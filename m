@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04076373BE9;
-	Mon, 27 Apr 2026 21:06:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6221B373BE9;
+	Mon, 27 Apr 2026 21:07:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777323978; cv=none; b=B/xwzGFwbxvx5C4bTsC/nPVs3fwC3CIBpIywnLXhIFgHZRJUjpHkaWjMA+lMB/qkgalkhr8jGN1IWIdMq8ekWZ4PbVjkFBhrHxUsvcefDHkB/IiK7FtLITE1k9065h3b1dw9wxBxtfGlQwYhrJpLBDCpYQuAQ+4Ys51D3tUsE+c=
+	t=1777324021; cv=none; b=CfHqhlnaTTaM+juwvbJIHP1AHxWWdv7DlPWsTPra1dLAdCJXJmK5vLp5x8I6EbSrt+eN1vdT9tQK7dMq1ImwuQ/p0ARLnGv+0t7YA6dCMORnP2RFjOqIw6Xman3NREP0Qq28fnx2QxS5Db1zbgerqW1aJKFqkPlTu5FNNafNXWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777323978; c=relaxed/simple;
-	bh=CIswUHjtV6oSUsxjeWT06cacL6KEcFHO+pUSNAd7kso=;
+	s=arc-20240116; t=1777324021; c=relaxed/simple;
+	bh=Ji6QG+tICOp3jZRjVIPmRNoeZX3XNm+1s3nZGqpXmws=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ZzzXa32G5psX9rPtuGSyjEQXJNDA1JnhWLjiex/HBea+s1D102raPO/pH5Ho7rGY49eE/DgFO81j2PhQYltfj93rl4fub4ZqHX80rmXDgSalhKHmeyYjKKGEmtvddFMUhK2h0ejqAGKRoZO1aj+Hpx8AZc6h+Z++9Z24TOsSUs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YoNJN0KK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=V6n6CO2AiEe3BFDUgN6jCIcKpbE6oYSY/dQtVWh4lJs8jtaLdqdkaZUhOzWBUwD+D82CMQHRipfeqTzw0gRHkZRZsykn1Xlf9cxqkcyIHcNf9QnigP7lp+iQluaOZ/EgSnqlPkJlEoKYj8awpD8t57pikstWJhi6yRBEQErL5/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QFGNDaTG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YoNJN0KK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE4DBC19425;
-	Mon, 27 Apr 2026 21:06:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QFGNDaTG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11644C19425;
+	Mon, 27 Apr 2026 21:07:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777323977;
-	bh=CIswUHjtV6oSUsxjeWT06cacL6KEcFHO+pUSNAd7kso=;
+	s=k20201202; t=1777324021;
+	bh=Ji6QG+tICOp3jZRjVIPmRNoeZX3XNm+1s3nZGqpXmws=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=YoNJN0KKRc41UjoNkjKTVxHCQ9uHmb1vXRgaeoA4tQWz/iAKTXe43aboUj7ZhDG0t
-	 grNENZpJKNHzFBJy7Y506+AuuCHjO1qZfDRXYgBS/0Yw8y5dlIOWegmRBKPba4bB6Y
-	 5VcibMz6TPsiqAgZkvXp2IBx61Yw3YfO9M4cAandeRfDj83rXbzcmH2WqXx6KVwMY1
-	 tFRBliyM+9VjS8JW20gNO4qb1z7tkpfpIBwBl3Wh8cGH9NaUQh2VAbsD4l95ckOfFr
-	 7cMHIO7JOZkCSv8VfoEMbGIMwpAhmicK4vHq6YczTKvrrB2AuD0Nao69SvIM0v/DRr
-	 xVcZfTO9P4O2Q==
-Date: Mon, 27 Apr 2026 16:06:15 -0500
+	b=QFGNDaTGW9a6kdfYz+Q7sP5WR3ZkbzEL1ZCMz/x/Se8P+hqKd3UU21B0gzVx4pqBl
+	 kykxyVYNOR7VMHGZ+ds/id+OC9sE4OJiDDrLvBJuAtwrEL/oYKUj25SReZiK63RWqV
+	 zqLGHgGm4CQzNaDmqo+Ta83Ay0qv+7jcHNQkaY/6E5JQ9nFVjxzjC2iuYoPQaq1/27
+	 0XleZbQtLDheHJpPJP0IVRsnCI+hQSiEFIetIZfoCYJn1sRQx3kn2wlhuvPKWYM0G1
+	 nI8/zJ/fR1QDFe6OK/JGPNIwx73t5SJiu7g/Tn0MksDCYe357ycHL/XROhv+A4Hhfc
+	 cSXQLsRyl3SJw==
+Date: Mon, 27 Apr 2026 16:06:58 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: David Matlack <dmatlack@google.com>
 Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
@@ -51,9 +51,9 @@ Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI
+Subject: Re: [PATCH v4 03/11] PCI: liveupdate: Track incoming preserved PCI
  devices
-Message-ID: <20260427210615.GA186434@bhelgaas>
+Message-ID: <20260427210658.GA186673@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -62,29 +62,28 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260423212316.3431746-3-dmatlack@google.com>
+In-Reply-To: <20260423212316.3431746-4-dmatlack@google.com>
 
-On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
-> Add APIs to allow drivers to notify the PCI core of which devices are
-> being preserved across a Live Update for the next kernel, i.e.
-> "outgoing" devices.
+On Thu, Apr 23, 2026 at 09:23:07PM +0000, David Matlack wrote:
+> During PCI enumeration, the previous kernel might have passed state about
+> devices that were preserved across kexec. The PCI core needs to fetch
+> this state to identify which devices are "incoming" and require special
+> handling.
 
 > +++ b/drivers/pci/liveupdate.c
-> @@ -43,6 +43,26 @@
->   *
->   *  * ``pci_liveupdate_register_flb(driver_file_handler)``
->   *  * ``pci_liveupdate_unregister_flb(driver_file_handler)``
-> + *
-> + * Device Tracking
-> + * ===============
-> + *
-> + * Drivers must notify the PCI core when specific devices are preserved or
-> + * unpreserved with the following APIs:
-> + *
-> + *  * ``pci_liveupdate_preserve(pci_dev)``
-> + *  * ``pci_liveupdate_unpreserve(pci_dev)``
-> + *
-> + * This allows the PCI core to keep it's FLB data (struct pci_ser) up to date
-> + * with the list of **outgoing** preserved devices for the next kernel.
 
-s/it's/its/
+> +void pci_liveupdate_finish(struct pci_dev *dev)
+> +{
+> +	if (!dev->liveupdate_incoming) {
+> +		pci_warn(dev, "Cannot finish preserving an unpreserved device\n");
+> +		return;
+> +	}
+> +
+> +	pci_info(dev, "Device is finished participating in Live Update\n");
+> +
+> +	/*
+> +	 * Drop the refcount so this device does not get treated as an incoming
+> +	 * device again, e.g. in case pci_liveupdate_setup_device() gets called
+> +	 * again becase the device is hot-plugged.
+
+s/becase/because/
