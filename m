@@ -1,131 +1,141 @@
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
+Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B3B255E43
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2026 18:57:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.169
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777316242; cv=pass; b=tKQW0FDmfOimJjz22fcECZ//I8+GuOfOBrRfNVsBeKylCVwFXxP9uQicEPK8ffe9NJDMFszDLF7kdMBaz3RhEqIYf1R555XGhnOJ093+YS9tjeC7hzF6YEBLnjFffTQPJI3rDunqz86/tF4oYEJYtDiRqpBRKU5u0QKhmlSauvo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777316242; c=relaxed/simple;
-	bh=DDNNIqkIGd79GFDvWgXKCnKvFpN60AdJ3nOosKMNMyk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oGMQZCk7Fn6i1EQO0XlHPQ8BaqPsF0gCSOltvtIGK7qaKrXLc34vejVYCtdOrfHTNNTqfr4wOqLs3UtLU0F7uRAO/NQR2yaEzPq47UN2A8g/GsCn5OiK3OPe2t/Ve8qqlAOWBemYD11fO1RgFKqFF9e7VS4nDe61LBbvVDmV+IQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UclVOq1t; arc=pass smtp.client-ip=209.85.208.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02AA241B362
+	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2026 19:31:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777318321; cv=none; b=BgYMCq3EOYDJvGufTKcwuoAdsYuycVVcoYOzdlsVQz1+azQNq2rhQ/a9Gg6JWG3RVElD5fJfzEVLu6LRuPATjK+hODxyFiIQXplWwV8UvIxs2ZXRNR2P39gmduMdZPVAX1QcDzjBGVWNDo7lFr14FqlELqHIKF0aZQKeFQCPUj0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777318321; c=relaxed/simple;
+	bh=LVmCeMbPONRbWHAmNFPGHdz4QzY8fHP3vOP6GzcGnRU=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=VgyN8zzNM5NWBGBzuNRrJXZxawnu5dI7XVmZOZVzUXUEuOg/KNRRk7jb7oEu2JosMeX0PAthYWNfU2nl2mQ1EGlcysJk4fFa2ZUTMxGOpddUMUNPZnxAQ6QUGKVgW1JCa21ndIViQ/HfeHDUdWQyRGcjm6jkc/QMnPRHH20oJCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--skhawaja.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DYeTMuAe; arc=none smtp.client-ip=209.85.214.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--skhawaja.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UclVOq1t"
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-38e7d984096so116260681fa.2
-        for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2026 11:57:21 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777316239; cv=none;
-        d=google.com; s=arc-20240605;
-        b=cpUVZLQ02MtE+ukIqoiQ/wB+h//nXmkci0OU3RRNd7TGGZFo+mQhDcUHAzhr6UWkDc
-         hHei52CUU1sMNQ00BUyQH40JKvkRH+RexyK8tAbESSnBfGn/vzER6M8bhjng+kB9PXQ/
-         LWpZgFifb0zZnrwCQqa7dD//2iEPLnGYPBGpM+X4waiAlFiUnSQAXKM50KMLdmS2o60V
-         nDeVpfaHU0Xm2/xWokfd1RhVZe9PBic0O0HciX4vFr5uQaYy9b3jv3FXvcdb9rEoyYBp
-         3YIRfqsvnsz/KEeAI6TXFtvqQ5T+FjIJeRB7JPVqmPwFgk7LfLrcvLPiqWGxhHc3QNP+
-         tN3w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=wr02yN3/yZBXI2xon5jDCKdawxJYqqpUq3piVXy5yYI=;
-        fh=Cpvr9cWYNKu/4Lp2WB6UmhYBKKNqBDk7NNLjyjFYDvY=;
-        b=aM5/lcC7rgcRB9eaD+2RVFRg66usEhXV3QhgJ396ZYt4Zlr5gP3PuGUb4PzSKez8RK
-         iFS25JM51VPe+sfJU3aNJDTr2DLftOpbPzpiFrQgnzQxnWnAyEYLD55ynMCaJt9gTaQC
-         qpnJzX05KIJy5wSSyGnwyjzZqfeX7y6MDLvSO9esk7529NOn75hRSbg8mAipRj7p/P5Z
-         EfZR8zOqlVLHVb/1qIxRN+KytCotzn028R7xBN4i0k2YCTEY41Cc53yRl3WljhvvDzSW
-         OdBucNhdJs2Uj94RFLWTCfN6CRUwv98VUIMsX8lMTCazvhA4oYDvcekQo5RqXvUbvr92
-         6LMA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DYeTMuAe"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2b2e6ee9444so114248335ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2026 12:31:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777316239; x=1777921039; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wr02yN3/yZBXI2xon5jDCKdawxJYqqpUq3piVXy5yYI=;
-        b=UclVOq1td6B5U0mvtxgD4CZ0pGhK6883kjDt84nzaVhA5Lfmv0O4Hk5sjFuTfaoSoZ
-         s02Fct0MiWn2RR1lAu/SLpVhys+/zvqSVnGTJHz2/UNyyaEitRJ8EHpBZmsFaGyOxqjf
-         t4csL9I8X9hS32t1dp8rcJHRauxr9AGAcx59JbhAHw05+2qeIzL7gnctKWCKubH9HkWn
-         7Sva5wtaNUuYrwKUC/yZL1tdzbjQg66KWK7V8+Mk7dVaYR2UFdTtXKX9W25x40wnaYXz
-         ATmLcuWAc4SzPkIkzqh8NFeBGwEt6u7fjLLBX+fBYzZ+rM07DT6rst4JIdie1jWN8j1s
-         Ddng==
+        d=google.com; s=20251104; t=1777318318; x=1777923118; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=snPdlzVdOYUMpgWp4O8YWqXKWZOQ7VLQKeDCjnOdDtE=;
+        b=DYeTMuAeP/GoKy2Dhhs3rvzRf2vHU2G61rL1gUIeND9t3PYoAQNblwMmxwoYXeT68g
+         H4UIdyp6ZuM1usHZpAFe5hZT4WxcFIsSaQi3c2Xcdz5BSzDe7jLBsklpFb+RRk9MCXtl
+         G260v/VF5VQXMFwnbpf2igjRMfjK9OHBchx99mQE7LY93GtAg/LKIzQtZU9kdkQdvhYF
+         K9nKBKQXoUNgGUK9xIWYNHr0Y4wHToTNQ0oXMDZUvcXXsnM31GYpAT4shxwMvgZgdLcH
+         nfIfEgnMc78HZjnUgH69zYEl6GGV+CaaegoQmYHOZm76rx1H9i70QJSmYMZZCPH4Ob80
+         PtWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777316239; x=1777921039;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=wr02yN3/yZBXI2xon5jDCKdawxJYqqpUq3piVXy5yYI=;
-        b=nr4UZlivdeomKk9HwVZMiJrGC44GZoquer4Iq5GFjtV1Ly9kzDqVDPWOm/vSiwaHFe
-         0yqdeAkElqkXzOcXovIRrVjwFCK/Vek+i+U3Q3lAttRdM2si+iEK6lXdejN35XRVuMiz
-         5dFUDHODg5xDtyh/K8xvKSBWJ0X2Ei0g3kL+6DmD1F91Pi+/a3L5OzcOunECzQA/Q4Av
-         +913jtdo/iUJzivl8X4dbtBDhCmzS3DtwhxhjMKoPHrEbW8xFVxt5v7BR1hZPQ4x53PB
-         fg90xN/oPhc0Ui3a5LiTnjMudFc0TLHTEbjFg28e5xsKknLRE0cjcYs2xwnvgwdcJYeY
-         oAjQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+2oq+moMjf5atgQZ5CNd7bQK+wI4kq7hcdlYZIMG0KCBsHsQKvxBR1rocr3VX62Ees/KRq8BX9SxY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyFEwL2UXW5gMpZvl7Ikfw0nFspm/LBT7AWa+SaydDDkeqzjBtB
-	TrqFgFXW3I6EXSD0m+PxA9Ky2BjZI57eulz249ewgaMN8X0zWxe+jN/CXBEm6nwxnhkQ46Yw4m7
-	z99+7Bq4JQ5E15PAFobRn3Oi0Wdp8CkCbKr4i3uOz
-X-Gm-Gg: AeBDievNW56acOswGhJwyRZE6X+9ySGmVFBKuo9kLoPkh8T2hk0Yh5uBIQZeCOlefIQ
-	0xusdjgnhzzgdJocyA0dX62bqXxvDkSK7Ci6Ypz0Zwx38IzvjrNM758ML8tltd7eaeBjdzJWvS6
-	OVYujhCeUz0wndjKyTYnL185kmXOSWGXWtX52/okrSJVAtUwNhzgeKtyKw28Mu3KDjBIn7oww11
-	Y0Mj5hPj70jsMPcWsrnRlpg1OTWYljGOrwyX7jQjKfVrcGhUJKJPQrqFEC1Sezr9mv4I8O0rPVG
-	N9CPG9nYXOxxWOF8KMQ6fA+9iil4zQ==
-X-Received: by 2002:a05:6512:3c98:b0:5a4:b18:427e with SMTP id
- 2adb3069b0e04-5a7466047eemr34628e87.1.1777316239065; Mon, 27 Apr 2026
- 11:57:19 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1777318318; x=1777923118;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=snPdlzVdOYUMpgWp4O8YWqXKWZOQ7VLQKeDCjnOdDtE=;
+        b=U5FJuMJPukrCi0HyWwbTh8GjzTnP1JZVh9zqMgHNtIBxazcypL8WyJKWeG8PaqWIJW
+         S38SIxnwadY+7cXhoZL990g6JWVVGkWja2bOqM4r5ulR/u4Zh7GLBEPQBIw6l552HjVY
+         ifAyIP9Q718da8t0Cto3Hv7g6QBNJYkLXgAWlzdMi6wmrMGWKfbDklF+o/WIdLnFIh47
+         QE9XctYWlZtP2srDFCDhW4e9GgyDRgLBGb4niwz06oscz/hrBPFBjHSWbweZ2iAhToXS
+         ahyr0voVoL39woTH5Guqd+jbpdfLuZTCr7ADPoeHpeyYkkDeMFovwPReiZaG8gnk35Gi
+         9xbw==
+X-Forwarded-Encrypted: i=1; AFNElJ/E8BBZH1PJS7vPpRhzYAT1TecNUgUkOIRpEJRPM1HsAtU9p++eC8cWoc8goL/CP/v06cHMJfUX8H4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw1ysyKnTet7mAZC3Z+1823b8+OgyHRDB7TJ6k/9f42KJSO05ZR
+	Hy+DzF7vj+986OqWVsdn9xJApYZK++12uhQj+BpfXJHUnlJBp1mnVlDLgjG37PdyrBzFERVpuA9
+	4NCBvS6L4b8IjSw==
+X-Received: from plda4.prod.google.com ([2002:a17:902:ee84:b0:2b0:af2d:2502])
+ (user=skhawaja job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:1107:b0:2b4:5bf8:a7e1 with SMTP id d9443c01a7336-2b97bfd91e7mr146815ad.6.1777318318229;
+ Mon, 27 Apr 2026 12:31:58 -0700 (PDT)
+Date: Mon, 27 Apr 2026 19:31:38 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260423212316.3431746-1-dmatlack@google.com> <20260423212316.3431746-3-dmatlack@google.com>
- <20260427085725.00005283@linux.microsoft.com>
-In-Reply-To: <20260427085725.00005283@linux.microsoft.com>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 27 Apr 2026 11:56:51 -0700
-X-Gm-Features: AVHnY4IwEsFxMBzAHVS8KxW2Zq56dU7ADRcx7gdZfScIG7qn-IMwc1DMcXI8nOc
-Message-ID: <CALzav=di-fMMPgTEzfWagRgXCWox9CB4XiRhZcVAzc3dUzzfHg@mail.gmail.com>
-Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI devices
-To: Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: iommu@lists.linux.dev, kexec@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
+Message-ID: <20260427193139.2109938-1-skhawaja@google.com>
+Subject: [PATCH] PCI: Init driver override spinlock in new_id_store()
+From: Samiullah Khawaja <skhawaja@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Danilo Krummrich <dakr@kernel.org>, 
+	Gui-Dong Han <hanguidong02@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Alex Williamson <alex@shazbot.org>, "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, 
+	open list <linux-kernel@vger.kernel.org>
+Cc: dmatlack@google.com, Samiullah Khawaja <skhawaja@google.com>, 
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Apr 27, 2026 at 8:57=E2=80=AFAM Jacob Pan <jacob.pan@linux.microsof=
-t.com> wrote:
+When setting new_id of a PCI device driver using sysfs a lockdep splat
+occurs. This is because the new_id function new_id_store() checks for
+driver_override by creating temporary pci_dev structs.
 
-> > +int pci_liveupdate_preserve(struct pci_dev *dev)
-> > +{
-> > +     struct pci_ser *ser;
-> > +     int i, ret;
-> > +
-> > +     guard(mutex)(&pci_flb_outgoing_lock);
-> > +
-> > +     ret =3D liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void
-> > **)&ser);
-> > +     if (ret)
-> > +             return ret;
-> > +
-> > +     if (!ser)
-> > +             return -ENOENT;
-> > +
-> > +     if (dev->is_virtfn)
-> > +             return -EINVAL;
-> This can be left outside the mutex?
+Since the newly added driver_override spinlock is not init for temporary
+pci_dev structs, the lockdep splat complains about it.
 
-Yes indeed. I will move it out in v5. Thanks!
+Init the driver_override spinlock to fix this.
+
+[    4.464296] INFO: trying to register non-static key.
+[    4.466207] The code is fine but needs lockdep annotation, or maybe
+[    4.468487] you didn't initialize this object before use?
+[    4.470486] turning off the locking correctness validator.
+[    4.472494] CPU: 2 UID: 0 PID: 177 Comm: liveupdate-iomm Not tainted 7.0.0+ #9 PREEMPT(full)
+[    4.472497] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+[    4.472498] Call Trace:
+[    4.472501]  <TASK>
+[    4.472503]  dump_stack_lvl+0x5d/0x80
+[    4.472508]  register_lock_class+0x77e/0x790
+[    4.472512]  ? check_prev_add+0xf4/0xd30
+[    4.472513]  ? check_prev_add+0xf4/0xd30
+[    4.472515]  __lock_acquire+0x3b4/0x1b80
+[    4.472518]  ? raw_irqentry_exit_cond_resched+0x20/0x50
+[    4.472556]  lock_acquire+0xbf/0x2e0
+[    4.472558]  ? pci_match_device+0x24/0x180
+[    4.472563]  _raw_spin_lock+0x30/0x40
+[    4.472567]  ? pci_match_device+0x24/0x180
+[    4.472569]  pci_match_device+0x24/0x180
+[    4.472571]  new_id_store+0x189/0x1d0
+[    4.472574]  kernfs_fop_write_iter+0x14f/0x210
+[    4.472578]  vfs_write+0x263/0x5e0
+[    4.472583]  ksys_write+0x79/0xf0
+[    4.472585]  do_syscall_64+0x117/0xf80
+[    4.472587]  ? clear_bhb_loop+0x40/0x90
+[    4.472590]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
+[    4.472592] RIP: 0033:0x7fe7bc0beeb2
+[    4.472595] Code: 18 41 8b 93 08 03 00 00 59 5e 48 83 f8 fc 75 1a 83 e2 39 83 fa 08 75 12 e8 2b ff ff ff 0f 1f 00 49 89 ca 48 8b 44 24 20 0f 05 <48> 83 c4 18 c3 66 0f 1f 84 00 00 00 00 00 48 83 ec 10 ff 74 24 18
+[    4.472596] RSP: 002b:00007ffcdbb1ed80 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
+[    4.472598] RAX: ffffffffffffffda RBX: 00007fe7bc2415c0 RCX: 00007fe7bc0beeb2
+[    4.472599] RDX: 000000000000000a RSI: 00005580955433c0 RDI: 0000000000000001
+[    4.472600] RBP: 000000000000000a R08: 0000000000000000 R09: 0000000000000000
+[    4.472601] R10: 0000000000000000 R11: 0000000000000202 R12: 000000000000000a
+[    4.472602] R13: 00005580955433c0 R14: 000055805932493e R15: 0000558095545490
+[    4.472605]  </TASK>
+
+Fixes: cb3d1049f4ea ("driver core: generalize driver_override in struct device")
+Fixes: 10a4206a2401 ("PCI: use generic driver_override infrastructure")
+Signed-off-by: Samiullah Khawaja <skhawaja@google.com>
+---
+ drivers/pci/pci-driver.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index d10ece0889f0..5f453213b8c5 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -215,6 +215,11 @@ static ssize_t new_id_store(struct device_driver *driver, const char *buf,
+ 		pdev->subsystem_device = subdevice;
+ 		pdev->class = class;
+ 
++		/*
++		 * Initialize the embedded struct device driver_override lock to
++		 * avoid the lockdep errors.
++		 */
++		spin_lock_init(&pdev->dev.driver_override.lock);
+ 		if (pci_match_device(pdrv, pdev))
+ 			retval = -EEXIST;
+ 
+
+base-commit: 254f49634ee16a731174d2ae34bc50bd5f45e731
+-- 
+2.54.0.545.g6539524ca2-goog
+
