@@ -1,263 +1,193 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010021.outbound.protection.outlook.com [52.101.56.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C1023DCD99;
-	Mon, 27 Apr 2026 17:37:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777311470; cv=none; b=Lp+M8q8OTZE0sspDvaiw4EVTEuqlYABFmeMaXxh6YqfUv5IINMKHtfTL3w954KWAjwlsiIo1BiAChFSqCgwCrNKTLLTXpzJFAy3/0NtgDlG70sXfe+37GgJY7Lvqso9LydpeRTL2ZQsQu6KJTTyj2+7sAXodyEnePe+xt/z3ldU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777311470; c=relaxed/simple;
-	bh=kM4HoBJaBuhfIaWRXlcVZyIJAMkolQXdqWkRiXRmmzo=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=VOm/6BSTKp3q7yABBDNnIVRRyLJwkfgjuSAy9h3SAqJbjoDQeVfObTFj/qZG4olaGhMDVafv/e9US19nOBXEid4r1NfL9JmWUUgH1J61cSIhqu3vuuiW9E6iX9UKUwmqei0gDJuJ3zm7CiDBfgM5Rvd6v+cvHmlIbAc5OT0i/0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UggPRKs8; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 856E4364EA4;
+	Mon, 27 Apr 2026 17:53:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777312403; cv=fail; b=OKmoHymxqtmlJVrfn4ROTiF6S0Z0LB9pOJ37EDgFYAVzWn2omQCSJ5l4a77yXXufHRSuestwavFurZW2yhxOunuOh2OTqI/0ih7ds9rXCY1BZPKD2VfevNZ2ppbw4vlmMz4Qy3LBfBYy212I7w86DBMKmUewo6SNK7i/9kDem+A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777312403; c=relaxed/simple;
+	bh=tH9KC/TGCIq5rP8Dut/9CdDocjGCwVvb2v2isVNlByw=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=oHns2SHPC9z9jNvb/lqjwPSCG66iI+z3uSM2k1jsUtQBqOqcrNqHT5LojWTzcno0aTDsLx8A2N58kYU986cK8Od+l9xHhcXGrlMEBtbHqDDcC0jpYNgPUqEHqqRMpMoIWNQ/Kq1HZWB4BFS3I0nqp5TJAmOFn0ZgLCne1MWnzw8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=altera.com; spf=pass smtp.mailfrom=altera.com; dkim=pass (2048-bit key) header.d=altera.com header.i=@altera.com header.b=sTrGgXOM; arc=fail smtp.client-ip=52.101.56.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=altera.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altera.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UggPRKs8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C37A7C19425;
-	Mon, 27 Apr 2026 17:37:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777311469;
-	bh=kM4HoBJaBuhfIaWRXlcVZyIJAMkolQXdqWkRiXRmmzo=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=UggPRKs8Avns3Vj/OFucdtUGUQtO09le6EtuW1tAdot1KntAo0nKrIy51Jwcxmz9v
-	 +0mayeU/xB1h96vtS5zAeIDJ6WgOpl7jgeXr00AlxqfLQxHFI/EByviJtRgB6faTST
-	 u/cnstMz2cCHFKDg3apAMz3Q7k/IavnR/2rQP3WeiUh/Tme/YAPwQxl6kzh+owNqeu
-	 Oak+KG4FrqA6YNpDrZ1JzBnHfSzaATsluZNtmw9u0TGsxnzPC4pnqVX8oyMKc9nWAg
-	 rsCD3XtIBu5Y1I/iAryK5crlXKBBWUtb8QlC/FZbZSG8+69EefNpIPoP/4RdopyZHC
-	 A26h+SCPTdwrQ==
-Date: Mon, 27 Apr 2026 12:37:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: brgl@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=altera.com header.i=@altera.com header.b="sTrGgXOM"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=gH2lFfitse24NMexf02hTh7GHwh9JYGwakmBa7gnHCa3acfumBckkphz1ggIBVVuf4cZIdNzVHcKdZj/QCO+Wb+jEI6lH/zTlvr/JCkAsNaablNJWKykXlGRGDtqV1hF4GCH1IW2ybvHrEHznLZGP1yhcSJUCjzV6HC6w7zEhRYJPxchmYxcTmG3fXg8M86SdWofM2c+xUvSqMr4E+iUqSUp5xW3jAoG2m25ciCrkqp1KyKShzXWouD5VzUir2pOqOEr7mmqks+ckTgl3jmRJSC1t4V/AtFk2UnjPkISlKBl46/lQMEF/D2UQnglV5BPJj/jZbCHwcZWVYgM507WJQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=d656+IBRHCC9v3A6/hXVTAvRqGUGREA+E+p+KijAyUs=;
+ b=JARtU1w2sWzU+hUisJXF3dmc2gAsPqXRYZpl6uFeyEJQvqNbxXmQKERUr75iXjTXfF22ID/66zijumuJXOhWRDu/RUrL52avD+I1D0RfA/+Ra6xh6xxnFtuqKM/GTX75sx9V+KYdM+a5PaXsnVLmsIvzmWoGC0V9Jzgwq8GiRrh/jM1kRrOt+0warc9nKxUVlXvrjuMSstcHREXSAh48o5Cbf+FgotCrtjsSsfd6OeLY7pGMZJ61HS5/ZIuBLXctZMJnrqttTW3x3a0wrETfSX0Q5BjJEVE7+qJFAeaGVqpoEgTLhiVpvE4jz1Tfjeqmd8TlmenryUaAuTW6cIw4sA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=altera.com; dmarc=pass action=none header.from=altera.com;
+ dkim=pass header.d=altera.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=altera.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=d656+IBRHCC9v3A6/hXVTAvRqGUGREA+E+p+KijAyUs=;
+ b=sTrGgXOMtSV9vZPqnahJaZ2aNY97esXj3EJT4rskBi0hvgTqvIOktIHcPS5YGDGDGVCYhXIJonOMt+yYoLN4JiWFcAEmSuSN+b0L1l7tPqHoJd08k7hA+Q89dA2qWN/5uUff0AXThVeScFXSwB+/GYb9IJb4w01UGOmqjjUOXKcv5ohG1b2lYMKSYDXPqa+ljmjXOgbhSFtYKG1zCvfeNrxE+TImuk+kgQkO/o3RSpSjTb6/sQ1MZGbKTzAnPcHDuo8uZdSbAcinRdQPzkQlaQyOnCcwEQYWPxGjNWryd4CwtKdFOHpDJlmPOyX6UNTv0/ITh0fCsA73khgy4FoAKg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=altera.com;
+Received: from SA1PR03MB6498.namprd03.prod.outlook.com (2603:10b6:806:1c5::7)
+ by CH7PR03MB7785.namprd03.prod.outlook.com (2603:10b6:610:24f::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.26; Mon, 27 Apr
+ 2026 17:53:17 +0000
+Received: from SA1PR03MB6498.namprd03.prod.outlook.com
+ ([fe80::feea:da58:faeb:9ebc]) by SA1PR03MB6498.namprd03.prod.outlook.com
+ ([fe80::feea:da58:faeb:9ebc%4]) with mapi id 15.20.9846.025; Mon, 27 Apr 2026
+ 17:53:17 +0000
+From: Mahesh Vaidya <mahesh.vaidya@altera.com>
+To: joyce.ooi@intel.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	ley.foon.tan@intel.com
+Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Subject: Re: [PATCH] PCI/pwrctrl: Do not try to power on/off devices that
- don't need pwrctrl
-Message-ID: <20260427173748.GA164968@bhelgaas>
+	stable@vger.kernel.org,
+	subhransu.sekhar.prusty@altera.com,
+	Mahesh Vaidya <mahesh.vaidya@altera.com>
+Subject: [PATCH] PCI: altera: Fix resource leaks on probe failure
+Date: Mon, 27 Apr 2026 10:53:02 -0700
+Message-Id: <20260427175302.570671-1-mahesh.vaidya@altera.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI2PR01CA0052.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::11) To SA1PR03MB6498.namprd03.prod.outlook.com
+ (2603:10b6:806:1c5::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260421104102.12322-1-manivannan.sadhasivam@oss.qualcomm.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR03MB6498:EE_|CH7PR03MB7785:EE_
+X-MS-Office365-Filtering-Correlation-Id: 99f031d3-c7b1-43f1-cc6b-08dea485dc3e
+X-MS-Exchange-AtpMessageProperties: SA
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|7416014|18002099003|56012099003|55112099003;
+X-Microsoft-Antispam-Message-Info:
+	KjFBDKsf98Sz2U3Xh0KByxQIxWJ2T+pCtpyr+b3+r8xvn7jynTEB1BBoIESgGG6a2kngSQc01fuwPSldoO1XLvZT3hphv662r5eJD3IF5eHIQTvdDnwXXNUB8+dxOE72acp8LeG+pgFgFoh0eehsPadJcHoJrbs/t9sVxxLv4tB3iE/W5YbbL6LpPyEtmG7rPPGs8CQEZxmG8jXcAqVvzklETxWyUGFKQ78QvqUhJTGEsesHp2ZfZisoNVnbwrhqsQblDgyoTDQESF3Wq2laqDFihigHoPQZJZIGGBzOs3717ZXzJcu3deONAIXIA7Oh8GHpDCeB4r05ljMPNg+VnrAByQXj0f16JkQWRNhvETD4bE4PGcSr3XCCnYB3HuvFFmIe/YeMFTlSvGnHBTgnhvfMDJlZLmAKqTDNxTdaOTYQhL9h8/njAtvpyi64kuimp+hDydxj6NpeVtB79kRLBh0DO5deZ6edntmxsNB9D6Y9IiVWMoTBl9f8JBVbHL7SUJinqnoAxWvYlqP8WihJV59Mc4DSbozg99v2dMyfbngzRLOqVRIN5RzIZJ27YGXbLqS2FXml26GA7PGefoeV6lEeOWPq4j9ax24m6lUJEukAhMhy//SVcnOhj6wif8rQNQLg9tjJqx3IEZkB5Znl70jcns0vF8WIvt9LemFyuYsmjW550+GO3kOFG0Xb+rR3XQ9pk3ep9YTAliIuJOA76UapasZDpV1v2ke2iwXsBiQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR03MB6498.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(18002099003)(56012099003)(55112099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?EX74bxf9K7zcUtL8ttleUvxLcYeylx9B2DffFnQzc8m5YHCIzr7/AMqOMQ1k?=
+ =?us-ascii?Q?tzJD5zziMI9zo+dyYCNLbEUXJCBY2QJKNR3WREl7MtgI2R/b0HqAWROwTPWj?=
+ =?us-ascii?Q?GX6GiGgMA06S2VtuqSj+Hd+QjboHJbyfUMDUzGhlnVx0QyrCCyTXps77WLCu?=
+ =?us-ascii?Q?fus0UgDm9SedPPWXtoytVSuotB5dkmaTja+IbRaTtLlwvK1MH+/+zr0yeS0o?=
+ =?us-ascii?Q?cK7bOnfuzJOJCm1u9dhtps/qN8LTwpEsM8ILELmS2KdKUrSRPRd811iBKOti?=
+ =?us-ascii?Q?LsBuAel4DSNvuzIKvTYNPhFFP6zf2zt7S5rOixabVcx63/fJGt4jW9eaXH3R?=
+ =?us-ascii?Q?AoHmWWQcnCa4cJFsHG8DRkclxAluNjHLgVVkWareCco800UK32XEcbadhq71?=
+ =?us-ascii?Q?Oa08SG9bFZIf0epnEtJwTOng78DVVb6lbqEck3z28Eu5i4C5p+Bh0188O+BM?=
+ =?us-ascii?Q?o+XkKsJgOPLTEuHop/3PRaXC2Z/OqNTnWALzuKdFKkGRHvwd6e4Z4Amd15nA?=
+ =?us-ascii?Q?zcFUrtwQMFPdkahCWa2IrII7663yxqoo+uRnprg0pmzr9qXa1NbUFHuA5iZx?=
+ =?us-ascii?Q?gppOw1jQ+fVB4s8Ie67aEH/N1BWeOxe1qaN9n/cCBDVQKRsqc0HTUMpEjon3?=
+ =?us-ascii?Q?ZzSJ7tt9bU3VAeQva3llClsDyydkzdwZXNBH0jJoBylZJkcUWABpzAq7i2VX?=
+ =?us-ascii?Q?CRMlps2J0goIpVFjCuP7w+qYRWbm7HXfwXI2Es6btTSxfVS1+yetzAJ9K1/p?=
+ =?us-ascii?Q?co5Om/qs2sZaxR8BBzb6ow8ajfGFJpOfvXGs4lSs81y0BKQs6SZbdXw3+7tC?=
+ =?us-ascii?Q?oH3pKh2WcU4z+QF+COX9O51n3f5j8Aer4u6C5tjExXjreyBZ1wMcRIFI5R6x?=
+ =?us-ascii?Q?RARNG/AuE0oWUqval2KIUMNCYEmXttO50h51ldE6xExpU8WLAhIXeUNbR0OK?=
+ =?us-ascii?Q?WHNZr+BfOvjpICCbzj/70HBKuYL/Cvd4B7kjTrL73Dg/Sfz834iGVx+USyRs?=
+ =?us-ascii?Q?zAo+44XR3zns4yHMH6l38Mp9YJqMqe7IwRS0vSck9Zn5QOFR7EdX9Ws6dO78?=
+ =?us-ascii?Q?xvTs6lRlVwthiFlx2Ygfvp3zP2w/2pcBelZGGWsLxUu+RyFfx4EAkjSWQNue?=
+ =?us-ascii?Q?D+Dgpw7RHmFreC3lQQrJhOsn1hBFCZ7Hqi1P8MrixqznwnrN9TRXt5vsSvJa?=
+ =?us-ascii?Q?fi7O0Vi0hTQPvCQBDp7MYIJGmQIbjcKtGFHiKbJwqKhJZxYOM3mFWwsiwAmO?=
+ =?us-ascii?Q?WE5pus36oBqqw/E9pokE2iA4BXrigRjrGnNeklmOrx9dIqFZ+VLKz63y89lY?=
+ =?us-ascii?Q?8j/oVmBS9bLZArPdQ9q+JMwCDzIQVoI0wl6O7Em7V5mhFFBM56R5zxcE4Jai?=
+ =?us-ascii?Q?X9Y9epWpYgqoxLFW5rvt2c8tgNk5CW75dFIuIBPLOhE6NXXUO4Lq8Sa801aQ?=
+ =?us-ascii?Q?MvE/BD3y7oEyuLeiqa7KIulbtnyb09w+CuQVboAf6hOQ3UJyM0yGovzA8QhB?=
+ =?us-ascii?Q?cdf0F+v0WC5xxBvl7DbIvoaTd9Q5C9u2DTIJD8Hjdg3Hw6j9eTxMgGyvni7B?=
+ =?us-ascii?Q?lvg574GaSRDy8f8letg4HPNG1lYBDKd90WrrMDvITiLg0tihrFK0FCXUxesm?=
+ =?us-ascii?Q?dU2RwMD2DDM5mIKsBbRjUi379YpmIdzw+Tp+iDdYqTDiD39Qey472WFeoIiu?=
+ =?us-ascii?Q?3asHYIOzzao69IfEFQsmZONq8OxyPfq8AfQsgnsXsY7OFG3Yi2s5m2Qa42QV?=
+ =?us-ascii?Q?hGad+K30xk8Ism8wobpFVH46eVzESwQ=3D?=
+X-OriginatorOrg: altera.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 99f031d3-c7b1-43f1-cc6b-08dea485dc3e
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR03MB6498.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Apr 2026 17:53:16.9504
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: fbd72e03-d4a5-4110-adce-614d51f2077a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: TmuN56xhdjSMsmWv0/yQzaJ44nWBaAPn5wauLkoNoHoYfXE0hzAI4XMKdLllT/8Ly56dFyUdJHk02XzMYU/nwrG2nhTq1QJhnLrugkAfOR0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH7PR03MB7785
 
-On Tue, Apr 21, 2026 at 04:11:01PM +0530, Manivannan Sadhasivam wrote:
-> pci_pwrctrl_is_required() is used to detect whether a device really
-> needs the PCI pwrctrl support or not. It is currently used in
-> pci_pwrctrl_create_device(), but not in pci_pwrctrl_power_{on/off}_device()
-> APIs. This leads to pwrctrl core trying to power on/off the incompatible
-> devices like USB hub downstream ports defined in DT.
-> 
-> Hence, add this check to prevent pwrctrl core from poking at wrong
-> devices. For this purpose, move the pci_pwrctrl_is_required() helper
-> definition to the top.
-> 
-> Fixes: b35cf3b6aa1e ("PCI/pwrctrl: Add APIs to power on/off pwrctrl devices")
-> Reported-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->  drivers/pci/pwrctrl/core.c | 90 ++++++++++++++++++++------------------
->  1 file changed, 48 insertions(+), 42 deletions(-)
-> 
-> diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-> index 97cff5b8ca88..b5a0a14d316e 100644
-> --- a/drivers/pci/pwrctrl/core.c
-> +++ b/drivers/pci/pwrctrl/core.c
-> @@ -139,6 +139,48 @@ int devm_pci_pwrctrl_device_set_ready(struct device *dev,
->  }
->  EXPORT_SYMBOL_GPL(devm_pci_pwrctrl_device_set_ready);
->  
-> +/*
-> + * Check whether the pwrctrl device really needs to be created or not. The
-> + * pwrctrl device will only be created if the node satisfies below requirements:
-> + *
-> + * 1. Presence of compatible property with "pci" prefix to match against the
-> + *    pwrctrl driver (AND)
-> + * 2. At least one of the power supplies defined in the devicetree node of the
-> + *    device (OR) in the remote endpoint parent node to indicate pwrctrl
-> + *    requirement.
-> + */
-> +static bool pci_pwrctrl_is_required(struct device_node *np)
-> +{
-> +	struct device_node *endpoint;
-> +	const char *compat;
-> +	int ret;
-> +
-> +	ret = of_property_read_string(np, "compatible", &compat);
-> +	if (ret < 0)
-> +		return false;
-> +
-> +	if (!strstarts(compat, "pci"))
-> +		return false;
-> +
-> +	if (of_pci_supply_present(np))
-> +		return true;
-> +
-> +	if (of_graph_is_present(np)) {
-> +		for_each_endpoint_of_node(np, endpoint) {
-> +			struct device_node *remote __free(device_node) =
-> +				of_graph_get_remote_port_parent(endpoint);
-> +			if (remote) {
-> +				if (of_pci_supply_present(remote)) {
-> +					of_node_put(endpoint);
-> +					return true;
-> +				}
-> +			}
-> +		}
-> +	}
-> +
-> +	return false;
-> +}
-> +
->  static int __pci_pwrctrl_power_off_device(struct device *dev)
->  {
->  	struct pci_pwrctrl *pwrctrl = dev_get_drvdata(dev);
-> @@ -157,6 +199,9 @@ static void pci_pwrctrl_power_off_device(struct device_node *np)
->  	for_each_available_child_of_node_scoped(np, child)
->  		pci_pwrctrl_power_off_device(child);
->  
-> +	if (!pci_pwrctrl_is_required(np))
-> +		return;
+The chained IRQ handler is installed during probe but is only
+removed from the remove path. If pci_host_probe() fails, the
+handler and INTx IRQ domain remain installed even though
+devm-managed probe data is released, leaving the handler with
+a stale data pointer.
 
-Sashiko asked:
+Install the chained handler only after the INTx domain is
+created, and tear both down if pci_host_probe() fails.
 
-  Should we also add this same check to pci_pwrctrl_destroy_device()?
-  Since pci_pwrctrl_destroy_device() iterates over all children and
-  blindly calls of_device_unregister(), could it erroneously
-  unregister incompatible devices (like USB hubs) created by another
-  subsystem if this check is missing?
+Fixes: c63aed7334c2 ("PCI: altera: Use pci_host_probe() to register host")
+Cc: stable@vger.kernel.org
+Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
+---
+ drivers/pci/controller/pcie-altera.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-which seems like a reasonable question.  pci_pwrctrl_create_device()
-only calls of_platform_device_create() if pci_pwrctrl_is_required().
+diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+index 3dbb7adc421c..a18e287b8614 100644
+--- a/drivers/pci/controller/pcie-altera.c
++++ b/drivers/pci/controller/pcie-altera.c
+@@ -891,7 +891,6 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ 	if (pcie->irq < 0)
+ 		return pcie->irq;
+ 
+-	irq_set_chained_handler_and_data(pcie->irq, pcie->pcie_data->ops->rp_isr, pcie);
+ 	return 0;
+ }
+ 
+@@ -1020,6 +1019,14 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
++	/*
++	 * The chained handler uses pcie->irq_domain, so install it
++	 * only after the INTx domain has been created.
++	 */
++	irq_set_chained_handler_and_data(pcie->irq,
++					 pcie->pcie_data->ops->rp_isr,
++					 pcie);
++
+ 	if (pcie->pcie_data->version == ALTERA_PCIE_V1 ||
+ 	    pcie->pcie_data->version == ALTERA_PCIE_V2) {
+ 		/* clear all interrupts */
+@@ -1037,7 +1044,16 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 	bridge->busnr = pcie->root_bus_nr;
+ 	bridge->ops = &altera_pcie_ops;
+ 
+-	return pci_host_probe(bridge);
++	ret = pci_host_probe(bridge);
++	if (ret)
++		goto err_teardown_irq;
++
++	return 0;
++
++err_teardown_irq:
++	altera_pcie_irq_teardown(pcie);
++
++	return ret;
+ }
+ 
+ static void altera_pcie_remove(struct platform_device *pdev)
 
-I'm also curious about the fact that of_platform_device_create() and
-of_platform_device_destroy() look like they should be a symmetric
-pair, but we don't use of_platform_device_destroy() in pwrctrl:
+base-commit: 4224e91fea5695a89843b4c38283016616946307
+-- 
+2.34.1
 
-  pci_pwrctrl_create_device
-    if (pci_pwrctrl_is_required(np))
-      pdev = of_platform_device_create(np)
-
-  pci_pwrctrl_destroy_device
-    pdev = of_find_device_by_node(np)
-    of_device_unregister(pdev)
-    platform_device_put(pdev)
-    of_node_clear_flag(np, OF_POPULATED)
-
-Another Sashiko question (although I don't think it's directly related
-to *this* patch):
-
-  Also, looking at the rest of this function, it calls device_is_bound()
-  before executing the power off callback:
-
-    drivers/pci/pwrctrl/core.c:pci_pwrctrl_power_off_device() {
-      ...
-      if (device_is_bound(&pdev->dev)) {
-        ret = __pci_pwrctrl_power_off_device(&pdev->dev);
-      ...
-    }
-
-  Could this result in a use-after-free?
-
-  If a concurrent driver unbind event occurs between the device_is_bound()
-  check and the callback execution inside __pci_pwrctrl_power_off_device(),
-  the pwrctrl structure might be freed since the device lock is not held.
-  This same pattern appears in pci_pwrctrl_power_on_device().
-
-And another (again unrelated to this patch):
-
-  Is there a resource leak if powering on a child device fails in the loop
-  just above this check?
-
-    drivers/pci/pwrctrl/core.c:pci_pwrctrl_power_on_device() {
-      for_each_available_child_of_node_scoped(np, child) {
-        ret = pci_pwrctrl_power_on_device(child);
-        if (ret)
-          return ret;
-      }
-      ...
-    }
-
-  If an error or -EPROBE_DEFER occurs, the function returns immediately.
-  Does it need to iterate backwards and power off the children it
-  successfully powered on during the current loop?
-
-  While the top-level caller pci_pwrctrl_power_on_devices() rolls back
-  siblings, the successfully powered-on sub-children here appear to be left
-  stranded. On -EPROBE_DEFER, the host controller might retry probing later,
-  repeatedly incrementing clock and regulator enable counts without
-  disabling them.
-
-If you do anything about these, note that I split the code move of
-pci_pwrctrl_is_required() to its own patch to make the addition of the
-calls more obvious.
-
->  	pdev = of_find_device_by_node(np);
->  	if (!pdev)
->  		return;
-> @@ -213,6 +258,9 @@ static int pci_pwrctrl_power_on_device(struct device_node *np)
->  			return ret;
->  	}
->  
-> +	if (!pci_pwrctrl_is_required(np))
-> +		return 0;
-> +
->  	pdev = of_find_device_by_node(np);
->  	if (!pdev)
->  		return 0;
-> @@ -268,48 +316,6 @@ int pci_pwrctrl_power_on_devices(struct device *parent)
->  }
->  EXPORT_SYMBOL_GPL(pci_pwrctrl_power_on_devices);
->  
-> -/*
-> - * Check whether the pwrctrl device really needs to be created or not. The
-> - * pwrctrl device will only be created if the node satisfies below requirements:
-> - *
-> - * 1. Presence of compatible property with "pci" prefix to match against the
-> - *    pwrctrl driver (AND)
-> - * 2. At least one of the power supplies defined in the devicetree node of the
-> - *    device (OR) in the remote endpoint parent node to indicate pwrctrl
-> - *    requirement.
-> - */
-> -static bool pci_pwrctrl_is_required(struct device_node *np)
-> -{
-> -	struct device_node *endpoint;
-> -	const char *compat;
-> -	int ret;
-> -
-> -	ret = of_property_read_string(np, "compatible", &compat);
-> -	if (ret < 0)
-> -		return false;
-> -
-> -	if (!strstarts(compat, "pci"))
-> -		return false;
-> -
-> -	if (of_pci_supply_present(np))
-> -		return true;
-> -
-> -	if (of_graph_is_present(np)) {
-> -		for_each_endpoint_of_node(np, endpoint) {
-> -			struct device_node *remote __free(device_node) =
-> -				of_graph_get_remote_port_parent(endpoint);
-> -			if (remote) {
-> -				if (of_pci_supply_present(remote)) {
-> -					of_node_put(endpoint);
-> -					return true;
-> -				}
-> -			}
-> -		}
-> -	}
-> -
-> -	return false;
-> -}
-> -
->  static int pci_pwrctrl_create_device(struct device_node *np,
->  				     struct device *parent)
->  {
-> -- 
-> 2.51.0
-> 
