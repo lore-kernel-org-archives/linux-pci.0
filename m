@@ -1,130 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AD96341660
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2026 16:06:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A28A0359A70;
+	Mon, 27 Apr 2026 16:31:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777305987; cv=none; b=oT0owBzl3qNka93Td7Pai4DOI/GRiFHzn1/CnBWgiRjxGXgRmaoINV0OM7f+3T/4v96YdpHmWOl4Gbij6wtO4GyQ3mEetNe2lTWwv+UsI15PJNsWCifbkGkx1b2yRVkzwSM7E9vdE/y2Nc2ohLtSBsqTHhTs43I9Q369ZKfsTHA=
+	t=1777307501; cv=none; b=myyt9bq/VqBx4qfb7zO8go75fxyTch+rlVIWAXiBiUYec1eD7gT4maYYKNIz7EPoL6zTN999MzyogRg8FQt07V+o6hV6eTavIhcZEnYYlJMZTYNZaz5mRO4xXKHUq9pINhUW9IIwZX07PHUOjAXtUcQFKppQthY9EuerxzBv21c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777305987; c=relaxed/simple;
-	bh=mzDS5S4lHKbGJcbG+SViaOsHQqXsul/yOTgWjqhBimU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=H/4mUkWH8wm4LbuFr/3HxP8rblHmUHL2pNEen/HGJmkkVoedqN6CuhgT1lDcSiLnrNk1A2sKDGaLjIMVUmm3gSwsVZykI65dLIv3F/kPXa0mzVW0loeyO7C+1DeYWo7oPnBpzH0n6xV3PWOh3U57CgmmaUicWoUfKnAKc8Sbt9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jIJI6Xjv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777307501; c=relaxed/simple;
+	bh=EmBgN/l8famoiPgynzTW/sALQPUBysGWNc0lBt29TW8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=pKlHB8Tu07AMP36uu9As85fp2i30u2n/zYfy5gSSZrbm2gnCX0Awy0pf7S/Tb429qp7NwGvFwvZCxmyTIaAMxey/nY7MzCjaA0kP4TZFlIYf1QXOsL0F7BeAhvJfpGem1Q93uGj7jWQ4R8pzXyYmg7J0Ho/lm+LY9jJ+YXVjIYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RinZmw0F; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jIJI6Xjv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E38F9C2BCB4
-	for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2026 16:06:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RinZmw0F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19613C19425;
+	Mon, 27 Apr 2026 16:31:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777305986;
-	bh=mzDS5S4lHKbGJcbG+SViaOsHQqXsul/yOTgWjqhBimU=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=jIJI6XjvxqQ8gWhn/tzGAsCUyz5EryYodCLSgPkrfzLK9DwAjfmIUjCSvpPj9JeZ8
-	 enRWk4cp7R7/IqhpO0Lqci5DP7T66uf1My+2mZgdi++O26qSGw9ZvLRSOSIBnPRjQJ
-	 sRb78X/zyUxSWjDnmk5Cv5W3Vif1UBtD/4ujIqYJ2TIZ1RmPgL8xDZhQJM9/+IPJQp
-	 AXMnsr4BcJnHRd9vTrrdcC7FQ7rsTYbulvmcAmODGNMUozVsX/HTybekF0sPAeszyV
-	 mpv5kpBvT9ryyY5CBseWyujl8HyCF+JSdQuPOW4ZWwr9nPxEJ5jYpmU16rflLZ1piL
-	 1ygSDTQBQc3EA==
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-5a40cfab24dso10683499e87.2
-        for <linux-pci@vger.kernel.org>; Mon, 27 Apr 2026 09:06:26 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ8MylaXgu/6M9kJ9D+tBh2wO/DpRx4J+zTqiqEkxx0HBofbvz7gVdaJK2zJFAZQ9eo+yhHVhwF3tdw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzRqKdKsdZoJM62BlbedjRV1kp+c4513ymHLsSiFnI013NXneEg
-	xnF/tobNVakwYnpvp7LpaaAYTLCtvKK9HZtrbPljeACGTFoebXFTc4jY/BZAogyI97YvRmY/qEp
-	jgIgC+4HrS/tfHaeqGENU2vxPzkf4Ihk=
-X-Received: by 2002:a05:6512:3984:b0:5a4:ab6:81b8 with SMTP id
- 2adb3069b0e04-5a4172e7fa9mr10923960e87.40.1777305985264; Mon, 27 Apr 2026
- 09:06:25 -0700 (PDT)
+	s=k20201202; t=1777307501;
+	bh=EmBgN/l8famoiPgynzTW/sALQPUBysGWNc0lBt29TW8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=RinZmw0FkguzhJm6YLBMK0Rxd0yaMn/wfzwEiaKqPJ72QskJB9Eng4b2HCqoImhxa
+	 hlnylvgXjDQyeCkaIZhrCut/b8JregTwmKlf1QmUqCWuLSA10NqYx5TOBVeUpu4NSR
+	 K0CnW8D+MgRtdXRsL3+Hk+VulUfGfB6dZQe2iYeAHoqkKnQ3DnmzjKVnhtIRkIBbVl
+	 flMFoHVKLkX2RFOPvEIN7jqi4PKDxBIm/FynjwF9aULAR052tEAdpge0xGsIwkD9g0
+	 zfLpeYq6WwvZQHhJNeZZmnaXaHf08SFwwE245gvr0ZmIOLM2jFqa4ivOJ+PJwV6jP+
+	 KvhpqWUdQIjlQ==
+Date: Mon, 27 Apr 2026 11:31:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de
+Subject: Re: [PATCH V1 08/13] PCI: hv: rename hv_compose_msi_msg to
+ hv_vmbus_compose_msi_msg
+Message-ID: <20260427163139.GA157548@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260427035341.1425576-1-superm1@kernel.org> <CAJZ5v0jMBpXC5BxjdMgpg8tMKpS3Hf2MO_MGNtdS_S+s41jx+A@mail.gmail.com>
- <ca274454-b58b-4837-a3fd-14ef30c24510@kernel.org> <CAJZ5v0haau7219McDX8d1KhS_ig_nPDVNEV-w0HWMe_nMCjkpg@mail.gmail.com>
- <286b39c3-f368-4477-bb67-2ce53f62d6a3@kernel.org>
-In-Reply-To: <286b39c3-f368-4477-bb67-2ce53f62d6a3@kernel.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 27 Apr 2026 18:06:12 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0gQX7oRBOkOiF6R1chdYA_outw7W2hQ_dWB02dftTvf8g@mail.gmail.com>
-X-Gm-Features: AVHnY4KL77CBX2eOvzOja-rUlowIlR2w4LDNvaWH1P3TwbK7iTivGwG87TWNUeg
-Message-ID: <CAJZ5v0gQX7oRBOkOiF6R1chdYA_outw7W2hQ_dWB02dftTvf8g@mail.gmail.com>
-Subject: Re: [PATCH 0/5] Improvements to PCI hibernate path
-To: Mario Limonciello <superm1@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
-	Lukas Wunner <lukas@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260422023239.1171963-9-mrathor@linux.microsoft.com>
 
-On Mon, Apr 27, 2026 at 5:19=E2=80=AFPM Mario Limonciello <superm1@kernel.o=
-rg> wrote:
->
-> On 4/27/26 10:09, Rafael J. Wysocki wrote:
-> > On Mon, Apr 27, 2026 at 4:14=E2=80=AFPM Mario Limonciello <superm1@kern=
-el.org> wrote:
-> >>
-> >> On 4/27/26 07:20, Rafael J. Wysocki wrote:
-> >>> On Mon, Apr 27, 2026 at 5:53=E2=80=AFAM Mario Limonciello (AMD)
-> >>> <superm1@kernel.org> wrote:
-> >>>>
-> >>>> A few cycles ago I sent out a kernel series for using the S4 paths w=
-hen
-> >>>> the system goes to S5.  Some parts of it got merged, and Rafael sugg=
-ested
-> >>>> to split the other parts into smaller pieces across multiple kernel =
-cycles
-> >>>> to make bisecting easier.
-> >>>>
-> >>>> This fell into my backlog behind other things, so I wanted to try ag=
-ain
-> >>>> this cycle for the PCI pieces. I have been carrying it, rebasing it =
-and
-> >>>> personally using it for a while now though.
-> >>>>
-> >>>> This series attempts to unify the PCI suspend and hibernate paths an=
-d to
-> >>>> fix some things that I observed to be wrong with how I expect hibern=
-ate
-> >>>> to work.
-> >>>>
-> >>>> It is based off 7.1-rc1 + Lukas' patch:
-> >>>> "PCI: Stop setting cached power state to "unknown" on unbind"
-> >>>>
-> >>>> Mario Limonciello (AMD) (5):
-> >>>>     PCI/PM: Disable device wakeups when halting or powering off syst=
-em
-> >>>>     PCI/PM: Split out code from pci_pm_suspend_noirq() into helper
-> >>>>     PCI/PM: Run bridge power up actions as part of restore phase
-> >>>>     PCI/PM: Use pci_power_manageable() in pci_pm_poweroff_noirq()
-> >>>>     PCI: Put PCIe bridges with downstream devices into D3 at hiberna=
-te
-> >>>>
-> >>>>    drivers/pci/pci-driver.c | 103 ++++++++++++++++++++++++++--------=
------
-> >>>>    1 file changed, 69 insertions(+), 34 deletions(-)
-> >>>>
-> >>>> --
-> >>>
-> >>> It would be good to CC this to linux-pm.
-> >>
-> >> Sure thing - if there is a need for a v2, I will include linux-pm in C=
-C.
-> >
-> > The thing is, you may not know if there's a need for a v2 without resen=
-ding.
->
-> I would think Lukas and Bjorn will at least have some comments and I
-> want to give them some time before cluttering inboxes with a second copy
-> of the series at the start of the dev cycle.
+On Tue, Apr 21, 2026 at 07:32:34PM -0700, Mukesh R wrote:
+> Main change here is to rename hv_compose_msi_msg to
+> hv_vmbus_compose_msi_msg as we introduce hv_compose_msi_msg in upcoming
+> patches that builds MSI messages for both VMBus and non-VMBus cases. VMBus
+> is not used on baremetal root partition for example. While at it, replace
+> spaces with tabs and fix some formatting involving excessive line wraps.
 
-Fair enough.
+Would be better to do the whitespace changes in their own patch,
+although several of them should just be dropped (see below).
 
-> How about if it looks good to them as is I'll send a v2 with their tags
-> added for linux-pm to get a chance to see and review as well.
->
-> And if they have feedback I'll incorporate and v2 will also go to linux-p=
-m.
+Capitalize subject ("PCI: hv: Rename ...").
 
-That should work, thanks!
+Add "()" after function names in subject and commit log.
+
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -30,7 +30,7 @@
+>   * function's configuration space is zero.
+>   *
+>   * The rest of this driver mostly maps PCI concepts onto underlying Hyper-V
+> - * facilities.  For instance, the configuration space of a function exposed
+> + * facilities.	For instance, the configuration space of a function exposed
+
+Oops, this hunk made it worse.  Definitely don't want a tab there.
+
+> @@ -1954,7 +1955,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  			return;
+>  		}
+>  		/*
+> -		 * The vector we select here is a dummy value.  The correct
+> +		 * The vector we select here is a dummy value.	The correct
+
+Another tab that should be a space.  Actually, you should just drop
+this hunk; the rest of the comment has two spaces after periods, so
+this should too.
+
+> @@ -2046,7 +2047,7 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  
+>  		/*
+>  		 * Make sure that the ring buffer data structure doesn't get
+> -		 * freed while we dereference the ring buffer pointer.  Test
+> +		 * freed while we dereference the ring buffer pointer.	Test
+
+Same here.  This makes it worse.
+
+> @@ -2226,7 +2227,7 @@ static int hv_pcie_init_irq_domain(struct hv_pcibus_device *hbus)
+>  /**
+>   * get_bar_size() - Get the address space consumed by a BAR
+>   * @bar_val:	Value that a BAR returned after -1 was written
+> - *              to it.
+> + *		to it.
+
+Just put "to it" on the preceding line.  There's plenty of space
+there.
+
+> @@ -2580,7 +2581,7 @@ static void q_resource_requirements(void *context, struct pci_response *resp,
+>   * new_pcichild_device() - Create a new child device
+>   * @hbus:	The internal struct tracking this root PCI bus.
+>   * @desc:	The information supplied so far from the host
+> - *              about the device.
+> + *		about the device.
+
+Ditto.  If you want to change this, put "about the device" on the
+preceding line.
+
+> @@ -3422,7 +3423,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
+>  	 * vmbus_allocate_mmio() gets used for allocating both device endpoint
+>  	 * resource claims (those which cannot be overlapped) and the ranges
+>  	 * which are valid for the children of this bus, which are intended
+> -	 * to be overlapped by those children.  Set the flag on this claim
+> +	 * to be overlapped by those children.	Set the flag on this claim
+
+Another hunk that should be dropped.
