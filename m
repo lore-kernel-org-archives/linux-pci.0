@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D595A33ADA9;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D77AE38B15F;
 	Mon, 27 Apr 2026 20:50:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777323034; cv=none; b=FTKJZGhtl5Azb63NWy5caOLsyM8DvLoPWv9yRrpL8GENGhXs7CP1nq4dvE+TRBcbFw+Xlf2UqMAr+7qVOTP3CG89aPwR7VP1/E8NUJe9GfKnz5+Xd9MUv7oQx1160Jsgbk2EmarO7gDAkU9WY9OFOGW4JYCTiYVWCeIi8F8msBQ=
+	t=1777323034; cv=none; b=oEBsXMS9js74qDR2hZKe21cpPkjZK67WuL1vG25KbSHKAtWFzno2NG0TPQWSrMV72geuEbyUGosXsNQMMdzoPI+FOXriE78nVyOnAjUHcBppl2JpkvXtCBYJzw65BoXuTies0RHellB+cFfPBETZlgv7PNGrrEjbXGEd0wug/dQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777323034; c=relaxed/simple;
-	bh=+Nec97Tui9c9Iet178LuyVfsDVIn5g6EVyth9hJ5hvI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AOmwq/Hj3gOw6AikCDxeni0IR2YqJbR/xrj4SccDgqktGBhwabePR8xGCB2y4IRAXWppimnXbdZibSyo3U2uQnBnsnF00rzveYHGDZYmiYiZqpHA2yxQ6n1LofaQ6eZ/rRzJT43PaeyU9CQJ/xgmWcYCi49m0spJHh0OgUZtcgs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Sm1n4ziy; arc=none smtp.client-ip=10.30.226.201
+	bh=fkR0V9zNfvX+GsYFVJoHDgpeIO3IQgP658jb7Aq63Pg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QWmNb/Syy4w+bYY+sOtguHfQQyxL/ZhKYNCdr5dvxS669UWmC6TGq+f4uq8QdiA6/Za0PK/lAUFxM4YJX43mD/Nv/51NNSs2RXvVIrooFP4oqJ8w5KyygdH4zlDF/h2+xuqNJpQbOT9px476X7m3YL9HKe+AMhGXyvv+D/B8pQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D4sXhCP4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Sm1n4ziy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51F4DC2BCB5;
-	Mon, 27 Apr 2026 20:50:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D4sXhCP4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51F87C19425;
+	Mon, 27 Apr 2026 20:50:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777323034;
-	bh=+Nec97Tui9c9Iet178LuyVfsDVIn5g6EVyth9hJ5hvI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Sm1n4ziyAPzZniBzAm5GdF/KWAc7Z/k6w1bTdPGrTfjosSnamXxEEAEGH0FdMg08E
-	 pkdTa6jwC5iPFqj3SADBTk6P/UAp+tT+sA0psE4U5Hhs5wwHalN63PapHGujmtFa/n
-	 mrnFa5UWx4cuPnh5KEhnr+t6/54LZI7bo6mm97QkdzPMdE7EBC+zyP+3vwx7Tzclry
-	 HUpXGR8hXek4sRPts+fSkphIhDMY+b1RVuofH1LyA51KHqhRTvkygnjUARmq15UR66
-	 DExFGjDQ9iA1vnOTA2RIMvuxGu6lw9Yt9LA4D+FPy4HIysWMCjdzzZI8h2UZsH/ket
-	 DQbAsjG6U77ow==
+	s=k20201202; t=1777323033;
+	bh=fkR0V9zNfvX+GsYFVJoHDgpeIO3IQgP658jb7Aq63Pg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=D4sXhCP47fzykxzLeDFCHa8bVyA1ukfG1+allDv/uNS06Be1Rx+P/U4fABEWdmfcC
+	 lW4u0a+TU9uk+0OnCyq4Ei3UjDwA9hgfbp460YAZXtmfs1F8pgQh/bF1A3/ATYD+Xo
+	 gGZ+GTi1vGMMHZVvVRbGEPN5iCBGcXPds/hzyVEb5PWX0yD3GdRT37D4dBlY3webOi
+	 DOeAU3ekkVk/PVIOR6t9nJIvGcu/baG7+hqG63UsN4y6mfUdyDQG7SiIezJx0MdkLg
+	 /XmAqUPSxIfPu7KfcTdXWqkDCv21QNBr2JxfAf9uTWG13PjoNKbzI55heSo9L0kx2z
+	 vJTGUfYjtgw3g==
 From: "Mario Limonciello (AMD)" <superm1@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
@@ -35,77 +34,52 @@ Cc: linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
 	Lukas Wunner <lukas@wunner.de>,
 	linux-pm@vger.kernel.org,
 	"Mario Limonciello (AMD)" <superm1@kernel.org>
-Subject: [PATCH v2 1/6] PCI: Stop setting cached power state to "unknown" on unbind
-Date: Mon, 27 Apr 2026 15:50:19 -0500
-Message-ID: <20260427205024.254677-2-superm1@kernel.org>
+Subject: [PATCH v2 0/6] Improvements to PCI hibernate path
+Date: Mon, 27 Apr 2026 15:50:18 -0500
+Message-ID: <20260427205024.254677-1-superm1@kernel.org>
 X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20260427205024.254677-1-superm1@kernel.org>
-References: <20260427205024.254677-1-superm1@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Lukas Wunner <lukas@wunner.de>
+A few cycles ago I sent out a kernel series for using the S4 paths when
+the system goes to S5.  Some parts of it got merged, and Rafael suggested
+to split the other parts into smaller pieces across multiple kernel cycles
+to make bisecting easier.
 
-When a PCI device is unbound from its driver, pci_device_remove() sets the
-cached power state in pci_dev->current_state to PCI_UNKNOWN.  This was
-introduced by commit 2449e06a5696 ("PCI: reset pci device state to unknown
-state for resume") to invalidate the cached power state in case the system
-is subsequently put to sleep.
+This fell into my backlog behind other things, so I wanted to try again
+this cycle for the PCI pieces. I have been carrying it, rebasing it and
+personally using it for a while now though.
 
-For bound devices, the cached power state is set to PCI_UNKNOWN in
-pci_pm_suspend_noirq(), immediately before entering system sleep.
+This series attempts to unify the PCI suspend and hibernate paths and to
+fix some things that I observed to be wrong with how I expect hibernate
+to work.
 
-Extend to unbound devices for consistency.
+Based off v7.1-rc1
 
-This obviates the need to change the cached power state on unbind, so stop
-doing so.
+v2:
+ - Include Lukas' patch from pci/pm directly in series so Sashiko can
+   better review.
+ - Include linux-pm in CC.
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
----
- drivers/pci/pci-driver.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+Lukas Wunner (1):
+  PCI: Stop setting cached power state to "unknown" on unbind
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d10ece0889f0f..2bfefd8db5260 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -512,13 +512,6 @@ static void pci_device_remove(struct device *dev)
- 	/* Undo the runtime PM settings in local_pci_probe() */
- 	pm_runtime_put_sync(dev);
- 
--	/*
--	 * If the device is still on, set the power state as "unknown",
--	 * since it might change by the next time we load the driver.
--	 */
--	if (pci_dev->current_state == PCI_D0)
--		pci_dev->current_state = PCI_UNKNOWN;
--
- 	/*
- 	 * We would love to complain here if pci_dev->is_enabled is set, that
- 	 * the driver should have called pci_disable_device(), but the
-@@ -893,7 +886,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pm) {
- 		pci_save_state(pci_dev);
--		goto Fixup;
-+		goto set_unknown;
- 	}
- 
- 	if (pm->suspend_noirq) {
-@@ -945,6 +938,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 		goto Fixup;
- 	}
- 
-+set_unknown:
- 	pci_pm_set_unknown_state(pci_dev);
- 
- 	/*
+Mario Limonciello (AMD) (5):
+  PCI/PM: Disable device wakeups when halting or powering off system
+  PCI/PM: Split out code from pci_pm_suspend_noirq() into helper
+  PCI/PM: Run bridge power up actions as part of restore phase
+  PCI/PM: Use pci_power_manageable() in pci_pm_poweroff_noirq()
+  PCI: Put PCIe bridges with downstream devices into D3 at hibernate
+
+ drivers/pci/pci-driver.c | 109 +++++++++++++++++++++++++--------------
+ 1 file changed, 69 insertions(+), 40 deletions(-)
+
 -- 
 2.53.0
 
