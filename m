@@ -1,161 +1,282 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail.m10.be (mail.m10.be [172.233.33.144])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB37C31E825
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 20:20:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23489330649;
+	Tue, 28 Apr 2026 20:44:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.233.33.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777407633; cv=none; b=GPakG6+sc1E4QWoVN3PJDxyoM+IaV6V9FlaHexCvxkGT6hDtm0grQjk9DUuCPsvpWueQHJRiR/R2JpLYo8w1Q/EaZKxTOTWog7gM6ffKivItcVuWEnXGstjA9w1EtoUe6/T+/1Nh5Hp15ChnY5+iRoG0h7bB+7a4fE//WNRCOEY=
+	t=1777409060; cv=none; b=R3pwcPnAJv4i0y09VSfw3whb7kjEjSUWO32Po/u0RFn9JhcGmVj21R5vJah873uu89boswxY4opsRxZ0/PDE9aBy8juavXOb2bmFa+iVpmAlj+viJU0+HyGegDcoocGZu7+qRUJ2QLQQ7okywfVVMEwHLGe9+vTvzq5h9CR+Fdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777407633; c=relaxed/simple;
-	bh=+4M4htXEh/xXtFiCFXN/m9StERkAgWTPW4y6jMSwAUs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZZ2+4lQMDvEWrJHqq/ewgCt/oFRKRnvvgIZFf6jWA+LfNz3e5ho3jImar/YwuGfyW6okrXBpet+QL83Z6drHCwI/cSnJMGS1yGtlUAc7gkWPpQXfmUTnQTUxZYYoJqDPAvGXhQRS4g/xg5v0uNBZr7uZVN1xBBkJSXD6Nzsk7R8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=iYVy2Uj0; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1777409060; c=relaxed/simple;
+	bh=6QESbL1x+8NQQjUUrgQJD8JE8+V45b2yB6ianJDA+E0=;
+	h=From:Content-Type:Mime-Version:Subject:Message-Id:Date:Cc:To; b=BPp/CxdkFptoXhIPH03y+SO0CRCkq3xwe5PY8k26Kso1VBUHb8wd+lANW/PJQrh0VoYiVwdOe/n2y9iHgOFh3BNLZ/DuIOWs5Z1HyvAmFVqSpKdj4cAbIikfGIb9A9NZvYGcUDnOk7JPtmEmo7bdVhd98/5bIm4lnpfYtD+NJt4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=maxboone.com; spf=fail smtp.mailfrom=maxboone.com; dkim=temperror (0-bit key) header.d=maxboone.com header.i=@maxboone.com header.b=f4U+AK3I; arc=none smtp.client-ip=172.233.33.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=maxboone.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=maxboone.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="iYVy2Uj0"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2b243198058so14025ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 13:20:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777407631; x=1778012431; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MaR4AuPDQzq9MeZ+Bqr1j2DtvJljfw3TYQa7ZG83Cs8=;
-        b=iYVy2Uj0BtzEejJ7IqaqqUnbOAY0YCT1Om7DU3z9uppgtOQ1SZBLAx8N8l1faTfVEv
-         JuyohZ08iYpz3bQmwBz6QQse9KDISeeQmVTUEbkHwKUTnyktewMWqHHLXUl66DN7mfGQ
-         ILouXOFMbZ4RAWx6V1DdKo7gQRybjKxZ/diDphlgyyp3eNxnuwbjCwGjYz07NQU2kGTo
-         CzXWf7SRSo3lEulYolcEhq1zA4+kRziMBWaWV/4oX8hd4G0EIXGPAwuTSeveRUbbdWCj
-         tsxeLKT4Ghu3s0itr5/mj6B1TJAkJnt8PK74FhuOgPuAtHan/j+hYps8HKP92us/ReGc
-         gXfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777407631; x=1778012431;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MaR4AuPDQzq9MeZ+Bqr1j2DtvJljfw3TYQa7ZG83Cs8=;
-        b=AWY8lpyWMQO9pSkjStV6nR4h69BIgCkxobTXyuNYCDHOevAmU5d1mEc1HNRYq0D7sd
-         gopkUckI951hIM7SUF79IjRwkP/ouPqnVL0wQqLxPbZlBE5q2JD6l2H/XueCJZXu4vip
-         /t503orMuVMAByjXfeW6WGBT8vCt3Ru3J89nYstHZes2dpfehKq3dF1RmgHVOaa8csm0
-         aZffvJN+wgOZJUZkf7ORSMZhBW05mfJCkUG+1LYQEHKjbhVMvmNZA5BC7rYJIhJTbIxg
-         urXxI+mdUgM0IR5pM/TGNEfhFQyURRD+lbX6XIRj6yA/0bVwJyLg2A6cZ0I1yWLTVfXk
-         uUCA==
-X-Forwarded-Encrypted: i=1; AFNElJ943b4zs6SY3PoACJd20RbSFqtWijPjT0xngwDyd51AAVA+9fNjPsWXKe2xdKgXVhCJw+3ZHk5SB+8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy3dP3sWwlU5rT/iAt8VMehfSDEuxkQdFqWfIeXInDP5zM5JrZG
-	wOCkhgZlxCTT9Bsa5MYpLT+OzlMZ6E8Zpkm76lT4o+MWpU3z/+nCTS/VnWjV+rbcRw==
-X-Gm-Gg: AeBDietpCys0mssPvw9+vv3I1BwXOjEFyzareS1fI+k7/Jpex343fR7klmt74WdxzHB
-	SUx4scBviz9OWat6nkeuea7quK5NrKxdxlgl7/7QTFuCj9v/ZaKL2me2pU8SstTlyW1zGBOge++
-	zifOWLAWdqnFQ0l05fhwRTu9MbnmjUpwKJNbXLEevJ52Af6qGK6Ta3bpyceZn+/B/5jTH8MxtJq
-	OsmCBmwirp4HhVH1So0kMGEQoeP3uCN9Y5oWxlBw2jSIs0fZvfXbYcrT8jxXrLmzVlaJw1Qf/g7
-	p81FhDXESb/lQCt9/SABynPxdyE6h9AkdXltrlPKfOXSaXpN5A1Ni1FZJq8+6RRtx1ttV6EAsED
-	dv3e5lojjs0l8tI9PjsZcGJm0aO7qiXeiWfta/aKO4IYeNCNv7N1zuqavqBKN5XgJipDcBon0Yn
-	YkFq5Fe6wrqHt1uBFrgDBLNK3Sfpfkf00CrSwxCLDS0DwopVQoEy1y8g3oJ80chcEulCiJrDx1u
-	awh47k=
-X-Received: by 2002:a17:902:db0e:b0:2b4:60e6:44bc with SMTP id d9443c01a7336-2b988e32430mr88155ad.13.1777407630352;
-        Tue, 28 Apr 2026 13:20:30 -0700 (PDT)
-Received: from google.com (60.89.247.35.bc.googleusercontent.com. [35.247.89.60])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-834dae00d13sm3520508b3a.8.2026.04.28.13.20.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Apr 2026 13:20:29 -0700 (PDT)
-Date: Tue, 28 Apr 2026 13:20:25 -0700
-From: Vipin Sharma <vipinsh@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: iommu@lists.linux.dev, kexec@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, 
-	Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>, 
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI
- devices
-Message-ID: <20260428201231.GA3885809.vipinsh@google.com>
-References: <20260423212316.3431746-1-dmatlack@google.com>
- <20260423212316.3431746-3-dmatlack@google.com>
+	dkim=temperror (0-bit key) header.d=maxboone.com header.i=@maxboone.com header.b="f4U+AK3I"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B1F144682C;
+	Tue, 28 Apr 2026 22:36:26 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maxboone.com;
+	s=dkim; t=1777408593;
+	h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=6QESbL1x+8NQQjUUrgQJD8JE8+V45b2yB6ianJDA+E0=;
+	b=f4U+AK3I7NsrGiKpTmeCjun7vbhr39Nz2BQOpYDBBhij7yUYNk5btG3a69ZZa1ZR6jXdyx
+	zdjr27sCQysnqPPWLiBOSbWVrkVdRkAwoPuFkuG9fnflRE2ay+XMh271GD9vuAnNhYqlHQ
+	df1Iyk3wqbBaY2dvKLBpsxYjHohnocsNAhqKVakTshA/m/aXfruGo+zV8cfbb4hxYGE7R6
+	ERiM07trWwUYg9FY6Nq7H1t2b+slVjRkDoJZLNajbfshmdReOYRW0WbH29FGSOXk7Lzz0s
+	X+43OxYGvJoTApAShNV20yD2E1h1kR+lAWUyl8CQONntbomeMuhxrmRWhcuMFw==
+From: Max Boone <contact@maxboone.com>
+Content-Type: text/plain;
+	charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260423212316.3431746-3-dmatlack@google.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81.1.4\))
+Subject: Re: [PATCH v14 4/7] PCI: endpoint: pci-ep-msi: Refactor doorbell
+ allocation for new backends
+Message-Id: <2F694A6C-23BA-4025-ACD7-2751595982CB@maxboone.com>
+Date: Tue, 28 Apr 2026 22:36:15 +0200
+Cc: Frank.Li@nxp.com,
+ allenbh@gmail.com,
+ bhanuseshukumar@gmail.com,
+ bhelgaas@google.com,
+ cassel@kernel.org,
+ dave.jiang@intel.com,
+ jdmason@kudzu.us,
+ jingoohan1@gmail.com,
+ kishon@kernel.org,
+ kwilczynski@kernel.org,
+ linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org,
+ lpieralisi@kernel.org,
+ mani@kernel.org,
+ marco.crivellari@suse.com,
+ mmaddireddy@nvidia.com,
+ ntb@lists.linux.dev,
+ robh@kernel.org,
+ shinichiro.kawasaki@wdc.com,
+ mboone@akamai.com
+To: den@valinux.co.jp,
+ mani@kernel.org,
+ frank.li@nxp.com
+X-Mailer: Apple Mail (2.3826.700.81.1.4)
+X-Last-TLS-Session-Version: TLSv1.2
 
-On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
-> +int pci_liveupdate_preserve(struct pci_dev *dev)
+On Tue, 14 Apr 2026 23:15:11 +0900, Koichiro Den wrote:
+> Prepare pci-ep-msi for non-MSI doorbell backends.
+>=20
+> Factor MSI doorbell allocation into a helper and extend struct
+> pci_epf_doorbell_msg with:
+>=20
+> - irq_flags: required IRQ request flags (e.g. IRQF_SHARED for some
+> backends)
+> - type: doorbell backend type
+> - bar/offset: pre-exposed doorbell target location, if any
+>=20
+> Initialize these fields for the existing MSI-backed doorbell
+> implementation.
+>=20
+> Also add PCI_EPF_DOORBELL_EMBEDDED type, which is to be implemented in =
+a
+> follow-up patch.
+>=20
+> No functional changes.
+
+I=E2=80=99m not very fond of keeping this implementation in the =
+pci-ep-msi file,
+as the platform MSI and this implementation are both iiuc specific to
+the designware ep driver. Even more so because the MSI implementation
+is enabled by config rather than through device tree.
+
+Wouldn=E2=80=99t we want end-users to specify what kind of doorbell they =
+want,
+as it seems to be that a more specific doorbell BAR layout can be=20
+programmed with eDMA, allowing native support for nvmet=E2=80=99s =
+doorbell
+BAR for example.
+
+Originally in a patchset by Frank Li the API that was proposed was more
+generic, and the pci-epc-msi implementation was chosen because there
+was only one implementation:
+- https://lore.kernel.org/imx/20231019150441.GA7254@thinkpad/
+- https://lore.kernel.org/imx/20231019172347.GC7254@thinkpad/
+
+I=E2=80=99d personally prefer to see an abstraction that is weaved into =
+pci-epc-core
+and pci-epf-core that can be implemented by drivers as they wish. While=20=
+
+still keeping the enum for different types.
+
+That also gives room to pull a poll-mode doorbell into the pci-epc-core,
+which deduplicates that code from the nvmet and vntb epfs, and allows
+other functions to use RC->EP doorbells without needing to bother with
+writing the polling mechanism.
+
+P.S. I=E2=80=99ve been working on a vfio-user based epc for development =
+purposes
+personally, and the last hurdle before I want to send it in for comments =
+is=20
+support for doorbells, and came across this patchset checking if =
+there=E2=80=99s
+any other activity in the space. Having an implementation-agnostic
+doorbell API in the EPF/EPC core would be very helpful to me.
+
+>=20
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Tested-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> ---
+> drivers/pci/endpoint/pci-ep-msi.c | 54 ++++++++++++++++++++++---------
+> include/linux/pci-epf.h | 23 +++++++++++--
+> 2 files changed, 60 insertions(+), 17 deletions(-)
+>=20
+> diff --git a/drivers/pci/endpoint/pci-ep-msi.c =
+b/drivers/pci/endpoint/pci-ep-msi.c
+> index 1395919571f8..85fe46103220 100644
+> --- a/drivers/pci/endpoint/pci-ep-msi.c
+> +++ b/drivers/pci/endpoint/pci-ep-msi.c
+> @@ -8,6 +8,7 @@
+>=20
+> #include <linux/device.h>
+> #include <linux/export.h>
+> +#include <linux/interrupt.h>
+> #include <linux/irqdomain.h>
+> #include <linux/module.h>
+> #include <linux/msi.h>
+> @@ -35,23 +36,13 @@ static void pci_epf_write_msi_msg(struct msi_desc =
+*desc, struct msi_msg *msg)
+> pci_epc_put(epc);
+> }
+>=20
+> -int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 num_db)
+> +static int pci_epf_alloc_doorbell_msi(struct pci_epf *epf, u16 =
+num_db)
+> {
+> - struct pci_epc *epc =3D epf->epc;
+> + struct pci_epf_doorbell_msg *msg;
+> struct device *dev =3D &epf->dev;
+> + struct pci_epc *epc =3D epf->epc;
+> struct irq_domain *domain;
+> - void *msg;
+> - int ret;
+> - int i;
+> -
+> - /* TODO: Multi-EPF support */
+> - if (list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list) !=3D=
+ epf) {
+> - dev_err(dev, "MSI doorbell doesn't support multiple EPF\n");
+> - return -EINVAL;
+> - }
+> -
+> - if (epf->db_msg)
+> - return -EBUSY;
+> + int ret, i;
+>=20
+> domain =3D of_msi_map_get_device_domain(epc->dev.parent, 0,
+> DOMAIN_BUS_PLATFORM_MSI);
+> @@ -74,6 +65,12 @@ int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 =
+num_db)
+> if (!msg)
+> return -ENOMEM;
+>=20
+> + for (i =3D 0; i < num_db; i++)
+> + msg[i] =3D (struct pci_epf_doorbell_msg) {
+> + .type =3D PCI_EPF_DOORBELL_MSI,
+> + .bar =3D NO_BAR,
+> + };
+> +
+> epf->num_db =3D num_db;
+> epf->db_msg =3D msg;
+>=20
+> @@ -90,13 +87,40 @@ int pci_epf_alloc_doorbell(struct pci_epf *epf, =
+u16 num_db)
+> for (i =3D 0; i < num_db; i++)
+> epf->db_msg[i].virq =3D msi_get_virq(epc->dev.parent, i);
+>=20
+> + return 0;
+> +}
+> +
+> +int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 num_db)
 > +{
-> +	struct pci_ser *ser;
-> +	int i, ret;
+> + struct pci_epc *epc =3D epf->epc;
+> + struct device *dev =3D &epf->dev;
+> + int ret;
 > +
-> +	guard(mutex)(&pci_flb_outgoing_lock);
+> + /* TODO: Multi-EPF support */
+> + if (list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list) !=3D=
+ epf) {
+> + dev_err(dev, "Doorbell doesn't support multiple EPF\n");
+> + return -EINVAL;
+> + }
 > +
-> +	ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void **)&ser);
-> +	if (ret)
-> +		return ret;
+> + if (epf->db_msg)
+> + return -EBUSY;
 > +
-> +	if (!ser)
-> +		return -ENOENT;
+> + ret =3D pci_epf_alloc_doorbell_msi(epf, num_db);
+> + if (!ret)
+> + return 0;
 > +
-> +	if (dev->is_virtfn)
-> +		return -EINVAL;
+> + dev_err(dev, "Failed to allocate doorbell: %d\n", ret);
+> return ret;
+> }
+> EXPORT_SYMBOL_GPL(pci_epf_alloc_doorbell);
+>=20
+> void pci_epf_free_doorbell(struct pci_epf *epf)
+> {
+> - platform_device_msi_free_irqs_all(epf->epc->dev.parent);
+> + if (!epf->db_msg)
+> + return;
 > +
-> +	if (dev->liveupdate_outgoing)
-> +		return -EBUSY;
+> + if (epf->db_msg[0].type =3D=3D PCI_EPF_DOORBELL_MSI)
+> + platform_device_msi_free_irqs_all(epf->epc->dev.parent);
+>=20
+> kfree(epf->db_msg);
+> epf->db_msg =3D NULL;
+> diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+> index 7737a7c03260..cd747447a1ea 100644
+> --- a/include/linux/pci-epf.h
+> +++ b/include/linux/pci-epf.h
+> @@ -152,14 +152,33 @@ struct pci_epf_bar {
+> struct pci_epf_bar_submap *submap;
+> };
+>=20
+> +enum pci_epf_doorbell_type {
+> + PCI_EPF_DOORBELL_MSI =3D 0,
+> + PCI_EPF_DOORBELL_EMBEDDED,
+> +};
 > +
-> +	if (ser->nr_devices == ser->max_nr_devices)
-> +		return -ENOSPC;
-> +
-> +	for (i = 0; i < ser->max_nr_devices; i++) {
-> +		/*
-> +		 * Start searching at index ser->nr_devices. This should result
-> +		 * in a constant time search under expected conditions (devices
-> +		 * are not getting unpreserved).
-> +		 */
-> +		int index = (ser->nr_devices + i) % ser->max_nr_devices;
-> +		struct pci_dev_ser *dev_ser = &ser->devices[index];
-> +
-> +		if (dev_ser->refcount)
-> +			continue;
-> +
-> +		pci_info(dev, "Device will be preserved across next Live Update\n");
-> +		ser->nr_devices++;
-> +
-> +		dev_ser->domain = pci_domain_nr(dev->bus);
-> +		dev_ser->bdf = pci_dev_id(dev);
-> +		dev_ser->refcount = 1;
-> +
-> +		dev->liveupdate_outgoing = dev_ser;
-> +		return 0;
-> +	}
-> +
-> +	return -ENOSPC;
-
-Since it is executing under a mutex, and we already failed
-'if (ser->nr_devices == ser->max_nr_devices) check above, will we ever reach
-here and return -ENOSPC?
-
-> diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.h
-> index 5c0e92588c00..5b4c8d9e462c 100644
-> --- a/include/linux/kho/abi/pci.h
-> +++ b/include/linux/kho/abi/pci.h
-> @@ -23,19 +23,20 @@
->   * incrementing the version number in the PCI_LUO_FLB_COMPATIBLE string.
->   */
->  
-> -#define PCI_LUO_FLB_COMPATIBLE "pci-v1"
-> +#define PCI_LUO_FLB_COMPATIBLE "pci-v2"
-
-Just curious, why did we change the version here? It's not like just
-previous patch is working enough to perform a live update. As the config
-is experimental, can't we just keep it PCI-v1 for the whole series?
-
-> 
+> /**
+> * struct pci_epf_doorbell_msg - represents doorbell message
+> - * @msg: MSI message
+> - * @virq: IRQ number of this doorbell MSI message
+> + * @msg: Doorbell address/data pair to be mapped into BAR space.
+> + * For MSI-backed doorbells this is the MSI message, while for
+> + * "embedded" doorbells this represents an MMIO write that asserts
+> + * an interrupt on the EP side.
+> + * @virq: IRQ number of this doorbell message
+> + * @irq_flags: Required flags for =
+request_irq()/request_threaded_irq().
+> + * Callers may OR-in additional flags (e.g. IRQF_ONESHOT).
+> + * @type: Doorbell type.
+> + * @bar: BAR number where the doorbell target is already exposed to =
+the RC
+> + * (NO_BAR if not)
+> + * @offset: offset within @bar for the doorbell target (valid iff
+> + * @bar !=3D NO_BAR)
+> */
+> struct pci_epf_doorbell_msg {
+> struct msi_msg msg;
+> int virq;
+> + unsigned long irq_flags;
+> + enum pci_epf_doorbell_type type;
+> + enum pci_barno bar;
+> + resource_size_t offset;
+> };
+>=20
+> /**
+> --=20
+> 2.51.0
