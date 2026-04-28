@@ -1,78 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F57C44CF44;
-	Tue, 28 Apr 2026 13:14:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204AC3EC2CD;
+	Tue, 28 Apr 2026 13:22:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777382063; cv=none; b=aTlDwZ7B7ZdU3kIUawrxDZCWryWiXaRfgd7U3LH9gAQb9kknXjfVxHgzymvNDPOA2mXa/05QsDyW1zAUpyhQ9ZAOBf7MxVyydhuXCclm3DQh0SeNSSAENs+teHgjl00ICz2AOQN97p5HswG/b4/W68DImm6W9XaUw4FHMA5aDbg=
+	t=1777382563; cv=none; b=OECDccrOvLgWkIEMbhHih1V3eCL/NBKEeNVDYg74tbBjHsMV6hFeXKnvq53jgx7WHVndmVKLL66v2XKZU5hqqLa4niUaq+6e9tUg73jMTW48rFDkKXhlt2EEjqx1bxZvQF4pusncpE5b3o3Xbg1b++thPOIbT8nu8RA1kX08AjA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777382063; c=relaxed/simple;
-	bh=fId8M51eLiEA5R+kZZRBfVGDoJPE40PDpQO/FvKYmkQ=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=h80yk9H7MgSherj4xsVYKBKss3r9KmRLIgWS6xh7/qHmNc8iZ6WnDbh8B96qgWX9Zpr58yiRmTUeOa/PC5ZLTmq6BCdw6qI6QzUA6w9sokIc/3liXIWaBVlBIsYz55o2VS4n1k8fIJ/8nd0EfV20i5QPEnAzJHOmkdv1Uk6Iur4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cTPK421+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777382563; c=relaxed/simple;
+	bh=M1huU9amtIwVkVET6Mnt5+JELOvaJpGXaOgvuKFhvMs=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=tNnq5NKlPlqabtTNIsWfIiH5MqGxiL0fVTx78FymSYOSgbmwzsp3D1NQQ0e/TarByyNvS1OuHDojnJn0US6EHvtqTwH8XXU/tYLqfyXu5Byk0d/Q6gW7m9aTTlCcAwdAnnkTo473Ko965L4dCYWDTkaaQREbQryZtC7CoEKqvqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OiiW3wML; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cTPK421+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C30EC2BCAF;
-	Tue, 28 Apr 2026 13:14:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OiiW3wML"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8093CC2BCAF;
+	Tue, 28 Apr 2026 13:22:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777382063;
-	bh=fId8M51eLiEA5R+kZZRBfVGDoJPE40PDpQO/FvKYmkQ=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=cTPK421+E+jI8HRlmLTMG8MYzB5JhrIJ5tmsueJAozatUgbxEQ4wqkQqYzs7i+IHC
-	 w34izlUYoBbQgEcEMyKom24HUQY9fHdzABq2989Sxe6X/lwpUcZ326o3iFd/+tZOjW
-	 P7gPxvl6kmrE+CSeTCF46fjiuYeibf9V/NFKdpENecwovgqmVH28T4tUnKjDGl7dvY
-	 G/DaprRDa0T9Iirz4kmgWf4Zu7YJZ7cn4eCck005wN5sKyFUWS5YR7Dyrlm/Oe8wWw
-	 MmiOLjQmBZp4VkVPbHlaeXHOdW6ostFu7NUVoz47o7en03s+nCR5wMACMQYH5pBA8T
-	 PIToYoUajX8hQ==
+	s=k20201202; t=1777382562;
+	bh=M1huU9amtIwVkVET6Mnt5+JELOvaJpGXaOgvuKFhvMs=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=OiiW3wMLHpl4S5Wz4DZtog1aQWzIYgBsMSYspKvyKB8CIWD91tcGzzeyTNYgfv7wf
+	 mEgvRbMt7A+3wgGvh/nT/1R/D6EEjoq2kBU10hxHwg2jU0AK03H4vC/HJMrQsFJVEL
+	 BSjhkvwvmNJjhI701K9k06IuP+iBAwShkzlAk8sLRQQRsP1s71TghxfnVEGXtWeuE6
+	 hZHcu+uD0LgWthhMv08g/dEyRIFqd6HpV6j0FmpAHpdig823kFoWsMvT1nstacs4jc
+	 fBNE8/dPdy20V+za2VdbCqfOE9Dq9a6MKUNCSs99wR0pziJSuU6jIL89Df4j8mVInb
+	 luRTpuL2qYUpA==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+To: Gary Guo <gary@garyguo.net>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, Boqun
+ Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, =?utf-8?Q?Bj=C3=B6r?=
+ =?utf-8?Q?n?= Roy Baron
+ <bjorn3_gh@protonmail.com>, Benno Lossin <lossin@kernel.org>, Alice Ryhl
+ <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, Daniel Almeida
+ <daniel.almeida@collabora.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Abdiel
+ Janulgue
+ <abdiel.janulgue@gmail.com>, Robin Murphy <robin.murphy@arm.com>,
+ Alexandre Courbot <acourbot@nvidia.com>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>
+Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+Subject: Re: [PATCH v2 08/11] rust: io: add `read_val` and `write_val`
+ function on I/O view
+In-Reply-To: <20260421-io_projection-v2-8-4c251c692ef4@garyguo.net>
+References: <20260421-io_projection-v2-0-4c251c692ef4@garyguo.net>
+ <20260421-io_projection-v2-8-4c251c692ef4@garyguo.net>
+Date: Tue, 28 Apr 2026 14:53:39 +0200
+Message-ID: <87o6j3p7os.fsf@t14s.mail-host-address-is-not-set>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 28 Apr 2026 15:14:15 +0200
-Message-Id: <DI4TCSCZ215E.16ZCXW7RSXBF@kernel.org>
-Subject: Re: [PATCH 03/24] rust: devres: add ForLt support to Devres
-Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>, "Danilo
- Krummrich" <dakr@kernel.org>
-To: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <acourbot@nvidia.com>, <aliceryhl@google.com>, <david.m.ertman@intel.com>,
- <ira.weiny@intel.com>, <leon@kernel.org>, <viresh.kumar@linaro.org>,
- <m.wilczynski@samsung.com>, <ukleinek@kernel.org>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <abdiel.janulgue@gmail.com>,
- <robin.murphy@arm.com>, <markus.probst@posteo.de>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260427221155.2144848-1-dakr@kernel.org>
- <20260427221155.2144848-4-dakr@kernel.org>
-In-Reply-To: <20260427221155.2144848-4-dakr@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
 
-On Tue Apr 28, 2026 at 12:11 AM CEST, Danilo Krummrich wrote:
-> Use ForLt::cast_ref() in Devres access methods, enabling lifetime
-> shortening for types that are covariant over their lifetime parameter.
+Gary Guo <gary@garyguo.net> writes:
+
+> When a view is narrowed to just a primitive, these functions provide a way
+> to access them using the `IoCapable` trait. This is used to provide
+> `io_read!` and `io_write!` macros, which are generalized version of current
+> `dma_read!` and `dma_write!` macro (that works on `Coherent` only, but not
+> subview of them, or other I/O backends).
 >
-> This is a no-op for 'static types, but prepares Devres for use with
-> lifetime-parameterized types such as pci::Bar<'_, SIZE>.
+> For DMA coherent objects, `IoCapable` is only implemented for atomically
+> accessible primitives; this is because `read_volatile`/`write_volatile` can
+> behave undesirably for aggregates; LLVM may turn them to multiple
+> instructions to access parts and assemble, or could combine them to a
+> single instruction.
 >
-> Add DevresGuard as a wrapper around RevocableGuard that applies
-> ForLt::cast_ref() on deref().
+> The ability to read/write aggregates (when atomicity is of no concern),
+> could be implemented with copying primitives (e.g. memcpy_{from,to}io) in
+> the future.
 >
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
 
-Please disregard this patch, it does nothing for this patch series.
+Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
 
-It sneaked in from a subsequent series I work on which makes device resourc=
-e
-types, such as pci::Bar, ForLt!() types themselves.
 
-One difficulty is that ForLt!(Bar<'_, SIZE>) fails when SIZE is a generic c=
-onst
-parameter, as it would require generic_const_exprs.
+Best regards,
+Andreas Hindborg
+
+
+
