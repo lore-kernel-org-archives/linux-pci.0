@@ -1,70 +1,70 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E60B2772D
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 22:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE79E344DAB
+	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 22:55:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777416720; cv=none; b=ebbXPVpMCoY2Z95CWIaEq/3w0s7QRHTp68K4zfgh2dq++3vifZltIVZAvsbT//TmQZL0roBvgTq7BuxoR5Lgf3JV1TjKH3gPmSKbLT4M+BpziAWd31+3jw42zqchWyzn06qoSMP5S7iw9otXGOD9VbSqAv44LmxT8obOoDDljIs=
+	t=1777416943; cv=none; b=SCfrhSmcp6Dqq0D230XHZZJvGbBCIgp36eYgxOp9b39dmp9FK8OflObIWFk8ycQJpDeq1SbW/CB1AZxdWcdUZzFXwvbosjSd3pfhm1RFD25dLwxVrqIenXW4cQNiIBnv105/GaIRS4tdGgkYxmwL/vTEB0fXVQY+liWMlfht4NI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777416720; c=relaxed/simple;
-	bh=EhAHeYRUZ1QV6wnUYX6Peu5JGPfj3YPRFCobZ1NqpLs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QHsfE0HCItIbD/Op/dkpCC0aoTuvUuf/KxNrfXDUSohCjAmqkSnSZiVMn/asyoHtpzLf8f7mpmsqwWEjdovi2TdZUp3LB93hipe4E9i1PxShq7SmKuDSLTNjVTvaJKcGE7Sei15LnGg2Mch3tD9fl9PBnJxdTIipYfkZBRNfSmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=ILj43TSE; arc=none smtp.client-ip=209.85.216.42
+	s=arc-20240116; t=1777416943; c=relaxed/simple;
+	bh=w92j1+KGo6D2kBLTSJDqU4ABcn9vG3xGdTKg2rNKn1s=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ps5uqJSZxTJ3wcase9g607Yhzt4+9rdza+EzTpKieSHFpiDw47FhjKe8tMnQwGzovpA9O642EFSMyjC5IP6fwwIZ6B6haitzkhbiZILZHCIU+Mt3hXMpJOL6KooKQwDccWd67WAEQDYDSwCSVq533L2a+H9YrcyPGM8yoaudJG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=oNF26PNT; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="ILj43TSE"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-35fb16e56efso7819796a91.2
-        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 15:51:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="oNF26PNT"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2a871daa98fso78233595ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 15:55:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1777416715; x=1778021515; darn=vger.kernel.org;
+        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1777416941; x=1778021741; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=GLJP6H6AkL9gb44VkGT2QFdVl/FUb87//pKbmPEt1ZM=;
-        b=ILj43TSErOw8AcanOv+RXRFMhRLB7Wr3JoukLytc2yFB+4cQeriVqhDGqInAcRiLNL
-         jPR3hGSjB6fiuuSVB2OyfvGEPq0dDw+GogZmTofQoRNAcU8kR/Ev4w7yF+84jb3UNWCZ
-         UuFpMQ2SpDFl2LUk+hroYlCiVegcJX/vqA5uwdOyBdNP/MMPZmXJcRr5CeK9vhu52TGV
-         FAzZjpm6fdoX77zxU8N8i1xL+GsNkBAZ6LkJ4aTklxCXidPTg4MNftBIvm6AxCkF8gE9
-         faYGgw6JeO+qh+Fbwbk02q2TcIKIt0d69BV8zvPcQoJ1Ca7scmO56K7xEh+rICE0VGvk
-         b/VA==
+        bh=SXh1sIdWXyFAkS1VJdBRbGA0VRROpFm5fAuvzlWqXxk=;
+        b=oNF26PNTJ3480BvVU+dlzEHLF6/6disZ9nACXdtQsMMCua2YpwkN0NLWPcsvyns5uj
+         5FrPrAU3xktZBtAaGH3/eMAKrPNinzwkSSvxHJmz9OP4uUsF1ZSCOpxLCm32bFMbkWKj
+         GWOR6E4gaoCZRc3V8KjaHFJQybrdw7+EtmL9JGfmCo2s8D+56iPeQoWaceSbCK0EeVdl
+         +PBo14Lxh84ZANg+6FCJMoeh8XzAtcoHHjWhaSceTUfxvteGyK2Wzf/Z/vIjeaggz8Oj
+         glhMs6UTmf9tLP5vzGMoEaUYJFvRaBO1JYgSnXGdTpXN06EaCrqxjfdp9zVhm4ah2P8a
+         13TQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777416715; x=1778021515;
+        d=1e100.net; s=20251104; t=1777416941; x=1778021741;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=GLJP6H6AkL9gb44VkGT2QFdVl/FUb87//pKbmPEt1ZM=;
-        b=hdkAP32ksQkx83m5BekwuoXOKWkg1CjM9CrRIWG6/IB7rRUGJsFhWhuZX8EmcbROPr
-         M7MsKFgWjUCu34Acsf65tztCchdNqM9rjxjpHh93NfYLJt/qYWKib4erC4Eft8hXbZax
-         Q3hdzq0KfRH463w8PY23B7m1sUMUWP4iOHzXjwLI3SOyJPCom1rhaHEx2vETQHtl9/tl
-         fsXDVbdj+5zpbwGYqAcfO6XyXPYH6RSxpQ1BSQJ4leZHjF3fSDdFcI46Wbw72ofe+QWY
-         VR84x5XdkfhSBoDja+M9lW2u6WN/VEua36XvjF7Yy4CVkCRpRS+TQ6D/+DdTYlNG2ErR
-         tciA==
-X-Forwarded-Encrypted: i=1; AFNElJ+b0TF4s6Hu9CNu8iijuY2xS/mqY65gb92pvUb+1Gvwi2DhGw8RrgfpiiVqfNVpVotbIztjbBXyQyU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZpK0j3Z2DCTJqUieq6DCprtFx9bgkaCiKLuxhuaUL31rsVEEh
-	fGhVBvjEgnyiYSKIULHYyexXnOqKnU1q/UNy7QsU7+zcYfS5uhZ0XcbSVTX/NIirWV8=
-X-Gm-Gg: AeBDieu3KVXzopLQ5/cpcOOnSo18p8MUVsA6JM/Bv+et7TQKY/Wvj9yFYM1BLGQkpvX
-	nCtOEQdFluBr0FQl3KBPLh30NJBloxmYWYn5N5ockGL53Tc7wUWNjAG0qfNYE9hsrW69BsY0CnV
-	FtVDeJi2iF9hDfBZZWV+ixt/gg91KNJh7MNhNWh4Ww8e1meuGRKil6n3pTNsT4c3wMQ5xBzuHJA
-	E558H4CqMHoBzqQX2GoLPENVPcVBeEilccFF9/2DSMxzH+47m3Rrb3W0s2Ul6aHRgf6562XG1cm
-	nMnqbUhuZCqNhEp2P9V1VosXF8lS10siz5tGDsSA3zd5nznZ5utGS5M9p/VPrnBLkrv5W/J/hAA
-	TGyAZV/zYd0P4T4mzYowyNf9BLIcpIRpx9qOsJfyl9MWTouUsHyprSYT1yej/nbbXT9CN5G4Utq
-	/ry2uwMTx1xc8ziJ2SrXIDIlw6DXPunRH2GoLIOcWPPqjfZ+s=
-X-Received: by 2002:a17:90b:1c09:b0:35d:9efd:7956 with SMTP id 98e67ed59e1d1-364a0b40d40mr1241214a91.11.1777416714744;
-        Tue, 28 Apr 2026 15:51:54 -0700 (PDT)
+        bh=SXh1sIdWXyFAkS1VJdBRbGA0VRROpFm5fAuvzlWqXxk=;
+        b=Vqk9W72zf8MmsJQIw+Xck+8AHOvp3eR2JQ4vqYm1oyzOaI4cnBa48604o9Z6m2LDKQ
+         l6IoV7qfEutzsSeAXq6pErGPW1flxUOIUeM5jTaL0q99qSvci5T9Enp7AqzXHJzJY2gU
+         H8S7JAwG2Dr3j5KyQJAkeFrnAsup37DiYHPOh1qvXar95KKSPZoZFFNcTtJEi9os3MlJ
+         cH2XeQ5jvNR3Y3FWaryutelKLykStoyfF6furTaI8oUx1brwSx8C1264KIMGUVHmkLh7
+         u+B4+UOCTvfUWx/iKVBYVH/PXL0pAlm7wUqU3ZEU89AEZDSXxdm8vO41dd4joeuqCOcX
+         J9Nw==
+X-Forwarded-Encrypted: i=1; AFNElJ9vYBJZJBvO85TzkkmYvsPJYBbrwJnEem9Q/LtmdX2eZ1AmXa/jlURHVikWW0KyMG2tTM5BbpYcPU0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy99JaWgQzSVRQk9qUUMHsDdDM9XWzSKNHAXVQ20E5nDqL8reUV
+	GPQlAZ+F3CTM9gaQFfVGwMDjuys+LpMWrHK6GVKzVY8axujzMGVps4ez4mPYQkC4VMc=
+X-Gm-Gg: AeBDievbgLQKhr2d/4/XPROEl+sfMp9N4B08hkgA+1OiF4zFvE6lfg3/ffvlLdbZcHA
+	6gkICcGUhRTJKMEobvC9GHGb4R4BPrW6bYfQyd3cS5icvuRMBKdtHXGQD5IReTfSeApAFoMSLaa
+	eAJeHbduYWftJPQLliSfjIInxiopORd6cvlmoMKScCUnBi9C/+vBL5Tub3UrpgU4QAwn+ud80x0
+	bdliXAtKbABj9ektbq6ULle5+oRsU3LRXVEMX67ClL3jKDDVnz/+fcRfRLhCWW7ubealXQYYn/b
+	neYVfdgJRB+CNkAguFsQ/HKTqWUEp9YXl0LHJfvsp36HVivlyhIYzjXI8pOPtQyFWBSaXucSroQ
+	zlph3FVS2dcel806KxvV7ol+5acGDU5Q1qr/Utqz+03B3U/5x97lvYJc+a7elFDa2OgCTack1SO
+	9xMFJGM8i8B1qnj0bsMw8oR9kXYFYchKXU9Jnp6K8oX0iUrHU=
+X-Received: by 2002:a17:903:2411:b0:2b0:67a7:5c4b with SMTP id d9443c01a7336-2b97c47b4c3mr50187205ad.28.1777416941276;
+        Tue, 28 Apr 2026 15:55:41 -0700 (PDT)
 Received: from geramyl-MS-S1-MAX.. ([2601:201:8080:e5c0:4857:38db:7c94:21e1])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-364a25c11b9sm176000a91.0.2026.04.28.15.51.53
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b98898ff65sm2518875ad.78.2026.04.28.15.55.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Apr 2026 15:51:54 -0700 (PDT)
+        Tue, 28 Apr 2026 15:55:40 -0700 (PDT)
 From: Geramy Loveless <gloveless@jqluv.com>
 To: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 Cc: Cristian Cocos <cristi@ieee.org>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
 	linux-pci@vger.kernel.org,
 	Geramy Loveless <gloveless@jqluv.com>
-Subject: [PATCH v3] PCI: release empty sibling bridge windows during window resize
-Date: Tue, 28 Apr 2026 15:51:46 -0700
-Message-ID: <20260428225146.3104063-1-gloveless@jqluv.com>
+Subject: [PATCH v3 RESEND] PCI: release empty sibling bridge windows during window resize
+Date: Tue, 28 Apr 2026 15:55:32 -0700
+Message-ID: <20260428225532.3108047-1-gloveless@jqluv.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -104,6 +104,11 @@ and the rebar succeeds:
 Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
 ---
+RESEND: my earlier v3 (Message-ID 20260428225146.3104063-1-gloveless@jqluv.com)
+was sent with stale code — the diff was byte-identical to v2 because the
+v3 edits weren't staged before commit --amend. This resend contains the
+actual v3 content described below. Apologies for the noise.
+
 v3:
  - Restructure helper: outer loop only recurses; inner iterates bus
    resources via pci_bus_for_each_resource(). The release path is now
@@ -126,97 +131,112 @@ v2:
  - Call release before the !res->child check.
  - Check bridge->subordinate before recursion.
 ---
- drivers/pci/setup-bus.c | 63 +++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 61 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 78 ++++++++++++++++++++++++++++++++---------
+ 1 file changed, 61 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4cf120ebe5a..0c1fb654c9c 100644
+index 4cf120ebe5a..b47dc1a2925 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -2292,6 +2292,60 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+@@ -2292,6 +2292,63 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
  }
  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
  
 +/*
-+ * pci_bus_release_empty_bridge_resources - Bottom-up release of bridge
-+ * window resources in empty subtrees.
++ * pbus_release_empty_bridge_resources - Bottom-up release of bridge windows
++ * in empty subtrees.
 + * @bus: PCI bus whose child bridges to process
-+ * @b_win: Ancestor bridge window; only children of this resource are released
-+ * @saved: List to save released resources for rollback
++ * @b_win: Ancestor bridge window; only resources that are (grand)parented
++ *	   by @b_win are released
++ * @saved: List to store released resources into for rollback
 + *
 + * Recurses depth-first into subordinate buses, then releases bridge windows
-+ * on the way back up.  Each resource is individually saved before release so
-+ * the entire operation can be rolled back.
++ * that are (grand)parented by @b_win on the way back up. Each resource is
++ * stored into @saved before release so the entire operation can be rolled
++ * back.
 + */
-+static void pci_bus_release_empty_bridge_resources(struct pci_bus *bus,
-+						   struct resource *b_win,
-+						   struct list_head *saved)
++static void pbus_release_empty_bridge_resources(struct pci_bus *bus,
++						struct resource *b_win,
++						struct list_head *saved)
 +{
 +	struct pci_dev *dev;
++	struct resource *r;
++	unsigned int i;
 +
 +	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		struct resource *r;
-+		unsigned int i;
++		if (dev->subordinate)
++			pbus_release_empty_bridge_resources(dev->subordinate,
++							    b_win, saved);
++	}
 +
-+		if (!dev->subordinate)
++	pci_bus_for_each_resource(bus, r, i) {
++		struct resource *p;
++		unsigned int idx;
++
++		if (!r || !resource_assigned(r))
 +			continue;
 +
-+		/* Recurse first — release deepest resources before parents */
-+		pci_bus_release_empty_bridge_resources(dev->subordinate,
-+						      b_win, saved);
++		/* Walk upstream to confirm r descends from (or equals) b_win */
++		for (p = r; p && p != b_win; p = p->parent)
++			;
++		if (!p)
++			continue;
 +
-+		pci_dev_for_each_resource(dev, r, i) {
-+			if (!pci_resource_is_bridge_win(i))
-+				continue;
++		idx = pci_resource_num(bus->self, r);
 +
-+			if (!resource_assigned(r))
-+				continue;
++		if (r->child) {
++			const char *res_name = pci_resource_name(bus->self, idx);
 +
-+			if (r->parent != b_win)
-+				continue;
-+
-+			if (r->child) {
-+				const char *res_name = pci_resource_name(dev, i);
-+
-+				pci_info(dev, "%s %pR: not released, children still present\n",
-+					 res_name, r);
-+				continue;
-+			}
-+
-+			if (pci_dev_res_add_to_list(saved, dev, r, 0, 0))
-+				continue;
-+
-+			pci_release_resource(dev, i);
++			pci_info(bus->self, "%s %pR: not released, active children present\n",
++				 res_name, r);
++			continue;
 +		}
++
++		if (pci_dev_res_add_to_list(saved, bus->self, r, 0, 0))
++			continue;
++
++		pci_release_resource(bus->self, idx);
 +	}
 +}
 +
  /*
   * Walk to the root bus, find the bridge window relevant for @res and
   * release it when possible. If the bridge window contains assigned
-@@ -2316,7 +2370,12 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
+@@ -2305,7 +2362,6 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
+ 	struct pci_dev *bridge = NULL;
+ 	LIST_HEAD(added);
+ 	LIST_HEAD(failed);
+-	unsigned int i;
+ 	int ret = 0;
  
- 		i = pci_resource_num(bridge, res);
+ 	while (!pci_is_root_bus(bus)) {
+@@ -2314,22 +2370,10 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
+ 		if (!res)
+ 			break;
  
+-		i = pci_resource_num(bridge, res);
+-
 -		/* Ignore BARs which are still in use */
-+		/* Release empty sibling bridge windows bottom-up */
-+		if (bridge->subordinate)
-+			pci_bus_release_empty_bridge_resources(
-+				bridge->subordinate, res, saved);
-+
-+		/* Ignore bridge windows which are still in use */
- 		if (!res->child) {
- 			ret = pci_dev_res_add_to_list(saved, bridge, res, 0, 0);
- 			if (ret)
-@@ -2327,7 +2386,7 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
- 			const char *res_name = pci_resource_name(bridge, i);
- 
- 			pci_warn(bridge,
+-		if (!res->child) {
+-			ret = pci_dev_res_add_to_list(saved, bridge, res, 0, 0);
+-			if (ret)
+-				return ret;
+-
+-			pci_release_resource(bridge, i);
+-		} else {
+-			const char *res_name = pci_resource_name(bridge, i);
+-
+-			pci_warn(bridge,
 -				 "%s %pR: was not released (still contains assigned resources)\n",
-+				 "%s %pR: not released, active children present\n",
- 				 res_name, res);
- 		}
+-				 res_name, res);
+-		}
++		/* Release this bridge window and any empty descendants bottom-up */
++		if (bridge->subordinate)
++			pbus_release_empty_bridge_resources(bridge->subordinate,
++							    res, saved);
  
+ 		bus = bus->parent;
+ 	}
 -- 
 2.43.0
 
