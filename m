@@ -1,202 +1,97 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AF2438947C;
-	Tue, 28 Apr 2026 09:27:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F5F73A6B7F;
+	Tue, 28 Apr 2026 09:37:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777368480; cv=none; b=coWnZZR+G3nOTz4Y9vBtUBS3wl3kSBNMGncYHMt9cfilzV+777rJ+KFKEC4sEVdct01x3Zsddc/rW6mjpjJkhU7mfhbFTO6VfN5ctdX6yeTruUfMTqXNY0m+uLgpfrQNlSLs/PP5Nw/DF2OKhfAfV9gjUxJIro/rzBzQI/31rSc=
+	t=1777369043; cv=none; b=Go0B44gr4NJ5TZxbTy3h37JZZbQ1Pg030hED3BjtRlmEhDCqxO11GeaG5qltjQLUTNsnVLAaQweUJXkZ/b5inY/RhFeVQuu2WEJO4M6CMQZ3q8zOPM1CBUofAVojnj8I0I5+GjWo/FrbYDenuXlrLZhJzHKPrS10pptChC/A4GM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777368480; c=relaxed/simple;
-	bh=Mo4G/rDgf9z8gYFzvbSXsjnYyCAnDRzNDsLl0L9AnDM=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=Dn+wDxk6kkmb9U/m1GbR9efO2s5pdrKofh9keaq9+f0118dsGP/2AXSpT09luHWSN7OSjTPAB2MgMvEnHokseWMAGlXmCSdFIj9qZqIP6Cffy5hcFJJDX3WGRU/30LU78Bditd47gmJugN1YyqncNON8KEqyjKYsDPiCn7NX1qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dH+hDT/3; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1777369043; c=relaxed/simple;
+	bh=HM9evInCFYKy8es/TsKXHh8GLiXdJjs/TZ6Xikd1hus=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VzteoljkgiEaO2dLDVHO1nVWSrtqOUMgyL3z8SR2REpBQ3XU/CImifiigGA7njDe5H7rBY7UqLAcy6p0cevrOHVxyhYQ5CZCi7V8lyxM/Hc0YGY5krPMrRHNu5gf33H7tVW1+imlb/28HARIzzyhZ0v3u/8vqugPZS3lnZhV/pI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NLxgCfyy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dH+hDT/3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777368479; x=1808904479;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=Mo4G/rDgf9z8gYFzvbSXsjnYyCAnDRzNDsLl0L9AnDM=;
-  b=dH+hDT/3BDLK0O7KIrFaGhhV1WsqPOaPcW4pNCLurRrrGm0XnqQDOh++
-   dw0VEbl1NljiwZYPJsZZ8Pm5KbTOaW33SB5uEh6f15Dh/aByFoULVsq6f
-   zZ5cZnsg4OzoGRUygctu1BbbO1VvT57PwhrqLp6huvUegnZZHnJgeiW9n
-   Aq+5NHvDfLu70tHNmPpIMMZX5UYrI/H+/ik3Izvo0J1SMm4XOlXXZ5ywo
-   7Hk7kSNJDJH+Xh0IshEIwlp4ZR3lTCj35+bkD7iiS84oRXBsQj53vVuLG
-   Nl0fhsz68iqfh+QHRuCdFcHcNbK+CBfM34NSlb1VvVqE2FLktENpM50+G
-   A==;
-X-CSE-ConnectionGUID: MrIp7kANSV+4se2aIhtzxg==
-X-CSE-MsgGUID: qpQpBsarTISZGBkOj5Aabw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11769"; a="78162000"
-X-IronPort-AV: E=Sophos;i="6.23,203,1770624000"; 
-   d="scan'208";a="78162000"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2026 02:27:58 -0700
-X-CSE-ConnectionGUID: K4NEpT2WQzyTicXVDSfP2Q==
-X-CSE-MsgGUID: 2dnTrdfrRQ6g/LP+sNiiPg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,203,1770624000"; 
-   d="scan'208";a="238931536"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.1])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2026 02:27:53 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 28 Apr 2026 12:27:49 +0300 (EEST)
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-cc: Manivannan Sadhasivam <mani@kernel.org>, 
-    Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-    =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kwilczynski@kernel.org>, 
-    Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-    Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org, 
-    linux-arm-msm@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-    mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com, 
-    Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH v5 1/3] PCI/ASPM: Add helper to encode L1SS T_POWER_ON
- fields
-In-Reply-To: <20260428-t_power_on_fux-v5-1-f1ef926a91ff@oss.qualcomm.com>
-Message-ID: <bc3a5f58-676a-3634-6b8f-bffc91d25265@linux.intel.com>
-References: <20260428-t_power_on_fux-v5-0-f1ef926a91ff@oss.qualcomm.com> <20260428-t_power_on_fux-v5-1-f1ef926a91ff@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NLxgCfyy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39FBBC2BCAF;
+	Tue, 28 Apr 2026 09:37:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777369042;
+	bh=HM9evInCFYKy8es/TsKXHh8GLiXdJjs/TZ6Xikd1hus=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=NLxgCfyywn0V6zY4za6ewhWgPGQ5lWDL/2Pa2I4YpZflmGrJW7S27qnAOo2AlEKqM
+	 a0uc2KNAXUvyDs4nom2XXsustejAYuVoAsdyjftRdcaBHwx87GgB80fnqqcgeYrfU/
+	 qIeZFx0t9z0iqOwkaOYS3RfWY4uZUSPZ592PJsP9INsFTUcfPYzx7QwwD13BIUtKyg
+	 z8uQF16K+0bEWjK9JUNjl34AUQ/nGBuun0c4ojbzGjep+h+EhJudTHXgD+3InX8cCW
+	 KP7qOtqSQ5NzWn2KzqB3cs6s8W44lH+VVXyey+CIUh1Fgs+7Iskd4aSTKCL9cu6cNR
+	 XA1JWIDp9YG5w==
+Date: Tue, 28 Apr 2026 11:37:18 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
+To: Danilo Krummrich <dakr@kernel.org>, m.wilczynski@samsung.com
+Cc: gregkh@linuxfoundation.org, rafael@kernel.org, acourbot@nvidia.com, 
+	aliceryhl@google.com, david.m.ertman@intel.com, ira.weiny@intel.com, leon@kernel.org, 
+	viresh.kumar@linaro.org, bhelgaas@google.com, kwilczynski@kernel.org, 
+	abdiel.janulgue@gmail.com, robin.murphy@arm.com, markus.probst@posteo.de, ojeda@kernel.org, 
+	boqun@kernel.org, gary@garyguo.net, bjorn3_gh@protonmail.com, lossin@kernel.org, 
+	a.hindborg@kernel.org, tmgross@umich.edu, driver-core@lists.linux.dev, 
+	linux-kernel@vger.kernel.org, nova-gpu@lists.linux.dev, dri-devel@lists.freedesktop.org, 
+	linux-pm@vger.kernel.org, linux-pwm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org
+Subject: Re: [PATCH 00/24] rust: device: Higher-Ranked Lifetime Types for
+ device drivers
+Message-ID: <afB-p7vhyVYlcTn6@monoceros>
+References: <20260427221155.2144848-1-dakr@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-142568513-1777368469=:1128"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="rqxumekpprrd4q5v"
+Content-Disposition: inline
+In-Reply-To: <20260427221155.2144848-1-dakr@kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
 
---8323328-142568513-1777368469=:1128
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+--rqxumekpprrd4q5v
+Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 00/24] rust: device: Higher-Ranked Lifetime Types for
+ device drivers
+MIME-Version: 1.0
 
-On Tue, 28 Apr 2026, Krishna Chaitanya Chundru wrote:
+Hello,
 
-> Add a shared helper to encode the PCIe L1 PM Substates T_POWER_ON
-> parameter into the T_POWER_ON Scale and T_POWER_ON Value fields.
->=20
-> This helper can be used by the controller drivers to change the
-> default/wrong value of T_POWER_ON in L1ss capability register to
-> avoid incorrect calculation of LTR_L1.2_THRESHOLD value.
->=20
-> The helper converts a T_POWER_ON time specified in microseconds into
-> the appropriate scale/value encoding defined by the PCIe spec r7.0,
-> sec 7.8.3.2. Values that exceed the maximum encodable range are clamped
-> to the largest representable encoding.
->=20
-> Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.co=
-m>
-> ---
->  drivers/pci/pci.h       |  6 ++++++
->  drivers/pci/pcie/aspm.c | 40 ++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 46 insertions(+)
->=20
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 4a14f88e543a..c379befe1ebe 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -1110,6 +1110,7 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev=
-, bool locked);
->  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
->  void pci_configure_ltr(struct pci_dev *pdev);
->  void pci_bridge_reconfigure_ltr(struct pci_dev *pdev);
-> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value);
->  #else
->  static inline void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap=
-) { }
->  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
-> @@ -1118,6 +1119,11 @@ static inline void pcie_aspm_pm_state_change(struc=
-t pci_dev *pdev, bool locked)
->  static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev)=
- { }
->  static inline void pci_configure_ltr(struct pci_dev *pdev) { }
->  static inline void pci_bridge_reconfigure_ltr(struct pci_dev *pdev) { }
-> +static inline void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, =
-u8 *value)
-> +{
-> +=09*scale =3D 0;
-> +=09*value =3D 0;
-> +}
->  #endif
-> =20
->  #ifdef CONFIG_PCIE_ECRC
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 925373b98dff..457d469b8d49 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -525,6 +525,46 @@ static u32 calc_l12_pwron(struct pci_dev *pdev, u32 =
-scale, u32 val)
->  =09return 0;
->  }
-> =20
-> +/**
-> + * pcie_encode_t_power_on - Encode T_POWER_ON into scale and value field=
-s
-> + * @t_power_on_us: T_POWER_ON time in microseconds
-> + * @scale: Encoded T_POWER_ON Scale (0..2)
-> + * @value: Encoded T_POWER_ON Value
-> + *
-> + * T_POWER_ON is encoded as:
-> + *   T_POWER_ON(us) =3D scale_unit(us) * value
-> + *
-> + * where scale_unit is selected by @scale:
-> + *   0: 2us
-> + *   1: 10us
-> + *   2: 100us
-> + *
-> + * If @t_power_on_us exceeds the maximum representable value, the result
-> + * is clamped to the largest encodable T_POWER_ON.
-> + *
-> + * See PCIe r7.0, sec 7.8.3.2.
-> + */
-> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+On Tue, Apr 28, 2026 at 12:10:58AM +0200, Danilo Krummrich wrote:
+>  drivers/pwm/pwm_th1520.rs             |  14 +-
 
-Hi,
+I didn't try to understand what you do here, but there is nothing
+scheduled so far for the pwm_th1520 driver in my tree, so
 
-I don't know how the type for t_power_on_us was picked but if it was=20
-arbitrary decision, I suggest you just go with 32-bit input.
+Acked-by: Uwe Kleine-K=F6nig <ukleinek@kernel.org>
 
-That would also remove the u32 -> u16 truncate done in the other patches=20
-of your series which would potentially corrupt the number (I assume=20
-numbers that big would be invalid but they could alias to small u16=20
-numbers).
+for patches #12 and #19 touching this driver for merging through (I
+guess) the rust tree. Maybe Michal wants to say something about the
+actual change.
 
-Reviewed-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+Best regards
+Uwe
 
-> +{
-> +=09u8 maxv =3D FIELD_MAX(PCI_L1SS_CAP_P_PWR_ON_VALUE);
-> +
-> +=09/* T_POWER_ON_Value ("value") is a 5-bit field with max value of 31. =
-*/
-> +=09if (t_power_on_us <=3D 2 * maxv) {
-> +=09=09*scale =3D 0; /* Value times 2us */
-> +=09=09*value =3D DIV_ROUND_UP(t_power_on_us, 2);
-> +=09} else if (t_power_on_us <=3D 10 * maxv) {
-> +=09=09*scale =3D 1; /* Value times 10us */
-> +=09=09*value =3D DIV_ROUND_UP(t_power_on_us, 10);
-> +=09} else if (t_power_on_us <=3D 100 * maxv) {
-> +=09=09*scale =3D 2; /* value times 100us */
-> +=09=09*value =3D DIV_ROUND_UP(t_power_on_us, 100);
-> +=09} else {
-> +=09=09*scale =3D 2;
-> +=09=09*value =3D maxv;
-> +=09}
-> +}
-> +EXPORT_SYMBOL(pcie_encode_t_power_on);
-> +
->  /*
->   * Encode an LTR_L1.2_THRESHOLD value for the L1 PM Substates Control 1
->   * register.  Ports enter L1.2 when the most recent LTR value is greater
->=20
->=20
+--rqxumekpprrd4q5v
+Content-Type: application/pgp-signature; name="signature.asc"
 
---=20
- i.
+-----BEGIN PGP SIGNATURE-----
 
---8323328-142568513-1777368469=:1128--
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmnwf8MACgkQj4D7WH0S
+/k7NPgf/WyrJVOG8I34GH5+Ktz8BA9Pxs9vvwKn2Dor40alOMKdMZe9E1/NeIjk4
+rRXtLa+EdYtq9IaNCEAbMBviP+iT93opuA2k3RqR/hJoIvYQBokftNexPO9U3Rn6
+p33A51jyrZ7rMaijj0caWsANCuPQDj3uYYvgQ+jPtSRx9kDZtBI+XqMAoSkGhRxA
+wD0/q4kZHaW1p2W3+wPWQfd3F++cs2cjxqZ1VVVs+BsA3LdZWJ29RI5kqIY1+Z/g
+kb2nv/HyhMRzaUfnHuvVi2/OlxnWn+Wt0WfDWaPPqOwNm+vKCuYBhvmhxs6iHfnG
+awPuxSiYzaxPXaCkO5cFlKMH2bnmeg==
+=08q4
+-----END PGP SIGNATURE-----
+
+--rqxumekpprrd4q5v--
