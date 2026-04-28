@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204AC3EC2CD;
-	Tue, 28 Apr 2026 13:22:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2438D3F9F35;
+	Tue, 28 Apr 2026 13:22:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777382563; cv=none; b=OECDccrOvLgWkIEMbhHih1V3eCL/NBKEeNVDYg74tbBjHsMV6hFeXKnvq53jgx7WHVndmVKLL66v2XKZU5hqqLa4niUaq+6e9tUg73jMTW48rFDkKXhlt2EEjqx1bxZvQF4pusncpE5b3o3Xbg1b++thPOIbT8nu8RA1kX08AjA=
+	t=1777382569; cv=none; b=HlQ7i/HMDgIYj0RF0cvmB/FFcfoP9FV1DTRmKx3GQioo1kCXzzdkR28WaJkHJsuYafb3+nWVKY7pIZLrG/z5biTe2UkYBJjdvMyZIRtw9Pcq55/NALN+n/t7DamIU1w9eyrX76VgzLJ852x85PwKa7ZFZn0/FOlOb69ChgRA1l8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777382563; c=relaxed/simple;
-	bh=M1huU9amtIwVkVET6Mnt5+JELOvaJpGXaOgvuKFhvMs=;
+	s=arc-20240116; t=1777382569; c=relaxed/simple;
+	bh=9rjTYTuP7L8sLjc7X69kwiggXB2C5UsAdNVY1jH4Pk4=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=tNnq5NKlPlqabtTNIsWfIiH5MqGxiL0fVTx78FymSYOSgbmwzsp3D1NQQ0e/TarByyNvS1OuHDojnJn0US6EHvtqTwH8XXU/tYLqfyXu5Byk0d/Q6gW7m9aTTlCcAwdAnnkTo473Ko965L4dCYWDTkaaQREbQryZtC7CoEKqvqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OiiW3wML; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=VxdlAW68fEyjc1ZeDBYYmBIUEpX+vnl473TmkyRNMVykJaKxSKXyTly+/VJTdqrt6uj2JAt1j1RPsXdYRkQEwMeOO0R2a/+UHzh+GQ//ef77YI9AhGY+okcWZcIwozU6pHqF5dfPPtwxluc3QU7QY6O689WUZ03m3DGT4oge8qo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kszh/63M; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OiiW3wML"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8093CC2BCAF;
-	Tue, 28 Apr 2026 13:22:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kszh/63M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E17AC4AF09;
+	Tue, 28 Apr 2026 13:22:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777382562;
-	bh=M1huU9amtIwVkVET6Mnt5+JELOvaJpGXaOgvuKFhvMs=;
+	s=k20201202; t=1777382568;
+	bh=9rjTYTuP7L8sLjc7X69kwiggXB2C5UsAdNVY1jH4Pk4=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=OiiW3wMLHpl4S5Wz4DZtog1aQWzIYgBsMSYspKvyKB8CIWD91tcGzzeyTNYgfv7wf
-	 mEgvRbMt7A+3wgGvh/nT/1R/D6EEjoq2kBU10hxHwg2jU0AK03H4vC/HJMrQsFJVEL
-	 BSjhkvwvmNJjhI701K9k06IuP+iBAwShkzlAk8sLRQQRsP1s71TghxfnVEGXtWeuE6
-	 hZHcu+uD0LgWthhMv08g/dEyRIFqd6HpV6j0FmpAHpdig823kFoWsMvT1nstacs4jc
-	 fBNE8/dPdy20V+za2VdbCqfOE9Dq9a6MKUNCSs99wR0pziJSuU6jIL89Df4j8mVInb
-	 luRTpuL2qYUpA==
+	b=kszh/63MBzQJEBmRrcmOOTYxhbiH13kOw4r74yEHr2fPGmknb/wxFKK+mPYoY0GER
+	 gajWe17zROcN87QMYobkstYdeaU7QjKWxTkg5CN5v12MLTMG+8PSmrRItUxUKAecXe
+	 J53yiINuqNVAZOGRNUKY4SydOjZvhlyTyRD1Bn50JgBrhGHcOYNyaFV0i9p2UorAJ/
+	 jfwlXFH0ebYuCb5q12m19COHXFOQidwX46t2g0iSXekZgAgvt6cRHqN8jcTnjbaTk2
+	 VO5oEvlFOpsHszFelT3A5Nr7qKMNK+PyOdeKk81+kMprCMYXrnLImb5xCLhVqIWSTH
+	 Fida1mVcj3kQg==
 From: Andreas Hindborg <a.hindborg@kernel.org>
 To: Gary Guo <gary@garyguo.net>, Greg Kroah-Hartman
  <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
@@ -43,13 +43,13 @@ To: Gary Guo <gary@garyguo.net>, Greg Kroah-Hartman
 Cc: driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org,
  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
  nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v2 08/11] rust: io: add `read_val` and `write_val`
- function on I/O view
-In-Reply-To: <20260421-io_projection-v2-8-4c251c692ef4@garyguo.net>
+Subject: Re: [PATCH v2 07/11] rust: dma: add methods to unsafely create
+ reference from subview
+In-Reply-To: <20260421-io_projection-v2-7-4c251c692ef4@garyguo.net>
 References: <20260421-io_projection-v2-0-4c251c692ef4@garyguo.net>
- <20260421-io_projection-v2-8-4c251c692ef4@garyguo.net>
-Date: Tue, 28 Apr 2026 14:53:39 +0200
-Message-ID: <87o6j3p7os.fsf@t14s.mail-host-address-is-not-set>
+ <20260421-io_projection-v2-7-4c251c692ef4@garyguo.net>
+Date: Tue, 28 Apr 2026 14:10:12 +0200
+Message-ID: <87qznzp9p7.fsf@t14s.mail-host-address-is-not-set>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,21 +60,14 @@ Content-Type: text/plain
 
 Gary Guo <gary@garyguo.net> writes:
 
-> When a view is narrowed to just a primitive, these functions provide a way
-> to access them using the `IoCapable` trait. This is used to provide
-> `io_read!` and `io_write!` macros, which are generalized version of current
-> `dma_read!` and `dma_write!` macro (that works on `Coherent` only, but not
-> subview of them, or other I/O backends).
+> Implement `Io` for `Coherent`, so now `dma::Coherent` can be used with I/O
+> projections.
 >
-> For DMA coherent objects, `IoCapable` is only implemented for atomically
-> accessible primitives; this is because `read_volatile`/`write_volatile` can
-> behave undesirably for aggregates; LLVM may turn them to multiple
-> instructions to access parts and assemble, or could combine them to a
-> single instruction.
->
-> The ability to read/write aggregates (when atomicity is of no concern),
-> could be implemented with copying primitives (e.g. memcpy_{from,to}io) in
-> the future.
+> This allows the `as_ref()` and `as_mut()` API to be used in smaller region
+> than the whole DMA allocation itself. For example, if a ring buffer is
+> shared between GPU and CPU, users may now use the `io_project!` API to
+> obtain a view of the buffer that is uniquely owned by the CPU and get a
+> reference.
 >
 > Signed-off-by: Gary Guo <gary@garyguo.net>
 
