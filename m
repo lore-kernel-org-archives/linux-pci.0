@@ -1,198 +1,328 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020101.outbound.protection.outlook.com [52.101.195.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DC88450902
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 13:27:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777382857; cv=none; b=SLTePRQ62eUAZ662yDgXlGvDtUDObY5vIWlxgMhvz2gNWycGXxWFzDZWCHCJlW2PD41oS4wiKgtFlkeOMwEC5Df4aMb5c2NbTz6rbfic8CvHYwaTlD2FGTwUd4WHbsoeRTJaP+PIe0EyK746cXLZEf39wp+qayQWgEbSRhQq4cg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777382857; c=relaxed/simple;
-	bh=ov8hIF8M1z6R9wDtFRkRAkC1i3judy0L71MjXuy8SHg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mxgYtgCY14fuExEpCfKbtJWGSn4RpkSw/LyFczE/cm3FvbtMl1m5f9mSSdhWxFvmB7vHECUIz7c5foZgQH/0IFkw2ZpwV33pCBr/5VzRmWKj3rubCxwPDLD5qCUfEEawuZEp9vSacQhPkbiVoFKbzST93jZByfsiNraH9ZHGWJE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=dW/1JQe9; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=UcRHpEkL; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F343436348;
+	Tue, 28 Apr 2026 14:08:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.101
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777385331; cv=fail; b=A5WffT2OMQjguMQ0wkKEzGgbksnnW/0UVYFVHzrE3U2BDiNkxknzXZaGdxOzNLhX6S0b0q1ctUTps1g4OW2v8EC7KLtos8v/jBC5AmQLSbYqdnvJ/XAhqv3KL4yDcQaqD5O2PU+rhJjfv4Tc+cefkHFF8x5qop0FFTXBgacXmmI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777385331; c=relaxed/simple;
+	bh=ndyC7XN9CVxHrFfZ6D62IrhXJSAHYfSGyDHejd8dokI=;
+	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
+	 In-Reply-To:MIME-Version; b=NrPJfTdzY2ckhI+FSY5h7HrXXzCGx9ISktWq5R3He/a07ZU3YZqidA6uMPdZPsi5KnkLyWjiuilVeY/GVUiszped9hP3pB+b/j3LSDK8eS0EjJ8D0hxkISIvXYvQfw1TvifrAl/lEm2xYEIcTIAiYsWOgb4zBnmPCpIgmBNPdrM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=OsbShZSZ; arc=fail smtp.client-ip=52.101.195.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="dW/1JQe9";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="UcRHpEkL"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63SC0TQd1625044
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 13:27:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=wClwdHi//EK
-	ovApGGp/o1/cMKxisBXL2sxG8w7zO7Fo=; b=dW/1JQe9cBtpzMr3eMM/+Eqt4vo
-	0ZSC+iHG5TPw/xMg2XFg6GwVycdDVghqjMmcwUHoFoBBTu2k02Iqux4l9Dy+ugQp
-	2MWnmuqNsGUVl5O2w+Hv4sP6jOYwTa4qpSmVi6q1qXmJZk4OLaeTrK3xBe35It2T
-	R7LsM8nBmLY+f9r73wsgUyRtzBKA64N0TVm0x+rsVYfCtz5OiudxL5hTo8ARKWA/
-	SVpbvFedwKEVGJFLqP+I7F1YnMcx5QMTrZCLlU0XyBBdB1v4GPWJ43pSDsGclisF
-	oMxvcs5QbZ0UUO/1sYYucyM3ew42wqnPo6IKYPNXMVfj1h8abVpZK4KqA5Q==
-Received: from mail-vs1-f70.google.com (mail-vs1-f70.google.com [209.85.217.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dtgmsb66r-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 13:27:35 +0000 (GMT)
-Received: by mail-vs1-f70.google.com with SMTP id ada2fe7eead31-6056351129bso16226759137.2
-        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 06:27:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1777382854; x=1777987654; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wClwdHi//EKovApGGp/o1/cMKxisBXL2sxG8w7zO7Fo=;
-        b=UcRHpEkLmkqrsoFjjEI8AAkd/TQzu0/DczlvkAqT97GHO1G8x88Lg4ultHuPfGihhe
-         ZtbdYRPo3660qwN/98b2Z3Nnq7eXWhuFgLPJLnDZ5JBNM/SmuLrcrgeF3SPne2camEd+
-         zVJp/N7NmyaCQTS1oJsXPp3zBveVGwPJa6rmt3e3uPtuqpTzDrjerQm7Wg6VvJTjeb8i
-         ofLCP8n/UXO5JipymKYD1JW8eNaMsEwuCE0F6SRXueEhGRDvpzibWSoWGPNGGqfyL9vQ
-         cqL/Nx3mVnoTkdCSPGe4HIDlLK7O6GeEDf8qgB7db4D3j05ICxXufMfPzyBiBOnMQu3E
-         pvPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777382854; x=1777987654;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=wClwdHi//EKovApGGp/o1/cMKxisBXL2sxG8w7zO7Fo=;
-        b=o9qjszBTQskw+lmkpV40HQbKo+Rw0OTcbj/qcCuNpbsAKp1sH9xnJlwIP1a45bx0Dv
-         uQWuOFGmRJMJjiWMG64VquyCS+FWCcDvT1S2GBikWLcyW3TQxF6FE12wAK7b8/WPhAcR
-         0hYSW9N3FvKWptjyU4Ci8RdGVkgXANL/jyun9U5Y7sZNtH630NyQaUsYakXXA78vH9IA
-         ZCa9aP/nbFM6VeGt+3cQ+/TsGQMANTiDf0cTddysD1aWW2zoQ64PXpFBfTXuXVN0/HhT
-         VQapy5mxifRL4TCQbUuSiCL+WTBHuRQa0kkq53NrX/AQD48gn65s7eq0bY75GZsru0N7
-         jySw==
-X-Forwarded-Encrypted: i=1; AFNElJ+bEW8mpw0XNV67HOFDh+Gwzu0OQQ+HbUq0oKMCw4ApEHF8oyWHAn8FZEQo5cSOxoWwSCXWAdm8cmo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxi6CDKvo5d040Ast1/lV035H5A18PWZ/zkqjvoxbz6nmmeOjlW
-	/ilAMfyzCQkU7uUSM2huE6FCua5w8R7DfaTOzNrwtTyw95/UCt5N2L2zSI0Kk9osuN8atJKAUlM
-	JopNRR6wEyNFX2uMA0mgYl14Xk4BTi76sIuKwYjJavN8XXmJL4ET57ZaCB0WxrnM=
-X-Gm-Gg: AeBDiet0ey6M993yT7gdLpLnNdA3dohihz7GTsdYghhwqnnlOeIqj1uzpDYtoHE6+9Q
-	zx5pYMY4bb7PAL/M59AOMiXUlrtiC56O4iUiMP0OovEgHzBxUrUP/zc3WHjBWxkQCL6FBFJt7Sr
-	OKJMZQJBBlpyxSUYsmmU0WsZ972dZ9un64UW9FCJ8OVGYu1jaTEzzOLGZoYww/vVMOxVEJ2saM0
-	Ruw69lFJu6nyCv6okbhVLiRyMqb9ycY8z2BRRUbCBXGbV4/NJl6eB6sZzqIEhhwkhdNg1JY7Dkt
-	EUQF6YRstZh+mQKMG0neKcZx+gOZTYuPtjMj8AeDzODd4x4xzAgVI2au1kBcSZxn3M6rB0gIU8e
-	pmNdNKdvU37RtfB3zId73jJEvEM+nYvJcQspTSSL+sphDhOM=
-X-Received: by 2002:a05:6102:54a7:b0:610:56a:4bdd with SMTP id ada2fe7eead31-6280bde472fmr1278814137.28.1777382853830;
-        Tue, 28 Apr 2026 06:27:33 -0700 (PDT)
-X-Received: by 2002:a05:6102:54a7:b0:610:56a:4bdd with SMTP id ada2fe7eead31-6280bde472fmr1278233137.28.1777382840066;
-        Tue, 28 Apr 2026 06:27:20 -0700 (PDT)
-Received: from quoll ([178.197.219.94])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4463d5ee9ecsm7232213f8f.16.2026.04.28.06.27.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Apr 2026 06:27:19 -0700 (PDT)
-From: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-To: Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-Subject: [RESEND PATCH v2 2/2] PCI: mvebu: Keep child node refcnt for probe duration
-Date: Tue, 28 Apr 2026 15:27:10 +0200
-Message-ID: <20260428132708.95998-4-krzysztof.kozlowski@oss.qualcomm.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260428132708.95998-3-krzysztof.kozlowski@oss.qualcomm.com>
-References: <20260428132708.95998-3-krzysztof.kozlowski@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="OsbShZSZ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=MmaymhB07wqvKIsDPoeVVPvU6JBZgpuoHjj+J1RnI0btZ+F1FIFj41YDQpL67/uBonAN4fOQUE7MA60KvvP0hVrLTuWLY/Uq+risesrH/Vw+LOgnc2NMQx9p21E8bladnx/PM32CraZZo2KK9lhI3ihptaGsFw/TPx4c6v9hqf081OTr5Oh8SY/ghTaFm3ChWGL+BpuQoeJHRj14R9STvTfIsTX5Ps8/K7jV9Zi07QylyZp6ijq0+cON01dsC7FLUYVmUGTqnU44vTxc5g+rctrLImorVt3KqUyeO5u2/iGqgP73taaJ4nC/8dGbvv6YIDZaxeEfVbOF+8/piXo8dQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=FwDuMHE/4HHSYPolYYpXbnNdbqbbZXyxT87H71H9lls=;
+ b=hFCIkVBMyOVmw1DaOlbIKbyuo5ZYCl/pFeSFtNl5bHECWJvzpPNmwWgKNbzgdp1fieEAYhk/BoR/fPOv4woEcbQ5Zg4nfngH15cBdT+spq9YX+qXWNzsQWQaq3KlXKWwqALPiLwpYBYZBDZ/4elSpM2pYz5kahDUgteYg/esn6GrknCO6UhHtpUGMUx4YJMg31ALeKjlmbmtKgM3Docr1cbPGQ2WkB3Zi8lNHYEOFG8mgt6JaS7C0XLLaymr89BWlCmgdl2VGFZU+X5uW5gdHHF6ub7fslgrdgzykEczPHCf3rTjg0utx2LnzR4skIbdWwcd4MPtQUdE/ohpfqYz/A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FwDuMHE/4HHSYPolYYpXbnNdbqbbZXyxT87H71H9lls=;
+ b=OsbShZSZS/dZTKY9ybBmRokrDrMHpa8aIskI8zBu/LLYL/YLFA5gagmb3caNGlpzM8aOf3J8hSB35+Msskki+SlUAyxVaZLRpprm6KvFMnlKJQiGXmN+xUa/q85Nq3y1NKzoSxxpewC+t98/jx8mtQLJfXHrtoG5unZ0rThVevk=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by CWLP265MB6708.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:1e9::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.26; Tue, 28 Apr
+ 2026 14:08:42 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.20.9846.025; Tue, 28 Apr 2026
+ 14:08:42 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 28 Apr 2026 15:08:41 +0100
+Message-Id: <DI4UIGMGKN6H.375657ZERNYB5@garyguo.net>
+From: "Gary Guo" <gary@garyguo.net>
+To: "Andreas Hindborg" <a.hindborg@kernel.org>, "Gary Guo"
+ <gary@garyguo.net>, "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, "Danilo Krummrich"
+ <dakr@kernel.org>, "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng"
+ <boqun@kernel.org>, =?utf-8?q?Bj=C3=B6rn_Roy_Baron?=
+ <bjorn3_gh@protonmail.com>, "Benno Lossin" <lossin@kernel.org>, "Alice
+ Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>, "Daniel
+ Almeida" <daniel.almeida@collabora.com>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, "Abdiel Janulgue" <abdiel.janulgue@gmail.com>,
+ "Robin Murphy" <robin.murphy@arm.com>, "Alexandre Courbot"
+ <acourbot@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>
+Cc: <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nouveau@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>
+Subject: Re: [PATCH v2 11/11] rust: io: add copying methods
+X-Mailer: aerc 0.21.0
+References: <20260421-io_projection-v2-0-4c251c692ef4@garyguo.net>
+ <20260421-io_projection-v2-11-4c251c692ef4@garyguo.net>
+ <87lde7p6d9.fsf@t14s.mail-host-address-is-not-set>
+In-Reply-To: <87lde7p6d9.fsf@t14s.mail-host-address-is-not-set>
+X-ClientProxiedBy: LO4P123CA0034.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:151::21) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1813; i=krzysztof.kozlowski@oss.qualcomm.com;
- h=from:subject; bh=ov8hIF8M1z6R9wDtFRkRAkC1i3judy0L71MjXuy8SHg=;
- b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBp8LWvxjL35h3b9GCXehstfFtvOosrOCx8JxD2V
- bgJIU/Bh3aJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCafC1rwAKCRDBN2bmhouD
- 16WlD/9v1FyqjVeDIKt9vW6cdG/antel/dqTkWtauYAQHcCKwfJF/GUZ7e5Ze/UthhvEqtUjfNW
- qZ/SJxUyDrHJFuFruqiSughQx1TfTQw6NpicAiWE6hLuGADO/tBlh1WO4FEqmSq6/onJPPh1eyK
- IM5GewioAdS3wz7EE0DOVoncynQBibxpTkhhKaRg6sE54NQJ9YDNHOya4xtiY7rAitvZmQsYBnJ
- eajJULQzgNDHPXvaa6XGiQ+YB3TuW+2d8gBKWywb9RjfrTfvPT3Wr9tjk3jZOlXf0BYqF8EwMY8
- p8f+69RByv/MAkZzG5yeLjLU+dCQJkH20OzLi+Y4nFu+g/pSwCYc3z34JBAVYtQ68cH2jaCpKvI
- voA7mxbSB769nrhf2neiMDLMVvZxY+ndor98M+G1p4lrgjo3e6nYtW0GNSxKkrqGCqJth68mibs
- +FRu106p7ZkPS0Fc1/pRSz1u5xoTxQGizvKPWkjNjJDzYenIot2+/F/r5pYio5Q3FYZHiV6AXfS
- 4hHkeKMgqe5tV6O3bInL4xOmnh6ZFt6+UUUzYpdxhFL/Dvbg/no+ZoxiAlOq03mUU1f0r4Gch7x
- 7PkoM4XZNene8Vm2AcQUTxlesu1YkVtRLteTwGEklVDXm0NtEu5KBmnqO8YLFGu0QzplzXxKb5x KqbBl83c5g0ouSw==
-X-Developer-Key: i=krzysztof.kozlowski@oss.qualcomm.com; a=openpgp; fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: 5liD-z_cMS29LmzWDqRbcNHa42ZduGF9
-X-Authority-Analysis: v=2.4 cv=R4gz39RX c=1 sm=1 tr=0 ts=69f0b5c7 cx=c_pps
- a=N1BjEkVkxJi3uNfLdpvX3g==:117 a=gOEeR9iKwsj33Yj5oN/cWg==:17
- a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22 a=EUspDBNiAAAA:8
- a=pABr9VbpVV2WwmlfmZwA:9 a=crWF4MFLhNY0qMRaF8an:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI4MDEyNiBTYWx0ZWRfX73m1xmWMPEyL
- 2fEVwmJ4MaxcNlfpLPc/bzAVC6XOzYKjDejlAHSiNf8etLqrZkuTKg5zSVCPtzCP+VoIiD/2Fdu
- BFE1Z+b+LtOlMDd8kaUoRw1lRi3Q0vCj1HnsRY0dP0u6DtT7cRYyws5vqDtscNlX2BAw6pfRYbO
- GjTZCW90Zzih/jKtsAJ1ConnUi1NO8ajDHvS5W4Pprfb5EVtDNvSLYsWRPyROsDHrx0pH2nwwig
- ZXJHc0cn+mft5PjlfnDBXh0FIooKQb8lqKg9dWf/RiQYH5t2kH96GTHghYsr+Zqf7EdmNFpFvGT
- kkLWT+zAM7ke1PLNTtxQMb4oSI4y1X5hN6ZkLZS5llFCGBQJCoAypqMUdTzp/1Ul75e8aDrdvNJ
- 6bqxHFazKEas3TLzUMb6/YxlePisIG0TXNYv+n9SNbYgBIozJVtJROOSlvkUWl+g33GOX5oQRpl
- yUuLccnpCEjJoa0kiSA==
-X-Proofpoint-ORIG-GUID: 5liD-z_cMS29LmzWDqRbcNHa42ZduGF9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-28_04,2026-04-28_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 priorityscore=1501 malwarescore=0 clxscore=1015
- impostorscore=0 spamscore=0 adultscore=0 bulkscore=0 phishscore=0
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
- definitions=main-2604280126
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CWLP265MB6708:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7a95ef55-85bf-4dd1-8ee7-08dea52fa761
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|1800799024|366016|376014|7416014|921020|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	TD9YVgmnLkSI+sVs/iOrwrJo8qMB/FdRmkturYpXDuinsM37YRudyiAwN/Fph3dzxG/eREOOCgqqt1kQi1wWYXMbeoOb62nfS62yl5XcjkgwNZXi7Loy/ohUNlFxXo9GhIY/5ekXNcAP9WChNy9y03rBb0QEKRNpufSOweorm11N92rT6IPuWJNEwSn8nlrm6ariEJBzGi+bZCgGhdfcHw9/GSEbE61i77VCjx7CvnXvEp8oukc6CrjLR6hqlBN4tLiSHsDKDnoceU3kmZZWKm9xyhh42JhSYNd1Qz853JcwyUQLGskDY0K72WVhhSPZhMk6PuTbjEEolFPmQ0MdnR4g3csnJRjqtBTZywhnP0bHsT6gVT6+8qAN8wZTjImRL7Dsm2vxMzUSpuHE/43BOG/vzqQHp0TLeQ2XM9f52J/rhrq5RUUyHdUK8dCKJWwZISwRxKR2fzYE9vFUBXCINc19CJtq3Q0Fp8TAWzsw1AaZD3SyqV5TzF0LZp7hK5gRXa7Juh5TojZ0nQ4g8Q7e+U9rsRs7DFg1phAehWL2fU1dU2RhvaJotrgf4tEqme7siANd++T84XxmQJqW6Hpeag44AZXshZOc9i+3PDtlK8gI08dK9o6gdlwRi3i3BceqNRwQVRExZsf/LL8C5Ac1BVWZDamtDdNI/r9sTa8krdrngkAfwDfdK13D/qozxR1EVKIOQkzlwyi/YRmzlXi6AWNYbrxGRuNWDkwe7OjXsZ6J6lUA67G5hTHyyamelAbPYrTZrOssF/ej2zsMN3ppQw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(366016)(376014)(7416014)(921020)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?KzdTWnBSdlNZdWY5eUJ4ekJ1NjlJU1V6V1BNVnJrelpyWjFDMVl1d1FtUW9J?=
+ =?utf-8?B?YXRtRzFJcmNwcUMzTy93Y0hOT0gyVjVpTm5zeWFNOXYrRllvcmQ0aDFrVFlk?=
+ =?utf-8?B?cWJaK2NCdkRaNS9nbkQwV3NVODJ0YXpBL0hrWWsyaEJlcS8rN2JTeWREcmxW?=
+ =?utf-8?B?OW5zSnBZSW1ESyt0d3pPTTZwM3hXL3V2TjErRHVQUUNNcXoyaUhteFFvSmtk?=
+ =?utf-8?B?Zzh4aE1CV01idTJyd2R2NTFobFNTaFYxUmlIRU82cEJPZzRPbGEwRzE5MGhC?=
+ =?utf-8?B?akRpMGp1QWlKSTgycFRDMWx6Q2REU1hKeHFDcUxQUmljVjczR1J3K2RpMWNi?=
+ =?utf-8?B?S21vZzgyU01aVnFMdDUzNmh3ODQrdURieGpGSkpvWHh5eE44WEx5REdWRDIv?=
+ =?utf-8?B?WXJFa3J2NldWWjhUS3JFL0Y1cFJZeGNqOTM1SlZvUE15aldYamw4amlBNDU3?=
+ =?utf-8?B?anh5dVNTalhuNWh4UHdTSTNTQzk4MFo0WTVHb3hBdmtud2NzaUwyYUo3MEh1?=
+ =?utf-8?B?c2VyaU1GRG5zYmhmRy9oaWxEYVhEWVNzL1k4TmJkbndtMmJrUSs3SzhSS2F6?=
+ =?utf-8?B?VjdpUFRid2FORCs0ZU9SbTI0eFAwMGc0R3c2UmRzOUNLMU9DdFNZYVpyU3dI?=
+ =?utf-8?B?aUpOZTV4RGxaZk9paUhxZkMvNEQ4Yyt3bW4xWVhDWnNOaW9CcnhRZjNocVUw?=
+ =?utf-8?B?ektkUGdPS20xZ1hGVm1iVjhiTlF3VXZ6YW5INGttL1JuMzRKSG1ZYVlUdllB?=
+ =?utf-8?B?emhOa29MYVRyZ0FINURycGltWFR6MC9rN0Y2SFphTC8vRmI0UkVuRGJmaWpF?=
+ =?utf-8?B?dFRmR3FhQUI3Q2J1U0I0c2tZdFBFTDVIL1B4VUgxZnJRMDErZGUvWlIxLzdQ?=
+ =?utf-8?B?QXgxaEI3dGovNEJqQnRRbnZzRHNnVUk0T2pxZnUvcFpRdEtKWnNNOWZsSG1G?=
+ =?utf-8?B?RFVLUndDaGpPVlpoMXZyMWNNTThveE1SYmZ0Qm16WEE4MUdZeXVuSjliMWJp?=
+ =?utf-8?B?UzJEWW5lSkhSODloZFlxUHdVM0pPT2l0bFprT00zZkVHZVZqMGNXUEtpSFVr?=
+ =?utf-8?B?WmR1QVdNOEtlUnVCUXpkZXl5bk9RN1R0cFYxQjNyYi84TjdVUy8zWEtLeUdk?=
+ =?utf-8?B?bjlCVlUwbGwrR0RPOWpRbGY1L01rbXhPUjZVQnRCTGdYakNsTEdnNEtKRHJi?=
+ =?utf-8?B?bG53eVVZdVZSWElWOUVaSDBUczQwTWdsZTFSMWtoTUhBcmxlRFFsMlV4Z0tV?=
+ =?utf-8?B?bnFHOFB4N1A2a0NnTmJGVGVQTS9wUWRRMkhIVjEvYWJ2NElrNGtwYSs3Snpz?=
+ =?utf-8?B?QWpFOVl4bml1Zy9qMEVhVm8wSWJBcU5CZUZvNjFIMGFFd2Z1ZEc1aVEzcnJh?=
+ =?utf-8?B?cFZ3WTN5cnRiaU4wVDU2MEUrSUtUQ3ZZQ2U0ZllaV1hvLzJwT1Irazl1THVl?=
+ =?utf-8?B?aE9OUEhzdzc5b1ZmVXN6c3NScUJ3aWhxSHZKM3hwTnhEU1B4amw4Vlg2eSt6?=
+ =?utf-8?B?OUFHcmZIYm5UOGlVT2J3TTNrbzV4S1hZc0srWUxmdDJPMFFJL291QUNBNkFB?=
+ =?utf-8?B?V3A2djNNUkF0M1VxK1RuQUlVV04zZ2xScVhIWFFuZ1N0cXhPTC9XRFRwMXRR?=
+ =?utf-8?B?WG1IOU9Qc0Fzc0pQejg2cGJ3dE02ak8yWjJ2RTBWdDB3dFduVEhreDZOcFFj?=
+ =?utf-8?B?dlJySFpreWE4MFRNZEE0djFmVllZS2lLaWVjUVBUZGJCUFh1Wnd6RThqQmZX?=
+ =?utf-8?B?bzZNTFNWaEtOWWcwZlV6OG5KT1JpWlN5TkZ3aHB1bWdsTHF6aVNvQmNGSFlG?=
+ =?utf-8?B?cldRaERBaGFLd0Z3K3JzaUJid0ZFalBnU3dmeWlEcFZxM1ZaczgzM2ZZdzFR?=
+ =?utf-8?B?dTdqZHZreUNmaTRkL3QyTVR1ZjBzOHlKb2ZTZWFGaDg2b3pPbS80aVJmSXkw?=
+ =?utf-8?B?Y1JLVWNOaUdaYW85d1hpaU1Gc3FudkJnR0J3dG5BS0gvb254NG1FR0dxOUlK?=
+ =?utf-8?B?dVFaRWxCMlRvWXMwUUErdy8xNGYrejNlNFNrVExiM05Pb3JzT2pCNnZWTnYx?=
+ =?utf-8?B?WjZDSGs0bGQwWTRrZy84OGtqOU5FaDdMUHNJTmpaZm9RSjVDSm8yNHBZN0lE?=
+ =?utf-8?B?OTREYWZQei9HQ3ltMTE3L3hNRVFJeEd5N3dKbFczUkVUa2lLRGEwY1RwUllm?=
+ =?utf-8?B?aVN3MHBRSkRVZkRKdGdwazhmNUlDMU1vQzVEVzBIeXNzbGxPQzFmWTQ5MUo3?=
+ =?utf-8?B?eG9XTGp5bDlLaCtwMUFJMlNQZ3FrTlQyTUFQOEpHRFVGSC92RkxBODdsUVpj?=
+ =?utf-8?B?MnpGQ1IzN2tEcm1kb0dyZkxWdW8yT0wxNWI5REx2OUI5YUZOVVR4dz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7a95ef55-85bf-4dd1-8ee7-08dea52fa761
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2026 14:08:42.4629
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: R4oIuLD3vk+g8t4clW/+aUU4SX+QsJ+7tLSKfbSrvrUv1iGu9wQ1OZH0X8cmO3hMUQ8VIMGjXeiP0m4nUh2l1g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWLP265MB6708
 
-Driver in probe() first iterates over child device nodes, storing the OF
-node pointer but does not take the reference to it for the remaining
-part of the probe where it is used.
+On Tue Apr 28, 2026 at 2:22 PM BST, Andreas Hindborg wrote:
+> Gary Guo <gary@garyguo.net> writes:
+>
+>> One feature that was lost from the old `dma_read!()` and `dma_write!()`
+>> when moving to `io_read!()` and `io_write!()` was the ability to read/wr=
+ite
+>> a large structs. However, the semantics was unclear to begin with, as th=
+ere
+>> was no guarantee about their atomicity even for structs that were small
+>> enough to fit in u32. Re-introduces the capability in the form of copyin=
+g
+>> methods.
+>>
+>>     dma_read!(foo, bar) -> io_project!(foo, bar).copy_read()
+>>     dma_write!(foo, bar, baz) -> io_project!(foo, bar).copy_write(baz)
+>>
+>> The semantics for these are modelled after memcpy so user has clear
+>> expectation of lack of atomicity. As an additional benefit of this chang=
+e,
+>> this now works for MMIO as well, which maps to `memcpy_{from,to}io`.
+>>
+>> For slices, which is unsized so the API above can't work, `copy_from_sli=
+ce`
+>> and `copy_to_slice` were added to copy from/to normal memory, and
+>> `copy_from_io_slice` and `copy_to_io_slice` were added to copy from/to
+>> other `Io` regions. They're optimized if at least one end is mapped to
+>> system memory; if none are, the copy occurs with an intermediate stack
+>> buffer.
+>>
+>> Signed-off-by: Gary Guo <gary@garyguo.net>
+>> ---
+>>  rust/kernel/dma.rs |   8 +-
+>>  rust/kernel/io.rs  | 231 ++++++++++++++++++++++++++++++++++++++++++++++=
++++++++
+>>  2 files changed, 238 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/rust/kernel/dma.rs b/rust/kernel/dma.rs
+>> index bbdeb117c145..307f5769ca0a 100644
+>> --- a/rust/kernel/dma.rs
+>> +++ b/rust/kernel/dma.rs
+>> @@ -16,7 +16,8 @@
+>>      fs::file,
+>>      io::{
+>>          Io,
+>> -        IoCapable, //
+>> +        IoCapable,
+>> +        IoCopyable, //
+>>      },
+>>      prelude::*,
+>>      ptr::KnownSize,
+>> @@ -997,6 +998,11 @@ unsafe fn io_write(&self, value: $ty, address: *mut=
+ $ty) {
+>>      u64
+>>  );
+>> =20
+>> +// SAFETY: `Coherent` is mapped to CPU address space.
+>> +unsafe impl<T: ?Sized + KnownSize> IoCopyable for Coherent<T> {
+>> +    const IS_MAPPED: bool =3D true;
+>> +}
+>> +
+>>  impl<'a, B: ?Sized + KnownSize, T: ?Sized> crate::io::View<'a, Coherent=
+<B>, T> {
+>>      /// Returns a DMA handle which may be given to the device as the DM=
+A address base of
+>>      /// the region.
+>> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
+>> index efcd7e6741d7..0b1ed68c0f9b 100644
+>> --- a/rust/kernel/io.rs
+>> +++ b/rust/kernel/io.rs
+>> @@ -4,6 +4,8 @@
+>>  //!
+>>  //! C header: [`include/asm-generic/io.h`](srctree/include/asm-generic/=
+io.h)
+>> =20
+>> +use core::mem::MaybeUninit;
+>> +
+>>  use crate::{
+>>      bindings,
+>>      prelude::*,
+>> @@ -233,6 +235,55 @@ pub trait IoCapable<T> {
+>>      unsafe fn io_write(&self, value: T, address: *mut T);
+>>  }
+>> =20
+>> +/// Trait indicating that an I/O backend supports memory copy operation=
+s.
+>> +///
+>> +/// # Safety
+>> +///
+>> +/// If [`IS_MAPPED`] is overridden to true, it must be correct per docu=
+mentation.
+>> +pub unsafe trait IoCopyable {
+>> +    /// Whether the pointers for this I/O backend are in the CPU addres=
+s space, and are coherently
+>> +    /// mapped.
+>> +    ///
+>> +    /// When this is true, it means that memory can be accessed with by=
+te-wise atomic memory copy.
+>> +    const IS_MAPPED: bool =3D false;
+>> +
+>> +    /// Copy `size` bytes from `address` to `buffer`.
+>> +    ///
+>> +    /// # Safety
+>> +    ///
+>> +    /// - The range `[address..address + size]` must be within the boun=
+ds of `Self`.
+>
+> We should probably specify what "bounds of `Self`" means here. It's not
+> the bounds of `Self`, it is the bounds of the memory region `Self`
+> represents.
 
-The pointer thus could become invalid if children OF nodes are being
-removed from the Devicetree, e.g. by removing OF overlay, while the
-probe is being executed.  That's is highly theoretical issue, thus it
-does not look like bug with any effect.
+I just copied the wording for `IoCapable` methods. That said, I think it's =
+worth
+improving.
 
-Nevertheless, make the code logically correct, so acquire the OF node
-refcnt for entire lifetime of the device, since the pointer is stored in
-each port state container structure.
+>
+>> +    /// - `buffer` is valid for write for `size` bytes.
+>> +    #[inline]
+>> +    unsafe fn copy_from_io(&self, address: *mut u8, buffer: *mut u8, si=
+ze: usize) {
+>> +        const_assert!(Self::IS_MAPPED);
+>> +
+>> +        // Use `bindings::memcpy` instead of copy_nonoverlapping for vo=
+latile.
+>> +        // SAFETY:
+>> +        // - `buffer` is valid for write for `size` bytes.
+>> +        // - `IS_MAPPED` guarantees `address` is in CPU address space, =
+with safety requirements
+>> +        //   `address` is valid for read for `size` bytes.
+>> +        unsafe { bindings::memcpy(buffer.cast(), address.cast(), size) =
+};
+>> +    }
+>
+> You could just leave out the default impl and implement each case for
+> `Coherent<_>` and `Mmio<_>`. Do you expect more implementers that can
+> share the default impl?
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+`copy_from_io_slice` and `copy_to_io_slice` needs `IS_MAPPED`, and also the
+optimization of `copy_read` / `copy_write` too.
 
----
+Given that the semantics of `IS_MAPPED` ensures memcpy is always okay, so I
+think it's better to just define it.
 
-Changes in v2:
-1. New patch
+The implementation of sys mem would also just use memcpy.
 
-Note: Not a fix, because practical impact is absolutely zero since
-of_node_get is a noop.
----
- drivers/pci/controller/pci-mvebu.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+>
+>> +
+>> +    /// Copy `size` bytes from `buffer` to `address`.
+>> +    ///
+>> +    /// # Safety
+>> +    ///
+>> +    /// - The range `[address..address + size]` must be within the boun=
+ds of `Self`.
+>> +    /// - `buffer` is valid for read for `size` bytes.
+>> +    #[inline]
+>> +    unsafe fn copy_to_io(&self, address: *mut u8, buffer: *const u8, si=
+ze: usize) {
+>> +        const_assert!(Self::IS_MAPPED);
+>> +
+>> +        // Use `bindings::memcpy` instead of copy_nonoverlapping for vo=
+latile.
+>> +        // SAFETY:
+>> +        // - `IS_MAPPED` guarantees `address` is in CPU address space, =
+with safety requirements
+>> +        //   `address` is valid for write for `size` bytes.
+>> +        // - `buffer` is valid for read for `size` bytes.
+>> +        unsafe { bindings::memcpy(address.cast(), buffer.cast(), size) =
+};
+>> +    }
+>> +}
+>> +
+> [snip]
+>> +
+>> +impl<IO: ?Sized + Io + IoCopyable> View<'_, IO, [u8]> {
+>> +    /// Copy bytes from slice to I/O memory.
+>> +    #[inline]
+>> +    pub fn copy_from_slice(self, data: &[u8]) {
+>> +        assert_eq!(self.len(), data.len());
+>
+> Do you really want a panic here?
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 4d3c97b62fe0..7fb9c7393588 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -1236,6 +1236,11 @@ static void mvebu_pcie_port_clk_put(void *data)
- 	clk_put(port->clk);
- }
- 
-+static void mvebu_pcie_port_of_node_put(void *data)
-+{
-+	of_node_put(data);
-+}
-+
- static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
- 	struct mvebu_pcie_port *port, struct device_node *child)
- {
-@@ -1482,7 +1487,11 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
- 		else if (ret == 0)
- 			continue;
- 
--		port->dn = child;
-+		port->dn = of_node_get(child);
-+		ret = devm_add_action_or_reset(dev, mvebu_pcie_port_of_node_put,
-+					       child);
-+		if (ret)
-+			return ret;
- 		i++;
- 	}
- 	pcie->nports = i;
--- 
-2.51.0
+It's the same for core's slice::copy_from_slice.
 
+Best,
+Gary
