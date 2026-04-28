@@ -1,168 +1,73 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09B038838C
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 23:51:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A360171CD
+	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 01:07:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777420305; cv=none; b=l9LBiRVXev1AUF07xkp5IG6QMIwNUrGjZQQogaiC3Xi608GRu/DzJ8AE964SzT5IfD2vA6o1vKyXg4B+fvRTItEHEoRnMZF5AVsT1P6On33GPz8xGvcRycY+q7YyzfnYqy6m5cDwvh6KU+3pa4yIaVdEFK7pT78RqcboLSHCotQ=
+	t=1777424881; cv=none; b=TNixp3UUsFcAsyLsFP3k4sIWjiBOmlu68hB1m2YobLnrV1Pwm0ckUOxRnXFjFTvFWQ1JkHnyKpDeD1C+Ey47ctTnjo6hTY78dHpXUCdng1wQfrx3VsrRiM1lINDFouNATHVn8aDdCztifv/QtCQwC2cQkr0s2ShZNS0PQWKdHkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777420305; c=relaxed/simple;
-	bh=PzrGjnYnqw4935qMxbE++jGJcpzbiv9Qu385mNo68Ew=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PPrFQAisyB/QqJVt89o+6bhspZb/nLGV9WB5vj2/guM9TeZn+JUWAihL/t7N4GrKw9eoNiX1WA+1L6nF7FjqiWKBfsht2z7xxOaDEJ4TDq5ITcR0OwjN49MTUEL6tNOYb/8lEsQS8RKQgMPkYc8i10Cla085a2Zs4qykOcX3AM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=veJ52o7X; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1777424881; c=relaxed/simple;
+	bh=PEdznQE2XE+f8rCFkGqo8/kbObIBmLfeCQG3nfXgAp4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JFilabAYEsuic0pAhHkoOjUYV3BIARHokvKtoofhmE/dTY7G1iG/3X1NUZvLOXA93SQFYFW10j58HkOGUvmxofpt8rW0noT62tV3jjlFXneh62pQMS3yazrMwq/T7OZGfBK97XzHWOgrhMYRY2Tf3lfW9mb8b7x+VR0NSbl5KEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=fJx5L2i9; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="veJ52o7X"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2b45cb89f7eso74796455ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 16:51:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777420303; x=1778025103; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=in+mysCXNp4IJcp8wpKV/ePcsC7P4CQwStR4ajhF2Xo=;
-        b=veJ52o7XgBTZD/d4gsn74d/L9Fe/9u1lhdwWWDUdMNRjuwTZ47RO8vJYkF6NaMe6hC
-         1wp84OTcSepUS5CpdqRar9FfLrAwyyKwJ5CPifdUNZMVjV9yUfgiczorXrhs/DzK9mMS
-         3DcXfbfDbKp8cnNCJE1tEbMzE1NqlqcNyfPb5puyT9N3d3r4STq1pgPVZxof7wOWgELM
-         hs6ymFWVJJknOKNQ1XD+miCCzH7iozy3IzAeCI/h+89qcgqNmOElz+jdg8+1HNIuOeqz
-         93cYPHfeQBPhR2P/9gkmu/B63A+ugtPTYnKvAtYJXGEpGqs0U3AZ1ecgRx1j57VdEgBG
-         T13w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777420303; x=1778025103;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=in+mysCXNp4IJcp8wpKV/ePcsC7P4CQwStR4ajhF2Xo=;
-        b=gTgDu3iTpg5cevfO65IQsI5DVSPR4gEm+qxPk5O9RtWNl01iDJpZ97P00SXGvSjtPg
-         sdG6yjORjEDErW5o6+ulLMf8UXjPjJUuzr8o3Hhd+zG7fRbFBBdPFesqXeS0OWCkorhw
-         BzS8uwI6nBLgDDCVUrOWmyiYRVBu3CFY3fL2bUoxSHbjGYsOAq/F8DoHGuqpR8+hIaks
-         Wb59IKoaq3HY2GijnBEEt8JsWYO9VRIqQNYD4MUntwJE2Dllf7qs1TuvBdajOJBeSiqe
-         vRbKD+N3mTGoWWWpfAUSh+7mDM4eiQctFBrMvjBloHnKyFnWNvOlHNl9gu+RwslzDAZz
-         wRkA==
-X-Forwarded-Encrypted: i=1; AFNElJ+jkysEOkIof8LNCj30a2iQ7uP2nd3yJV/7zVIpKxascw4cu1KHmoDWvwvtuGfNiVT3KyOkJF91Qa4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyaD/hY8z1A4G/5ghjTbiwcxrw2wEtshxskIHbFiixFLr7U3k5s
-	llWfZRA8AddD9FrEQlhFQ7ekzykwf/sCujWA3RdhZWHZb+UoVriHK8CZkHcHo7HKUA==
-X-Gm-Gg: AeBDievFQB1FYLtQtZfx4DTuyOQE4eVdAr759YPPlUgYPbVyNe3QIMGru7WsEdW/5Py
-	zzkhSotBEQwcm4bhwGOkFk86/4hsrBkK5+EOb/kcUOZvGLZiZ8BflFh+jJtHOpH/l76nA1mq3AR
-	0eHBxh9M2qexEpR6Fs8L2yqVTMo0PxCwvjMTfDx3mybd3E8upa/oTOSX/NzJ9/OYydazcZAdOJg
-	2KxaSjAU0463ZwEVmqRZziCHNRRyxqFz5iDIvi83uufoqG2Kqu8cL9ILQO2AWCahsjSRNpztCtu
-	TnFi9D7mfztZrYvSLdl98/vwKEuY/Lig63jnxLvnY4Fcjb4hAfjDP4qzJJ3Bo0yq0SG3YyACxkv
-	0oEFxzm7V5N4VyqW7bu3LXTi7L+8M8GBGE0NcW6V6DXKdq99qx7KQ21fyRxx3Y0pU/THBrsbyBT
-	mvTlsBWhYerFXRmmQrbAz7iszzjnkDwR0Om74/DaotcRqlMwQlOwwsOf8Pt9IBk97/CSfeYoIgs
-	ZsG5A==
-X-Received: by 2002:a17:903:a90:b0:2b2:65db:8c5f with SMTP id d9443c01a7336-2b97c4c8995mr46570035ad.27.1777420302688;
-        Tue, 28 Apr 2026 16:51:42 -0700 (PDT)
-Received: from google.com (76.9.127.34.bc.googleusercontent.com. [34.127.9.76])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b98859f629sm3480345ad.0.2026.04.28.16.51.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Apr 2026 16:51:41 -0700 (PDT)
-Date: Tue, 28 Apr 2026 23:51:37 +0000
-From: David Matlack <dmatlack@google.com>
-To: Vipin Sharma <vipinsh@google.com>
-Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>,
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 01/11] PCI: liveupdate: Set up FLB handler for the PCI
- core
-Message-ID: <afFICT9mSL1XG0v_@google.com>
-References: <20260423212316.3431746-1-dmatlack@google.com>
- <20260423212316.3431746-2-dmatlack@google.com>
- <20260428185242.GB3825533.vipinsh@google.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="fJx5L2i9"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4g4zgc0qY8z9tkd;
+	Wed, 29 Apr 2026 03:07:56 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1777424876;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JrIiJ/1VeJoZS90MOSzgHaHoy8qfnV97x3jTtA0OI8k=;
+	b=fJx5L2i9a0nWxJKM8iZbaNMwU49jlmW6dt/eNF0rLwmZl7tkVABOQwLehGIOWnATrgYxcj
+	fb+KVNgj5s11uCqjIvECSbKjuHIr9xAkvG2ATUd8QpsGBCRmH/J4lmlHuYczt26wbE9e1X
+	7JXujbDkYJcKl1roYlMZqNgk57KxBQaBzmIdCIsPI4teSZ/93pMeteAztcdnNRmZT12Dsq
+	FJJdtI8ceEIxwETTJUf2hCCkLSuu/Vgwj1qR4MRpF4B3axLYBMlcydXzAmJ1oIlCwjyP1f
+	MpL1yvKHm/WxDMnl/3ZP9ed9qerib6q1MP6p93Yi5gTH09d2uydYAYRrf/l9iA==
+Message-ID: <c8d9911c-0880-4c2b-8896-a9939302d368@mailbox.org>
+Date: Tue, 28 Apr 2026 20:55:47 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260428185242.GB3825533.vipinsh@google.com>
+Subject: Re: [PATCH] PCI: rcar: Fix up MAINTAINERS entry
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Koichiro Den <den@valinux.co.jp>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+References: <20260428173657.GA237110@bhelgaas>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <20260428173657.GA237110@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-ID: b9718719dc9a263d2e5
+X-MBO-RS-META: mred81ixfk73bpj19xxf6eqygwis7o4o
 
-On 2026-04-28 12:45 PM, Vipin Sharma wrote:
-> On Thu, Apr 23, 2026 at 09:23:05PM +0000, David Matlack wrote:
-> > +	pr_debug("Preserving struct pci_ser with room for %u devices\n",
-> > +		 max_nr_devices);
-> > +
-> > +	ser = kho_alloc_preserve(size);
-> > +	if (IS_ERR(ser))
-> > +		return PTR_ERR(ser);
+On 4/28/26 7:36 PM, Bjorn Helgaas wrote:
+> On Tue, Apr 28, 2026 at 07:19:54AM +0200, Marek Vasut wrote:
+>> Use up to date address. No functional change.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 > 
-> Should there be a similar pr_debug() in case of failure to denote that above
-> "Preserving ..." message didn't finish, or, maybe just print one
-> pr_debug() after the error check above?
+> I'd be happy to apply this, but am wondering if you want to update
+> other similar addresses at the same time?
 
-Hm... I guess there could always be more pr_debug()s but I don't want to
-instrument every error path. I could move it to the success path but I
-don't see how that makes it any better.
+Not all of them, only the gyroadc needs an update, and I'll send that 
+one via iio, thank you for pointing that out. The rest are still fine.
 
-> 
-> > +/**
-> > + * struct pci_dev_ser - Serialized state about a single PCI device.
-> > + *
-> > + * @domain: The device's PCI domain number (segment).
-> > + * @bdf: The device's PCI bus, device, and function number.
-> > + * @reserved: Reserved (to naturally align struct pci_dev_ser).
-> > + */
-> > +struct pci_dev_ser {
-> > +	u32 domain;
-> > +	u16 bdf;
-> > +	u16 reserved;
-> 
-> Should this be renamed to 'u8 __padding[2];' instead? This will allow to
-> just change the array length based on the need (0, 1, 2, 3).
-
-Sorry I'm not following what you mean here. What is the reason to rename
-this field and change it to an array?
-
-> > +} __packed;
-> > +
-> > +/**
-> > + * struct pci_ser - PCI Subsystem Live Update State
-> > + *
-> > + * This struct tracks state about all devices that are being preserved across
-> > + * a Live Update for the next kernel.
-> > + *
-> > + * @max_nr_devices: The length of the devices[] flexible array.
-> > + * @nr_devices: The number of devices that were preserved.
-> > + * @devices: Flexible array of pci_dev_ser structs for each device.
-> > + */
-> > +struct pci_ser {
-> > +	u32 max_nr_devices;
-> > +	u32 nr_devices;
-> > +	struct pci_dev_ser devices[];
-> > +} __packed;
-> > +
-> > +/* Ensure all elements of devices[] are naturally aligned. */
-> > +static_assert(offsetof(struct pci_ser, devices) % sizeof(unsigned long) == 0);
-> > +static_assert(sizeof(struct pci_dev_ser) % sizeof(unsigned long) == 0);
-> 
-> Nit: Maybe move this assert to be near to the definition of this struct,
-> easier to find it when editing the struct vs finding it later during
-> build.
-
-The combination of these 2 asserts is what guarantees that every element
-of the devices[] array are naturally aligned, that's why I put them
-together here.
-
-I can move it up though if you think it's better.
+If you could pick this one up, that would be nice. Thank you !
