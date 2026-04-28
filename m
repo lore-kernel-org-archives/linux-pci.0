@@ -1,380 +1,207 @@
-Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021098.outbound.protection.outlook.com [52.101.125.98])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF16F361DB1;
-	Tue, 28 Apr 2026 07:00:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.98
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777359627; cv=fail; b=fY2X1ogupuYH9hxdTpKMbwf+4ubO0CO3t4xCL5WW8Dy0XO+9FJihhfKAO22rOvwkO9BrYWhOWJ5H/pWAjNToSM8gNcZILHli4GRsT27MSAQNKNcIIrN4YYep/tAEtdC8p08r92M72LWkwyWIghb9TLRpEQdJ/X7NvT88aZW4TP8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777359627; c=relaxed/simple;
-	bh=EcCJ6Huvei6uZkRqnvABVpCamsdiy4v//qC/5rO4PEM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=VLPlxvtGrailIaURWVH/ABVIzpB38Z9e8fwF8eN4Lzrs9mYbOe/4NRODeN8eXkt+c/+Kmk51pyhzllg57QrbBpCiNoywfOgzwlER9ABZ8b7SCC7KFW1FKttkiBtH/zuyx+0u9QE5NWsyPy0y/+Y2qPE9/N4XFIQldGBvJ7SU1wQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=RsuTtQNC; arc=fail smtp.client-ip=52.101.125.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 908E7373BF8
+	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 07:04:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777359866; cv=none; b=Ew6JFY+grCvPOKz/XOTy2DM2UJA+6p5TKNyQt32zqxRKF5XbsisffxJQg2XIercxZYarlhm0o37EtiurhjoUbx+5GSl6iumj5HNCxFfaI3R43gAtGUfAfsF0jjMPGaoEzHEu78AngNnsHrnSFU8RwtFjRumdK6qfZdKLdw9KFP4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777359866; c=relaxed/simple;
+	bh=8PVc0vfI3vCpQF7fkCpJp1KC/P10AJqeqm+DyCguC+o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nRJPFFThk9NLS8Nrg6cEkKEWa5XQwke6jwn1m7lwTUUmjRoPpidNRoxg0CqqRTeHm1Ig3SOjT3kZmVB/LQ9ax13Ise7jHGWomGSr6OyxFDX2S+RVdu0H4uhvS38aHri4RJGaPHv+PPRWxSEMzDlLX2UAFt0lz8CE4a8BCTd9Je0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=a4wi3LxL; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Mu3Bw79B; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="RsuTtQNC"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mCCwU0XBrNRD3IRuGvpq1M06kVanKX+1SnQFQhrfVL1egTSF6U3VclUDmsUJu+kvMi0RjtoO/6+Lm4v+ZSOUzGDxv942zdqSclQ+V3ObktPRUGPv+zst6lM20GpuTMW6GlGFsBgIST4FcVXcfkb7YoQBjOLPCVFWbtPVNkZq2IAHP82MKqu5UjCxbDu07yeBfVKNnz9bYkQ/qrICd3XZH9v+eN4vrnQCnAmFuRSfj1FIHHFon3IZSETxD9odHqZBFhMyFAPMiI8PA/XnGHs1EMO4C/aTd5kNioY5LiFvw5WoyvLj7RZoim5hPOHttrP2YUnPmC4mCaiJgvk9CsFmlA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=I5tj+cUxqfRHhTIddTtw4FDu3EdDPXpJeuaHY9p59EY=;
- b=mjzeS6iu6JcRJTOYk0L0R8vRdf3+5gCsN+etPrlN4YHlksTzqNYXyXctERp1nwAHoRyriW6+6VCV/gi2pNoCRkfRjDWzHgVIWxzCjmZH5IBwYpdJPML7M/5z+QsQ38eE5OsP8C3DmKhVVlEPo+4vzg7tg5ehABJ/0RhpOK5FsVY9wWx7ik/rQHjMU7MZNuVNvX7t5W1cXiQQYbBQlKvsLpUT9ZaciS/4AtjdamiRCynvChvSVLAKuwmtL//lwO6nb1ki5Kyb8PgZSwO9kC/U/6NNlPoZGo1Zd1AZghKNowtnMqic7oafF3P4JEDxJo1oeiTAbK9VNE/VS09nalGrCg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=I5tj+cUxqfRHhTIddTtw4FDu3EdDPXpJeuaHY9p59EY=;
- b=RsuTtQNCew3UU9oKcXy9HRnOXwg6Z2QL7W4UnqAg96KMFrhbcT4DggbiZXdKsa5vnnNAPonrwag5GgkMBVvAz3w7VtncDd2Dbnx3w+DOzqb//t6Eh+kEtMrebjDd2tSOAtEDjHGGBuS9iFuGsYmykmKohQ94wpUaZt9/Y7Szuow=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY7P286MB5403.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:1f3::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.26; Tue, 28 Apr
- 2026 07:00:21 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9846.025; Tue, 28 Apr 2026
- 07:00:21 +0000
-Date: Tue, 28 Apr 2026 16:00:20 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org, stable@vger.kernel.org, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-gen4: Limit Max_Read_Request_Size and
- Max_Payload_Size to 256 Bytes
-Message-ID: <oeb2uiudm7afzzzy3f5rykzctfnxlsydit6ww5raohcbxo3v34@hmnqr2ud42kq>
-References: <20260425233845.459175-1-marek.vasut+renesas@mailbox.org>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260425233845.459175-1-marek.vasut+renesas@mailbox.org>
-X-ClientProxiedBy: TY4PR01CA0081.jpnprd01.prod.outlook.com
- (2603:1096:405:36c::19) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="a4wi3LxL";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Mu3Bw79B"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63S53NpB2383087
+	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 07:04:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	8nDXMwCmY/sDn34euJ++LuckS+2KEQeDpNkaBWWS2hQ=; b=a4wi3LxLMkfD5bYw
+	YDTfKUEmqWqbWe1CkPMyQczr0EDcpkY0LDOj0BPDkvOrOPfCcpdbDVZCSt0jUxYR
+	0YeruyIsks5eel5B1BUgacxDIrK1dBxO5E/zA3zY1weBP1zRcjS6EwvUw4OYiY7w
+	RvYkohJIVf0VXDUZyq1a9eSj784eaLR5nc9G1dFzvCFsTa8dDEhWT4LyJ7wOApu3
+	xJSJ4xO7QezcIYfLCOzF07X9JepmJFAcTQPvr8RqRE7JeGs/4NacztxwECGlS21m
+	+lRjwIbzWlLr3DlPZF4ZlE3TTZ0Y36g5DmHRQvV+BvkLfGHmGsWVO0yTLQaoJM0s
+	Yermvg==
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dt85xuqre-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 07:04:24 +0000 (GMT)
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-35d9278587bso13262469a91.2
+        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 00:04:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1777359864; x=1777964664; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=8nDXMwCmY/sDn34euJ++LuckS+2KEQeDpNkaBWWS2hQ=;
+        b=Mu3Bw79BEGvUgTh0GGl/SsVjO3PUKZmxVvds2ZysWSXkdYkQKWcQFxkcc+9HHfLn3Q
+         dVPMQN8Qk3KhCeuZTMty6hDRdtXBmKnf/zdcJKL0yy09F+fziesP7UuyHBlU/JpsS/KO
+         EHck3a11qpL5fQDgRJuEZsAdVJAzcv8iLhjZ84/a+HQWMHERVK90MNDiO/bNBHmQ7PTi
+         9FmTl3w277+mTiG1/ZTQF4bCSuiYr8EQvQE+fmN//2rYPuRxsLqPjtZlcki+sO6g3II5
+         4/yzrzNSwmlz6vlCaE12mDxfkWnliJKV3x4MV+6nZ+cmHtDZJkbVybtV0VpEtfItq70y
+         6olQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777359864; x=1777964664;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8nDXMwCmY/sDn34euJ++LuckS+2KEQeDpNkaBWWS2hQ=;
+        b=hKLvplCNOAQjsoJXhaz85f1ufFN/g3Wbil2Sky4BaFVan1MZkX6Ww7WfPV6jHCj2Ux
+         BdujoAb1EIAZWST9oeMh1TxT3YDdbVjivzflGx5EnTQWu5GLwjmk6sd97eo3PGtFJ0+J
+         /H9zHIEAE5UWnWldR1TPoph1b8ZtBYbwt1BWLRIP1fzLox1qZhRkiG3TYCZRiJYwDZKg
+         6aU1GBdZ5WI7BvOFI/tH0tocKnH3fSH72teKzQdbaiDvjpoS9ECX/jaUDTdJ1zV7WH/i
+         o00/9I08NkMvjXofMKXKYa53TYZCBCm4nzbSNX/v9T+HFaZ4qGPb95c1rl0MF84bKepr
+         4uBg==
+X-Forwarded-Encrypted: i=1; AFNElJ99+CdCfdKOJAdQ5bEaxnqhFuFvEPWZXemy4qMsiHGEuE9C4dD99Q3NCWidVvd74bI+FCDD5LZICyM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx8NSn9PPwkGRDz+k8UnKa1sxkrbomdbrHHjKHQmipfoT+bdmOi
+	Ok9v8S2k1bHgZm9Jb1AvGP6dD/4WBZ0IeyyG5fkARX230ItGKWRGn4xX0JzJhjeY/WE72FDDWUJ
+	q4wCoXyCsQpxJ/yPdaZ9PN6Y5WjkIwvMJ6lAiYxY9jW39RUVc+WQaNyxXlhZoH30=
+X-Gm-Gg: AeBDieucuglN2s/AH9NbZ0GKICokHpLIM9JlLtHSn4t+IC3UwqC10m2PLNE8lEF2I9r
+	vCTElaL4Qdw7STAtYr1eCreI753Dqja+r+kHkh2m7yi1+mXH04PvL/4RdCjPIk9nyL5ksFfKaS3
+	JaTgtuA8UdhC33jCLMAB7xK5T/V+eyDOpRBkbpLehpQcOro3kkfRdvQaKEijDN/wseInkL8kje4
+	DxvaDjC0jCL0o54Qw0wEBSRO1jV9hGyDHc3tWgR7SzzDjs5W9oDMvrgSmyTiF9FjRHWRh87HNzO
+	/dhBlmE/ECgDvO4Xc2xsr1xReTwx3ucnTeY7B6qgbkyoiOF5Tu7UeTFYtfBqBm6XE/RrLURjOVD
+	3mvLsSp6fme1o/0C6DBeCCEM/mTTF96Obg2rC6OgmMC/VxJlS0ugeV3NPv9Y0/6h1Sg==
+X-Received: by 2002:a17:90b:1dd1:b0:35f:b46e:e329 with SMTP id 98e67ed59e1d1-36491f8a604mr2022974a91.6.1777359864082;
+        Tue, 28 Apr 2026 00:04:24 -0700 (PDT)
+X-Received: by 2002:a17:90b:1dd1:b0:35f:b46e:e329 with SMTP id 98e67ed59e1d1-36491f8a604mr2022941a91.6.1777359863611;
+        Tue, 28 Apr 2026 00:04:23 -0700 (PDT)
+Received: from [10.92.193.222] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36490fd57dasm1670321a91.17.2026.04.28.00.04.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Apr 2026 00:04:23 -0700 (PDT)
+Message-ID: <5233eb62-7b6c-45c6-b24c-af4db5248352@oss.qualcomm.com>
+Date: Tue, 28 Apr 2026 12:34:18 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY7P286MB5403:EE_
-X-MS-Office365-Filtering-Correlation-Id: ed6e95b0-3fe3-470d-cb61-08dea4f3d069
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|366016|376014|1800799024|10070799003|56012099003|18002099003|22082099003|11006099003;
-X-Microsoft-Antispam-Message-Info:
-	OveEztDybQdWDoMPrcTIIQnkKlb9v8HhgpDBp5Wp6QWwvWLeo+PLg2ARBZH09Q99Mik0/+rAly6vSG26x/Q1Wnwel44MzAQPB3hTlJwhNKEMTAboZMBdz/4xAgaHIpSGrCNw93iLOXUFtJkZTM1ZYSk3cVNXIauraypY4x97gP/uzuQb3c87oRLvdZ4y7bhhGKh4DLgj8trYc4CE1bVMAVkL4V9+ailH1S14wLPdlxFpHczu7M7eJKSwKOdTvxSFFS/FBvF6isGfj5KQKTFPovGEeIbFN0pgcHwcCpbB7BJLY1fmHT0jX1DCAFP+SCL/yctmA3OoyniqLdz2KN+I2cgCvmTrvz0IHapvT7aAwInUv8xuhfLDT11WTtGe+VX7KtSiMito4yxvMWMnqyjS2ZLAD4SArgNZ/3TLmtitPZfGrl6DUpzqnvudSrU8lt6ukn19eRQ2UpZwNRFA2tAmBODBS7FamkiyAtW5PX9eYf1cDY9FONRuJCbYgj/1cfObnI3s8Yp5a0P8F8NkbPEyql2HaPTG8sPHljGH0SKFgAZPJ1VqBpm5yOIVbDGpr+wuDBvmHqO0VHunZkgfzX9wFouNGhvHVra2X1PJjfaDAWRd1xUg3kft/u6dnjqjEswJ1A4mFpQLSFwzYpoEOg2yCxWmqEoR0epI5Nn/8/gbq7tlpTwj5kzf7c77JDu0Sv/yfPkpT7HLN9y+U6Pnpe0BcTDBYQx8wsOPdHVYU7327zE=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(376014)(1800799024)(10070799003)(56012099003)(18002099003)(22082099003)(11006099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?WGw2ZFJ3OFd6NXdLa1BQWG84L1FDNmZxWmRFUXlobE1mUW5EME1nQTVuZmVQ?=
- =?utf-8?B?ZzFNNjlqSTU2ZlhpRUIrdE5HZk44WUlIUUNEVmhZV2NqVFdPQ2dzL0ZGcDdS?=
- =?utf-8?B?cndXdXZVeWVib3gxbk5RMlJvOGNmcnpFK1BDTlU2VDJWTFpLMlJLQTVoSzFG?=
- =?utf-8?B?dVorbTVKQ3Y5ZVlSK1NBMThxUlpNWXJCRU5DeSsweGROYmxRWHZOblM2czhj?=
- =?utf-8?B?UDNZNWU3U3owVitLeUtJWTdTc2RNR1NOOTJHUDJGNU9ZMVhCVnlQZzBuOU53?=
- =?utf-8?B?bFp1K2FaUERYNVdqbS9WWSt2aHR2TnFhWjlVOGtjblFYSnlwazYyQmRMSDdP?=
- =?utf-8?B?RVpRbmIwWCtlTEphZk52NVE0cTgvUGMwR21rTngrVGpZYnZ2SVVJNlh4bmE4?=
- =?utf-8?B?NWI2TjJXYzJHQXVFdndPYXprMEErbXNSYXVLYXBPQTN5akJIaU0rL2F5SkZD?=
- =?utf-8?B?c05BdDdoMW5EcG9ZZkxaTDdCVC9NbDR5dmI4OWEzOXIrUTlRUXNYSFY1bnVT?=
- =?utf-8?B?cEJZZmlUVG16anQ1M2xPNVhoYTVTWS96TjV5eUttdFdLU0ZVMGlwZ2VDZVVB?=
- =?utf-8?B?SG85dDQ2UmVXN3poOVovNzBvcXZPODM2dEVVZ2QzbVpmL3VZNWZ1SWxZelo5?=
- =?utf-8?B?bWtxWU0wcDMvMzV3eHZ6SHRteFIxWkhaRlYrcHgxRWJRUTZHVHVsZjgvWGdL?=
- =?utf-8?B?dE9rMmtUMXVhU3dsTG1VT1JEc2M0a29xZUdzZlJ1K2RKOC9tM0x4VmgwYUxZ?=
- =?utf-8?B?OFNmQWV5V3hWbHlXQjhpV3I0OUxtRll0OW8zVGI0R1hycldzeTIyQ3duTXUy?=
- =?utf-8?B?d29RbEpTYmt0b21wUlRQb3NSNnFocjJXUFpvbnB6UGw3ajBHaWJDTDB0TG9n?=
- =?utf-8?B?SjJRdGtoaHBvQVJrWEQ0WFdtcGgxTFVhMVN4Y0RwcHpwUkhTaENFdWt4SlRM?=
- =?utf-8?B?OFd5NVZ2NFgyRlYwSjhIaDMwc1BNK0VNKzROT0I1QmgzNHo2TE8xUm9QUFls?=
- =?utf-8?B?cWRqWWJjK0hTTzhhN094VGUvVk4xaHY4dHBNemVOaTZUWEE4dmdPVW9zT1lk?=
- =?utf-8?B?NHNsaURzTis5NUYzNVRxSWIvMTM2L1l3RjRDdmo0QUpkaEx5aHdhbFo4bWNV?=
- =?utf-8?B?bkJtdEpCdTdvcFE0L2hPZUhDczIxajlLbmEwS1V5clp3Qy9lRTIxLy9Hcmor?=
- =?utf-8?B?YkRrcHRPNlFVZ1U5dmE2Mk1yaW9BRy83RS9TeE9uOXNTU0V5aThKYmhrYk04?=
- =?utf-8?B?b1hmZ2xpQlRqQ0hmZEVqMVNvMnoyRXcvVFdULzFUSm5CU2lwQjhLYisrNm1r?=
- =?utf-8?B?NnRjM2pxZXNtN3dKQWNyRGw0bVZNdStPSW56WW5wQlIzc3Z4R1NscmVEN0hz?=
- =?utf-8?B?OGR5QUUwRWxwRXVqSkVjVndoNDZmZWQvYVphZWR0dy9jbHE5a3R2SCtsSFlG?=
- =?utf-8?B?UFJtWjkyWGxDRFUySHkzaVRwT1ZJalp0MzhCNXJKUEJjeHZFakZITTZESHdn?=
- =?utf-8?B?a0t2Q3lwWXdiZi95STJBL2w4WkdBK2NoSFFyUWdINDY1dWpOeXQycWhIS0lC?=
- =?utf-8?B?SVA0c2NmbENQNlNNMXkzd05FRlEraU82T1N4bjd5SVJrRk5YbmJjOENCRDZ0?=
- =?utf-8?B?V2NRbVZvR0piTmJ4dVVyVWtrekJWZG1zUXRNKzRHUUg3cXE5QnhXNmZMNVdu?=
- =?utf-8?B?c0s4TzRGdmlkam02b2J0V2tXa2dmbkIvZ2s5dWJRL0tqTlZIV3FpcWpwZzh6?=
- =?utf-8?B?SGg3bGJOVm1aT3lLN3M1SmduWVRsTDltMDc0Um9LK2xjMy8rRE1raDFTQ0dG?=
- =?utf-8?B?ckRSVGwyeExRakg1cUhRaUdlbkFJQ2hGN2QvUEhOOStOTjlYMlM1cGZmelhN?=
- =?utf-8?B?T3lsaHU3N0RKa0FwaWZHdnk4WFd1emVUM3pkdEV0a1lqRnhHU1ZKVWtKQjI0?=
- =?utf-8?B?dFo5c2pudUpBN3FhTHhZYWRkKzFOQkt0aSt5b0RvN1lZQVpOazZzOGw5N2du?=
- =?utf-8?B?TER5MnlPaHNZWGZva2RPZWNUTGl2SEE1RTFJdW5hd0dvOGNuSXNlTEhjdEdx?=
- =?utf-8?B?ZVd1OXAwWHVjZEFpTnB6bldxQXJWN0ROcXFkSThyUWFVUXpJQTUzRTQyYXRj?=
- =?utf-8?B?WXU1a0t6ZUhMYzc4QmVoYjBXVHMwQXZyTDc2c2wxa3pQdVhaVXUvTjFvbCtR?=
- =?utf-8?B?a3p2UloyaVFQUDI1dkJwYlNsSytqbHNLek1qRnh4WjhFc0pRMHpFczMyQ0tu?=
- =?utf-8?B?anBWZU9mWUpkWGdGdDB0M1RNYUhnVEpDc2k5VXRmV3d1YStvdWNZZkxCQUUz?=
- =?utf-8?B?TnYzaEV1MVMzaHpvUEJuMkhkem8vQkZHSUxqdy9sVTdEcWtCTTV2cVlhMnN2?=
- =?utf-8?Q?LKSWWMQlB22OW2IclfxFMbj1auMtoY7VC038P?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: ed6e95b0-3fe3-470d-cb61-08dea4f3d069
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Apr 2026 07:00:21.5201
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rPybDxYnQir36fMknjPM1jsvXrf5lZZPwRLdarLSbo+T2+173tOyX43ljZJhlQWszUEahyIEJrjJHOweTZl6OQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY7P286MB5403
-
-On Sun, Apr 26, 2026 at 01:38:28AM +0200, Marek Vasut wrote:
-> R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
-> maximum payload size. The PCIe DMA generates requests of size up
-> to minimum(Max_Read_Request_Size, Max_Payload_Size). Force limit
-> both Max_Read_Request_Size and Max_Payload_Size to 256 Bytes and
-> propagate this limit to all downstream devices.
-> 
-> This limitation can be triggered for example by using an NVMe SSD
-> which does not use host memory buffer, Samsung 980 PRO is such an
-> SSD. Affected SSD reports 'hmpre' field as 0:
-> "
-> $ nvme id-ctrl /dev/nvme0 | grep hmpre
-> hmpre     : 0
-> "
-> 
-> The symptom is a read from the SSD which wraps around at 256 Byte
-> boundary. The test for this symptom can be implemented by writing
-> 512 Byte of random data into the SSD and reading the data back. If
-> the read back data repeat after 256 Bytes, the device is affected.
-> "
-> $ dd if=/dev/urandom of=/tmp/data.bin bs=256 count=2 \
->   dd if=/tmp/data.bin of=/dev/nvme0n1 bs=256 count=2 \
->   dd if=/dev/nvme0n1 bs=256 count=2 of=/tmp/readback.bin
-> "
-> 
-> Expected data:
-> "
-> $ hexdump -vC /tmp/data.bin
-> 00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca
-> 00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b
-> ...
-> 00000100  7a ce 3c b2 e1 d5 d9 11  88 63 10 59 76 3c dc 32 <-- random
-> 00000110  72 32 2a 7d a3 e1 aa 13  7c da 58 a1 7b 21 11 50 <-- data
-> "
-> 
-> Faulty readback, collected without this change in place:
-> "
-> $ hexdump -vC /tmp/readback.bin
-> 00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <---.
-> 00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-. |
-> ...                                                          | |
-> 00000100  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <-:-+- repeated
-> 00000110  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-+--- data
->      ^^^
->       |
->       '--- Repeat starts at offset 0x100 = 256 Bytes
-> "
-> 
-> Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-> ---
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Koichiro Den <den@valinux.co.jp>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
->  drivers/pci/controller/dwc/pcie-rcar-gen4.c | 56 +++++++++++++++++++++
->  1 file changed, 56 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> index 8b03c42f8c84c..82f0a074a71da 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> @@ -576,6 +576,7 @@ static int r8a779f0_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable)
->  static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
->  {
->  	struct dw_pcie *dw = &rcar->dw;
-> +	u16 offset = dw_pcie_find_capability(dw, PCI_CAP_ID_EXP);
->  	u32 val;
->  
->  	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
-> @@ -584,11 +585,66 @@ static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
->  		val |= BIT(6);
->  	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
->  
-> +	val = dw_pcie_readl_dbi(dw, offset + PCI_EXP_DEVCTL);
-> +	val &= ~(PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ);
-> +	val |= PCI_EXP_DEVCTL_PAYLOAD_256B | PCI_EXP_DEVCTL_READRQ_256B;
-> +	dw_pcie_writel_dbi(dw, offset + PCI_EXP_DEVCTL, val);
-> +
->  	val = readl(rcar->base + PCIEPWRMNGCTRL);
->  	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
->  	writel(val, rcar->base + PCIEPWRMNGCTRL);
->  }
-
-Hello Marek,
-
-The patch makes sense to me. Let me ask two questions:
-
-1. Could r8a779f0 (R-Car S4-8) be handled as well, perhaps by adding a separate
-   .additional_common_init() implementation for it?
-
-   As far as I can see, the r8a779f0 match data currently does not use
-   rcar_gen4_pcie_additional_common_init().
-
-2. Did you also happen to test V4H/V4M in endpoint (EP) mode, with the local
-   eDMA engine issuing MRd requests toward host memory? Your commit message
-   describes an NVMe device as the requester, but I'm wondering whether the same
-   256B limit was also verified for the R-Car EP DMA requester path.
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 3/3] PCI: qcom: Program T_POWER_ON
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com
+References: <20260404-t_power_on_fux-v4-0-2891391177f4@oss.qualcomm.com>
+ <20260404-t_power_on_fux-v4-3-2891391177f4@oss.qualcomm.com>
+ <hd3zmtaaetewdlki77jtqqfz2dzv2mad2dcqmssvqbagm3p62h@qihlc6xw4vqn>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <hd3zmtaaetewdlki77jtqqfz2dzv2mad2dcqmssvqbagm3p62h@qihlc6xw4vqn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=Zs3d7d7G c=1 sm=1 tr=0 ts=69f05bf8 cx=c_pps
+ a=RP+M6JBNLl+fLTcSJhASfg==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=TGbq2H1_L8zW2zdi06cA:9 a=QEXdDO2ut3YA:10
+ a=iS9zxrgQBfv6-_F4QbHw:22
+X-Proofpoint-ORIG-GUID: XGViylqAFGXMXN0VKC4g_kZTCq9apfMJ
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI4MDA2MyBTYWx0ZWRfX1Mm0Arq8zKoQ
+ TEC1+CBPdLjtCd2L43Go5uZhG7T9WLASJHnMadMc5WeKQIjFOK3WqazCPI8kZXwQci7xvNzZWmB
+ JILA0jQeikGL6xQJpDmH6mShe7mIM0f7bBOFezf8Z1oZ3FAoqQrCqtdA4ZobkfSCqKO0JE9pekv
+ 1vkhuJ6SXNlv8DniLto7kjOXksQlsW7m4qC7LVWSYAXoK7/0D+nsh/aBJ+SRQwpVO+JGSL+E4H0
+ ObCwkNWbVaS7qP/rt0Y6XKj7v4u11mXM/Zr9Cn81zxe6qoEuf5uOIOEUxpzPmeWTvdUPabH3Sl9
+ NaiLbOj/9l3lr6h2pfbfXLR34+SXaR9j2pJ7NOM9c3i76fqtDCBv9a12p/Tha2hTwlDUjmG+BNz
+ Fwk0HLhY1+23VyLgmVL7JrS71A0flthSdaYMZ3Bt6wx87VGTWOG9vlWZlFXVYztqb7yg4+Jt7//
+ ugMqkAttLOVg5o7n33g==
+X-Proofpoint-GUID: XGViylqAFGXMXN0VKC4g_kZTCq9apfMJ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-28_01,2026-04-21_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 lowpriorityscore=0 phishscore=0 bulkscore=0 malwarescore=0
+ impostorscore=0 adultscore=0 suspectscore=0 spamscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2604280063
 
 
 
-(*) The background for my question 2:
+On 4/10/2026 10:25 PM, Manivannan Sadhasivam wrote:
+> On Sat, Apr 04, 2026 at 01:47:20PM +0530, Krishna Chaitanya Chundru wrote:
+>> Some platforms have incorrect T_POWER_ON value programmed in hardware.
+>> Generally these will be corrected by bootloaders, but not all targets
+>> support bootloaders to program correct values due to that
+>> LTR_L1.2_THRESHOLD value calculated by aspm driver can be wrong, which
+>> can result in improper L1.2 exit behavior and if AER happens to be
+>> supported and enabled, the error may be *reported* via AER.
+>>
+>> Parse "t-power-on-us" property from each root port node and program them
+>> as part of host initialization using dw_pcie_program_t_power_on() before
+>> link training.
+>>
+>> This property in added to the dtschema here[1].
+>>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> Link[1]: https://lore.kernel.org/all/20260205093346.667898-1-krishna.chundru@oss.qualcomm.com/
+>> ---
+>>  drivers/pci/controller/dwc/pcie-qcom.c | 14 ++++++++++++++
+>>  1 file changed, 14 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+>> index 67a16af69ddc75fca1b123e70715e692a91a9135..a8f82f860c08fe2eabad2c0eed541b8dd121215e 100644
+>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+>> @@ -269,6 +269,7 @@ struct qcom_pcie_perst {
+>>  struct qcom_pcie_port {
+>>  	struct list_head list;
+>>  	struct phy *phy;
+>> +	u32 l1ss_t_power_on;
+>>  	struct list_head perst;
+>>  };
+>>  
+>> @@ -1283,6 +1284,14 @@ static int qcom_pcie_phy_power_on(struct qcom_pcie *pcie)
+>>  	return 0;
+>>  }
+>>  
+>> +static void qcom_pcie_configure_ports(struct qcom_pcie *pcie)
+>> +{
+>> +	struct qcom_pcie_port *port;
+>> +
+>> +	list_for_each_entry(port, &pcie->ports, list)
+>> +		dw_pcie_program_t_power_on(pcie->pci, port->l1ss_t_power_on);
+> Since this writes to the same register, there is no point in iterating over all
+> ports. Add a TODO here also and write it only once.
+we will iterate only once in case of single root port. so we are good here.
 
-   I only have access to S4 Spider boards. In my RC <-> EP setup, where the EP
-   side uses the local eDMA engine to issue MRd requests toward the RC, 256-byte
-   MRd requests still appear to corrupt the transferred data. With the following
-   change on top of your patch, my DMA-read tests become stable:
+- Krishna Chaitanya.
+>> +}
+>> +
+>>  static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+>>  {
+>>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> @@ -1317,6 +1326,8 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+>>  	dw_pcie_remove_capability(pcie->pci, PCI_CAP_ID_MSIX);
+>>  	dw_pcie_remove_ext_capability(pcie->pci, PCI_EXT_CAP_ID_DPC);
+>>  
+>> +	qcom_pcie_configure_ports(pcie);
+>> +
+>>  	qcom_pcie_perst_deassert(pcie);
+>>  
+>>  	if (pcie->cfg->ops->config_sid) {
+>> @@ -1759,6 +1770,9 @@ static int qcom_pcie_parse_port(struct qcom_pcie *pcie, struct device_node *node
+>>  	if (ret)
+>>  		return ret;
+>>  
+>> +	/* TODO: Need to move to dwc once multi root port support is added.  */
+> s/dwc/DWC core
+>
+> s/root port/Root Port
+>
+> - Mani
+>
 
-   ---8<-----8<---
-
-   diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-   index 82f0a074a71d..6910b9cd9d7b 100644
-   --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-   +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-   @@ -595,6 +595,18 @@ static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
-           writel(val, rcar->base + PCIEPWRMNGCTRL);
-    }
-   
-   +static void r8a779f0_additional_common_init(struct rcar_gen4_pcie *rcar)
-   +{
-   +       struct dw_pcie *dw = &rcar->dw;
-   +       u16 offset = dw_pcie_find_capability(dw, PCI_CAP_ID_EXP);
-   +       u32 val;
-   +
-   +       val = dw_pcie_readl_dbi(dw, offset + PCI_EXP_DEVCTL);
-   +       val &= ~(PCI_EXP_DEVCTL_PAYLOAD | PCI_EXP_DEVCTL_READRQ);
-   +       val |= PCI_EXP_DEVCTL_PAYLOAD_128B | PCI_EXP_DEVCTL_READRQ_128B;
-   +       dw_pcie_writel_dbi(dw, offset + PCI_EXP_DEVCTL, val);
-   +}
-   +
-    static void rcar_gen4_rc_pcie_quirk(struct pci_dev *dev)
-    {
-           static const struct pci_device_id rcar_gen4_pcie_rc_devid = {
-   @@ -796,11 +808,13 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
-    }
-   
-    static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie = {
-   +       .additional_common_init = r8a779f0_additional_common_init,
-           .ltssm_control = r8a779f0_pcie_ltssm_control,
-           .mode = DW_PCIE_RC_TYPE,
-    };
-   
-    static struct rcar_gen4_pcie_drvdata drvdata_r8a779f0_pcie_ep = {
-   +       .additional_common_init = r8a779f0_additional_common_init,
-           .ltssm_control = r8a779f0_pcie_ltssm_control,
-           .mode = DW_PCIE_EP_TYPE,
-    };
-
-   ---8<-----8<---
-
-   One detail which might be important is that limiting only MPS does not appear
-   to be sufficient in my setup. MPS=128B with MRRS=256B still seems broken,
-   while MPS=128B with MRRS=128B works fine. I wonder whether this is because
-   the "MPS" term in the min(MRRS, MPS) limit for DMA read transfers may
-   effectively be tied to the DMA read buffer segment size / MPSS rather than
-   only to DevCtl.MPS. I'm not sure about this yet though.
-
-   One more thing I noticed in the manuals:
-
-     R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025:
-       Type00 MPSS initial = 256B, PCI R, Internal R/W
-       Type01 MPSS initial = 128B, PCI R, Internal R
-
-     R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025
-       Type00 MPSS initial = 256B, PCI R, Internal R
-       Type01 MPSS initial = 128B, PCI R, Internal R/W
-
-   I'm still unsure, but this difference might be relevant. In particular, in
-   V4H/V4M RC mode your patch programs DevCtl.MPS to 256B, but does not change
-   Type01 MPSS. I wonder if the Type01 MPSS should also be updated to 256B first
-   on SoCs where the manual says it is writable from the internal bus, or if I'm
-   missing something here.
-
-
-
-Best regards,
-Koichiro
-
->  
-> +static void rcar_gen4_rc_pcie_quirk(struct pci_dev *dev)
-> +{
-> +	static const struct pci_device_id rcar_gen4_pcie_rc_devid = {
-> +		PCI_DEVICE(PCI_VENDOR_ID_RENESAS, 0x0030),
-> +		.class = PCI_CLASS_BRIDGE_PCI_NORMAL, .class_mask = ~0
-> +	};
-> +	struct pci_bus *bus = dev->bus;
-> +	struct pci_dev *bridge;
-> +
-> +	if (pci_is_root_bus(bus))
-> +		bridge = dev;
-> +
-> +	/* Look for the host bridge */
-> +	while (!pci_is_root_bus(bus)) {
-> +		bridge = bus->self;
-> +		bus = bus->parent;
-> +	}
-> +
-> +	if (!bridge)
-> +		return;
-> +
-> +	if (!pci_match_one_device(&rcar_gen4_pcie_rc_devid, bridge))
-> +		return;
-> +
-> +	/*
-> +	 * R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
-> +	 * maximum payload size. The PCIe DMA generates requests of size up
-> +	 * to minimum(Max_Read_Request_Size, Max_Payload_Size). Force limit
-> +	 * both Max_Read_Request_Size and Max_Payload_Size to 256 Bytes and
-> +	 * propagate this limit to all downstream devices.
-> +	 *
-> +	 * For details, refer to:
-> +	 * R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025 or
-> +	 * R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025 or
-> +	 * R-Car V4M R19UH0217EJ0100 Rev.1.00 Dec. 12, 2025,
-> +	 * chapters 104.1.1 Features and 104.3.9 DMA Transfer
-> +	 * section DMA Read Transfer.
-> +	 */
-> +	if (pcie_get_readrq(dev) > 256) {
-> +		dev_info(&dev->dev, "Limiting MRRS to 256 bytes\n");
-> +		pcie_set_readrq(dev, 256);
-> +	}
-> +
-> +	if (pcie_get_mps(dev) > 256) {
-> +		dev_info(&dev->dev, "Limiting MPS to 256 bytes\n");
-> +		pcie_set_mps(dev, 256);
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, rcar_gen4_rc_pcie_quirk);
-> +
->  static void rcar_gen4_pcie_phy_reg_update_bits(struct rcar_gen4_pcie *rcar,
->  					       u32 offset, u32 mask, u32 val)
->  {
-> -- 
-> 2.53.0
-> 
