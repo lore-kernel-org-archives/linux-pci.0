@@ -1,242 +1,222 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE79E344DAB
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 22:55:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70BE338BF9A
+	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 23:47:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777416943; cv=none; b=SCfrhSmcp6Dqq0D230XHZZJvGbBCIgp36eYgxOp9b39dmp9FK8OflObIWFk8ycQJpDeq1SbW/CB1AZxdWcdUZzFXwvbosjSd3pfhm1RFD25dLwxVrqIenXW4cQNiIBnv105/GaIRS4tdGgkYxmwL/vTEB0fXVQY+liWMlfht4NI=
+	t=1777420052; cv=none; b=jvCy8JShjz0Vh5uywhS6MFjFV21CM15/a5vWjTlptEIfZzZjqfFDz8WEWrjfmuU/H96oylAiV0DkgISJnhqsSDr5Evj5nQ3a7o5H90m3ygXLc3E5uzOU6Ewy04MZy+gY2D8569etYyxw9gDgEn/tXSjBeNTyHaJE+i6+9qTaVxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777416943; c=relaxed/simple;
-	bh=w92j1+KGo6D2kBLTSJDqU4ABcn9vG3xGdTKg2rNKn1s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ps5uqJSZxTJ3wcase9g607Yhzt4+9rdza+EzTpKieSHFpiDw47FhjKe8tMnQwGzovpA9O642EFSMyjC5IP6fwwIZ6B6haitzkhbiZILZHCIU+Mt3hXMpJOL6KooKQwDccWd67WAEQDYDSwCSVq533L2a+H9YrcyPGM8yoaudJG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=oNF26PNT; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
+	s=arc-20240116; t=1777420052; c=relaxed/simple;
+	bh=oZv/inceMwaKLWNaXYQI3akHygkXQqc0/nr+tIR7BEY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B9nLl7ZLlhM9XTsxrmec8H5VYuaah1fqI9PXL9Dv/7RLVlpMU/ZWemUwIjtcEnLVz5nu0pVwVZ43SRsc4X0l8ItPqjnsXkLqHWZhO4c3wfH+7tRLGHodIqBCMIe9Yuw6zJFecVE3iNiFBUX4INNs0s3cNO2x2n0Fy05h1Ymg5ZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=guptNxEn; arc=none smtp.client-ip=209.85.216.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="oNF26PNT"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2a871daa98fso78233595ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 15:55:41 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="guptNxEn"
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-35f9ab079bdso8132456a91.2
+        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 16:47:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1777416941; x=1778021741; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=SXh1sIdWXyFAkS1VJdBRbGA0VRROpFm5fAuvzlWqXxk=;
-        b=oNF26PNTJ3480BvVU+dlzEHLF6/6disZ9nACXdtQsMMCua2YpwkN0NLWPcsvyns5uj
-         5FrPrAU3xktZBtAaGH3/eMAKrPNinzwkSSvxHJmz9OP4uUsF1ZSCOpxLCm32bFMbkWKj
-         GWOR6E4gaoCZRc3V8KjaHFJQybrdw7+EtmL9JGfmCo2s8D+56iPeQoWaceSbCK0EeVdl
-         +PBo14Lxh84ZANg+6FCJMoeh8XzAtcoHHjWhaSceTUfxvteGyK2Wzf/Z/vIjeaggz8Oj
-         glhMs6UTmf9tLP5vzGMoEaUYJFvRaBO1JYgSnXGdTpXN06EaCrqxjfdp9zVhm4ah2P8a
-         13TQ==
+        d=google.com; s=20251104; t=1777420048; x=1778024848; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=EpaL2C2UFwZgckez6PzSxOJ2+MS43lyhGR+45AYtYTo=;
+        b=guptNxEnuVqRVcBEH8yVnH2nzhVloszzN7DtR7l2DInGibU6kgyefWP11YXJnx0KG1
+         Qq6c66jkzODRm7YanpL4df8jksSFRTYpS7/II6r9pRz7KMcUxmvUziqoHuYxPHC2enEw
+         7g6kwP7GimAEPRPK8d/8cyH5e71d9eaqUeeqbH2GS2qvWodeCF07Cg7GhlkFBXFC1Khr
+         W6Yxxd4ktYTkcQpyHcGNfj2yvEEB5+MumdiycreJKrlcDwP1yDNlD9oPHKrpHemhQd7W
+         2cwHC5MPFAop9iaCQzlW9iVx5tIBNKtogXH+ttJ0ftTD/Y1z9ceAGKfTxspTz7TTk/3y
+         IanQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777416941; x=1778021741;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SXh1sIdWXyFAkS1VJdBRbGA0VRROpFm5fAuvzlWqXxk=;
-        b=Vqk9W72zf8MmsJQIw+Xck+8AHOvp3eR2JQ4vqYm1oyzOaI4cnBa48604o9Z6m2LDKQ
-         l6IoV7qfEutzsSeAXq6pErGPW1flxUOIUeM5jTaL0q99qSvci5T9Enp7AqzXHJzJY2gU
-         H8S7JAwG2Dr3j5KyQJAkeFrnAsup37DiYHPOh1qvXar95KKSPZoZFFNcTtJEi9os3MlJ
-         cH2XeQ5jvNR3Y3FWaryutelKLykStoyfF6furTaI8oUx1brwSx8C1264KIMGUVHmkLh7
-         u+B4+UOCTvfUWx/iKVBYVH/PXL0pAlm7wUqU3ZEU89AEZDSXxdm8vO41dd4joeuqCOcX
-         J9Nw==
-X-Forwarded-Encrypted: i=1; AFNElJ9vYBJZJBvO85TzkkmYvsPJYBbrwJnEem9Q/LtmdX2eZ1AmXa/jlURHVikWW0KyMG2tTM5BbpYcPU0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy99JaWgQzSVRQk9qUUMHsDdDM9XWzSKNHAXVQ20E5nDqL8reUV
-	GPQlAZ+F3CTM9gaQFfVGwMDjuys+LpMWrHK6GVKzVY8axujzMGVps4ez4mPYQkC4VMc=
-X-Gm-Gg: AeBDievbgLQKhr2d/4/XPROEl+sfMp9N4B08hkgA+1OiF4zFvE6lfg3/ffvlLdbZcHA
-	6gkICcGUhRTJKMEobvC9GHGb4R4BPrW6bYfQyd3cS5icvuRMBKdtHXGQD5IReTfSeApAFoMSLaa
-	eAJeHbduYWftJPQLliSfjIInxiopORd6cvlmoMKScCUnBi9C/+vBL5Tub3UrpgU4QAwn+ud80x0
-	bdliXAtKbABj9ektbq6ULle5+oRsU3LRXVEMX67ClL3jKDDVnz/+fcRfRLhCWW7ubealXQYYn/b
-	neYVfdgJRB+CNkAguFsQ/HKTqWUEp9YXl0LHJfvsp36HVivlyhIYzjXI8pOPtQyFWBSaXucSroQ
-	zlph3FVS2dcel806KxvV7ol+5acGDU5Q1qr/Utqz+03B3U/5x97lvYJc+a7elFDa2OgCTack1SO
-	9xMFJGM8i8B1qnj0bsMw8oR9kXYFYchKXU9Jnp6K8oX0iUrHU=
-X-Received: by 2002:a17:903:2411:b0:2b0:67a7:5c4b with SMTP id d9443c01a7336-2b97c47b4c3mr50187205ad.28.1777416941276;
-        Tue, 28 Apr 2026 15:55:41 -0700 (PDT)
-Received: from geramyl-MS-S1-MAX.. ([2601:201:8080:e5c0:4857:38db:7c94:21e1])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b98898ff65sm2518875ad.78.2026.04.28.15.55.40
+        d=1e100.net; s=20251104; t=1777420048; x=1778024848;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=EpaL2C2UFwZgckez6PzSxOJ2+MS43lyhGR+45AYtYTo=;
+        b=W9X2a1OYH1mxg2+xCsJNeZ8j8uQjLUFtWoHLKM2ptncCnVgc8C9qiyJscRMlu1K8JP
+         J2Uf4V3EY19In0gSPOtvAWLVFZn2QuyQE01tWIbVX8EOMEeeBQ3Yr3Y9G+yObX627y8e
+         0SbrIZ+vwrStlmM43K08vblVQkyrsgLXOUG+mJOVnMmEWcuct+eZuEVm2OmbnWfFOzrK
+         sbEp89mgmR4lLQZ8oqMXf5RaT1+qyrlP4Zxodmy9a2a+xZiWKSPcfw8JMCTLpsyDw4uQ
+         QsIQbkw+SRslGc+NVSx5yk8S6DENuvke1AqK+Ho0PbTbY8gBLJ+psMduLz1c0I8P+nCq
+         mWag==
+X-Forwarded-Encrypted: i=1; AFNElJ/43f0QmAtVMTjNv5UuY73FqnSNGgU5c2+0qv14D6OyvNL51ESRRqlGA0aRlpIcAfxYISrb8BgvHH0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZLAQ2w6Xc0E0iSTHPyH2xxEvYjGmMcjoxkqG70rJnf+c2sBoI
+	/eF36pq0+B3rW7JZEWD/COVFeHVEfSPaWpwMzvE/BlO7V51wkIpTdGjkihhg9YVT8g==
+X-Gm-Gg: AeBDieuBO9rDobXJXLE7KiMvF5iyJWxYyeQJO3lhA5hgC5IyjnHo3z0p3TN31za1ss4
+	ETUshIHWVGzkorQ7ttyANo8UjYTHyC8roFvuK0TrxFvrQu86s5jPx51lJnLDwZsb9oN0dtLEMNT
+	e1Z/e+3p0HDs5qlAhqkN2yNtGHh+im2xnHN9I7dagXmc3zxPQ4lgEEZ6q+j0OHhFFuALQiJfVbi
+	7iPAx40gKgeqPtyg+u040zIBI1CsoUDQi26JCr6ysI6r7HgJI6Zj8zZMo1Eo/ogGsIIqnCZAUGw
+	+GBE1QBd0FZ+3ZJSEFIU/g/V6UCS82RjRmUxcIYxDOXqkzvZBNBTWdJ+C/l6mnQqrwg48SVVkEA
+	jLHPu8n1vzWPXFDcXjAuJioQne472GsoKA5DsXKRGJFDWjnZxfMHWuPMzrX83e1Bgy0LHDhdUZw
+	pulRkxxgfoS3l8rurTpV54O3z9QMG2tkr+RQrcMgf9pAk8m918g2zhKlb0kvQ2jL02M3KpPthW8
+	s/8MA==
+X-Received: by 2002:a05:6a20:a120:b0:3a2:bd1d:d68c with SMTP id adf61e73a8af0-3a3af60f200mr1710132637.50.1777420047985;
+        Tue, 28 Apr 2026 16:47:27 -0700 (PDT)
+Received: from google.com (76.9.127.34.bc.googleusercontent.com. [34.127.9.76])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c7fd64f09fdsm178148a12.17.2026.04.28.16.47.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Apr 2026 15:55:40 -0700 (PDT)
-From: Geramy Loveless <gloveless@jqluv.com>
-To: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: Cristian Cocos <cristi@ieee.org>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Tue, 28 Apr 2026 16:47:27 -0700 (PDT)
+Date: Tue, 28 Apr 2026 23:47:23 +0000
+From: David Matlack <dmatlack@google.com>
+To: Pasha Tatashin <pasha.tatashin@soleen.com>
+Cc: Pratyush Yadav <pratyush@kernel.org>, iommu@lists.linux.dev,
+	kexec@lists.infradead.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
 	linux-pci@vger.kernel.org,
-	Geramy Loveless <gloveless@jqluv.com>
-Subject: [PATCH v3 RESEND] PCI: release empty sibling bridge windows during window resize
-Date: Tue, 28 Apr 2026 15:55:32 -0700
-Message-ID: <20260428225532.3108047-1-gloveless@jqluv.com>
-X-Mailer: git-send-email 2.43.0
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v4 01/11] PCI: liveupdate: Set up FLB handler for the PCI
+ core
+Message-ID: <afFHC6C1Qbwio4pH@google.com>
+References: <20260423212316.3431746-1-dmatlack@google.com>
+ <20260423212316.3431746-2-dmatlack@google.com>
+ <2vxzeck45yin.fsf@kernel.org>
+ <aetvAkM0y45WAmfV@plex>
+ <ae_4fg_18Rli2_Nt@google.com>
+ <afDroRNDr9ttY4O9@plex>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <afDroRNDr9ttY4O9@plex>
 
-pbus_reassign_bridge_resources() refuses to release bridge windows that
-have child resources. On multi-port PCIe switches (e.g. Thunderbolt
-docks), empty sibling downstream ports hold small reservations that
-prevent the parent window from being freed and re-sized for rebar.
+On 2026-04-28 05:50 PM, Pasha Tatashin wrote:
+> On 04-27 23:59, David Matlack wrote:
+> > On 2026-04-24 01:29 PM, Pasha Tatashin wrote:
+> > > On 04-24 14:33, Pratyush Yadav wrote:
+> > > > Hi David,
+> > > > 
+> > > > On Thu, Apr 23 2026, David Matlack wrote:
+> > > > [...]
+> > > > > diff --git a/MAINTAINERS b/MAINTAINERS
+> > > > > index c9b7b6f9828e..94af31837375 100644
+> > > > > --- a/MAINTAINERS
+> > > > > +++ b/MAINTAINERS
+> > > > > @@ -20555,6 +20555,18 @@ L:	linux-pci@vger.kernel.org
+> > > > >  S:	Supported
+> > > > >  F:	Documentation/PCI/pci-error-recovery.rst
+> > > > >  
+> > > > > +PCI LIVE UPDATE
+> > > > > +M:	Bjorn Helgaas <bhelgaas@google.com>
+> > > > > +M:	David Matlack <dmatlack@google.com>
+> > > > > +L:	linux-pci@vger.kernel.org
+> > > > > +S:	Supported
+> > > > > +Q:	https://patchwork.kernel.org/project/linux-pci/list/
+> > > > > +B:	https://bugzilla.kernel.org
+> > > > > +C:	irc://irc.oftc.net/linux-pci
+> > > > > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
+> > > > > +F:	drivers/pci/liveupdate.c
+> > > > > +F:	include/linux/kho/abi/pci.h
+> > > > > +
+> > > > 
+> > > > Can we please also add these files under the "LIVE UPDATE" entry. The
+> > > > code here concerns both live update and PCI.
+> > 
+> > Covering that intersection of Live Update and PCI was exactly my
+> > intention with introducing this new PCI LIVE UPDATE entry. This ensures
+> > we have maintenance coverage with knowledge of that intersection.
+> > 
+> > > > We can figure out the
+> > > > maintenance details as we go along, but I think the live update
+> > > > maintainers should at least get all the patches for PCI live update.
+> > 
+> > Would adding kexec@ here be sufficient or do you want to be CC'd
+> > directly?
+> > 
+> > If you want to be CC'd directly do you think makes more sense to add the
+> > Live Update maintainers as Reviewers under PCI LIVE UPDATE, or add
+> > drivers/pci/liveupdate.c under LIVE UPDATE?
+> > 
+> > > > 
+> > > > Perhaps also add the kexec list here? We plan to use it to maintain the
+> > > > LUO patches, and adding it will make sure we get the patches in case
+> > > > someone updates the file list here but forgets to update it in the LIVE
+> > > > UPDATE entry.
+> > > 
+> > > +1
+> > > 
+> > > These files should also be added to the Live Update entry, and the kexec
+> > > mailing list should be included.
+> > > 
+> > > Changes specific to Live Update should be routed through the
+> > > liveupdate/linux.git tree, while generic PCI changes should go through
+> > > pci/pci.git. In either case, if liveupdate.c or abi/pci.h are modified,
+> > > acks are required from the Live Update group.
+> > 
+> > Do you want to merge changes to drivers/pci/liveupdate.c through the
+> > live update tree or PCI tree? We should probably decide now. I was
+> > assuming the PCI tree since its part of PCI core.
+> > 
+> > As we project this out there are going to be users of the Live Update
+> > API across different parts of the kernel: PCI core, IOMMU core, IOMMU
+> > drivers, VFIO core, VFIO PCI drivers, and KVM. I don't think it will
+> > scale to take all that code through the live update tree.
+> 
+> All Live-Update-specific changes should go through the liveupdate tree. 
+> The liveupdate tree is the only Linux tree that will cover full Live 
+> Update regression testing, and it contains reviewers and maintainers who 
+> know the details of the Live Update process, its lifecycle, and its 
+> requirements.
+> 
+> The request we are hearing from other subsystem maintainers is that they 
+> want to make sure Live Update is isolated enough not to make their lives 
+> harder. This means reducing the number of conflicts, the maintenance 
+> burden, and testing responsibilities.
+> 
+> Therefore, the "PCI LIVE UPDATE" entry should specify you as a 
+> maintainer, "kexec@lists.infradead.org" as the list to which all LU 
+> changes should be CC'd, and "liveupdate/linux.git" as the git tree 
+> against which changes should be applied.
+> 
+> It should also include "linux-pci@vger.kernel.org" so the PCI 
+> maintainers are CC'd. In case there are larger changes that touch core 
+> PCI and liveupdate.c/abi, we can ACK them, ensuring we are aware of 
+> incoming conflicts during the current or next merge cycle.
+> 
+> It should also specify the members of LU group so we can stage the 
+> changes.
 
-Walk descendants of the target window depth-first, saving and freeing
-each empty bridge window so the parent can then be released and grown.
+Sorry what does this mean specifically?
 
-Without this change, attempts to grow a window deep below a switch
-fabric leave nested empty windows pinning the ancestor:
+> This is the way we agreed to handle kexec changes: Baoquan He is the 
+> maintainer, and without his Reviewed-by tag, we won't take changes to 
+> kexec. This is the approach we follow with MM for KHO changes to 
+> memblock and memfd preservation, as well as the upcoming 
+> hugetlb/guestmemfd preservation. 
+> 
+> This is also the approach we should continue using when adding LUO 
+> support to other components like PCI, VFIO, IOMMU, and KVM. It keeps 
+> life easier for the core component maintainers and ensures we do not 
+> regress LU by staging everything in the same tree and sending LU merge 
+> requests from a single tree.
 
-  pcieport 0000:65:00.0: bridge window [mem 0x8880000000-0x98800fffff
-    64bit pref]: not released, active children present
-  pcieport 0000:00:03.2: bridge window [mem 0x8880000000-0x98800fffff
-    64bit pref]: not released, active children present
+Ok it sounds like we are aligned on keeping drivers/pci/liveupdate.c,
+include/linux/kho/abi/pci.h, and Documentation/PCI/liveupdate.rst in the
+PCI LIVE UPDATE entry and not duplicating them in the LIVE UPDATE entry.
 
-With the bottom-up walk and upstream ancestry check, the chain unwinds
-and the rebar succeeds:
+I think the only open question is what tree to use for the PCI LIVE
+UPDATE entry, PCI tree or Live Update tree. You are proposing the Live
+Update tree.
 
-  pcieport 0000:96:00.0: bridge window [...]: releasing
-  pcieport 0000:95:00.0: bridge window [...]: releasing
-  pcieport 0000:94:00.0: bridge window [...]: releasing
-  pcieport 0000:65:00.0: bridge window [...]: releasing
-  amdgpu 0000:97:00.0: BAR 0 [mem 0x9000000000-0x97ffffffff 64bit pref]:
-    assigned
-
-Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
----
-RESEND: my earlier v3 (Message-ID 20260428225146.3104063-1-gloveless@jqluv.com)
-was sent with stale code — the diff was byte-identical to v2 because the
-v3 edits weren't staged before commit --amend. This resend contains the
-actual v3 content described below. Apologies for the noise.
-
-v3:
- - Restructure helper: outer loop only recurses; inner iterates bus
-   resources via pci_bus_for_each_resource(). The release path is now
-   unified, so the caller-side block in pbus_reassign_bridge_resources()
-   is gone.
- - Walk the resource tree upstream when checking ancestry of @b_win,
-   so descendants in nested topologies are also released (Ilpo).
- - Drop pci_resource_is_bridge_win() filter; bus resources are
-   inherently bridge windows.
- - Rename pci_bus_release_empty_bridge_resources() to
-   pbus_release_empty_bridge_resources().
- - Drop misleading "Uses PCI bus/device iterators..." paragraph from
-   commit message.
- - Kerneldoc tweaks per Ilpo's review.
-
-v2:
- - Use PCI bus/device iterators instead of walking raw resource tree.
- - Save released resources to rollback list.
- - Filter via pci_resource_is_bridge_win() (now removed in v3).
- - Call release before the !res->child check.
- - Check bridge->subordinate before recursion.
----
- drivers/pci/setup-bus.c | 78 ++++++++++++++++++++++++++++++++---------
- 1 file changed, 61 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4cf120ebe5a..b47dc1a2925 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2292,6 +2292,63 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
- 
-+/*
-+ * pbus_release_empty_bridge_resources - Bottom-up release of bridge windows
-+ * in empty subtrees.
-+ * @bus: PCI bus whose child bridges to process
-+ * @b_win: Ancestor bridge window; only resources that are (grand)parented
-+ *	   by @b_win are released
-+ * @saved: List to store released resources into for rollback
-+ *
-+ * Recurses depth-first into subordinate buses, then releases bridge windows
-+ * that are (grand)parented by @b_win on the way back up. Each resource is
-+ * stored into @saved before release so the entire operation can be rolled
-+ * back.
-+ */
-+static void pbus_release_empty_bridge_resources(struct pci_bus *bus,
-+						struct resource *b_win,
-+						struct list_head *saved)
-+{
-+	struct pci_dev *dev;
-+	struct resource *r;
-+	unsigned int i;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		if (dev->subordinate)
-+			pbus_release_empty_bridge_resources(dev->subordinate,
-+							    b_win, saved);
-+	}
-+
-+	pci_bus_for_each_resource(bus, r, i) {
-+		struct resource *p;
-+		unsigned int idx;
-+
-+		if (!r || !resource_assigned(r))
-+			continue;
-+
-+		/* Walk upstream to confirm r descends from (or equals) b_win */
-+		for (p = r; p && p != b_win; p = p->parent)
-+			;
-+		if (!p)
-+			continue;
-+
-+		idx = pci_resource_num(bus->self, r);
-+
-+		if (r->child) {
-+			const char *res_name = pci_resource_name(bus->self, idx);
-+
-+			pci_info(bus->self, "%s %pR: not released, active children present\n",
-+				 res_name, r);
-+			continue;
-+		}
-+
-+		if (pci_dev_res_add_to_list(saved, bus->self, r, 0, 0))
-+			continue;
-+
-+		pci_release_resource(bus->self, idx);
-+	}
-+}
-+
- /*
-  * Walk to the root bus, find the bridge window relevant for @res and
-  * release it when possible. If the bridge window contains assigned
-@@ -2305,7 +2362,6 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
- 	struct pci_dev *bridge = NULL;
- 	LIST_HEAD(added);
- 	LIST_HEAD(failed);
--	unsigned int i;
- 	int ret = 0;
- 
- 	while (!pci_is_root_bus(bus)) {
-@@ -2314,22 +2370,10 @@ static int pbus_reassign_bridge_resources(struct pci_bus *bus, struct resource *
- 		if (!res)
- 			break;
- 
--		i = pci_resource_num(bridge, res);
--
--		/* Ignore BARs which are still in use */
--		if (!res->child) {
--			ret = pci_dev_res_add_to_list(saved, bridge, res, 0, 0);
--			if (ret)
--				return ret;
--
--			pci_release_resource(bridge, i);
--		} else {
--			const char *res_name = pci_resource_name(bridge, i);
--
--			pci_warn(bridge,
--				 "%s %pR: was not released (still contains assigned resources)\n",
--				 res_name, res);
--		}
-+		/* Release this bridge window and any empty descendants bottom-up */
-+		if (bridge->subordinate)
-+			pbus_release_empty_bridge_resources(bridge->subordinate,
-+							    res, saved);
- 
- 		bus = bus->parent;
- 	}
--- 
-2.43.0
-
+Bjorn are you ok with that approach?
