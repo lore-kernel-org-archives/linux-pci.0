@@ -1,75 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 072223F20FE;
-	Tue, 28 Apr 2026 14:54:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5694B3B0AF1;
+	Tue, 28 Apr 2026 15:25:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777388072; cv=none; b=WPSbFn54ViqFajD24YfEI1040lu6I/W+qAK7IECTeI0yKkTsARij0s4g2BLhZmzRYXUZ1YeuU1EJNghXGTtdYUtsWWbe9JyBTSOhVMFKcSkdn8ObaldPFWEzGKDVYa3+I5AHqa4b3kVpPbjRIvEzSTu4Zde43sl3szhUzIWrjes=
+	t=1777389900; cv=none; b=G/UrAQNoI/x/7ttdEBPEi0Eqk4mDsvwm/SXsXFNsMs3bdSmUhcfoZ2YBfYS6A5SEdoJMxUhAwD62Y+oCAaifux/ztyBt9rPjqgZKe6G/vBWNvIXfQeCn5zHFBIfBoJrvzus/G7IIp4S1uiwJ0uRPNj8WwUJ5Unr+rl/JFIVJk6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777388072; c=relaxed/simple;
-	bh=u5DGLyR5HD/1MGBsf8teWYoDSABc+D9y2JX4a/0KSqk=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=mOYDDdquJH/0vUkvP5M6AerJvotF+cUXfMGSuu+F2GtLfZJYQJIgQ0OB3/AD9tJhDno5WKvRRiYErHxBeFNvkOMDMawASxYJP+ReNe/kgDr41bcoExkhUAYycHYTJBniMGeK6LnSyW2PYEa6/0VPxRezLHCjD2aoLU+OStdhToE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l74otaXl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777389900; c=relaxed/simple;
+	bh=u64nPhavIjrbkIOuDS+rk495KAKnnTNnuGKl1iIgrnQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HH3rlHxL2z7srupeojQ3kKQBo0BaZiTDvcsKl67BwTWz1uyx1j8Mhzf7VnU65VvBS70gtlIxR72/SiqNxKFBpHKBlTId89k4Y+Fl5P7O2f/FH3NpJg/rrjli3lpLgntqQxX448AOjEJtdlAWutWvPLxA0v4dr9I5+yp9xKm3Bvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dGVllmvQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l74otaXl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DF5CC2BCB5;
-	Tue, 28 Apr 2026 14:54:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dGVllmvQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5289AC2BCAF;
+	Tue, 28 Apr 2026 15:24:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777388071;
-	bh=u5DGLyR5HD/1MGBsf8teWYoDSABc+D9y2JX4a/0KSqk=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=l74otaXlxwMDVQrDfF61j4VgU+FzRLy4fUUwF3H6HBpKmA03eU2LCYfmcAlFs/YEQ
-	 A2N1h6J59/02mOogggPqpHHk82Ce1qP2xE/ZCsfZEef+E1pkeHtpUwdynt+dd/hogD
-	 7nVypud7lcZ+QDTVI4amd84NirO8RXdycMq/D1ns7Bwmvvhca8kww+1hgsdZEQ64jD
-	 bbFaUIBwxKuICOndPlEQBoTNK6lzRoET7Kw9ZKmlc+HWWvN7qOVnDPPfSCHs60E1K/
-	 STxdm7uT8irGGSRmDMMd9kfbcEcyK5cao7xuoXS+Q78BjU1udkHw/1+ozpaMgH2bje
-	 CBrRpKabXGycQ==
+	s=k20201202; t=1777389899;
+	bh=u64nPhavIjrbkIOuDS+rk495KAKnnTNnuGKl1iIgrnQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=dGVllmvQI59FU2rKl51MvdlSIUC4iRZxt6th/z8BzKSjvuVMjEzce0//g4FZBqB6R
+	 PTWxDsPC1Stg6HSgaJ6NIw+hfxqlofQGb6gStsyQl0a+280uFfyqMMay8W4UoRpfw3
+	 pXCOG3YwyvUlS83O6foSv3A9XR7BSENKl8sqaZy78uAbivPW2EA54JjM+mQLRqJJMd
+	 +xgOGXj5lvZ0gp+7qz7PF5mZkBPlKhSXRCu11qGTlQZrgBmlqBYyI4uPEp9Vx0fP6g
+	 6BnAF3yNLrv2ntGsd5liEd9PmQsvIeTTTdZmxIQkrxRgeutZnapuUv0DAHhCilyGo1
+	 gw5/gyEGWj2cQ==
+From: Thierry Reding <thierry.reding@kernel.org>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	thierry.reding@gmail.com,
+	jonathanh@nvidia.com,
+	kishon@kernel.org,
+	arnd@arndb.de,
+	gregkh@linuxfoundation.org,
+	Frank.Li@nxp.com,
+	den@valinux.co.jp,
+	hongxing.zhu@nxp.com,
+	jingoohan1@gmail.com,
+	vidyas@nvidia.com,
+	cassel@kernel.org,
+	18255117159@163.com,
+	Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: (subset) [PATCH v8 0/9] Enhancements to pcie-tegra194 driver
+Date: Tue, 28 Apr 2026 17:24:50 +0200
+Message-ID: <177738985833.3914480.661455445762332370.b4-ty@b4>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260324191000.1095768-1-mmaddireddy@nvidia.com>
+References: <20260324191000.1095768-1-mmaddireddy@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 28 Apr 2026 16:54:25 +0200
-Message-Id: <DI4VHH97CABG.3VW1RVS2O10K7@kernel.org>
-Subject: Re: [PATCH v2 05/11] rust: io: restrict untyped IO access and
- `register!` to `Region`
-Cc: "Gary Guo" <gary@garyguo.net>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>, "Trevor Gross"
- <tmgross@umich.edu>, "Daniel Almeida" <daniel.almeida@collabora.com>,
- "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
- Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
- <robin.murphy@arm.com>, "Alexandre Courbot" <acourbot@nvidia.com>, "David
- Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>,
- <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <nouveau@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>
-To: "Andreas Hindborg" <a.hindborg@kernel.org>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260421-io_projection-v2-0-4c251c692ef4@garyguo.net>
- <20260421-io_projection-v2-5-4c251c692ef4@garyguo.net>
- <874ikvqwyd.fsf@t14s.mail-host-address-is-not-set>
- <vYp32vOGPut322JQ-5jSBZQNd6eXvnOvg8b6YDhYcYzBqTBVUvSajCJng33oXSQ9wiMvb62VLERzLYSa4g2pJQ==@protonmail.internalid> <DI4QT2U1098S.3K9K7INQ86M0Q@garyguo.net> <87tssvp9sq.fsf@t14s.mail-host-address-is-not-set> <DI4SY1NXU1XW.2VHPFEKIFBQVW@garyguo.net> <87ik9bp2og.fsf@t14s.mail-host-address-is-not-set>
-In-Reply-To: <87ik9bp2og.fsf@t14s.mail-host-address-is-not-set>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-On Tue Apr 28, 2026 at 4:41 PM CEST, Andreas Hindborg wrote:
-> That is probably a good call =F0=9F=98=85 Going over the pieces again, I =
-am not
-> sure when and where I decided this was an index rather than a byte
-> offset.
+From: Thierry Reding <treding@nvidia.com>
 
-This is not the first time I see someone stumble over this, assuming this h=
-as
-index semantics, i.e. I assume there might be something creating this
-impression.
 
-However, I can't see what that might be (probably I'm too used to the C
-primitives). In case you know, I'd be interesting for me to know.
+On Wed, 25 Mar 2026 00:39:51 +0530, Manikanta Maddireddy wrote:
+> This series[1] was originally posted by Vidya Sagar, and I have rebased
+> it onto 6.19.0-rc6-next. I addressed review comments and split this into
+> two series, one for fixes and the other is for enhancements(current).
+> I verified these patches on Jetson AGX Orin(Tegra234 SoC).
+> 
+> Disabling L1SS capability based on support-clkreq device tree property
+> is moved to common DWC driver, so I reworked below patch to disable
+> just L1.2 capability on Tegra234 SoC.
+>  - PCI: tegra194: Disable L1.2 capability of Tegra234 EP
+> 
+> [...]
+
+Applied, thanks!
+
+[8/9] arm64: tegra: Add aspm-l1-entry-delay-ns to PCIe nodes
+      commit: d60ed99f1c9e0bdf1fcd713426f6213abe592c83
+
+Best regards,
+-- 
+Thierry Reding <treding@nvidia.com>
