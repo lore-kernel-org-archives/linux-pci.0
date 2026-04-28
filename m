@@ -1,102 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38730390235
-	for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 17:36:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 047F444D014;
+	Tue, 28 Apr 2026 17:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777397819; cv=none; b=eq9fT9Cr3ksd6t8U3paNjLSW90Y/gehbzzaDG+jzzDu+5rOUIFZz4Ub2dx8VfZ1MHyf4b1+T90PyGpXDAHQlzOm4+tHjsgPJzngcatrEtHDgYDoKE17QfiVFOrQ1Tns7Q/1W1iHhu5eTpxuY/4P85u6zEuEBvSNUPA554Z+Sfuc=
+	t=1777397851; cv=none; b=T0Zwz0di5SxBUyJtgUqe+AskFjVfQF57X2cIu+wrqsU0XWxEV0gEhyApMf5uZiOCtJ4TwTd7VmuwN219wW6L03UsKgj6y+896O4Y0MYrNcYWWUyjh2B7K4jRwhAAmJp+IgDG610r7KEPRO+bj9sGuuFrKXgMfmJogtF2OansTfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777397819; c=relaxed/simple;
-	bh=FaHB592fqkC3vWzDpeqzNvvx97RXvXIqNaaiEoMiv1w=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=G9lu079YTgjufO2Sb4w4V/SktdSbLOysqzqKPZhwtWjIwcOkv7HV3MOy18E9sTH5RO5hQ1628bilUqQX6CQwvH/CslaTDl10keLEBFrYOEI11MrH0aIwEL3xjnQj6AKP66Y9FUNEw80HjRGjdnNCPegHW6cZG7I0dSzSxBjtGnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=InVRK18Q; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777397851; c=relaxed/simple;
+	bh=r2YM0wY1o2r6IwK1f66cqj7/D4ypxGsODLxRg+vuoSI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=osVRbXsBHQaw7mbfIGoH92V5T3ud/daqPzVSeEG1SV55DfL0gPetfK/NQ1Ng0luO08FrdgeVb+BJvD2mdHNN3G0QyZ+wuJPHuroz01b4uWaG11f59nWjIZN87HszJ9zEkG7YLsYYL6YYA6RoiKaBk9Up16JWCBf3hWS1FVDecSQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=sTFMNTRY; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="InVRK18Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD836C2BCAF;
-	Tue, 28 Apr 2026 17:36:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777397818;
-	bh=FaHB592fqkC3vWzDpeqzNvvx97RXvXIqNaaiEoMiv1w=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=InVRK18QahfSHbNnC/8rJyl3PMStL4xAq8viXVWTeFVLUXjkrE8Er/gRclri9qlOo
-	 /Px+3s/JQD9ZclCEZTfnOtsTmp9Re8dFCMA4kcItQH7yS6G6Or9p0rRglUrroIwdF5
-	 dwWS6AT5eJFlmg7CHVRJIic5yYCK70IVOS+Em4bx+mHVSF52X5npvdnabsopCZaBqg
-	 2WEj8ol/OOpCJv1R+h9wlMbXC9BpI2Q3b02osRHHxOpgSZkaK+xEh6FMg7k07S5m16
-	 AShnylwnsJfLMQD7q+82VAwg5njDXXoyFFdyHdvcLnHa1jjpVK9IgFUse//b4IT9+o
-	 ObkwqyCzI/J9g==
-Date: Tue, 28 Apr 2026 12:36:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-pci@vger.kernel.org,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Koichiro Den <den@valinux.co.jp>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: Re: [PATCH] PCI: rcar: Fix up MAINTAINERS entry
-Message-ID: <20260428173657.GA237110@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="sTFMNTRY"
+Received: from [192.168.0.88] (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
+	by linux.microsoft.com (Postfix) with ESMTPSA id F0E5D20B716C;
+	Tue, 28 Apr 2026 10:37:28 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com F0E5D20B716C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1777397849;
+	bh=B5HeDN7LyTkUBtdQONLSYPM1kmKVQS+F0XuoHVbtdW0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=sTFMNTRYJ4vvJk9Xxluf2YFxPMJotwiXeD1xZ6jjSEGQRXhkxcYFo3wi8E6gHUynF
+	 0M7/e4BfhuG3Ih6qIsIP+Dr4eATNy/mELngWee64KCfaIYpbdD8NUtTxZg2jy+O7to
+	 cYp7D23EcEfWDOrYW+Unn5QO0RJsy2e9ydxFaANA=
+Message-ID: <d73822c0-dd72-6b33-81ad-ebd154300b81@linux.microsoft.com>
+Date: Tue, 28 Apr 2026 10:37:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260428052030.51101-1-marek.vasut+renesas@mailbox.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH V1 08/13] PCI: hv: rename hv_compose_msi_msg to
+ hv_vmbus_compose_msi_msg
+Content-Language: en-US
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
+ mhklinux@outlook.com, muislam@microsoft.com, namjain@linux.microsoft.com,
+ magnuskulke@linux.microsoft.com, anbelski@linux.microsoft.com,
+ linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-arch@vger.kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
+ decui@microsoft.com, longli@microsoft.com, tglx@kernel.org,
+ mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+ joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de
+References: <20260428171451.GA233136@bhelgaas>
+From: Mukesh R <mrathor@linux.microsoft.com>
+In-Reply-To: <20260428171451.GA233136@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Apr 28, 2026 at 07:19:54AM +0200, Marek Vasut wrote:
-> Use up to date address. No functional change.
+On 4/28/26 10:14, Bjorn Helgaas wrote:
+> On Mon, Apr 27, 2026 at 07:22:12PM -0700, Mukesh R wrote:
+>> On 4/27/26 09:31, Bjorn Helgaas wrote:
+>>> On Tue, Apr 21, 2026 at 07:32:34PM -0700, Mukesh R wrote:
+>>>> Main change here is to rename hv_compose_msi_msg to
+>>>> hv_vmbus_compose_msi_msg as we introduce hv_compose_msi_msg in upcoming
+>>>> patches that builds MSI messages for both VMBus and non-VMBus cases. VMBus
+>>>> is not used on baremetal root partition for example. While at it, replace
+>>>> spaces with tabs and fix some formatting involving excessive line wraps.
+>>>
+>>> Would be better to do the whitespace changes in their own patch,
+>>> although several of them should just be dropped (see below).
 > 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
-
-I'd be happy to apply this, but am wondering if you want to update
-other similar addresses at the same time?
-
-  DH ELECTRONICS DHSOM SOM AND BOARD SUPPORT
-  M:      Marek Vasut <marex@denx.de>
-
-  MXSFB DRM DRIVER
-  M:      Marek Vasut <marex@denx.de>
-
-  RENESAS R-CAR GYROADC DRIVER
-  M:      Marek Vasut <marek.vasut@gmail.com>
-
-  ROHM MULTIFUNCTION BD9571MWV-M PMIC DEVICE DRIVERS
-  M:      Marek Vasut <marek.vasut+renesas@gmail.com>
-
-If so, I think it'd make sense to do a single patch that updates all
-of them at once.
-
-> ---
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Koichiro Den <den@valinux.co.jp>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Cc: linux-pci@vger.kernel.org
-> ---
->  MAINTAINERS | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>> - * facilities.  For instance, the configuration space of a function exposed
+>>>> + * facilities.	For instance, the configuration space of a function exposed
+>>>
+>>> Oops, this hunk made it worse.  Definitely don't want a tab there.
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index c871acf2179ce..1c87fb5b2f66d 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -20440,7 +20440,7 @@ F:	drivers/pci/controller/plda/pcie-plda-host.c
->  F:	drivers/pci/controller/plda/pcie-plda.h
->  
->  PCI DRIVER FOR RENESAS R-CAR
-> -M:	Marek Vasut <marek.vasut+renesas@gmail.com>
-> +M:	Marek Vasut <marek.vasut+renesas@mailbox.org>
->  M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
->  L:	linux-pci@vger.kernel.org
->  L:	linux-renesas-soc@vger.kernel.org
-> -- 
-> 2.53.0
+>>>> -		 * The vector we select here is a dummy value.  The correct
+>>>> +		 * The vector we select here is a dummy value.	The correct
+>>>
+>>> Another tab that should be a space.  Actually, you should just drop
+>>> this hunk; the rest of the comment has two spaces after periods, so
+>>> this should too.
+>>
+>> well, most of our files does global replace 8 spaces with tabs, so
+>> everywhere comments are well indented. Since, checkpatch doesn't complain
+>> about tabs on comment lines, may I assue it is not a strict requirement
+>> and more a nit or personal preference?
 > 
+> I guess I didn't make it clear.  I'm not complaining about leading
+> tabs; I'm pointing out that the comments should not have embedded tabs
+> in the middle between a period and the first word of the next
+> sentence.
+
+Oh, my bad, sorry, i didnt' realize that. Thank you, will def get rid
+of them (most likely resulted from: vim %retab! command).
+
+Thanks,
+-Mukesh
+
+
+> Here's what it looks like with "git show | cat -T":
+> 
+>    - * facilities.  For instance, the configuration space of a function exposed
+>    + * facilities.^IFor instance, the configuration space of a function exposed
+>                   ^^
+> 
+>    -^I^I * The vector we select here is a dummy value.  The correct
+>    +^I^I * The vector we select here is a dummy value.^IThe correct
+>                                                       ^^
+> 
+>    -^I^I * freed while we dereference the ring buffer pointer.  Test
+>    +^I^I * freed while we dereference the ring buffer pointer.^ITest
+>                                                               ^^
+> 
+>    -^I * to be overlapped by those children.  Set the flag on this claim
+>    +^I * to be overlapped by those children.^ISet the flag on this claim
+>                                             ^^
+> 
+> None of these hunks should be here.  Maybe some automation gone wrong?
+> 
+> In any case, every hunk of a patch that does "rename
+> hv_compose_msi_msg to hv_vmbus_compose_msi_msg" should contain those
+> names.  Any whitespace changes should be in their own patch so they
+> don't make it hard to review the rename.
+
