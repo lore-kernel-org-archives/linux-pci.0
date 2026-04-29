@@ -1,272 +1,253 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11023100.outbound.protection.outlook.com [40.93.201.100])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA3B123ED5B;
-	Wed, 29 Apr 2026 01:58:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.100
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777427905; cv=fail; b=YlLhGSj6/TY5TqahENrkZlkQgsthcfWDyfHgW2u80VXWf/GvZRX6RywD6p0fiJdfE5+w6U2kJIwgrN8GiBbrAaX4UhXZ4HyTPF+VREu7uzgQqvMcWCwE5BBWMFJ66peoU90rAE1r7ybaZptOtFk0vnqym6VBgvCfpI0Um+PUVHk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777427905; c=relaxed/simple;
-	bh=aSTcYHca9ECfU2Z69e9LHAhvpdfazq9yp1YToKLDXXo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=s+hJJ3WOjnp8gly5isS2ZQu9IUeoL+pTkvBrXrLT4hkD5Z0k7/A4dulbKTOusQ7/kuA8655J0OkQYjKBhBVoLDch4BrFv3ePHC92YKrCLEEUc3VSECSJyPHvbqt0gUJVm3CfaoT64rNh0/2wwrg92Oqly8kQm754zsNJ4nbMFSg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=AfmcBZ1R; arc=fail smtp.client-ip=40.93.201.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47BCB2DC32A
+	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 03:05:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777431907; cv=none; b=SKGO5AwAhKoZ8ekRrJL3msveU3URuICXytEhakl43wGZwe6SCSgXH0wqLij7Kxm/9Zw/42EgxY7iLStXMy1XXkuhgMw4EQ5mhTRaWRHiAMvKYs1f5A0qey+QwrG3YOGbHd44mTUNNzMP00mI5vIVOIi+yu18IxEjVvwN54IB6d4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777431907; c=relaxed/simple;
+	bh=2GGUiaHFX5KqOrq3sYTX7GQ9oHEzmTcuK0OpVgkkJC4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UcxRvOTd/wrwbBc737+CA3dFUjqrbgq3idvh9O1tC2El3kCPyxrbNUcvfg/1s6V2V37sx4S6EnSqtON9goDH8RH2ELpAj7tXnDCUD6HFZtRzKmizmpNbvc3U8rzaVOPqbXi1NmBXWJd+erQqJVVs59QRK5+FkDpIOILaWItbgPw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=CKWBnnyx; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Tafkcv9c; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="AfmcBZ1R"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jG54f/NUZauEBQO9MR8hVc1dmUexz3zBX4CPd8S3nENJnYqfc84BSnzivcRnJkQwVLMpIncCqHOoWRoY4iV5904uv8j0pmO26QYaUtaeynOttWHE2Ti4diUebqBa8i8PHDnz80ZElvXtdemR81oyT8bmSTltFi8NFMeur0cDBP3qgo9bjYVWxz2SRxkBBba3ZI9oDb+NU1DHd87HBIurr3JZabTZO3msHSfRudqn/lk5w1/w+4G5vgJU9yfPAXo8jzDZCyRFZ2wWixWoMqE8QKTiBCPSxtGnfC7IE4nSc23H7eVqsOZi5YBdQXjyt8HrIcmniY6VPKQU/hckVSQrLA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/cTvGkAlkH7djI1Dk59/5Bls7bi7xvvtkbLFgUAiPyY=;
- b=mx9OdCl013X4gId2X0fLregFgtY9cLNhcTSNH+YMFlnUcXqQfwqe3Vtla9d/5SQhocg6yUyTvzI6RrOpMS7k3QNzKubeKPNzXyWnN2GThj95OcLCbXcXp16Uy5MYY3/tyWJsIZVIKk5Ttn3K0xLn5ULX4idFoXfyigD4MEFClo1Q6Zi46jQtIzZTsOcFAaWSfX/yeW5OPDgfu5ctmfYN3OqkomPEV4RSXmpObTxiPj3nExJ5ZjWIUFOPCUflZJ6rV/8/+zxatU04twwlKlJjFfUXfcQDxWpkbMzMWifWFL2kcNFKQ8yQTuI7LFO8/fdUcMv9mDfl0B+ipXnRYo7sJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/cTvGkAlkH7djI1Dk59/5Bls7bi7xvvtkbLFgUAiPyY=;
- b=AfmcBZ1RpGVP5mfv5NVs0yOQW4xrMjAsUg0eXSu21GOzZgioF69IoHMdV8fTp7Hn2fghqmOdf5wT8HEzFAv6miODK6/6vm6y8mTWLIoSHpAZ5q4v99/YEvI1EbpMr2/K5tTFu99ziTzetTCryxM4nRIcoCSjpYLwCNoGT61SvvU=
-Received: from SA1PR21MB6921.namprd21.prod.outlook.com (2603:10b6:806:4a7::11)
- by SA5PR21MB6945.namprd21.prod.outlook.com (2603:10b6:806:4d5::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.4; Wed, 29 Apr
- 2026 01:58:20 +0000
-Received: from SA1PR21MB6921.namprd21.prod.outlook.com
- ([fe80::51cf:497c:e5df:f6d]) by SA1PR21MB6921.namprd21.prod.outlook.com
- ([fe80::51cf:497c:e5df:f6d%2]) with mapi id 15.20.9870.013; Wed, 29 Apr 2026
- 01:58:20 +0000
-From: Dexuan Cui <DECUI@microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>, KY Srinivasan <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>, "wei.liu@kernel.org"
-	<wei.liu@kernel.org>, Long Li <longli@microsoft.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, Jake Oshins
-	<jakeo@microsoft.com>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "matthew.ruffell@canonical.com"
-	<matthew.ruffell@canonical.com>, "kjlx@templeofstupid.com"
-	<kjlx@templeofstupid.com>
-CC: Krister Johansen <johansen@templeofstupid.com>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject: RE: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Topic: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Index:
- AQHcwvqZ7/kLR2JkdUmudlv9HY41bLXRHh0QgAOgeDCAAHmtkIAKqeRQgA0oSLCACEewkA==
-Date: Wed, 29 Apr 2026 01:58:19 +0000
-Message-ID:
- <SA1PR21MB69213486F821CA5A2C793C81BF342@SA1PR21MB6921.namprd21.prod.outlook.com>
-References: <20260402234313.2490779-1-decui@microsoft.com>
- <SN6PR02MB415794E53D2B621F6A8BA382D45CA@SN6PR02MB4157.namprd02.prod.outlook.com>
- <SA1PR21MB69215C164B06109C6682984EBF5BA@SA1PR21MB6921.namprd21.prod.outlook.com>
- <SN6PR02MB4157D5C8EE35A221B130FC5AD45BA@SN6PR02MB4157.namprd02.prod.outlook.com>
- <SA1PR21MB69218F955B62DFF62E3E88D2BF222@SA1PR21MB6921.namprd21.prod.outlook.com>
- <SN6PR02MB4157D5BAFAE2134276241FFED42A2@SN6PR02MB4157.namprd02.prod.outlook.com>
-In-Reply-To:
- <SN6PR02MB4157D5BAFAE2134276241FFED42A2@SN6PR02MB4157.namprd02.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=8e73110c-cf31-4373-a3ed-8fccb895746f;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-04-29T00:06:33Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SA1PR21MB6921:EE_|SA5PR21MB6945:EE_
-x-ms-office365-filtering-correlation-id: 01c5b9e6-0403-4016-8265-08dea592c9ab
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|7416014|376014|921020|38070700021|18002099003|22082099003|56012099003;
-x-microsoft-antispam-message-info:
- JHDe2LBREGzymIKUfNuCEwEdt0my3A1asdAJNoIUY0aO83J0PRpNLKzzmiT338vG2FgehRGRSsuFmheA3nHmtuWPzQHcTBpqdMX6un8e4xdqNjzcZjQNvmUtxeznJjkVWwYPlapEOJdDJe1Rh+H6VNg9/9UwBVEfxvTQY4tIKSjIpdieFp9icFjrj6NAcnhUK3xMxWgtfKxiL1/WDPkCGBsJXUBCf4ARojNpp+OGpukJug8qRHdXph3McFv0FBuRMWEmweYm7E0NMxfn7IfjhTYDd7QAfzR+LFEocAGs/8x0/K3LgEHb7PXQoLpjA/2r1fWfrsUuSMm2YO2zcfFISwZfT9tyj0GrKrFcCn0poKoNF8hpfVDG6S3uChu2TulNp9J1wqpyw6oBrmO0rIJj00OPLqKjaLM2ggvqD13I1OZAKKavhjoEe5N9m5IrjgFV0z+Lkm0xYDrLEvX9n+VsnQ61zT1rb7bPUaEJaXrMcOofmqZbVBNT6vIDO+67819iSEEhs+BbjLpuQ5mJLUX/5dC5qJ7V5CiL6aC4J2ED69EjHTshqsXfmdF1of9VTLnPnlswu0IvHidadBD04p+A0YCtH2ULUem2qhJ5nsAl/TPy2BCTyd4xlQJ3ZXPtbxA5NKdkn/jzo4VoPk7BNDsoOFBbpyjD8BwpO86NtMORr0fVY9nMUfTUWgP7HK0r5vSRPFtCTXMIzVBlnmkRPnKfnw1Rl29x+2c+mR4/QsF4Ou5klPyEP660eQKfsA53ypr0ziDroGArEi6EzzGashRitWhYL0PQ6ztD4ufMzu6qUNUzmwIlLjx/5RTqWGIFn+l0
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR21MB6921.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(921020)(38070700021)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?WmrSm7Amng+H0ENsHmAB3PHH/EayFFz0R6jn5k1gxQE2Zd4rNiLV17l+F2cm?=
- =?us-ascii?Q?TZjlnVvTy8vEpB3rVvy6AA3HWpNz2Cxf+5IBdUEjETl630ehhiaI8Yc4/u/e?=
- =?us-ascii?Q?gnqfVmyFKuAVA5S5+bTh/wMn5KxZdY38KbJt167nHqSAkMEEqUx2GuGUNi30?=
- =?us-ascii?Q?1Nf1lM6ixlz1evqeKM8d076u/zhHqI7WFsH+3txPn8kbWKvH5EmO5117chgj?=
- =?us-ascii?Q?+3LNS0BcZUB9rfsbahfaqOl987akA1j7BYQfIhRe4hzQmt0LMojlqP1Vz/Tx?=
- =?us-ascii?Q?J3fF/8XAEiSPnD/AmWvkHuFJE4ej7k9VnUFDtsW/N9o2TcQM20JMnIUL1C2f?=
- =?us-ascii?Q?D+fiuXAOh2KWvxI5XICXh7V+xhJL0Cd32Mj52XBor617jaYO9P7M73cifc78?=
- =?us-ascii?Q?TI6OtMg/lZJ79/fbIYtu5q8tGHrUgelRwhRo4NOq9AvZq1sXPLcDP/x9Fucy?=
- =?us-ascii?Q?3c+w0/9E3p4YTxylMl1iAAUg8cdsNYAkYTnYnhBJiqhUAPP3h9IJJG5mX5cU?=
- =?us-ascii?Q?fMg9yuKNninp3qR+Ciu8txVP6PjQJNTmyH3z35vgJEcyIB273JHdssZ6Bpnm?=
- =?us-ascii?Q?kqOl3lnYqEOm5fdfSQEmdaZyS5IBBkYA63P9OURzkgQREfxWRMaw0IOFenlF?=
- =?us-ascii?Q?/kyvO4AX07enu+fZ4RwpcivkKZGOUdMRA0+TM6PwtiCAuTdPGW2jKZzQYMCQ?=
- =?us-ascii?Q?0+4TnBF9afH0awCIs8ZGHDev3i0ch5pMVHSO20phG6OzM5L5ecDfsn0Qm0mq?=
- =?us-ascii?Q?HXTXpM+LP8uWBN/RdrlHpH80D3DKKGBQyfM2soT6qgkTB9PjMdqrcuT7VpmF?=
- =?us-ascii?Q?j5gAruv1eI/mbvM4RHg0guVzFu91BDUChr4m02lH8EkOtOCBI5dwg6tMOCUJ?=
- =?us-ascii?Q?Eg3k78X/FlKw58od/AYUaiX0kNdafLF3USdaHDtgvqt+WuuZgC1XQcKYwZYr?=
- =?us-ascii?Q?UOgwYpV5larwQcOonHCyguJSB0TsPWjU/kkw1bpGD8CPRa6AmPRIh5BXh8KD?=
- =?us-ascii?Q?V6/fjxl7FFC42aNWBe2pe38Db9x559pswcFU0SISoeO7sz7VgTXndj0zzsdS?=
- =?us-ascii?Q?42dUaJx2zHG0ub4wz5JaQgM9o73s/CipJ1fenYuvFMKnbzhEJMwSyXGcD4b5?=
- =?us-ascii?Q?34QbDxXOCpU4sbhDRole3lAEWNs8cmqrgwzovOmjBLpRhZnWqlZzkUjrbDix?=
- =?us-ascii?Q?jwqRRTJqul9LFtWQirP+LqYU8K8vN1XqYSHyOjNsYFGAKOJGJFvDkh/cSM0d?=
- =?us-ascii?Q?lV310jnnQWSPoMYN2ysEgNzjPeUrxWWrWbltKUteRraiV+tUpqMtdYrvgJNI?=
- =?us-ascii?Q?y1cC6LdqqAl8VsmiV7hTbqig5f27Azh9h0TvVZPst/15xcqm0sMsuAEkRaAy?=
- =?us-ascii?Q?kADDr4BW7xtTKb+gLwTQRVE5amYFCRBq18Vwu1lz2lUd5x1LYJy9ds5VJIsf?=
- =?us-ascii?Q?mX3nhuPN1wBa5A7/4r6GOZVG/3M0WoKxtfSd7B5MuTdeSWzCxDnDbkCRd0Nc?=
- =?us-ascii?Q?Sx5uEQXeFl38SfRgSChzLjreiWFoIiZayhVhfeuuIHnPjvLQLI5PTvapaQse?=
- =?us-ascii?Q?A1hnC5lyHl5ttNvNmRb+JTQ6BV4a8VJreGO6+y1CX+uK4EB254V/czZaPpCz?=
- =?us-ascii?Q?mgY0CUNHOCC5RyHNyVx1x+U/EjoSxV4YQ+pgXVnB8tSf0zWlv+rfghH9fiSv?=
- =?us-ascii?Q?anzAXKwBuFRvzw8y6PiOnt8eP+j6OucgpZuEneWZMNPXv9MTmdZYmkKYG2dh?=
- =?us-ascii?Q?vIUZYIqzWw=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="CKWBnnyx";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Tafkcv9c"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63T1KBBR2890881
+	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 03:05:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	DvpF9N/gAyKtXmKaTyV2WHzu+7iolN9prQ5oE9ZY/7I=; b=CKWBnnyxEvDgCE8D
+	00r0hxa8rUY5rWZR0chUO27fCEA2MsqSVfdgvwRt3cBLHx25nwas3fXU9PStCOVQ
+	w7MkaSDQEpqnEIlIUIfJhAQMaQ9hy23XDqB+AHddc9iz8QONch/IzCzNaERn7Yiq
+	xyKJ8sHHP3N6TFwbCz+dYXd1eJD5paV8MLDmDiNh2DYVFjV0JtmysO0lZlmojGl0
+	t0TBEIiiQsLkN3oDE+4EUdNMB5nSdbtXF3oitlc++9+V080gXRQAIiVOBW6DPL9n
+	ZE2JfZIMKE2zMA4MXWqmx24JcF30n0HPaOkqPKrFTjmEPX/9E16VKACeNKJeajFi
+	DVPQGQ==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dttgyujny-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 03:05:05 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2b465bf993cso123704035ad.1
+        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 20:05:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1777431904; x=1778036704; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=DvpF9N/gAyKtXmKaTyV2WHzu+7iolN9prQ5oE9ZY/7I=;
+        b=Tafkcv9cW0pMGZv5/cBxU8et4zLkSZUGBLJDH95oXU8YEejyt4MFkTj5MMCiJNtL1o
+         Y9RgQzkGFnSqOczfrGbsHvfO4jlZb6Qp/0hS2ItfZ7TQjs1nTi68tHprya6NJlorD2tn
+         SELxYidjjqofknBlEVrOWPNhKkBmXhUT6khnPhSMwGDPP/PZmOyner15xNur9PdPeMlE
+         KVjNjFCXsgVSWMIfXRSZe8f9RAypUFmBprfsEKthKMRtgGrdUk0NzHT1NmsJERsq6tZo
+         FObiDQ82xeXCrvY3YNif4OLihC4U6p1t8dhYzeJfNt26GS43RB1sonbzQvy1p81MXzMo
+         O7qw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777431904; x=1778036704;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DvpF9N/gAyKtXmKaTyV2WHzu+7iolN9prQ5oE9ZY/7I=;
+        b=cVNg6i72Bj/fVHzFypl1SPjsOU5ttPD/BYxT5q5TD/sAhbYrtpfKOdOj9EUYzlUQCE
+         f22w3m1yKtrkbZRl0/LRZXCqRK8xVGbrSHAVNFvmoGmQk4tjqu+dkCM7Cc0/zTBK+hWO
+         Cog10ChlHh2+pAk8Kzg8EmGM5HvkNqEieITnjydOCmn7Emt80/NvNNyJgf6P9XHX7dMH
+         3+ZrcxGa9XEnmwCgTaVkwPeFLwFEfBkU6vscru2GFbJJ7KE1q4rIh4528ecr9ivbIcwe
+         gKrmleBc0VTp/nXTeA78z+ELYSzPGlzx8zf5EpoaGLK2aJpl8cW3DCtOR5yC4mNxYv/K
+         o1wQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9yKXWoKD0fy0cnee5f/rC8GV4gAlCcQvlZR6/j+FCb22auNLz9ZkqDR6SPaCInYrwRQu1d68371D8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7O9u/9laOce2mjwZMJvTq1FDqhzs/vQaJE/fTTDi0ye3eBwuI
+	Jmff/1x5T0RsuVE1tXlKDUkM1BVnOu0khqfT/VMgKWzMW6M08AQah0J6gC2Vsh/7kxrYQBRdmXB
+	oVYJDy7rRAq7+VfJGmDvxdCr/MZ/4rqCrDLrDQw0+XORiLAq+RTrzNFNmz/xynOI=
+X-Gm-Gg: AeBDievATd/OOlbHyZQrkWmkRIXACpzZYZrKS9Ea5iLCElmquhg6ZFzbymjbyyEc7Vp
+	ZNAtMj0+zYjCgtE85CQWLWoCw6kyNGvUvRfKCgy72X5YrE6sjPwtVr2lvLUcdbxcdaMu2Ddcen9
+	Zbc2dCuftXTDGEXsjsIJVfV/Xc38RBtNHX0XaDC90lLpbmENPkKI/QgLzh+u9PbYYBY5JdMgQd6
+	nkTryc9Xotd0rBQEm+/Ps6W15+V6od2+dUjas6kZsoK4dLjSCwd7rxRAWOLJlaTka2t5yX4EFkN
+	2pU+FoCq9g5C9KNsLiAlmLI5wH9R5enFYFeJ62nfxOL3SDdGGzotuarRu8zHn3hS6Z4fqME2NiR
+	mCGjcb/n8Iud++j90UV5sBN4fcDuesDQ/KkOquf0wQIydsmkYAWHPHDkoeiAAyWR9Ng==
+X-Received: by 2002:a17:902:eec2:b0:2b4:5f67:5914 with SMTP id d9443c01a7336-2b987442b4fmr14370725ad.33.1777431904456;
+        Tue, 28 Apr 2026 20:05:04 -0700 (PDT)
+X-Received: by 2002:a17:902:eec2:b0:2b4:5f67:5914 with SMTP id d9443c01a7336-2b987442b4fmr14370415ad.33.1777431903925;
+        Tue, 28 Apr 2026 20:05:03 -0700 (PDT)
+Received: from [10.92.193.222] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b988940d08sm5813365ad.43.2026.04.28.20.04.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 28 Apr 2026 20:05:03 -0700 (PDT)
+Message-ID: <28c30ddb-f46a-458d-9680-eac1ce8c5b68@oss.qualcomm.com>
+Date: Wed, 29 Apr 2026 08:34:58 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR21MB6921.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 01c5b9e6-0403-4016-8265-08dea592c9ab
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Apr 2026 01:58:19.9968
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: y1vzzx5BmwUvAC/qZvjyEoD2MGZuqmo5NMWqZmzGAC1WT3o07tl2fYdRI+4nYf3B7wqHskpeRjzx0/sbUAcbxQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA5PR21MB6945
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/3] PCI/ASPM: Add helper to encode L1SS T_POWER_ON
+ fields
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com,
+        Shawn Lin <shawn.lin@rock-chips.com>
+References: <20260428-t_power_on_fux-v5-0-f1ef926a91ff@oss.qualcomm.com>
+ <20260428-t_power_on_fux-v5-1-f1ef926a91ff@oss.qualcomm.com>
+ <bc3a5f58-676a-3634-6b8f-bffc91d25265@linux.intel.com>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <bc3a5f58-676a-3634-6b8f-bffc91d25265@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: R-2Q-lPYthGAK66DtK_oKFP9mxvfIsil
+X-Proofpoint-GUID: R-2Q-lPYthGAK66DtK_oKFP9mxvfIsil
+X-Authority-Analysis: v=2.4 cv=cb7iaHDM c=1 sm=1 tr=0 ts=69f17561 cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=s8YR1HE3AAAA:8 a=EUspDBNiAAAA:8 a=QyXUC8HyAAAA:8 a=Zlw8WEmqWycuYniGgb4A:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=uG9DUKGECoFWVXl0Dc02:22
+ a=jGH_LyMDp9YhSvY-UuyI:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI5MDAyNiBTYWx0ZWRfXzYTPe6EXTA2N
+ 6GXQop25UoAQAXULl8+76ezQtPmnQEI8LAoxYsTeRO8A/MKJP9PeNG8/BTLKfvG7/jrZhh13h8o
+ LG3dnOF6MkwMmV3CQfeBaS8yn7dTCtWwqbpgKyJHpPEoIpv2jdsz6Nfo/TYMFcwhLLMD//Qf6rS
+ E0BKqPsqMqmzKZIixtf5lsmFVGxLhqixqTtHCPyOWTBAC/qlMTcI5kkZb6AYZfmnY1u0K7eUByo
+ S8Kir1JqKQg4lrwelHVw40tc33+B7H1yRS0vgnTnMBUZCK2mT6Air+4Y7/v654bnmb2/jxpHujV
+ wtadoAyGY7+2p+YshD2P1PP3XagucsBIrYi7xIDemM+PH0m6zGMZWpbesPYVgUGpM6rVcMmmdwM
+ hTr/XQRVZ21vmmhwvClb3Bp7lHBp0XQS/GfAIMX7pqUbavcSAozPJLUr+zUzq79+uEp+1WsYplh
+ 9GAIv74JGMCafiiONVQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-28_05,2026-04-28_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 adultscore=0 clxscore=1015 impostorscore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 spamscore=0 priorityscore=1501
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
+ definitions=main-2604290026
 
-> From: Michael Kelley <mhklinux@outlook.com>
-> Sent: Thursday, April 23, 2026 10:40 AM
-> > ...
-> > Another example is: for a Gen2 VM with the below commands:
-> >    Set-VM -LowMemoryMappedIoSpace 1GB \
-> >           -VMName decui-u2204-gen2-fb
-> >    // i.e. the default setting on Azure. Let's ignore CVMs here.
 
-Sorry for the incorrect statement: this is not the default setting
-on Azure. The default for regular VMs on Azure should be
-"-LowMemoryMappedIoSpace 3GB".  Not sure how I made the
-incorrect statement -- I guess I might have confused my local VM
-with my Azure VM, and at some moment, I might have mistaken
-the meaning of the "-LowMemoryMappedIoSpace" parameter:
-for that local VM, I might somehow incorrectly though that the
-param means low_mmio_base rather than low_mmio_size.
 
-> FWIW, I'm seeing that in Gen2 VMs in Azure, the low_mmio_size
-> is 3 GiB. I'm looking at a D16ds_v5, and a D16lds_v6. The v5 VM
-> is newly created, while the v6 has been around for a few months.
+On 4/28/2026 2:57 PM, Ilpo Järvinen wrote:
+> On Tue, 28 Apr 2026, Krishna Chaitanya Chundru wrote:
+>
+>> Add a shared helper to encode the PCIe L1 PM Substates T_POWER_ON
+>> parameter into the T_POWER_ON Scale and T_POWER_ON Value fields.
+>>
+>> This helper can be used by the controller drivers to change the
+>> default/wrong value of T_POWER_ON in L1ss capability register to
+>> avoid incorrect calculation of LTR_L1.2_THRESHOLD value.
+>>
+>> The helper converts a T_POWER_ON time specified in microseconds into
+>> the appropriate scale/value encoding defined by the PCIe spec r7.0,
+>> sec 7.8.3.2. Values that exceed the maximum encodable range are clamped
+>> to the largest representable encoding.
+>>
+>> Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>  drivers/pci/pci.h       |  6 ++++++
+>>  drivers/pci/pcie/aspm.c | 40 ++++++++++++++++++++++++++++++++++++++++
+>>  2 files changed, 46 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 4a14f88e543a..c379befe1ebe 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -1110,6 +1110,7 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked);
+>>  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+>>  void pci_configure_ltr(struct pci_dev *pdev);
+>>  void pci_bridge_reconfigure_ltr(struct pci_dev *pdev);
+>> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value);
+>>  #else
+>>  static inline void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap) { }
+>>  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+>> @@ -1118,6 +1119,11 @@ static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked)
+>>  static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+>>  static inline void pci_configure_ltr(struct pci_dev *pdev) { }
+>>  static inline void pci_bridge_reconfigure_ltr(struct pci_dev *pdev) { }
+>> +static inline void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+>> +{
+>> +	*scale = 0;
+>> +	*value = 0;
+>> +}
+>>  #endif
+>>  
+>>  #ifdef CONFIG_PCIE_ECRC
+>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+>> index 925373b98dff..457d469b8d49 100644
+>> --- a/drivers/pci/pcie/aspm.c
+>> +++ b/drivers/pci/pcie/aspm.c
+>> @@ -525,6 +525,46 @@ static u32 calc_l12_pwron(struct pci_dev *pdev, u32 scale, u32 val)
+>>  	return 0;
+>>  }
+>>  
+>> +/**
+>> + * pcie_encode_t_power_on - Encode T_POWER_ON into scale and value fields
+>> + * @t_power_on_us: T_POWER_ON time in microseconds
+>> + * @scale: Encoded T_POWER_ON Scale (0..2)
+>> + * @value: Encoded T_POWER_ON Value
+>> + *
+>> + * T_POWER_ON is encoded as:
+>> + *   T_POWER_ON(us) = scale_unit(us) * value
+>> + *
+>> + * where scale_unit is selected by @scale:
+>> + *   0: 2us
+>> + *   1: 10us
+>> + *   2: 100us
+>> + *
+>> + * If @t_power_on_us exceeds the maximum representable value, the result
+>> + * is clamped to the largest encodable T_POWER_ON.
+>> + *
+>> + * See PCIe r7.0, sec 7.8.3.2.
+>> + */
+>> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+> Hi,
+>
+> I don't know how the type for t_power_on_us was picked but if it was 
+> arbitrary decision, I suggest you just go with 32-bit input.
+The maximum value of the T power ON is 3100us, so we are using u16 here.
 
-This is also my observation, after I double checked my Azure VM.
+- Krishna Chaitanya.
+> That would also remove the u32 -> u16 truncate done in the other patches 
+> of your series which would potentially corrupt the number (I assume 
+> numbers that big would be invalid but they could alias to small u16 
+> numbers).
+>
+> Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+>
+>> +{
+>> +	u8 maxv = FIELD_MAX(PCI_L1SS_CAP_P_PWR_ON_VALUE);
+>> +
+>> +	/* T_POWER_ON_Value ("value") is a 5-bit field with max value of 31. */
+>> +	if (t_power_on_us <= 2 * maxv) {
+>> +		*scale = 0; /* Value times 2us */
+>> +		*value = DIV_ROUND_UP(t_power_on_us, 2);
+>> +	} else if (t_power_on_us <= 10 * maxv) {
+>> +		*scale = 1; /* Value times 10us */
+>> +		*value = DIV_ROUND_UP(t_power_on_us, 10);
+>> +	} else if (t_power_on_us <= 100 * maxv) {
+>> +		*scale = 2; /* value times 100us */
+>> +		*value = DIV_ROUND_UP(t_power_on_us, 100);
+>> +	} else {
+>> +		*scale = 2;
+>> +		*value = maxv;
+>> +	}
+>> +}
+>> +EXPORT_SYMBOL(pcie_encode_t_power_on);
+>> +
+>>  /*
+>>   * Encode an LTR_L1.2_THRESHOLD value for the L1 PM Substates Control 1
+>>   * register.  Ports enter L1.2 when the most recent LTR value is greater
+>>
+>>
 
-> In a CVM, the low_mmio_size should be 1 GiB. This overall example
-> is still correct -- it's just the comment that I have doubts about. Or
-> maybe you are looking at a different VM size that has a different
-> default?
-
-For CVMs, yes, the low_mmio_size is 1GB.
-
->=20
-> Some years back, I had gotten into a discussion with Azure about
-> this size because the swiotlb memory wants to be allocated below
-> the 4 GiB line, and reserving 3 GiB for low mmio limited the size
-> of the swiotlb. CVMs were changed to have only 1 GiB for low
-> mmio because they need a larger swiotlb.
-
-Right, I also remember the story. :-)
-
-> > With the below command:
-> >    Set-VM -LowMemoryMappedIoSpace 3GB \
-> >           -VMName decui-u2204-gen2-fb
-> >    // i.e. the default setting on Azure. Unlike x86-64, an ARM64
-> >    // VM on Azure has 3GB of mmio below 4GB.
->=20
-> See my previous comment on the same topic. I think arm64
-> and x86/x64 are the same.
-
-Agreed.
-
-> Question about Gen 1 VMs: If the Linux frame buffer driver moves
-> the frame buffer somewhere other than the default location, and
-> then the VM does a kexec/kdump, what does the legacy PCI graphic
-> device BAR report as the frame buffer location? Does it *always*
-> report 4G-128MB, or does it report the new location? I can run
-
-It always reports 4G-128MB.=20
-BTW,  I suspect a Gen2 VM may have the same issue, i.e.=20
-currently we only reserve 8MB below 4GB; if hyperv_drm uses
-high MMIO, I suspect the UEFI firmware would still report the
-same original low MMIO framebuffer base/size to the kdump kernel,
-but there is no easy way to verify this for Gen2 VMs...
-
-> an experiment to find out, but maybe you've already done so and
-> not reported that detail here.
->=20
-> Michael
-
-I have a Gen1 Ubuntu 22.04 VM, and I run the below commands:
-Set-VM -LowMemoryMappedIoSpace 128MB -VMName decui-u2204-gen1-fb
-Set-VMVideo -VMName decui-u2204-gen1-fb -HorizontalResolution 7680 -Vertica=
-lResolution 4320 -ResolutionType Single
-
-When the VM boots up, we reserve 64MB at 4G-128MB:
-[   11.492075] hv_vmbus: hv_mmio=3D[mem 0xf8000000-0xfed3ffff],[mem 0xfe000=
-0000-0xfffffffff] fb=3D[mem 0xf8000000-0xfbffffff]
-
-Since the required mmio size in the hyperv-drm driver is 128MB:
-[   28.631923] hyperv_connect_vsp: hyperv_drm: mmio_megabytes=3D128 MB
-the driver has to allocate MMIO from the high MMIO space, because=20
-we only reserve 64MB below 4GB, and the available low_mmio_size is
-smaller than 128MB due to the vTPM MMIO range:
-
-# cat /proc/iomem
-00000000-00000fff : Reserved
-00001000-0009fbff : System RAM
-0009fc00-0009ffff : Reserved
-000a0000-000bffff : PCI Bus 0000:00
-000c0000-000c7fff : Video ROM
-000e0000-000fffff : Reserved
-  000f0000-000fffff : System ROM
-00100000-f7feffff : System RAM
-  d7000000-f6ffffff : Crash kernel
-f7ff0000-f7ffefff : ACPI Tables
-f7fff000-f7ffffff : ACPI Non-volatile Storage
-f8000000-fffbffff : PCI Bus 0000:00
-  f8000000-fbffffff : 0000:00:08.0
-  fec00000-fec003ff : IOAPIC 0
-  fee00000-fee00fff : PNP0C02:01
-fffc0000-ffffffff : PNP0C01:00
-100000000-507ffffff : System RAM
-  281600000-28295449f : Kernel code
-  282a00000-283746fff : Kernel rodata
-  283800000-283c5287f : Kernel data
-  28411a000-2845fffff : Kernel bss
-fe0000000-fffffffff : PCI Bus 0000:00
-  fe0000000-fe7ffffff : 5620e0c7-8062-4dce-aeb7-520c7ef76171
-
-However,  when the kdump kernel starts to run, and I print the
-pci_resource_start(pdev, 0) and pci_resource_len(pdev, 0)
-from vmbus_reserve_fb(), I still see 4G-128MB:
-[   12.506159] Gen1 VM: start=3D0xf8000000, size=3D0x4000000
-
-In this case, we can't really fix the MMIO conflict, e.g.
-if both hv_pci and hyperv_drm are built as modules, then
-the order of loading them can be nondeterministic:if the order
-in the first kernel is different from the order in
-the kdump kernel, we run into trouble.
-
-If the order is deterministic (e.g. hv_pci is
-built-in, and hyperv_drm is built as a module),
-we should be good since both allocates MMIO from
-the high MMIO range in a deterministic way.
-
-Thanks,
-Dexuan
