@@ -1,404 +1,221 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.162])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D74338F25F
-	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 06:42:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 586A134751D
+	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 07:26:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.162
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777444981; cv=none; b=StvgPwlXB4yD3GdL8y4k+9aFgwOAnnZ1/WQKzBuWLAHibOtzev4cblst6G1ChkE8QCFETVp/PR7oNIm+b4KNKoQpGdJSoKCe04rddQ0gBAlfxns/omq1g7sHKPglIyNBbUDk/IhPcQuwid0DUbeeOAJJ+BnADlpCbAo+Esr7b7E=
+	t=1777447593; cv=none; b=TMuh1YqkcAh8N8ckbD25GH6P7slvK6mKQb+DqdTypLGmBB10JcKgqHrt3IFVY2r02IoD0nXirp1YVo121SnOyqhq1bOez2+nnTKuBjUKGY4IGo8VbQc0I6OuzJJnyIhkxBRfV/i5ibted9S8UALpyVJKp9bC8V7QyQREkFarkKE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777444981; c=relaxed/simple;
-	bh=pA76AmsNQb6QnqOiWK09b1zUzJDidnd19LIa2CcRAH8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=j3QSG04blXCqp1Q55zOFkbRNNEVm4bRYxq3RmDrebjw8nlbx26L8QX6Fivawt3hD9oh1pIi0Rpaga2wGUNW/vTlhWDOnzTkdg1jRt3O7Q4PabvEPONznGl2V7HhEhgMi+yMXlqzLK2MP+VDkIJwDn0NY/1q5BU066hoao/ppBHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=QettX4S0; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Q9Aj5z7/; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1777447593; c=relaxed/simple;
+	bh=oQde5zE4oF8XHfRrVSDCm604TzeXwdKc0Oi7Jedt6/k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DGVF+5UloW9hyZajzMPlptt1xE1r0o/7eCQ6N40iTX6NlJqjr5nC5eMkt/MAgTDKBWJhiDyhaD6CElygjRfFdQjFyjsaVXoRL1Suokm2mu2OF2fpav7519qsniGEj/1rzR3exlhvhEBRTWNmHftnZHBmnRZlCMHUC4j5/+dw1EE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=kb76pK91; arc=none smtp.client-ip=188.68.63.162
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="QettX4S0";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Q9Aj5z7/"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63T3YbMS017747
-	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 06:42:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Hq//0MaTtB+D8Slz74o3QINBfe6mU8ByJ3ZjSrdZlow=; b=QettX4S0iLWjYPHi
-	FTry+GOYf9EN4MCZS21DDK6lWwoeIaVCrqaYjhb12u1AuZHfDrJfpEGJF3H157+u
-	TdRZUWD2xCLSIDpx+d0JGThXImnkN1LzSrY6sPV2Nqfief6hKiPeF8lOYgLboWgS
-	F/39v47nnF9vgdFRT9bcq2mHnow7adqAoyWpgH6MpLid01qywToLqQDMMryqmknY
-	wn923A9qek6cXlajP21RO5wni4uFH+YhCEyM8/T7IBsuFHBJul65tbOEXny/nhWc
-	++PRj76dtgcuJSSM7P7ilXe9So2pT0sHSiuV87h8NEc42Vq+Is6T4YY5CEvTfnGh
-	kNl0PQ==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4du1eeabc9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 06:42:58 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-35da86144daso11794146a91.3
-        for <linux-pci@vger.kernel.org>; Tue, 28 Apr 2026 23:42:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1777444978; x=1778049778; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Hq//0MaTtB+D8Slz74o3QINBfe6mU8ByJ3ZjSrdZlow=;
-        b=Q9Aj5z7/VYNnFqQsvZoisH+XPUmurFBF0xt8oBhlXeSqIXs1Az6lo7oB6SA9BTTH8k
-         HesZNI50kU07iOQH5U1fnJFT2p1axyUR3H3JG/j4qjAKTEpzu6JVIebmThXMstMU1z4I
-         JrNgHvHJ7MgEIILdSu8o1DmnSIQtlCiq/Vrs/TDqgkcbRVMqOq5bxSbjM9KNC1MVSHKv
-         qGsHImfJruD230wtixLNZUlhJLyruxIsCXcoaNHayXSeAndyXqWrXme874EUi2ZfLu69
-         4Reyu8cUEh40zlnTPeN6tO+4wR0uytRxewMPDWBUvHGQQr+THPcdc1qGO0hS9YhTW5q5
-         pSEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777444978; x=1778049778;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Hq//0MaTtB+D8Slz74o3QINBfe6mU8ByJ3ZjSrdZlow=;
-        b=U8GanM7Sdk18TapLpLryjgyoy4pXkPhr0hCP+GEzAUK87W557f8kabHk9mwa+Kr4NR
-         qVc169MWzzC21Re/nLy5AFr11EMKDJtgbXvwpZfEb2w+4Qmy2eNjuKd772M+ml+DcLHv
-         mvQWdWFfeN29VQ0muEf1REzGv9at5wS3ShAcCiC2Mfmpyc5ChqPKKsSvEnfmFFH34jGU
-         TP2oRXvOVqyk3la2vG0v68utjcTNxsuREZ+XltWhOOEtYjuogKoEh3RW0auedVUji908
-         H1mlnm7pU55ax+WAhPSj3c9hQfNJVbLv2huWo9tDTvG7ZU+2xhUnLZxXW+2Q6YDpCfR0
-         nu2g==
-X-Gm-Message-State: AOJu0YxJNOaYgZxlEobxFyifsUE3bpTuDUmXcUW4t4ua0eM9gzFhXU35
-	RbZf7v9KdAwG+UcGV+GqKU+Nxja74GaB28SybGZM69YTBgcP6fHyhifrSyP0j7TfDq3nDKFRiix
-	OEc8uUp8P7BX4JMJfCeF9e+SHQDVxHwpyh+r2vYti7xk+oVAGHaRMOPXxdrJk10U=
-X-Gm-Gg: AeBDies8cg9pKxCjhoQNwupB644Z7rrWtJ5kX7jvOwX4KjQuodzXsvLUJ17J0qDB+Mb
-	qlLWkyUC27+eh/0vh1V/PGEeOpdzpWyHoDcHG+Uw0CZbfc53ZpoT2Vsl1up7l7faIAMynKfR06k
-	gJ4R1BPYJvVhW0Ip83ELbp10lR1xFgvrZswkvIDWR0m+Wx/PuXCsTTIUGiETn1Z2mkdVaIibEIq
-	vpcSNAxD/BM8bg3ouMJno+3JyhUJJQS/lyS6+rIILb2TVTe4qtYjo5+FJ0hHt3rFyUT67QmcbNM
-	lbq5eNXY8rpge+erxnsw6qrD0VuCUsevZpJzGovwXlQuQHsBPla2xgYwKbzgsxpJKJSAKFU6i7p
-	iMAQCaZVpeHuSDfZM12sPS+phZQLL2OIo+Dha/VWatjhUvBzMw0AjGrV3RMrdogZLvjc=
-X-Received: by 2002:a17:90b:5865:b0:359:f77f:8cff with SMTP id 98e67ed59e1d1-36492046f97mr6801405a91.19.1777444977834;
-        Tue, 28 Apr 2026 23:42:57 -0700 (PDT)
-X-Received: by 2002:a17:90b:5865:b0:359:f77f:8cff with SMTP id 98e67ed59e1d1-36492046f97mr6801368a91.19.1777444977296;
-        Tue, 28 Apr 2026 23:42:57 -0700 (PDT)
-Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-364a0303d59sm2021414a91.15.2026.04.28.23.42.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Apr 2026 23:42:57 -0700 (PDT)
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Date: Wed, 29 Apr 2026 12:12:27 +0530
-Subject: [PATCH v5 5/5] PCI: qcom: Add D3cold support
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="kb76pK91"
+Received: from mors-relay-8201.netcup.net (localhost [127.0.0.1])
+	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4g583Z74ptz3y6Z;
+	Wed, 29 Apr 2026 09:25:46 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1777447547;
+	bh=oQde5zE4oF8XHfRrVSDCm604TzeXwdKc0Oi7Jedt6/k=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=kb76pK91Auzn5syjdNDGpF6zxXD3bjETDBPyMsGIAYPemV8k0V4EC1/rpz7iVbDTW
+	 81IxZFKi266+SmBaa1mIpuOp9NdE1JB86OIrbotLfgyUq6zEtEK6mmZ2qF5+CF+yd8
+	 xcSwkQGOVhZ9uM/3ZnVvjJeYtMvl4jDny5yabRGiVv9qt3L7y77VWqRVzZGXM+FRRi
+	 JMbsaEvrmEiJkMDPXY5OA/pAh4ruKErnnc9rFw9QF57qkhnp9DDuUjA/5rCMdUueTL
+	 6LpEC+hOn4v2tQeniPSzM/kDNdFi7KN+ok4b4eVewcGRfByaHwCpRu/exRlM5twKwJ
+	 GrE7wxdcrNHXw==
+Received: from policy01-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-8201.netcup.net (Postfix) with ESMTPS id 4g583Z6C2wz3y4w;
+	Wed, 29 Apr 2026 09:25:46 +0200 (CEST)
+X-Virus-Scanned: Debian amavisd-new at policy01-mors.netcup.net
+X-Spam-Flag: NO
+X-Spam-Score: -2.898
+X-Spam-Level: 
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy01-mors.netcup.net (Postfix) with ESMTPS id 4g583W4bVPz8tdJ;
+	Wed, 29 Apr 2026 09:25:43 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id BEF6A633D0;
+	Wed, 29 Apr 2026 09:25:42 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <40051e46-11a8-414a-aa8a-ecb37846a649@leemhuis.info>
+Date: Wed, 29 Apr 2026 09:25:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: Update saved_config_space upon resource assignment
+To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bernd Schumacher <bernd@bschu.de>, "Alexandre N." <an.tech@mailo.com>,
+ Salvatore Bonaccorso <carnil@debian.org>, 1131025@bugs.debian.org,
+ Uwe Kleine-Koenig <ukleinek@debian.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Alex Williamson <alex@shazbot.org>,
+ Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, regressions@lists.linux.dev,
+ linux-pci@vger.kernel.org
+References: 
+ <febc3f354e0c1f5a9f5b3ee9ffddaa44caccf651.1776268054.git.lukas@wunner.de>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+X-Enigmail-Draft-Status: N11222
+Autocrypt: addr=linux@leemhuis.info; keydata=
+ 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 MEK4
+In-Reply-To: 
+ <febc3f354e0c1f5a9f5b3ee9ffddaa44caccf651.1776268054.git.lukas@wunner.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260429-d3cold-v5-5-89e9735b9df6@oss.qualcomm.com>
-References: <20260429-d3cold-v5-0-89e9735b9df6@oss.qualcomm.com>
-In-Reply-To: <20260429-d3cold-v5-0-89e9735b9df6@oss.qualcomm.com>
-To: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Will Deacon <will@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        jonathanh@nvidia.com, bjorn.andersson@oss.qualcomm.com,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1777444949; l=8346;
- i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
- bh=pA76AmsNQb6QnqOiWK09b1zUzJDidnd19LIa2CcRAH8=;
- b=rBSaTdbJhOplkic9jOdMuWUYoZEN4Z5hY6sphVVqaapCV9NZRGxNjRynDSrXYWSeMPcIp8xB2
- /VMqJixAoW2CPphPAtumG5GxoEqm/AT6P2t6yJ4dDrOsgeIhSe5Pclt
-X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
- pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
-X-Authority-Analysis: v=2.4 cv=C/7ZDwP+ c=1 sm=1 tr=0 ts=69f1a872 cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=Um2Pa8k9VHT-vaBCBUpS:22
- a=EUspDBNiAAAA:8 a=nOXFll4yYCsuIFAjJyMA:9 a=QEXdDO2ut3YA:10
- a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI5MDA2NCBTYWx0ZWRfX98WSfFIOtNAW
- BhvrWJVsznp0+eQtdz7D9hOi9SAjefsd9ZvH7LcPI3LNiVJC87hWO6Ygp5UistLAk8rhkhQ2xcV
- ZikBMNJzANXS/aMohfz33xnGu9ifsowFOflEMUQdNIJEFt+cBlDM2uKwfDksnbGeVS550luimjc
- vV0lJ4efWLzDGsuEdBu3NT4GaBTubtAfV/L7OZiFFzbLw7hBsIwJR/KXK4JymlVYDhU275ZiQpa
- NDfkIiGcvmIKXUiVKWFDp1F4CSydgC3ux2IlnEh+EDgBEYjaQiPffuzxWRF6OL3eXqD1LmnMMzX
- a65GOAxwey32GYTMCn48RU54Jw8xSqD3qxB8Cc7vd3mqB9d2KPnN5uNckxUWHQh1Amo/Jx4pCOg
- t6pG972m/qz0fzV2Arpize3oiCr8jhs9rcrxFFlTPN7SjSlKJWJUWeMe2ZCIIc/S/aOdKdxBqz2
- k4sZdvFzxlVBoyMAXDQ==
-X-Proofpoint-GUID: Uv3HRCOGtkEHhgpYL4UKB3Ou20RC79Cm
-X-Proofpoint-ORIG-GUID: Uv3HRCOGtkEHhgpYL4UKB3Ou20RC79Cm
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-28_05,2026-04-28_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0
- priorityscore=1501 bulkscore=0 phishscore=0 suspectscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2604290064
+X-PPP-Message-ID: <177744754331.2437893.7300139824891796474@mxe9fb.netcup.net>
+X-NC-CID: 4H1AzZDm7MNaS380OBd68xyjr7zkXvMklCezlslU6cqGG3sGses=
 
-Add support for transitioning PCIe endpoints under host bridge into
-D3cold by integrating with the DWC core suspend/resume helpers.
+Top-posting, to make this easy to process:
 
-Implement PME_TurnOff message generation via ELBI_SYS_CTRL and hook it
-into the DWC host operations so the controller follows the standard
-PME_TurnOff-based power-down sequence before entering D3cold.
+Bjorn, sorry for bothering you, but I wondered: is below patch still in
+your review queue? It fixes a regression that made it to a longterm
+series that two people reported.
 
-When the device is suspended into D3cold, fully tear down interconnect
-bandwidth, OPP votes. If D3cold is not entered, retain existing behavior
-by keeping the required interconnect and OPP votes.
+Ciao, Thorsten
 
-Use dw_pcie::skip_pwrctrl_off to avoid powering off devices during suspend
-to preserve wakeup capability of the devices and also not to power on the
-devices in the init path.
-
-Drop the qcom_pcie::suspended flag and rely on the existing
-dw_pcie::suspended state, which now drives both the power-management
-flow and the interconnect/OPP handling.
-
-Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 155 ++++++++++++++++++++-------------
- 1 file changed, 95 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 9dd808e85409..94403be5a05e 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -146,6 +146,7 @@
- 
- /* ELBI_SYS_CTRL register fields */
- #define ELBI_SYS_CTRL_LT_ENABLE			BIT(0)
-+#define ELBI_SYS_CTRL_PME_TURNOFF_MSG		BIT(4)
- 
- /* ELBI_SYS_STTS register fields */
- #define ELBI_SYS_STTS_LTSSM_STATE_MASK		GENMASK(17, 12)
-@@ -288,7 +289,6 @@ struct qcom_pcie {
- 	const struct qcom_pcie_cfg *cfg;
- 	struct dentry *debugfs;
- 	struct list_head ports;
--	bool suspended;
- 	bool use_pm_opp;
- };
- 
-@@ -1364,13 +1364,17 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		goto err_deinit;
- 
--	ret = pci_pwrctrl_create_devices(pci->dev);
--	if (ret)
--		goto err_disable_phy;
-+	if (!pci->suspended) {
-+		ret = pci_pwrctrl_create_devices(pci->dev);
-+		if (ret)
-+			goto err_disable_phy;
-+	}
- 
--	ret = pci_pwrctrl_power_on_devices(pci->dev);
--	if (ret)
--		goto err_pwrctrl_destroy;
-+	if (!pp->skip_pwrctrl_off) {
-+		ret = pci_pwrctrl_power_on_devices(pci->dev);
-+		if (ret)
-+			goto err_pwrctrl_destroy;
-+	}
- 
- 	if (pcie->cfg->ops->post_init) {
- 		ret = pcie->cfg->ops->post_init(pcie);
-@@ -1395,9 +1399,10 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
- err_assert_reset:
- 	qcom_pcie_perst_assert(pcie);
- err_pwrctrl_power_off:
--	pci_pwrctrl_power_off_devices(pci->dev);
-+	if (!pp->skip_pwrctrl_off)
-+		pci_pwrctrl_power_off_devices(pci->dev);
- err_pwrctrl_destroy:
--	if (ret != -EPROBE_DEFER)
-+	if (ret != -EPROBE_DEFER && !pci->suspended)
- 		pci_pwrctrl_destroy_devices(pci->dev);
- err_disable_phy:
- 	qcom_pcie_phy_power_off(pcie);
-@@ -1414,11 +1419,14 @@ static void qcom_pcie_host_deinit(struct dw_pcie_rp *pp)
- 
- 	qcom_pcie_perst_assert(pcie);
- 
--	/*
--	 * No need to destroy pwrctrl devices as this function only gets called
--	 * during system suspend as of now.
--	 */
--	pci_pwrctrl_power_off_devices(pci->dev);
-+	if (!pci->pp.skip_pwrctrl_off) {
-+		/*
-+		 * No need to destroy pwrctrl devices as this function only gets called
-+		 * during system suspend as of now.
-+		 */
-+		pci_pwrctrl_power_off_devices(pci->dev);
-+	}
-+
- 	qcom_pcie_phy_power_off(pcie);
- 	pcie->cfg->ops->deinit(pcie);
- }
-@@ -1432,10 +1440,18 @@ static void qcom_pcie_host_post_init(struct dw_pcie_rp *pp)
- 		pcie->cfg->ops->host_post_init(pcie);
- }
- 
-+static void qcom_pcie_host_pme_turn_off(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+
-+	writel(ELBI_SYS_CTRL_PME_TURNOFF_MSG, pci->elbi_base + ELBI_SYS_CTRL);
-+}
-+
- static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
- 	.init		= qcom_pcie_host_init,
- 	.deinit		= qcom_pcie_host_deinit,
- 	.post_init	= qcom_pcie_host_post_init,
-+	.pme_turn_off	= qcom_pcie_host_pme_turn_off,
- };
- 
- /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
-@@ -2102,53 +2118,51 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
- 	if (!pcie)
- 		return 0;
- 
--	/*
--	 * Set minimum bandwidth required to keep data path functional during
--	 * suspend.
--	 */
--	if (pcie->icc_mem) {
--		ret = icc_set_bw(pcie->icc_mem, 0, kBps_to_icc(1));
--		if (ret) {
--			dev_err(dev,
--				"Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
--				ret);
--			return ret;
--		}
--	}
-+	ret = dw_pcie_suspend_noirq(pcie->pci);
-+	if (ret)
-+		return ret;
- 
--	/*
--	 * Turn OFF the resources only for controllers without active PCIe
--	 * devices. For controllers with active devices, the resources are kept
--	 * ON and the link is expected to be in L0/L1 (sub)states.
--	 *
--	 * Turning OFF the resources for controllers with active PCIe devices
--	 * will trigger access violation during the end of the suspend cycle,
--	 * as kernel tries to access the PCIe devices config space for masking
--	 * MSIs.
--	 *
--	 * Also, it is not desirable to put the link into L2/L3 state as that
--	 * implies VDD supply will be removed and the devices may go into
--	 * powerdown state. This will affect the lifetime of the storage devices
--	 * like NVMe.
--	 */
--	if (!dw_pcie_link_up(pcie->pci)) {
--		qcom_pcie_host_deinit(&pcie->pci->pp);
--		pcie->suspended = true;
--	}
-+	if (pcie->pci->suspended) {
-+		ret = icc_disable(pcie->icc_mem);
-+		if (ret)
-+			dev_err(dev, "Failed to disable PCIe-MEM interconnect path: %d\n", ret);
- 
--	/*
--	 * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
--	 * Because on some platforms, DBI access can happen very late during the
--	 * S2RAM and a non-active CPU-PCIe interconnect path may lead to NoC
--	 * error.
--	 */
--	if (pm_suspend_target_state != PM_SUSPEND_MEM) {
- 		ret = icc_disable(pcie->icc_cpu);
- 		if (ret)
- 			dev_err(dev, "Failed to disable CPU-PCIe interconnect path: %d\n", ret);
- 
- 		if (pcie->use_pm_opp)
- 			dev_pm_opp_set_opp(pcie->pci->dev, NULL);
-+	} else {
-+		/*
-+		 * Set minimum bandwidth required to keep data path functional during
-+		 * suspend.
-+		 */
-+		if (pcie->icc_mem) {
-+			ret = icc_set_bw(pcie->icc_mem, 0, kBps_to_icc(1));
-+			if (ret) {
-+				dev_err(dev,
-+					"Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
-+					ret);
-+				return ret;
-+			}
-+		}
-+
-+		/*
-+		 * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
-+		 * Because on some platforms, DBI access can happen very late during the
-+		 * S2RAM and a non-active CPU-PCIe interconnect path may lead to NoC
-+		 * error.
-+		 */
-+		if (pm_suspend_target_state != PM_SUSPEND_MEM) {
-+			ret = icc_disable(pcie->icc_cpu);
-+			if (ret)
-+				dev_err(dev, "Failed to disable CPU-PCIe interconnect path: %d\n",
-+					ret);
-+
-+			if (pcie->use_pm_opp)
-+				dev_pm_opp_set_opp(pcie->pci->dev, NULL);
-+		}
- 	}
- 	return ret;
- }
-@@ -2162,25 +2176,46 @@ static int qcom_pcie_resume_noirq(struct device *dev)
- 	if (!pcie)
- 		return 0;
- 
--	if (pm_suspend_target_state != PM_SUSPEND_MEM) {
-+	if (pcie->pci->suspended) {
- 		ret = icc_enable(pcie->icc_cpu);
- 		if (ret) {
- 			dev_err(dev, "Failed to enable CPU-PCIe interconnect path: %d\n", ret);
- 			return ret;
- 		}
--	}
- 
--	if (pcie->suspended) {
--		ret = qcom_pcie_host_init(&pcie->pci->pp);
--		if (ret)
--			return ret;
-+		ret = icc_enable(pcie->icc_mem);
-+		if (ret) {
-+			dev_err(dev, "Failed to enable PCIe-MEM interconnect path: %d\n", ret);
-+			goto disable_icc_cpu;
-+		}
- 
--		pcie->suspended = false;
-+		/*
-+		 * Ignore -ENODEV & -EIO here since it is expected when no endpoint is
-+		 * connected to the PCIe link.
-+		 */
-+		ret = dw_pcie_resume_noirq(pcie->pci);
-+		if (ret && ret != -ENODEV && ret != -EIO)
-+			goto disable_icc_mem;
-+	} else {
-+		if (pm_suspend_target_state != PM_SUSPEND_MEM) {
-+			ret = icc_enable(pcie->icc_cpu);
-+			if (ret) {
-+				dev_err(dev, "Failed to enable CPU-PCIe interconnect path: %d\n",
-+					ret);
-+				return ret;
-+			}
-+		}
- 	}
- 
- 	qcom_pcie_icc_opp_update(pcie);
- 
- 	return 0;
-+disable_icc_mem:
-+	icc_disable(pcie->icc_mem);
-+disable_icc_cpu:
-+	icc_disable(pcie->icc_cpu);
-+
-+	return ret;
- }
- 
- static const struct of_device_id qcom_pcie_match[] = {
-
--- 
-2.34.1
+On 4/15/26 17:56, Lukas Wunner wrote:
+> Bernd reports passthrough failure of a Digital Devices Cine S2 V6 DVB
+> adapter plugged into an ASRock X570S PG Riptide board with BIOS version
+> P5.41 (09/07/2023):
+> 
+>   ddbridge 0000:05:00.0: detected Digital Devices Cine S2 V6 DVB adapter
+>   ddbridge 0000:05:00.0: cannot read registers
+>   ddbridge 0000:05:00.0: fail
+> 
+> BIOS assigns an incorrect BAR to the DVB adapter which doesn't fit into
+> the upstream bridge window.  The kernel corrects the BAR assignment:
+> 
+>   pci 0000:07:00.0: BAR 0 [mem 0xfffffffffc500000-0xfffffffffc50ffff 64bit]: can't claim; no compatible bridge window
+>   pci 0000:07:00.0: BAR 0 [mem 0xfc500000-0xfc50ffff 64bit]: assigned
+> 
+> Correction of the BAR assignment happens in an x86-specific fs_initcall,
+> pcibios_assign_resources(), after device enumeration in a subsys_initcall.
+> This order was introduced at the behest of Linus in 2004:
+> 
+>     https://git.kernel.org/tglx/history/c/a06a30144bbc
+> 
+> No other architecture performs such a late BAR correction.
+> 
+> Bernd bisected the issue to commit a2f1e22390ac ("PCI/ERR: Ensure error
+> recoverability at all times"), but it only occurs in the absence of commit
+> 4d4c10f763d7 ("PCI: Explicitly put devices into D0 when initializing").
+> This combination exists in stable kernel v6.12.70, but not in mainline,
+> hence Bernd cannot reproduce the issue with mainline.
+> 
+> Since a2f1e22390ac, config space is saved on enumeration, prior to BAR
+> correction.  Upon passthrough, the corrected BAR is overwritten with the
+> incorrect saved value by:
+> 
+>   vfio_pci_core_register_device()
+>     vfio_pci_set_power_state()
+>       pci_restore_state()
+> 
+> But only if the device's current_state is PCI_UNKNOWN, as it was prior to
+> commit 4d4c10f763d7.  Since the commit, it is PCI_D0, which changes the
+> behavior of vfio_pci_set_power_state() to no longer restore the state
+> without saving it first.
+> 
+> Alexandre is reporting the same issue as Bernd, but in his case, mainline
+> is affected as well.  The difference is that on Alexandre's system, the
+> host kernel binds a driver to the device which is unbound prior to
+> passthrough, whereas on Bernd's system no driver gets bound by the host
+> kernel.
+> 
+> Unbinding sets current_state to PCI_UNKNOWN in pci_device_remove(), so
+> when vfio-pci is subsequently bound to the device, pci_restore_state() is
+> once again called without invoking pci_save_state() first.
+> 
+> To robustly fix the issue, always update saved_config_space upon resource
+> assignment.
+> 
+> Reported-by: Bernd Schumacher <bernd@bschu.de>
+> Tested-by: Bernd Schumacher <bernd@bschu.de>
+> Closes: https://lore.kernel.org/r/acfZrlP0Ua_5D3U4@eldamar.lan/
+> Reported-by: Alexandre N. <an.tech@mailo.com>
+> Tested-by: Alexandre N. <an.tech@mailo.com>
+> Closes: https://lore.kernel.org/r/dd3c3358-de0f-4a56-9c81-04aceaab4058@mailo.com/
+> Fixes: a2f1e22390ac ("PCI/ERR: Ensure error recoverability at all times")
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org # v6.12+
+> ---
+>  drivers/pci/setup-res.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index e5fcadf..1769ba9 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -102,6 +102,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+>  	}
+>  
+>  	pci_write_config_dword(dev, reg, new);
+> +	dev->saved_config_space[reg / 4] = new;
+>  	pci_read_config_dword(dev, reg, &check);
+>  
+>  	if ((new ^ check) & mask) {
+> @@ -112,6 +113,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+>  	if (res->flags & IORESOURCE_MEM_64) {
+>  		new = region.start >> 16 >> 16;
+>  		pci_write_config_dword(dev, reg + 4, new);
+> +		dev->saved_config_space[(reg + 4) / 4] = new;
+>  		pci_read_config_dword(dev, reg + 4, &check);
+>  		if (check != new) {
+>  			pci_err(dev, "%s: error updating (high %#010x != %#010x)\n",
 
