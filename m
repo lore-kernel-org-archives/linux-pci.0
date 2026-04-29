@@ -1,43 +1,42 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9886C3CE495;
-	Wed, 29 Apr 2026 18:06:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64C7E413222;
+	Wed, 29 Apr 2026 18:07:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777486020; cv=none; b=RDryy15t1fta6vq0+fs6JIL+h1DMDKHdkWUjQDnyDq5v1iMNgyCUU9Uec9dmwntzBf6IcoPQndFASpeUFdHzyMYjX/cHihrrBLqoS7t8hDWeKBTvIrmkm98laOrZ+MLrurc6bpx1O/UC8sOgW0AK/Oz/LqCzNr28eWuT/Dudeuk=
+	t=1777486023; cv=none; b=CuwWUbtMJ09GjdDDFXy54eur8rpYoW6r1tdUZqH0VhBMZWkqagthQOCnizrzFdXRJDLJ6x4o0Jsd6V3a/1kCRHjU/S01o5JLtmYwEFhffmvUQ5YmEdHzA2Ii3D8CQIPYB+4dVg+UmPEacXDUVefuh8BErKABfCahqx7ImqWCWmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777486020; c=relaxed/simple;
-	bh=R3M1Wd/Iys/ZSh84oAQZ8j5ob1LKTDhbBg/wAEZStYU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HPHNo3ad8wFB4wgzQdN1KZ/5j1cI05XqA0GF9sLgpPKQs/1tabnem2Iou/V51fum7WF/Fu0JlTXEsd+vCao2Tior8cZ3zXTdxpRw87SPdJeOosqR37vai3MmbQ4fuP7hws9scCj0NLGHpPj+ujS+MTEo83C3n7KxUmgNlsIqK98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FcEfI34o; arc=none smtp.client-ip=192.198.163.15
+	s=arc-20240116; t=1777486023; c=relaxed/simple;
+	bh=/xqUyS0Nu6H02iDqmvzGe/xfNqDuvDK/AgOJphjGTes=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=h9tHYnL3bJsurvAI40kA9olyTUbPUEkcm2leMlWfraonvkjvjZVL6ABK4YVG+2vOqOuhPU5QDittmJihxc7/265t9Y4GEMVipNkzPqj+FOndquylGzJ/Ko6dPnv6Vp3EkrztVEqJ8AxuAM0Slnu/F+3jZ/UDdekJ8WXB7FsFEXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XTepb1qc; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FcEfI34o"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XTepb1qc"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777486017; x=1809022017;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=R3M1Wd/Iys/ZSh84oAQZ8j5ob1LKTDhbBg/wAEZStYU=;
-  b=FcEfI34oAewrquGu/atRxUKOTyxfPOY1evkliLbtErSH1nRLIN0y6u6V
-   vBQkoTtt26TFRV51MXYI+M/IDjueodIjwrjF4I2yjkE1BMOjOkHq862Y8
-   aJrlB1DVX8gtvlaHJvE6GPdes3ZWTX2LFVnDjMDIT9+evGSsjiuILfuH6
-   owTUk+Imp9BJn73iOytzEYLCpx3GUFVnIESt46Ma08YpROkDW6IKk5lpG
-   T/9VDlfbNPB9XU0OKrvKiPPI8T8R3yTcWOaPipNBHfRmkP+C9f6kEkoaF
-   ja+NMiZ8eM0ggIzFrTqXKme1Vyyx6T4oLRwOS3fFwO9T/GeRnStomNe03
-   g==;
-X-CSE-ConnectionGUID: U+CjtDMNTsuQ7UXH47hLVQ==
-X-CSE-MsgGUID: 3p4y/EbGQRuWuYmD/WglcA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11771"; a="78532274"
+  t=1777486021; x=1809022021;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=/xqUyS0Nu6H02iDqmvzGe/xfNqDuvDK/AgOJphjGTes=;
+  b=XTepb1qc4+b4MkiJXGPyZWlAxQQqJ1wKqxKDcViIiWTRoRG6ZxCcnPVZ
+   Sn01KWqPpz9/o4jMgj9IkOikqVvpIdP1WK8ScI//Td0B0N9If3bGcR4zP
+   cbOzVh5yI09jfVRWmhbMFoy7VEjyCXnnbO4bYju41C4k0g4vBqISeeg3H
+   xl8+yI1MY3r2+G8kx8Ye8IIAa3XIlZr7ImlHkKG43rfNfL6T66Q6I2D5j
+   z8xAKKGVKWegIFV3G76d6SYpP4uEFdapKzO4ubWBR7As9F0tQdXqhHJZp
+   FfdHQnM6FsNow1y3Tkr3xXNGBBH55wqtLtTEbAU3gBx4P/XPwu+D5/HLi
+   w==;
+X-CSE-ConnectionGUID: FH9e4M03T7Cv2i/7UVPy8g==
+X-CSE-MsgGUID: UgOP8FbHSUyaLxDAwtdmwg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11771"; a="78532267"
 X-IronPort-AV: E=Sophos;i="6.23,206,1770624000"; 
-   d="scan'208";a="78532274"
+   d="scan'208";a="78532267"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 11:06:55 -0700
-X-CSE-ConnectionGUID: mR8rcttgQ56FZ9VCwOI0gw==
-X-CSE-MsgGUID: ng0XwoOFRSCNLdXC0cwaMw==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 11:06:54 -0700
+X-CSE-ConnectionGUID: NkYtTC8USS2bbeuKoGjrfQ==
+X-CSE-MsgGUID: uJ5hh9mnQDycBeLyC2PWmA==
 X-ExtLoop1: 1
 Received: from iherna2-mobl4.amr.corp.intel.com (HELO tfalcon-desk.intel.com) ([10.124.221.251])
   by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 11:06:53 -0700
@@ -51,123 +50,90 @@ Cc: "David E . Box" <david.e.box@linux.intel.com>,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Thomas Falcon <thomas.falcon@intel.com>
-Subject: [RFC PATCH 1/4] pcie/aspm: Add debug logging for aspm policy config
-Date: Wed, 29 Apr 2026 13:06:43 -0500
-Message-ID: <20260429180647.197072-2-thomas.falcon@intel.com>
+Subject: [RFC PATCH 0/4] pcie/aspm: Enable all advertised ASPM states by default
+Date: Wed, 29 Apr 2026 13:06:42 -0500
+Message-ID: <20260429180647.197072-1-thomas.falcon@intel.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20260429180647.197072-1-thomas.falcon@intel.com>
-References: <20260429180647.197072-1-thomas.falcon@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Include additional logging for ASPM and Clock PM state changes
-keeping track of code flow and enabled power saving states.
+Hi Bjorn, Rafael, all,
 
-Example output after enabling powersupersave policy:
+This series follows up on the discussion from August 2025 about ASPM
+default behavior and enabling all advertised link power states by
+default [1].
 
-[  130.179249] pcieport 0000:80:1b.0: Updating ASPM state
-[  130.179256] igc 0000:81:00.0: ASPM: Disabling ASPM on this device before disabling parent
-[  130.179368] pcieport 0000:80:1b.0: ASPM: Disabling ASPM before applying configuration
-[  130.179373] pcieport 0000:80:1b.0: ASPM: Configure L1 substates
-[  130.179391] pcieport 0000:80:1b.0: ASPM: Configure ASPM state on upstream device
-[  130.179395] igc 0000:81:00.0: ASPM: Configure ASPM state on downstream device
-[  130.179401] pcieport 0000:80:1b.0: ASPM: enabled states: L1 ASPM-L1.1 PCI-PM-L1.1 PCI-PM-L1.2
-[  130.179416] pcieport 0000:00:06.0: Updating ASPM state
-[  130.179418] nvme 0000:01:00.0: ASPM: Disabling ASPM on this device before disabling parent
-[  130.179422] pcieport 0000:00:06.0: ASPM: Disabling ASPM before applying configuration
-[  130.179425] pcieport 0000:00:06.0: ASPM: Configure L1 substates
-[  130.179435] pcieport 0000:00:06.0: ASPM: Configure ASPM state on upstream device
-[  130.179438] nvme 0000:01:00.0: ASPM: Configure ASPM state on downstream device
-[  130.179442] pcieport 0000:00:06.0: ASPM: enabled states: L1 ASPM-L1.1 ASPM-L1.2 PCI-PM-L1.1 PCI-PM-L1.2
+Today, ASPM behavior is influenced first by build-time configuration
+(CONFIG_PCIEASPM_*), along with firmware-provided defaults. The reliance
+on Kconfig for policy selection and the current two-phase configuration
+model (initial safe setup followed by a later, more aggressive
+driver-triggered configuration) complicate both usage and maintenance.
 
-Suggested-by: David E. Box <david.e.box@linux.intel.com>
-Signed-off-by: Thomas Falcon <thomas.falcon@intel.com>
----
- drivers/pci/pcie/aspm.c | 34 ++++++++++++++++++++++++++++++----
- 1 file changed, 30 insertions(+), 4 deletions(-)
+The direction discussed was to move toward a model where the OS enables
+all supported ASPM states by default, while still respecting platform
+policy (FADT, _OSC), driver constraints, and user overrides.
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 925373b98dff..cd23c1462502 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -372,6 +372,9 @@ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
- 	/* Need nothing if the specified equals to current state */
- 	if (link->clkpm_enabled == enable)
- 		return;
-+
-+	pci_dbg(link->pdev, "%s Clock PM\n",
-+		enable ? "Enabling" : "Disabling");
- 	pcie_set_clkpm_nocheck(link, enable);
- }
- 
-@@ -961,11 +964,14 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 	state &= (link->aspm_capable & ~link->aspm_disable);
- 
- 	/* Can't enable any substates if L1 is not enabled */
--	if (!(state & PCIE_LINK_STATE_L1))
-+	if (!(state & PCIE_LINK_STATE_L1)) {
-+		pci_dbg(parent, "ASPM: L1 not enabled, disabling L1 substates\n");
- 		state &= ~PCIE_LINK_STATE_L1SS;
-+	}
- 
- 	/* Spec says both ports must be in D0 before enabling PCI PM substates*/
- 	if (parent->current_state != PCI_D0 || child->current_state != PCI_D0) {
-+		pci_dbg(parent, "ASPM: Both ports are not in D0, disable PCI PM L1 substates unless explicitly enabled\n");
- 		state &= ~PCIE_LINK_STATE_L1_SS_PCIPM;
- 		state |= (link->aspm_enabled & PCIE_LINK_STATE_L1_SS_PCIPM);
- 	}
-@@ -973,6 +979,8 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 	/* Nothing to do if the link is already in the requested state */
- 	if (link->aspm_enabled == state)
- 		return;
-+	pci_dbg(parent, "Updating ASPM state\n");
-+
- 	/* Convert ASPM state to upstream/downstream ASPM register state */
- 	if (state & PCIE_LINK_STATE_L0S_UP)
- 		dwstream |= PCI_EXP_LNKCTL_ASPM_L0S;
-@@ -997,16 +1005,34 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
- 	 * Sec 7.5.3.7 also recommends programming the same ASPM Control
- 	 * value for all functions of a multi-function device.
- 	 */
--	list_for_each_entry(child, &linkbus->devices, bus_list)
-+	list_for_each_entry(child, &linkbus->devices, bus_list) {
-+		pci_dbg(child, "ASPM: Disabling ASPM on this device before disabling parent\n");
- 		pcie_config_aspm_dev(child, 0);
-+	}
-+	pci_dbg(parent, "ASPM: Disabling ASPM before applying configuration\n");
- 	pcie_config_aspm_dev(parent, 0);
- 
--	if (link->aspm_capable & PCIE_LINK_STATE_L1SS)
-+	if (link->aspm_capable & PCIE_LINK_STATE_L1SS) {
-+		pci_dbg(parent, "ASPM: Configure L1 substates\n");
- 		pcie_config_aspm_l1ss(link, state);
-+	}
- 
-+	pci_dbg(parent, "ASPM: Configure ASPM state on upstream device\n");
- 	pcie_config_aspm_dev(parent, upstream);
--	list_for_each_entry(child, &linkbus->devices, bus_list)
-+	list_for_each_entry(child, &linkbus->devices, bus_list) {
-+		pci_dbg(child, "ASPM: Configure ASPM state on downstream device\n");
- 		pcie_config_aspm_dev(child, dwstream);
-+	}
-+
-+	pci_dbg(parent, "ASPM: enabled states:%s%s%s%s%s%s%s%s\n",
-+		FLAG(state, L0S_UP, " L0s-Upstream"),
-+		FLAG(state, L0S_DW, " L0s-Downstream"),
-+		FLAG(state, L1, " L1"),
-+		FLAG(state, L1_1, " ASPM-L1.1"),
-+		FLAG(state, L1_2, " ASPM-L1.2"),
-+		FLAG(state, L1_1_PCIPM, " PCI-PM-L1.1"),
-+		FLAG(state, L1_2_PCIPM, " PCI-PM-L1.2"),
-+		FLAG(state, CLKPM, " ClockPM"));
- 
- 	link->aspm_enabled = state;
- 
+This series is an RFC to explore that direction and gather feedback.
+
+Specifically, it:
+
+    Enables all advertised ASPM states by default via the existing
+    policy framework, which respects capability masks, blacklist
+    restrictions, and user configuration.
+    Consolidates ASPM configuration into a single initialization step,
+    instead of the current two-phase model (pre-driver “safe” init
+    followed by driver-probe adjustments). This simplifies behavior and
+    reduces maintenance complexity.
+    Adds detailed debug instrumentation to make ASPM configuration
+    decisions and transitions more visible, helping to evaluate impact
+    and identify mismatches with firmware expectations.
+    Limits the default behavior change to newer systems using a DMI BIOS
+    year check (>= 2025). This is intended to reduce risk on legacy
+    platforms where firmware expectations or device behavior may not
+    tolerate more aggressive ASPM enablement.
+    Removes CONFIG_PCIEASPM_* policy selections in favor of runtime
+    policy selection, simplifying configuration and making behavior
+    more consistent.
+
+This RFC is not intended for immediate upstreaming, but to evaluate the
+feasibility and impact of this approach.
+
+This does not address synthetic PCIe hierarchies (e.g. VMD), which may
+lack valid firmware policy entirely. Those cases likely require
+targeted handling and are left for follow-on work so that the core
+defaulting model can be evaluated independently.
+
+Feedback is especially welcome on:
+
+    The DMI-based gating approach for limiting rollout risk
+    Whether this correctly captures “enable all advertised states”
+    The removal of Kconfig-based policy selection
+    The shift from a two-phase to single-phase configuration model
+
+[1] https://lore.kernel.org/linux-pci/20250828204345.GA958461@bhelgaas/
+
+Thomas Falcon (4):
+  pcie/aspm: Add debug logging for aspm policy config
+  pcie/aspm: Enable all power-saving states during link state
+    initialization
+  pcie/aspm: Enable all hardware power-saving states by default
+  pcie/aspm: Remove CONFIG_PCIEASPM_* policy definitions
+
+ Documentation/arch/x86/amd-debugging.rst |  5 +-
+ arch/mips/configs/bmips_stb_defconfig    |  1 -
+ arch/mips/configs/loongson2k_defconfig   |  1 -
+ drivers/pci/pci-acpi.c                   |  4 +-
+ drivers/pci/pcie/Kconfig                 | 33 ---------
+ drivers/pci/pcie/aspm.c                  | 87 +++++++++++++++++++-----
+ include/linux/pci.h                      |  1 +
+ 7 files changed, 77 insertions(+), 55 deletions(-)
+
 -- 
 2.43.0
 
