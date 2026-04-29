@@ -1,144 +1,357 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 195EC1F3B85;
-	Wed, 29 Apr 2026 21:53:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B9BAE2F745C;
+	Wed, 29 Apr 2026 22:28:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777499596; cv=none; b=Vw03o9IiqoYBBSEzynz3ZG+RiGqJDlOjQ2mYRQOyU9+U5IhhROxN97oJNkji1rbXpJtIByfiXEESADElykKIND898Vh0a/t6F9umbuMcLAioAagAasX2HneOyHNHEA/hawwbidmwfMCZACtZNflQNwFnHLSNeXAk2PBW41OurIA=
+	t=1777501699; cv=none; b=g2x2GZRn2FwW5V3O41T2stEz6aExJpDSct4AWtifEOlQt+gmLIZW6pcBw2mivo5qJeR61nmo8eu6P7byFK8I7PoinUB/ki8eJQROQE031e7PeKLYdYnXVaPhZZ4c2gVEkq5ICachpQyFdkglObHhyqhgtAeKdsRrLrPwwzgkYMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777499596; c=relaxed/simple;
-	bh=QMStOrC9ijSdcmZwpecCfj8cW7cjmtEWxaBR3/UpVls=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QjEYfoNvLQbFBAtk8xj+cLRC5TCM6fNulp8+Dmoq+nYm7uXzwyaeWH4/4uUIyscdWXaU1njcHE1ob1wgBXIOnemcC1PO5li+HgVSHr4TbCTqMfQl50ivEFbHbCNGRIdFmi4nuUOT9oZa+KIS12jawGj6tBjgJeir6j6+H1tD2Us=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DB9+kZPD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777501699; c=relaxed/simple;
+	bh=cCkMN2p6aXdsS4VjZWRh464K6oe32v3NGfn5qQfr2Ik=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=oHo86cUb6OZ8RT0Tebp89rmubw3KNVYzDG8kH4i3AwJToDRRh+KcJD5yWpHG8w2GzQs0oEa88T+AwIe5afJVQ91GzJrg801U8dPZB4KSC7RTgmFu5St4ox8sUTFZ42WHEC2SxtcjEJcU/tkCwzh4H7icRynUfJvbwHoe/7zf2dw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=W9PFJauS; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DB9+kZPD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FDA5C19425;
-	Wed, 29 Apr 2026 21:53:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777499595;
-	bh=QMStOrC9ijSdcmZwpecCfj8cW7cjmtEWxaBR3/UpVls=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DB9+kZPDshUQej3kRybqEfvdwkk667Gm6CkHX5VlzJSsCkGdxN0SK66RBIbtcRQiX
-	 oR5JEXAjnydRYcR1XVvWKjGNU0kKz3vRPzjlIIomF/G+LQ0IDnd+et2lboaOd8Qc/8
-	 WcepsbyXQUbwF/WWXTIE11uuDVG6Vpu6lT02czNXEtD/0Z/ih1iJc/XNmBhnIpFn80
-	 QN3DdAaMXmFzbd4t1ZLgozXRJ5n769qzHJuv/YZJfLpmpAt/Zud3+Eb4H963mf/p4+
-	 rEdieLZ7HK7keBlOU6yHJ+A7kGjM7uCVMbX9JXbQubG0LkVt/W4rDPibeeifUAjchc
-	 zVufsAqHwppjA==
-Date: Thu, 30 Apr 2026 06:53:13 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
-	Richard Henderson <richard.henderson@linaro.org>, Christophe Leroy <chleroy@kernel.org>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Dexuan Cui <decui@microsoft.com>, 
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>, Lukas Wunner <lukas@wunner.de>, 
-	Oliver O'Halloran <oohall@gmail.com>, Saurabh Singh Sengar <ssengar@microsoft.com>, 
-	Shuan He <heshuan@bytedance.com>, Srivatsa Bhat <srivatsabhat@microsoft.com>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v6 24/24] PCI/sysfs: Limit BAR resize attribute scope to
- platforms with PCI mmap
-Message-ID: <20260429212749.GB3724801@rocinante>
-References: <20260422161407.118748-25-kwilczynski@kernel.org>
- <20260429204932.GA318462@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="W9PFJauS"
+Received: from localhost (unknown [20.236.11.29])
+	by linux.microsoft.com (Postfix) with ESMTPSA id B332D20B716C;
+	Wed, 29 Apr 2026 15:28:16 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com B332D20B716C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1777501697;
+	bh=nNaeytT1WfkYlrb7aq4OM5BymIk3oCnk59yTBTmQPMc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=W9PFJauSunK2M1P7HpxoCdIEe/7dds3W8ifeRq+H+GIEPZIql+z+ll5f8Oi8pnA5k
+	 stF9yPMgyiXGStTt9LoWiMYlFXVCGkHR4jBbO6Qv+M68ZVMuno2zYfiGGjcdCd8LfU
+	 3eBJCFTPEacmBO2mKO6fT5KCiB/jVoL0/2gljJdk=
+Date: Wed, 29 Apr 2026 15:28:14 -0700
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: David Matlack <dmatlack@google.com>
+Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mm@kvack.org, linux-pci@vger.kernel.org, Adithya Jayachandran
+ <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, Alex
+ Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris
+ Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, Jason
+ Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet
+ <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, Leon Romanovsky
+ <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport
+ <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, Pasha Tatashin
+ <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>,
+ Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja
+ <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, Will Deacon
+ <will@kernel.org>, William Tu <witu@nvidia.com>, Yi Liu
+ <yi.l.liu@intel.com>, jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH v4 05/11] PCI: liveupdate: Inherit bus numbers during
+ Live Update
+Message-ID: <20260429152814.000005f7@linux.microsoft.com>
+In-Reply-To: <ae_SHCjNGrEPurzH@google.com>
+References: <20260423212316.3431746-1-dmatlack@google.com>
+	<20260423212316.3431746-6-dmatlack@google.com>
+	<20260427114745.00000656@linux.microsoft.com>
+	<ae_J2pRWFf5qjZXb@google.com>
+	<ae_SHCjNGrEPurzH@google.com>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260429204932.GA318462@bhelgaas>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hello,
+Hi David,
 
-> > The resourceN_resize sysfs attributes allow users to resize
-> > Resizable BARs (ReBAR).  After a successful resize, the resource
-> > attribute groups are removed and recreated so that the updated
-> > BAR sizes are reflected in the sysfs files.
+On Mon, 27 Apr 2026 21:16:12 +0000
+David Matlack <dmatlack@google.com> wrote:
+
+> On 2026-04-27 08:40 PM, David Matlack wrote:
+> > On 2026-04-27 11:47 AM, Jacob Pan wrote:  
+> > > On Thu, 23 Apr 2026 21:23:09 +0000
+> > > David Matlack <dmatlack@google.com> wrote:  
+> >   
+> > > > To keep things simple, inherit the secondary and subordinate bus
+> > > > numbers on all bridges if any PCI devices were preserved (i.e.
+> > > > even bridges without any downstream endpoints that were
+> > > > preserved). This avoids accidentally assigning a bridge a new
+> > > > window that overlaps with a preserved device that is downstream
+> > > > of a different bridge.
+> > > > 
+> > > > If a bridge is enumerated with a broken topology or has no bus
+> > > > numbers set during a Live Update, refuse to assign it new bus
+> > > > numbers and refuse to enumerate devices below it. This is a
+> > > > safety measure to prevent topology conflicts.
+> > > > 
+> > > > Require that CONFIG_CARDBUS is not enabled to enable
+> > > > CONFIG_PCI_LIVEUPDATE since inheriting bus numbers on
+> > > > PCI-to-CardBus bridges requires additional work but is not a
+> > > > priority at the moment.
+> > > > 
+> > > > Signed-off-by: David Matlack <dmatlack@google.com>  
+> >   
+> > > > +	/*
+> > > > +	 * During a Live Update, preserved devices are allowed
+> > > > to continue
+> > > > +	 * performing memory transactions. The kernel must not
+> > > > change the fabric
+> > > > +	 * topology, including bus numbers, since that would
+> > > > require disabling
+> > > > +	 * and flushing any memory transactions first.
+> > > > +	 *
+> > > > +	 * To keep things simple, inherit the secondary and
+> > > > subordinate bus
+> > > > +	 * numbers on _all_ bridges if _any_ PCI devices were
+> > > > preserved (i.e.
+> > > > +	 * even bridges without any downstream endpoints that
+> > > > were preserved).
+> > > > +	 * This avoids accidentally assigning a bridge a new
+> > > > window that
+> > > > +	 * overlaps with a preserved device that is downstream
+> > > > of a different
+> > > > +	 * bridge.
+> > > > +	 */
+> > > > +	dev->liveupdate_inherit_buses = true;
+> > > > +  
+> > > This flag never gets cleared after the incoming kernel boot up,
+> > > what if the user does a manual rescan via sysfs? i.e.
+> > > # echo 1 > /sys/bus/pci/rescan
+> > > pcibios_assign_all_busses() will never gets called for this
+> > > device, and may hit this
+> > > 	if (dev->liveupdate_inherit_buses) {
+> > > 		pci_err(dev, "Cannot reconfigure bridge during
+> > > 		Live Update!\n");
+> > > 
+> > > So, maybe clear it in pci_liveupdate_finish()?  
+> > 
+> > I think we can allo wa rescan to assign new bus numbers once all
+> > devices go through pci_liveupdate_finish() by clearing
+> > dev->liveupdate_inherit_buses on all devices in pci_flb_finish(). We
+> > would need to hold pci_rescan_remove_lock to avoid this racing with
+> > such a rescan.
+> > 
+> > Now that you bring up /sys/bus/pci/rescan... I think we also need to
+> > set dev->liveupdate_inherit_buses in the outgoing kernel, to avoid
+> > bus numbers changing on outgoing preserved devices.
+> > pci_flb_preserve() should take pci_rescan_remove_lock and set
+> > dev->liveupdate_inherit_buses on all devices, and
+> > pci_flb_unpreserve() should do the opposite.
+> > 
+> > If we did all then then /sys/bus/pci/rescan can work like normal as
+> > long as no devices are preserved (incoming or outgoing). If any
+> > devices are preserved then dev->liveupdate_inherit_buses gets set
+> > to prevent bus numbers from changing during a possible rescan.  
 > 
-> Out of curiosity, where does this removal/recreation happen?  I don't
-> see it in pci_resize_resource() or
-> pci_do_resource_release_and_resize().
+> Something like this? This is a diff applied on top of this commit.
+Below looks correct to me, but I have another question. How do you
+stablize PCI BARs? PCI BDF stability does not guarantee BARs don't get
+moved, right?
 
-The __resource_resize_store() helper carries the relevant code, per:
-
-  sysfs_remove_groups(&pdev->dev.kobj, pci_dev_resource_attr_groups);
-
-  ret = pci_resize_resource(pdev, n, size, 0);
-  if (ret)
-  	pci_warn(pdev, "Failed to resize BAR %d: %pe\n",
-  		 n, ERR_PTR(ret));
-
-  pci_assign_unassigned_bus_resources(bus);
-
-  if (sysfs_create_groups(&pdev->dev.kobj, pci_dev_resource_attr_groups))
-  	pci_warn(pdev, "Failed to recreate resource groups after BAR resizing\n");
-
-  pci_write_config_word(pdev, PCI_COMMAND, cmd);
-
-This takes place under the device_lock() with a given device woken up using
-pci_config_pm_runtime_get().
-
-See for reference:
-
-  https://elixir.bootlin.com/linux/v7.0.1/source/drivers/pci/pci-sysfs.c#L1596
-
-> > Resizable BARs are a PCI Express extended capability
-> > (PCI_EXT_CAP_ID_REBAR), which requires PCIe extended config
-> > space.
 > 
-> It sounds like the fact that ReBAR requires extended config space is
-> important somehow (beyond just the fact that we can't discover ReBAR
-> without it)?  Is there some connection between extended config space
-> and mmap?
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index fead478e8a04..b1b0a5b1a5df 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -120,6 +120,20 @@
+>  
+>  #include "pci.h"
+>  
+> +/*
+> + * During a Live Update, preserved devices are allowed to continue
+> performing
+> + * memory transactions. The kernel must not change the fabric
+> topology,
+> + * including bus numbers, since that would require disabling and
+> flushing any
+> + * memory transactions first.
+> + *
+> + * To keep things simple, inherit the secondary and subordinate bus
+> numbers on
+> + * _all_ bridges if _any_ PCI devices are preserved (i.e.  even
+> bridges without
+> + * any downstream endpoints that were preserved).  This avoids
+> accidentally
+> + * assigning a bridge a new window that overlaps with a preserved
+> device that is
+> + * downstream of a different bridge.
+> + */
+> +static atomic_t inherit_buses;
+> +
+>  struct pci_flb_outgoing {
+>  	/* The pci_ser struct to be passed to the next kernel */
+>  	struct pci_ser *ser;
+> @@ -141,6 +155,29 @@ static unsigned long pci_ser_xa_key(unsigned
+> long domain, unsigned long bdf) return domain << 16 | bdf;
+>  }
+>  
+> +bool pci_liveupdate_inherit_buses(void)
+> +{
+> +	return atomic_read(&inherit_buses);
+> +}
+> +
+> +static void pci_set_liveupdate_inherit_buses(bool enable)
+> +{
+> +	/* Ensure updates to inherit_buses do not race with rescans
+> */
+> +	pci_lock_rescan_remove();
+> +
+> +	/*
+> +	 * Increment/decrement instead of setting directly to
+> true/false so that
+> +	 * pci_liveupdate_inherit_buses() returns true if any device
+> is outgoing
+> +	 * preserved or incoming preserved.
+> +	 */
+> +	if (enable)
+> +		atomic_inc(&inherit_buses);
+> +	else
+> +		atomic_dec(&inherit_buses);
+> +
+> +	pci_unlock_rescan_remove();
+> +}
+> +
+>  static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
+>  {
+>  	struct pci_flb_outgoing *outgoing;
+> @@ -180,6 +217,8 @@ static int pci_flb_preserve(struct
+> liveupdate_flb_op_args *args) 
+>  	args->obj = outgoing;
+>  	args->data = virt_to_phys(outgoing->ser);
+> +
+> +	pci_set_liveupdate_inherit_buses(true);
+>  	return 0;
+>  }
+>  
+> @@ -187,6 +226,8 @@ static void pci_flb_unpreserve(struct
+> liveupdate_flb_op_args *args) {
+>  	struct pci_flb_outgoing *outgoing = args->obj;
+>  
+> +	pci_set_liveupdate_inherit_buses(false);
+> +
+>  	pr_debug("Unpreserving struct pci_ser\n");
+>  	WARN_ON_ONCE(outgoing->ser->nr_devices);
+>  	kho_unpreserve_free(outgoing->ser);
+> @@ -223,6 +264,8 @@ static int pci_flb_retrieve(struct
+> liveupdate_flb_op_args *args) }
+>  
+>  	args->obj = incoming;
+> +
+> +	pci_set_liveupdate_inherit_buses(true);
+>  	return 0;
+>  }
+>  
+> @@ -230,6 +273,8 @@ static void pci_flb_finish(struct
+> liveupdate_flb_op_args *args) {
+>  	struct pci_flb_incoming *incoming = args->obj;
+>  
+> +	pci_set_liveupdate_inherit_buses(false);
+> +
+>  	xa_destroy(&incoming->xa);
+>  	kho_restore_free(incoming->ser);
+>  	kfree(incoming);
+> @@ -385,21 +430,6 @@ void pci_liveupdate_setup_device(struct pci_dev
+> *dev) if (!xa)
+>  		return;
+>  
+> -	/*
+> -	 * During a Live Update, preserved devices are allowed to
+> continue
+> -	 * performing memory transactions. The kernel must not
+> change the fabric
+> -	 * topology, including bus numbers, since that would require
+> disabling
+> -	 * and flushing any memory transactions first.
+> -	 *
+> -	 * To keep things simple, inherit the secondary and
+> subordinate bus
+> -	 * numbers on _all_ bridges if _any_ PCI devices were
+> preserved (i.e.
+> -	 * even bridges without any downstream endpoints that were
+> preserved).
+> -	 * This avoids accidentally assigning a bridge a new window
+> that
+> -	 * overlaps with a preserved device that is downstream of a
+> different
+> -	 * bridge.
+> -	 */
+> -	dev->liveupdate_inherit_buses = true;
+> -
+>  	key = pci_ser_xa_key(pci_domain_nr(dev->bus),
+> pci_dev_id(dev)); dev_ser = xa_load(xa, key);
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 09bab39738d7..abd8379b99cf 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -1442,6 +1442,7 @@ static inline int pci_msix_write_tph_tag(struct
+> pci_dev *pdev, unsigned int inde #ifdef CONFIG_PCI_LIVEUPDATE
+>  void pci_liveupdate_setup_device(struct pci_dev *dev);
+>  void pci_liveupdate_cleanup_device(struct pci_dev *dev);
+> +bool pci_liveupdate_inherit_buses(void);
+>  #else
+>  static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
+>  {
+> @@ -1450,6 +1451,11 @@ static inline void
+> pci_liveupdate_setup_device(struct pci_dev *dev) static inline void
+> pci_liveupdate_cleanup_device(struct pci_dev *dev) {
+>  }
+> +
+> +static inline bool pci_liveupdate_inherit_buses(void)
+> +{
+> +	return false;
+> +}
+>  #endif
+>  
+>  #endif /* DRIVERS_PCI_H */
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index fa26f4170add..f94fa1fc76cc 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1374,9 +1374,9 @@ bool pci_ea_fixed_busnrs(struct pci_dev *dev,
+> u8 *sec, u8 *sub) return true;
+>  }
+>  
+> -static bool pci_should_assign_new_buses(struct pci_dev *dev)
+> +static bool pci_should_assign_new_buses(void)
+>  {
+> -	if (dev->liveupdate_inherit_buses)
+> +	if (pci_liveupdate_inherit_buses())
+>  		return false;
+>  
+>  	return pcibios_assign_all_busses();
+> @@ -1409,7 +1409,7 @@ static int pci_scan_bridge_extend(struct
+> pci_bus *bus, struct pci_dev *dev, int max, unsigned int
+> available_buses, int pass)
+>  {
+> -	const bool assign_new_buses =
+> pci_should_assign_new_buses(dev);
+> +	const bool assign_new_buses = pci_should_assign_new_buses();
+>  	struct pci_bus *child;
+>  	u32 buses;
+>  	u16 bctl;
+> @@ -1518,7 +1518,7 @@ static int pci_scan_bridge_extend(struct
+> pci_bus *bus, struct pci_dev *dev, goto out;
+>  		}
+>  
+> -		if (dev->liveupdate_inherit_buses) {
+> +		if (pci_liveupdate_inherit_buses()) {
+>  			pci_err(dev, "Cannot reconfigure bridge
+> during Live Update!\n"); pci_err(dev, "Downstream devices will not be
+> enumerated!\n"); goto out;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 9a602b322e3c..dd6b26ca9462 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -511,7 +511,6 @@ struct pci_dev {
+>  	unsigned int	rom_bar_overlap:1;	/* ROM BAR
+> disable broken */ unsigned int	rom_attr_enabled:1;	/*
+> Display of ROM attribute enabled? */ unsigned int
+> non_mappable_bars:1;	/* BARs can't be mapped to user-space  */
+> -	unsigned int	liveupdate_inherit_buses:1; /* Inherit
+> bus numbers due to Live Update */ pci_dev_flags_t dev_flags;
+>  	atomic_t	enable_cnt;	/* pci_enable_device has
+> been called */ 
 
-No, there is no connection between extended configuration space and mmap.
-
-I was trying to establish two separate facts:
-
-  - ReBAR requires PCI Express (for the extended configuration
-    space support).
-  - Every PCI Express-capable architecture defines either
-    HAVE_PCI_MMAP or ARCH_GENERIC_PCI_MMAP_RESOURCE.
-
-The commit message should have captured the reasoning better.
- 
-> > Every PCIe-capable architecture defines either HAVE_PCI_MMAP or
-> > ARCH_GENERIC_PCI_MMAP_RESOURCE (via the relevant arch headers
-> > or the generic asm-generic/pci.h fallback).  On platforms that
-> > define neither, the resource files are not created and the sysfs
-> > group remove and create calls in __resource_resize_store() are
-> > no-ops.
-> 
-> What's the connection between ReBAR and mmap?
-
-The connection is somewhat indirect, through the sysfs resource files.
-
-The resourceN_resize attribute exists so userspace can resize a BAR and
-then access it through the resourceN sysfs files.  Those resource files
-only exist on platforms that define HAVE_PCI_MMAP or
-ARCH_GENERIC_PCI_MMAP_RESOURCE.
-
-On architectures without either of these defines, pci_dev_resource_attr_groups
-array will be NULL and the sysfs_remove_groups() and sysfs_create_groups()
-calls in __resource_resize_store() are no-ops.  And there will be no
-resource files to tear down or recreate.
-
-To add, there are some kernel drivers that need ReBAR call pci_resize_resource()
-directly (e.g., amdgpu, xe, i915), not through the sysfs attribute.
-
-The only platform without these aforementioned defines is Alpha, which is
-conventional PCI only and cannot have ReBAR.  So this guard removes dead
-sysfs code on platforms where it can never be executed.
-
-Hope this helps.
-
-Thank you!
-
-	Krzysztof
