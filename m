@@ -1,300 +1,166 @@
-Received: from mail.m10.be (mail.m10.be [172.233.33.144])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B90F63B47FF;
-	Wed, 29 Apr 2026 08:58:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=172.233.33.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D3873921C2;
+	Wed, 29 Apr 2026 09:33:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777453129; cv=none; b=ZGiDewQ2amNX93PkQf8HF+5CevlQxMjgbUX63E0NTPVQoi1MR69AhvIKYFA7ZAe2tlzYopgik4d4ArsZr2sibIpGP4jNkOG0GF9/TXlsCNiGBpQWNAGGnHjc7poagHciG1oijGegIJGVfAa15B3xK2sSpn9FaScm15Fyc1nSy8s=
+	t=1777455200; cv=none; b=QY+LXrWZvtlQ19FKaneHn9cSx8HYq1gPc5Pe5nP9jgIGNxWzW0s/ZSm2cSEAkkt8WgaWg+smWF9idrZzhmy+6shXJUTS0NDhLQqR4YzDpqyepPWxlEmUZRj/K3YJdNEH0QqQvO2mINvpbf9glk4zL/c3Ig33IN95oYqejShA5BA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777453129; c=relaxed/simple;
-	bh=C+h8HgEnNSuCzU3ag2uQxz1V8h02BaXX+aAt2iE5qoI=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=Hs+8PDSv4mq5eapBGR9zKTb7DOXEjitl/g8Mh5qI2wAZh0Cz8hmWoh4fkFJoFNs2RMmCsglHhMsCThv8pQCVKS2cFfKRCweiBpk8y8xEX2N9mZXbGe8ZyjixlI0Rvi2qimnMCYBXiKL87EKr3Bl5nBv3sGlOtriZqsl0LxmKjMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=maxboone.com; spf=fail smtp.mailfrom=maxboone.com; dkim=temperror (0-bit key) header.d=maxboone.com header.i=@maxboone.com header.b=V5xsm5ho; arc=none smtp.client-ip=172.233.33.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=maxboone.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=maxboone.com
+	s=arc-20240116; t=1777455200; c=relaxed/simple;
+	bh=GQZhXFU7lhHkmz5VyNccAdxMxoGDGwmpXqoF9767owQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=V0iiQC/GHVDgiynsbwCAqhP8I+Jc+TVAl2+1Kwhwq8Psjja66fP21mU8xorEdTyRVOA6A/fPPG2Zrffo2FHPLUl3orX2DbSKBLL75RNaOGUvj57d6QMPdfhKNPU12fu3Xf/Ga5Rc0ZDDUGnCWfxhk1MTj6u1qb4E0+vV00Owuho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XEieC5NI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=maxboone.com header.i=@maxboone.com header.b="V5xsm5ho"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 4FADB46877;
-	Wed, 29 Apr 2026 10:58:38 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maxboone.com;
-	s=dkim; t=1777453124;
-	h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=qpvwgnlTAQ8g9wVEsK04P0MJezG6PFyvMb+dfNOSRyw=;
-	b=V5xsm5ho/M3/dePidVb4OZQ9BepQt87yTSCK0GQP7HkJp/k91G9d7xC9MYpvES8xC29gWu
-	7SG0kuCWN60d65IJRnXmxeKKOpLd4saxRNXmKOFUPdg0xp+siHKtptSaVRKig8nJkEGJHb
-	pk8zqQ1XFc3xAzTEjO3YqxCoEfTOt96DyAIEDz/IGKNTjTZ7EBe4mt7RiE+9S5eT1lWxuX
-	esN5diONHHpioUmVh69ajdmxgtUl/FDgUrebA6VfUJGLh+oKrmJM4zV8LPoPfqfPnhERKl
-	eVh8dCMoBkHgPbJrs44XQzHRtmzZKF5HNwKN3ohDFSvseMy6T3fP0mgGgueMSQ==
-Content-Type: text/plain;
-	charset=utf-8
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XEieC5NI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16D81C19425;
+	Wed, 29 Apr 2026 09:33:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777455200;
+	bh=GQZhXFU7lhHkmz5VyNccAdxMxoGDGwmpXqoF9767owQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=XEieC5NIn73hV729TgYybER1HWYgPlQ1RWVRxU0+THO8TAsgSaqxpcfCwUDNyX9W3
+	 /JxbhZ3W6kxhe2i07hpaYaUZQHP82DbndzQdgZXKIysvnpL1Pwmjhd2YPqg3xdC7m5
+	 H93eDzZDuppX5+pvwNEYHVBkcexAlQQjn/ud4z8vHarODrOyg3DqUx0qj5v9ACKs1K
+	 1kwbDwP6Y4xlDO0v1Ig/fXM2bdwHqzrsXTd0FxvdwhdBDI5g9mo5hxRLYLjIiO1fwT
+	 EMzv2hw8HfW9VvW3L3tsb3N2QGabwsDXJQ/PHSS9UfLzVVka7wXizdfCgujv28L1iu
+	 PjAt6lhdQm5VQ==
+Date: Wed, 29 Apr 2026 11:33:13 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Max Boone <contact@maxboone.com>
+Cc: den@valinux.co.jp, mani@kernel.org, frank.li@nxp.com, allenbh@gmail.com,
+	bhanuseshukumar@gmail.com, bhelgaas@google.com,
+	dave.jiang@intel.com, jdmason@kudzu.us, jingoohan1@gmail.com,
+	kishon@kernel.org, kwilczynski@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	lpieralisi@kernel.org, marco.crivellari@suse.com,
+	mmaddireddy@nvidia.com, ntb@lists.linux.dev, robh@kernel.org,
+	shinichiro.kawasaki@wdc.com, mboone@akamai.com
+Subject: Re: [PATCH v14 4/7] PCI: endpoint: pci-ep-msi: Refactor doorbell
+ allocation for new backends
+Message-ID: <afHQWdn2rmG4mAA4@ryzen>
+References: <2F694A6C-23BA-4025-ACD7-2751595982CB@maxboone.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81.1.4\))
-Subject: Re: [PATCH v14 4/7] PCI: endpoint: pci-ep-msi: Refactor doorbell
- allocation for new backends
-From: Max Boone <contact@maxboone.com>
-In-Reply-To: <20260414141514.1341429-5-den@valinux.co.jp>
-Date: Wed, 29 Apr 2026 10:58:28 +0200
-Cc: Jingoo Han <jingoohan1@gmail.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Jon Mason <jdmason@kudzu.us>,
- Dave Jiang <dave.jiang@intel.com>,
- Allen Hubbe <allenbh@gmail.com>,
- Niklas Cassel <cassel@kernel.org>,
- Frank Li <Frank.Li@nxp.com>,
- Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>,
- Marco Crivellari <marco.crivellari@suse.com>,
- Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
- Manikanta Maddireddy <mmaddireddy@nvidia.com>,
- linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- ntb@lists.linux.dev,
- mboone@akamai.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <E2F607BF-6225-4799-A708-F908C7869DE3@maxboone.com>
-References: <20260414141514.1341429-1-den@valinux.co.jp>
- <20260414141514.1341429-5-den@valinux.co.jp>
-To: Koichiro Den <den@valinux.co.jp>,
- mani@kernel.org,
- Frank Li <Frank.Li@nxp.com>
-X-Mailer: Apple Mail (2.3826.700.81.1.4)
-X-Last-TLS-Session-Version: TLSv1.2
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2F694A6C-23BA-4025-ACD7-2751595982CB@maxboone.com>
+
+On Tue, Apr 28, 2026 at 10:36:15PM +0200, Max Boone wrote:
+> 
+> I’m not very fond of keeping this implementation in the pci-ep-msi file,
+> as the platform MSI and this implementation are both iiuc specific to
+> the designware ep driver. Even more so because the MSI implementation
+> is enabled by config rather than through device tree.
+
+Why do you think that the current code with DOMAIN_BUS_PLATFORM_MSI is
+designware EPC specific?
+
+I don't see anything that is designware EPC specific.
+
+Sure, it relies on GIC ITS, but I don't see why non-designware EPCs can't
+use GIC ITS.
 
 
+> 
+> Wouldn’t we want end-users to specify what kind of doorbell they want,
+> as it seems to be that a more specific doorbell BAR layout can be 
+> programmed with eDMA, allowing native support for nvmet’s doorbell
+> BAR for example.
 
-> On Apr 14, 2026, at 4:15=E2=80=AFPM, Koichiro Den <den@valinux.co.jp> =
-wrote:
->=20
-> Prepare pci-ep-msi for non-MSI doorbell backends.
->=20
-> Factor MSI doorbell allocation into a helper and extend struct
-> pci_epf_doorbell_msg with:
->=20
->  - irq_flags: required IRQ request flags (e.g. IRQF_SHARED for some
->    backends)
->  - type: doorbell backend type
->  - bar/offset: pre-exposed doorbell target location, if any
->=20
-> Initialize these fields for the existing MSI-backed doorbell
-> implementation.
->=20
-> Also add PCI_EPF_DOORBELL_EMBEDDED type, which is to be implemented in =
-a
-> follow-up patch.
+I also wanted to use my designware based EPC for doorbells in nvmet-pci-epf,
+specifically the support that Koichiro added for inbound subrange mapping.
 
-I=E2=80=99m not very fond of keeping this implementation in the =
-pci-ep-msi file,
-as the platform MSI and this implementation are both iiuc specific to
-the designware ep driver. Even more so because the MSI implementation
-is enabled by config rather than through device tree.
+However, most designware EPC have a strict alignment requirement
+(CX_ATU_MIN_REGION_SIZE), which is often 4k.
 
-Wouldn=E2=80=99t we want end-users to specify what kind of doorbell they =
-want,
-as it seems to be that a more specific doorbell BAR layout can be=20
-programmed with eDMA, allowing native support for nvmet=E2=80=99s =
-doorbell
-BAR for example.
+This alignment requirement is there both on the PCI address (address within
+the BAR, and for the physical memory address (target address)).
 
-Originally in a patchset by Frank Li the API that was proposed was more
-generic, and the pci-epc-msi implementation was chosen because there
-was only one implementation:
-- https://lore.kernel.org/imx/20231019150441.GA7254@thinkpad/
-- https://lore.kernel.org/imx/20231019172347.GC7254@thinkpad/
+I thought that we could use the inbound subrange mapping and put the doorbells
+in a separate inbound iATU, so we could remove polling in the nvmet-pci-epf
+driver, just like they have done in the vNTB driver. However, it works in vNTB
+because they have a register telling exactly which BAR and offset in that BAR
+where the doorbells are.
+In the NVMe PCIe Transport specification, the offset for the start of the
+doorbells is fixed, at offset 0x1000 (4k) and the only thing you can change is
+the stride between the doorbells.
 
-I=E2=80=99d personally prefer to see an abstraction that is weaved into =
-pci-epc-core
-and pci-epf-core that can be implemented by drivers as they wish. While=20=
+Currently, a doorbell is a single 32-bit data, sure we could call
+pci_epf_alloc_doorbell() with ("number of I/O queues" + 1 (admin queue)) * 2
+(submission queue and completion queue).
 
-still keeping the enum for different types.
+However, the address which we get from pci_epf_alloc_doorbell() might not be
+4k aligned.
 
-That also gives room to pull a poll-mode doorbell into the pci-epc-core,
-which deduplicates that code from the nvmet and vntb epfs, and allows
-other functions to use RC->EP doorbells without needing to bother with
-writing the polling mechanism.
+We have the function pci_epf_align_inbound_addr() which can split this
+non-aligned address to a 4k aligned base + offset from that base.
 
-P.S. I=E2=80=99ve been working on a vfio-user based epc for development =
-purposes
-personally, and the last hurdle before I want to send it in for comments =
-is=20
-support for doorbells, and came across this patchset checking if =
-there=E2=80=99s
-any other activity in the space. Having an implementation-agnostic
-doorbell API in the EPF/EPC core would be very helpful to me.
+However, that would also require the host side driver to write to this offset
+from the start address. (See e.g. doorbell_offset in pci-epf-test.c).
 
->=20
-> No functional changes.
->=20
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
-> Tested-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Koichiro Den <den@valinux.co.jp>
-> ---
-> drivers/pci/endpoint/pci-ep-msi.c | 54 ++++++++++++++++++++++---------
-> include/linux/pci-epf.h           | 23 +++++++++++--
-> 2 files changed, 60 insertions(+), 17 deletions(-)
->=20
-> diff --git a/drivers/pci/endpoint/pci-ep-msi.c =
-b/drivers/pci/endpoint/pci-ep-msi.c
-> index 1395919571f8..85fe46103220 100644
-> --- a/drivers/pci/endpoint/pci-ep-msi.c
-> +++ b/drivers/pci/endpoint/pci-ep-msi.c
-> @@ -8,6 +8,7 @@
->=20
-> #include <linux/device.h>
-> #include <linux/export.h>
-> +#include <linux/interrupt.h>
-> #include <linux/irqdomain.h>
-> #include <linux/module.h>
-> #include <linux/msi.h>
-> @@ -35,23 +36,13 @@ static void pci_epf_write_msi_msg(struct msi_desc =
-*desc, struct msi_msg *msg)
-> pci_epc_put(epc);
-> }
->=20
-> -int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 num_db)
-> +static int pci_epf_alloc_doorbell_msi(struct pci_epf *epf, u16 =
-num_db)
-> {
-> - struct pci_epc *epc =3D epf->epc;
-> + struct pci_epf_doorbell_msg *msg;
-> struct device *dev =3D &epf->dev;
-> + struct pci_epc *epc =3D epf->epc;
-> struct irq_domain *domain;
-> - void *msg;
-> - int ret;
-> - int i;
-> -
-> - /* TODO: Multi-EPF support */
-> - if (list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list) !=3D=
- epf) {
-> - dev_err(dev, "MSI doorbell doesn't support multiple EPF\n");
-> - return -EINVAL;
-> - }
-> -
-> - if (epf->db_msg)
-> - return -EBUSY;
-> + int ret, i;
->=20
-> domain =3D of_msi_map_get_device_domain(epc->dev.parent, 0,
->      DOMAIN_BUS_PLATFORM_MSI);
-> @@ -74,6 +65,12 @@ int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 =
-num_db)
-> if (!msg)
-> return -ENOMEM;
->=20
-> + for (i =3D 0; i < num_db; i++)
-> + msg[i] =3D (struct pci_epf_doorbell_msg) {
-> + .type =3D PCI_EPF_DOORBELL_MSI,
-> + .bar =3D NO_BAR,
-> + };
-> +
-> epf->num_db =3D num_db;
-> epf->db_msg =3D msg;
->=20
-> @@ -90,13 +87,40 @@ int pci_epf_alloc_doorbell(struct pci_epf *epf, =
-u16 num_db)
-> for (i =3D 0; i < num_db; i++)
-> epf->db_msg[i].virq =3D msi_get_virq(epc->dev.parent, i);
->=20
-> + return 0;
-> +}
-> +
-> +int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 num_db)
-> +{
-> + struct pci_epc *epc =3D epf->epc;
-> + struct device *dev =3D &epf->dev;
-> + int ret;
-> +
-> + /* TODO: Multi-EPF support */
-> + if (list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list) !=3D=
- epf) {
-> + dev_err(dev, "Doorbell doesn't support multiple EPF\n");
-> + return -EINVAL;
-> + }
-> +
-> + if (epf->db_msg)
-> + return -EBUSY;
-> +
-> + ret =3D pci_epf_alloc_doorbell_msi(epf, num_db);
-> + if (!ret)
-> + return 0;
-> +
-> + dev_err(dev, "Failed to allocate doorbell: %d\n", ret);
-> return ret;
-> }
-> EXPORT_SYMBOL_GPL(pci_epf_alloc_doorbell);
->=20
-> void pci_epf_free_doorbell(struct pci_epf *epf)
-> {
-> - platform_device_msi_free_irqs_all(epf->epc->dev.parent);
-> + if (!epf->db_msg)
-> + return;
-> +
-> + if (epf->db_msg[0].type =3D=3D PCI_EPF_DOORBELL_MSI)
-> + platform_device_msi_free_irqs_all(epf->epc->dev.parent);
->=20
-> kfree(epf->db_msg);
-> epf->db_msg =3D NULL;
-> diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-> index 7737a7c03260..cd747447a1ea 100644
-> --- a/include/linux/pci-epf.h
-> +++ b/include/linux/pci-epf.h
-> @@ -152,14 +152,33 @@ struct pci_epf_bar {
-> struct pci_epf_bar_submap *submap;
-> };
->=20
-> +enum pci_epf_doorbell_type {
-> + PCI_EPF_DOORBELL_MSI =3D 0,
-> + PCI_EPF_DOORBELL_EMBEDDED,
-> +};
-> +
-> /**
->  * struct pci_epf_doorbell_msg - represents doorbell message
-> - * @msg: MSI message
-> - * @virq: IRQ number of this doorbell MSI message
-> + * @msg: Doorbell address/data pair to be mapped into BAR space.
-> + *       For MSI-backed doorbells this is the MSI message, while for
-> + *       "embedded" doorbells this represents an MMIO write that =
-asserts
-> + *       an interrupt on the EP side.
-> + * @virq: IRQ number of this doorbell message
-> + * @irq_flags: Required flags for =
-request_irq()/request_threaded_irq().
-> + *             Callers may OR-in additional flags (e.g. =
-IRQF_ONESHOT).
-> + * @type: Doorbell type.
-> + * @bar: BAR number where the doorbell target is already exposed to =
-the RC
-> + *       (NO_BAR if not)
-> + * @offset: offset within @bar for the doorbell target (valid iff
-> + *          @bar !=3D NO_BAR)
->  */
-> struct pci_epf_doorbell_msg {
-> struct msi_msg msg;
-> int virq;
-> + unsigned long irq_flags;
-> + enum pci_epf_doorbell_type type;
-> + enum pci_barno bar;
-> + resource_size_t offset;
-> };
->=20
-> /**
-> --=20
-> 2.51.0
->=20
->=20
---
-Max
+So, basically, with the current limitation that the doorbells must start at
+0x1000, together with the fact that the doorbells returned from
+pci_epf_alloc_doorbell() might have an arbitrary alignment, I don't see how
+we could add support for doorbells in nvmet-pci-epf.
 
-P.P.S. Sorry for the duplicate mail, the mailto link from lore didn=E2=80=99=
-t work properly, at least this should put it in-thread.
+If we could supply an alignment requirement to pci_epf_alloc_doorbell(),
+e.g. 4k, and the API is guaranteed to return an address that satisfies this
+alignment requirement, then we would be good.
+
+However, right now, we don't have such an API. We simple get an address
+somewhere within the GIC ITS MMIO region.
+
+
+> 
+> Originally in a patchset by Frank Li the API that was proposed was more
+> generic, and the pci-epc-msi implementation was chosen because there
+> was only one implementation:
+> - https://lore.kernel.org/imx/20231019150441.GA7254@thinkpad/
+> - https://lore.kernel.org/imx/20231019172347.GC7254@thinkpad/
+> 
+> I’d personally prefer to see an abstraction that is weaved into pci-epc-core
+> and pci-epf-core that can be implemented by drivers as they wish. While 
+> still keeping the enum for different types.
+> 
+> That also gives room to pull a poll-mode doorbell into the pci-epc-core,
+> which deduplicates that code from the nvmet and vntb epfs, and allows
+> other functions to use RC->EP doorbells without needing to bother with
+> writing the polling mechanism.
+
+Sounds like a good idea.
+
+
+> 
+> P.S. I’ve been working on a vfio-user based epc for development purposes
+> personally, and the last hurdle before I want to send it in for comments is 
+> support for doorbells, and came across this patchset checking if there’s
+> any other activity in the space. Having an implementation-agnostic
+> doorbell API in the EPF/EPC core would be very helpful to me.
+
+I have looked at adding doorbell support to nvmet-pci-epf, but got stuck on
+pci_epf_alloc_doorbell() returning an address that is not 4k aligned.
+
+(Since the NVMe PCIe transport specification has the doorbells at a fixed
+location, we can't change that.)
+
+But if we could provide an "alignment" parameter to pci_epf_alloc_doorbell(),
+then I think it is possible.
+
+Sure, the GIC ITS MMIO area might be quite small, so it might not be able
+satisfy such a request. E.g. on rk3588, the its1 MMIO region is 0x20000 (128k):
+https://github.com/torvalds/linux/blob/v7.1-rc1/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi#L2414
+
+However, I have not idea of how much of this region the GIC driver uses for
+actual registers, and how much of that region it can actually dedicate to
+doorbells.
+
+
+Kind regards,
+Niklas
