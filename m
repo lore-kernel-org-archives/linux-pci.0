@@ -1,125 +1,205 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA659410D30;
-	Wed, 29 Apr 2026 17:02:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 786A4349B15
+	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 17:50:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777482174; cv=none; b=nRAdqVQZRPPrc/e4mh8jKpPDvCgsz2n+0Tbax53a75jx19hkauu0/Ok5MNk4r+2capOLDoLu2G2s0iu72WevtpLIkKHd6S9cxgOmQBsWJKVYhlegiGDWNv8693erwIptWt9Pn20z92Kp0iYL9IZNcKcqC4t424cRBaZudQOBzg8=
+	t=1777485055; cv=none; b=jtPlkmcJFRHYyXnnTVn+SGLt1/Ui6UuJ7sowCxQL3x16TWBzIPpN21Q/Lo+UgjBcJIaSZ6oMwaoh/048UL957G+TAHKyDTg3wlAFCctrRz0MLmF1cWSSIRcj6YyTpiyvkBtD/08aiC6opAq3mVoc4dvzQUWAOYYK1/q2R/kgtt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777482174; c=relaxed/simple;
-	bh=AvSi77U2xdiuDSmJ/4Mmu/UUV3LdEsb/UgY3ImgkueM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YmzNMqFGbYstFw4C6cMIf40LELS5/oL30y+vT25lO2Z8XWbB3Saym7OwoGfYT20OV4WOMQJSrESpPjbv1c+aVHP3+9O5x5SQz630iln0W3ItvrN2AyOM9Bvu8TFEa96UQFCazm56Lw0qMfIL9adOMdFQzFDNkQgWDiLJHZ8QhLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=qDk62q3e; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1777485055; c=relaxed/simple;
+	bh=aMugJ0ZBJXDc7rvh2bJ3KRXTsVTkE6xPUwIjPmhk2sw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mmV0qE/NJsPgKW/kwACBXNhxN+5mDBMdQtNtvm9NC7wJT/DSqXV/R6C1ia05H1aBhgkgNNF1Evz0YmBKmcGbLVr2mp2N1sCyrOmMCVTSx4AA1Zp2DaeNbrI8YQaXlzdZmTVM2/41Nz/HBUfazbth/LM+0YgrIk4zK54SILQLA3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LPmqVor3; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="qDk62q3e"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63TAOf1L2902222;
-	Wed, 29 Apr 2026 17:02:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=ZrZvCc
-	Ul/7rztmkAGjbnAqrOnzV1q/9Dp6/4+89pYqs=; b=qDk62q3enJfoOr+IZUdAE4
-	7TvSpweMA5tt95RhdSUEIQbZLhjcs2VbJp66MDjI9uYwp5SJ7xDdeH26IW/DPFA+
-	R2sjiy3Am4R7Gwu7DN86FDkP4psIwXnscpQk8em1u/EHbtWMh6b+VrmFtT4/8+OY
-	SKceErdoc5k6To00YVUNI7Nf1rcMsbTTYVxL9u/qnXgN4JY0Ohcq6no7fBFQZSGs
-	JV+DPXIoC+2z42NyyA8Jy1IQLWk3QMnymV0TJaGouwLVO4b4cKaW0yjJS140eOre
-	+K5GoI0HsCyUsgXGCO24FpeoVTf8b02AfGxRUcpQt52e3gVEG1Vb47gQYyN29/dQ
-	==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4drn9rbn0p-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 29 Apr 2026 17:02:47 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63TGrvFn007088;
-	Wed, 29 Apr 2026 17:02:46 GMT
-Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ds8xk77mk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 29 Apr 2026 17:02:46 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
-	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63TH2iSq32113272
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 29 Apr 2026 17:02:44 GMT
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 84C0E58071;
-	Wed, 29 Apr 2026 17:02:44 +0000 (GMT)
-Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 96FF75806B;
-	Wed, 29 Apr 2026 17:02:43 +0000 (GMT)
-Received: from [9.61.245.137] (unknown [9.61.245.137])
-	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 29 Apr 2026 17:02:43 +0000 (GMT)
-Message-ID: <bd33cf8e-a964-4192-bcb5-90831fa0dba2@linux.ibm.com>
-Date: Wed, 29 Apr 2026 10:02:43 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LPmqVor3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1777485052;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=aN9FmHPycLDcEOypQ9jkbPb9+pdZg5rU9vhuURF+Zr8=;
+	b=LPmqVor33zBDxUkN/NSrYslA27H36mWA5UnMkNztsqtZoNrJOI0Yzs01r8tdIyuhFkBMQE
+	otSdns54qiFLyC4qeLcb2TU+Wtqxjl0jKs+5ZjdcPGR1RPr2nju5E9ifjuifmFEUvJpN12
+	GWAl1RXOko3ZgzSKeBdsvP5KJxO6B2o=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-348-lK2NxAFNP06hdNo8JzZ3mQ-1; Wed,
+ 29 Apr 2026 13:50:49 -0400
+X-MC-Unique: lK2NxAFNP06hdNo8JzZ3mQ-1
+X-Mimecast-MFC-AGG-ID: lK2NxAFNP06hdNo8JzZ3mQ_1777485047
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4262019560AA;
+	Wed, 29 Apr 2026 17:50:47 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.80.165])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 4767C300019F;
+	Wed, 29 Apr 2026 17:50:41 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: linux-kernel@vger.kernel.org,
+	driver-core@lists.linux.dev,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>
+Cc: Tarun Sahu <tarunsahu@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
+	Jordan Richards <jordanrichards@google.com>,
+	Ewan Milne <emilne@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Lombardi, Maurizio" <mlombard@redhat.com>,
+	Stuart Hayes <stuart.w.hayes@gmail.com>,
+	Laurence Oberman <loberman@redhat.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	kexec@lists.infradead.org,
+	David Jeffery <djeffery@redhat.com>
+Subject: [PATCH v15 0/5] shut down devices asynchronously
+Date: Wed, 29 Apr 2026 13:50:11 -0400
+Message-ID: <20260429175016.7915-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v14 0/7] Error recovery for vfio-pci devices on s390x
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, lukas@wunner.de, alex@shazbot.org,
-        clg@redhat.com, schnelle@linux.ibm.com, mjrosato@linux.ibm.com
-References: <20260428220104.GA258993@bhelgaas>
-Content-Language: en-US
-From: Farhan Ali <alifm@linux.ibm.com>
-In-Reply-To: <20260428220104.GA258993@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: KR9ZTGS9C0aErvqqfapBwYpyCMyhf8zl
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI5MDE2OSBTYWx0ZWRfX3xGw8x2vYHVM
- kja3bCTDR5lDIlBsMqy3PxL7rG4lHPMBifEAWA4/fWjFlMEAi3f3evPk1XOpnBaTB3Jbx2VmCbT
- cs0L57pd1M6DV2Rhoum2IbKPvg1V4nGL7JQDz4ksTLiXAEynXO2ri3UtPbRh/yB3N7mohtdRd7o
- AI/afU7JNr3Ez0cqXpfesy84RpyvkuJJpKwql44LI9n8y0T0MvE6BCo5R0tll+7BacqSp+ewxw6
- iB5hfNtLv7dwEjszIH/5//kkhNSUVbEzY/j1Bm/T0NqVwEZ7lbx5hvKu+8ZoeY9drdMGc7lQ1xv
- 7RvwGz5O43TGJSDCIl58nY7SbYevl5XUOMXRDw4By6qBbbo6+C+zDGFCWlJgKjy+tn0Ay5pmJja
- PYD3MdGPqdcQDmiVRVW/fuSdDWVIfmUJdiSkwpX1UFl0QzNGoKjOHP3grqUwmtDxAmWvdXue4C8
- RStRnZGPXu7sSYO0Zsg==
-X-Authority-Analysis: v=2.4 cv=Kc7idwYD c=1 sm=1 tr=0 ts=69f239b7 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=c92rfblmAAAA:8
- a=VnNF1IyMAAAA:8 a=30HAmgh_zRYVhuhcYW4A:9 a=QEXdDO2ut3YA:10
- a=GvGzcOZaWPEFPQC_NcjD:22
-X-Proofpoint-ORIG-GUID: KR9ZTGS9C0aErvqqfapBwYpyCMyhf8zl
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-29_01,2026-04-28_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 bulkscore=0 adultscore=0 spamscore=0
- malwarescore=0 impostorscore=0 priorityscore=1501 lowpriorityscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
- definitions=main-2604290169
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+
+This patchset allows the kernel to shutdown devices asynchronously and
+unrelated async devices to be shut down in parallel to each other.
+
+Only devices which explicitly enable it are shut down asynchronously. The
+default is for a device to be shut down from the synchronous shutdown loop.
+
+This can dramatically reduce system shutdown/reboot time on systems that
+have multiple devices that take many seconds to shut down (like certain
+NVMe drives). On one system tested, the shutdown time went from 11 minutes
+without this patch to 55 seconds with the patch. And on another system from
+80 seconds to 11.
+
+And thank you to everyone who has spent some of their valuable time
+providing reviews, suggestions, criticisms, or tests on the various
+iterations of this patchset.
 
 
-On 4/28/2026 3:01 PM, Bjorn Helgaas wrote:
-> On Tue, Apr 21, 2026 at 09:30:24AM -0700, Farhan Ali wrote:
->> Hi,
->>
->> This Linux kernel patch series introduces support for error recovery for
->> passthrough PCI devices on System Z (s390x).
-> Can you take a look through
-> https://sashiko.dev/#/patchset/20260421163031.704-1-alifm%40linux.ibm.com
-> and see if there's anything worth changing?
+Changes from V14:
 
-Hi Bjorn,
+Remove unneeded use of '!!' with boolean type
 
-AFAICT Sashiko correctly identified one error that needs to be fixed. I 
-think there were some other suggestions that would require some changes 
-based on discussion with Niklas. I will wait a bit more to see if there 
-is any other feedback before sending a new revision.
+Changes from V13:
 
-Thanks
+Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
 
-Farhan
+Changes from V12:
 
+Only acquire a parent reference if acquiring the parent's lock
+device_enable_async_shutdown should return void
+Minor comment and description cleanups
+
+Changes from V11:
+
+  * Swap the order of the first two patches
+  * Rework conditional parent locking so that lock and unlock no longer use
+    separate conditional checks
+  * Remove an used variable
+  * Comment and description text cleanups
+
+Changes from V10:
+
+Reworked to more closely match the design used for async suspend
+  * No longer uses async subsystem cookies for synchronization
+  * Minimized changes to struct device
+  * Enable async shutdown for pci and scsi devices which support async suspend
+
+Changes from V9:
+
+Address resource and timing issues when spawning a unique async thread
+for every device during shutdown:
+  * Make the asynchronous threads able to shut down multiple devices,
+    instead of spawning a unique thread for every device.
+  * Modify core kernel async code with a custom wake function so it
+    doesn't wake up a thread waiting to synchronize on a cookie until
+    the cookie has reached the desired value, instead of waking up
+    every waiting thread to check the cookie every time an async thread
+    ends.
+
+Changes from V8:
+
+Deal with shutdown hangs resulting when a parent/supplier device is
+  later in the devices_kset list than its children/consumers:
+  * Ignore sync_state_only devlinks for shutdown dependencies
+  * Ignore shutdown_after for devices that don't want async shutdown
+  * Add a sanity check to revert to sync shutdown for any device that
+    would otherwise wait for a child/consumer shutdown that hasn't
+    already been scheduled
+
+Changes from V7:
+
+Do not expose driver async_shutdown_enable in sysfs.
+Wrapped a long line.
+
+Changes from V6:
+
+Removed a sysfs attribute that allowed the async device shutdown to be
+"on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+previously "safe" is now the only behavior, so drivers now only need to
+have the option to enable or disable async shutdown.
+
+Changes from V5:
+
+Separated into multiple patches to make review easier.
+Reworked some code to make it more readable
+Made devices wait for consumers to shut down, not just children
+  (suggested by David Jeffery)
+
+Changes from V4:
+
+Change code to use cookies for synchronization rather than async domains
+Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+  opt-out of async shutdown (when not disabled), with ability to control
+  driver opt-in/opt-out via sysfs
+  
+Changes from V3:
+
+Bug fix (used "parent" not "dev->parent" in device_shutdown)
+ 
+Changes from V2:
+ 
+Removed recursive functions to schedule children to be shutdown before
+  parents, since existing device_shutdown loop will already do this
+ 
+Changes from V1:
+
+Rewritten using kernel async code (suggested by Lukas Wunner)
+
+
+Stuart Hayes (2):
+  driver core: separate function to shutdown one device
+  driver core: do not always lock parent in shutdown
+
+David Jeffery (3):
+  driver core: async device shutdown infrastructure
+  PCI: Enable async shutdown support
+  scsi: Enable async shutdown support
+
+ drivers/base/base.h       |   2 +
+ drivers/base/core.c       | 180 ++++++++++++++++++++++++++++++--------
+ drivers/pci/probe.c       |   2 +
+ drivers/scsi/hosts.c      |   2 +
+ drivers/scsi/scsi_sysfs.c |   3 +
+ include/linux/device.h    |  14 ++-
+ 6 files changed, 166 insertions(+), 37 deletions(-)
+
+-- 
+2.53.0
 
