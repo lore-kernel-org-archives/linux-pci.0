@@ -1,202 +1,173 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazolkn19010072.outbound.protection.outlook.com [52.103.2.72])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4327334EEF1;
-	Wed, 29 Apr 2026 18:01:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.2.72
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777485714; cv=fail; b=NLYAUpTJ4dOFXftrweEgINHqbGArKTwNUX+c9DRclMAYAiBfuD7ihaINxCvpv+W0J+crrdbgmu3B1dyyF+IBIqc6tuv33YiUJtGmUijVU6qeqLxMdkdqqqe/zBS7XGDoZLWbNi+zLw76QKjK9BhzSFXj9aFmAxao1C6/3wwG1Sw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777485714; c=relaxed/simple;
-	bh=Yi7MOQdwTs9NKtOkX74QYFq3quzFmztTKQuHOaSNIu8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=AeRdaqpvt0R+6KODFKwYC0y6oGgpCo7BxWJay44LgvWigwtG8/uIITXYEMBvlTuAWopH6DcqiibpyNB16fcpn3QexI+Rd9iEE4jJ52mSFRnyeWpgrVMNIqH34b0eL2UJRtEU00I+rDUvsLZ0j3FroPfHi9l/WZLYzf09RmzPE9Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=tM4xCKil; arc=fail smtp.client-ip=52.103.2.72
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9886C3CE495;
+	Wed, 29 Apr 2026 18:06:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777486020; cv=none; b=RDryy15t1fta6vq0+fs6JIL+h1DMDKHdkWUjQDnyDq5v1iMNgyCUU9Uec9dmwntzBf6IcoPQndFASpeUFdHzyMYjX/cHihrrBLqoS7t8hDWeKBTvIrmkm98laOrZ+MLrurc6bpx1O/UC8sOgW0AK/Oz/LqCzNr28eWuT/Dudeuk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777486020; c=relaxed/simple;
+	bh=R3M1Wd/Iys/ZSh84oAQZ8j5ob1LKTDhbBg/wAEZStYU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HPHNo3ad8wFB4wgzQdN1KZ/5j1cI05XqA0GF9sLgpPKQs/1tabnem2Iou/V51fum7WF/Fu0JlTXEsd+vCao2Tior8cZ3zXTdxpRw87SPdJeOosqR37vai3MmbQ4fuP7hws9scCj0NLGHpPj+ujS+MTEo83C3n7KxUmgNlsIqK98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FcEfI34o; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="tM4xCKil"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=DxfsPGO9Jt5MTEgMKnB6yjpmJrZcOVD3oOF6jrTHKsJ0NFTBtHcEJBrirVqIdlMQ31DuZLySc4iN8CT34pMZxgd9m+BcTI/QZvWoXqy10EcUrVNHDdP8MUHC6rlLdOOLjB+yoZczghrKJ/TuWEU9LBs9tFEXRLpCGSjl7Ya6Cy9rlgneHFWChjNOTU1jCKylgYOL/lek084UztYInarVtWp+uBLFYJWDvtYvz9B8eotqNnVM4F3+3pHPUyzKnibUAHHxQ1w9am/b/+aZtWvPMKYXaFnnIVogUfbSEfFbwMmNca/mMm3MU9fUEcqXU1v9emYm0Kz47gLr5TcTXitrbw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WvW1EoQtel0Z4Kbz3JQKUlZ1IfZwy/Pard2prmBWiFw=;
- b=kWFuO+wJL2NTV4zFu5gXUvVyHos+e6qZ+sL9HqY37eGbv7JaTjD0vU+ZaESvWagthY6JxVTKx8ak68vV29tx20pNov99UILEUAwI9Lm/EO9R1wYQNpMKGuQhiRlXDUwdWd7Dgtb3JcgBHLgjSoGIVxXRy9OMuMvMJUuf6XFbLfzifY8E+jB/XxsDhdfaMMoj/wW3+u3c1GTFxJna+HKS0hbzcwX0I78IGa34QNZU9K1Kw0RQ55k2Vpq0CqX74QSqG9OLt6RN2BMiuVKLSL+YykZe5DLglOPfTEpn2wTrtF0AyzdzS+1CJ2/Ywhe+DjO3I0WEeziwYiXGg8xcPGTZsQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WvW1EoQtel0Z4Kbz3JQKUlZ1IfZwy/Pard2prmBWiFw=;
- b=tM4xCKil+Yc7Y9Xnk0bVD0zxMZoOezFNuTBYWisdbitXwxkfHWa2UBjY8Wr9oeQhFJwuW1J0F7/UHWGJS83noO9vZfLcqUKbrzy2e3jzSRgLpEKy4Cy3SHo0MZgjoN8atLJfYyRoOx/30fA0WzG0lRkLPAN0f4Ozu1D+vns9XQ1lkaCCvZca6gtIPnTW7k8jOtlcvBIWg5wysvzmnCI0BnjVcZK1sFDDMEiUXVj0l4WrSYLy8KdDvk1SfTUa29Qbq/pdMtk8NDAhRQWk9yHPx8stuQ0ta50fIGKZM+2qXkef2c2sJqIFq8Pu1QnUYvB11w4QoXb4VrjGgjriDt0lmg==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by DM4PR02MB9008.namprd02.prod.outlook.com (2603:10b6:8:b7::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9846.28; Wed, 29 Apr
- 2026 18:01:50 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9870.016; Wed, 29 Apr 2026
- 18:01:50 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Dexuan Cui <DECUI@microsoft.com>, Michael Kelley <mhklinux@outlook.com>,
-	KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
-	"wei.liu@kernel.org" <wei.liu@kernel.org>, Long Li <longli@microsoft.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org"
-	<kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, Jake Oshins <jakeo@microsoft.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"matthew.ruffell@canonical.com" <matthew.ruffell@canonical.com>,
-	"kjlx@templeofstupid.com" <kjlx@templeofstupid.com>
-CC: Krister Johansen <johansen@templeofstupid.com>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>
-Subject: RE: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Topic: [PATCH v2] PCI: hv: Allocate MMIO from above 4GB for the config
- window
-Thread-Index:
- AQHcwvqZ7/kLR2JkdUmudlv9HY41bLXRHh0QgAOgeDCAAHmtkIAKqeRQgA0oSLCACEewkIABLGxw
-Date: Wed, 29 Apr 2026 18:01:50 +0000
-Message-ID:
- <SN6PR02MB415736AB356EE347B9B5C7DDD4342@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260402234313.2490779-1-decui@microsoft.com>
- <SN6PR02MB415794E53D2B621F6A8BA382D45CA@SN6PR02MB4157.namprd02.prod.outlook.com>
- <SA1PR21MB69215C164B06109C6682984EBF5BA@SA1PR21MB6921.namprd21.prod.outlook.com>
- <SN6PR02MB4157D5C8EE35A221B130FC5AD45BA@SN6PR02MB4157.namprd02.prod.outlook.com>
- <SA1PR21MB69218F955B62DFF62E3E88D2BF222@SA1PR21MB6921.namprd21.prod.outlook.com>
- <SN6PR02MB4157D5BAFAE2134276241FFED42A2@SN6PR02MB4157.namprd02.prod.outlook.com>
- <SA1PR21MB69213486F821CA5A2C793C81BF342@SA1PR21MB6921.namprd21.prod.outlook.com>
-In-Reply-To:
- <SA1PR21MB69213486F821CA5A2C793C81BF342@SA1PR21MB6921.namprd21.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|DM4PR02MB9008:EE_
-x-ms-office365-filtering-correlation-id: c0c7733b-c93a-4874-8806-08dea6196336
-x-microsoft-antispam:
- BCL:0;ARA:14566002|461199028|8062599012|15080799012|19110799012|8060799015|37011999003|19101099003|31061999003|51005399006|55001999006|13091999003|440099028|3412199025|102099032|40105399003|1710799026;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?3zJnCou/5EkPCu8+k/2D36Ch0AX3J+IIFxIM6xKAl1AIPdvG+sD1ogmVNAp6?=
- =?us-ascii?Q?bg0n2Opdl7ro4c79qpGeBqtE1graFOB/fWptCVWoH8UBt6P4HlnoCI7vk2d8?=
- =?us-ascii?Q?aWMeqE8CY05QKHNk5LBDxbKJyiwwLl8HVz1la6hpsrCSZQ4e9uM0iQtAhxoL?=
- =?us-ascii?Q?CCaJURxOhgPRDrpqegMVeL+pI1D0J5E6c1DbNnc4KUx3AKnp6m83y9fqBCE8?=
- =?us-ascii?Q?ouq9uU3iDeg688I9jf9CUpzeRjr7VbM4erGPH9Mjx69/SAXroqR19cXtmyaq?=
- =?us-ascii?Q?6ltJZgrxIi5fx972St8B/p8LYWA5/mSF8nSc9/Me974uuVLlseMe0e4Gzzbd?=
- =?us-ascii?Q?8MtDa38qldud/ovIiHrosIQkyX3KbgQInC7vVpvhC26Ezeko3FqLapmBNBr6?=
- =?us-ascii?Q?unDM1p05Sd+PWT3sQT1ss1jiA/FIEiXdIvSeR2lcLZYfFfblexcAgHHMey6k?=
- =?us-ascii?Q?1UDF3P2OtqL03C2MFrhNmKN4RQ9uCZ1fABzyzSzxmm58DnuAzsqTOWdYlXdo?=
- =?us-ascii?Q?eoVbSbhzJj9O7Q0V6cMly15sojRcwhh1PI4DKoKO92mC9B0Y5vx3DWWOmOx2?=
- =?us-ascii?Q?nVw9azf2y8uBLb+SPsv+AeEyB7Ir0CvTyhriIPL5MIV/+tjRbPZUykXtbqZt?=
- =?us-ascii?Q?9f0yppqHVOFBrABeGkTdqBhZNwD7EBSl0sbNxgkqk2cCAazn1H8KMQgEYMVI?=
- =?us-ascii?Q?zPhh38xgACGoNTONiLtofMR+F8NqM8KIQvQ2rHfjpYH/4yVJkHhmwLFDAHvG?=
- =?us-ascii?Q?o2yuJuUSGOL6ZQTQMVRzjSKCu9oTHU/u7D9NfuDpUJiTUSFBsLFMjkLftXub?=
- =?us-ascii?Q?vdtD4XAc0BRjl+rtxftni7a6n6QCWPamZJz16CpzC2fBL2Y7BvrrBd0+ewLY?=
- =?us-ascii?Q?+PpkbSAaQscuAFveiBdPHr8JqGZD445lhqHzcdNrnB7wcaJSIV3Oy/T05Mu/?=
- =?us-ascii?Q?cpd51UJWJqZHrJDiHFtBDkdn39A9Qdcwwak7dg4YPQnu52VAHMR1BQno9Be9?=
- =?us-ascii?Q?J9V2Hw2VvCMZQPd05OWYLsploXy1vt2uvWTZ6WzBf9QkucLxEPlwLf7Miig0?=
- =?us-ascii?Q?RNwKDcSv?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?yw15FWD/6wGUr1OdMlj4E8r+qBlPvvM4KpUcTMpEbKwJWNvbreOy9dNTdk/v?=
- =?us-ascii?Q?Lr6RGhZaMaESPA0R2pRMDUURm0xA3qovo/al5LV8vI9nFKNxqRFecmVtfWBQ?=
- =?us-ascii?Q?07fkMNwGryf2US4mIwSjQj6o243qzp9mSaxH4vkPn7SltS6osP0VeGjFoB2X?=
- =?us-ascii?Q?sKD7WBMFSCMw9rhcqDa0Lfy+yaly9Uc4ko9sJbJV7fsFC4mv+xSX3u6jXKNt?=
- =?us-ascii?Q?kNdYohmsYR+bd6xU/n2Z2Myo3up3bJ52DQMxS0t5KpM5YKrCYDQBz84M+5cy?=
- =?us-ascii?Q?+GKFh+SJpWgdQDTJUwYrRWXeLhL54AxIWm59fZoKRviycxs4IUat1ZJfQDA9?=
- =?us-ascii?Q?MU2eva+HmW7DEidh4iBlFFpf8iBmlYnDQIoB/UpAU8Sj1YoF61GB+1weU+jz?=
- =?us-ascii?Q?SwiADZlo2fcFL1X42P5NND2Hex2mqWJeubavG2nKyMJZFcZU2XBG9LjLZGke?=
- =?us-ascii?Q?vvZkVRyP1fbPhMNWZ4NDcu5wMl7Mqc0fxhwWeJDEDDvpbeSdESxTcOKV63m5?=
- =?us-ascii?Q?hkEO1CAv2eBAevPjrsV2mJDQw+acQVH8s3SKQPQ71b4uug+mFWxeZja2eCSx?=
- =?us-ascii?Q?29XpebIFKL90pnrdRAH0z4COpjt+cP6xU8UimR2OyBXKujBozQs4zuOeeAeZ?=
- =?us-ascii?Q?3C/U9ejzLlaXFNnhFftpUK8W7UVTWA+kRvYqprjhQ/kMKnNMxmu4U+gfaxUt?=
- =?us-ascii?Q?qOzehp/VtBsoyXW9utQJpwB1I4DfOSsCaFiLCQQZiCidSHCJ6FzNUaRjPkaY?=
- =?us-ascii?Q?O4vNhprjQqPuDBSuG62TOAWiYnxBgVRjXxNv7spzwK+q+weLVALLFx2Y4+gw?=
- =?us-ascii?Q?hj+QusdvU4a3QdOdCMPD7q4jzlq28LyR7LHKAPlBNKYx5jmom6Fc4NbKwIVd?=
- =?us-ascii?Q?rw39iN9MbEVVIyDdYJLixdlZwIvJg/TZs4w67HSV8VubY7jUl2jJmB3uzfYF?=
- =?us-ascii?Q?IBcF/lvlgRPvcmceBN+MKMDbXRbuEW8mZb2lPT/m4g5+GcgDQPRrpUhW7hOH?=
- =?us-ascii?Q?EE392WaHn1LGBKfFU10/r4LFXst9tqP9NtezE4qFSW8CcSmBa+94QtIifSIm?=
- =?us-ascii?Q?JHBmLO96Z4RkK5JVfOrfNWZtBTDWVy/Stk3KBC3Uag1U7NhJCBRcIB2kOhcH?=
- =?us-ascii?Q?7kveJEFe2qu80RCwDMPFxaLlO/7DzXat2XX19ou7e50w5BRJyU9iwD6Wlr/R?=
- =?us-ascii?Q?VRvvSU8749Mm7UrSBBKG/GDSJEnslVPtgNm1gaLntcYC5SqXODIP53Fc/59+?=
- =?us-ascii?Q?4NvhMaXA7fE1v6CAN/WrQnQ4xOfJWoZwtGyIf8yZj1ynDN/g9AAYJ55k9pgr?=
- =?us-ascii?Q?vW7AvespeHGgzFy2En4OK0gHBCHgpfV6BKk1e3zyvf0dHNt7FcVJvAdFxiTw?=
- =?us-ascii?Q?k653ReU=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FcEfI34o"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1777486017; x=1809022017;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=R3M1Wd/Iys/ZSh84oAQZ8j5ob1LKTDhbBg/wAEZStYU=;
+  b=FcEfI34oAewrquGu/atRxUKOTyxfPOY1evkliLbtErSH1nRLIN0y6u6V
+   vBQkoTtt26TFRV51MXYI+M/IDjueodIjwrjF4I2yjkE1BMOjOkHq862Y8
+   aJrlB1DVX8gtvlaHJvE6GPdes3ZWTX2LFVnDjMDIT9+evGSsjiuILfuH6
+   owTUk+Imp9BJn73iOytzEYLCpx3GUFVnIESt46Ma08YpROkDW6IKk5lpG
+   T/9VDlfbNPB9XU0OKrvKiPPI8T8R3yTcWOaPipNBHfRmkP+C9f6kEkoaF
+   ja+NMiZ8eM0ggIzFrTqXKme1Vyyx6T4oLRwOS3fFwO9T/GeRnStomNe03
+   g==;
+X-CSE-ConnectionGUID: U+CjtDMNTsuQ7UXH47hLVQ==
+X-CSE-MsgGUID: 3p4y/EbGQRuWuYmD/WglcA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11771"; a="78532274"
+X-IronPort-AV: E=Sophos;i="6.23,206,1770624000"; 
+   d="scan'208";a="78532274"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 11:06:55 -0700
+X-CSE-ConnectionGUID: mR8rcttgQ56FZ9VCwOI0gw==
+X-CSE-MsgGUID: ng0XwoOFRSCNLdXC0cwaMw==
+X-ExtLoop1: 1
+Received: from iherna2-mobl4.amr.corp.intel.com (HELO tfalcon-desk.intel.com) ([10.124.221.251])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 11:06:53 -0700
+From: Thomas Falcon <thomas.falcon@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>
+Cc: "David E . Box" <david.e.box@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Len Brown <lenb@kernel.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Thomas Falcon <thomas.falcon@intel.com>
+Subject: [RFC PATCH 1/4] pcie/aspm: Add debug logging for aspm policy config
+Date: Wed, 29 Apr 2026 13:06:43 -0500
+Message-ID: <20260429180647.197072-2-thomas.falcon@intel.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260429180647.197072-1-thomas.falcon@intel.com>
+References: <20260429180647.197072-1-thomas.falcon@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: c0c7733b-c93a-4874-8806-08dea6196336
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Apr 2026 18:01:50.1494
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR02MB9008
+Content-Transfer-Encoding: 8bit
 
-From: Dexuan Cui <DECUI@microsoft.com> Sent: Tuesday, April 28, 2026 6:58 P=
-M
-> > From: Michael Kelley <mhklinux@outlook.com> Sent: Thursday, April 23, 2=
-026 10:40 AM
+Include additional logging for ASPM and Clock PM state changes
+keeping track of code flow and enabled power saving states.
 
-[snip]
+Example output after enabling powersupersave policy:
 
->=20
-> > Question about Gen 1 VMs: If the Linux frame buffer driver moves
-> > the frame buffer somewhere other than the default location, and
-> > then the VM does a kexec/kdump, what does the legacy PCI graphic
-> > device BAR report as the frame buffer location? Does it *always*
-> > report 4G-128MB, or does it report the new location? I can run
->=20
-> It always reports 4G-128MB.
+[  130.179249] pcieport 0000:80:1b.0: Updating ASPM state
+[  130.179256] igc 0000:81:00.0: ASPM: Disabling ASPM on this device before disabling parent
+[  130.179368] pcieport 0000:80:1b.0: ASPM: Disabling ASPM before applying configuration
+[  130.179373] pcieport 0000:80:1b.0: ASPM: Configure L1 substates
+[  130.179391] pcieport 0000:80:1b.0: ASPM: Configure ASPM state on upstream device
+[  130.179395] igc 0000:81:00.0: ASPM: Configure ASPM state on downstream device
+[  130.179401] pcieport 0000:80:1b.0: ASPM: enabled states: L1 ASPM-L1.1 PCI-PM-L1.1 PCI-PM-L1.2
+[  130.179416] pcieport 0000:00:06.0: Updating ASPM state
+[  130.179418] nvme 0000:01:00.0: ASPM: Disabling ASPM on this device before disabling parent
+[  130.179422] pcieport 0000:00:06.0: ASPM: Disabling ASPM before applying configuration
+[  130.179425] pcieport 0000:00:06.0: ASPM: Configure L1 substates
+[  130.179435] pcieport 0000:00:06.0: ASPM: Configure ASPM state on upstream device
+[  130.179438] nvme 0000:01:00.0: ASPM: Configure ASPM state on downstream device
+[  130.179442] pcieport 0000:00:06.0: ASPM: enabled states: L1 ASPM-L1.1 ASPM-L1.2 PCI-PM-L1.1 PCI-PM-L1.2
 
-OK, good to know. I was hoping it might report the new location. :-(
+Suggested-by: David E. Box <david.e.box@linux.intel.com>
+Signed-off-by: Thomas Falcon <thomas.falcon@intel.com>
+---
+ drivers/pci/pcie/aspm.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
-> BTW,  I suspect a Gen2 VM may have the same issue, i.e.
-> currently we only reserve 8MB below 4GB; if hyperv_drm uses
-> high MMIO, I suspect the UEFI firmware would still report the
-> same original low MMIO framebuffer base/size to the kdump kernel,
-> but there is no easy way to verify this for Gen2 VMs...
->=20
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 925373b98dff..cd23c1462502 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -372,6 +372,9 @@ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
+ 	/* Need nothing if the specified equals to current state */
+ 	if (link->clkpm_enabled == enable)
+ 		return;
++
++	pci_dbg(link->pdev, "%s Clock PM\n",
++		enable ? "Enabling" : "Disabling");
+ 	pcie_set_clkpm_nocheck(link, enable);
+ }
+ 
+@@ -961,11 +964,14 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ 	state &= (link->aspm_capable & ~link->aspm_disable);
+ 
+ 	/* Can't enable any substates if L1 is not enabled */
+-	if (!(state & PCIE_LINK_STATE_L1))
++	if (!(state & PCIE_LINK_STATE_L1)) {
++		pci_dbg(parent, "ASPM: L1 not enabled, disabling L1 substates\n");
+ 		state &= ~PCIE_LINK_STATE_L1SS;
++	}
+ 
+ 	/* Spec says both ports must be in D0 before enabling PCI PM substates*/
+ 	if (parent->current_state != PCI_D0 || child->current_state != PCI_D0) {
++		pci_dbg(parent, "ASPM: Both ports are not in D0, disable PCI PM L1 substates unless explicitly enabled\n");
+ 		state &= ~PCIE_LINK_STATE_L1_SS_PCIPM;
+ 		state |= (link->aspm_enabled & PCIE_LINK_STATE_L1_SS_PCIPM);
+ 	}
+@@ -973,6 +979,8 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ 	/* Nothing to do if the link is already in the requested state */
+ 	if (link->aspm_enabled == state)
+ 		return;
++	pci_dbg(parent, "Updating ASPM state\n");
++
+ 	/* Convert ASPM state to upstream/downstream ASPM register state */
+ 	if (state & PCIE_LINK_STATE_L0S_UP)
+ 		dwstream |= PCI_EXP_LNKCTL_ASPM_L0S;
+@@ -997,16 +1005,34 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+ 	 * Sec 7.5.3.7 also recommends programming the same ASPM Control
+ 	 * value for all functions of a multi-function device.
+ 	 */
+-	list_for_each_entry(child, &linkbus->devices, bus_list)
++	list_for_each_entry(child, &linkbus->devices, bus_list) {
++		pci_dbg(child, "ASPM: Disabling ASPM on this device before disabling parent\n");
+ 		pcie_config_aspm_dev(child, 0);
++	}
++	pci_dbg(parent, "ASPM: Disabling ASPM before applying configuration\n");
+ 	pcie_config_aspm_dev(parent, 0);
+ 
+-	if (link->aspm_capable & PCIE_LINK_STATE_L1SS)
++	if (link->aspm_capable & PCIE_LINK_STATE_L1SS) {
++		pci_dbg(parent, "ASPM: Configure L1 substates\n");
+ 		pcie_config_aspm_l1ss(link, state);
++	}
+ 
++	pci_dbg(parent, "ASPM: Configure ASPM state on upstream device\n");
+ 	pcie_config_aspm_dev(parent, upstream);
+-	list_for_each_entry(child, &linkbus->devices, bus_list)
++	list_for_each_entry(child, &linkbus->devices, bus_list) {
++		pci_dbg(child, "ASPM: Configure ASPM state on downstream device\n");
+ 		pcie_config_aspm_dev(child, dwstream);
++	}
++
++	pci_dbg(parent, "ASPM: enabled states:%s%s%s%s%s%s%s%s\n",
++		FLAG(state, L0S_UP, " L0s-Upstream"),
++		FLAG(state, L0S_DW, " L0s-Downstream"),
++		FLAG(state, L1, " L1"),
++		FLAG(state, L1_1, " ASPM-L1.1"),
++		FLAG(state, L1_2, " ASPM-L1.2"),
++		FLAG(state, L1_1_PCIPM, " PCI-PM-L1.1"),
++		FLAG(state, L1_2_PCIPM, " PCI-PM-L1.2"),
++		FLAG(state, CLKPM, " ClockPM"));
+ 
+ 	link->aspm_enabled = state;
+ 
+-- 
+2.43.0
 
-[snip]
-
->=20
-> However,  when the kdump kernel starts to run, and I print the
-> pci_resource_start(pdev, 0) and pci_resource_len(pdev, 0)
-> from vmbus_reserve_fb(), I still see 4G-128MB:
-> [   12.506159] Gen1 VM: start=3D0xf8000000, size=3D0x4000000
->=20
-> In this case, we can't really fix the MMIO conflict, e.g.
-> if both hv_pci and hyperv_drm are built as modules, then
-> the order of loading them can be nondeterministic:if the order
-> in the first kernel is different from the order in
-> the kdump kernel, we run into trouble.
-
-Yep.
-
->=20
-> If the order is deterministic (e.g. hv_pci is
-> built-in, and hyperv_drm is built as a module),
-> we should be good since both allocates MMIO from
-> the high MMIO range in a deterministic way.
->=20
-
-Yep.
-
-Thanks,
-
-Michael
