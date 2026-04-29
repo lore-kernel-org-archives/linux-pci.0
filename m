@@ -1,293 +1,320 @@
-Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CE1040FDBE
-	for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 16:21:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.178
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777479690; cv=pass; b=Z4AkK+sbAE8M4Z70ELLfjPLPND7hfXetG6GQe6meXjXIrW2riUbZxZ94irCFvPXJ8PhVDcnXqlHN+G1HLSOL7bycblbgw5Hh1lTHQ670LNufY7o8q+qcZBFunc2LDZK6fkmslHZM0jlB7OZolplh5MqgTH/hAnFhn1h6k6Oiwgw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777479690; c=relaxed/simple;
-	bh=kf23xg9RLUhQr/tA8z9LpXbufKza/+MISzGlgYWrx8I=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Jp8YHeP4g2woIvJBKY+BVQE5Te9YqXsBsXMwpOG7KqPhP0/dqBF6v84BxCA957MPK95InSBfKmv8NEdO2RcqOSBW2aqIkZrH8buLLwICeZ1wCY/LvFVYISBqRgAxnffaDPYjcBqqU98gPyyWZqTu8t3xYBBGT320vk6FD7zzCOQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com; spf=none smtp.mailfrom=jqluv.com; dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b=hLMlD/vp; arc=pass smtp.client-ip=209.85.160.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jqluv.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=jqluv.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 177361BF33;
+	Wed, 29 Apr 2026 16:48:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777481329; cv=none; b=TEhjh0IUBNGbSg5TvvrR/nXhR7VI41Z/7tpTMi4pT4isRxSasWCSvlpCDi5XwS54hR6Z5t1vXTZ/qoFD8X2AuJ8ldYgI0DMNplgfzjjjx3MZGDFBfhLpCP83utC/9aEt1MDrjSgc2HarhT2a+s+cYK9AUCRxgfjJcuy1RSLXv88=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777481329; c=relaxed/simple;
+	bh=4smGaLjoU0hrT/urGxaKNLqx+urAyoW/OI6iJfTTaoI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AFjw0bESqqXiMLHfcuRsNu20vIw54tFbfHwqI8i8ReyX0Sq0M9rAo+A9JASDWa+CaCisfMkwWyZxf8CltoO1Bjbl0NXDWjfn3k2xZFhADkDarFNCZ2rMbTXjRNHmKG5yNstlUMaOvEsEVAQLNYRVKTK2zJhFGcDM4tExiJstOE8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=N5vu02I9; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jqluv-com.20251104.gappssmtp.com header.i=@jqluv-com.20251104.gappssmtp.com header.b="hLMlD/vp"
-Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-50faf8ed9c5so55100741cf.2
-        for <linux-pci@vger.kernel.org>; Wed, 29 Apr 2026 09:21:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777479678; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Wcr8FHSxvutq6FYlb2+AylI002Y0KTxOPeckD6tmvcRz0/r2GSxSOkk9m6IR9KfLKb
-         wtVfkz30PJy6fdUlkdnfpiN5OvukLaXkbXbAlwyhDJbb+cvMKcuNQ/lEV1GMLYMawE0z
-         vX6qGNL2IiwC8PQPHpMKLrPIyv7ORMaPfea7RRdUROUPcPuResvtoODiml8Hmdnij5/e
-         HF1rqFLaY18M4bfNe7dUhwssp77DsvTAnSnw1LVd27VNLp0VmR13ENNOpj7mN5kctTvN
-         QxRbjRUaXYlByDwp1BOkMBI8T4AcWpOXA7YgUJLzMWLON5RtFDIo6zBdoRzAyBE8ZT56
-         eUvQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=RGuZ4SJMokCn8C5Jef4Vuyolecb8c9bvSvvHqufnpwI=;
-        fh=ZYGNxh8KP2rH2Q8tFfKWSzEZMz8N1VxYaW4KMQ3HJ9o=;
-        b=jse/8NMwEj3XWnhT5kJ76nbhWqCNkdtA/U76/UuoKdYYVhVmaRtDmroQKpjcXSFdhf
-         rnpAeHhfjBJqxD66pZfHh6QwR+ZEMtYHrUF7dzUI+/cHS+oCqrvugHlPpa73IfrOu951
-         aNkA+J3Rz57zCNuStQw5OmKek/AtcwgOFtF8QIXpfVQdKA4BWgGBdei3kaRHijYovlPY
-         bAJaqX7n1Wzt3zfVWGBB+jqV2snVcyJ5E7a+2+ixoRq1d9/uQgkEbyZ9Kl+kiSSpLlZm
-         QK9T01WfkQsKxp4gojXAWzuGs2ge91Xm//cgAxyo8QFq91RVA/+X+xJnJO09WiSY3AXg
-         1cDA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=jqluv-com.20251104.gappssmtp.com; s=20251104; t=1777479678; x=1778084478; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RGuZ4SJMokCn8C5Jef4Vuyolecb8c9bvSvvHqufnpwI=;
-        b=hLMlD/vp7OBiyIy8RPWSkv9fW5/wWPdJoQEYp8HIAw9uyZVZT6V8xfFrgn//YOhh95
-         7hi9a9TEJX6rMzz7Buz52asVc3IxqF3nJ9Db2HhK79JaM3z9rWga4FrROTmOmPZSaK7X
-         p9q4HRj3oYu95MfmWB654OPuoCRl1cEYUP5QnullKmVf1EPjoK5ETJWjwiXi0pcmWXBj
-         IbDEb943P+a1jfx+4VRpwMpWe7QMDGprE3JcVx+mpC71YU9T0NGecTMtP0SWTFfup3i0
-         fbmvgfOh7uhvQVblcsiSREaKs81foc1S8mi/9y6YusdwoYzhMJ/KqJEniOLoP4+2BY4o
-         eqwg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777479678; x=1778084478;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=RGuZ4SJMokCn8C5Jef4Vuyolecb8c9bvSvvHqufnpwI=;
-        b=W8WQU+egP9jyzKPzGS/X6LoyzZtdhWtBudnt4SIwmJFbd2cHDAMJgYpM31oCfpk+Zj
-         pbp8ckRXyJJNQpNWTuVnmNexL2yUn3M6z4DULsspUowZgoeZ56DOrwBdb+tGG+wg+LU5
-         ahqBh4doC99PJOAcV+/y/pO3IWMhX1/US+jRPyccg1IGysfhyUZet8vLiug6xTCme9Zn
-         UYam4RwTLcEVtXPWAVe3ja/niA/h0lMPdZrTXlOWdABj4ggp5pqsdL50WKopF8xCh/9f
-         Bve3uv/kHpA6c4utqKcInBiyQNmMrU1NXzyLyeTPYdpdSkChK9dl0FfaeHLwQ1bcFB5M
-         7Ywg==
-X-Forwarded-Encrypted: i=1; AFNElJ/PcJZeFAnahp2QaVKJ3hzkh6Ys+/5HyCJHqrixBhHfGiyEjQW7fsOOHEorNQPxPA4e2CTwHdHwcdo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzNJ5yrNu/rUnadYawRJWn6a3GRnEDnST8cp39xSwqPI/ckfvqi
-	OiprbzxLKAZyFKHi6lQ68PUDf4KqZ36TOT7CB9Yz1yR+gT6Cc5sDyAX8+/1rQCrhYQfii0RiaVY
-	kaF6d6fOz/jR6UPNfhC3RoFGgYO7+Ybn7H85NXQ/xSIzl8GAHZS3qekr6Ug==
-X-Gm-Gg: AeBDievMu1oi+g1L3FwdayuDmVsvNN0LKy43LEPgN8bWYcraLt1UslQeXlb1minkMet
-	FvQGKK7GCqJGr0fMrZG5IQbZhAFt+v6rALh3B77k2qR4+FUflehVWE7a/QB/RSSkfvTMbUPYweu
-	qyCrQx4hUTwnYWRbQX/E67W98F+hJOWZ9VIWxse63PccAbdwICVmKuEjgETmUnYsh/o2RV1ZCFt
-	ctRUIdJ8yIigz7m/EPbXN5d1bCPOF7BW7e1LKNeYoC0dBjv6zy+HHWQ59FcN+4ULk48BAv39JZD
-	z6BtM4XEnr7g3so=
-X-Received: by 2002:a05:622a:4a12:b0:50e:6054:bc with SMTP id
- d75a77b69052e-51018978cfdmr67334971cf.16.1777479677836; Wed, 29 Apr 2026
- 09:21:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="N5vu02I9"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63TAxLHV2581734;
+	Wed, 29 Apr 2026 16:48:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=D5Q9lE
+	nAGTn1pTXPBMevVztOM+h15O7DUTqSvBWYnyA=; b=N5vu02I95vz31GZ4NS+1zB
+	1MWy9mGm/3GPSeFSoHXYL5AyBVSz8qJ4UTYeRARXs0+FLRUC5koeZcZ0LNHN2OD8
+	PwZScM1h44Bb2ySN4oIlNGiz7EihdVm9/7Z7o/o0KoWoTpHvIOQaAGBNZxmKyihj
+	e+7hwajnSDidrTcbzn7rgtrkv86gLmnGrsppbeqCGGK/rdmXFQJDavdAk40bgAkC
+	ugaTGLYyiauZIZ6Zoza3C8reBeCr+RTI5MQLZ6cBPvoZIoLXhj3+sXkIjjjsUQnU
+	hO/oN2+Azt5orUgFnXG7HQ8FQwGBgaouYHBIyVXlrNxdHtXlGtzldN3UjyPZ0xEw
+	==
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4drn8vj2hk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 29 Apr 2026 16:48:35 +0000 (GMT)
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 63TGcqFp030202;
+	Wed, 29 Apr 2026 16:48:34 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ds8avy88e-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 29 Apr 2026 16:48:34 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (smtpav06.wdc07v.mail.ibm.com [10.39.53.233])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 63TGmXpt27525826
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 29 Apr 2026 16:48:33 GMT
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 96EC758054;
+	Wed, 29 Apr 2026 16:48:33 +0000 (GMT)
+Received: from smtpav06.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A7D355803F;
+	Wed, 29 Apr 2026 16:48:32 +0000 (GMT)
+Received: from [9.61.245.137] (unknown [9.61.245.137])
+	by smtpav06.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 29 Apr 2026 16:48:32 +0000 (GMT)
+Message-ID: <3f0d25e2-fe8f-470e-a857-f5474cba8cdf@linux.ibm.com>
+Date: Wed, 29 Apr 2026 09:48:32 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260428225146.3104063-1-gloveless@jqluv.com> <21ed8a45-f19f-4a14-9aed-dbe0f545ae27@amd.com>
-In-Reply-To: <21ed8a45-f19f-4a14-9aed-dbe0f545ae27@amd.com>
-From: Geramy Loveless <gloveless@jqluv.com>
-Date: Wed, 29 Apr 2026 09:21:07 -0700
-X-Gm-Features: AVHnY4L1rBkzBiYrQqjJpKoZhi9xkiCMvP-Rzsag5p0cpIY7J4jtOWb7m6L_ECc
-Message-ID: <CAGpo2meOiExOK=r9y7Jiio0XmJ2vDtE_4NkeCniQ873jEqynyw@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: release empty sibling bridge windows during
- window resize
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	Cristian Cocos <cristi@ieee.org>, linux-pci@vger.kernel.org, 
-	Mario Limonciello <mario.limonciello@amd.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v14 4/7] s390/pci: Store PCI error information for
+ passthrough devices
+To: Niklas Schnelle <schnelle@linux.ibm.com>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, lukas@wunner.de, alex@shazbot.org, clg@redhat.com,
+        mjrosato@linux.ibm.com
+References: <20260421163031.704-1-alifm@linux.ibm.com>
+ <20260421163031.704-5-alifm@linux.ibm.com>
+ <08008a2a61556482c71f7f0ed65106e32e77f418.camel@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <08008a2a61556482c71f7f0ed65106e32e77f418.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=CIIamxrD c=1 sm=1 tr=0 ts=69f23663 cx=c_pps
+ a=5BHTudwdYE3Te8bg5FgnPg==:117 a=5BHTudwdYE3Te8bg5FgnPg==:17
+ a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=RzCfie-kr_QcCd8fBx8p:22 a=VnNF1IyMAAAA:8
+ a=Ari48j0v6zWzjkmJ-KoA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: VHbjh4NNUMT9RRbPYTBkTEe7l_iadA-V
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDI5MDE2OSBTYWx0ZWRfX1tOLDRtHADMf
+ dNP9g3WCikLXPb+0BHdubiWaQK/Mf8O5KBJf0d+6L7aO4k9h/EI3DjZsM2qHIARf7PQjSL2sJCa
+ kCQDMDzwhxJmmwopZaKTsrhB4NwtvgaEAi2+m6RRiTS0zuTNqevXtv+UEBDQbst/HIfldFgw7vo
+ +zVMJg06y0H2RljuyERAUgELjkA3oj10bM6u5iCoO9R5MegS/Dj/tFS1IHkuAD8wuXG2uS38KGW
+ M/NlqxY3cZ97jPmMZPMA70QNufNubAojneNTrNu2C9xthSLXasuIWgBVkyvhimoilnDK7SVSY5m
+ PlEWaCmV0Phtvcc0lZZFVEMLeEUT982VKGuDDRSM3+TyeHVVMyk9qqGORKGHBWdCs6Xs3ozH6g5
+ cB1Oq9VBU2HxobHIEuvd24RJyAZ6u6Cfg7xa/TFa8P+c8dMqcsqOJKzBRqYz6PX0oQ+Mnv6ICft
+ TYGQNztkuZIjwyEcoaw==
+X-Proofpoint-GUID: VHbjh4NNUMT9RRbPYTBkTEe7l_iadA-V
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-04-29_01,2026-04-28_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 phishscore=0 malwarescore=0 suspectscore=0 adultscore=0
+ impostorscore=0 lowpriorityscore=0 clxscore=1015 bulkscore=0
+ priorityscore=1501 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2604200000
+ definitions=main-2604290169
 
-> On 4/29/26 00:51, Geramy Loveless wrote:
-> > pbus_reassign_bridge_resources() refuses to release bridge windows that
-> > have child resources. On multi-port PCIe switches (e.g. Thunderbolt
-> > docks), empty sibling downstream ports hold small reservations that
-> > prevent the parent window from being freed and re-sized for rebar.
-> >
-> > Walk descendants of the target window depth-first, saving and freeing
-> > each empty bridge window so the parent can then be released and grown.
-> >
-> > Without this change, attempts to grow a window deep below a switch
-> > fabric leave nested empty windows pinning the ancestor:
-> >
-> >   pcieport 0000:65:00.0: bridge window [mem 0x8880000000-0x98800fffff
-> >     64bit pref]: not released, active children present
-> >   pcieport 0000:00:03.2: bridge window [mem 0x8880000000-0x98800fffff
-> >     64bit pref]: not released, active children present
-> >
-> > With the bottom-up walk and upstream ancestry check, the chain unwinds
-> > and the rebar succeeds:
-> >
-> >   pcieport 0000:96:00.0: bridge window [...]: releasing
-> >   pcieport 0000:95:00.0: bridge window [...]: releasing
-> >   pcieport 0000:94:00.0: bridge window [...]: releasing
-> >   pcieport 0000:65:00.0: bridge window [...]: releasing
-> >   amdgpu 0000:97:00.0: BAR 0 [mem 0x9000000000-0x97ffffffff 64bit pref]=
-:
-> >     assigned
->
-> That sounds reasonable and I can see the rollback store
->
-> But do we make sure that we can allocate all released child resources add=
-itional to the resized resource?
-I am not sure I will need to investigate to see if the other code in
-the kernel follows this path correctly, I would assume it does since
-the parent is being released by this code if there was no children, we
-are just releasing the children too if applicable essentially.
-Thats my thoughts they could be inaccurate though since i'm not
-extremely involved in linux kernel code until recently.
+
+On 4/29/2026 4:41 AM, Niklas Schnelle wrote:
+> On Tue, 2026-04-21 at 09:30 -0700, Farhan Ali wrote:
+>> For a passthrough device we need co-operation from user space to recover
+>> the device. This would require to bubble up any error information to user
+>> space.  Let's store this error information for passthrough devices, so it
+>> can be retrieved later.
+>>
+>> We can now have userspace drivers (vfio-pci based) on s390x. The userspace
+>> drivers will not have any KVM fd and so no kzdev associated with them. So
+>> we need to update the logic for detecting passthrough devices to not depend
+>> on struct kvm_zdev.
+>>
+>> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
+>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+>> ---
+>>   arch/s390/include/asm/pci.h      |  30 ++++++++
+>>   arch/s390/pci/pci.c              |   1 +
+>>   arch/s390/pci/pci_event.c        | 117 +++++++++++++++++--------------
+>>   drivers/vfio/pci/vfio_pci_zdev.c |   9 ++-
+>>   4 files changed, 105 insertions(+), 52 deletions(-)
+>>
+> --- snip ---
+>> +
+>> +void zpci_start_mediated_recovery(struct zpci_dev *zdev)
+>> +{
+>> +	guard(mutex)(&zdev->pending_errs_lock);
+>> +	zdev->pending_errs.mediated_recovery = true;
+>> +}
+>> +EXPORT_SYMBOL_GPL(zpci_start_mediated_recovery);
+>> +
+>> +void zpci_stop_mediated_recovery(struct zpci_dev *zdev)
+>> +{
+>> +	struct pci_dev *pdev = NULL;
+>> +
+>> +	guard(mutex)(&zdev->pending_errs_lock);
+>> +	zdev->pending_errs.mediated_recovery = false;
+>> +	pdev = pci_get_slot(zdev->zbus->bus, zdev->devfn);
+>> +	if (zdev->pending_errs.count)
+>> +		pr_info("%s: Unhandled PCI error events count=%d",
+>> +			pci_name(pdev), zdev->pending_errs.count);
+> Sashiko notes a possible ABBA locking issue here between
+> pending_errs_lock and the pci_bus_sem inside pci_get_slot(). I wonder
+> if that would also be visible with lockdep? Also Sashiko notes that
+> zdev->zbus->bus could be NULL I don't think this is possible at the
+> current callsites via vfio-pci though. Similarly I don't think
+> pci_get_slot() can really be NULL at the current call sites. This makes
+> me wonder however, would it maybe be cleaner to pass a struct pci_dev
+> here so you don't need the pci_get_slot() at all? Both
+> vfio_pci_zdev_open_device() and vfio_pci_zdev_close_device() have that
+> readily available via vdev->pdev.
+
+The pdev here was meant for helpful error message. On second thought 
+maybe removing the pdev usage, and using the fid would be better?
 
 >
-> E.g. in the above example how is the new size of the bridge window determ=
-ined? Does it include the released child resources so that they can be even=
-tually be re-allocated when drivers start needing them?
+>
+>> +	memset(&zdev->pending_errs, 0, sizeof(struct zpci_ccdf_pending));
+>> +	pci_dev_put(pdev);
+>> +}
+>> +EXPORT_SYMBOL_GPL(zpci_stop_mediated_recovery);
+>> +
+>>   static pci_ers_result_t zpci_event_notify_error_detected(struct pci_dev *pdev,
+>>   							 struct pci_driver *driver)
+>>   {
+>> @@ -175,7 +190,8 @@ static pci_ers_result_t zpci_event_do_reset(struct pci_dev *pdev,
+>>    * and the platform determines which functions are affected for
+>>    * multi-function devices.
+>>    */
+>> -static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>> +static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev,
+>> +							  struct zpci_ccdf_err *ccdf)
+>>   {
+>>   	pci_ers_result_t ers_res = PCI_ERS_RESULT_DISCONNECT;
+>>   	struct zpci_dev *zdev = to_zpci(pdev);
+>> @@ -194,13 +210,6 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>>   	}
+>>   	pdev->error_state = pci_channel_io_frozen;
+>>   
+>> -	if (is_passed_through(pdev)) {
+>> -		pr_info("%s: Cannot be recovered in the host because it is a pass-through device\n",
+>> -			pci_name(pdev));
+>> -		status_str = "failed (pass-through)";
+>> -		goto out_unlock;
+>> -	}
+>> -
+>>   	driver = to_pci_driver(pdev->dev.driver);
+>>   	if (!is_driver_supported(driver)) {
+>>   		if (!driver) {
+>> @@ -216,12 +225,24 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>>   		goto out_unlock;
+>>   	}
+>>   
+>> +	zpci_store_pci_error(pdev, ccdf);
+>> +
+>>   	ers_res = zpci_event_notify_error_detected(pdev, driver);
+>>   	if (ers_result_indicates_abort(ers_res)) {
+>>   		status_str = "failed (abort on detection)";
+>>   		goto out_unlock;
+>>   	}
+>>   
+>> +	scoped_guard(mutex, &zdev->pending_errs_lock) {
+>> +		if (zdev->pending_errs.mediated_recovery) {
+>> +			pr_info("%s: Leaving recovery of pass-through device to user-space\n",
+>> +				pci_name(pdev));
+>> +			ers_res = PCI_ERS_RESULT_RECOVERED;
+>> +			status_str = "in progress";
+>> +			goto out_unlock;
+>> +		}
+>> +	}
+>> +
+> Sashiko notes that mixing goto unlock and lock guards within one
+> function is discouraged. Here it's not that hard to read since it is
+> just a scoped guard but I think we should still not mix it.
+>
+> However if we also convert the device_lock() to a guard lock here the
+> goto would still make sense to go to the zpci_report_status() and that
+> is still a bit odd with guarded locks. So I think an alternative simple
+> fix, that makes this overall cleaner too, is to put the whole
+> scoped_guard() block above into a helper function then you can do the
+> goto out_unlock on that helper returning PCI_ERS_RESULT_RECVOERED in
+> line with e.g. zpci_event_notify_error_detected(). That way you don't
+> need to touch existing locks and you get to keep the guard locking.
 
-This patch basically releases the children so the system that deals
-with allocating and changing window size can actually change it.
-So basically the only blocker to window resizing was this patch,
-whatever pcie already does in linux basically now can happen with the
-children released without further changes.
-Does that make sense?
+How about changing it to mutex_lock/mutex_unlock? I think the block is 
+small enough that it shouldn't be too confusing. Moving to a function 
+opens up the possibility of using a stale value for mediated_recovery.
 
-Basically our only job is to make sure to release the children and the
-rest of the linux kernel can continue forward and resize the window,
-the stopper was the children not getting released essentially.
+
+>>   	if (ers_res != PCI_ERS_RESULT_NEED_RESET) {
+>>   		ers_res = zpci_event_do_error_state_clear(pdev, driver);
+>>   		if (ers_result_indicates_abort(ers_res)) {
+>> @@ -266,25 +287,19 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>>    * @pdev: PCI function for which to report
+>>    * @es: PCI channel failure state to report
+>>    */
+>> -static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es)
+>> +static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es,
+>> +				  struct zpci_ccdf_err *ccdf)
+>>   {
+>>   	struct pci_driver *driver;
+>>   
+>>   	pci_dev_lock(pdev);
+>>   	pdev->error_state = es;
+>> -	/**
+>> -	 * While vfio-pci's error_detected callback notifies user-space QEMU
+>> -	 * reacts to this by freezing the guest. In an s390 environment PCI
+>> -	 * errors are rarely fatal so this is overkill. Instead in the future
+>> -	 * we will inject the error event and let the guest recover the device
+>> -	 * itself.
+>> -	 */
+>> -	if (is_passed_through(pdev))
+>> -		goto out;
+>> +
+>> +	zpci_store_pci_error(pdev, ccdf);
+>>   	driver = to_pci_driver(pdev->dev.driver);
+>>   	if (driver && driver->err_handler && driver->err_handler->error_detected)
+>>   		driver->err_handler->error_detected(pdev, pdev->error_state);
+>> -out:
+>> +
+>>   	pci_dev_unlock(pdev);
+>>   }
+>>   
+>> @@ -330,12 +345,12 @@ static void __zpci_event_error(struct zpci_ccdf_err *ccdf)
+>>   		break;
+>>   	case 0x0040: /* Service Action or Error Recovery Failed */
+>>   	case 0x003b:
+>> -		zpci_event_io_failure(pdev, pci_channel_io_perm_failure);
+>> +		zpci_event_io_failure(pdev, pci_channel_io_perm_failure, ccdf);
+>>   		break;
+>>   	default: /* PCI function left in the error state attempt to recover */
+>> -		ers_res = zpci_event_attempt_error_recovery(pdev);
+>> +		ers_res = zpci_event_attempt_error_recovery(pdev, ccdf);
+>>   		if (ers_res != PCI_ERS_RESULT_RECOVERED)
+>> -			zpci_event_io_failure(pdev, pci_channel_io_perm_failure);
+>> +			zpci_event_io_failure(pdev, pci_channel_io_perm_failure, ccdf);
+>>   		break;
+>>   	}
+>>   	pci_dev_put(pdev);
+>> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
+>> index 0990fdb146b7..0658095ac5b1 100644
+>> --- a/drivers/vfio/pci/vfio_pci_zdev.c
+>> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
+>> @@ -148,6 +148,8 @@ int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+>>   	if (!zdev)
+>>   		return -ENODEV;
+>>   
+>> +	zpci_start_mediated_recovery(zdev);
+>> +
+>>   	if (!vdev->vdev.kvm)
+>>   		return 0;
+> Sashiko notes that mediated recovery stays true iif kvm_register()
+> fails later in this function. I think Sashiko is right there.
+
+Yes, indeed. This needs to be fixed.
+
+Thanks
+
+Farhan
 
 >
-> Regards,
-> Christian.
->
-> >
-> > Suggested-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> > Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
-> > ---
-> > v3:
-> >  - Restructure helper: outer loop only recurses; inner iterates bus
-> >    resources via pci_bus_for_each_resource(). The release path is now
-> >    unified, so the caller-side block in pbus_reassign_bridge_resources(=
-)
-> >    is gone.
-> >  - Walk the resource tree upstream when checking ancestry of @b_win,
-> >    so descendants in nested topologies are also released (Ilpo).
-> >  - Drop pci_resource_is_bridge_win() filter; bus resources are
-> >    inherently bridge windows.
-> >  - Rename pci_bus_release_empty_bridge_resources() to
-> >    pbus_release_empty_bridge_resources().
-> >  - Drop misleading "Uses PCI bus/device iterators..." paragraph from
-> >    commit message.
-> >  - Kerneldoc tweaks per Ilpo's review.
-> >
-> > v2:
-> >  - Use PCI bus/device iterators instead of walking raw resource tree.
-> >  - Save released resources to rollback list.
-> >  - Filter via pci_resource_is_bridge_win() (now removed in v3).
-> >  - Call release before the !res->child check.
-> >  - Check bridge->subordinate before recursion.
-> > ---
-> >  drivers/pci/setup-bus.c | 63 +++++++++++++++++++++++++++++++++++++++--
-> >  1 file changed, 61 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > index 4cf120ebe5a..0c1fb654c9c 100644
-> > --- a/drivers/pci/setup-bus.c
-> > +++ b/drivers/pci/setup-bus.c
-> > @@ -2292,6 +2292,60 @@ void pci_assign_unassigned_bridge_resources(stru=
-ct pci_dev *bridge)
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
-> >
-> > +/*
-> > + * pci_bus_release_empty_bridge_resources - Bottom-up release of bridg=
-e
-> > + * window resources in empty subtrees.
-> > + * @bus: PCI bus whose child bridges to process
-> > + * @b_win: Ancestor bridge window; only children of this resource are =
-released
-> > + * @saved: List to save released resources for rollback
-> > + *
-> > + * Recurses depth-first into subordinate buses, then releases bridge w=
-indows
-> > + * on the way back up.  Each resource is individually saved before rel=
-ease so
-> > + * the entire operation can be rolled back.
-> > + */
-> > +static void pci_bus_release_empty_bridge_resources(struct pci_bus *bus=
-,
-> > +                                                struct resource *b_win=
-,
-> > +                                                struct list_head *save=
-d)
-> > +{
-> > +     struct pci_dev *dev;
-> > +
-> > +     list_for_each_entry(dev, &bus->devices, bus_list) {
-> > +             struct resource *r;
-> > +             unsigned int i;
-> > +
-> > +             if (!dev->subordinate)
-> > +                     continue;
-> > +
-> > +             /* Recurse first =E2=80=94 release deepest resources befo=
-re parents */
-> > +             pci_bus_release_empty_bridge_resources(dev->subordinate,
-> > +                                                   b_win, saved);
-> > +
-> > +             pci_dev_for_each_resource(dev, r, i) {
-> > +                     if (!pci_resource_is_bridge_win(i))
-> > +                             continue;
-> > +
-> > +                     if (!resource_assigned(r))
-> > +                             continue;
-> > +
-> > +                     if (r->parent !=3D b_win)
-> > +                             continue;
-> > +
-> > +                     if (r->child) {
-> > +                             const char *res_name =3D pci_resource_nam=
-e(dev, i);
-> > +
-> > +                             pci_info(dev, "%s %pR: not released, chil=
-dren still present\n",
-> > +                                      res_name, r);
-> > +                             continue;
-> > +                     }
-> > +
-> > +                     if (pci_dev_res_add_to_list(saved, dev, r, 0, 0))
-> > +                             continue;
-> > +
-> > +                     pci_release_resource(dev, i);
-> > +             }
-> > +     }
-> > +}
-> > +
-> >  /*
-> >   * Walk to the root bus, find the bridge window relevant for @res and
-> >   * release it when possible. If the bridge window contains assigned
-> > @@ -2316,7 +2370,12 @@ static int pbus_reassign_bridge_resources(struct=
- pci_bus *bus, struct resource *
-> >
-> >               i =3D pci_resource_num(bridge, res);
-> >
-> > -             /* Ignore BARs which are still in use */
-> > +             /* Release empty sibling bridge windows bottom-up */
-> > +             if (bridge->subordinate)
-> > +                     pci_bus_release_empty_bridge_resources(
-> > +                             bridge->subordinate, res, saved);
-> > +
-> > +             /* Ignore bridge windows which are still in use */
-> >               if (!res->child) {
-> >                       ret =3D pci_dev_res_add_to_list(saved, bridge, re=
-s, 0, 0);
-> >                       if (ret)
-> > @@ -2327,7 +2386,7 @@ static int pbus_reassign_bridge_resources(struct =
-pci_bus *bus, struct resource *
-> >                       const char *res_name =3D pci_resource_name(bridge=
-, i);
-> >
-> >                       pci_warn(bridge,
-> > -                              "%s %pR: was not released (still contain=
-s assigned resources)\n",
-> > +                              "%s %pR: not released, active children p=
-resent\n",
-> >                                res_name, res);
-> >               }
-> >
->
+>>   
+>> @@ -161,7 +163,12 @@ void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
+>>   {
+>>   	struct zpci_dev *zdev = to_zpci(vdev->pdev);
+>>   
+>> -	if (!zdev || !vdev->vdev.kvm)
+>> +	if (!zdev)
+>> +		return;
+>> +
+>> +	zpci_stop_mediated_recovery(zdev);
+>> +
+>> +	if (!vdev->vdev.kvm)
+>>   		return;
+>>   
+>>   	if (zpci_kvm_hook.kvm_unregister)
