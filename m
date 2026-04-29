@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29B613A7F7E;
-	Wed, 29 Apr 2026 12:28:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6344F35F180;
+	Wed, 29 Apr 2026 12:28:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777465683; cv=none; b=iVTygNFXlYwTvLweEjn89OMlb8sGNeFf2oRD1+xosqX/3G09+L35s6j80RV2j29+wVYQ5zaZ1FuumF/MauVr7dVKBRf8OAl82x0zaWqR7CDfbBPg0gQVoXmOlypF+75+/tEmXz7HBcjT0KWZ1EnkJuFhkVAfTPy/rhgRFbVKoOw=
+	t=1777465695; cv=none; b=LjX1VfjbUoXEJ0vV2nADOuEa3JndbTaqrOQx/ww9gD8SdTwtnbbw738qhheWZU5hRLAzEa/xeWTkubE8rnYTxtFo+KCcsvkymq1ae4PvWC0Ue/W2c7TrQEZPTg2Ffm2jw8yGhKmOmrMnL00dVxIBCFrgsegrfQCcBxv13MZTeeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777465683; c=relaxed/simple;
-	bh=fw+Loat2qyLgqvGvG/Jk0dbdhzaYJWuE1SAW/SPTWpo=;
+	s=arc-20240116; t=1777465695; c=relaxed/simple;
+	bh=oeSgNgDXBsgR0efD4S75suw6nUvLdg/+OHFHO/cn4ws=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dmi1bYyzl3sCalE43efjjugCcb7+JxLb9RaZzTgvv1Yp8CgWVTHNpvGpO9l35hOBrUi78yzBp+ztOfsyKMbcdP3966Rpn7CEUmxAJotfo7hS55OcALvhJMzkmDgezL3+PgTSQaKmgWkqkwLvMr/fAaN9JozbpTllm2WFFhF02gM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=K/lPdyrP; arc=none smtp.client-ip=198.175.65.20
+	 MIME-Version:Content-Type; b=nzvliPIV5X8YyjzXIuI/pH9Q5dmr6Y5svmnCQ3gPcKmCeUsA6AjhkieIuNBxsl44sQKPnrFoyLYPXZgAHyFkVjk+qPBkyQZgqdDHy2A0BE1XpgAxSmRyn3DIi6FvM0LYnYnfLJvDW3Qnzu5pbrd+BMUzNW44XohxyUKNMJQUms4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iElUlVt2; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="K/lPdyrP"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iElUlVt2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777465682; x=1809001682;
+  t=1777465694; x=1809001694;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=fw+Loat2qyLgqvGvG/Jk0dbdhzaYJWuE1SAW/SPTWpo=;
-  b=K/lPdyrPvfv/drtvGpqkFPX+8TRzIDINuRFqLaWMeACU+BIa+Qi5CSxP
-   fl20hTs+x2+4m5x+C4imRpGvgCVMthQAfBySApvI8fV14/WHgRbWVANPA
-   Cw1vmstD6N3CZHfaj5AW9RxwBZmpZKn51GeliG9x0M1MHsslfabsPyH1H
-   wyiqOikHOj6IoObaycImhxKWvpWnu6pwhauRLIpFjzX038ouYilhqUAxn
-   FqMt783lRSR77+xqIXrqTDuhMtF841tt7jo1cnUKWNLcTVnK5N+0bwTkA
-   i+aBvkGxxD0YNmbC6HKDOfNHTN7VlwoVeBuhiHEIm+5l0wpiHMPpd9M4k
+  bh=oeSgNgDXBsgR0efD4S75suw6nUvLdg/+OHFHO/cn4ws=;
+  b=iElUlVt2r4us9Z9oq44dJwqga3x0BaziHQCPCTg2MBRm+/mPC5g2hX0b
+   YD8aWuIMlPhpTX1hiZXhAQMoO+N/g5uVxXJxTBLsncS5A5mjVqO3bV3zQ
+   HzUHln74tQVRCgAktBuMWGDkzEsawNCvBc+/cQrMb/1TXL9RVl47Lgpl0
+   6DxUV8ELeIWofu8RpISn9rLG5w6SjSSkD/mvhcQKakVd9GuovPvWgC4ib
+   2xg1mXx8iavY5i8/PQILB1OX+RN++QiP3kFMIFCc2DfEHbeFXTy20hYTy
+   VK7vlbV8CF0CJLGZrgOi6XG3rbjGWIuDIVW38Fra1pQE3N9VPmi7qTArc
    Q==;
-X-CSE-ConnectionGUID: ubrm0mXkQM+/x7sm4fiKyw==
-X-CSE-MsgGUID: AWi0bEjkSnuI6K7tHB5ibA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11770"; a="78101853"
+X-CSE-ConnectionGUID: V1fbMe5zQumZVVSOjB4OdQ==
+X-CSE-MsgGUID: 5WT/aL4hSrWk7fMcPROtDQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11770"; a="78101863"
 X-IronPort-AV: E=Sophos;i="6.23,206,1770624000"; 
-   d="scan'208";a="78101853"
+   d="scan'208";a="78101863"
 Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:28:02 -0700
-X-CSE-ConnectionGUID: A2voe4hURxKRu6GvpKDDDg==
-X-CSE-MsgGUID: zK9kVFhfSe2LF3GcQiLeoQ==
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:28:14 -0700
+X-CSE-ConnectionGUID: M7JSCq3WQimiDepsf6U6sQ==
+X-CSE-MsgGUID: /7sDIPHHQWeOjNW11AQIwA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,206,1770624000"; 
-   d="scan'208";a="257573702"
+   d="scan'208";a="257573749"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.212])
-  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:27:58 -0700
+  by fmviesa002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:28:11 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -53,9 +53,9 @@ To: linux-pci@vger.kernel.org,
 	Nicholas Piggin <npiggin@gmail.com>,
 	linux-kernel@vger.kernel.org
 Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 08/11] PCI: Convert pci_resource_alignment() input parameters to const
-Date: Wed, 29 Apr 2026 15:26:14 +0300
-Message-Id: <20260429122617.7324-9-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 09/11] PCI: Move pci_resource_alignment() to setup-res.c file
+Date: Wed, 29 Apr 2026 15:26:15 +0300
+Message-Id: <20260429122617.7324-10-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20260429122617.7324-1-ilpo.jarvinen@linux.intel.com>
 References: <20260429122617.7324-1-ilpo.jarvinen@linux.intel.com>
@@ -68,63 +68,62 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-pci_resource_alignment() calculates resource alignment and should not
-alter its input structs. Make its input parameters const.
-
-It requires making also pci_cardbus_resource_alignment() input const.
+pci_resource_alignment() is a bit one the complex side to have in a
+header so put it into setup-res.c.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/pci.h           | 8 ++++----
- drivers/pci/setup-cardbus.c | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/pci.h       | 13 ++-----------
+ drivers/pci/setup-res.c | 12 ++++++++++++
+ 2 files changed, 14 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 710803be3a79..e0fcc33dfef6 100644
+index e0fcc33dfef6..472b6c2f7c4d 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -419,7 +419,7 @@ static inline bool pci_is_cardbus_bridge(struct pci_dev *dev)
- 	return dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
- }
- #ifdef CONFIG_CARDBUS
--unsigned long pci_cardbus_resource_alignment(struct resource *res);
-+unsigned long pci_cardbus_resource_alignment(const struct resource *res);
- int pci_bus_size_cardbus_bridge(struct pci_bus *bus,
- 				struct list_head *realloc_head);
- int pci_cardbus_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
-@@ -428,7 +428,7 @@ int pci_cardbus_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- int pci_setup_cardbus(char *str);
- 
- #else
--static inline unsigned long pci_cardbus_resource_alignment(struct resource *res)
-+static inline unsigned long pci_cardbus_resource_alignment(const struct resource *res)
- {
- 	return 0;
- }
-@@ -1044,8 +1044,8 @@ static inline void pci_suspend_ptm(struct pci_dev *dev) { }
+@@ -1044,17 +1044,8 @@ static inline void pci_suspend_ptm(struct pci_dev *dev) { }
  static inline void pci_resume_ptm(struct pci_dev *dev) { }
  #endif
  
--static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
--						     struct resource *res)
-+static inline resource_size_t pci_resource_alignment(const struct pci_dev *dev,
-+						     const struct resource *res)
- {
- 	int resno = pci_resource_num(dev, res);
+-static inline resource_size_t pci_resource_alignment(const struct pci_dev *dev,
+-						     const struct resource *res)
+-{
+-	int resno = pci_resource_num(dev, res);
+-
+-	if (pci_resource_is_iov(resno))
+-		return pci_sriov_resource_alignment(dev, resno);
+-	if (dev->class >> 8 == PCI_CLASS_BRIDGE_CARDBUS)
+-		return pci_cardbus_resource_alignment(res);
+-	return resource_alignment(res);
+-}
++resource_size_t pci_resource_alignment(const struct pci_dev *dev,
++				       const struct resource *res);
  
-diff --git a/drivers/pci/setup-cardbus.c b/drivers/pci/setup-cardbus.c
-index 1ebd13a1f730..0cba404080ad 100644
---- a/drivers/pci/setup-cardbus.c
-+++ b/drivers/pci/setup-cardbus.c
-@@ -22,7 +22,7 @@
- static unsigned long pci_cardbus_io_size = DEFAULT_CARDBUS_IO_SIZE;
- static unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
+ resource_size_t pci_min_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 0d203325562b..18e8775ea848 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -246,6 +246,18 @@ static int pci_revert_fw_address(struct resource *res, struct pci_dev *dev,
+ 	return 0;
+ }
  
--unsigned long pci_cardbus_resource_alignment(struct resource *res)
-+unsigned long pci_cardbus_resource_alignment(const struct resource *res)
- {
- 	if (res->flags & IORESOURCE_IO)
- 		return pci_cardbus_io_size;
++resource_size_t pci_resource_alignment(const struct pci_dev *dev,
++				       const struct resource *res)
++{
++	int resno = pci_resource_num(dev, res);
++
++	if (pci_resource_is_iov(resno))
++		return pci_sriov_resource_alignment(dev, resno);
++	if (dev->class >> 8 == PCI_CLASS_BRIDGE_CARDBUS)
++		return pci_cardbus_resource_alignment(res);
++	return resource_alignment(res);
++}
++
+ /*
+  * For mem bridge windows, try to relocate tail remainder space to space
+  * before res->start if there's enough free space there. This enables
 -- 
 2.39.5
 
