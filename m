@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4879399023;
-	Wed, 29 Apr 2026 12:27:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7940E39BFF4;
+	Wed, 29 Apr 2026 12:27:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777465645; cv=none; b=VbXAZt42bCKNL4jbTpGiQAkx5914Ho5y9nUuUit78y7OlfjRck1kTQHAsvcXkULk3QU9BIm2wQ35SNkYmc3crJangRXzcarNk4Z/Ie5L5BnrxA7Vn89P9lwiewkZTBcmfRYZ7+3eWQ2rn1woJQJvy9YjbRN5GOQ/SofuNGVBMD8=
+	t=1777465657; cv=none; b=ZFhEVnSeDQD1sQhwsB3yFSvFN4MhRfsz1IMkvsn0FSjyT7xYvOtqFAUepOy5IH2G6GSKiV7hvUUOy3BYl18ufsnRBNTFjXpI5seDT57F/5RDFZUK6vZ4WQfrFY1zqSFc+z27aqicdKyvXgM9mmC1gjz6xL7HcQkH2urCGVqFa7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777465645; c=relaxed/simple;
-	bh=8VXJ5q9tWKaV2T92TCmAxPMeclranQN4ydQ0uXeo4AY=;
+	s=arc-20240116; t=1777465657; c=relaxed/simple;
+	bh=av6nUtlRUMx1I+d/0rUy1n4lGYX7MGYYBRJ36tkOEdo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XMvblRTZVDGMQk1S1qemBxeZJpyCAxmJDvTfxKn4QvDJjSETvxA4yqH5scY9DNKaGxaJ+lGdyA88GblVbIQYR3teJj7IkLzWiim6PAAJ7VUkQ3GIaLgXaoqTuuELUszUOmmFhJNdz8avJQM93ZGTViX9/9h3IWqIakuyNmSRzf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gTH/zqHM; arc=none smtp.client-ip=198.175.65.20
+	 MIME-Version:Content-Type; b=mGTK/59g9r4U0mbU7swgSleuUZt24ZwJnTC/pTJoBO6zy5YaRQobqMvKapKZsO3k0j/76KMLs9x2IeRfazspW85A8Jix4K0ACkn4+Ndn4xvmcUAfFsl+e3D4lc206H+f7ystidIS0wd9MiHWLzath3tz/ExJchqR7+CgnA/KTjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=A3oyLOt0; arc=none smtp.client-ip=198.175.65.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gTH/zqHM"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="A3oyLOt0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777465645; x=1809001645;
+  t=1777465657; x=1809001657;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=8VXJ5q9tWKaV2T92TCmAxPMeclranQN4ydQ0uXeo4AY=;
-  b=gTH/zqHM0CQH/QjUuj6zUxRbXUlTnuNcit7QGSSqFzIRCckS5YDsP4Bo
-   l5msHNbEa6gFXzrTAyVPZ7HISwSsldJ4SLCaXR37ZEqKo+J0ujo+bIffX
-   YwoqezD+Artr5I/az89BedvnKhV7Urd7BKy09ncV90F4zqiSbdJmewenq
-   YFruvdJopoxWJ6jpAKn+esQc9TnsK9CAvrAdTWw3sxT2ajs+28KwN2t38
-   zp0rzU6KC8Id534AbpFgAzJOBPCintj647Irp5TnO8fRMYVKXrXV9PvmU
-   gznt2gH/7cGv+Dd2EGGx8lB1suSGOWyMyG/T1GXeiGfdy1Rq5bXVch7Aq
-   w==;
-X-CSE-ConnectionGUID: n2hr5JWSQmO+ht37pyTZtA==
-X-CSE-MsgGUID: kwHYQsGpT3SLBRQ4Yi2UkA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11770"; a="78101799"
+  bh=av6nUtlRUMx1I+d/0rUy1n4lGYX7MGYYBRJ36tkOEdo=;
+  b=A3oyLOt0yFwE9IlX/JcwAXfLCOaCyYAtqbuNAcFWxkgREen407b6VTwg
+   /4WvimpwhIB4nbmt/v5c8ni/yERTkrpOUNpdCwio94jkBgn3kfWTtdSEd
+   PwIf5MISDh4KxiakGv+oodSYaJGj7mTekFydB4uuwhv9utifQEpUnIi7H
+   8Ro0hX2NZ4j8/NXavlXZtQGOQACU3ftQxB0drA68sRBvPMBm1qcF1hO8h
+   3oHzqH5qLyVgfs9gG3QhSp6FcwDATLFxwkNkUNwAgheO2OHfwFSAJJbfC
+   XwokChEu5G+IUet7nni92B9L04KX22wkc6tugLYwCd0rLCm4HQKEJQVFF
+   Q==;
+X-CSE-ConnectionGUID: 9bMLsEyrRZOB8ehaBlNwDA==
+X-CSE-MsgGUID: Ma1g6aj1QSGcktZK9K0prA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11770"; a="78101821"
 X-IronPort-AV: E=Sophos;i="6.23,206,1770624000"; 
-   d="scan'208";a="78101799"
+   d="scan'208";a="78101821"
 Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:27:24 -0700
-X-CSE-ConnectionGUID: Jgvu4VG+RDuYkRSRGmchNQ==
-X-CSE-MsgGUID: ccCDbeE2TSqj2vquDJN+4g==
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:27:36 -0700
+X-CSE-ConnectionGUID: YbPY7mx3RA+0HaaKTn90OA==
+X-CSE-MsgGUID: gjkuTCivS++kW7ekDhzxHg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,206,1770624000"; 
-   d="scan'208";a="234512170"
+   d="scan'208";a="234512290"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.212])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:27:20 -0700
+  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2026 05:27:32 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -51,11 +51,12 @@ To: linux-pci@vger.kernel.org,
 	Madhavan Srinivasan <maddy@linux.ibm.com>,
 	Michael Ellerman <mpe@ellerman.id.au>,
 	Nicholas Piggin <npiggin@gmail.com>,
+	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
 	linux-kernel@vger.kernel.org
 Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 05/11] resource: Make resource_alignment() input const resource
-Date: Wed, 29 Apr 2026 15:26:11 +0300
-Message-Id: <20260429122617.7324-6-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 06/11] powerpc/pseries: Make pseries_get_iov_fw_value() & pnv_iov_get() pci_dev const
+Date: Wed, 29 Apr 2026 15:26:12 +0300
+Message-Id: <20260429122617.7324-7-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20260429122617.7324-1-ilpo.jarvinen@linux.intel.com>
 References: <20260429122617.7324-1-ilpo.jarvinen@linux.intel.com>
@@ -68,41 +69,43 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-resource_alignment() does not need to change resource so it can be
-made const.
+Convert input pci_dev for pseries_get_iov_fw_value() and pnv_iov_get()
+to const to be able to convert pcibios_iov_resource_alignment() as well
+in an upcoming change.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- include/linux/ioport.h | 2 +-
- kernel/resource.c      | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ arch/powerpc/platforms/powernv/pci.h   | 2 +-
+ arch/powerpc/platforms/pseries/setup.c | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 3c73c9c0d4f7..f7930b3dfd0a 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -261,7 +261,7 @@ extern int allocate_resource(struct resource *root, struct resource *new,
- struct resource *lookup_resource(struct resource *root, resource_size_t start);
- int adjust_resource(struct resource *res, resource_size_t start,
- 		    resource_size_t size);
--resource_size_t resource_alignment(struct resource *res);
-+resource_size_t resource_alignment(const struct resource *res);
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 42075501663b..032b2081aedb 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -251,7 +251,7 @@ struct pnv_iov_data {
+ 	struct resource holes[PCI_SRIOV_NUM_BARS];
+ };
  
- /**
-  * resource_set_size - Calculate resource end address from size and start
-diff --git a/kernel/resource.c b/kernel/resource.c
-index d02a53fb95d8..3d17e3196a3e 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -1238,7 +1238,7 @@ reserve_region_with_split(struct resource *root, resource_size_t start,
-  *
-  * Returns alignment on success, 0 (invalid alignment) on failure.
-  */
--resource_size_t resource_alignment(struct resource *res)
-+resource_size_t resource_alignment(const struct resource *res)
+-static inline struct pnv_iov_data *pnv_iov_get(struct pci_dev *pdev)
++static inline struct pnv_iov_data *pnv_iov_get(const struct pci_dev *pdev)
  {
- 	switch (res->flags & (IORESOURCE_SIZEALIGN | IORESOURCE_STARTALIGN)) {
- 	case IORESOURCE_SIZEALIGN:
+ 	return pdev->dev.archdata.iov_data;
+ }
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 50b26ed8432d..b670c6fdfcea 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -658,7 +658,8 @@ enum get_iov_fw_value_index {
+ 	WDW_SIZE      = 3     /*  Get Window Size */
+ };
+ 
+-static resource_size_t pseries_get_iov_fw_value(struct pci_dev *dev, int resno,
++static resource_size_t pseries_get_iov_fw_value(const struct pci_dev *dev,
++						int resno,
+ 						enum get_iov_fw_value_index value)
+ {
+ 	const int *indexes;
 -- 
 2.39.5
 
