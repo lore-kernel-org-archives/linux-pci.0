@@ -1,155 +1,102 @@
-Received: from gate2.alliedtelesis.co.nz (gate2.alliedtelesis.co.nz [202.36.163.20])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 462F9282F26
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 02:25:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.36.163.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F1EC27CB35;
+	Thu, 30 Apr 2026 02:51:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777515958; cv=none; b=RLjunmke3B98/SiT+RWT45anJBGsbpvuOTZrvujOLM+vt5D6oYQESP5NuFsgOeOf1EOFC7WWcYrPjKyQDd/6zVPghzN1+GMO1Jc4Unj2v8S1niv7rHEzLVtmGG8i+TxUDBdB4VLpbDf9pNWOPtiqvpnv2V85toIj/nCm+17T9kg=
+	t=1777517491; cv=none; b=a0oQH4uWl6G0dCadsQAHN2LhBag044OpQZZTQ25vbs2NTbtZuvMtPkNykxlroPhuCHLVlzu13QmEEMSLtgG7Dp7F4+FtuA0tHUeoBhBozmjUE7nbTM23khEkUk2RRnaK9nPRIuC0OhuovuHHqh+NNgUnB3QzGuK66JT5MM8Sdn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777515958; c=relaxed/simple;
-	bh=2YfcaCpVj8I0+6vfMIX/411ZUiHo41zjdzHXYSM43QE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tFJjixebDudCC2OV0FOohiP9wrj4ptzdjAHdBXIVVYaD1n+tNZOAdKQ1fPQMufkISkFOScZ72cVHSID2iKyIiW7kcwohZ3RB5oGmvqXbn/TUQ8U9iDVevmjm1PNP3siabPH9PhPc7axGDjmY3cATCU1y4nHrnbd9DF2cCMxZ/34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=alliedtelesis.co.nz; spf=pass smtp.mailfrom=alliedtelesis.co.nz; dkim=pass (2048-bit key) header.d=alliedtelesis.co.nz header.i=@alliedtelesis.co.nz header.b=RBnHOaT8; arc=none smtp.client-ip=202.36.163.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=alliedtelesis.co.nz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alliedtelesis.co.nz
+	s=arc-20240116; t=1777517491; c=relaxed/simple;
+	bh=rIRCNcazwtx/16LQtiNpVTsW/tJ6F6VdllcASy+OcwI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nzYZYQ4EX/XCVNYYN6k/iMLurGrhgVoO5/uU83r+XBYp/UR101ucXP9HFyj40KZF3kbM6ouUTU3PWTwmjdF5u6CtG1TGNPSdNdTXzA/0Y4o/c/IpTmfnMtHxj6myY1/ixggqoYbpW5kA792G9Vh8CnoBpazEzXDdwW37qkG41PE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DnDKlg3e; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=alliedtelesis.co.nz header.i=@alliedtelesis.co.nz header.b="RBnHOaT8"
-Received: from svr-chch-seg1.atlnz.lc (mmarshal3.atlnz.lc [10.32.18.43])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by gate2.alliedtelesis.co.nz (Postfix) with ESMTPS id C090F2C03DB;
-	Thu, 30 Apr 2026 14:16:46 +1200 (NZST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alliedtelesis.co.nz;
-	s=mail181024; t=1777515406;
-	bh=HCK71yqemvhP7M6VURV0XNIhfF8xXPI+wMqttk0c3rI=;
-	h=From:To:Cc:Subject:Date:From;
-	b=RBnHOaT8DSYkT5MNqWxPAjxIqaG7zpkgXdJ+Lc1ahiwIV7WPD8/gUwQbgBXc7Qoj+
-	 fDXu29nSnT1O0soJMDByI7nfxJKLS/jNTlyOcO17+fxYZgxWezznsxerT31ulqCHxY
-	 6zXj7tnlHJ+iJJQXEYTuU2/efYGtVtxIeOmNNkIF+OroiXu2TPas5/A0aeMqqxICT7
-	 dKW0bb51kEYIsazPj6p8mDGN0+dghcIEw3svDlZvdOr2CsPy/gBFG1fI0ABCEZPe+T
-	 Ne0WN/IuJXfrzqsKsUfzMOIwnF0PwtctT2WWeki1Jpk6sZaT6upGnMk0prohTrKgKp
-	 mkQgHNbUZXV1g==
-Received: from pat.atlnz.lc (Not Verified[10.32.16.33]) by svr-chch-seg1.atlnz.lc with Trustwave SEG (v8,2,6,11305)
-	id <B69f2bb8e0000>; Thu, 30 Apr 2026 14:16:46 +1200
-Received: from markto-dl.ws.atlnz.lc (markto-dl.ws.atlnz.lc [10.33.23.30])
-	by pat.atlnz.lc (Postfix) with ESMTP id 9352D13EE37;
-	Thu, 30 Apr 2026 14:16:46 +1200 (NZST)
-Received: by markto-dl.ws.atlnz.lc (Postfix, from userid 1155)
-	id 8D9BA40695; Thu, 30 Apr 2026 14:16:46 +1200 (NZST)
-From: Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
-To: rjui@broadcom.com,
-	sbranden@broadcom.com,
-	lpieralisi@kernel.org,
-	robh@kernel.org
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
-Subject: [PATCH] PCI: iproc: Restore map_irq
-Date: Thu, 30 Apr 2026 14:16:28 +1200
-Message-ID: <20260430021628.1343154-1-mark.tomlinson@alliedtelesis.co.nz>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DnDKlg3e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E6B0C19425;
+	Thu, 30 Apr 2026 02:51:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777517490;
+	bh=rIRCNcazwtx/16LQtiNpVTsW/tJ6F6VdllcASy+OcwI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DnDKlg3eXCjhTyZNnSikiqYO9CladC/9RYhcZIUp/WOWJx2QSjoyXMiDS0IvVFmMu
+	 RAYvV/p/0ssidiphG7YgFpHqMlnFY9TIMqyJ0u+lMmGkHzrJp8w1OdfBaBXE8UMRu4
+	 FmpwK5HVtlqHFrsXS3bFv0yTh9ZyBguA/GIGuj9Sppeo1PFvETXF0jwp9wIpU6LtmV
+	 UOb0vka5BrX2x2lQkpSMWXqk5BVBIX/U8K5S3zVjKa9jCpagkkT0KhUV861EX9Wsks
+	 NlkMZ3RbQ7pdRPGhwESVDf38PBSM6lH0xpuaCbagRrVEREGO8oCJ4GQF4lkiQFcq8w
+	 +ctrgendZ886w==
+Date: Thu, 30 Apr 2026 11:51:28 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
+	Richard Henderson <richard.henderson@linaro.org>, Christophe Leroy <chleroy@kernel.org>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, Dexuan Cui <decui@microsoft.com>, 
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>, Lukas Wunner <lukas@wunner.de>, 
+	Oliver O'Halloran <oohall@gmail.com>, Saurabh Singh Sengar <ssengar@microsoft.com>, 
+	Shuan He <heshuan@bytedance.com>, Srivatsa Bhat <srivatsabhat@microsoft.com>, 
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v6 24/24] PCI/sysfs: Limit BAR resize attribute scope to
+ platforms with PCI mmap
+Message-ID: <20260430020648.GA3923076@rocinante>
+References: <20260422161407.118748-25-kwilczynski@kernel.org>
+ <20260429204932.GA318462@bhelgaas>
+ <20260429212749.GB3724801@rocinante>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-SEG-SpamProfiler-Analysis: v=2.4 cv=FPe4xPos c=1 sm=1 tr=0 ts=69f2bb8e a=KLBiSEs5mFS1a/PbTCJxuA==:117 a=A5OVakUREuEA:10 a=0iGZelks7BQB0ZmUgWIA:9 a=3ZKOabzyN94A:10
-X-SEG-SpamProfiler-Score: 0
-x-atlnz-ls: pat
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260429212749.GB3724801@rocinante>
 
-Some time back, the PCI bridge map_irq and swizzle_irq were set up with
-default functions. The iproc PCIe driver was broken by this change, with
-the mapping function ending up being set to NULL. Restore the original
-(and intended) behaviour to use the default functions.
+Hello,
 
-The iproc pcie kept the mapping function in a private data structure,
-which was then copied into the pci_host_bridge structure. As the private
-data was initialised to NULL, the NULL would end up being copied. The
-fix is not to keep the mapping function in the private data, but just
-set the function pointer directly when needed.
+> The only platform without these aforementioned defines is Alpha, which is
+> conventional PCI only and cannot have ReBAR.  So this guard removes dead
+> sysfs code on platforms where it can never be executed.
 
-Fixes: b64aa11eb2dd ("PCI: Set bridge map_irq and swizzle_irq to default =
-functions")
-Signed-off-by: Mark Tomlinson <mark.tomlinson@alliedtelesis.co.nz>
----
- drivers/pci/controller/pcie-iproc-bcma.c     | 2 +-
- drivers/pci/controller/pcie-iproc-platform.c | 2 +-
- drivers/pci/controller/pcie-iproc.c          | 1 -
- drivers/pci/controller/pcie-iproc.h          | 2 --
- 4 files changed, 2 insertions(+), 5 deletions(-)
+Having a closer look:
 
-diff --git a/drivers/pci/controller/pcie-iproc-bcma.c b/drivers/pci/contr=
-oller/pcie-iproc-bcma.c
-index 99a99900444d..593418c2bc3a 100644
---- a/drivers/pci/controller/pcie-iproc-bcma.c
-+++ b/drivers/pci/controller/pcie-iproc-bcma.c
-@@ -64,7 +64,7 @@ static int iproc_bcma_pcie_probe(struct bcma_device *bd=
-ev)
- 	if (ret)
- 		return ret;
-=20
--	pcie->map_irq =3D iproc_bcma_pcie_map_irq;
-+	bridge->map_irq =3D iproc_bcma_pcie_map_irq;
-=20
- 	bcma_set_drvdata(bdev, pcie);
-=20
-diff --git a/drivers/pci/controller/pcie-iproc-platform.c b/drivers/pci/c=
-ontroller/pcie-iproc-platform.c
-index 0cb78c583c7e..4c9a0c4bb923 100644
---- a/drivers/pci/controller/pcie-iproc-platform.c
-+++ b/drivers/pci/controller/pcie-iproc-platform.c
-@@ -98,7 +98,7 @@ static int iproc_pltfm_pcie_probe(struct platform_devic=
-e *pdev)
- 	switch (pcie->type) {
- 	case IPROC_PCIE_PAXC:
- 	case IPROC_PCIE_PAXC_V2:
--		pcie->map_irq =3D NULL;
-+		bridge->map_irq =3D NULL;
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller=
-/pcie-iproc.c
-index ccf71993ea35..c22d0aecaaac 100644
---- a/drivers/pci/controller/pcie-iproc.c
-+++ b/drivers/pci/controller/pcie-iproc.c
-@@ -1502,7 +1502,6 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struc=
-t list_head *res)
-=20
- 	host->ops =3D &iproc_pcie_ops;
- 	host->sysdata =3D pcie;
--	host->map_irq =3D pcie->map_irq;
-=20
- 	ret =3D pci_host_probe(host);
- 	if (ret < 0) {
-diff --git a/drivers/pci/controller/pcie-iproc.h b/drivers/pci/controller=
-/pcie-iproc.h
-index 969ded03b8c2..c4443f236ca3 100644
---- a/drivers/pci/controller/pcie-iproc.h
-+++ b/drivers/pci/controller/pcie-iproc.h
-@@ -61,7 +61,6 @@ struct iproc_msi;
-  * @base_addr: PCIe host controller register base physical address
-  * @mem: host bridge memory window resource
-  * @phy: optional PHY device that controls the Serdes
-- * @map_irq: function callback to map interrupts
-  * @ep_is_internal: indicates an internal emulated endpoint device is co=
-nnected
-  * @iproc_cfg_read: indicates the iProc config read function should be u=
-sed
-  * @rej_unconfig_pf: indicates the root complex needs to detect and reje=
-ct
-@@ -91,7 +90,6 @@ struct iproc_pcie {
- 	phys_addr_t base_addr;
- 	struct resource mem;
- 	struct phy *phy;
--	int (*map_irq)(const struct pci_dev *, u8, u8);
- 	bool ep_is_internal;
- 	bool iproc_cfg_read;
- 	bool rej_unconfig_pf;
---=20
-2.54.0
+  resource_resize_attr_is_visible()
+    pci_rebar_get_current_size()      <- returns -ENOTSUPP, so is_visible callback returns 0
+      pci_rebar_find_pos()
+        pos = pdev->rebar_cap         <- set to 0 on a conventional PCI
+        if (!pos)
+          return -ENOTSUPP            <- no ReBAR support
 
+The pdev->rebar_cap is set during PCI enumeration:
+
+  pci_init_capabilities()
+    pci_rebar_init()
+      pdev->rebar_cap = pci_find_ext_capability()
+        pci_find_next_ext_capability()
+          if (dev->cfg_size <= PCI_CFG_SPACE_SIZE)
+            return 0;                 <- dev->cfg_size set to 256 here for conventional PCI
+
+The PCI_CFG_SPACE_SIZE is 256 here.
+
+When the platform has support for PCI Express, the dev->cfg_size is then
+set to 4096.  On an architecture that supports conventional PCI only (such
+as Alpha), the pdev->rebar_cap will be set to 0, the is_visible callback
+will then return 0, and the resize sysfs attribute is never created, as
+such, the __resource_resize_store() callback will never be executed.
+
+To make the connetion here to the #ifdef guards:
+
+For the pci_rebar_get_current_size() to return >= 0, the device needs
+PCI Express and extended configuration space support.  As of today,
+every architecture with PCI Express support defines HAVE_PCI_MMAP or
+ARCH_GENERIC_PCI_MMAP_RESOURCE.
+
+I hope the reasoning here works.
+
+Thank you!
+
+	Krzysztof
