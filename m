@@ -1,191 +1,190 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863FA477E43
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 18:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777573524; cv=none; b=u6HErOeF7K2jbRClUNv9fd2EKuPG7wigvL8dkngax3H+gU7PotTfFE6EfPQcDikDmHWfetMTiSp15/gH294NRLYBKOdipJPrNHjk1OiA0k7ifiBDFoUcUa1D0d0w3oXFgg2EdsJCcndGhw17phzr7EDFaC0wKzWs7r0V0vd71hQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777573524; c=relaxed/simple;
-	bh=ZDryYlw3wmD6yJlXYdxSZE6y0ltm6/Y3efuvn9gp+xo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HITNwTbZMnkqIGli4YZcmN5GDoQIKMxo2f0m56TaIdoqHmx3R4oLpiYz8xAn5f2jGzF0SNBMlxTMFBGZcH8bN/yhTZ9hs3wVrDsQnnhc7DO3hT10ADxRxsuYMu+NLFXdg8LijArbdLadsFTSx9jsGUJzOqF16bsFuSLCiJUoZVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=afjNWeYQ; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD2E28030E;
+	Thu, 30 Apr 2026 18:45:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777574757; cv=pass; b=S1KKC85KmC5SrK+9KHXTsEmgMUuxFz2IJzte0dAaSivDyvHR85+G1hMkpHkYpiVC06bLgtqX15P9PzkNyzD5P7q8ymh7S4AoX33tEqMJmAM9THvIOkwo2vocTPKJPjOcNGvhZ/hVADd+D3q2AJN+11KYXZn9Yqr2JICyOIcFKB8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777574757; c=relaxed/simple;
+	bh=FPpVVe+m+q36Kjv0eDC5VirL8YxY+kryP06SAzR123Q=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=fatNsnQFCkgGVOB1FqIkUOc0kYr9L/ku/E/1sP3Paf/fRtD8vUtmKEBubITRkZvAiNALFgvLW5g81g4fTN+j+Qj5u7FjFJntmtfj1EZAZo84wY741d5+JjIwtTIELFPvJ+LMY5Tu5B0eYgKQXuDxjD3BsBZ5VKK8qfLcHEaWU4o=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rong.moe; spf=pass smtp.mailfrom=rong.moe; dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b=Tg69EmOI; arc=pass smtp.client-ip=136.143.188.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rong.moe
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rong.moe
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="afjNWeYQ"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2b46da8c48eso18925ad.1
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 11:25:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777573523; x=1778178323; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=eSG/yM4Jbprzjr8hlewRTOp1V59hFoclV98ulyGviIc=;
-        b=afjNWeYQu3LjCB32c7/96seA2fhq+Hi/Gyx5Xo1Hn+5XdT+7fACUbM1U3JPRZI7Hv0
-         B7d6l9zps71Td/cArkdTNfZDMGVlh3Q4P/F2EunfOh78fy00NzbvdcJqT+n23a53SQAN
-         n0oxsLXLEolhORpq6+/hBkEOGGf0TQjlW4KaWiaDocTn2foXvMGZ6H7vURYiroktyLPH
-         ICgYU0msHUqQoTmeC9sPrps0Yio3A+tr8nNI5CCNGR5X9+dsInhnNAztPZAG9odzOuOE
-         5Md0UJ7KzuKRtkrBHzO0nFP7P3035zEZWwhm4ryQ8OK0kcH/rbooDXZXRNgBhIYaT/va
-         OlcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777573523; x=1778178323;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eSG/yM4Jbprzjr8hlewRTOp1V59hFoclV98ulyGviIc=;
-        b=BPHaIfl/dImGu85Q2Rid7mkkHKoITNliPmdIE7fkRIjaCCqerKqDN7v5MQk0a+iNa4
-         6sR7BbFQ2ZRLHNSwo7BgWpWIeU2a9TYcRWPmYRIJA7HLLFz3e7oQgxIYLb+aKgsg9T9V
-         NPswAJSshReB90eZn6J1QumOWRD1JtfemBOXH6Vi4z0Ld5/RShVHoBovvHY8css4jzdj
-         Uhe8Sp3haW+MNAU6H1bKAh1CKZyijvMSx9+avJeAgNzXIjhPMcOy+q+OLepNabTqFPtJ
-         6TUrmiGMnCRUAWl490LfI1rxFfg5G5ZEv0pWl9Ur8cpD5sx+Z8QRdozW8hPB05/QnDib
-         hHnQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+zzBQfMAD04+y1uVRF1S6mPV+J/dTX2jNCn3Yyf6M9HEZ9Iwcxm8En366AZ75etWegRDXDDgd95Ng=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzrPVZ+izxJaU7TbsBbyp2cr4jQW+lyOO6GYC0ZPpovpZ3Lu2Ve
-	Wca43zg8ipn8Rfao+dWe0kuAiIrVZev+xhLSAxGBtQYsDKwdUZCB9HwbIlzt3Ak3bQ==
-X-Gm-Gg: AeBDieuczSvtPxHbcD+Vy0GzLmuk4BqJpQfNv7XaqY8rcl3W81VLGscC3UWe8+pPsVH
-	MqOSCY4/lx8LS5InapY7kaSCpOX1VuTZKrQ8jlLxWtyI8Jc43XzKuhywNNbqC892uGKqEIyMqJU
-	vh93QzsmfajN08KJAjAhx6TxmVOIVfPlspuPRwWTgyeqEsKE47d5a2+tSARMK7rMgSvX/NCQKBy
-	J4Wd9RTj2pSSup9q+xWXVdiwhzUTCcy6/IgFTbByI61pUH/2am7RkycqdR4xH31SGHk7+6lm2af
-	w70LrYbvvsQjJHDyLYTxDqmEch/mUS6FwMZZRWMY4scxJEBLgl0VMJMwdx79GhPOGhWuninzNfZ
-	xyZDhlIlu4IzgurEn1q00NiVzVx0EEfouOe5/sCN7XLulOSHidf9mxrPWBznXRcgIk8mb/PT2rz
-	KLKzBTTpALu1L9ON+QHGFlQkYprFX/qDfW07RoxZqNpBix1uVs1kpp2pYHtU9thqoDGOBa4sVqt
-	tCdzRE=
-X-Received: by 2002:a17:903:2a8f:b0:2b4:6153:e541 with SMTP id d9443c01a7336-2b9ce26a5dcmr69445ad.3.1777573521791;
-        Thu, 30 Apr 2026 11:25:21 -0700 (PDT)
-Received: from google.com (60.89.247.35.bc.googleusercontent.com. [35.247.89.60])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c7ffbcaa477sm278266a12.31.2026.04.30.11.25.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2026 11:25:21 -0700 (PDT)
-Date: Thu, 30 Apr 2026 11:25:16 -0700
-From: Vipin Sharma <vipinsh@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: iommu@lists.linux.dev, kexec@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, 
-	Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>, 
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI
- devices
-Message-ID: <20260430175916.GA13902.vipinsh@google.com>
-References: <20260423212316.3431746-1-dmatlack@google.com>
- <20260423212316.3431746-3-dmatlack@google.com>
- <20260428201231.GA3885809.vipinsh@google.com>
- <CALzav=dfLtdrPhkBkGwHpDAWUBMHnbGPccwhy1__doziNVZQJQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b="Tg69EmOI"
+ARC-Seal: i=1; a=rsa-sha256; t=1777574736; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=bARqjw6y9ZzRH+weM4zD+od67bHG5EjI1lLjk1ZPrj9RJ+o00U4F1dMXFBm73Rmr7rH+tQBpfp4miFwTLThFrSUqmtH6vtVRzm2mpq5tVdBHcA7HxTVr6nDsmixUtM1ZIsyx3i9aOd5F9xE/AMv6LIbC+HHKgkdpXyxAK83psqo=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1777574736; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=qhcUzWz+e0eHqHXsaKs+FfS0uIQ3j8wCK538/jEKh44=; 
+	b=QQmh7wdMGZFXPYJSuL2vsqhDwJX3558b0zbJ3ii663DAA6VoxMyRnbX7GJDoB17Qe88E9TBZaSF1aKx63tQg2qbbnR8U2Us+06d0qwvgcaa2Kb0W6MvgzY1dU+VqD4HBXXXJUMqZQtqcUahUD0f24ClBZs5SnuIJAa1AUvoauYI=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=rong.moe;
+	spf=pass  smtp.mailfrom=i@rong.moe;
+	dmarc=pass header.from=<i@rong.moe>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1777574736;
+	s=zmail2048; d=rong.moe; i=i@rong.moe;
+	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:To:To:Cc:Cc:Reply-To;
+	bh=qhcUzWz+e0eHqHXsaKs+FfS0uIQ3j8wCK538/jEKh44=;
+	b=Tg69EmOIcZR+jtONoO8C1q7jrxMY+8LLXBC//b6w/D0jipOxqkOlUUXYFvSzk1nK
+	1Z0hRyVV8ZHVpwL9hNGg8I3fcK54EPX/08OMxsGB/XS23OiE0wbucZV6/0dH01h43jy
+	2t16kM+2RdqE9sxJ2Z5FSX9fDsTnc+8ba42NurplT7VjhtQNKgcC2/h4LwAFpS4gjgv
+	4uPseNJjWawzFJPPvZcf4eEcPrV/3Sa9JYMxfee6cb6c+4H0lYBWLt7HRM6+7bnUU9K
+	PBYBVEN/5jYZF4zvGvGNTnUwIwbjy4yI8J3RcON9R0OC5Q8llwe9OC0ZBy+ELvCISyY
+	voKJP+lbHg==
+Received: by mx.zohomail.com with SMTPS id 1777574734960836.5917068452161;
+	Thu, 30 Apr 2026 11:45:34 -0700 (PDT)
+From: Rong Zhang <i@rong.moe>
+Date: Fri, 01 May 2026 02:45:23 +0800
+Subject: [PATCH v2] PCI: loongson: Do not ignore downstream devices on
+ external bridges
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALzav=dfLtdrPhkBkGwHpDAWUBMHnbGPccwhy1__doziNVZQJQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260501-ls7a-bridge-fixes-v2-1-69fa93683805@rong.moe>
+X-B4-Tracking: v=1; b=H4sIAEOj82kC/22NwQ6CMBBEf4Xs2ZpSoYIn/8NwaMsW1ig1XSQaw
+ r9bMN48vszMmxkYIyHDKZsh4kRMYUigdhm43gwdCmoTg5JKy0JW4sZHI2ykNkWeXsiiMrUtC6O
+ tVg7S7hFxC9Ls0nyZn/aKblxFa6MnHkN8b6dTvvZ+/vqPf8qFFAddSo+tz4135xiGbn8PCM2yL
+ B8EFxLDwwAAAA==
+X-Change-ID: 20260408-ls7a-bridge-fixes-8a9b54a6b62c
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Huacai Chen <chenhuacai@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Jiaxun Yang <jiaxun.yang@flygoat.com>, 
+ "Lain \"Fearyncess\" Yang" <i@lain.vg>, Rong Zhang <i@rong.moe>
+X-Mailer: b4 0.16-dev-7777e
+X-ZohoMailClient: External
 
-On Tue, Apr 28, 2026 at 02:12:13PM -0700, David Matlack wrote:
-> On Tue, Apr 28, 2026 at 1:20 PM Vipin Sharma <vipinsh@google.com> wrote:
-> >
-> > On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
-> > > +int pci_liveupdate_preserve(struct pci_dev *dev)
-> > > +{
-> > > +     struct pci_ser *ser;
-> > > +     int i, ret;
-> > > +
-> > > +     guard(mutex)(&pci_flb_outgoing_lock);
-> > > +
-> > > +     ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void **)&ser);
-> > > +     if (ret)
-> > > +             return ret;
-> > > +
-> > > +     if (!ser)
-> > > +             return -ENOENT;
-> > > +
-> > > +     if (dev->is_virtfn)
-> > > +             return -EINVAL;
-> > > +
-> > > +     if (dev->liveupdate_outgoing)
-> > > +             return -EBUSY;
-> > > +
-> > > +     if (ser->nr_devices == ser->max_nr_devices)
-> > > +             return -ENOSPC;
-> > > +
-> > > +     for (i = 0; i < ser->max_nr_devices; i++) {
-> > > +             /*
-> > > +              * Start searching at index ser->nr_devices. This should result
-> > > +              * in a constant time search under expected conditions (devices
-> > > +              * are not getting unpreserved).
-> > > +              */
-> > > +             int index = (ser->nr_devices + i) % ser->max_nr_devices;
-> > > +             struct pci_dev_ser *dev_ser = &ser->devices[index];
-> > > +
-> > > +             if (dev_ser->refcount)
-> > > +                     continue;
-> > > +
-> > > +             pci_info(dev, "Device will be preserved across next Live Update\n");
-> > > +             ser->nr_devices++;
-> > > +
-> > > +             dev_ser->domain = pci_domain_nr(dev->bus);
-> > > +             dev_ser->bdf = pci_dev_id(dev);
-> > > +             dev_ser->refcount = 1;
-> > > +
-> > > +             dev->liveupdate_outgoing = dev_ser;
-> > > +             return 0;
-> > > +     }
-> > > +
-> > > +     return -ENOSPC;
-> >
-> > Since it is executing under a mutex, and we already failed
-> > 'if (ser->nr_devices == ser->max_nr_devices) check above, will we ever reach
-> > here and return -ENOSPC?
-> 
-> Yeah I wouldn't expect to ever reach here.
+Loongson PCI host controllers have a hardware quirk that requires
+software to ignore downstream devices with device number > 0 on the
+internal bridges. The current implementation applies the workaround to
+all non-root buses, which breaks external bridges (e.g., PCIe switches)
+with multiple downstream devices.
 
-Will you be removing it or want to keep it just in case scenario?
+Fix it by only applying the workaround to internal bridges.
 
-> 
-> > > diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.h
-> > > index 5c0e92588c00..5b4c8d9e462c 100644
-> > > --- a/include/linux/kho/abi/pci.h
-> > > +++ b/include/linux/kho/abi/pci.h
-> > > @@ -23,19 +23,20 @@
-> > >   * incrementing the version number in the PCI_LUO_FLB_COMPATIBLE string.
-> > >   */
-> > >
-> > > -#define PCI_LUO_FLB_COMPATIBLE "pci-v1"
-> > > +#define PCI_LUO_FLB_COMPATIBLE "pci-v2"
-> >
-> > Just curious, why did we change the version here?
-> 
-> Because a field in struct pci_dev_ser changed.
-> 
-> > It's not like just
-> > previous patch is working enough to perform a live update. As the config
-> > is experimental, can't we just keep it PCI-v1 for the whole series?
-> 
-> What is the benefit of keeping "pci-v1"?
->
+Tested on Loongson-LS3A4000-7A1000-NUC-SE, using AMD Promontory 21
+chipset add-in card [1].
 
-I don't see any benefit in keeping v1 or changing to v2 as well.
+  $ lspci -tnnnvvv
+  -[0000:00]-+-00.0  Loongson Technology LLC 7A1000 Chipset Hyper Transport Bridge Controller [0014:7a00]
+             +-00.1  Loongson Technology LLC 7A2000 Chipset Hyper Transport Bridge Controller [0014:7a10]
+             +-03.0  Loongson Technology LLC 2K1000/2000 / 7A1000 Chipset Gigabit Ethernet Controller [0014:7a03]
+             +-04.0  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB OHCI Controller [0014:7a24]
+             +-04.1  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB EHCI Controller [0014:7a14]
+             +-05.0  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB OHCI Controller [0014:7a24]
+             +-05.1  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB EHCI Controller [0014:7a14]
+             +-06.0  Loongson Technology LLC 7A1000 Chipset Vivante GC1000 GPU [0014:7a15]
+             +-06.1  Loongson Technology LLC 2K1000 / 7A1000 Chipset Display Controller [0014:7a06]
+             +-07.0  Loongson Technology LLC 2K1000/2000/3000 / 3B6000M / 7A1000/2000 Chipset HD Audio Controller [0014:7a07]
+             +-08.0  Loongson Technology LLC 2K1000 / 7A1000 Chipset 3Gb/s SATA AHCI Controller [0014:7a08]
+             +-08.1  Loongson Technology LLC 2K1000 / 7A1000 Chipset 3Gb/s SATA AHCI Controller [0014:7a08]
+             +-08.2  Loongson Technology LLC 2K1000 / 7A1000 Chipset 3Gb/s SATA AHCI Controller [0014:7a08]
+             +-09.0-[01]----00.0  Qualcomm Technologies, Inc QCNFA765 Wireless Network Adapter [17cb:1103]
+             +-0a.0-[02]----00.0  Etron Technology, Inc. EJ188/EJ198 USB 3.0 Host Controller [1b6f:7052]
+             +-0f.0-[03-08]----00.0-[04-08]--+-00.0-[05]----00.0  Shenzhen Longsys Electronics Co., Ltd. FORESEE XP1000 / Lexar Professional CFexpress Type B Gold series, NM620 PCIe NVME SSD (DRAM-less) [1d97:5216]
+             |                               +-08.0-[06]----00.0  MAXIO Technology (Hangzhou) Ltd. NVMe SSD Controller MAP1202 (DRAM-less) [1e4b:1202]
+             |                               +-0c.0-[07]----00.0  Advanced Micro Devices, Inc. [AMD] 600 Series Chipset USB 3.2 Controller [1022:43f7]
+             |                               \-0d.0-[08]----00.0  Advanced Micro Devices, Inc. [AMD] 600 Series Chipset SATA Controller [1022:43f6]
+             \-16.0  Loongson Technology LLC 7A1000 Chipset SPI Controller [0014:7a0b]
 
-My reasoning is that before this series is merged, there is no real need
-for versioning here. This is first series which is introducing PCI
-liveupdate. It is not gonna be that someone has merged patch 1 only, run
-its kernel and then kexec to next kernel which has patch 2.
+Fixes: 2410e3301fcc ("PCI: loongson: Don't access non-existent devices")
+Link: https://oshwhub.com/wesd/b650 [1]
+Co-developed-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
+Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
+Co-developed-by: Lain "Fearyncess" Yang <i@lain.vg>
+Signed-off-by: Lain "Fearyncess" Yang <i@lain.vg>
+Signed-off-by: Rong Zhang <i@rong.moe>
+---
+Changes in v2:
+- Squash into a single patch to prevent temporary build regressions,
+  i.e., unused variable on non-MIPS builds (found by Sashiko)
+  - https://sashiko.dev/#/patchset/20260409-ls7a-bridge-fixes-v1-0-3650fedf1afc%40rong.moe
+- Link to v1: https://patch.msgid.link/20260409-ls7a-bridge-fixes-v1-0-3650fedf1afc@rong.moe
+---
+ drivers/pci/controller/pci-loongson.c | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-> I think it makes sense to follow the rule we set which is to update
-> the compatibility string in any commit that changes the ABI.
+diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+index bc630ab8a283..de5e809a537d 100644
+--- a/drivers/pci/controller/pci-loongson.c
++++ b/drivers/pci/controller/pci-loongson.c
+@@ -80,6 +80,18 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+ 			DEV_LS7A_LPC, system_bus_quirk);
+ 
++static const struct pci_device_id loongson_internal_bridge_devids[] = {
++	{ PCI_VDEVICE(LOONGSON, DEV_LS2K_PCIE_PORT0) },
++	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT0) },
++	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT1) },
++	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT2) },
++	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT3) },
++	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT4) },
++	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT5) },
++	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT6) },
++	{ 0, },
++};
++
+ /*
+  * Some Loongson PCIe ports have hardware limitations on their Maximum Read
+  * Request Size. They can't handle anything larger than this.  Sane
+@@ -92,24 +104,13 @@ static void loongson_set_min_mrrs_quirk(struct pci_dev *pdev)
+ {
+ 	struct pci_bus *bus = pdev->bus;
+ 	struct pci_dev *bridge;
+-	static const struct pci_device_id bridge_devids[] = {
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS2K_PCIE_PORT0) },
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT0) },
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT1) },
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT2) },
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT3) },
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT4) },
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT5) },
+-		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT6) },
+-		{ 0, },
+-	};
+ 
+ 	/* look for the matching bridge */
+ 	while (!pci_is_root_bus(bus)) {
+ 		bridge = bus->self;
+ 		bus = bus->parent;
+ 
+-		if (pci_match_id(bridge_devids, bridge)) {
++		if (pci_match_id(loongson_internal_bridge_devids, bridge)) {
+ 			if (pcie_get_readrq(pdev) > 256) {
+ 				pci_info(pdev, "limiting MRRS to 256\n");
+ 				pcie_set_readrq(pdev, 256);
+@@ -230,11 +231,11 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus,
+ 	struct loongson_pci *priv = pci_bus_to_loongson_pci(bus);
+ 
+ 	/*
+-	 * Do not read more than one device on the bus other than
+-	 * the host bus.
++	 * Do not read more than one device on the internal bridges.
+ 	 */
+ 	if ((priv->data->flags & FLAG_DEV_FIX) && bus->self) {
+-		if (!pci_is_root_bus(bus) && (device > 0))
++		if (!pci_is_root_bus(bus) && (device > 0) &&
++		    pci_match_id(loongson_internal_bridge_devids, bus->self))
+ 			return NULL;
+ 	}
+ 
 
-Okay, this is also fine.
+---
+base-commit: 08d0d3466664000ba0670e0ef0d447f23459e0d4
+change-id: 20260408-ls7a-bridge-fixes-8a9b54a6b62c
+
+Thanks,
+Rong
 
