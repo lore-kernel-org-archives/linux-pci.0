@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DBD6477993;
-	Thu, 30 Apr 2026 16:25:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9411945BD57;
+	Thu, 30 Apr 2026 16:25:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777566305; cv=none; b=HDUY+3wMYw8PoVNrGrAlb/ca4wyzBCnwEkdTi7q3HR0x3pDjd40HPHak18ttq+hCX5c1gy0dKNofDDBxLyH1JbYw+PgWLXNqdK88WnKZwBEe+j/IqyZHqggygsVEYDYs8SNjs2XrqUbmFLT17HNxMqv/MNC19YIOqz7z+iVl7dQ=
+	t=1777566306; cv=none; b=oQTL+2pmJ0veDRi7Sgp7sbkz87HM2ZLjkIOspm9SsWU74jvupgNsy7hN5lfaqdhztOkP9W3EskeR5eD0HctUpmycpE85eqy305XpVgMFVgMaU0lPQ7ElET0NRTOy8BJK3vV6cX7ZxR/W0yxYnfPMGbIoqeJXir5drvMdh7g9TcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777566305; c=relaxed/simple;
-	bh=srG+yZobwtkFs3Ykezmyljr7KjBdK21EgkvzAZGf7oE=;
+	s=arc-20240116; t=1777566306; c=relaxed/simple;
+	bh=zGya12c0o5aRiDVzH50QTYenNbVMFV+ylKxK3Bd8OSs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=abyv/3zXASgrYkx6pxSYfwN7k0LYpgLRCq+/lyh3gPcVhQLrGNbeL+onTbPyFQD1xLrbB37khRkyRLNxp90j8Fn54Cjt5kWqPHLTastLAKI2KIvBq3V98zu9+uIl9fd983mJU+cQfmiI+jxkbygHudxyNd25GG1a0SA1ufnjdIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=lMatsQ1+; arc=none smtp.client-ip=220.197.31.4
+	 MIME-Version; b=H9JeCFy+NMsFhiV7Ime8OC4wI1LwzDZvPB43lBVySTmV4Wn1CjLYYLfqudgLDyBil8j8IaRWShusTzPQ3SElusZH1RmoqE9nZDf6KKjUD6wZwWjJ5nn4qo6przXDOYM2r6dzi7+19epkL5pRrQ8ABAxtVY3ANGRjnwyqYPIn3+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fpuQhOZp; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="lMatsQ1+"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fpuQhOZp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=5+
-	p21yOHzM6HhEIEW/ME4J11uHV07Opa5IXiJKuYTnA=; b=lMatsQ1+P+mAVueFhx
-	ByTEy3KOKqteAnvPjQJ4Z6oAZalw018QcnCu5PD0T88nMiY4+Dz17iV+q/p2lag8
-	IpWGuxSIOSsuqIoqG3hRRrnYZGKPZ2wQ+vqugO+AmWzUjRzeZ6omWktxwsm+SdfI
-	B5Le9VMAm7sMIWCZDzb8qDFAs=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=SK
+	nNKCXhsL/SUQcuaVtsiDGDwFzkCFIi96zkjl1hpAY=; b=fpuQhOZpaGB6/bScYo
+	eQZsM/1Lqg0tg6XacRT3Xt5i9rQMIk0fpwYK+pPVCTkb1keV/2VyK+WZlL2MHsUa
+	d17UeYsn9BjkfDpjwcilaJA8fBMeuZ9u6RVeJ9djsRFDss5hGZujoFsy0RGOzwFG
+	+BDAQlrTAnOO4Ig+Iuo8Y1x0k=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wA3Df0_gvNpcypXCg--.51103S4;
-	Fri, 01 May 2026 00:24:32 +0800 (CST)
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wBnTp9HgvNpIh98Cg--.30330S2;
+	Fri, 01 May 2026 00:24:40 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -36,9 +36,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [RESEND PATCH 10/16] PCI: eswin: Use FIELD_MODIFY()
-Date: Fri,  1 May 2026 00:24:14 +0800
-Message-Id: <20260430162420.42839-11-18255117159@163.com>
+Subject: [RESEND PATCH 16/16] PCI: mediatek-gen3: Use FIELD_MODIFY()
+Date: Fri,  1 May 2026 00:24:20 +0800
+Message-Id: <20260430162420.42839-17-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260430162420.42839-1-18255117159@163.com>
 References: <20260430162420.42839-1-18255117159@163.com>
@@ -49,35 +49,35 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wA3Df0_gvNpcypXCg--.51103S4
-X-Coremail-Antispam: 1Uf129KBjvdXoWrur17Kr1UAw15tr13GF4kWFg_yoWDAFbEvr
-	yUCF47Ar4DGrySk340kw1rJr9xA3Z7Xw40gas5tFs3ZF97Kr15WFyvvrZ8tFy3CF1rJFyk
-	tr1vqrWxCFy7JjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sR_O6pDUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wEIq2nzgkFEAQAA3V
+X-CM-TRANSID:_____wBnTp9HgvNpIh98Cg--.30330S2
+X-Coremail-Antispam: 1Uf129KBjvdXoWrur17Kr18WF4xtFyrXw1xuFg_yoWDKrXE93
+	9rJF4fC34DKryfG39YkryrAr9Yka4xWw10y3WrtF1SyayxuF1Fqr9avrWDX3Z8CFsxJF43
+	t3WDCF18AFyxCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7VUUb_-PUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AgKrWnzgkhPPgAA3i
 
 Use FIELD_MODIFY() to remove open-coded bit manipulation.
 No functional change intended.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pcie-eswin.c | 3 +--
+ drivers/pci/controller/pcie-mediatek-gen3.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
-index 2845832b3824..ce8d64f8a395 100644
---- a/drivers/pci/controller/dwc/pcie-eswin.c
-+++ b/drivers/pci/controller/dwc/pcie-eswin.c
-@@ -211,8 +211,7 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
+diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+index b0accd828589..f36a616a8b52 100644
+--- a/drivers/pci/controller/pcie-mediatek-gen3.c
++++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+@@ -494,8 +494,7 @@ static int mtk_pcie_startup_port(struct mtk_gen3_pcie *pcie)
+ 	/* Set Link Control 2 (LNKCTL2) speed restriction, if any */
+ 	if (pcie->max_link_speed) {
+ 		val = readl_relaxed(pcie->base + PCIE_CONF_LINK2_CTL_STS);
+-		val &= ~PCIE_CONF_LINK2_LCR2_LINK_SPEED;
+-		val |= FIELD_PREP(PCIE_CONF_LINK2_LCR2_LINK_SPEED, pcie->max_link_speed);
++		FIELD_MODIFY(PCIE_CONF_LINK2_LCR2_LINK_SPEED, &val, pcie->max_link_speed);
+ 		writel_relaxed(val, pcie->base + PCIE_CONF_LINK2_CTL_STS);
+ 	}
  
- 	/* Configure Root Port type */
- 	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
--	val &= ~PCIEELBI_CTRL0_DEV_TYPE;
--	val |= FIELD_PREP(PCIEELBI_CTRL0_DEV_TYPE, PCI_EXP_TYPE_ROOT_PORT);
-+	FIELD_MODIFY(PCIEELBI_CTRL0_DEV_TYPE, &val, PCI_EXP_TYPE_ROOT_PORT);
- 	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
- 
- 	list_for_each_entry(port, &pcie->ports, list) {
 -- 
 2.34.1
 
