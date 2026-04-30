@@ -1,156 +1,227 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010005.outbound.protection.outlook.com [52.101.69.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC7A53AEF57;
-	Thu, 30 Apr 2026 10:49:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777546167; cv=none; b=CbAt9yO4jt9xU+bsV5AvGTkviicJwK+6N7s+cCfU7QKaBxjc0cRJkZn5CjAyo6bp9xpBxXMRFdRKbk0SqGPmDINLvw7MU5wIyOzT9cclnbY38rzabPHiYQ7b5oxUwrRjr2hmWqzRNNXrze4TYCD/gNZHiBMjLsd+/0sw4Oi5dYg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777546167; c=relaxed/simple;
-	bh=/vWvGqgbRW7X36x4tSAyZn55Y2G5HU9FVbNdqlcPZPI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VFhvjYrvVNxeaXMlniGN58pAdJ4Q9HFDGFX/NZ0daLBeZ8x39wlXX61DMvQ5sr1Yl8Zc3x5gR0M0j1XwOkzU3BoeO6nKi9JIuIbOa3UB2sM58cqVLve1SOIU3u26hkB5tWMBGMoM9AR0O4sDISCA16bOz/1w9j4W1k0Q4uZ0EXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SS5qTBCr; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F54E19E839;
+	Thu, 30 Apr 2026 11:07:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.5
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777547223; cv=fail; b=q/seDnvYZdhN/9kZlfRRoT47rxh7LrNJ0Q8M8QdhSSDaVi9sT58gZIzbIxMTiOtpMTkyyidIR0i86tSKIr8fg1G+IOGifdIsvUOUy/RvXtMZdl9LIuIfLGRTqYjZipYsXZqZeDV/VTzgRU1Zl6yUK8+Kx3WsEWZsGcVsaTlF3bk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777547223; c=relaxed/simple;
+	bh=54G7TRODDIJN8SbJYv5ZtcElhkwDxxe+Ks+m6aVW0pg=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=lRPdBQYMW/NWoFByx2qpAoQwNrz/85BXjS7eT1ERjO5MQZrzSKbLdIifla4JRbXUNITiZTYc6Ttn2KRXjyMWsZFDAdyqdGCCnFQI/KqWWGEYXZlS6yG/fAK3HqILt2wePCZE3jeeFjUZ3k+0/d+sSPh819x4wmvcAp5chECUK2A=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=nxJqJXEF; arc=fail smtp.client-ip=52.101.69.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SS5qTBCr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76460C2BCB3;
-	Thu, 30 Apr 2026 10:49:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777546167;
-	bh=/vWvGqgbRW7X36x4tSAyZn55Y2G5HU9FVbNdqlcPZPI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=SS5qTBCrhrzxRgCCwUuVePyx2nclcCfq0UGYc/k7yPK9nKOZzffLTU9CUXX9f8ia6
-	 ckPCwhd2TOQeYq3IZ+1P4QSU79wa9whOA5VKuvvFTH/kb81aWzRA7WJXxTAFXKAh6W
-	 vm/8mdw+e/PmveAMSUQXX5zpQVR/cOFcVdxN+nu7+jbrb+W/ZGoVplHLVn7ekbyjVC
-	 XmJfP/Ke8nTmwtMU2OnRLv/L9pR8kxhhHB8uc8877HHzS0gIb26GJW1Ja0wduNB4PF
-	 wvMIG8Lm9x6WaNsrv2W6bmES81O38D2iL0tZBF14P6Hs1Y1YysnO9WaBB9BY74gp+w
-	 4yopL2jo4ZJTg==
-Message-ID: <866455eb-5886-4d6a-b384-2cbed18b67b6@kernel.org>
-Date: Thu, 30 Apr 2026 12:49:21 +0200
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="nxJqJXEF"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=DdQIfyoWPcYB6jtqZvwZPYRnIPS/BlBittLu8Im2OOYOwP/0Eh5P9Y/r1tmVIIubdOw+5e1nyI/8TTJPjPHkT19/qTRxHQnwj8060vAad4U6qqcuMvQ4PUyTaLp6fx3toAt6L7PdAcycTShDCSUErFteKM0XsLfIDV3dSMJxGX+TEhy4JGMf0e8/FODSzXnAhro6c+N7G4Wg7xVyHwR7hlewGZgh+Y0W7KR+GafUo4t0F1Ya93JiFrwAmI2jT4XCQVPc4mxqnBRy356OIho46oQNYRiUXHlDgx7jftQDMk4eGRRuwAAFL9uBdcLY14FNJum6zd2HAGlWx9v1UBCHOQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jKwE4FvD116+ghF8di6dMrH+jwBPGos7uX0Kschl048=;
+ b=hxXJYTl5wmCfv1EIsYQ2S0KHgt7taYs3PoRhEiXSHhUwpZwKSLFO56l52hbhBBsuRGlaPNT68lpWd1p92zBciiUFeUQkXdNoxhxRjOACgfN+Xzg8na4tQ55RKtZVILndHBuQmrc4BFXQaQBAdjpVqJp61+UqMl6y5Lo3gosAuN2aR+BgxWEgyjUX8PpvTtGye9jBXA2Ooaka6whUnFeAw0/oV2C0VMGmh6HGB/pkVHYWjq0HTZWEvQGHyljqe1rTYaZCs9aLKKzWrh2VMD2hB22/SV0+2B5i0fFLCT27ZXQfZUt2x6kLYVRdBZQ0u7KYVvJ0tSo5GOco9iwYLOzy3w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jKwE4FvD116+ghF8di6dMrH+jwBPGos7uX0Kschl048=;
+ b=nxJqJXEFNKOsHI2AvIlYgLKLU9Wd+6X2TUFgVhcDo0T/DOgmXRkXa8RtBcTnnZjf9hnyDEF5XlmEdTDR+fv9PlToC8XKOWDAfnifCMM8k2SRJRgOJJFe/meWxDer2yCvgsoPxIJqblVFNm09KlwnIWbv7jwleCq71gE5zby8nRJ7oBTtfzhTsF3PYlFQN8ZCtnMPIu76FiF0+xZAIBwwiE3tw7QNr7E5nkTYnySpb8J5DCPKE6rXylqReVJc77CGVhywCOemltbxmdpVDGbYvo+IiXJkkO25gJViX1zZ756ILEzmGO9eM79I+2df/3FZmRFKIBr+KljabefSp64bdw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com (2603:10a6:20b:438::13)
+ by GVXPR04MB10609.eurprd04.prod.outlook.com (2603:10a6:150:219::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.18; Thu, 30 Apr
+ 2026 11:06:57 +0000
+Received: from AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4]) by AM9PR04MB8585.eurprd04.prod.outlook.com
+ ([fe80::f010:fca8:7ef:62f4%4]) with mapi id 15.20.9846.025; Thu, 30 Apr 2026
+ 11:06:57 +0000
+From: Vladimir Oltean <vladimir.oltean@nxp.com>
+To: linux-phy@lists.infradead.org
+Cc: Vinod Koul <vkoul@kernel.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-can@vger.kernel.org,
+	linux-gpio@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-sunxi@lists.linux.dev,
+	linux-tegra@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org,
+	spacemit@lists.linux.dev,
+	UNGLinuxDriver@microchip.com,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v7 phy-next 01/27] ata: add <linux/pm_runtime.h> where missing
+Date: Thu, 30 Apr 2026 14:06:26 +0300
+Message-Id: <20260430110652.558622-2-vladimir.oltean@nxp.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260430110652.558622-1-vladimir.oltean@nxp.com>
+References: <20260430110652.558622-1-vladimir.oltean@nxp.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: AM0PR02CA0123.eurprd02.prod.outlook.com
+ (2603:10a6:20b:28c::20) To AM9PR04MB8585.eurprd04.prod.outlook.com
+ (2603:10a6:20b:438::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/3] arm64: dts: imx95: Add dma, intr, aer and pme
- interrupters for pcie{0,1}
-To: Hongxing Zhu <hongxing.zhu@nxp.com>
-Cc: "robh@kernel.org" <robh@kernel.org>,
- "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>, Frank Li <frank.li@nxp.com>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
- "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
- "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
- "mani@kernel.org" <mani@kernel.org>,
- "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
- "kernel@pengutronix.de" <kernel@pengutronix.de>,
- "festevam@gmail.com" <festevam@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "imx@lists.linux.dev" <imx@lists.linux.dev>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20260430050954.3467984-1-hongxing.zhu@nxp.com>
- <20260430050954.3467984-3-hongxing.zhu@nxp.com>
- <20260430-adaptable-wonderful-hoatzin-e1056f@quoll>
- <AM0PR04MB52208A6081E971A8BF05B2888C352@AM0PR04MB5220.eurprd04.prod.outlook.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGVBBMBCgA/AhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJoF1BKBQkWlnSaAAoJEBuTQ307
- QWKbHukP/3t4tRp/bvDnxJfmNdNVn0gv9ep3L39IntPalBFwRKytqeQkzAju0whYWg+R/rwp
- +r2I1Fzwt7+PTjsnMFlh1AZxGDmP5MFkzVsMnfX1lGiXhYSOMP97XL6R1QSXxaWOpGNCDaUl
- ajorB0lJDcC0q3xAdwzRConxYVhlgmTrRiD8oLlSCD5baEAt5Zw17UTNDnDGmZQKR0fqLpWy
- 786Lm5OScb7DjEgcA2PRm17st4UQ1kF0rQHokVaotxRM74PPDB8bCsunlghJl1DRK9s1aSuN
- hL1Pv9VD8b4dFNvCo7b4hfAANPU67W40AaaGZ3UAfmw+1MYyo4QuAZGKzaP2ukbdCD/DYnqi
- tJy88XqWtyb4UQWKNoQqGKzlYXdKsldYqrLHGoMvj1UN9XcRtXHST/IaLn72o7j7/h/Ac5EL
- 8lSUVIG4TYn59NyxxAXa07Wi6zjVL1U11fTnFmE29ALYQEXKBI3KUO1A3p4sQWzU7uRmbuxn
- naUmm8RbpMcOfa9JjlXCLmQ5IP7Rr5tYZUCkZz08LIfF8UMXwH7OOEX87Y++EkAB+pzKZNNd
- hwoXulTAgjSy+OiaLtuCys9VdXLZ3Zy314azaCU3BoWgaMV0eAW/+gprWMXQM1lrlzvwlD/k
- whyy9wGf0AEPpLssLVt9VVxNjo6BIkt6d1pMg6mHsUEVzsFNBFVDXDQBEADNkrQYSREUL4D3
- Gws46JEoZ9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLue
- MNsWLJBvBaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6ei
- OMheesVS5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wA
- GldWsRxbf3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA
- 6z6lBZn0WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9
- YegxWKvXXHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt
- 91pFzBSOIpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gU
- BLHFTg2hYnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/
- JoFzZ4B0p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu
- 4vXVFBYIGmpyNPYzRm0QPwARAQABwsF8BBgBCgAmAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtB
- YpsFAmgXUF8FCRaWWyoACgkQG5NDfTtBYptO0w//dlXJs5/42hAXKsk+PDg3wyEFb4NpyA1v
- qmx7SfAzk9Hf6lWwU1O6AbqNMbh6PjEwadKUk1m04S7EjdQLsj/MBSgoQtCT3MDmWUUtHZd5
- RYIPnPq3WVB47GtuO6/u375tsxhtf7vt95QSYJwCB+ZUgo4T+FV4hquZ4AsRkbgavtIzQisg
- Dgv76tnEv3YHV8Jn9mi/Bu0FURF+5kpdMfgo1sq6RXNQ//TVf8yFgRtTUdXxW/qHjlYURrm2
- H4kutobVEIxiyu6m05q3e9eZB/TaMMNVORx+1kM3j7f0rwtEYUFzY1ygQfpcMDPl7pRYoJjB
- dSsm0ZuzDaCwaxg2t8hqQJBzJCezTOIkjHUsWAK+tEbU4Z4SnNpCyM3fBqsgYdJxjyC/tWVT
- AQ18NRLtPw7tK1rdcwCl0GFQHwSwk5pDpz1NH40e6lU+NcXSeiqkDDRkHlftKPV/dV+lQXiu
- jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
- zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
- XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <AM0PR04MB52208A6081E971A8BF05B2888C352@AM0PR04MB5220.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM9PR04MB8585:EE_|GVXPR04MB10609:EE_
+X-MS-Office365-Filtering-Correlation-Id: de4ddc80-8124-438c-4287-08dea6a8983a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|19092799006|376014|7416014|10070799003|1800799024|22082099003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	sEcQvROVo7d0fMsWAsl3bByT62/dYS+K10I+wm51Jxe5dnTidsjxb61xbvxvPgqH268OA70rnfRaFWZqJZzM2aqqbI8ZWhADosUo7zqo8JLbmMyOJiNrE0gNJHrfdarxOvItNyt5MTBohUZ5f9/K2RnYO1LWjRYlVxogj6SNeqqfVVjkxfSIUuIbEJsOP4qCRHnhO60OU6ZaB1H0fW6YNn5xQgSOEZavPYHGyVFS9eoqWoO5j3wzEUN72kef9OHOnFf+D/XE1+8mOsZfmIA44uvAkh+lT7YJXtvri9PnOHUk0nj8GUvIvMeiDUxb8oC+Z3eZTYhDq1+Wm0277cbwPccA141s6w10HViOLKJJhelE5K2Ube6Ko4Pvt/ZeQl7Sz9OFWN0UuwSYhW2//qBQP/AgQOGdB44GQLQ9tDo05m3TK+cnuM1UQokyJaGGXYI2vehqUnJ1PuNNrl6ARUeBWP+jOJDikRMavKBEz+5vWmlFWzNyLUK7K7GLRz2ZF0YRTRoh7bP6Uz7Kx+qI85HDwVN2MUw/25eZWFQjl7zRSLQZ7yx9FWVD/2XwM/r7EfRP/nD170mGkBAyQejUSyGkJA5N4LYOtvw0YIE8sogJaf8E6wQX/dFkq4/WKzzjiRXB5AitlIox4NjeI40wd4gbAcXB2R6HO41Rabw48QOnZUxRdaNtAJgvMBTtvMcz/jVkKiibOExrsvCw9a2upV7yM1SGkBdUjHiuZ5kqNVzpuyc=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM9PR04MB8585.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(376014)(7416014)(10070799003)(1800799024)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?P0SOLbTZoYyfdxaZE3qsZ0rI5R5eJBqx4h/ZD7CH+kposvovyzvCCuMmoP4p?=
+ =?us-ascii?Q?+QTaUJuM2rfpUhFeB5lsLQUGl849G9lwKI4xz+4hk8o8bxagK56vGB/zyPLZ?=
+ =?us-ascii?Q?QNCgB8ycTUz3Ff/s9ipqGne11I7vohpFdXt5IoXb1f1S8YrTrZfoG5eKJzu6?=
+ =?us-ascii?Q?8cS4EhrGOQ9O2ItYkaEUP+59OKVcdbUK3dHMbw85Hj+TMi3yRAaL1rlTCOiz?=
+ =?us-ascii?Q?Aelcta1VwuPyeJSBkdE9xMcRl7urYSJhTKtAMRftCIb2rRVhljVBiDgSwuvX?=
+ =?us-ascii?Q?ykTrfY4CWwdmHjmxxxREeDFBpfdkoST8nzw9vFoZdBVcyTEhXdd1IL7K+QX+?=
+ =?us-ascii?Q?fPWxvKIyM06NE7zqD9btG6OaeuDmbbsbb2I3/uA18n0QinicLwoo1PKKg0LZ?=
+ =?us-ascii?Q?IxQKKWQni2k3Or5flIuhLjb+SH59IYVmmByOYCY/x/yPESf5AT/OHUMGhUZp?=
+ =?us-ascii?Q?UAkHrXp93k6oTECFbfk2/dcoY1FbWke8TMeS8LHBVSYFtGMKAAcuKq07r5ur?=
+ =?us-ascii?Q?zkYRU40C+EmYIXK5n54ueYTzCpIIjDSkPU+/cAa+23jnH/kAsPPpZILx4xSf?=
+ =?us-ascii?Q?ymjJOJCFazkfKtho6+bYzgitnYG3lPytG4YFlgjVuuzQlO75ujh9gNHsLp9v?=
+ =?us-ascii?Q?F1Va8qMCcTehVaWI0omUNwHPVeTlWYbLBt/HfGXkuJf+C++xKyKxQ8+ZGyfe?=
+ =?us-ascii?Q?S199DL/cmad2XX9USasaOx7Oa4mGwf0osnR7ukmUxbYVPGYKKJDsYGiGTodO?=
+ =?us-ascii?Q?9UMmfyimjLtRtEEhYBqJkNAvC8xTX+mmVKMk/xGMMe43yOuY2t2Z9ciB9eoh?=
+ =?us-ascii?Q?IAaJ9ABM2fWqCN1UghJYPReJIwC2VtJq7cbKBXBSCwsvwPeKqFfarymNrf+n?=
+ =?us-ascii?Q?xrhDOi6dcuE8TtK9XRcDcZw2WCD0MTIBZelccwHnRt6gCC95qedVMp0y1MBC?=
+ =?us-ascii?Q?RlMIALJ/RL2RYCDtJxim/hJoVsKrNvvNh2uyHCblyxEBe4N8QCfWrlTLflew?=
+ =?us-ascii?Q?SEy+9Aw/L93ZKuOQQInI5UhafHjWfCulFAGiUCv22I4ghi0VXcR49myS+Q04?=
+ =?us-ascii?Q?5xZCxXIf7lI0FTkh+rtlMhMr3Wkb0sGfWz7bALuvSzIc/V5m0B93GUh9bGsw?=
+ =?us-ascii?Q?uX3TeO5V+fvIvjVtKCDdlJNnLHMOvk/fG6Z8R0+sk5oJBFD+AE3Yza3NbRnW?=
+ =?us-ascii?Q?XK81MKVKY2DXr+4nWecn92146H3PDZf39Wb9yeSnbzDjp3iXylHi/9Mt5P5F?=
+ =?us-ascii?Q?BUrxe6BZn+0vDn7zO2R4A5kRQphje7KPEGnixKfByPtaZD6oJ6GCKzUkDINU?=
+ =?us-ascii?Q?LtHXE8MZCnj8dATLanOwm5zIMxPj0F4QD4tvffJW2B/tPJgM966sL9Y6gtpS?=
+ =?us-ascii?Q?6V0ui3NFVkEW5+SpCyhCaRPp9oEPpHOCVjQ6dgg5MsItE8TugQgrFuRmzyqx?=
+ =?us-ascii?Q?x9jM8XIWbR9dYDnw2IED3gmewhjzxDdX/+0E6bXbDTdh4+rgB6abvemWC75G?=
+ =?us-ascii?Q?SPeWvMXCrCcu3gPpwqJlAzZBxLEArZJoxkG0isC/OWiqxw63lAYMnEYz01Oa?=
+ =?us-ascii?Q?MHBNAOswQ06f+31IIA7Qleoea3Dk5DegteQkZQ1KZrzy4D58WEX8+Ioqw2w9?=
+ =?us-ascii?Q?ZfOtj8YJ2rkeDEL1i4o9jXY4bvmmboOKMe9Ou56QtWqsk2rk6Yan1tT7QZTa?=
+ =?us-ascii?Q?xg/L5qU/e2MFDEUml2auCpuRNo6NomCgjtjJ5THcsigb1bzlrsEOKiU/zftP?=
+ =?us-ascii?Q?spAhUgMoSqi55zKl2CSuxU/8BmOoPqrWTkjS7CgeAaiPXqWEBbWi?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: de4ddc80-8124-438c-4287-08dea6a8983a
+X-MS-Exchange-CrossTenant-AuthSource: AM9PR04MB8585.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Apr 2026 11:06:57.3816
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2NEkdICbkplZeCoO/Rvm+/OYm5Zkf7K+qSqYyoTVhpt7htG3YtPI8OFuZIiAxw169ax55rc20WBHorqr/rF+kA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB10609
 
-On 30/04/2026 10:37, Hongxing Zhu wrote:
->> -----Original Message-----
->> From: Krzysztof Kozlowski <krzk@kernel.org>
->> Sent: Thursday, April 30, 2026 4:05 PM
->> To: Hongxing Zhu <hongxing.zhu@nxp.com>
->> Cc: robh@kernel.org; krzk+dt@kernel.org; conor+dt@kernel.org;
->> bhelgaas@google.com; Frank Li <frank.li@nxp.com>; l.stach@pengutronix.de;
->> lpieralisi@kernel.org; kwilczynski@kernel.org; mani@kernel.org;
->> s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com; linux-
->> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->> devicetree@vger.kernel.org; imx@lists.linux.dev; linux-kernel@vger.kernel.org
->> Subject: Re: [PATCH v3 2/3] arm64: dts: imx95: Add dma, intr, aer and pme
->> interrupters for pcie{0,1}
->>
->> On Thu, Apr 30, 2026 at 01:09:53PM +0800, Richard Zhu wrote:
->>> Add dma, intr, aer and pme interrupters for pcie{0,1}.
->>>
->>> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
->>> ---
->>>  arch/arm64/boot/dts/freescale/imx95.dtsi | 16 ++++++++++++----
->>>  1 file changed, 12 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/arch/arm64/boot/dts/freescale/imx95.dtsi
->>> b/arch/arm64/boot/dts/freescale/imx95.dtsi
->>> index 71394871d8dd0..6896d9c15bf53 100644
->>> --- a/arch/arm64/boot/dts/freescale/imx95.dtsi
->>> +++ b/arch/arm64/boot/dts/freescale/imx95.dtsi
->>> @@ -1861,8 +1861,12 @@ pcie0: pcie@4c300000 {
->>>  			bus-range = <0x00 0xff>;
->>>  			num-lanes = <1>;
->>>  			num-viewport = <8>;
->>> -			interrupts = <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>;
->>> -			interrupt-names = "msi";
->>
->> Why there is no fixes tag if this is here for two years and you claim that IT
->> CANNOT work without these interrupts?
-> Regarding the Fixes tag: I think that it is not needed here because this is not
->  a bug fix.
-> 
-> The driver has been functional for two years using only the MSI interrupt. The
+It appears that libahci.c, ahci.c as well as the ahci_brcm, ahci_ceva
+and ahci_qoriq drivers are using runtime PM operations without including
+<linux/pm_runtime.h>. This header is somehow being indirectly provided
+by <linux/phy/phy.h>, which would like to drop it (none of the functions
+it exports need it).
 
-That's not what your binding said. Get your patchset straight including
-proper ABI impact explanations.
+Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
+---
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>
 
-Best regards,
-Krzysztof
+v2->v7: none
+v1->v2: collect tag
+---
+ drivers/ata/ahci.c       | 1 +
+ drivers/ata/ahci_brcm.c  | 1 +
+ drivers/ata/ahci_ceva.c  | 1 +
+ drivers/ata/ahci_qoriq.c | 1 +
+ drivers/ata/libahci.c    | 1 +
+ 5 files changed, 5 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1d73a53370cf..1396a53bd6df 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -26,6 +26,7 @@
+ #include <linux/device.h>
+ #include <linux/dmi.h>
+ #include <linux/gfp.h>
++#include <linux/pm_runtime.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 29be74fedcf0..48460e515722 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -16,6 +16,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include <linux/string.h>
+ 
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index 2d6a08c23d6a..3938bf378341 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -12,6 +12,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/reset.h>
+ #include "ahci.h"
+ 
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index 0dec1a17e5b1..409152bfefb6 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
+ #include <linux/libata.h>
+ #include "ahci.h"
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index c79abdfcd7a9..e0de4703a4f2 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -30,6 +30,7 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include "ahci.h"
+ #include "libata.h"
+ 
+-- 
+2.34.1
+
