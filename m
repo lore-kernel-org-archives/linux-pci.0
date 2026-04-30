@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED1D3472793;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F317E472798;
 	Thu, 30 Apr 2026 16:24:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777566299; cv=none; b=Iv0lGOod5UySRsEm7NT8c2ZwU166Mzq6Y/y7Wkv/lZk6XU9xC3LUOZ7opup/XY1tU6F9vyZL95HJY2MaSzaYSEjWpL2mqnT8yCe2sZeF7XH3u5y7GLX6/y9o1WTqoXBfMLWwPFOmOmIHilGeq6SvfA3bk9mmRNW6hZ5w4rAJL5k=
+	t=1777566302; cv=none; b=gyIx3V9m7oKN+GToXqfAcqvAp9RxPKMyeCtUQ7bOwLar38/nLIoe082KraVyeFVpxZjM3k4OZ8cbZ5upDcdbH3+saO8x87o2fGXZOF8iC0mGbiN3GcsRdT6u5cY34H4A0XBEkL1OeKA3dKXJ2Vag9QlfQ1d5cZseCoaEb4WZFa0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777566299; c=relaxed/simple;
-	bh=Dn8fTsOZ9GOWIt3xVVd8EqvKuV6qq4me2FvrTvXlIio=;
+	s=arc-20240116; t=1777566302; c=relaxed/simple;
+	bh=mKRbDHHs0pBDmNClLmPUI/k8yIq84PMezI+ZfgY5vhM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=g2btZRr+dCQcFK4+nnhkF9Mzp7xxebhJ22oOD8UYq7Eajl/Onk26BrYl08jcxrAsr11HZ496axvcP0heCZnUJ1lq+L/U0+MLBUxxvFF++E9xWHMsubLOQycUu1BR2Z6zGgo3lulY4OH7fCg1wo9auXlZsvgeFmC1boctZWDTy6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QgNIAESw; arc=none smtp.client-ip=220.197.31.5
+	 MIME-Version; b=R8ScfpRklY42RmYksgmIGbm9LwICbbud6Y6AfF5pya/hWB0IvNCxrPx9OrmJ0YNBDnBIO+xr8j3YwAeaxwgSsadf8vTULaI9gZf18cnOy1r+7aKqSnXVwsEPylGKo9oawbrzvzp5aJ5yb8c1FpN577BweqxCGj5gPYMYlPLbEYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=kV1/8b8Y; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QgNIAESw"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="kV1/8b8Y"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=TA
-	2PDtzRtI+kBQoqeedPsIvWorvQfdP/9rl8VrEEZwY=; b=QgNIAESwSwnr0w4I7l
-	Ba5zKXw8xpWzZbCYOOr/0c5vk+GNNptFlBGaL3b4CHWpD0xIAeymuf4cYduZ0XKu
-	cLxr/DS0V+I5lvmFmQkUNOfsvrWNXYVhA0KXolWM3T+qiLgUo0Ir6gADPCYK/gQs
-	1mW7XmE5SQMbcxmCKZuCDEjM4=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=MK
+	0nueE9kuPh+C6bezt4QBz2BNnFpiu2HHOSbx6DsC8=; b=kV1/8b8Y1kpvxqjJMC
+	auDa+Mx1Q7oM2Vcau9f2AIxoFMicnagkwljriWG3tVNyjcAj75yyB+2cnmVHldP9
+	VEultCh1EDze/ZbJNpy4fDOtbUrBxqcP8LdJoncP4fLmI8Gb1Hi1pURHyT94KL8S
+	TJxhFqutoVKwEDLZuZXPl9qHw=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wA3Df0_gvNpcypXCg--.51103S9;
-	Fri, 01 May 2026 00:24:36 +0800 (CST)
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wAHJXM2gvNpY8PXCg--.48992S7;
+	Fri, 01 May 2026 00:24:26 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -36,9 +36,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [RESEND PATCH 15/16] PCI: mvebu: Use FIELD_MODIFY()
-Date: Fri,  1 May 2026 00:24:19 +0800
-Message-Id: <20260430162420.42839-16-18255117159@163.com>
+Subject: [RESEND PATCH 05/16] PCI/TPH: Use FIELD_MODIFY()
+Date: Fri,  1 May 2026 00:24:09 +0800
+Message-Id: <20260430162420.42839-6-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260430162420.42839-1-18255117159@163.com>
 References: <20260430162420.42839-1-18255117159@163.com>
@@ -49,35 +49,49 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wA3Df0_gvNpcypXCg--.51103S9
-X-Coremail-Antispam: 1Uf129KBjvdXoWrur17Kr1UAw15uFyDuw1DAwb_yoWDCrX_ua
-	4rJanFkrWqgryIkas2ya18AF90ya47Zw4j93WFqF1fZFy8Ar1Fqrn7X398tryDCF43XrnI
-	yr1DCrWFk3sFyjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRiD73PUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AQJrGnzgkROhwAA3Y
+X-CM-TRANSID:_____wAHJXM2gvNpY8PXCg--.48992S7
+X-Coremail-Antispam: 1Uf129KBjvJXoW7urW7uF4xGF1fZr48AF1xuFg_yoW8Xr1Upa
+	yrJa4fKF9rtr1jyF4DXa1DXrn0gF9aqF97A34Ut39FgF47AF4xXasYyrnxtr18ZFWvvFWf
+	ua9xtryjgFyUA3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRPUUUUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BoGqWnzgjpM7QAA3a
 
 Use FIELD_MODIFY() to remove open-coded bit manipulation.
 No functional change intended.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/pci-mvebu.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/tph.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index a72aa57591c0..d6eb65b8cd7f 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -263,8 +263,7 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
- 	 * not set correctly then link with endpoint card is not established.
- 	 */
- 	lnkcap = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCAP);
--	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
--	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, port->is_x4 ? 4 : 1);
-+	FIELD_MODIFY(PCI_EXP_LNKCAP_MLW, &lnkcap, port->is_x4 ? 4 : 1);
- 	mvebu_writel(port, lnkcap, PCIE_CAP_PCIEXP + PCI_EXP_LNKCAP);
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 91145e8d9d95..655ffd60e62f 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -139,8 +139,7 @@ static void set_ctrl_reg_req_en(struct pci_dev *pdev, u8 req_type)
  
- 	/* Disable Root Bridge I/O space, memory space and bus mastering. */
+ 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+ 
+-	reg &= ~PCI_TPH_CTRL_REQ_EN_MASK;
+-	reg |= FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, req_type);
++	FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, req_type);
+ 
+ 	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
+ }
+@@ -427,11 +426,8 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
+ 	/* Write them into TPH control register */
+ 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+ 
+-	reg &= ~PCI_TPH_CTRL_MODE_SEL_MASK;
+-	reg |= FIELD_PREP(PCI_TPH_CTRL_MODE_SEL_MASK, pdev->tph_mode);
+-
+-	reg &= ~PCI_TPH_CTRL_REQ_EN_MASK;
+-	reg |= FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, pdev->tph_req_type);
++	FIELD_MODIFY(PCI_TPH_CTRL_MODE_SEL_MASK, &reg, pdev->tph_mode);
++	FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, pdev->tph_req_type);
+ 
+ 	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
+ 
 -- 
 2.34.1
 
