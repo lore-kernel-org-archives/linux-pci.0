@@ -1,30 +1,29 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E082B39C00C;
-	Thu, 30 Apr 2026 16:13:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97249358D32;
+	Thu, 30 Apr 2026 16:13:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777565633; cv=none; b=ugU7GfcpHCwJ3rFB0uHmGnMyYo5MogWSSgMWUf/1kJi160n+CxLyLK7ULKxpQZWkKxZegKp+FZLvjd+VKcFq4fVuSBClEqMKHJ1OCE00rUUuXh6j9VVge2XIFbL+vrQgCetVQiu4/4KM76gIDeJL9Frm+VK8m0tjACVxw21Gz6k=
+	t=1777565633; cv=none; b=NtU/bqtnCXhT6+9rA8+BHGyV659lC+spQfThftefAIbYXpNGGkCaK8uz9G8BfuDI48lK+LEBA79yDpsgsAJ1up/uiOLDE2bK9ozwk5h4uJgAkltzDEKiPEmRz1R+7XBE8O+iEZTKnHu1a+wBK3b8TGe+YK4wdhAKknSlduRHq+c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777565633; c=relaxed/simple;
-	bh=srG+yZobwtkFs3Ykezmyljr7KjBdK21EgkvzAZGf7oE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BBh83z8Wofo3MyzWQYloe82KUrJTmw/EGFew/BSslVJJc1EZf2oVQt3575vFSM9fNvP06J14e6G2AVuTGhiUoPmDsfuRztLHmjeyCVBTfMvj0QCzSljnaYCBgkx0Eayorb6y20ALapTF3mY1QmVRoWM6xhiX46RN3Y49pYVkza4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=hvXzZo2Q; arc=none smtp.client-ip=220.197.31.5
+	bh=XYlepJ2zg8v2sfg25HgD6d5qLoil4AuAtFUxxV1iqBg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kFJ7BNaWkNAKH/LZ1nJr/VF82dkbdrLSHEAaN9+oxf95jAjNavxuHFlDRwY+St2QHsonE53TAlzfNuqsyzG7ooslrl+xp/9JAOOMGQSSzns9kiZEK4fPFihYo4uZTTWPf7R9+w8emOesLECPGAgvbYIhWnvvz+LWQIUOGaZ2swQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=aC9MMdHI; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="hvXzZo2Q"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="aC9MMdHI"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=5+
-	p21yOHzM6HhEIEW/ME4J11uHV07Opa5IXiJKuYTnA=; b=hvXzZo2Q0zewptnF8B
-	mJCwTfwJOSrBaVTI4fKyjgYMPUpXy2jwVg/zbiq2eMUj/oVUIYODcqtZcXjPSq7E
-	ktWwj/hqKqWquK/3iMiHVe+7wEDOv9E1OkQJKq27hZn3kzt1eJc674Qjwvuzhv7e
-	QPjUEf/s6Rat4EVx0eaG6Zh7s=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=sW
+	KKnHbzkHVqsnzjDuIPGOuEmQVnvRdiBjV7VHlqOFA=; b=aC9MMdHIv+TtOy2F7C
+	G2tHMlfePjtWEvpL3Qa/0S/UCvyP/HVCfjGpTnd+SLe5nJvBPO/8m8HbrswTLUDC
+	oY2Oneiermng7oPFuNr2WuFLUtKs+4I2+KY7TDhES4lVrsdxuEZ5VG3xfANO6C9g
+	E8k3uALjkjsf/mvlgvg6Z8mTk=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDnbymkf_NpTNe+Cg--.31297S12;
-	Fri, 01 May 2026 00:13:31 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDnbymkf_NpTNe+Cg--.31297S2;
+	Fri, 01 May 2026 00:13:25 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -36,12 +35,10 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 10/16] PCI: eswin: Use FIELD_MODIFY()
-Date: Fri,  1 May 2026 00:12:48 +0800
-Message-Id: <20260430161254.40278-11-18255117159@163.com>
+Subject: [PATCH 00/16] PCI: Use FIELD_MODIFY() to simplify bitfield operations
+Date: Fri,  1 May 2026 00:12:38 +0800
+Message-Id: <20260430161254.40278-1-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260430161254.40278-1-18255117159@163.com>
-References: <20260430161254.40278-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,35 +46,68 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnbymkf_NpTNe+Cg--.31297S12
-X-Coremail-Antispam: 1Uf129KBjvdXoWrur17Kr1UAw15tr13GF4kWFg_yoWDAFbEvr
-	yUCF47Ar4DGrySk340kw1rJr9xA3Z7Xw40gas5tFs3ZF97Kr15WFyvvrZ8tFy3CF1rJFyk
-	tr1vqrWxCFy7JjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRiFksDUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwthBWnzf6v2WAAA3M
+X-CM-TRANSID:_____wDnbymkf_NpTNe+Cg--.31297S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Ar43Kr17CF1xWFW7tFyDAwb_yoW8uFy3pa
+	y5KFyxZF18tr45ZF43Xa10kas0vFnYkFyUKa9Fg3srW3ZxCrWjgrWUtFyrtr9xJFW8uFyU
+	Kw1Ut34UGFs3JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pimFAdUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wVgBGnzf6XqMgAA3S
 
-Use FIELD_MODIFY() to remove open-coded bit manipulation.
-No functional change intended.
+Replace open-coded bitmask clear + FIELD_PREP() sequences with the
+dedicated FIELD_MODIFY() macro.  FIELD_MODIFY() performs the same
+operation but is shorter, less error-prone, and includes compile-time
+checks to prevent field overflow.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
+This series touches the PCI core, PCIe extended capabilities (PTM, IDE,
+TPH, MSI, REBAR, IOV, CardBus), and several DesignWare-based and
+other PCI host controllers.  No functional change is intended.
+
+The patches are split per subsystem or per driver to ease review:
 ---
- drivers/pci/controller/dwc/pcie-eswin.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Hi, If the Maintainers think it's not necessary, please ignore it.
+---
 
-diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
-index 2845832b3824..ce8d64f8a395 100644
---- a/drivers/pci/controller/dwc/pcie-eswin.c
-+++ b/drivers/pci/controller/dwc/pcie-eswin.c
-@@ -211,8 +211,7 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
- 
- 	/* Configure Root Port type */
- 	val = readl_relaxed(pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
--	val &= ~PCIEELBI_CTRL0_DEV_TYPE;
--	val |= FIELD_PREP(PCIEELBI_CTRL0_DEV_TYPE, PCI_EXP_TYPE_ROOT_PORT);
-+	FIELD_MODIFY(PCIEELBI_CTRL0_DEV_TYPE, &val, PCI_EXP_TYPE_ROOT_PORT);
- 	writel_relaxed(val, pci->elbi_base + PCIEELBI_CTRL0_OFFSET);
- 
- 	list_for_each_entry(port, &pcie->ports, list) {
+Hans Zhang (16):
+  PCI: Use FIELD_MODIFY()
+  PCI/PTM: Use FIELD_MODIFY()
+  PCI/IDE: Use FIELD_MODIFY()
+  PCI/IOV: Use FIELD_MODIFY()
+  PCI/TPH: Use FIELD_MODIFY()
+  PCI/MSI: Use FIELD_MODIFY()
+  PCI/REBAR: Use FIELD_MODIFY()
+  PCI/CARDBUS: Use FIELD_MODIFY()
+  PCI: al: Use FIELD_MODIFY()
+  PCI: eswin: Use FIELD_MODIFY()
+  PCI: s32g: Use FIELD_MODIFY()
+  PCI: tegra194: Use FIELD_MODIFY()
+  PCI: qcom: Use FIELD_MODIFY()
+  PCI: dwc: Use FIELD_MODIFY()
+  PCI: mvebu: Use FIELD_MODIFY()
+  PCI: mediatek-gen3: Use FIELD_MODIFY()
+
+ drivers/pci/controller/dwc/pcie-al.c          | 12 ++----
+ .../controller/dwc/pcie-designware-debugfs.c  | 23 ++++-------
+ .../pci/controller/dwc/pcie-designware-ep.c   |  3 +-
+ drivers/pci/controller/dwc/pcie-designware.c  |  3 +-
+ drivers/pci/controller/dwc/pcie-eswin.c       |  3 +-
+ drivers/pci/controller/dwc/pcie-nxp-s32g.c    |  3 +-
+ drivers/pci/controller/dwc/pcie-qcom-common.c | 40 +++++++------------
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |  6 +--
+ drivers/pci/controller/dwc/pcie-tegra194.c    |  8 ++--
+ drivers/pci/controller/pci-mvebu.c            |  3 +-
+ drivers/pci/controller/pcie-mediatek-gen3.c   |  3 +-
+ drivers/pci/ide.c                             |  6 +--
+ drivers/pci/iov.c                             |  3 +-
+ drivers/pci/msi/msi.c                         | 11 ++---
+ drivers/pci/pci.c                             |  3 +-
+ drivers/pci/pcie/ptm.c                        |  3 +-
+ drivers/pci/rebar.c                           |  6 +--
+ drivers/pci/setup-cardbus.c                   |  3 +-
+ drivers/pci/tph.c                             | 10 ++---
+ 19 files changed, 51 insertions(+), 101 deletions(-)
+
+
+base-commit: 3b3bea6d4b9c162f9e555905d96b8c1da67ecd5b
 -- 
 2.34.1
 
