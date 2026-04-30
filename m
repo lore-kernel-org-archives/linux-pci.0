@@ -1,123 +1,151 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42EEA22D792
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 20:12:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A13135AC3B
+	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 20:36:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777579940; cv=none; b=JV44oljOXWdrI65QkEewsAdq11EAoMUmTInJvAC8SIQAmgklQEd7NpZCoalZJ0IKTwh4L77mZ+Un5GAHIlD+x/c/Ym9ZT4k/K9neIACfRNf5Wuf5IWx5yd8DoC9ElELxkxUnwjwobFdgnrAUSmIXkwGSRLCFylpVgYCmHJIZULM=
+	t=1777581403; cv=none; b=I33erNj39f4A600wI4DdHadsXKYsamGVUrZm7l1L8CFW5ZASCs1lxZrC9JClV0EjN64gc1XjzWMNNmugIoYQT0IoL4suNPMIZ1NZUUxWRpLoUVJRp0kfmhjGGp5h410ehHlcwMX6v0QrRxa5kuB9qJDzJ6cDXc91M/GtiOvFLDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777579940; c=relaxed/simple;
-	bh=jzqU0r1iXDyszfjki8AsxC67ASPO/PvjTdiLkSByPFU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HfdhxkhCfy08ljO0MAV77h9e64iF3bx2e4bv5zZhke0z/UnePqubczsfJ/wD2PS8obP3Q5kWX+7H3AonevH2gge2pmupUy9Njihk3A8sftI6YxjKj3jZM3npGSLqlO+CDLGNQH9Enn73gyd9omQv4ymwueVzUmgAK1G0QXVVwl0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=HQo+XzrX; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1777581403; c=relaxed/simple;
+	bh=EwPsMmwDlEf4Sg12GI+V/on0UHI6jKuUp1UpMdnjbrI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TciNKX+l8ezrhSgbxurthtxM27DmfDH3ZRKBJbBerVevX0V2v4WftiyclHJEa2cC7xgRenfsaR6ebDQ/Tkl+PH71DZmh+m8NqdLVpX09ll5diAi5cGq5dWRyaxNcPuX9Xi+FywJ3GXnkDN0onpiJFE17t/wVaS0EHgNSzQbQp4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NOXuKwx9; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="HQo+XzrX"
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 63UDAsa74182001
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 13:12:18 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2025-q2; bh=sInQ2EyrWhVx820/ik
-	KwwXHwtxBsZT0OSVOIPwT0byA=; b=HQo+XzrXlbX8/6iOvE/YN8Zko6ss3hysN6
-	Y/mWtEnP3GhvwA1IdF9zC5EjvLkwn6Qq/X1nZrrguds2GE/W7pFtwQCZsUdQyp3o
-	xTa25oHLS8pkDwIwDGAh0bTTzSshMz1oBJ3ga44sHPx9fvYpX8feEZBwYXQmZqm8
-	mpZU3RLcFlnIFbHloCMyIcTIXhFn2siUBzsLxBAjdp5erWA3iDBDhUmyG6X5oJfa
-	08UYYL2b+JGwMccKN1QFNK6OMFYHdQfmhLiQelwMK0RjWNEs7hehhVBA3KArfAk/
-	3luUPzgI4WqaG3tOKXO1yBMTAYuEmBnaRTfcCP4jXXYOC7yVqViQ==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4drsn3ctd9-4
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 13:12:18 -0700 (PDT)
-Received: from twshared98058.15.frc2.facebook.com (2620:10d:c0a8:1c::1b) by
- mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.37; Thu, 30 Apr 2026 20:12:15 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id A7F5C1B9B4FB6; Thu, 30 Apr 2026 13:07:04 -0700 (PDT)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon
- Romanovsky <leon@kernel.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>,
-        Yochai
- Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
-        Zhiping Zhang
-	<zhipingz@meta.com>
-Subject: [PATCH v2 0/2] vfio/dma-buf: add TPH support for peer-to-peer access
-Date: Thu, 30 Apr 2026 13:06:55 -0700
-Message-ID: <20260430200704.352228-1-zhipingz@meta.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NOXuKwx9"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2b25cf1b5f0so8076715ad.3
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 13:36:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1777581402; x=1778186202; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=h7XgKHoPXsQn1bRJuoPg0uZx0GmeDlDmcffd2v4MAfo=;
+        b=NOXuKwx9JwJ6dR1ro+o7v+0/CEPyHX+hUiCJPa+dj5PB8bc/pdCTMLY2//T/qEyu4w
+         fmcv2YbeuWeiLw0gcZFfX+ThO9HBIZhrzlESuuds1BtWn7QuYtWLEwmJnUVNXO2y/l0a
+         pTgJPuujBToBBE1qr4PqeFKXr57wVfUJMmnmgykVuLPZ1Jz461o0MjoUlyJg7retMxhO
+         mKdbUM8dJLWDrV3fJgYTw/KiSEnHyilR5DS6RWZvqWpGxPKrO09WLrwLkAWYLPNZ9mme
+         exA2MIPVlfImAEMfNIfaoM+yigw7M0ylUIwYuQARnxddN+SRNMesNlBE+b5Paop8BguR
+         +L1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777581402; x=1778186202;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=h7XgKHoPXsQn1bRJuoPg0uZx0GmeDlDmcffd2v4MAfo=;
+        b=ehYzWbBfg0L0aRB+9Gp74pB0sFtc/XgTdeXhtDcvpILn7f/siMHX2nWWprByAZwES8
+         N3vh/l6DPqjAs4XFTwqlGdCYOQfqWqu24P+WQv7gI7z0SmjQEDdTTnsn/AqHoAPUsAE5
+         xWHDrQOE1PwnQuc7V5+1DnY4qHEKQGlzSEQXEj8rwtoEdL2WO1V7Y31qrdHCYWcaYoBo
+         8bGKpm51RUGx3+old/T5surk79roKIt/9BgLZi7lJ5RH8vDf/9S7wFwOM8UMaHf3GsMl
+         WoEXQQhHdRm2nq8qrpVYrHM1yn6IclfLXSKUZPvpHpbVOuexjjEYyHMYa7QbDGfQsdmz
+         tFrA==
+X-Forwarded-Encrypted: i=1; AFNElJ/g33aJEs15/CpWD+dEzZSTY4XS+TT66WvHMs3t4omI2yaT5dQhQbUr8dcOsC4uhjLnZs/rmgzsHuA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxICififhCIpfo9RuxaiU/3/Wl5OzHJ+7AnsG2j++KN9u31IeOE
+	dTBtl0TFXJdlABlbidhlBm1pYdrKMM3iJIT32HY546lOKACSX6pBYti1w2nERuQwzQ==
+X-Gm-Gg: AeBDiet5O0RPGgXPhs/C/uBA+lVW97wcEJsNs6QGEGqzcq6Nv6hZ0wE2NCaBGw+0HZ5
+	BQTmEOPkFL3g5hwXNDh3mGtIwmtHGRjMd9DQLY8k4OlIMoz39D5Zc707t/5m0TA3kx19szSAbnY
+	rqkkiW7UiGYWRN5udyc9pmjYB8dNRrPVJ9y7FjA0vHvYMZf4IqaL8OaAxIP8C1OKpqbl+YzCZso
+	x33AmvKpkSahDaKDFLLKXH5c9dF4D9iTF+RxCr7Yx8Z3IOXIo6yJ7lWkJZj36ijrImAyk32ZpR7
+	EuMozgkDnia1vys+rqp50oav6SDRN9R4CG7hSRp+Acs559CN/ZMsWxUCz3Y5tpLnEuPXHrXXeID
+	l4ZzZLXt18VkUBqRnsdBd7weVLo4SmivQOVGzFgPRdoVohVg1RuKX1D3O/jc56yVQdWivjpNKGl
+	8HnzLBmog+vgDXr5bvBfNIDdK5Fy5l0K9QsqF9gDsEzI0binM5GZpa8Jh14Q4yDOmGU6S8TJ27n
+	RMEEA==
+X-Received: by 2002:a17:902:bcc4:b0:2b2:490c:410e with SMTP id d9443c01a7336-2b9a23195femr34674875ad.7.1777581401489;
+        Thu, 30 Apr 2026 13:36:41 -0700 (PDT)
+Received: from google.com (76.9.127.34.bc.googleusercontent.com. [34.127.9.76])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b9cae4a127sm5909845ad.67.2026.04.30.13.36.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2026 13:36:40 -0700 (PDT)
+Date: Thu, 30 Apr 2026 20:36:36 +0000
+From: David Matlack <dmatlack@google.com>
+To: Vipin Sharma <vipinsh@google.com>
+Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI
+ devices
+Message-ID: <afO9VOckgyiiokw8@google.com>
+References: <20260423212316.3431746-1-dmatlack@google.com>
+ <20260423212316.3431746-3-dmatlack@google.com>
+ <20260428201231.GA3885809.vipinsh@google.com>
+ <CALzav=dfLtdrPhkBkGwHpDAWUBMHnbGPccwhy1__doziNVZQJQ@mail.gmail.com>
+ <20260430175916.GA13902.vipinsh@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNDMwMDIwOCBTYWx0ZWRfX64gPoCTIYNtE
- UpgNAxIADXLKxdTFdRoVbeFiw1mrxdyOyzU557bw1CQGiNwjj7Eavy/HKRLXCtVmnFvRLE0w4SW
- SLZ1wtopENn1EaB6b2gcKZMAaNvjs/gODvm0C9NgBrLMLHoVfD1XJOs27jZnhE0uCarfRzOoy8g
- 8xSHB1H++bzXahUcbpWPa/TyMeS38Zz2zkezAh0t9QC/gQU5tregWyMq/JStm+t+Lx7ZV6gI8tt
- svi9Nan4FDy2f8L4h0jqxT0h5VDyReG5ba6XUOhrr5sPYObC34JATcww53tjbB0/o/Ko72ghIdW
- 8Lbja32o6SikRmGQuDmXILuoyntMLfuC4aHChtV6xfTHzk+4sVpaQhwDp6Y0JQzRWm9r5efCx3t
- MkQtpLRXNJ7PZjHpGzU/QozykKFx3jsU0AOWL8b98r/+b/jUXj9GQO0Yfu0AmHNMMc/ywoTKNfB
- uQcWRnthAVq0th9JU5A==
-X-Authority-Analysis: v=2.4 cv=NoDhtcdJ c=1 sm=1 tr=0 ts=69f3b7a2 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=IkcTkHD0fZMA:10 a=A5OVakUREuEA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=7x6HtfJdh03M6CCDgxCd:22 a=tpM8CJlwf7uhpglF1g9U:22 a=VwQbUJbxAAAA:8
- a=VabnemYjAAAA:8 a=NbcebPYJtCDKC3IOK8sA:9 a=QEXdDO2ut3YA:10
- a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: uQNYinGjMTMSWjqixtsM7rQOoETtHfGL
-X-Proofpoint-ORIG-GUID: uQNYinGjMTMSWjqixtsM7rQOoETtHfGL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-04-30_05,2026-04-30_02,2025-10-01_01
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260430175916.GA13902.vipinsh@google.com>
 
-This series adds TLP Processing Hints (TPH) support to the VFIO dma-buf
-export path, allowing importing drivers (e.g. mlx5) to use the exporter's
-steering tag when performing peer-to-peer DMA into a VFIO-owned device.
+On 2026-04-30 11:25 AM, Vipin Sharma wrote:
+> On Tue, Apr 28, 2026 at 02:12:13PM -0700, David Matlack wrote:
+> > On Tue, Apr 28, 2026 at 1:20 PM Vipin Sharma <vipinsh@google.com> wrote:
+> > >
+> > > On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
+> > > > +int pci_liveupdate_preserve(struct pci_dev *dev)
+> > > > +{
 
-Changes since v1:
-  - VFIO_DEVICE_FEATURE_DMA_BUF is now unchanged =E2=80=94 dma_ranges[],
-    __counted_by(nr_ranges), and flags=3D=3D0 are all preserved
-  - Added a new VFIO_DEVICE_FEATURE_DMA_BUF_TPH (feature 13) as a separat=
-e
-    SET ioctl that takes a dmabuf fd, validates it belongs to this vfio
-    device, and stores the steering tag + processing hint under memory_lo=
-ck
-  - Kept the dma_buf_ops.get_tph callback as the general exporter-side
-    interface for importing drivers
+> > > > +     if (ser->nr_devices == ser->max_nr_devices)
+> > > > +             return -ENOSPC;
+> > > > +
+> > > > +     for (i = 0; i < ser->max_nr_devices; i++) {
+> > > > +             /*
+> > > > +              * Start searching at index ser->nr_devices. This should result
+> > > > +              * in a constant time search under expected conditions (devices
+> > > > +              * are not getting unpreserved).
+> > > > +              */
+> > > > +             int index = (ser->nr_devices + i) % ser->max_nr_devices;
+> > > > +             struct pci_dev_ser *dev_ser = &ser->devices[index];
+> > > > +
+> > > > +             if (dev_ser->refcount)
+> > > > +                     continue;
+> > > > +
+> > > > +             pci_info(dev, "Device will be preserved across next Live Update\n");
+> > > > +             ser->nr_devices++;
+> > > > +
+> > > > +             dev_ser->domain = pci_domain_nr(dev->bus);
+> > > > +             dev_ser->bdf = pci_dev_id(dev);
+> > > > +             dev_ser->refcount = 1;
+> > > > +
+> > > > +             dev->liveupdate_outgoing = dev_ser;
+> > > > +             return 0;
+> > > > +     }
+> > > > +
+> > > > +     return -ENOSPC;
+> > >
+> > > Since it is executing under a mutex, and we already failed
+> > > 'if (ser->nr_devices == ser->max_nr_devices) check above, will we ever reach
+> > > here and return -ENOSPC?
+> > 
+> > Yeah I wouldn't expect to ever reach here.
+> 
+> Will you be removing it or want to keep it just in case scenario?
 
-Patch 1 adds the dma-buf get_tph callback and the new vfio uAPI.
-Patch 2 wires up the mlx5 RDMA driver as a consumer.
-
-Previous links:
-https://lore.kernel.org/linux-pci/20260324234615.3731237-1-zhipingz@meta.=
-com/
-https://lore.kernel.org/dri-devel/20260420183920.3626389-1-zhipingz@meta.=
-com/
-
-Zhiping Zhang (2):
-  vfio: add dma-buf get_tph callback and DMA_BUF_TPH feature
-  RDMA/mlx5: get tph for p2p access when registering dma-buf mr
-
- drivers/infiniband/hw/mlx5/mr.c                   |  38 +++++++
- drivers/net/ethernet/mellanox/mlx5/core/lib/st.c  |  25 +++--
- drivers/vfio/pci/vfio_pci_core.c                  |   3 +
- drivers/vfio/pci/vfio_pci_dmabuf.c                |  65 ++++++++++++
- drivers/vfio/pci/vfio_pci_priv.h                  |  11 ++
- include/linux/dma-buf.h                           |  17 +++
- include/linux/mlx5/driver.h                       |   7 ++
- include/uapi/linux/vfio.h                         |  22 ++++
- 8 files changed, 180 insertions(+), 8 deletions(-)
-
---
-2.47.1
+I'm not sure how I would remove it. The code doesn't not compile without
+a return.
