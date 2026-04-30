@@ -1,38 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A527D3B776A;
-	Thu, 30 Apr 2026 21:14:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F5D2EF653
+	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 21:15:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777583685; cv=none; b=jvAEz+Gou2rZ93IJH1IBvRTIeDDvXnfAc9RuERdfhO001vcO7M32jeKEyNYdhO2H0b0vKke377rTgLLED7be9pDkJKg+OCOAjX5GNcgUZWdLlsZofHfszdRD6zzaP6WTF/jbLqWZUWD+ZSeEEWiWh7OcGjJwWC3DELJiOcU1B2w=
+	t=1777583722; cv=none; b=MJubQ0eD5iRc3x4IOUOnbTrFAbkyMQ5Q3lPfgXlidWv4RCCgXR6eJT87FnyIRk0wRRVuYxCpq+qgaMQ50Sy29gaXBAfpYme6B1wU42ua+VEMAhZCfvoe9LgQVmad+nMnw8ZXiR+69CBApxhg1Q+rJeLysgmw4caVjsOwb5qJIKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777583685; c=relaxed/simple;
-	bh=jExc9ThFJh5G6uRoarH4ZYtA+yWxsZXYal1m+NQwiSg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=hn7O74kbQUk4ev2ODSp0BTeyRjVnJkeN09hukWt7rabYSRyHcJ76iNTwjCXIRTomV1LRs0t7v/R3YL8Af8OOcGBVeFGy1JKS2nysU+yf88Q1F5H08exvthdeNAV7YLGN1+1Q2rXdtbgpelfbmdXGc/iuVq4so6p/X1tL2pRTRSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QB6UvPiv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777583722; c=relaxed/simple;
+	bh=inZO7ZV0wRh5CqvM/ucg9lY2CTAYKdanpisWvC3TQ9o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GSZpfk9ZLFEa7/6UGC8jYSUKrSAjMw/qSEGSbdo7aqhIhXRzkf8Tl+LNXI7nsPt5Psry+iu2c13CkV6v2zS/QV/a7TzSjUhwUVW4/bilDqQG0urLRZE3gyjtdZwcjc0HV1NUmF+yBFAOYIwB7UPsHX6Cv0W9i0aPOcFW4Q4qucE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=UxMLn1IQ; arc=none smtp.client-ip=209.85.216.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QB6UvPiv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E437C2BCB3;
-	Thu, 30 Apr 2026 21:14:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777583685;
-	bh=jExc9ThFJh5G6uRoarH4ZYtA+yWxsZXYal1m+NQwiSg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=QB6UvPivTiYRt+vDiYJx/8sd6EhpdJ2trnqgU+5o6tvhrZ8N9uRATlIeKOcY7HpDa
-	 VQvviXfNIM1lW7NKurpjJKDO0jdXvpLopueUvz15uYa5HIM6j40TXXJummc/mo2see
-	 CkTcrmQ5xrv/Ot/u0uTtJ3PnYcLWiuqGF6L4vmT8UX7wADE87nzSSUx6Ps9Lpd8/OE
-	 k7pn6uGckkjnWFHcb2Q+wu5PcqpDWoakBOXxfXR0KSysGTTuc7vkGopEZSW3ltVkp5
-	 f/ecEjFnJty6BzmBDMKeIgK7zGz2rcfyg8JXarzpdZjYik2J/UPOqIMyy7lbNvWl2d
-	 VFCF1JQwGMUAQ==
-Date: Thu, 30 Apr 2026 16:14:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: quirks: Advertise D3cold capability for UPD720201
-Message-ID: <20260430211443.GA440215@bhelgaas>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UxMLn1IQ"
+Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-35d95017a68so1134415a91.3
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 14:15:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1777583721; x=1778188521; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=tuRbo58QsKRQvu4meQcJrzjCe/FSskWcv20z3c8VC1o=;
+        b=UxMLn1IQuNma/45TLDGLHz7WiSXx7C7t5cQnqX8cRydSOs+re11gX2q69MKSOFV5ms
+         yzthR0GcbnPt38XRXtjcPQI27tCEEsTLsHTm7/HsVItkFHFB6kNkkqfabx8KCKV2Yof3
+         5QMTGStowS9Yb+/aUll4kFgcze81ZfZiNf9dKQCD7jnAOS88QKSGDVNpMGbf7nCvNZOv
+         6PoA3uAi7zNQx/tuulBDn91lWPx0TiPRc8UdtO/DFhgWQSXZsSzqqEnXVtmjyuLaOWPS
+         BhV8nuFuXAvRMRbu9h1BooBDLqEWX+aD2Vh3NaB5F6bGPg2Bu7khJEKb1bhGnB4LjGk1
+         C2qg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777583721; x=1778188521;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tuRbo58QsKRQvu4meQcJrzjCe/FSskWcv20z3c8VC1o=;
+        b=tT4BpJ8UQTXGiCfZ01G4AacfPyi3WMUxI2U4FM23E6IG/w90Djs//v7xe6SOV+4/MO
+         RonZZrue5fZCZ731DwvFDduUZGnvjPRoQrenA6FujyZJjcM92cVKEVxRbk9mB+hGs5GZ
+         FKop1FcJdBXkp7CLjfXW/2SEB3Q/pYfvU2Ustvn7Kt49xki0QMz3lJH2eZuvsPvS8nkw
+         y85iTPRGbtPCfq99luG9B+bWH+r4uDmdQ1gV/2kPWLjZ0brXFAbzeiW6llJcuaAwfA2T
+         S40JnC1cxonCdxj7HC2NMU5tAgNStT0Q3QAxvfU/SdD5Q00tHig2h0VQQeMQ3C5aNccp
+         jgOQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9wO62oJTOBGWS8c+cbBUxjZKgAcmP0T/UfvsJ255iQ966RNQvfaMvfTluv+mjzehfodzx7wm1lq5M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOjflep/1/xNudfDE6XvdhiJRV7v+3G9EppXBrwlSYP/saMIL5
+	NIaaU3TNxCfUnRJZv4AN4KvkjHcyCavISSrMxOp5OAmoRnpxy5VzmPbVFxZI6f3yEg==
+X-Gm-Gg: AeBDieuKotqBpw+zTmiGJfocIihJxW4uvUjYGR5PBEn8XN3uTi4OvUPS3oSyG7lXp2c
+	aFZ8edyXd4zYtb2qEWGEuHfAOr0EXOiO+sSk4JtwBSBE+4lIEg9KmjQ9UH4IZ4bIuKH5S9DgEvo
+	sEazwnNhMSd/zp54QVY0+sYx0hGdjAaqfrrjLYQ6FxzMf6dkycrQFWD5bnw2n6MwgBW3DFQlMWB
+	G9/tVLB2ShICQ5XlmZWLjQiR1fMA2M27fV8yfsi1/Ou0BCa3GVpt8VYGPAmaBC9pO9SPVvwZTGP
+	W6g0JirJ40rWszMgDUiURBE+nMHtLXVSGXtuNjrgEanEOR8RjdJRgQpCmZBEcztvQoHavPQoaK2
+	p5d2Rlei16VL8+Pjf4krseZX1kyl0m+BuQiQ7HXLYxTEuKUxzgyJ7NrXFhx+u5N/dg1aWhiWeQL
+	DCYr7wMpgaqVw5vhZmn/qbycrEt6MhnGOeMAetUS8I31ZkSl8ROvfoC2vfFkB/uVMFRZpnuuMeR
+	6kbf1GCr4xitwpI
+X-Received: by 2002:a17:90b:2790:b0:35b:e51a:ec77 with SMTP id 98e67ed59e1d1-364c309bc21mr4610958a91.16.1777583720228;
+        Thu, 30 Apr 2026 14:15:20 -0700 (PDT)
+Received: from google.com (76.9.127.34.bc.googleusercontent.com. [34.127.9.76])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-364ebd46484sm474408a91.0.2026.04.30.14.15.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2026 14:15:19 -0700 (PDT)
+Date: Thu, 30 Apr 2026 21:15:14 +0000
+From: David Matlack <dmatlack@google.com>
+To: Samiullah Khawaja <skhawaja@google.com>
+Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI
+ devices
+Message-ID: <afPGYp145FbrvURR@google.com>
+References: <20260423212316.3431746-1-dmatlack@google.com>
+ <20260423212316.3431746-3-dmatlack@google.com>
+ <afDqs6oqWlhoVqMN@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,52 +96,36 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260430-d3cold_support-v1-1-6734f280c481@oss.qualcomm.com>
+In-Reply-To: <afDqs6oqWlhoVqMN@google.com>
 
-On Thu, Apr 30, 2026 at 10:12:18AM +0530, Sushrut Shree Trivedi wrote:
-> PCIe-to-USB bridge UPD720201 does not advertise D3cold
-> support until firmware is loaded post pci enumeration.
-> This results in upd blocking D3cold entry during system
-> suspend and causing overall failure to enter XO
-> shutdown.
+On 2026-04-28 05:24 PM, Samiullah Khawaja wrote:
+> On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
 
-I think you're saying that the PM Capability in config space changes
-when the firmware is loaded.  That makes me worry about what *other*
-config space changes might happen when the firmware is loaded.
-There's all sorts of stuff we do during enumeration that depends on
-what's in config space.
-
-> Hence, add a quirk to advertise D3cold PME capability
-> since the HW actually supports and advertises it post
-> firmware loading.
+> > +	for (i = 0; i < ser->max_nr_devices; i++) {
+> > +		/*
+> > +		 * Start searching at index ser->nr_devices. This should result
+> > +		 * in a constant time search under expected conditions (devices
+> > +		 * are not getting unpreserved).
+> > +		 */
+> > +		int index = (ser->nr_devices + i) % ser->max_nr_devices;
+> > +		struct pci_dev_ser *dev_ser = &ser->devices[index];
 > 
-> Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
-> ---
->  drivers/pci/quirks.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+> nit: Maybe we can move this logic in a separate function as down the road
+> when we expand this to add VFs and Hotpluggable devices, this might
+> change significantly? It's good if it is self-contained.
+
+Did you mean to leave this comment on pci_flb_preserve() where it
+decides how many devices to allocate room for?
+
+> > +static inline struct pci_dev_ser *pci_liveupdate_outgoing(struct pci_dev *dev)
+> > +{
+> > +	return dev->liveupdate_outgoing;
+> > +}
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index caaed1a01dc0..c32617ed33aa 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -6381,3 +6381,13 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
->  #endif
-> +
-> +/*
-> + * Renesas PCIe-to-USB bridge UPD720201 does not advertise D3cold
-> + * capability by default until firmware is loaded post-enumeration.
+> Is this expected to be called under the outgoing lock?
 
-There are several mentions of "Renesas UPD720201/UPD720202 USB 3.0
-xHCI Host Controller" in the tree.  I assume this is the same device?
-If so, I think it'd be worth using similar terminology, i.e., "USB
-xHCI host controller" instead of "PCIe-to-USB bridge"
-
-> +static void quirk_enable_d3cold(struct pci_dev *dev)
-> +{
-> +	dev->pme_support = dev->pme_support | (1 << PCI_D3cold);
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_RENESAS, 0x0014, quirk_enable_d3cold);
-
-How do we know that FINAL fixups happen after firmware loading?
+For now this API is only used during shutdown, at which point userspace
+should have already been stopped so drivers should not be changing the
+preservation status of an outgoing device. So I don't think this needs
+to be under the outgoing lock, but it would be nice to have some more
+explicit synchronization.
