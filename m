@@ -1,148 +1,171 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11020115.outbound.protection.outlook.com [52.101.56.115])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C902432ED27
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 20:42:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777581757; cv=none; b=WPiiEyxpYS/gDzJkIcKU8wIf2dxZvw9u6TQNvz7hWFMqa0waEQFsb15FhuauqwVFtBI64bofd6GiJRzifjnYnmWBxqOaE9EqR/ia8+XPFqEFc5MWOaWR1NU0Jv0siy/23zXCfzDAkiIHhUf1v1xkMEqVnRXwfrgXu2gfYMeOrxk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777581757; c=relaxed/simple;
-	bh=4FBRaYnJRq/un4FnbGeS++Q533k2ady0orYZ5cPNJho=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HuR9ArSUKaa8c/ZpqsvbznUk3uScqdNyx+GhOVq4Lr2JpiSnavUeyhGqEjEo0fkjiS8H2lB+p8b6NU6ycKe+fa6ZDTFSkUi+BtROWfhoUqPe1ryl2872cAtvZdBYmUnr7cnEa6Eph4vtioF4PmW7t5AVm/MfNirCTJfU9e4qHLc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=RAzBHdch; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A90A03A255F;
+	Thu, 30 Apr 2026 20:43:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.115
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777581835; cv=fail; b=C3dMNRJDJfFXpfNx11dPtfRKlQ2OYV2/ZxQmcvEXe8VBGzc2Ivm12FdszvSZeiyvD54rI9URqCIYXRmpMm9gaQeLK7TlYVs9NPvKECbZgTSOf/AfBZENEutfJRY/dwRptdjSfzu2m8Y1mLwNrwUHXKvf0YJgQIy0j5uoXIBkRzw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777581835; c=relaxed/simple;
+	bh=pTzZBWsYTSzYwd0IzoOtI2GFzfLlAmuLnkj996rJZpY=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=CoMe7AyMUiweqRbg8Apd/eOug2paBy2SsduMKzdTaEdLF2x8ldAMtOxJ/ZyjRq4bXVtgLstCkJGGWkWLd99w95VLglMmjkdE493I/CrpJSaxWRixvotvebRcHjYZuBGfbNMgQnqnZQlYYLEdykbEL7uhcUcx3DFCoV8/wFZKYYA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=altera.com; spf=pass smtp.mailfrom=altera.com; dkim=pass (2048-bit key) header.d=altera.com header.i=@altera.com header.b=pl6FDo/m; arc=fail smtp.client-ip=52.101.56.115
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=altera.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altera.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RAzBHdch"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-2b2591757fbso33845ad.0
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 13:42:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777581756; x=1778186556; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=3vbJaL0qvtGk1NC0ztOfHKQqU3avaZZm4uoH47YILVE=;
-        b=RAzBHdcho1bZ+2FKFJ5aWZ4qmMjn2ZL2uVf4F8ik0QnyqODn6YmqC+hFpDDRO9vE7I
-         To/VA0Fejz6DOWCdjjD3Z9QdjQfjdpYwGswMYZ0w5dhrf+37klPW1O60l1Zy012Vo5k+
-         8Umpsb2ZePc0K/+GWubcbQmmRSjp1KanF7DMuV52GHiNVjmoAMs8Ws6m4bddeE+bXL5u
-         UtSqQzUIbVN8CfM1Bg27Ogw2ebceI6BFsOgIK9h9acJMQvPz/OBwxmH7v304rQv7gyHM
-         Zq3JDFAtFO2EB5JxYFvvo3ZPoXXiqNrXs96bpNkfja6EIHYOI/W+vn56PfOgfylbkbWX
-         4t7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777581756; x=1778186556;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3vbJaL0qvtGk1NC0ztOfHKQqU3avaZZm4uoH47YILVE=;
-        b=MrSMtUBN27btWEIWuObkZkx3z1+146X8ww+N37utWvpl+dvrH1B+YoMxNTYFG+u7PZ
-         uPD0vg1PICoHsgyU3/ZuZF11tbPgrt/WMgu9MOsAOT/pHb3U98eqpKGx+vYUmXuEPPH0
-         02rjSGrQge+YUkuWKW6VX+i33MXDFSJtA3lp4FZat+O242hE5sk2dRuW08Y3VUq9KW9T
-         w45Q+4CqqZyOpyVlnlmBJBpXz1Xrbh7DHnfZKil0n9o0V0zsFvV8PMiOYndHfi99fk9B
-         iQw/H7dAGrMuuji5zQSqcab8C9o8HMGqBHGgcrkp8FZVaBud8Vlu2mN7vxurg9AdrKhG
-         nnbQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+1YSmITjtzjeTXYUzeGVas7GPGLnprFtp6zvsM1iU22kcmZbYL2EX/8BANtpwCc5lo6fTNmSaVJkA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwtMQ4h4X3CMg8dsnQH29WdPWDXq87wLZQsiZrEqishrDrVS3xz
-	2jW589o4uKP6iLJR0vCu7ThN8HLJvybAEXkJSBUtSBckPnvhI1Us2HSTh80mvt9k9g==
-X-Gm-Gg: AeBDieso2YpHgudXSr9F9GffqM7AIYfFkbd4bpEe1F+hJLHraFZZxhyzNl64Dfj6+S7
-	nFuNPrwX45C65pU7CRXyP0NSl5pks+yV+HaRRSUU9SCIgNh/VenpPQ74+Xc3uKSMadCy25Fwpqb
-	1WwNyo7nRl1BXxyCQ5Kslcn5o3hcPxTSkDO946DRtItBLKnhFnxHVzYS2u3RfDNPNGPQT6E/ico
-	YIalcW0EfeVuDpuoCfvQTyl688IxVqS6MFzbJ3KmsP/AiyiZIw/a0dvO6RkOnqxbsH6hfRVywte
-	cJoFxt8s6jPGO/zQ9Nby1ZR7qcfjWU15BqvlunPJuqNxFNmlQ/FlFrCbf11I2GuaWLq6BZBzSw1
-	x8jPbVmgOrTzrOBVFpzdbLnr6xeiAEvqN7XQZoU+8Hh837eO0w5syHFLvw2bScQ9bJt85wlFxl9
-	LOr8hgd9mu7dxAsA98GB3I60PhvKoW1aBOdw27wmakZf+pPdOb0U1kWny3pJxQpCI32M5YsNXPq
-	rb8YP5H8Q==
-X-Received: by 2002:a17:902:efd3:b0:2ae:575f:3755 with SMTP id d9443c01a7336-2b9cde4ae98mr575255ad.20.1777581755636;
-        Thu, 30 Apr 2026 13:42:35 -0700 (PDT)
-Received: from google.com (176.13.105.34.bc.googleusercontent.com. [34.105.13.176])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b9cae55612sm4897165ad.73.2026.04.30.13.42.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Apr 2026 13:42:35 -0700 (PDT)
-Date: Thu, 30 Apr 2026 13:42:31 -0700
-From: Vipin Sharma <vipinsh@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: iommu@lists.linux.dev, kexec@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, 
-	Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>, 
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI
- devices
-Message-ID: <20260430204009.GB22297.vipinsh@google.com>
-References: <20260423212316.3431746-1-dmatlack@google.com>
- <20260423212316.3431746-3-dmatlack@google.com>
- <20260428201231.GA3885809.vipinsh@google.com>
- <CALzav=dfLtdrPhkBkGwHpDAWUBMHnbGPccwhy1__doziNVZQJQ@mail.gmail.com>
- <20260430175916.GA13902.vipinsh@google.com>
- <afO9VOckgyiiokw8@google.com>
+	dkim=pass (2048-bit key) header.d=altera.com header.i=@altera.com header.b="pl6FDo/m"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=u2uhkHNzyg57fZPQAIKrtpQ/isGF1bTuTkIOiheWpUsuOG+d44IYZv61j2dsFXg6zh7JdAtfnPNBm7Lfswk9mmXaFTbNj7Mn58wnDV5jSHkXiU7tKg/sWgM7vhPrW07KvGnHahoJB50t36g5jZW1jE2DjNEVUkq1eHPwdH4kqxuvTQ5tBnBz2eWxhMBxDcicHmre+VFcAQTdxc1cyjUQO3aZ1HIPc58h8+5JVjPzXBQ2VNPRy3SCE2dfcma/pZX5v+bFtL7jBx0PWQbpjNImvQBaTPq3a+ppJqqjmrMlBnQ/sjudACLdGKNgg8KZzXlqqzRoqBaPuDdhr3rHbtGu3Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=uE1gzyGIbhYrl6+Hvt8qPsHPjS8Xld+xWt8YNmq8UTo=;
+ b=Q5ti27WJ/bLK1Qr7ISlQfqjF4L4VOy9RxujuADf/mPL9qjjChTgWyVEI1x/I+VXxb+j6N73OtxBx1xptiXlK3OlshiAejaIZpBe7FK0gbzwWzmwGRpVyVazxn/RBSLvt6XtwR3Wj2jvxnPWmc5+LvU0hibe0LkSjfxRmdVHzcPI3qjkbWphmqTECQ0+CBmbsCEjORzi3Qs3KF7ZDDBn4OaUm5p9SUXJDfdSXGhQrxXuSZ3MmXQFVBWv6UQigRhEUtPNxuBonSRfU2uOFvcY/YrCN4VQoGh5UWrcluz3HiX7NfR9i2bDP7UrXOutcMbpZufCR4izBuyQ0y3M6Fly0ww==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=altera.com; dmarc=pass action=none header.from=altera.com;
+ dkim=pass header.d=altera.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=altera.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uE1gzyGIbhYrl6+Hvt8qPsHPjS8Xld+xWt8YNmq8UTo=;
+ b=pl6FDo/mbeo9FMw0jy/blM6ZmowmkuJuPjO8v48Hu/d759KvwLHBh2SRB4ULS+DVhhWU9OyqeN4cCG7wlVPt4QPoUqCo2ExbtLQ0kwFXkxczqvqUevJsf8S85Q/r0uYbr44MX76B5GcoHPoavahNIxRTy0IDzY+ZiofaTzj/82BFR0AplwnNRB6KMDCboCG5k/OoA+YPCDGPQf03Dtm5WYfj8AveKrgiVFELMTI+5CWbf5a/lpGR3Jy0+CnSmZPwArE1UMVrXCs5WAyjN4/0UJEp8qfgCqEUpJpX7WNU7hLmi1Tk2Tm/ngxo2M10gL7vQbPoN/u+72Qg2D9tHy0HKQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=altera.com;
+Received: from SA1PR03MB6498.namprd03.prod.outlook.com (2603:10b6:806:1c5::7)
+ by BY5PR03MB5201.namprd03.prod.outlook.com (2603:10b6:a03:221::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.22; Thu, 30 Apr
+ 2026 20:43:47 +0000
+Received: from SA1PR03MB6498.namprd03.prod.outlook.com
+ ([fe80::feea:da58:faeb:9ebc]) by SA1PR03MB6498.namprd03.prod.outlook.com
+ ([fe80::feea:da58:faeb:9ebc%4]) with mapi id 15.20.9870.020; Thu, 30 Apr 2026
+ 20:43:46 +0000
+From: Mahesh Vaidya <mahesh.vaidya@altera.com>
+To: joyce.ooi@intel.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	ley.foon.tan@intel.com,
+	dinguyen@kernel.org
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	subhransu.sekhar.prusty@altera.com,
+	preetam.narayan@altera.com,
+	cheryl.bansal@altera.com,
+	stable@vger.kernel.org,
+	Mahesh Vaidya <mahesh.vaidya@altera.com>
+Subject: [PATCH v2 0/2] PCI: altera: Fix IRQ cleanup on probe failure
+Date: Thu, 30 Apr 2026 13:43:28 -0700
+Message-Id: <20260430204330.3121003-1-mahesh.vaidya@altera.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI2PR02CA0012.apcprd02.prod.outlook.com
+ (2603:1096:4:194::7) To SA1PR03MB6498.namprd03.prod.outlook.com
+ (2603:10b6:806:1c5::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <afO9VOckgyiiokw8@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR03MB6498:EE_|BY5PR03MB5201:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3bc0eaec-9b13-459b-55cb-08dea6f92c93
+X-MS-Exchange-AtpMessageProperties: SA
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|41320700013|366016|1800799024|18002099003|56012099003|55112099003;
+X-Microsoft-Antispam-Message-Info:
+	OxYeVkoZB2zH3wSP75efGQAdiOG6vbgPhPWPhkMjI7U4jrdrNdZC67E437KsYLR1lqdFk2gVBr84rsLPiexkoixz9gCa4baZaaJX6mtx598XoAEr8Sd8j8H/ovZhsl80H37FViXJRiFmS6jGhM/yFVZixCumTcQFvcvVRq+JP59DQ8IvOihek6po9ZgRMM9CFSxlUJL0dnEjLBuzM/hcxOelpJjOlgWq9s/Dws+WilJsVWJGys3pmaIbc307YnBlwwtFMBHY5hlx3sWoJfiiR8zGuRALh9/0kbCUNTJnmCFja2N/vqaPk6QwQ/96cp68vcEG2lLSFwRdq1tJakgUyS7CbvBsVds6EJfZYJRZRFDhUWWSZ7APYe5C8EzI86M0E+fb8xC1zI2LlEIRYBqWS8qc8aRztIgN81fVwo4DQ5l935/kervx6pTSE5fllIpQrmIpScfqd7lMjY4UCAZpYNE5F3mcNT5P8UfOAsp4CKMxJIZSTfJQ1FrLf+7TvFlJmAekjGXsOl6LjxqKGd4JXdemM1dylWlQPkqeOm+UzBM1R5brWHgeEmvLkZcOeyaRU86EQN6qDmbf7CVHz5DhZF9rCDmXVbl0h6s7fVm5c2+J/y/h6riUjecsA+7S1ii1y4IeQSd6BMS0ISgjmO2gEg==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR03MB6498.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(41320700013)(366016)(1800799024)(18002099003)(56012099003)(55112099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?1/Lwm9utSb4fs0Ckl6wjv/Y05WiblWKEzUQDOiYa49d8Oh6Ph0Tuw7mU0IAM?=
+ =?us-ascii?Q?m+9JhlsZlm1IVN71sTTq/f/IEGpCL+cHV9uUIlGr1KPixYJGLK+W1tVW8A2G?=
+ =?us-ascii?Q?4QBXA2bA5J5QsBQGFbnNCXWbUTEpGgqbn5pVM9tcImMjPsD0H3AItXZCXFyf?=
+ =?us-ascii?Q?NDSimWRVq19DEcKZBfC1tYm8KXJAUHASeVtPkkfRfg+ZjjlRLWRf/IL1Cv/v?=
+ =?us-ascii?Q?4Y24bj51lMU1UiLsd/ciMspMP7S0vYfLjHJSwwUlZZtkQQkmhLx0XQyol0o9?=
+ =?us-ascii?Q?bQVcBzYQpIi/kWMhsyV2zsnxJFcU6TXXKjzFjQedJZRKp2Sw3PIix/1euR1m?=
+ =?us-ascii?Q?b6sR++dM5fySTcwWWRKsM6xwcIfKXSw2Rly2sgfQAu6/TJXHXekm6y2kSvEm?=
+ =?us-ascii?Q?DJmcz3gyEXGTkcPZASp221pB1t6tcwIxLbtKJWtETB+/epEC/ZOB1CDJ1qj3?=
+ =?us-ascii?Q?izhRatgLKhi5uLTY9qIVueBkOiNuHOrSO1UwY7E8Fuc9w8nulfSLIMEFrRPM?=
+ =?us-ascii?Q?hH264rsyBBhG6IE7hqPmr6gGpKoVm3wX8m+SnweHwAlFbijz30AYwkMaboko?=
+ =?us-ascii?Q?Qh+sX0WH93ejGCaRiiTSif/maKPGeAQlL6TNrqY3pITKmO/Y2lUgbdKg3xIW?=
+ =?us-ascii?Q?/tbBXzLErtCqSPfvn0EAeJziib0p28+Y/8N4qrOnPKVGzs24MlhfuOxNA2V3?=
+ =?us-ascii?Q?Mmi8t/sWKTj+gNnL7i1/83UDdJuN3DdmD5rNngVxgnUphtkLN2QGgOEV8LNu?=
+ =?us-ascii?Q?JDiicKApR2TJRJi9yiM4ocZma85cMIrDZtiYn8b6D944dbUr58Gdg16Qvk7o?=
+ =?us-ascii?Q?OCdiR5cjLE6SlqrchL/lks1QgcaPuUrYGFuciC1FKqgnP6VigDooWTIqhJRQ?=
+ =?us-ascii?Q?trWG9WM2xm9HrdGk/hCkg1Dn7ykhONZCp2q3ZDDjWMgOnq3CfKvsEl7ogPIV?=
+ =?us-ascii?Q?qupRCXcUFYvuRwW1NGgkiZCfBROXYLg9dCrwWUcxPZEXdxMTN7kbR2S8U6Xj?=
+ =?us-ascii?Q?oyhGQR9Z2INoc9JEibCCLEyt2MLsAaGJyM1ezGjkiqeyih7uxb4uBXkV/X8s?=
+ =?us-ascii?Q?7WlU9+1m1fRponFxKFKNcEOpKRMbHiREO4Xb0S7iP0+MNZowdKfc16Kl9Bt9?=
+ =?us-ascii?Q?GKI3gv+ICZtznvwdGbzWEt3vpj+CJHO/LVGoY+DI1avqp0uBH7gTT94rnLMm?=
+ =?us-ascii?Q?KOYipyRbfcA79r2A9M+ClFzXZG4VwrPqBvZe45i94j/JvgVZFBMQzYPmK4mY?=
+ =?us-ascii?Q?9N2gJHKNZl5r8Qge2D7kLWGiyxjIDDzydvfpvqkLJEwptoWwyjYFxhA9wlA/?=
+ =?us-ascii?Q?bf3A2RyyLPu+om6xivskndo/2MVlkbAfujwo56SqEaUczbc9h/j7FxclPsbK?=
+ =?us-ascii?Q?U4dacNS0Jqs6Oodq5KW0yLLmz4gxGpczSggd5Rp19mxFWoB9AYkXPaZPej7x?=
+ =?us-ascii?Q?lMNLLO86Zw/DUUDMSdrC/wCkU181j9HUI5nZRGJcLio7qBQkHCQ7xLkTH5Bs?=
+ =?us-ascii?Q?OGGxtChgHT69JSXxHJ7GolxWMkZ0FIi/aUeJifOPpbfK4ExtIDVGmetnN4OM?=
+ =?us-ascii?Q?A6ZgZWeBcDWR7rGLsafUOd5TpnpBTiLJmZTHp7154mJdJNplUz/kqRDK9GyB?=
+ =?us-ascii?Q?l7WyRIvayIOoYLvJMFvowYx59nILI48c55unld4mLwMW/zVr3R10zWs0xsmM?=
+ =?us-ascii?Q?hLQiH1Mv5izkyLZxYQeac5BVQbejx09kL+boEWXY40LxPH3IZJahcFqfxOtm?=
+ =?us-ascii?Q?qT1xsExPPCOosrQ5SJcVdC5/qyDzd5A=3D?=
+X-OriginatorOrg: altera.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3bc0eaec-9b13-459b-55cb-08dea6f92c93
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR03MB6498.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Apr 2026 20:43:46.5514
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: fbd72e03-d4a5-4110-adce-614d51f2077a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: moc32F+6gKW+0s5aInuT/wGjKaum5RaSzY/bIixsSEUxb4VtSUzoLNZC88HY4lCdjjfNmZGcpDIdSILPtvmX+PJj/nq4uf7Xhng92KCJNXE=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR03MB5201
 
-On Thu, Apr 30, 2026 at 08:36:36PM +0000, David Matlack wrote:
-> On 2026-04-30 11:25 AM, Vipin Sharma wrote:
-> > On Tue, Apr 28, 2026 at 02:12:13PM -0700, David Matlack wrote:
-> > > On Tue, Apr 28, 2026 at 1:20 PM Vipin Sharma <vipinsh@google.com> wrote:
-> > > >
-> > > > On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
-> > > > > +int pci_liveupdate_preserve(struct pci_dev *dev)
-> > > > > +{
-> 
-> > > > > +     if (ser->nr_devices == ser->max_nr_devices)
-> > > > > +             return -ENOSPC;
-> > > > > +
-> > > > > +     for (i = 0; i < ser->max_nr_devices; i++) {
-> > > > > +             /*
-> > > > > +              * Start searching at index ser->nr_devices. This should result
-> > > > > +              * in a constant time search under expected conditions (devices
-> > > > > +              * are not getting unpreserved).
-> > > > > +              */
-> > > > > +             int index = (ser->nr_devices + i) % ser->max_nr_devices;
-> > > > > +             struct pci_dev_ser *dev_ser = &ser->devices[index];
-> > > > > +
-> > > > > +             if (dev_ser->refcount)
-> > > > > +                     continue;
-> > > > > +
-> > > > > +             pci_info(dev, "Device will be preserved across next Live Update\n");
-> > > > > +             ser->nr_devices++;
-> > > > > +
-> > > > > +             dev_ser->domain = pci_domain_nr(dev->bus);
-> > > > > +             dev_ser->bdf = pci_dev_id(dev);
-> > > > > +             dev_ser->refcount = 1;
-> > > > > +
-> > > > > +             dev->liveupdate_outgoing = dev_ser;
-> > > > > +             return 0;
-> > > > > +     }
-> > > > > +
-> > > > > +     return -ENOSPC;
-> > > >
-> > > > Since it is executing under a mutex, and we already failed
-> > > > 'if (ser->nr_devices == ser->max_nr_devices) check above, will we ever reach
-> > > > here and return -ENOSPC?
-> > > 
-> > > Yeah I wouldn't expect to ever reach here.
-> > 
-> > Will you be removing it or want to keep it just in case scenario?
-> 
-> I'm not sure how I would remove it. The code doesn't not compile without
-> a return.
+This series addresses review feedback from v1 of the Altera PCIe probe
+failure cleanup fix.
 
-Oh, I meant, inside loop a break and outside just return 0, that way it
-won't be a dead code.
+Patch 1 removes irq_dispose_mapping(pcie->irq) from the IRQ teardown
+path. pcie->irq is the parent IRQ returned by platform_get_irq(), not an
+IRQ created by the Altera INTx irq_domain, so the driver should detach
+the chained handler but not dispose the parent IRQ mapping.
+
+Patch 2 fixes the original probe failure issue. The chained handler is
+now installed only after the INTx domain is created, controller interrupts
+are disabled during teardown, and the IRQ setup is torn down if
+pci_host_probe() fails.
+
+Tested on Agilex 7 and Stratix 10:
+- Boot and fio read/write through a PCIe endpoint.
+- Probe-failure cleanup path by injecting a failure before
+  pci_host_probe().
+
+Changes since v1:
+- Removed irq_dispose_mapping(pcie->irq), since pcie->irq is the parent
+  IRQ returned by platform_get_irq().
+- Added controller interrupt disable helper.
+- Disabled controller interrupts before tearing down the chained handler
+  and INTx domain.
+- Reused the teardown path when pci_host_probe() fails.
+
+v1:
+https://lore.kernel.org/linux-pci/20260427175302.570671-1-mahesh.vaidya@altera.com/
+
+Mahesh Vaidya (2):
+  PCI: altera: Do not dispose parent IRQ mapping
+  PCI: altera: Fix resource leaks on probe failure
+
+ drivers/pci/controller/pcie-altera.c | 36 +++++++++++++++++++++++++---
+ 1 file changed, 33 insertions(+), 3 deletions(-)
+
+
+base-commit: 4224e91fea5695a89843b4c38283016616946307
+-- 
+2.34.1
+
