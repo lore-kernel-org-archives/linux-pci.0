@@ -1,114 +1,94 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACBB240DFDB
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 00:35:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEA381DE2D3;
+	Thu, 30 Apr 2026 01:31:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777509345; cv=none; b=Xs3pTLdWioGssgFMqhQyFJ6g+O6PbJx+42Fvn4BpmsdyrGJaFOFg6oB7jEfeMZcyD1Wje2wjnpFLHLpljLtgZjlJVyhvVld39fu9dFZv0lJFS/4kq+A9V9VeSmP4o6Mb8tAsfgXybrFmWwF5BAu5anqnrQNaA1ovR9rmEyAXCbo=
+	t=1777512692; cv=none; b=NwfYZO3JaZO1QL+u533MUETd88639U5IBFLoHBNLfP9eknRuPvxcSfBmu+ZCDkyH9aB/xo49UYUanX2pjBiucpb3jsfx/y/B+XcEk8Z294TCGGzc3TBpc9NMU+GFqD5UGLdh5kgKKQVB6zedaobmXoZCtbJdMmCXdKAoP1zND0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777509345; c=relaxed/simple;
-	bh=tHRXmR6VQcmnd19CwjoHzYakRyuHtTseVwT528iMuKU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j4o0MIe8ta8R1O18AxkDwn2A1gpJ5o1G6/atbI98kEsm2tEbwkcMqe48li43aM3Ozsb4q2HLxmrk9obeqfMJNHWD/U1B8mpFqJkLSHK79RATjkPQP/tY5qAFQ2oli0DimTxW4dMyvd4qsjrhGHYdRQLWJDWqAuOvZZ8OaRlhQlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DPy0PUVJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777512692; c=relaxed/simple;
+	bh=+6AI1AIMBVhMSxwAA+CFoyVM0Rm3EFPwFg6gwl9zXno=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u33UymysTgqPyGKZ/6ENAyYciOECUbXuOd7NTIhiiSeex5OrMbyuEuDG2TxfDvGYeDiakH+jxLbYvyL8/zZEDLE94Huz49EmTflJYlUXlvoboy3a/bgtwFJmC0asIYJ/2niok3deMgZKnjwPOSLN2rKJGuRpOZEFolvIlbiVJHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dlwoye1h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DPy0PUVJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A63CC19425;
-	Thu, 30 Apr 2026 00:35:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dlwoye1h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C56CC19425;
+	Thu, 30 Apr 2026 01:31:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777509345;
-	bh=tHRXmR6VQcmnd19CwjoHzYakRyuHtTseVwT528iMuKU=;
-	h=From:To:Cc:Subject:Date:From;
-	b=DPy0PUVJW83UpfZBqsi9lPec3HuIW0irun3ai/DHBzijhJESyj4qF+RXyeNgIBOAA
-	 EFja8nDGuyRbaZhUXqE1id/anUIloU4f7hRqmjIBsotYl05NwkFbMEI4MwVNt+Qxoo
-	 CfWmZI+meDAB/SjVHKHiur9bxDKALzXzK7abQz/y7L19RzH7Mzm+Nh4rHNRWm9poV8
-	 nc3aWfvDTgkeI3fohtYVcBztol4mbfcaY84nPW2p9SVh+NMaI6f1GREfoWc7nw1sGZ
-	 DOAH11qdGwLA7E2i5QP0IKlSnekSO7xqmLCKbduwN3xTJO5vC0793/JViF+txU3xAK
-	 7hCsmL3I37Qsw==
-From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Shuan He <heshuan@bytedance.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/proc: Fix race between pci_proc_init() and pci_bus_add_device()
-Date: Thu, 30 Apr 2026 00:35:42 +0000
-Message-ID: <20260430003542.455198-1-kwilczynski@kernel.org>
-X-Mailer: git-send-email 2.54.0
+	s=k20201202; t=1777512692;
+	bh=+6AI1AIMBVhMSxwAA+CFoyVM0Rm3EFPwFg6gwl9zXno=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Dlwoye1hKVvQsM62tnha105SiLWaxrmgMPjEBT2QZOgXqFKo8bi+z5yjr1dhx5MMe
+	 yp0qMjc7HBwO6rkSyhpEf0xF2HeDI+6nQeMyqkvDxOIHDGQl7CVlLasnMPLZBLSQZW
+	 Z5ycRyFsxB9ZvPoQ0KDQPxb6bjt+r9ifzkwpeEH1uTfHaF2CRMMZVZ/aCvl30r8/8N
+	 ZLygWI7AgEsh5w67hzwL4YrLMVFKSBwMnJiHbB/mVbJh7aXhWfhb2EDIisUkRchwWM
+	 C8BQs6jwWQSNJjWDEWM3VSLZlInVhFF+AcYOjsQU3r1IsjiL3pLeK/M7R7PO6QpZRr
+	 vAxh0v+dU+xow==
+Date: Thu, 30 Apr 2026 10:31:30 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
+	Richard Henderson <richard.henderson@linaro.org>, Christophe Leroy <chleroy@kernel.org>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, Dexuan Cui <decui@microsoft.com>, 
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>, Lukas Wunner <lukas@wunner.de>, 
+	Oliver O'Halloran <oohall@gmail.com>, Saurabh Singh Sengar <ssengar@microsoft.com>, 
+	Shuan He <heshuan@bytedance.com>, Srivatsa Bhat <srivatsabhat@microsoft.com>, 
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, moubingquan <moubingquan@h-partners.com>, 
+	Ian <4dark@outlook.com>, Koba Ko <kobak@nvidia.com>, 
+	Koen Vandeputte <koen.vandeputte@citymesh.com>, Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
+	Artem Savkov <artem.savkov@gmail.com>, Korneliusz Osmenda <korneliuszo@gmail.com>, 
+	Alexander Stein <alexander.stein@ew.tq-group.com>
+Subject: Re: [PATCH v6 00/24] PCI: Convert all dynamic sysfs attributes to
+ static
+Message-ID: <20260430005931.GA3872993@rocinante>
+References: <20260422161407.118748-1-kwilczynski@kernel.org>
+ <20260429200439.GA313340@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260429200439.GA313340@bhelgaas>
 
-pci_proc_attach_device() creates procfs entries for PCI devices and is
-called from pci_bus_add_device().  It returns early if proc_initialized
-is not yet set.
+Hello,
 
-On x86 with ACPI, PCI enumeration occurs at subsys_initcall, before
-pci_proc_init() sets proc_initialized at device_initcall.  The
-for_each_pci_dev() loop in pci_proc_init() creates procfs entries for
-these already-enumerated devices.  This loop runs without holding any
-lock.
+> > This has been reported a few times:
+> > 
+> >   - https://lore.kernel.org/linux-pci/20250702155112.40124-1-heshuan@bytedance.com/
+> >   - https://lore.kernel.org/linux-pci/b51519d6-ce45-4b6d-8135-c70169bd110e@h-partners.com/
+> >   - https://lore.kernel.org/linux-pci/1702093576-30405-1-git-send-email-ssengar@linux.microsoft.com/
+> >   - https://lore.kernel.org/linux-pci/SY0P300MB04687548090B73E40AF97D8897B82@SY0P300MB0468.AUSP300.PROD.OUTLOOK.COM/
+> >   - https://lore.kernel.org/linux-pci/20230105174736.GA1154719@bhelgaas/
+> >   - https://lore.kernel.org/linux-pci/m3eebg9puj.fsf@t19.piap.pl/
+> >   - https://lore.kernel.org/linux-pci/20200716110423.xtfyb3n6tn5ixedh@pali/
+> >   - https://lore.kernel.org/linux-pci/1366196798-15929-1-git-send-email-artem.savkov@gmail.com/
+> >   - https://bugzilla.kernel.org/show_bug.cgi?id=215515
+> >   - https://bugzilla.kernel.org/show_bug.cgi?id=216888
+> 
+> Seems like some or all of these should be mentioned in the relevant
+> patch as "Closes:" tags?
 
-On ARM64 with devicetree, PCI host bridges probe at device_initcall.
-With async probing enabled, pci_bus_add_device() can run concurrently
-with pci_proc_init(), and both may call pci_proc_attach_device() for
-the same device, leading to duplicate proc_create_data() calls.
+Bugzilla would makes sense.  As for the lore.kernel.org links, then if you
+find these useful when included, then add these too.  Surprisingly, not as
+popular to do so, as I thought, per:
 
-Thus, wrap the for_each_pci_dev() loop with pci_lock_rescan_remove() to
-serialise against concurrent PCI bus operations.  Add an early return in
-pci_proc_attach_device() when dev->procent is already set, making the
-function idempotent and symmetric with pci_proc_detach_device() which
-clears this field.
+  $ git log | grep -E 'Closes: (http?://)?lore' | wc -l
+  43
 
-While at it, update code to match preferred style and help with
-readability.
+Having said that, the following bug looks like it might be out of scope
+for us, for this series aims to fix, after having a second look at it:
 
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
----
- drivers/pci/proc.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+  https://bugzilla.kernel.org/show_bug.cgi?id=216888
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index ce36e35681e8..9326f235bc58 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -425,6 +425,9 @@ int pci_proc_attach_device(struct pci_dev *dev)
- 	if (!proc_initialized)
- 		return -EACCES;
- 
-+	if (dev->procent)
-+		return 0;
-+
- 	if (!bus->procdir) {
- 		if (pci_proc_domain(bus)) {
- 			sprintf(name, "%04x:%02x", pci_domain_nr(bus),
-@@ -464,12 +467,17 @@ int pci_proc_detach_bus(struct pci_bus *bus)
- static int __init pci_proc_init(void)
- {
- 	struct pci_dev *dev = NULL;
-+
- 	proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
- 	proc_create_seq("devices", 0, proc_bus_pci_dir,
--		    &proc_bus_pci_devices_op);
-+			&proc_bus_pci_devices_op);
-+
- 	proc_initialized = 1;
-+
-+	pci_lock_rescan_remove();
- 	for_each_pci_dev(dev)
- 		pci_proc_attach_device(dev);
-+	pci_unlock_rescan_remove();
- 
- 	return 0;
- }
--- 
-2.54.0
+Thank you!
 
+	Krzysztof
