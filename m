@@ -1,29 +1,30 @@
 Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97249358D32;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEC5B428846;
 	Thu, 30 Apr 2026 16:13:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777565633; cv=none; b=NtU/bqtnCXhT6+9rA8+BHGyV659lC+spQfThftefAIbYXpNGGkCaK8uz9G8BfuDI48lK+LEBA79yDpsgsAJ1up/uiOLDE2bK9ozwk5h4uJgAkltzDEKiPEmRz1R+7XBE8O+iEZTKnHu1a+wBK3b8TGe+YK4wdhAKknSlduRHq+c=
+	t=1777565633; cv=none; b=Rbw4/A0h53zsII8gr3nJUc1eCiEqNvr0UVLRBjIhLBl//SmIMKZI2DenN9OVuOoQoAEBLEowF5SE7Gfpn4EIH1W+QvYf3ApiYuBpHC/30mvcuJv+X3RZy8rSojqtb1tC1EJm9pseUo4UmJh9UjF2Ou8ge5T2kPvs1tAZZasvAUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777565633; c=relaxed/simple;
-	bh=XYlepJ2zg8v2sfg25HgD6d5qLoil4AuAtFUxxV1iqBg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kFJ7BNaWkNAKH/LZ1nJr/VF82dkbdrLSHEAaN9+oxf95jAjNavxuHFlDRwY+St2QHsonE53TAlzfNuqsyzG7ooslrl+xp/9JAOOMGQSSzns9kiZEK4fPFihYo4uZTTWPf7R9+w8emOesLECPGAgvbYIhWnvvz+LWQIUOGaZ2swQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=aC9MMdHI; arc=none smtp.client-ip=117.135.210.3
+	bh=mKRbDHHs0pBDmNClLmPUI/k8yIq84PMezI+ZfgY5vhM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=I5H1mIpIB0QMk8hmrCk/yXWkUnyHwlY5IHXj+AEHQPSomQ07PgWf6o7o4sFvWfk6IT37aoIJ7ZhHst5Z4+lm+foH8mWXh7yGAqj9EVVA4p/e7pYi7Yq0K5AH0HcdcLO3kezcWVg2S2tqQZ41xade3NnLSkduIiTrV2FesiTvD4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=aZ6rsasI; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="aC9MMdHI"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="aZ6rsasI"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=sW
-	KKnHbzkHVqsnzjDuIPGOuEmQVnvRdiBjV7VHlqOFA=; b=aC9MMdHIv+TtOy2F7C
-	G2tHMlfePjtWEvpL3Qa/0S/UCvyP/HVCfjGpTnd+SLe5nJvBPO/8m8HbrswTLUDC
-	oY2Oneiermng7oPFuNr2WuFLUtKs+4I2+KY7TDhES4lVrsdxuEZ5VG3xfANO6C9g
-	E8k3uALjkjsf/mvlgvg6Z8mTk=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=MK
+	0nueE9kuPh+C6bezt4QBz2BNnFpiu2HHOSbx6DsC8=; b=aZ6rsasI7ujYDvUTIu
+	sPRpVd/Pl10MsbVr073EEOEFPrBLeiQsLQbMwSSr1SkD+Uwb87e4AzGq7ckQfBx0
+	kZvUskUdcVh22ugrgGoP2dUQILBn2pWrEhjoW8MP1boQm//MoTsyhRw3pwz5MKFt
+	EtrGt2hjGrPqikjrAMuCeSy1w=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDnbymkf_NpTNe+Cg--.31297S2;
-	Fri, 01 May 2026 00:13:25 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDnbymkf_NpTNe+Cg--.31297S7;
+	Fri, 01 May 2026 00:13:28 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -35,10 +36,12 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 00/16] PCI: Use FIELD_MODIFY() to simplify bitfield operations
-Date: Fri,  1 May 2026 00:12:38 +0800
-Message-Id: <20260430161254.40278-1-18255117159@163.com>
+Subject: [PATCH 05/16] PCI/TPH: Use FIELD_MODIFY()
+Date: Fri,  1 May 2026 00:12:43 +0800
+Message-Id: <20260430161254.40278-6-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260430161254.40278-1-18255117159@163.com>
+References: <20260430161254.40278-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,68 +49,49 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnbymkf_NpTNe+Cg--.31297S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Ar43Kr17CF1xWFW7tFyDAwb_yoW8uFy3pa
-	y5KFyxZF18tr45ZF43Xa10kas0vFnYkFyUKa9Fg3srW3ZxCrWjgrWUtFyrtr9xJFW8uFyU
-	Kw1Ut34UGFs3JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pimFAdUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wVgBGnzf6XqMgAA3S
+X-CM-TRANSID:_____wDnbymkf_NpTNe+Cg--.31297S7
+X-Coremail-Antispam: 1Uf129KBjvJXoW7urW7uF4xGF1fZr48AF1xuFg_yoW8Xr1Upa
+	yrJa4fKF9rtr1jyF4DXa1DXrn0gF9aqF97A34Ut39FgF47AF4xXasYyrnxtr18ZFWvvFWf
+	ua9xtryjgFyUA3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRkOzsUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwhhBWnzf6j1+wAA3s
 
-Replace open-coded bitmask clear + FIELD_PREP() sequences with the
-dedicated FIELD_MODIFY() macro.  FIELD_MODIFY() performs the same
-operation but is shorter, less error-prone, and includes compile-time
-checks to prevent field overflow.
+Use FIELD_MODIFY() to remove open-coded bit manipulation.
+No functional change intended.
 
-This series touches the PCI core, PCIe extended capabilities (PTM, IDE,
-TPH, MSI, REBAR, IOV, CardBus), and several DesignWare-based and
-other PCI host controllers.  No functional change is intended.
-
-The patches are split per subsystem or per driver to ease review:
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Hi, If the Maintainers think it's not necessary, please ignore it.
----
+ drivers/pci/tph.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-Hans Zhang (16):
-  PCI: Use FIELD_MODIFY()
-  PCI/PTM: Use FIELD_MODIFY()
-  PCI/IDE: Use FIELD_MODIFY()
-  PCI/IOV: Use FIELD_MODIFY()
-  PCI/TPH: Use FIELD_MODIFY()
-  PCI/MSI: Use FIELD_MODIFY()
-  PCI/REBAR: Use FIELD_MODIFY()
-  PCI/CARDBUS: Use FIELD_MODIFY()
-  PCI: al: Use FIELD_MODIFY()
-  PCI: eswin: Use FIELD_MODIFY()
-  PCI: s32g: Use FIELD_MODIFY()
-  PCI: tegra194: Use FIELD_MODIFY()
-  PCI: qcom: Use FIELD_MODIFY()
-  PCI: dwc: Use FIELD_MODIFY()
-  PCI: mvebu: Use FIELD_MODIFY()
-  PCI: mediatek-gen3: Use FIELD_MODIFY()
-
- drivers/pci/controller/dwc/pcie-al.c          | 12 ++----
- .../controller/dwc/pcie-designware-debugfs.c  | 23 ++++-------
- .../pci/controller/dwc/pcie-designware-ep.c   |  3 +-
- drivers/pci/controller/dwc/pcie-designware.c  |  3 +-
- drivers/pci/controller/dwc/pcie-eswin.c       |  3 +-
- drivers/pci/controller/dwc/pcie-nxp-s32g.c    |  3 +-
- drivers/pci/controller/dwc/pcie-qcom-common.c | 40 +++++++------------
- drivers/pci/controller/dwc/pcie-qcom-ep.c     |  6 +--
- drivers/pci/controller/dwc/pcie-tegra194.c    |  8 ++--
- drivers/pci/controller/pci-mvebu.c            |  3 +-
- drivers/pci/controller/pcie-mediatek-gen3.c   |  3 +-
- drivers/pci/ide.c                             |  6 +--
- drivers/pci/iov.c                             |  3 +-
- drivers/pci/msi/msi.c                         | 11 ++---
- drivers/pci/pci.c                             |  3 +-
- drivers/pci/pcie/ptm.c                        |  3 +-
- drivers/pci/rebar.c                           |  6 +--
- drivers/pci/setup-cardbus.c                   |  3 +-
- drivers/pci/tph.c                             | 10 ++---
- 19 files changed, 51 insertions(+), 101 deletions(-)
-
-
-base-commit: 3b3bea6d4b9c162f9e555905d96b8c1da67ecd5b
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 91145e8d9d95..655ffd60e62f 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -139,8 +139,7 @@ static void set_ctrl_reg_req_en(struct pci_dev *pdev, u8 req_type)
+ 
+ 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+ 
+-	reg &= ~PCI_TPH_CTRL_REQ_EN_MASK;
+-	reg |= FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, req_type);
++	FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, req_type);
+ 
+ 	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
+ }
+@@ -427,11 +426,8 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
+ 	/* Write them into TPH control register */
+ 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+ 
+-	reg &= ~PCI_TPH_CTRL_MODE_SEL_MASK;
+-	reg |= FIELD_PREP(PCI_TPH_CTRL_MODE_SEL_MASK, pdev->tph_mode);
+-
+-	reg &= ~PCI_TPH_CTRL_REQ_EN_MASK;
+-	reg |= FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, pdev->tph_req_type);
++	FIELD_MODIFY(PCI_TPH_CTRL_MODE_SEL_MASK, &reg, pdev->tph_mode);
++	FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, pdev->tph_req_type);
+ 
+ 	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
+ 
 -- 
 2.34.1
 
