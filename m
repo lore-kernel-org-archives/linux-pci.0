@@ -1,121 +1,83 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAB7546AF15
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 16:13:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 059AF44BCAA;
+	Thu, 30 Apr 2026 16:13:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777565623; cv=none; b=g4PTSJaOMW8B8z3gNmdZb3fLDzM5mFRkn3D8bwmYEykeka02k3A3MAjpBYUBtPdVuceEktLSuk/xjltbg1UNtfoCbe6SWC8WiCwJikBDK56Kcu47Vu3aIbcZDMNznIBF71+zCTxhiasRCUfMRqbKyfwhA8yrXR8l0VvrPZ/A0/4=
+	t=1777565631; cv=none; b=D8BJXWsicwa1WTXnvx0jZifcCdlTYfcNTlKAjluITntup35L0ooJGV8np2Dj+XZB7GQllOWLCSmLV6vMQ5d0Jc0l/NGyv4rEhCQ0UXcLill3pWZ0xGcNxOaWEm18ulx4CEu6VhPxa3gPyoAL+CAC0HWnq7ICdvPZ8BcxdOWlNDY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777565623; c=relaxed/simple;
-	bh=7FxeS7UrdqX2NlSTElB+df65eG4I664/MsabMaXbTjs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OzI6o45Zeh+svMIV+CQu0oGybX7XNMNkVHx8uMNUXppAeFjv/4UGK9W/d3/CpULtBjlxXzPtdQMVsyqdtnplm5gURnZ1VutXZcSVt4FIZDYxkl93hq+NjIO6z0e5jlNNqSOG6I4EV0CKHYvUQd1CYHfK8SH6o6rrTCRJxeS8RgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aSfmxmKT; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1777565631; c=relaxed/simple;
+	bh=PWQa6kmZuv3zdHViw4antbtQC4IL6oOR4srb64P6UUc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=c0e7OZPlxPPoLaSwMjwvRiLppJr94zq0G5XDTaaoYLaoHRdOrQJ/T1myTyG19DgPoccVHjikO1EQpHHZyjeYynrPC1C9sgeKpooboolPkYcZWhPJGpYz9dPmXvTTeNLi+hYIvC9Vp/Et+0l0OBqHHQNUYPoCujOBmjicX1sULW0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=qRoA8vKh; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aSfmxmKT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777565621; x=1809101621;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=7FxeS7UrdqX2NlSTElB+df65eG4I664/MsabMaXbTjs=;
-  b=aSfmxmKTTBoVz1tpV7gSnMVsDglJ+1D/RrBwS2nSOD9AKWoj0hfxuSNW
-   DDOya6FXSLwv9Q1vEeaU2RYgNkIaRRDAmV+yMsGpiBWYEcDoepDNfKrs2
-   Adnooqszhd4qTZC0nxcJYkxqoj5GA85iwc8qTrA0kcVVVvkAs5FibicZC
-   zRAurJBQa+OxOdJ2hujz0Szm8FECJ76E5bFXTqLCvTgRCCQsdjxaGhCo4
-   1UXXPfBj8lS/uGlIwSRLgSkoHhAeiUm8N9DPSVp08Wvo0hs7Q9/jsOtJ0
-   mt/2qJ1kaxQrqp4H/9K8iqC4tzxJB6G+OCm0zhJUSG0Bknwts6Rg60FZ/
-   w==;
-X-CSE-ConnectionGUID: LS4kgK50SOOScx6xxe5ECw==
-X-CSE-MsgGUID: MSCv/OEhRfmOmUBklKsQbg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11772"; a="81100523"
-X-IronPort-AV: E=Sophos;i="6.23,208,1770624000"; 
-   d="scan'208";a="81100523"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Apr 2026 09:13:40 -0700
-X-CSE-ConnectionGUID: AB+03OciRcikVXWgNFwl8Q==
-X-CSE-MsgGUID: 60urOWMfSDGaX5pUkGvxkg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,208,1770624000"; 
-   d="scan'208";a="238948252"
-Received: from igk-lkp-server01.igk.intel.com (HELO bdf09bfdbd5f) ([10.211.93.152])
-  by orviesa004.jf.intel.com with ESMTP; 30 Apr 2026 09:13:38 -0700
-Received: from kbuild by bdf09bfdbd5f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wIU1A-000000004r3-08QC;
-	Thu, 30 Apr 2026 16:13:36 +0000
-Date: Thu, 30 Apr 2026 18:13:03 +0200
-From: kernel test robot <lkp@intel.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH v2 3/3] PCI: vmd: Replace pci_alloc_irq_vectors() with
- pcim_alloc_irq_vectors()
-Message-ID: <202604301846.yNeYYwuL-lkp@intel.com>
-References: <1776392767-83668-4-git-send-email-shawn.lin@rock-chips.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="qRoA8vKh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Dn
+	+bcvrZaMvrCdXQIg31n1Ub72ehyce3TBLdKzywkAM=; b=qRoA8vKhnpFU0xUWHG
+	x0K+PRWCwbHkTbjf9+Ht/oyw4Yj4dkXr69FDMnNMSnTISAVipXge6TcnI9CUonvN
+	rZD2WXrMKCNANOd/Mu8KRWu28JMAOzUh1pabwDFsC7tm6LdxoFtJjS/egX43vTIe
+	Jx4zyzkAvOee1zTRMkIQ6Xpls=
+Received: from zhb.. (unknown [])
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDnbymkf_NpTNe+Cg--.31297S3;
+	Fri, 01 May 2026 00:13:25 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	jingoohan1@gmail.com
+Cc: robh@kernel.org,
+	s32@nxp.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH 01/16] PCI: Use FIELD_MODIFY()
+Date: Fri,  1 May 2026 00:12:39 +0800
+Message-Id: <20260430161254.40278-2-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260430161254.40278-1-18255117159@163.com>
+References: <20260430161254.40278-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1776392767-83668-4-git-send-email-shawn.lin@rock-chips.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDnbymkf_NpTNe+Cg--.31297S3
+X-Coremail-Antispam: 1Uf129KBjvdXoWrur17tw4fAr17Aw4rWF1UGFg_yoW3GFg_ur
+	1rAr4xCrWjyr17Ca42kw18Jr9YkayxXr4kuFy0yFySyr17J34YgFykXFy8JFW5ur43JryU
+	C3srWryUuryxZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sR_5rcDUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AZgBGnzf6bzpAAA3a
 
-Hi Shawn,
+Use FIELD_MODIFY() to remove open-coded bit manipulation.
+No functional change intended.
 
-kernel test robot noticed the following build warnings:
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/pci.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v7.1-rc1 next-20260430]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8f7cfcc00090..942f70f6a441 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5771,8 +5771,7 @@ int pcix_set_mmrbc(struct pci_dev *dev, int mmrbc)
+ 		if (v > o && (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_MMRBC))
+ 			return -EIO;
+ 
+-		cmd &= ~PCI_X_CMD_MAX_READ;
+-		cmd |= FIELD_PREP(PCI_X_CMD_MAX_READ, v);
++		FIELD_MODIFY(PCI_X_CMD_MAX_READ, &cmd, v);
+ 		if (pci_write_config_word(dev, cap + PCI_X_CMD, cmd))
+ 			return -EIO;
+ 	}
+-- 
+2.34.1
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Shawn-Lin/PCI-MSI-Add-Devres-managed-IRQ-vectors-allocation/20260418-031441
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/1776392767-83668-4-git-send-email-shawn.lin%40rock-chips.com
-patch subject: [PATCH v2 3/3] PCI: vmd: Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors()
-config: x86_64-kexec (https://download.01.org/0day-ci/archive/20260430/202604301846.yNeYYwuL-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260430/202604301846.yNeYYwuL-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202604301846.yNeYYwuL-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> Warning: drivers/pci/msi/api.c:304 function parameter 'dev' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:304 function parameter 'min_vecs' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:304 function parameter 'max_vecs' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:304 function parameter 'flags' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'dev' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'min_vecs' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'max_vecs' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'flags' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'affd' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:304 function parameter 'dev' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:304 function parameter 'min_vecs' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:304 function parameter 'max_vecs' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:304 function parameter 'flags' not described in 'pcim_alloc_irq_vectors'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'dev' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'min_vecs' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'max_vecs' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'flags' not described in 'pcim_alloc_irq_vectors_affinity'
->> Warning: drivers/pci/msi/api.c:317 function parameter 'affd' not described in 'pcim_alloc_irq_vectors_affinity'
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
