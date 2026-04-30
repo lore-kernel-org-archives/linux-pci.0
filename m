@@ -1,102 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F1EC27CB35;
-	Thu, 30 Apr 2026 02:51:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F31C2365A17;
+	Thu, 30 Apr 2026 03:26:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777517491; cv=none; b=a0oQH4uWl6G0dCadsQAHN2LhBag044OpQZZTQ25vbs2NTbtZuvMtPkNykxlroPhuCHLVlzu13QmEEMSLtgG7Dp7F4+FtuA0tHUeoBhBozmjUE7nbTM23khEkUk2RRnaK9nPRIuC0OhuovuHHqh+NNgUnB3QzGuK66JT5MM8Sdn4=
+	t=1777519562; cv=none; b=f2/YD3tV3szmGxdiKZ4ExIZs3XA0YgZ0DJmqoJ8HCv/xGj8e7sA3+CLYC4VWWuQ4nQkRgCU/3eeJdtiS/+IGYhIWddI19c0feJH+0HkVQk91aptVpASCTVIiu2pXEa6BOuUxFjAAx5BN+AASbwIft01q7v6rd0RDAT36j1tLUT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777517491; c=relaxed/simple;
-	bh=rIRCNcazwtx/16LQtiNpVTsW/tJ6F6VdllcASy+OcwI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nzYZYQ4EX/XCVNYYN6k/iMLurGrhgVoO5/uU83r+XBYp/UR101ucXP9HFyj40KZF3kbM6ouUTU3PWTwmjdF5u6CtG1TGNPSdNdTXzA/0Y4o/c/IpTmfnMtHxj6myY1/ixggqoYbpW5kA792G9Vh8CnoBpazEzXDdwW37qkG41PE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DnDKlg3e; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777519562; c=relaxed/simple;
+	bh=S8ESDWn2FV212MQ0O36a6N64V74CpKEgoDR0Cwb1eYo=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=fNsbJXlU3243pmZBd2iBGql3vQ7Enw+DO2r35YjNj1wR66kFqcbAcYW4g7aM4fsYxI84v153/NL1M0FX+CS/aqsY7mEfOpfizRmFiWDA8XIH1JPQJ09FCpabOps3OgCEm148DC9K8ZdExvxjkOPnuYjbbRwawx6FCDCJZO+6KqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RtcaGla8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DnDKlg3e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E6B0C19425;
-	Thu, 30 Apr 2026 02:51:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RtcaGla8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA1C6C2BCB8;
+	Thu, 30 Apr 2026 03:26:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777517490;
-	bh=rIRCNcazwtx/16LQtiNpVTsW/tJ6F6VdllcASy+OcwI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DnDKlg3eXCjhTyZNnSikiqYO9CladC/9RYhcZIUp/WOWJx2QSjoyXMiDS0IvVFmMu
-	 RAYvV/p/0ssidiphG7YgFpHqMlnFY9TIMqyJ0u+lMmGkHzrJp8w1OdfBaBXE8UMRu4
-	 FmpwK5HVtlqHFrsXS3bFv0yTh9ZyBguA/GIGuj9Sppeo1PFvETXF0jwp9wIpU6LtmV
-	 UOb0vka5BrX2x2lQkpSMWXqk5BVBIX/U8K5S3zVjKa9jCpagkkT0KhUV861EX9Wsks
-	 NlkMZ3RbQ7pdRPGhwESVDf38PBSM6lH0xpuaCbagRrVEREGO8oCJ4GQF4lkiQFcq8w
-	 +ctrgendZ886w==
-Date: Thu, 30 Apr 2026 11:51:28 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
-	Richard Henderson <richard.henderson@linaro.org>, Christophe Leroy <chleroy@kernel.org>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Dexuan Cui <decui@microsoft.com>, 
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>, Lukas Wunner <lukas@wunner.de>, 
-	Oliver O'Halloran <oohall@gmail.com>, Saurabh Singh Sengar <ssengar@microsoft.com>, 
-	Shuan He <heshuan@bytedance.com>, Srivatsa Bhat <srivatsabhat@microsoft.com>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v6 24/24] PCI/sysfs: Limit BAR resize attribute scope to
- platforms with PCI mmap
-Message-ID: <20260430020648.GA3923076@rocinante>
-References: <20260422161407.118748-25-kwilczynski@kernel.org>
- <20260429204932.GA318462@bhelgaas>
- <20260429212749.GB3724801@rocinante>
+	s=k20201202; t=1777519561;
+	bh=S8ESDWn2FV212MQ0O36a6N64V74CpKEgoDR0Cwb1eYo=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=RtcaGla8SJMvzp565cZWG4JA/pd6x2rokqKWLW76DsXVVSBMWfvO7M+j3tfPr4WiS
+	 iYIi3LmvsvftG5YY+oM7g4PvJ9jMSl95DFA2LT7Ri+Y57wvJYObh7grdN4/wFxy9Bp
+	 3dNPBrE0VUHIF5qHqtQDM1L3bZLqpe75efGu9RIosM9YKInDL4ti/opEBCchGSV7Ed
+	 NJ0t/2yQEWiWU4UX0J1SMMnzWayyrY3pGrDTZxRSaZcqhSakDi4GgjEzwKf7uPPJCg
+	 fYiHoJFVnaikAgVqNlokz3BThqsRnYRJYWEnZONwh0eeFUJrF4d3CMi6aMhGsxyQjO
+	 srXFfj2h9HOug==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 02F1A3809A07;
+	Thu, 30 Apr 2026 03:25:18 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260429212749.GB3724801@rocinante>
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH RESEND v10 0/8] ACPI: Unify CPU UID interface and fix
+ ARM64
+ TPH steer-tag issue
+From: patchwork-bot+linux-riscv@kernel.org
+Message-Id: 
+ <177751951654.2274119.17258357457134506240.git-patchwork-notify@kernel.org>
+Date: Thu, 30 Apr 2026 03:25:16 +0000
+References: <20260401081640.26875-1-fengchengwen@huawei.com>
+In-Reply-To: <20260401081640.26875-1-fengchengwen@huawei.com>
+To: Chengwen Feng <fengchengwen@huawei.com>
+Cc: linux-riscv@lists.infradead.org, bhelgaas@google.com,
+ catalin.marinas@arm.com, will@kernel.org, rafael@kernel.org,
+ mark.rutland@arm.com, x86@kernel.org, liuyonglong@huawei.com,
+ anshuman.khandual@arm.com, linux-doc@vger.kernel.org, kees@kernel.org,
+ linux-pci@vger.kernel.org, dave.hansen@linux.intel.com,
+ Eric.VanTassell@amd.com, somnath.kotur@broadcom.com, kai.huang@intel.com,
+ kevinloughlin@google.com, punit.agrawal@oss.qualcomm.com, hpa@zytor.com,
+ ilkka@os.amperecomputing.com, kernel@xen0n.name, thorsten.blum@linux.dev,
+ linux-acpi@vger.kernel.org, corbet@lwn.net, masahiroy@kernel.org,
+ si.yanteng@linux.dev, peterz@infradead.org,
+ pawan.kumar.gupta@linux.intel.com, linux-arm-kernel@lists.infradead.org,
+ xen-devel@lists.xenproject.org, szy0127@sjtu.edu.cn, lenb@kernel.org,
+ thomas.lendacky@amd.com, thuth@redhat.com, ryan.roberts@arm.com,
+ darwi@linutronix.de, make24@iscas.ac.cn, suzuki.poulose@arm.com,
+ james.clark@linaro.org, wei.huang2@amd.com, bwicaksono@nvidia.com,
+ loongarch@lists.linux.dev, jonathan.cameron@huawei.com,
+ sohil.mehta@intel.com, boris.ostrovsky@oracle.com, xin@zytor.com,
+ andrew.gospodarek@broadcom.com, wanghuiqiang@huawei.com, jgross@suse.com,
+ wangyuquan1236@phytium.com.cn, seanjc@google.com, guohanjun@huawei.com,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+ linux-perf-users@vger.kernel.org, wangzhou1@hisilicon.com, tglx@kernel.org,
+ heinrich.schuchardt@canonical.com, chenl311@chinatelecom.cn,
+ robin.murphy@arm.com
 
-Hello,
+Hello:
 
-> The only platform without these aforementioned defines is Alpha, which is
-> conventional PCI only and cannot have ReBAR.  So this guard removes dead
-> sysfs code on platforms where it can never be executed.
+This series was applied to riscv/linux.git (fixes)
+by Rafael J. Wysocki <rafael.j.wysocki@intel.com>:
 
-Having a closer look:
+On Wed, 1 Apr 2026 16:16:32 +0800 you wrote:
+> This patchset unifies ACPI Processor UID retrieval across
+> arm64/loongarch/riscv/x86 via acpi_get_cpu_uid() (with input validation)
+> and fixes ARM64 CPU steer-tag retrieval failure in PCI/TPH:
+> 
+> 1-4: Add acpi_get_cpu_uid() for arm64/loongarch/riscv/x86 (update
+>      respective users)
+> 5: Centralize acpi_get_cpu_uid() declaration in include/linux/acpi.h
+> 6: Clean up perf/arm_cspmu
+> 7: Clean up ACPI/PPTT and remove unused get_acpi_id_for_cpu()
+> 8: Pass ACPI Processor UID to Cache Locality _DSM
+> 
+> [...]
 
-  resource_resize_attr_is_visible()
-    pci_rebar_get_current_size()      <- returns -ENOTSUPP, so is_visible callback returns 0
-      pci_rebar_find_pos()
-        pos = pdev->rebar_cap         <- set to 0 on a conventional PCI
-        if (!pos)
-          return -ENOTSUPP            <- no ReBAR support
+Here is the summary with links:
+  - [RESEND,v10,1/8] arm64: acpi: Add acpi_get_cpu_uid() for unified ACPI CPU UID retrieval
+    https://git.kernel.org/riscv/c/7cd5f5659ac8
+  - [RESEND,v10,2/8] LoongArch: Add acpi_get_cpu_uid() for unified ACPI CPU UID retrieval
+    https://git.kernel.org/riscv/c/d78ef9d2e1f2
+  - [RESEND,v10,3/8] RISC-V: ACPI: Add acpi_get_cpu_uid() for unified ACPI CPU UID retrieval
+    https://git.kernel.org/riscv/c/0c8231994e43
+  - [RESEND,v10,4/8] x86/acpi: Add acpi_get_cpu_uid() for unified ACPI CPU UID retrieval
+    https://git.kernel.org/riscv/c/3cfe889f8965
+  - [RESEND,v10,5/8] ACPI: Centralize acpi_get_cpu_uid() declaration in include/linux/acpi.h
+    https://git.kernel.org/riscv/c/f652d0a4e13c
+  - [RESEND,v10,6/8] perf: arm_cspmu: Switch to acpi_get_cpu_uid() from get_acpi_id_for_cpu()
+    https://git.kernel.org/riscv/c/1ab03189793f
+  - [RESEND,v10,7/8] ACPI: PPTT: Use acpi_get_cpu_uid() and remove get_acpi_id_for_cpu()
+    https://git.kernel.org/riscv/c/a7034e9e4491
+  - [RESEND,v10,8/8] PCI/TPH: Pass ACPI Processor UID to Cache Locality _DSM
+    https://git.kernel.org/riscv/c/abdd2a86535b
 
-The pdev->rebar_cap is set during PCI enumeration:
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-  pci_init_capabilities()
-    pci_rebar_init()
-      pdev->rebar_cap = pci_find_ext_capability()
-        pci_find_next_ext_capability()
-          if (dev->cfg_size <= PCI_CFG_SPACE_SIZE)
-            return 0;                 <- dev->cfg_size set to 256 here for conventional PCI
 
-The PCI_CFG_SPACE_SIZE is 256 here.
-
-When the platform has support for PCI Express, the dev->cfg_size is then
-set to 4096.  On an architecture that supports conventional PCI only (such
-as Alpha), the pdev->rebar_cap will be set to 0, the is_visible callback
-will then return 0, and the resize sysfs attribute is never created, as
-such, the __resource_resize_store() callback will never be executed.
-
-To make the connetion here to the #ifdef guards:
-
-For the pci_rebar_get_current_size() to return >= 0, the device needs
-PCI Express and extended configuration space support.  As of today,
-every architecture with PCI Express support defines HAVE_PCI_MMAP or
-ARCH_GENERIC_PCI_MMAP_RESOURCE.
-
-I hope the reasoning here works.
-
-Thank you!
-
-	Krzysztof
