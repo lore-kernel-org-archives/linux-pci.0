@@ -1,251 +1,321 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E2C13A3830
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 21:41:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEB422690EC
+	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 21:46:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777585285; cv=none; b=tfaFmZUsHlfjYjGZJ0c6awXl4B79mMbA08+wsX4G+hW4ORnO5OP2GUI2T4oilRjb+RSH2C3u3dxBwSPCtfMZyz8ezw/qRf5EpLjpRZObUvBQSv8fnHoHCGn7amOCoMoqOgJt9CNQ1QkQ5BoJTQT/bxjdfos/4b9rBq/B5q3EMFU=
+	t=1777585577; cv=none; b=qbxm+DzAZuKbgX2ZGFZ40YtdR3m4R44fWN07pmQY4O/peCup+hZ6/9Av45NNBAGBkVwdABahcGNTQ9tIQySQd8IHTimApMGQX9QDXd+xZJSFjLj2cEPznc8GAXRNi5H2Y4hZfrIY2H+V0mdjlZaZ4+YlTEc2CXzKH+8oB4afKYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777585285; c=relaxed/simple;
-	bh=6Uq6A0mV41CjUmZm/vm4w/OOWYrR+v7vH90TRC9z6Fo=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=iriHr20CSiw9seiMHaWC9Nbr45ohGU2Vn70493KQgkWlUBMqbeZxZzA4V+9xVvkPV2acpKM4ZEJJ6HboGLkX6jvtf75k1BiaygDuNI7ChTuthwDzjUEklLumK8VIeBr5syRl8WbIqETBQSoRyfPTPU/f0YDyI+fBWib/HQt75mE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PsIch+r7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777585577; c=relaxed/simple;
+	bh=0xPFDMUmb+S4bnGKhFmD/1JTV3urGir4pXCC42KbLvU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=fMyG+qnlmA3s77zEJbifAWQUVv8KaeUtOAXeJoMAsA36BgD1r1xRdLzoMSgRuFE47YbpnpEXkEGf1ZqYa3svC6Uo1PChBCYovi1PC6Rn3jysvTevynCvOAzHOxJU6SYoZjnDR5wbr53NyNzhspUPRS5a16lWcJKHw9L7679Z3V8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pOcTKxtD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PsIch+r7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AB2CC2BCB4;
-	Thu, 30 Apr 2026 21:41:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pOcTKxtD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C939C2BCB3;
+	Thu, 30 Apr 2026 21:46:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777585285;
-	bh=6Uq6A0mV41CjUmZm/vm4w/OOWYrR+v7vH90TRC9z6Fo=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=PsIch+r76xe72kDqHEkIy33zsA/upJwkYlyJcXfDyiRuR5To+68rQPGQMZYBuzk6g
-	 OqKsk4CKKljGZ4QsKB2u9pHR3qC+IX6vPFXmk0WonrKsNlCPTW/caKB/I2PBU+4LYP
-	 jem+yd5tvvCataumYlnJd4kg+44AFIs+4cCwip94FIUtHSB3+w5X3M4RiuBynLOKRg
-	 LFgk5yyt5Amex8TZc/RETnZTXUmraT1ZvIun0VVLyobWM8QA1uJkkkHiNlOESXjrHN
-	 LiYO8pmpOG5gEhCv1oMTGOjMZYcMbDng1jG/NpR9y53aghQnDaBBkh5ExRRHnlnHmr
-	 NT0As/Hq251hA==
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 94594F40069;
-	Thu, 30 Apr 2026 17:41:23 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Thu, 30 Apr 2026 17:41:23 -0400
-X-ME-Sender: <xms:g8zzaXQgENWylzGXUzS7DIy7_MVtLBvpGnZlXC6l9lnbPza6jZNeIA>
-    <xme:g8zzadrgxzQZ8WQG377jnrScN_1U5hCKalHb5bGZSKQ7lOm2Kt7jtomXEU8wzGdzW
-    HI1uBlg8278mRPA6Bp-08Xca4RMYLU0UjuSX-RgCI3vwI0N0oPurZxC>
-X-ME-Received: <xmr:g8zzaVbhYpXjrya_LEUA3uzHZjKUJzC0xXQq5VMswANFGQFxnzNmGCRQ_1pCJbKyq_Xx7LN_oSCk6TeC3Jsk1KBzRwNq69olvpE>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdekkeegvdcutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefkjghfufggtgfgsehtjeertddttdejnecuhfhrohhmpedfffgrnhcuhghi
-    lhhlihgrmhhsucdlnhhvihguihgrmddfuceoughjsgifsehkvghrnhgvlhdrohhrgheqne
-    cuggftrfgrthhtvghrnhepvdegheeikeetleeuffeuheefjeejvdejvdevteefgfffveeh
-    vdeuvdffveffvdehnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
-    hfrhhomhepughjsgifodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqddujeej
-    vdeftdegheehqdeffeefleegtdegjedqughjsgifpeepkhgvrhhnvghlrdhorhhgsehfrg
-    hsthhmrghilhdrtghomhdpnhgspghrtghpthhtohepudelpdhmohguvgepshhmthhpohhu
-    thdprhgtphhtthhopehnihgtohhlihhntgesnhhvihguihgrrdgtohhmpdhrtghpthhtoh
-    epjhhgghesnhhvihguihgrrdgtohhmpdhrtghpthhtohepfihilhhlsehkvghrnhgvlhdr
-    ohhrghdprhgtphhtthhopehrohgsihhnrdhmuhhrphhhhiesrghrmhdrtghomhdprhgtph
-    htthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtohepjhhorhho
-    seeksgihthgvshdrohhrghdprhgtphhtthhopehprhgrrghnsehgohhoghhlvgdrtghomh
-    dprhgtphhtthhopegsrgholhhurdhluheslhhinhhugidrihhnthgvlhdrtghomhdprhgt
-    phhtthhopehkvghvihhnrdhtihgrnhesihhnthgvlhdrtghomh
-X-ME-Proxy: <xmx:g8zzaYSE2Jx2rmrznxwwijil_ZmrHDUyhv1L3KBMpWgsfpdh-pmukw>
-    <xmx:g8zzaTfrAvo-mm8m-MnLVDxuPIDBNyMJjefbSFFwBffYMXtMvtg62g>
-    <xmx:g8zzaXl6uO6HxKg7ZZ5PmEP7eTvxQ1ZgcCJmUc5_nR0WJ0X3CYUxaw>
-    <xmx:g8zzaYiUjLOfhXDHc_GPQpF-MzkP6c3lJ6rNi8T8q18PotbHRkcXnA>
-    <xmx:g8zzaYEECV6ZeJ-2SWMSsTalAYimtXj19iYzO4gXvViI0c_Q9VsuGDzS>
-Feedback-ID: i67ae4b3e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 30 Apr 2026 17:41:22 -0400 (EDT)
-Date: Thu, 30 Apr 2026 14:41:22 -0700
-From: "Dan Williams (nvidia)" <djbw@kernel.org>
-To: Nicolin Chen <nicolinc@nvidia.com>, 
- jgg@nvidia.com, 
- will@kernel.org, 
- robin.murphy@arm.com, 
- bhelgaas@google.com
-Cc: joro@8bytes.org, 
- praan@google.com, 
- baolu.lu@linux.intel.com, 
- kevin.tian@intel.com, 
- miko.lenczewski@arm.com, 
- linux-arm-kernel@lists.infradead.org, 
- iommu@lists.linux.dev, 
- linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, 
- dan.j.williams@intel.com, 
- jonathan.cameron@huawei.com, 
- vsethi@nvidia.com, 
- linux-cxl@vger.kernel.org, 
- nirmoyd@nvidia.com
-Message-ID: <69f3cc82926_3291a910039@djbw-dev.notmuch>
-In-Reply-To: <f6734b9dad0050138676f11ecd14e9db1cf6b697.1777269009.git.nicolinc@nvidia.com>
-References: <cover.1777269009.git.nicolinc@nvidia.com>
- <f6734b9dad0050138676f11ecd14e9db1cf6b697.1777269009.git.nicolinc@nvidia.com>
-Subject: Re: [PATCH v4 1/3] PCI: Allow ATS to be always on for CXL.cache
- capable devices
+	s=k20201202; t=1777585576;
+	bh=0xPFDMUmb+S4bnGKhFmD/1JTV3urGir4pXCC42KbLvU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=pOcTKxtDhLx0fYN3IrQOcAUkFpY0Zmhx4qopabkCzxqoB8AOxPvdS5DrlR1Iuydsc
+	 Fj+e9lY+UjeXbbYY6c3zZvsC9tO4Idz/3F0t6EQtlQyND5rAiKKXJgbT96ur1kiCti
+	 4qqZWLDJq3m4c1GbliD+u3TEsAIgvLRJsV3aCzmpE5UBl6Qc72StIBzOO5UfxYCa6S
+	 EO47QnGNRo8Ibda3IUUV/7nw4CtxODw7pf2JO4Ndnm573NGIsw1tfHG4wsK7pfZgwJ
+	 jc6cecySwVpb5wPfmspZgTEURHalV3hwgsJx7bMUmOjYiuDyowZTxv5TUR5peGvMz4
+	 RIfn+4+25QIIw==
+Date: Thu, 30 Apr 2026 16:46:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Guixin Liu <kanie@linux.alibaba.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org, Xunlei Pang <xlpang@linux.alibaba.com>,
+	oliver.yang@linux.alibaba.com
+Subject: Re: [PATCH v11 2/2] PCI: Check ROM header and data structure addr
+ before accessing
+Message-ID: <20260430214615.GA441190@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260130080729.96152-3-kanie@linux.alibaba.com>
 
-Nicolin Chen wrote:
-> Controlled by the IOMMU driver, ATS is usually enabled "on demand" when a
-> given PASID on a device is attached to an I/O page table. This is working
-> even when a device has no translation on its RID (i.e., the RID is IOMMU
-> bypassed).
+On Fri, Jan 30, 2026 at 04:07:29PM +0800, Guixin Liu wrote:
+> We meet a crash when running stress-ng on x86_64 machine:
 > 
-> However, certain PCIe devices require non-PASID ATS on their RID even when
-> the RID is IOMMU bypassed. Call this "always on".
+>   BUG: unable to handle page fault for address: ffa0000007f40000
+>   RIP: 0010:pci_get_rom_size+0x52/0x220
+>   Call Trace:
+>   <TASK>
+>     pci_map_rom+0x80/0x130
+>     pci_read_rom+0x4b/0xe0
+>     kernfs_file_read_iter+0x96/0x180
+>     vfs_read+0x1b1/0x300
 > 
-> For example, CXL spec r4.0 notes in sec 3.2.5.13 Memory Type on CXL.cache:
->  "To source requests on CXL.cache, devices need to get the Host Physical
->   Address (HPA) from the Host by means of an ATS request on CXL.io."
+> Our analysis reveals that the ROM space's start address is
+> 0xffa0000007f30000, and size is 0x10000. Because of broken ROM
+> space, before calling readl(pds), the pds's value is
+> 0xffa0000007f3ffff, which is already pointed to the ROM space
+> end, invoking readl() would read 4 bytes therefore cause an
+> out-of-bounds access and trigger a crash.
+> Fix this by adding image header and data structure checking.
 > 
-> In other words, the CXL.cache capability requires ATS; otherwise, it can't
-> access host physical memory.
+> We also found another crash on arm64 machine:
 > 
-> Introduce a new pci_ats_always_on() helper for the IOMMU driver to scan a
-> PCI device and shift ATS policies between "on demand" and "always on".
+>   Unable to handle kernel paging request at virtual address
+> ffff8000dd1393ff
+>   Mem abort info:
+>   ESR = 0x0000000096000021
+>   EC = 0x25: DABT (current EL), IL = 32 bits
+>   SET = 0, FnV = 0
+>   EA = 0, S1PTW = 0
+>   FSC = 0x21: alignment fault
 > 
-> Add the support for CXL.cache devices first. Pre-CXL devices will be added
-> in quirks.c file.
+> The call trace is the same with x86_64, but the crash reason is
+> that the data structure addr is not aligned with 4, and arm64
+> machine report "alignment fault". Fix this by adding alignment
+> checking.
 > 
-> Note that pci_ats_always_on() validates against pci_ats_supported(), so we
-> ensure that untrusted devices (e.g. external ports) will not be always on.
-> This maintains the existing ATS security policy regarding potential side-
-> channel attacks via ATS.
-> 
-> Cc: linux-cxl@vger.kernel.org
-> Suggested-by: Vikram Sethi <vsethi@nvidia.com>
-> Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-> Reviewed-by: Kevin Tian <kevin.tian@intel.com>
-> Tested-by: Nirmoy Das <nirmoyd@nvidia.com>
-> Acked-by: Nirmoy Das <nirmoyd@nvidia.com>
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+> Fixes: 47b975d234ea ("PCI: Avoid iterating through memory outside the resource window")
+> Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com>
+> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 > ---
->  include/linux/pci-ats.h       |  3 +++
->  include/uapi/linux/pci_regs.h |  1 +
->  drivers/pci/ats.c             | 43 +++++++++++++++++++++++++++++++++++
->  3 files changed, 47 insertions(+)
+>  drivers/pci/rom.c | 113 ++++++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 95 insertions(+), 18 deletions(-)
 > 
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index 75c6c86cf09dc..d14ba727d38b3 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -12,6 +12,7 @@ int pci_prepare_ats(struct pci_dev *dev, int ps);
->  void pci_disable_ats(struct pci_dev *dev);
->  int pci_ats_queue_depth(struct pci_dev *dev);
->  int pci_ats_page_aligned(struct pci_dev *dev);
-> +bool pci_ats_always_on(struct pci_dev *dev);
->  #else /* CONFIG_PCI_ATS */
->  static inline bool pci_ats_supported(struct pci_dev *d)
->  { return false; }
-> @@ -24,6 +25,8 @@ static inline int pci_ats_queue_depth(struct pci_dev *d)
->  { return -ENODEV; }
->  static inline int pci_ats_page_aligned(struct pci_dev *dev)
->  { return 0; }
-> +static inline bool pci_ats_always_on(struct pci_dev *dev)
-> +{ return false; }
->  #endif /* CONFIG_PCI_ATS */
+> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+> index 4f7641b93b4b..d8abed669fac 100644
+> --- a/drivers/pci/rom.c
+> +++ b/drivers/pci/rom.c
+> @@ -6,9 +6,12 @@
+>   * (C) Copyright 2004 Silicon Graphics, Inc. Jesse Barnes <jbarnes@sgi.com>
+>   */
 >  
->  #ifdef CONFIG_PCI_PRI
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 14f634ab9350d..6ac45be1008b8 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -1349,6 +1349,7 @@
->  /* CXL r4.0, 8.1.3: PCIe DVSEC for CXL Device */
->  #define PCI_DVSEC_CXL_DEVICE				0
->  #define  PCI_DVSEC_CXL_CAP				0xA
-> +#define   PCI_DVSEC_CXL_CACHE_CAPABLE			_BITUL(0)
->  #define   PCI_DVSEC_CXL_MEM_CAPABLE			_BITUL(2)
->  #define   PCI_DVSEC_CXL_HDM_COUNT			__GENMASK(5, 4)
->  #define  PCI_DVSEC_CXL_CTRL				0xC
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index ec6c8dbdc5e9c..fc871858b65bc 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -205,6 +205,49 @@ int pci_ats_page_aligned(struct pci_dev *pdev)
->  	return 0;
+> +#include <linux/align.h>
+>  #include <linux/bits.h>
+>  #include <linux/kernel.h>
+>  #include <linux/export.h>
+> +#include <linux/io.h>
+> +#include <linux/overflow.h>
+>  #include <linux/pci.h>
+>  #include <linux/sizes.h>
+>  #include <linux/slab.h>
+> @@ -84,6 +87,91 @@ void pci_disable_rom(struct pci_dev *pdev)
 >  }
+>  EXPORT_SYMBOL_GPL(pci_disable_rom);
 >  
-> +/*
-> + * CXL r4.0, sec 3.2.5.13 Memory Type on CXL.cache notes: to source requests on
-> + * CXL.cache, devices need to get the Host Physical Address (HPA) from the Host
-> + * by means of an ATS request on CXL.io.
-> + *
-> + * In other words, CXL.cache devices cannot access host physical memory without
-> + * ATS.
-> + */
-> +static bool pci_cxl_ats_always_on(struct pci_dev *pdev)
+> +static bool pci_rom_is_header_valid(struct pci_dev *pdev,
+> +				    void __iomem *image,
+> +				    void __iomem *rom,
+> +				    size_t size,
+> +				    bool last_image)
 > +{
-> +	int offset;
-> +	u16 cap;
+> +	unsigned long rom_end = (unsigned long)rom + size - 1;
+> +	unsigned long header_end;
+> +	u16 signature;
 > +
-> +	offset = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					   PCI_DVSEC_CXL_DEVICE);
-> +	if (!offset)
+> +	/*
+> +	 * Some CPU architectures require IOMEM access addresses to
+> +	 * be aligned, for example arm64, so since we're about to
+> +	 * call readw(), we check here for 2-byte alignment.
+> +	 */
+
+I think PCI Firmware r3.3, sec 5.1, actually requires 512-byte
+alignment, but I guess we haven't enforced that before.  Worth
+mentioning the spec requirement to show that this isn't just an
+arbitrary thing to accommodate a weird CPU architecture.
+
+> +	if (!IS_ALIGNED((unsigned long)image, 2))
 > +		return false;
 > +
-> +	if (pci_read_config_word(pdev, offset + PCI_DVSEC_CXL_CAP, &cap))
+> +	if (check_add_overflow((unsigned long)image, PCI_ROM_HEADER_SIZE,
+> +				&header_end))
 > +		return false;
 > +
-> +	return cap & PCI_DVSEC_CXL_CACHE_CAPABLE;
+> +	if (image < rom || header_end > rom_end)
+> +		return false;
 
-Apologies for coming to this late and forgive me if the following has
-already been asked and answered. Why not check for actual CXL.cache
-protocol on the wire being present?
+From Sashiko:
 
-I.e. replace pci_cxl_ats_always_on() with a pdev->is_cxl_cache and this
-incremental change (compile tested only):
+  Does this correctly handle a ROM structure that fits exactly at the
+  end of the window?
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2c4454583c11..45d87af4de63 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -483,7 +483,8 @@ struct pci_dev {
- 	unsigned int	is_pciehp:1;
- 	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
- 	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
--	unsigned int	is_cxl:1;               /* Compute Express Link (CXL) */
-+	unsigned int	is_cxl_mem:1;           /* Compute Express Link (CXL.mem) */
-+	unsigned int	is_cxl_cache:1;         /* Compute Express Link (CXL.cache) */
- 	/*
- 	 * Devices marked being untrusted are the ones that can potentially
- 	 * execute DMA attacks and similar. They are typically connected
-@@ -809,7 +810,7 @@ static inline bool pci_is_display(struct pci_dev *pdev)
- 
- static inline bool pcie_is_cxl(struct pci_dev *pci_dev)
- {
--	return pci_dev->is_cxl;
-+	return pci_dev->is_cxl_mem || pci_dev->is_cxl_cache;
- }
- 
- #define for_each_pci_bridge(dev, bus)				\
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b63cd0c310bc..c01f0e8362f1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1733,9 +1733,8 @@ static void set_pcie_cxl(struct pci_dev *dev)
- 	pci_read_config_word(dev, dvsec + PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS,
- 			     &cap);
- 
--	dev->is_cxl = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_CACHE, cap) ||
--		FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_MEM, cap);
--
-+	dev->is_cxl_cache = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_CACHE, cap);
-+	dev->is_cxl_mem = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_MEM, cap);
- }
- 
- static void set_pcie_untrusted(struct pci_dev *dev)
+  Since header_end is calculated exclusively and rom_end inclusively,
+  a perfectly sized structure will have header_end equal to rom_end +
+  1, causing the header_end > rom_end check to incorrectly evaluate to
+  true and reject the ROM. This same inclusive versus exclusive
+  boundary mismatch also happens in pci_rom_is_data_struct_valid()
+  when checking the end pointer.
+
+> +
+> +	/* Standard PCI ROMs start out with these bytes 55 AA */
+> +	signature = readw(image);
+> +	if (signature == PCI_ROM_IMAGE_SIGNATURE)
+> +		return true;
+
+I think this and pci_rom_is_data_struct_valid() would read better if
+every test was a check for failure instead of having a bunch of
+failure returns, followed by a success return, followed by another
+failure return.  E.g.,
+
+  if (signature != PCI_ROM_IMAGE_SIGNATURE) {
+    if (last_image) {
+      ...
+    }
+    return false;
+  }
+
+  return true;
+
+> +	if (last_image) {
+> +		pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
+> +			 PCI_ROM_IMAGE_SIGNATURE, signature);
+> +	} else {
+> +		pci_info(pdev, "No more image in the PCI ROM\n");
+> +	}
+
+I'm not completely convinced that it's worth passing in last_image.  I
+suppose the reason was to make the messages exactly the same as
+before?
+
+Even in the "!last_image" case, I think it might be worth printing the
+signature we got.  The "No more image" message means that the ROM
+format isn't strictly conforming, doesn't it?  Maybe the same message
+would suffice for both "last_image" and "!last_image"?
+
+> +	return false;
+> +}
+> +
+> +static bool pci_rom_is_data_struct_valid(struct pci_dev *pdev,
+> +					 void __iomem *pds,
+> +					 void __iomem *rom,
+> +					 size_t size)
+> +{
+> +	unsigned long rom_end = (unsigned long)rom + size - 1;
+> +	unsigned long end;
+> +	u32 signature;
+> +	u16 data_len;
+> +
+> +	/*
+> +	 * Some CPU architectures require IOMEM access addresses to
+> +	 * be aligned, for example arm64, so since we're about to
+> +	 * call readl(), we check here for 4-byte alignment.
+> +	 */
+> +	if (!IS_ALIGNED((unsigned long)pds, 4))
+> +		return false;
+> +
+> +	/* Before reading length, check addr range. */
+> +	if (check_add_overflow((unsigned long)pds, PCI_ROM_DATA_STRUCT_LEN + 1,
+> +				&end))
+> +		return false;
+> +
+> +	if (pds < rom || end > rom_end)
+> +		return false;
+> +
+> +	data_len = readw(pds + PCI_ROM_DATA_STRUCT_LEN);
+> +	if (!data_len || data_len == U16_MAX)
+> +		return false;
+> +
+> +	if (check_add_overflow((unsigned long)pds, data_len, &end))
+> +		return false;
+> +
+> +	if (end > rom_end)
+> +		return false;
+
+More from Sashiko:
+
+  Does pci_rom_is_data_struct_valid() need to enforce a minimum safe
+  size for data_len?
+
+  If a malformed device advertises a small data_len (e.g., 12 bytes),
+  validation passes here, but the subsequent reads in
+  pci_get_rom_size() for PCI_ROM_IMAGE_LEN and
+  PCI_ROM_LAST_IMAGE_INDICATOR could access unmapped memory past the
+  ROM boundary.
+
+> +	signature = readl(pds);
+> +	if (signature == PCI_ROM_DATA_STRUCT_SIGNATURE)
+> +		return true;
+
+Seems like it would be nicer to check the signature first, before
+checking the data_len.  If the signature is bad, we log a hint about
+what went wrong, but we don't log anything if data_len is bad.
+
+> +	pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
+> +		 PCI_ROM_DATA_STRUCT_SIGNATURE, signature);
+> +	return false;
+> +}
+> +
+>  /**
+>   * pci_get_rom_size - obtain the actual size of the ROM image
+>   * @pdev: target PCI device
+> @@ -99,38 +187,27 @@ static size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom,
+>  			       size_t size)
+>  {
+>  	void __iomem *image;
+> -	int last_image;
+>  	unsigned int length;
+> +	bool last_image;
+>  
+>  	image = rom;
+>  	do {
+>  		void __iomem *pds;
+> -		/* Standard PCI ROMs start out with these bytes 55 AA */
+> -		if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
+> -			pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
+> -				 PCI_ROM_IMAGE_SIGNATURE, readw(image));
+> +		if (!pci_rom_is_header_valid(pdev, image, rom, size, true))
+>  			break;
+> -		}
+> +
+>  		/* get the PCI data structure and check its "PCIR" signature */
+>  		pds = image + readw(image + PCI_ROM_POINTER_TO_DATA_STRUCT);
+> -		if (readl(pds) != PCI_ROM_DATA_STRUCT_SIGNATURE) {
+> -			pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
+> -				 PCI_ROM_DATA_STRUCT_SIGNATURE, readl(pds));
+> +		if (!pci_rom_is_data_struct_valid(pdev, pds, rom, size))
+>  			break;
+> -		}
+> +
+>  		last_image = readb(pds + PCI_ROM_LAST_IMAGE_INDICATOR) &
+>  				   PCI_ROM_LAST_IMAGE_INDICATOR_BIT;
+>  		length = readw(pds + PCI_ROM_IMAGE_LEN);
+>  		image += length * PCI_ROM_IMAGE_SECTOR_SIZE;
+> -		/* Avoid iterating through memory outside the resource window */
+> -		if (image >= rom + size)
+> +
+> +		if (!pci_rom_is_header_valid(pdev, image, rom, size, last_image))
+>  			break;
+
+More from Sashiko.  I'm not sure about this one.
+
+  Does this log a false-positive warning when processing the final
+  image?
+
+  When last_image is true, the image pointer is advanced to the end of
+  the ROM and passed into pci_rom_is_header_valid().
+
+  Because last_image is passed as true to the helper, the signature
+  check will fail and log an invalid header signature error for a
+  perfectly valid device instead of gracefully finishing the loop.
+
+> -		if (!last_image) {
+> -			if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
+> -				pci_info(pdev, "No more image in the PCI ROM\n");
+> -				break;
+> -			}
+> -		}
+>  	} while (length && !last_image);
+>  
+>  	/* never return a size larger than the PCI resource window */
+> -- 
+> 2.32.0.3.g01195cf9f
+> 
