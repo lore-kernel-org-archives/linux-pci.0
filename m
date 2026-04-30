@@ -1,227 +1,172 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11020119.outbound.protection.outlook.com [52.101.46.119])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 615453A75A2;
-	Thu, 30 Apr 2026 20:44:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.119
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777581850; cv=fail; b=nz0ff0A933P4cEjdr4BXiFe4AnvkcRc4ugsTTLmqJtW7d3e20IqbJDwrrzzZDeJAdqIPyjkrvKOnWxK9hm0P/mdP3xl5E326Fl+msE/S5AM+mwmShcYX7fQUHNWWirQYcJ/LjM1+kdd85KYSdHfryJ+DcKPh+w6AMZMJ7afV1RA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777581850; c=relaxed/simple;
-	bh=fkML1gVmL5aiVlom+SHX5xzWqz/HEtLOGcO+1ECvkUI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=LhqBGK4ipK/u7yA/kWnZlLIS5qPqRIoEB8xTWcSYnMx7k68SHBxyme3H+AcAQ3cjFIvZbTbRJsLTe73nuzdRyhhlDzvPVQdKdM65sbU4M+i9DbR9T+/PCbQcklH901piMJko2tZ0+8rPUzNQGiJqoBaqDYvhg97JoEtv+Fes1eg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=altera.com; spf=pass smtp.mailfrom=altera.com; dkim=pass (2048-bit key) header.d=altera.com header.i=@altera.com header.b=kbzIOYAy; arc=fail smtp.client-ip=52.101.46.119
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=altera.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altera.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 701313AE709
+	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 20:45:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777581905; cv=none; b=JQmtnHbdPP3HkqU+iDSSBneEjT32P+tY4Orky8EIB61b8UBf90PI/Db+qMznlvabe/xWy4t9EpzlFzH8Re5wo4yifaHr7WDY9aUyBtardet0AvLr64T7Fqc1byeBCn4eP6uTr7SyYqxtAP1OcPjpS9xNIN6d1beJdFQNQRkFelI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777581905; c=relaxed/simple;
+	bh=NfdHaeQSfqq3H+A37t2n3ZLxXNIDGtu4NkmeTlmQkBo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HNa3CeLRzXhXlcYwh+P76qm+uDUrp9yGRshJGystuY3hOLK+3E2f156g9zZx86GVzAaxvuigYquDVQnll/vCEMV6NCHiS0C7WgHAkWd6prXw2QjWTJ4aKEDC9EFOcgVOqbvwHVOACneNfhWX3IZ0asAordiV1j3u1dvtHdwbBUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pd7J6bFp; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=altera.com header.i=@altera.com header.b="kbzIOYAy"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=odLHQ84pCCzzH+paYzC3Cfufrbh6+qUdvP/SI0ujoftJnyM3nKjts4MxVepSiRhVfJDs/eAdRhTkMlvFXx2Y+Ad19ni7bIsuuhxQNKprVt4dbJQbbwujNT1D61bLTxZ5dFHTsQ+0Re/FJDjMPoCqoOBtrGRqY0I1ROp3B4ySiu9qpHniNsaPfzmozyi/pNDIhZfTqPyuOx3hSl1Q2uQP/GPYgOFg6cbFHningbMraQEY3xTK2LehD5+3nJayMDHLiSlVKofU+G7RMBIYaDmnmQCfPUr8ndq89bR2SL/nvgBIvk9h7p8i2lBOVx86sz7ZWURxXWcJt3Zxs4V6lbK/cw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Z9NIoInk5PK6eKh9WrrG+OMbryDiooPwWHkkuIlY4xg=;
- b=reaRZ61y2I6PCwwW/Oew3+YtEBWxVCzTenPIlbvm1DOTvo9hlpwAO/+o8XG5Zwn1BB9cZyrdTwW7BYNWtRoYlMdsUQwCJz9B5tnYTXFO5xmKmzEsuQtFFWMJrzphrFuhkTln6HD0iMXhaowog9HUeICRn0OcXQt136ZX6+HkGPsIIIF3Mm2nJLsVouQBTl4+404x9VMISL7kpH6/GYrQW+wZ8XUnMLazT8dg2usdYX42oOHFl7KmwQABx2t8PWIUJvfMnBvVIzuf4dU37Ojo92zs0Sh1Pgg+lSqI5aZrIy2XwBE3MdJBTz/YNka8+2Oe2y4xSBSXZeGMcox7T2spHg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=altera.com; dmarc=pass action=none header.from=altera.com;
- dkim=pass header.d=altera.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=altera.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Z9NIoInk5PK6eKh9WrrG+OMbryDiooPwWHkkuIlY4xg=;
- b=kbzIOYAy5ClRzl2Yo+6U3VSOkhSckoSuNdPOKYG8p27Z9LljowxGhp7s3dCV+bxEI6J+kk2CTdNdKQoTtbBYFouYPi7H7BUPFOoj/z4pZ+NcNdpKuuRfTyMv9qT8qVYEfb7k+AU2Z+U2NLPjNYi2D0i0pOO78iMlQBz+lETh1Jk8iWj3zG5o1zQuuOYD1vJZ2ALzPKmZUF7HN/o9QvAXhcXfOMLiiRND3mQnAfc3HZU+NIgFVnSJbiqxnpyWAwxwTq3VmzmeapKmPzH9oESV9zdggsV/Iu+FiT5G89oOVIB2LCi+u9+6npSxVN+8AcyBimJ9Y4jjSc8i9sw82Di2nw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=altera.com;
-Received: from SA1PR03MB6498.namprd03.prod.outlook.com (2603:10b6:806:1c5::7)
- by BY5PR03MB5201.namprd03.prod.outlook.com (2603:10b6:a03:221::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.22; Thu, 30 Apr
- 2026 20:44:03 +0000
-Received: from SA1PR03MB6498.namprd03.prod.outlook.com
- ([fe80::feea:da58:faeb:9ebc]) by SA1PR03MB6498.namprd03.prod.outlook.com
- ([fe80::feea:da58:faeb:9ebc%4]) with mapi id 15.20.9870.020; Thu, 30 Apr 2026
- 20:44:03 +0000
-From: Mahesh Vaidya <mahesh.vaidya@altera.com>
-To: joyce.ooi@intel.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	ley.foon.tan@intel.com,
-	dinguyen@kernel.org
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	subhransu.sekhar.prusty@altera.com,
-	preetam.narayan@altera.com,
-	cheryl.bansal@altera.com,
-	stable@vger.kernel.org,
-	Mahesh Vaidya <mahesh.vaidya@altera.com>
-Subject: [PATCH v2 2/2] PCI: altera: Fix resource leaks on probe failure
-Date: Thu, 30 Apr 2026 13:43:30 -0700
-Message-Id: <20260430204330.3121003-3-mahesh.vaidya@altera.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260430204330.3121003-1-mahesh.vaidya@altera.com>
-References: <20260430204330.3121003-1-mahesh.vaidya@altera.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SI2PR02CA0012.apcprd02.prod.outlook.com
- (2603:1096:4:194::7) To SA1PR03MB6498.namprd03.prod.outlook.com
- (2603:10b6:806:1c5::7)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pd7J6bFp"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2b2d3a9e149so11190645ad.1
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 13:45:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1777581904; x=1778186704; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=JvD+uC7yGlafUSeu2Mn7DdblXz0CDLD8RU3/xZfrtps=;
+        b=pd7J6bFpyX5ChGy3frsVicyYh7uMv12e0mcktdF18SC964r/CnxUWZByuml0ihS2Y2
+         xi2daOhvIgAqgyeTMegbsErrnEw0kQkBUFV8DhztWEbc1CJhoUSN3HfrqVNpCe+sPXME
+         HuovXcuChcN6oO+d0/bN3xe5tPR7zS5389J2xz+gVLw2Lmk2vdIh2Vu/6BZBCVnRKSiw
+         4mAQ8bhs8AiO94iMTJkihP0bqdH+fDRYuRZTFXZci7vXX2I8fK/sDb6lJlrz2qRNZix0
+         udpf5KKiOI0DaeuoA+M6T5sKg53xCxPYadDRzwHiX6+3YFycyz1uzAK6uZ4dO9JgtTob
+         KAGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777581904; x=1778186704;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=JvD+uC7yGlafUSeu2Mn7DdblXz0CDLD8RU3/xZfrtps=;
+        b=kakGd5aqh8kFaiF7GnBMO8cY5FRS3o6yDdcRX8X4/Jhr8faFcr9OW7NBGe6q+7Ho+g
+         2sluofCJ06s4mRYwvsoBJuEIPMH91C37xP2Uc7XwHg1hTssMr337VM1XATuJ+quyf+OG
+         aG1L2LatxWs0/G9sc8S+DglYifqwsfrKmhH8Gh5U4XHATofx+byvYyXW5KWYbu6AZthX
+         /328h1y+FZy44oeJ+92NWA+Vgd/4CHF2HNlWPIqenoxsUI6sVr0ybX9snLmU1SNtyXdl
+         2/H7u0dCWN5OKE+OcjmeO83mwzOedn6h5DI8YAmr+6ozusxGqhIs4t3hvHAXDPuN7DwE
+         G85Q==
+X-Forwarded-Encrypted: i=1; AFNElJ8Kxm+HKtMImIdj0syBT+uHv5i6zx6NbTwVOB2yf9RHiSa8ZaiVwnaYfGWkTrnVYEwFqC+6m1oypoQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyoNcnfQ9GWVvDz8z2SRJk9QoIGVYENAh8Zcm1bDuUw6xJrEekg
+	7TyZxDMkqWkw59zDtfnjF0fa6fVeoPlJXuXa1aqN/U+X1T7K4S9o+Ak8Nosp59w8jw==
+X-Gm-Gg: AeBDietdlxphFdAxHCQ2f2GzXnZNTJ2jmtTLm0ZzKS+7WD8ikgpnN5fAMwCAd1cWlx+
+	2pX38zM6XSjFBJELVkhyjYSFi29WzlrHUkIWNFaHmhBZuoPrm4Neg3xUQSqMORC9QzA7SNwhRk/
+	Gn6RDjC/vHkYTENBHVJugol88xXh1tikBQ83ucZ9+YFPoEv/j8r0xpTkEXvFgrAPT4DEzTjLhNW
+	ASVLDKcbGQqdvNMtNbgfZA1go2gh+ZrfDRXYOe3iXXVXnIU1EYnc9h6icQ/l6ndSPrE20ZKyR8n
+	w3xXHTDKaD8lPHlgzIWs5HDZnI04HhaizlKWhIzU+t9/5GIWqQjq66XrIdxD+fC5HM+OPaIA0rr
+	EnDu2Qo+IB/lczySrjF9MIWHBEatEulMt+ioIkUVMaT5sgUgOSyki+zUpIkT8A6f7que+B0wmwW
+	rLrbfsZXaHc95u6FbQCfsTw6CjL3uGZuonS/6lbP73ENPL0qTuE/TUDouQn2wzSGxJ5bOYbdYn6
+	HKpPQ==
+X-Received: by 2002:a17:903:200a:b0:2b2:6cab:3127 with SMTP id d9443c01a7336-2b9a44c5da2mr25533465ad.20.1777581903207;
+        Thu, 30 Apr 2026 13:45:03 -0700 (PDT)
+Received: from google.com (76.9.127.34.bc.googleusercontent.com. [34.127.9.76])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b9cae5cc52sm4845105ad.78.2026.04.30.13.45.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2026 13:45:02 -0700 (PDT)
+Date: Thu, 30 Apr 2026 20:44:58 +0000
+From: David Matlack <dmatlack@google.com>
+To: Vipin Sharma <vipinsh@google.com>
+Cc: iommu@lists.linux.dev, kexec@lists.infradead.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Alexander Graf <graf@amazon.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Jacob Pan <jacob.pan@linux.microsoft.com>,
+	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>,
+	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
+	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Pratyush Yadav <pratyush@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v4 01/11] PCI: liveupdate: Set up FLB handler for the PCI
+ core
+Message-ID: <afO_StuvUj1Rj-5I@google.com>
+References: <20260423212316.3431746-1-dmatlack@google.com>
+ <20260423212316.3431746-2-dmatlack@google.com>
+ <20260428185242.GB3825533.vipinsh@google.com>
+ <afFICT9mSL1XG0v_@google.com>
+ <20260430182532.GB13902.vipinsh@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR03MB6498:EE_|BY5PR03MB5201:EE_
-X-MS-Office365-Filtering-Correlation-Id: c75a3e82-0981-4212-ff52-08dea6f936b3
-X-MS-Exchange-AtpMessageProperties: SA
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|41320700013|366016|1800799024|18002099003|56012099003|22082099003|55112099003;
-X-Microsoft-Antispam-Message-Info:
-	FLWMp8t+p7PSRXf4ctqnLCLKKO2QBCKqOWr3SPXvWneiRnlQS9XzhHc+jrCNKw5zMcgYH2BFI2Q54F75hzc86bcy88AClHxCydLumnGLBpejYuuh+UpFu/r5nnT14hQfZTigtdCFZgmYUjrpLb/HFg7RZWzMJHlwIGjXCVEao6xgribnySLe7YgyhLfKp7y4L5jL6DkUxLIm9oXYOiagZ8EvB7wrWXRJtoNi9rxy1eWpcN6slcgQuGPgoHIdAQJ93qo0Dit9gBNKiClSvhhB3Loi+FeYpngSDEVIl12tpIuvON/gxO4433zxSlsuj1CBKVvt5Fr7LeynLxJEDXPHudune0qLJV3aNeZF+HXLJs4sy7ZeicQfSB+yvsCGW6BFRNWyqTTe2emEIuPDk5x89YC2sUwPmrRMmpUkhVNpYcGtmY8T1sjn6i6WOga1G5hmojMjfQOKbr4jgT2F0gC13Pxs0A5vshJ5KY96yaB5pNXMk6rTsxuBYBqFCG3DjTqojS6mHLnwZ9xoPJ16vnD50Tp8VVDC0wV28oP3lhB73f3wUX7uCk0w2okTo5uWEfw1r/CKLKlhTWFORq6YLT1vKyV5TvXIpoB1lC0plpzUO2h1jd60MFYqoBLuBKyvmCifJaKIOvMxXB0mFlppiVYSPl2R729hrAQsFT6bjQFuJUCNaNBoTh40EBEbw9Qhvq0Q
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR03MB6498.namprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(41320700013)(366016)(1800799024)(18002099003)(56012099003)(22082099003)(55112099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?ldeTPxenXJJkKtdhK9CoeKpNeiLBZO6YEKwFDyty08vgX3F59D3GChUCQg4d?=
- =?us-ascii?Q?slxbbK/yCtwofCZ5ccXcoewmVeMuG4a71NXEmfMVMK23Go9MflvsRrzNEcWo?=
- =?us-ascii?Q?oQasE23uEV2dE5h//pniXxPeDqFVFIGWWGjbSKPYGepxtiAREnEgl6hvDRfW?=
- =?us-ascii?Q?uhrJtle2emzQ/Y7v/fr/xMTqQZ3FJP/xTViboAwTzUYU6hyHcOILNu9WHB3W?=
- =?us-ascii?Q?jD32BwjwUJZlEA3aJYIu0Zgdx8eLKZ8Ye3rz0YVxDSkoPovKM25xlmfKLwHK?=
- =?us-ascii?Q?Aauq52PZiLy3U8JMhbknMRIRF7JYXHRJ/0d6uj2COjHybJgi5ZEjtXRHtdSe?=
- =?us-ascii?Q?mqk71U8zTM8/jgXr+gXktF227Fc5+oPCr35yNFMPs3Vk9TNbyjcrsy+zNEHP?=
- =?us-ascii?Q?kTD+CykcXgIQE4rFeKZot4+IdpVKZxPK3d2wQHKefRW1GheCYCUUmH7MjADm?=
- =?us-ascii?Q?n9vv/AbanYhmPsYE9cG43Dx1AACMYSq2X9y6DU302/UIryZYkEWIRpKQPobv?=
- =?us-ascii?Q?uWvK+bEtIi/1gR9bGEJ5xXf1JKJfZUttR700Dh/jpEnZQLPRcuxx5jlTcs1z?=
- =?us-ascii?Q?02uel7SH+wSb1M+55Y3w8Y/tEqxwxBtHVxBhpbWUgwsBGsutcrJ3ptegE/3b?=
- =?us-ascii?Q?oANumBkN5bRUgnqhFHQmSpkXu1pYA4kFw0CfGm3da+GRx2YBOpI5rs6jqfmt?=
- =?us-ascii?Q?XVcuKfu/5OG9RdPfkUqltWDiixFx8GZO9dqDG7rcV7V8YOL2NYNaa5RbdKCQ?=
- =?us-ascii?Q?KmG5eAMIKEXVd5vrhhxSW1cbR+9mQFppYq4B4RSd17rXoKw55hdk5YWsieZB?=
- =?us-ascii?Q?hbQEPX9RcuoOu+BoqzNb4zD2IfO39jTRfVkXG/9+GsicEfqV6wmfyfjk8XkU?=
- =?us-ascii?Q?qUZUcB6ZfDqgnl8yfceP/EqBT4jTeyD+6aMtKIjC6BKSyvKssnBKiSWmnTOP?=
- =?us-ascii?Q?kuZth68LRkxcHP0M/p+w3uut5j6thf2kMqh7pYm9gnjhDUcmnVoZHyoJ9/I4?=
- =?us-ascii?Q?qXNxPlRPiRorIqfRyEDMxVRwo4pw4rpJ1aA3g2FVmWSpFDjnLCZ7g5X2q3F5?=
- =?us-ascii?Q?bBjG3RUsK1//csAq5/0hjgck1LnrHUvsEaFiq5vaazviY3xwEUYNrHEd8BUk?=
- =?us-ascii?Q?bDeme8DyM6Ji0Wg8PE7dk++6wlgy6b1klqBx9NxlFSDc/ui1r7hhGc/GuIAt?=
- =?us-ascii?Q?bmOQ23KpagRUkcXyrQmf08KVCLQOzLjxI+bT2OuHpZETATtDaGkRiGYi+7oN?=
- =?us-ascii?Q?itLIP1Gpfladl1AthNe7qmODqPoxdyKZJQhVXEbe4uyXUCrECIifP6fVSQVA?=
- =?us-ascii?Q?LtLDgk1jVCk7pdoicCIC7DZiIYN1GdI8ADjhiIFJr/aDZvwRMgSxS/FwgcP0?=
- =?us-ascii?Q?ce1jIygZldz+AYMkW0AqNJkqIS/Bjn6bI2fww/zsHUiYum/pxFcKp5kRQRj9?=
- =?us-ascii?Q?mBJDApUcCB+wb2kiacTMH9tQAr7UEeCVb8UQ7RbCxGTuxKeNGnc5LvxtiSsf?=
- =?us-ascii?Q?CeSeee+mUrjvoYST8lNMyU/bi8znQo3JpNVLXt5+3yTrZc4uwsAjEY3YjgT9?=
- =?us-ascii?Q?pj08KqEtiXQ5imQPL/eOroJgubYypQ7/LSH3kMCcE2bRDqPQCX8scvnAiHQR?=
- =?us-ascii?Q?x25usLsp390vP80cf0kUaTH9XO6imePv3fI7lqbm8BuzSpDjZOZ9jb1bv7y0?=
- =?us-ascii?Q?7scc8e/jcnHDOOWAo+UiKVzoFax7FCw0yj6iQ3uyii0Cp5RCy91LRlYPFMdK?=
- =?us-ascii?Q?dMphAYVnE5x8y3PdchE5zGY8CVsG87Q=3D?=
-X-OriginatorOrg: altera.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c75a3e82-0981-4212-ff52-08dea6f936b3
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR03MB6498.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Apr 2026 20:44:03.0213
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: fbd72e03-d4a5-4110-adce-614d51f2077a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: VG9df+bwCVLJXmm74rViWemSNsf6QkR+Edx3fp9cxmQtK9xfHmcjCqDd0r5ODC33VZ8pfNJ6FR2LeG0LrzpClrKeKuSd4tPUp1VGWCeYcWg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR03MB5201
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260430182532.GB13902.vipinsh@google.com>
 
-The chained IRQ handler is installed during probe but is only removed
-from the remove path. If pci_host_probe() fails, the handler and INTx IRQ
-domain remain installed even though the devm-managed host bridge storage
-containing struct altera_pcie will be released, leaving the handler with
-a stale data pointer.
+On 2026-04-30 11:48 AM, Vipin Sharma wrote:
+> On Tue, Apr 28, 2026 at 11:51:37PM +0000, David Matlack wrote:
+> > On 2026-04-28 12:45 PM, Vipin Sharma wrote:
+> > > On Thu, Apr 23, 2026 at 09:23:05PM +0000, David Matlack wrote:
+> > > > +	pr_debug("Preserving struct pci_ser with room for %u devices\n",
+> > > > +		 max_nr_devices);
+> > > > +
+> > > > +	ser = kho_alloc_preserve(size);
+> > > > +	if (IS_ERR(ser))
+> > > > +		return PTR_ERR(ser);
+> > > 
+> > > Should there be a similar pr_debug() in case of failure to denote that above
+> > > "Preserving ..." message didn't finish, or, maybe just print one
+> > > pr_debug() after the error check above?
+> > 
+> > Hm... I guess there could always be more pr_debug()s but I don't want to
+> > instrument every error path. I could move it to the success path but I
+> > don't see how that makes it any better.
+> > 
+> 
+> In current way, it is printing that it is preserving pci_ser, but there
+> is no indication did it succeed or not in logs. If we are printing the
+> logs then may be complete picture will be to know what is the action and its
+> result.
+> 
+> I think moving to success path or printing again based on the failure
+> provides assurance of what happened. If this gets printed in happy
+> path, then we will know it succeeded in preserving that struct on
+> kho.  Absence means it didn't. 
+> 
+> We can also remove pr_debug(), if this is of no value.
 
-Interrupts are also enabled before pci_host_probe() is called. If probe
-fails after that point, the controller interrupt source should be disabled
-before the chained handler and INTx domain are removed.
+I think I'll just drop these. BPF can be used to trace this function and
+what it returns when debugging issues.
 
-Install the chained handler only after the INTx domain has been created.
-Disable controller interrupts during IRQ teardown, and tear the IRQ setup
-down if pci_host_probe() fails.
+> 
+> > > 
+> > > > +/**
+> > > > + * struct pci_dev_ser - Serialized state about a single PCI device.
+> > > > + *
+> > > > + * @domain: The device's PCI domain number (segment).
+> > > > + * @bdf: The device's PCI bus, device, and function number.
+> > > > + * @reserved: Reserved (to naturally align struct pci_dev_ser).
+> > > > + */
+> > > > +struct pci_dev_ser {
+> > > > +	u32 domain;
+> > > > +	u16 bdf;
+> > > > +	u16 reserved;
+> > > 
+> > > Should this be renamed to 'u8 __padding[2];' instead? This will allow to
+> > > just change the array length based on the need (0, 1, 2, 3).
+> > 
+> > Sorry I'm not following what you mean here. What is the reason to rename
+> > this field and change it to an array?
+> > 
+> 
+> Having a padding explicitly tells there is a requirement of being
+> aligned. Reserved sounds more like don't use this u16.
 
-Fixes: c63aed7334c2 ("PCI: altera: Use pci_host_probe() to register host")
-Cc: stable@vger.kernel.org
-Reviewed-by: Subhransu S. Prusty <subhransu.sekhar.prusty@altera.com>
-Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
----
- drivers/pci/controller/pcie-altera.c | 35 ++++++++++++++++++++++++++--
- 1 file changed, 33 insertions(+), 2 deletions(-)
+It's documented above, but agree padding is a better name.
 
-diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
-index 3d3519b8d88f..902ae2d81763 100644
---- a/drivers/pci/controller/pcie-altera.c
-+++ b/drivers/pci/controller/pcie-altera.c
-@@ -864,8 +864,23 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
- 	return 0;
- }
- 
-+static void altera_pcie_disable_irq(struct altera_pcie *pcie)
-+{
-+	if (pcie->pcie_data->version == ALTERA_PCIE_V1 ||
-+	    pcie->pcie_data->version == ALTERA_PCIE_V2) {
-+		/* Disable all P2A interrupts */
-+		cra_writel(pcie, 0, P2A_INT_ENABLE);
-+	} else if (pcie->pcie_data->version == ALTERA_PCIE_V3) {
-+		/* Disable port-level interrupts (CFG_AER, etc.) */
-+		writel(0, pcie->hip_base +
-+			  pcie->pcie_data->port_conf_offset +
-+			  pcie->pcie_data->port_irq_enable_offset);
-+	}
-+}
-+
- static void altera_pcie_irq_teardown(struct altera_pcie *pcie)
- {
-+	altera_pcie_disable_irq(pcie);
- 	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
- 	irq_domain_remove(pcie->irq_domain);
- }
-@@ -890,7 +905,6 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
- 	if (pcie->irq < 0)
- 		return pcie->irq;
- 
--	irq_set_chained_handler_and_data(pcie->irq, pcie->pcie_data->ops->rp_isr, pcie);
- 	return 0;
- }
- 
-@@ -1019,6 +1033,14 @@ static int altera_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
-+	/*
-+	 * The chained handler uses pcie->irq_domain, so install it
-+	 * only after the INTx domain has been created.
-+	 */
-+	irq_set_chained_handler_and_data(pcie->irq,
-+					 pcie->pcie_data->ops->rp_isr,
-+					 pcie);
-+
- 	if (pcie->pcie_data->version == ALTERA_PCIE_V1 ||
- 	    pcie->pcie_data->version == ALTERA_PCIE_V2) {
- 		/* clear all interrupts */
-@@ -1036,7 +1058,16 @@ static int altera_pcie_probe(struct platform_device *pdev)
- 	bridge->busnr = pcie->root_bus_nr;
- 	bridge->ops = &altera_pcie_ops;
- 
--	return pci_host_probe(bridge);
-+	ret = pci_host_probe(bridge);
-+	if (ret)
-+		goto err_teardown_irq;
-+
-+	return 0;
-+
-+err_teardown_irq:
-+	altera_pcie_irq_teardown(pcie);
-+
-+	return ret;
- }
- 
- static void altera_pcie_remove(struct platform_device *pdev)
--- 
-2.34.1
+> If someone add more field down the line say u8, then to make struct size
+> aligned they will need to add another u8, u16, u32, and name those
+> fields padding or reserved. IMO, having a u8 array named padding makes
+> it easier to just change array length as per the need.
 
+This field does get replaced in the next patch. But I see your point
+that if we need to pad by an amount other than u8, u16, or u32, then we
+would need an array.
