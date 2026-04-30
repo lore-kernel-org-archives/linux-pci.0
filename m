@@ -1,94 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEA381DE2D3;
-	Thu, 30 Apr 2026 01:31:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFE34175A68
+	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 02:01:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777512692; cv=none; b=NwfYZO3JaZO1QL+u533MUETd88639U5IBFLoHBNLfP9eknRuPvxcSfBmu+ZCDkyH9aB/xo49UYUanX2pjBiucpb3jsfx/y/B+XcEk8Z294TCGGzc3TBpc9NMU+GFqD5UGLdh5kgKKQVB6zedaobmXoZCtbJdMmCXdKAoP1zND0Y=
+	t=1777514499; cv=none; b=Mu9UMAOGUnz++j5QMgBVObuwTFv5gtQpo2L/86qCEESC08deQ6nNXmnwrSYZSjm8WkanTdOyKMRzpfZ/XNqfu0rsKIqWS+Wddxz5tMiG+M9XZLzwXFeZQYel1iNJHussUEfDV1HFQWGorQVPVmY/TxO7iK7IAbRR/uOcVQXVwa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777512692; c=relaxed/simple;
-	bh=+6AI1AIMBVhMSxwAA+CFoyVM0Rm3EFPwFg6gwl9zXno=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u33UymysTgqPyGKZ/6ENAyYciOECUbXuOd7NTIhiiSeex5OrMbyuEuDG2TxfDvGYeDiakH+jxLbYvyL8/zZEDLE94Huz49EmTflJYlUXlvoboy3a/bgtwFJmC0asIYJ/2niok3deMgZKnjwPOSLN2rKJGuRpOZEFolvIlbiVJHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dlwoye1h; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777514499; c=relaxed/simple;
+	bh=JJMq0wJo5tUrSwaLXQ46Z1x/GlE8ogLh9GDGepEZnuU=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=J+FFrDtAQ/Y2Qw9hTq3mHea7SvL3IM5Buc3Rth0eu2f8mNfTadYXSoWLyRFC3Brkbwj+0oNoGEx9Jg7Jam84gXf03WtMJUrZDeAw0WI/bmWhAVe5K6oWPue40K5BOK7XfLOwimweMaC7eU/R1EqqNsi/sn+3C75KKwuiOJ2/0JQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=naWybzqD; arc=none smtp.client-ip=115.124.30.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dlwoye1h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C56CC19425;
-	Thu, 30 Apr 2026 01:31:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777512692;
-	bh=+6AI1AIMBVhMSxwAA+CFoyVM0Rm3EFPwFg6gwl9zXno=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Dlwoye1hKVvQsM62tnha105SiLWaxrmgMPjEBT2QZOgXqFKo8bi+z5yjr1dhx5MMe
-	 yp0qMjc7HBwO6rkSyhpEf0xF2HeDI+6nQeMyqkvDxOIHDGQl7CVlLasnMPLZBLSQZW
-	 Z5ycRyFsxB9ZvPoQ0KDQPxb6bjt+r9ifzkwpeEH1uTfHaF2CRMMZVZ/aCvl30r8/8N
-	 ZLygWI7AgEsh5w67hzwL4YrLMVFKSBwMnJiHbB/mVbJh7aXhWfhb2EDIisUkRchwWM
-	 C8BQs6jwWQSNJjWDEWM3VSLZlInVhFF+AcYOjsQU3r1IsjiL3pLeK/M7R7PO6QpZRr
-	 vAxh0v+dU+xow==
-Date: Thu, 30 Apr 2026 10:31:30 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
-	Richard Henderson <richard.henderson@linaro.org>, Christophe Leroy <chleroy@kernel.org>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Dexuan Cui <decui@microsoft.com>, 
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>, Lukas Wunner <lukas@wunner.de>, 
-	Oliver O'Halloran <oohall@gmail.com>, Saurabh Singh Sengar <ssengar@microsoft.com>, 
-	Shuan He <heshuan@bytedance.com>, Srivatsa Bhat <srivatsabhat@microsoft.com>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, moubingquan <moubingquan@h-partners.com>, 
-	Ian <4dark@outlook.com>, Koba Ko <kobak@nvidia.com>, 
-	Koen Vandeputte <koen.vandeputte@citymesh.com>, Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
-	Artem Savkov <artem.savkov@gmail.com>, Korneliusz Osmenda <korneliuszo@gmail.com>, 
-	Alexander Stein <alexander.stein@ew.tq-group.com>
-Subject: Re: [PATCH v6 00/24] PCI: Convert all dynamic sysfs attributes to
- static
-Message-ID: <20260430005931.GA3872993@rocinante>
-References: <20260422161407.118748-1-kwilczynski@kernel.org>
- <20260429200439.GA313340@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="naWybzqD"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1777514492; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type;
+	bh=cFZspXCupbkExLGWZePLeRmIog/jTy71T8Duapnl8Eo=;
+	b=naWybzqDpxWigUAu3qx2mPFdtSqowaGlEMsQRYJ455SUwTrcBl37o8OUI6/OLh2f5FxoSNPtElOSifCtJ906JR2v7L+V+IAko/+Tvr+zvBFySnpR5hd3Qzz362QWV1H0s/Tczwf97v6Evt5nI68kEZdQhz6ObvYBN4xq/R7PSvs=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037033178;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0X1zVPH1_1777514490;
+Received: from 30.178.82.55(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0X1zVPH1_1777514490 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Thu, 30 Apr 2026 10:01:31 +0800
+Message-ID: <6bdc5b48-3170-4f30-8062-e417016900ba@linux.alibaba.com>
+Date: Thu, 30 Apr 2026 10:01:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260429200439.GA313340@bhelgaas>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v11 0/2] PCI: Fix crash when access broken ROM
+From: Guixin Liu <kanie@linux.alibaba.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Andy Shevchenko <andriy.shevchenko@intel.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ linux-pci@vger.kernel.org, Xunlei Pang <xlpang@linux.alibaba.com>,
+ oliver.yang@linux.alibaba.com
+References: <20260209175432.GA196137@bhelgaas>
+ <e607705c-b4eb-4582-b941-28e9a318dbe2@linux.alibaba.com>
+In-Reply-To: <e607705c-b4eb-4582-b941-28e9a318dbe2@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Hello,
+Hi Bjorn, gentling ping...
 
-> > This has been reported a few times:
-> > 
-> >   - https://lore.kernel.org/linux-pci/20250702155112.40124-1-heshuan@bytedance.com/
-> >   - https://lore.kernel.org/linux-pci/b51519d6-ce45-4b6d-8135-c70169bd110e@h-partners.com/
-> >   - https://lore.kernel.org/linux-pci/1702093576-30405-1-git-send-email-ssengar@linux.microsoft.com/
-> >   - https://lore.kernel.org/linux-pci/SY0P300MB04687548090B73E40AF97D8897B82@SY0P300MB0468.AUSP300.PROD.OUTLOOK.COM/
-> >   - https://lore.kernel.org/linux-pci/20230105174736.GA1154719@bhelgaas/
-> >   - https://lore.kernel.org/linux-pci/m3eebg9puj.fsf@t19.piap.pl/
-> >   - https://lore.kernel.org/linux-pci/20200716110423.xtfyb3n6tn5ixedh@pali/
-> >   - https://lore.kernel.org/linux-pci/1366196798-15929-1-git-send-email-artem.savkov@gmail.com/
-> >   - https://bugzilla.kernel.org/show_bug.cgi?id=215515
-> >   - https://bugzilla.kernel.org/show_bug.cgi?id=216888
-> 
-> Seems like some or all of these should be mentioned in the relevant
-> patch as "Closes:" tags?
 
-Bugzilla would makes sense.  As for the lore.kernel.org links, then if you
-find these useful when included, then add these too.  Surprisingly, not as
-popular to do so, as I thought, per:
+Best Regards,
+Guixin Liu
 
-  $ git log | grep -E 'Closes: (http?://)?lore' | wc -l
-  43
 
-Having said that, the following bug looks like it might be out of scope
-for us, for this series aims to fix, after having a second look at it:
+在 2026/4/24 14:32, Guixin Liu 写道:
+>
+>
+> 在 2026/2/10 01:54, Bjorn Helgaas 写道:
+>> On Mon, Feb 09, 2026 at 02:43:39PM +0800, Guixin Liu wrote:
+>>> Gentling ping...
+>>>
+>>> Hi Bjorn and Ilpo, Could you please review these two patches?
+>>>
+>>> In this version, I fixed the case issues in the first patch title.
+>> Will do, thanks.  Since the v7.0 merge window is open, this is on my
+>> list to look at as soon as v7.0-rc1 is tagged, probably on Feb 22.
+> Hi Bjorn, looks like these two patches still haven't been merged, 
+> Would it be possible to get them merged for the 7.0 release? Best 
+> Regards, Guixin Liu
+>>
+>>> 在 2026/1/30 16:07, Guixin Liu 写道:
+>>>> v10 -> v11:
+>>>> - Change 'pci rom' to 'PCI ROM' of the tittle of the first patch.
+>>>> - Add Andy Shevchenko's rb tag in the first patch, thanks.
+>>>>
+>>>> v9 -> v10:
+>>>> - Reorder the header files, and not touch kernel.h
+>>>> - Change PCI_ROM_IMAGE_LEN_UNIT_BYTES to PCI_ROM_IMAGE_SECTOR_SIZE.
+>>>> - Add a comment for PCI_ROM_DATA_STRUCT_SIGNATURE.
+>>>>
+>>>> v8 -> v9:
+>>>> - Supplemental explanation for the commit body of the first patch.
+>>>> - Change PCI_ROM_IMAGE_LEN_UNIT_SZ_512 to 
+>>>> PCI_ROM_IMAGE_LEN_UNIT_BYTES,
+>>>> and change it's definition to SZ_512.
+>>>> - Use u16 and u32 for signature val instead of unsigned short/int.
+>>>>
+>>>> v7 -> v8:
+>>>> - Ordered header files alphabetically.
+>>>> - Convert the literals too in the firt patch.
+>>>> - Use local val to save signature instead of reading twice.
+>>>>
+>>>> v6 -> v7:
+>>>> - Put all named defines to a separate patch.
+>>>> - Change PCI_ROM_IMAGE_LEN_UNIT_BYTES to 
+>>>> PCI_ROM_IMAGE_LEN_UNIT_SZ_512.
+>>>> - Named BIT(7) to PCI_ROM_LAST_IMAGE_INDICATOR_BIT.
+>>>> - Fix all other comments from Ilpo, such as including header files,
+>>>> and alignment fault, Thanks.
+>>>>
+>>>> v5 -> v6:
+>>>> - Convert some magic number to named defines, suggested by
+>>>> Ilpo, thanks.
+>>>>
+>>>> v4 -> v5:
+>>>> - Add Andy Shevchenko's rb tag, thanks.
+>>>> - Change u64 to unsigned long.
+>>>> - Change pci_rom_header_valid() to pci_rom_is_header_valid() and
+>>>> change pci_rom_data_struct_valid() to pci_rom_is_data_struct_valid().
+>>>> - Change rom_end from rom+size to rom+size-1 for more readble,
+>>>> and also change header_end >= rom_end to header_end > rom_end, same
+>>>> as data structure end.
+>>>> - Change if(!last_image) to if (last_image)..
+>>>> - Use U16_MAX instead of 0xffff.
+>>>> - Split check_add_overflow() from data_len checking.
+>>>> - Remove !!() when reading last_image, and Use BIT(7) instead of 0x80.
+>>>>
+>>>> v3 -> v4:
+>>>> - Use "u64" instead of "uintptr_t".
+>>>> - Invert the if statement to avoid excessive indentation.
+>>>> - Add comment for alignment checking.
+>>>> - Change last_image's type from int to bool.
+>>>>
+>>>> v2 -> v3:
+>>>> - Add pci_rom_header_valid() helper for checking image addr and 
+>>>> signature.
+>>>> - Add pci_rom_data_struct_valid() helper for checking data struct add
+>>>> and signature.
+>>>> - Handle overflow issue when adding addr with size.
+>>>> - Handle alignment fault when running on arm64.
+>>>>
+>>>> v1 -> v2:
+>>>> - Fix commit body problems, such as blank line in "Call Trace" both 
+>>>> sides,
+>>>>     thanks, (Andy Shevchenko).
+>>>> - Remove every step checking, just check the addr is in header or data
+>>>> struct.
+>>>> - Add Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com> 
+>>>> tag.
+>>>>
+>>>> Guixin Liu (2):
+>>>>     PCI: Introduce named defines for PCI ROM
+>>>>     PCI: Check ROM header and data structure addr before accessing
+>>>>
+>>>>    drivers/pci/rom.c | 137 
+>>>> ++++++++++++++++++++++++++++++++++++++--------
+>>>>    1 file changed, 115 insertions(+), 22 deletions(-)
+>>>>
+>
 
-  https://bugzilla.kernel.org/show_bug.cgi?id=216888
-
-Thank you!
-
-	Krzysztof
