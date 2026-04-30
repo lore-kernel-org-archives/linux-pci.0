@@ -1,176 +1,251 @@
-Received: from mail-vs1-f46.google.com (mail-vs1-f46.google.com [209.85.217.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3C9427A904
-	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 21:22:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.217.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777584181; cv=pass; b=kAs3Lgg+e8uAvzEv5266+cptPWzXm+yzDtxVCs8IbGtigun3DKZxQtY2tHPZnktTnZIU5VCBg2ns7GqrvF7+bLNwL6GkSjMi2yguShLkoalQJJvIHJjeDAHXBaWbjCKoS3VvwR3vqRsZrALv6mVnzGMW9/RRHbLBfW+Ie0+yliw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777584181; c=relaxed/simple;
-	bh=M3mVujZnSbDcky4ImjiZHpQ7MdR18QqNyQGKAVOs0Hs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=i3KszDxp8O0rSBc+UTs051AbQkgI44MSeeiFJziy8TlhbajxcyMpEpha4pTXF8Nx3kP/s9XBW7NUYa3Z4Kx53aCd4A5y+F65AwCFJlUKM/dCLoB40dX/1QkohavIcKuOOcmK9mJeymLiP77rjQmvQsADPoyg38nV815b0Y2Y1xw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=H4yBkh4+; arc=pass smtp.client-ip=209.85.217.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E2C13A3830
+	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 21:41:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777585285; cv=none; b=tfaFmZUsHlfjYjGZJ0c6awXl4B79mMbA08+wsX4G+hW4ORnO5OP2GUI2T4oilRjb+RSH2C3u3dxBwSPCtfMZyz8ezw/qRf5EpLjpRZObUvBQSv8fnHoHCGn7amOCoMoqOgJt9CNQ1QkQ5BoJTQT/bxjdfos/4b9rBq/B5q3EMFU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777585285; c=relaxed/simple;
+	bh=6Uq6A0mV41CjUmZm/vm4w/OOWYrR+v7vH90TRC9z6Fo=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 Mime-Version:Content-Type; b=iriHr20CSiw9seiMHaWC9Nbr45ohGU2Vn70493KQgkWlUBMqbeZxZzA4V+9xVvkPV2acpKM4ZEJJ6HboGLkX6jvtf75k1BiaygDuNI7ChTuthwDzjUEklLumK8VIeBr5syRl8WbIqETBQSoRyfPTPU/f0YDyI+fBWib/HQt75mE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PsIch+r7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="H4yBkh4+"
-Received: by mail-vs1-f46.google.com with SMTP id ada2fe7eead31-610aadb2d9fso460262137.0
-        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 14:22:59 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777584179; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Aj9A1iRoIS71ThPoRV0t5QlP+hjjeHHiGiy268QSjb1mAYSYPRjiibZ/NQPaKvApaP
-         2O4ATuZyNn6cpXFPNuHvDf/LCoK1/duYbZ9OYfuPxDqBxpHGwoq9U9ISSuL1pNzfFl9F
-         k8L2XvoYj89ua6o8g11afS7ErJcw+cN+PYtc6Iszc7Dq+MbbaTjF0we52PGbaLIYB5eM
-         ATIrbdwXzEoxSjC64NvseWsTpwmT182l7UjbXqxsdvVlj4kj8ZICCKofXLqHPwR6dGqZ
-         7N4WTUTcvCn0/4Cp9EY/1Ytvvogu8kWhogsfPcWY5mAIjwfZr4joDncRdZrohrqgCjKU
-         E46Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=VDdDBeOth/GyO4S6LG5C4tIpCfmXMPVkXYvoyOVLmpc=;
-        fh=0CwitysbmaxXRYCEJlivB80p51oomkj7WgcN2ahMzBg=;
-        b=OG7ei/43LgBge/87HSqobHIEYgkAJlLdai0QiEaznT/uuXV17NEsZOhlFTPkek0Hvl
-         gvn+b4hsYt1EubyvfWhp3fx/ICAUZ4dFOV52rl9i3zYSof3ox6qp2g6sahmEGL1iy3LU
-         i9oz/hzRuWsSQrHJavKm7zEUHybQjO+TaknILYtnJqrmmzKKc9QSrWRdK9LKry2sS1RF
-         hE/SUHN3dFSMQCT7T8QzbEP3lnmJcSb8JRh9t3cQ6a9dyt9KOL00/0YRCUvWWnJfdYLy
-         R2PvScP6BteMctBkNcM7Fp6HdG9bcxc5fkjR1zd4QT6Lq+owAQu0BJzkT07bjYHuoHO5
-         L7ng==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777584179; x=1778188979; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VDdDBeOth/GyO4S6LG5C4tIpCfmXMPVkXYvoyOVLmpc=;
-        b=H4yBkh4+BAYyAGuckmnPx6xuGsf4yyYrGetfI4FJsnhTSELM3EMJpKYEPTp3h0e+4N
-         ZjjBod8JdKCA2drHnl1Ks6jJUp1vhixNgH6nMZs+Oijf9OBOPU5cH5Xqn+aDvzbRh619
-         OlQfa32S2RpAhYC2/lEEo09u90+JBedJ6Vl452vVeRxtzjKQ2x33HlMtHsnsvsfyuOrU
-         s/5bwAtoTVuF87HVpHblBMHqXcspL4kyOU1cflNJQ/NiH/4qQZiSTT8yJkW4AonttLWS
-         R+Irjc55IPVsaIcL1fHvr6/2F7poILOJOFjwk8WBYOhJDMNAoOrH9ErUO9vsc66MwDj/
-         BK/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777584179; x=1778188979;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=VDdDBeOth/GyO4S6LG5C4tIpCfmXMPVkXYvoyOVLmpc=;
-        b=RYYHAbHZsnhqOvAk4Hnbsel9lfFLbldTJXGjJ7g2lHuuNmHDOp6gdgTBaHgHkONhsP
-         j3cxrfZWpwp26wMHEgBKtlk67bNAn0ujC9B0hTDpdUylKtuOREy/bSdYsnxATOMwkXBe
-         9WBqGIR9llIERk7nDoZRa5SMwAkcuQi1t9RkOexddmWDWWTpCJr318HcAnEXzQnNo4Fp
-         /7kA8+tZAd+0BezGk5XwoVH6A+Tm2VxoX5l12gZfufaYho9uPK2U1om2N8ysbH9YDO2p
-         NeV1khoHcJymoAipAAj/Lws0dFZBpAcWIebOavwKFwYlJaMjpJLXL2hrXR98QoX4/Nql
-         YnAA==
-X-Forwarded-Encrypted: i=1; AFNElJ8DmJq1z4qCBryF5kuP6SuI5AKhCopqkBHaECKoN28Q4j2lWOK+lNsCpY/dDCOz7tUh61T2VrtOBVs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwlhoBK4pyJN+Rk6ecq0XzVIuDPOgRMzloDEbk/AKU5b0d8Pj1K
-	hOKwNH+PbYEkvEJ//KjVEAFYKkv9MHpeq/mVRj+ewO97fBmYUU3FnoP1r4ep+x4fQ8jvo1F6G1s
-	hAqEAAhgnWYOoeEPYELQWKqHiKbFztzTYH0iVzVPt
-X-Gm-Gg: AeBDietrb4EJo4ZQKgGzZKayvgqLqEScRIgdOCkLPU4L5Wr/L7nZDBOYjIcA2eWhrTZ
-	DYakboV3zeacPp0rTV884HbE8d8rMZndofNwoYQE7TVa/GmfFWkEIYeceR8PB90l/ZdKvpZjF5i
-	cZ0UvtlCe7FddRMX0VKsfjF23ZTljIFfvTSld9+kqXd5/3ve5lG8JdXmdyPGsQyS60ueAUUt1qG
-	qW7mgs9LITBwdKWCvm0Mr8jQmj8oYEol5Ei2UE+7rjErrwLRxG7YFKuS64PNaKLRV/Gxow3pBHM
-	Rd+cmqQPcTTV4Aeg9Xz4IRCbD1Xpjw==
-X-Received: by 2002:a05:6102:808f:b0:60f:7499:9b6b with SMTP id
- ada2fe7eead31-62ad51bb6d4mr2567155137.29.1777584178374; Thu, 30 Apr 2026
- 14:22:58 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PsIch+r7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AB2CC2BCB4;
+	Thu, 30 Apr 2026 21:41:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777585285;
+	bh=6Uq6A0mV41CjUmZm/vm4w/OOWYrR+v7vH90TRC9z6Fo=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=PsIch+r76xe72kDqHEkIy33zsA/upJwkYlyJcXfDyiRuR5To+68rQPGQMZYBuzk6g
+	 OqKsk4CKKljGZ4QsKB2u9pHR3qC+IX6vPFXmk0WonrKsNlCPTW/caKB/I2PBU+4LYP
+	 jem+yd5tvvCataumYlnJd4kg+44AFIs+4cCwip94FIUtHSB3+w5X3M4RiuBynLOKRg
+	 LFgk5yyt5Amex8TZc/RETnZTXUmraT1ZvIun0VVLyobWM8QA1uJkkkHiNlOESXjrHN
+	 LiYO8pmpOG5gEhCv1oMTGOjMZYcMbDng1jG/NpR9y53aghQnDaBBkh5ExRRHnlnHmr
+	 NT0As/Hq251hA==
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 94594F40069;
+	Thu, 30 Apr 2026 17:41:23 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-01.internal (MEProxy); Thu, 30 Apr 2026 17:41:23 -0400
+X-ME-Sender: <xms:g8zzaXQgENWylzGXUzS7DIy7_MVtLBvpGnZlXC6l9lnbPza6jZNeIA>
+    <xme:g8zzadrgxzQZ8WQG377jnrScN_1U5hCKalHb5bGZSKQ7lOm2Kt7jtomXEU8wzGdzW
+    HI1uBlg8278mRPA6Bp-08Xca4RMYLU0UjuSX-RgCI3vwI0N0oPurZxC>
+X-ME-Received: <xmr:g8zzaVbhYpXjrya_LEUA3uzHZjKUJzC0xXQq5VMswANFGQFxnzNmGCRQ_1pCJbKyq_Xx7LN_oSCk6TeC3Jsk1KBzRwNq69olvpE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdekkeegvdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpeffhffvvefkjghfufggtgfgsehtjeertddttdejnecuhfhrohhmpedfffgrnhcuhghi
+    lhhlihgrmhhsucdlnhhvihguihgrmddfuceoughjsgifsehkvghrnhgvlhdrohhrgheqne
+    cuggftrfgrthhtvghrnhepvdegheeikeetleeuffeuheefjeejvdejvdevteefgfffveeh
+    vdeuvdffveffvdehnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
+    hfrhhomhepughjsgifodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqddujeej
+    vdeftdegheehqdeffeefleegtdegjedqughjsgifpeepkhgvrhhnvghlrdhorhhgsehfrg
+    hsthhmrghilhdrtghomhdpnhgspghrtghpthhtohepudelpdhmohguvgepshhmthhpohhu
+    thdprhgtphhtthhopehnihgtohhlihhntgesnhhvihguihgrrdgtohhmpdhrtghpthhtoh
+    epjhhgghesnhhvihguihgrrdgtohhmpdhrtghpthhtohepfihilhhlsehkvghrnhgvlhdr
+    ohhrghdprhgtphhtthhopehrohgsihhnrdhmuhhrphhhhiesrghrmhdrtghomhdprhgtph
+    htthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtohepjhhorhho
+    seeksgihthgvshdrohhrghdprhgtphhtthhopehprhgrrghnsehgohhoghhlvgdrtghomh
+    dprhgtphhtthhopegsrgholhhurdhluheslhhinhhugidrihhnthgvlhdrtghomhdprhgt
+    phhtthhopehkvghvihhnrdhtihgrnhesihhnthgvlhdrtghomh
+X-ME-Proxy: <xmx:g8zzaYSE2Jx2rmrznxwwijil_ZmrHDUyhv1L3KBMpWgsfpdh-pmukw>
+    <xmx:g8zzaTfrAvo-mm8m-MnLVDxuPIDBNyMJjefbSFFwBffYMXtMvtg62g>
+    <xmx:g8zzaXl6uO6HxKg7ZZ5PmEP7eTvxQ1ZgcCJmUc5_nR0WJ0X3CYUxaw>
+    <xmx:g8zzaYiUjLOfhXDHc_GPQpF-MzkP6c3lJ6rNi8T8q18PotbHRkcXnA>
+    <xmx:g8zzaYEECV6ZeJ-2SWMSsTalAYimtXj19iYzO4gXvViI0c_Q9VsuGDzS>
+Feedback-ID: i67ae4b3e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 30 Apr 2026 17:41:22 -0400 (EDT)
+Date: Thu, 30 Apr 2026 14:41:22 -0700
+From: "Dan Williams (nvidia)" <djbw@kernel.org>
+To: Nicolin Chen <nicolinc@nvidia.com>, 
+ jgg@nvidia.com, 
+ will@kernel.org, 
+ robin.murphy@arm.com, 
+ bhelgaas@google.com
+Cc: joro@8bytes.org, 
+ praan@google.com, 
+ baolu.lu@linux.intel.com, 
+ kevin.tian@intel.com, 
+ miko.lenczewski@arm.com, 
+ linux-arm-kernel@lists.infradead.org, 
+ iommu@lists.linux.dev, 
+ linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, 
+ dan.j.williams@intel.com, 
+ jonathan.cameron@huawei.com, 
+ vsethi@nvidia.com, 
+ linux-cxl@vger.kernel.org, 
+ nirmoyd@nvidia.com
+Message-ID: <69f3cc82926_3291a910039@djbw-dev.notmuch>
+In-Reply-To: <f6734b9dad0050138676f11ecd14e9db1cf6b697.1777269009.git.nicolinc@nvidia.com>
+References: <cover.1777269009.git.nicolinc@nvidia.com>
+ <f6734b9dad0050138676f11ecd14e9db1cf6b697.1777269009.git.nicolinc@nvidia.com>
+Subject: Re: [PATCH v4 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260423212316.3431746-1-dmatlack@google.com> <20260423212316.3431746-3-dmatlack@google.com>
- <20260428201231.GA3885809.vipinsh@google.com> <CALzav=dfLtdrPhkBkGwHpDAWUBMHnbGPccwhy1__doziNVZQJQ@mail.gmail.com>
- <20260430175916.GA13902.vipinsh@google.com> <afO9VOckgyiiokw8@google.com> <20260430204009.GB22297.vipinsh@google.com>
-In-Reply-To: <20260430204009.GB22297.vipinsh@google.com>
-From: David Matlack <dmatlack@google.com>
-Date: Thu, 30 Apr 2026 14:22:25 -0700
-X-Gm-Features: AVHnY4Ikcvel7QdyZYGumdrGxwhKO_qS6LiUUIjUSJt8Np0PybdhnEVt0dyw8U8
-Message-ID: <CALzav=dsQ7fj3MJ8Fbv9LZMjeayOgM31c-PZZd5JVL2gov+3=Q@mail.gmail.com>
-Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI devices
-To: Vipin Sharma <vipinsh@google.com>
-Cc: iommu@lists.linux.dev, kexec@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
-	Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, Apr 30, 2026 at 1:42=E2=80=AFPM Vipin Sharma <vipinsh@google.com> w=
-rote:
->
-> On Thu, Apr 30, 2026 at 08:36:36PM +0000, David Matlack wrote:
-> > On 2026-04-30 11:25 AM, Vipin Sharma wrote:
-> > > On Tue, Apr 28, 2026 at 02:12:13PM -0700, David Matlack wrote:
-> > > > On Tue, Apr 28, 2026 at 1:20=E2=80=AFPM Vipin Sharma <vipinsh@googl=
-e.com> wrote:
-> > > > >
-> > > > > On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
-> > > > > > +int pci_liveupdate_preserve(struct pci_dev *dev)
-> > > > > > +{
-> >
-> > > > > > +     if (ser->nr_devices =3D=3D ser->max_nr_devices)
-> > > > > > +             return -ENOSPC;
-> > > > > > +
-> > > > > > +     for (i =3D 0; i < ser->max_nr_devices; i++) {
-> > > > > > +             /*
-> > > > > > +              * Start searching at index ser->nr_devices. This=
- should result
-> > > > > > +              * in a constant time search under expected condi=
-tions (devices
-> > > > > > +              * are not getting unpreserved).
-> > > > > > +              */
-> > > > > > +             int index =3D (ser->nr_devices + i) % ser->max_nr=
-_devices;
-> > > > > > +             struct pci_dev_ser *dev_ser =3D &ser->devices[ind=
-ex];
-> > > > > > +
-> > > > > > +             if (dev_ser->refcount)
-> > > > > > +                     continue;
-> > > > > > +
-> > > > > > +             pci_info(dev, "Device will be preserved across ne=
-xt Live Update\n");
-> > > > > > +             ser->nr_devices++;
-> > > > > > +
-> > > > > > +             dev_ser->domain =3D pci_domain_nr(dev->bus);
-> > > > > > +             dev_ser->bdf =3D pci_dev_id(dev);
-> > > > > > +             dev_ser->refcount =3D 1;
-> > > > > > +
-> > > > > > +             dev->liveupdate_outgoing =3D dev_ser;
-> > > > > > +             return 0;
-> > > > > > +     }
-> > > > > > +
-> > > > > > +     return -ENOSPC;
-> > > > >
-> > > > > Since it is executing under a mutex, and we already failed
-> > > > > 'if (ser->nr_devices =3D=3D ser->max_nr_devices) check above, wil=
-l we ever reach
-> > > > > here and return -ENOSPC?
-> > > >
-> > > > Yeah I wouldn't expect to ever reach here.
-> > >
-> > > Will you be removing it or want to keep it just in case scenario?
-> >
-> > I'm not sure how I would remove it. The code doesn't not compile withou=
-t
-> > a return.
->
-> Oh, I meant, inside loop a break and outside just return 0, that way it
-> won't be a dead code.
+Nicolin Chen wrote:
+> Controlled by the IOMMU driver, ATS is usually enabled "on demand" when a
+> given PASID on a device is attached to an I/O page table. This is working
+> even when a device has no translation on its RID (i.e., the RID is IOMMU
+> bypassed).
+> 
+> However, certain PCIe devices require non-PASID ATS on their RID even when
+> the RID is IOMMU bypassed. Call this "always on".
+> 
+> For example, CXL spec r4.0 notes in sec 3.2.5.13 Memory Type on CXL.cache:
+>  "To source requests on CXL.cache, devices need to get the Host Physical
+>   Address (HPA) from the Host by means of an ATS request on CXL.io."
+> 
+> In other words, the CXL.cache capability requires ATS; otherwise, it can't
+> access host physical memory.
+> 
+> Introduce a new pci_ats_always_on() helper for the IOMMU driver to scan a
+> PCI device and shift ATS policies between "on demand" and "always on".
+> 
+> Add the support for CXL.cache devices first. Pre-CXL devices will be added
+> in quirks.c file.
+> 
+> Note that pci_ats_always_on() validates against pci_ats_supported(), so we
+> ensure that untrusted devices (e.g. external ports) will not be always on.
+> This maintains the existing ATS security policy regarding potential side-
+> channel attacks via ATS.
+> 
+> Cc: linux-cxl@vger.kernel.org
+> Suggested-by: Vikram Sethi <vsethi@nvidia.com>
+> Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
+> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+> Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+> Tested-by: Nirmoy Das <nirmoyd@nvidia.com>
+> Acked-by: Nirmoy Das <nirmoyd@nvidia.com>
+> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+> ---
+>  include/linux/pci-ats.h       |  3 +++
+>  include/uapi/linux/pci_regs.h |  1 +
+>  drivers/pci/ats.c             | 43 +++++++++++++++++++++++++++++++++++
+>  3 files changed, 47 insertions(+)
+> 
+> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+> index 75c6c86cf09dc..d14ba727d38b3 100644
+> --- a/include/linux/pci-ats.h
+> +++ b/include/linux/pci-ats.h
+> @@ -12,6 +12,7 @@ int pci_prepare_ats(struct pci_dev *dev, int ps);
+>  void pci_disable_ats(struct pci_dev *dev);
+>  int pci_ats_queue_depth(struct pci_dev *dev);
+>  int pci_ats_page_aligned(struct pci_dev *dev);
+> +bool pci_ats_always_on(struct pci_dev *dev);
+>  #else /* CONFIG_PCI_ATS */
+>  static inline bool pci_ats_supported(struct pci_dev *d)
+>  { return false; }
+> @@ -24,6 +25,8 @@ static inline int pci_ats_queue_depth(struct pci_dev *d)
+>  { return -ENODEV; }
+>  static inline int pci_ats_page_aligned(struct pci_dev *dev)
+>  { return 0; }
+> +static inline bool pci_ats_always_on(struct pci_dev *dev)
+> +{ return false; }
+>  #endif /* CONFIG_PCI_ATS */
+>  
+>  #ifdef CONFIG_PCI_PRI
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 14f634ab9350d..6ac45be1008b8 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -1349,6 +1349,7 @@
+>  /* CXL r4.0, 8.1.3: PCIe DVSEC for CXL Device */
+>  #define PCI_DVSEC_CXL_DEVICE				0
+>  #define  PCI_DVSEC_CXL_CAP				0xA
+> +#define   PCI_DVSEC_CXL_CACHE_CAPABLE			_BITUL(0)
+>  #define   PCI_DVSEC_CXL_MEM_CAPABLE			_BITUL(2)
+>  #define   PCI_DVSEC_CXL_HDM_COUNT			__GENMASK(5, 4)
+>  #define  PCI_DVSEC_CXL_CTRL				0xC
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index ec6c8dbdc5e9c..fc871858b65bc 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -205,6 +205,49 @@ int pci_ats_page_aligned(struct pci_dev *pdev)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * CXL r4.0, sec 3.2.5.13 Memory Type on CXL.cache notes: to source requests on
+> + * CXL.cache, devices need to get the Host Physical Address (HPA) from the Host
+> + * by means of an ATS request on CXL.io.
+> + *
+> + * In other words, CXL.cache devices cannot access host physical memory without
+> + * ATS.
+> + */
+> +static bool pci_cxl_ats_always_on(struct pci_dev *pdev)
+> +{
+> +	int offset;
+> +	u16 cap;
+> +
+> +	offset = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
+> +					   PCI_DVSEC_CXL_DEVICE);
+> +	if (!offset)
+> +		return false;
+> +
+> +	if (pci_read_config_word(pdev, offset + PCI_DVSEC_CXL_CAP, &cap))
+> +		return false;
+> +
+> +	return cap & PCI_DVSEC_CXL_CACHE_CAPABLE;
 
-That would hide bugs if the refcounts in the array got messed up. How about=
-:
+Apologies for coming to this late and forgive me if the following has
+already been asked and answered. Why not check for actual CXL.cache
+protocol on the wire being present?
 
-  /* This should never be reached. */
-  return WARN_ON_ONCE(-ENOSPC);
+I.e. replace pci_cxl_ats_always_on() with a pdev->is_cxl_cache and this
+incremental change (compile tested only):
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c4454583c11..45d87af4de63 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -483,7 +483,8 @@ struct pci_dev {
+ 	unsigned int	is_pciehp:1;
+ 	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
+ 	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
+-	unsigned int	is_cxl:1;               /* Compute Express Link (CXL) */
++	unsigned int	is_cxl_mem:1;           /* Compute Express Link (CXL.mem) */
++	unsigned int	is_cxl_cache:1;         /* Compute Express Link (CXL.cache) */
+ 	/*
+ 	 * Devices marked being untrusted are the ones that can potentially
+ 	 * execute DMA attacks and similar. They are typically connected
+@@ -809,7 +810,7 @@ static inline bool pci_is_display(struct pci_dev *pdev)
+ 
+ static inline bool pcie_is_cxl(struct pci_dev *pci_dev)
+ {
+-	return pci_dev->is_cxl;
++	return pci_dev->is_cxl_mem || pci_dev->is_cxl_cache;
+ }
+ 
+ #define for_each_pci_bridge(dev, bus)				\
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b63cd0c310bc..c01f0e8362f1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1733,9 +1733,8 @@ static void set_pcie_cxl(struct pci_dev *dev)
+ 	pci_read_config_word(dev, dvsec + PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS,
+ 			     &cap);
+ 
+-	dev->is_cxl = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_CACHE, cap) ||
+-		FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_MEM, cap);
+-
++	dev->is_cxl_cache = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_CACHE, cap);
++	dev->is_cxl_mem = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_MEM, cap);
+ }
+ 
+ static void set_pcie_untrusted(struct pci_dev *dev)
