@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598DE37E30F;
-	Thu, 30 Apr 2026 10:48:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC7A53AEF57;
+	Thu, 30 Apr 2026 10:49:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777546124; cv=none; b=QRPWytXthiBARCBrPSz49HcaRdjXfBWA/lQASXtQg2vI2P65MyLpABEbPHuH1/+3AAV6OW11Bu1CgEHBTeynLZd65sywkXc6yB16ccb7/dHau7wiP7iMx/OOTK0fy9oxi3SzEyzRkGWzPY/VRThkfIWmfLe2mC5i4O7GamH3xbw=
+	t=1777546167; cv=none; b=CbAt9yO4jt9xU+bsV5AvGTkviicJwK+6N7s+cCfU7QKaBxjc0cRJkZn5CjAyo6bp9xpBxXMRFdRKbk0SqGPmDINLvw7MU5wIyOzT9cclnbY38rzabPHiYQ7b5oxUwrRjr2hmWqzRNNXrze4TYCD/gNZHiBMjLsd+/0sw4Oi5dYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777546124; c=relaxed/simple;
-	bh=dc076GcKD+3U/9fyVv1BpskAGEG1i7yl9xbdLK3+ui4=;
+	s=arc-20240116; t=1777546167; c=relaxed/simple;
+	bh=/vWvGqgbRW7X36x4tSAyZn55Y2G5HU9FVbNdqlcPZPI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Il18VQ4VWN2VQYkJUFrkXJim3ieBJfZ+Gnjy+rYZym6xL0uZqMM/SlFBKxFty2zbRTlYrhsi77At6x+ZuHkMr7PGqAOmR/TrkJF1oG61zNvQZIVmaRvprYnYBVusKfHlReyzPNhY+qgwb9scFMc1HWW/XfRGB4hoo83/kDRS8Dk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bhOE8ONC; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=VFhvjYrvVNxeaXMlniGN58pAdJ4Q9HFDGFX/NZ0daLBeZ8x39wlXX61DMvQ5sr1Yl8Zc3x5gR0M0j1XwOkzU3BoeO6nKi9JIuIbOa3UB2sM58cqVLve1SOIU3u26hkB5tWMBGMoM9AR0O4sDISCA16bOz/1w9j4W1k0Q4uZ0EXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SS5qTBCr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bhOE8ONC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FB4DC2BCB3;
-	Thu, 30 Apr 2026 10:48:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SS5qTBCr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76460C2BCB3;
+	Thu, 30 Apr 2026 10:49:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777546124;
-	bh=dc076GcKD+3U/9fyVv1BpskAGEG1i7yl9xbdLK3+ui4=;
+	s=k20201202; t=1777546167;
+	bh=/vWvGqgbRW7X36x4tSAyZn55Y2G5HU9FVbNdqlcPZPI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=bhOE8ONCopA3SzPX8cjzbA6/fnAzToaFtL9L0JOHgo/t2R64T5Oms9c/JlPOi9akP
-	 hQfxky/GXZ2psuSQtru4Oh828y3X4Bpmxx9vsbl7NY/JUd0lW5n0eAsdKWdMOiv0bv
-	 weG+cHTYed+TzwaRD98FyL50kpM1SyMvNsfp1MoG2VLLlWCOWu5BWqpChLBSoPMRQU
-	 yCncEwpKYuJTWo07+5vJWTYC8/5/iB/KvxYWu4BJtJGVKWerXqf+vhQywt6gmOu1mp
-	 V7FqoKuDEQ6CPZp1lJWD+l8C1kTZQb/hhFfy+ASsacJ14OpvhloTyjxZPkXdFjTmeo
-	 OR+Z9pxi2D5TA==
-Message-ID: <55258a51-9cdb-451c-be06-74b9b3020cbc@kernel.org>
-Date: Thu, 30 Apr 2026 12:48:35 +0200
+	b=SS5qTBCrhrzxRgCCwUuVePyx2nclcCfq0UGYc/k7yPK9nKOZzffLTU9CUXX9f8ia6
+	 ckPCwhd2TOQeYq3IZ+1P4QSU79wa9whOA5VKuvvFTH/kb81aWzRA7WJXxTAFXKAh6W
+	 vm/8mdw+e/PmveAMSUQXX5zpQVR/cOFcVdxN+nu7+jbrb+W/ZGoVplHLVn7ekbyjVC
+	 XmJfP/Ke8nTmwtMU2OnRLv/L9pR8kxhhHB8uc8877HHzS0gIb26GJW1Ja0wduNB4PF
+	 wvMIG8Lm9x6WaNsrv2W6bmES81O38D2iL0tZBF14P6Hs1Y1YysnO9WaBB9BY74gp+w
+	 4yopL2jo4ZJTg==
+Message-ID: <866455eb-5886-4d6a-b384-2cbed18b67b6@kernel.org>
+Date: Thu, 30 Apr 2026 12:49:21 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/3] dt-bindings: PCI: imx6q-pcie: Add intr, aer and
- pme interrupts
+Subject: Re: [PATCH v3 2/3] arm64: dts: imx95: Add dma, intr, aer and pme
+ interrupters for pcie{0,1}
 To: Hongxing Zhu <hongxing.zhu@nxp.com>
 Cc: "robh@kernel.org" <robh@kernel.org>,
  "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
@@ -56,9 +56,9 @@ Cc: "robh@kernel.org" <robh@kernel.org>,
  "imx@lists.linux.dev" <imx@lists.linux.dev>,
  "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 References: <20260430050954.3467984-1-hongxing.zhu@nxp.com>
- <20260430050954.3467984-2-hongxing.zhu@nxp.com>
- <20260430-proud-ammonite-of-gaiety-abaafc@quoll>
- <AM0PR04MB52202A13D528B3AE16C3616A8C352@AM0PR04MB5220.eurprd04.prod.outlook.com>
+ <20260430050954.3467984-3-hongxing.zhu@nxp.com>
+ <20260430-adaptable-wonderful-hoatzin-e1056f@quoll>
+ <AM0PR04MB52208A6081E971A8BF05B2888C352@AM0PR04MB5220.eurprd04.prod.outlook.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -104,14 +104,14 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <AM0PR04MB52202A13D528B3AE16C3616A8C352@AM0PR04MB5220.eurprd04.prod.outlook.com>
+In-Reply-To: <AM0PR04MB52208A6081E971A8BF05B2888C352@AM0PR04MB5220.eurprd04.prod.outlook.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 30/04/2026 10:37, Hongxing Zhu wrote:
 >> -----Original Message-----
 >> From: Krzysztof Kozlowski <krzk@kernel.org>
->> Sent: Thursday, April 30, 2026 4:04 PM
+>> Sent: Thursday, April 30, 2026 4:05 PM
 >> To: Hongxing Zhu <hongxing.zhu@nxp.com>
 >> Cc: robh@kernel.org; krzk+dt@kernel.org; conor+dt@kernel.org;
 >> bhelgaas@google.com; Frank Li <frank.li@nxp.com>; l.stach@pengutronix.de;
@@ -119,39 +119,38 @@ On 30/04/2026 10:37, Hongxing Zhu wrote:
 >> s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com; linux-
 >> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
 >> devicetree@vger.kernel.org; imx@lists.linux.dev; linux-kernel@vger.kernel.org
->> Subject: Re: [PATCH v3 1/3] dt-bindings: PCI: imx6q-pcie: Add intr, aer and pme
->> interrupts
+>> Subject: Re: [PATCH v3 2/3] arm64: dts: imx95: Add dma, intr, aer and pme
+>> interrupters for pcie{0,1}
 >>
->> On Thu, Apr 30, 2026 at 01:09:52PM +0800, Richard Zhu wrote:
->>> Add 'intr', 'aer', and 'pme' interrupt entries to the i.MX6Q PCIe
->>> binding to support PCIe event-based interrupts for general controller
->>> events, Advanced Error Reporting, and Power Management Events respectively.
+>> On Thu, Apr 30, 2026 at 01:09:53PM +0800, Richard Zhu wrote:
+>>> Add dma, intr, aer and pme interrupters for pcie{0,1}.
 >>>
->>> These interrupts are optional for existing variants (imx6q, imx6sx,
->>> imx6qp, imx7d, imx8mq, imx8mm, imx8mp) to maintain backward
->>> compatibility with existing device trees.
+>>> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+>>> ---
+>>>  arch/arm64/boot/dts/freescale/imx95.dtsi | 16 ++++++++++++----
+>>>  1 file changed, 12 insertions(+), 4 deletions(-)
 >>>
->>> For fsl,imx95-pcie, all 5 interrupts (msi, dma, intr, aer, pme) are
->>> mandatory due to hardware requirements.
->>>
->>> This introduces an ABI requirement for fsl,imx95-pcie. The i.MX95
->>> hardware requires dedicated interrupt lines for AER, PME, and general
->>> controller events due to its redesigned interrupt architecture. i.MX95
->>> cannot function correctly without explicit interrupt routing for error
->>> handling, power management and link event detection.
+>>> diff --git a/arch/arm64/boot/dts/freescale/imx95.dtsi
+>>> b/arch/arm64/boot/dts/freescale/imx95.dtsi
+>>> index 71394871d8dd0..6896d9c15bf53 100644
+>>> --- a/arch/arm64/boot/dts/freescale/imx95.dtsi
+>>> +++ b/arch/arm64/boot/dts/freescale/imx95.dtsi
+>>> @@ -1861,8 +1861,12 @@ pcie0: pcie@4c300000 {
+>>>  			bus-range = <0x00 0xff>;
+>>>  			num-lanes = <1>;
+>>>  			num-viewport = <8>;
+>>> -			interrupts = <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>;
+>>> -			interrupt-names = "msi";
 >>
->> fsl,imx95-pcie was added more than two years ago, so how it cannot function
->> correctly? Are you saying that for two years you had here completely broken
->> code?
->>
->> If this wasn't tested for two years, how can we believe anything is tested now?
-> The basic PCIe functionality has been working since the initial fsl,imx95-pcie
-> support. However, AER (Advanced Error Reporting) and link up/down detection
-> were not previously enabled. This patch-set adds and verifies support for
-> these advanced features.
+>> Why there is no fixes tag if this is here for two years and you claim that IT
+>> CANNOT work without these interrupts?
+> Regarding the Fixes tag: I think that it is not needed here because this is not
+>  a bug fix.
 > 
+> The driver has been functional for two years using only the MSI interrupt. The
 
-That is not what you said in the commit msg.
+That's not what your binding said. Get your patchset straight including
+proper ABI impact explanations.
 
 Best regards,
 Krzysztof
