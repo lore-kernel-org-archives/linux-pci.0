@@ -1,59 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7170C372B4F;
-	Thu, 30 Apr 2026 21:06:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A527D3B776A;
+	Thu, 30 Apr 2026 21:14:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777583204; cv=none; b=DhiBl9NPww5ooOkKYGSf8VDLe3+pT2xsAnulk3ObJ2vzSEcWGzgStxNTtW7reUaYdyTJO+KdM87KvrozZuSpygh6AaJkZdEvtKbPE8DRWMJimqqoes+gNk1tG1gyTXlQ+cgQjnWXHfn6AuovdKIjxvdhzolf30ed9SUgd/5eD+4=
+	t=1777583685; cv=none; b=jvAEz+Gou2rZ93IJH1IBvRTIeDDvXnfAc9RuERdfhO001vcO7M32jeKEyNYdhO2H0b0vKke377rTgLLED7be9pDkJKg+OCOAjX5GNcgUZWdLlsZofHfszdRD6zzaP6WTF/jbLqWZUWD+ZSeEEWiWh7OcGjJwWC3DELJiOcU1B2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777583204; c=relaxed/simple;
-	bh=fSFeh7LyM/VW+wkyTESwF1r98DYurH8l0qUBEQElk78=;
+	s=arc-20240116; t=1777583685; c=relaxed/simple;
+	bh=jExc9ThFJh5G6uRoarH4ZYtA+yWxsZXYal1m+NQwiSg=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=EZCcGsnvTI103uvaKb30A+ujVBLiYisr6Vw1wbxobuU+dnkC6rs95jtbTLSBNKBjvfxbnKUYko9ll98OvmS8guITzNkRS2ybWMCXO+tbGkWCKcJsaHZiDdquyLHtPWbrO4TVmOPfc4LRpF+63XwbmZrfSlGMkYhEs+coUKbPnz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=puQeAZOb; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=hn7O74kbQUk4ev2ODSp0BTeyRjVnJkeN09hukWt7rabYSRyHcJ76iNTwjCXIRTomV1LRs0t7v/R3YL8Af8OOcGBVeFGy1JKS2nysU+yf88Q1F5H08exvthdeNAV7YLGN1+1Q2rXdtbgpelfbmdXGc/iuVq4so6p/X1tL2pRTRSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QB6UvPiv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="puQeAZOb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E40FAC2BCB3;
-	Thu, 30 Apr 2026 21:06:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QB6UvPiv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E437C2BCB3;
+	Thu, 30 Apr 2026 21:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777583204;
-	bh=fSFeh7LyM/VW+wkyTESwF1r98DYurH8l0qUBEQElk78=;
+	s=k20201202; t=1777583685;
+	bh=jExc9ThFJh5G6uRoarH4ZYtA+yWxsZXYal1m+NQwiSg=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=puQeAZObx6LcsJjZvu1WHP+8Qjize0ip9P2cmvV8hYk+1hbARQsBepTiOkBvWthHE
-	 APtvhoP5m8I/E1y18V1kD/BTX+C9Pm/HjCuQycbFK5Jfpa+ZiRcj/X5jsQaWJ9yA+Z
-	 gZ/MVR+TMtwrBvUy/REkOHTbIlNzOpb6jzNWtJHsZ4tT6+SSq2ep9KlR1Fsb5yi0rh
-	 3mZuRSvjEI/bYoelZD7EGAAq6Dn80fISgjTt8OAIkRxPbeKMYn2JqYdjFWaqkD5+fj
-	 svxk+yuFxLyw188ejvfehH9ozLGi75STutLaHibMhH6Z6IOF0uCXaxI2yaRttJVO7G
-	 jOJaHcSyl23Sw==
-Date: Thu, 30 Apr 2026 16:06:42 -0500
+	b=QB6UvPivTiYRt+vDiYJx/8sd6EhpdJ2trnqgU+5o6tvhrZ8N9uRATlIeKOcY7HpDa
+	 VQvviXfNIM1lW7NKurpjJKDO0jdXvpLopueUvz15uYa5HIM6j40TXXJummc/mo2see
+	 CkTcrmQ5xrv/Ot/u0uTtJ3PnYcLWiuqGF6L4vmT8UX7wADE87nzSSUx6Ps9Lpd8/OE
+	 k7pn6uGckkjnWFHcb2Q+wu5PcqpDWoakBOXxfXR0KSysGTTuc7vkGopEZSW3ltVkp5
+	 f/ecEjFnJty6BzmBDMKeIgK7zGz2rcfyg8JXarzpdZjYik2J/UPOqIMyy7lbNvWl2d
+	 VFCF1JQwGMUAQ==
+Date: Thu, 30 Apr 2026 16:14:43 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>, iommu@lists.linux.dev,
-	kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>,
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v4 01/11] PCI: liveupdate: Set up FLB handler for the PCI
- core
-Message-ID: <20260430210642.GA439800@bhelgaas>
+To: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: quirks: Advertise D3cold capability for UPD720201
+Message-ID: <20260430211443.GA440215@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -62,70 +41,52 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <afFHC6C1Qbwio4pH@google.com>
+In-Reply-To: <20260430-d3cold_support-v1-1-6734f280c481@oss.qualcomm.com>
 
-On Tue, Apr 28, 2026 at 11:47:23PM +0000, David Matlack wrote:
-> On 2026-04-28 05:50 PM, Pasha Tatashin wrote:
-> > On 04-27 23:59, David Matlack wrote:
-> > > On 2026-04-24 01:29 PM, Pasha Tatashin wrote:
-> > > > On 04-24 14:33, Pratyush Yadav wrote:
-> > > > > On Thu, Apr 23 2026, David Matlack wrote:
-> > > > > [...]
-> > > > > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > > > > index c9b7b6f9828e..94af31837375 100644
-> > > > > > --- a/MAINTAINERS
-> > > > > > +++ b/MAINTAINERS
-> > > > > > @@ -20555,6 +20555,18 @@ L:	linux-pci@vger.kernel.org
-> > > > > >  S:	Supported
-> > > > > >  F:	Documentation/PCI/pci-error-recovery.rst
-> > > > > >  
-> > > > > > +PCI LIVE UPDATE
-> > > > > > +M:	Bjorn Helgaas <bhelgaas@google.com>
-> > > > > > +M:	David Matlack <dmatlack@google.com>
-> > > > > > +L:	linux-pci@vger.kernel.org
-> > > > > > +S:	Supported
-> > > > > > +Q:	https://patchwork.kernel.org/project/linux-pci/list/
-> > > > > > +B:	https://bugzilla.kernel.org
-> > > > > > +C:	irc://irc.oftc.net/linux-pci
-> > > > > > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git
-> > > > > > +F:	drivers/pci/liveupdate.c
-> > > > > > +F:	include/linux/kho/abi/pci.h
-> > > > > > +
-> > > > > 
-> > > > > Can we please also add these files under the "LIVE UPDATE" entry. The
-> > > > > code here concerns both live update and PCI.
-> > > 
-> > > Covering that intersection of Live Update and PCI was exactly my
-> > > intention with introducing this new PCI LIVE UPDATE entry. This ensures
-> > > we have maintenance coverage with knowledge of that intersection.
-> > > 
-> > > > > We can figure out the
-> > > > > maintenance details as we go along, but I think the live update
-> > > > > maintainers should at least get all the patches for PCI live update.
-> ...
+On Thu, Apr 30, 2026 at 10:12:18AM +0530, Sushrut Shree Trivedi wrote:
+> PCIe-to-USB bridge UPD720201 does not advertise D3cold
+> support until firmware is loaded post pci enumeration.
+> This results in upd blocking D3cold entry during system
+> suspend and causing overall failure to enter XO
+> shutdown.
 
-> > This is the way we agreed to handle kexec changes: Baoquan He is the 
-> > maintainer, and without his Reviewed-by tag, we won't take changes to 
-> > kexec. This is the approach we follow with MM for KHO changes to 
-> > memblock and memfd preservation, as well as the upcoming 
-> > hugetlb/guestmemfd preservation. 
-> > 
-> > This is also the approach we should continue using when adding LUO 
-> > support to other components like PCI, VFIO, IOMMU, and KVM. It keeps 
-> > life easier for the core component maintainers and ensures we do not 
-> > regress LU by staging everything in the same tree and sending LU merge 
-> > requests from a single tree.
-> 
-> Ok it sounds like we are aligned on keeping drivers/pci/liveupdate.c,
-> include/linux/kho/abi/pci.h, and Documentation/PCI/liveupdate.rst in the
-> PCI LIVE UPDATE entry and not duplicating them in the LIVE UPDATE entry.
-> 
-> I think the only open question is what tree to use for the PCI LIVE
-> UPDATE entry, PCI tree or Live Update tree. You are proposing the Live
-> Update tree.
-> 
-> Bjorn are you ok with that approach?
+I think you're saying that the PM Capability in config space changes
+when the firmware is loaded.  That makes me worry about what *other*
+config space changes might happen when the firmware is loaded.
+There's all sorts of stuff we do during enumeration that depends on
+what's in config space.
 
-Yes, I think that makes sense, at least to start.  In early days, it
-would probably be a headache to coordinate LU things across multiple
-trees.
+> Hence, add a quirk to advertise D3cold PME capability
+> since the HW actually supports and advertises it post
+> firmware loading.
+> 
+> Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
+> ---
+>  drivers/pci/quirks.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index caaed1a01dc0..c32617ed33aa 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -6381,3 +6381,13 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+>  #endif
+> +
+> +/*
+> + * Renesas PCIe-to-USB bridge UPD720201 does not advertise D3cold
+> + * capability by default until firmware is loaded post-enumeration.
+
+There are several mentions of "Renesas UPD720201/UPD720202 USB 3.0
+xHCI Host Controller" in the tree.  I assume this is the same device?
+If so, I think it'd be worth using similar terminology, i.e., "USB
+xHCI host controller" instead of "PCIe-to-USB bridge"
+
+> +static void quirk_enable_d3cold(struct pci_dev *dev)
+> +{
+> +	dev->pme_support = dev->pme_support | (1 << PCI_D3cold);
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_RENESAS, 0x0014, quirk_enable_d3cold);
+
+How do we know that FINAL fixups happen after firmware loading?
