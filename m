@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F317E472798;
-	Thu, 30 Apr 2026 16:24:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7357B47277B;
+	Thu, 30 Apr 2026 16:24:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777566302; cv=none; b=gyIx3V9m7oKN+GToXqfAcqvAp9RxPKMyeCtUQ7bOwLar38/nLIoe082KraVyeFVpxZjM3k4OZ8cbZ5upDcdbH3+saO8x87o2fGXZOF8iC0mGbiN3GcsRdT6u5cY34H4A0XBEkL1OeKA3dKXJ2Vag9QlfQ1d5cZseCoaEb4WZFa0=
+	t=1777566302; cv=none; b=BBuglmvj6yH15b8xQj/6kYz19F04ZkefBDUOALa5bPrSX+AXnb8Bj5CxhJOfIF5PzQJuyYSeujVoEj4aDCzv/NyKIFXZ/ENJDuICoeDs83zqAFOj6sMzQqoqtmdc5Go11NNp3AChp/ReWPcoFGrbkOH8U+SWsG1/6x8mBNOdDVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1777566302; c=relaxed/simple;
-	bh=mKRbDHHs0pBDmNClLmPUI/k8yIq84PMezI+ZfgY5vhM=;
+	bh=48RwPttdxZUFq0ycWhKKebZCeIv1wICIT4uEJXvm8oE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=R8ScfpRklY42RmYksgmIGbm9LwICbbud6Y6AfF5pya/hWB0IvNCxrPx9OrmJ0YNBDnBIO+xr8j3YwAeaxwgSsadf8vTULaI9gZf18cnOy1r+7aKqSnXVwsEPylGKo9oawbrzvzp5aJ5yb8c1FpN577BweqxCGj5gPYMYlPLbEYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=kV1/8b8Y; arc=none smtp.client-ip=117.135.210.5
+	 MIME-Version; b=bpaXsFYXGrSMeu5JvvZO6LRXJT4X9b4cJ7omRvIYGMlHgksTxSbe1yGndZ3LicJUJwWlJ0LqOcSlJg9KTttBs4PyUxX5f4fzWn0h0FQIqMgHHhhrL5rD4diW+eZ7lYf3Ss+8J7GrnPywY3SmqPP7kHaWsfej2/iOYdR/meonqGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=oahKvQ3L; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="kV1/8b8Y"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="oahKvQ3L"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=MK
-	0nueE9kuPh+C6bezt4QBz2BNnFpiu2HHOSbx6DsC8=; b=kV1/8b8Y1kpvxqjJMC
-	auDa+Mx1Q7oM2Vcau9f2AIxoFMicnagkwljriWG3tVNyjcAj75yyB+2cnmVHldP9
-	VEultCh1EDze/ZbJNpy4fDOtbUrBxqcP8LdJoncP4fLmI8Gb1Hi1pURHyT94KL8S
-	TJxhFqutoVKwEDLZuZXPl9qHw=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=jA
+	Vlhbb5fwv85oSekzGzmWm4cvS4iOhwz8Eg65D2AxY=; b=oahKvQ3L+z1nKceMKJ
+	AGN8o3pErn/dgD+z3BOml8Up4rTGe9lru7MZr94W+tscNgnVhl5HTwiiLOneMJX4
+	mRmcrxR3gu+Z2Z12nk7gbzxSNEksFtl513Z+uNp4mWbmPUan6HuUiZJVMv7KgXrH
+	sWODiucDY0LU5M07bIjZQHwTw=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wAHJXM2gvNpY8PXCg--.48992S7;
-	Fri, 01 May 2026 00:24:26 +0800 (CST)
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wA3Df0_gvNpcypXCg--.51103S5;
+	Fri, 01 May 2026 00:24:33 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -36,9 +36,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [RESEND PATCH 05/16] PCI/TPH: Use FIELD_MODIFY()
-Date: Fri,  1 May 2026 00:24:09 +0800
-Message-Id: <20260430162420.42839-6-18255117159@163.com>
+Subject: [RESEND PATCH 11/16] PCI: s32g: Use FIELD_MODIFY()
+Date: Fri,  1 May 2026 00:24:15 +0800
+Message-Id: <20260430162420.42839-12-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260430162420.42839-1-18255117159@163.com>
 References: <20260430162420.42839-1-18255117159@163.com>
@@ -49,49 +49,35 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAHJXM2gvNpY8PXCg--.48992S7
-X-Coremail-Antispam: 1Uf129KBjvJXoW7urW7uF4xGF1fZr48AF1xuFg_yoW8Xr1Upa
-	yrJa4fKF9rtr1jyF4DXa1DXrn0gF9aqF97A34Ut39FgF47AF4xXasYyrnxtr18ZFWvvFWf
-	ua9xtryjgFyUA3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRPUUUUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BoGqWnzgjpM7QAA3a
+X-CM-TRANSID:_____wA3Df0_gvNpcypXCg--.51103S5
+X-Coremail-Antispam: 1Uf129KBjvdXoWrur17Kr1UAw15uF18CFWxZwb_yoWfZFXE9F
+	1DCan7Cr1qkr9rCasYkw1fXrZIya1xXr18Kas5tFsIvF4xGw15ZFZ2va98JF15CF15Ar9a
+	krnFvF1xCFyayjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRgmReUUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AEIq2nzgkFOJQAA38
 
 Use FIELD_MODIFY() to remove open-coded bit manipulation.
 No functional change intended.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/tph.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/pci/controller/dwc/pcie-nxp-s32g.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index 91145e8d9d95..655ffd60e62f 100644
---- a/drivers/pci/tph.c
-+++ b/drivers/pci/tph.c
-@@ -139,8 +139,7 @@ static void set_ctrl_reg_req_en(struct pci_dev *pdev, u8 req_type)
+diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+index b3ec38099fa3..31e1169b8ab6 100644
+--- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
++++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
+@@ -139,8 +139,7 @@ static int s32g_init_pcie_controller(struct dw_pcie_rp *pp)
  
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
+ 	/* Set RP mode */
+ 	val = s32g_pcie_readl_ctrl(s32g_pp, PCIE_S32G_PE0_GEN_CTRL_1);
+-	val &= ~DEVICE_TYPE_MASK;
+-	val |= FIELD_PREP(DEVICE_TYPE_MASK, PCI_EXP_TYPE_ROOT_PORT);
++	FIELD_MODIFY(DEVICE_TYPE_MASK, &val, PCI_EXP_TYPE_ROOT_PORT);
  
--	reg &= ~PCI_TPH_CTRL_REQ_EN_MASK;
--	reg |= FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, req_type);
-+	FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, req_type);
- 
- 	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
- }
-@@ -427,11 +426,8 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- 	/* Write them into TPH control register */
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
- 
--	reg &= ~PCI_TPH_CTRL_MODE_SEL_MASK;
--	reg |= FIELD_PREP(PCI_TPH_CTRL_MODE_SEL_MASK, pdev->tph_mode);
--
--	reg &= ~PCI_TPH_CTRL_REQ_EN_MASK;
--	reg |= FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, pdev->tph_req_type);
-+	FIELD_MODIFY(PCI_TPH_CTRL_MODE_SEL_MASK, &reg, pdev->tph_mode);
-+	FIELD_MODIFY(PCI_TPH_CTRL_REQ_EN_MASK, &reg, pdev->tph_req_type);
- 
- 	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
- 
+ 	/* Use default CRNS */
+ 	val &= ~SRIS_MODE;
 -- 
 2.34.1
 
