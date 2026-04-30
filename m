@@ -1,190 +1,186 @@
-Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD2E28030E;
-	Thu, 30 Apr 2026 18:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.15
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777574757; cv=pass; b=S1KKC85KmC5SrK+9KHXTsEmgMUuxFz2IJzte0dAaSivDyvHR85+G1hMkpHkYpiVC06bLgtqX15P9PzkNyzD5P7q8ymh7S4AoX33tEqMJmAM9THvIOkwo2vocTPKJPjOcNGvhZ/hVADd+D3q2AJN+11KYXZn9Yqr2JICyOIcFKB8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777574757; c=relaxed/simple;
-	bh=FPpVVe+m+q36Kjv0eDC5VirL8YxY+kryP06SAzR123Q=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=fatNsnQFCkgGVOB1FqIkUOc0kYr9L/ku/E/1sP3Paf/fRtD8vUtmKEBubITRkZvAiNALFgvLW5g81g4fTN+j+Qj5u7FjFJntmtfj1EZAZo84wY741d5+JjIwtTIELFPvJ+LMY5Tu5B0eYgKQXuDxjD3BsBZ5VKK8qfLcHEaWU4o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rong.moe; spf=pass smtp.mailfrom=rong.moe; dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b=Tg69EmOI; arc=pass smtp.client-ip=136.143.188.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rong.moe
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rong.moe
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 886E015B0EC
+	for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 18:48:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777574908; cv=none; b=fbIqVcG6f1ODQYRvsIupy9O6rlGM6vbOD4GIGqNjBDdPihn+BOYb1T9mESx7ikYR+9CEyjopcaSOh9ajMFAv8/LEz2xGDrOV0+CG9aEc8hhG7w2wnZsVvS3MtDBSH9IKrId7b2fzzAPgGKvxmn583r26ofbNE9vYv5jylyJ51qc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777574908; c=relaxed/simple;
+	bh=oOCA6r5C2BmuUW8Nh03N3Y23igUJA/x154m57C9Gmrc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=G6Fel2WKIDCPOTRRj8ZwF+p/eJhcM3f4Pabi3TbeCYA/qepzDs3xW/GGQq/HJN9v+6ep610Sh6Gmh7trm4Qs5lKESCctrYm9miy4PXzyFMIadOC9FDDBeB4rrDXT6INGm9fIUfTtfqU2ZEuiAjddASUqpvKeGq00bmU18zItjzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=FXG6muwT; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rong.moe header.i=i@rong.moe header.b="Tg69EmOI"
-ARC-Seal: i=1; a=rsa-sha256; t=1777574736; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=bARqjw6y9ZzRH+weM4zD+od67bHG5EjI1lLjk1ZPrj9RJ+o00U4F1dMXFBm73Rmr7rH+tQBpfp4miFwTLThFrSUqmtH6vtVRzm2mpq5tVdBHcA7HxTVr6nDsmixUtM1ZIsyx3i9aOd5F9xE/AMv6LIbC+HHKgkdpXyxAK83psqo=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1777574736; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=qhcUzWz+e0eHqHXsaKs+FfS0uIQ3j8wCK538/jEKh44=; 
-	b=QQmh7wdMGZFXPYJSuL2vsqhDwJX3558b0zbJ3ii663DAA6VoxMyRnbX7GJDoB17Qe88E9TBZaSF1aKx63tQg2qbbnR8U2Us+06d0qwvgcaa2Kb0W6MvgzY1dU+VqD4HBXXXJUMqZQtqcUahUD0f24ClBZs5SnuIJAa1AUvoauYI=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=rong.moe;
-	spf=pass  smtp.mailfrom=i@rong.moe;
-	dmarc=pass header.from=<i@rong.moe>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1777574736;
-	s=zmail2048; d=rong.moe; i=i@rong.moe;
-	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:To:To:Cc:Cc:Reply-To;
-	bh=qhcUzWz+e0eHqHXsaKs+FfS0uIQ3j8wCK538/jEKh44=;
-	b=Tg69EmOIcZR+jtONoO8C1q7jrxMY+8LLXBC//b6w/D0jipOxqkOlUUXYFvSzk1nK
-	1Z0hRyVV8ZHVpwL9hNGg8I3fcK54EPX/08OMxsGB/XS23OiE0wbucZV6/0dH01h43jy
-	2t16kM+2RdqE9sxJ2Z5FSX9fDsTnc+8ba42NurplT7VjhtQNKgcC2/h4LwAFpS4gjgv
-	4uPseNJjWawzFJPPvZcf4eEcPrV/3Sa9JYMxfee6cb6c+4H0lYBWLt7HRM6+7bnUU9K
-	PBYBVEN/5jYZF4zvGvGNTnUwIwbjy4yI8J3RcON9R0OC5Q8llwe9OC0ZBy+ELvCISyY
-	voKJP+lbHg==
-Received: by mx.zohomail.com with SMTPS id 1777574734960836.5917068452161;
-	Thu, 30 Apr 2026 11:45:34 -0700 (PDT)
-From: Rong Zhang <i@rong.moe>
-Date: Fri, 01 May 2026 02:45:23 +0800
-Subject: [PATCH v2] PCI: loongson: Do not ignore downstream devices on
- external bridges
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FXG6muwT"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2b243198058so24585ad.1
+        for <linux-pci@vger.kernel.org>; Thu, 30 Apr 2026 11:48:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1777574907; x=1778179707; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=9xAzQZcfn4hf28SgvSsobLbrv7DrZRSNcDWvXS0OfYE=;
+        b=FXG6muwT8CW2xQ5uyU6zFGmU3s4eGPuMZADtION1e+h++0ks6a0kAFdLE7skILJ2Bq
+         eGo+4lSboHx64gSLBk+xIz5eVkBteWoz993tpGo/ZunCoiLZpFELkl/9z58tkXVGyOPL
+         Bg8V5EOS8+CIrCQ0POr7jp4GBPzceF5KrBypalvCMyglGgS3IxQRC9DwO09J2hMy+uqO
+         nsk6dAXnmrNF53axhVXgz1G05FkHcMJ6lh8mAus/k4UBqoVb1hwnnjC9QAcC8o0v6giT
+         Kwq8bcBuJxdVT8vXcqp203o7DP6FC7YMVSaJX5hWAYiyHwM3tObDn+QH6G/VdkWpSMLL
+         AogA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777574907; x=1778179707;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=9xAzQZcfn4hf28SgvSsobLbrv7DrZRSNcDWvXS0OfYE=;
+        b=Ck6btg0XsW4seixDXR+bMfGYabBrnUualdwoxpXVrkJrZNkumIFVG0V/7/l02fcR8s
+         5e9GBbtCtn18JgETJseP2nsLxcDzr3LoJ/O5n4nsNdSB7qGkgfrM80fZhpxlxZNjHxP5
+         aIak2VffeXIwgLHdo7v8s/pyTKqTyNyX1YPTOggKH8ZJiBq/tiGTGehQDuw/J4VHvqMy
+         +ZWtFIlK53tF5VoO1JSVEqm9kOsA5uyY4Ab7C5iN5i1JVIlC1qZCFJI2dqpBX6bkDGm1
+         HR7lprIqkiIMmcR1ALb/yRxBJeMe5VsDWpi7FdCMwGhbnT1M4Yddl3/8K+0Fb/JkBKtG
+         xJkg==
+X-Forwarded-Encrypted: i=1; AFNElJ8ixUkQN7gprJBf9Br+hC094vFG9VSYojI4gz7vYLFccjkKeeDdZBjWNfEe9+9FzJ1NgbYndu+qmlw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz/3pw46chdIGVJrid16JjPdjiFno8/0jlN0qJplk3TlbjNbPxX
+	t5ljl5CDhAI/fcRAZja4DtnOEGVphb/CDPHuCG0MRfVUTTJswxKxm7n1lSthdoAPYg==
+X-Gm-Gg: AeBDieu6JaNz8VffisAOoBm8VEwgM9QyY8Q0nUbCFj3Tvmk2qgK2isQZSQaacsy6q29
+	A4zDTUPhpySNKXXextXFd0Tqv0Rf1afR/YoGHObIP50NRL7XmEDVXyRMA2WkxAUpeZ+6OGzybqG
+	KHhNx/jlrZQaQzy0uRkkXxE5RAL9KtMtsKIZiCL2Hsnw7blt2L50B1rgHixy8vFCNOhfCBxu0PR
+	EMG6iNYCmIBghoAmp99UrYPiVWG1KejHE9+qRE9FFEXsxNWkpEEV8sH/MOoUdjOjlZAgB+b7lSb
+	MYuGrfX8xYt5Qd1NHT4apbTVDwMcVTLA9eMiBXTHmCKzltJ8BOSeStwmqvyXMF0QO3qN/39NS7J
+	hPQ25ibNZ6ma68EpkZ+ivGGEcNXI+zALqesXNpfzjplnxKXP9iu8i4dknNUnxdOyiSX/tHpLk6C
+	1zPfpAG/+k6m+JLGp7Vh3bngxHNTp1pS0s38CMXGDY1T246P8FSq5+BJCOcb32wzrBCcVh0rdgW
+	xTvLVgP1w==
+X-Received: by 2002:a17:903:4b4f:b0:2b0:5c88:51e1 with SMTP id d9443c01a7336-2b9cd98bb43mr418175ad.14.1777574906266;
+        Thu, 30 Apr 2026 11:48:26 -0700 (PDT)
+Received: from google.com (176.13.105.34.bc.googleusercontent.com. [34.105.13.176])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b9caa7e47asm3289405ad.15.2026.04.30.11.48.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2026 11:48:25 -0700 (PDT)
+Date: Thu, 30 Apr 2026 11:48:21 -0700
+From: Vipin Sharma <vipinsh@google.com>
+To: David Matlack <dmatlack@google.com>
+Cc: iommu@lists.linux.dev, kexec@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
+	Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, 
+	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, 
+	Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
+	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, William Tu <witu@nvidia.com>, 
+	Yi Liu <yi.l.liu@intel.com>
+Subject: Re: [PATCH v4 01/11] PCI: liveupdate: Set up FLB handler for the PCI
+ core
+Message-ID: <20260430182532.GB13902.vipinsh@google.com>
+References: <20260423212316.3431746-1-dmatlack@google.com>
+ <20260423212316.3431746-2-dmatlack@google.com>
+ <20260428185242.GB3825533.vipinsh@google.com>
+ <afFICT9mSL1XG0v_@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260501-ls7a-bridge-fixes-v2-1-69fa93683805@rong.moe>
-X-B4-Tracking: v=1; b=H4sIAEOj82kC/22NwQ6CMBBEf4Xs2ZpSoYIn/8NwaMsW1ig1XSQaw
- r9bMN48vszMmxkYIyHDKZsh4kRMYUigdhm43gwdCmoTg5JKy0JW4sZHI2ykNkWeXsiiMrUtC6O
- tVg7S7hFxC9Ls0nyZn/aKblxFa6MnHkN8b6dTvvZ+/vqPf8qFFAddSo+tz4135xiGbn8PCM2yL
- B8EFxLDwwAAAA==
-X-Change-ID: 20260408-ls7a-bridge-fixes-8a9b54a6b62c
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Huacai Chen <chenhuacai@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Jiaxun Yang <jiaxun.yang@flygoat.com>, 
- "Lain \"Fearyncess\" Yang" <i@lain.vg>, Rong Zhang <i@rong.moe>
-X-Mailer: b4 0.16-dev-7777e
-X-ZohoMailClient: External
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <afFICT9mSL1XG0v_@google.com>
 
-Loongson PCI host controllers have a hardware quirk that requires
-software to ignore downstream devices with device number > 0 on the
-internal bridges. The current implementation applies the workaround to
-all non-root buses, which breaks external bridges (e.g., PCIe switches)
-with multiple downstream devices.
+On Tue, Apr 28, 2026 at 11:51:37PM +0000, David Matlack wrote:
+> On 2026-04-28 12:45 PM, Vipin Sharma wrote:
+> > On Thu, Apr 23, 2026 at 09:23:05PM +0000, David Matlack wrote:
+> > > +	pr_debug("Preserving struct pci_ser with room for %u devices\n",
+> > > +		 max_nr_devices);
+> > > +
+> > > +	ser = kho_alloc_preserve(size);
+> > > +	if (IS_ERR(ser))
+> > > +		return PTR_ERR(ser);
+> > 
+> > Should there be a similar pr_debug() in case of failure to denote that above
+> > "Preserving ..." message didn't finish, or, maybe just print one
+> > pr_debug() after the error check above?
+> 
+> Hm... I guess there could always be more pr_debug()s but I don't want to
+> instrument every error path. I could move it to the success path but I
+> don't see how that makes it any better.
+> 
 
-Fix it by only applying the workaround to internal bridges.
+In current way, it is printing that it is preserving pci_ser, but there
+is no indication did it succeed or not in logs. If we are printing the
+logs then may be complete picture will be to know what is the action and its
+result.
 
-Tested on Loongson-LS3A4000-7A1000-NUC-SE, using AMD Promontory 21
-chipset add-in card [1].
+I think moving to success path or printing again based on the failure
+provides assurance of what happened. If this gets printed in happy
+path, then we will know it succeeded in preserving that struct on
+kho.  Absence means it didn't. 
 
-  $ lspci -tnnnvvv
-  -[0000:00]-+-00.0  Loongson Technology LLC 7A1000 Chipset Hyper Transport Bridge Controller [0014:7a00]
-             +-00.1  Loongson Technology LLC 7A2000 Chipset Hyper Transport Bridge Controller [0014:7a10]
-             +-03.0  Loongson Technology LLC 2K1000/2000 / 7A1000 Chipset Gigabit Ethernet Controller [0014:7a03]
-             +-04.0  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB OHCI Controller [0014:7a24]
-             +-04.1  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB EHCI Controller [0014:7a14]
-             +-05.0  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB OHCI Controller [0014:7a24]
-             +-05.1  Loongson Technology LLC 2K1000 / 7A1000/2000 Chipset USB EHCI Controller [0014:7a14]
-             +-06.0  Loongson Technology LLC 7A1000 Chipset Vivante GC1000 GPU [0014:7a15]
-             +-06.1  Loongson Technology LLC 2K1000 / 7A1000 Chipset Display Controller [0014:7a06]
-             +-07.0  Loongson Technology LLC 2K1000/2000/3000 / 3B6000M / 7A1000/2000 Chipset HD Audio Controller [0014:7a07]
-             +-08.0  Loongson Technology LLC 2K1000 / 7A1000 Chipset 3Gb/s SATA AHCI Controller [0014:7a08]
-             +-08.1  Loongson Technology LLC 2K1000 / 7A1000 Chipset 3Gb/s SATA AHCI Controller [0014:7a08]
-             +-08.2  Loongson Technology LLC 2K1000 / 7A1000 Chipset 3Gb/s SATA AHCI Controller [0014:7a08]
-             +-09.0-[01]----00.0  Qualcomm Technologies, Inc QCNFA765 Wireless Network Adapter [17cb:1103]
-             +-0a.0-[02]----00.0  Etron Technology, Inc. EJ188/EJ198 USB 3.0 Host Controller [1b6f:7052]
-             +-0f.0-[03-08]----00.0-[04-08]--+-00.0-[05]----00.0  Shenzhen Longsys Electronics Co., Ltd. FORESEE XP1000 / Lexar Professional CFexpress Type B Gold series, NM620 PCIe NVME SSD (DRAM-less) [1d97:5216]
-             |                               +-08.0-[06]----00.0  MAXIO Technology (Hangzhou) Ltd. NVMe SSD Controller MAP1202 (DRAM-less) [1e4b:1202]
-             |                               +-0c.0-[07]----00.0  Advanced Micro Devices, Inc. [AMD] 600 Series Chipset USB 3.2 Controller [1022:43f7]
-             |                               \-0d.0-[08]----00.0  Advanced Micro Devices, Inc. [AMD] 600 Series Chipset SATA Controller [1022:43f6]
-             \-16.0  Loongson Technology LLC 7A1000 Chipset SPI Controller [0014:7a0b]
+We can also remove pr_debug(), if this is of no value.
 
-Fixes: 2410e3301fcc ("PCI: loongson: Don't access non-existent devices")
-Link: https://oshwhub.com/wesd/b650 [1]
-Co-developed-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
-Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
-Co-developed-by: Lain "Fearyncess" Yang <i@lain.vg>
-Signed-off-by: Lain "Fearyncess" Yang <i@lain.vg>
-Signed-off-by: Rong Zhang <i@rong.moe>
----
-Changes in v2:
-- Squash into a single patch to prevent temporary build regressions,
-  i.e., unused variable on non-MIPS builds (found by Sashiko)
-  - https://sashiko.dev/#/patchset/20260409-ls7a-bridge-fixes-v1-0-3650fedf1afc%40rong.moe
-- Link to v1: https://patch.msgid.link/20260409-ls7a-bridge-fixes-v1-0-3650fedf1afc@rong.moe
----
- drivers/pci/controller/pci-loongson.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+> > 
+> > > +/**
+> > > + * struct pci_dev_ser - Serialized state about a single PCI device.
+> > > + *
+> > > + * @domain: The device's PCI domain number (segment).
+> > > + * @bdf: The device's PCI bus, device, and function number.
+> > > + * @reserved: Reserved (to naturally align struct pci_dev_ser).
+> > > + */
+> > > +struct pci_dev_ser {
+> > > +	u32 domain;
+> > > +	u16 bdf;
+> > > +	u16 reserved;
+> > 
+> > Should this be renamed to 'u8 __padding[2];' instead? This will allow to
+> > just change the array length based on the need (0, 1, 2, 3).
+> 
+> Sorry I'm not following what you mean here. What is the reason to rename
+> this field and change it to an array?
+> 
 
-diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
-index bc630ab8a283..de5e809a537d 100644
---- a/drivers/pci/controller/pci-loongson.c
-+++ b/drivers/pci/controller/pci-loongson.c
-@@ -80,6 +80,18 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
- 			DEV_LS7A_LPC, system_bus_quirk);
- 
-+static const struct pci_device_id loongson_internal_bridge_devids[] = {
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS2K_PCIE_PORT0) },
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT0) },
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT1) },
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT2) },
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT3) },
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT4) },
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT5) },
-+	{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT6) },
-+	{ 0, },
-+};
-+
- /*
-  * Some Loongson PCIe ports have hardware limitations on their Maximum Read
-  * Request Size. They can't handle anything larger than this.  Sane
-@@ -92,24 +104,13 @@ static void loongson_set_min_mrrs_quirk(struct pci_dev *pdev)
- {
- 	struct pci_bus *bus = pdev->bus;
- 	struct pci_dev *bridge;
--	static const struct pci_device_id bridge_devids[] = {
--		{ PCI_VDEVICE(LOONGSON, DEV_LS2K_PCIE_PORT0) },
--		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT0) },
--		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT1) },
--		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT2) },
--		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT3) },
--		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT4) },
--		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT5) },
--		{ PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT6) },
--		{ 0, },
--	};
- 
- 	/* look for the matching bridge */
- 	while (!pci_is_root_bus(bus)) {
- 		bridge = bus->self;
- 		bus = bus->parent;
- 
--		if (pci_match_id(bridge_devids, bridge)) {
-+		if (pci_match_id(loongson_internal_bridge_devids, bridge)) {
- 			if (pcie_get_readrq(pdev) > 256) {
- 				pci_info(pdev, "limiting MRRS to 256\n");
- 				pcie_set_readrq(pdev, 256);
-@@ -230,11 +231,11 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus,
- 	struct loongson_pci *priv = pci_bus_to_loongson_pci(bus);
- 
- 	/*
--	 * Do not read more than one device on the bus other than
--	 * the host bus.
-+	 * Do not read more than one device on the internal bridges.
- 	 */
- 	if ((priv->data->flags & FLAG_DEV_FIX) && bus->self) {
--		if (!pci_is_root_bus(bus) && (device > 0))
-+		if (!pci_is_root_bus(bus) && (device > 0) &&
-+		    pci_match_id(loongson_internal_bridge_devids, bus->self))
- 			return NULL;
- 	}
- 
+Having a padding explicitly tells there is a requirement of being
+aligned. Reserved sounds more like don't use this u16.
 
----
-base-commit: 08d0d3466664000ba0670e0ef0d447f23459e0d4
-change-id: 20260408-ls7a-bridge-fixes-8a9b54a6b62c
+If someone add more field down the line say u8, then to make struct size
+aligned they will need to add another u8, u16, u32, and name those
+fields padding or reserved. IMO, having a u8 array named padding makes
+it easier to just change array length as per the need.
 
-Thanks,
-Rong
+> > > +} __packed;
+> > > +
+> > > +/**
+> > > + * struct pci_ser - PCI Subsystem Live Update State
+> > > + *
+> > > + * This struct tracks state about all devices that are being preserved across
+> > > + * a Live Update for the next kernel.
+> > > + *
+> > > + * @max_nr_devices: The length of the devices[] flexible array.
+> > > + * @nr_devices: The number of devices that were preserved.
+> > > + * @devices: Flexible array of pci_dev_ser structs for each device.
+> > > + */
+> > > +struct pci_ser {
+> > > +	u32 max_nr_devices;
+> > > +	u32 nr_devices;
+> > > +	struct pci_dev_ser devices[];
+> > > +} __packed;
+> > > +
+> > > +/* Ensure all elements of devices[] are naturally aligned. */
+> > > +static_assert(offsetof(struct pci_ser, devices) % sizeof(unsigned long) == 0);
+> > > +static_assert(sizeof(struct pci_dev_ser) % sizeof(unsigned long) == 0);
+> > 
+> > Nit: Maybe move this assert to be near to the definition of this struct,
+> > easier to find it when editing the struct vs finding it later during
+> > build.
+> 
+> The combination of these 2 asserts is what guarantees that every element
+> of the devices[] array are naturally aligned, that's why I put them
+> together here.
+> 
+> I can move it up though if you think it's better.
 
+Okay, SGTM.
