@@ -1,158 +1,167 @@
-Received: from mail-dl1-f97.google.com (mail-dl1-f97.google.com [74.125.82.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 357AE287503
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2026 22:05:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.97
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2E5D1A8F7B
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2026 23:27:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777673110; cv=none; b=mdcVY1iiiZ6hDVb6eKW32LQnLduINW2rkveQ63NxcGrFawpUh8gfpGnHMoaekWZShAG+XiQJZuR/lvO0CoalMXS37zGl+fAE7TKgJRKgp14RwJ9UlQF3bUp1N3EuQgQF5TB1rUbhDvhzN2mmvmoLWgarFyIon+SkhaV9oxlwDnI=
+	t=1777678064; cv=none; b=QTZ4HpRRgF8E+vV5DUU3UCSuZwhVe8mTJqtMarAvtfsN9JPXdZYMoPz8Op/MuIlRCJi5J2tBfPWJfJE2/MVm3eRGz7wNH1Z2b5WUdFNHLpLLiw/ooX1d5z7uW/1M3FcEXV99lougGaJOu++5uB5SKCGzzut+sykpg37R4F1Gljw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777673110; c=relaxed/simple;
-	bh=0qSOFdNT6dR0KSqAHacMYC+aznjSOX25Xn2HUv4F0p0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g814ZStPVV7NIKBymR8I4hgBF0gk3a1QcuV4wXyd15xjTaSaEBGAU5RCaEzqe08QElViMnw/RKJrBtmB0mv+F443eKaFxyUuN6ZrUWsmmNppABJ8jK5r2pjQB6nlndrbf54kPtMi28u0n6PF8OyzDI+hK4gBO0HFYMV1lRAZSFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=WFay63yA; arc=none smtp.client-ip=74.125.82.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1777678064; c=relaxed/simple;
+	bh=2k5q00p8L2SCLrIAB5imsL6AkKQY6Gzh059g+5BeG2w=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 Mime-Version:Content-Type; b=RQAKWKQLz8M38bX1afeZMkGNc3DN3Fd9aNq03UT/vGDPLM+p/FiM96O0IH87C14Xk50QAWUDfahthGIiekfyFuVR3bVlHKBEc7YDFZpGFTK0VdldGlHGxnnqLiQhiD52LQlxnWJu36coeBZ1IUi94wnuu/GDNd0BC0HK+GVtRis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GpK1WTsd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WFay63yA"
-Received: by mail-dl1-f97.google.com with SMTP id a92af1059eb24-12dcdcd54adso3602601c88.1
-        for <linux-pci@vger.kernel.org>; Fri, 01 May 2026 15:05:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777673108; x=1778277908;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=0JiJdMx+KJquXdLD9tyzm4VKNrHA4z52kt6wPCreDaY=;
-        b=Ry7gQM2z9sngIcDhHcDr3S6oLByT+A32deo9bUWXNRoc32JYe5FSa8X+fTHvJAB8F8
-         Jia5/SpP0VDLFdOFQNHF24Ybf1/S45rlFBwIetAOJaMQiMfKenYPvMegRaVKzAwd2PJb
-         FgECCTzCbodVJtwPPRnpBUom1vS2tJAR7hYOJnN5t0cCQlzCM+OHG9NEDiuwOKRuUbgp
-         oAFZWS6ltz+WgDUBYLF+8RQxPWw0m7ntB5aM6UTxNCYjHCFQPEKqN1dqGMQB0sdHWaZJ
-         LjBPFJUtrWi2/UlRMpkFL2cmc+q1Ww4D2kZxK8Pc4Cbfltyq+EzUxJDzUiXTHKFrDUsF
-         mXvg==
-X-Gm-Message-State: AOJu0YyMMu6TcoZhTCPO+RCRSfN4NONlZTObSwTpQXNe77pCvjQo+7UU
-	ewhmpHiD6etEvgGMDAUdXZsOcWNWINbo/DMfmvVdDtkIFQvQCPUJE5YHIYyA57eykKb80Nb2QR7
-	xIIksbppsMzWrlSrwp1mMjuvnRbHVVga+TOEAw/1HTxdQQ/F/VWu8RXBV+dFP/UUQrDWsTiSJ5x
-	tA6Cyxy1KvdbJG8ltoBrFm676QugxtN7QHTBdLXeEchxiHkpbnyGoYfFh5vAEBhY/cjUTxE3zU6
-	FqYhhtlu04kC+Kr8wkH
-X-Gm-Gg: AeBDieunHwAN9nLiCfvqYy86JGi/A4+3wJRJFsygfxZGOIchfHbmicZPImeJJB0UApI
-	lyo1Bo9ds/Av+WTnXPPJhDZ9Y0qDo7eWuNwqdWZ7eskiv13mitD+YcpOfGVg2Mz4P+3WLc5MTbA
-	SqBbeIymRliQFZKuBGmDFohERziM9ojtqHyeYK7cByBs6WkrTVDXWyvLjnRjNjjtW8cFqaCmcie
-	H+PLHZfP9IE/QbiFh+jKAE7CODQjMbiIkvgLShURh/n1F9oNOvtu6MnfrhRKlnZb+/rB8QUmT9E
-	p+sknMIoKJiDXJzwl6jWXM/CQLZ70lK8KZ/NI9iECzvv+0gZ7ui+0FUxSQIxaO8Nh2Eymy4+Cy/
-	djXltWA88aEAg/7IQfvPBdrf4tqWAMYPHwBRDVwzkIHWxdwfDkf0DiWXy1CdKydW6lwCdLyj1eG
-	T2fFZmaqiYPkJ8xfAIHZKtZq09e47vM3U0QJ9osN8S7Hb3L4Wub4csbJBUDqJ7QajVRIO1IQpo3
-	8A=
-X-Received: by 2002:a05:7022:4391:b0:12a:713b:8958 with SMTP id a92af1059eb24-12dfd7bbc2dmr474444c88.10.1777673107954;
-        Fri, 01 May 2026 15:05:07 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-121.dlp.protect.broadcom.com. [144.49.247.121])
-        by smtp-relay.gmail.com with ESMTPS id a92af1059eb24-12df843d895sm260939c88.8.2026.05.01.15.05.07
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 May 2026 15:05:07 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-50d5d1c2289so56423711cf.2
-        for <linux-pci@vger.kernel.org>; Fri, 01 May 2026 15:05:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1777673106; x=1778277906; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=0JiJdMx+KJquXdLD9tyzm4VKNrHA4z52kt6wPCreDaY=;
-        b=WFay63yAPRoQkcnSe97zBV6MZynaDpVMMcKII1G3vL+y2qh/pxRHDMiEZrfC7xwYqJ
-         x9A/KEwr37otSGJlJjI8KB329N4SvBHwtHS4slbO2XFe3tyYMafQ5ul6boQRcP5Pb8ZU
-         12pC7HQuflku/R0f688EJH2P4jMCjjPkS7C98=
-X-Received: by 2002:ac8:57c9:0:b0:50f:b17d:7e53 with SMTP id d75a77b69052e-5104bf6baeamr15609351cf.47.1777673106367;
-        Fri, 01 May 2026 15:05:06 -0700 (PDT)
-X-Received: by 2002:ac8:57c9:0:b0:50f:b17d:7e53 with SMTP id d75a77b69052e-5104bf6baeamr15608871cf.47.1777673105862;
-        Fri, 01 May 2026 15:05:05 -0700 (PDT)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51040b5e8b4sm29282711cf.23.2026.05.01.15.05.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 May 2026 15:05:04 -0700 (PDT)
-Message-ID: <ef1c9256-7fed-4476-bf84-9dc46bca2232@broadcom.com>
-Date: Fri, 1 May 2026 15:05:02 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GpK1WTsd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D28AC2BCB4;
+	Fri,  1 May 2026 23:27:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777678063;
+	bh=2k5q00p8L2SCLrIAB5imsL6AkKQY6Gzh059g+5BeG2w=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=GpK1WTsdYFhkQb0stH7wNNsrKIrKqEtaXpi9/uDZCt6BTrZQ/He5NU6QAwLlnoLwC
+	 guztffc7OZxlBaMIA9GgkUmNak6mZ0l6v/SH2BubVjYHSapzqR07sJtenDlLjb0Vrf
+	 v7E19++DWZxAQljDbzWC2g6cDaNL4h2ZNp3GUom+nSceiT02UMxYF1c7bzVKCQJi7w
+	 LhZSFokhuaklTiveWalu1i9UIbtf7EzuBvHSl6Tn8WpWJECAmwOOkZeG2+YOFpRNQC
+	 FdFRSQyOL7IBFs1To1+z1lE46+H5yQFJkQZMV7pLy8Zey+hDZ/6QYdNFDysU++zY6d
+	 NTW4EPoONmbRA==
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfauth.phl.internal (Postfix) with ESMTP id A88FDF40068;
+	Fri,  1 May 2026 19:27:42 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-04.internal (MEProxy); Fri, 01 May 2026 19:27:42 -0400
+X-ME-Sender: <xms:7jb1acHY-tPHMvyM98Jqckvdort1JVM99gSyfPMsEDUEEqUbN5gJcQ>
+    <xme:7jb1acZG05AiWaobmeQsjEXn-98j1WHrGb-VSSRg-QhDdU4c6ZbZ71W-zZCFNzgcP
+    hsATR-XUCjE1wPvKH-tsF2n5eZQAociU5IiwePTIZ6RMgI-mJkYng4K>
+X-ME-Received: <xmr:7jb1ad0n3Xd6f7-Z65FKboAL6YNLzkFObSdXGqjzz9Ahin0-X8SPDiE_MFwfOjxAph1BtznRROZL2BxS1XNUm2Ti32Gg4nCO8Zc>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdeludehvdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpeffhffvvefkjghfufggtgfgsehtjeertddttdejnecuhfhrohhmpedfffgrnhcuhghi
+    lhhlihgrmhhsucdlnhhvihguihgrmddfuceoughjsgifsehkvghrnhgvlhdrohhrgheqne
+    cuggftrfgrthhtvghrnhepvdegheeikeetleeuffeuheefjeejvdejvdevteefgfffveeh
+    vdeuvdffveffvdehnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
+    hfrhhomhepughjsgifodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqddujeej
+    vdeftdegheehqdeffeefleegtdegjedqughjsgifpeepkhgvrhhnvghlrdhorhhgsehfrg
+    hsthhmrghilhdrtghomhdpnhgspghrtghpthhtohepvddtpdhmohguvgepshhmthhpohhu
+    thdprhgtphhtthhopehnihgtohhlihhntgesnhhvihguihgrrdgtohhmpdhrtghpthhtoh
+    epughjsgifsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjghhgsehnvhhiughirgdr
+    tghomhdprhgtphhtthhopeifihhllheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheprh
+    hosghinhdrmhhurhhphhihsegrrhhmrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghs
+    sehgohhoghhlvgdrtghomhdprhgtphhtthhopehjohhroheskegshihtvghsrdhorhhgpd
+    hrtghpthhtohepphhrrggrnhesghhoohhglhgvrdgtohhmpdhrtghpthhtohepsggrohhl
+    uhdrlhhusehlihhnuhigrdhinhhtvghlrdgtohhm
+X-ME-Proxy: <xmx:7jb1aUc7xep8-XO8N2WGdSLCmHALigT1u79gu81zGLEbTP19kskZDg>
+    <xmx:7jb1afAUat8iHAecyPX4xjpsjKHL7MLEgoZRwuNvZJIdGN1dLsSPFw>
+    <xmx:7jb1aW07DHrU6-JbKte1wiE-7EtcH2ze9v0pvjWzc_PNyAFr1HPPzg>
+    <xmx:7jb1afM_RN63IDbTfXgJndsz4SEIBN-UAnwcJ9lMdpGEKCGKX38t5A>
+    <xmx:7jb1aUc0Q01sB9YnmfYzZ1DP9YbWSwcXE7IeewNI6Ru4D3cN50Vq79pG>
+Feedback-ID: i67ae4b3e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 1 May 2026 19:27:42 -0400 (EDT)
+Date: Fri, 01 May 2026 16:27:41 -0700
+From: "Dan Williams (nvidia)" <djbw@kernel.org>
+To: Nicolin Chen <nicolinc@nvidia.com>, 
+ "Dan Williams (nvidia)" <djbw@kernel.org>
+Cc: jgg@nvidia.com, 
+ will@kernel.org, 
+ robin.murphy@arm.com, 
+ bhelgaas@google.com, 
+ joro@8bytes.org, 
+ praan@google.com, 
+ baolu.lu@linux.intel.com, 
+ kevin.tian@intel.com, 
+ miko.lenczewski@arm.com, 
+ linux-arm-kernel@lists.infradead.org, 
+ iommu@lists.linux.dev, 
+ linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, 
+ dan.j.williams@intel.com, 
+ jonathan.cameron@huawei.com, 
+ vsethi@nvidia.com, 
+ linux-cxl@vger.kernel.org, 
+ nirmoyd@nvidia.com
+Message-ID: <69f536ed263dd_3291a910017@djbw-dev.notmuch>
+In-Reply-To: <afPlkW5zlTSHwQCT@Asurada-Nvidia>
+References: <cover.1777269009.git.nicolinc@nvidia.com>
+ <f6734b9dad0050138676f11ecd14e9db1cf6b697.1777269009.git.nicolinc@nvidia.com>
+ <69f3cc82926_3291a910039@djbw-dev.notmuch>
+ <afPlkW5zlTSHwQCT@Asurada-Nvidia>
+Subject: Re: [PATCH v4 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: brcmstb: Assign pcie->gen from pcie_get_link_speed()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Dom Cobley <popcornmix@gmail.com>,
- Phil Elwell <phil@raspberrypi.com>, Jim Quinlan <jim2101024@gmail.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Hans Zhang <18255117159@163.com>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-rpi-kernel@lists.infradead.org>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20260501220359.GA522578@bhelgaas>
-Content-Language: en-US, fr-FR
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
- xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
- M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
- JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
- PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
- KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
- AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
- IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
- ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
- bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
- Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
- tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
- TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
- zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
- WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
- IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
- U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
- 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
- pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
- MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
- IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
- gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
- obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
- N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
- CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
- C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
- wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
- EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
- fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
- MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
- 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
- 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
-In-Reply-To: <20260501220359.GA522578@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
 Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On 5/1/26 15:03, Bjorn Helgaas wrote:
-> On Fri, May 01, 2026 at 01:24:38PM -0700, Florian Fainelli wrote:
->> After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
->> pcie->gen stopped being assigned and as a result the established PCIe
->> link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
->> to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
->>
->> Link: https://github.com/raspberrypi/linux/issues/7343
->> Reported-by: Dom Cobley <popcornmix@gmail.com>
->> Reported-by: Phil Elwell <phil@raspberrypi.com>
->> Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
->> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Nicolin Chen wrote:
+> On Thu, Apr 30, 2026 at 02:41:22PM -0700, Dan Williams (nvidia) wrote:
+> > > +static bool pci_cxl_ats_always_on(struct pci_dev *pdev)
+> > > +{
+> > > +	int offset;
+> > > +	u16 cap;
+> > > +
+> > > +	offset = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
+> > > +					   PCI_DVSEC_CXL_DEVICE);
+> > > +	if (!offset)
+> > > +		return false;
+> > > +
+> > > +	if (pci_read_config_word(pdev, offset + PCI_DVSEC_CXL_CAP, &cap))
+> > > +		return false;
+> > > +
+> > > +	return cap & PCI_DVSEC_CXL_CACHE_CAPABLE;
+> [...]
+> > Apologies for coming to this late and forgive me if the following has
+> > already been asked and answered. Why not check for actual CXL.cache
+> > protocol on the wire being present?
 > 
-> Applied to pci/for-linus for v7.1, thanks, and sorry for the breakage.
+> Actually it would make the patch smaller. The thing is that this
+> is_cxl property wasn't added when I started the series. So, it's
+> not using it. :)
+> 
+> > @@ -1733,9 +1733,8 @@ static void set_pcie_cxl(struct pci_dev *dev)
+> >  	pci_read_config_word(dev, dvsec + PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS,
+> >  			     &cap);
+> >  
+> > -	dev->is_cxl = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_CACHE, cap) ||
+> > -		FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_MEM, cap);
+> > -
+> > +	dev->is_cxl_cache = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_CACHE, cap);
+> > +	dev->is_cxl_mem = FIELD_GET(PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS_MEM, cap);
+> 
+> One caveat is that:
+> 
+> Here it checks the cap from:
+> 	PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS (0xE) via
+> 		PCI_DVSEC_CXL_FLEXBUS_PORT_STATUS (0x7)
+> 
+> On the other hand, mine checks from:
+> 	PCI_DVSEC_CXL_CAP (0xA) via
+> 		PCI_DVSEC_CXL_DEVICE (0x0)
+> 
+> The spec mentions in 8.2.1.3.1 DVSEC Flex Bus Port Capability: "
+>   Note: The Mem_Capable, IO_Capable, and Cache_Capable fields are
+>   also present in the DVSEC Flex Bus for the device [which is the
+>   legacy name for DVSEC 0x0]. This allows for future scalability
+>   where multiple devices, each with potentially different
+>   capabilities, may be populated behind a single Port.
+> "
+> 
+> Not arguing that set_pcie_cxl() is wrong, but I am not sure if there
+> would be any side effect to rely on the "legacy name" over DVSEC 0x0.
+> 
+> Is there any CXL expert who can help confirm?
 
-I reviewed the original change and completely missed that, so no 
-worries, the fault is mine to have missed it in the first place. Thanks 
-for fast tracking this!
--- 
-Florian
+You appear to be confusing Cache_Capable and Cache_Enabled.
+
+"8.2.1.3.1 DVSEC Flex Bus Port Capability" != "8.2.1.3.3 DVSEC Flex Bus Port Status"
+
+Cache_Capable is only a capability. To check that the device has
+actually trained the CXL.cache alternate protocol you need to look at
+the status register.
