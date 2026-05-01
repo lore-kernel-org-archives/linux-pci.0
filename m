@@ -1,50 +1,32 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6602C2D8DC2;
-	Fri,  1 May 2026 18:36:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 91216346AE5;
+	Fri,  1 May 2026 18:38:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777660575; cv=none; b=hKQEVPB3+KYddbc1k8f6Ip0zppXDFfPf8h8Wmaz5fQfJoP82aaDZpdN7fj7SgL1tGpNUlWd4xTeR8yfw8OJU4e8Usur3K76BjWCoVwe9wPbSTV+9v398P+R1q9oDFAZihYOiuW84OZFl3EWTAwQc/czrvzgFHci/6RPJDf7WsOA=
+	t=1777660734; cv=none; b=Vu888MYsz2gdTtNG31HU1H6uiggMKBd4fA4emr4b5sq3VoD2R1/sgSpd0HAg6DV69bg8bI3nDdpe7Z3G5q7BUR85O4xv8O2vZnY7QdzNP4c5k6suVa3Myxyu4/YK4ThAStAjmx2Fel+RikL6DIlFSNlHwPWb5khWAVUszb5KQiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777660575; c=relaxed/simple;
-	bh=dqWzN3WzUs/2xEA/hJZyavoFvPEMuufxcbTgcr0EqdM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=esPOG6jB3AJC9yWE3rRs+38UTDTzP6SR0fpCDNXOjUSGC1my1Vj9GgyBqmmy2PwRVjWNo1X0IsRTG7vvdev4Ue3g3rgff45QbwKBGjgdkORTXL/o3m3pAsUe+xtVnfzO6JqKij+Rjt18SlfM+DrazqgY6wwxWYvIdNPPK4iwgDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I20yWzME; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1777660734; c=relaxed/simple;
+	bh=Cs/3xyomAhG80Ub25L3D0EyGfkubymoWuhLCR3M++6k=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=CJYCgBDPgOUF6vNwNqxXDJhmo7tG/ReEPH2PN+dYJBxLGiuSII69pGOvnyqpQJXcSWaapJd/Nxnzz0ZFOwqAesNoXdfF+i6zFVrm/9z5JJOKPEgM7wZWXQpul4Ef5LJJv8Io/Cixk3SS+JPF4Ksb6Ib8M0MNk1dvneEm9autarw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Yr2yEuJp; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I20yWzME"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777660573; x=1809196573;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=dqWzN3WzUs/2xEA/hJZyavoFvPEMuufxcbTgcr0EqdM=;
-  b=I20yWzME1nz0kiLO7LJjlm4lDzibugIp8FLqhnNfBISaR1za1ArDLJwe
-   2oI6PfPbZv/ksZb75ASkdHtmnxtW9/D+OE4g+pMYbQaZ3CuEoAh0qW9Io
-   bKZhxAPITecXDtfbHKqenet2eN6obfCorvfRjR+Wrc+q38aTJ7ODO3O7K
-   IgKrAR4lp4zUsmeCTwuvCCquVvtB9sA7JIRtt8cvuVN0+ipVo5xC0a0xa
-   kUvAk+QaLfwBNbec9iJoll/wr28PGPIS7b29vAbOdvBY5/g/vpCxW+ZBM
-   szvvP4wspG+e2EpojT/NRKfvE15d0AqA0GHToEhlzAQiaa3JJG6E0VZqH
-   A==;
-X-CSE-ConnectionGUID: XzGn19YySq2pcEiJgH/A5A==
-X-CSE-MsgGUID: rX5wYDzETs6rsrx0iaalyw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11773"; a="89724017"
-X-IronPort-AV: E=Sophos;i="6.23,210,1770624000"; 
-   d="scan'208";a="89724017"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 May 2026 11:36:13 -0700
-X-CSE-ConnectionGUID: Eotnzz2UTJKwfUIHB/PKHg==
-X-CSE-MsgGUID: 6Rp0cYAFSBSpwBRsOtmaPA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,210,1770624000"; 
-   d="scan'208";a="236716382"
-Received: from aduenasd-mobl5.amr.corp.intel.com (HELO [10.125.109.150]) ([10.125.109.150])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 May 2026 11:36:12 -0700
-Message-ID: <180be663-7834-45ee-8a82-7e9b8a196820@intel.com>
-Date: Fri, 1 May 2026 11:36:10 -0700
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Yr2yEuJp"
+Received: from [10.17.144.128] (unknown [131.107.1.128])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 1753E20B7167;
+	Fri,  1 May 2026 11:38:46 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 1753E20B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1777660726;
+	bh=VWHUtdKcIqKUgAKujME9mYENyngCK25nDrOwnvGtKZ4=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=Yr2yEuJpMuZAb5c5L1ZVIGd0WTZdXvOQUbBFLDZxcjSqzT3t7eNSzNOawn0riz86Q
+	 PzKG/qeVpwgR8AZks1mgXdNM0zypBT2mCoGxKdetYOza06aF3g9fJTwhucp8bqYjB5
+	 ug7tBUkWFaCjbSwK5Bva8svCaU3VxBfj+1VLDrqc=
+Message-ID: <af9fa6f0-1dce-4a15-98c5-b4f8cc8b7f70@linux.microsoft.com>
+Date: Fri, 1 May 2026 11:38:44 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,155 +34,297 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI/CXL: Allow PM Init to complete on cxl_bus reset
- if ACS SV enabled
-To: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
- linux-cxl@vger.kernel.org
-Cc: Davidlohr Bueso <dave@stgolabs.net>,
- Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, Jonathan Cameron <jic23@kernel.org>,
- Dan Williams <djbw@kernel.org>
-References: <20260428182454.464655-1-fabio.m.de.francesco@linux.intel.com>
- <20260428182454.464655-2-fabio.m.de.francesco@linux.intel.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
+ mhklinux@outlook.com, muislam@microsoft.com, namjain@linux.microsoft.com,
+ magnuskulke@linux.microsoft.com, anbelski@linux.microsoft.com,
+ linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+ linux-arch@vger.kernel.org, easwar.hariharan@linux.microsoft.com,
+ kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+ longli@microsoft.com, tglx@kernel.org, mingo@redhat.com, bp@alien8.de,
+ dave.hansen@linux.intel.com, x86@kernel.org, joro@8bytes.org,
+ will@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ bhelgaas@google.com, arnd@arndb.de
+Subject: Re: [PATCH V2 08/11] PCI: hv: Build device id for a VMBus device,
+ export PCI devid function
+To: Mukesh R <mrathor@linux.microsoft.com>
+References: <20260501004157.3108202-1-mrathor@linux.microsoft.com>
+ <20260501004157.3108202-9-mrathor@linux.microsoft.com>
+From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
 Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260428182454.464655-2-fabio.m.de.francesco@linux.intel.com>
+In-Reply-To: <20260501004157.3108202-9-mrathor@linux.microsoft.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-
-
-On 4/28/26 11:24 AM, Fabio M. De Francesco wrote:
-> CXL r4.0 sec 8.1.5.1 Implementation Note describes a scenario in which
-> issuing a Secondary Bus Reset on a CXL Downstream Port leaves the
-> Port Power Management Initialization Complete bit unset when the PCIe
-> Access Control Service (ACS) Source Validation bit (SV) is enabled on
-> the Downstream Port. The spec states that another SBR alone will not
-> facilitate recovery and shows a software recovery sequence.
+On 4/30/2026 5:41 PM, Mukesh R wrote:
+> On Hyper-V, most hypercalls related to PCI passthru to map/unmap regions,
+> interrupts, etc need a device ID as a parameter. This device ID refers
+> to that specific device during the lifetime of passthru.
 > 
-> Implement the sequence by extending cxl_reset_bus_function() to save,
-> clear, and restore ACS SV and Bus Master Enable (BME) on the Downstream
-> Port around the SBR with the use of helpers.
+> An L1VH VM only contains VMBus based devices. A device ID for a VMBus
+> device is slightly different in that it uses the hv_pcibus_device info
+> for building it to make sure it matches exactly what the hypervisor
+> expects. This VMBus based device ID is needed when attaching devices in
+> an L1VH based guest VM. Before building it, a check is done to make sure
+> the device is a valid VMBus device.
 > 
-> The wait inside pci_bridge_secondary_bus_reset() covers the 100 ms
-> referenced by the spec. The helpers return when ACS SV is not enabled on
-> the Downstream Port.
+> In remaining cases, PCI device ID is used. So, also make PCI device ID
+> build function hv_build_devid_type_pci() public.
 > 
-> Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
+> Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
 > ---
->  drivers/pci/pci.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 49 insertions(+)
+>  arch/x86/hyperv/irqdomain.c         |  9 +++++----
+>  arch/x86/include/asm/mshyperv.h     |  6 ++++++
+>  drivers/pci/controller/pci-hyperv.c | 24 ++++++++++++++++++++++++
+>  include/asm-generic/mshyperv.h      |  8 ++++++++
+>  4 files changed, 43 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f7cfcc00090..047d3b4508a5 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4930,10 +4930,55 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
->  	return rc;
->  }
->  
-> +static void cxl_disable_acs_sv_bme(struct pci_dev *bridge, u16 *saved_cmd,
-> +				   u16 *saved_acs_ctrl)
+Please see the discussion on a similar patch for the guest IOMMU driver here:
+https://lore.kernel.org/all/2dabc1b8-0cf0-4fc8-9cd4-cce60adfc05e@linux.microsoft.com/
 
-Maybe you can call this 'cxl_bus_reset_prep' and the restore one 'cxl_bus_reset_done'?
+My implementation of that approach is below:
 
-> +{
+--------------------x8-------------------------------------------------
+commit 233e90466cb79b3a952806206d89164ca2a1428a
+Author: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+Date:   Thu Apr 30 20:46:05 2026 +0000
 
-Should you return int and check if the two ptr passed in are valid?
+    PCI: hv: Inform IOMMU when new devices are offered
 
-> +	if (!bridge->acs_cap)
-> +		return;
+    Hyper-V uses a logical device ID to identify a PCI endpoint device for
+    child partitions. This ID is built from parts of the virtual PCI bus
+    GUID and the function number of the PCI BDF. This ID is required to
+    identify devices to the hypervisor for IOMMU management hypercalls used
+    by the Hyper-V IOMMU driver.
 
-Returning here and the output parameters are not set. That is a problem when you try to restore with invalid values. Maybe -EOPNOTSUPP needs to be returned. Errno from this function should prevent the restore from being called.
+    Inform the IOMMU driver of the Hyper-V vPCI bus GUID so it can build the
+    logical device ID for vPCI devices, and factor the logic for building
+    this ID into a standalone helper function for clarity and easier
+    maintenance in tandem with the IOMMU driver's version.
 
-> +
-> +	pci_read_config_word(bridge, bridge->acs_cap + PCI_ACS_CTRL,
-> +			     saved_acs_ctrl);
-> +	if (!(*saved_acs_ctrl & PCI_ACS_SV))
-> +		return;
+    Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
 
-What is the caller suppose to do if PCI_ACS_SV is not set? Should you skip restore later?
+diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
+index 20d947c2c758..d1070a4a24eb 100644
+--- a/arch/x86/include/asm/mshyperv.h
++++ b/arch/x86/include/asm/mshyperv.h
+@@ -315,6 +315,9 @@ static inline void __mshv_vtl_return_call(struct mshv_vtl_cpu_context *vtl0) {}
+ 
+ #ifdef CONFIG_HYPERV_PVIOMMU
+ int __init hv_iommu_init(void);
++int hv_iommu_inform(int dom, guid_t bus_instance_guid);
++#else
++int hv_iommu_inform(int dom, guid_t bus_instance_guid) {}
+ #endif
+ 
+ #include <asm-generic/mshyperv.h>
+diff --git a/drivers/iommu/hyperv/iommu.c b/drivers/iommu/hyperv/iommu.c
+index ad7000f4566e..34a39c3b89b4 100644
+--- a/drivers/iommu/hyperv/iommu.c
++++ b/drivers/iommu/hyperv/iommu.c
+@@ -8,6 +8,7 @@
+ 
+ #include <linux/iommu.h>
+ #include <linux/pci.h>
++#include <linux/uuid.h>
+ #include <linux/dma-map-ops.h>
+ #include <linux/generic_pt/iommu.h>
+ #include <linux/syscore_ops.h>
+@@ -26,12 +27,86 @@ static struct hv_iommu_domain hv_blocking_domain;
+ static const struct iommu_domain_ops hv_iommu_identity_domain_ops;
+ static const struct iommu_domain_ops hv_iommu_blocking_domain_ops;
+ static struct iommu_ops hv_iommu_ops;
++static struct list_head hv_pci_bus_list;
+ 
+ #define hv_iommu_present(iommu_cap) (iommu_cap & HV_IOMMU_CAP_PRESENT)
+ #define hv_iommu_s1_domain_supported(iommu_cap) (iommu_cap & HV_IOMMU_CAP_S1)
+ #define hv_iommu_5lvl_supported(iommu_cap) (iommu_cap & HV_IOMMU_CAP_S1_5LVL)
+ #define hv_iommu_ats_supported(iommu_cap) (iommu_cap & HV_IOMMU_CAP_ATS)
+ 
++/*
++ * Build a "Device Logical ID" out of this PCI bus's instance GUID and the
++ * function number of the device.
++ * This is identical and should be maintained in sync with
++ * hv_pci_build_logical_dev_id() in pci-hyperv.c. Only repeated here to avoid
++ * dependency of a built-in driver (iommu) on a module (pci-hyperv) and to
++ * maintain the correct direction of dependency of the PCI driver on the IOMMU
++ * instead of vice versa
++ */
++static u64 hv_iommu_build_logical_dev_id(struct pci_dev *pdev,
++					 guid_t bus_instance_guid)
++{
++	return (u64)((bus_instance_guid.b[5] << 24) |
++		     (bus_instance_guid.b[4] << 16) |
++		     (bus_instance_guid.b[7] << 8)  |
++		     (bus_instance_guid.b[6] & 0xf8) |
++		     PCI_FUNC(pdev->devfn));
++}
++
++static struct hv_pci_busdata *find_hv_pci_bus(int dom)
++{
++	struct hv_pci_busdata *curr = NULL;
++
++	list_for_each_entry(curr, &hv_pci_bus_list, list) {
++		if (curr->dom == dom) {
++			return curr;
++		}
++	}
++	return NULL;
++}
++
++#define INVALID_LOGICAL_DEV_ID	0
++static u64 hv_iommu_get_logical_dev_id(struct pci_dev *pdev)
++{
++	struct hv_pci_busdata *bus = find_hv_pci_bus(pci_domain_nr(pdev->bus));
++
++	if (!bus) {
++		dev_WARN(&pdev->dev,
++			"received device ID request for missing hv_pci bus\n");
++		return INVALID_LOGICAL_DEV_ID;
++	}
++
++	return hv_iommu_build_logical_dev_id(pdev, bus->bus_instance_guid);
++}
++
++int hv_iommu_inform(int dom, guid_t bus_instance_guid)
++{
++	struct hv_pci_busdata *found, *new;
++
++	/* Don't spend memory if there is no consumer */
++	if (no_iommu || !iommu_detected)
++		return 0;
++
++	found = find_hv_pci_bus(dom);
++	if (found && !guid_equal(&found->bus_instance_guid, &bus_instance_guid)) {
++		found->bus_instance_guid = bus_instance_guid;
++		return 0;
++	}
++
++	new = kzalloc_obj(*new);
++	if (!new) {
++		pr_info("No memory to allocate hv_pci bus data\n");
++		return -ENOMEM;
++	}
++
++	new->dom = dom;
++	new->bus_instance_guid = bus_instance_guid;
++	list_add(&new->list, &hv_pci_bus_list);
++
++	return 0;
++}
++EXPORT_SYMBOL_FOR_MODULES(hv_iommu_inform, "pci-hyperv");
++
+ static int hv_create_device_domain(struct hv_iommu_domain *hv_domain, u32 domain_stage)
+ {
+ 	int ret;
+@@ -143,7 +218,7 @@ static void hv_iommu_detach_dev(struct iommu_domain *domain, struct device *dev)
+ 	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
+ 	memset(input, 0, sizeof(*input));
+ 	input->partition_id = HV_PARTITION_ID_SELF;
+-	input->device_id.as_uint64 = hv_build_logical_dev_id(pdev);
++	input->device_id.as_uint64 = hv_iommu_get_logical_dev_id(pdev);
+ 	status = hv_do_hypercall(HVCALL_DETACH_DEVICE_DOMAIN, input, NULL);
+ 
+ 	local_irq_restore(flags);
+@@ -185,7 +260,7 @@ static int hv_iommu_attach_dev(struct iommu_domain *domain, struct device *dev,
+ 	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
+ 	memset(input, 0, sizeof(*input));
+ 	input->device_domain = hv_domain->device_domain;
+-	input->device_id.as_uint64 = hv_build_logical_dev_id(pdev);
++	input->device_id.as_uint64 = hv_iommu_get_logical_dev_id(pdev);
+ 	status = hv_do_hypercall(HVCALL_ATTACH_DEVICE_DOMAIN, input, NULL);
+ 
+ 	local_irq_restore(flags);
+@@ -213,7 +288,7 @@ static int hv_iommu_get_logical_device_property(struct device *dev,
+ 	output = *this_cpu_ptr(hyperv_pcpu_input_arg) + sizeof(*input);
+ 	memset(input, 0, sizeof(*input));
+ 	input->partition_id = HV_PARTITION_ID_SELF;
+-	input->logical_device_id = hv_build_logical_dev_id(to_pci_dev(dev));
++	input->logical_device_id = hv_iommu_get_logical_dev_id(to_pci_dev(dev));
+ 	input->code = code;
+ 	status = hv_do_hypercall(HVCALL_GET_LOGICAL_DEVICE_PROPERTY, input, output);
+ 	*property = *output;
+@@ -665,6 +740,7 @@ int __init hv_iommu_init(void)
+ 
+ 	iommu_detected = 1;
+ 	pci_request_acs();
++	INIT_LIST_HEAD(&hv_pci_bus_list);
+ 
+ 	hv_iommu = kzalloc(sizeof(*hv_iommu), GFP_KERNEL);
+ 	if (!hv_iommu)
+diff --git a/drivers/iommu/hyperv/iommu.h b/drivers/iommu/hyperv/iommu.h
+index 8829176ddb51..5b2d1c41c101 100644
+--- a/drivers/iommu/hyperv/iommu.h
++++ b/drivers/iommu/hyperv/iommu.h
+@@ -36,6 +36,12 @@ struct hv_iommu_domain {
+ 	u64		pgsize_bitmap;
+ };
+ 
++struct hv_pci_busdata {
++	int dom;
++	guid_t bus_instance_guid;
++	struct list_head list;
++};
++
+ struct hv_iommu_endpoint {
+ 	struct device *dev;
+ 	struct hv_iommu_dev *hv_iommu;
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index 3b7adf28ee09..5d4fb2c2f60a 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -597,23 +597,19 @@ static unsigned int hv_msi_get_int_vector(struct irq_data *data)
+ 
+ #define hv_msi_prepare		pci_msi_prepare
+ 
+-/**
++#define INVALID_LOGICAL_DEV_ID	0
++/*
+  * Build a "Device Logical ID" out of this PCI bus's instance GUID and the
+  * function number of the device.
+  */
+-u64 hv_build_logical_dev_id(struct pci_dev *pdev)
++static u64 hv_pci_build_logical_dev_id(struct pci_dev *pdev, guid_t bus_instance_guid)
+ {
+-	struct pci_bus *pbus = pdev->bus;
+-	struct hv_pcibus_device *hbus = container_of(pbus->sysdata,
+-						struct hv_pcibus_device, sysdata);
+-
+-	return (u64)((hbus->hdev->dev_instance.b[5] << 24) |
+-		     (hbus->hdev->dev_instance.b[4] << 16) |
+-		     (hbus->hdev->dev_instance.b[7] << 8)  |
+-		     (hbus->hdev->dev_instance.b[6] & 0xf8) |
++	return (u64)((bus_instance_guid.b[5] << 24) |
++		     (bus_instance_guid.b[4] << 16) |
++		     (bus_instance_guid.b[7] << 8)  |
++		     (bus_instance_guid.b[6] & 0xf8) |
+ 		     PCI_FUNC(pdev->devfn));
+ }
+-EXPORT_SYMBOL_GPL(hv_build_logical_dev_id);
+ 
+ /**
+  * hv_irq_retarget_interrupt() - "Unmask" the IRQ by setting its current
+@@ -657,7 +653,7 @@ static void hv_irq_retarget_interrupt(struct irq_data *data)
+ 	params->int_entry.source = HV_INTERRUPT_SOURCE_MSI;
+ 	params->int_entry.msi_entry.address.as_uint32 = int_desc->address & 0xffffffff;
+ 	params->int_entry.msi_entry.data.as_uint32 = int_desc->data;
+-	params->device_id = hv_build_logical_dev_id(pdev);
++	params->device_id = hv_pci_build_logical_dev_id(pdev, hbus->hdev->dev_instance);
+ 	params->int_target.vector = hv_msi_get_int_vector(data);
+ 
+ 	if (hbus->protocol_version >= PCI_PROTOCOL_VERSION_1_2) {
+@@ -3869,6 +3865,9 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 
+ 	hbus->state = hv_pcibus_probed;
+ 
++	/* Inform the IOMMU of the bus GUID of devices headed their way */
++	hv_iommu_inform(dom, hdev->dev_instance);
++
+ 	ret = create_root_hv_pci_bus(hbus);
+ 	if (ret)
+ 		goto free_windows;
 
-> +
-> +	pci_read_config_word(bridge, PCI_COMMAND, saved_cmd);
-> +	if (*saved_cmd & PCI_COMMAND_MASTER)
+--------------------8x-------------------------------------------------
 
-If all you care is master bit enabled, maybe just write back a bool 'master_en'.
-
-> +		pci_clear_master(bridge);
-> +
-> +	pci_write_config_word(bridge, bridge->acs_cap + PCI_ACS_CTRL,
-> +			      *saved_acs_ctrl & ~PCI_ACS_SV);
-> +}
-> +
-> +static void cxl_restore_acs_sv_bme(struct pci_dev *bridge, u16 saved_cmd,
-> +				   u16 saved_acs_ctrl)
-
-static void cxl_bus_reset_done(struct pci_dev *bridge, bool master_en, u16 acs_ctrl)
-
-saved_ has no relevance to the function itself.
-
-Come to think of it, why not create a local struct and pass that in as parameter for prep and done functions? That way in the future if there are other stuff that needs to be done, this can be more versatile.
-
-struct cxl_reset_ctx {
-	u16 acs_ctrl;
-	bool master_en;
-	bool acs_restore;
-};
-
-This way you can also set 'acs_restore' on completion of the prep function. And in the done function, you can check and return early if it's not set. That takes away the messiness of returning errno in the prep function and then needing to determine if you need to call the prep function or not.
-
-DJ
-
-> +{
-> +	if (!bridge->acs_cap || !(saved_acs_ctrl & PCI_ACS_SV))
-> +		return;
-> +
-> +	pci_write_config_word(bridge, bridge->acs_cap + PCI_ACS_CTRL,
-> +			      saved_acs_ctrl);
-> +	if (saved_cmd & PCI_COMMAND_MASTER)
-> +		pci_set_master(bridge);
-> +}
-> +
-> +/**
-> + * cxl_reset_bus_function - SBR for a child of a CXL downstream port
-> + * @dev: child device whose upstream bridge is a CXL downstream port
-> + * @probe: if true, only check whether the reset is supported
-> + *
-> + * Issues an SBR on @dev's parent bus. Temporarily sets the CXL Port
-> + * DVSEC Unmask SBR bit across the reset. When ACS Source Validation
-> + * is enabled on the bridge, also temporarily clears Bus Master Enable
-> + * and ACS Source Validation, per CXL r4.0 sec 8.1.5.1.
-> + *
-> + * Return: 0 on success, -ENOTTY if the reset cannot be issued, or an
-> + * errno from the reset path.
-> + */
->  static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
->  {
->  	struct pci_dev *bridge;
->  	u16 dvsec, reg, val;
-> +	u16 saved_cmd = 0, saved_acs_ctrl = 0;
->  	int rc;
->  
->  	bridge = pci_upstream_bridge(dev);
-> @@ -4957,6 +5002,8 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
->  		return rc;
->  	}
->  
-> +	cxl_disable_acs_sv_bme(bridge, &saved_cmd, &saved_acs_ctrl);
-> +
->  	if (reg & PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR) {
->  		val = reg;
->  	} else {
-> @@ -4971,6 +5018,8 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
->  		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
->  				      reg);
->  
-> +	cxl_restore_acs_sv_bme(bridge, saved_cmd, saved_acs_ctrl);
-> +
->  	pci_dev_reset_iommu_done(dev);
->  	return rc;
->  }
-
+Thanks,
+Easwar (he/him)
