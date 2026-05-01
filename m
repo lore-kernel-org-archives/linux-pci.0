@@ -1,163 +1,206 @@
-Received: from mail-dl1-f54.google.com (mail-dl1-f54.google.com [74.125.82.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE23140F8E6
-	for <linux-pci@vger.kernel.org>; Fri,  1 May 2026 18:25:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.54
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777659956; cv=pass; b=Z2GMxNrUngf9qbT1GTJK1KcOTwLGWl0+GxSnfEJ8hiaUJyIDQP4CQHFE7e8y23b28pOTnlRy5ol3hLidAqSy3MdWBP55U8KdUffMf0UlO13NtB+UcJKOATHkuQC4UryvjnUwLRtiaa49kwSQYWlX3spEBnOexolj2MbosYFS128=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777659956; c=relaxed/simple;
-	bh=7glQpGGcTAa1D+c5BdpA3vyeZj9yXvwRLKoRKqlblRY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dzr7kERzpezGHOrY8o+GbC6oQl7nSAeWOan8h4uyKM/RZGP5zVXI3pQdmYcNf1a8xTFg0umd+2AJ8j0px+NWhE8AwSnjUQSuypPcdqmiz7lddDJaVp/7T27cQN+jAtgqBgzQU+CisRci1+eU0perqDBFMjdW5HKcpaxZPRWoSAA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Y0zg40tJ; arc=pass smtp.client-ip=74.125.82.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6602C2D8DC2;
+	Fri,  1 May 2026 18:36:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777660575; cv=none; b=hKQEVPB3+KYddbc1k8f6Ip0zppXDFfPf8h8Wmaz5fQfJoP82aaDZpdN7fj7SgL1tGpNUlWd4xTeR8yfw8OJU4e8Usur3K76BjWCoVwe9wPbSTV+9v398P+R1q9oDFAZihYOiuW84OZFl3EWTAwQc/czrvzgFHci/6RPJDf7WsOA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777660575; c=relaxed/simple;
+	bh=dqWzN3WzUs/2xEA/hJZyavoFvPEMuufxcbTgcr0EqdM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=esPOG6jB3AJC9yWE3rRs+38UTDTzP6SR0fpCDNXOjUSGC1my1Vj9GgyBqmmy2PwRVjWNo1X0IsRTG7vvdev4Ue3g3rgff45QbwKBGjgdkORTXL/o3m3pAsUe+xtVnfzO6JqKij+Rjt18SlfM+DrazqgY6wwxWYvIdNPPK4iwgDA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I20yWzME; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Y0zg40tJ"
-Received: by mail-dl1-f54.google.com with SMTP id a92af1059eb24-12c726ef332so3485905c88.1
-        for <linux-pci@vger.kernel.org>; Fri, 01 May 2026 11:25:54 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777659954; cv=none;
-        d=google.com; s=arc-20240605;
-        b=KoAGNkTJclSBgxYGdXcYaOABDk2/1fpQKZ0KLcKYGnIuvdKVfbvxJghPZxm1yzXLUH
-         Ee4OCk26nKDWWUEZxYmk0LBHecfZlfjICzga3BgWiMvx5jmo+jvLO6WxYrkhPzrY6wwR
-         TcaXw85ktL75ECMsjOQNdLK7sZ4JJ+x8AP3F9Q+b9/5/BVCdxwbvCKjlIiSBHBPZrQgm
-         RkSlmxoB2Zobt/zNg1JNdmGI6xbvdm2FSLnMgRU7hVV+9zraNceqwswXEM2xJ3Tn63EN
-         oBS1YUwiJ8B6lmxxyPjNu23uKwBZJMcPeo0QhXE6VqdKGdWiZzvCHu40To1YKtOMGe1b
-         mrwg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=Ynp4A/JaH22lvkihT3nPFtsXKnzutYHpfXYULBKQQKo=;
-        fh=oLc8cY1WZkNDR0TDd0c7jzJ6nNe/J5amqCf0E+6d4Ug=;
-        b=fBbcizsR8CbJAqwYUMntGfaeIOk4bUPBMQCpqWldiUQaP5tB8hYtE74ycAULgwi6YY
-         T3XVwN9HRedDs9Vh7jiJhVYep7eoFDcW4WaIZ7PjFS6WNX4wfBMJxi17m/dgtwW4qchb
-         Qmj2kQAMWLyGXKV7bSxn5DmdhNqhbPSS6e8LzZApW6MPKq5k2Dsxlp0c2+jOvlSusKkZ
-         oooV7pH4aF9fCS8UCyy7DxAmVRgUgAot2W4r4wcyVwK1Qn395oH87b/tXJQIQ9dEvGXc
-         bnpKZXv3ITjaF2Ki4yrvcW/J54oNZyTKGNg2ezb8lUr/rXQ12N1ucr3TV+kBlEctTams
-         A+cA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777659954; x=1778264754; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ynp4A/JaH22lvkihT3nPFtsXKnzutYHpfXYULBKQQKo=;
-        b=Y0zg40tJ/dsI8QnrMT7KX1AP+6jlCpkUHhzn14Y0wrdVewWfc2FexT/2tqeHzFTcvm
-         n0m8mUpcPImgPDeczA0UMLqt35VbfItet35/zS2F1XahoNO2IKCsxz4dvplyXekT0HHt
-         42hx6GQlfDXv0e5d2vUwNu7MVV8qkPjf2Crm9UdCLYV2jGcast1plervurVM1l1LHADg
-         XAPV/43Iyu4bYUOniL21VvTvfcpvpUbmrdcqssm9yXVP3wrApyi460jZ5mEoPFcugvFE
-         GBfrpcBfD605DSTERUlo/0yO5mEaPOvABlq9zVsfvH1CoVuEj8S/R4pLMuJ9iGZ1sSza
-         g4Ig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777659954; x=1778264754;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Ynp4A/JaH22lvkihT3nPFtsXKnzutYHpfXYULBKQQKo=;
-        b=m5OxmzQjwRkKSfS7NuknPSFGmbd6BtjWgO81jGi4bL1zXvO3jdxU+VXURGzEXRWWa+
-         fSzdiqVY+jHxCeA70BFyqixy+V6XfyO/9u1sZSltXVsR8IWXUtFMSSlitnaz5+ZWXj7v
-         LeVx4sAB/DVa54QatWo4MzTlyFZYookO0Nj8XFRYgyO2mPWjICsoNHfiuB6hA9Y9FQmh
-         TZLGrX3wjVqFi1SblXRy7AEgw5edDBGqxl6Js7D2xn4COBTExD4b5LahXeZhH0vCrKve
-         7q+yYHTk2mMXoYD7clrog0QW+XVmLB6y79BmfgkZ8WdJaC8+ETnNq8ITU3Eeh2o7nDcB
-         VCww==
-X-Forwarded-Encrypted: i=1; AFNElJ9nIETjfAEof2Hh8QlBgpbeNtpgRebgihZqVnHESX6xFm/S5wuSv4VXOKtvUhY3tuyDeLiBoFpt1ow=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwF14H9Ck23XW3RpPmD3E2AxvBu0on4ghvvSMyIoCmzzw2h6/cY
-	j5pEE1ia+vMn+VJfEksH9KJkiyIZ75w3FwFIUYbLIVpybgMAdVsWGJCQV1wPC6wUpCz6HfduwwQ
-	4J2bwMWXufjNM4CUhkzbASAyLdy7EviAlBUrlgLU4
-X-Gm-Gg: AeBDievMt77oiQJW0AGjhUxzNz+RwZzCBA4GRBR4OUNaQAdT9nYITwY+28HOPqis6Gl
-	BlBFQVW0PWik4Kf6c4BYrGN783Evtb6Lv5Qoh5Z3zj++gs53ySUtvlOlblxTqZt2wusFMxRprsc
-	iLtd3FZplVGKBSrd7toNN7ZDyi5aX6qnnHGwjqwZrDQPVJAzcJdcNwrZe6fNWJRywQ+EYota4oQ
-	8aow36ReTgqld3RuS2vhHGoE4QIVNyx9gOvAOf7WpzoXWrgayZ9QxG2ylZhr0af5ekG0J5W7lkA
-	zAaa8EE7KR3Y7Yho3Q2jmNTyx5hbAg==
-X-Received: by 2002:a05:7022:ebcc:b0:12b:ec15:69d3 with SMTP id
- a92af1059eb24-12dfd7d88femr150449c88.19.1777659953185; Fri, 01 May 2026
- 11:25:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I20yWzME"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1777660573; x=1809196573;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=dqWzN3WzUs/2xEA/hJZyavoFvPEMuufxcbTgcr0EqdM=;
+  b=I20yWzME1nz0kiLO7LJjlm4lDzibugIp8FLqhnNfBISaR1za1ArDLJwe
+   2oI6PfPbZv/ksZb75ASkdHtmnxtW9/D+OE4g+pMYbQaZ3CuEoAh0qW9Io
+   bKZhxAPITecXDtfbHKqenet2eN6obfCorvfRjR+Wrc+q38aTJ7ODO3O7K
+   IgKrAR4lp4zUsmeCTwuvCCquVvtB9sA7JIRtt8cvuVN0+ipVo5xC0a0xa
+   kUvAk+QaLfwBNbec9iJoll/wr28PGPIS7b29vAbOdvBY5/g/vpCxW+ZBM
+   szvvP4wspG+e2EpojT/NRKfvE15d0AqA0GHToEhlzAQiaa3JJG6E0VZqH
+   A==;
+X-CSE-ConnectionGUID: XzGn19YySq2pcEiJgH/A5A==
+X-CSE-MsgGUID: rX5wYDzETs6rsrx0iaalyw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11773"; a="89724017"
+X-IronPort-AV: E=Sophos;i="6.23,210,1770624000"; 
+   d="scan'208";a="89724017"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 May 2026 11:36:13 -0700
+X-CSE-ConnectionGUID: Eotnzz2UTJKwfUIHB/PKHg==
+X-CSE-MsgGUID: 6Rp0cYAFSBSpwBRsOtmaPA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,210,1770624000"; 
+   d="scan'208";a="236716382"
+Received: from aduenasd-mobl5.amr.corp.intel.com (HELO [10.125.109.150]) ([10.125.109.150])
+  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 May 2026 11:36:12 -0700
+Message-ID: <180be663-7834-45ee-8a82-7e9b8a196820@intel.com>
+Date: Fri, 1 May 2026 11:36:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260423212316.3431746-1-dmatlack@google.com> <20260423212316.3431746-3-dmatlack@google.com>
- <afDqs6oqWlhoVqMN@google.com> <afPGYp145FbrvURR@google.com> <afTgOXpUNWMapPAS@google.com>
-In-Reply-To: <afTgOXpUNWMapPAS@google.com>
-From: David Matlack <dmatlack@google.com>
-Date: Fri, 1 May 2026 11:25:26 -0700
-X-Gm-Features: AVHnY4LHOeLRxPaffc9oaSUdxPiYe323BsN3VXy59mO0tVvOtZ5BkXLT2WRxf9Q
-Message-ID: <CALzav=cJLA3-gK=Ljfqf=YCPML60F=hM_teB67M_3PNCZE4T9w@mail.gmail.com>
-Subject: Re: [PATCH v4 02/11] PCI: liveupdate: Track outgoing preserved PCI devices
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: iommu@lists.linux.dev, kexec@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org, Adithya Jayachandran <ajayachandra@nvidia.com>, 
-	Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Chris Li <chrisl@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
-	Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pranjal Shrivastava <praan@google.com>, Pratyush Yadav <pratyush@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] PCI/CXL: Allow PM Init to complete on cxl_bus reset
+ if ACS SV enabled
+To: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+ linux-cxl@vger.kernel.org
+Cc: Davidlohr Bueso <dave@stgolabs.net>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, Jonathan Cameron <jic23@kernel.org>,
+ Dan Williams <djbw@kernel.org>
+References: <20260428182454.464655-1-fabio.m.de.francesco@linux.intel.com>
+ <20260428182454.464655-2-fabio.m.de.francesco@linux.intel.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260428182454.464655-2-fabio.m.de.francesco@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, May 1, 2026 at 11:17=E2=80=AFAM Samiullah Khawaja <skhawaja@google.=
-com> wrote:
->
-> On Thu, Apr 30, 2026 at 09:15:14PM +0000, David Matlack wrote:
-> >On 2026-04-28 05:24 PM, Samiullah Khawaja wrote:
-> >> On Thu, Apr 23, 2026 at 09:23:06PM +0000, David Matlack wrote:
-> >
-> >> > +  for (i =3D 0; i < ser->max_nr_devices; i++) {
-> >> > +          /*
-> >> > +           * Start searching at index ser->nr_devices. This should =
-result
-> >> > +           * in a constant time search under expected conditions (d=
-evices
-> >> > +           * are not getting unpreserved).
-> >> > +           */
-> >> > +          int index =3D (ser->nr_devices + i) % ser->max_nr_devices=
-;
-> >> > +          struct pci_dev_ser *dev_ser =3D &ser->devices[index];
-> >>
-> >> nit: Maybe we can move this logic in a separate function as down the r=
-oad
-> >> when we expand this to add VFs and Hotpluggable devices, this might
-> >> change significantly? It's good if it is self-contained.
-> >
-> >Did you mean to leave this comment on pci_flb_preserve() where it
-> >decides how many devices to allocate room for?
->
-> I was talking about this one, as I think depending on the scheme we take
-> this might change significantly. Just a nit, you can ignore it.
 
-It would depend on if userspace is doing a lot of unpreserving as
-well... I'll see what I can do in v5.
 
-> >
-> >> > +static inline struct pci_dev_ser *pci_liveupdate_outgoing(struct pc=
-i_dev *dev)
-> >> > +{
-> >> > +  return dev->liveupdate_outgoing;
-> >> > +}
-> >>
-> >> Is this expected to be called under the outgoing lock?
-> >
-> >For now this API is only used during shutdown, at which point userspace
-> >should have already been stopped so drivers should not be changing the
-> >preservation status of an outgoing device. So I don't think this needs
-> >to be under the outgoing lock, but it would be nice to have some more
-> >explicit synchronization.
->
-> Ok that makes sense. I have similar cases in my series, but maybe we can
-> add kdoc regarding these stating in which context this is expected to be
-> used?
+On 4/28/26 11:24 AM, Fabio M. De Francesco wrote:
+> CXL r4.0 sec 8.1.5.1 Implementation Note describes a scenario in which
+> issuing a Secondary Bus Reset on a CXL Downstream Port leaves the
+> Port Power Management Initialization Complete bit unset when the PCIe
+> Access Control Service (ACS) Source Validation bit (SV) is enabled on
+> the Downstream Port. The spec states that another SBR alone will not
+> facilitate recovery and shows a software recovery sequence.
+> 
+> Implement the sequence by extending cxl_reset_bus_function() to save,
+> clear, and restore ACS SV and Bus Master Enable (BME) on the Downstream
+> Port around the SBR with the use of helpers.
+> 
+> The wait inside pci_bridge_secondary_bus_reset() covers the 100 ms
+> referenced by the spec. The helpers return when ACS SV is not enabled on
+> the Downstream Port.
+> 
+> Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
+> ---
+>  drivers/pci/pci.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 49 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f7cfcc00090..047d3b4508a5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4930,10 +4930,55 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+>  	return rc;
+>  }
+>  
+> +static void cxl_disable_acs_sv_bme(struct pci_dev *bridge, u16 *saved_cmd,
+> +				   u16 *saved_acs_ctrl)
 
-Yes will do. I'll add some documentation and also restrict it to avoid
-misuse (move to internal pci.h, return a bool instead of pointer, and
-use READ_ONCE()).
+Maybe you can call this 'cxl_bus_reset_prep' and the restore one 'cxl_bus_reset_done'?
+
+> +{
+
+Should you return int and check if the two ptr passed in are valid?
+
+> +	if (!bridge->acs_cap)
+> +		return;
+
+Returning here and the output parameters are not set. That is a problem when you try to restore with invalid values. Maybe -EOPNOTSUPP needs to be returned. Errno from this function should prevent the restore from being called.
+
+> +
+> +	pci_read_config_word(bridge, bridge->acs_cap + PCI_ACS_CTRL,
+> +			     saved_acs_ctrl);
+> +	if (!(*saved_acs_ctrl & PCI_ACS_SV))
+> +		return;
+
+What is the caller suppose to do if PCI_ACS_SV is not set? Should you skip restore later?
+
+> +
+> +	pci_read_config_word(bridge, PCI_COMMAND, saved_cmd);
+> +	if (*saved_cmd & PCI_COMMAND_MASTER)
+
+If all you care is master bit enabled, maybe just write back a bool 'master_en'.
+
+> +		pci_clear_master(bridge);
+> +
+> +	pci_write_config_word(bridge, bridge->acs_cap + PCI_ACS_CTRL,
+> +			      *saved_acs_ctrl & ~PCI_ACS_SV);
+> +}
+> +
+> +static void cxl_restore_acs_sv_bme(struct pci_dev *bridge, u16 saved_cmd,
+> +				   u16 saved_acs_ctrl)
+
+static void cxl_bus_reset_done(struct pci_dev *bridge, bool master_en, u16 acs_ctrl)
+
+saved_ has no relevance to the function itself.
+
+Come to think of it, why not create a local struct and pass that in as parameter for prep and done functions? That way in the future if there are other stuff that needs to be done, this can be more versatile.
+
+struct cxl_reset_ctx {
+	u16 acs_ctrl;
+	bool master_en;
+	bool acs_restore;
+};
+
+This way you can also set 'acs_restore' on completion of the prep function. And in the done function, you can check and return early if it's not set. That takes away the messiness of returning errno in the prep function and then needing to determine if you need to call the prep function or not.
+
+DJ
+
+> +{
+> +	if (!bridge->acs_cap || !(saved_acs_ctrl & PCI_ACS_SV))
+> +		return;
+> +
+> +	pci_write_config_word(bridge, bridge->acs_cap + PCI_ACS_CTRL,
+> +			      saved_acs_ctrl);
+> +	if (saved_cmd & PCI_COMMAND_MASTER)
+> +		pci_set_master(bridge);
+> +}
+> +
+> +/**
+> + * cxl_reset_bus_function - SBR for a child of a CXL downstream port
+> + * @dev: child device whose upstream bridge is a CXL downstream port
+> + * @probe: if true, only check whether the reset is supported
+> + *
+> + * Issues an SBR on @dev's parent bus. Temporarily sets the CXL Port
+> + * DVSEC Unmask SBR bit across the reset. When ACS Source Validation
+> + * is enabled on the bridge, also temporarily clears Bus Master Enable
+> + * and ACS Source Validation, per CXL r4.0 sec 8.1.5.1.
+> + *
+> + * Return: 0 on success, -ENOTTY if the reset cannot be issued, or an
+> + * errno from the reset path.
+> + */
+>  static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  {
+>  	struct pci_dev *bridge;
+>  	u16 dvsec, reg, val;
+> +	u16 saved_cmd = 0, saved_acs_ctrl = 0;
+>  	int rc;
+>  
+>  	bridge = pci_upstream_bridge(dev);
+> @@ -4957,6 +5002,8 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  		return rc;
+>  	}
+>  
+> +	cxl_disable_acs_sv_bme(bridge, &saved_cmd, &saved_acs_ctrl);
+> +
+>  	if (reg & PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR) {
+>  		val = reg;
+>  	} else {
+> @@ -4971,6 +5018,8 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
+>  				      reg);
+>  
+> +	cxl_restore_acs_sv_bme(bridge, saved_cmd, saved_acs_ctrl);
+> +
+>  	pci_dev_reset_iommu_done(dev);
+>  	return rc;
+>  }
+
