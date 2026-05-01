@@ -1,141 +1,291 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 376C93859EC;
-	Fri,  1 May 2026 14:20:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91A183CA499
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2026 14:36:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777645211; cv=none; b=NmflJ5VitPWXBQ6UY70pp5CLrR8wtfVRkTf3nmDAfOd0DAGbSm+TJBHi/7u2814QnJnpPb33+UdD3BuJKRKttfWr+f7+gT/IqEhwrFZRrPEbpmQvsMkKIWgX6fuk3LIJbKQ5PnvwaQId41foPwy5zMM8fElmcfAFgKlBMoDGhD4=
+	t=1777646172; cv=none; b=mQQ6GDtSHmLS9zGSciNaPNEhV2Ta0B6XJlll07UDN2ITr/TDMevhX9Pm/AXG/AhAV6Bj/w9zrpGTmB975omoTElVzuMmYinfihVWA6NxfDRguoK3rIHc05i7THnVV8DQ464djSGChMoNDW35PJD0+s92Er+WlXC7yN90QfboKRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777645211; c=relaxed/simple;
-	bh=JCnm/2GDLCDtjMwG41oP7viMaz2X9zq00J/+NIv0J5w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W0ATUPLOGO5iJ2PE65WTw2O2YlreN67zzW2eAmjrC6r9Q+poGc9q6eths584qsJQRRx007xTsXUChDwY88Zl+jGdmJbgLSxncy1dTYDPx01MDQWnC3/XgLjZqEWOWxp5WMKuoEEfx6zuvSKaS0Pill3Bg3K0SBS4PjcKPyO+5A8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=D5JfCbmY; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1777646172; c=relaxed/simple;
+	bh=E3bzm3QfblHpymqQiQxNq+2D7OfbgIrNy1j3vjDCsY8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=nhY24++YEnZfOtGUTyH+qkKWs3AOwIcUZz++JBMQWwzA2HWWdzRXrXkg7Q2QRp0pgV5sgqyr3n969FAiQbfMlYPT8DWIiFVZIvEKST5M6uxqNyCM9l3VfPHEVh1x2DbNYFkz6LLIy+IZthZwD7om8t41qXffxYxLyeDSZR7SvN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=lMnSkLCg; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="D5JfCbmY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=0RPn/xHG/LjhRwStUHz+Jbvvg1rwsjKyUE8xWaBuizE=;
-	b=D5JfCbmYj9MJZqTP/WAh6WDbjzgCdmEXTBV8uW1vxl9E2S6FvX17O93oKFs22+
-	J9JXFNt4ZO6SaYkNfDu4QW6X82wdagOdFc1KmjWxMEIrpxBcg5zMe0+LngEIB45+
-	2YIF4axnCzXvb6X7vGhR/eSoZMnHsudJUEjfJwsFXKlAc=
-Received: from [IPV6:240e:b8f:927e:5900:a6da:de99:5aab:66f2] (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgD38QNztvRpLYmECg--.48965S2;
-	Fri, 01 May 2026 22:19:32 +0800 (CST)
-Message-ID: <92fa1579-9c00-4d60-a916-1d2af1fb63ef@163.com>
-Date: Fri, 1 May 2026 22:19:31 +0800
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="lMnSkLCg"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id DA2CD240103
+	for <linux-pci@vger.kernel.org>; Fri,  1 May 2026 16:36:06 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1777646166; bh=ACUzYLr3qqQMmbokYLGbria4mjdatKFkWDd5VxD8PSs=;
+	h=From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:To:Cc:Autocrypt:OpenPGP:From;
+	b=lMnSkLCgQDUSA/5TDV0o6DEBihB4O8d8m4bdlFo1WwwW0XNQxi8SpDSfaGRsTgcHB
+	 5BEsaQVlaR81efRPN8W9qkc43hP14Lb41z0PVAjPoOkrnWdkXMLxo9ZwoZFe3wNrAr
+	 dQ5VbvdM/PS4Jvdfc9b1x6XIGLzR6DTMHlZu8UcmjkmOZDTGBBqHjcv4tPyZyhhFtW
+	 Kc20jKCmP2g0EDt54FKt/Ic46hrnxCH/Swu9/k2h4b7oTSkYXrEJp1VnWL/+kDSrwL
+	 el/6zbIjrPJP0zxQ+86vlEKKcSvqdnJ9uOTuPvbycKCfzmx5hp9hVrli7U7bs4TP3b
+	 /v4T6LGnpp/Mw==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4g6YW84MvPz9rxG;
+	Fri,  1 May 2026 16:36:04 +0200 (CEST)
+From: Markus Probst <markus.probst@posteo.de>
+Date: Fri, 01 May 2026 14:36:05 +0000
+Subject: [PATCH v16 2/3] rust: leds: add Mode trait
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RESEND PATCH 00/16] PCI: Use FIELD_MODIFY() to simplify bitfield
- operations
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, jingoohan1@gmail.com, robh@kernel.org, s32@nxp.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260430180857.GA421892@bhelgaas>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260430180857.GA421892@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PSgvCgD38QNztvRpLYmECg--.48965S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxCr13Jr47ur4fXw17uF1rZwb_yoW5ZFWrpa
-	y5JF4xZFWxtr4Y9anxAan8Ca4YvFnIyryUtayqg3srW3ZIvry7WrWUtayrGr93Ar4UWF13
-	Kw4Ut343GFs3J3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U5nYwUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7BRiBmn0tnSceQAA3m
+Message-Id: <20260501-rust_leds-v16-2-9f329fdedcd9@posteo.de>
+References: <20260501-rust_leds-v16-0-9f329fdedcd9@posteo.de>
+In-Reply-To: <20260501-rust_leds-v16-0-9f329fdedcd9@posteo.de>
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+ Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
+ Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Boqun Feng <boqun@kernel.org>, Boqun Feng <boqun@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Markus Probst <markus.probst@posteo.de>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5332;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=E3bzm3QfblHpymqQiQxNq+2D7OfbgIrNy1j3vjDCsY8=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBp9LpQPk288lLbmRXPjYIv3XlTbqajWBkB1Wi2I
+ PMxfPGWaiCJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCafS6UBsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9Lr/RAAjLKd9iLV4ghqqKSRVJGKIIq2NDZmBlK
+ W6JmmWzqQaDNOsr0RBCtofqc4emDZ/IYEyCgYG87YyI0AloIL2hNOT9sZTcIAJ4adMQvrRPDFLC
+ 71iDEy6aCJtdVKiLjIthgaOXE4jfcF8sZ4q6j0o4IMpClEDWktpWO3PseBHyokZuLvAfaM/jXsP
+ hy8qqUR0JGgvBNxe96jO8KYAE2jgoYQHdFoJio+0+acgZCzbnaOudg0+4bAnxjmpg/nxDA2gjM5
+ HLFyoCS4mmTu2VBHh+Uih4kwmmnDfIH69t3OxXPPifvb/P75EnvEMKV11tyUrXTeAJHqakSud6k
+ U96fpcN+Yz2nK/wkKGt3rkCg3MFGjjt78JwjmZ58B1VNqWtneqkiXA6UF/7K1s2qS/X/pKqL0ay
+ wdBr9Y+qjFKL5FG7VVW6rVH4SvjhJuUgWqRRN4eWPfi1vMOy+egSmLM4HfR3Jka5MgwFPFQ6TCm
+ 4QRb0/ynV/ufCYXPTC42VWAhGAeHE2d/y2Z3HgIyMKf6RJB548Meb1UoE7MUrrtku6cvaLQUz5t
+ JNHCxBKCRpVxtzGL4/YIb98qoZbzm/yyEwZGZOKOCscAfAabP6k5GNOgYBnSULGv6t1JMsojAKP
+ nPS6wCINjDvyZcqKAstBI4FW8/nATRBbnDRqd0GajjpR+FBhvljQ=
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
+Add the `led::Mode` trait to allow for other types of led class devices
+in `led::LedOps`.
 
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+ rust/kernel/led.rs        | 31 +++++++++++++++++++++++++++----
+ rust/kernel/led/normal.rs | 24 ++++++++++++++++--------
+ 2 files changed, 43 insertions(+), 12 deletions(-)
 
-On 5/1/26 02:08, Bjorn Helgaas wrote:
-> On Fri, May 01, 2026 at 12:24:04AM +0800, Hans Zhang wrote:
->> Replace open-coded bitmask clear + FIELD_PREP() sequences with the
->> dedicated FIELD_MODIFY() macro.  FIELD_MODIFY() performs the same
->> operation but is shorter, less error-prone, and includes compile-time
->> checks to prevent field overflow.
->>
->> This series touches the PCI core, PCIe extended capabilities (PTM, IDE,
->> TPH, MSI, REBAR, IOV, CardBus), and several DesignWare-based and
->> other PCI host controllers.  No functional change is intended.
->>
->> The patches are split per subsystem or per driver to ease review:
-> 
-> A "resend" implies that this is the same series as posted earlier but
-> forgotten for some reason.  But the original was only twelve minutes
-> earlier, and this adds more instances.  This should be a "v2" with a
-> note about what changed from the original posting.  In any event, I'll
-> ignore the original posting in favor of this one.
+diff --git a/rust/kernel/led.rs b/rust/kernel/led.rs
+index 57746b0b08ca..5ddfee47f911 100644
+--- a/rust/kernel/led.rs
++++ b/rust/kernel/led.rs
+@@ -33,7 +33,10 @@
+ 
+ mod normal;
+ 
+-pub use normal::Device;
++pub use normal::{
++    Device,
++    Normal, //
++};
+ 
+ /// The name of the led is determined by the driver.
+ pub enum Named {}
+@@ -162,6 +165,7 @@ pub fn name(self, name: &'a CStr) -> Self {
+ /// #[vtable]
+ /// impl led::LedOps for MyLedOps {
+ ///     type Bus = platform::Device<device::Bound>;
++///     type Mode = led::Normal;
+ ///     const BLOCKING: bool = false;
+ ///     const MAX_BRIGHTNESS: u32 = 255;
+ ///
+@@ -194,6 +198,11 @@ pub trait LedOps: Send + Sync + 'static + Sized {
+     #[allow(private_bounds)]
+     type Bus: AsBusDevice<Bound>;
+ 
++    /// The led mode to use.
++    ///
++    /// See [`Mode`].
++    type Mode: Mode;
++
+     /// If set true, [`LedOps::brightness_set`] and [`LedOps::blink_set`] must perform the
+     /// operation immediately. If set false, they must not sleep.
+     const BLOCKING: bool;
+@@ -206,12 +215,16 @@ pub trait LedOps: Send + Sync + 'static + Sized {
+     fn brightness_set(
+         &self,
+         dev: &Self::Bus,
+-        classdev: &Device<Self>,
++        classdev: &<Self::Mode as Mode>::Device<Self>,
+         brightness: u32,
+     ) -> Result<()>;
+ 
+     /// Gets the current brightness level.
+-    fn brightness_get(&self, dev: &Self::Bus, classdev: &Device<Self>) -> Result<u32> {
++    fn brightness_get(
++        &self,
++        dev: &Self::Bus,
++        classdev: &<Self::Mode as Mode>::Device<Self>,
++    ) -> Result<u32> {
+         let _ = (dev, classdev);
+         build_error!(VTABLE_DEFAULT_ERROR)
+     }
+@@ -227,7 +240,7 @@ fn brightness_get(&self, dev: &Self::Bus, classdev: &Device<Self>) -> Result<u32
+     fn blink_set(
+         &self,
+         dev: &Self::Bus,
+-        classdev: &Device<Self>,
++        classdev: &<Self::Mode as Mode>::Device<Self>,
+         delay_on: &mut usize,
+         delay_off: &mut usize,
+     ) -> Result<()> {
+@@ -291,6 +304,16 @@ fn try_from(value: u32) -> core::result::Result<Self, Self::Error> {
+     }
+ }
+ 
++/// The led mode.
++///
++/// Each led mode has its own led class device type with different capabilities.
++///
++/// See [`Normal`].
++pub trait Mode: private::Sealed {
++    /// The class device for the led mode.
++    type Device<T: LedOps<Mode = Self>>;
++}
++
+ mod private {
+     pub trait Sealed {}
+ }
+diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
+index 6715ddf911be..ad69ed85feb0 100644
+--- a/rust/kernel/led/normal.rs
++++ b/rust/kernel/led/normal.rs
+@@ -6,11 +6,19 @@
+ 
+ use super::*;
+ 
++/// The led mode for the `struct led_classdev`. Leds with this mode can only have a fixed color.
++pub enum Normal {}
++
++impl Mode for Normal {
++    type Device<T: LedOps<Mode = Self>> = Device<T>;
++}
++impl private::Sealed for Normal {}
++
+ /// The led class device representation.
+ ///
+ /// This structure represents the Rust abstraction for a led class device.
+ #[pin_data(PinnedDrop)]
+-pub struct Device<T: LedOps> {
++pub struct Device<T: LedOps<Mode = Normal>> {
+     #[pin]
+     ops: T,
+     #[pin]
+@@ -19,7 +27,7 @@ pub struct Device<T: LedOps> {
+ 
+ impl<'a, S: DeviceBuilderState> DeviceBuilder<'a, S> {
+     /// Registers a new [`Device`].
+-    pub fn build<T: LedOps>(
++    pub fn build<T: LedOps<Mode = Normal>>(
+         self,
+         parent: &'a T::Bus,
+         ops: impl PinInit<T, Error> + 'a,
+@@ -88,7 +96,7 @@ pub fn build<T: LedOps>(
+     }
+ }
+ 
+-impl<T: LedOps> Device<T> {
++impl<T: LedOps<Mode = Normal>> Device<T> {
+     /// # Safety
+     /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
+     /// `led::Device`.
+@@ -107,17 +115,17 @@ fn parent(&self) -> &device::Device<Bound> {
+ }
+ 
+ // SAFETY: A `led::Device` can be unregistered from any thread.
+-unsafe impl<T: LedOps + Send> Send for Device<T> {}
++unsafe impl<T: LedOps<Mode = Normal> + Send> Send for Device<T> {}
+ 
+ // SAFETY: `led::Device` can be shared among threads because all methods of `led::Device`
+ // are thread safe.
+-unsafe impl<T: LedOps + Sync> Sync for Device<T> {}
++unsafe impl<T: LedOps<Mode = Normal> + Sync> Sync for Device<T> {}
+ 
+-struct Adapter<T: LedOps> {
++struct Adapter<T: LedOps<Mode = Normal>> {
+     _p: PhantomData<T>,
+ }
+ 
+-impl<T: LedOps> Adapter<T> {
++impl<T: LedOps<Mode = Normal>> Adapter<T> {
+     /// # Safety
+     /// `led_cdev` must be a valid pointer to a `led_classdev` embedded within a
+     /// `led::Device`.
+@@ -210,7 +218,7 @@ impl<T: LedOps> Adapter<T> {
+ }
+ 
+ #[pinned_drop]
+-impl<T: LedOps> PinnedDrop for Device<T> {
++impl<T: LedOps<Mode = Normal>> PinnedDrop for Device<T> {
+     fn drop(self: Pin<&mut Self>) {
+         let raw = self.classdev.get();
+         // SAFETY: The existence of `self` guarantees that `self.classdev.get()` is a pointer to a
 
-
-Hi Bjorn,
-
-Sorry.
-
-Due to the fact that my development environment uses the 163 email 
-service provided by China, the command "git send-email 
---no-chain-reply-to --quiet --to xxx --cc xxx" will not send the patches 
-if there are more than 10 of them. Therefore, the following command 
-needs to be executed: git send-email --no-chain-reply-to --quiet 
---batch-size=5 --relogin-delay=10 --to xxx --cc xxx. This way, you can 
-send more than 10 patches. Next time, I will be more careful when 
-sending and will also increment the version number.
-
-Best regards,
-Hans
-
-> 
-> Looks like a good candidate for coccinelle.
-> 
->> Hans Zhang (16):
->>    PCI: Use FIELD_MODIFY()
->>    PCI/PTM: Use FIELD_MODIFY()
->>    PCI/IDE: Use FIELD_MODIFY()
->>    PCI/IOV: Use FIELD_MODIFY()
->>    PCI/TPH: Use FIELD_MODIFY()
->>    PCI/MSI: Use FIELD_MODIFY()
->>    PCI/REBAR: Use FIELD_MODIFY()
->>    PCI/CARDBUS: Use FIELD_MODIFY()
->>    PCI: al: Use FIELD_MODIFY()
->>    PCI: eswin: Use FIELD_MODIFY()
->>    PCI: s32g: Use FIELD_MODIFY()
->>    PCI: tegra194: Use FIELD_MODIFY()
->>    PCI: qcom: Use FIELD_MODIFY()
->>    PCI: dwc: Use FIELD_MODIFY()
->>    PCI: mvebu: Use FIELD_MODIFY()
->>    PCI: mediatek-gen3: Use FIELD_MODIFY()
->>
->>   drivers/pci/controller/dwc/pcie-al.c          | 12 ++----
->>   .../controller/dwc/pcie-designware-debugfs.c  | 23 ++++-------
->>   .../pci/controller/dwc/pcie-designware-ep.c   |  3 +-
->>   drivers/pci/controller/dwc/pcie-designware.c  |  3 +-
->>   drivers/pci/controller/dwc/pcie-eswin.c       |  3 +-
->>   drivers/pci/controller/dwc/pcie-nxp-s32g.c    |  3 +-
->>   drivers/pci/controller/dwc/pcie-qcom-common.c | 40 +++++++------------
->>   drivers/pci/controller/dwc/pcie-qcom-ep.c     |  6 +--
->>   drivers/pci/controller/dwc/pcie-tegra194.c    |  8 ++--
->>   drivers/pci/controller/pci-mvebu.c            |  3 +-
->>   drivers/pci/controller/pcie-mediatek-gen3.c   |  3 +-
->>   drivers/pci/ide.c                             |  6 +--
->>   drivers/pci/iov.c                             |  3 +-
->>   drivers/pci/msi/msi.c                         | 11 ++---
->>   drivers/pci/pci.c                             |  3 +-
->>   drivers/pci/pcie/ptm.c                        |  3 +-
->>   drivers/pci/rebar.c                           |  6 +--
->>   drivers/pci/setup-cardbus.c                   |  3 +-
->>   drivers/pci/tph.c                             | 10 ++---
->>   19 files changed, 51 insertions(+), 101 deletions(-)
->>
->>
->> base-commit: 3b3bea6d4b9c162f9e555905d96b8c1da67ecd5b
->> -- 
->> 2.34.1
->>
+-- 
+2.53.0
 
