@@ -1,166 +1,103 @@
-Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33DC23D281;
-	Sat,  2 May 2026 13:58:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3B332652A2
+	for <linux-pci@vger.kernel.org>; Sat,  2 May 2026 16:24:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777730313; cv=none; b=EmLvmJYQMFhksMI6LIyE4BufAO/uwdtRqY844BsDREcz2uVR2rmoE7eVChKUUFvSoXk5zjAP2Wcm3eRLEUx38W6oP3FSRRVPj9RMzWsTaBuI2OIQzsjqC0IWy4PBRz+ugk0LLM9YkFvEiem5WXWdOteTknuL1SVB4MACNBKyGBA=
+	t=1777739063; cv=none; b=s9vl0Bt1lCsyv5NX9H5QxjjAtMnmtCShvdIrSUg36baMt8mW0+89nBPEBXs8e3IIMD374PPyC/7JyN5yHKuTCYsURgpCEFne8B7xMq76pBWCSkx9YEYWauWsvUW0VV/snJgn0ZJ53GNIpBRY54fuTeVuFPsNQ3KY/mgLQCJHzmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777730313; c=relaxed/simple;
-	bh=Sb1P/UJsx2ORy0a0bNGk3UrMIn6yN/zSwVYbw/ZFAAY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Yp65rdXRjrleIXxlQIYPt9px8nSBXIicwkQLJxar/lB8+CGR9Wb9zjSFZ222I78Qldo42CGY8HIg4VE0MXQbW6jBVokq/dx8G7IKO95OAVgdl5qewdS5jv2UVc8JtbOicTIf0dc9yxCX7XOyI/bf7rY0+RkmAStdIFT4CdmTMo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from edelgard.fodlan.icenowy.me (unknown [112.94.102.122])
-	by APP-03 (Coremail) with SMTP id rQCowAAnDOPsAvZpzmzfDw--.27778S2;
-	Sat, 02 May 2026 21:58:05 +0800 (CST)
-Message-ID: <0f42afefd9322779af5463b696c55b08d2296ea8.camel@iscas.ac.cn>
-Subject: Re: [PATCH 2/2] PCI: Add quirk to disable PCIe port services on
- Sophgo SG2042
-From: Icenowy Zheng <zhengxingda@iscas.ac.cn>
-To: Manivannan Sadhasivam <mani@kernel.org>, Han Gao <gaohan@iscas.ac.cn>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?=
-	 <u.kleine-koenig@baylibre.com>, Jonathan Cameron
- <jonathan.cameron@huawei.com>,  Lukas Wunner <lukas@wunner.de>, Ilpo
- =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, Kees Cook	
- <kees@kernel.org>, Chen Wang <unicorn_wang@outlook.com>, 
-	linux-pci@vger.kernel.org, sophgo@lists.linux.dev,
- linux-kernel@vger.kernel.org, 	linux-riscv@lists.infradead.org, Han Gao
- <rabenda.cn@gmail.com>, Inochi Amaoto	 <inochiama@gmail.com>, Vivian Wang
- <wangruikang@iscas.ac.cn>, Yao Zi <me@ziyao.cc>, 	stable@vger.kernel.org
-Date: Sat, 02 May 2026 21:58:04 +0800
-In-Reply-To: <q6wmn67lzk5c2pgmgkoezcvy3xj3yqecg675gx7xyrw3amjwpi@5pjla6j3krbv>
-References: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
-	 <20260331175658.1015829-3-gaohan@iscas.ac.cn>
-	 <q6wmn67lzk5c2pgmgkoezcvy3xj3yqecg675gx7xyrw3amjwpi@5pjla6j3krbv>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 
+	s=arc-20240116; t=1777739063; c=relaxed/simple;
+	bh=2rG+BmqF2L7Z3SXRX2evVS0766cCoBWD40kLCjLjsPM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N61EyuZEc220kkZvwPAA7yOWQqiqKOiGIL39oQvyPg+e00VGMGKnRriWo7d++IRh2d8fp5O0tOG0Sj9jo7qrWTqCkbizDgHKQ43uVQJ+e3V7gI6Md4mK+bSu4jE4SZG6h9VXFpio+Bz1L1e1qDzjIsoASl4GeoMuIUMGAhkJqro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-c7973bbc16dso1649194a12.0
+        for <linux-pci@vger.kernel.org>; Sat, 02 May 2026 09:24:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777739062; x=1778343862;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KUG5TbVa1RWcqk/55upOjf0WsHYgGEoiOowtAjLAhnk=;
+        b=FYkRbCiIm5ASaq/3RZtdYpJD4rnoaDcizhlHaXJf3ivY29YkKswH1Up7SlL/jc5jVs
+         VdGittzEiQD90VT2YPvecza53I2cWVUOFU9Roq5bjCa2xAkvfx/aBpLlbVXpqTMKNkvJ
+         MuGwggPZJJc8Ah6Qgr/TtBt0Wmcdk+SEdqha3kP7QKRHq5yh6yMk+EhkqjUk0IvNyuYP
+         BsOIyPQUN3nBiGz1kQBRm9gwZSSBUw1dadzCc3qhQ+EjJyVGt4Ew8JTq3fRyciLwVVqD
+         Cxs5UbZ2Fd9NBPSq9qOE1eGWBbY0+yejObuGMcE6HUlTL20nZuaTb7xPbj26PqhVeHuS
+         Umdg==
+X-Forwarded-Encrypted: i=1; AFNElJ/S5r2C28BVPDbqhrM+himRlan11ZJ+jFZp28TIAy5SnYbDfPpTISgYLrgL/EMGPKI4gmOlVTJjMb0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyxMwgZ+UO+76mk1LGAjCSC7TJdA0X4roMxBZiVtMgyi7kXpbKN
+	4kS3w5zg6egZS9ZPuG3sSglY4JqPUbO6Q0M43WAqr7aOTXK0OMUulG3qluy18w==
+X-Gm-Gg: AeBDievFQ0C3A/x9JkTALz7CCPkzViG4J5UrsEuna2Pp4T/VdjAtL0uu5mTrrf/yRyv
+	AkniTMThvA7pOcjdmHn7JkEC47KatmWWDIhKLS/Ta1/8B2I/mdH5zaE9xZUcpQ2AnSPMz7S5Q3/
+	UKk5lU9y6crlgMtwiWef1BRrOmcsaj44C4wJJjR/f51ZecMOfx5pWmd8XLt+CMqcnQTwSJx31FO
+	EA1Gu8AGby0Klr2y8U2pJzRidKNf4E0oM5VDFZkLPDX0vr4itbCFT5U2X+b6s3A/vetTZfS+S/9
+	c3k3Tw9rc+JH70V2rH19Z/PZSVaUwfIuYuUwrbCREwHvvoR27nMSPERixP2IWPgwH/8AD11DcAR
+	0l7YI+7/rZKujSqvPYEpiwtjFnG9o8qWyhHpaA7+uyAqA+JYb8WTMkqVha8dzrf7V0GPcNmF6Q7
+	JiP6bJ357zdY2IL96w+cu7QqypJotMLRJ1zKDI+19CzUejvj3y/9QozLxh18Pau7lg089XjmpuC
+	g+7+CvRMgG9c/ZiqQOOZVOdgHPUftzDz7SB0vJg2KxPwv6rAhbYwphcN1jKySQB5mBCfZCiM3qc
+	5e/5X4CybNc7GvC1vCZO910o1UHc6vNpNpE0vmH6DA==
+X-Received: by 2002:a05:6a21:7016:b0:3a3:a69c:214f with SMTP id adf61e73a8af0-3a7f1c97a82mr3985899637.36.1777739061904;
+        Sat, 02 May 2026 09:24:21 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8352bfe7a49sm3023579b3a.46.2026.05.02.09.24.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 02 May 2026 09:24:20 -0700 (PDT)
+Date: Sun, 3 May 2026 01:24:19 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To: duziming <duziming2@huawei.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com, 
+	alex@shazbot.org, chrisw@redhat.com, jbarnes@virtuousgeek.org, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, liuyongqiang13@huawei.com
+Subject: Re: [PATCH v4 2/4] PCI/sysfs: Fix null pointer dereference during
+ hotplug
+Message-ID: <20260502162024.GA1323630@rocinante>
+References: <20260226171403.GA3813150@bhelgaas>
+ <502de80c-d062-4253-a2a3-cfb240d7dab2@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CM-TRANSID:rQCowAAnDOPsAvZpzmzfDw--.27778S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxuF4UKr43uF17AF18Gw1ftFb_yoW5tF1rpF
-	Z5GasYyr40gFyUKw4UXw18CFyDua1vy34Fkr9IgayxuanIyr95Xrs2qr98KFsrXFsrXF1Y
-	qwn8Ww13GayDuFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvqb7Iv0xC_Kw4lb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I2
-	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
-	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xII
-	jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4
-	A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IE
-	w4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMc
-	vjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY
-	1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8Jw
-	C20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAF
-	wI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjx
-	v20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2
-	jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0x
-	ZFpf9x07bxNV9UUUUU=
-X-CM-SenderInfo: x2kh0wp0lqwv3d6l2u1dvotugofq/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <502de80c-d062-4253-a2a3-cfb240d7dab2@huawei.com>
 
-=E5=9C=A8 2026-05-01=E4=BA=94=E7=9A=84 22:23 +0530=EF=BC=8CManivannan Sadha=
-sivam=E5=86=99=E9=81=93=EF=BC=9A
-> On Wed, Apr 01, 2026 at 01:56:58AM +0800, Han Gao wrote:
-> > SG2042's PCIe root ports [1f1c:2042] fail to deliver MSI interrupts
-> > to
-> > downstream devices when native port services are enabled. Devices
-> > under
-> > an affected root port receive zero interrupts despite successful
-> > vector
-> > allocation, causing driver timeouts (e.g. amdgpu fence fallback
-> > timer
-> > expired on all rings).
-> >=20
->=20
-> Have you investigated why the endpoint is not able to deliver MSIs to
-> host when
-> Port services are enabled? Is it because the portdrv driver consumes
-> all MSIs or
-> MSIs are masked in hw (if so why? due to hardware issue?) or
-> something else?
+Hello,
 
-The problem is that the MSI controller has only 16 MSIs usable (it's
-wrongly described as 32 previously, a fix to this is pending[1]), and
-the failing device have an onboard PCIe switch, which created many PCIe
-ports (and corresponding pcieport devices).
+> Given this, would setting the pointer to NULL after kfree still be
+> considered a worthwhile defensive measure?
+> 
+[...]
+> > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > > index 18e5d4603b472..fbcbf39232732 100644
+> > > --- a/drivers/pci/pci-sysfs.c
+> > > +++ b/drivers/pci/pci-sysfs.c
+> > > @@ -1227,12 +1227,14 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
+> > >   		if (res_attr) {
+> > >   			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+> > >   			kfree(res_attr);
+> > > +			pdev->res_attr[i] = NULL;
+> > >   		}
+> > >   		res_attr = pdev->res_attr_wc[i];
+> > >   		if (res_attr) {
+> > >   			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+> > >   			kfree(res_attr);
+> > > +			pdev->res_attr_wc[i] = NULL;
+> > >   		}
+> > >   	}
+> > >   }
 
-With pcieport devices activated, 11 MSIs are requested by the pcieport
-drivers -- 3 SoC PCIe ports and 8 switch downstream ports. Then only 5
-MSIs are available, but there're still 10 downstream-facing PCIe ports
-now (and 5 of them are hardwired to onboard peripherals).
+If the changes like the following series:
 
-Thanks,
-Icenowy
+  https://lore.kernel.org/linux-pci/20260422161407.118748-1-kwilczynski@kernel.org/
 
-[1]
-https://lore.kernel.org/all/20260407160143.1182430-1-zhengxingda@iscas.ac.c=
-n/
+Will eventually be accepted, then this won't be needed.
 
->=20
-> Currently, the problem description is very vague.
->=20
-> - Mani
->=20
-> > Set PCI_DEV_FLAGS_NO_PORT_SERVICES on SG2042 root ports to prevent
-> > the
-> > port service driver from probing, restoring correct MSI delivery.
-> >=20
-> > Fixes: 1c72774df028 ("PCI: sg2042: Add Sophgo SG2042 PCIe driver")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
-> > ---
-> > =C2=A0drivers/pci/quirks.c=C2=A0=C2=A0=C2=A0 | 12 ++++++++++++
-> > =C2=A0include/linux/pci_ids.h |=C2=A0 2 ++
-> > =C2=A02 files changed, 14 insertions(+)
-> >=20
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 48946cca4be7..bbde482ff7cb 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -6380,3 +6380,15 @@ static void
-> > pci_mask_replay_timer_timeout(struct pci_dev *pdev)
-> > =C2=A0DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750,
-> > pci_mask_replay_timer_timeout);
-> > =C2=A0DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755,
-> > pci_mask_replay_timer_timeout);
-> > =C2=A0#endif
-> > +
-> > +/*
-> > + * SG2042's PCIe root ports do not correctly deliver MSI
-> > interrupts to
-> > + * downstream devices when native PCIe port services are enabled.
-> > All
-> > + * services including bwctrl must be disabled, equivalent to
-> > pcie_ports=3Dcompat.
-> > + */
-> > +static void quirk_sg2042_no_port_services(struct pci_dev *dev)
-> > +{
-> > +	pci_info(dev, "SG2042: disabling native PCIe port
-> > services\n");
-> > +	dev->dev_flags |=3D PCI_DEV_FLAGS_NO_PORT_SERVICES;
-> > +}
-> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SOPHGO, 0x2042,
-> > quirk_sg2042_no_port_services);
-> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > index 406abf629be2..9663be526dd0 100644
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2630,6 +2630,8 @@
-> > =C2=A0
-> > =C2=A0#define PCI_VENDOR_ID_CXL		0x1e98
-> > =C2=A0
-> > +#define PCI_VENDOR_ID_SOPHGO		0x1f1c
-> > +
-> > =C2=A0#define PCI_VENDOR_ID_TEHUTI		0x1fc9
-> > =C2=A0#define PCI_DEVICE_ID_TEHUTI_3009	0x3009
-> > =C2=A0#define PCI_DEVICE_ID_TEHUTI_3010	0x3010
-> > --=20
-> > 2.47.3
-> >=20
+Thank you!
 
+	Krzysztof
