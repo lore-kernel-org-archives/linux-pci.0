@@ -1,95 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EBFF3101CD;
-	Sat,  2 May 2026 11:40:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33DC23D281;
+	Sat,  2 May 2026 13:58:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777722021; cv=none; b=r5mnYeQ0e0fXF8b9Io8ByaNQjgfkAfanYRdhtXbMKHglPGoU4kDssan5NqZDRUbGquJ7ZBh12s0MDLjCvMqQIYuwbF7UNPzvWYh1d2kCLUJNoW2DY2QHOeP6/Svqws5rRqfDtswpCSs3dJvmUwWQpScHptHoWB8Yc3Xh580lqxY=
+	t=1777730313; cv=none; b=EmLvmJYQMFhksMI6LIyE4BufAO/uwdtRqY844BsDREcz2uVR2rmoE7eVChKUUFvSoXk5zjAP2Wcm3eRLEUx38W6oP3FSRRVPj9RMzWsTaBuI2OIQzsjqC0IWy4PBRz+ugk0LLM9YkFvEiem5WXWdOteTknuL1SVB4MACNBKyGBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777722021; c=relaxed/simple;
-	bh=Ba1wqX2SN8Flrod7t3UMQ92yqgaLJRZILMs4KGu8JaY=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=pZS+w4wRilBYexw4eFgOgTWS/fpu0YcPcIFqfdQNR0OIIno/bn489mCtwO1GPYo3hsk841zzYYguZboHKIxizDIMmslpIulavd9HK1IidZsYvYBPdjJH4bmyXDEadzqHsJaOuSvRsB2For3SqEqPlQuk0ijvpuMydfGo3kKHPJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UvN+ekgw; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UvN+ekgw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CE86C19425;
-	Sat,  2 May 2026 11:40:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777722020;
-	bh=Ba1wqX2SN8Flrod7t3UMQ92yqgaLJRZILMs4KGu8JaY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=UvN+ekgwd8BBWJbXT5QkMKUdTwzEYPmQV8Tt0MSw65R2LjEfKccGzIwXqIU6oPC8Z
-	 m6W5N1A3NE2WurVH3eQOX3EnBf33MxsYsE/X6erNCChhShy3oX5rAmA9ewQvl5a7TI
-	 DfiaUl87B+rIOvviedQ0uG4n17Lc3/DXrqdD5SZPrBNSwqb4r2qX5W2mhsoZ0a1EEr
-	 2ABXYDWxmLLZUhuWxo33Bb7bIJGAZnl2Xet65XNqcNUokSWw6ey/f9y2UOj5y/w1OC
-	 Eca1fVzlOAG0AnMMxBs862CJOQ2Gg20OOVnPQXU9U5gO95VSylI25bJzyJ7eAdozs9
-	 BO6KYoiyee5qw==
-Date: Sat, 2 May 2026 06:40:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: linux-pci@vger.kernel.org, Dom Cobley <popcornmix@gmail.com>,
-	Phil Elwell <phil@raspberrypi.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Hans Zhang <18255117159@163.com>,
-	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-rpi-kernel@lists.infradead.org>,
-	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: brcmstb: Assign pcie->gen from pcie_get_link_speed()
-Message-ID: <20260502114019.GA551304@bhelgaas>
+	s=arc-20240116; t=1777730313; c=relaxed/simple;
+	bh=Sb1P/UJsx2ORy0a0bNGk3UrMIn6yN/zSwVYbw/ZFAAY=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Yp65rdXRjrleIXxlQIYPt9px8nSBXIicwkQLJxar/lB8+CGR9Wb9zjSFZ222I78Qldo42CGY8HIg4VE0MXQbW6jBVokq/dx8G7IKO95OAVgdl5qewdS5jv2UVc8JtbOicTIf0dc9yxCX7XOyI/bf7rY0+RkmAStdIFT4CdmTMo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from edelgard.fodlan.icenowy.me (unknown [112.94.102.122])
+	by APP-03 (Coremail) with SMTP id rQCowAAnDOPsAvZpzmzfDw--.27778S2;
+	Sat, 02 May 2026 21:58:05 +0800 (CST)
+Message-ID: <0f42afefd9322779af5463b696c55b08d2296ea8.camel@iscas.ac.cn>
+Subject: Re: [PATCH 2/2] PCI: Add quirk to disable PCIe port services on
+ Sophgo SG2042
+From: Icenowy Zheng <zhengxingda@iscas.ac.cn>
+To: Manivannan Sadhasivam <mani@kernel.org>, Han Gao <gaohan@iscas.ac.cn>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?=
+	 <u.kleine-koenig@baylibre.com>, Jonathan Cameron
+ <jonathan.cameron@huawei.com>,  Lukas Wunner <lukas@wunner.de>, Ilpo
+ =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>, Kees Cook	
+ <kees@kernel.org>, Chen Wang <unicorn_wang@outlook.com>, 
+	linux-pci@vger.kernel.org, sophgo@lists.linux.dev,
+ linux-kernel@vger.kernel.org, 	linux-riscv@lists.infradead.org, Han Gao
+ <rabenda.cn@gmail.com>, Inochi Amaoto	 <inochiama@gmail.com>, Vivian Wang
+ <wangruikang@iscas.ac.cn>, Yao Zi <me@ziyao.cc>, 	stable@vger.kernel.org
+Date: Sat, 02 May 2026 21:58:04 +0800
+In-Reply-To: <q6wmn67lzk5c2pgmgkoezcvy3xj3yqecg675gx7xyrw3amjwpi@5pjla6j3krbv>
+References: <20260331175658.1015829-1-gaohan@iscas.ac.cn>
+	 <20260331175658.1015829-3-gaohan@iscas.ac.cn>
+	 <q6wmn67lzk5c2pgmgkoezcvy3xj3yqecg675gx7xyrw3amjwpi@5pjla6j3krbv>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.58.3 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260501202438.376033-1-florian.fainelli@broadcom.com>
+X-CM-TRANSID:rQCowAAnDOPsAvZpzmzfDw--.27778S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxuF4UKr43uF17AF18Gw1ftFb_yoW5tF1rpF
+	Z5GasYyr40gFyUKw4UXw18CFyDua1vy34Fkr9IgayxuanIyr95Xrs2qr98KFsrXFsrXF1Y
+	qwn8Ww13GayDuFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvqb7Iv0xC_Kw4lb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I2
+	0VC2zVCF04k26cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rw
+	A2F7IY1VAKz4vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xII
+	jxv20xvEc7CjxVAFwI0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4
+	A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IE
+	w4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26r1j6r4UMc
+	vjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY
+	1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8Jw
+	C20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAF
+	wI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjx
+	v20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2
+	jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0x
+	ZFpf9x07bxNV9UUUUU=
+X-CM-SenderInfo: x2kh0wp0lqwv3d6l2u1dvotugofq/
 
-On Fri, May 01, 2026 at 01:24:38PM -0700, Florian Fainelli wrote:
-> After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
-> pcie->gen stopped being assigned and as a result the established PCIe
-> link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
-> to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
-> 
-> Link: https://github.com/raspberrypi/linux/issues/7343
-> Reported-by: Dom Cobley <popcornmix@gmail.com>
-> Reported-by: Phil Elwell <phil@raspberrypi.com>
-> Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
-> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
-> ---
->  drivers/pci/controller/pcie-brcmstb.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-> index 714bcab97b60..6138fc4bc064 100644
-> --- a/drivers/pci/controller/pcie-brcmstb.c
-> +++ b/drivers/pci/controller/pcie-brcmstb.c
-> @@ -2072,8 +2072,7 @@ static int brcm_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(pcie->clk);
->  
->  	ret = of_pci_get_max_link_speed(np);
-> -	if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
-> -		pcie->gen = 0;
-> +	pcie->gen = pcie_get_link_speed(ret);
+=E5=9C=A8 2026-05-01=E4=BA=94=E7=9A=84 22:23 +0530=EF=BC=8CManivannan Sadha=
+sivam=E5=86=99=E9=81=93=EF=BC=9A
+> On Wed, Apr 01, 2026 at 01:56:58AM +0800, Han Gao wrote:
+> > SG2042's PCIe root ports [1f1c:2042] fail to deliver MSI interrupts
+> > to
+> > downstream devices when native port services are enabled. Devices
+> > under
+> > an affected root port receive zero interrupts despite successful
+> > vector
+> > allocation, causing driver timeouts (e.g. amdgpu fence fallback
+> > timer
+> > expired on all rings).
+> >=20
+>=20
+> Have you investigated why the endpoint is not able to deliver MSIs to
+> host when
+> Port services are enabled? Is it because the portdrv driver consumes
+> all MSIs or
+> MSIs are masked in hw (if so why? due to hardware issue?) or
+> something else?
 
-Take a look at https://sashiko.dev/#/patchset/20260501202438.376033-1-florian.fainelli%40broadcom.com
+The problem is that the MSI controller has only 16 MSIs usable (it's
+wrongly described as 32 previously, a fix to this is pending[1]), and
+the failing device have an onboard PCIe switch, which created many PCIe
+ports (and corresponding pcieport devices).
 
-The notes at https://github.com/raspberrypi/linux/issues/7343 assumed
-PCI_SPEED_UNKNOWN was 0, but in fact it is 0xff, which means you might
-want the more defensive patch instead.
+With pcieport devices activated, 11 MSIs are requested by the pcieport
+drivers -- 3 SoC PCIe ports and 8 switch downstream ports. Then only 5
+MSIs are available, but there're still 10 downstream-facing PCIe ports
+now (and 5 of them are hardwired to onboard peripherals).
 
-I'll be happy to replace what's on pci/for-linus if so.
+Thanks,
+Icenowy
 
->  	pcie->ssc = of_property_read_bool(np, "brcm,enable-ssc");
->  
-> -- 
-> 2.43.0
-> 
+[1]
+https://lore.kernel.org/all/20260407160143.1182430-1-zhengxingda@iscas.ac.c=
+n/
+
+>=20
+> Currently, the problem description is very vague.
+>=20
+> - Mani
+>=20
+> > Set PCI_DEV_FLAGS_NO_PORT_SERVICES on SG2042 root ports to prevent
+> > the
+> > port service driver from probing, restoring correct MSI delivery.
+> >=20
+> > Fixes: 1c72774df028 ("PCI: sg2042: Add Sophgo SG2042 PCIe driver")
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Han Gao <gaohan@iscas.ac.cn>
+> > ---
+> > =C2=A0drivers/pci/quirks.c=C2=A0=C2=A0=C2=A0 | 12 ++++++++++++
+> > =C2=A0include/linux/pci_ids.h |=C2=A0 2 ++
+> > =C2=A02 files changed, 14 insertions(+)
+> >=20
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 48946cca4be7..bbde482ff7cb 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -6380,3 +6380,15 @@ static void
+> > pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+> > =C2=A0DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750,
+> > pci_mask_replay_timer_timeout);
+> > =C2=A0DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755,
+> > pci_mask_replay_timer_timeout);
+> > =C2=A0#endif
+> > +
+> > +/*
+> > + * SG2042's PCIe root ports do not correctly deliver MSI
+> > interrupts to
+> > + * downstream devices when native PCIe port services are enabled.
+> > All
+> > + * services including bwctrl must be disabled, equivalent to
+> > pcie_ports=3Dcompat.
+> > + */
+> > +static void quirk_sg2042_no_port_services(struct pci_dev *dev)
+> > +{
+> > +	pci_info(dev, "SG2042: disabling native PCIe port
+> > services\n");
+> > +	dev->dev_flags |=3D PCI_DEV_FLAGS_NO_PORT_SERVICES;
+> > +}
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SOPHGO, 0x2042,
+> > quirk_sg2042_no_port_services);
+> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> > index 406abf629be2..9663be526dd0 100644
+> > --- a/include/linux/pci_ids.h
+> > +++ b/include/linux/pci_ids.h
+> > @@ -2630,6 +2630,8 @@
+> > =C2=A0
+> > =C2=A0#define PCI_VENDOR_ID_CXL		0x1e98
+> > =C2=A0
+> > +#define PCI_VENDOR_ID_SOPHGO		0x1f1c
+> > +
+> > =C2=A0#define PCI_VENDOR_ID_TEHUTI		0x1fc9
+> > =C2=A0#define PCI_DEVICE_ID_TEHUTI_3009	0x3009
+> > =C2=A0#define PCI_DEVICE_ID_TEHUTI_3010	0x3010
+> > --=20
+> > 2.47.3
+> >=20
+
