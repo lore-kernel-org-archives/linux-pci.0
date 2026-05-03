@@ -1,123 +1,191 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A66FE2236F0
-	for <linux-pci@vger.kernel.org>; Sun,  3 May 2026 13:51:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C6DD38AC75;
+	Sun,  3 May 2026 15:47:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777816269; cv=none; b=puK3dGmU00TNUWoFLW6yhFUoMTvXlsqzNyT+F7fMUxH0t41Pdte2yDsGGS0XLdxpZHNgvE8ip6SY5jKh2bcZnHyFu5ii5x9ByanHlpa+Zc/dQlJVHoHDqJA3QcgqgTJN4bC6O8HdXm2XDy1FVhHI6RJJqQsG+Pcrtxjc6VCLivI=
+	t=1777823257; cv=none; b=kY31oPF/L1goseu7DyuQfk4b91HcEfG4R4RV1kTwK/4bmhoaD8xYliDMMWdQFcpPCayvz4wy5G/FUaQLbuyN2KpmHEFP2dHojCWeZ28F6lhM5I7MPrRon6VRtYaq8vS5+gAMRf7cQD8+D+tcNF5Ks85HtZpIseY0B0f1VHv54vs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777816269; c=relaxed/simple;
-	bh=DgfVWxrYBRgguAFdrL7fywNOdpoYYzD63n1bUhrK4yw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CY0XzCtR7Te1KH7+L5M8JGgQG0KZsYoYl9Zgxqs7ny+dMKIRAfljXYRKzowCdlH66ERkZB/4/KE+wxYiaP2AbEyA7bUnaaiZ8GOGQbuuS/aDe92Fb4PW0qdsZcfQrzoP/p3NYQVszEeaWddHg1us3tfX4VdYTq8PV7bZpllCNt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ILJ/iEp0; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777823257; c=relaxed/simple;
+	bh=hMp1u47oFAAcO0vVkjJY4Vr1Gz+E5GZ32BxtpX3Ap/g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tmMvkJfr3qasSK19eEIjTqEdmfb4kZd3jpKK9Ic3zygP9+orh9mj9iT2PbR7xEuvE0x8SveR1IW96PTsrHtj0llv9ZUfvWB2d4KaOl17Jqb75y2SsESCM5XJjX84u7C7/wCuecP5RVzfj9dHxgcEyrmhm2dWJMBPUwXE53kynZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Wo6wpdMa; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ILJ/iEp0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46193C2BCB4;
-	Sun,  3 May 2026 13:51:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777816269;
-	bh=DgfVWxrYBRgguAFdrL7fywNOdpoYYzD63n1bUhrK4yw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=ILJ/iEp0UTcZQXo6eRh+LNRnheOFsrE29s8ueNCy/OKwcTEVZaIaRIgmKPeIU57Et
-	 x+EUppoSRsa6+eDYv5OwwBgHSsDyMl1Q//4+aA55TkGIGxY6GGnpRVWxMO3zv7wJXf
-	 DcDr8H+PlmN4okdEljIDRpWjlMBJplqvt86j7+SEwHnjMhD7qxnAkvxYsJAvpp4tOF
-	 37/eERiWs4GK2IgTavXWJQZcOGrFUg60PAelm6eMWfwygWTUyRbMtfmN4SzRk+AmOY
-	 eFAgeLKFaLBuj/to0NP/Nf6lW9NA22it0WKtxPOmWTiBAZW1kFuZ7fLHjCUKLKfiBw
-	 B3Ngp0QHYLAzw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
-Reply-To: sashiko@lists.linux.dev
-To: "Lukas Wunner" <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <785c98b50a7a00d0698848c75d51b8f5669ad18f.1777814679.git.lukas@wunner.de>
-References: <785c98b50a7a00d0698848c75d51b8f5669ad18f.1777814679.git.lukas@wunner.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 03 May 2026 13:51:08 +0000
-Message-Id: <20260503135109.46193C2BCB4@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Wo6wpdMa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=fXUtsbdTPP5h/+DpPz67XLTVhEN4uswt4dk5RszFyoI=;
+	b=Wo6wpdMa+HLX/r39LtIQRrsokF3uTK2oo8O9FhfIBfa9DheuEttE8m7XQhwngw
+	mcssaFbGpDwse1hOneoPV6eBOaVyEHNcIY3m2r39kem8AWWm2bDDiYEhQrIT88O5
+	vYdHUXndAI9XwCnr9+7UB89NifgqU6uKPV5OnKp8n0Emg=
+Received: from [IPV6:240e:b8f:927e:5900:ed20:7e7a:6456:3b2c] (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgBXxffWbfdp1t+hCA--.253S2;
+	Sun, 03 May 2026 23:46:33 +0800 (CST)
+Message-ID: <699bd359-7389-45fa-a79b-10046f73bf12@163.com>
+Date: Sun, 3 May 2026 23:46:33 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] PCI: cadence: Ensure that
+ cdns_pcie_host_wait_for_link() waits 100 ms after link up
+To: Siddharth Vadapalli <s-vadapalli@ti.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ mani@kernel.org, vigneshr@ti.com, robh@kernel.org,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260501153553.66382-1-18255117159@163.com>
+ <20260501153553.66382-2-18255117159@163.com>
+ <4ce9f13a-b17f-4149-ade8-57519f4a4752@ti.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <4ce9f13a-b17f-4149-ade8-57519f4a4752@ti.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PigvCgBXxffWbfdp1t+hCA--.253S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxKFy5GryDJw1xXr4kCF1UAwb_yoW7XF15pa
+	yUWFyxKF4IqrWYva1kA3W7ZryaqF95Aa47Gw4kKa4xArnrArWUtFsFgF13WrZIgr4qvr17
+	Zw1jqF9rGF1avFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UOYFZUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBnpjWn3bdnkZQAA3S
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Removing the read-back and retry loop for BAR restoration in `pci_=
-restore_state()` introduces a risk of silent regressions for hardware resum=
-ing from non-FLR resets (such as D3hot to D0 transitions or custom driver r=
-esets). The commit incorrectly assumes the 60s delay from `pci_dev_wait()` =
-covers all usages, but standard PM resume paths only delay for 10ms (`PCI_P=
-M_D3_WAIT`) before calling `pci_restore_state()`. Historically, hardware th=
-at needed slightly longer to accept configuration writes relied on the 10x =
-1ms retry loop to successfully restore BARs. By removing both the retry and=
- the read-back verification, BAR writes to slow devices will be silently dr=
-opped, leaving hardware unconfigured and causing MMIO accesses to result in=
- IOMMU faults or kernel crashes.
---
 
-commit 28d12557c0e570f2b2d21da1dcbb7889df2f4672
-Author: Lukas Wunner <lukas@wunner.de>
 
-PCI: Drop unnecessary retries when restoring BARs
+On 5/2/26 13:18, Siddharth Vadapalli wrote:
+> On 01/05/26 21:05, Hans Zhang wrote:
+>> As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link speeds
+>> greater than 5.0 GT/s, software must wait a minimum of 100 ms after Link
+>> training completes before sending a Configuration Request.
+>>
+>> Add a new 'max_link_speed' field in struct cdns_pcie to record the
+>> maximum supported (or currently configured) link speed of the controller.
+>>
+>> In cdns_pcie_host_wait_for_link(), after the link is reported as up,
+>> insert a 100 ms delay if max_link_speed > 2 (i.e., > 5 GT/s). This
+>> implements the required delay at the common Cadence host layer.
+>>
+>> Currently max_link_speed is zero-initialized, so the delay is not yet
+>> active. Glue drivers must set max_link_speed appropriately to enable
+>> the delay. This matches the approach taken for the Synopsys DWC
+>> controller in commit 80dc18a0cba8d ("PCI: dwc: Ensure that
+>> dw_pcie_wait_for_link() waits 100 ms after link up").
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> ---
+>>   .../pci/controller/cadence/pcie-cadence-host-common.c    | 9 +++++++++
+>>   drivers/pci/controller/cadence/pcie-cadence.h            | 2 ++
+>>   2 files changed, 11 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c 
+>> b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+>> index 2b0211870f02..d4ae762f423f 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+>> @@ -14,6 +14,7 @@
+>>   #include "pcie-cadence.h"
+>>   #include "pcie-cadence-host-common.h"
+>> +#include "../../pci.h"
+>>   #define LINK_RETRAIN_TIMEOUT HZ
+>> @@ -55,6 +56,14 @@ int cdns_pcie_host_wait_for_link(struct cdns_pcie 
+>> *pcie,
+>>       /* Check if the link is up or not */
+>>       for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+>>           if (pcie_link_up(pcie)) {
+>> +            /*
+>> +             * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
+>> +             * supports Link speeds greater than 5.0 GT/s, software
+>> +             * must wait a minimum of 100 ms after Link training
+>> +             * completes before sending a Configuration Request.
+>> +             */
+>> +            if (pcie->max_link_speed > 2)
+>> +                msleep(PCIE_RESET_CONFIG_WAIT_MS);
+> 
+> I think the above could be moved to cdns_pcie_host_start_link() as follows:
+> 
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c 
+> b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> index 2b0211870f02..0f885dcbdb12 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> @@ -115,6 +115,15 @@ int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc,
+>       if (!ret && rc->quirk_retrain_flag)
+>           ret = cdns_pcie_retrain(pcie, pcie_link_up);
+> 
+> +    /*
+> +     * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
+> +     * supports Link speeds greater than 5.0 GT/s, software
+> +     * must wait a minimum of 100 ms after Link training
+> +     * completes before sending a Configuration Request.
+> +     */
+> +    if (!ret && pcie->max_link_speed > 2)
+> +        msleep(PCIE_RESET_CONFIG_WAIT_MS);
+> +
+>       return ret;
+>   }
+>   EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
+> 
+> This will avoid an additional and unnecessary delay when 
+> 'cdns_pcie_retrain()' retrains the link.
+> 
+> Instead of checking for the link being up using "pcie_link_up(pcie)", 
+> checking for 'ret' being zero should also work (ret being zero indicates 
+> that the link is up).
+> 
+> Since configuration space accesses will not be performed until 
+> cdns_pcie_host_start_link() completes executing, it should be safe to 
+> switch to the above implementation.
 
-This commit removes the retry loop when restoring PCI configuration space.
-It relies on the lengthened FLR delays now present in the kernel, concluding
-that retries for BAR restoration are no longer needed.
+Hi Siddharth,
 
-Closes: https://lore.kernel.org/r/20260416225745.GA41850@bhelgaas/
+I think this is applicable to LGA IP as per the method you mentioned. 
+However, for HPA IP, additional repetitive code needs to be added in the 
+following code.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f7cfcc00090..1e386dfaa669 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1764,7 +1764,7 @@ int pci_save_state(struct pci_dev *dev)
+Regarding the "quirk_retrain_flag" tag, I reviewed this submission 
+record and it appears to be a workaround method. Can it be considered 
+that it is not a universal method? Or is the same processing logic also 
+added in the HPA?
 
-[ ... ]
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c 
+b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+index 0f540bed58e8..65159f52067d 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+@@ -305,6 +305,15 @@ int cdns_pcie_hpa_host_link_setup(struct 
+cdns_pcie_rc *rc)
+         if (ret)
+                 dev_dbg(dev, "PCIe link never came up\n");
 
->  static void pci_restore_config_dword(struct pci_dev *pdev, int offset,
-> -				     u32 saved_val, int retry, bool force)
-> +				     u32 saved_val, bool force)
->  {
->  	u32 val;
-> =20
-> @@ -1772,52 +1772,42 @@ static void pci_restore_config_dword(struct pci_d=
-ev *pdev, int offset,
->  	if (!force && val =3D=3D saved_val)
->  		return;
-> =20
-> -	for (;;) {
-> -		pci_dbg(pdev, "restore config %#04x: %#010x -> %#010x\n",
-> -			offset, val, saved_val);
-> -		pci_write_config_dword(pdev, offset, saved_val);
-> -		if (retry-- <=3D 0)
-> -			return;
-> +	pci_dbg(pdev, "restore config %#04x: %#010x -> %#010x\n", offset, val,
-> +		saved_val);
-> =20
-> -		pci_read_config_dword(pdev, offset, &val);
-> -		if (val =3D=3D saved_val)
-> -			return;
-> -
-> -		mdelay(1);
-> -	}
-> +	pci_write_config_dword(pdev, offset, saved_val);
->  }
++       /*
++        * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
++        * supports Link speeds greater than 5.0 GT/s, software
++        * must wait a minimum of 100 ms after Link training
++        * completes before sending a Configuration Request.
++        */
++       if (pcie->max_link_speed > 2)
++               msleep(PCIE_RESET_CONFIG_WAIT_MS);
++
+         return ret;
+  }
+  EXPORT_SYMBOL_GPL(cdns_pcie_hpa_host_link_setup);
 
-Does removing the read-back and retry loop introduce a risk for hardware
-resuming from non-FLR resets?
+Best regards,
+Hans
+> 
+> 
+>>               dev_info(dev, "Link up\n");
+>>               return 0;
+>>           }
+> 
+> [TRIMMED]
+> 
+> Regards,
+> Siddharth.
 
-While FLR paths might now have a 60 second delay, pci_restore_state() is
-used globally across the kernel. For example, during a PM resume from
-D3hot to D0, the kernel typically only delays for 10ms (PCI_PM_D3_WAIT)
-before restoring state.
-
-If a device is slow to exit reset, will these configuration writes be
-silently dropped without the fallback retry loop, potentially leaving BARs
-unconfigured and causing MMIO accesses to fault?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/785c98b50a7a00d0698=
-848c75d51b8f5669ad18f.1777814679.git.lukas@wunner.de?part=3D1
