@@ -1,160 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71F6B34C80D
-	for <linux-pci@vger.kernel.org>; Sun,  3 May 2026 16:52:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E33F399374
+	for <linux-pci@vger.kernel.org>; Sun,  3 May 2026 18:46:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777827164; cv=none; b=sA4msISlXBtljflC8UdgfCmareqMoV/uuz+eAS3IQ7AGxpow0qdiUpBNqsCBspxM6YwmfhdA6NS8u6ZYpO6X/pg1KMlVoZ3XnueD6LyrI9iu5cMV9EPNbtPM0NfZ7ngCiHKWwpo/J4tAiiI+ahINaqKK7I0NUnNmgaIS+M5g5Gs=
+	t=1777833991; cv=none; b=AB9j0De4PSLAuimnIMkLgoH59dQhB+TfSI70tN2LJ0PGqXfehkpQdSQhFfoYmL8aBL7bgyBqsgzrZDhXUd7Sy3e3tggMhs9WLZhGbJ86GZCK2z2PNuucXqh321hJ3fM7v/ek9QCnUaREgnM0j/At1EUfITvPP8mKuHHJrgCFY6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777827164; c=relaxed/simple;
-	bh=c9hEDcaBbMm+9MIAJ2OXdE0ANuWKycOgxmrQkGpzH1k=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=UkBPp4lDeqFrhFq5D7wGf+oseCI7majx1/2qTUcZE9sOx2Kbbmch4nzggAXKnt61QM+b5+RQRQHTEcl3MNg+8tk0fYQXWTIRt5UkxuCJ/0DRsdL0AF9K5rdDBUYFaKywSUB3ULRIuyq54dxp0HMqEpTteWCSHBXcnMjbfunuPiU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fIDcM2mk; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fIDcM2mk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A676C2BCB4;
-	Sun,  3 May 2026 16:52:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777827163;
-	bh=c9hEDcaBbMm+9MIAJ2OXdE0ANuWKycOgxmrQkGpzH1k=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=fIDcM2mkvjJLA02k8kx+rZTBNdsuktdGfA4OrYlZOpdtRjdR1PP+my7cCI5c2rhPR
-	 zXmQ9w6DZsdb2KYvRV7C+JS4B1ufO1gQSudOEVxDCnQOht58PhuZVmxRH+Zwx87xa5
-	 JtH3AiNzrM8dXyb+Cp8jCbIcYcOU5CRRlVMu89I19Vxik/FzLL3iqqrITMkT4ObPNH
-	 TFrKqAW4hSYB4YT8vWL5VhcF4UnZNXNT/66UZs0zUzS5BV7BH9MpiVgAEfHNsvW7VI
-	 6bhdz/Dqm0tP69p/GJyE28gB2mQT8vmrGZucYgzjbs+4i3i8MXJhYizecfhYE9VXtb
-	 DeKjN35BDFkPQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: cadence: Use cdns_pcie_find_capability() to get
- PCIe Cap offset in host driver
-Reply-To: sashiko@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260503161913.77878-1-18255117159@163.com>
-References: <20260503161913.77878-1-18255117159@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sun, 03 May 2026 16:52:42 +0000
-Message-Id: <20260503165243.4A676C2BCB4@smtp.kernel.org>
+	s=arc-20240116; t=1777833991; c=relaxed/simple;
+	bh=hXqSns0mZXRsTyQvYM1QQtbBtCTGXJw/NDYOYiyyiuI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BtPCgVuTGUVXyrTTl3gc9eezLCeuUaKEAAQukXPF2s90bnGOGvvCeQbQykVXsdp/SMruUElzXKL1lkVenNsZGwpFcQqsnHsw0ptuZN0Hy2CLn4b2cSfJ9FI235gZe7Vi4EWPF6XeloMWeQqxE6Z9O53GQEkc5hZUkF24Q8y5hmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-837dfccd950so12004b3a.0
+        for <linux-pci@vger.kernel.org>; Sun, 03 May 2026 11:46:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777833989; x=1778438789;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=i2HxLSSoyWjc7srvpQpGKBdhtVDS99Q1hYlUtIuh62k=;
+        b=LmIOvEucb4PIFanRxSCdK+hPj33YqBmcfGUiwZVlCCioze+lZO03LK/dUHRzhBWbA+
+         +J5qYv4A9MacMO4vO7o6H0WIU3ltGC5CoDOgdPd/zHtUH+H/5V6qEKEev/64/cVQYktH
+         s51bzy3t94naAxW/H9PuQ3US20ctPl0rjDVbhKh0EquY4/MYFCjU7w5c5ljAxKOPTymR
+         dEMWjIcC6hMA1LGyPnVei30cvlC7Syg4CPxpx5C3lTcpj8chzuhpPchWNl6Nfqd4A+WS
+         Obb4B7H7jba/UF79Hh/Z2X1afOYrBTI8holTLUcJ9C0oRxRjtxVb85kPIU/xeo8mxr/k
+         XG9g==
+X-Forwarded-Encrypted: i=1; AFNElJ9o4bYEiRU1oeQuYDvsEjKWlDrJJxh0ukfsfYxVGXSpVa0lX0wbnUlusTcfd+SfsgPCS7SEPE/C4Ho=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxSARomU8c4wbsgybGsgO1gRPiYs8UpgpmVBx+CIQCdiML73o76
+	Kniz/+/li7njO87UMmfaFEijTFtfo+YN9vzN2d6ZD8KmEYtKxF08xcg4
+X-Gm-Gg: AeBDieuxm9HCVmzjV3k7GdXzFtEa95GmdAa5SMKxs6olPcmuGZrJjOQEjzuWb2SVnCv
+	7SNegf7e99UcGAjARxFtShg1p8YOE1OS9zou25dM9IPQdedO7+epMH0CgBrIQw8n7tRVfc6ikVZ
+	OOyx6a6XkGF2HbbUemnhmLTWQVqee+ec2h2f93h+yxdMzM0ZFx9oMvRhuoJDuoCW7BmVbUN23Q7
+	tGQl792m8cG2oQ0MGkpxCo0Clbd94xbgN2kEyaqWDYaCYSvMWyhL3mfpTEdwNo+q9/WlMRwIBsu
+	TQsePDtsLAxkugRWKq4q87ZCtIEsPiWBe2HJ84boEmNLke/HGjPfzT9KYkccYjXIe1RP1LfJppO
+	prIq1G1dRv1AryMYtjoW8gcJK+OkPqFx3wafJyUSgO//sK+xAUtjuX0YmG64w9ptwJaF7gpPuhx
+	JaWfwMQFdmkSowLlvlS069j0iGEPYySSQhPkNi0WQE1hXNhNf9ugJKwZGj4iELQUPERDEXLvL9/
+	snCUcAXQ8EMM/kLl8imdLQfMbV8qmD7QGaw+n7B4+Lwf2UHNIkHwwJjDK5SWElAVg5l5K4ja8SQ
+	yVIVq+2WQu9Olah+Efn50PU3ccaKUG1RWRi1U/9wKQ==
+X-Received: by 2002:a05:6a00:bd0d:b0:82c:212a:a9b5 with SMTP id d2e1a72fcca58-8352d24425fmr6654243b3a.36.1777833989242;
+        Sun, 03 May 2026 11:46:29 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-835158bc863sm8514553b3a.26.2026.05.03.11.46.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 May 2026 11:46:28 -0700 (PDT)
+Date: Mon, 4 May 2026 03:46:27 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To: Deepanshu Kartikey <kartikey406@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
+Subject: Re: [PATCH] PCI/proc: check __get_user() return value in
+ proc_bus_pci_write()
+Message-ID: <20260503154557.GA1455207@rocinante>
+References: <20260502011446.125268-1-kartikey406@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260502011446.125268-1-kartikey406@gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Critical] cdns_pcie_find_capability() searches the wrong register space =
-in Host mode and its return value is not validated, leading to Root Port co=
-nfiguration space corruption.
---
+Hello,
 
-commit 09b3c64b8f5892eb365acd13030a8067652a15e8
-Author: Hans Zhang <18255117159@163.com>
+> Check __get_user() and return -EFAULT on failure.
+[...]
+> @@ -136,7 +136,10 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  
+>  	if ((pos & 1) && cnt) {
+>  		unsigned char val;
+> -		__get_user(val, buf);
+> +		if (__get_user(val, buf)) {
+> +			ret = -EFAULT;
+> +			goto out;
+> +		}
 
-PCI: cadence: Use cdns_pcie_find_capability() to get PCIe Cap offset in hos=
-t driver
+We could move to get_user() here.  This would allow you to drop
+the access_ok(), too, as get_user() would return -EFAULT on error.
 
-This commit replaces the hardcoded CDNS_PCIE_RP_CAP_OFFSET with a dynamic
-lookup using cdns_pcie_find_capability() in Cadence PCIe host-related
-functions. The goal is to ensure correct operation across various SoC desig=
-ns
-where the capability might not reside at offset 0xC0.
+So, something simple, like:
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/=
-drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> index 2b0211870f02..5013d3fe23b5 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> @@ -26,14 +26,14 @@ EXPORT_SYMBOL_GPL(bar_max_size);
-> =20
->  int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
->  {
-> -	u32 pcie_cap_off =3D CDNS_PCIE_RP_CAP_OFFSET;
->  	unsigned long end_jiffies;
->  	u16 lnk_stat;
-> +	u8 cap =3D cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
+  if (get_user(val, buf))
+  	goto err;
 
-Does this capability search scan the correct register space when operating =
-in
-host mode?
+> +out:
 
-Looking at the helper function, it uses cdns_pcie_read_cfg() which reads
-directly from the base address without the Root Port offset:
+Use "err" for a single goto label for the error path.
 
-drivers/pci/controller/cadence/pcie-cadence.c:cdns_pcie_find_capability() {
-    return PCI_FIND_NEXT_CAP(cdns_pcie_read_cfg, PCI_CAPABILITY_LIST,
-                             cap, NULL, pcie);
-}
+>  	pci_config_pm_runtime_put(dev);
+> -
+>  	*ppos = pos;
+> -	i_size_write(ino, dev->cfg_size);
+> -	return nbytes;
+> +	if (ret > 0)
+> +		i_size_write(ino, dev->cfg_size);
+> +	return ret;
 
-However, the Root Port configuration registers are physically located at
-pcie->reg_base + CDNS_PCIE_RP_BASE. Could this cause the search to scan the
-Local Management register space instead, failing to find PCI_CAP_ID_EXP
-and returning 0?
+This can be kept simple:
 
-[ ... ]
+  err:
+  	pci_config_pm_runtime_put(dev);
+  	return -EFAULT;
 
-> @@ -68,27 +68,26 @@ EXPORT_SYMBOL_GPL(cdns_pcie_host_wait_for_link);
->  int cdns_pcie_retrain(struct cdns_pcie *pcie,
->  		      cdns_pcie_linkup_func pcie_link_up)
->  {
-> -	u32 lnk_cap_sls, pcie_cap_off =3D CDNS_PCIE_RP_CAP_OFFSET;
-> +	u32 lnk_cap_sls;
->  	u16 lnk_stat, lnk_ctl;
->  	int ret =3D 0;
-> +	u8 cap =3D cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
-> =20
->  	/*
->  	 * Set retrain bit if current speed is 2.5 GB/s,
->  	 * but the PCIe root port support is > 2.5 GB/s.
->  	 */
-> =20
-> -	lnk_cap_sls =3D cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + pcie_cap_off=
- +
-> +	lnk_cap_sls =3D cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + cap +
->  					     PCI_EXP_LNKCAP));
+The i_size_write() is such an unfortunate band-aid, but unless we have a
+way to set the size before the procfs entry is created/made visible, then
+the problem that this aims to fix is here to stay for now, see:
 
-If the capability is not found and cap evaluates to 0, is it safe to proceed
-without validating the return value?
+  ecb3908046ce ("pci: write file size to inode on proc bus file write")
 
-Since the fallback value would be 0, evaluating cap + PCI_EXP_LNKCAP will
-result in an offset of 0x0C.
+Having said all that, since you are looking at proc_bus_pci_write(),
+then perhaps an update to proc_bus_pci_read() to use put_user() would
+also be prudent.
 
-[ ... ]
+Thank you!
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers=
-/pci/controller/cadence/pcie-cadence-host.c
-> index 0bc9e6e90e0e..2a3fd41c1cf4 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-> @@ -147,12 +148,12 @@ static int cdns_pcie_host_init_root_port(struct cdn=
-s_pcie_rc *rc)
->  	cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
->  	cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
-> =20
-> -	value =3D cdns_pcie_rp_readl(pcie, CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LN=
-KCAP);
-> +	value =3D cdns_pcie_rp_readl(pcie, cap + PCI_EXP_LNKCAP);
->  	if (rc->quirk_broken_aspm_l0s)
->  		value &=3D ~PCI_EXP_LNKCAP_ASPM_L0S;
->  	if (rc->quirk_broken_aspm_l1)
->  		value &=3D ~PCI_EXP_LNKCAP_ASPM_L1;
-> -	cdns_pcie_rp_writel(pcie, CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP, val=
-ue);
-> +	cdns_pcie_rp_writel(pcie, cap + PCI_EXP_LNKCAP, value);
-
-Will this overwrite the wrong configuration registers if cap is 0?
-
-The cdns_pcie_rp_writel() function automatically adds CDNS_PCIE_RP_BASE to
-the destination offset. If cap is 0, writing to cap + PCI_EXP_LNKCAP will
-access offset 0x0C.
-
-Could this regression unintentionally clobber the standard Type 1 PCI header
-registers, such as the Cache Line Size and Latency Timer, and corrupt the
-Root Port hardware state?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260503161913.7787=
-8-1-18255117159@163.com?part=3D1
+	Krzysztof
