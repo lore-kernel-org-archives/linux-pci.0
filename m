@@ -1,121 +1,152 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E33F399374
-	for <linux-pci@vger.kernel.org>; Sun,  3 May 2026 18:46:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 070EE2FFFB8
+	for <linux-pci@vger.kernel.org>; Sun,  3 May 2026 20:30:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777833991; cv=none; b=AB9j0De4PSLAuimnIMkLgoH59dQhB+TfSI70tN2LJ0PGqXfehkpQdSQhFfoYmL8aBL7bgyBqsgzrZDhXUd7Sy3e3tggMhs9WLZhGbJ86GZCK2z2PNuucXqh321hJ3fM7v/ek9QCnUaREgnM0j/At1EUfITvPP8mKuHHJrgCFY6I=
+	t=1777840212; cv=none; b=cAjWHyrJcN96JLXbP3Q+OLfpw5f6SRyPQTy2Eb/dRLIDSPyokK0C1UYB5p+1u7E/8iku2pNmZt2o4oSUVGNGcMD5E1+s3w29dysa6KXcSaA0iZqevbHUFyTndHgFRVd0A8+6tXN53JK9eUKXRscMgN3BEhHbGpzhnBYa+B+mxHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777833991; c=relaxed/simple;
-	bh=hXqSns0mZXRsTyQvYM1QQtbBtCTGXJw/NDYOYiyyiuI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BtPCgVuTGUVXyrTTl3gc9eezLCeuUaKEAAQukXPF2s90bnGOGvvCeQbQykVXsdp/SMruUElzXKL1lkVenNsZGwpFcQqsnHsw0ptuZN0Hy2CLn4b2cSfJ9FI235gZe7Vi4EWPF6XeloMWeQqxE6Z9O53GQEkc5hZUkF24Q8y5hmE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+	s=arc-20240116; t=1777840212; c=relaxed/simple;
+	bh=bcezSkZUVFmq8awrbtFKLKUmQEyY8sZzF9XzM732STE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Benb3iUqZjOrGDK7YoowuX+9h+0vAwjx4TmnP/336K2XKy9OOtvBLu3hJty1G8Fsum8dhX/ZmDB2z48vRtLUbn9bM/CPFaRI1HRj9RqDAA7iszWhw6kr6ObB3tMQP3bwBPp08MN9dckXWt5cDC4qozRq8whi/VCcgZxOfwOlOAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GUHmQrQ8; arc=none smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-837dfccd950so12004b3a.0
-        for <linux-pci@vger.kernel.org>; Sun, 03 May 2026 11:46:29 -0700 (PDT)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GUHmQrQ8"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-7b41fdf9de2so25153857b3.0
+        for <linux-pci@vger.kernel.org>; Sun, 03 May 2026 13:30:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1777840210; x=1778445010; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=utFZGAmkY5HSapsYpTO/OWvfTIFdh3s3Nz41thxW7Qs=;
+        b=GUHmQrQ8hKWDTJOwRtc08rGvp+UVgi9NH61NCQCxliZna/4NcN2ejglHqVXhHK/9Ue
+         jc4HuXxuBU+qWr5YEHdT2rv3RLh882BuKFXp51MIakVF/BCMB9fLMaW8n9QRmK+GFrRk
+         RnR9uKyIr5vtMsqlfSjAgZa53AHrGvgznnYGBlGb4j3kiY8+qg32h/ejVc14Nj+QS/bJ
+         QVqTN7RtFvUs3KrVhspsrM7Vgk8tT9Y0Jtnac26gHjs0WJdTGfDr50cw8Go1jHi54iaC
+         1SNVGNt0eMe8VKNtC1Mz3nCjQumjmedxjX7S+2qYdIqCsmohQgZPiAGAETxYdy4iVcLn
+         SF4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777833989; x=1778438789;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=i2HxLSSoyWjc7srvpQpGKBdhtVDS99Q1hYlUtIuh62k=;
-        b=LmIOvEucb4PIFanRxSCdK+hPj33YqBmcfGUiwZVlCCioze+lZO03LK/dUHRzhBWbA+
-         +J5qYv4A9MacMO4vO7o6H0WIU3ltGC5CoDOgdPd/zHtUH+H/5V6qEKEev/64/cVQYktH
-         s51bzy3t94naAxW/H9PuQ3US20ctPl0rjDVbhKh0EquY4/MYFCjU7w5c5ljAxKOPTymR
-         dEMWjIcC6hMA1LGyPnVei30cvlC7Syg4CPxpx5C3lTcpj8chzuhpPchWNl6Nfqd4A+WS
-         Obb4B7H7jba/UF79Hh/Z2X1afOYrBTI8holTLUcJ9C0oRxRjtxVb85kPIU/xeo8mxr/k
-         XG9g==
-X-Forwarded-Encrypted: i=1; AFNElJ9o4bYEiRU1oeQuYDvsEjKWlDrJJxh0ukfsfYxVGXSpVa0lX0wbnUlusTcfd+SfsgPCS7SEPE/C4Ho=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSARomU8c4wbsgybGsgO1gRPiYs8UpgpmVBx+CIQCdiML73o76
-	Kniz/+/li7njO87UMmfaFEijTFtfo+YN9vzN2d6ZD8KmEYtKxF08xcg4
-X-Gm-Gg: AeBDieuxm9HCVmzjV3k7GdXzFtEa95GmdAa5SMKxs6olPcmuGZrJjOQEjzuWb2SVnCv
-	7SNegf7e99UcGAjARxFtShg1p8YOE1OS9zou25dM9IPQdedO7+epMH0CgBrIQw8n7tRVfc6ikVZ
-	OOyx6a6XkGF2HbbUemnhmLTWQVqee+ec2h2f93h+yxdMzM0ZFx9oMvRhuoJDuoCW7BmVbUN23Q7
-	tGQl792m8cG2oQ0MGkpxCo0Clbd94xbgN2kEyaqWDYaCYSvMWyhL3mfpTEdwNo+q9/WlMRwIBsu
-	TQsePDtsLAxkugRWKq4q87ZCtIEsPiWBe2HJ84boEmNLke/HGjPfzT9KYkccYjXIe1RP1LfJppO
-	prIq1G1dRv1AryMYtjoW8gcJK+OkPqFx3wafJyUSgO//sK+xAUtjuX0YmG64w9ptwJaF7gpPuhx
-	JaWfwMQFdmkSowLlvlS069j0iGEPYySSQhPkNi0WQE1hXNhNf9ugJKwZGj4iELQUPERDEXLvL9/
-	snCUcAXQ8EMM/kLl8imdLQfMbV8qmD7QGaw+n7B4+Lwf2UHNIkHwwJjDK5SWElAVg5l5K4ja8SQ
-	yVIVq+2WQu9Olah+Efn50PU3ccaKUG1RWRi1U/9wKQ==
-X-Received: by 2002:a05:6a00:bd0d:b0:82c:212a:a9b5 with SMTP id d2e1a72fcca58-8352d24425fmr6654243b3a.36.1777833989242;
-        Sun, 03 May 2026 11:46:29 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-835158bc863sm8514553b3a.26.2026.05.03.11.46.28
+        d=1e100.net; s=20251104; t=1777840210; x=1778445010;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=utFZGAmkY5HSapsYpTO/OWvfTIFdh3s3Nz41thxW7Qs=;
+        b=oPHLcff9TB7lcfqWudj7afdp/eMXG2FZaYDlCJeZJmEnnTMwwdahdvi2mWmcociFCA
+         ssQv6a9V2tUu/KYp8HaAvkJJ2wwp8IPYHzYjuwLx054jXhD75+Cq8GG+IFuS5P4JzvHF
+         nlsnN1DYn7wDJbpHjyRa1SQ3W0IfulTKMr+gOitugwW/vIafVaXzDemhqAVIrv2GL6HP
+         G7WYO9UPplLGXnvQ3t8q8d6MLjRaAajODLu/KMQqX+YhR3ltnATQZQ0WWyw7qp8jTvzC
+         wecj424Hh+9kVlRCbv+Jy63YzsrzXXxDAT898HJA/zh8yh9NWYYTFUGIW82D+oXShrmd
+         ZWlA==
+X-Forwarded-Encrypted: i=1; AFNElJ/11neJhDU+/pCyS1Aq+HJKRy6HjGxw2TTsKqrQ1D12iSg0fhnhnp/krOhbDwB53tfqtH9PnxdQ6ec=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy1walcbBPlnnc3jv5HN8soV5K1dMamFbPcVZjyi7WdgWvopzV8
+	nTCv53ZYOQWFsptmnISGa2Ti+d32j/+7q18mJCFGj9YmxtTVGuxsKr9m
+X-Gm-Gg: AeBDieuyaMU7mdL+hws3zJP87jwOEGXzQGdOu5L2QoK7+azm8Pm/p0fszrKEQDaZuOf
+	O667JngWtP9pPTx9AuEQ7dMF2KIxZCAcBd+eZpmtFu4RWJUTNqqlTag09SuzCgDSbAsnqsPDX5f
+	ZZywUqBOvA8NQRvR+7V5kKgZVSQufaoKng0lzuT8mGhrU0Dr/9wZoHp/S30Fxwd1AMlBHmXwhas
+	3t6d3bC4I64XuK12/DVCSJ3XhilZC70ulWE+9jiUTXL6cPjjhwn8jwjpUFQSwDLvVeJl0wYrj2F
+	X6qGr6w/b58kqB2kFPWIE2RaSTnjK5a+3qZDzkyGAskhl2CCZWVNeClqo1J2zwDi4EL/v4+YAnD
+	V9Cee+MS6rWPm+KnP+U8lp/7VgsfYlEa4UYJNG1wJkmUY70aLQt2GFZ55iO/KcrOvfPJhobbpnS
+	HmHm7UcGpy7FKD8CyVe2p/DraQkyifGwkQVl6oAhJ3aqlHBXSsMaHQI43Y8BaHts6kWNsyFZGRi
+	gRln4nCNg==
+X-Received: by 2002:a05:690c:c4f6:b0:79a:40fb:9346 with SMTP id 00721157ae682-7bd76fabc9emr76374857b3.20.1777840209910;
+        Sun, 03 May 2026 13:30:09 -0700 (PDT)
+Received: from localhost (104-48-214-220.lightspeed.snantx.sbcglobal.net. [104.48.214.220])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7bd66525651sm40140327b3.3.2026.05.03.13.30.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 May 2026 11:46:28 -0700 (PDT)
-Date: Mon, 4 May 2026 03:46:27 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To: Deepanshu Kartikey <kartikey406@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
-Subject: Re: [PATCH] PCI/proc: check __get_user() return value in
- proc_bus_pci_write()
-Message-ID: <20260503154557.GA1455207@rocinante>
-References: <20260502011446.125268-1-kartikey406@gmail.com>
+        Sun, 03 May 2026 13:30:09 -0700 (PDT)
+From: Steev Klimaszewski <threeway@gmail.com>
+To: krishna.chundru@oss.qualcomm.com
+Cc: bhelgaas@google.com,
+	bjorn.andersson@oss.qualcomm.com,
+	jingoohan1@gmail.com,
+	jonathanh@nvidia.com,
+	kwilczynski@kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	lpieralisi@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	will@kernel.org
+Subject: Re: PCI: qcom: Add D3cold support
+Date: Sun,  3 May 2026 15:30:06 -0500
+Message-ID: <20260503203008.287559-1-threeway@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260429-d3cold-v5-0-89e9735b9df6@oss.qualcomm.com>
+References: <20260429-d3cold-v5-0-89e9735b9df6@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260502011446.125268-1-kartikey406@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello,
+Hi Krishna,
 
-> Check __get_user() and return -EFAULT on failure.
-[...]
-> @@ -136,7 +136,10 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
->  
->  	if ((pos & 1) && cnt) {
->  		unsigned char val;
-> -		__get_user(val, buf);
-> +		if (__get_user(val, buf)) {
-> +			ret = -EFAULT;
-> +			goto out;
-> +		}
+> This series adds support for putting Qualcomm PCIe host bridges into D3cold
+> when downstream conditions allow it, and introduces a small common helper
+> to determine D3cold eligibility based on endpoint state.
 
-We could move to get_user() here.  This would allow you to drop
-the access_ok(), too, as get_user() would return -EFAULT on error.
+> On Qualcomm platforms, PCIe host controllers are currently kept powered
+> even when there are no active endpoints (i.e. all endpoints are already in
+> PCI_D3hot). This prevents the SoC from entering deeper low‑power states
+> such as CXPC.
 
-So, something simple, like:
+> While PCIe D3cold support exists in the PCI core, host controller drivers
+> lack a common mechanism to determine whether it is safe to power off the
+> host bridge without breaking active devices or wakeup functionality.
+> As a result, controllers either avoid entering D3cold or depend on rough,
+> driver‑specific workarounds.
 
-  if (get_user(val, buf))
-  	goto err;
+> This series addresses that gap.
 
-> +out:
+> 1. Introduces pci_host_common_can_enter_d3cold(), a helper that determines
+>    whether a host bridge may enter D3cold based on downstream PCIe endpoint
+>    state. The helper permits D3cold only when all *active* endpoints are
+>    already in PCI_D3hot, and any wakeup‑enabled endpoint supports PME
+>    from D3cold.
 
-Use "err" for a single goto label for the error path.
+> 2. Updates the Designware PCIe host driver to use this helper in the
+>    suspend_noirq() path, replacing the existing heuristic that blocked
+>    D3cold whenever L1 ASPM was enabled.
 
->  	pci_config_pm_runtime_put(dev);
-> -
->  	*ppos = pos;
-> -	i_size_write(ino, dev->cfg_size);
-> -	return nbytes;
-> +	if (ret > 0)
-> +		i_size_write(ino, dev->cfg_size);
-> +	return ret;
+> 3. Enables D3cold support for Qualcomm PCIe controllers by wiring them into
+>    the DesignWare common suspend/resume flow and explicitly powering down
+>    controller resources when all endpoints are in D3hot.
 
-This can be kept simple:
+> The immediate outcome of this series is that Qualcomm PCIe host bridges can
+> enter D3cold when all endpoints are in D3hot.
 
-  err:
-  	pci_config_pm_runtime_put(dev);
-  	return -EFAULT;
+> This is a necessary but not sufficient step toward unblocking CXPC. With
+> this series applied, CXPC can be achieved on systems with no attached NVMe
+> devices. Support for NVMe‑attached systems requires additional changes
+> in NVMe driver, which are being worked on separately.
 
-The i_size_write() is such an unfortunate band-aid, but unless we have a
-way to set the size before the procfs entry is created/made visible, then
-the problem that this aims to fix is here to stay for now, see:
+> Tested on:
+>   - Qualcomm Lemans EVK, Monaco & sc7280 platforms.
 
-  ecb3908046ce ("pci: write file size to inode on proc bus file write")
+> Validation steps:
+>   - Boot without NVMe attach:
+>       * PCIe host enters D3cold during suspend
+>       * SoC is able to reach CXPC provided other drivers also remove
+> 	their votes as part of suspend.
 
-Having said all that, since you are looking at proc_bus_pci_write(),
-then perhaps an update to proc_bus_pci_read() to use put_user() would
-also be prudent.
+I have been testing this patchset with Mani's patchset that is supposed to be
+related to NVMe on the Thinkpad X13s found at:
 
-Thank you!
+https://lore.kernel.org/all/20260414-l1ss-fix-v1-0-adbb4555b5ab@oss.qualcomm.com/
 
-	Krzysztof
+v4 of this patchset *boots* along with Mani's patchset, however, v5 does not,
+and unfortunately, the machine does not seem to get to a point where I can even
+get logs from it.  Do you know what I might be missing?  I have *not* attempted
+to remove the nvme drive and boot off USB to test it.
+
+-- steev
