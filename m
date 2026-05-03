@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A42C123909C
-	for <linux-pci@vger.kernel.org>; Sun,  3 May 2026 03:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1DEDCA52
+	for <linux-pci@vger.kernel.org>; Sun,  3 May 2026 03:31:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777779000; cv=none; b=m7CjC/KcWYzoVXLllJPVLaSF3Z8LEzYwxIK1yxe0/20WutRjsacsX3HFHxUg1Io355lmsPUSsjDa5Tbg6YgzO8XOeeq8KxinfRZVO6FY3OmMhoCKUeHsGNO35TSniwHu49aBVh0ap2EH2P3We9ccTUXnH3Lr/d8coNpj0C7jap8=
+	t=1777779120; cv=none; b=k5K22JPDXaMgbdsFb70KQLf55l8VFOU/F/CXtXbJPJ+BautXhWLEH1mjj7Euq6ibz2b3s3jtc3mZoe/qA4h4YOHnesfb/5JeRkElksfjl4gtR6n9eXTizm9p72KrG2NjMAqkbre7OmJIwFobctLDDtJUPFTzvJ4RykrqRXBH3HY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777779000; c=relaxed/simple;
-	bh=yEh/nkxHtiIk5RdJ0amzhL7cpjp8VG8AHT3dDLe4/i4=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=rSJg8tZO9HdFn05U2DJDuGZOVKg69ECxVULV45VDarp0LNWzcd9CSMVD+Br1tSkD/U7szJgqi1PaS3n0oNoXoaife/H/MRxXVsEgj4hwPQPkoIRliugtAgPRS6T4vA8X3oaE6chnfJirJeEpKKSScFftXLUimrNOozRZpHs229M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=b5FK3Qck; arc=none smtp.client-ip=198.175.65.15
+	s=arc-20240116; t=1777779120; c=relaxed/simple;
+	bh=SESe2YLyGLDdjyLUXL4Ej8hIcn+pv1biYuj9fRsDlnk=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=UVOX4YUa/1+oIjJL+QlMCR8ggnuougMblPcmaWe3rZjlujZIdt/3Ok1Hh1mBsA+BR+ukQsg2TfS+ESbrQ3Z7v51vPdaR5ekC0WwDDDMJ3O+M2q/FpUrrxRhhYkr4q9cUgnRt6QTNWkY6gMF9NM+QGfNuxU+471c7fa3b9tvBHNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hSUlk5TG; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="b5FK3Qck"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hSUlk5TG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1777778999; x=1809314999;
+  t=1777779119; x=1809315119;
   h=date:from:to:cc:subject:message-id;
-  bh=yEh/nkxHtiIk5RdJ0amzhL7cpjp8VG8AHT3dDLe4/i4=;
-  b=b5FK3Qck20D+Mn1lnLr/7kaZ6SXfdZ6/c9q2xqnaOlKl1Fn0Km+x/LWp
-   ro2d5cILvk4wOrsokJYpljXiEOXkM82EzCngoleFh8akmtDBayqKMX/Rx
-   HwNhelxtjfPvv4S7zioukIUjI8H61N/jpFBDRTZeLRmpGcXrtzIYCdNId
-   jii2XYSPaR8prD3int5htQHPPSiF/+KcGq3WHzaaeVLmCqIzQm+YkGlIj
-   BRW+ULjIvHlMaxhkzb87W97R7h5YZjx4ik5MuVWwLE/cqUu8COaVHTn+w
-   EB5rmkeMdmo5rou3QF7A6UqcvVMP0O+3Lk+HR21THoUSrvFDDwUPoZq+7
-   g==;
-X-CSE-ConnectionGUID: TUXYgQHrTE+6THMVt+EUXw==
-X-CSE-MsgGUID: r1Yx6yu2RdmmZvADY+xw+Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11774"; a="82293902"
+  bh=SESe2YLyGLDdjyLUXL4Ej8hIcn+pv1biYuj9fRsDlnk=;
+  b=hSUlk5TGJB8kcDEbqiyHVkUyGGqwiZxCaZXAKPrxS8ZE3fLTqBokEgdc
+   /q1L7W9GkXXRVbauycZZXWbL1RPSgUYPqhCnwRNylzje3EBV+5uC5ywMr
+   53Rb1sBsZ8NKgFQzZ5pbtiS87CgbKvG3XmYcEuPoFFLAHMBXIpyd5wRzr
+   4H/BiVylPOYYHH7l4YtSU3TwgbFB8sdanWnIVX/WlR2rCkadzqE7Dvd2l
+   Ciue/eZuMyxKRvMeQ3n34zhV/c8tM8KbLpHH+sI/0+VmhdNU2wNX2LOrC
+   uymW8UIFo/L2anDoguFGhIsq4qB1p1sz3PbyR2tk2wyHKgWneEHE1boSb
+   Q==;
+X-CSE-ConnectionGUID: xTKIf7R8TUOxyvDzSidYew==
+X-CSE-MsgGUID: TRFy7PFrTjO8Jhzxk31/hg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11774"; a="78880111"
 X-IronPort-AV: E=Sophos;i="6.23,213,1770624000"; 
-   d="scan'208";a="82293902"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 May 2026 20:29:58 -0700
-X-CSE-ConnectionGUID: pIBlYz2wQT+fmnSJ5KFnkg==
-X-CSE-MsgGUID: BmghtfLFTx2WbwKuFnJQPw==
+   d="scan'208";a="78880111"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 May 2026 20:31:58 -0700
+X-CSE-ConnectionGUID: 4ocn2wzDThKl9ZfOJRkYcg==
+X-CSE-MsgGUID: HWVhdPPZQf6Yv6ZTrPuYtQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,213,1770624000"; 
-   d="scan'208";a="235458263"
+   d="scan'208";a="234175009"
 Received: from lkp-server01.sh.intel.com (HELO 781826d00641) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 02 May 2026 20:29:57 -0700
+  by orviesa006.jf.intel.com with ESMTP; 02 May 2026 20:31:57 -0700
 Received: from kbuild by 781826d00641 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wJNWk-0000000025x-2nrf;
-	Sun, 03 May 2026 03:29:54 +0000
-Date: Sun, 03 May 2026 11:29:31 +0800
+	id 1wJNYg-00000000265-33L4;
+	Sun, 03 May 2026 03:31:54 +0000
+Date: Sun, 03 May 2026 11:31:05 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <mani@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/host-common] BUILD SUCCESS
- 76d06fb36e8e6d1705fbbf75a450e5725199ed5f
-Message-ID: <202605031121.cHPJxObw-lkp@intel.com>
+Subject: [pci:dt-binding] BUILD SUCCESS
+ 50c94a2351458ee6cb6e52c5678f099534366830
+Message-ID: <202605031157.CHX8mSZU-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,10 +59,10 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/host-common
-branch HEAD: 76d06fb36e8e6d1705fbbf75a450e5725199ed5f  PCI: host-common: Request bus reassignment when not probe-only
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git dt-binding
+branch HEAD: 50c94a2351458ee6cb6e52c5678f099534366830  dt-bindings: pci: sophgo: Add dma-coherent property for SG2042
 
-elapsed time: 1887m
+elapsed time: 1888m
 
 configs tested: 213
 configs skipped: 2
