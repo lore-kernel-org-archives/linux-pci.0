@@ -1,224 +1,162 @@
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9048B2F290A;
-	Sun,  3 May 2026 23:54:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777852458; cv=none; b=N0fUN6u4toP07cYhk6wdzL3RC5S7XQWny9aJBN0iiXbmZuJw4y7/CNMakikupLImVrRTx21B/i0lFEJGQBIn7Qeh3l3WRevvTBoW5ZczKo+ZWNxkPAWg6um2ryyX4EdVIJZdj52/BXDg45CMsapjRghRbKafCSYGEdoJz4FQ6Rg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777852458; c=relaxed/simple;
-	bh=+/9ZPV3Ls9eTRutrc+DL0VDyzqbT5fjfYQVWFfKkG5w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W2m39Wg3SXhfFZP4qPG6dXSEl558iYaNBYq7A6rG1deo+dSB6W2iHQRzo2JMFk1zT6C7jNVZnGo3kNp5Sv+kofga7Ncz8Dwe38gQ1eWmRM+Dk+6f3Z1r4IGU1dG+yjIsAEh8hAiNxzKE1ReDXgJOP2kzADapRIx62rBiaCjgAeg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=D0zo53Qs; arc=none smtp.client-ip=80.241.56.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C15C8248B
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 01:23:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.172
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777857813; cv=pass; b=jRqmoCQFE+kfihC0Swd4jX4e5QiU6mnNT3SaGswphY2hdxvHATg3XS58D/tAMVXnD8uiDA3i1kTX4eJLSbNGyKVp3vNBwIrmGVpCw3trgxLQGsU/dJV7WeiSl2bF6LnaKoW9GZM9ffcCeXSqhzXWmrdMoQWMpr4MPwnFnz/iX1Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777857813; c=relaxed/simple;
+	bh=8sdI02B/mV8t0/D1hNqUUuDuSgv5DnBU3ptBK27Rk1E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=HzJTZJnuqUPdnes/IRTPIkYaX9+UuJvi2furglbn8X1WEQ2HcRQVtPMelOYLHv03yuRLQYY9KeWQmiH62xIw7vGXZ4rq6zDE1iJeFSoQT5JZzQ/oqrU3Uk5gQG2pPXr7k6/A01I2UIcSGvZSm5MDW8FuX0f4sDfm/nIw411bPyI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Py3hqYbY; arc=pass smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="D0zo53Qs"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4g81p65LJmz9tG7;
-	Mon,  4 May 2026 01:54:06 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1777852446;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gbT4vaB0sGuZY+4GMUSVBAGk/Ihyd7fLiazH/3ZH0s8=;
-	b=D0zo53Qsh702xSh0m5k8p4O2pTS+UgiX1AGKooGRUl3H87e9zen1B6sH4XZM+UJKY6cHNB
-	EikRdJLcIXX1VuhyFoIoDgjOOtkli0U4epL9avpopoWM4Ze4vMM3lVVf0uvGt2J2imgFlQ
-	WHUS+BUt1L0q1veGiHrdFHDzWMyCCM7OzuoOdAWuK5jJtG7STZaix5SC0Ui6Eyg85SIUh7
-	wGuwgS5BJky592LuAJhqAuKgbVQVzBnDF7+j5yf2kPDHCns/TzObUHrlnVrI9QWzcvK5Lc
-	OEi0SfjVH7NaN1MXNGx/B/cGQ+vwBf+KHt3wOgqJ5u1v68fJkRJ24og2XD3iew==
-Message-ID: <66d050f4-5d21-43e0-af8e-39a0d6c4b0ec@mailbox.org>
-Date: Mon, 4 May 2026 01:54:01 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Py3hqYbY"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-79a7109f568so38977157b3.1
+        for <linux-pci@vger.kernel.org>; Sun, 03 May 2026 18:23:32 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777857811; cv=none;
+        d=google.com; s=arc-20240605;
+        b=DKfp1dXGWsHnmQD/Tfxf3UnQuvIlLkg6ux92bxdoAJ/Gozy6Hw6RLK+5ZSVkz0Sbdk
+         kL/7jcxf7EX76v80wy9lBRsEJKzZ4geSsBlxrJQAnkS7kmTiSSi/QLd4OGtGx96CfK7Z
+         QGgtbzq44M34w9IUb/eiJbHWhpftk6dkHQgutlu+zmhHbuGkyortTHyhm5Vru6z1PUQ/
+         NgqnWsgkzWnwJWbM5ZqcahmXje3AQFDKw1ntieyiIwshyaEXMM7IrKV60PwgfiCCOoAX
+         eKMYgK1VSff166S+8ZCxSoRZVc+9blglEjcy2hm3vjtQUCoGybt+/DVkx5j0a0gcd/cn
+         g78g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=GnnjZJnxpC114lgHTXq4H9DIaCx9qFlYg4tgp/jUJVQ=;
+        fh=99/qQXvzscAM7yzbIbgYcELHOp+r/6xWiQuPGB9MxbA=;
+        b=azIlFCCOCJ3KZOgncNueIrBz2SdhsWlRIEWRaL9IB5NKprDPe2jSD3MxKJos/iF1qD
+         pi4KCO5hjeI5sSjWjGxAJ8iddFdrgHmmIqk+cM46aMRakDfdLGIJe0PZSJ5xYR2KZsFr
+         /qmNUdEmLPFWQdiCy4x4Jyj7GQdvX5LYgoGjZG2C4x2RIjy74aVymC9W5vjM0ecNFWCY
+         MTR2hu/2QmYE0uizuMwXobVaay3y33SsEPNxSbu5d9OJxNVnkacPXZHQFTGZyVKKPqOu
+         ZUGTmfwhoPQ5u7owZE5rAjaeNeiEzU/GELzumDGyvI6TNTFnDOXLqMOTno/oqcv4ZhpZ
+         UXJA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1777857811; x=1778462611; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GnnjZJnxpC114lgHTXq4H9DIaCx9qFlYg4tgp/jUJVQ=;
+        b=Py3hqYbYtD8Ot3eb5yo03KWIeBc0BH2JQJs55rr7VF6beAZb007z215kO6wAjjGy4y
+         8AG5EXT+iMlLBgrBeuYmvmnTFuG2SiMEsrK7UgW6YCc24/9WIcvx1alfuIYv4W/pJ2m5
+         D3xy22QyMQyUHI7QtUmAf1GzllTr/SWI/eKEgoTgpFSXDjgBe6O0321eAs8J2eXRJWpg
+         /KM64BW+Zi8Ei30dTTnQH8l3uQELMwsoxJRPFU4czruYfMnthzKeJcGSaxzFe2fnIc2a
+         Qts2faR5jF97SOiKUG/8BKUVtJeNSvsKnCFrxHlpReptUjAzOUpP/tQusWolk8bdXR/R
+         YnLA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777857811; x=1778462611;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=GnnjZJnxpC114lgHTXq4H9DIaCx9qFlYg4tgp/jUJVQ=;
+        b=jHZPIRR3Owqe2tKD1M0yZUhYjVS5lMm6ZYZccWPohEtB8Pr7byPYRUWy5/FXXtSMxX
+         1p8Woua43pZzwqsXFiaKrSh7EEWpMJ8SJjbVmnfSWZWmXx478Y+DbPaJUITIYb9lGuDm
+         lX8j2Wkg2/9errHn8Dy1pW5QhD7yDFSiL4PoYOaKLzkr6tAJkYoIckq2+iQCBH1U2QOl
+         F2o7RWlTLkdHcPpISJiGbsb3CKzuRAQ5XsSnKLK2yt7fGu3iAS9LjUGDK4vFFVvGNQJI
+         oA7dRwoZCAhgQeeT1CBIH636fY/ErS7pQr7E7ntkreK0teiF+iLag24K/xz/Az2qwOBy
+         tHvw==
+X-Forwarded-Encrypted: i=1; AFNElJ8vyN+s/E8SY/N8K1TYGzFpx5NbpKwFiXrfPyQlgwzsmx8BYuTWEZ0NKmVC+JlJN8pJYZOysScuolQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzEPsWrrCDgyywqW0VGtcgVJPl3dK6rQcjFC2nTa6va2DEPMvF4
+	OwLgy6o1eO3tP1hkQwrXpJCYVdIsTKfTyuhpeKn09PfGHakKcCgc2robTSPDkvCbSOjO0UxClYV
+	zXO7Zy0IlunlXTanRa+7CUQcDf79Mdcs=
+X-Gm-Gg: AeBDies6dl/GesrQNtqsnanLOJkJtBTWLsC6+mvKmt4+OLMRnhJbeSvnMOT1anDwCG1
+	4wsZqFq5u4nR3ELLtGzQ8bYpL/hOXtjqRyho3L8ws255JKwKg1UZWkAUQmQx3LDRFiTCaTJwZsU
+	kxr7aGE8PtyiabvwyMx/f8zy2RB1LQn4tUMo7b6LUZNIEvRaSnPYbuUb0/rNgP5KJCEs+8ZbVVs
+	Emt5DfbISWasscF/8+4Js1S/DIf7gcH0cuIakmnFqzP7G6XRjVHcR61UpUw1Vahn9hV2RFgWGvn
+	83u6gAl8Ux0Te8UKJ82k+2Tp8IYsbDQX2bOewg2av316p36rlB0jaVaV974oS82ct4R0mRs4s3o
+	VRz579u4=
+X-Received: by 2002:a05:690c:e3eb:b0:7bd:998c:7397 with SMTP id
+ 00721157ae682-7bd998c78d8mr6708707b3.26.1777857811454; Sun, 03 May 2026
+ 18:23:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] PCI: rcar-gen4: Limit Max_Read_Request_Size and
- Max_Payload_Size to 256 Bytes
-To: Koichiro Den <den@valinux.co.jp>
-Cc: linux-pci@vger.kernel.org, stable@vger.kernel.org,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
- <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-References: <20260425233845.459175-1-marek.vasut+renesas@mailbox.org>
- <oeb2uiudm7afzzzy3f5rykzctfnxlsydit6ww5raohcbxo3v34@hmnqr2ud42kq>
-Content-Language: en-US
-From: Marek Vasut <marek.vasut@mailbox.org>
-In-Reply-To: <oeb2uiudm7afzzzy3f5rykzctfnxlsydit6ww5raohcbxo3v34@hmnqr2ud42kq>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-MBO-RS-ID: af6812f820f262f57a6
-X-MBO-RS-META: 5w83fjf7ysioag1tbj4ec9i8bw4c39he
+References: <20260502011446.125268-1-kartikey406@gmail.com> <20260503154557.GA1455207@rocinante>
+In-Reply-To: <20260503154557.GA1455207@rocinante>
+From: Deepanshu Kartikey <kartikey406@gmail.com>
+Date: Mon, 4 May 2026 06:53:19 +0530
+X-Gm-Features: AVHnY4LAzKE65UAqCQJ1ussP5u7mZnf1aw8lE27SCzqOyzz8PbJSatHCvDc7s8M
+Message-ID: <CADhLXY41kZbPT5EdkCRMqjvmw7iguLaTMcrGDf+-5JRW1xE7pg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/proc: check __get_user() return value in proc_bus_pci_write()
+To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, 
+	syzbot+c7604c9fdd7580cca4e0@syzkaller.appspotmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 4/28/26 9:00 AM, Koichiro Den wrote:
+On Mon, May 4, 2026 at 12:16=E2=80=AFAM Krzysztof Wilczy=C5=84ski <kw@linux=
+.com> wrote:
+>
+> Hello,
+>
+> > Check __get_user() and return -EFAULT on failure.
+> [...]
+> > @@ -136,7 +136,10 @@ static ssize_t proc_bus_pci_write(struct file *fil=
+e, const char __user *buf,
+> >
+> >       if ((pos & 1) && cnt) {
+> >               unsigned char val;
+> > -             __get_user(val, buf);
+> > +             if (__get_user(val, buf)) {
+> > +                     ret =3D -EFAULT;
+> > +                     goto out;
+> > +             }
+>
+> We could move to get_user() here.  This would allow you to drop
+> the access_ok(), too, as get_user() would return -EFAULT on error.
+>
+> So, something simple, like:
+>
+>   if (get_user(val, buf))
+>         goto err;
+>
+> > +out:
+>
+> Use "err" for a single goto label for the error path.
+>
+> >       pci_config_pm_runtime_put(dev);
+> > -
+> >       *ppos =3D pos;
+> > -     i_size_write(ino, dev->cfg_size);
+> > -     return nbytes;
+> > +     if (ret > 0)
+> > +             i_size_write(ino, dev->cfg_size);
+> > +     return ret;
+>
+> This can be kept simple:
+>
+>   err:
+>         pci_config_pm_runtime_put(dev);
+>         return -EFAULT;
+>
+> The i_size_write() is such an unfortunate band-aid, but unless we have a
+> way to set the size before the procfs entry is created/made visible, then
+> the problem that this aims to fix is here to stay for now, see:
+>
+>   ecb3908046ce ("pci: write file size to inode on proc bus file write")
+>
+> Having said all that, since you are looking at proc_bus_pci_write(),
+> then perhaps an update to proc_bus_pci_read() to use put_user() would
+> also be prudent.
+>
+> Thank you!
+>
+>         Krzysztof
 
-Hello Den-san,
+Thanks for the detailed feedback. I will send patch v2 shortly.
 
-> The patch makes sense to me. Let me ask two questions:
-> 
-> 1. Could r8a779f0 (R-Car S4-8) be handled as well, perhaps by adding a separate
->     .additional_common_init() implementation for it?
-> 
->     As far as I can see, the r8a779f0 match data currently does not use
->     rcar_gen4_pcie_additional_common_init().
+Thanks
 
-I will address this one in V2, thank you for pointing that out.
-
-> 2. Did you also happen to test V4H/V4M in endpoint (EP) mode, with the local
->     eDMA engine issuing MRd requests toward host memory?
-
-I was not able to test this configuration.
-
-Is it possible to perform this test with a single device, by having the 
-eDMA do local-memory-read-to-local-memory-write transfers, maybe using 
-PIPE_LOOPBACK/LOOPBACK_ENABLE bits, or do I need two devices with NTB 
-connection between them ?
-
-In case it is the later, could you please briefly describe the S4 NTB 
-setup you use, so I could try to replicate it locally ?
-
-> Your commit message
->     describes an NVMe device as the requester, but I'm wondering whether the same
->     256B limit was also verified for the R-Car EP DMA requester path.
-
-This part I currently can not answer, I'm sorry.
-
-...
-
-I made the following two observations in the meantime.
-
-First, I wrote two SSDs, Crucial P5 Plus SSD without HMPRE (without host 
-memory buffer) and XPG GAMMIX P55 with HMPRE (with host memory buffer) 
-with 4 GiB of random data on another system (iMX8M Plus, ARM64 with DWC 
-PCIe controller too), then I did a read back and compared the data, the 
-writen and read-back data matched.
-
-Then I plugged both SSDs into V4H Sparrow Hawk _without_ this patch, and 
-I did read back of data:
-
-- Crucial P5 Plus SSD without HMPRE (without host memory buffer)
-   -> Data read back match data written on iMX8M Plus, OK
-- XPG GAMMIX P55 with HMPRE (with host memory buffer)
-   -> Data read back match data written on iMX8M Plus, OK
-
-Then I wrote 512 Byte of data into the Crucial P5 Plus SSD without HMPRE 
-on V4H Sparrow Hawk and did read back again.
-   -> Data read back does NOT match data written, NG
-
-That would indicate that:
-- WRITE transfers from SSD to DRAM are OK
-- READ transfers from DRAM to SSD are corrupted at 256 Bytes boundary
-
-That would indicate that we need _at_least_ the 256 Bytes limit, likely 
-on both MPS and MRRS.
-
-Second, I got a report of another SSD for which this patch is not 
-sufficient. I currently do not have access to that SSD, but I will ask 
-for access and investigate. That may shed some light on the 128 Byte 
-limit below.
-
-> (*) The background for my question 2:
-> 
->     I only have access to S4 Spider boards. In my RC <-> EP setup, where the EP
->     side uses the local eDMA engine to issue MRd requests toward the RC, 256-byte
->     MRd requests still appear to corrupt the transferred data.
-
-Is the corruption deterministic in some way, i.e. are the same bytes of 
-the transferred data corrupted every time, or is the corruption "random" ?
-
-Does the corruption happen even on singular MRd transfer, or does it 
-happen only when a lot of traffic is sent across the NTB link? I wonder 
-if this corruption might be DRAM bandwidth related, i.e. whether the DMA 
-does possibly saturate the DRAM controller with write requests and make 
-the system run out of DRAM bandwidth.
-
-> With the following
->     change on top of your patch, my DMA-read tests become stable:
-
-[...]
-
->     One detail which might be important is that limiting only MPS does not appear
->     to be sufficient in my setup. MPS=128B with MRRS=256B still seems broken,
->     while MPS=128B with MRRS=128B works fine. I wonder whether this is because
->     the "MPS" term in the min(MRRS, MPS) limit for DMA read transfers may
->     effectively be tied to the DMA read buffer segment size / MPSS rather than
->     only to DevCtl.MPS. I'm not sure about this yet though.
-
-I think setting MPS=128B MRRS=256B only leads to the transfer being 
-split into 2 x 128B TLPs sent across the PCIe link, but in the end, 2 x 
-128 Bytes of data are received (in some order) into the read segment 
-buffer and reordered, and 1 x 256 Bytes are written from read segment 
-buffer into the memory as a single write.
-
-In case of MPS=256B MRRS=256B, only one 256B TLP is sent across the 
-link, 1 x 256 Bytes of data are received into the read segment buffer 
-with no reordering necessary, and 1 x 256 Bytes are still written from 
-read segment buffer into the memory as a single write.
-
-=> For MPS=128B/MPS=256B and MRRS=256B, there is difference in the
-    transfer format between PCIe and DMA, but there is no difference
-    between DMA and DRAM .
-
-But in case of MRRS=128B and transfer of 256 Bytes, 2 x 128 Bytes of 
-data are received into (separate? (*)) entries in read segment buffer, 
-and 2 x 128 Bytes are written from (separate?) entries in read segment 
-buffer into the memory as two separate writes . Could this different 
-memory write pattern be responsible for the (lack of) corruption ?
-
-Do you know whether the data are corrupted on the PCIe-to-DMA side (when 
-the data are received from the PCIe side and written into the read 
-buffer segment) or on the DMA-to-DRAM side (on read from read segment 
-buffer or on write into DRAM) ?
-
-(*) Since the read segment buffer has 16 x 256 Byte segments, with 16 
-DMA tags and never more than 16 MRd requests in flight, I think it is 
-likely that each MRd data land in separate read segment buffer segment. 
-But this information comes from another datasheet, not V4H one.
-
->     One more thing I noticed in the manuals:
-> 
->       R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025:
->         Type00 MPSS initial = 256B, PCI R, Internal R/W
->         Type01 MPSS initial = 128B, PCI R, Internal R
-> 
->       R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025
->         Type00 MPSS initial = 256B, PCI R, Internal R
->         Type01 MPSS initial = 128B, PCI R, Internal R/W
-> 
->     I'm still unsure, but this difference might be relevant. In particular, in
->     V4H/V4M RC mode your patch programs DevCtl.MPS to 256B, but does not change
->     Type01 MPSS. I wonder if the Type01 MPSS should also be updated to 256B first
->     on SoCs where the manual says it is writable from the internal bus, or if I'm
->     missing something here.
-
-This is a very good point.
-
-The R-Car S4 RM Rev.1.20 lists Type00 MPSS as Internal R and Type01 MPSS 
-as Internal R/W. This was updated in RM Rev.1.30 to Type 00 Internal R/W 
-and Type 01 Internal R. It is possible this change is going to be added 
-into the V4H RM in the future too. That would likely imply, that Type01 
-MPSS is not programmable.
-
-I don't think Type1 affects RC operation, but does it affect NTB ?
-
-[...]
-
-Thank you for your help!
-
--- 
-Best regards,
-Marek Vasut
+Deepanshu Kartikey
