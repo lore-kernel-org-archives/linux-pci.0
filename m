@@ -1,140 +1,192 @@
-Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4381E3E3C53
-	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 17:24:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.47
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777915457; cv=pass; b=rilUH+eWLWFMevfLHbO/GyVjgdicd3AMhkmBT7DU1In1JeoXmNoBgv8Y+F0HJ6yyjVPYVIkDVsK635vzczhx/zCZAOEBx3EbRyXeJMH1WvDX/hDFQd1Ah79UYpzHSo7QhYqCepugubyZdHzMn3SB+0CH6qd/4rHhCkk4hYLLIhc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777915457; c=relaxed/simple;
-	bh=GyTv8qCOVeKZc1v9heh9q2u8oTrZt8SPcXhTl05cfUk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oMg6WYfSKNEprm7okvmcsjKb6IgiuvTFg/Wq3kA/oQ9v3vcqRPeZdoonXCZj580aqzp8FUvsWxRNCxxuqrhNE08PWwMeNGdiWMqnjt1LoyoZHL82SqcWmpwvb9RgthtA35a7ZMDV2awzR1SQhBcgM1h2JjS1CR480R/PVIgLedE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=E1+T0jvX; arc=pass smtp.client-ip=74.125.82.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E0283DFC9C;
+	Mon,  4 May 2026 17:28:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777915693; cv=none; b=bvWDzejDhWS2EfG4Ab/7VtPif5jzYyuT2jVcFus2b+jemoH4RNZLZ7b/5siy8oPSgtrQrM7nEu4jShnzYjwtuM3I1htjYc6LteNKg3wvITWY1UnWFZwgibTYHCLbalCXnLg5RX9t0cY7HAneEehst8QaGdlGQIxzfcHqCWqUbKg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777915693; c=relaxed/simple;
+	bh=eTvOmNE2BNm1wDppi3fIZ4uvG0J+7TKuqfBE6VXCtcU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hkHeKpGwRgFNy/4lijIN/jEOHZ8ccFW5hc8V7epVC1Z//YhBbkXE5gSWYbQkdgdL1+ZptbKnqykMUe6StRIXdWh5+ZPE1gWWumvDKmarpomxRLX9+RflYsUC46MVUkpc6XqRmk/7mr2Pp1gurkC2web5MMKxbNFiqZBs9msNsus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jaqEnUkN; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="E1+T0jvX"
-Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-12713e56abdso3028568c88.1
-        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 10:24:15 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777915455; cv=none;
-        d=google.com; s=arc-20240605;
-        b=NE+0lVL84HOlmVKbK7dUVPepL3k2jXc6NcCSeCJHn6Zjeunb4a1oYL/6/sFfOm5/q6
-         5wsMYUBwpv1grQA1sMRFU7VzV9Jl/9FvdoWITfwgRvzXY8E+VcmC/zJ2BX9G0UQ7yJyX
-         3SD9a1uLhu5h0BKPbeE8eCnd/HFbVwodr/JuqfgMZ7jZVz7+s3yldxu9RI7wl8uaGe98
-         cEp7UZ33YkIQCh8RYG5qqspwHt6+wYTKeZHbFUtixdx95kmNHvnHNKkfMDgiP1dfAF+W
-         bkDOxts6aYvVMfL27KMakHqIgkK1JueoPW9UKR3qw9opW6xQS0q6XVOmG7SMyVEKW823
-         i85A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=8DRIGBANyTxbRVKczgT9uBMklmvWRVuW0duqUNmLE+k=;
-        fh=G+9vKX84hvpoAFI1MZ8XwDelPTzjdfF97MrorYnrAnA=;
-        b=Wla9N5M62V6hyGWnTP5rKPHSPSBTzy5kglrC1BR4P6wDiQrc4Ye6jrl06F93rIGwSU
-         3h4n0ahfeRXN5FplVA/b44kt1QPrh88XHRXYwQttwl6vDZz+PQfsLq1uj+tVD4M3UiKw
-         eIhRmdExQwAT7XzRY1VgIVOIta2+0YEVrBczSeDVwHi589C/osmh+ws7y8HmP/+NrCxI
-         Z6Eg0GA+vKHZGK4di4dYUlgyhxtud/GSywN1CydnMEqdEhGhFk1a0rJ3ZeLyInzHg7h+
-         2B7HsVw4pqvl5mYxVez/B13p/QnUpCMfsBLFqt9fs6lOM/6SlwbNVhrE9KbIA8ICA3IM
-         JUNA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1777915455; x=1778520255; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8DRIGBANyTxbRVKczgT9uBMklmvWRVuW0duqUNmLE+k=;
-        b=E1+T0jvX2+/WRy3DTsXnIl7CYn1i4mjob4uTOWQngmm2jkAzedB9fvq5SiLlpk9YLI
-         bZTVRQFgJuYwGBPR82RVZfFPO25+1FIt05UZd9cFtskm1SQVjsyV/0C2ZhxOcuJapdO6
-         sSR0oQ4nG1NPmAUe6gn0jN41odnGBr1w0NN22nBznpYUeRbfTijXL5i0B876nBIZxt5u
-         iDX0pp+DdWzKUqsEE3Aib3x5L3StwYYjxhWAvRLu4BXkc2PHlfzX/zgALCfei5l3syyI
-         QsPqnN7kAXsb5zfRCwVuPRAZ1qnbCA617AxEa9T8/80/XBJtJTO7LDTju3E41ulOkh3o
-         kM5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777915455; x=1778520255;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=8DRIGBANyTxbRVKczgT9uBMklmvWRVuW0duqUNmLE+k=;
-        b=N504KkeG7NODGOWHn9qy9BAjMYsMwFvbCqaqOt6lAWQGyG4a3HEmYEe5JBedWRQ9am
-         cIfEuiArmecRYd33dz2xvLP5lTj/Cr8aXIkIxrpvnw/havn6uXXJCNChDCh9kDRV5fuL
-         lCpkXNQcNGK2jAXGO1rIDeoIfZ1WcIyad2GRs+mNCWgmcP83z/izVWgcLL6MbnXgV6EN
-         rHSAaEC6SD5FHfuErMRSrTuYgeYP8aTigrVuJyfsQCV2DSxlAWykEjVOsRcJ0gliZpVZ
-         jdLxNn/Of1AmwkKZwYba2V96OqxlFSX9nQVAYkIFeuA7FcVHf0/uy+LCq1x1MmzVoqqn
-         yjxQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9ckFNaq8N0+H9oXXhlLXyS3zXnZ8h05EDkHcqBvSU+3kdti2HvwjDqUP68faB7YusR/HEatVq5M7I=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9bLrAzKDmkbju0ouja4cK7OLMuwUaO4dVGvVOh55hGLWgNVBi
-	3qJHZGtPstcW6SSbxozZUCZQauKcvboOBzW2VyzSlX8NBeyYmMCBlWogWyMXk6tjjYcWR6HLHuP
-	5IlN36Sb2NuO+WNsw3W7ewdZ1fxngy+lQF2b7PUQy
-X-Gm-Gg: AeBDieuH4BIUcflZcN3ffWkFCz5GUyXScsENenmFHCbNDspIb6LOgaI3xFGdvektCmZ
-	FBenz5Kd/RWuybQkzLwqESfk1wnc7PVy/kN02V1IdA4/rL8HKvTWEtOLj1NnpBmJtAuPd1jIhkG
-	j6pH7v06GwOIzyZ8aBH1XbZ/kU4gko1By84N0WDdu2cYj7dXUOIJxc/rEN5/TZZtRxnKpLJ/7kQ
-	QbFrPhZFQ3L85uous93autaRhE6WnSZMRihPT0IrJ+cd5ixfpXzawtt7ibFC1wdTguWClpkbRGe
-	NJrdsESX5qdK7o5fvhvImhz37S4Pow==
-X-Received: by 2002:a05:7022:497:b0:12d:de3e:86af with SMTP id
- a92af1059eb24-130a9fec67emr177647c88.18.1777915454575; Mon, 04 May 2026
- 10:24:14 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jaqEnUkN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=/+IJ2bHq3KHL+ncW96AkfLa+YxfD/L2ZH5eAWikm96M=;
+	b=jaqEnUkNVgj2cgy8SfWW9EK6v+ENe6eXlNvzSo3I0415X+x4fxY6l8Fk7Mfqor
+	xH5SPnjK/Jtgqkrg87OD9Q0RHqrj4SMQfBkY7U38KcQgwMgrEidVNSLvdZb9Pu1x
+	ATrSM6cykEg/+fDDxWhLRX5lFRUi7Lp8k+ZA+wE+0OorM=
+Received: from [IPV6:240e:b8f:927e:5900:8c4c:fe90:544d:6d62] (unknown [])
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3nnnY1vhpZalxDQ--.25765S2;
+	Tue, 05 May 2026 01:26:49 +0800 (CST)
+Message-ID: <a491a592-5576-4987-a866-a8491f8612e8@163.com>
+Date: Tue, 5 May 2026 01:26:48 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260423212316.3431746-1-dmatlack@google.com> <20260423212316.3431746-8-dmatlack@google.com>
-In-Reply-To: <20260423212316.3431746-8-dmatlack@google.com>
-From: David Matlack <dmatlack@google.com>
-Date: Mon, 4 May 2026 10:23:48 -0700
-X-Gm-Features: AVHnY4KOWy2Xw7Jao5yCErgbS2iXWpg2-ZhNYfKSnvLQBaJlNVGZseag5k_UOKw
-Message-ID: <CALzav=cmZzNetCqWjQaG=VO+Fs=TTL3izU01vDUFd-=mRnDAuw@mail.gmail.com>
-Subject: Re: [PATCH v4 07/11] PCI: liveupdate: Inherit ACS flags in incoming
- preserved devices
-To: iommu@lists.linux.dev, kexec@lists.infradead.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	linux-pci@vger.kernel.org
-Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, 
-	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, 
-	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: brcmstb: Assign pcie->gen from pcie_get_link_speed()
+To: Florian Fainelli <florian.fainelli@broadcom.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Dom Cobley <popcornmix@gmail.com>,
+ Phil Elwell <phil@raspberrypi.com>, Jim Quinlan <jim2101024@gmail.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-rpi-kernel@lists.infradead.org>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20260502114019.GA551304@bhelgaas>
+ <2f453b89-0ce8-4ef3-ae93-c282a2d08fd7@broadcom.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <2f453b89-0ce8-4ef3-ae93-c282a2d08fd7@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3nnnY1vhpZalxDQ--.25765S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJw1Dtw17Zw1xJFW3Cr4DArb_yoWrCryrpa
+	9rJa48tF18tFW5ur1jq3Z5Zw1Yg3ZxCrWUKws3Ww17uFsIy3s5KFyFkrySyF97tFZ7uw17
+	X3W3tF48GF4fAFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR58nrUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xqEKGn41toR3gAA3P
 
-On Thu, Apr 23, 2026 at 2:23=E2=80=AFPM David Matlack <dmatlack@google.com>=
- wrote:
->
-> Inherit Access Control Services (ACS) flags on all incoming preserved
-> devices (endpoints and upstream bridges) during a Live Update.
->
-> Inheriting ACS flags avoids changing routing rules while memory
-> transactions are in flight from preserved devices. This is also strictly
-> necessary to ensure that IOMMU group assignments do not change across
-> a Live Update for preserved devices, as changing ACS configurations can
-> split or merge IOMMU groups.
->
-> Signed-off-by: David Matlack <dmatlack@google.com>
 
-> @@ -1017,6 +1017,15 @@ void pci_enable_acs(struct pci_dev *dev)
->         bool enable_acs =3D false;
->         int pos;
->
-> +       /*
-> +        * ACS flags must be inherited from the previous kernel during a =
-Live
-> +        * Update for preserved devices (which includes endpoints and any
-> +        * upstream bridges) to avoid changing routing while memory trans=
-actions
-> +        * are in flight.
-> +        */
-> +       if (pci_liveupdate_incoming(dev))
-> +               return;
 
-Sashiko caught that pci_enable_acs() is also called from
-pci_restore_state() so this patch needs a fix to ensure that ACS flags
-do not change or get lost after a save+reset+restore.
+On 5/5/26 00:58, Florian Fainelli wrote:
+> On 5/2/26 04:40, Bjorn Helgaas wrote:
+>> On Fri, May 01, 2026 at 01:24:38PM -0700, Florian Fainelli wrote:
+>>> After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
+>>> pcie->gen stopped being assigned and as a result the established PCIe
+>>> link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
+>>> to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
+>>>
+>>> Link: https://github.com/raspberrypi/linux/issues/7343
+>>> Reported-by: Dom Cobley <popcornmix@gmail.com>
+>>> Reported-by: Phil Elwell <phil@raspberrypi.com>
+>>> Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
+>>> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+>>> ---
+>>>   drivers/pci/controller/pcie-brcmstb.c | 3 +--
+>>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/ 
+>>> controller/pcie-brcmstb.c
+>>> index 714bcab97b60..6138fc4bc064 100644
+>>> --- a/drivers/pci/controller/pcie-brcmstb.c
+>>> +++ b/drivers/pci/controller/pcie-brcmstb.c
+>>> @@ -2072,8 +2072,7 @@ static int brcm_pcie_probe(struct 
+>>> platform_device *pdev)
+>>>           return PTR_ERR(pcie->clk);
+>>>       ret = of_pci_get_max_link_speed(np);
+>>> -    if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
+>>> -        pcie->gen = 0;
+>>> +    pcie->gen = pcie_get_link_speed(ret);
+>>
+>> Take a look at https://sashiko.dev/#/patchset/20260501202438.376033-1- 
+>> florian.fainelli%40broadcom.com
+>>
+>> The notes at https://github.com/raspberrypi/linux/issues/7343 assumed
+>> PCI_SPEED_UNKNOWN was 0, but in fact it is 0xff, which means you might
+>> want the more defensive patch instead.
+>>
+>> I'll be happy to replace what's on pci/for-linus if so.
+> 
+> I am starting to think a revert is the simplest path forward, it's not 
+> clear what pcie_get_link_speed() brings to the table honestly.
+
+Hi Florian,
+
+The pcie_get_link_speed function is designed to prevent other Root Port 
+drivers from accessing the array pcie_link_speed out of bounds.
+
+
+
+commit 03f920936977 ("PCI: controller: Validate max-link-speed")
+
+diff --git a/drivers/pci/controller/pcie-brcmstb.c 
+b/drivers/pci/controller/pcie-brcmstb.c
+index 062f55690012..714bcab97b60 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -1442,7 +1442,7 @@ static int brcm_pcie_start_link(struct brcm_pcie 
+*pcie)
+         cls = FIELD_GET(PCI_EXP_LNKSTA_CLS, lnksta);
+         nlw = FIELD_GET(PCI_EXP_LNKSTA_NLW, lnksta);
+         dev_info(dev, "link up, %s x%u %s\n",
+-                pci_speed_string(pcie_link_speed[cls]), nlw,
++                pci_speed_string(pcie_get_link_speed(cls)), nlw,
+                  ssc_good ? "(SSC)" : "(!SSC)");
+
+         return 0;
+@@ -2072,7 +2072,8 @@ static int brcm_pcie_probe(struct platform_device 
+*pdev)
+                 return PTR_ERR(pcie->clk);
+
+         ret = of_pci_get_max_link_speed(np);
+-       pcie->gen = (ret < 0) ? 0 : ret;
++       if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
++               pcie->gen = 0;
+
+
+
+
+Sorry, it's my fault. Should it be changed to the following?
+Florian, what do you think?
+
+
+
+diff --git a/drivers/pci/controller/pcie-brcmstb.c 
+b/drivers/pci/controller/pcie-brcmstb.c
+index 714bcab97b60..9a09a48acfb5 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -2074,6 +2074,8 @@ static int brcm_pcie_probe(struct platform_device 
+*pdev)
+         ret = of_pci_get_max_link_speed(np);
+         if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
+                 pcie->gen = 0;
++       else
++               pcie->gen = ret;
+
+         pcie->ssc = of_property_read_bool(np, "brcm,enable-ssc");
+
+
+
+or
+
+
+
+diff --git a/drivers/pci/controller/pcie-brcmstb.c 
+b/drivers/pci/controller/pcie-brcmstb.c
+index 714bcab97b60..1187e19fbe89 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -2072,8 +2072,7 @@ static int brcm_pcie_probe(struct platform_device 
+*pdev)
+                 return PTR_ERR(pcie->clk);
+
+         ret = of_pci_get_max_link_speed(np);
+-       if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
+-               pcie->gen = 0;
++       pcie->gen = (ret < 0) ? 0 : ret;
+
+
+Best regards,
+Hans
+
+
+
