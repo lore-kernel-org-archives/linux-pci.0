@@ -1,171 +1,221 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f179.google.com (mail-vk1-f179.google.com [209.85.221.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1663C314A84
-	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 08:22:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CC9E357735
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 09:05:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777882961; cv=none; b=DehYYh/h8A2Kgb2O86KIfzxpQ7m6tjm6SZ8rvlV3umMdBU9lOaM2FCROogFshB/J9YXijunrJvdarYaVwrpDOTM7Qcngx3h6CMpRKqlVowTcvu33Lg47y7tKr4e3TQu1xtZcnw5bRGdfoaCKPjyKyOOGCChSjbDVBtNvrFWOKNw=
+	t=1777885527; cv=none; b=Kko/tgsp2b1kOMz1O4HrWSmgVuQiHwY2hpHJFeH21TCSnVbsNLOFUg94Vj4qEdusNrUqbMMpDn0kV9tmgIvxV5dPUunpMgXtZgGeLepe2z2a6XXG9h1az52lmFRB4VXWzaApxxdekxzoXrpSd0qL4gHtLO3rRH/HHAdfZC9dg8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777882961; c=relaxed/simple;
-	bh=ZTTJkhmcxly0uSBJHLNzBkDsEma5FfJo/2uaz1jLFMk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iCHA/TIl+sQ+Qs3rR7KG6hPWP08OrJ0vZ7ja/J5E3EJaAWrWkkL9Bzf4ldus/GQjqlPdmpbmKo7LH7r+6k6sy2pl/sydwsm9m4h9amOMq+YNdt1796pxoP3AdMev3PJE3eDMmwkN+wmEBwudbKnE01PISHASWP/Ow1ZsZSyKNm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=AB1V9yiT; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="AB1V9yiT"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=WOWFWuQ6Aa/jVM4ZrUesSe5Ka2GKpNHDgEray8AQmS8=;
-	b=AB1V9yiTMyzK9zyh/ARyxErog+hpntZh3+3+L73nlI6Sdqo2plX6Dd09hHNSux
-	RVJv5QDGV1i1y8DGu/xCtvWEm5Z3OCEPvB/nXa/tehCzU3RsdHcvNL/ySgGgHQbD
-	7WHGFQ93gBO5PrQ17mTyqkRyEafad6M8P2ARrxFWTbWvM=
-Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wDnv0tCV_hpNNjUDA--.14088S2;
-	Mon, 04 May 2026 16:22:27 +0800 (CST)
-Message-ID: <5823faec-d972-4c77-90ec-a215c686e0a8@163.com>
-Date: Mon, 4 May 2026 16:22:26 +0800
+	s=arc-20240116; t=1777885527; c=relaxed/simple;
+	bh=NvZkJz2oTmRF8PSVjwwY5oHKDCA/yV3ifrPuiMpUAaU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FrQUDpLMBEjpzRftyMNJT4ZOQMTrhP9RL0Cqpk8Ph7tXJ8eyrRzyk3oeGRDGAdC6gioXiTs0pgxrMUyz+6qxQWDzAR/zQm21fICh8ob0KN+XSsv8TnaLTPWJPcy4A6fsSZMmsEDlTYSrw4aYLlK2gkJ2cppgL3DQpB/G0MMTG3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.221.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-vk1-f179.google.com with SMTP id 71dfb90a1353d-57513a91514so362286e0c.2
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 02:05:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777885524; x=1778490324;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=plo5P6qpAaOBS1LGxtH3kAqckE95GaSrW4sXgxkjnV0=;
+        b=oSIJI/TTDw9dgH6i7fD8GqGuxedzSFAIYm1urDFfCJgooSlwt9YQ1+VAjoropgWVub
+         WyGM+xr9Up72XJkJE6qWrp8VtaRrHmn/7d3XZauqWEAohI/jp3XrPxfNu7iEzbqhw9q1
+         /xKnATo24k5xsF/sQia4L+wNwn5yjcEGs7SaxZ+C2y3xX5eObT2nS8aVjgiH1MTeDH9W
+         pJxR3p1FHAQepnTxL6Fz0FAJR8zJhhCOx9HwinI/YSNCdHYtlTe+ndSRvtLGTTmtA2zX
+         COJcALWTH6h3sjsgEfiJLE0NTFVSgFf5g74SjjPTCB4ri6gnoXQy+rNdLTOv8/JYyLZm
+         FeFw==
+X-Forwarded-Encrypted: i=1; AFNElJ8YGcCpM/GfuqFZM+zESK7Qm8PSTTEz0k2pvk6xBzV+qBKKuM3YSbdb4Ul5olCdIhzsajmaJ8JGoXY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyUNxpThTALrbWNKcYapmLrcw4R9ovZhKDh0jG9f47UYbn2z9YG
+	FiPS0i7poSkHYOeP91PY8ozF99Lbz3qOgS53D31sXZftIFvck3Ek+i5Nqmfp4UQO
+X-Gm-Gg: AeBDiesdgAJFPR6VsoZDVw5C8KQTiuM1Ysk0ao7Z9nFd1gtg52TnnwC0mqgEPTLehpp
+	C2GeApzS/cYgMMAOgXCJ4YuCqrsXP/xWibmAHsbMDIUbSDV7HZPbgB8dOZbY+r/uLyz4inVN7BB
+	lBtLsS6IavLfN8Wwbb84gYsI8WDSCTUUampv0Du90dYkr4o0AreqcyBhC3Qp0onxEB7dV6ANs79
+	opObsTHL3cW6PgyUCkXrOL7mJ/4KcrZRHUcwJp6lBPQa8LFLjnNlfr3vsutJrmX0w786xzbysgF
+	xqHd0uF3Pq9mKKrDup4lUzoU41Gd127sp7m2pm4rwBEkRIVj3iK/q1jFl+B/oiAn3UUaorEeTZE
+	ZdHzmeKg3y9VgX1/lg2HWwi/vz/AoSdAfyLR2QKJptGkclieHQSdlg3SaY4azkoxkdUrUsKvHW+
+	lCjGobStN3ir/PMDI3WZP8YcvY26V5Ss9evuB3pkE60kl/MNl2wTxmgn/kb1GpYX06dx3etyBj8
+	90TzSP9zw==
+X-Received: by 2002:a05:6122:83c3:b0:56b:a673:27bb with SMTP id 71dfb90a1353d-5750c5b9a08mr2837809e0c.8.1777885524128;
+        Mon, 04 May 2026 02:05:24 -0700 (PDT)
+Received: from mail-vs1-f45.google.com (mail-vs1-f45.google.com. [209.85.217.45])
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5749f7e8c25sm5676862e0c.2.2026.05.04.02.05.23
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 May 2026 02:05:23 -0700 (PDT)
+Received: by mail-vs1-f45.google.com with SMTP id ada2fe7eead31-62ddb07fbd2so490322137.2
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 02:05:23 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ+xPPwyMoBWfhsLvQ1BbH3i0Jg6jN5v6Mm4q8pL8e67PCEltbwodVbL+gF8yvhLzX4rcf3QlCPKP0s=@vger.kernel.org
+X-Received: by 2002:a05:6102:2ad5:b0:628:397c:ecea with SMTP id
+ ada2fe7eead31-62d854946bemr3171395137.10.1777885522827; Mon, 04 May 2026
+ 02:05:22 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: cadence: Use cdns_pcie_find_capability() to get PCIe
- Cap offset in host driver
-To: sashiko@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-References: <20260503161913.77878-1-18255117159@163.com>
- <20260503165243.4A676C2BCB4@smtp.kernel.org>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260503165243.4A676C2BCB4@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDnv0tCV_hpNNjUDA--.14088S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxuryDAw18KFy5Xry3tFW5Wrg_yoWrKw15pF
-	Z5W3WIk3W0qr429r4vy3Z8ZF13GF9Iya47tayvkw13XF17CFyDKF42kF13GF43GrsrJr17
-	X3yDta9xu3WayFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRYNtsUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wN+Imn4V0NdvgAA3S
+References: <20260318124450.163471-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260318124450.163471-6-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <605e8d4c-09e7-4d11-acdb-7829a85eacc3@tuxon.dev> <CA+V-a8srS9g2WDMARDJn98K=nL9v1LiZYxqM8evsVrzR-s5ZMA@mail.gmail.com>
+ <lvix7p4e7c4dtchtdti3rwrs7jkda5iy7lthcffhqc7g6vgu2p@54qywklrspi7>
+ <CA+V-a8sd=dyTZmViLbDrCPYbx5ujWzjk74HxhP0aBEqxLuEqJA@mail.gmail.com> <leky6ktelj7t3uwd4bakgefrk32m3ceyxmwbkkjpp5zqp6rjgj@jtiqktxchws3>
+In-Reply-To: <leky6ktelj7t3uwd4bakgefrk32m3ceyxmwbkkjpp5zqp6rjgj@jtiqktxchws3>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Mon, 4 May 2026 11:05:11 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUpzABKKRBwK3mMmTS1+S21R+0k94bOX-+4ZBoa+bRWSA@mail.gmail.com>
+X-Gm-Features: AVHnY4LeZA0N6FCy7UX3qdh0-rhPGX17H6io1xUI_gkSOdYz_S3cRhnSj4PBBRg
+Message-ID: <CAMuHMdUpzABKKRBwK3mMmTS1+S21R+0k94bOX-+4ZBoa+bRWSA@mail.gmail.com>
+Subject: Re: [PATCH 5/5] PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, Magnus Damm <magnus.damm@gmail.com>, 
+	Wolfram Sang <wsa+renesas@sang-engineering.com>, 
+	John Madieu <john.madieu.xa@bp.renesas.com>, linux-pci@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>, 
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi Manivannan,
 
+On Fri, 1 May 2026 at 16:42, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> On Fri, May 01, 2026 at 12:13:55PM +0100, Lad, Prabhakar wrote:
+> > On Thu, Apr 30, 2026 at 4:26=E2=80=AFPM Manivannan Sadhasivam <mani@ker=
+nel.org> wrote:
+> > > On Wed, Apr 08, 2026 at 07:54:41PM +0100, Lad, Prabhakar wrote:
+> > > > On Wed, Mar 25, 2026 at 10:18=E2=80=AFAM Claudiu Beznea
+> > > > <claudiu.beznea@tuxon.dev> wrote:
+> > > > > On 3/18/26 14:44, Prabhakar wrote:
+> > > > > > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > > > > >
+> > > > > > Add support for the RZ/V2H(P) SoC PCIe controller to the rzg3s-=
+host
+> > > > > > driver.
+> > > > > >
+> > > > > > The RZ/V2H(P) SoC features two independent PCIe channels that s=
+hare
+> > > > > > physical lanes. The hardware supports two configuration modes: =
+single
+> > > > > > x4 mode where one controller uses all four lanes, or dual x2 mo=
+de
+> > > > > > where both controllers use two lanes each.
+> > > > > >
+> > > > > > Introduce configure_lanes() function pointer to configure the P=
+CIe
+> > > > > > lanes based on the number of channels enabled. Implement
+> > > > > > rzv2h_pcie_configure_lanes() to detect the active PCIe channels=
+ at
+> > > > > > boot time and program the lane mode via the system controller u=
+sing
+> > > > > > the new RZG3S_SYSC_FUNC_ID_LINK_MASTER function ID.
+> > > > > >
+> > > > > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renes=
+as.com>
+> > > > > > ---
+> > > > > >   drivers/pci/controller/pcie-rzg3s-host.c | 142 ++++++++++++++=
++++++++++
+> > > > > >   1 file changed, 142 insertions(+)
+> > > > > >
+> > <snip>
+> > > > >
+> > > > > This introduces some limits in the systems with RZ/V2H(P) SoCs wi=
+th regards to
+> > > > > the usage of linux,pci-domain. I would like the PCIe maintainers =
+take on this.
+> > > > >
+> > > > > As this is necessary to index in the system controller driver spe=
+cific data (as
+> > > > > there are different SYSC offsets for different PCIe controllers) =
+I see the
+> > > > > following alternatives, if any:
+> > > > >
+> > > > > 1/ add a dedicated DT property for this, e.g. renesas,pcie-contro=
+ller-id
+> > > > > 2/ Add dedicated DT bindings for RZ/V2H(P) SoC that would be used=
+ to specify the
+> > > > >     system controller register offset and mask for different func=
+tionalities.
+> > > > >
+> > > > >     E.g.:
+> > > > >     renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
+> > > > >     renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
+> > > > >     renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
+> > > > >
+> > > > >     And use them in each controller DT node. E.g.:
+> > > > >
+> > > > >     pcie0: pcie@add1 {
+> > > > >         // ...
+> > > > >
+> > > > >         renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
+> > > > >         renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
+> > > > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
+> > > > >
+> > > > >         // ...
+> > > > >     };
+> > > > >
+> > > > >     pcie0: pcie@add1 {
+> > > > >         // ...
+> > > > >
+> > > > >         renesas,sysc-l1-allow =3D <&sysc 0x1050 0x1>;
+> > > > >         renesas,sysc-mode =3D <&sysc 0x1054 0x1>;
+> > > > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
+> > > > >
+> > > > >         // ...
+> > > > >     };
+> > > > >
+> > > > I'd like to get a clearer steer from the PCIe and DT maintainers
+> > > > before investing further in either direction.
+> > > >
+> > > > To recap the two approaches on the table:
+> > > >
+> > > >   Option 1: A single renesas,pcie-controller-id property used to lo=
+ok up
+> > > >             SYSC offsets in the driver.
+> > >
+> > > Can you explain what is the limitation with 'linux,pci-domain' proper=
+ty?
+> > >
+> > As sashiko pointed out.dev, The linux,pci-domain property is generally
+> > an OS-specific logical property intended to assign a stable PCI domain
+> > number across reboots. Restricting it to [0, 1] would prevent system
+> > integrators from using non-conflicting domain numbers like 2 or 3 if
+> > the board incorporates other PCIe controllers.
+>
+> "linux,pci-domain" is supposed to be used in SoC.dtsi, not in board.dts. =
+AFAIK,
+> the board designers have no reason to change it.
+>
+> Yes, the property name implies that it is a Linux specific property and i=
+f you
+> want, you can propose a generic one (not vendor specific one). Other than=
+ that,
+> I don't see a blocker in using this property. Many SoCs already do this a=
+nd
+> other DT projects like u-boot do not end up parsing this property.
 
-On 5/4/26 00:52, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Critical] cdns_pcie_find_capability() searches the wrong register space in Host mode and its return value is not validated, leading to Root Port configuration space corruption.
-> --
-> 
-> commit 09b3c64b8f5892eb365acd13030a8067652a15e8
-> Author: Hans Zhang <18255117159@163.com>
-> 
-> PCI: cadence: Use cdns_pcie_find_capability() to get PCIe Cap offset in host driver
-> 
-> This commit replaces the hardcoded CDNS_PCIE_RP_CAP_OFFSET with a dynamic
-> lookup using cdns_pcie_find_capability() in Cadence PCIe host-related
-> functions. The goal is to ensure correct operation across various SoC designs
-> where the capability might not reside at offset 0xC0.
-> 
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->> index 2b0211870f02..5013d3fe23b5 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->> @@ -26,14 +26,14 @@ EXPORT_SYMBOL_GPL(bar_max_size);
->>   
->>   int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
->>   {
->> -	u32 pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
->>   	unsigned long end_jiffies;
->>   	u16 lnk_stat;
->> +	u8 cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
-> 
-> Does this capability search scan the correct register space when operating in
-> host mode?
-> 
-> Looking at the helper function, it uses cdns_pcie_read_cfg() which reads
-> directly from the base address without the Root Port offset:
-> 
-> drivers/pci/controller/cadence/pcie-cadence.c:cdns_pcie_find_capability() {
->      return PCI_FIND_NEXT_CAP(cdns_pcie_read_cfg, PCI_CAPABILITY_LIST,
->                               cap, NULL, pcie);
-> }
-> 
-> However, the Root Port configuration registers are physically located at
-> pcie->reg_base + CDNS_PCIE_RP_BASE. Could this cause the search to scan the
-> Local Management register space instead, failing to find PCI_CAP_ID_EXP
-> and returning 0?
+Sounds like this overlaps with pciN DT aliases, which are in use on
+some (PPC) boards?
 
-I don't think we need to worry about this issue.
+Gr{oetje,eeting}s,
 
-As per PCIe r7.0, sec 7.5.1.1.11, Since all PCI Express Functions
+                        Geert
 
-are required to implement the PCI Express Capability structure, which 
-must be included somewhere in this linked list;
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
 
-So, it won't return 0 here.
-
-Best regards,
-Hans
-
-
-> 
-> [ ... ]
-> 
->> @@ -68,27 +68,26 @@ EXPORT_SYMBOL_GPL(cdns_pcie_host_wait_for_link);
->>   int cdns_pcie_retrain(struct cdns_pcie *pcie,
->>   		      cdns_pcie_linkup_func pcie_link_up)
->>   {
->> -	u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
->> +	u32 lnk_cap_sls;
->>   	u16 lnk_stat, lnk_ctl;
->>   	int ret = 0;
->> +	u8 cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
->>   
->>   	/*
->>   	 * Set retrain bit if current speed is 2.5 GB/s,
->>   	 * but the PCIe root port support is > 2.5 GB/s.
->>   	 */
->>   
->> -	lnk_cap_sls = cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + pcie_cap_off +
->> +	lnk_cap_sls = cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + cap +
->>   					     PCI_EXP_LNKCAP));
-> 
-> If the capability is not found and cap evaluates to 0, is it safe to proceed
-> without validating the return value?
-> 
-> Since the fallback value would be 0, evaluating cap + PCI_EXP_LNKCAP will
-> result in an offset of 0x0C.
-> 
-> [ ... ]
-> 
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
->> index 0bc9e6e90e0e..2a3fd41c1cf4 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
->> @@ -147,12 +148,12 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
->>   	cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
->>   	cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
->>   
->> -	value = cdns_pcie_rp_readl(pcie, CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP);
->> +	value = cdns_pcie_rp_readl(pcie, cap + PCI_EXP_LNKCAP);
->>   	if (rc->quirk_broken_aspm_l0s)
->>   		value &= ~PCI_EXP_LNKCAP_ASPM_L0S;
->>   	if (rc->quirk_broken_aspm_l1)
->>   		value &= ~PCI_EXP_LNKCAP_ASPM_L1;
->> -	cdns_pcie_rp_writel(pcie, CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP, value);
->> +	cdns_pcie_rp_writel(pcie, cap + PCI_EXP_LNKCAP, value);
-> 
-> Will this overwrite the wrong configuration registers if cap is 0?
-> 
-> The cdns_pcie_rp_writel() function automatically adds CDNS_PCIE_RP_BASE to
-> the destination offset. If cap is 0, writing to cap + PCI_EXP_LNKCAP will
-> access offset 0x0C.
-> 
-> Could this regression unintentionally clobber the standard Type 1 PCI header
-> registers, such as the Cache Line Size and Latency Timer, and corrupt the
-> Root Port hardware state?
-> 
-
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
