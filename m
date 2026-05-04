@@ -1,206 +1,168 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FD564A8D;
-	Mon,  4 May 2026 06:55:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EFCC22A1D4
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 07:06:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777877725; cv=none; b=p/57i9Rbu83C+ox06TsV9L1lNNbc7h9c1j/RhSwy1jwb0gbI2M3lxZdgzuTuZW9lY3ER9ttKB1wC253WR+dWs2RYN49W4P272gdQgKd74HlJOoTl+hjOZvztMYL7ZS4SYFCH4O9PAf9TC1cxI4fhviJH2Eqx34ud2qmwVeYIjCQ=
+	t=1777878399; cv=none; b=i9jU82M1ybnjKpYhUqIVbwt7GA+nwxIZx2g8lCoV17/JP5qq1Mqu4M5qBWvkqmxGDfll5YD711kq28QDC6+kZaW2HNZPQz80YarcOsSQs/Yw1rXTW1D1S88DJEqGYAfvy7EgIFR06tTc64loyWR3lJYjl9PYKTS4XSNsIjG4PSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777877725; c=relaxed/simple;
-	bh=fihdatZKdC4krblrX+0f/Tf1Id7pyT3INbmeSaqHcD8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GBdGCXHE3N4R71xHSJNYorJALXQaRcY0x+iPT91AOhvgiPaVuke57/76JLaX2EBAFQJRcsm7ooHBMoNKUCxNR005TTQVLP+Hx43hcTvUfGcksCTI9SIpEZgiZ/2BZz+mSL3X/RceNpCAw/6IuQw3m8jZGJWuq5aRhEVoO1Uht3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Mv47BYqL; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1777878399; c=relaxed/simple;
+	bh=95gzVVmt+pw2w1ewq3IbkhXHmC7ClllvwdDzT6KAVs4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BwS206x0x01LQSjBROnMuCfPrXYZouIgUvyFOjzdASmWyLeGNFBKJJjFAUosQsbqNu2PtrB5Yr28mJofvem2tWUOuz+WeLSL4czMxhRCJPjW9UsHr2b39yO7rEC1Thp8Huc3v3TbParoaVC95mCElWLsrtl8mfRbvsxBveZpviw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=f7L2ScIl; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VQAOH+j3; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Mv47BYqL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Gk
-	yJeK0xh7ft8l0KrjIr5L7TmwFz7SabyNUN7O8c/TM=; b=Mv47BYqLBTe08xKFOb
-	sclDIReMVsNlzMuxuwQIXeKPPlaFoMMKxRC+kmPlE79DXuLqbph6XYt4mySRkFm0
-	4yVqnDBCAJxXGmaQKG9vfpMO1+rAurSIHZ782kW0dRQIXOjO26HxuJJeEyHLnxlP
-	PKZh7tj7b/h8gnUovfe20wkn4=
-Received: from wmy.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3GtGyQvhp0AomDQ--.49192S2;
-	Mon, 04 May 2026 14:54:54 +0800 (CST)
-From: w15303746062@163.com
-To: airlied@redhat.com
-Cc: dri-devel@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org,
-	x86@kernel.org,
-	linux-pci@vger.kernel.org,
-	Mingyu Wang <25181214217@stu.xidian.edu.cn>
-Subject: [PATCH] char: agp: amd64 - fix null-ptr-deref in amd64_fetch_size and related functions
-Date: Mon,  4 May 2026 14:54:41 +0800
-Message-Id: <20260504065441.99033-1-w15303746062@163.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="f7L2ScIl";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VQAOH+j3"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6446DNcv147384
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2026 07:06:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	KCWGn2uzwamB2rWwC+/Q9KFgMXFAeWM7XXqwwI7+OpQ=; b=f7L2ScIlzgUsnpyR
+	VfiAY+btzU06ihT9wy6Bci1LzEHY7s61RGfpJ53JPMrFVFHpQVYR0oH/oBskIZ/8
+	25xCyzCnD/cRUoXJOeGts5uvW/GmGxo5aUwYCkgiwW38Sjqu6IoUAEETcNX1Hzg9
+	1YJw0HrXG/7OYfbWR1rOfgSsgILeAPMSewfoADdhDSt0uklFxOYgokZW5kS1f25K
+	n3vybFNrOew5sK58srARoN8cQ8hGiNb153gQ2HCizr5h2IJQmiu8fVE95XDvcpye
+	A0DLHw+Vup9CbRNvAB16k+rvDmRWXr64APNXIxpTjx/1wizdOLnB+Oht5LNYFGwG
+	Y/leVA==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4dw8uxmq3n-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 07:06:37 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-36514eb1194so2877409a91.2
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 00:06:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1777878396; x=1778483196; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=KCWGn2uzwamB2rWwC+/Q9KFgMXFAeWM7XXqwwI7+OpQ=;
+        b=VQAOH+j3S5KNAlq2IPA77tRDfC5TWL+kyR5ykIRP2cayFvbl+vcOtGhPvQynjzgJ1B
+         Ol6enwWEr3kA/9qqS6TKluwAzLvT68SG7buLiH8CLt7HPGOsOocW21LqQjL2iFu1i30R
+         /G1mSewzTjV8Af89AE4teJ3CwIl6jKifaYtZDzMkzH/pRK9X808zHjVUBcVKxVmX4diq
+         ITWb/VvmlCiyqPifbRpay+Elzwn0SjSBWCVpMBFWNKBCdoCCePGJLmGAtr/anaU9ZiEm
+         /W0igFOsKI33E2nrfrkXYhh2oNXFeZPZRia9JlohCfDanuLGwINVi9fEun7dVy3iDlOx
+         t+og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777878396; x=1778483196;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=KCWGn2uzwamB2rWwC+/Q9KFgMXFAeWM7XXqwwI7+OpQ=;
+        b=dEp0v7ZsLSSIdrc0ZTQ97cFkhjYA74dHoUChCd7FiQUNrH1Lp3eI9YI1UMcACcnpZN
+         +/2uL17QNlZiCaej7k3PAzLUK3WJ1GM1F3PyuvNW6ZXpG2i7igsHkLHC/OfK/hyx6dye
+         K355lh2LE/0dMVGRPhdtk6N+yN3yzvRLN1uZTXID3xwF8cLvRX+20WZyTcJPFXBYEXcj
+         /o159lrTeU7TROpIWkwCb2h+0e5SOiTcDhhzZ7kj0bgZTbrNBZZKeg7D4Zq5l7ihCN7t
+         W+7Ifhs1D0R/VObqCPKfFLxZGahv3X1o0MpYlouL3vE9m5TjprvW9Es5mvenRb/1pmK5
+         SHDg==
+X-Forwarded-Encrypted: i=1; AFNElJ/pIHAzOqWGhRfpf13V5dWpYSHLqbwlGXeSn18xiWiFY/DTV1iTz7z0k9hCUjVrkwbk3sjVKc8z+bc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzuP2514seNXCxjMQ9GO2UvD2JtDPSCt/tz/zuY7LiSEtLQHww8
+	+ubYmqwPO+C/s7924ugIJCS9Y5vxyjqmtP9vEqXRjcdSwihkAFnZR3D3ORL6lxYTAxaF+sgjo2O
+	3ed1PdDYOHlMtdk6ecAffvTI+TCrFFgd3TwILyUxOuForjJD41gZe/jOb9nzIzdw=
+X-Gm-Gg: AeBDievG1QKgxzzRRmM95dECPMm1d+azW+YnQxiD9hvq3WY5Ko94kv0aL0VReUvrY8n
+	RDH3n4LBrjYeTffhxrU9V9SdhFUppJhMzVSHnYLsYzM9JTjbXVYggxid5eqUwMljvUaYQPMpa23
+	VIqCbHX2+Zcq6PC7/LvFUzh0HyZ/BUqyAbZ/LnXm0OyH6sWtZ1C8Iw9xrE4bRt4bKa09xvm+npD
+	/4U9sBuQJADDFR2VRZHB6DqscbNoxy0i5qWl/R8moYOn5DdfRM6/3yV35VpZ08ozg/aCmrwxdpD
+	0yJnUm/+uWgR6rswgj5qhkp9F+mSIcOdm73vOPxDi+XtKxHh12P/JwTuo27QZZwmRv3WRs8hRU3
+	2WExPuMOte03VKEIGu+TrFOT436kSAr1mEQY/mhXOYgdJtkDnGabBWFQ9lsRb9tYeiQ==
+X-Received: by 2002:a17:90b:35cf:b0:35b:e4f8:7b2b with SMTP id 98e67ed59e1d1-3650ce8ef42mr8906528a91.18.1777878396366;
+        Mon, 04 May 2026 00:06:36 -0700 (PDT)
+X-Received: by 2002:a17:90b:35cf:b0:35b:e4f8:7b2b with SMTP id 98e67ed59e1d1-3650ce8ef42mr8906494a91.18.1777878395886;
+        Mon, 04 May 2026 00:06:35 -0700 (PDT)
+Received: from [10.92.193.136] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-364be00b175sm12883779a91.9.2026.05.04.00.06.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 May 2026 00:06:35 -0700 (PDT)
+Message-ID: <ffd59407-c65c-4f99-a587-3b968f9c82c5@oss.qualcomm.com>
+Date: Mon, 4 May 2026 12:36:29 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: PCI: qcom: Add D3cold support
+To: Steev Klimaszewski <threeway@gmail.com>
+Cc: bhelgaas@google.com, bjorn.andersson@oss.qualcomm.com,
+        jingoohan1@gmail.com, jonathanh@nvidia.com, kwilczynski@kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org,
+        will@kernel.org
+References: <dd4dc11e-338a-4d13-9830-095a93187f4c@oss.qualcomm.com>
+ <20260504041407.289464-1-threeway@gmail.com>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <20260504041407.289464-1-threeway@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3GtGyQvhp0AomDQ--.49192S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxtr1UCw1UJFyrZF1fur1UAwb_yoW7GrWxpF
-	4fZFZxtr4UGr4agF40qa1DCrn5ArZ7XFy5JrZrCw1F9a1vyry8tr1ftFy5ZrWfCFWDXF43
-	Can8tF4kGFyqyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jFg4fUUUUU=
-X-CM-SenderInfo: jzrvjiatxuliiws6il2tof0z/xtbDAB5YPGn4Qr7DNwAA3j
+X-Proofpoint-ORIG-GUID: i9WtOW198gUUBfALxJ6ZhFhq0Bis1sO7
+X-Authority-Analysis: v=2.4 cv=QqxuG1yd c=1 sm=1 tr=0 ts=69f8457d cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
+ a=NEAV23lmAAAA:8 a=EUspDBNiAAAA:8 a=oJpzRAQ81oZ_FtZBIQYA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=mQ_c8vxmzFEMiUWkPHU9:22
+X-Proofpoint-GUID: i9WtOW198gUUBfALxJ6ZhFhq0Bis1sO7
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA0MDA3NCBTYWx0ZWRfX2cuocv9ctsKB
+ BVuexseHM33AQlDgzXEz+mQ22xZX8AOJ/N0npgTkxW5Bi0o/X2szdKhP8pNQ3wvflAD0mZ0LQ0f
+ 0CS7bklx+xf/VHyyB/u/vV4ZBroh82GM0P8A4JAwLCWJtnpcNL/YL8cVqRNdQio3K2FXTYP+SY9
+ VlSSBRTxIQ4vmJftj9Si5cWRQR11gdLqyZwMxArK89vcfXcGsjFB7PvGTPKQkx6tOCALq6W/kAr
+ 5TKvCI2nllyXTTmkbdyq5nucYmQF2WUPa9YY6o6g4EbaQrhRt12WcSWXiFh6BdVS5K+pM6xdQQe
+ 5fP3yEcCDzRabKMAE5XwzDWc76swEzUax2V7S/4LKf7zONQeO5o7LxVI/rRD5/9EeWrBfaC+INv
+ +qyDXiL4n+GXf/kxAM8kx7O+n2K0kauT36Zmqc8wZMdxBE93LnKXlzbSYnKFf6egJHWCtnzMas/
+ 634GjlBEQLB3luMlS8g==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-04_02,2026-04-30_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 bulkscore=0 suspectscore=0 clxscore=1015 phishscore=0
+ priorityscore=1501 malwarescore=0 spamscore=0 adultscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605040074
 
-From: Mingyu Wang <25181214217@stu.xidian.edu.cn>
 
-A NULL pointer dereference vulnerability was identified in the AMD64 AGP
-driver (amd64-agp) during driver initialization and aperture size fetching.
 
-When the `amd64_agp` module is loaded on a system without a physical AMD
-Northbridge (e.g., in a QEMU/KVM virtualized environment with a simulated
-AMD 8151 AGP bridge), the underlying hardware query `node_to_amd_nb(0)`
-returns NULL.
+On 5/4/2026 9:44 AM, Steev Klimaszewski wrote:
+> On Sun, May 3, 2026 at 10:37 PM Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com> wrote:
+>>> v4 of this patchset *boots* along with Mani's patchset, however, v5 does not,
+>>> and unfortunately, the machine does not seem to get to a point where I can even
+>>> get logs from it.  Do you know what I might be missing?  I have *not* attempted
+>>> to remove the nvme drive and boot off USB to test it.
+>> This series, will not have any impact on the boot, this series comes in to the
+>> picture only in case
+>> of suspend and resume. can you share your platform details and kernel you are
+>> booting with.
+> Oddly, it seems to, because if I simply go back to v4, the system boots.  I'm
+> using a 7.0 kernel on the Thinkpad X13s (SC8280XP).  The sources are at
+> https://github.com/steev/linux/tree/lenovo-x13s-linux-7.0.y (with the v5
+> applied).  PCIE_QCOM is built-in to the kernel.  Not sure what other information
+> is needed.
+Hi Steev,
 
-In `amd64_fetch_size()`, the code previously attempted to unconditionally
-dereference the `misc` member of the returned pointer:
-    `dev = node_to_amd_nb(0)->misc;`
+I made mistake in re basing the code, can you try below and see if that fixes
+your issue.
+I will send this in next patch series.
 
-Since `node_to_amd_nb(0)` can return NULL (either due to missing hardware
-or when CONFIG_AMD_NB is disabled), this direct dereference results in a
-General Protection Fault (GPF) and a subsequent kernel panic, as caught
-by KASAN.
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1327,7 +1327,7 @@ static enum dw_pcie_ltssm qcom_pcie_get_ltssm(struct
+dw_pcie *pci)
+        struct qcom_pcie *pcie = to_qcom_pcie(pci);
+        u32 val;
 
-Fix this by introducing proper sanity checks. Before accessing the `misc`
-pointer, explicitly verify that the pointer returned by `node_to_amd_nb()`
-is not NULL.
-
-Furthermore, to prevent similar crashes, this patch sweeps the entire
-driver and applies the same safeguard to all other functions that iterate
-over or directly access the AMD Northbridge descriptors, including
-`amd_8151_configure()`, `amd64_cleanup()`, `cache_nbs()`, `uli_agp_init()`,
-and `nforce3_agp_init()`.
-
-Signed-off-by: Mingyu Wang <25181214217@stu.xidian.edu.cn>
----
- drivers/char/agp/amd64-agp.c | 50 ++++++++++++++++++++++++++++--------
- 1 file changed, 40 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/char/agp/amd64-agp.c b/drivers/char/agp/amd64-agp.c
-index 2505df1f4e69..7bbadfc74ffe 100644
---- a/drivers/char/agp/amd64-agp.c
-+++ b/drivers/char/agp/amd64-agp.c
-@@ -121,14 +121,16 @@ static struct aper_size_info_32 amd64_aperture_sizes[7] =
- static int amd64_fetch_size(void)
- {
- 	struct pci_dev *dev;
-+	struct amd_northbridge *nb;
- 	int i;
- 	u32 temp;
- 	struct aper_size_info_32 *values;
- 
--	dev = node_to_amd_nb(0)->misc;
--	if (dev==NULL)
-+	nb = node_to_amd_nb(0);
-+	if (!nb || !nb->misc)
- 		return 0;
- 
-+	dev = nb->misc;
- 	pci_read_config_dword(dev, AMD64_GARTAPERTURECTL, &temp);
- 	temp = (temp & 0xe);
- 	values = A_SIZE_32(amd64_aperture_sizes);
-@@ -187,8 +189,12 @@ static int amd_8151_configure(void)
- 
- 	/* Configure AGP regs in each x86-64 host bridge. */
- 	for (i = 0; i < amd_nb_num(); i++) {
--		agp_bridge->gart_bus_addr =
--			amd64_configure(node_to_amd_nb(i)->misc, gatt_bus);
-+		struct amd_northbridge *nb = node_to_amd_nb(i);
-+
-+		if (!nb || !nb->misc)
-+			continue;
-+
-+		agp_bridge->gart_bus_addr = amd64_configure(nb->misc, gatt_bus);
- 	}
- 	amd_flush_garts();
- 	return 0;
-@@ -204,7 +210,13 @@ static void amd64_cleanup(void)
- 		return;
- 
- 	for (i = 0; i < amd_nb_num(); i++) {
--		struct pci_dev *dev = node_to_amd_nb(i)->misc;
-+		struct amd_northbridge *nb = node_to_amd_nb(i);
-+		struct pci_dev *dev;
-+
-+		if (!nb || !nb->misc)
-+			continue;
-+
-+		dev = nb->misc;
- 		/* disable gart translation */
- 		pci_read_config_dword(dev, AMD64_GARTAPERTURECTL, &tmp);
- 		tmp &= ~GARTEN;
-@@ -335,7 +347,13 @@ static int cache_nbs(struct pci_dev *pdev, u32 cap_ptr)
- 
- 	i = 0;
- 	for (i = 0; i < amd_nb_num(); i++) {
--		struct pci_dev *dev = node_to_amd_nb(i)->misc;
-+		struct amd_northbridge *nb = node_to_amd_nb(i);
-+		struct pci_dev *dev;
-+
-+		if (!nb || !nb->misc)
-+			continue;
-+
-+		dev = nb->misc;
- 		if (fix_northbridge(dev, pdev, cap_ptr) < 0) {
- 			dev_err(&dev->dev, "no usable aperture found\n");
- #ifdef __x86_64__
-@@ -391,6 +409,7 @@ static int uli_agp_init(struct pci_dev *pdev)
- {
- 	u32 httfea,baseaddr,enuscr;
- 	struct pci_dev *dev1;
-+	struct amd_northbridge *nb;
- 	int i, ret;
- 	unsigned size = amd64_fetch_size();
- 
-@@ -411,9 +430,14 @@ static int uli_agp_init(struct pci_dev *pdev)
- 		goto put;
- 	}
- 
-+	nb = node_to_amd_nb(0);
-+	if (!nb || !nb->misc) {
-+		ret = -ENODEV;
-+		goto put;
-+	}
-+
- 	/* shadow x86-64 registers into ULi registers */
--	pci_read_config_dword (node_to_amd_nb(0)->misc, AMD64_GARTAPERTUREBASE,
--			       &httfea);
-+	pci_read_config_dword(nb->misc, AMD64_GARTAPERTUREBASE, &httfea);
- 
- 	/* if x86-64 aperture base is beyond 4G, exit here */
- 	if ((httfea & 0x7fff) >> (32 - 25)) {
-@@ -453,6 +477,7 @@ static int nforce3_agp_init(struct pci_dev *pdev)
- {
- 	u32 tmp, apbase, apbar, aplimit;
- 	struct pci_dev *dev1;
-+	struct amd_northbridge *nb;
- 	int i, ret;
- 	unsigned size = amd64_fetch_size();
- 
-@@ -479,9 +504,14 @@ static int nforce3_agp_init(struct pci_dev *pdev)
- 	tmp |= nforce3_sizes[i].size_value;
- 	pci_write_config_dword(dev1, NVIDIA_X86_64_1_APSIZE, tmp);
- 
-+	nb = node_to_amd_nb(0);
-+	if (!nb || !nb->misc) {
-+		ret = -ENODEV;
-+		goto put;
-+	}
-+
- 	/* shadow x86-64 registers into NVIDIA registers */
--	pci_read_config_dword (node_to_amd_nb(0)->misc, AMD64_GARTAPERTUREBASE,
--			       &apbase);
-+	pci_read_config_dword(nb->misc, AMD64_GARTAPERTUREBASE, &apbase);
- 
- 	/* if x86-64 aperture base is beyond 4G, exit here */
- 	if ( (apbase & 0x7fff) >> (32 - 25) ) {
--- 
-2.34.1
+-       if (pcie->cfg->ops->ltssm_enable)
++       if (pcie->cfg->ops->get_ltssm)
+                return pcie->cfg->ops->get_ltssm(pcie);
+ 
+- Krishna Chaitanya.
+>> - Krishna Chaitanya.
+>>> -- steev
 
