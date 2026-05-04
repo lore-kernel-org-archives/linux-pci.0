@@ -1,148 +1,155 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013046.outbound.protection.outlook.com [52.101.72.46])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B3AB3F0771;
-	Mon,  4 May 2026 19:12:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777921934; cv=fail; b=A4yWfBdtOp6OLOUeRZOW+qp0uUB48Yzwogu426ZPpEierFmj/JZ23HwWqKfxmynohdjQwQDo1JgSY/mSVB6jL0J1QzaHMfWxif6aSmfPW3uyrEPzscoBANTRS68gm5cEwBXzrOSF29gQ6sizck0Yjnmb7E7QYlb6IzeY5z/s/3Q=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777921934; c=relaxed/simple;
-	bh=NU4KNFK8OnrqPS/4huMcbZS35SQ4NctBCTg4DOWJfXk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=LoPaSSs+NE80GxnrIcAhd7S3kgI24+bmRSnm4QkDX4zO4SIjQlP/xzeUWNRgaY3Y7RJhY9b/s/N484TKNiBmHj+YtVqUSHNOohxMf1L3zFgwKcl9qhZ2r8vrlUgWbYQzrq6xcEoGpfzGq6UQj6q3Y3gq9OvykhlQ77Sez0LDqGE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=W6u4NJ1C; arc=fail smtp.client-ip=52.101.72.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 171ED22A4EE
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 19:32:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777923125; cv=none; b=NQo20cAlENWnceR6waxdgJGO/a7AVQWJqAPC66XJFEor5jCKIIxlsMXbkthfWyXZ6i9m4mc3++xZs8qcXYMUq57O9yagw1YFsG0UOt2d/k3G8ir9yT18BljLhtA7rUIz/LKT0zODk87oTsf21e2mSndLdUqWq+b08NLCYIC9pJ8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777923125; c=relaxed/simple;
+	bh=EfYYKiKTPvMaOhSyqrgwYz9Ahx78+U0+7ZiwjLgRGUs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=tTGgIuTuh1pA5j1fgiUTmJbSIx8k1YNqcaPqq/OEueCvKqblCAOD2O3qBMH/jfPJU38W4heh7qqGGePrDET09PWulu7y5KMLQO89VJUFo4yitTR3Zo4KcnkmcM89eNM0z0goCNztRPRfmZXN3kLQT17AfUigccbGvJPunLIntEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IUWr8563; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="W6u4NJ1C"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=x/Lq7yRcfGr0R7Rlo6Nsb/uPYm7QuDEnVTeczBToGDFUwiQYoijyhpuXKJNKXIdqlvVph6RZnd/afxdNFLcxWRQyyJjWYa5omvwwbgodZcq6yhiDqEwYGZ7JROZ+w+1IRbQkP2jS4wAKImYCEF39Pbuj38lvCaV2Sd1BCFDMDsFuKlpiF0F+Gs5qj0Z8JwA5T9dEhisNrczOT/1cI3khCWIyj5tNDevM0PBGBGJVtOdoKOIccs1PVX9AaLUbnPaWN3EgrzUs92VrPGLmpaVLFUfwCTfnCJ7xp5NNgbyj5RqW0GaJRnvmeLWyKoKDv4LjzHoaoiPt7ZrVHJoSjn8JNg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PMOjy4vQ2i+xBIoAMe6krzSGov9z0IIP+6HpueQzmPU=;
- b=IF0C2bmTS/ueUjHgfe7/UucjX1ljkS6X+5qJdbBJFRXlqwP14PIWipKotv+pEnF4FW8jkneKTZxmbw+QP7DTrLmxZm/Wj5zVGeWJAGSVD2KORQM2szeFoZtpd3URjmQHIVMmuqdamsa69lAEMWXEtXNEPJAc6JQNJCSdZY1mnEzQhxfamHLd6EAH12FHW3aZ4r9fyrygoYnr54PSzQt0eM5lr02xYtTU/Kcq0lga7F15Z3EanluZgr0udxFIBqBdqK8NX1BQGCkviJtyrJAmWIfZfuY3cF3LmYE5ANzregJB/q78//f5INZ3WWnlR0lgpSNnhyvm7siBwVlQj2D7eA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PMOjy4vQ2i+xBIoAMe6krzSGov9z0IIP+6HpueQzmPU=;
- b=W6u4NJ1Ch8Lo9gnTRuX9V70DNro5FaIHeah7kM9SJZyQ4s47lZo3Fzmg6hKtdJu8dDybCwdczeClv44XhoJJ0e3vkEPQRWyYt8pbQnOO5KWRH9pU7GDRVG5o9iQhSmbntOKzc36CVvHQDhSMNsRJzGxhTTERRfqvzFdeUnk1hhGX1GE5V4PN2ZGqfZ1vV37HjuCS9dwnMLfOhdkIg2ZFOV4iPJZAlaK/zruFZRz2MpC7m9ScLfRIONQNV9cWWWW/GQz2lka4gD9Ky6XhKJER7uDJBUtIv81rILc/lNezi2qoo85NUEUPFPp6FIA4D/bXLeBY5L9UNRECNOb9QcO+QA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by AM0PR04MB6898.eurprd04.prod.outlook.com (2603:10a6:208:185::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Mon, 4 May
- 2026 19:12:09 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9870.023; Mon, 4 May 2026
- 19:12:09 +0000
-Date: Mon, 4 May 2026 15:12:04 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Hans Zhang <18255117159@163.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	mani@kernel.org, jingoohan1@gmail.com, robh@kernel.org, s32@nxp.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RESEND PATCH 11/16] PCI: s32g: Use FIELD_MODIFY()
-Message-ID: <afjvhLycxNcNFcqa@lizhi-Precision-Tower-5810>
-References: <20260430162420.42839-1-18255117159@163.com>
- <20260430162420.42839-12-18255117159@163.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260430162420.42839-12-18255117159@163.com>
-X-ClientProxiedBy: SN7PR04CA0184.namprd04.prod.outlook.com
- (2603:10b6:806:126::9) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IUWr8563"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9889FC2BCC4
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 19:32:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1777923124;
+	bh=EfYYKiKTPvMaOhSyqrgwYz9Ahx78+U0+7ZiwjLgRGUs=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=IUWr85633eJXSKuKD+d2i/YbPo4Rk+6WWIZjUN1DpdI3SV8Inwfup+/l95ZBVECc5
+	 mImC6WATCo0voBFCwWlPoDc6zLIVM3iuUPmHgSy4ZvER5X6RHgapj3tvtPyub6wHL7
+	 e7NZ9d7OCzLEwNC15FKO2DbZie3iCl3u/ibXFj60ZEbnLMWBiyDFhHG4QSItYuLSls
+	 JoZz2PRH9FZvt+kkfx2jHHDaRB8pY/yShsuni+iRM1JM8SGbhXfyIPjljdDHRqAQ4W
+	 CtyXckvsyRIjC07mbs/wD9a9omI+xN6vDK1xOGt0ZBnSph21TbNt25V8SU6QTxC29P
+	 1nIxDvXz6gK6Q==
+Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-5a877510541so1096988e87.2
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 12:32:04 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ8mNqS9TqsBIJK4LitEOI88yrTScUavrXX2MfeeU0cUunswYc9XQFgUlatejwUGmLos64y75zwyXHE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxq4j9Z8+KivEcu/rFjbsfZOZz/L/7w0RISOAeg3L5OABX1aHlm
+	oT5svP3ERYKNvmbx1tbZQkOGGO/s+6kzy7VxLp678eUDJImU874ybXXgC/Rq9WwrdeYDdD6cwde
+	MiqPCKFpiIFDU4VajF7Uj4RcSIkm62Yc=
+X-Received: by 2002:a05:6512:2253:b0:5a3:e7f3:1e17 with SMTP id
+ 2adb3069b0e04-5a87f1ea40bmr82704e87.32.1777923122948; Mon, 04 May 2026
+ 12:32:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|AM0PR04MB6898:EE_
-X-MS-Office365-Filtering-Correlation-Id: 46ab1f03-2dc5-4344-0404-08deaa110a3e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|19092799006|52116014|376014|22082099003|56012099003|18002099003|18092099006|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	26yLReRX5pLUUbSZynDmMBf+KLEGU60TzkpKEnfNXnWPtKDy4ox/azJOGzxPIweiCM+V/Mtdd6qVxScWe7JjNkyAqIPGL0CE4Fcgh29m/8UaU3blNWX7Jkp4q3MGOZFXauAIOod7RXVpR8oLnjTQabwp6LbNNprxyxAM+8Gmdx5scx1OIcJT95g09SUYMAew6zI7WlQzuesKsXv5U82Yyzy9V65jtOaB+Lq6uDUTf/hyoGPwClL7PDSYg4gnR/RA4IhDWOSUuH4m44iJ9Fw+QbXvXQMRMy4Hlrlgmpw2ZqYf/tQUXbo5cFXyYWsZMD53fXZyreS+sT/ebosCMneaFl1buDlQi9ryq5cDZ6utMvViK7YWqQHXUa1EVPc1n36vmkfiUk/jNTrJVzD6ZkQe1tEfgUPtXOZGCz0pWI+ENuSRTEjpxxnsgw3C3M/nwe/2I8bBL+KK+MZav4nrO5k7HIqN59Ib/3rco23qLuDRzUN8fsQAmUa74eIJe3LZOgA4hbGwvQ2o8Hw5aQQVyBtDEiciYdYWPKHnkFxh3sOonG5xJ5smsfI61IIxE1dtkVmqgyQcFYxzDDttpX+FweZhY0gI2BIS9++CMra8pWTUPESdyC78IMBC4qJ4allSjJGN2HflcqmAi95jDtCBJBX/xxPwiTyV5aL1bc/4C6L1CTs9OINmYufsb9oLZI8gkHLkS4DPrQfY3vFKmAchyEOJ5ssfSMonsSTVUIgWIjKWUkWhtSAZlLVHlPmkUcnigmHx
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(52116014)(376014)(22082099003)(56012099003)(18002099003)(18092099006)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?7akJ0perSIF94vPNxrGnKheZKGevYBcOgtxteP1pzyNuZmvddryiuEsrosiO?=
- =?us-ascii?Q?Fv2xqFm3P2DobG+cor/ZQq/yFom0ReSQUiA9v1e6xmKOJovYiZ+OhmvvuoB6?=
- =?us-ascii?Q?+Ok5tdy3/utiXvOzLn2ObaBjpmD3CZFhjkjEK/1oNZ+L8mOF1egmyiXm0htG?=
- =?us-ascii?Q?h1yl+rmtBAMBVbBG2ErcgtjIJhm6SFTdttKGfpD9sp7ocQxsxoq1YGPIQSma?=
- =?us-ascii?Q?hxnK+Uq0RUs4wT+AcF9vM1cw7zZmXETwlQKcBrTwdrulAasvMwGzumCr4G2s?=
- =?us-ascii?Q?pAB1OlMdivVx2c4RA7yDIvM4461yLboLRRAQ4k2ldWLmlMDGgHo7MSyIqAzA?=
- =?us-ascii?Q?O6cATfUGiL2a28HsEuGt5ZcvGyR1Hzt9kQhKTsLJDZeuHp6Fuu4He9wJ/7hY?=
- =?us-ascii?Q?E3N5w+rIhpzcWFcp8DSX4RLMJtkfRXIrspf3XUbebJE3FoAXabfXsBDyfKR6?=
- =?us-ascii?Q?0x07qX2AO447+Q2h2+wXF6TpCRsWE/hh9qcJYX0H9zLEjvQ+u1VcJNMqLB8V?=
- =?us-ascii?Q?u/lgzUK/yFTF8dKh9Qh/KfiCPyGYAfEStghh48ooypkVsBVNVPYrh1KOlSpF?=
- =?us-ascii?Q?s2PUZCuFKHwAqpiDKdgkntVDInb3oNuvBTchzs9IXHmH4zhiCpjvQEI8yLPI?=
- =?us-ascii?Q?FNxuy6Mo/dnl9ImrNmhYQsDrYHKkIYWXLTORyEVuHqfGsa9v+Y6lCcnG1g6F?=
- =?us-ascii?Q?PDQaBk2IDYljp2pXZGJ5AJeLt9y9JOnwetOtbGbedjKCElBOiWkAPbgSnPPm?=
- =?us-ascii?Q?d5U1ljHPE/DtA0HbJ7ClLF8AozuNUSVCxtak3av13YdZ/Uka2FFxnLCywWh1?=
- =?us-ascii?Q?sUuQ8vgdpykeg2aK/a29tTFWOCpYRmDwPN/cY+gSlrke6IQmVxo2DoQCoRdv?=
- =?us-ascii?Q?z2lDjf+hLtBomdyk/cm+DcNBx0oyjb4AUFxiLHSMcOFlEczZTjqEJ/phb5E2?=
- =?us-ascii?Q?15pyEVb2yYkQJcASozHrEmIB1PGnKUbDQkoXYMtCvMU3b2XQE0P542ksGeal?=
- =?us-ascii?Q?tCUf7tHlaM1CNXxYFObRJHAC9zf/wCgr4b2ebL0APdZRd8aqk6Ssl9UDouFq?=
- =?us-ascii?Q?nIjpo3T7/qZaePMDSXgAfsH846sHZ9BfcwJvBOwUVHlD4hrVrzpFLQrvHyBR?=
- =?us-ascii?Q?4ccnoegVwcaHESntK7opUB0qa34Z4/ToPAfT9jT2RRK30Pe+i4DBbOCXN6/C?=
- =?us-ascii?Q?NANzIQX6EbxOe7ldh7p4EFYjdBByGmRo+I22wQhMUtkfdwsc5UMptGbA+b6v?=
- =?us-ascii?Q?QA3YRwjBTKwyJDY9OPBqQLgXQpY28CdxZ8S2lGbHoVQDm3kKXnQNs66N8FUQ?=
- =?us-ascii?Q?0Apj8tuOqTmLsC+ou75QiLfCcy4bIcebUZ4kU6CjNWrieHKODIa7eP2YYQSx?=
- =?us-ascii?Q?J89Qv2kwgb7ddaNK/Fh0AM2Fz/NQw0eFbBcfXh8cfaAGVpgQ4XfOnpEF8Z/J?=
- =?us-ascii?Q?pCewU/+ZhxiYXXJHdx82SSaFgFCaJMVgbO/1LlQccRXIqrfpgCvAq1oEG0Gb?=
- =?us-ascii?Q?+jn0unsNN6mddH81WN6k0Psf+3GSf3YaQeKdWPhVqDIssCdxg/9jpoUbv60s?=
- =?us-ascii?Q?9r4aRQfG9xQC2puulL/zAPY8GsKdqNuAzNwqeCDH7KJovFJuzGG4YZ9l5V8A?=
- =?us-ascii?Q?kZhVApN9MtlbrJaxCBbvOeWPQe9S65eyNmaG/Ew1VdmpR1gj7tJ7hJsWbMd8?=
- =?us-ascii?Q?UaF3Zf8tqUkrjRazONuYZwL9ctpySe5oTcONMHyHCKGIfk6U?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 46ab1f03-2dc5-4344-0404-08deaa110a3e
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 May 2026 19:12:09.7762
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 62cwOaw6l0PzOZ0ldwt6t0TH9pxhV1XwQu86vxF5GBwBsRnw8LgdvGuSLADfuJjbZr73QW7RUd8b2qeCHCW6zw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6898
+References: <afhPkLynt7vS793r@wunner.de> <20260504170941.GA648635@bhelgaas>
+In-Reply-To: <20260504170941.GA648635@bhelgaas>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 4 May 2026 21:31:51 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0g3f8_7v-8W0SAbn_8vmKUJgpDbgyYMSjv03QjXJ8bCHQ@mail.gmail.com>
+X-Gm-Features: AVHnY4JVxZ-1gM7Q1n5FAe474ER8rGfL5asG9eGNbmtZy0CgmCYmYhOwPozDCGA
+Message-ID: <CAJZ5v0g3f8_7v-8W0SAbn_8vmKUJgpDbgyYMSjv03QjXJ8bCHQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, sashiko-bot@kernel.org, linux-pci@vger.kernel.org, 
+	sashiko@lists.linux.dev, Marco Nenciarini <mnencia@kcore.it>, 
+	Michal Winiarski <michal.winiarski@intel.com>, Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Eric Chanudet <echanude@redhat.com>, 
+	Jean Guyader <jean.guyader@gmail.com>, Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>, 
+	Mario Limonciello <superm1@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, May 01, 2026 at 12:24:15AM +0800, Hans Zhang wrote:
-> Use FIELD_MODIFY() to remove open-coded bit manipulation.
-> No functional change intended.
+On Mon, May 4, 2026 at 7:09=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> w=
+rote:
 >
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
+> [+cc Mario]
+>
+> On Mon, May 04, 2026 at 09:49:36AM +0200, Lukas Wunner wrote:
+> > On Sun, May 03, 2026 at 01:51:08PM +0000, sashiko-bot@kernel.org wrote:
+> > > Thank you for your contribution! Sashiko AI review found 1 potential
+> > > issue(s) to consider:
+> > > - [High] Removing the read-back and retry loop for BAR restoration in
+> > > `pci_restore_state()` introduces a risk of silent regressions for
+> > > hardware resuming from non-FLR resets (such as D3hot to D0 transition=
+s
+> > > or custom driver resets). The commit incorrectly assumes the 60s dela=
+y
+> > > from `pci_dev_wait()` covers all usages, but standard PM resume paths
+> > > only delay for 10ms (`PCI_PM_D3_WAIT`) before calling `pci_restore_st=
+ate()`.
+> > > Historically, hardware that needed slightly longer to accept
+> > > configuration writes relied on the 10x 1ms retry loop to successfully
+> > > restore BARs. By removing both the retry and the read-back verificati=
+on,
+> > > BAR writes to slow devices will be silently dropped, leaving hardware
+> > > unconfigured and causing MMIO accesses to result in IOMMU faults or
+> > > kernel crashes.
+> >
+> > Hallucination alert:
+> >
+> > PCI_PM_D3_WAIT does not exist, it was renamed to PCI_PM_D3HOT_WAIT
+> > six years ago by commit 3789af9a13e5, which went into v5.10.
+> >
+> > The macro is used in:
+> >
+> > pci_pm_resume_noirq()
+> >   pci_pm_default_resume_early()
+> >     pci_pm_power_up_and_verify_state()
+> >       pci_power_up()
+> >         pci_dev_d3_sleep()
+> >
+> > However before pci_power_up() calls pci_dev_d3_sleep(), it reads
+> > the PMCSR register and errors out if config space is inaccessible.
+> >
+> > Hence when pci_restore_state() is invoked a bit later, config space
+> > can be assumed to be accessible.
+>
+> I don't quite follow this.  In this path, pci_power_up() changes a
+> device from some low-power state to D0.  If the device was in D3hot or
+> D3cold, we must delay at least 10ms before any access to it (PCIe
+> r7.0, sec 5.9).
 
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+D3hot and D3cold are different in this respect, so using "or" here is
+inaccurate and confusing.
 
->  drivers/pci/controller/dwc/pcie-nxp-s32g.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pcie-nxp-s32g.c b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> index b3ec38099fa3..31e1169b8ab6 100644
-> --- a/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> +++ b/drivers/pci/controller/dwc/pcie-nxp-s32g.c
-> @@ -139,8 +139,7 @@ static int s32g_init_pcie_controller(struct dw_pcie_rp *pp)
->
->  	/* Set RP mode */
->  	val = s32g_pcie_readl_ctrl(s32g_pp, PCIE_S32G_PE0_GEN_CTRL_1);
-> -	val &= ~DEVICE_TYPE_MASK;
-> -	val |= FIELD_PREP(DEVICE_TYPE_MASK, PCI_EXP_TYPE_ROOT_PORT);
-> +	FIELD_MODIFY(DEVICE_TYPE_MASK, &val, PCI_EXP_TYPE_ROOT_PORT);
->
->  	/* Use default CRNS */
->  	val &= ~SRIS_MODE;
-> --
-> 2.34.1
->
+Accessing the config space of a device in D3hot is entirely correct
+and doesn't require any delay.
+
+Accessing the config space of a device in D3cold is questionable
+because the device may not be accessible, but then the host bridge
+should just fail the access.
+
+The 10 ms delay is after attempting to program the device into D0 from
+D3hot (or the other way around) and it is observed as required.
+
+> pci_power_up() doesn't do any delay before the PMCSR read.
+
+It assumes that platform_pci_set_power_state() has run and either it
+has succeeded or the config space is not accessible which is when
+PCI_POSSIBLE_ERROR() will trigger.  Unfortunately, there is no
+canonical way to verify that power has been restored to the device
+other than attempting to access it.
+
+> That part seems like a pre-existing issue even before this patch.
+
+I beg to differ.
+
+> If the PMCSR read returns PCI_POSSIBLE_ERROR(), pci_power_up() does
+> complain "Unable to change power state ... to D0" and return -EIO, but
+> pci_pm_power_up_and_verify_state() doesn't look at it,
+
+In fact, pci_update_current_state() changes the power state to D3cold
+if the config space is not accessible.
+
+> and pci_pm_default_resume_early() continues on to pci_restore_state(), so
+> it looks to me like we could try to restore state to an inaccessible
+> device.
+
+So the pci_restore_state() call could be avoided if the power state of
+the device was D3cold, but then the question is how much of a problem
+that is in practice.
+
+> We do call pci_dev_wait() in pci_pm_reset(), which does a D3hot -> D0
+> transition; shouldn't we do the same in pci_power_up()?
+
+It would be good to make them consistent, but maybe the other way around?
