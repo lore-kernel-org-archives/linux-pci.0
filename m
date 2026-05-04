@@ -1,182 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs1-f99.google.com (mail-vs1-f99.google.com [209.85.217.99])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E683E201004;
-	Mon,  4 May 2026 16:22:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2A73E3D9A
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 16:58:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777911738; cv=none; b=VMSkF3JtR9rB2Z8+2Rcyt5x/qrtKV5YKgAxz0nCs4+JGfrQkkgRxKDndeULQJUs5iLnEEXyDDKirxHLzxoi8CtzgiHEVtIAZjm4n59bvgzr3aik2Hqi8IjQqrYRdSnSJ1nLYc+wjS/iccGf7zl9zq9tmSiVl+vPf4tWGLjJXTQg=
+	t=1777913900; cv=none; b=AZeLdEkQwhEdd+vTol4WKB0OTUtJJQiAGRYY2/3apdShxnxlsudJGHPpaN3xN+sJ7QKahUR/W7Z8oELUYHjsATdCK2xdCryHWWuYHe7mGI8VpQyWy91NlFybDTeZP2bjF/5PUS6yfh9WnKDupopiCVBs7cVniSPFdQeGHNqAfv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777911738; c=relaxed/simple;
-	bh=EFoXaA7QN5/lEL3hMBDIvrwajwBU482e1LM6bLAGR6Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=T7QOnwnOAmx4noM3fb+NBOGZVlAapAQLfLiEcmagwJcXFMZ+WOPUlPoKke7b8mXsS2zPBnqGRMF6bFVofU8SXF/ncZhHlW3aBZO4meLlGJ9RO0gAA+1s6zLxe+36LYq7kFzQ+Dv/ixn8N3zjScJBDolMtv5B0sJDCqV0h+iRWLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NN+aLVGq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777913900; c=relaxed/simple;
+	bh=WpgoaaNzosd0BxLmR2WF6+J9dkKSsdxwMIC09WBTJyM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=t5MNWo258YSr5hrKJBtr2IbyRdI6XSuTpvrjfsIcKvOBKT/AdIm3Bd4IFLSxJO7DkE1zhbO6gZdZTox2Fb8DGXxKau8SdsghLofiSF+VP07AJWFnuC657hD/0QLkZEfwl9vz0L/wSiV67cgj7Ak1cEH0X7aTPKW2O8siSATcOdM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=f6YLROaI; arc=none smtp.client-ip=209.85.217.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NN+aLVGq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57194C2BCB8;
-	Mon,  4 May 2026 16:22:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777911737;
-	bh=EFoXaA7QN5/lEL3hMBDIvrwajwBU482e1LM6bLAGR6Y=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=NN+aLVGqB10/VoaP3mPs6rZ+vE1MCrbRPJEj64vcRhSyfVfJHbTI2riAUNJdqkF7Y
-	 tRJxnREeO28XyVFDr3Kxcr2BqGjEfb0EyRCEslWsEdAcQGLLKDeNMRN3PAGJ4U+B6v
-	 NHgaxIMa59DvrK2Qccnk9KQyL9r9bOJcVPoCAldzWAcW6vFOBCg89j/TWw+jVC2yjV
-	 UREFpiAXxRiUys5jTlIb9qxHgyNZju5DcD042BB5VWiw9yclv7wSDjk8+XugRnMZZc
-	 KaD5FVr4eu0kkSvgf9bWwnhB9L2980ddBQkWwM94m7DKGOEMFxga7v46wogsQV5Dkh
-	 3M+rremsnfPzg==
-Date: Mon, 4 May 2026 11:22:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: Siddharth Vadapalli <s-vadapalli@ti.com>, bhelgaas@google.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	vigneshr@ti.com, robh@kernel.org, linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: cadence: Ensure that
- cdns_pcie_host_wait_for_link() waits 100 ms after link up
-Message-ID: <20260504162216.GA646395@bhelgaas>
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="f6YLROaI"
+Received: by mail-vs1-f99.google.com with SMTP id ada2fe7eead31-6201fc9ac0eso1541607137.0
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 09:58:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777913897; x=1778518697;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=faOI5W+NOaiamFpm7prjE2bXLwM58plu3qwpg+EeMUk=;
+        b=cnu86rJT++C9LDcj5kkQIvLmC/hQuuTJjHlSmjfQOgOGmu7+mLHQYZ9nPWFsVB3Kcj
+         pEBijEAz6wZ8EBkU2Bw8cIjQ2OAp7CLI8s/WcXn60fej56JIZtWsmo8W3KbZmTr2Lafs
+         rgALRl0VqTQ9j6EevMmH9ozl0In8Ja61uTzn4ILxItwmWQwG80+mXdue+Vjy6oRDeKVh
+         OqWi5sBwIkB20qAX43sTRj6kHYRlwJAWh5sWQN7T3/sk0wEpSxQWHooJs5OJR6+yVvUj
+         lAKDPoAJFmiDioAeclzRtbRu5bLnKVMOTf+v1GKUuPkIbZoAaFmDew6J8P+vm2K5Cz2W
+         5T1A==
+X-Gm-Message-State: AOJu0Ywd013QuiDu685UrxMpdcMgAm3FPfE65j9BmW8SzAqD3LipxDIS
+	U1Nu0wv4sOkpchAFcuS6sa6reqsJr5YoO19oO6PIU/Sl1C8f0t1UFDfqeEt9dmP1ZvWDSyMUwqa
+	7GGFmxfWcMUeND3C3MiuRj1Yhb1/ICqwRe+ISw4FxrQQuSGuAFfBnVlbaQ03sJ/jo6XMFgJHEsf
+	tFRqJSgRf3tLQGbVysX/Bv50BwyTQehkby6w8nkqMCWcBvnq5N51N4Q0oa1fM+AHtFU21qD2oSN
+	m3mMtxRwzaC5mcEvcOn
+X-Gm-Gg: AeBDievbm6yYkGXixWqVWZ5j3Jd7RUO79lifekc9kh635tLNWuQtVWEkmvjVHBQxkQu
+	iwcJtkF/qwyEoJQFouPprEjM6yDoQhfqtpHkVJQf/xc8FAoxhel1HvbKVS1ZralGJuvEOBWPbKP
+	gsrGHbOF3AwvPJEX998sN7navpOhIfP97GtNfV/cFVnGFAUDPN5M57ukWEZzueQB+nrCySFFM6o
+	co/wcbjoEA5SQM1IbCgYnONmYlXl5j5Ukho8EQyEOpegyHCVTW2PISIvTw5I6rDOgAdyTHm31Kn
+	RIkr1qTvilA8pofWhy4VyUuqTUSqunh3E0k1rjle5X0f5bcaeHqkjSzklIBEAjBGNTr9/+lfWJh
+	ci+LZlaftMNbQ1ro3Y6fktgbTSPhR5818cUziMUuClWnWZHe9I9TCY1CK3cdU3IBO872AzRfklE
+	6H2AZTaInAX6qjxFV/QjBUWohK7vVziyF9Zzc/FWaMEXcRZCblFm5yD6gmP6JPDRNh3GqTr6LXP
+	eU=
+X-Received: by 2002:a05:6102:c4f:b0:612:7ddc:52ee with SMTP id ada2fe7eead31-62d86a1cfc9mr4430508137.15.1777913897121;
+        Mon, 04 May 2026 09:58:17 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-121.dlp.protect.broadcom.com. [144.49.247.121])
+        by smtp-relay.gmail.com with ESMTPS id ada2fe7eead31-62f46bbc654sm150737137.15.2026.05.04.09.58.16
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 04 May 2026 09:58:17 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-dy1-f200.google.com with SMTP id 5a478bee46e88-2ee5b73c5f2so5515061eec.0
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 09:58:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1777913896; x=1778518696; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=faOI5W+NOaiamFpm7prjE2bXLwM58plu3qwpg+EeMUk=;
+        b=f6YLROaI+OxPSCYN2//MjuwxtPKhOkP7mtdcQRhCPT4FeYnMBhiPzLO6MuMBZCB+8n
+         ZUHaMDXFAZe4SEBOqbVDZUaM44vLShT5irYmc8KLfOxh6fZQE82dl/3TJC6OpsVTxbHy
+         VwDtacTOKpfoKs6pRzz4ZmdDf6s91ncPv4A/s=
+X-Received: by 2002:a05:7300:8c28:b0:2ed:e15:c923 with SMTP id 5a478bee46e88-2efbb7718e3mr4770358eec.31.1777913895974;
+        Mon, 04 May 2026 09:58:15 -0700 (PDT)
+X-Received: by 2002:a05:7300:8c28:b0:2ed:e15:c923 with SMTP id 5a478bee46e88-2efbb7718e3mr4770325eec.31.1777913895339;
+        Mon, 04 May 2026 09:58:15 -0700 (PDT)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2f194556795sm6594936eec.2.2026.05.04.09.58.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 May 2026 09:58:14 -0700 (PDT)
+Message-ID: <2f453b89-0ce8-4ef3-ae93-c282a2d08fd7@broadcom.com>
+Date: Mon, 4 May 2026 09:58:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ce5574b7-1c0d-4b46-b92e-e8f7ddbd8ef0@163.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: brcmstb: Assign pcie->gen from pcie_get_link_speed()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Dom Cobley <popcornmix@gmail.com>,
+ Phil Elwell <phil@raspberrypi.com>, Jim Quinlan <jim2101024@gmail.com>,
+ Broadcom internal kernel review list
+ <bcm-kernel-feedback-list@broadcom.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Hans Zhang <18255117159@163.com>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-rpi-kernel@lists.infradead.org>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20260502114019.GA551304@bhelgaas>
+Content-Language: en-US, fr-FR
+From: Florian Fainelli <florian.fainelli@broadcom.com>
+Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
+ xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
+ M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
+ JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
+ PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
+ KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
+ AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
+ IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
+ ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
+ bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
+ Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
+ tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
+ TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
+ zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
+ WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
+ IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
+ U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
+ 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
+ pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
+ MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
+ IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
+ gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
+ obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
+ N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
+ CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
+ C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
+ wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
+ EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
+ fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
+ MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
+ 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
+ 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
+In-Reply-To: <20260502114019.GA551304@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On Mon, May 04, 2026 at 02:23:34PM +0800, Hans Zhang wrote:
-> On 5/4/26 13:08, Siddharth Vadapalli wrote:
-> > On 03/05/26 21:16, Hans Zhang wrote:
-> > > On 5/2/26 13:18, Siddharth Vadapalli wrote:
-> > > > On 01/05/26 21:05, Hans Zhang wrote:
-> > > > > As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports
-> > > > > Link speeds
-> > > > > greater than 5.0 GT/s, software must wait a minimum of 100
-> > > > > ms after Link
-> > > > > training completes before sending a Configuration Request.
-> > > > > 
-> > > > > Add a new 'max_link_speed' field in struct cdns_pcie to record the
-> > > > > maximum supported (or currently configured) link speed of
-> > > > > the controller.
-> > > > > 
-> > > > > In cdns_pcie_host_wait_for_link(), after the link is reported as up,
-> > > > > insert a 100 ms delay if max_link_speed > 2 (i.e., > 5 GT/s). This
-> > > > > implements the required delay at the common Cadence host layer.
-> > > > > 
-> > > > > Currently max_link_speed is zero-initialized, so the delay is not yet
-> > > > > active. Glue drivers must set max_link_speed appropriately to enable
-> > > > > the delay. This matches the approach taken for the Synopsys DWC
-> > > > > controller in commit 80dc18a0cba8d ("PCI: dwc: Ensure that
-> > > > > dw_pcie_wait_for_link() waits 100 ms after link up").
-> > > > > 
-> > > > > Signed-off-by: Hans Zhang <18255117159@163.com>
-> > > > > ---
-> > > > >   .../pci/controller/cadence/pcie-cadence-host-common.c    |
-> > > > > 9 +++++ ++++
-> > > > >   drivers/pci/controller/cadence/pcie-cadence.h            | 2 ++
-> > > > >   2 files changed, 11 insertions(+)
-> > > > > 
-> > > > > diff --git
-> > > > > a/drivers/pci/controller/cadence/pcie-cadence-host- common.c
-> > > > > b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> > > > > index 2b0211870f02..d4ae762f423f 100644
-> > > > > --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> > > > > +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> > > > > @@ -14,6 +14,7 @@
-> > > > >   #include "pcie-cadence.h"
-> > > > >   #include "pcie-cadence-host-common.h"
-> > > > > +#include "../../pci.h"
-> > > > >   #define LINK_RETRAIN_TIMEOUT HZ
-> > > > > @@ -55,6 +56,14 @@ int cdns_pcie_host_wait_for_link(struct
-> > > > > cdns_pcie *pcie,
-> > > > >       /* Check if the link is up or not */
-> > > > >       for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-> > > > >           if (pcie_link_up(pcie)) {
-> > > > > +            /*
-> > > > > +             * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
-> > > > > +             * supports Link speeds greater than 5.0 GT/s, software
-> > > > > +             * must wait a minimum of 100 ms after Link training
-> > > > > +             * completes before sending a Configuration Request.
-> > > > > +             */
-> > > > > +            if (pcie->max_link_speed > 2)
-> > > > > +                msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> > > > 
-> > > > I think the above could be moved to cdns_pcie_host_start_link()
-> > > > as follows:
-> > > > 
-> > > > diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-
-> > > > common.c b/
-> > > > drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> > > > index 2b0211870f02..0f885dcbdb12 100644
-> > > > --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> > > > +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> > > > @@ -115,6 +115,15 @@ int cdns_pcie_host_start_link(struct
-> > > > cdns_pcie_rc *rc,
-> > > >       if (!ret && rc->quirk_retrain_flag)
-> > > >           ret = cdns_pcie_retrain(pcie, pcie_link_up);
-> > > > 
-> > > > +    /*
-> > > > +     * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
-> > > > +     * supports Link speeds greater than 5.0 GT/s, software
-> > > > +     * must wait a minimum of 100 ms after Link training
-> > > > +     * completes before sending a Configuration Request.
-> > > > +     */
-> > > > +    if (!ret && pcie->max_link_speed > 2)
-> > > > +        msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> > > > +
-> > > >       return ret;
-> > > >   }
-> > > >   EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
-> > > > 
-> > > > This will avoid an additional and unnecessary delay when
-> > > > 'cdns_pcie_retrain()' retrains the link.
-> > > > 
-> > > > Instead of checking for the link being up using
-> > > > "pcie_link_up(pcie)", checking for 'ret' being zero should also
-> > > > work (ret being zero indicates that the link is up).
-> > > > 
-> > > > Since configuration space accesses will not be performed until
-> > > > cdns_pcie_host_start_link() completes executing, it should be
-> > > > safe to switch to the above implementation.
-> > > 
-> > > Hi Siddharth,
-> > > 
-> > > I think this is applicable to LGA IP as per the method you
-> > > mentioned. However, for HPA IP, additional repetitive code needs to
-> > > be added in the following code.
-> > 
-> > Yes, additional code is required as you rightly pointed out, but the
-> > problem I was trying to address with your patch is the following:
-> >      cdns_pcie_host_start_link()
-> >        calls cdns_pcie_host_wait_for_link()
-> >          Link is Up and we wait for 100 ms here
-> >        calls cdns_pcie_retrain()
-> >            calls cdns_pcie_host_wait_for_link() a second time
-> >              Link is Up again after retraining and we wait and
-> >              we wait an additional 100 ms here.
-> > 
-> > Instead, it will be sufficient if we could wait just once after
-> > cdns_pcie_retrain() returns.
+On 5/2/26 04:40, Bjorn Helgaas wrote:
+> On Fri, May 01, 2026 at 01:24:38PM -0700, Florian Fainelli wrote:
+>> After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
+>> pcie->gen stopped being assigned and as a result the established PCIe
+>> link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
+>> to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
+>>
+>> Link: https://github.com/raspberrypi/linux/issues/7343
+>> Reported-by: Dom Cobley <popcornmix@gmail.com>
+>> Reported-by: Phil Elwell <phil@raspberrypi.com>
+>> Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
+>> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
+>> ---
+>>   drivers/pci/controller/pcie-brcmstb.c | 3 +--
+>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+>> index 714bcab97b60..6138fc4bc064 100644
+>> --- a/drivers/pci/controller/pcie-brcmstb.c
+>> +++ b/drivers/pci/controller/pcie-brcmstb.c
+>> @@ -2072,8 +2072,7 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+>>   		return PTR_ERR(pcie->clk);
+>>   
+>>   	ret = of_pci_get_max_link_speed(np);
+>> -	if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
+>> -		pcie->gen = 0;
+>> +	pcie->gen = pcie_get_link_speed(ret);
 > 
-> Hi Siddharth,
+> Take a look at https://sashiko.dev/#/patchset/20260501202438.376033-1-florian.fainelli%40broadcom.com
 > 
-> Yes, I looked at the code and indeed it works this way.
+> The notes at https://github.com/raspberrypi/linux/issues/7343 assumed
+> PCI_SPEED_UNKNOWN was 0, but in fact it is 0xff, which means you might
+> want the more defensive patch instead.
 > 
-> Because of the abundance of redundant comments. I'm wondering if it's
-> possible to encapsulate a helper function in the file
-> drivers/pci/controller/pci-host-common.c, so that controller drivers like
-> dwc and cadence can call this API. Or do you know where it would be
-> appropriate to place it?
-> 
-> Hello, Bjorn and Mani, I wonder what your opinions are.
+> I'll be happy to replace what's on pci/for-linus if so.
 
-Make a proposal.  Sounds fine to remove redundant comments if they
-cause confusion.  Adding a helper to make things more consistent
-across drivers also sounds fine, but it would be better to have a
-straw-man proposal to respond to.
-
-Bjorn
+I am starting to think a revert is the simplest path forward, it's not 
+clear what pcie_get_link_speed() brings to the table honestly.
+-- 
+Florian
