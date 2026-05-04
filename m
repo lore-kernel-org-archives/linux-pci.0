@@ -1,235 +1,206 @@
 Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E9B114AD20;
-	Mon,  4 May 2026 06:24:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FD564A8D;
+	Mon,  4 May 2026 06:55:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777875867; cv=none; b=nN00HHVvzJZXlOvW6JgGTNn6ToZcmsELcMyaCoQPyjkEZook4gYrPWHOUSL2M9iaptUQ4Ls91kLaJ2Fn5meeT/2K8H+cc9ABE1W1uOT5Sa0eL7k/xPPPf7xuwEat4dOSSQThoN3mgDUwcY2rrb1ILnZ2A+2QxfIy5XWfRwiv3cY=
+	t=1777877725; cv=none; b=p/57i9Rbu83C+ox06TsV9L1lNNbc7h9c1j/RhSwy1jwb0gbI2M3lxZdgzuTuZW9lY3ER9ttKB1wC253WR+dWs2RYN49W4P272gdQgKd74HlJOoTl+hjOZvztMYL7ZS4SYFCH4O9PAf9TC1cxI4fhviJH2Eqx34ud2qmwVeYIjCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777875867; c=relaxed/simple;
-	bh=PYB35MQoaY7taFrX9TWz3qPYZADd9v1r68AyDsDtoFQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=scaCI7yZd76qkvBP2CDrwBBpe8LsqbuIKZYlzCr3vq8I4xpBuf7yRbcv54DXzL5VIBzuswS9DvVWulcyMLa2ItkPBTEOj9QTCwtNjCkci6rQ4luIDr7Y+h2vnNmKJA4jn/FngZjJQTDYqp+wWHsSyDOV4ZMqgtGB0aozCjmvNlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MW0kuarW; arc=none smtp.client-ip=117.135.210.4
+	s=arc-20240116; t=1777877725; c=relaxed/simple;
+	bh=fihdatZKdC4krblrX+0f/Tf1Id7pyT3INbmeSaqHcD8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GBdGCXHE3N4R71xHSJNYorJALXQaRcY0x+iPT91AOhvgiPaVuke57/76JLaX2EBAFQJRcsm7ooHBMoNKUCxNR005TTQVLP+Hx43hcTvUfGcksCTI9SIpEZgiZ/2BZz+mSL3X/RceNpCAw/6IuQw3m8jZGJWuq5aRhEVoO1Uht3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Mv47BYqL; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MW0kuarW"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Mv47BYqL"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=eoDyIB9MKLnXGCh0r+3x/f8pDxF2OmHPG/aL1VQ2lUw=;
-	b=MW0kuarWRqO895SdwzFvchUvvnwO4oPHaj9gpWOd7wlRac/b7eGBP4oVPstXsD
-	+pMzLTGe+Q/O+Rth1SCCBAInEiTi0FDzvGQjFAGEc27WNasCYwxacLaQKsLhrhYm
-	O1wPY0uYzCS6NiggMqlVbjzQQ2jEVi5EOaldtNOsGbCUw=
-Received: from [192.168.50.71] (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgAX2IFmO_hpvbviCA--.227S2;
-	Mon, 04 May 2026 14:23:38 +0800 (CST)
-Message-ID: <ce5574b7-1c0d-4b46-b92e-e8f7ddbd8ef0@163.com>
-Date: Mon, 4 May 2026 14:23:34 +0800
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Gk
+	yJeK0xh7ft8l0KrjIr5L7TmwFz7SabyNUN7O8c/TM=; b=Mv47BYqLBTe08xKFOb
+	sclDIReMVsNlzMuxuwQIXeKPPlaFoMMKxRC+kmPlE79DXuLqbph6XYt4mySRkFm0
+	4yVqnDBCAJxXGmaQKG9vfpMO1+rAurSIHZ782kW0dRQIXOjO26HxuJJeEyHLnxlP
+	PKZh7tj7b/h8gnUovfe20wkn4=
+Received: from wmy.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wD3GtGyQvhp0AomDQ--.49192S2;
+	Mon, 04 May 2026 14:54:54 +0800 (CST)
+From: w15303746062@163.com
+To: airlied@redhat.com
+Cc: dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	x86@kernel.org,
+	linux-pci@vger.kernel.org,
+	Mingyu Wang <25181214217@stu.xidian.edu.cn>
+Subject: [PATCH] char: agp: amd64 - fix null-ptr-deref in amd64_fetch_size and related functions
+Date: Mon,  4 May 2026 14:54:41 +0800
+Message-Id: <20260504065441.99033-1-w15303746062@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI: cadence: Ensure that
- cdns_pcie_host_wait_for_link() waits 100 ms after link up
-To: Siddharth Vadapalli <s-vadapalli@ti.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, vigneshr@ti.com, robh@kernel.org,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260501153553.66382-1-18255117159@163.com>
- <20260501153553.66382-2-18255117159@163.com>
- <4ce9f13a-b17f-4149-ade8-57519f4a4752@ti.com>
- <699bd359-7389-45fa-a79b-10046f73bf12@163.com>
- <a3093010-d120-4c5d-b272-d8cb3884f0b3@ti.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <a3093010-d120-4c5d-b272-d8cb3884f0b3@ti.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgAX2IFmO_hpvbviCA--.227S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW3XFyrGr1DZry3WFyUJFy7Jrb_yoWxAFy7pa
-	yUWF1xKF40qr45u3Wvv3WUZrySqr98GFy7Gw4kKa4xZrnrCr17tF42gF43WF9xGrs0vr17
-	Z3WUtF9rGF1YvFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U5DGOUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AqBJWn4O2qsAwAA3t
+X-CM-TRANSID:_____wD3GtGyQvhp0AomDQ--.49192S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxtr1UCw1UJFyrZF1fur1UAwb_yoW7GrWxpF
+	4fZFZxtr4UGr4agF40qa1DCrn5ArZ7XFy5JrZrCw1F9a1vyry8tr1ftFy5ZrWfCFWDXF43
+	Can8tF4kGFyqyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jFg4fUUUUU=
+X-CM-SenderInfo: jzrvjiatxuliiws6il2tof0z/xtbDAB5YPGn4Qr7DNwAA3j
 
+From: Mingyu Wang <25181214217@stu.xidian.edu.cn>
 
+A NULL pointer dereference vulnerability was identified in the AMD64 AGP
+driver (amd64-agp) during driver initialization and aperture size fetching.
 
-On 5/4/26 13:08, Siddharth Vadapalli wrote:
-> On 03/05/26 21:16, Hans Zhang wrote:
->>
->>
->> On 5/2/26 13:18, Siddharth Vadapalli wrote:
->>> On 01/05/26 21:05, Hans Zhang wrote:
->>>> As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link 
->>>> speeds
->>>> greater than 5.0 GT/s, software must wait a minimum of 100 ms after 
->>>> Link
->>>> training completes before sending a Configuration Request.
->>>>
->>>> Add a new 'max_link_speed' field in struct cdns_pcie to record the
->>>> maximum supported (or currently configured) link speed of the 
->>>> controller.
->>>>
->>>> In cdns_pcie_host_wait_for_link(), after the link is reported as up,
->>>> insert a 100 ms delay if max_link_speed > 2 (i.e., > 5 GT/s). This
->>>> implements the required delay at the common Cadence host layer.
->>>>
->>>> Currently max_link_speed is zero-initialized, so the delay is not yet
->>>> active. Glue drivers must set max_link_speed appropriately to enable
->>>> the delay. This matches the approach taken for the Synopsys DWC
->>>> controller in commit 80dc18a0cba8d ("PCI: dwc: Ensure that
->>>> dw_pcie_wait_for_link() waits 100 ms after link up").
->>>>
->>>> Signed-off-by: Hans Zhang <18255117159@163.com>
->>>> ---
->>>>   .../pci/controller/cadence/pcie-cadence-host-common.c    | 9 +++++ 
->>>> ++++
->>>>   drivers/pci/controller/cadence/pcie-cadence.h            | 2 ++
->>>>   2 files changed, 11 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host- 
->>>> common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>> index 2b0211870f02..d4ae762f423f 100644
->>>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>> @@ -14,6 +14,7 @@
->>>>   #include "pcie-cadence.h"
->>>>   #include "pcie-cadence-host-common.h"
->>>> +#include "../../pci.h"
->>>>   #define LINK_RETRAIN_TIMEOUT HZ
->>>> @@ -55,6 +56,14 @@ int cdns_pcie_host_wait_for_link(struct cdns_pcie 
->>>> *pcie,
->>>>       /* Check if the link is up or not */
->>>>       for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
->>>>           if (pcie_link_up(pcie)) {
->>>> +            /*
->>>> +             * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
->>>> +             * supports Link speeds greater than 5.0 GT/s, software
->>>> +             * must wait a minimum of 100 ms after Link training
->>>> +             * completes before sending a Configuration Request.
->>>> +             */
->>>> +            if (pcie->max_link_speed > 2)
->>>> +                msleep(PCIE_RESET_CONFIG_WAIT_MS);
->>>
->>> I think the above could be moved to cdns_pcie_host_start_link() as 
->>> follows:
->>>
->>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host- 
->>> common.c b/ drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>> index 2b0211870f02..0f885dcbdb12 100644
->>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>> @@ -115,6 +115,15 @@ int cdns_pcie_host_start_link(struct 
->>> cdns_pcie_rc *rc,
->>>       if (!ret && rc->quirk_retrain_flag)
->>>           ret = cdns_pcie_retrain(pcie, pcie_link_up);
->>>
->>> +    /*
->>> +     * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
->>> +     * supports Link speeds greater than 5.0 GT/s, software
->>> +     * must wait a minimum of 100 ms after Link training
->>> +     * completes before sending a Configuration Request.
->>> +     */
->>> +    if (!ret && pcie->max_link_speed > 2)
->>> +        msleep(PCIE_RESET_CONFIG_WAIT_MS);
->>> +
->>>       return ret;
->>>   }
->>>   EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
->>>
->>> This will avoid an additional and unnecessary delay when 
->>> 'cdns_pcie_retrain()' retrains the link.
->>>
->>> Instead of checking for the link being up using "pcie_link_up(pcie)", 
->>> checking for 'ret' being zero should also work (ret being zero 
->>> indicates that the link is up).
->>>
->>> Since configuration space accesses will not be performed until 
->>> cdns_pcie_host_start_link() completes executing, it should be safe to 
->>> switch to the above implementation.
->>
->> Hi Siddharth,
->>
->> I think this is applicable to LGA IP as per the method you mentioned. 
->> However, for HPA IP, additional repetitive code needs to be added in 
->> the following code.
-> 
-> Yes, additional code is required as you rightly pointed out, but the 
-> problem I was trying to address with your patch is the following:
->      cdns_pcie_host_start_link()
->        calls cdns_pcie_host_wait_for_link()
->          Link is Up and we wait for 100 ms here
->        calls cdns_pcie_retrain()
->            calls cdns_pcie_host_wait_for_link() a second time
->              Link is Up again after retraining and we wait and
->              we wait an additional 100 ms here.
-> 
-> Instead, it will be sufficient if we could wait just once after 
-> cdns_pcie_retrain() returns.
+When the `amd64_agp` module is loaded on a system without a physical AMD
+Northbridge (e.g., in a QEMU/KVM virtualized environment with a simulated
+AMD 8151 AGP bridge), the underlying hardware query `node_to_amd_nb(0)`
+returns NULL.
 
-Hi Siddharth,
+In `amd64_fetch_size()`, the code previously attempted to unconditionally
+dereference the `misc` member of the returned pointer:
+    `dev = node_to_amd_nb(0)->misc;`
 
-Yes, I looked at the code and indeed it works this way.
+Since `node_to_amd_nb(0)` can return NULL (either due to missing hardware
+or when CONFIG_AMD_NB is disabled), this direct dereference results in a
+General Protection Fault (GPF) and a subsequent kernel panic, as caught
+by KASAN.
 
-Because of the abundance of redundant comments. I'm wondering if it's 
-possible to encapsulate a helper function in the file 
-drivers/pci/controller/pci-host-common.c, so that controller drivers 
-like dwc and cadence can call this API. Or do you know where it would be 
-appropriate to place it?
+Fix this by introducing proper sanity checks. Before accessing the `misc`
+pointer, explicitly verify that the pointer returned by `node_to_amd_nb()`
+is not NULL.
 
-Hello, Bjorn and Mani, I wonder what your opinions are.
+Furthermore, to prevent similar crashes, this patch sweeps the entire
+driver and applies the same safeguard to all other functions that iterate
+over or directly access the AMD Northbridge descriptors, including
+`amd_8151_configure()`, `amd64_cleanup()`, `cache_nbs()`, `uli_agp_init()`,
+and `nforce3_agp_init()`.
 
-> 
->>
->> Regarding the "quirk_retrain_flag" tag, I reviewed this submission 
->> record and it appears to be a workaround method. Can it be considered 
->> that it is not a universal method? Or is the same processing logic 
->> also added in the HPA?
-> 
-> I am not sure, but to the best of my knowledge, the quirk is not 
-> applicable to HPA.
-> 
+Signed-off-by: Mingyu Wang <25181214217@stu.xidian.edu.cn>
+---
+ drivers/char/agp/amd64-agp.c | 50 ++++++++++++++++++++++++++++--------
+ 1 file changed, 40 insertions(+), 10 deletions(-)
 
-The SOC of our company is HPA IP, and it doesn't require this flag setting.
-
-Best regards,
-Hans
-
->>
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/ 
->> drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
->> index 0f540bed58e8..65159f52067d 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
->> @@ -305,6 +305,15 @@ int cdns_pcie_hpa_host_link_setup(struct 
->> cdns_pcie_rc *rc)
->>          if (ret)
->>                  dev_dbg(dev, "PCIe link never came up\n");
->>
->> +       /*
->> +        * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
->> +        * supports Link speeds greater than 5.0 GT/s, software
->> +        * must wait a minimum of 100 ms after Link training
->> +        * completes before sending a Configuration Request.
->> +        */
->> +       if (pcie->max_link_speed > 2)
->> +               msleep(PCIE_RESET_CONFIG_WAIT_MS);
->> +
->>          return ret;
->>   }
->>   EXPORT_SYMBOL_GPL(cdns_pcie_hpa_host_link_setup);
->>
->> Best regards,
->> Hans
-> 
-> [TRIMMED]
-> 
-> Regards,
-> Siddharth.
+diff --git a/drivers/char/agp/amd64-agp.c b/drivers/char/agp/amd64-agp.c
+index 2505df1f4e69..7bbadfc74ffe 100644
+--- a/drivers/char/agp/amd64-agp.c
++++ b/drivers/char/agp/amd64-agp.c
+@@ -121,14 +121,16 @@ static struct aper_size_info_32 amd64_aperture_sizes[7] =
+ static int amd64_fetch_size(void)
+ {
+ 	struct pci_dev *dev;
++	struct amd_northbridge *nb;
+ 	int i;
+ 	u32 temp;
+ 	struct aper_size_info_32 *values;
+ 
+-	dev = node_to_amd_nb(0)->misc;
+-	if (dev==NULL)
++	nb = node_to_amd_nb(0);
++	if (!nb || !nb->misc)
+ 		return 0;
+ 
++	dev = nb->misc;
+ 	pci_read_config_dword(dev, AMD64_GARTAPERTURECTL, &temp);
+ 	temp = (temp & 0xe);
+ 	values = A_SIZE_32(amd64_aperture_sizes);
+@@ -187,8 +189,12 @@ static int amd_8151_configure(void)
+ 
+ 	/* Configure AGP regs in each x86-64 host bridge. */
+ 	for (i = 0; i < amd_nb_num(); i++) {
+-		agp_bridge->gart_bus_addr =
+-			amd64_configure(node_to_amd_nb(i)->misc, gatt_bus);
++		struct amd_northbridge *nb = node_to_amd_nb(i);
++
++		if (!nb || !nb->misc)
++			continue;
++
++		agp_bridge->gart_bus_addr = amd64_configure(nb->misc, gatt_bus);
+ 	}
+ 	amd_flush_garts();
+ 	return 0;
+@@ -204,7 +210,13 @@ static void amd64_cleanup(void)
+ 		return;
+ 
+ 	for (i = 0; i < amd_nb_num(); i++) {
+-		struct pci_dev *dev = node_to_amd_nb(i)->misc;
++		struct amd_northbridge *nb = node_to_amd_nb(i);
++		struct pci_dev *dev;
++
++		if (!nb || !nb->misc)
++			continue;
++
++		dev = nb->misc;
+ 		/* disable gart translation */
+ 		pci_read_config_dword(dev, AMD64_GARTAPERTURECTL, &tmp);
+ 		tmp &= ~GARTEN;
+@@ -335,7 +347,13 @@ static int cache_nbs(struct pci_dev *pdev, u32 cap_ptr)
+ 
+ 	i = 0;
+ 	for (i = 0; i < amd_nb_num(); i++) {
+-		struct pci_dev *dev = node_to_amd_nb(i)->misc;
++		struct amd_northbridge *nb = node_to_amd_nb(i);
++		struct pci_dev *dev;
++
++		if (!nb || !nb->misc)
++			continue;
++
++		dev = nb->misc;
+ 		if (fix_northbridge(dev, pdev, cap_ptr) < 0) {
+ 			dev_err(&dev->dev, "no usable aperture found\n");
+ #ifdef __x86_64__
+@@ -391,6 +409,7 @@ static int uli_agp_init(struct pci_dev *pdev)
+ {
+ 	u32 httfea,baseaddr,enuscr;
+ 	struct pci_dev *dev1;
++	struct amd_northbridge *nb;
+ 	int i, ret;
+ 	unsigned size = amd64_fetch_size();
+ 
+@@ -411,9 +430,14 @@ static int uli_agp_init(struct pci_dev *pdev)
+ 		goto put;
+ 	}
+ 
++	nb = node_to_amd_nb(0);
++	if (!nb || !nb->misc) {
++		ret = -ENODEV;
++		goto put;
++	}
++
+ 	/* shadow x86-64 registers into ULi registers */
+-	pci_read_config_dword (node_to_amd_nb(0)->misc, AMD64_GARTAPERTUREBASE,
+-			       &httfea);
++	pci_read_config_dword(nb->misc, AMD64_GARTAPERTUREBASE, &httfea);
+ 
+ 	/* if x86-64 aperture base is beyond 4G, exit here */
+ 	if ((httfea & 0x7fff) >> (32 - 25)) {
+@@ -453,6 +477,7 @@ static int nforce3_agp_init(struct pci_dev *pdev)
+ {
+ 	u32 tmp, apbase, apbar, aplimit;
+ 	struct pci_dev *dev1;
++	struct amd_northbridge *nb;
+ 	int i, ret;
+ 	unsigned size = amd64_fetch_size();
+ 
+@@ -479,9 +504,14 @@ static int nforce3_agp_init(struct pci_dev *pdev)
+ 	tmp |= nforce3_sizes[i].size_value;
+ 	pci_write_config_dword(dev1, NVIDIA_X86_64_1_APSIZE, tmp);
+ 
++	nb = node_to_amd_nb(0);
++	if (!nb || !nb->misc) {
++		ret = -ENODEV;
++		goto put;
++	}
++
+ 	/* shadow x86-64 registers into NVIDIA registers */
+-	pci_read_config_dword (node_to_amd_nb(0)->misc, AMD64_GARTAPERTUREBASE,
+-			       &apbase);
++	pci_read_config_dword(nb->misc, AMD64_GARTAPERTUREBASE, &apbase);
+ 
+ 	/* if x86-64 aperture base is beyond 4G, exit here */
+ 	if ( (apbase & 0x7fff) >> (32 - 25) ) {
+-- 
+2.34.1
 
