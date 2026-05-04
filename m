@@ -1,106 +1,140 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D1B234CFDD;
-	Mon,  4 May 2026 17:09:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777914583; cv=none; b=S0rTdCpzY6uFnVbPnG1PgGQGqIMJhz9EQzYhU/N2rwF6boHzGaHHsu2nGm0qhPirGpqALeKnxvKRuUYDUEezYSnx9X6Ffy1qFrrQeLI1QPWPzequ0r2H4P7R0KJNsq80KhnQ1YCv62xek4K9Sq2Avz6iIbwrrqTAGRm3XzljHBQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777914583; c=relaxed/simple;
-	bh=DL0oHUGtIQtcJa3UvSNpsHCUpyj2484rSE3g3qjViQ0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=T3OhXHfUumo7kIx156edUgGzEXfsjBrhUQIw3qUMXTfDfW0VDq11/KhzS//xRYZ66nBkOtlxg/rEJT/F7kXJj1TA12eOrtKL62DANQSkHgwDJX23wq4wCcUeDj4bCEamuCRghpmjBQ4PkZDx7Wkbuqfu3YPYf04UFiRQRiMKJXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c+ExzHbk; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4381E3E3C53
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 17:24:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.47
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777915457; cv=pass; b=rilUH+eWLWFMevfLHbO/GyVjgdicd3AMhkmBT7DU1In1JeoXmNoBgv8Y+F0HJ6yyjVPYVIkDVsK635vzczhx/zCZAOEBx3EbRyXeJMH1WvDX/hDFQd1Ah79UYpzHSo7QhYqCepugubyZdHzMn3SB+0CH6qd/4rHhCkk4hYLLIhc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777915457; c=relaxed/simple;
+	bh=GyTv8qCOVeKZc1v9heh9q2u8oTrZt8SPcXhTl05cfUk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oMg6WYfSKNEprm7okvmcsjKb6IgiuvTFg/Wq3kA/oQ9v3vcqRPeZdoonXCZj580aqzp8FUvsWxRNCxxuqrhNE08PWwMeNGdiWMqnjt1LoyoZHL82SqcWmpwvb9RgthtA35a7ZMDV2awzR1SQhBcgM1h2JjS1CR480R/PVIgLedE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=E1+T0jvX; arc=pass smtp.client-ip=74.125.82.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c+ExzHbk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6A32C2BCB8;
-	Mon,  4 May 2026 17:09:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777914583;
-	bh=DL0oHUGtIQtcJa3UvSNpsHCUpyj2484rSE3g3qjViQ0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=c+ExzHbkvgNEzyWPuMePVK7/qM3PkmMH8cReatgKVTb/LzMSV9LSqIPWnv697dlWi
-	 3mLiiH1X6QLMZ7ybpXAKRvcX2dsdoIxwtYJVgDUInk9NaFkvQBvGpyqDJJ2zTvuyUr
-	 hZQUTzB1PhVaThjECxs1NHsx2tHPGq74bwKz7Ij+6s+gRlMq3WYwPwAA+nwCB+fKIH
-	 dn7BZbvQcKme6hm1HNmQuYPoi4HEFw4f/DhPKkofQAFSjbLuH+fHKzMuh/iu5CWdXG
-	 vROeYjpR/0UCmkpqWD3c50PvHYXNLs+/XjFbO1n7y0XqA3pNfQso2Of3X61Qe2ZXNq
-	 ZP9HVavj8R25g==
-Date: Mon, 4 May 2026 12:09:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: sashiko-bot@kernel.org, linux-pci@vger.kernel.org,
-	sashiko@lists.linux.dev, Marco Nenciarini <mnencia@kcore.it>,
-	Michal Winiarski <michal.winiarski@intel.com>,
-	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Eric Chanudet <echanude@redhat.com>,
-	Jean Guyader <jean.guyader@gmail.com>,
-	Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>,
-	Mario Limonciello <superm1@kernel.org>
-Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
-Message-ID: <20260504170941.GA648635@bhelgaas>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="E1+T0jvX"
+Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-12713e56abdso3028568c88.1
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 10:24:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777915455; cv=none;
+        d=google.com; s=arc-20240605;
+        b=NE+0lVL84HOlmVKbK7dUVPepL3k2jXc6NcCSeCJHn6Zjeunb4a1oYL/6/sFfOm5/q6
+         5wsMYUBwpv1grQA1sMRFU7VzV9Jl/9FvdoWITfwgRvzXY8E+VcmC/zJ2BX9G0UQ7yJyX
+         3SD9a1uLhu5h0BKPbeE8eCnd/HFbVwodr/JuqfgMZ7jZVz7+s3yldxu9RI7wl8uaGe98
+         cEp7UZ33YkIQCh8RYG5qqspwHt6+wYTKeZHbFUtixdx95kmNHvnHNKkfMDgiP1dfAF+W
+         bkDOxts6aYvVMfL27KMakHqIgkK1JueoPW9UKR3qw9opW6xQS0q6XVOmG7SMyVEKW823
+         i85A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=8DRIGBANyTxbRVKczgT9uBMklmvWRVuW0duqUNmLE+k=;
+        fh=G+9vKX84hvpoAFI1MZ8XwDelPTzjdfF97MrorYnrAnA=;
+        b=Wla9N5M62V6hyGWnTP5rKPHSPSBTzy5kglrC1BR4P6wDiQrc4Ye6jrl06F93rIGwSU
+         3h4n0ahfeRXN5FplVA/b44kt1QPrh88XHRXYwQttwl6vDZz+PQfsLq1uj+tVD4M3UiKw
+         eIhRmdExQwAT7XzRY1VgIVOIta2+0YEVrBczSeDVwHi589C/osmh+ws7y8HmP/+NrCxI
+         Z6Eg0GA+vKHZGK4di4dYUlgyhxtud/GSywN1CydnMEqdEhGhFk1a0rJ3ZeLyInzHg7h+
+         2B7HsVw4pqvl5mYxVez/B13p/QnUpCMfsBLFqt9fs6lOM/6SlwbNVhrE9KbIA8ICA3IM
+         JUNA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1777915455; x=1778520255; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8DRIGBANyTxbRVKczgT9uBMklmvWRVuW0duqUNmLE+k=;
+        b=E1+T0jvX2+/WRy3DTsXnIl7CYn1i4mjob4uTOWQngmm2jkAzedB9fvq5SiLlpk9YLI
+         bZTVRQFgJuYwGBPR82RVZfFPO25+1FIt05UZd9cFtskm1SQVjsyV/0C2ZhxOcuJapdO6
+         sSR0oQ4nG1NPmAUe6gn0jN41odnGBr1w0NN22nBznpYUeRbfTijXL5i0B876nBIZxt5u
+         iDX0pp+DdWzKUqsEE3Aib3x5L3StwYYjxhWAvRLu4BXkc2PHlfzX/zgALCfei5l3syyI
+         QsPqnN7kAXsb5zfRCwVuPRAZ1qnbCA617AxEa9T8/80/XBJtJTO7LDTju3E41ulOkh3o
+         kM5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777915455; x=1778520255;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=8DRIGBANyTxbRVKczgT9uBMklmvWRVuW0duqUNmLE+k=;
+        b=N504KkeG7NODGOWHn9qy9BAjMYsMwFvbCqaqOt6lAWQGyG4a3HEmYEe5JBedWRQ9am
+         cIfEuiArmecRYd33dz2xvLP5lTj/Cr8aXIkIxrpvnw/havn6uXXJCNChDCh9kDRV5fuL
+         lCpkXNQcNGK2jAXGO1rIDeoIfZ1WcIyad2GRs+mNCWgmcP83z/izVWgcLL6MbnXgV6EN
+         rHSAaEC6SD5FHfuErMRSrTuYgeYP8aTigrVuJyfsQCV2DSxlAWykEjVOsRcJ0gliZpVZ
+         jdLxNn/Of1AmwkKZwYba2V96OqxlFSX9nQVAYkIFeuA7FcVHf0/uy+LCq1x1MmzVoqqn
+         yjxQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9ckFNaq8N0+H9oXXhlLXyS3zXnZ8h05EDkHcqBvSU+3kdti2HvwjDqUP68faB7YusR/HEatVq5M7I=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz9bLrAzKDmkbju0ouja4cK7OLMuwUaO4dVGvVOh55hGLWgNVBi
+	3qJHZGtPstcW6SSbxozZUCZQauKcvboOBzW2VyzSlX8NBeyYmMCBlWogWyMXk6tjjYcWR6HLHuP
+	5IlN36Sb2NuO+WNsw3W7ewdZ1fxngy+lQF2b7PUQy
+X-Gm-Gg: AeBDieuH4BIUcflZcN3ffWkFCz5GUyXScsENenmFHCbNDspIb6LOgaI3xFGdvektCmZ
+	FBenz5Kd/RWuybQkzLwqESfk1wnc7PVy/kN02V1IdA4/rL8HKvTWEtOLj1NnpBmJtAuPd1jIhkG
+	j6pH7v06GwOIzyZ8aBH1XbZ/kU4gko1By84N0WDdu2cYj7dXUOIJxc/rEN5/TZZtRxnKpLJ/7kQ
+	QbFrPhZFQ3L85uous93autaRhE6WnSZMRihPT0IrJ+cd5ixfpXzawtt7ibFC1wdTguWClpkbRGe
+	NJrdsESX5qdK7o5fvhvImhz37S4Pow==
+X-Received: by 2002:a05:7022:497:b0:12d:de3e:86af with SMTP id
+ a92af1059eb24-130a9fec67emr177647c88.18.1777915454575; Mon, 04 May 2026
+ 10:24:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <afhPkLynt7vS793r@wunner.de>
+References: <20260423212316.3431746-1-dmatlack@google.com> <20260423212316.3431746-8-dmatlack@google.com>
+In-Reply-To: <20260423212316.3431746-8-dmatlack@google.com>
+From: David Matlack <dmatlack@google.com>
+Date: Mon, 4 May 2026 10:23:48 -0700
+X-Gm-Features: AVHnY4KOWy2Xw7Jao5yCErgbS2iXWpg2-ZhNYfKSnvLQBaJlNVGZseag5k_UOKw
+Message-ID: <CALzav=cmZzNetCqWjQaG=VO+Fs=TTL3izU01vDUFd-=mRnDAuw@mail.gmail.com>
+Subject: Re: [PATCH v4 07/11] PCI: liveupdate: Inherit ACS flags in incoming
+ preserved devices
+To: iommu@lists.linux.dev, kexec@lists.infradead.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-pci@vger.kernel.org
+Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
+	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
+	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Jonathan Corbet <corbet@lwn.net>, 
+	Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
+	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
+	Pratyush Yadav <pratyush@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
+	Saeed Mahameed <saeedm@nvidia.com>, Samiullah Khawaja <skhawaja@google.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Will Deacon <will@kernel.org>, 
+	William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-[+cc Mario]
+On Thu, Apr 23, 2026 at 2:23=E2=80=AFPM David Matlack <dmatlack@google.com>=
+ wrote:
+>
+> Inherit Access Control Services (ACS) flags on all incoming preserved
+> devices (endpoints and upstream bridges) during a Live Update.
+>
+> Inheriting ACS flags avoids changing routing rules while memory
+> transactions are in flight from preserved devices. This is also strictly
+> necessary to ensure that IOMMU group assignments do not change across
+> a Live Update for preserved devices, as changing ACS configurations can
+> split or merge IOMMU groups.
+>
+> Signed-off-by: David Matlack <dmatlack@google.com>
 
-On Mon, May 04, 2026 at 09:49:36AM +0200, Lukas Wunner wrote:
-> On Sun, May 03, 2026 at 01:51:08PM +0000, sashiko-bot@kernel.org wrote:
-> > Thank you for your contribution! Sashiko AI review found 1 potential
-> > issue(s) to consider:
-> > - [High] Removing the read-back and retry loop for BAR restoration in
-> > `pci_restore_state()` introduces a risk of silent regressions for
-> > hardware resuming from non-FLR resets (such as D3hot to D0 transitions
-> > or custom driver resets). The commit incorrectly assumes the 60s delay
-> > from `pci_dev_wait()` covers all usages, but standard PM resume paths
-> > only delay for 10ms (`PCI_PM_D3_WAIT`) before calling `pci_restore_state()`.
-> > Historically, hardware that needed slightly longer to accept
-> > configuration writes relied on the 10x 1ms retry loop to successfully
-> > restore BARs. By removing both the retry and the read-back verification,
-> > BAR writes to slow devices will be silently dropped, leaving hardware
-> > unconfigured and causing MMIO accesses to result in IOMMU faults or
-> > kernel crashes.
-> 
-> Hallucination alert:
-> 
-> PCI_PM_D3_WAIT does not exist, it was renamed to PCI_PM_D3HOT_WAIT
-> six years ago by commit 3789af9a13e5, which went into v5.10.
-> 
-> The macro is used in:
-> 
-> pci_pm_resume_noirq()
->   pci_pm_default_resume_early()
->     pci_pm_power_up_and_verify_state()
->       pci_power_up()
->         pci_dev_d3_sleep()
-> 
-> However before pci_power_up() calls pci_dev_d3_sleep(), it reads
-> the PMCSR register and errors out if config space is inaccessible.
-> 
-> Hence when pci_restore_state() is invoked a bit later, config space
-> can be assumed to be accessible.
+> @@ -1017,6 +1017,15 @@ void pci_enable_acs(struct pci_dev *dev)
+>         bool enable_acs =3D false;
+>         int pos;
+>
+> +       /*
+> +        * ACS flags must be inherited from the previous kernel during a =
+Live
+> +        * Update for preserved devices (which includes endpoints and any
+> +        * upstream bridges) to avoid changing routing while memory trans=
+actions
+> +        * are in flight.
+> +        */
+> +       if (pci_liveupdate_incoming(dev))
+> +               return;
 
-I don't quite follow this.  In this path, pci_power_up() changes a
-device from some low-power state to D0.  If the device was in D3hot or
-D3cold, we must delay at least 10ms before any access to it (PCIe
-r7.0, sec 5.9).  pci_power_up() doesn't do any delay before the PMCSR
-read.  That part seems like a pre-existing issue even before this
-patch.
-
-If the PMCSR read returns PCI_POSSIBLE_ERROR(), pci_power_up() does
-complain "Unable to change power state ... to D0" and return -EIO, but
-pci_pm_power_up_and_verify_state() doesn't look at it, and
-pci_pm_default_resume_early() continues on to pci_restore_state(), so
-it looks to me like we could try to restore state to an inaccessible
-device.
-
-We do call pci_dev_wait() in pci_pm_reset(), which does a D3hot -> D0
-transition; shouldn't we do the same in pci_power_up()?
+Sashiko caught that pci_enable_acs() is also called from
+pci_restore_state() so this patch needs a fix to ensure that ACS flags
+do not change or get lost after a save+reset+restore.
