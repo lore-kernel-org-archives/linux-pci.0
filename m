@@ -1,135 +1,333 @@
-Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012037.outbound.protection.outlook.com [52.101.66.37])
+Received: from fhigh-b4-smtp.messagingengine.com (fhigh-b4-smtp.messagingengine.com [202.12.124.155])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22FF30149F;
-	Mon,  4 May 2026 21:18:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.37
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777929502; cv=fail; b=Jsam1y7y3fLcEKBZNvlZA5LgkSUAFvK1boG9B0S4c7quJUGqJwpLVZywQXzL5YOs4lTaVNX8nGNd023eiFgA8nmoMgpQdmsDSEKO6YXgCVjb8rVm6WfVc/LmHCkBoLfDxpyTyFfQUByzz3n9L2fTXlQBn3J6guZxUXsp0Mh8hxk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777929502; c=relaxed/simple;
-	bh=h1tcueVHZOc60raX+Ef/o0Fmkq7ivPx7FYCeNP0U1B4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=mWupm1r+LcZp5aWJDcr3TeQDqNABGLZ2jiHWozqJR6CMmRtqQQLc//JYRPWLG39VDzED7hFXDfYebLj/J3wSo6Gw4hwrMbk8vdT4Dgj+QhC9z65hEXB/eFXYBbaFnFqOy6ua7gEwPFgclcNjoXgmkZf58ldKR7fGvKFyg4a4Tjo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=MknN49R/; arc=fail smtp.client-ip=52.101.66.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52BCE3630B2;
+	Mon,  4 May 2026 21:45:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.155
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777931107; cv=none; b=jbqoQyyqg+zUy8Z9edg8HbOCN584kH8wyXy4kS5maC9+FD1EUZfe3oydChQNlmQ7bbNP5KbZdoUTRMy23Rb/VjLVfNsFGaFYki4wxN/u8yfWSxeqoUFOX+wPiyvpy8uibou6FKCTzUD/fUYmhTrEh8iX2MT1Wb/w00CIgFYTUSQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777931107; c=relaxed/simple;
+	bh=2V0GjmRpASTcxDhwzO1jdLMdFPf0GxO5qhZOBZdEFmg=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RaUu9vDz6Xz/8EeNCYftKRrS2lUnqGGnErkrNcHSo6ymFsWP4RwdJh48yqf42gbFQOK1Z49msFREUdsHz3p4KpPGhjn+L8D9rYDbQIpzL04SjH2EZs9w3SmJogHkpGvmOrRz4E8wSmOrhReXmUWE+Bonrnp+jSR7Gw81jlO8En8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=u2WYQ6Uu; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=aKlRNK6C; arc=none smtp.client-ip=202.12.124.155
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="MknN49R/"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZforMufM8iuYTFsI65qyDJsz+Wz4Gr5wIFGpSwVdzSYeBZi3UWOeJZsbqh3dfcy6kGopLVxpTCPcXjk4IguKqSx8Bh52JfodNf1leVqGor4eMO5INOw32jp8YFLFv7Ycv8u/n/NvBXMl+/END/WpaGTwO6rDdAIIfwnNHzVnDwZm2jIP/iw6R8+UNfIXvsgr55wUMre+oemdQmMAbKIPo6k/xpawiQyxYpaf3rhIXvvkIihqbypTYCniMfpZZz06uMtwXzSWgzHyzC2jrQcwtwswFKZPngUWL+cZtvAeJTyKelu955XZlHugEX+tWgAFnLCDsI2pTOYpmjmQ2BMmww==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=h1tcueVHZOc60raX+Ef/o0Fmkq7ivPx7FYCeNP0U1B4=;
- b=vFejs36sGWOw5BtmtWAjAEuABzzQN0eBvuK0IyXPEIBa6xkWh8TczAdYj5EYQp75xfkIpMe3g0UovYllQX+NKD0ep2vjoBu+hbo2LvHSpqlQUHjFU04OP3suAsuXfzyDCgVW8uSAK3PoSKnz9CYm6hcgFlFTQ9K0bUc8tZeyyhPouHMVO0uepOte33sNaIJRjgEY4SxjWgEtmKJ55BO8y850QTxHU2dIpyw9MpzTC1wr05225KGe+oItJNVyo5kXaqA/vEAM8qL3RrQ5/ROyeTHFAB8KlUNZG9y9/ozHmMXI3EBSiT1ZhDcKw31hSAiYor9JBibyj877Dfyt7cMxJA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=h1tcueVHZOc60raX+Ef/o0Fmkq7ivPx7FYCeNP0U1B4=;
- b=MknN49R/tksc0+P5BVllMFAvaBK5kTTmax/ndzsRp93dKRLnjd60ERoN4BAYfJFGq3Oo0xrd/fVeIydj+Nx8Z3XngFXrWfp5WU6HIg4LZwwHWahL1r0GNqSKKxxSmS5wFxQogpWlCDVXMn+4moIXmQ7n0nufEqXs+w6j5CLHlW/osQ7IgwIeL/NWr3n3miXQ8n7MAfxMjb6PoZfL1SsDAiH3jZfYBano8x0/C6mDZ4NILW3r2+/SR02nj4K9YeTciPSxKrIwbBcsSINOG20VxWo7f7X6k+wFeVfQB6zH2eWPNVbi2IxvtRGhtyBHL/k8yVkJ1s/JKzsTLncscLLeTA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by PAXPR04MB8317.eurprd04.prod.outlook.com (2603:10a6:102:1ce::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Mon, 4 May
- 2026 21:18:17 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%6]) with mapi id 15.20.9870.023; Mon, 4 May 2026
- 21:18:17 +0000
-Date: Mon, 4 May 2026 17:18:10 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	bhelgaas@google.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, s.hauer@pengutronix.de,
-	kernel@pengutronix.de, festevam@gmail.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org, imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v8 3/5] arm64: dts: imx94: Add pcie0 and pcie0-ep supports
-Message-ID: <afkNEjm73o8qoYRY@lizhi-Precision-Tower-5810>
-References: <20260324023036.784466-1-hongxing.zhu@nxp.com>
- <20260324023036.784466-4-hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260324023036.784466-4-hongxing.zhu@nxp.com>
-X-ClientProxiedBy: SN7PR18CA0001.namprd18.prod.outlook.com
- (2603:10b6:806:f3::15) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="u2WYQ6Uu";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="aKlRNK6C"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 2DFFD7A00E1;
+	Mon,  4 May 2026 17:45:04 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Mon, 04 May 2026 17:45:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1777931103;
+	 x=1778017503; bh=OlSrzNwR1CmvKwsGitkBEdA3NqGhfCJH662kCZt/3r0=; b=
+	u2WYQ6Uu2KBrknnMFCQlgjyWBH5bLy2MKSnl9TL87RibXUahAgyKLZQz/sscqRng
+	hKQHdRwLh1RL158ZjL3IPdSZHHIbxX8nSpyDNQai8Rf2wdrKozW1W9F5GqzQSnQE
+	uKOq+WQr5rKq9uifY/F0VIaHDmmqHySIQ7Y6zBya/laY0e+UK+JhVG8L6C+sEuBQ
+	TrVDfVA6kpKBu/ciRky42FfOsLpdX2YLCizuh2pB2mJnTwo/G+t2ne2WOvwjkuAW
+	lGqWQSDUe67s2cL4Ae/nr3M5P084kiwDr6I/fhW2EDLFSyT1iTVsDMdOoFvjl4VI
+	d8jgFikcBoRdWyTvw+mCKg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1777931103; x=
+	1778017503; bh=OlSrzNwR1CmvKwsGitkBEdA3NqGhfCJH662kCZt/3r0=; b=a
+	KlRNK6CDog0qPrHp2p3/xHIFC6EAUPUwTgZfc6zyZIugdY2hoDC+C5o9CCg0oSC/
+	xkdSBhEOr8zX4lHUUWFNMs51R3R98/vLgIulIliN8aehif8/3TSU3h1rCQAZk0s3
+	EqKTDGxg0XXR/ns+S8j1zgZzKpx1RkvXOCN0/yVd72zfop1rqCaJkKB+2HezFA/u
+	AVfxnu97ysc2gaTfIhNVglneNkfjnBSuybXPizAl6gRcUCrRn2pO7gsw/pTH25w+
+	48MiCuy5J83ZMKvpC3BV5sP4S+jsl47vlXCnMJjSpN2jBXk/OQ5arksBN/Wq5R3n
+	2g4iB+MUCj3QRW39pW38g==
+X-ME-Sender: <xms:XxP5abNp_6jzROaygyUxuZIi2Sfe9p9hH9fCqo7KYS4ZVEalARZ87Q>
+    <xme:XxP5acVRJWvhqDkKINawXeGKvu29RbXTAx_TLFsm63ETyLKo_5f_DmN8Vm7uekHXO
+    29Qa6zpc8IN4VBE1PvbATfeUunP4drZ8ReM9Cya1PYkU5jpJtvqVw>
+X-ME-Received: <xmr:XxP5aWjw5togl-E-fvGwT1lgnhNB50KrU8cG8NFcARCOdN7PwcL8KBQ7Uas>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdelleelhecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
+    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
+    hrpeffhffvvefukfgjfhfogggtgfesthejredtredtvdenucfhrhhomheptehlvgigucgh
+    ihhllhhirghmshhonhcuoegrlhgvgiesshhhrgiisghothdrohhrgheqnecuggftrfgrth
+    htvghrnhepkeelffevieeuheeiieeifeelteffheeiffekledvleejgedthfdvjeehudff
+    ledvnecuffhomhgrihhnpehsrghshhhikhhordguvghvnecuvehluhhsthgvrhfuihiivg
+    eptdenucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhg
+    pdhnsggprhgtphhtthhopeduvddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepii
+    hhihhpihhnghiisehmvghtrgdrtghomhdprhgtphhtthhopehjghhgseiiihgvphgvrdgt
+    rgdprhgtphhtthhopehlvghonheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohephhgvlh
+    hgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqrhgumhgrsehv
+    ghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvg
+    hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehnvghtuggvvhesvhhgvghrrdhkvghr
+    nhgvlhdrohhrghdprhgtphhtthhopegurhhiqdguvghvvghlsehlihhsthhsrdhfrhgvvg
+    guvghskhhtohhprdhorhhgpdhrtghpthhtohepkhgsuhhstghhsehkvghrnhgvlhdrohhr
+    gh
+X-ME-Proxy: <xmx:XxP5adhrn-X3lMuQKFhBxNc05YU7BNl-iLyjUMQ5ANsGEhJua-JtQg>
+    <xmx:XxP5acEFz1M3kD8WF8YH1HN2mgUFzmuFGgW1BHE9gppL4vbipx5RWg>
+    <xmx:XxP5aSAl52d32IoyjnYnW-0WGkwRxr_6Duss9bz4vMn9gu1Iclsucg>
+    <xmx:XxP5aaBxM1wcE8nEMklL4h8FOTerGFfDxsGx2GtGHkdGlHJOdrvaXw>
+    <xmx:XxP5aaCL4_QhABUW956FJqUirCoMKNMZoo1aDA6d0eZOFbJYiH530tSq>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 4 May 2026 17:45:00 -0400 (EDT)
+Date: Mon, 4 May 2026 15:44:59 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Bjorn
+ Helgaas <helgaas@kernel.org>, <linux-rdma@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
+ <dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>, Yochai
+ Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+ alex@shazbot.org
+Subject: Re: [PATCH v2 1/2] vfio: add dma-buf get_tph callback and
+ DMA_BUF_TPH feature
+Message-ID: <20260504154459.77b8153d@shazbot.org>
+In-Reply-To: <20260430200704.352228-2-zhipingz@meta.com>
+References: <20260430200704.352228-1-zhipingz@meta.com>
+	<20260430200704.352228-2-zhipingz@meta.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|PAXPR04MB8317:EE_
-X-MS-Office365-Filtering-Correlation-Id: bd930db7-d17d-4999-94d3-08deaa22a8e8
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|19092799006|376014|7416014|52116014|1800799024|38350700014|56012099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	EsgKNzBeIJvyONJyOyswe6Fq9mXiQ0yX0hy5O2wi9HZUCrIVzd1EFldSmvuRsdxBmdIifkquJ4GZV0u6ohK1xpS253BnkEY3lAxgPT4Wd/yD9X9q5VyK5yrhAOGaC3pS3FoRZxbQU9cxIkpN8o7GcwIH1RHbzb9EW3MmC295D4XM+depLKyQEhaQeXxXa5HGW7N8xX1cQJaIr8a1TbF3meZw7xZLwFPoJnGGney4E5xUf7CO7bFnUtLW7tNcb1GEYhDtL5W7x1M6TIWlqxxYefqalN5l0VRlY/ukXvXzvh5V7ccEKgKo/LBcl3SeW/1TsmmdQTqB2nL+Dz+0O4jRp0wez761WF111SbtLDTKROBUVfy7Mbi689Szc5i2F28ECHpIAeLN0LDQ4C7r722oeN4AB4fi7Dk8AocBXbzU90d4OMkGfDqVCJvy4VBLemWdCK8O4tyiMQLLic95q+6Z2ax/MoZ64ZJZMxVGuvN+Q9aVH1QkGwByxlPNNyVTLFX71UEkr7MYRxTpN9ONH+kYXFb4VrOgSv91M6BYjH9jlqsVFOtuhKVAE6BgcJ7cX7h8XYbQnIQuPJvXo02cq5UaJpiLiUNbWoCImEH19FoEXS1dju4KcXNyRWbEFrHstPU77mFQRrwvcjUK+9T6Ac18q31c7zXcpYduV8NPxMa9/3e1QI1AGMVFaI9knzXt5UUQljF137rffZnh7p6+mftjEvWj88shRCRvtvTazpKWRj2JqdPQxk5dhxTgcjUtJQR7
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(19092799006)(376014)(7416014)(52116014)(1800799024)(38350700014)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?N/EtsGltTtO6ILEEZN9OJxB9eJ8AbfO+7/7xD8HL2A3HTLDGC5SYgrHpR509?=
- =?us-ascii?Q?ZwnGNBb/QAzWWDLua9xioOCViYsLYxgYUev3Q17t0u1TqR4IXnOBlcZJG3xx?=
- =?us-ascii?Q?jh7R3fWKmjeIjJ9eiX41zjX/skWbu0ggohpM254ReIk82fdN71LDs/Ui5V2k?=
- =?us-ascii?Q?QjYV9d/DM1tZtcJ8qzfw/aZZb45/Ry64qWM4D5KKiMyTNfbIoaMAuv5zUYW/?=
- =?us-ascii?Q?n6xGC7NNS2K5iLCxRGOeW7ewI1xEst3OMywlYfK6ixHl83kJH/rlOCjAw1QC?=
- =?us-ascii?Q?ztuci1Uvt2TQEmuYzEZPBWoQL30tibK1EtHPGzonQQj9Suw51RXuKc6eql7E?=
- =?us-ascii?Q?C/9NW6VSPAFefPfV3w51M9b+2z9qqRl9XjNPFL0wleWqQq+43sgy1lGoB4yD?=
- =?us-ascii?Q?jF3wRJjmbhfxl9EZPAHkL62yBNOFAY/a5rjH63n3SdhGrROIU1FRA4SijeYT?=
- =?us-ascii?Q?VPtKC8Y9n9Cthd3kzMU4NcFwCHryCAh6E07RyS5QL5C2dIX+wILR5tuYusv+?=
- =?us-ascii?Q?HSSL9Lv9Nf6aL/+mHbecQv+UNy8IE9hvtxyc1icQJgwHiUcZI3ccmRxBaD3G?=
- =?us-ascii?Q?qsIXj2Eg8XNwBfJnAGCHn4NqUXCQ1shaoV2z28fiEGVachdL3poCB9pz1+vz?=
- =?us-ascii?Q?UXlGaEPO+AG9QErFGsa740FrNqaoSaOqvHS8j9bjyy8X2Dw9RNPuIPj0XmC4?=
- =?us-ascii?Q?Fs4ZcfgOu28TN9P0wHwZw3CGdTW15SlU3d2y0nv5cW3TV9bB6jlsjFTpJHpq?=
- =?us-ascii?Q?I9Au3Ocfr9m0vpsroEdGERfXYsQ335GI28M5vpmoxL9geC1eN8cWL4eACXK3?=
- =?us-ascii?Q?HWcdvUjLySsQkJBqWL3V52gS+La/uvCSaNnUxAv/+VTAQHuk/JbV1xoRXhcO?=
- =?us-ascii?Q?gv3x88AAVKNDGrCb7qIRBZAZ71B9n6LbKufhZqvhSavAlT13dMAubJpxzNoJ?=
- =?us-ascii?Q?M32yxveXywPrPscJzkmrWy4oqNUSRHSHHYQqN8QjBhYqkwL/USuA96ZP8nVZ?=
- =?us-ascii?Q?aUtqlcuFD6tn+oktmzXkw8p29E3WapHZmHOXJMalV0xdIh/NpftojngiU9wN?=
- =?us-ascii?Q?VgEl9chnGIaPgaYDjYj7M3WH9OWIhXarsoLHdDoodwiBACsKqdK1vLXWXnIN?=
- =?us-ascii?Q?ifUXZYRlBpEbX3a+EFIewC3l4gMuJKQt+JDZ9ZFJKG874e+/KFIrREeWmdN+?=
- =?us-ascii?Q?FLA/QBV9LEElle0aOQtYC6HZUg+rg14JSARQ47IpcEfOK1mTi9929C9uppdc?=
- =?us-ascii?Q?wUvHtWaMfmNRoP0YinHIOU3ypXvOqQKHK9KBYKZLqb8FFYLQASt7sdkacDb4?=
- =?us-ascii?Q?s/n1TC+THqojxzLhoqXEXzeP5NukE8ya/sl750ht/HcaLD3pB4TGPaiDNcxO?=
- =?us-ascii?Q?kK1evm6bwTm6AW2fNfW+G4cMK/5pojWKLRrULFeY4pfP7zQS8KD8mB1qRAUV?=
- =?us-ascii?Q?2yQvvJN2Av7diAl3GlADqH6r/jwg6Jq9V0GnpPjktSBpObhruKc+Q+gq0yHu?=
- =?us-ascii?Q?7QrIPPdggNlIhKoVnK619YJLeoRd4L3IJYCoyhDrkLWWGMmjFjfDft7aCOED?=
- =?us-ascii?Q?bxxEbuOITlKsxnvIJmeHeOmVGFvPDbPc67IO0D1QaKxPVB0UmFis3D/qubyu?=
- =?us-ascii?Q?t2ytLOmNlhgpIBZn/952rYlmsENeJgnYO4FO9aESOAd1L6be6dAy5tvIX5xn?=
- =?us-ascii?Q?fxwefZpofemYveKsN7XWAWauXFBljQ7EbAtHindj/MHbJyuvfxlUQf8EjKEU?=
- =?us-ascii?Q?DN+lT6assw=3D=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bd930db7-d17d-4999-94d3-08deaa22a8e8
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 May 2026 21:18:17.4139
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: I6Lea8ifkN8VnsgqMjVkujG304zy+94CM3tJubdDu66wA7zfmi+nvJoM83B5GPZrZywJRezFp57iwYOk5Vdy8w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8317
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Mar 24, 2026 at 10:30:34AM +0800, Richard Zhu wrote:
-> Add pcie0 and pcie0-ep supports.
->
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> ---
+On Thu, 30 Apr 2026 13:06:56 -0700
+Zhiping Zhang <zhipingz@meta.com> wrote:
 
-DTS part fail to apply, can you rebase to v7.1-rc1.
+> Add a dma-buf callback that returns raw TPH metadata from the exporter
+> so peer devices can reuse the steering tag and processing hint
+> associated with a VFIO-exported buffer.
+> 
+> Add a new VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl that takes the fd from
+> VFIO_DEVICE_FEATURE_DMA_BUF along with a steering tag and processing
+> hint, validates the fd is a vfio-exported dma-buf belonging to this
+> device, and stores the TPH values under memory_lock. This keeps the
+> existing VFIO_DEVICE_FEATURE_DMA_BUF uAPI completely unchanged.
+> 
+> The user sequences setting TPH on the dma-buf before the importer
+> consumes it.
+> 
+> Add an st_width parameter to get_tph() so the exporter can reject
+> steering tags that exceed the consumer's supported width (8 vs 16 bit).
+> When no TPH metadata was supplied, get_tph() returns -EOPNOTSUPP.
+> 
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 
-Frank
+The uAPI is better, but sashiko has some review comments[1] for you.
 
->
+Please also copy the kvm list for vfio related development.  Thanks,
+
+Alex
+
+[1]https://sashiko.dev/#/patchset/20260430200704.352228-1-zhipingz@meta.com
+
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1534,6 +1534,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+>  		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
+>  	case VFIO_DEVICE_FEATURE_DMA_BUF:
+>  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
+> +	case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
+> +		return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
+> +							 argsz);
+>  	default:
+>  		return -ENOTTY;
+>  	}
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> @@ -19,6 +19,9 @@ struct vfio_pci_dma_buf {
+>  	u32 nr_ranges;
+>  	struct kref kref;
+>  	struct completion comp;
+> +	u16 steering_tag;
+> +	u8 ph;
+> +	u8 tph_present : 1;
+>  	u8 revoked : 1;
+>  };
+>  
+> @@ -69,6 +72,22 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
+>  	return ret;
+>  }
+>  
+> +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steering_tag,
+> +				    u8 *ph, u8 st_width)
+> +{
+> +	struct vfio_pci_dma_buf *priv = dmabuf->priv;
+> +
+> +	if (!priv->tph_present)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (st_width < 16 && priv->steering_tag > ((1U << st_width) - 1))
+> +		return -EINVAL;
+> +
+> +	*steering_tag = priv->steering_tag;
+> +	*ph = priv->ph;
+> +	return 0;
+> +}
+> +
+>  static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
+>  				   struct sg_table *sgt,
+>  				   enum dma_data_direction dir)
+> @@ -101,6 +120,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf *dmabuf)
+>  
+>  static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
+>  	.attach = vfio_pci_dma_buf_attach,
+> +	.get_tph = vfio_pci_dma_buf_get_tph,
+>  	.map_dma_buf = vfio_pci_dma_buf_map,
+>  	.unmap_dma_buf = vfio_pci_dma_buf_unmap,
+>  	.release = vfio_pci_dma_buf_release,
+> @@ -331,6 +351,55 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>  	return ret;
+>  }
+>  
+> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
+> +				      u32 flags,
+> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
+> +				      size_t argsz)
+> +{
+> +	struct vfio_device_feature_dma_buf_tph set_tph;
+> +	struct vfio_pci_dma_buf *priv;
+> +	struct dma_buf *dmabuf;
+> +	int ret;
+> +
+> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
+> +				 sizeof(set_tph));
+> +	if (ret != 1)
+> +		return ret;
+> +
+> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
+> +		return -EFAULT;
+> +
+> +	if (set_tph.reserved)
+> +		return -EINVAL;
+> +
+> +	dmabuf = dma_buf_get(set_tph.dmabuf_fd);
+> +	if (IS_ERR(dmabuf))
+> +		return PTR_ERR(dmabuf);
+> +
+> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops) {
+> +		ret = -EINVAL;
+> +		goto out_put;
+> +	}
+> +
+> +	priv = dmabuf->priv;
+> +	down_write(&vdev->memory_lock);
+> +	if (priv->vdev != vdev) {
+> +		ret = -EINVAL;
+> +		goto out_unlock;
+> +	}
+> +
+> +	priv->steering_tag = set_tph.steering_tag;
+> +	priv->ph = set_tph.ph;
+> +	priv->tph_present = 1;
+> +	ret = 0;
+> +
+> +out_unlock:
+> +	up_write(&vdev->memory_lock);
+> +out_put:
+> +	dma_buf_put(dmabuf);
+> +	return ret;
+> +}
+> +
+>  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
+>  {
+>  	struct vfio_pci_dma_buf *priv;
+> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+> --- a/drivers/vfio/pci/vfio_pci_priv.h
+> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+> @@ -118,6 +118,10 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+>  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>  				  struct vfio_device_feature_dma_buf __user *arg,
+>  				  size_t argsz);
+> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
+> +				      u32 flags,
+> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
+> +				      size_t argsz);
+>  void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
+>  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked);
+>  #else
+> @@ -128,6 +132,13 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>  {
+>  	return -ENOTTY;
+>  }
+> +static inline int
+> +vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev, u32 flags,
+> +				  struct vfio_device_feature_dma_buf_tph __user *arg,
+> +				  size_t argsz)
+> +{
+> +	return -ENOTTY;
+> +}
+>  static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
+>  {
+>  }
+> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> --- a/include/linux/dma-buf.h
+> +++ b/include/linux/dma-buf.h
+> @@ -113,6 +113,23 @@ struct dma_buf_ops {
+>  	 */
+>  	void (*unpin)(struct dma_buf_attachment *attach);
+>  
+> +	/**
+> +	 * @get_tph:
+> +	 * @dmabuf: DMA buffer for which to retrieve TPH metadata
+> +	 * @steering_tag: Returns the raw TPH steering tag
+> +	 * @ph: Returns the TPH processing hint
+> +	 * @st_width: Consumer's supported steering tag width in bits (8 or 16)
+> +	 *
+> +	 * Return the TPH (TLP Processing Hints) metadata associated with this
+> +	 * DMA buffer. Exporters that do not provide TPH metadata should return
+> +	 * -EOPNOTSUPP. If the steering tag exceeds @st_width bits, return
+> +	 * -EINVAL.
+> +	 *
+> +	 * This callback is optional.
+> +	 */
+> +	int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph,
+> +		       u8 st_width);
+> +
+>  	/**
+>  	 * @map_dma_buf:
+>  	 *
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+> @@ -1534,6 +1534,28 @@ struct vfio_device_feature_dma_buf {
+>   */
+>  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+>  
+> +/**
+> + * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) metadata
+> + * with a vfio-exported dma-buf. The dma-buf must have been created by
+> + * VFIO_DEVICE_FEATURE_DMA_BUF on this device.
+> + *
+> + * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA_BUF.
+> + * steering_tag and ph are the raw TPH values that importing drivers should use
+> + * when accessing the buffer.
+> + *
+> + * The user must set TPH on the dma-buf before the importer consumes it.
+> + *
+> + * Return: 0 on success, -errno on failure.
+> + */
+> +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
+> +
+> +struct vfio_device_feature_dma_buf_tph {
+> +	__s32	dmabuf_fd;
+> +	__u16	steering_tag;
+> +	__u8	ph;
+> +	__u8	reserved;
+> +};
+> +
+>  /* -------- API for Type1 VFIO IOMMU -------- */
+>  
+>  /**
+
