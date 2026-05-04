@@ -1,101 +1,92 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2883064B5;
-	Mon,  4 May 2026 07:49:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D0DE30F7FB
+	for <linux-pci@vger.kernel.org>; Mon,  4 May 2026 07:49:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777880948; cv=none; b=fafoP5OdndC9Ykaky7pTFvURmgle2aEmyto6hBIp1hRBncz6O51CDjgwjFdhwDNjppnPdYFdpXykO54UyvgxoM2LELnYZICvbGWNtRbGSUUqc+kDPytX1avdlOX+hw8PPBQ/r3IqyX07rSKWFOwC29F5DXPyd1zcwOqAwo8AZTE=
+	t=1777880982; cv=none; b=EC3PubSrXJBKyzdn4FN1nEdvr79NdLV8wc9TAcivqMsjFaVHoAsZMOLu4w80InGYxrVTo/bhZ6wRwpeM//C2yQnUHieygE2k8TkCyFGIXsFTHWq0gCosl2nn6mvZ8pGV2Hb97fSbhkz/xafAC/zGcmccaouOj5LHW79+VsPHzRw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777880948; c=relaxed/simple;
-	bh=V7xSpYLUltDLUB7S/I3rVJ4BaJ/OuF26OVtn7+/zfmo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=slx7MXaFsWF/rJBTE3QmXZt1R7YD7R/zIad4yGQjh0cQn7AE3Zsc1dhSlLZbybi+FjaLtjER9ucUiArK/mdO+7MdXYygCDMR3iQ8ckbVfm2jR/cRr6zyjtFvobOeXTEJGFXahbaKxbiyer96igcqzk/UTkOy1g4HO4ZJkQHF78Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=H7olWS5R; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="H7olWS5R"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=BG
-	2utFDGULuhQh672bTQWamHdZY+4eC37jgZ9SY1idg=; b=H7olWS5RZg7vQT1sno
-	c2iSGZnhunC5zuuMpS042oREnPlUBbZ7VeQGSGP4syeZfS2+GA3RYkYsTd0peFo5
-	pfHaB9gP1ADxF1fHUeAQkX3goD+T9GvbWGvTMLYBmVlzxUjg+RQYE1bbelCV7P1u
-	Hb3bwr7FAr4jYYInHdI35jzqI=
-Received: from wmy.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDXP31IT_hp5Vw+DQ--.51144S2;
-	Mon, 04 May 2026 15:48:36 +0800 (CST)
-From: w15303746062@163.com
-To: airlied@redhat.com
-Cc: dri-devel@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org,
-	x86@kernel.org,
-	linux-pci@vger.kernel.org,
-	Mingyu Wang <25181214217@stu.xidian.edu.cn>
-Subject: [PATCH v2] char: agp: amd64 - fix broken error propagation in agp_amd64_probe()
-Date: Mon,  4 May 2026 15:48:23 +0800
-Message-Id: <20260504074823.99377-1-w15303746062@163.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1777880982; c=relaxed/simple;
+	bh=iyd9zb129Pnm+iwV0/zcRqQV5H+vblJWszUxZPv1rlQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SyPzyPJDIdk4ua8LLRGPU4rpEYjl5L2PqD9YF3tPlfvC23bP2Bg7xtDpIu5aXg5wHq80v4SLorM00wWo/2wPCcErfFnDHFQUNreIK1Ku+r4m2Ym+y4Vt+qWC6y9I6e64SCEFpISybyo4cJzI/HLXVFoFkYfRwPCHtRat2h3ez4M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id D6BC910DDB;
+	Mon, 04 May 2026 09:49:36 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id B74046019647; Mon,  4 May 2026 09:49:36 +0200 (CEST)
+Date: Mon, 4 May 2026 09:49:36 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: sashiko-bot@kernel.org
+Cc: linux-pci@vger.kernel.org, sashiko@lists.linux.dev,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Marco Nenciarini <mnencia@kcore.it>,
+	Michal Winiarski <michal.winiarski@intel.com>,
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Eric Chanudet <echanude@redhat.com>,
+	Jean Guyader <jean.guyader@gmail.com>,
+	Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>
+Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
+Message-ID: <afhPkLynt7vS793r@wunner.de>
+References: <785c98b50a7a00d0698848c75d51b8f5669ad18f.1777814679.git.lukas@wunner.de>
+ <20260503135109.46193C2BCB4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXP31IT_hp5Vw+DQ--.51144S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Cr15CFy3AFWxGryrXF1DZFb_yoW8tF1fpa
-	93GwsYka1kK34rKFWDtw47Ar1Fvwn7WFWYkr1kGw4DuasxGFyxAry3tFWj9Fy5CFWqyr4a
-	v3W5KFW5ua4DAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jFg4fUUUUU=
-X-CM-SenderInfo: jzrvjiatxuliiws6il2tof0z/xtbC5BSBZWn4T1RBhAAA3b
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260503135109.46193C2BCB4@smtp.kernel.org>
 
-From: Mingyu Wang <25181214217@stu.xidian.edu.cn>
+On Sun, May 03, 2026 at 01:51:08PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential
+> issue(s) to consider:
+> - [High] Removing the read-back and retry loop for BAR restoration in
+> `pci_restore_state()` introduces a risk of silent regressions for
+> hardware resuming from non-FLR resets (such as D3hot to D0 transitions
+> or custom driver resets). The commit incorrectly assumes the 60s delay
+> from `pci_dev_wait()` covers all usages, but standard PM resume paths
+> only delay for 10ms (`PCI_PM_D3_WAIT`) before calling `pci_restore_state()`.
+> Historically, hardware that needed slightly longer to accept
+> configuration writes relied on the 10x 1ms retry loop to successfully
+> restore BARs. By removing both the retry and the read-back verification,
+> BAR writes to slow devices will be silently dropped, leaving hardware
+> unconfigured and causing MMIO accesses to result in IOMMU faults or
+> kernel crashes.
 
-A NULL pointer dereference was observed in the AMD64 AGP driver when
-running in a virtualized environment (e.g., QEMU/KVM) without a physical
-AMD Northbridge. The crash occurs in amd64_fetch_size() when attempting
-to dereference the pointer returned by node_to_amd_nb(0).
+Hallucination alert:
 
-The root cause of this crash is broken error propagation in
-agp_amd64_probe(). When no AMD Northbridges are found, cache_nbs()
-correctly returns -ENODEV. However, the probe function erroneously
-checked the return value against exactly -1, rather than < 0.
+PCI_PM_D3_WAIT does not exist, it was renamed to PCI_PM_D3HOT_WAIT
+six years ago by commit 3789af9a13e5, which went into v5.10.
 
-As a result, the hardware absence error was masked, allowing the driver
-to improperly proceed with initialization. It eventually called
-agp_add_bridge(), which invokes amd64_fetch_size(). Since the hardware
-does not exist, node_to_amd_nb(0) returns NULL, leading to a General
-Protection Fault (GPF) when accessing its ->misc member.
+The macro is used in:
 
-Fix the issue by correcting the error check in agp_amd64_probe() to
-abort properly when cache_nbs() returns any negative error code. This
-prevents the driver from erroneously proceeding without hardware, thereby
-resolving the subsequent NULL pointer dereference at its source.
+pci_pm_resume_noirq()
+  pci_pm_default_resume_early()
+    pci_pm_power_up_and_verify_state()
+      pci_power_up()
+        pci_dev_d3_sleep()
 
-Signed-off-by: Mingyu Wang <25181214217@stu.xidian.edu.cn>
----
-+ Changes in v2:
-+ - Dropped redundant NULL pointer checks in various initialization functions.
-+ - Fixed the actual root cause: broken error propagation in agp_amd64_probe() 
-+   where it erroneously checked cache_nbs() against exactly -1 instead of < 0.
-+   (Thanks to Sashiko AI for the review feedback).
-+
- drivers/char/agp/amd64-agp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+However before pci_power_up() calls pci_dev_d3_sleep(), it reads
+the PMCSR register and errors out if config space is inaccessible.
 
-diff --git a/drivers/char/agp/amd64-agp.c b/drivers/char/agp/amd64-agp.c
-index 2505df1f4e69..6741270e0a98 100644
---- a/drivers/char/agp/amd64-agp.c
-+++ b/drivers/char/agp/amd64-agp.c
-@@ -546,7 +546,7 @@ static int agp_amd64_probe(struct pci_dev *pdev,
- 	/* Fill in the mode register */
- 	pci_read_config_dword(pdev, bridge->capndx+PCI_AGP_STATUS, &bridge->mode);
- 
--	if (cache_nbs(pdev, cap_ptr) == -1) {
-+	if (cache_nbs(pdev, cap_ptr) < 0) {
- 		agp_put_bridge(bridge);
- 		return -ENODEV;
- 	}
--- 
-2.34.1
+Hence when pci_restore_state() is invoked a bit later, config space
+can be assumed to be accessible.
 
+sashiko reviews are a mixed bag, I think this one doesn't even reach
+junior developer level. :(
+
+Thanks,
+
+Lukas
