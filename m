@@ -1,402 +1,221 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010033.outbound.protection.outlook.com [52.101.201.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 835823C3451
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 06:54:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE216314D34;
+	Tue,  5 May 2026 08:51:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.33
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777964062; cv=fail; b=k76Gx4cvhotKt8V4ufo0Q84JRWwBeq95Oqy6eGaiHP6akCRJzLtDh9XYsp+kxQJl3K8mP/YpOHjeuv1ZKGL1G0eztza6GiZMELMZWQDz/I1HrDfDcjM00SXHz+rFMSYvK/Dq3lptsD0J2jSuX5/P72bIsL1H4VN7HkwNCixCRfM=
+	t=1777971078; cv=fail; b=rWQ2eZWzXjJ7HWM0mnPrE786iEvOyI628Bc25Tq8PfK6TkUspIzlfARUS/cXrzjBh2n5fNIFqddeczIir5J86N60WPtIWRvLy9fJF8KUU+yl2WeF9KIXFDVUmogyvwERh+CgKhm5/T0dIxy3mbqA7o+XBVMjgvmQ01sh+Qu1pLQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777964062; c=relaxed/simple;
-	bh=GnOs6zrMZZDdRu2gdB9Y7jzSPOwey5UzAT8kxViXCiM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NV+XMWwvpXjoGyAnp5uX+hEhsHUVuwuYw1oQOx1QLqsEaF3se7ORRc7WybLMl11YWa0Dt05xi6wNBKATp2uJgs6A/1Y2nhZhRUBvVk1KRK+Z8Nae3UZNxSnjwPf2EzoxpT93270g8R0Xtmj4f7XV31NKgLUEr5RGRjEM+4L8duk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=IhXflBOe; arc=fail smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1777971078; c=relaxed/simple;
+	bh=uTBN7tgoiEuoPxJ02ChOjDdouxG6ZW94NGrZfu6myn0=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=bpNg6vYbhAXIJNw5Bg6QjGdInGNgBvyHw6YcaeYJYLeL07UpzXyHJh9AgL/JS9QJIF0kjcQY5aHpYNvZjAbilziUJodsYVn5YdUzsIk5eBqShjiQGlGEXoBs1C7YjjemauqcWov+YwhQNwePlVrDo3CojLQVR7u+sxNrXwT/SJ0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=IoPqVN3O; arc=fail smtp.client-ip=52.101.201.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="IhXflBOe"
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 644HVBQp513572
-	for <linux-pci@vger.kernel.org>; Mon, 4 May 2026 23:54:19 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=D1mf9Znv8+ZNWIl/62MdhJpFIl6cZ0E08irrbj6h/RE=; b=IhXflBOemPK3
-	U8Z15qfbXAtar3VVsStb8w8V6wh1lL2Ws0tmFDXc99BVDS7Lo21exksx9//XQMUo
-	DBuksD73qntJ+bIuhKGsMusUX8KD2Z6Q1vueNAPDNMzQiBh8DAxMOo/GYY+gLh8K
-	cmxuT+sv/xGOvDt99IP0ecrA6vErAQe5cN6jEUwhzHS2o2nb5mFKdUeCvXQbtTUK
-	Eja7bMB/foB8yPMA2nUogQvg0I/LLcJxjf7s1hxBfoDxtmnD+lRAAgDGEL9fOx+R
-	YQykJpmeDb9fGCDSBTOeJdine5TdaUnpHeOn9c53exrV+NGMQyBxtSB076wdHsTj
-	X96BUp0ASw==
-Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dwda0es3n-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 23:54:18 -0700 (PDT)
-Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7d496d080d8so6448884a34.0
-        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 23:54:18 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777964058; cv=none;
-        d=google.com; s=arc-20240605;
-        b=DwsOCCLDsxy3l7kxg0M4ClL1LbEGFFQ69JQ3S7zrK8WcYFc9ObHoCb1mDm3Gx4S/fr
-         DeLhvo9wwkVPCm5Tr76VFd15u+Nylq3orESKE2Zm8MtH8o/ldB96Jwubrq8j9NUJpR8J
-         7aJY5NwHA6gmxaFpf+7l/db0+D+U5OjVtDwfPVEuBmwe60DP4l31YwV1kq+mEFEhminY
-         e7YdPSR42y95phxizanm2v8D4/o08LcThW0FckAwKeg+QqdSRMPPptPLew5s3Mx2GgU2
-         h4n3dEyEkAmYwssppavhHIuxeQzDT3gC4jHAz/UcpXVwaZyJov/cjMB1/6KDcu2GK28Z
-         GOZg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=uhzg8pVh5XZoijloMRfkO2ATqnu2chpe+p7ocg9d4tw=;
-        fh=lqhSnY9aSTG5UrvjIRpGQBkoM/vLUXEy3RHGyiT0eIk=;
-        b=U71qc1dA2/lagfJYqV6in/n2AF0F3akrO9VtANpxmuDLERNG5opfPDKeo/2YjIvPBr
-         kLTMctx4iSNOAXdvRkWbvfQiwFq/ZNhFISmH7tlTjXvE+PRp2LicB1Pu9+eZ6fuVZZsM
-         6I/JXvvnXcY7fw+MSuvG81r45N36zPMndB6m5MkKKQMBX3DbFVHaEMIqwCnVoG8p8b0V
-         LwHMv6G0vMbt7xlf7iMthl5NjbPY6PojR7HlVH2xWPEcejMnemz9dH6o2VhAoc8oxW3G
-         /gb0FnCakZcKn+7CF+24DrlZFkc6FxjU9TBjC6JJjrW84haXz8L1b+SP2iRIcGJK8I+S
-         LFWw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777964058; x=1778568858;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=uhzg8pVh5XZoijloMRfkO2ATqnu2chpe+p7ocg9d4tw=;
-        b=A21yQdS3p8j8e1v0CiYaq3/p3hSbHz59SdbzoBvVkjQ3ONwc5zXa0JiY1PzeccEr3a
-         NGv6Chy0e9d5R4OWkoD3cd7OM78yhsWc31TVeZkgreayBbLQvaeTDKlSSmgBIZoSfDBV
-         QW1s2EbYCVFKXrFRVdkdCxTwT+Sg3PrgXvhfrHUM/3vXSdK5FkfVJBWimOeR45uGMDgU
-         ZonRqgdSL+BuYnKdq4DUVp1l71g5ws41l1+J8ePmYQf/tKvMDHXiDWKW2I0bEJ1qYyNZ
-         JSgifKqduQ1K9k9vVP2s+232cPdApMmI1YvEMzotA770ggmNxJnt8KNQ47AmtfS2/6lS
-         fO6A==
-X-Forwarded-Encrypted: i=1; AFNElJ8lbPJwbtGbwM5l8Xt0comeo2VNY+v+6oSdYCTSnXh5m9sc8WvK1qhf2GKNyU6kFsBbf15Fan9wIEA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YznfVem6MMWlyhJGi/+iadGWVIMu7EZgNwfeedG3JzFLFPDZqF4
-	decwzm67/L/JgQljnsjmI3Bcl5qYHJcIwzTHXhBdopuc1KYu7cDjWVvEnK03HvFcGQzd2lMpa+l
-	/JISwRU5Kqn/r1mUlzg//H4BE1ON8HXGgxld6m9MCUvf/lskG3NHzPJ/0luICctuORH65eWvzHe
-	kD5rx1HDCtAycRQhAzaFbrXWeYNQY5XcgvZcI=
-X-Gm-Gg: AeBDietqkHRMo8EzKml8J43APqEA9dvu41WzFt46kzCJdlL0FHga+zDHwGGyfas8Obp
-	E8buFLX01nQ5FO5iis+kd0xQl6nJzWy8IsrFuDieOHRiB8nk9iBE1mIVIzf1PXBE67uLFG+9cwo
-	5Dy/J5/ii25vd5GUWDVDcyq0acG5I6jbJUqUXwQvbz7iJccKZZ4+n5srIqyShmcAO/ouTlH6i76
-	nsRAkCj4KyCCmpZb6JyaTze6l0YIncsCyp12Sr9Pc3CMb9PZeY=
-X-Received: by 2002:a05:6830:6e1b:b0:7e1:cbe3:bb1b with SMTP id 46e09a7af769-7e1cbe3be7emr251846a34.0.1777964057775;
-        Mon, 04 May 2026 23:54:17 -0700 (PDT)
-X-Received: by 2002:a05:6830:6e1b:b0:7e1:cbe3:bb1b with SMTP id
- 46e09a7af769-7e1cbe3be7emr251833a34.0.1777964057130; Mon, 04 May 2026
- 23:54:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="IoPqVN3O"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=psDoinY/l3/iGwIujDX2yXVEp4WYyWpRfziVrpSsQdORn78AFO9/Pf8TRfAiEdCurV+y5q9v1i1/BqGtEhHDL/QP+4Yxqu5RuGFV34iIjTCwLSX4CbuKfxk0jWELlWO3QrM1u6oTqmWv38sXDQVJohHDbU8xoaXS8AqkJFhECyy/yYkywrxFUtUxVJOScVkVBPapzf+xZikICiEQKhRDleq3ho+EKkwFdaVZf1pRag/Otn9Mq6JJ46Rscmv9M7L2z5x/u6GA4B32xBrxESlNDs0mn/n/m4JCRO7RWf5RZ9JleSHJtR1tGb4b/S6V4+VTs82Rcmu7YAbfU/+HVHcmqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NPtH1RI9X7X6N84MRcV5V3PhqTmdLvMgBPNYZ9nnhoI=;
+ b=UzSprzPLQLjRcN3SAZ9jiXiir/ZAtBdOVWleHtLMwQL7D/J9rpogbYax6GT+UE6CtiGCRlEPJpmRS9ClD5ZG9DtrxLX3Q+7UCN00sGG81ayf9t2tIcVcy9p5GM5JuqOppCyRfqbM17Q8tb7vc8L0CFNswu20NdjNapZCVki0cKi6gKdXgK+Of/z4v9AuiEyOeKTEfNsv7NZH7go8eXgrHdStgAnXH/GPkeigF5p3NN8vRmshAD56gSPnkhHrWMybOYKrn8fH9Jy2sVGjDFsvvdxw10sm9EOaMsuUFh1sv8hAtbW+2mDEbVEP71ofAYhytnABKLLhWjPT9XNv7cfPlw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NPtH1RI9X7X6N84MRcV5V3PhqTmdLvMgBPNYZ9nnhoI=;
+ b=IoPqVN3OFLenlQ2UfnYSu7kGwcjXbdh22zg81jEPmpiMTZx7oDmEXiqrizH7AzxSeO+ueQFjueqm3Z75RDuChUg0zZxHm2VhZQLQWqIU7gJTts0La59MPLggORPC0xNcxvf+WMU/JE99+Ot5SBjieNFXwnpo2DMx211p5CjK5kZ/nWsnjAM32ng9a2Css04uXlt23CU6NKEoJV1zerjGo2Dsze29LNumsUP3fy/cNhJUB1P7/L3mRDMG8rxbZAev+DIZhvfJFcVYqpGkbYGYLT4+YVMtq8d3njihGaK+w5rLvZx0mlLr+U/m4FQuBte6dRxltIgsvRKqnvAk4heMHg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
+ by SJ1PR12MB6100.namprd12.prod.outlook.com (2603:10b6:a03:45d::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.27; Tue, 5 May
+ 2026 08:50:58 +0000
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391%6]) with mapi id 15.20.9870.023; Tue, 5 May 2026
+ 08:50:58 +0000
+Message-ID: <58f54b48-7c06-4564-9ec9-d1efb1cb8687@nvidia.com>
+Date: Tue, 5 May 2026 09:50:52 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for
+ L1 entrance latency
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ thierry.reding@gmail.com, kishon@kernel.org, arnd@arndb.de,
+ gregkh@linuxfoundation.org, Frank.Li@nxp.com, den@valinux.co.jp,
+ hongxing.zhu@nxp.com, jingoohan1@gmail.com, vidyas@nvidia.com,
+ cassel@kernel.org, 18255117159@163.com
+Cc: linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260410073330.837238-1-mmaddireddy@nvidia.com>
+From: Jon Hunter <jonathanh@nvidia.com>
+Content-Language: en-US
+In-Reply-To: <20260410073330.837238-1-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PR3P189CA0061.EURP189.PROD.OUTLOOK.COM
+ (2603:10a6:102:b4::6) To DS2PR12MB9750.namprd12.prod.outlook.com
+ (2603:10b6:8:2b0::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260430200704.352228-1-zhipingz@meta.com> <20260430200704.352228-2-zhipingz@meta.com>
- <20260504154459.77b8153d@shazbot.org>
-In-Reply-To: <20260504154459.77b8153d@shazbot.org>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Mon, 4 May 2026 23:54:06 -0700
-X-Gm-Features: AVHnY4LnfRqtsa29br_gywqWSmKi9XQx9-UD43AecyJJP1ECdfbRFsjVzAPHTkA
-Message-ID: <CAH3zFs3ZEAjsy_8nq4EHGbNWzXVVfJeRynEdVNYu9_j8N24s8w@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] vfio: add dma-buf get_tph callback and DMA_BUF_TPH feature
-To: Alex Williamson <alex@shazbot.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-rdma@vger.kernel.org,
-        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Keith Busch <kbusch@kernel.org>,
-        Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
-        kvm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-GUID: TA91tYpXZfub6Eemw1T5Gy6ja1DCzoG_
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA1MDA2MiBTYWx0ZWRfX2kTFRGNOpjBv
- A0KyA0H0btsDMRzMHXrDDcVzsAuHbJasadvY8hR5Y7Fy7Ey+N19oatXIiNduc+lfbHSNro2XgRT
- +s1Cb1/IEL4ukDxCKZwkTobrvl70CVzOaqMSIpatgENWnp4wBvzXfMorR1yp/eOIj3hni06DIVN
- DZzi5jexIqvpgGONUElFhPvFFZ29I/HPhk/KBtc00u5DXwqzZkt+ARDYfXMiXyJtUbPUX4jerpf
- FcZVmk52wQ+hlywpqEFeJBtmw5ehHmM+Yj4lkOdR6eFPslwijYwgdYnfsDFIbNfD8lYhoqLk5Ed
- O73Hon9VtZmfYX8knRgy7q4Ck1rnFGCZ3bON0ztz9O6GdXxwrqGSJGFwQAhIMAzPYlWW37is7T+
- AyEW9v4s6JVEejQlk4IIlM802/3hwLOT71Yx/ErvTaHTCFY3ZwMXlnnpIh964k8nHNUYF3jV7iW
- gtyXvrY51Ts7t724bJA==
-X-Authority-Analysis: v=2.4 cv=NYjWEWD4 c=1 sm=1 tr=0 ts=69f9941a cx=c_pps
- a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=tpM8CJlwf7uhpglF1g9U:22
- a=c92rfblmAAAA:8 a=VabnemYjAAAA:8 a=r1p2_3pzAAAA:8 a=VwQbUJbxAAAA:8
- a=YLhAehpVo6qmETfym2AA:9 a=QEXdDO2ut3YA:10 a=eYe2g0i6gJ5uXG_o6N4q:22
- a=GvGzcOZaWPEFPQC_NcjD:22 a=gKebqoRLp9LExxC7YDUY:22 a=r_pkcD-q9-ctt7trBg_g:22
-X-Proofpoint-ORIG-GUID: TA91tYpXZfub6Eemw1T5Gy6ja1DCzoG_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-05_02,2026-04-30_02,2025-10-01_01
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|SJ1PR12MB6100:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6811f488-5e1b-4908-d87b-08deaa836d47
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|7416014|376014|921020|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	/DAUyhpF0J58rD23LMgS03sGwKMoOlq2wv9KYwwK5hQZ7pjXJddxv5T3A2WyL84Lbf1DSHJLZwmHzynWqjW6ypXyUk34bfdXPAVinfRFTfUcu1ICqqKuTXS3mfs0Ka5WAbfLN73xjHj0GTcoUPo3DVztAxFRe97r7m8PjEpCj2doveqCCgXrjwCWUCVEW9u/S17hW0PGX/EJz1k7n1Ner2huzwXIGz1b1IqRFbc38r8cjwbyx/VNkvtGrpjJ9qKPZZtwrKSMJmdbUfMHewzzv5AiYE/kjBOTIy6ZrIetPvMlr8mavWXGF3PxNbFFA3MN1dOPfrs8nJY9mH+7uEouRxd5uyAWisnBKYuhhV0mVtzyI0MrOcNFmtX9CulB7LtE7z7waqag9+yiF5q+5pbJsEny5avtDf5ojfwaQB4JFUHTDBeHCJqKBY9Q9JWuRe+XcSRd+UTpylaFGGqN5WAFgOWGPDEqzbix9rr0uhByg/80iZg+SWQvfV9ESLdYFXfZNFSL8CnkAJXjR54wWfg1UJ/LBSKewhP5HU8pc4qTPTgceQ4HGRga+LUA/vRhL7ugg3DLQqTOtOfg+8DWzWvLtxEBobvUThCrPXiQqlyAxgLUk7gppIpWpHbdnXyUsQcTpgEPlqOdLr4BmQB3mp3WK4PFiJxAHvw6Di1VE3qASQzW6k231WzuMVut5c2GBuW8V76yIufC59vJPLRlnz2rxLdNMAAV7E04vu3CGRNbvAM3dAzhZSpFHPRh6pepr+x1
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(921020)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?dERZektYSFB0YzZLWExtQzlsQU1wL1VyMzhwcys0clIxSE12QjZSSk1RNytQ?=
+ =?utf-8?B?MWw1bTlobzNCT295SWx6MDdKZDNocTE3NGxhbWRJd2d3QzMyQTB6MFZCWVNL?=
+ =?utf-8?B?MzNCWE1xTTFwZ01Waml6cVA2eWhlV3Y1Q1VJU2lJU2F0QXBnSWdiQmRhcU1Z?=
+ =?utf-8?B?SW1kOTA2M0Q3ZHFPd3U3VWlieVY3UjZDNnNWUjB3TXVSWVhTZ0NjL0MvL1pF?=
+ =?utf-8?B?YlZJQy9yN0pzRUFucGdlMVJIRUNJRzBFR3dITFBwOEJrZDR4YXVRNkk2Mmc5?=
+ =?utf-8?B?VzJiUmh2eDZyUEF6aFZJNU0rbDg4ZHF0ZE1LK2VZdTIvdTUwNGJvQzlHamJX?=
+ =?utf-8?B?Zlp2SzZWZjhROXhESXhmc0c1NlppMms4dGsvWWRVWUZ6dlU5dnVZK1hpOU9H?=
+ =?utf-8?B?TEZTZUlxQTlGTXJWSGVBbUlPZ2Y0bGs1UFhrV1didEZ6dVVGcVJ0RU42VEpM?=
+ =?utf-8?B?ZlRva1g3bGN1SjVmUDBCRnVKSDhLMWh4R2hxR3g3T3dzSE9hSFhDUWg2QTdL?=
+ =?utf-8?B?WGVDU0tXenpscFF4OGZtUXBCYTh2bWVWU2t6SFlNZjJ3eXdVblY4MWNRQXdU?=
+ =?utf-8?B?TTFEUWU4TFNpSjJsV0dyWGEvcXFpaXRwS05VOGl6TmsvQ2dQa25keGFDNjNL?=
+ =?utf-8?B?a2lKZWxzWlNmM0dsamxiVk9mUjBUVVNOQlhjait0TnkxMmpzUlNUNGgzZU1n?=
+ =?utf-8?B?Tk9KS0pVL290RWh3d3NaMFdiaGIxaVZSL2wrcW5ndWVpZnZaY083UW1GSlZk?=
+ =?utf-8?B?ZlBDcmcxazJLdk1nU1dzYjdRME9oaXZ3bExJOGZOQ1dsRHNobjJCendvRjA0?=
+ =?utf-8?B?Uy94YnhZTVhVSWtSRENIZ0ZRWjUvWnNPTTRIc0xnQmFGa0dZaVg3eTBaRHlQ?=
+ =?utf-8?B?UE5MdnQwbjFRSlNpLzYwd21td3NqRm0xd1Ewa2RBbmNaRkx0MGlDY3RieDR4?=
+ =?utf-8?B?Z0hOZVlmN1ltdEVwTHBBRERwWldzYTg2QjFWdHg0ZG9TRzNaL3FMcENCd1Jl?=
+ =?utf-8?B?clVpZ2N0ZkhxWFRZbjR4MUVBdUt1d1BFS3V6MGFGeFBaeUlJSWlhQnhSQjJK?=
+ =?utf-8?B?UEdlNU1EdlpnalAvOGtkdFpDdHdBN1BFTmtkM0MrNW9HME0wd0JzYjJ0aTBB?=
+ =?utf-8?B?Ry96U1ZoZHY3dmhEV09NdUV2TS9zeDR0SVJ6ckhiNHBJb0FWUWl0VXlVQ2d0?=
+ =?utf-8?B?anFBdnFRV2lTbG50S0V3dklzck1pYmtueVhjUDdXMHN6RjRKSmxDWGhMYkFp?=
+ =?utf-8?B?VDgyZnJ1Y1lTRlcxa1BDV2d4eXpYK3lwSFczeGo2WWtvVVBIcisxS2kvSm5j?=
+ =?utf-8?B?ZTdtc1BTR05ZNDdkSzhtbWMzWC9odEhlTFFWZWwyTkc2SzN5bnRZd1IwbFBy?=
+ =?utf-8?B?TXlMQ3MwOU02ZU13TEl0b3M4ZDhaUnNYWHNQMUhKOWJNb0k1TWxmeEJUV2xQ?=
+ =?utf-8?B?dU5ZcGRZVkhKbHJoL2MxL1RqaGc3TzQ4aFB0MkRISzI3dWQxZW9sTk45bWdO?=
+ =?utf-8?B?RVpvdWpzWlo1UWVoTzVrSkRpd2g1c1l4dm1FS2ozVmduRC9jZzhVdmpzUUZO?=
+ =?utf-8?B?cFI1OUZ3WXpyVVlhZnVLclJCWWlKWnJ5M0tuK3NDenVVN1dmZmJGeW5tL3pz?=
+ =?utf-8?B?cHRXVFduZTllT2NiVnB4VUVSdFMvZFBGQ0Z0N3A1dDNkVGdjTHpOTkZGTjBu?=
+ =?utf-8?B?amxPZjB2N2ZFZVIvdnlYRCtuLzYrRFRlZmhnR0lCWEpaR1l1QUNvM1E1cUxz?=
+ =?utf-8?B?dTk1T0lLUnM3RjllcFhRK1dDdzdwVkx2NjlTSFkzV3pCUWlJdkdxeHYwaEN6?=
+ =?utf-8?B?ajdUU3ZaRlBnMFBod3ZsK0MxUmREMHRNY0djNkxXeEFVVUxJOG93bld3NGVo?=
+ =?utf-8?B?NU5mRXVxL0ZRUllydUU0b3F0d1ZLQzZ3dHFqbUZHNzRuYmVvbUFWd1BYakN2?=
+ =?utf-8?B?dVdLaDh6QjFGV0dBdWtmMXhqby9wSXRRTXRGRndVZVZOWE9CK1hTVXliblR0?=
+ =?utf-8?B?eEErTnNlZnBoRWxHZjBzTm1xMWR0c0l0M0dxZVBFVDZiKzRLdVZObWRhQVBD?=
+ =?utf-8?B?K3Jsa2kwUUdMdlpjcDVvWHBYbXczdnZLRkIyeEF5ODBJeWlhREJTNWQ0bjE3?=
+ =?utf-8?B?blBtQUhiV0ZRaS95aEswa2hsSVF6YUVjWDVRTjRGUGN2YUVyUXZZaXJURnRW?=
+ =?utf-8?B?TEY5Nmo2MGdPOUhtK3NXMUtOQlBzUWU2QjRnYityZ0Yybzl2R3NYTzk1dlRN?=
+ =?utf-8?B?a2FlWHJORllwa0ZxeWkrSTJvMDlQNGpobU1USzRrbDNMMEZGVkVIWnRCMVBI?=
+ =?utf-8?B?OExjbUhKSytma251cUpSbVNxRzR0NmlobVUySkc1UktYVGVIZ3VIUT09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6811f488-5e1b-4908-d87b-08deaa836d47
+X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2026 08:50:58.5011
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: BYYrJzUEht7dYhRMsZnLtij8v7SLIOofZyhkOCCclpNVYK9ZwwVJxsYcFmwcMOSpYZv7PKnzVgVotJgrs5W2ow==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR12MB6100
 
-On Mon, May 4, 2026 at 2:45=E2=80=AFPM Alex Williamson <alex@shazbot.org> w=
-rote:
->
-> >
-> On Thu, 30 Apr 2026 13:06:56 -0700
-> Zhiping Zhang <zhipingz@meta.com> wrote:
->
-> > Add a dma-buf callback that returns raw TPH metadata from the exporter
-> > so peer devices can reuse the steering tag and processing hint
-> > associated with a VFIO-exported buffer.
-> >
-> > Add a new VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl that takes the fd from
-> > VFIO_DEVICE_FEATURE_DMA_BUF along with a steering tag and processing
-> > hint, validates the fd is a vfio-exported dma-buf belonging to this
-> > device, and stores the TPH values under memory_lock. This keeps the
-> > existing VFIO_DEVICE_FEATURE_DMA_BUF uAPI completely unchanged.
-> >
-> > The user sequences setting TPH on the dma-buf before the importer
-> > consumes it.
-> >
-> > Add an st_width parameter to get_tph() so the exporter can reject
-> > steering tags that exceed the consumer's supported width (8 vs 16 bit).
-> > When no TPH metadata was supplied, get_tph() returns -EOPNOTSUPP.
-> >
-> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
->
-> The uAPI is better, but sashiko has some review comments[1] for you.
->
-> Please also copy the kvm list for vfio related development.  Thanks,
->
-> Alex
 
-Got it, thanks Alex. let me check sashiko's comments and post a new
-revision. i also copied kvm@vger.kernel.org and will include in future
-revisions.
+On 10/04/2026 08:33, Manikanta Maddireddy wrote:
+> Program ASPM L1 entrance latency from the optional aspm-l1-entry-delay-ns
+> device tree property instead of of_data. Convert the value from nanoseconds
 
-Zhiping
+Is the 'instead of of_data' relevant here?
 
->
-> [1]https://urldefense.com/v3/__https://sashiko.dev/*/patchset/20260430200=
-704.352228-1-zhipingz@meta.com__;Iw!!Bt8RZUm9aw!7glmqoMRhcdDwOgCAQuuEVqlhFJ=
-rh9bAYHXvicXPAO2M-k-NPwE_wFeUjVhe7EXbkXMd6g7eOe13$
->
-> > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_p=
-ci_core.c
-> > --- a/drivers/vfio/pci/vfio_pci_core.c
-> > +++ b/drivers/vfio/pci/vfio_pci_core.c
-> > @@ -1534,6 +1534,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_devic=
-e *device, u32 flags,
-> >               return vfio_pci_core_feature_token(vdev, flags, arg, args=
-z);
-> >       case VFIO_DEVICE_FEATURE_DMA_BUF:
-> >               return vfio_pci_core_feature_dma_buf(vdev, flags, arg, ar=
-gsz);
-> > +     case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
-> > +             return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
-> > +                                                      argsz);
-> >       default:
-> >               return -ENOTTY;
-> >       }
-> > diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio=
-_pci_dmabuf.c
-> > --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> > +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> > @@ -19,6 +19,9 @@ struct vfio_pci_dma_buf {
-> >       u32 nr_ranges;
-> >       struct kref kref;
-> >       struct completion comp;
-> > +     u16 steering_tag;
-> > +     u8 ph;
-> > +     u8 tph_present : 1;
-> >       u8 revoked : 1;
-> >  };
-> >
-> > @@ -69,6 +72,22 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *atta=
-chment,
-> >       return ret;
-> >  }
-> >
-> > +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steer=
-ing_tag,
-> > +                                 u8 *ph, u8 st_width)
-> > +{
-> > +     struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
-> > +
-> > +     if (!priv->tph_present)
-> > +             return -EOPNOTSUPP;
-> > +
-> > +     if (st_width < 16 && priv->steering_tag > ((1U << st_width) - 1))
-> > +             return -EINVAL;
-> > +
-> > +     *steering_tag =3D priv->steering_tag;
-> > +     *ph =3D priv->ph;
-> > +     return 0;
-> > +}
-> > +
-> >  static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachme=
-nt,
-> >                                  struct sg_table *sgt,
-> >                                  enum dma_data_direction dir)
-> > @@ -101,6 +120,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf=
- *dmabuf)
-> >
-> >  static const struct dma_buf_ops vfio_pci_dmabuf_ops =3D {
-> >       .attach =3D vfio_pci_dma_buf_attach,
-> > +     .get_tph =3D vfio_pci_dma_buf_get_tph,
-> >       .map_dma_buf =3D vfio_pci_dma_buf_map,
-> >       .unmap_dma_buf =3D vfio_pci_dma_buf_unmap,
-> >       .release =3D vfio_pci_dma_buf_release,
-> > @@ -331,6 +351,55 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_=
-core_device *vdev, u32 flags,
-> >       return ret;
-> >  }
-> >
-> > +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vde=
-v,
-> > +                                   u32 flags,
-> > +                                   struct vfio_device_feature_dma_buf_=
-tph __user *arg,
-> > +                                   size_t argsz)
-> > +{
-> > +     struct vfio_device_feature_dma_buf_tph set_tph;
-> > +     struct vfio_pci_dma_buf *priv;
-> > +     struct dma_buf *dmabuf;
-> > +     int ret;
-> > +
-> > +     ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-> > +                              sizeof(set_tph));
-> > +     if (ret !=3D 1)
-> > +             return ret;
-> > +
-> > +     if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
-> > +             return -EFAULT;
-> > +
-> > +     if (set_tph.reserved)
-> > +             return -EINVAL;
-> > +
-> > +     dmabuf =3D dma_buf_get(set_tph.dmabuf_fd);
-> > +     if (IS_ERR(dmabuf))
-> > +             return PTR_ERR(dmabuf);
-> > +
-> > +     if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
-> > +             ret =3D -EINVAL;
-> > +             goto out_put;
-> > +     }
-> > +
-> > +     priv =3D dmabuf->priv;
-> > +     down_write(&vdev->memory_lock);
-> > +     if (priv->vdev !=3D vdev) {
-> > +             ret =3D -EINVAL;
-> > +             goto out_unlock;
-> > +     }
-> > +
-> > +     priv->steering_tag =3D set_tph.steering_tag;
-> > +     priv->ph =3D set_tph.ph;
-> > +     priv->tph_present =3D 1;
-> > +     ret =3D 0;
-> > +
-> > +out_unlock:
-> > +     up_write(&vdev->memory_lock);
-> > +out_put:
-> > +     dma_buf_put(dmabuf);
-> > +     return ret;
-> > +}
-> > +
-> >  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool rev=
-oked)
-> >  {
-> >       struct vfio_pci_dma_buf *priv;
-> > diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_p=
-ci_priv.h
-> > --- a/drivers/vfio/pci/vfio_pci_priv.h
-> > +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> > @@ -118,6 +118,10 @@ static inline bool vfio_pci_is_vga(struct pci_dev =
-*pdev)
-> >  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u=
-32 flags,
-> >                                 struct vfio_device_feature_dma_buf __us=
-er *arg,
-> >                                 size_t argsz);
-> > +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vde=
-v,
-> > +                                   u32 flags,
-> > +                                   struct vfio_device_feature_dma_buf_=
-tph __user *arg,
-> > +                                   size_t argsz);
-> >  void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
-> >  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool rev=
-oked);
-> >  #else
-> > @@ -128,6 +132,13 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core=
-_device *vdev, u32 flags,
-> >  {
-> >       return -ENOTTY;
-> >  }
-> > +static inline int
-> > +vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev, u=
-32 flags,
-> > +                               struct vfio_device_feature_dma_buf_tph =
-__user *arg,
-> > +                               size_t argsz)
-> > +{
-> > +     return -ENOTTY;
-> > +}
-> >  static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_devic=
-e *vdev)
-> >  {
-> >  }
-> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> > --- a/include/linux/dma-buf.h
-> > +++ b/include/linux/dma-buf.h
-> > @@ -113,6 +113,23 @@ struct dma_buf_ops {
-> >        */
-> >       void (*unpin)(struct dma_buf_attachment *attach);
-> >
-> > +     /**
-> > +      * @get_tph:
-> > +      * @dmabuf: DMA buffer for which to retrieve TPH metadata
-> > +      * @steering_tag: Returns the raw TPH steering tag
-> > +      * @ph: Returns the TPH processing hint
-> > +      * @st_width: Consumer's supported steering tag width in bits (8 =
-or 16)
-> > +      *
-> > +      * Return the TPH (TLP Processing Hints) metadata associated with=
- this
-> > +      * DMA buffer. Exporters that do not provide TPH metadata should =
-return
-> > +      * -EOPNOTSUPP. If the steering tag exceeds @st_width bits, return
-> > +      * -EINVAL.
-> > +      *
-> > +      * This callback is optional.
-> > +      */
-> > +     int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph,
-> > +                    u8 st_width);
-> > +
-> >       /**
-> >        * @map_dma_buf:
-> >        *
-> > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> > --- a/include/uapi/linux/vfio.h
-> > +++ b/include/uapi/linux/vfio.h
-> > @@ -1534,6 +1534,28 @@ struct vfio_device_feature_dma_buf {
-> >   */
-> >  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
-> >
-> > +/**
-> > + * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) m=
-etadata
-> > + * with a vfio-exported dma-buf. The dma-buf must have been created by
-> > + * VFIO_DEVICE_FEATURE_DMA_BUF on this device.
-> > + *
-> > + * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DM=
-A_BUF.
-> > + * steering_tag and ph are the raw TPH values that importing drivers s=
-hould use
-> > + * when accessing the buffer.
-> > + *
-> > + * The user must set TPH on the dma-buf before the importer consumes i=
-t.
-> > + *
-> > + * Return: 0 on success, -errno on failure.
-> > + */
-> > +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
-> > +
-> > +struct vfio_device_feature_dma_buf_tph {
-> > +     __s32   dmabuf_fd;
-> > +     __u16   steering_tag;
-> > +     __u8    ph;
-> > +     __u8    reserved;
-> > +};
-> > +
-> >  /* -------- API for Type1 VFIO IOMMU -------- */
-> >
-> >  /**
->
+> to the hardware encoding (log2(us) + 1, 3-bit field). If the property is
+
+Its says 'nanoseconds', but the equation above references uS. I see 
+below you convert ns to uS and then take the log2. So I guess this 
+should be 'log2(ns/1000) + 1'. Also the '3-bit field' bit is not very 
+clear. So may be ...
+
+"Convert the value from nanoseconds to a hardware encoded 3-bit value 
+that is equal to log2(ns/1000) + 1. If the property is absent or greater 
+than 7 (the maximum latency value supported), then default to 7."
+
+> absent, default to 7 (maximum latency).
+> 
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+> Link: https://patch.msgid.link/20260324191000.1095768-10-mmaddireddy@nvidia.com
+> ---
+>   drivers/pci/controller/dwc/pcie-tegra194.c | 14 ++++++++++++++
+>   1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 50c5ef12552b..f171f7e32b75 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -18,6 +18,7 @@
+>   #include <linux/interrupt.h>
+>   #include <linux/iopoll.h>
+>   #include <linux/kernel.h>
+> +#include <linux/log2.h>
+>   #include <linux/module.h>
+>   #include <linux/of.h>
+>   #include <linux/of_pci.h>
+> @@ -272,6 +273,7 @@ struct tegra_pcie_dw {
+>   	u32 aspm_cmrt;
+>   	u32 aspm_pwr_on_t;
+>   	u32 aspm_l0s_enter_lat;
+> +	u32 aspm_l1_enter_lat;
+>   
+>   	struct regulator *pex_ctl_supply;
+>   	struct regulator *slot_ctl_3v3;
+> @@ -710,6 +712,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
+>   	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
+>   	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
+>   	val |= (pcie->aspm_l0s_enter_lat << PORT_AFR_L0S_ENTRANCE_LAT_SHIFT);
+> +	val &= ~PORT_AFR_L1_ENTRANCE_LAT_MASK;
+> +	val |= (pcie->aspm_l1_enter_lat << PORT_AFR_L1_ENTRANCE_LAT_SHIFT);
+>   	val |= PORT_AFR_ENTER_ASPM;
+>   	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
+>   }
+> @@ -1110,6 +1114,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+>   {
+>   	struct platform_device *pdev = to_platform_device(pcie->dev);
+>   	struct device_node *np = pcie->dev->of_node;
+> +	u32 val;
+>   	int ret;
+>   
+>   	pcie->dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+> @@ -1136,6 +1141,15 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+>   		dev_info(pcie->dev,
+>   			 "Failed to read ASPM L0s Entrance latency: %d\n", ret);
+>   
+> +	/* Default to max latency of 7. */
+> +	pcie->aspm_l1_enter_lat = 7;
+> +	ret = of_property_read_u32(np, "aspm-l1-entry-delay-ns", &val);
+> +	if (!ret) {
+> +		u32 us = max(val / 1000, 1U);
+> +
+> +		pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7);
+> +	}
+> +
+>   	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
+>   	if (ret < 0) {
+>   		dev_err(pcie->dev, "Failed to read num-lanes: %d\n", ret);
+
+-- 
+nvpublic
+
