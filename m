@@ -1,201 +1,402 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 200413C9EFB;
-	Tue,  5 May 2026 06:30:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777962607; cv=none; b=ilTBljF/MG4mvVUA+xKquKgVQGd+6S9VcGx9N4qyik+ZUJ5yBKQnh/uBH00sVvAJwxo70+JoNFT071hYta7euyUJvEZDKgveK0qH/ZaFXipYmbAQ/3nX4vCNdyDslGeFf+nAAA/fjLT3iZZLKmn1osatZULg8NW8GrDCNGEXDN0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777962607; c=relaxed/simple;
-	bh=Gshdy4KsJzWqCiRNt8lQefnoup6TCmp8iBuVAHQYh7c=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PXrwhGDUPsxxDKWULCIf6sdmnumMDPAKtyGoDIGYipKCpV4qo7ci3uO9qinaWWWgC+4QYgqxxMBRO+PGbiTLA9Frwsg7snnrmKCt2RREG6/cSLmgSr81GLuwqw6fPgvfO+SUFmfpaV9oNXNXnmY4sEQtvVi1m0DgmWQsomgF5G4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=dGVv4kpf; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 835823C3451
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 06:54:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.145.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1777964062; cv=fail; b=k76Gx4cvhotKt8V4ufo0Q84JRWwBeq95Oqy6eGaiHP6akCRJzLtDh9XYsp+kxQJl3K8mP/YpOHjeuv1ZKGL1G0eztza6GiZMELMZWQDz/I1HrDfDcjM00SXHz+rFMSYvK/Dq3lptsD0J2jSuX5/P72bIsL1H4VN7HkwNCixCRfM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1777964062; c=relaxed/simple;
+	bh=GnOs6zrMZZDdRu2gdB9Y7jzSPOwey5UzAT8kxViXCiM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NV+XMWwvpXjoGyAnp5uX+hEhsHUVuwuYw1oQOx1QLqsEaF3se7ORRc7WybLMl11YWa0Dt05xi6wNBKATp2uJgs6A/1Y2nhZhRUBvVk1KRK+Z8Nae3UZNxSnjwPf2EzoxpT93270g8R0Xtmj4f7XV31NKgLUEr5RGRjEM+4L8duk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=IhXflBOe; arc=fail smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="dGVv4kpf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=mMW8AEGhMafvz4O5+74DGobnCil6TvXWOF0reU/8wjk=;
-	b=dGVv4kpfLQOtKe1W90YBYeq37NsDG0q3mgiZtNY4I3Vu6DXExg46Xh1QNmWoVk
-	hsIzTfkoNYC7nY5yQS/HFhc2St/qnnCH5kY/kdyHPdZyulsjOovGbEqUvGttAyK2
-	nUC+vzJJ3R2Wn+AXjYuZkjsGzT+P/zbgUE+HTLZEAlsq8=
-Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wCnTnkgjvlpV+DSDQ--.40732S2;
-	Tue, 05 May 2026 14:28:49 +0800 (CST)
-Message-ID: <25d5e524-d7b4-432d-8114-44d32b736732@163.com>
-Date: Tue, 5 May 2026 14:28:47 +0800
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="IhXflBOe"
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 644HVBQp513572
+	for <linux-pci@vger.kernel.org>; Mon, 4 May 2026 23:54:19 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=D1mf9Znv8+ZNWIl/62MdhJpFIl6cZ0E08irrbj6h/RE=; b=IhXflBOemPK3
+	U8Z15qfbXAtar3VVsStb8w8V6wh1lL2Ws0tmFDXc99BVDS7Lo21exksx9//XQMUo
+	DBuksD73qntJ+bIuhKGsMusUX8KD2Z6Q1vueNAPDNMzQiBh8DAxMOo/GYY+gLh8K
+	cmxuT+sv/xGOvDt99IP0ecrA6vErAQe5cN6jEUwhzHS2o2nb5mFKdUeCvXQbtTUK
+	Eja7bMB/foB8yPMA2nUogQvg0I/LLcJxjf7s1hxBfoDxtmnD+lRAAgDGEL9fOx+R
+	YQykJpmeDb9fGCDSBTOeJdine5TdaUnpHeOn9c53exrV+NGMQyBxtSB076wdHsTj
+	X96BUp0ASw==
+Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dwda0es3n-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 23:54:18 -0700 (PDT)
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7d496d080d8so6448884a34.0
+        for <linux-pci@vger.kernel.org>; Mon, 04 May 2026 23:54:18 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777964058; cv=none;
+        d=google.com; s=arc-20240605;
+        b=DwsOCCLDsxy3l7kxg0M4ClL1LbEGFFQ69JQ3S7zrK8WcYFc9ObHoCb1mDm3Gx4S/fr
+         DeLhvo9wwkVPCm5Tr76VFd15u+Nylq3orESKE2Zm8MtH8o/ldB96Jwubrq8j9NUJpR8J
+         7aJY5NwHA6gmxaFpf+7l/db0+D+U5OjVtDwfPVEuBmwe60DP4l31YwV1kq+mEFEhminY
+         e7YdPSR42y95phxizanm2v8D4/o08LcThW0FckAwKeg+QqdSRMPPptPLew5s3Mx2GgU2
+         h4n3dEyEkAmYwssppavhHIuxeQzDT3gC4jHAz/UcpXVwaZyJov/cjMB1/6KDcu2GK28Z
+         GOZg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=uhzg8pVh5XZoijloMRfkO2ATqnu2chpe+p7ocg9d4tw=;
+        fh=lqhSnY9aSTG5UrvjIRpGQBkoM/vLUXEy3RHGyiT0eIk=;
+        b=U71qc1dA2/lagfJYqV6in/n2AF0F3akrO9VtANpxmuDLERNG5opfPDKeo/2YjIvPBr
+         kLTMctx4iSNOAXdvRkWbvfQiwFq/ZNhFISmH7tlTjXvE+PRp2LicB1Pu9+eZ6fuVZZsM
+         6I/JXvvnXcY7fw+MSuvG81r45N36zPMndB6m5MkKKQMBX3DbFVHaEMIqwCnVoG8p8b0V
+         LwHMv6G0vMbt7xlf7iMthl5NjbPY6PojR7HlVH2xWPEcejMnemz9dH6o2VhAoc8oxW3G
+         /gb0FnCakZcKn+7CF+24DrlZFkc6FxjU9TBjC6JJjrW84haXz8L1b+SP2iRIcGJK8I+S
+         LFWw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777964058; x=1778568858;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=uhzg8pVh5XZoijloMRfkO2ATqnu2chpe+p7ocg9d4tw=;
+        b=A21yQdS3p8j8e1v0CiYaq3/p3hSbHz59SdbzoBvVkjQ3ONwc5zXa0JiY1PzeccEr3a
+         NGv6Chy0e9d5R4OWkoD3cd7OM78yhsWc31TVeZkgreayBbLQvaeTDKlSSmgBIZoSfDBV
+         QW1s2EbYCVFKXrFRVdkdCxTwT+Sg3PrgXvhfrHUM/3vXSdK5FkfVJBWimOeR45uGMDgU
+         ZonRqgdSL+BuYnKdq4DUVp1l71g5ws41l1+J8ePmYQf/tKvMDHXiDWKW2I0bEJ1qYyNZ
+         JSgifKqduQ1K9k9vVP2s+232cPdApMmI1YvEMzotA770ggmNxJnt8KNQ47AmtfS2/6lS
+         fO6A==
+X-Forwarded-Encrypted: i=1; AFNElJ8lbPJwbtGbwM5l8Xt0comeo2VNY+v+6oSdYCTSnXh5m9sc8WvK1qhf2GKNyU6kFsBbf15Fan9wIEA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YznfVem6MMWlyhJGi/+iadGWVIMu7EZgNwfeedG3JzFLFPDZqF4
+	decwzm67/L/JgQljnsjmI3Bcl5qYHJcIwzTHXhBdopuc1KYu7cDjWVvEnK03HvFcGQzd2lMpa+l
+	/JISwRU5Kqn/r1mUlzg//H4BE1ON8HXGgxld6m9MCUvf/lskG3NHzPJ/0luICctuORH65eWvzHe
+	kD5rx1HDCtAycRQhAzaFbrXWeYNQY5XcgvZcI=
+X-Gm-Gg: AeBDietqkHRMo8EzKml8J43APqEA9dvu41WzFt46kzCJdlL0FHga+zDHwGGyfas8Obp
+	E8buFLX01nQ5FO5iis+kd0xQl6nJzWy8IsrFuDieOHRiB8nk9iBE1mIVIzf1PXBE67uLFG+9cwo
+	5Dy/J5/ii25vd5GUWDVDcyq0acG5I6jbJUqUXwQvbz7iJccKZZ4+n5srIqyShmcAO/ouTlH6i76
+	nsRAkCj4KyCCmpZb6JyaTze6l0YIncsCyp12Sr9Pc3CMb9PZeY=
+X-Received: by 2002:a05:6830:6e1b:b0:7e1:cbe3:bb1b with SMTP id 46e09a7af769-7e1cbe3be7emr251846a34.0.1777964057775;
+        Mon, 04 May 2026 23:54:17 -0700 (PDT)
+X-Received: by 2002:a05:6830:6e1b:b0:7e1:cbe3:bb1b with SMTP id
+ 46e09a7af769-7e1cbe3be7emr251833a34.0.1777964057130; Mon, 04 May 2026
+ 23:54:17 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI: cadence: Ensure that
- cdns_pcie_host_wait_for_link() waits 100 ms after link up
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Siddharth Vadapalli <s-vadapalli@ti.com>, bhelgaas@google.com,
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- vigneshr@ti.com, robh@kernel.org, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260504162216.GA646395@bhelgaas>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260504162216.GA646395@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCnTnkgjvlpV+DSDQ--.40732S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxtF4ruF43JFy3AFy7ZF45trb_yoW7KrWUpa
-	yUGF1IkF4vqr45Z3Wvv3W5XrySqr98JFy7Xw1kKryxXrnFvr17tF42gF4agFy3Xr4qyr17
-	Zr1UtF9rGr1YyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U5sqAUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwGEKGn5jiEdbwAA3j
+References: <20260430200704.352228-1-zhipingz@meta.com> <20260430200704.352228-2-zhipingz@meta.com>
+ <20260504154459.77b8153d@shazbot.org>
+In-Reply-To: <20260504154459.77b8153d@shazbot.org>
+From: Zhiping Zhang <zhipingz@meta.com>
+Date: Mon, 4 May 2026 23:54:06 -0700
+X-Gm-Features: AVHnY4LnfRqtsa29br_gywqWSmKi9XQx9-UD43AecyJJP1ECdfbRFsjVzAPHTkA
+Message-ID: <CAH3zFs3ZEAjsy_8nq4EHGbNWzXVVfJeRynEdVNYu9_j8N24s8w@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] vfio: add dma-buf get_tph callback and DMA_BUF_TPH feature
+To: Alex Williamson <alex@shazbot.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-rdma@vger.kernel.org,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, Keith Busch <kbusch@kernel.org>,
+        Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+        kvm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-GUID: TA91tYpXZfub6Eemw1T5Gy6ja1DCzoG_
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA1MDA2MiBTYWx0ZWRfX2kTFRGNOpjBv
+ A0KyA0H0btsDMRzMHXrDDcVzsAuHbJasadvY8hR5Y7Fy7Ey+N19oatXIiNduc+lfbHSNro2XgRT
+ +s1Cb1/IEL4ukDxCKZwkTobrvl70CVzOaqMSIpatgENWnp4wBvzXfMorR1yp/eOIj3hni06DIVN
+ DZzi5jexIqvpgGONUElFhPvFFZ29I/HPhk/KBtc00u5DXwqzZkt+ARDYfXMiXyJtUbPUX4jerpf
+ FcZVmk52wQ+hlywpqEFeJBtmw5ehHmM+Yj4lkOdR6eFPslwijYwgdYnfsDFIbNfD8lYhoqLk5Ed
+ O73Hon9VtZmfYX8knRgy7q4Ck1rnFGCZ3bON0ztz9O6GdXxwrqGSJGFwQAhIMAzPYlWW37is7T+
+ AyEW9v4s6JVEejQlk4IIlM802/3hwLOT71Yx/ErvTaHTCFY3ZwMXlnnpIh964k8nHNUYF3jV7iW
+ gtyXvrY51Ts7t724bJA==
+X-Authority-Analysis: v=2.4 cv=NYjWEWD4 c=1 sm=1 tr=0 ts=69f9941a cx=c_pps
+ a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=tpM8CJlwf7uhpglF1g9U:22
+ a=c92rfblmAAAA:8 a=VabnemYjAAAA:8 a=r1p2_3pzAAAA:8 a=VwQbUJbxAAAA:8
+ a=YLhAehpVo6qmETfym2AA:9 a=QEXdDO2ut3YA:10 a=eYe2g0i6gJ5uXG_o6N4q:22
+ a=GvGzcOZaWPEFPQC_NcjD:22 a=gKebqoRLp9LExxC7YDUY:22 a=r_pkcD-q9-ctt7trBg_g:22
+X-Proofpoint-ORIG-GUID: TA91tYpXZfub6Eemw1T5Gy6ja1DCzoG_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-05_02,2026-04-30_02,2025-10-01_01
 
+On Mon, May 4, 2026 at 2:45=E2=80=AFPM Alex Williamson <alex@shazbot.org> w=
+rote:
+>
+> >
+> On Thu, 30 Apr 2026 13:06:56 -0700
+> Zhiping Zhang <zhipingz@meta.com> wrote:
+>
+> > Add a dma-buf callback that returns raw TPH metadata from the exporter
+> > so peer devices can reuse the steering tag and processing hint
+> > associated with a VFIO-exported buffer.
+> >
+> > Add a new VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl that takes the fd from
+> > VFIO_DEVICE_FEATURE_DMA_BUF along with a steering tag and processing
+> > hint, validates the fd is a vfio-exported dma-buf belonging to this
+> > device, and stores the TPH values under memory_lock. This keeps the
+> > existing VFIO_DEVICE_FEATURE_DMA_BUF uAPI completely unchanged.
+> >
+> > The user sequences setting TPH on the dma-buf before the importer
+> > consumes it.
+> >
+> > Add an st_width parameter to get_tph() so the exporter can reject
+> > steering tags that exceed the consumer's supported width (8 vs 16 bit).
+> > When no TPH metadata was supplied, get_tph() returns -EOPNOTSUPP.
+> >
+> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+>
+> The uAPI is better, but sashiko has some review comments[1] for you.
+>
+> Please also copy the kvm list for vfio related development.  Thanks,
+>
+> Alex
 
+Got it, thanks Alex. let me check sashiko's comments and post a new
+revision. i also copied kvm@vger.kernel.org and will include in future
+revisions.
 
-On 5/5/26 00:22, Bjorn Helgaas wrote:
-> On Mon, May 04, 2026 at 02:23:34PM +0800, Hans Zhang wrote:
->> On 5/4/26 13:08, Siddharth Vadapalli wrote:
->>> On 03/05/26 21:16, Hans Zhang wrote:
->>>> On 5/2/26 13:18, Siddharth Vadapalli wrote:
->>>>> On 01/05/26 21:05, Hans Zhang wrote:
->>>>>> As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports
->>>>>> Link speeds
->>>>>> greater than 5.0 GT/s, software must wait a minimum of 100
->>>>>> ms after Link
->>>>>> training completes before sending a Configuration Request.
->>>>>>
->>>>>> Add a new 'max_link_speed' field in struct cdns_pcie to record the
->>>>>> maximum supported (or currently configured) link speed of
->>>>>> the controller.
->>>>>>
->>>>>> In cdns_pcie_host_wait_for_link(), after the link is reported as up,
->>>>>> insert a 100 ms delay if max_link_speed > 2 (i.e., > 5 GT/s). This
->>>>>> implements the required delay at the common Cadence host layer.
->>>>>>
->>>>>> Currently max_link_speed is zero-initialized, so the delay is not yet
->>>>>> active. Glue drivers must set max_link_speed appropriately to enable
->>>>>> the delay. This matches the approach taken for the Synopsys DWC
->>>>>> controller in commit 80dc18a0cba8d ("PCI: dwc: Ensure that
->>>>>> dw_pcie_wait_for_link() waits 100 ms after link up").
->>>>>>
->>>>>> Signed-off-by: Hans Zhang <18255117159@163.com>
->>>>>> ---
->>>>>>    .../pci/controller/cadence/pcie-cadence-host-common.c    |
->>>>>> 9 +++++ ++++
->>>>>>    drivers/pci/controller/cadence/pcie-cadence.h            | 2 ++
->>>>>>    2 files changed, 11 insertions(+)
->>>>>>
->>>>>> diff --git
->>>>>> a/drivers/pci/controller/cadence/pcie-cadence-host- common.c
->>>>>> b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>>> index 2b0211870f02..d4ae762f423f 100644
->>>>>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>>> @@ -14,6 +14,7 @@
->>>>>>    #include "pcie-cadence.h"
->>>>>>    #include "pcie-cadence-host-common.h"
->>>>>> +#include "../../pci.h"
->>>>>>    #define LINK_RETRAIN_TIMEOUT HZ
->>>>>> @@ -55,6 +56,14 @@ int cdns_pcie_host_wait_for_link(struct
->>>>>> cdns_pcie *pcie,
->>>>>>        /* Check if the link is up or not */
->>>>>>        for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
->>>>>>            if (pcie_link_up(pcie)) {
->>>>>> +            /*
->>>>>> +             * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
->>>>>> +             * supports Link speeds greater than 5.0 GT/s, software
->>>>>> +             * must wait a minimum of 100 ms after Link training
->>>>>> +             * completes before sending a Configuration Request.
->>>>>> +             */
->>>>>> +            if (pcie->max_link_speed > 2)
->>>>>> +                msleep(PCIE_RESET_CONFIG_WAIT_MS);
->>>>>
->>>>> I think the above could be moved to cdns_pcie_host_start_link()
->>>>> as follows:
->>>>>
->>>>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-
->>>>> common.c b/
->>>>> drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>> index 2b0211870f02..0f885dcbdb12 100644
->>>>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>> @@ -115,6 +115,15 @@ int cdns_pcie_host_start_link(struct
->>>>> cdns_pcie_rc *rc,
->>>>>        if (!ret && rc->quirk_retrain_flag)
->>>>>            ret = cdns_pcie_retrain(pcie, pcie_link_up);
->>>>>
->>>>> +    /*
->>>>> +     * As per PCIe r6.0, sec 6.6.1, a Downstream Port that
->>>>> +     * supports Link speeds greater than 5.0 GT/s, software
->>>>> +     * must wait a minimum of 100 ms after Link training
->>>>> +     * completes before sending a Configuration Request.
->>>>> +     */
->>>>> +    if (!ret && pcie->max_link_speed > 2)
->>>>> +        msleep(PCIE_RESET_CONFIG_WAIT_MS);
->>>>> +
->>>>>        return ret;
->>>>>    }
->>>>>    EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
->>>>>
->>>>> This will avoid an additional and unnecessary delay when
->>>>> 'cdns_pcie_retrain()' retrains the link.
->>>>>
->>>>> Instead of checking for the link being up using
->>>>> "pcie_link_up(pcie)", checking for 'ret' being zero should also
->>>>> work (ret being zero indicates that the link is up).
->>>>>
->>>>> Since configuration space accesses will not be performed until
->>>>> cdns_pcie_host_start_link() completes executing, it should be
->>>>> safe to switch to the above implementation.
->>>>
->>>> Hi Siddharth,
->>>>
->>>> I think this is applicable to LGA IP as per the method you
->>>> mentioned. However, for HPA IP, additional repetitive code needs to
->>>> be added in the following code.
->>>
->>> Yes, additional code is required as you rightly pointed out, but the
->>> problem I was trying to address with your patch is the following:
->>>       cdns_pcie_host_start_link()
->>>         calls cdns_pcie_host_wait_for_link()
->>>           Link is Up and we wait for 100 ms here
->>>         calls cdns_pcie_retrain()
->>>             calls cdns_pcie_host_wait_for_link() a second time
->>>               Link is Up again after retraining and we wait and
->>>               we wait an additional 100 ms here.
->>>
->>> Instead, it will be sufficient if we could wait just once after
->>> cdns_pcie_retrain() returns.
->>
->> Hi Siddharth,
->>
->> Yes, I looked at the code and indeed it works this way.
->>
->> Because of the abundance of redundant comments. I'm wondering if it's
->> possible to encapsulate a helper function in the file
->> drivers/pci/controller/pci-host-common.c, so that controller drivers like
->> dwc and cadence can call this API. Or do you know where it would be
->> appropriate to place it?
->>
->> Hello, Bjorn and Mani, I wonder what your opinions are.
-> 
-> Make a proposal.  Sounds fine to remove redundant comments if they
-> cause confusion.  Adding a helper to make things more consistent
-> across drivers also sounds fine, but it would be better to have a
-> straw-man proposal to respond to.
+Zhiping
 
-Hi Bjorn,
-
-Thank you for your reply. I will then prepare the next version.
-
-Best regards,
-Hans
-
-> 
-> Bjorn
-
+>
+> [1]https://urldefense.com/v3/__https://sashiko.dev/*/patchset/20260430200=
+704.352228-1-zhipingz@meta.com__;Iw!!Bt8RZUm9aw!7glmqoMRhcdDwOgCAQuuEVqlhFJ=
+rh9bAYHXvicXPAO2M-k-NPwE_wFeUjVhe7EXbkXMd6g7eOe13$
+>
+> > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_p=
+ci_core.c
+> > --- a/drivers/vfio/pci/vfio_pci_core.c
+> > +++ b/drivers/vfio/pci/vfio_pci_core.c
+> > @@ -1534,6 +1534,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_devic=
+e *device, u32 flags,
+> >               return vfio_pci_core_feature_token(vdev, flags, arg, args=
+z);
+> >       case VFIO_DEVICE_FEATURE_DMA_BUF:
+> >               return vfio_pci_core_feature_dma_buf(vdev, flags, arg, ar=
+gsz);
+> > +     case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
+> > +             return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
+> > +                                                      argsz);
+> >       default:
+> >               return -ENOTTY;
+> >       }
+> > diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio=
+_pci_dmabuf.c
+> > --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > @@ -19,6 +19,9 @@ struct vfio_pci_dma_buf {
+> >       u32 nr_ranges;
+> >       struct kref kref;
+> >       struct completion comp;
+> > +     u16 steering_tag;
+> > +     u8 ph;
+> > +     u8 tph_present : 1;
+> >       u8 revoked : 1;
+> >  };
+> >
+> > @@ -69,6 +72,22 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *atta=
+chment,
+> >       return ret;
+> >  }
+> >
+> > +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steer=
+ing_tag,
+> > +                                 u8 *ph, u8 st_width)
+> > +{
+> > +     struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
+> > +
+> > +     if (!priv->tph_present)
+> > +             return -EOPNOTSUPP;
+> > +
+> > +     if (st_width < 16 && priv->steering_tag > ((1U << st_width) - 1))
+> > +             return -EINVAL;
+> > +
+> > +     *steering_tag =3D priv->steering_tag;
+> > +     *ph =3D priv->ph;
+> > +     return 0;
+> > +}
+> > +
+> >  static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachme=
+nt,
+> >                                  struct sg_table *sgt,
+> >                                  enum dma_data_direction dir)
+> > @@ -101,6 +120,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf=
+ *dmabuf)
+> >
+> >  static const struct dma_buf_ops vfio_pci_dmabuf_ops =3D {
+> >       .attach =3D vfio_pci_dma_buf_attach,
+> > +     .get_tph =3D vfio_pci_dma_buf_get_tph,
+> >       .map_dma_buf =3D vfio_pci_dma_buf_map,
+> >       .unmap_dma_buf =3D vfio_pci_dma_buf_unmap,
+> >       .release =3D vfio_pci_dma_buf_release,
+> > @@ -331,6 +351,55 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_=
+core_device *vdev, u32 flags,
+> >       return ret;
+> >  }
+> >
+> > +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vde=
+v,
+> > +                                   u32 flags,
+> > +                                   struct vfio_device_feature_dma_buf_=
+tph __user *arg,
+> > +                                   size_t argsz)
+> > +{
+> > +     struct vfio_device_feature_dma_buf_tph set_tph;
+> > +     struct vfio_pci_dma_buf *priv;
+> > +     struct dma_buf *dmabuf;
+> > +     int ret;
+> > +
+> > +     ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
+> > +                              sizeof(set_tph));
+> > +     if (ret !=3D 1)
+> > +             return ret;
+> > +
+> > +     if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
+> > +             return -EFAULT;
+> > +
+> > +     if (set_tph.reserved)
+> > +             return -EINVAL;
+> > +
+> > +     dmabuf =3D dma_buf_get(set_tph.dmabuf_fd);
+> > +     if (IS_ERR(dmabuf))
+> > +             return PTR_ERR(dmabuf);
+> > +
+> > +     if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
+> > +             ret =3D -EINVAL;
+> > +             goto out_put;
+> > +     }
+> > +
+> > +     priv =3D dmabuf->priv;
+> > +     down_write(&vdev->memory_lock);
+> > +     if (priv->vdev !=3D vdev) {
+> > +             ret =3D -EINVAL;
+> > +             goto out_unlock;
+> > +     }
+> > +
+> > +     priv->steering_tag =3D set_tph.steering_tag;
+> > +     priv->ph =3D set_tph.ph;
+> > +     priv->tph_present =3D 1;
+> > +     ret =3D 0;
+> > +
+> > +out_unlock:
+> > +     up_write(&vdev->memory_lock);
+> > +out_put:
+> > +     dma_buf_put(dmabuf);
+> > +     return ret;
+> > +}
+> > +
+> >  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool rev=
+oked)
+> >  {
+> >       struct vfio_pci_dma_buf *priv;
+> > diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_p=
+ci_priv.h
+> > --- a/drivers/vfio/pci/vfio_pci_priv.h
+> > +++ b/drivers/vfio/pci/vfio_pci_priv.h
+> > @@ -118,6 +118,10 @@ static inline bool vfio_pci_is_vga(struct pci_dev =
+*pdev)
+> >  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u=
+32 flags,
+> >                                 struct vfio_device_feature_dma_buf __us=
+er *arg,
+> >                                 size_t argsz);
+> > +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vde=
+v,
+> > +                                   u32 flags,
+> > +                                   struct vfio_device_feature_dma_buf_=
+tph __user *arg,
+> > +                                   size_t argsz);
+> >  void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
+> >  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool rev=
+oked);
+> >  #else
+> > @@ -128,6 +132,13 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core=
+_device *vdev, u32 flags,
+> >  {
+> >       return -ENOTTY;
+> >  }
+> > +static inline int
+> > +vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev, u=
+32 flags,
+> > +                               struct vfio_device_feature_dma_buf_tph =
+__user *arg,
+> > +                               size_t argsz)
+> > +{
+> > +     return -ENOTTY;
+> > +}
+> >  static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_devic=
+e *vdev)
+> >  {
+> >  }
+> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> > --- a/include/linux/dma-buf.h
+> > +++ b/include/linux/dma-buf.h
+> > @@ -113,6 +113,23 @@ struct dma_buf_ops {
+> >        */
+> >       void (*unpin)(struct dma_buf_attachment *attach);
+> >
+> > +     /**
+> > +      * @get_tph:
+> > +      * @dmabuf: DMA buffer for which to retrieve TPH metadata
+> > +      * @steering_tag: Returns the raw TPH steering tag
+> > +      * @ph: Returns the TPH processing hint
+> > +      * @st_width: Consumer's supported steering tag width in bits (8 =
+or 16)
+> > +      *
+> > +      * Return the TPH (TLP Processing Hints) metadata associated with=
+ this
+> > +      * DMA buffer. Exporters that do not provide TPH metadata should =
+return
+> > +      * -EOPNOTSUPP. If the steering tag exceeds @st_width bits, return
+> > +      * -EINVAL.
+> > +      *
+> > +      * This callback is optional.
+> > +      */
+> > +     int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph,
+> > +                    u8 st_width);
+> > +
+> >       /**
+> >        * @map_dma_buf:
+> >        *
+> > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> > --- a/include/uapi/linux/vfio.h
+> > +++ b/include/uapi/linux/vfio.h
+> > @@ -1534,6 +1534,28 @@ struct vfio_device_feature_dma_buf {
+> >   */
+> >  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+> >
+> > +/**
+> > + * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) m=
+etadata
+> > + * with a vfio-exported dma-buf. The dma-buf must have been created by
+> > + * VFIO_DEVICE_FEATURE_DMA_BUF on this device.
+> > + *
+> > + * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DM=
+A_BUF.
+> > + * steering_tag and ph are the raw TPH values that importing drivers s=
+hould use
+> > + * when accessing the buffer.
+> > + *
+> > + * The user must set TPH on the dma-buf before the importer consumes i=
+t.
+> > + *
+> > + * Return: 0 on success, -errno on failure.
+> > + */
+> > +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
+> > +
+> > +struct vfio_device_feature_dma_buf_tph {
+> > +     __s32   dmabuf_fd;
+> > +     __u16   steering_tag;
+> > +     __u8    ph;
+> > +     __u8    reserved;
+> > +};
+> > +
+> >  /* -------- API for Type1 VFIO IOMMU -------- */
+> >
+> >  /**
+>
