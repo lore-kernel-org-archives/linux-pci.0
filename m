@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70A5B37B014
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 22:28:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34AA132C937
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 22:56:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778020133; cv=none; b=b9dgej61ph520zcr20gwiWberg1/EClYGKaT5F7sushskb30CB6Eh2FGu65kZnQ0rw8a2V9k+87gO4skNc+xggOUtwvI0uHEnZ6ojVGvmyqasWulwl2wiAvHIl9jHh3mIMgcl977xuhOI8dSBkGmmRYVOzZRmaCbGR1sZkHrsWA=
+	t=1778021786; cv=none; b=TLAbA6qR/WXUhOggCP0FZ6iTbD95MgElGgeSdcYgZff/1gsTQfxt5TLFnPVWiW4RMlCAVDZ+mBEFkhN28z2eXOaIeFPb9f8kgv3Nm+o8fGMBJYxDqLJCM7B9IiYjeV0iO2hhSw5ejHn/499GtsizajurW25AS/AlBbAkw/EWStU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778020133; c=relaxed/simple;
-	bh=NcJrR+AoDc1OAKzaL766DaGMVHu0D+hJUS0ew21RXaA=;
+	s=arc-20240116; t=1778021786; c=relaxed/simple;
+	bh=s78riUYH4omGMoo57Ve3BIq7OJE5YbXIBLS7N7pyIpA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qRIDVhDEd0IhYB6KXZlJb65XCQWggclWXmKGhICD79QyFp989k/IoOM9Wt0eXtBTPb252eYHsQdhi70707LwmjTz3LqayFagYJqQdxv2oqJC+lBD1dsRhEPo7+d5jdAxRH1TUVJo38kScce2xQFvz7zlKgSKxrhRDcdcY0jve/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eUsz642U; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=eOBaFgrj52smKX0OsMHNFP11rFzzt6GY5ZCLXz3IkmdkSOvtCbvxV0sx+42JWX43pIlJ4zQZQduu+QCZVLpeSbWim4uR6zvrD9eLvIy3BC9aZ4rjpDzlWdXeyz1NSnlPcVRT7YU8X6zDiXQihMUtNrWwN9lOFJj7uNx5vxD/mOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kp0XEbbF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eUsz642U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00913C2BCB4;
-	Tue,  5 May 2026 22:28:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kp0XEbbF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADC00C2BCB9;
+	Tue,  5 May 2026 22:56:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778020133;
-	bh=NcJrR+AoDc1OAKzaL766DaGMVHu0D+hJUS0ew21RXaA=;
+	s=k20201202; t=1778021785;
+	bh=s78riUYH4omGMoo57Ve3BIq7OJE5YbXIBLS7N7pyIpA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=eUsz642UQWOAq3jJsXYvu6qi1QBEwd287p38VeCVt9YG/lz9UgjslD6H40wBjYlmx
-	 Df337SfIzUbYFu38v+Ff1S7v1rTzrDl5gJ6TVeXr64/TQpHPjcu60oPJL3NDYUQZZa
-	 ohQQUj501BgLVt8iq/4kiuIfOD0AgYu8WHSrHektWnmTGNeV0lxknsFXHgjkHsOesp
-	 RjMsX+qLMdjjLtNIOB4fft2DgXqkLlf+Somql1673eL3b/cszvfsNm3jeH4Zw/uDoh
-	 fJtHr/etf+JwAHEKLjMkBQoHMeFCdcHVZvO+JwutG2F6UTACM28kyYzaBlRLf9H3eD
-	 9hv0tQg2z6S4g==
+	b=kp0XEbbFhF/BAWJ1gLZm+mq0TRgfqKgqqu+oU/nCpD4/0G+tgbMqZVtpvZbCA/G/l
+	 lJHGO2FH/XqujgCX5xe/RjR4TrwEKZlcE+XlGKnMx3pM4bGCL2e2o133rQJQfKp86g
+	 tca8JX0Azw+d1IArr+80/oeQIFfFVMNFqIussTMulpGeHSwxAJh7VVzw/uzlBp6oaH
+	 bK163+Sg5J7dVNbXhK6U79Ip2+YCuH+O2I0CVp4QzXYFJmK3IsrzPRINJucKfRMYuC
+	 0bYTSSxqx94rJWgPIBURhJraUgVU7qcHPdZOLtHmybHZY784uHfu0kNQnaWu5PVkAH
+	 AmXIKXvsRWovg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 06/11] PCI: Establish common CXL Port protocol error
- flow
+Subject: Re: [PATCH v15 4/7] s390/pci: Store PCI error information for
+ passthrough devices
 Reply-To: sashiko@lists.linux.dev
-To: "Terry Bowman" <terry.bowman@amd.com>
+To: "Farhan Ali" <alifm@linux.ibm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260505173029.2718246-7-terry.bowman@amd.com>
-References: <20260505173029.2718246-7-terry.bowman@amd.com>
+In-Reply-To: <20260505200510.2954-5-alifm@linux.ibm.com>
+References: <20260505200510.2954-5-alifm@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 05 May 2026 22:28:52 +0000
-Message-Id: <20260505222853.00913C2BCB4@smtp.kernel.org>
+Date: Tue, 05 May 2026 22:56:25 +0000
+Message-Id: <20260505225625.ADC00C2BCB9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,121 +46,133 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Mixed AER uncorrectable errors and Fatal errors bypass standard PC=
-Ie error recovery.
-- [High] `cxl_forward_error()` unconditionally writes to `pdev->aer_cap + P=
-CI_ERR_COR_STATUS`, which can corrupt BAR0 if `aer_cap` is 0.
-- [Medium] AER Uncorrectable Error status is left uncleared if the CXL port=
- driver is unbound.
+- [High] The mediated recovery feature for non-KVM passthrough devices is g=
+ated by a KVM-dependent Kconfig option, causing it to be compiled out and f=
+ail when KVM is disabled.
+- [High] A time-of-check to time-of-use (TOCTOU) race condition exists in `=
+zpci_event_attempt_error_recovery` regarding the `mediated_recovery` state,=
+ leading to permanently broken passthrough devices.
+- [Low] Missing trailing newline (`\n`) characters in `pr_err()` and `pr_in=
+fo()` format strings.
 --
 
-commit 40776581efad3966047d440ec936219af21ff33c
-Author: Terry Bowman <terry.bowman@amd.com>
+commit b20dbe013c9c596d29efb7c91a62d8992eaf33b9
+Author: Farhan Ali <alifm@linux.ibm.com>
 
-PCI: Establish common CXL Port protocol error flow
+s390/pci: Store PCI error information for passthrough devices
 
-This commit adds CXL Port protocol error handling callbacks to unify
-detection, logging, and recovery across CXL Ports and Endpoints. It also
-routes CXL protocol errors through the CXL RAS helpers and wires the AER
-core to a kfifo for error processing.
+This commit modifies s390 PCI error handling to store error information for
+passthrough devices. This allows userspace drivers like vfio-pci to manage
+device recovery directly, removing the dependency on a KVM file descriptor.
 
-> The correctable AER status is cleared by the producer in
-> cxl_forward_error().
-
-The patch 'PCI/CXL: Add RCH support to CXL handlers' updates
-cxl_rch_handle_error_iter() to call cxl_forward_error() directly for
-RCD Endpoints (RCiEPs).
-
-If cxl_forward_error() unconditionally writes to
-pdev->aer_cap + PCI_ERR_COR_STATUS to clear the correctable AER status,
-what happens if an RCD Endpoint does not expose an AER capability to the
-OS and dev->aer_cap is 0?
-
-Would writing to 0 + PCI_ERR_COR_STATUS (offset 0x10) inadvertently
-overwrite the PCI Base Address Register 0 (BAR0) and corrupt the device's
-memory mapping?=20
-
-The original pci_aer_handle_error() explicitly guarded this write by
-checking if the aer offset is non-zero.
-
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-
+> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
+> --- a/arch/s390/pci/pci_event.c
+> +++ b/arch/s390/pci/pci_event.c
+> @@ -81,6 +52,46 @@ static bool is_driver_supported(struct pci_driver *dri=
+ver)
 [ ... ]
-
-> @@ -1186,7 +1187,10 @@ static void pci_aer_handle_error(struct pci_dev *d=
-ev, struct aer_err_info *info)
->  static void handle_error_source(struct pci_dev *dev, struct aer_err_info=
- *info)
->  {
->  	cxl_rch_handle_error(dev, info);
-> -	pci_aer_handle_error(dev, info);
-> +	if (is_cxl_error(dev, info))
-> +		cxl_forward_error(dev, info);
-> +	else
-> +		pci_aer_handle_error(dev, info);
->  	pci_dev_put(dev);
->  }
-
-Since is_cxl_error() returns true when the CXL Internal Error bit is set,
-does this bypass standard PCIe error recovery if a device experiences a
-concurrent CXL Internal Error and a standard PCIe Uncorrectable Error
-(such as a Data Link Protocol Error)?
-
-Additionally, if the error is fatal, the PCIe link is frozen. Standard
-handling in pci_aer_handle_error() would normally call pcie_do_recovery()
-to perform a link reset.
-
-Because cxl_do_recovery() only clears the AER status and returns without
-resetting the link, could the device be left permanently frozen?
-
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-
-[ ... ]
-
-> +static int __cxl_proto_err_work_fn(struct cxl_proto_err_work_data *wd)
+> +static void zpci_store_pci_error(struct pci_dev *pdev,
+> +				 struct zpci_ccdf_err *ccdf)
 > +{
-> +	struct cxl_dport *dport;
-> +	struct cxl_port *port __free(put_cxl_port) =3D
-> +		find_cxl_port_by_dev(&wd->pdev->dev, &dport);
+> +	struct zpci_dev *zdev =3D to_zpci(pdev);
+> +	int i;
 > +
-> +	if (!port) {
-> +		dev_err_ratelimited(&wd->pdev->dev,
-> +				    "Failed to find parent port device in CXL topology\n");
-> +		return 0;
+> +	guard(mutex)(&zdev->pending_errs_lock);
+> +	if (!zdev->pending_errs.mediated_recovery)
+> +		return;
+> +
+> +	if (zdev->pending_errs.count >=3D ZPCI_ERR_PENDING_MAX) {
+> +		pr_err("%s: Maximum number (%d) of pending error events queued",
+> +		       pci_name(pdev), ZPCI_ERR_PENDING_MAX);
+
+Is this missing a trailing newline (\n) in the format string?
+
+> +		return;
 > +	}
 > +
-> +	/*
-> +	 * Hold the port device lock and verify a driver is bound before
-> +	 * handling errors. Protects against NULL deref if an error is
-> +	 * dispatched before probe completion or after driver removal.
-> +	 */
-> +	guard(device)(&port->dev);
-> +	if (!port->dev.driver) {
-> +		dev_err_ratelimited(&port->dev,
-> +				    "Port device is unbound, abort error handling\n");
-> +		return 0;
-> +	}
-> +
-> +	cxl_handle_proto_error(wd->pdev, port, dport, wd->severity);
-> +
-> +	return 0;
+> +	i =3D zdev->pending_errs.tail % ZPCI_ERR_PENDING_MAX;
+> +	memcpy(&zdev->pending_errs.err[i], ccdf, sizeof(struct zpci_ccdf_err));
+> +	zdev->pending_errs.tail++;
+> +	zdev->pending_errs.count++;
 > +}
+[ ... ]
+> +void zpci_stop_mediated_recovery(struct zpci_dev *zdev)
+> +{
+> +	guard(mutex)(&zdev->pending_errs_lock);
+> +	zdev->pending_errs.mediated_recovery =3D false;
+> +	if (zdev->pending_errs.count)
+> +		pr_info("Unhandled PCI error events count=3D%d for PCI function 0x%x",
+> +			zdev->pending_errs.count, zdev->fid);
 
-If the port is not found or the driver is unbound, this function aborts
-and returns early before calling cxl_handle_proto_error().
+Does this pr_info() also need a trailing newline (\n)?
 
-Since handle_error_source() already bypassed the standard PCIe error
-recovery, does returning early here leave the AER Uncorrectable Error
-status uncleared on the device?
+> +	memset(&zdev->pending_errs, 0, sizeof(struct zpci_ccdf_pending));
+> +}
+> +EXPORT_SYMBOL_GPL(zpci_stop_mediated_recovery);
+[ ... ]
+> @@ -216,12 +221,25 @@ static pci_ers_result_t zpci_event_attempt_error_re=
+covery(struct pci_dev *pdev)
+>  		goto out_unlock;
+>  	}
+> =20
+> +	zpci_store_pci_error(pdev, ccdf);
+> +
+>  	ers_res =3D zpci_event_notify_error_detected(pdev, driver);
+>  	if (ers_result_indicates_abort(ers_res)) {
+>  		status_str =3D "failed (abort on detection)";
+>  		goto out_unlock;
+>  	}
+> =20
+> +	mutex_lock(&zdev->pending_errs_lock);
+> +	if (zdev->pending_errs.mediated_recovery) {
+> +		pr_info("%s: Leaving recovery of pass-through device to user-space\n",
+> +			pci_name(pdev));
+> +		ers_res =3D PCI_ERS_RESULT_RECOVERED;
+> +		status_str =3D "in progress";
+> +		mutex_unlock(&zdev->pending_errs_lock);
+> +		goto out_unlock;
+> +	}
+> +	mutex_unlock(&zdev->pending_errs_lock);
 
-Standard PCIe handling normally ensures these registers are cleared even
-if no driver is bound. Could leaving them uncleared block future error
-reporting?
+Is there a time-of-check to time-of-use race condition here?
+
+zpci_store_pci_error() checks zdev->pending_errs.mediated_recovery and
+returns without storing the error if it is false. Later in this function,
+we acquire pending_errs_lock again and re-evaluate mediated_recovery to
+decide whether to skip host-level recovery.
+
+If a concurrent userspace open of the VFIO device sets mediated_recovery to
+true between these two checks, the error is discarded but the host recovery
+is still skipped. Could this state be cached once under a single critical
+section?
+
+> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci=
+_zdev.c
+> --- a/drivers/vfio/pci/vfio_pci_zdev.c
+> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
+> @@ -144,24 +144,36 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_cor=
+e_device *vdev,
+>  int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+>  {
+>  	struct zpci_dev *zdev =3D to_zpci(vdev->pdev);
+> +	int ret;
+> =20
+>  	if (!zdev)
+>  		return -ENODEV;
+> =20
+> +	zpci_start_mediated_recovery(zdev);
+
+The commit message states the goal is to support userspace drivers without
+any KVM fd. However, does placing this logic in vfio_pci_zdev.c inadvertent=
+ly
+tie the mediated recovery feature to KVM?
+
+Since vfio_pci_zdev.c is only built if CONFIG_VFIO_PCI_ZDEV_KVM is enabled,
+if a kernel is configured without KVM, vfio_pci_zdev_open_device() resolves
+to an empty inline stub. This means mediated_recovery would never be set to
+true, and the host kernel would still attempt recovery on the passthrough
+device.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505173029.2718=
-246-1-terry.bowman@amd.com?part=3D6
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505200510.2954=
+-1-alifm@linux.ibm.com?part=3D4
