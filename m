@@ -1,141 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98CC234B697
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 21:29:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A23823644C1
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 21:30:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778016581; cv=none; b=YqvB7zCDU7kCzKvY0DRxF7o5ZmoC4ma11jJmvVkUCi9HhC86m80KAtEe+CCpm5qjCzjYor20wjYeZTwPy/CEtZxfYvSPo42uXbJBOYs0oQikvsviLxVtEoIwuMTGkYClNGEseBgiMUCIm4HV9WBhJF9Luvtzh2wOPUby/g3JMJc=
+	t=1778016610; cv=none; b=VwC8hNL+YLDf1ZllwRAKAgcyP1X8DeGIO3O6l8UDS7YPzMBxiwQith+31zjK+iSY/oWxPEEF9u2dEs41aG6bWXouqGS84d0V/bKDOwEGSfu1MdKn6Gkc/uzZJt2MlkKWrxZcVjEXyI7c6v35CRL8Z7eGTBjV4HcsCaDXJP3T+aA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778016581; c=relaxed/simple;
-	bh=K3gL/QqX9XIpzqa2FbgJjpHhstp5sZGQSwwPjxPX41k=;
+	s=arc-20240116; t=1778016610; c=relaxed/simple;
+	bh=Fjr0+pe6IKzwNvLCaCHDr61vsV9a45l5edQ0TvHz6PQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ctkCcwAtSIXThLluGTlKlYMJk/aeL1HM9nYaoxqYDy139gleZrTLI5j500VzKP2oReZyeh15IPbLzowBDpxy2Arsp2CXK+PbZZYrEkjaxhmjDy8SLa0l0lbE4pB8ceQwW26v2xlOEpoCtKagO4xONQLGzkJOJhxNex3CRQhkQdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HsAAv3sD; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=NjW+QmC6eF9lMvtSxHgAbT8M7go+Q4bFs9AkxYhbQ6mDVeX3N/YKjcGLLSTba/kS+g4jxk7qXcyPgnYaQxRjLBjBWP3NaBEFBeP7sMxY2jH1yAFpIW5dd4xcU1+hzC8l6fzH3ZlnK3P7hr6wlENFUQN33KyyGPzUs9rZa4yaSa0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jWtPqsgL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HsAAv3sD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17138C2BCB4;
-	Tue,  5 May 2026 21:29:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jWtPqsgL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 234D2C2BCB4;
+	Tue,  5 May 2026 21:30:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778016581;
-	bh=K3gL/QqX9XIpzqa2FbgJjpHhstp5sZGQSwwPjxPX41k=;
+	s=k20201202; t=1778016610;
+	bh=Fjr0+pe6IKzwNvLCaCHDr61vsV9a45l5edQ0TvHz6PQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=HsAAv3sDybVWQ/4TYLa5BpveuzqRvJBQC5YnWteQ+THMT7clsa6ScRPo3dnh0DQJI
-	 IEMlLflOVr9e9PKVojCbCnudyKUCRkcwGL6YsGl1iPLjHIlbFR1B3X9CI4mRVbk7gj
-	 ql/YKmp4wKn2vsIsNNswgtrNpnVZY7drd4mQ6oGf0ikSwGfohHcwnckISTnvj8PRjd
-	 RhIcKTREL78efpCOX13WMP2rYOjXHE12AOlgY80m2qKm3wIuIuh3nG/SZAMnGuPSJO
-	 koDtOtN2v7gefeiGBHuKB6fgtodpOyuSKQWNWJlZGwtpEA9A6O13OKcFYqwWde70KV
-	 Oie5ARf1ajiPQ==
+	b=jWtPqsgL9XqaCwbbFd/wE/mhA7HU4335CpqVJ4Lp9mWF2SSPD9R9ECp22iWMfrvbC
+	 nWc1GBQL+Z+mgUYkkd1ukf32/tgqARF2TwIRUegfEaBsV+NrvbGuEERBk/n6vhQjsD
+	 4+rrdTvRB29qNKG3i5qAiJ+PlJU8XYmKjNe3dNguTtYUQ7XHAFLa5HvV8rKcTkRwQJ
+	 ija2vW0I/P7zonwBFV+106DHBhbRQIjeejWv+t2cXWkU6SSj9KKGuFhM3PT4jKTy06
+	 gjjXufFnHEz7Z4eKcgMmzIFC/FVcN1r4n7isQG6RHPPN4KERwGXM8KPYFhq+vOWKwW
+	 xtv+AdEMSGtaw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v15 1/7] PCI: Allow per function PCI slots to fix slot
- reset on s390
+Subject: Re: [PATCH v17 03/11] cxl: Use common CPER handling for all CXL
+ devices
 Reply-To: sashiko@lists.linux.dev
-To: "Farhan Ali" <alifm@linux.ibm.com>
+To: "Terry Bowman" <terry.bowman@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260505200510.2954-2-alifm@linux.ibm.com>
-References: <20260505200510.2954-2-alifm@linux.ibm.com>
+In-Reply-To: <20260505173029.2718246-4-terry.bowman@amd.com>
+References: <20260505173029.2718246-4-terry.bowman@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 05 May 2026 21:29:40 +0000
-Message-Id: <20260505212941.17138C2BCB4@smtp.kernel.org>
+Date: Tue, 05 May 2026 21:30:09 +0000
+Message-Id: <20260505213010.234D2C2BCB4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Global enablement of `per_func_slot` on S390 breaks standard PCIe =
-hotplug matching and hardware association.
-- [High] Lockless read of `dev->slot` in `pci_dev_reset_slot_function()` le=
-ads to a Time-Of-Check to Time-Of-Use (TOCTOU) Use-After-Free.
+- [Critical] Stack out-of-bounds read of 448 bytes when copying the CXL hea=
+der log to the trace event ring buffer, leaking kernel stack memory to user=
+space.
+- [High] Silent dropping of valid CPER hardware errors for unbound devices.
+- [Medium] Unnecessary device locking based on a flawed premise of object l=
+ifetime.
 --
 
-commit e4e35148b2442f92d3db17a20a087722c65c043d
-Author: Farhan Ali <alifm@linux.ibm.com>
-PCI: Allow per function PCI slots to fix slot reset on s390
+commit fb7e6f8e6c582af55947d02985f007b61cfc1671
+Author: Terry Bowman <terry.bowman@amd.com>
 
-This commit introduces a per-function PCI slot flag to fix slot resets for
-multifunction devices on s390 systems. It updates the PCI slot number field
-to a 16-bit integer to accommodate special placeholder and all-devices valu=
-es.
+cxl: Use common CPER handling for all CXL devices
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f7cfcc000901..d0c9f0166af5c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
+This commit unifies the CPER error handling paths for CXL Port and Endpoint
+devices by removing the PCI-type specific dispatch. It extends the driver
+check and device lock to Port devices, and replaces the memdev lookup with
+direct use of the PCI device for trace events.
+
+> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
+> index d7081caaf5d3f..56611da8357a2 100644
+> --- a/drivers/cxl/core/ras.c
+> +++ b/drivers/cxl/core/ras.c
+
 [ ... ]
-> @@ -4865,8 +4865,9 @@ static int pci_reset_hotplug_slot(struct hotplug_sl=
-ot *hotplug, bool probe)
+
+> @@ -77,38 +40,20 @@ void cxl_cper_handle_prot_err(struct cxl_cper_prot_er=
+r_work_data *data)
+>  		pci_get_domain_bus_and_slot(data->prot_err.agent_addr.segment,
+>  					    data->prot_err.agent_addr.bus,
+>  					    devfn);
+> -	struct cxl_memdev *cxlmd;
+> -	int port_type;
 > =20
->  static int pci_dev_reset_slot_function(struct pci_dev *dev, bool probe)
->  {
-> -	if (dev->multifunction || dev->subordinate || !dev->slot ||
-> -	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
-> +	if (dev->subordinate || !dev->slot ||
-> +	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
-> +	    (dev->multifunction && !dev->slot->per_func_slot))
-
-Does this code introduce a time-of-check to time-of-use use-after-free
-regression?
-
-When dev->slot is accessed locklessly, it could be freed concurrently if a
-hotplug driver module unload invokes pci_destroy_slot() and
-pci_slot_release(), which clears dev->slot to NULL under pci_bus_sem and
-frees the slot.
-
-Because this function does not hold pci_bus_sem or elevate the slot's
-reference count, adding another lockless dereference to
-dev->slot->per_func_slot right after the !dev->slot check could access
-freed memory if the slot is destroyed in between.
-
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index 6d5cd37bfb1e7..894d6213ed306 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-[ ... ]
-> @@ -72,6 +72,23 @@ static ssize_t cur_speed_read_file(struct pci_slot *sl=
-ot, char *buf)
->  	return bus_speed_read(slot->bus->cur_bus_speed, buf);
->  }
+>  	if (!pdev)
+>  		return;
 > =20
-> +static bool pci_dev_matches_slot(struct pci_dev *dev, struct pci_slot *s=
-lot)
-> +{
-> +	if (slot->per_func_slot)
-> +		return dev->devfn =3D=3D slot->number;
-> +
-> +	return slot->number =3D=3D PCI_SLOT_ALL_DEVICES ||
-> +		PCI_SLOT(dev->devfn) =3D=3D slot->number;
-> +}
-> +
-> +static bool pci_slot_enabled_per_func(void)
-> +{
-> +	if (IS_ENABLED(CONFIG_S390))
-> +		return true;
-> +
-> +	return false;
-> +}
+> -	port_type =3D pci_pcie_type(pdev);
+> -	if (port_type =3D=3D PCI_EXP_TYPE_ROOT_PORT ||
+> -	    port_type =3D=3D PCI_EXP_TYPE_DOWNSTREAM ||
+> -	    port_type =3D=3D PCI_EXP_TYPE_UPSTREAM) {
+> -		if (data->severity =3D=3D AER_CORRECTABLE)
+> -			cxl_cper_trace_corr_port_prot_err(pdev, data->ras_cap);
+> -		else
+> -			cxl_cper_trace_uncorr_port_prot_err(pdev, data->ras_cap);
+> -
+> -		return;
+> -	}
+> -
+>  	guard(device)(&pdev->dev);
+>  	if (!pdev->dev.driver)
+>  		return;
 
-Does this global enablement cause a regression for standard PCIe hotplug
-matching on s390 systems?
+Will this silently drop valid CPER hardware errors for unbound Port devices?
 
-By unconditionally returning true on s390, slot->per_func_slot is globally
-set to 1 for all hotplug slots created. When per_func_slot is true,
-pci_dev_matches_slot() prioritizes an exact match of
-dev->devfn =3D=3D slot->number.
+Previously, the port device dispatch block correctly bypassed the driver ch=
+eck
+for CXL ports. Since the code only logs the CPER data via tracepoints and
+reads the PCI config space for the DSN, is a bound driver actually required?
 
-However, standard hotplug drivers like pciehp initialize slots using
-PCI_SLOT_ALL_DEVICES (now 0xfeff). Since a device's devfn is an 8-bit value,
-this will never match, which might completely break pciehp topology on s390
-environments such as KVM guests.
+Also, is the device lock necessary here?
 
-Additionally, if generic drivers like shpchp register slots using just the
-device number (for example, 5), the strict match will compare devfn to 5
-(device 0, function 5) instead of the correct device 5, function 0
-(devfn 40). Could this lead to failed associations or cross-device resets?
+The commit message notes "the existing device lock will ensure the CXL devi=
+ce
+remains accessible while in scope". However, object lifetime and accessibil=
+ity
+of pdev are already guaranteed by the reference count acquired via
+pci_get_domain_bus_and_slot(), which is released safely by the
+__free(pci_dev_put) cleanup.
+
+> -	struct device *mem_dev __free(put_device) =3D bus_find_device(
+> -		&cxl_bus_type, NULL, pdev, match_memdev_by_parent);
+> -	if (!mem_dev)
+> -		return;
+> -
+> -	cxlmd =3D to_cxl_memdev(mem_dev);
+>  	if (data->severity =3D=3D AER_CORRECTABLE)
+> -		cxl_cper_trace_corr_prot_err(pdev, cxlmd, data->ras_cap);
+> +		cxl_cper_trace_corr_prot_err(pdev, pci_get_dsn(pdev),
+> +					     &data->ras_cap);
+>  	else
+> -		cxl_cper_trace_uncorr_prot_err(pdev, cxlmd, data->ras_cap);
+> +		cxl_cper_trace_uncorr_prot_err(pdev, pci_get_dsn(pdev),
+> +					       &data->ras_cap);
+
+Can this cause an out-of-bounds read of kernel stack memory?
+
+The trace event cxl_aer_uncorrectable_error performs a memory copy of the
+header log:
+
+memcpy(__entry->header_log, hl, CXL_HEADERLOG_SIZE);
+
+CXL_HEADERLOG_SIZE is 512 bytes, but the hl pointer passed in via
+ras_cap->header_log is only a 16-element u32 array (64 bytes) inside
+struct cxl_ras_capability_regs.
+
+Could this copy 448 bytes of uninitialized stack memory past the array into
+the userspace trace buffer?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505200510.2954=
--1-alifm@linux.ibm.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505173029.2718=
+246-1-terry.bowman@amd.com?part=3D3
