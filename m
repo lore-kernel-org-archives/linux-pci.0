@@ -1,119 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6CAA30B521;
-	Tue,  5 May 2026 23:12:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD152F3C0A;
+	Tue,  5 May 2026 23:19:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778022732; cv=none; b=sbvbl01GeWIo+OzS0fpwIXU2mOJPQ+Rq4A5NltOe5ET/cZAfvccJ+M0BUcCVysCnkBPZa1AD3rVMjHTtqhOdU2Y+CC39a0NE9/D/Chwo3U0cFTrcs03gY947sBw5nndp9kTo1KbJKttPdl63nsLtEw3P5SrqyTKkOuGr5tbH4Jo=
+	t=1778023159; cv=none; b=npalkWcdC+u/fqbmf4xoA31nMNMTMaoZpgZ/b/ggVimbINLoUazE2UeeWwKhugSquAvWHpUpRromIagXQ77dFsa3UeEJzM4uP+Awn1OOuIGCj5S2+klJsI3SrnvVI7D0jVC01pPf8KeAw3Z3CCdgMGlE9ee7V3EJbFMUaZYL4lY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778022732; c=relaxed/simple;
-	bh=KphMG9jiVB2OJLAMUTdfTkFkyrHOjO80/tesl+RVVT4=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:To:From:Subject:
-	 References:In-Reply-To; b=bS8n1hb04G6W9VEqvfoL/Z8ltgsNKypqS3HtbbbuVQaYybnpTS2jDmy0hG96dZpXLwsAJDhWTfsMkvuc1kBnh5KukRY1+ZYdBlWoYN0S6v51UZjLrnGld/ymblwTy8WgpCU/M0Y2N8QDCZX+DKOvfV0XRpSZxyCmNWE5AO5yUv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nLeKvUQ4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778023159; c=relaxed/simple;
+	bh=aSUWwvC/Z4hL7kLLz0uyOBLteb3wXBC4iS5QzbWk3v8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nQrtgLRybCQoci2Bzz07meeMwyKdOr7nwmQJDC38kTf5soKPi7u8hgSivcLCZixE2c+3G1c3CYVOJOVUJQGvKzBm3WEyq5ofBX5qqGHSUa1s3DzkFG7ujJHlAogDCXSDaoWRFZZUwDgY2A+ZOru2X0qd0Kq01tQn49X0xG4+gog=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H1irtPcp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nLeKvUQ4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEA06C2BCB4;
-	Tue,  5 May 2026 23:12:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H1irtPcp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF4AAC2BCB4;
+	Tue,  5 May 2026 23:19:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778022732;
-	bh=KphMG9jiVB2OJLAMUTdfTkFkyrHOjO80/tesl+RVVT4=;
-	h=Date:Cc:To:From:Subject:References:In-Reply-To:From;
-	b=nLeKvUQ4j8NIWpLtl1VhRpd7s/lcvYTFSFEoiUp9vRAz62tcyYHXsUPNFhXmV8TDe
-	 G7q956NMUdSYHXKkOdo7is74GUwJULIsEK+a275FEgVuiTLveWpR+rkehdw8gnQCkA
-	 fdv/djTHNVNdosNV21qzbhndSyB70D+tz8zTT/pBV5zxlP0v+2Oy8DEiMMlMfrROKZ
-	 euUccuMQeFMdz5SfhBooRT+NpOTI5VCf0IgX/95pYP6Niz6/2x/GK0pgJ8uKzEsJlo
-	 8u0Ic+b5QLdBuIkGDKm1GJqzejs8qnbsZZdSel9xT3nYWTsum3Xmk2jWyIWL+nm0BW
-	 gJlAK9RKF9MMQ==
+	s=k20201202; t=1778023159;
+	bh=aSUWwvC/Z4hL7kLLz0uyOBLteb3wXBC4iS5QzbWk3v8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=H1irtPcpfqHFY1VDM3K8ELysNJFq/zwjdjMpTSwrQSsgIhrG3hD4jfvtldFC0r+B1
+	 Qv32FF7xVtw6QRvptdGazbpcqIAhhypVAB8rtdLVu6PxiwFnf4vjsyV7QJL1J2CRmP
+	 gaGXGGDc/YsWmrSzjTsD9VdsETYnebTmntkloGM1/R9AvdXITa0lDE606YYADj3Y3b
+	 l6G78KuaByZtWVEudnARiWkGJ1SlPCckAQciDPSAjljBHmkz3gabvnVoKik1123AyO
+	 HnhTR4xt3ZxAaSeWmecxnGt13CJqKt+ps/vRL8UBweVmXQNoh0w9tjSKs0/NAH8uX4
+	 nVitbO6Aijv0A==
+Date: Wed, 6 May 2026 08:19:17 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Magnus Lindholm <linmag7@gmail.com>, Matt Turner <mattst88@gmail.com>, 
+	Richard Henderson <richard.henderson@linaro.org>, Christophe Leroy <chleroy@kernel.org>, 
+	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
+	Nicholas Piggin <npiggin@gmail.com>, Dexuan Cui <decui@microsoft.com>, 
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>, Lukas Wunner <lukas@wunner.de>, 
+	Oliver O'Halloran <oohall@gmail.com>, Saurabh Singh Sengar <ssengar@microsoft.com>, 
+	Shuan He <heshuan@bytedance.com>, Srivatsa Bhat <srivatsabhat@microsoft.com>, 
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v6 04/24] PCI/sysfs: Use BAR length in
+ pci_llseek_resource() when attr->size is zero
+Message-ID: <20260505231700.GA1410272@rocinante>
+References: <20260430232202.GA3577346@rocinante>
+ <20260505214659.GA752301@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 06 May 2026 01:12:05 +0200
-Message-Id: <DIB4GBS45L86.LTUCNRDL24Y3@kernel.org>
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <acourbot@nvidia.com>, <aliceryhl@google.com>, <david.m.ertman@intel.com>,
- <ira.weiny@intel.com>, <leon@kernel.org>, <viresh.kumar@linaro.org>,
- <m.wilczynski@samsung.com>, <ukleinek@kernel.org>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <abdiel.janulgue@gmail.com>,
- <robin.murphy@arm.com>, <markus.probst@posteo.de>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-To: "Deborah Brouwer" <deborah.brouwer@collabora.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH REF 24/24] gpu: drm: tyr: use HRT lifetime for IoMem
-References: <20260427221155.2144848-1-dakr@kernel.org>
- <20260427221155.2144848-25-dakr@kernel.org> <afp1rLvvdh_mo_g7@um790>
-In-Reply-To: <afp1rLvvdh_mo_g7@um790>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260505214659.GA752301@bhelgaas>
 
-On Wed May 6, 2026 at 12:56 AM CEST, Deborah Brouwer wrote:
-> Is the intended model that DRM drivers keep lifetime-bound resources such=
- as
-> IoMem<'bound> only in platform drvdata and access them via Device::drvdat=
-a_borrow()?
+Hello,
 
-No, this method is unsafe and intended for busses only, drivers should neve=
-r use
-it directly.
+> > > The alternative would be separate llseek callbacks for both the legacy
+> > > and resource attributes, which we can add if this would be the preference
+> > > here.
+> > 
+> > If we were to do this, then it would be as follows:
+> > 
+> >   static loff_t pci_llseek_resource(struct file *filep,
+> >                                     struct kobject *kobj,
+> >                                     const struct bin_attribute *attr,
+> >                                     loff_t offset, int whence)
+> >   {
+> >         struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+> >         int bar = (unsigned long)attr->private;
+> > 
+> >         return fixed_size_llseek(filep, offset, whence,
+> >                                  pci_resource_len(pdev, bar));
+> >   }
+> > 
+> >   static loff_t pci_llseek_resource_legacy(struct file *filep,
+> >					       struct kobject *kobj __always_unused,
+> >                                            const struct bin_attribute *attr,
+> >                                            loff_t offset, int whence)
+> >   {
+> >         return fixed_size_llseek(filep, offset, whence, attr->size);
+> >   }
+> > 
+> > Each callback would be placed within the corresponding #ifdef block, so one
+> > for HAVE_PCI_MMAP or ARCH_GENERIC_PCI_MMAP_RESOURCE, and the other for the
+> > legacy attributes, so behind the HAVE_PCI_LEGACY guard.
+> > 
+> > Note, the names need to be different, as some architectures offer both
+> > type of resource files, like PowerPC, which defines both the HAVE_PCI_LEGACY
+> > and HAVE_PCI_MMAP.
+> > 
+> > With this split, we can also drop the __maybe_unused annotation.
+> > 
+> > While I wanted to keep the changes to only what was needed for the
+> > pci_llseek_resource() to cover both type of resources, it would be
+> > also fine to have two distinct callbacks, too.
+> 
+> Yes, I think this is much more readable than the "if (attr->size)"
+> check.
 
-> Or is the expectation that drm::Driver should also have a lifetime-parame=
-terized
-> Data associated type?
+OK.  I will switch to two llseek callbacks in the next version.
 
-Exactly, the plan is to have lifetime-parameterized private data on the
-drm::Registration, which is available in IOCTLs. The cover letter mentions =
-that
-briefly:
+Thank you,
 
-    A follow-up series extends this to class device registrations, starting=
- with
-    DRM, so that class device callbacks (IOCTLs, etc.) can safely access de=
-vice
-    resources through the separate registration data bound to the registrat=
-ion's
-    lifetime without Devres indirection.
-
-This becomes possible as I also have patches that protect DRM IOCTLs throug=
-h the
-drm::UnbindGuard (which is just drm_dev_enter() and drm_dev_exit()). Togeth=
-er
-with drm_dev_unplug() being called when the drm::Registration is dropped al=
-l
-IOCTLs are guaranteed to provide a bound scope of the underlying bus device=
- and
-hence the device resources in the DRM registration data availble through th=
-e
-IOCTLs.
-
-I have all those patches ready and I plan to send them this week.
-
-> The reason I ask is that Tyr currently stores an MMIO handle in several a=
-reas,
-> (firmware, MMU/address-space management, and IRQ handling)  and it does r=
-egister
-> accesses directly. See what we're trying to do:
-> https://lore.kernel.org/rust-for-linux/20260424-b4-fw-boot-v4-v4-0-a5d910=
-50789d@collabora.com/
-
-Note that you are not blocked by this, you can always move IoMem<'_> into a
-Devres through IoMem::into_devres() and use it without lifetime bounds. But=
- of
-course the goal is to make this unnecessary.
-
-> Moving IoMem<'bound> only into platform drvdata would require a big refac=
-tor
-> to thread &IoMem<'_> through those paths or fetch it from drvdata at each=
- hardware
-> access site. So, I wanted to clarify the plan first before I start this w=
-ork.
-
-No worries, that'd be the exact opposite of what we want to achieve. :)
+	Krzysztof
