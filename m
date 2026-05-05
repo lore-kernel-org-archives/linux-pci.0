@@ -1,81 +1,81 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA9A12EB859
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 09:50:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93C203451CC
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 09:54:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777974607; cv=pass; b=CmMNTd6b2ZuuIuav+nP7f3oeAxnWZzGW+URbkQXtgbpBatlm4GDlUJsA8K7YGI5abvUK5AI4y2ZytRkbBhGHpaFobsenSkQMqirM7BoNX5qyu0DcTpq2w0BNdHJuSfvspjVr6oi2Ks2I3LVN3GJhZXRgpefjMZMBt2Xqfn5icMg=
+	t=1777974885; cv=pass; b=Z7x1DQV2mqhl3BD4KRy5JD1l9L/RI42ojr0+5/Hw6hofoiiDxy7GMcvyswIsxeE4vXdp9xvwiL/E5ILh+wAHjiKQG5gueeA7pIuX6dWbECICknU8H57y5p+BAEx7N5FMVA6nQOEHlXz9N92Ibq1ouUL/4jqSdCye8kB4Po3Bo38=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777974607; c=relaxed/simple;
-	bh=qQ0fdreUZzC/7HdkK25NxWYh+tIDDlH4eCp9sTOS4JY=;
+	s=arc-20240116; t=1777974885; c=relaxed/simple;
+	bh=E35b9v/9N86s+jnlEC41wZVsmhcr4qcpURavxyfZD9U=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KjrcKF1Bh25SbHcY0CSUpWkYal6nhKUOPEOLe5bmXTcW8nSqKCa0RkGRz8DnJ1ChjRrYHPObTb5N47HoNcBI5E6HlSAjLHuy1f+XbouJRmecuGRWNOUWPHVWKjHaJxfsT0wcd42rPcqI0fp7hCTeyv31dEZqiyQFZA1htTCT1dQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UBjs0fqi; arc=pass smtp.client-ip=209.85.221.48
+	 To:Cc:Content-Type; b=us85BxNf6qD+w0WDSSm2cfPaCiEiUZXIo8N9Z7/kF7CFK7tlipI4ZZuy/A+1iLupRrGxTaG2FGQCNMzjAnMdpMU+xeIdpOkQIpSfjw6I/oQTNPcEIdqd2B9XJvZ7+j7rVTPDU27UvEDu4l9teUTnEsejfzHU7ghhAwtRbZoBQlU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZEHsKYha; arc=pass smtp.client-ip=209.85.128.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UBjs0fqi"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-44a74032ff8so2664057f8f.1
-        for <linux-pci@vger.kernel.org>; Tue, 05 May 2026 02:50:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777974603; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZEHsKYha"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-48d146705b4so8970475e9.3
+        for <linux-pci@vger.kernel.org>; Tue, 05 May 2026 02:54:43 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1777974882; cv=none;
         d=google.com; s=arc-20240605;
-        b=Nykv6PXpDNfPhFedHw/9EJsItmFvNN+w/veV0Io8aaVhLcrTW7YZTIhU/+t9P/tWFd
-         Faujt19ucNRJqtNlL82Ox4XlSIfFiPPQ5Csb2z2RrNzeLFC/8uHl4/0utVPjHjGyUcXs
-         A2CU41baEmhFE4ax2HKTAa0itTHQ0V3ZpD/tA+gSurl61oqXaBioDy3vGXiekM88FVgm
-         5lx+DPaYwKLEi70AELIYW328M31zj+16Uuca5GAun46DZ0vTvtcSsFZ9YfFku6WYMU7E
-         BB+yDTSxtjzyuQP6j1vDo5tMEkn7fraESupmQSXVqeoau2R6pjfCuLEY+YTNZL6WpCnE
-         84fQ==
+        b=GdG9X73j5MKejPWX/DYlDoAcZJthtPK/VKA8Ags3hY+ZALOjq8ezWOXoIk+OoJeID7
+         +D//Sbxc0ufhSy5ZUpy3A9PXhUgd5N7IZs9fdoGI9uMIFB8/jXY4O1Su7f8Z4xc6rZGB
+         +yxePbP84ZQG5yJXrubJCTu5387qB6plGexgWqjrwAyljsvdkJJJgp/dXHzRyFi13qqY
+         dzq/gfRkb6P86ILDLrYtvgQuxc4PqzPkWoD5x2urnFg9pUnGgR0E8OgOz1axqduC/v5+
+         xxpU3dCENsPnYrt+XAd0rBwk+OQBDyzZqFPMBqds/A6J7rAsjLi52q0SY3Ev+xeHEaYr
+         OAFQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=yM4KcG56R9vbDU06owym0pp3y5nB/08M1mIBueRT0Dk=;
-        fh=u5DDa4TXFqBk41dmXnJxuzivjyqvi9EnrrP1aYVFYQE=;
-        b=DG+Nb1VRrPtB8c/x+kUNHts8NUn8TnyaAozjNGuRqIvGKjTboctaZuTJcNoX26MRas
-         z5NYLiJYT1QmECJnhujFc+fAsUy4NB0MceJSDJNM7ETrTCX+9RikvCeLUZNfT7iu0sue
-         Df0nZwTygmEhaXEMmrt/ZBKQIRb254W7mSHNeKOAzL1MATWmeoYYbV41aQsGaX2+d9Fc
-         8/20MWnlSBUOohAxRCof5GLYNXPvtmQuiLloi1Guv2PljOR1iVM7VYIhctob6SwhBwr4
-         ErgzWQSc1ftbDNYVB6kL3bhCCEpls8s9e+MX3JREQhxG9/JtMQ1LKWVfaFcvpjoOhLXM
-         AUlQ==;
+        bh=/OFVXXRgPbKb/k/EVNaXDuuccfuOclNAixih9iVgxqg=;
+        fh=LGpv5ddclBSNPXd4DQXFq7X7P6V6RqNuql3pWptuVSE=;
+        b=DhpP18NlfwE/p0APQi25O17LFHqDl2ppzxPSWpPkMVzFXgBKQQu9RdILFG3Bo7MUz9
+         2noGfguT9eoS5Q69+DNYhJmToER0y2e8UhpdjMUsL+FkN8O6T21kSdcwZPrJrYBRMtqf
+         hWhFNy0mkA7V/8NSoL3RDq9SP7wzX7jRTMk/rfwGdYcv7Kb1whHte0TcS4xpiJku5yot
+         2ZdefvmtlSzOs6UbT74NQTKw0LzzeYX+9lIN+j6eZ23maor0tJlZglHj0eT9cKRrGTPm
+         YG04CB5SYIg7duRwAna+3hUFRNu6ndVb6IrKF9wq48xpmbEbhJ4XBls/sJbHbwbVFlRK
+         7UqA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777974603; x=1778579403; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1777974882; x=1778579682; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=yM4KcG56R9vbDU06owym0pp3y5nB/08M1mIBueRT0Dk=;
-        b=UBjs0fqiICJTxUYdi61u826nIJwUieJ7vazwRcShSJMxW9foPK1eNRe0q8ckskaGxu
-         rV6PR6bnTRgN0y0AT96FnCb5DAwCYEsiOPZqM+PPOuFo1eRV1J/Z4m5au9oxpj9whOEp
-         wtyG8RaOkF6elETkRWWJoha+JfDj4I9bgsMR5ibuDP6A2cmSgjEYn3p/hhpuQcHEpgR2
-         uActrKlpdRDKdqOGqPQuL4y8Dqo8Dqa1sGyhKaIXCq6pdRO5yQUyk9Ljm7t+CXXBda9o
-         mfD7A9o4lADip55AeiJiXE4oZfmwKvPDQPqDMfn6gFboCGSR6WbwRk/I6u/V90MMTB6c
-         mUoA==
+        bh=/OFVXXRgPbKb/k/EVNaXDuuccfuOclNAixih9iVgxqg=;
+        b=ZEHsKYha81Il5yhbFlSBZdApQeIN0/u+vgCZx7aHUilChCBH9AGMZflSPaNQimVOQY
+         88cYh887Jm9nWH3PzwP0UMY/M3Zecx9lmweanyrS319w6o8AZ9P7jg8acXRRyLhjClUE
+         VAVuKwroK74wgcA61/JWu6dWI3R0oB8oLCzxgB+dQfSDgF4+1xbMN/bENUw8qolOCRrM
+         NkmuHLsJYZMi9YtW01gRlrkREYQg+knJq/HDrP8TIcs6NirW5hxhSUMZrhsT44sl8XCa
+         4noUOHrRdLp93S5/q4LpNfnphQ/icZGjITewT0u9jN0Va3It9ZLx83zIVVzS/brrQhxJ
+         eShQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777974603; x=1778579403;
+        d=1e100.net; s=20251104; t=1777974882; x=1778579682;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=yM4KcG56R9vbDU06owym0pp3y5nB/08M1mIBueRT0Dk=;
-        b=Ro7WN4Fk+NsW3wc1DVTdpN6vYp0wGT6cuwTWIYghG/9ru+mzdkJDLDjWhG67fD4QyE
-         5jS7rhgZq4BqKRds5hnkuj/pP2BTzF6dfWCmYWHeEHVdrXLWSu5k4rOjyCnLGeX5Xu17
-         2T3DpP09+9tDARvQvPMKxDq4oPD2fAbTt6tngtaqqAzTIl/l1o8JEds4v5VN21ScHO12
-         8zU6vQZN9hMKNiMz6O8eYFPchzJmq1bvFWopRlQtQcj7VbHjwfaf8JEIvzhMZFRnfoHn
-         xXAOpzoa1agb2zdKxg2+xIxcLB1Ij/VvuRjUHQO0/JUPhw03vIz8kuUf/jvy38WT26XT
-         L0Cg==
-X-Forwarded-Encrypted: i=1; AFNElJ9oUgHzZAzojqHoOiGoGv/L16coT0OQUpAPw9iL4DgmZ4sDBfYlt2Q1JF1kQr+609y3aiQTC8Bxc8w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwK1w3wM05e2Xc2CgLqSWD5cLGZPy/rlyo6U6SWpumMz0EA5OqW
-	jcEpBctraK6R+vCt66IeKfEu0Ybp+hAE0deVUUcwsH55lV6On3KTtJJY2GI0MQ/23rw1uB0H8w6
-	WGQovxvY/410QAozWnDfvY0hM/qE/938=
-X-Gm-Gg: AeBDievVH4AIs/MImWKFAxVfo/AWXieZ/TFGKVZptjrk1SvHHwHqgvh5sDfNH67/Yzx
-	YZTQ94sBZ/V0Ah9Ahzn/CSsYz1QL+pDxiOr1dJca6cSJotfJ4iwodjyG4pvJDmRMJbSrPqYtW0C
-	nCvX2Xyx9atyKaNLw93Q26jPgSab6H0Il3EjR8fZ7jtKtinrQg3YB1H7zr9w9ku7PQDB1LbE3pw
-	ZunXyFEOqv6eNUHV2r9ZuHYJK/Si0HturINUroSL4XU8n13N7pyapsAAkHxocl4Q/qOeApAFw+G
-	LoFxtz5y85tWdJ2GyLXY8nzUGwyu5L5H72MPybnOAJq8/aaFANnzxIZt/63EDKklCbVYedwXzM0
-	zBIM=
-X-Received: by 2002:a05:6000:18a5:b0:43d:7c1b:b8c7 with SMTP id
- ffacd0b85a97d-44bb65e0664mr22072385f8f.21.1777974602954; Tue, 05 May 2026
- 02:50:02 -0700 (PDT)
+        bh=/OFVXXRgPbKb/k/EVNaXDuuccfuOclNAixih9iVgxqg=;
+        b=MTgAI1xjI3azZK5fvnma2KQor+7vocnjK/OwjugirqTGe6i1EGBA3saFb/FsUoEBk/
+         L85GU0fzqV+9Eymz/+ADcYGALj3hmkjSrPM/zkcxTJAq1Gs0l7CPKQ1NSmKvsbOg+q7q
+         tg8uxS2vaJBt/vk48M0hcATgLVLTzxfoACdq+r1Ku9KJy65khUqwP3t4JUaZ5kAO0mVS
+         ++Vqi424Vz4/t0AqiFZKrEjBr6Y8p2nQYCJkOEtFwsrquFa4691Eo+/CF5yRZRLDFyqB
+         SFNhOwGMnHTjIl4WkONBQmaYCY0JJgASpT0y6UcRXNjh1MJ7rHn0MBfKW2dVsrthxAzI
+         Bg8A==
+X-Forwarded-Encrypted: i=1; AFNElJ/Izlp/v8ejnoLauCXz/u9w2I0ZpljR8hTeduEmUZBKOs2FJKcEf4QUkggVBwvbsghvtKWFHg8qVEc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4v+Nw4TtGhiHApRvZ40C1CdSWpFuPlXD5jg7fU7MPjHo9ttIN
+	Kv4wZndfZxm3kHmk0wUEVGs+mdbWoFcEY5xnneadF9oHHyDs0MqFESL9HnBtanb9p44JmPoEk06
+	wuTSQETOrbAmua6wwOspiFNJytQ3rL7k=
+X-Gm-Gg: AeBDievQbyESf7sHR1BNzhc/EDOYrDL209avEKjqPtEJBsjEGv2W5YIZUiz8X24sryr
+	gbMsTCPCAh8/fNeVJO3hZvVBf7jWM5VB6+soaCSbNi43ycamhjOII5BpKTFVwEgKSSqgH0zKhfe
+	/4GVrzgLXI6F+WoPkRCrIgGomzo3gcFI5S1L523/wHn7TJu3Jo3lGJ/sqSXZS4/PvTlz3+9b3G2
+	MUqLFlrLK94Y1tuG6YFdWhqCFIS/FL4TxZloqaGza4wVac89713/d7JsZw+5Sob9rGyO0HckNCJ
+	HPHBRyfLg3V8gHi1nbDT6x+v2zcHU4W/srWjj9XaL+aeQhNnZCSDquP3DqtGOdhLdBlTNern+rs
+	PObbiCAblWsygnA==
+X-Received: by 2002:a05:600c:8b58:b0:488:9bf8:7f17 with SMTP id
+ 5b1f17b1804b1-48d18be5b32mr36270575e9.14.1777974881868; Tue, 05 May 2026
+ 02:54:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -85,20 +85,19 @@ MIME-Version: 1.0
 References: <20260318124450.163471-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
  <20260318124450.163471-6-prabhakar.mahadev-lad.rj@bp.renesas.com>
  <605e8d4c-09e7-4d11-acdb-7829a85eacc3@tuxon.dev> <CA+V-a8srS9g2WDMARDJn98K=nL9v1LiZYxqM8evsVrzR-s5ZMA@mail.gmail.com>
- <lvix7p4e7c4dtchtdti3rwrs7jkda5iy7lthcffhqc7g6vgu2p@54qywklrspi7>
- <CA+V-a8sd=dyTZmViLbDrCPYbx5ujWzjk74HxhP0aBEqxLuEqJA@mail.gmail.com> <leky6ktelj7t3uwd4bakgefrk32m3ceyxmwbkkjpp5zqp6rjgj@jtiqktxchws3>
-In-Reply-To: <leky6ktelj7t3uwd4bakgefrk32m3ceyxmwbkkjpp5zqp6rjgj@jtiqktxchws3>
+ <CAMuHMdXRtAOZrQbebng5pLXNENUeZenA1Hng1kER+1vbSwaj0Q@mail.gmail.com>
+In-Reply-To: <CAMuHMdXRtAOZrQbebng5pLXNENUeZenA1Hng1kER+1vbSwaj0Q@mail.gmail.com>
 From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date: Tue, 5 May 2026 10:49:35 +0100
-X-Gm-Features: AVHnY4IoCllXpa4rpkEn8ddmDkn7rn864MKfmonI0Q9JZNQwspbW0qaX6F7JYzw
-Message-ID: <CA+V-a8ve9+Dz1kxZDXUROAuiKMYp=+q0BqMfGo12dsy=SXjyfw@mail.gmail.com>
+Date: Tue, 5 May 2026 10:54:15 +0100
+X-Gm-Features: AVHnY4LoB9VhkRhCHgWKDjlqC7kBQg0p7x7zE8Yn05GYW88TH9I1loXaSoAIan0
+Message-ID: <CA+V-a8t2HhtMWT6v489PZbi+-Yzc0ybgYXFuPd2QeEndn-x+TQ@mail.gmail.com>
 Subject: Re: [PATCH 5/5] PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
 	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
 	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
 	Philipp Zabel <p.zabel@pengutronix.de>, Magnus Damm <magnus.damm@gmail.com>, 
 	Wolfram Sang <wsa+renesas@sang-engineering.com>, 
 	John Madieu <john.madieu.xa@bp.renesas.com>, linux-pci@vger.kernel.org, 
@@ -109,171 +108,144 @@ Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>, Geert Uytterhoeven <geert+renesas@
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Mani,
+Hi Geert,
 
-On Fri, May 1, 2026 at 3:42=E2=80=AFPM Manivannan Sadhasivam <mani@kernel.o=
-rg> wrote:
+On Mon, May 4, 2026 at 10:14=E2=80=AFAM Geert Uytterhoeven <geert@linux-m68=
+k.org> wrote:
 >
-> On Fri, May 01, 2026 at 12:13:55PM +0100, Lad, Prabhakar wrote:
-> > Hi Manivannan,
-> >
-> > On Thu, Apr 30, 2026 at 4:26=E2=80=AFPM Manivannan Sadhasivam <mani@ker=
-nel.org> wrote:
-> > >
-> > > On Wed, Apr 08, 2026 at 07:54:41PM +0100, Lad, Prabhakar wrote:
-> > > > Hi All,
+> Hi Prabhakar,
+>
+> On Wed, 8 Apr 2026 at 20:55, Lad, Prabhakar <prabhakar.csengg@gmail.com> =
+wrote:
+> > On Wed, Mar 25, 2026 at 10:18=E2=80=AFAM Claudiu Beznea
+> > <claudiu.beznea@tuxon.dev> wrote:
+> > > On 3/18/26 14:44, Prabhakar wrote:
+> > > > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 > > > >
-> > > > On Wed, Mar 25, 2026 at 10:18=E2=80=AFAM Claudiu Beznea
-> > > > <claudiu.beznea@tuxon.dev> wrote:
-> > > > >
-> > > > > Hi, Prabhakar,
-> > > > >
-> > > > > On 3/18/26 14:44, Prabhakar wrote:
-> > > > > > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > > > > >
-> > > > > > Add support for the RZ/V2H(P) SoC PCIe controller to the rzg3s-=
-host
-> > > > > > driver.
-> > > > > >
-> > > > > > The RZ/V2H(P) SoC features two independent PCIe channels that s=
-hare
-> > > > > > physical lanes. The hardware supports two configuration modes: =
-single
-> > > > > > x4 mode where one controller uses all four lanes, or dual x2 mo=
-de
-> > > > > > where both controllers use two lanes each.
-> > > > > >
-> > > > > > Introduce configure_lanes() function pointer to configure the P=
-CIe
-> > > > > > lanes based on the number of channels enabled. Implement
-> > > > > > rzv2h_pcie_configure_lanes() to detect the active PCIe channels=
- at
-> > > > > > boot time and program the lane mode via the system controller u=
-sing
-> > > > > > the new RZG3S_SYSC_FUNC_ID_LINK_MASTER function ID.
-> > > > > >
-> > > > > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renes=
-as.com>
-> > > > > > ---
-> > > > > >   drivers/pci/controller/pcie-rzg3s-host.c | 142 ++++++++++++++=
-+++++++++
-> > > > > >   1 file changed, 142 insertions(+)
-> > > > > >
-> > <snip>
-> > > > >
-> > > > > This introduces some limits in the systems with RZ/V2H(P) SoCs wi=
-th regards to
-> > > > > the usage of linux,pci-domain. I would like the PCIe maintainers =
-take on this.
-> > > > >
-> > > > > As this is necessary to index in the system controller driver spe=
-cific data (as
-> > > > > there are different SYSC offsets for different PCIe controllers) =
-I see the
-> > > > > following alternatives, if any:
-> > > > >
-> > > > > 1/ add a dedicated DT property for this, e.g. renesas,pcie-contro=
-ller-id
-> > > > > 2/ Add dedicated DT bindings for RZ/V2H(P) SoC that would be used=
- to specify the
-> > > > >     system controller register offset and mask for different func=
-tionalities.
-> > > > >
-> > > > >     E.g.:
-> > > > >     renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
-> > > > >     renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
-> > > > >     renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
-> > > > >
-> > > > >     And use them in each controller DT node. E.g.:
-> > > > >
-> > > > >     pcie0: pcie@add1 {
-> > > > >         // ...
-> > > > >
-> > > > >         renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
-> > > > >         renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
-> > > > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
-> > > > >
-> > > > >         // ...
-> > > > >     };
-> > > > >
-> > > > >     pcie0: pcie@add1 {
-> > > > >         // ...
-> > > > >
-> > > > >         renesas,sysc-l1-allow =3D <&sysc 0x1050 0x1>;
-> > > > >         renesas,sysc-mode =3D <&sysc 0x1054 0x1>;
-> > > > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
-> > > > >
-> > > > >         // ...
-> > > > >     };
-> > > > >
-> > > > I'd like to get a clearer steer from the PCIe and DT maintainers
-> > > > before investing further in either direction.
+> > > > Add support for the RZ/V2H(P) SoC PCIe controller to the rzg3s-host
+> > > > driver.
 > > > >
-> > > > To recap the two approaches on the table:
+> > > > The RZ/V2H(P) SoC features two independent PCIe channels that share
+> > > > physical lanes. The hardware supports two configuration modes: sing=
+le
+> > > > x4 mode where one controller uses all four lanes, or dual x2 mode
+> > > > where both controllers use two lanes each.
 > > > >
-> > > >   Option 1: A single renesas,pcie-controller-id property used to lo=
-ok up
-> > > >             SYSC offsets in the driver.
+> > > > Introduce configure_lanes() function pointer to configure the PCIe
+> > > > lanes based on the number of channels enabled. Implement
+> > > > rzv2h_pcie_configure_lanes() to detect the active PCIe channels at
+> > > > boot time and program the lane mode via the system controller using
+> > > > the new RZG3S_SYSC_FUNC_ID_LINK_MASTER function ID.
 > > > >
-> > >
-> > > Can you explain what is the limitation with 'linux,pci-domain' proper=
-ty?
-> > >
-> > As sashiko pointed out.dev, The linux,pci-domain property is generally
-> > an OS-specific logical property intended to assign a stable PCI domain
-> > number across reboots. Restricting it to [0, 1] would prevent system
-> > integrators from using non-conflicting domain numbers like 2 or 3 if
-> > the board incorporates other PCIe controllers.
-> >
+> > > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.c=
+om>
 >
-> "linux,pci-domain" is supposed to be used in SoC.dtsi, not in board.dts. =
-AFAIK,
-> the board designers have no reason to change it.
->
-> Yes, the property name implies that it is a Linux specific property and i=
-f you
-> want, you can propose a generic one (not vendor specific one). Other than=
- that,
-> I don't see a blocker in using this property. Many SoCs already do this a=
-nd
-> other DT projects like u-boot do not end up parsing this property.
->
-> > > >   Option 2: Explicit per-controller DT properties carrying the SYSC
-> > > >             phandle, register offset, and mask for each functionali=
-ty
-> > > >             (L1 allow, mode, link-master, etc.).
+> > > > --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> > > > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> > > > @@ -1687,6 +1712,63 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host=
+ *host,
+> > > >       return ret;
+> > > >   }
 > > > >
+> > > > +static int rzg3s_pcie_get_controller_id(struct rzg3s_pcie_host *ho=
+st)
+> > > > +{
+> > > > +     struct device_node *np =3D host->dev->of_node;
+> > > > +     u32 domain;
+> > > > +     int ret;
+> > > > +
+> > > > +     if (host->data->num_channels =3D=3D 1)
+> > > > +             return 0;
+> > > > +
+> > > > +     ret =3D of_property_read_u32(np, "linux,pci-domain", &domain)=
+;
 > > >
-> > > Are the register offsets going to stay the same across controller ins=
-tances?
+> > > This introduces some limits in the systems with RZ/V2H(P) SoCs with r=
+egards to
+> > > the usage of linux,pci-domain. I would like the PCIe maintainers take=
+ on this.
 > > >
-> > > If they are not going to change and you can derive the offsets using =
-the
-> > > controller index, then there is no need to go for individual DT prope=
-rties.
+> > > As this is necessary to index in the system controller driver specifi=
+c data (as
+> > > there are different SYSC offsets for different PCIe controllers) I se=
+e the
+> > > following alternatives, if any:
 > > >
-> > The offsets will remain the same across the controller instances. So
-> > instead of using linux,pci-domain property we could use below is that
-> > OK?
+> > > 1/ add a dedicated DT property for this, e.g. renesas,pcie-controller=
+-id
+> > > 2/ Add dedicated DT bindings for RZ/V2H(P) SoC that would be used to =
+specify the
+> > >     system controller register offset and mask for different function=
+alities.
+> > >
+> > >     E.g.:
+> > >     renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
+> > >     renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
+> > >     renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
+> > >
+> > >     And use them in each controller DT node. E.g.:
+> > >
+> > >     pcie0: pcie@add1 {
+> > >         // ...
+> > >
+> > >         renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
+> > >         renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
+> > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
+> > >
+> > >         // ...
+> > >     };
+> > >
+> > >     pcie0: pcie@add1 {
+> > >         // ...
+> > >
+> > >         renesas,sysc-l1-allow =3D <&sysc 0x1050 0x1>;
+> > >         renesas,sysc-mode =3D <&sysc 0x1054 0x1>;
+> > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
+> > >
+> > >         // ...
+> > >     };
+> > >
+> > I'd like to get a clearer steer from the PCIe and DT maintainers
+> > before investing further in either direction.
 > >
-> > pcie0 {
-> >   renesas,sysc =3D <&sysc 0>;
-> > };
+> > To recap the two approaches on the table:
 > >
-> > pcie1 {
-> >   renesas,sysc =3D <&sysc 1>;
-> > };
+> >   Option 1: A single renesas,pcie-controller-id property used to look u=
+p
+> >             SYSC offsets in the driver.
 > >
-> > Where 0/1 are the controller instance IDs that the driver will use to
-> > derive the correct offsets.
+> >   Option 2: Explicit per-controller DT properties carrying the SYSC
+> >             phandle, register offset, and mask for each functionality
+> >             (L1 allow, mode, link-master, etc.).
 > >
+> > Both have trade-offs. Option 1 is simpler in the DT but moves hardware
+> > knowledge into the driver, tightening the coupling. Option 2 is more
+> > verbose but fully describes the hardware topology in the DT and avoids
+> > a driver-internal lookup table.
 >
-> What if you have other register blocks using the same pattern in the futu=
-re?
-> You'll end up with renesas,xxx =3D <xxx, N>. You should stick to
-> "linux,pci-domain".
+> As this is SoC integration description, I think it belongs in DT.
+> But adding many properties is indeed cumbersome.
+> Fortunately the two register blocks inside SYSC seem to have the same
+> layout for both channels, so you can just use a single property to
+> refer to the base offsets (0x1000 and 0x1030).  Even if a difference
+> would pop up later, you could check for e.g. =3D=3D 0x1000 in the driver.
 >
-As Geert pointed out this overlaps with pciX DT aliases on PPC boards.
+Okay, something like below?
+
+&pcie0 {
+  renesas,sysc =3D <&sysc 0x1000>;
+};
+
+&pcie1 {
+  renesas,sysc =3D <&sysc 0x1030>;
+};
+
+> > Are there other approaches the maintainers would prefer that we
+> > haven't considered?
+>
+> Option 3: Look at the unit address.
+>
+Indeed but this might be discouraged by DT maintainers ;)
 
 Cheers,
 Prabhakar
