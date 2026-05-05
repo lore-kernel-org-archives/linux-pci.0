@@ -1,173 +1,203 @@
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011061.outbound.protection.outlook.com [40.107.208.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F27A6481A8A
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 15:25:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A8CD3B19A9;
+	Tue,  5 May 2026 16:00:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.61
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777994726; cv=pass; b=h0X5+K7Cqo0Yw2QrYcvEkpZWCe7w0CpbdFgGgF6k7MDuMCEH2dQM+TCH1DjaLpzjEcOPBSAHnnY/NXXLgAR973fB0PxejddkzEqrKrnbVDsIxyhxiEcb0lkMAdZPtohjMTDDVzIp/Z9kVosPHe/tIlqhxX5jDbTpAO0cxdFXDqI=
+	t=1777996812; cv=fail; b=tuzqSxWUXz0WJMLX0uywJUyF7ZN0sz935LMtSrBxobnL9gE2zE6DnL2pQ6eSeFCbp5a0FOTMGqn1aJTPURcp2bff5NKplQ+KdtHU7XRZ3NwYnQkSJ534Dj+31e+vY1yh5sfflJ3XIwBlCwWfBg/mlSI0WrJCrfcry8m3gWSn4sI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777994726; c=relaxed/simple;
-	bh=lGg2abmeK2X7Qd78vLYSKP0TideB4JdenQcUnDGZRJU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=SqJZOunj4MBh5Kfmab7HSltqX3mfGbZtMJDSkXb8exP+87UWFqTuNztfVzNBpPk6GcSnizUEcyi/9iTBiIYFoQBRHh510oXhgxNWdtPAITtslU+tirwLHAv+YqKB5DdWUNbmUy0uOAdCIm8IbNY5d6yjbpak96eROvGRmstzQe8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RuGrre6X; arc=pass smtp.client-ip=209.85.208.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1777996812; c=relaxed/simple;
+	bh=BYj2+FgrkKaRErRyvkGIO58yqMhOoFkA1Hb99+O85Mk=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=Q5CRVjy9alatfoTn5eWJLfKoPQl5l2srb946af0fj8XDpPxCnFc8fyKXOhu0uBiflECHRfUjR2al8eyhEON8VTgJRldf/sM613VszyztXqzeUwgggFkrBSFwAMV+yetLCD37o9QrOhP4KIGkPxmSlXK141PJ9/skIcfibBDyBqY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=MPK2YPSF; arc=fail smtp.client-ip=40.107.208.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RuGrre6X"
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-38def541b0bso52248541fa.1
-        for <linux-pci@vger.kernel.org>; Tue, 05 May 2026 08:25:24 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1777994723; cv=none;
-        d=google.com; s=arc-20240605;
-        b=X86f+MLC4HouKTtlu17eJJ6LSJH9JKGPcXk2gk610x2zzaOfPj4FKhQHYR617R/+KU
-         htqVlV2zbHqd+AcE5gt4DG9F4k96Frm5TAS4pdMayufUzDkNp3d2hWjrqj2uT4Nat9kQ
-         OnVvaDPAOlWniLBXSrnd7cbMWA43s6MM+S9BtN5m4mAn0Dkrjm57gWvCZSQ92AGPaFiP
-         kxZsSe3S2HC1Z92pjVbp0mV0DJYyuBFW/AIaZ4majMWtxekQh6L3nVPT8rvuJzDL9TmW
-         z5S+86h5kQqiZCyXb0eixVljvLr35OwzLKV/1mBR7h4vKdTigUhCWrhqH8yCq+Zhsl/2
-         CNzg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :reply-to:in-reply-to:references:mime-version:dkim-signature;
-        bh=LFA23XaRUYTvjaED/Oey0IjLZr5jn1jKfrl93jCACf8=;
-        fh=83ioabFBVQHELsaQ9bw1+SFPkjLPVZ/gKY99TJBZnyA=;
-        b=fPkcLuhnpMbpVRsk1E70FvL2n7Z2IGj/W4XTqzPRkG7TXSe64beSPF8emHqvS55YZm
-         LW9PIqcKSBNls2VhFtqzbQs+5t4TSdYvcvWMRURFWOM7ziHhCrBEABzG4utqwqUcOvxD
-         M3AEh3P6Fas0wuYA2TJXbViP7gqOUpTsi7jc+sUQvL8jvI1di4TsF9d860wIhtO2d4If
-         TF5ENHLs3srUa5nrJFunE40mf67AOxiJBg970oOdlgkjhlFkgUEDN0mR922nUQC4a7VP
-         JeeO8/CMYxeME5lsCDO0EpXKzVzi5t0QtCqhq4HVyR/KW+/D3zMyHRmxRQsM6Hn7VBwR
-         iY3A==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1777994723; x=1778599523; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :reply-to:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=LFA23XaRUYTvjaED/Oey0IjLZr5jn1jKfrl93jCACf8=;
-        b=RuGrre6XCib72q/BQC27n0fzzgEy8is8kuAozd6FkZ4q7R+TLNfcNhax+GBoOu31iu
-         yzsfABT4Mbu9JDwoevybyNkXDvIrH6EQYYakGlYkkz7eq30tiH/AM68yHVFgzaB5F8Dp
-         +3xReQopXSoH766llx9/VyWuqGRGkDWGJVFCIYg4AzgBjqA+hlpwTHi3/RprDIzpiFNs
-         mpgxMGMo9e+kSPOgd2k2sWxszAky0GAPzBAvhWI6t874vOiuxoR/cJ3KNuh9uBhfV4TS
-         GKSFxvtbUeQl8G3f01i38ocJ7GJNgQ20N4hoYBED9UO3zaJLcIwBhbTPkR1j18N53dfa
-         5hEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1777994723; x=1778599523;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :reply-to:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LFA23XaRUYTvjaED/Oey0IjLZr5jn1jKfrl93jCACf8=;
-        b=H8JLqcnM8vziU1wUMNHiTnaJFOwW/HKp3YQ4e7vOBqQ1oeYPS88LVEwWKtX5kp1H4D
-         QNnm7gudva+q2A1Ra4r9GpMbv5hRFJzQnJFpo/s7s44fdlbcbVWDACxt0en1HUUmWDvr
-         G7EOVIHdmFmPh9wVjfexGS2RDVY+WgTR0MCg9U7Pj8xqS+1j1AdiuKFJSW1KeMGApGTm
-         jtW0vxD3r1IZee8OAT3UHvvctvCJCWYa7xRP6g5FQU0RuvbDRcbdZPXyn2+ZNHt8QzEG
-         VPKg3lqiCfSAhoO+m9F3r0ySfdfeKPW6YtjdSPNx9BL85sWxDou/d/EKT9BnSLe+JYc1
-         +wuQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8l9wxhKPzuJ0L53q3/GKuuuT0OYqI1pj+u83vhP6GLn7fxmYOz4yv9TJBHv8w8nuIhq1wO42Ewx8Q=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw+o7xRgc9ycwnJvsea9pgLdhBr9emHliZPEumO2S2NJDC8t5VL
-	o5km3bJ4lCNf0cXEGFLT7wzCQULwO45RMI4eYXLnmBw3JyIpd1hznqWkRqZ5mc8eVNqsjcQ4A1z
-	dvP4wNSNp383WNe4buZ1Fm/VZDcU1L7Q=
-X-Gm-Gg: AeBDieteM5e+a3eaQHxCuEax8T4mWxC+rk/4uqJ4DdZ0Mc2UX16VRvVpQl2pICmlFoi
-	zkjpPnVja6HGkDUSpe336QR+9iGrvRF9KAuvsMzniJxqP4utWAWOTYtH44Rmr+ykCKUZJaYXvVn
-	qWutU0hv176p06RZRl1ZQGZix/y0nNMYbUWRJecCxzv86tTxayXnER1WOLlmv9Fzx2hrKWiy/Fc
-	0ywQTu8BRUfGCzHhwRM0D1sXr+1KWtJwSZSDXC+jashfAkC+sdRpKAUNBd3Spq1KzTwJAZRWF8l
-	DJDh6L/xv9Pem2kLo0bKzNqhsZ0A3LWF4/Am5HLcQCJvKEYZ+JL1RF5fMD8K/QEpJHM7jLEKB3I
-	nz6Uwo8kdFc7gkZ0=
-X-Received: by 2002:a2e:b8d6:0:b0:38a:6537:6f51 with SMTP id
- 38308e7fff4ca-393b492c293mr16805791fa.5.1777994722861; Tue, 05 May 2026
- 08:25:22 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="MPK2YPSF"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=UjG95ryF0xQt46Ind41C2/GV+oJhXP0WJOxyO5o88z6LktYKU1BjnFFOXDTVh0qXjB56O6CEF31TDum9ycT2ir4idN2N3PyivS3ExvQ5zN5Xoekl2dtc3xl91YicWlORBfffHKqxZ26a6OKCcwfFp/G9jR+nk1nvopBL0DBWR95Daqpu+S9ir1c6Mc7ct3lU6610ma7Dt9KHoN3dEFE2jTU4T2/eHnS8GX8YfZkwmLitkJ5tICeUeAIyWudlbhqIH8NnPNBEPnO/lIbccSobH59OT174mnbD9tf3TKJ0rgbBJlsfsaJR+iVjtyz132+AE6ZcOU8wVUaOuPsUGV/fiQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0DwvDfGlfsWQMGOzo+sbv5bCxpkKguGYYN38Oy/J7Dc=;
+ b=w+PPmangmz5vWt93z9qBNTHd8GS0owbEHFgbnlw8P5SEUA2zyMSLHVNPKp07Vumdg834vX//YQbvoAgL4oFx03EvvaqWZ3hPfnk33w7kxhwiXMlnEn7AczPmyWknnwWuu8lz2w+iA520ZrN6W7btch2zy7bTee5M7vc4nweVKGAFlUoRxfF7uDmNvn53ywhofxe1lESttWBPq0DxGvbc9cEBPDc35GcZQSaJucV+2LcuUixeTJsmSa7yh8pd0mnI6bOdnuOF/Qx8woAFYRHYvGAIInEI5okgOcCLU4gMy8CvG0I3dw+X/VLFJ9V6lJuMQSkuykuzceBJNi2+DkOJkQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0DwvDfGlfsWQMGOzo+sbv5bCxpkKguGYYN38Oy/J7Dc=;
+ b=MPK2YPSFVRDw4Xs5SGZxiqBhjtukncx9HJdzfjphFaXkc0SCoe/uzFoe5WbV1DowYQc/zivFBwZjFtV+N+/nmiVS26z1aJEfTKyraBSMSG2CyiovaPLuXm7OBbooMvJCWJ9jlhiQWRorPI0xOm25AiFaMxp8J0ZawR5pl4gBjAQ=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from SA0PR12MB4557.namprd12.prod.outlook.com (2603:10b6:806:9d::10)
+ by CY8PR12MB7315.namprd12.prod.outlook.com (2603:10b6:930:51::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Tue, 5 May
+ 2026 16:00:05 +0000
+Received: from SA0PR12MB4557.namprd12.prod.outlook.com
+ ([fe80::885a:79b3:8288:287]) by SA0PR12MB4557.namprd12.prod.outlook.com
+ ([fe80::885a:79b3:8288:287%5]) with mapi id 15.20.9870.023; Tue, 5 May 2026
+ 16:00:05 +0000
+Message-ID: <26e1e270-c6ae-4389-9956-3b4554db7735@amd.com>
+Date: Tue, 5 May 2026 11:00:03 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI: mark Thunderbolt-attached devices as removable
+Content-Language: en-US
+To: Geramy Loveless <gloveless@jqluv.com>, bhelgaas@google.com
+Cc: ilpo.jarvinen@linux.intel.com, christian.koenig@amd.com, cristi@ieee.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260428223147.3092087-1-gloveless@jqluv.com>
+From: Mario Limonciello <mario.limonciello@amd.com>
+In-Reply-To: <20260428223147.3092087-1-gloveless@jqluv.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SA1P222CA0007.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:806:22c::22) To SA0PR12MB4557.namprd12.prod.outlook.com
+ (2603:10b6:806:9d::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260414081730.3864372-1-rkannoth@marvell.com>
- <20260504224955.GA669929@bhelgaas> <MN0PR18MB5847809DF7EB9A3ECA4A4159D33E2@MN0PR18MB5847.namprd18.prod.outlook.com>
-In-Reply-To: <MN0PR18MB5847809DF7EB9A3ECA4A4159D33E2@MN0PR18MB5847.namprd18.prod.outlook.com>
-Reply-To: bjorn@helgaas.com
-From: Bjorn Helgaas <bjorn.helgaas@gmail.com>
-Date: Tue, 5 May 2026 10:25:11 -0500
-X-Gm-Features: AVHnY4K-DyAHKMwAD4q2TyCQMOsJNwWJaGHim2wRQ-H-SZM8qBkBVZjAEwGD_qs
-Message-ID: <CABhMZUW5Y3g86_ki8MfcqX9Qj63TxqQR=m74c8sBm-puZGEvUg@mail.gmail.com>
-Subject: Re: Re: [PATCH v2] PCI: host-common: Request bus reassignment when
- not probe-only
-To: Ratheesh Kannoth <rkannoth@marvell.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"will@kernel.org" <will@kernel.org>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org" <mani@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "vidyas@nvidia.com" <vidyas@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4557:EE_|CY8PR12MB7315:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4be99698-0bdc-4a26-50b0-08deaabf5fd2
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	/p9Bx/ecw0d1ar6MFqSg0pWrDMGjAaX2WZyC7rZXuQHQVdEUNcySx7Fb0phMXnxksiYmAOz0wQWRN6aP6675bv8WNaN+aV2anNZaw06OQfl1tnzKARGZPvkpIObOBmR1jWTTcvHjtzoubVfaEBEgVy/19NB+5uFAhHve667HStxXTCQhNg95akR3UiWgCIMmAstcql2RbI6RUABmedqro/lJ5Bk8l71jRSvhn5UYvwbcItZylEGggC+bFeB0hHBhtmiqrD1bzoTyO3paCLVAfoai6/+1MbUxyCtEXbRjOPzeauNW0fuXdCa8yvGz798SSgUEAegWGIJg67VbYKB0zdFl+MQcjZ6zNudXdSlLtxGCRfy7LcgeNUsNBEU25kVFQLzrm7k472pVF/30wZB0dmc+MTMtnHEaZ9U6Bu7wI3H+Fvrl+itR+XkxmbA21CE5RwYdjR7EZ7c6Kp38BzDkddI04Gp2UFm5lcihRkUoYUGEykTR+lofjvIP3U4icTRttnX8wA/eJaEmThF9c03Z4n0ExUb3M1iJTVBU1lobwLu6ew+T5uHBzz4qtxT7zMCosB+HqkOtHzbPT69uOIdvHHmNY3xNWUqtDlPHllKlM8u3Le253LOHD+gEjJjvAqUuPD8zUSjAAxEAnUZ7kCfMThspckAzk2X6XxJYmyZwAdsYjOvkoZyuTr4OSNnf/LKn
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4557.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WVJqSzVITmwvZnd3SnlnSnluSXNPNHZOb241STRRNXN3U0xZUjZJcTd4TWZO?=
+ =?utf-8?B?dkhuUTMvZUhmM2lVd0g5NVpXaDJmTlB5YkRwT0xDU254Y2lwZ1c3VEdmRHJm?=
+ =?utf-8?B?dkxQaStlcVlaZFJrcXBTb2YzWEViV2FzNGs5SzQrY0pUb3h1ZXdmeHM1Q25S?=
+ =?utf-8?B?UmJ2L3p0WklSNndXWEd4NTJtTXptRFV4SWkrR0ErVzdZbU9uUEtldDM5NTVl?=
+ =?utf-8?B?eUxLTjdpNk5Hc0U5S2Z0VTlhemFFL2VjRFUxU2dES1ZBVU9ubVZMUFpyVFF2?=
+ =?utf-8?B?NEJlazN1V01nNEttVTlENWwxcUZCeURJRVN5OVlnNFJaLzQ4dGRieDRIRkdH?=
+ =?utf-8?B?czJ5VjdzcXBlbnpEdWt0bzlLY3pRTWdNSGF5UTJ2WjdZU2Zpay9wSW0rSXlk?=
+ =?utf-8?B?Q085dm1JVWNaam1hSkNJbWdyUkNqVTlndldSRUgzN3hCTlBKZXYzLzJlNWJ2?=
+ =?utf-8?B?YnQrS0ZuK1NkY2FSdmlqWmtKR1FOM3BhbWhZeXY1M2NZeDdJendyRTgyN0RM?=
+ =?utf-8?B?OGRPZDJTMHliUTRhaTd0RTIxdXpnWnZ6Ny9iTDBtc1hmZjdJSWZjaTRKM3Nv?=
+ =?utf-8?B?eXl2QjFJNjhDNEpLalI0VG9HL2JFbnoxeUV1aU00M1VPM0VzeGxzNTE4Nk9L?=
+ =?utf-8?B?dVhFbFpkM2RNL0I3WWk1Y01xcGdoQ1lwNkNGSFJvWFNUdHZQL3dvVEgxdXZl?=
+ =?utf-8?B?dS9YNDBJblE0aVQwSnZ4Y3Q4cndIOW9rVDZTdUN1TnUyS3VWY0owRXFQMTNw?=
+ =?utf-8?B?TWEyUm5nVVR2Z0VsbGt2NUVpTmRQVU5Nc3JBdDBtVi9KeExvRVRkR1h1d3pB?=
+ =?utf-8?B?S3VWZnRNMndsRGYxcXlzTVdBa1JUblRsSlU0bHA5YnRjLzgxeWs1ZVZRRHYv?=
+ =?utf-8?B?b2dBcm1JT255Z1BQbVpXUXZKYkxJK0lUK3FpelFTS2J4MG5yQmlqTFVlTlVQ?=
+ =?utf-8?B?NGhydXpIV2JoZkcrTS9yNmF1R01TMVVZbEgxdTZPTDJndTFuaVRyTHJ4VTZa?=
+ =?utf-8?B?VjErdmRkd1dSb29FVW5ZS3MyRURjNEdtYmxkcGpwRHlMbmdsYWpIM0dhWjd5?=
+ =?utf-8?B?MVdJQnlsSFBNWFdtM0NxVURRc3h2a20zSEVTVjdtZEwwYmxES25uTUx1ZTQ4?=
+ =?utf-8?B?ZTIvMGt4cTl3MGkrcE5ISjlrM3JnMmY4UitVNHNwMHlIbHJqbllSbWJraDMw?=
+ =?utf-8?B?RFpOcjlWbzIyMExYTkw0NUhaTTVNZjhzNGNDVW1Nek83SU9yNmpyKzV4TEpF?=
+ =?utf-8?B?bmJBVDNMQ1lXZVpNdXVEQm9VWDNlWit4Z1FDVlk2UEQ2VjFTejVVbG0xZkM1?=
+ =?utf-8?B?dnhLYVRVemZwME95Q3hUTHhnR2U4RDJDMzQzWTcrRy9JN0Z5Y0lQOWZqdk1J?=
+ =?utf-8?B?clZZT1lqblJHUXhrRCtDYmJMU1lLK0V3dE5ub01VWEtHbnpVWVFROFBQSWlX?=
+ =?utf-8?B?a0dlU3ZFblE0MEM5djZKbFNNZXdsQ3dDR2lTNDhCUUtTRzFOOEpQRkJIdThI?=
+ =?utf-8?B?bmlxY2dVNDJld29tWU9HYVppQjJ3TWZCOW9XU1VoRjBSZWdNWVcrSTl6cHpK?=
+ =?utf-8?B?Y0VncDJ4V3VsSkYxY0ZvbTNQY1A2WWlpU3NwU2dnMXZnZzM2VS8rZUYwZTdo?=
+ =?utf-8?B?cVRuelcxN2gvZ3lDZXp1aGFHWE1nNVhqbGNDejZSUEkrWjI4WU54Wkw4NzU0?=
+ =?utf-8?B?ZnlRZU9lZ1FFZWJNT1lkMnFwSjJHK0dWbC9OYjdmVk5IektHeHZpM1ViZUMr?=
+ =?utf-8?B?aW0xSmtiNUVjNmQ3V2JNcXBGZ3BVUkYySVlZSHVlRmsrNnF1RHZDZmRnUEM3?=
+ =?utf-8?B?SjJPYnZHai90Z01VbGdtdU4xVERaVVI2RUhTeVZ3WC94NUU5aTkvaGNWM3RL?=
+ =?utf-8?B?TStXL0pNSmJQTjZVZG1aRHFKVWdBYUNrSExmOGNXNDBCVXZ4dTVHSTM2TTNj?=
+ =?utf-8?B?L2FwRlI3L0U0dktmZDJBc3ViOWdMbEsvR0pqRzFNVnNqblp1ZmYza3BISjVF?=
+ =?utf-8?B?V1EzZGdPb1oySE9kMUxYM0dsSzBSZCtpa2t2OTlUVnF5UnFYRDFsS1FYZHZj?=
+ =?utf-8?B?RWlmSE5uWVNJS0NacWtrM1FMMTRteXZuRmRRc2RTUHBjZ21LMTFScy9rWVBZ?=
+ =?utf-8?B?ckRuRWgwanlERGc3R1gxR1BSa0RJTG1NdDIveDV1QktMZzdsTmRUZk5ka0ZV?=
+ =?utf-8?B?OGFOT2czcjdWQ1dsM2FJYmlhbTJOK2tuUGNuUnR5ekY4VWdSWjlNRFF1WFFq?=
+ =?utf-8?B?YnlxK2ExUCsxcFFuK093c2FXVTNJYnNiQ1NHS0h0WTV5eDBpTENxRUdRb0p5?=
+ =?utf-8?B?M2E3UWRmdWZITXlmRDFoV1JRNDlxcERtMVJCd2MvUzdnbm5xcG80dz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4be99698-0bdc-4a26-50b0-08deaabf5fd2
+X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4557.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2026 16:00:05.7971
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: qVyKR2GvTlNTqzn0e2ca2MmsoqKu4U6tWfcuIUFMP5rPmO1atMQ6Sg+g11KeoTbj7e6+EvA/sKO9jtzMHyEfSg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7315
 
-On Mon, May 4, 2026 at 9:49=E2=80=AFPM Ratheesh Kannoth <rkannoth@marvell.c=
-om> wrote:
->
-> ZjQcmQRYFpfptBannerEnd
->
-> On Tue, Apr 14, 2026 at 01:47:30PM +0530, Ratheesh Kannoth wrote:
->
-> > pci_host_common_init() is used by several generic ECAM host drivers.
->
-> > After PCI core changes around pci_flags and preserve_config, these host=
-s
->
-> > no longer opted into full bus number reassignment the way they did
->
-> > before.
->
-> >
->
-> > When PCI_PROBE_ONLY is not set, add PCI_REASSIGN_ALL_BUS so
->
-> > pci_scan_bridge_extend() takes the reassignment path: bus numbers can b=
-e
->
-> > assigned from firmware EA data (e.g. pci_ea_fixed_busnrs()). Skip the
->
-> > flag in probe-only mode so existing assignments are not overridden.
->
-> >
->
-> > CC: Bjorn Helgaas <helgaas@kernel.org>
->
-> > CC: Vidya Sagar <vidyas@nvidia.com>
->
-> > CC: Manivannan Sadhasivam <mani@kernel.org>
->
-> > Fixes: 7246a4520b4b ("PCI: Use preserve_config in place of pci_flags")
->
-> > Link: https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__lore.kerne=
-l.org_netdev_adcXzcz2wWJFw4d7-40rkannoth-2DOptiPlex-2D7090_&d=3DDwIBAg&c=3D=
-nKjWec2b6R0mOyPaz7xtfQ&r=3DaekcsyBCH00_LewrEDcQBzsRw8KCpUR0vZb_auTHk4M&m=3D=
-01Ocq--c6MApFtcfadw2NVeNuCaGZBUwjA3VpG_9uhWaoPultvNor45uL_Eiijk8&s=3Db9P4fx=
-av0nsyokGf8a2Tm_XrNqunGO4YOS6RJ29_iuk&e=3D
->
-> > Signed-off-by: Ratheesh Kannoth <rkannoth@marvell.com>
->
->
->
-> > Was there a bug report associated with this?
->
-> Please find Bug https://bugzilla.kernel.org/show_bug.cgi?id=3D221219 repo=
-rted by me.
 
-I don't have access to that bug report.  If there's nothing secret in
-it, can you make it public?
 
-I assume this is the same issue you mentioned at
-https://lore.kernel.org/all/abkqm_LCd9zAM8cW@rkannoth-OptiPlex-7090/?
+On 4/28/26 17:31, Geramy Loveless wrote:
+> pci_set_removable() only marks devices as removable if their upstream
+> bridge has the ACPI ExternalFacingPort property set.  Some firmware
+> (e.g. MSI MS-S1 MAX with AMD Strix Halo) does not set this property on
+> Thunderbolt root ports, so devices behind them are never marked
+> removable.  This causes all drivers that use dev_is_removable() to miss
+> eGPU-specific code paths.
 
-Your email response was HTML, so the mailing lists rejected it, which
-is why your response doesn't appear here:
-https://lore.kernel.org/all/20260414081730.3864372-1-rkannoth@marvell.com/t=
-/#u
+Just to be clear on the topology here - this machine actually has both 
+USB4 and USB4v2 routers.
 
-If you can send plain-text emails, that will work better in the Linux
-ecosystem.  More details at
-https://people.kernel.org/tglx/notes-about-netiquette
+There are 2 USB4 routers that are part of the APU.
+Therea are 2 USB4v2 routers that are from a discrete chip.
 
-Bjorn
+Looking at the port I/O connectivity on their website [1], I suppose the 
+"front" connectivity ones are the USB4 routers and the "rear" ones are 
+USB4v2?  This issue you're hitting where devices are missing 
+ExternalFacingPort - is it an issue with the rear ones, front ones, or both?
+
+Link: https://www.minisforum.com/products/ms-s1-max [1]
+> 
+> Fall back to pci_is_thunderbolt_attached() when the parent is not
+> already marked removable.  set_pcie_thunderbolt() runs before
+> pci_set_removable() during device add, so the is_thunderbolt flag is
+> already available.
+> 
+> This fixes the problem at the PCI core level so all drivers benefit
+> from correct removable detection, not just individual drivers that add
+> their own Thunderbolt checks.
+> 
+> Signed-off-by: Geramy Loveless <gloveless@jqluv.com>
+> ---
+>   drivers/pci/probe.c | 22 ++++++++++++++--------
+>   1 file changed, 14 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index bccc7a4bdd7..2387edc5b89 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1761,17 +1761,23 @@ static void pci_set_removable(struct pci_dev *dev)
+>   	if (!parent)
+>   		return;
+>   	/*
+> -	 * We (only) consider everything tunneled below an external_facing
+> -	 * device to be removable by the user. We're mainly concerned with
+> -	 * consumer platforms with user accessible thunderbolt ports that are
+> -	 * vulnerable to DMA attacks, and we expect those ports to be marked by
+> -	 * the firmware as external_facing. Devices in traditional hotplug
+> -	 * slots can technically be removed, but the expectation is that unless
+> -	 * the port is marked with external_facing, such devices are less
+> +	 * We consider everything tunneled below an external_facing device to
+> +	 * be removable by the user. We're mainly concerned with consumer
+> +	 * platforms with user accessible thunderbolt ports that are vulnerable
+> +	 * to DMA attacks, and we expect those ports to be marked by the
+> +	 * firmware as external_facing. Devices in traditional hotplug slots
+> +	 * can technically be removed, but the expectation is that unless the
+> +	 * port is marked with external_facing, such devices are less
+>   	 * accessible to user / may not be removed by end user, and thus not
+>   	 * exposed as "removable" to userspace.
+> +	 *
+> +	 * Some firmware does not set the ExternalFacingPort property on
+> +	 * Thunderbolt root ports.  In that case, fall back to checking
+> +	 * whether the device sits below a Thunderbolt controller, which
+> +	 * is itself inherently user-removable.
+>   	 */
+> -	if (dev_is_removable(&parent->dev)) {
+> +	if (dev_is_removable(&parent->dev) ||
+> +	    pci_is_thunderbolt_attached(dev)) {
+>   		dev_set_removable(&dev->dev, DEVICE_REMOVABLE);
+>   		return;
+>   	}
+
