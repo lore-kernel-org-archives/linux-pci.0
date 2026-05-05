@@ -1,198 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F935291864
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 21:07:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F18E54654
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 21:17:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778015274; cv=none; b=h9S1qWVzbQ5u0mI95g4erYRJ3c0dL9GEnzFLRXihVmJi9bAGNQ1o2/AjXNOuHCEIItBkB0k9HdlbbzALy0TQCRfc0V3UAtRZXenpxGL1fc9RIW80D7R9AUVK2WcOWJfHUUW1hBDzWmIltJnhqpSPMXWyKLCvpu5kEXbao4zKDvE=
+	t=1778015842; cv=none; b=PBnoxa02Ti0pl9621eBpPQa6mBRTIaKrQfV9oCqND2QmoPociHMagPXIeBvvKODe1ub6yFHokZS6a46fvh9xx9iOlJhwPUl4IXwu1QSJC6HOSx87fokEToGBP6KNi6AWn2/ZgGWFYp1Axed3xYx+pQiOpUgvyrFEJHJkEfUPbp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778015274; c=relaxed/simple;
-	bh=Mu5QqxyqVGswjgV1q0Kxf4rbENVMtQfqfy3dr4PFfUc=;
+	s=arc-20240116; t=1778015842; c=relaxed/simple;
+	bh=09TV64aT53CBvqXv7ZN33RPVZjLa8iVFbVwTfw7dzy0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fgh4ehp5lMX17VgUbl1gnmcNyjJAzHurkr05SckEpSmIq5gob6a3BoCVhCrnUxAVRzp/vzMdz6EAIzLrQ1uK4TBkjvbuj4s8XxfkNyYy6Wc4GPDh37xxkSzu8ZwZk94o2BpVsEXHfhzYU9R4XQy2UPp68/ksxr7sG3P76rXZGgg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q1k08Uy6; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=i8RxVelc7nllA0/zJnQGNLoZyD5pX5CS2CkXjiW9s+/EvFEGhauD2rGEuWgbNctMiAwf+bpcs3vMXIdUeCEq0i2xkT9QCtLhry8x/Piya05j6oukbAo9DQ9BCN8aC9Jj+e/AKFvMYW8cq1HhkGtDlpADRU23eyQlWYShRqTSA+w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XgD0COQT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q1k08Uy6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9B8FC2BCB4;
-	Tue,  5 May 2026 21:07:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XgD0COQT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09ACFC2BCB4;
+	Tue,  5 May 2026 21:17:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778015273;
-	bh=Mu5QqxyqVGswjgV1q0Kxf4rbENVMtQfqfy3dr4PFfUc=;
+	s=k20201202; t=1778015842;
+	bh=09TV64aT53CBvqXv7ZN33RPVZjLa8iVFbVwTfw7dzy0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=q1k08Uy6PnaulxxSgI5Jjsrq8tiK52wYGSuO51FV7x8VJ6q7+ZRet4n6n8pDDf8lI
-	 nMUiqalG5eKsB68qj9ZI8Fgg4GZjJ595WihDA9PCUobobPDL6bv/h4PEdE6bxm+PoE
-	 wczCUvClfvWJ7mvGBJhRSvUhLZ3srpFgpYlhvUN99kwoDIvImKXVjHgt8cojaBx5q+
-	 lw31pjS3/Tao34So19feGKblT7F+PhKrzCosicSVYzilwrHzs6Deu2SpMZtZg+wjyc
-	 YDkjjw8h5RCzSuCiokS5M3LpW2jl7FC6444rWp0k7TuQYn3wmd+QvnKWyIk2jOqbFI
-	 heEnMxjj+Cffw==
+	b=XgD0COQTx8d5NgSfBy7fLNfRfnyoLL0f0fxUpNUEDNdhsgsegCnKHTixeNcqY6z9V
+	 I4zRNeFD9epTqfsTerBif2hOLyh8QJxyXaW1cWkkoi4PYQwZoHbG08bPq+5gDwKUk3
+	 mz0oM+TLHbWc6xPvGZBzybl7pFixrok1x+vcMpMYXGqcD6iYdk/NQ3MfDgwFbTIbvL
+	 5wUpx9ntA0s42bpb1vTDJkBeTN37GOWs3W2rkldC5kblG0jXRVCLOGr9r0rYjBkThm
+	 B9tdAvMZzwsdJ+vdBA1lbFHff2IsXFWFNY1Gpz0Z6ZJQLnUToWhQNEOasCpngWb+Kz
+	 XT44v1v5TGbgQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 02/11] cxl/ras: Unify Endpoint and Port AER trace
- events
+Subject: Re: [PATCH 3/3] PCI/IOV: Restore initial VF ReBAR sizes on PF
+ release
 Reply-To: sashiko@lists.linux.dev
-To: "Terry Bowman" <terry.bowman@amd.com>
+To: "Marcin Bernatowicz" <marcin.bernatowicz@linux.intel.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260505173029.2718246-3-terry.bowman@amd.com>
-References: <20260505173029.2718246-3-terry.bowman@amd.com>
+In-Reply-To: <20260505170010.3414074-4-marcin.bernatowicz@linux.intel.com>
+References: <20260505170010.3414074-4-marcin.bernatowicz@linux.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Tue, 05 May 2026 21:07:53 +0000
-Message-Id: <20260505210753.B9B8FC2BCB4@smtp.kernel.org>
+Date: Tue, 05 May 2026 21:17:21 +0000
+Message-Id: <20260505211722.09ACFC2BCB4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Critical] ABI breakage for user-space RAS monitoring tools.
-- [Critical] Massive kernel stack out-of-bounds read (Information Leak) in =
-trace_cxl_aer_uncorrectable_error.
-- [High] Unconditional PCI configuration space reads via pci_get_dsn() on p=
-otentially frozen links.
-- [High] Out-of-bounds MMIO read in header_log_copy() causing potential sys=
-tem crash.
+- [High] Unsafe hardware configuration writes during kobject .release callb=
+ack and incorrect lifecycle hook.
 --
 
-commit 7ac043ff49acf52a4133043e3ef651a4e11ba73f
-Author: Dan Williams <djbw@kernel.org>
+commit b1af88a89dd13b3ede54e65628a75befe1b43cf4
+Author: Marcin Bernatowicz <marcin.bernatowicz@linux.intel.com>
 
-cxl/ras: Unify Endpoint and Port AER trace events
+PCI/IOV: Restore initial VF ReBAR sizes on PF release
 
-This commit unifies the trace events for CXL Endpoint and Port devices on
-both the CPER and native AER paths. It generalizes the correctable and
-uncorrectable error events to use a common device and serial number format.
-It also renames the memdev field to device to support all CXL device types.
+This commit attempts to restore the per-VF BAR sizes to their initial
+values when sriov_release() is called. It aims to handle the case where
+VF BARs were resized but SR-IOV was not enabled when the PF driver is
+unbound.
 
-Link: https://lore.kernel.org/linux-cxl/69cb2d5ba3111_178904100b7@dwillia2-=
-mobl4.notmuch/
+>     sriov_disable() and sriov_enable() error paths restore the per-VF BAR
+>     sizes saved at probe time. They do not cover the case where the PF
+>     driver is unbound while VF BARs were resized but SR-IOV was never
+>     enabled (or was already disabled).
+>    =20
+>     On the next bind, sriov_init() re-reads the SR-IOV capability and
+>     captures the current (inflated) BAR registers as the new initial sizes
+>     in iov->barsz_orig[]. The restore logic becomes a no-op for that boot
+>     and the kernel may reserve MMIO for the inflated VF aperture multipli=
+ed
+>     by TotalVFs.
 
->     **WARNING: ABI BREAK**
->     Rename the trace event field "memdev" to "device" so all CXL device t=
-ypes
->     (Ports and Endpoints) can be reported under a common field name. Note=
- this
->     is an ABI break for userspace tools that key off the old "memdev" fie=
-ld.
->     Specifically, rasdaemon's ras-cxl-handler.c looks up "memdev" and bai=
-ls on
->     NULL, so an unmodified rasdaemon will drop every CXL CE/UCE event onc=
-e this
->     kernel ships. A rasdaemon update is needed in a separate series.
+Is sriov_release() the correct place for this restoration?
 
-Does renaming this trace event field violate the stable ABI policy for
-trace events?
+The commit message states it covers when the PF driver is unbound and menti=
+ons
+the next bind, but sriov_release() is called by pci_release_dev() which is
+the kobject .release callback.
 
-Since unmodified system monitoring utilities like rasdaemon will drop
-these memory errors after this change, should a backward-compatible approach
-be used, such as retaining the memdev field or adding a new event without
-deleting the old one?
+This executes when the pci_dev reference count drops to 0 (such as during
+device destruction), not during a driver unbind via sysfs. Furthermore,
+sriov_init() is called during device enumeration, not driver bind.
 
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 006c6ffc2f567..d7081caaf5d3f 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-> @@ -28,20 +28,24 @@ static void cxl_cper_trace_uncorr_port_prot_err(struc=
-t pci_dev *pdev,
->  	else
->  		fe =3D status;
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index a05c1be388d2f..794f956910886 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -969,6 +969,8 @@ static void sriov_release(struct pci_dev *dev)
+>  {
+>  	BUG_ON(dev->sriov->num_VFs);
 > =20
-> -	trace_cxl_port_aer_uncorrectable_error(&pdev->dev, status, fe,
-> -					       ras_cap.header_log);
-> +	trace_cxl_aer_uncorrectable_error(&pdev->dev, status, fe,
-> +					  ras_cap.header_log,
-> +					  pci_get_dsn(pdev));
->  }
+> +	sriov_restore_vf_rebar_initial_sizes(dev);
 
-Can passing ras_cap.header_log here cause an out-of-bounds stack read?
+Is it safe to access the hardware configuration space here?
 
-The ras_cap.header_log field is an array of 16 u32 elements (64 bytes).
-However, inside the trace_cxl_aer_uncorrectable_error() fast assign block,
-it copies CXL_HEADERLOG_SIZE (512 bytes):
+Since sriov_release() executes as a .release callback, it can run at an
+arbitrary time, such as being delayed indefinitely by an open sysfs file
+descriptor.
 
-	TP_fast_assign(
-		...
-		memcpy(__entry->header_log, hl, CXL_HEADERLOG_SIZE);
-	)
+If the device has been surprise-removed or placed in D3cold (suspended), wo=
+n't
+PCIe config space reads return ~0 (0xFFFF)?
 
-Will this read 448 bytes past the end of the header_log array and leak
-adjacent uninitialized kernel stack data into the trace ring buffer, making
-it accessible to user-space?
+In that case, pci_iov_is_memory_decoding_enabled() would evaluate
+0xFFFF & PCI_SRIOV_CTRL_MSE as true, causing pci_iov_vf_bar_set_size() to
+return -EBUSY.
 
-Also, can calling pci_get_dsn() here cause issues if the PCIe link is in a
-frozen state?
+This could trigger a pci_warn() in sriov_restore_vf_rebar_initial_sizes() f=
+or
+every resized VF BAR, spamming the kernel log with false-positive warnings,=
+ and
+potentially causing PCIe Unsupported Requests or bus errors.
 
-Since pci_get_dsn() performs live PCI config space reads, executing it on a
-disconnected or frozen device could result in system hangs, extended timeou=
-ts,
-or Unsupported Request completions.
-
-Furthermore, since pci_get_dsn() is passed as an argument to the trace
-wrapper, won't the config space read execute unconditionally on every
-error even if tracing is disabled?
-
-[ ... ]
-
-> @@ -247,7 +252,7 @@ bool cxl_handle_ras(struct device *dev, void __iomem =
-*ras_base)
->  	}
-> =20
->  	header_log_copy(ras_base, hl);
-> -	trace_cxl_aer_uncorrectable_error(to_cxl_memdev(dev), status, fe, hl);
-> +	trace_cxl_aer_uncorrectable_error(dev, status, fe, hl, serial);
->  	writel(status & CXL_RAS_UNCORRECTABLE_STATUS_MASK, addr);
-
-Can the call to header_log_copy() just above this trace event cause an
-out-of-bounds MMIO read?
-
-The header_log_copy() function iterates 128 times to read 512 bytes from
-the MMIO address:
-
-static void header_log_copy(void __iomem *ras_base, u32 *log)
-{
-	...
-	int i, log_u32_size =3D CXL_HEADERLOG_SIZE / sizeof(u32);
-
-	addr =3D ras_base + CXL_RAS_HEADER_LOG_OFFSET;
-	log_addr =3D log;
-
-	for (i =3D 0; i < log_u32_size; i++) {
-		*log_addr =3D readl(addr);
-		...
-}
-
-However, during component probe, the CXL RAS capability block is mapped
-with a length of CXL_RAS_CAPABILITY_LENGTH, which is only 88 bytes.
-
-Could attempting to read 512 bytes from an 88-byte MMIO mapping send PCIe
-memory reads to unintended device offsets, potentially triggering
-Master Aborts, Unsupported Requests, or unhandled page faults?
-
-[ ... ]
-
-> @@ -299,7 +305,8 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *p=
-dev,
->  		 * chance the situation is recoverable dump the status of the RAS
->  		 * capability registers and bounce the active state of the memdev.
->  		 */
-> -		ue =3D cxl_handle_ras(&cxlds->cxlmd->dev, cxlmd->endpoint->regs.ras);
-> +		ue =3D cxl_handle_ras(&cxlds->cxlmd->dev, pci_get_dsn(pdev),
-> +				    cxlmd->endpoint->regs.ras);
->  	}
-
-In cxl_error_detected(), if the PCIe link is in a frozen state, will the
-call to pci_get_dsn() fail?
-
-Because pci_get_dsn() performs live PCI config space reads, calling it
-when the channel state is pci_channel_io_frozen could cause system hangs
-or Unsupported Request completions.
-
-Will this vulnerability persist even if subsequent patches in the series
-(like "cxl: Update Endpoint AER uncorrectable handler") refactor the error
-flow into a workqueue, since the pci_get_dsn() call remains on the
-fatal error path?
+> +
+>  	if (dev !=3D dev->sriov->dev)
+>  		pci_dev_put(dev->sriov->dev);
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505173029.2718=
-246-1-terry.bowman@amd.com?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505170010.3414=
+074-1-marcin.bernatowicz@linux.intel.com?part=3D3
