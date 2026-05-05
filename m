@@ -1,81 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED652C21EE
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 23:53:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A3613264C2
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 23:56:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778025197; cv=none; b=W64Q9/YWQtYimfem+wl5CKPyBfHVVbB039DT4EMZPO5A3eaVgpk43Wm9NgOwUDgaaj9eRgHjuKSKsgjVYcPqh0umTpDLgqHph5bh3AjES/BH99BuXVpq/05t7YhEjReFiurKYBEK0cBdBxx7QRT77fAMbcvBPAKxVgNILYZI9Mc=
+	t=1778025398; cv=none; b=cEMJWdC+lxTZ9Jf8EcH+pSmoMp9F3M7tEzngXVOLK7SonevdWbzot8fTXOey06XIDH542gSCb/iRHRCbg4BwjsX1y9y26F5GubDSwS+PoYWgmRHfOhaJDdavtgFNOeZqujA7U4MyhOGlMqt83hfSPghwJ4uodHh2Do0r0Nj1+mY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778025197; c=relaxed/simple;
-	bh=M/Y9g/XLxMmWmVs1W3+8998tRt5JGDJl3BHMFlKu+30=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=au4LyXHqk6E5mrJg+7GbqDCQ3rk6o5sZOJLq7UIzfNM4qaysEO25d4TLrfG8mhyy24gdP62d462PPVdap/vsoQ1HXGj6l99fK/KGtUmC6Q8zzRhAYw7JOQ9kQJHFkhvsqEsvdVH4zN1XAKtTOYwFXNLyM0hy7I8Rk+Q6052J+ac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ag9pMgnz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778025398; c=relaxed/simple;
+	bh=t+90LNdeQiAdwG9I/bOCuS87OwD+8NcSjAIU5OtDiCg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VjcntQPChWFC8qGfyX+vTBtALbfUL7sPYO4qL2BnibSM+fbpQv5YjO7bGE97YgjHZPs47zZ3Njxy0zKUsv/TU9/Suxm0Tg+bX/HgzeecEngv5a36JLt8o0YTfIXUBCtKx+S2wzK5TltEXpO5Hbp/oXMf4MDpY/K9PUB8a9RX9S0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d7fBo999; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ag9pMgnz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DFB5C2BCB9;
-	Tue,  5 May 2026 23:53:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d7fBo999"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F6CDC2BCB4;
+	Tue,  5 May 2026 23:56:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778025196;
-	bh=M/Y9g/XLxMmWmVs1W3+8998tRt5JGDJl3BHMFlKu+30=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Ag9pMgnzlH89nRKDW3rL5+7afdITgagfDvpsi9NSmfi0k99p+1cX5OBXdLIe8S+kj
-	 UaDM9/j6kNM/P7T1sBJo7zKBcBUfVLucoOJnPKxrpn3JW4Y7KQVARDcR67WKHrkBh4
-	 oom74WuErIIyjG782Bhdl4ULlwrfRKTUM1uN/fOemWwnvGmNfkM8MqiFa5XZWytPIm
-	 BA8hxgAMknLVtQqmuqYrjpBmUu1En3ACFPMft//Eu0bG/DCeLZMAOlPP+tUKRjhUZ3
-	 hg6LYxcee8az+IgXncpD/PxNDRstaD8IiIuRpbi9gtcxQwMgAXM5qqiF/gjd8q1U4F
-	 +s0+6O1QmpAWQ==
-Date: Wed, 6 May 2026 08:53:14 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, Shuan He <heshuan@bytedance.com>, 
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/proc: Fix race between pci_proc_init() and
- pci_bus_add_device()
-Message-ID: <20260505234738.GC1410272@rocinante>
-References: <20260501010127.GA990551@rocinante>
- <20260501193721.GA511830@bhelgaas>
- <afm8y+KHlgtSWBqH@lpieralisi>
+	s=k20201202; t=1778025398;
+	bh=t+90LNdeQiAdwG9I/bOCuS87OwD+8NcSjAIU5OtDiCg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=d7fBo999A0S2wUSWUWSdNzgq1KQnuM4ajl/DMDIgdyBlvKHENqJ3adA1WGIPWl2LO
+	 rZPcW4XiNSyU4hs1wvBCaHQhT2ndSE9Cg8YbYcWEy6/OtTTt7L5vBIa++WiR6oi+W/
+	 GOXe2t2fn8LzcMKMSiKDfM+x9BOHgBa8zZMuNpSpHMvc+yfvjMkpAOyWSyzTO8Ha+L
+	 YqzXnrE143cydr2dfFsU5fd5D+irccEwjEGnN9VHiGuOC/WPlMarAnz6wEHIpf334C
+	 4DTVLQxiND24X3X/h5aCetPTAIsg3Bbr7fDVUCOBVdQbXMhIz8zF2G/nnvsCMCeNKa
+	 vI4Ty0lbxTwSQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v15 6/7] vfio/pci: Add a reset_done callback for
+ vfio-pci driver
+Reply-To: sashiko@lists.linux.dev
+To: "Farhan Ali" <alifm@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260505200510.2954-7-alifm@linux.ibm.com>
+References: <20260505200510.2954-7-alifm@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 05 May 2026 23:56:37 +0000
+Message-Id: <20260505235638.3F6CDC2BCB4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <afm8y+KHlgtSWBqH@lpieralisi>
 
-Hello,
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [Critical] Concurrent execution of `vfio_pci_core_aer_reset_done` and `vf=
+io_pci_core_disable` leads to an exploitable Use-After-Free on `vdev->pci_s=
+aved_state`.
+- [High] The return value of `pci_load_saved_state()` is ignored, potential=
+ly pushing corrupted state to the hardware.
+- [Medium] The state recovery logic is marked `static`, depriving vendor-sp=
+ecific VFIO PCI drivers of the feature.
+--
 
-> > > Lorenzo Pieralisi did some testing reported outside the mailing list (we
-> > > talked on IRC) on the platform he had some boot issues.  With this patch
-> > > applied, the problems seen before were resolved.
-> > 
-> > Thanks!  Can we include a link to the problem report and maybe a
-> > couple lines of the symptoms?
-> 
-> You can add a Link tag:
-> 
-> https://lore.kernel.org/linux-pci/20250702155112.40124-2-heshuan@bytedance.com/
-> 
-> FWIW I tested it on top of:
-> 
-> https://lore.kernel.org/lkml/20260505-gic-v5-acpi-iwb-probe-deferral-v1-0-b37b85998362@kernel.org/
-> 
-> so:
-> 
-> Tested-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> 
-> > Also the analysis of Sashiko feedback?
-> 
-> I have not looked into this yet though I/We should.
-> 
-> Thanks for the fix !
+commit 50af2d4f1aef440c94cd13a26e090b9661198f8c
+Author: Farhan Ali <alifm@linux.ibm.com>
 
-Thank you for taking the time to test it!  Much appreciated.
+vfio/pci: Add a reset_done callback for vfio-pci driver
 
-	Krzysztof
+On error recovery for a PCI device bound to the vfio-pci driver, this
+commit attempts to restore the device state to its initial saved state
+by adding a reset_done callback.
+
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index f47a49ca67fae..6358b59fab2b1 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+
+[ ... ]
+
+> @@ -2255,6 +2255,17 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
+ruct pci_dev *pdev,
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
+> =20
+> +static void vfio_pci_core_aer_reset_done(struct pci_dev *pdev)
+
+Vendor-specific VFIO PCI drivers sometimes override the .reset_done callback
+in their pci_error_handlers. Should this function be exported instead of
+static, so that vendor drivers can also invoke the core framework's state
+restoration?
+
+> +{
+> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
+> +
+> +	if (!vdev->pci_saved_state)
+> +		return;
+> +
+
+Is there a race condition here between the AER recovery thread and the VFIO
+device close path?
+
+The AER thread invokes vfio_pci_core_aer_reset_done() holding
+device_lock(&pdev->dev), but without VFIO-specific locks like dev_set->lock.
+
+Concurrently, closing the VFIO device file descriptor invokes the disable
+path:
+
+vfio_pci_core_close_device() -> vfio_pci_core_disable()
+
+The disable path runs with dev_set->lock held, but without
+device_lock(&pdev->dev), and it frees the saved state:
+
+pci_load_and_free_saved_state(pdev, &vdev->pci_saved_state)
+
+Could vdev->pci_saved_state be freed immediately after the check here,
+causing a use-after-free when it is passed to pci_load_saved_state() below?
+
+> +	pci_load_saved_state(pdev, vdev->pci_saved_state);
+> +	pci_restore_state(pdev);
+
+Can pci_load_saved_state() fail and return an error?
+
+If it returns an error, such as -EINVAL for capability size mismatches,
+dev->state_saved remains false and the capability buffers may only be
+partially copied.
+
+Since the return value is ignored here, does calling pci_restore_state(pdev)
+immediately afterward risk pushing partially populated or corrupted state b=
+ack
+to the hardware?
+
+> +}
+> +
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505200510.2954=
+-1-alifm@linux.ibm.com?part=3D6
