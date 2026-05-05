@@ -1,139 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA3942556E;
-	Tue,  5 May 2026 21:31:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4629A48A2DE;
+	Tue,  5 May 2026 21:42:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778016663; cv=none; b=tQ2Nne9NcGZ1WPHBD+pcUoAQl3ZxJ/dIW4HVA+RDOkvlJuQOBdpLJ3rCu/ToJ7IbNrP9TQi9DmY3Y/L/f3oOMQjDS9C4e+aO0EqrObeylFeynYepekCx30py4GpVh7mxzRU42+h/hFyBJOKP6WnQ44WyESjRBjPbRO+Z52GR5Nw=
+	t=1778017358; cv=none; b=NKlk3YK+KEYIYtXaHWcWOc3sCuzExtkZngmZhzg0yLL6FAm1AVOVZZjLhqGYf3WFRw6Jewzo0FtGIFUFqGN9lyUXZTV5koupGVx079nEftWB0b7Wi4lvi7hwmWWSFQ0x7RlsQhhhkhw3lH2kgZlM1oCr+Qdd3lSrEg226vpFhlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778016663; c=relaxed/simple;
-	bh=i9ndZnTLt8zIDy5Mkgz7fGXuWdU3oQ9A5bMpZWxB1ZA=;
+	s=arc-20240116; t=1778017358; c=relaxed/simple;
+	bh=a3YOnkajHyfwERXeEYwLVyZkFUh4Eg/Ia/6U/YCqEjs=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=gWMnryUOo3/Hc0fs9B6iRyWETVDcrmaRwLd17njLjh0Y3oLmH0IlR1R6juW0TV8y7Lo0QUNGXCfR1HKKYFk0f9jEqy7T9gZ8NqNUBrrpQ4mxrOHPQ41U5NlLIVLRnj93Vpa+/U91H+rYHv3o8/sRG4dVS1BmwuMwxluOnIrn/QM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kEyYBLGA; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=TLHRLfBkM+TxcyBOhhpaB2O8qz1/9d+17kIvvHAAzlmaGZ44lrmge1oxg0ggGNuJnzd+HyS7zZ3m4qLsQyySmIQdO2cbaa6+yTXVkbzfdtCEEFXcVUL+MupknvCYoqTeTMsx2qtsPYJJr/DNeF/9KFwaiOTEaRZ9PPuEBX4sR5Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g8Rs5Ysq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kEyYBLGA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44779C2BCB4;
-	Tue,  5 May 2026 21:31:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g8Rs5Ysq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA7F4C2BCB4;
+	Tue,  5 May 2026 21:42:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778016663;
-	bh=i9ndZnTLt8zIDy5Mkgz7fGXuWdU3oQ9A5bMpZWxB1ZA=;
+	s=k20201202; t=1778017357;
+	bh=a3YOnkajHyfwERXeEYwLVyZkFUh4Eg/Ia/6U/YCqEjs=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=kEyYBLGA+XfMJXuZ3Uwb/EoPqSdmtYKeCCZpRwkybIP1z4TrzcAbQK+PV0M6tix7X
-	 G4baoMSN6EPb3enZoZt0d3xWs6EBbjXSH6xJtQZZ4XIzR7+YMl9Dy6pjL9rpw1sE4w
-	 FOoZtqxUlxfuoh/kYMQ1aVu04f8wYnt5NvrKvwdf0T9OzFn2U5lEaLYD3ZW8kS/zbt
-	 MRRaKR7O+I6vb+HqxiM01+N19la4tFuCqMTZZFNMUWiBP/2xCqRgOhVr1zlSrWKb8V
-	 9YTyWKGVUiycFNVBmKTGNwtMGpu5esSVfCKygbJfR3f6BIayeh2Mn6xSD3/2Gk577q
-	 nOAYkX3YxlPNA==
-Date: Tue, 5 May 2026 16:31:02 -0500
+	b=g8Rs5Ysq3yjrmKJLH79HPwie7wxnTr7A7fvQQc7zwaMklNAczNvZ6oxdnnL3aJdkN
+	 X7EzUEMiyaUoyLinPcDcaf0IFJjLHjpKSJ8mF9SCG8XRLWHamJOMJyxIxxDD9wOYtU
+	 asSzF+Ybj0WQazrgHiEbinySZssq45BaPVQxC+hF64Xz2axWfGPyzz9Moag11TrdG9
+	 ACWa9/VVU3XZBUogIJSLbEmqLX9Up1A3W4tElWjZtEkrzh4DoGY4sp/jkVSMSUWt+t
+	 uVv6u01rQPqHXdl2hJb2Qu7h2wT4oEnXYI5tbkwrHTt4S7rUJbozqVi4T6dY15UdnH
+	 WRF2n3Mh4cvEA==
+Date: Tue, 5 May 2026 16:42:34 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: Hans Zhang <18255117159@163.com>, linux-pci@vger.kernel.org,
-	Dom Cobley <popcornmix@gmail.com>,
-	Phil Elwell <phil@raspberrypi.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-rpi-kernel@lists.infradead.org>,
-	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: brcmstb: Assign pcie->gen from pcie_get_link_speed()
-Message-ID: <20260505213102.GA750989@bhelgaas>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, linux-pm@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH] PCI/ASPM: Enable L0s/L1 for removable devices when BIOS
+ didn't configure ASPM
+Message-ID: <20260505214234.GA751157@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <d13eb4ce-a868-4b10-b044-83fa1ddea1e9@broadcom.com>
+In-Reply-To: <66ceb34e-17a0-4ff5-8534-9067d4e9b32c@amd.com>
 
-On Tue, May 05, 2026 at 10:58:49AM -0700, Florian Fainelli wrote:
-> On 5/5/26 09:01, Bjorn Helgaas wrote:
-> > On Mon, May 04, 2026 at 04:46:03PM -0700, Florian Fainelli wrote:
-> > > On 5/4/26 10:26, Hans Zhang wrote:
-> > > > On 5/5/26 00:58, Florian Fainelli wrote:
-> > > > > On 5/2/26 04:40, Bjorn Helgaas wrote:
-> > > > > > On Fri, May 01, 2026 at 01:24:38PM -0700, Florian Fainelli wrote:
-> > > > > > > After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
-> > > > > > > pcie->gen stopped being assigned and as a result the established PCIe
-> > > > > > > link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
-> > > > > > > to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
-> > > > > > > 
-> > > > > > > Link: https://github.com/raspberrypi/linux/issues/7343
-> > > > > > > Reported-by: Dom Cobley <popcornmix@gmail.com>
-> > > > > > > Reported-by: Phil Elwell <phil@raspberrypi.com>
-> > > > > > > Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
-> > > > > > > Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
-> > > > > > > ---
-> > > > > > >    drivers/pci/controller/pcie-brcmstb.c | 3 +--
-> > > > > > >    1 file changed, 1 insertion(+), 2 deletions(-)
-> > > > > > > 
-> > > > > > > diff --git a/drivers/pci/controller/pcie-brcmstb.c
-> > > > > > > b/drivers/pci/ controller/pcie-brcmstb.c
-> > > > > > > index 714bcab97b60..6138fc4bc064 100644
-> > > > > > > --- a/drivers/pci/controller/pcie-brcmstb.c
-> > > > > > > +++ b/drivers/pci/controller/pcie-brcmstb.c
-> > > > > > > @@ -2072,8 +2072,7 @@ static int brcm_pcie_probe(struct
-> > > > > > > platform_device *pdev)
-> > > > > > >            return PTR_ERR(pcie->clk);
-> > > > > > >        ret = of_pci_get_max_link_speed(np);
-> > > > > > > -    if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
-> > > > > > > -        pcie->gen = 0;
-> > > > > > > +    pcie->gen = pcie_get_link_speed(ret);
-> > > > > > 
-> > > > > > Take a look at https://sashiko.dev/#/
-> > > > > > patchset/20260501202438.376033-1-
-> > > > > > florian.fainelli%40broadcom.com
-> > > > > > 
-> > > > > > The notes at https://github.com/raspberrypi/linux/issues/7343 assumed
-> > > > > > PCI_SPEED_UNKNOWN was 0, but in fact it is 0xff, which means you might
-> > > > > > want the more defensive patch instead.
-> > > > > > 
-> > > > > > I'll be happy to replace what's on pci/for-linus if so.
-> > > > > 
-> > > > > I am starting to think a revert is the simplest path forward, it's
-> > > > > not clear what pcie_get_link_speed() brings to the table honestly.
-> > > > 
-> > > > The pcie_get_link_speed function is designed to prevent other Root Port
-> > > > drivers from accessing the array pcie_link_speed out of bounds.
+[+cc Mika]
+
+On Tue, May 05, 2026 at 11:08:14AM -0500, Mario Limonciello wrote:
+> On 5/5/26 11:05, Bjorn Helgaas wrote:
+> > On Mon, May 04, 2026 at 05:52:46PM -0500, Mario Limonciello wrote:
+> > > When comparing lspci output between Windows and Linux for hotplugged
+> > > Thunderbolt 5 eGPU devices, Windows enables ASPM L1 but Linux doesn't:
 > > > 
-> > > Yes, so that's useful in the first hunk of your commit where we were
-> > > printing the link speed without checking that the 'max-link-speed' would be
-> > > bounds check, however it is not really useful for assigning to pcie->gen in
-> > > our case, so I would prefer the second option:
+> > >    Windows: LnkCtl: ASPM L1 Enabled
+> > >    Linux:   LnkCtl: ASPM Disabled
 > > > 
-> > >            ret = of_pci_get_max_link_speed(np);
-> > >   -       if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
-> > >   -               pcie->gen = 0;
-> > >   +       pcie->gen = (ret < 0) ? 0 : ret;
+> > > This difference in ASPM configuration can cause behavioral differences
+> > > between the two operating systems for the same hardware.
 > > 
-> > The point of this validation is to make sure we don't program the
-> > brcmstb hardware with something it doesn't support.
-> > 
-> > of_pci_get_max_link_speed() only returns an error (ret < 0) if DT
-> > didn't contain a 'max-link-speed' property.  That doesn't tell us
-> > anything about what brcmstb devices support.
-> > 
-> > I think this test should be something like what advk_pcie_probe() or
-> > rockchip_pcie_parse_dt() do.  If of_pci_get_max_link_speed() fails or
-> > returns something not supported by the hardware, they default to the
-> > fastest speed known to be supported.
+> > A tangent, not a comment on the patch itself, but what sort of
+> > behavioral differences are these?  If ASPM is working correctly, the
+> > only differences *should* be in power consumption and performance.
 > 
-> Doing that could be challenging because it varies on a per-controller
-> instance on some chips like 2712, this would also be a behavioral difference
-> compared to today where the driver resorts to HW-defaults if the property is
-> not specified.
+> This originally stemmed from a significant performance difference that was
+> observed between Windows and Linux with eGPUs.  The link in the patch points
+> at that bug if you want to look more closely at it.
 
-I think it's OK to default to what the hardware advertises if that
-makes sense for this hardware and driver.
+Hmm.  The bug (https://bugzilla.kernel.org/show_bug.cgi?id=221319)
+reports "instant reboot", which is definitely a behavioral difference.
+But AFAICS this patch would just fix something noticed along the way
+but not the reboot itself.
 
-The fact that this is all device & driver dependent was part of what
-motivated the series in the first place -- the generic OF code can't
-do that kind of per-controller validation.
+To avoid confusion, I would use "performance difference" or "power
+difference" when describing this patch.
+
+> I was hopeful that aligning ASPM would align the behavior, but alas this
+> didn't.
+> 
+> It was still a difference that I figured we should discuss whether it should
+> be changed to be consistent.
+
+Definitely.  I hope we can at least enable L1.1.  L1.2 is a whole
+'nother issue.
