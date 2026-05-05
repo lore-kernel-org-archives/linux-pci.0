@@ -1,141 +1,235 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E23533F586
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 10:22:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B97572FD681
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 10:43:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777976572; cv=none; b=JET2kRzwaIvkYZgyfka+d/kthmqHNW383fiS0fMqSJL1ezuyU1kTx4wZhJZMJ6dLxcLMLGDIjvgZcqDMXTss+mkGDFvk/WRyd7JSLJNDkH1z6xXTOhs143SYVqq8rIlahfa0GIc/0FVXMZLVobic1BEseMWWhT3R8GYsbrdYRR4=
+	t=1777977811; cv=none; b=N+SiKwcPllKXaA4JOOwNRypvVoCrV9oE4mZYW1YCMymDZoxiY306evGx+5269RREe5sq3wSiMcP+ELCQoW4KzPvpC8w2GjqTGjvIRI46HjKWfzSfDyCmBaGP0U46BQESgionyydjwH/uZ2iG6BpcDbdf7uDzTGar3gLyasqBMbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777976572; c=relaxed/simple;
-	bh=z2YmbsS2kZk9RBeybP4JYxHRl0VR7eIBvyk4ziLXiBw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=X0k+PebjtqVIosLbq0tJRwPsP+8K+sHfJSs0h33lPDzP97k9nYXUt0AMAHAKtB+gA7ySp3IC2iEOt6TKMi6/1a/cwBVG3k3OwZhtoos63apx9y16Pgi2UtWkhVtIinvtIOHd/zAFU6XnI7uCDhfvYiKSF7k23qWm6QihGzTVYPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NrrrbJ+y; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777977811; c=relaxed/simple;
+	bh=4p8xZgPTwl23yuO4usByrqVx7sRRkYZITrF1b6z8fNY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=a30NbhSKcLOzsfx4yaGwQm8rLnRlWnaiTilfJCBu6MVBltrBZ2Mqn7K2y/X0VLjQ7yuHV8/Ib8mWwiPXMz4wOj6boZrRb1nIBHcGODzvJINfcnVbABqHx1YVEhSR9tLKFi9/k3PWM3pTiAQvsG9crHNn2r3F5I4BWKwbgMwuAoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pSHbcEEf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NrrrbJ+y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4754C2BCB4;
-	Tue,  5 May 2026 10:22:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pSHbcEEf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D911C2BCF7
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 10:43:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777976571;
-	bh=z2YmbsS2kZk9RBeybP4JYxHRl0VR7eIBvyk4ziLXiBw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=NrrrbJ+yED95GIUS1jm715Mzdnm94Kg3PGPEHZoWLbg32qzv3Y/5tvgu2cPN6JBZk
-	 dUafsxTmQg7tJc8OSGBs28NlOg0hWx+eVI7mmAVNHbHUcF6f0goPPVKPCOAokUGmGF
-	 HkzGosy4yWZ9ALumX1AHCwUIr0g59FuFOF9PL4VPPVIKpbXur6dLBeIwMoPDDEXcXE
-	 cOc68IGhVhwf3vr4wA1nMYr8Y7+Kfeynx+Q+a4QgB2HNksw0O5lbxkSX62AYu0i5Ez
-	 ac18EXqXZ3D9aUbGei84VSmK6p4g7mFPlJfoQIXV6I2/xqASod0eaiUf8PKA8ECP2t
-	 VsqzjQJ1O4CWg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] usb: cdnsp: Add support for device-only
- configuration
-Reply-To: sashiko@lists.linux.dev
-To: "Pawel Laszczak via B4 Relay" <devnull+pawell.cadence.com@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260505-device_only_branch_v2-v2-1-98cc19fbd02a@cadence.com>
-References: <20260505-device_only_branch_v2-v2-1-98cc19fbd02a@cadence.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 05 May 2026 10:22:51 +0000
-Message-Id: <20260505102251.B4754C2BCB4@smtp.kernel.org>
+	s=k20201202; t=1777977811;
+	bh=4p8xZgPTwl23yuO4usByrqVx7sRRkYZITrF1b6z8fNY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=pSHbcEEffmwAe1AyV5gwpZOhcvKoyz5oNnw5hpUc4pL78QL6NWwQ93yOMxpJ1i1Sk
+	 MGPGZVJyIqgnLxqCX+bx3hERDbXYLz/1x1I0b0KY6bjkhHxQsrTkCQwsrzs0M3umOG
+	 4+89S7eH/7QVsU5IKOSP2RLRa8R+pdUZs89GlJ48cijmAuMtZbi9lJSCB9WBA6NX34
+	 SMnDQ2D3SyVtz0iMvEfHNVTl8myiDfqT3y8WnMXr7efRqdKTC22USNHHZ1ZXrEn3LG
+	 4GbRbN1bncCugzOAQTKfs5y/IQdQszglWZQR9wf8bqbZg1UgOIzYt2elCg0Vl+7USV
+	 oi0JMLWiKAvbg==
+Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-393800586aeso26683811fa.1
+        for <linux-pci@vger.kernel.org>; Tue, 05 May 2026 03:43:31 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9NvRSE94WnlPV1GCMeARO4RJIw+u0UuWbvtbbsShrgeQwL1c8JC91OUpdFWn4slKHYBqXfe9doqIE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxd3+bUyI46CB5n7tNa4CeDdfozY1RBnkMoWwoZLxTtdomhEZKx
+	/PO4RXXzLT9WQJnOHQx2jijK3cJU8nYhCyhTMpI7q6QzDQjykwWPS3I2oTaiyXys1kXl6poqj4m
+	iSzvq8EwuijuUfOHXUBjpcaWqyWZdhtc=
+X-Received: by 2002:a05:6512:3f0b:b0:5a8:7360:5c59 with SMTP id
+ 2adb3069b0e04-5a87e6826b7mr1133820e87.10.1777977809996; Tue, 05 May 2026
+ 03:43:29 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <CAJZ5v0g3f8_7v-8W0SAbn_8vmKUJgpDbgyYMSjv03QjXJ8bCHQ@mail.gmail.com>
+ <20260504211741.GA659556@bhelgaas>
+In-Reply-To: <20260504211741.GA659556@bhelgaas>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Tue, 5 May 2026 12:43:17 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0hngqvdi2vRB4n5T3sGSPc10eR=1X+UO2QAR=GHYmQo2w@mail.gmail.com>
+X-Gm-Features: AVHnY4L9S085Yvf8QXDvLO4t6IegPYvzrYt8Z57K_31su0wbMOblGNmN7xFGjSs
+Message-ID: <CAJZ5v0hngqvdi2vRB4n5T3sGSPc10eR=1X+UO2QAR=GHYmQo2w@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>, sashiko-bot@kernel.org, 
+	linux-pci@vger.kernel.org, sashiko@lists.linux.dev, 
+	Marco Nenciarini <mnencia@kcore.it>, Michal Winiarski <michal.winiarski@intel.com>, 
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Eric Chanudet <echanude@redhat.com>, 
+	Jean Guyader <jean.guyader@gmail.com>, Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>, 
+	Mario Limonciello <superm1@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
-s) to consider:
-- [High] The platform probe function silently swallows `-EPROBE_DEFER` for =
-the optional OTG IRQ, permanently breaking DRD mode.
-- [High] The error path for platform device registration in `cdnsp_pci_prob=
-e()` incorrectly frees a shared driver wrapper, causing a Use-After-Free.
-- [High] Concurrent execution of `cdnsp_pci_probe` across both PCI function=
-s leads to a NULL pointer dereference.
-- [Medium] Concurrent execution of `cdnsp_pci_remove` across both PCI funct=
-ions causes the shared driver data to be leaked.
-- [Medium] PHY mode is left unconfigured when operating in peripheral-only =
-mode.
-- [Medium] Forcing IORESOURCE_MEM on an unpopulated Host BAR creates a conf=
-licting, zero-length memory resource.
-- [Low] `cdns_get_id()` returns the Host ID instead of the Peripheral ID fo=
-r Device-only mode.
---
+On Mon, May 4, 2026 at 11:17=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> On Mon, May 04, 2026 at 09:31:51PM +0200, Rafael J. Wysocki wrote:
+> > On Mon, May 4, 2026 at 7:09=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.or=
+g> wrote:
+> > > On Mon, May 04, 2026 at 09:49:36AM +0200, Lukas Wunner wrote:
+> > > > On Sun, May 03, 2026 at 01:51:08PM +0000, sashiko-bot@kernel.org wr=
+ote:
+> > > > > Thank you for your contribution! Sashiko AI review found 1 potent=
+ial
+> > > > > issue(s) to consider:
+> > > > > - [High] Removing the read-back and retry loop for BAR restoratio=
+n in
+> > > > > `pci_restore_state()` introduces a risk of silent regressions for
+> > > > > hardware resuming from non-FLR resets (such as D3hot to D0 transi=
+tions
+> > > > > or custom driver resets). The commit incorrectly assumes the 60s =
+delay
+> > > > > from `pci_dev_wait()` covers all usages, but standard PM resume p=
+aths
+> > > > > only delay for 10ms (`PCI_PM_D3_WAIT`) before calling `pci_restor=
+e_state()`.
+> > > > > Historically, hardware that needed slightly longer to accept
+> > > > > configuration writes relied on the 10x 1ms retry loop to successf=
+ully
+> > > > > restore BARs. By removing both the retry and the read-back verifi=
+cation,
+> > > > > BAR writes to slow devices will be silently dropped, leaving hard=
+ware
+> > > > > unconfigured and causing MMIO accesses to result in IOMMU faults =
+or
+> > > > > kernel crashes.
+> > > >
+> > > > Hallucination alert:
+> > > >
+> > > > PCI_PM_D3_WAIT does not exist, it was renamed to PCI_PM_D3HOT_WAIT
+> > > > six years ago by commit 3789af9a13e5, which went into v5.10.
+> > > >
+> > > > The macro is used in:
+> > > >
+> > > > pci_pm_resume_noirq()
+> > > >   pci_pm_default_resume_early()
+> > > >     pci_pm_power_up_and_verify_state()
+> > > >       pci_power_up()
+> > > >         pci_dev_d3_sleep()
+> > > >
+> > > > However before pci_power_up() calls pci_dev_d3_sleep(), it reads
+> > > > the PMCSR register and errors out if config space is inaccessible.
+> > > >
+> > > > Hence when pci_restore_state() is invoked a bit later, config space
+> > > > can be assumed to be accessible.
+> > >
+> > > I don't quite follow this.  In this path, pci_power_up() changes a
+> > > device from some low-power state to D0.  If the device was in D3hot o=
+r
+> > > D3cold, we must delay at least 10ms before any access to it (PCIe
+> > > r7.0, sec 5.9).
+> >
+> > D3hot and D3cold are different in this respect, so using "or" here is
+> > inaccurate and confusing.
+> >
+> > Accessing the config space of a device in D3hot is entirely correct
+> > and doesn't require any delay.
+> >
+> > Accessing the config space of a device in D3cold is questionable
+> > because the device may not be accessible, but then the host bridge
+> > should just fail the access.
+> >
+> > The 10 ms delay is after attempting to program the device into D0 from
+> > D3hot (or the other way around) and it is observed as required.
+>
+> Thanks for taking a look at this!
 
-Note: The format of this report has been altered to provide a free-form sum=
-mary
-of the findings due to recitation restrictions. Direct patch quoting has be=
-en
-omitted.
+No prob.
 
-commit a05f3bd009fe3424669de67ea28711725bd2a6c9
-Author: Pawel Laszczak <pawell@cadence.com>
-Subject: usb: cdnsp: Add support for device-only configuration
+> If pci_power_up() is doing D3cold -> D0, main power is initially off,
+> so platform_pci_set_power_state(PCI_D0) would turn on main power,
+> which is a Fundamental Reset leaving the device in D0uninitialized.
+> In general the device needs at least 100 ms after that reset before
+> any access, e.g., before the PMCSR read.
 
-This commit introduces support for operating the Cadence USBSSP controller
-in a peripheral-only mode, bypassing the Dual-Role Device logic. It also
-updates the BAR indexing for the peripheral-only configuration.
+Yes, it does in general, but that should be covered by
+platform_pci_set_power_state() because on some platforms the delay can
+be shorter.
 
-In cdns3_plat_probe(), the code fetches the optional OTG interrupt via
-platform_get_irq_byname_optional(). If it returns -EPROBE_DEFER, the check
-for negative values sets cdns->no_drd =3D 1 and continues in Device-only mo=
-de.
+> If pci_power_up() is doing D3hot -> D0, the device already has main
+> power, so I suppose platform_pci_set_power_state(PCI_D0) doesn't do
+> anything.
 
-Does this break the probe deferral mechanism? On platforms where the IRQ
-controller probes later, the controller would be permanently degraded to
-peripheral-only mode instead of deferring and retrying.
+It may or may not.  Some platforms supply AML to run during D3hot ->
+D0 transitions (and the ACPI spec allows that).
 
-Looking at cdnsp_pci_probe(), when the second PCI function probes, it fetch=
-es
-the shared state wrapper via pci_get_drvdata(). If the platform device
-registration fails, the error path unconditionally calls kfree() on the wra=
-pper.
+> The device remains in D3hot, the PMCSR read should be fine,
+> and the PMCSR write to transition to D0 is immediately followed by the
+> 10 ms delay.  When No_Soft_Reset =3D=3D 1, this should be enough.
+>
+> But when No_Soft_Reset =3D=3D 0, the transition is to D0uninitialized,
+> which sec 2.3.1 includes as a reset condition after which the device
+> is permitted to return RRS.
+>
+> So to me it looks like we need these delays:
+>
+>   - For D3cold -> D0, msleep(100) and pci_dev_wait() between
+>     platform_pci_set_power_state(PCI_D0) and the PMCSR read, similar
+>     to what pcie_flr() does.
 
-Can this lead to a use-after-free? The wrapper was allocated by the first
-function and is actively stored in its driver data. Freeing it would corrupt
-the first function's state, and when removed later, cdnsp_pci_remove() would
-dereference the freed wrapper.
+Adding those delays directly to the PCI PM code would ruin the timing
+of system resume on many systems where devices go into D3cold during
+suspend, or are powered off by the platform firmware later in the case
+of S3 transitions.  For instance, during resume from S3, everything is
+typically powered up by the platform firmware which also takes care of
+the delays and the kernel effectively gets all devices in D0uninit.
 
-Also in cdnsp_pci_probe(), the driver relies on pci_is_enabled() to check if
-the sibling function has already been probed. Since pcim_enable_device()
-increments the enable counter early in the probe, concurrent probes could
-both see pci_is_enabled() as true.
+Also, as stated above, IMO it is better if
+platform_pci_set_power_state() takes care of the delay.
 
-Could this cause a null pointer dereference? One thread might call
-pci_get_drvdata() before the other has called pci_set_drvdata(),
-receiving a null pointer that is immediately dereferenced when accessing
-the wrapper's resources.
+>     Maybe platform_pci_set_power_state() takes care of some or all of
+>     this internally?
 
-Similarly, in cdnsp_pci_remove(), the shared wrapper is conditionally freed
-if the sibling function is not enabled. Since pcim_enable_device() uses
-managed resources, the actual PCI disablement occurs after the remove
-callback completes.
+At least on some platforms, yes it does.
 
-If both functions are unbound concurrently, would both threads see the
-sibling as still enabled, causing them both to skip the kfree() and leak
-the wrapper memory?
+Moreover, the power-on may not actually happen during
+platform_pci_set_power_state() for the device in question, but for its
+parent.  It is quite common to provide an ACPI power resource for a
+PCIe root port for bringing up the downstream link, which doesn't
+really change the power state of the root port itself, but it affects
+the subordinate device (and possibly everything below it).
 
-The updated cdns_drd_gadget_on() function returns early if no_drd is true.
+Of course, a good question is what Alternative OSes do when
+transitioning PCIe devices from D3cold to D0, but I think I can find
+that out.
 
-Does this leave the PHY mode unconfigured? Skipping the rest of the function
-also skips the phy_set_mode() calls for the USB2 and USB3 PHYs, leaving
-them in an undefined state which might prevent the link from establishing.
-
-In cdnsp_pci_probe(), the driver sets up the host resource using BAR 0 and
-assigns the memory resource flag.
-
-In a device-only configuration where the host controller is absent and
-BAR 0 is unpopulated, pci_resource_start() and pci_resource_end() typically
-return 0. Could passing a base-0 memory resource cause the platform core to
-attempt claiming physical address 0 and abort the probe?
-
-When the no_drd flag is true, cdns_get_id() is modified to return 0.
-
-Since 0 corresponds to the host ID, does this incorrectly identify the
-device-only controller as a host? Even if the role state machine handles
-it later, returning the host ID for a peripheral-only setup seems
-structurally flawed.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505-device_onl=
-y_branch_v2-v2-1-98cc19fbd02a@cadence.com?part=3D1
+>   - For D3hot -> D0 with No_Soft_Reset =3D=3D 0, pci_dev_wait() after the
+>     PMCSR write to transition to D0.
+>
+>     abbcf0e2a99d ("PCI: Wait for device to become ready after a power
+>     management reset") added the similar wait in pci_pm_reset().
+>
+> > > pci_power_up() doesn't do any delay before the PMCSR read.
+> >
+> > It assumes that platform_pci_set_power_state() has run and either it
+> > has succeeded or the config space is not accessible which is when
+> > PCI_POSSIBLE_ERROR() will trigger.  Unfortunately, there is no
+> > canonical way to verify that power has been restored to the device
+> > other than attempting to access it.
+> >
+> > > That part seems like a pre-existing issue even before this patch.
+> >
+> > I beg to differ.
+> >
+> > > If the PMCSR read returns PCI_POSSIBLE_ERROR(), pci_power_up() does
+> > > complain "Unable to change power state ... to D0" and return -EIO, bu=
+t
+> > > pci_pm_power_up_and_verify_state() doesn't look at it,
+> >
+> > In fact, pci_update_current_state() changes the power state to D3cold
+> > if the config space is not accessible.
+> >
+> > > and pci_pm_default_resume_early() continues on to pci_restore_state()=
+, so
+> > > it looks to me like we could try to restore state to an inaccessible
+> > > device.
+> >
+> > So the pci_restore_state() call could be avoided if the power state of
+> > the device was D3cold, but then the question is how much of a problem
+> > that is in practice.
+> >
+> > > We do call pci_dev_wait() in pci_pm_reset(), which does a D3hot -> D0
+> > > transition; shouldn't we do the same in pci_power_up()?
+> >
+> > It would be good to make them consistent, but maybe the other way aroun=
+d?
