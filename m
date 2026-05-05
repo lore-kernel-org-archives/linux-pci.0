@@ -1,125 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3B0F3EE1C4;
-	Tue,  5 May 2026 16:26:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CEB54963B5;
+	Tue,  5 May 2026 16:54:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777998391; cv=none; b=b2XqrhMSx9cgqNL5aIJy/EEMCa4y7XwGuepE7hurErLXRA/YP+qllxrFRA6frgYh6ik4XxdbRKMG3XxjzkJ5CpIYcU/98fjbb+v02TWZrWiYpLGc2cW3qHOoHeERPPSI7gFQjYbtQab9wwxkU+/yVJgo2bijO+gucVg7GiOaj/g=
+	t=1778000079; cv=none; b=cCaRdYlAsgyC2sVmIUBxyZ55de66yZXVfeUIFxYHKz14UbqKmjzyFaVh0ic9/Xxq2WBzTgjuzJp1rPQnlZR3aXtVrPKLvM6eFtYAvtceSd9mn3HznpsZm7kbvtjIYXIhnjJTdN6VFlBER0jlnlrNaMZi2I8suhU9EnPt4Sb6qyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777998391; c=relaxed/simple;
-	bh=d9oRhAaRGwydDiDuK7BhCRvRWDp8pOBlU9+d0qcoLXY=;
+	s=arc-20240116; t=1778000079; c=relaxed/simple;
+	bh=fxg60DBRC7ewP16U58hh90AF8Q8nkPZgxJLVWalk6uQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=YjO8IVpMtSzCXGDC2g79qdmSNbTcXozg1SPKqgVjg/MPfo+j/eJYcAoIiSrMv0yC2XUaaLSE6CFwkfpe0i40Hb0Ukrk+jajW6M67+pxCmfcbur3xRzWfG3w1C/EKjxUMVnc8yjw1nBI3bv2L42x3uN9ljDkWbOiEsxuHHHZEPM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P3c57A43; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=QpUNuMJlYkt4uqMdoLbw0P0A+K25vJCEPy4BZ6IiH74tRzEAkf4RXc/ShgaETYE60hWuEU2KmUK7X+DuVocp/f3FQ8tjfCTppT6Bz0M3Sv9ex8WXtFO5MuqqE9xPrUBDKN+0+eKNp8LaQG+t/TU0X4n0sC9S9nrG+1+7BgooCJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QkMVIJVI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P3c57A43"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D7D5C2BCB4;
-	Tue,  5 May 2026 16:26:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QkMVIJVI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 469A8C2BCB4;
+	Tue,  5 May 2026 16:54:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777998391;
-	bh=d9oRhAaRGwydDiDuK7BhCRvRWDp8pOBlU9+d0qcoLXY=;
+	s=k20201202; t=1778000078;
+	bh=fxg60DBRC7ewP16U58hh90AF8Q8nkPZgxJLVWalk6uQ=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=P3c57A43Ly9U95oakv1tzSfsBDMAQvbGX3L5fDur0PPxN8g/BkGWOrF0IQ1vnb8kn
-	 q5FpFULXXt5CFm8Sy/qdB+pGfZ+595OPQ/+H2h/dpiAmaAvc14vlTx4Z7a774smhAG
-	 mRi8mWrUgi+n3TQ7klBwMiCHYz3eCKtTXeoo5Vugwd9W8wFUQWC/qxp4tUJmAVvLgS
-	 jHSgvFYD9WkXPVvCXJZvfwe/RjozMVbFHi4OoCu3mLeSQZDLHCSt79QQSlDeG2UmtL
-	 GPSyoqLckepvJjFkRnrQa3yfyKh+iIz18B0bEQzeLYkJERNnopW8hE0+mQWVZV5SLC
-	 bwYA1sJR8mQqw==
-Date: Tue, 5 May 2026 11:26:29 -0500
+	b=QkMVIJVIE8DTY2CJJpwYgdgcLHvQ4ayMpY0Z+nD+FB0TWgHgSv7VjMQCW7Za2o2Tl
+	 BnCd/L+CJlhztiA8vuHYTjGGG5u+Sf+tCcrV/8yq09RJcvzqVPqI3e5VYNNjcYuV0e
+	 iHRUSGaiDInBpGAqV9bj55w/XnhTq86wy6XjGfAWRfxP9PYZ4hxbKuHJvxBOrvx7zq
+	 do7qYss0bOfRmGANaysERE9CQ5apY3QrVgYQ1FKwQUQ4Qk7pUwH0gBYyap3t7xsY6i
+	 ds9IpgbF2FsVhjsDWu3oGbBIWLb0N2wmIkEX7Ut87c2L/mhoMT0ONv/sdvIQrajyEI
+	 oKOdxokyoO6+w==
+Date: Tue, 5 May 2026 11:54:36 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: linux-phy@lists.infradead.org, Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org, freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org, netdev@vger.kernel.org,
-	spacemit@lists.linux.dev, UNGLinuxDriver@microchip.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manikandan K Pillai <mpillai@cadence.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Tom Joseph <tjoseph@cadence.com>
-Subject: Re: [PATCH v8 phy-next 01/31] PCI: cadence: Preserve all error codes
- in cdns_plat_pcie_probe()
-Message-ID: <20260505162629.GA734488@bhelgaas>
+To: Hans Zhang <18255117159@163.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	mani@kernel.org, jingoohan1@gmail.com, robh@kernel.org, s32@nxp.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH 00/16] PCI: Use FIELD_MODIFY() to simplify
+ bitfield operations
+Message-ID: <20260505165436.GA737933@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260505100523.1922388-2-vladimir.oltean@nxp.com>
+In-Reply-To: <20260430162420.42839-1-18255117159@163.com>
 
-[+cc Tom, author of bd22885aa188 in case there's something subtle here]
-
-On Tue, May 05, 2026 at 01:04:53PM +0300, Vladimir Oltean wrote:
-> The blamed commit functionally changed the error path of
-> cdns_pcie_host_probe(), now cdns_plat_pcie_probe().
+On Fri, May 01, 2026 at 12:24:04AM +0800, Hans Zhang wrote:
+> Replace open-coded bitmask clear + FIELD_PREP() sequences with the
+> dedicated FIELD_MODIFY() macro.  FIELD_MODIFY() performs the same
+> operation but is shorter, less error-prone, and includes compile-time
+> checks to prevent field overflow.
 > 
-> When the old code path executed "goto err_get_sync", the PCIe controller
-> probe function propagated the pm_runtime_get_sync() error code. The new
-> code doesn't, and returns 0.
+> This series touches the PCI core, PCIe extended capabilities (PTM, IDE,
+> TPH, MSI, REBAR, IOV, CardBus), and several DesignWare-based and
+> other PCI host controllers.  No functional change is intended.
 > 
-> Similarly for the "goto err_init" previously triggered by
-> cdns_pcie_host_init() errors, and now triggered by
-> cdns_pcie_host_setup() and cdns_pcie_ep_setup() errors. These are not
-> propagated and will result in probing success, which is incorrect.
-> 
-> Fixes: bd22885aa188 ("PCI: cadence: Refactor driver to use as a core library")
-> Signed-off-by: Vladimir Oltean <vladimir.oltean@nxp.com>
+> The patches are split per subsystem or per driver to ease review:
 > ---
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-> Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Cc: Manikandan K Pillai <mpillai@cadence.com>
-> Cc: Manivannan Sadhasivam <mani@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-
-I guess this driver is orphaned.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> v7->v8: patch is new, issue was flagged by Sashiko
-> https://sashiko.dev/#/patchset/20260430110652.558622-1-vladimir.oltean@nxp.com
+> Hi, If the Maintainers think it's not necessary, please ignore it.
 > ---
->  drivers/pci/controller/cadence/pcie-cadence-plat.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> index b067a3296dd3..8b12a46b5601 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-> @@ -126,7 +126,7 @@ static int cdns_plat_pcie_probe(struct platform_device *pdev)
->  	while (phy_count--)
->  		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
->  
-> -	return 0;
-> +	return ret;
-
-This affects cases where pm_runtime_get_sync(),
-cdns_pcie_host_setup(), or cdns_pcie_ep_setup() return failure.
-
-Seems right to me to fail the probe when these fail.
-
-Not all users of pm_runtime_get_sync() check for failure, but I think
-all the other controller drivers that do check return failures from
-the .probe().
-
->  }
->  
->  static void cdns_plat_pcie_shutdown(struct platform_device *pdev)
-> -- 
-> 2.34.1
+> Hans Zhang (16):
+>   PCI: Use FIELD_MODIFY()
+>   PCI/PTM: Use FIELD_MODIFY()
+>   PCI/IDE: Use FIELD_MODIFY()
+>   PCI/IOV: Use FIELD_MODIFY()
+>   PCI/TPH: Use FIELD_MODIFY()
+>   PCI/MSI: Use FIELD_MODIFY()
+>   PCI/REBAR: Use FIELD_MODIFY()
+>   PCI/CARDBUS: Use FIELD_MODIFY()
+>   PCI: al: Use FIELD_MODIFY()
+>   PCI: eswin: Use FIELD_MODIFY()
+>   PCI: s32g: Use FIELD_MODIFY()
+>   PCI: tegra194: Use FIELD_MODIFY()
+>   PCI: qcom: Use FIELD_MODIFY()
+>   PCI: dwc: Use FIELD_MODIFY()
+>   PCI: mvebu: Use FIELD_MODIFY()
+>   PCI: mediatek-gen3: Use FIELD_MODIFY()
 > 
+>  drivers/pci/controller/dwc/pcie-al.c          | 12 ++----
+>  .../controller/dwc/pcie-designware-debugfs.c  | 23 ++++-------
+>  .../pci/controller/dwc/pcie-designware-ep.c   |  3 +-
+>  drivers/pci/controller/dwc/pcie-designware.c  |  3 +-
+>  drivers/pci/controller/dwc/pcie-eswin.c       |  3 +-
+>  drivers/pci/controller/dwc/pcie-nxp-s32g.c    |  3 +-
+>  drivers/pci/controller/dwc/pcie-qcom-common.c | 40 +++++++------------
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c     |  6 +--
+>  drivers/pci/controller/dwc/pcie-tegra194.c    |  8 ++--
+>  drivers/pci/controller/pci-mvebu.c            |  3 +-
+>  drivers/pci/controller/pcie-mediatek-gen3.c   |  3 +-
+>  drivers/pci/ide.c                             |  6 +--
+>  drivers/pci/iov.c                             |  3 +-
+>  drivers/pci/msi/msi.c                         | 11 ++---
+>  drivers/pci/pci.c                             |  3 +-
+>  drivers/pci/pcie/ptm.c                        |  3 +-
+>  drivers/pci/rebar.c                           |  6 +--
+>  drivers/pci/setup-cardbus.c                   |  3 +-
+>  drivers/pci/tph.c                             | 10 ++---
+>  19 files changed, 51 insertions(+), 101 deletions(-)
+
+I squashed these together since they're all doing exactly the same
+thing and applied to pci/misc for v7.2, thanks!  I think this makes it
+noticeably easier to read, especially in the cases where we update
+several register fields at once.
+
+Sashiko noticed the dev->sriov->barsz[] array bounds issue, which is
+mostly addressed by another pending patch: https://patch.msgid.link/44a4ae53ec2825816b816c85cd378430d9a95cc6.1776429882.git.mnencia@kcore.it
+
+Sashiko also flagged a potential pcie-mediatek-gen3.c issue related to
+checking the return from pci_runtime_get_sync(), but that has nothing
+to do with this patch, so I'll just forward that to the Mediatek
+folks.
+
+https://sashiko.dev/#/patchset/20260430162420.42839-1-18255117159%40163.com
