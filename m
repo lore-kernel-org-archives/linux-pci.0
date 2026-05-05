@@ -1,235 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B97572FD681
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 10:43:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51296413249
+	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 10:59:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1777977811; cv=none; b=N+SiKwcPllKXaA4JOOwNRypvVoCrV9oE4mZYW1YCMymDZoxiY306evGx+5269RREe5sq3wSiMcP+ELCQoW4KzPvpC8w2GjqTGjvIRI46HjKWfzSfDyCmBaGP0U46BQESgionyydjwH/uZ2iG6BpcDbdf7uDzTGar3gLyasqBMbg=
+	t=1777978767; cv=none; b=vE6q5jL+MLIRYgXpNs8hz40I2CITkI1hrd0g2IBRTdGn7CvGei8G867aZWpFQiU+3ugE+tFRNKmI2iPXyl82vc/I+cakk1V6ZT4zWsIpDDZy0duilGKHieDcfbQvSEeH6QrCbjXXdTTcdvewCGr3UFpJBB9Ut0bZyj1ay0Aycrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1777977811; c=relaxed/simple;
-	bh=4p8xZgPTwl23yuO4usByrqVx7sRRkYZITrF1b6z8fNY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=a30NbhSKcLOzsfx4yaGwQm8rLnRlWnaiTilfJCBu6MVBltrBZ2Mqn7K2y/X0VLjQ7yuHV8/Ib8mWwiPXMz4wOj6boZrRb1nIBHcGODzvJINfcnVbABqHx1YVEhSR9tLKFi9/k3PWM3pTiAQvsG9crHNn2r3F5I4BWKwbgMwuAoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pSHbcEEf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1777978767; c=relaxed/simple;
+	bh=+1OMtPQnjvsrjv2z1oNYsQPynllgk0fbt+9DPHqnSdU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rcuY0XCFLT/mGqijn2CNeeubezfx0OJXoxVU9dVuEkcI/gmgSwUkvmDsCCfywriP8EXCtQlrc7X9gnnmS5o5P4ihcEed92TO5WYrl99ZyYCFLAqZbFB6bXSMDpLufl99gPSETNc4d3oLpccnQ8eGATU35dOYM50yh+l7rGdJomo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=LjXdg19f; arc=none smtp.client-ip=209.85.215.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pSHbcEEf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D911C2BCF7
-	for <linux-pci@vger.kernel.org>; Tue,  5 May 2026 10:43:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1777977811;
-	bh=4p8xZgPTwl23yuO4usByrqVx7sRRkYZITrF1b6z8fNY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=pSHbcEEffmwAe1AyV5gwpZOhcvKoyz5oNnw5hpUc4pL78QL6NWwQ93yOMxpJ1i1Sk
-	 MGPGZVJyIqgnLxqCX+bx3hERDbXYLz/1x1I0b0KY6bjkhHxQsrTkCQwsrzs0M3umOG
-	 4+89S7eH/7QVsU5IKOSP2RLRa8R+pdUZs89GlJ48cijmAuMtZbi9lJSCB9WBA6NX34
-	 SMnDQ2D3SyVtz0iMvEfHNVTl8myiDfqT3y8WnMXr7efRqdKTC22USNHHZ1ZXrEn3LG
-	 4GbRbN1bncCugzOAQTKfs5y/IQdQszglWZQR9wf8bqbZg1UgOIzYt2elCg0Vl+7USV
-	 oi0JMLWiKAvbg==
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-393800586aeso26683811fa.1
-        for <linux-pci@vger.kernel.org>; Tue, 05 May 2026 03:43:31 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ9NvRSE94WnlPV1GCMeARO4RJIw+u0UuWbvtbbsShrgeQwL1c8JC91OUpdFWn4slKHYBqXfe9doqIE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxd3+bUyI46CB5n7tNa4CeDdfozY1RBnkMoWwoZLxTtdomhEZKx
-	/PO4RXXzLT9WQJnOHQx2jijK3cJU8nYhCyhTMpI7q6QzDQjykwWPS3I2oTaiyXys1kXl6poqj4m
-	iSzvq8EwuijuUfOHXUBjpcaWqyWZdhtc=
-X-Received: by 2002:a05:6512:3f0b:b0:5a8:7360:5c59 with SMTP id
- 2adb3069b0e04-5a87e6826b7mr1133820e87.10.1777977809996; Tue, 05 May 2026
- 03:43:29 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="LjXdg19f"
+Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-c80227b1f6cso777186a12.1
+        for <linux-pci@vger.kernel.org>; Tue, 05 May 2026 03:59:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1777978765; x=1778583565; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Jm/1AnMDt5e46hwN56ltGnjEOkXvSOu1rxl9OIWCxKE=;
+        b=LjXdg19fHxOUvmD7neSNQ/4DswaPpPhcSmslLnDZnjqxeVpo+ChvspGfZx9P+jIuTx
+         SsucXBUwOVPVg4rStcn7XF1grySGocbnCSKZGrSwURtrP5YqQfwqe7p2lsG6yP8diTLC
+         zvDB+lHmI+a/DlaYPTkUfDDT0C+LWkZe3cjTo=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1777978765; x=1778583565;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Jm/1AnMDt5e46hwN56ltGnjEOkXvSOu1rxl9OIWCxKE=;
+        b=iGKEUeKGjwurXNT0r/kqQLUrcuO5Vc7qeQ0hFDY3udZc4HEgalxNOW/+x7VmMbfLOr
+         sjUFJyhSuEqPurT9Zma0OSKmL+mWd9FEZSx28OTYKU28wmtgBqdYSWEgE+VVpC3ff6o0
+         9ocl6LNzptKBoGI0HRxAsayxixaYX9vR0LXBEHglZTTPrXn0ozRb8Ipfa4K9dk6OGICX
+         7mY/rmS0S75CzE3+0SaBXwJIniycjFjLknpWl+D8ZshKDIZ2L0Km6EvG/uEmt+rzQBJS
+         AnEqf0IsbIgWCBMMKwM9FA64Mbrg2zPRIrkc6OPR/MaUQZPQXIfMuXqIWzU/2a58Kl1J
+         Scag==
+X-Forwarded-Encrypted: i=1; AFNElJ+LBodADvqYDeos1UcfO8R/cOu9zseiRgWsSQHI+1BKBQYu5TfoP1FI39ffifBuuv1oZpjz6mbJYPA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwqJZs0iecBoJBh+h+Y2sn6rpKyGiFdj0ic5RLrbeAFIyIMt2w/
+	UhrJUloHUQKFmvOGK6xJATH4nH65MJBnviFmPetiACdIC3Wv/PlumCDusf48TApmwQ==
+X-Gm-Gg: AeBDieswqAdYGnkeY98fm0KtMLjs8bq2QpCHcawSiOPdz+iOmO5NjLyGQmy+6Qfz/rS
+	p5eQOzP1agPz5FNzegn/59vPcF1eh6BPUgvXmVyn9ga3Tk1lk3x+2KKvWQaJ6mMwxnt/ixUTVd8
+	r1gh9CnlumpzOEQchi2bpFcTcNeaSctLgaue/LUKFCi27uoTBUY/nsacy9aqsQ8RRJ1B7WH/jZa
+	2SQc6tcLWc5flMV98mQCo9cp+KA32US+hCcn6l9KLQOSC8tGJiDMz/eBsZJvIXTu5XizERjits3
+	C/1Vqzwg00rrxZotEqr8ikfPBrMek7XTdYGzzamae7vamA+0AfogWcb+n8PMK+WtuOAkVHSeJo2
+	KvbWckkUR4Woft24lOdtTjLsvZt1GGQPadYd8CGGLFNa/Ov3P+fna2QJ/o2KX+VQBbEFIqsqgzF
+	M0PNP8BQSz3uxsrhBNnXRPVO7NB1zO4pAzFuvYXLl8ze+iMT/f+B4YvMKyLCmZ7HdEf5wS8Ld1C
+	kp1MFPGPBk/Z/WV2XA=
+X-Received: by 2002:a05:6a20:e210:b0:398:7ffe:472f with SMTP id adf61e73a8af0-3a7f1a1e096mr14432341637.2.1777978765661;
+        Tue, 05 May 2026 03:59:25 -0700 (PDT)
+Received: from wenstp920.tpe.corp.google.com ([2a00:79e0:201d:8:f1d4:2ef0:7d08:9dd8])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c7ffbba71b0sm13005611a12.2.2026.05.05.03.59.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 May 2026 03:59:24 -0700 (PDT)
+From: Chen-Yu Tsai <wenst@chromium.org>
+To: Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Chen-Yu Tsai <wenst@chromium.org>,
+	linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: mediatek-gen3: Do full device power down on removal
+Date: Tue,  5 May 2026 18:59:16 +0800
+Message-ID: <20260505105918.1823170-1-wenst@chromium.org>
+X-Mailer: git-send-email 2.54.0.545.g6539524ca2-goog
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJZ5v0g3f8_7v-8W0SAbn_8vmKUJgpDbgyYMSjv03QjXJ8bCHQ@mail.gmail.com>
- <20260504211741.GA659556@bhelgaas>
-In-Reply-To: <20260504211741.GA659556@bhelgaas>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 5 May 2026 12:43:17 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0hngqvdi2vRB4n5T3sGSPc10eR=1X+UO2QAR=GHYmQo2w@mail.gmail.com>
-X-Gm-Features: AVHnY4L9S085Yvf8QXDvLO4t6IegPYvzrYt8Z57K_31su0wbMOblGNmN7xFGjSs
-Message-ID: <CAJZ5v0hngqvdi2vRB4n5T3sGSPc10eR=1X+UO2QAR=GHYmQo2w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>, sashiko-bot@kernel.org, 
-	linux-pci@vger.kernel.org, sashiko@lists.linux.dev, 
-	Marco Nenciarini <mnencia@kcore.it>, Michal Winiarski <michal.winiarski@intel.com>, 
-	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Eric Chanudet <echanude@redhat.com>, 
-	Jean Guyader <jean.guyader@gmail.com>, Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>, 
-	Mario Limonciello <superm1@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Mon, May 4, 2026 at 11:17=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Mon, May 04, 2026 at 09:31:51PM +0200, Rafael J. Wysocki wrote:
-> > On Mon, May 4, 2026 at 7:09=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.or=
-g> wrote:
-> > > On Mon, May 04, 2026 at 09:49:36AM +0200, Lukas Wunner wrote:
-> > > > On Sun, May 03, 2026 at 01:51:08PM +0000, sashiko-bot@kernel.org wr=
-ote:
-> > > > > Thank you for your contribution! Sashiko AI review found 1 potent=
-ial
-> > > > > issue(s) to consider:
-> > > > > - [High] Removing the read-back and retry loop for BAR restoratio=
-n in
-> > > > > `pci_restore_state()` introduces a risk of silent regressions for
-> > > > > hardware resuming from non-FLR resets (such as D3hot to D0 transi=
-tions
-> > > > > or custom driver resets). The commit incorrectly assumes the 60s =
-delay
-> > > > > from `pci_dev_wait()` covers all usages, but standard PM resume p=
-aths
-> > > > > only delay for 10ms (`PCI_PM_D3_WAIT`) before calling `pci_restor=
-e_state()`.
-> > > > > Historically, hardware that needed slightly longer to accept
-> > > > > configuration writes relied on the 10x 1ms retry loop to successf=
-ully
-> > > > > restore BARs. By removing both the retry and the read-back verifi=
-cation,
-> > > > > BAR writes to slow devices will be silently dropped, leaving hard=
-ware
-> > > > > unconfigured and causing MMIO accesses to result in IOMMU faults =
-or
-> > > > > kernel crashes.
-> > > >
-> > > > Hallucination alert:
-> > > >
-> > > > PCI_PM_D3_WAIT does not exist, it was renamed to PCI_PM_D3HOT_WAIT
-> > > > six years ago by commit 3789af9a13e5, which went into v5.10.
-> > > >
-> > > > The macro is used in:
-> > > >
-> > > > pci_pm_resume_noirq()
-> > > >   pci_pm_default_resume_early()
-> > > >     pci_pm_power_up_and_verify_state()
-> > > >       pci_power_up()
-> > > >         pci_dev_d3_sleep()
-> > > >
-> > > > However before pci_power_up() calls pci_dev_d3_sleep(), it reads
-> > > > the PMCSR register and errors out if config space is inaccessible.
-> > > >
-> > > > Hence when pci_restore_state() is invoked a bit later, config space
-> > > > can be assumed to be accessible.
-> > >
-> > > I don't quite follow this.  In this path, pci_power_up() changes a
-> > > device from some low-power state to D0.  If the device was in D3hot o=
-r
-> > > D3cold, we must delay at least 10ms before any access to it (PCIe
-> > > r7.0, sec 5.9).
-> >
-> > D3hot and D3cold are different in this respect, so using "or" here is
-> > inaccurate and confusing.
-> >
-> > Accessing the config space of a device in D3hot is entirely correct
-> > and doesn't require any delay.
-> >
-> > Accessing the config space of a device in D3cold is questionable
-> > because the device may not be accessible, but then the host bridge
-> > should just fail the access.
-> >
-> > The 10 ms delay is after attempting to program the device into D0 from
-> > D3hot (or the other way around) and it is observed as required.
->
-> Thanks for taking a look at this!
+When power control for downstream devices was introduced in the
+mediatek-gen3 PCIe controller driver, only the power to the downstream
+devices was cut when the controller driver is removed. This matched
+existing behavior, but in hindsight a proper power down sequence should
+have been followed.
 
-No prob.
+Call mtk_pcie_devices_power_down() on driver removal so that in addition
+to removing power from the downstream devices, PERST# is asserted.
 
-> If pci_power_up() is doing D3cold -> D0, main power is initially off,
-> so platform_pci_set_power_state(PCI_D0) would turn on main power,
-> which is a Fundamental Reset leaving the device in D0uninitialized.
-> In general the device needs at least 100 ms after that reset before
-> any access, e.g., before the PMCSR read.
+Fixes: 1a152e21940a ("PCI: mediatek-gen3: Integrate new pwrctrl API")
+Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
+---
+ drivers/pci/controller/pcie-mediatek-gen3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yes, it does in general, but that should be covered by
-platform_pci_set_power_state() because on some platforms the delay can
-be shorter.
+diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
+index b0accd828589..e6acca7e79a0 100644
+--- a/drivers/pci/controller/pcie-mediatek-gen3.c
++++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+@@ -1260,7 +1260,7 @@ static void mtk_pcie_remove(struct platform_device *pdev)
+ 	pci_remove_root_bus(host->bus);
+ 	pci_unlock_rescan_remove();
+ 
+-	pci_pwrctrl_power_off_devices(pcie->dev);
++	mtk_pcie_devices_power_down(pcie);
+ 	mtk_pcie_power_down(pcie);
+ 	pci_pwrctrl_destroy_devices(pcie->dev);
+ 	mtk_pcie_irq_teardown(pcie);
+-- 
+2.54.0.545.g6539524ca2-goog
 
-> If pci_power_up() is doing D3hot -> D0, the device already has main
-> power, so I suppose platform_pci_set_power_state(PCI_D0) doesn't do
-> anything.
-
-It may or may not.  Some platforms supply AML to run during D3hot ->
-D0 transitions (and the ACPI spec allows that).
-
-> The device remains in D3hot, the PMCSR read should be fine,
-> and the PMCSR write to transition to D0 is immediately followed by the
-> 10 ms delay.  When No_Soft_Reset =3D=3D 1, this should be enough.
->
-> But when No_Soft_Reset =3D=3D 0, the transition is to D0uninitialized,
-> which sec 2.3.1 includes as a reset condition after which the device
-> is permitted to return RRS.
->
-> So to me it looks like we need these delays:
->
->   - For D3cold -> D0, msleep(100) and pci_dev_wait() between
->     platform_pci_set_power_state(PCI_D0) and the PMCSR read, similar
->     to what pcie_flr() does.
-
-Adding those delays directly to the PCI PM code would ruin the timing
-of system resume on many systems where devices go into D3cold during
-suspend, or are powered off by the platform firmware later in the case
-of S3 transitions.  For instance, during resume from S3, everything is
-typically powered up by the platform firmware which also takes care of
-the delays and the kernel effectively gets all devices in D0uninit.
-
-Also, as stated above, IMO it is better if
-platform_pci_set_power_state() takes care of the delay.
-
->     Maybe platform_pci_set_power_state() takes care of some or all of
->     this internally?
-
-At least on some platforms, yes it does.
-
-Moreover, the power-on may not actually happen during
-platform_pci_set_power_state() for the device in question, but for its
-parent.  It is quite common to provide an ACPI power resource for a
-PCIe root port for bringing up the downstream link, which doesn't
-really change the power state of the root port itself, but it affects
-the subordinate device (and possibly everything below it).
-
-Of course, a good question is what Alternative OSes do when
-transitioning PCIe devices from D3cold to D0, but I think I can find
-that out.
-
->   - For D3hot -> D0 with No_Soft_Reset =3D=3D 0, pci_dev_wait() after the
->     PMCSR write to transition to D0.
->
->     abbcf0e2a99d ("PCI: Wait for device to become ready after a power
->     management reset") added the similar wait in pci_pm_reset().
->
-> > > pci_power_up() doesn't do any delay before the PMCSR read.
-> >
-> > It assumes that platform_pci_set_power_state() has run and either it
-> > has succeeded or the config space is not accessible which is when
-> > PCI_POSSIBLE_ERROR() will trigger.  Unfortunately, there is no
-> > canonical way to verify that power has been restored to the device
-> > other than attempting to access it.
-> >
-> > > That part seems like a pre-existing issue even before this patch.
-> >
-> > I beg to differ.
-> >
-> > > If the PMCSR read returns PCI_POSSIBLE_ERROR(), pci_power_up() does
-> > > complain "Unable to change power state ... to D0" and return -EIO, bu=
-t
-> > > pci_pm_power_up_and_verify_state() doesn't look at it,
-> >
-> > In fact, pci_update_current_state() changes the power state to D3cold
-> > if the config space is not accessible.
-> >
-> > > and pci_pm_default_resume_early() continues on to pci_restore_state()=
-, so
-> > > it looks to me like we could try to restore state to an inaccessible
-> > > device.
-> >
-> > So the pci_restore_state() call could be avoided if the power state of
-> > the device was D3cold, but then the question is how much of a problem
-> > that is in practice.
-> >
-> > > We do call pci_dev_wait() in pci_pm_reset(), which does a D3hot -> D0
-> > > transition; shouldn't we do the same in pci_power_up()?
-> >
-> > It would be good to make them consistent, but maybe the other way aroun=
-d?
