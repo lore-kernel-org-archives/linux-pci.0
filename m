@@ -1,82 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15C4466B65;
-	Wed,  6 May 2026 16:06:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9CCD3E3C5C;
+	Wed,  6 May 2026 16:12:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778083590; cv=none; b=RTtTMvq03H/rq8iFc27sxkgiSrOkHN/6Nse/XjuTdopKFG/YoRxhfHfi9CnYz0mmeSQhauYNrcWnkZVBa3U/Ol4g2LYPHqrVhwWj79SuL4qSaRG+3XLgFhfSL5h0W9wYWb7eQG+q6Xrz7iduBk2AzAn7dno6RXhrnKcjnuc7/Gg=
+	t=1778083979; cv=none; b=PliIB/Eg3kE5XjAMgu12OtwqAnkB9ZRNU9+IFr7S69GvhQukbsygs/aBSjLZTVNQQRPL8BSxNqYl8eFaf3WqCy5p5UR7NM+c0feO7xYvKxk9LngvJJP01r835dB5XYHdxX47zghqARtMGQONacla9z1vVtuw90QfJxyNLvtnWOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778083590; c=relaxed/simple;
-	bh=dw1RBaTtWl+xJ4dT/a4uc4TtjIaLLW1DXmDYHjx9dVA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YwMdWZ5nLfizrXLIYTf7Sc5KogqfCxiKn9F36fVUgTZIiPI1BenanGFReAjrH6dRRM8jBvKq0JpaYOkZFjJ41P7zITE88oD/YGLGcYe8iRbQFi3Zlq6L0h4R0iZKP3sFjMeMZ9a/iW9qgwtEO+uhr4SYxTSLpOkpeFZSPUvM2Uc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y9qQFqc3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778083979; c=relaxed/simple;
+	bh=lbipQSdW9eamAUsOM+N+POd/NzpUUKVeffLPOodwSEA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rUhiVijKV8QaOZlm1dOJ9CAklJFTr1DoDyrArtFnlbWwE9Dlax3Th9YUg2MRj1KJgzIoPoYB/8XjfyWE8ZZxQ8/2pnUn27phLbIVlu4/pwAx6ndl71SeU+gJgSgayVloAjpSZx3ipj4+EGPp81+sarTToHOSc3c7fBGj1aJJ5VI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=hbRddbGv; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y9qQFqc3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48F16C2BCB0;
-	Wed,  6 May 2026 16:06:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778083589;
-	bh=dw1RBaTtWl+xJ4dT/a4uc4TtjIaLLW1DXmDYHjx9dVA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Y9qQFqc3y1BQi8VHDtLk6wwOnx85IW/MOetmM11iTWA3d+9OF3Wk8WMkpTxup2iCB
-	 O5eBwYeGIRxGXfztja9lU64J/HM2tHEgrfqPJ0JWPDbC1X5evOpA8xwGUaBKRiWVjL
-	 u13izj1CULgBvNkKFozW+jQgnUoywGhahbcrM77mWL5a8JrkVv94kGe52Wx0PO2X5n
-	 OPCl3VrEqgP9nTN2ZTdZPNU13QQ5F2KznHg89OXMJ67ny/g3/GmZmY6FR2oKZFiVBn
-	 fe5838AVU701hj9+NGP0oTV0TS1Ub83wAIwctrFTsb4Bwb+hWPX4MK6U9CRd4FhPx4
-	 25hCMk1jxgdzg==
-Date: Wed, 6 May 2026 21:36:22 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	hans.zhang@cixtech.com, robh@kernel.org, mpillai@cadence.com, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] PCI: cadence: Add debugfs property to provide
- LTSSM status of the PCIe link
-Message-ID: <twryupjevgplfyfcjip323jcy2gjdnbigvvdpytcodisq76lfs@p7fvtw2ev6lr>
-References: <20260406103237.1203127-1-18255117159@163.com>
- <20260406103237.1203127-3-18255117159@163.com>
- <7g32xmc5juraumjexmjmptrwvpsbni43csjw727zzkdetforzs@y5xumpko2lf2>
- <3fd86269-e25e-4bd7-9b2d-6b8afb514be4@163.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="hbRddbGv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=6Yn1siduxQdPynqGnjuL/BLupMMq5Muv+EwIc3BEU5A=;
+	b=hbRddbGvHTc9parUytwp2o919Xf/aPaJwOvV+9zOFYnPwWaoqIsiZhxCMTI3ag
+	loWpxGBClFczyjHQ3iPlfHtflcuTWbsbkv+aH1Vn1WftmtkEhnQQXyCESE2DJEtw
+	/nJ/nu6FyaCpMzJz0Bh+yHcW6W29ao8f1c1mvYPdxVelg=
+Received: from [IPV6:240e:b8f:927e:5900:dbee:26f0:1b68:48a4] (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgD3PwAqaPtpQDXyCQ--.172S2;
+	Thu, 07 May 2026 00:11:26 +0800 (CST)
+Message-ID: <53e37127-975b-42cd-a1a2-35dd3018c45c@163.com>
+Date: Thu, 7 May 2026 00:11:22 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/8] PCI: j721e: Set max_link_speed to enable 100 ms
+ delay after link up
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com,
+ pali@kernel.org, ryder.lee@mediatek.com, jianjun.wang@mediatek.com,
+ claudiu.beznea.uj@bp.renesas.com, mpillai@cadence.com, robh@kernel.org,
+ s-vadapalli@ti.com, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
+ linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260506152346.166056-1-18255117159@163.com>
+ <20260506152346.166056-5-18255117159@163.com>
+ <rlsvpbo4gcix3mmbfsxvmfebnnn4bqm3cv34x4qkxuv3zwydnm@ehi3el63z664>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <rlsvpbo4gcix3mmbfsxvmfebnnn4bqm3cv34x4qkxuv3zwydnm@ehi3el63z664>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <3fd86269-e25e-4bd7-9b2d-6b8afb514be4@163.com>
+X-CM-TRANSID:PigvCgD3PwAqaPtpQDXyCQ--.172S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uF1xJr1xAFWxKw15XryxKrg_yoW8ZF4rpa
+	y7JFWfCF1IqFWY9Fs7Z3W5ZFyaq3Z8J3yUJrZag3W7uFnxCFs3JFyIqFyrJ393KF4kZr12
+	yF13tasrWFsxtFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UMrWwUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxA5+Imn7aC5W2gAA3O
 
-On Wed, May 06, 2026 at 11:52:06PM +0800, Hans Zhang wrote:
 
-[...]
 
-> > > +static int ltssm_status_open(struct inode *inode, struct file *file)
-> > > +{
-> > > +	return single_open(file, ltssm_status_show, inode->i_private);
-> > > +}
-> > > +
-> > > +static const struct file_operations cdns_pcie_ltssm_status_ops = {
-> > > +	.open = ltssm_status_open,
-> > > +	.read = seq_read,
-> > > +};
-> > 
-> > Sashiko pointed out that you could use DEFINE_SHOW_ATTRIBUTE() to simplify the
-> > code here.
+On 5/7/26 00:04, Manivannan Sadhasivam wrote:
+> On Wed, May 06, 2026 at 11:23:42PM +0800, Hans Zhang wrote:
+>> Set cdns_pcie.max_link_speed to the maximum supported link speed
+>> (obtained from the device tree property "max-link-speed") in
+>> j721e_pcie_set_link_speed(). This activates the post-link delay logic
+>> added in cdns_pcie_host_start_link() when the controller supports
+>> speeds greater than 5 GT/s.
+>>
+>> As required by PCIe r6.0 sec 6.6.1, and following the same approach as
+>> commit 80dc18a0cba8d ("PCI: dwc: Ensure that dw_pcie_wait_for_link()
+>> waits 100 ms after link up"), this ensures a 100 ms delay after link
+>> training completes before any Configuration Request is sent.
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> ---
+>>   drivers/pci/controller/cadence/pci-j721e.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+>> index bfdfe98d5aba..ee85b8e04f5b 100644
+>> --- a/drivers/pci/controller/cadence/pci-j721e.c
+>> +++ b/drivers/pci/controller/cadence/pci-j721e.c
+>> @@ -206,6 +206,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+>>   	    (pcie_get_link_speed(link_speed) == PCI_SPEED_UNKNOWN))
+>>   		link_speed = 2;
+>>   
+>> +	pcie->cdns_pcie.max_link_speed = link_speed;
 > 
-> I haven't received any notification from Sashiko. Next time, I'll go
-> directly to the website to check the relevant information. It seems that
-> Sashiko only sent out an email recently; I didn't receive any emails from
-> her before.
+> What about other glue drivers?
+
+Hi Mani,
+
+pci-sky1.c:
+There is no time to handle the corresponding DTS yet, and the attribute 
+"max-link-speed" has not been parsed either. There will be a plan for 
+the subsequent upstream.
+
+pcie-sg2042.c：
+I'm not familiar with this product.
+
+
+Do you mean something like a dwc driver, similar to being placed in the 
+file drivers/pci/controller/dwc/pcie-designware.c?
+pci->max_link_speed = of_pci_get_max_link_speed(np);
+
+For the Cadence driver, it is located in 
+drivers/pci/controller/cadence/pcie-cadence-host-common.c.
+
+
+Best regards,
+Hans
+
+> 
+> - Mani
 > 
 
-Yes, that's the recent behavior. Thanks to kwilczynski ;) You should get
-notification for next iteration.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
