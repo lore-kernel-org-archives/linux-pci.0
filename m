@@ -1,247 +1,138 @@
-Received: from mail-ua1-f41.google.com (mail-ua1-f41.google.com [209.85.222.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 054A143DA21
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 12:07:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F45243CEE7
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 12:26:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778069259; cv=none; b=B8GgYKzFcs1TFJr64QxpgneuOzhoVxRi6mphlZUUyOJFwIs/T417MIQngYuNkpdES/Hn9FuHf4B8Oz29JnxJiqCqLczqpucv0vgeikKiWdTX0+V1a6cPLM9yD2nloxYKlmD0D/1FBZPMQmVQEdbS6O7Z4dvFZeXStQEZD23VkYE=
+	t=1778070412; cv=none; b=goVTYQKr+IPGLFUQIYuB7OWEX8bdF0nDi7wMLHHTq7b7vEFPXzYS1furb3QTmLJHbeCo0v/jJ6TA22fD7O6kYw5yUAVveb3pfkJXxWxe3EQ+PjiAqE8myVLSy17EFt46UjTgHWTpZFSLeASi3ZfB195lYGiOnnh1MWymxY9tvsE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778069259; c=relaxed/simple;
-	bh=soAn2vrnq+NZwkeJhBPM72OE9WgHbaIcXvtyW2rribo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OLz6RFZ8on+u4BiApwM09uqAfaVSBzo1Nzc7HXlWU1sNKBKlKFPywlzSw+TVyUiQ4AC0Ku/nG+45o3A7w9RBKDg22Me7/MvDFD0tkbitLdKReyRZV0aHMuFQPE05t9XtMzv/M7ryO8Rq2ClhqsNV/e4onaotA9XrNho8xrOK52Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.222.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ua1-f41.google.com with SMTP id a1e0cc1a2514c-94ac7f22d23so1679064241.3
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 05:07:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778069257; x=1778674057;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=p1b6tMUtONBmgXqH4JWcLF8QY3yG7D5JUUuZo3u2Uck=;
-        b=h+TPwEM37SjrT17xmjnSsm5uSTTK9HrPWIkUjRjVqfdBfT2nVnveaaJnJXzIyNzini
-         l1zDBTb95JnposdngLhz/GPzWgQiCtmLGzf/jjyhNUejwaJz4hvG+wGnc5ez7UXG+H3m
-         x+OiM3epi74Y2WaD19AmTkrEwyHhFk6oAKf1utuP04tJWIh1Z6AcU45uB2NcxtPlavaH
-         FREoWLzoJe+tp0loEW040GcruGWOLQsOdqtK709UKPVfhuiWj31E+qOXHjwKp0q2K59/
-         BQQk40v2K6lbvyoyD4RUOM/Sx5yMtA/Z+SaRaRqdWbh2g//ngULCZrJETC5PE1cq+c4H
-         SeAg==
-X-Forwarded-Encrypted: i=1; AFNElJ+GnfE/BS031vV99XKJQe9XzGchB3m119/jq+ayzcNMxr3vERx6wq2zJWuSlSGZ6B3PxLqifvBTk0o=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPgYe6+m5T5DWFL0uN8MUkkNP1fWKu1A0J1m9rBONF0x49pfGs
-	EdjMPVo3CkXGgIQ7Iz9p1iKYtX90ZB/UzIBlxlneWwAOKSp8GKgp3Y5/lww1Z6KW5H4=
-X-Gm-Gg: AeBDietcwp51gkQPhsk+B7uPXFfY2/TPXhpb9tSRyliqWgpbwtx58gm4Ipmzt3TScnn
-	VFA6bJBE+zLAuWOpuIBqS+TKfVm0yiTV+O7nkr5VzCXb2qkXA+ZETLz0BX+E/MKfgZtkQ4OmJov
-	17+6nzW6IJUlEQfZgPYhMK/TcqbUKplGee3Pk4TYoiwSAJHPU+xsC9VqbgJtdyrox6T9s3AnOk7
-	Or2FGiplLd/OQtuhBYgcYBx+nwpB69holSYNnvRLftRfddzhjScbKyrwDIsD1Xv1Elv59yzDa91
-	8JqvnT42uDlCgAOexteQtx5vwhKFKi6jv6dgRCr3KIb8RacSWxxwnY09DZB8GO3Tfup+HwvdJh/
-	lDTKH5vVI4CixkzRqh13aUWXPd8PfkGqc7lUvChqCldwt9MX+jZQ7na6jJY/KZpaZ/aqusxu0bC
-	Re3JWeZn1EDoTFq2f6lqXMF6YqimYgzoQZLL0sryF91gFi6oDd7xcDIO06uxpjs12mkvSSzOo=
-X-Received: by 2002:a05:6102:26d1:b0:608:6b33:5bc2 with SMTP id ada2fe7eead31-630f8fc123emr982452137.18.1778069256450;
-        Wed, 06 May 2026 05:07:36 -0700 (PDT)
-Received: from mail-ua1-f51.google.com (mail-ua1-f51.google.com. [209.85.222.51])
-        by smtp.gmail.com with ESMTPSA id ada2fe7eead31-62bfbb75140sm8954826137.5.2026.05.06.05.07.34
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 May 2026 05:07:34 -0700 (PDT)
-Received: by mail-ua1-f51.google.com with SMTP id a1e0cc1a2514c-94dd01deb53so1717630241.0
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 05:07:34 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ8dnh2LNQ5VwA8BIasTsQt7RjuctSQ4NPBkcZ/mQEi21BvkAi+pqeNw7D5ENR6CKEghJrXw4mVnHu4=@vger.kernel.org
-X-Received: by 2002:a05:6102:5693:b0:611:7c7b:4d40 with SMTP id
- ada2fe7eead31-630f907cbb1mr1000566137.30.1778069254404; Wed, 06 May 2026
- 05:07:34 -0700 (PDT)
+	s=arc-20240116; t=1778070412; c=relaxed/simple;
+	bh=ikT94KsWrOMd3eUjic2p5g+1U/hWXVVWvYgJTg15GFU=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=JopdQspuMNgO6jGypiUZ1gwAQZ/LyEqduy13O0ZkX2QAIRpf47D+73zLi4L55kYZKp5XvMJmxIbzunmdP8W3ZsWwroBwPWCSv5JtC00l7jDux3c5vU6T9DIGpAAMrTDAnKLvdFYjI3V4Ln5rT+GjtOvdh7R/yjCYxDrZFeO1CvY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Uezzlt+0; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Uezzlt+0"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1778070411; x=1809606411;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=ikT94KsWrOMd3eUjic2p5g+1U/hWXVVWvYgJTg15GFU=;
+  b=Uezzlt+0ZT2UOrlslGHALK4DwllMKcWPqYQLuD66jrZIw5DVZF/6Eeuy
+   WJKbADl/3JDGoecuWMHAzsVObLz1dn803T0uXsoG05lShLlkBVqDjM2ki
+   1EDOalYR25QI1Ra36hI1WyrI+0jBXFkCE70UK9aTNH9DjJqrQx24bmepv
+   lpDz2JfzHvR4CzC/o4cEwp3X3dDU/EYYnXKtxQ7M+1jZ/IbLPaZvHPMNF
+   dxoL/hBwgJjNKfa+Rp29vmBfj2FJBRwI1GMVmpG9hXTBonnVq/zilFVXf
+   b14rdqbmX0PTLjCxhGZvarxsBaWWRwyQ8XJfQWKaHjBuTCQL7r3sQoa1E
+   A==;
+X-CSE-ConnectionGUID: cPTHMRqKR0GgZ6AAMRE5xw==
+X-CSE-MsgGUID: wNGTQOC6SMG3T9+dmriuBA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11777"; a="82867214"
+X-IronPort-AV: E=Sophos;i="6.23,219,1770624000"; 
+   d="scan'208";a="82867214"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2026 05:26:50 -0700
+X-CSE-ConnectionGUID: CpBiOoVFTSawM2FXWEjWlg==
+X-CSE-MsgGUID: cyLV2ZE7QCKG8KgoPaLafA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,219,1770624000"; 
+   d="scan'208";a="240113562"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.231])
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2026 05:26:47 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Wed, 6 May 2026 15:26:43 +0300 (EEST)
+To: stuck-tamer-growl@duck.com, Sanath S <Sanath.S@amd.com>, 
+    Mario Limonciello <mario.limonciello@amd.com>, 
+    Mika Westerberg <mika.westerberg@linux.intel.com>, 
+    Bjorn Helgaas <helgaas@kernel.org>
+cc: "bjorn@helgaas.com" <bjorn@helgaas.com>, 
+    Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: Fwd: [Bug 221457] New: PCI core drops Resizable BAR sizing after
+ ASPM common-clock reconfiguration on Thunderbolt/USB4 hot-plug link
+In-Reply-To: <F2774784-D1E3-46C2-8A6A-CC8932884D5F.1@smtp-inbound1.duck.com>
+Message-ID: <8ad6c6c8-48e4-b276-e639-ae9362cc7eff@linux.intel.com>
+References: <20260504184325.GA656008@bhelgaas> <AB2EBCFC-663F-48A1-9C11-2DFB7C844B19.1@smtp-inbound1.duck.com> <F2774784-D1E3-46C2-8A6A-CC8932884D5F.1@smtp-inbound1.duck.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260318124450.163471-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260318124450.163471-6-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <605e8d4c-09e7-4d11-acdb-7829a85eacc3@tuxon.dev> <CA+V-a8srS9g2WDMARDJn98K=nL9v1LiZYxqM8evsVrzR-s5ZMA@mail.gmail.com>
- <lvix7p4e7c4dtchtdti3rwrs7jkda5iy7lthcffhqc7g6vgu2p@54qywklrspi7>
- <CA+V-a8sd=dyTZmViLbDrCPYbx5ujWzjk74HxhP0aBEqxLuEqJA@mail.gmail.com>
- <leky6ktelj7t3uwd4bakgefrk32m3ceyxmwbkkjpp5zqp6rjgj@jtiqktxchws3>
- <CAMuHMdUpzABKKRBwK3mMmTS1+S21R+0k94bOX-+4ZBoa+bRWSA@mail.gmail.com> <phuerp2kp6ngruqjkpyjczpn5ya7iywrsiaqiiydvqxwlkntks@gyfcws3intsw>
-In-Reply-To: <phuerp2kp6ngruqjkpyjczpn5ya7iywrsiaqiiydvqxwlkntks@gyfcws3intsw>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 6 May 2026 14:07:21 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdW_f5676cmimQYNyO3FZyi=DY_3sdVdUSUqXyZXpqCN0Q@mail.gmail.com>
-X-Gm-Features: AVHnY4JBLrNERmCgzgZxToIaKZzdpYZg7PBuCPB4L1Dje6XmwXVPrc9hRXm7oGY
-Message-ID: <CAMuHMdW_f5676cmimQYNyO3FZyi=DY_3sdVdUSUqXyZXpqCN0Q@mail.gmail.com>
-Subject: Re: [PATCH 5/5] PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, Magnus Damm <magnus.damm@gmail.com>, 
-	Wolfram Sang <wsa+renesas@sang-engineering.com>, 
-	John Madieu <john.madieu.xa@bp.renesas.com>, linux-pci@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>, 
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
 
-Hi Manivannan,
+On Wed, 6 May 2026, stuck-tamer-growl@duck.com wrote:
 
-On Wed, 6 May 2026 at 14:02, Manivannan Sadhasivam <mani@kernel.org> wrote:
-> On Mon, May 04, 2026 at 11:05:11AM +0200, Geert Uytterhoeven wrote:
-> > On Fri, 1 May 2026 at 16:42, Manivannan Sadhasivam <mani@kernel.org> wr=
-ote:
-> > > On Fri, May 01, 2026 at 12:13:55PM +0100, Lad, Prabhakar wrote:
-> > > > On Thu, Apr 30, 2026 at 4:26=E2=80=AFPM Manivannan Sadhasivam <mani=
-@kernel.org> wrote:
-> > > > > On Wed, Apr 08, 2026 at 07:54:41PM +0100, Lad, Prabhakar wrote:
-> > > > > > On Wed, Mar 25, 2026 at 10:18=E2=80=AFAM Claudiu Beznea
-> > > > > > <claudiu.beznea@tuxon.dev> wrote:
-> > > > > > > On 3/18/26 14:44, Prabhakar wrote:
-> > > > > > > > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.co=
-m>
-> > > > > > > >
-> > > > > > > > Add support for the RZ/V2H(P) SoC PCIe controller to the rz=
-g3s-host
-> > > > > > > > driver.
-> > > > > > > >
-> > > > > > > > The RZ/V2H(P) SoC features two independent PCIe channels th=
-at share
-> > > > > > > > physical lanes. The hardware supports two configuration mod=
-es: single
-> > > > > > > > x4 mode where one controller uses all four lanes, or dual x=
-2 mode
-> > > > > > > > where both controllers use two lanes each.
-> > > > > > > >
-> > > > > > > > Introduce configure_lanes() function pointer to configure t=
-he PCIe
-> > > > > > > > lanes based on the number of channels enabled. Implement
-> > > > > > > > rzv2h_pcie_configure_lanes() to detect the active PCIe chan=
-nels at
-> > > > > > > > boot time and program the lane mode via the system controll=
-er using
-> > > > > > > > the new RZG3S_SYSC_FUNC_ID_LINK_MASTER function ID.
-> > > > > > > >
-> > > > > > > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.r=
-enesas.com>
-> > > > > > > > ---
-> > > > > > > >   drivers/pci/controller/pcie-rzg3s-host.c | 142 ++++++++++=
-+++++++++++++
-> > > > > > > >   1 file changed, 142 insertions(+)
-> > > > > > > >
-> > > > <snip>
-> > > > > > >
-> > > > > > > This introduces some limits in the systems with RZ/V2H(P) SoC=
-s with regards to
-> > > > > > > the usage of linux,pci-domain. I would like the PCIe maintain=
-ers take on this.
-> > > > > > >
-> > > > > > > As this is necessary to index in the system controller driver=
- specific data (as
-> > > > > > > there are different SYSC offsets for different PCIe controlle=
-rs) I see the
-> > > > > > > following alternatives, if any:
-> > > > > > >
-> > > > > > > 1/ add a dedicated DT property for this, e.g. renesas,pcie-co=
-ntroller-id
-> > > > > > > 2/ Add dedicated DT bindings for RZ/V2H(P) SoC that would be =
-used to specify the
-> > > > > > >     system controller register offset and mask for different =
-functionalities.
-> > > > > > >
-> > > > > > >     E.g.:
-> > > > > > >     renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
-> > > > > > >     renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
-> > > > > > >     renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
-> > > > > > >
-> > > > > > >     And use them in each controller DT node. E.g.:
-> > > > > > >
-> > > > > > >     pcie0: pcie@add1 {
-> > > > > > >         // ...
-> > > > > > >
-> > > > > > >         renesas,sysc-l1-allow =3D <&sysc 0x1020 0x1>;
-> > > > > > >         renesas,sysc-mode =3D <&sysc 0x1024 0x1>;
-> > > > > > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
-> > > > > > >
-> > > > > > >         // ...
-> > > > > > >     };
-> > > > > > >
-> > > > > > >     pcie0: pcie@add1 {
-> > > > > > >         // ...
-> > > > > > >
-> > > > > > >         renesas,sysc-l1-allow =3D <&sysc 0x1050 0x1>;
-> > > > > > >         renesas,sysc-mode =3D <&sysc 0x1054 0x1>;
-> > > > > > >         renesas,sysc-link-master =3D <&sysc 0x1060 0x300>;
-> > > > > > >
-> > > > > > >         // ...
-> > > > > > >     };
-> > > > > > >
-> > > > > > I'd like to get a clearer steer from the PCIe and DT maintainer=
-s
-> > > > > > before investing further in either direction.
-> > > > > >
-> > > > > > To recap the two approaches on the table:
-> > > > > >
-> > > > > >   Option 1: A single renesas,pcie-controller-id property used t=
-o look up
-> > > > > >             SYSC offsets in the driver.
-> > > > >
-> > > > > Can you explain what is the limitation with 'linux,pci-domain' pr=
-operty?
-> > > > >
-> > > > As sashiko pointed out.dev, The linux,pci-domain property is genera=
-lly
-> > > > an OS-specific logical property intended to assign a stable PCI dom=
-ain
-> > > > number across reboots. Restricting it to [0, 1] would prevent syste=
-m
-> > > > integrators from using non-conflicting domain numbers like 2 or 3 i=
-f
-> > > > the board incorporates other PCIe controllers.
+> Bjorn and All,
+> 
+> Attached 
+> 
+> pristine.dmesg.txt and pristine.lspci-vv.txt                                                                  
+> cmdline "quiet splash", same kernel/hardware as the report.                                                                    
+>                                                                                                                                         
+> Many thanks!
+> 
+> Peter / stuck-tamer-growl
+> 
+> 
+> 
+> On Monday, May 4th, 2026 at 2:43 PM, Bjorn Helgaas <helgaas_at_kernel.org_stuck-tamer-growl@duck.com> wrote:
+> 
+> > [+bcc reporter]
+> > 
+> > On Mon, May 04, 2026 at 01:29:28PM -0500, Bjorn Helgaas wrote:
+> > > ---------- Forwarded message ---------
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=221457
+> > > ...
+> > > SUMMARY
 > > >
-> > > "linux,pci-domain" is supposed to be used in SoC.dtsi, not in board.d=
-ts. AFAIK,
-> > > the board designers have no reason to change it.
-> > >
-> > > Yes, the property name implies that it is a Linux specific property a=
-nd if you
-> > > want, you can propose a generic one (not vendor specific one). Other =
-than that,
-> > > I don't see a blocker in using this property. Many SoCs already do th=
-is and
-> > > other DT projects like u-boot do not end up parsing this property.
-> >
-> > Sounds like this overlaps with pciN DT aliases, which are in use on
-> > some (PPC) boards?
-> >
->
-> Hmm. DT aliases are discouraged these days, AFAIK. Are those boards also =
-need
-> these register configuration? I thought only RZ/V2H(P) SoCs need them. If=
- not,
-> then RZ/V2H(P) DTS can use 'linux,pci-domain' property.
->
-> If yes, then it would be better to hardcode these offsets in the driver b=
-ased
-> on the compatible. DT's job is to describe the hardware topology and reso=
-urces,
-> not register offsets.
+> > > Initial PCI enumeration assigns BAR 1 = 16 GB on an RTX 5060 Ti behind a
+> > > Thunderbolt 4 link. Shortly after, the pcieport ASPM service runs a
+> > > common-clock reconfigure on the host root port, the downstream bridges go
+> > > through [bus 00-00] reset and re-enumeration, and BAR 1 is reassigned at 256
+> > > MB.
+> > 
+> > stuck-tamer-growl: Thanks for the report.  Would you mind collect the
+> > complete dmesg log and the output of "sudo lspci -vv" and posting them
+> > here (or in the bugzilla if you prefer)?
 
-The offsets cannot be hardcoded based just on the compatible value as there
-are two instances.  The offsets do describe the topology.
+Hi,
 
-Gr{oetje,eeting}s,
+To me it looks the ASPM/CCC is a red herring (or another problem unrelated 
+to the ReBAR size issue).
 
-                        Geert
+What happens here is the entire PCIe topology is reset:
 
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
+[    1.121434] kernel: pcieport 0000:00:07.2: pciehp: Slot(14): Link Down
+[    1.121439] kernel: pcieport 0000:00:07.2: pciehp: Slot(14): Card not present
+[    5.804638] kernel: pcieport 0000:00:07.2: pciehp: Slot(14): Card present
+[    5.804643] kernel: pcieport 0000:00:07.2: pciehp: Slot(14): Link Up
 
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
+I recalled Mika Westerberg mentioned some time back Thunderbolt is 
+starting to reset things on boot so this might be related to that.
+
+As the hotplug tears down everything on PCI side, there's nothing to hold 
+the ReBAR size information across as far as PCI core is concerned.
+
+Thunderbolt reset on boot was (probably) introduced by this commit:
+
+59a54c5f3dbd ("thunderbolt: Reset topology created by the boot firmware")
+
+
+I don't know if the nvidia out-of-tree driver does attempt BAR resize on 
+its own (some in-kernel GPU driver do on their own outside of PCI core's 
+resource fitting algorithm). At least there's no indication in the log 
+that would point to even a resize attempt happening.
+
+
+My resizable BAR aware resource fitting would eventually solve this but 
+it's not yet ready. I'm currently trying to fix pci=realloc not detecting 
+need to resize anything if the current ReBAR size fits just fine.
+
+
+-- 
+ i.
+
