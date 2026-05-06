@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5713E33E35F
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 19:57:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66EF08460
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:01:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778097469; cv=none; b=Jv+6XLcjIunwuBi2pr7iuCnNSlbkkd1ton+JwJIpoaL76B1A9ZWnMH6XY0MBbn9SdNPwryJC1SvMZnr3Wos7OCA4+Ck9MLM9g0Vpi5ddnPhblbyKOjK6+BTAdhJjnDTpLUiyBFbRzvFOoHXWYXv3k4KlGvnpHmZP3btQRr8/oe4=
+	t=1778097677; cv=none; b=SRDAyLmI9461qHBLpJnc2EblNzrJjTLveFiMe1o2hfuUM139/CsWscbs1ZgAmvnph1vvPY5o26vkGWoTQndil3alRlRCgBnCyswBCDu1Rfrh+Chdk4sCJw2h3T6uO4ipzDV3QBYCvWgaLDCxH5x8Y+feV9dgxQu87nkFz4fswhE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778097469; c=relaxed/simple;
-	bh=d0e9gqoyXvUGYMxgStyL5E55xLpSj2jNvNc1sTlxOjw=;
+	s=arc-20240116; t=1778097677; c=relaxed/simple;
+	bh=shpMpjhVxu2TC5v4DX324MH03krGG4C87UPDqcJ6EZA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TcvSniKxWB6Dx9K1SHMFF6jnFXux2RL5fXH655gu06ggC8P7IbJW/juio7UWLCy7J9SVSV0ntnbFrzZ1Cmrs8hDEdiSl7MRXC7fZK7v4c+wzHTEQXDaBaI9YWsZZmgrAy34NT/DIMoJuKj8siduztxH4N7VH7Yco6qVid4z1lXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o78CvqPF; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=q7AjL2s64Zc7LpoKxmlXGcFUZcM5dgM5bTqnY0wLcQ89nEUUb7l4/cpMp8/U0+iuz4WzNeDjmeFbFXkkG2pwfl042Qoz3yq/ATOKJMb9h3uf5ko+j3BRKuvu7qfC/xSM17sYdEmaJwDqX64ThQhzY+mukOaQFz66doAbbyQpLco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VeMAHsRM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o78CvqPF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25379C2BCB0;
-	Wed,  6 May 2026 19:57:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VeMAHsRM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E280AC2BCB0;
+	Wed,  6 May 2026 20:01:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778097469;
-	bh=d0e9gqoyXvUGYMxgStyL5E55xLpSj2jNvNc1sTlxOjw=;
+	s=k20201202; t=1778097677;
+	bh=shpMpjhVxu2TC5v4DX324MH03krGG4C87UPDqcJ6EZA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=o78CvqPFweAcQtwZVLFxuXZ9k1A+HouDonL99onUwoNwYKmyxo38lnArRBuXg3YRh
-	 SeC08zXYJmaGSy5XV67X7w8szbiHeyXvaFhk7WEWpAWN2LqJDDr+ivk/IV00p+4Vh0
-	 oWF33BL/0e5CM6Bx178XQ/p3pGSLX+abW/44ahTd/ATmS8+PfBrTeOEvzb94zWwlW8
-	 dTSY2+UOQ7H6FKy7ujvN/XwzH7KXt6qLy9Ov+9yuIVWuJeiwozPeOipjbIHzK7COto
-	 logqT8zLj8H2+etXA/FFMOnPw7ZbrAf93+AyosUCGJuzz/NjX39iGuEZw2saiM5dHG
-	 vK4MYVMBbva1w==
+	b=VeMAHsRMnA6wrTzsndKAP8Jq9Crkzd65S+FNhbSeOMZQzCUp8tZIokGawe6f/3oXI
+	 oayHwc6CGYY8KzCAaKb5GoAyDxasWOkRCMtlDjFENsXmiM/RMyeCarQldcgw29JQhs
+	 oEJBhFg8vJpHSco0Me38OzCoxOXrgFjrIJR17telojGq21/noubizAb5NeNnBZoa9O
+	 MxHZghldHkybfbU0RgKi1N2fEudW8QThmxczTEuFZEoEKc4BdD1Cc5jtzgjTGG6aCk
+	 nVbuLVYVQxl7TXoXErnVAr9CMAU8ovCbrnzC3HU7zm57wseqkHGrgm2hJswRYrL8/t
+	 wV8qvlaldO8mw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 5/6] vfio/pci: Add PCIe TPH GET_ST interface
+Subject: Re: [PATCH v7 1/6] PCI: Validate ACS enable flags against
+ device-specific ACS capabilities
 Reply-To: sashiko@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
+To: "Wei Wang" <wei.w.wang@hotmail.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260506094623.29327-6-fengchengwen@huawei.com>
-References: <20260506094623.29327-6-fengchengwen@huawei.com>
+In-Reply-To: <SI2PR01MB43931FC883781B95114B94E1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+References: <SI2PR01MB43931FC883781B95114B94E1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 06 May 2026 19:57:48 +0000
-Message-Id: <20260506195749.25379C2BCB0@smtp.kernel.org>
+Date: Wed, 06 May 2026 20:01:16 +0000
+Message-Id: <20260506200116.E280AC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,125 +46,103 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] The `argsz` validation incorrectly double-counts the size of the u=
-nion member, causing valid requests to be rejected.
-- [High] Concurrent TPH ioctls lead to data races on unprotected PCIe TPH s=
-tate variables and device configuration space.
-- [Medium] The unused `index` field in `struct vfio_pci_tph_entry` is not v=
-alidated to be zero during `VFIO_PCI_TPH_GET_ST`.
+- [High] The new validation logic unconditionally fails when parsing the `d=
+isable_acs_redir` parameter, completely breaking the ability to disable ACS=
+ redirection.
+- [High] The validation logic incorrectly treats the 'Egress Control Vector=
+ Size' field as capability flags, breaking the configuration of Enhanced AC=
+S features and allowing reserved bit corruption.
+- [Medium] The complete removal of the `mask` bounds validation allows malf=
+ormed user strings to clear reserved bits in the ACS Control Register.
 --
 
-commit 69a04a0a6e943f789b3703368fa523b4efd43755
-Author: Chengwen Feng <fengchengwen@huawei.com>
+commit 624557195263e213573cb1ed8cebc0a3dd09d6c8
+Author: Wei Wang <wei.w.wang@hotmail.com>
 
-vfio/pci: Add PCIe TPH GET_ST interface
+PCI: Validate ACS enable flags against device-specific ACS capabilities
 
-This commit adds support to batch get CPU steering tags for device-specific
-TPH mode that does not implement an ST table. This interface requires
-enabling the enable_unsafe_tph_ds_mode module parameter.
+The ACS flag validation is updated to use dev->acs_capabilities instead
+of the full set of ACS control bits, ensuring only supported ACS features
+are enabled. Note that a regression regarding the disable_acs_redir
+parameter was fixed later in the patch series by commit 2b4c7af1c4a60
+(PCI: Refactor disable_acs_redir and config_acs param handling).
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 69f666d20c4af..45e641ab2a887 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-[ ... ]
-> @@ -1529,6 +1529,77 @@ static int vfio_pci_tph_disable(struct vfio_pci_co=
-re_device *vdev)
->  	return 0;
->  }
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 783e71962cc61..e017200694d8a 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -931,12 +931,6 @@ static void __pci_config_acs(struct pci_dev *dev, st=
+ruct pci_acs *caps,
+>  			}
+>  		}
 > =20
-> +static int vfio_pci_tph_get_st(struct vfio_pci_core_device *vdev,
-> +			       struct vfio_device_pci_tph_op *op,
-> +			       void __user *uarg)
-> +{
+> -		if (mask & ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR | PCI_ACS_CR |
+> -			    PCI_ACS_UF | PCI_ACS_EC | PCI_ACS_DT)) {
+> -			pci_err(dev, "Invalid ACS flags specified\n");
+> -			return;
+> -		}
+> -
+
+Does the removal of the mask validation allow malformed user strings to
+clear reserved bits in the ACS Control Register?
+
+If a user specifies 0 in the command line for an upper bit position, that
+bit is set in mask but remains clear in flags. Because flags is 0 at that
+position, the new validation checks will trivially pass.
+
+The function later evaluates:
+
+caps->ctrl =3D (caps->fw_ctrl & ~mask) | (flags & mask);
+
+which would unconditionally clear the corresponding bits in the device's ACS
+Control register, potentially violating the PCIe specification that dictates
+reserved bits must be preserved or read-only.
+
+>  		ret =3D pci_dev_str_match(dev, p, &p);
+>  		if (ret < 0) {
 [ ... ]
-> +	if (!st.count || st.count > VFIO_PCI_TPH_MAX_ENTRIES)
-> +		return -EINVAL;
-> +
-> +	size =3D st.count * sizeof(*ents);
-> +	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, st) +
-> +			sizeof(struct vfio_pci_tph_st) + size)
-> +		return -EINVAL;
-
-Is it possible the size calculation double-counts
-sizeof(struct vfio_pci_tph_st)?
-
-The macro offsetofend(TYPE, MEMBER) evaluates to offsetof(TYPE, MEMBER) +
-sizeof_field(TYPE, MEMBER). For the st member, offsetofend() correctly
-calculates the end boundary. Adding sizeof(struct vfio_pci_tph_st) a
-second time makes the expected minimum argsz larger than it should be.
-
-If userspace passes the properly calculated size, will the kernel
-incorrectly evaluate this as false and reject valid ioctl calls with -EINVA=
-L?
-
-(Note: The identical calculation error appears to be present in
-vfio_pci_tph_enable() introduced in a prior patch.)
-
-> +
-> +	ents =3D kvmalloc(size, GFP_KERNEL);
-> +	if (!ents)
-> +		return -ENOMEM;
-> +
-> +	ents_off =3D offsetof(struct vfio_pci_tph_st, ents);
-> +	if (copy_from_user(ents, uarg + ents_off, size)) {
-> +		err =3D -EFAULT;
-> +		goto out;
+> @@ -959,6 +953,12 @@ static void __pci_config_acs(struct pci_dev *dev, st=
+ruct pci_acs *caps,
+>  	if (!pci_dev_specific_disable_acs_redir(dev))
+>  		return;
+> =20
+> +	if (flags & ~dev->acs_capabilities) {
+> +		pci_err(dev, "Invalid ACS enable flags specified: %#06x\n",
+> +			(u16)(flags & ~dev->acs_capabilities));
+> +		return;
 > +	}
 > +
-> +	for (i =3D 0; i < st.count; i++) {
-> +		/* Check reserved fields are zero */
-> +		if (memchr_inv(&ents[i].reserved0, 0, sizeof(ents[i].reserved0)) ||
-> +		    memchr_inv(&ents[i].reserved1, 0, sizeof(ents[i].reserved1))) {
-> +			err =3D -EINVAL;
-> +			goto out;
-> +		}
 
-Does this code need to validate that the unused index field in
-struct vfio_pci_tph_entry is zero?
+Will this validation unconditionally fail when parsing the disable_acs_redir
+parameter, breaking the ability to disable ACS redirection?
 
-While reserved0 and reserved1 are checked, the index field appears to
-be ignored during GET_ST operations. Because userspace is not required to
-zero-fill unused arguments, this field may contain uninitialized garbage.
+When the pci=3Ddisable_acs_redir parameter is used, __pci_config_acs() is
+called with an inverted mask for flags, making acs_flags evaluate to 0xFFD3
+as a 16-bit unsigned integer.
 
-If a future kernel extension assigns meaning to index for GET_ST, will
-this lack of validation break backwards compatibility by making it
-impossible to distinguish intentional new values from uninitialized data in
-older applications?
+Since flags has its upper bits set, and ~dev->acs_capabilities also has its
+upper bits set, the bitwise AND will result in a non-zero value. This seems
+like it will instantly log an invalid flags error and return early, silently
+failing to disable ACS redirection.
 
-[ ... ]
->  static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
->  			      void __user *uarg)
->  {
-> @@ -1545,6 +1616,8 @@ static int vfio_pci_ioctl_tph(struct vfio_pci_core_=
-device *vdev,
->  		return vfio_pci_tph_enable(vdev, &op, uarg + minsz);
->  	case VFIO_PCI_TPH_DISABLE:
->  		return vfio_pci_tph_disable(vdev);
-> +	case VFIO_PCI_TPH_GET_ST:
-> +		return vfio_pci_tph_get_st(vdev, &op, uarg + minsz);
->  	default:
->  		/* Other ops are not implemented yet */
->  		return -EINVAL;
+Could treating the Egress Control Vector Size field as capability flags bre=
+ak
+the configuration of Enhanced ACS features?
 
-Are concurrent TPH ioctls adequately serialized here?
+dev->acs_capabilities is populated by reading the 16-bit PCI_ACS_CAP regist=
+er,
+where bits 8-15 contain the Egress Control Vector Size integer. Validating
+against the full 16-bit value incorrectly uses the vector size as a bitmask
+of valid capabilities.
 
-The vfio_pci_ioctl_tph() handler processes requests without acquiring any
-serialization locks (such as vdev->igate). If userspace issues multiple
-TPH ioctls concurrently, vfio_pci_tph_enable(), vfio_pci_tph_disable(),
-and vfio_pci_tph_get_st() can execute in parallel.
-
-The underlying PCI core functions pcie_enable_tph() and pcie_disable_tph()
-perform lockless read-modify-write operations on the PCI_TPH_CTRL config
-register and mutate pdev->tph_mode, pdev->tph_req_type, and
-pdev->tph_enabled. Simultaneously, vfio_pci_tph_get_st() invokes
-pcie_tph_get_cpu_st(), which relies on these state variables.
-
-Can this lead to data races on unprotected PCIe TPH state variables,
-resulting in corrupted device configuration space or inconsistent state
-reads?
+If a user provides a parameter to enable Enhanced ACS controls, the validat=
+ion
+might erroneously reject them unless the device's vector size happens to
+have those exact bits set. Conversely, if a device has a non-zero egress
+vector size, a user could pass flags corresponding to the set bits in the
+vector size, allowing unintended modification of reserved bits in
+PCI_ACS_CTRL.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506094623.2932=
-7-1-fengchengwen@huawei.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/SI2PR01MB439385689A=
+32A1DDA9CEABE1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com?part=3D1
