@@ -1,296 +1,171 @@
-Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
+Received: from mxout70.expurgate.net (mxout70.expurgate.net [91.198.224.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9AE9367F5B;
-	Wed,  6 May 2026 06:58:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809A0369972;
+	Wed,  6 May 2026 07:03:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.198.224.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778050733; cv=none; b=HjX2dY1N22/jib2V/i4wAuddnG+nLSWFm0ZaQI/E+JBPFu+kM40EuwSkkbTS+nGfkR1PnlonBefqMXzwFDZ1RueVRMqa0I3ZxipuQ5Pkk11ffV2gf5XDUi6F3NdTslO0bSRuLg12dfIKmtSrDUdhKZZadN5GEKhrufmSWKcZYog=
+	t=1778051020; cv=none; b=sInlQitY+2t5cveA+caI9LVWYGt6wD1lh+o1NKiSh1OteM5CGQKaeU7CsuQcjS4M3nr4K7CrNQeuxubK09e2JX3bhdCyAmWOWC85jVbIc6xWsU6OUxwcKvjepqPs6eE6chGDAJRewn+jmcDvWPmup3xIEZsCSO/IVpwymkHvz3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778050733; c=relaxed/simple;
-	bh=sY5tng38gcB9d6yfv3moDi7zkrwX/tSnnQN2YfeTxTA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=BuhEV6eG7C9Mj80QlK/CYRAC/9qmiZgwRfb1/bQ3rDChvMY6O4FVMQJDBGUQU2svq577hwFtkbfMwklMP6gcvfEVPSmhR+sDhb20mB90Cxer3oj9GWYSxb9f/n0kjA6zFlWRuU+StpbFuwug+pGsHZzTFXshNpW1riB7NPeiAqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=rY2rX3cL; arc=none smtp.client-ip=113.46.200.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1778051020; c=relaxed/simple;
+	bh=GQQ4tLKaodjP8OXQAc//QWaL9kDZOgafjgUyva4+Mys=;
+	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
+	 References:Message-ID; b=BY+gc/dg/fQPOlr/cNREGJEg7x5FjjPUVUH/Dk5QpVTMZ9m1je+MoeqXbQp5M+xY+x9hn0AVaQwwlWX2ElJYo60H8NaDonJ8EUvJjrdGmH2mKCw/zVQY2aRcbDEezpYxTAPFTFFVFRaEjwr0otmtGcj/630G+imP5pnWzs9Vfjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=JeRvSI3C; arc=none smtp.client-ip=91.198.224.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="rY2rX3cL"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=G+HgQJkz+cXLEu0vkzPQS/AfVAtum3DymBhzhdmqjVs=;
-	b=rY2rX3cL84ykQx4bxmZDkhviFef06MCpPOpPN/6UkenY5nWH5h/U4p1LKj/2mpw0dC1/MB0HE
-	hqH2vyo0WbUM5fEsGK7zR5cE6xmrv0anu8sHiIWRifN57edlqcXoCcY838w05MWV0kTMzsmw/qG
-	u+PDj81kbdjK1hd/OUJbjwU=
-Received: from mail.maildlp.com (unknown [172.19.163.127])
-	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4g9QzT0pKszKm4C;
-	Wed,  6 May 2026 14:52:05 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1AEBB402AB;
-	Wed,  6 May 2026 14:58:38 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 6 May 2026 14:58:37 +0800
-Message-ID: <09995589-b81d-4cb7-a313-15a943d8b28d@huawei.com>
-Date: Wed, 6 May 2026 14:58:36 +0800
+	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="JeRvSI3C"
+Received: from [194.37.255.9] (helo=mxout.expurgate.net)
+	by relay.expurgate.net with smtp (Exim 4.92)
+	(envelope-from <prvs=76004fd39a=fe@dev.tdt.de>)
+	id 1wKW0g-006cbg-9V; Wed, 06 May 2026 08:45:30 +0200
+Received: from [195.243.126.94] (helo=securemail.tdt.de)
+	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <fe@dev.tdt.de>)
+	id 1wKW0f-000f1P-Ka; Wed, 06 May 2026 08:45:29 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
+	s=z1-selector1; t=1778049926;
+	bh=q8jnMdC7S4lRdaod9kLw6q0kgekMN7xuH/EWnvr0Mfs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=JeRvSI3C6m2dSQlia4vsFf2YGeKlxn0JmFInBJXbwS/+aZjrNsotc0Otg02T+kVCO
+	 pVaATOzb+n0UV8dcaTXWSLb/ZPKIVns72GeXgSy5qEYXn7w2dgmuMSW01Lx1wQ5Zuf
+	 yKoJIuGC5I2pEzKJFI7dnLyg7+aGk2c6CBiqjT+m5ZP+G5xENji6uK8xTTUrjeBMDf
+	 BCguBtu/4RZ2LBCxJlGZxEXRN37jr/f6X2kDrGk5kNTs5jCgEzaiC4LjcLCt4qcYPx
+	 AeB8kXWbKVBlOYTNQYrowOZWmQ95UlrJlrB8c8moUecivwSJ9M4NSk5j9/con58win
+	 OTjSjApJyIUtw==
+Received: from securemail.tdt.de (localhost [127.0.0.1])
+	by securemail.tdt.de (Postfix) with ESMTP id CAB80240042;
+	Wed,  6 May 2026 08:45:26 +0200 (CEST)
+Received: from mail.dev.tdt.de (unknown [10.2.4.42])
+	by securemail.tdt.de (Postfix) with ESMTP id AD89C240040;
+	Wed,  6 May 2026 08:45:26 +0200 (CEST)
+Received: from mail.dev.tdt.de (localhost [IPv6:::1])
+	by mail.dev.tdt.de (Postfix) with ESMTP id 2ECC8248D2;
+	Wed,  6 May 2026 08:45:26 +0200 (CEST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] vfio: add dma-buf get_tph callback and DMA_BUF_TPH
- feature
-To: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <linux-rdma@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>, Yochai
- Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>
-References: <20260430200704.352228-1-zhipingz@meta.com>
- <20260430200704.352228-2-zhipingz@meta.com>
-Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260430200704.352228-2-zhipingz@meta.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemk500009.china.huawei.com (7.202.194.94)
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 6 May 2026 08:45:26 +0200 (CEST)
+From: Florian Eckert <fe@dev.tdt.de>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Sajid Dalvi <sdalvi@google.com>,
+	Ajay Agarwal <ajayagarwal@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, Eckert.Florian@googlemail.com,
+	ms@dev.tdt.de
+Subject: Re: [PATCH v5 0/7] PCI: intel-gw: Fixes to make the driver working
+ again
+In-Reply-To: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
+References: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
+Message-ID: <6f483189ec993e3e5f89bccec11cc02a@dev.tdt.de>
+X-Sender: fe@dev.tdt.de
+User-Agent: Roundcube Webmail/1.3.17
+Content-Transfer-Encoding: quoted-printable
+X-purgate-ID: 151534::1778049930-A141CF85-AE22F8A8/0/0
+X-purgate-type: clean
+X-purgate: clean
 
-On 5/1/2026 4:06 AM, Zhiping Zhang wrote:
-> Add a dma-buf callback that returns raw TPH metadata from the exporter
-> so peer devices can reuse the steering tag and processing hint
-> associated with a VFIO-exported buffer.
-> 
-> Add a new VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl that takes the fd from
-> VFIO_DEVICE_FEATURE_DMA_BUF along with a steering tag and processing
-> hint, validates the fd is a vfio-exported dma-buf belonging to this
-> device, and stores the TPH values under memory_lock. This keeps the
-> existing VFIO_DEVICE_FEATURE_DMA_BUF uAPI completely unchanged.
-> 
-> The user sequences setting TPH on the dma-buf before the importer
-> consumes it.
-> 
-> Add an st_width parameter to get_tph() so the exporter can reject
-> steering tags that exceed the consumer's supported width (8 vs 16 bit).
-> When no TPH metadata was supplied, get_tph() returns -EOPNOTSUPP.
-> 
-> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1534,6 +1534,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->  		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
->  	case VFIO_DEVICE_FEATURE_DMA_BUF:
->  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-> +	case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
-> +		return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
-> +							 argsz);
->  	default:
->  		return -ENOTTY;
->  	}
-> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> @@ -19,6 +19,9 @@ struct vfio_pci_dma_buf {
->  	u32 nr_ranges;
->  	struct kref kref;
->  	struct completion comp;
-> +	u16 steering_tag;
-> +	u8 ph;
-> +	u8 tph_present : 1;
->  	u8 revoked : 1;
->  };
->  
-> @@ -69,6 +72,22 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
->  	return ret;
->  }
->  
-> +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steering_tag,
-> +				    u8 *ph, u8 st_width)
-> +{
-> +	struct vfio_pci_dma_buf *priv = dmabuf->priv;
-> +
-> +	if (!priv->tph_present)
-> +		return -EOPNOTSUPP;
-> +
-> +	if (st_width < 16 && priv->steering_tag > ((1U << st_width) - 1))
-> +		return -EINVAL;
+Just a friendly reminder. I hope I=E2=80=99ve incorporated all your comme=
+nts.
+If there=E2=80=99s anything else you=E2=80=99d like me to do, please let =
+me know.
 
-The checker will failed in following cases:
-1. If the exporter passed 8bit st, and importer support 16bit st, then it will pass
-   the checker.
-2. The exporter enabled 16bit st and its st is < 256 (note: the pcie protocol doesn't
-   restrict 16bit-st must >=256), and importer only support 8bit st, then it will also
-   pass the checker
-
-Suggest userspace passing both st(8bit) and extend-st(16bit), and importer chose the
-right one.
-
-> +
-> +	*steering_tag = priv->steering_tag;
-> +	*ph = priv->ph;
-> +	return 0;
-> +}
-> +
->  static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment,
->  				   struct sg_table *sgt,
->  				   enum dma_data_direction dir)
-> @@ -101,6 +120,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf *dmabuf)
->  
->  static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
->  	.attach = vfio_pci_dma_buf_attach,
-> +	.get_tph = vfio_pci_dma_buf_get_tph,
->  	.map_dma_buf = vfio_pci_dma_buf_map,
->  	.unmap_dma_buf = vfio_pci_dma_buf_unmap,
->  	.release = vfio_pci_dma_buf_release,
-> @@ -331,6 +351,55 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  	return ret;
->  }
->  
-> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-> +				      u32 flags,
-> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
-> +				      size_t argsz)
-> +{
-> +	struct vfio_device_feature_dma_buf_tph set_tph;
-> +	struct vfio_pci_dma_buf *priv;
-> +	struct dma_buf *dmabuf;
-> +	int ret;
-> +
-> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-> +				 sizeof(set_tph));
-> +	if (ret != 1)
-> +		return ret;
-> +
-> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
-> +		return -EFAULT;
-> +
-> +	if (set_tph.reserved)
-> +		return -EINVAL;
-> +
-> +	dmabuf = dma_buf_get(set_tph.dmabuf_fd);
-> +	if (IS_ERR(dmabuf))
-> +		return PTR_ERR(dmabuf);
-> +
-> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops) {
-> +		ret = -EINVAL;
-> +		goto out_put;
-> +	}
-> +
-> +	priv = dmabuf->priv;
-> +	down_write(&vdev->memory_lock);
-> +	if (priv->vdev != vdev) {
-> +		ret = -EINVAL;
-> +		goto out_unlock;
-> +	}
-> +
-> +	priv->steering_tag = set_tph.steering_tag;
-> +	priv->ph = set_tph.ph;
-> +	priv->tph_present = 1;
-> +	ret = 0;
-> +
-> +out_unlock:
-> +	up_write(&vdev->memory_lock);
-> +out_put:
-> +	dma_buf_put(dmabuf);
-> +	return ret;
-> +}
-> +
->  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
->  {
->  	struct vfio_pci_dma_buf *priv;
-> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> @@ -118,6 +118,10 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  				  struct vfio_device_feature_dma_buf __user *arg,
->  				  size_t argsz);
-> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-> +				      u32 flags,
-> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
-> +				      size_t argsz);
->  void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
->  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked);
->  #else
-> @@ -128,6 +132,13 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  {
->  	return -ENOTTY;
->  }
-> +static inline int
-> +vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev, u32 flags,
-> +				  struct vfio_device_feature_dma_buf_tph __user *arg,
-> +				  size_t argsz)
-> +{
-> +	return -ENOTTY;
-> +}
->  static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev)
->  {
->  }
-> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> --- a/include/linux/dma-buf.h
-> +++ b/include/linux/dma-buf.h
-> @@ -113,6 +113,23 @@ struct dma_buf_ops {
->  	 */
->  	void (*unpin)(struct dma_buf_attachment *attach);
->  
-> +	/**
-> +	 * @get_tph:
-> +	 * @dmabuf: DMA buffer for which to retrieve TPH metadata
-> +	 * @steering_tag: Returns the raw TPH steering tag
-> +	 * @ph: Returns the TPH processing hint
-> +	 * @st_width: Consumer's supported steering tag width in bits (8 or 16)
-> +	 *
-> +	 * Return the TPH (TLP Processing Hints) metadata associated with this
-> +	 * DMA buffer. Exporters that do not provide TPH metadata should return
-> +	 * -EOPNOTSUPP. If the steering tag exceeds @st_width bits, return
-> +	 * -EINVAL.
-> +	 *
-> +	 * This callback is optional.
-> +	 */
-> +	int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph,
-> +		       u8 st_width);
-> +
->  	/**
->  	 * @map_dma_buf:
->  	 *
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1534,6 +1534,28 @@ struct vfio_device_feature_dma_buf {
->   */
->  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
->  
-> +/**
-> + * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) metadata
-> + * with a vfio-exported dma-buf. The dma-buf must have been created by
-> + * VFIO_DEVICE_FEATURE_DMA_BUF on this device.
-> + *
-> + * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA_BUF.
-> + * steering_tag and ph are the raw TPH values that importing drivers should use
-> + * when accessing the buffer.
-> + *
-> + * The user must set TPH on the dma-buf before the importer consumes it.
-> + *
-> + * Return: 0 on success, -errno on failure.
-> + */
-> +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
-> +
-> +struct vfio_device_feature_dma_buf_tph {
-> +	__s32	dmabuf_fd;
-> +	__u16	steering_tag;
-> +	__u8	ph;
-> +	__u8	reserved;
-> +};
-> +
->  /* -------- API for Type1 VFIO IOMMU -------- */
->  
->  /**
-> 
-> 
-
+On 2026-04-17 10:35, Florian Eckert wrote:
+> This series fixes and improve the 'intel-gw' driver to work again with
+> the current dwc pcie framework. The following changes are:
+>=20
+> * Move interrupt 'enable' to its own function to improve readability,
+>   and add additional register writes just as the Maxlinear kernel does=20
+> in
+>   their SDK.
+> * Enable clock for the PHY before PHY init call.
+> * Add missing 'start_link' callback. That was added to the PCIe dwc
+>   framework.
+> * Move ATU base address assignment to the probe function and also add=20
+> the
+>   the possibility to read it from the devicetree by dwc core.
+> * Update devicetree documentation for intel-gw-pcie.yaml
+> * Remove unused preprocessor define.
+> * Mark driver as orphaned as the maitainer's email no longer works
+>=20
+> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+> ---
+> Changes in v5:
+> - Also add the DTS 'minItems' option for 'reg-names'.
+> - Add missing quotation marks to the DTS example change to make the DTS
+>   bot hopefully happy.
+> - Link to v4:
+> https://lore.kernel.org/r/20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.=
+tdt.de
+>=20
+> Changes in v4:
+> - Add 'atu' to the end of the resource definition to ensure backwords
+>   compatibility.
+> - Updated the commit description to explain why the MaxLinear SDK is=20
+> used
+>   as a reference.
+> - Remove 'Rahul Tanwar <rtanwar@maxlinear.com>' out of the loop, as the=
+=20
+> email
+>   address is no longer valid and is being rejected.
+> - Link to v3:
+> https://lore.kernel.org/r/20260401-pcie-intel-gw-v3-0-63b008c5b7b2@dev.=
+tdt.de
+>=20
+> Changes in v3:
+> - Update commit messages.
+> - Correct the sample code for dt bindings by adding the missing=20
+> quotation
+>   marks. Add 'minItems: 3' to avoid ABI issues.
+> - Move driver atu base assignment to probe function and keep backward
+>   compatibility.
+> - Link to v2:
+> https://lore.kernel.org/r/20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.=
+tdt.de
+>=20
+> Changes in v2:
+> - Added additional information to the commit descriptions
+> - Add additional patch to mark driver as orphaned as the maintainer's
+>   email no longer works.
+> - Fix wrong error path for enable clock before phy init.
+> - Add new patch to update the devicetree documentation for the 'atu'
+>   resource
+> - Add additional recipients responsible for documenting the dervicetree
+>   bindings.
+> - Link to v1:
+> https://lore.kernel.org/r/20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.=
+tdt.de
+>=20
+> ---
+> Florian Eckert (7):
+>       MAINTAINERS: Remove bouncing intel-gw maintainer
+>       PCI: intel-gw: Remove unused define
+>       PCI: intel-gw: Move interrupt enable to own function
+>       PCI: intel-gw: Enable clock before phy init
+>       PCI: intel-gw: Add start_link callback function
+>       PCI: intel-gw: Move driver atu base assignment to probe function
+>       dt-bindings: PCI: intel,lgm-pcie: Add atu resource
+>=20
+>  .../devicetree/bindings/pci/intel-gw-pcie.yaml     |  9 ++-
+>  MAINTAINERS                                        |  3 +-
+>  drivers/pci/controller/dwc/pcie-intel-gw.c         | 73=20
+> +++++++++++++++-------
+>  3 files changed, 58 insertions(+), 27 deletions(-)
+> ---
+> base-commit: 028ef9c96e96197026887c0f092424679298aae8
+> change-id: 20260317-pcie-intel-gw-50902113f9e1
+>=20
+> Best regards,
