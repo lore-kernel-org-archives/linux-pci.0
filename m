@@ -1,137 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFE543AF646
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:40:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 202D935CBD7
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:40:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778100019; cv=none; b=Wko8ekgbPbzRbAjtJrWUMMy6EBaRIY2iBP7am1e4S0+KdSZL6iUP4SrjWfeeaoW751/O11OQVYX5BpprrS9F3Fh5FLpahvnEIqw1C2zOS0lV8zYXaNwUYT3OTjIWNtP3PKRtmlD1P6Qjlr9m5w5tcZV2L5ekSI1hKb9BVaDLfBg=
+	t=1778100053; cv=none; b=h+ITUpgEhwdM0mnlubPR6NJRcc6D3lvBEuAwp0GAQnJXsy2Dwz/FbYfXeNdYIAwt3dYkh7l4KwltUf230sM0hCODfKBJZsP6WoMt/9Bmhy5aAnbJd0xfTt9QE//b+bZJpFKa8VPpYvBPKrutWb/eZTMfRlh27PnFuQKTHEhPOn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778100019; c=relaxed/simple;
-	bh=oZjggD/JUIQWp6JBa5utsRzMjSxmrAdtcY9wd8v8Xb8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FMox/DNzoHxOLR70zJXZSeXNP6/GVMq9aXkpgMC8yTX2MoNrWYeyVhHgDzLY+OWSYHVk4QbdDcVcAOfYPAuyNp3yzlt2iMahmRWADEVNTHktZyMa6Vxr6eJkB0cscoSn4O+yfvOp2LvPWSUeVojPNVnw2Cmia/3wTmcTQz5d/jM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G3wEakDL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778100053; c=relaxed/simple;
+	bh=N1utPvEcBUC2CgJY2X87EWrYwsuzry0dWKDcX8h66DA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=rH8Dg43ycFEPE17Ic75qAhDDcelJDW7pYMMtv3UbsGhcKUkAXwyog5ZXPIxxvbksGyOVsTdijevU6XOZQqP5+DNxVeR5O8nKs9QRbgSFjFZH3X6sRMkHOmtxlDKxLYh+bp0IiFPbnw4MNKKHisa0KKiyCnqIS0Y+G+ucv2SqeU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BIMjQzpe; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G3wEakDL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52D2DC2BCB0;
-	Wed,  6 May 2026 20:40:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778100019;
-	bh=oZjggD/JUIQWp6JBa5utsRzMjSxmrAdtcY9wd8v8Xb8=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=G3wEakDLifC6I2KU32n0ia9DN2TNdrQenCh5Y9lT0BkTG1zzA/R30IgXNG4aiGIhP
-	 mL/dPo21HIQTy4hIeA4QWlNCj7Txhe67cA2zcwHhGNWp94pOobA8LAM1rRs5dufCwY
-	 HNPsx3dsn3lUCVJG+qisWthYTFDnEdl5M0l5RXZhL01+8koMQHpd4AFdPDEWT/aeqo
-	 FL9Xqj+M1jRPmg0ddJu6fyCdOGIyddCjNJXxisocENz0vjZpmKmaapI9n5/+R/jAG6
-	 TCGIWu8UoWKi7n0xNHEJp4oaxVYlETLZi8U+wkz8NtSGlwALdNk+FZKllXDoPY17ll
-	 2DLNs7/5ftrjA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: brcmstb: Assign pcie->gen from
- of_pci_get_max_link_speed()
-Reply-To: sashiko@lists.linux.dev
-To: "Florian Fainelli" <florian.fainelli@broadcom.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260506164537.103196-1-florian.fainelli@broadcom.com>
-References: <20260506164537.103196-1-florian.fainelli@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 06 May 2026 20:40:18 +0000
-Message-Id: <20260506204019.52D2DC2BCB0@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BIMjQzpe"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-83945063f70so654473b3a.0
+        for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 13:40:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778100050; x=1778704850; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Ab/JEpZ7Fi0qyubDO84DlmrRRJltgbTbtMwqDlljXhg=;
+        b=BIMjQzpeeyTopXwFqVsgfksLN2mbJuj1WTDU/RFyIVutzwgeTPvFdDxpkZC6COUobT
+         Pva7KSrREIRVb5dPNEdZcuR+ZPGfAEj+TuQc+ssBZT4i1jzCxvhF9GKorY5ADvzXLo4H
+         QNG4VH6NadZ2M3fbjI7+sqYdYjhfjGapfRKUSSgJ7hMaV54a9foMIggYjV9km/0hr+Hf
+         cWpVabCDnYuqdjsXTgNWX6sUzYqz43gXD3mGX53BIxw4LbbEQxXXfbHBI0BKxHmDxeab
+         ZWzPPZZH84U7SGlgv8lH6jwiHj237nFbrIo5mIqU5+iAO4c//z63PkM+Jw3prRWKYTKK
+         yetg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778100050; x=1778704850;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=Ab/JEpZ7Fi0qyubDO84DlmrRRJltgbTbtMwqDlljXhg=;
+        b=llRjjxzXr3Krf7jWrtkWW1nClV8HFxfZjxvwjEGwpArCK0Jbb033L5NZJ8cjx7Dflf
+         J9HMEK9XTM3TNn7V/yNfLu/HMPm+uvrlcZBdSUA/U8OdL6ZfnHjubx63VFljGhEuaclh
+         NA9m1wDirfwABVlHsHo8+PIJsWu5gW5nX+U3njXepSNHzjpDLepISaQ3D4sDJI9iC4UB
+         iPbwcfgjscZU9SA2vLnxukJz21MTUqG68y/laRkQnSDI1qelcsJJjFZbn7Q13/nlKJ9n
+         V+iXSAVTnSIJ75mJF0xtSr06+NTKa8LDsLee73hpVksJpv12mqVfnX0eFEV0eQwlhVFy
+         4bwA==
+X-Forwarded-Encrypted: i=1; AFNElJ9M6oSg59qocoAVoxNSKIxMLG8qf3l6nMlqr3VCDG0p1fOmPof9o8d6WxoSwgIwHdsBLp98NZgqVj4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxS5NWHlEkO2bnwcyJKuSmWsNhw3gI2m6lTyZka8I5+K6pxQlG3
+	pJsVDfMuBjPLkUdp1pr2BFfba9JMvOabffo9JMGvQDCOffOxz7scHVI4
+X-Gm-Gg: AeBDieub91IQz/t8eyS130jitkcsSFpP6maxeSbLIw+9Qm0fHHmSQWnatipfLTh9xSc
+	Bup4ViSK3+k6SJ0HKwALgsXjipa8VIayBtiG7NmmFFnwYVjd7/xzXK8dJ3ZuU69kxxOSRiLaggC
+	Uy+gnU+3qg2ZxU0Y9YEv7Sp2nm2wqAm1XCxhdeA7j9C802w68HIOIWmEtCAkypqX16AJST8VdOG
+	p+6M1meqKF3PAPDUAjJOYtFLuNhSVEgsBECz7NO24Zxoqt/5eZKMVrq0cDB1Sicz8HK+BXOn0mo
+	IdPk8Sqw8wZEoM6x89RJIhsFiWMoZupZL3ELUyJm7h1AkuiCyvuFqcUultvpqDyjCC25ZkeYMN5
+	ZaWd1wgFW3iaoBSDbFlABJ7h57w5s0SOwdE0QpY0vE3VflHRN84xhDm/UuynWgvpLc1u5Ymulj3
+	/QU8JOMAi40YFwH9vay8y0g7ltqIScW0M=
+X-Received: by 2002:a05:6a00:3989:b0:837:d331:8700 with SMTP id d2e1a72fcca58-83bb65f40b2mr96595b3a.1.1778100050268;
+        Wed, 06 May 2026 13:40:50 -0700 (PDT)
+Received: from mincom1 ([14.67.155.79])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8396563f11csm7952185b3a.3.2026.05.06.13.40.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 May 2026 13:40:49 -0700 (PDT)
+From: Jihong Min <hurryman2212@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mathias Nyman <mathias.nyman@intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Basavaraj Natikar <Basavaraj.Natikar@amd.com>,
+	linux-usb@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jihong Min <hurryman2212@gmail.com>
+Subject: [PATCH v2 0/2] AMD PROM21 xHCI temperature hwmon support
+Date: Thu,  7 May 2026 05:40:32 +0900
+Message-ID: <cover.1778099627.git.hurryman2212@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260506032939.92351-1-hurryman2212@gmail.com>
+References: <20260506032939.92351-1-hurryman2212@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] The error handling path in `brcm_pcie_probe()` causes a NULL point=
-er dereference if `pci_host_probe()` fails.
-- [High] The driver fails to handle the `msi-map` device tree binding varia=
-nt when determining if the internal MSI controller should be enabled.
---
+Hi,
 
-commit 8f216627ede49601fd793dae393dc6232ac6f438
-Author: Florian Fainelli <florian.fainelli@broadcom.com>
+This series adds hwmon support for the temperature sensor exposed by AMD
+PROM21 xHCI controllers. The temperature value is read through a
+vendor-specific index/data register pair in the xHCI PCI MMIO BAR.
 
-PCI: brcmstb: Assign pcie->gen from of_pci_get_max_link_speed()
+v1 implemented this directly under drivers/usb/host. Based on review
+feedback, v2 splits the support into a generic xhci-pci auxiliary-device
+interface and a standalone hwmon driver under drivers/hwmon. xhci-pci
+creates the auxiliary child only for PCI IDs matched by its internal table,
+currently only AMD 1022:43fd, and the hwmon driver binds to that child
+through the auxiliary bus.
 
-After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
-pcie->gen stopped being assigned and as a result the established PCIe
-link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
-to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
+The PROM21 hwmon driver registers the hwmon device under the parent PCI
+function so userspace reports it as a PCI adapter. The auxiliary driver
+still owns the lifetime and unregisters the hwmon device before xhci-pci
+tears down the HCD.
 
-Whether the 'max-link-speed' property is not specified, or it exceeds
-Gen3, resort to the HW defaults.
+I tested register access while the parent xHCI PCI function was suspended.
+The temperature register did not return a valid value without
+runtime-resuming the device. v2 therefore keeps the default behavior of
+allowing a temperature read to wake the xHCI PCI device, and adds
+allow_pm_switch=N for users who prefer reads not to wake the device. In
+that mode a read returns -EAGAIN while the device is suspended.
 
-Link: https://github.com/raspberrypi/linux/issues/7343
+Changes in v2:
+- split the original single patch into a two-patch series
+- add a generic xhci-pci auxiliary-device interface
+- move PROM21 hwmon support to drivers/hwmon as an auxiliary driver
+- avoid linking hwmon-specific code into xhci-hcd
+- add Documentation/hwmon/prom21-hwmon.rst
+- document register offsets, conversion formula, sysfs attributes, and
+  allow_pm_switch behavior
 
-> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controll=
-er/pcie-brcmstb.c
-> index 714bcab97b603..08a0e7091cedc 100644
-> --- a/drivers/pci/controller/pcie-brcmstb.c
-> +++ b/drivers/pci/controller/pcie-brcmstb.c
-> @@ -2072,8 +2072,10 @@ static int brcm_pcie_probe(struct platform_device =
-*pdev)
->  		return PTR_ERR(pcie->clk);
-> =20
->  	ret =3D of_pci_get_max_link_speed(np);
-> -	if (pcie_get_link_speed(ret) =3D=3D PCI_SPEED_UNKNOWN)
-> +	if (ret < 0 || ret > 3)
->  		pcie->gen =3D 0;
-> +	else
-> +		pcie->gen =3D ret;
-> =20
->  	pcie->ssc =3D of_property_read_bool(np, "brcm,enable-ssc");
+Sincerely,
+Jihong Min
 
-This isn't a regression from this commit, but while reviewing this function
-I noticed a pre-existing regression. The driver currently checks for
-msi-parent but does not check for the msi-map device tree binding variant:
+Jihong Min (2):
+  usb: xhci-pci: add generic auxiliary device interface
+  hwmon: add initial support for AMD PROM21 xHCI temperature sensor
 
-drivers/pci/controller/pcie-brcmstb.c:brcm_pcie_probe() {
-    ...
-	if (pci_msi_enabled()) {
-		struct device_node *msi_np =3D of_parse_phandle(pcie->np, "msi-parent", 0=
-);
+ Documentation/hwmon/index.rst        |   1 +
+ Documentation/hwmon/prom21-hwmon.rst |  84 ++++++++
+ drivers/hwmon/Kconfig                |  11 +
+ drivers/hwmon/Makefile               |   1 +
+ drivers/hwmon/prom21-hwmon.c         | 300 +++++++++++++++++++++++++++
+ drivers/usb/host/Kconfig             |  10 +
+ drivers/usb/host/xhci-pci.c          | 114 ++++++++++
+ 7 files changed, 521 insertions(+)
+ create mode 100644 Documentation/hwmon/prom21-hwmon.rst
+ create mode 100644 drivers/hwmon/prom21-hwmon.c
 
-		if (msi_np =3D=3D pcie->np)
-			ret =3D brcm_pcie_enable_msi(pcie);
-    ...
-}
-
-Will this bypass brcm_pcie_enable_msi() and prevent the creation of the
-local MSI domain if a platform's DT uses msi-map instead of msi-parent
-to reference the built-in MSI controller?
-
-I also noticed another pre-existing regression in the probe error handling =
-path:
-
-drivers/pci/controller/pcie-brcmstb.c:brcm_pcie_probe() {
-    ...
-	ret =3D pci_host_probe(bridge);
-	if (!ret && !brcm_pcie_link_up(pcie))
-		ret =3D -ENODEV;
-
-	if (ret) {
-		brcm_pcie_remove(pdev);
-		return ret;
-	}
-    ...
-}
-
-If pci_host_probe(bridge) fails early before allocating bridge->bus,
-bridge->bus will remain NULL.
-
-Inside brcm_pcie_remove(pdev), bridge->bus is passed directly to
-pci_stop_root_bus(bridge->bus).
-
-The function pci_stop_root_bus() evaluates pci_is_root_bus(bus), which
-dereferences the pointer via !(bus->parent).
-
-Does this cause a NULL pointer dereference and a kernel panic if
-pci_host_probe() fails?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506164537.1031=
-96-1-florian.fainelli@broadcom.com?part=3D1
+-- 
+2.53.0
