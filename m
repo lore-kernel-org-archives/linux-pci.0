@@ -1,106 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F2E931715C
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 21:05:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2503B0AE5
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 21:07:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778101504; cv=none; b=BJYF1xeQUzg/A3lUI1o55RN1QW5SK8KKCWvHOvyyJ6zdA3la64PwqJvlycS01fT+eE8NckKnBJVGWBNq56HmNhVxRLxnAgrpAOatfHikQCv1LgFJ1pbzJvZNWWR1UWJ73RFiOPIK1xHf8J25vb2qUgJZDu1YoxfF+Q+RQs4BpPo=
+	t=1778101645; cv=none; b=YR1vMHzr/1KpAS87iV1chr3l/wp0sew1Hlmkq4Vf1UvTTkOYXGGNNAWTU8aErhqiO4lDDMX0SK8ZGk2bvrXAUpXjrW6IJfvZxxtrMJ/jIF7WYKnp3f6A2JM/bHa9N/6bSHilh/JnELXYv7U154WVdQTUohkBj+eCMe/JklfLNxM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778101504; c=relaxed/simple;
-	bh=X4aYINGejy7k9MwQbm+16AqS58mF7+ak5XVT6q6vSi0=;
+	s=arc-20240116; t=1778101645; c=relaxed/simple;
+	bh=ZAzsiuM43l70AnAKdJM4g4s1EB1f1ldhIOrU5M/s9go=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nSoCZpSB3U0k0XA2PXUSQJEyKqrAtwIxIWl80SAxqUo6zUmqlNXjR0pXfvqqIbhmcrsYPx58dGkWELZyN+a6gR38TYq6x4VUoyCFAU3qzpjozFyif5uvTIGDB8hHxlZj0ParfjF5Wx1jOIoNopnZdt2zyg6JJKnZ2R9xizR4ZjY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=alEFBwD3; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=JmzshVpfI5yAXHz7gOXjROKyQNn5CS/5kAP0p/THXNe3tTjIn5tCR3Xtsq1pfBAnzmYpxYp5EjOyUD2FwPMfbDA3D1fLfSjb7CS2lyBPbyinph/ECiNrGps4GKaA0HvzbP/FHxcnMnnSUoFjF8tj7TReFmJkM5zby1kw7SsFt0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LGf0c+wT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="alEFBwD3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9448C2BCB0;
-	Wed,  6 May 2026 21:05:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LGf0c+wT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49C3CC2BCB0;
+	Wed,  6 May 2026 21:07:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778101504;
-	bh=X4aYINGejy7k9MwQbm+16AqS58mF7+ak5XVT6q6vSi0=;
+	s=k20201202; t=1778101645;
+	bh=ZAzsiuM43l70AnAKdJM4g4s1EB1f1ldhIOrU5M/s9go=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=alEFBwD3piNx1guIEV3OdBiBD+Btoi25GZ7QRXUOvc35Ymt496P1esgG7gUxksEjG
-	 WwwKKgK1sKzX3tciJKJhIOPCFEbQhbGCsuQ2oVTA3b5L7/I7YE+LQho0qtWi8ciB8o
-	 3sG4onq/XEZVs1jOaawlhBYuz1fH3txFGEBk3kNiWnNAy9HoiBXiz6IaOgJwqgtFBS
-	 7eoajUYiJI2CjBLsV28I82c6ni4wQGF3ccmShzufrne+SfIXbMjXKOgI9+jq14znHZ
-	 lRgwU8neA/vT9u8x0lctnmJI5034FYvt/CYqpFHgXlISKlCLmpJtBJazrYtwuStXS4
-	 4C8ju91qeLpiQ==
+	b=LGf0c+wTbEclp6ZrIGLb8tzCWxEpxID7rNV6SJnaW2hbXW40dfEMllXBZy6gsbkXG
+	 WuflFlGUAApq5FKP+RtiXgfAUBPTq89iCLxumHKawzDki8hWRdTIS7kdXy2Sq30RL8
+	 LnQ1AThMLS+t+BbyTwShpkqoDh1uH24ZRHdfB2/sW2jwCVL8KyU4YvrRBv3HWZfF1g
+	 avH0h2eO5R9zJWhW2AD0YJl4+eU3wDrCGS3Mv+nQkTgiwR7qkVj9wau6yfxkNjnGG1
+	 TjtromkZv9u0OKq9Iw7LwgsP24B6USfkmccWMcG7Z5gj0ujNEgBe+HDh0rBFaZKJNC
+	 mpLT91YCylR9w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/8] PCI: cadence: HPA: Add 100 ms delay after link
- training
+Subject: Re: [PATCH v7 4/6] PCI: Refactor disable_acs_redir and config_acs
+ param handling
 Reply-To: sashiko@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260506152346.166056-4-18255117159@163.com>
-References: <20260506152346.166056-4-18255117159@163.com>
+To: "Wei Wang" <wei.w.wang@hotmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <SI2PR01MB43933B1790A24957EB7DB79ADC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+References: <SI2PR01MB43933B1790A24957EB7DB79ADC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 06 May 2026 21:05:03 +0000
-Message-Id: <20260506210503.E9448C2BCB0@smtp.kernel.org>
+Date: Wed, 06 May 2026 21:07:24 +0000
+Message-Id: <20260506210725.49C3CC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The mandatory 100 ms PCIe link training delay will be silently byp=
-assed for the Cadence HPA path because `pcie->max_link_speed` is never init=
-ialized.
+- [High] Bounds checking in pci_param_config_acs() breaks backwards compati=
+bility for padded parameters and contains an integer underflow that leads t=
+o Undefined Behavior.
+- [Medium] Silenced logging for disable_acs_redir reduces configuration obs=
+ervability.
 --
 
-commit febef6953b8de7d70ee1c2d2e0d894d52ff3e063
-Author: Hans Zhang <18255117159@163.com>
+commit 2b4c7af1c4a60302203ef348c929aa8cf673e3ac
+Author: Wei Wang <wei.w.wang@hotmail.com>
 
-PCI: cadence: HPA: Add 100 ms delay after link training
+PCI: Refactor disable_acs_redir and config_acs param handling
 
-This commit adds a 100 ms delay after link training for the Cadence HPA PCIe
-controller by calling pcie_wait_after_link_train(). It intends to ensure
-compliance with the PCIe specification for speeds greater than 5.0 GT/s.
+This commit refactors the ACS parameter handling by splitting the old
+__pci_config_acs function into dedicated functions for disable_acs_redir
+and config_acs parameters.
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/dri=
-vers/pci/controller/cadence/pcie-cadence-host-hpa.c
-> index 0f540bed58e88..62e939906785b 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+
 [ ... ]
-> @@ -304,6 +305,8 @@ int cdns_pcie_hpa_host_link_setup(struct cdns_pcie_rc=
- *rc)
->  	ret =3D cdns_pcie_host_wait_for_link(pcie, cdns_pcie_hpa_link_up);
->  	if (ret)
->  		dev_dbg(dev, "PCIe link never came up\n");
-> +	else
-> +		pcie_wait_after_link_train(pcie->max_link_speed);
 
-Will pcie->max_link_speed ever be initialized to a value greater than 2 in =
-the
-HPA path?
+> +static void pci_param_disable_acs_redir(struct pci_dev *dev,
+> +					struct pci_acs *caps)
+> +{
+> +	u16 acs_redir_mask =3D PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC;
+> +
+> +	if (!disable_acs_redir_param ||
+> +	    !pci_dev_match_disable_acs_redir(dev, disable_acs_redir_param) ||
+> +	    !pci_dev_specific_disable_acs_redir(dev))
+> +		return;
+> +
+> +	caps->ctrl =3D caps->fw_ctrl & ~acs_redir_mask;
+> +}
 
-The inline function pcie_wait_after_link_train() executes the 100 ms delay =
-only
-if max_link_speed > 2:
+The previous implementation printed a pci_info message when ACS control was
+modified. Is it intentional that pci_param_disable_acs_redir no longer logs
+confirmation that the redirect was disabled?
 
-drivers/pci/pci.h:pcie_wait_after_link_train() {
-	if (max_link_speed > 2)
-		msleep(PCIE_RESET_CONFIG_WAIT_MS);
-}
+This might make debugging device isolation issues more difficult without the
+dmesg confirmation.
 
-The HPA path is uniquely utilized by the pci-sky1.c glue driver, but neither
-pci-sky1.c nor the Cadence core code appears to parse or assign a value to
-pcie->max_link_speed.
+[ ... ]
 
-Because the struct cdns_pcie is zero-initialized, pcie->max_link_speed rema=
-ins
-0. Passing 0 to pcie_wait_after_link_train() fails the condition check, whi=
-ch
-seems to completely bypass the required 100 ms delay.
+> +static void pci_param_config_acs(struct pci_dev *dev, struct pci_acs *ca=
+ps)
+> +{
+> +	u16 shift =3D 0, max_shift =3D fls(dev->acs_capabilities) - 1;
 
-> =20
->  	return ret;
->  }
+If dev->acs_capabilities is 0, fls(0) evaluates to 0. Will 0 - 1 underflow
+the u16 max_shift variable to 65535, effectively bypassing the bounds check
+below?
+
+> +	u16 enabled_bits =3D 0, disabled_bits =3D 0;
+> +	const char *p, *seg;
+
+[ ... ]
+
+> +	p =3D strchr(seg, '@');
+> +	/* Parse bitstring backwards from '@' */
+> +	while (p > seg) {
+> +		if (shift > max_shift) {
+> +			pci_err(dev, "ACS flag bit %d exceed range %d\n",
+> +				shift, max_shift);
+> +			return;
+> +		}
+
+The previous implementation gracefully allowed parameter padding that excee=
+ded
+the capability mask, only erroring if unsupported bits were actively enable=
+d.
+
+Does aborting here when shift exceeds max_shift break backwards compatibili=
+ty
+for existing working kernel boot parameters (like config_acs=3D00000000@...)
+on devices with fewer capabilities?
+
+> +
+> +		switch (*--p) {
+> +		case '1':
+> +			enabled_bits |=3D BIT(shift);
+> +			break;
+
+If the bounds check is bypassed due to the max_shift underflow mentioned
+above, could shift increment without bounds for long user strings?
+
+If shift exceeds the width of an unsigned long, BIT(shift) could trigger
+undefined behavior. Additionally, since enabled_bits is a u16, shift amounts
+of 16 or greater will silently truncate.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506152346.1660=
-56-1-18255117159@163.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/SI2PR01MB439385689A=
+32A1DDA9CEABE1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com?part=3D4
