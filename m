@@ -1,171 +1,331 @@
-Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010014.outbound.protection.outlook.com [52.101.84.14])
+Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50FDC3C465;
-	Wed,  6 May 2026 04:01:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.14
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778040108; cv=fail; b=C68dPlteFBowo/UiT2jzTc+/HBR14lbx9IK6jjcImc2em/0UIm01Sg75oJrTLHvxtl62H7vZzmaCZpca+RcQnnYL1+748BK4WoT1pLTZXJz4zogbN4DMXR9NGD3iqfrRBaIBDZ3f4BDVysMG9NVrewi4N0H4FDYrkWXdk4c3JA8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778040108; c=relaxed/simple;
-	bh=D5c5IERPDGTfNM2MVkQZiYCcYcAS6Cdd17XJf/GBYUA=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=g8PUZzFSMoZFWsYLss+MxXyZWXq+bHbq48FS/kdophP+AlqPO474w1SjpmGsHMoCs0IAXgrP3ACKb/R69H7M8mrGlRA0VfkMz1J3vqoTSLaueowzt55P6IwIGfwPzPBQtonDCeipZei27kH2cFJFgitfAw/2pUYhTHrsjmnu+Qg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=E3PKxuk3; arc=fail smtp.client-ip=52.101.84.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07B3240DFDE
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 04:39:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778042390; cv=none; b=a7kPgyej38vcQU8yVXi+xu2ZDjXN4wbOaBjQyTm3q7H8LFO2Y9yZITWGi4qutwulLsVOrrC2VZn5+L12BuPxqqLsLLSXJMP2lkJ81kLLgcS9y978AF8skJ32B/p9PoIFIa7dFOBlnLN+ZSoP5pJbeDkwSR4o0AGFj4XfrvGRQy8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778042390; c=relaxed/simple;
+	bh=oucua38T8wm1KyL1kAlDQ54gxQ0An3taoENAPAtQ3T4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Idsi4NH6YKUMzRjOED+WsQSvZL4aHf8oG1I6SWyS7/KPwIbZQwQzdq9pTBujwrh4YBvLAxOLcAC0MEfLiE6L/4HlOSMnnr08Y/zqHWOsN8lqfs+s5uxjYEWh1QxGNkq9vxdcXgEUPhZ4/bUPb7eiM9dkZgmP6PyiUrzeD/Y6wr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=rc4pjYVf; arc=none smtp.client-ip=115.124.30.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="E3PKxuk3"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MnlkaoWohiBCnd68rYxpKnYNF8Bu4723v8MIdqdCutBMFBM4EOqarAFlXbgaI1c8rVf3A0KpCN05T67Vknzv90xhqCmgC1hTfuwZJDPNxiI41lIMvakArE9ZqSYUCRLcmzUaPjuj/qk7kLp3Rp19IRoRSBcPWs3dE1IOFgCSUIim7Qy2q/sm7fm1tvuf8BZ4d2rtlqUJguXWIYzs61G+ErilQCG8Ktd2KaFkGca0B6WvOoMxRd33biAJNDiUTxdLqcOM0wqcMF8Az5xJ9ssaJ1VjnC2kzV6pGKs4wdHMTpXYne5fpovWfFmYptc+iVxo28IPbpY5WQvieELhUwe+Zg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dpE3fKgBQvycb9ipwZXwEwW/ad8UFiS8Pui4xc5SO7I=;
- b=H45XpKLRpmVxawBeTFdIwmPiRIFcTtPHjQkqWuLZhRX14himYMqhvcyL3Px5skB/TWKmvVi7cGLGOQu5mD7hENjuQl/5qbvXgXvjU9OlU3TgPi9PaVz4WHwcZTeIaoe0IgIAf8akVTrLsUiEf+Ov//ZHaHTLXLfyR6oxhMVfhfiRGrw4aJ+iz4a3suanq12MSacROzljU2rUlLS0/fWJm7qWdd9rr4zo4PrKd1l4Y9/mkxXsXOLxRmaFJaSG3ZLnDRGflg56IYjJ2wQZsaCEcmXqrPy/05y+ndev70tSCvbi/fr6Pvu+4W//pLRqcHWxJ+c2ZO4B15YZ8lp0tD/Jvw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dpE3fKgBQvycb9ipwZXwEwW/ad8UFiS8Pui4xc5SO7I=;
- b=E3PKxuk36Gro/npI2muxbADJ5K/tvd3S5XbHSKEjWE0webW9kqcJa2iV2dd0fxrxvx9cXsZJ72lI8Nz1T2P5s/iLJ2TpGazUxFvVDdM6YwWMayZjpiLI0jQMswgG4JenTLFZInHCB7BJ1LxcQS5JgDlVJM0Qs3i7HRdBxncknCBgnhKx6wTyvZ/5CqwGhw6R74Nwf2nYIVFx2RDl5FUSGNmgKNogFJSlUlU6d1x0jEX4qhYeV66Eh5DtorYk41W/fV+55g8gzb4KwlQ5keHEWM1sUxgBG3SRadFgMrRR/rvp5AeMNisvmVg7BE2wDFN2Jxqc5e42YK8WY17PPUGdTQ==
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- (2603:10a6:150:30c::14) by GV2PR04MB11303.eurprd04.prod.outlook.com
- (2603:10a6:150:2a3::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.15; Wed, 6 May
- 2026 04:01:42 +0000
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.20.9870.023; Wed, 6 May 2026
- 04:01:42 +0000
-From: Hongxing Zhu <hongxing.zhu@nxp.com>
-To: Frank Li <frank.li@nxp.com>
-CC: "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
-	<krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
-	<mani@kernel.org>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
-	<festevam@gmail.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "imx@lists.linux.dev" <imx@lists.linux.dev>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v8 3/5] arm64: dts: imx94: Add pcie0 and pcie0-ep supports
-Thread-Topic: [PATCH v8 3/5] arm64: dts: imx94: Add pcie0 and pcie0-ep
- supports
-Thread-Index: AQHcuzX7sgD34BfOKUm5YX4QZoB41LX+oJgAgAH2NnA=
-Date: Wed, 6 May 2026 04:01:42 +0000
-Message-ID:
- <GV2PR04MB120190D9CDCC17720D13088218C3F2@GV2PR04MB12019.eurprd04.prod.outlook.com>
-References: <20260324023036.784466-1-hongxing.zhu@nxp.com>
- <20260324023036.784466-4-hongxing.zhu@nxp.com>
- <afkNEjm73o8qoYRY@lizhi-Precision-Tower-5810>
-In-Reply-To: <afkNEjm73o8qoYRY@lizhi-Precision-Tower-5810>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|GV2PR04MB11303:EE_
-x-ms-office365-filtering-correlation-id: e2975494-2a99-4f4b-9acd-08deab242ea6
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|19092799006|1800799024|366016|7416014|376014|38070700021|22082099003|56012099003|18002099003;
-x-microsoft-antispam-message-info:
- CFQPGkSFKuy8gVQ23iUMZ6JGjk+ux765vw5H65CdUHPS96xI+zXPhXASClKXRbBXIVaBbCWCti7Z99bPa/UkBAgRa9NXH+gNHYbk+t94m8LRMG/8xijMYPvY9w1Y9au9Q+xdkmAW3ODmNDyrerxsTfY/3RGsozBcmcf6LNAfy/T3AJLsiRzCJsI6zpFmGF1VTUEYCwMqfoOeQtMwP8MZVydJJa81KZntPn51p0GOsPHGIP8u6/6/jFm57gc6TxdXqNE5GP9R/3E9iY6mkxpRFXQaX+Ra2DoMeDaquXnoTmOp2sHW42uiFe+Fh7SZc6CvGCyglaay5xHqzC/dWA8Pe09TPWLxO5Ue6Xc5vKNJjFZyp5NOlNuLSQilQCUR/8LPAPQ3uedpcvzCQ5197YCsGivv9MWm5M6X+cbjuxK06p0ol3XgZt+9LgiDQfwsP+Lne9diicH3cxIQMqeOrphWZBlhYmai/rcN/Oo3MoXSiz7ZTuA3D7rsvqt4O+IiofxOEVtqYF/MtkrViDPLqIONf0Zbkcd8EroM/8cLdhhkH2f4ili+y+ZsbS2Uzh7/id0WquWBHizvWjKc/Vj8pO7971qENGOVcbO6Hnkbi7qz2G61Iypgf3783JGkkksn6KgB132Dnt2Ek2/bHT30vaYy3VrFYSzTKRuGzBuGGR+GQUgyMh/fsM16KuC/4hI5OrP3IIG2h+iT5H0JP/YeEjcIYGU/6QGS0/Rdhy6GH2PA9U0VjwmHT133xoQ5tUT5IK34
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(7416014)(376014)(38070700021)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?n10/Q0yT1vyfCuLA12bobKsKpQ+c/Y9V3cOMgnX54OdNqnalTiHEY3W9iUvG?=
- =?us-ascii?Q?DSTQycfrstJTOLgc1N1qQYD5P6xZjJsQ/swUCSNhwZTTsNE8rcLQV+YEyQUx?=
- =?us-ascii?Q?jRxHxcGGqhkX4XVou4LoQOgm8NLJ41yrMLmh1aRtABgQUyGpj4VwRh3mvuGO?=
- =?us-ascii?Q?MUHjX1IHFHEzJ8xj1ZtkHoq/DYzwdCP3iaM257TxikMPLWxLYn6/03+aPG4O?=
- =?us-ascii?Q?hzBSKRRVaRivR9YchOYVZCdOU9iEsYGKtuv81BDolM5x+SF9jiHV8zLJanYP?=
- =?us-ascii?Q?zFTJesogdj/jgxaeGK+fGMvPNffCO3KsJ64FiBoR4yvVoITkZNL+CVh6EuO4?=
- =?us-ascii?Q?S6VRRjXE9SFHobJ8VFbtGfFXYANB6u8LN9TL/VO/z/i1pIcFp+7aPTJ8GTLH?=
- =?us-ascii?Q?IDi+KLURlIguM185WzOC0fFU7i1JZXxIhfchgwuCz0aojTszHhvd/OU6XYlQ?=
- =?us-ascii?Q?CnJWE97xqMR7X1TKdyGAD3+5bykW41bV0z0WKX1k+a34L9crxEkSOtz1G/oY?=
- =?us-ascii?Q?I5SQPJ+QEijLaIgoMW5C9T1R9Hm/8QdH/FOz7p77J8dtfU4eVQCceWAKwOcc?=
- =?us-ascii?Q?8xo5pnDrG7xor7GUN1n1Cqst3EDmXQxN5WWiwLRxWQfvzPBGVgy63DWucL9z?=
- =?us-ascii?Q?9DFxLA91YP0Za2ZCSHJG9GD9UpnK/TYP590zy2ZLgp/rT4U7kndj/jBUvHhm?=
- =?us-ascii?Q?bWkeGN/NOPUByHyN/fWdXiak9kutaejjEvRgd2EQq4P+1KctkBSCsX9gcHBn?=
- =?us-ascii?Q?FP3j8zLSK1t0eDffyCBUkFQhB3zoy39BD9gwFjhlm7fF/v6fRHEZZj9e5OtU?=
- =?us-ascii?Q?vjFg7HjLA5Cq3isXojCQh/XZ9JtjkH7JHrp/EvuJ4utXYLdKt1EYCWbjtpLi?=
- =?us-ascii?Q?BaqMnA1/TZWUGwrI493Tq29MVF9qKHUAzD3MZx5t1KMZmSXwfUEnvyVmFTID?=
- =?us-ascii?Q?4WQr6Re06D2hwTtYJXdeIi//XNUHJagZ6tbNs8Lh7uFQdRtMdLRlhqbMsMUE?=
- =?us-ascii?Q?S5imV5mQXYDbIe1rnDF75ziwveN4UJry6GKiseu4XytFft6J4sSV4bJJtrpw?=
- =?us-ascii?Q?+raBRVCxgr+4Q06o6dL66VVZO05POC0OwPdMc6k7QFgRHUz0kNrkYf7RqX7S?=
- =?us-ascii?Q?7KeKZi60netuAmYkbY3ygEueTGTMWzZMpP7VKY7jdwUAjXuZ/HCbOQQ5qYxK?=
- =?us-ascii?Q?1YYyH1C/2ai0TocIqU+Y0k5yiygKqHLsQ+WbqNkW+ZCkuhOpt/S0LrO9y1uM?=
- =?us-ascii?Q?VAg6GCVV7/ClZg90vQ3a0wA4T+fcuUepzZXONnKUF18PpI7LDGjQ1C1deqBL?=
- =?us-ascii?Q?Zux/NEA+nQ7Z9GrrA8xWNU08pMuI12aoCJTIQKCrhf6+plz7Klf3LII3ReTx?=
- =?us-ascii?Q?+DgplbwPa5pX9i0pPKrsRswM5evSUIN7eMk1Kp0uzXrk+jVKshPOsI3vJ++X?=
- =?us-ascii?Q?007mxjJq+o3EonnY6pax6db6zQZ5RfZxUiyXkQNyke2cWbnkHATaG57wDemE?=
- =?us-ascii?Q?o5ub5Va3D2JEgIw9h1fantryBqbuf2nOUcycFnlCcJaR+36uNjf52FGJxRkl?=
- =?us-ascii?Q?Mhr+10hHF1dc7Cet4hbfPF6nikk28YnAmtXPvKI7GlsWi50p87NjmQ+6WwcW?=
- =?us-ascii?Q?sVDZH/rlCyVav1nNN1jM1IAF1ubzGOdNYQUnaPFHSkGAB8CenHovlsEYPKc9?=
- =?us-ascii?Q?POM2qESYAwaFaLIl9KzdVcBwDi1S8jsbqFJ3qfTCKnkN363c?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="rc4pjYVf"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1778042378; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=O0pcudE2O9NRpRLh76BAZRJFTyNMzyc2+RdYjWE/kRs=;
+	b=rc4pjYVfwPCuY2EE1PiWap9irPaX6ajtSvjMIS5Byv4uAroJ2rm+M7nWhiQ0bDedv/e5jPcOwYUPdAJ9qVyu8fxO2KiDimg40wJIfzWGuCz+6y/st/MhAeL6Tj4ypG7UPKolWrfnwsYtmBG5m9uQbevwsx1Pd0nOpvM8BSClKNA=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R351e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0X2KbY28_1778042376;
+Received: from 30.178.82.123(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0X2KbY28_1778042376 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 06 May 2026 12:39:37 +0800
+Message-ID: <d843329a-85c3-4b1c-b35b-e506d247d0ab@linux.alibaba.com>
+Date: Wed, 6 May 2026 12:39:36 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e2975494-2a99-4f4b-9acd-08deab242ea6
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 May 2026 04:01:42.2453
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: km7FQgsfhOQzij34JCmc0guaeQF0OVk58f6jd0QoPmaXAYASewURK4q7jSo+mMitADfrmmWDYzKa9cvMj6+WAA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11303
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v11 2/2] PCI: Check ROM header and data structure addr
+ before accessing
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Andy Shevchenko <andriy.shevchenko@intel.com>,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ linux-pci@vger.kernel.org, Xunlei Pang <xlpang@linux.alibaba.com>,
+ oliver.yang@linux.alibaba.com
+References: <20260430214615.GA441190@bhelgaas>
+From: Guixin Liu <kanie@linux.alibaba.com>
+In-Reply-To: <20260430214615.GA441190@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-> -----Original Message-----
-> From: Frank Li <frank.li@nxp.com>
-> Sent: Tuesday, May 5, 2026 5:18 AM
-> To: Hongxing Zhu <hongxing.zhu@nxp.com>
-> Cc: robh@kernel.org; krzk+dt@kernel.org; conor+dt@kernel.org;
-> bhelgaas@google.com; l.stach@pengutronix.de; lpieralisi@kernel.org;
-> kwilczynski@kernel.org; mani@kernel.org; s.hauer@pengutronix.de;
-> kernel@pengutronix.de; festevam@gmail.com; linux-pci@vger.kernel.org; lin=
-ux-
-> arm-kernel@lists.infradead.org; devicetree@vger.kernel.org;
-> imx@lists.linux.dev; linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH v8 3/5] arm64: dts: imx94: Add pcie0 and pcie0-ep sup=
-ports
->=20
-> On Tue, Mar 24, 2026 at 10:30:34AM +0800, Richard Zhu wrote:
-> > Add pcie0 and pcie0-ep supports.
-> >
-> > Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> > ---
->=20
-> DTS part fail to apply, can you rebase to v7.1-rc1.
-Hi Frank:
-Okay,  would rebase to v7.1-rc1, and resend the dts part.
-Would update the according changes later when the following two patch-set a=
-re
-merged.
-[1] [PATCH V14 00/12] pci-imx6: Add support for parsing the reset property =
-in
-new Root Port binding
-[2] [PATCH V2 0/8] PCI: imx6: Integrate pwrctrl API and update device trees
 
-Best Regards
-Richard Zhu
->=20
-> Frank
->=20
-> >
+
+在 2026/5/1 05:46, Bjorn Helgaas 写道:
+> On Fri, Jan 30, 2026 at 04:07:29PM +0800, Guixin Liu wrote:
+>> We meet a crash when running stress-ng on x86_64 machine:
+>>
+>>    BUG: unable to handle page fault for address: ffa0000007f40000
+>>    RIP: 0010:pci_get_rom_size+0x52/0x220
+>>    Call Trace:
+>>    <TASK>
+>>      pci_map_rom+0x80/0x130
+>>      pci_read_rom+0x4b/0xe0
+>>      kernfs_file_read_iter+0x96/0x180
+>>      vfs_read+0x1b1/0x300
+>>
+>> Our analysis reveals that the ROM space's start address is
+>> 0xffa0000007f30000, and size is 0x10000. Because of broken ROM
+>> space, before calling readl(pds), the pds's value is
+>> 0xffa0000007f3ffff, which is already pointed to the ROM space
+>> end, invoking readl() would read 4 bytes therefore cause an
+>> out-of-bounds access and trigger a crash.
+>> Fix this by adding image header and data structure checking.
+>>
+>> We also found another crash on arm64 machine:
+>>
+>>    Unable to handle kernel paging request at virtual address
+>> ffff8000dd1393ff
+>>    Mem abort info:
+>>    ESR = 0x0000000096000021
+>>    EC = 0x25: DABT (current EL), IL = 32 bits
+>>    SET = 0, FnV = 0
+>>    EA = 0, S1PTW = 0
+>>    FSC = 0x21: alignment fault
+>>
+>> The call trace is the same with x86_64, but the crash reason is
+>> that the data structure addr is not aligned with 4, and arm64
+>> machine report "alignment fault". Fix this by adding alignment
+>> checking.
+>>
+>> Fixes: 47b975d234ea ("PCI: Avoid iterating through memory outside the resource window")
+>> Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com>
+>> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+>> Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+>> ---
+>>   drivers/pci/rom.c | 113 ++++++++++++++++++++++++++++++++++++++--------
+>>   1 file changed, 95 insertions(+), 18 deletions(-)
+>>
+>> diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+>> index 4f7641b93b4b..d8abed669fac 100644
+>> --- a/drivers/pci/rom.c
+>> +++ b/drivers/pci/rom.c
+>> @@ -6,9 +6,12 @@
+>>    * (C) Copyright 2004 Silicon Graphics, Inc. Jesse Barnes <jbarnes@sgi.com>
+>>    */
+>>   
+>> +#include <linux/align.h>
+>>   #include <linux/bits.h>
+>>   #include <linux/kernel.h>
+>>   #include <linux/export.h>
+>> +#include <linux/io.h>
+>> +#include <linux/overflow.h>
+>>   #include <linux/pci.h>
+>>   #include <linux/sizes.h>
+>>   #include <linux/slab.h>
+>> @@ -84,6 +87,91 @@ void pci_disable_rom(struct pci_dev *pdev)
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_disable_rom);
+>>   
+>> +static bool pci_rom_is_header_valid(struct pci_dev *pdev,
+>> +				    void __iomem *image,
+>> +				    void __iomem *rom,
+>> +				    size_t size,
+>> +				    bool last_image)
+>> +{
+>> +	unsigned long rom_end = (unsigned long)rom + size - 1;
+>> +	unsigned long header_end;
+>> +	u16 signature;
+>> +
+>> +	/*
+>> +	 * Some CPU architectures require IOMEM access addresses to
+>> +	 * be aligned, for example arm64, so since we're about to
+>> +	 * call readw(), we check here for 2-byte alignment.
+>> +	 */
+> I think PCI Firmware r3.3, sec 5.1, actually requires 512-byte
+> alignment, but I guess we haven't enforced that before.  Worth
+> mentioning the spec requirement to show that this isn't just an
+> arbitrary thing to accommodate a weird CPU architecture.
+Yes, it says "Each image must start on a 512-byte boundary and must 
+contain the PCI Expansion ROM header".
+
+OK, I'll add a 512-byte alignment check in the next version, along
+with a comment citing the spec requirement.
+>> +	if (!IS_ALIGNED((unsigned long)image, 2))
+>> +		return false;
+>> +
+>> +	if (check_add_overflow((unsigned long)image, PCI_ROM_HEADER_SIZE,
+>> +				&header_end))
+>> +		return false;
+>> +
+>> +	if (image < rom || header_end > rom_end)
+>> +		return false;
+>  From Sashiko:
+>
+>    Does this correctly handle a ROM structure that fits exactly at the
+>    end of the window?
+>
+>    Since header_end is calculated exclusively and rom_end inclusively,
+>    a perfectly sized structure will have header_end equal to rom_end +
+>    1, causing the header_end > rom_end check to incorrectly evaluate to
+>    true and reject the ROM. This same inclusive versus exclusive
+>    boundary mismatch also happens in pci_rom_is_data_struct_valid()
+>    when checking the end pointer.
+That's right, chagend in v12, thanks.
+>> +
+>> +	/* Standard PCI ROMs start out with these bytes 55 AA */
+>> +	signature = readw(image);
+>> +	if (signature == PCI_ROM_IMAGE_SIGNATURE)
+>> +		return true;
+> I think this and pci_rom_is_data_struct_valid() would read better if
+> every test was a check for failure instead of having a bunch of
+> failure returns, followed by a success return, followed by another
+> failure return.  E.g.,
+>
+>    if (signature != PCI_ROM_IMAGE_SIGNATURE) {
+>      if (last_image) {
+>        ...
+>      }
+>      return false;
+>    }
+>
+>    return true;
+I think so, changed in v12, thanks.
+>> +	if (last_image) {
+>> +		pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
+>> +			 PCI_ROM_IMAGE_SIGNATURE, signature);
+>> +	} else {
+>> +		pci_info(pdev, "No more image in the PCI ROM\n");
+>> +	}
+> I'm not completely convinced that it's worth passing in last_image.  I
+> suppose the reason was to make the messages exactly the same as
+> before?
+>
+> Even in the "!last_image" case, I think it might be worth printing the
+> signature we got.  The "No more image" message means that the ROM
+> format isn't strictly conforming, doesn't it?  Maybe the same message
+> would suffice for both "last_image" and "!last_image"?
+Commit beced88e6af43 ("PCI: Add check code for last image indicator not 
+set")
+added this printing to avoid print "Invalid image",
+I thinks it's worth keeping as-is.
+>> +	return false;
+>> +}
+>> +
+>> +static bool pci_rom_is_data_struct_valid(struct pci_dev *pdev,
+>> +					 void __iomem *pds,
+>> +					 void __iomem *rom,
+>> +					 size_t size)
+>> +{
+>> +	unsigned long rom_end = (unsigned long)rom + size - 1;
+>> +	unsigned long end;
+>> +	u32 signature;
+>> +	u16 data_len;
+>> +
+>> +	/*
+>> +	 * Some CPU architectures require IOMEM access addresses to
+>> +	 * be aligned, for example arm64, so since we're about to
+>> +	 * call readl(), we check here for 4-byte alignment.
+>> +	 */
+>> +	if (!IS_ALIGNED((unsigned long)pds, 4))
+>> +		return false;
+>> +
+>> +	/* Before reading length, check addr range. */
+>> +	if (check_add_overflow((unsigned long)pds, PCI_ROM_DATA_STRUCT_LEN + 1,
+>> +				&end))
+>> +		return false;
+>> +
+>> +	if (pds < rom || end > rom_end)
+>> +		return false;
+>> +
+>> +	data_len = readw(pds + PCI_ROM_DATA_STRUCT_LEN);
+>> +	if (!data_len || data_len == U16_MAX)
+>> +		return false;
+>> +
+>> +	if (check_add_overflow((unsigned long)pds, data_len, &end))
+>> +		return false;
+>> +
+>> +	if (end > rom_end)
+>> +		return false;
+> More from Sashiko:
+>
+>    Does pci_rom_is_data_struct_valid() need to enforce a minimum safe
+>    size for data_len?
+>
+>    If a malformed device advertises a small data_len (e.g., 12 bytes),
+>    validation passes here, but the subsequent reads in
+>    pci_get_rom_size() for PCI_ROM_IMAGE_LEN and
+>    PCI_ROM_LAST_IMAGE_INDICATOR could access unmapped memory past the
+>    ROM boundary.
+OK, what would be a suitable min value here? 
+PCI_ROM_LAST_IMAGE_INDICATOR? I think this value needs to work for both 
+new and legacy devices.
+>
+>> +	signature = readl(pds);
+>> +	if (signature == PCI_ROM_DATA_STRUCT_SIGNATURE)
+>> +		return true;
+> Seems like it would be nicer to check the signature first, before
+> checking the data_len.  If the signature is bad, we log a hint about
+> what went wrong, but we don't log anything if data_len is bad.
+OK, changed in v12.
+>> +	pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
+>> +		 PCI_ROM_DATA_STRUCT_SIGNATURE, signature);
+>> +	return false;
+>> +}
+>> +
+>>   /**
+>>    * pci_get_rom_size - obtain the actual size of the ROM image
+>>    * @pdev: target PCI device
+>> @@ -99,38 +187,27 @@ static size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom,
+>>   			       size_t size)
+>>   {
+>>   	void __iomem *image;
+>> -	int last_image;
+>>   	unsigned int length;
+>> +	bool last_image;
+>>   
+>>   	image = rom;
+>>   	do {
+>>   		void __iomem *pds;
+>> -		/* Standard PCI ROMs start out with these bytes 55 AA */
+>> -		if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
+>> -			pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
+>> -				 PCI_ROM_IMAGE_SIGNATURE, readw(image));
+>> +		if (!pci_rom_is_header_valid(pdev, image, rom, size, true))
+>>   			break;
+>> -		}
+>> +
+>>   		/* get the PCI data structure and check its "PCIR" signature */
+>>   		pds = image + readw(image + PCI_ROM_POINTER_TO_DATA_STRUCT);
+>> -		if (readl(pds) != PCI_ROM_DATA_STRUCT_SIGNATURE) {
+>> -			pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
+>> -				 PCI_ROM_DATA_STRUCT_SIGNATURE, readl(pds));
+>> +		if (!pci_rom_is_data_struct_valid(pdev, pds, rom, size))
+>>   			break;
+>> -		}
+>> +
+>>   		last_image = readb(pds + PCI_ROM_LAST_IMAGE_INDICATOR) &
+>>   				   PCI_ROM_LAST_IMAGE_INDICATOR_BIT;
+>>   		length = readw(pds + PCI_ROM_IMAGE_LEN);
+>>   		image += length * PCI_ROM_IMAGE_SECTOR_SIZE;
+>> -		/* Avoid iterating through memory outside the resource window */
+>> -		if (image >= rom + size)
+>> +
+>> +		if (!pci_rom_is_header_valid(pdev, image, rom, size, last_image))
+>>   			break;
+> More from Sashiko.  I'm not sure about this one.
+>
+>    Does this log a false-positive warning when processing the final
+>    image?
+>
+>    When last_image is true, the image pointer is advanced to the end of
+>    the ROM and passed into pci_rom_is_header_valid().
+>
+>    Because last_image is passed as true to the helper, the signature
+>    check will fail and log an invalid header signature error for a
+>    perfectly valid device instead of gracefully finishing the loop.
+I rename the "last_image" param of pci_rom_is_header_valid() to 
+"expect_valid", and add a !last_image check here to print "No more 
+image" instead of "Invalid sig". Best Regards, Guixin Liu
+>> -		if (!last_image) {
+>> -			if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
+>> -				pci_info(pdev, "No more image in the PCI ROM\n");
+>> -				break;
+>> -			}
+>> -		}
+>>   	} while (length && !last_image);
+>>   
+>>   	/* never return a size larger than the PCI resource window */
+>> -- 
+>> 2.32.0.3.g01195cf9f
+>>
+
