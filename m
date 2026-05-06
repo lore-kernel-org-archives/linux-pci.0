@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34F98496905;
-	Wed,  6 May 2026 15:55:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD373F23B5;
+	Wed,  6 May 2026 16:03:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778082952; cv=none; b=XuuwCzH986d+7z680KsSOw5dLooYCsqJ0ZBIn7dkiJ6bLivauhT70uBiPdynto1KC6Ua5w8qiFFBYX66eDy/n4D2kiljGqwVbtAakib3aF7FXJGjxXc6w77vDsyyXVPdz2uyk6M3D5mZHt0SkkQK4trnBCsUjDv1aT5nJpD5ick=
+	t=1778083412; cv=none; b=ZD4IDqgFDH0SxTD+SloEPnSWLIAFbTAK7E2bseeXv8NBwimrGIXAABu8mAOSsZRYTmLwc2T+Ahqa091T1A4hSVOUgHaXrJqGLO1RBFMZjtJvcyqshMX7Kr/1e/PN8jvXbiQ3ERdthLvAlYBXVqR8+BDFNaHQb4PFHYNJzLXZgl4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778082952; c=relaxed/simple;
-	bh=Ph5NSUFFQWfRFBXRYCMYPAzIJbj1RVi6AHZ+xntAAFw=;
+	s=arc-20240116; t=1778083412; c=relaxed/simple;
+	bh=D7wD6AzQrfQznPONV9GRM3q9KpiebSKEPsnKHA4ZTg0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=di6mNL606P7ZiWZiC9zR6tVRYE2zYWDlU9yAn6Uy50HjjN2EKoBJAFX5FKDl5wv0IeG/6NY3KOEtaDwywYoqDpg1x08pGBBSMfqBGuxJp7rb2N7/d3hPfXv47P0gdgBF53nT/BcrHhwLzyg/NXH5lS74uWG4Owcd69oheQq0G0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tfEeQw/d; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=kcjOEAoVWnbndlJtCVZZyxbzrBMRezs1CiGZXWPfMp2XQnF0RfXWFmfT83EEZ4galaM4eg8Y6YCswQz+ATU7zC63nIy9djwmbl1QoWGBKg9KIetgqchGS/GQRFmnK5JkS4+txeo6pvcA+iNpttnMiK+ZM+1xJ/mJwok5uJyPDwE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rErI/Xa/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tfEeQw/d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2252C2BCB0;
-	Wed,  6 May 2026 15:55:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rErI/Xa/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04DA5C2BCB0;
+	Wed,  6 May 2026 16:03:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778082952;
-	bh=Ph5NSUFFQWfRFBXRYCMYPAzIJbj1RVi6AHZ+xntAAFw=;
+	s=k20201202; t=1778083410;
+	bh=D7wD6AzQrfQznPONV9GRM3q9KpiebSKEPsnKHA4ZTg0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tfEeQw/dEE9ZvynULyLEVP7NROJ17+o5Zid3jA3XxADKGiWLaVX6pA0Mc4EGbzUoy
-	 grMbANHbWa/oRAll7VELcgEWxYM1xYjMAZCGhPn23K9ro5Ac9esX1ZmctTY3cGhVfg
-	 O9D5dMOSkMfTQ+UkDhil5Dl6ugh5eqyCsDiS1Ex3j/XvLoqICT5jjfoh8lTugrDQqa
-	 C+/ozpmkDU0zWqx1jD3zzF6TShiKT4Ug0LkW8VSyMnm2vv+99PvgFcm8CCk/ah5qqx
-	 IN07dtX8NXTP1CmuNGlVnw8tIcjd8iEMKjFLibvSqWMWxVIQkkbSS40xb64aosafnp
-	 8EyEtHW5sEN5g==
-Date: Wed, 6 May 2026 21:25:41 +0530
+	b=rErI/Xa/Sz0vIh+pL7XfyNJMZYTiQrj/hBdSpM4Tz7W6bsYY6WwTXAlSV+KHa7b0F
+	 KGnevHCvYPNuBWT8voXSIYzlkTEoNi6zB/PKxDq+4xKYo4TIDAOyG4KLGOVkY2EGcp
+	 PYxctxHRTEIqJiH/YmgF14GoBiiRWYCdoVTdb6q8ZUDqvruBa9xMWnaQ30Wff3gLNn
+	 YejsgZua3jATErmQAkcK+i9TIBk95Gtjyd/rb8Sbj4HHroO2CnEWrbarj0CfiHd6B+
+	 TO5al7zrda2resDqCebdMiDvkkSGV/kUTsqbnmPAJV3JTAP0TI4XUIyPIpHx8X/M7E
+	 0EAnbDC1Jk+0g==
+Date: Wed, 6 May 2026 21:33:21 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Hans Zhang <18255117159@163.com>
 Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
@@ -36,10 +36,11 @@ Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
 	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
 	linux-mediatek@lists.infradead.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/8] PCI: Add pcie_wait_after_link_train() helper
-Message-ID: <qryvbq7tn7gpkx63ljauddp3qxczgbzlpfkxiula7vq6f23yaz@oi2pal2ynzgv>
+Subject: Re: [PATCH v2 2/8] PCI: cadence: LGA: Add max_link_speed field and
+ 100 ms delay after link training
+Message-ID: <jmqw5tmgbpou5lanjcnolrpmipgnny6chm53wqybtqg4epfuql@cxqryplrmylk>
 References: <20260506152346.166056-1-18255117159@163.com>
- <20260506152346.166056-2-18255117159@163.com>
+ <20260506152346.166056-3-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,51 +50,79 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260506152346.166056-2-18255117159@163.com>
+In-Reply-To: <20260506152346.166056-3-18255117159@163.com>
 
-On Wed, May 06, 2026 at 11:23:39PM +0800, Hans Zhang wrote:
-> PCIe r6.0, sec 6.6.1 (Conventional Reset) requires that for a Downstream
-> Port supporting Link speeds greater than 5.0 GT/s, software must wait a
-> minimum of 100 ms after Link training completes before sending any
-> Configuration Request.
+On Wed, May 06, 2026 at 11:23:40PM +0800, Hans Zhang wrote:
+> The Cadence LGA (Legacy Architecture IP) PCIe host controller currently
+> lacks the mandatory 100 ms delay after link training completes for speeds
+> > 5.0 GT/s, as required by PCIe r6.0 sec 6.6.1.
 > 
-> Introduce a static inline helper pcie_wait_after_link_train() that checks
-> the given max_link_speed (2 = 5.0 GT/s, 3 = 8.0 GT/s, etc.) and calls
-> msleep(100) only when the speed is greater than 5.0 GT/s. The helper uses
-> the existing PCIE_RESET_CONFIG_WAIT_MS macro defined in pci.h.
+> Add a 'max_link_speed' field to struct cdns_pcie to record the maximum
+> supported link speed (or the currently configured speed). In the common
+> host layer function cdns_pcie_host_start_link(), after the link has been
+> successfully established, call pcie_wait_after_link_train() to insert the
+> required delay if max_link_speed > 2.
 > 
-> This allows multiple host controller drivers to share the same mandatory
-> delay without duplicating the logic.
+> Glue drivers must set max_link_speed appropriately (e.g., from the device
+> tree property "max-link-speed") to enable the delay.
 > 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
->  drivers/pci/pci.h | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 4a14f88e543a..a8705a2a2d85 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
 
-Since this helper is for host controller drivers, this needs to be defined in
-pci-host-common.h.
-
-> @@ -60,6 +60,19 @@ struct pcie_tlp_log;
->   */
->  #define PCIE_RESET_CONFIG_WAIT_MS	100
->  
-> +/**
-> + * pcie_wait_after_link_train - Wait 100 ms if link speed > 5 GT/s
-> + * @max_link_speed: the maximum link speed (2 = 5.0 GT/s, 3 = 8.0 GT/s, ...)
-> + *
-> + * Must be called after Link training completes and before the first
-> + * Configuration Request is sent.
-> + */
-> +static inline void pcie_wait_after_link_train(int max_link_speed)
-
-pci_host_common_link_train_delay()?
+You need to club those glue driver patches into this one. Otherwise, you'll end
+up breaking bisectability.
 
 - Mani
+
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> ---
+>  drivers/pci/controller/cadence/pcie-cadence-host-common.c | 4 ++++
+>  drivers/pci/controller/cadence/pcie-cadence.h             | 2 ++
+>  2 files changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> index 2b0211870f02..51376f69d007 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> @@ -14,6 +14,7 @@
+>  
+>  #include "pcie-cadence.h"
+>  #include "pcie-cadence-host-common.h"
+> +#include "../../pci.h"
+>  
+>  #define LINK_RETRAIN_TIMEOUT HZ
+>  
+> @@ -115,6 +116,9 @@ int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc,
+>  	if (!ret && rc->quirk_retrain_flag)
+>  		ret = cdns_pcie_retrain(pcie, pcie_link_up);
+>  
+> +	if (!ret)
+> +		pcie_wait_after_link_train(pcie->max_link_speed);
+> +
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+> index 574e9cf4d003..e222b095d2b6 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence.h
+> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
+> @@ -86,6 +86,7 @@ struct cdns_plat_pcie_of_data {
+>   * @ops: Platform-specific ops to control various inputs from Cadence PCIe
+>   *       wrapper
+>   * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
+> + * @max_link_speed: maximum supported link speed
+>   */
+>  struct cdns_pcie {
+>  	void __iomem		             *reg_base;
+> @@ -98,6 +99,7 @@ struct cdns_pcie {
+>  	struct device_link	             **link;
+>  	const  struct cdns_pcie_ops          *ops;
+>  	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
+> +	int				     max_link_speed;
+>  };
+>  
+>  /**
+> -- 
+> 2.34.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
