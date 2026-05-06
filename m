@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EA0647DD75;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8922E47CC80;
 	Wed,  6 May 2026 15:25:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778081122; cv=none; b=JZSOTV4G2kKurWqKsbc9V8Mnz+PMpl9xEaTGnqVd2Va6MpeQc0fCIyFaP43Crph0MOtJrc5FsJgRBuqmJRlOwEYH21b5lOxP9adIjxtvsOGddcPnwi1KNF3P4/wzkTa6Z6uacElnCOeFtmpJv0FEBLT2s5o/OlVIyIjZQ1CWboU=
+	t=1778081122; cv=none; b=EEFSq3OMG4YuZp9BV0mGescbMn6o3Bhr6UBbrr1qyLBESC+ixvjVNqeo0q4X7KtnQiDhaSN1mP8sXlXsKbF2C5pwkT/ZCqzxcyyl4CnsH1ypZZrzc0Y7dAGoY/AGItW/x0BAxwzIWHImZYFg4bubCOxwLDNX+7KkXpU/z+ZE+PM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1778081122; c=relaxed/simple;
-	bh=EwX5vw8flnwTRgHgywLKXc0U4GS3nY6wv8fQ5S7ddKU=;
+	bh=hOvMa018kLpNbaWX7Zza3kl+vca409Z0VW8vMXcwSVs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ZeRhqJ6yXR0tmVKzuKb3mJBpb5zYlIKoV4ma4JJB1BgBIKKEnU0V+8WdaKbd9cB/Ki2Wc2fKNPmH6rYh2Rn+qckANollMN/cBLBPMbeu46C3NIMK6BoLfIW7sdks0r6JloyRSqYzyVnDKg80IWRpySl/V+4NyZGJmei/t3pK19I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=lgrgDVct; arc=none smtp.client-ip=220.197.31.4
+	 MIME-Version; b=G1ZV3NRqc52l6lYYCW4FFG3ch2XJtfr+G4RSP3pw7Nf6A2t3X4BSk1Y3Au+aKf/gIMp/SXUAFil5lhvHIZWFqxaAhYLTxn7BNNRoAiQpFIPN+MnSpNExhMJdgE2yRE2xm3ybymC0c60CPyUuhaEIFPIG0kT/G1SuLlIl5UVqToQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=mMb9kc89; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="lgrgDVct"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="mMb9kc89"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=BN
-	GiJZhgTLPluypgzeJ1aG/d9sbWAAhxnbKSoRw5x1o=; b=lgrgDVctqQNdhZIm1t
-	PcEbxw4/HmqAapBQyeaO8ydZ1v915P9ACRci6PFsg1rsX/KPMVEbYTfocgsylCtR
-	u6Gce0AmIoirQwtAuLx8wuzT5nrymkOjbCKp1BRUrhDHT3oWq3Qb9zfcWFVpoKSQ
-	75ceAByEc1iuse/J93QGXRVH4=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=uE
+	EJQ9fXszYfwRyDtR6o0/pUHqmq54B1aA4O008XVv8=; b=mMb9kc89cru2itfUkh
+	Eh2md/CTuLPUpRJN1UCaVC+R7gJg/05zaFVf6MN375fUdxTcEbLRvm5HGyFiq31g
+	C8tU96NjI4ZuPrcQSVMbckGSM6JiREeQqRoa5JbpvmbpVJG2G04HE0b46cM2H5az
+	7D+Snzwl538eCInoaS0sk74dM=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wCHAqsXXftpv5CgDg--.43926S4;
-	Wed, 06 May 2026 23:24:11 +0800 (CST)
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wCHAqsXXftpv5CgDg--.43926S6;
+	Wed, 06 May 2026 23:24:13 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -47,9 +47,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 2/8] PCI: cadence: LGA: Add max_link_speed field and 100 ms delay after link training
-Date: Wed,  6 May 2026 23:23:40 +0800
-Message-Id: <20260506152346.166056-3-18255117159@163.com>
+Subject: [PATCH v2 4/8] PCI: j721e: Set max_link_speed to enable 100 ms delay after link up
+Date: Wed,  6 May 2026 23:23:42 +0800
+Message-Id: <20260506152346.166056-5-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260506152346.166056-1-18255117159@163.com>
 References: <20260506152346.166056-1-18255117159@163.com>
@@ -60,74 +60,41 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCHAqsXXftpv5CgDg--.43926S4
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ZFWfZryUWw43Wr43uw17ZFb_yoW5JFWfpa
-	yDWryfGF1IqrWY9a1kZa4UXryaq3Z8C347tws2k34xWr17CrW5JF42gF1fJFy3KrZrZry7
-	ZF1DtF9rGr4ayFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziM7KxUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBu2Wmn7XRs43gAA3B
+X-CM-TRANSID:_____wCHAqsXXftpv5CgDg--.43926S6
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uF17Jr4UXrWkZF1xZFy5urg_yoW8Gr1xpa
+	y7GFWxG3WIqFW5uanrZ3W5XFyaqFn8J3y7GrZag3WxZFnxCr93JFyIqFyfJ3yfKF4kAF17
+	A3Zrt342qr43tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zEt8ncUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxB63W2n7XR45DgAA3Q
 
-The Cadence LGA (Legacy Architecture IP) PCIe host controller currently
-lacks the mandatory 100 ms delay after link training completes for speeds
-> 5.0 GT/s, as required by PCIe r6.0 sec 6.6.1.
+Set cdns_pcie.max_link_speed to the maximum supported link speed
+(obtained from the device tree property "max-link-speed") in
+j721e_pcie_set_link_speed(). This activates the post-link delay logic
+added in cdns_pcie_host_start_link() when the controller supports
+speeds greater than 5 GT/s.
 
-Add a 'max_link_speed' field to struct cdns_pcie to record the maximum
-supported link speed (or the currently configured speed). In the common
-host layer function cdns_pcie_host_start_link(), after the link has been
-successfully established, call pcie_wait_after_link_train() to insert the
-required delay if max_link_speed > 2.
-
-Glue drivers must set max_link_speed appropriately (e.g., from the device
-tree property "max-link-speed") to enable the delay.
+As required by PCIe r6.0 sec 6.6.1, and following the same approach as
+commit 80dc18a0cba8d ("PCI: dwc: Ensure that dw_pcie_wait_for_link()
+waits 100 ms after link up"), this ensures a 100 ms delay after link
+training completes before any Configuration Request is sent.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/cadence/pcie-cadence-host-common.c | 4 ++++
- drivers/pci/controller/cadence/pcie-cadence.h             | 2 ++
- 2 files changed, 6 insertions(+)
+ drivers/pci/controller/cadence/pci-j721e.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-index 2b0211870f02..51376f69d007 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-@@ -14,6 +14,7 @@
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index bfdfe98d5aba..ee85b8e04f5b 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -206,6 +206,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+ 	    (pcie_get_link_speed(link_speed) == PCI_SPEED_UNKNOWN))
+ 		link_speed = 2;
  
- #include "pcie-cadence.h"
- #include "pcie-cadence-host-common.h"
-+#include "../../pci.h"
- 
- #define LINK_RETRAIN_TIMEOUT HZ
- 
-@@ -115,6 +116,9 @@ int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc,
- 	if (!ret && rc->quirk_retrain_flag)
- 		ret = cdns_pcie_retrain(pcie, pcie_link_up);
- 
-+	if (!ret)
-+		pcie_wait_after_link_train(pcie->max_link_speed);
-+
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 574e9cf4d003..e222b095d2b6 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -86,6 +86,7 @@ struct cdns_plat_pcie_of_data {
-  * @ops: Platform-specific ops to control various inputs from Cadence PCIe
-  *       wrapper
-  * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
-+ * @max_link_speed: maximum supported link speed
-  */
- struct cdns_pcie {
- 	void __iomem		             *reg_base;
-@@ -98,6 +99,7 @@ struct cdns_pcie {
- 	struct device_link	             **link;
- 	const  struct cdns_pcie_ops          *ops;
- 	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
-+	int				     max_link_speed;
- };
- 
- /**
++	pcie->cdns_pcie.max_link_speed = link_speed;
+ 	val = link_speed - 1;
+ 	ret = regmap_update_bits(syscon, offset, GENERATION_SEL_MASK, val);
+ 	if (ret)
 -- 
 2.34.1
 
