@@ -1,99 +1,118 @@
-Received: from outbound.st.icloud.com (p-east2-cluster5-host7-snip4-10.eps.apple.com [57.103.79.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 793EA36493E
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 22:52:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.79.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92CE2214A84
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 23:05:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778107935; cv=none; b=DwCjVqc5v42AY3ilnMu+uFMFDmE+lYqlX+/gsmHFtePxQFrV6FtjuWPyuovEjK2/CbcwYNHfpNMnPTsa4jf8NCgGs63W9lcODA11gPhj+IGK4VgOWaxEr55kkKrtaAL4NQvQJexESkgHiJLDDnbmAi30glopnPhPeDMZnvd+ng8=
+	t=1778108739; cv=none; b=LtRtIW+ICILNhfFi0nc5gL9BglD61F7pOBe7JQflPxLm2LoMdNgvhoePHHTw7new7VmZgY7OYavbaI6jWF41EkHP0eTxGi0HpbA4ZcivTa81SCdhnOfzol50NWrQaOLA+cPztF02x5ODV1yTznj367hOR1ataYawMmSL3lhGU4s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778107935; c=relaxed/simple;
-	bh=zHkix/9GTTrDk7GuC+3H49H5keRzWBA6Vi1hJtgTiuQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r0AYlV2N+AmLkJT0NAOnzXSpRpXOed9vNxp6RfnAFX1jIB50/z0N0m5zVghJY1XXEMozDK5EDB8aI3pq97/9SQyr5IIGTu90fo0tIIjSiXGN7QiSHca1qeNKI1HGxYZXPjK6IyTfQnl4fZxk6PbL6BWACtaWzy6LQ1RSXbM+u+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=dYZ1yMHs; arc=none smtp.client-ip=57.103.79.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1778108739; c=relaxed/simple;
+	bh=QRU0NMupGZ9A/on6onvDqr7/kFxxIyzT5cX3o7UnINA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VXEV7tdKPQ3wm4kwIs1pR72gWdUmt0YpREblSt88ERV+74Ps4qda2zYLJo37+2TvKpnXbtgEkwYBosYyWJgoYhYEeXb3sm4nAtmBlRvWNNvvDJuRvrsnCKwDH8qesZPJpqDBWWBJgfcmXe8M2hwBdMVSU9ld+FVqHW2iow2j22w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cvgWI1je; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="dYZ1yMHs"
-Received: from outbound.st.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-east-1a-10-percent-0 (Postfix) with ESMTPS id 438241800173;
-	Wed, 06 May 2026 22:52:12 +0000 (UTC)
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhMHVsARQNFDFYEVBcOVk1RDUEfTgZTHgtKAl93AlEcVg1XQ1QEX1BfHA4FQhlACVQZXV8FWgAwUBtfAkIPHBNWFRMfVFYDRBkQVgFYVl0FTRpcGFkPHANNVloOWwRHFBcbXAAXG0YCBCMCXwBFAl4JVgEwFw9WTVAbXwJCDxwTVhUTAF4PD0xaSlJeU1kFFBRLUV0GRgZEWE4eD1UNBF1fHVBbBFwFSAAaAAt3AlEcVg1XQ1QEX04ZDEodUlZbE1UXRgk=
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778107933; x=1780699933; bh=tmZHxx8BT5NuOd6vFPjkI8aOgJMGX8DlupV282+qql8=; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:x-icloud-hme; b=dYZ1yMHs4ZyYaqC7mhUgpLG9YJ2w4i1WQiKkWSiWpdG9brkIJB+A0evw/ry1Wiqq3Rhyu/OXV1PtH/423tNKoQ0+abzH8vYnelFVKAzWmiVZhYKuzgYEckDP5/DDicUq+gHugLwkvsI0Wit4ym0qmlnpYYFVOXrXNF3Cnng1s50Z3b9Xl7L6GVBLfkaBeC8y2a7wQxkhPe3Yb1BQ0xBajaBHcxEwd9UdE9FwGvrTVKjUdVC1sKYJIRj8qanTZ2Bekd6LIwbFqmEv1/662jdv2kUZwFwEQST8tLLSoOOTN/C7NfX6UE88qucQzOQQqkDvxMCSgNteD3uodYcwz/TwNg==
-Received: from [192.168.89.2] (unknown [17.42.251.67])
-	by p00-icloudmta-asmtp-us-east-1a-10-percent-0 (Postfix) with ESMTPSA id C8C001800259;
-	Wed, 06 May 2026 22:52:08 +0000 (UTC)
-Message-ID: <c2a3d27d-3b01-44a6-bbf6-fec637789b3f@icloud.com>
-Date: Thu, 7 May 2026 07:52:06 +0900
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cvgWI1je"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1257EC2BCB0;
+	Wed,  6 May 2026 23:05:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778108739;
+	bh=QRU0NMupGZ9A/on6onvDqr7/kFxxIyzT5cX3o7UnINA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=cvgWI1jee/cYzi8s0OonKX53LwQDUV7Rw7T7Q6ZAIQNEjKvjyHqjGZk14rt1hRAaf
+	 qjE3Z2efgESuHhj49lRa6mbAcZDk/Xwb9WX/JFxoOy3Xguxp37IkQKnfCdGpDqCxmQ
+	 OOqJbJU/Bf4hV4p9cJxxeSGzCxj4BTam8Or39aExrC6TNXtE01Xj6QI8LdPzSzemPj
+	 GuCiTZwFnTCWMK11d23kmxB9pqF4riiYVr0+cewoa0X7XqcxQ6pX0uJHxTm7Tgpv/I
+	 Y6qB3jhPm+s3J/JoYXOfeix6qgRjvrOdGkuFl2g87xySGYh9BtaNE/zs0f7Jp4UOpw
+	 GH0L73+VvP4SA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 7/9] nvmet: pci-epf: Use
+ dmaengine_prep_config_single_safe() API
+Reply-To: sashiko@lists.linux.dev
+To: "Frank Li" <Frank.Li@nxp.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260506-dma_prep_config-v4-7-85b3d22babff@nxp.com>
+References: <20260506-dma_prep_config-v4-7-85b3d22babff@nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 06 May 2026 23:05:38 +0000
+Message-Id: <20260506230539.1257EC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] hwmon: add initial support for AMD PROM21 xHCI
- temperature sensor
-To: Randy Dunlap <rdunlap@infradead.org>, Jihong Min
- <hurryman2212@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>
-Cc: Guenter Roeck <linux@roeck-us.net>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260506032939.92351-1-hurryman2212@gmail.com>
- <cover.1778099627.git.hurryman2212@gmail.com>
- <2e2ea249b30168a2eab62fc110c226a511f21bf2.1778099627.git.hurryman2212@gmail.com>
- <5a61ad36-d754-4ab9-8a56-83bccc1397f2@infradead.org>
-Content-Language: en-US
-From: Jihong Min <hurryman2212@icloud.com>
-In-Reply-To: <5a61ad36-d754-4ab9-8a56-83bccc1397f2@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Authority-Info-Out: v=2.4 cv=a4A9NESF c=1 sm=1 tr=0 ts=69fbc61d
- cx=c_apl:c_pps:t_out a=YrL12D//S6tul8v/L+6tKg==:117
- a=YrL12D//S6tul8v/L+6tKg==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=igFlAM52ROepjvOJJTIA:9 a=QEXdDO2ut3YA:10 a=PgRulw5oR9JgysbTFEid:22
- a=MienORt8HT0FiJ1vGQZ6:22
-X-Proofpoint-GUID: qqHqUMJjeNjFkAxa12ACcxBqc2CKvqs7
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA2MDIyNCBTYWx0ZWRfX6IpE/4CTLjVV
- 8j8A9Y1kI/iGohiXcDoUX57S5GXO7XyF4IK3Qt8ml3VpozC74xoE1F+bwugyuVoXYiCj6OrLnFP
- zMlL/rm86kn526InoIksm95Zw6DEWzgpjmx89JH5/X+1WZT095jLNw5LKkXNvbRarIl33bs5/zB
- kUlIXdaWfdVRFjN3FR48JkMuCTqeASjTfZFAwV8jrNe2OfElwoP62MQ1ydG7Qt0YLRDT/Ehix+a
- XvGV2ycbmrs3K5RwzN8K6qBt5RL1GoDFYq2muXtp//nmJXmH6kjrjV5f2Dlh+SxO3wNc9bzGLxv
- ecCiB0Gu7XmUyeIlb/TX7G4yqFkKISQ3qeb0pDn5i3uNtT0G4Ip7z8cAaOc7oU=
-X-Proofpoint-ORIG-GUID: qqHqUMJjeNjFkAxa12ACcxBqc2CKvqs7
 
- > It sorta looks like these entries are supposed to be maintained in
- > alphabetical order, but that new entry is not.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Removing the mutex introduces a severe concurrency bug, leading to=
+ spurious channel-wide termination of DMA transfers and CPU starvation.
+- [Low] The local variable `lock` is assigned but never used, resulting in =
+a compiler warning.
+--
 
-Yes, you are right. I also noticed that but it seems I pasted it in the 
-wrong place.
-Fixed this locally for v3 by moving prom21-hwmon after powr1220 and next 
-to pt5161l.
+commit 36bcfc6ae688edc18d4bf05e641f168d44b9db2c
+Author: Frank Li <Frank.Li@nxp.com>
 
-Thank you,
-Jihong Min
+nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
 
-On 5/7/26 07:17, Randy Dunlap wrote:
->
-> On 5/6/26 1:40 PM, Jihong Min wrote:
->> diff --git a/Documentation/hwmon/index.rst b/Documentation/hwmon/index.rst
->> index 8b655e5d6b68..0d85b78596cf 100644
->> --- a/Documentation/hwmon/index.rst
->> +++ b/Documentation/hwmon/index.rst
->> @@ -215,6 +215,7 @@ Hardware Monitoring Kernel Drivers
->>      peci-dimmtemp
->>      pmbus
->>      powerz
->> +   prom21-hwmon
->>      powr1220
->>      pt5161l
->>      pxe1610
-> It sorta looks like these entries are supposed to be maintained in alphabetical
-> order, but that new entry is not.
->
+This commit updates the driver to use the new
+dmaengine_prep_config_single_safe() API, combining configuration and
+descriptor preparation into a single call. It also removes the mutex lock
+used during the transfer since the combined preparation is atomic.
+
+> diff --git a/drivers/nvme/target/pci-epf.c b/drivers/nvme/target/pci-epf.c
+> index 2afe8f4d0e461..04d8f48d69503 100644
+> --- a/drivers/nvme/target/pci-epf.c
+> +++ b/drivers/nvme/target/pci-epf.c
+> @@ -388,22 +388,15 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_=
+pci_epf *nvme_epf,
+>  		return -EINVAL;
+>  	}
+> =20
+> -	mutex_lock(lock);
+> -
+
+Is the local variable lock still needed here? Since the mutex_lock() and
+mutex_unlock() calls are removed, the earlier assignments of this variable
+in the switch statement appear to be unused and might trigger a compiler
+warning.
+
+[ ... ]
+
+> @@ -426,9 +419,6 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_pc=
+i_epf *nvme_epf,
+>  unmap:
+>  	dma_unmap_single(dma_dev, dma_addr, seg->length, dir);
+> =20
+> -unlock:
+> -	mutex_unlock(lock);
+> -
+>  	return ret;
+>  }
+
+Does removing this lock introduce concurrency issues with dma_sync_wait()
+and the error handling path?
+
+Looking at the remainder of nvmet_pci_epf_dma_transfer(), it calls:
+
+    if (dma_sync_wait(chan, cookie) !=3D DMA_COMPLETE) {
+        dev_err(dev, "DMA transfer failed\n");
+        ret =3D -EIO;
+        dmaengine_terminate_sync(chan);
+    }
+
+If the mutex is removed, multiple threads could concurrently submit
+transfers to the same DMA channel and enter dma_sync_wait(). Since
+dma_sync_wait() polls for completion, could this lead to CPU starvation
+from multiple threads busy-spinning concurrently?
+
+Additionally, if one thread fails or times out in dma_sync_wait(), it
+will call dmaengine_terminate_sync(chan). Will this indiscriminately
+abort the in-flight transfers of all other concurrently executing threads
+on the same channel?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506-dma_prep_c=
+onfig-v4-0-85b3d22babff@nxp.com?part=3D7
