@@ -1,171 +1,227 @@
-Received: from mxout70.expurgate.net (mxout70.expurgate.net [91.198.224.70])
+Received: from canpmsgout11.his.huawei.com (canpmsgout11.his.huawei.com [113.46.200.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 809A0369972;
-	Wed,  6 May 2026 07:03:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.198.224.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 425F6369972;
+	Wed,  6 May 2026 07:04:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778051020; cv=none; b=sInlQitY+2t5cveA+caI9LVWYGt6wD1lh+o1NKiSh1OteM5CGQKaeU7CsuQcjS4M3nr4K7CrNQeuxubK09e2JX3bhdCyAmWOWC85jVbIc6xWsU6OUxwcKvjepqPs6eE6chGDAJRewn+jmcDvWPmup3xIEZsCSO/IVpwymkHvz3k=
+	t=1778051071; cv=none; b=FC6OgRArtGhhlY2m+e96O1tGaQcto+QcJ5z5EY1SSwKWhzZa8INIthnmluqEgcVuIQLtVplQWWpjcPPEC9s8WUE7kdQ+F3AFwZJqtXm4gr6B2xe/kf2jZZo4M/oEtwO2WnA9VPTdQYbBP+npWG5aV0pJVqIhRbp4EY3f6zKFVkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778051020; c=relaxed/simple;
-	bh=GQQ4tLKaodjP8OXQAc//QWaL9kDZOgafjgUyva4+Mys=;
-	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:In-Reply-To:
-	 References:Message-ID; b=BY+gc/dg/fQPOlr/cNREGJEg7x5FjjPUVUH/Dk5QpVTMZ9m1je+MoeqXbQp5M+xY+x9hn0AVaQwwlWX2ElJYo60H8NaDonJ8EUvJjrdGmH2mKCw/zVQY2aRcbDEezpYxTAPFTFFVFRaEjwr0otmtGcj/630G+imP5pnWzs9Vfjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de; spf=pass smtp.mailfrom=dev.tdt.de; dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b=JeRvSI3C; arc=none smtp.client-ip=91.198.224.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=dev.tdt.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dev.tdt.de
+	s=arc-20240116; t=1778051071; c=relaxed/simple;
+	bh=Y/HHyV3Pag2vFHBzhqDfxLpfaC/x1YZ9aOJwU/NaxrY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=HqZZZ1zkoEh71OE339mgF7y1rPGKmGDoHrByAuS2GwAJmc5pQI58mAjEzz+1ZkZyBznDlmzuPV6NBRLjLBU6V27LYvs1nWUAvwFIV0pqhuzJ8bIqeT604nJu8mLyEC7V3ziModUDPr5ZW1LHS4V1k32w/pQ/VnbDwe9NhejOIvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Ew/DB68b; arc=none smtp.client-ip=113.46.200.226
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=temperror (0-bit key) header.d=dev.tdt.de header.i=@dev.tdt.de header.b="JeRvSI3C"
-Received: from [194.37.255.9] (helo=mxout.expurgate.net)
-	by relay.expurgate.net with smtp (Exim 4.92)
-	(envelope-from <prvs=76004fd39a=fe@dev.tdt.de>)
-	id 1wKW0g-006cbg-9V; Wed, 06 May 2026 08:45:30 +0200
-Received: from [195.243.126.94] (helo=securemail.tdt.de)
-	by relay.expurgate.net with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <fe@dev.tdt.de>)
-	id 1wKW0f-000f1P-Ka; Wed, 06 May 2026 08:45:29 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dev.tdt.de;
-	s=z1-selector1; t=1778049926;
-	bh=q8jnMdC7S4lRdaod9kLw6q0kgekMN7xuH/EWnvr0Mfs=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=JeRvSI3C6m2dSQlia4vsFf2YGeKlxn0JmFInBJXbwS/+aZjrNsotc0Otg02T+kVCO
-	 pVaATOzb+n0UV8dcaTXWSLb/ZPKIVns72GeXgSy5qEYXn7w2dgmuMSW01Lx1wQ5Zuf
-	 yKoJIuGC5I2pEzKJFI7dnLyg7+aGk2c6CBiqjT+m5ZP+G5xENji6uK8xTTUrjeBMDf
-	 BCguBtu/4RZ2LBCxJlGZxEXRN37jr/f6X2kDrGk5kNTs5jCgEzaiC4LjcLCt4qcYPx
-	 AeB8kXWbKVBlOYTNQYrowOZWmQ95UlrJlrB8c8moUecivwSJ9M4NSk5j9/con58win
-	 OTjSjApJyIUtw==
-Received: from securemail.tdt.de (localhost [127.0.0.1])
-	by securemail.tdt.de (Postfix) with ESMTP id CAB80240042;
-	Wed,  6 May 2026 08:45:26 +0200 (CEST)
-Received: from mail.dev.tdt.de (unknown [10.2.4.42])
-	by securemail.tdt.de (Postfix) with ESMTP id AD89C240040;
-	Wed,  6 May 2026 08:45:26 +0200 (CEST)
-Received: from mail.dev.tdt.de (localhost [IPv6:::1])
-	by mail.dev.tdt.de (Postfix) with ESMTP id 2ECC8248D2;
-	Wed,  6 May 2026 08:45:26 +0200 (CEST)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Ew/DB68b"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=I4AmL4fvNpHMSVvocXatLftD8fJJA1bCgo9cY2QiSIw=;
+	b=Ew/DB68bHUrSMhBn5/hMtVsMFKu006BxiMFiG/N/kYcaJph0xKfstdQz6yH8GMWVGNimnU5P+
+	9jpxClX/XwWL12MleUz9H09yjPafzKAzBbYjrVhyN686xOBytdxGOZ9Ry4uzdkFlyqWw9a9tt5z
+	nQPJxUjeIBbD/1b5iR8YL0s=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4g9R693VDZzKm5S;
+	Wed,  6 May 2026 14:57:53 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 79D764055B;
+	Wed,  6 May 2026 15:04:26 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 6 May 2026 15:04:25 +0800
+Message-ID: <a63179d7-28b1-4269-9ef2-c20368d0b91c@huawei.com>
+Date: Wed, 6 May 2026 15:04:25 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 6 May 2026 08:45:26 +0200 (CEST)
-From: Florian Eckert <fe@dev.tdt.de>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?utf-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Sajid Dalvi <sdalvi@google.com>,
-	Ajay Agarwal <ajayagarwal@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, Eckert.Florian@googlemail.com,
-	ms@dev.tdt.de
-Subject: Re: [PATCH v5 0/7] PCI: intel-gw: Fixes to make the driver working
- again
-In-Reply-To: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
-References: <20260417-pcie-intel-gw-v5-0-0a2b933fe04f@dev.tdt.de>
-Message-ID: <6f483189ec993e3e5f89bccec11cc02a@dev.tdt.de>
-X-Sender: fe@dev.tdt.de
-User-Agent: Roundcube Webmail/1.3.17
-Content-Transfer-Encoding: quoted-printable
-X-purgate-ID: 151534::1778049930-A141CF85-AE22F8A8/0/0
-X-purgate-type: clean
-X-purgate: clean
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/2] RDMA/mlx5: get tph for p2p access when registering
+ dma-buf mr
+To: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>, <linux-rdma@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>, Yochai
+ Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>
+References: <20260430200704.352228-1-zhipingz@meta.com>
+ <20260430200704.352228-3-zhipingz@meta.com>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260430200704.352228-3-zhipingz@meta.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-Just a friendly reminder. I hope I=E2=80=99ve incorporated all your comme=
-nts.
-If there=E2=80=99s anything else you=E2=80=99d like me to do, please let =
-me know.
+On 5/1/2026 4:06 AM, Zhiping Zhang wrote:
+> Query dma-buf TPH metadata when registering a dma-buf MR for peer to
+> peer access and translate the raw steering tag into an mlx5 steering tag
+> index. Factor mlx5_st_alloc_index() so callers that already have a raw
+> steering tag can allocate the corresponding mlx5 index directly. Keep the
+> DMAH path as the first priority and only fall back to dma-buf metadata when
+> no DMAH is supplied.
+> 
+> Pass the device's supported ST width (8 or 16 bit, derived from
+> pdev->tph_req_type) to get_tph() so the exporter can reject tags that
+> exceed the consumer's capability. Initialize ret in mlx5_st_create() so the
+> cached steering-tag path returns success cleanly under clang builds.
+> 
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> 
+> diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5/mr.c
+> --- a/drivers/infiniband/hw/mlx5/mr.c
+> +++ b/drivers/infiniband/hw/mlx5/mr.c
+> @@ -46,6 +46,8 @@
+>  #include "data_direct.h"
+>  #include "dmah.h"
+>  
+> +MODULE_IMPORT_NS("DMA_BUF");
+> +
+>  static int mkey_max_umr_order(struct mlx5_ib_dev *dev)
+>  {
+>  	if (MLX5_CAP_GEN(dev->mdev, umr_extended_translation_offset))
+> @@ -899,6 +901,40 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_attach_ops = {
+>  	.invalidate_mappings = mlx5_ib_dmabuf_invalidate_cb,
+>  };
+>  
+> +static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, int fd, u16 *st_index,
+> +			      u8 *ph)
+> +{
+> +	struct pci_dev *pdev = dev->mdev->pdev;
+> +	struct dma_buf *dmabuf;
+> +	u16 steering_tag;
+> +	u8 st_width;
+> +	int ret;
+> +
+> +	st_width = (pdev->tph_req_type == PCI_TPH_REQ_EXT_TPH) ? 16 : 8;
 
-On 2026-04-17 10:35, Florian Eckert wrote:
-> This series fixes and improve the 'intel-gw' driver to work again with
-> the current dwc pcie framework. The following changes are:
->=20
-> * Move interrupt 'enable' to its own function to improve readability,
->   and add additional register writes just as the Maxlinear kernel does=20
-> in
->   their SDK.
-> * Enable clock for the PHY before PHY init call.
-> * Add missing 'start_link' callback. That was added to the PCIe dwc
->   framework.
-> * Move ATU base address assignment to the probe function and also add=20
-> the
->   the possibility to read it from the devicetree by dwc core.
-> * Update devicetree documentation for intel-gw-pcie.yaml
-> * Remove unused preprocessor define.
-> * Mark driver as orphaned as the maitainer's email no longer works
->=20
-> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
-> ---
-> Changes in v5:
-> - Also add the DTS 'minItems' option for 'reg-names'.
-> - Add missing quotation marks to the DTS example change to make the DTS
->   bot hopefully happy.
-> - Link to v4:
-> https://lore.kernel.org/r/20260415-pcie-intel-gw-v4-0-ad45d2418c8e@dev.=
-tdt.de
->=20
-> Changes in v4:
-> - Add 'atu' to the end of the resource definition to ensure backwords
->   compatibility.
-> - Updated the commit description to explain why the MaxLinear SDK is=20
-> used
->   as a reference.
-> - Remove 'Rahul Tanwar <rtanwar@maxlinear.com>' out of the loop, as the=
-=20
-> email
->   address is no longer valid and is being rejected.
-> - Link to v3:
-> https://lore.kernel.org/r/20260401-pcie-intel-gw-v3-0-63b008c5b7b2@dev.=
-tdt.de
->=20
-> Changes in v3:
-> - Update commit messages.
-> - Correct the sample code for dt bindings by adding the missing=20
-> quotation
->   marks. Add 'minItems: 3' to avoid ABI issues.
-> - Move driver atu base assignment to probe function and keep backward
->   compatibility.
-> - Link to v2:
-> https://lore.kernel.org/r/20260330-pcie-intel-gw-v2-0-8bd07367a298@dev.=
-tdt.de
->=20
-> Changes in v2:
-> - Added additional information to the commit descriptions
-> - Add additional patch to mark driver as orphaned as the maintainer's
->   email no longer works.
-> - Fix wrong error path for enable clock before phy init.
-> - Add new patch to update the devicetree documentation for the 'atu'
->   resource
-> - Add additional recipients responsible for documenting the dervicetree
->   bindings.
-> - Link to v1:
-> https://lore.kernel.org/r/20260317-pcie-intel-gw-v1-0-7fe13726ad4f@dev.=
-tdt.de
->=20
-> ---
-> Florian Eckert (7):
->       MAINTAINERS: Remove bouncing intel-gw maintainer
->       PCI: intel-gw: Remove unused define
->       PCI: intel-gw: Move interrupt enable to own function
->       PCI: intel-gw: Enable clock before phy init
->       PCI: intel-gw: Add start_link callback function
->       PCI: intel-gw: Move driver atu base assignment to probe function
->       dt-bindings: PCI: intel,lgm-pcie: Add atu resource
->=20
->  .../devicetree/bindings/pci/intel-gw-pcie.yaml     |  9 ++-
->  MAINTAINERS                                        |  3 +-
->  drivers/pci/controller/dwc/pcie-intel-gw.c         | 73=20
-> +++++++++++++++-------
->  3 files changed, 58 insertions(+), 27 deletions(-)
-> ---
-> base-commit: 028ef9c96e96197026887c0f092424679298aae8
-> change-id: 20260317-pcie-intel-gw-50902113f9e1
->=20
-> Best regards,
+The tph_req_type is defined under CONFIG_PCIE_TPH, how about add a wrap function
+to query it.
+
+> +
+> +	dmabuf = dma_buf_get(fd);
+> +	if (IS_ERR(dmabuf))
+> +		return;
+> +
+> +	if (!dmabuf->ops->get_tph)
+> +		goto end_dbuf_put;
+> +
+> +	ret = dmabuf->ops->get_tph(dmabuf, &steering_tag, ph, st_width);
+> +	if (ret) {
+> +		mlx5_ib_dbg(dev, "get_tph failed (%d)\n", ret);
+> +		goto end_dbuf_put;
+> +	}
+> +
+> +	ret = mlx5_st_alloc_index_by_tag(dev->mdev, steering_tag, st_index);
+> +	if (ret) {
+> +		*ph = MLX5_IB_NO_PH;
+> +		mlx5_ib_dbg(dev, "st_alloc_index_by_tag failed (%d)\n", ret);
+> +	}
+> +
+> +end_dbuf_put:
+> +	dma_buf_put(dmabuf);
+> +}
+> +
+>  static struct ib_mr *
+>  reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
+>  		   u64 offset, u64 length, u64 virt_addr,
+> @@ -941,6 +977,8 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
+>  		ph = dmah->ph;
+>  		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
+>  			st_index = mdmah->st_index;
+> +	} else {
+> +		get_tph_mr_dmabuf(dev, fd, &st_index, &ph);
+>  	}
+>  
+>  	mr = alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
+> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> --- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> +++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> @@ -29,7 +29,7 @@ struct mlx5_st *mlx5_st_create(struct mlx5_core_dev *dev)
+>  	u8 direct_mode = 0;
+>  	u16 num_entries;
+>  	u32 tbl_loc;
+> -	int ret;
+> +	int ret = 0;
+>  
+>  	if (!MLX5_CAP_GEN(dev, mkey_pcie_tph))
+>  		return NULL;
+> @@ -92,23 +92,18 @@ void mlx5_st_destroy(struct mlx5_core_dev *dev)
+>  	kfree(st);
+>  }
+>  
+> -int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
+> -			unsigned int cpu_uid, u16 *st_index)
+> +int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
+> +			       u16 *st_index)
+>  {
+>  	struct mlx5_st_idx_data *idx_data;
+>  	struct mlx5_st *st = dev->st;
+>  	unsigned long index;
+>  	u32 xa_id;
+> -	u16 tag;
+> -	int ret;
+> +	int ret = 0;
+>  
+>  	if (!st)
+>  		return -EOPNOTSUPP;
+>  
+> -	ret = pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
+> -	if (ret)
+> -		return ret;
+> -
+>  	if (st->direct_mode) {
+>  		*st_index = tag;
+>  		return 0;
+> @@ -152,6 +147,20 @@ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
+>  	mutex_unlock(&st->lock);
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(mlx5_st_alloc_index_by_tag);
+> +
+> +int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
+> +			unsigned int cpu_uid, u16 *st_index)
+> +{
+> +	u16 tag;
+> +	int ret;
+> +
+> +	ret = pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return mlx5_st_alloc_index_by_tag(dev, tag, st_index);
+> +}
+>  EXPORT_SYMBOL_GPL(mlx5_st_alloc_index);
+>  
+>  int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index)
+> diff --git a/include/linux/mlx5/driver.h b/include/linux/mlx5/driver.h
+> --- a/include/linux/mlx5/driver.h
+> +++ b/include/linux/mlx5/driver.h
+> @@ -1166,10 +1166,17 @@ int mlx5_dm_sw_icm_dealloc(struct mlx5_core_dev *dev, enum mlx5_sw_icm_type type
+>  			   u64 length, u16 uid, phys_addr_t addr, u32 obj_id);
+>  
+>  #ifdef CONFIG_PCIE_TPH
+> +int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
+> +			       u16 *st_index);
+>  int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
+>  			unsigned int cpu_uid, u16 *st_index);
+>  int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index);
+>  #else
+> +static inline int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev,
+> +					     u16 tag, u16 *st_index)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+>  static inline int mlx5_st_alloc_index(struct mlx5_core_dev *dev,
+>  				      enum tph_mem_type mem_type,
+>  				      unsigned int cpu_uid, u16 *st_index)
+> 
+> 
+
