@@ -1,172 +1,237 @@
-Received: from mail-oa1-f97.google.com (mail-oa1-f97.google.com [209.85.160.97])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5828D3ED11C
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 18:15:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.97
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778091357; cv=none; b=ViEHYOVtgR+tZ/j8nrL2MQqQ/NckH8tBfy/mSsxABb8K5DNLN7GItKdfhHnHxgyKV/q4m1MNbmNkhdly6YJq0NFg8TJlbaOnPSCZZqzRutOjC+VnMtimZtPv7ETD8uVRYZ8bHFhXZTUpwG6bMqouwIUagHRZ4j3NrmL6P+QKFyU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778091357; c=relaxed/simple;
-	bh=UQQouORRLqUgjE8irwF3HtFW3vJ24g5VLcuvlsmn6v0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fB9kMbdNHAzf0GaCpCS3PnbPao46oej3KkXI9l7UxctmLTY5fHeatJnERxsvmWDhOcyqLK2JrK71s66/HKk4upDLwQMSLuKTAPc9ccQ85EmrLi78lRRnhZUHQAjc3a73q2KZUF3iMz/p7L5LQUT2LjRUG0PeVYdprtPovsCzGl8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=IdF8OuJl; arc=none smtp.client-ip=209.85.160.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D83848C8C7
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 18:23:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778091814; cv=fail; b=XAABlWETdDyzm1K4FteP39IanbZLTvVX2wBdrRd1AidjBUT3otzAEEMqgpNXtephCjhqo18q9AuJ4t9LEaOLUpcCbukOt3YlBLJG6fmBVgNjlGACd+fJMW08kYd+I6nzMbBQeK/wId3GX68lSGKYexPYWoo9/6yiFvdt+OE221o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778091814; c=relaxed/simple;
+	bh=bW6VioqM1I6vjQsLLVeVP3XOu1uhGTd03bArfH78eFc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=YGjncXD/Ubuubgv9OXC60UzuKC9c8zKdtZMcTxv2q5rPOSNiT+iqdSRvo0dM6GHLpsWByFjYBzg+ckjX/n8klewhgPhOojLx7kVtXAgGX3+Oe7axm9grn7UdsrVaHuraXcdi59gOzeHlgSACUI4diYf68IVGL9F8e4P/b8fvmIA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=ecrKNO8M; arc=fail smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="IdF8OuJl"
-Received: by mail-oa1-f97.google.com with SMTP id 586e51a60fabf-42fe552aedeso2066044fac.0
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 11:15:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="ecrKNO8M"
+Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64663qOM2795101
+	for <linux-pci@vger.kernel.org>; Wed, 6 May 2026 11:23:32 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=2YYLKXiToPfzzk84iAjnpM/kE1au7fYknVhGTQOnVXE=; b=ecrKNO8MJk5q
+	oKIjdTP3cT9AdMHpRtYIW89FhY5abcRsfaMChsqaI29WSGcVqrxmCW6KF0syyjsU
+	vXI+L5TDYQh9jgaGGd8jj0BHllL5waomMFt0M0n9CBCiB1dPI9YoWYdjX9Ms3CAr
+	/SAHXyeletOuK9p8msNRfKXlukH2yHk5gRcTM18srPB6KJhdvGbk2B06ATSaEUy0
+	GNA4BpGfx4il8hopju1ylXLm53Xe1Jd0huucKOv9aqixb3LuPoCYJS2o5kzLnMkP
+	tS+7rw11iVZoYfP9udWgz/AiMp9YnhOy+Cp1r+syjSjMfpGJEU/w5r3R/fpUCjql
+	KHoh0wEEWw==
+Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4dxtp2a25a-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 11:23:31 -0700 (PDT)
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7dcde7bf859so122100a34.0
+        for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 11:23:31 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778091811; cv=none;
+        d=google.com; s=arc-20240605;
+        b=AzYN5HmPY8QziTobIclwQhbXfUdZ0buHKpd6iyuXV80lBuFbdWpW9QqASH6yO0WeiX
+         PWHPmTrqFZsum1sc/az6WSP+VVs7MhPa+65Rp6OuqwM1ZtUzeOT9kfJJuJ9sxbPuKjpH
+         R6jcTNKVe/hZWrp+FYnS14I183thlkIW9kYzyCtC2m1XPJXeYJPNB0F+SMyJHV6pgCsG
+         IEy65MRJkVYXZ8xlDUPwiwVNhs0VdyA6Cj4b2hWJLoXfwT4VcYQvEJuxLhVKsxr+F02C
+         ApP/CowuRwzDYzaI16dQ4M4KYoaMZiLv/qwAsa+jyPq0KX6NCIBDmRn3k6Kc7wp+jwt5
+         mxoA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version;
+        bh=06MsYmJiQI0tIH7Lw/430OArMXdAJd2jDLxFSIS0mBU=;
+        fh=Of0GpIUCUxTFWY1gBKZGWDY5cg4YQgfRNw8iml6yVlQ=;
+        b=KIVxFtWs8WtvL5I2C3O/eZcTMPN34aOd/gZ2peQtCUGULkUVMOzTdWwzkIptz0P/Op
+         mk+ZWQZRUQ2fkjLK10WYBEu+EB0WL8LOECYsG++LeTi8k3xO5N+JuhO9ktD6uPJ1yGm3
+         PZnNgyX0THeCenxQB580OgDIrWh4X/gLfk4O0yGkx0ocmsB/eWqWrVdZTJJvNfLmZeLl
+         XE1SRSYNS7Xn5R5no0KqIyDvntaonCULTKmBceLQjPl4EneAk4lnI9t7Fj/zG+3nPR6S
+         b5eEJuC4LqqB3heSsMmYykVPnjWnIsHii1G70Wr8rbiJoxB8uSjmmKEl1plRPN8PLdV7
+         7aXQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778091355; x=1778696155;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:dkim-signature:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=tc35fNzFyPuxuc/CBMONA9M+RTBFlJ+zPVDNxFCN7Y4=;
-        b=tODZ3/jM1nNloSw0yaF0mUJzwRPUjGLc36zNtnHHXPU6BJ9Q+/ItMJxXsn3LV6og/k
-         mCT9DYULamosc914ngbaqg9OlGECwNn+gWUL/V+cdnE/6C2R7UGd4SooFgBS5rSQWNWP
-         JgvqhsBnQITk1ixPOmasToM90Pzhu11KrmvIHY2hENaZMrGxs7bXDGigoYI2o7ZQuN7L
-         8V+M4WpA8MGWq7x3XjeY4XOnGZNRk7cL7kThwSMPxC9S9RBllKt/M6gbQv8abJGiNOTe
-         b8wWCTr4+8HwQT84qPcqn5Y16Vg+EK8GXukHwYkeHCBhEBH37h3Ra5dnu7fEbsKhswt3
-         AjsQ==
-X-Gm-Message-State: AOJu0YxFX/gGsAM27aPySvpcaPLiH5xherYnG9N+gPA2f0o1R0l3sKpo
-	BkH53KbdzVPBC6JlV/J+1cU0KFY2hKnLevrmgQqjOnLg+6RAbKNFAtFouwqPUv39teEuEjOduyM
-	hpvoikit+JBKG/uKShTs22ytt8uI798SZSsY5tP84F21lhAdeeMlvBwAHupnxAq8X47fkbYUTsw
-	pizUsBzpyPUFf/FTez5b8R8NrlEwe1jq/a5YrWtltURR56WK3gOnzKgpewKDKgV0PhkH0kiThFy
-	39kyGwIG0lHEAAkLqgC
-X-Gm-Gg: AeBDietAMagClyn3Zg6+UCXmgW2uiBBztDuiiekbgV5DX7TnKWvHFyo1+dYAwLcepJD
-	GVICeen/5hHK4eSfN5BWSsibSLfZVFVfNiZfqjGJR+8qvbSlbS7ks0gFjTfO+hSavbZrzuLoVrE
-	9ruWbl/oZnbWRpno3AqJdn0mg2Wnp5Z0Q/EX86svA9oWagVpxXpEIEE/vfc/5TkraofJ6z1kj9j
-	8FqEo8zit3eQYRDkL5v3Qa9y2i09n8BZzojDJb/7GbNSnW2hORvAIGhpJ8ctDrp5nqCmFQkY6BB
-	MApzYvsRUGNBFlr9S3EHAGSRRyXk4w7YeJ4YDP5N06aUxWjOoSzSrIp8Vyq0smjw8oadLDY1BCj
-	dkrq8AtTP8IyC+J5bMc+lCmjg/au4uX3SXUatgGrQhVrD02EDwJ47reA0Iob7M9nj8DnI8sK+W6
-	/hCBoJztAnhYo3cqECciJghZn7OBjqytAQLsgphUprH5Ph1YiF0JCFrDbKvqoEeahe2iV06f97
-X-Received: by 2002:a05:6870:2188:b0:417:3260:8586 with SMTP id 586e51a60fabf-434f66c1cddmr2698159fac.34.1778091355197;
-        Wed, 06 May 2026 11:15:55 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-21.dlp.protect.broadcom.com. [144.49.247.21])
-        by smtp-relay.gmail.com with ESMTPS id 586e51a60fabf-43454523a17sm1436754fac.0.2026.05.06.11.15.54
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 06 May 2026 11:15:55 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-2f485961555so5346927eec.1
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 11:15:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1778091354; x=1778696154; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=tc35fNzFyPuxuc/CBMONA9M+RTBFlJ+zPVDNxFCN7Y4=;
-        b=IdF8OuJl7k3ZGgZyqh5w7T1nMRvy6J1O/wkZG4sMevblpa7Cgc+z+v/643mIPvTSUS
-         GROXbu6vnCqTV0kmfQJz6xj3wV+pvoly+UYY/RWVLD0zbHQeHWvTA6K1+ZpKRZeJj3Py
-         Blj3kOt3Ee9vldI8KWncB9CKyEX2I6U8udeDU=
-X-Received: by 2002:a05:7301:3d1a:b0:2dd:6937:79b8 with SMTP id 5a478bee46e88-2f548159736mr2514686eec.5.1778091353744;
-        Wed, 06 May 2026 11:15:53 -0700 (PDT)
-X-Received: by 2002:a05:7301:3d1a:b0:2dd:6937:79b8 with SMTP id 5a478bee46e88-2f548159736mr2514665eec.5.1778091353038;
-        Wed, 06 May 2026 11:15:53 -0700 (PDT)
-Received: from [10.67.48.245] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2f57038b0a1sm4262270eec.28.2026.05.06.11.15.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 May 2026 11:15:52 -0700 (PDT)
-Message-ID: <83ceeae6-20e8-40a5-bc0b-6231d2118b6e@broadcom.com>
-Date: Wed, 6 May 2026 11:15:50 -0700
+        d=1e100.net; s=20251104; t=1778091811; x=1778696611;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=06MsYmJiQI0tIH7Lw/430OArMXdAJd2jDLxFSIS0mBU=;
+        b=nKKsIzCySnTn3LQfZDEZq8H3zLd8VvdiHkx2ACbAbR3n7737/nQyr161W/z3o/clTo
+         FooVVRIoFTw2fwC8MnyjKWjE7DzWNkdZN+iDWY78IFhXLAQfKoGhTCdLwdl+yatmHeZL
+         7/0WmI36uRtF1lmoS6t+gsfwfHwFNrPenGnQI9QjfCBGOt4Q3JT3FIzRKQWIVAHIa0lG
+         H7KXLkVCYRzf+uy+JBTWSXLZpfirveCTWT4dN/Y4qQfMTW1Zk0O5yqkJ+YjEopXakAC4
+         Yfc9MYxFojwfR9oQWV+zoEwzStgEgQbWceFxbuHVpwC06hJFOyRM7RuW2bHliTiC3WoZ
+         ZCZg==
+X-Forwarded-Encrypted: i=1; AFNElJ/AfF0X6l36YO3QABaae+pXTjXFIzYCuTFLhtgxb4flieCwrCrqfqfDxS3PqixubdsteWQnD3G64qY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxriHt1I7FDMyC9EyNFBwnKD1hX71c89p5cQ7Ct/ATmA0rv+dfj
+	XFw/vFHPc5S8yw7HRw3P5H+JsvbSzYdKrsmOrO6PrjEhxlmt1xCG57rVICbtrzxxbpp8wlcGP2i
+	zonEonI+c3WpGxhaOYfhvD4sBKCWxHE7tOymbYBcYr6wyDw63WrwrLHk7PWMhRw77FtyCA1OS8T
+	o/ZC+XxYJNP7tC+t+PhZSE2I94QfvOKJm0zLU=
+X-Gm-Gg: AeBDiesz3XPmys1XMXO8Cdq+yTCrqTtMPZaASAnGvh5StBVwp5Qu6PTuuNMTq41sDAK
+	ZB9nJ+ReTH934nTH8nAB0qlouEZQQG0WV9DvL1yC6Vq3CGClKtBgBOizEX04E63x/pJTkuDPYd/
+	+six6Bw8u7SaftQwP/X4q4Jts3bboOimhTIC24Kg076RGa4IXJvU8sCg4jZ0jvKhqPitl3nBjeC
+	qqKcRLY0nh+Y1di4+aptrkW0R4+whsLMomS7ZK/R78=
+X-Received: by 2002:a05:6830:4986:b0:7dc:e032:9b5f with SMTP id 46e09a7af769-7e1df220611mr2715785a34.25.1778091811279;
+        Wed, 06 May 2026 11:23:31 -0700 (PDT)
+X-Received: by 2002:a05:6830:4986:b0:7dc:e032:9b5f with SMTP id
+ 46e09a7af769-7e1df220611mr2715758a34.25.1778091810773; Wed, 06 May 2026
+ 11:23:30 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI: brcmstb: Assign pcie->gen from
- of_pci_get_max_link_speed()
-To: Manivannan Sadhasivam <mani@kernel.org>,
- Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: linux-pci@vger.kernel.org, Dom Cobley <popcornmix@gmail.com>,
- Phil Elwell <phil@raspberrypi.com>, Jim Quinlan <jim2101024@gmail.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Hans Zhang <18255117159@163.com>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-rpi-kernel@lists.infradead.org>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <mid:20260501202438.376033-1-florian.fainelli@broadcom.com>
- <20260506164537.103196-1-florian.fainelli@broadcom.com>
- <t3u7r2ee6gdkjceula2ctvgditgxibwxcpaejc7ekbgdjog3br@c6n6ztzsbhpu>
-Content-Language: en-US, fr-FR
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
- xsBNBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
- M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
- JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
- PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
- KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
- AAHNMEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPsLB
- IQQQAQgAywUCZWl41AUJI+Jo+hcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFr
- ZXktdXNhZ2UtbWFza0BwZ3AuY29tjDAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2Rp
- bmdAcGdwLmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29t
- Lm5ldAUbAwAAAAMWAgEFHgEAAAAEFQgJChYhBNXZKpfnkVze1+R8aIExtcQpvGagAAoJEIEx
- tcQpvGagWPEH/2l0DNr9QkTwJUxOoP9wgHfmVhqc0ZlDsBFv91I3BbhGKI5UATbipKNqG13Z
- TsBrJHcrnCqnTRS+8n9/myOF0ng2A4YT0EJnayzHugXm+hrkO5O9UEPJ8a+0553VqyoFhHqA
- zjxj8fUu1px5cbb4R9G4UAySqyeLLeqnYLCKb4+GklGSBGsLMYvLmIDNYlkhMdnnzsSUAS61
- WJYW6jjnzMwuKJ0ZHv7xZvSHyhIsFRiYiEs44kiYjbUUMcXor/uLEuTIazGrE3MahuGdjpT2
- IOjoMiTsbMc0yfhHp6G/2E769oDXMVxCCbMVpA+LUtVIQEA+8Zr6mX0Yk4nDS7OiBlvOwE0E
- U8AbwQEIAKxr71oqe+0+MYCc7WafWEcpQHFUwvYLcdBoOnmJPxDwDRpvU5LhqSPvk/yJdh9k
- 4xUDQu3rm1qIW2I9Puk5n/Jz/lZsqGw8T13DKyu8eMcvaA/irm9lX9El27DPHy/0qsxmxVmU
- pu9y9S+BmaMb2CM9IuyxMWEl9ruWFS2jAWh/R8CrdnL6+zLk60R7XGzmSJqF09vYNlJ6Bdbs
- MWDXkYWWP5Ub1ZJGNJQ4qT7g8IN0qXxzLQsmz6tbgLMEHYBGx80bBF8AkdThd6SLhreCN7Uh
- IR/5NXGqotAZao2xlDpJLuOMQtoH9WVNuuxQQZHVd8if+yp6yRJ5DAmIUt5CCPcAEQEAAcLB
- gQQYAQIBKwUCU8AbwgUbDAAAAMBdIAQZAQgABgUCU8AbwQAKCRCTYAaomC8PVQ0VCACWk3n+
- obFABEp5Rg6Qvspi9kWXcwCcfZV41OIYWhXMoc57ssjCand5noZi8bKg0bxw4qsg+9cNgZ3P
- N/DFWcNKcAT3Z2/4fTnJqdJS//YcEhlr8uGs+ZWFcqAPbteFCM4dGDRruo69IrHfyyQGx16s
- CcFlrN8vD066RKevFepb/ml7eYEdN5SRALyEdQMKeCSf3mectdoECEqdF/MWpfWIYQ1hEfdm
- C2Kztm+h3Nkt9ZQLqc3wsPJZmbD9T0c9Rphfypgw/SfTf2/CHoYVkKqwUIzI59itl5Lze+R5
- wDByhWHx2Ud2R7SudmT9XK1e0x7W7a5z11Q6vrzuED5nQvkhAAoJEIExtcQpvGagugcIAJd5
- EYe6KM6Y6RvI6TvHp+QgbU5dxvjqSiSvam0Ms3QrLidCtantcGT2Wz/2PlbZqkoJxMQc40rb
- fXa4xQSvJYj0GWpadrDJUvUu3LEsunDCxdWrmbmwGRKqZraV2oG7YEddmDqOe0Xm/NxeSobc
- MIlnaE6V0U8f5zNHB7Y46yJjjYT/Ds1TJo3pvwevDWPvv6rdBeV07D9s43frUS6xYd1uFxHC
- 7dZYWJjZmyUf5evr1W1gCgwLXG0PEi9n3qmz1lelQ8lSocmvxBKtMbX/OKhAfuP/iIwnTsww
- 95A2SaPiQZA51NywV8OFgsN0ITl2PlZ4Tp9hHERDe6nQCsNI/Us=
-In-Reply-To: <t3u7r2ee6gdkjceula2ctvgditgxibwxcpaejc7ekbgdjog3br@c6n6ztzsbhpu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+References: <20260430200704.352228-1-zhipingz@meta.com> <20260430200704.352228-2-zhipingz@meta.com>
+ <09995589-b81d-4cb7-a313-15a943d8b28d@huawei.com>
+In-Reply-To: <09995589-b81d-4cb7-a313-15a943d8b28d@huawei.com>
+From: Zhiping Zhang <zhipingz@meta.com>
+Date: Wed, 6 May 2026 11:23:19 -0700
+X-Gm-Features: AVHnY4Lr6ainK1nflhUwWMi2SscR_b7hHjj8HpGh-ezHilmWJEso71FyiVM42gA
+Message-ID: <CAH3zFs2x2QebpqDC0qwQg_GP2FVs-qqNxPupck40cEHNrBMEsA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] vfio: add dma-buf get_tph callback and DMA_BUF_TPH feature
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+        Yishai Hadas <yishaih@nvidia.com>, kvm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-ORIG-GUID: Kbx7VgdJ7MuuV6MLYiMaBHtm8d4jUf_B
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA2MDE4MCBTYWx0ZWRfX6ZJThH+uRn+z
+ gkS9N61HFIrYFEbPG7WAgXl2+xW6g1+aaDb5oE+UDZApcEQd/0bkZg3hHvwhbnkUDBun8+PqqHa
+ 2+3EGpKorzkzhgjV9ScdXpPd0i2IuqJr3cKsZ/dioAJdMzjOt75Rug0LXqgQlajNMLfr/CGs4qJ
+ 1VqIomtjXB2qayAh+Q+AHwLm6o+jaH6ME1IM8Zyxm6HYB8ZT4RN9lZKn9XV2ciJTNjg52hS0G8z
+ jmdqEVVjtULZ75quuvDcOoStAbrB5spN108IVpfMbpOAc8RveeuZvhCyqq+BefafBsSGlrVnXv1
+ 7V6udQQAxY8YxKh0NNW3MfrBBG8XmQxAJIGP2FTH2BRTl4fFHtDQcBFUxpYuAbuImJ4h3DxnRB0
+ ZdUM9FGeT1oNsjl+VefCNoj4kI7VVEP2oUjhOi0f/eRmNtnS6NVLv1R50xslILZlDxMxkycyu5w
+ wqBT7A9PDityy8as2pg==
+X-Authority-Analysis: v=2.4 cv=SsmgLvO0 c=1 sm=1 tr=0 ts=69fb8723 cx=c_pps
+ a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=JnKecZnUtZousrUlYMGU:22
+ a=i0EeH86SAAAA:8 a=VabnemYjAAAA:8 a=jjQCJkVV9gP_kkOIbcAA:9 a=QEXdDO2ut3YA:10
+ a=eYe2g0i6gJ5uXG_o6N4q:22 a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-GUID: Kbx7VgdJ7MuuV6MLYiMaBHtm8d4jUf_B
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-06_01,2026-05-06_01,2025-10-01_01
 
-On 5/6/26 10:08, Manivannan Sadhasivam wrote:
-> On Wed, May 06, 2026 at 09:45:37AM -0700, Florian Fainelli wrote:
->> After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
->> pcie->gen stopped being assigned and as a result the established PCIe
->> link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
->> to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
->>
->> Whether the 'max-link-speed' property is not specified, or it exceeds
->> Gen3, resort to the HW defaults.
->>
->> Link: https://github.com/raspberrypi/linux/issues/7343
->> Reported-by: Dom Cobley <popcornmix@gmail.com>
->> Reported-by: Phil Elwell <phil@raspberrypi.com>
->> Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
->> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
-> 
-> Since this is a 7.1 material:
-> 
-> Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+On Tue, May 5, 2026 at 11:58=E2=80=AFPM fengchengwen <fengchengwen@huawei.c=
+om> wrote:
+>
+> >
+> On 5/1/2026 4:06 AM, Zhiping Zhang wrote:
+> > Add a dma-buf callback that returns raw TPH metadata from the exporter
+> > so peer devices can reuse the steering tag and processing hint
+> > associated with a VFIO-exported buffer.
+> >
+> > Add a new VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl that takes the fd from
+> > VFIO_DEVICE_FEATURE_DMA_BUF along with a steering tag and processing
+> > hint, validates the fd is a vfio-exported dma-buf belonging to this
+> > device, and stores the TPH values under memory_lock. This keeps the
+> > existing VFIO_DEVICE_FEATURE_DMA_BUF uAPI completely unchanged.
+> >
+> > The user sequences setting TPH on the dma-buf before the importer
+> > consumes it.
+> >
+> > Add an st_width parameter to get_tph() so the exporter can reject
+> > steering tags that exceed the consumer's supported width (8 vs 16 bit).
+> > When no TPH metadata was supplied, get_tph() returns -EOPNOTSUPP.
+> >
+> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> >
+> > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_p=
+ci_core.c
+> > --- a/drivers/vfio/pci/vfio_pci_core.c
+> > +++ b/drivers/vfio/pci/vfio_pci_core.c
+> > @@ -1534,6 +1534,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_devic=
+e *device, u32 flags,
+> >               return vfio_pci_core_feature_token(vdev, flags, arg, args=
+z);
+> >       case VFIO_DEVICE_FEATURE_DMA_BUF:
+> >               return vfio_pci_core_feature_dma_buf(vdev, flags, arg, ar=
+gsz);
+> > +     case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
+> > +             return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
+> > +                                                      argsz);
+> >       default:
+> >               return -ENOTTY;
+> >       }
+> > diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio=
+_pci_dmabuf.c
+> > --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > @@ -19,6 +19,9 @@ struct vfio_pci_dma_buf {
+> >       u32 nr_ranges;
+> >       struct kref kref;
+> >       struct completion comp;
+> > +     u16 steering_tag;
+> > +     u8 ph;
+> > +     u8 tph_present : 1;
+> >       u8 revoked : 1;
+> >  };
+> >
+> > @@ -69,6 +72,22 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *atta=
+chment,
+> >       return ret;
+> >  }
+> >
+> > +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steer=
+ing_tag,
+> > +                                 u8 *ph, u8 st_width)
+> > +{
+> > +     struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
+> > +
+> > +     if (!priv->tph_present)
+> > +             return -EOPNOTSUPP;
+> > +
+> > +     if (st_width < 16 && priv->steering_tag > ((1U << st_width) - 1))
+> > +             return -EINVAL;
+>
+> The checker will failed in following cases:
+> 1. If the exporter passed 8bit st, and importer support 16bit st, then it=
+ will pass
+>    the checker.
+> 2. The exporter enabled 16bit st and its st is < 256 (note: the pcie prot=
+ocol doesn't
+>    restrict 16bit-st must >=3D256), and importer only support 8bit st, th=
+en it will also
+>    pass the checker
+>
+> Suggest userspace passing both st(8bit) and extend-st(16bit), and importe=
+r chose the
+> right one.
+>
 
-Thanks!
+ Agreed =E2=80=94 8-bit ST and 16-bit Extended ST are distinct namespaces
+(firmware returns
+them as separate fields with separate validity bits), so a numeric
+range check is insufficient.
+For v3 I'll change the uAPI to carry both, gated by a flags field:
 
-> 
->> Change-Id: Ic5431469dd7a6c8b391f84f27119dad876256880
-> 
-> This Change-Id is irrelevant to upstream.
+  #define VFIO_DMA_BUF_TPH_ST (1 << 0)  /* steering_tag valid */
+  #define VFIO_DMA_BUF_TPH_ST_EXT (1 << 1)  /* steering_tag_ext valid
+*/
+  struct vfio_device_feature_dma_buf_tph {
+      __s32 dmabuf_fd;
+      __u32 flags;
+      __u16 steering_tag;       /* 8-bit ST */
+      __u16 steering_tag_ext;   /* 16-bit Extended ST */
+      __u8  ph;
+      __u8  reserved[3];
+  };
 
-Should I resubmit or can it be stripped while applying?
--- 
-Florian
+get_tph() then picks the field matching the importer's st_width and
+returns -EOPNOTSUPP
+if that one isn't valid.
 
+Thanks,
+Zhiping
