@@ -1,44 +1,44 @@
 Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazolkn19013085.outbound.protection.outlook.com [52.103.43.85])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22CA248034B;
-	Wed,  6 May 2026 14:10:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1F9A4921BF;
+	Wed,  6 May 2026 14:11:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.43.85
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778076661; cv=fail; b=B6n98VYaRz1+pSLQDrC9ob+VXwCMQ9IAGrCd9lvIjzndce1aJfDa8slv95h0mpEMaYmscdarceMxUuQKJOYPU67Z96mMsBvL+eycEJYxt+dfNQGNf6wTXz1j51x5jiDHWIh0Dsn41DBu5e9YElb0I6vWECGLpJ6uE8r0XrOW4+E=
+	t=1778076664; cv=fail; b=u+ETYql4tI20cTXpFYInMdevn9bCK6+gzudLEkXR0Vj1KQ/vVecNRlzTg5WZfyLEUREMNh60vvFpwN+dlv+7mff9GCt6/jN0blqE4AY5uJVe5oQ7VzRa+Myn3ox/hKcdwCY0P0wUrrrQ3YaGwb6MuPprPvjdl2KcYNRducDt6vU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778076661; c=relaxed/simple;
-	bh=UWi715lrhws5cOzdZxlcL6rRky8HGF+2HcQJzavF8bA=;
+	s=arc-20240116; t=1778076664; c=relaxed/simple;
+	bh=CLmBlYUv2LR4DcbrCrdJbxrRyFlxZoQGygkxKddqVWQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=PIg9jeDy+1utJROYwbHrOFujnuA2H3D+5hTncYzaqUzjoOStTYQQPwbJKrtcxBcS6AOI/hUNxYlBsQnlKETV56SeNkqH1h2sEW+B3vyNSuCG2p8eqlZxjr16veOnQi4KweE+6fm+L+1cz2L7lb3l7JbY1mgptkzs1UVixSLthBc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=FWdqtT/f; arc=fail smtp.client-ip=52.103.43.85
+	 Content-Type:MIME-Version; b=FY91lTuZorV8b5oBJbk3j/sQkJEG40mZf54RHApTcbNlFw7lufk5mO8R9VBu8LHy7GUIXqVub1E/eYDfIq+mTNYrSLZ8UjXQfI2OPdtLvdcXWZ1Vw45TpUgttIRtYkp/hd+Xb0iilxa3he2KkPcWAuNxCSXXXu25LV4nqVQE9Gg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com; spf=pass smtp.mailfrom=hotmail.com; dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b=tpdkj9qE; arc=fail smtp.client-ip=52.103.43.85
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hotmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="FWdqtT/f"
+	dkim=pass (2048-bit key) header.d=hotmail.com header.i=@hotmail.com header.b="tpdkj9qE"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=GfOC30/dcZZuRx2QsxfN+jHSNjufGNqJ/03Kt8s7x/Uojo5AwqZkk/fOIO3uRJjmgKvGl8JhHO2CKJE3eObdLZEtcIKxw/DUclp8wn68eRTkn+9JRgbgLWVcGcQMi9sj2GxdEwwD58BRAs6y/eXeKSFYdcqeMwi1tFEHaYHpp1OakL59e2lDUxTrTp4H6Cndaf9288Sdjf3/OVW3spCIIvT6Z9RZDbTjxYhJ1v9A+/Sg0QbHVA5zX7DvpiN2wDN4U1kDRWHQouzez/vuid8nDDVOn+c5Cjy3/fmrhN+HGperq6zn2C5DTIoqDsOx1HJtH9S+VxQEvcxWEsv/04FFRw==
+ b=EC++RQrAnS6pwCXXSurEjS7M8u2NmwAXS9iUJe/3bzB1PZyiZW39od+pUFVDZlqo0KCg7YNyHOtS3mA0UNezZ+ed6zioqxBzXpcmpo9iBhdXw4dPoto0T0BIObOAhEJGoMcz1Rd71w9alD0fKkDZ4pT32Mmg61CZQaokHO5PQm3rguslbTvbSxm1xpAtotOmX4bh9xFW4C6isU3BJG8rTIthYMU0e5WJsnthb1prZMM2F0dzPJC3PPzzelAEDW6SP7niOM44QGLGNHr+BpwqsuvWcLg5oXawxz5aZo3zcHdfVm+vnJW7u+vKg7YOQ4HQbNpydB2EoQBsjgyvXHP/eA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=94fjCrmLZyXaTPp0nZOy335MnaVtH5KDBNqNysRkcds=;
- b=vetwm7UAMTaHOkDLf5dXwbT/zRl485kBZTsaREFfDZ0uhGTpnenDe5eJTJ644PFsop9wq02JN5tZfEt4mq4e6Zi2bHGX8Uk0NC59WrB7gRh9WBLKIIDu+EMwdvd3m96g4jJVvAIBmt8FjB1FsuYGekfMp7eWUSFBwMStSyqlEZfA5wG7gJU1130qQcxOcyDXUemALFt5GF87pCIQ5JyH0aWm0tyF0N2nJNJ45pKX7QRUWDcP9vPoiGiYzCtfbdQF8623BPcu1Ru5WK8myyAAduXO5ilO/dzQ1NrE3XOpk38Y001ithHYLGpqf3r6UwZIZ/pEJq/5lJCcxgAQhK+WKQ==
+ bh=7XAjjx0zDw1RdHfefDwhU0O5f9UlDtOyz2Oy9By+s7g=;
+ b=tfo4MhqA0Axngr9hEO8zrGyC6XYmNZAXGm153g82T7a3tdbuiKWF04XOH2v2v3qTA8DeJrqSnWKf3I8qxSSOk55oPZexEzEbqM0Lh4pVCOYNUo+PPK4QNoqDtbfefUVs7NQjm6cChC6T2paS8X9l4ADUyUPc/9Yw52i6fCG9qgBfY8K4A26qM+LF1xBLGUyNDJ+FckvqLpuMQP60FgQyxQ7QHY6gb9zekVdgSvi+qS3cEO2WL+4drWvS3xGq+pBcJPJrCSa+IL6H7Hu7UViU0ZRRCQrFvfdjh/VGNW8/V3AVwxpMHmAe1Ecvuwg0CC4TBdpn1T0XR8dMvhW8WhgKRw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=94fjCrmLZyXaTPp0nZOy335MnaVtH5KDBNqNysRkcds=;
- b=FWdqtT/fdgtQFeeH0AJC9XvjQPsOPjKnjghZx4hmWE5pecXDiDmMIRz3pwW0DTLoxvbhtEnNZb45KU2U09BAOj6Y6Ua24/VBKCh0hQQRJvm1vaMMblTLx2QN2Ub36DCZVKXzv9/aq3h07T7ffI3KU685z5d4+KST2tdfXQz0fGynFlwmm9+EWeMDPD6GRxgirYevVtZYXeBLTtAV5HRXMxq+HztMohvbChkzK3xmhFMFvUQKltsWVzDZXP1kiGfvL6WXMX3kGqLalZS8kNY+pc3UfWpCYMHesSo3bufOlcT8YRIymFK+t5yoEfqLCPpTf1yYjfRzK4kI/ewhi/VhdA==
+ bh=7XAjjx0zDw1RdHfefDwhU0O5f9UlDtOyz2Oy9By+s7g=;
+ b=tpdkj9qEzpDMBmVjmwxf/GcgSZVYFKv9mTdiW2xeajsh3KlkNJgXn2MLanT913aHQiwXP9atR3+mpNA1plHV9+AfQ6QJ8r0V0xpNgSRMgaF1EXgF+k0RtjjBOCrQqJdczwVhX1u0fosjAPOER19cKai20vH22TMWj94do3+i2obwRwX+eYWYxVC0KnGWhs2wRMJ6y6phFslUSVwHKE4wb7wocXPXhPnmLDi6Jb2u0W5BnzqSuf4LFrfXrddGvpjgVT/tWj8THwzsUvDFG9iL7TtNi/d6GeBK9FORyLGDpXlG+fl0/Azt+I+Xwd+IhPzglaKSLGOEtEOpKFM+4WyAFw==
 Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  (2603:1096:4:1b0::7) by SEZPR01MB4454.apcprd01.prod.exchangelabs.com
  (2603:1096:101:70::13) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.17; Wed, 6 May
- 2026 14:10:56 +0000
+ 2026 14:10:58 +0000
 Received: from SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  ([fe80::c735:fab8:6e3d:6d1c]) by SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  ([fe80::c735:fab8:6e3d:6d1c%4]) with mapi id 15.20.9891.008; Wed, 6 May 2026
- 14:10:56 +0000
+ 14:10:58 +0000
 From: Wei Wang <wei.w.wang@hotmail.com>
 To: bhelgaas@google.com,
 	jgg@nvidia.com,
@@ -53,20 +53,20 @@ To: bhelgaas@google.com,
 Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	wei.w.wang@hotmail.com
-Subject: [PATCH v7 3/6] PCI: Consolidate delimiter handling into pci_dev_str_match()
-Date: Wed,  6 May 2026 22:10:31 +0800
+Subject: [PATCH v7 4/6] PCI: Refactor disable_acs_redir and config_acs param handling
+Date: Wed,  6 May 2026 22:10:32 +0800
 Message-ID:
- <SI2PR01MB43933D93A8B638C86C84D405DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+ <SI2PR01MB43933B1790A24957EB7DB79ADC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <SI2PR01MB439385689A32A1DDA9CEABE1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
 References: <SI2PR01MB439385689A32A1DDA9CEABE1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-ClientProxiedBy: TY4PR01CA0004.jpnprd01.prod.outlook.com
  (2603:1096:405:26e::16) To SI2PR01MB4393.apcprd01.prod.exchangelabs.com
  (2603:1096:4:1b0::7)
 X-Microsoft-Original-Message-ID:
- <20260506141034.1738541-4-wei.w.wang@hotmail.com>
+ <20260506141034.1738541-5-wei.w.wang@hotmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -76,60 +76,76 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SI2PR01MB4393:EE_|SEZPR01MB4454:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2f5c4066-268d-4569-739d-08deab794a07
+X-MS-Office365-Filtering-Correlation-Id: 0631ea8f-c522-4f64-b5d3-08deab794b7d
 X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|41001999006|8060799015|23021999003|5072599009|19110799012|7042599007|15080799012|51005399006|461199028|45011099003|37011999003|3412199025|440099028|40105399003|1710799026;
+	BCL:0;ARA:14566002|41001999006|8060799015|23021999003|5072599009|6090799003|19110799012|7042599007|15080799012|51005399006|16051099003|12121999013|461199028|45011099003|37011999003|3412199025|440099028|40105399003|1710799026;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?5EV+yDLXnKLp2JFweTizjNidwtIc0/rWT/v7Ff5ZH46g4PNYXzbO5BToJX6/?=
- =?us-ascii?Q?HQnsBdyZGKIFU2vPnyMqO/VavVgtFwHFRNaRbJMlrsEpn70wETrRWqXXw/U+?=
- =?us-ascii?Q?I9yToyy0vQnOCdCDqNckDXFvOiW7EGF4hkxJ2SYf4J3eRp21b+5n7y1M/vXW?=
- =?us-ascii?Q?/bmv9nbUM+/AOoTRyiJxZYSS+DXMFOmcFtKcsYpkZGWqUvClf6EJDnxCcJK8?=
- =?us-ascii?Q?E+TCJwR33Fw5Bqyw9TlnfM2EcSLkSsFSTLFB3rKyWPTQYHPhw7wRMSgqaAfS?=
- =?us-ascii?Q?yqTsAPTUi9vXMcE8UjRMiZjRrmi2E1jFlXlWELzxR16eHR1YARIqxJcJciUn?=
- =?us-ascii?Q?ieX4iGdq5SO4HG3MBm9Q8Dc2G1pwwB88c0qK0WdQ3yYjpg/dH8Vl7OMkdf+5?=
- =?us-ascii?Q?XKGunLNfcecysLjh9lweBu23rKjOFCroANC3zG05MjoD+/Kb1wyd05QdSjbu?=
- =?us-ascii?Q?PmIKN47eYha4kQ4fJXiwHcR5qmrSmC/bLRsRIVcillGDhKBv8B1RNaP+vafU?=
- =?us-ascii?Q?ao3q9mKKhDPeDEOc5Nt2zwDVdU8UY1hA0sx7izBDalEcbpZUa9GIp+UxGD9I?=
- =?us-ascii?Q?sqtX3gWF7gtovV+kVL+DykUH/uS5hTTkxUaGC03s8T1L1Gq8vM7HgA3Mi2eE?=
- =?us-ascii?Q?FzFXYhjTJAHS0BYeD09NKIADAeIriSqIXL/DgJqYRhfRrbFYlDrLCcwQSNOf?=
- =?us-ascii?Q?1/vLRWCkKpLeurcQ1qjkipcqsSyhZkK/3bFy7Vi7bjjTMu40Z90sOrAjb44y?=
- =?us-ascii?Q?2c6lpfJg59cOEnPRLhqHMSH2n3fStxXgi2Rs54XJjJr/6cXV/8rxXFFviJqn?=
- =?us-ascii?Q?fM0928YE3yeL/YyagDrgOENfZYMePX/dsR306CvC9Iy2GJg9sB2QR25RSZWz?=
- =?us-ascii?Q?3eiphGxGIw/LWjhbTqWWlixT05hGUCwvEscyaDe2FTZQO8vTKMT0I4j9937p?=
- =?us-ascii?Q?n6kvzCLAa6SLwmkA7N0FFRA4JDvBawXQzwwsbp21geTEkjazSMHOTSIyYAkz?=
- =?us-ascii?Q?ZT1SX8N1rir8DdFX6IXhLbPMMg7VSKRKpraKWM5uBkd/JouH057uANy0+L/x?=
- =?us-ascii?Q?vFQfDWl2?=
+	=?utf-8?B?TnNtM0NibW9JTno1L1hwS0dyb2ZkN2FrVWppaUwzRUoyMHRENmYreUNXcVNR?=
+ =?utf-8?B?MGNERWdPaTY0NU1JOG5RN1pNL0JXQUNnUUFXd2hDVFBpMXhyblhKOHZHQkFx?=
+ =?utf-8?B?OW82RWplSi8rcmpWQTFaQ2x6clYxSWZrbEhaQTJjcUVPR2JYQzZNS3N1Sndy?=
+ =?utf-8?B?UFNteUQ2dDNQZzJZZFJheHRxeDhVYXlCY01NNXRtbmhZVnVoanJYdms5ajgy?=
+ =?utf-8?B?djBLOTduMjJxTityM0FFMnFRMlFRYzVUZU12RzZnaEVYN29XTDNhbGNKRS91?=
+ =?utf-8?B?ZDU0TUJhYnNubzBwOTBHZ0dqU0FmN0FoU1NGQ2F5czRVSWNvaWJsd1ZaV1E0?=
+ =?utf-8?B?SlhaeCt2THFEbVcwS0NhcklnS1FqclA1MG9CVG9lQ1U5V25LMFJTUytISXFw?=
+ =?utf-8?B?TXpaQWlrVzc5Sk92eFFIRWk3VDc5b2tWV2U2N1pWcnk5UmNRRXVVSTBvZnpr?=
+ =?utf-8?B?Wit3YVpFd3lHSHl6MXpaWWx3ZitGRGRRRHRCV3dOcTZjWUtlL1FtUmFXYnJF?=
+ =?utf-8?B?Ylg1SnVlQXJGc3psc1Z2c0tRd2lFQmI1WGp0NWVYM0tFMmRYQXNtWmhwS3hZ?=
+ =?utf-8?B?WDRxS0VsMXZrRHRhZmdkRmpmVEJnRFlrTEx1azd3OWZHT3lPbnEyYWllb0tH?=
+ =?utf-8?B?Vm5HbnZ6UkFNZGZvSVl5Vm1YSmpZbUNUaGFuZUJWbnFBYVdXblNydngzZk40?=
+ =?utf-8?B?WkRTZGpRLzgvMTVoVmszcE9FVXNxN20yZ2pUVEpES2JRV0h6YjBKS042ZWgx?=
+ =?utf-8?B?OHpGNy9KdXdkSE9oQ3VBVXJubkg0VXhVdWV3QzdvZE9VYXljSlpFQmpnR3FL?=
+ =?utf-8?B?RlMxb09tR0FWYm1lUERSZTMwS2NhN1FOcm12QS94TkFqVmJjWUh5Wm1ZaHB2?=
+ =?utf-8?B?K2JJWHR5MkpvWHpVL28xTExSbmVTSmUyZ0RXSlBwUzhOdm9GK3JSRW02SU9l?=
+ =?utf-8?B?ZDl2cVBuM1pnckdITGRkdzNUNGhzcElteXlSSnlRWGZBMTlQZXZIYTRBcWFJ?=
+ =?utf-8?B?UFNyeXNCcjBFcjYySnNLL0NsZnRJLytsUzVhWWhoZHM2NzVZUzJ6QzJSVW9O?=
+ =?utf-8?B?UHZVQ3J4RU9xUjE4Tmo0R1hXWEdSV1U1NkVWQ2N6TWliQ1V3YmJVQzVia0pX?=
+ =?utf-8?B?RkdHWi9JUXRiMldKYTRPMGlpS3FSa0ZqM3FMZGNGcTZieGdEUlYyempqVGZm?=
+ =?utf-8?B?N1ZQMm5vNW5GMC9Rc01NQmx5S2VkT3UvUWZ3T3VnbGZzdFM0NlRSaHRMSXJE?=
+ =?utf-8?B?c2dhbndXZEt3WE9FV3VyVWJROVkxUm5JUjdGMWlxS05kZFJrdDcyVGs5WXUv?=
+ =?utf-8?B?Mnl0K1dYZXY4ekRPbTkvUWZtL0wyQnF4OHFMYVNyMWVqTGdhbGt4c3hJcFM0?=
+ =?utf-8?B?eUpYR09lRkdocEdGRG9KVWMydlRKUE5HaTVESVRqQlpOTjhLMGRzSGc0Sitw?=
+ =?utf-8?B?RVU0QWUzKzlDYjNGQTJjd1lQQU5FOHZxUzBHakhGZWxqTzkwZGlvVlhKZ2dN?=
+ =?utf-8?B?N3BhSkVFUnA3dzNoYnNpNk5YTTYwaTlmUEMxS28xRjIvbER2RUJxTTRFamIy?=
+ =?utf-8?B?YTZrdz09?=
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?Hgs1nLuZtznUfZswLR7vL20U/YdHTSSJA21BsE48/Fqm/P0nNlzMJnOU66wZ?=
- =?us-ascii?Q?wNZwAVDaYIYkE0m8NXnhejVC0DcKeA1M2lUzesedzA4bdqW12dbo7uRTgYoY?=
- =?us-ascii?Q?jJ/U8qaUAPC3NxZu2H9i5TYKh3SGlj1m/VyUZI5b4cmVWW3cQbltyi2zzxSH?=
- =?us-ascii?Q?otOX5aWvOphL49s6NpeRP+uRPlEntcCbb2/5c2WcggbtS0ErP7YzEY4RK6QB?=
- =?us-ascii?Q?Q3qUpNNW8fZ7k/UJry3CsCXkHVa90Rt4hvjXND7qolpLzUPrqu6mWhu1VBIJ?=
- =?us-ascii?Q?wJv5JpM1g9X4kGBJZ0eCMig5ReVnto/jFIulxC5xRAoOehrEDrUIlA/WB+G9?=
- =?us-ascii?Q?i/cVpgjn9E2dtjbICs4BFssoHsLE6aisi3Hc4njCqmNln0oq0Meh1JVftaSS?=
- =?us-ascii?Q?4vKKaTA7LXluCrPNsGqIPMx4bZLeAsM4Fwl4AVdV0tsbQ24ozpJx3slzotR/?=
- =?us-ascii?Q?koXs1gUQ8WvRz/1FtV+jqaALTMk4U7AbsiAzdItVhmZzriEB4jcUXRT8tO01?=
- =?us-ascii?Q?0Vb/iYUYM1iG3NBkejnSfh+/ZSAoULgl9+6+Tm8uJJEcMie3M7qbto5N/KVK?=
- =?us-ascii?Q?qvNdQ8nVaFb/mZuG/JX3CsmnWDz63e/MSWDIoIaSQlrRTVDaLoZJazr64Iow?=
- =?us-ascii?Q?HPsV/1JUmgyadGRLjQhrWwnORKK6sBFKjhQya/cjkUWlq68YceteDrBDFiDP?=
- =?us-ascii?Q?LbjPeQMdsr9ToXoAOOd/Qn0ierbIXudb5xo96PaWORrRuJby34HhGqvMEOuL?=
- =?us-ascii?Q?VRtJKhNdsof4FWC3eiPkzQfxLc9lHHIwfX9pFVU54pZE4lKHW+pru6gsG1/Z?=
- =?us-ascii?Q?OK2XZ856LcbS67NX9LbFRcQsrBF1+uUnCZnuGV+rcgPeomsO2TbTSP3erVVf?=
- =?us-ascii?Q?omJ1I2EorfxQhTJb6x7P1L/iLypdyz/0dCs/kMUgTY5R+dVbFi5r14Q7/BPI?=
- =?us-ascii?Q?msMtF5SaT4uAyb+gNAHEcB6C1XycqRWPtZl7H54CpTK3nW/UXVHpqWMCGBNe?=
- =?us-ascii?Q?QK5MnAIGdKXhcIT9xRs3hfT5zRcLaIeJCzABJYAebKYzeRbpSp/KtxYx17L5?=
- =?us-ascii?Q?z0Yxq1lpOabYZSTT6OphtEeMhlb2HWLtFALL3rqmu2zobbYl/DRe7CWR20GO?=
- =?us-ascii?Q?Z1G9MdJCxGdwpzIePCVasBuEMtwip8gnAHUIOTHYeFLuN+ZRqkJ13BR86oAG?=
- =?us-ascii?Q?FJYM+EJBRW8ht2F7b9w+umZGB2cccfVHPBiiMQEzc1CwPnwtdgEqY1stdZjO?=
- =?us-ascii?Q?8QWLDsraYntmb2uT6j9GxQjXne49jiHLPwiaReAuSIYznSoXZr5NNQhBhALm?=
- =?us-ascii?Q?SGmE0N+4nRTqBXo/hPi8vOwF4b6bTYR6JA3lBfV6+l3fBzd6BWuLju6urva9?=
- =?us-ascii?Q?ZJLUAfOdjb9Tx+sxe6YEzM0nq/8P?=
+	=?utf-8?B?WHVEV3Vkb2pnMzFnZzY0c2lzUkVJMkdxLzJOM3h4TFIybG05WXVMMzY3U3VN?=
+ =?utf-8?B?MU1FcVZ5NHE5a08zYm0vNzU0UU0vVUJrTEtjMy9NTm1icEtRaEljU1BsVExp?=
+ =?utf-8?B?ZzRyTi92RU4wYlJWUGZRZSt1VWRXcEZlT0ZxTVFjYVFydjgrVCtxNlQ1K2Mz?=
+ =?utf-8?B?WE1xQ2U5bm1BTExyZm0vWHRncUdDSjJSUTlZcGwvbCt3akJEWHhrb1RCS25E?=
+ =?utf-8?B?TVVlVW5zZzBiOUtucFNWS2RyRWFIWno2Q2REeWRsV2pBMGgydy9ja3gvMEIy?=
+ =?utf-8?B?QVRua1JVUDFGcng5MTgrbTR3NHd4QVdtQTNPcDl1K2lFc0x6eGU0M25Yb0ZN?=
+ =?utf-8?B?N2ZjUlMxamtFUTVsZWxPbEw0YmpCSzJpTGJVamJYM2pNSE55T1E5L0xhVkVV?=
+ =?utf-8?B?YlpMV3hKQ0lyS1VhdU9EMG9xMFBUSllFaytrWXViQURvamFsOXdyOVZMY01w?=
+ =?utf-8?B?bk1WbURWNnYrR1lTQ3JJcTZEc0xHUkFzSzI4bVl2MXhKSVJqRTBDTk4vRnRX?=
+ =?utf-8?B?aDFOeTUvd0NmbUQ3TFh3QTN1K1E5WHBEN0czbjN2Q25qUXJqRCtNdVJWVEJj?=
+ =?utf-8?B?NnJjR201QXlOVUwrZ0JrWGNnd1kwSGE4VWJ5clBzWTJ1OWlwbkJldi9jSjBZ?=
+ =?utf-8?B?ejdCb2RqTnp5blR5dVJoRHpqYjJnTUo0NG1xdTBnUHNxR2lRZmErVmdpZTJD?=
+ =?utf-8?B?WDlUR0hOOEIrdG9KM2VXMGllcXFpcWpwcTVxZWlzazk4ZEhNSERUSEF1VXZr?=
+ =?utf-8?B?QU1IL093R1F4M0cvZFR1amZpb0NheHIwd0Y5bFZqaURZaDNGL0tsejN0VjNJ?=
+ =?utf-8?B?VVZTQ0hqOE8xN2tRQmZicTZmWmdiTVdkRTZ0UVI0WENvVWgvOWp2cVM1b1lF?=
+ =?utf-8?B?T1grdEVTaTJ5NFk0UHIva2JuNnFadFBIdXFQWTJVTUFFb1VBNzhQclRMY0Nu?=
+ =?utf-8?B?aGIxazlSVjE5MnFVMkpEODlhT09SVnAyNWo2R0M4Skh4Ni80SUZFVjJtc3Q2?=
+ =?utf-8?B?QU9nSXVUUmI5c1BWWlFMaDdXc25nMlVLeE14UDJheXBFREhJSVU3S0FQY0dK?=
+ =?utf-8?B?Y3BGeEpRQ1crMGlaRlc3S2RLbnE3Vjh1d2x3SXVnTWVHaEdJdkNQNkN6OVNz?=
+ =?utf-8?B?SGhlNDdZYWpCNmg4RkRnUnB6Vjk3a3lrcE5UWUVGME9iZ0xJYStQL3hkNi9s?=
+ =?utf-8?B?emlOMG9hRDBkVjlLeVp1RnFJSWRDbGZObzI1ZFBuV2hDalFsUUhZWEJRWVFa?=
+ =?utf-8?B?cDBnLy9YRGx6a3dqVXI2QzExVFVwYTI2UTR2cXJ1MUl3dThLL0xsdC9SOE9U?=
+ =?utf-8?B?K1M4QlNNSjUyWGR2TmFrZDF5ZDlpUGpiazluV1B4ZldSUjVkWHZIQS93eGhI?=
+ =?utf-8?B?dW0yeUpZMDZkZlRhazNuTjRQMmhvOVFvK21PNE9QNGxPaGlSblRKUnduNjdl?=
+ =?utf-8?B?L2hGOWtUSml2RVR2bVdtTU14WFJHZjRaL01YcmlCREJINVJld0trajhIT1dG?=
+ =?utf-8?B?cW9YQ0Jvb3haQ21CODhMeSt2SkFkMTFVWDJBbXFUOWpkYWx4MmhWaU9qQjJq?=
+ =?utf-8?B?ZFN1VlJsNk15UTQxaDBFVDF2SmluQkZjNjczeDlETzA0T1k4bDIwSUYwUk9l?=
+ =?utf-8?B?QlR6VFowcTVoSDl4QkhZU3pQNlVwK0RBbHBXKzB6UlBBU3A5M05veG8yOHVt?=
+ =?utf-8?B?U1NsNjl4NWZzVlpIenB6N0t4TmNrVVlOQ2tsbFFqV0dwR3RlM3l6M1VuM3ZY?=
+ =?utf-8?B?UWNGdmRaWmNMOHFCOTFDbHVXU2J3cGFxVFdXdi82TjRxcW4zNkNSdnpta3Jh?=
+ =?utf-8?B?OUZCMFdzWmtieUd4djBWQTYzb2drcUxnZ1c2aE5rTnFCOVF5N2tLSktjcC8r?=
+ =?utf-8?Q?Mw28Kboy8kE9P?=
 X-OriginatorOrg: sct-15-20-9412-4-msonline-outlook-3e488.templateTenant
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2f5c4066-268d-4569-739d-08deab794a07
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0631ea8f-c522-4f64-b5d3-08deab794b7d
 X-MS-Exchange-CrossTenant-AuthSource: SI2PR01MB4393.apcprd01.prod.exchangelabs.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 May 2026 14:10:55.9630
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 May 2026 14:10:58.3577
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
@@ -137,125 +153,244 @@ X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
 	00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR01MB4454
 
-Callers of pci_dev_str_match() manually checked for the ';' or ','
-delimiter and advanced the parameter pointer past it. Move this common
-logic into pci_dev_str_match() so callers no longer need to duplicate it.
+The current implementation mixes disable_acs_redir and config_acs param
+processing inside __pci_config_acs(), using acs_mask==0 as an implicit
+signal to switch into config_acs_param mode. The intertwined logic is
+hard to follow and easy to break:
 
-When no delimiter is found (end of parameter list or malformed entry),
-pci_dev_str_match() now returns -ENODEV to indicate that no further entries
-can be parsed, preserving the previous caller behavior of stopping parsing.
+  - The acs_mask==0 special case is non-obvious and obscures which code
+    paths apply to which parameter.
+  - The interleaved logic is fragile; changes intended for one parameter
+    can unintentionally affect the other. For example,
+    pci_dev_specific_disable_acs_redir() is invoked on the common path
+    even though it should apply only to disable_acs_redir.
+
+Split the two behaviors into dedicated functions,
+pci_param_disable_acs_redir() and pci_param_config_acs(), making the
+control flow explicit and easier to maintain.
+
+The new pci_param_config_acs() implementation also improves on the
+original logic:
+
+  - It searches for the matching device first and parses ACS flags only
+    for the matched device, avoiding unnecessary work.
+  - A switch statement replaces multiple if/else blocks, improving
+    readability.
+  - Bounds checking (max_shift) prevents overrunning the device’s ACS
+    capability bits.
+  - Variable names (enabled_bits, disabled_bits) more clearly express
+    their roles compared to the previous mask/flags pair.
+  - Error messages are simplified to reduce dmesg noise.
+
+This refactor separates concerns, improves robustness, and makes future
+extensions to ACS parameter handling safer and easier to review.
 
 Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- drivers/pci/pci.c | 46 ++++++++++++++++++++++++----------------------
- 1 file changed, 24 insertions(+), 22 deletions(-)
+ drivers/pci/pci.c | 168 +++++++++++++++++++++++++++-------------------
+ 1 file changed, 98 insertions(+), 70 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e017200694d8..ebd1e81264d2 100644
+index ebd1e81264d2..54f702ed4c96 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -334,7 +334,7 @@ static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
-  * pci_dev_str_match - test if a string matches a device
-  * @dev: the PCI device to test
-  * @p: string to match the device against
-- * @endptr: pointer to the string after the match
-+ * @endptr: pointer to the string after the match, with the delimiter skipped
-  *
-  * Test if a string (typically from a kernel parameter) matches a specified
-  * PCI device. The string may be of one of the following formats:
-@@ -374,8 +374,10 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 			     &subsystem_vendor, &subsystem_device, &count);
- 		if (ret != 4) {
- 			ret = sscanf(p, "%hx:%hx%n", &vendor, &device, &count);
--			if (ret != 2)
--				return -EINVAL;
-+			if (ret != 2) {
-+				ret = -EINVAL;
-+				goto not_found;
-+			}
+@@ -900,87 +900,117 @@ struct pci_acs {
+ 	u16 fw_ctrl;
+ };
  
- 			subsystem_vendor = 0;
- 			subsystem_device = 0;
-@@ -390,6 +392,9 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 		    (!subsystem_device ||
- 			    subsystem_device == dev->subsystem_device))
- 			goto found;
-+
-+		/* No matching string found */
-+		ret = 0;
- 	} else {
- 		/*
- 		 * PCI Bus, Device, Function IDs are specified
-@@ -397,16 +402,28 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
- 		 */
- 		ret = pci_dev_str_match_path(dev, p, &p);
- 		if (ret < 0)
--			return ret;
-+			goto not_found;
- 		else if (ret)
- 			goto found;
+-static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
+-			     const char *p, const u16 acs_mask, const u16 acs_flags)
++static bool pci_dev_match_disable_acs_redir(struct pci_dev *dev, const char *p)
+ {
+-	u16 flags = acs_flags;
+-	u16 mask = acs_mask;
+-	char *delimit;
+ 	int ret = 0;
+ 
+-	if (!p)
+-		return;
+-
+ 	while (*p) {
+-		if (!acs_mask) {
+-			/* Check for ACS flags */
+-			delimit = strstr(p, "@");
+-			if (delimit) {
+-				int end;
+-				u32 shift = 0;
+-
+-				end = delimit - p - 1;
+-				mask = 0;
+-				flags = 0;
+-
+-				while (end > -1) {
+-					if (*(p + end) == '0') {
+-						mask |= 1 << shift;
+-						shift++;
+-						end--;
+-					} else if (*(p + end) == '1') {
+-						mask |= 1 << shift;
+-						flags |= 1 << shift;
+-						shift++;
+-						end--;
+-					} else if ((*(p + end) == 'x') || (*(p + end) == 'X')) {
+-						shift++;
+-						end--;
+-					} else {
+-						pci_err(dev, "Invalid ACS flags... Ignoring\n");
+-						return;
+-					}
+-				}
+-				p = delimit + 1;
+-			} else {
+-				pci_err(dev, "ACS Flags missing\n");
+-				return;
+-			}
+-		}
+-
+ 		ret = pci_dev_str_match(dev, p, &p);
+-		if (ret < 0) {
++		if (ret == 1)
++			return true;
++		else if (ret < 0)
+ 			break;
+-		} else if (ret == 1) {
+-			/* Found a match */
+-			break;
+-		}
  	}
  
--	*endptr = p;
--	return 0;
-+not_found:
-+	if (ret < 0)
-+		pr_err("PCI: Can't parse parameter: %s\n", p);
+-	if (ret != 1)
++	return false;
++}
 +
-+	if (*p != ';' && *p != ',') {
-+		/*
-+		 * End of param or invalid format. Return -ENODEV so the caller
-+		 * stops parsing.
-+		 */
-+		return -ENODEV;
++static void pci_param_disable_acs_redir(struct pci_dev *dev,
++					struct pci_acs *caps)
++{
++	u16 acs_redir_mask = PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC;
++
++	if (!disable_acs_redir_param ||
++	    !pci_dev_match_disable_acs_redir(dev, disable_acs_redir_param) ||
++	    !pci_dev_specific_disable_acs_redir(dev))
+ 		return;
+ 
+-	if (!pci_dev_specific_disable_acs_redir(dev))
+-		return;
++	caps->ctrl = caps->fw_ctrl & ~acs_redir_mask;
++}
+ 
+-	if (flags & ~dev->acs_capabilities) {
+-		pci_err(dev, "Invalid ACS enable flags specified: %#06x\n",
+-			(u16)(flags & ~dev->acs_capabilities));
+-		return;
+-	}
+-
+-	pci_dbg(dev, "ACS mask  = %#06x\n", mask);
+-	pci_dbg(dev, "ACS flags = %#06x\n", flags);
+-	pci_dbg(dev, "ACS control = %#06x\n", caps->ctrl);
+-	pci_dbg(dev, "ACS fw_ctrl = %#06x\n", caps->fw_ctrl);
++static const char *pci_dev_match_config_acs(struct pci_dev *dev, const char *p)
++{
++	const char *seg;
++	int ret;
+ 
+ 	/*
+-	 * For mask bits that are 0, copy them from the firmware setting
+-	 * and apply flags for all the mask bits that are 1.
++	 * Example: 11101010x@0000:01:00.0;101x@0000:02:00.0;1@0000:03:00.0
++	 * Three segments delimited via ';'. @seg always points to the start
++	 * of a segment and p advances to the start of the device id (BDF)
++	 * after '@'. Upon match, return the start of the matching segment.
+ 	 */
+-	caps->ctrl = (caps->fw_ctrl & ~mask) | (flags & mask);
++	while (*p) {
++		seg = p;
++		p = strchr(seg, '@');
++		/* If malformed string, stop parsing. */
++		if (!p || p == seg)
++			break;
+ 
+-	pci_info(dev, "Configured ACS to %#06x\n", caps->ctrl);
++		p++;
++		/* pci_dev_str_match() updates p to the next segment. */
++		ret = pci_dev_str_match(dev, p, &p);
++		if (ret == 1)
++			return seg;
++		else if (ret < 0)
++			break;
 +	}
 +
-+	*endptr = p + 1;
-+	return ret;
- 
- found:
--	*endptr = p;
-+	*endptr = *p == '\0' ? p : p + 1;
- 	return 1;
++	return NULL;
++}
++
++static void pci_param_config_acs(struct pci_dev *dev, struct pci_acs *caps)
++{
++	u16 shift = 0, max_shift = fls(dev->acs_capabilities) - 1;
++	u16 enabled_bits = 0, disabled_bits = 0;
++	const char *p, *seg;
++
++	if (!config_acs_param)
++		return;
++
++	seg = pci_dev_match_config_acs(dev, config_acs_param);
++	if (!seg)
++		return;
++
++	p = strchr(seg, '@');
++	/* Parse bitstring backwards from '@' */
++	while (p > seg) {
++		if (shift > max_shift) {
++			pci_err(dev, "ACS flag bit %d exceed range %d\n",
++				shift, max_shift);
++			return;
++		}
++
++		switch (*--p) {
++		case '1':
++			enabled_bits |= BIT(shift);
++			break;
++		case '0':
++			disabled_bits |= BIT(shift);
++			break;
++		case 'x':
++		case 'X':
++			/* Skip this bit */
++			break;
++		default:
++			pci_err(dev, "Invalid ACS flag character '%c'\n", *p);
++			return;
++		}
++		shift++;
++	}
++
++	if (enabled_bits & ~dev->acs_capabilities) {
++		pci_err(dev, "Invalid ACS enable flags specified: %#06x\n",
++			(u16)(enabled_bits & ~dev->acs_capabilities));
++		return;
++	}
++
++	pci_dbg(dev, "ACS enabled: %#06x, disabled: %#06x\n",
++		enabled_bits, disabled_bits);
++
++	caps->ctrl = (caps->fw_ctrl | enabled_bits) & ~disabled_bits;
++
++	pci_info(dev, "Configured ACS to %#06x (FW default: %#06x)\n",
++		 caps->ctrl, caps->fw_ctrl);
  }
  
-@@ -933,18 +950,11 @@ static void __pci_config_acs(struct pci_dev *dev, struct pci_acs *caps,
+ /**
+@@ -1037,10 +1067,8 @@ void pci_enable_acs(struct pci_dev *dev)
+ 	 * Always apply caps from the command line, even if there is no iommu.
+ 	 * Trust that the admin has a reason to change the ACS settings.
+ 	 */
+-	__pci_config_acs(dev, &caps, disable_acs_redir_param,
+-			 PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC,
+-			 ~(PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC));
+-	__pci_config_acs(dev, &caps, config_acs_param, 0, 0);
++	pci_param_disable_acs_redir(dev, &caps);
++	pci_param_config_acs(dev, &caps);
  
- 		ret = pci_dev_str_match(dev, p, &p);
- 		if (ret < 0) {
--			pr_warn_once("PCI: Can't parse ACS command line parameter\n");
- 			break;
- 		} else if (ret == 1) {
- 			/* Found a match */
- 			break;
- 		}
--
--		if (*p != ';' && *p != ',') {
--			/* End of param or invalid format */
--			break;
--		}
--		p++;
- 	}
- 
- 	if (ret != 1)
-@@ -6387,16 +6397,8 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 			align = 1ULL << align_order;
- 			break;
- 		} else if (ret < 0) {
--			pr_err("PCI: Can't parse resource_alignment parameter: %s\n",
--			       p);
- 			break;
- 		}
--
--		if (*p != ';' && *p != ',') {
--			/* End of param or invalid format */
--			break;
--		}
--		p++;
- 	}
- out:
- 	spin_unlock(&resource_alignment_lock);
+ 	pci_write_config_word(dev, pos + PCI_ACS_CTRL, caps.ctrl);
+ }
 -- 
 2.51.0
 
