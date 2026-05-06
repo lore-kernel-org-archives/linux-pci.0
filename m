@@ -1,101 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE0DC355F25
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:55:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1857D3090C5
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:58:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778100932; cv=none; b=Ku/6INFiiDHPfq1kGqv8lOl8tEqXNm3CcVBb+aaGIGp3P4gKdGbBEDe9qEuyQkGEZtY1rRzv3Gbb8z/a1+cpxPJxXhRlQbV5LgKqcguTX3ZCKyDdfMXLnZRQowzq/Ef9U3LmJoR4PXyTab/zJItseinfImoXmU2P7G2nShHlPqo=
+	t=1778101106; cv=none; b=AtmJjj5HqMQC+LawsjOSnBsJhTRCbDKAMeXz8Hnno0m94qpe/tiflzAKNFJxX/arFcCZVmGqYbFDpDMORbe+nt0F2C582ijKM40+PskbCroENjT+O4/BEKiBMv5V+0ieS1MPWQUPPpL3D+m8YkizjD6CATIhA5pq6gSlQx4eBoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778100932; c=relaxed/simple;
-	bh=KV9N3HMDZe9iB27wUyhT0PmERVNMt82BheECX206Rtw=;
+	s=arc-20240116; t=1778101106; c=relaxed/simple;
+	bh=ig6L4eW/nZJHHaHXCE13Nn6bPRdVuNCTrChrJNiLXlE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qCTsT6ObOmTwveIvsmQPRozFfF7i4uvyfa84l+213C8V9AGWsvdFnWjG+6fOYGSV91RH1+6jL1cHWUIR+d/hROKSPbiXqx9W8n8i0m9b4yCzdpROLQ9sRWSvE64aISNmo/sHJPhNMs4vsWK5k7TJb8xsWFufNmqyRi/ayLLg9VE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QtqiW+qn; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=rVuv875flGawgxamxtiFxurp46vGMtXsrV0zXDxQBv4FsomwBo3TIZYq+C35SKGpVm4xTgEj1jGMzITPAYf2C+XqJ4sv9OnsSHZNHBkWvQlSkCn5aT17Z921lctbGtzXQQVUQJPw9h92efPb5cz6rhwq6sv2ZGnbK+GD2iXg6Kw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PYwcVjKo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QtqiW+qn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D863C2BCB0;
-	Wed,  6 May 2026 20:55:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PYwcVjKo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C75DDC2BCB0;
+	Wed,  6 May 2026 20:58:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778100931;
-	bh=KV9N3HMDZe9iB27wUyhT0PmERVNMt82BheECX206Rtw=;
+	s=k20201202; t=1778101105;
+	bh=ig6L4eW/nZJHHaHXCE13Nn6bPRdVuNCTrChrJNiLXlE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=QtqiW+qnjUj5oPju5CY995h7NMWt3o3ADE6PM8/TKMfTBel/tm17jsyVQQ1hxsEWa
-	 dHhLnA0DUWwo/24QD8T/fJr47o8KEYACiZltGFaNfskmJFggTU+swaTTXSkgtdS9lV
-	 7JB+7aBNGM4bRS2wzu9ZclsaBUXiP0v2QQxVw131l+uWnjyswLj2LNSMP3IjYv/kqT
-	 uOKsbdT7A8Y5NViBekiWn0EjmjEAyCyEkzPJ80ddawFlG8p8glX30QxQRmeiZmAgV+
-	 s9l63VkDEc3IqoYIc/kwp64T5fGXrZF/rPZWmsH1LtvgoycB9XtQugtT6+nRBNPXYv
-	 sXP3X9FLSkzTQ==
+	b=PYwcVjKoShgEksb1rhkrhRPO1MVAqBjQmnUg5NYSVtxCrvtFW7bW2vGUzIk9gfmW2
+	 7HZtnvL2dTKzisORebrEefVVvZAFCa6HyXZothZPtQX7Hu94dWB1LtbneWABlgkccv
+	 JZFp0DLJLXJcjjubTLRJXAvoNkNkC/R66HJPyaTVwVqiI43iJk50pWE0DShXQ1D8cS
+	 JsCEkhXnOipO5/H9QI2i2QFKL6pGkz7Kc20WkEfAis6es7Js2KjrtgNpdn8ugl0+aG
+	 VXK0CW8rCqI9JLTAdWjBz/sGeW+kbLuVLWseyfQ3FauUYsfVg6upWHuaCNQbMRw6+P
+	 cTjgj8UtkP6kQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 5/9] PCI: tegra: Explicitly specify PMC instance to use
+Subject: Re: [PATCH] PCI: pciehp: Disable link and turn off slot power while
+ removing
 Reply-To: sashiko@lists.linux.dev
-To: "Thierry Reding" <thierry.reding@kernel.org>
+To: "Mario Limonciello" <mario.limonciello@amd.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260506-pmc-v1-5-a6de5da7216b@nvidia.com>
-References: <20260506-pmc-v1-5-a6de5da7216b@nvidia.com>
+In-Reply-To: <20260506164353.1278571-1-mario.limonciello@amd.com>
+References: <20260506164353.1278571-1-mario.limonciello@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 06 May 2026 20:55:30 +0000
-Message-Id: <20260506205531.7D863C2BCB0@smtp.kernel.org>
+Date: Wed, 06 May 2026 20:58:25 +0000
+Message-Id: <20260506205825.C75DDC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Unassigned error code in tegra_pcie_get_resources() when devm_tegr=
-a_pmc_get() fails causes a kernel panic.
+- [Critical] Unconditional slot power-off in `pciehp_release_ctrl()` abrupt=
+ly cuts power to active devices, causing kernel crashes.
+- [Low] Dead code in `pciehp_power_off_slot()` due to `pciehp_link_disable(=
+)` always returning 0.
 --
 
-commit 03b6ac6d72e8b9fdb4c4e55b15fd0c26dfc93236
-Author: Thierry Reding <treding@nvidia.com>
+commit 5574c68659aab56ef2cf2ec6acc4c999a6afa1fc
+Author: Mario Limonciello (AMD) <superm1@kernel.org>
 
-PCI: tegra: Explicitly specify PMC instance to use
+PCI: pciehp: Disable link and turn off slot power while removing
 
-Currently the kernel relies on a global variable to reference the PMC
-context. This commit updates the driver to use an explicit lookup for
-the PMC and passes that to the public PMC APIs.
+This commit adds code to pciehp_power_off_slot() to disable the link
+before turning off slot power. It also introduces a cleanup sequence
+in pciehp_release_ctrl() to disable the link and turn off slot power
+during driver removal.
 
-> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/=
-pci-tegra.c
-> index 512309763d1fb..2c6c521e69017 100644
-> --- a/drivers/pci/controller/pci-tegra.c
-> +++ b/drivers/pci/controller/pci-tegra.c
-
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pcieh=
+p_hpc.c
+> index 4c62140a3cb44..6705dcaf1ad0c 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
 [ ... ]
-
-> @@ -1432,6 +1436,12 @@ static int tegra_pcie_get_resources(struct tegra_p=
-cie *pcie)
->  		return err;
->  	}
+> @@ -558,6 +563,12 @@ int pciehp_power_on_slot(struct controller *ctrl)
 > =20
-> +	pcie->pmc =3D devm_tegra_pmc_get(dev);
-> +	if (IS_ERR(pcie->pmc)) {
-> +		dev_err_probe(dev, PTR_ERR(pcie->pmc), "failed to get PMC\n");
-> +		return err;
-
-Does this code accidentally return success when devm_tegra_pmc_get() fails?
-
-If devm_tegra_pmc_get() returns an error pointer, the error path is taken,
-but err is not updated. Looking earlier in tegra_pcie_get_resources(), err
-is 0 from the successful call to tegra_pcie_resets_get().
-
-If the function returns 0, probe will continue with an error pointer
-stored in pcie->pmc.
-
-Later, when tegra_pcie_power_on() calls tegra_pmc_powergate_power_off(),
-will it dereference this error pointer and cause a kernel panic?
-
-Should this return the result of dev_err_probe() instead?
-
-> +	}
+>  void pciehp_power_off_slot(struct controller *ctrl)
+>  {
+> +	int retval;
 > +
->  	if (soc->program_uphy) {
->  		err =3D tegra_pcie_phys_get(pcie);
->  		if (err < 0) {
+> +	retval =3D pciehp_link_disable(ctrl);
+> +	if (retval)
+> +		ctrl_err(ctrl, "%s: Can not disable the link!\n", __func__);
+
+Since pciehp_link_disable() calls __pciehp_link_set() which unconditionally
+returns 0, will this error path ever be executed?
+
+> +
+>  	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
+>  	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>  		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+[ ... ]
+> @@ -1096,6 +1107,8 @@ struct controller *pcie_init(struct pcie_device *de=
+v)
+>  void pciehp_release_ctrl(struct controller *ctrl)
+>  {
+>  	cancel_delayed_work_sync(&ctrl->button_work);
+> +	if (POWER_CTRL(ctrl))
+> +		pciehp_power_off_slot(ctrl);
+>  	kfree(ctrl);
+>  }
+
+If the pciehp driver is unbound manually or encounters an error during
+probe, could this unconditionally cut power to active devices?
+
+Since pciehp is a port service, unbinding it removes hotplug monitoring
+but does not detach the active child PCIe devices (such as NVMe drives)
+from the PCI core.
+
+If pciehp_release_ctrl() is called while child drivers are still bound and
+running, does this lead to unexpected link down events and unsupported
+requests?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506-pmc-v1-0-a=
-6de5da7216b@nvidia.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506164353.1278=
+571-1-mario.limonciello@amd.com?part=3D1
