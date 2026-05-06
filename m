@@ -1,275 +1,140 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5F84BC015;
-	Wed,  6 May 2026 17:43:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC75848167A;
+	Wed,  6 May 2026 17:48:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778089391; cv=none; b=dxoTyFhoypvQ2ToIodD8XHdIHAgKg3VODVJpeBSpAAzd9gUiz7Bho0ytV4YTUZlBOw5of8Zwr7uiNgrLILiFpxYs/G9OfCzNX6NbF+spb4WmSU+Uy/9TK9+tHC/xR+bFE99vOkzBbUSVwTZU8hacRoBqZI/vLqhj3dkdq2PTgrA=
+	t=1778089726; cv=none; b=ucY22/fzgGM8ez1fbFr0blysdAuAGiuP2b1VRzlVHKnb05+TpVPlifi2hpsxRTMh6gnBEKYvXJmEHOinqv1QOUYjlvUsizjH9jvx5BcOMGvZuglX6RQTJR3WWydoEE0Yjk6V1WeeJrGmcJR1mqDfhmTZ6o/PVJZVzfjZG8S0gig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778089391; c=relaxed/simple;
-	bh=uCR3RwTsnrVAjQfKOQZVMImunep76UHiZRuWEpNrqgU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oC8TPhQElqxkPb0RgZQiV7yXHmLInL6BNtBPtCfT1TfnlcsP7nhL6bkrFYNywVooRElLW0VwxaVv+gwW5TaXjHeQgGoOFSRAX7BcT0yCMdFng6vvJv4CZIWL1QBTZQSzftMsuIuQH5xywJ20T7guYl0Ca+y7wCKbnuihTiSb/u0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fg54+LwJ; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1778089726; c=relaxed/simple;
+	bh=cfE/nyxXJocKO1O7pZ91ACi5Q1vHGPeBdIDXW/fileA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=nmEjRO36BAf68P8oktBHe86O6HcwAZLVKss9i9D3ivX+SgbRkupEuGBdRk2VW+mWNl7rDgonMlLmpWEFjsVuiMR9kT/vkheIS7RidDAkV8H7JLq5J3Sf4iRombn7qeHm1fH3w1c+NQNSWK90gox3/Qbow7zLxWXP4tt+BObBEmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L5WmSJSg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fg54+LwJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778089388; x=1809625388;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=uCR3RwTsnrVAjQfKOQZVMImunep76UHiZRuWEpNrqgU=;
-  b=fg54+LwJYoJSzTpXILleAHeHLJ6Sw4rDnqeQiMMyfoxzL68an/PKqirb
-   L9c98Vm9fnc+BwK1IqhtGiZxPKoiLpYNe8Xs86MyMP3ZurmY5vBfrfnGo
-   yrqS39osAglPS/9bZ+5oGm/COOaGhwMcrNaFZovXchguF/74W3ckXSCC0
-   RnN+cGQyarDAuvMJt1u89aV05VOeMWTEgqtVFcW3jM/gDEiLLo1AJT4+v
-   5k5TmxtT2j2jhn2l9q+qWv48/hlHOV4IW2AxKxC4vJNqq62wO77NnLK5f
-   5Ob7uvf0KcqLSLvJqPtnxDIkgYZ2/+C4RGDfJOlBjTXYFxlp1aMlnT/hy
-   w==;
-X-CSE-ConnectionGUID: l+iDbfaJQMaLsTmzB283YQ==
-X-CSE-MsgGUID: MU5BCrykQamuFHD/t/Rcdg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11778"; a="82651143"
-X-IronPort-AV: E=Sophos;i="6.23,219,1770624000"; 
-   d="scan'208";a="82651143"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2026 10:43:06 -0700
-X-CSE-ConnectionGUID: KxTuzebqSxWpSISwf2JJjg==
-X-CSE-MsgGUID: pUXqmJxZQvK+0lilyXfjQQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,219,1770624000"; 
-   d="scan'208";a="233556555"
-Received: from cmdeoliv-mobl4.amr.corp.intel.com (HELO [10.125.110.169]) ([10.125.110.169])
-  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2026 10:43:03 -0700
-Message-ID: <0cda6505-a217-4c75-b3cb-51a8c396793c@intel.com>
-Date: Wed, 6 May 2026 10:43:02 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L5WmSJSg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D173C2BCB0;
+	Wed,  6 May 2026 17:48:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778089725;
+	bh=cfE/nyxXJocKO1O7pZ91ACi5Q1vHGPeBdIDXW/fileA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=L5WmSJSgBp9CROV2OHCeUtlcnNEjgXbMK0hfQbxPLkKUINNC/rzw1xlJ1PO0ffzNW
+	 e7Ge5gg6idpYzv2yCbE5KUtKsQqVyVLhMSEh6swycc/WtPoVTE8o4rKaBhShVuNW/t
+	 97ivXP9yFXg7Z0dFnETVEEcnI7RsRCMNxJWfiU0p43hBnNUJGLBB6uOUJNEY5M844O
+	 Qq14sClcFECoNJq0ev5P3miyBRH7rNgnuJZ9tgmUvWQh3aqHEAgfo0w62bxBlA5uge
+	 Y/O1SIz0K8x6pDbegDm2H+X0iTQKOC2ewr7TH1zljvhgjB0pFIPyjl213/Wv0bj/Vn
+	 DJQ4mmcoNDmxQ==
+Date: Wed, 6 May 2026 12:48:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Lindholm <linmag7@gmail.com>,
+	Matt Turner <mattst88@gmail.com>,
+	Richard Henderson <richard.henderson@linaro.org>,
+	Christophe Leroy <chleroy@kernel.org>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Dexuan Cui <decui@microsoft.com>,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Lukas Wunner <lukas@wunner.de>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Saurabh Singh Sengar <ssengar@microsoft.com>,
+	Shuan He <heshuan@bytedance.com>,
+	Srivatsa Bhat <srivatsabhat@microsoft.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-alpha@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v6 24/24] PCI/sysfs: Limit BAR resize attribute scope to
+ platforms with PCI mmap
+Message-ID: <20260506174844.GA792825@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v17 09/11] cxl: Update Endpoint AER uncorrectable handler
-To: Terry Bowman <terry.bowman@amd.com>, dave@stgolabs.net, jic23@kernel.org,
- alison.schofield@intel.com, djbw@kernel.org, bhelgaas@google.com,
- shiju.jose@huawei.com, ming.li@zohomail.com,
- Smita.KoralahalliChannabasappa@amd.com, rrichter@amd.com,
- dan.carpenter@linaro.org, PradeepVineshReddy.Kodamati@amd.com,
- lukas@wunner.de, Benjamin.Cheatham@amd.com,
- sathyanarayanan.kuppuswamy@linux.intel.com, vishal.l.verma@intel.com,
- alucerop@amd.com, ira.weiny@intel.com, corbet@lwn.net, rafael@kernel.org,
- xueshuai@linux.alibaba.com, linux-cxl@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org
-References: <20260505173029.2718246-1-terry.bowman@amd.com>
- <20260505173029.2718246-10-terry.bowman@amd.com>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260505173029.2718246-10-terry.bowman@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260505231945.GB1410272@rocinante>
 
+On Wed, May 06, 2026 at 08:42:00AM +0900, Krzysztof Wilczyński wrote:
+> > > > The only platform without these aforementioned defines is Alpha, which is
+> > > > conventional PCI only and cannot have ReBAR.  So this guard removes dead
+> > > > sysfs code on platforms where it can never be executed.
+> > > 
+> > > Having a closer look:
+> > > 
+> > >   resource_resize_attr_is_visible()
+> > >     pci_rebar_get_current_size()      <- returns -ENOTSUPP, so is_visible callback returns 0
+> > >       pci_rebar_find_pos()
+> > >         pos = pdev->rebar_cap         <- set to 0 on a conventional PCI
+> > >         if (!pos)
+> > >           return -ENOTSUPP            <- no ReBAR support
+> > > 
+> > > The pdev->rebar_cap is set during PCI enumeration:
+> > > 
+> > >   pci_init_capabilities()
+> > >     pci_rebar_init()
+> > >       pdev->rebar_cap = pci_find_ext_capability()
+> > >         pci_find_next_ext_capability()
+> > >           if (dev->cfg_size <= PCI_CFG_SPACE_SIZE)
+> > >             return 0;                 <- dev->cfg_size set to 256 here for conventional PCI
+> > > 
+> > > The PCI_CFG_SPACE_SIZE is 256 here.
+> > > 
+> > > When the platform has support for PCI Express, the dev->cfg_size is then
+> > > set to 4096.  On an architecture that supports conventional PCI only (such
+> > > as Alpha), the pdev->rebar_cap will be set to 0, the is_visible callback
+> > > will then return 0, and the resize sysfs attribute is never created, as
+> > > such, the __resource_resize_store() callback will never be executed.
+> > > 
+> > > To make the connetion here to the #ifdef guards:
+> > > 
+> > > For the pci_rebar_get_current_size() to return >= 0, the device needs
+> > > PCI Express and extended configuration space support.  As of today,
+> > > every architecture with PCI Express support defines HAVE_PCI_MMAP or
+> > > ARCH_GENERIC_PCI_MMAP_RESOURCE.
+> > > 
+> > > I hope the reasoning here works.
+> > 
+> > We're talking about this #ifdef:
+> > 
+> >   +#if defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
+> >    static ssize_t __resource_resize_show(struct device *dev, int n, char *buf)
+> >    ...
+> >   +#endif
+> > 
+> > I follow the reasoning now but by next week I won't, so I think it
+> > requires too much background knowledge.  Future changes involving
+> > HAVE_PCI_MMAP or ARCH_GENERIC_PCI_MMAP_RESOURCE could easily break
+> > this.
+> > 
+> > IIUC it's basically doing what "#ifdef CONFIG_PCI_REBAR" or even
+> > "#ifdef CONFIG_PCI_EXPRESS" would do, if we had such a thing.
+> 
+> We don't sadly have such guards at the moment, so using the guards like
+> HAVE_PCI_MMAP or ARCH_GENERIC_PCI_MMAP_RESOURCE would be the next best
+> thing.  We already rely on these throughout the pci-sysfs.c already, and
+> will also rely on either for the static sysfs attributes, so if there was
+> some issues with either of these, if these "broke" somehow, then we would
+> have other more severe problems.  Note, that architectures rely on these
+> macros to let us know about what "feature" is expected to be enabled, so to
+> speak, so I would imagine nobody would break this accidentally (famous last
+> words) and perhaps with extreme caution would do it on purpose.
+>
+> > How terrible would it be if we just accepted this dead code on Alpha?
+> 
+> I would prefer not to build any dead code anywhere if it can be helped,
+> especially with as little as two lines of code added.  Plus, most of the
+> code setting up resources that are not specific to Alpha, would have been
+> disabled using exactly the same guard as the one proposed to be added
+> here, not like this sets any precedent or adds something new.
 
-
-On 5/5/26 10:30 AM, Terry Bowman wrote:
-> The CXL cxl_core driver now implements protocol RAS support. PCI
-> uncorrectable (UCE) protocol errors, however, continue to be reported via
-> the AER capability and must still be handled by a PCI error recovery callback.
-> UCE handling is required to provide direction for recovery.
-> 
-> Replace the existing cxl_error_detected() callback in cxl/pci.c with a new
-> cxl_pci_error_detected() implementation that handles uncorrectable AER PCI
-> protocol errors.
-> 
-> The handler decides solely based on the pci_channel_state_t parameter and
-> does not access PCIe AER capability registers from .error_detected, matching
-> the pattern used by other drivers including the NVMe and ixgbe drivers.
-> CXL.cachemem-corrupting protocol errors are routed separately through the
-> AER-CXL kfifo to cxl_handle_proto_error(), so cxl_pci does not need to
-> second-guess the AER core's classification.
-> 
-> claude-opus-4.7 was used for research on PCI error state transitions and
-> requirements.
-> 
-> Assisted-by: Claude:claude-opus-4.7
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-> 
-> ---
-> 
-> Changes in v16->v17:
-> - Rename pci_error_handlers struct instance to cxl_pci_error_handlers to
->   avoid shadowing the struct type tag.
-> - Restore scoped_guard(device) and dev->driver check around AER read.
-> - NULL-check find_cxl_port_by_dev() before deref of port->uport_dev.
-> - Updated commit message. (Terry)
-> - Add scope cleanup for port variable in cxl_pci_error_detected() (Terry)
-> - Drop cxl_uncor_aer_present(), rely on AER state
-> 
-> Changes in v15->v16:
-> - Update commit message (DaveJ)
-> - s/cxl_handle_aer()/cxl_uncor_aer_present()/g (Jonathan)
-> - cxl_uncor_aer_present(): Leave original result calculation based on
->   if a UCE is present and the provided state (Terry)
-> - Add call to pci_print_aer(). AER fails to log because is upstream
->   link (Terry)
-> 
-> Changes in v14->v15:
-> - Update commit message and title. Added Bjorn's ack.
-> - Move CE and UCE handling logic here
-> 
-> Changes in v13->v14:
-> - Add Dave Jiang's review-by
-> - Update commit message & headline (Bjorn)
-> - Refactor cxl_port_error_detected()/cxl_port_cor_error_detected() to
->   one line (Jonathan)
-> - Remove cxl_walk_port() (Dan)
-> - Remove cxl_pci_drv_bound(). Check for 'is_cxl' parent port is
->   sufficient (Dan)
-> - Remove device_lock_if()
-> - Combined CE and UCE here (Terry)
-> 
-> Changes in v12->v13:
-> - Move get_pci_cxl_host_dev() and cxl_handle_proto_error() to Dequeue
->   patch (Terry)
-> - Remove EP case in cxl_get_ras_base(), not used. (Terry)
-> - Remove check for dport->dport_dev (Dave)
-> - Remove whitespace (Terry)
-> 
-> Changes in v11->v12:
-> - Add call to cxl_pci_drv_bound() in cxl_handle_proto_error() and
->   pci_to_cxl_dev()
-> - Change cxl_error_detected() -> cxl_cor_error_detected()
-> - Remove NULL variable assignments
-> - Replace bus_find_device() with find_cxl_port_by_uport() for upstream
->   port searches.
-> 
-> Changes in v10->v11:
-> - None
-> ---
->  drivers/cxl/core/ras.c | 43 ++++++++++++++++--------------------------
->  drivers/cxl/cxlpci.h   |  8 ++++----
->  drivers/cxl/pci.c      |  6 +++---
->  3 files changed, 23 insertions(+), 34 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/ras.c b/drivers/cxl/core/ras.c
-> index 5cc4087c2807..a98ce0f412ad 100644
-> --- a/drivers/cxl/core/ras.c
-> +++ b/drivers/cxl/core/ras.c
-> @@ -253,38 +253,27 @@ bool cxl_handle_ras(struct device *dev, u64 serial, void __iomem *ras_base)
->  	return true;
->  }
->  
-> -pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
-> -				    pci_channel_state_t state)
-> +pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
-> +					pci_channel_state_t state)
->  {
-> -	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
-> -	struct cxl_memdev *cxlmd = cxlds->cxlmd;
-> -	struct device *dev = &cxlmd->dev;
-> -	bool ue;
-> +	struct cxl_dport *dport;
-> +	struct cxl_port *port __free(put_cxl_port) =
-> +		find_cxl_port_by_dev(&pdev->dev, &dport);
-
-Move this to right before 'port' is being checked. It's ok to do inline var declaration with __free().
-
-DJ
-
-> +	struct cxl_memdev *cxlmd;
-> +	struct device *dev;
->  
-> -	scoped_guard(device, dev) {
-> -		if (!dev->driver) {
-> -			dev_warn(&pdev->dev,
-> -				 "%s: memdev disabled, abort error handling\n",
-> -				 dev_name(dev));
-> -			return PCI_ERS_RESULT_DISCONNECT;
-> -		}
-> +	if (!port)
-> +		return PCI_ERS_RESULT_DISCONNECT;
->  
-> -		/*
-> -		 * A frozen channel indicates an impending reset which is fatal to
-> -		 * CXL.mem operation, and will likely crash the system. On the off
-> -		 * chance the situation is recoverable dump the status of the RAS
-> -		 * capability registers and bounce the active state of the memdev.
-> -		 */
-> -		ue = cxl_handle_ras(&cxlds->cxlmd->dev, pci_get_dsn(pdev),
-> -				    cxlmd->endpoint->regs.ras);
-> -	}
-> +	cxlmd = to_cxl_memdev(port->uport_dev);
-> +	dev = &cxlmd->dev;
->  
->  	switch (state) {
->  	case pci_channel_io_normal:
-> -		if (ue) {
-> -			device_release_driver(dev);
-> -			return PCI_ERS_RESULT_NEED_RESET;
-> -		}
-> +		/*
-> +		 * Non-fatal CXL protocol errors are handled asynchronously
-> +		 * by the AER-CXL kfifo worker (cxl_proto_err_work_fn).
-> +		 */
->  		return PCI_ERS_RESULT_CAN_RECOVER;
->  	case pci_channel_io_frozen:
->  		dev_warn(&pdev->dev,
-> @@ -299,7 +288,7 @@ pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
->  	}
->  	return PCI_ERS_RESULT_NEED_RESET;
->  }
-> -EXPORT_SYMBOL_NS_GPL(cxl_error_detected, "CXL");
-> +EXPORT_SYMBOL_NS_GPL(cxl_pci_error_detected, "CXL");
->  
->  static void cxl_handle_proto_error(struct pci_dev *pdev, struct cxl_port *port,
->  				   struct cxl_dport *dport, int severity)
-> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-> index 06c46adcf0f6..8aeb80a4e573 100644
-> --- a/drivers/cxl/cxlpci.h
-> +++ b/drivers/cxl/cxlpci.h
-> @@ -89,13 +89,13 @@ struct cxl_dev_state;
->  void read_cdat_data(struct cxl_port *port);
->  
->  #ifdef CONFIG_CXL_RAS
-> -pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
-> -				    pci_channel_state_t state);
-> +pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
-> +					pci_channel_state_t state);
->  void devm_cxl_dport_rch_ras_setup(struct cxl_dport *dport);
->  void devm_cxl_port_ras_setup(struct cxl_port *port);
->  #else
-> -static inline pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
-> -						  pci_channel_state_t state)
-> +static inline pci_ers_result_t cxl_pci_error_detected(struct pci_dev *pdev,
-> +						      pci_channel_state_t state)
->  {
->  	return PCI_ERS_RESULT_NONE;
->  }
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index 5eb64ced0de5..6459f94f8fa8 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -1000,8 +1000,8 @@ static void cxl_reset_done(struct pci_dev *pdev)
->  	}
->  }
->  
-> -static const struct pci_error_handlers cxl_error_handlers = {
-> -	.error_detected	= cxl_error_detected,
-> +static const struct pci_error_handlers cxl_pci_error_handlers = {
-> +	.error_detected	= cxl_pci_error_detected,
->  	.slot_reset	= cxl_slot_reset,
->  	.resume		= cxl_error_resume,
->  	.reset_done	= cxl_reset_done,
-> @@ -1011,7 +1011,7 @@ static struct pci_driver cxl_pci_driver = {
->  	.name			= KBUILD_MODNAME,
->  	.id_table		= cxl_mem_pci_tbl,
->  	.probe			= cxl_pci_probe,
-> -	.err_handler		= &cxl_error_handlers,
-> +	.err_handler		= &cxl_pci_error_handlers,
->  	.dev_groups		= cxl_rcd_groups,
->  	.driver	= {
->  		.probe_type	= PROBE_PREFER_ASYNCHRONOUS,
-
+OK, let's leave it as-is.  It's confusing to read, but no more so than
+other existing uses.
