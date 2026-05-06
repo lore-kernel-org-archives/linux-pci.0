@@ -1,220 +1,82 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 866313F0ABD
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 16:05:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15C4466B65;
+	Wed,  6 May 2026 16:06:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778083510; cv=none; b=Typs+0YiBe1GN4+YcX+X3ZhyB+AsVN0hmi4qFZPv9hPYCo5TUc5qowL/TWhoY2IJuPy3fi4ObIkEwXmqkHi7ZGj+G80t4dRqZYa6yQyRs9tuwQ1eBDVproNC9qSMXO5u4Ew+7f9M4hxtoqNUTr3k+0F4t3pyL9TA2V+ib6R5FKE=
+	t=1778083590; cv=none; b=RTtTMvq03H/rq8iFc27sxkgiSrOkHN/6Nse/XjuTdopKFG/YoRxhfHfi9CnYz0mmeSQhauYNrcWnkZVBa3U/Ol4g2LYPHqrVhwWj79SuL4qSaRG+3XLgFhfSL5h0W9wYWb7eQG+q6Xrz7iduBk2AzAn7dno6RXhrnKcjnuc7/Gg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778083510; c=relaxed/simple;
-	bh=rgc3XOQMiHQSX20xpG1Si95emz7PnA0bN/4ujqjL64o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=exA3ncyVO1whZ4urq9pAmj10JkChCoWcbx35HnsPbAqN3TIOMpdFpSDDVOTIJwkWl6//91ELJRaqBOXALooZrfU2Fj6ye08d4zcOhSBN27lbTfxCJVgdy8VsUfEpsrVxVaBBQwqXQl0XYWn5fvigPkMDieKR5bDJVdubU8iVQL0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gajjvdQY; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778083590; c=relaxed/simple;
+	bh=dw1RBaTtWl+xJ4dT/a4uc4TtjIaLLW1DXmDYHjx9dVA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YwMdWZ5nLfizrXLIYTf7Sc5KogqfCxiKn9F36fVUgTZIiPI1BenanGFReAjrH6dRRM8jBvKq0JpaYOkZFjJ41P7zITE88oD/YGLGcYe8iRbQFi3Zlq6L0h4R0iZKP3sFjMeMZ9a/iW9qgwtEO+uhr4SYxTSLpOkpeFZSPUvM2Uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y9qQFqc3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gajjvdQY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=fpScM8E7CGXREuKUv5rM5m2pbPCI7g1/h6kIJ58kn98=;
-	b=gajjvdQYWLFGijeLHAjeubH7vUBP2NYe0cObDhWiGHdsLkyHV02n+hzvRd42lO
-	Ei/oryYean/erjXc+39nlqyaOhUv7WxhPGmQK8JH3JceGgOJVVRBAb8JpPLJ25oc
-	EPQZycaw5R7OxpzP4x9Z3NE/7KQSlo62Zs/Ax2zz6antc=
-Received: from [IPV6:240e:b8f:927e:5900:dbee:26f0:1b68:48a4] (unknown [])
-	by gzsmtp1 (Coremail) with SMTP id PCgvCgDX2Z2SZvtpEP+LCg--.10169S2;
-	Thu, 07 May 2026 00:04:34 +0800 (CST)
-Message-ID: <505b1138-b4a7-4519-b6e5-5da6e06d615d@163.com>
-Date: Thu, 7 May 2026 00:04:34 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y9qQFqc3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48F16C2BCB0;
+	Wed,  6 May 2026 16:06:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778083589;
+	bh=dw1RBaTtWl+xJ4dT/a4uc4TtjIaLLW1DXmDYHjx9dVA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Y9qQFqc3y1BQi8VHDtLk6wwOnx85IW/MOetmM11iTWA3d+9OF3Wk8WMkpTxup2iCB
+	 O5eBwYeGIRxGXfztja9lU64J/HM2tHEgrfqPJ0JWPDbC1X5evOpA8xwGUaBKRiWVjL
+	 u13izj1CULgBvNkKFozW+jQgnUoywGhahbcrM77mWL5a8JrkVv94kGe52Wx0PO2X5n
+	 OPCl3VrEqgP9nTN2ZTdZPNU13QQ5F2KznHg89OXMJ67ny/g3/GmZmY6FR2oKZFiVBn
+	 fe5838AVU701hj9+NGP0oTV0TS1Ub83wAIwctrFTsb4Bwb+hWPX4MK6U9CRd4FhPx4
+	 25hCMk1jxgdzg==
+Date: Wed, 6 May 2026 21:36:22 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	hans.zhang@cixtech.com, robh@kernel.org, mpillai@cadence.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] PCI: cadence: Add debugfs property to provide
+ LTSSM status of the PCIe link
+Message-ID: <twryupjevgplfyfcjip323jcy2gjdnbigvvdpytcodisq76lfs@p7fvtw2ev6lr>
+References: <20260406103237.1203127-1-18255117159@163.com>
+ <20260406103237.1203127-3-18255117159@163.com>
+ <7g32xmc5juraumjexmjmptrwvpsbni43csjw727zzkdetforzs@y5xumpko2lf2>
+ <3fd86269-e25e-4bd7-9b2d-6b8afb514be4@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: cadence: Use cdns_pcie_find_capability() to get PCIe
- Cap offset in host driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: sashiko@lists.linux.dev, linux-pci@vger.kernel.org
-References: <20260505212306.GA744158@bhelgaas>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260505212306.GA744158@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PCgvCgDX2Z2SZvtpEP+LCg--.10169S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxKFyUtr15GFWUJF13Cr45ZFb_yoWxJFW8pF
-	Z8GF4Syr4kJr42vr4vv3Z8ZF13tF9xAa47tan5K343ZryjkFyUKFy2kF15GF13Grs7AF17
-	X3yDta93urn0yFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR2iigUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xIXumn7ZpLF4QAA3W
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3fd86269-e25e-4bd7-9b2d-6b8afb514be4@163.com>
 
+On Wed, May 06, 2026 at 11:52:06PM +0800, Hans Zhang wrote:
 
+[...]
 
-On 5/6/26 05:23, Bjorn Helgaas wrote:
-> On Mon, May 04, 2026 at 04:22:26PM +0800, Hans Zhang wrote:
->> On 5/4/26 00:52, sashiko-bot@kernel.org wrote:
->>> Thank you for your contribution! Sashiko AI review found 1
->>> potential issue(s) to consider:
->>>
->>> - [Critical] cdns_pcie_find_capability() searches the wrong
->>> register space in Host mode and its return value is not validated,
->>> leading to Root Port configuration space corruption.
->>> --
->>>
->>> commit 09b3c64b8f5892eb365acd13030a8067652a15e8
->>> Author: Hans Zhang <18255117159@163.com>
->>>
->>> PCI: cadence: Use cdns_pcie_find_capability() to get PCIe Cap offset in host driver
->>>
->>> This commit replaces the hardcoded CDNS_PCIE_RP_CAP_OFFSET with a dynamic
->>> lookup using cdns_pcie_find_capability() in Cadence PCIe host-related
->>> functions. The goal is to ensure correct operation across various SoC designs
->>> where the capability might not reside at offset 0xC0.
->>>
->>>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>> index 2b0211870f02..5013d3fe23b5 100644
->>>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>> @@ -26,14 +26,14 @@ EXPORT_SYMBOL_GPL(bar_max_size);
->>>>    int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
->>>>    {
->>>> -	u32 pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
->>>>    	unsigned long end_jiffies;
->>>>    	u16 lnk_stat;
->>>> +	u8 cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
->>>
->>> Does this capability search scan the correct register space when
->>> operating in host mode?
->>>
->>> Looking at the helper function, it uses cdns_pcie_read_cfg() which
->>> reads directly from the base address without the Root Port offset:
->>>
->>> drivers/pci/controller/cadence/pcie-cadence.c:cdns_pcie_find_capability() {
->>>       return PCI_FIND_NEXT_CAP(cdns_pcie_read_cfg, PCI_CAPABILITY_LIST,
->>>                                cap, NULL, pcie);
->>> }
->>>
->>> However, the Root Port configuration registers are physically
->>> located at pcie->reg_base + CDNS_PCIE_RP_BASE. Could this cause
->>> the search to scan the Local Management register space instead,
->>> failing to find PCI_CAP_ID_EXP and returning 0?
->>
->> I don't think we need to worry about this issue.
->>
->> As per PCIe r7.0, sec 7.5.1.1.11, Since all PCI Express Functions
->> are required to implement the PCI Express Capability structure,
->> which must be included somewhere in this linked list;
->>
->> So, it won't return 0 here.
+> > > +static int ltssm_status_open(struct inode *inode, struct file *file)
+> > > +{
+> > > +	return single_open(file, ltssm_status_show, inode->i_private);
+> > > +}
+> > > +
+> > > +static const struct file_operations cdns_pcie_ltssm_status_ops = {
+> > > +	.open = ltssm_status_open,
+> > > +	.read = seq_read,
+> > > +};
+> > 
+> > Sashiko pointed out that you could use DEFINE_SHOW_ATTRIBUTE() to simplify the
+> > code here.
 > 
-> It's true that all Root Ports must have a PCIe Capability, but
-> that's not related to this issue.
-> 
-> cdns_pcie_host_init_root_port() accesses PCI_EXP_LNKCAP at the
-> address:
-> 
->    pcie->reg_base + CDNS_PCIE_RP_BASE + CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP
-> 
-> but when we search with cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP),
-> we start reading at:
-> 
->    pcie->reg_base + PCI_CAPABILITY_LIST
-> 
-> It should be starting at:
-> 
->    pcie->reg_base + CDNS_PCIE_RP_BASE + PCI_CAPABILITY_LIST
-> 
-> Previously, cdns_pcie_find_capability() and
-> cdns_pcie_find_ext_capability() were only used for endpoints, and I
-> assume they work fine there.  There is pcie->is_rc, so there should be
-> a way to make this work for both endpoints and Root Ports.
+> I haven't received any notification from Sashiko. Next time, I'll go
+> directly to the website to check the relevant information. It seems that
+> Sashiko only sent out an email recently; I didn't receive any emails from
+> her before.
 > 
 
-Hi Bjorn,
+Yes, that's the recent behavior. Thanks to kwilczynski ;) You should get
+notification for next iteration.
 
-The reason for using the "is_rc" tag is that for Cadence IP, it is not 
-only applicable to the RC or EP mode, but also there are significant 
-differences between the LGA and HPA generations of IP. Including 
-register offset values, definitions, etc., it fails to achieve good 
-compatibility. It is not like Synopsys IP, where compatibility has been 
-handled very well. It was truly out of necessity.
+- Mani
 
-> 
-> Separate issue: I think some of the config accessors ended up being
-> sub-optimal.  They should all have the same structure, but
-> cdns_pcie_read_cfg_dword() is different from the rest, I think because
-> some devices don't support 1- and 2-byte accesses.
-
-
-Yes, it has been changed in the following submission.
-
-Commit: d9cf7154deed (PCI: cadence: Use cdns_pcie_read_sz() for byte or 
-word read access)
-
-In my submission 18ac51ae9df9 ("PCI: cadence: Implement capability 
-search using PCI core APIs"). It works very well for the Root Port. (For 
-drivers/pci/controller/cadence/pci-sky1.c, no other upstream code has 
-been implemented yet. It is functioning properly in the product.)
-
-> 
->    cdns_pcie_read_cfg_byte
->      addr = pcie->reg_base + where
->      cdns_pcie_read_sz(addr, 0x1)
->       readl(addr)
-> 
->    cdns_pcie_read_cfg_word
->      addr = pcie->reg_base + where
->      cdns_pcie_read_sz(addr, 0x2)
->       readl(addr)
-> 
->    cdns_pcie_read_cfg_dword
->      cdns_pcie_readl
->        readl(pcie->reg_base + reg)
-> 
-> I think it would be better to use "cdns_pcie_read_sz(addr, 0x4)"
-> even for cdns_pcie_read_cfg_dword().
-
-Agree. I will make some revisions. I've recently found some time to 
-conduct a CIX SOC test.
-
-> 
->>> [ ... ]
->>>
->>>> @@ -68,27 +68,26 @@ EXPORT_SYMBOL_GPL(cdns_pcie_host_wait_for_link);
->>>>    int cdns_pcie_retrain(struct cdns_pcie *pcie,
->>>>    		      cdns_pcie_linkup_func pcie_link_up)
->>>>    {
->>>> -	u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
->>>> +	u32 lnk_cap_sls;
->>>>    	u16 lnk_stat, lnk_ctl;
->>>>    	int ret = 0;
->>>> +	u8 cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
->>>>    	/*
->>>>    	 * Set retrain bit if current speed is 2.5 GB/s,
->>>>    	 * but the PCIe root port support is > 2.5 GB/s.
->>>>    	 */
->>>> -	lnk_cap_sls = cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + pcie_cap_off +
->>>> +	lnk_cap_sls = cdns_pcie_readl(pcie, (CDNS_PCIE_RP_BASE + cap +
->>>>    					     PCI_EXP_LNKCAP));
-> 
-> Could reduce the size of the diff by keeping the original
-> "pcie_cap_off" name.
-
-I would like to refer to:
-
-struct pci_dev {
-     ......
-     u8			pcie_cap;	/* PCIe capability offset */
-     ......
-};
-
-Additionally, I have already created a series of patches here locally to 
-simplify the DWC driver. This is because each Root Port driver is 
-looking at the PCI_CAP_ID_EXP offset.
-
-Best regards,
-Hans
-
+-- 
+மணிவண்ணன் சதாசிவம்
