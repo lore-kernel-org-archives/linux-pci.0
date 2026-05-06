@@ -1,107 +1,109 @@
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.207])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1BC06FBF;
-	Wed,  6 May 2026 16:45:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.144.207
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E2FD3EF0C0;
+	Wed,  6 May 2026 16:51:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778085947; cv=none; b=AT2e1paVD1Y45UPXzQsN9i51j2k4UJIPWMxx25rl7MjRQ11krswqPgQLF0vla3E3EHWHK4AUC+hFWfk0VlloJPAxe7hY5NaQbfj01LeW/wPBNqd58HRs3EfwXOdEChvkYrv1AOpFOMd/VEdUzYTdwdwwWriwMNXBNBRyvHj+NJc=
+	t=1778086291; cv=none; b=s1n0EIcY5inUncGSi335jLE6unoifhceeDuon/zzKGjl0O3kPcddEyorfS+SBD6JNsqnHMWjOjuuldBs7sg1drrdOUlKdwmnZ56c1LybW9PlaUcxHJhl7AVSG+lTsmbnm6esY6cFtpmODT/O9+u9Y8b7Mbg+F+WKn54I20cPaSo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778085947; c=relaxed/simple;
-	bh=pnx+TK8zeQAG2K101+AcDa+mZC2hhV45wFr99/sXDrw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Lei/Uj522sRWcqXTeEVxIhenCsBxV02IWeIkZ9djUHBt+nMYImsn7UjB07TqHEcPB62xWwGrDzR6rY6FB3j0Cnl3FxK1o7pZTppzCUjmZ3UdvqumAH1rgaSfd5OTqWPF1AzxEPrer72HjY8znNQ32QPkTuMfehbIBEw3O5o1xuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=ChRc2cDi; arc=none smtp.client-ip=192.19.144.207
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1778086291; c=relaxed/simple;
+	bh=2K5E0k7GqmHaKFpr4e85ybCWT1y0qN91EcgSjpPThu8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WDZUdUwOUCZKEhyepsk5ejROUbP6HsTFXCMwWsvlUBgB0kWXTqdrgBpSDmlvtAXnOAzW6Gbo8ZaNkN6EvvigFE78Tr8lE5QrCWCGW0nuXArcJggd+wFjKvQDfIKDgpibIVWqTBI+A2NEwiS1A/Kte6nGlc6NvIlyBqmPdr2/S/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g5m2Gt/O; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ChRc2cDi"
-Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 8BE97C00151E;
-	Wed,  6 May 2026 09:45:39 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 8BE97C00151E
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-	s=dkimrelay; t=1778085939;
-	bh=pnx+TK8zeQAG2K101+AcDa+mZC2hhV45wFr99/sXDrw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ChRc2cDiV37OxZ98ZHU9hmrv34VJq0ktCbzPQWXBdweKDCHe6omgWTdcEZIz297Wg
-	 JUBWpYaONW9TlQ5v479aSutfoXNunrSlKhs0BJO52uGN39YLotMbmFH34Ua0nq3re6
-	 BmGcmoL3AO5Urrcb8qgOKwFbLmLguwn60vtdG0V4=
-Received: from stbirv-lnx-1.igp.broadcom.net (stbirv-lnx-1.igp.broadcom.net [10.67.48.32])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 2D003B70;
-	Wed,  6 May 2026 09:45:39 -0700 (PDT)
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-To: linux-pci@vger.kernel.org
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
-	Dom Cobley <popcornmix@gmail.com>,
-	Phil Elwell <phil@raspberrypi.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hans Zhang <18255117159@163.com>,
-	linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
-	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2] PCI: brcmstb: Assign pcie->gen from of_pci_get_max_link_speed()
-Date: Wed,  6 May 2026 09:45:37 -0700
-Message-Id: <20260506164537.103196-1-florian.fainelli@broadcom.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <mid:20260501202438.376033-1-florian.fainelli@broadcom.com>
-References: <mid:20260501202438.376033-1-florian.fainelli@broadcom.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g5m2Gt/O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D50D0C2BCC7;
+	Wed,  6 May 2026 16:51:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778086291;
+	bh=2K5E0k7GqmHaKFpr4e85ybCWT1y0qN91EcgSjpPThu8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=g5m2Gt/OO1X9cbBX03L+ZmgwGKZk9TL/jelC96b0qzb7PDqRpz7z6PFkXJPx2RJap
+	 QDw9p/gXe8lHT43hCVkWxmWKUjpDO69eDmIhBudMKaDBoJatu+IvQyntVyAbP2sDGj
+	 6/hBYQ1TIbwEMqfVTJn+0gsoqIJnf9oFTWMF9l9VVOHVIs5uIZmI5wnZ0m1GF/klWk
+	 6gA5/KoPyzeMJ9Z9eSPK3LsVkcd/HP2y5jFaILcDI0mTd06EQaKE6bHVsDokxz+kL4
+	 UhdHRsvV5OyDOMkFOCU7PYCC4HQjCWq85lw9SQxX2hVmJI16UzZWwGqmS2LZ0LoKOP
+	 G9tKqrrD3jNBw==
+Date: Wed, 6 May 2026 22:21:20 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com, 
+	pali@kernel.org, ryder.lee@mediatek.com, jianjun.wang@mediatek.com, 
+	claudiu.beznea.uj@bp.renesas.com, mpillai@cadence.com, robh@kernel.org, s-vadapalli@ti.com, 
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-mediatek@lists.infradead.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 4/8] PCI: j721e: Set max_link_speed to enable 100 ms
+ delay after link up
+Message-ID: <5gx6bpy2i65ij44itdfhlrx3tbrbf2yybmhivryw6rmtwwocyr@ppew2wb4ft47>
+References: <20260506152346.166056-1-18255117159@163.com>
+ <20260506152346.166056-5-18255117159@163.com>
+ <rlsvpbo4gcix3mmbfsxvmfebnnn4bqm3cv34x4qkxuv3zwydnm@ehi3el63z664>
+ <53e37127-975b-42cd-a1a2-35dd3018c45c@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <53e37127-975b-42cd-a1a2-35dd3018c45c@163.com>
 
-After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
-pcie->gen stopped being assigned and as a result the established PCIe
-link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
-to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
+On Thu, May 07, 2026 at 12:11:22AM +0800, Hans Zhang wrote:
+> 
+> 
+> On 5/7/26 00:04, Manivannan Sadhasivam wrote:
+> > On Wed, May 06, 2026 at 11:23:42PM +0800, Hans Zhang wrote:
+> > > Set cdns_pcie.max_link_speed to the maximum supported link speed
+> > > (obtained from the device tree property "max-link-speed") in
+> > > j721e_pcie_set_link_speed(). This activates the post-link delay logic
+> > > added in cdns_pcie_host_start_link() when the controller supports
+> > > speeds greater than 5 GT/s.
+> > > 
+> > > As required by PCIe r6.0 sec 6.6.1, and following the same approach as
+> > > commit 80dc18a0cba8d ("PCI: dwc: Ensure that dw_pcie_wait_for_link()
+> > > waits 100 ms after link up"), this ensures a 100 ms delay after link
+> > > training completes before any Configuration Request is sent.
+> > > 
+> > > Signed-off-by: Hans Zhang <18255117159@163.com>
+> > > ---
+> > >   drivers/pci/controller/cadence/pci-j721e.c | 1 +
+> > >   1 file changed, 1 insertion(+)
+> > > 
+> > > diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+> > > index bfdfe98d5aba..ee85b8e04f5b 100644
+> > > --- a/drivers/pci/controller/cadence/pci-j721e.c
+> > > +++ b/drivers/pci/controller/cadence/pci-j721e.c
+> > > @@ -206,6 +206,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+> > >   	    (pcie_get_link_speed(link_speed) == PCI_SPEED_UNKNOWN))
+> > >   		link_speed = 2;
+> > > +	pcie->cdns_pcie.max_link_speed = link_speed;
+> > 
+> > What about other glue drivers?
+> 
+> Hi Mani,
+> 
+> pci-sky1.c:
+> There is no time to handle the corresponding DTS yet, and the attribute
+> "max-link-speed" has not been parsed either. There will be a plan for the
+> subsequent upstream.
+> 
+> pcie-sg2042.c：
+> I'm not familiar with this product.
+> 
 
-Whether the 'max-link-speed' property is not specified, or it exceeds
-Gen3, resort to the HW defaults.
+Since this helper gets called unconditionally for all glue drivers, not setting
+'max_link_speed' would cause 100ms delay for all link speeds.
 
-Link: https://github.com/raspberrypi/linux/issues/7343
-Reported-by: Dom Cobley <popcornmix@gmail.com>
-Reported-by: Phil Elwell <phil@raspberrypi.com>
-Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
-Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
-Change-Id: Ic5431469dd7a6c8b391f84f27119dad876256880
----
-Changes in v2:
+So either set 'max_link_speed' for all drivers, or call the helper directly from
+glue drivers.
 
-- utilize of_pci_get_max_link_speed() directly
-- also validate against exceeding Gen3
+- Mani
 
- drivers/pci/controller/pcie-brcmstb.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 714bcab97b60..08a0e7091ced 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -2072,8 +2072,10 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pcie->clk);
- 
- 	ret = of_pci_get_max_link_speed(np);
--	if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
-+	if (ret < 0 || ret > 3)
- 		pcie->gen = 0;
-+	else
-+		pcie->gen = ret;
- 
- 	pcie->ssc = of_property_read_bool(np, "brcm,enable-ssc");
- 
 -- 
-2.34.1
-
+மணிவண்ணன் சதாசிவம்
