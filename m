@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1637D3B3C00;
-	Wed,  6 May 2026 21:52:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7FDB3B47DF;
+	Wed,  6 May 2026 21:52:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778104336; cv=none; b=MsGspQAXR0S8BU7J2jBRbI9fpL7RFUXcBdRItJSB/Ci7ps9T9exN2HYNpEPFgWUdtJW3sXH90c6qpZ4JPn6IA1jDHE5WTHeuNdBMwJvomeC9YtgR2Xy9iWrczYNhIFM1j35XeGApVjtRPazGuPtwu7JhNP1qtdqAeSub5ae69po=
+	t=1778104342; cv=none; b=SdSKbMBrlI8raeSTQtaFGFL2MP3cePfcZ8okjI15RAlFCcy5WcnJEf+7Hs65FGot3MUe7dEHNrE33xMH/oYRGf9jQn1YQ73mA7S+Cd/FXX0vkaz/Pon+QlLuGQtYpTjYPtj789Ledw8fnZMf+lg8sYR0CPvNI3RkYDold91CqzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778104336; c=relaxed/simple;
-	bh=CJzXzWucM829+MDBDBZxsfVoUlMH9RIMYpxWLe+dI5Y=;
+	s=arc-20240116; t=1778104342; c=relaxed/simple;
+	bh=hUk/06OQ65XIhi8xFZ1jZmeWHhNf8K96MP/3Shol3Ps=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OpzoPWyhQ1f3sIOX7wbrGKsF78B6w+Bs4hBPeuGCWcPM+sUkE8lMFiUttpQFGZi7r+z48SXZHrUgYU8MLJLaKvIWF/mDyfPwB3zClaCEGam4ESuasSRbXaGKaerPECCCDgYuSoK5n9kKjMQiUkXGvw9zISkPDsx+CaHwuqnXxu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gqiWVNkr; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=VssihG86EQrnt8dmyDSnHSXclpZR7tPljMDQ80/4T2/TvRfXqAqvJCP6H1K4DdDfBKEByKW/PfROkY/B5ntGAF5EKuYr7dytO/7XUYohzRdfwVMpo1SB/OPLJIZC8xL+KFH38MEhlulwjjNrSwLjA/Efb+jxD8nkGa5B1p9ZCmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mZ9aLErk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gqiWVNkr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F378C2BCB2;
-	Wed,  6 May 2026 21:52:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mZ9aLErk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27F25C2BCB0;
+	Wed,  6 May 2026 21:52:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778104335;
-	bh=CJzXzWucM829+MDBDBZxsfVoUlMH9RIMYpxWLe+dI5Y=;
+	s=k20201202; t=1778104342;
+	bh=hUk/06OQ65XIhi8xFZ1jZmeWHhNf8K96MP/3Shol3Ps=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gqiWVNkrOAoUEQgxyKxXgOhRxSopfd85M2KuZiGUg3Q9+CBan75GNvs50HVzvOT/2
-	 QyUOlNTGtIV7uCejdqwiTzlDr8pe4WmFWjdkJdfstXxPIQCZs31DpJYiuNOCO0ZU+o
-	 D+mxt5xuFZc6VV7kzDwV7C0FPzGBoqJz/4zX91UXjgL9AinumpyM+GljwaZ1To6Acr
-	 Kg+UklkEy6NjaBYwVCYK3o+dOAIUDi1MeboX+ama+VPAzdxGvMzgl6c/IDTWGHMEtD
-	 LyCuPWtyucJb96lH/hMXT6YjMflOSTyafjXudZtyitRHVl01VLNA6139XR4sAOA+ve
-	 n/DB5C2AVPBKA==
+	b=mZ9aLErk/O67CVVusinDvzXa1zZ5Sq+jvu/KVH4Rk7wBUsOzZrUHRywvjFM77FVbC
+	 B9HnyoZUNJ6seAgoqMFl/CX3/wHHPzhML+1d21x26xlbFULJ3Y03JM3BZCDXoWCcdg
+	 m5DTmSTVAG0YPC/wy6XNBPONWu2vPkwjI8Wyt4v+Rx8vNNgqkxO8d4rD8X/ABVTYD1
+	 Gcul3KKNU84kySZx3AaquiOf/tvaOmS17Tn1gu7z4Ug3ZCPE67Nm+nkk8stuX+0PNx
+	 XWim4gydo+hn1jDezUf3CkiWQsPG+EqsliZJt9Y+LMxAudTkN8C8KcSaDTAyBxuP5/
+	 J8W4a+SXhik8A==
 From: Danilo Krummrich <dakr@kernel.org>
 To: gregkh@linuxfoundation.org,
 	rafael@kernel.org,
@@ -60,9 +60,9 @@ Cc: driver-core@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	rust-for-linux@vger.kernel.org,
 	Danilo Krummrich <dakr@kernel.org>
-Subject: [PATCH v2 08/25] rust: usb: implement Sync for Device<Bound>
-Date: Wed,  6 May 2026 23:50:44 +0200
-Message-ID: <20260506215113.851360-9-dakr@kernel.org>
+Subject: [PATCH v2 09/25] rust: device: implement Sync for Device<Bound>
+Date: Wed,  6 May 2026 23:50:45 +0200
+Message-ID: <20260506215113.851360-10-dakr@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260506215113.851360-1-dakr@kernel.org>
 References: <20260506215113.851360-1-dakr@kernel.org>
@@ -74,33 +74,34 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Device<Bound> uses the same underlying struct usb_device as
-Device<Normal>; Bound is a zero-sized type-state marker that does not
-affect thread safety.
+The underlying `struct device` is the same for all device contexts;
+`Bound` is a zero-sized type-state marker that does not affect thread
+safety. Implement `Sync` for `Device<Bound>` with the same safety
+argument as the existing `Device<Normal>` implementation.
 
-This is needed for drivers to store &'bound usb::Device<Bound> in their HRT
-private data while remaining Send.
+This is needed for types that hold `&'bound Device<Bound>`, such as
+`io::mem::IoMem`, to be `Send`.
 
 Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 ---
- rust/kernel/usb.rs | 4 ++++
+ rust/kernel/device.rs | 4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
-index 9b9d3ae41087..442e456fd2d3 100644
---- a/rust/kernel/usb.rs
-+++ b/rust/kernel/usb.rs
-@@ -467,6 +467,10 @@ unsafe impl Send for Device {}
- // allow any mutation through a shared reference.
+diff --git a/rust/kernel/device.rs b/rust/kernel/device.rs
+index cee61638b08c..fbbb297cf2a9 100644
+--- a/rust/kernel/device.rs
++++ b/rust/kernel/device.rs
+@@ -498,6 +498,10 @@ unsafe impl Send for Device {}
+ // synchronization in `struct device`.
  unsafe impl Sync for Device {}
  
-+// SAFETY: Same as `Device<Normal>` -- the underlying `struct usb_device` is the same;
-+// `Bound` is a zero-sized type-state marker that does not affect thread safety.
-+unsafe impl Sync for Device<device::Bound> {}
++// SAFETY: Same as `Device<Normal>` -- the underlying `struct device` is the same; `Bound` is a
++// zero-sized type-state marker that does not affect thread safety.
++unsafe impl Sync for Device<Bound> {}
 +
- /// Declares a kernel module that exposes a single USB driver.
+ /// Marker trait for the context or scope of a bus specific device.
  ///
- /// # Examples
+ /// [`DeviceContext`] is a marker trait for types representing the context of a bus specific
 -- 
 2.54.0
 
