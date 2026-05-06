@@ -1,203 +1,342 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010013.outbound.protection.outlook.com [52.101.229.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20903F1676;
-	Wed,  6 May 2026 15:34:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.13
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778081667; cv=fail; b=JGLD6i+YmCjiECgoYs3pGQ4od3XLzX8yfKTcr/cfjqWkgtOas5FITWosL0WD0qlv2SlxcCF9bmi7QS4GNfZJy0KynqdLrRcGA4+NJZLYVDXMgcJIArB/MTg+gqhS73Mmn3Redpelmg5VyI47eibQZ5LRyThHVt89MXKSMrJ2YJg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778081667; c=relaxed/simple;
-	bh=VGBN0i7R7QE2MC3VmYHRrvzSYN0RoJbdI7IX65MLbE0=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=TzfPBPgyXd6uohvK3HZH+8wB8VCsMRJ2Mvd58JeDjvZ/CZLZcchZk+C6sPgDOT/qhCFMDjBqGwKLVJbg75KpG+LJRMxas8yZylgJmzNj/F6yYkwYqTvZJePa4eXmoDKJzUc65lV+4TBNu/WxOgluygGtMtO3Xi9zysj8MbIC+9I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com; spf=pass smtp.mailfrom=bp.renesas.com; dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b=RtPJ61aJ; arc=fail smtp.client-ip=52.101.229.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=bp.renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bp.renesas.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B328748BD3E;
+	Wed,  6 May 2026 15:43:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778082239; cv=none; b=Erago/R8iA3dnImv811sim6xKlR3YtVfIUaCGITlbWOnjFlhSss/F3L/9D6DisKaeWAT1hMUWbvSKJ/84mugwGmAYXIbsyZ4D3eUlfYLCeuMQAI4MhpbnNu5nIZR9DPec5ABhevwOWiox1QDVO45JmerdkPqNiezSYyVz+iSOFs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778082239; c=relaxed/simple;
+	bh=zjcd85zFCrtep8qWbNfm9PYfy2DJZ5mLQBaKE/42MqY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KDyh/3GkD+bh1xw0YkcSIBdt7W1H8cmOEtPZw4xSE2yRgBdzWoxlUugOdky+S3VCThf58QgZD3eWzFdMpXk+xmASYiavWZU+Yp1nFqVbPlOPM6+/LONnVpIVzQifo8YdmfVqrhX18niDpoiLNisxUXxQr943fHrk7OT+G4cYoCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NxEpNWow; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=bp.renesas.com header.i=@bp.renesas.com header.b="RtPJ61aJ"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ija0YOG4T+Kk/07ZVui716yBO9OUruC65lls4+0xymBAqOcQ5gDkMYOs7oEUKgiKn2VqbT3GCls7qCgyZ7kj2ClpaHbFTDHMphGolDIcjdSEoF39hp4Zyce6rsQ/09SfHjNiEdfIJKOd5tbN/HyQ2P2vhIAHqm5YyzWbr3VsMIy2GzHPOvSn/uCy7R0dL4dEHGuTnzfgTSQdZXzlVd2GRagE3Iy1PLj0OUx3t1jsYkXEVkPzaeMTlbjTSpHj7YVbaWb2imeWRC3S5THHo8LczNlV71DjYoM9jgFT6HHMd421JZxwmDvxSrsjO7ErSDY7Vnns/sX54Jm68xrp8EgGMA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3B9YW1Ck4qu2cjRy/tdGiyuUBQqV/sa7sjOilg8iEYU=;
- b=xnsuhzOOH02px7P/TRyvyJ5HNB925/zUfOz3F/6ubyYcXSzBKVFTxrutlB4oyd35Y2bABZulHWQ3JmcO95let1wRBnhIHsvaDVWyWYGhkQ88nlg+cQXbM20YS/WzLwR+AL2fnEqyXfWMc8Cghfj9czCz5JBWFt51EZmPdACQN79sKO15FFTrwv4APHu9tyaDmu9oQk1Bi6FzJnC7n8xiZBuTkZdGld1qdoiRCMGr2wg3tIezTZP7utQ7we2qFD9I6ZHJc4H7FoIrKGvMCXGsBbhDfu9kkvitnCjZxy2TRnScZ3DJbKk6KYHy5BLyZuJqe6NmGzhwWfzyTBY8eh1Prg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
- header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bp.renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3B9YW1Ck4qu2cjRy/tdGiyuUBQqV/sa7sjOilg8iEYU=;
- b=RtPJ61aJnw//JHMREBv8+34o9+0SLiu6/jBNQESu7dPp8Iq/xVc/LY0xsjygGI0S6np19Ya4uTDDvWugY3ZBLlNeSqZUuiVLe4l5NeehQ6jsO3BBMnQT0r+7+Wxbokae3fBjAkKuJgTwL2FsrIydQ9WUPeValu9/4DGmyVUfwvI=
-Received: from TY3PR01MB11346.jpnprd01.prod.outlook.com (2603:1096:400:3d0::7)
- by OSZPR01MB8218.jpnprd01.prod.outlook.com (2603:1096:604:1a7::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.17; Wed, 6 May
- 2026 15:34:15 +0000
-Received: from TY3PR01MB11346.jpnprd01.prod.outlook.com
- ([fe80::87d1:4928:d55:97de]) by TY3PR01MB11346.jpnprd01.prod.outlook.com
- ([fe80::87d1:4928:d55:97de%4]) with mapi id 15.20.9891.008; Wed, 6 May 2026
- 15:34:15 +0000
-From: Biju Das <biju.das.jz@bp.renesas.com>
-To: Hans Zhang <18255117159@163.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
-	<mani@kernel.org>, "vigneshr@ti.com" <vigneshr@ti.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>, "thomas.petazzoni@bootlin.com"
-	<thomas.petazzoni@bootlin.com>, "pali@kernel.org" <pali@kernel.org>,
-	"ryder.lee@mediatek.com" <ryder.lee@mediatek.com>,
-	"jianjun.wang@mediatek.com" <jianjun.wang@mediatek.com>, Claudiu Beznea
-	<claudiu.beznea.uj@bp.renesas.com>, "mpillai@cadence.com"
-	<mpillai@cadence.com>
-CC: "robh@kernel.org" <robh@kernel.org>, "s-vadapalli@ti.com"
-	<s-vadapalli@ti.com>, "linux-omap@vger.kernel.org"
-	<linux-omap@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-mediatek@lists.infradead.org"
-	<linux-mediatek@lists.infradead.org>, "linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 1/8] PCI: Add pcie_wait_after_link_train() helper
-Thread-Topic: [PATCH v2 1/8] PCI: Add pcie_wait_after_link_train() helper
-Thread-Index: AQHc3WypLYbFrTGQQEK3Lt/fnk7ymbYBIExA
-Date: Wed, 6 May 2026 15:34:14 +0000
-Message-ID:
- <TY3PR01MB1134694C0F3D14E4A69EFB8CA863F2@TY3PR01MB11346.jpnprd01.prod.outlook.com>
-References: <20260506152346.166056-1-18255117159@163.com>
- <20260506152346.166056-2-18255117159@163.com>
-In-Reply-To: <20260506152346.166056-2-18255117159@163.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=bp.renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TY3PR01MB11346:EE_|OSZPR01MB8218:EE_
-x-ms-office365-filtering-correlation-id: b1f5b8f9-eaab-4b5c-c3fd-08deab84edf1
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|7416014|376014|921020|38070700021|18002099003|56012099003|22082099003;
-x-microsoft-antispam-message-info:
- xAntCA+hOnGYLejX/VhdJvJSy6xuw1AkmAnuzvOTs27Rhh+goC16tpX+9xfeA+tkctJYvZAn1zBRz4XgSg1gACiI3sjjHY0GG0yf1wwFTtii1UL7RVzlgJjRnFSJ1RMpK2DpEWUyCMq5Xp/ErQjYPOc67sVBipsjkatNts8ibA6U6W3sVH3tgzSmvMCWZJNHGqcRYBlS7+WTBrkJsqOk3mttq0qLAMtjvqVM1h7oCzzeankoqJlrJuSKb74ryRv69wjZZyXF6aFTVVqwytPdoy1F3UGcDIriwOYBH88nIuKeIVi4AVHrFgJizuwPtEX12EJZtonYnls9RBCBFWy1Rd1Ftltzb6TA+GH9bCd6Bu25GMrIkIVJpMoFQQOuyTbkEVtn/gib26YDEK0P8gMjd4c7ZcdcIHQs+lQnGZLmAHvLOi/rCTGjD3EQVIvAoFRwtabFpjWVMRtKsza4MVXP68b7byN4/U1AyvzyW3uhrsJsQsXs7hf1FKi5IzwufEpMe0X2lImNU+8VxBe40GX8/jiroTI7kzcbQ9yxCNiBkrej0LmxjvdX18Wiwr7v1xJUbMPrYQwGxg6DS89jzXxKrtAQOmNMOcTgzXpyTBctMd5t22I9HSX8qo45F8S+viowKElQlZJC4q7TmtY3AwJsYjA1MV1zFI6k4Nl5LrcKX/Lko6tnnzqXbbl0ZsXpBOVnE/m6BpcMkcTSpbT2cLLwYLlb2XS875oUulpY/V07Fmx8J5x7Gns/MHw4s390thlXBqhQYqrtdgo5m31NBrh8iA==
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY3PR01MB11346.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(921020)(38070700021)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?QBb8NPB88SppxanmO4JYuzSCFcKdkbPU7Rnyy75ZJdGgjwpbWq4o+Q9IGK4r?=
- =?us-ascii?Q?/3wCXcHSnJZr088BQIN8HtygQJToCLZ6CTNPGv3ed0ZTtUZm+NkqJffCijvq?=
- =?us-ascii?Q?Z1LGCALoO3dXjj8VR/rqre3IDmcPhCW4OCT3kgir7R7StRqIPMMpEtriAZ42?=
- =?us-ascii?Q?9ngGFfKQ6+eUa0iwHmZEu9xZwt0iXpsBsfZ7RubkXAHw+9xaBey0kyM8/Rsf?=
- =?us-ascii?Q?4Xacg4kyl5plDGIeS1KXAqcBTVV0BQvUbSrh4HVReSghoAhi44aCnrBWQ9Ff?=
- =?us-ascii?Q?OLfoDnxDujJ1FA7gyy2WR4/K4MCCWNRFegH9afVz7Ptiw26B2Hn8Rh1IBiM7?=
- =?us-ascii?Q?h/0+yZg6+Jyb3bJhJnq5skTrEah7I1ZXk/ttrcSO9x1iouYkqIUctpVDNOKi?=
- =?us-ascii?Q?3F6BWTvQLZa9oSFKfib2tDMisN7ZyaRUi9chLrkHWhp4M3KtDaXnl9zjj47T?=
- =?us-ascii?Q?i/fQIhO9uOvZyGlNPcHuTAvzKlCwe9spyjeJPTyC8TMpUbBVjX7eAIb52LYJ?=
- =?us-ascii?Q?pO3W+Imoiq4WXvbGXI482BG05x4QcZLMFFjHIjjCE241mRSuOuS4QPiSvxWg?=
- =?us-ascii?Q?i1E8/TzcA7u7QmL4nq8BjBNCF1S7F5a+3a5oAjkJZG5PNLkXjU1s82KpnRKG?=
- =?us-ascii?Q?XLBNwhazxexoo/V3UXNWvMRFq+KAsfKDqwUqtF2TKopW6o4FqfZH4z85cb+k?=
- =?us-ascii?Q?myU64LsscpHtnUDx9+5f5sPyNWxdN2715Ta+9S7pnr6DGYQTW54rAD4+9tUi?=
- =?us-ascii?Q?SX0//Joqj2MMQxRmj8RDVrUKV5Xt5f5gkLYKXUDOJow39LZ6OVNCUu2vCZrr?=
- =?us-ascii?Q?ovTgfPs0zWom+52LaYyJBvFVWrOsnDzzzk3cW3SV+Cl6koLa2+y9WjxyopH0?=
- =?us-ascii?Q?j7LUjiLwioJFTOcqQDfgO4ryg7B/K71pVDpy7LTAQS0gxj9OkgLa5RmCD+fo?=
- =?us-ascii?Q?eQSdMlHMVLwl4o+WjyR27xV/T1BB/Of2YBkwM3kr6bFAVY8Irwb7/U2eQ5a8?=
- =?us-ascii?Q?fBvI893ECTTqdWdodAIGZv24WLatr1VtjlaiKGv41DHhI0PNH1JA8riyrrjt?=
- =?us-ascii?Q?GMfudPxMM2Ss4aBqQRYIZxceTMheeY0sVLuPXgbuZoYSERw701D8cMvXZxZd?=
- =?us-ascii?Q?gZ3reTUprwuyEUvnEEKSlDFUyz1dm33kE/D97yeEJt2XD4LhlRxkTy4fDU3x?=
- =?us-ascii?Q?y+q9Eriq9Sb5Xz7i6pTBmRZCmj7rK9Q+vo7glgVl6HiT+nsO2s7Y2R4lzr/j?=
- =?us-ascii?Q?jMHOes/HG+95UiOxWWw2/NiDTaHBcAX1CuM7A3QEupoJvUj1E04jjugLcWrb?=
- =?us-ascii?Q?ya8bIUuH2OfGR+paR6UE04ULSLJWStTL/07e23bx9ycQvjScje5bft+Kkzm/?=
- =?us-ascii?Q?krtdNfYRSs8jj6Bdl4vnOwEGuHlCBt1fJHTlF+cZ3DtGjfJhJyTTIuba/yTG?=
- =?us-ascii?Q?E82L1U19t0dYeoPqxS4+AduH18S2vpz+ZtFDczn5WfKXHwvvMI0tqLk/8AuX?=
- =?us-ascii?Q?s5XHtFQ1IBIHUQgTJ8IGs6STTG3vk5ml+IqI9X7sv/ZNpooKxgDXbaplSRpr?=
- =?us-ascii?Q?BuLz4meNJCEZRLAxPKeWNQ3r2wvNe9/UcGTEhY/pzUQO08jc8bEdosKT6vY4?=
- =?us-ascii?Q?PczllOdswOnMXRzcHujF1MdH9tfs8/RG59xp8YXzDJ4/gGISO+P3rPaPsmen?=
- =?us-ascii?Q?cyhLmU/TcTfHSwcgho7DLS/+xsfvN2otd0Ft5kpwhhDDlTKioSI5bRZm3GJc?=
- =?us-ascii?Q?sBLiNTLIWA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NxEpNWow"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A193C2BCB0;
+	Wed,  6 May 2026 15:43:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778082239;
+	bh=zjcd85zFCrtep8qWbNfm9PYfy2DJZ5mLQBaKE/42MqY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=NxEpNWowbrHhPT0PMvMgv74DYwJ4BjeohfNbqX9jSwPhZZMFts0c+M/xofdLBZjJm
+	 cA/jkMXv7EQ0+8vB0tsbHwvOspcDlBgXkEgDfZOgoz/EGalz+GenX9yIFv5VE1bDgy
+	 kAmtsf2hX0oiK2EwJgzssE1DXSlSi7ClwTmK8pveZPFN+2DMnM9ViqcUFusixGv0fq
+	 nUrkrJWWWlqr/8FJIFRue5Q6EovIF6/1foK6zJwv59yXwYaj+/t6tm729fjFJs6e6/
+	 sSY/6w5/YEpMxjhPZcOMD/iPZn7MyAhcc1/AQ3TwnNcTEdjTlbYEoCu8DFzV+CkPnr
+	 xXOWB58ySj8FA==
+Date: Wed, 6 May 2026 21:13:51 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	hans.zhang@cixtech.com, robh@kernel.org, mpillai@cadence.com, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] PCI: cadence: Add debugfs property to provide
+ LTSSM status of the PCIe link
+Message-ID: <7g32xmc5juraumjexmjmptrwvpsbni43csjw727zzkdetforzs@y5xumpko2lf2>
+References: <20260406103237.1203127-1-18255117159@163.com>
+ <20260406103237.1203127-3-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: bp.renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TY3PR01MB11346.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b1f5b8f9-eaab-4b5c-c3fd-08deab84edf1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 May 2026 15:34:14.9080
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rAgYJl/hNfUgvRRCRKf/2QNzW7ogANDgj3KxYI5SSb0CkwX1XSBZUfv7gDj/+Ro8+RjvGjkb//5bQ16/uy+i+SEU7r/Kpccff6mZRhOG1eE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSZPR01MB8218
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260406103237.1203127-3-18255117159@163.com>
 
-
-
-> -----Original Message-----
-> From: Hans Zhang <18255117159@163.com>
-> Sent: 06 May 2026 16:24
-> Subject: [PATCH v2 1/8] PCI: Add pcie_wait_after_link_train() helper
->=20
-> PCIe r6.0, sec 6.6.1 (Conventional Reset) requires that for a Downstream =
-Port supporting Link speeds
-> greater than 5.0 GT/s, software must wait a minimum of 100 ms after Link =
-training completes before
-> sending any Configuration Request.
->=20
-> Introduce a static inline helper pcie_wait_after_link_train() that checks=
- the given max_link_speed (2 =3D
-> 5.0 GT/s, 3 =3D 8.0 GT/s, etc.) and calls
-> msleep(100) only when the speed is greater than 5.0 GT/s. The helper uses=
- the existing
-> PCIE_RESET_CONFIG_WAIT_MS macro defined in pci.h.
->=20
-> This allows multiple host controller drivers to share the same mandatory =
-delay without duplicating the
-> logic.
->=20
+On Mon, Apr 06, 2026 at 06:32:37PM +0800, Hans Zhang wrote:
+> Add the debugfs property to provide a view of the current link's LTSSM
+> status from the Root Port device.
+> 
+> Test example:
+>   # cat /sys/kernel/debug/cdns_pcie_a0c0000.pcie/ltssm_status
+>   L0_STATE (0x29)
+> 
 > Signed-off-by: Hans Zhang <18255117159@163.com>
 > ---
->  drivers/pci/pci.h | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
->=20
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h index 4a14f88e543a..a8=
-705a2a2d85 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -60,6 +60,19 @@ struct pcie_tlp_log;
->   */
->  #define PCIE_RESET_CONFIG_WAIT_MS	100
->=20
-> +/**
-> + * pcie_wait_after_link_train - Wait 100 ms if link speed > 5 GT/s
-> + * @max_link_speed: the maximum link speed (2 =3D 5.0 GT/s, 3 =3D 8.0 GT=
-/s,
-> +...)
-> + *
-> + * Must be called after Link training completes and before the first
-> + * Configuration Request is sent.
-> + */
-> +static inline void pcie_wait_after_link_train(int max_link_speed) {
-> +	if (max_link_speed > 2)
-> +		msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> +}
+>  Documentation/ABI/testing/debugfs-cdns-pcie   |   5 +
+>  drivers/pci/controller/cadence/Kconfig        |   9 +
+>  drivers/pci/controller/cadence/Makefile       |   1 +
+>  drivers/pci/controller/cadence/pci-sky1.c     |   3 +
+>  .../controller/cadence/pcie-cadence-debugfs.c | 215 ++++++++++++++++++
+>  .../pci/controller/cadence/pcie-cadence-ep.c  |   3 +
+>  .../cadence/pcie-cadence-host-hpa.c           |   8 +-
+>  .../controller/cadence/pcie-cadence-host.c    |   9 +-
+>  drivers/pci/controller/cadence/pcie-cadence.h | 145 ++++++++++++
+>  9 files changed, 396 insertions(+), 2 deletions(-)
+>  create mode 100644 Documentation/ABI/testing/debugfs-cdns-pcie
+>  create mode 100644 drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+> 
+> diff --git a/Documentation/ABI/testing/debugfs-cdns-pcie b/Documentation/ABI/testing/debugfs-cdns-pcie
+> new file mode 100644
+> index 000000000000..659ad2ab70e4
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/debugfs-cdns-pcie
+> @@ -0,0 +1,5 @@
+> +What:		/sys/kernel/debug/cdns_pcie_<dev>/ltssm_status
+> +Date:		March 2026
+> +Contact:	Hans Zhang <18255117159@163.com>
+> +Description:	(RO) Read will return the current PCIe LTSSM state in both
+> +		string and raw value.
+> diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
+> index 9e651d545973..b277c5f6e196 100644
+> --- a/drivers/pci/controller/cadence/Kconfig
+> +++ b/drivers/pci/controller/cadence/Kconfig
+> @@ -6,6 +6,15 @@ menu "Cadence-based PCIe controllers"
+>  config PCIE_CADENCE
+>  	tristate
+>  
+> +config PCIE_CADENCE_DEBUGFS
+> +	bool "Cadence PCIe debugfs entries"
 
-Maybe move this patch to the user??
+Why not tristate?
 
-Cheers,
-Biju
-
+> +	depends on DEBUG_FS
+> +	depends on PCIE_CADENCE_HOST || PCIE_CADENCE_EP
+> +	help
+> +	  Say Y here to enable debugfs entries for the PCIe controller. These
+> +	  entries provide various debug features related to the controller and
+> +	  the LTSSM status of link can be displayed.
 > +
->  /* Parameters for the waiting for link up routine */
->  #define PCIE_LINK_WAIT_MAX_RETRIES	10
->  #define PCIE_LINK_WAIT_SLEEP_MS		90
-> --
-> 2.34.1
->=20
+>  config PCIE_CADENCE_HOST
+>  	tristate
+>  	depends on OF
+> diff --git a/drivers/pci/controller/cadence/Makefile b/drivers/pci/controller/cadence/Makefile
+> index b8ec1cecfaa8..2cdc4617e0c2 100644
+> --- a/drivers/pci/controller/cadence/Makefile
+> +++ b/drivers/pci/controller/cadence/Makefile
+> @@ -4,6 +4,7 @@ pcie-cadence-host-mod-y := pcie-cadence-host-common.o pcie-cadence-host.o pcie-c
+>  pcie-cadence-ep-mod-y := pcie-cadence-ep.o
+>  
+>  obj-$(CONFIG_PCIE_CADENCE) = pcie-cadence-mod.o
+> +obj-$(CONFIG_PCIE_CADENCE_DEBUGFS) += pcie-cadence-debugfs.o
+>  obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host-mod.o
+>  obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep-mod.o
+>  obj-$(CONFIG_PCIE_CADENCE_PLAT) += pcie-cadence-plat.o
+> diff --git a/drivers/pci/controller/cadence/pci-sky1.c b/drivers/pci/controller/cadence/pci-sky1.c
+> index e1f4a98e2ab6..093f20466339 100644
+> --- a/drivers/pci/controller/cadence/pci-sky1.c
+> +++ b/drivers/pci/controller/cadence/pci-sky1.c
+> @@ -221,7 +221,10 @@ MODULE_DEVICE_TABLE(of, of_sky1_pcie_match);
+>  static void sky1_pcie_remove(struct platform_device *pdev)
+>  {
+>  	struct sky1_pcie *pcie = platform_get_drvdata(pdev);
+> +	struct cdns_pcie_rc *rc;
+>  
+> +	rc = container_of(pcie->cdns_pcie, struct cdns_pcie_rc, pcie);
+> +	cdns_pcie_debugfs_deinit(&rc->pcie);
 
+You are calling cdns_pcie_debugfs_init() from pcie-cadence-host-hpa.c driver. So
+you should call cdns_pcie_debugfs_deinit() there only in an exported API.
+
+>  	pci_ecam_free(pcie->cfg);
+>  }
+>  
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-debugfs.c b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+> new file mode 100644
+> index 000000000000..d83007ae218e
+> --- /dev/null
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+> @@ -0,0 +1,215 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Cadence PCIe controller debugfs driver
+> + *
+> + * Copyright (C) 2026 Hans Zhang <18255117159@163.com>
+> + * Author: Hans Zhang <18255117159@163.com>
+
+Since copyright belongs to you, there is no need to mention 'Author'.
+
+> + */
+> +
+> +#include <linux/debugfs.h>
+> +
+> +#include "pcie-cadence.h"
+> +
+> +#define CDNS_DEBUGFS_BUF_MAX		128
+> +#define CDNS_PCIE_LGA_LTSSM_STATUS_MASK	GENMASK(29, 24)
+> +#define CDNS_PCIE_HPA_LTSSM_STATUS_MASK	GENMASK(27, 20)
+> +
+> +static const char *cdns_pcie_ltssm_status_string(enum cdns_pcie_ltssm ltssm)
+> +{
+> +	const char *str;
+> +
+> +	switch (ltssm) {
+> +#define CDNS_PCIE_LTSSM_NAME(n) case n: str = #n; break
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_QUIET);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_QUIET_ENTRY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RCVR_DETECTED_ST);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RCVR_DETECTED_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_CONFIG);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_CONFIG_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_CONFIG_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_RC);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_RC_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_RC_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_ACC_RC);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_RC);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_RC_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_ACC_RC);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_EP);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_EP_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_EP_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_ACC_EP);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_EP);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_EP_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_ACC_EP);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_ACC_EP_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_COMPLETE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_COMPLETE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_COMPLETE_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_IDLE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_IDLE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0_STATE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_LOCK);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_LOCK_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_CFG);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_CFG_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_IDLE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_IDLE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_5);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_6);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_7);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_ENTRY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_5);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_WAIT_FOR_LINK_TX);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_FTS_ENTRY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_FTS_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_FTS_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_ST);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_5);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_6);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_7);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_8);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_ENTRY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_ENTRY_FROM_RECOVERY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_EXIT_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_EXIT);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_5);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_ACTIVE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_ENTRY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_IDLE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_EXIT);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_ENTRY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_5);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_IDLE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_3);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_4);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_5);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_FROM_RECOVERY);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ACTIVE);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_EXIT);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_EXIT_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_EXIT_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE0);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE2_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE2_2);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE3_1);
+> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE3_2);
+> +	default:
+> +		str = "CDNS_PCIE_LTSSM_UNKNOWN";
+> +		break;
+> +	}
+> +
+> +	return str + strlen("CDNS_PCIE_LTSSM_");
+> +}
+> +
+> +static int ltssm_status_show(struct seq_file *s, void *v)
+> +{
+> +	struct cdns_pcie *pci = s->private;
+> +	enum cdns_pcie_ltssm ltssm;
+> +	u32 reg;
+> +
+> +	if (pci->is_hpa) {
+> +		reg = cdns_pcie_hpa_readl(pci, REG_BANK_IP_REG,
+> +					CDNS_PCIE_HPA_PHY_DBG_STS_REG0);
+> +		ltssm = FIELD_GET(CDNS_PCIE_HPA_LTSSM_STATUS_MASK, reg);
+> +	} else {
+> +		reg = cdns_pcie_readl(pci, CDNS_PCIE_LM_BASE);
+> +		ltssm = FIELD_GET(CDNS_PCIE_LGA_LTSSM_STATUS_MASK, reg);
+> +	}
+> +
+> +	seq_printf(s, "%s (0x%02x)\n", cdns_pcie_ltssm_status_string(ltssm), ltssm);
+> +
+> +	return 0;
+> +}
+> +
+> +static int ltssm_status_open(struct inode *inode, struct file *file)
+> +{
+> +	return single_open(file, ltssm_status_show, inode->i_private);
+> +}
+> +
+> +static const struct file_operations cdns_pcie_ltssm_status_ops = {
+> +	.open = ltssm_status_open,
+> +	.read = seq_read,
+> +};
+
+Sashiko pointed out that you could use DEFINE_SHOW_ATTRIBUTE() to simplify the
+code here.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
