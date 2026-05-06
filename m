@@ -1,98 +1,86 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A1D4949E3;
-	Wed,  6 May 2026 15:25:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF675481A88;
+	Wed,  6 May 2026 15:27:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778081126; cv=none; b=laXSQpY/FnWxfXDbBu4lmamR/BCU/EnmPSj9H7GeBkg2B/62bnnODfbLK+R3UaxhtA7hOWV03zH3+QAnti7rOLi04U3rxTToT4MIL07+DWVPU0Jsi4oBt+zPOYB7l19Vf+hdYkungbF7EmnQQJjAUqLVGbhxG7pbCpuo+cAbrBI=
+	t=1778081243; cv=none; b=PW3VYnMfe0qA3kio+mVp/FwFE0NpvD8/qv46aV06UoiDy/IuNbOIIWK8MvD6lh3c1T1ObtH2PLxTX8orSYikI6fvcfQfgfOM+iWpT+GYc+cnhfOxZa4Vo8fDrlpgsWwvItdg8xJMLDw40dLIxLK1mumDbo59w4CtkNq9lM0L97Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778081126; c=relaxed/simple;
-	bh=mpv3vlGZm+Ok6QVRvcIV33SeSqsLagci5BU4xYX168c=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NCJ8jiLiQsCXueas41Gj82ec4hBYu3uWPBT+7aouRoV2RV/bRZUw8Iy8Zog5eMESMbFP3g0CBQzsd0zTIOx7cRs8G/8s8tlqW81ZZGk87bTD3ywEfxqWyRI+js3TSUWdvVStulItIFIVISpKphnnGkFPJM4VtRWw+NRv7IdThD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=hDDHTfQz; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778081243; c=relaxed/simple;
+	bh=/esJ3YZzJyUy0eSG2B1OUUhXRvgwi5HAS2K4p+IHGC8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=qSqPQ8xseJLcOZSvd++leJI536Hi2Bxi+umT9u50v44oID9tsK6eBLTQ/qumriLygoka+ujjgJofL56Mj4BJ4DQlHmNzWEkpGJQ9wJetdEylc9TM3oYaDjsneN/FN230Iij0iTje2dNdKVDlVlHGscowI4MZoxXeFW59fkDEyUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sXiBhoMn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="hDDHTfQz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=sr
-	is0xyiMLfYPD6D/YefkQkhGzEH93jUaJ4nBZ/Loa0=; b=hDDHTfQzz2ffofBWZ6
-	MMO1lj9A9H/9vDW4NbQFBR/f8Xw7UUFwfkt8GvaLmvh5Hx8u21aeOzXk27XcU+rD
-	huHoO115HRJ9ERdNVq5Db1hOUD9Io3ook8IBV7imAu6TVHzcEbjgNG7e7A/iz6/+
-	3fabcJ6BJK/JGoeQ6yLk2bLk0=
-Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wCHAqsXXftpv5CgDg--.43926S9;
-	Wed, 06 May 2026 23:24:17 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	vigneshr@ti.com,
-	jingoohan1@gmail.com,
-	thomas.petazzoni@bootlin.com,
-	pali@kernel.org,
-	ryder.lee@mediatek.com,
-	jianjun.wang@mediatek.com,
-	claudiu.beznea.uj@bp.renesas.com,
-	mpillai@cadence.com
-Cc: robh@kernel.org,
-	s-vadapalli@ti.com,
-	linux-omap@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 7/8] PCI: mediatek-gen3: Add 100 ms delay after link training
-Date: Wed,  6 May 2026 23:23:45 +0800
-Message-Id: <20260506152346.166056-8-18255117159@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260506152346.166056-1-18255117159@163.com>
-References: <20260506152346.166056-1-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sXiBhoMn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3743FC2BCB8;
+	Wed,  6 May 2026 15:27:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778081243;
+	bh=/esJ3YZzJyUy0eSG2B1OUUhXRvgwi5HAS2K4p+IHGC8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=sXiBhoMnxelMDo7XuHsQRgwe5WMn3QMjnZQ1ISsasxyD4PkDOsyvxS4BwyPbX6SEW
+	 u9ENb/+9pzLbJbPz4CsqFrgoXV4cK10PpJ34b3+0gYm6DVmkqKAFpTnJZVPYmH6mNP
+	 5VNuV2EynXiGD7qzXSOxwZw/wMsd+0rqyGCW0db7ALpL9YjbhJBMUrT9HbGjjF8sET
+	 pPzXshX5V0ovW4Xx0UMdgoZacs8LN/q8AcumCQSvRAE1JikUGLqbwFNcZ67tsr3hrM
+	 55000kvAplWDvFzY6jEZyRsx5yu9b3t/cea6OoyfHNICnC+G4avMyMlwt22LyaMFNZ
+	 lkppYB8w+eVWQ==
+Date: Wed, 6 May 2026 10:27:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>,
+	Lukas Wunner <lukas@wunner.de>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH] PCI/ASPM: Enable L0s/L1 for removable devices when BIOS
+ didn't configure ASPM
+Message-ID: <20260506152721.GA790227@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCHAqsXXftpv5CgDg--.43926S9
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Jr4kWw4fAw18WF4rJF1kZrb_yoWDArXE9a
-	y8JrWfZay5Cry5CFnayFyrZr9aya47Wr18XayrKFnxZa48ur9Yqr9IvryDXFs5Gw4aqF17
-	tryqyF18uFyDAjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRufOztUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AG4XGn7XSHiCgAA3P
+In-Reply-To: <a6ffd678-65ee-43a0-a9f2-99d45126f5b0@amd.com>
 
-The MediaTek Gen3 PCIe host driver lacks the required 100 ms delay after
-link training completes for speeds > 5.0 GT/s, as specified in PCIe r6.0
-sec 6.6.1.
+On Wed, May 06, 2026 at 10:10:47AM -0500, Mario Limonciello wrote:
+> On 5/5/26 23:53, Mika Westerberg wrote:
+> > On Tue, May 05, 2026 at 08:09:22PM +0200, Rafael J. Wysocki wrote:
+> > > On Tue, May 5, 2026 at 12:53 AM Mario Limonciello
+> > > <mario.limonciello@amd.com> wrote:
+> ...
 
-The driver already stores max_link_speed (from the device tree). After
-mtk_pcie_startup_port() successfully brings up the link, call
-pcie_wait_after_link_train() to comply with the specification.
+> > > > +        * For devicetree platforms, enable L0s and L1 by default.
+> > > > +        *
+> > > > +        * For removable devices (e.g., Thunderbolt/USB4), enable L0s and L1
+> > > > +        * by default if BIOS didn't configure any ASPM states. This handles
+> > > > +        * hotplugged devices where firmware may not have configured ASPM.
+> > > > +        */
+> > 
+> > Only L1 is supported over TB/USB4 tunnel (no L0s, no L1 substates). The
+> > PCIe endpoint and the downstream port it connects to of course can support
+> > the full range as that's a real PCIe link.
+> 
+> OK - the comment should be updated but I do expect that below code
+> (link->aspm_support) should remain OK.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/pcie-mediatek-gen3.c | 2 ++
- 1 file changed, 2 insertions(+)
+TB/USB4 are examples of removable devices but they're not the only
+ones, so I think it's OK for the comment to mention L0s.  In fact, it
+*should* mention L0s since the code below includes L0s, and mentioning
+only L1 would just be confusing.
 
-diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index b0accd828589..7c5f2ba7157b 100644
---- a/drivers/pci/controller/pcie-mediatek-gen3.c
-+++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -570,6 +570,8 @@ static int mtk_pcie_startup_port(struct mtk_gen3_pcie *pcie)
- 		goto err_power_down_device;
- 	}
- 
-+	pcie_wait_after_link_train(pcie->max_link_speed);
-+
- 	return 0;
- 
- err_power_down_device:
--- 
-2.34.1
-
+> > > > +       if (of_have_populated_dt() ||
+> > > > +           (dev_is_removable(&pdev->dev) && !link->aspm_enabled)) {
+> > > >                  if (link->aspm_support & PCIE_LINK_STATE_L0S)
+> > > >                          link->aspm_default |= PCIE_LINK_STATE_L0S;
+> > > >                  if (link->aspm_support & PCIE_LINK_STATE_L1)
+> > > > --
+> > > > 2.43.0
+> > > > 
+> 
