@@ -1,140 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775293B27E3
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 22:02:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6D213B52EA;
+	Wed,  6 May 2026 22:06:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778104976; cv=none; b=Q9ASA2my/sPOzzxuL5FuC+sS2cfGNupc6IFchu1f9+tFcBZ6hBMz0k3y6GoHgAapYHFxKuf7WD4x+ohNqTvjCT1X9RnKDkNEZpgWJIhuJNQ3wr3gkmzd+4v29VqW8KsVp8WlUDy88D9D7rrKJt5HCVwHUsgohbrzeW7MD8DXDTo=
+	t=1778105204; cv=none; b=n4nYOPHjySCII9a12cfOWS41zOibUP1WVQtF2wv4GCPQk9Lpz9aUXiVof9oY4wds8CQm3a+7hCNJR4YfFi8/7vktejXm4ghiE/vQXK5H7TdGuoEMPynUz9vw3ccP/1b2jd1rlNju/oxHGi3mp+kz8+NU3dYhh2Ws723dS+xCFUQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778104976; c=relaxed/simple;
-	bh=9QazxRb2+ueSeTAZWTMCpmbU+O51bA/Pk/ohHQhQWi4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KO7Kt8n9bEbdsynomh6BYj9/4iu0nygxeULlOau67FObC/zI97RTp6dpKLjqcJ4Wun3cTHRb4/RStigLOcogIxvzgx/hhL8cwVsIeV9yi6SKwmOmUDkgAvre0u9fQDqm16o8KMa+cYXrTIe7feUoI4dZbduyxmldiRwVqNXIFtc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZjpnHmBe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778105204; c=relaxed/simple;
+	bh=JTusYyNLA22gY11bCtDchSj/wTcpsrskdCGVYwigaZg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hOi2krMw655RKmbJbnnTvlflsJ/lsrcnkF2dy1KkiGWTFfS7B/nRfE1rKjeplbNcyYqAxryDN6pieSmAZP+pUB6a8HDSYj45R4PlJY8CS7VB14z1KTBFaon0cLjMLR0gJ2wBICpOPHSQaYRBdnFGo7ynPa04RFu0EHiwyjy1Xrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HljAvGz4; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZjpnHmBe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02992C2BCB0;
-	Wed,  6 May 2026 22:02:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778104976;
-	bh=9QazxRb2+ueSeTAZWTMCpmbU+O51bA/Pk/ohHQhQWi4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=ZjpnHmBepSWtWl9u/RRhGGb4HBQLhv8U8DZH/6OerXtz+3+6OQt/i/dIuj52pSfBn
-	 sr2u7xpz2i6MeE2e+doFhysskbVFnGMcrWozRVOuEJE2sUHzkPliPdnz5WwAfKPafy
-	 B0931/b32vloMBoGfL3JJfwBYe7dARO4TIGfhFZ0xbgNxl1anGgxHKXbFgp5KgQsHM
-	 195I07y/sYixT/7Vh5/bgBlN+1c2neTN6z7KlMqVGJde+MI4OcHZ0ldwwUrrzmhq7r
-	 J3qY92q9C0zZaq+1QGYLT6rBXkXsZlqqKjIO+9ykfJTe6RsqB6u71CjLlijrhab62O
-	 KxquuI/AlFFHw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 2/9] dmaengine: Add safe API to combine configuration
- and preparation
-Reply-To: sashiko@lists.linux.dev
-To: "Frank Li" <Frank.Li@nxp.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260506-dma_prep_config-v4-2-85b3d22babff@nxp.com>
-References: <20260506-dma_prep_config-v4-2-85b3d22babff@nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 06 May 2026 22:02:55 +0000
-Message-Id: <20260506220256.02992C2BCB0@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HljAvGz4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=vTlOLeIdQpCjv7UhS84C4IGjj5+hiOQHx/OYcjnThOU=; b=HljAvGz4gMMAvypsS14xsOBZga
+	dAW6uoihhLT7Lc58XydWuRc8nOcmhOKbzgw7/NjneYqQaoD40XPQ0NN8KcTnpIt2Ok45ah8reXArd
+	+yTOflZbLHWmg64Dy9Gi+aDkapCp8jxAtgSpvlmtyz07tysZDWhl92zc8oO+EGwfj/lZU0fEEiEYS
+	rXOdMztrrURxyyXAtLsC5LkbAvoDcN4Gsi8OqWMwuQDPyGEpWc3l6MM8ArlQ8YCs32Zau9fZzPyU+
+	0g80BLx/nnAwGqO352bwqYebD/1RZnzKHioJlfK5xr5nwwNj9vCTh/fL5fNz/I1Tw1n8rpIQx+xsC
+	xuUWtSAQ==;
+Received: from [50.53.43.113] (helo=[192.168.254.34])
+	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wKkNj-00000002A0U-3R8g;
+	Wed, 06 May 2026 22:06:15 +0000
+Message-ID: <649c67bb-be03-4843-ac2f-19f4eeabef54@infradead.org>
+Date: Wed, 6 May 2026 15:06:14 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 2/6] Documentation/kernel-parameters: Add multi-device
+ config_acs example
+To: Wei Wang <wei.w.wang@hotmail.com>, bhelgaas@google.com, jgg@nvidia.com,
+ jonathan.cameron@huawei.com, dan.carpenter@linaro.org,
+ akpm@linux-foundation.org, bp@alien8.de, alex@shazbot.org,
+ kevin.tian@intel.com, manivannan.sadhasivam@oss.qualcomm.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <SI2PR01MB439385689A32A1DDA9CEABE1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+ <SI2PR01MB439372F20062A8C25599FE43DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Language: en-US
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <SI2PR01MB439372F20062A8C25599FE43DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Deadlock risk due to using `spin_lock()` instead of `spin_lock_irq=
-save()`.
-- [High] Calling `dmaengine_slave_config()` while holding a spinlock causes=
- 'sleeping while atomic' kernel panics.
-- [Medium] Meaningful code and commit message mismatch regarding lock type,=
- and truncated comment.
---
+Hi,
 
-commit 4872a557291e0d82176d77b1a17c5e410863322e
-Author: Frank Li <Frank.Li@nxp.com>
-dmaengine: Add safe API to combine configuration and preparation
+On 5/6/26 7:10 AM, Wei Wang wrote:
+> The config_acs parameter allows configuring ACS settings for multiple PCI
+> devices by separating entries with semicolons. The current documentation
+> only illustrates applying one configuration pattern to all devices, but
+> does not show how to specify multiple devices with different ACS settings
+> in a single parameter. Add an example demonstrating multi-device usage
+> with distinct ACS configurations.
+> 
+> Some bootloaders interpret ';' as a command separator, which can cause
+> the parameter to be split as multiple commands. Document that the entire
+> parameter may need to be quoted to avoid bootloader parsing issues. This
+> avoids confusing bootloader errors such as ‘can't find command <BDF>’
+> when passing multiple device entries.
+> 
+> Signed-off-by: Wei Wang <wei.w.wang@hotmail.com>
+> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
+> ---
+>  Documentation/admin-guide/kernel-parameters.txt | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 170aae226e2e..0c159ab59e14 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -5277,15 +5277,20 @@ Kernel parameters
+>  				  '1' – force enabled
+>  				  'x' – unchanged
+>  				For example,
+> -				  pci=config_acs=10x@pci:0:0
+> +				- pci=config_acs=10x@pci:0:0
 
-This commit introduces dmaengine_prep_config_single_safe() and
-dmaengine_prep_config_sg_safe() to provide a safe way to combine slave
-configuration and transfer preparation. Drivers can implement a new
-device_prep_config_sg() callback or the code falls back to executing both
-steps under a per-channel lock.
+Are these added hyphens/dashes helpful?
+Are they needed for some reason?
+I don't see any problem here without the leading '-'.
+They (here and below) seem like they could add some confusion IMO.
 
->  Drivers may implement the new device_prep_config_sg() callback to perform
->  both steps atomically. If the callback is not provided, the helpers fall
->  back to calling dmaengine_slave_config() followed by
->  dmaengine_prep_slave_sg() under per-channel mutex protection.
-
-This isn't a bug, but the commit message mentions per-channel mutex
-protection, while the implementation actually uses a spinlock. Could the
-commit message be updated to match the code?
-
-> --- a/include/linux/dmaengine.h
-> +++ b/include/linux/dmaengine.h
-> @@ -341,6 +343,12 @@ struct dma_chan {
->  	dma_cookie_t cookie;
->  	dma_cookie_t completed_cookie;
-> =20
-> +	/*
-> +	 * protect between config and prepare transfer because *_prep() may be
-> +	 * called from complete callback, which is in GFP_NOSLEEP context.
-> +	 */
-> +	spinlock_t lock; /* protect between config and prepare transfer since */
-
-This isn't a bug, but the inline comment for the lock appears to be truncat=
-ed
-mid-sentence after the word since.
-
-[ ... ]
-
-> +static inline struct dma_async_tx_descriptor *
-> +dmaengine_prep_config_sg_safe(struct dma_chan *chan, struct scatterlist =
-*sgl,
-> +			      unsigned int sg_len,
-> +			      enum dma_transfer_direction dir,
-> +			      unsigned long flags,
-> +			      struct dma_slave_config *config)
-> +{
-> +	struct dma_async_tx_descriptor *tx;
+>  				would configure all devices that support
+>  				ACS to enable P2P Request Redirect, disable
+>  				Translation Blocking, and leave Source
+>  				Validation unchanged from whatever power-up
+>  				or firmware set it to.
+> -
+>  				Note: this may remove isolation between devices
+>  				and may put more devices in an IOMMU group.
+> +				- 'pci=config_acs=10x@0000:04:00.0;1x101@0000:84:00.0'
+> +				configures two devices with different ACS settings.
+> +				Note: Some bootloaders interpret ';' as a command
+> +				separator. If so, quote the entire parameter to
+> +				ensure it is passed to the kernel unchanged.
 > +
-> +	if (!chan || !chan->device)
-> +		return NULL;
-> +
-> +	if (!chan->device->device_prep_config_sg)
-> +		spin_lock(&chan->lock);
+>  		force_floating	[S390] Force usage of floating interrupts.
+>  		nomio		[S390] Do not use MIO instructions.
+>  		norid		[S390] ignore the RID field and force use of
 
-Since this API can be called from process context, and completion callbacks
-might attempt to re-queue transfers from hardware interrupt context, could
-using spin_lock() here cause a deadlock regression if the CPU is interrupted
-while holding chan->lock?
+-- 
+~Randy
 
-Would it be safer to use spin_lock_irqsave() here instead? If so, we might
-need a new variable to save the interrupt state to avoid shadowing the
-existing flags function argument.
-
-> +
-> +	tx =3D dmaengine_prep_config_sg(chan, sgl, sg_len, dir, flags, config);
-
-Does calling dmaengine_prep_config_sg() while holding a spinlock introduce a
-regression where scheduling while atomic panics can occur?
-
-Looking at dmaengine_prep_config_sg(), it calls dmaengine_slave_config(),
-which invokes the driver's device_config() callback. Many DMA drivers
-expect device_config() to be called in process context and perform sleeping
-operations like acquiring mutexes, making sleeping memory allocations, or
-calling pm_runtime_get_sync().
-
-> +
-> +	if (!chan->device->device_prep_config_sg)
-> +		spin_unlock(&chan->lock);
-> +
-> +	return tx;
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506-dma_prep_c=
-onfig-v4-0-85b3d22babff@nxp.com?part=3D2
