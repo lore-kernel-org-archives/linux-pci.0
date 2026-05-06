@@ -1,82 +1,70 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013044.outbound.protection.outlook.com [52.101.83.44])
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012050.outbound.protection.outlook.com [40.107.200.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EFD13B388A;
-	Wed,  6 May 2026 20:45:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87F7A33A9CF;
+	Wed,  6 May 2026 20:53:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.50
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778100316; cv=fail; b=OV2krdy3dL2tsmJ+Zwu4b8cPHJfchs+XNd7jO6dffcosuGOmr5DGzmivpXnqKUEekeBPcGmgWDrCBSNPDm+sVAwrCyuVu1mEPGnF1Eae5NgZiPp7v87xTHxxdqsCSnWcapdAWpB7RLBgNrDo7GSmRi8pvxfg+rq/gXNGTIKGigw=
+	t=1778100801; cv=fail; b=FypS2qyGDGLc9lFtZuN2Je2nYMTpeWCkWirnfln0tNUfl0Md83MlQYwcdLn3t6bkbZ6xYWBb/uxnZK0WOyiAGiVkAjTpkSdHgd3Ji7oX+4PIogqZD2dPBZFD8ezcA6phK6jVj5uNs5+R8Am5N2Hs5stBAJtauAp3v+zpgY3a3Lg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778100316; c=relaxed/simple;
-	bh=ewqGbq/a6Fri69k6AcMWiHQJDkdRRZkdZmXyxU701QQ=;
-	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=MlYUtU4aB2LiVQQReooCm2/ifWfjvnv/XMZnAETnnJcLsgY/Wm3crZSwO2njuYJ865bxfzIEmkyScmfk34Y8qCcJP5DWFoln4ijFGd7GNY4qDQ2t6mAYkCEczk+LAaRpGH9Mv8AeFBD3Fb2OMoHEnYNE3+HZa6mD8rUe9DL43h4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=GEXP5XO8; arc=fail smtp.client-ip=52.101.83.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	s=arc-20240116; t=1778100801; c=relaxed/simple;
+	bh=Xril5mDpCnOe80KcRCG6lo9LGV8WUiKtho4ZXI1WsaQ=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=jmYUIxrixG70x7WnyjwQgtrY2Ou9idyQkf56/Hbiw6dvpCNKrcjgVYVmEU/Yio67d+FDOWb6XRhjEPCE9YPcjSl2WB5iCVAhIkeaGxABSZsSAr/5elFMg3S+PUEPbFzRG6ALe9PfYEeBjBVuE7kPX3BqBsRKEPCGKO3AyR//0Ns=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=DHmT8flk; arc=fail smtp.client-ip=40.107.200.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="GEXP5XO8"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="DHmT8flk"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UJTNPtJjdzwPQsvkBNCIIzEkvuKDp8zHBY3wfT5wrX3kGe7Om6/AjZYFAVjXbJOeZ5mYbUnLZxRhdfwjSGs44akDZpJkhyJGPFXXYbAB+77lqB3Zn/z/KqjHfx4rg4vHNJJeGYkuEi1qeg5soE14wRD8VwW0z1MKBjNryMQ1Zl5wKdJmwAV1Nmap65lyqEhSej+yEH/Aqclo9eyKPh9D9Q4IGKF+uPG+pD9SkSm+QYw1gXnmMEBOmggXCW+DEWl6+kJdcSNO/yEa25mcNGDg2LTPAOk3lEpmqK/e4UWKLet7o0O1vK3z1S2wvlHH94w48FNSa+p5lKCohO+sL3OK+g==
+ b=F8d23d9TWHRdA9H6ov3GvYlpQloIsnlOxaLGFSCOhdt80lQwKAYAXAwcbiIwWK++4w3lswD7CvcVm4iZdkT8W6qIa98/XbB1Lvoku1wUVN7JS/ELJoATKG01ah4YJGZdZBClaLUiUwW4sMgyjOSfnYqAt9zLtFrSTQfIbWf9dHZc0rI2L8fQNess7K7NjBQNr47iiG9IYPV2S5eqgIairfyEWPUJ9R9QuW5rbkJhbf3gR1HWmMJPQYxfmX88hBgdcDnWUCpCU47q5CnHyHxFLVZTLQfgbYe0PxOYVHzPzpdDylBOZprvO6wiSl9T/O6aQKrKvXVWIYBED+ZP7cnA7A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=EqPY0p8jDgE74yvJfwdQ5/+zHgEN+pCu6Yjn/v91/tQ=;
- b=JsOaA5mkl4fZfJ5aDEef5rRlvogiPYC19JOiCizawmqm73mDOUhAfNrXC6dlBDagTvcoNXAso2pqvnApZ2ZGAhF1JuescMFGOrA4aZbjDE6xPwOHa3vNvEh3TTjAqDipSxx7LzfMjsQf2SChKCAXZooSml9YzwjQixk0FkykflD8eKrNnAF2x7SsOKdZaemgiIwL+wyFfI2ROBlynEQDKUbMykPj0/WuJtdV1R3g6jcQq9qGiZbYVHxxTECJt0z5jUkWJK3wYJJKOfJ3gsnylbqn+j5tl62sz3GDKLefUI0pESra1DqV/l7HG9r+4VimBmZDfCXpRNFyQXT6QE27Vg==
+ bh=CxotyDfdVYd54Ch4Ez0sz/iofYcg557WNCwfBySVKJ0=;
+ b=lgtEHMfOtIgtsmcDx39oV+fKRkz8lss+T4IAOSRpsO1Ba1f5uSjn2WrP70xNRVVySJEJ0qVgUkwPoGYrW4/7puAThv9dd2H3bdIEF/0mEYi+LWdUlJeM7b7QCBJ3Xrp5B7k0CSrkDl9rFL87prjR3m8M1MfkFplgjQnMAmmppYy+QZmy0uf0zxtcw1djihO74Jf6E9q6vSlcKgza57YesJ2ZRGey7dZNaC3E5Iai/VAF9n5hyJ4W44Ws+aE7oRestTNjC1VLdIb91glMOxtvRcX+c+6aC2Cf6FaKsvrxGYZ48XK2dIKBt7EtZJwPg8kpeQCzkJ2byIykb9saFWcxEQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EqPY0p8jDgE74yvJfwdQ5/+zHgEN+pCu6Yjn/v91/tQ=;
- b=GEXP5XO83slt3HfbMdvF3UDbSxPSTIcr2bPupW67H7kpOM8q/K7fltiZJ+hu2rzluy2UHkLcG6waFN+bYv7EvBxq8i9srKbyKz4p6OtntQpirCCn26uz0nDIQvK7m9PQEDZypH7LR7f11SduKcHL/3dEBl5J+YjwXdONkS+2zL28DrWQmLacNb0o23sJOtYraQhgqsQAvn48mcAoi1rWgVvAZjb/PNvjc6DIfFWXKF4bulNcyDOnPq65KPTDky/zBTVXeUkN+riaheNAox8+MfTE6WgnjsAsMej4dmcIfjFFLkfEFeHxq21KM1fEeKcHisl/qeSQQyUyVvvFMRwr5g==
+ bh=CxotyDfdVYd54Ch4Ez0sz/iofYcg557WNCwfBySVKJ0=;
+ b=DHmT8flkafMcowpmf4/dsqMD8BfSFJmm7WqAViOgw8U7dK2N8D6Inb2x+YqoZihZI4vDrjGOscHkQhoWJY3qDa8/LzH+pVEIYJ6k5uWOoT0PyqMcPXffTiDNTb/1Ev0jIwMGuSm/DIO+WsAhU0tJ/mcmsX4/aUinb1RJRijNfK4=
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from DU0PR04MB9372.eurprd04.prod.outlook.com (2603:10a6:10:35b::7)
- by DBAPR04MB7319.eurprd04.prod.outlook.com (2603:10a6:10:1ac::6) with
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from SA0PR12MB4557.namprd12.prod.outlook.com (2603:10b6:806:9d::10)
+ by LV2PR12MB5991.namprd12.prod.outlook.com (2603:10b6:408:14f::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Wed, 6 May
- 2026 20:45:07 +0000
-Received: from DU0PR04MB9372.eurprd04.prod.outlook.com
- ([fe80::4f6:1e57:c3b9:62b4]) by DU0PR04MB9372.eurprd04.prod.outlook.com
- ([fe80::4f6:1e57:c3b9:62b4%4]) with mapi id 15.20.9891.008; Wed, 6 May 2026
- 20:45:07 +0000
-From: Frank Li <Frank.Li@nxp.com>
-Date: Wed, 06 May 2026 16:44:21 -0400
-Subject: [PATCH v4 9/9] crypto: atmel: Use dmaengine_prep_config_single()
- API
-Content-Type: text/plain; charset="utf-8"
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.15; Wed, 6 May
+ 2026 20:53:15 +0000
+Received: from SA0PR12MB4557.namprd12.prod.outlook.com
+ ([fe80::885a:79b3:8288:287]) by SA0PR12MB4557.namprd12.prod.outlook.com
+ ([fe80::885a:79b3:8288:287%5]) with mapi id 15.20.9891.008; Wed, 6 May 2026
+ 20:53:15 +0000
+Message-ID: <bb047320-594d-46de-9522-1098e784ebc1@amd.com>
+Date: Wed, 6 May 2026 15:53:11 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] usb: xhci-pci: add generic auxiliary device
+ interface
+Content-Language: en-US
+To: Jihong Min <hurryman2212@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Mathias Nyman <mathias.nyman@intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260506032939.92351-1-hurryman2212@gmail.com>
+ <cover.1778099627.git.hurryman2212@gmail.com>
+ <3f26994ebb5f0e4e653a8108a9626bc793148679.1778099627.git.hurryman2212@gmail.com>
+From: Mario Limonciello <mario.limonciello@amd.com>
+In-Reply-To: <3f26994ebb5f0e4e653a8108a9626bc793148679.1778099627.git.hurryman2212@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260506-dma_prep_config-v4-9-85b3d22babff@nxp.com>
-References: <20260506-dma_prep_config-v4-0-85b3d22babff@nxp.com>
-In-Reply-To: <20260506-dma_prep_config-v4-0-85b3d22babff@nxp.com>
-To: Vinod Koul <vkoul@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
- Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
- Herbert Xu <herbert@gondor.apana.org.au>, 
- "David S. Miller" <davem@davemloft.net>, 
- Nicolas Ferre <nicolas.ferre@microchip.com>, 
- Alexandre Belloni <alexandre.belloni@bootlin.com>, 
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Koichiro Den <den@valinux.co.jp>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
- mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, 
- linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev, Frank Li <Frank.Li@nxp.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1778100264; l=1356;
- i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
- bh=ewqGbq/a6Fri69k6AcMWiHQJDkdRRZkdZmXyxU701QQ=;
- b=M3IH1CmJSO6VFOT+XqauC8zPPZJ0y8dBB0JtIAGFpBJ30dT3m2TQljwidfBWOzJtPebEm0xbt
- A4wZS1YV+O6D40lVb1ycWe1xSKtnhBP1yFkfeBUIJUYW3S4bOz7seFu
-X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
- pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
-X-ClientProxiedBy: SA1P222CA0051.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:806:2d0::24) To DU0PR04MB9372.eurprd04.prod.outlook.com
- (2603:10a6:10:35b::7)
+X-ClientProxiedBy: DS7PR03CA0285.namprd03.prod.outlook.com
+ (2603:10b6:5:3ad::20) To SA0PR12MB4557.namprd12.prod.outlook.com
+ (2603:10b6:806:9d::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -84,109 +72,267 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DU0PR04MB9372:EE_|DBAPR04MB7319:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6d11b016-6ab0-45ce-a8e8-08deabb05b63
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4557:EE_|LV2PR12MB5991:EE_
+X-MS-Office365-Filtering-Correlation-Id: e689a10f-c00f-486b-8da0-08deabb17e4e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|19092799006|52116014|1800799024|7416014|376014|366016|56012099003|921020|18002099003|22082099003|38350700014;
+	BCL:0;ARA:13230040|376014|1800799024|366016|7416014|18002099003|22082099003|56012099003|3023799003;
 X-Microsoft-Antispam-Message-Info:
-	8FfxIC8FizgzpznZAz7rryFF5vhhKxMeg1iAUNDcJ2HYaOJy02upVGKcVPifXwcwKD5gmfep1maDtohooyaoUwFa5PSllpCr/n1oPDbEH3RT3g0Gg06lgSlieV2uXIZoIPt7eIBIdvKXFYzh5WtXPMgSb1JMkn6c0R994ikfMhCybdEgc6B0UePjv5DSAM80fYfy+ZOv/XsnvpTC68+w09k3C2dQLBcw2JhjPjc4WsoGJ85IPhsVNv6JJ650RYn0YG8kN2AYlVyucCIU7tqqqK7KsUpnEc3tQRA0OpjVtyAiS5pZFQbdpinSyy3e+91FNr9tMwcLxOv9KfuDbzSqFpN6mpr8vom5D441LUCGb2yzr2RKE3qt5k9gVcUXOlklRY95lUcyM+4OsDt6R6IsPJAh1PTozDBqwWDiGebAsr79AF5PtRgVQG355KOUH5BbDV/NosOMz93YydlZLBCYgYwrbMCCaIMevqol49QL4/Pku5eWM3YQtLXCWt0LKaFioyUijqX86pR2463Npn8e0C15k8+4B94SsUYWWXGaUEzD0BcR7S5V3imEHqSgUKm/T5vaSRScKDmrUuTP9vuVAJUXzQkXu2IgPayCt+FuKvlTLJ4NRRwVK1T70kYO4gTtL+6e14tHLXSYP21uq08KZniym3S+fjgSB2kyOE3/P7eNNnlrM/HT95jCuJDETOyDyEsR+fkgLgfL0AES2XjgDb59g4rVWk2W3u+VpAU8+cBDOTdm2elSasN4HoHbzHeORDvEeVBTrq/QFk1/p2y5Lw==
+	CZCAmMJhKMJtFR/eERTnA0R6AXrPfhuKjEqPAHtTDWFgXotT18dyX0Lp0c8Z9GeKnkB4xWkM/zMuMdXq5SgvlgOt8rJhnl3ISIB76TuyUTkPuXfmCT7zlIuiM1f8rpSFgcJgYP71cqANTpWqK6zmHGBdcNIX5S+d3HTNzMjreZOZWmVOvSfmwA/j0AGi8+mWrNsD+iS/orv9YErSu8XPIj/mdo9i1feq9d4Fm4svpZ63wAK7EEB7LTgZF5novxw9nxzbWk6VWDPv5Zd/wOjksg/7+VmnwWRhQxPC8Q5wlR4seQ0N6Zyxgl2vNZuPbdj7duvtqgpDVZl2r46IwBJd5qXN/bMU7LetMkN1m5dYplN0VX1TTt8OlPVz/Kpd1Z/9iKdvIlsSsu5yRv+KX+zDdLw8EGxuwMnHPuLLqPxZgwRSm34oqdXDOVVuB3QGNwEJswJ94ijtu6oK/9E/EcRfy9A837BlUNftwUfOVePITdG/E7AyhR/Yik1gebvDfdhq7hzzrPaWSqc2BHRsH5Y9xT0wPWXCZ6U26aAvAKe7qy6Occicn7ekdq5eH/VXJkD8Cu2cwr8Ar15PUQGDGIaNAREqpxL3gwwnNXuB07WOq3f6YE90tRQX2AlpYVQstuMivGSIzxcbgB/F8EKnFRLJ27wYx2knRQ5HOeyPHg2Ae3oJBul4Jj2Oow1ZNdLkXZYM
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU0PR04MB9372.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(52116014)(1800799024)(7416014)(376014)(366016)(56012099003)(921020)(18002099003)(22082099003)(38350700014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4557.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(7416014)(18002099003)(22082099003)(56012099003)(3023799003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?a2xwT0ZBa2V0TTRrTTV1MU1UcGVhOHFHcTkxMmdweDZ0eHk4UnNWd2RyRWFV?=
- =?utf-8?B?czVMZDFIYlRKN3hBdXdMNlJxWWIyNklpSzdyRHp6UGxTbklzbldQZlpWNk5S?=
- =?utf-8?B?UkZBVHI3d3dveG04YWV6UGFuZlBaMWlkUVhuSEpUTXZjTGZGY1hxR1k3R0Zk?=
- =?utf-8?B?a0FpMGlJT3JXTWpQdU9RMmJ4RS9Sc013U0lkQXB0dnZJdnVnZUF5TzdTQlRB?=
- =?utf-8?B?cU14WjVtZnA2bjRZME9rN0c3UHZRUkRDdXk5OG4wQkFaRjhXNVIrWWJialE3?=
- =?utf-8?B?dDFjdGszQW81WVJrakJlWHZ1SUpFTStQYlcvSGlQS2ttcnFzN2x2cWdzSUZw?=
- =?utf-8?B?bGlUVWROSkg2Zm9Hb0dBOVFPWDloOE4vTUpYQklKbDlKc2VtVlpuVDZVUHRQ?=
- =?utf-8?B?OGtaYUI4UE14UDdFZ3krRndST282VnFNT0NlT1lZcCs0WWFZeU5zRmxTN3Jx?=
- =?utf-8?B?VXQwTFpTVytYZWxCUGJpTFZlMFdLSzJsOHp0ZlRvMUt2Ti9OZzhkaDBQL1o0?=
- =?utf-8?B?RWNDUEVYbkdIV3huQXdKRVowdzR5aTNGT3I1SXpKelNIdHEwQ1JjN0hJOENi?=
- =?utf-8?B?Nlc2bnZGd0U4emx6WGJIWVJPSkZqNURMSkEyUlhXL3JhaTRUbkhES2RFaTRE?=
- =?utf-8?B?YkVPbkxDZnNRY3JuaHp6ekU4L3lrT0lwVng4TGpaR3lmMDFmK2NVSzZKWmJ2?=
- =?utf-8?B?SkpyREY1V1dCcVJoZ0RIU2xoRlowa25mM1UybnhrUThiZGYwY1ljZktNL25M?=
- =?utf-8?B?RzVOWlNtemQ3WUVjcWc2WjVGZHpsL1JvNTQxSndmZlVjSFlvR0NPaWtWbjIz?=
- =?utf-8?B?ZmpCQ290YTJYV3NRM1dmRzI1RkJZSjU5QWg3eFc1elNrVy9SaGZwdytmeGc2?=
- =?utf-8?B?QS96QWQzMjBvaHlRWGkxYnpsSys5TVV2S0ZpeW9ObzF5RjJqU01VUjdHRUY5?=
- =?utf-8?B?a2tVWXRBRmNNZHR6cExpSjZvQkxaQ0NQS2RSLysvVDlWVEFoSlRyWXQ4RVNT?=
- =?utf-8?B?VklaRVBWWUtWc0lRRWNIRllIS0hISXdQSnFHOUJaVWFWTWJwK01UVEw4Ky9R?=
- =?utf-8?B?VXI1bUkyVm95VVV5ZkkyWnFHSUIySlQ3eEFMdjFkSzdmbmJMalZuOVF6aHBo?=
- =?utf-8?B?L09zMDZicGxNMFgyV2FnckZXeElrYXNyR0s5ZlZRNGlEVXlkMHRwVGtDTjdn?=
- =?utf-8?B?UDlWYWtPeE9mVlY0QVZEYUcvMC9IK2tKVDBoaGVvRUVwTXU0dmFYV0xqUnhQ?=
- =?utf-8?B?NVpPc29mWWQwRlBRUVdrZU4yblRzMGJTNVdjaDZ4MUlkYUp2d3FBWlg5MjF0?=
- =?utf-8?B?NHdMK2NiZ1F0bzlJZ1VDWTNLKzQvNW9LKzhEMGQzSHRCTWtIaVBMUFBSWTJh?=
- =?utf-8?B?eUE2VVR2LzFxWUZqdUErNmh0dUxjSjkyUGVZZ0hpUTNHMnM4azdENEo5UTFz?=
- =?utf-8?B?Y1hOV1JiZUtGZDUrNzlCL0NkWEkxYkNMck1kdVcyWFc4ZHVZZUpMdTJzQjV6?=
- =?utf-8?B?ZEg1cmh3SUJxbEVFTHRjOVQyVGFVSmNycWVZVEQ1QUwreG9wK3M1WTdvQ0tV?=
- =?utf-8?B?R09oNEovRzdpNkl5QnJ2OTFvdEpnODJyclRPYVJxOC9CcHo4S01mdWV4ZzVm?=
- =?utf-8?B?QW93NjEza1pGbW9oYWxyd3R3VXk3bkQ4NGFDYjBaM3pDM2kvTWNyQ0I0c1R4?=
- =?utf-8?B?a3dmWnJzRFBvUEZrWVcxSE1LVXZqLzVNZG4zTUlRY1I1akUwR2lDNmc0cndV?=
- =?utf-8?B?V3lUNnpuSnVxNXh2Q0dWc1lJVVkyb251elJ6b2pGZ3FuY2dxZW1CNXlBakF1?=
- =?utf-8?B?b29yQ0tIdWRYWFhzZ3ZGWDR6NHZSbzVnZkJiWFlTNHZVY0VvWE5EU2RwUHNS?=
- =?utf-8?B?UVB2U1NoRW52Ym5VR2gwWE82TEU0QXhlcTNEeXZUaWsxdG5GOGpvd2oyM0pM?=
- =?utf-8?B?YWRTYjloMEZBc3V0STN4bmorUEVvK2hhdlkvWm42TUYrNFkzd1hHMUdSTnQv?=
- =?utf-8?B?ZkZ5NzdJYTAwTjR4UC9iQjlIeXdwb1JCbHkyNzVROG5sRXVTUzFjM2YwbG9P?=
- =?utf-8?B?amF4K0grNTNrekwwZXUyN0JBOS9mVUErQktmdjB6YVpmbjJrUEVrWGtEb0ZK?=
- =?utf-8?B?OWpoUnZYRkhzRnRoSm9CWGJDd1pWZm1BblcrQ2F0b3IxTEZxeEVLR0FNTTlv?=
- =?utf-8?B?Y3VCTUJRWkJaN0Qva0dzN1d3cFRsYm1SN0RnWHZOQVppR1ZnSXVUNjJzOWdB?=
- =?utf-8?B?akI5T2YzVEFRejNsK3o4bjd6Z2lIL2Nkcm5rSE1MK0VUY3BMclYzVEVjaDhx?=
- =?utf-8?B?Nk9KTWFqbzNZV1FTWmVxVDVGclVaMENlMWJyd0R5R3NBTEpwalg5Zz09?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6d11b016-6ab0-45ce-a8e8-08deabb05b63
-X-MS-Exchange-CrossTenant-AuthSource: DU0PR04MB9372.eurprd04.prod.outlook.com
+	=?utf-8?B?S2xEMDNHSGg5Y1BvbEY5eVVKa29mdFphbXhOQ2FGN2pyMGtUWXRlTHBCTlVO?=
+ =?utf-8?B?dzlxTW9lenVSRWZScVd4VXRORS9GdUJTQ2NnTUlJZUYxNnVFNUZTanpPMnlz?=
+ =?utf-8?B?WUg5WmRuaWwweEdSZXVUWEllTWM0c0E4SkQ0MTJWNXF4UXVkamJvUTluMVYv?=
+ =?utf-8?B?d0duWGIzT0NNbjFjT2dQMjF6ZzRtREFHYjQrTWFJT1FYSHRRTndCaVQvTHhw?=
+ =?utf-8?B?QlZIWFFMVll5WXJBcUppZVc0c0c1R1hFZktkSmlEczV5YVRsbUpVSXdPWHp5?=
+ =?utf-8?B?UURxRG9TNi91Q0l0SG5nd05tdkJEcTBDL0JqbXhiMEVCTU1Wd2pFR0RITlBW?=
+ =?utf-8?B?TzkrWlJ0dG5MTEtnM1RNcEJ4TWxtbzBxMUo0M0Q0d0ZhTmQzNTJTTWZ2VlJU?=
+ =?utf-8?B?VnJ0VFhKTDNEcEdXV3JFSkdMUGFlZ2RKL1R0T0tBYjBVbVAyR0N0cm5BeW1O?=
+ =?utf-8?B?YVVZS0UrTXBmaE1pUXVRQXFOWWg5YlVoUng2ZmFKaTV2Ukp0ZmpmWTdPUjBy?=
+ =?utf-8?B?Rm83ZUFFKzgxaFdGNkJOaElEbmVqNDJBSjFrMVFnMnRCTFpuaGpEWWdacXlS?=
+ =?utf-8?B?aTF3MnFWWGY0Zmg4TnlXaG10VGNXdUczZEFrcGhlVFNFMmtVRG04S3lSSU4v?=
+ =?utf-8?B?dkpRUUl0eWdvOGVsekJwbUJlRzhxZEFxNmR0TEtlMlBxL0g0Wk1wdHFDcjZv?=
+ =?utf-8?B?OHVhY2ZnVUwrdkxaYXpiOEErd2VBMzhyVEJINDIzTEt2ZmFoNkVJY09BVS9L?=
+ =?utf-8?B?K1NJKysvNlNSN3BoNXFDcjVGMkR2WUM1cXl0QmNsTHFGMDlnZXEzZnlJRGFF?=
+ =?utf-8?B?K29PS3ljMHdtV2wycFh6ZllRL3Q2cXY3eDVkZ1p3Mzdsc0FqdkJ2aWVsS3Vs?=
+ =?utf-8?B?c2hCSmYvZWZhVG5tRzNXVmhGemRtOHhoZ3hUS0hid0g0SklubmJtWHdmTlRX?=
+ =?utf-8?B?bW80T0xyQUMxWVFXUG9xNS9qeU5TSWxlWDE0Wm9pc3Q0bDJwQWhzdzJ0Zngr?=
+ =?utf-8?B?U1JYeWxzRENGblJxZ29LenUxUHRTd2R3UFpLUG1BK1lqV3diZkFtd05hd0ox?=
+ =?utf-8?B?YUdGODE3dk9QVGhmcXdjcTBKU0xXRFYrNys5amw5VUFteTRnbCttNU1vbk93?=
+ =?utf-8?B?Znpza082dU9WeHpic0tFdjFvbkhiNWxYVXg5bnFXRFFPUFM4U3BZcWtnUUlE?=
+ =?utf-8?B?SzJaWGVUNGlYSzUrcTZVSmQ1ODdRdW9Qdy9xaEh2dXdjZTZBUFRINmVmVU5V?=
+ =?utf-8?B?eG9CRGVVRWUxTElGS2gxRHBuMjk0QWQ5MWdyN1A2bTd3clBHMHFDM2V3Tnhw?=
+ =?utf-8?B?SDM3Q0VuMEk1UU02S1ZmWnNIVFlvV2IzMmowbHo2bjJXSTBQVGVTM21JT0N3?=
+ =?utf-8?B?Qll2RWRPb2tvT05LRzZyZCs3VFJCRlRCQUd0Wi9EQU1pem1uVHFDZGZTd1hz?=
+ =?utf-8?B?Rm8rQVlsV0RXb1Q4RzJiMnprb3pVbFRBNW5kcFY0cGxYamM2SUt0UFRWRURN?=
+ =?utf-8?B?S3VNVGZ0WS9LYUcxL3R5Q0ttMnVZRE12ZGhHM0poOStrNUo0MmdiYnJNQ3lp?=
+ =?utf-8?B?djBsb0p6VW9WV2VObFRldGRoS1R3SktLU0xHK0RUVjVMZU4yL1hhUmZ3QnN1?=
+ =?utf-8?B?NkpMU0M4ZTZ6dEZ3Z0cvM1dGcnd4S3ROK09KRDlvRFEyZkVPSnVuUDIvTlhq?=
+ =?utf-8?B?c2ErLzJvbWpnVm1NTDZPZlpFK2d4MXB1S0tJVU9PS0RRUmxQeU5xUUx5Smoz?=
+ =?utf-8?B?b3pYa0NZdXVuVnhxQytBaVJKRnh2MkxJcXlnTGFjVzQvbFNYVFRQL2hoTlVi?=
+ =?utf-8?B?MUx0dVlHdXhobU9qRU13SWpCdVlPNWdsLzB6eGFZVkVyY1ErT3BaV0RMT2Qw?=
+ =?utf-8?B?eTMzZlpkc2t0ZDhpWkF5ZEN5WHp6ZkR4MjV0K2FmRXkrVHpKMm8rWUtUSDFz?=
+ =?utf-8?B?OXVWTW9iOWFiaWlpK0lXeFJyS01kRzJGd0Z6dFdwaHpnQ3FVeDlXOTNaZGVV?=
+ =?utf-8?B?TmJQL1JpczlFMnZ6SFFlU3RDVXdKa3ViUG1ObG03azF4VUNnOHdJeGYybWJI?=
+ =?utf-8?B?ZWFwQzVSV0hNaFFCaWlZa2JIcVBnUXVLRXlzU2lLWHE3NlZXempZUXNzanZv?=
+ =?utf-8?B?am8wUzAvSDlRSFgvT1VHL1ZrL1kvNlJOMkFWNWFvSXJxMi9CeVZqYVJuK1FM?=
+ =?utf-8?B?a0FNdC9iTW40NTRXZkl0Y2lJUjIyWnlLL3VjSEZjV2N3SVA2TVFXU2l6TjE5?=
+ =?utf-8?B?NW1GcTBiMnpyTUo5R0xINzAxVEt6MTRGQXppaUFYVEVlOGRteG9IV0NDejhU?=
+ =?utf-8?B?T3FLd0JicTRqcXpDNTA4c2VxWld2Wi9Wc3pZUkRkNi95bTJsYjQ2dz09?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e689a10f-c00f-486b-8da0-08deabb17e4e
+X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4557.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 May 2026 20:45:07.0624
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 May 2026 20:53:15.2858
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1Y08ICFJenWp66Gcn0sR6dTQddvIL6nIBPCijmQmoomGQ0HWcxtflQtRmZgoeWvdL6X1QzijbUPpOPwVZYB02A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAPR04MB7319
+X-MS-Exchange-CrossTenant-UserPrincipalName: BGZbwIM5w34Pqa5f7OX41LZN2ETzjRlQe1VQl0C0kaxvqYHCibdCUpOds0nSupCg55iqjcu7uZtxuNlFANg/Uw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5991
 
-Using new API dmaengine_prep_config_single() to simple code.
 
-No functional change.
 
-Tested-by: Niklas Cassel <cassel@kernel.org>
-Acked-by: Nicolas Ferre <nicolas.ferre@microchip.com>
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
----
- drivers/crypto/atmel-aes.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+On 5/6/26 15:40, Jihong Min wrote:
+> [You don't often get email from hurryman2212@gmail.com. Learn why this is important at https://aka.ms/LearnAboutSenderIdentification ]
+> 
+> Some xHCI PCI controllers expose controller-specific functionality that is
+> not part of generic xHCI operation and is better handled by optional child
+> drivers in other subsystems. Add a small auxiliary device registration path
+> for selected xHCI PCI controllers.
+> 
+> The initial table creates an xhci_pci.hwmon auxiliary device for AMD
+> 1022:43fd controllers. Store the created auxiliary device in devres so the
+> xhci-pci remove path destroys it before HCD teardown. Use a
+> PCI-domain-qualified id so auxiliary device names remain unique across PCI
+> domains.
+> 
+> This keeps xhci-pci responsible only for publishing selected controller
+> functions while allowing subsystem-specific drivers to bind through the
+> auxiliary bus.
+> 
+> Assisted-by: Codex:gpt-5.5
+> Signed-off-by: Jihong Min <hurryman2212@gmail.com>
+> ---
+>   drivers/usb/host/Kconfig    |  10 ++++
+>   drivers/usb/host/xhci-pci.c | 114 ++++++++++++++++++++++++++++++++++++
+>   2 files changed, 124 insertions(+)
+> 
+> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+> index 0a277a07cf70..e0c2c7ac5c97 100644
+> --- a/drivers/usb/host/Kconfig
+> +++ b/drivers/usb/host/Kconfig
+> @@ -42,6 +42,16 @@ config USB_XHCI_PCI
+>          depends on USB_PCI
+>          default y
+> 
+> +config USB_XHCI_PCI_AUXDEV
+> +       bool "xHCI PCI auxiliary device support"
+> +       depends on USB_XHCI_PCI
+> +       select AUXILIARY_BUS
+> +       help
+> +         This enables xHCI PCI support for registering auxiliary devices
+> +         for selected controllers. It is used by optional child drivers
+> +         that bind to xHCI PCI controller-specific functionality through
+> +         the auxiliary bus.
+> +
+>   config USB_XHCI_PCI_RENESAS
+>          tristate "Support for additional Renesas xHCI controller with firmware"
+>          depends on USB_XHCI_PCI
+> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+> index 585b2f3117b0..1ab27d2182eb 100644
+> --- a/drivers/usb/host/xhci-pci.c
+> +++ b/drivers/usb/host/xhci-pci.c
+> @@ -8,6 +8,8 @@
+>    * Some code borrowed from the Linux EHCI driver.
+>    */
+> 
+> +#include <linux/auxiliary_bus.h>
+> +#include <linux/device/devres.h>
+>   #include <linux/pci.h>
+>   #include <linux/slab.h>
+>   #include <linux/module.h>
+> @@ -103,6 +105,114 @@ static int xhci_pci_run(struct usb_hcd *hcd);
+>   static int xhci_pci_update_hub_device(struct usb_hcd *hcd, struct usb_device *hdev,
+>                                        struct usb_tt *tt, gfp_t mem_flags);
+> 
+> +#if IS_ENABLED(CONFIG_USB_XHCI_PCI_AUXDEV)
+> +static const struct {
+> +       struct pci_device_id id;
+> +       const char *aux_dev_name;
+> +} pci_ids_have_aux[] = {
+> +       {
+> +               .id = { PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x43fd) }, /* PROM21 xHCI */
+> +               .aux_dev_name = "hwmon",
+> +       },
+> +       { /* end: all zeroes */ }
+> +};
+> +
+> +struct xhci_pci_aux_devres {
+> +       struct auxiliary_device *auxdev;
+> +};
+> +
+> +static bool xhci_pci_aux_match_id(const struct pci_device_id *id,
+> +                                 const struct pci_dev *pdev)
+> +{
+> +       if (id->vendor != PCI_ANY_ID && id->vendor != pdev->vendor)
+> +               return false;
+> +       if (id->device != PCI_ANY_ID && id->device != pdev->device)
+> +               return false;
+> +       if (id->subvendor != PCI_ANY_ID &&
+> +           id->subvendor != pdev->subsystem_vendor)
+> +               return false;
+> +       if (id->subdevice != PCI_ANY_ID &&
+> +           id->subdevice != pdev->subsystem_device)
+> +               return false;
+> +
+> +       return !((id->class ^ pdev->class) & id->class_mask);
 
-diff --git a/drivers/crypto/atmel-aes.c b/drivers/crypto/atmel-aes.c
-index b393689400b4c17294cba73fcd16567fdd6687f4..d890b5a277b9c1394d2c7912bd663ff86321099f 100644
---- a/drivers/crypto/atmel-aes.c
-+++ b/drivers/crypto/atmel-aes.c
-@@ -795,7 +795,6 @@ static int atmel_aes_dma_transfer_start(struct atmel_aes_dev *dd,
- 	struct dma_slave_config config;
- 	dma_async_tx_callback callback;
- 	struct atmel_aes_dma *dma;
--	int err;
- 
- 	memset(&config, 0, sizeof(config));
- 	config.src_addr_width = addr_width;
-@@ -820,12 +819,9 @@ static int atmel_aes_dma_transfer_start(struct atmel_aes_dev *dd,
- 		return -EINVAL;
- 	}
- 
--	err = dmaengine_slave_config(dma->chan, &config);
--	if (err)
--		return err;
--
--	desc = dmaengine_prep_slave_sg(dma->chan, dma->sg, dma->sg_len, dir,
--				       DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
-+	desc = dmaengine_prep_config_sg(dma->chan, dma->sg, dma->sg_len, dir,
-+					DMA_PREP_INTERRUPT | DMA_CTRL_ACK,
-+					&config);
- 	if (!desc)
- 		return -ENOMEM;
- 
+What's wrong with pci_match_id()?
 
--- 
-2.43.0
+> +}
+> +
+> +static const char *xhci_pci_aux_dev_name(struct pci_dev *pdev)
+> +{
+> +       int i;
+> +
+> +       for (i = 0; pci_ids_have_aux[i].aux_dev_name; i++) {
+> +               if (xhci_pci_aux_match_id(&pci_ids_have_aux[i].id, pdev))
+> +                       return pci_ids_have_aux[i].aux_dev_name;
+> +       }
+> +
+> +       return NULL;
+> +}
+> +
+> +static void xhci_pci_aux_devres_release(struct device *dev, void *res)
+> +{
+> +       struct xhci_pci_aux_devres *devres = res;
+> +
+> +       if (devres->auxdev)
+> +               auxiliary_device_destroy(devres->auxdev);
+> +}
+> +
+> +static void xhci_pci_try_add_aux_device(struct pci_dev *pdev)
+> +{
+> +       struct xhci_pci_aux_devres *devres;
+> +       struct auxiliary_device *auxdev;
+> +       const char *aux_dev_name;
+> +
+> +       aux_dev_name = xhci_pci_aux_dev_name(pdev);
+> +       if (!aux_dev_name)
+> +               return;
+> +
+> +       devres = devres_alloc(xhci_pci_aux_devres_release, sizeof(*devres),
+> +                             GFP_KERNEL);
+> +       if (!devres) {
+> +               dev_warn(&pdev->dev,
+> +                        "failed to allocate auxiliary device state\n");
+> +               return;
+> +       }
+> +
+> +       auxdev = auxiliary_device_create(&pdev->dev, KBUILD_MODNAME,
+> +                                        aux_dev_name, NULL,
+> +                                        (pci_domain_nr(pdev->bus) << 16) |
+> +                                                pci_dev_id(pdev));
+> +       if (!auxdev) {
+> +               devres_free(devres);
+> +               dev_warn(&pdev->dev, "failed to add %s auxiliary device\n",
+> +                        aux_dev_name);
+> +               return;
+> +       }
+> +
+> +       devres->auxdev = auxdev;
+> +       devres_add(&pdev->dev, devres);
+> +}
+> +
+> +static void xhci_pci_try_remove_aux_device(struct pci_dev *pdev)
+> +{
+> +       struct xhci_pci_aux_devres *devres;
+> +
+> +       devres = devres_find(&pdev->dev, xhci_pci_aux_devres_release, NULL,
+> +                            NULL);
+> +       if (!devres || !devres->auxdev)
+> +               return;
+> +
+> +       auxiliary_device_destroy(devres->auxdev);
+> +       devres->auxdev = NULL;
+> +}
+> +#else
+> +static inline void xhci_pci_try_add_aux_device(struct pci_dev *pdev)
+> +{
+> +}
+> +
+> +static inline void xhci_pci_try_remove_aux_device(struct pci_dev *pdev)
+> +{
+> +}
+> +#endif
+> +
+>   static const struct xhci_driver_overrides xhci_pci_overrides __initconst = {
+>          .reset = xhci_pci_setup,
+>          .start = xhci_pci_run,
+> @@ -677,6 +787,8 @@ int xhci_pci_common_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>          if (device_property_read_bool(&dev->dev, "ti,pwron-active-high"))
+>                  pci_clear_and_set_config_dword(dev, 0xE0, 0, 1 << 22);
+> 
+> +       xhci_pci_try_add_aux_device(dev);
+> +
+>          return 0;
+> 
+>   put_usb3_hcd:
+> @@ -713,6 +825,8 @@ void xhci_pci_remove(struct pci_dev *dev)
+>          xhci = hcd_to_xhci(pci_get_drvdata(dev));
+>          set_power_d3 = xhci->quirks & XHCI_SPURIOUS_WAKEUP;
+> 
+> +       xhci_pci_try_remove_aux_device(dev);
+> +
+>          xhci->xhc_state |= XHCI_STATE_REMOVING;
+> 
+>          if (pci_choose_state(dev, PMSG_SUSPEND) == PCI_D0)
+> --
+> 2.53.0
+> 
 
