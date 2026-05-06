@@ -1,124 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CC0A366831
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 22:36:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2683B368299
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 22:37:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778106992; cv=none; b=TOKlsW9ZGCQFe1cgAPjzf+CC4fd+V2pfeqRaspSzOBRrAJV/VRT4aOFZzoqTUgGj4KuwiXlvZkoxu0SgxX9Z4SV74pzeOPUj1nWiHmYc/0/K+/hDPbuKWbph+Q4uy2rE4LQGm/0e0GfRKOeHRgnEovxyyFuD0e1EAjGeqWGhOY0=
+	t=1778107035; cv=none; b=H8LY8Yc2hllkQ6FPoXeU4di3gw/HCih2PSUZjoeDeSYLESQGaA6ONyUVOWz29/tG4F3rEh2300x8FqkXOuzXSLHqKJUyc3O3pL+YbZnfAW9Gyxhhs9N8M4yUyIT35pmPt0pvu9xEeF3OtMVqa3VkyTroU33j1HV+bHYRR7p13Hc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778106992; c=relaxed/simple;
-	bh=EOWSsOJOGzYHMAIoasqQECFNklk4yclhtnH4hXexJaI=;
+	s=arc-20240116; t=1778107035; c=relaxed/simple;
+	bh=jZ/YEXuiVXP2Q21uWF56EImvQlJOw7P4qVosh009zvM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=vAwFSMxi90pB4gMZY52wObIGZXjULwwYjeEhuadvhfiJGMXNBvSsntyfYqIJ+FH+wEoROjp3BKCPnZ0ihRArurRj1rJSN9PY5gw39M9W2y7r6EfJ9gYIZ/RCqAR+TcYYOf7MHwKxNXXNBEHSo5qY9PwyqxPyt52GVJCTAAcrWVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QcDFVNGV; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=M5GyuoW8cmSccrU7HVn4uWR8dYxbXAudx8B3hR8g6e+j19EGJdIVC/eCopSlJnU16Y19toavvb5Ju5RRfxDCW/KwwP3HUcLZRRiS7Hq9w3aqw+6G92qnnzA5gWsonAjmaiAb3dXEZz1vIf5Gjy6+Qa7gAhN/IGZaNmMkd6+RtH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XxDGXHkU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QcDFVNGV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3515EC2BCB0;
-	Wed,  6 May 2026 22:36:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XxDGXHkU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7F71C2BCB0;
+	Wed,  6 May 2026 22:37:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778106992;
-	bh=EOWSsOJOGzYHMAIoasqQECFNklk4yclhtnH4hXexJaI=;
+	s=k20201202; t=1778107034;
+	bh=jZ/YEXuiVXP2Q21uWF56EImvQlJOw7P4qVosh009zvM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=QcDFVNGV6yWXpUo3O1uw+viL05zsMzMRT3s9xsUSONfD4YOSpdjnQyps3xTRo1lbD
-	 PA4Gh23gzQPX1uP8xt1XRPukwTjakn630nx8HsqsW48MyF36ebLN0j6U7Zo/uchZ1z
-	 PJZ0ucsAgO0dt3I/R8Cc1zxBvXd0qX0Ug0PAZPO5mjPXxPPvwWk2eiUvfa3aPcI+dS
-	 /to0R3bdZMLc1wojgLnlyA50aBw6weKy05OrH5iwwnmmljagIyZzateH0HaKHD1vcu
-	 Ob/SMT8M+SrdXM16eto03+v1o6wZaOcfqH9p5Q4ft5LHlICKdiXDflWnJY5Fka7ayT
-	 vwxPFcnsz+AYA==
+	b=XxDGXHkUQiILnM6vQUHdiyaZiXwPjrQ2Fl2ieFOEXNl/VPJFpUcspYzYrkmJez0mj
+	 vM3CnqJFu5iBHTrvfc8cbWcvOlY+oxz43x/u40oI8xy0zZuQfWIzBQLW1NNikMwlmF
+	 G13xiOAbDW/cDpatAF065qoc+rCJKqF5pHrHOtvcQlzmBk3aQtqBZqts8nt8sigqye
+	 OARKYpcpLhXx6xH1cPDDFVYpj6GBLzI0p57hz38/AZJkFndh3L8Z3in806c2lmrH+G
+	 Ilv3FpZdKTSmJHc1YFngiZBVgbZvU68U1icG880q8NiVCpzgkUfmuCXSMZhbTpEBo1
+	 Ssk48L86UXTeA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 5/9] dmaengine: dw-edma: Pass dma_slave_config to
- dw_edma_device_transfer()
+Subject: Re: [PATCH 9/9] soc/tegra: pmc: Move legacy code behind CONFIG_ARM
+ guard
 Reply-To: sashiko@lists.linux.dev
-To: "Frank Li" <Frank.Li@nxp.com>
+To: "Thierry Reding" <thierry.reding@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260506-dma_prep_config-v4-5-85b3d22babff@nxp.com>
-References: <20260506-dma_prep_config-v4-5-85b3d22babff@nxp.com>
+In-Reply-To: <20260506-pmc-v1-9-a6de5da7216b@nvidia.com>
+References: <20260506-pmc-v1-9-a6de5da7216b@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 06 May 2026 22:36:31 +0000
-Message-Id: <20260506223632.3515EC2BCB0@smtp.kernel.org>
+Date: Wed, 06 May 2026 22:37:13 +0000
+Message-Id: <20260506223714.A7F71C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Ignored return value of dw_edma_device_config() causes transfer to=
- proceed with rejected configuration.
-- [High] Data races and violation of atomic configuration due to lockless g=
-lobal state mutation in dw_edma_device_prep_config_sg().
+- [High] Moving `tegra_pmc_early_init()` entirely behind `#if defined(CONFI=
+G_ARM)` drops critical interrupt polarity configuration on 64-bit ARM platf=
+orms.
 --
 
-commit c3c3192e70e9eff9723db89a8944f9898577a1fd
-Author: Frank Li <Frank.Li@nxp.com>
+commit 3d33d60e285505a610396bfade1e54d01280574f
+Author: Thierry Reding <treding@nvidia.com>
 
-dmaengine: dw-edma: Pass dma_slave_config to dw_edma_device_transfer()
+soc/tegra: pmc: Move legacy code behind CONFIG_ARM guard
 
-Pass dma_slave_config to dw_edma_device_transfer() to support atomic
-configuration and descriptor preparation when a non-NULL config is
-provided to device_prep_config_sg().
+This commit wraps legacy power management controller (PMC) code in a
+CONFIG_ARM preprocessor guard. This separates legacy code from code needed
+on modern 64-bit ARM platforms.
 
-Tested-by: Niklas Cassel <cassel@kernel.org>
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
-
-> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
-edma-core.c
-> index f7f58b0010e26..ec6f6b1e48256 100644
-> --- a/drivers/dma/dw-edma/dw-edma-core.c
-> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> diff --git a/drivers/soc/tegra/pmc.c b/drivers/soc/tegra/pmc.c
+> --- a/drivers/soc/tegra/pmc.c
+> +++ b/drivers/soc/tegra/pmc.c
 
 [ ... ]
 
-> @@ -595,7 +610,7 @@ dw_edma_device_prep_config_sg(struct dma_chan *dchan,=
- struct scatterlist *sgl,
->  	if (config)
->  		dw_edma_device_config(dchan, config);
+> @@ -4833,6 +4721,125 @@ static struct platform_driver tegra_pmc_driver =
+=3D {
+>  };
+>  builtin_platform_driver(tegra_pmc_driver);
+> =20
+> +#if defined(CONFIG_ARM)
 
-Is it safe to ignore the return value of dw_edma_device_config() here?
+[ ... ]
 
-If dw_edma_device_config() fails, for example by returning -EINVAL due to a
-peripheral_size mismatch, the code will still call dw_edma_device_transfer()
-with the rejected config.=20
-
-Since dw_edma_device_config() sets chan->non_ll =3D false before validating=
- the
-peripheral config, a failed call might also leave the channel in an
-inconsistent state.
-
-Should this check the return value and return NULL on failure?
-
-Additionally, the commit message mentions this change is to support atomic
-configuration. When device_prep_config_sg() is implemented, the dmaengine
-core deliberately bypasses chan->lock via dmaengine_prep_config_sg_safe(),
-expecting the callback to be re-entrant and thread-safe.
-
-However, dw_edma_device_config() modifies global channel state:
-
-drivers/dma/dw-edma/dw-edma-core.c:dw_edma_device_config() {
-    ...
-    chan->non_ll =3D false;
-    ...
-    memcpy(&chan->config, config, sizeof(*config));
-    chan->configured =3D true;
-    ...
-}
-
-If multiple threads prepare descriptors on the same channel concurrently,
-won't they data race on these fields?=20
-
-Furthermore, dw_edma_device_transfer() still reads the mutated chan->non_ll
-to determine bursts_max. Does this break the re-entrancy promised by the sa=
-fe
-API, potentially leading to incorrectly programmed hardware descriptors?
-
-> -	return dw_edma_device_transfer(&xfer);
-> +	return dw_edma_device_transfer(&xfer, dw_edma_device_get_config(dchan, =
-config));
+> @@ -4911,3 +4918,4 @@ static int __init tegra_pmc_early_init(void)
+>  	return 0;
 >  }
+>  early_initcall(tegra_pmc_early_init);
+> +#endif /* CONFIG_ARM */
+
+Will wrapping tegra_pmc_early_init() entirely behind CONFIG_ARM prevent
+interrupt polarity configuration on 64-bit ARM platforms?
+
+Since CONFIG_ARM is only defined for 32-bit ARM (64-bit uses CONFIG_ARM64),
+this skips the early initialization entirely on modern systems.
+
+However, tegra_pmc_early_init() is the exclusive caller of
+pmc->soc->setup_irq_polarity() after parsing the nvidia,invert-interrupt
+device tree property.
+
+Several 64-bit ARM SoCs (such as Tegra186, Tegra194, and Tegra234) define
+and rely on this callback to configure the Wake AOWAKE control registers.
+
+Does bypassing this initialization leave the hardware in a default state
+that could cause system wake functionality from suspend to behave
+incorrectly?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506-dma_prep_c=
-onfig-v4-0-85b3d22babff@nxp.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506-pmc-v1-0-a=
+6de5da7216b@nvidia.com?part=3D9
