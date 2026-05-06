@@ -1,319 +1,162 @@
-Received: from outbound.pv.icloud.com (pv-2004e-snip4-8.eps.apple.com [57.103.65.239])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D3463AEF51
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 21:09:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.65.239
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778101795; cv=none; b=fNdJvRhu4nYKNHJNyLWO5//sR26stsDhYotezKR2D//R/6RMgep4Th/9JwpLt6fKqIWCE2ywg3hNJZ54WFhnbZWkV8Eg3BGliXa20o6I/SZAi1eJwi95kxU1pVT9BkmvMItBQf3EXE9qlvTOFIGFAvco6Q6s5gFfUMHrl12KdaM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778101795; c=relaxed/simple;
-	bh=xhItaJiFgN5yRzIv4cYQftVxOYXNFdrftDSkh6GkG+I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p09t31A6lfVeOtIsRQcbu513PdKcFGEhlnu5Sixjhoy1eJaq3xEbBHgimnLKe6r5M+ILZpYVhzg0VewkY/9pBUor44wiYpYhDAsPMpAlp5zlHEgVbrWsDGMe6SM+7HCXe+1pdqEPlcUG8uxRh7hPtrGqD/WgYr3n3IWmnsIpEyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=ghk65ysV; arc=none smtp.client-ip=57.103.65.239
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E652A34CFD6
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 21:10:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=170.10.129.124
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778101837; cv=pass; b=jDUc1dn0cU/GBLjd+CzyyVkaHUFJzZwdTV/26osbh4qCLq+6MHItXSqZKSON/wrD/uBamYp3PFnLeHsusWNVNVQP6CT/rEaDuOJ3el3kIOdxwJEirXfXa4lhoT/PbXa2RVa3fCaYVv3oyPD7OkWWh8bq2cAOq3Wm0MsKf1X6Lr4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778101837; c=relaxed/simple;
+	bh=QqaD8UmQ8Z3VOreDAgWf/h1HMc4iYrLZBevxSmnzqSE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jWDdYkFc+JOZWwIMMFT1okOqUHFD8jCarXvK7+Raz8Pvlp9umaHjKdUKdXiabw2mDBGpQSf89xHz41VyX4/bivi0SGL68iPOAUYD+ayPUmdmbrmzImPRUK9BXUGWrue2Itimru4c6O3WlMMwbTflydhSEwUZtjzq09sqdhtYeXk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZwV83VRD; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=Io/1TX9z; arc=pass smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="ghk65ysV"
-Received: from outbound.pv.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-west-1a-10-percent-2 (Postfix) with ESMTPS id BDA9E1800BDE;
-	Wed, 06 May 2026 21:09:50 +0000 (UTC)
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhMHVsARQNFDFYEVBcOVk1RDUEfTgZTHgtKAl93AlEcVg1XQ1QEX1BfHA4FQhlACVQZXV8FWgAwUBtfAkIPHBNWFRMfVFYDQxkQVgFYVl0FTRpcGFkPHABPVloOWwRHFBcbXAAXG0YCBCMCXwBFAl4JVgEwFw9WTVAbXwJCDxwTVhUTAF4PD0xdTQVfDlgBRBRLBVwORgZECB0eVAUOUF0LQAtZAgkAE18ZBlp3AlEcVg1XQ1QEX04ZDEodUlZbE1UXRgk=
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778101792; x=1780693792; bh=hfRdvhCbBJYSad/80rTb5YsNbiHQgE5KIYzOPDw0FTo=; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:x-icloud-hme; b=ghk65ysVIVyDpovWhtZEUkn1AxAOtqBDwAMBONn/Hg0weIkryIh8y5E5/94vpMKnOwTkrMNXA5qw3IqWstXBLFPrho+H9IJA2EnAnVKqY9iqTwt0FyMCpCSuhWqobtk4ygx/gh/DD1Qwwo56xZ9/Quo7IYBTwjK6mDGanzf8IV52NStvrqdSTElLj+XcGuDMTq9zKYRuvftjUJK5lie2LRLS96hshI4XxFRBEXKK45CgtSXfsE4OHKwGNlFSGM4QIiDr3aA1dRYuijoqiRczwk8CFUk7sgjeBwPYvNRjKUsbncrp7PHVe/7WkkhGZFRKOBKxVqTsgRRPBxYC3KeK+Q==
-Received: from [192.168.89.2] (unknown [17.56.9.36])
-	by p00-icloudmta-asmtp-us-west-1a-10-percent-2 (Postfix) with ESMTPSA id 0A7F51800BDD;
-	Wed, 06 May 2026 21:09:47 +0000 (UTC)
-Message-ID: <d5629334-3619-441e-92eb-28845b2cfa57@icloud.com>
-Date: Thu, 7 May 2026 06:09:45 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZwV83VRD";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="Io/1TX9z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778101835;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=wxnLsY+y7KxAKQJwPXt/psWoOCQobXjWIWQgMudLMZw=;
+	b=ZwV83VRDYxg55tckBhjXMhJn9oOk8kDusv+lDjNfTm92EBSdoM7OqBEY2Jv0mc+RaUWNah
+	dxMUr63r1iHjEaMn4XuhrCkiLOj7IxaKuG5RxgXab5SI2IAycmhH24YM7jrkr9DKJ/VEys
+	rFrCdmMqww0UCbAN9I2M3DbI6kKp0Ss=
+Received: from mail-ua1-f71.google.com (mail-ua1-f71.google.com
+ [209.85.222.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-425-FiPhO5T8NEqHowR7I0YXYw-1; Wed, 06 May 2026 17:10:33 -0400
+X-MC-Unique: FiPhO5T8NEqHowR7I0YXYw-1
+X-Mimecast-MFC-AGG-ID: FiPhO5T8NEqHowR7I0YXYw_1778101833
+Received: by mail-ua1-f71.google.com with SMTP id a1e0cc1a2514c-950bdef305bso322949241.3
+        for <linux-pci@vger.kernel.org>; Wed, 06 May 2026 14:10:33 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778101833; cv=none;
+        d=google.com; s=arc-20240605;
+        b=NzyRFKuSf7zinOW/Zeig1IkCPYbj2yG9LHQOpq6TioBnQqG+pY9cOouv8hXl9zUYPT
+         JAEKFOsAj6dDbbTWrTof9Nl7unBvBkl3CvFMM7aWHO4ASWMHK43aNGvYXEcRAGz0DlY/
+         jMIBNv+VHQTgPFJ2TYddV6vNMFWdIcp20VpcrbXm6fBfkfnJlXo7ToYZ+ub6WjzNb2R/
+         tQBRx7u8eP4KrV92TLfCwAQjv6VmPQy04Pw5L9CZZtoTpumlKy2Xn0wzYKW6n/x8+7E7
+         E/qarKG13v88B59rkv1g1IwAiSUk/H1OEDTvFN/X6ids5oK1mOUn49q8Mj9iJjcokylg
+         1OXg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=wxnLsY+y7KxAKQJwPXt/psWoOCQobXjWIWQgMudLMZw=;
+        fh=Uwa8l6HB2kJTGCbiz84BZE47dQtaZ3sXdMBO7FyGPR4=;
+        b=fEIqCzm/DfnYAm4IRvmnVKagB0+CGr045/Ds7Sk1TkedaElxwc9Oh5KxibwI5Ixlir
+         fEMm9rF5RjIrrDYuiJ2wfec4H460RVH57HulEp5/3NxhRYjS4ukekd2szDT2X1eTuXLI
+         rSYdqM2+sVnOuE4za2nkV/ISoe6lfPstCAayR8ZDaRp7wXtPx6suUlaKMmt6zoPG5UAv
+         WyuaOcHSpl+k/QytkXr4z7XZXxnfjlpq1KS0b9bL/PCXikOqzL3lHGI0BUepKvu8UyF5
+         ima9kENZY/GIjGSdrDU9S3RVTRJ+GbhG6q2Vc4OJjxYIwnKLp/C30yjxsANgoyDQZ/1W
+         T3AA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1778101833; x=1778706633; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wxnLsY+y7KxAKQJwPXt/psWoOCQobXjWIWQgMudLMZw=;
+        b=Io/1TX9z1xev4nF01brEehtP0t1Xbm7nnX9/0owhkCO2Ussu9EnVk1mWc3P5TDazAI
+         RFB6pAk9LEp8e9YnSbDq3y1ctRDD4BG/1IgXKrVRc5CFTcdjCoXV/gVz7eL4CU0N15cU
+         3jzrHSCr0QaMwlRykw1sm8RjX0BIJB28f/1Ps4g/TWQAEfcuyTsedq03sUD65aA03Hbj
+         8DhnqkJyEq0g4cPsrLaMnz4BugfloBrbntO+i38o46ZY8RsPV6RSehNhk+Ho6XJZtcSM
+         WWpQHPchPgpGny8k2zxiV9sJ8H9k329F0YD1nO2S+zXc3pZ2NqnGQHsYRy8Omlp7xuDA
+         LrSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778101833; x=1778706633;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=wxnLsY+y7KxAKQJwPXt/psWoOCQobXjWIWQgMudLMZw=;
+        b=Iq3BCHOFO6e09M6JuqjDrAuVcljTmmhoMxWgfJS9DK2/5JpmcTLCPC5l38CHQoipGj
+         LOioSd9ZMPLiiMyXF0h44p4zK8gO1cNzpnOiekKzm1ja5ToFWus0T/fI/sQiu3YbFBEL
+         EcE67FCGq3zztK1mPT4D7VxRUH/l3QmpDYGfzAeOKjYHXHMwpDE2Vu3k5+pImqtixA/D
+         xeV+oM3uZW0WQ79oWC3z9OZOmQg1LMC8zh8anrkSh1GhI/Ktjo3oDphWP2QMc7FAOGT1
+         kQpTFpFZGt9cNt/rPY/toAgLCdM0iD0GazGTzLHJk7op7bTjX5yUbYnKIUztqwiSsfQ5
+         U0xg==
+X-Forwarded-Encrypted: i=1; AFNElJ8fF3meyZiqfG0jfIBaT1QMWnCoZWy/wXLxsABCxIbkN6SJyKFuO+lcGkplIzLvTncWPHpQYYa349s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPQZ5MwNseqpev6wWfx2y5/1ly8BrRoiqt/xfpZnhAe+utUPfS
+	f65he/zm6bfyHqxjsLgvLfTGZuzKPmkXnOWTYGML5RaqXTzDebgeFrR22U8Z0vayhViCpVDXWYG
+	RD40Q1L2Czz2eMDdb4K5O0ILIHO7ES6tSPV1rKIB1mz59ntiRkZvtvNjT1GbYSousTSIGjE1tgc
+	CAwTFllLxCV6HI5Na7B2j6OMN8yIiXS4yt/+df
+X-Gm-Gg: AeBDievjhzLOhP1EvOPwI7Anu5qJ5l+mjaeAhca4o0xM0OntDdtSL60/g3rbdGDYdFs
+	2R9F96i8f4GwHEbzyXvrqvK7lOfjw7B/lvB90pO27OI5NWBPURMXfdf+JS4pjDMYFpy+mUnOYJ4
+	rZOn6OIHIfe3e8cWCIqpoEDV/Q6+X518rlScedJI/9m/OgIMVt2lBIBUORZWwGSp9gR/Upv+UwT
+	5pUPHme1tIFqiGLxZ/A9nNIekwCUjW02Kh1He/VHagcx1Q5sZQVCLp3zA2pQ4lPxn4CibMe+Csc
+	tsaoBA==
+X-Received: by 2002:a05:6102:6a92:b0:605:8280:5e6b with SMTP id ada2fe7eead31-630f8fda840mr2980734137.16.1778101832519;
+        Wed, 06 May 2026 14:10:32 -0700 (PDT)
+X-Received: by 2002:a05:6102:6a92:b0:605:8280:5e6b with SMTP id
+ ada2fe7eead31-630f8fda840mr2980722137.16.1778101832091; Wed, 06 May 2026
+ 14:10:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] usb: xhci-pci: add generic auxiliary device
- interface
-To: Mario Limonciello <mario.limonciello@amd.com>,
- Jihong Min <hurryman2212@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>
-Cc: Guenter Roeck <linux@roeck-us.net>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260506032939.92351-1-hurryman2212@gmail.com>
- <cover.1778099627.git.hurryman2212@gmail.com>
- <3f26994ebb5f0e4e653a8108a9626bc793148679.1778099627.git.hurryman2212@gmail.com>
- <bb047320-594d-46de-9522-1098e784ebc1@amd.com>
-Content-Language: en-US
-From: Jihong Min <hurryman2212@icloud.com>
-In-Reply-To: <bb047320-594d-46de-9522-1098e784ebc1@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: hQpG0iB_lRLBxD8WYBCtYVq52zEpCcEg
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA2MDIwNyBTYWx0ZWRfX1A01szgfm5xO
- faiNiGEX70SOTp9/vJO9A+BsJdcjd17YZ2X2zJc46IPOZnolV8C5QgT+jxikWVinzPK95RXEjC4
- NjG16+TPVzdDCZFI0b40DJwgJnfCTgMM6g5+2vm9rDCXKi3T41m0o1tU519jflNSUTemsu1gcjN
- gnebXyEjpGJQZHyHngJ3PhhArOBOE8MhHNCJZyZlsOHKr5sFrHg8jVz60KMaqsUaimJ2uBxF+ak
- QfS6SCteRITYSL3gr41CsmOg61mQP5wWeOO3R+EFPaoXigqvfkEdHbS8V4jQWhxXLgBHZuLfxvA
- fvOk3GEbgCQRCr8xD+8AmP8dCMyIv2vBGhajdswo/vEZJNofhea+PcTamrUXPM=
-X-Proofpoint-ORIG-GUID: hQpG0iB_lRLBxD8WYBCtYVq52zEpCcEg
-X-Authority-Info-Out: v=2.4 cv=eqjSD4pX c=1 sm=1 tr=0 ts=69fbae20
- cx=c_apl:c_pps:t_out a=azHRBMxVc17uSn+fyuI/eg==:117
- a=azHRBMxVc17uSn+fyuI/eg==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=_EeEMxcBAAAA:8 a=pGLkceISAAAA:8 a=uczJOLB7-GI-dphXaB8A:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=czjwGCTIUPoA:10 a=PgRulw5oR9JgysbTFEid:22
- a=oa2-kN79Xhin27rcel9q:22
+References: <20260429175016.7915-5-djeffery@redhat.com> <20260506182801.GA805231@bhelgaas>
+In-Reply-To: <20260506182801.GA805231@bhelgaas>
+From: David Jeffery <djeffery@redhat.com>
+Date: Wed, 6 May 2026 17:10:19 -0400
+X-Gm-Features: AVHnY4IXvba8Tz17dkRY5kRjhQZN70nrQGJ8xeOK7b1DB0TCF0AP8sKV7dUTWys
+Message-ID: <CA+-xHTFj_J4r2oqG8cPOU_wx7pChjHt9SgyHzKbTD8+KgeSFXw@mail.gmail.com>
+Subject: Re: [PATCH 4/5] PCI: Enable async shutdown support
+To: Bjorn Helgaas <helgaas@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev, 
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, Tarun Sahu <tarunsahu@google.com>, 
+	Pasha Tatashin <tatashin@google.com>, =?UTF-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>, 
+	Jordan Richards <jordanrichards@google.com>, Ewan Milne <emilne@redhat.com>, 
+	John Meneghini <jmeneghi@redhat.com>, "Lombardi, Maurizio" <mlombard@redhat.com>, 
+	Stuart Hayes <stuart.w.hayes@gmail.com>, Laurence Oberman <loberman@redhat.com>, 
+	Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	John Garry <john.g.garry@oracle.com>, kexec@lists.infradead.org, 
+	Pasha Tatashin <pasha.tatashin@soleen.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I refactored the auxiliary device table to use PCI_DEVICE_DATA(), store the
-auxiliary device name in driver_data, and use pci_match_id() inside
-xhci_pci_aux_dev_name(). The relevant change is:
-
-#define PCI_DEVICE_ID_AMD_PROM21_XHCI            0x43fd
-...
-static const struct pci_device_id pci_ids_have_aux[] = {
-     { PCI_DEVICE_DATA(AMD, PROM21_XHCI, "hwmon") },
-     { /* end: all zeroes */ }
-};
-...
-static const char *xhci_pci_aux_dev_name(struct pci_dev *pdev)
-{
-     const struct pci_device_id *id;
-
-     id = pci_match_id(pci_ids_have_aux, pdev);
-     if (!id)
-         return NULL;
-
-     return (const char *)id->driver_data;
-}
-
-I will include this in v3.
-
-Thank you,
-Jihong Min
-
-On 5/7/26 05:53, Mario Limonciello wrote:
+On Wed, May 6, 2026 at 2:28=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> w=
+rote:
 >
+> On Wed, Apr 29, 2026 at 01:50:15PM -0400, David Jeffery wrote:
+> > Like its async suspend support, allow PCI device shutdown to be perform=
+ed
+> > asynchronously to reduce shutdown time.
+> >
+> > Signed-off-by: David Jeffery <djeffery@redhat.com>
+> > Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+> > Tested-by: Laurence Oberman <loberman@redhat.com>
+> > Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> > Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
 >
-> On 5/6/26 15:40, Jihong Min wrote:
->> [You don't often get email from hurryman2212@gmail.com. Learn why 
->> this is important at https://aka.ms/LearnAboutSenderIdentification ]
->>
->> Some xHCI PCI controllers expose controller-specific functionality 
->> that is
->> not part of generic xHCI operation and is better handled by optional 
->> child
->> drivers in other subsystems. Add a small auxiliary device 
->> registration path
->> for selected xHCI PCI controllers.
->>
->> The initial table creates an xhci_pci.hwmon auxiliary device for AMD
->> 1022:43fd controllers. Store the created auxiliary device in devres 
->> so the
->> xhci-pci remove path destroys it before HCD teardown. Use a
->> PCI-domain-qualified id so auxiliary device names remain unique 
->> across PCI
->> domains.
->>
->> This keeps xhci-pci responsible only for publishing selected controller
->> functions while allowing subsystem-specific drivers to bind through the
->> auxiliary bus.
->>
->> Assisted-by: Codex:gpt-5.5
->> Signed-off-by: Jihong Min <hurryman2212@gmail.com>
->> ---
->>   drivers/usb/host/Kconfig    |  10 ++++
->>   drivers/usb/host/xhci-pci.c | 114 ++++++++++++++++++++++++++++++++++++
->>   2 files changed, 124 insertions(+)
->>
->> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
->> index 0a277a07cf70..e0c2c7ac5c97 100644
->> --- a/drivers/usb/host/Kconfig
->> +++ b/drivers/usb/host/Kconfig
->> @@ -42,6 +42,16 @@ config USB_XHCI_PCI
->>          depends on USB_PCI
->>          default y
->>
->> +config USB_XHCI_PCI_AUXDEV
->> +       bool "xHCI PCI auxiliary device support"
->> +       depends on USB_XHCI_PCI
->> +       select AUXILIARY_BUS
->> +       help
->> +         This enables xHCI PCI support for registering auxiliary 
->> devices
->> +         for selected controllers. It is used by optional child drivers
->> +         that bind to xHCI PCI controller-specific functionality 
->> through
->> +         the auxiliary bus.
->> +
->>   config USB_XHCI_PCI_RENESAS
->>          tristate "Support for additional Renesas xHCI controller 
->> with firmware"
->>          depends on USB_XHCI_PCI
->> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
->> index 585b2f3117b0..1ab27d2182eb 100644
->> --- a/drivers/usb/host/xhci-pci.c
->> +++ b/drivers/usb/host/xhci-pci.c
->> @@ -8,6 +8,8 @@
->>    * Some code borrowed from the Linux EHCI driver.
->>    */
->>
->> +#include <linux/auxiliary_bus.h>
->> +#include <linux/device/devres.h>
->>   #include <linux/pci.h>
->>   #include <linux/slab.h>
->>   #include <linux/module.h>
->> @@ -103,6 +105,114 @@ static int xhci_pci_run(struct usb_hcd *hcd);
->>   static int xhci_pci_update_hub_device(struct usb_hcd *hcd, struct 
->> usb_device *hdev,
->>                                        struct usb_tt *tt, gfp_t 
->> mem_flags);
->>
->> +#if IS_ENABLED(CONFIG_USB_XHCI_PCI_AUXDEV)
->> +static const struct {
->> +       struct pci_device_id id;
->> +       const char *aux_dev_name;
->> +} pci_ids_have_aux[] = {
->> +       {
->> +               .id = { PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x43fd) }, /* 
->> PROM21 xHCI */
->> +               .aux_dev_name = "hwmon",
->> +       },
->> +       { /* end: all zeroes */ }
->> +};
->> +
->> +struct xhci_pci_aux_devres {
->> +       struct auxiliary_device *auxdev;
->> +};
->> +
->> +static bool xhci_pci_aux_match_id(const struct pci_device_id *id,
->> +                                 const struct pci_dev *pdev)
->> +{
->> +       if (id->vendor != PCI_ANY_ID && id->vendor != pdev->vendor)
->> +               return false;
->> +       if (id->device != PCI_ANY_ID && id->device != pdev->device)
->> +               return false;
->> +       if (id->subvendor != PCI_ANY_ID &&
->> +           id->subvendor != pdev->subsystem_vendor)
->> +               return false;
->> +       if (id->subdevice != PCI_ANY_ID &&
->> +           id->subdevice != pdev->subsystem_device)
->> +               return false;
->> +
->> +       return !((id->class ^ pdev->class) & id->class_mask);
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
 >
-> What's wrong with pci_match_id()?
->
->> +}
->> +
->> +static const char *xhci_pci_aux_dev_name(struct pci_dev *pdev)
->> +{
->> +       int i;
->> +
->> +       for (i = 0; pci_ids_have_aux[i].aux_dev_name; i++) {
->> +               if (xhci_pci_aux_match_id(&pci_ids_have_aux[i].id, 
->> pdev))
->> +                       return pci_ids_have_aux[i].aux_dev_name;
->> +       }
->> +
->> +       return NULL;
->> +}
->> +
->> +static void xhci_pci_aux_devres_release(struct device *dev, void *res)
->> +{
->> +       struct xhci_pci_aux_devres *devres = res;
->> +
->> +       if (devres->auxdev)
->> +               auxiliary_device_destroy(devres->auxdev);
->> +}
->> +
->> +static void xhci_pci_try_add_aux_device(struct pci_dev *pdev)
->> +{
->> +       struct xhci_pci_aux_devres *devres;
->> +       struct auxiliary_device *auxdev;
->> +       const char *aux_dev_name;
->> +
->> +       aux_dev_name = xhci_pci_aux_dev_name(pdev);
->> +       if (!aux_dev_name)
->> +               return;
->> +
->> +       devres = devres_alloc(xhci_pci_aux_devres_release, 
->> sizeof(*devres),
->> +                             GFP_KERNEL);
->> +       if (!devres) {
->> +               dev_warn(&pdev->dev,
->> +                        "failed to allocate auxiliary device state\n");
->> +               return;
->> +       }
->> +
->> +       auxdev = auxiliary_device_create(&pdev->dev, KBUILD_MODNAME,
->> +                                        aux_dev_name, NULL,
->> + (pci_domain_nr(pdev->bus) << 16) |
->> + pci_dev_id(pdev));
->> +       if (!auxdev) {
->> +               devres_free(devres);
->> +               dev_warn(&pdev->dev, "failed to add %s auxiliary 
->> device\n",
->> +                        aux_dev_name);
->> +               return;
->> +       }
->> +
->> +       devres->auxdev = auxdev;
->> +       devres_add(&pdev->dev, devres);
->> +}
->> +
->> +static void xhci_pci_try_remove_aux_device(struct pci_dev *pdev)
->> +{
->> +       struct xhci_pci_aux_devres *devres;
->> +
->> +       devres = devres_find(&pdev->dev, xhci_pci_aux_devres_release, 
->> NULL,
->> +                            NULL);
->> +       if (!devres || !devres->auxdev)
->> +               return;
->> +
->> +       auxiliary_device_destroy(devres->auxdev);
->> +       devres->auxdev = NULL;
->> +}
->> +#else
->> +static inline void xhci_pci_try_add_aux_device(struct pci_dev *pdev)
->> +{
->> +}
->> +
->> +static inline void xhci_pci_try_remove_aux_device(struct pci_dev *pdev)
->> +{
->> +}
->> +#endif
->> +
->>   static const struct xhci_driver_overrides xhci_pci_overrides 
->> __initconst = {
->>          .reset = xhci_pci_setup,
->>          .start = xhci_pci_run,
->> @@ -677,6 +787,8 @@ int xhci_pci_common_probe(struct pci_dev *dev, 
->> const struct pci_device_id *id)
->>          if (device_property_read_bool(&dev->dev, 
->> "ti,pwron-active-high"))
->>                  pci_clear_and_set_config_dword(dev, 0xE0, 0, 1 << 22);
->>
->> +       xhci_pci_try_add_aux_device(dev);
->> +
->>          return 0;
->>
->>   put_usb3_hcd:
->> @@ -713,6 +825,8 @@ void xhci_pci_remove(struct pci_dev *dev)
->>          xhci = hcd_to_xhci(pci_get_drvdata(dev));
->>          set_power_d3 = xhci->quirks & XHCI_SPURIOUS_WAKEUP;
->>
->> +       xhci_pci_try_remove_aux_device(dev);
->> +
->>          xhci->xhc_state |= XHCI_STATE_REMOVING;
->>
->>          if (pci_choose_state(dev, PMSG_SUSPEND) == PCI_D0)
->> -- 
->> 2.53.0
->>
->
+> I'm concerned about tripping over driver issues, but it's a pretty big
+> benefit.  I think it's worth mentioning the "async_shutdown" module
+> parameter somewhere in the commit logs and putting an example in
+> Documentation/admin-guide/kernel-parameters.txt.
+
+Sure, I can see about adding a document patch to it.
+
+> Might even consider keeping in -next for a cycle+ and targeting v7.3.
+
+I would be happy for it to spend as much time in linux-next as needed
+for people to be comfortable with the risk of odd interactions with
+all the pci drivers it will indirectly impact.
+
+But I must admit my ignorance with some of the details of linux-next.
+Looking at the main code changes, the patchset would seem to want to
+go through driver-core to get to linux-next. But as far as indirect
+impact, it is the diverse collection of devices and drivers under PCI
+which are most affected by the changes. Is there a consensus on how to
+steward a patchset like this one into linux-next?
+
+David Jeffery
+
