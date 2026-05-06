@@ -1,144 +1,183 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E507F30DEAC;
-	Wed,  6 May 2026 19:19:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A3B630AAD8
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 19:21:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778095194; cv=none; b=qKmRsbyu3zET5ZVuwofHXY7XfZn9V1fy5wJCcFus544S/zRA96Nm7rqsoA/h602upBlKw9oYVGe6NZeQ5F52wkYfpss1dHYJAmloOuZobf3eJ652VJm8SLzQTPFW90guq93XmVm841O+NAzFtKIhrO6kc+xq89u8OLl29x0dZLM=
+	t=1778095290; cv=none; b=nUss9p+K1TQJ5du+89aIJwzPzTd8bJcKm6Vq2npQgMtVcJ1LJBo6+RxD7eWBXhJruRV2qPX+PQMaI6TYIF+pPMNoGiaYSH7/YPyoAgqKmajblC0TYRf9LRkXeoxdzCCvCgwhSEqRDBzdg1QNht+XmOvsYPMwcvoEoxqfGwBne1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778095194; c=relaxed/simple;
-	bh=Z4GI0KWcW7yWvDHyuLmOHZwjY6bMRUGR3X8Y519YmG4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=RnDw1MD9ayvPf5PmR1/N1i3Kv4BMmCEmryZ0v/jIxFjWupwmQjQS4vLEgHSqaB+KuSMlmgcDgk1BSy3dSAloOYowRbCa4p6ElRPaRjjWrpwSemKPmJz8eAr7VTqBg3zEaBxd/IpBaXemQqMAFSXxlCUO7LUdhdlUAh8ds7XBQQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aT0n2bji; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778095290; c=relaxed/simple;
+	bh=VCjxNZC5KsDGrQRuvPvDWXpl9BQzPFlVMO9L0XAf7j8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=BUSBUBPXOAgdax5rLUWb1lI4P709OgM47HMYDxcVANJEBn4yVL1KgYR9s2uq5c/SGXwMb407AoHa3/4Ma62u5lKMuLQyTkWzAScGTtjHX50hpO90tRoJgnC+BRiNAXmqEEIjm0Oqmg0kLgkC3ksMQnHZO4aZLipDvgntiey14xY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qux6WVDN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aT0n2bji"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D4B1C2BCB0;
-	Wed,  6 May 2026 19:19:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qux6WVDN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1E18C2BCB0;
+	Wed,  6 May 2026 19:21:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778095193;
-	bh=Z4GI0KWcW7yWvDHyuLmOHZwjY6bMRUGR3X8Y519YmG4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=aT0n2bjiqcpn8fHKqAZt8l+apcufJRB+xQp0YJiQUphuOc3KbVvi3UqHbLYswb26R
-	 CfEE8gZYyQrX49JjxP8TwOGl15sKmqDhYXEiOgbNckVoniL9pH0TgOQkqMZKw37BKy
-	 OUYILhbmCd8DTIRX809UMdmDAvYbF2lP12KHL+IYNBUSMe7f3kKl9PGTmVEQFwNoPX
-	 8DL8lJPcwsTFtB70rFEF21us5CAK63gbmB3dmfwOpgKk2hu+1X6MBwAoZQS7bCuNAS
-	 zTU6u7D32od/nW4tm+wQZ+WhGPj+Sfb2fwGSIdTq5/XxwcuUVb1R7qpKTqbJARWrJG
-	 cQLztV+Gk7lYQ==
-From: Thomas Gleixner <tglx@kernel.org>
-To: Thorsten Leemhuis <regressions@leemhuis.info>, Stefan Roese
- <stefan.roese@mailbox.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- roxmail@list.ru, Linux kernel regressions list
- <regressions@lists.linux.dev>, Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: Regression fyi: pci usb3 card in 32bit P4 s478 stopped working
-In-Reply-To: <87o6iswdqs.ffs@tglx>
-References: <87df54eb-c527-4f1a-a3a7-67afbd73cb47@leemhuis.info>
- <87o6iswdqs.ffs@tglx>
-Date: Wed, 06 May 2026 21:19:49 +0200
-Message-ID: <87lddwwdka.ffs@tglx>
+	s=k20201202; t=1778095289;
+	bh=VCjxNZC5KsDGrQRuvPvDWXpl9BQzPFlVMO9L0XAf7j8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=qux6WVDNaJXjyh2oqABszrnulXMGpj4SEhE6we+NA+03yAtN6k8YIE7oWc2tZopDC
+	 roJeomhUr/LuSBZRNtSXcARhUoT3lddNMbA7miTti0dWQN2jooDjPG5iEZk/1KuYl9
+	 676CqHrQCbtV2CqO+KTiE+oemDNzenbCYfwNtCWkmcFDdHWWUUE2wnHWNGi6hKM4IZ
+	 N0kj4sFEU0Rd/8oV313i9zFc8dy5n+aSfZ2MnRYinkpH5HVfxYaCvoyUjBy2eM7Osu
+	 guZiwLI35KKRvCbzj2Cn14Z2Pb1c6wfGNHbUp0FQuMdSfLNne8y7ILNJrBDgKPoLlK
+	 ltEeq1M/6aa5Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 4/6] vfio/pci: Add PCIe TPH enable/disable support
+Reply-To: sashiko@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260506094623.29327-5-fengchengwen@huawei.com>
+References: <20260506094623.29327-5-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 06 May 2026 19:21:29 +0000
+Message-Id: <20260506192129.A1E18C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-On Wed, May 06 2026 at 21:15, Thomas Gleixner wrote:
-> Seems to be a special case and I don't have access to this Marvell NVME
-> device to validate that a potential fix might work.
->
-> But looking at the context when this commit was merged and the
-> information in the thread discussing the whole issue then this was
-> required because the PCI/MSI code back then did not check upfront
-> whether MSIX is supported by the underlying PCI interrupt domain.
->
-> Since 6.2 (roughly a year after the above commit) this changed so that
-> the code in question can't be reached anymore when the underlying
-> interrupt domain does not support MSI-X, which in turn makes this hack
-> moot.
->
-> That means we can revert to the original behavior on kernels >= 6.2,
-> which still leaves us with the gap of 5.10, 5.15, 6.1 LTS kernels.
->
-> That makes me realize in hindsight that we should have created a quirk
-> for that broken Marvell NVME device instead of playing games with the
-> specification. Even if that spcificiation is not worth the paper it is
-> written on as demonstrated by that Marvell device which has been
-> rubberstamped as fully compliant. Oh well...
->
-> The more I think about it, the more I tend to revert that commit all the
-> way back to 5.10 and wait for people to complain about that broken
-> Marvell device again. If they show up, we fix it properly with a quirk
-> even if it's a major nuisance.
->
-> Roman, can you confirm that the patch below makes your setup work again
-> on 6.18+ kernels?
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] Incorrect `argsz` validation in `vfio_pci_tph_enable()` incorrectl=
+y adds the structure size twice, breaking the UAPI.
+- [High] Missing locking in `vfio_pci_ioctl_tph()` leads to config space an=
+d `pci_dev` bitfield data corruption.
+- [High] Disabling TPH after registering the device exposes it to userspace=
+ races.
+- [High] TPH state is not explicitly disabled when the VFIO device is close=
+d, leading to state inconsistencies and subsequent failures.
+--
 
-Duh! Inserted the non-compiling version and then hit send before
-noticing... Proper patch below.
+commit c8b020c06b71ba6da131d464466e50c2b03f622b
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-Thanks,
+vfio/pci: Add PCIe TPH enable/disable support
 
-        tglx
----
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -656,11 +656,15 @@ static void msix_update_entries(struct p
- 	}
- }
- 
--static void msix_mask_all(void __iomem *base, int tsize)
-+static void msix_mask_all(struct pci_dev *dev, int tsize)
- {
- 	u32 ctrl = PCI_MSIX_ENTRY_CTRL_MASKBIT;
-+	void __iomem *base = dev->msix_base;
- 	int i;
- 
-+	if (pci_msi_domain_supports(dev, MSI_FLAG_NO_MASK, DENY_LEGACY))
-+		return;
-+
- 	for (i = 0; i < tsize; i++, base += PCI_MSIX_ENTRY_SIZE)
- 		writel(ctrl, base + PCI_MSIX_ENTRY_VECTOR_CTRL);
- }
-@@ -724,7 +728,6 @@ static int msix_capability_init(struct p
- 	 */
- 	pci_msix_clear_and_set_ctrl(dev, 0, PCI_MSIX_FLAGS_MASKALL |
- 				    PCI_MSIX_FLAGS_ENABLE);
--
- 	/* Mark it enabled so setup functions can query it */
- 	dev->msix_enabled = 1;
- 
-@@ -737,6 +740,12 @@ static int msix_capability_init(struct p
- 		goto out_disable;
- 	}
- 
-+	/*
-+	 * Ensure that all table entries are masked to prevent stale entries
-+	 * from firing in a crash kernel.
-+	 */
-+	msix_mask_all(dev, tsize);
-+
- 	ret = msix_setup_interrupts(dev, entries, nvec, affd);
- 	if (ret)
- 		goto out_unmap;
-@@ -744,17 +753,6 @@ static int msix_capability_init(struct p
- 	/* Disable INTX */
- 	pci_intx_for_msi(dev, 0);
- 
--	if (!pci_msi_domain_supports(dev, MSI_FLAG_NO_MASK, DENY_LEGACY)) {
--		/*
--		 * Ensure that all table entries are masked to prevent
--		 * stale entries from firing in a crash kernel.
--		 *
--		 * Done late to deal with a broken Marvell NVME device
--		 * which takes the MSI-X mask bits into account even
--		 * when MSI-X is disabled, which prevents MSI delivery.
--		 */
--		msix_mask_all(dev->msix_base, tsize);
--	}
- 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
- 
- 	pcibios_free_irq(dev);
+This patch adds support to enable and disable the TPH function with mode
+selection. It restricts the unsafe device-specific TPH mode via a module
+parameter and disables TPH when taking over device ownership.
+
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index d98d04bad4a39..69f666d20c4af 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+
+[ ... ]
+
+> @@ -1492,6 +1492,43 @@ static int vfio_pci_tph_get_cap(struct vfio_pci_co=
+re_device *vdev,
+>  	return 0;
+>  }
+> =20
+> +static int vfio_pci_tph_enable(struct vfio_pci_core_device *vdev,
+> +			      struct vfio_device_pci_tph_op *op,
+> +			      void __user *uarg)
+> +{
+> +	struct pci_dev *pdev =3D vdev->pdev;
+> +	struct vfio_pci_tph_ctrl ctrl;
+> +	int mode;
+> +
+> +	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, ctrl) +
+> +			sizeof(struct vfio_pci_tph_ctrl))
+> +		return -EINVAL;
+
+Since offsetofend(TYPE, MEMBER) already includes the size of the ctrl membe=
+r,
+does adding sizeof(struct vfio_pci_tph_ctrl) a second time require more
+bytes than the actual structure size?
+
+Could this cause the check to reject valid userspace calls that provide the
+exact structure size?
+
+> +
+> +	if (copy_from_user(&ctrl, uarg, sizeof(ctrl)))
+> +		return -EFAULT;
+> +
+> +	if (ctrl.mode !=3D VFIO_PCI_TPH_MODE_IV &&
+> +	    ctrl.mode !=3D VFIO_PCI_TPH_MODE_DS)
+> +		return -EINVAL;
+> +
+> +	if (ctrl.mode =3D=3D VFIO_PCI_TPH_MODE_DS && !enable_unsafe_tph_ds_mode)
+> +		return -EOPNOTSUPP;
+> +
+> +	/* Reserved must be zero */
+> +	if (memchr_inv(ctrl.reserved, 0, sizeof(ctrl.reserved)))
+> +		return -EINVAL;
+> +
+> +	mode =3D (ctrl.mode =3D=3D VFIO_PCI_TPH_MODE_IV) ? PCI_TPH_ST_IV_MODE :
+> +						     PCI_TPH_ST_DS_MODE;
+> +	return pcie_enable_tph(pdev, mode);
+> +}
+
+If userspace enables TPH but crashes or closes the file descriptor without
+manually disabling it, is the TPH state left enabled since the release path
+does not call pcie_disable_tph()?
+
+If the device is opened again, could subsequent attempts to enable TPH fail
+with -EBUSY because pcie_enable_tph() sees it already enabled?
+
+> +
+> +static int vfio_pci_tph_disable(struct vfio_pci_core_device *vdev)
+> +{
+> +	pcie_disable_tph(vdev->pdev);
+> +	return 0;
+> +}
+> +
+>  static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
+>  			      void __user *uarg)
+>  {
+> @@ -1504,6 +1541,10 @@ static int vfio_pci_ioctl_tph(struct vfio_pci_core=
+_device *vdev,
+>  	switch (op.op) {
+>  	case VFIO_PCI_TPH_GET_CAP:
+>  		return vfio_pci_tph_get_cap(vdev, &op, uarg + minsz);
+> +	case VFIO_PCI_TPH_ENABLE:
+> +		return vfio_pci_tph_enable(vdev, &op, uarg + minsz);
+> +	case VFIO_PCI_TPH_DISABLE:
+> +		return vfio_pci_tph_disable(vdev);
+
+Because vfio_pci_ioctl_tph() handles these ioctls locklessly without
+holding vdev->igate, does concurrently calling pcie_enable_tph() cause a
+data race on the pdev->tph_enabled bitfield?
+
+Could this concurrently overwrite adjacent critical bitfields in
+struct pci_dev like msi_enabled or is_managed?
+
+>  	default:
+>  		/* Other ops are not implemented yet */
+>  		return -EINVAL;
+
+[ ... ]
+
+> @@ -2259,6 +2300,8 @@ int vfio_pci_core_register_device(struct vfio_pci_c=
+ore_device *vdev)
+>  	ret =3D vfio_register_group_dev(&vdev->vdev);
+>  	if (ret)
+>  		goto out_power;
+> +	/* Disable TPH when taking over ownership of the device */
+> +	pcie_disable_tph(pdev);
+
+Is it safe to call pcie_disable_tph() after vfio_register_group_dev()?
+
+Since the device becomes visible to userspace once registered, could a
+userspace process instantly open the device and enable TPH, racing with this
+initialization thread and overwriting the user's configuration?
+
+Should hardware state initialization happen before publishing the device to
+userspace?
+
+>  	return 0;
+> =20
+>  out_power:
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506094623.2932=
+7-1-fengchengwen@huawei.com?part=3D4
