@@ -1,107 +1,563 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80B1B21ABD7;
-	Wed,  6 May 2026 18:28:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 358BF47DD6A;
+	Wed,  6 May 2026 18:34:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778092083; cv=none; b=A744oz5c8dT3PxvWlB0bc1mZA3/MxYz1EV1e9mY0+p1O9CCsyINW7Q1N+gimc9MYbigRJnnDldT+9AgJwSWMHCFBCY84V3NjxuMES1Kp8QN7eh4xLbHUlqPZPIMrVvOnNFyESeMQeZzmIzezeq2Rlzwtbv02pEWfeRfH/yT90Mk=
+	t=1778092461; cv=none; b=jEY0xGA5sQoZNulhr0uOkIlSWO+5C8dTe6feVqIJF0aXLAghoxSAI4w0hhMK/gfxPT4GfDlPpsVFsMRtyHRCDjM56CklEAjomnkle3KS8DeuMEPMfz0cj+NPIVylqIcN4CR79zUJNbHdeNSxXAy0QDCQ0wA5a/2Nsj6VXReDS7M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778092083; c=relaxed/simple;
-	bh=jlQrcIbWomenhNoj/8xHLnSkp47Vutmn92tD24BRgHg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=aLMuLKC0boYKg9vMCORXAgQzS6+5yQvVHskAFUzmuNq0ReCycssoaekhAboveIBaY3rzVCo2/BUgJ8yoTfb40d1feEQ7pOvQyXGtbQyMeXOuxEDZp0MlWbHl57Cq90clHztNMxFGigiBCE5CPEiEJ2jTRY/rpPPVhXsHyo6QQxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V80eYLLv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778092461; c=relaxed/simple;
+	bh=QDrBENxjsSz9HpYZlPbembLQuDucx2Gt2nomRrO4fQI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ljnnq3at85vOEe7x4C3S6gepAVyZIiOTK9aqGmFrDToro/qNIWh6SOUrf3WRnK/TCuMxyHr1wiQxfL4IhZqEyhBLQAX0vq/bbg8BE0XFo15kVYCPvz6qk1oFq6REPKZ/JUsoSKEVODCgsUvJ2THhGgja+wBUiNQW2JNcj9J4beQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=L6h1pyTj; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V80eYLLv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03ABFC2BCB0;
-	Wed,  6 May 2026 18:28:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778092083;
-	bh=jlQrcIbWomenhNoj/8xHLnSkp47Vutmn92tD24BRgHg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=V80eYLLvvYNvUDbpR0K4vfgvU37Du3P8q/mYdWap7aJMgYwDVfSO4wTCRAtDACD0h
-	 if8CYVD1r+xRoM++8D5IRg2t6KdADvfkZ7Us4L9lL0g++faf+Avpg+E1BxS5O6Xzml
-	 Ay3LeydT62BJan98OtknbEk9aIakGsdHkB4MfbajWSXZZseGtyJdg4X9G4Bc8Xl3L+
-	 rh0RYgEgL0iEwPXt/YMWkj3rYtadi5KX5AqnxYROIBso6XsW186SWwX7wpJemQMiXE
-	 7Z+lDPWBGitu+v/QDhOV3zcum8sBM9VdkmzvoUu4XzpmzA5fgse/7h3s6wcXDoSVx6
-	 lQpbgbv+9SoDQ==
-Date: Wed, 6 May 2026 13:28:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Jeffery <djeffery@redhat.com>
-Cc: linux-kernel@vger.kernel.org, driver-core@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?utf-8?B?TWljaGHFgiBDxYJhcGnFhHNraQ==?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>, kexec@lists.infradead.org,
-	Pasha Tatashin <pasha.tatashin@soleen.com>
-Subject: Re: [PATCH 4/5] PCI: Enable async shutdown support
-Message-ID: <20260506182801.GA805231@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="L6h1pyTj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1778092459; x=1809628459;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=QDrBENxjsSz9HpYZlPbembLQuDucx2Gt2nomRrO4fQI=;
+  b=L6h1pyTj2kYkzFpfrCrYProu2BdJ7UI5bdbyqhS/SHuCeMiqcb3P2msy
+   AYRAANiMCbdG4LUqql2RwQVyW8EJQVWHJTUGvCqQ98eepfevJN2QkcKJN
+   b3g5IrnFlxJV37MJYHMSfODnvWPU9IuQX/sRPrY02Fwg5U+x55mWNjtdz
+   LerWJfVZb1D+fowsfeo/baW/cEtQw40KDjxWK3iol8abPl4AjS0SA2nis
+   f0VTfOf2J1/qGC4nVJn3HpEJK5/ak4lrcSGUKok4KPLCvt8y+IsULZJ4M
+   wnWdMuqot98fY6quB4JwqROuZb8rmnVVhnCdDJivcSX5NNauEfDIkxUqT
+   Q==;
+X-CSE-ConnectionGUID: LSwhBE/OT6KLVL9dq7TxGQ==
+X-CSE-MsgGUID: VsFMiQ1FRBW5naC8K4nsBQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11778"; a="82879344"
+X-IronPort-AV: E=Sophos;i="6.23,220,1770624000"; 
+   d="scan'208";a="82879344"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2026 11:34:18 -0700
+X-CSE-ConnectionGUID: pktBvql3TUWGSUHC8UGOWA==
+X-CSE-MsgGUID: Y4XOKrpiQu2NG0OJ84GsmA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,220,1770624000"; 
+   d="scan'208";a="259919397"
+Received: from cmdeoliv-mobl4.amr.corp.intel.com (HELO [10.125.110.169]) ([10.125.110.169])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 May 2026 11:34:16 -0700
+Message-ID: <d42199e8-af04-4232-a9eb-eecd2355c314@intel.com>
+Date: Wed, 6 May 2026 11:34:15 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260429175016.7915-5-djeffery@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v17 11/11] Documentation: cxl: Document CXL protocol error
+ handling
+To: Terry Bowman <terry.bowman@amd.com>, dave@stgolabs.net, jic23@kernel.org,
+ alison.schofield@intel.com, djbw@kernel.org, bhelgaas@google.com,
+ shiju.jose@huawei.com, ming.li@zohomail.com,
+ Smita.KoralahalliChannabasappa@amd.com, rrichter@amd.com,
+ dan.carpenter@linaro.org, PradeepVineshReddy.Kodamati@amd.com,
+ lukas@wunner.de, Benjamin.Cheatham@amd.com,
+ sathyanarayanan.kuppuswamy@linux.intel.com, vishal.l.verma@intel.com,
+ alucerop@amd.com, ira.weiny@intel.com, corbet@lwn.net, rafael@kernel.org,
+ xueshuai@linux.alibaba.com, linux-cxl@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-doc@vger.kernel.org
+References: <20260505173029.2718246-1-terry.bowman@amd.com>
+ <20260505173029.2718246-12-terry.bowman@amd.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260505173029.2718246-12-terry.bowman@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 29, 2026 at 01:50:15PM -0400, David Jeffery wrote:
-> Like its async suspend support, allow PCI device shutdown to be performed
-> asynchronously to reduce shutdown time.
+
+
+On 5/5/26 10:30 AM, Terry Bowman wrote:
+> Add Documentation/driver-api/cxl/linux/protocol-error-handling.rst
+> describing the end-to-end CXL protocol error path: AER ingress, the
+> AER-CXL kfifo handoff, the cxl_core consumer worker, RCD/RCH special
+> cases, severity policy, trace events, and a source code map.
 > 
-> Signed-off-by: David Jeffery <djeffery@redhat.com>
-> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-> Tested-by: Laurence Oberman <loberman@redhat.com>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
-
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I'm concerned about tripping over driver issues, but it's a pretty big
-benefit.  I think it's worth mentioning the "async_shutdown" module
-parameter somewhere in the commit logs and putting an example in
-Documentation/admin-guide/kernel-parameters.txt.
-
-Might even consider keeping in -next for a cycle+ and targeting v7.3.
-
+> This documents the architecture introduced by the preceding patches in
+> this series.
+> 
+> This was generated by claude-opus-4.7.
+> 
+> Assisted-by: Claude:claude-opus-4.7
+> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
 > ---
->  drivers/pci/probe.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  Documentation/driver-api/cxl/index.rst        |   1 +
+>  .../cxl/linux/protocol-error-handling.rst     | 440 ++++++++++++++++++
+>  2 files changed, 441 insertions(+)
+>  create mode 100644 Documentation/driver-api/cxl/linux/protocol-error-handling.rst
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index b63cd0c310bc..86e855090553 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1045,6 +1045,7 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+> diff --git a/Documentation/driver-api/cxl/index.rst b/Documentation/driver-api/cxl/index.rst
+> index 3dfae1d310ca..6861b2e5726a 100644
+> --- a/Documentation/driver-api/cxl/index.rst
+> +++ b/Documentation/driver-api/cxl/index.rst
+> @@ -42,6 +42,7 @@ that have impacts on each other.  The docs here break up configurations steps.
+>     linux/dax-driver
+>     linux/memory-hotplug
+>     linux/access-coordinates
+> +   linux/protocol-error-handling
 >  
->  	bus->bridge = get_device(&bridge->dev);
->  	device_enable_async_suspend(bus->bridge);
-> +	device_enable_async_shutdown(bus->bridge);
->  	pci_set_bus_of_node(bus);
->  	pci_set_bus_msi_domain(bus);
->  	if (bridge->msi_domain && !dev_get_msi_domain(&bus->dev) &&
-> @@ -2753,6 +2754,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	pci_reassigndev_resource_alignment(dev);
->  
->  	pci_init_capabilities(dev);
-> +	device_enable_async_shutdown(&dev->dev);
->  
->  	/*
->  	 * Add the device to our list of discovered devices
-> -- 
-> 2.53.0
-> 
+>  .. toctree::
+>     :maxdepth: 2
+> diff --git a/Documentation/driver-api/cxl/linux/protocol-error-handling.rst b/Documentation/driver-api/cxl/linux/protocol-error-handling.rst
+> new file mode 100644
+> index 000000000000..4d6f33f0ed31
+> --- /dev/null
+> +++ b/Documentation/driver-api/cxl/linux/protocol-error-handling.rst
+> @@ -0,0 +1,440 @@
+> +.. SPDX-License-Identifier: GPL-2.0
+> +
+> +==============================
+> +CXL Protocol Error Handling
+> +==============================
+> +
+> +This document describes how the kernel detects, classifies, dispatches,
+> +logs, and recovers from CXL protocol errors signaled through the PCIe
+> +Advanced Error Reporting (AER) interface. It covers both Virtual
+> +Hierarchy (VH) topologies (Root Ports, Upstream/Downstream Switch
+> +Ports, and Endpoints) and Restricted CXL Host (RCH) topologies
+> +(Root Complex Event Collectors driving Restricted CXL Devices).
+> +
+> +It is intended for kernel developers maintaining or extending
+> +``drivers/pci/pcie/aer*.c``, ``drivers/cxl/core/ras.c``, and the
+> +related plumbing in ``include/linux/aer.h``.
+> +
+> +
+> +Background
+> +==========
+> +
+> +A CXL device reports protocol-layer failures (CXL.cachemem RAS) as
+> +PCIe AER **Internal Errors**: ``PCI_ERR_COR_INTERNAL`` for correctable
+> +events and ``PCI_ERR_UNC_INTN`` for uncorrectable events. From the AER
+> +core's point of view these look like ordinary PCIe AER messages, but
+> +their semantics are CXL-specific: the actual fault information lives
+> +in CXL RAS capability registers, not in the PCIe AER status registers.
+> +
+> +Historically, native CXL.cachemem RAS handling was implemented only
+> +for CXL Endpoints and for RCH Downstream Ports. CXL Root Ports,
+> +Upstream Switch Ports, and Downstream Switch Ports were not covered.
+> +This left the kernel unable to log or react to protocol errors
+> +signaled by switch components.
+> +
+> +The unified CXL protocol error path closes that gap by routing every
+> +CXL Internal Error through a single producer/consumer pipeline shared
+> +by all CXL device types.
+> +
+> +
+> +Architecture overview
+> +=====================
+> +
+> +CXL protocol error handling is implemented as a distinct error plane
+> +layered on top of the existing PCIe AER infrastructure. The two planes
+> +are kept separate:
+> +
+> +* The **PCIe AER plane** continues to handle native PCIe errors
+> +  (Receiver overflows, malformed TLPs, completion timeouts, and so
+> +  on). This is unchanged.
+> +
+> +* The **CXL protocol error plane** owns CXL Internal Errors. The AER
+> +  core forwards them to ``cxl_core`` via a dedicated kfifo; ``cxl_core``
+> +  then dispatches to CE/UE handlers and drives the recovery and
+> +  panic policy.
+> +
+> +The boundary between the two planes is ``is_cxl_error()`` in
+> +``drivers/pci/pcie/aer_cxl_vh.c``, which inspects ``info->is_cxl``
+> +(set from ``pcie_is_cxl()``) together with the PCIe device type and
+> +the AER status word. When ``is_cxl_error()`` returns true the event
+> +is enqueued into the AER-CXL kfifo; otherwise the event flows through
+> +``pci_aer_handle_error()`` as before.
+> +
+> +The pipeline has three layers:
+> +
+> +1. **Producer** (``aer_cxl_vh.c``, ``aer_cxl_rch.c``) - runs in AER
+> +   IRQ/threaded context, classifies, clears the AER CE status, and
+> +   enqueues ``struct cxl_proto_err_work_data``.
+> +2. **Queue** - the AER-CXL kfifo plus a backing ``struct work_struct``.
+> +3. **Consumer** (``cxl_core/ras.c``) - workqueue-context worker that
+> +   resolves the CXL Port topology and dispatches to CE/UE handlers.
+> +
+> +
+> +Topologies
+> +==========
+> +
+> +Two topologies are supported, and both feed the same kfifo.
+> +
+> +Virtual Hierarchy (VH)
+> +----------------------
+> +
+> +A standard CXL VH consists of a CXL Root Port (RP), an optional CXL
+> +Upstream Switch Port (USP), one or more CXL Downstream Switch Ports
+
+I think it's clearer if you say "an optional CXL Upstream Switch Port (USP)
+with one or more CXL Downstream Switch Ports (DSP)" to indicate that this is
+a wholly contained component. Otherwise it reads that only the USP is
+optional.
+
+DJ
+
+> +(DSPs), and CXL Endpoints (EPs) attached to the DSPs. Each component
+> +is a regular PCIe device with a CXL DVSEC and a CXL RAS capability,
+> +and it raises Internal Errors directly to the AER subsystem via the
+> +RP's MSI/MSI-X interrupt.
+> +
+> +The VH producer is ``cxl_forward_error()`` in
+> +``drivers/pci/pcie/aer_cxl_vh.c``.
+> +
+> +Restricted CXL Host (RCH)
+> +-------------------------
+> +
+> +In the RCH topology, a Root Complex Event Collector (RCEC) aggregates
+> +errors from one or more Restricted CXL Devices (RCDs) attached as
+> +Root Complex Integrated Endpoints. The RCEC delivers the AER
+> +interrupt; the AER driver iterates the RCDs beneath it.
+> +
+> +The RCH producer is ``cxl_rch_handle_error_iter()`` in
+> +``drivers/pci/pcie/aer_cxl_rch.c``. For each RCD it finds, it calls
+> +``cxl_forward_error()`` (the same producer helper used by the VH
+> +path), so RCH events end up in the same AER-CXL kfifo as VH events.
+> +
+> +
+> +End-to-end flow
+> +===============
+> +
+> +The diagram below shows the full path from an AER interrupt through
+> +producer classification, kfifo handoff, and consumer dispatch.
+> +
+> +.. code-block:: text
+> +
+> +   +-------------------------------------------------------------------------+
+> +   |                  CXL Internal Error Packet Flow                         |
+> +   |    From PCIe AER Interrupt to CXL Protocol Error Handling and Logging   |
+> +   +-------------------------------------------------------------------------+
+> +
+> +      CXL device (RP / USP / DSP / EP / RCD) raises AER Internal Error
+> +      (correctable PCI_ERR_COR_INTERNAL or uncorrectable PCI_ERR_UNC_INTN)
+> +                      |
+> +                      v
+> +      +-------------------------------------------------------------+
+> +      |    PCIe Root Port AER MSI/MSI-X interrupt fires             |
+> +      +-------------------------------------------------------------+
+> +                      |
+> +      ============= drivers/pci/pcie/aer.c (AER core) =============
+> +                      |
+> +                      v
+> +           +---------------------------------+
+> +           |  aer_irq()  /  aer_isr()        |  (top + threaded handler)
+> +           +---------------------------------+
+> +                      |
+> +                      v
+> +           +---------------------------------+
+> +           |  aer_isr_one_error()            |
+> +           |  aer_isr_one_error_type()       |
+> +           +---------------------------------+
+> +                      |
+> +                      v
+> +          +------------------------------------------+
+> +          |  aer_get_device_error_info()             |
+> +          |  - reads PCI_ERR_COR_STATUS              |
+> +          |  - reads PCI_ERR_UNCOR_STATUS  (*if RP/  |
+> +          |    RCEC/DSP, or non-fatal severity)      |
+> +          |  - sets info->is_cxl = pcie_is_cxl(dev)  |
+> +          +------------------------------------------+
+> +                      |
+> +                      v
+> +           +---------------------------------+
+> +           |  handle_error_source(dev, info) |
+> +           +---------------------------------+
+> +              |                          |
+> +              |  is_cxl_error()          +--->  pci_aer_handle_error()
+> +              |  (CXL device + Internal)        (native PCIe AER path,
+> +              v                                  not covered here)
+> +      +-------------------------------------------------------------+
+> +      | Topology dispatch within AER core:                          |
+> +      |                                                             |
+> +      |   - VH topology  (RP / USP / DSP / EP)                      |
+> +      |     -> drivers/pci/pcie/aer_cxl_vh.c                        |
+> +      |                                                             |
+> +      |   - RCH topology (RCEC iterates RCDs under it)              |
+> +      |     -> drivers/pci/pcie/aer_cxl_rch.c                       |
+> +      +-------------------------------------------------------------+
+> +           |                                            |
+> +           | VH path                            RCH path (RCEC AER)
+> +           v                                            v
+> +      ============= aer_cxl_vh.c (VH      ============= aer_cxl_rch.c (RCH
+> +                    producer) =============              producer) ==========
+> +           |                                            |
+> +           v                                            v
+> +      +-----------------------------+         +-------------------------------+
+> +      | cxl_forward_error(pdev,info)|         | cxl_rch_handle_error_iter()   |
+> +      |  - if AER_CORRECTABLE:      |         |  - iterate each RCD pdev      |
+> +      |     clear PCI_ERR_COR_STATUS|         |    beneath the RCEC           |
+> +      |  - pci_dev_get(pdev)        |         |  - call cxl_forward_error()   |
+> +      |  - build cxl_proto_err_     |         |    for each RCD               |
+> +      |    work_data                |         |    (same producer helper as   |
+> +      |    { pdev, severity }       |         |     the VH path uses)         |
+> +      |  - kfifo_in_spinlocked(...) |         +-------------------------------+
+> +      |  - schedule_work(...)       |                       |
+> +      +-----------------------------+                       |
+> +              |                                             |
+> +              +-----------------+---------------------------+
+> +                                |
+> +                                v
+> +                    +--------------------------+
+> +                    |     AER-CXL kfifo        |
+> +                    |     (work_struct)        |
+> +                    +--------------------------+
+> +                                |
+> +                                v
+> +      ============= drivers/cxl/core/ras.c (consumer worker) =======
+> +                                |
+> +                                v
+> +      +-------------------------------------------------------------+
+> +      | cxl_proto_err_work_fn() (workqueue handler)                 |
+> +      |   for_each_cxl_proto_err(&wd, __cxl_proto_err_work_fn)      |
+> +      +-------------------------------------------------------------+
+> +                      |
+> +                      v
+> +      +-------------------------------------------------------------+
+> +      | __cxl_proto_err_work_fn(wd)                                 |
+> +      |   port = find_cxl_port_by_dev(&pdev->dev, &dport)           |
+> +      |   cxl_handle_proto_error(pdev, port, dport, severity)       |
+> +      |   pci_dev_put(pdev)                                         |
+> +      +-------------------------------------------------------------+
+> +                      |
+> +                      v
+> +      +-------------------------------------------------------------+
+> +      | cxl_handle_proto_error()                                    |
+> +      +-------------------------------------------------------------+
+> +           |                                            |
+> +      pci_pcie_type ==                          pci_pcie_type !=
+> +      PCI_EXP_TYPE_RC_END                       PCI_EXP_TYPE_RC_END
+> +      (RCD Endpoint)                            (VH: RP/USP/DSP/EP)
+> +           |                                            |
+> +           v                                            |
+> +      +-------------------------------------+           |
+> +      | cxl_handle_rdport_errors(pdev)      |           |
+> +      |   - process RCH Downstream Port's   |           |
+> +      |     RAS register block first        |           |
+> +      |   - cxl_handle_cor_ras() for CE     |           |
+> +      |   - cxl_handle_ras() for UE         |           |
+> +      |     (log only; does NOT panic)      |           |
+> +      +-------------------------------------+           |
+> +           |                                            |
+> +           +--------------------+-----------------------+
+> +                                |
+> +                                v
+> +                   +-----------------------------+
+> +                   | severity == AER_CORRECTABLE |
+> +                   +-----------------------------+
+> +                         |                  |
+> +                         yes                no
+> +                         v                  v
+> +            +----------------------+   +-------------------------+
+> +            | cxl_handle_cor_ras() |   | cxl_do_recovery()       |
+> +            |  - emit cxl_aer_     |   | (described below)       |
+> +            |    correctable_      |   +-------------------------+
+> +            |    error trace       |
+> +            | pcie_clear_device_   |
+> +            |   status()           |
+> +            +----------------------+
+> +
+> +                    +-------------------------------+
+> +                    | cxl_do_recovery()             |
+> +                    |  if pci_dev_is_disconnected:  |
+> +                    |    panic("CXL cachemem err.") |
+> +                    |                               |
+> +                    |  ue = cxl_handle_ras()        |
+> +                    |    -> emit                    |
+> +                    |       cxl_aer_uncorrectable_  |
+> +                    |       error trace event       |
+> +                    |                               |
+> +                    |  if (ue):                     |
+> +                    |    panic("CXL cachemem err.") |
+> +                    |                               |
+> +                    |  pcie_clear_device_status()   |
+> +                    |  pci_aer_clear_nonfatal_status|
+> +                    |  pci_aer_clear_fatal_status   |
+> +                    +-------------------------------+
+> +
+> +
+> +Severity policy
+> +===============
+> +
+> +The kernel's response to a CXL protocol error depends on the AER
+> +severity reported by the device and on the result of inspecting the
+> +CXL RAS registers.
+> +
+> +Correctable Error (CE)
+> +----------------------
+> +
+> +* The AER driver clears ``PCI_ERR_COR_STATUS`` in the producer
+> +  (``cxl_forward_error()``) before enqueue, so the device is
+> +  acknowledged even if the consumer drops the event.
+> +* The consumer's ``cxl_handle_cor_ras()`` reads and clears the CXL
+> +  RAS correctable status and emits a ``cxl_aer_correctable_error``
+> +  trace event.
+> +* No recovery action is taken.
+> +
+> +Uncorrectable Error (UE), non-fatal
+> +-----------------------------------
+> +
+> +* The producer enqueues the event without clearing the AER UCE
+> +  status.
+> +* The consumer enters ``cxl_do_recovery()``.
+> +* ``cxl_handle_ras()`` reads the CXL RAS uncorrectable status and
+> +  emits a ``cxl_aer_uncorrectable_error`` trace event.
+> +* If ``cxl_handle_ras()`` returns true (a CXL RAS UE bit was set),
+> +  the kernel panics with ``"CXL cachemem error."``. CXL.cachemem
+> +  traffic cannot be safely recovered in software once corruption is
+> +  observed; continuing risks silent data loss across all devices in
+> +  an interleaved HDM region.
+> +* If ``cxl_handle_ras()`` returns false (no CXL RAS bit set, i.e.
+> +  the AER UCE was a PCIe-side issue rather than a CXL.cachemem
+> +  issue), the AER UCE status is cleared and execution continues.
+> +
+> +Uncorrectable Error (UE), fatal
+> +-------------------------------
+> +
+> +Fatal severity follows the same recovery path as non-fatal in
+> +``cxl_do_recovery()``, with one important caveat: the AER core only
+> +reads ``PCI_ERR_UNCOR_STATUS`` for Root Ports, RCECs, Downstream
+> +Ports, or non-fatal severities (see ``aer_get_device_error_info()``
+> +in ``drivers/pci/pcie/aer.c``). For a fatal UE signaled by an
+> +upstream component, PCI config reads to the source device are
+> +expected to fail, so ``UNCOR_STATUS`` is never retrieved and
+> +``info->status`` stays zero.
+> +
+> +The practical consequence: a fatal UE on an Upstream Switch Port or
+> +Endpoint is **not** classified as a CXL error by ``is_cxl_error()``.
+> +It falls through to ``pci_aer_handle_error()`` and is processed by
+> +the standard AER recovery flow. Only the CXL trace events emitted by
+> +the AER core (``aer_event``) appear; the CXL-specific
+> +``cxl_aer_uncorrectable_error`` event is not emitted on this path.
+> +
+> +Disconnect during recovery
+> +--------------------------
+> +
+> +``cxl_do_recovery()`` checks ``pci_dev_is_disconnected(pdev)`` before
+> +touching the RAS registers. A device disconnecting during an
+> +uncorrectable error event is itself unrecoverable, particularly when
+> +the device backs an interleaved HDM region; in that case the kernel
+> +panics directly rather than returning ``~0u`` from the readl() and
+> +masking the cause.
+> +
+> +
+> +RCD/RCH special cases
+> +=====================
+> +
+> +RCD Endpoint flow
+> +-----------------
+> +
+> +When ``cxl_handle_proto_error()`` sees ``pci_pcie_type(pdev) ==
+> +PCI_EXP_TYPE_RC_END`` (i.e. an RCD Endpoint), it calls
+> +``cxl_handle_rdport_errors()`` first. This processes the RAS state
+> +of the RCH Downstream Port that hosts the RCD before falling through
+> +to the common CE/UE dispatch on the RCD Endpoint itself.
+> +
+> +The RCH Downstream Port's RAS UE is **logged only**: it emits the
+> +trace event but does not panic. The panic decision is taken on the
+> +RCD Endpoint's own RAS in ``cxl_do_recovery()``.
+> +
+> +This split mirrors the structure of an RCH topology: the RCH dport
+> +is functionally a CXL infrastructure component (similar to a switch
+> +port), while the RCD itself is the actual CXL.cachemem source whose
+> +corruption drives the recovery decision.
+> +
+> +RCH ingress aggregation
+> +-----------------------
+> +
+> +RCH errors do not arrive on a per-RCD interrupt. The RCEC is the AER
+> +source, and the AER driver drives ``cxl_rch_handle_error_iter()`` to
+> +walk each RCD beneath it and forward an event per RCD through the
+> +shared kfifo. From the consumer's point of view, RCH-originated
+> +events are indistinguishable from VH events.
+> +
+> +
+> +Trace events
+> +============
+> +
+> +Two unified trace events are emitted from ``cxl_handle_cor_ras()``
+> +and ``cxl_handle_ras()`` and are used by every CXL device type and
+> +both topologies:
+> +
+> +* ``cxl_aer_correctable_error`` - emitted when a CXL RAS CE bit is
+> +  set; carries the human-readable status string.
+> +* ``cxl_aer_uncorrectable_error`` - emitted when a CXL RAS UE bit is
+> +  set; carries both the current status and the first-error pointer.
+> +
+> +Common fields:
+> +
+> +* ``device=<PCI BDF>`` - the source device (always a PCI BDF, even
+> +  for RCH paths where the trace was historically a memdev name).
+> +* ``host=<bridge>`` - the parent host bridge or PCI host BDF.
+> +* ``serial=<u64>`` - the device serial from ``pci_get_dsn()``.
+> +
+> +The ``device`` field replaces the older ``memdev`` field that earlier
+> +revisions emitted on Endpoint events. Userspace consumers
+> +(rasdaemon's ``ras-cxl-handler.c``) need a corresponding update to
+> +read the new field name.
+> +
+> +
+> +Source code map
+> +===============
+> +
+> +============================================  ==============================
+> +File                                          Role
+> +============================================  ==============================
+> +``drivers/pci/pcie/aer.c``                    AER core; receives the IRQ,
+> +                                              builds ``aer_err_info``,
+> +                                              dispatches to either the CXL
+> +                                              path (``is_cxl_error()``) or
+> +                                              ``pci_aer_handle_error()``.
+> +``drivers/pci/pcie/aer_cxl_vh.c``             VH producer; provides
+> +                                              ``is_cxl_error()``,
+> +                                              ``cxl_forward_error()``, the
+> +                                              AER-CXL kfifo, and the
+> +                                              consumer registration
+> +                                              helpers.
+> +``drivers/pci/pcie/aer_cxl_rch.c``            RCH producer; iterates RCDs
+> +                                              under an RCEC and forwards
+> +                                              each via
+> +                                              ``cxl_forward_error()``.
+> +``drivers/cxl/core/ras.c``                    Consumer; defines
+> +                                              ``cxl_proto_err_work_fn()``,
+> +                                              ``cxl_handle_proto_error()``,
+> +                                              ``cxl_handle_rdport_errors()``,
+> +                                              ``cxl_do_recovery()``,
+> +                                              ``cxl_handle_cor_ras()`` and
+> +                                              ``cxl_handle_ras()``.
+> +``include/linux/aer.h``                       Public declarations:
+> +                                              ``struct cxl_proto_err_work_data``,
+> +                                              ``cxl_proto_err_fn_t``,
+> +                                              ``cxl_register_proto_err_work()``
+> +                                              and ``for_each_cxl_proto_err()``.
+> +============================================  ==============================
+> +
+> +
+> +Limitations and future work
+> +===========================
+> +
+> +* **USP/EP fatal UCE is not classified as CXL.** As described under
+> +  `Severity policy`_, the AER core never retrieves
+> +  ``PCI_ERR_UNCOR_STATUS`` in this scenario, so ``is_cxl_error()``
+> +  cannot tag the event as CXL. The event is handled by the AER path
+> +  only. Resolving this requires either an AER-core change to attempt
+> +  a config read with link-validity gating, or a separate CXL-side
+> +  notification mechanism for upstream-signaled fatal events.
+> +* **User-defined status masks** are not yet supported. All CE and UE
+> +  status bits are reported as they appear in the RAS register.
+> +* **Port traversing in cxl_do_recovery()** is not yet implemented; a
+> +  CXL UE today is reported and acted on at the source device only,
+> +  not propagated to ancestor ports.
+> +* The RCH producer (``aer_cxl_rch.c``) currently lives under
+> +  ``drivers/pci/pcie/`` for historical reasons. Moving it to
+> +  ``drivers/cxl/core/ras_rch.c`` is on the roadmap.
+> +
+
