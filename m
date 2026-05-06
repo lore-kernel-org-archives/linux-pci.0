@@ -1,96 +1,137 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C29E72E091B
-	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:39:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFE543AF646
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:40:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778099958; cv=none; b=KIgpauv/p+bQfjQ1+vHKupEfbCNOm5T3/DZGAzRKrASY3E6APrb5cS4rPzxHbrPan0DWFOzRq2EGquO7YTQVV8b9YJDofyFkDMvfizrZpVkpXwpwmv1K/IpN5w0/b66SikZPT7Nzpe0td1O0EXeySVMPKlGwi63YfRgnhZcjqNE=
+	t=1778100019; cv=none; b=Wko8ekgbPbzRbAjtJrWUMMy6EBaRIY2iBP7am1e4S0+KdSZL6iUP4SrjWfeeaoW751/O11OQVYX5BpprrS9F3Fh5FLpahvnEIqw1C2zOS0lV8zYXaNwUYT3OTjIWNtP3PKRtmlD1P6Qjlr9m5w5tcZV2L5ekSI1hKb9BVaDLfBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778099958; c=relaxed/simple;
-	bh=i5B0aGvhK9WAWBKdfB7LGsiLJh0U0Uoi5jcTQf6H9fk=;
+	s=arc-20240116; t=1778100019; c=relaxed/simple;
+	bh=oZjggD/JUIQWp6JBa5utsRzMjSxmrAdtcY9wd8v8Xb8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=XQQ3ZjHj6bKij79OOid4UmtJQ9D2vJ1LiEWC/NGtHPC81T1wP8TnLZd8WaAqwrJkH9r3LK34rGHuPcXBBSKXWoZ3jxrsWfoGqghR3OEe1oL88ps8uaMgWxFD5y/TvYU1ePp8L4waDlXKQUcMb05nS7trY5vNGQR1jXedtxMiyhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nf3GFoIG; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=FMox/DNzoHxOLR70zJXZSeXNP6/GVMq9aXkpgMC8yTX2MoNrWYeyVhHgDzLY+OWSYHVk4QbdDcVcAOfYPAuyNp3yzlt2iMahmRWADEVNTHktZyMa6Vxr6eJkB0cscoSn4O+yfvOp2LvPWSUeVojPNVnw2Cmia/3wTmcTQz5d/jM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G3wEakDL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nf3GFoIG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F1B4C2BCB0;
-	Wed,  6 May 2026 20:39:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G3wEakDL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52D2DC2BCB0;
+	Wed,  6 May 2026 20:40:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778099958;
-	bh=i5B0aGvhK9WAWBKdfB7LGsiLJh0U0Uoi5jcTQf6H9fk=;
+	s=k20201202; t=1778100019;
+	bh=oZjggD/JUIQWp6JBa5utsRzMjSxmrAdtcY9wd8v8Xb8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=nf3GFoIGQ41WE07fPFa7E7p73XTWR7Ob6JS7Wq1KoGkduWtDhgs2TAMJfLPC19WKi
-	 tcsB31p2O6x4CltFX7I/U+hwsVlt+7kUWCHbx7OQT+R9VREutyZl5GfVekDCelh7eH
-	 ZC+Fne8b3pcBVy4bagemPoiQzyDZsA+0WliJ34Rl9M2N4QoJBo7NyK9pvZ/Z2mM30p
-	 960RsbMbFd1XULJn5/D2pKB9DsT/hfe05hqd/shzRjJydQ0EY1r4/jgw6ghLlwYwYt
-	 bDeWO0Tk7bJZruml3j+xYAYaBmMHUt+rAKSQ80A6SkNcdichZ7dW/35UOTX20oCZ0A
-	 7D2TFoV/oUBhw==
+	b=G3wEakDLifC6I2KU32n0ia9DN2TNdrQenCh5Y9lT0BkTG1zzA/R30IgXNG4aiGIhP
+	 mL/dPo21HIQTy4hIeA4QWlNCj7Txhe67cA2zcwHhGNWp94pOobA8LAM1rRs5dufCwY
+	 HNPsx3dsn3lUCVJG+qisWthYTFDnEdl5M0l5RXZhL01+8koMQHpd4AFdPDEWT/aeqo
+	 FL9Xqj+M1jRPmg0ddJu6fyCdOGIyddCjNJXxisocENz0vjZpmKmaapI9n5/+R/jAG6
+	 TCGIWu8UoWKi7n0xNHEJp4oaxVYlETLZi8U+wkz8NtSGlwALdNk+FZKllXDoPY17ll
+	 2DLNs7/5ftrjA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 2/8] PCI: cadence: LGA: Add max_link_speed field and
- 100 ms delay after link training
+Subject: Re: [PATCH v2] PCI: brcmstb: Assign pcie->gen from
+ of_pci_get_max_link_speed()
 Reply-To: sashiko@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260506152346.166056-3-18255117159@163.com>
-References: <20260506152346.166056-3-18255117159@163.com>
+To: "Florian Fainelli" <florian.fainelli@broadcom.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260506164537.103196-1-florian.fainelli@broadcom.com>
+References: <20260506164537.103196-1-florian.fainelli@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 06 May 2026 20:39:17 +0000
-Message-Id: <20260506203918.7F1B4C2BCB0@smtp.kernel.org>
+Date: Wed, 06 May 2026 20:40:18 +0000
+Message-Id: <20260506204019.52D2DC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The generic PCIe compliance fix is silently bypassed for several C=
-adence host controllers due to uninitialized `max_link_speed`.
+- [High] The error handling path in `brcm_pcie_probe()` causes a NULL point=
+er dereference if `pci_host_probe()` fails.
+- [High] The driver fails to handle the `msi-map` device tree binding varia=
+nt when determining if the internal MSI controller should be enabled.
 --
 
-commit c86b1055b143ccb331408ed591540753d03613ac
-Author: Hans Zhang <18255117159@163.com>
+commit 8f216627ede49601fd793dae393dc6232ac6f438
+Author: Florian Fainelli <florian.fainelli@broadcom.com>
 
-PCI: cadence: LGA: Add max_link_speed field and 100 ms delay after link tra=
-ining
+PCI: brcmstb: Assign pcie->gen from of_pci_get_max_link_speed()
 
-This commit adds a mandatory 100 ms delay after link training completes for
-speeds > 5.0 GT/s in the Cadence PCIe host controller to comply with PCIe
-r6.0. It adds a max_link_speed field to track the speed and triggers the
-delay if this speed is greater than 2.
+After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
+pcie->gen stopped being assigned and as a result the established PCIe
+link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
+to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/=
-drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> index 2b0211870f02a..51376f69d0076 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-[ ... ]
-> @@ -115,6 +116,9 @@ int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc,
->  	if (!ret && rc->quirk_retrain_flag)
->  		ret =3D cdns_pcie_retrain(pcie, pcie_link_up);
+Whether the 'max-link-speed' property is not specified, or it exceeds
+Gen3, resort to the HW defaults.
+
+Link: https://github.com/raspberrypi/linux/issues/7343
+
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controll=
+er/pcie-brcmstb.c
+> index 714bcab97b603..08a0e7091cedc 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -2072,8 +2072,10 @@ static int brcm_pcie_probe(struct platform_device =
+*pdev)
+>  		return PTR_ERR(pcie->clk);
 > =20
-> +	if (!ret)
-> +		pcie_wait_after_link_train(pcie->max_link_speed);
+>  	ret =3D of_pci_get_max_link_speed(np);
+> -	if (pcie_get_link_speed(ret) =3D=3D PCI_SPEED_UNKNOWN)
+> +	if (ret < 0 || ret > 3)
+>  		pcie->gen =3D 0;
+> +	else
+> +		pcie->gen =3D ret;
+> =20
+>  	pcie->ssc =3D of_property_read_bool(np, "brcm,enable-ssc");
 
-Since struct cdns_pcie is zero-initialized by glue drivers, max_link_speed
-will default to 0 for drivers that are not updated by this series (such as
-pcie-sg2042.c, pci-sky1.c, and pcie-cadence-plat.c).
+This isn't a regression from this commit, but while reviewing this function
+I noticed a pre-existing regression. The driver currently checks for
+msi-parent but does not check for the msi-map device tree binding variant:
 
-If max_link_speed is 0, the condition max_link_speed > 2 in
-pcie_wait_after_link_train() will evaluate to false, meaning the mandatory
-100ms compliance delay will be bypassed for those platforms.
+drivers/pci/controller/pcie-brcmstb.c:brcm_pcie_probe() {
+    ...
+	if (pci_msi_enabled()) {
+		struct device_node *msi_np =3D of_parse_phandle(pcie->np, "msi-parent", 0=
+);
 
-Could the core driver dynamically read the hardware capability (for example,
-from cdns_pcie_readl(pcie, ... + PCI_EXP_LNKCAP) & PCI_EXP_LNKCAP_SLS) when
-max_link_speed is 0 to ensure compliance across all Cadence host platforms?
+		if (msi_np =3D=3D pcie->np)
+			ret =3D brcm_pcie_enable_msi(pcie);
+    ...
+}
 
-> +
->  	return ret;
->  }
->  EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
+Will this bypass brcm_pcie_enable_msi() and prevent the creation of the
+local MSI domain if a platform's DT uses msi-map instead of msi-parent
+to reference the built-in MSI controller?
+
+I also noticed another pre-existing regression in the probe error handling =
+path:
+
+drivers/pci/controller/pcie-brcmstb.c:brcm_pcie_probe() {
+    ...
+	ret =3D pci_host_probe(bridge);
+	if (!ret && !brcm_pcie_link_up(pcie))
+		ret =3D -ENODEV;
+
+	if (ret) {
+		brcm_pcie_remove(pdev);
+		return ret;
+	}
+    ...
+}
+
+If pci_host_probe(bridge) fails early before allocating bridge->bus,
+bridge->bus will remain NULL.
+
+Inside brcm_pcie_remove(pdev), bridge->bus is passed directly to
+pci_stop_root_bus(bridge->bus).
+
+The function pci_stop_root_bus() evaluates pci_is_root_bus(bus), which
+dereferences the pointer via !(bus->parent).
+
+Does this cause a NULL pointer dereference and a kernel panic if
+pci_host_probe() fails?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506152346.1660=
-56-1-18255117159@163.com?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506164537.1031=
+96-1-florian.fainelli@broadcom.com?part=3D1
