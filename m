@@ -1,198 +1,127 @@
-Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9353876BF;
-	Wed,  6 May 2026 20:30:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA3DB303CAE
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 20:37:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778099435; cv=none; b=LMhbBnzxNkosMX5wn/CNXw9ZhIzwRVLTnNr4P/2rmIosmiw7iqPca7AqvTqk2gsHL+6/Pe8GylwXm2AMc4JVxiOsWwWeg4AyoJ6qvFzN+SR5w0gy3T9Q9K4sSkpAviP+x1b8oeKBcg1mHOjQVG0nya0KdjfBtzpaZWK2BfK+S3c=
+	t=1778099827; cv=none; b=Ra2MirheEyXtrUeKLHyHC+y/Ux24rBr39K9fSlpFTLBszBoJxvWMkxkAJhfSV80ar+30/c2Y+5pS74auyrWox1LUZVGqDPhdXiMsjUF9FP8oQ1yp3lsfERmva9yL/zXaAWh1orH6WRJRgNwlUPybwQcYTSFOUMtBHicBr1HrSds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778099435; c=relaxed/simple;
-	bh=ElJosHTYLcI9BgvAkBOdPtaYbxUdlkp93c6ZPh+hIQ4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Oh+zZ91cJdaqqm3Hn44tWu3DWdauSjNGYP7nSWNn7JWxhX1SNdU9cMqpl7eAZoQ5/7w95G3S0RRz/uRkHwcqqj6dCDZLHvYFKmMK4FD55QqTYGDvcTfRePQcggddC5Yk67kR8SEgiDUGg2oXXhTvTy2Nm7PssBqtOfN92r8kwdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=P6Hvk6+A; arc=none smtp.client-ip=185.171.202.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1778099827; c=relaxed/simple;
+	bh=OrRl2iX3SeNhqMsYeeJaOE+TfYPz2RrvsWs2Iaq7bOg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=bnAi+fjNaqvCQBXvgtw8GJoQMG1iKsz18/dp1KpsKDP3pitq/ilrcYLptsXfer0LdU0zdXi/SjXShhI5cpmdWmNcHqFyRlkUqb7ikvW3JLFOmUdkpjVhE4AYYpjFmRB4awrxgToslhNbxf3jBIDYIjh8PN6g3OMe9L/96iZYY74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JaP354Gs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="P6Hvk6+A"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id 6E250C5DC52;
-	Wed,  6 May 2026 20:31:16 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id E9AF660558;
-	Wed,  6 May 2026 20:30:28 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 879BB107F1E2B;
-	Wed,  6 May 2026 22:30:16 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1778099425; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=Vrqq7dyzDgCl+FqaMvTiuXKBdsOhTj/wqsPWsAfCeVU=;
-	b=P6Hvk6+A9KAGIiXMc5ppzQ8YnInesNyobJwlVOScdEn3BK6ZEG23RDVXqJ6UhXoJCZ/ClQ
-	IUaW5ffmO1GB5JT6pTn4JtgmuSK+cRR3G1OcUYmDqGuh+VBCxuJ5HSm/LVFRPC4a7eFPCK
-	lYEJgLQ08RS58hm0mDonItlSHMq4n57ZfMggV7q1BtmhvLggvm/45yz/tuzkuo9gCOFf+u
-	3K5HNHEI5PY46RtLY6F5VEi1OqnYZRWCqhL897NXI0JaUY6wU9HQsCRvqSXESwzhM7jo2T
-	za6fvFc/XcHv7AFGlUDrBhtbj3FxDismo+IFvtdNJhuaoK/yerA+Brrcvr3ndA==
-Date: Wed, 6 May 2026 22:30:15 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, Krzysztof
- Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Geert
- Uytterhoeven <geert+renesas@glider.be>, Kalle Niemi <kaleposti@gmail.com>,
- Matti Vaittinen <mazziesaccount@gmail.com>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, Sascha
- Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team
- <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, Michael
- Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, Andi
- Shyti <andi.shyti@kernel.org>, Wolfram Sang
- <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, Arnd
- Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, Charles Keepax
- <ckeepax@opensource.cirrus.com>, Richard Fitzgerald
- <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, Linus
- Walleij <linusw@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Mark
- Brown <broonie@kernel.org>, Len Brown <lenb@kernel.org>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus
- <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang
- <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
- Dan Williams <dan.j.williams@intel.com>, Shawn Guo <shawnguo@kernel.org>,
- Wolfram Sang <wsa@kernel.org>, linux-kernel@vger.kernel.org,
- driver-core@lists.linux.dev, imx@lists.linux.dev,
- linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
- linux-i2c@vger.kernel.org, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
- patches@opensource.cirrus.com, linux-gpio@vger.kernel.org,
- linux-pm@vger.kernel.org, linux-spi@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, Allan Nielsen
- <allan.nielsen@microchip.com>, Horatiu Vultur
- <horatiu.vultur@microchip.com>, Steen Hegelund
- <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v6 13/27] PCI: of: Remove fwnode_dev_initialized() call
- for a PCI root bridge node
-Message-ID: <20260506222846.68963c71@bootlin.com>
-In-Reply-To: <20260325202037.GA1291636@bhelgaas>
-References: <20260325143555.451852-14-herve.codina@bootlin.com>
-	<20260325202037.GA1291636@bhelgaas>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JaP354Gs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E69AC2BCB0;
+	Wed,  6 May 2026 20:37:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778099827;
+	bh=OrRl2iX3SeNhqMsYeeJaOE+TfYPz2RrvsWs2Iaq7bOg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=JaP354Gs67nU6B1OlPKItuXaVa+WugmdifUNDP9SwGuXzahnBCkauwJZOVlZjLp/h
+	 uXJ8E36oYGPgB6og6lP2f5ugoh/qFJXquRqrudRn/ZuBgGdJdHfEW/zqsVkWfaxKlc
+	 DnK+GOXo7ZE0gx7QRvbxZ/2NTDwxa3uAYsP2NkJW3qlnmbijM8eGHYSiSXwW82n4tC
+	 KhHstbqDPU4j3GeTuMRuoqaCugzDBeTK+jgNWBAcFMFZ53hsOE/doTeCY9RzRjYknG
+	 M33u7cCQQ12dBndDcNMF87abhCy+Q3cwgWmTVkxrkLT4rg1jQrpxreoNm3VLs+5/T6
+	 dk/A4NaeeTHew==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 3/6] PCI: Consolidate delimiter handling into
+ pci_dev_str_match()
+Reply-To: sashiko@lists.linux.dev
+To: "Wei Wang" <wei.w.wang@hotmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <SI2PR01MB43933D93A8B638C86C84D405DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+References: <SI2PR01MB43933D93A8B638C86C84D405DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 06 May 2026 20:37:06 +0000
+Message-Id: <20260506203707.3E69AC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
 
-Hi Bjorn,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] When path-based parsing fails, the error message logs the remain=
+ing parameters (or an empty string) instead of the malformed parameter.
+- [Medium] Replacing a rate-limited print with an unconditional `pr_err()` =
+causes severe boot log spam for malformed parameters.
+--
 
-On Wed, 25 Mar 2026 15:20:37 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+commit aaf5aed76bd0649688730dce72d818789919c430
+Author: Wei Wang <wei.w.wang@hotmail.com>
 
-> On Wed, Mar 25, 2026 at 03:35:40PM +0100, Herve Codina wrote:
-> > During the instantiation of devices described by a device-tree overlay
-> > applied on a PCI device, devlink displays the following kind of debug
-> > messages instead of creating the expected links:
-> >    'Not linking xxxx - might never become dev'
-> > 
-> > Without those expected links, the device removal order cannot be
-> > correct.
-> > 
-> > Those debug traces are printed by fw_devlink_create_devlink(). In our
-> > use case, they are all printed because the supplier of the link has at
-> > least one of its ancestor with its fwnode flag FWNODE_FLAG_INITIALIZED
-> > set.
-> > 
-> > The culprit ancestor is the PCI root bridge.
-> > 
-> > The fwnode related to the PCI root bridge is created dynamically by the
-> > of_pci_make_host_bridge_node() function. During this creation
-> > fwnode_dev_initialized() is called which set the FWNODE_FLAG_INITIALIZED
-> > flag.
-> > 
-> > Calling fwnode_dev_initialized() tells devlink that the device related
-> > to this node is handled out of the driver core. This is not correct in
-> > our case. Indeed the device related to this firmware node is handled
-> > using driver core mechanisms and is fully compliant devlink
-> > expectations.
-> > 
-> > Simply remove the fwnode_dev_initialized() call. With that done, the
-> > devlink debug messages are no more displayed and links that were missing
-> > are correctly created.
-> > 
-> > Signed-off-by: Herve Codina <herve.codina@bootlin.com>  
-> 
-> I would ordinarily make sure the person who added
-> fwnode_dev_initialized() here was ok with its removal, but it looks
-> like you added this with 1f340724419e ("PCI: of: Create device tree
-> PCI host bridge node"), so I assume you're ok with removing it :)
+PCI: Consolidate delimiter handling into pci_dev_str_match()
 
-Yes, I am really ok to remove it :)
+This commit moves the ';' or ',' delimiter checking logic directly into
+pci_dev_str_match(), simplifying caller code. It also updates the function
+to return -ENODEV when parsing reaches the end of the list or encounters an
+invalid format.
 
-> 
-> I suppose there could be a "Fixes: 1f340724419e" tag, but maybe
-> there's no need to backport this anywhere?
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e017200694d8a..ebd1e81264d21 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+[ ... ]
+> @@ -397,16 +402,28 @@ static int pci_dev_str_match(struct pci_dev *dev, c=
+onst char *p,
+>  		 */
+>  		ret =3D pci_dev_str_match_path(dev, p, &p);
+>  		if (ret < 0)
+> -			return ret;
+> +			goto not_found;
 
-Yes, I will add the Fixes tag.
+In pci_dev_str_match_path(), the pointer p is advanced immediately:
 
-Also the previous patch ("PCI: of: Set fwnode device of newly created PCI
-device nodes") fixes 407d1a51921e ("PCI: Create device tree node for bridge")
+static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
+				  const char **endptr)
+{
+...
+	*endptr =3D strchrnul(path, ';');
 
-I plan to add "Fixes: 407d1a51921e" to the previous patch to make things
-consistent.
+Since pci_dev_str_match() calls pci_dev_str_match_path(dev, p, &p), the loc=
+al
+pointer p is updated to the end of the parameter before returning an error.
 
-To ease backports and avoid conflicts, I plan to add 'Cc: stable' in 4
-patches:
- - patch 13 "PCI: of: Remove fwnode_dev_initialized() call for a PCI root
-   bridge node"
-   This current patch with Fixes added
+When we jump to not_found, does this mean the pr_err() will print the
+remaining parameters (or an empty string) instead of the malformed paramete=
+r?
 
- - patch 12 "PCI: of: Set fwnode device of newly created PCI device nodes"
-   The previous patch with Fixes added
+>  		else if (ret)
+>  			goto found;
+>  	}
+> =20
+> -	*endptr =3D p;
+> -	return 0;
+> +not_found:
+> +	if (ret < 0)
+> +		pr_err("PCI: Can't parse parameter: %s\n", p);
 
- - patch 11 "PCI: of: Use fw_devlink_set_device()"
-   Avoid conflict when patch 13 is applied
+Because pci_dev_str_match() is evaluated for every PCI device during boot
+enumeration (for example, through __pci_config_acs()), it is called
+repeatedly.
 
- - patch 6  "driver core: fw_devlink: Introduce fw_devlink_set_device()"
-   Needed for patch 11 and 12
+Could this unconditional pr_err() cause severe boot log spam if a malformed
+parameter is passed on the kernel command line?
 
-Do you think it makes sense ?
+The previous code in __pci_config_acs() used a rate-limited pr_warn_once(),
+which this commit removed:
 
-Best regards,
-Hervé
+[ ... ]
+> @@ -933,18 +950,11 @@ static void __pci_config_acs(struct pci_dev *dev, s=
+truct pci_acs *caps,
+> =20
+>  		ret =3D pci_dev_str_match(dev, p, &p);
+>  		if (ret < 0) {
+> -			pr_warn_once("PCI: Can't parse ACS command line parameter\n");
+>  			break;
+>  		} else if (ret =3D=3D 1) {
+[ ... ]
 
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> > ---
-> >  drivers/pci/of.c | 1 -
-> >  1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> > index b694fcda16b1..0993257fe025 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -811,7 +811,6 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
-> >  	 */
-> >  	of_node_set_flag(np, OF_POPULATED);
-> >  	fw_devlink_set_device(&np->fwnode, &bridge->dev);
-> > -	fwnode_dev_initialized(&np->fwnode, true);
-> >  
-> >  	ret = of_changeset_apply(cset);
-> >  	if (ret)
-> > -- 
-> > 2.53.0
-> >   
-
-
-
--- 
-Hervé Codina, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/SI2PR01MB439385689A=
+32A1DDA9CEABE1DC3F2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com?part=3D3
