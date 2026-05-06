@@ -1,215 +1,185 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010058.outbound.protection.outlook.com [52.101.56.58])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A976E30DD1C;
-	Wed,  6 May 2026 21:36:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.58
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778103417; cv=fail; b=mpTeaOCknV+WghAdx1m35v7pySgsnUUvYQZ5Qn93RGfrzRxahNqxUeJvMh8ek+05VV4A960DrDOmXXcutBVPAzyvZLI9qK01zmA2fL6eJj4/ab66l7ma7diJe1rWyGG1T5pqHNE7gVxxypRcuTu4iw2MMq94DAUrFmN6spXpXxE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778103417; c=relaxed/simple;
-	bh=onJWV/xrbGLNOuITWrgGfPk2xc/1uvfYLplnv4Yd2rE=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=bT8aEMzsZ/oQl/gO6HVF2yoY6y6Yck2p8KB2CIiwKvlqHfKPIGju9SRS1qFLcInJFgS8Bq5IvJfRuWu6EDKfMU/1bXJDZseJneZTrqwzVWxrYJk2oRS9vG6trxZjRniIXMRYopO8NzpzNATKZvo/xYsAcX+sY25pSCuEjQQxs2I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=UvsnLOWN; arc=fail smtp.client-ip=52.101.56.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56E030DD1C
+	for <linux-pci@vger.kernel.org>; Wed,  6 May 2026 21:39:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778103545; cv=none; b=VhcdgdKgKIUECrWCYLRko/Rs8kwKrFHQdpPrxmzuxeSJeaiTCDRUURk5nMqmdRChjck2MCqN5z58XpPaCsq9G4Xfw6O+vzkcc9lTyGpbSW32LNyg+79XSkX28WK9aJS2FsiYh4gYg0+BmPqOSdcWezN/XeeGf16Tg9KAY/tc/bI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778103545; c=relaxed/simple;
+	bh=fgm1VB5hMDEWMYRVyBNiGO46LvPuKc6Cthgp19m9ozM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=WWKFz9xv3LWKAuOBftIvCFqlkYJgJV+hyf10w0Wnvbo6y8kIPe4dCrCh8I48yXE3gMdE5w4RCsRna2vuV8UrY12gjo3n/qXo9FBU7cY4baDTnWLFBQ9Irgc4Kks9eRG/Ru/4NPG/YN5/6k+Yj37ScDNkpWMrPE7rIGBxLm8rSC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YLhjzHJt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="UvsnLOWN"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=FqnlVrcfPO5rYxKdJewWhA2MHTThE34BHzb7poPtH3qltwt3cuhH1OjkbQ5KFnlX0h0HZ4R0rtgrDvLs659J9K+hwV2qP7F06FSc62KXQ9eyb4vjB1gi5h5WwwBNm4w2V16sBhR0INyZ2Rv6MP/a684D1aAjqhRPOcVk0Ojm5lYWEa25Zp/xCGoJrALbTvO8HjDVOqnrv1zruP+lOvV/W90qCJaA/M7jWhMC1r87KxkuGIQhrk4uIrZXydPUM579PsOgEO64rjvf8QKnGRq4BMwuqq6cOfAOMUBMD6whJZPQ6rHaS3fOasxj9RCt6eeURgbSAD0+cELvKOx5rC7NDg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Kc1a82Cnqb3GoUmf2yn6Uw0ghjwDJJobqn08QhW6yRw=;
- b=eemfTAtfxoM2oaG/Tg11t6KGuzB5N36hR4B5OJB93E++3pj7G4d3B8fuCGh2+iZhbO42rZrFoOALN/HSPtuKOoSJwVbzB0g/QmqVNq3+f9dHuZJYy1Rscz+M4OhDBOHxiDyYaaAUzblpD+XtG/A5lKUiVmmw+PjY/L4ptfEcV0Zvo03vkIju10eToorABmW14Vx4a2i+T+guk/MNH5BYstwLU/TV1kzbnWme3ilm9cQ9i4iYLnm7hBmfuxlBJGy4GrxYatZDpOImeNMifow6DTK8p42W4d0PAAmNPhMKhHMG9V07hlVBjlHoIEg9kCTwDRVCg+h7Z87bxYK3V3JfKQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Kc1a82Cnqb3GoUmf2yn6Uw0ghjwDJJobqn08QhW6yRw=;
- b=UvsnLOWNqeY4wvY+cr8lrfYRJST8yMmD53ksfzEtQG/n8FDA2TRNJCzEm8GV0QTSNeiubUAFYupTFNIYcxXRIzIWJXHBWxgKPxXBMPTuAXX63GB7pNzEnvWJlIiYiB7v7czzKJd5NOEaZe0L3G8m5UqRMyWQje+hpgqJR3fhFpw=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from SA0PR12MB4557.namprd12.prod.outlook.com (2603:10b6:806:9d::10)
- by MN2PR12MB4063.namprd12.prod.outlook.com (2603:10b6:208:1dc::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9870.25; Wed, 6 May
- 2026 21:36:52 +0000
-Received: from SA0PR12MB4557.namprd12.prod.outlook.com
- ([fe80::885a:79b3:8288:287]) by SA0PR12MB4557.namprd12.prod.outlook.com
- ([fe80::885a:79b3:8288:287%5]) with mapi id 15.20.9891.008; Wed, 6 May 2026
- 21:36:52 +0000
-Message-ID: <424c4dc4-1810-4ffb-ae93-7ec9f880ec1e@amd.com>
-Date: Wed, 6 May 2026 16:36:49 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] hwmon: add initial support for AMD PROM21 xHCI
- temperature sensor
-Content-Language: en-US
-To: Michal Pecio <michal.pecio@gmail.com>, Jihong Min <hurryman2212@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>, Guenter Roeck <linux@roeck-us.net>,
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260506032939.92351-1-hurryman2212@gmail.com>
- <cover.1778099627.git.hurryman2212@gmail.com>
- <2e2ea249b30168a2eab62fc110c226a511f21bf2.1778099627.git.hurryman2212@gmail.com>
- <20260506233332.664f220c.michal.pecio@gmail.com>
-From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <20260506233332.664f220c.michal.pecio@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SA1PR03CA0002.namprd03.prod.outlook.com
- (2603:10b6:806:2d3::11) To SA0PR12MB4557.namprd12.prod.outlook.com
- (2603:10b6:806:9d::10)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YLhjzHJt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CB8BC2BCB0;
+	Wed,  6 May 2026 21:39:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778103545;
+	bh=fgm1VB5hMDEWMYRVyBNiGO46LvPuKc6Cthgp19m9ozM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=YLhjzHJtqMTeH9u7pfhzMfJff4Wz/GXm2JVJU21kR11h7HVR2tgytU3Pkz8L1YFib
+	 X/k/Yz/oiArb4cwlwofkuw9WyvvI5p/ds8A41siBd9iZgh7pR8Utd5qUhjlthIsSlf
+	 u2RSvLJuQUFpwp8BW0OJJHaui7oy+Og4rjS1TcBvkZamogftSM5FbnhD7fVIUz2hka
+	 o7yfzCvxYiSVFEfAMb4Cyl6ihJqRf+ovdImYpgpE6FRa9P5Z1AazEWn86eRDVhJD82
+	 eKvHnkCfv3isQSH7MVCvYH2zfWwFH7gQz0cBKvQCG1KS0o5JzEP9wTWVYesQlL5CyM
+	 uT29rJWI/JWcQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 1/9] dmaengine: Add API to combine configuration and
+ preparation (sg and single)
+Reply-To: sashiko@lists.linux.dev
+To: "Frank Li" <Frank.Li@nxp.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260506-dma_prep_config-v4-1-85b3d22babff@nxp.com>
+References: <20260506-dma_prep_config-v4-1-85b3d22babff@nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 06 May 2026 21:39:04 +0000
+Message-Id: <20260506213905.1CB8BC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA0PR12MB4557:EE_|MN2PR12MB4063:EE_
-X-MS-Office365-Filtering-Correlation-Id: 616a36cd-8663-4257-c313-08deabb7965a
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|56012099003|18002099003|22082099003|3023799003;
-X-Microsoft-Antispam-Message-Info:
-	NM63taJjzZIOPTdN6kg/T3u2RvuFsvMsjx1ow3mcdLzMKhdiLWucqNZgoQlkfWxR+hB9Z8QzX95V0gfwuxUVmWhd6ZbR9644nMoiGjxuI8OFRu1m/tgSw7A4mF7pjngry9XI4ZREy5RX9vXEQWq/rnVwgbLVBN5ahAOKmDpC14aCFSsEt+AtzVSvyMdnbWMVPhmFlsNanTnKjAU+qeIQlvVd4pgEmEnLj0+dE4PVvUyGDq2VnPDi1TEQ4nIuohZFgKzQsOUH9Sq/JMOR8AgXVUqs15XPLvHMWuM3IzMb+pjJ8CPjmLQXdaQUp7rNTq/OkvggVmXCcqqlKdKhdHqU8q4f4q+zVPhiRJ9hfgybsZlHUxTp0XDckRdD5dF0yMSH78yrl8PvWT+evjyu9HlKW/0yEzR5LwXKyAKrKvsOf68eatEQFNm+KkLoa+lE3OtDKK1ZdC/pVNHPDVqy9+sfs4ylGD2JQUSMn8VrcLvOJYiQHzIICD4gKEVlezHZbgbhewT34TFGH6iGvoUT8fBJCdtNgC8tuXVkJ8sLLLFkhrTuslEWnnQSkfL5cxtP1Cs4heYUYjHzLYilr7aJPmhQXqXWgwWdzQNsRQ/n+jNqNRhPylYhRr3k8cd+TIzq0V7NxeJJNnJz7+rDurhYH67zMfe5gmhm6teR7dHOBHPEEJMq298LeXodVUcDlJ1GldHn
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4557.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(56012099003)(18002099003)(22082099003)(3023799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VmdpTVU0cEp0WjNRTHZQczRYU3hCbjVyUXl2ZFV5aC9LaFVhbExXeHRMSm51?=
- =?utf-8?B?enQ2NW1SaElodjgrSUNQS3Y1b0lxK2EwZkpxMHNBQ3VhVUdkeW1OYVRLVXh3?=
- =?utf-8?B?NlJTVWVzTG1GZXZ0bVpkMkgrRVRlQVhYWk5mWDM4M2c3N2VUakZ0c0h5WVVM?=
- =?utf-8?B?SFJjRy9CTVljOEt4ZnVVNXR0cnplaVlPdlpQbXlIcnJQMXh5VFQ3SCtWYldD?=
- =?utf-8?B?NnRUbTlVTlEyTTV3M29JM2xHOVhsaWRudU5KbEJrT3huQ2Y4SThDYjRnZS9R?=
- =?utf-8?B?eXB0TE10WithUUVBeiszNkFBU3Y2Y2lJZVZ6RnBqK3J3YU5EczkwcjFoZkRC?=
- =?utf-8?B?ekE2emIzM1JIMWxnL2FvaEFCbldLUUY3ZTAzZFV5U3RKMEEzM3orcUZoMys4?=
- =?utf-8?B?MUpoQmxuNUx5bmtBeWJvMEV3NG8rVGdCb3RRRUkzRGM5MUhIcHF1U2FHWUo0?=
- =?utf-8?B?ZHFpazl0S1VlMEVsNW5SMUw4Y3d1dUZTbWRURC9hVzNYTE52R09zRHdHYWVo?=
- =?utf-8?B?YjhBalVTbXJLMXVjWThnSW5xMkMxTkt2NjJhSXR0Q0l2QnpScWpIZmEyUHFv?=
- =?utf-8?B?SDVkeldXaGYzRlAvV2t2eTdTVkp4UlArMVk0WkZtSnBKbnRYN0JvUGtxMWZ3?=
- =?utf-8?B?NnB4OGlTVkVuVjNINlJ1MGsxZlE2dWk2UmpKdVhTOTllUnNBY08wMDg4dWc0?=
- =?utf-8?B?RzhLaVRWUEU0aDA3L1UyYzFZNndYM25qT1EwbytvdEtYZGduYWo0V0lUU0Nn?=
- =?utf-8?B?d0VGUzVldEthRHFMaEtGRWhqTVRqMjBQOGhxWHJZcnI0Z1ZtVUlaeUxqQ200?=
- =?utf-8?B?N2V2RDhHZUo1OUdReTVTcFZOQWkzWjUvZ2laSmZaU2hSdFJZbmZ0MEljTTZN?=
- =?utf-8?B?enhkOHh0bTM2RjdhM2RPK0F6ZklkdlQ3QVRmQW5Yb2pFeEZDY1pnUW9ZbFAr?=
- =?utf-8?B?R3N2SkZ4a1lhamdtbFhBSXMrd3B4KzVvMWZVTUJiTGo1b3E3SXEvdFhIbXpI?=
- =?utf-8?B?R1M4NkROMlpjeWpVb1hud09JTTF2cTFMOTFKUU9jWkVFWG5PZVYreHhHMTlv?=
- =?utf-8?B?RUxoaE1vL2xDNjVab1lEM3g5bzAwMkRrT1p4ekpxQ1JLL3FLREpCSnBLVGlC?=
- =?utf-8?B?VlYwN2JBZUNQTlQ1ZVhXdEN2Yk5tUGNCaytvQ2dFQ21INDQrMFlKRUZzOWZv?=
- =?utf-8?B?cFB5MmdMbVQvTUkzSnlUdllUNDh6U28wWEpJZEQzN1MxVjYvRm0vQitNQ3VU?=
- =?utf-8?B?djFDdXozVVFyM1JlZWRwNDdxYUdiekZKbGUzR2w5cElsVW1zeUZiVmphME1N?=
- =?utf-8?B?MVRyOS9ISmNPSGRNQ09EMytoL0JtM3lYNHNlMEVxM1kxT2NJTG1DaTBqelVa?=
- =?utf-8?B?Vm4zRXlCUzA2RFMvQ0trS2IyUkNIck5ydEpUOGhsQUpxSENiRStPeEhuVldZ?=
- =?utf-8?B?emEyRzN4aTMwbU5zakNnN1orOHhTeGRYZ2M2cHVneGlmVlhPbUh6K0VPalFo?=
- =?utf-8?B?cGQ3NXZaa1hoUmRVRGppTGRjWDJ0c1h4TVM3T0loSEkvd2xtQy82Tk1YZmNy?=
- =?utf-8?B?WkVMTmJjdU5VN0hNWVExOHEyRDdacDZYOG5KTGhTNlh5NHMrM2I3ODVtdXJ2?=
- =?utf-8?B?VTY1WjNGRTExVGUvNHBkMnozbTl3QVBvcVdEQmd4QkxlNlU5dVUvQlQ0OXdF?=
- =?utf-8?B?QmU5N1V4amZQSkxiVUJaS1oyeU9pKzhxblBlM1NvaWVtM015ZFMwbkl3VG9P?=
- =?utf-8?B?T1VGd2pRbVhMbGljNU1XMElYOFJ4N1F3TEk0d2FSQ0w2S0diODdOMDZidjlx?=
- =?utf-8?B?eVFmV3poMlV4eHZUSHJRWTNuK2ZTNFFCNEU0cndkbk8rVWFFZXcwV0xRRU1E?=
- =?utf-8?B?YXZDbi9zTmVUSUFkUFc5M0hsUGdkT1BqWFJGL1NQZWI0WW83T2RYL3JHK1VT?=
- =?utf-8?B?RDd2SGE5dTczd1oxWHFiZzBlYW9pUCsyK3BXUFNyVDlLd1dxZHBVSmV6Yk85?=
- =?utf-8?B?Tmo0ZkZkM0hhTHN2SEVaUDA0VjJtVEc1YnFPM2VwTU5tNWRGRDFBdG1CK0hn?=
- =?utf-8?B?dzk4ejdvK2tqb2ZwZnQ3aTd5NDdob0RGazMzdlpXeENPYWRBbUpOamM5M1BW?=
- =?utf-8?B?cTFjZ2JoRVZVUnE2bENubC9PbGhUSGJ6MUw5TytrNzFLckFjZndycnc0TTd6?=
- =?utf-8?B?WUE5YTMyR1kwNzlsME9DOHZoL2lMQWduS0VjVzRKbUdveFcwTHN4S1RDNytB?=
- =?utf-8?B?RjNOYllGTFpRck1vb1BUZ3JpbzdIZzdUcXZidmV1T2Y0dTVXRUh2dFM2UStW?=
- =?utf-8?B?cVJ5Y3FLL1dQV1RwUjg2aDc4dkVwcjZxblV4OHJDd1R1cnZkSmM3dz09?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 616a36cd-8663-4257-c313-08deabb7965a
-X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4557.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 May 2026 21:36:52.4476
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Xs5FQCcBbk/49wqHvEFzGmb/UEuW0VcbrIbeNkS1pqMNA1mJvngb+G3pSHB4UaMVEvAoJkai2PHpZiDLsdI0FQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4063
 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] The implementation contradicts the commit message regarding the =
+fallback behavior when config is NULL.
+- [Low] Device configuration side effects are applied before verifying if t=
+he channel supports the preparation callback.
+--
 
+commit ba8a363576907f3e47dc9c928c997d667ec117f9
+Author: Frank Li <Frank.Li@nxp.com>
 
-On 5/6/26 16:33, Michal Pecio wrote:
-> On Thu,  7 May 2026 05:40:34 +0900, Jihong Min wrote:
->> AMD PROM21 xHCI controllers expose an 8-bit temperature value
-> 
-> I think this commit message and certainly the Kconfig help text should
-> include full name of the chip and perhaps its official marketing names
-> too, so that people better understand what hardware is supported.
-> 
-> So: "AMD Promontory 21 chipset" and "AM5 6xx/8xx series chipsets", or
-> whatever they are called by AMD and motherboard vendors.
-> 
->> through a vendor-specific index/data register pair in the xHCI PCI
->> MMIO BAR region. Add an auxiliary hwmon driver for AMD 1022:43fd
->> controllers and bind it to the xhci_pci.hwmon auxiliary device
->> created by xhci-pci.
->>
->> The read path verifies the parent PCI function and uses the
->> initialized xHCI HCD MMIO mapping. The vendor index register is at
->> byte offset 0x3000 from the xHCI MMIO BAR base and the vendor data
->> register is at byte offset 0x3008. The driver writes register selector
->> 0x0001e520 to the index register, reads the raw temperature value from
->> the low 8 bits of the data register, and restores the previous index
->> before returning. Expose temp1_input and an xHCI label through hwmon.
->>
->> Register the hwmon device under the parent PCI function so userspace
->> reports it as a PCI adapter, while the auxiliary driver still owns the
->> hwmon lifetime and unregisters it from the auxiliary remove path.
->>
->> No public AMD reference is available for this value.
-> 
-> Is there any documentation of the index/data registers themselves?
-> 
-> Any potential danger that something else (FW? SMM?) uses them too?
-> 
->> The conversion formula is derived from observed temperature readings:
->>
->>    temp[C] = raw * 0.9066 - 78.624
-> 
-> Could make sense to describe methodology, particularly in case some
-> people would come and question the formula.
-> 
-> How was actual chip temperature measured?
-> Was the output compared with any other (Windows?) utilities?
-> 
-> People will be comparing these results and possibly trying to draw
-> some conclusions, like OMG Linux runs this chip 8°C hotter, should
-> I demand a full refund of my free Ubuntu download????!!!?
-> 
->> The temperature register did not return a valid value while the xHCI
->> PCI function was suspended in testing. Keep the existing behavior by
->> default and allow temperature reads to wake the xHCI PCI device. Add an
->> allow_pm_switch module parameter so users can disable that behavior;
->> when disabled, reads do not wake the device and return -EAGAIN if it is
->> suspended.
-> 
-> Is such behavior useful?
-> 
-> Maybe the driver could just disable runtime PM while it's loaded.
+dmaengine: Add API to combine configuration and preparation (sg and single)
 
-I'd encourage what we do in amdgpu for dGPUs. The hwmon files will 
-return an error code (I forget which code) when the device is in runtime 
-PM when called.  Don't explicitly wake it otherwise.
+This commit introduces combined API functions for DMA configuration and
+preparation to simplify operations where parameters must be adjusted per
+transfer. It adds dmaengine_prep_config_single() and
+dmaengine_prep_config_sg(), along with a new device_prep_config_sg
+callback.
 
-This prevents someone installing a sensor monitoring application and 
-that application "being the only thing" keeping the dGPU awake.  If it's 
-awake already for other reasons (like being used) then return valid data 
-to the applications.
+> Previously, configuration and preparation required two separate calls. Th=
+is
+> works well when configuration is done only once during initialization.
+>
+> However, in cases where the burst length or source/destination address mu=
+st
+> be adjusted for each transfer, calling two functions is verbose and
+> requires additional locking to ensure both steps complete atomically.
+>
+> Add a new API dmaengine_prep_config_single() and dmaengine_prep_config_sg=
+()
+> and callback device_prep_config_sg() that combines configuration and
+> preparation into a single operation. If the configuration argument is
+> passed as NULL, fall back to the existing implementation.
 
-> 
->>
->> Document the supported device, register access, conversion formula,
->> module parameter, sysfs attributes, and sysfs lookup method.
->>
->> Assisted-by: Codex:gpt-5.5
->> Signed-off-by: Jihong Min <hurryman2212@gmail.com>
+This isn't a bug, but the commit message description doesn't exactly match
+the implementation.
 
+Looking at the code, if a driver implements the new device_prep_config_sg
+callback, it will be called unconditionally, even if the config argument is
+NULL. It does not fall back to the existing implementation in that scenario.
+
+While the code behavior appears structurally correct (since drivers moving
+to the new API might remove their old device_prep_slave_sg callback), could
+the commit message be updated to clarify this? Clarifying that config can
+be NULL might prevent driver authors from assuming it is always valid,
+avoiding potential null pointer dereferences.
+
+> diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+> index b3d251c9734e9..defa377d2ef54 100644
+> --- a/include/linux/dmaengine.h
+> +++ b/include/linux/dmaengine.h
+
+[ ... ]
+
+> @@ -974,22 +979,44 @@ static inline bool is_slave_direction(enum dma_tran=
+sfer_direction direction)
+>  	       (direction =3D=3D DMA_DEV_TO_DEV);
+>  }
+> =20
+> -static inline struct dma_async_tx_descriptor *dmaengine_prep_slave_singl=
+e(
+> -	struct dma_chan *chan, dma_addr_t buf, size_t len,
+> -	enum dma_transfer_direction dir, unsigned long flags)
+> +static inline struct dma_async_tx_descriptor *
+> +dmaengine_prep_config_single(struct dma_chan *chan, dma_addr_t buf, size=
+_t len,
+> +			     enum dma_transfer_direction dir,
+> +			     unsigned long flags,
+> +			     struct dma_slave_config *config)
+>  {
+>  	struct scatterlist sg;
+> +
+> +	if (!chan || !chan->device)
+> +		return NULL;
+> +
+>  	sg_init_table(&sg, 1);
+>  	sg_dma_address(&sg) =3D buf;
+>  	sg_dma_len(&sg) =3D len;
+> =20
+> -	if (!chan || !chan->device || !chan->device->device_prep_slave_sg)
+> +	if (chan->device->device_prep_config_sg)
+> +		return chan->device->device_prep_config_sg(chan, &sg, 1, dir,
+> +							   flags, config);
+> +
+> +	if (config)
+> +		if (dmaengine_slave_config(chan, config))
+> +			return NULL;
+> +
+> +	if (!chan->device->device_prep_slave_sg)
+>  		return NULL;
+
+Does this apply device configuration side effects before verifying if the
+channel actually supports the preparation callback?
+
+If device_prep_slave_sg is missing, the function correctly aborts and
+returns NULL. However, the hardware or software channel state might have
+already been mutated by the earlier dmaengine_slave_config() call on a
+channel that cannot actually process the transfer.
+
+Would it be safer to check for the presence of device_prep_slave_sg before
+attempting the configuration fallback?
+
+[ ... ]
+
+> @@ -1010,17 +1037,37 @@ static inline struct dma_async_tx_descriptor *dma=
+engine_prep_peripheral_dma_vec(
+>  							    dir, flags);
+>  }
+> =20
+> -static inline struct dma_async_tx_descriptor *dmaengine_prep_slave_sg(
+> -	struct dma_chan *chan, struct scatterlist *sgl,	unsigned int sg_len,
+> -	enum dma_transfer_direction dir, unsigned long flags)
+> +static inline struct dma_async_tx_descriptor *
+> +dmaengine_prep_config_sg(struct dma_chan *chan, struct scatterlist *sgl,
+> +			 unsigned int sg_len, enum dma_transfer_direction dir,
+> +			 unsigned long flags, struct dma_slave_config *config)
+>  {
+> -	if (!chan || !chan->device || !chan->device->device_prep_slave_sg)
+> +	if (!chan || !chan->device)
+> +		return NULL;
+> +
+> +	if (chan->device->device_prep_config_sg)
+> +		return chan->device->device_prep_config_sg(chan, sgl, sg_len,
+> +				dir, flags, config);
+> +
+> +	if (config)
+> +		if (dmaengine_slave_config(chan, config))
+> +			return NULL;
+> +
+> +	if (!chan->device->device_prep_slave_sg)
+>  		return NULL;
+
+This has the same potential configuration side effect ordering issue as
+dmaengine_prep_config_single() above. Should the device_prep_slave_sg check
+happen before calling dmaengine_slave_config()?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260506-dma_prep_c=
+onfig-v4-0-85b3d22babff@nxp.com?part=3D1
