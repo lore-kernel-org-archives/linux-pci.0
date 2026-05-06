@@ -1,373 +1,132 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C23F2E2286;
-	Wed,  6 May 2026 15:52:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9454A29898B;
+	Wed,  6 May 2026 15:54:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778082781; cv=none; b=KeCCDmj4L106Y2v82njhZcb8yNjunn4LUGVTYDnYYzolL590xRjuBQJwHORni1J0OjqcxD4l8Hjm+uXnF4AjRebhAg7CJe2tcvH2+WrbA7JkksU5dZahvU4TXiSQ97vB3t8OVbfDhHBjQuGIoOsr8qTEHGfdoII1bUdcSSJsqpk=
+	t=1778082860; cv=none; b=amoLHclxR/eJNeSGLYn4sFZ/GLzyK7FtVeUtFHrR6wwk01+1dShPP0C4zMpkojCIPyX8U+FZZaHWZBAimgOXV/Gz2osj+SwDBH7RWsnMxF7wg9N7pVNGn6/vqN/nVk1DdGxDfeujFpJae1n07byxBz+KFy5a4EAoSvU20pAACzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778082781; c=relaxed/simple;
-	bh=T3kTDcg1+RbUWbdP3JYLNDLDVXLc90aG+hnpt5TGcLA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jftvKs4iNoOXrQc4od3reeZ8y6UYbo6H+kvbvjE+SQ5m2/gmTRdMTL65ZfPI759RypctQKdKyOAjdvAnN2M903pdO98/vRO5j4XOOOF8KGfzqX8GgTPS7fkLB6VKpO8gB70bVZtF+unIkmGaJdLsBdhRZGQsxeJXMALmrzyuvZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=EJUU4EYb; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778082860; c=relaxed/simple;
+	bh=AQpTvheUcxBcm/Yw2ZZYWlqrM9bUxu4cQfZOpCag28g=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=lYrz2m8lJJ3UYqP8RY4Mfe/EAyXeu+YOd7aV3SqqLPdeecPPR+mDks5DfntTkKSX25hyCYBcDbqLhz6vIJWvl+NQJ2HkHnzKfvHsW8YQknvdlLcPwUCmZ0jonBlbvbQSOU8xUKtuvtoUKnHwU/ti1UBd/jrELqFYEwnU0fKqoWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dvWE085q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="EJUU4EYb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=UGfEWfoNTixTiN9Bln73rZFbRr8oWy6S/G6tQU6PEZs=;
-	b=EJUU4EYbu8MiZHylUlon8x67v9zHAb6IaRlyxJq0LCvD4ZbSOGFZ1UBN1ikQWp
-	gji3+JAPL5MylVYfkEc17EYqEd2HxnhnQcFmnRBlL45ayCRShL5LyrohKiwws0P2
-	P9X5nd4Wl8uCUHKzA/CUIn5H/31l4dOQxx+pH4HHhF2IM=
-Received: from [IPV6:240e:b8f:927e:5900:dbee:26f0:1b68:48a4] (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wAXnw2mY_tptlZuDg--.42391S2;
-	Wed, 06 May 2026 23:52:07 +0800 (CST)
-Message-ID: <3fd86269-e25e-4bd7-9b2d-6b8afb514be4@163.com>
-Date: Wed, 6 May 2026 23:52:06 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dvWE085q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBA95C2BCB0;
+	Wed,  6 May 2026 15:54:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778082859;
+	bh=AQpTvheUcxBcm/Yw2ZZYWlqrM9bUxu4cQfZOpCag28g=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=dvWE085qYUaQ7nlS0PQqEN1BmMJl6e+2if85fsObIS9TjTBneIel9W+HgEH6OT/Ip
+	 JN4eYXT65uX3kF09Q6+CZKoe2BMGUzq+BI4bIvyEPeQSpekkcEwtNh2TvU4Su7cML+
+	 pvO/5TXv4mgIwiRRWHnZhiOIGL5FMMyU//PHElgfLPejOn3vm58J08/OHOzFc2OR8O
+	 soGUdeJj7tLfMbTi2dJXzbVF1egxPpbUJNFFm7XsSsjefNhJVc3Q3NUdmaocMI0Vwr
+	 5HYVbq9444RYkjvEN8wiQ2rSNPqM0FU/kiqz14xKBZu6i46qqowvR075pFcS+YHNsg
+	 YAXVfPTBPRtnw==
+Date: Wed, 6 May 2026 10:54:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Chengwen Feng <fengchengwen@huawei.com>
+Cc: alex@shazbot.org, jgg@ziepe.ca, wathsala.vithanage@arm.com,
+	wei.huang2@amd.com, wangzhou1@hisilicon.com,
+	wangyushan12@huawei.com, liuyonglong@huawei.com,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 1/6] PCI/TPH: Fix pcie_tph_get_st_table_loc() field
+ extraction
+Message-ID: <20260506155418.GA790442@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] PCI: cadence: Add debugfs property to provide
- LTSSM status of the PCIe link
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- hans.zhang@cixtech.com, robh@kernel.org, mpillai@cadence.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260406103237.1203127-1-18255117159@163.com>
- <20260406103237.1203127-3-18255117159@163.com>
- <7g32xmc5juraumjexmjmptrwvpsbni43csjw727zzkdetforzs@y5xumpko2lf2>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <7g32xmc5juraumjexmjmptrwvpsbni43csjw727zzkdetforzs@y5xumpko2lf2>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wAXnw2mY_tptlZuDg--.42391S2
-X-Coremail-Antispam: 1Uf129KBjvAXoWfGr45Xr1kCw4DZry7uFyDJrb_yoW8Xw4xCo
-	W3Gw1fWayxAa4DAas7X3ZrKFyxtr1I93W7ta18tr1rGFsrK3ZrtrWUXw18ta1Fgr1UArW5
-	AF1DZ3Wjkr4xWrsxn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjxU1VbkDUUUU
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7Adb-mn7Y6d-VAAA3z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260506094623.29327-2-fengchengwen@huawei.com>
 
-
-
-On 5/6/26 23:43, Manivannan Sadhasivam wrote:
-> On Mon, Apr 06, 2026 at 06:32:37PM +0800, Hans Zhang wrote:
->> Add the debugfs property to provide a view of the current link's LTSSM
->> status from the Root Port device.
->>
->> Test example:
->>    # cat /sys/kernel/debug/cdns_pcie_a0c0000.pcie/ltssm_status
->>    L0_STATE (0x29)
->>
->> Signed-off-by: Hans Zhang <18255117159@163.com>
->> ---
->>   Documentation/ABI/testing/debugfs-cdns-pcie   |   5 +
->>   drivers/pci/controller/cadence/Kconfig        |   9 +
->>   drivers/pci/controller/cadence/Makefile       |   1 +
->>   drivers/pci/controller/cadence/pci-sky1.c     |   3 +
->>   .../controller/cadence/pcie-cadence-debugfs.c | 215 ++++++++++++++++++
->>   .../pci/controller/cadence/pcie-cadence-ep.c  |   3 +
->>   .../cadence/pcie-cadence-host-hpa.c           |   8 +-
->>   .../controller/cadence/pcie-cadence-host.c    |   9 +-
->>   drivers/pci/controller/cadence/pcie-cadence.h | 145 ++++++++++++
->>   9 files changed, 396 insertions(+), 2 deletions(-)
->>   create mode 100644 Documentation/ABI/testing/debugfs-cdns-pcie
->>   create mode 100644 drivers/pci/controller/cadence/pcie-cadence-debugfs.c
->>
->> diff --git a/Documentation/ABI/testing/debugfs-cdns-pcie b/Documentation/ABI/testing/debugfs-cdns-pcie
->> new file mode 100644
->> index 000000000000..659ad2ab70e4
->> --- /dev/null
->> +++ b/Documentation/ABI/testing/debugfs-cdns-pcie
->> @@ -0,0 +1,5 @@
->> +What:		/sys/kernel/debug/cdns_pcie_<dev>/ltssm_status
->> +Date:		March 2026
->> +Contact:	Hans Zhang <18255117159@163.com>
->> +Description:	(RO) Read will return the current PCIe LTSSM state in both
->> +		string and raw value.
->> diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
->> index 9e651d545973..b277c5f6e196 100644
->> --- a/drivers/pci/controller/cadence/Kconfig
->> +++ b/drivers/pci/controller/cadence/Kconfig
->> @@ -6,6 +6,15 @@ menu "Cadence-based PCIe controllers"
->>   config PCIE_CADENCE
->>   	tristate
->>   
->> +config PCIE_CADENCE_DEBUGFS
->> +	bool "Cadence PCIe debugfs entries"
+On Wed, May 06, 2026 at 05:46:18PM +0800, Chengwen Feng wrote:
+> pcie_tph_get_st_table_loc() incorrectly uses FIELD_GET(), which shifts the
+> field value to bit 0. But the function is designed to return raw
+> PCI_TPH_LOC_* values as defined in the function comment.
 > 
-> Why not tristate?
-
-Hi Mani,
-
-Will change.
-
+> This causes incorrect ST table location detection. Fix it by using bitwise
+> AND with PCI_TPH_CAP_LOC_MASK to return the unshifted field value matching
+> the function specification.
 > 
->> +	depends on DEBUG_FS
->> +	depends on PCIE_CADENCE_HOST || PCIE_CADENCE_EP
->> +	help
->> +	  Say Y here to enable debugfs entries for the PCIe controller. These
->> +	  entries provide various debug features related to the controller and
->> +	  the LTSSM status of link can be displayed.
->> +
->>   config PCIE_CADENCE_HOST
->>   	tristate
->>   	depends on OF
->> diff --git a/drivers/pci/controller/cadence/Makefile b/drivers/pci/controller/cadence/Makefile
->> index b8ec1cecfaa8..2cdc4617e0c2 100644
->> --- a/drivers/pci/controller/cadence/Makefile
->> +++ b/drivers/pci/controller/cadence/Makefile
->> @@ -4,6 +4,7 @@ pcie-cadence-host-mod-y := pcie-cadence-host-common.o pcie-cadence-host.o pcie-c
->>   pcie-cadence-ep-mod-y := pcie-cadence-ep.o
->>   
->>   obj-$(CONFIG_PCIE_CADENCE) = pcie-cadence-mod.o
->> +obj-$(CONFIG_PCIE_CADENCE_DEBUGFS) += pcie-cadence-debugfs.o
->>   obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host-mod.o
->>   obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep-mod.o
->>   obj-$(CONFIG_PCIE_CADENCE_PLAT) += pcie-cadence-plat.o
->> diff --git a/drivers/pci/controller/cadence/pci-sky1.c b/drivers/pci/controller/cadence/pci-sky1.c
->> index e1f4a98e2ab6..093f20466339 100644
->> --- a/drivers/pci/controller/cadence/pci-sky1.c
->> +++ b/drivers/pci/controller/cadence/pci-sky1.c
->> @@ -221,7 +221,10 @@ MODULE_DEVICE_TABLE(of, of_sky1_pcie_match);
->>   static void sky1_pcie_remove(struct platform_device *pdev)
->>   {
->>   	struct sky1_pcie *pcie = platform_get_drvdata(pdev);
->> +	struct cdns_pcie_rc *rc;
->>   
->> +	rc = container_of(pcie->cdns_pcie, struct cdns_pcie_rc, pcie);
->> +	cdns_pcie_debugfs_deinit(&rc->pcie);
+> While this change appears to be a no-op within tph.c, the external caller
+> mlx5_st_create() relies on the documented function behavior, making this
+> fix necessary.
+
+Previously, pcie_tph_get_st_table_loc() returned 0x0 (for
+PCI_TPH_LOC_NONE), 0x2 (for PCI_TPH_LOC_CAP), or 0x4 (for
+PCI_TPH_LOC_MSIX).
+
+mlx5_st_create() is currently the only external caller.  It only
+checks for PCI_TPH_LOC_NONE, which is 0 regardless of the FIELD_GET(),
+so I don't think this actually fixes mlx5_st_create().
+
+Probably still worth a stable backport because other drivers may call
+pcie_tph_get_st_table_loc() in the future, and if they depend on
+PCI_TPH_LOC_CAP or PCI_TPH_LOC_MSIX, and are backported to stable
+kernels, they will need this.
+
+I might reword that last paragraph to avoid the implication that this
+actually fixes something in mlx5:
+
+  This doesn't make a difference to mlx5_st_create(), the lone
+  external caller, because it only checks for PCI_TPH_LOC_NONE (0),
+  but will be needed for callers that check for PCI_TPH_LOC_CAP or
+  PCI_TPH_LOC_MSIX.
+
+> Fixes: d2e8a34876ce ("PCI/TPH: Add Steering Tag support")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+> Reviewed-by: Alex Williamson <alex.williamson@nvidia.com>
+
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Feel free to merge along with the rest, I assume via the VFIO tree.
+
+> ---
+>  drivers/pci/tph.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 > 
-> You are calling cdns_pcie_debugfs_init() from pcie-cadence-host-hpa.c driver. So
-> you should call cdns_pcie_debugfs_deinit() there only in an exported API.
-
-Okay.
-
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 91145e8d9d95..f17b74b5fb1e 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
+> @@ -170,7 +170,7 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+>  
+>  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+>  
+> -	return FIELD_GET(PCI_TPH_CAP_LOC_MASK, reg);
+> +	return reg & PCI_TPH_CAP_LOC_MASK;
+>  }
+>  EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
+>  
+> @@ -183,11 +183,7 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+>  	u32 reg;
+>  	u32 loc;
+>  
+> -	/* Check ST table location first */
+>  	loc = pcie_tph_get_st_table_loc(pdev);
+> -
+> -	/* Convert loc to match with PCI_TPH_LOC_* defined in pci_regs.h */
+> -	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
+>  	if (loc != PCI_TPH_LOC_CAP)
+>  		return 0;
+>  
+> @@ -316,8 +312,6 @@ int pcie_tph_set_st_entry(struct pci_dev *pdev, unsigned int index, u16 tag)
+>  	set_ctrl_reg_req_en(pdev, PCI_TPH_REQ_DISABLE);
+>  
+>  	loc = pcie_tph_get_st_table_loc(pdev);
+> -	/* Convert loc to match with PCI_TPH_LOC_* */
+> -	loc = FIELD_PREP(PCI_TPH_CAP_LOC_MASK, loc);
+>  
+>  	switch (loc) {
+>  	case PCI_TPH_LOC_MSIX:
+> -- 
+> 2.17.1
 > 
->>   	pci_ecam_free(pcie->cfg);
->>   }
->>   
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-debugfs.c b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
->> new file mode 100644
->> index 000000000000..d83007ae218e
->> --- /dev/null
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
->> @@ -0,0 +1,215 @@
->> +// SPDX-License-Identifier: GPL-2.0
->> +/*
->> + * Cadence PCIe controller debugfs driver
->> + *
->> + * Copyright (C) 2026 Hans Zhang <18255117159@163.com>
->> + * Author: Hans Zhang <18255117159@163.com>
-> 
-> Since copyright belongs to you, there is no need to mention 'Author'.
-
-Thanks, will delete.
-
-> 
->> + */
->> +
->> +#include <linux/debugfs.h>
->> +
->> +#include "pcie-cadence.h"
->> +
->> +#define CDNS_DEBUGFS_BUF_MAX		128
->> +#define CDNS_PCIE_LGA_LTSSM_STATUS_MASK	GENMASK(29, 24)
->> +#define CDNS_PCIE_HPA_LTSSM_STATUS_MASK	GENMASK(27, 20)
->> +
->> +static const char *cdns_pcie_ltssm_status_string(enum cdns_pcie_ltssm ltssm)
->> +{
->> +	const char *str;
->> +
->> +	switch (ltssm) {
->> +#define CDNS_PCIE_LTSSM_NAME(n) case n: str = #n; break
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_QUIET);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_QUIET_ENTRY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DETECT_ACTIVE_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RCVR_DETECTED_ST);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RCVR_DETECTED_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_ACTIVE_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_CONFIG);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_CONFIG_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_CONFIG_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_RC);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_RC_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_RC_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_ACC_RC);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_RC);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_RC_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_ACC_RC);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_EP);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_EP_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_START_EP_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LW_ACC_EP);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_EP);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_WAIT_EP_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_ACC_EP);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_LANENUM_ACC_EP_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_COMPLETE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_COMPLETE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_COMPLETE_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_IDLE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_CONFIG_IDLE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DUMMY_STATE_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0_STATE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_LOCK);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_LOCK_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_CFG);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_RCVR_CFG_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_IDLE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_IDLE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_5);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_6);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_DISABLE_LINK_7);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_HOT_RESET_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_ENTRY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L0S_5);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_WAIT_FOR_LINK_TX);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_FTS_ENTRY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_FTS_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_FTS_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_ST);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_TX_ELEC_IDLE_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_SPEED_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_5);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_6);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_7);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_POLLING_COMPLIANCE_GEN23_8);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_ENTRY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_ENTRY_FROM_RECOVERY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_EXIT_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_EXIT);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_GEN2_5);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_SLAVE_ACTIVE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_ENTRY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_IDLE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L1_EXIT);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_ENTRY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_5);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_L2_IDLE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_3);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_4);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_5);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ENTRY_FROM_RECOVERY);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_ACTIVE);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_EXIT);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_EXIT_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_LOOPBACK_MASTER_EXIT_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE0);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE2_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE2_2);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE3_1);
->> +	CDNS_PCIE_LTSSM_NAME(CDNS_PCIE_LTSSM_RECOVERY_EQUALIZATION_PHASE3_2);
->> +	default:
->> +		str = "CDNS_PCIE_LTSSM_UNKNOWN";
->> +		break;
->> +	}
->> +
->> +	return str + strlen("CDNS_PCIE_LTSSM_");
->> +}
->> +
->> +static int ltssm_status_show(struct seq_file *s, void *v)
->> +{
->> +	struct cdns_pcie *pci = s->private;
->> +	enum cdns_pcie_ltssm ltssm;
->> +	u32 reg;
->> +
->> +	if (pci->is_hpa) {
->> +		reg = cdns_pcie_hpa_readl(pci, REG_BANK_IP_REG,
->> +					CDNS_PCIE_HPA_PHY_DBG_STS_REG0);
->> +		ltssm = FIELD_GET(CDNS_PCIE_HPA_LTSSM_STATUS_MASK, reg);
->> +	} else {
->> +		reg = cdns_pcie_readl(pci, CDNS_PCIE_LM_BASE);
->> +		ltssm = FIELD_GET(CDNS_PCIE_LGA_LTSSM_STATUS_MASK, reg);
->> +	}
->> +
->> +	seq_printf(s, "%s (0x%02x)\n", cdns_pcie_ltssm_status_string(ltssm), ltssm);
->> +
->> +	return 0;
->> +}
->> +
->> +static int ltssm_status_open(struct inode *inode, struct file *file)
->> +{
->> +	return single_open(file, ltssm_status_show, inode->i_private);
->> +}
->> +
->> +static const struct file_operations cdns_pcie_ltssm_status_ops = {
->> +	.open = ltssm_status_open,
->> +	.read = seq_read,
->> +};
-> 
-> Sashiko pointed out that you could use DEFINE_SHOW_ATTRIBUTE() to simplify the
-> code here.
-
-I haven't received any notification from Sashiko. Next time, I'll go 
-directly to the website to check the relevant information. It seems that 
-Sashiko only sent out an email recently; I didn't receive any emails 
-from her before.
-
-Will change.
-
-Best regards,
-Hans
-
-> 
-> - Mani
-> 
-
