@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC54735B631;
-	Wed,  6 May 2026 22:00:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9338B3246E8;
+	Wed,  6 May 2026 22:00:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778104834; cv=none; b=gbkYvQJQvnpy2ZRRz5svyGm8eRW2Lr2mSriaHMX5I8b3/WVZJVX7bXbDH2RFuf/4D/gkloiWleUDkfspIhq7L99L3u/Phd1E+lUkSFC0a1Oho4Joom1XJqdaxjP62jbXe5MXmTIbw25KT74QsFLLOIwbEqNX0rUy2UKQufI3r0g=
+	t=1778104840; cv=none; b=IoU2ZUWt7MNkImAelXx+LjUEdrs2p/sdbo58ChcxFl6pO6NJ3sbdS423A29T63H9OysfS7k/fYha3TTjaGeWpokXnrlCLsIn/EP6qA+YV51IrNmI/VMNVa08TOHkvtmtUXiXtJec2PdOjvJOSIXY9UlOwbcLFyni88/EDwYiTvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778104834; c=relaxed/simple;
-	bh=nCyApNb8RKn1veEhbH+LihTl9SHcYNeSopAO0tq8/OA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Jck5wFznS4xhqP+1jmUdatgGAeXyILu9E0ZFlHNOPBJBubmL/b1yU17CUgCSRhF8t0yxfeEejP2uv3rzLwiZhLEmMBSrt/Y+5F6S5UrjrWzsAXbG+AZNYRF78l3BlzmwyMM/7uONSScfk153eM9fKhZMF3SNH8UoYUqMDZ01Cko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r7ZPn4Zu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778104840; c=relaxed/simple;
+	bh=qO/bJBZKk+2JX7D64j+KbHrwyxEIaJ1JMMkQoGp2JnE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=AwlbKQSuZ6hlxxqDUparSi1iNAnfaY50XUEZAo8c9sXGuys8aaT9089fmP29FLpZ+FiCtmuULildyDaDtbAIf1F6/C7+oF6ZhrUW2aDYB6f+8ysX0Dp9K4ipR4/NM0FYYJyKrIYJVQwwBYCHAtCfHjxWcWoAxci/aQiz9QaVBcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P7ypO5dF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r7ZPn4Zu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5551DC2BCB2;
-	Wed,  6 May 2026 22:00:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P7ypO5dF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3676C2BCB0;
+	Wed,  6 May 2026 22:00:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778104833;
-	bh=nCyApNb8RKn1veEhbH+LihTl9SHcYNeSopAO0tq8/OA=;
-	h=From:To:Cc:Subject:Date:From;
-	b=r7ZPn4ZuEfXPGPabAtTXrwgZPsqXmXckRw4t6mO2USweTSvl2RUftL8wUqYiaHVc6
-	 F/74M2nXgVwWrb4IB2kr1wJJsahWu+Ra4QxGTmk+dtcJrNUKk26S7ai3T5XMW4QO0e
-	 /jmtBfR4JNscZOtjsINOTk345VDwTVWgpTzwrbAFE29tbdw9uLDIThLfSGSDGJx3pY
-	 aOCD+Klzh2O7/VerE10AIB/YF/JAJSMjbRfhLQDnq1AR9Hw/utzMFw+u+w998uKBS+
-	 0FbEMPMpM346TySODIGrcOnm+hDCujKBflOD/B+Vkwqp83Nh1h48gH7aSEOIvVJf68
-	 c/8Ui70hgF0KQ==
+	s=k20201202; t=1778104840;
+	bh=qO/bJBZKk+2JX7D64j+KbHrwyxEIaJ1JMMkQoGp2JnE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=P7ypO5dF3L0fBPUCnrrx6TaZenXdgGdQI7+zaewT/iX4gvhZQjbi/XtNoCeKZGSdp
+	 huZTtbG64v0FWXWbZqF45iaz77BzK7ymtNMEbsAam7fMkVTTi590vuR1SYKcr4IZoT
+	 LtPXr/16xMMQ6Ee7UQPHF2uxcwm/IMrHSnmz5pA4qJDWbApFw9ebqWXZMFUyqUI1Xy
+	 dXpKeIBIuj8GTQTqGl74bxNio3acLhxMfT5MBBtmatHZgJEtibHlvuD5eupsft6FEK
+	 wznkGnE7WBuXVotsYr+B5d73GxxhmeSldbnQtSNhWirZhDrHARwyBKrYe3GE5sAkm9
+	 PcwXFCeFvZANQ==
 From: Danilo Krummrich <dakr@kernel.org>
 To: gregkh@linuxfoundation.org,
 	rafael@kernel.org,
@@ -59,10 +60,12 @@ Cc: driver-core@lists.linux.dev,
 	linux-pci@vger.kernel.org,
 	rust-for-linux@vger.kernel.org,
 	Danilo Krummrich <dakr@kernel.org>
-Subject: [PATCH 0/3] rust: devres: add DevresLt for ForLt-aware device resource access
-Date: Wed,  6 May 2026 23:58:32 +0200
-Message-ID: <20260506220012.855173-1-dakr@kernel.org>
+Subject: [PATCH 1/3] rust: devres: add DevresLt for ForLt-aware device resource access
+Date: Wed,  6 May 2026 23:58:33 +0200
+Message-ID: <20260506220012.855173-2-dakr@kernel.org>
 X-Mailer: git-send-email 2.54.0
+In-Reply-To: <20260506220012.855173-1-dakr@kernel.org>
+References: <20260506220012.855173-1-dakr@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -71,39 +74,180 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Devres<T> stores resources as T and hands out &'bound T from its access
-methods. For lifetime-parameterized types like Bar<'bound, SIZE> that
-are transmuted to 'static for storage, the synthetic 'static leaks to
-callers -- any method on the stored type that surfaces its lifetime
-parameter would yield a &'static reference, which is unsound.
+Devres<T> stores resources as T and returns &'bound T from access(). For
+lifetime-parameterized types like Bar<'bound, SIZE> that are transmuted
+to 'static for storage, this exposes the synthetic 'static lifetime to
+callers -- any method on the stored type that returns a reference with
+its lifetime parameter would yield a &'static reference, which is
+unsound.
 
-This series adds DevresLt<F: ForLt>, a thin wrapper around
-Devres<F::Of<'static>> that applies ForLt::cast_ref in all access paths
-to shorten the stored 'static back to the caller's borrow lifetime.
+Add DevresLt<F: ForLt>, a thin wrapper around Devres<F::Of<'static>>
+that applies ForLt::cast_ref in all access methods to shorten the stored
+'static lifetime to the caller's borrow lifetime.
+
 Devres<T: Send> remains unchanged for static resource types.
 
-Also implement ForLt for Bar, IoMem and ExclusiveIoMem, and their
-into_devres() methods to return DevresLt instead of plain Devres.
-Provide convenience type aliases DevresBar, DevresIoMem and
-DevresExclusiveIoMem.
+Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+---
+ rust/kernel/devres.rs | 97 +++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 90 insertions(+), 7 deletions(-)
 
-This series depends on [1].
-
-[1] https://lore.kernel.org/driver-core/20260506215113.851360-1-dakr@kernel.org/
-
-Danilo Krummrich (3):
-  rust: devres: add DevresLt for ForLt-aware device resource access
-  rust: pci: return DevresLt from Bar::into_devres()
-  rust: io: mem: return DevresLt from
-    IoMem/ExclusiveIoMem::into_devres()
-
- drivers/pwm/pwm_th1520.rs |  5 +-
- rust/kernel/devres.rs     | 97 ++++++++++++++++++++++++++++++++++++---
- rust/kernel/io/mem.rs     | 55 ++++++++++++++++------
- rust/kernel/pci.rs        |  1 +
- rust/kernel/pci/io.rs     | 30 ++++++++----
- 5 files changed, 155 insertions(+), 33 deletions(-)
-
+diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
+index 58efe80474bd..c9c698901871 100644
+--- a/rust/kernel/devres.rs
++++ b/rust/kernel/devres.rs
+@@ -24,6 +24,7 @@
+         Arc, //
+     },
+     types::{
++        ForLt,
+         ForeignOwnable,
+         Opaque, //
+     },
+@@ -122,7 +123,7 @@ struct Inner<T> {
+ /// # Ok(())
+ /// # }
+ /// ```
+-pub struct Devres<T: Send> {
++pub struct Devres<T: Send + 'static> {
+     dev: ARef<Device>,
+     inner: Arc<Inner<T>>,
+ }
+@@ -184,7 +185,7 @@ pub(super) unsafe fn devres_node_remove(
+     }
+ }
+ 
+-impl<T: Send> Devres<T> {
++impl<T: Send + 'static> Devres<T> {
+     /// Creates a new [`Devres`] instance of the given `data`.
+     ///
+     /// The `data` encapsulated within the returned `Devres` instance' `data` will be
+@@ -237,7 +238,7 @@ pub fn new<E>(dev: &Device<Bound>, data: impl PinInit<T, E>) -> Result<Self>
+         })
+     }
+ 
+-    fn data(&self) -> &Revocable<T> {
++    pub(crate) fn data(&self) -> &Revocable<T> {
+         &self.inner.data
+     }
+ 
+@@ -297,15 +298,19 @@ pub fn device(&self) -> &Device {
+     /// #![cfg(CONFIG_PCI)]
+     /// use kernel::{
+     ///     device::Core,
+-    ///     devres::Devres,
++    ///     devres::DevresLt,
+     ///     io::{
+     ///         Io,
+     ///         IoKnownSize, //
+     ///     },
+-    ///     pci, //
++    ///     pci,
++    ///     types::ForLt, //
+     /// };
+     ///
+-    /// fn from_core(dev: &pci::Device<Core>, devres: Devres<pci::Bar<'_, 0x4>>) -> Result {
++    /// fn from_core(
++    ///     dev: &pci::Device<Core>,
++    ///     devres: DevresLt<ForLt!(pci::Bar<'_, 0x4>)>,
++    /// ) -> Result {
+     ///     let bar = devres.access(dev.as_ref())?;
+     ///
+     ///     let _ = bar.read32(0x0);
+@@ -353,7 +358,7 @@ unsafe impl<T: Send> Send for Devres<T> {}
+ // SAFETY: `Devres` can be shared with any task, if `T: Sync`.
+ unsafe impl<T: Send + Sync> Sync for Devres<T> {}
+ 
+-impl<T: Send> Drop for Devres<T> {
++impl<T: Send + 'static> Drop for Devres<T> {
+     fn drop(&mut self) {
+         // SAFETY: When `drop` runs, it is guaranteed that nobody is accessing the revocable data
+         // anymore, hence it is safe not to wait for the grace period to finish.
+@@ -369,6 +374,84 @@ fn drop(&mut self) {
+     }
+ }
+ 
++/// Guard returned by [`DevresLt::try_access`].
++///
++/// Dereferences to `F::Of<'bound>`, applying [`ForLt::cast_ref`] to shorten the lifetime of the
++/// stored data to the guard's borrow lifetime.
++pub struct DevresGuard<'bound, F: ForLt>(RevocableGuard<'bound, F::Of<'static>>);
++
++impl<'bound, F: ForLt> core::ops::Deref for DevresGuard<'bound, F> {
++    type Target = F::Of<'bound>;
++
++    fn deref(&self) -> &Self::Target {
++        F::cast_ref(&*self.0)
++    }
++}
++
++/// Device-managed resource with [`ForLt`](trait@ForLt)-aware access.
++///
++/// `DevresLt` wraps [`Devres`] and applies [`ForLt::cast_ref`] in its access methods to shorten
++/// the stored `'static` lifetime to the caller's borrow lifetime. This prevents transmuted
++/// `'static` lifetimes from leaking to users.
++///
++/// Use this for resource types that implement [`ForLt`](trait@ForLt) and are stored with a
++/// transmuted `'static` lifetime (e.g. [`pci::Bar`]).
++///
++/// [`pci::Bar`]: crate::pci::Bar
++pub struct DevresLt<F: ForLt>(Devres<F::Of<'static>>)
++where
++    F::Of<'static>: Send;
++
++impl<F: ForLt> DevresLt<F>
++where
++    F::Of<'static>: Send,
++{
++    /// Creates a new [`DevresLt`] instance of the given `data`.
++    pub fn new<E>(dev: &Device<Bound>, data: impl PinInit<F::Of<'static>, E>) -> Result<Self>
++    where
++        Error: From<E>,
++    {
++        Ok(Self(Devres::new(dev, data)?))
++    }
++
++    /// Return a reference of the [`Device`] this [`DevresLt`] instance has been created with.
++    pub fn device(&self) -> &Device {
++        self.0.device()
++    }
++
++    /// Obtain `&'bound F::Of<'bound>`, bypassing the [`Revocable`].
++    ///
++    /// This method works like [`Devres::access`], but shortens the returned reference's lifetime
++    /// from `'static` to `'bound` via [`ForLt::cast_ref`].
++    pub fn access<'bound>(
++        &'bound self,
++        dev: &'bound Device<Bound>,
++    ) -> Result<&'bound F::Of<'bound>> {
++        self.0.access(dev).map(F::cast_ref)
++    }
++
++    /// [`DevresLt`] accessor for [`Revocable::try_access`].
++    pub fn try_access(&self) -> Option<DevresGuard<'_, F>> {
++        self.0.data().try_access().map(DevresGuard)
++    }
++
++    /// [`DevresLt`] accessor for [`Revocable::try_access_with`].
++    pub fn try_access_with<R, G>(&self, f: G) -> Option<R>
++    where
++        G: for<'bound> FnOnce(&'bound F::Of<'bound>) -> R,
++    {
++        self.0.data().try_access_with(|data| f(F::cast_ref(data)))
++    }
++
++    /// [`DevresLt`] accessor for [`Revocable::try_access_with_guard`].
++    pub fn try_access_with_guard<'bound>(
++        &'bound self,
++        guard: &'bound rcu::Guard,
++    ) -> Option<&'bound F::Of<'bound>> {
++        self.0.data().try_access_with_guard(guard).map(F::cast_ref)
++    }
++}
++
+ /// Consume `data` and [`Drop::drop`] `data` once `dev` is unbound.
+ fn register_foreign<P>(dev: &Device<Bound>, data: P) -> Result
+ where
 -- 
 2.54.0
 
