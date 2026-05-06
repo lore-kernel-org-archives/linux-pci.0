@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1DE2481A82;
-	Wed,  6 May 2026 15:25:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A2A49219C;
+	Wed,  6 May 2026 15:25:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778081125; cv=none; b=sf1PVkgdrmAHr78u0hlT9/QiqzwDbTS7pBSK7qnF9zoAgkeix02Qh52pv+fDsMe7O+cyqiNOTCsOJQzSa3ZH9+6JKcTvIsVff0mcwZa1J1+slL8K8RQ2PniZvLk4O3mDdJBkurvyH2Xfs0Y6QXfTrsIY+CbBpnWEiEQjkIjZ6Zg=
+	t=1778081125; cv=none; b=Q4ptf/NmqNYFQWUcUst/XwlBpsf7YRT5Vm275ACa8dyw/qoB9OflSZxprGk/Y8/Y0PtvJILTMdwsjEYnK38zNhmoq92KKP52WxO4BNIcTDjFjczBVGDI7O7qZunC70Khu7QbL0Fmx/wK6he/dJk8hWdJOX4KrJSfEN0ea5BGoR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1778081125; c=relaxed/simple;
-	bh=GhIUQhK/ACVD4fdxZ164YUvoWXZbPzyuCKLehj/SzdA=;
+	bh=G0FMgyUyO0ZfGOOdQVnL8bDKgkjDFXxYECNke1oaX4g=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=DvD0WhqSRoSQWEYqP1CvWcyVvHhVcoXYGQe/FyJ/6btMUVcADnxgAJg3NZNv7ojAKT02poCULUSVmamA+k8tblnPxmHNQsY2Cvk4UmAFZNAibnAyNGe5414mUOitTC08DzabtYo/kWDXOEiBbV4ri68uD6ngbz1650KEwXuVOiQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=joWJy+qj; arc=none smtp.client-ip=220.197.31.4
+	 MIME-Version; b=N0dCoQgiMv7iHVih1kzX7eQzaq3bSG/v7xSLIPJTH3XUtQAE7OUX1Yxr80NxjlGOtXixkRt5Ty13dJuDavqkKga/FvRaCXnjm5IXq7bnGjuRobthsGIfTCwlUgjN7ytHFMy8CzlhNYBenzJXsSkBlcOxg5U0h4e3Yxvpik17A7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ORxpGjQJ; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="joWJy+qj"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ORxpGjQJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=pD
-	yIM4BKweQBnCpgrNGgNcV7Vbp6Q+A8dmpeii+IQGo=; b=joWJy+qjTJCNktMpzt
-	ZqXslnzQhJb1oT/i6kVzHaxMfME0l3i7P69BPzq7402unsiX/DLgq1c7c5w8Opts
-	FeoNmeCBC/CLmqIJVT+84XHBaEZAvXAOhCVNxaV+0C4teOKBqAIAArIXYq1xkeFU
-	2WIITz0TSsY1VyPDzjF9cu12o=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=8f
+	YT+L8xujiw5+/Qen2DspUJWPjgtV6UMGsDVRY0cUw=; b=ORxpGjQJCvXUb8Tvix
+	QGSzijb+F36amAMRqRzzmnASTnmVEvZHKV9f3uyBrtOUd8BgKDstr1CoimQHhbyt
+	BxulBaoF81LkfW9Ggaf12Uj6s7SohMZq43+mdkMyT7FwQ06bSfaqckw+1nX365Fb
+	lavDSZktYOnJS761Hljeyu6dk=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAXH5wkXftpfKPsDg--.7909S2;
-	Wed, 06 May 2026 23:24:21 +0800 (CST)
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wCHAqsXXftpv5CgDg--.43926S7;
+	Wed, 06 May 2026 23:24:14 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -47,9 +47,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link training
-Date: Wed,  6 May 2026 23:23:46 +0800
-Message-Id: <20260506152346.166056-9-18255117159@163.com>
+Subject: [PATCH v2 5/8] PCI: dwc: Use common pcie_wait_after_link_train() helper
+Date: Wed,  6 May 2026 23:23:43 +0800
+Message-Id: <20260506152346.166056-6-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260506152346.166056-1-18255117159@163.com>
 References: <20260506152346.166056-1-18255117159@163.com>
@@ -60,40 +60,44 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAXH5wkXftpfKPsDg--.7909S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtr1DXw47ZryDZFy8XryfCrg_yoWkurg_u3
-	9xCFn7Aw4UGr9akF12y34rZryYy342qr10qa10vF13ta4I9r1rXw1fZF4jy3WUWa15JFyv
-	yryqyr109r9rujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRM7KItUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAW5XWn7XSU5xwAA3x
+X-CM-TRANSID:_____wCHAqsXXftpv5CgDg--.43926S7
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tw1rAFW7WryDZw4xXw4DCFg_yoW8Grykpa
+	98JF4FkFy8JF43ua1DC3Z3ury5X3ZxArW7GFZ3Wa4fZa47ArZFqr10q34Sq34xXrsFvr1a
+	qr17tF17GwsrAF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piI38bUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxB+3W2n7XR85JgAA34
 
-The Renesas RZ/G3S PCIe host driver currently does not enforce the
-mandatory 100 ms delay after link training completes for speeds > 5.0 GT/s,
-required by PCIe r6.0 sec 6.6.1.
+The DWC driver already implements the 100 ms delay required by PCIe
+r6.0 sec 6.6.1 by checking pci->max_link_speed and calling msleep(100).
 
-The driver already has a 'max_link_speed' field (derived from the device
-tree). Add a call to pcie_wait_after_link_train() in
-rzg3s_pcie_host_init() after reading the link status, ensuring that the
-delay is applied before any Configuration Request is sent downstream.
+Replace the open-coded msleep() with the new common helper
+pcie_wait_after_link_train() to reduce code duplication and improve
+maintainability. No functional change intended.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/pcie-rzg3s-host.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
-index d86e7516dcc2..6ab59c5464cf 100644
---- a/drivers/pci/controller/pcie-rzg3s-host.c
-+++ b/drivers/pci/controller/pcie-rzg3s-host.c
-@@ -1390,6 +1390,8 @@ static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host)
- 	val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
- 	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index c11cf61b8319..e5808d4b3867 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -799,13 +799,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+ 		return -ETIMEDOUT;
+ 	}
  
-+	pcie_wait_after_link_train(host->max_link_speed);
-+
- 	return 0;
+-	/*
+-	 * As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link
+-	 * speeds greater than 5.0 GT/s, software must wait a minimum of 100 ms
+-	 * after Link training completes before sending a Configuration Request.
+-	 */
+-	if (pci->max_link_speed > 2)
+-		msleep(PCIE_RESET_CONFIG_WAIT_MS);
++	pcie_wait_after_link_train(pci->max_link_speed);
  
- config_deinit_post:
+ 	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
 -- 
 2.34.1
 
