@@ -1,102 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BE4933F5AA;
-	Thu,  7 May 2026 23:02:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 357AA175A99
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 23:20:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778194970; cv=none; b=DJ4+XPa0Mgrhdixu56e6icv57rU0y+K3IFpGYww42NjeQxCq2r3Z+P58nrvWFyMWbo0z+/YJR5QtdGUoP29tscS0PG9yAmqm72Sn2RmboqhD+xqqzIwznswV6/vhQcPgJTrueh0109wz68DE7clniz2fNXBA2BPM8/kgs758X00=
+	t=1778196018; cv=none; b=cfpxRn1+mqKavdPMLd3xaC4XFGQBMrN2NlTPSoMq4SYkorkboZYS/Fd23Kf3nMsr7mOKXcz4S+TQXCTnOJS7f+u+RkSUJJrf4UfoarPuZ7JKqmy/RuLQQcMLStlv2Zh4Y6xNB5wpsPu2k83As/aeFT4KR8e9K36pTYKf8NC1X/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778194970; c=relaxed/simple;
-	bh=v7ZawboY1tagenWamPRS78LGMs+Lnkdb67PDXmvdElg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=RoZ23VwCesNk5yJidh8rSToFyGcxB6zkVgnGyPlHsWOBZRYox6BUYzKZlCOSKLVbqU6W58RZvx91aNSpU1/UUrm6SQvsAVPiotf8uXf2h4BFf6P/O/ADwWxS6eedHzS11IteOxteM78Q6l7nHbfs1fD3birXjhP8OM+LO/yRshc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vIZsPB9L; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778196018; c=relaxed/simple;
+	bh=XDIL4lZLx7HTlxm0pMj9E20DYlZnj9ZoOLm53fZLC3Q=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=cnG/MhRF2lfi+0Pg5w63pprTxI4U2QaIr+k12iaghEu3/MvDMZj2i401f9NkHKjc5NF7qHWQYhsIG0EMLSXQQ5mEpyRS0OR2r3AzPfOd2jLKhcWtYAqHACrCcINyNPtF/gibC4mVVjJtTs2xns/cF80A1kDuh8jLSARBIMf3mtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RvAqhW6k; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vIZsPB9L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED565C2BCB2;
-	Thu,  7 May 2026 23:02:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RvAqhW6k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0AC6C2BCB2;
+	Thu,  7 May 2026 23:20:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778194970;
-	bh=v7ZawboY1tagenWamPRS78LGMs+Lnkdb67PDXmvdElg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=vIZsPB9LCVDbo33b//MxiLgxtLZpOOrDM+qB7b1QJ1yi+YHUCwaHeHZ/ut3j65dlZ
-	 zFU33X6uHrGA39g+3x8+ePsw1fobbJjhbgF8ZJYOas0FsRLAe4Qv1gl5EK7U/thQy2
-	 Eor+jZCAIcTfzAA2tYMzs+1680r6Zb8Q2mQ+0J1wb3abk9kxh3wZzBX51J1t/qydYG
-	 zZO3U+ZQ6UBVs1fT6c8M+Q/6nyoub66hE56cbqgQNVA0uVERnIpgh3Dr3YOsuBuOdn
-	 Fu6uvTy8HkYxWu7IAhUeXR25b6w7dY9yCvEypTiX7ir+ceXK+jHDnjHZEqy+2hpSTp
-	 L+NOqjTMeg3jQ==
-Date: Thu, 7 May 2026 18:02:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/4] PCI: Introduce an API to check if RC/platform can
- retain device context during suspend
-Message-ID: <20260507230248.GA51586@bhelgaas>
+	s=k20201202; t=1778196018;
+	bh=XDIL4lZLx7HTlxm0pMj9E20DYlZnj9ZoOLm53fZLC3Q=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=RvAqhW6klnAUwWfXAeCfa9KX5EghWE7GuF4x0NsRGg3fV/pkXT1KeZZg2lHN9cgfU
+	 cSXo65AYlRJOaZJgo6pO5WQuIqP0E9PvRuthb/l/9bBeVXOXfGMfX5rmo7cvayyinl
+	 MhiGCLBvePZy0qb+4AkrTLamZmrkeblamt7BDscP3BKcGCLJ8Tztcc4DhbpPn/SXnS
+	 hFZdbZH+UToT8QROw1NzN7ofxwazuzfw/Rqs5UHJW5Co8Aa+2PJESuTL/izbbmeYbz
+	 cGphOI1UvAbPrHMQZ+WtOOgmgV45cFosHLGqbtu86RdshlCqg16Jw/PN+ZM4/hugpE
+	 onBVplxYOww2Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 3/6] vfio/pci: Add PCIe TPH interface with capability
+ query
+Reply-To: sashiko@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260507130956.34441-4-fengchengwen@huawei.com>
+References: <20260507130956.34441-4-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 07 May 2026 23:20:17 +0000
+Message-Id: <20260507232017.A0AC6C2BCB2@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <xqwvjygt3bgttbipe6hhnpkfwauczxpoiyfbbakdyzesz6ydcd@en54522wjnar>
 
-On Fri, Apr 17, 2026 at 04:41:09PM +0530, Manivannan Sadhasivam wrote:
-> On Thu, Apr 16, 2026 at 02:18:55PM -0500, Bjorn Helgaas wrote:
-> > On Tue, Apr 14, 2026 at 09:29:39PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > 
-> > > Currently, the PCI endpoint drivers like NVMe checks whether the device
-> > > context will be retained or not during system suspend, with the help of
-> > > pm_suspend_via_firmware() API.
-> > > 
-> > > But it is possible that the device context might be lost due to some
-> > > platform limitation as well. Having those checks in the endpoint drivers
-> > > will not scale and will cause a lot of code duplication.
-> ...
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The ST table size (`st_table_sz`) is incorrectly reported as 0 w=
+hen the Steering Tag (ST) table is located in the MSI-X table.
+--
 
-> > > + * pci_dev_suspend_retention_supported - Check if the platform can retain the device
-> > > + *					 context during system suspend
-> > > + * @pdev: PCI device to check
-> > > + *
-> > > + * Returns true if the platform can guarantee to retain the device context,
-> > > + * false otherwise.
-> > > + */
-> > > +bool pci_dev_suspend_retention_supported(struct pci_dev *pdev)
-> > 
-> > This doesn't seem like the right name.  This isn't a property of the
-> > *device*; that's all determined by the PCI spec (devices must retain
-> > all internal state in D0, D1, and D2, they retain it in D3hot if
-> > No_Soft_Reset, and they never do in D3cold).
-> > 
-> > So this seems like something to do with the *platform* behavior.  It
-> > sounds like this is basically a way to learn whether the device might
-> > be put in D3cold on system suspend.
-> 
-> That's correct. But I wanted to keep it device specific, since apart
-> from pm_suspend_via_firmware() there could be other issues causing
-> context to be lost. Like the issue with RC, brought up in the
-> successive patches. There could be chances that only one hierarchy
-> might be affected. So making it device specific would give us the
-> granularity.
+commit 84cffb4ace52d740319be3c3a2f634b68268963c
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-OK, a device-specific API is fine.
+vfio/pci: Add PCIe TPH interface with capability query
 
-Maybe it could be something like "pci_suspend_preserves_context()"?
+This commit adds the VFIO_DEVICE_PCI_TPH IOCTL to allow userspace to query
+device TPH capabilities, supported modes, and steering tag table informatio=
+n.
+It also introduces a module parameter to restrict unsafe device-specific TPH
+mode to trusted userspace only.
 
-Is it the case that suspend never uses D3cold?  If suspend ever uses
-D3cold, *every* device put in D3cold will lose its context.
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 3f8d093aacf8a..e7efa8f230bec 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+[ ... ]
+> @@ -1461,6 +1463,55 @@ static int vfio_pci_ioctl_ioeventfd(struct vfio_pc=
+i_core_device *vdev,
+>  				  ioeventfd.fd);
+>  }
+> =20
+> +static int vfio_pci_tph_get_cap(struct vfio_pci_core_device *vdev,
+> +				struct vfio_device_pci_tph_op *op,
+> +				void __user *uarg)
+> +{
+> +	struct pci_dev *pdev =3D vdev->pdev;
+> +	struct vfio_pci_tph_cap cap =3D {0};
+> +	u8 mode;
+> +
+> +	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, cap))
+> +		return -EINVAL;
+> +
+> +	mode =3D pcie_tph_get_st_modes(pdev);
+> +	if (!enable_unsafe_tph_ds_mode)
+> +		mode &=3D ~PCI_TPH_CAP_ST_DS;
+> +	if (mode =3D=3D 0 || mode =3D=3D PCI_TPH_CAP_ST_NS)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (mode & PCI_TPH_CAP_ST_IV)
+> +		cap.supported_modes |=3D VFIO_PCI_TPH_MODE_IV;
+> +	if (mode & PCI_TPH_CAP_ST_DS)
+> +		cap.supported_modes |=3D VFIO_PCI_TPH_MODE_DS;
+> +
+> +	if (pcie_tph_get_st_table_loc(pdev) !=3D PCI_TPH_LOC_NONE)
+> +		cap.st_table_sz =3D pcie_tph_get_st_table_size(pdev);
 
-How would this work if suspend can use D3cold?  Can a driver (or this
-API) learn whether D3cold might be used?
+Is it possible that st_table_sz is incorrectly reported as 0 here when the
+Steering Tag (ST) table is located in the MSI-X table?
+
+The kernel function pcie_tph_get_st_table_size() returns 0 if the ST table
+location is anything other than PCI_TPH_LOC_CAP, meaning it returns 0 for
+PCI_TPH_LOC_MSIX.
+
+As a result, userspace would receive st_table_sz =3D=3D 0, which the UAPI
+documentation explicitly defines as 'no ST table'.
+
+Furthermore, because the location is not PCI_TPH_LOC_NONE, any subsequent
+userspace attempt to use VFIO_PCI_TPH_GET_ST would be rejected by the kernel
+with -EOPNOTSUPP.
+
+This would leave userspace completely unable to properly program the ST tab=
+le
+using SET_ST because it falsely believes the table size is 0 and cannot que=
+ry
+the CPU tags.
+
+Should the MSI-X table size (e.g., via pci_msix_vec_count(pdev)) be used to
+populate st_table_sz when the location is PCI_TPH_LOC_MSIX?
+
+> +
+> +	if (copy_to_user(uarg, &cap, sizeof(cap)))
+> +		return -EFAULT;
+> +
+> +	return 0;
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507130956.3444=
+1-1-fengchengwen@huawei.com?part=3D3
