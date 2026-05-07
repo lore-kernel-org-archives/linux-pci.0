@@ -1,152 +1,164 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3791033F5B5
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 23:49:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A88D2D7DC6
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 23:54:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778197774; cv=none; b=axZo31kUuQxU22zhCi9SE5nsmnNI/MISaaGvsmDInQP9UBqgvif3QVwa6HJgJrYxpRDVJRALdNilHmk64MJpovb1V7by+mYacMnxVpCEeryCNOPcKAb7dgD4W2ariviR/6tlANiCSaBkYs6Hg0Yt1KnLZTF1kP4lyGw0lRbnYoU=
+	t=1778198092; cv=none; b=W9LwuKN+YinVFxEZgKnJ66SPpBjiuf2aoA/iejcc6fMKnfiut639BLFhlzV8QzDMwrUFJSP4z3rJKm4JMNJq0ivgBdwKP+Ca/WELJEZBUuOlxQEHr52O95SA/GLzjQ62qrJtpv6nIysHbuaN5o+JpXy/1ObxWQwl5IiF1aad0NM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778197774; c=relaxed/simple;
-	bh=PM7LqU+kjXdx0gr6NqRSso9vEXBNMApT8IQPoOzhvDg=;
+	s=arc-20240116; t=1778198092; c=relaxed/simple;
+	bh=dtOKTYYJ9j88H2/nOddlp1kMeMLnsK3AFr3cPg0d+mo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OM7UV1qJZJtxkWBtzdMFHsRjWPFqqtllFcVLcxK5CBPKU9zYWjD60dtrb98LuN3y/eOHOSS4iqBcNhyMNMW/6pwjsMG1zDtd725B3PmUF7hxi7UrFq+0BpeAVmSAQqFOpVFHeNrbximubCbd5uFiKvAvHAgR6+x0Rcl7zewCEGk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ukdgEqGX; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=toOGyU0KWyR5okMTIqkgvMaWtf6i3kwscOoMmstuVXtGkkwkDeeTHwAJy+B7qsI2um5t5ZDpZUkhAME28i690qsr8xT3hNmvKVpQNzqUr+RnzPQw4FqVneVUD4gqNmp1ryrrIFcnQaYWzenA72DNCwTvxFnu5ohIeFuMsjODHVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l8vzjxSy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ukdgEqGX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A210DC2BCB2;
-	Thu,  7 May 2026 23:49:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l8vzjxSy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10C62C2BCB2;
+	Thu,  7 May 2026 23:54:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778197773;
-	bh=PM7LqU+kjXdx0gr6NqRSso9vEXBNMApT8IQPoOzhvDg=;
+	s=k20201202; t=1778198092;
+	bh=dtOKTYYJ9j88H2/nOddlp1kMeMLnsK3AFr3cPg0d+mo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=ukdgEqGX7Gv91TfSUmTsQqa3V2LEu61VH8UzkIQVAJkFtuWuZkBKhp34ZwdW6LEsw
-	 R/CYtkYGJz9WADesBkWV0oS9FfIFl1Rh/vakWv/75Fn3E2wNd6hd3QBxBqWQ0qBdeC
-	 333looKHGQtAcVyiq3wd8udVSPYJH1O3xLJLyD4oZ+XTklSIpGNQcW4maugLnE8v8Y
-	 ++uFY2ygR8cJnrSnpRs1bvPpZvOCzpKfXRA7eCFNoYlrD/ml5baKsjjQAH/+bGR0Zy
-	 b5+P1lTmJ4z1TnVy0+i8AQYWix6IiH8LTErxXn8whnhXnlkLXVej0rgttVsEaKCmFW
-	 Y/keV7Mtq4HYQ==
+	b=l8vzjxSyBbWSpxCFAJArnhMCK8t2ipyk+iI+XKwoop1BwaNf9ocq/T5ZYJMSKOxR+
+	 Ude2kqu7OZkyuQ3qf7jGgU2cl+PbpWQWS6AVr3cLV0d4F41YYlDvxF93LXW/rP30nx
+	 3yUPFzlR7FiLYkReMAItBOUlD30R4QdWmBneppM8WsypoE5FZqk4tHOIDyf0V5wj82
+	 iWTvrYTmpcQiKiF9w67X5iIMyazLA3cSl0+4ilpikD6uD/mcebShEyB/+npbfwjmn1
+	 5ApwwpED3Uw5velPcCzVPgQ86WoupGvfeXc6CdqfHcjnn0a6P6mZrihZABWNk99/Zy
+	 ufX4VuIgodaXQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 4/6] vfio/pci: Add PCIe TPH enable/disable support
+Subject: Re: [PATCH v2 4/9] power: sequencing: pcie-m2: Create serdev for
+ PCI devices present before probe
 Reply-To: sashiko@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
+To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260507130956.34441-5-fengchengwen@huawei.com>
-References: <20260507130956.34441-5-fengchengwen@huawei.com>
+In-Reply-To: <20260507-pwrseq-m2-bt-v2-4-1740bd478539@oss.qualcomm.com>
+References: <20260507-pwrseq-m2-bt-v2-4-1740bd478539@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 07 May 2026 23:49:33 +0000
-Message-Id: <20260507234933.A210DC2BCB2@smtp.kernel.org>
+Date: Thu, 07 May 2026 23:54:51 +0000
+Message-Id: <20260507235452.10C62C2BCB2@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] PCIe configuration accesses for TPH in device register/close paths=
- occur while the device may be suspended (D3).
-- [High] Missing Runtime PM wake-up in TPH ioctl handlers allows hardware a=
-ccess on suspended devices.
+- [High] Reference leak of 'serdev_ctrl' on early return in '__pwrseq_pcie_=
+m2_create_serdev()'.
+- [High] Potential NULL pointer dereference in 'pwrseq_pcie_m2_notify()' wh=
+en accessing 'pdev->dev.parent->of_node'.
+- [Medium] Subsystem guidelines violation: mixing 'goto' error handling wit=
+h '__free()' cleanup helpers.
 --
 
-commit 7ffb59002e7aaac5444cc6452b34924776dcf634
-Author: Chengwen Feng <fengchengwen@huawei.com>
+commit 1d901a33bb02968191e0403afce66cf3ae8ed0f3
+Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-vfio/pci: Add PCIe TPH enable/disable support
+power: sequencing: pcie-m2: Create serdev for PCI devices present before pr=
+obe
 
-This commit adds support to enable and disable the PCIe TPH function
-with mode selection, restricting unsafe modes. It also disables TPH when
-ownership is taken or when userspace closes the device file descriptor.
+This commit adds support to create serdev devices for PCI devices that
+are already present before the driver's probe function registers the
+PCI notifier.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index e7efa8f230bec..7a5dc2bfe2e9d 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -738,6 +738,9 @@ void vfio_pci_core_close_device(struct vfio_device *c=
-ore_vdev)
->  #endif
->  	vfio_pci_dma_buf_cleanup(vdev);
+> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -236,7 +236,7 @@ static int pwrseq_pcie_m2_create_bt_node(struct pwrse=
+q_pcie_m2_ctx *ctx,
+>  	return ret;
+>  }
 > =20
-> +	/* Disable TPH when userspace closes the device FD */
-> +	pcie_disable_tph(vdev->pdev);
-> +
-
-Is it safe to call pcie_disable_tph() here before vfio_pci_core_disable()
-wakes the device up?
-
-A device might be in a suspended state when its file descriptor is closed.
-vfio_pci_core_disable() explicitly handles waking the device up via
-pm_runtime_resume(&pdev->dev).
-
-If the device is in D3, won't accessing the configuration space cause
-dropped writes or PCIe bus faults?
-
->  	vfio_pci_core_disable(vdev);
-> =20
->  	mutex_lock(&vdev->igate);
-
-[ ... ]
-
->  static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
->  			      void __user *uarg)
+> -static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx,
+> +static int __pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx,
+>  					struct pci_dev *pdev)
 >  {
->  	struct vfio_device_pci_tph_op op =3D {0};
->  	size_t minsz =3D sizeof(op.argsz) + sizeof(op.op);
+>  	struct serdev_controller *serdev_ctrl;
+[ ... ]
+>  	/* Bail out if the device was already attached to this controller */
+>  	if (serdev_ctrl->serdev) {
+>  		serdev_controller_put(serdev_ctrl);
+>  		return 0;
+>  	}
 > =20
-> +	guard(mutex)(&vdev->igate);
-> +
+> +	/* Bail out if the serdev device was already created for the PCI dev */
+> +	mutex_lock(&ctx->list_lock);
+> +	list_for_each_entry(pci_dev, &ctx->pci_devices, list) {
+> +		if (pci_dev->pdev =3D=3D pdev) {
+> +			mutex_unlock(&ctx->list_lock);
+> +			return 0;
 
-Could this ioctl be called while the device is suspended?
+Does this early return path leak the reference to serdev_ctrl?
 
-Neither vfio_pci_core_ioctl() nor vfio_pci_ioctl_tph() appears to call
-pm_runtime_resume_and_get() before dispatching these ioctls.
+The of_find_serdev_controller_by_node() call earlier in the function acquir=
+es
+a reference, and the previous bailout path correctly calls
+serdev_controller_put(serdev_ctrl), but this new path appears to return
+without releasing the reference.
 
-Since userspace can place the device into a low-power state, accessing
-the TPH configuration space registers via pcie_tph_get_st_modes(),
-pcie_enable_tph(), or pcie_disable_tph() might read invalid data or
-drop writes.
-
->  	if (copy_from_user(&op, uarg, minsz))
->  		return -EFAULT;
-> =20
->  	switch (op.op) {
->  	case VFIO_PCI_TPH_GET_CAP:
->  		return vfio_pci_tph_get_cap(vdev, &op, uarg + minsz);
-> +	case VFIO_PCI_TPH_ENABLE:
-> +		return vfio_pci_tph_enable(vdev, &op, uarg + minsz);
-> +	case VFIO_PCI_TPH_DISABLE:
-> +		return vfio_pci_tph_disable(vdev);
->  	default:
->  		/* Other ops are not implemented yet */
->  		return -EINVAL;
+Also, looking at the rest of __pwrseq_pcie_m2_create_serdev() in the source,
+it declares serdev_parent using the __free(device_node) macro while also
+using goto labels for error paths like err_put_ctrl. Does this mix of goto
+and __free() cleanup helpers violate the subsystem guidelines?
 
 [ ... ]
-
-> @@ -2258,6 +2303,9 @@ int vfio_pci_core_register_device(struct vfio_pci_c=
-ore_device *vdev)
->  	if (!disable_idle_d3)
->  		pm_runtime_put(dev);
-> =20
-> +	/* Disable TPH when taking over ownership of the device */
-> +	pcie_disable_tph(pdev);
+> +static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx)
+> +{
+> +	struct pci_dev *pdev =3D NULL;
+> +	int ret;
 > +
+> +	if (!pwrseq_pcie_m2_check_remote_node(ctx->dev, 3, 0, "serial") ||
+> +	    !pwrseq_pcie_m2_check_remote_node(ctx->dev, 0, 0, "pcie"))
+> +		return 0;
+> +
+> +	struct device_node *pci_parent __free(device_node) =3D
+> +				of_graph_get_remote_node(dev_of_node(ctx->dev), 0, 0);
+> +	if (!pci_parent)
+> +		return 0;
+> +
+> +	/* Create serdev for existing PCI devices if required */
+> +	for_each_pci_dev(pdev) {
+> +		if (!pdev->dev.parent || pci_parent !=3D pdev->dev.parent->of_node)
+> +			continue;
 
-Does this call to pcie_disable_tph() happen after the device may have
-already entered a low-power state?
+It is good to see the defensive !pdev->dev.parent check here to prevent a
+null pointer dereference.
 
-pm_runtime_put() can asynchronously drop the PM usage counter and allow
-the device to enter D3.
+However, the existing pwrseq_pcie_m2_notify() function performs a similar
+check without validating the parent:
 
-Shouldn't the TPH disablement occur before dropping the PM reference to
-avoid accessing the configuration space of a suspended device?
+	if (!pci_parent || (pci_parent !=3D pdev->dev.parent->of_node))
 
->  	ret =3D vfio_register_group_dev(&vdev->vdev);
->  	if (ret)
->  		goto out_power;
+Could a PCI device without a parent triggering a BUS_NOTIFY_ADD_DEVICE
+event cause a crash in pwrseq_pcie_m2_notify() because it is missing the
+same defensive check?
+
+[ ... ]
+> +		ret =3D __pwrseq_pcie_m2_create_serdev(ctx, pdev);
+> +		if (ret) {
+> +			dev_err_probe(ctx->dev, ret,
+> +				      "Failed to create serdev for PCI device (%s)\n",
+> +				      pci_name(pdev));
+> +			pci_dev_put(pdev);
+> +			goto err_remove_serdev;
+>  		}
+>  	}
+> =20
+>  	return 0;
+> +
+> +err_remove_serdev:
+> +	pwrseq_pcie_m2_remove_serdev(ctx, NULL);
+> +
+> +	return ret;
+>  }
+
+Similar to the function above, this newly added function mixes the
+__free(device_node) cleanup helper for pci_parent with the err_remove_serdev
+goto label. Should all resources here be converted to scope-based cleanup to
+avoid ownership confusion?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507130956.3444=
-1-1-fengchengwen@huawei.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507-pwrseq-m2-=
+bt-v2-0-1740bd478539@oss.qualcomm.com?part=3D4
