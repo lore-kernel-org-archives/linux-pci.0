@@ -1,95 +1,155 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [194.59.206.189])
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08E1733A9E1;
-	Thu,  7 May 2026 06:23:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.59.206.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78D973537F1;
+	Thu,  7 May 2026 07:23:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778135013; cv=none; b=S7Qmg+nJmO7m1MMdjdln+3r9NJMT5MbJzcvaBA2gVqnIKKlZaM5DSFFPghMXUA0RpmMLaOmyoKglrmsnePzs5Gm0JudUtSyim5T1r5vXwbBzWrIkLmgO1cJfPBG7bLznRPHANqUdQ0aGU1U49nJoV1U3/JW8yGgASm+CneGNr4M=
+	t=1778138638; cv=none; b=d42dtdxyfajBuKMlL4kpG7YWqjFgvHhqeK1JH5oYf6MOr8O3xcWV3/odBcWGDigDkU9VVOOkoT1YSDj9xJjAT+1PaffH84n0ASGPkYG0CU5RYsbbThrxh6wGGEMJSW1lfAMcrtck2oSalHJUtFJEEJWGroWNRD3Vgk559azAP+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778135013; c=relaxed/simple;
-	bh=vL4DabYOD9B6tSqbsgRgvxI82cLXViFTzFEHJXUIi2c=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KACLrDvvd3V/pejtVz0jWas+9sJMJkkXlSfVQmIg7D5UzzYFrKGEK275xQ6orBWpmo9E3V4PsT04CNfNFTTtNuvlaLabgUg02fDO/xJfW2qbru6bUzbhLhfTaMXgc9R8zq0Ccyfaw8kC/preyUD5DtzZ2G9tmNhPw1i5eHLqSAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=XNIf6V+d; arc=none smtp.client-ip=194.59.206.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	s=arc-20240116; t=1778138638; c=relaxed/simple;
+	bh=ag2e4rubDHljcUbsB2BC/MHj9ZFXFOBLhTjLy6JSlhk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Kjzk/66yqjtWd3q+3Oy03Ub3KoFO1lt39ivhrMzshUXwRIUHb+sGyoz3OIpqfhD5MVY6j2udwhY3xZB1Xyv086MfNaZm63QwVEjvNETFa9sAayuk+Oeml9zNDhjF54SjaKdLCqjMrhSI4gYWi26wuKDrD+jGwgU3nn6cKLFqwe0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=ZLJf7HFo; arc=none smtp.client-ip=185.171.202.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="XNIf6V+d"
-Received: from relay02-mors.netcup.net (localhost [127.0.0.1])
-	by relay02-mors.netcup.net (Postfix) with ESMTPS id 4gB2571NKJz4Btc;
-	Thu,  7 May 2026 08:14:03 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1778134443;
-	bh=vL4DabYOD9B6tSqbsgRgvxI82cLXViFTzFEHJXUIi2c=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=XNIf6V+dLxp4NXjq3SL/sM3dunYoc4rEgiJjpIMFWwwDcyry6YZcy0uSDt83otv2b
-	 N7BYL6pV4KVmhtrhvjJAFzjuhSJaz8Q3kBUe49JwAWwJ8PSXdl19SAcWXkMhb/ykjy
-	 2ffV2RLyuw55+EyljhODmkX/HjbPjU/DLsMhI5so7J9Xwzr7fXS1bNU95zxB8CX3UY
-	 dmkfkZEC1lIgnU8W7XYgqwYcO+lScV07XBzCR5aW5wGsg02ff+r2w6mi4C6z7hjJf8
-	 QDq/DMwSmU3qaz+VRjfvtOyip6No7qmuq1cT5eIVDLpy7vGuhaoUIK3PfktAXttS4D
-	 1ruFoWoc6Q6jQ==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by relay02-mors.netcup.net (Postfix) with ESMTPS id 4gB2570fbsz7vfc;
-	Thu,  7 May 2026 08:14:03 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4gB2561PKgz8sZg;
-	Thu,  7 May 2026 08:14:02 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id AA4FD5FBF7;
-	Thu,  7 May 2026 08:14:01 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <c0305eb4-811f-492d-9ee1-db1e8759af3f@leemhuis.info>
-Date: Thu, 7 May 2026 08:14:00 +0200
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="ZLJf7HFo"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-04.galae.net (Postfix) with ESMTPS id 48A98C5DC58;
+	Thu,  7 May 2026 07:24:41 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 90CF6605D0;
+	Thu,  7 May 2026 07:23:53 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 4F651107F1B9F;
+	Thu,  7 May 2026 09:23:28 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1778138630; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=KuHg3bpGpRy0j8zZGsR4xMbCeq+40KQNwSqwL73wrxg=;
+	b=ZLJf7HFoaWrA+QvjHT5Gh6TZeRPeQK7D9TRFNzAxGhp0EWNliZg4AwN/3MS8qxZ+WzAXXq
+	T6wrHBfmoxlIOCE0LR6qB6nNclEBnM62oa0qHR1b3eIxeSfrgMTMIlcTQI7nqZge15D0l+
+	sLj9R0qfJuv9VoGTvaYtmVXHcV/7jHrAKRNpo7q2YNgBW2BMI67agx51RlZqky+pM/DE/w
+	2FWDjIij6E4LO6ldmdu10VRhQ1jdNnY1LWBRw2nfeTqWN3+DsPlyj7HsjlEMWCYQvoebbU
+	LgYPnGZiAHv/HKhw9qbr3lFn7WqvriiVxW4qqE4OwbN85ifqMP1iikrTMszpLg==
+Date: Thu, 7 May 2026 09:23:26 +0200
+From: Herve Codina <herve.codina@bootlin.com>
+To: Linus Walleij <linusw@kernel.org>
+Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, Krzysztof
+ Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Geert
+ Uytterhoeven <geert+renesas@glider.be>, Kalle Niemi <kaleposti@gmail.com>,
+ Matti Vaittinen <mazziesaccount@gmail.com>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, Sascha
+ Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team
+ <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, Michael
+ Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, Andi
+ Shyti <andi.shyti@kernel.org>, Wolfram Sang
+ <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, Arnd
+ Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, Bjorn
+ Helgaas <bhelgaas@google.com>, Charles Keepax
+ <ckeepax@opensource.cirrus.com>, Richard Fitzgerald
+ <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, Ulf
+ Hansson <ulf.hansson@linaro.org>, Mark Brown <broonie@kernel.org>, Len
+ Brown <lenb@kernel.org>, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>,
+ Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus
+ <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang
+ <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+ Dan Williams <dan.j.williams@intel.com>, Shawn Guo <shawnguo@kernel.org>,
+ Wolfram Sang <wsa@kernel.org>, linux-kernel@vger.kernel.org,
+ driver-core@lists.linux.dev, imx@lists.linux.dev,
+ linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
+ linux-i2c@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
+ patches@opensource.cirrus.com, linux-gpio@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-spi@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, Allan Nielsen
+ <allan.nielsen@microchip.com>, Horatiu Vultur
+ <horatiu.vultur@microchip.com>, Steen Hegelund
+ <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH v6 20/27] misc: lan966x_pci: Fix dtso nodes ordering
+Message-ID: <20260507092326.2f8e3b47@bootlin.com>
+In-Reply-To: <CAD++jLkFu+Z22QBFiaa9S+Epeh=RJZOYX8BOLVDFw4bhEoYF1Q@mail.gmail.com>
+References: <20260325143555.451852-1-herve.codina@bootlin.com>
+	<20260325143555.451852-21-herve.codina@bootlin.com>
+	<CAD++jLkFu+Z22QBFiaa9S+Epeh=RJZOYX8BOLVDFw4bhEoYF1Q@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] amdgpu fails to load eGPU after 6.19
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
- Rio Liu <rio@r26.me>
-References: 
- <a1FodrO_nl6UemO3VLBk5Gsu6PjvxLU-OYhvJEMeKFem-Bpi7ZXDHrIxtwsTCmpn-WndBxnzZNtdKJy_V6PjafnFjSKz7sr1eEfGobRzpgs=@r26.me>
- <4dfc25f2-f660-c234-4e4d-c5c76216523d@linux.intel.com>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <4dfc25f2-f660-c234-4e4d-c5c76216523d@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: 
- <177813444197.2807031.18438117709254262244@mxe9fb.netcup.net>
-X-NC-CID: n2LspJU92EYRXPtK9VRjUeEldcGFM4szdVWA2meL9Wpn/7iW6ko=
+X-Last-TLS-Session-Version: TLSv1.3
 
-Lo! Restarting this after deliberately waiting for a bit:
+Hi Linus,
 
-On 4/14/26 16:28, Ilpo Järvinen wrote:
-> Please note that there are also some fixes to the new algorithm which are 
-> only queued for v7.1 as is (I expect they'll be backported from there 
-> though). They're currently in the pci/resource branch awaiting PCI 
-> maintainer (Bjorn Helgaas) to make PR to Linus.
+On Thu, 26 Mar 2026 11:33:19 +0100
+Linus Walleij <linusw@kernel.org> wrote:
 
-FWIW, I assume you mainly meant the patches from this series:
-https://lore.kernel.org/all/20260324165633.4583-1-ilpo.jarvinen@linux.intel.com/
+> Hi Herve,
+> 
+> this is nitpicking, but if you respin the series consider the following:
+> 
+> On Wed, Mar 25, 2026 at 3:42 PM Herve Codina <herve.codina@bootlin.com> wrote:
+> >
+> > Nodes available in the dtso are not ordered by their unit address.
+> >
+> > Fix that re-ordering them according to their unit address.
+> >
+> > Signed-off-by: Herve Codina <herve.codina@bootlin.com>  
+> (...)
+> > +                               switch: switch@e0000000 {  
+> 
+> Recommended practice is:
+> 
+> ethernet-switch@...
+> 
+> > +                                       compatible = "microchip,lan966x-switch";
+> > +                                       reg = <0xe0000000 0x0100000>,
+> > +                                             <0xe2000000 0x0800000>;
+> > +                                       reg-names = "cpu", "gcb";
+> > +
+> > +                                       interrupt-parent = <&oic>;
+> > +                                       interrupts = <12 IRQ_TYPE_LEVEL_HIGH>,
+> > +                                                    <9 IRQ_TYPE_LEVEL_HIGH>;
+> > +                                       interrupt-names = "xtr", "ana";
+> > +
+> > +                                       resets = <&reset 0>;
+> > +                                       reset-names = "switch";
+> > +
+> > +                                       pinctrl-names = "default";
+> > +                                       pinctrl-0 = <&tod_pins>;
+> > +
+> > +                                       ethernet-ports {
+> > +                                               #address-cells = <1>;
+> > +                                               #size-cells = <0>;
+> > +
+> > +                                               port0: port@0 {  
+> 
+> Recommended practice is:
+> ethernet-port@...
+> 
 
-The series iirc fixed a few regressions at least three people reported
-with eGPU setup in 6.19/7.0. So I guess it really would be good to have
-them backported. Which leads to two questions:
+Yes, it should be but the DT binding [0] says "switch" and "port".
 
-* Have any reasons against backporting turned up in between?
-* If not, could you or anybody else be so kind and submit those for
-inclusion in the 7.0 series to get those regressions finally resolved
-for users that don't want to run -rc kernels?
+Those node names have to follow the DT binding even if this binding doesn't
+follow recommended practice.
 
-Ciao, Thorsten
+[0] https://elixir.bootlin.com/linux/v7.0/source/Documentation/devicetree/bindings/net/microchip,lan966x-switch.yaml
+
+Best regards,
+Hervé
+
+-- 
+Hervé Codina, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
