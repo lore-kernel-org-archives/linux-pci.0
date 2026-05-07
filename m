@@ -1,129 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0B2E37C111
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF77437EFE2
 	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 08:00:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778140804; cv=none; b=VAzJuID6P7Tl9gSGJlzE1dF6Zq+YVbDLfBuoZLLAQw1Luf0nWl2AI2UKuukuugOCTv9cPRoDmVPaPrBAR1vPBhW3W1gvIAN/Rn8ODx2+akCY9ZRFi00NywCEpSZQD36WCvslxpOpqtZpypFJ7y9ztO2FiySgVnA0hM1yXlDblnk=
+	t=1778140805; cv=none; b=Z/ST1gMe9vVPPjeX6oOpMtvzKZ2ejWKTE1Sjs7ORu3vIQTyq+gGlmBg6hlsTikdOOpAmvr+h/fi9nD94RTo6WS3l3YDM0+EXX6hA+MQTEsBalrcqardxK4pJpUZAjfMhrr0DMSnmtiTb5SvW47B+2cVYddQenyHC2jo6vwH8clc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778140804; c=relaxed/simple;
-	bh=zWJSTblMoNIj9xsEQg6h5VxF5Fho7k+w1XgwjqaVy0M=;
+	s=arc-20240116; t=1778140805; c=relaxed/simple;
+	bh=Y9z3Gag4RVPz5yJ68hMHVKmLAv3951NtoVNOMhr9gpY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PxPTurDcm4l14w2tjmIiK+oLbP1MIkmC/5MbBfGDYOydlUs6ZuHRXQV5AexJOkEWg8IrFsIDg+FlONhZTac6R1ThB6L3ljGJYAdVV4NLaK8b0hk8My+PxMrUOLu9k6r1exqDI1QL+KpkyVjNRg0jXQ2IYZykX3U0C0bMyXai72Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V6Mu/l/c; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=TtCL9R6QZ8jYpMtKRlL3PDj+SBbagQIYSiEvXipnbXwb4WAngKguCo9QJCvploxw95XVqUVQOKfeI308OZvEEkSm6ePIqGkspYKnUVyFY9Eu8kkupy4ucG019HurcHnDJb3LARSCklOYWfp8Fp9Q5cbuLWn9Lm24tio3CN8Xltg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OwFkEzGO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V6Mu/l/c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 365FBC2BCB8;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OwFkEzGO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8EB1C2BCC9;
 	Thu,  7 May 2026 08:00:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778140803;
-	bh=zWJSTblMoNIj9xsEQg6h5VxF5Fho7k+w1XgwjqaVy0M=;
+	s=k20201202; t=1778140804;
+	bh=Y9z3Gag4RVPz5yJ68hMHVKmLAv3951NtoVNOMhr9gpY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=V6Mu/l/cBsbj5S3RLsAfsZVs0EHd1RbsSS+IMjpvVQQOR/zll9eRXhOQDBHA2Dedr
-	 uhM7nDEtj/zT+z2tRMMVGar18yOkkTqWHqNuOv6Fx4DS/T3rH4EbZvUr/mMVhcOy2v
-	 f/EPePN0wmxFVSf21qa++TWn8zMJH/phYDkfX1HmZSYqdS7+kantC04Tvc8zYrH5II
-	 +eWiX2Y8TZtLmqZ32hWZoCFgoVAdamd/EN395LFmXJ91DsBWSes1pgkk9sCCMp0WrM
-	 u5s29tZy8LzttAJmsxrCF8D0sFAWBLHneP5fN69WjOpY9zQBE7NI1R9x9GKK0cXWAG
-	 bE+p6oaejqa5w==
+	b=OwFkEzGOOwok1wwnf+opft4KtsNMFL+MhYoxp6ev5IFcJ9f5rZlIsMn6nUtCt6phq
+	 cNKJI3OeUTjTVB4JWu81rIsl+lRzar9NkhJ1OKAIkaYOlpHH2LvLQO6INmWyStq7Zy
+	 V6SVuC4Ob0SwNyM5KziISKJpK60uTG1sQPpiLFiJymi4xGSTKKYSgPMwWdQp7xIR/L
+	 qetKFnigHdvdzUDDNMAkDVEenf46SnV6dFYZyNZLf+MakcFTCLrgWdFTekwL6s0Z5M
+	 kfVdcm+5uvNpThSGWT55NYe9vxIRYC/CAvLTNAMKEQR4xOn7acugb+Sny5A54R5eab
+	 yv4MBjrXQSHeg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 phy-next 13/31] scsi: ufs: qcom: keep separate track
- of PHY power state
+Subject: Re: [PATCH v8 phy-next 15/31] drm/rockchip: dw_hdmi: avoid direct
+ dereference of phy->dev.of_node
 Reply-To: sashiko@lists.linux.dev
 To: "Vladimir Oltean" <vladimir.oltean@nxp.com>
-Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
-In-Reply-To: <20260505100523.1922388-14-vladimir.oltean@nxp.com>
-References: <20260505100523.1922388-14-vladimir.oltean@nxp.com>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+In-Reply-To: <20260505100523.1922388-16-vladimir.oltean@nxp.com>
+References: <20260505100523.1922388-16-vladimir.oltean@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 07 May 2026 08:00:02 +0000
-Message-Id: <20260507080003.365FBC2BCB8@smtp.kernel.org>
+Date: Thu, 07 May 2026 08:00:03 +0000
+Message-Id: <20260507080003.E8EB1C2BCC9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Failing to clear `phy_powered_on` upon a `phy_power_off()` error l=
-eads to calling `phy_power_off()` on an exited PHY during driver removal.
-- [High] Silently ignoring `phy_power_off()` errors alters error propagatio=
-n and can lead to system hangs.
+- [Low] A PHY specifier is parsed and passed directly to a Clock framework =
+API, conflating two different DT domains.
 --
 
-commit 22afdb4c537193d799444f149b239ffbc8dfa455
+commit 6a42fe45756ea5f0b8615efd6d337d5e679b8587
 Author: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-scsi: ufs: qcom: keep separate track of PHY power state
+drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
 
-This commit adds a phy_powered_on boolean to the Qualcomm UFS driver to
-track the PHY power state. It wraps phy_power_on() and phy_power_off()
-in helper functions that check and update this state to prevent unbalanced
-calls.
+The commit refactors dw_hdmi_rockchip_bind() to perform a manual phandle
+lookup on the hdmi PHY index within the controller's DT node, avoiding a
+direct dereference of hdmi->phy->dev.of_node.
 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-
-[ ... ]
-
-> +static void ufs_qcom_phy_power_off(struct ufs_qcom_host *host)
-> +{
-> +	int ret;
-> +
-> +	if (!host->phy_powered_on)
-> +		return;
-> +
-> +	ret =3D phy_power_off(host->generic_phy);
-> +	if (ret) {
-> +		dev_warn(host->hba->dev, "Failed to power off PHY: %pe\n",
-> +			 ERR_PTR(ret));
-> +		return;
-> +	}
-> +
-> +	host->phy_powered_on =3D false;
-> +}
-
-If phy_power_off() returns an error, the early return leaves
-host->phy_powered_on set to true.
-
-During driver removal, ufshcd_hba_exit() invokes ufs_qcom_exit(), which
-calls ufs_qcom_phy_power_off() followed by phy_exit(). If the power off
-fails here, phy_powered_on remains true.
-
-When ufshcd_hba_exit() subsequently calls ufshcd_setup_clocks(hba, false),
-it will invoke ufs_qcom_phy_power_off() again. Because the flag is still
-true, could this result in calling phy_power_off() on an already exited PHY?
+> diff --git a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/dr=
+m/rockchip/dw_hdmi-rockchip.c
+> index 0dc1eb5d2ae39..7abb42e486c02 100644
+> --- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+> +++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
 
 [ ... ]
 
-> @@ -1420,20 +1453,14 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *=
-hba, bool on,
->  				ufs_qcom_dev_ref_clk_ctrl(host, false);
->  			}
+> @@ -588,13 +589,17 @@ static int dw_hdmi_rockchip_bind(struct device *dev=
+, struct device *master,
+>  		return dev_err_probe(hdmi->dev, ret, "failed to get phy\n");
+>  	}
 > =20
-> -			err =3D phy_power_off(phy);
-> -			if (err) {
-> -				dev_err(hba->dev, "phy power off failed, ret=3D%d\n", err);
-> -				return err;
-> -			}
-> +			ufs_qcom_phy_power_off(host);
->  		}
->  		break;
+> -	if (hdmi->phy) {
+> +	index =3D of_property_match_string(np, "phy-names", "hdmi");
+> +	if (index >=3D 0) {
+>  		struct of_phandle_args clkspec;
+> =20
+> -		clkspec.np =3D hdmi->phy->dev.of_node;
+> -		hdmi->hdmiphy_clk =3D of_clk_get_from_provider(&clkspec);
+> -		if (IS_ERR(hdmi->hdmiphy_clk))
+> -			hdmi->hdmiphy_clk =3D NULL;
+> +		if (!of_parse_phandle_with_args(np, "phys", "#phy-cells", index,
+> +						&clkspec)) {
+> +			hdmi->hdmiphy_clk =3D of_clk_get_from_provider(&clkspec);
 
-Because ufs_qcom_phy_power_off() returns void, it swallows the error from
-phy_power_off(). Previously, this error was propagated back to the UFS core,
-which correctly aborted the suspend or teardown flow.
+This isn't a bug, but does this pass a PHY specifier directly to a Clock
+framework API?
 
-By no longer returning the error, ufs_qcom_setup_clocks() silently returns =
-0.
-The UFS core will then proceed to disable the clocks while the PHY is still
-active and powered on.
+of_parse_phandle_with_args() parses the phys property using #phy-cells,
+populating clkspec as a PHY specifier. This is then passed to
+of_clk_get_from_provider() which expects a Clock specifier governed by
+#clock-cells.
 
-Would this early disabling of clocks lead to unclocked register accesses
-and asynchronous aborts causing system hangs?
+While this does not cause a runtime failure here because the Rockchip HDMI
+PHY clock provider uses of_clk_src_simple_get and ignores the specifier
+arguments, it appears to conflate two different DT domains.
+
+Would it be better to retrieve the device node using of_parse_phandle()
+and explicitly synthesize a 0-cell clock specifier to maintain the API
+abstraction?
+
+> +			of_node_put(clkspec.np);
+> +			if (IS_ERR(hdmi->hdmiphy_clk))
+> +				hdmi->hdmiphy_clk =3D NULL;
+> +		}
+>  	}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505100523.1922=
-388-1-vladimir.oltean@nxp.com?part=3D13
+388-1-vladimir.oltean@nxp.com?part=3D15
