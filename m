@@ -1,141 +1,157 @@
-Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B28A42DF136;
-	Thu,  7 May 2026 14:19:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.22.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 890CD401A03
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 14:29:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778163569; cv=none; b=YPRcJM/oQ1mS4r5yXm4WEor8lFX9/Al7jcYBbGeNb/5rClRa2gTyLbLzMVDZUnIAxKn0JWvE4x0MlF43jC9B4gS6lUSdYLsW9cf6bZPhRvDpPMI+LmlXSlz0RpBMQNFa6sSltoVkUrYMqoaP6Xx8uWJGsVA3TG0ySKMpYNJR/Wg=
+	t=1778164186; cv=none; b=YUm5ovBDm3HzDbpZetCXQCk1IYCZCPNnRISNRpqHipgp4fZeKKKD1SrNRTGpBgoofYCNkaTzAwaHIhW7cdYe0ZOrE5vEDqF6fXlyR1/ehjOGG2c47qMZS2C6PGLV8OkPVLYGcpuNHhMMpLLztC9a5dHwEJn56V6wkSSsRhOG9GQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778163569; c=relaxed/simple;
-	bh=Tph5f9/v1xSnzr9BklEAJxX/syAAOqhqaQ33HcBHCUY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=U+zgBfC7XzFP7OH83s3DUetZixde2n9UJEDJxPtUzd+kHHBg0Z39LmqNPpAz+a1Bt8MYapVrqnktGQ3oqdhXVhFKY1edblMCTyW6O4uVifCLP6uC0mDDnqWXvwbmNfbjx2gkscO9+NKCkind7h4eGoG5xL8l4ZcW0ks1ka0WaSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=54.207.22.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
-X-QQ-mid: zesmtpsz2t1778163514tb43c222c
-X-QQ-Originating-IP: 1sKs3UfqVeO5nm/Na9x2m9MbDphK0h3wGe9yUC8UiZQ=
-Received: from [192.168.30.32] ( [116.234.74.217])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Thu, 07 May 2026 22:18:31 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 0
-X-BIZMAIL-ID: 8446522380017217308
-EX-QQ-RecipientCnt: 10
-From: Xilin Wu <sophon@radxa.com>
-Date: Thu, 07 May 2026 22:18:31 +0800
-Subject: [PATCH] PCI: qcom: Restrict PERST# parsing to PCI bridge nodes
+	s=arc-20240116; t=1778164186; c=relaxed/simple;
+	bh=ezmR/KKCPtyWBUwCLXTx1NDZJ26eGNGjHFL8tYzcbi4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZKHgBq/7eyHfQ1GaHLZ819s7MUc0NXCNGiI+RFMQTfJ/WGAgxgeGlrLBbm07tu2EZtiEBXj2FfsAhj0xe3JI5HuwhsGK5na16snFk/Aysk1s/IGSh5bnFcT2W2pNmUFwW5no+gCA4ZifnYc1Lp8NGN8tzRgYIeM86gf8zyOKZNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EkleaJYq; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EkleaJYq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778164184;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=p/Ie+sFcRQTzoKcDR8BzjhL+HxzOxnnOZKDIau57duo=;
+	b=EkleaJYq/ooIoJgX6P+n6Q2nGm7iAkhP6gcjj/jLDVjX/M+nTyENVKOBWfF8tv34LWNaam
+	5R6yxoTaUmOPX57Egv+xPcOl2CCI6SAGgjrTzDFDzyTlfb7g4zZFCiVfXSJW0Y62xA3+aG
+	CKUktGhn5x6agMhHv875vikA6K39rdo=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-439-b3OGTQWWOeW15l0LltNXTA-1; Thu,
+ 07 May 2026 10:29:38 -0400
+X-MC-Unique: b3OGTQWWOeW15l0LltNXTA-1
+X-Mimecast-MFC-AGG-ID: b3OGTQWWOeW15l0LltNXTA_1778164177
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 60C0218E6A5A;
+	Thu,  7 May 2026 14:29:28 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.69])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C99471803A92;
+	Thu,  7 May 2026 14:29:26 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH] PCI: Add D3cold reset quirk for devices with broken/missing FLR
+Date: Thu,  7 May 2026 16:29:16 +0200
+Message-ID: <20260507142916.392983-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260507-fix-qcom-pcie-parse-perst-v1-1-79bdcce38eeb@radxa.com>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWM0QqDMAxFf0XyvEAtVIu/MvZQu+gyUGuiYyD++
- 7Lt5cKBe84BSsKk0FUHCL1YeZkN6ksF+ZHmkZDvxuCdb1xwLQ78xjUvE5bMhCWJ2pLohilGP4T
- oUhMimF+E7PxrX29/1r1/Ut6+QTjPD0V9YQZ9AAAA
-X-Change-ID: 20260507-fix-qcom-pcie-parse-perst-a882f580a658
-To: Manivannan Sadhasivam <mani@kernel.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Xilin Wu <sophon@radxa.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2471; i=sophon@radxa.com;
- h=from:subject:message-id; bh=Tph5f9/v1xSnzr9BklEAJxX/syAAOqhqaQ33HcBHCUY=;
- b=owGbwMvMwCVmdFg0fe08Iz/G02pJDJl/5ls0CGmdULa+UG5pX3ywYHrr1j02a1+Gq/Q0VB8vl
- vXju+vdUcrCIMbFICumyKIQzzCXvTL32lOxUj2YOaxMIEMYuDgFYCK8cowMO4zu1f/T3/Eu0sXF
- O89xn9qGxQfq6njXvvi0+P67NsbKCwx/5Xufp3A8uFHOOO34O8s0XgZdp66Vib8WqM3JulHHVlD
- ACgA=
-X-Developer-Key: i=sophon@radxa.com; a=openpgp;
- fpr=205F009D07796DD6E516752E32C31567AD9E324E
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpsz:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
-X-QQ-XMAILINFO: Nj+lDvaLCxoMOKds4NpPuX6blPQsbPCMpW8kJbbiOvZTDvhSseSpfo/E
-	VXFGp1q2bJ/JbpFLq7COna7dIhDFOzff3XQfAPct+s4S8N91UjC77uwCZJZboAuWyjC9ZFU
-	6fRHPG8+GKrKVFQ+FSK6hk18PQuCuudj7svjstcrvPj7wytGbcFUtg/qJit/mvWG6A1S3+r
-	tFyhSwkBuFbv0jItWoU/mLVTj4Nbfuxc9EhuWLc1ZIAQ68OLl67+O/QwTwolhUxNgp/lSOW
-	XiqfTGoihZ+zdpsKcF6t6XU8pJQt4oit/yOTtGw3aWOs5Ks4JRZ10llBpQEFGdPkfimiwkq
-	s9li3Udf4VjiAQTVGFgmxH0q9yoeaAxmsjIU3SGRo4AFTmsPDFY41oGMutNqkDoLgwxvJ8Q
-	yLlWBR7y0cMbcxCmySNr+7LqQmYs5NBLNuYpTKSitl/HCtgXb2qjPdNbGQXAfzyaB0QlH8Q
-	BdPOfFU8w1FxesPq4hUBevR2At6JFo+x0Lx21KGskrS9oTSGzQUklhujI2hU1E9K64kJxzP
-	2XKRpNcCZjAQGz4/nAKnO2BJsicI3Q6q+Xlngy51CXifbrIYQ9iK6FcNf0yBZfBDi0Y9O6Y
-	ZfbSzZkO09GYZ7zdlwv8uQK6JL0fahrHDcQdpKv19XIhA570enWqNcrMk/WXOtvgn0f7azw
-	Rrd5vWp97AW3guZ0zrop3VnxoosbkuC68RMA+Mu1XEEwG6MBpGFvzLUXc64seYnKw2sot6D
-	2/G1xsFkxTUqzmMF+OHTDxQKO4BubiMUq1ybnNS09H6If9Fz8x1OE0Jq5qzVVvRJQVDAq+v
-	xsc8ax03Fi+3vFqfH32ZVi2iirCR6kMidCdqAaBemNiVTyHZlhi1KYlEyFHsFrsX0w88eRO
-	Z19RG572lDxGKjNVA/MC1FfW4t3kZZN44pbiwXs6f9YnZFLfS9PA0deJP/KfTW7LsUzi/U/
-	ANXED9zREIgMQ6m/uhi9agNcC7v7gpIRlQgeIArFbDb2R9H9ZSfEfqkO+Fze4aahEhEeqNK
-	RTdMr6vAXZKCFGBb3FCYeaWSk/X0+QerAyKonLtVrH0486WpHHxYgIc1CuftA=
-X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
-X-QQ-RECHKSPAM: 0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Commit 2fd60a2edb83 ("PCI: qcom: Parse PERST# from all PCIe bridge
-nodes") extended PERST# parsing below the Root Port, so that downstream
-PCIe switch bridge nodes can describe their own PERST# GPIOs.
+Some PCIe devices require D3cold power state transitions for proper
+firmware reset when used in VFIO passthrough scenarios, but lack
+Function Level Reset (FLR) capability or have incomplete FLR
+implementations that don't fully reset firmware state.
 
-However, the implementation recurses into every available child node.  A
-PCI hierarchy may contain non-bridge child nodes with unrelated
-"reset-gpios" properties, such as an Ethernet PHY below an MDIO bus.  If
-such a reset GPIO is provided by a PCI endpoint GPIO controller, the
-endpoint has not been enumerated while the host bridge is still probing.
-Trying to acquire that GPIO then returns -EPROBE_DEFER and the Root Port
-probe is deferred indefinitely.
+Known devices affected:
+- Qualcomm ath11k WiFi (17cb:1103) - FLReset-, reset unreliable
+- Qualcomm ath12k WiFi (17cb:1107) - FLReset-, reset always fails
+- Qualcomm SDX62/SDX65 5G modems (17cb:0308) - FLReset-, never
+  initialize in VMs
+- MediaTek mt7925e WiFi (14c3:7925) - FLReset+ but broken, reset always
+  fails
 
-Only recurse into child nodes that are PCI bridge/bus nodes.  Keep parsing
-the Root Port passed by qcom_pcie_parse_port(), but filter descendants to
-nodes with device_type = "pci" and either a bus-range property or an
-explicit PCI bridge class compatible.
+The problem manifests in two scenarios:
 
-Fixes: 2fd60a2edb83 ("PCI: qcom: Parse PERST# from all PCIe bridge nodes")
-Signed-off-by: Xilin Wu <sophon@radxa.com>
+1. WiFi devices (ath11k, ath12k, mt7925e): Normal VM operation works fine,
+   including clean shutdown/reboot. However, when the VM terminates
+   uncleanly (crash, force-off), VFIO attempts to reset the device before
+   it can be assigned to another VM. Because FLR is missing or broken, the
+   reset fails and the device remains in an undefined state, preventing
+   reuse.
+
+2. Modem devices (SDX62/SDX65): Never successfully initialize even on first
+   VM assignment due to lack of proper reset capability.
+
+Add reset_device_d3cold() quirk that performs a simple D3cold->D0
+power cycle when the device is bound to vfio-pci. This provides
+firmware reset capability for VM reset operations where standard PCI
+reset methods are insufficient.
+
+The quirk only applies during VFIO passthrough - native drivers use
+their own reset mechanisms and will fall back to standard PCI reset
+methods by returning -ENOTTY.
+
+Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index af6bf5cce65b..5e0c31cc32a0 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1693,7 +1693,16 @@ static const struct pci_ecam_ops pci_qcom_ecam_ops = {
- 	}
- };
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index caaed1a01dc0..11d9a8b562e4 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4237,6 +4237,40 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+ 	return 0;
+ }
  
--/* Parse PERST# from all nodes in depth first manner starting from @np */
-+static bool qcom_pcie_is_bridge_node(struct device_node *np)
++/*
++ * Some devices need D3cold->D0 power cycle for proper firmware reset
++ * when used in VFIO passthrough. Some claim FLReset+ but it's incomplete,
++ * others lack FLR entirely, and standard reset methods don't fully reset
++ * firmware state. On bare metal with native drivers, we skip this and let
++ * the driver handle reset via standard methods.
++ */
++static int reset_device_d3cold(struct pci_dev *dev, bool probe)
 +{
-+	if (!of_node_is_type(np, "pci"))
-+		return false;
++	int ret;
 +
-+	return of_property_present(np, "bus-range") ||
-+	       of_device_is_compatible(np, "pciclass,0604");
++	if (probe)
++		return 0;
++
++	if (!dev->driver || strcmp(dev->driver->name, "vfio-pci") != 0)
++		return -ENOTTY;
++
++	/*
++	 * D3cold->D0 power cycle for firmware reset.
++	 * VFIO has already disabled interrupts and will handle state
++	 * save/restore, so we just do the power transition.
++	 */
++	ret = pci_set_power_state(dev, PCI_D3cold);
++	if (ret && ret != -EIO)
++		pci_warn(dev, "D3cold transition failed: %d\n", ret);
++
++	ret = pci_set_power_state(dev, PCI_D0);
++	if (ret && ret != -EIO)
++		pci_warn(dev, "D0 transition failed: %d\n", ret);
++
++	pci_info(dev, "D3cold reset completed\n");
++	return 0;
 +}
 +
-+/* Parse PERST# from all PCIe bridge nodes starting from @np */
- static int qcom_pcie_parse_perst(struct qcom_pcie *pcie,
- 				 struct qcom_pcie_port *port,
- 				 struct device_node *np)
-@@ -1731,6 +1740,9 @@ static int qcom_pcie_parse_perst(struct qcom_pcie *pcie,
+ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+ 		 reset_intel_82599_sfp_virtfn },
+@@ -4252,6 +4286,10 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 		reset_chelsio_generic_dev },
+ 	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+ 		reset_hinic_vf_dev },
++	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_device_d3cold },     /* Qualcomm ath11k WiFi */
++	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_device_d3cold },     /* Qualcomm ath12k WiFi */
++	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_device_d3cold },     /* Qualcomm SDX62/SDX65 5G modem */
++	{ PCI_VENDOR_ID_MEDIATEK, 0x7925, reset_device_d3cold }, /* MediaTek mt7925e WiFi */
+ 	{ 0 }
+ };
  
- parse_child_node:
- 	for_each_available_child_of_node_scoped(np, child) {
-+		if (!qcom_pcie_is_bridge_node(child))
-+			continue;
-+
- 		ret = qcom_pcie_parse_perst(pcie, port, child);
- 		if (ret)
- 			return ret;
-
----
-base-commit: 735d2f48cadaa9a87e7c7601667878de70c771c5
-change-id: 20260507-fix-qcom-pcie-parse-perst-a882f580a658
-
-Best regards,
---  
-Xilin Wu <sophon@radxa.com>
+-- 
+2.53.0
 
