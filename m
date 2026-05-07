@@ -1,181 +1,141 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from smtpbgbr2.qq.com (smtpbgbr2.qq.com [54.207.22.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BD03F9F46
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 13:50:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B28A42DF136;
+	Thu,  7 May 2026 14:19:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.22.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778161858; cv=none; b=dIxwv/lrNBWh87uvKwAB++TrmFzi6ksEHSb4PZR6A0GXoAXRlRxORmvrs6a16UiLZ6z2tV6Wx98WjbIL3EnCIj/1/MS1MXS6tq9KClangrEf0mmOmecisXt4SmYPLkGDhJeNEZnfESQc6Bw/qaYY+c6bOdCWqvpfIYrMFMG0Pgw=
+	t=1778163569; cv=none; b=YPRcJM/oQ1mS4r5yXm4WEor8lFX9/Al7jcYBbGeNb/5rClRa2gTyLbLzMVDZUnIAxKn0JWvE4x0MlF43jC9B4gS6lUSdYLsW9cf6bZPhRvDpPMI+LmlXSlz0RpBMQNFa6sSltoVkUrYMqoaP6Xx8uWJGsVA3TG0ySKMpYNJR/Wg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778161858; c=relaxed/simple;
-	bh=A9tloqLO3MivRI8SWRtbw6IBEItXyRuvtNnEaNE+iKs=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=KoryE3IbMREAcY0tsrKldIXGBYdFtEX+lQ5+EvLQgrDE/yJBH3Wc7HfwRcDRrR7+UBjduC8DW4EinLBQMspwu4tUq6Y2AEigH6WsWXKh2wvmNZBc6vrDg7B7mLPvYFx2HpKZpQFqYigJ2B3P7j5ZJ2RMP73/OuWKLXADSrVySsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CKptxliQ; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CKptxliQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778161856; x=1809697856;
-  h=date:from:to:cc:subject:message-id;
-  bh=A9tloqLO3MivRI8SWRtbw6IBEItXyRuvtNnEaNE+iKs=;
-  b=CKptxliQ8xNXHMSU3GVRrZobGb7MWrhvbKXYmad1B232z9Dpeney6h+x
-   x3xYxfi8tuRL+ALMZczywev3vFWwJAWBF9iDpdCCUh8o8rzVAbDXJPOTU
-   rVS3Q7LkybbrLqcTx+VpwAfNjf95Q+252J/mMLBZdFtGezN2XR4arU0Xg
-   qW7ZSPbMYmYPoEWj6yuZBjNH0950RFVLQk3wGUToN09F6y5Q37LyZW0Jn
-   CFg2X28S2F8Vmt8gYUTdf7Xrkv6kxABM4X2kCl4EsMXJeflxbyvVIccuK
-   X1U9YtlXk75ZTBnC/uGjZaFkUv8dnAkIGQGw1TGRRvROwwm4P8buYlD0R
-   A==;
-X-CSE-ConnectionGUID: 8hUXpkhnTfSzdHK41pDaXg==
-X-CSE-MsgGUID: +2dtKOn8RTG82krK5vyQTA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11779"; a="79012215"
-X-IronPort-AV: E=Sophos;i="6.23,221,1770624000"; 
-   d="scan'208";a="79012215"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 May 2026 06:50:56 -0700
-X-CSE-ConnectionGUID: +MWFXXd5QpaqrUOjH2VA6w==
-X-CSE-MsgGUID: NBAAb0rYSZOpnzYyUjj31A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,221,1770624000"; 
-   d="scan'208";a="235635646"
-Received: from lkp-server01.sh.intel.com (HELO d6e19f2f5857) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 07 May 2026 06:50:55 -0700
-Received: from kbuild by d6e19f2f5857 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wKz7s-0000000007B-09Am;
-	Thu, 07 May 2026 13:50:52 +0000
-Date: Thu, 07 May 2026 21:50:33 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- cede9116c5e1572d38b9d357f35556d480867822
-Message-ID: <202605072127.1tAgAcgp-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	s=arc-20240116; t=1778163569; c=relaxed/simple;
+	bh=Tph5f9/v1xSnzr9BklEAJxX/syAAOqhqaQ33HcBHCUY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=U+zgBfC7XzFP7OH83s3DUetZixde2n9UJEDJxPtUzd+kHHBg0Z39LmqNPpAz+a1Bt8MYapVrqnktGQ3oqdhXVhFKY1edblMCTyW6O4uVifCLP6uC0mDDnqWXvwbmNfbjx2gkscO9+NKCkind7h4eGoG5xL8l4ZcW0ks1ka0WaSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com; spf=pass smtp.mailfrom=radxa.com; arc=none smtp.client-ip=54.207.22.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=radxa.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=radxa.com
+X-QQ-mid: zesmtpsz2t1778163514tb43c222c
+X-QQ-Originating-IP: 1sKs3UfqVeO5nm/Na9x2m9MbDphK0h3wGe9yUC8UiZQ=
+Received: from [192.168.30.32] ( [116.234.74.217])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 07 May 2026 22:18:31 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 8446522380017217308
+EX-QQ-RecipientCnt: 10
+From: Xilin Wu <sophon@radxa.com>
+Date: Thu, 07 May 2026 22:18:31 +0800
+Subject: [PATCH] PCI: qcom: Restrict PERST# parsing to PCI bridge nodes
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260507-fix-qcom-pcie-parse-perst-v1-1-79bdcce38eeb@radxa.com>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yWM0QqDMAxFf0XyvEAtVIu/MvZQu+gyUGuiYyD++
+ 7Lt5cKBe84BSsKk0FUHCL1YeZkN6ksF+ZHmkZDvxuCdb1xwLQ78xjUvE5bMhCWJ2pLohilGP4T
+ oUhMimF+E7PxrX29/1r1/Ut6+QTjPD0V9YQZ9AAAA
+X-Change-ID: 20260507-fix-qcom-pcie-parse-perst-a882f580a658
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, Xilin Wu <sophon@radxa.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2471; i=sophon@radxa.com;
+ h=from:subject:message-id; bh=Tph5f9/v1xSnzr9BklEAJxX/syAAOqhqaQ33HcBHCUY=;
+ b=owGbwMvMwCVmdFg0fe08Iz/G02pJDJl/5ls0CGmdULa+UG5pX3ywYHrr1j02a1+Gq/Q0VB8vl
+ vXju+vdUcrCIMbFICumyKIQzzCXvTL32lOxUj2YOaxMIEMYuDgFYCK8cowMO4zu1f/T3/Eu0sXF
+ O89xn9qGxQfq6njXvvi0+P67NsbKCwx/5Xufp3A8uFHOOO34O8s0XgZdp66Vib8WqM3JulHHVlD
+ ACgA=
+X-Developer-Key: i=sophon@radxa.com; a=openpgp;
+ fpr=205F009D07796DD6E516752E32C31567AD9E324E
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:radxa.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: Nj+lDvaLCxoMOKds4NpPuX6blPQsbPCMpW8kJbbiOvZTDvhSseSpfo/E
+	VXFGp1q2bJ/JbpFLq7COna7dIhDFOzff3XQfAPct+s4S8N91UjC77uwCZJZboAuWyjC9ZFU
+	6fRHPG8+GKrKVFQ+FSK6hk18PQuCuudj7svjstcrvPj7wytGbcFUtg/qJit/mvWG6A1S3+r
+	tFyhSwkBuFbv0jItWoU/mLVTj4Nbfuxc9EhuWLc1ZIAQ68OLl67+O/QwTwolhUxNgp/lSOW
+	XiqfTGoihZ+zdpsKcF6t6XU8pJQt4oit/yOTtGw3aWOs5Ks4JRZ10llBpQEFGdPkfimiwkq
+	s9li3Udf4VjiAQTVGFgmxH0q9yoeaAxmsjIU3SGRo4AFTmsPDFY41oGMutNqkDoLgwxvJ8Q
+	yLlWBR7y0cMbcxCmySNr+7LqQmYs5NBLNuYpTKSitl/HCtgXb2qjPdNbGQXAfzyaB0QlH8Q
+	BdPOfFU8w1FxesPq4hUBevR2At6JFo+x0Lx21KGskrS9oTSGzQUklhujI2hU1E9K64kJxzP
+	2XKRpNcCZjAQGz4/nAKnO2BJsicI3Q6q+Xlngy51CXifbrIYQ9iK6FcNf0yBZfBDi0Y9O6Y
+	ZfbSzZkO09GYZ7zdlwv8uQK6JL0fahrHDcQdpKv19XIhA570enWqNcrMk/WXOtvgn0f7azw
+	Rrd5vWp97AW3guZ0zrop3VnxoosbkuC68RMA+Mu1XEEwG6MBpGFvzLUXc64seYnKw2sot6D
+	2/G1xsFkxTUqzmMF+OHTDxQKO4BubiMUq1ybnNS09H6If9Fz8x1OE0Jq5qzVVvRJQVDAq+v
+	xsc8ax03Fi+3vFqfH32ZVi2iirCR6kMidCdqAaBemNiVTyHZlhi1KYlEyFHsFrsX0w88eRO
+	Z19RG572lDxGKjNVA/MC1FfW4t3kZZN44pbiwXs6f9YnZFLfS9PA0deJP/KfTW7LsUzi/U/
+	ANXED9zREIgMQ6m/uhi9agNcC7v7gpIRlQgeIArFbDb2R9H9ZSfEfqkO+Fze4aahEhEeqNK
+	RTdMr6vAXZKCFGBb3FCYeaWSk/X0+QerAyKonLtVrH0486WpHHxYgIc1CuftA=
+X-QQ-XMRINFO: NyFYKkN4Ny6FuXrnB5Ye7Aabb3ujjtK+gg==
+X-QQ-RECHKSPAM: 0
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: cede9116c5e1572d38b9d357f35556d480867822  PCI: Initialize temporary device in new_id_store()
+Commit 2fd60a2edb83 ("PCI: qcom: Parse PERST# from all PCIe bridge
+nodes") extended PERST# parsing below the Root Port, so that downstream
+PCIe switch bridge nodes can describe their own PERST# GPIOs.
 
-elapsed time: 729m
+However, the implementation recurses into every available child node.  A
+PCI hierarchy may contain non-bridge child nodes with unrelated
+"reset-gpios" properties, such as an Ethernet PHY below an MDIO bus.  If
+such a reset GPIO is provided by a PCI endpoint GPIO controller, the
+endpoint has not been enumerated while the host bridge is still probing.
+Trying to acquire that GPIO then returns -EPROBE_DEFER and the Root Port
+probe is deferred indefinitely.
 
-configs tested: 104
-configs skipped: 10
+Only recurse into child nodes that are PCI bridge/bus nodes.  Keep parsing
+the Root Port passed by qcom_pcie_parse_port(), but filter descendants to
+nodes with device_type = "pci" and either a bus-range property or an
+explicit PCI bridge class compatible.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Fixes: 2fd60a2edb83 ("PCI: qcom: Parse PERST# from all PCIe bridge nodes")
+Signed-off-by: Xilin Wu <sophon@radxa.com>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-tested configs:
-alpha                   allnoconfig    gcc-15.2.0
-alpha                  allyesconfig    gcc-15.2.0
-alpha                     defconfig    gcc-15.2.0
-arc                    allmodconfig    gcc-15.2.0
-arc                     allnoconfig    gcc-15.2.0
-arc                    allyesconfig    clang-23
-arc                    allyesconfig    gcc-15.2.0
-arc                       defconfig    gcc-15.2.0
-arm                     allnoconfig    clang-23
-arm                     allnoconfig    gcc-15.2.0
-arm                    allyesconfig    gcc-15.2.0
-arm64                  allmodconfig    clang-19
-arm64                  allmodconfig    clang-23
-arm64                   allnoconfig    gcc-15.2.0
-csky                   allmodconfig    gcc-15.2.0
-csky                    allnoconfig    gcc-15.2.0
-csky                      defconfig    gcc-15.2.0
-csky        randconfig-001-20260507    gcc-15.2.0
-csky        randconfig-002-20260507    gcc-15.2.0
-hexagon                allmodconfig    clang-17
-hexagon                allmodconfig    gcc-15.2.0
-hexagon                 allnoconfig    clang-23
-hexagon                 allnoconfig    gcc-15.2.0
-hexagon                   defconfig    clang-23
-hexagon     randconfig-001-20260507    clang-23
-hexagon     randconfig-002-20260507    clang-23
-i386                   allmodconfig    gcc-14
-i386                    allnoconfig    gcc-14
-i386                    allnoconfig    gcc-15.2.0
-i386                   allyesconfig    gcc-14
-i386                      defconfig    clang-20
-i386        randconfig-001-20260507    gcc-13
-i386        randconfig-002-20260507    clang-20
-i386        randconfig-003-20260507    gcc-14
-i386        randconfig-004-20260507    gcc-14
-i386        randconfig-005-20260507    gcc-14
-i386        randconfig-006-20260507    gcc-14
-i386        randconfig-007-20260507    clang-20
-loongarch              allmodconfig    clang-19
-loongarch              allmodconfig    clang-23
-loongarch               allnoconfig    clang-23
-loongarch               allnoconfig    gcc-15.2.0
-loongarch                 defconfig    clang-19
-loongarch   randconfig-001-20260507    clang-23
-loongarch   randconfig-002-20260507    clang-23
-m68k                   allmodconfig    gcc-15.2.0
-m68k                    allnoconfig    gcc-15.2.0
-m68k                   allyesconfig    gcc-15.2.0
-m68k                      defconfig    gcc-15.2.0
-microblaze              allnoconfig    gcc-15.2.0
-microblaze             allyesconfig    gcc-15.2.0
-microblaze                defconfig    gcc-15.2.0
-mips                   allmodconfig    gcc-15.2.0
-mips                    allnoconfig    gcc-15.2.0
-mips                   allyesconfig    gcc-15.2.0
-mips              bcm47xx_defconfig    clang-18
-nios2                  allmodconfig    clang-23
-nios2                  allmodconfig    gcc-11.5.0
-nios2                   allnoconfig    gcc-11.5.0
-nios2                     defconfig    gcc-11.5.0
-nios2       randconfig-001-20260507    gcc-9.5.0
-nios2       randconfig-002-20260507    gcc-10.5.0
-openrisc               allmodconfig    clang-23
-openrisc               allmodconfig    gcc-15.2.0
-openrisc                allnoconfig    gcc-15.2.0
-openrisc                  defconfig    gcc-15.2.0
-parisc                 allmodconfig    gcc-15.2.0
-parisc                  allnoconfig    gcc-15.2.0
-parisc                 allyesconfig    gcc-15.2.0
-parisc                    defconfig    gcc-15.2.0
-parisc64                  defconfig    gcc-15.2.0
-powerpc                allmodconfig    gcc-15.2.0
-powerpc                 allnoconfig    gcc-15.2.0
-riscv                  allmodconfig    clang-23
-riscv                   allnoconfig    gcc-15.2.0
-riscv                  allyesconfig    clang-16
-riscv                     defconfig    clang-23
-s390                   allmodconfig    clang-18
-s390                    allnoconfig    clang-23
-s390                   allyesconfig    gcc-15.2.0
-s390                      defconfig    clang-23
-sh                     allmodconfig    gcc-15.2.0
-sh                      allnoconfig    gcc-15.2.0
-sh                     allyesconfig    gcc-15.2.0
-sh                        defconfig    gcc-15.2.0
-sparc                   allnoconfig    gcc-15.2.0
-sparc                     defconfig    gcc-15.2.0
-sparc64                allmodconfig    clang-23
-sparc64                   defconfig    clang-20
-um                     allmodconfig    clang-19
-um                      allnoconfig    clang-23
-um                     allyesconfig    gcc-14
-um                     allyesconfig    gcc-15.2.0
-um                        defconfig    clang-23
-um                   i386_defconfig    gcc-14
-um                 x86_64_defconfig    clang-23
-x86_64                 allmodconfig    clang-20
-x86_64                  allnoconfig    clang-20
-x86_64                 allyesconfig    clang-20
-x86_64                    defconfig    gcc-14
-x86_64                rhel-9.4-rust    clang-20
-xtensa                  allnoconfig    gcc-15.2.0
-xtensa                 allyesconfig    clang-23
-xtensa                 allyesconfig    gcc-15.2.0
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index af6bf5cce65b..5e0c31cc32a0 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1693,7 +1693,16 @@ static const struct pci_ecam_ops pci_qcom_ecam_ops = {
+ 	}
+ };
+ 
+-/* Parse PERST# from all nodes in depth first manner starting from @np */
++static bool qcom_pcie_is_bridge_node(struct device_node *np)
++{
++	if (!of_node_is_type(np, "pci"))
++		return false;
++
++	return of_property_present(np, "bus-range") ||
++	       of_device_is_compatible(np, "pciclass,0604");
++}
++
++/* Parse PERST# from all PCIe bridge nodes starting from @np */
+ static int qcom_pcie_parse_perst(struct qcom_pcie *pcie,
+ 				 struct qcom_pcie_port *port,
+ 				 struct device_node *np)
+@@ -1731,6 +1740,9 @@ static int qcom_pcie_parse_perst(struct qcom_pcie *pcie,
+ 
+ parse_child_node:
+ 	for_each_available_child_of_node_scoped(np, child) {
++		if (!qcom_pcie_is_bridge_node(child))
++			continue;
++
+ 		ret = qcom_pcie_parse_perst(pcie, port, child);
+ 		if (ret)
+ 			return ret;
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+---
+base-commit: 735d2f48cadaa9a87e7c7601667878de70c771c5
+change-id: 20260507-fix-qcom-pcie-parse-perst-a882f580a658
+
+Best regards,
+--  
+Xilin Wu <sophon@radxa.com>
+
