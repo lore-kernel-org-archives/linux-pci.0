@@ -1,155 +1,124 @@
-Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78D973537F1;
-	Thu,  7 May 2026 07:23:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C6083382F0
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 07:59:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778138638; cv=none; b=d42dtdxyfajBuKMlL4kpG7YWqjFgvHhqeK1JH5oYf6MOr8O3xcWV3/odBcWGDigDkU9VVOOkoT1YSDj9xJjAT+1PaffH84n0ASGPkYG0CU5RYsbbThrxh6wGGEMJSW1lfAMcrtck2oSalHJUtFJEEJWGroWNRD3Vgk559azAP+w=
+	t=1778140799; cv=none; b=VBEKBDZ0UFDNUtAtnAU8bCm/QJzuCOGjvEySFccx3KdSopkKgsym0WwcVAdTHUX1Q5MUhZ7BveSOOqRrGIaDde5JirxZZWxkoOi1QdEQSJUWDvYxEKK16BX1mlumJJyXKb0On0YcHi55+G3PYJ9xwlLKRSKz38YUBao+vWwDE5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778138638; c=relaxed/simple;
-	bh=ag2e4rubDHljcUbsB2BC/MHj9ZFXFOBLhTjLy6JSlhk=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Kjzk/66yqjtWd3q+3Oy03Ub3KoFO1lt39ivhrMzshUXwRIUHb+sGyoz3OIpqfhD5MVY6j2udwhY3xZB1Xyv086MfNaZm63QwVEjvNETFa9sAayuk+Oeml9zNDhjF54SjaKdLCqjMrhSI4gYWi26wuKDrD+jGwgU3nn6cKLFqwe0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=ZLJf7HFo; arc=none smtp.client-ip=185.171.202.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1778140799; c=relaxed/simple;
+	bh=PAqjXxV0tM+tkJZe+pIS5Ky/Or2uQagGCWjUiJWr/EM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=UrTGmIjq/OSfbuQp4wh/H5lxZ+gNM5I1yAiH4TXITfH1sYOolzyHYcvqyE43aaYOcvWW8EuGwUprqQLyulTWuc/GRkA7VENPEJmQZKqxvAmWnhscEh4itv/K1Z0kBUYsRI3C1WxKmjQU9QM1kdgR5tZD+RSUB5JK3Fm8mCyGAJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sJuMg55B; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="ZLJf7HFo"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id 48A98C5DC58;
-	Thu,  7 May 2026 07:24:41 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 90CF6605D0;
-	Thu,  7 May 2026 07:23:53 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 4F651107F1B9F;
-	Thu,  7 May 2026 09:23:28 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1778138630; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=KuHg3bpGpRy0j8zZGsR4xMbCeq+40KQNwSqwL73wrxg=;
-	b=ZLJf7HFoaWrA+QvjHT5Gh6TZeRPeQK7D9TRFNzAxGhp0EWNliZg4AwN/3MS8qxZ+WzAXXq
-	T6wrHBfmoxlIOCE0LR6qB6nNclEBnM62oa0qHR1b3eIxeSfrgMTMIlcTQI7nqZge15D0l+
-	sLj9R0qfJuv9VoGTvaYtmVXHcV/7jHrAKRNpo7q2YNgBW2BMI67agx51RlZqky+pM/DE/w
-	2FWDjIij6E4LO6ldmdu10VRhQ1jdNnY1LWBRw2nfeTqWN3+DsPlyj7HsjlEMWCYQvoebbU
-	LgYPnGZiAHv/HKhw9qbr3lFn7WqvriiVxW4qqE4OwbN85ifqMP1iikrTMszpLg==
-Date: Thu, 7 May 2026 09:23:26 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: Linus Walleij <linusw@kernel.org>
-Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>, Krzysztof
- Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Geert
- Uytterhoeven <geert+renesas@glider.be>, Kalle Niemi <kaleposti@gmail.com>,
- Matti Vaittinen <mazziesaccount@gmail.com>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>, Frank Li <Frank.Li@nxp.com>, Sascha
- Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team
- <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, Michael
- Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, Andi
- Shyti <andi.shyti@kernel.org>, Wolfram Sang
- <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, Arnd
- Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, Charles Keepax
- <ckeepax@opensource.cirrus.com>, Richard Fitzgerald
- <rf@opensource.cirrus.com>, David Rhodes <david.rhodes@cirrus.com>, Ulf
- Hansson <ulf.hansson@linaro.org>, Mark Brown <broonie@kernel.org>, Len
- Brown <lenb@kernel.org>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus
- <sakari.ailus@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>,
- Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang
- <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
- Dan Williams <dan.j.williams@intel.com>, Shawn Guo <shawnguo@kernel.org>,
- Wolfram Sang <wsa@kernel.org>, linux-kernel@vger.kernel.org,
- driver-core@lists.linux.dev, imx@lists.linux.dev,
- linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
- linux-i2c@vger.kernel.org, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-sound@vger.kernel.org,
- patches@opensource.cirrus.com, linux-gpio@vger.kernel.org,
- linux-pm@vger.kernel.org, linux-spi@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, Allan Nielsen
- <allan.nielsen@microchip.com>, Horatiu Vultur
- <horatiu.vultur@microchip.com>, Steen Hegelund
- <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v6 20/27] misc: lan966x_pci: Fix dtso nodes ordering
-Message-ID: <20260507092326.2f8e3b47@bootlin.com>
-In-Reply-To: <CAD++jLkFu+Z22QBFiaa9S+Epeh=RJZOYX8BOLVDFw4bhEoYF1Q@mail.gmail.com>
-References: <20260325143555.451852-1-herve.codina@bootlin.com>
-	<20260325143555.451852-21-herve.codina@bootlin.com>
-	<CAD++jLkFu+Z22QBFiaa9S+Epeh=RJZOYX8BOLVDFw4bhEoYF1Q@mail.gmail.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sJuMg55B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B787EC2BCB8;
+	Thu,  7 May 2026 07:59:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778140797;
+	bh=PAqjXxV0tM+tkJZe+pIS5Ky/Or2uQagGCWjUiJWr/EM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=sJuMg55BNEcpWXmaclOJ9iw1FdhU7QAEhGEuvQTco97Efm060tyJx8hAzc4YblWuN
+	 z5YyVnQLyjILrAT8S73/UzzTrWQRG/pHRn4NBYp1UUF6KdZgBWTO/vcXZsNrRgbS2p
+	 o2BJYDE0nfjD6btE4hxz5XnehB6OZMpGgzYU8+2f9beSp79FYZTdWrZVI5UjOo4Bz8
+	 1ai/iGCBR17/ijvngv0WwfdtMasRauJJs01NsUKz+mGNOMLLJLVLa/OTbox/v1NnOo
+	 AmRrLvZorAuY4P3/8/lOZ3xn/U50fnav2KR07quPIQ2uM6I4NMq+vhHd2yNKZW1G2d
+	 /j+V5dQZWcVfQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 phy-next 01/31] PCI: cadence: Preserve all error
+ codes in cdns_plat_pcie_probe()
+Reply-To: sashiko@lists.linux.dev
+To: "Vladimir Oltean" <vladimir.oltean@nxp.com>
+Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20260505100523.1922388-2-vladimir.oltean@nxp.com>
+References: <20260505100523.1922388-2-vladimir.oltean@nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 07 May 2026 07:59:57 +0000
+Message-Id: <20260507075957.B787EC2BCB8@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
 
-Hi Linus,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Type confusion in `cdns_plat_pcie_shutdown()` and PM callbacks cau=
+ses an out-of-bounds read and kernel crash during system shutdown or suspen=
+d.
+- [High] Missing driver `.remove` callback causes severe Use-After-Free and=
+ resource leaks upon driver unbind.
+--
 
-On Thu, 26 Mar 2026 11:33:19 +0100
-Linus Walleij <linusw@kernel.org> wrote:
+commit 0bab3a01514eb340ef73b1b934e9dc310bdbfcda
+Author: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-> Hi Herve,
-> 
-> this is nitpicking, but if you respin the series consider the following:
-> 
-> On Wed, Mar 25, 2026 at 3:42 PM Herve Codina <herve.codina@bootlin.com> wrote:
-> >
-> > Nodes available in the dtso are not ordered by their unit address.
-> >
-> > Fix that re-ordering them according to their unit address.
-> >
-> > Signed-off-by: Herve Codina <herve.codina@bootlin.com>  
-> (...)
-> > +                               switch: switch@e0000000 {  
-> 
-> Recommended practice is:
-> 
-> ethernet-switch@...
-> 
-> > +                                       compatible = "microchip,lan966x-switch";
-> > +                                       reg = <0xe0000000 0x0100000>,
-> > +                                             <0xe2000000 0x0800000>;
-> > +                                       reg-names = "cpu", "gcb";
-> > +
-> > +                                       interrupt-parent = <&oic>;
-> > +                                       interrupts = <12 IRQ_TYPE_LEVEL_HIGH>,
-> > +                                                    <9 IRQ_TYPE_LEVEL_HIGH>;
-> > +                                       interrupt-names = "xtr", "ana";
-> > +
-> > +                                       resets = <&reset 0>;
-> > +                                       reset-names = "switch";
-> > +
-> > +                                       pinctrl-names = "default";
-> > +                                       pinctrl-0 = <&tod_pins>;
-> > +
-> > +                                       ethernet-ports {
-> > +                                               #address-cells = <1>;
-> > +                                               #size-cells = <0>;
-> > +
-> > +                                               port0: port@0 {  
-> 
-> Recommended practice is:
-> ethernet-port@...
-> 
+PCI: cadence: Preserve all error codes in cdns_plat_pcie_probe()
 
-Yes, it should be but the DT binding [0] says "switch" and "port".
+This commit updates the error path in cdns_plat_pcie_probe() to ensure that
+errors from functions like pm_runtime_get_sync() and cdns_pcie_host_setup()
+are properly propagated instead of incorrectly returning success.
 
-Those node names have to follow the DT binding even if this binding doesn't
-follow recommended practice.
+> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+> @@ -126,7 +126,7 @@ static int cdns_plat_pcie_probe(struct platform_devic=
+e *pdev)
+>  	while (phy_count--)
+>  		device_link_del(cdns_plat_pcie->pcie->link[phy_count]);
+> =20
+> -	return 0;
+> +	return ret;
+>  }
 
-[0] https://elixir.bootlin.com/linux/v7.0/source/Documentation/devicetree/bindings/net/microchip,lan966x-switch.yaml
+I noticed a potential issue here that predates this patch.
 
-Best regards,
-Hervé
+This driver does not appear to have a .remove callback, nor does it set
+.suppress_bind_attrs =3D true. If the driver is unbound via sysfs, devres w=
+ill
+clean up managed allocations like the host bridge, EPC structs, and
+struct cdns_pcie memory.
 
--- 
-Hervé Codina, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+However, without a remove callback to call cdns_pcie_host_disable(), does t=
+he
+PCI core subsystem remain unaware that the host bridge was removed?
+
+Could this lead to a use-after-free if the PCI core continues to access the
+freed bridge structure and memory-mapped I/O regions?
+
+A related leak of PHY device links was noted as fixed by a later commit in
+this series (PCI: Remove device links to PHY), but it appears the missing
+root bus teardown remains unfixed.
+
+> =20
+>  static void cdns_plat_pcie_shutdown(struct platform_device *pdev)
+
+I also noticed another pre-existing issue related to this function.
+
+In cdns_plat_pcie_probe(), the platform device's driver data is set to a
+struct cdns_plat_pcie pointer:
+
+cdns_plat_pcie_probe()
+    cdns_plat_pcie =3D devm_kzalloc(dev, sizeof(*cdns_plat_pcie), GFP_KERNE=
+L);
+    ...
+    platform_set_drvdata(pdev, cdns_plat_pcie);
+
+However, cdns_plat_pcie_shutdown() retrieves this and casts it directly to a
+struct cdns_pcie pointer:
+
+cdns_plat_pcie_shutdown()
+    struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
+    ...
+    cdns_pcie_disable_phy(pcie);
+
+Since struct cdns_plat_pcie is just a wrapper containing a pointer to the
+actual struct cdns_pcie, does this incorrect cast cause an out-of-bounds
+read when cdns_pcie_disable_phy() attempts to access pcie->phy_count and
+iterate over the PHY pointers?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505100523.1922=
+388-1-vladimir.oltean@nxp.com?part=3D1
