@@ -1,135 +1,213 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 290383793CC
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 22:19:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EDFF3CF69D;
+	Thu,  7 May 2026 22:42:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778192344; cv=none; b=HQJoAoFIEqOUWipxKHOSho4aZej07wEGG2b0TDqtrwLMXiRDCxmWmghO3THP7ZpQIqx1mpqPbPyFr7B6oqmwNY+o6BV4nm3yC28nsJco83zxfEYBdKs4exyhG5ZhiOCcOJWh6o/o9Pe5XMaOpBDuytqfD5VBGkOOoDlYGVVpU14=
+	t=1778193739; cv=none; b=jn/oF2e4qn6Q3NeADv1SckusvEV4+Dxtx+e2HJk0Kfx8cL4jIxZg6XFZvidVz8cOCdGEFZWcPhq6LoMTAg5LKAElcaw3l1v3Whet2nnzbm+IWzjnrEl442aY1fXTldOY+zG9IVE0AD/4tVGV/UArzjQhM3CppeURftR4yCgM5ec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778192344; c=relaxed/simple;
-	bh=H3JEqO6v6F5iO+Vl9lhr9b2r8U+jo3BC39KgpYfO3yY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VAOlt0x9m31d825o+GPLBRokBaurrFe712MlSUFMdffAjJBOhhYAmz3Q2nqXBQuxOd6ltb9/TKA4uUVmdyw6HcnJoSteHTHr9GobtpuNAcXVnAQP3ZlxAHoQ1yDNAqIMWLlqeumZDeSEpmdiprzOFwM2Th8LsQ8MFnoDoHfVgPg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VM8gThIa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778193739; c=relaxed/simple;
+	bh=J0kRFG9bUaWTTHIU1f8/BZmV72pbWWRzeSv5tn2IJ+Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=qreVWgYtvi809Em1da/n4yDmuID8/BEb8XUTAn9f2lhSF/u/MI8r+Bj/3XcBa4Y0hV+3+mKya1ODNsRMyg7BDWkHLmBAD7+d8eZxENKy+Nxo6UDM/uwb+6+CCbOx3h8tA8is9ULzkc/KLEEX5wW/VS4gB3E1xHRmmkF/HW/u1VY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pZ8OJoJD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VM8gThIa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77885C2BCF7;
-	Thu,  7 May 2026 22:19:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pZ8OJoJD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DED86C2BCB2;
+	Thu,  7 May 2026 22:42:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778192343;
-	bh=H3JEqO6v6F5iO+Vl9lhr9b2r8U+jo3BC39KgpYfO3yY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=VM8gThIaM6KYgxdR8qzY3bqhXv9VIJ3MMkjLe9+AO87LhO9P2FQT6US84fPQbrVHg
-	 Js6hk0yEGlG21VuduBjdPPQPCZXezAUQm3Y/K1fNg+9QkRtbWIHuQTccUl2USxz9yR
-	 kVhCguONRSz5eUh+1Fevsrm47iZ+of8qQAX/C+IfKFKj8uDn4rfw4uC/ncD6v0UGWN
-	 OypRdQKU4yH+maNYu3G+GMBevx29+2zDhTcISpnRSGT5R6rgHnUQzHQ2M8j0qLCAQE
-	 UA69RgxD/IYHundOtcP59+vNj4703sEVPSEtOTip0qzSBlFnlhARo44KO/4pssvlPk
-	 gJ6o2bTey1TuA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 2/6] PCI/TPH: Export pcie_tph_get_st_modes() for
- external use
-Reply-To: sashiko@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260507130956.34441-3-fengchengwen@huawei.com>
-References: <20260507130956.34441-3-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 07 May 2026 22:19:02 +0000
-Message-Id: <20260507221903.77885C2BCF7@smtp.kernel.org>
+	s=k20201202; t=1778193739;
+	bh=J0kRFG9bUaWTTHIU1f8/BZmV72pbWWRzeSv5tn2IJ+Y=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=pZ8OJoJDjVp74T5HTAFYAW24ULTzTS5u6XyQpEYzf/fwJ5askHm4Fepx+Mb8uIuBh
+	 TTWkblCiS9WBse7RVNTyWkBEd6TQDKcRX4EFPjrBJ1/wnrNBYScemGuDwm5uQmWla2
+	 F/28EibEfFcTpulfbdWpo4wOhiE4GwjNtSEVwOK9iKai27Zxp2rvtKUTNoPQ+UJR9B
+	 N7G5SWN8B3xOPKcvsiFMQTUaj/25gFtPjx0RFsJAuhRUmDrSRJg5R0nF0XDYF1LUdZ
+	 saU/G2E92XATlbrCE6iN3x0H4Jfxqq+T1rAzFc+lQSLeDTrl0JYmf65tvMbU+dZE+U
+	 or2kQaRwQdKVA==
+Date: Thu, 7 May 2026 17:42:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Inochi Amaoto <inochiama@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Alex Elder <elder@riscstar.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH 5/5] PCI: spacemit-k1: Add Spacemit K3 PCIe host
+ controller support
+Message-ID: <20260507224217.GA48780@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260502101319.2364052-6-inochiama@gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] The `pcie_tph_get_st_modes()` and `pcie_tph_get_st_table_loc()` fu=
-nctions ignore the return value of `pci_read_config_dword()`, leading to fa=
-bricated capabilities being exposed to userspace.
-- [Low] The commit message incorrectly refers to the configuration option a=
-s `!CONFIG_PCI_TPH` instead of `!CONFIG_PCIE_TPH`.
---
+On Sat, May 02, 2026 at 06:13:18PM +0800, Inochi Amaoto wrote:
+> The PCIe controller on Spacemit K3 is almost a standard Synopsys
+> Designware PCIe IP with extra link and reset control. Unlike
+> the PCIe controller on K1, this controller supports external MSI
+> interrupt controller and can use multiple phy at the same time.
+> 
+> Add driver to support PCIe controller on Spacemit K3 PCIe.
+> 
+> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
 
-commit 4a10965994892856e6b789d0c75e23d0e2e09be7
-Author: Chengwen Feng <fengchengwen@huawei.com>
+Sashiko had some good questions:
+https://sashiko.dev/#/patchset/20260502101319.2364052-1-inochiama%40gmail.com
 
-PCI/TPH: Export pcie_tph_get_st_modes() for external use
+Looks like the CONFIG_PCIE_SPACEMIT_K1 menu item and help text
+drivers/pci/controller/dwc/Kconfig should be updated to include K3.
 
-This commit exports the pcie_tph_get_st_modes() helper so drivers like VFIO
-can query and expose device capabilities to userspace. It also adds stub
-functions and tph_cap validation to prevent invalid configuration access.
+The "CONFIG_PCIE_SPACEMIT_K1" name itself should stay the same.
 
-> Add stub functions for pcie_tph_get_st_table_size() and
-> pcie_tph_get_st_table_loc() when !CONFIG_PCI_TPH.
+s/Designware/DesignWare/, also in 4/5 commit log
+s/phy/PHY/ here and other patches and subject lines
+s/msi/MSI/ in 3/5 subject and commit log when it's a stand-alone word
+s/pci:/PCI:/ in 4/5 subject to match history (and patch 3/5)
 
-This isn't a bug, but there is a typo in the configuration option name.
-The actual kernel configuration option for PCIe TLP Processing Hints is
-CONFIG_PCIE_TPH rather than CONFIG_PCI_TPH.
+> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
 
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index 877cf556242b4..ba31b010f67ad 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-[ ... ]
-> -static u8 get_st_modes(struct pci_dev *pdev)
-> +/**
-> + * pcie_tph_get_st_modes - Get supported Steering Tag modes
-> + * @pdev: PCI device to query
-> + *
-> + * Return:
-> + *  Bitmask of supported ST modes (PCI_TPH_CAP_ST_NS, PCI_TPH_CAP_ST_IV,
-> + *                                 PCI_TPH_CAP_ST_DS)
-> + */
-> +u8 pcie_tph_get_st_modes(struct pci_dev *pdev)
->  {
->  	u32 reg;
-> =20
-> +	if (!pdev->tph_cap)
-> +		return 0;
+> +#define INTR_STATUS				0x0010
 > +
->  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
-
-Should we check the return value of pci_read_config_dword() here?
-
-If the device is disconnected or unresponsive, pci_read_config_dword()
-returns an error and populates the variable with the standard PCI error
-response 0xFFFFFFFF.
-
-When the mask (PCI_TPH_CAP_ST_NS | PCI_TPH_CAP_ST_IV | PCI_TPH_CAP_ST_DS)
-is applied to 0xFFFFFFFF, it results in 7. This falsely indicates that all
-Steering Tag modes are supported.
-
-Since this function is now exported for external subsystems like VFIO, does
-this risk exposing fabricated hardware capabilities to userspace when a
-device becomes unresponsive?
-
->  	reg &=3D PCI_TPH_CAP_ST_NS | PCI_TPH_CAP_ST_IV | PCI_TPH_CAP_ST_DS;
-> =20
->  	return reg;
->  }
-> +EXPORT_SYMBOL(pcie_tph_get_st_modes);
-[ ... ]
->  u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
->  {
->  	u32 reg;
-> =20
-> +	if (!pdev->tph_cap)
-> +		return PCI_TPH_LOC_NONE;
+>  #define INTR_ENABLE				0x0014
+>  #define MSI_CTRL_INT			BIT(11)
+> +#define RDLH_LINK_UP_INT		BIT(20)
 > +
->  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+> +#define K3_PHY_AHB_IRQSTATUS_INTX		0x0008
+> +
+> +#define K3_PHY_AHB_IRQENABLE_SET_INTX		0x000c
+> +#define LEG_EP_INTERRUPTS		(BIT(6) | BIT(7) | BIT(8) | BIT(9))
 
-Similarly, does this need error checking for the config read?
+Would be nicer to use "INTX" rather than "LEG" here since we use
+"INTX" in K3_PHY_AHB_IRQENABLE_SET_INTX, in the comments, etc.
 
-Applying the PCI_TPH_CAP_LOC_MASK (3 << 9) to 0xFFFFFFFF results in 0x600,
-which is an invalid, undefined location enum.
+> +#define K3_PHY_AHB_IRQENABLE_SET_MSI		0x0014
+> +/* MSI defined as BIT(11) in existing INTR_ENABLE, reusing */
+> +
+> +#define K3_ADDR_INTR_STATUS1			0x0018
+> +
+> +#define K3_ADDR_INTR_ENABLE1			0x001C
 
-> =20
->  	return reg & PCI_TPH_CAP_LOC_MASK;
->  }
+You're using a mix of upper- and lower-case hex here.  Be consistent
+and match the existing code.
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507130956.3444=
-1-1-fengchengwen@huawei.com?part=3D2
+Seems a little weird to have a mix of "IRQ" names (e.g.,
+K1_PHY_AHB_IRQ_EN, K3_PHY_AHB_IRQSTATUS_INTX,
+K3_PHY_AHB_IRQENABLE_SET_INTX) and "INTR" names (e.g., INTR_STATUS,
+INTR_ENABLE, K3_ADDR_INTR_STATUS1, K3_ADDR_INTR_ENABLE1) when I think
+they're really talking about the same concept.
+
+And why do the new K3 names have "ADDR" in the middle when the
+existing "INTR_ENABLE" names don't?  It's obvious these are addresses
+(well, actually I think they're *offsets*, but no need to be that
+detailed).
+
+> +static int k3_pcie_init(struct dw_pcie_rp *pp)
+> +{
+> ...
+> +	val = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
+> +	val &= ~(0xffff << 8);
+> +	val |= ((0x1 << 4) << 8);
+
+Can you use FIELD_MODIFY and some #defines here?
+
+> +	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, val);
+> +
+> +	/* Set the PCI vendor and device ID */
+
+Superfluous comment since the code is obvious.
+
+> +	dw_pcie_dbi_ro_wr_en(pci);
+> +	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_SPACEMIT);
+> +	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, PCI_DEVICE_ID_SPACEMIT_K3);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
+> +
+> +	/* Finally, as a workaround, disable ASPM L1 */
+
+I guess this means a device erratum?  It advertises L1 but it doesn't
+actually work?
+
+> +	k1_pcie_disable_aspm_l1(k1);
+
+> +static int k3_pcie_msi_host_init(struct dw_pcie_rp *pp)
+> +{
+> ...
+> +	val = dw_pcie_readl_dbi(pci, COHERENCY_CONTROL_3_OFF);
+> +	val |= (0xf << 11);
+
+FIELD_MODIFY and some #defines here?
+
+> +static int k3_pcie_start_link(struct dw_pcie *pci)
+> +{
+> +	struct k1_pcie *k1 = to_k1_pcie(pci);
+> +	u32 val;
+> +
+> +	k1_pcie_start_link(pci);
+> +
+> +	/* Enable INTx */
+> +	val = readl_relaxed(k1->link + K3_PHY_AHB_IRQENABLE_SET_INTX);
+> +	val |= LEG_EP_INTERRUPTS;
+> +	writel_relaxed(val, k1->link + K3_PHY_AHB_IRQENABLE_SET_INTX);
+> +
+> +	/* Enable MSI/MSIX specific to K3 */
+
+s/MSIX/MSI-X/ to match spec usage.
+
+> +	val = readl_relaxed(k1->link + K3_ADDR_INTR_ENABLE1);
+> +	val |= (MSI_INT | MSIX_INT);
+> +	writel_relaxed(val, k1->link + K3_ADDR_INTR_ENABLE1);
+
+Generally speaking I think the interrupt setup belongs somewhere other
+than .start_link().  Usually .start_link() only enables LTSSM.
+
+> +	return 0;
+> +}
+
+> +static irqreturn_t k3_pcie_irq_thread(int irq, void *data)
+> +{
+> +	struct k1_pcie *k1 = data;
+> +	struct dw_pcie_rp *pp = &k1->pci.pp;
+> +	struct device *dev = k1->pci.dev;
+> +	u32 status0, status1, status2;
+> +
+> +	k3_pcie_clear_irq_status(k1, &status0, &status1, &status2);
+> +
+> +	writel_relaxed(status0, k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
+> +	writel_relaxed(status1, k1->link + INTR_STATUS);
+> +	writel_relaxed(status2, k1->link + K3_ADDR_INTR_STATUS1);
+> +
+> +	if (FIELD_GET(RDLH_LINK_UP_INT, status1)) {
+> +		msleep(PCIE_RESET_CONFIG_WAIT_MS);
+> +		/* Rescan the bus to enumerate endpoint devices */
+> +		pci_lock_rescan_remove();
+> +		pci_rescan_bus(pp->bridge->bus);
+
+This is the *only* driver that uses pci_rescan_bus() this way, which
+automatically makes it suspicous.  Maybe it's the first hardware that
+implements or is willing to use RDLH_LINK_UP_INT for this, but somehow
+I doubt it.
+
+> +		pci_unlock_rescan_remove();
+> +	} else if (!status0 && !status1 && !status2)
+> +		dev_WARN_ONCE(dev, true,
+> +			      "Received unknown event. status0=0x%08x status1=0x%08x status2=0x%08x\n",
+> +			      status0, status1, status2);
+> +
+> +	return IRQ_HANDLED;
+> +}
