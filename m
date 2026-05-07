@@ -1,132 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 357AA175A99
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 23:20:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88CCB32F76D
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 23:28:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778196018; cv=none; b=cfpxRn1+mqKavdPMLd3xaC4XFGQBMrN2NlTPSoMq4SYkorkboZYS/Fd23Kf3nMsr7mOKXcz4S+TQXCTnOJS7f+u+RkSUJJrf4UfoarPuZ7JKqmy/RuLQQcMLStlv2Zh4Y6xNB5wpsPu2k83As/aeFT4KR8e9K36pTYKf8NC1X/Q=
+	t=1778196508; cv=none; b=ZVQrjJSyS9eHPbeFIw6Qh/YwsvfNcbPpUlPHTdlcpNcqflKcT+C2rZY/UEaokGzObxg/Dao2TPtZeFl3SbqGbboRYKZzF6tQxSgQ+qlzGbQFaSgd2nrDox4Leocqv5oghA3XNKGgOfQa3WCYg6TQ1qin3XDKt7PjKP4mt3jnn+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778196018; c=relaxed/simple;
-	bh=XDIL4lZLx7HTlxm0pMj9E20DYlZnj9ZoOLm53fZLC3Q=;
+	s=arc-20240116; t=1778196508; c=relaxed/simple;
+	bh=b2WYSRDOi60IJD/yGwl/TJZbr3kbvYmpL7/CMkOeDtg=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cnG/MhRF2lfi+0Pg5w63pprTxI4U2QaIr+k12iaghEu3/MvDMZj2i401f9NkHKjc5NF7qHWQYhsIG0EMLSXQQ5mEpyRS0OR2r3AzPfOd2jLKhcWtYAqHACrCcINyNPtF/gibC4mVVjJtTs2xns/cF80A1kDuh8jLSARBIMf3mtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RvAqhW6k; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=bN7R3YNA853iOBGI9XVVtyQwJlZW//XNuiDEa5U5Xf+x6Uw6wLrNMFhT1Suq3z4YqMZIgShbDQbuaoGsGR/pqXKNngn7hcRAP/n15nnEhbZi7hiXd7Wn2QarZnMNbp7Hoxt3mgmevaoCNrUayG/WlliO+u86XaHjjfSNs95UW64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tQ21rt+8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RvAqhW6k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0AC6C2BCB2;
-	Thu,  7 May 2026 23:20:17 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tQ21rt+8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14D87C2BCB2;
+	Thu,  7 May 2026 23:28:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778196018;
-	bh=XDIL4lZLx7HTlxm0pMj9E20DYlZnj9ZoOLm53fZLC3Q=;
+	s=k20201202; t=1778196508;
+	bh=b2WYSRDOi60IJD/yGwl/TJZbr3kbvYmpL7/CMkOeDtg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=RvAqhW6klnAUwWfXAeCfa9KX5EghWE7GuF4x0NsRGg3fV/pkXT1KeZZg2lHN9cgfU
-	 cSXo65AYlRJOaZJgo6pO5WQuIqP0E9PvRuthb/l/9bBeVXOXfGMfX5rmo7cvayyinl
-	 MhiGCLBvePZy0qb+4AkrTLamZmrkeblamt7BDscP3BKcGCLJ8Tztcc4DhbpPn/SXnS
-	 hFZdbZH+UToT8QROw1NzN7ofxwazuzfw/Rqs5UHJW5Co8Aa+2PJESuTL/izbbmeYbz
-	 cGphOI1UvAbPrHMQZ+WtOOgmgV45cFosHLGqbtu86RdshlCqg16Jw/PN+ZM4/hugpE
-	 onBVplxYOww2Q==
+	b=tQ21rt+8u8jhWIFvvrHWhVXdapJAxAXULV5rOvSlQOQu8FYOsFtXwfNXCrswMxCif
+	 f9YeITvMFLQ2oWPyvfNeAPt6rA467VQlC1FH1WgDa15OkEOi2FQkplDU/zSESpoxlm
+	 iVB8mIjNpIxB2leDlTchXkjd4j5zgfuJVjgDJJ9F4zX5s5W99bjCFICxc1tZ5jNHRw
+	 QhyaazbBmiJox2IjT0qPhEF+6MXnm//JLI+YT9Y3XKvSJw3OyIiYuIXrKK9vLsu0yh
+	 mzBZpDaHuWXunGU33HZ4soPP7hPtMPQGErN9u08y1PjqA3PXPN6iQmRefQzRn9L5xx
+	 x3KCTj3yVf3Mw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 3/6] vfio/pci: Add PCIe TPH interface with capability
- query
+Subject: Re: [PATCH v2 2/9] power: sequencing: pcie-m2: Allow creating
+ serdev for multiple PCI devices
 Reply-To: sashiko@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
+To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260507130956.34441-4-fengchengwen@huawei.com>
-References: <20260507130956.34441-4-fengchengwen@huawei.com>
+In-Reply-To: <20260507-pwrseq-m2-bt-v2-2-1740bd478539@oss.qualcomm.com>
+References: <20260507-pwrseq-m2-bt-v2-2-1740bd478539@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 07 May 2026 23:20:17 +0000
-Message-Id: <20260507232017.A0AC6C2BCB2@smtp.kernel.org>
+Date: Thu, 07 May 2026 23:28:27 +0000
+Message-Id: <20260507232828.14D87C2BCB2@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] The ST table size (`st_table_sz`) is incorrectly reported as 0 w=
-hen the Steering Tag (ST) table is located in the MSI-X table.
+- [High] Logic flaw prevents tracking multiple PCI devices, defeating the c=
+ore purpose of the patch.
+- [High] Lockless check of `serdev_ctrl->serdev` introduces a data race dur=
+ing concurrent device additions.
 --
 
-commit 84cffb4ace52d740319be3c3a2f634b68268963c
-Author: Chengwen Feng <fengchengwen@huawei.com>
+commit c7f58507c704ae72da8e4afb0e0855215048187d
+Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-vfio/pci: Add PCIe TPH interface with capability query
+power: sequencing: pcie-m2: Allow creating serdev for multiple PCI devices
 
-This commit adds the VFIO_DEVICE_PCI_TPH IOCTL to allow userspace to query
-device TPH capabilities, supported modes, and steering tag table informatio=
-n.
-It also introduces a module parameter to restrict unsafe device-specific TPH
-mode to trusted userspace only.
+This patch introduces a list to track multiple PCI devices per M.2 slot
+by creating a 'pwrseq_pci_dev' for each device requiring a serdev. It
+replaces the single serdev reference with this list to scale the driver.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 3f8d093aacf8a..e7efa8f230bec 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/se=
+quencing/pwrseq-pcie-m2.c
+> index b2ed336fd5ad9..469e130330faa 100644
+> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+
 [ ... ]
-> @@ -1461,6 +1463,55 @@ static int vfio_pci_ioctl_ioeventfd(struct vfio_pc=
-i_core_device *vdev,
->  				  ioeventfd.fd);
->  }
+
+> @@ -248,17 +259,23 @@ static int pwrseq_pcie_m2_create_serdev(struct pwrs=
+eq_pcie_m2_ctx *ctx)
+>  		return 0;
+>  	}
+
+Since the intent is to track multiple PCI devices per M.2 slot, does this
+existing early bailout:
+
+	if (serdev_ctrl->serdev) {
+		serdev_controller_put(serdev_ctrl);
+		return 0;
+	}
+
+prevent adding subsequent PCI devices to the ctx->pci_devices list?
+
+If serdev_ctrl->serdev is already set by the first device, won't this return
+0 without allocating pwrseq_pci_dev, leaving the list with only one device?
+
+Additionally, is it possible for two PCI devices to trigger the
+BUS_NOTIFY_ADD_DEVICE notifier concurrently?
+
+If both threads observe serdev_ctrl->serdev as NULL without synchronization,
+could they both proceed to allocate and call serdev_device_add()? This could
+overwrite the ctrl->serdev pointer locklessly.
+
+If the slower thread ultimately fails device_add() due to a sysfs name
+collision, it could execute ctrl->serdev =3D NULL in its error path. Would =
+this
+corrupt the serdev controller state and silently orphan the serdev that was
+successfully registered by the first thread?
+
 > =20
-> +static int vfio_pci_tph_get_cap(struct vfio_pci_core_device *vdev,
-> +				struct vfio_device_pci_tph_op *op,
-> +				void __user *uarg)
-> +{
-> +	struct pci_dev *pdev =3D vdev->pdev;
-> +	struct vfio_pci_tph_cap cap =3D {0};
-> +	u8 mode;
-> +
-> +	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, cap))
-> +		return -EINVAL;
-> +
-> +	mode =3D pcie_tph_get_st_modes(pdev);
-> +	if (!enable_unsafe_tph_ds_mode)
-> +		mode &=3D ~PCI_TPH_CAP_ST_DS;
-> +	if (mode =3D=3D 0 || mode =3D=3D PCI_TPH_CAP_ST_NS)
-> +		return -EOPNOTSUPP;
-> +
-> +	if (mode & PCI_TPH_CAP_ST_IV)
-> +		cap.supported_modes |=3D VFIO_PCI_TPH_MODE_IV;
-> +	if (mode & PCI_TPH_CAP_ST_DS)
-> +		cap.supported_modes |=3D VFIO_PCI_TPH_MODE_DS;
-> +
-> +	if (pcie_tph_get_st_table_loc(pdev) !=3D PCI_TPH_LOC_NONE)
-> +		cap.st_table_sz =3D pcie_tph_get_st_table_size(pdev);
-
-Is it possible that st_table_sz is incorrectly reported as 0 here when the
-Steering Tag (ST) table is located in the MSI-X table?
-
-The kernel function pcie_tph_get_st_table_size() returns 0 if the ST table
-location is anything other than PCI_TPH_LOC_CAP, meaning it returns 0 for
-PCI_TPH_LOC_MSIX.
-
-As a result, userspace would receive st_table_sz =3D=3D 0, which the UAPI
-documentation explicitly defines as 'no ST table'.
-
-Furthermore, because the location is not PCI_TPH_LOC_NONE, any subsequent
-userspace attempt to use VFIO_PCI_TPH_GET_ST would be rejected by the kernel
-with -EOPNOTSUPP.
-
-This would leave userspace completely unable to properly program the ST tab=
-le
-using SET_ST because it falsely believes the table size is 0 and cannot que=
-ry
-the CPU tags.
-
-Should the MSI-X table size (e.g., via pci_msix_vec_count(pdev)) be used to
-populate st_table_sz when the location is PCI_TPH_LOC_MSIX?
-
-> +
-> +	if (copy_to_user(uarg, &cap, sizeof(cap)))
-> +		return -EFAULT;
-> +
-> +	return 0;
-> +}
+> -	ctx->serdev =3D serdev_device_alloc(serdev_ctrl);
+> -	if (!ctx->serdev) {
+> +	pci_dev =3D kzalloc(sizeof(*pci_dev), GFP_KERNEL);
+> +	if (!pci_dev) {
+>  		ret =3D -ENOMEM;
+>  		goto err_put_ctrl;
+>  	}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507130956.3444=
-1-1-fengchengwen@huawei.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507-pwrseq-m2-=
+bt-v2-0-1740bd478539@oss.qualcomm.com?part=3D2
