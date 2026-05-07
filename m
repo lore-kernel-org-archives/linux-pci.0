@@ -1,123 +1,164 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 780D137756E
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 07:59:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF6D37AA7E
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 08:00:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778140799; cv=none; b=NPjHeMzjdqXPGoSAIbiwi6KG0ACu/+azzdJj6+JQjkTqxjsCOhR6S6ZRtrKMjFE9n7WKq47BbthnwFJrTqNBMXPmhVFuTlrTOnAZ+5IHGZuZ3H3JrlBO+7dNrhEFqA97iA9Bzv78JLL+2mlCY8dF9xgbJSRaI7KZ75mpeWU/jn0=
+	t=1778140800; cv=none; b=j7TxXNF+sTlYWnqbFsGzNgnZuFhGW+5McFdSSeBmooTqfo7Zea2tFpDnKjrwaoCqvOwyu5m44wXHPVKsEn7eNa/j2/OyKZJ9KrDud3SK3FZ0v3nij5OUkNrSZcCmHr9Om+ynkdF0UaXwFVuwzpgn2rOcbzhHxWkBOzxz2/6itz4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778140799; c=relaxed/simple;
-	bh=ma3trTyqcR2zMHbTmP1FiSJo20kbC7/PwNHpY9rd2rk=;
+	s=arc-20240116; t=1778140800; c=relaxed/simple;
+	bh=TVSu35uwVUU84kaaUUHzbGpIol7cjYWHmARM/A+4SiA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PDO3G8RIlZYCC9v+zOOuTe+SmV5WaRdkGWhuZWfpws/Q1eQEDsyGiqDkLDYzTiDtYoNpyEimhXmW3nQTXsdB7cw6AByHSi2n7mnfiJYgmzAPeEDwQDV5RUBU2Zi7N1vFUMYIvYVG8r8XvGXtRq5H4X6/Ifsu18F0utLQUqh+SOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cBwdMWz5; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=JT9MN9ilm0at7riTG+pm4cKjJs6hJDRT1zyYIjDKpL1Rc6/tuozJ/Mi2fCi/ZTB/OMfaqjGjCqeD2oMIXH4+2uwd4gT1Ye2UTbp1s9xVHLMJpEX1Fyr3qPrMg8S6K2DUi3YemaZaLAoLiPGnNR5b8M7teWS700Gn5TS6Oo5UXJA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cHBVjQO+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cBwdMWz5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82CD8C2BCC7;
-	Thu,  7 May 2026 07:59:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cHBVjQO+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47D77C2BCB8;
+	Thu,  7 May 2026 07:59:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778140798;
-	bh=ma3trTyqcR2zMHbTmP1FiSJo20kbC7/PwNHpY9rd2rk=;
+	s=k20201202; t=1778140799;
+	bh=TVSu35uwVUU84kaaUUHzbGpIol7cjYWHmARM/A+4SiA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=cBwdMWz5PGG8LWy4eLLEb3C7KMNwLhItullSociv6CWpY24TTTMS3Ko3/f94JzCMy
-	 f2ejsYRco+bUyHtj+DGcUjrDsdWmafHeYFvPRozJHEkbsgqz1Hfo6oPdQpztrS0UaC
-	 QhBEV2hHg2I8v1PRnZrmyGT+jzOaSQNNBDBx8Ai9wKjb35KsUl5NUDe7BRg7ueEjAX
-	 WyHrzRWAyJ7y1Rfx8TU6duZx6aD3ZoPRW1W9CDNDGKqbkUnKnrjfnxK573HLmRKt+z
-	 U7W6mBRZBpyTM1RkvdUmtSxokN3Ojtgipkj1ttNL8FzNfkr32M3zuOQgmOM9LBo/jI
-	 DDbDSnsjKYDjA==
+	b=cHBVjQO+6UM3oMKrPM4eFz7oiRTWog0CVW4Z92erzruq5lrnN9SN8RvXYauE8vAs2
+	 N84Zl9oWu1EFokry5P4O4rTCid3Y6xoxI7vjAltjRg030CMuafjG9CJmXT2lDfdd8j
+	 W8UtGdqTPSUpib6xnmgmYsfIqpldlNoocNS5XSV9g/xLZjjDJ0ePZhSeljwuvWmWC3
+	 n5qvzbS96lpAH5wYCUjvgu/Os2Ilk2DDlbwzIYzezIkEQBFXbSpyBjjjjafpoKwRT6
+	 TqzQ62IiTVO0JrDfOAPhHZy7xwgl0fAz34tJpTSTIMNxxjrizJXsjSBifkoWxDECsx
+	 Bn+aC++jG2iMA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 phy-next 02/31] ata: add <linux/pm_runtime.h> where
- missing
+Subject: Re: [PATCH v8 phy-next 09/31] PCI: Remove device links to PHY
 Reply-To: sashiko@lists.linux.dev
 To: "Vladimir Oltean" <vladimir.oltean@nxp.com>
 Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260505100523.1922388-3-vladimir.oltean@nxp.com>
-References: <20260505100523.1922388-3-vladimir.oltean@nxp.com>
+In-Reply-To: <20260505100523.1922388-10-vladimir.oltean@nxp.com>
+References: <20260505100523.1922388-10-vladimir.oltean@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Date: Thu, 07 May 2026 07:59:58 +0000
-Message-Id: <20260507075958.82CD8C2BCC7@smtp.kernel.org>
+Message-Id: <20260507075959.47D77C2BCB8@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Callers of `ahci_rpm_get_port()` unconditionally ignore the return=
- value of `pm_runtime_get_sync()`, potentially accessing suspended hardware.
-- [High] AHCI interrupt handlers process interrupts without checking if the=
- device is runtime-active, leading to spurious handling and MMIO reads on s=
-uspended devices.
+- [Critical] Critical memory corruption in cdns_plat_pcie_shutdown() due to=
+ incorrect pointer cast.
+- [High] Asynchronous pm_runtime_put() is called immediately before pm_runt=
+ime_disable(), cancelling suspend transitions.
+- [High] Shared IRQ handlers access hardware registers without checking PM =
+runtime state, causing spurious interrupts or bus errors.
 --
 
-commit 4c8bdcda88f27ad5b4d7ed5e7d48bab865cfb2dd
+commit abda94a24ef1bb0817706ae87aa20f04251c14ad
 Author: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-ata: add <linux/pm_runtime.h> where missing
+PCI: Remove device links to PHY
 
-This patch adds the <linux/pm_runtime.h> header to several AHCI drivers
-that use runtime PM operations but previously relied on an indirect
-inclusion from <linux/phy/phy.h>.
+This commit removes device links between the PCIe controllers and PHY
+providers in the Cadence, DRA7xx, and Keystone drivers. The device links
+are now redundant since the PHY core automatically adds device links to
+order suspend/resume operations.
 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 1d73a53370cf3..1396a53bd6df3 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -26,6 +26,7 @@
->  #include <linux/device.h>
->  #include <linux/dmi.h>
->  #include <linux/gfp.h>
-> +#include <linux/pm_runtime.h>
->  #include <scsi/scsi_host.h>
->  #include <scsi/scsi_cmnd.h>
->  #include <linux/libata.h>
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers=
+/pci/controller/cadence/pcie-cadence-plat.c
+> index 8b12a46b56019..6fd16e09e2444 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
+> @@ -41,7 +41,6 @@ static int cdns_plat_pcie_probe(struct platform_device =
+*pdev)
+>  	struct pci_host_bridge *bridge;
+>  	struct cdns_pcie_ep *ep;
+>  	struct cdns_pcie_rc *rc;
+> -	int phy_count;
+>  	bool is_rc;
+>  	int ret;
 
-While reviewing the addition of runtime PM headers, I noticed a pre-existing
-regression with how interrupts are handled in this driver.
+In cdns_plat_pcie_probe(), the driver data is initialized to point to a
+struct cdns_plat_pcie object:
 
-Could ahci_single_level_irq_intr() be invoked for a runtime-suspended
-device due to shared interrupts (IRQF_SHARED)?
+	cdns_plat_pcie =3D devm_kzalloc(dev, sizeof(*cdns_plat_pcie), GFP_KERNEL);
+	...
+	platform_set_drvdata(pdev, cdns_plat_pcie);
 
-If the device is powered down, would reading HOST_IRQ_STAT return 0xffffffff
-and cause the handler to call ata_qc_complete_multiple() with fatal errors
-(like PORT_IRQ_FREEZE and PORT_IRQ_ERROR), eventually triggering severe ATA
-error handling and port resets?
+However, in cdns_plat_pcie_shutdown(), the pointer is extracted and cast
+directly to struct cdns_pcie *:
 
-Would using pm_runtime_get_if_active() before accessing the hardware regist=
-ers
-prevent this issue?
+static void cdns_plat_pcie_shutdown(struct platform_device *pdev)
+{
+	struct device *dev =3D &pdev->dev;
+	struct cdns_pcie *pcie =3D dev_get_drvdata(dev);
+	...
+	cdns_pcie_disable_phy(pcie);
+}
+
+Since struct cdns_plat_pcie is only 8 bytes large, but the phy_count field
+is at an offset of roughly 36 bytes in struct cdns_pcie, does this lead to
+an out-of-bounds read and memory corruption when cdns_pcie_disable_phy()
+attempts to iterate over the PHYs?
 
 [ ... ]
-
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index c79abdfcd7a9b..e0de4703a4f2d 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -30,6 +30,7 @@
->  #include <scsi/scsi_cmnd.h>
->  #include <linux/libata.h>
->  #include <linux/pci.h>
-> +#include <linux/pm_runtime.h>
->  #include "ahci.h"
->  #include "libata.h"
+> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/cont=
+roller/dwc/pci-keystone.c
+> index fe4836925c4e3..cab9fad212add 100644
+> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+[ ... ]
+> @@ -1337,25 +1321,18 @@ static int ks_pcie_probe(struct platform_device *=
+pdev)
+>  	pm_runtime_disable(dev);
+>  	ks_pcie_disable_phy(ks_pcie);
 > =20
+> -err_link:
+> -	while (--i >=3D 0 && link[i])
+> -		device_link_del(link[i]);
+> -
+> +err:
+>  	return ret;
+>  }
+> =20
+>  static void ks_pcie_remove(struct platform_device *pdev)
+>  {
+>  	struct keystone_pcie *ks_pcie =3D platform_get_drvdata(pdev);
+> -	struct device_link **link =3D ks_pcie->link;
+> -	int num_lanes =3D ks_pcie->num_lanes;
+>  	struct device *dev =3D &pdev->dev;
+> =20
+>  	pm_runtime_put(dev);
+>  	pm_runtime_disable(dev);
 
-I also noticed another pre-existing regression in this driver.
+Does calling pm_runtime_put() immediately before pm_runtime_disable() cancel
+the suspend transition?
 
-Does ahci_rpm_get_port() need to have its return value checked by callers?
+pm_runtime_put() queues an asynchronous idle or suspend work item, but
+calling pm_runtime_disable() immediately afterward cancels this pending
+transition via __pm_runtime_barrier().
 
-It looks like it directly returns the result of pm_runtime_get_sync(), but
-callers like ahci_show_port_cmd(), ahci_read_em_buffer(), and
-ahci_port_resume() seem to unconditionally ignore this return value.
+Could this leave the hardware in an active or incorrect power state from
+the controller's perspective? Would it be safer to use synchronous
+pm_runtime_put_sync() instead?
 
-If pm_runtime_get_sync() fails, could the callers proceed to access
-memory-mapped I/O registers (such as PORT_CMD or HOST_EM_CTL) on a suspended
-device, potentially causing a synchronous external abort on ARM or invalid
-reads on x86?
+This asynchronous put pattern also appears in the error paths of
+dra7xx_pcie_probe() and ks_pcie_probe().
+
+While reviewing the power management handling in these drivers, I also
+noticed that the shared interrupt handlers read hardware registers directly
+without verifying if the device is active:
+
+drivers/pci/controller/dwc/pci-dra7xx.c:dra7xx_pcie_irq_handler() {
+	...
+	reg =3D dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
+
+If another device sharing the same IRQ line triggers an interrupt while the
+PCIe controller is runtime suspended, will these handlers attempt to read
+powered-down hardware?
+
+Should the handlers check the PM runtime state using
+pm_runtime_get_if_active() to prevent spurious interrupts or bus errors?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505100523.1922=
-388-1-vladimir.oltean@nxp.com?part=3D2
+388-1-vladimir.oltean@nxp.com?part=3D9
