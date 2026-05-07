@@ -1,410 +1,201 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from fout-b7-smtp.messagingengine.com (fout-b7-smtp.messagingengine.com [202.12.124.150])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA847426690
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 15:22:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A06E449EC5;
+	Thu,  7 May 2026 15:25:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.150
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778167349; cv=none; b=bskmfDfmim3R3DLHljGZ2AIl3APdr7gBOyaz/JmaKYIu74a0xB8IzBtA6DQ/E2vNr4qpp1iBMjcXvOk93to+SzOjtYUKNQo3TxEeAgZtb20cjmp0ZPZzrWWwhO+T/hBysxwgyTGUzp/YKx0dK0bu8jOVHa7eBOCYLV8DpPFgG20=
+	t=1778167525; cv=none; b=t1t7M+s0JmcoeuMMNCmjPbKXot/FEhZOiEl/bMVGEgoYxOdIsbmPfNK4Z5OTfpbboFH9wB9TTAj9Cq3xK75IdmUcD/Br7LstaMN2KQh2eNqZ2BNCfcTpXoJmPQGxYu7Lb0q4kllAA+Gqr3LfJOw661MsD9OVAfKKsUysevuKj8k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778167349; c=relaxed/simple;
-	bh=tL8vhjTM/0lzcBl5kGybgTGbZkaz7KtDK49q0G/JKg4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=b0PBwNmvUi0LhFvxaCp+psTF2IYjFrrA/s5lhv7spvL7nJ+YVrCsBMh8wO60py+76IeStszJ/VOnNFtI0OFuP5WAeTY44KBjg48B4T0noZUj8X3XcZNZNZG59MTP24xUIaBAoUfe/oMGdBUO26QMPnaK27nvhGVlyIeCs0peHZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Hn1ioPfR; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778167525; c=relaxed/simple;
+	bh=5D73UgmzYAbMCgy71AQH7BnKfr+NyNK4G08K25k/7qI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JTe5+nEZcKahUGryoLbYYU2QZJntF+fWVgnf4mwDrd/fvdEyfExJFZvxHf34ShKWCAconipqwKFI31jnu7QM3ZllZ5fgbzDEDjzddgcIEAU3FK1cfqfG4HxlM7Oa7+C8y01M8w9kT+/8WXFbg7vFdJ+sP2uyTks00NRx68eF2Y8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=ohhcZ76v; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=tz1jVmyB; arc=none smtp.client-ip=202.12.124.150
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Hn1ioPfR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=YpeiknJVJPLIFMqNflFehOonJQLV87GJbhuLuF4ydoc=;
-	b=Hn1ioPfRoik0hfxvXAUbZxjHccxhXuHbsG1B/HaOWqrRfJMCb9gNqzROk2C39Q
-	BOiaTEFejCewTp2/554L94+7hOixi/UfyjxmHGzMZiSClhaC3BC582mQngwl/r1h
-	T1EU1vbWpGl4O+EpngsfeTeRIvDc9miUGmv3MzLWxIzU0=
-Received: from [192.168.71.11] (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgDnn_gDrvxp1fr3DQ--.42093S2;
-	Thu, 07 May 2026 23:21:40 +0800 (CST)
-Message-ID: <3280415c-3c38-4b69-b2a5-6b97d0d24e54@163.com>
-Date: Thu, 7 May 2026 23:21:39 +0800
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="ohhcZ76v";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="tz1jVmyB"
+Received: from phl-compute-11.internal (phl-compute-11.internal [10.202.2.51])
+	by mailfout.stl.internal (Postfix) with ESMTP id 538021D000A0;
+	Thu,  7 May 2026 11:25:21 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-11.internal (MEProxy); Thu, 07 May 2026 11:25:21 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1778167521;
+	 x=1778253921; bh=tCciJ3UNh3k/4As+A1FcBt3Wz7n9hz0fmoKMl8/g4TM=; b=
+	ohhcZ76vq3Kti+Fc3/WlzfZCsXuG2wUXLRfXiPic464CROl+Oxz+RzoxZEOn3UT4
+	LcY/Za0mAS+mFgTJStwtfAITIppjt9CEPZwjL5dauHNMMgQJbuq5HIBQLYV63eqE
+	JnEdNRf+14YqGhGgm8ceRnPK3mfaGpvLOjw3PAn50fdlP51trpm42CV5Uet5XeeN
+	Q+oPIKBptSTbSzAVAycz+SRcfvPBF7ozdZ32PgDRWiYaNf9rP+ik6uu0VQPxbnpW
+	YbyhnRfzh+9QuI3FcLVrUrj9OhEqVconfasiZs0VrD/iwm6PHIKMiyL6jbEO03Qr
+	AuR43uf7w9kP0PiSDWUheA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778167521; x=
+	1778253921; bh=tCciJ3UNh3k/4As+A1FcBt3Wz7n9hz0fmoKMl8/g4TM=; b=t
+	z1jVmyBQn/FgNAUYbobftM2aM1xHTL1oxNBL6rLglcrNn6f6G08BKXrGVEQhTtBg
+	PoAUdR0j2CFZFEcxdyiyMz9+4EPuxzV+NlQsv+gDI7Qph+AfGmC2eFbD+5Pz4vzd
+	Rq12HyDQvZrLkxphVP/GdrKgIefM0+x+QXHOzKhuZsOFrtCKpDSck9QnFYRqQ4dQ
+	YiVh0B3ouNHyOt7VxcH8y0q5RP7MnpsKjWLCwl99qO3URUIwYPs9ZrubkUV1Rfc9
+	RlW+SWQ1J0m5Q0xXeE/zH6vb/W6tnWRLUjKNec1IUrwyI3NZcsSoi6HZKntjRIKA
+	A8X9adbaOZy8pRd8DaQ1A==
+X-ME-Sender: <xms:4K78aa0GYYbgNs3z4PqPC3BSZAtvr_vdsLBpCcchbVfBjdqXyEISaw>
+    <xme:4K78aelvbBYWVGo3WqaMzQlxfZxAScBD3mfeajp9zZd8qwwY5vg9ecZoUCmqDq94b
+    lk7ngghhDr69z2rZ3efs0NH4Rc9C2uWAitS7AnyqcQMjZFwaVGtLg>
+X-ME-Received: <xmr:4K78aS-5mGY2zyBE2bvbDUzVmKLqX3ix9SZ-GlQuCDdSMzw9HWrDdA2vWdw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddutdejkedvucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
+    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
+    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepvdekfeejkedvudfhudfhteekud
+    fgudeiteetvdeukedvheetvdekgfdugeevueeunecuvehluhhsthgvrhfuihiivgeptden
+    ucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhgpdhnsg
+    gprhgtphhtthhopeehpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehjthhorhhn
+    ohhsmhesrhgvughhrghtrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghssehgohhogh
+    hlvgdrtghomhdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghl
+    rdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvg
+    hlrdhorhhgpdhrtghpthhtoheprghlvgigsehshhgriigsohhtrdhorhhg
+X-ME-Proxy: <xmx:4K78abpst2IUUIzW2RXfpmyNYCVu83KY7q3XAZb4E6-KLJG0gzkSQQ>
+    <xmx:4K78aTmvebHkBtkQhxgBE6RrEqrwmn-Dm8Dv_k48LPk969Ne6FRRVQ>
+    <xmx:4K78aagSOtLLTPd4bVUJo5icY9j2Nq2dbtUV_HkmVhPvCeqJwNmnug>
+    <xmx:4K78aTc8INvm-yCWzZhYhAdlXt3qnh42FyxU4mfQMyYpyJQY0kT4hQ>
+    <xmx:4a78aeuEXOiRlxUERSZR-ip4tJJiR47LlBnuf4MdgmIo_vWMgegdZLyP>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 7 May 2026 11:25:20 -0400 (EDT)
+Date: Thu, 7 May 2026 09:25:18 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH] PCI: Add D3cold reset quirk for devices with
+ broken/missing FLR
+Message-ID: <20260507092518.186c7f1b@shazbot.org>
+In-Reply-To: <20260507142916.392983-1-jtornosm@redhat.com>
+References: <20260507142916.392983-1-jtornosm@redhat.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: cadence: Use cdns_pcie_find_capability() to get PCIe
- Cap offset in host driver
-To: Aksh Garg <a-garg7@ti.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Siddharth Vadapalli <s-vadapalli@ti.com>
-Cc: sashiko@lists.linux.dev, linux-pci@vger.kernel.org
-References: <20260506171227.GA797577@bhelgaas>
- <a791e1d8-f17a-4e8c-8afe-d1da338f4c5e@163.com>
- <2e92d011-02fa-433f-92e3-142880d5d0d2@163.com>
- <181c2204-dfb6-4484-b4e4-069d8c7445fd@ti.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <181c2204-dfb6-4484-b4e4-069d8c7445fd@ti.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PSgvCgDnn_gDrvxp1fr3DQ--.42093S2
-X-Coremail-Antispam: 1Uf129KBjvAXoW3tw4fJry3ArW7CFW3Xr1kKrg_yoW8JFy8Jo
-	Wftr4xGw4xCr18Jay0kasFqryUZ3Wjv3Z8Ar98Kw4DZryaya15Jr47Ja13Xw42vr48Ar4U
-	Ary8tw1Y9FW2g3Zxn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjxU5a0mUUUUU
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAVG6Wn8rgU6egAA3Q
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
+On Thu,  7 May 2026 16:29:16 +0200
+Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 
+> Some PCIe devices require D3cold power state transitions for proper
+> firmware reset when used in VFIO passthrough scenarios, but lack
+> Function Level Reset (FLR) capability or have incomplete FLR
+> implementations that don't fully reset firmware state.
+> 
+> Known devices affected:
+> - Qualcomm ath11k WiFi (17cb:1103) - FLReset-, reset unreliable
+> - Qualcomm ath12k WiFi (17cb:1107) - FLReset-, reset always fails
+> - Qualcomm SDX62/SDX65 5G modems (17cb:0308) - FLReset-, never
+>   initialize in VMs
+> - MediaTek mt7925e WiFi (14c3:7925) - FLReset+ but broken, reset always
+>   fails
+> 
+> The problem manifests in two scenarios:
+> 
+> 1. WiFi devices (ath11k, ath12k, mt7925e): Normal VM operation works fine,
+>    including clean shutdown/reboot. However, when the VM terminates
+>    uncleanly (crash, force-off), VFIO attempts to reset the device before
+>    it can be assigned to another VM. Because FLR is missing or broken, the
+>    reset fails and the device remains in an undefined state, preventing
+>    reuse.
+> 
+> 2. Modem devices (SDX62/SDX65): Never successfully initialize even on first
+>    VM assignment due to lack of proper reset capability.
+> 
+> Add reset_device_d3cold() quirk that performs a simple D3cold->D0
+> power cycle when the device is bound to vfio-pci. This provides
+> firmware reset capability for VM reset operations where standard PCI
+> reset methods are insufficient.
+> 
+> The quirk only applies during VFIO passthrough - native drivers use
+> their own reset mechanisms and will fall back to standard PCI reset
+> methods by returning -ENOTTY.
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> ---
+>  drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index caaed1a01dc0..11d9a8b562e4 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4237,6 +4237,40 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Some devices need D3cold->D0 power cycle for proper firmware reset
+> + * when used in VFIO passthrough. Some claim FLReset+ but it's incomplete,
+> + * others lack FLR entirely, and standard reset methods don't fully reset
+> + * firmware state. On bare metal with native drivers, we skip this and let
+> + * the driver handle reset via standard methods.
+> + */
+> +static int reset_device_d3cold(struct pci_dev *dev, bool probe)
+> +{
+> +	int ret;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (!dev->driver || strcmp(dev->driver->name, "vfio-pci") != 0)
 
-On 5/7/26 20:31, Aksh Garg wrote:
-> 
-> 
-> On 07/05/26 09:18, Hans Zhang wrote:
->>
->>
->> On 5/7/26 11:31, Hans Zhang wrote:
->>>
->>>
->>> On 5/7/26 01:12, Bjorn Helgaas wrote:
->>>> On Thu, May 07, 2026 at 12:04:34AM +0800, Hans Zhang wrote:
->>>>> On 5/6/26 05:23, Bjorn Helgaas wrote:
->>>>>> On Mon, May 04, 2026 at 04:22:26PM +0800, Hans Zhang wrote:
->>>>>>> On 5/4/26 00:52, sashiko-bot@kernel.org wrote:
->>>>>>>> Thank you for your contribution! Sashiko AI review found 1
->>>>>>>> potential issue(s) to consider:
->>>>>>>>
->>>>>>>> - [Critical] cdns_pcie_find_capability() searches the wrong
->>>>>>>> register space in Host mode and its return value is not validated,
->>>>>>>> leading to Root Port configuration space corruption.
->>>>>>>> -- 
->>>>>>>>
->>>>>>>> commit 09b3c64b8f5892eb365acd13030a8067652a15e8
->>>>>>>> Author: Hans Zhang <18255117159@163.com>
->>>>>>>>
->>>>>>>> PCI: cadence: Use cdns_pcie_find_capability() to get PCIe Cap 
->>>>>>>> offset in host driver
->>>>>>>>
->>>>>>>> This commit replaces the hardcoded CDNS_PCIE_RP_CAP_OFFSET with 
->>>>>>>> a dynamic
->>>>>>>> lookup using cdns_pcie_find_capability() in Cadence PCIe host- 
->>>>>>>> related
->>>>>>>> functions. The goal is to ensure correct operation across 
->>>>>>>> various SoC designs
->>>>>>>> where the capability might not reside at offset 0xC0.
->>>>>>>>
->>>>>>>>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host- 
->>>>>>>>> common.c b/drivers/pci/controller/cadence/pcie-cadence-host- 
->>>>>>>>> common.c
->>>>>>>>> index 2b0211870f02..5013d3fe23b5 100644
->>>>>>>>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>>>>>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
->>>>>>>>> @@ -26,14 +26,14 @@ EXPORT_SYMBOL_GPL(bar_max_size);
->>>>>>>>>     int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
->>>>>>>>>     {
->>>>>>>>> -    u32 pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
->>>>>>>>>         unsigned long end_jiffies;
->>>>>>>>>         u16 lnk_stat;
->>>>>>>>> +    u8 cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
->>>>>>>>
->>>>>>>> Does this capability search scan the correct register space when
->>>>>>>> operating in host mode?
->>>>>>>>
->>>>>>>> Looking at the helper function, it uses cdns_pcie_read_cfg() which
->>>>>>>> reads directly from the base address without the Root Port offset:
->>>>>>>>
->>>>>>>> drivers/pci/controller/cadence/pcie- 
->>>>>>>> cadence.c:cdns_pcie_find_capability() {
->>>>>>>>        return PCI_FIND_NEXT_CAP(cdns_pcie_read_cfg, 
->>>>>>>> PCI_CAPABILITY_LIST,
->>>>>>>>                                 cap, NULL, pcie);
->>>>>>>> }
->>>>>>>>
->>>>>>>> However, the Root Port configuration registers are physically
->>>>>>>> located at pcie->reg_base + CDNS_PCIE_RP_BASE. Could this cause
->>>>>>>> the search to scan the Local Management register space instead,
->>>>>>>> failing to find PCI_CAP_ID_EXP and returning 0?
->>>>>>>
->>>>>>> I don't think we need to worry about this issue.
->>>>>>>
->>>>>>> As per PCIe r7.0, sec 7.5.1.1.11, Since all PCI Express Functions
->>>>>>> are required to implement the PCI Express Capability structure,
->>>>>>> which must be included somewhere in this linked list;
->>>>>>>
->>>>>>> So, it won't return 0 here.
->>>>>>
->>>>>> It's true that all Root Ports must have a PCIe Capability, but
->>>>>> that's not related to this issue.
->>>>>>
->>>>>> cdns_pcie_host_init_root_port() accesses PCI_EXP_LNKCAP at the
->>>>>> address:
->>>>>>
->>>>>>     pcie->reg_base + CDNS_PCIE_RP_BASE + CDNS_PCIE_RP_CAP_OFFSET + 
->>>>>> PCI_EXP_LNKCAP
->>>>>>
->>>>>> but when we search with cdns_pcie_find_capability(pcie, 
->>>>>> PCI_CAP_ID_EXP),
->>>>>> we start reading at:
->>>>>>
->>>>>>     pcie->reg_base + PCI_CAPABILITY_LIST
->>>>>>
->>>>>> It should be starting at:
->>>>>>
->>>>>>     pcie->reg_base + CDNS_PCIE_RP_BASE + PCI_CAPABILITY_LIST
->>>>>>
->>>>>> Previously, cdns_pcie_find_capability() and
->>>>>> cdns_pcie_find_ext_capability() were only used for endpoints, and I
->>>>>> assume they work fine there.  There is pcie->is_rc, so there 
->>>>>> should be
->>>>>> a way to make this work for both endpoints and Root Ports.
->>>>>
->>>>> The reason for using the "is_rc" tag is that for Cadence IP, it is 
->>>>> not only
->>>>> applicable to the RC or EP mode, but also there are significant 
->>>>> differences
->>>>> between the LGA and HPA generations of IP. Including register 
->>>>> offset values,
->>>>> definitions, etc., it fails to achieve good compatibility. It is 
->>>>> not like
->>>>> Synopsys IP, where compatibility has been handled very well. It was 
->>>>> truly
->>>>> out of necessity.
->>>>
->>>> I think cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP) fails on Root
->>>> Ports because it doesn't include the CDNS_PCIE_RP_BASE offset.  Do you
->>>> have hardware where you can test that?
->>
->> Hi Siddharth,
->>
->> Could you please test the functions mentioned above? It would be great 
->> if you could help test it and give us your feedback. (pci-j721e.c)
->>
->> I guess the following changes might need to be made.
->>
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/ 
->> pci/controller/cadence/pcie-cadence.h
->> index 574e9cf4d003..bb01761749f1 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence.h
->> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
->> @@ -298,6 +298,9 @@ static inline int cdns_pcie_read_cfg_byte(struct 
->> cdns_pcie *pcie, int where,
->>   {
->>          void __iomem *addr = pcie->reg_base + where;
->>
->> +       if ((pcie->is_rc) && (!pcie->is_hpa))
->> +               addr += CDNS_PCIE_RP_BASE;
->> +
->>          *val = cdns_pcie_read_sz(addr, 0x1);
->>          return PCIBIOS_SUCCESSFUL;
->>   }
->> @@ -307,6 +310,9 @@ static inline int cdns_pcie_read_cfg_word(struct 
->> cdns_pcie *pcie, int where,
->>   {
->>          void __iomem *addr = pcie->reg_base + where;
->>
->> +       if ((pcie->is_rc) && (!pcie->is_hpa))
->> +               addr += CDNS_PCIE_RP_BASE;
->> +
->>          *val = cdns_pcie_read_sz(addr, 0x2);
->>          return PCIBIOS_SUCCESSFUL;
->>   }
->> @@ -314,7 +320,12 @@ static inline int cdns_pcie_read_cfg_word(struct 
->> cdns_pcie *pcie, int where,
->>   static inline int cdns_pcie_read_cfg_dword(struct cdns_pcie *pcie, 
->> int where,
->>                                             u32 *val)
->>   {
->> -       *val = cdns_pcie_readl(pcie, where);
->> +       void __iomem *addr = pcie->reg_base + where;
->> +
->> +       if ((pcie->is_rc) && (!pcie->is_hpa))
->> +               addr += CDNS_PCIE_RP_BASE;
->> +
->> +       *val = cdns_pcie_read_sz(addr, 0x4);
->>          return PCIBIOS_SUCCESSFUL;
->>   }
->>
->>
->> "is_hpa" flag I added it in another series. As mentioned before, the 
->> compatibility of Cadence IP is not very good. It is divided into LGA 
->> and HPA IP. And there are many differences between the Root Port and 
->> the Endpoint.
->>
->> https://patchwork.kernel.org/project/linux-pci/ 
->> patch/20260406103237.1203127-2-18255117159@163.com/
->>
->> Best regards,
->> Hans
->>
-> 
-> Hi Hans,
-> 
-> I have tested this on J7200 and J721E SoCs, which uses pci-j721e.c
-> driver for their PCIe controllers. The patch alone fails to find the
-> capabilities using cdns_pcie_find_capability() for Root Port.
-> 
-> With the "is_hpa" flag patch, and the patch "PCI: cadence: Use
-> cdns_pcie_find_capability() to get PCIe Cap offset in host driver" along
-> with the diff suggested above:
+We should not have driver dependent reset behavior.  If FLR is broken,
+add these devices to the list of devices using quirk_no_flr() and we'll
+fall back to another reset method.  We also shouldn't be implementing a
+variant of pci_pm_reset().  PM reset can also be prioritized over FLR
+via the reset_methods sysfs attribute if the reset method really is
+tied to the usage.  Thanks,
 
-Thank you very much for your test. We need to wait for Bjorn's approval.
+Alex
 
-> 
-> Tested-by: Aksh Garg <a-garg7@ti.com>
-
-When the future patch is sent to the PCI mailing list, if you test it at 
-that time, please reply to this tag again.
-
-> 
-> 
-> I would also like me to be included in the CC list for future
-> correspondence regarding Cadence PCIe Controller patches.
-> 
-
-Sure. In the future, when I send the patch, I will CC it to you in the 
-email.
-
-Best regards,
-Hans
-
-> Regards,
-> Aksh Garg
-> 
->>>
->>> Hi Bjorn,
->>>
->>> The attachment contains the dmesg and lspci -vvv log from the test.
->>>
->>> Here is the test code:
->>>
->>> diff --git a/drivers/pci/controller/cadence/pci-sky1.c b/drivers/pci/ 
->>> controller/cadence/pci-sky1.c
->>> index cd55c64e58a9..0d0c42309127 100644
->>> --- a/drivers/pci/controller/cadence/pci-sky1.c
->>> +++ b/drivers/pci/controller/cadence/pci-sky1.c
->>> @@ -130,6 +130,39 @@ static const struct cdns_pcie_ops sky1_pcie_ops = {
->>>       .link_up = sky1_pcie_link_up,
->>>   };
->>>
->>> +void cix_pcie_test_cap(struct sky1_pcie *pcie)
->>> +{
->>> +    u16 offset;
->>> +
->>> +    printk(KERN_EMERG"[HANS] fun = %s, line = %d ........... \n", 
->>> __func__, __LINE__);
->>> +    /* capability */
->>> +    offset = cdns_pcie_find_capability(pcie->cdns_pcie, PCI_CAP_ID_PM);
->>> +    printk(KERN_EMERG"[HANS]pm offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_capability(pcie->cdns_pcie, 
->>> PCI_CAP_ID_MSI);
->>> +    printk(KERN_EMERG"[HANS]msi offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_capability(pcie->cdns_pcie, 
->>> PCI_CAP_ID_MSIX);
->>> +    printk(KERN_EMERG"[HANS]msix offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_capability(pcie->cdns_pcie, 
->>> PCI_CAP_ID_EXP);
->>> +    printk(KERN_EMERG"[HANS]exp offset = 0x%x\n", offset);
->>> +
->>> +    printk(KERN_EMERG"[HANS] fun = %s, line = %d ........... \n", 
->>> __func__, __LINE__);
->>> +    /* extend capability */
->>> +    offset = cdns_pcie_find_ext_capability(pcie->cdns_pcie, 
->>> PCI_EXT_CAP_ID_ERR);
->>> +    printk(KERN_EMERG"[HANS]aer offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_ext_capability(pcie->cdns_pcie, 
->>> PCI_EXT_CAP_ID_VC);
->>> +    printk(KERN_EMERG"[HANS]Virtual Channel offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_ext_capability(pcie->cdns_pcie, 
->>> PCI_EXT_CAP_ID_DSN);
->>> +    printk(KERN_EMERG"[HANS]Device Serial Number offset = 0x%x\n", 
->>> offset);
->>> +    offset = cdns_pcie_find_ext_capability(pcie->cdns_pcie, 
->>> PCI_EXT_CAP_ID_PWR);
->>> +    printk(KERN_EMERG"[HANS]pwr offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_ext_capability(pcie->cdns_pcie, 
->>> PCI_EXT_CAP_ID_REBAR);
->>> +    printk(KERN_EMERG"[HANS]resize bar offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_ext_capability(pcie->cdns_pcie, 
->>> PCI_EXT_CAP_ID_SECPCI);
->>> +    printk(KERN_EMERG"[HANS]second exp offset = 0x%x\n", offset);
->>> +    offset = cdns_pcie_find_ext_capability(pcie->cdns_pcie, 
->>> PCI_EXT_CAP_ID_L1SS);
->>> +    printk(KERN_EMERG"[HANS]L1ss offset = 0x%x\n", offset);
->>> +}
->>> +
->>>   static int sky1_pcie_probe(struct platform_device *pdev)
->>>   {
->>>       struct cdns_plat_pcie_of_data *reg_off;
->>> @@ -141,6 +174,7 @@ static int sky1_pcie_probe(struct platform_device 
->>> *pdev)
->>>       struct sky1_pcie *pcie;
->>>       int ret;
->>>
->>> +    printk(KERN_EMERG"[HANS] fun = %s, line = %d ........... \n", 
->>> __func__, __LINE__);
->>>       pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
->>>       if (!pcie)
->>>           return -ENOMEM;
->>> @@ -202,6 +236,8 @@ static int sky1_pcie_probe(struct platform_device 
->>> *pdev)
->>>
->>>       dev_set_drvdata(dev, pcie);
->>>
->>> +    cix_pcie_test_cap(pcie);
->>> +
->>>       ret = cdns_pcie_hpa_host_setup(rc);
->>>       if (ret < 0) {
->>>           pci_ecam_free(pcie->cfg);
->>> @@ -230,7 +266,7 @@ static struct platform_driver sky1_pcie_driver = {
->>>       .driver = {
->>>           .name = "sky1-pcie",
->>>           .of_match_table = of_sky1_pcie_match,
->>> -        .probe_type = PROBE_PREFER_ASYNCHRONOUS,
->>> +        // .probe_type = PROBE_PREFER_ASYNCHRONOUS,
->>>       },
->>>   };
->>>   module_platform_driver(sky1_pcie_driver);
->>>
->>>
->>> For the LGA IP, an offset address CDNS_PCIE_RP_BASE needs to be 
->>> added. And the HPA IP requires an offset address of 
->>> CDNS_PCIE_HPA_RP_BASE, but it is equal to 0;
->>>
->>> drivers/pci/controller/cadence/pcie-cadence-hpa-regs.h
->>>
->>> /* Root Port register base address */
->>> #define CDNS_PCIE_HPA_RP_BASE            0x0
->>>
->>> Therefore, for "drivers/pci/controller/cadence/pci-sky1.c", it is 
->>> normal.
->>>
->>>
->>>
->>> Using the following code for work is also normal. Later, I will re- 
->>> unify it into the same operation.
->>>
->>> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/ 
->>> pci/controller/cadence/pcie-cadence.h
->>> index 574e9cf4d003..723ea79fb02e 100644
->>> --- a/drivers/pci/controller/cadence/pcie-cadence.h
->>> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
->>> @@ -314,7 +314,9 @@ static inline int cdns_pcie_read_cfg_word(struct 
->>> cdns_pcie *pcie, int where,
->>>   static inline int cdns_pcie_read_cfg_dword(struct cdns_pcie *pcie, 
->>> int where,
->>>                                             u32 *val)
->>>   {
->>> -       *val = cdns_pcie_readl(pcie, where);
->>> +       void __iomem *addr = pcie->reg_base + where;
->>> +
->>> +       *val = cdns_pcie_read_sz(addr, 0x4);
->>>          return PCIBIOS_SUCCESSFUL;
->>>   }
->>>
->>>
->>> Best regards,
->>> Hans
->>>
->>>
->>
+> +		return -ENOTTY;
+> +
+> +	/*
+> +	 * D3cold->D0 power cycle for firmware reset.
+> +	 * VFIO has already disabled interrupts and will handle state
+> +	 * save/restore, so we just do the power transition.
+> +	 */
+> +	ret = pci_set_power_state(dev, PCI_D3cold);
+> +	if (ret && ret != -EIO)
+> +		pci_warn(dev, "D3cold transition failed: %d\n", ret);
+> +
+> +	ret = pci_set_power_state(dev, PCI_D0);
+> +	if (ret && ret != -EIO)
+> +		pci_warn(dev, "D0 transition failed: %d\n", ret);
+> +
+> +	pci_info(dev, "D3cold reset completed\n");
+> +	return 0;
+> +}
+> +
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -4252,6 +4286,10 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  		reset_chelsio_generic_dev },
+>  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+>  		reset_hinic_vf_dev },
+> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_device_d3cold },     /* Qualcomm ath11k WiFi */
+> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_device_d3cold },     /* Qualcomm ath12k WiFi */
+> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_device_d3cold },     /* Qualcomm SDX62/SDX65 5G modem */
+> +	{ PCI_VENDOR_ID_MEDIATEK, 0x7925, reset_device_d3cold }, /* MediaTek mt7925e WiFi */
+>  	{ 0 }
+>  };
+>  
 
