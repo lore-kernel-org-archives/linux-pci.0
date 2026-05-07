@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF77437EFE2
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 08:00:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D6D37C936
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 08:00:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778140805; cv=none; b=Z/ST1gMe9vVPPjeX6oOpMtvzKZ2ejWKTE1Sjs7ORu3vIQTyq+gGlmBg6hlsTikdOOpAmvr+h/fi9nD94RTo6WS3l3YDM0+EXX6hA+MQTEsBalrcqardxK4pJpUZAjfMhrr0DMSnmtiTb5SvW47B+2cVYddQenyHC2jo6vwH8clc=
+	t=1778140802; cv=none; b=c9g+wKubgjHvi6ZAml456u3SCIh04afSS4A+wCFu67hCVH8mRZJqVaOYSZYVSlhPCgdVuPujT14l6Qrks3f6OsGv/i82k56o1+VizZlv0jbVity0SR5z+ywkdyTajEkuFnpd51NkUUQuEUGlZCi179OqKhycm9nHySNJ5XVGCk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778140805; c=relaxed/simple;
-	bh=Y9z3Gag4RVPz5yJ68hMHVKmLAv3951NtoVNOMhr9gpY=;
+	s=arc-20240116; t=1778140802; c=relaxed/simple;
+	bh=vJ62qumG08PeknTr7gYBqsK6MRDSnl9se9nS77auLw4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TtCL9R6QZ8jYpMtKRlL3PDj+SBbagQIYSiEvXipnbXwb4WAngKguCo9QJCvploxw95XVqUVQOKfeI308OZvEEkSm6ePIqGkspYKnUVyFY9Eu8kkupy4ucG019HurcHnDJb3LARSCklOYWfp8Fp9Q5cbuLWn9Lm24tio3CN8Xltg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OwFkEzGO; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=CjavMXKPN94DByBme2uoiCb9dou8GsUEhH2o0IefRQBR4ySnopfx9vzsIt+33PCA1opdZHhSFCybOfrigq9m6pqxxbLqdp95dwfEAnJIyRMqlXEPXMPJAeipCCbdnVzHkWeN8dbopAXOFZerRktNyWIdyGBC31sjDGxZlKRUEb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oeoc+MLZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OwFkEzGO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8EB1C2BCC9;
-	Thu,  7 May 2026 08:00:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oeoc+MLZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 508B8C2BCB8;
+	Thu,  7 May 2026 08:00:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778140804;
-	bh=Y9z3Gag4RVPz5yJ68hMHVKmLAv3951NtoVNOMhr9gpY=;
+	s=k20201202; t=1778140801;
+	bh=vJ62qumG08PeknTr7gYBqsK6MRDSnl9se9nS77auLw4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=OwFkEzGOOwok1wwnf+opft4KtsNMFL+MhYoxp6ev5IFcJ9f5rZlIsMn6nUtCt6phq
-	 cNKJI3OeUTjTVB4JWu81rIsl+lRzar9NkhJ1OKAIkaYOlpHH2LvLQO6INmWyStq7Zy
-	 V6SVuC4Ob0SwNyM5KziISKJpK60uTG1sQPpiLFiJymi4xGSTKKYSgPMwWdQp7xIR/L
-	 qetKFnigHdvdzUDDNMAkDVEenf46SnV6dFYZyNZLf+MakcFTCLrgWdFTekwL6s0Z5M
-	 kfVdcm+5uvNpThSGWT55NYe9vxIRYC/CAvLTNAMKEQR4xOn7acugb+Sny5A54R5eab
-	 yv4MBjrXQSHeg==
+	b=oeoc+MLZVH9BidiXnNVxuXVvU7yD2Dztiln2lxQh5xVTtT4mK0u7eOorcIsOOL/wI
+	 zNatHLihMjUQDpVBATmijDHg/gzr8PzcwUwJLWNoWpxIjs+eoZmOiJXPCRlAXAaW9u
+	 4+MWJBppe7rPBjiiR69DKBohAcSVnhRItlXyw48W2vZh+gqgMA88KgDeSTOQCOcE28
+	 OlIj292Ay+1Koem3KUvcegP1giuCbEnMCT8b4Q/2ZYaxBKvN2fZu81ZyYrrmM9FL+S
+	 g5iJ43uleyWhbMJC4CJeUluyXAfdlNuUnOOs8yU/R+5UlXNXCT+QzdwVtrsIBNlO02
+	 wP+fVM1XnDfRg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 phy-next 15/31] drm/rockchip: dw_hdmi: avoid direct
- dereference of phy->dev.of_node
+Subject: Re: [PATCH v8 phy-next 11/31] scsi: ufs: qcom: call phy_init()
+ before phy_power_on()
 Reply-To: sashiko@lists.linux.dev
 To: "Vladimir Oltean" <vladimir.oltean@nxp.com>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260505100523.1922388-16-vladimir.oltean@nxp.com>
-References: <20260505100523.1922388-16-vladimir.oltean@nxp.com>
+Cc: linux-pci@vger.kernel.org, wsa+renesas@sang-engineering.com
+In-Reply-To: <20260505100523.1922388-12-vladimir.oltean@nxp.com>
+References: <20260505100523.1922388-12-vladimir.oltean@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 07 May 2026 08:00:03 +0000
-Message-Id: <20260507080003.E8EB1C2BCC9@smtp.kernel.org>
+Date: Thu, 07 May 2026 08:00:00 +0000
+Message-Id: <20260507080001.508B8C2BCB8@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,67 +46,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] A PHY specifier is parsed and passed directly to a Clock framework =
-API, conflating two different DT domains.
+- [Low] The patch introduces a compilation error by removing a label but le=
+aving a `goto` statement referencing it.
 --
 
-commit 6a42fe45756ea5f0b8615efd6d337d5e679b8587
+commit a9b6eda8b500b1bd6c9826051626a38b21091a29
 Author: Vladimir Oltean <vladimir.oltean@nxp.com>
 
-drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
+scsi: ufs: qcom: call phy_init() before phy_power_on()
 
-The commit refactors dw_hdmi_rockchip_bind() to perform a manual phandle
-lookup on the hdmi PHY index within the controller's DT node, avoiding a
-direct dereference of hdmi->phy->dev.of_node.
+This commit changes the order of PHY API calls in the Qualcomm UFS driver to
+comply with the Generic PHY API expectations. It moves phy_init() to
+ufs_qcom_init() and removes the vestigial initialization from
+ufs_qcom_power_up_sequence().
 
-> diff --git a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c b/drivers/gpu/dr=
-m/rockchip/dw_hdmi-rockchip.c
-> index 0dc1eb5d2ae39..7abb42e486c02 100644
-> --- a/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
-> +++ b/drivers/gpu/drm/rockchip/dw_hdmi-rockchip.c
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index bc037db46624a..9039b087bf214 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+[ ... ]
+> @@ -513,13 +513,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba=
+ *hba)
+> =20
+> =20
+>  	/* phy initialization - calibrate the phy */
+> -	ret =3D phy_init(phy);
+> -	if (ret) {
+> -		dev_err(hba->dev, "%s: phy init failed, ret =3D %d\n",
+> -			__func__, ret);
+> -		return ret;
+> -	}
+> -
+>  	ret =3D phy_set_mode_ext(phy, mode, host->phy_gear);
+>  	if (ret)
+>  		goto out_disable_phy;
+
+Does this cause a compilation error? The goto statement jumps to the
+out_disable_phy label, but the label is removed by this patch at the end of
+the function.
 
 [ ... ]
-
-> @@ -588,13 +589,17 @@ static int dw_hdmi_rockchip_bind(struct device *dev=
-, struct device *master,
->  		return dev_err_probe(hdmi->dev, ret, "failed to get phy\n");
->  	}
+> @@ -529,23 +522,18 @@ static int ufs_qcom_power_up_sequence(struct ufs_hb=
+a *hba)
+[ ... ]
+>  	ufs_qcom_select_unipro_mode(host);
 > =20
-> -	if (hdmi->phy) {
-> +	index =3D of_property_match_string(np, "phy-names", "hdmi");
-> +	if (index >=3D 0) {
->  		struct of_phandle_args clkspec;
-> =20
-> -		clkspec.np =3D hdmi->phy->dev.of_node;
-> -		hdmi->hdmiphy_clk =3D of_clk_get_from_provider(&clkspec);
-> -		if (IS_ERR(hdmi->hdmiphy_clk))
-> -			hdmi->hdmiphy_clk =3D NULL;
-> +		if (!of_parse_phandle_with_args(np, "phys", "#phy-cells", index,
-> +						&clkspec)) {
-> +			hdmi->hdmiphy_clk =3D of_clk_get_from_provider(&clkspec);
-
-This isn't a bug, but does this pass a PHY specifier directly to a Clock
-framework API?
-
-of_parse_phandle_with_args() parses the phys property using #phy-cells,
-populating clkspec as a PHY specifier. This is then passed to
-of_clk_get_from_provider() which expects a Clock specifier governed by
-#clock-cells.
-
-While this does not cause a runtime failure here because the Rockchip HDMI
-PHY clock provider uses of_clk_src_simple_get and ignores the specifier
-arguments, it appears to conflate two different DT domains.
-
-Would it be better to retrieve the device node using of_parse_phandle()
-and explicitly synthesize a 0-cell clock specifier to maintain the API
-abstraction?
-
-> +			of_node_put(clkspec.np);
-> +			if (IS_ERR(hdmi->hdmiphy_clk))
-> +				hdmi->hdmiphy_clk =3D NULL;
-> +		}
->  	}
+>  	return 0;
+> -
+> -out_disable_phy:
+> -	phy_exit(phy);
+> -
+> -	return ret;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260505100523.1922=
-388-1-vladimir.oltean@nxp.com?part=3D15
+388-1-vladimir.oltean@nxp.com?part=3D11
