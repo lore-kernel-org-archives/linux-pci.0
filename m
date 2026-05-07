@@ -1,157 +1,122 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 890CD401A03
-	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 14:29:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564863C6A43;
+	Thu,  7 May 2026 14:48:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778164186; cv=none; b=YUm5ovBDm3HzDbpZetCXQCk1IYCZCPNnRISNRpqHipgp4fZeKKKD1SrNRTGpBgoofYCNkaTzAwaHIhW7cdYe0ZOrE5vEDqF6fXlyR1/ehjOGG2c47qMZS2C6PGLV8OkPVLYGcpuNHhMMpLLztC9a5dHwEJn56V6wkSSsRhOG9GQ=
+	t=1778165330; cv=none; b=IuWaKgUDoABO4tjSemzFU05S0VDsNYeUaZwoo8gVEhOvHE8XwzWe4KKp31+vdEwqZnTAH60caAJU7dYgZy0sV3B1vSotLUvpd3YaCvS4++5C67Y/78SgbUGv2mwKc4CuiDdJO+/Sw5/uOpnXRiFfRfRabwwEc5CCJ/pEPXNQpkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778164186; c=relaxed/simple;
-	bh=ezmR/KKCPtyWBUwCLXTx1NDZJ26eGNGjHFL8tYzcbi4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZKHgBq/7eyHfQ1GaHLZ819s7MUc0NXCNGiI+RFMQTfJ/WGAgxgeGlrLBbm07tu2EZtiEBXj2FfsAhj0xe3JI5HuwhsGK5na16snFk/Aysk1s/IGSh5bnFcT2W2pNmUFwW5no+gCA4ZifnYc1Lp8NGN8tzRgYIeM86gf8zyOKZNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EkleaJYq; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778165330; c=relaxed/simple;
+	bh=mAnZeudFZDCOP3cJqoGPtLyUBm7fmF2BfW+v9MBNZoo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hzaN02niuZwC040MlRasC4Yi0omzZJZQQ5O7ZS2uZN8PAxmLYN8zlj7c3DrQL90b3dN7J27wRNlIG37D4o1OkbgN8BOdjeVZJnHbWjg5Thgem+yDxfyC1PeYo4tZYdsCDejpaG22BQVVBSxPye6zcXXlx7DvNNjCoBNjeyTVgu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QIEELKKv; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EkleaJYq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778164184;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=p/Ie+sFcRQTzoKcDR8BzjhL+HxzOxnnOZKDIau57duo=;
-	b=EkleaJYq/ooIoJgX6P+n6Q2nGm7iAkhP6gcjj/jLDVjX/M+nTyENVKOBWfF8tv34LWNaam
-	5R6yxoTaUmOPX57Egv+xPcOl2CCI6SAGgjrTzDFDzyTlfb7g4zZFCiVfXSJW0Y62xA3+aG
-	CKUktGhn5x6agMhHv875vikA6K39rdo=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-439-b3OGTQWWOeW15l0LltNXTA-1; Thu,
- 07 May 2026 10:29:38 -0400
-X-MC-Unique: b3OGTQWWOeW15l0LltNXTA-1
-X-Mimecast-MFC-AGG-ID: b3OGTQWWOeW15l0LltNXTA_1778164177
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 60C0218E6A5A;
-	Thu,  7 May 2026 14:29:28 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.69])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C99471803A92;
-	Thu,  7 May 2026 14:29:26 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH] PCI: Add D3cold reset quirk for devices with broken/missing FLR
-Date: Thu,  7 May 2026 16:29:16 +0200
-Message-ID: <20260507142916.392983-1-jtornosm@redhat.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QIEELKKv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=KjhKx2J06APKtxFuNWiKeBEj4SQNQ/II0at4VGGiHnA=;
+	b=QIEELKKvbLVVsk0ss3zOat2V6Yd92mlMmIEYH3TQjj4XqJX03NkbgBzGeaeV9N
+	VlJVCegy9NOZQPki9TOKdAC5Q24IqT8gyq0ydKV4JZYSHfc3YV0yhYC/b7urQmDn
+	gE6AjSwYonrc7idotl7JmQTWSaU1wJEfhD1bsbr8gZ55I=
+Received: from [192.168.71.11] (unknown [])
+	by gzsmtp1 (Coremail) with SMTP id PCgvCgCHOqEbpvxpmYUECw--.3259S2;
+	Thu, 07 May 2026 22:47:55 +0800 (CST)
+Message-ID: <265a2718-053c-46c2-994c-706b9437b48f@163.com>
+Date: Thu, 7 May 2026 22:47:54 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 0/3] PCI: Refactor PCIe speed validation and conversion
+ functions
+To: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
+ kwilczynski@kernel.org, mani@kernel.org, ilpo.jarvinen@linux.intel.com,
+ jingoohan1@gmail.com
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260407130450.1489318-1-18255117159@163.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260407130450.1489318-1-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PCgvCgCHOqEbpvxpmYUECw--.3259S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uF43ur15CFWxZFWDWryUZFb_yoW8Kr15pa
+	yYvw4fArW7G3sxCa97G3Wjqry5Wan3XrW0yry3Gas3Zw13AFn3JF4vgF1FvF9rArWFvr42
+	vry7Zw1kCw1qkFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UkEfOUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwx1K7Wn8ph00MAAA3T
 
-Some PCIe devices require D3cold power state transitions for proper
-firmware reset when used in VFIO passthrough scenarios, but lack
-Function Level Reset (FLR) capability or have incomplete FLR
-implementations that don't fully reset firmware state.
+Hi Bjorn,
 
-Known devices affected:
-- Qualcomm ath11k WiFi (17cb:1103) - FLReset-, reset unreliable
-- Qualcomm ath12k WiFi (17cb:1107) - FLReset-, reset always fails
-- Qualcomm SDX62/SDX65 5G modems (17cb:0308) - FLReset-, never
-  initialize in VMs
-- MediaTek mt7925e WiFi (14c3:7925) - FLReset+ but broken, reset always
-  fails
+Gentle ping.
 
-The problem manifests in two scenarios:
+Best regards,
+Hans
 
-1. WiFi devices (ath11k, ath12k, mt7925e): Normal VM operation works fine,
-   including clean shutdown/reboot. However, when the VM terminates
-   uncleanly (crash, force-off), VFIO attempts to reset the device before
-   it can be assigned to another VM. Because FLR is missing or broken, the
-   reset fails and the device remains in an undefined state, preventing
-   reuse.
-
-2. Modem devices (SDX62/SDX65): Never successfully initialize even on first
-   VM assignment due to lack of proper reset capability.
-
-Add reset_device_d3cold() quirk that performs a simple D3cold->D0
-power cycle when the device is bound to vfio-pci. This provides
-firmware reset capability for VM reset operations where standard PCI
-reset methods are insufficient.
-
-The quirk only applies during VFIO passthrough - native drivers use
-their own reset mechanisms and will fall back to standard PCI reset
-methods by returning -ENOTTY.
-
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
- drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index caaed1a01dc0..11d9a8b562e4 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4237,6 +4237,40 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
- 	return 0;
- }
- 
-+/*
-+ * Some devices need D3cold->D0 power cycle for proper firmware reset
-+ * when used in VFIO passthrough. Some claim FLReset+ but it's incomplete,
-+ * others lack FLR entirely, and standard reset methods don't fully reset
-+ * firmware state. On bare metal with native drivers, we skip this and let
-+ * the driver handle reset via standard methods.
-+ */
-+static int reset_device_d3cold(struct pci_dev *dev, bool probe)
-+{
-+	int ret;
-+
-+	if (probe)
-+		return 0;
-+
-+	if (!dev->driver || strcmp(dev->driver->name, "vfio-pci") != 0)
-+		return -ENOTTY;
-+
-+	/*
-+	 * D3cold->D0 power cycle for firmware reset.
-+	 * VFIO has already disabled interrupts and will handle state
-+	 * save/restore, so we just do the power transition.
-+	 */
-+	ret = pci_set_power_state(dev, PCI_D3cold);
-+	if (ret && ret != -EIO)
-+		pci_warn(dev, "D3cold transition failed: %d\n", ret);
-+
-+	ret = pci_set_power_state(dev, PCI_D0);
-+	if (ret && ret != -EIO)
-+		pci_warn(dev, "D0 transition failed: %d\n", ret);
-+
-+	pci_info(dev, "D3cold reset completed\n");
-+	return 0;
-+}
-+
- static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
- 		 reset_intel_82599_sfp_virtfn },
-@@ -4252,6 +4286,10 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_chelsio_generic_dev },
- 	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
- 		reset_hinic_vf_dev },
-+	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_device_d3cold },     /* Qualcomm ath11k WiFi */
-+	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_device_d3cold },     /* Qualcomm ath12k WiFi */
-+	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_device_d3cold },     /* Qualcomm SDX62/SDX65 5G modem */
-+	{ PCI_VENDOR_ID_MEDIATEK, 0x7925, reset_device_d3cold }, /* MediaTek mt7925e WiFi */
- 	{ 0 }
- };
- 
--- 
-2.53.0
+On 4/7/26 21:04, Hans Zhang wrote:
+> This series refactors PCIe speed validation and conversion logic to
+> shared functions in the public header, eliminating code duplication
+> and ensuring consistency across drivers.
+> 
+> ---
+> Changes for v7:
+> - patch 0002 add #include <asm/bug.h> (Ilpo)
+> - s/u32 link_speed/enum pci_bus_speed link_speed/ (Ilpo)
+> - The return value of pci_bus_speed2lnkctl2 uses the variable ctrl2_speed
+>    to avoid the abuse of variable types. (Ilpo)
+> 
+> Changes for v6:
+> https://patchwork.kernel.org/project/linux-pci/patch/20260406105613.1228673-1-18255117159@163.com/
+> 
+> - missing one line of code:
+>    link_speed = pcie_get_link_speed(pci->max_link_speed);
+> 
+> Changes for v5:
+> https://patchwork.kernel.org/project/linux-pci/patch/20260406104708.1218648-1-18255117159@163.com/
+> 
+> - Rebase to v7.0-rc1. (pci/next tree)
+> 
+> Changes for v4:
+> https://patchwork.kernel.org/project/linux-pci/patch/20251102143206.111347-1-18255117159@163.com/
+> 
+> - Maintain O(1) array-based lookup for speed conversion (addressing
+>    performance concerns from v3 feedback)
+> - Move pcie_valid_speed() and pci_bus_speed2lnkctl2() to pci.h
+> - Update dwc driver to use the shared functions
+> - Rebase to v6.18-rc3.
+> 
+> This addresses the feedback from Lukas Wunner and Manivannan Sadhasivam
+> on the v3 submission, ensuring no runtime performance regression while
+> achieving code reuse.
+> 
+> Changes for v3:
+> https://patchwork.kernel.org/project/linux-pci/patch/20250816154633.338653-1-18255117159@163.com/
+> 
+> - Rebase to v6.17-rc1.
+> - Gentle ping.
+> 
+> Changes for v2:
+> - s/PCIE_SPEED2LNKCTL2_TLS_ENC/PCIE_SPEED2LNKCTL2_TLS
+> - The patch commit message were modified.
+> ---
+> 
+> Hans Zhang (3):
+>    PCI: Add public pcie_valid_speed() for shared validation
+>    PCI: Move pci_bus_speed2lnkctl2() to public header
+>    PCI: dwc: Use common speed conversion function
+> 
+>   drivers/pci/controller/dwc/pcie-designware.c | 28 +++++++-------------
+>   drivers/pci/pci.h                            | 23 ++++++++++++++++
+>   drivers/pci/pcie/bwctrl.c                    | 22 ---------------
+>   3 files changed, 32 insertions(+), 41 deletions(-)
+> 
+> 
+> base-commit: 525e91d84dc085492b36d4b87abb7c1cc93fcb44
 
