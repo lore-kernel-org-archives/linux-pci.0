@@ -1,32 +1,31 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+Received: from outbound.st.icloud.com (p-east2-cluster1-host11-snip4-10.eps.apple.com [57.103.76.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D73D518050;
-	Thu,  7 May 2026 02:57:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A5E14317D
+	for <linux-pci@vger.kernel.org>; Thu,  7 May 2026 03:29:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.76.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778122625; cv=none; b=uHXbbJuhCNHB3srNfXTEb1GdPIZKFO6rm9ivdMbUUvA6eVY6gxmHCUHclibTaVtrdKyrP1nGAl3dv2zhGliEbdHcGMighytPxBSTRzgylgMzjcA3bIxGl9elUiAc5ZOYs0Cxq7DkUc9ZY9eMCnP9BRELljNOYBvWcNNnVGlUjLA=
+	t=1778124591; cv=none; b=NHtqoqfgputvf5k5katjgGiI0aPUyjKytk1c3Z0uxH5CQ3IL98SUTBSyW8LGmzVleLZTcsV308HG4FiVVqzpVllz4QFXt0dkJ6/SKJTXwQ14oIfcvf4t1O4H4mbxXGequgmJDbX9h7SpNbzCIqRDy61GrI+aSkOROUsfhUGQ0Mw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778122625; c=relaxed/simple;
-	bh=3DBsfkH7gzYhvM2dIY6FZDcSe2ttFz8i0azMzDepDPY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NgyLigj25ribcnXL28ad5KML5C0ED65hMx0cpS0aTlYo5UDDp88dZiQgXF0Y2OjRUmJBeGS/9Ez8+pZbtB3gVRYQyamzQb8/CGe/rwDgocYoyg2ReZXpoNzNOp41ALWJsYMa9iH1wKQHQ8+faI/ha7wl8emLOEPZZsWvxVkI+Vg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=DUOy+8oh; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778124591; c=relaxed/simple;
+	bh=AA+h13ygloHL7WlYCl2vXfWMwo0irJG4t0MnVX9xM/A=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=XzuhzbSF18CC23GCJnQAE0utV3FZNHOmiWBRE3eyPBbTbTWyO6zDNgacWlxYW0iu5E9Ht8pIAoz/rBA98laTo4/Uv39S1wQZg1z3ocxwAeHx9CSxGoivkm0kRKYwJKY2Wx7vk4yEXpw6FxNLQMVBYXRHxHQrxKNNQc1z61D++/4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=AmcArhM1; arc=none smtp.client-ip=57.103.76.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="DUOy+8oh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=rcexbzChlIPm5ezwkYYKsN/sTQpx30eqrb2Z67XEnQQ=;
-	b=DUOy+8ohKqqvW2jpwsFKZZUC4czjWDI4CVp5StqhEa1h7q3YG+6lNdXd4ns7Qe
-	afDrFlzProb4Qf1RNsTc6T1XVTc9Ui2OtupmW15JmT73g4Ur+moa+xR+rYSRQCP4
-	kMx5L1Mxkt28VmNasoxt9VSofgCGz8pSdm9IUhN7CaBWY=
-Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD3R6Yn__tp9RRWDw--.64792S2;
-	Thu, 07 May 2026 10:55:35 +0800 (CST)
-Message-ID: <a236aca1-bc31-4ee5-b1b3-59d0a7d70c8b@163.com>
-Date: Thu, 7 May 2026 10:55:34 +0800
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="AmcArhM1"
+Received: from outbound.st.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-east-1a-100-percent-5 (Postfix) with ESMTPS id C684D18000B1;
+	Thu, 07 May 2026 03:29:46 +0000 (UTC)
+X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhMHVsARQNFDFYEVBcOVk1RDUEfTgZTHgtKAl93AlEcVg1XQ1QEX1BfHA4FQhlACVQZXV8FWgAwUBtfAkIPHBNWFRMfVFYDRBkQVgFYVl0FTRpcGFkPHANNVloOWwRHFBcbXAAXG0YCBCMCXwBFAl4JVgEwFw9WTVAbXwJCDxwTVhUTAF4PD0wKHVZbAA8ASRRKBV1TRgYTDhoeVAUJVF0IHQcJUw0HEg9OUF13AlEcVg1XQ1QEX04ZDEodUlZbE1UXRgk=
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778124589; x=1780716589; bh=xiO80MKCQGnBn7bYo3wXKE3b28gDaoCGsntdpJkmXT8=; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type:x-icloud-hme; b=AmcArhM1mRfE0iSs53r82cAh8NA2wHF8y6yVe7PkpcgSJoYebNQ72+tfoBZ1Nc4vA4RYWsGfIPzwdmYSgMaTLu01bG6t2Xo+Fv39HbNoXjJKGgVb+GhfEVLopn6KZO39xtze3WJqZL2o9SANiB8Ydgv2z2wTIgsbJwmJDza5rnrX5hX+6gBRRocN5S35gKR1iljWGv+vgDNJjTGnjOHc7psgcTwks75jRd5sLuqIrdtXG9LH3Fz/xCTSS7pGHEIpYwuX2pKdSRVYwbtlMYPAE1nG6mqDC5RP2SxD/Al92DHBOnT5DkL8mbOf761bFjXo3zDbiePi/Kuq4Zxuzx+PGw==
+Received: from [192.168.89.2] (unknown [17.42.251.67])
+	by p00-icloudmta-asmtp-us-east-1a-100-percent-5 (Postfix) with ESMTPSA id 341FF18000B7;
+	Thu, 07 May 2026 03:29:43 +0000 (UTC)
+Message-ID: <3ee67d29-260d-4c7b-92bf-1e4ddf5b66c0@icloud.com>
+Date: Thu, 7 May 2026 12:29:40 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,80 +33,82 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI: brcmstb: Assign pcie->gen from
- of_pci_get_max_link_speed()
-To: Florian Fainelli <florian.fainelli@broadcom.com>,
- linux-pci@vger.kernel.org
-Cc: Dom Cobley <popcornmix@gmail.com>, Phil Elwell <phil@raspberrypi.com>,
- Jim Quinlan <jim2101024@gmail.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-rpi-kernel@lists.infradead.org>,
- "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
- <linux-arm-kernel@lists.infradead.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <mid:20260501202438.376033-1-florian.fainelli@broadcom.com>
- <20260506164537.103196-1-florian.fainelli@broadcom.com>
+Subject: Re: [PATCH v2 2/2] hwmon: add initial support for AMD PROM21 xHCI
+ temperature sensor
+From: Jihong Min <hurryman2212@icloud.com>
+To: Randy Dunlap <rdunlap@infradead.org>, Jihong Min
+ <hurryman2212@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Mathias Nyman <mathias.nyman@intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260506032939.92351-1-hurryman2212@gmail.com>
+ <cover.1778099627.git.hurryman2212@gmail.com>
+ <2e2ea249b30168a2eab62fc110c226a511f21bf2.1778099627.git.hurryman2212@gmail.com>
+ <5a61ad36-d754-4ab9-8a56-83bccc1397f2@infradead.org>
+ <c2a3d27d-3b01-44a6-bbf6-fec637789b3f@icloud.com>
 Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260506164537.103196-1-florian.fainelli@broadcom.com>
+In-Reply-To: <c2a3d27d-3b01-44a6-bbf6-fec637789b3f@icloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD3R6Yn__tp9RRWDw--.64792S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tr1fZr4fXry7KF4xJF1DKFg_yoW8Ar1Dpa
-	9rJay8tFyUtFWrua1UG3W5uF1Ygan5urW7KwsxWw17uanIy34rKFy29ryfJF9rKFs7uw13
-	X3Way3W7GF1ayF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR573PUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7AhjB2n7-yhitgAA3R
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA3MDAzMCBTYWx0ZWRfX1JJY2z7S9WL2
+ 9cGsNPneLYO61NVg1Ooby+VB0DqRjbOmTSLjRLHlYIxbQLxFCNLH7KdCT8tIAS8s3zSeD5WMA+W
+ cla4j/MM3H4aCAyFcLHG7thDdHk34Yzw/AlX2lx/xV3QtdHvNeewu+P4FsON3xFbG4w8BhNjRPL
+ +kig+cqU+45PT2tm1WYQLfN01vupBV0BY+OpvABzPtf+arKwpXmcspCRRV+65y/SkXLOGN8x457
+ WANcIN2cA7t1roHpRY/KuxeDOs515BYtx8eN/RT8R4eaEw3R7vqlJRCY93cF/1c9oxs2ZqTEDUE
+ 4q6AA3cNcH9jofr44UvkPEtb8/tYYtptzxXtKXpj+7oKqgdg5Pm4c453y0k2qA=
+X-Proofpoint-ORIG-GUID: G_jU8VvAtb5Jsr1iWb6dpbI8ddRfOmKu
+X-Authority-Info-Out: v=2.4 cv=E7nAZKdl c=1 sm=1 tr=0 ts=69fc072b
+ cx=c_apl:c_pps:t_out a=YrL12D//S6tul8v/L+6tKg==:117
+ a=YrL12D//S6tul8v/L+6tKg==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
+ a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=hqD2QSi1MT07sOiQ9kgA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=PgRulw5oR9JgysbTFEid:22 a=MienORt8HT0FiJ1vGQZ6:22
+X-Proofpoint-GUID: G_jU8VvAtb5Jsr1iWb6dpbI8ddRfOmKu
 
+I noticed that my v2 series was accidentally sent as a reply to the v1
+discussion, which made the patch series harder to track. It also appears
+that Sashiko did not pick up v2 as a separate patchset because of the
+threading.
 
+I will send v3 as a clean new thread with the review feedback addressed so
+far.
 
-On 5/7/26 00:45, Florian Fainelli wrote:
-> After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
-> pcie->gen stopped being assigned and as a result the established PCIe
-> link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
-> to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
-> 
-> Whether the 'max-link-speed' property is not specified, or it exceeds
-> Gen3, resort to the HW defaults.
-> 
-> Link: https://github.com/raspberrypi/linux/issues/7343
-> Reported-by: Dom Cobley <popcornmix@gmail.com>
-> Reported-by: Phil Elwell <phil@raspberrypi.com>
-> Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
-> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
-> Change-Id: Ic5431469dd7a6c8b391f84f27119dad876256880
+Thank you,
+Jihong Min
 
-Reviewed-by: Hans Zhang <18255117159@163.com>
-
-> ---
-> Changes in v2:
-> 
-> - utilize of_pci_get_max_link_speed() directly
-> - also validate against exceeding Gen3
-> 
->   drivers/pci/controller/pcie-brcmstb.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-> index 714bcab97b60..08a0e7091ced 100644
-> --- a/drivers/pci/controller/pcie-brcmstb.c
-> +++ b/drivers/pci/controller/pcie-brcmstb.c
-> @@ -2072,8 +2072,10 @@ static int brcm_pcie_probe(struct platform_device *pdev)
->   		return PTR_ERR(pcie->clk);
->   
->   	ret = of_pci_get_max_link_speed(np);
-> -	if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
-> +	if (ret < 0 || ret > 3)
->   		pcie->gen = 0;
-> +	else
-> +		pcie->gen = ret;
->   
->   	pcie->ssc = of_property_read_bool(np, "brcm,enable-ssc");
->   
-
+On 5/7/26 07:52, Jihong Min wrote:
+> > It sorta looks like these entries are supposed to be maintained in
+> > alphabetical order, but that new entry is not.
+>
+> Yes, you are right. I also noticed that but it seems I pasted it in 
+> the wrong place.
+> Fixed this locally for v3 by moving prom21-hwmon after powr1220 and 
+> next to pt5161l.
+>
+> Thank you,
+> Jihong Min
+>
+> On 5/7/26 07:17, Randy Dunlap wrote:
+>>
+>> On 5/6/26 1:40 PM, Jihong Min wrote:
+>>> diff --git a/Documentation/hwmon/index.rst 
+>>> b/Documentation/hwmon/index.rst
+>>> index 8b655e5d6b68..0d85b78596cf 100644
+>>> --- a/Documentation/hwmon/index.rst
+>>> +++ b/Documentation/hwmon/index.rst
+>>> @@ -215,6 +215,7 @@ Hardware Monitoring Kernel Drivers
+>>>      peci-dimmtemp
+>>>      pmbus
+>>>      powerz
+>>> +   prom21-hwmon
+>>>      powr1220
+>>>      pt5161l
+>>>      pxe1610
+>> It sorta looks like these entries are supposed to be maintained in 
+>> alphabetical
+>> order, but that new entry is not.
+>>
