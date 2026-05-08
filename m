@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD062C3266
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:52:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF9CD28725B
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:58:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778212346; cv=none; b=t5LLH7SbshfUjl4I73aAq8YV7EDTEl9zoQzqfkNNm6CmeekjJXw99ZDH3NR7+W2R8I19brVCgKLm4advPgDov+bPdUg0d8QZ9bV37qejmDEsrvN5cZ0dYtwZOGhnMk6o6/Vn7Egz0+/qXirN6EwlrcM64/RiP/LFKgtdavHN1kU=
+	t=1778212686; cv=none; b=andJB7jOJbQQ9fzMXhgeUYZAwVEKBe/UPX+vuviRu+Kv+T4GsSfdB6gaAkUOtKAMJ1npY7Q53trVouQmshqxI3FFJDFXsi6S2zYdSqePGdiXx1pn/REH8iqrZI5cmjShMHEdHsdmbLzYKvBuRjkTQOQgdzqjYHvFzbjyqhqlCgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778212346; c=relaxed/simple;
-	bh=21BAkKHFtEC2SBbmi0/xyEMqLfQmNHIchfHxvegOBlQ=;
+	s=arc-20240116; t=1778212686; c=relaxed/simple;
+	bh=Rb6o2pAgryP/W1ucJ1j0Y1K+zUjA9Nncf0PWkb75PPo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nJmW0Ym7ggRtIH3PYhPcIbCNvm6DQybqM63Uui8WmZuKlHrHi4p+LqSBzlLhfODAesa0EVZGldOzLgxp+Or139GhxvA5ho/8u2EFV8Vf+5DQxbHjxfmHsinNUCabo4dmKKMVqaeiUxiRFKBlGIL7B7MFgygDdt1ZiGLM10sXC8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nItJzaim; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=bk9jrdyLSzzlh2qNrsxy+Ma2eToLUYCp8/fYpIRAYFgM6qyVmFBaZ7BdUgKpoLQ95iDGmnSIIbwH82Km1/oUcTFTbz8RjIfb1+SPiGPaEYgADt4aTMJRUtUgqQIPO1JqOvwEkoP8N2Q0H0BkkZwjOo6zAhddXeYw/JVwPzlb5W4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FeFmUgv/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nItJzaim"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49139C2BCB0;
-	Fri,  8 May 2026 03:52:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FeFmUgv/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EE8DC2BCB0;
+	Fri,  8 May 2026 03:58:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778212346;
-	bh=21BAkKHFtEC2SBbmi0/xyEMqLfQmNHIchfHxvegOBlQ=;
+	s=k20201202; t=1778212686;
+	bh=Rb6o2pAgryP/W1ucJ1j0Y1K+zUjA9Nncf0PWkb75PPo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=nItJzaimk/rUxcwqj00km2JdIRlLh1YgeZlIBRdbZX/Ys/skt56NdxiF7tBr0BJIS
-	 35ILp1XqzLb/Swpl62BQuWkMSLjt31VH8DbzrG5plr55D4mDbfcydbWunr76KJVT1e
-	 el4P9M4iLKp3qM+Y/yU0hIfx2DqWA+5jHsI8SYMo8Iu7ZBSvTPR5WptQmFqkhIRp0y
-	 Ly1L2WrY5cmKDXB+esUn+OFor5PGDgeUr5vIV65oJmpFeVsDQxBuXz7nfV8I1spngD
-	 jy6kX7LNwcrxyvdcf8uW9JsWFBQNZI5mwOlfH4gkCTKDBGLZhR2bl78g5tUCCPGaN/
-	 dacWYfwTsoxgw==
+	b=FeFmUgv/5s7QSzA9d3jTuphN3bQgxmbTzAc0XrCeXcH2emQzccvCGQWYELHD8KvlE
+	 Bq2lpfkxEG1mWM+1vtyJUliBUEnLU9T/LuGuMysbHVl+UhcGiCmSqVaY9UoDV7s9u8
+	 bSNKkmK9vWmQxcKftbjuJmP2qdk5U0ylnCdcInMpissQB2CsbDoYve/LmRkHJklLzd
+	 YOAuK3bVXQg7eOXLd64wR/SF0YLBu/ejXlMburXYOJWzP3qLfzoAjy+I0Sub4jmVB9
+	 YLpf1Hv6ZbdJ/blK151x0pSDWwCteouh5RM9h014P0r9Cr14/mWOqnnOKgbkNdKv0W
+	 Sw2BXyTzqgDvg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 01/18] rust: add untrusted data abstraction
+Subject: Re: [PATCH 10/18] PCI/CMA: Validate Subject Alternative Name in
+ certificates
 Reply-To: sashiko@lists.linux.dev
 To: alistair23@gmail.com
 Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260508031710.514574-2-alistair.francis@wdc.com>
-References: <20260508031710.514574-2-alistair.francis@wdc.com>
+In-Reply-To: <20260508031710.514574-11-alistair.francis@wdc.com>
+References: <20260508031710.514574-11-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 03:52:25 +0000
-Message-Id: <20260508035226.49139C2BCB0@smtp.kernel.org>
+Date: Fri, 08 May 2026 03:58:05 +0000
+Message-Id: <20260508035806.0EE8DC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,256 +46,155 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 6 potential issue(=
 s) to consider:
-- [High] Missing owned interface causes memory leaks for `Untrusted<MaybeUn=
-init<T>>`.
-- [High] Calling `.len()` after `.as_mut_ptr()` on the same slice triggers =
-Undefined Behavior under Stacked Borrows.
-- [Medium] Unaligned reference creation in `Validate` documentation example=
-s triggers Undefined Behavior.
-- [Low] Missing `#[inline]` annotations on abstraction functions.
-- [Low] Nested imports violate the vertical import style guidelines.
-- [Low] Incomplete sentences, wrong examples, and inaccurate safety comment=
-s in documentation.
+- [High] Valid devices with a DSN of 0 are incorrectly rejected
+- [High] SSVID and SSID fields are incorrectly omitted for PCIe bridges
+- [High] Torn read of device identity prevents reauthentication after runti=
+me mutations
+- [High] Kbuild linkage failure when compiled as a loadable module
+- [Medium] Chaining `snprintf` without length checks risks logic errors and=
+ out-of-bounds stack reads
+- [Medium] Strict case-sensitive comparison of the Subject Alternative Name=
+ risks rejecting valid certificates
 --
 
-commit 2a47d2c142208915fc2ad9542e62ff816065513b
-Author: Benno Lossin <lossin@kernel.org>
+commit 72435325efe665bb825f47731ca5c0081b7acc14
+Author: Lukas Wunner <lukas@wunner.de>
+Subject: PCI/CMA: Validate Subject Alternative Name in certificates
 
-rust: add untrusted data abstraction
+This commit introduces functionality to validate the Subject Alternative Na=
+me
+(SAN) in PCIe Leaf Certificates. It parses the SAN using an ASN.1 decoder
+and verifies that the identity encoded in the certificate matches the
+device's identity in Config Space.
 
-This commit introduces the Untrusted and Unvalidated abstractions for handl=
-ing
-data from userspace or hardware. It uses the Validate trait to enforce
-validation before data can be safely accessed.
-
-Message-ID: <20240925205244.873020-2-benno.lossin@proton.me>
-
-> diff --git a/rust/kernel/validate.rs b/rust/kernel/validate.rs
-> new file mode 100644
-> index 0000000000000..ae0aa20e27b47
-> --- /dev/null
-> +++ b/rust/kernel/validate.rs
-> @@ -0,0 +1,605 @@
-> +// SPDX-License-Identifier: GPL-2.0
-
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 16abfd0e17e19..15512512fce7d 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
 [ ... ]
+> -obj-$(CONFIG_PCI_CMA)		+=3D cma.o
+> +obj-$(CONFIG_PCI_CMA)		+=3D cma.o cma.asn1.o
+> +$(obj)/cma.o:			$(obj)/cma.asn1.h
+> +$(obj)/cma.asn1.o:		$(obj)/cma.asn1.c $(obj)/cma.asn1.h
 
-> +use crate::prelude::Init;
-> +use core::{
-> +    mem::MaybeUninit,
-> +    ops::{Index, IndexMut},
-> +    ptr, slice,
-> +};
+If CONFIG_PCI_CMA is configured as a loadable module, will Kbuild compile
+two separate modules (cma.ko and cma.asn1.ko)?
 
-This isn't a bug, but should ptr and slice be on separate lines to follow t=
-he
-vertical import style guidelines?
+Because the ASN.1 compiler does not export the cma_decoder symbol, would
+the cma.ko module fail to link during modpost with an undefined symbol
+error?
 
+Should these objects be bundled into a composite object instead? For
+example:
+
+cma_module-y :=3D cma.o cma.asn1.o
+obj-$(CONFIG_PCI_CMA) +=3D cma_module.o
+
+> diff --git a/drivers/pci/cma.c b/drivers/pci/cma.c
+> index 998fde6366fb8..ee186f3619409 100644
+> --- a/drivers/pci/cma.c
+> +++ b/drivers/pci/cma.c
 [ ... ]
-
-> +impl<T: ?Sized> Untrusted<T> {
-> +    /// Marks the given value as untrusted.
-> +    ///
-> +    /// # Examples
-> +    ///
-> +    /// ```
-> +    /// use kernel::validate::Untrusted;
-> +    ///
-> +    /// # mod bindings { pub(crate) unsafe fn read_foo_info() -> [u8; 4]=
- { todo!() } };
-> +    /// fn read_foo_info() -> Untrusted<[u8; 4]> {
-> +    ///     // SAFETY: just an FFI call without preconditions.
-> +    ///     Untrusted::new(unsafe { bindings::read_foo_info() })
-> +    /// }
-> +    /// ```
-> +    pub fn new(value: T) -> Self
-> +    where
-> +        T: Sized,
-> +    {
-> +        Self(Unvalidated::new(value))
-> +    }
-
-Should small abstraction functions like new(), new_ref(), new_mut(), and
-validate() be annotated with #[inline] per the Rust subsystem coding
-guidelines?
-
-[ ... ]
-
-> +    ///         // SAFETY: `data` returned by `foo_hardware_read` is val=
-id for reads as long as the
-> +    ///         // `foo_hardware` object exists. That function updated t=
-he
-> +    ///         let data =3D unsafe { &mut *data };
-> +    ///         Ok(Untrusted::new_mut(data))
-> +    ///     }
-> +    /// }
-> +    /// ```
-> +    pub fn new_mut(value: &mut T) -> &mut Self {
-
-This isn't a bug, but it looks like the comment sentence "That function upd=
-ated
-the" is incomplete.
-
-[ ... ]
-
-> +    /// Turns a slice of uninitialized, untrusted values into an untrust=
-ed slice of uninitialized
-> +    /// values.
-> +    pub fn transpose_slice_uninit(
-> +        slice: &[MaybeUninit<Untrusted<T>>],
-> +    ) -> &Untrusted<[MaybeUninit<T>]>
-> +    where
-> +        T: Sized,
-> +    {
-> +        let ptr =3D slice.as_ptr().cast::<MaybeUninit<T>>();
-> +        // SAFETY: `ptr` and `len` come from the same mutable slice refe=
-rence.
-> +        let slice =3D unsafe { slice::from_raw_parts(ptr, slice.len()) };
-
-This isn't a bug, but the safety comment mentions a "mutable slice referenc=
-e",
-while the input slice is an immutable reference. Could this be corrected?
-
-> +        Untrusted::new_ref(slice)
-> +    }
+> +int pci_cma_note_san(void *context, size_t hdrlen, unsigned char tag,
+> +		     const void *value, size_t vlen)
+> +{
+> +	struct pci_cma_x509_context *ctx =3D context;
 > +
-> +    /// Turns a slice of uninitialized, untrusted values into an untrust=
-ed slice of uninitialized
-> +    /// values.
-> +    pub fn transpose_slice_uninit_mut(
-> +        slice: &mut [MaybeUninit<Untrusted<T>>],
-> +    ) -> &mut Untrusted<[MaybeUninit<T>]>
-> +    where
-> +        T: Sized,
-> +    {
-> +        // CAST: `MaybeUninit<T>` and `MaybeUninit<Untrusted<T>>` have t=
-he same layout.
-> +        let ptr =3D slice.as_mut_ptr().cast::<MaybeUninit<T>>();
-> +        // SAFETY: `ptr` and `len` come from the same mutable slice refe=
-rence.
-> +        let slice =3D unsafe { slice::from_raw_parts_mut(ptr, slice.len(=
-)) };
+> +	/* These aren't the drOIDs we're looking for. */
+> +	if (ctx->last_oid !=3D OID_CMA)
+> +		return 0;
+> +
+> +	if (tag !=3D ASN1_UTF8STR ||
+> +	    vlen !=3D ctx->expected_len ||
+> +	    memcmp(value, ctx->expected_name, vlen) !=3D 0) {
 
-Could calling slice.len() after slice.as_mut_ptr() trigger undefined behavi=
-or
-under Stacked Borrows?
+Does this perform a strict case-sensitive comparison of the Subject
+Alternative Name?
 
-Calling slice.len() creates a shared reference that invalidates the previou=
-sly
-derived mutable raw pointer.
+If a device vendor provisions the certificate using uppercase hexadecimal
+letters (a common standard for hardware IDs), could this strict memcmp()
+erroneously reject a valid device?
 
-Should the length be stored in a local variable before calling
-slice.as_mut_ptr()?
-
-> +        Untrusted::new_mut(slice)
-> +    }
+> +		pci_err(ctx->pdev, "Leaf certificate of slot %u "
+> +			"has invalid Subject Alternative Name\n", ctx->slot);
+> +		return -EINVAL;
+> +	}
+> +
+> +	ctx->found =3D true;
+> +
+> +	return 0;
 > +}
 > +
-> +impl<T> Untrusted<MaybeUninit<T>> {
-> +    /// Sets the underlying untrusted value.
-> +    ///
-> +    /// # Examples
-> +    ///
-> +    /// ```
-> +    /// use kernel::validate::Untrusted;
-> +    ///
-> +    /// let mut untrusted =3D Untrusted::new(42);
-> +    /// untrusted.write(24);
-> +    /// ```
-> +    pub fn write_uninit<E>(&mut self, value: impl Init<T, E>) -> Result<=
-&mut Untrusted<T>, E> {
+> +static unsigned int pci_cma_construct_san(struct pci_dev *pdev, char *na=
+me)
+> +{
+> +	unsigned int len;
+> +	u64 serial;
+> +
+> +	len =3D snprintf(name, CMA_NAME_MAX,
+> +		       "Vendor=3D%04hx:Device=3D%04hx:CC=3D%06x:REV=3D%02hhx",
+> +		       pdev->vendor, pdev->device, pdev->class, pdev->revision);
 
-This isn't a bug, but the example initializes Untrusted::new(42) instead of
-using MaybeUninit, and calls write() instead of write_uninit().
+The commit message mentions handling devices that mutate their identity
+at runtime, but this string is constructed using cached software state
+from probe time (like pdev->vendor).
 
-Additionally, does this interface leak owned resources?
+Since pci_get_dsn() reads the live hardware state, could a mutated device
+result in an inconsistent string containing a stale vendor/device ID but
+a new DSN? Will reauthentication fail without a full PCI rescan?
 
-There is no assume_init() or into_inner() method to consume the Untrusted
-MaybeUninit type by value and return the initialized Untrusted type.
+Additionally, snprintf() returns the number of characters that would have
+been written, not the actual bytes written.
 
-Because MaybeUninit does not drop the inner type when it goes out of scope,
-it seems any initialized resource requiring a destructor will be permanently
-leaked.
+If the inputs ever exceed the 79-byte CMA_NAME_MAX buffer (for instance,
+if a quirk mutates pdev->class to exceed 6 hex characters), the string
+will be truncated but len will reflect the untruncated size.
 
-[ ... ]
+Could this cause the later memcmp() check in pci_cma_note_san() to read
+out of bounds of the ctx->expected_name stack buffer? Should scnprintf()
+be used here instead to track the actual length written?
 
-> +impl<T> Untrusted<[MaybeUninit<T>]> {
-> +    /// Sets the underlying untrusted value.
-> +    ///
-> +    /// # Examples
-> +    ///
-> +    /// ```
-> +    /// use kernel::validate::Untrusted;
-> +    ///
-> +    /// let mut untrusted =3D Untrusted::new(42);
-> +    /// untrusted.write(24);
-> +    /// ```
-> +    pub fn write_uninit_slice<E>(
-> +        &mut self,
-> +        value: impl Init<[T], E>,
-> +    ) -> Result<&mut Untrusted<[T]>, E> {
-> +        let ptr: *mut [MaybeUninit<T>] =3D &mut self.0 .0;
-> +        // CAST: `MaybeUninit<T>` is `repr(transparent)`.
-> +        let ptr =3D ptr as *mut [T];
-> +        // SAFETY: `ptr` came from a reference and if `Err` is returned,=
- the underlying memory is
-> +        // considered uninitialized.
-> +        unsafe { value.__init(ptr) }.map(|()| {
-> +            let this =3D self.0.raw_mut().as_mut_ptr();
-> +            // CAST: `MaybeUninit<T>` is `repr(transparent)`.
-> +            let this =3D this.cast::<T>();
-> +            // SAFETY: `this` and `len` came from the same slice referen=
-ce.
-> +            let this =3D unsafe { slice::from_raw_parts_mut(this, self.0=
-.len()) };
+> +
+> +	if (pdev->hdr_type =3D=3D PCI_HEADER_TYPE_NORMAL)
+> +		len +=3D snprintf(name + len, CMA_NAME_MAX - len,
+> +				":SSVID=3D%04hx:SSID=3D%04hx",
+> +				pdev->subsystem_vendor, pdev->subsystem_device);
 
-Similar to transpose_slice_uninit_mut(), does calling self.0.len()
-invalidate the mutable pointer derived from self.0.raw_mut().as_mut_ptr()?
+PCIe Type 1 devices (bridges) can also implement the Subsystem Vendor ID
+capability.
 
-[ ... ]
+If a Type 1 bridge implements this capability and includes these fields in
+its certificate as required by the specification, will this condition
+unconditionally omit them and cause validation to fail?
 
-> +///         let ptr =3D raw.as_ptr();
-> +///         // CAST: `Data` only contains integers and has `repr(C)`.
-> +///         let ptr =3D ptr.cast::<Data>();
-> +///         // SAFETY: `ptr` came from a reference and the cast above is=
- valid.
-> +///         Ok(unsafe { &*ptr })
-> +///     }
-> +/// }
+> +
+> +	serial =3D pci_get_dsn(pdev);
+> +	if (serial)
+> +		len +=3D snprintf(name + len, CMA_NAME_MAX - len,
+> +				":%016llx", serial);
+> +
+> +	return len;
+> +}
 
-Could dereferencing this pointer trigger undefined behavior due to unaligned
-access?
+Looking at pci_get_dsn(), it returns 0 both when the DSN capability is
+missing and when the device's legitimate serial number is 0.
 
-A byte slice &[u8] only guarantees 1-byte alignment, so the resulting
-pointer might not satisfy the 8-byte alignment required by the Data struct.
+If a device implements the capability with a valid DSN of 0, will this
+check evaluate to false, omit the field, and reject a valid device?
 
-Should the example verify alignment before dereferencing?
+Would it be safer to explicitly check for the capability's presence via
+pci_find_ext_capability() instead?
 
-[ ... ]
+Also, pci_get_dsn() performs two separate 32-bit reads without a lock:
 
-> +///         // version 0 and 1 only use the lower 4 bits of flags
-> +///         if raw[1] & 0xf0 !=3D 0 {
-> +///             return Err(EINVAL);
-> +///         }
-> +///         if raw[1] =3D=3D 0 {}
-> +///         let ptr =3D raw.as_ptr();
+pci_read_config_dword(dev, pos, &dword);
+dsn =3D (u64)dword;
+pci_read_config_dword(dev, pos + 4, &dword);
+dsn |=3D ((u64)dword) << 32;
 
-This isn't a bug, but there appears to be an unused if block here.
-
-[ ... ]
-
-> +    fn new_ref(value: &T) -> &Self {
-> +        let ptr: *const T =3D value;
-> +        // CAST: `Self` is `repr(transparent)` and contains a `T`.
-> +        let ptr =3D ptr as *const Self;
-> +        // SAFETY: `ptr` came from a mutable reference valid for `'a`.
-> +        unsafe { &*ptr }
-> +    }
-
-This isn't a bug, but the safety comment says the pointer came from a "muta=
-ble
-reference", yet the value is an immutable reference. Could this be fixed?
+Could a concurrent mutation of the device identity result in a torn
+64-bit read during this check?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508031710.5145=
-74-1-alistair.francis@wdc.com?part=3D1
+74-1-alistair.francis@wdc.com?part=3D10
