@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B435B15539A;
-	Fri,  8 May 2026 04:36:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EE1815539A;
+	Fri,  8 May 2026 04:36:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778215003; cv=none; b=rXcteunWh+uCes1QLQg1CM1ft04WXA9/Xcbq+i8wzQ39wM8uoIATUycSPhuUyNS+sN6EehBZ9+VtpJMldoQXeLQyMDz5pslzg4DCrDkz68RT6RzLGRrPlNJXSIv65VMcil8ujHWQvgfd9vTq0EJeQdkkdg9UP1I4A51FcwDtIZk=
+	t=1778215007; cv=none; b=MSaqAy5TdZYqYdYV2j5xqs1WlbtQ6UmYhBKHz+1oN16VBGTn+pgG6z0xKe2YaImgutD1S+9Qox18jliIZyT5NCUKnh9ahQDgOI/zHdLFexQmF7yc6+1CIzbxo9R4x+rw6Hx2dmlz8KBxXozUf+Oj2v/sPtyV1JOvusIApBY6JmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778215003; c=relaxed/simple;
-	bh=RvhmeHPggHFvnpvKsNMm4x+OKY6vAIZNY1FNS7XUoxg=;
+	s=arc-20240116; t=1778215007; c=relaxed/simple;
+	bh=/RwghHanAn6lsGhprPzwE0OVa63WsjjjMpcAfzd54OU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Odq4qUvYP5zo52tXbqE2UYDtt2V+whTSVHNoISi5Yr6z2JOqO5TXGTj3i98HgXIoHFY/fccHHcDLwPe5HHvAyejtnAyQ3n2ZdnL/DXrtXn28ZDSaeU1Ey1Mvu7VSxfgyUAX6gL+YhYBeptbeRLyFXFkRxSmmkpfZQQJwHV+8kdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R6HBL0pi; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rtTXrrTLVq1/5M+8Ovm4XhCIBckR2DiGRcEBvmzOr6EyGFkbiasfLDUMelcHOZh1i5KHk2lpyIl32acqZGTd3B2ToaEUB99MqKdgyGMyEBNDs6HJJZvIIAbP/KSScftPTGORhkDWbB9e/JTKdAeJ2Cddxi1lv+6tjICr0rKsRhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=is6VcbmI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R6HBL0pi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BDF0C2BCB4;
-	Fri,  8 May 2026 04:36:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="is6VcbmI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7695C2BCB0;
+	Fri,  8 May 2026 04:36:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778215003;
-	bh=RvhmeHPggHFvnpvKsNMm4x+OKY6vAIZNY1FNS7XUoxg=;
+	s=k20201202; t=1778215007;
+	bh=/RwghHanAn6lsGhprPzwE0OVa63WsjjjMpcAfzd54OU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=R6HBL0pinAWktnoLCLexrXMErdJxfRI3rqc0tRU23vmwpMZG2iZWBFQiawvwdama7
-	 invyEx99A5op8QyhD40MMD/JRw1YfS5fMjapZ3HM3cThGZ00Xf9h4l4VV57lK4Vi78
-	 IS83/FicH4dpT7UBDUCjWXj2F+ANaJ82RldQ1UUqAzJq25dtHOv7RqTfeABdNoZ+cb
-	 0UFEA5Irs8HN0SSZO3odQp/QJ1wtZZCG0QaqnigEJFbnjrs+AhxM7LLVw2av/xWfJu
-	 YDIflHsAtCCxTMFzyXtuNCKBsL6scKYhv8VYhRgR4rj/2L50xgbv1v8Tn3jBvOuCzr
-	 W4DsRyW/AmuzA==
+	b=is6VcbmItJK+wucHOxI/Rzr8eobabubSF05p3tb3KkUVquAazMA+HCH+pqKrzyi6J
+	 LIM+sGXuVJbO0WGzX39AFq/k3JgzGlbRfy18JkP4g3H8Lx2Uv7QqxzOSYkb4hYVnra
+	 VhG0673LrTjdaj9L3s0/rpQOH/T17V9FTQyP9IcHLk0pqxas1s0CBP3YUUrTW5jpP+
+	 qzdxzU5UIGvroExRr7fJ4z/jaj35FTGLuqTM6fEGUH7MC7zgFF9IzoBoQTvydoWQAV
+	 seZNeVhyB7mTeI+qei0XPNfygRmSQyOxQODg4Zq9q1J7UuWbD1aTFmk5+BAV05ab4Y
+	 Qw/tLwZp5GYVA==
 From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>,
@@ -50,9 +50,9 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-alpha@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v7 15/24] alpha/PCI: Remove WARN from __pci_mmap_fits() and __legacy_mmap_fits()
-Date: Fri,  8 May 2026 04:35:34 +0000
-Message-ID: <20260508043543.217179-16-kwilczynski@kernel.org>
+Subject: [PATCH v7 16/24] alpha/PCI: Add static PCI resource attribute macros
+Date: Fri,  8 May 2026 04:35:35 +0000
+Message-ID: <20260508043543.217179-17-kwilczynski@kernel.org>
 X-Mailer: git-send-email 2.54.0
 In-Reply-To: <20260508043543.217179-1-kwilczynski@kernel.org>
 References: <20260508043543.217179-1-kwilczynski@kernel.org>
@@ -65,74 +65,55 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Remove the WARN() that fires when userspace attempts to mmap beyond
-the BAR bounds.  The check still returns 0 to reject the mapping,
-but the warning is excessive for normal operation.
+Add macros for declaring static binary attributes for Alpha's PCI
+resource files:
 
-A similar warning was removed from the PCI core in the commit
-3b519e4ea618 ("PCI: fix size checks for mmap() on /proc/bus/pci files").
+  - pci_dev_resource_attr(),        for dense/BWX systems (mmap dense)
+  - pci_dev_resource_sparse_attr(), for sparse systems (mmap sparse)
+  - pci_dev_resource_dense_attr(),  for dense companion files (mmap dense)
+
+Each macro creates a const bin_attribute with the BAR index stored in
+the .private property and the appropriate .mmap callback.
 
 Tested-by: Magnus Lindholm <linmag7@gmail.com>
 Tested-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Acked-by: Magnus Lindholm <linmag7@gmail.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- arch/alpha/kernel/pci-sysfs.c | 20 ++++----------------
- 1 file changed, 4 insertions(+), 16 deletions(-)
+ arch/alpha/kernel/pci-sysfs.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 8802f955256e..a8dade7d084b 100644
+index a8dade7d084b..b537313d1717 100644
 --- a/arch/alpha/kernel/pci-sysfs.c
 +++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -48,13 +48,7 @@ static int __pci_mmap_fits(struct pci_dev *pdev, int num,
- 	start = vma->vm_pgoff;
- 	size = ((len - 1) >> (PAGE_SHIFT - shift)) + 1;
- 
--	if (start < size && size - start >= nr)
--		return 1;
--	WARN(1, "process \"%s\" tried to map%s 0x%08lx-0x%08lx on %s BAR %d "
--		"(size 0x%08lx)\n",
--		current->comm, sparse ? " sparse" : "", start, start + nr,
--		pci_name(pdev), num, size);
--	return 0;
-+	return start < size && size - start >= nr;
+@@ -104,6 +104,26 @@ static int pci_mmap_resource_dense(struct file *filp, struct kobject *kobj,
+ 	return pci_mmap_resource(kobj, attr, vma, 0);
  }
  
++#define __pci_dev_resource_attr(_bar, _name, _suffix, _mmap)		\
++static const struct bin_attribute					\
++pci_dev_resource##_bar##_suffix##_attr = {				\
++	.attr = { .name = __stringify(_name), .mode = 0600 },		\
++	.private = (void *)(unsigned long)(_bar),			\
++	.mmap = (_mmap),						\
++}
++
++#define pci_dev_resource_attr(_bar)					\
++	__pci_dev_resource_attr(_bar, resource##_bar,,			\
++			    pci_mmap_resource_dense)
++
++#define pci_dev_resource_sparse_attr(_bar)				\
++	__pci_dev_resource_attr(_bar, resource##_bar##_sparse, _sparse,	\
++			    pci_mmap_resource_sparse)
++
++#define pci_dev_resource_dense_attr(_bar)				\
++	__pci_dev_resource_attr(_bar, resource##_bar##_dense, _dense,	\
++			    pci_mmap_resource_dense)
++
  /**
-@@ -259,7 +253,7 @@ int pci_create_resource_files(struct pci_dev *pdev)
- 
- static int __legacy_mmap_fits(struct pci_controller *hose,
- 			      struct vm_area_struct *vma,
--			      unsigned long res_size, int sparse)
-+			      unsigned long res_size)
- {
- 	unsigned long nr, start, size;
- 
-@@ -267,13 +261,7 @@ static int __legacy_mmap_fits(struct pci_controller *hose,
- 	start = vma->vm_pgoff;
- 	size = ((res_size - 1) >> PAGE_SHIFT) + 1;
- 
--	if (start < size && size - start >= nr)
--		return 1;
--	WARN(1, "process \"%s\" tried to map%s 0x%08lx-0x%08lx on hose %d "
--		"(size 0x%08lx)\n",
--		current->comm, sparse ? " sparse" : "", start, start + nr,
--		hose->index, size);
--	return 0;
-+	return start < size && size - start >= nr;
- }
- 
- static inline int has_sparse(struct pci_controller *hose,
-@@ -296,7 +284,7 @@ int pci_mmap_legacy_page_range(struct pci_bus *bus, struct vm_area_struct *vma,
- 
- 	res_size = (mmap_type == pci_mmap_mem) ? bus->legacy_mem->size :
- 						 bus->legacy_io->size;
--	if (!__legacy_mmap_fits(hose, vma, res_size, sparse))
-+	if (!__legacy_mmap_fits(hose, vma, res_size))
- 		return -EINVAL;
- 
- 	return hose_mmap_page_range(hose, vma, mmap_type, sparse);
+  * pci_remove_resource_files - cleanup resource files
+  * @pdev: pci_dev to cleanup
 -- 
 2.54.0
 
