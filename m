@@ -1,177 +1,236 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9349817BCA
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 04:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A28182367B5
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 04:31:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778214323; cv=none; b=FSHNtphyA8sQkQEa1/wOaGgekU7er2+RtGLNGDYZGJK71v3d8lZnFW5rCGOOtD7S4PV7MX4ZKvVPp9Qhc+g9iUNIyLroFQLpuWMR/nalZH5KHx89eKDvFlgHxQELbdwh6NCqfFLmVi0mxGWYl+DtLkDqm93qRyKo4W3IdS6l5ew=
+	t=1778214696; cv=none; b=pIU+DGETogzS4rEGYPKHylF3z9uTEx9NAH5d4pkYyv6sU4QUSAUlCo0A+bG98u2MP0ESLxM8umqedvHiBCTJVM/Z/pHMitMAPa6AAdkRHe+XKgs4wxLdvt3Sv9D1tEIzWDNPm5TlQia1BysTfHU577BwAI7wmqIqzdjd6cnpto8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778214323; c=relaxed/simple;
-	bh=5moNjiP+glR3IeuB3JfTCJYgT19DShuteoQK3bfNoio=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ua7EyQpOAT5uFmyU35xsoyn1tjCTtC2VB6cQ8KdWf5VohcmCvjCdtkHMjqF+F7vpr1xt1vAl6y/FS4FTRWEGr6wGkAkuxsTXlFcEZCfVafMrGtstWGizIDrIM13CqcUk8iOMn1GeFP5zdmvtq0PS5W8wiYQcIYzZmj4E1FdPlos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qyK3bsFF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778214696; c=relaxed/simple;
+	bh=YFRykaqgq0p0tx19utSc/mGsGV5tKxzrwjPAi8InNRc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hqvHKPFTYtpiJnb3jJA3SQr1YvBFVn3IKeHCZvk0+jhgF7uJNrxwgym2iSbZdtNCjeoSPl6U1/4o7JQJufHxGcueIY2kIM3XiKo6//NmTHU9/WEWFivK1XTjllOqlGXuwintEYPNVpGNNV7/mJbgnnSK54Dje2hKCsYuvYG1Ia4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=lquLDqNr; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qyK3bsFF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10940C2BCB0;
-	Fri,  8 May 2026 04:25:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778214323;
-	bh=5moNjiP+glR3IeuB3JfTCJYgT19DShuteoQK3bfNoio=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=qyK3bsFFzueu/P2+0Pbx2Niu+tVzXkbZGHLWdVeB8Tp3oOtIBNCRhbFuWWXBDFv+0
-	 pDIGYLH9GLxrTnfHImHBjC9m8LMwIgDd93bxcm47aWg1SXDQVwmQuNws760aB4Cdni
-	 bIjCM194Wqpb6sadIDKv4NiubuFA6LZ9ACDwvnud8i2LLViJ/FR6xCR6ul0QDxfgau
-	 KS+d4ztZKJjUb2X/JuvStLYu0zv63M+S358BrjdODty5dWyHY+/bbhpEUlebpveRGS
-	 z1zW6dwxsKhXLxC+VHYZwtPBMaVLziwdnNng6UfWir3J6KXGn1nJuOUp55JmqXRSTO
-	 Hg82Oey3SQXUA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 16/18] lib: rspdm: Support SPDM certificate validation
-Reply-To: sashiko@lists.linux.dev
-To: alistair23@gmail.com
-Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260508031710.514574-17-alistair.francis@wdc.com>
-References: <20260508031710.514574-17-alistair.francis@wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 04:25:22 +0000
-Message-Id: <20260508042523.10940C2BCB0@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="lquLDqNr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=zOjzfqdILjuppl54PXVImfO724apQlMc35Rh9swFQtI=;
+	b=lquLDqNrxjs/oh67RR47nwkcUk+2lC26bv6HU961SpNC0WcZe78XyIgchg3JLP
+	m1/3KSAOpapWUgRDj1ruCk0b7FuLyAFUfBE1cZKUqn/2KbJshJaTYZ5ztnacGdKE
+	mmgsBua5CNJFwk/tRUgMDqQpHjnjsj4nsuQZdSayah+vE=
+Received: from [192.168.50.71] (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgC3mmoQZ_1pWkbJCw--.142S2;
+	Fri, 08 May 2026 12:31:14 +0800 (CST)
+Message-ID: <10503cf8-2f2c-4a8d-8c24-f1056859edd8@163.com>
+Date: Fri, 8 May 2026 12:31:12 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/2] PCI: cadence: Add debugfs property to provide
+ LTSSM status of the PCIe link
+To: sashiko@lists.linux.dev, Manikandan K Pillai <mpillai@cadence.com>
+Cc: linux-pci@vger.kernel.org
+References: <20260508034101.1910036-3-18255117159@163.com>
+ <20260508041956.C8F10C2BCB0@smtp.kernel.org>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260508041956.C8F10C2BCB0@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:QCgvCgC3mmoQZ_1pWkbJCw--.142S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3JrWkKF18Kw1xGry5XF1xGrg_yoWxur4xpa
+	9rGFyfCF4xXFWYv3Z2v3WUXF1fJF93Aa47Gw4vkw17uFnxuryUuFnrKFW5GrW3WrWqqr12
+	v3Z8tasrWF43AFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRYNtsUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBK3W2n9ZxK4ZAAA3H
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] validate_cert_chain overwrites `leaf_key` when validating multiple=
- provisioned slots, corrupting state and breaking authentication.
-- [High] validate_cert_chain leaks dynamically allocated `x509_certificate`=
- structures on all error paths.
-- [High] validate_cert_chain leaks the leaf `x509_certificate` structure up=
-on successful validation.
---
 
-commit 3ec614986c351b34141bcbc9f49c6cce87d68be8
-Author: Alistair Francis <alistair@alistair23.me>
 
-    lib: rspdm: Support SPDM certificate validation
+On 5/8/26 12:19, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
+> - [High] PCIE_CADENCE_DEBUGFS tristate configuration causes build failure and module linkage issues.
+> - [High] Race condition in debugfs deinitialization leads to unprotected hardware access.
+> - [High] Missing Runtime PM reference in debugfs read handler causes system crash.
+> - [Medium] Missing link teardown in `cdns_pcie_hpa_host_disable`.
+> - [Medium] Incorrect bitmask `CDNS_PCIE_LGA_LTSSM_STATUS_MASK` truncates LTSSM states.
+> --
+> 
+> commit b032928b3c42715d7bb97e0bd26a99d252cd98d9
+> Author: Hans Zhang <18255117159@163.com>
+> 
+> PCI: cadence: Add debugfs property to provide LTSSM status of the PCIe link
+> 
+> Add the debugfs property to provide a view of the current link's LTSSM
+> status from the Root Port device.
+> 
+>> diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
+>> index 9e651d5459735..cb010bc97aad3 100644
+>> --- a/drivers/pci/controller/cadence/Kconfig
+>> +++ b/drivers/pci/controller/cadence/Kconfig
+>> @@ -6,6 +6,15 @@ menu "Cadence-based PCIe controllers"
+>>   config PCIE_CADENCE
+>>   	tristate
+>>   
+>> +config PCIE_CADENCE_DEBUGFS
+>> +	tristate "Cadence PCIe debugfs entries"
+> 
+> Could this Kconfig option be changed to a bool?
 
-This commit adds support for validating the SPDM certificate chain. It perf=
-orms
-basic sanity checks to ensure the chain is correct, uses supported signatur=
-es,
-and is not blacklisted in the kernel.
+This is the reminder from Mani that I made the necessary modifications 
+for, because the Cadence PCIe driver is a support module.
 
-> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> index 69b6f67a6ef52..4c8ee553bb699 100644
-> --- a/lib/rspdm/state.rs
-> +++ b/lib/rspdm/state.rs
+> 
+> When configured as a module (=m), Kbuild defines
+> CONFIG_PCIE_CADENCE_DEBUGFS_MODULE, not CONFIG_PCIE_CADENCE_DEBUGFS. As a
+> result, the preprocessor check in pcie-cadence.h evaluates to false, causing
+> the header to declare empty static inline stubs. When pcie-cadence-debugfs.c
+> defines the non-static versions, the build fails with a function redefinition
+> error.
+> 
+> Furthermore, changing the check to IS_ENABLED(CONFIG_PCIE_CADENCE_DEBUGFS)
+> would cause linkage errors if the core drivers are built-in while the debugfs
+> feature is a module, since built-in code cannot call module functions.
+> 
+> [ ... ]
+> 
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-debugfs.c b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+>> new file mode 100644
+>> index 0000000000000..a4f0c4f6f98f4
+>> --- /dev/null
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+>> @@ -0,0 +1,208 @@
+> [ ... ]
+>> +#define CDNS_PCIE_LGA_LTSSM_STATUS_MASK	GENMASK(29, 24)
+> 
+> Does this mask need to be extended to cover all possible states?
+> 
+> This mask covers only 6 bits, allowing it to extract values up to 63.
+> However, the cdns_pcie_ltssm enum defines states up to 127. If the
+> hardware enters a state 64 or higher, FIELD_GET will silently truncate
+> the value, making state 65 appear as state 1.
 
-[ ... ]
+Hi Manikandan,
 
-> @@ -786,4 +789,68 @@ pub(crate) fn get_certificate(&mut self, slot: u8) -=
-> Result<(), Error> {
-> =20
->          Ok(())
->      }
-> +
-> +    pub(crate) fn validate_cert_chain(&mut self, slot: u8) -> Result<(),=
- Error> {
+I have already confirmed this with Manikandan. You can ask Manikandan to 
+confirm it again.
 
-[ ... ]
 
-> +            let cert_ptr =3D unsafe {
-> +                from_err_ptr(bindings::x509_cert_parse(
-> +                    &cert_chain_buf[offset..] as *const _ as *const c_vo=
-id,
-> +                    cert_len as usize,
-> +                ))?
-> +            };
-> +            let cert =3D unsafe { *cert_ptr };
-> +
-> +            if cert.unsupported_sig || cert.blacklisted {
-> +                pr_err!("Certificate was rejected\n");
-> +                to_result(-(bindings::EKEYREJECTED as i32))?;
-> +            }
+> 
+> [ ... ]
+>> +static int ltssm_status_show(struct seq_file *s, void *v)
+>> +{
+>> +	struct cdns_pcie *pci = s->private;
+>> +	enum cdns_pcie_ltssm ltssm;
+>> +	u32 reg;
+>> +
+>> +	if (pci->is_hpa) {
+>> +		reg = cdns_pcie_hpa_readl(pci, REG_BANK_IP_REG,
+>> +					CDNS_PCIE_HPA_PHY_DBG_STS_REG0);
+>> +		ltssm = FIELD_GET(CDNS_PCIE_HPA_LTSSM_STATUS_MASK, reg);
+>> +	} else {
+>> +		reg = cdns_pcie_readl(pci, CDNS_PCIE_LM_BASE);
+>> +		ltssm = FIELD_GET(CDNS_PCIE_LGA_LTSSM_STATUS_MASK, reg);
+>> +	}
+> 
+> Is a runtime PM reference required here before accessing the hardware?
+> 
+> Since the driver supports power management, the controller might be in a
+> low-power, clock-gated state when this debugfs file is read. Reading the
+> registers without calling pm_runtime_get_sync() first could cause a bus fault
+> and crash the system.
+> 
+> [ ... ]
+> 
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+>> index c0e1194a936b3..38a0157b60dc7 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+>> @@ -659,6 +659,7 @@ void cdns_pcie_ep_disable(struct cdns_pcie_ep *ep)
+>>   	pci_epc_mem_free_addr(epc, ep->irq_phys_addr, ep->irq_cpu_addr,
+>>   			      SZ_128K);
+>>   	pci_epc_mem_exit(epc);
+>> +	cdns_pcie_debugfs_deinit(&ep->pcie);
+>>   }
+> 
+> Should cdns_pcie_debugfs_deinit() be called earlier in the teardown process?
 
-Is it possible this code leaks the x509_certificate structure on error path=
-s?
+Will change.
 
-If any validation step fails (such as cert.unsupported_sig or an error in
-public_key_verify_signature), returning early with the ? operator will bypa=
-ss
-the x509_free_certificate cleanup for both the currently parsing certificate
-(cert_ptr) and the previously parsed certificate (prev_cert).
+> 
+> If a userspace process is currently reading the debugfs file while the module
+> is being removed, ltssm_status_show() could attempt to read registers after
+> the hardware has been deactivated, potentially resulting in a bus fault.
+> Removing the debugfs entries first ensures no new reads can begin while the
+> hardware is shut down.
+> 
+> [ ... ]
+> 
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+>> index 0f540bed58e88..8bf7cc106413b 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+>> @@ -309,6 +309,18 @@ int cdns_pcie_hpa_host_link_setup(struct cdns_pcie_rc *rc)
+>>   }
+>>   EXPORT_SYMBOL_GPL(cdns_pcie_hpa_host_link_setup);
+>>   
+>> +void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc)
+>> +{
+>> +	struct pci_host_bridge *bridge;
+>> +
+>> +	bridge = pci_host_bridge_from_priv(rc);
+>> +	pci_stop_root_bus(bridge->bus);
+>> +	pci_remove_root_bus(bridge->bus);
+>> +
+> 
+> Is it necessary to stop the PCIe link here?
+The HPA driver does not yet provide the "stop the PCIe link" function. 
+More will be added later.
 
-Since they are stored as raw pointers, the drop semantics do not free them.
+> 
+> The setup path explicitly starts the link with cdns_pcie_start_link(),
+> but this teardown function omits stopping it or disabling PTM responses.
+> Leaving the link active after the bus is unregistered could lead to
+> spurious interrupts or unhandled DMA requests.
+> 
+>> +	cdns_pcie_debugfs_deinit(&rc->pcie);
+> 
+> Similar to the endpoint path, should debugfs teardown happen before
+> the hardware is disabled to avoid concurrent access faults?
 
-> +
-> +            if let Some(prev) =3D prev_cert {
-> +                // Check against previous certificate
-> +                let rc =3D unsafe { bindings::public_key_verify_signatur=
-e((*prev).pub_, cert.sig) };
-> +
-> +                if rc < 0 {
-> +                    pr_err!("Signature validation error\n");
-> +                    to_result(rc)?;
-> +                }
-> +            }
+Will change.
 
-[ ... ]
+> 
+>> +}
+> 
+> [ ... ]
+> 
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> index 0bc9e6e90e0e0..873d496c440f0 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> @@ -370,6 +370,7 @@ void cdns_pcie_host_disable(struct cdns_pcie_rc *rc)
+>>   
+>>   	cdns_pcie_host_deinit(rc);
+>>   	cdns_pcie_host_link_disable(rc);
+>> +	cdns_pcie_debugfs_deinit(&rc->pcie);
+>>   }
+> 
+> Should this debugfs teardown be moved to the beginning of the function
+> for the same reason mentioned above?
 
-> +        if let Some(prev) =3D prev_cert {
-> +            if let Some(validate) =3D self.validate {
-> +                let rc =3D unsafe { validate(self.dev, slot, prev) };
-> +                to_result(rc)?;
-> +            }
-> +
-> +            self.leaf_key =3D unsafe { Some((*prev).pub_) };
 
-Does this overwrite self.leaf_key when validating multiple provisioned slot=
-s?
+Will change.
 
-The caller in lib.rs iterates over all provisioned slots, calling
-validate_cert_chain() for each:
 
-    let mut provisioned_slots =3D state.provisioned_slots;
-    while (provisioned_slots as usize) > 0 {
-        let slot =3D provisioned_slots.trailing_zeros() as u8;
+Best regards,
+Hans
+> 
 
-        if let Err(e) =3D state.validate_cert_chain(slot) {
-            return e.to_errno() as c_int;
-        }
-
-        provisioned_slots &=3D !(1 << slot);
-    }
-
-Since self.leaf_key is a single Option, this will overwrite the previous pu=
-blic
-key pointer without freeing it.
-
-If a device has multiple provisioned slots, could signature verification la=
-ter
-in challenge() fail because self.leaf_key holds the public key of the last
-provisioned slot rather than the first?
-
-Also, does this leak the leaf x509_certificate structure on successful
-validation?
-
-At the successful completion of the certificate chain loop, the final
-certificate remains in prev_cert. The public key is extracted into
-self.leaf_key, but bindings::x509_free_certificate(prev) is never called.
-
-While spdm_destroy() later frees the public key via public_key_free(), the
-x509_certificate structure itself and its internal fields appear to be leak=
-ed
-permanently.
-
-> +        }
-> +
-> +        Ok(())
-> +    }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508031710.5145=
-74-1-alistair.francis@wdc.com?part=3D16
