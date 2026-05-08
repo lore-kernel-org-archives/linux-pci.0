@@ -1,272 +1,486 @@
-Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37050221F39
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 08:21:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3A123C554B;
+	Fri,  8 May 2026 09:51:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778228512; cv=none; b=IDzeMAVT6hs1h8i9qT0MbA6FuZJALhv1i1/xE6BsJ+lDUcXH7bEHN3ekh6ZelEgHMvIs5zzgSlZByScBWqpQvZ6oRbU76zZj1ofOe2sUbu2XfiQ1KETxJQ8AA90y8FBgSXDeDAr7SXIN6G+1YPDaqrAxZr4QgZ4GRtOGOeaRcoY=
+	t=1778233879; cv=none; b=PgpMSEaonbmpAjI1FYox1q8z9QehJ8AkXF+HgJkNm3DJch8HhQYWL3zQT7ke6l02tYJcn6SK20WSEqlNmvpa+8vd9gBqlRRiz7jCkAQL6Y7auy3wbOY41qdLpOu9MXIHdpV7EMGwnu2vhtd7VbLlfIEj0eOCHmqYV+81WVuffGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778228512; c=relaxed/simple;
-	bh=V3h4GANUuWozhDK+uvj1J1Ryvja7twnUcXsVZFRh0dE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=n/RofQC/CpjBuNxpQzmcjL39t/jBnxwzr3LhHQyuGEUjeq3djHetCjLE0fYYxncZRSYZr1dUcsW1dn27dcPZ/2D1xiFgT7GlFqg40OOhh8wcl5ytezgZTGYfPZweCL+Yk3RG4QOov8djzVEFxZrRqvKDXmq07kKOyndtrY+nzkg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=x11/5k0G; arc=none smtp.client-ip=115.124.30.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1778233879; c=relaxed/simple;
+	bh=1mXFFKF1dPf7BWJnw0/0ZdqTCwv+sOJ/6jrp+H/xCgk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=u7w5IDFW5rfa10SydGVkpnxxUHq+ujabGUyMj7KdyCRYyUQxg4qgEJAQi9o6r8qFbYBBi82REvm3m5PIvnyaXQiVOOJSYnlFM+Ai/zGd0olgYD1jKOdph43ZLfYpdBm8UHD9+gdeuMDgVRWVbZ0YlaI4ByJPD1s/NnFSBTm4ubE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ui1qPHeN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="x11/5k0G"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1778228504; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=mcMIv8qaWKZuq2oCWwsjDndEyMqehlPDhIppWbr0hL8=;
-	b=x11/5k0GaivZU1q7GgDoK8gM6gZNfoiK789qXKNj97V2OZLAvuvP8Th1ciLjU26KjSzYBeuADbyz0P3Iwv4ed8WvjqAsHFWAK+RfPG728IcK3rkmyyvuT3WE66S5rpvld+VvtDwYy7locewdgw5d7q8YJ3WFZkCsSYQxY1N9OFw=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R441e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0X2Wne7b_1778228499;
-Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0X2Wne7b_1778228499 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 08 May 2026 16:21:44 +0800
-From: Guixin Liu <kanie@linux.alibaba.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Andy Shevchenko <andriy.shevchenko@intel.com>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	xlpang@linux.alibaba.com,
-	oliver.yang@linux.alibaba.com
-Subject: [PATCH v12 2/2] PCI: Check ROM header and data structure addr before accessing
-Date: Fri,  8 May 2026 16:21:28 +0800
-Message-ID: <20260508082128.3344255-3-kanie@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.7
-In-Reply-To: <20260508082128.3344255-1-kanie@linux.alibaba.com>
-References: <20260508082128.3344255-1-kanie@linux.alibaba.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ui1qPHeN"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2FAABC32786;
+	Fri,  8 May 2026 09:51:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778233878;
+	bh=1mXFFKF1dPf7BWJnw0/0ZdqTCwv+sOJ/6jrp+H/xCgk=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=Ui1qPHeN/SfZ1xTtfY+wjgQNbb0a9t+QMVLjmWBeRze06ubv3G/V6y6BJpbdcvTGK
+	 1SSX1Obz821A89qTksACU9hhXCWThfBWnxdY2t1PoQEQWS6iEo/S3xr0VQUd41Ubi/
+	 /M1RXypkEtQ8YW/ZIW995EhDKe8SObje+vO90EBbwI0IwRcPX2fp61ljZch3lBJhO1
+	 xNIc3zdKtgGa+1nDptX8L2hZBK8814Unza4XrggSDcu/bGSaoQN1MtZNmSnK2NkjPT
+	 wrX6Y8PxB0adLsu1a+gfngH7G+qq26Gdipqz9Ajy53VUDqa06sJQlqtEKtINOVZgcG
+	 i6Xt7RqzOAexA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC8ABCD3447;
+	Fri,  8 May 2026 09:51:17 +0000 (UTC)
+From: Pawel Laszczak via B4 Relay <devnull+pawell.cadence.com@kernel.org>
+Date: Fri, 08 May 2026 12:06:39 +0200
+Subject: [PATCH v3] usb: cdnsp: Add support for device-only configuration
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
+X-B4-Tracking: v=1; b=H4sIAK61/WkC/yXMTQ5AMBBA4avIrDUp4ieuIiLVmTIWrbSIRNxds
+ fwW710QyDMFaJMLPB0c2NmIIk1Az8pOJBijIZd5JUvZCOsG9DhoZw1PglRdYYamqVUBsVk9GT6
+ /X9f/Dvu4kN7eCdz3A3TPUF9xAAAA
+X-Change-ID: 20260508-no_drd_config-ea76d1df87a3
+To: Peter Chen <peter.chen@kernel.org>, Roger Quadros <rogerq@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, Pawel Laszczak <pawell@cadence.com>
+X-Mailer: b4 0.15.1
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1778234813; l=13735;
+ i=pawell@cadence.com; h=from:subject:message-id;
+ bh=eob8YUk5Cc1H/Q9UO05mmC3MRyfXop55OMzN4ymHMIE=;
+ b=zcPIuwSdnmA3hiW1fy9l6iHlXNmz5OM+5anpH6hlFxJNaPaXxvP5nojtAsavpMVCoyRyibwZt
+ ToNMGUFrbg4Cfip5MpRdRV7KNZBBCESE/zbEj0dEfb5XTG5Uc87oHyV
+X-Developer-Key: i=pawell@cadence.com; a=ed25519;
+ pk=EUPBvLO9CDg7j6defeDl2iqi+z5Ivqu4Z46aiqe7dYc=
+X-Endpoint-Received: by B4 Relay for pawell@cadence.com/default with
+ auth_id=707
+X-Original-From: Pawel Laszczak <pawell@cadence.com>
+Reply-To: pawell@cadence.com
 
-We meet a crash when running stress-ng on x86_64 machine:
+From: Pawel Laszczak <pawell@cadence.com>
 
-  BUG: unable to handle page fault for address: ffa0000007f40000
-  RIP: 0010:pci_get_rom_size+0x52/0x220
-  Call Trace:
-  <TASK>
-    pci_map_rom+0x80/0x130
-    pci_read_rom+0x4b/0xe0
-    kernfs_file_read_iter+0x96/0x180
-    vfs_read+0x1b1/0x300
+This patch introduces support for the Cadence USBSSP (cdnsp)
+controller in hardware configurations where the Dual-Role Device (DRD)
+register block is not implemented or is inaccessible.
 
-Our analysis reveals that the ROM space's start address is
-0xffa0000007f30000, and size is 0x10000. Because of broken ROM
-space, before calling readl(pds), the pds's value is
-0xffa0000007f3ffff, which is already pointed to the ROM space
-end, invoking readl() would read 4 bytes therefore cause an
-out-of-bounds access and trigger a crash.
-Fix this by adding image header and data structure checking.
+In such cases, the driver cannot rely on the DRD logic to manage roles
+and must operate exclusively in a fixed peripheral/host mode.
 
-We also found another crash on arm64 machine:
+The change in BAR indexing (from BAR 2 to BAR 1) is a direct
+consequence of the 32-bit addressing used in this specific
+DRD-disabled hardware layout, compared to the 64-bit addressing
+used in DRD-enabled configurations.
 
-  Unable to handle kernel paging request at virtual address
-ffff8000dd1393ff
-  Mem abort info:
-  ESR = 0x0000000096000021
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x21: alignment fault
+Tested on a PCI platform with a hardware configuration that lacks
+DRD support. Platform-side changes are included to support the PCI
+glue layer's property injection to handle this specific layout.
 
-The call trace is the same with x86_64, but the crash reason is
-that the data structure addr is not aligned with 4, and arm64
-machine report "alignment fault". Fix this by adding alignment
-checking.
-
-Fixes: 47b975d234ea ("PCI: Avoid iterating through memory outside the resource window")
-Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com>
-Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> # pci_ids.h
+Signed-off-by: Pawel Laszczak <pawell@cadence.com>
 ---
- drivers/pci/rom.c | 128 +++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 110 insertions(+), 18 deletions(-)
+v3:
+  - Improved descriptions and comments for better clarity.
+  - Introduced the 'no_drd' property to indicate missing DRD register block.
+  - Added support for fixed host-only and device-only configurations.
+  - Ensured cdns_otg_disable_irq is called only when no_drd is false.
+  - Updated cdns_drd_gadget_on/off to ensure PHY mode is correctly 
+    handled even if DRD is disabled.
 
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index d4a141bd148b..9744f1a2923a 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -6,9 +6,12 @@
-  * (C) Copyright 2004 Silicon Graphics, Inc. Jesse Barnes <jbarnes@sgi.com>
-  */
+v2:
+  - Changed otg_irq to be optionali.
+  - Added cdns->no_drd check in cdns_power_is_lost.
+  - Added cdns->no_drd check in cdns_get_id.
+---
+ drivers/usb/cdns3/cdns3-plat.c | 26 ++++++++++++++----------
+ drivers/usb/cdns3/cdnsp-pci.c  | 46 +++++++++++++++++++++++++++++++++---------
+ drivers/usb/cdns3/core.c       |  3 ++-
+ drivers/usb/cdns3/core.h       |  4 ++++
+ drivers/usb/cdns3/drd.c        | 44 ++++++++++++++++++++++++++++++++++++++--
+ include/linux/pci_ids.h        |  1 +
+ 6 files changed, 101 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/usb/cdns3/cdns3-plat.c b/drivers/usb/cdns3/cdns3-plat.c
+index 3fe3109a3688..86c963a072db 100644
+--- a/drivers/usb/cdns3/cdns3-plat.c
++++ b/drivers/usb/cdns3/cdns3-plat.c
+@@ -81,6 +81,7 @@ static int cdns3_plat_probe(struct platform_device *pdev)
+ 	if (cdns->pdata && cdns->pdata->override_apb_timeout)
+ 		cdns->override_apb_timeout = cdns->pdata->override_apb_timeout;
  
-+#include <linux/align.h>
- #include <linux/bits.h>
- #include <linux/kernel.h>
- #include <linux/export.h>
-+#include <linux/io.h>
-+#include <linux/overflow.h>
- #include <linux/pci.h>
- #include <linux/sizes.h>
- #include <linux/slab.h>
-@@ -27,6 +30,16 @@
- #define PCI_ROM_DATA_STRUCT_SIGNATURE		0x52494350
- #define PCI_ROM_DATA_STRUCT_LEN			0x0A
++	cdns->no_drd = device_property_read_bool(dev, "no_drd");
+ 	platform_set_drvdata(pdev, cdns);
  
-+/*
-+ * Per PCI Local Bus Spec 2.x / PCI Firmware Spec r3.3 sec 5.1.3
-+ * Table 5-2, a conformant PCI Data Structure is at least 24 bytes
-+ * (0x18), large enough to cover every fixed field this driver
-+ * reads (up to the Indicator byte at offset 0x15).  Reject smaller
-+ * device-claimed lengths so the follow-up readers in
-+ * pci_get_rom_size() cannot escape the mapped ROM window.
-+ */
-+#define PCI_ROM_DATA_STRUCT_MIN_LEN		0x18
-+
- /**
-  * pci_enable_rom - enable ROM decoding for a PCI device
-  * @pdev: PCI device to enable
-@@ -84,6 +97,95 @@ void pci_disable_rom(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_disable_rom);
+ 	ret = platform_get_irq_byname(pdev, "host");
+@@ -113,21 +114,24 @@ static int cdns3_plat_probe(struct platform_device *pdev)
  
-+static bool pci_rom_is_header_valid(struct pci_dev *pdev,
-+				    void __iomem *image,
-+				    void __iomem *rom,
-+				    size_t size,
-+				    bool expect_valid)
-+{
-+	unsigned long rom_end = (unsigned long)rom + size - 1;
-+	unsigned long header_end;
-+	u16 signature;
+ 	cdns->dev_regs	= regs;
+ 
+-	cdns->otg_irq = platform_get_irq_byname(pdev, "otg");
+-	if (cdns->otg_irq < 0)
+-		return dev_err_probe(dev, cdns->otg_irq,
+-				     "Failed to get otg IRQ\n");
+-
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "otg");
+-	if (!res) {
+-		dev_err(dev, "couldn't get otg resource\n");
+-		return -ENXIO;
++	if (!cdns->no_drd) {
++		cdns->otg_irq = platform_get_irq_byname(pdev, "otg");
++		if (cdns->otg_irq < 0)
++			return dev_err_probe(dev, cdns->otg_irq,
++					     "Failed to get otg IRQ\n");
 +
-+	/*
-+	 * Per PCI Firmware Specification r3.3, sec 5.1, each image must
-+	 * start on a 512-byte boundary and must contain the PCI Expansion
-+	 * ROM header.  Because @rom is page-aligned (returned by ioremap()),
-+	 * checking 512-byte alignment of @image is equivalent to enforcing
-+	 * the spec's sector-aligned layout within the ROM.  This also
-+	 * satisfies the natural-alignment requirement of readw() on archs
-+	 * such as arm64 that disallow unaligned IOMEM access.
-+	 */
-+	if (!IS_ALIGNED((unsigned long)image, PCI_ROM_IMAGE_SECTOR_SIZE))
-+		return false;
-+
-+	if (check_add_overflow((unsigned long)image, PCI_ROM_HEADER_SIZE - 1,
-+				&header_end))
-+		return false;
-+
-+	if (image < rom || header_end > rom_end)
-+		return false;
-+
-+	/* Standard PCI ROMs start out with these bytes 55 AA */
-+	signature = readw(image);
-+	if (signature != PCI_ROM_IMAGE_SIGNATURE) {
-+		if (expect_valid) {
-+			pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
-+				 PCI_ROM_IMAGE_SIGNATURE, signature);
-+		} else {
-+			pci_info(pdev, "No more image in the PCI ROM\n");
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "otg");
++		if (!res) {
++			dev_err(dev, "couldn't get otg resource\n");
++			return -ENXIO;
 +		}
-+		return false;
-+	}
++		cdns->otg_res = *res;
++	} else {
++		dev_dbg(dev, "No DRD support\n");
+ 	}
+ 
+ 	cdns->phyrst_a_enable = device_property_read_bool(dev, "cdns,phyrst-a-enable");
+ 
+-	cdns->otg_res = *res;
+-
+ 	cdns->wakeup_irq = platform_get_irq_byname_optional(pdev, "wakeup");
+ 	if (cdns->wakeup_irq == -EPROBE_DEFER)
+ 		return cdns->wakeup_irq;
+diff --git a/drivers/usb/cdns3/cdnsp-pci.c b/drivers/usb/cdns3/cdnsp-pci.c
+index 432007cfe695..992700479172 100644
+--- a/drivers/usb/cdns3/cdnsp-pci.c
++++ b/drivers/usb/cdns3/cdnsp-pci.c
+@@ -19,6 +19,7 @@
+ 
+ struct cdnsp_wrap {
+ 	struct platform_device *plat_dev;
++	struct property_entry prop[3];
+ 	struct resource dev_res[6];
+ 	int devfn;
+ };
+@@ -29,10 +30,15 @@ struct cdnsp_wrap {
+ #define RES_HOST_ID		3
+ #define RES_DEV_ID		4
+ #define RES_DRD_ID		5
+-
++/* DRD PCI configuration - 64-bit addressing */
++/* First PCI function */
+ #define PCI_BAR_HOST		0
+-#define PCI_BAR_OTG		0
+ #define PCI_BAR_DEV		2
++/* Second PCI function */
++#define PCI_BAR_OTG		0
++/* Device only PCI configuration - 32-bit addressing */
++/* First PCI function */
++#define PCI_BAR_ONLY_DEV	1
+ 
+ #define PCI_DEV_FN_HOST_DEVICE	0
+ #define PCI_DEV_FN_OTG		1
+@@ -65,6 +71,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 	struct cdnsp_wrap *wrap;
+ 	struct resource *res;
+ 	struct pci_dev *func;
++	bool no_drd = false;
+ 	int ret = 0;
+ 
+ 	/*
+@@ -75,11 +82,14 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 		    pdev->devfn != PCI_DEV_FN_OTG))
+ 		return -EINVAL;
+ 
++	if (pdev->device == PCI_DEVICE_ID_CDNS_UDC_USBSSP)
++		no_drd = true;
 +
-+	return true;
-+}
+ 	func = cdnsp_get_second_fun(pdev);
+-	if (!func)
++	if (!func && !no_drd)
+ 		return -EINVAL;
+ 
+-	if (func->class == PCI_CLASS_SERIAL_USB_XHCI ||
++	if ((func && func->class == PCI_CLASS_SERIAL_USB_XHCI) ||
+ 	    pdev->class == PCI_CLASS_SERIAL_USB_XHCI) {
+ 		ret = -EINVAL;
+ 		goto put_pci;
+@@ -93,7 +103,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	if (pci_is_enabled(func)) {
++	if (func && pci_is_enabled(func)) {
+ 		wrap = pci_get_drvdata(func);
+ 	} else {
+ 		wrap = kzalloc_obj(*wrap);
+@@ -106,10 +116,12 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 	res = wrap->dev_res;
+ 
+ 	if (pdev->devfn == PCI_DEV_FN_HOST_DEVICE) {
++		int bar_dev = no_drd ? PCI_BAR_ONLY_DEV : PCI_BAR_DEV;
 +
-+static bool pci_rom_is_data_struct_valid(struct pci_dev *pdev,
-+					 void __iomem *pds,
-+					 void __iomem *rom,
-+					 size_t size)
-+{
-+	unsigned long rom_end = (unsigned long)rom + size - 1;
-+	unsigned long end;
-+	u32 signature;
-+	u16 data_len;
+ 		/* Function 0: host(BAR_0) + device(BAR_2). */
+ 		dev_dbg(&pdev->dev, "Initialize Device resources\n");
+-		res[RES_DEV_ID].start = pci_resource_start(pdev, PCI_BAR_DEV);
+-		res[RES_DEV_ID].end = pci_resource_end(pdev, PCI_BAR_DEV);
++		res[RES_DEV_ID].start = pci_resource_start(pdev, bar_dev);
++		res[RES_DEV_ID].end = pci_resource_end(pdev, bar_dev);
+ 		res[RES_DEV_ID].name = "dev";
+ 		res[RES_DEV_ID].flags = IORESOURCE_MEM;
+ 		dev_dbg(&pdev->dev, "USBSSP-DEV physical base addr: %pa\n",
+@@ -145,9 +157,20 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 		wrap->dev_res[RES_IRQ_OTG_ID].flags = IORESOURCE_IRQ;
+ 	}
+ 
+-	if (pci_is_enabled(func)) {
++	if (no_drd || pci_is_enabled(func)) {
++		u8 idx = 0;
 +
-+	/*
-+	 * Some CPU architectures require IOMEM access addresses to
-+	 * be aligned, for example arm64, so since we're about to
-+	 * call readl(), we check here for 4-byte alignment.
-+	 */
-+	if (!IS_ALIGNED((unsigned long)pds, 4))
-+		return false;
+ 		/* set up platform device info */
+ 		pdata.override_apb_timeout = CHICKEN_APB_TIMEOUT_VALUE;
 +
-+	if (check_add_overflow((unsigned long)pds, PCI_ROM_DATA_STRUCT_LEN + 1,
-+				&end))
-+		return false;
++		if (no_drd) {
++			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "peripheral");
++			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("no_drd");
++		} else {
++			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "otg");
++			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("usb-role-switch");
++		}
 +
-+	if (pds < rom || end > rom_end)
-+		return false;
-+
-+	signature = readl(pds);
-+	if (signature != PCI_ROM_DATA_STRUCT_SIGNATURE) {
-+		pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
-+			 PCI_ROM_DATA_STRUCT_SIGNATURE, signature);
-+		return false;
-+	}
-+
-+	data_len = readw(pds + PCI_ROM_DATA_STRUCT_LEN);
-+	if (data_len < PCI_ROM_DATA_STRUCT_MIN_LEN || data_len == U16_MAX)
-+		return false;
-+
-+	if (check_add_overflow((unsigned long)pds, data_len - 1, &end))
-+		return false;
-+
-+	if (end > rom_end)
-+		return false;
-+
-+	return true;
-+}
-+
- /**
-  * pci_get_rom_size - obtain the actual size of the ROM image
-  * @pdev: target PCI device
-@@ -99,38 +201,28 @@ static size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom,
- 			       size_t size)
+ 		memset(&plat_info, 0, sizeof(plat_info));
+ 		plat_info.parent = &pdev->dev;
+ 		plat_info.fwnode = pdev->dev.fwnode;
+@@ -158,6 +181,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
+ 		plat_info.dma_mask = pdev->dma_mask;
+ 		plat_info.data = &pdata;
+ 		plat_info.size_data = sizeof(pdata);
++		plat_info.properties = wrap->prop;
+ 		wrap->devfn = pdev->devfn;
+ 		/* register platform device */
+ 		wrap->plat_dev = platform_device_register_full(&plat_info);
+@@ -185,13 +209,17 @@ static void cdnsp_pci_remove(struct pci_dev *pdev)
+ 	if (wrap->devfn == pdev->devfn)
+ 		platform_device_unregister(wrap->plat_dev);
+ 
+-	if (!pci_is_enabled(func))
++	if (!func || !pci_is_enabled(func))
+ 		kfree(wrap);
+ 
+ 	pci_dev_put(func);
+ }
+ 
+ static const struct pci_device_id cdnsp_pci_ids[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
++	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
++	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
++	  .class = PCI_CLASS_SERIAL_USB_CDNS },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
+ 	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
+diff --git a/drivers/usb/cdns3/core.c b/drivers/usb/cdns3/core.c
+index 6a8d1fefbc0d..504bdf13ea80 100644
+--- a/drivers/usb/cdns3/core.c
++++ b/drivers/usb/cdns3/core.c
+@@ -70,7 +70,8 @@ static void cdns_role_stop(struct cdns *cdns)
+ static void cdns_exit_roles(struct cdns *cdns)
  {
- 	void __iomem *image;
--	int last_image;
- 	unsigned int length;
-+	bool last_image;
+ 	cdns_role_stop(cdns);
+-	cdns_drd_exit(cdns);
++	if (!cdns->no_drd)
++		cdns_drd_exit(cdns);
+ }
  
- 	image = rom;
- 	do {
- 		void __iomem *pds;
--		/* Standard PCI ROMs start out with these bytes 55 AA */
--		if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
--			pci_info(pdev, "Invalid PCI ROM header signature: expecting %#06x, got %#06x\n",
--				 PCI_ROM_IMAGE_SIGNATURE, readw(image));
-+		if (!pci_rom_is_header_valid(pdev, image, rom, size, true))
- 			break;
--		}
-+
- 		/* Get the PCI data structure and check its "PCIR" signature */
- 		pds = image + readw(image + PCI_ROM_POINTER_TO_DATA_STRUCT);
--		if (readl(pds) != PCI_ROM_DATA_STRUCT_SIGNATURE) {
--			pci_info(pdev, "Invalid PCI ROM data signature: expecting %#010x, got %#010x\n",
--				 PCI_ROM_DATA_STRUCT_SIGNATURE, readl(pds));
-+		if (!pci_rom_is_data_struct_valid(pdev, pds, rom, size))
- 			break;
--		}
-+
- 		last_image = readb(pds + PCI_ROM_LAST_IMAGE_INDICATOR) &
- 				   PCI_ROM_LAST_IMAGE_INDICATOR_BIT;
- 		length = readw(pds + PCI_ROM_IMAGE_LEN);
- 		image += length * PCI_ROM_IMAGE_SECTOR_SIZE;
--		/* Avoid iterating through memory outside the resource window */
--		if (image >= rom + size)
-+
-+		if (!last_image &&
-+		    !pci_rom_is_header_valid(pdev, image, rom, size, false))
- 			break;
--		if (!last_image) {
--			if (readw(image) != PCI_ROM_IMAGE_SIGNATURE) {
--				pci_info(pdev, "No more image in the PCI ROM\n");
--				break;
--			}
--		}
- 	} while (length && !last_image);
+ /**
+diff --git a/drivers/usb/cdns3/core.h b/drivers/usb/cdns3/core.h
+index bca973b999a4..8c492fda924c 100644
+--- a/drivers/usb/cdns3/core.h
++++ b/drivers/usb/cdns3/core.h
+@@ -84,6 +84,9 @@ struct cdns3_platform_data {
+  *                        value in CHICKEN_BITS_3 will be preserved.
+  * @gadget_init: pointer to gadget initialization function
+  * @host_init: pointer to host initialization function
++ * @no_drd: DRD register block is inaccessible. The controller is hardwired to
++ *          single role (host or device) or the logic for role switching is
++ *          missing.
+  */
+ struct cdns {
+ 	struct device			*dev;
+@@ -124,6 +127,7 @@ struct cdns {
+ 	u32                             override_apb_timeout;
+ 	int (*gadget_init)(struct cdns *cdns);
+ 	int (*host_init)(struct cdns *cdns);
++	bool				no_drd;
+ };
  
- 	/* never return a size larger than the PCI resource window */
--- 
-2.43.7
+ int cdns_hw_role_switch(struct cdns *cdns);
+diff --git a/drivers/usb/cdns3/drd.c b/drivers/usb/cdns3/drd.c
+index 84fb38a5723a..f87cf85cb97a 100644
+--- a/drivers/usb/cdns3/drd.c
++++ b/drivers/usb/cdns3/drd.c
+@@ -87,6 +87,9 @@ int cdns_get_id(struct cdns *cdns)
+ {
+ 	int id;
+ 
++	if (cdns->no_drd)
++		return 0;
++
+ 	id = readl(&cdns->otg_regs->sts) & OTGSTS_ID_VALUE;
+ 	dev_dbg(cdns->dev, "OTG ID: %d", id);
+ 
+@@ -107,7 +110,7 @@ void cdns_clear_vbus(struct cdns *cdns)
+ {
+ 	u32 reg;
+ 
+-	if (cdns->version != CDNSP_CONTROLLER_V2)
++	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
+ 		return;
+ 
+ 	reg = readl(&cdns->otg_cdnsp_regs->override);
+@@ -120,7 +123,7 @@ void cdns_set_vbus(struct cdns *cdns)
+ {
+ 	u32 reg;
+ 
+-	if (cdns->version != CDNSP_CONTROLLER_V2)
++	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
+ 		return;
+ 
+ 	reg = readl(&cdns->otg_cdnsp_regs->override);
+@@ -181,6 +184,9 @@ int cdns_drd_host_on(struct cdns *cdns)
+ 	u32 val, ready_bit;
+ 	int ret;
+ 
++	if (cdns->no_drd)
++		goto phy_set;
++
+ 	/* Enable host mode. */
+ 	writel(OTGCMD_HOST_BUS_REQ | OTGCMD_OTG_DIS,
+ 	       &cdns->otg_regs->cmd);
+@@ -197,6 +203,7 @@ int cdns_drd_host_on(struct cdns *cdns)
+ 	if (ret)
+ 		dev_err(cdns->dev, "timeout waiting for xhci_ready\n");
+ 
++phy_set:
+ 	phy_set_mode(cdns->usb2_phy, PHY_MODE_USB_HOST);
+ 	phy_set_mode(cdns->usb3_phy, PHY_MODE_USB_HOST);
+ 	return ret;
+@@ -210,6 +217,9 @@ void cdns_drd_host_off(struct cdns *cdns)
+ {
+ 	u32 val;
+ 
++	if (cdns->no_drd)
++		goto phy_set;
++
+ 	writel(OTGCMD_HOST_BUS_DROP | OTGCMD_DEV_BUS_DROP |
+ 	       OTGCMD_DEV_POWER_OFF | OTGCMD_HOST_POWER_OFF,
+ 	       &cdns->otg_regs->cmd);
+@@ -218,6 +228,8 @@ void cdns_drd_host_off(struct cdns *cdns)
+ 	readl_poll_timeout_atomic(&cdns->otg_regs->state, val,
+ 				  !(val & OTGSTATE_HOST_STATE_MASK),
+ 				  1, 2000000);
++
++phy_set:
+ 	phy_set_mode(cdns->usb2_phy, PHY_MODE_INVALID);
+ 	phy_set_mode(cdns->usb3_phy, PHY_MODE_INVALID);
+ }
+@@ -234,6 +246,9 @@ int cdns_drd_gadget_on(struct cdns *cdns)
+ 	u32 ready_bit;
+ 	int ret, val;
+ 
++	if (cdns->no_drd)
++		goto phy_set;
++
+ 	/* switch OTG core */
+ 	writel(OTGCMD_DEV_BUS_REQ | reg, &cdns->otg_regs->cmd);
+ 
+@@ -251,6 +266,7 @@ int cdns_drd_gadget_on(struct cdns *cdns)
+ 		return ret;
+ 	}
+ 
++phy_set:
+ 	phy_set_mode(cdns->usb2_phy, PHY_MODE_USB_DEVICE);
+ 	phy_set_mode(cdns->usb3_phy, PHY_MODE_USB_DEVICE);
+ 	return 0;
+@@ -265,6 +281,9 @@ void cdns_drd_gadget_off(struct cdns *cdns)
+ {
+ 	u32 val;
+ 
++	if (cdns->no_drd)
++		goto phy_set;
++
+ 	/*
+ 	 * Driver should wait at least 10us after disabling Device
+ 	 * before turning-off Device (DEV_BUS_DROP).
+@@ -277,6 +296,8 @@ void cdns_drd_gadget_off(struct cdns *cdns)
+ 	readl_poll_timeout_atomic(&cdns->otg_regs->state, val,
+ 				  !(val & OTGSTATE_DEV_STATE_MASK),
+ 				  1, 2000000);
++
++phy_set:
+ 	phy_set_mode(cdns->usb2_phy, PHY_MODE_INVALID);
+ 	phy_set_mode(cdns->usb3_phy, PHY_MODE_INVALID);
+ }
+@@ -392,6 +413,19 @@ int cdns_drd_init(struct cdns *cdns)
+ 	u32 state, reg;
+ 	int ret;
+ 
++	if (cdns->no_drd) {
++		cdns->dr_mode = usb_get_dr_mode(cdns->dev);
++		cdns->version = CDNSP_CONTROLLER_V2;
++
++		if (cdns->dr_mode != USB_DR_MODE_HOST &&
++		    cdns->dr_mode != USB_DR_MODE_PERIPHERAL) {
++			dev_err(cdns->dev, "Incorrect dr_mode\n");
++			return -EINVAL;
++		}
++
++		return 0;
++	}
++
+ 	regs = devm_ioremap_resource(cdns->dev, &cdns->otg_res);
+ 	if (IS_ERR(regs))
+ 		return PTR_ERR(regs);
+@@ -492,6 +526,9 @@ int cdns_drd_init(struct cdns *cdns)
+ 
+ int cdns_drd_exit(struct cdns *cdns)
+ {
++	if (cdns->no_drd)
++		return 0;
++
+ 	cdns_otg_disable_irq(cdns);
+ 
+ 	return 0;
+@@ -500,6 +537,9 @@ int cdns_drd_exit(struct cdns *cdns)
+ /* Indicate the cdns3 core was power lost before */
+ bool cdns_power_is_lost(struct cdns *cdns)
+ {
++	if (cdns->no_drd)
++		return false;
++
+ 	if (cdns->version == CDNS3_CONTROLLER_V0) {
+ 		if (!(readl(&cdns->otg_v0_regs->simulate) & BIT(0)))
+ 			return true;
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 24cb42f66e4b..a6b9b6f6d8cc 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2424,6 +2424,7 @@
+ #define PCI_DEVICE_ID_CDNS_USBSS	0x0100
+ #define PCI_DEVICE_ID_CDNS_USB		0x0120
+ #define PCI_DEVICE_ID_CDNS_USBSSP	0x0200
++#define PCI_DEVICE_ID_CDNS_UDC_USBSSP	0x0400
+ 
+ #define PCI_VENDOR_ID_ARECA		0x17d3
+ #define PCI_DEVICE_ID_ARECA_1110	0x1110
+
+---
+base-commit: 17c7841d09ee7d33557fd075562d9289b6018c90
+change-id: 20260508-no_drd_config-ea76d1df87a3
+
+Best regards,
+--  
+Pawel Laszczak <pawell@cadence.com>
+
 
