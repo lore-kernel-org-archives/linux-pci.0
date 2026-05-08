@@ -1,79 +1,79 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010036.outbound.protection.outlook.com [52.101.56.36])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78FEC33D515;
-	Fri,  8 May 2026 06:10:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.36
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778220610; cv=fail; b=XeIDoazIjkbS0j+5AQzdGc+FtLeeRsb0s+9be2IEV+zvYn3DlBRsDPhN9f7NzgMIULiU3LEZF+TEeK6XBgHjE4T89KnmR/14MMtt9YwFB5k7yhEza2eA3nSjgrmzFczFy93fd8yU6uyECs5qcaiNg9J1HdsIUJRAEuqim1Cif08=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778220610; c=relaxed/simple;
-	bh=Xzffqq58skJ1NK1+QHza5G/k3ydtMwD39bW6QL+20VU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=AFcnoNamdtIEPYH+fqSgPFUp/GBNzW6IZaad08VS6TbHlugyBDVAhzYfw1EnHIzLmTu97HmCGiZgvBxs57n8rnoPD/y/1/oz6vgbYIzhV5Il64xsfvhQaxYR5wGaSvgA4eSw3GGNlNF9PCIPJfccOGlI91uVSj7N8SoDpZU96WE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=IKPWsMMB; arc=fail smtp.client-ip=52.101.56.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EECD34CFC6
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 06:36:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778222214; cv=none; b=DcRe7zU8+fUQ2z3WIfx40NCZzVBwrNKH03UO0Xl+ABYIq4jVTeYGNrrjmuu4mkVY1jreD2bguxm5L0oKlOovlHaab3vTd068ovz2MtoT1fcjYBaKa/pp7xGJk5juMXFduZi+uH7p8frILBtCHrXyZ55+W2zLeHoir03P2MgoB5c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778222214; c=relaxed/simple;
+	bh=9jqLAACjfGjKanuQVNeQ7eoQMeqQBRzeZ3dpRjunfuQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tMURTZTsYFjIlFKxqlu8FMuvftEeAzkcD2HW2ybWfYo4ssehpe/m4+X39ieAWCYRtU+uib3Sb7flD7PsjcT4Eo87ENwEkDjKMz4fxDEn6LqOWRvSVw1hzZ+Ys+azUbJ1ltizsRk49x75l5DY1e9F7tcWhKV5ORYwBzzH7J3QFzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=V4KBoMSO; arc=none smtp.client-ip=209.85.215.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="IKPWsMMB"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=b12tzY3HnSt+RCLpkE/QrwnFKL2OkMR2Psi90qJuSBcIE/Z+kdkAq7LB2/SRTHg7Hfog6Bd3FhELw+BxSLpyIxDitjuuOxU9/BdlMXAohQOvXIN2PMWlx42Aqod6Yr9fOunL2W7mNlXVkGjQ1Pp+Lu019jaUL4CoyEZTSORILXvnX5UT3kD++IzaBcoTq+1SPKTjX8ag5kZMPvvB3YKuWDRGSrFPpHgH2djYTQF0URhSN3muV1jqnaXpQhsA6+6lvQUkCuXhYrSM6VwoweE/LO49qo6LVQNa3oP+IZpsJeGTvOyqA8VRELnHxl2Zn2MLwCofShFk/hpAY0En2OOSKQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gjife0XanYDZglXm0oLTDB4RwhnWbTcXxwgBqQXfrjs=;
- b=UlZodM+KS1N5HlLZ79or9jXzU6vWIxOBHMqZxKOgtXn6Zx+/uS2ri+x1yoU16n/oRfG+vpZUznNppxA1iEYr6ifvCT++RiJB9jLQlJqM/AU2DKoPmF0X1OEHOIQYC2HULWuBnj+2XB2mA+fuqyIbSEExcnyzwbA5jPNoCl/cHl+tnVBDanyxotS2e9NWbOt7+KJ1MHE2GVS7BDLmwvLVEu6f+aDZ3kFFEC5uFm/701YOb3EdiKzKMaqWtUBqczcTYMVN6o0chnlEEJCm9trkxgU53cjNAxVOBiDR+nAH0m0edxplsWuHFymGCp0xW4tb0N+chp/SUO9VBAMogam0hw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.23.194) smtp.rcpttodomain=cixtech.com smtp.mailfrom=ti.com; dmarc=pass
- (p=quarantine sp=none pct=100) action=none header.from=ti.com; dkim=none
- (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gjife0XanYDZglXm0oLTDB4RwhnWbTcXxwgBqQXfrjs=;
- b=IKPWsMMBNcPEfBryiW3lS+TGupaRgsP/8XZFHWYfgD2UZ3EE9yuKTVc7LSsw4XgwfewlxEthOyWSVAgK7UPEvCS992GTjZrjcQI5QnBPxGfDvnN+GJeo70B6tCEGNakKS8+9f4h/NXKaKIByUZtG4L0DtMlp/slVrxUpOvWV43Y=
-Received: from CH5PR02CA0005.namprd02.prod.outlook.com (2603:10b6:610:1ed::7)
- by BY5PR10MB4354.namprd10.prod.outlook.com (2603:10b6:a03:20c::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.15; Fri, 8 May
- 2026 06:09:58 +0000
-Received: from DS3PEPF000099DE.namprd04.prod.outlook.com
- (2603:10b6:610:1ed:cafe::9d) by CH5PR02CA0005.outlook.office365.com
- (2603:10b6:610:1ed::7) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9891.19 via Frontend Transport; Fri,
- 8 May 2026 06:09:58 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.194)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.23.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.23.194; helo=lewvzet200.ext.ti.com; pr=C
-Received: from lewvzet200.ext.ti.com (198.47.23.194) by
- DS3PEPF000099DE.mail.protection.outlook.com (10.167.17.200) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9891.9 via Frontend Transport; Fri, 8 May 2026 06:09:57 +0000
-Received: from DLEE205.ent.ti.com (157.170.170.85) by lewvzet200.ext.ti.com
- (10.4.14.103) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 8 May
- 2026 01:09:55 -0500
-Received: from DLEE209.ent.ti.com (157.170.170.98) by DLEE205.ent.ti.com
- (157.170.170.85) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 8 May
- 2026 01:09:55 -0500
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DLEE209.ent.ti.com
- (157.170.170.98) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Fri, 8 May 2026 01:09:55 -0500
-Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64869qwd764459;
-	Fri, 8 May 2026 01:09:52 -0500
-From: Aksh Garg <a-garg7@ti.com>
-To: <linux-pci@vger.kernel.org>, <helgaas@kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <s-vadapalli@ti.com>,
-	<hans.zhang@cixtech.com>, <vigneshr@ti.com>, <danishanwar@ti.com>,
-	<a-garg7@ti.com>
-Subject: [PATCH] MAINTAINERS: Add Aksh Garg as PCI CADENCE reviewer
-Date: Fri, 8 May 2026 11:39:51 +0530
-Message-ID: <20260508060951.840233-1-a-garg7@ti.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="V4KBoMSO"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-c80148ae949so723322a12.2
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2026 23:36:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1778222202; x=1778827002; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=22ncQpWLdF2X8pTtJBnqzgTb5DeYk3+PKhZtvYNM/EM=;
+        b=V4KBoMSOVmUilffq/53aV8sUf+yvt7SDCNNXjUJpOemFFhyW9EYBhX91yjFh3+jBOg
+         ifnM4Puk0SkxvCcYvKTCy/oQdJ72WZ5zdA5ULyBiCzYc06/hJ1twPiMLI93GqoCrUdoY
+         szZCnvJqgbcrrMTv8y0yX6I/5AmrF5NEOreBs=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778222202; x=1778827002;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=22ncQpWLdF2X8pTtJBnqzgTb5DeYk3+PKhZtvYNM/EM=;
+        b=Vlve/LirP8cYaiyDmJUcUGb3+ws4hfe1jF1hgxdzJfw3jf3RVw0z1e3XvYP5NYRWLg
+         TjcMvA6aTWmjM7+LYNPXnCN7BeVFb+eE5xxTaIx90+Gk5uARiLp0Dnczkq11+/A4Qaww
+         4nNKpY9WZigO+Xmh0RWTvCrR/C2W8qvBXrlVoRSay7qMDXfNv1py8O2n2Q8BAyQLEXDq
+         1ZQ1FdKZX7Uu5VGwts7NPRHBoMtKw24VeatuhxGalAPwfIEAJKFl3NSsN/nphlmIN/cc
+         EJZNMhvR7QoBdxg6Rg6hzo7a+x6Nw6UACylymcu4UHpzpQhZLualCF0cA4wJtWv6CRRR
+         IIPg==
+X-Forwarded-Encrypted: i=1; AFNElJ9qyrxe3je0dZQSnkmoKDv0/dqDq43OieTwMfEqnKCOGiSVM/aLCddESolb5a/4nnTi2RzvCOJf2/A=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxyiRW608KfW9NsEofseFKcikxq8CaXj4aSduVOld/HU7kbqZEJ
+	+M0pKQJfLjZgoAy2SwcKW/Hv72JEZbsmkYG4R4blkSndyeLSpTGhn95A0rnLTCkBRA==
+X-Gm-Gg: AeBDiesfXmF8QPpZvAQX8eQLm5NcnGMBs3vH4NzKG8S5qaeNoNtFAbaTocsQjDsUiVp
+	kdLHzI1neb6gFVm5EM32lrzSXlK9krwgWqZYZ78SiBQrU97ey60+nXpx+pZxw9RQ/f6BfmZlHOQ
+	EELKjWU6xlAR/TiulygLmHwfQroLrcqzYoNtKaRiLKFcnHb5i0KApK3Ob2d/gIf1HGJzFhaUhrR
+	6BWBBtNVIID42F488rXXXx6Wdv6EyDEND3IOaahncTgFKBdYLbKXaqKDTy1QhAs39FZrBPwovCC
+	EutK0cIbT5fshaRhwzann/qhASyLE7W6vMHokrRuFvOODf1eV+P/dhUhGvC31wOhlPCWCE5ckVC
+	ClGZYzzHv6cLJLoxQPCAJs6k2eJvb+Y0n/fq0i4SLwJBrQbMj303oKE0pMnlJCeMq7xlU32LauM
+	WUVBKdTz4RIS+7tm8Vq9oW/mPShfv1mmZKoSWQLr1l/G3uCe3E9WxEVZTTWZt3WXumppvah375q
+	Yb/5UDe/GhmgMJEZg==
+X-Received: by 2002:a05:6a20:939d:b0:398:6ea8:21f7 with SMTP id adf61e73a8af0-3aa5a9559ebmr11751571637.15.1778222202210;
+        Thu, 07 May 2026 23:36:42 -0700 (PDT)
+Received: from wenstp920.tpe.corp.google.com ([2a00:79e0:201d:8:bac0:e137:a29f:62c])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83967dbee14sm14850717b3a.48.2026.05.07.23.36.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 May 2026 23:36:41 -0700 (PDT)
+From: Chen-Yu Tsai <wenst@chromium.org>
+To: Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Cc: Chen-Yu Tsai <wenst@chromium.org>,
+	devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] dt-bindings: PCI: mediatek-gen3: Allow memory-region for restricted DMA buffer
+Date: Fri,  8 May 2026 14:36:32 +0800
+Message-ID: <20260508063633.3894348-1-wenst@chromium.org>
+X-Mailer: git-send-email 2.54.0.563.g4f69b47b94-goog
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,60 +81,41 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS3PEPF000099DE:EE_|BY5PR10MB4354:EE_
-X-MS-Office365-Filtering-Correlation-Id: efbb3632-3f8f-47d1-8807-08deacc86e50
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|376014|36860700016|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	tIBve/wY3qCr9XICUimYZbGSxzS3kCy3S1vOckzqJXjHE6nf/k15TYqFLvQMq9eUNjK7dPF6QySWKy6hHSGT454xEk254OSlFz1vJ1LihUdTHXngmMClnb2+lfu7NZlWq20rlY+JSJFJ4DuQiRcI8LgTTfGqzflgXg91AKTZNWd4uns32uR7JUEspgRKM7jMjel71iy2eatsiaRd9Idp6BFrsvVzOz8sIS9IQij6hKISJI5/Re9828EPceXaUF0cNNSHUljqkM+sOnbDl2sT+fQLsa9o+XTn0KLrk4eXCLcFO6qKe5yibMs+fE7P0XYG0NlEUWkj2ALEVGWVnky3KFFRh9ExErdk/vJwUVUaUo+yHzPCVAKJdqgcGzuiTIMWfQOQbAOxjZa/0VAI/+oXgayj+y5Gf8Ib2fJVRrfYTy2fXFQdq9ODWgQPtUdCvibzUlhAyzXqzUJsZ4HQ0mhDhxu3Sso3cbgkvJFD+zl5lXDNf5uA56eYGSUlezlHcemTsHYubtwuI+GaI/cGhBAVecDnCYBZkZ+IyAV26d+ZmmYYXxQ65tiE8HBAsUFlNm0RDna2NX8Awz5ilgSPfucpUOeMPc3E0FJyLu8+34mpqaHLbDEI50XSYzahWUu/9gfj7gOEOHpIrTlPDe3Caboj9B6uK1G8zjmhER6UGIaOykLM43vaoM/xK9D4ZtYnfEY6P0yNVMOtOQToUp3+9SZDf3G6xw+PvtAnKTyvyOZMmos=
-X-Forefront-Antispam-Report:
-	CIP:198.47.23.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet200.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(376014)(36860700016)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	YJ2j15RJSaPJQoKF0bYJ3YXoIiSaFIoLNJETF2WGkkfdqqT7rSkg89AkT0KnK1I7+m+fpRKBbDiwvrM4lAmBoRLOUWkjA7eWAFYwBBGIAuPmHogvara3VG5GaJaKHC+Nc1QmJEYr7gFUj4MJlk0T2I3xUcuNNDeSFLnR2Ytf0KZNwfBUkkXyF4xuAlvmlyLDcgHc68B8UyHBquZZYLGS2hD0JJgmnYjl6TC+uk9kiDIeeBneNKAAyCC20NfSvJgLWC3kqBmU7E3B/y2aOp09JT3w1YSA0L2rudS1Tihir0xHRoYP1iJ/XskTLkxsTYEYswRsAsOo/KruKA1drY1ibYW6wAh6M/yGMMwb5DeyQeVzFCDZ5P6DY/0YvzA2W6N7XycFLkK7kpPcFVytT3X0PUMatLiB00y6UroXmVIyT5PQAzgXRqQV6JnrB0XY8jWr
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 May 2026 06:09:57.6301
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: efbb3632-3f8f-47d1-8807-08deacc86e50
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.194];Helo=[lewvzet200.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DS3PEPF000099DE.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4354
 
-I wish to contribute to the review process for Cadence PCIe IP drivers,
-hence add myself as a reviewer.
+On some SoCs without an IOMMU behind the PCIe controller, the PCIe
+controller memory access could be limited to a small region by the
+firmware configuring a memory protection unit. This memory region
+must be assigned to the PCIe controller so that the OS knows to
+use that region. Otherwise PCIe devices would not work properly.
 
-Signed-off-by: Aksh Garg <a-garg7@ti.com>
+Allow the memory-region property with one item pointing to a
+restricted DMA buffer.
+
+Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
 ---
- MAINTAINERS | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+This patch compliments another patch that moved the memory-region from
+the PCIe device to the PCIe controller [1].
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2fb1c75afd16..e2c188a358ed 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -20315,10 +20315,11 @@ F:	Documentation/devicetree/bindings/pci/marvell,armada8k-pcie.yaml
- F:	drivers/pci/controller/dwc/pcie-armada8k.c
+[1] https://lore.kernel.org/all/20260430120725.241779-1-wenst@chromium.org/
+
+ Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+index 4db700fc36ba..4a9e41d01628 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+@@ -115,6 +115,10 @@ properties:
+   power-domains:
+     maxItems: 1
  
- PCI DRIVER FOR CADENCE PCIE IP
-+R:	Aksh Garg <a-garg7@ti.com>
- L:	linux-pci@vger.kernel.org
- S:	Orphan
- F:	Documentation/devicetree/bindings/pci/cdns,*
--F:	drivers/pci/controller/cadence/*cadence*
-+F:	drivers/pci/controller/cadence/
- 
- PCI DRIVER FOR CIX Sky1
- M:	Hans Zhang <hans.zhang@cixtech.com>
++  memory-region:
++    maxItems: 1
++    description: phandle to restricted DMA buffer
++
+   mediatek,pbus-csr:
+     $ref: /schemas/types.yaml#/definitions/phandle-array
+     items:
 -- 
-2.34.1
+2.54.0.563.g4f69b47b94-goog
 
