@@ -1,174 +1,169 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C047D23E342
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 20:21:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413451EFFB7
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 20:36:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778271697; cv=none; b=cyJon0U2uzLNhtN+/fKOWck61RrGJai7Il5URTwxa1yGhzXB+2784d1jTCaeOsRLq2IALGm6Nq2fNNaYr60ML0PEem/x0NxVErj3CqPfSI1DOTJYaXfvZf+IMbT22LZk+By0gk9YP/1Kjiv9ntKlFBLtlgu1qFA25FvG3qLA/8U=
+	t=1778272608; cv=none; b=IfiDOn0wdrWxysa7XAvxHv5TyG1Gc1vH8yyyuGjhcCMiKKJjtQgQZH4QlmOh653H2jE+4k/UdpfD1UkxCXTTZ5qrEU9EVd9M5mprSY0gxvlkI4bKcg8jmwrWl9t0098yJJslDe+QXA8pAf1ae4bHlUNbEXwEl8z2pUm3JLfCoOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778271697; c=relaxed/simple;
-	bh=NT6ZuQOSvGO4+lVLZUt9jy1lQXelaCUrt9EGcKiMItg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=L9FZ5jOoypwzzyUD7RV1Yct/oXEllbXihSTLpQB5nubUHs+qmKaMoY549017znjCUmsYTaJnYVvkCo7ZdPbPcaN49Dhyp10vOz0QXZL+nLDVFdx2aVbPNW6/OLlkLs+xDXYO1sMs5qcDlO6oeOq+ZnedRzGzDVPCWWelKcjjXOM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O4BGIswb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778272608; c=relaxed/simple;
+	bh=r16uspIZznIhMXpG4T/bkzN1F3PDMKLiIzc6CunoQAE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OP7tksFpGvNhmvwNnGsGIssPE1WaP5bzxt/NoKS0E+eSUi24O1R6oO0uTVvmul3s9dmMWu3zc+ev+mONvsrvTQSEw/APCJaJyiKyE9g+8vGLODbvxSZgKhf8sf/O1rZ8OuWwWKOcB8IgLP6Qp3ViHuxK2g+5wBN3wRXIC3zRDOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=JL3ZJ39o; arc=none smtp.client-ip=74.125.82.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O4BGIswb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 849F4C2BCB0;
-	Fri,  8 May 2026 20:21:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778271697;
-	bh=NT6ZuQOSvGO4+lVLZUt9jy1lQXelaCUrt9EGcKiMItg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=O4BGIswbWFafNz0ydvurbNqGVRrAqD4WFNZo1OelCjTflAoQnceKpZxsJ3iUzz/oE
-	 bpJvWiOUF+r87OiF2QEOmmtQ5BvWmohQdCmTBMQlXOXYkWbyL+J806X0ybEeup95hs
-	 SqKqT31Uh7a/gIcZYOCRsCMKdEhyuIKJOQoCNeKZ8zqyh0hCKy4rYpPnaOxAq4KfmR
-	 o0uSH+dJbVwndVPCjVWs13SrxJElgxzxTZda73En1zAQS8rl1bBN7HL4ewyHVJEL+M
-	 lpbNLDRnKRS3ONcEJ4H19zukrOyQ8XxKMT3wIAFV3JbOkWgJoODO4FboGHvwd80+qh
-	 rNBPyXqH9cHhQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] usb: cdnsp: Add support for device-only
- configuration
-Reply-To: sashiko@lists.linux.dev
-To: "Pawel Laszczak via B4 Relay" <devnull+pawell.cadence.com@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
-References: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 20:21:36 +0000
-Message-Id: <20260508202137.849F4C2BCB0@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="JL3ZJ39o"
+Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2ecf9e398f4so6326911eec.1
+        for <linux-pci@vger.kernel.org>; Fri, 08 May 2026 13:36:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1778272605; x=1778877405; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=it9s5SDS+9FA8rWlzgMlowzHbZDxtLnrq7mFV1fkn1U=;
+        b=JL3ZJ39oRHxYbgVSZMAxGm2Fke9GB4gduf9FOIT8iInsuGmpoGHU5haJKHFO/p/0Mh
+         Vc1RyaycpOw6bzgjR5S526NrkpjLlyUNvzzNPMqVrFxQh1w+sc5M4+DfipbFOhcBD2GB
+         CY92TQ+NNh5og8L66Pdv7vGhQ1L23Hww5opjU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778272605; x=1778877405;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=it9s5SDS+9FA8rWlzgMlowzHbZDxtLnrq7mFV1fkn1U=;
+        b=EP7tVRKDOnnCthTT6BWGUzuzbpwxNez9ek4cJ4Gbbnd+oGE9PECRZtFZfSfw36HKZV
+         ojXQNMpb+4aOyt3rdXjp2mZwgWWwFLHC0nZxLS0P9Vopit4j2V6emGluHifzYnJRfWMh
+         huem216wc4yC0pOzwSzUMmsLXfu0O8QkgIu3+Rk6Fu3jLKzCaI8GFn5nwh/c9fl26Yr5
+         gHaw3AxWl4Bjq1O7eWFpXnyaZzM/Hqf1vEETAFR8MR7MuRHVkj88r58PydAVwcd0Y621
+         pCS4u5iGLesaUn5GvFywK7XOYl6egoJY/I3IvHpfpu8gEJCuJB+QFJkNTUhyzOzS5oh4
+         Wegw==
+X-Gm-Message-State: AOJu0YxG9OewshDIye8nhBZHm+YMl1nAdfVVEKzjuC+nyzid7JvLf9Dp
+	/s4gNnsZPQPQ2lkvhiCsIMtUN9CIiaKSVp6Ay4XC/4rMOTyIN5n0d/uqg/N/H4YGig==
+X-Gm-Gg: Acq92OFgOTeNCtiATgATN1IzFJ9AHGtPjWs06zfnCfajTN8v/BAPLRRSb+KEU9S0cyD
+	CU/XuStMETyVN0E9rWM7DGhgm9K6IkbpnnU7NgzWXHhFKqV0aV1cZi8Kn4v7EfD3Fk5oc+eDGBm
+	1mUTwy+SlcHGdyEd5U2ZHSJa0+kdDbmlY4C46SYkTI3Sasxbk1h1ju1LNBE5n0XCWpYQPlBzpvu
+	SFQHgaYYaCJNg1Xy6pv+VLsYmwTVyQ4I6WY7o2zHKg084ymSQ2gov2MPg6sLXB4B1LG8Pep7Uf7
+	oI6sDbmBRxg2yQ2E8xd+mS+wgQfboyWKyIidjpbm0xbNNGlemM9glmC2S1FbOu9YggrrFosbm5Q
+	2Hj+95XNszV0YzGLs/wNIqozxf0vFsaMxD237oY2qQkFeLOnewjJbGqHRWB94iyzRWb/XuSMvuK
+	wEO5kfeJOITp3uqBK7iTq+pV5aKu1WXin1Z8f29B+qLhrgA9Mfw0egS8rQvpUI6w==
+X-Received: by 2002:a05:7301:3f16:b0:2c9:1943:e7ff with SMTP id 5a478bee46e88-2f54b35fb00mr6500611eec.10.1778272605216;
+        Fri, 08 May 2026 13:36:45 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:68c8:9c69:b0fb:a687])
+        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-2f88885b820sm3683873eec.20.2026.05.08.13.36.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 May 2026 13:36:44 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-kernel@vger.kernel.org,
+	Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v3] PCI/portdrv: Allow probing even without child services
+Date: Fri,  8 May 2026 13:36:29 -0700
+Message-ID: <20260508133629.v3.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+X-Mailer: git-send-email 2.54.0.563.g4f69b47b94-goog
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] The function `cdns_drd_host_on()` returns an uninitialized variabl=
-e `ret` when `cdns->no_drd` is true.
-- [High] Use-after-free and double-free in `cdnsp_pci_probe()` error path.
-- [High] Concurrent probing of paired PCI functions leads to a NULL pointer=
- dereference.
-- [High] Partial unbind of PCI functions leaves the platform device running=
- with disabled MMIO regions.
---
+The PCIe port driver fails to probe if it finds no child services,
+presumably under the assumption that the driver is not useful in that
+case. However, the driver *can* still be useful for power management
+support -- namely, it still configures the port for runtime PM / D3,
+which may be important for allowing a bridge to enter low power modes.
 
-commit b3f808c677ea7f7e8a40cfd26c7b60a0f4d50887
-Author: Pawel Laszczak <pawell@cadence.com>
+Thus, allow probe to succeed even if no IRQs and no child services are
+available. This also mirrors existing behavior for ports that have no
+PCIe capabilities, where we'd also probe successfully.
 
-usb: cdnsp: Add support for device-only configuration
-   =20
-This patch introduces support for the Cadence USBSSP (cdnsp) controller in
-hardware configurations where the Dual-Role Device (DRD) register block is
-not implemented or is inaccessible.
+This change is a bit more important after commit f5cd8a929c82 ("PCI:
+dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
+controller"), because it's common for some DWC-based systems to:
 
-> diff --git a/drivers/usb/cdns3/cdnsp-pci.c b/drivers/usb/cdns3/cdnsp-pci.c
-> index 432007cfe6954..992700479172f 100644
-> --- a/drivers/usb/cdns3/cdnsp-pci.c
-> +++ b/drivers/usb/cdns3/cdnsp-pci.c
-[ ... ]
-> @@ -93,7 +103,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
-> =20
->  	pci_set_master(pdev);
-> =20
-> -	if (pci_is_enabled(func)) {
-> +	if (func && pci_is_enabled(func)) {
->  		wrap =3D pci_get_drvdata(func);
+1. have only have the "aer" and "pcie_pme" port services available and
+2. not define legacy INTx interrupts properly in their device tree.
 
-This wasn't introduced by this patch, but does this code have a race condit=
-ion
-during concurrent probing?=20
+After commit f5cd8a929c82, such systems may fail
+pcie_init_service_irqs() and so exit with -ENODEV.
 
-If both PCI functions are probed simultaneously (e.g., via sysfs bind), both
-threads could see pci_is_enabled(func) as true before either has called
-pci_set_drvdata().=20
+Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+I didn't get an answer to my responses to the last review feedback:
+https://lore.kernel.org/all/adg5IPWdCSv1UqFE@google.com/
+So I've attempted to address the feedback without churning all the port
+service drivers.
 
-This would cause pci_get_drvdata() to return NULL, leading to an immediate
-NULL pointer dereference when accessing wrap->dev_res.
+Changes in v3:
+ * defer pci_set_master() until we really know we have some child
+   service
 
->  	} else {
->  		wrap =3D kzalloc_obj(*wrap);
-[ ... ]
-> @@ -158,6 +181,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
->  		plat_info.dma_mask =3D pdev->dma_mask;
->  		plat_info.data =3D &pdata;
->  		plat_info.size_data =3D sizeof(pdata);
-> +		plat_info.properties =3D wrap->prop;
->  		wrap->devfn =3D pdev->devfn;
->  		/* register platform device */
->  		wrap->plat_dev =3D platform_device_register_full(&plat_info);
->  		if (IS_ERR(wrap->plat_dev)) {
->  			ret =3D PTR_ERR(wrap->plat_dev);
->  			kfree(wrap);
+Changes in v2:
+ * clear master when we have no child services
 
-This wasn't introduced by this patch, but is it safe to unconditionally call
-kfree(wrap) here if we're probing the second PCI function?=20
+ drivers/pci/pcie/portdrv.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-Since the wrap structure was allocated and set as drvdata by the first
-function, freeing it here could destroy the shared structure while the first
-function is still actively bound and relying on its drvdata.
+diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+index 2d6aa488fe7b..a79a52560849 100644
+--- a/drivers/pci/pcie/portdrv.c
++++ b/drivers/pci/pcie/portdrv.c
+@@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+  */
+ static int pcie_port_device_register(struct pci_dev *dev)
+ {
+-	int status, capabilities, i, nr_service;
++	int status, capabilities, i;
+ 	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
+ 
+ 	/* Enable PCI Express port device */
+@@ -343,7 +343,6 @@ static int pcie_port_device_register(struct pci_dev *dev)
+ 	if (!capabilities)
+ 		return 0;
+ 
+-	pci_set_master(dev);
+ 	/*
+ 	 * Initialize service irqs. Don't use service devices that
+ 	 * require interrupts if there is no way to generate them.
+@@ -355,29 +354,20 @@ static int pcie_port_device_register(struct pci_dev *dev)
+ 	if (status) {
+ 		capabilities &= PCIE_PORT_SERVICE_HP;
+ 		if (!capabilities)
+-			goto error_disable;
++			return 0;
+ 	}
+ 
+ 	/* Allocate child services if any */
+-	status = -ENODEV;
+-	nr_service = 0;
+ 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+ 		int service = 1 << i;
+ 		if (!(capabilities & service))
+ 			continue;
+-		if (!pcie_device_init(dev, service, irqs[i]))
+-			nr_service++;
++		pcie_device_init(dev, service, irqs[i]);
+ 	}
+-	if (!nr_service)
+-		goto error_cleanup_irqs;
+ 
+-	return 0;
++	pci_set_master(dev);
+ 
+-error_cleanup_irqs:
+-	pci_free_irq_vectors(dev);
+-error_disable:
+-	pci_disable_device(dev);
+-	return status;
++	return 0;
+ }
+ 
+ typedef int (*pcie_callback_t)(struct pcie_device *);
+-- 
+2.54.0.563.g4f69b47b94-goog
 
-When the first function is eventually unbound, cdnsp_pci_remove() would
-retrieve this dangling pointer, dereference it, and free it again.
-
->  			goto put_pci;
->  		}
->  	}
-[ ... ]
-> @@ -185,13 +209,17 @@ static void cdnsp_pci_remove(struct pci_dev *pdev)
->  	if (wrap->devfn =3D=3D pdev->devfn)
->  		platform_device_unregister(wrap->plat_dev);
-
-This wasn't introduced by this patch, but what happens if a user manually
-unbinds the PCI function that didn't trigger the platform device registrati=
-on?
-
-It looks like the platform device would remain registered and active since
-wrap->devfn !=3D pdev->devfn, but the underlying PCI MMIO resources for this
-function would be abruptly disabled. Could this cause a fatal bus fault on
-subsequent accesses by the platform child drivers to the disabled BARs?
-
-> -	if (!pci_is_enabled(func))
-> +	if (!func || !pci_is_enabled(func))
->  		kfree(wrap);
-> =20
->  	pci_dev_put(func);
->  }
-[ ... ]
-> diff --git a/drivers/usb/cdns3/drd.c b/drivers/usb/cdns3/drd.c
-> index 84fb38a5723a3..f87cf85cb97a1 100644
-> --- a/drivers/usb/cdns3/drd.c
-> +++ b/drivers/usb/cdns3/drd.c
-[ ... ]
-> @@ -181,6 +184,9 @@ int cdns_drd_host_on(struct cdns *cdns)
->  	u32 val, ready_bit;
->  	int ret;
-> =20
-> +	if (cdns->no_drd)
-> +		goto phy_set;
-> +
->  	/* Enable host mode. */
->  	writel(OTGCMD_HOST_BUS_REQ | OTGCMD_OTG_DIS,
->  	       &cdns->otg_regs->cmd);
-> @@ -197,6 +203,7 @@ int cdns_drd_host_on(struct cdns *cdns)
->  	if (ret)
->  		dev_err(cdns->dev, "timeout waiting for xhci_ready\n");
-> =20
-> +phy_set:
->  	phy_set_mode(cdns->usb2_phy, PHY_MODE_USB_HOST);
->  	phy_set_mode(cdns->usb3_phy, PHY_MODE_USB_HOST);
->  	return ret;
-
-If cdns->no_drd is true, we jump directly to phy_set, skipping the hardware
-polling loop that assigns a value to ret.=20
-
-Does this cause the function to return uninitialized stack garbage in ret?
-
-Callers checking for a non-zero return value might abort the host
-initialization unexpectedly.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508-no_drd_con=
-fig-v3-1-0614f5044721@cadence.com?part=3D1
