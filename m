@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E09F423A85
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 19:02:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F74D352921
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 19:31:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778266949; cv=none; b=Ln+4GX4juuIJQGynaN6Mny1vb3C2WsPfOeaw1E80zCaGoYFmdbOwyZaBdjzgZEo4zNmRfu+s1osvndfd9STfCeReAY/P+BqpaoIsusittWykNaTda14m0t4HPHNfW+ro6b6S3f69efGFSK7JoyVJngJGt97E+1yAI8Mfrl9g3r8=
+	t=1778268688; cv=none; b=Gpgu7kwUSW379GRbFo8htxThnAaQps93lYna382h91L5rfL2dDwLjrQYKsDtAqf6q4ZfLzUOpNFrOwsblLHyhhR7oKDuibcetBWxMAv/h9KYsX6JRyibCIeOnSI7MBxK9T34RX8AX9vKs45SS/Ud0FrVDpPd9AC4h4Uy3OA5hhA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778266949; c=relaxed/simple;
-	bh=/sIVyftLqxYoxdkEqHlElojy7FaMvLL41mCvT4YtEbg=;
+	s=arc-20240116; t=1778268688; c=relaxed/simple;
+	bh=579xusswqy24/8BNkTNAejWlYtNidFjK6kzQ/Gxp7Vs=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mp4vhbtHa42hsHqWf9CNIJOGwLYVJzpCoe0d9NJtG7WzLRYBy45wkGcD1rcOoBXAU0K7FFrrzwMVcgbRTUHnFX4X1AHw0QWn+RWAV7w505crov2YWC+gkGbBDzDDHyWgVnIRcxmOmbJ4YoJ8P/jhJM0s/tQa866U7V2zwVtyOxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=asIhpky9; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=QKrZFIegiqloCF+T2TJAAaJXH/omG1H6kMzFSr8aiieSNPBhro0yxFlOuGF5Kfm9LOuhamK6VP6F4/DxzC/5AAcHelFZmLOSnV46SWrYjgO9ua0Lxyt3Mur691UL+uvASvMizPgB1FBFosX43JMVMDrX4ZlNeqE745eIACxZJoQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m3ZkoWJf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="asIhpky9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85506C2BD01;
-	Fri,  8 May 2026 19:02:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m3ZkoWJf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 912BEC2BCB0;
+	Fri,  8 May 2026 19:31:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778266948;
-	bh=/sIVyftLqxYoxdkEqHlElojy7FaMvLL41mCvT4YtEbg=;
+	s=k20201202; t=1778268687;
+	bh=579xusswqy24/8BNkTNAejWlYtNidFjK6kzQ/Gxp7Vs=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=asIhpky9s4dlM2JEwq7jQNxPm7lqFnSJt6w5Iw00nE4q8ej53/fJhEJ0uRU2EhFd2
-	 sasLmpVRK+sqzG4mtxdKr7gC9L0OyvC7qgTbubsVptMgsVwzIgPKnwx7AAfNcv9+Mo
-	 1zpggIHX+9xx32ffr+IkCJc4KN2mWJcG5FwQEjSoIqiow4oD4t5N0QVdACDgiRkvMW
-	 oRHEl+WQvfTusfrRpNGycdNydBa14j7oFdMhSZLwo/DlmOEpwUKThxSYcGtMnh3/L4
-	 vZxbNp34eQHKCKsbFG4+LINuTMZ89LlliIcgnDY5Vtc7tfZtp8uGmjI2f81ncNK/ZU
-	 S5mhihBYHzF8w==
+	b=m3ZkoWJfCEMMG9nEBGQCfaUfAVAn/1PZeeEVIJr2RcXNaFF6Ti0yEsf6TNiGxlbnJ
+	 xCMvVkzKQPPeE1RM4HUbknOXZKWHxJlyCMmhSmtG2822eudsGPDPJQhoMs7Lnjcg91
+	 OgcUkNilox4EQbNEdBpy+yp3q/CnYZekLRWEfsmTCfV9owvzwnuZRDnF283u//7dHR
+	 nVNMu7QPilq9vGS5rd44uO6DcixOSkg2Jii8l0XUHbg+gMxPICLdakUl5+xvacwvOF
+	 LPiNTsme/58WHNkU70zn5iG0RMEgWwd0CI8wClcZdjlUCYA7nX9PcqhXeoNhTEOal5
+	 zk2h2ZpoNT5bQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 2/7] PCI/TPH: Export pcie_tph_get_st_modes() for
- external use
+Subject: Re: [PATCH v8 3/7] PCI/TPH: Fix pcie_tph_get_st_table_size() for
+ MSI-X table location
 Reply-To: sashiko@lists.linux.dev
 To: "Chengwen Feng" <fengchengwen@huawei.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260508064053.37529-3-fengchengwen@huawei.com>
-References: <20260508064053.37529-3-fengchengwen@huawei.com>
+In-Reply-To: <20260508064053.37529-4-fengchengwen@huawei.com>
+References: <20260508064053.37529-4-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 19:02:27 +0000
-Message-Id: <20260508190228.85506C2BD01@smtp.kernel.org>
+Date: Fri, 08 May 2026 19:31:27 +0000
+Message-Id: <20260508193127.912BEC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,84 +46,70 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] pcie_tph_get_st_modes() and pcie_tph_get_st_table_loc() do not che=
-ck the return value of pci_read_config_dword(), causing them to return fals=
-e capabilities on read failures.
+- [High] Modifying pcie_tph_get_st_table_size() to return > 0 for MSI-X loc=
+ated ST tables causes severe out-of-bounds read/writes in PCI configuration=
+ space during TPH state save and restore.
 --
 
-commit 521881ea093ae852c8fad775f8ffcbe3b9c7a46b
+commit 73d4864dbc8b240284d0329056ab114562107193
 Author: Chengwen Feng <fengchengwen@huawei.com>
 
-PCI/TPH: Export pcie_tph_get_st_modes() for external use
+    PCI/TPH: Fix pcie_tph_get_st_table_size() for MSI-X table location
+   =20
+    pcie_tph_get_st_table_size() previously only returned valid size when ST
+    Table is in TPH Capability space. According to PCIe spec [1], ST table =
+size
+    is also valid when ST Table is located in MSI-X table.
 
-This commit exports the pcie_tph_get_st_modes() helper to allow external
-drivers like VFIO to query supported PCIe TPH steering tag modes. It also
-adds stub functions for when CONFIG_PCIE_TPH is disabled and includes
-tph_cap validation to prevent invalid PCI configuration space access.
+[ ... ]
 
 > diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index 877cf556242b4..ba31b010f67ad 100644
+> index ba31b010f67ad..de5bd7039cdca 100644
 > --- a/drivers/pci/tph.c
 > +++ b/drivers/pci/tph.c
-> @@ -145,15 +145,27 @@ static void set_ctrl_reg_req_en(struct pci_dev *pde=
-v, u8 req_type)
-[ ... ]
-> -static u8 get_st_modes(struct pci_dev *pdev)
-> +/**
-> + * pcie_tph_get_st_modes - Get supported Steering Tag modes
-> + * @pdev: PCI device to query
-> + *
-> + * Return:
-> + *  Bitmask of supported ST modes (PCI_TPH_CAP_ST_NS, PCI_TPH_CAP_ST_IV,
-> + *                                 PCI_TPH_CAP_ST_DS)
-> + */
-> +u8 pcie_tph_get_st_modes(struct pci_dev *pdev)
->  {
->  	u32 reg;
-> =20
-> +	if (!pdev->tph_cap)
-> +		return 0;
-> +
->  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
->  	reg &=3D PCI_TPH_CAP_ST_NS | PCI_TPH_CAP_ST_IV | PCI_TPH_CAP_ST_DS;
-> =20
->  	return reg;
->  }
-
-If pci_read_config_dword() fails (for example, if the device is disconnected
-or isolated), it sets the output variable reg to PCI_ERROR_RESPONSE (~0U).
-
-Because the return value is not checked, this code will apply the bitmask
-to ~0U, which evaluates to 0x07 (PCI_TPH_CAP_ST_NS | PCI_TPH_CAP_ST_IV |
-PCI_TPH_CAP_ST_DS).
-
-Since this function is being exported for external use by drivers like VFIO,
-could this falsely advertise that the device supports all three ST modes
-instead of none? Should the return value of pci_read_config_dword() be
-checked to ensure 0 is returned on failure?
-
-> +EXPORT_SYMBOL(pcie_tph_get_st_modes);
-> =20
->  /**
->   * pcie_tph_get_st_table_loc - Return the device's ST table location
-> @@ -168,6 +180,9 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
->  {
->  	u32 reg;
-> =20
-> +	if (!pdev->tph_cap)
-> +		return PCI_TPH_LOC_NONE;
-> +
->  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
-> =20
->  	return reg & PCI_TPH_CAP_LOC_MASK;
-
-Similarly, does an unchecked read failure here lead to returning an invalid
-location mask derived from the ~0U error response? Would it be safer to che=
-ck
-the return value and return PCI_TPH_LOC_NONE if the read fails?
 
 [ ... ]
+
+> @@ -200,7 +201,7 @@ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+> =20
+>  	/* Check ST table location first */
+>  	loc =3D pcie_tph_get_st_table_loc(pdev);
+> -	if (loc !=3D PCI_TPH_LOC_CAP)
+> +	if (loc !=3D PCI_TPH_LOC_CAP && loc !=3D PCI_TPH_LOC_MSIX)
+>  		return 0;
+> =20
+>  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+
+If pcie_tph_get_st_table_size() returns a value greater than 0 when the ST
+table is located in the MSI-X table, does this cause pci_restore_tph_state()
+to write out of bounds in the PCI configuration space?
+
+Looking at pci_restore_tph_state(), it uses the size returned by
+pcie_tph_get_st_table_size() to write ST entries directly into the TPH
+Extended Capability:
+
+drivers/pci/tph.c:pci_restore_tph_state() {
+	...
+	st_entry =3D (u16 *)cap;
+	offset =3D PCI_TPH_BASE_SIZEOF;
+	num_entries =3D pcie_tph_get_st_table_size(pdev);
+	for (i =3D 0; i < num_entries; i++) {
+		pci_write_config_word(pdev, pdev->tph_cap + offset,
+				      *st_entry++);
+		offset +=3D sizeof(u16);
+	}
+}
+
+When the ST table is located in MSI-X, the entries are memory mapped rather
+than stored in the TPH capability itself.
+
+Because the TPH Extended Capability is only 12 bytes long in this case, cou=
+ld
+this loop clobber subsequent capabilities in the configuration space during
+resume?
+
+A similar out-of-bounds read would occur in pci_save_tph_state().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508064053.3752=
-9-1-fengchengwen@huawei.com?part=3D2
+9-1-fengchengwen@huawei.com?part=3D3
