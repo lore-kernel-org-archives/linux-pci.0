@@ -1,68 +1,67 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A183B3E1D01
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 13:12:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9964397E75
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 13:17:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778245971; cv=none; b=nFNSNZP/lMP0fLPsLHiFwKlTX3/OiGAX03pmni3xOeVbIGz6VRlpYFZHPkNQl6JVAGiAZiRKCceVBeJT2jhWpZA/tDVTykxJittq07b4wsw+O6NLBw7eIvfZkw0EtFt9P/L+8GpejwrQ824sG2Tlv492vZhNR5gxKj5TQEYfUkQ=
+	t=1778246277; cv=none; b=VrnD4VTyOAfeNhaTAYs92GLbZ0/LPhxAHTbNzi36ZYjepOtJkyCHm2iYIBbYZQD5As4S++0R4L4+LfWcJwbEkR8Aj1T13EIrmH3QzTc9n8kvImkTkakLKCLP7UcICdcyEtp/ZAfwz0RaIANKGwH1qxxKoHzwiUcWw++kQcurCyM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778245971; c=relaxed/simple;
-	bh=lCN0WUlTdniaIrkmkOjjxN2l9ymDOkuC4O8gikYxFdc=;
+	s=arc-20240116; t=1778246277; c=relaxed/simple;
+	bh=8p27S5MOGU71UbNINV14aMU5g0i9T0ZM6IUt5Ys7L38=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qEVlCGkCxsFj77Yn9QsgMtB34JWN7usGfDnHk+ws7Vj/f4Oqbg81Xbvxua0VCMnHOuigOWlS2Jygl4FEzxsJf6rK8OgD8f+13/0xN3AEahutghYnkp4pJXTg1WiVNK4/DZCdHc9bJ7Froyh0v4G4SKr3CtFslRTQdFqY8ODPeHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TTa3CNtW; arc=none smtp.client-ip=209.85.214.174
+	 In-Reply-To:Content-Type; b=jeRJRR9DMUhFmv0AGv2O4GtNdEYnm7q0S02eesXEmhOy82XBccFdmzi917PhjzA3s4h0PgZKtBVVFdVHeoWYzZiBZ5po91MuhW2lEhyAy4x0txo6tvSmMdywh8+Kn4q72jhwlGSgkwtuvugsASB1E8lMMGv0D7kS5T4WyKqk6sM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=psxYf6iS; arc=none smtp.client-ip=209.85.210.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TTa3CNtW"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2bab2548e8bso9544335ad.0
-        for <linux-pci@vger.kernel.org>; Fri, 08 May 2026 06:12:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="psxYf6iS"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-8379e010b01so825860b3a.1
+        for <linux-pci@vger.kernel.org>; Fri, 08 May 2026 06:17:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778245969; x=1778850769; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1778246275; x=1778851075; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=PFzlHQa62rnDCDfNm7Sg1yAUWMyaxvIeUIF/EGTrexE=;
-        b=TTa3CNtWFQpBln/9lj9EmoqIE0LTfF65tflWoOu+vQmi70DfQMqHMQ5JGi2X3rQlXt
-         4ZaP7GbPzO2W1Pnj7HwhlQQuKjGyDUa5EE1ngAxB/JZn61DAmhvD70vqlLX90jzgFrdc
-         zKDGE9mU38m5etCsuSHmJikMSyF7hm7kA25oWVuN2DPFpIcnAa+hr3vSofQ5dccRG1zb
-         LUwIlY+mILBCSeaybgIC8Ug+LQz4QBz/UyEN0bLPGvCd9VZIWmhBus54kjsC0OskMLED
-         1marsxslsws3EURcV0Rg0v9eu0dmLhMDU8nzRzmVFnn2tU6GAgVPK8YkCY7uFl6UafRT
-         ufIg==
+        bh=GPQqbo0BGx+WtuCfVxMY5CEZE7UAc0Y6Xa4Xm40mq+I=;
+        b=psxYf6iSnTx2vR6kv8IOLvrsIJ/otyW6lYKpJ3tR1EOOlfaMSYkQc/srNsYRiQIGIh
+         w5Sxi9qQ+eTg3Q35xbRrdZvp8oY5Ti5+p6kPNPYGiylf0D0Vp4YMhRfAkdiCVION+S8G
+         tPGZaPERI6TK6+47FnYDwPfqyltZ4VCovlvoM5RvUiqbWYbsNSHrCNy2rbBf5PCCdGLw
+         HkWLGdVtQBoZoF8tLIJrX2TPVIEtTH2qfUDy3MOOesAA7i/FOpvnVUs34+Bsvt5NSDDc
+         IrVTFfOhCunrMp/gcBtJoIvhayhDaWYQA7YtjlWYthV1I7R4M1xS3WmwQpfYM0DYKiIU
+         WH0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778245969; x=1778850769;
+        d=1e100.net; s=20251104; t=1778246275; x=1778851075;
         h=content-transfer-encoding:in-reply-to:autocrypt:from
          :content-language:references:cc:to:subject:user-agent:mime-version
          :date:message-id:sender:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=PFzlHQa62rnDCDfNm7Sg1yAUWMyaxvIeUIF/EGTrexE=;
-        b=jWQAjDtKZRBfWW74wTRnqMCR/6TLVEKNamzwVQabfdAJMa4akhBSUWmIHd5WDH1DPL
-         bh/DmF8dZpawcynIUV5YzFcUoYjtod2jgqJ6cI/qDmeKpPLOOG6xiTie2ZRleSMSOaL/
-         omOQFhPowYXLNoGbvMU3DPGWVslJmTDevkXfXeKx35nOyNbmRrBWtlAQoQsIQwjyjIGf
-         rj9e3MdQxPZ7F3vpfyFrG5i2erbQfhmBUdBQ8mE3HP3MjG6AiN3kfdItYFBLkz34Cffu
-         ROpyyGfYZCwBr0MbR6t+AmhnEHdDhVDgSQWLxn9wtAbiWYF6/AqGmUsP/hTJwGG8BFcA
-         m8ag==
-X-Forwarded-Encrypted: i=1; AFNElJ+2RalPy66aiyU9E8ou3k5N2t9Y1Tq4EoenmNe7J7SQk0pbFOzJsTaBMkXFziaClDjw0aY4/kVCUFs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxD05dAcW86Wxb2j+9cpe3QVF4K+0Zda3HXTHuqTihf48AIDjfe
-	vSwnE7oWHRYloFs0VY+FEwuIeOEbNS+6HoafrI/UW9KRA8+M0+NuHdj8VTBmVA==
-X-Gm-Gg: Acq92OG5FgNw/XM1Fj6s2ZwEwyzR1+upwKKF2Vft/v3jVqK8SBbDG4skw7JjJGfDPKw
-	h1DYB0mq14Y2VTDJ0NJFqPd+FodSn5WqT/ZZviO8EkBkEjkkHcwTryDMaTjIxnGg34mgeS9kXgB
-	9mpm+D0IPJMcQiNdPgvfU3GRbLFBVlJO4UUDPKAfH1HD9RfT2hYm5zMU8Txi501/kSufmXxmTSg
-	cdewm0iBqa6cZ42Jv5dgaU5TpLpDXMIS15EUJRIgCiNquvS2+ARYERyUuwpwQlxpt1oazvXCWvw
-	rylSNOQ+j1E2gPRAJWvQWQ2MLoZYiWDWw7MU63RTn8Fna5fKUYfvxBgzD0bhEHjDICll99z7e7J
-	a4QSYN2bgqi4WW8GaArLH+V8/EoEkTvlVeFNxwHE9h4atjJXlDvSd4fwUGYn9xfR5XPH1vT10LZ
-	moAOjWXJuau20jyNflC3/VL7IgFERZYe2HK9mV/vAZ+SEh/Ax+YKv7J4+5//LeoATf3K1RmVDtf
-	pDdPAXZr4U=
-X-Received: by 2002:a17:902:ca85:b0:2ba:4086:ecb9 with SMTP id d9443c01a7336-2ba798d564cmr86134875ad.36.1778245968374;
-        Fri, 08 May 2026 06:12:48 -0700 (PDT)
+        bh=GPQqbo0BGx+WtuCfVxMY5CEZE7UAc0Y6Xa4Xm40mq+I=;
+        b=cTICZ5gOb7YpCRoaNHvwCVJHhdluYL8vPqwmugGag5N4qjzj/sDVsYVcys4I+otmIT
+         FY/Vjpmh3TbsqPiaSMeRgrcxq551DUzf3kfr10lb9Vk23HRQT3TAYbYwsl0NA5xH+nJE
+         Nc8Y0IAbUpspSrzlu0eULjqxHFSqZ8+G8PdQgbJ0dagF2Rwwkj2i/l8srtSHOYN++R2x
+         ZytiHi2iLLzNXmEyrjLMvMLynuBH0NHXmki5kvW6mx45osa1FR3d5IlxbVQmH0CXiecG
+         OHBCif3CyD+mvoRXYdllrkOYkIUhhAg1NeFNnagQjZ+6ar/nGmBoi5Pm48maZoiv4Xbf
+         DGAQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+ZPLruDA15W3kI+bci6mV5gTlTbjb6tEWk2od0CWbKpwXtXZ1IgKroV3AhPOTgfUtBomOM6NZg8yU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzcg288S29hACcW3bhYnPrkhrRCVeQG8tIDRxOEPfst8CfjUhDq
+	oqa5r9RqidRWfkM/XqaBVN+zquDyB9uD4RooVPvqE0VQNKDH3FnTwkGl
+X-Gm-Gg: AeBDiet/Oz6U1/ZQ0U1RucUlVvK0YIjjUBRMgy9dZcsD4MV3eMsV8MfHYQgWck1U0TY
+	b7LY1pYDlkCVG/HCxQwfhLwkrAVOkXXBmiFlPQDRSHxQ3LEmC9lndEKN+V97TiyO4VWdcqJ7X07
+	iZWjlSdSaYMLWdSz44VTND7S56ssq8Ew0xl91NwdscEIW2sz1JhKUIlMJoxKUqEXboMZQI5vhYk
+	XG0kybYE1fn4U2181NEDVfvF6ItNm/oWgQaLSD2ebqcMXCe793wnHSbYcZWqS3PvRsV6uqOhLhx
+	+SE14GspvJvu8ZHl4iEimPK1ZDLsDF3vh2Fm78uiCcsInaQEO5bEmbwRNjUXy6kVM5ese39eP8y
+	SC5MABtD1b6fT7nHV7rRB82t+R9kNDwVak/iZzowg6XyXcvJ3QDdqKDFkcYIUXlr9g9UdUCy2jP
+	y5Ovw+MZb6mizm+8+veUnG/NSi1JKMdsJLMABGDTCpdtniKsHL2Rz5D1O1uiju6qC/GwUyj0Dc
+X-Received: by 2002:a05:6a00:f0f:b0:838:3f54:a0ee with SMTP id d2e1a72fcca58-83a5b2d2c16mr12005499b3a.7.1778246275059;
+        Fri, 08 May 2026 06:17:55 -0700 (PDT)
 Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1d27242sm25574335ad.9.2026.05.08.06.12.46
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83965945101sm12098812b3a.13.2026.05.08.06.17.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 08 May 2026 06:12:47 -0700 (PDT)
+        Fri, 08 May 2026 06:17:54 -0700 (PDT)
 Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <6745fd21-2001-4e06-af41-96ae63154c02@roeck-us.net>
-Date: Fri, 8 May 2026 06:12:45 -0700
+Message-ID: <e9808463-021b-41cf-8080-0f4e45ae2ebb@roeck-us.net>
+Date: Fri, 8 May 2026 06:17:53 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,20 +69,22 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] hwmon: add AMD Promontory 21 xHCI temperature
- sensor support
-To: Jihong Min <hurryman2212@icloud.com>, Jihong Min <hurryman2212@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>,
+Subject: Re: [PATCH v3 1/2] usb: xhci-pci: add generic auxiliary device
+ interface
+To: Jihong Min <hurryman2212@icloud.com>,
+ Mathias Nyman <mathias.nyman@linux.intel.com>,
+ Jihong Min <hurryman2212@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Mathias Nyman <mathias.nyman@intel.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
  Mario Limonciello <mario.limonciello@amd.com>,
  Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
  linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <cover.1778123510.git.hurryman2212@gmail.com>
- <0c35058bb088213397b42fca8d51e9ad0bba5169.1778123510.git.hurryman2212@gmail.com>
- <35c2436b-d172-4172-a684-a96c4a0dcabe@roeck-us.net>
- <16c4f7e5-e33d-4271-a7af-5d6c7fca0570@icloud.com>
+ <effa7bd7bef8a8ea28b9e28fe47af6a58e39edf2.1778123510.git.hurryman2212@gmail.com>
+ <a5739875-b8a5-4918-8850-fa4b32d5279d@linux.intel.com>
+ <f47d9cc1-e39b-4199-b031-e91b8e02ab1d@icloud.com>
 Content-Language: en-US
 From: Guenter Roeck <linux@roeck-us.net>
 Autocrypt: addr=linux@roeck-us.net; keydata=
@@ -129,37 +130,62 @@ Autocrypt: addr=linux@roeck-us.net; keydata=
  F0WaMvQMNrk9UAUziVcUkLU52NS9SXqpVg8vgrO0JKx97IXFPcNh0DWsSj/0Y8HO/RDkGXYn
  FDMj7fZSPKyPQPmEHg+W/KzxSSfdgWIHF2QaQ0b2q1wOSec4Rti52ohmNSY+KNIW/zODhugJ
  np3900V20aS7eD9K8GTU0TGC1pyz6IVJwIE=
-In-Reply-To: <16c4f7e5-e33d-4271-a7af-5d6c7fca0570@icloud.com>
+In-Reply-To: <f47d9cc1-e39b-4199-b031-e91b8e02ab1d@icloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 5/7/26 22:42, Jihong Min wrote:
-> I believe I have addressed the other review comments for v4, including the
-> remaining discussion from v2 2/2, your comments, and Mathias's suggestion to
-> move the PROM21-specific xHCI PCI handling into a separate glue driver.
+On 5/8/26 00:04, Jihong Min wrote:
+> Hi Mathias,
 > 
-> I agree that "prom21_hwmon" is not a good name.
+> I tried the xhci-pci-prom21.c approach you suggested, with a PROM21-specific
+> PCI glue driver calling xhci_pci_common_probe() and creating the auxiliary
+> hwmon child device from that driver.
 > 
-> I think just "prom21" may also be too broad, because Promontory 21 is a
-> chipset/IP block with multiple I/O functions. This driver monitors the
-> temperature value exposed through the PROM21 xHCI PCI function's MMIO BAR, so
-> the xHCI part should probably be visible in the hwmon naming.
+> While doing that I noticed a possible boot-time regression with the module
+> case.
 > 
-> I am considering:
+> If CONFIG_USB_XHCI_PCI=y and CONFIG_USB_XHCI_PCI_PROM21=m, then generic
+> xhci-pci sees CONFIG_USB_XHCI_PCI_PROM21 as enabled and refuses the PROM21
+> PCI ID:
 > 
->    - drivers/hwmon/prom21-xhci.c
->    - CONFIG_SENSORS_PROM21_XHCI
->    - hwmon name: prom21_xhci
+>      if (IS_ENABLED(CONFIG_USB_XHCI_PCI_PROM21) &&
+>          pci_match_id(pci_ids_prom21, dev))
+>              return -ENODEV;
 > 
-> while keeping the USB glue as xhci-pci-prom21.c.
+> That means the PROM21 xHCI controller is handled only by
+> xhci-pci-prom21.ko. If that module is not present in the initramfs or is not
+> loaded early enough, the PROM21 xHCI controller remains unbound during early
+> boot. Devices behind that controller, such as a USB keyboard used for early
+> boot or disk unlock, would not work even though the generic xhci-pci driver is
+> built in and could otherwise operate the controller.
 > 
-> Does that sound reasonable?
+> This seems different from the Renesas case, where the separate PCI driver is
+> needed for controller-specific firmware handling. For PROM21, the USB/xHCI
+> operation itself is still generic; the only extra function is publishing an
+> optional hwmon child device.
+> 
+> So I am not sure what the preferred direction should be:
+> 
+>    1. Keep the separate xhci-pci-prom21.c PCI glue driver and make
+>       USB_XHCI_PCI_PROM21 built-in only, or otherwise constrain the Kconfig so
+>       the generic xhci-pci handoff cannot break early boot.
+> 
+>    2. Keep PROM21 handled by generic xhci-pci and add only a small
+>       PROM21-specific auxiliary-device creation hook in xhci-pci after the
+>       common probe succeeds. In that model, failure to create the optional hwmon
+>       auxiliary device would not affect USB operation.
+> 
+>    3. Some other split that keeps PROM21-specific sensor code outside
+>       xhci-pci, but does not prevent generic xhci-pci from binding the
+>       controller when the optional PROM21 glue is not available early.
+> 
+> Do you still prefer the separate xhci-pci-prom21.c PCI driver for this case,
+> or would the minimal xhci-pci auxiliary-device hook be more appropriate given
+> the built-in xhci-pci / modular PROM21 glue case?
 > 
 
-Yes.
-
-Please note that you keep top-posting. I don't mind that much, but
-top-posting is (sometimes strongly) discouraged for linux kernel discussions.
+Maybe I am missing something, but it seems to me that CONFIG_USB_XHCI_PCI_PROM21
+should be just as built-in as CONFIG_USB_XHCI_PCI.
 
 Thanks,
 Guenter
@@ -167,503 +193,197 @@ Guenter
 > Sincerely,
 > Jihong Min
 > 
-> On 5/8/26 00:53, Guenter Roeck wrote:
->> On Thu, May 07, 2026 at 12:31:59PM +0900, Jihong Min wrote:
->>> PROM21 xHCI controllers expose an 8-bit temperature value through a
->>> vendor-specific index/data register pair in the xHCI PCI MMIO BAR
->>> region. Add an auxiliary hwmon driver for PROM21 controllers with PCI
->>> ID 1022:43fd.
+> On 5/7/26 18:31, Mathias Nyman wrote:
+>> On 5/7/26 06:31, Jihong Min wrote:
+>>> Some xHCI PCI controllers expose controller-specific functionality that is
+>>> not part of generic xHCI operation and is better handled by optional child
+>>> drivers in other subsystems. Add a small auxiliary device registration path
+>>> for selected xHCI PCI controllers.
 >>>
->>> PROM21 is an AMD chipset IP used in single-chip or daisy-chained
->>> configurations to build AMD 6xx/8xx series chipsets.
+>>> The initial PCI ID match table lists AMD Promontory 21 (PROM21) 1022:43fd
+>>> controllers. For matching controllers, xhci-pci creates an auxiliary
+>>> device and stores it in devres so the remove path destroys it before HCD
+>>> teardown.
 >>>
->>> The vendor index register is at byte offset 0x3000 from the xHCI MMIO
->>> BAR base and the vendor data register is at byte offset 0x3008. The
->>> driver writes register selector 0x0001e520 to the index register, reads
->>> the raw temperature value from the low 8 bits of the data register, and
->>> restores the previous index before returning. Expose temp1_input and an
->>> xHCI label through hwmon.
->>>
->>> Register the hwmon device under the parent PCI function so userspace
->>> reports it as a PCI adapter, while the auxiliary driver still owns the
->>> hwmon lifetime and unregisters it from the auxiliary remove path.
->>>
->>> No public AMD reference is available for this value. The conversion
->>> formula is derived from observed temperature readings:
->>>
->>>    temp[C] = raw * 0.9066 - 78.624
->>>
->>> Testing showed that the temperature register does not return a valid
->>> value while the xHCI PCI function is runtime suspended. By default, the
->>> driver does not wake the parent PCI device from hwmon reads and returns
->>> -EPERM while the device is suspended.
->> Seriously ? Why would this be a permission issue ? Make it -ENODATA.
->>
->>> Document the supported device, register access, conversion formula,
->>> module parameter, sysfs attributes, and sysfs lookup method.
+>>> Subsystem-specific child drivers can then bind to those devices through
+>>> the auxiliary bus and keep their hardware-specific logic outside xhci-pci.
 >>>
 >>> Assisted-by: Codex:gpt-5.5
 >>> Signed-off-by: Jihong Min <hurryman2212@gmail.com>
 >>> ---
->>>   Documentation/hwmon/index.rst        |   1 +
->>>   Documentation/hwmon/prom21-hwmon.rst |  86 ++++++++
->>>   drivers/hwmon/Kconfig                |  11 +
->>>   drivers/hwmon/Makefile               |   1 +
->>>   drivers/hwmon/prom21-hwmon.c         | 293 +++++++++++++++++++++++++++
->>>   5 files changed, 392 insertions(+)
->>>   create mode 100644 Documentation/hwmon/prom21-hwmon.rst
->>>   create mode 100644 drivers/hwmon/prom21-hwmon.c
+>>>   drivers/usb/host/Kconfig    | 10 +++++
+>>>   drivers/usb/host/xhci-pci.c | 83 +++++++++++++++++++++++++++++++++++++
+>>>   2 files changed, 93 insertions(+)
 >>>
->>> diff --git a/Documentation/hwmon/index.rst b/Documentation/hwmon/index.rst
->>> index 8b655e5d6b68..41072977f0ef 100644
->>> --- a/Documentation/hwmon/index.rst
->>> +++ b/Documentation/hwmon/index.rst
->>> @@ -216,6 +216,7 @@ Hardware Monitoring Kernel Drivers
->>>      pmbus
->>>      powerz
->>>      powr1220
->>> +   prom21-hwmon
->>>      pt5161l
->>>      pxe1610
->>>      pwm-fan
->>> diff --git a/Documentation/hwmon/prom21-hwmon.rst b/Documentation/hwmon/prom21-hwmon.rst
->>> new file mode 100644
->>> index 000000000000..0ba763e68ae9
->>> --- /dev/null
->>> +++ b/Documentation/hwmon/prom21-hwmon.rst
->>> @@ -0,0 +1,86 @@
->>> +.. SPDX-License-Identifier: GPL-2.0
->>> +
->>> +Kernel driver prom21-hwmon
->>> +==========================
->>> +
->>> +Supported chips:
->>> +
->>> +  * AMD Promontory 21 (PROM21) xHCI
->>> +
->>> +    Prefix: 'prom21_hwmon'
->> The "hwmon" in this name is redundant. Yes, I know, others like it too,
->> but it is still redundant. I won't comment on it further, though.
->>
->>> +
->>> +    PCI ID: 1022:43fd
->>> +
->>> +Author:
->>> +
->>> +  - Jihong Min <hurryman2212@gmail.com>
->>> +
->>> +Description
->>> +-----------
->>> +
->>> +This driver exposes the temperature sensor in AMD PROM21 xHCI controllers.
->>> +
->>> +The driver binds to an auxiliary device created by the xHCI PCI driver for
->>> +supported controllers. The sensor value is accessed through a vendor-specific
->>> +index/data register pair in the controller's PCI MMIO BAR.
->>> +
->>> +PROM21 is an AMD chipset IP used in single-chip or daisy-chained configurations
->>> +to build AMD 6xx/8xx series chipsets. Since the xHCI controllers are
->>> +integrated in PROM21, this temperature can also be used as a monitor for a
->>> +temperature close to the AMD chipset temperature.
->>> +
->>> +Register access
->>> +---------------
->>> +
->>> +The temperature value is read through a vendor-specific index/data register
->>> +pair in the xHCI PCI MMIO BAR. The driver uses the following byte offsets from
->>> +the MMIO BAR base:
->>> +
->>> +======================= =====================================================
->>> +0x3000            Vendor index register
->>> +0x3008            Vendor data register
->>> +======================= =====================================================
->>> +
->>> +The driver saves the current vendor index register value, writes the
->>> +temperature selector ``0x0001e520`` to the vendor index register, reads the
->>> +vendor data register, and restores the previous vendor index value before
->>> +returning. The raw temperature value is the low 8 bits of the vendor data
->>> +register value.
->>> +
->>> +No public AMD reference is available for the raw value. The temperature
->>> +conversion formula is derived from observed PROM21 xHCI temperature readings:
->>> +
->>> +  temp[C] = raw * 0.9066 - 78.624
->>> +
->>> +Module parameters
->>> +-----------------
->>> +
->>> +pm: bool
->>> +  Allow runtime PM state changes for device memory access. This is disabled
->>> +  by default. If disabled, the driver does not wake the xHCI PCI device from
->>> +  a temperature read. It reads the temperature only when the device is active.
->>> +  A read from a suspended device returns ``-EPERM``.
->>> +
->>> +Sysfs entries
->>> +-------------
->>> +
->>> +======================= =====================================================
->>> +temp1_input        Temperature in millidegrees Celsius
->>> +temp1_label        "xHCI"
->> This is pointless and not the idea behind having a "label" attribute.
->> The driver name itself already associates the sensor with xhci.
->> Please drop.
->>
->>> +======================= =====================================================
->>> +
->>> +The hwmon device name is ``prom21_hwmon``. The sysfs path depends on the hwmon
->>> +device number assigned by the kernel. Userspace can locate the device by
->>> +matching the ``name`` attribute:
->>> +
->>> +.. code-block:: sh
->>> +
->>> +   for hwmon in /sys/class/hwmon/hwmon*; do
->>> +           [ "$(cat "$hwmon/name")" = "prom21_hwmon" ] || continue
->>> +           cat "$hwmon/temp1_label"
->>> +           cat "$hwmon/temp1_input"
->>> +   done
->>> +
->>> +``temp1_input`` reports millidegrees Celsius, so a value of ``50113`` means
->>> +50.113 degrees Celsius. If the raw register value is invalid, ``temp1_input``
->>> +returns ``-ENODATA``.
->>> diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
->>> index 14e4cea48acc..06d81cc29fec 100644
->>> --- a/drivers/hwmon/Kconfig
->>> +++ b/drivers/hwmon/Kconfig
->>> @@ -940,6 +940,17 @@ config SENSORS_POWERZ
->>>         This driver can also be built as a module. If so, the module
->>>         will be called powerz.
->>> +config SENSORS_PROM21
->>> +    tristate "AMD Promontory 21 xHCI temperature sensor"
+>>> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+>>> index 0a277a07cf70..e0c2c7ac5c97 100644
+>>> --- a/drivers/usb/host/Kconfig
+>>> +++ b/drivers/usb/host/Kconfig
+>>> @@ -42,6 +42,16 @@ config USB_XHCI_PCI
+>>>       depends on USB_PCI
+>>>       default y
+>>>   +config USB_XHCI_PCI_AUXDEV
+>>> +    bool "xHCI PCI auxiliary device support"
 >>> +    depends on USB_XHCI_PCI
->>> +    select USB_XHCI_PCI_AUXDEV
+>>> +    select AUXILIARY_BUS
 >>> +    help
->>> +      If you say yes here you get support for the AMD Promontory 21
->>> +      (PROM21) xHCI temperature sensor.
+>>> +      This enables xHCI PCI support for registering auxiliary devices
+>>> +      for selected controllers. It is used by optional child drivers
+>>> +      that bind to xHCI PCI controller-specific functionality through
+>>> +      the auxiliary bus.
 >>> +
->>> +      This driver can also be built as a module. If so, the module
->>> +      will be called prom21-hwmon.
+>>>   config USB_XHCI_PCI_RENESAS
+>>>       tristate "Support for additional Renesas xHCI controller with firmware"
+>>>       depends on USB_XHCI_PCI
+>>> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+>>> index 585b2f3117b0..618d6840e108 100644
+>>> --- a/drivers/usb/host/xhci-pci.c
+>>> +++ b/drivers/usb/host/xhci-pci.c
+>>> @@ -8,6 +8,8 @@
+>>>    * Some code borrowed from the Linux EHCI driver.
+>>>    */
+>>>   +#include <linux/auxiliary_bus.h>
+>>> +#include <linux/device/devres.h>
+>>>   #include <linux/pci.h>
+>>>   #include <linux/slab.h>
+>>>   #include <linux/module.h>
+>>> @@ -80,6 +82,7 @@
+>>>   #define PCI_DEVICE_ID_AMD_RAVEN_15E1_XHCI        0x15e1
+>>>   #define PCI_DEVICE_ID_AMD_RAVEN2_XHCI            0x15e5
+>>>   #define PCI_DEVICE_ID_AMD_RENOIR_XHCI            0x1639
+>>> +#define PCI_DEVICE_ID_AMD_PROM21_XHCI            0x43fd
+>>>   #define PCI_DEVICE_ID_AMD_PROMONTORYA_4            0x43b9
+>>>   #define PCI_DEVICE_ID_AMD_PROMONTORYA_3            0x43ba
+>>>   #define PCI_DEVICE_ID_AMD_PROMONTORYA_2            0x43bb
+>>> @@ -103,6 +106,80 @@ static int xhci_pci_run(struct usb_hcd *hcd);
+>>>   static int xhci_pci_update_hub_device(struct usb_hcd *hcd, struct usb_device *hdev,
+>>>                         struct usb_tt *tt, gfp_t mem_flags);
+>>>   +static const struct pci_device_id pci_ids_have_aux[] = {
+>>> +    { PCI_DEVICE_DATA(AMD, PROM21_XHCI, "prom21_hwmon") },
+>>> +    { /* end: all zeroes */ }
+>>> +};
 >>> +
->>>   config SENSORS_POWR1220
->>>       tristate "Lattice POWR1220 Power Monitoring"
->>>       depends on I2C
->>> diff --git a/drivers/hwmon/Makefile b/drivers/hwmon/Makefile
->>> index 4788996aa137..7693ed3b3f72 100644
->>> --- a/drivers/hwmon/Makefile
->>> +++ b/drivers/hwmon/Makefile
->>> @@ -196,6 +196,7 @@ obj-$(CONFIG_SENSORS_PC87427)    += pc87427.o
->>>   obj-$(CONFIG_SENSORS_PCF8591)    += pcf8591.o
->>>   obj-$(CONFIG_SENSORS_POWERZ)    += powerz.o
->>>   obj-$(CONFIG_SENSORS_POWR1220)  += powr1220.o
->>> +obj-$(CONFIG_SENSORS_PROM21)    += prom21-hwmon.o
->>>   obj-$(CONFIG_SENSORS_PT5161L)    += pt5161l.o
->>>   obj-$(CONFIG_SENSORS_PWM_FAN)    += pwm-fan.o
->>>   obj-$(CONFIG_SENSORS_QNAP_MCU_HWMON)    += qnap-mcu-hwmon.o
->>> diff --git a/drivers/hwmon/prom21-hwmon.c b/drivers/hwmon/prom21-hwmon.c
->>> new file mode 100644
->>> index 000000000000..1c137304d65d
->>> --- /dev/null
->>> +++ b/drivers/hwmon/prom21-hwmon.c
->>> @@ -0,0 +1,293 @@
->>> +// SPDX-License-Identifier: GPL-2.0
->>> +/*
->>> + * AMD PROM21 xHCI Hwmon Implementation
->>> + * (only temperature monitoring is supported)
->>> + *
->>> + * This can be effectively used as the alternative chipset temperature monitor.
->>> + *
->>> + * Copyright (C) 2026 Jihong Min <hurryman2212@gmail.com>
->>> + */
+>>> +struct xhci_pci_aux_devres {
+>>> +    struct auxiliary_device *auxdev;
+>>> +};
 >>> +
->>> +#include <linux/auxiliary_bus.h>
->>> +#include <linux/device.h>
->>> +#include <linux/err.h>
->>> +#include <linux/errno.h>
->>> +#include <linux/hwmon.h>
->>> +#include <linux/io.h>
->>> +#include <linux/math.h>
->>> +#include <linux/module.h>
->>> +#include <linux/mutex.h>
->>> +#include <linux/pci.h>
->>> +#include <linux/pm_runtime.h>
->>> +#include <linux/slab.h>
->>> +#include <linux/usb.h>
->>> +#include <linux/usb/hcd.h>
+>>> +static const char *xhci_pci_aux_dev_name(struct pci_dev *pdev)
+>>> +{
+>>> +    const struct pci_device_id *id;
 >>> +
->>> +#define PROM21_INDEX 0x3000
->>> +#define PROM21_DATA 0x3008
->>> +#define PROM21_TEMP_REG 0x0001e520
+>>> +    id = pci_match_id(pci_ids_have_aux, pdev);
+>>> +    if (!id)
+>>> +        return NULL;
 >>> +
->>> +#define PROM21_HWMON_NAME "prom21_hwmon"
->>> +#define PROM21_TEMP_LABEL "xHCI"
+>>> +    return (const char *)id->driver_data;
+>>> +}
 >>> +
->>> +struct prom21_hwmon {
->>> +    struct pci_dev *pdev;
->>> +    struct device *hwmon_dev;
->>> +    void __iomem *regs;
->>> +    bool removing;
->>> +    struct mutex lock; /* protects removing and the index/data registers */
->> It is difficult to believe that auxiliary device management is so unstable
->> that it needs all that complexity. This will require confirmation from
->> someone who knows how this is supposed to work, and a detailed explanation
->> in the driver explaining why it is necessary.
+>>> +static void xhci_pci_aux_devres_release(struct device *dev, void *res)
+>>> +{
+>>> +    struct xhci_pci_aux_devres *devres = res;
+>>> +
+>>> +    if (devres->auxdev)
+>>> +        auxiliary_device_destroy(devres->auxdev);
+>>> +}
+>>> +
+>>> +static void xhci_pci_try_add_aux_device(struct pci_dev *pdev)
+>>> +{
+>>> +    struct xhci_pci_aux_devres *devres;
+>>> +    struct auxiliary_device *auxdev;
+>>> +    const char *aux_dev_name;
+>>> +
+>>> +    aux_dev_name = xhci_pci_aux_dev_name(pdev);
+>>> +    if (!aux_dev_name)
+>>> +        return;
+>>> +
+>>> +    devres = devres_alloc(xhci_pci_aux_devres_release, sizeof(*devres),
+>>> +                  GFP_KERNEL);
+>>> +    if (!devres) {
+>>> +        dev_warn(&pdev->dev,
+>>> +             "failed to allocate auxiliary device state\n");
+>>> +        return;
+>>> +    }
+>>> +
+>>> +    auxdev = auxiliary_device_create(&pdev->dev, KBUILD_MODNAME,
+>>> +                     aux_dev_name, NULL,
+>>> +                     (pci_domain_nr(pdev->bus) << 16) |
+>>> +                         pci_dev_id(pdev));
+>>> +    if (!auxdev) {
+>>> +        devres_free(devres);
+>>> +        dev_warn(&pdev->dev, "failed to add %s auxiliary device\n",
+>>> +             aux_dev_name);
+>>> +        return;
+>>> +    }
+>>> +
+>>> +    devres->auxdev = auxdev;
+>>> +    devres_add(&pdev->dev, devres);
+>>> +}
+>>> +
+>>> +static void xhci_pci_try_remove_aux_device(struct pci_dev *pdev)
+>>> +{
+>>> +    struct xhci_pci_aux_devres *devres;
+>>> +
+>>> +    devres = devres_find(&pdev->dev, xhci_pci_aux_devres_release, NULL,
+>>> +                 NULL);
+>>> +    if (!devres || !devres->auxdev)
+>>> +        return;
+>>> +
+>>> +    auxiliary_device_destroy(devres->auxdev);
+>>> +    devres->auxdev = NULL;
+>>> +}
+>>> +
+>>>   static const struct xhci_driver_overrides xhci_pci_overrides __initconst = {
+>>>       .reset = xhci_pci_setup,
+>>>       .start = xhci_pci_run,
+>>> @@ -677,6 +754,9 @@ int xhci_pci_common_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>>>       if (device_property_read_bool(&dev->dev, "ti,pwron-active-high"))
+>>>           pci_clear_and_set_config_dword(dev, 0xE0, 0, 1 << 22);
+>>>   +    if (IS_ENABLED(CONFIG_USB_XHCI_PCI_AUXDEV))
+>>> +        xhci_pci_try_add_aux_device(dev);
+>>> +
+>>>       return 0;
 >>
->>> +};
->>> +
->>> +static bool pm;
->>> +module_param(pm, bool, 0444);
->>> +MODULE_PARM_DESC(pm, "Allow runtime PM state changes for device memory access");
->> No. Either enable it or don't, but please don't add such module parameters.
->> The pm complexity in the driver, as written, makes it all but impossible
->> to determine what is going on.
+>> I think this should be turned around so that the vendor specific code calls the common code.
+>> xhci-pci-renesas.c does this nicely.
 >>
->>> +
->>> +static void prom21_hwmon_invalidate(struct prom21_hwmon *hwmon)
->>> +{
->>> +    mutex_lock(&hwmon->lock);
->>> +    hwmon->removing = true;
->>> +    mutex_unlock(&hwmon->lock);
->>> +}
->>> +
->>> +static int prom21_hwmon_pm_get(struct prom21_hwmon *hwmon, bool *pm_ref)
->>> +{
->>> +    struct device *dev = &hwmon->pdev->dev;
->>> +    int ret;
->>> +
->>> +    *pm_ref = false;
->>> +
->>> +    /*
->>> +     * PROM21 temperature register access does not return a valid value while
->>> +     * the parent xHCI PCI function is suspended. By default, only read when
->>> +     * runtime PM reports the device as active, or when runtime PM is disabled
->>> +     * and the device is not marked as suspended. If pm=Y, allow runtime PM
->>> +     * state changes while accessing the temperature register.
->>> +     */
->>> +    if (pm) {
->>> +        ret = pm_runtime_resume_and_get(dev);
->>> +        if (ret < 0)
->>> +            return ret;
->>> +
->>> +        *pm_ref = true;
->>> +        return 0;
->>> +    }
->>> +
->>> +    ret = pm_runtime_get_if_active(dev);
->>> +    if (ret > 0) {
->>> +        *pm_ref = true;
->>> +        return 0;
->>> +    }
->>> +
->>> +    if (ret == -EINVAL && !pm_runtime_status_suspended(dev))
->>> +        return 0;
->>> +
->>> +    if (!ret || pm_runtime_status_suspended(dev))
->>> +        return -EPERM;
->>> +
->>> +    return ret;
->>> +}
->>> +
->>> +/*
->>> + * This is not a pure MMIO read. The PROM21 vendor data register is selected
->>> + * by temporarily writing PROM21_TEMP_REG to the vendor index register. Keep
->>> + * the sequence short and restore the previous index before returning.
->>> + */
->>> +static int prom21_hwmon_read_temp_raw_restore_index(struct prom21_hwmon *hwmon,
->>> +                            u8 *raw)
->>> +{
->>> +    struct device *dev = &hwmon->pdev->dev;
->>> +    bool pm_ref;
->>> +    u32 index;
->>> +    u32 data;
->>> +    int ret;
->>> +
->>> +    /*
->>> +     * The xHCI PCI remove path destroys the auxiliary device before HCD
->>> +     * teardown. Keep runtime PM and MMIO inside the critical section so a
->>> +     * sysfs read cannot use the vendor register pair after remove starts.
->>> +     */
->>> +    mutex_lock(&hwmon->lock);
->>> +    if (hwmon->removing) {
->>> +        mutex_unlock(&hwmon->lock);
->>> +        return -ENODEV;
->>> +    }
->>> +
->>> +    ret = prom21_hwmon_pm_get(hwmon, &pm_ref);
->>> +    if (ret) {
->>> +        mutex_unlock(&hwmon->lock);
->>> +        return ret;
->>> +    }
->>> +
->>> +    index = readl(hwmon->regs + PROM21_INDEX);
->>> +    /* Select the PROM21 temperature register through the vendor index. */
->>> +    writel(PROM21_TEMP_REG, hwmon->regs + PROM21_INDEX);
->>> +    data = readl(hwmon->regs + PROM21_DATA);
->>> +    /* Restore the previous vendor index register value. */
->>> +    writel(index, hwmon->regs + PROM21_INDEX);
->>> +    readl(hwmon->regs + PROM21_INDEX);
->>> +
->>> +    if (pm_ref) {
->>> +        /*
->>> +         * Use autosuspend so repeated sysfs reads do not suspend the
->>> +         * controller immediately after each successful register access.
->>> +         */
->>> +        pm_runtime_mark_last_busy(dev);
->>> +        pm_runtime_put_autosuspend(dev);
->>> +    }
->>> +    mutex_unlock(&hwmon->lock);
->>> +
->>> +    *raw = data & 0xff;
->>> +    if (!*raw || *raw == 0xff)
->>> +        return -ENODATA;
->>> +
->>> +    return 0;
->>> +}
->>> +
->>> +static long prom21_hwmon_raw_to_millicelsius(u8 raw)
->>> +{
->>> +    /*
->>> +     * No public AMD reference is available for this value.
->>> +     * The scale was derived from observed PROM21 xHCI temperature readings:
->>> +     *  temp[C] = raw * 0.9066 - 78.624
->>> +     */
->>> +    return DIV_ROUND_CLOSEST(raw * 9066, 10) - 78624;
->>> +}
->>> +
->>> +static umode_t prom21_hwmon_is_visible(const void *drvdata,
->>> +                       enum hwmon_sensor_types type, u32 attr,
->>> +                       int channel)
->>> +{
->>> +    if (type != hwmon_temp || channel)
->>> +        return 0;
->>> +
->>> +    switch (attr) {
->>> +    case hwmon_temp_input:
->>> +    case hwmon_temp_label:
->>> +        return 0444;
->>> +    default:
->>> +        return 0;
->>> +    }
->>> +}
->>> +
->>> +static int prom21_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
->>> +                 u32 attr, int channel, long *val)
->>> +{
->>> +    struct prom21_hwmon *hwmon = dev_get_drvdata(dev);
->>> +    u8 raw;
->>> +    int ret;
->>> +
->>> +    if (type != hwmon_temp || attr != hwmon_temp_input || channel)
->>> +        return -EOPNOTSUPP;
->>> +
->>> +    ret = prom21_hwmon_read_temp_raw_restore_index(hwmon, &raw);
->>> +    if (ret)
->>> +        return ret;
->>> +
->>> +    *val = prom21_hwmon_raw_to_millicelsius(raw);
->>> +    return 0;
->>> +}
->>> +
->>> +static int prom21_hwmon_read_string(struct device *dev,
->>> +                    enum hwmon_sensor_types type, u32 attr,
->>> +                    int channel, const char **str)
->>> +{
->>> +    if (type != hwmon_temp || attr != hwmon_temp_label || channel)
->>> +        return -EOPNOTSUPP;
->>> +
->>> +    *str = PROM21_TEMP_LABEL;
->>> +    return 0;
->>> +}
->>> +
->>> +static const struct hwmon_ops prom21_hwmon_ops = {
->>> +    .is_visible = prom21_hwmon_is_visible,
->>> +    .read = prom21_hwmon_read,
->>> +    .read_string = prom21_hwmon_read_string,
->>> +};
->>> +
->>> +static const struct hwmon_channel_info *const prom21_hwmon_info[] = {
->>> +    HWMON_CHANNEL_INFO(temp, HWMON_T_INPUT | HWMON_T_LABEL),
->>> +    NULL,
->>> +};
->>> +
->>> +static const struct hwmon_chip_info prom21_hwmon_chip_info = {
->>> +    .ops = &prom21_hwmon_ops,
->>> +    .info = prom21_hwmon_info,
->>> +};
->>> +
->>> +static int prom21_hwmon_probe(struct auxiliary_device *auxdev,
->>> +                  const struct auxiliary_device_id *id)
->>> +{
->>> +    struct device *dev = &auxdev->dev;
->>> +    struct device *parent = dev->parent;
->>> +    struct prom21_hwmon *hwmon;
->>> +    struct pci_dev *pdev;
->>> +    struct usb_hcd *hcd;
->>> +    int ret;
->>> +
->>> +    if (!parent || !dev_is_pci(parent))
->>> +        return -ENODEV;
->>> +
->>> +    pdev = to_pci_dev(parent);
->>> +    hcd = pci_get_drvdata(pdev);
->>> +    if (!hcd)
->>> +        return dev_err_probe(dev, -ENODEV,
->>> +                     "xHCI HCD data unavailable\n");
->>> +
->>> +    if (!hcd->regs || hcd->rsrc_len < PROM21_DATA + sizeof(u32))
->>> +        return dev_err_probe(dev, -ENODEV, "invalid MMIO resource\n");
->>> +
->>> +    hwmon = devm_kzalloc(dev, sizeof(*hwmon), GFP_KERNEL);
->>> +    if (!hwmon)
->>> +        return -ENOMEM;
->>> +
->>> +    ret = devm_mutex_init(dev, &hwmon->lock);
->>> +    if (ret)
->>> +        return ret;
->>> +
->>> +    hwmon->pdev = pdev;
->>> +    hwmon->regs = hcd->regs;
->>> +    auxiliary_set_drvdata(auxdev, hwmon);
->>> +
->>> +    /*
->>> +     * Use the PCI function as the hwmon parent so user space reports it as
->>> +     * a PCI adapter. Lifetime is still owned by this auxiliary driver;
->>> +     * remove() unregisters the hwmon device before xhci-pci tears down the
->>> +     * HCD.
->>> +     */
->>> +    hwmon->hwmon_dev =
->>> +        hwmon_device_register_with_info(&pdev->dev, PROM21_HWMON_NAME,
->>> +                        hwmon, &prom21_hwmon_chip_info,
->>> +                        NULL);
->>> +    if (IS_ERR(hwmon->hwmon_dev))
->>> +        return PTR_ERR(hwmon->hwmon_dev);
->>> +
->>> +    return 0;
->>> +}
->>> +
->>> +static void prom21_hwmon_remove(struct auxiliary_device *auxdev)
->>> +{
->>> +    struct prom21_hwmon *hwmon = auxiliary_get_drvdata(auxdev);
->>> +
->>> +    if (hwmon) {
->>> +        prom21_hwmon_invalidate(hwmon);
->>> +        hwmon_device_unregister(hwmon->hwmon_dev);
->>> +    }
->>> +}
->>> +
->>> +static const struct auxiliary_device_id prom21_hwmon_id_table[] = {
->>> +    { .name = "xhci_pci." PROM21_HWMON_NAME },
->>> +    {}
->>> +};
->>> +MODULE_DEVICE_TABLE(auxiliary, prom21_hwmon_id_table);
->>> +
->>> +static struct auxiliary_driver prom21_hwmon_driver = {
->>> +    .name = "prom21-hwmon",
->>> +    .probe = prom21_hwmon_probe,
->>> +    .remove = prom21_hwmon_remove,
->>> +    .id_table = prom21_hwmon_id_table,
->>> +};
->>> +module_auxiliary_driver(prom21_hwmon_driver);
->>> +
->>> +MODULE_AUTHOR("Jihong Min <hurryman2212@gmail.com>");
->>> +MODULE_DESCRIPTION("AMD PROM21 xHCI hwmon driver");
->>> +MODULE_LICENSE("GPL");
+>> In your case it would be adding something like a xhci-pci-prom21.c pci driver:
+>>
+>> xhci_pci_prom21_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>> {
+>>     crate_auxiliary_device(dev);
+>>     return xhci_pci_common_probe(dev, id);
+>> }
+>>
+>> xhci_pci_prom21_remove(struct pci_dev *dev)
+>> {
+>>     destroy_auxiliary_device(dev);
+>>     xhci_pci_remove(dev);
+>> }
+>>
+>> static const struct pci_device_id pci_ids[] = {
+>>     { PCI_DEVICE(YOUR_AMD_PCI_VENDOR_ID, YOUR_PROM21_DEVICE_ID) },
+>>     { /* end: all zeroes */ }
+>> };
+>> MODULE_DEVICE_TABLE(pci, pci_ids);
+>>
+>> static struct pci_driver xhci_prom21_pci_driver = {
+>>     .name =        "xhci-pci-prom21",
+>>     .id_table =    pci_ids,
+>>
+>>     .probe =    xhci_pci_prom21_probe,
+>>     .remove =    xhci_pci_prom21_remove,
+>>
+>>     .shutdown =     usb_hcd_pci_shutdown,
+>>     .driver = {
+>>         .pm = pm_ptr(&usb_hcd_pci_pm_ops),
+>>     },
+>> };
+>> module_pci_driver(xhci_prom21_pci_driver);
+>>
+>> MODULE_DESCRIPTION("AMD Promontory 21 xHCI PCI Host Controller Driver");
+>> MODULE_IMPORT_NS("xhci");
+>> MODULE_LICENSE("GPL v2");
+>>
+>> -Mathias
+> 
 
