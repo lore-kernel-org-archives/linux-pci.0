@@ -1,63 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C9D839DBE4;
-	Fri,  8 May 2026 23:22:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27CA22DA75C
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 23:30:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778282543; cv=none; b=ZueT8PAHiUqrkxkXH6qLUE27UV3/WnccGLNxDo0Me+B1tsVrbflaaozl1vSnxBwYVznKNye4b41oTyj8glEMV3tpzUgee3GgQeu9WzCedWHPJ080nsApbXu0gKy9KKSUi3nTXzUXj6INmMx0wRwPBORSbAt2+B+mmHM9bw8wbIE=
+	t=1778283023; cv=none; b=pMOHvRjlr8/iQ9+jh0lDud/ABn1QgtQjCnhE2C14FviIMAKIv63XV++LmOET5LlB+BRxS3r2lUFDAd65ggB7yhncMKk/eMLiebnspdMSZ3C9EqSg8d2vdf6e7Dcls4Hs9AQpknrG/bcHtQF5jhV+Q9Sf7l/erWQ3Y9uLxHPr/m4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778282543; c=relaxed/simple;
-	bh=6d84cgm4DRArrgnud1ZGRucUe96Mg5TsvVVukCKOvDY=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=LqMaAcwX4bPDFGxGAr1mImzJgS9UscrxUKKT13Idh1vXVZme5EH/n6146hgQ3JSTaHQMIFYNI3nTFrBvzSDvrogdFLsm2t9guqYUs/zxdARFd/jn/TeLKYZiH3fEkufTZq7N20mKq7KNTnKa9jc/uIYLYu03wk3081g7N7WdAuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V9hpKE2L; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778283023; c=relaxed/simple;
+	bh=mFt9oDbTTtBb8Y3wfB6C3gFl1lYyF7MsvjPeoede2jQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=IOCiY9N9p5U3hQBoxE93eKw/RLgD60cZhiySCJgaHv2wScESrNYLXn/c9kPCLQoo69+ErPHcrxSRiec+pAP7yIligGjUdFvAEXjtjL546VzeJFz1wz3CO50Ekf5dCfncfFmxUO55F1gnh/CW30S5462GYaqeOxfKxxw5hvDyLqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NEi9LIvA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V9hpKE2L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22D9BC2BCB4;
-	Fri,  8 May 2026 23:22:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NEi9LIvA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D20A8C2BCB0;
+	Fri,  8 May 2026 23:30:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778282543;
-	bh=6d84cgm4DRArrgnud1ZGRucUe96Mg5TsvVVukCKOvDY=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=V9hpKE2Ledm4wBAeQiBcom/PBlS8hP/kgQHQFodgO0FLiTt+ph+lpJBbbSXhWfqRd
-	 oU4nEbeSb/QmHbvIRkuWhP/IM20dEescOSxvM10BFllviyyMqYZPFB6slnpq2L3hRh
-	 vNh9Gco9jZ1JHhyit0PlFlLanwnTtZccbdjkjPa8CbjUdECgBmAopxqbua9ejXKByx
-	 HuC5ZYJyUskB3lUR/uMTfWTatmDuUQqKkG+2bjrf1sevXZ0NU9XPmsGv/IUqLhTsrB
-	 yf6Cjq+2DKylO60wgOTqtlV5oWCh6bKu4vvsXuDEeUqPmbpeRzM1RhS0VnKn/odyuV
-	 GV8D5w7uOFcEg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B9ED838119DB;
-	Fri,  8 May 2026 23:21:32 +0000 (UTC)
-Subject: Re: [GIT PULL] PCI fixes for v7.1
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20260508210428.GA19478@bhelgaas>
-References: <20260508210428.GA19478@bhelgaas>
-X-PR-Tracked-List-Id: <linux-pci.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20260508210428.GA19478@bhelgaas>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.1-fixes-1
-X-PR-Tracked-Commit-Id: 9ef40a09c5de18f0d275a451f5c2a7fd4f07158b
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 678ede852f918581fbc43c61f4c4737a3df99cac
-Message-Id: <177828249129.892019.4662822956812707353.pr-tracker-bot@kernel.org>
-Date: Fri, 08 May 2026 23:21:31 +0000
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, Keith Busch <kbusch@kernel.org>, Lukas Wunner <lukas@wunner.de>, Samiullah Khawaja <skhawaja@google.com>, Marek Vasut <marek.vasut+renesas@mailbox.org>, Marek Vasut <marek.vasut+renesas@gmail.com>, Hans Zhang <18255117159@163.com>, Hans Zhang <hans.zhang@cixtech.com>, Aksh Garg <a-garg7@ti.com>
+	s=k20201202; t=1778283023;
+	bh=mFt9oDbTTtBb8Y3wfB6C3gFl1lYyF7MsvjPeoede2jQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=NEi9LIvAWuED5+HoH2tuOQkKznC2rSrySdajAyH81ZHuCtJySp/ayPgXPhyMgnLZo
+	 qZOvOhRhGLO9msnPW1nzQ+5hvAIXkuIEAaKccpZhaQbxP8ebnalWFUq6Wog0MxvkMm
+	 KrRpm/GTQEfNS/NYbWzLS1/1nn+avyj3EA4FCDotJOSMfAyuznwTTMnCe9Ss2k72Iz
+	 YqBkov3udZzBR6gyanN3hMfmTdNYSwgN290xe+/cQ7nqEO+vxz64ZTLiBoT5Iqr5IB
+	 PlnC11Xx8kSZcjvsVx1OkUzOHxt5NBpyWh2MVkpujKZDYxSxiUv3ZiMR/IB9HZMloy
+	 HeYUbDd6hw5Jg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3] PCI/portdrv: Allow probing even without child
+ services
+Reply-To: sashiko@lists.linux.dev
+To: "Brian Norris" <briannorris@chromium.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260508133629.v3.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+References: <20260508133629.v3.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 08 May 2026 23:30:22 +0000
+Message-Id: <20260508233022.D20A8C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-The pull request you sent on Fri, 8 May 2026 16:04:28 -0500:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] Moving `pci_set_master()` after child device registration causes c=
+hild drivers to probe with Bus Mastering disabled, risking permanently lost=
+ MSI/MSI-X interrupts.
+--
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.1-fixes-1
+commit 9b851bf8faf271ab0b2daad51bfd51f89a1e87d4
+Author: Brian Norris <briannorris@chromium.org>
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/678ede852f918581fbc43c61f4c4737a3df99cac
+PCI/portdrv: Allow probing even without child services
 
-Thank you!
+This commit modifies the PCIe port driver to allow probe to succeed even
+if no child services are available. This ensures the port can still be
+configured for runtime PM and low power modes on systems that only have
+certain port services available or lack legacy INTx interrupts.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdw=
+b33xkcdwk@76vnrx45fsfd/
+
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -343,7 +343,6 @@ static int pcie_port_device_register(struct pci_dev *=
+dev)
+>  	if (!capabilities)
+>  		return 0;
+> =20
+> -	pci_set_master(dev);
+>  	/*
+>  	 * Initialize service irqs. Don't use service devices that
+>  	 * require interrupts if there is no way to generate them.
+
+[ ... ]
+
+>  	/* Allocate child services if any */
+> -	status =3D -ENODEV;
+> -	nr_service =3D 0;
+>  	for (i =3D 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
+>  		int service =3D 1 << i;
+>  		if (!(capabilities & service))
+>  			continue;
+> -		if (!pcie_device_init(dev, service, irqs[i]))
+> -			nr_service++;
+> +		pcie_device_init(dev, service, irqs[i]);
+>  	}
+> -	if (!nr_service)
+> -		goto error_cleanup_irqs;
+> =20
+> -	return 0;
+> +	pci_set_master(dev);
+
+Does moving pci_set_master() after the pcie_device_init() loop risk dropping
+MSI/MSI-X interrupts during child driver probes?
+
+The pcie_device_init() function calls device_register(), which synchronously
+invokes the probe routines of child service drivers like pciehp or aer.
+During probe, these child drivers configure the hardware and enable their
+interrupts.
+
+Because PCIe MSI and MSI-X interrupts are memory write transactions, they
+require the Bus Master Enable (BME) bit to be set in the PCI Command Regist=
+er.
+
+If a hardware event occurs immediately after the child driver unmasks the
+interrupt but before pci_set_master(dev) is called, will the hardware attem=
+pt
+to send an MSI and drop the memory write because BME is 0?
+
+Since PCIe interrupts are edge-triggered messages, could these dropped
+interrupts result in permanently missed hotplug events or cause hardware er=
+ror
+handling regressions?
+
+> -error_cleanup_irqs:
+> -	pci_free_irq_vectors(dev);
+> -error_disable:
+> -	pci_disable_device(dev);
+> -	return status;
+> +	return 0;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508133629.v3.1=
+.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid?part=3D1
