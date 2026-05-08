@@ -1,303 +1,270 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11013059.outbound.protection.outlook.com [52.101.72.59])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 701C91F3B85;
-	Fri,  8 May 2026 03:15:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.59
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778210135; cv=fail; b=aGoZi4meny9wjFIW+93UmTTlicX29ck4U4s9J8THPYmYDt0BnyKUITucKsxGEuBlRW7oZ/A0pzAhxUPsuM/gn2opv6z0pT8t6j1YIMFrODUV95bHFHzqACMwLry6Qmg2Z8p9D0koPv8rhx6qSWQ734R4HxFcE4Chxt7mGCxQpuA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778210135; c=relaxed/simple;
-	bh=P7NlC0/+l1NA8MTjLJ2u3aQnQ6y4Kf96u4qmTTnD0jE=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=agHcQT2HdLcmjw0gizzVuBy8q9IEE1/l6XA8l2DusV25QViEZbrNgaRms4O1AFwaunvtIm12PGUuVePJdHnUQ0ns7+OcZRWmxpYOmg66Z/sCmEGMjSGjuIyeQJRi3WD2bysL9eZSKYWvSJJK94y/tD5DWul5dWMHFWdBY+eCaiw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=i9rEZfKI; arc=fail smtp.client-ip=52.101.72.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3797623AE62
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:17:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778210245; cv=none; b=DFh5BEAH/rguqoKB7EHbWYWN8SQ+6j6dJScJAFERld5XoGPzQqovHDjnllnp2f4A+lY+hYtbh/ZIbAQH+0QJVgotx700vRCDOte5VfhX5naQXSwi+BO2aGC+LocsRteFfjo5SzYPfsTm9u3PJCoBbENCHGR88lNAFIFQ4t5Zi00=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778210245; c=relaxed/simple;
+	bh=olWEdOC0npplVm/+buubaUjCS1b7j/tqkVFbPLXQiHM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TU5hRnR8ulP+3MTQNiEacg9kMd1fgtaYXI3NSz6yU2aG8M7I5UUil6wtDmN2q3pSy8RVVn6sbCxEN4KBiAHGT56EozxwK/s87P53HWLCM+ZMo280jWP2GUK4Fp4AtHT0fBZlmnnKOnvG5ELDmDRYXQg//AftJBgQqGzcl7z+Ewo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IiSk8ZWy; arc=none smtp.client-ip=209.85.215.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="i9rEZfKI"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OnNczUpqZkxPt1YnAf7gVRCr+pG0KUbHd7wped0MX7ZmlCGwt8lUh/7pMgEzSK2hZQZrHjefn1gV+VhYufoeHLKbZWLDUXmhM7EXUDJ7OWh28kuBfhaxNAckMAohBbYYFUOjTIa98liTXIttgG+5KOstqagS1diia26Kq1aKms/y6ygiU0eTGyoRohAvduQnL6J3XmGBAlSU8KwzQaif6AOtwSElqeJBCtViSpvESmiOpvVXlrjAm5IBI6o1fp/2v1ZSbUtLEvwgGrL12oJNAcQTWjv89VtRf+Vri7F/4QllJBhIaXRvoae9GfLF5frVoBtlYNESZ4cuT639o1NqFQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fLZSBMMRGW1Fp45yvmeMIZBNKK0bzr1EIL9mug0MwcE=;
- b=r1IMaHtnexq8tw40ur78hWOIQtCnd870pKHMr2WPF8uOfLfsxMTMuJPraYlZnppuCzdSSjekCDZodU5+xwEw4xYc9fhlLVju5Fy1I3w3fIdpzuxDBMltRpChByEfBzF7c17r1avO1sMPRj9gYjSSKLTiwlhtWT8te0RPol4Mu3i8tx+FMxrRWSGn3fuSBMo/LgXxaRYqfUSaEtiVtVciORMWINUf16uIQTVP0Epl6D/hpXeIb8KY39EFvygV1fCFSa6sYZd1/hUC/Nf5OOKQIo1gHXABNkGcrtpwzze5WGQ1nQ9vKFZJX0NG0QE25TLtb6yjiWCUo94e78xJUN2fzA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fLZSBMMRGW1Fp45yvmeMIZBNKK0bzr1EIL9mug0MwcE=;
- b=i9rEZfKITSPc2uyMucyGo+juOEx7GoEYtavTXKmpyy0XDakdRclJHUmS5NBjBgHZ2u6vOciwAQ82O9c4L+vTLpCoFC/uzzKoOlyIC7RfN+sw+uNr+f58SSvZZIqkYRaoeyT/eTIeNyMNGPNbxqSyM7/gD57bcHYM6dYZwzbhrITnqjmy3w9f5arS2oYv494sy72KqRvd8Lit7PIdUZy3MHhOUKmC8tASGdsrqIwPYZQuX3ecrdEcLw11G2Iavphx1QJzM7GoC1hmIyR/bWKvcxErBPFIod5ZEr6hbq9Nhgsjb0hRzJriD7eOvy/5Ovwc/LEdjCKhdNosdF0EquHD+Q==
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- (2603:10a6:150:30c::14) by GVXPR04MB12159.eurprd04.prod.outlook.com
- (2603:10a6:150:312::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.17; Fri, 8 May
- 2026 03:15:30 +0000
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.20.9891.008; Fri, 8 May 2026
- 03:15:30 +0000
-From: Hongxing Zhu <hongxing.zhu@nxp.com>
-To: Sherry Sun <sherry.sun@nxp.com>, "robh@kernel.org" <robh@kernel.org>,
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "conor+dt@kernel.org"
-	<conor+dt@kernel.org>, Frank Li <frank.li@nxp.com>, "s.hauer@pengutronix.de"
-	<s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>,
-	"festevam@gmail.com" <festevam@gmail.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-	"mani@kernel.org" <mani@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-CC: "imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH V14 03/12] PCI: imx6: Assert PERST# before enabling
- regulators
-Thread-Topic: [PATCH V14 03/12] PCI: imx6: Assert PERST# before enabling
- regulators
-Thread-Index: AQHc0js3bM4lCNbwaEa3e/8C/uPFM7YDhZfw
-Date: Fri, 8 May 2026 03:15:30 +0000
-Message-ID:
- <GV2PR04MB12019D9313DBF77F8265147948C3D2@GV2PR04MB12019.eurprd04.prod.outlook.com>
-References: <20260422093549.407022-1-sherry.sun@nxp.com>
- <20260422093549.407022-4-sherry.sun@nxp.com>
-In-Reply-To: <20260422093549.407022-4-sherry.sun@nxp.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|GVXPR04MB12159:EE_
-x-ms-office365-filtering-correlation-id: 25b7ced0-56cd-4604-7fb0-08deacb00f70
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|19092799006|376014|7416014|366016|1800799024|38070700021|921020|56012099003|18002099003|22082099003;
-x-microsoft-antispam-message-info:
- jYeVCxnKSomcUtN5ccyLNUlBf8ZCHeaGrZdZwuStZcDoKXtx7CdBpNVpwCzQSnBKs5nJZ3rsvEkNTNNPvjCULw+aoDWMHx5lrn0cMgwMdQ/+oL6PH+BdfkE1EnPO1VsMVBhAZ5gcOBcoZTXoMgbM73DX6JSpkEc0RT9P30pzUW+a+nHIDTr+4g8qPHYuQIFBr1Nwqrmi3dZqvm1/Lm5bYpRUkzUoEAIgF0T92wYJqRZWtBKr48AmbEeZ7fz4514gSIl0G0xxwbEudEieopQBaYqdJXE54zt2UGL9My/SGrWiL/KXX4cpzEl4mGrPbEzQPnOG+X+YDHJeJtvyuul8zytSuI6I7ZIp3KAfiOPjgPYIOjnw7PQRlsXZoUaKmQJKUNgdo6d8z4bII7+52YARtUjWHTwt9inTSHYYMDqRVyRpOmI07RfPmHb86ER18rB8Z/chsL9JxowNIXZA86RA2z9+19ZBI5gyEVkvjvpcV67CEh3mqMpWHqB5OnQAXZbwGW/RGmybI019isytypLxZGu8E47oTMWrDo2KFJmkNAL0V6OYmdafrJz7KCJWwBR18aQHWJRIIrsNRY5SthdaSvvLpdqZhQ/yv4DO4L3D78u6gt5kmB7iqJ7Jgx2Kx8CwQpNLse1Fz9GmJssKmS7LnlyZOnFwKMdZOHC90f/dt5MUmYPwRAkrMsrIM+TA7vo8PFwnclzGMOojdJj70v46baiMDb0GQO//2YBdzszN1RXHeJMiEhoOWfSmCVoLPuDcEF1H748INWzMXpuicWCkDg==
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(376014)(7416014)(366016)(1800799024)(38070700021)(921020)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?5Q5uFlDuYZbaGKqX0XjOaIeOQxtXo+APBdDTKnbuhVI6TaOfyF+ZtLjVAnns?=
- =?us-ascii?Q?xQnXpsymVsDORRXmAT3NR7LkamB7NsQOla362BCCY1R+efBBxL4fCg9sn1nE?=
- =?us-ascii?Q?rkvI4oxwuXrLLDtgB+3RZTwacwvDNc/gVhnm1mQcUT4rWVOGUU20yQ774/yd?=
- =?us-ascii?Q?kCxXyvZxVbCQgHpzaOptOtlbcAtXZuTrKDcWYrghgDHIea+cEm2WGPFTnirm?=
- =?us-ascii?Q?Ip2O2Ep5wwKNymiGDhRwodU2CcnrbzfXsZKusdvtmZVkTdC11IGcIz+0rytW?=
- =?us-ascii?Q?DuEUDgLnnKmgvKpGD5p5wo9L9pERIyNH1tCn0dyjOBS79EwuGqo4lrNEuKwq?=
- =?us-ascii?Q?2bhTatH0PvirxhD2/hQpUJcOJmm2dJdF+92giZLat6RULBPKaTmqlqIcjbPO?=
- =?us-ascii?Q?31C4jE+HHc1KcCdq0rZP0AqEuDGG+UVYJNWjBh0QZxgccRDgIi9bNIoHek3A?=
- =?us-ascii?Q?XxmsdvzvkvEcl2FFS5da/muDYYZSfXH41Umy1fMgSGL7ESxYo/LteM6hPl+5?=
- =?us-ascii?Q?2gHpnhzUXeDh36O6QQD1hjYxt5sYHfxpnudWNME0oNqTKu3ZvGNKM3HkDiHB?=
- =?us-ascii?Q?q0x94Xmi53NO6GiK+ODwSuHe04rOS5JNj/dA1ENrYDIMYi/wYoPRYoFfzJPp?=
- =?us-ascii?Q?zP98Sd2RG/3Q8EJTo+nU9H6e1vqsMXqnTJBtA398oDcMFzQQI+AgtcEc5b2s?=
- =?us-ascii?Q?1NrXTTvlJ3sa9myUm75exJigkT57PhyeZ1YRQElQwJhhb4nP/RZk1j9xa0Y7?=
- =?us-ascii?Q?6jNHmid26SMsmRguzyfXPKlpKLjeUAbgHnQDtIBi3WKcIa7VWjjs/fvMdrv3?=
- =?us-ascii?Q?jhM4q7QzZKo4Yxnmj8xJandcPXVx+psDPuVuc5L1IsG7H4n3EPgPLncNTe2T?=
- =?us-ascii?Q?UAIve3TDFzXEJRCRP7twc9KSCdsPU846P3FFUgkbxuJu74RTZnt1x4chsUV0?=
- =?us-ascii?Q?W0n+8P3IZT34ItdoS1aWHjs+UpX65Xx2hhi0ZjjuorPUsKpF6ejXFVFoR1JL?=
- =?us-ascii?Q?DuFO+eWc2miRty4jz3KH4wPQdnW4icxAC1whQRPXlkeWgm0k98BUpSzLUfMX?=
- =?us-ascii?Q?2Ey4q+BrvVkX51jU8pryC3/9Gtb761Pk1uolQFTfbVCtAuYTwgwIUYCNOSHJ?=
- =?us-ascii?Q?6DNlGDw0/fBIWrZA6LJV9kcQLkPAMdMNNU/AosP5iIBWhPnXy2zxly84/0AA?=
- =?us-ascii?Q?uVMyvQD2kz21rq7+4XqhxkmKISC2aZTESbUctGy9Zk1+X67H2TMS+kYwUN18?=
- =?us-ascii?Q?4YVDCg49MVTQopKggvaJ2FeVIcmdhGDjRSKKNzIRi/NKH3RPTlbThOccV3ra?=
- =?us-ascii?Q?zEbkxA0uWIKzd9yKfZyuMHToM1peyYtQuTcvLMonPn3QZbzxc6AWpEbTTb6G?=
- =?us-ascii?Q?8W0/tU+50oX5+uoo6NoiUEEtIbU06LzgiW2UCK9uXO5NmCxjg2XBA9eNR3Nm?=
- =?us-ascii?Q?rBG0hRYi7gOOE+R1k2K3y7wZAdoz3HsNoF7kjW+qEKvihR9+v5tX76WJzr6L?=
- =?us-ascii?Q?Tf9K8ILK8evjTcxjJ4+YCO3QXWgjv9DXOl96TDqNJBIox/bjXmBdI98uNZn2?=
- =?us-ascii?Q?tJRGQ64+hHkwmWXU8j28pVkW6Kjbwk82nM0GcXqisaO2CJ/WMfCQ92LD/1so?=
- =?us-ascii?Q?e7GA0+B+E0sZ+5OTdcaIQDPkoS9htwb/+aOJklVqCMrZlbDnmA1zMIG1+j5r?=
- =?us-ascii?Q?p+DvGbjvI3nFZ/3HTC3qXIPvvS6pHcQYYTAqySNXzRfVlGY1?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IiSk8ZWy"
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-c7980c060cfso660692a12.2
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2026 20:17:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778210242; x=1778815042; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Bis4g28b9JZNcXJXn6/4Wkgj50FVt3cnNrHRU3VMTEw=;
+        b=IiSk8ZWymzWQazaVn/OelvOm0vt83ny7x4TNvh2Usgwwz+SR809iwWZNAknwc33WP8
+         mOdQ1QEAUvZ8+BZvIyL74MVEkmHQ1ELC7q0G/h+wF6sbsDXqDV+Cvp6ecPMBgIwp+4kJ
+         6PTHbpc28u875YFUnyE0KSNe5xWViCj2SZ5V5E3twsXqOjWvc25tdXjpOuBQRZjN+w2Q
+         YZ8auPcQ4uq7hNxZ8G0eGLIT7Xu0+iIz1MHZJPkQ8XRsAOhE+9hQcnmMxqmqnpZ+PneZ
+         wdJ9tL5P48GZfXY5PCJhKROf+sFdI22UXt/u0iK+gr/5CTcdQzI4n8U93FlGtQtR8haS
+         PjtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778210242; x=1778815042;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Bis4g28b9JZNcXJXn6/4Wkgj50FVt3cnNrHRU3VMTEw=;
+        b=ePH03d8tPzzjSgzZlIgbSqyF/97HmGA2Fibbu+iRXuz1fSn3iOmj2MzruT8VG/GQ3G
+         l1mDUaug3PxwXc2CLSrHrwKmJOgT7xhumaNluavXu68jzWeda1F7yzgB/vtN0pwwNdGx
+         XvGdtKpzuaq4Mbnhz9ntFCkJGxuEJrAriIifMAEX1nbUJhBHdZp2RIacYEOEtH28t8vW
+         U8NQB5jddetprDJI5aH972AiLD1qnP2GSVtjgPWvj6P/fTwjuEUGk5dYN1l7MhbSrT08
+         akfRARBTyqYga6ycripJAfutv9HkqOAQ0nDGX9QZxGCY3bCefRf3zix84SIRubu6WqVe
+         pm7Q==
+X-Forwarded-Encrypted: i=1; AFNElJ8vI+/DH0O0Fsf+ESZ8n3qpBDGxqc7RS2Lk/eMVyIjpv2F2XL1teWBazEQy/SlAhIsqIAGB/2vFkaY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YztINMahrdtOsuQKwatdDeXwDVNom2gMRrXC1zlovw8ANLEDaZ1
+	LQnM2pubY9mzdOeTVvJf5a/rWEEIZfbeQJNbLFgt548cgj/RE0jdjS6J
+X-Gm-Gg: Acq92OG+TZOm4EP1I3/Ob0wN/h3pbX4dnjPW30uB6SPMSBoASQeewKTgz2u4WdV1H9x
+	9nMpvvo9JMOsMI6aV34Trscfk3xiIH6HVTyq5C2vB6JibJOwk2Q2lkpRrRycRLBKr067++2b4lp
+	rQYghynHD0PPHzdYwFxAWrSYOIVI057nIpLPNKyPXygydFAT77VnReCdk0zy4zpClKaMIxGG+Ro
+	0lKlOeY4R5W0HzH5r2mbTdFo9ABW/vrgCNK1pkthDDGuqEDfxlf3g4rDhLfDlO5D9z0gW9cJpPa
+	KS2Ys3U+f/tNAi1nTBmSzD6G2GOSb2MQo0sG8GwQMhG1w7TRV9dEq6lrKxLXSSWSVswrFXfjDNU
+	gqlJPGo5YF5StjNbuEZQ5JUFiiDlTsQF2IVhExOk6P8HMzwZ/4Uws4PorR5OtNFM8dUn7MjLeai
+	K0LeRY71Q1sPY6IcuCB/xWkIJKNDJmWIzuSkp+vgtx45xe84N9usB+KNC4HJbI3w==
+X-Received: by 2002:a17:903:186:b0:2b7:975c:dacc with SMTP id d9443c01a7336-2baf0cf4251mr10476125ad.1.1778210242377;
+        Thu, 07 May 2026 20:17:22 -0700 (PDT)
+Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:6209:4521:6813:45b7])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1eafa62sm3220685ad.74.2026.05.07.20.17.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 May 2026 20:17:21 -0700 (PDT)
+From: alistair23@gmail.com
+X-Google-Original-From: alistair.francis@wdc.com
+To: alistair@alistair23.me,
+	linux-kernel@vger.kernel.org,
+	lukas@wunner.de,
+	Jonathan.Cameron@huawei.com,
+	bhelgaas@google.com,
+	rust-for-linux@vger.kernel.org,
+	akpm@linux-foundation.org,
+	linux-cxl@vger.kernel.org,
+	djbw@kernel.org,
+	linux-pci@vger.kernel.org
+Cc: alex.gaynor@gmail.com,
+	wilfred.mallawa@wdc.com,
+	gary@garyguo.net,
+	bjorn3_gh@protonmail.com,
+	benno.lossin@proton.me,
+	aliceryhl@google.com,
+	boqun.feng@gmail.com,
+	a.hindborg@kernel.org,
+	tmgross@umich.edu,
+	ojeda@kernel.org,
+	alistair23@gmail.com,
+	Alistair Francis <alistair.francis@wdc.com>
+Subject: [PATCH 00/18] lib: Rust implementation of SPDM
+Date: Fri,  8 May 2026 13:16:52 +1000
+Message-ID: <20260508031710.514574-1-alistair.francis@wdc.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 25b7ced0-56cd-4604-7fb0-08deacb00f70
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 May 2026 03:15:30.6221
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: prs72QqNFUyG72O7NI1VvFCFuPTFd1I1w5L1+QH0dztkri1IYUvuCtIGokWmsCVg7NHizXfRA/+KT9JkSWSpRA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB12159
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-> -----Original Message-----
-> From: Sherry Sun <sherry.sun@nxp.com>
-> Sent: Wednesday, April 22, 2026 5:36 PM
-> To: robh@kernel.org; krzk+dt@kernel.org; conor+dt@kernel.org; Frank Li
-> <frank.li@nxp.com>; s.hauer@pengutronix.de; kernel@pengutronix.de;
-> festevam@gmail.com; lpieralisi@kernel.org; kwilczynski@kernel.org;
-> mani@kernel.org; bhelgaas@google.com; Hongxing Zhu
-> <hongxing.zhu@nxp.com>; l.stach@pengutronix.de
-> Cc: imx@lists.linux.dev; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: [PATCH V14 03/12] PCI: imx6: Assert PERST# before enabling regul=
-ators
->=20
-> The PCIe endpoint may start responding or driving signals as soon as its =
-supply is
-> enabled, even before the reference clock is stable.
-> Asserting PERST# before enabling the regulator ensures that the endpoint =
-remains
-> in reset throughout the entire power-up sequence, until both power and re=
-fclk
-> are known to be stable and link initialization can safely begin.
->=20
-> Currently, the driver enables the vpcie3v3aux regulator in
-> imx_pcie_probe() before PERST# is asserted in imx_pcie_host_init(), which=
- may
-> cause PCIe endpoint undefined behavior during early power-up. However, th=
-ere is
-> no issue so far because PERST# is requested as GPIOD_OUT_HIGH in
-> imx_pcie_probe(), which guarantees that PERST# is asserted before enablin=
-g the
-> vpcie3v3aux regulator.
->=20
-> This is prepare for the upcoming changes that will parse the reset proper=
-ty using
-> the new Root Port binding, which will use GPIOD_ASIS when requesting the =
-reset
-> GPIO. With GPIOD_ASIS, the GPIO state is not guaranteed, so explicit sequ=
-encing
-> is required.
->=20
-> Fix the power sequencing by:
-> 1. Moving vpcie3v3aux regulator enable from probe to
->    imx_pcie_host_init(), where it can be properly sequenced with PERST#.
-> 2. Moving imx_pcie_assert_perst() before regulator and clock enable to
->    ensure correct ordering.
->=20
-> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
+From: Alistair Francis <alistair.francis@wdc.com>
 
-Best Regards
-Richard Zhu
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 49 +++++++++++++++++++++------
->  1 file changed, 39 insertions(+), 10 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c
-> b/drivers/pci/controller/dwc/pci-imx6.c
-> index e35044cc5218..735127ed1455 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -168,6 +168,8 @@ struct imx_pcie {
->  	u32			tx_swing_full;
->  	u32			tx_swing_low;
->  	struct regulator	*vpcie;
-> +	struct regulator	*vpcie_aux;
-> +	bool			vpcie_aux_enabled;
->  	struct regulator	*vph;
->  	void __iomem		*phy_base;
->=20
-> @@ -1222,6 +1224,13 @@ static void imx_pcie_disable_device(struct
-> pci_host_bridge *bridge,
->  	imx_pcie_remove_lut(imx_pcie, pci_dev_id(pdev));  }
->=20
-> +static void imx_pcie_vpcie_aux_disable(void *data) {
-> +	struct regulator *vpcie_aux =3D data;
-> +
-> +	regulator_disable(vpcie_aux);
-> +}
-> +
->  static void imx_pcie_assert_perst(struct imx_pcie *imx_pcie, bool assert=
-)  {
->  	if (assert) {
-> @@ -1242,6 +1251,24 @@ static int imx_pcie_host_init(struct dw_pcie_rp *p=
-p)
->  	struct imx_pcie *imx_pcie =3D to_imx_pcie(pci);
->  	int ret;
->=20
-> +	imx_pcie_assert_perst(imx_pcie, true);
-> +
-> +	/* Keep 3.3Vaux supply enabled for the entire PCIe controller lifecycle=
- */
-> +	if (imx_pcie->vpcie_aux && !imx_pcie->vpcie_aux_enabled) {
-> +		ret =3D regulator_enable(imx_pcie->vpcie_aux);
-> +		if (ret) {
-> +			dev_err(dev, "failed to enable vpcie_aux
-> regulator: %d\n",
-> +				ret);
-> +			return ret;
-> +		}
-> +		imx_pcie->vpcie_aux_enabled =3D true;
-> +
-> +		ret =3D devm_add_action_or_reset(dev,
-> imx_pcie_vpcie_aux_disable,
-> +					       imx_pcie->vpcie_aux);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
->  	if (imx_pcie->vpcie) {
->  		ret =3D regulator_enable(imx_pcie->vpcie);
->  		if (ret) {
-> @@ -1251,25 +1278,24 @@ static int imx_pcie_host_init(struct dw_pcie_rp *=
-pp)
->  		}
->  	}
->=20
-> +	ret =3D imx_pcie_clk_enable(imx_pcie);
-> +	if (ret) {
-> +		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
-> +		goto err_reg_disable;
-> +	}
-> +
->  	if (pp->bridge && imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_LUT))
-> {
->  		pp->bridge->enable_device =3D imx_pcie_enable_device;
->  		pp->bridge->disable_device =3D imx_pcie_disable_device;
->  	}
->=20
->  	imx_pcie_assert_core_reset(imx_pcie);
-> -	imx_pcie_assert_perst(imx_pcie, true);
->=20
->  	if (imx_pcie->drvdata->init_phy)
->  		imx_pcie->drvdata->init_phy(imx_pcie);
->=20
->  	imx_pcie_configure_type(imx_pcie);
->=20
-> -	ret =3D imx_pcie_clk_enable(imx_pcie);
-> -	if (ret) {
-> -		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
-> -		goto err_reg_disable;
-> -	}
-> -
->  	if (imx_pcie->phy) {
->  		ret =3D phy_init(imx_pcie->phy);
->  		if (ret) {
-> @@ -1782,9 +1808,12 @@ static int imx_pcie_probe(struct platform_device
-> *pdev)
->  	of_property_read_u32(node, "fsl,max-link-speed", &pci-
-> >max_link_speed);
->  	imx_pcie->supports_clkreq =3D of_property_read_bool(node, "supports-
-> clkreq");
->=20
-> -	ret =3D devm_regulator_get_enable_optional(&pdev->dev, "vpcie3v3aux");
-> -	if (ret < 0 && ret !=3D -ENODEV)
-> -		return dev_err_probe(dev, ret, "failed to enable Vaux supply\n");
-> +	imx_pcie->vpcie_aux =3D devm_regulator_get_optional(&pdev->dev,
-> "vpcie3v3aux");
-> +	if (IS_ERR(imx_pcie->vpcie_aux)) {
-> +		if (PTR_ERR(imx_pcie->vpcie_aux) !=3D -ENODEV)
-> +			return PTR_ERR(imx_pcie->vpcie_aux);
-> +		imx_pcie->vpcie_aux =3D NULL;
-> +	}
->=20
->  	imx_pcie->vpcie =3D devm_regulator_get_optional(&pdev->dev, "vpcie");
->  	if (IS_ERR(imx_pcie->vpcie)) {
-> --
-> 2.37.1
+Security Protocols and Data Models (SPDM) [1] is used for authentication,
+attestation and key exchange. SPDM is generally used over a range of
+transports, such as PCIe, MCTP/SMBus/I3C, ATA, SCSI, NVMe or TCP.
+
+From the kernels perspective SPDM is used to authenticate and attest devices.
+In this threat model a device is considered untrusted until it can be verified
+by the kernel and userspace using SPDM. As such SPDM data is untrusted data
+that can be mallicious.
+
+The SPDM specification is also complex, with the 1.2.1 spec being almost 200
+pages and the 1.3.0 spec being almost 250 pages long.
+
+As such we have the kernel parsing untrusted responses from a complex
+specification, which sounds like a possible exploit vector. This is the type
+of place where Rust excels!
+
+This series implements a SPDM requester in Rust.
+
+This is based on Lukas' C implementation [2], but has been refacted during the
+first few RFCs. I have included some of the relevent patchesfrom Lukas' C
+SPDM implementation in this series where they are required.
+
+This is a standalone series and doesn't depend on Lukas' implementation.
+
+The goal of this series is to get the smallest possible SPDM implementation
+upstream. That will provide building blocks for us to continue working on.
+
+As such we don't yet provide evidence or certificates to userspace, allow
+userspace to provide a nonce, support PQC or more advanced SPDM features.
+This is enough to communicate with a device and return "authenticated" to
+userspace.
+
+Note that RFC v3 did provide evidence and certificates to userspace and
+allowed a custom nonce. Showing that it's possible. I also have patches
+that build apon [4] to do this via a TSM driver, again showing it's
+possible with the current approach.
+We just don't support it yet and for TSM I need [4] upstream first.
+
+This series is different to Lukas' original approach and the approach taken
+in the previous RFCs and instead adds the PCI-CMA support as a TSM driver.
+This was described by Dan in [3] and [5]. The advantage here is that for PCIe
+we can leverage the TSM work for a lot of the features and provide userspace
+a consistient interface between PCI TSM and CMA.
+
+This series also doesn't check the certificate chain against the kernel
+keyring and will instead leave that to userspace once [4] is merged.
+
+Other transport mode (such as ATA, SCSI, NVMe and MCTP) will
+therefore need slightly different approaches, as TSM doesn't apply.
+The library can support this though, it will just need some netlink
+and sysfs wrappers added as applicable. This way each transport can support
+SPDM in the way it sees fit.
+
+The entire tree can be seen here:
+https://github.com/alistair23/linux/tree/alistair/spdm-rust-tsm
+
+I'm testing this by running the following
+
+```shell
+cargo run -- --qemu-server response
+
+qemu-system-x86_64 \
+  -nic none \
+  -object rng-random,filename=/dev/urandom,id=rng0 \
+  -device virtio-rng-pci,rng=rng0 \
+  -drive file=deploy/images/qemux86-64/core-image-pcie-qemux86-64.rootfs.ext4,if=virtio,format=raw \
+  -usb -device usb-tablet -usb -device usb-kbd \
+  -cpu Skylake-Client \
+  -machine q35,i8042=off \
+  -smp 4 -m 2G \
+  -drive file=blknvme,if=none,id=mynvme,format=raw \
+  -device nvme,drive=mynvme,serial=deadbeef,spdm_port=2323,spdm_trans=doe \
+  -snapshot \
+  -serial mon:stdio -serial null -nographic \
+  -kernel deploy/images/qemux86-64/bzImage \
+  -append 'root=/dev/vda rw  console=ttyS0 console=ttyS1 oprofile.timer=1 tsc=reliable no_timer_check rcupdate.rcu_expedited=1 swiotlb=0 '
+
+ls /sys/devices/pci0000:00/0000:00:03.0/
+ls /sys/devices/pci0000:00/0000:00:03.0/tsm/
+cat  /sys/devices/pci0000:00/0000:00:03.0/authenticated
+echo tsm0 > /sys/devices/pci0000:00/0000:00:03.0/tsm/connect
+cat  /sys/devices/pci0000:00/0000:00:03.0/authenticated
+```
+
+1: https://www.dmtf.org/standards/spdm
+2: https://lore.kernel.org/all/cover.1719771133.git.lukas@wunner.de/
+3: http://lore.kernel.org/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch
+4: https://lore.kernel.org/all/69976d7d39c60_2f4a1009@dwillia2-mobl4.notmuch/
+5: https://lore.kernel.org/lkml/69e19c80b892b_fe0831000@djbw-dev.notmuch/
+
+v1:
+ - Add CMA as a TSM driver
+ - Initial support for SPDM 1.4
+ - Cleanup a range of comments and concerns from RFC
+ - Remove kernel keyring checks
+RFC v3:
+ - Use netlink to send information to userspace
+ - Don't autogenerate Rust helpers
+RFC v2:
+ - Drop support for Rust and C implementations
+ - Include patches from Lukas to reduce series deps
+ - Large code cleanups based on more testing
+ - Support for authentication
+
+Alistair Francis (13):
+  rust: add bindings for hash.h
+  rust: error: impl From<FromBytesWithNulError> for Kernel Error
+  lib: rspdm: Initial commit of Rust SPDM
+  PCI/TSM: Support connecting to PCIe CMA devices
+  PCI/CMA: Add a PCI TSM CMA driver using SPDM
+  lib: rspdm: Support SPDM get_version
+  lib: rspdm: Support SPDM get_capabilities
+  lib: rspdm: Support SPDM negotiate_algorithms
+  lib: rspdm: Support SPDM get_digests
+  lib: rspdm: Support SPDM get_certificate
+  lib: rspdm: Support SPDM certificate validation
+  rust: allow extracting the buffer from a CString
+  lib: rspdm: Support SPDM challenge
+
+Benno Lossin (1):
+  rust: add untrusted data abstraction
+
+Lukas Wunner (4):
+  X.509: Make certificate parser public
+  X.509: Parse Subject Alternative Name in certificates
+  X.509: Move certificate length retrieval into new helper
+  PCI/CMA: Validate Subject Alternative Name in certificates
+
+ MAINTAINERS                               |   13 +
+ crypto/asymmetric_keys/x509_cert_parser.c |    9 +
+ crypto/asymmetric_keys/x509_loader.c      |   38 +-
+ crypto/asymmetric_keys/x509_parser.h      |   42 +-
+ drivers/pci/Kconfig                       |   14 +
+ drivers/pci/Makefile                      |    4 +
+ drivers/pci/cma.asn1                      |   41 +
+ drivers/pci/cma.c                         |  262 +++++
+ drivers/pci/doe.c                         |    3 -
+ include/keys/asymmetric-type.h            |    2 +
+ include/keys/x509-parser.h                |   57 ++
+ include/linux/oid_registry.h              |    3 +
+ include/linux/pci-doe.h                   |    4 +
+ include/linux/pci-tsm.h                   |   11 +-
+ include/linux/spdm.h                      |   39 +
+ lib/Kconfig                               |   17 +
+ lib/Makefile                              |    2 +
+ lib/rspdm/Makefile                        |   10 +
+ lib/rspdm/consts.rs                       |  155 +++
+ lib/rspdm/lib.rs                          |  180 ++++
+ lib/rspdm/state.rs                        | 1070 +++++++++++++++++++++
+ lib/rspdm/validator.rs                    |  524 ++++++++++
+ rust/bindings/bindings_helper.h           |    7 +
+ rust/helpers/hash.c                       |   18 +
+ rust/helpers/helpers.c                    |    1 +
+ rust/kernel/error.rs                      |   10 +
+ rust/kernel/lib.rs                        |    1 +
+ rust/kernel/str.rs                        |   13 +-
+ rust/kernel/validate.rs                   |  605 ++++++++++++
+ 29 files changed, 3091 insertions(+), 64 deletions(-)
+ create mode 100644 drivers/pci/cma.asn1
+ create mode 100644 drivers/pci/cma.c
+ create mode 100644 include/keys/x509-parser.h
+ create mode 100644 include/linux/spdm.h
+ create mode 100644 lib/rspdm/Makefile
+ create mode 100644 lib/rspdm/consts.rs
+ create mode 100644 lib/rspdm/lib.rs
+ create mode 100644 lib/rspdm/state.rs
+ create mode 100644 lib/rspdm/validator.rs
+ create mode 100644 rust/helpers/hash.c
+ create mode 100644 rust/kernel/validate.rs
+
+-- 
+2.52.0
 
