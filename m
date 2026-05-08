@@ -1,105 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D6A36403B;
-	Fri,  8 May 2026 21:04:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1E6F379EF0
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 21:21:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778274270; cv=none; b=NVaM2fJmft7QOQdtLoYmfVY0gXrOe7uAtXp2UNxHgG71936VVxRhJFhGqy9NhpIBU9BvjqP5w47vkZIj/uYJagIRnA6zLjn9S2Hm8gnn90Dfccg1XyvZw7t62P4ZENo9tcaC//uagqHQh62eHneOnyEg41jpvvHQko8L8h2BExQ=
+	t=1778275312; cv=none; b=Suelti4EmHEcrBLGwk5b7PjsAk+hSI8UI2HSjFaOs9aG8iGkZtzjPDSJW4e/Ii5RAFbrFX10Bz0z07KoQUTMhudn3WsVmT/ulImIML9i3ONrkbEfJHuTZgFbvHb6mV+w/2zXr/LYyoj3H2+gMGwcc00ZXWpcHSiIC7PJCL0lA48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778274270; c=relaxed/simple;
-	bh=azpOnJbK0Ml4D1VGSusOins3kG0pxRpD4X+uSZ7LwB0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=lJUSgVOua7R0I5YbMh5jk98W8Hi0gZhssLbb5A92SqiK028v+9JE15ew9Cv4tHpnIB7BhBgBqc70I2o8F2QV/YP/vt+OEUhVx8WMIxEJMQjER4SA1iHuiof2b7N0rCtZNkimAsMTR29rQvgClOJ+7Bp4wljad04ruG+NBldLg/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ejFxLuJG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778275312; c=relaxed/simple;
+	bh=EBdTULwkW+XU6twMCd6t+6jkzSAwEtmsaGC7Ptk4CsA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=cwoagliQWndd5EdjVUJLzvMRCREe7ylJS4qhS5h6/5TcQ2ebeqqvgxSNUGgUWy7X3O3GPzaiR46UEeiFHmFhnk1xn7BC/wnXGjMtRX5D2+iaSE/0052u2UnO+1JcbLKQQNmSE9ljdkAcNofr3nXlaErAjqMhMH6w9DUcrGD4Hes=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RwYI+eFO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ejFxLuJG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B711EC2BCB0;
-	Fri,  8 May 2026 21:04:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RwYI+eFO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22A9DC2BCB0;
+	Fri,  8 May 2026 21:21:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778274269;
-	bh=azpOnJbK0Ml4D1VGSusOins3kG0pxRpD4X+uSZ7LwB0=;
-	h=Date:From:To:Cc:Subject:From;
-	b=ejFxLuJGK0FzScYckOsaIgZB/Vbc4yAs/VV8LooZqtX9hR2vC7ueuLoVfhYvWkkuF
-	 80HJ+QWdTcGpfkmK28uw5tF1v6B7GXNF421A3z3Ju2KfSPr4xhF4K+HmxMzRjhg+Fx
-	 WXfjqmWrKhEvQXRScgZhd9UD586g5KC4V2zTSKDW27OLE+tDhbA241ksoNiZoHxGAj
-	 q4+gcV/HiXP3/WGZGuxLOIWdDeSgvvn7nssjBOS1/lkUUUUkB0zrr6J6GTrn4l6DDV
-	 GM+uMdd/SAzVf38E1XbnmmJof1zLxSuYSJTDJAg7+5W/AvAew/3lc84Ca/Ckgtsqan
-	 fh8fEWJf7KbQg==
-Date: Fri, 8 May 2026 16:04:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Keith Busch <kbusch@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Marek Vasut <marek.vasut+renesas@gmail.com>,
-	Hans Zhang <18255117159@163.com>,
-	Hans Zhang <hans.zhang@cixtech.com>, Aksh Garg <a-garg7@ti.com>
-Subject: [GIT PULL] PCI fixes for v7.1
-Message-ID: <20260508210428.GA19478@bhelgaas>
+	s=k20201202; t=1778275312;
+	bh=EBdTULwkW+XU6twMCd6t+6jkzSAwEtmsaGC7Ptk4CsA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=RwYI+eFOeI7sHlYwy6iThopkB8fdYzEyclWyQYSBJ9TkiSzmNDfbmOwP0FYU7R+Lp
+	 MTEaaNxhQvDMfn4lPq8NxiNZHADxu0cx6gZgo68yRlo2+ytANqBpED1dmAl3eiStnB
+	 RoB915+qXxNAg4x8Sto2ldZrD74qqNv120eaux6h7TsnoCIq7TgXbURp8wkdwW6e3e
+	 pBiwccpyz6ZT9W1tn/5+rSaGTriwCWq4dFCZ8YEmoILdXrX4dZyEJXouHD7h06yIUw
+	 iXV0rLP3BHslZQpzsKPhWdJEIYbB8XCJZvrJ+hwCmi2E5nlj6WBxFepY3EFYLoJM41
+	 CqSvgp7YasgJw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2] PCI: Force PM reset for Qualcomm devices with
+ NoSoftRst+
+Reply-To: sashiko@lists.linux.dev
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260508145153.717641-2-jtornosm@redhat.com>
+References: <20260508145153.717641-2-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 08 May 2026 21:21:51 +0000
+Message-Id: <20260508212152.22A9DC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-The following changes since commit 254f49634ee16a731174d2ae34bc50bd5f45e731:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The local variable `csr` is left uninitialized and later written t=
+o the PCI Power Management Control register when the `PCI_DEV_FLAGS_FORCE_P=
+M_RESET` flag is set.
+--
 
-  Linux 7.1-rc1 (2026-04-26 14:19:00 -0700)
+commit 1f91cbd53469950e5e046d032ea4bd761ddec438
+Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-are available in the Git repository at:
+PCI: Force PM reset for Qualcomm devices with NoSoftRst+
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.1-fixes-1
+This commit adds a new PCI_DEV_FLAGS_FORCE_PM_RESET flag to bypass the
+PCI_PM_CTRL_NO_SOFT_RESET check during PM reset, applying it as a quirk
+to several Qualcomm devices. This allows devices without FLR that falsely
+advertise NoSoftRst+ to be properly reset, which is necessary for VFIO
+passthrough re-assignment.
 
-for you to fetch changes up to 9ef40a09c5de18f0d275a451f5c2a7fd4f07158b:
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f7cfcc000901..e0b32eccfcf42 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4460,9 +4464,11 @@ static int pci_pm_reset(struct pci_dev *dev, bool =
+probe)
+>  	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
+>  		return -ENOTTY;
+> =20
+> -	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
+> -	if (csr & PCI_PM_CTRL_NO_SOFT_RESET)
+> -		return -ENOTTY;
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_FORCE_PM_RESET)) {
+> +		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
+> +		if (csr & PCI_PM_CTRL_NO_SOFT_RESET)
+> +			return -ENOTTY;
+> +	}
+> =20
+>  	if (probe)
+>  		return 0;
 
-  MAINTAINERS: Add Aksh Garg as PCIe CADENCE reviewer (2026-05-08 15:50:07 -0500)
+If the PCI_DEV_FLAGS_FORCE_PM_RESET flag is set, does this leave the local
+variable csr uninitialized?
 
-----------------------------------------------------------------
+Looking at the rest of pci_pm_reset():
 
-- Don't fallback to bus reset after failed slot reset; a bus reset isn't
-  safe if the .reset_slot() callback is implemented (Keith Busch)
+drivers/pci/pci.c:pci_pm_reset() {
+	...
+	csr &=3D ~PCI_PM_CTRL_STATE_MASK;
+	csr |=3D PCI_D3hot;
+	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+	...
+}
 
-- Update saved_config_space upon resource assignment to fix passthrough
-  regressions when x86 pcibios_assign_resources() updates BARs (Lukas
-  Wunner)
+Writing uninitialized stack memory back to the PM Control/Status Register
+could corrupt hardware state like PME Enable and Data Scale, or inadvertent=
+ly
+clear Write-1-to-Clear bits like PME Status.
 
-- Initialize a temporary pci_dev->dev in sysfs 'new_id' attribute to fix a
-  lockdep regression after driver_override was moved from PCI to device
-  core (Samiullah Khawaja)
+Could this cause unpredictable device behavior or lockups?
 
-- Update MAINTAINERS email addresses (Marek Vasut, Hans Zhang)
-
-- Add MAINTAINERS reviewer for PCIe Cadence IP (Aksh Garg)
-
-----------------------------------------------------------------
-Aksh Garg (1):
-      MAINTAINERS: Add Aksh Garg as PCIe CADENCE reviewer
-
-Hans Zhang (1):
-      MAINTAINERS: Update Hans Zhang email for PCIe CIX Sky1
-
-Keith Busch (1):
-      PCI: Don't fallback to bus reset after failed slot reset
-
-Lukas Wunner (1):
-      PCI: Update saved_config_space upon resource assignment
-
-Marek Vasut (1):
-      MAINTAINERS: Update Marek Vasut email for PCIe R-Car
-
-Samiullah Khawaja (1):
-      PCI: Initialize temporary device in new_id_store()
-
- MAINTAINERS              | 7 ++++---
- drivers/pci/pci-driver.c | 9 ++++++++-
- drivers/pci/pci.c        | 9 ++++-----
- drivers/pci/setup-res.c  | 2 ++
- 4 files changed, 18 insertions(+), 9 deletions(-)
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508145153.7176=
+41-2-jtornosm@redhat.com?part=3D1
