@@ -1,328 +1,198 @@
-Received: from fhigh-b7-smtp.messagingengine.com (fhigh-b7-smtp.messagingengine.com [202.12.124.158])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11022092.outbound.protection.outlook.com [40.93.195.92])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53618221DB3;
-	Fri,  8 May 2026 22:40:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.158
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778280014; cv=none; b=VBdJsDPRM3dYpZksRwQRMyPb2ehuPjz9Aer25g/XeTk0l4SZiJHkeVskfQT366ZVG1LV9xPEQKQzWv6YGqKdWd80sFMs2lDygqDYNgy8MY8A4z7WkUd9L1ZJZqF7+fZdpK7KPF7WtGexHu0zOh6aEYpea2ockLKW+L38JUZkDaM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778280014; c=relaxed/simple;
-	bh=3U/SufooL3Si7bLRcOBI7bsAVJzUk2gQOQr1d6uTwfg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aybgsKnZwIvG1wbSR4dgL6BQHoK3OdV4vmijaohJlcfZ4cxVepfkoOLkIf6Lhe+8B2zWYNhR66UU+w955VVxMtZyPglu72vL+UzJymWgJhliOnDiF9p88wDalAk1+ykbN86CWw6jkxVXHupk8XVonShPG0Vrkp82B6rEodS0DVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Qm8ycKBe; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=lL6hewsN; arc=none smtp.client-ip=202.12.124.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6858E2D8376;
+	Fri,  8 May 2026 22:47:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.92
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778280438; cv=fail; b=tK5YfwdnNjr6tHMSb1X5p9Tg/pa0iNxUcNUhUwm/M8QYUENzpD/9JEtKfMSQxGLk3UrLRPIhpYLKoHyB+h2aAyHTOrzFGT6EggrtFSxM0qwpyPPmbsOKXjdVqm8jHSDZlNQ9ziAdJbnvXGAiAkwK2/HpYIhLFIVwPfeGw8LNGVk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778280438; c=relaxed/simple;
+	bh=KOFjvFCfeS+3YegRpdEsH0XOWBrC5147pufYqNr4HHg=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=YzFMYUY2JrG+d5GNrJiSb2+6rX4w9SfWCTnHweMpSfUPDt8KKsBuVNMGBCmTTgTzllN6fLImvEfhmewlxmJ8ZeUh9cvmn9ja1V4SC/ehrHkekGPwGY+Wnkkk/Dn0PnRKwlL6TADZYsjYrcfec30+ZkwfUk8djAUWs53dhRsNvmQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com; spf=pass smtp.mailfrom=microsoft.com; dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b=jH2LNa5U; arc=fail smtp.client-ip=40.93.195.92
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Qm8ycKBe";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="lL6hewsN"
-Received: from phl-compute-11.internal (phl-compute-11.internal [10.202.2.51])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id B60AF7A003D;
-	Fri,  8 May 2026 18:40:09 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-11.internal (MEProxy); Fri, 08 May 2026 18:40:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1778280009;
-	 x=1778366409; bh=Wc3dTDrH7Vx3KTw/aznXnAyEe2c8FMx6eWi4Ve4R5S0=; b=
-	Qm8ycKBeS1hGwW4e+I7uIEDcACwNCXjMVDUrfqyJJNCYwNCXNVsanULGcKUWUWbu
-	aLqHiK5YvlbJizCgxig8xYSyMaR/cZDDQjz6x4d9ZtCOu9zONtVWgL6ITwoCk9p/
-	R48xsEfaSzKi8DyOdn4IHlfQbaoQ6WVpez4WOIhOaIrpBlqcGQGJm+Y2BYue5j4n
-	VWuLST1sOUqfB/RxQHKLv8e4T4D98sqiHcpvGYAzedddYNqzgs8yqHIoQJpgKJPe
-	vkbLwvGnkIKYqSEJXkHoifywkIM4BiXxG1BTCyEz4fv47B53lhhICD3YeMFlY7p6
-	VYxTNfKNb134qchlDU/Kdw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778280009; x=
-	1778366409; bh=Wc3dTDrH7Vx3KTw/aznXnAyEe2c8FMx6eWi4Ve4R5S0=; b=l
-	L6hewsNFVW7fn722npCcf241T/bS42PLlQmu61d8YKU/gA2VR3jS09oQ6/ZH88qB
-	+Hf6KJJ/IJTtDSYwfsyyVm0ofC/czvL+Mt0CQjuJC78Tdtjm3sWwiNHWFuSCytCr
-	3Y4XUbcM48AWldIygn8RlkOiIDyqao1Y5Itie7YHGQLqMkU8q14a1UUj60w1zoFL
-	CD3RW8K7/lVej1QaqxaHxaJz37FpX4XRh1ux9ByrN8Hlw9UvVaE0dFSZOMQCdqAu
-	uUUXSEtFchMMS0RVQVg4eFIx0O81LAYVcwvXGeEtXIsCqlf1oaUEMxo3CG8taYeY
-	726HIuxZXA4auP6NAVpnA==
-X-ME-Sender: <xms:SGb-aXzHN17j16e--r4VWJWR_xjsOSC-MeCdtNQuST4hq6KVqZAJvA>
-    <xme:SGb-adjdwQvIEyIwkvYBKy4NTuk9_3tbTKUMPO-tyS58e-8CytK0lEu-cazuFEBeO
-    aAXkZxp2v2P6UcJpWgZ3GZ8t1yzsfX0Su7iYa0Hdosd-Megra0_gw>
-X-ME-Received: <xmr:SGb-aarISflQoeHxJ1pxV2dkr9ky007b3YUW8sLNwj65rdecmjQ2KEfjaLM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduudduheejucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
-    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
-    htthgvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudeg
-    veeuueenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepuddupdhmohguvgep
-    shhmthhpohhuthdprhgtphhtthhopehfvghnghgthhgvnhhgfigvnheshhhurgifvghird
-    gtohhmpdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohepfigrthhh
-    shgrlhgrrdhvihhthhgrnhgrghgvsegrrhhmrdgtohhmpdhrtghpthhtohephhgvlhhgrg
-    grsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepfigvihdrhhhurghnghdvsegrmhgu
-    rdgtohhmpdhrtghpthhtohepfigrnhhgiihhohhuudeshhhishhilhhitghonhdrtghomh
-    dprhgtphhtthhopeifrghnghihuhhshhgrnhduvdeshhhurgifvghirdgtohhmpdhrtghp
-    thhtoheplhhiuhihohhnghhlohhngheshhhurgifvghirdgtohhmpdhrtghpthhtohepkh
-    hvmhesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:SGb-aUj_T85b8j6-xBHgvujER9Yo1AKuXmCkypS0G_pclvA1dH4lcw>
-    <xmx:SGb-acN8lU1XnZT-js6l8fUDfL_cZryIHvqEZI3aQczsU58bf4y3Ag>
-    <xmx:SGb-aey7sjHdEUUHBNtqWaa0o8zowEqF_2ovQd86pOLdIyH6hnpmTA>
-    <xmx:SGb-aepE0WuI6fB9XlmSptcHVvDw8dHApQfILDWxNDWLBvwVlf4_bA>
-    <xmx:SWb-aVc8ucTlsOHHo2qPkpaqN9he8egKKP6kJaoaV-ZdLFgq8Z8OCQKD>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 8 May 2026 18:40:06 -0400 (EDT)
-Date: Fri, 8 May 2026 16:40:03 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Chengwen Feng <fengchengwen@huawei.com>
-Cc: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
- <wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
- <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v8 4/7] vfio/pci: Add PCIe TPH interface with capability
- query
-Message-ID: <20260508164003.70918c0c@shazbot.org>
-In-Reply-To: <20260508064053.37529-5-fengchengwen@huawei.com>
-References: <20260508064053.37529-1-fengchengwen@huawei.com>
-	<20260508064053.37529-5-fengchengwen@huawei.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="jH2LNa5U"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=mlQez1jr/Rz2TagfsA+FdaEnuKP2UYnXoc6LrVL2bpNRdmAl7N+tHb0JVBYSdz1amSu/Qk9uGXATzCElTH5pIczEeo6Oxk6W+DJtvr+nXmro7GQUSqj+Axoy1oYnh6eRE/mgyzk5+DmFPDiQjMaVODIwkBp4Mib/b58fnOoFjmsGn0ha2fTvKgbTISrmaTa5RmYqE6rQ4NfqiuDxlkr79T9DIuFhZV+7ZjGqJdKfC20F5uanu7Z5boKoRiA9VjzrzRDoA6ecX8H4yo4gmWRrI1cP87PTPAFV8/YVEueiAr6WDkGNYaHKOU5d70cZw33yeWYi8HxDuIKCsN2r/crVeA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=3nC4MzrjREqYJpnAivNDrnP2XvAwnMyNyye+XnQHbvA=;
+ b=IzNC/W4oEyCM6Kb5/vPBz5TJ3ZqSYS9PfoJvSjVEx6P/2z1tGE7sxgSrVSlNokZK/XJuMjP72MFgv29yhiBRX7BttEN7EhrVXDBAAuCmC1lVrnJVtlt3+BYUN1HKQD4sc3AmWkyyLM2dRh/JprSw75KVMHL+iSaqY+Oa+RLicjHfnUV58mOFwayAU6KD2AmwLIucBWQMrq6Q5WRXPBbwMxSdowDMMAbkrVXwkxtMw3h4uZq3ZDEEZHlQ90ovv0yoSjh2iZYxG9BVobIY5Wf7t4Jj7nSmzrddSS84azUmDz3Ubug+vHHtGWJInpxQn22o9/Q4LXHAMyOezo6+dwgXxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3nC4MzrjREqYJpnAivNDrnP2XvAwnMyNyye+XnQHbvA=;
+ b=jH2LNa5UJlJDib8nQTXy9tXW86GpBR1fvSIqxH52FlEfrWg9ecElC6H+nkWlwjC44X7Nbxae/atGpI9BWrhsbRdKAY15TqY5wqha0zYhQ7KNiQPhke0Ung5o//OKgaKkh/IZ0L4q71+xAy4yZ0QbfTA8orEY2WoNJBiMEXcmcQU=
+Received: from SA3PR21MB3867.namprd21.prod.outlook.com (2603:10b6:806:2fc::15)
+ by SA1PR21MB6897.namprd21.prod.outlook.com (2603:10b6:806:4a7::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.3; Fri, 8 May
+ 2026 22:47:14 +0000
+Received: from SA3PR21MB3867.namprd21.prod.outlook.com
+ ([fe80::70ff:4d3:2cb6:92a3]) by SA3PR21MB3867.namprd21.prod.outlook.com
+ ([fe80::70ff:4d3:2cb6:92a3%5]) with mapi id 15.21.0025.008; Fri, 8 May 2026
+ 22:47:14 +0000
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Haiyang Zhang
+	<haiyangz@linux.microsoft.com>, Paul Rosswurm <paulros@microsoft.com>
+CC: "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>, KY Srinivasan
+	<kys@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui
+	<DECUI@microsoft.com>, Long Li <longli@microsoft.com>, Andrew Lunn
+	<andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
+	<pabeni@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>, Simon Horman
+	<horms@kernel.org>, Shradha Gupta <shradhagupta@linux.microsoft.com>,
+	Dipayaan Roy <dipayanroy@linux.microsoft.com>, Erni Sri Satya Vennela
+	<ernis@linux.microsoft.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [EXTERNAL] Re: [PATCH net-next] net: mana: Add handler for sriov
+ configure
+Thread-Topic: [EXTERNAL] Re: [PATCH net-next] net: mana: Add handler for sriov
+ configure
+Thread-Index: AQHc3zanDnHpDRX8iESldsM8tK6b87YEuBYAgAAAorA=
+Date: Fri, 8 May 2026 22:47:14 +0000
+Message-ID:
+ <SA3PR21MB38676896F76FD9C27127DA87CA3D2@SA3PR21MB3867.namprd21.prod.outlook.com>
+References: <20260508220412.15138-1-haiyangz@linux.microsoft.com>
+ <20260508223732.GA25113@bhelgaas>
+In-Reply-To: <20260508223732.GA25113@bhelgaas>
+Accept-Language: en-US
+Content-Language: en-US
+X-Mentions: paulros@microsoft.com
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=5cddbc71-fc09-4e0c-a9d1-8a9374a0c66d;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2026-05-08T22:39:47Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
+ 3, 0, 1;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA3PR21MB3867:EE_|SA1PR21MB6897:EE_
+x-ms-office365-filtering-correlation-id: 285a6759-59de-4d0d-ee41-08dead53bf99
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|366016|7416014|376014|38070700021|56012099003|18002099003|22082099003;
+x-microsoft-antispam-message-info:
+ 1+Szs5EM56wCVaFcqFbM2IWuNIJN6lRzNsGB+XaomcYP54XhQQh1qJuuC2LI3TDoZG/4LYLT1rokmWUZPOwrX6ZSPaYCdKDVP9zHCsc2Gssa3EhNnTROyt5FvSjs+Aa5eNYl0qoespflmUsior9ftCqnI8BWA5DLqGb6HL87kOuVs5hzACgH+JVZXbMOCfexXiYa6+Fn8vINhmYLB9cI9U/1ibD6msIi2UBIZLRtSpnyWtdnvppS17hvCwL6luoOn1hZFBzbqsF4jOuBUWlS1BOJxacEb9UzZBnbig7axF4ukD3LorTHw0svKAnAdLMI9o79dx5Fuh5X1F6ckUpZxmZ6StX3UAkUIAxbi3og3fzcc6VnLxnro57MI5WHf2tUh0L0u8Xu1lmzhXcU4wKyi1cTVNumQH9SzcIBsfFvC0QFOK7ehpH68THfn9LageNxEmMPm1xCpDN2z5EqH1ofgjmXKETW0EPFCgstBzstdamcPk5Nn3GBKgKANektKvnNEMnHt8j7F9YCQN1gzVf/vjSy5RMiSWOwg3zvwEWnNKedwBae+zgcT2FMwzz1PrODNhhPdmPKTQsyrievung9Uur9Srhraq8/i9L8Xza/d0pJNsuvksbJU66jIt4R6Nf91TsBOGAzrQX99BtDVixp1jgulrdjyZoy5XYEJpjeqJr8wi5xTuriFACHhJ5jYzergdf1sitY1hMRH2qt/JkoeeTKF7cz1I3CulWJ8UHBTOZjYdcZyxlNoRRcCcv2mPjT
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA3PR21MB3867.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(38070700021)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?2vYomUWc8Qdsvtd1Et7yINiAgqYonvwKZuePj5A4TOB70k6Wzj4tks2bmdD0?=
+ =?us-ascii?Q?PwmVtfqof6Ol6LlxMgvhwv3Z8iBEDrT5l0A0MLLKfh6o6qUrmCfuBsKocat8?=
+ =?us-ascii?Q?JbwmyNDvkr75q2V4KWcMH5sXgj4AUvId0TVRIZkF8pxQHv7nVU2R5enKDxFd?=
+ =?us-ascii?Q?4hktYyLJDIu6L63gVSUYuaAIJ1xpVZQnPcDVHDENeRAMHnKALkrb9MZJ0y+H?=
+ =?us-ascii?Q?Iy4yCZz42Rm4fGfQwQvVl/ne43foFw3bYhCnxOtuO2LZv7sqO/yZ5xJMxZ8w?=
+ =?us-ascii?Q?Slrqp251a1kdBTtiAkQDeZEO2w/tC02QGqqLygeBpEVibmtXR8cK+ogsMm9f?=
+ =?us-ascii?Q?9xE1mlyCTvtJPxPfIMylAJjHQ+1BTo+H9EBh/+JQgvm+XAukLUtq3u7mKaDu?=
+ =?us-ascii?Q?0zz6nRQxXE4ZpzXQw6/qIil8s0vt2prfDbkUTrRYkwteH/3OZonixPGZy6l0?=
+ =?us-ascii?Q?cEO7+KZbonqIfG+6Ep/kaJDXoBdxujjgW+1Pe90ULygEt6W0WVoLBQzrgQ7G?=
+ =?us-ascii?Q?rnW7pZ4JC5xG5t6Gf49Kc8pCHd2gEufS1F2o7tD+8RxITJNH0E7C9o9aK8xg?=
+ =?us-ascii?Q?FhgBV9fL71oB1eK9OOPjPHKHlJk0WLvdJhqNHxMj6+O4kTyD5XNg3vRP8MLE?=
+ =?us-ascii?Q?nmRyH1+PMbVovTwwJ8FF8pfqwXfE6bhI9QbggyhngspiSbJCuEWN72t1lkEK?=
+ =?us-ascii?Q?i2A/nGIjmcHSEsay9uSdKD8C4iZ8ZNWImoehQ+iY3P7vDV8D1r4o5FCml/ma?=
+ =?us-ascii?Q?NxB6V/jb9WaemQps6QOyNm7MdRJxEaXvMxA8vLkFXLFepcacnOyopkX3v3bQ?=
+ =?us-ascii?Q?bsHgZCfV4D82qJG6tb210ZR5E7IcWlRTx1Kf+KGljyIkLYkotFVVst4XulhF?=
+ =?us-ascii?Q?//0LEvttctK5eksS9qdqJ+25sarRZh5x2eJzSs6ZTZf5k/xh4eA3e5e1Sn4F?=
+ =?us-ascii?Q?wuPVVKKjBV6U159aj9dI3fKy0XQWZpEa+Hn2x01RGu7HvONsNa+GzddTTGVF?=
+ =?us-ascii?Q?+lEN3iFILmbu01wS4cTySePiEJjLwEjHRiXpYblKHbr42IMHU2TZoJxyJqyC?=
+ =?us-ascii?Q?wqdRDyZsEYKIS1SwNrxDD6azQYeST/v2ROs+t6eHYR7PDH3xLkI9wBOLquST?=
+ =?us-ascii?Q?wfSpt9Ajr5eC+btZIJiNSQckuI6yDRwnwO6yx9yl4WCSzdSxXCwIascMoxNo?=
+ =?us-ascii?Q?gM8fr2l/BQln1azBb54YYEx6G7D84qAV1moW6jKEsJNT4EOqs0k5TstKuSdO?=
+ =?us-ascii?Q?a0dXF9/sySKUEtXiyJTviEgm4T2mgYQCCVF2xXAO1c62S4gKqQ4N+pxbLGOC?=
+ =?us-ascii?Q?fNLDjB8rfYMqkMaBHKGxnRnkR6Nob/r4uYogghWDsHKuGCENuWP0krGFLZoY?=
+ =?us-ascii?Q?bnKSI0eiOsXWiT87wQJWKrxbndl0zl8M8xNT15fFoGiNPve/ZBStLySuio5j?=
+ =?us-ascii?Q?CxVKAfqs0Xd1Wy/0cJJ/nZVjlJduqtxT6gJNBvkpsd/sTBnNW6TLGYITldhP?=
+ =?us-ascii?Q?WtybzkgEKnNER7kxtp4Gd7QfPdLOoA8LhR4imA52r8RX74lPbFH2HyNO8WcW?=
+ =?us-ascii?Q?+ogDZKDs/qZ0/D94DkyHiFrAyOOyEt2JSQ+rEhNSZkaKmDruJ+fLEV1kczr3?=
+ =?us-ascii?Q?jNa5WN4HVk1yf9fIvPq1Rj7yxluTpary574VLeC/e30MyG8KvLY2nLGyO9iS?=
+ =?us-ascii?Q?0jH2Ya9N8uPaSph2e6HxMIcKT5ROX8pg30b0Wbq0CXSfrqi1nKvDB9ZFhgl1?=
+ =?us-ascii?Q?SXkyYMcDPg=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA3PR21MB3867.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 285a6759-59de-4d0d-ee41-08dead53bf99
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 May 2026 22:47:14.1009
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CVlT8ufnUhAoKuqPeSulq2tdpxuf9CxYOCiCu1xJ+pagnIWbiygGiGg/kJD0l/dbiPWtpYnMGXfdB1kPolEEWw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR21MB6897
 
-On Fri, 8 May 2026 14:40:50 +0800
-Chengwen Feng <fengchengwen@huawei.com> wrote:
 
-> Add VFIO_DEVICE_PCI_TPH IOCTL to allow userspace to query device TPH
-> capabilities, supported modes, and steering tag table information.
-> 
-> Add module parameter 'enable_unsafe_tph_ds_mode' to restrict unsafe
-> device-specific TPH mode to trusted userspace only.
-> 
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> ---
->  drivers/vfio/pci/vfio_pci.c      |  13 ++-
->  drivers/vfio/pci/vfio_pci_core.c |  56 ++++++++++++-
->  include/linux/vfio_pci_core.h    |   3 +-
->  include/uapi/linux/vfio.h        | 133 +++++++++++++++++++++++++++++++
->  4 files changed, 202 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 0c771064c0b8..40bf5aa9fd0b 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -60,6 +60,12 @@ static bool disable_denylist;
->  module_param(disable_denylist, bool, 0444);
->  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
->  
-> +#ifdef CONFIG_PCIE_TPH
-> +static bool enable_unsafe_tph_ds_mode;
-> +module_param(enable_unsafe_tph_ds_mode, bool, 0444);
-> +MODULE_PARM_DESC(enable_unsafe_tph_ds_mode, "Enable UNSAFE TPH device-specific (DS) mode. This mode provides weak isolation, cannot be safely used for virtual machines. If you do not know what this is for, step away. (default: false)");
-> +#endif
-> +
 
-Why is the "unsafe" aspect of this keyed on mode rather than storage
-location?
+> -----Original Message-----
+> From: Bjorn Helgaas <helgaas@kernel.org>
+> Sent: Friday, May 8, 2026 6:38 PM
+> To: Haiyang Zhang <haiyangz@linux.microsoft.com>
+> Cc: linux-hyperv@vger.kernel.org; netdev@vger.kernel.org; KY Srinivasan
+> <kys@microsoft.com>; Haiyang Zhang <haiyangz@microsoft.com>; Wei Liu
+> <wei.liu@kernel.org>; Dexuan Cui <DECUI@microsoft.com>; Long Li
+> <longli@microsoft.com>; Andrew Lunn <andrew+netdev@lunn.ch>; David S.
+> Miller <davem@davemloft.net>; Eric Dumazet <edumazet@google.com>; Jakub
+> Kicinski <kuba@kernel.org>; Paolo Abeni <pabeni@redhat.com>; Bjorn Helgaa=
+s
+> <bhelgaas@google.com>; Simon Horman <horms@kernel.org>; Shradha Gupta
+> <shradhagupta@linux.microsoft.com>; Dipayaan Roy
+> <dipayanroy@linux.microsoft.com>; Erni Sri Satya Vennela
+> <ernis@linux.microsoft.com>; linux-kernel@vger.kernel.org; linux-
+> pci@vger.kernel.org; Paul Rosswurm <paulros@microsoft.com>
+> Subject: [EXTERNAL] Re: [PATCH net-next] net: mana: Add handler for sriov
+> configure
+>=20
+> On Fri, May 08, 2026 at 03:04:06PM -0700, Haiyang Zhang wrote:
+> > From: Haiyang Zhang <haiyangz@microsoft.com>
+> >
+> > Add callback function for the pci_driver, sriov_configure.
+> >
+> > Also disable VF autoprobe when it runs as PF driver on bare metal,
+> > since the hardware side may not have the VF ready immediately.
+> >
+> > Export pci_vf_drivers_autoprobe() so the driver can toggle the VF
+> > autoprobe flag.
+>=20
+> Technically pci_vf_drivers_autoprobe() doesn't *toggle* the autoprobe
+> flag.  That would mean setting it to the opposite of its current
+> value.
+>=20
+> Here I would say "so the driver can prevent autoprobing of the VFs",
+> which is the intent.
+Thanks, I will change the wording.
 
-Currently the user cannot enable TPH, the capability is read-only, but
-the user does have direct access to the MSI-X table.  We rely on an
-agreement that the user needs to use SET_IRQS to allocate host vectors
-and we use interrupt remapping as protection against abuse, but there's
-no mediation of STs written directly to the MSI-X table.  If the device
-supports IV mode with ST in the MSI-X table, nothing prevents the user
-from writing those ST entries directly to the MSI-X table.  Therefore
-doesn't it have the same security concern as DS mode?
+>=20
+> Out of curiosity, how do the VFs eventually get probed?  I guess
+> there's some other mechanism that tells you when they're ready, and
+> you manually use sysfs 'sriov_drivers_autoprobe' to enable probing,
+> then bind drivers to them via sysfs?
+We have a user program talking to the Azure backplane to get that informati=
+on.
+@Paul Rosswurm, do you have more details?
 
-Further, config space lives in the device and various devices are known
-to have alternate means for accessing their config space.
-Virtualization of config space is more to present the device in the VM
-address space and bridge features between guest and host.  It's not
-great as a security barrier.
 
-Maybe it's really neither the mode nor storage location, and we need to
-decide if TPH as a whole introduces any new security considerations.
-It seems arguable whether we can actually prevent a device from
-including arbitrary STs on TLPs in any case and maybe we're really only
-exposing a curated programming interface.
+> The prevention of autoprobing sounds like a critical part of this
+> change; might be worth saying something in the subject, because "add
+> sriov configure" doesn't include much information.
+How about "Add handler for sriov configure with VF autoprobe off"?
 
-...
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 5de618a3a5ee..81da2bd0c21b 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1321,6 +1321,139 @@ struct vfio_precopy_info {
->  
->  #define VFIO_MIG_GET_PRECOPY_INFO _IO(VFIO_TYPE, VFIO_BASE + 21)
->  
-> +/**
-> + * struct vfio_pci_tph_cap - PCIe TPH capability information
-> + * @supported_modes: Supported TPH operating modes
-> + * @st_table_sz: Number of entries in ST table; 0 means no ST table
-> + * @reserved: Must be zero
-> + *
-> + * Used with VFIO_PCI_TPH_GET_CAP operation to return device
-> + * TLP Processing Hints (TPH) capabilities to userspace.
-> + */
-> +struct vfio_pci_tph_cap {
-> +	__u8  supported_modes;
-> +#define VFIO_PCI_TPH_MODE_IV	(1u << 0) /* Interrupt vector */
-> +#define VFIO_PCI_TPH_MODE_DS	(1u << 1) /* Device specific */
-> +	__u8  reserved0;
-> +	__u16 st_table_sz;
-> +	__u32 reserved;
-> +};
-> +
-> +/**
-> + * struct vfio_pci_tph_ctrl - TPH enable control structure
-> + * @mode: Selected TPH operating mode (VFIO_PCI_TPH_MODE_*)
-> + * @reserved: Must be zero
-> + *
-> + * Used with VFIO_PCI_TPH_ENABLE operation to specify the
-> + * operating mode when enabling TPH on the device.
-> + */
-> +struct vfio_pci_tph_ctrl {
-> +	__u8 mode;
-> +	__u8 reserved[7];
-> +};
-> +
-> +/**
-> + * struct vfio_pci_tph_entry - Single TPH steering tag entry
-> + * @cpu: CPU identifier for steering tag calculation
-> + * @mem_type: Memory type (VFIO_PCI_TPH_MEM_TYPE_*)
-> + * @reserved0: Must be zero
-> + * @index: ST table index for programming
-> + * @st: Unused for SET_ST
-> + * @reserved1: Must be zero
-> + *
-> + * For VFIO_PCI_TPH_GET_ST:
-> + *   Userspace sets @cpu and @mem_type; kernel returns @st.
-> + *
-> + * For VFIO_PCI_TPH_SET_ST:
-> + *   Userspace sets @index, @cpu, and @mem_type.
-> + *   Kernel internally computes the steering tag and programs
-> + *   it into the specified @index.
-> + *
-> + *   If @cpu == U32_MAX, kernel clears the steering tag at
-> + *   the specified @index.
-> + */
-> +struct vfio_pci_tph_entry {
-> +	__u32 cpu;
-> +	__u8  mem_type;
-> +#define VFIO_PCI_TPH_MEM_TYPE_VM	0
-> +#define VFIO_PCI_TPH_MEM_TYPE_PM	1
-> +	__u8  reserved0;
-> +	__u16 index;
-> +	__u16 st;
-> +	__u16 reserved1;
-> +};
-> +
-> +/**
-> + * struct vfio_pci_tph_st - Batch steering tag request
-> + * @count: Number of entries in the array
-> + * @reserved: Must be zero
-> + * @ents: Flexible array of steering tag entries
-> + *
-> + * Container structure for batch get/set operations.
-> + * Used with both VFIO_PCI_TPH_GET_ST and VFIO_PCI_TPH_SET_ST.
-> + */
-> +struct vfio_pci_tph_st {
-> +	__u32 count;
-> +	__u32 reserved;
-> +	struct vfio_pci_tph_entry ents[];
-> +#define VFIO_PCI_TPH_MAX_ENTRIES    2048
-> +};
-> +
-> +/**
-> + * struct vfio_device_pci_tph_op - Argument for VFIO_DEVICE_PCI_TPH
-> + * @argsz: User allocated size of this structure
-> + * @op: TPH operation (VFIO_PCI_TPH_*)
-> + * @cap: Capability data for GET_CAP
-> + * @ctrl: Control data for ENABLE
-> + * @st: Batch entry data for GET_ST/SET_ST
-> + *
-> + * @argsz must be set by the user to the size of the structure
-> + * being executed. Kernel validates input and returns data
-> + * only within the specified size.
-> + *
-> + * Operations:
-> + * - VFIO_PCI_TPH_GET_CAP: Query device TPH capabilities.
-> + * - VFIO_PCI_TPH_ENABLE:  Enable TPH using mode from &ctrl.
-> + * - VFIO_PCI_TPH_DISABLE: Disable TPH on the device.
-> + * - VFIO_PCI_TPH_GET_ST:  Retrieve CPU steering tags for Device-Specific (DS)
-> + *                         mode. Used when device requires SW to obtain ST
-> + *                         values for programming.
-> + * - VFIO_PCI_TPH_SET_ST:  Program steering tag entries into device ST table.
-> + *                         Valid when ST table resides in TPH Requester
-> + *                         Capability or MSI-X Table.
-> + *                         If any entry fails, all programmed entries are rolled
-> + *                         back to 0 before returning error.
-> + */
-> +struct vfio_device_pci_tph_op {
-> +	__u32 argsz;
-> +	__u32 op;
-> +#define VFIO_PCI_TPH_GET_CAP	0
-> +#define VFIO_PCI_TPH_ENABLE	1
-> +#define VFIO_PCI_TPH_DISABLE	2
-> +#define VFIO_PCI_TPH_GET_ST	3
-> +#define VFIO_PCI_TPH_SET_ST	4
-> +	union {
-> +		struct vfio_pci_tph_cap cap;
-> +		struct vfio_pci_tph_ctrl ctrl;
-> +		struct vfio_pci_tph_st st;
-> +	};
-> +};
-> +
-> +/**
-> + * VFIO_DEVICE_PCI_TPH - _IO(VFIO_TYPE, VFIO_BASE + 22)
-> + *
-> + * IOCTL for managing PCIe TLP Processing Hints (TPH) on
-> + * a VFIO-assigned PCI device. Provides operations to query
-> + * device capabilities, enable/disable TPH, retrieve CPU's
-> + * steering tags, and program steering tag tables.
-> + *
-> + * Return: 0 on success, negative errno on failure.
-> + *         -EOPNOTSUPP: Operation not supported
-> + *         -ENODEV: Device or required functionality not present
-> + *         -EINVAL: Invalid argument or TPH not supported
-> + */
-> +#define VFIO_DEVICE_PCI_TPH	_IO(VFIO_TYPE, VFIO_BASE + 22)
-> +
-
-This seems like the wrong shape to me and introduces yet another ioctl
-multiplexer.  We already have that via the device feature interface.
-I'd propose this only needs one new DEVICE_FEATURE ioctl, TPH_ST.  The
-uAPI would look like:
-
-struct vfio_device_feature_tph_st {
-	__u32 flags;
-#define VFIO_TPH_ST_MEM_TYPE_PM	(1 << 0)
-	__u16 index;
-	__u16 count;
-	__u32 data[]; /* host CPU# on SET, ST value on GET */
-}
-
-The user can SET multiple STs at once that have the same mem_type
-(assuming that's a reasonable limitation).  On SET, each {cpu#,
-mem_type} is translated to a host value and stored internally.  A GET
-returns that translated ST value for DS use cases.
-
-The user can use PROBE to determine if this feature is available.
-
-We already provide the TPH capability read-only in config space, we can
-use that rather than an explicit INFO/GET_CAP interface.
-
-When the feature is available, the TPH control register is virtualized.
-On enabling TPH via config space, vfio will store the translated ST
-values to the appropriate location, or none, and enable TPH.  On SET
-while already enabled, vfio will update both the internal table and the
-device location (or none).  Thanks,
-
-Alex
+Thanks,
+- Haiyang
