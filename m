@@ -1,72 +1,67 @@
-Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010053.outbound.protection.outlook.com [40.93.198.53])
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012048.outbound.protection.outlook.com [52.101.48.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D3330BBBF;
-	Fri,  8 May 2026 16:27:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B87D37CD54;
+	Fri,  8 May 2026 16:40:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.48
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778257651; cv=fail; b=WhcwC90Th7vTEq4Yel/XYIYF57W82bFB+wkHLT6KXxOn6B/wZgQ1v48pn0mXZtUgiW7RM0YY6f1YjURLP1+hwV0gBXqIQBpTyqXAX/5nPGAR5B+53dKVCn2/kJaRxeDnZNTJaoMwzDWHw/hPFFr3EjXVi3UXTN+bCDNuKROymO8=
+	t=1778258428; cv=fail; b=YBlB4Git7n7FkcH19AMSDt5LKywBtZC+ykKBdw8flzrFxRdZhV6wdrCwJC+8vS5cuMIMRDW1kdVN2hco9dA8VGU/f4mhqWQL6svvjiVUN8RBvEvRdrArjYoiPUxM8aV7rjCYPXsNNK13MEVcqrZTuYP34xWVezdqJg8NExTAeVo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778257651; c=relaxed/simple;
-	bh=IPrhcqyUCxiuRWFEFEyDBBW2IZK9/gr9I0PYES++Muc=;
+	s=arc-20240116; t=1778258428; c=relaxed/simple;
+	bh=uhjpmrm/AXSuqMTylyILM9uSP5fptSAzRiHksGu26Ww=;
 	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=n206W+kosyTIV8je2ikl5jDvcMD/rNhSq+OQxj5igS6NJCQzWf7Xar+fj/PKZ8XqFb2q7GCgiiyDBjsp03jVzUV9V9nKWARdF+llxoqdiMncCkY3InONl4fafUUpcO7hiTXErcicHf3TrMEyT8Aw02TfGpWJvR40oKXiUh13Cco=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=BiE0iZ6P; arc=fail smtp.client-ip=40.93.198.53
+	 Content-Type:MIME-Version; b=E3q302WNWuD7A9IiiLPMCCMjEM9Mtu1VNYFekGgG3t4DsE1edQthmnZmINRDsRJdH+pfelGsb+2YMwAib5teKXjNKjbcgRRn4/yB8hUUC02ngtD4+kSPygjq2WGKCEcRhNC8HELfzP6PpEwxNkuj7ksuDgrI6K0FgtcxQMBi0Rs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=HqdSthh5; arc=fail smtp.client-ip=52.101.48.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="BiE0iZ6P"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="HqdSthh5"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XvaYN4NQavJcV4B7M5g93kh6MSydAdE5ARbp8pTqasPKM7p4MsjqVLgs9uEXSTgcwUAJ4cNQU92Kx83451k5ctLbSktA7/jGPGXy0HeQc7cAta5ZxoaKOPA0TnrZ1tslWu2dlSk+A8+jt8Djq2iVhobhx0w81hYoVzkYoJVU43o7slESC5oBUKB7E9k2qFjgzFLB3Qo+9+IwRnVP+ZK0Oh5L0gkDuR4FRD9n6K8/IP4T3Bnu7sVlS2xMCdXG1h+61W9ks082U6KxzRiFBrjo0D6NOUSJlP1p5SKsCNbio64QwdUxuRPwavDVcgBrE00CkthH6N0uc0nBiyF0FAq+zA==
+ b=Mnw3M4b/N5w7ysrqmTfdIEqwwd8l1UptKGCHRXub8kuZVj17ErCgi9qQ68vVDxNgl0PMCiDn4d3FKiyMRD7hDO5oHaGWwqjCibfjH7vtbHijSyC0gBkrtwKUDo5xhVZe49vn5GYDRZST9kGE/vFXC9ptfm1d0PhFkVxsqfDmZSf/qC7GJPIDt3ohrzNI4o5iyQx0R5oucFWC25F8Sz3n5M4zwOTtJZdZs0HO8C77fGbtD3MoK98wV9bszWgzi77RUTed4OI/CHgzyIHfFa8TgymQ3HFSBNist7oUn3JI2vEZH7lfLefIXW5AOlHygniGblRgsRSs+yCbgjrdiupw6g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xajWmA05dYFXq3UBkGXuWAxwfZZ7SIk+8PygALyOHP8=;
- b=rCzPYo0YQgcme5A6MP5F9SyXIAW1UP260S8irKYRGU2zy1CVpEajAi0ffZ/WDqG3qJ6+s604wf7LIcOlXdVXvgf4j3TB7cDaXybrf0VR6gTLGdnIy8AbUyRXIUBoBnwgIPwKDNi+RyNJuEwf0uS1q8GjKxl681ZAsdejycG/ofs4aLT/+OaQho/XyLmIr1fpq0yfwMgg1tWK7CBqCYj02Yl4fpiP0cgCveZhTrIKkoTHVqA4clKKOsb2ZQLxFrrXSti4CnGorZTF0cehWrsM9WHlF97H/7qDj3FWT9gM7WQ3HtLRUukekfgzKYlUSAe+oWDfnBeWtwWU5Inr01+lbg==
+ bh=OngtIOU6H/deE3m3Z5jZ12ZrgqnqDjKRABLBQPiMV8Q=;
+ b=LHvZYQlpnMgtVovnRVfaW4dLNwihwGoKIOwHXCnU+ofi8r4E61v1237e7X/A5vR7Io9Wv9qR56z4ElCyuLYTsY9YNAuCyYRZhN3S6+PSZZkIwjINr0GwZ5eCJ+VjtaZmkdNbs0jfvjyFgrFe0moAETSlmNR42U3CNFV5lzqHy4xkDlvPzmEOvpQA/V87uKHNi64MMPryEgeQxeOSnbVZLQZCLV/8Zgpqmm7bDgAReX45def1ni6sJiOOsxfIzmk74rvoiir9Kq3OxnuwG/E5EHMLmKOyLRvFi/1AqxU/LvCWrIedXEF1ec8kiLbXOS6i4UtrIHZPbMrTdfy2YqVjUA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
  header.d=amd.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xajWmA05dYFXq3UBkGXuWAxwfZZ7SIk+8PygALyOHP8=;
- b=BiE0iZ6PfblQv0DkEY/MhLa5wMgYJWstaTeWg8dyZ6JZVKg1Wh66Fhlojs9ViJB8k7ODWnGG8PTrlhoCOubKgIlYchH6XFohUC/VQ29ju/lQHe04JhaHOer1608y9Oz1LDVSWXywNY2bLJVCD4Gu/b4EtSbx+tWQfeIDk4x+7Us=
+ bh=OngtIOU6H/deE3m3Z5jZ12ZrgqnqDjKRABLBQPiMV8Q=;
+ b=HqdSthh5NnJnCJHaMchxyRZDvg4eBeaKCfYQR8CdwpgdBuP+sWMvlKoqt4Yqw+Zpa01U/LXINVlXEmnhNqUJhKweic9hLU3GxYclOTvEORZPKq7RAJX8coUhowQmBp1uGWu+mwkvayppmu8WLEy52r4ALL9Zbr1/2muTfic7djk=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=amd.com;
 Received: from SA0PR12MB4557.namprd12.prod.outlook.com (2603:10b6:806:9d::10)
- by BY5PR12MB4177.namprd12.prod.outlook.com (2603:10b6:a03:201::14) with
+ by SA1PR12MB8697.namprd12.prod.outlook.com (2603:10b6:806:385::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.19; Fri, 8 May
- 2026 16:27:24 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.20; Fri, 8 May
+ 2026 16:40:23 +0000
 Received: from SA0PR12MB4557.namprd12.prod.outlook.com
  ([fe80::885a:79b3:8288:287]) by SA0PR12MB4557.namprd12.prod.outlook.com
  ([fe80::885a:79b3:8288:287%5]) with mapi id 15.20.9891.019; Fri, 8 May 2026
- 16:27:24 +0000
-Message-ID: <70035490-eafb-4610-8889-9e04931c8b32@amd.com>
-Date: Fri, 8 May 2026 11:27:21 -0500
+ 16:40:23 +0000
+Message-ID: <ad41d70b-e9c0-446e-8bd0-4528de75b592@amd.com>
+Date: Fri, 8 May 2026 11:40:22 -0500
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] hwmon: add AMD Promontory 21 xHCI temperature
- sensor support
+Subject: Re: [PATCH v4 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
 Content-Language: en-US
-To: Jihong Min <hurryman2212@icloud.com>, Guenter Roeck <linux@roeck-us.net>,
- Jihong Min <hurryman2212@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>, Jonathan Corbet <corbet@lwn.net>,
+To: Jihong Min <hurryman2212@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Mathias Nyman <mathias.nyman@intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>, Jonathan Corbet <corbet@lwn.net>,
  Shuah Khan <skhan@linuxfoundation.org>,
  Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
  linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <cover.1778123510.git.hurryman2212@gmail.com>
- <0c35058bb088213397b42fca8d51e9ad0bba5169.1778123510.git.hurryman2212@gmail.com>
- <35c2436b-d172-4172-a684-a96c4a0dcabe@roeck-us.net>
- <16c4f7e5-e33d-4271-a7af-5d6c7fca0570@icloud.com>
- <6745fd21-2001-4e06-af41-96ae63154c02@roeck-us.net>
- <198ae20f-49c9-4f81-87e2-e16e81053f08@icloud.com>
+References: <20260508143910.14673-1-hurryman2212@gmail.com>
+ <20260508143910.14673-2-hurryman2212@gmail.com>
 From: Mario Limonciello <mario.limonciello@amd.com>
-In-Reply-To: <198ae20f-49c9-4f81-87e2-e16e81053f08@icloud.com>
+In-Reply-To: <20260508143910.14673-2-hurryman2212@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: DS7PR03CA0177.namprd03.prod.outlook.com
- (2603:10b6:5:3b2::32) To SA0PR12MB4557.namprd12.prod.outlook.com
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SN6PR2101CA0017.namprd21.prod.outlook.com
+ (2603:10b6:805:106::27) To SA0PR12MB4557.namprd12.prod.outlook.com
  (2603:10b6:806:9d::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -75,113 +70,294 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA0PR12MB4557:EE_|BY5PR12MB4177:EE_
-X-MS-Office365-Filtering-Correlation-Id: dfb10e12-ebe1-4e19-2786-08dead1eaf95
+X-MS-TrafficTypeDiagnostic: SA0PR12MB4557:EE_|SA1PR12MB8697:EE_
+X-MS-Office365-Filtering-Correlation-Id: 376a5f8f-ee62-4c6d-dce4-08dead20803f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|376014|7416014|18002099003|56012099003|22082099003;
+	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|22082099003|56012099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	RfUTJvNyFnGomcX/Q/F/Myzeiv2n1PEgQeT/7cvx+42eOj8Xxlqv3gMapaXu0OCV5H6/6LuTpcjtPXLV/Cb9+DZ8QEX6FXkfbmxrPQMsqpKZQPoVniszFfpKbga9Eh6luUhrzdHzR8XgIb2ANiZ3d2QbYOn1fcSwfrB7YEbWpX8TwaZOvJQgEYHUOob0qZbYwN4yJuz/LAABRwpuHSgCAQfpOFqGsZD2F/098Pkf7yIEYpMJqseybdQ+fGAHGm257RJsQ3WSkRuMgE8URChM119gHBEKZ21KueF4lOF30tVxOYsX1L9oqaTQsEvMnMchnQuVO0axEz8+czdFNe2zoPKmyeAbPFRQBrY82c2LTQovM2DeJNx0NDc4PyDPwdBpKyBBFyf4SYEa5oW3roRVls/Wsp4ekxr4K2vsjBAkOKc0bNMzyCYypqXwfX7FDz4sTb9wsstm//TUlA8SZQiJ8SXnLmI7hoyPvklMo4xti9aeR5Q5CVwCkPAiEheo8XvBSMlpYltBmbdCoQh/V5oKjd9hh/no24/0ePxJ2pDu3ncVNEekOQ4AkeBzVXLpCfAxFHaLPKnZPyJYhFg61mz0x9qjVUjpkVabcTICFO/7LZPSj7huYqrTVYKNeSe1/6rwpCKKs+hx4c9+3pOiO/MqLA==
+	LY7qWFoqBJaZ5uaDSTIs8pLckjGx7qObYYUZsdCEl+tg0gmBsT9Q9qKQa4CmxSPE3iQ2xyMXV8ifcgclvYqOChg7T1rzE+uYeGbXB/ZcGVryc/PIb0ADEWetyysYOzy2XTrXAr0aQS6FAc6TiFzNhOr0sDlMgzT1fWUg168QTO8xnMRNG3lgvssnWLmN2xIuzOVKTzjbqf9Sy+JFVG3Ge7eUCvKdN//RG3xEIOIJ1Us2hKkd1GT/8/LuSwV4lGGYIdj0SuBvTB8zDFwQOIcP5pIgKhT2GdZkd9T9Lk/TME6AJk1vILJErh8Oanhu8qamAWhvpeVnegP+5YzwxZ7ll9DsrEGDBNIox5Ar1wC6H29a8AFXZgiCcZwHSj9//depiAXnGFIODwYeYwWLqyzUKq9TDgvURFRhj5cWn/uYWh1jWmUuM5bUZvVDENDSE6lTprguNqKmMHC8Ab7D4VQqMpc9dM/nYqJc3q4pOFlWFIb1R49TqzUqnLVPAv3zH/lEwa4WUkwW7AF8Mf/VarXkutGWWVptFbFc8p93C6saMXCLLbw9okYVQsJU53pCJpqv1mhgU5DAwln9q9eVRJDBFzTpZHhqR9kiooR1zX7vtOSPplW7KeqW5U/07imMmvCzI+r2hbRlBUEeqVRapb9z0qSomFHwopBqk9cyE/WeUyGs+i1YfLD2NDSEiXCcaOV9
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4557.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA0PR12MB4557.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(22082099003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?eURmNUpIMWZYK0J5NURoNkU2cmJ2ZTFrUDhQVEdJdmduNGhPOUorTXRGUkdQ?=
- =?utf-8?B?dDg3ZWEzbEQ2WXBWT0MyS2V1VGhQN2toNVo2RlJVT3hsSmNwUzdQV0VJZGp6?=
- =?utf-8?B?em9yVk5VMXU2YmhaM0J2N1VYVFozM0FEU2pEbmZFYXRzbHNRaEFzTDRraHly?=
- =?utf-8?B?V3VKMzB2K3gvNWorb0xwQXFVVU9NYWdyYWxTaXEwQ1U3ODRJUFJsRmd0UDdk?=
- =?utf-8?B?OGliWGFMamw1YzhLZWVZdWxhWDQvaWl1aTNxazhaOWRKSXBMcGQ3UnhyNUl6?=
- =?utf-8?B?NXhOblF6NzdvczRzQnhheWNVWEY3L2Q5bkF2dDlyUUZGbmp3WnM0NmU4SVFw?=
- =?utf-8?B?T2M1bkpjUnJRVkNHekpVa2pnQXZld1ZldzVNYXUxaUd5UWxYckg4QXFyN1M5?=
- =?utf-8?B?Q2dOelBKSVo3ejh6OHNNQXd4L0Z0OVRWWGMxNisyZnpSSklLdmc5R0RHaU1W?=
- =?utf-8?B?VlpVWjVvaHh1YWtra0JYWnBSZ3NaVE5CaFhPU05QS1JIZ1JQUzRNZitteFM3?=
- =?utf-8?B?RUJyN1NFSHA2eDZtSml2bUw1YzhSSjYxRWJpZU4yZ0MxRGd6RGFjWkUwNWlh?=
- =?utf-8?B?UmRWSkk1dGVlMTJML3hFVVVWK2cwK25NOUd6bkdMQ3RXS0NXTmxpdm1JNVJ1?=
- =?utf-8?B?djEvUDlXYVNqWlQ5MVpncTFQRW9hNDVMSU9JNjArZVFXRXlsTkdrRmVWaElo?=
- =?utf-8?B?aDNSNGdLQ1RSaFRYeG1TRHBWYWRtaENNMXEwN0ljVFE4R2NpTnFNalVnSk5k?=
- =?utf-8?B?UEQ3TDZFb0dIdnZjNGovZkpHZjdReG13NFpndkJZblZRZEJDOXgzSnpiZzJi?=
- =?utf-8?B?dU9UaHUxWlc1S0xnUCtEOHhWcUhETndNbG9QbGJFZHk4YklZUzN0eGJqVVNR?=
- =?utf-8?B?RnhtcnZpMHhXbTJjM1I0RXBIbGRaclVyQlhDalRiWTV3RjdYUHptenVuRVFq?=
- =?utf-8?B?OWNkQi83aU1vU2lUalllc1E2Q1Zvb0F6TVZCaE9wWld6dElTTjcwSW5PQmtI?=
- =?utf-8?B?cmk4VjA0ME1WN1pDbFByYk5aM24xbC9PVGx6RnFVcWtjVTljYklyWlFLN05H?=
- =?utf-8?B?KzljczF3bmowZ282Q1BvYW9pcExmMXNtZnZKRmJzazk4UEtCOW5xMW9Kb3JO?=
- =?utf-8?B?Rk8zL1FtcXJ4SkZXVDM0NTA2aFJFcTZtTEVrNWZJekZOTTArcWFtQ2pHOEsx?=
- =?utf-8?B?ZEJxNWZGbThUbjJBeHBtTko2RmlaU1VCdzRMalAzN2t1L1UwTG50U25HZE50?=
- =?utf-8?B?Yk1rZ2tBVWg2YmRnYWZsTlhwcStqVkhMa2VXalNzTGhCUDU1cXhSRS9nNjRj?=
- =?utf-8?B?Vi80MlpFd2lOdWNxeXNCbjBmRVpyUVh1dndPekEweFNDK2NOS3hZd2lFY0th?=
- =?utf-8?B?QyswMVRtMzNwVTlDV1ViRlpnZFA5QVBzb3RkcW9rTTU1dG11Tk9GL1V1MFcy?=
- =?utf-8?B?bTBMcWFvK0lnZ0tVY2U2RWliRmIrMjdQdzJGcnlCNHpMK1BVS1VCNkdrME00?=
- =?utf-8?B?SzBzU0NEb0c3UHhROVJEaWwxRTZYQlcxSzRGSlVaYUdWUXRzMWVpTXhFYnVH?=
- =?utf-8?B?cUVtQzkxU3UvQjhmcHRXN0d5K1dNM0pzbjQvMDZrNnBDZFlrTEZQZW15OUdw?=
- =?utf-8?B?aXF0K0swRHRuYmZkNEhlK0hybllWM1g4UWdlcGlkR2lVVHdibGxtTWQwekwv?=
- =?utf-8?B?cW5qOTFGeXd3dDFRN3BRL3VPVVBxRE5yRkcvRTZLVG1jb3dBc1c1WUc2dUVu?=
- =?utf-8?B?WUs3aFBVaGJsUW1WbVJKQW1oWjBwM2Vnb1FyMG9sai9ndmYxRXhHRW16bXpQ?=
- =?utf-8?B?czdraXMyUGxPcGF4T0pWOVZkOTV1emhibnlDa3NSamZJYmxLSmg5K3lwaHR5?=
- =?utf-8?B?cXI3cnlHQzRtRExSRW5mMHE4cjc0aXZ2dU1NWWJwelFqaVlrSjYyVEl0Y0JR?=
- =?utf-8?B?ZWlxNjhqNHV5VldyQ1lGYVpvd3lQSGh0ZDBtWnJjWHJ1Z1N5RVRiZW4vYU8x?=
- =?utf-8?B?UDlnZ0tmTXNUdS9OcTg0VWRtNGI2Ulp3anh3NGljOXZoUDFLODlraVJYamtm?=
- =?utf-8?B?NkpPUk8zbUVwMkYwOFNmWVp4RFZJa0VROWxjZHhlQy9ObjRBYm5HMVJsd0RZ?=
- =?utf-8?B?VFljalJuUU1JOHM0bXhudDJDRHhOdVhZVE1jWDlsMnVUMEhQRGF0ajYvTDJt?=
- =?utf-8?B?UThmcFZnRUE1bVdNc21nRk5Mb2VYTDdMYlRQbjZ0SnlDdjlKTzBZTzduUVNZ?=
- =?utf-8?B?QVlMb2F5ZHlRb0FyaDBpa0NRM0Jtc0Y0bjBNV01jZnNGWGwrYzhRckVGVG1y?=
- =?utf-8?B?b2dvQWxsNVhJQkRPVWlLT1VUTkRNV095czR6SDBBMUdNeGtQVWVYQT09?=
+	=?utf-8?B?WTdVcisyRW5QUllhU2NpNDlLNHUyT3JZZzdFTldDaUw1SWI4KzErVGdUelBN?=
+ =?utf-8?B?ZmFweFRsZzZLd3pUTGQ3a3ZpWUhOVXRXQUwxeUQ0bWljNVhrNmg3cStwVWQ5?=
+ =?utf-8?B?U3JxL2ZwRlVmaXQwaGxiL0IvUlNJNEtKcHRSbXRZanBqeVB2MjVRTENqSzN1?=
+ =?utf-8?B?NmNUTVBQeUtSbjE2T3RBOXN0UjFhSUxoSnZBemIxelVSbENJOEk0Y1JQdGh0?=
+ =?utf-8?B?Vm1tS2E0NWYwUWhjUEJvb0FrTmZLa0c4QnlqWUJEcEZvaTU0VFJNOWJ4cmpD?=
+ =?utf-8?B?dEI0aHFNc01tRUVtNTk0S2FDYThPVjE0TFhEMk5Fbis5cWRyN00rMS9HbTF3?=
+ =?utf-8?B?Y2dCVlp0ejBuU2ZpMTFqckdFSWJuakFTMytnNzg5dzdicWFXT3c4b0Y0ZHhr?=
+ =?utf-8?B?czBoNlVXYzdwdFF2ZFpqaWJpengrOWRCTkNjb1RMSlNISDF1SVF3aGRVcVJV?=
+ =?utf-8?B?cTVMT2Rha0tSRlBWZFRKSUphM2NOMUtPTlJCQVA5S1YxaEd0aGg4V0R5N1dh?=
+ =?utf-8?B?bnAwOEsrNFZPdVJDdVgvQ0pkTmZJdHU5eEZIMXl1QWt5cHpCc3J4QkpqRHNv?=
+ =?utf-8?B?bGl6a0R6R2o2c3dRRXplOWMwK0NDSVpGbGF3T2U1aEduTGJ1a2dLK0NkVWFH?=
+ =?utf-8?B?ZVIzVzdxTVJCQ3NhYUtYbXVkWi80dDVyV1llVEU2Q1R1NkxCK1dDRDJQZ2dY?=
+ =?utf-8?B?anVXQ1ExU3FvbzFhVGh4R0dLU3QyRnNybjNyQzg0RHBFc2l2SjdpRTBpSk9G?=
+ =?utf-8?B?MVlDWmp2cVU4WURLTmNua2Z5V1BIV1NuaWkwV1pLYUlyRWpDQmNNd2ZGNEw5?=
+ =?utf-8?B?N1JTMEExQ0NxM3A3bHIzOUlXQnNTb3pwN2RxVm52ZnNoRGtwOCtBVnNOREhF?=
+ =?utf-8?B?MkpVNTh6YlNJem9jc203R3pWTkxnbUlqaWtUVVdscE9JUmNJWGQyZnNiMnJk?=
+ =?utf-8?B?ejFIaTUrbGxBWmRYNE4xMGJkeHVzVVNmcEdUSFVhV0ZBNW1vNmRhK1lQNnZ4?=
+ =?utf-8?B?SzJadERHdyt0b3ZuZENKMWEraWlLVWo4eDloYzZJcVJQTUo5UnMyT1RBTkJs?=
+ =?utf-8?B?MmJXdHBNRkE5VlRLNVBTUWIwdTcrN3ExSzBlUjdVR1I4SE5oWFhtRTJrbE9O?=
+ =?utf-8?B?WnBLUU1uYnJVa3dmYUFNb3RYclE3My9wQWNmcTBEZ3BseVdGdVRaSUVzOVk2?=
+ =?utf-8?B?dWtnZHlGQUk2RTBzSndZZlZHVGxkaVdKVHl1NGUrVm9CdHRxV3dMUFNHRXZQ?=
+ =?utf-8?B?RWFkb09TVzE3dUY2akY2V25uZXRXcFRRQTF2dlFwbENibmdoWnhxbWhxSG1E?=
+ =?utf-8?B?NXBVOWhzd0x6MWtNenJoRW53ZWVBZ25jZkQrQTB3OW9CUDNhNEVCM2lkM0RJ?=
+ =?utf-8?B?VTRQQk9CcW04bVlVMlIxZFdveEplUzFhOVhlZVlqcmo3NCtYeCtnZzFrSURZ?=
+ =?utf-8?B?MXZ2REt1R2FCM0FKdHNKVzdVQ0RudmRVTW1IWU5RZFBnSURFZ3ZXSXB3TG5G?=
+ =?utf-8?B?NnJROTNzT0JEWmlSRWlONzlIUDlKZVlESnlVcEFhaFFySFVkdTJPZldYZXZW?=
+ =?utf-8?B?NWYyd1lrem9KNUNhdTlCRkdXRzQvU2FISXQvcDkraXpOMmM3aVJyODRSWTR1?=
+ =?utf-8?B?ZndtTHBUc0I2cHVXenROanlrSHNtQWVwcE9qa093T3pzWnV1cTNWU2paSVNY?=
+ =?utf-8?B?ZENrK0RwMzhtU3ZGbWdEL21PSW55c1o1a3VuTFlRMkQ3cDZDcmlzUEFVS3Ir?=
+ =?utf-8?B?M2d1Z1ZheVZoQ0lXbEhLWVYreG5OSHJXL3lta0J6UUdGanJGeis0OVBnWEgw?=
+ =?utf-8?B?c28zMlIwbjBiQkovQUxCZUpiVVNXWncxUWZPVktrUDF3QXQ4bE1od3gvbldC?=
+ =?utf-8?B?ZEd2YnhIMWsyb3hybmx1VUEwaVBNNXpOQUc0ekZabGRnd3N0UU1MT2loWXRZ?=
+ =?utf-8?B?MjJQYjFTRXN6Z3Juc3QrRDJCTlR4bFQrNnNta0RvbUxwN2xyTFI3TlJqY1Fi?=
+ =?utf-8?B?WVJvZCs0OTZ4ZVR5SFRBeVlEUFV4N2t6Mzd3MDRML1dkck9EQlQ5NGdNd3li?=
+ =?utf-8?B?bnB0eFg0RlFqUEc3QlZjZ2RuMG8rNHBjVS9TdDZqSUhHc2ZjSEtjVzI5QTBh?=
+ =?utf-8?B?QlhGeGVZNk16aDJ3Z2dZOTJNNWtyK3ZsazBUR0hhTUFVSkprSEk5TlhTZ3ZO?=
+ =?utf-8?B?RjZ2bEtBUm5Oa09JRzJmTk0wTkxpRmRQbWh2bzdtYXJDQ0pFWUJTaDdoSWJ0?=
+ =?utf-8?B?VHRJSittSGdSTnR4KzhycVdaNFErN2w3cWhYc3BESWdPa1o0L1htQjBrN2FM?=
+ =?utf-8?B?SC9BaU4vSWpsdDJLaXhKTThmS1ZvUlI0NVVZZFdBbEM4QVcyMEw5dz09?=
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dfb10e12-ebe1-4e19-2786-08dead1eaf95
+X-MS-Exchange-CrossTenant-Network-Message-Id: 376a5f8f-ee62-4c6d-dce4-08dead20803f
 X-MS-Exchange-CrossTenant-AuthSource: SA0PR12MB4557.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 May 2026 16:27:24.2826
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 May 2026 16:40:23.6389
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fkdmyoDZPKPpK6UYdLa4xzFTVVSjW2Rwi4u0U54fLxQKeuB+VcPBvk73rxeotqFbliMYcRhXqgB95/1a2B5xSQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4177
+X-MS-Exchange-CrossTenant-UserPrincipalName: d4FkqLh8ul7NCtohIf+qwAw6fIm6r6slInVk8J762SvSYKW7icGXEXmfpBDuekU2G3P9ItiOeqTwgTC9ej9N5w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8697
 
 
 
-On 5/8/26 09:21, Jihong Min wrote:
->> Yes.
->>
->> Please note that you keep top-posting. I don't mind that much, but
->> top-posting is (sometimes strongly) discouraged for linux kernel 
->> discussions.
+On 5/8/26 09:39, Jihong Min wrote:
+> AMD Promontory 21 (PROM21) xHCI controllers use generic xHCI
+> operation, but the PCI function also exposes optional
+> controller-specific sensor functionality. Add a small PROM21 PCI glue
+> driver for AMD 1022:43fd controllers.
 > 
-> Sorry, this is my first kernel contribution and I was not familiar with the
-> mailing list convention around top-posting. I will avoid top-posting and 
-> use
-> inline replies from now on.
-
-Another thing to mention is that you are going too fast between patch 
-versions.  All your patches show up in a ton of people's inboxes.
-
-It's great you've gotten feedback on them but I suggest you give it a 
-few days or a week between versions to gather more feedback.
-
-If you haven't already; you should take a look at what Sahiko finds on 
-your patches too.  Be sure to look at the feedback critically and take 
-it with a grain of salt; but it often finds a few nuggets that are 
-worthwhile to consider.
-
-Here is the Sahiko link for v4 you can review if you weren't already 
-looking at it.
-
-https://sashiko.dev/#/patchset/20260508143910.14673-1-hurryman2212%40gmail.com
-
+> The driver delegates USB host operation to the common xhci-pci core and
+> creates a "hwmon" auxiliary device for optional child drivers. Failure
+> to create the auxiliary device is logged but does not fail the xHCI
+> probe, since the auxiliary device is only needed for sensor support.
 > 
-> I have addressed the review comments in v4, including runtime PM behavior,
-> temp1_label removal, -ENODATA return, the PROM21-specific xHCI PCI glue 
-> split,
-> and making the PROM21 PCI glue built-in only when enabled. I also 
-> adopted the
-> naming scheme discussed above:
+> Keep the PROM21 PCI glue built-in only when enabled because it owns the
+> PCI binding for PROM21 xHCI controllers and must be available whenever
+> the common built-in xhci-pci driver hands those controllers off. This
+> avoids an early boot case where generic xhci-pci rejects a PROM21
+> controller but a modular xhci-pci-prom21 driver is not available in the
+> initramfs, leaving USB devices behind that controller unavailable.
 > 
->    - drivers/hwmon/prom21-xhci.c
->    - CONFIG_SENSORS_PROM21_XHCI
->    - hwmon name: prom21_xhci
+> Assisted-by: Codex:gpt-5.5
+> Signed-off-by: Jihong Min <hurryman2212@gmail.com>
+> ---
+>   drivers/usb/host/Kconfig           |  18 +++++
+>   drivers/usb/host/Makefile          |   1 +
+>   drivers/usb/host/xhci-pci-prom21.c | 111 +++++++++++++++++++++++++++++
+>   drivers/usb/host/xhci-pci.c        |  11 +++
+>   4 files changed, 141 insertions(+)
+>   create mode 100644 drivers/usb/host/xhci-pci-prom21.c
 > 
-> I will send v4 now.
-> 
-> Sincerely,
-> Jihong Min
+> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+> index 0a277a07cf70..74eedef1440d 100644
+> --- a/drivers/usb/host/Kconfig
+> +++ b/drivers/usb/host/Kconfig
+> @@ -42,6 +42,24 @@ config USB_XHCI_PCI
+>   	depends on USB_PCI
+>   	default y
+>   
+> +config USB_XHCI_PCI_PROM21
+> +	bool "AMD Promontory 21 xHCI PCI support"
+> +	depends on USB_XHCI_PCI=y
+> +	select AUXILIARY_BUS
+> +	help
+> +	  Say 'Y' to enable support for the AMD Promontory 21 xHCI PCI
+> +	  controller with optional sensor support. This driver does not add
+> +	  PROM21-specific USB or xHCI operation. It binds PROM21 xHCI PCI
+> +	  functions, delegates USB host operation to the common xHCI PCI core,
+> +	  and creates auxiliary devices for optional sensor drivers.
+> +
+> +	  This driver is built-in only because it owns the PCI binding for
+> +	  PROM21 xHCI controllers when enabled and must be available whenever
+> +	  the common xHCI PCI driver is available. The optional sensor driver
+> +	  can still be built as a module.
+> +
+> +	  If unsure, say 'N'.
+> +
+>   config USB_XHCI_PCI_RENESAS
+>   	tristate "Support for additional Renesas xHCI controller with firmware"
+>   	depends on USB_XHCI_PCI
+> diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
+> index a07e7ba9cd53..174580c1281a 100644
+> --- a/drivers/usb/host/Makefile
+> +++ b/drivers/usb/host/Makefile
+> @@ -71,6 +71,7 @@ obj-$(CONFIG_USB_UHCI_HCD)	+= uhci-hcd.o
+>   obj-$(CONFIG_USB_FHCI_HCD)	+= fhci.o
+>   obj-$(CONFIG_USB_XHCI_HCD)	+= xhci-hcd.o
+>   obj-$(CONFIG_USB_XHCI_PCI)	+= xhci-pci.o
+> +obj-$(CONFIG_USB_XHCI_PCI_PROM21)	+= xhci-pci-prom21.o
+>   obj-$(CONFIG_USB_XHCI_PCI_RENESAS)	+= xhci-pci-renesas.o
+>   obj-$(CONFIG_USB_XHCI_PLATFORM) += xhci-plat-hcd.o
+>   obj-$(CONFIG_USB_XHCI_HISTB)	+= xhci-histb.o
+> diff --git a/drivers/usb/host/xhci-pci-prom21.c b/drivers/usb/host/xhci-pci-prom21.c
+> new file mode 100644
+> index 000000000000..7354a898732e
+> --- /dev/null
+> +++ b/drivers/usb/host/xhci-pci-prom21.c
+> @@ -0,0 +1,111 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * AMD Promontory 21 xHCI host controller PCI Bus Glue.
+> + *
+> + * This does not add any PROM21-specific USB or xHCI operation. It exists only
+> + * to publish an auxiliary device for integrated temperature sensor support.
+> + *
+> + * Copyright (C) 2026 Jihong Min <hurryman2212@gmail.com>
+> + */
+> +
+> +#include <linux/auxiliary_bus.h>
+> +#include <linux/device/devres.h>
+> +#include <linux/errno.h>
+> +#include <linux/module.h>
+> +#include <linux/pci.h>
+> +#include <linux/slab.h>
+> +#include <linux/usb.h>
+> +#include <linux/usb/hcd.h>
+> +
+> +#include "xhci-pci.h"
+> +
+> +struct prom21_xhci_auxdev {
+> +	struct auxiliary_device *auxdev;
+> +};
+> +
+> +static void prom21_xhci_auxdev_release(struct device *dev, void *res)
+> +{
+> +	struct prom21_xhci_auxdev *prom21_auxdev = res;
+> +
+> +	auxiliary_device_destroy(prom21_auxdev->auxdev);
+> +}
+> +
+> +static int prom21_xhci_create_auxdev(struct pci_dev *pdev)
+> +{
+> +	struct prom21_xhci_auxdev *prom21_auxdev;
+> +
+> +	prom21_auxdev = devres_alloc(prom21_xhci_auxdev_release,
+> +				     sizeof(*prom21_auxdev), GFP_KERNEL);
+> +	if (!prom21_auxdev)
+> +		return -ENOMEM;
+> +
+> +	prom21_auxdev->auxdev =
+> +		auxiliary_device_create(&pdev->dev, KBUILD_MODNAME, "hwmon",
+> +					NULL, (pci_domain_nr(pdev->bus) << 16) |
+> +						      pci_dev_id(pdev));
+> +	if (!prom21_auxdev->auxdev) {
+> +		devres_free(prom21_auxdev);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	devres_add(&pdev->dev, prom21_auxdev);
+> +	return 0;
+> +}
+> +
+> +static void prom21_xhci_destroy_auxdev(struct pci_dev *pdev)
+> +{
+> +	devres_release(&pdev->dev, prom21_xhci_auxdev_release, NULL, NULL);
+> +}
+> +
+> +static int prom21_xhci_probe(struct pci_dev *dev,
+> +			     const struct pci_device_id *id)
+> +{
+> +	int retval;
+> +
+> +	retval = xhci_pci_common_probe(dev, id);
+> +	if (retval)
+> +		return retval;
+> +
+> +	retval = prom21_xhci_create_auxdev(dev);
+> +	if (retval) {
+> +		/*
+> +		 * The auxiliary device only provides optional temperature sensor
+> +		 * support. Keep the xHCI controller usable if it fails.
+> +		 */
+> +		dev_err(&dev->dev,
+> +			"failed to create PROM21 hwmon auxiliary device: %d\n",
+> +			retval);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void prom21_xhci_remove(struct pci_dev *dev)
+> +{
+> +	prom21_xhci_destroy_auxdev(dev);
+> +	xhci_pci_remove(dev);
+> +}
+> +
+> +static const struct pci_device_id pci_ids[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x43fd) }, /* PROM21 xHCI */
+> +	{ /* end: all zeroes */ }
+> +};
+> +MODULE_DEVICE_TABLE(pci, pci_ids);
+> +
+> +static struct pci_driver prom21_xhci_driver = {
+> +	.name = "xhci-pci-prom21",
+> +	.id_table = pci_ids,
+> +
+> +	.probe = prom21_xhci_probe,
+> +	.remove = prom21_xhci_remove,
+> +
+> +	.shutdown = usb_hcd_pci_shutdown,
+> +	.driver = {
+> +		.pm = pm_ptr(&usb_hcd_pci_pm_ops),
+> +	},
+> +};
+> +module_pci_driver(prom21_xhci_driver);
+> +
+> +MODULE_DESCRIPTION("AMD Promontory 21 xHCI PCI Host Controller Driver");
+> +MODULE_IMPORT_NS("xhci");
+> +MODULE_LICENSE("GPL");
+> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+> index 585b2f3117b0..5db427ad0422 100644
+> --- a/drivers/usb/host/xhci-pci.c
+> +++ b/drivers/usb/host/xhci-pci.c
+> @@ -84,6 +84,7 @@
+>   #define PCI_DEVICE_ID_AMD_PROMONTORYA_3			0x43ba
+>   #define PCI_DEVICE_ID_AMD_PROMONTORYA_2			0x43bb
+>   #define PCI_DEVICE_ID_AMD_PROMONTORYA_1			0x43bc
+> +#define PCI_DEVICE_ID_AMD_PROM21_XHCI			0x43fd
+
+This define should be in a common header used by xhci-pci.c and 
+xhci-pci-prom21.c both.
+
+>   
+>   #define PCI_DEVICE_ID_ATI_NAVI10_7316_XHCI		0x7316
+>   
+> @@ -696,12 +697,22 @@ static const struct pci_device_id pci_ids_renesas[] = {
+>   	{ /* end: all zeroes */ }
+>   };
+>   
+> +/* handled by xhci-pci-prom21 if enabled */
+> +static const struct pci_device_id pci_ids_prom21[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_PROM21_XHCI) },
+> +	{ /* end: all zeroes */ }
+> +};
+> +
+>   static int xhci_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>   {
+>   	if (IS_ENABLED(CONFIG_USB_XHCI_PCI_RENESAS) &&
+>   			pci_match_id(pci_ids_renesas, dev))
+>   		return -ENODEV;
+>   
+> +	if (IS_ENABLED(CONFIG_USB_XHCI_PCI_PROM21) &&
+> +	    pci_match_id(pci_ids_prom21, dev))
+> +		return -ENODEV;
+> +
+>   	return xhci_pci_common_probe(dev, id);
+>   }
+>   
 
