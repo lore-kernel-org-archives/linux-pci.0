@@ -1,252 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE42B308F07
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:41:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31DC92F363F;
+	Fri,  8 May 2026 03:41:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778211686; cv=none; b=hP6sevRRikr+707qZjwPBNrffrn1mjgpZlsUjx1tz/9iK9d+rPUJnEb0+xOpiUxwTaV8tbuGAaSsfa2uOB3O2k4iMUH7EqrZqQam+pujRRDoVUuadZRZ/UNUh/2Ajtl4DYJUhpWFqIX+iqR6hdnH4ND8tc0wZ6BHLpQO+jNsnEg=
+	t=1778211713; cv=none; b=crBeQjV8U5JuMFGYMxZDP1SZFSB5kZjov5fea0SDCE2N6EEaMfmSBje2cIjKx1vdTCYPkig5cJl690E1xr0d73UOTIgiF8Jvvybe4NpJDKTt4/+mmaoHzu7HE6o4AUsTZTOD8DghfCxqjc/XM9spuTQrcHYGmJr5YkCRo+1hclk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778211686; c=relaxed/simple;
-	bh=BvDqFMLvyDt4fMplbxM1GWoR5pa0JJfp1yAKvmGgp/k=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mHSVKzvJW2+3WxcYtJpJK2qn/x+j5WVHFwm59cP+y2TVfKjDSFo5qYhWTnpWsLjub9VSfKTtk65zcz3ZBJs3qzCL8HCLCS4W1b5zoD7FjFmFOVpIU8uFwypBZBNj5Znr2VaNQxh2Da8QHYEEuScY0gpmptah0pItyJgTnc2+ESo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bBzP4/ZI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778211713; c=relaxed/simple;
+	bh=MEUWDC+gwIz+NhpCeCEaqZyh+heJsW4lr89gxGprlkQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=o/0brSyw3jflyEZY7LozDzsuhf6L8sPuFxArgrPejnLkWu9gIMULsdB+zlVeJ+f6gBOdP+UF0zoHPPqE4ahQHAdicO/TOwSI6x2unyHbSc03cwmn/MHNexlBbm1WqOL8sVSdsJGjw65xl7sZRi0kLwQEke/Lkzp4iwZLvJiYmKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=SpXG226z; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bBzP4/ZI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A5B0C2BCB0;
-	Fri,  8 May 2026 03:41:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778211686;
-	bh=BvDqFMLvyDt4fMplbxM1GWoR5pa0JJfp1yAKvmGgp/k=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=bBzP4/ZIEzFvaLMR08EhDJKO/Jj09+sgHOP5JaQ6b/KzexwXToOdBA7W0nH6e+YI6
-	 FhRr53jXRsPKdCWMhm/ZYAoyGec95ss14aEl0YkYaFOBu7ZOlynLXTq9TZPNOAZqcQ
-	 XAUVwtAHHyX351OprtFbr2UL9ARjFU7cysRFnFb9tH0bN3MYo7NqdtZD0RmoGZeC8J
-	 ZDds1FcHMtGi75OeASgP1Hdyfz9Rfzra0hvQDMW49G7vCH7MA8yNNmwppPaKKtqqUf
-	 9VPvZqs/K7LO5Nzhzg3LAATCgLULY/JEQWlooz1teBW06cvtuOP82v4mf/GmT8NelD
-	 y8ynOgjmPHAqw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 07/18] lib: rspdm: Initial commit of Rust SPDM
-Reply-To: sashiko@lists.linux.dev
-To: alistair23@gmail.com
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260508031710.514574-8-alistair.francis@wdc.com>
-References: <20260508031710.514574-8-alistair.francis@wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 03:41:25 +0000
-Message-Id: <20260508034126.4A5B0C2BCB0@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="SpXG226z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=7d
+	UHVsNE/6UVVlfOX223yJ9AwbYp6g3uturHQXczS2I=; b=SpXG226zCJBwHQiZad
+	PWeBpayz+PXNyIONRc6dqixxVTPvSjzlmuTjLfPv3brDwGOQn2jCmTMyBPfKcKpw
+	Qg86O9en0t/PfbeOjQ2enImOsUkjEJeh1pzcI9gVnSFFDsIUStl3c9ZRzM8JzgmH
+	KaygBh7zQkot8oFWITC7h2ktc=
+Received: from Precision-7960.. (unknown [])
+	by gzsmtp4 (Coremail) with SMTP id PygvCgCX5jJYW_1pUkipCw--.764S2;
+	Fri, 08 May 2026 11:41:15 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	hans.zhang@cixtech.com
+Cc: robh@kernel.org,
+	mpillai@cadence.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v4 0/2] PCI: cadence: Add LTSSM debugfs
+Date: Fri,  8 May 2026 11:40:59 +0800
+Message-Id: <20260508034101.1910036-1-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PygvCgCX5jJYW_1pUkipCw--.764S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGw4fCw47tw18Wr4DWw1kuFg_yoW5tw4fpa
+	4kKFWfGr4xArW3Z3Z3Z3WUWryftFn3A3yxJwsa9w1xZ3W3CryDXr1IkFW5XrZxGrZrur17
+	tr15twn7KryavFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0JUUxhdUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xzHa2n9W1yuXAAA36
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
-s) to consider:
-- [Critical] `spdm_exchange` parses the response buffer before the transpor=
-t function populates it, violating aliasing rules and causing incorrect beh=
-avior.
-- [Critical] Casting untrusted device data to a packed struct containing a =
-Rust enum causes Undefined Behavior.
-- [High] `spdm_destroy` is an empty function, leading to a permanent memory=
- leak of the SPDM state.
-- [High] `spdm_exchange` unsoundly requires a `&'static mut SpdmState` para=
-meter across the FFI boundary.
-- [Medium] `config RSPDM` uses `select RUST` without inheriting its depende=
-ncies.
-- [Low] `spdm_exchange` is exported to C but missing a declaration in the h=
-eader file.
-- [Low] The `LowerHex` implementation for `SpdmErrorCode` injects unexpecte=
-d newlines into logs.
---
+Hi,
 
-commit e8e3509aa659e22c45fe6865916c641e09098dfb
-Author: Alistair Francis <alistair@alistair23.me>
+This series adds debugfs support to the Cadence PCIe controller driver,
+allowing users to read the current LTSSM state of the link for debugging
+purposes.
 
-lib: rspdm: Initial commit of Rust SPDM
+Patch 1 introduces a new flag 'is_hpa' in the cdns_pcie structure to
+distinguish HPA (High Performance Architecture IP) platforms, which
+have a different register layout for LTSSM status.
 
-This is the initial commit of the Rust SPDM library. It is based on and
-compatible with the C SPDM library in the kernel (lib/spdm).
+Patch 2 implements the debugfs file "ltssm_status" under a per-device
+directory. It reads the LTSSM state from the appropriate hardware register
+based on the 'is_hpa' flag and displays both a descriptive string and the
+raw value.
 
-> diff --git a/include/linux/spdm.h b/include/linux/spdm.h
-> new file mode 100644
-> index 0000000000000..e23e386ed97ab
-> --- /dev/null
-> +++ b/include/linux/spdm.h
-[ ... ]
-> +struct spdm_state *spdm_create(struct device *dev, spdm_transport *trans=
-port,
-> +			       void *transport_priv, u32 transport_sz,
-> +			       spdm_validate *validate);
-> +
-> +int spdm_authenticate(struct spdm_state *spdm_state);
-> +
-> +void spdm_destroy(struct spdm_state *spdm_state);
+=====================
+Test:
+root@orangepi6plus:~# ls -l /sys/kernel/debug/cdns_pcie_a0*
+/sys/kernel/debug/cdns_pcie_a010000.pcie:
+total 0
+-r--r--r-- 1 root root 0 Jan  1  1970 ltssm_status
 
-Is spdm_exchange() intended to be a part of the public C API? The Rust
-implementation exports it, but a declaration appears to be missing from this
-header file.
+/sys/kernel/debug/cdns_pcie_a0c0000.pcie:
+total 0
+-r--r--r-- 1 root root 0 Jan  1  1970 ltssm_status
 
-> +
-> +extern const struct attribute_group spdm_attr_group;
-> +
-> +#endif
-> diff --git a/lib/Kconfig b/lib/Kconfig
-> index 00a9509636c18..5a248709132e2 100644
-> --- a/lib/Kconfig
-> +++ b/lib/Kconfig
-[ ... ]
-> @@ -592,6 +592,23 @@ config LWQ_TEST
->  	help
->            Run boot-time test of light-weight queuing.
-> =20
-> +config RSPDM
-> +	bool "Rust SPDM"
-> +	select RUST
+/sys/kernel/debug/cdns_pcie_a0e0000.pcie:
+total 0
+-r--r--r-- 1 root root 0 Jan  1  1970 ltssm_status
+root@orangepi6plus:~# 
+root@orangepi6plus:~# 
+root@orangepi6plus:~# cat /sys/kernel/debug/cdns_pcie_a0*/ltss*
+L0_STATE (0x29)
+L0_STATE (0x29)
+L0_STATE (0x29)
+root@orangepi6plus:~# 
+root@orangepi6plus:~# uname -a
+Linux orangepi6plus 7.1.0-rc2-00377-gb898336dec53-dirty #43 SMP PREEMPT Fri May  8 11:15:00 CST 2026 aarch64 aarch64 aarch64 GNU/Linux
+=====================
 
-Does this need to use "depends on RUST" instead of "select RUST"? According
-to the Kconfig subsystem guidelines, selecting a symbol without satisfying
-its dependencies (such as HAVE_RUST) can cause unmet dependency warnings and
-potential build failures.
+---
+Changes for v4:
+- Remove the copyright email address of the author of pcie-cadence-debugfs.c (Mani)
+- Add cdns_pcie_hpa_host_disable() (Mani)
+- Use DEFINE_SHOW_ATTRIBUTE() (Mani & Sashiko)
 
-> +	select CRYPTO
-> +	select KEYS
-[ ... ]
-> diff --git a/lib/rspdm/consts.rs b/lib/rspdm/consts.rs
-> new file mode 100644
-> index 0000000000000..2feddde678858
-> --- /dev/null
-> +++ b/lib/rspdm/consts.rs
-[ ... ]
-> +pub(crate) const SPDM_REQ: u8 =3D 0x80;
-> +pub(crate) const SPDM_ERROR: u8 =3D 0x7f;
-> +
-> +#[expect(dead_code)]
-> +#[derive(Clone, Copy)]
-> +pub(crate) enum SpdmErrorCode {
-> +    InvalidRequest =3D 0x01,
+Changes for v3:
+https://patchwork.kernel.org/project/linux-pci/patch/20260406103237.1203127-1-18255117159@163.com/
 
-Does this enum need a #[repr(u8)] attribute? It is embedded in the packed
-SpdmErrorRsp struct and cast from untrusted device data. Without a specified
-representation, its memory layout is compiler-defined, which might lead to
-unexpected behavior when casting raw bytes.
+- Export cdns_pcie_debugfs_deinit (Mani)
+- pcie-cadence-ep.c pcie-cadence-host.c pci-sky1.c call cdns_pcie_debugfs_deinit
 
-[ ... ]
-> +impl core::fmt::LowerHex for SpdmErrorCode {
-> +    /// A debug print format for the SpdmSessionInfo struct
-> +    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result=
- {
-> +        writeln!(f, "{:#x}", *self as u8)?;
+Changes for v2:
+https://patchwork.kernel.org/project/linux-pci/patch/20260321033035.3008585-3-18255117159@163.com/
 
-This isn't a bug, but using writeln! here appends a newline character. When
-formatted inside macros like pr_err! that already include a newline, this
-results in two consecutive newlines in the kernel log. Would it be better
-to use write! instead?
+- s/DW_PCIE_LTSSM_NAME/CDNS_PCIE_LTSSM_NAME/
+- S/January 2026/March 2026/
+- EXPORT_SYMBOL_GPL(cdns_pcie_debugfs_init); // Resolve the following error issues.
+  >> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-host-mod.ko] undefined!
+  >> ERROR: modpost: "cdns_pcie_debugfs_init" [drivers/pci/controller/cadence/pcie-cadence-ep-mod.ko] undefined!
 
-> +
-> +        Ok(())
-> +    }
-> +}
-> diff --git a/lib/rspdm/lib.rs b/lib/rspdm/lib.rs
-> new file mode 100644
-> index 0000000000000..758d43fba5cba
-> --- /dev/null
-> +++ b/lib/rspdm/lib.rs
-[ ... ]
-> +#[no_mangle]
-> +pub unsafe extern "C" fn spdm_exchange(
-> +    state: &'static mut SpdmState,
+v1:
+https://patchwork.kernel.org/project/linux-pci/cover/20260315155514.127255-1-18255117159@163.com/
 
-Could this signature cause lifetime issues? The state reference is marked
-as &'static mut, which asserts to the compiler that the object lives for
-the entire duration of the program and has exclusive global access. When
-the C side frees this state via spdm_destroy(), the 'static guarantee is
-violated. Should this take a raw pointer or an elided lifetime reference?
+Hans Zhang (2):
+  PCI: cadence: Add HPA architecture flag
+  PCI: cadence: Add debugfs property to provide LTSSM status of the PCIe
+    link
 
-> +    req: *mut c_void,
-> +    req_sz: usize,
-> +    rsp: *mut c_void,
-> +    rsp_sz: usize,
-> +) -> isize {
-[ ... ]
-> +/// spdm_destroy() - Destroy SPDM session
-> +///
-> +/// @spdm_state: SPDM session state
-> +#[export]
-> +pub unsafe extern "C" fn spdm_destroy(_state_ptr: *mut spdm_state) {}
+ Documentation/ABI/testing/debugfs-cdns-pcie   |   5 +
+ drivers/pci/controller/cadence/Kconfig        |   9 +
+ drivers/pci/controller/cadence/Makefile       |   1 +
+ drivers/pci/controller/cadence/pci-sky1.c     |   4 +
+ .../controller/cadence/pcie-cadence-debugfs.c | 208 ++++++++++++++++++
+ .../pci/controller/cadence/pcie-cadence-ep.c  |   3 +
+ .../cadence/pcie-cadence-host-hpa.c           |  20 +-
+ .../controller/cadence/pcie-cadence-host.c    |   9 +-
+ drivers/pci/controller/cadence/pcie-cadence.h | 152 +++++++++++++
+ 9 files changed, 409 insertions(+), 2 deletions(-)
+ create mode 100644 Documentation/ABI/testing/debugfs-cdns-pcie
+ create mode 100644 drivers/pci/controller/cadence/pcie-cadence-debugfs.c
 
-Does this code leak the SPDM state allocation? spdm_create() allocates the
-memory on the heap using KBox::new() and transfers ownership to C, but this
-function is empty and does not drop the allocation.
 
-> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-> new file mode 100644
-> index 0000000000000..18e81f24c7249
-> --- /dev/null
-> +++ b/lib/rspdm/state.rs
-[ ... ]
-> +    pub(crate) fn spdm_exchange(
-> +        &self,
-> +        request_buf: &mut [u8],
-> +        response_buf: &mut [u8],
-> +    ) -> Result<i32, Error> {
-> +        let header_size =3D core::mem::size_of::<SpdmHeader>();
-> +        let request: &mut SpdmHeader =3D Untrusted::new_mut(request_buf)=
-.validate_mut()?;
-> +        let response: &SpdmHeader =3D Untrusted::new_ref(response_buf).v=
-alidate()?;
+base-commit: 917719c412c48687d4a176965d1fa35320ec457c
+-- 
+2.34.1
 
-Can this result in undefined behavior due to aliasing rules? The code
-creates an immutable reference to the response_buf here, but later passes
-a mutable raw pointer to the C transport function below while this reference
-is still alive.
-
-Also, does this validate uninitialized or stale memory instead of the newly
-received response? The transport function has not been called yet.
-
-> +
-> +        let transport_function =3D self.transport.ok_or(EINVAL)?;
-> +        // SAFETY: `transport_function` is provided by the new(), we are
-> +        // calling the function.
-> +        let length =3D unsafe {
-> +            transport_function(
-> +                self.transport_priv,
-> +                self.dev,
-> +                request_buf.as_ptr() as *const c_void,
-> +                request_buf.len(),
-> +                response_buf.as_mut_ptr() as *mut c_void,
-> +                response_buf.len(),
-> +            ) as i32
-> +        };
-> +        to_result(length)?;
-> +
-> +        if (length as usize) < header_size {
-> +            return Ok(length); // Truncated response is handled by calle=
-rs
-> +        }
-> +        if response.code =3D=3D SPDM_ERROR {
-> +            if length as usize >=3D core::mem::size_of::<SpdmErrorRsp>()=
- {
-> +                // SAFETY: The response buffer will be at least as large=
- as
-> +                // `SpdmErrorRsp` so we can cast the buffer to `SpdmErro=
-rRsp` which
-> +                // is a packed struct.
-> +                self.spdm_err(unsafe { &*(response_buf.as_ptr() as *cons=
-t SpdmErrorRsp) })?;
-
-Can this raw pointer cast cause undefined behavior if the untrusted device
-data contains an invalid enum variant? SpdmErrorRsp embeds the Rust enum
-SpdmErrorCode, and interpreting unvalidated bytes as a Rust enum that does
-not match a valid variant is undefined behavior.
-
-> +            } else {
-> +                return Err(EINVAL);
-> +            }
-> +        }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508031710.5145=
-74-1-alistair.francis@wdc.com?part=3D7
