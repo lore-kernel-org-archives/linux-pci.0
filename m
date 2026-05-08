@@ -1,63 +1,63 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C278D2F260F
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:18:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE60D30EF82
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:18:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778210332; cv=none; b=kYzxbzsvRAjCYycFLNivxC3/SlgPbHp6KXEQ//LMdTsfThWc9hQ/j6XVBwSfx5XCmC4LJgGpxOJGcJcEh8gBgDsmmpfCQIt2RZy4eRBmCDEzgB+X3w7OQ9OOYFZWbdmuPM1PHbG2+nZZRq2xoSVXHHSD0zO4YioCvAzppvlhxwM=
+	t=1778210338; cv=none; b=LBgP2DpN1NPWSFzbx+BYBZAFiOa64PWfjRf64oMAJyREde/27m7BFs8qvvhvAsF5mK3/iOZ59b/LQ3Y1DJX47ZKIXsrzf9+E2AvSP3V2EwRmCl7sJy4m94+8ifa/gr+A5hzw/43Q1C2NEwMOpwVz1sqTslmt0CQ+uux50Yw+uXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778210332; c=relaxed/simple;
-	bh=oxNrGjcZCazizcSxSSIR96HPVNGWilr6D9NtWMsT9rw=;
+	s=arc-20240116; t=1778210338; c=relaxed/simple;
+	bh=pgki4w7RWc81YTCI0ulFXlX7HnZjkRUDYahaKFjwBrY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gHP1TCb0kogIWy8WJX5Jq52Mv62GCGi7Vl3XR9W0GZmP7OiaihAWg+Dz8EDiRjlwGqmCZHuJ1j3exQYwUma5jtC2rPyvUfB7Z+AZJ8eYoZ0lMFqZx4rZX3zRFZRLGvu+dQt7KO2cW0TV7DZf6wO3KYQqb7wWn2YRwhxYbu3bMx4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a+a6o51L; arc=none smtp.client-ip=209.85.214.178
+	 MIME-Version; b=ezYwqilrygEe+IvAG0FVTFB49PECSGfS/Qd1k1bLCDzLbvbKQ5eMrGo8/CzMyScnP4XdfycMb7Oaa/J3IqnqRyMwnuOFYE+N6tncEB/Hg3kMWZyoes+J4hWbH/Ig8Yw3PXiDu6G1HMiQ9ISsk5xoztoARsuTbwQiKvqPA7RuA3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=s5yyXS3T; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a+a6o51L"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2baca78cfaaso8654405ad.1
-        for <linux-pci@vger.kernel.org>; Thu, 07 May 2026 20:18:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s5yyXS3T"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-2ba4efedbeaso11157435ad.1
+        for <linux-pci@vger.kernel.org>; Thu, 07 May 2026 20:18:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778210327; x=1778815127; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1778210334; x=1778815134; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=sdaY8XVDz6HV3abuC4HHO5UewMGlDvcsArdslgC4GX0=;
-        b=a+a6o51LnORkrj8YRpE5Xy8JhOmLgr/EPwjAL1nxVAAUF7J/76zW8cfLLpMBpc+jns
-         XcNxlEblsg+g11U2adOV+fhOn2uS9A6CY3/bNdrFONHCmqaIAsgl0q/hr5WfpCg8bM5b
-         6vf/vijWohGSxuTGnjTDAbGb0ACVYYMjaGSu0RObcl2b5X+i20WV80p62/qFMKtB6821
-         RRr5M3CCWanHzG5v+6a+O1729SgJnff7wzrEFHwSxKZetRdHfXOAhzH2ojVYlwoIoJ2a
-         0QMvd14MRAivzBwj11Ad1oHAyb9kYXAvUf8hmH9dkE1ixQNdqyt0N1XL+SmuK+9NffPp
-         NNlQ==
+        bh=VcbWqg6jBmtAgedbxHyaToXZ0xvL9n8c+k1cA5Ncp9c=;
+        b=s5yyXS3Tq4hRomHX1+ENW+n73wPP/CbxuD5Z8LCDEw94z6LeEdsEortXwfia4YNHBc
+         SCp52PXZzYkRqZ9fJH0zSeHgLFV37EmA1Bdls8ffa59xfqstqR10e9P7KOmbb4dQ1TcB
+         LZ3MmpZfkaHaW+kAluIGe8VVjvmfJg2gCb+k22Z8LKpRJgZvnXBLhXWyCKPtM1JfvBSE
+         mq+q4x0VnncjdqnT6x96kRQO8tfvFW7aA2ItuIV7bEBuiE3j6j7BavoPSNkwUyec+90g
+         80p5kRgWWMTz/WIX6xGYRLA1m7K404OXvjheprNDtMgThPc7BUs1yuv80QoA1xDWLweP
+         GlKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778210327; x=1778815127;
+        d=1e100.net; s=20251104; t=1778210334; x=1778815134;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=sdaY8XVDz6HV3abuC4HHO5UewMGlDvcsArdslgC4GX0=;
-        b=gH3yiqP8bUhzTzz/PlBVTnytDHXbt8oNETXk6WqSIlsxk7IAZbT0FMOg4sjPCWdzgt
-         Wby3L8ANBUauyLUbYBu+XUJmnNi8g2VJ9XMtbYle2tir5lTucqZmbPpYX0UKzszmHe90
-         6X1IYaw5oNWQP22ewA0YfOnHS09gu7l2VY22JA4TAMXoEOQUu+GCPZkwHp9mhvArF2+2
-         nDv2f8MaGtgJzJ5KvOg8h2qLYkWy7Mv8HedxAsq6frYr9ebGfcSnDF/Y696AjIhdDt5H
-         OnVTtdrK8xoh2RFak7/DYbwW7OpInGs/B85ATxGIsMMP9F5seNuFUWdwFgJbM3y03IV4
-         hINA==
-X-Forwarded-Encrypted: i=1; AFNElJ+/OnLlVvv65IV0Yyql99VI0yGfvTuIiaTW9DzoCj7/0VWHs3IIWeAOuWJ+WAngIZHp37NX72N3zhw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx7P/iHwSYl1bpdzKhx2xUiQPL1b92xeQXNVojnk0J/AFue+Cwx
-	KVownEdsEZkw1zGb7Iw+SMxBMrJkWUkNozDhXREXTUbTWTyAfmEiwkJx
-X-Gm-Gg: Acq92OGlDslE4wmuLKwaKaKxe3jiSkcs+JZdU41t08M5G6f8Erg/huNW8mtVtBpVVps
-	bnh/+2y6GIt6po3JGuDzVBSR9Htn1GVrIKu4beA+tKi8xO9Lo1gnjkiMgoe/fCRgm+Im6F/AgKw
-	7rH70bTz7JiJzGqIW7ZLd+A/foUq9En6L2bCKu1FtuhSFGqD+o5XMTN3F3C+XU19cqG+Xame+Lk
-	mi8mX7/94C0N98QgYdpBQnug3DXERt2Zr8V59dMHT3JJ/jmejNcbyQJC/gmUwqUt0MKb0KV19Te
-	mt0KUF7od3+wtDtJHxtjhbTnoDNjJqb5608OPnB4FRgQd8dmnYSQ7rKTzEnNQBAZeP9IWuhBhAD
-	Yfo9v9ekbotsu5zeGlMnxSyq4M4ZrSZfhhwwiMjTv8vyHj9ulzjYnmwBFpvrxIuQNOCdCtgTMsf
-	IiR5SzQ8NZmT4sk9Stm3QGLOK34hfjI4qDdJ9zAswk
-X-Received: by 2002:a17:903:1af0:b0:2ad:bd4c:a5 with SMTP id d9443c01a7336-2ba78f63c82mr112714875ad.1.1778210327123;
-        Thu, 07 May 2026 20:18:47 -0700 (PDT)
+        bh=VcbWqg6jBmtAgedbxHyaToXZ0xvL9n8c+k1cA5Ncp9c=;
+        b=XZ81/B2Hfi5alsQXf8aOS0jbmJp4i5K8jzxnE3yYg7M7KFbcRASs34HzyRLAXdREhK
+         YUTF/ir6IYHIbFxnPLraQvygJY0rvF8ehmTxP/WoYGE6i0uc1DmxGXZHpnuJtjh/94AH
+         hy7breOk+iRQgd2xrHziITZ4TGeoUVL13cBPbAys8+yUzCb7/1Q8ScqQrmugOA9/W6O6
+         M97g/3vZwjGU3mrwiEnSOAe5eAM74B1V4kNyR1xHrJqcXdEz5fxL4XUtqNUfNUA+R3OM
+         9JsVenI4E0C0Z9v/MEKdlg5NDJNK/Ar+SuFQLvvhfDhjk3RtR9T5coAiKaGf2yEF+i+9
+         DgTA==
+X-Forwarded-Encrypted: i=1; AFNElJ+wpcno1nMdY8WrYO0ztQEvRMh1KIxBDdBJ8u6vIPtcpHiBQYji2b1dj9GR9uGN5WBg0uRfM2MN7Lw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwGqYeeOrkDXNEfoLTS2mjLNxenb2w/Xv3RnH5+t5c8igbAWwyh
+	WG8/A6bm0WAMdAgRIQkwodLZlJg6fpRn37FpgDjlaKsYmU9grfRzKD5H
+X-Gm-Gg: Acq92OFpA1I0bRL1q0remoOLDH5+alS1NV+ZHmRHDmi4ML7U9yRnX6Dc3Hr6CuTNXfM
+	+P+Ce6g/zlOqrtvTXVfiWubQhTvJIQp+359DaLfsYEtjD1gQmX3uQfUjmYaZSDT/ub8zUlQbHRw
+	YufnqSPtukihT7rnIrdtr1FSQDBxs9oteslUslVuImql68MrtIQBoSQ3D6Wuly1d4fmIERQc9IF
+	gVMNkHiLHq0B8dHWhZ2F5std3zs5YHn+1PlSM2TUts4gdHFkB3LaubBYM6taCfi1qDou7OxYww3
+	OVu/72gC4iYwUMTcNPGFJjK3kLi08ohEeKnejVSwjmAHQAB6ecC8nLfUrCuksslsIysOOisdzX+
+	ippMiuPY8W+043ycy7bsJ+UpYgjRSHAdb61XLgJJPA/OZ6+b8wopgf2byzJLoILmv++mXNaFspP
+	bRHcrGkiCB+uRKCF3LhMaT9Ybjn17R1GNTomEzqFJojCO7HCpOwT8=
+X-Received: by 2002:a17:902:fa07:b0:2b2:549f:7d2b with SMTP id d9443c01a7336-2ba794b9766mr73480655ad.11.1778210334411;
+        Thu, 07 May 2026 20:18:54 -0700 (PDT)
 Received: from toolbx.alistair23.me ([2403:581e:fdf9:0:6209:4521:6813:45b7])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1eafa62sm3220685ad.74.2026.05.07.20.18.40
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1eafa62sm3220685ad.74.2026.05.07.20.18.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 May 2026 20:18:46 -0700 (PDT)
+        Thu, 07 May 2026 20:18:53 -0700 (PDT)
 From: alistair23@gmail.com
 X-Google-Original-From: alistair.francis@wdc.com
 To: alistair@alistair23.me,
@@ -81,9 +81,9 @@ Cc: alex.gaynor@gmail.com,
 	tmgross@umich.edu,
 	ojeda@kernel.org,
 	alistair23@gmail.com
-Subject: [PATCH 11/18] lib: rspdm: Support SPDM get_version
-Date: Fri,  8 May 2026 13:17:03 +1000
-Message-ID: <20260508031710.514574-12-alistair.francis@wdc.com>
+Subject: [PATCH 12/18] lib: rspdm: Support SPDM get_capabilities
+Date: Fri,  8 May 2026 13:17:04 +1000
+Message-ID: <20260508031710.514574-13-alistair.francis@wdc.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260508031710.514574-1-alistair.francis@wdc.com>
 References: <20260508031710.514574-1-alistair.francis@wdc.com>
@@ -97,62 +97,63 @@ Content-Transfer-Encoding: 8bit
 
 From: Alistair Francis <alistair@alistair23.me>
 
-Support the GET_VERSION SPDM command.
+Support the GET_CAPABILITIES SPDM command.
 
 Signed-off-by: Alistair Francis <alistair@alistair23.me>
 ---
- lib/rspdm/consts.rs    | 14 +++++++++
- lib/rspdm/lib.rs       |  8 ++++-
- lib/rspdm/state.rs     | 61 ++++++++++++++++++++++++++++++++++++
- lib/rspdm/validator.rs | 70 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 152 insertions(+), 1 deletion(-)
+ lib/rspdm/consts.rs    | 19 ++++++++-
+ lib/rspdm/lib.rs       |  4 ++
+ lib/rspdm/state.rs     | 76 ++++++++++++++++++++++++++++++++-
+ lib/rspdm/validator.rs | 97 +++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 192 insertions(+), 4 deletions(-)
 
 diff --git a/lib/rspdm/consts.rs b/lib/rspdm/consts.rs
-index 2feddde67885..5482a0f6cee0 100644
+index 5482a0f6cee0..ef7d2d1d8e6e 100644
 --- a/lib/rspdm/consts.rs
 +++ b/lib/rspdm/consts.rs
-@@ -7,10 +7,21 @@
- //! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
- //! <https://www.dmtf.org/dsp/DSP0274>
+@@ -9,12 +9,11 @@
  
-+use crate::validator::SpdmHeader;
-+use core::mem;
-+
+ use crate::validator::SpdmHeader;
+ use core::mem;
++use kernel::bits::bit_u32;
+ 
  /* SPDM versions supported by this implementation */
  pub(crate) const SPDM_VER_10: u8 = 0x10;
-+#[allow(dead_code)]
-+pub(crate) const SPDM_VER_11: u8 = 0x11;
-+#[allow(dead_code)]
-+pub(crate) const SPDM_VER_12: u8 = 0x12;
-+#[allow(dead_code)]
-+pub(crate) const SPDM_VER_13: u8 = 0x13;
-+pub(crate) const SPDM_VER_14: u8 = 0x14;
+-#[allow(dead_code)]
+ pub(crate) const SPDM_VER_11: u8 = 0x11;
+-#[allow(dead_code)]
+ pub(crate) const SPDM_VER_12: u8 = 0x12;
+ #[allow(dead_code)]
+ pub(crate) const SPDM_VER_13: u8 = 0x13;
+@@ -68,3 +67,19 @@ fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
  
- pub(crate) const SPDM_MIN_VER: u8 = SPDM_VER_10;
-+pub(crate) const SPDM_MAX_VER: u8 = SPDM_VER_14;
- 
- pub(crate) const SPDM_REQ: u8 = 0x80;
- pub(crate) const SPDM_ERROR: u8 = 0x7f;
-@@ -54,3 +65,6 @@ fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-         Ok(())
-     }
- }
+ pub(crate) const SPDM_GET_VERSION: u8 = 0x84;
+ pub(crate) const SPDM_GET_VERSION_LEN: usize = mem::size_of::<SpdmHeader>() + u8::MAX as usize;
 +
-+pub(crate) const SPDM_GET_VERSION: u8 = 0x84;
-+pub(crate) const SPDM_GET_VERSION_LEN: usize = mem::size_of::<SpdmHeader>() + u8::MAX as usize;
++pub(crate) const SPDM_GET_CAPABILITIES: u8 = 0xe1;
++pub(crate) const SPDM_MIN_DATA_TRANSFER_SIZE: u32 = 42;
++
++// SPDM cryptographic timeout of this implementation:
++// Assume calculations may take up to 1 sec on a busy machine, which equals
++// roughly 1 << 20.  That's within the limits mandated for responders by CMA
++// (1 << 23 usec, PCIe r6.2 sec 6.31.3) and DOE (1 sec, PCIe r6.2 sec 6.30.2).
++// Used in GET_CAPABILITIES exchange.
++pub(crate) const SPDM_CTEXPONENT: u8 = 20;
++
++pub(crate) const SPDM_CERT_CAP: u32 = bit_u32(1);
++pub(crate) const SPDM_CHAL_CAP: u32 = bit_u32(2);
++
++pub(crate) const SPDM_REQ_CAPS: u32 = SPDM_CERT_CAP | SPDM_CHAL_CAP;
++pub(crate) const SPDM_RSP_MIN_CAPS: u32 = SPDM_CERT_CAP | SPDM_CHAL_CAP;
 diff --git a/lib/rspdm/lib.rs b/lib/rspdm/lib.rs
-index 758d43fba5cb..1cc6c33516fb 100644
+index 1cc6c33516fb..9628f258854c 100644
 --- a/lib/rspdm/lib.rs
 +++ b/lib/rspdm/lib.rs
-@@ -105,7 +105,13 @@
- /// Return 0 on success or a negative errno.  In particular, -EPROTONOSUPPORT
- /// indicates authentication is not supported by the device.
- #[export]
--pub unsafe extern "C" fn spdm_authenticate(_state_ptr: *mut spdm_state) -> c_int {
-+pub unsafe extern "C" fn spdm_authenticate(state_ptr: *mut spdm_state) -> c_int {
-+    let state: &mut SpdmState = unsafe { &mut (*(state_ptr as *mut SpdmState)) };
-+
-+    if let Err(e) = state.get_version() {
+@@ -112,6 +112,10 @@
+         return e.to_errno() as c_int;
+     }
+ 
++    if let Err(e) = state.get_capabilities() {
 +        return e.to_errno() as c_int;
 +    }
 +
@@ -160,181 +161,230 @@ index 758d43fba5cb..1cc6c33516fb 100644
  }
  
 diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
-index 18e81f24c724..26b90942b298 100644
+index 26b90942b298..e7119ffa9a69 100644
 --- a/lib/rspdm/state.rs
 +++ b/lib/rspdm/state.rs
-@@ -8,6 +8,7 @@
- //! <https://www.dmtf.org/dsp/DSP0274>
- 
- use core::ffi::c_void;
-+use core::slice::from_raw_parts_mut;
- use kernel::prelude::*;
- use kernel::{
-     bindings,
-@@ -22,10 +23,14 @@
- use crate::consts::{
-     SpdmErrorCode,
+@@ -25,10 +25,17 @@
      SPDM_ERROR,
-+    SPDM_GET_VERSION_LEN,
-+    SPDM_MAX_VER,
+     SPDM_GET_VERSION_LEN,
+     SPDM_MAX_VER,
++    SPDM_MIN_DATA_TRANSFER_SIZE,
      SPDM_MIN_VER,
-     SPDM_REQ, //
+-    SPDM_REQ, //
++    SPDM_REQ,
++    SPDM_RSP_MIN_CAPS,
++    SPDM_VER_10,
++    SPDM_VER_11,
++    SPDM_VER_12, //
  };
  use crate::validator::{
-+    GetVersionReq,
-+    GetVersionRsp,
++    GetCapabilitiesReq,
++    GetCapabilitiesRsp,
+     GetVersionReq,
+     GetVersionRsp,
      SpdmErrorRsp,
-     SpdmHeader, //
- };
-@@ -232,4 +237,60 @@ pub(crate) fn spdm_exchange(
+@@ -47,6 +54,8 @@
+ ///
+ /// `version`: Maximum common supported version of requester and responder.
+ ///  Negotiated during GET_VERSION exchange.
++/// @rsp_caps: Cached capabilities of responder.
++///  Received during GET_CAPABILITIES exchange.
+ #[expect(dead_code)]
+ pub struct SpdmState {
+     pub(crate) dev: *mut bindings::device,
+@@ -57,6 +66,7 @@ pub struct SpdmState {
  
-         Ok(length)
+     // Negotiated state
+     pub(crate) version: u8,
++    pub(crate) rsp_caps: u32,
+ }
+ 
+ impl SpdmState {
+@@ -74,6 +84,7 @@ pub(crate) fn new(
+             transport_sz,
+             validate,
+             version: SPDM_MIN_VER,
++            rsp_caps: 0,
+         }
+     }
+ 
+@@ -293,4 +304,67 @@ pub(crate) fn get_version(&mut self) -> Result<(), Error> {
+ 
+         Ok(())
      }
 +
-+    /// Negotiate a supported SPDM version and store the information
-+    /// in the `SpdmState`.
-+    pub(crate) fn get_version(&mut self) -> Result<(), Error> {
-+        let mut request = GetVersionReq::default();
++    /// Obtain the supported capabilities from an SPDM session and store the
++    /// information in the `SpdmState`.
++    pub(crate) fn get_capabilities(&mut self) -> Result<(), Error> {
++        let mut request = GetCapabilitiesReq::default();
 +        request.version = self.version;
 +
-+        // SAFETY: `request` is repr(C) and packed, so we can convert it to a slice
-+        let request_buf = unsafe {
-+            from_raw_parts_mut(
-+                &mut request as *mut _ as *mut u8,
-+                core::mem::size_of::<GetVersionReq>(),
-+            )
++        let (req_sz, rsp_sz) = match self.version {
++            SPDM_VER_10 => (4, 8),
++            SPDM_VER_11 => (8, 8),
++            _ => {
++                request.data_transfer_size = self.transport_sz.to_le();
++                request.max_spdm_msg_size = request.data_transfer_size;
++
++                (
++                    core::mem::size_of::<GetCapabilitiesReq>(),
++                    core::mem::size_of::<GetCapabilitiesRsp>(),
++                )
++            }
 +        };
 +
-+        let mut response_vec: KVec<u8> = KVec::with_capacity(SPDM_GET_VERSION_LEN, GFP_KERNEL)?;
-+        // SAFETY: `response_vec` is SPDM_GET_VERSION_LEN length, initialised, aligned
++        // SAFETY: `request` is repr(C) and packed, so we can convert it to a slice
++        let request_buf = unsafe { from_raw_parts_mut(&mut request as *mut _ as *mut u8, req_sz) };
++
++        let mut response_vec: KVec<u8> = KVec::with_capacity(rsp_sz, GFP_KERNEL)?;
++        // SAFETY: `response_vec` is rsp_sz length, initialised, aligned
 +        // and won't be mutated
-+        let response_buf =
-+            unsafe { from_raw_parts_mut(response_vec.as_mut_ptr(), SPDM_GET_VERSION_LEN) };
++        let response_buf = unsafe { from_raw_parts_mut(response_vec.as_mut_ptr(), rsp_sz) };
 +
 +        let rc = self.spdm_exchange(request_buf, response_buf)?;
 +
-+        // SAFETY: `rc` is the length of data read, which will be smaller
-+        // than the capacity of the vector
-+        unsafe { response_vec.inc_len(rc as usize) };
-+
-+        let response: &mut GetVersionRsp = Untrusted::new_mut(&mut response_vec).validate_mut()?;
-+
-+        let mut foundver = false;
-+        let unaligned = core::ptr::addr_of_mut!(response.version_number_entries) as *mut u16;
-+
-+        for i in 0..response.version_number_entry_count {
-+            // Creating a reference on a packed struct will result in
-+            // undefined behaviour, so we operate on the raw data directly
-+            let addr = unaligned.wrapping_add(i as usize);
-+            let alpha_version = (unsafe { core::ptr::read_unaligned::<u16>(addr) } & 0xF) as u8;
-+            let version = (unsafe { core::ptr::read_unaligned::<u16>(addr) } >> 8) as u8;
-+
-+            if alpha_version > 0 {
-+                pr_warn!("Alpha version {alpha_version} is unsupported\n");
-+            }
-+
-+            if version >= self.version && version <= SPDM_MAX_VER {
-+                self.version = version;
-+                foundver = true;
-+            }
++        if rc < (rsp_sz as i32) {
++            pr_err!("Truncated capabilities response\n");
++            to_result(-(bindings::EIO as i32))?;
 +        }
 +
-+        if !foundver {
-+            pr_err!("No common supported version\n");
-+            to_result(-(bindings::EPROTO as i32))?;
++        // SAFETY: `rc` is the length of data read, which will be smaller
++        // or the same as the capacity of the vector
++        unsafe { response_vec.inc_len(rc as usize) };
++
++        let response: &mut GetCapabilitiesRsp =
++            Untrusted::new_mut(&mut response_vec).validate_mut()?;
++
++        self.rsp_caps = u32::from_le(response.flags);
++        if (self.rsp_caps & SPDM_RSP_MIN_CAPS) != SPDM_RSP_MIN_CAPS {
++            pr_err!(
++                "{:#x} capabilities are supported, which don't meet required {:#x}",
++                self.rsp_caps,
++                SPDM_RSP_MIN_CAPS
++            );
++            to_result(-(bindings::EPROTONOSUPPORT as i32))?;
++        }
++
++        if self.version >= SPDM_VER_12 {
++            if response.data_transfer_size < SPDM_MIN_DATA_TRANSFER_SIZE {
++                pr_err!("Malformed capabilities response\n");
++                to_result(-(bindings::EPROTO as i32))?;
++            }
++            self.transport_sz = self.transport_sz.min(response.data_transfer_size);
 +        }
 +
 +        Ok(())
 +    }
  }
 diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
-index 58039f532b7d..8f45bafd4d69 100644
+index 8f45bafd4d69..7dc55882c880 100644
 --- a/lib/rspdm/validator.rs
 +++ b/lib/rspdm/validator.rs
-@@ -7,6 +7,10 @@
- //! Rust implementation of the DMTF Security Protocol and Data Model (SPDM)
- //! <https://www.dmtf.org/dsp/DSP0274>
- 
-+use crate::bindings::{
-+    __IncompleteArrayField,
-+    __le16, //
-+};
- use crate::consts::SpdmErrorCode;
- use core::mem;
- use kernel::prelude::*;
-@@ -21,6 +25,11 @@
-     },
+@@ -26,8 +26,12 @@
  };
  
-+use crate::consts::{
-+    SPDM_GET_VERSION,
-+    SPDM_MIN_VER, //
-+};
-+
+ use crate::consts::{
++    SPDM_CTEXPONENT,
++    SPDM_GET_CAPABILITIES,
+     SPDM_GET_VERSION,
+-    SPDM_MIN_VER, //
++    SPDM_MIN_VER,
++    SPDM_REQ_CAPS, //
++    SPDM_VER_11,
+ };
+ 
  #[repr(C, packed)]
- pub(crate) struct SpdmHeader {
-     pub(crate) version: u8,
-@@ -71,3 +80,64 @@ pub(crate) struct SpdmErrorRsp {
-     pub(crate) error_code: SpdmErrorCode,
-     pub(crate) error_data: u8,
+@@ -141,3 +145,94 @@ fn validate(unvalidated: &mut Unvalidated<KVec<u8>>) -> Result<Self, Self::Err>
+         Ok(rsp)
+     }
  }
 +
 +#[repr(C, packed)]
-+pub(crate) struct GetVersionReq {
++pub(crate) struct GetCapabilitiesReq {
 +    pub(crate) version: u8,
 +    pub(crate) code: u8,
 +    pub(crate) param1: u8,
 +    pub(crate) param2: u8,
++
++    reserved1: u8,
++    pub(crate) ctexponent: u8,
++    reserved2: [u8; 2],
++
++    pub(crate) flags: u32,
++
++    /* End of SPDM 1.1 structure */
++    pub(crate) data_transfer_size: u32,
++    pub(crate) max_spdm_msg_size: u32,
 +}
 +
-+impl Default for GetVersionReq {
++impl Default for GetCapabilitiesReq {
 +    fn default() -> Self {
-+        GetVersionReq {
++        GetCapabilitiesReq {
 +            version: 0,
-+            code: SPDM_GET_VERSION,
++            code: SPDM_GET_CAPABILITIES,
 +            param1: 0,
 +            param2: 0,
++            reserved1: 0,
++            ctexponent: SPDM_CTEXPONENT,
++            reserved2: [0; 2],
++            flags: (SPDM_REQ_CAPS as u32).to_le(),
++            data_transfer_size: 0,
++            max_spdm_msg_size: 0,
 +        }
 +    }
 +}
 +
 +#[repr(C, packed)]
-+pub(crate) struct GetVersionRsp {
++pub(crate) struct GetCapabilitiesRsp {
 +    pub(crate) version: u8,
 +    pub(crate) code: u8,
-+    param1: u8,
++    pub(crate) param1: u8,
 +    param2: u8,
-+    reserved: u8,
-+    pub(crate) version_number_entry_count: u8,
-+    pub(crate) version_number_entries: __IncompleteArrayField<__le16>,
++
++    reserved1: u8,
++    pub(crate) ctexponent: u8,
++    reserved2: [u8; 2],
++
++    pub(crate) flags: u32,
++
++    /* End of SPDM 1.1 structure */
++    pub(crate) data_transfer_size: u32,
++    pub(crate) max_spdm_msg_size: u32,
++
++    pub(crate) supported_algorithms: __IncompleteArrayField<__le16>,
 +}
 +
-+impl Validate<&mut Unvalidated<KVec<u8>>> for &mut GetVersionRsp {
++impl Validate<&mut Unvalidated<KVec<u8>>> for &mut GetCapabilitiesRsp {
 +    type Err = Error;
 +
 +    fn validate(unvalidated: &mut Unvalidated<KVec<u8>>) -> Result<Self, Self::Err> {
 +        let raw = unvalidated.raw_mut();
-+        if raw.len() < mem::size_of::<GetVersionRsp>() {
-+            return Err(EINVAL);
-+        }
 +
-+        let version = *(raw.get(0).ok_or(ENOMEM))? as usize;
-+        if version != SPDM_MIN_VER.into() {
-+            return Err(EINVAL);
-+        }
++        if raw.len() < mem::size_of::<GetCapabilitiesRsp>() {
++            let version = *(raw.get(0).ok_or(ENOMEM))?;
++            let version_1_1_len = mem::size_of::<GetCapabilitiesRsp>()
++                - mem::size_of::<__IncompleteArrayField<__le16>>()
++                - mem::size_of::<u32>()
++                - mem::size_of::<u32>();
 +
-+        let version_number_entries = *(raw.get(5).ok_or(ENOMEM))? as usize;
-+        let total_expected_size =
-+            version_number_entries * mem::size_of::<__le16>() + mem::size_of::<GetVersionRsp>();
-+        if raw.len() < total_expected_size {
-+            return Err(EINVAL);
++            if version == SPDM_VER_11 && raw.len() == version_1_1_len {
++                // Version 1.1 of the spec doesn't include all of the fields
++                // So let's extend the KVec with 0s so we can cast the
++                // vector to GetCapabilitiesRsp
++
++                for _i in version_1_1_len..mem::size_of::<GetCapabilitiesRsp>() {
++                    raw.push(0, GFP_KERNEL)?;
++                }
++            } else {
++                return Err(EINVAL);
++            }
 +        }
 +
 +        let ptr = raw.as_mut_ptr();
-+        // CAST: `GetVersionRsp` only contains integers and has `repr(C)`.
-+        let ptr = ptr.cast::<GetVersionRsp>();
++        // CAST: `GetCapabilitiesRsp` only contains integers and has `repr(C)`.
++        let ptr = ptr.cast::<GetCapabilitiesRsp>();
 +        // SAFETY: `ptr` came from a reference and the cast above is valid.
-+        let rsp: &mut GetVersionRsp = unsafe { &mut *ptr };
++        let rsp: &mut GetCapabilitiesRsp = unsafe { &mut *ptr };
 +
 +        Ok(rsp)
 +    }
