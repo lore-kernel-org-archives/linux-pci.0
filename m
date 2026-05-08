@@ -1,215 +1,238 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46968274FDF
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 04:19:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AF3F14F70
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 04:23:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778213997; cv=none; b=dceV52w5x6rSfK91wVmGogF23fq1XIKFky/9jsDxT8DXGzhFldpGogFElJlzBfViecQ69w/e04JW+a5G9JX8iFngh/3z4O8RLCvKUQ1hSCRQjtn9KDAHsJ6v76MCCcCtuFw87xYNStJkg09aM6giKyxRwmbLa+UDBaTpFTjlHHo=
+	t=1778214208; cv=none; b=n9m0gfe3wtl2y7t0wg4Pcp7YivhVg7HSX2/YxWhkFETZ1TC3Fm/eKkyKzWYIgAAineheJbr6hfW+lLNbGvu01m/+bA9X8zY3lQUJnudsn24LF2cRL6yteEsy9j20knEz/WiLUZgxTcXBn6N0HfS+mtZEAD82ti61bKwHQ66A734=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778213997; c=relaxed/simple;
-	bh=JbQ7qR5wtIm89m6j5d05ehY7NlatOUbzq1F1UGKvDkU=;
+	s=arc-20240116; t=1778214208; c=relaxed/simple;
+	bh=8P9bWeonzLDF0hKTjVu0kgMjLh6yrqQACqRbY64iv9c=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fRc0lw36XqCbjl1LmZE/rMK7cKO1AMuuNHoDFsWB/HqzpfIn959695kSmNWwcFuHurQIVrUgZb71JLJyYoG7L9WAzBYnDn9pL+KAhA+VBOKOzD9PXfqB3YScj14HE4pFg6TBx+SUl8F3yyE0tWiGow15dOvX1BqOU7PaIXIJ9k8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UvBvBj4E; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=Lq6Eblv5EbGhEBLbyQpwvBF8ozLuCZHDdywXVNIy8UjERINd+iYOO3qYJO2lTOzFoIotV1BtPTcogth5ABIrlRY/XX+Ij3z+LYMVMqgDp1eSJ9cBqpAbETjUnhBAZLTXLmGNOQkhPerkq4HBP6jHiq43A7RGmzdksYUg0d+t0/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PsQA/NqH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UvBvBj4E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8F10C2BCB0;
-	Fri,  8 May 2026 04:19:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PsQA/NqH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C08FAC2BCB4;
+	Fri,  8 May 2026 04:23:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778213996;
-	bh=JbQ7qR5wtIm89m6j5d05ehY7NlatOUbzq1F1UGKvDkU=;
+	s=k20201202; t=1778214207;
+	bh=8P9bWeonzLDF0hKTjVu0kgMjLh6yrqQACqRbY64iv9c=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=UvBvBj4E+wjdoJtamlQxpS2djQHkM9Es83xo+l24JqJ0o7xlktt8q1HRcL1TG755T
-	 p0uGs33PNvmrTh0ivuf3ociLMWN4Fyjh8VrIV5JNaoBp68SYj2SnwLEg58PWPDwC1V
-	 w32+Krcx1JFEhuYs3U3VaOmMNHdxVHKSAmW1bu9pzgDPJvC2rw6T9aZmoNSD7PaXgW
-	 VMpdZNQGRlfhQTPOZ7sHDiO29XbeMxqLzUXQcDuxijMQZLU6TyqptecyPijk3bTsao
-	 B73gLuZvrAzA0lGqGwVZ9NpM6wGuubLBJinxA8BBGvvdMlyXRH5e+iQo6G327stLBp
-	 YIamqP9oEARaw==
+	b=PsQA/NqH1mtl3YetX1Q256pDZR06MpR3FfHjjsmBv1hiWHjpNnCKdnjGcKcp+9bMd
+	 5iEmzBRKiUBRBJI1BKAio1NuveKPJvNdnOVAnPca7eRM2rhdtqkMwn0opMxpxX3wd4
+	 B58CWkUHtQtgOKepOQBwQtfMYgD56qp50+yaoWaPBI4Gu74Q+vdMDdgf0KJ9mN1+pX
+	 BW/WeSNjxi8JKq1muEUp9eEKjJ7zZCaWMvAYfK1qD1F+cla184kqPFyAfjLnmgD0+/
+	 I4K97vG1aGAZYozk1GdmMFpsqVTrCD63Qu85/n+HtuqXVYS5bqfgz3Gcoan8s3pmEw
+	 bQsjTaQ6Bnccw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 2/2] PCI: cadence: Add debugfs property to provide
- LTSSM status of the PCIe link
+Subject: Re: [PATCH 15/18] lib: rspdm: Support SPDM get_certificate
 Reply-To: sashiko@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260508034101.1910036-3-18255117159@163.com>
-References: <20260508034101.1910036-3-18255117159@163.com>
+To: alistair23@gmail.com
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260508031710.514574-16-alistair.francis@wdc.com>
+References: <20260508031710.514574-16-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 04:19:56 +0000
-Message-Id: <20260508041956.C8F10C2BCB0@smtp.kernel.org>
+Date: Fri, 08 May 2026 04:23:27 +0000
+Message-Id: <20260508042327.C08FAC2BCB4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 7 potential issue(=
 s) to consider:
-- [High] PCIE_CADENCE_DEBUGFS tristate configuration causes build failure a=
-nd module linkage issues.
-- [High] Race condition in debugfs deinitialization leads to unprotected ha=
-rdware access.
-- [High] Missing Runtime PM reference in debugfs read handler causes system=
- crash.
-- [Medium] Missing link teardown in `cdns_pcie_hpa_host_disable`.
-- [Medium] Incorrect bitmask `CDNS_PCIE_LGA_LTSSM_STATUS_MASK` truncates LT=
-SSM states.
+- [Critical] Unbounded lifetime in `Validate` implementation subverts borro=
+w checker, causing strict aliasing UB.
+- [High] Improper vector length accumulation via `inc_len` causes capacity =
+overflow and memory corruption.
+- [High] Creating an uninitialized memory slice causes Undefined Behavior.
+- [High] Out-of-bounds memory reference creation before verifying `certs_bu=
+f` length.
+- [High] Missing little-endian conversions for SPDM fields break the protoc=
+ol on Big Endian architectures.
+- [High] Raw `u16` arithmetic on untrusted network lengths can overflow and=
+ panic the kernel.
+- [Medium] The validation of the certificate response size incorrectly chec=
+ks against the request struct.
 --
 
-commit b032928b3c42715d7bb97e0bd26a99d252cd98d9
-Author: Hans Zhang <18255117159@163.com>
+commit 2a3b232f8fe8f4917dbcbbbbc545cdee33becabb
+Author: Alistair Francis <alistair@alistair23.me>
 
-PCI: cadence: Add debugfs property to provide LTSSM status of the PCIe link
+lib: rspdm: Support SPDM get_certificate
 
-Add the debugfs property to provide a view of the current link's LTSSM
-status from the Root Port device.
+This commit adds support for the SPDM GET_CERTIFICATE command. It introduces
+the get_certificate function and related state exchange logic to retrieve
+and validate certificate chains.
 
-> diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/control=
-ler/cadence/Kconfig
-> index 9e651d5459735..cb010bc97aad3 100644
-> --- a/drivers/pci/controller/cadence/Kconfig
-> +++ b/drivers/pci/controller/cadence/Kconfig
-> @@ -6,6 +6,15 @@ menu "Cadence-based PCIe controllers"
->  config PCIE_CADENCE
->  	tristate
+> diff --git a/lib/rspdm/state.rs b/lib/rspdm/state.rs
+> index bcb1cc955c4c6..69b6f67a6ef52 100644
+> --- a/lib/rspdm/state.rs
+> +++ b/lib/rspdm/state.rs
+[ ... ]
+> @@ -661,4 +671,119 @@ pub(crate) fn get_digests(&mut self) -> Result<(), =
+Error> {
 > =20
-> +config PCIE_CADENCE_DEBUGFS
-> +	tristate "Cadence PCIe debugfs entries"
-
-Could this Kconfig option be changed to a bool?
-
-When configured as a module (=3Dm), Kbuild defines
-CONFIG_PCIE_CADENCE_DEBUGFS_MODULE, not CONFIG_PCIE_CADENCE_DEBUGFS. As a
-result, the preprocessor check in pcie-cadence.h evaluates to false, causing
-the header to declare empty static inline stubs. When pcie-cadence-debugfs.c
-defines the non-static versions, the build fails with a function redefiniti=
-on
-error.
-
-Furthermore, changing the check to IS_ENABLED(CONFIG_PCIE_CADENCE_DEBUGFS)
-would cause linkage errors if the core drivers are built-in while the debug=
-fs
-feature is a module, since built-in code cannot call module functions.
-
-[ ... ]
-
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-debugfs.c b/driv=
-ers/pci/controller/cadence/pcie-cadence-debugfs.c
-> new file mode 100644
-> index 0000000000000..a4f0c4f6f98f4
-> --- /dev/null
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
-> @@ -0,0 +1,208 @@
-[ ... ]
-> +#define CDNS_PCIE_LGA_LTSSM_STATUS_MASK	GENMASK(29, 24)
-
-Does this mask need to be extended to cover all possible states?
-
-This mask covers only 6 bits, allowing it to extract values up to 63.
-However, the cdns_pcie_ltssm enum defines states up to 127. If the
-hardware enters a state 64 or higher, FIELD_GET will silently truncate
-the value, making state 65 appear as state 1.
-
-[ ... ]
-> +static int ltssm_status_show(struct seq_file *s, void *v)
-> +{
-> +	struct cdns_pcie *pci =3D s->private;
-> +	enum cdns_pcie_ltssm ltssm;
-> +	u32 reg;
+>          Ok(())
+>      }
 > +
-> +	if (pci->is_hpa) {
-> +		reg =3D cdns_pcie_hpa_readl(pci, REG_BANK_IP_REG,
-> +					CDNS_PCIE_HPA_PHY_DBG_STS_REG0);
-> +		ltssm =3D FIELD_GET(CDNS_PCIE_HPA_LTSSM_STATUS_MASK, reg);
-> +	} else {
-> +		reg =3D cdns_pcie_readl(pci, CDNS_PCIE_LM_BASE);
-> +		ltssm =3D FIELD_GET(CDNS_PCIE_LGA_LTSSM_STATUS_MASK, reg);
-> +	}
+> +    fn get_cert_exchange(
+> +        &mut self,
+> +        request_buf: &mut [u8],
+> +        response_vec: &mut KVec<u8>,
+> +        rsp_sz: usize,
+> +    ) -> Result<&mut GetCertificateRsp, Error> {
+> +        // SAFETY: `response_vec` is rsp_sz length, initialised, aligned
+> +        // and won't be mutated
+> +        let response_buf =3D unsafe { from_raw_parts_mut(response_vec.as=
+_mut_ptr(), rsp_sz) };
 
-Is a runtime PM reference required here before accessing the hardware?
+Does this create a slice over uninitialized memory? Since response_vec was
+allocated with KVec::with_capacity(rsp_sz, GFP_KERNEL), it hasn't been
+initialized to valid u8 values.
 
-Since the driver supports power management, the controller might be in a
-low-power, clock-gated state when this debugfs file is read. Reading the
-registers without calling pm_runtime_get_sync() first could cause a bus fau=
-lt
-and crash the system.
+> +
+> +        let rc =3D self.spdm_exchange(request_buf, response_buf)?;
+> +
+> +        if rc < (core::mem::size_of::<GetCertificateReq>() as i32) {
+
+Is it correct to validate the response size against GetCertificateReq here?
+
+Should this check against GetCertificateRsp instead, in case the structures
+diverge in size in the future?
+
+> +            pr_err!("Truncated certificate response\n");
+> +            to_result(-(bindings::EIO as i32))?;
+> +        }
+> +
+> +        // SAFETY: `rc` is the length of data read, which will be smaller
+> +        // then the capacity of the vector
+> +        unsafe { response_vec.inc_len(rc as usize) };
+
+Since get_certificate() reuses response_vec in a while loop across multiple
+exchanges without clearing it, does calling inc_len() here continuously
+accumulate the length?
+
+If spdm_exchange always writes to the start of the buffer, could this
+accumulation eventually exceed the vector's allocated capacity?
 
 [ ... ]
+> +    pub(crate) fn get_certificate(&mut self, slot: u8) -> Result<(), Err=
+or> {
+> +        let mut request =3D GetCertificateReq::default();
+> +        request.version =3D self.version;
+> +        request.param1 =3D slot;
+> +
+> +        let req_sz =3D core::mem::size_of::<GetCertificateReq>();
+> +        let rsp_sz =3D (core::mem::size_of::<GetCertificateRsp>() as u32=
+ + u16::MAX as u32)
+> +            .min(self.transport_sz) as usize;
+> +
+> +        request.offset =3D 0;
+> +        request.length =3D (rsp_sz - core::mem::size_of::<GetCertificate=
+Rsp>()) as u16;
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/p=
-ci/controller/cadence/pcie-cadence-ep.c
-> index c0e1194a936b3..38a0157b60dc7 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> @@ -659,6 +659,7 @@ void cdns_pcie_ep_disable(struct cdns_pcie_ep *ep)
->  	pci_epc_mem_free_addr(epc, ep->irq_phys_addr, ep->irq_cpu_addr,
->  			      SZ_128K);
->  	pci_epc_mem_exit(epc);
-> +	cdns_pcie_debugfs_deinit(&ep->pcie);
->  }
-
-Should cdns_pcie_debugfs_deinit() be called earlier in the teardown process?
-
-If a userspace process is currently reading the debugfs file while the modu=
-le
-is being removed, ltssm_status_show() could attempt to read registers after
-the hardware has been deactivated, potentially resulting in a bus fault.
-Removing the debugfs entries first ensures no new reads can begin while the
-hardware is shut down.
+Are we missing a conversion to little-endian for request.length here?
 
 [ ... ]
-
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/dri=
-vers/pci/controller/cadence/pcie-cadence-host-hpa.c
-> index 0f540bed58e88..8bf7cc106413b 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-> @@ -309,6 +309,18 @@ int cdns_pcie_hpa_host_link_setup(struct cdns_pcie_r=
-c *rc)
->  }
->  EXPORT_SYMBOL_GPL(cdns_pcie_hpa_host_link_setup);
-> =20
-> +void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc)
-> +{
-> +	struct pci_host_bridge *bridge;
+> +        let response =3D self.get_cert_exchange(request_buf, &mut respon=
+se_vec, rsp_sz)?;
 > +
-> +	bridge =3D pci_host_bridge_from_priv(rc);
-> +	pci_stop_root_bus(bridge->bus);
-> +	pci_remove_root_bus(bridge->bus);
+> +        let total_cert_len =3D
+> +            ((response.portion_length + response.remainder_length) & 0xF=
+FFF) as usize;
+
+Since portion_length and remainder_length are read directly from the
+untrusted SPDM response, do they need to be converted from little-endian?
+
+Could this addition overflow u16 and cause a panic if the responder provides
+large lengths? Should they be cast to usize before adding?
+
+[ ... ]
+> +        while remainder_length > 0 {
+> +            request.offset =3D offset.to_le() as u16;
+
+Does offset.to_le() perform a byte swap on the 64-bit usize before
+truncating it to u16? On big-endian systems, wouldn't this shift zeroes
+into the lower 16 bits and always send an offset of 0?
+
+Should this be (offset as u16).to_le() instead?
+
+[ ... ]
+> +            if response.portion_length =3D=3D 0
+> +                || (response.param1 & 0xF) !=3D slot
+> +                || offset as u16 + response.portion_length + response.re=
+mainder_length
+> +                    !=3D total_cert_len as u16
+
+Could this arithmetic overflow u16 if a malicious responder supplies large
+length values?
+
+[ ... ]
+> +        let header_length =3D core::mem::size_of::<SpdmCertChain>() + se=
+lf.hash_len;
 > +
+> +        let ptr =3D certs_buf.as_mut_ptr();
+> +        // SAFETY: `SpdmCertChain` is repr(C) and packed, so we can conv=
+ert it from a slice
+> +        let ptr =3D ptr.cast::<SpdmCertChain>();
+> +        // SAFETY: `ptr` came from a reference and the cast above is val=
+id.
+> +        let certs: &mut SpdmCertChain =3D unsafe { &mut *ptr };
+> +
+> +        if total_cert_len < header_length
+> +            || total_cert_len as u16 !=3D certs.length
+> +            || total_cert_len !=3D certs_buf.len()
+> +        {
 
-Is it necessary to stop the PCIe link here?
+Is it safe to create the mutable reference to SpdmCertChain before verifying
+the length of certs_buf?
 
-The setup path explicitly starts the link with cdns_pcie_start_link(),
-but this teardown function omits stopping it or disabling PTM responses.
-Leaving the link active after the bus is unregistered could lead to
-spurious interrupts or unhandled DMA requests.
+If the responder replies with a truncated payload, could this create a
+reference to unallocated memory? Should the boundary checks happen before
+creating the reference?
 
-> +	cdns_pcie_debugfs_deinit(&rc->pcie);
+Also, does certs.length need to be converted from little-endian before
+comparing it here?
 
-Similar to the endpoint path, should debugfs teardown happen before
-the hardware is disabled to avoid concurrent access faults?
-
+> diff --git a/lib/rspdm/validator.rs b/lib/rspdm/validator.rs
+> index 1e5ee8a7582b1..8b44a056b3354 100644
+> --- a/lib/rspdm/validator.rs
+> +++ b/lib/rspdm/validator.rs
+[ ... ]
+> +impl Validate<&mut Unvalidated<KVec<u8>>> for &mut GetCertificateRsp {
+> +    type Err =3D Error;
+> +
+> +    fn validate(unvalidated: &mut Unvalidated<KVec<u8>>) -> Result<Self,=
+ Self::Err> {
+> +        let raw =3D unvalidated.raw_mut();
+> +        if raw.len() < mem::size_of::<GetCertificateRsp>() {
+> +            return Err(EINVAL);
+> +        }
+> +
+> +        let ptr =3D raw.as_mut_ptr();
+> +        // CAST: `GetCertificateRsp` only contains integers and has `rep=
+r(C)`.
+> +        let ptr =3D ptr.cast::<GetCertificateRsp>();
+> +        // SAFETY: `ptr` came from a reference and the cast above is val=
+id.
+> +        let rsp: &mut GetCertificateRsp =3D unsafe { &mut *ptr };
+> +
+> +        Ok(rsp)
+> +    }
 > +}
 
-[ ... ]
+Does returning Self here decouple the returned reference's lifetime from the
+unvalidated parameter's lifetime?
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers=
-/pci/controller/cadence/pcie-cadence-host.c
-> index 0bc9e6e90e0e0..873d496c440f0 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-> @@ -370,6 +370,7 @@ void cdns_pcie_host_disable(struct cdns_pcie_rc *rc)
-> =20
->  	cdns_pcie_host_deinit(rc);
->  	cdns_pcie_host_link_disable(rc);
-> +	cdns_pcie_debugfs_deinit(&rc->pcie);
->  }
-
-Should this debugfs teardown be moved to the beginning of the function
-for the same reason mentioned above?
+In get_cert_exchange(), could this allow the returned response reference
+to outlive the borrow of the underlying vector, potentially causing
+overlapping mutable and immutable references to the same memory allocation?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508034101.1910=
-036-1-18255117159@163.com?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508031710.5145=
+74-1-alistair.francis@wdc.com?part=3D15
