@@ -1,90 +1,204 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73B0134E744
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 21:22:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A5F130171A;
+	Fri,  8 May 2026 21:43:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778275328; cv=none; b=RfnK6Bz9bkXI/d9mfhZpsIAAqlCFD8pDxyvvjZGj3GZgbaS4se3MN1Vn8bdR5Wg0SzakRw7R8/lQumOCeT8XWHk2sf1JLjX/i3tiAzEDAgIz2fsoL7bu3N8KIEWAlyxmteA6dhg6Bo2qXBqUWxS/aj20XIGGZz3creT2H8Gblrg=
+	t=1778276591; cv=none; b=IrZUuMNk/5CMVlbmGovuB8B2iwDlckJE5TgjFnOKvthir2BQ9HmjVFgwxbGY/JVeODIX7HJNqjZI+eqokdQVNsPqcPgV/58CryZp9Y5dbomj0+AHd3BwE3K0ciKQT7sbsW9zPcqyZTD8+drV2FwkJ3IRktuMRiQaEZEFDtACbww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778275328; c=relaxed/simple;
-	bh=WZ5RFBMGjvagUnYCsmLWB9DmfEoqCkrFFnBNIkK09Pw=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=mcluQFEq4jWHAdW12qxPfT7eWcP+IzS2TvufVoodHtWSr/5WGj+ycORF54K/hVOdmNevJaFX4ey2lpwZkx1ebbzNWqlYJTlNqPo9IRo7TLUXwNI1eaA4lFcKQpJKzoAsiIk0KhOhHbEENWX/ZMc4qPXsSgfBVOnyEQjqYB+SUto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GVCXinJG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778276591; c=relaxed/simple;
+	bh=3FlxDe9og/Uf8FICT2+xgDoU1qSHSCjeRNrP9tt0wcc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=aw1CI5e5xAWaVQIO0vAsiQ3hAYVckb8sTQsMv4Mt0ypN4mHlGTyX5IQEvjROCz9aPOpgNEVVf1hihjyqq4C/FdNZp8pO4wkEiBKhf0OZPy3DQe3OrlJFaSdrfQ2A6NdHB9A5J6SQIssajZ3anO9GJzx661smF80CiMe/xLTl5ls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YojPhLFw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GVCXinJG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2544FC2BCB0;
-	Fri,  8 May 2026 21:22:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YojPhLFw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11F74C2BCB0;
+	Fri,  8 May 2026 21:43:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778275328;
-	bh=WZ5RFBMGjvagUnYCsmLWB9DmfEoqCkrFFnBNIkK09Pw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=GVCXinJG7A6HRDky9C2iWJPiAglJROayk4MouxPqKB8pjf5+2ptUzFb00d/5412m/
-	 IrrBNu6IjYUk+b4p/T9q+caZDu2VAXnrpNgO+2yK7zozM9Wi2ls/Cw3kszZACjx5wb
-	 ZJsFrv9kqP8rYYanqeHwbRrNaXxnJ87W7XfA2CAr8Scd+oKVEUtKUOQvsQs74omeJZ
-	 wjvFPtmDqxtEb6dmVeEEvDHk3sUXkGVhI6N9KtEmh0OhosxPsY3D4QRBOPCC3oalKG
-	 LEhRCSN1WLLgIXt3SjIu0pttCOYN5NNWOqlME55hdCveIM0zytXVQeLRNdYjI14P7Z
-	 MlQcDhB0D12vg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: Disable broken FLR on MediaTek MT7925
-Reply-To: sashiko@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260508145153.717641-1-jtornosm@redhat.com>
-References: <20260508145153.717641-1-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 21:22:07 +0000
-Message-Id: <20260508212208.2544FC2BCB0@smtp.kernel.org>
+	s=k20201202; t=1778276591;
+	bh=3FlxDe9og/Uf8FICT2+xgDoU1qSHSCjeRNrP9tt0wcc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=YojPhLFw6N9f/40AV81KdVEduyCu58hd3NrYX5sUi1lkHOFlhCiAaPuCVyab41Pdr
+	 HdIphTKEzyUhPMwXUaMPfW9iQQWcPM0xeOYoLqUWN90Y9vVmr9jeyI/2veNlnpSEsh
+	 9Z1X8a5AK8S4kWoTAwab+3yluEt3doi0EDeztwIeE5wzHaecL6wdhtY+afxEAs9RLn
+	 liAdHd0lAc9Z2O1/RK2lGihzfR10ntPIezxUro5iOjrn84pJIRhA3LVQ/zNPuvBm9X
+	 ZtH3yilS7+VdqLCWKrUhHTeloq43wTVwbwUtAyxX/CmvSuP9He37U7CaLRyRLxcFRF
+	 bnG6nKooVgKBQ==
+Date: Fri, 8 May 2026 16:43:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, sashiko-bot@kernel.org,
+	linux-pci@vger.kernel.org, sashiko@lists.linux.dev,
+	Marco Nenciarini <mnencia@kcore.it>,
+	Michal Winiarski <michal.winiarski@intel.com>,
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+	Eric Chanudet <echanude@redhat.com>,
+	Jean Guyader <jean.guyader@gmail.com>,
+	Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>,
+	Mario Limonciello <superm1@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
+Message-ID: <20260508214309.GA14699@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJZ5v0iZN5NtUztqe=MxCRcXdBaaqzZ749OqSUkadwwBy0ugUQ@mail.gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] Incomplete implementation: Missing MediaTek MT7925 device ID `0x=
-0717` in the FLR quirk list.
---
+On Fri, May 08, 2026 at 02:51:37PM +0200, Rafael J. Wysocki wrote:
+> On Fri, May 8, 2026 at 2:17 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, May 05, 2026 at 12:43:17PM +0200, Rafael J. Wysocki wrote:
+> > > On Mon, May 4, 2026 at 11:17 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > ...
+> >
+> > > > If pci_power_up() is doing D3cold -> D0, main power is initially
+> > > > off, so platform_pci_set_power_state(PCI_D0) would turn on main
+> > > > power, which is a Fundamental Reset leaving the device in
+> > > > D0uninitialized.  In general the device needs at least 100 ms
+> > > > after that reset before any access, e.g., before the PMCSR read.
+> > >
+> > > Yes, it does in general, but that should be covered by
+> > > platform_pci_set_power_state() because on some platforms the delay
+> > > can be shorter.
+> >
+> > It's surprising to me that platform_pci_set_power_state() takes
+> > care of that delay because there's so much PCIe infrastructure
+> > (dependencies on link speed, RRS polling, Immediate Readiness,
+> > Readiness Notifications, etc), much of which sounds more like
+> > OS-level support than firmware support.
+> 
+> It is kind of a mixed bag because it involves platform-specific
+> operations (the PCIe spec doesn't define a standard method of
+> transitioning devices in D3cold into D0).
+> 
+> The consensus in the industry appears to be that if AML is used for
+> carrying out D3cold->D0 transitions, it is expected to take the
+> requisite delays into account.
+> 
+> > But if platform_pci_set_power_state() does guarantee that the device
+> > is Configuration-Ready, we should document that somewhere.
+> 
+> It is more along the lines of what I said before: After
+> platform_pci_set_power_state() the device is either
+> Configuration-Ready, or inaccessible (in which case it can be assumed
+> to have dropped off the bus, but this is all platform-specific, so on
+> some platforms there may be ways to revive such devices).
 
-commit 2cb7494208e4978bb4c09df85e374c7eac96b74d
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+If the device is Configuration-Ready or inaccessible after
+platform_pci_set_power_state(PCI_D0), then I agree we shouldn't add
+that delay in pci_power_up().
 
-PCI: Disable broken FLR on MediaTek MT7925
+> That said, I'm all for documenting it.
 
-The MediaTek MT7925 WiFi device advertises FLR capability but its
-implementation is broken, causing reset to fail and leaving the device in
-an undefined state. This commit disables FLR for the device so the PCI core
-can fall back to working reset methods like PM reset or bus reset.
+Strawman below.  "Inaccessible upon return" is bound to lead to
+questions, but if the PCI core can't do anything I don't know what
+else to say.
 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index caaed1a01dc02..e49136ac5dbfb 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-[ ... ]
-> @@ -5619,6 +5620,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x17f0, =
-quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
+  diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+  index ed1b1d7a7b46..2b0513c35387 100644
+  --- a/drivers/pci/pci.c
+  +++ b/drivers/pci/pci.c
+  @@ -1068,6 +1068,12 @@ static inline bool platform_pci_power_manageable(struct pci_dev *dev)
+	  return acpi_pci_power_manageable(dev);
+   }
+   
+  +/*
+  + * When setting power state to D0, platform_pci_set_power_state() ensures
+  + * main power is on and that any required delays after a transition to D0
+  + * have been completed.  The device is either Configuration-Ready or
+  + * inaccessible upon return.
+  + */
+   static inline int platform_pci_set_power_state(struct pci_dev *dev,
+						 pci_power_t t)
+   {
 
-Should this quirk also include the 0x0717 device ID?
+> > > > If pci_power_up() is doing D3hot -> D0, the device already has
+> > > > main power, so I suppose platform_pci_set_power_state(PCI_D0)
+> > > > doesn't do anything.
+> > >
+> > > It may or may not.  Some platforms supply AML to run during D3hot ->
+> > > D0 transitions (and the ACPI spec allows that).
+> >
+> > If the device started in D3hot, it never lost main power, and I
+> > assumed platform_pci_set_power_state(PCI_D0) might just leave it in
+> > D3hot.  It sounds like it takes it all the way to D0, although the
+> > subsequent code that checks the PMCSR state does suggest that the
+> > device might *not* be in D0:
+> 
+> On platforms using ACPI, platform_pci_set_power_state() carries out
+> the AML part of the transition which may do nothing for devices in
+> D3hot (for instance, there may be an ACPI power resource that needs to
+> be turned "on" in order to restore power to the device, but if the
+> power resource is "on" already, say because it is shared with another
+> device that is in D0 ATM, its state may not change).
+> 
+> platform_pci_set_power_state() may also be a no-op for the given
+> device (for example, if this is an add-on device without any
+> associated AML).
+> 
+> The rule of thumb is that if there is a programmatic way to remove
+> power from a PCIe device (so it can go into D3cold), it is generally
+> platform-specific and there should be a complementary programmatic way
+> to do the reverse (also generally platform-specific).  Otherwise, the
+> device can go only as deep as D3hot except when the system as a whole
+> is powered down or it is on a Thunderbolt link that can be
+> disconnected at any time etc.
+> 
+> >     platform_pci_set_power_state(dev, PCI_D0);
+> >
+> >     pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+> >     state = pmcsr & PCI_PM_CTRL_STATE_MASK;
+> >     if (state == PCI_D0)
+> >       goto end;
+> >
+> >     pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
+> >     if (state == PCI_D3hot)
+> >       pci_dev_d3_sleep(dev);
+> >     ...
+> >
+> >   end:
+> >
+> > If platform_pci_set_power_state(PCI_D0) puts the device in D0 and
+> > takes care of all the delays, "state" should always be PCI_D0, and we
+> > shouldn't need the D3hot and D2 delays here.
+> 
+> Well, not quite, as per the above.
 
-The MT7925 driver in drivers/net/wireless/mediatek/mt76/mt7925/pci.c
-registers and supports two MediaTek device IDs: 0x7925 and 0x0717. Both IDs
-share the same initialization logic, MAC behavior, and firmware.
+OK, so after platform_pci_set_power_state(PCI_D0), the device may be
+in D3hot in some cases.  Then there's a D3hot -> D0 transition, and we
+do pci_dev_d3_sleep(), but not pci_dev_wait().  Sec 2.3.1 says RRS is
+permitted after a D3hot to D0uninitialized, and pci_dev_wait() is what
+waits and retries for the RRS case.
 
-Since 0x0717 belongs to the same MT7925 family and shares the same
-underlying hardware IP, is it likely to have the same broken FLR
-implementation?
+It looks to me like we need pci_dev_wait() after that transition when
+No_Soft_Reset == 0, i.e., something like the below.  Do you think this
+is unnecessary?
 
-If so, users with the 0x0717 variant might still experience the VFIO
-passthrough undefined state issue if the device is omitted from this quirk
-list.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508145153.7176=
-41-1-jtornosm@redhat.com?part=3D1
+  diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+  index 8f7cfcc00090..ed1b1d7a7b46 100644
+  --- a/drivers/pci/pci.c
+  +++ b/drivers/pci/pci.c
+  @@ -1341,10 +1341,14 @@ int pci_power_up(struct pci_dev *dev)
+	  pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
+   
+	  /* Mandatory transition delays; see PCI PM 1.2. */
+  -	if (state == PCI_D3hot)
+  +	if (state == PCI_D3hot) {
+		  pci_dev_d3_sleep(dev);
+  -	else if (state == PCI_D2)
+  +		if (!(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET))
+  +			pci_dev_wait(dev, "power up D3hot->D0",
+  +				     PCIE_RESET_READY_POLL_MS);
+  +	} else if (state == PCI_D2) {
+		  udelay(PCI_PM_D2_DELAY);
+  +	}
+   
+   end:
+	  dev->current_state = PCI_D0;
