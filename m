@@ -1,108 +1,223 @@
-Received: from outbound.ci.icloud.com (ci-2004a-snip4-1.eps.apple.com [57.103.89.4])
+Received: from fout-a6-smtp.messagingengine.com (fout-a6-smtp.messagingengine.com [103.168.172.149])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16C5D40FD96
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 16:56:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.89.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6F642F8EB8;
+	Fri,  8 May 2026 17:16:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778259387; cv=none; b=bBx5KPHJUuJfHe1Mco4U76SkhFvQzRpqevSFqrZWyxky2sctafck2OABjCFMzFvIH0JmssRGz61zLDNJxHbCBiZYvyRA/ghUncLB27WmLIpEoCjlhBncgv7bkiQ8a5UT22ym4emO+9SIGHb0iWIxAq7bd+dkpMd8PiZtvPRAUpQ=
+	t=1778260594; cv=none; b=mrQ+1JuxMiz1p8mJQ6yme9uE3kL8rdlIuzKF0KvHUKMhKIpkyR1ZHBb+eEgDWqa/rBECA1lcLpu2Qh/INIovD5a93pwaowtuJmRuXbdHb6v+Va23ERwuUdc7DuEFkDlSZfu+X/6kSwCRVJ5RtCeGgZbEVQa9nts3nnG5KiJmrLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778259387; c=relaxed/simple;
-	bh=O+Z+iiQS6mOHEHFMXl2jZzyLVpVMQFSe6c0A8tPA/Y0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iYd9I9xhE1wgCDUFBKkFPPvlocDszJ2Cki9M7fMDau4KynqPcLwaVp7W0JHK1m5MEE+rNBY2Rszw2D3fXSLhV/NUZNPxvQbfHSrX/QX4jTLgQb5qEKfJBCSKHpwIAt6TViuQioxlKkoVpYt4ProqpG2eCJi2otEqyLkNWXNmpmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=mLSdWLvZ; arc=none smtp.client-ip=57.103.89.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1778260594; c=relaxed/simple;
+	bh=CKY8MtedfFKR3eZ2qjXZejpi+wTKyof4SRt5glHxP6g=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LYTrWt6Uj2bl24aR3ulPInB0/zF7xEhLJa9Z9OSzLyvRXBaURM4SqibMj10rGSNKekHR406ADIdkpUxe9LO5B2PxPZE2SngV5cT/09CexTblcnXvuJHJF0nKWXHxu3cFJjE1ZMexYAxFt9XzqOyJy6x/r5S50n0CiPB1Ueqz+KQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=O1sZOaDT; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=cJxX3h1e; arc=none smtp.client-ip=103.168.172.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="mLSdWLvZ"
-Received: from outbound.ci.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-central-1k-100-percent-8 (Postfix) with ESMTPS id 1A45418003AE;
-	Fri, 08 May 2026 16:56:22 +0000 (UTC)
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhJBkMDRQVJF0wBTVIPDxhMCkEUWgpcQgtJAS1eCF4fTBwdDlgGEhZdRVsYRRlLHVgWAV8GWXIZWhRcGFNFUR9UWEEOCloBUFEdXwIKBEcEWxdGA1NFURkXEVABWB5WXloXXk1HH0BNYkkBWhlbHEAXSm5NUw8PGVoUXBhTRVEfVFheBFNWDkAMSwZYUQlWXQ1LAFQaXwcRDVUKCFUNH0RfTwFcA14DQwFAAS1eCF4fTBwdDlgGDFBNAUMICgJRHFYNVw==
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778259385; x=1780851385; bh=+QLZLsNYf7h9Ce79kOQN7zRPNN2q7F1QoiGbgvgNk78=; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:x-icloud-hme; b=mLSdWLvZwqNRhNXhUmkJmhVTY7rlx831BK9MA47Ujn6al8NsCzs2vAVcWeuMFjznM2mfiqMfa4WcmoBtLWqWQ1cIVC469vVg4XC8VyCxOwi4HgZQ4JkCml5gB4hnu7FuTuYjEFJHNPi5jFuHZFJtQWNmMAnH9oHV3ZIr9OvyDCgDmz7MRTePhkULARMyFcyCH6OFkzcz2aVfuAWyOQrbIQOWrR7VKaljt3q1UHzG2W1hdajhVA8Up4tJMK2rteIUXOtmpYsHxRRbER1UKg+kfKy08ZGxTCoBCv8t8rWSp2rqP9XK9Ug6y0DrTGZPEa3ul8K4cLTxlGrSYhpJ1JbLUg==
-Received: from [192.168.89.2] (unknown [17.57.156.36])
-	by p00-icloudmta-asmtp-us-central-1k-100-percent-8 (Postfix) with ESMTPSA id BB7C11802090;
-	Fri, 08 May 2026 16:56:19 +0000 (UTC)
-Message-ID: <05355fbd-4339-45a4-9ebf-4f7214513882@icloud.com>
-Date: Sat, 9 May 2026 01:56:17 +0900
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="O1sZOaDT";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="cJxX3h1e"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfout.phl.internal (Postfix) with ESMTP id E6C83EC0073;
+	Fri,  8 May 2026 13:16:30 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-10.internal (MEProxy); Fri, 08 May 2026 13:16:30 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1778260590;
+	 x=1778346990; bh=KZLIH5uuK5L2ZLEtxa/cc2CTeS4FicC3l2Fx3x2XTqU=; b=
+	O1sZOaDTOIKyJZJ2zAElw5KPMYeV2hBgRdPZFh71hYamGpqrC8zQGgGB4Wi+pRJj
+	LmcltU77JdOj+D9E+JeV0+D1jSCO1bIK0lHl9kNOXs/nieF+6pxZ10RT20Ksg0OP
+	RTMZznYfByYH54KdCnn9yNzlardgbPN+NHKcPv59GTpM2xinO669cpzITWuEDemG
+	/yHf892V7p7l4gZy+x72PL3E3GWDnRXqAUflSCR3LeYlxQNgNboDm2eUkWkPRe8E
+	8Kr+gRVqqGRJH9Kw7xPhmhGexlDCKQtOkOWKz5JdbSVx76/XLky9lsE8SxvF1Ano
+	1I7GBUpnulfTMfGF5GjL/w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778260590; x=
+	1778346990; bh=KZLIH5uuK5L2ZLEtxa/cc2CTeS4FicC3l2Fx3x2XTqU=; b=c
+	JxX3h1eBXjNj3NKGNv9yV1+8gdbE7yjpF9Mf9RlL6fxNAiWNMtJ9+5MJwY9YAU3j
+	iz/gZLLng2PmkUYlKSii3pTIt9GCRZrw9RUYYjRInal9Y42ZYZBFLONoj88znM2v
+	PnYmD8lSFVh5I5HkMtQluNgKNYlbADefJ8L3WHpYYe881ygmwVPJvZLSTHJEjPGz
+	gf7jBINxO4lREeo8PUjukXwIxeer1aztOL4aP/ctC7xGh6r3WRPG+UvFd4yZMyNv
+	9CfK/bVKJNvMKA0zVe4HyHCwY5tMQ1pIQ+p3ZkCI9wLYNID1UrtewOiLxdng/J9X
+	t//0oEIIcNuRTAupHkFvA==
+X-ME-Sender: <xms:bhr-aRIVSkxzvm8o2LADMnPWnq8f7nlNo1hErFyHUpMMUT1QMlFAaQ>
+    <xme:bhr-aepOspiHXChT2T6UqZB3k0ILCV19d9TwSLovzyQ0mL4R8Csxe77R4kcSqblXD
+    LEwrreYZWwY4wHOfHnXbAj31okMPp5gDzKGeOvgJVsfkf2lW-wXCQ>
+X-ME-Received: <xmr:bhr-aZySnxeNd7hjdb9N2NqTj5aW-kdjLAMWg5qY6dNNFzf7VgOdwg_UjMk>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduuddtleefucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
+    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
+    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepkeehjeeitefffeeuieetjedtje
+    ffvdelledvuedvffdvfeetgefhveekuedvfedvnecuffhomhgrihhnpehkvghrnhgvlhdr
+    ohhrghenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohephedpmhhouggvpehs
+    mhhtphhouhhtpdhrtghpthhtohepjhhtohhrnhhoshhmsehrvgguhhgrthdrtghomhdprh
+    gtphhtthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtoheplhhi
+    nhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuh
+    igqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegrlhgv
+    giesshhhrgiisghothdrohhrgh
+X-ME-Proxy: <xmx:bhr-aSPudeAykLzzdZ6sHmcwSof2w6DoA_kV7etaHlMLz9gYKsi14w>
+    <xmx:bhr-ae4ep74ifhSr7zCrfDXE-prHs5uheW09KplSj2sdgzw3McEz1g>
+    <xmx:bhr-ablAyzHB0V6XAXP-4ge7HLqCfbpN5VTr7zyVmkgqVoOt7upu5w>
+    <xmx:bhr-aXQfADG6MYYTzzBpJT5itQKBHChXi1es6ww0MxQr2VTUoYWxlg>
+    <xmx:bhr-aeizaAC8jlk2G0ghHxWIjdGJtPHvJGQZxQSM3g3qBvHRTsCfwazJ>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 8 May 2026 13:16:30 -0400 (EDT)
+Date: Fri, 8 May 2026 11:16:27 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH v2] PCI: Force PM reset for Qualcomm devices with
+ NoSoftRst+
+Message-ID: <20260508111627.702c9be2@shazbot.org>
+In-Reply-To: <20260508145153.717641-2-jtornosm@redhat.com>
+References: <20260508145153.717641-1-jtornosm@redhat.com>
+	<20260508145153.717641-2-jtornosm@redhat.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] hwmon: add AMD Promontory 21 xHCI temperature
- sensor support
-To: Mario Limonciello <mario.limonciello@amd.com>,
- Guenter Roeck <linux@roeck-us.net>, Jihong Min <hurryman2212@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <cover.1778123510.git.hurryman2212@gmail.com>
- <0c35058bb088213397b42fca8d51e9ad0bba5169.1778123510.git.hurryman2212@gmail.com>
- <35c2436b-d172-4172-a684-a96c4a0dcabe@roeck-us.net>
- <16c4f7e5-e33d-4271-a7af-5d6c7fca0570@icloud.com>
- <6745fd21-2001-4e06-af41-96ae63154c02@roeck-us.net>
- <198ae20f-49c9-4f81-87e2-e16e81053f08@icloud.com>
- <70035490-eafb-4610-8889-9e04931c8b32@amd.com>
-Content-Language: en-US
-From: Jihong Min <hurryman2212@icloud.com>
-In-Reply-To: <70035490-eafb-4610-8889-9e04931c8b32@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Authority-Info-Out: v=2.4 cv=NfzrFmD4 c=1 sm=1 tr=0 ts=69fe15b7
- cx=c_apl:c_pps:t_out a=2G65uMN5HjSv0sBfM2Yj2w==:117
- a=2G65uMN5HjSv0sBfM2Yj2w==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=c92rfblmAAAA:8 a=pGLkceISAAAA:8 a=NEAV23lmAAAA:8 a=jm6BaUM5yunLdwCpO_4A:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=GvGzcOZaWPEFPQC_NcjD:22
- a=PgRulw5oR9JgysbTFEid:22 a=MienORt8HT0FiJ1vGQZ6:22
-X-Proofpoint-GUID: zLnn0M4GnOupoLmgccVWtpqh383ISKTu
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA4MDE2OSBTYWx0ZWRfX0oLtkKpTDFo8
- Q1C3S/9OJHt0gK558mbjbUH+xyYetB1TWRJq3wYHUstKW9SGieVCx64c1+yxTgUzCwao8ZQ7cM3
- WBLs05D7DOPnYPOyh63Lzf3G4CVkhHLN7OFA1rj5nh0zjLGft3IHygrOOMR8VEiIfGPU8s5SXYG
- Mc4yCWAhsQFsCE5wHu6bTzrBYSK/Dx5mJrDKarAwAreLC3uNH7DvvdZ0YBMkAe8Wp4C3FOcMpcS
- kfetB5gt5pLSjWgZFxjXJh9iQFgnVUxnQ2yjI8xqVCOyCoOEd/+jzs6eLyk0+ZuiIsTFVRNi1o4
- bmp7pUK5BZDHsvIEdSswUJ9sKxnrwm9fwHQHZV5sJqVB5cgWLSeTFJeB16zV1w=
-X-Proofpoint-ORIG-GUID: zLnn0M4GnOupoLmgccVWtpqh383ISKTu
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
->
-> Another thing to mention is that you are going too fast between patch 
-> versions.  All your patches show up in a ton of people's inboxes.
->
-> It's great you've gotten feedback on them but I suggest you give it a 
-> few days or a week between versions to gather more feedback.
-Thanks for the guidance. I understand, and I agree that I have been sending
-new revisions too quickly.
+On Fri,  8 May 2026 16:51:53 +0200
+Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 
-I will slow down the revision cadence from now on and wait a few days, or
-until the review discussion settles, before sending the next version.
->
-> If you haven't already; you should take a look at what Sahiko finds on 
-> your patches too.  Be sure to look at the feedback critically and take 
-> it with a grain of salt; but it often finds a few nuggets that are 
-> worthwhile to consider.
->
-> Here is the Sahiko link for v4 you can review if you weren't already 
-> looking at it.
->
-> https://sashiko.dev/#/patchset/20260508143910.14673-1-hurryman2212%40gmail.com 
->
->
-I have been checking the Sashiko feedback and have been incorporating the
-actionable issues it found where they made sense. I will continue to review
-it critically before sending future revisions.
+> Some Qualcomm PCIe devices lack FLR capability and have the NoSoftRst+
+> flag set in their PM capability. This causes all standard PCI reset
+> methods to return -ENOTTY, leaving the device without any reset capability.
+> 
+> Add PCI_DEV_FLAGS_FORCE_PM_RESET flag to bypass the NoSoftRst check and
+> allow PM reset to proceed with the standard D3hot->D0 transition. This
+> provides these devices with a working reset method.
+> 
+> Apply this quirk to Qualcomm devices that need PM reset:
+> - ath11k WiFi (17cb:1103) - No FLR, NoSoftRst+, needs reset for reuse
+> - ath12k WiFi (17cb:1107) - No FLR, NoSoftRst+, needs reset for reuse
+> - SDX62/SDX65 5G modems (17cb:0308) - No FLR, NoSoftRst+, never initialize
+>   without proper reset (both modem generations share the same PCI device ID)
+> 
+> The problem manifests in VFIO passthrough scenarios:
+> 
+> 1. WiFi devices (ath11k, ath12k): Normal VM operation works fine,
+>    including clean shutdown/reboot. However, when the VM terminates
+>    uncleanly (crash, force-off), VFIO attempts to reset the device.
+>    Without a working reset method, the device cannot be reused for
+>    another VM, preventing device reassignment.
+> 
+> 2. Modem devices (SDX62/SDX65): Never successfully initialize even on
+>    first VM assignment without proper reset capability.
 
-For reference only, and not as a substitute for the mailing-list 
-patches, I am
-keeping my current work-in-progress branch here:
+What does reset_methods sysfs attribute report for these devices on an
+unpatched kernel?
 
-   https://github.com/hurryman2212/linux/tree/prom21_hwmon
+I'd tend to expect these are single-function devices where bus reset
+would be available as a function level reset.  Even in the case of a
+multi-function device, vfio-pci could be performing a bus reset if all
+the functions are bound to vfio-pci.  I'm very suspicious that this is
+just masking an underlying issue relative to bus reset for these
+devices, especially if we haven't actually verified the device state is
+actually reset on transition back to D0 and we're just relying on
+heuristics that this makes it work.  Thanks,
 
-Sincerely,
-Jihong Min
+Alex
+
+> Testing showed that without this quirk, no reset is performed during
+> VFIO device initialization. With this quirk, PM reset succeeds and
+> devices work reliably in VFIO passthrough scenarios.
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> ---
+> v2:
+>   - Split from original combined patch based on maintainer feedback (Alex
+>     Williamson) and commented results.
+>   - Change approach: instead of custom D3cold reset method, enable existing
+>     pci_pm_reset() by bypassing NoSoftRst check for affected devices
+>     (PCI_DEV_FLAGS_FORCE_PM_RESET flag is added for that)
+> v1: https://lore.kernel.org/all/20260507142916.392983-1-jtornosm@redhat.com/
+> 
+>  drivers/pci/pci.c    | 12 +++++++++---
+>  drivers/pci/quirks.c | 13 +++++++++++++
+>  include/linux/pci.h  |  2 ++
+>  3 files changed, 24 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f7cfcc00090..e0b32eccfcf4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4451,6 +4451,10 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
+>   * cooldown period, which for the D0->D3hot and D3hot->D0 transitions is 10 ms
+>   * by default (i.e. unless the @dev's d3hot_delay field has a different value).
+>   * Moreover, only devices in D0 can be reset by this function.
+> + *
+> + * Some devices incorrectly advertise PCI_PM_CTRL_NO_SOFT_RESET but PM reset
+> + * actually works. For such devices, PCI_DEV_FLAGS_FORCE_PM_RESET can be set
+> + * via quirk to bypass the NO_SOFT_RESET check and enable PM reset.
+>   */
+>  static int pci_pm_reset(struct pci_dev *dev, bool probe)
+>  {
+> @@ -4460,9 +4464,11 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+>  	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
+>  		return -ENOTTY;
+>  
+> -	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
+> -	if (csr & PCI_PM_CTRL_NO_SOFT_RESET)
+> -		return -ENOTTY;
+> +	if (!(dev->dev_flags & PCI_DEV_FLAGS_FORCE_PM_RESET)) {
+> +		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
+> +		if (csr & PCI_PM_CTRL_NO_SOFT_RESET)
+> +			return -ENOTTY;
+> +	}
+>  
+>  	if (probe)
+>  		return 0;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index caaed1a01dc0..5e8b310c9d5f 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -5595,6 +5595,19 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+>  
+> +/*
+> + * Some devices incorrectly advertise NoSoftRst+ (suggesting PM reset won't
+> + * work), but PM reset via D3hot->D0 transition actually works fine. Force
+> + * PM reset for these devices to provide working reset capability.
+> + */
+> +static void quirk_force_pm_reset(struct pci_dev *dev)
+> +{
+> +	dev->dev_flags |= PCI_DEV_FLAGS_FORCE_PM_RESET;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1103, quirk_force_pm_reset); /* ath11k */
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1107, quirk_force_pm_reset); /* ath12k */
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0308, quirk_force_pm_reset); /* SDX62/SDX65 */
+> +
+>  /*
+>   * FLR may cause the following to devices to hang:
+>   *
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2c4454583c11..714dbdaa21af 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -261,6 +261,8 @@ enum pci_dev_flags {
+>  	 * integrated with the downstream devices and doesn't use real PCI.
+>  	 */
+>  	PCI_DEV_FLAGS_PCI_BRIDGE_NO_ALIAS = (__force pci_dev_flags_t) (1 << 14),
+> +	/* Force PM reset even when NoSoftRst+ is set */
+> +	PCI_DEV_FLAGS_FORCE_PM_RESET = (__force pci_dev_flags_t) (1 << 15),
+>  };
+>  
+>  enum pci_irq_reroute_variant {
+
