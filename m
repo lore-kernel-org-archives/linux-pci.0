@@ -1,62 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7909837DEAE;
-	Fri,  8 May 2026 07:53:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98DDA37649A
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 08:21:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.112
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778226831; cv=none; b=u4JrcWd73K4iJvSunvBXuuq+3qDNMCGAwnhY1ReX+NW7Ez/7CHnYjaico14ogjoU8JvWyOVvuIsBBmexRXV+GHw919pZ2HWY+sjzTDjXDGxZacuibfMRjPNlG1wg7xyfXFCA6NWXFVo+5XGUm7NboEPi0EiwlLsupdttHW0SU2o=
+	t=1778228502; cv=none; b=ljSEJbWBYW/GmTvHTqGsx3HLhavluC0sqLY6APx+oTV1IJFKEvOZ14JPM3Lvv4YKfFSQMQxzbzf3wyOxWAG9XbMmgTOMSa5AZTtpOVRSdu/ulxh8IzxVBsDnb7oOLPF6ogLj+Uer4ytLk2sPGvg5gj5fL+DpZde7+NioKzF9axE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778226831; c=relaxed/simple;
-	bh=7/6VaBIgOlfcegUaqMLDDGVr/EsnyHzYdYA5T7Dy614=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=urwZeTBQ5ftkr/lCS5JD8rDNThlgJD/SQBLTmqbtM6o5RGMS0wfZAy/LIL134imynYDheEp0VGurIRxrbfDHIXFKffRT9EYMo/DW786HWk5pLnrDKp6eno0aFL0rpFqywG8Ems2/nyVzu0WyyZPOKvDI5nKdS7HJn6tu+JR15NE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8B59C2BCB0;
-	Fri,  8 May 2026 07:53:45 +0000 (UTC)
-Message-ID: <5801e477-41f7-4a86-b355-8802b416f7e6@tuxon.dev>
-Date: Fri, 8 May 2026 10:53:42 +0300
+	s=arc-20240116; t=1778228502; c=relaxed/simple;
+	bh=fH3APPdQ1h3Iw+fvYSemzsnDQ7XSeHDX6Rr+3hHdVPQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qD1awvzoj+pVHwXJwvUpll3AcY2+Y2yvRFRaAjnMSeyAIy74pMnLx+WJ1KgVuNKbrMlFA9bQqAmsxjlqDiiWWBcboM9zsyLS/9EG+qi2vHLZtSxFAXOxoSxE0OQ/o4OURyLT7yIqMe55FORiEIhkkkt8coz6pesUYVoW4SFX8XU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=s3waDUJd; arc=none smtp.client-ip=115.124.30.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="s3waDUJd"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1778228495; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=qhRalLrhBMvmOFNb9c9SZR3d/E72vBtPlylO5i3gcII=;
+	b=s3waDUJddT8+ZEsN7crJNHltjnM8SONow0jXSbNbxUiLCQ0nG60C1DYMYgIgDlP+wBVjHPpgi7OBm0XRAkK7IjIHN1DD0OlbfDucT2doKKnRS5YoFJr8DnGuUobVdmtk6WGEOMfIVDixJrz+98NJUFUu8/nEX6BGUW7Ky4wrCMo=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R211e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=7;SR=0;TI=SMTPD_---0X2WqcIT_1778228488;
+Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0X2WqcIT_1778228488 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 08 May 2026 16:21:34 +0800
+From: Guixin Liu <kanie@linux.alibaba.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Andy Shevchenko <andriy.shevchenko@intel.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	xlpang@linux.alibaba.com,
+	oliver.yang@linux.alibaba.com
+Subject: [PATCH v12 0/2] PCI: Fix crash when access broken ROM
+Date: Fri,  8 May 2026 16:21:26 +0800
+Message-ID: <20260508082128.3344255-1-kanie@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.7
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] dt-bindings: PCI: renesas,r9a08g045-pcie: Add RZ/V2N
- support
-To: Prabhakar <prabhakar.csengg@gmail.com>,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
- <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>,
- Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
- Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <20260501102407.29462-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <20260501102407.29462-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+v11 -> v12:
+- Add rb tag from Krzysztof Wilczyński in the first patch, thanks.
+- Change "get" to "Get".
+- Renamed parameter last_image → expect_valid in
+  pci_rom_is_header_valid() to better reflect its semantics: it
+  indicates whether the caller expects the image to be valid
+  (and thus whether a missing/invalid signature should be reported
+  as an error or as normal end-of-chain).
+- Tightened image alignment check: replaced the 2-byte alignment check
+  with a 512-byte (PCI_ROM_IMAGE_SECTOR_SIZE) alignment check on image,
+  per PCI Firmware Specification r3.3, sec 5.1, which mandates that each
+  ROM image starts on a 512-byte boundary. This also satisfies the
+  natural-alignment requirement of readw() on architectures such as arm64.
+- Updated comment to cite the PCI Firmware Spec r3.3 sec 5.1 as the
+  authoritative source for the alignment requirement, and to explain the
+  relationship between page-aligned rom, sector-aligned image,
+  and the IOMEM access constraint.
+- Fixed off-by-one in overflow checks: check_add_overflow() now uses
+  PCI_ROM_HEADER_SIZE - 1 and data_len - 1 so that header_end / end
+  represent the inclusive last byte of the region, matching the
+  subsequent > rom_end comparison.
+- Refactored signature-check log flow: collapsed the dual-return branches
+  into a single if (signature != PCI_ROM_IMAGE_SIGNATURE) block, emitting
+  the appropriate pci_info() based on expect_valid, then returning false;
+  success path returns true at the end.
+- Reorder pci_rom_is_data_struct_valid() to check the "PCIR" signature
+  before reading data_len, so bad signatures are still logged.
+- Collapse the signature branch to early-return on failure,
+  matching the style of pci_rom_is_header_valid().
+- Add PCI_ROM_DATA_STRUCT_MIN_LEN (0x18), the PCI 2.x baseline PCI Data
+  Structure length.
+- Reject data_len < PCI_ROM_DATA_STRUCT_MIN_LEN to keep the fixed-offset
+  reads (PCI_ROM_IMAGE_LEN @0x10, PCI_ROM_LAST_IMAGE_INDICATOR @0x15)
+  in pci_get_rom_size() inside the mapped ROM window.
+- Cite PCI Firmware Spec r3.3 sec 5.1.3 Table 5-2 in the new macro's
+  comment.
 
+v10 -> v11:
+- Change 'pci rom' to 'PCI ROM' of the tittle of the first patch.
+- Add Andy Shevchenko's rb tag in the first patch, thanks. 
 
-On 5/1/26 13:24, Prabhakar wrote:
-> From: Lad Prabhakar<prabhakar.mahadev-lad.rj@bp.renesas.com>
-> 
-> Document the Renesas RZ/V2N PCIe host controller, which is compatible with
-> the RZ/G3E PCIe IP and therefore uses it as a fallback compatible. The
-> only difference is that it uses device ID 0x003B.
-> 
-> Make the binding title generic to avoid extending the title for each new
-> SoC, and update the description to list the supported SoCs and their
-> capabilities.
-> 
-> Signed-off-by: Lad Prabhakar<prabhakar.mahadev-lad.rj@bp.renesas.com>
-Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+v9 -> v10:
+- Reorder the header files, and not touch kernel.h
+- Change PCI_ROM_IMAGE_LEN_UNIT_BYTES to PCI_ROM_IMAGE_SECTOR_SIZE.
+- Add a comment for PCI_ROM_DATA_STRUCT_SIGNATURE.
+
+v8 -> v9:
+- Supplemental explanation for the commit body of the first patch.
+- Change PCI_ROM_IMAGE_LEN_UNIT_SZ_512 to PCI_ROM_IMAGE_LEN_UNIT_BYTES,
+and change it's definition to SZ_512.
+- Use u16 and u32 for signature val instead of unsigned short/int.
+
+v7 -> v8:
+- Ordered header files alphabetically.
+- Convert the literals too in the firt patch.
+- Use local val to save signature instead of reading twice.
+
+v6 -> v7:
+- Put all named defines to a separate patch.
+- Change PCI_ROM_IMAGE_LEN_UNIT_BYTES to PCI_ROM_IMAGE_LEN_UNIT_SZ_512.
+- Named BIT(7) to PCI_ROM_LAST_IMAGE_INDICATOR_BIT.
+- Fix all other comments from Ilpo, such as including header files,
+and alignment fault, Thanks.
+
+v5 -> v6:
+- Convert some magic number to named defines, suggested by
+Ilpo, thanks.
+
+v4 -> v5:
+- Add Andy Shevchenko's rb tag, thanks.
+- Change u64 to unsigned long.
+- Change pci_rom_header_valid() to pci_rom_is_header_valid() and
+change pci_rom_data_struct_valid() to pci_rom_is_data_struct_valid().
+- Change rom_end from rom+size to rom+size-1 for more readble,
+and also change header_end >= rom_end to header_end > rom_end, same
+as data structure end.
+- Change if(!last_image) to if (last_image)..
+- Use U16_MAX instead of 0xffff.
+- Split check_add_overflow() from data_len checking.
+- Remove !!() when reading last_image, and Use BIT(7) instead of 0x80.
+
+v3 -> v4:
+- Use "u64" instead of "uintptr_t".
+- Invert the if statement to avoid excessive indentation.
+- Add comment for alignment checking.
+- Change last_image's type from int to bool.
+
+v2 -> v3:
+- Add pci_rom_header_valid() helper for checking image addr and signature.
+- Add pci_rom_data_struct_valid() helper for checking data struct add
+and signature.
+- Handle overflow issue when adding addr with size.
+- Handle alignment fault when running on arm64.
+
+v1 -> v2:
+- Fix commit body problems, such as blank line in "Call Trace" both sides,
+  thanks, (Andy Shevchenko).
+- Remove every step checking, just check the addr is in header or data
+struct.
+- Add Suggested-by: Guanghui Feng <guanghuifeng@linux.alibaba.com> tag.
+
+Guixin Liu (2):
+  PCI: Introduce named defines for PCI ROM
+  PCI: Check ROM header and data structure addr before accessing
+
+ drivers/pci/rom.c | 154 +++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 131 insertions(+), 23 deletions(-)
+
+-- 
+2.43.7
+
