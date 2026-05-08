@@ -1,109 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94AAB173
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 00:44:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99A62F8E8F
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 00:52:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778201092; cv=none; b=QYtPNjr6v5HWE9YZZRuInUwQ8d/b198cYEXkBjmb/srX64gvEjauQic2jh9Ajn21DpJOgTjpRNkhJqRcCgIceqLNgD1zWfFlJimNNoNO9jJrAFeQhGDz3eT2Stcp+yMBjcz4zDP6MHtdtowaNI9j4fATdA1W92jVg80QjgCA8bo=
+	t=1778201524; cv=none; b=JuucZr6w+gy+VX2w0YbXq7ksPqYiiRkocYgt4Z6Clfnkr4z+nY8k2glDXzGqaPrxPOuf2ZYNM6SAYo0miGiF2pDG3+smpEo2tKl0eHpozSMIJWcXY1ScabHCmWK+tGmdLJKQ9OSO0HCDg8OPErD2Kjly2YS8H3391uYVTuWMo1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778201092; c=relaxed/simple;
-	bh=Kt9Q9QIejnk9XsTF4y8GWrpyaAZkPg4iKj3KFm5CGmg=;
+	s=arc-20240116; t=1778201524; c=relaxed/simple;
+	bh=W2WyodUP6OxGG+EVbRHquHrQbdQ+pUoIKYUjenKCMjM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=MVL5cbigrJhLoZGptCztiILAr5XLLxFEoSeYLBuMzI/JVrFiIDnvxWa4jVnb0e1UkmrCR2m5FjvnF688D7D3iiBTmvsGtOBncowVJ5VVQD6HSJ1lHuI8oXMm92PvBBos1WJKJk0WMiA/jS5OY9MNlVFrtdigFin8tschKoFxj3I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PH3iOkWk; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=OHqwBww+/QseHUTn4fPSkfkhzH2p8zO586v8lt9L75wD7vpe8zuCWM9ns0VXlC1FEgJ2EJplARUlIHDpmfezZ8fucrRZACE1fVhfReH86YfmzHuO0U4NWqsM6BZQXa9/1DDOk0N6gWyCk4ZAVavY5g3Dl6vnXkDPgrHc0l/+ruM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLbhIU0v; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PH3iOkWk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10FE9C2BCB2;
-	Fri,  8 May 2026 00:44:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLbhIU0v"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D2A9C2BCB2;
+	Fri,  8 May 2026 00:52:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778201092;
-	bh=Kt9Q9QIejnk9XsTF4y8GWrpyaAZkPg4iKj3KFm5CGmg=;
+	s=k20201202; t=1778201524;
+	bh=W2WyodUP6OxGG+EVbRHquHrQbdQ+pUoIKYUjenKCMjM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=PH3iOkWkx+Ze1BZ2Rp3U6Z4R3xun41B8Wy4WIhJp2z2jrdCBowR6P9OplxZVFD/v3
-	 dTmsc/aFrHoDv5ZMTgwA4RampF81d+xTaszTSTdwHZsgAD8B/OYBsD2QqdZkQ0xTX/
-	 wchh6E0FFD5CL5sDqCaroesqtwp2XArTp8vEXu0BeEkxiapSiNmvgGKLQZH/3qAtiV
-	 grMne7CKAcxDHQo4mF623TkIb5P1V0E2cO1fHbs69AnxaKxi7lKF/mI7WhQb/u2Yy/
-	 qi/hBsm1EpRCKYI+ZKL5suTu1dTdK8yriPYrglE2xrv4o9V9miSllfRacbYV2WRjdn
-	 14PD9ona/Gkhw==
+	b=OLbhIU0vSDWqKOQuJDVAiPeutu9CRuhMnjUIRKUmqJC2OQ5O6xcgy76VXmaicDeWM
+	 aEyzdoZYkEr/Qd1w1DDbyFBpyupMT9w4seuEwYRum2e4b3+OYMujpXDf6L9A+tNONn
+	 wJJqW6EZEIRwCpx7F+V7oeBG7D6ziXSe4/LZi2waYQHHMvtuXNP2xxXZOuwYpZ3nDr
+	 kCyip+GgsfJi8h+L1ddr0zig0REekjmH/9z0W2nVINJEb1Yb89ZgWtNljuyXjr60pB
+	 mWwjte7BOMkDEn8IHCmhHFQgm2C12QaokyliwbIm+ZaYjvBOZe6EeezgI2CiVfhXoy
+	 9OzSnT6DEe30Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 6/9] Bluetooth: hci_qca: Add M.2 Bluetooth device
- support using pwrseq
+Subject: Re: [PATCH v7 6/6] vfio/pci: Add PCIe TPH SET_ST interface
 Reply-To: sashiko@lists.linux.dev
-To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+To: "Chengwen Feng" <fengchengwen@huawei.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260507-pwrseq-m2-bt-v2-6-1740bd478539@oss.qualcomm.com>
-References: <20260507-pwrseq-m2-bt-v2-6-1740bd478539@oss.qualcomm.com>
+In-Reply-To: <20260507130956.34441-7-fengchengwen@huawei.com>
+References: <20260507130956.34441-7-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 00:44:51 +0000
-Message-Id: <20260508004452.10FE9C2BCB2@smtp.kernel.org>
+Date: Fri, 08 May 2026 00:52:03 +0000
+Message-Id: <20260508005204.2D2A9C2BCB2@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Resource leak due to `devm_pwrseq_get` being called with the paren=
-t UART controller device instead of the serdev device being probed.
+- [High] The rollback logic for successfully programmed steering tag entrie=
+s silently fails when an entry write fails, leaving the device in an incons=
+istent state.
+- [Medium] The `mem_type` field of `struct vfio_pci_tph_entry` is not valid=
+ated when `cpu =3D=3D U32_MAX`, breaking future ABI extensibility.
 --
 
-commit f9b32f0ee9703eed7ebec9d68e29f842c80446dd
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+commit b4acf86102a9bd7b08e0de22fe836e8de9341956
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-Bluetooth: hci_qca: Add M.2 Bluetooth device support using pwrseq
+vfio/pci: Add PCIe TPH SET_ST interface
 
-This commit adds support for controlling the power supply of an M.2
-Bluetooth device using the 'uart' pwrseq device. It detects if the device is
-attached through the M.2 Key E connector by checking for the presence of an
-OF graph link, and if so, retrieves the pwrseq device.
+This commit adds the VFIO_PCI_TPH_SET_ST operation to support batch
+programming of steering tag entries. It includes logic to roll back
+successfully programmed entries to 0 if any entry fails, aiming to prevent
+inconsistent device states.
 
-> diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
-> index cd1834246b479..c83fe72bc5499 100644
-> --- a/drivers/bluetooth/hci_qca.c
-> +++ b/drivers/bluetooth/hci_qca.c
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index c328515bcaaff..5d10de546d5c6 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+
 [ ... ]
-> @@ -2443,6 +2444,18 @@ static int qca_serdev_probe(struct serdev_device *=
-serdev)
->  	case QCA_WCN6750:
->  	case QCA_WCN6855:
->  	case QCA_WCN7850:
-> +		/*
-> +		 * OF graph link is only present for BT devices attached through
-> +		 * the M.2 Key E connector.
-> +		 */
-> +		if (of_graph_is_present(dev_of_node(&serdev->ctrl->dev))) {
-> +			qcadev->bt_power->pwrseq =3D devm_pwrseq_get(&serdev->ctrl->dev,
-> +								   "uart");
 
-Does tying this power sequencer resource to the parent UART controller
-(&serdev->ctrl->dev) instead of the serdev device (&serdev->dev) cause a
-resource leak?
-
-Since devm_pwrseq_get() binds the resource cleanup to the lifecycle of the
-device passed to it, the cleanup will not execute if qca_serdev_probe()
-fails later and returns an error like -EPROBE_DEFER, or if the hci_qca driv=
-er
-is later unbound.
-
-The device resource framework only cleans up resources associated with
-&serdev->dev on probe failure or unbind.
-
-This seems like it would leave an unreleased reference on the power
-sequencer provider device and an unbalanced module reference, which might
-accumulate on every probe deferral.
-
-> +			if (IS_ERR(qcadev->bt_power->pwrseq))
-> +				return PTR_ERR(qcadev->bt_power->pwrseq);
-> +			break;
+> @@ -1604,6 +1604,90 @@ static int vfio_pci_tph_get_st(struct vfio_pci_cor=
+e_device *vdev,
+> +	for (; i < st.count; i++) {
+> +		/* Check reserved fields and st are zero */
+> +		if (memchr_inv(&ents[i].reserved0, 0, sizeof(ents[i].reserved0)) ||
+> +		    memchr_inv(&ents[i].reserved1, 0, sizeof(ents[i].reserved1)) ||
+> +		    ents[i].st !=3D 0) {
+> +			err =3D -EINVAL;
+> +			goto out;
 > +		}
 > +
->  		if (!device_property_present(&serdev->dev, "enable-gpios")) {
->  			/*
->  			 * Backward compatibility with old DT sources. If the
+> +		if (ents[i].cpu =3D=3D U32_MAX) {
+> +			err =3D pcie_tph_set_st_entry(pdev, ents[i].index, 0);
+> +			if (err)
+> +				goto out;
+> +			continue;
+
+If userspace sets cpu to U32_MAX to clear a steering tag, does this bypass
+the validation of mem_type?=20
+
+By skipping validation and allowing userspace to pass uninitialized data in
+this field, could this break forward compatibility if mem_type needs to be
+repurposed later for this case?
+
+> +		}
+> +
+> +		if (ents[i].mem_type =3D=3D VFIO_PCI_TPH_MEM_TYPE_VM) {
+> +			mtype =3D TPH_MEM_TYPE_VM;
+> +		} else if (ents[i].mem_type =3D=3D VFIO_PCI_TPH_MEM_TYPE_PM) {
+> +			mtype =3D TPH_MEM_TYPE_PM;
+> +		} else {
+> +			err =3D -EINVAL;
+> +			goto out;
+> +		}
+> +
+> +		err =3D pcie_tph_get_cpu_st(pdev, mtype, ents[i].cpu, &st_val);
+> +		if (err)
+> +			goto out;
+> +		err =3D pcie_tph_set_st_entry(pdev, ents[i].index, st_val);
+> +		if (err)
+> +			goto out;
+> +	}
+> +
+> +out:
+> +	if (err) {
+> +		/* Roll back previously programmed entries to 0 */
+> +		for (j =3D 0; j < i; j++)
+> +			pcie_tph_set_st_entry(pdev, ents[j].index, 0);
+
+If a prior call to pcie_tph_set_st_entry() fails (e.g., due to an out of
+bounds index) and disables TPH on the device internally, will these rollback
+calls silently fail?
+
+Since pcie_tph_set_st_entry() checks whether TPH is enabled and returns
+-EINVAL if it is disabled, the partially programmed entries might remain on
+the device without being cleared.
+
+If the user later re-enables TPH, could the device end up using an
+inconsistent steering tag table?
+
+> +	}
+> +	kvfree(ents);
+> +	return err;
+> +}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507-pwrseq-m2-=
-bt-v2-0-1740bd478539@oss.qualcomm.com?part=3D6
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507130956.3444=
+1-1-fengchengwen@huawei.com?part=3D6
