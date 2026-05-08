@@ -1,88 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996FD3F1655;
-	Fri,  8 May 2026 14:42:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA4183EDAA7
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 14:52:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778251363; cv=none; b=GyNtXTLqgtIx++H6aK1hWuEkLLPRy8VJBS3roagPthxJfT+mwSUKuTTg7Uvz8uT2T/hT4sbx5xRvtFTdZ3nSGOqz6XWWgMNDbWPicDNXe8nnKlA5TcnRYF6g5Y37Tv8SBy0byJOM8CktHz0RJXWNLcQTwRoBT5EZAKzGs4wdoVI=
+	t=1778251925; cv=none; b=cvCxWOP5k9wJ6QuufkA0wgcX8oZo32kvcujC8P7rqB6Db9AmQfF8aYZY1JStVr3q+5WkKYa/MUtK8wL0F9NGBbXmE/1A6ivbCMLr6lVMDDPzjcG1l63oSuolMjPktX+A3nBzdBaMj/4TBdReCSzxcR+dya29hx50C7vbaoZPVMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778251363; c=relaxed/simple;
-	bh=fwSulS9p2KQXubNlBUEZFPP7KWK+SXr/m+kU38386Lg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oK00x2W0b1ADERLFFlEZNsO/lwwSTvwPi0MpctJTlJfD2Cveg3Dr2y8wzASeJGTp/TFn1cElk/CmPS/l6FF4VK/hFjNiEPbHrA04ATqjJoEWUknN4y3/w1CvNjDyHtnJhqmxvOR0Lqr5iF2+2Zcfu0v80SIn9w2Al7IeUhkKNSI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WsQZBFLe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778251925; c=relaxed/simple;
+	bh=tMxc8tD5koE3vTO4Xfkix684EAa3iK8l4SkoTFR5tOQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IfFtbzdpb514TH3wnNKBhxHtItSFNoiKu37Ai7lhr6YMAvDRI58KJHUhnlymFlTi4brMKO/7sRGGgmSqgoEqEujcAw2/2ZSYkNZ2iF02/i48D9CvAGiZehERKbpBrZ8LynnnNhpDwE9zXFAP46OmTXNgdkihRox4K7oK5Uum7CU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AgudvaHd; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WsQZBFLe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11C6EC2BCB0;
-	Fri,  8 May 2026 14:42:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778251363;
-	bh=fwSulS9p2KQXubNlBUEZFPP7KWK+SXr/m+kU38386Lg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WsQZBFLeR0drDq6JjXEOYinHpoNdwDQkT/kh10BZUWebi+tLl9Z8iu5nFZylwmwG+
-	 TBaB5ST59mT/d7BPBmr1Q3wP5LGT70jPOeN1/wJiuw8ZVrg6wXwbiJPLJLLwdWu+jy
-	 bhibDX+iVcbdO+gYPX2HBlYOgWRwZR2t1q72FM7GWtdWVcFpJfKW6XpUM7ppfICJFb
-	 qTQDKNFWKQGq43uk3n8o3BxEPSylc1JAaZKgI6T1AwIHUy1q1Mk9dLN21svGPwSY2U
-	 gt7m+C37Ijo2qlcXrclzL3fRlXnOcLhvqMGPx7vw1ZJFOV9KscV7c1p6gn01IBLBb4
-	 JuVcu1fLr5HGg==
-Date: Fri, 8 May 2026 09:42:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: pawell@cadence.com
-Cc: Peter Chen <peter.chen@kernel.org>, Roger Quadros <rogerq@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] usb: cdnsp: Add support for device-only configuration
-Message-ID: <20260508144241.GC85390@bhelgaas>
-References: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AgudvaHd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778251922;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=pc0TXbTtQ74b8v8dq0wfYtNbxh6d69DJ2mLcLE2Q8v4=;
+	b=AgudvaHdlwBLtxABXH3B4/Mg472Dhk6CNZber9Y1p1PWPSlkaRPDzFDwEwEQoO5XX06u8E
+	NIxzKCPl9RPgUUS7y9wKiNMtfgZu0bli1Dvth3MCdbyhH8lfNt8e/5AUAz5psfM9Cy/wXV
+	huDLDp5ETqHHHl+KBewE5r5mpPj24W8=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-439-XQv1DklJOwOWIkkmTgbgMw-1; Fri,
+ 08 May 2026 10:52:01 -0400
+X-MC-Unique: XQv1DklJOwOWIkkmTgbgMw-1
+X-Mimecast-MFC-AGG-ID: XQv1DklJOwOWIkkmTgbgMw_1778251920
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 519F4195608A;
+	Fri,  8 May 2026 14:52:00 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.32.23])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id F15773002D2F;
+	Fri,  8 May 2026 14:51:57 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v2] PCI: Disable broken FLR on MediaTek MT7925
+Date: Fri,  8 May 2026 16:51:52 +0200
+Message-ID: <20260508145153.717641-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Fri, May 08, 2026 at 12:06:39PM +0200, Pawel Laszczak via B4 Relay wrote:
-> From: Pawel Laszczak <pawell@cadence.com>
-> 
-> This patch introduces support for the Cadence USBSSP (cdnsp)
-> controller in hardware configurations where the Dual-Role Device (DRD)
-> register block is not implemented or is inaccessible.
-> 
-> In such cases, the driver cannot rely on the DRD logic to manage roles
-> and must operate exclusively in a fixed peripheral/host mode.
-> 
-> The change in BAR indexing (from BAR 2 to BAR 1) is a direct
-> consequence of the 32-bit addressing used in this specific
-> DRD-disabled hardware layout, compared to the 64-bit addressing
-> used in DRD-enabled configurations.
-> 
-> Tested on a PCI platform with a hardware configuration that lacks
-> DRD support. Platform-side changes are included to support the PCI
-> glue layer's property injection to handle this specific layout.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com> # pci_ids.h
+The MediaTek MT7925 WiFi device (14c3:7925) advertises FLR capability
+but the implementation is broken - reset always fails, leaving the device
+in an undefined state.
 
-I did ack this
-(https://lore.kernel.org/linux-pci/20260331181209.GA148250@bhelgaas/) but I
-wish I had added a note about why.  Usually we don't add things to
-pci_ids.h unless they're used by more than one driver.  This (slightly)
-simplifies backporting things.
+This manifests in VFIO passthrough scenarios: Normal VM operation works
+fine, including clean shutdown/reboot. However, when the VM terminates
+uncleanly (crash, force-off), VFIO attempts to reset the device before
+it can be assigned to another VM. Because FLR is broken, the reset fails
+and the device remains in an undefined state, preventing reuse.
 
-Fine as-is, but if you respin for other reasons, you could consider moving
-it to cdnsp-pci.c.
+Disable FLR for this device so the PCI core falls back to working reset
+methods (PM reset or bus reset).
 
-> +++ b/include/linux/pci_ids.h
+This follows the existing pattern used for the MediaTek MT7922 WiFi
+(14c3:0616), which is the predecessor device and already uses this quirk.
 
- *      Do not add new entries to this file unless the definitions
- *      are shared between multiple drivers.
- */
+Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+---
+v2:
+  - Change from device-specific D3cold reset to quirk_no_flr() approach
+    based on maintainer feedback (Alex Williamson)
+  - Follow existing pattern used by MediaTek MT7922 (0x0616)
+v1: https://lore.kernel.org/all/20260507142916.392983-1-jtornosm@redhat.com/
 
-> +#define PCI_DEVICE_ID_CDNS_UDC_USBSSP	0x0400
+ drivers/pci/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Looks like this #define could go in cdnsp-pci.c, since that's the only
-place it's used.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 000000000000..111111111111 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5607,6 +5607,7 @@
+  * Intel 82579LM Gigabit Ethernet Controller 0x1502
+  * Intel 82579V Gigabit Ethernet Controller 0x1503
+  * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
++ * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
+  */
+ static void quirk_no_flr(struct pci_dev *dev)
+ {
+@@ -5617,6 +5618,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
+
+ /* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
+ static void quirk_no_flr_snet(struct pci_dev *dev)
+--
+2.53.0
+
