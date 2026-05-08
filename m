@@ -1,46 +1,46 @@
-Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33F5733260E;
-	Fri,  8 May 2026 06:41:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9AF346FD2;
+	Fri,  8 May 2026 06:41:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778222471; cv=none; b=kZoA09Vj2hMGQjIYFi6Zys9fU4Gwqsvcf2dQfCzqgXJIkJgle1Jtb82VjI6FpaHQdh3sBv6RRB9IQrJY+nEC5PBA0XV8sPF4k6dpp+2QNtqspPCHAzAptLgU7WBNyGMw9X9im9zGwBdnlT5dx1LfU7CCfg6WgWSZiWpYcB7e0Oc=
+	t=1778222472; cv=none; b=QuRk9pLlJjcdsRP2x7F49IE3LxdVEHSXttzTz2a5C0qKu5HWoh/X7LsKItSwIzASGO5Znl0Tp4mMYSUwL90QK8OnQG+8AjkQ+gCg26ZZ8nFtKykmKZ6anrdbQxI8yHXXEybfE1XbQ1DpJ/fTwSMIvLw7YaDVcTVorggXsf5TqAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778222471; c=relaxed/simple;
-	bh=nZ77Qx15FQjlfkQiv1WNBEd+bTaQpuNpy4fkczqNe0s=;
+	s=arc-20240116; t=1778222472; c=relaxed/simple;
+	bh=eRTzNOuDc7dat6s4hNmwZXsKyWASDNuahad7V9t5tdM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hNZNKuR2aV5vUEdX3kBS/XjYn9NCZBDF54A+R0Et/uTScVn58Q5W1Ke+IpTVbL8FXxSF5hm8BLF1QHl8ZY2Y/AHDmVwFEig5RPB+Obsn+6d44NLvi0qguX5tPjAAjDY4u427ai+xZRc9bM99vxLLezHVEEg4tZzhDIYFxF79tWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ui3JM8fR; arc=none smtp.client-ip=113.46.200.225
+	 MIME-Version:Content-Type; b=IEnTAIQ+zLFJo/o5Lq7OXJMZrGJ7rJjfdiF0rJiEsXMIHUl1R2BlKnERvTtpx0phWnOa1Q8z93RS/5Hb6haJziF8PTbNraAVomRJI3cdeAbBRt8YXQ8Hj3aD95PPJxy7fQ3XGuTLTt9QGHF9SaBleUmCc7HSuypWWdS+C5oVC3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=TRrGX/GE; arc=none smtp.client-ip=113.46.200.222
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ui3JM8fR"
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="TRrGX/GE"
 dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
 	c=relaxed/relaxed; q=dns/txt;
 	h=From;
-	bh=5ZWpG5nAH4Ms4MOMRfRox3bKTRlzC2EutZldfGVDmEw=;
-	b=ui3JM8fRTPCUjKUiUWGi+71kvtIRzOJRK/ShoXbYFzCuZM1S7+4TxymHYm++XU8yyP/YIb1fm
-	v4Lr6EqZ5/7B5qpTmFPjapXn23zi7ptKQklh2GoILnndCzlQl1gHMNRPoORCJeiJa1fL8/DS0NL
-	RiD/nSu0kEIHw23bhrPqNuA=
+	bh=fd2VDTjAdMqXsNa5cZTMm3EpBDW41poENzxMNDtCrgQ=;
+	b=TRrGX/GE+CsDsW4tZKC1DrB2+RkHLxowLixpUOYPilkwQtsvKS2J1ZkKsyqdh44dkMBFYX7n3
+	9684qmag0vOtlT9vSk6Jc73q1OsVEEr1QAtLFSVdITiP1EqdzP1vHHy8UySrPFcCKCIxsB0TGSQ
+	MYwunOyy0IWtBQuwaVaUzDo=
 Received: from mail.maildlp.com (unknown [172.19.163.15])
-	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4gBfT534GFz1K97g;
-	Fri,  8 May 2026 14:33:29 +0800 (CST)
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4gBfT60xDJzLlX9;
+	Fri,  8 May 2026 14:33:30 +0800 (CST)
 Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 04A9740539;
-	Fri,  8 May 2026 14:41:02 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 9BC6C40539;
+	Fri,  8 May 2026 14:41:03 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 8 May 2026 14:41:01 +0800
+ 15.2.1544.11; Fri, 8 May 2026 14:41:03 +0800
 From: Chengwen Feng <fengchengwen@huawei.com>
 To: <alex@shazbot.org>, <jgg@ziepe.ca>
 CC: <wathsala.vithanage@arm.com>, <helgaas@kernel.org>, <wei.huang2@amd.com>,
 	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
 	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v8 2/7] PCI/TPH: Export pcie_tph_get_st_modes() for external use
-Date: Fri, 8 May 2026 14:40:48 +0800
-Message-ID: <20260508064053.37529-3-fengchengwen@huawei.com>
+Subject: [PATCH v8 7/7] vfio/pci: Add PCIe TPH SET_ST interface
+Date: Fri, 8 May 2026 14:40:53 +0800
+Message-ID: <20260508064053.37529-8-fengchengwen@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20260508064053.37529-1-fengchengwen@huawei.com>
 References: <20260508064053.37529-1-fengchengwen@huawei.com>
@@ -54,101 +54,123 @@ Content-Type: text/plain
 X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
  kwepemk500009.china.huawei.com (7.202.194.94)
 
-Export the helper to retrieve supported PCIe TPH steering tag modes so
-that drivers like VFIO can query and expose device capabilities to
-userspace.
-
-Add stub functions for pcie_tph_get_st_table_size() and
-pcie_tph_get_st_table_loc() when !CONFIG_PCIE_TPH.
-
-Add tph_cap validation for pcie_tph_get_st_modes() and
-pcie_tph_get_st_table_loc() to prevent invalid PCI configuration
-space access when TPH is not supported.
+Add VFIO_PCI_TPH_SET_ST operation to support batch programming of steering
+tag entries. If any entry fails, roll back successfully programmed entries
+to 0 to prevent inconsistent device state.
 
 Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/tph.c       | 19 +++++++++++++++++--
- include/linux/pci-tph.h |  7 +++++++
- 2 files changed, 24 insertions(+), 2 deletions(-)
+ drivers/vfio/pci/vfio_pci_core.c | 90 ++++++++++++++++++++++++++++++++
+ 1 file changed, 90 insertions(+)
 
-diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index 877cf556242b..ba31b010f67a 100644
---- a/drivers/pci/tph.c
-+++ b/drivers/pci/tph.c
-@@ -145,15 +145,27 @@ static void set_ctrl_reg_req_en(struct pci_dev *pdev, u8 req_type)
- 	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 7ec2dd32f106..9e399696ce6e 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -1606,6 +1606,94 @@ static int vfio_pci_tph_get_st(struct vfio_pci_core_device *vdev,
+ 	return err;
  }
  
--static u8 get_st_modes(struct pci_dev *pdev)
-+/**
-+ * pcie_tph_get_st_modes - Get supported Steering Tag modes
-+ * @pdev: PCI device to query
-+ *
-+ * Return:
-+ *  Bitmask of supported ST modes (PCI_TPH_CAP_ST_NS, PCI_TPH_CAP_ST_IV,
-+ *                                 PCI_TPH_CAP_ST_DS)
-+ */
-+u8 pcie_tph_get_st_modes(struct pci_dev *pdev)
- {
- 	u32 reg;
- 
-+	if (!pdev->tph_cap)
-+		return 0;
++static int vfio_pci_tph_set_st(struct vfio_pci_core_device *vdev,
++			       struct vfio_device_pci_tph_op *op,
++			       void __user *uarg)
++{
++	struct pci_dev *pdev = vdev->pdev;
++	struct vfio_pci_tph_entry *ents;
++	struct vfio_pci_tph_st st;
++	enum tph_mem_type mtype;
++	size_t size, ents_off;
++	int i = 0, j, err;
++	u32 tab_sz;
++	u16 st_val;
 +
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
- 	reg &= PCI_TPH_CAP_ST_NS | PCI_TPH_CAP_ST_IV | PCI_TPH_CAP_ST_DS;
- 
- 	return reg;
- }
-+EXPORT_SYMBOL(pcie_tph_get_st_modes);
- 
- /**
-  * pcie_tph_get_st_table_loc - Return the device's ST table location
-@@ -168,6 +180,9 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
- {
- 	u32 reg;
- 
-+	if (!pdev->tph_cap)
-+		return PCI_TPH_LOC_NONE;
++	tab_sz = pcie_tph_get_st_table_size(pdev);
++	if (tab_sz == 0)
++		return -EOPNOTSUPP;
 +
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
- 
- 	return reg & PCI_TPH_CAP_LOC_MASK;
-@@ -395,7 +410,7 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- 
- 	/* Sanitize and check ST mode compatibility */
- 	mode &= PCI_TPH_CTRL_MODE_SEL_MASK;
--	dev_modes = get_st_modes(pdev);
-+	dev_modes = pcie_tph_get_st_modes(pdev);
- 	if (!((1 << mode) & dev_modes))
++	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, st))
++		return -EINVAL;
++
++	if (copy_from_user(&st, uarg, sizeof(st)))
++		return -EFAULT;
++
++	if (!st.count || st.count > VFIO_PCI_TPH_MAX_ENTRIES)
++		return -EINVAL;
++
++	/* Check reserved fields are zero */
++	if (memchr_inv(&st.reserved, 0, sizeof(st.reserved)))
++		return -EINVAL;
++
++	size = st.count * sizeof(*ents);
++	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, st) + size)
++		return -EINVAL;
++
++	ents = kvmalloc(size, GFP_KERNEL);
++	if (!ents)
++		return -ENOMEM;
++
++	ents_off = offsetof(struct vfio_pci_tph_st, ents);
++	if (copy_from_user(ents, uarg + ents_off, size)) {
++		err = -EFAULT;
++		goto out;
++	}
++
++	for (; i < st.count; i++) {
++		err = -EINVAL;
++
++		/* Check reserved fields and st are zero */
++		if (memchr_inv(&ents[i].reserved0, 0, sizeof(ents[i].reserved0)) ||
++		    memchr_inv(&ents[i].reserved1, 0, sizeof(ents[i].reserved1)) ||
++		    ents[i].st != 0)
++			goto out;
++
++		if (ents[i].mem_type == VFIO_PCI_TPH_MEM_TYPE_VM)
++			mtype = TPH_MEM_TYPE_VM;
++		else if (ents[i].mem_type == VFIO_PCI_TPH_MEM_TYPE_PM)
++			mtype = TPH_MEM_TYPE_PM;
++		else
++			goto out;
++
++		if (ents[i].index >= tab_sz)
++			goto out;
++
++		if (ents[i].cpu == U32_MAX) {
++			err = pcie_tph_set_st_entry(pdev, ents[i].index, 0);
++			if (err)
++				goto out;
++			continue;
++		}
++
++		err = pcie_tph_get_cpu_st(pdev, mtype, ents[i].cpu, &st_val);
++		if (err)
++			goto out;
++		err = pcie_tph_set_st_entry(pdev, ents[i].index, st_val);
++		if (err)
++			goto out;
++	}
++
++out:
++	if (err) {
++		/* Roll back previously programmed entries to 0 */
++		for (j = 0; j < i; j++)
++			pcie_tph_set_st_entry(pdev, ents[j].index, 0);
++	}
++	kvfree(ents);
++	return err;
++}
++
+ static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
+ 			      void __user *uarg)
+ {
+@@ -1626,6 +1714,8 @@ static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
+ 		return vfio_pci_tph_disable(vdev);
+ 	case VFIO_PCI_TPH_GET_ST:
+ 		return vfio_pci_tph_get_st(vdev, &op, uarg + minsz);
++	case VFIO_PCI_TPH_SET_ST:
++		return vfio_pci_tph_set_st(vdev, &op, uarg + minsz);
+ 	default:
+ 		/* Other ops are not implemented yet */
  		return -EINVAL;
- 
-diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-index be68cd17f2f8..5772d48ea444 100644
---- a/include/linux/pci-tph.h
-+++ b/include/linux/pci-tph.h
-@@ -30,6 +30,7 @@ void pcie_disable_tph(struct pci_dev *pdev);
- int pcie_enable_tph(struct pci_dev *pdev, int mode);
- u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
- u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
-+u8 pcie_tph_get_st_modes(struct pci_dev *pdev);
- #else
- static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
- 					unsigned int index, u16 tag)
-@@ -41,6 +42,12 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
- static inline void pcie_disable_tph(struct pci_dev *pdev) { }
- static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
- { return -EINVAL; }
-+static inline u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
-+{ return 0; }
-+static inline u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
-+{ return 0; }
-+static inline u8 pcie_tph_get_st_modes(struct pci_dev *pdev)
-+{ return 0; }
- #endif
- 
- #endif /* LINUX_PCI_TPH_H */
 -- 
 2.17.1
 
