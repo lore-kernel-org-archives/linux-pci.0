@@ -1,95 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA6D2D2397
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 20:51:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D6A36403B;
+	Fri,  8 May 2026 21:04:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778273498; cv=none; b=OlBLeBBAoPB0+NNnYjTiWiiLO7jtzQJUPQlNSnXEuqIreNXL6nGX3mQ2Osw00oK0PWaXIpo57C0CnjXbVWjMZ+p0cU93Q/V4JIxjTAZ4Qn/JI4Vcg3KRE7rjPnwYuWYtrD5L/vGoVJKxmb0qziHcX0eKq0DPF6eVdDDapJGuqGI=
+	t=1778274270; cv=none; b=NVaM2fJmft7QOQdtLoYmfVY0gXrOe7uAtXp2UNxHgG71936VVxRhJFhGqy9NhpIBU9BvjqP5w47vkZIj/uYJagIRnA6zLjn9S2Hm8gnn90Dfccg1XyvZw7t62P4ZENo9tcaC//uagqHQh62eHneOnyEg41jpvvHQko8L8h2BExQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778273498; c=relaxed/simple;
-	bh=JAxAImxrEXB3z40/otkidML1NX7C50Dd4t4wi95PeaY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=u9lep+6GdbwbhGMOrpvU9GFCM4hRy7e7SxPeGLqA6zC0/Kcnaey4majEw0YF+P8W7Vly5GJ/CANy4pNSxP4Uv2/teF1ndroz9RCsvnqCcNZkCiLJ/5YalWs5jsL55LCvdXbHETnxTC/Bs/nvlizSSH2aCBQRsWz7pXUS4cwTXRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GgYwjGWG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778274270; c=relaxed/simple;
+	bh=azpOnJbK0Ml4D1VGSusOins3kG0pxRpD4X+uSZ7LwB0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=lJUSgVOua7R0I5YbMh5jk98W8Hi0gZhssLbb5A92SqiK028v+9JE15ew9Cv4tHpnIB7BhBgBqc70I2o8F2QV/YP/vt+OEUhVx8WMIxEJMQjER4SA1iHuiof2b7N0rCtZNkimAsMTR29rQvgClOJ+7Bp4wljad04ruG+NBldLg/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ejFxLuJG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GgYwjGWG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61A4FC2BCB0;
-	Fri,  8 May 2026 20:51:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ejFxLuJG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B711EC2BCB0;
+	Fri,  8 May 2026 21:04:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778273498;
-	bh=JAxAImxrEXB3z40/otkidML1NX7C50Dd4t4wi95PeaY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=GgYwjGWGiEFMqzb7jTu9HWKKooqwyJSuHM+eiJy9ZPOaZhAThsP/Iv5xrUoGSAp3N
-	 1cQ3rdm0iBdGA8lcSou1k+FToVrxvbiC8xIM76DpYpd5uT2iPg9h68UrUzCIwUzpt8
-	 fxK9NE/dxiwjmQ5QyqvqXVOrWrQzDUBhs9m8QRUdHMrJl0QzJKAFog2Cep8X9FD1vO
-	 jcU97vWWe7lS0nOt+Sl0CLLorrn/uy0yVCjktkrj0sty8t0EZKZ3BOfNdS29b/hz3v
-	 1padholiGKuU25wJT54X8YRMvFyRaHSZLLwGZ7KmujT3hUzgyr0mpe6LtF/lrPT2na
-	 /6FzbPMZx6TmA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: dwc: Use DEFINE_SHOW_ATTRIBUTE for ltssm_status
- debugfs
-Reply-To: sashiko@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260508133432.1964491-1-18255117159@163.com>
-References: <20260508133432.1964491-1-18255117159@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 20:51:37 +0000
-Message-Id: <20260508205138.61A4FC2BCB0@smtp.kernel.org>
+	s=k20201202; t=1778274269;
+	bh=azpOnJbK0Ml4D1VGSusOins3kG0pxRpD4X+uSZ7LwB0=;
+	h=Date:From:To:Cc:Subject:From;
+	b=ejFxLuJGK0FzScYckOsaIgZB/Vbc4yAs/VV8LooZqtX9hR2vC7ueuLoVfhYvWkkuF
+	 80HJ+QWdTcGpfkmK28uw5tF1v6B7GXNF421A3z3Ju2KfSPr4xhF4K+HmxMzRjhg+Fx
+	 WXfjqmWrKhEvQXRScgZhd9UD586g5KC4V2zTSKDW27OLE+tDhbA241ksoNiZoHxGAj
+	 q4+gcV/HiXP3/WGZGuxLOIWdDeSgvvn7nssjBOS1/lkUUUUkB0zrr6J6GTrn4l6DDV
+	 GM+uMdd/SAzVf38E1XbnmmJof1zLxSuYSJTDJAg7+5W/AvAew/3lc84Ca/Ckgtsqan
+	 fh8fEWJf7KbQg==
+Date: Fri, 8 May 2026 16:04:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Keith Busch <kbusch@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Marek Vasut <marek.vasut+renesas@gmail.com>,
+	Hans Zhang <18255117159@163.com>,
+	Hans Zhang <hans.zhang@cixtech.com>, Aksh Garg <a-garg7@ti.com>
+Subject: [GIT PULL] PCI fixes for v7.1
+Message-ID: <20260508210428.GA19478@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] The commit message inaccurately claims 'No functional change int=
-ended', while the patch implicitly fixes a memory leak and module unload ra=
-ce condition.
---
+The following changes since commit 254f49634ee16a731174d2ae34bc50bd5f45e731:
 
-commit 3ba9e0fae6d8b7784978dea48b58611a119ad5c9
-Author: Hans Zhang <18255117159@163.com>
+  Linux 7.1-rc1 (2026-04-26 14:19:00 -0700)
 
-PCI: dwc: Use DEFINE_SHOW_ATTRIBUTE for ltssm_status debugfs
+are available in the Git repository at:
 
-This commit replaces the custom open function and file operations for
-the ltssm_status debugfs file with the DEFINE_SHOW_ATTRIBUTE macro to
-reduce boilerplate.
+  git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.1-fixes-1
 
-> Replace the custom open function and file_operations with the
-> standard DEFINE_SHOW_ATTRIBUTE macro to reduce boilerplate code.
->=20
-> No functional change intended.
+for you to fetch changes up to 9ef40a09c5de18f0d275a451f5c2a7fd4f07158b:
 
-Is the "No functional change intended" description accurate here?
+  MAINTAINERS: Add Aksh Garg as PCIe CADENCE reviewer (2026-05-08 15:50:07 -0500)
 
-The original code used single_open() but did not provide a .release
-callback, which leaks the seq_file on close:
+----------------------------------------------------------------
 
-> -static int ltssm_status_open(struct inode *inode, struct file *file)
-> -{
-> -	return single_open(file, ltssm_status_show, inode->i_private);
-> -}
+- Don't fallback to bus reset after failed slot reset; a bus reset isn't
+  safe if the .reset_slot() callback is implemented (Keith Busch)
 
-[ ... ]
+- Update saved_config_space upon resource assignment to fix passthrough
+  regressions when x86 pcibios_assign_resources() updates BARs (Lukas
+  Wunner)
 
-> -static const struct file_operations dwc_pcie_ltssm_status_ops =3D {
-> -	.open =3D ltssm_status_open,
-> -	.read =3D seq_read,
-> -};
-> +DEFINE_SHOW_ATTRIBUTE(ltssm_status);
+- Initialize a temporary pci_dev->dev in sysfs 'new_id' attribute to fix a
+  lockdep regression after driver_override was moved from PCI to device
+  core (Samiullah Khawaja)
 
-By migrating to DEFINE_SHOW_ATTRIBUTE(), the new file operations
-automatically include .release =3D single_release and .owner =3D THIS_MODUL=
-E.
+- Update MAINTAINERS email addresses (Marek Vasut, Hans Zhang)
 
-Could the commit message be updated to reflect that this implicitly fixes
-a seq_file memory leak and a module unload race condition?
+- Add MAINTAINERS reviewer for PCIe Cadence IP (Aksh Garg)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508133432.1964=
-491-1-18255117159@163.com?part=3D1
+----------------------------------------------------------------
+Aksh Garg (1):
+      MAINTAINERS: Add Aksh Garg as PCIe CADENCE reviewer
+
+Hans Zhang (1):
+      MAINTAINERS: Update Hans Zhang email for PCIe CIX Sky1
+
+Keith Busch (1):
+      PCI: Don't fallback to bus reset after failed slot reset
+
+Lukas Wunner (1):
+      PCI: Update saved_config_space upon resource assignment
+
+Marek Vasut (1):
+      MAINTAINERS: Update Marek Vasut email for PCIe R-Car
+
+Samiullah Khawaja (1):
+      PCI: Initialize temporary device in new_id_store()
+
+ MAINTAINERS              | 7 ++++---
+ drivers/pci/pci-driver.c | 9 ++++++++-
+ drivers/pci/pci.c        | 9 ++++-----
+ drivers/pci/setup-res.c  | 2 ++
+ 4 files changed, 18 insertions(+), 9 deletions(-)
