@@ -1,104 +1,117 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08FA4317174;
-	Fri,  8 May 2026 03:41:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79F165192
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:43:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778211716; cv=none; b=TWBZ70eAmlL8FTrtaWq5Q1tGFNbTBDOlE9BqsA0VV95fLdq9HZJOAb1VQC2J6PvZE20NP3Gi2i+ytWPa2HoyvLfZV7TnSJO7no7sTn6py4jgbqeDCSrvzSF6P2FzyYVqfGqtNj/3XhlGSsSg66wwyCn0Zh8EQSXDa9wMq02Hn/Y=
+	t=1778211789; cv=none; b=V7CGlPMxdbvS/T0SycUoIGO49F5KhQpzN4Y6+IAEdptMseUUWcMBEs/Qp1/NWq/NCjum7vQ0MG7GxmzLk61PviZfQ/A8L3dX2t87mYxchbRNmvTozX1WKZqaHowcIV8RGbT1peQbd93bTnrvuaYMKCo3i9DIt2VkPh7P01W/+iQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778211716; c=relaxed/simple;
-	bh=pArVZXkhrJuq4P8ImSz2TeRji4YMR96EykM9VNZ//7c=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=igUx7EYlcCDWDGyNFokWfOnxssVGOWNiOKL99WfoGc0wnSX6jwoyrjqiRb8uK/sRRmjt9BuSQgpAOsezqSZ/yuTNAnUOabo+lxIQgDRPP7+kUJmYNexe53ncCm13z6lZ9LYglR0u6QCBy+sRm0+ChTPP7NincCWDxGwY8oHed4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YNrK7rmf; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778211789; c=relaxed/simple;
+	bh=e648FWE7GOnQcDzOwhFweU4Cuje+PbzlCVNdyxsRpds=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=KVOf5ezenM6l+nW9CByWfN8gONu/Uasgrqqh6MCpqjewavODb2qnl1HW5CIAAMF+33MQ63C/yYRhQkGnqdEGko6oNiWMGJIfgrMNAZBO3t0UPB434I95WWSXw8BgnazwumSR7MEXYXn6hJQwrWMx5Km6QH5pSdtg2oJ/qPBBO2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nHv5SGGl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YNrK7rmf"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=2B
-	63YrNMsen+1RgWxaUoJOlqGHuGmoS2N2EpQ1kPbiY=; b=YNrK7rmfLF2d82ozYf
-	onV518/imtjh4c096R3IyHqjWv/3nyqWFNzwbGtUzh6rbDc+Yg9mtXcvNm0lf6Fs
-	1FjJ5isMvAFJOpj3ZGw+XdgAqQRthjzc7lEq+Mf5b3e9GFXpYw3tL8l/pt0K1oa7
-	F2H+KtoG2ASExZFSOJzCgKf8A=
-Received: from Precision-7960.. (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgCX5jJYW_1pUkipCw--.764S3;
-	Fri, 08 May 2026 11:41:17 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	hans.zhang@cixtech.com
-Cc: robh@kernel.org,
-	mpillai@cadence.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v4 1/2] PCI: cadence: Add HPA architecture flag
-Date: Fri,  8 May 2026 11:41:00 +0800
-Message-Id: <20260508034101.1910036-2-18255117159@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260508034101.1910036-1-18255117159@163.com>
-References: <20260508034101.1910036-1-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nHv5SGGl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58D6DC2BCB0;
+	Fri,  8 May 2026 03:43:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778211789;
+	bh=e648FWE7GOnQcDzOwhFweU4Cuje+PbzlCVNdyxsRpds=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=nHv5SGGlobC1+OcSWXc1wVCOJhfUgaXsFICvYy16eX43mOfaWuBXYYfhdLRuS+0Ax
+	 Ivd4TkYozqrGnEfdGhfnTRhWoMcXQyUt+JZc3pO2s1adfS+pk7vd8/RFFF+XSzJ4uQ
+	 GqxAMU9H1wJ90BkcxExzpMfXyVmHEJA9T1pxvad1ky5lXjoXD35AtHDp9b6brlvoHr
+	 xxjg/bOz32QpmjqavOgZu0ctz+uNe4JUdbJcRxJ1dzvR5E1dpQa6AOu0YCNHz8ONS6
+	 tU6dgxFpias40+fUU01DSq47TKG0tfkwYmXNKYh2yiMYpOfrkgKPpZ+ctbMOIFWfo9
+	 X/3UV3Gn8vOqA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 05/18] rust: add bindings for hash.h
+Reply-To: sashiko@lists.linux.dev
+To: alistair23@gmail.com
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260508031710.514574-6-alistair.francis@wdc.com>
+References: <20260508031710.514574-6-alistair.francis@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 08 May 2026 03:43:08 +0000
+Message-Id: <20260508034309.58D6DC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PygvCgCX5jJYW_1pUkipCw--.764S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFy3ArWfuw4Dtr4kXr4UXFb_yoW8Zr13pa
-	yDGFyfC3WfXF45uan5Z3W5GF1a9FnxZasrKwsI9w1fuF13CrWUGFy2gFyrJF9xKrW7ur1I
-	vF1DtasrJFsIyrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pR0Ap5UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxB3Ha2n9W10MRgAA3t
 
-Add a boolean flag 'is_hpa' to the cdns_pcie structure to indicate
-that the controller is part of a Heterogeneous Processor Architecture
-(HPA) system. This flag will be used by subsequent patches to handle
-HPA-specific register layouts and behaviors.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Low] Unintended exposure of <linux/hash.h> to Rust bindings.
+- [Low] Alphabetical sorting rules are violated in bindings_helper.h and he=
+lpers.c.
+--
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/cadence/pci-sky1.c     | 1 +
- drivers/pci/controller/cadence/pcie-cadence.h | 2 ++
- 2 files changed, 3 insertions(+)
+commit d4762d094c0da15881ab9c843fc2316ba4792255
+Author: Alistair Francis <alistair.francis@wdc.com>
 
-diff --git a/drivers/pci/controller/cadence/pci-sky1.c b/drivers/pci/controller/cadence/pci-sky1.c
-index cd55c64e58a9..e1f4a98e2ab6 100644
---- a/drivers/pci/controller/cadence/pci-sky1.c
-+++ b/drivers/pci/controller/cadence/pci-sky1.c
-@@ -174,6 +174,7 @@ static int sky1_pcie_probe(struct platform_device *pdev)
- 	cdns_pcie->reg_base = pcie->reg_base;
- 	cdns_pcie->msg_res = pcie->msg_res;
- 	cdns_pcie->is_rc = true;
-+	cdns_pcie->is_hpa = true;
- 
- 	reg_off = devm_kzalloc(dev, sizeof(*reg_off), GFP_KERNEL);
- 	if (!reg_off) {
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 574e9cf4d003..9a464cbaf073 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -80,6 +80,7 @@ struct cdns_plat_pcie_of_data {
-  * @msg_res: Region for send message to map PCI accesses
-  * @dev: PCIe controller
-  * @is_rc: tell whether the PCIe controller mode is Root Complex or Endpoint.
-+ * @is_hpa: indicates if the architecture is HPA
-  * @phy_count: number of supported PHY devices
-  * @phy: list of pointers to specific PHY control blocks
-  * @link: list of pointers to corresponding device link representations
-@@ -93,6 +94,7 @@ struct cdns_pcie {
- 	struct resource                      *msg_res;
- 	struct device		             *dev;
- 	bool			             is_rc;
-+	bool				     is_hpa;
- 	int			             phy_count;
- 	struct phy		             **phy;
- 	struct device_link	             **link;
--- 
-2.34.1
+rust: add bindings for hash.h
 
+This commit exposes crypto_shash_descsize(), crypto_shash_digestsize(),
+and crypto_free_shash() to Rust by adding them to the C helpers and
+updating the bindings include lists.
+
+> diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_hel=
+per.h
+> index 446dbeaf08668..d73142078240f 100644
+> --- a/rust/bindings/bindings_helper.h
+> +++ b/rust/bindings/bindings_helper.h
+> @@ -30,6 +30,7 @@
+> =20
+>  #include <linux/acpi.h>
+>  #include <linux/gpu_buddy.h>
+> +#include <crypto/hash.h>
+>  #include <drm/drm_device.h>
+>  #include <drm/drm_drv.h>
+
+This isn't a bug, but does this addition break the alphabetical sorting of
+the includes?  It looks like <crypto/hash.h> is being inserted between
+<linux/gpu_buddy.h> and <drm/drm_device.h>.
+
+[ ... ]
+
+> @@ -60,6 +61,7 @@
+>  #include <linux/file.h>
+>  #include <linux/firmware.h>
+>  #include <linux/fs.h>
+> +#include <linux/hash.h>
+>  #include <linux/i2c.h>
+
+The commit message mentions adding bindings for crypto/hash.h.  Is the
+addition of linux/hash.h intended here?
+
+It doesn't appear that utilities from linux/hash.h are being used, which
+could unnecessarily increase bindgen execution time and pollute the
+Rust namespace.
+
+> diff --git a/rust/helpers/helpers.c b/rust/helpers/helpers.c
+> index 625921e27dfbc..6372e14f8419c 100644
+> --- a/rust/helpers/helpers.c
+> +++ b/rust/helpers/helpers.c
+> @@ -60,6 +60,7 @@
+>  #include "dma-resv.c"
+>  #include "drm.c"
+>  #include "err.c"
+> +#include "hash.c"
+>  #include "irq.c"
+>  #include "fs.c"
+>  #include "gpu.c"
+
+This isn't a bug, but does inserting hash.c here also bypass alphabetical
+sorting?
+
+While it is placed before irq.c, both fs.c and gpu.c appear further down in
+the existing list, so placing hash.c after gpu.c might keep this block more
+properly ordered.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508031710.5145=
+74-1-alistair.francis@wdc.com?part=3D5
