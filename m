@@ -1,87 +1,130 @@
-Received: from outbound.st.icloud.com (p-east2-cluster3-host3-snip4-10.eps.apple.com [57.103.77.161])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2D1D3EDAB6
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 14:23:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.77.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B04773502A9
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 14:39:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778250184; cv=none; b=KI4rM7EbRmn9XDkbd5FDStSGz9X5wzsNL9OKgPlj0d4cPlnYAw1SLXHG5O3OmTymfmfdjQVa/BUNRJAtyPbKnd8RCTWD6OTwB0GB+929Dubq+Z+zG+9mA0+iAiZ8u7yAr0Xma6nEjR4TJqgyH7wEM1iOiF6LT2SqnssCsXP+aJc=
+	t=1778251179; cv=none; b=tHHyAx+kfuYBD/h/CD+TuzP9Li+5UXzpEKZBuKLQFaV4Rz2DqaZHyMM0EPTBpKvafUmnTdrrgsg7W6zNmS2gEyOZdpKMaE/mZVMhrmLTGlSxG/ZLbjzLV6doToSFLlnezHypzHIH2l/VkRf7L+3WCz5haYWvjWLmOQ+TpXlBkxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778250184; c=relaxed/simple;
-	bh=JoYi8unmhRyGlySqvOx5enCVvPvMMtTNiIyWrQ2cRIY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Nz07DfyJeN1Fcw5Xp0WE6+tJ67m+j/94rFb20GCKZn0BCRxTrrufZTC+kDcBdcV8eTmR/byEV0EaEM32PN9OMWM2msVOA7gv2jZHGRJNA55DElhh4o0AMpNFpkXvBZpVDWEduHc8FPZYFZhWLENVwOPfjlfFxT3r8BV2OGGCbhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=XEvflbCT; arc=none smtp.client-ip=57.103.77.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1778251179; c=relaxed/simple;
+	bh=CRo+41M0qXiyDrMxBRd9ybpoOu9d/b6QhFbdrm5JsyE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=iHghi3kGgnRvb+0O/NvxS2HTjI4LwQas5W8tX+s+7++El2ed9yYbMEMWLV3wavbDLXS5k02Svfx3qm+622V7voD/JXiOjxk6/jMyse+9Qg3muONl/1O4DVvNSwmNu7TJrcuwSurTrJRCHNxHwail9STSCzPsEPjKOdgL5YUAjfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ISGHnfyp; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="XEvflbCT"
-Received: from outbound.st.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-east-1a-100-percent-10 (Postfix) with ESMTPS id 837991800406;
-	Fri, 08 May 2026 14:23:02 +0000 (UTC)
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhJBkMDRQVJF0wBTVIPDxhMCkEUWgpcQgtJAS1eCF4fTBwdDlgGEhZdRVsYRRlLHVgWAV8GWXIZWhRcGFNFUR9UWEEOCloGUFEdXwIKBEcEWxdGA1NFQQQXEVABWB5WXloXXk1HH0BNYkkBWhlbHEAXSm5NUw8PGVoUXBhTRVEfVFheBFNWDkZcHQdcAVNXXQkbC10aXwMVXVVSWQ5SH0lfTFJbVgkBFAAcVy1eCF4fTBwdDlgGDFBNAUMICgJRHFYNVw==
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778250182; x=1780842182; bh=pTHjvdMwsYhTdkjLo4aG9FbhbYPuqJOLfmT8ghWrP2Q=; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:x-icloud-hme; b=XEvflbCT3lwDprBDfXR7L29qEo8k+0eH0qi18S974YIaiiH3BcyrRtYxfojtqAz9WXGGbUcg+TyKkaRKyYCG7NaafENBwhE3DdA5G7Mo64LgpS4kaawYuCPHzdYqsbCfIDPB32PVBqakK9Z+qFn+YVLd+rOr5p9VRth27hdKiacLrW47rV0PkU8Fm2FxmHfiI2sYD031vnT3oUmzJvcAnhPFxsHw4M8GIzkqoHXpYqKPgrRsmyg/PkZCrro6jqdoQJlz9R6DP/69vaxQqxCXO+pfLwppQUUqNjv1R4q1VVedpmaF8e6PWKxOhIeb/MPHF3ZRS+AgdROh1G9nj+xVAg==
-Received: from [192.168.89.2] (unknown [17.42.251.67])
-	by p00-icloudmta-asmtp-us-east-1a-100-percent-10 (Postfix) with ESMTPSA id 7A0EC1800413;
-	Fri, 08 May 2026 14:22:59 +0000 (UTC)
-Message-ID: <6ee4168e-0c80-41ed-a499-9f4a6ab3d9dd@icloud.com>
-Date: Fri, 8 May 2026 23:22:57 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ISGHnfyp"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-c8016d642b2so1476479a12.0
+        for <linux-pci@vger.kernel.org>; Fri, 08 May 2026 07:39:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778251178; x=1778855978; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=RXdrkYkgPTA26PL0ikladf23kOngeqlDqPwT8C8tFUc=;
+        b=ISGHnfypC8TkYLFtcBPjBgtTf/t1/VHlTkBaNu9CxUeh8/3DjOGCSNd0CxfBjBTWla
+         FYVR62/Z8jthfzurSzCaxFjKex4hdTGk0U4jskO3EPnZUEleJHuYd55wJ42Rab/aeMgg
+         AYZ1P9Wo41umOlANk0PV2BsGljOhHcvfNKf08HOMS7LB5ZrmRy4U+QKnVH7u6YNXNJoW
+         1QPLizm83TJiIjhweZzrhEcmqsv7wjHK55U6xSokNskri5tyIKlKUKekUqFgRVYCZeiW
+         uqRuly1BQciK35kurXe65+6o9VpIrckq2YUwK15rN0u/FrMw1UcKW2MGHAJcvMYldufO
+         C/5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778251178; x=1778855978;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RXdrkYkgPTA26PL0ikladf23kOngeqlDqPwT8C8tFUc=;
+        b=HAAZlJmdoz50gbrXb2r0bgl3kWe2m8Fn4zop+/bf0yTB7wNMxaJQPbGvLE8QYM1N1G
+         PBlh6K7Ny9hGJcsn6y4eKcw4BN2wtvRc4TZOOq1d4wWauR+Rt7BPhYiwOmY+Go+DsFZY
+         /eG8wYDmH9NZTtX1lukQyirSQzewyXYQ18Gbuh6HDlejjttbNAaEvPFJrF3qyGSLa2xE
+         Pa7P+QEP9J50gNX3P3mnELoej0jtwtgZporUl4YL8rhryWzQ9L43Xaj8yKiGkRLVOBYE
+         LOvOb9DFlDP22ndZKmgDT6wDSppGjX44Us0ZguQgP9uEgiTJkAoVEvyu6Mt2ilRX9YeH
+         MpjA==
+X-Forwarded-Encrypted: i=1; AFNElJ9bAZ1FjTt6oG6PKB89a6Z1eroHTBSK6yrv162MZsaJ2EQvPd1IBuT8AE7V1RSe0d6txAhKqPoaOQA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxg6IledDDC5sQaczzofK7IgcnZfZDIJ91MQbaXAbm0hDjaVIn4
+	oAJcUfsKAP2Q/m2maAE3bzqHg/mKwlonWV1U9AjqQnYvyvh1+m/65c2P
+X-Gm-Gg: AeBDievIIw5K10nZB89oZXirEuCrRpqagYE755dlJ5gdKjD77tzzeiYj0njdYlmbO8R
+	y0F0obaMXWynlogIvf7wsIOQR9T62dg7ezaUAuzpwEXhnaKmrpxQo9ybBD4d8MYryqLlf4a93YI
+	WRHmstPXKo3aS9YqU9F4XVBOvKLeEVn5BAh2LJ7oNYGtZJzWpzKXbfFBJnJ6XNbY4yjYIbfMogI
+	4f6HMNfB2G8rxHEhovdP9ryUv7E11DTCOsZazdEwGHwlZdQqJPaRecGyviPSlp5hiG/CxX9MKZ1
+	bRVUv+r3CbXXqs3HxUHTDMFwWI3S6wsswCBiTlH8tE98ZR+FfMdaHijW4MJ9ZFONFNtgEkkZTMo
+	5rJxLY/Ctl24Vdy9SqTLovdUagOXT31CUCOO74JDA4nyySt5SaGo3xphgPAXBYwVf8AWkxRw8F8
+	Y1hp0lvCrFhC4ikhIUmaU=
+X-Received: by 2002:a05:6a21:3393:b0:3a0:babd:b959 with SMTP id adf61e73a8af0-3aa8beb360amr7436988637.9.1778251177970;
+        Fri, 08 May 2026 07:39:37 -0700 (PDT)
+Received: from mincom1 ([115.4.79.42])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-839679c8462sm12395499b3a.38.2026.05.08.07.39.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 May 2026 07:39:37 -0700 (PDT)
+From: Jihong Min <hurryman2212@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mathias Nyman <mathias.nyman@intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Basavaraj Natikar <Basavaraj.Natikar@amd.com>,
+	linux-usb@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jihong Min <hurryman2212@gmail.com>
+Subject: [PATCH v4 0/2] AMD Promontory 21 xHCI temperature sensor support
+Date: Fri,  8 May 2026 23:39:08 +0900
+Message-ID: <20260508143910.14673-1-hurryman2212@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] usb: xhci-pci: add generic auxiliary device
- interface
-To: Guenter Roeck <linux@roeck-us.net>,
- Mathias Nyman <mathias.nyman@linux.intel.com>,
- Jihong Min <hurryman2212@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <cover.1778123510.git.hurryman2212@gmail.com>
- <effa7bd7bef8a8ea28b9e28fe47af6a58e39edf2.1778123510.git.hurryman2212@gmail.com>
- <a5739875-b8a5-4918-8850-fa4b32d5279d@linux.intel.com>
- <f47d9cc1-e39b-4199-b031-e91b8e02ab1d@icloud.com>
- <e9808463-021b-41cf-8080-0f4e45ae2ebb@roeck-us.net>
-Content-Language: en-US
-From: Jihong Min <hurryman2212@icloud.com>
-In-Reply-To: <e9808463-021b-41cf-8080-0f4e45ae2ebb@roeck-us.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Authority-Info-Out: v=2.4 cv=PqqergM3 c=1 sm=1 tr=0 ts=69fdf1c6
- cx=c_apl:c_pps:t_out a=YrL12D//S6tul8v/L+6tKg==:117
- a=YrL12D//S6tul8v/L+6tKg==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=CMyN6fOrr9rKfuqf088A:9 a=QEXdDO2ut3YA:10 a=PgRulw5oR9JgysbTFEid:22
- a=oa2-kN79Xhin27rcel9q:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTA4MDE0OSBTYWx0ZWRfX99ELyWsewQ7b
- 0c5QuzCZPaqYLv5tG2aSdIcDfqqZj8pX/Wi8Qa0lvvztYFrjCvqwGfWXGy2aM4OSNUpXmxLO53x
- ZA6jcpm8bCP5XvhGZp3TjKNZNroI6XYHQ9UJuwx2B7db9LZSfup7aJ9KK0o3OE+ZJ74hmZkT1iO
- KQ359C6VWTdB0uqsjrDQFkUus8AKbvXjZiTfV5UIsIEc2LgTNMeVpOW7hJl2WV6K4ma0EEGxG88
- Mhh8Z0epb1lHSCW4yCcUKMOlu0t12LZh+ei6mB3Oddxe0LAq0qvBjZzH9R31XUUSTZIMml4mCHT
- 3ZoeAqbVU6tWfO+mgiWnHG+P5Ug/5Cf/Qw/M2tyV3vTKTLr+HQ+tI5ecjbed0c=
-X-Proofpoint-GUID: h6i_y0cwKY-r93VxDF3xNbewDOJybE-u
-X-Proofpoint-ORIG-GUID: h6i_y0cwKY-r93VxDF3xNbewDOJybE-u
+Content-Transfer-Encoding: 8bit
 
-> Maybe I am missing something, but it seems to me that 
-> CONFIG_USB_XHCI_PCI_PROM21
-> should be just as built-in as CONFIG_USB_XHCI_PCI.
+This series adds temperature monitoring for AMD Promontory 21 (PROM21)
+xHCI PCI functions.
 
+Patch 1 adds a small PROM21-specific xHCI PCI glue driver. USB host
+operation is delegated to common xhci-pci code; the PROM21 glue only owns
+the PCI binding and publishes an auxiliary "hwmon" child device for
+optional sensor support. The glue is built-in only when enabled, matching
+built-in xhci-pci, so PROM21 controllers are not left unbound during early
+boot if an optional module is absent.
 
-Agreed. I changed USB_XHCI_PCI_PROM21 to a bool depending on
+Patch 2 adds the auxiliary hwmon driver. It exposes temp1_input as
+prom21_xhci, does not wake the parent PCI device for sensor reads, and
+documents the register access and empirical observation method used to
+identify the register pair and conversion formula.
 
-USB_XHCI_PCI=y, so the PROM21 PCI glue is built in whenever it owns the
-PROM21 xHCI PCI binding. The hwmon sensor driver remains optional and can
-still be built as a module.
+Changes in v4:
+- Move PROM21 PCI handling into a PROM21-specific xHCI PCI glue driver.
+- Make USB_XHCI_PCI_PROM21 built-in only when enabled.
+- Rename the hwmon driver/config/name to prom21-xhci,
+  SENSORS_PROM21_XHCI, and prom21_xhci.
+- Return -ENODATA for suspended parent devices and invalid raw values.
+- Remove temp1_label and the runtime PM module parameter.
+- Simplify hwmon remove/read lifetime handling.
+- Expand hwmon documentation with register access, runtime PM behavior,
+  sysfs lookup, and observation details.
 
-I will include this in v4.
+Jihong Min (2):
+  usb: xhci-pci: add AMD Promontory 21 PCI glue
+  hwmon: add AMD Promontory 21 xHCI temperature sensor support
 
-Sincerely,
-Jihong Min
+ Documentation/hwmon/index.rst       |   1 +
+ Documentation/hwmon/prom21-xhci.rst |  99 +++++++++++
+ drivers/hwmon/Kconfig               |  10 ++
+ drivers/hwmon/Makefile              |   1 +
+ drivers/hwmon/prom21-xhci.c         | 250 ++++++++++++++++++++++++++++
+ drivers/usb/host/Kconfig            |  18 ++
+ drivers/usb/host/Makefile           |   1 +
+ drivers/usb/host/xhci-pci-prom21.c  | 111 ++++++++++++
+ drivers/usb/host/xhci-pci.c         |  11 ++
+ 9 files changed, 502 insertions(+)
+ create mode 100644 Documentation/hwmon/prom21-xhci.rst
+ create mode 100644 drivers/hwmon/prom21-xhci.c
+ create mode 100644 drivers/usb/host/xhci-pci-prom21.c
+
+-- 
+2.53.0
