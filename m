@@ -1,169 +1,135 @@
-Received: from mail-dy1-f178.google.com (mail-dy1-f178.google.com [74.125.82.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 413451EFFB7
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 20:36:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2756335AC01
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 20:46:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778272608; cv=none; b=IfiDOn0wdrWxysa7XAvxHv5TyG1Gc1vH8yyyuGjhcCMiKKJjtQgQZH4QlmOh653H2jE+4k/UdpfD1UkxCXTTZ5qrEU9EVd9M5mprSY0gxvlkI4bKcg8jmwrWl9t0098yJJslDe+QXA8pAf1ae4bHlUNbEXwEl8z2pUm3JLfCoOk=
+	t=1778273214; cv=none; b=bYleiRxDOx0wyDJ84riDDpcV7GcGE5pjA+xZiz7/50vOTvgjp5OdwBvRZsbhyNzhay4JfBU3+xl7L15Kkm9W8v/RhtebTPEFlpRyoyL2qvxKIy0sz4Jb1nKK90lzOsu37bQM0YCM62dclF2I1wRFBmm6lunq5AsMSgT5R9Db8Tc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778272608; c=relaxed/simple;
-	bh=r16uspIZznIhMXpG4T/bkzN1F3PDMKLiIzc6CunoQAE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OP7tksFpGvNhmvwNnGsGIssPE1WaP5bzxt/NoKS0E+eSUi24O1R6oO0uTVvmul3s9dmMWu3zc+ev+mONvsrvTQSEw/APCJaJyiKyE9g+8vGLODbvxSZgKhf8sf/O1rZ8OuWwWKOcB8IgLP6Qp3ViHuxK2g+5wBN3wRXIC3zRDOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=JL3ZJ39o; arc=none smtp.client-ip=74.125.82.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1778273214; c=relaxed/simple;
+	bh=SwGiKEfKroqIggk9fVheRXzU+cSwwRWydHc5j+s/kCo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=CWYiPWSpcJtMYIy6KFKXeYecXCATZg8l1I4t4aWM6Sb6cFca+p9LrOiKEYfGkeHo1lTHb1A23vI1Ry+slMXWG4NO4RZ1uOOsCOo6f4EfVsJ/lbjl1xiDw739zb2lq35cj3Sk1mawc6w3U6iwKjjIkxr2PLCxtTmSFxBIvF+KG0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E6BbsElJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="JL3ZJ39o"
-Received: by mail-dy1-f178.google.com with SMTP id 5a478bee46e88-2ecf9e398f4so6326911eec.1
-        for <linux-pci@vger.kernel.org>; Fri, 08 May 2026 13:36:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1778272605; x=1778877405; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=it9s5SDS+9FA8rWlzgMlowzHbZDxtLnrq7mFV1fkn1U=;
-        b=JL3ZJ39oRHxYbgVSZMAxGm2Fke9GB4gduf9FOIT8iInsuGmpoGHU5haJKHFO/p/0Mh
-         Vc1RyaycpOw6bzgjR5S526NrkpjLlyUNvzzNPMqVrFxQh1w+sc5M4+DfipbFOhcBD2GB
-         CY92TQ+NNh5og8L66Pdv7vGhQ1L23Hww5opjU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778272605; x=1778877405;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=it9s5SDS+9FA8rWlzgMlowzHbZDxtLnrq7mFV1fkn1U=;
-        b=EP7tVRKDOnnCthTT6BWGUzuzbpwxNez9ek4cJ4Gbbnd+oGE9PECRZtFZfSfw36HKZV
-         ojXQNMpb+4aOyt3rdXjp2mZwgWWwFLHC0nZxLS0P9Vopit4j2V6emGluHifzYnJRfWMh
-         huem216wc4yC0pOzwSzUMmsLXfu0O8QkgIu3+Rk6Fu3jLKzCaI8GFn5nwh/c9fl26Yr5
-         gHaw3AxWl4Bjq1O7eWFpXnyaZzM/Hqf1vEETAFR8MR7MuRHVkj88r58PydAVwcd0Y621
-         pCS4u5iGLesaUn5GvFywK7XOYl6egoJY/I3IvHpfpu8gEJCuJB+QFJkNTUhyzOzS5oh4
-         Wegw==
-X-Gm-Message-State: AOJu0YxG9OewshDIye8nhBZHm+YMl1nAdfVVEKzjuC+nyzid7JvLf9Dp
-	/s4gNnsZPQPQ2lkvhiCsIMtUN9CIiaKSVp6Ay4XC/4rMOTyIN5n0d/uqg/N/H4YGig==
-X-Gm-Gg: Acq92OFgOTeNCtiATgATN1IzFJ9AHGtPjWs06zfnCfajTN8v/BAPLRRSb+KEU9S0cyD
-	CU/XuStMETyVN0E9rWM7DGhgm9K6IkbpnnU7NgzWXHhFKqV0aV1cZi8Kn4v7EfD3Fk5oc+eDGBm
-	1mUTwy+SlcHGdyEd5U2ZHSJa0+kdDbmlY4C46SYkTI3Sasxbk1h1ju1LNBE5n0XCWpYQPlBzpvu
-	SFQHgaYYaCJNg1Xy6pv+VLsYmwTVyQ4I6WY7o2zHKg084ymSQ2gov2MPg6sLXB4B1LG8Pep7Uf7
-	oI6sDbmBRxg2yQ2E8xd+mS+wgQfboyWKyIidjpbm0xbNNGlemM9glmC2S1FbOu9YggrrFosbm5Q
-	2Hj+95XNszV0YzGLs/wNIqozxf0vFsaMxD237oY2qQkFeLOnewjJbGqHRWB94iyzRWb/XuSMvuK
-	wEO5kfeJOITp3uqBK7iTq+pV5aKu1WXin1Z8f29B+qLhrgA9Mfw0egS8rQvpUI6w==
-X-Received: by 2002:a05:7301:3f16:b0:2c9:1943:e7ff with SMTP id 5a478bee46e88-2f54b35fb00mr6500611eec.10.1778272605216;
-        Fri, 08 May 2026 13:36:45 -0700 (PDT)
-Received: from localhost ([2a00:79e0:2e7c:8:68c8:9c69:b0fb:a687])
-        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-2f88885b820sm3683873eec.20.2026.05.08.13.36.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 08 May 2026 13:36:44 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	linux-kernel@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v3] PCI/portdrv: Allow probing even without child services
-Date: Fri,  8 May 2026 13:36:29 -0700
-Message-ID: <20260508133629.v3.1.I5fd5d83f518681b3949d8ab2f16ba8244fd3e774@changeid>
-X-Mailer: git-send-email 2.54.0.563.g4f69b47b94-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E6BbsElJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0A71C2BCF4;
+	Fri,  8 May 2026 20:46:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778273213;
+	bh=SwGiKEfKroqIggk9fVheRXzU+cSwwRWydHc5j+s/kCo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=E6BbsElJSsC8v3Agg3KTgrMbntHjhror5HYFkXY5zoxe+dwv8VGFsJMI3TXXPNd9N
+	 CgyYLHClJpY7/g3OicqMf+cwRDJcEvN/URx492771Axl0KwkBYONQ+Br3NcNmDXMdi
+	 IxIfYXle77AaRVpU7r6XMFB3/NSgB5Or2ZWsPSGKPp6eCrPhXgMopARrGnFeKFvjoa
+	 qsUHxWbMQVmRQz7CGil9/6ENDLM/Jk5GSqznJ5RjCSSx/8Y6rAPk+xCKdmfuau2lGu
+	 AYNCdO79uQmhqN4IVYzfJT/HQprInkR+mGsC0FAizg8/1lNTtgPG724Q4t6haaQ3A1
+	 2Oq4WVthj+42A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 5/7] vfio/pci: Add PCIe TPH enable/disable support
+Reply-To: sashiko@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260508064053.37529-6-fengchengwen@huawei.com>
+References: <20260508064053.37529-6-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 08 May 2026 20:46:52 +0000
+Message-Id: <20260508204652.F0A71C2BCF4@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The PCIe port driver fails to probe if it finds no child services,
-presumably under the assumption that the driver is not useful in that
-case. However, the driver *can* still be useful for power management
-support -- namely, it still configures the port for runtime PM / D3,
-which may be important for allowing a bridge to enter low power modes.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] TPH operations access the device's PCI configuration space without=
+ ensuring the device is in the D0 power state, risking accesses while suspe=
+nded (D3).
+- [High] `vdev->igate` is insufficient to prevent bitfield tearing on `pdev=
+->tph_enabled` against other PCI subsystems.
+--
 
-Thus, allow probe to succeed even if no IRQs and no child services are
-available. This also mirrors existing behavior for ports that have no
-PCIe capabilities, where we'd also probe successfully.
+commit e6a89cf03d6c51144466205cce4a3bf38731b5db
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-This change is a bit more important after commit f5cd8a929c82 ("PCI:
-dwc: Remove MSI/MSIX capability for Root Port if iMSI-RX is used as MSI
-controller"), because it's common for some DWC-based systems to:
+vfio/pci: Add PCIe TPH enable/disable support
 
-1. have only have the "aer" and "pcie_pme" port services available and
-2. not define legacy INTx interrupts properly in their device tree.
+This patch adds support for enabling and disabling the TPH function via
+mode selection. It also disables TPH when ownership is taken or when
+userspace closes the device FD.
 
-After commit f5cd8a929c82, such systems may fail
-pcie_init_service_irqs() and so exit with -ENODEV.
+> Serialize all TPH operations under vdev->igate mutex using scope-based
+> automatic locking to prevent hardware control and bitfield races.
 
-Link: https://lore.kernel.org/all/nyada24tqwlkzdceyoxbzitzygvp4elvj5oajnqdwb33xkcdwk@76vnrx45fsfd/
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-I didn't get an answer to my responses to the last review feedback:
-https://lore.kernel.org/all/adg5IPWdCSv1UqFE@google.com/
-So I've attempted to address the feedback without churning all the port
-service drivers.
+If pdev->tph_enabled is a bitfield inside struct pci_dev that shares a
+memory word with other core PCI bitfields (like state_saved or
+is_busmaster), will vdev->igate prevent bitfield tearing?
 
-Changes in v3:
- * defer pci_set_master() until we really know we have some child
-   service
+Since other kernel subsystems modify these neighboring bitfields without
+holding the VFIO-private igate mutex (such as the PCI PM core modifying
+state_saved during runtime suspend), concurrent updates could result in
+data races and lost state updates.
 
-Changes in v2:
- * clear master when we have no child services
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 0e97b128fd637..bfc7e87d190f4 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -738,6 +738,9 @@ void vfio_pci_core_close_device(struct vfio_device *c=
+ore_vdev)
+>  #endif
+>  	vfio_pci_dma_buf_cleanup(vdev);
+> =20
+> +	/* Disable TPH when userspace closes the device FD */
+> +	pcie_disable_tph(vdev->pdev);
+> +
+>  	vfio_pci_core_disable(vdev);
 
- drivers/pci/pcie/portdrv.c | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
+Is it safe to access the device's PCI configuration space here?
 
-diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-index 2d6aa488fe7b..a79a52560849 100644
---- a/drivers/pci/pcie/portdrv.c
-+++ b/drivers/pci/pcie/portdrv.c
-@@ -330,7 +330,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
-  */
- static int pcie_port_device_register(struct pci_dev *dev)
- {
--	int status, capabilities, i, nr_service;
-+	int status, capabilities, i;
- 	int irqs[PCIE_PORT_DEVICE_MAXSERVICES];
- 
- 	/* Enable PCI Express port device */
-@@ -343,7 +343,6 @@ static int pcie_port_device_register(struct pci_dev *dev)
- 	if (!capabilities)
- 		return 0;
- 
--	pci_set_master(dev);
- 	/*
- 	 * Initialize service irqs. Don't use service devices that
- 	 * require interrupts if there is no way to generate them.
-@@ -355,29 +354,20 @@ static int pcie_port_device_register(struct pci_dev *dev)
- 	if (status) {
- 		capabilities &= PCIE_PORT_SERVICE_HP;
- 		if (!capabilities)
--			goto error_disable;
-+			return 0;
- 	}
- 
- 	/* Allocate child services if any */
--	status = -ENODEV;
--	nr_service = 0;
- 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
- 		int service = 1 << i;
- 		if (!(capabilities & service))
- 			continue;
--		if (!pcie_device_init(dev, service, irqs[i]))
--			nr_service++;
-+		pcie_device_init(dev, service, irqs[i]);
- 	}
--	if (!nr_service)
--		goto error_cleanup_irqs;
- 
--	return 0;
-+	pci_set_master(dev);
- 
--error_cleanup_irqs:
--	pci_free_irq_vectors(dev);
--error_disable:
--	pci_disable_device(dev);
--	return status;
-+	return 0;
- }
- 
- typedef int (*pcie_callback_t)(struct pcie_device *);
--- 
-2.54.0.563.g4f69b47b94-goog
+Since vfio_pci_core_disable() is explicitly responsible for waking up the
+device via pm_runtime_resume(), pcie_disable_tph() is being called before
+the device is ensured to be in the D0 power state.=20
 
+Accessing the config space of a suspended device could cause PCIe errors
+like Unsupported Requests.
+
+[ ... ]
+
+>  	switch (op.op) {
+>  	case VFIO_PCI_TPH_GET_CAP:
+>  		return vfio_pci_tph_get_cap(vdev, &op, uarg + minsz);
+> +	case VFIO_PCI_TPH_ENABLE:
+> +		return vfio_pci_tph_enable(vdev, &op, uarg + minsz);
+> +	case VFIO_PCI_TPH_DISABLE:
+> +		return vfio_pci_tph_disable(vdev);
+
+Are these TPH capability accesses safe without a pm_runtime_resume_and_get()
+and pm_runtime_put() wrapper?
+
+Userspace could potentially access the config space while the device is idle
+and runtime suspended.
+
+[ ... ]
+
+> @@ -2257,6 +2302,9 @@ int vfio_pci_core_register_device(struct vfio_pci_c=
+ore_device *vdev)
+>  	if (!disable_idle_d3)
+>  		pm_runtime_put(dev);
+> =20
+> +	/* Disable TPH when taking over ownership of the device */
+> +	pcie_disable_tph(pdev);
+> +
+
+Could this pcie_disable_tph() execute while the device is suspending?
+
+It is called after pm_runtime_put(), meaning the PM core may have already
+started asynchronously suspending the device, potentially leading to config
+space accesses while the device is in D3.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508064053.3752=
+9-1-fengchengwen@huawei.com?part=3D5
