@@ -1,117 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C79F165192
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:43:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1EC8635D
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 03:45:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778211789; cv=none; b=V7CGlPMxdbvS/T0SycUoIGO49F5KhQpzN4Y6+IAEdptMseUUWcMBEs/Qp1/NWq/NCjum7vQ0MG7GxmzLk61PviZfQ/A8L3dX2t87mYxchbRNmvTozX1WKZqaHowcIV8RGbT1peQbd93bTnrvuaYMKCo3i9DIt2VkPh7P01W/+iQ=
+	t=1778211944; cv=none; b=qvB0RDgDnzJ/wstCOEBtTFdW6MBGEMVTSfVpJF6jdOUgXMZ1wWMW9k0Pbsv7FzU5afzx+BNmsdeOHfP+ZNdzu2eHVevtwMADHXhP1R89HV0jPkrrkexhZgdSpmoogjMbX8JfhXOn3GXChbSHT9CCG9FyXcvFkmssTo82jNRSeWs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778211789; c=relaxed/simple;
-	bh=e648FWE7GOnQcDzOwhFweU4Cuje+PbzlCVNdyxsRpds=;
+	s=arc-20240116; t=1778211944; c=relaxed/simple;
+	bh=TZvjDkRrsvyYtai6/4fqD71zkwm9S1hQzyg2/Z0clOw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=KVOf5ezenM6l+nW9CByWfN8gONu/Uasgrqqh6MCpqjewavODb2qnl1HW5CIAAMF+33MQ63C/yYRhQkGnqdEGko6oNiWMGJIfgrMNAZBO3t0UPB434I95WWSXw8BgnazwumSR7MEXYXn6hJQwrWMx5Km6QH5pSdtg2oJ/qPBBO2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nHv5SGGl; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=jZ6ElC7j2Js1//6aFJ6icubOag3AaMY5bTZKVDtiNTUeBW9mzEgDHwezsU2eWk4PxXyVKnmbGpBo+r1+wIcYZYTyd5S4sTUnLs7pLDrdlWYNE5gzKNo5TsYR9XVWsNqiUTKqudYyCtKJiQt+BCcHwdBhG1vBj4ll5uCPyrSxSPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BjOL5F9w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nHv5SGGl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58D6DC2BCB0;
-	Fri,  8 May 2026 03:43:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BjOL5F9w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9D2FC2BCB0;
+	Fri,  8 May 2026 03:45:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778211789;
-	bh=e648FWE7GOnQcDzOwhFweU4Cuje+PbzlCVNdyxsRpds=;
+	s=k20201202; t=1778211944;
+	bh=TZvjDkRrsvyYtai6/4fqD71zkwm9S1hQzyg2/Z0clOw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=nHv5SGGlobC1+OcSWXc1wVCOJhfUgaXsFICvYy16eX43mOfaWuBXYYfhdLRuS+0Ax
-	 Ivd4TkYozqrGnEfdGhfnTRhWoMcXQyUt+JZc3pO2s1adfS+pk7vd8/RFFF+XSzJ4uQ
-	 GqxAMU9H1wJ90BkcxExzpMfXyVmHEJA9T1pxvad1ky5lXjoXD35AtHDp9b6brlvoHr
-	 xxjg/bOz32QpmjqavOgZu0ctz+uNe4JUdbJcRxJ1dzvR5E1dpQa6AOu0YCNHz8ONS6
-	 tU6dgxFpias40+fUU01DSq47TKG0tfkwYmXNKYh2yiMYpOfrkgKPpZ+ctbMOIFWfo9
-	 X/3UV3Gn8vOqA==
+	b=BjOL5F9wNf168Lrif69MpgcWe0vYnJpcmTVMAeUJ+hLgUxeRzTfDB8bh5WjnBJVzE
+	 6VBpuJIfPIfTNXj/iyx9dEacuDOpsuMKmwlH7y3a2Wywgt18K/GlCgSAvVyid9E64z
+	 lMcOpUL0EszS4BuYBTs0dqp4UGix2oC4F3+XM9r3tmPUi2KkxBXDAVvlw80j9ggZdz
+	 oRi8l/SYbJvJVJSyoLXCs3jv0n6JVg8KuD/gmOa8lxkTAlLFC+TcW5G5tsUrdufy7s
+	 dQmRYDgWim+/xOdtt6jgikYwjLLYsZBFrUaUyLaCdOv2gOkHLeSwHDC6mSbaEy55rc
+	 PeG9/rb7cJ2JQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 05/18] rust: add bindings for hash.h
+Subject: Re: [PATCH 02/18] X.509: Make certificate parser public
 Reply-To: sashiko@lists.linux.dev
 To: alistair23@gmail.com
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260508031710.514574-6-alistair.francis@wdc.com>
-References: <20260508031710.514574-6-alistair.francis@wdc.com>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260508031710.514574-3-alistair.francis@wdc.com>
+References: <20260508031710.514574-3-alistair.francis@wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 03:43:08 +0000
-Message-Id: <20260508034309.58D6DC2BCB0@smtp.kernel.org>
+Date: Fri, 08 May 2026 03:45:43 +0000
+Message-Id: <20260508034543.D9D2FC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] Unintended exposure of <linux/hash.h> to Rust bindings.
-- [Low] Alphabetical sorting rules are violated in bindings_helper.h and he=
-lpers.c.
+- [Medium] The commit message claims to adjust the `#include <linux/time.h>=
+` directive to `#include <linux/time64.h>`, but the patch fails to do so.
 --
 
-commit d4762d094c0da15881ab9c843fc2316ba4792255
-Author: Alistair Francis <alistair.francis@wdc.com>
+commit b079c32d2fd414877e2d8a8b3e079a1f6c2dc220
+Author: Lukas Wunner <lukas@wunner.de>
 
-rust: add bindings for hash.h
+X.509: Make certificate parser public
 
-This commit exposes crypto_shash_descsize(), crypto_shash_digestsize(),
-and crypto_free_shash() to Rust by adding them to the C helpers and
-updating the bindings include lists.
+This commit makes struct x509_certificate and its associated parsing functi=
+ons
+public to allow CMA-SPDM access to the Subject Alternative Name. It moves
+these definitions from the private x509_parser.h to a new public header.
 
-> diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_hel=
-per.h
-> index 446dbeaf08668..d73142078240f 100644
-> --- a/rust/bindings/bindings_helper.h
-> +++ b/rust/bindings/bindings_helper.h
-> @@ -30,6 +30,7 @@
-> =20
->  #include <linux/acpi.h>
->  #include <linux/gpu_buddy.h>
-> +#include <crypto/hash.h>
->  #include <drm/drm_device.h>
->  #include <drm/drm_drv.h>
-
-This isn't a bug, but does this addition break the alphabetical sorting of
-the includes?  It looks like <crypto/hash.h> is being inserted between
-<linux/gpu_buddy.h> and <drm/drm_device.h>.
+>     The private header file x509_parser.h previously included <linux/time=
+.h>
+>     for the definition of time64_t.  That definition was since moved to
+>     <linux/time64.h> by commit 361a3bf00582 ("time64: Add time64.h header
+>     and define struct timespec64"), so adjust the #include directive as p=
+art
+>     of the move to the new public header file <keys/x509-parser.h>.
 
 [ ... ]
 
-> @@ -60,6 +61,7 @@
->  #include <linux/file.h>
->  #include <linux/firmware.h>
->  #include <linux/fs.h>
-> +#include <linux/hash.h>
->  #include <linux/i2c.h>
+> diff --git a/include/keys/x509-parser.h b/include/keys/x509-parser.h
+> new file mode 100644
+> index 0000000000000..8b68e720693a6
+> --- /dev/null
+> +++ b/include/keys/x509-parser.h
+> @@ -0,0 +1,55 @@
+> +/* SPDX-License-Identifier: GPL-2.0-or-later */
+> +/* X.509 certificate parser
+> + *
+> + * Copyright (C) 2012 Red Hat, Inc. All Rights Reserved.
+> + * Written by David Howells (dhowells@redhat.com)
+> + */
+> +
+> +#ifndef _KEYS_X509_PARSER_H
+> +#define _KEYS_X509_PARSER_H
+> +
+> +#include <linux/cleanup.h>
+> +#include <linux/time.h>
 
-The commit message mentions adding bindings for crypto/hash.h.  Is the
-addition of linux/hash.h intended here?
+Does this include directive match the intention stated in the commit messag=
+e?
 
-It doesn't appear that utilities from linux/hash.h are being used, which
-could unnecessarily increase bindgen execution time and pollute the
-Rust namespace.
-
-> diff --git a/rust/helpers/helpers.c b/rust/helpers/helpers.c
-> index 625921e27dfbc..6372e14f8419c 100644
-> --- a/rust/helpers/helpers.c
-> +++ b/rust/helpers/helpers.c
-> @@ -60,6 +60,7 @@
->  #include "dma-resv.c"
->  #include "drm.c"
->  #include "err.c"
-> +#include "hash.c"
->  #include "irq.c"
->  #include "fs.c"
->  #include "gpu.c"
-
-This isn't a bug, but does inserting hash.c here also bypass alphabetical
-sorting?
-
-While it is placed before irq.c, both fs.c and gpu.c appear further down in
-the existing list, so placing hash.c after gpu.c might keep this block more
-properly ordered.
+The commit message mentions adjusting the include to <linux/time64.h>, but =
+it
+appears this still includes <linux/time.h>.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508031710.5145=
-74-1-alistair.francis@wdc.com?part=3D5
+74-1-alistair.francis@wdc.com?part=3D2
