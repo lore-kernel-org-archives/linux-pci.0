@@ -1,165 +1,204 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E3C531196F
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 20:01:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65FD22F0680
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 20:03:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778270465; cv=none; b=t6uM3ODViL1krt61cbW3B7yhO7aqSSjHJ6zEraOEEkcWO1sngH5F3+zOkk5qdN5d5deVGPU020790CpuIF7U2qBuaXdNW9Sr0ileDBPFqTddh2Tz4Te22yAm0oa6hwlsINyokzQs1pr5h/12hcGpGT4SyqPP4/rWT+QK+C4A2H8=
+	t=1778270632; cv=none; b=gTGJJ844pOpDOS6e3Z4hR+6ZEDEr+VCZNnaB/IPIjDkMvBU4xGK3sOfzVOn+Gn6fQpWCWGl2gAFrjEd0BRFMaBvHgLVieN5JJp8lxxhJ+iG+xhovpik/rdi3Nmh7tcJhMiLwEdcb1etP6+qcXnPERrtxq4LjDXnM4oN4WYOACho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778270465; c=relaxed/simple;
-	bh=GJHIQYHdExoFgvU+cmgVz3hyDeMUKMsUNcryW43m6cw=;
+	s=arc-20240116; t=1778270632; c=relaxed/simple;
+	bh=l59vJd2IC/wcrjIDYyYhP5FAMAaAYWBdyRI+ajevnOU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LGOL4blSmqwvlr+yNK+Y75cm9Rv71Sat2b0wofYkWuNOeAhEPdt8838sqeRlPkyEKbBeLI1/1MPh99Gql+U9Oun6z8jBJT0iwT3qb9UjskPIuB2flCvv2ULN532LVvRmw52xO5ecBGuA/eGpFwwvfpTANN9weVEXdaQA84kwXqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n1PgKlEt; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=WBxIUcZVqfTK9jPdT8MkNZN14d4DZGvo1cIEbMxZIJB4cKuacTWRa4zqTItES1SROSSwGoQddoMXZbZzVX1GznDlTHyx1thZhmgGPzCnTBS+lZSBFjYpDIcTb1AYvhhngIViKrXnzjKx7ncwaZjbYafxuAbO7qN7O+vUs4qouVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QKzwgDzb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n1PgKlEt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8388C2BCB0;
-	Fri,  8 May 2026 20:01:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QKzwgDzb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3E20C2BCB0;
+	Fri,  8 May 2026 20:03:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778270464;
-	bh=GJHIQYHdExoFgvU+cmgVz3hyDeMUKMsUNcryW43m6cw=;
+	s=k20201202; t=1778270632;
+	bh=l59vJd2IC/wcrjIDYyYhP5FAMAaAYWBdyRI+ajevnOU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=n1PgKlEtcqsPJQdkglokQsXaKg1Gl1DcX7jgKUjwzM09LD0iTqyjhbZJQ2G1jCTyF
-	 89aUJPMq2POaGYShNpBbNilKKc9tpQ9nMgEkGkLWF3bcuqR11ed3i+fqTtD4CfziQk
-	 xwDiYs/sMiiYiT76WoYYFHQy6+nhjh0EQ6R1hzUkeE0OQePJCpkzC+Y4xLhZ+3fJdm
-	 +vYZ+5xWDZIwTSgR5DseoCcll/3ZIdJvWjuDAIdOy6HIK3etVfPDba/zI1A3MPJTFi
-	 OOQxKDmeoR3KWH6ymJw86T0FUE55kmao5+rEzy/AmGAus3FyzZqg2TwMPZOFinyZJz
-	 kFcuRE8IDOHtA==
+	b=QKzwgDzbtLZw6YjxdW9K1AzLoI0no4HmIaGM6SsKLlb2tx0QZoEZRRS42MBAb7NoZ
+	 mc4nX2mb/CXmXb6gTBUphdl85yeNNSWcTWCE799Y1gwatgiSMzOdL+ofiVQC1qMgDE
+	 JMQQtxmSt7AwQuVKGS8etO5Qqdyi66vepEJ4zAnim2BMtqam0tFyjA8KW4vRbXdl7w
+	 y1bVruuXurCoQuie3f5E34ikkypZcMBG/LOoI2u5LPc8PTgk/XAXcCYApsl7ynUHQO
+	 NX6Zhkki/RTKLLQM3GDvHR/LltdImZJgbXiCHXLDpLsbhAdy3LIb+mTNLXE+2hWqCJ
+	 jh9Ns/8+FINIA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: qcom: Handle mixed PERST#/PHY DT configuration
+Subject: Re: [PATCH v8 4/7] vfio/pci: Add PCIe TPH interface with capability
+ query
 Reply-To: sashiko@lists.linux.dev
-To: "Qiang Yu" <qiang.yu@oss.qualcomm.com>
+To: "Chengwen Feng" <fengchengwen@huawei.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260508-mix_perst_phy_dts-v1-1-9eff6ee9b51a@oss.qualcomm.com>
-References: <20260508-mix_perst_phy_dts-v1-1-9eff6ee9b51a@oss.qualcomm.com>
+In-Reply-To: <20260508064053.37529-5-fengchengwen@huawei.com>
+References: <20260508064053.37529-5-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 20:01:04 +0000
-Message-Id: <20260508200104.B8388C2BCB0@smtp.kernel.org>
+Date: Fri, 08 May 2026 20:03:51 +0000
+Message-Id: <20260508200351.D3E20C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] Probing fails for legacy device trees due to a GPIO request confli=
-ct (-EBUSY).
-- [High] Unconditional recursion in `qcom_pcie_parse_perst()` duplicates th=
-e `pcie->reset` GPIO descriptor for every descendant node.
-- [High] Missing `phy_exit()` cleanup on error path in `qcom_pcie_parse_por=
-t()` causes hardware state and resource leak.
+- [High] UAPI Backwards Compatibility Breakage and Buffer Overflow Risk
+- [High] Missing memory_lock Causes Hardware State Races During Reset
+- [Medium] UAPI Bloat / Bypassing VFIO_DEVICE_FEATURE Framework
+- [Medium] Incorrect Module Parameter Scope Limits Vendor Drivers
 --
 
-commit 1a0ea25971de08bb67bf6aea3574504602a6d020
-Author: Qiang Yu <qiang.yu@oss.qualcomm.com>
+commit 83318520665fc31c05135b8adff081970464291e
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-PCI: qcom: Handle mixed PERST#/PHY DT configuration
+vfio/pci: Add PCIe TPH interface with capability query
+   =20
+Add VFIO_DEVICE_PCI_TPH IOCTL to allow userspace to query device TPH
+capabilities, supported modes, and steering tag table information.
 
-The driver currently supports PERST# and PHY DT configuration on either the
-RC or RP node. This commit adds support for mixed setups where PHY is on
-the RP node but PERST# remains on the RC node by reusing the RC PERST#
-GPIO and emitting a warning.
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 0c771064c0b84..40bf5aa9fd0be 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -60,6 +60,12 @@ static bool disable_denylist;
+>  module_param(disable_denylist, bool, 0444);
+>  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disa=
+bling the denylist allows binding to devices with known errata that may lea=
+d to exploitable stability or security issues when accessed by untrusted us=
+ers.");
+> =20
+> +#ifdef CONFIG_PCIE_TPH
+> +static bool enable_unsafe_tph_ds_mode;
+> +module_param(enable_unsafe_tph_ds_mode, bool, 0444);
 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index 9fdfc88ac1512..8235961d692f2 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+Vendor-specific VFIO drivers (such as mlx5_vfio_pci or hisi_vfio_pci) load
+the shared vfio_pci_core.ko library directly and do not depend on vfio_pci.=
+ko.
+
+If users of these vendor drivers want to enable unsafe TPH DS mode, they
+have no way to do so unless they explicitly load the generic vfio_pci drive=
+r,
+which alters the core state for all bound devices.
+
+Should this parameter reside directly in vfio_pci_core.c instead?
 
 [ ... ]
 
-> @@ -1703,6 +1704,11 @@ static int qcom_pcie_parse_perst(struct qcom_pcie =
-*pcie,
->  	struct gpio_desc *reset;
->  	int ret;
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 3f8d093aacf8a..0e97b128fd637 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+[ ... ]
+> @@ -1461,6 +1463,54 @@ static int vfio_pci_ioctl_ioeventfd(struct vfio_pc=
+i_core_device *vdev,
+>  				  ioeventfd.fd);
+>  }
 > =20
-> +	if (pcie->reset) {
-> +		reset =3D pcie->reset;
-> +		goto skip_perst_parsing;
-> +	}
+> +static int vfio_pci_tph_get_cap(struct vfio_pci_core_device *vdev,
+> +				struct vfio_device_pci_tph_op *op,
+> +				void __user *uarg)
+> +{
+> +	struct pci_dev *pdev =3D vdev->pdev;
+> +	struct vfio_pci_tph_cap cap =3D {0};
+> +	u8 mode;
 > +
->  	if (!of_find_property(np, "reset-gpios", NULL))
->  		goto parse_child_node;
-> =20
-> @@ -1721,6 +1727,7 @@ static int qcom_pcie_parse_perst(struct qcom_pcie *=
-pcie,
->  		return PTR_ERR(reset);
->  	}
-> =20
-> +skip_perst_parsing:
->  	perst =3D devm_kzalloc(dev, sizeof(*perst), GFP_KERNEL);
+> +	if (op->argsz < offsetofend(struct vfio_device_pci_tph_op, cap))
+> +		return -EINVAL;
 
-When pcie->reset is configured, this jumps to skip_perst_parsing, adds
-pcie->reset to the port's list, and then falls through to parse_child_node:
+If struct vfio_pci_tph_cap is extended in future kernel releases, offsetofe=
+nd()
+will increase. Will new kernels reject valid requests from older userspace
+binaries with -EINVAL, breaking backwards compatibility?
 
-parse_child_node:
-	for_each_available_child_of_node_scoped(np, child) {
-		ret =3D qcom_pcie_parse_perst(pcie, port, child);
-		if (ret)
-			return ret;
-	}
+> +
+> +	mode =3D pcie_tph_get_st_modes(pdev);
+> +	/* Hide unsafe device-specific (DS) mode by default */
+> +	if (!enable_unsafe_tph_ds_mode)
+> +		mode &=3D ~PCI_TPH_CAP_ST_DS;
+> +	if (mode =3D=3D 0 || mode =3D=3D PCI_TPH_CAP_ST_NS)
+> +		return -EOPNOTSUPP;
+> +
+> +	if (mode & PCI_TPH_CAP_ST_IV)
+> +		cap.supported_modes |=3D VFIO_PCI_TPH_MODE_IV;
+> +	if (mode & PCI_TPH_CAP_ST_DS)
+> +		cap.supported_modes |=3D VFIO_PCI_TPH_MODE_DS;
+> +	cap.st_table_sz =3D pcie_tph_get_st_table_size(pdev);
+> +
+> +	if (copy_to_user(uarg, &cap, sizeof(cap)))
 
-Since pcie->reset remains set globally, does this recursively call itself
-for all descendant nodes, skip property parsing again, and append the exact
-same GPIO descriptor to the port's list for every descendant?
+If the capability structure grows in the future, will the kernel write beyo=
+nd
+the bounds of an older userspace application's allocated buffer?
 
-Will this redundantly toggle the same GPIO multiple times and unintentional=
-ly
-ignore any endpoint-specific reset-gpios properties defined in child nodes?
+> +		return -EFAULT;
+> +
+> +	return 0;
+> +}
+> +
+> +static int vfio_pci_ioctl_tph(struct vfio_pci_core_device *vdev,
+> +			      void __user *uarg)
+> +{
+> +	struct vfio_device_pci_tph_op op =3D {0};
+> +	size_t minsz =3D sizeof(op.argsz) + sizeof(op.op);
+> +
+> +	if (copy_from_user(&op, uarg, minsz))
+> +		return -EFAULT;
+> +
+> +	switch (op.op) {
+> +	case VFIO_PCI_TPH_GET_CAP:
+> +		return vfio_pci_tph_get_cap(vdev, &op, uarg + minsz);
+
+This handler does not acquire down_read(&vdev->memory_lock). Does this allow
+TPH IOCTLs to run concurrently with a PCI hot reset
+(VFIO_DEVICE_PCI_HOT_RESET) which takes the write lock via
+vfio_pci_zap_and_down_write_memory_lock()?
+
+Concurrent execution could allow vfio_pci_tph_get_cap() to read configurati=
+on
+space while the secondary bus is in reset, yielding bogus data.
+
+More importantly, later in this series when vfio_pci_tph_set_st() is added =
+to
+write directly to the MSI-X table via MMIO, performing MMIO writes to a dev=
+ice
+actively undergoing reset can cause PCI Master Aborts. On certain platforms,
+this can trigger AER panics or EEH isolation.
 
 [ ... ]
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 5de618a3a5eee..81da2bd0c21b0 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+[ ... ]
+> +/**
+> + * VFIO_DEVICE_PCI_TPH - _IO(VFIO_TYPE, VFIO_BASE + 22)
+> + *
+> + * IOCTL for managing PCIe TLP Processing Hints (TPH) on
+> + * a VFIO-assigned PCI device. Provides operations to query
+> + * device capabilities, enable/disable TPH, retrieve CPU's
+> + * steering tags, and program steering tag tables.
+> + *
+> + * Return: 0 on success, negative errno on failure.
+> + *         -EOPNOTSUPP: Operation not supported
+> + *         -ENODEV: Device or required functionality not present
+> + *         -EINVAL: Invalid argument or TPH not supported
+> + */
+> +#define VFIO_DEVICE_PCI_TPH	_IO(VFIO_TYPE, VFIO_BASE + 22)
 
-> @@ -1778,6 +1785,14 @@ static int qcom_pcie_parse_ports(struct qcom_pcie =
-*pcie)
->  	struct device *dev =3D pcie->pci->dev;
->  	int ret =3D -ENODEV;
-> =20
-> +	if (of_find_property(dev->of_node, "perst-gpios", NULL)) {
-> +		pcie->reset =3D devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
-> +		if (IS_ERR(pcie->reset))
-> +			return PTR_ERR(pcie->reset);
-> +
-> +		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be f=
-ixed!\n");
-> +	}
-> +
->  	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
+This introduces a new top-level IOCTL to manage PCIe TPH capabilities inste=
+ad
+of using the standard VFIO_DEVICE_FEATURE IOCTL.
 
-If there are no child "pci" nodes, this function returns -ENODEV. Does the
-caller then fall back to qcom_pcie_parse_legacy_binding() which will also
-attempt to request the exact same "perst" GPIO?
-
-Since devm_gpiod_get_optional() persists for the lifetime of the probe and
-GPIOLIB enforces exclusive access by default, will the second request fail
-with -EBUSY and break the probe path for legacy platforms?
-
->  		if (!of_node_is_type(of_port, "pci"))
->  			continue;
->  		ret =3D qcom_pcie_parse_port(pcie, of_port);
->  		if (ret)
->  			goto err_port_del;
->  	}
-
-This issue wasn't introduced by this patch, but if qcom_pcie_parse_perst()
-returns an error (such as -EPROBE_DEFER or -ENOMEM) from within
-qcom_pcie_parse_port(), is phy_init() successfully called before the error
-is encountered?
-
-If qcom_pcie_parse_port() returns early without calling phy_exit(), and the
-failing port has not yet been added to the pcie->ports list, does the
-err_port_del cleanup loop skip this port?
-
-err_port_del:
-	list_for_each_entry_safe(port, tmp_port, &pcie->ports, list) {
-		...
-		phy_exit(port->phy);
-
-Could this leave the PHY active and unbalance regulator/clock enable counts
-across probe retries?
+Could this be implemented using VFIO_DEVICE_FEATURE, which was explicitly
+designed to act as a unified multiplexer for querying and setting new device
+features, to avoid unnecessarily bloating the UAPI namespace and duplicating
+boilerplate for sizing and feature discovery?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508-mix_perst_=
-phy_dts-v1-1-9eff6ee9b51a@oss.qualcomm.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508064053.3752=
+9-1-fengchengwen@huawei.com?part=3D4
