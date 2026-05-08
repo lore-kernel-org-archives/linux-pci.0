@@ -1,140 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A99A62F8E8F
-	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 00:52:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4BCD2F8E8F
+	for <linux-pci@vger.kernel.org>; Fri,  8 May 2026 00:53:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778201524; cv=none; b=JuucZr6w+gy+VX2w0YbXq7ksPqYiiRkocYgt4Z6Clfnkr4z+nY8k2glDXzGqaPrxPOuf2ZYNM6SAYo0miGiF2pDG3+smpEo2tKl0eHpozSMIJWcXY1ScabHCmWK+tGmdLJKQ9OSO0HCDg8OPErD2Kjly2YS8H3391uYVTuWMo1I=
+	t=1778201581; cv=none; b=KF1aO/KaYd+JdbhOecGbkwZE04xIwOf2aRNNyUT+PXjmHflciFlvk2vZDuxAB+2GjKeDrDWJ+NbfbN1/UZNLKzhtXKqkWcDRG7HJbcel07WPuJrnPbrp1oIkhpKEnANWKxccOoYyyxLgNQNmnhP1Bn7IN4bMNArnocfVNaAAeNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778201524; c=relaxed/simple;
-	bh=W2WyodUP6OxGG+EVbRHquHrQbdQ+pUoIKYUjenKCMjM=;
+	s=arc-20240116; t=1778201581; c=relaxed/simple;
+	bh=fk41o2uxL+FlCpUXW5ppFJDQt5EmuLvsNDY4pvNHw4E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OHqwBww+/QseHUTn4fPSkfkhzH2p8zO586v8lt9L75wD7vpe8zuCWM9ns0VXlC1FEgJ2EJplARUlIHDpmfezZ8fucrRZACE1fVhfReH86YfmzHuO0U4NWqsM6BZQXa9/1DDOk0N6gWyCk4ZAVavY5g3Dl6vnXkDPgrHc0l/+ruM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OLbhIU0v; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=bSpVMqn6sfIfieka/M2Yey+eDbp4M0pqZMfzK47+szMUCVBsaKKJwwkxyvN3wPtsL+tLF341EO+1VkHyuulcnHWitM1MB+QCO0OkzufxK1wMgKNNFQO6VgP/BLmOuCi0YKzsTcaR1+eSJINnfliU9mE1ijyuZGsvn9Zx2J6L+F0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCyspxa6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OLbhIU0v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D2A9C2BCB2;
-	Fri,  8 May 2026 00:52:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCyspxa6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DB0FC2BCB2;
+	Fri,  8 May 2026 00:53:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778201524;
-	bh=W2WyodUP6OxGG+EVbRHquHrQbdQ+pUoIKYUjenKCMjM=;
+	s=k20201202; t=1778201581;
+	bh=fk41o2uxL+FlCpUXW5ppFJDQt5EmuLvsNDY4pvNHw4E=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=OLbhIU0vSDWqKOQuJDVAiPeutu9CRuhMnjUIRKUmqJC2OQ5O6xcgy76VXmaicDeWM
-	 aEyzdoZYkEr/Qd1w1DDbyFBpyupMT9w4seuEwYRum2e4b3+OYMujpXDf6L9A+tNONn
-	 wJJqW6EZEIRwCpx7F+V7oeBG7D6ziXSe4/LZi2waYQHHMvtuXNP2xxXZOuwYpZ3nDr
-	 kCyip+GgsfJi8h+L1ddr0zig0REekjmH/9z0W2nVINJEb1Yb89ZgWtNljuyXjr60pB
-	 mWwjte7BOMkDEn8IHCmhHFQgm2C12QaokyliwbIm+ZaYjvBOZe6EeezgI2CiVfhXoy
-	 9OzSnT6DEe30Q==
+	b=eCyspxa6nZ1b6pT01Ra0Rhgau5X3G/F6He/nuTQQ7OfIR/+v9PWSWgbuH/xB+V9+C
+	 BRy0EHXr9uZQCKdwgwQpgaqRRf31GMl2Q7mhBqYSHzPUsiw1jMiHVRIXL1yhBEwKFy
+	 K7zKfAzB5Ya231h0AgCeK0LmFXLOy9vSjWroB14OYCbaejvMFcTeiUWMzZ96Swv8Uu
+	 gbTQ6GcmxV/Qe7Xvp7dSxT7VmIQ8LzBNdf+523m9WoqCNSIPqswckp/bsIp0Lz71cz
+	 8scuZcZnguHQ+rCXhV+A1CxZcO6GYiIfeC5l3lGMAMeSTrV6kr9k3ALTi3iU0/AuGe
+	 Q2vKzGGXuUrqA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 6/6] vfio/pci: Add PCIe TPH SET_ST interface
+Subject: Re: [PATCH v2 7/9] Bluetooth: hci_qca: Rename 'power_ctrl_enabled'
+ to 'bt_en_available'
 Reply-To: sashiko@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
+To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260507130956.34441-7-fengchengwen@huawei.com>
-References: <20260507130956.34441-7-fengchengwen@huawei.com>
+In-Reply-To: <20260507-pwrseq-m2-bt-v2-7-1740bd478539@oss.qualcomm.com>
+References: <20260507-pwrseq-m2-bt-v2-7-1740bd478539@oss.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 08 May 2026 00:52:03 +0000
-Message-Id: <20260508005204.2D2A9C2BCB2@smtp.kernel.org>
+Date: Fri, 08 May 2026 00:53:00 +0000
+Message-Id: <20260508005301.1DB0FC2BCB2@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The rollback logic for successfully programmed steering tag entrie=
-s silently fails when an entry write fails, leaving the device in an incons=
-istent state.
-- [Medium] The `mem_type` field of `struct vfio_pci_tph_entry` is not valid=
-ated when `cpu =3D=3D U32_MAX`, breaking future ABI extensibility.
+- [Medium] The rename of 'power_ctrl_enabled' to 'bt_en_available' introduc=
+es a misleading semantic mismatch and contradicts the commit message.
 --
 
-commit b4acf86102a9bd7b08e0de22fe836e8de9341956
-Author: Chengwen Feng <fengchengwen@huawei.com>
+commit ebe40bb62789f8cbdbd8baa6c8be848d58c9f72b
+Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-vfio/pci: Add PCIe TPH SET_ST interface
+Bluetooth: hci_qca: Rename 'power_ctrl_enabled' to 'bt_en_available'
 
-This commit adds the VFIO_PCI_TPH_SET_ST operation to support batch
-programming of steering tag entries. It includes logic to roll back
-successfully programmed entries to 0 if any entry fails, aiming to prevent
-inconsistent device states.
+This commit renames the power_ctrl_enabled flag to bt_en_available in
+qca_serdev_probe(), with the commit message stating that the flag only
+indicates the availability of the BT_EN GPIO.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index c328515bcaaff..5d10de546d5c6 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-
+> diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+> --- a/drivers/bluetooth/hci_qca.c
+> +++ b/drivers/bluetooth/hci_qca.c
 [ ... ]
+> @@ -2391,7 +2391,7 @@ static int qca_serdev_probe(struct serdev_device *s=
+erdev)
+>  	struct hci_dev *hdev;
+>  	const struct qca_device_data *data;
+>  	int err;
+> -	bool power_ctrl_enabled =3D true;
+> +	bool bt_en_available =3D true;
 
-> @@ -1604,6 +1604,90 @@ static int vfio_pci_tph_get_st(struct vfio_pci_cor=
-e_device *vdev,
-> +	for (; i < st.count; i++) {
-> +		/* Check reserved fields and st are zero */
-> +		if (memchr_inv(&ents[i].reserved0, 0, sizeof(ents[i].reserved0)) ||
-> +		    memchr_inv(&ents[i].reserved1, 0, sizeof(ents[i].reserved1)) ||
-> +		    ents[i].st !=3D 0) {
-> +			err =3D -EINVAL;
-> +			goto out;
-> +		}
-> +
-> +		if (ents[i].cpu =3D=3D U32_MAX) {
-> +			err =3D pcie_tph_set_st_entry(pdev, ents[i].index, 0);
-> +			if (err)
-> +				goto out;
-> +			continue;
+Is the description in the commit message accurate?
 
-If userspace sets cpu to U32_MAX to clear a steering tag, does this bypass
-the validation of mem_type?=20
+Looking at qca_serdev_probe(), there are several paths where the BT_EN GPIO
+is not present, but this flag remains true. For example, with a QCA_WCN3990
+device, qcadev->bt_en can be NULL. Since it doesn't match the specific
+SoC types in the checks below, bt_en_available is never set to false:
 
-By skipping validation and allowing userspace to pass uninitialized data in
-this field, could this break forward compatibility if mem_type needs to be
-repurposed later for this case?
+qca_serdev_probe() {
+        ...
+        qcadev->bt_en =3D devm_gpiod_get_optional(&serdev->dev, "enable",
+                                       GPIOD_OUT_LOW);
+        ...
+        if (!qcadev->bt_en &&
+            (data->soc_type =3D=3D QCA_WCN6750 ||
+             data->soc_type =3D=3D QCA_WCN6855 ||
+             data->soc_type =3D=3D QCA_WCN7850))
+                bt_en_available =3D false;
+        ...
+}
 
-> +		}
-> +
-> +		if (ents[i].mem_type =3D=3D VFIO_PCI_TPH_MEM_TYPE_VM) {
-> +			mtype =3D TPH_MEM_TYPE_VM;
-> +		} else if (ents[i].mem_type =3D=3D VFIO_PCI_TPH_MEM_TYPE_PM) {
-> +			mtype =3D TPH_MEM_TYPE_PM;
-> +		} else {
-> +			err =3D -EINVAL;
-> +			goto out;
-> +		}
-> +
-> +		err =3D pcie_tph_get_cpu_st(pdev, mtype, ents[i].cpu, &st_val);
-> +		if (err)
-> +			goto out;
-> +		err =3D pcie_tph_set_st_entry(pdev, ents[i].index, st_val);
-> +		if (err)
-> +			goto out;
-> +	}
-> +
-> +out:
-> +	if (err) {
-> +		/* Roll back previously programmed entries to 0 */
-> +		for (j =3D 0; j < i; j++)
-> +			pcie_tph_set_st_entry(pdev, ents[j].index, 0);
+The original power_ctrl_enabled flag tracked whether any driver-managed
+power control (such as regulators or a generic power sequencer) was
+available, ensuring the qca_hci_shutdown callback is registered.
 
-If a prior call to pcie_tph_set_st_entry() fails (e.g., due to an out of
-bounds index) and disables TPH on the device internally, will these rollback
-calls silently fail?
-
-Since pcie_tph_set_st_entry() checks whether TPH is enabled and returns
--EINVAL if it is disabled, the partially programmed entries might remain on
-the device without being cleared.
-
-If the user later re-enables TPH, could the device end up using an
-inconsistent steering tag table?
-
-> +	}
-> +	kvfree(ents);
-> +	return err;
-> +}
+Does renaming this generic power control flag to bt_en_available introduce
+a mismatch where bt_en_available is true while qcadev->bt_en is NULL,
+potentially confusing future modifications?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507130956.3444=
-1-1-fengchengwen@huawei.com?part=3D6
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260507-pwrseq-m2-=
+bt-v2-0-1740bd478539@oss.qualcomm.com?part=3D7
