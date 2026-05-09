@@ -1,111 +1,110 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F34F928642B;
-	Sat,  9 May 2026 16:26:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C268D1A9FBD
+	for <linux-pci@vger.kernel.org>; Sat,  9 May 2026 22:05:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778344001; cv=none; b=ideYrtDSUubg6mjag4GymCx8fu5HMySXSvwnvz7St/mfdn0ZF2PletfecpL5mXM+lVuQVZW01c5chPpwLWbHBYM7dVc/couKPwGahdYEbUi4jxTMNxOjHCvj0ycLQiephCbE/NkPnDX5oCYCsvMHW+n58FN9CnlMVuWaZzqlTLg=
+	t=1778364349; cv=none; b=lgBjv0ak3a/ilOXetBRJQ4ZN0ws6BwhJtuXv0n8lYSsf7UC7kNOgWkSwmkV+jmwKSnxKS0BKDEi6tZY1CMs31HB5Q20XM7Udn6BCSuFbU0HSB2IC+EqIqtxpYZ+viLO7YI3h+7KjeaaCNkg9EoAnWE9v+ZIMH+6Zzu732vJy/ug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778344001; c=relaxed/simple;
-	bh=aBZF33Pr9/96AEPUQMpQeHadYjHExm9L2z4OKt7kbeE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=X07UkOEljV7mvn4m5Ltk9g/spswq9XOHZEbeZTTgPc2jh2sR6zquWujh5jkKOBhEYjnXiT4+yjw2n6XUo7A9+tbfN8Ctq24OgCaubwYs3AEYJQdLabLk/ibBcP6v2f3h5BcoPrdSYD2EBGV61DGHaSqZZahXLSa/ew65p0I0bjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=QNwnNxpr; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778364349; c=relaxed/simple;
+	bh=amY7drjb/Q54+72Z8fnza2OBnLxuh96synD6u1epBEc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=TEzUPx7HO2GwiQ1N3u4x0NLbucXfp9M/DsB3nGn7PFisfXApwG135N4N1dNsQGfVK6nqqYB5Cz5rP4vVPiyYe9tyixPLbmspgnMd/uG3r6LbUymiJxQaB08G8ub8LsssdpwBk5OWGbDASijO3DnOf0NX9uAfFJN+5tweBhGAfh8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YHKyqiqj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="QNwnNxpr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=Yolk7fPVSsosJ3+V1HG/g+3kb5mEYUGoiAatqyto7So=;
-	b=QNwnNxprHHJUW4PbRByVgKv8H/imUdQGoJjvkX/EUA+Eo4EOgoN3fXXG/YFjUD
-	RCZw7p7hHvAFaD7xgsZA0twZgcRMC0emc+V0FzVJidZqk4Clo93Xmta7ExoLcWQ1
-	mMZ1Fx0EyXnaAa2I8HKBo3TN9DpBamsrne72PUdUBxsnk=
-Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g0-1 (Coremail) with SMTP id _____wBnQtTpX_9pIRSmAQ--.47405S2;
-	Sun, 10 May 2026 00:25:14 +0800 (CST)
-Message-ID: <4f063568-0f5c-42ad-acc5-2d6ca5b546ad@163.com>
-Date: Sun, 10 May 2026 00:25:13 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YHKyqiqj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7510C2BCB2;
+	Sat,  9 May 2026 22:05:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778364349;
+	bh=amY7drjb/Q54+72Z8fnza2OBnLxuh96synD6u1epBEc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=YHKyqiqjZZV2p5qHIVmw+km56wTTnUrJHCZ2hLlZStGuBWWwOUpFN13+2Zru7joEN
+	 MLxSDf8l8LMYCU2+0vCt+ms3rceMIan/Kt32cDR2y+IXh5kenp+k84+4eehcyJfOER
+	 +hbFkrvJIPl+aAt9kfzWw4zz6tF9IwqAcSaw2KC0ZHzhMvnp3g5RmjOEwvxW9RHpys
+	 +5InhAQho2Vhiers3080s+cTWAywBYCU+0mEeLHm19GVAnyv9I1b3lQNtFBuyR9tz5
+	 abiy0s48OKkeEhZ7O52pAfVxfkOPudYijRAmKwJy4AqZAUUG4JpmEGfrRBoiyqfjln
+	 kpgOHwTWp+Y6w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH net-next] net: mana: Add handler for sriov configure
+Reply-To: sashiko@lists.linux.dev
+To: "Haiyang Zhang" <haiyangz@linux.microsoft.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260508220412.15138-1-haiyangz@linux.microsoft.com>
+References: <20260508220412.15138-1-haiyangz@linux.microsoft.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Sat, 09 May 2026 22:05:48 +0000
+Message-Id: <20260509220548.D7510C2BCB2@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link
- training
-To: Claudiu Beznea <claudiu.beznea@tuxon.dev>, bhelgaas@google.com,
- lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
- vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com,
- pali@kernel.org, ryder.lee@mediatek.com, jianjun.wang@mediatek.com,
- claudiu.beznea.uj@bp.renesas.com, mpillai@cadence.com
-Cc: robh@kernel.org, s-vadapalli@ti.com, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
- linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260506152346.166056-1-18255117159@163.com>
- <20260506152346.166056-9-18255117159@163.com>
- <bd0f4589-b586-4f01-b12c-6ae5c19ec21b@tuxon.dev>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <bd0f4589-b586-4f01-b12c-6ae5c19ec21b@tuxon.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBnQtTpX_9pIRSmAQ--.47405S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFWxAF13Cr4xKF48ArW8Zwb_yoW8Wry3pF
-	ZYv3WjyF1UXr4Y9a17X3Z8uFyYq3Z8A34UJ3s3Wa47ZwnxuFZrWF98uF4fJ3Z2grZ7XrW3
-	t3W5t3WUGa15AFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UEPfQUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC7ApsEGn-X+qp5wAA33
 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Missing `pci_disable_sriov()` in PF driver's `remove` and `shutdow=
+n` paths causes resource leaks and potential Use-After-Free.
+- [Medium] Missing VF assignment check in `mana_sriov_configure` causes sil=
+ent failure when disabling SR-IOV.
+--
 
+commit 1f4061f22025ea097273f720b3bccac577e7d805
+Author: Haiyang Zhang <haiyangz@microsoft.com>
 
-On 5/7/26 00:52, Claudiu Beznea wrote:
-> Hi, Hans,
-> 
-> On 5/6/26 18:23, Hans Zhang wrote:
->> The Renesas RZ/G3S PCIe host driver currently does not enforce the
->> mandatory 100 ms delay after link training completes for speeds > 5.0 
->> GT/s,
->> required by PCIe r6.0 sec 6.6.1.
->>
->> The driver already has a 'max_link_speed' field (derived from the device
->> tree). Add a call to pcie_wait_after_link_train() in
->> rzg3s_pcie_host_init() after reading the link status, ensuring that the
->> delay is applied before any Configuration Request is sent downstream.
->>
->> Signed-off-by: Hans Zhang <18255117159@163.com>
->> ---
->>   drivers/pci/controller/pcie-rzg3s-host.c | 2 ++
->>   1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/ 
->> controller/pcie-rzg3s-host.c
->> index d86e7516dcc2..6ab59c5464cf 100644
->> --- a/drivers/pci/controller/pcie-rzg3s-host.c
->> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
->> @@ -1390,6 +1390,8 @@ static int rzg3s_pcie_host_init(struct 
->> rzg3s_pcie_host *host)
->>       val = readl_relaxed(host->axi + RZG3S_PCI_PCSTAT2);
->>       dev_info(host->dev, "PCIe link status [0x%x]\n", val);
->> +    pcie_wait_after_link_train(host->max_link_speed);
-> 
-> There is an msleep(PCIE_RESET_CONFIG_WAIT_MS) after 
-> rzg3s_pcie_set_max_link_speed() call. Shouldn't that msleep() call be 
-> replaced with your pcie_wait_after_link_train() ?
+net: mana: Add handler for sriov configure
 
-Hi Claudiu,
+This commit adds the sriov_configure callback to the mana pci_driver to han=
+dle
+SR-IOV configuration. It also exports pci_vf_drivers_autoprobe() and disabl=
+es
+VF autoprobe when running as a PF driver on bare metal.
 
-Sorry for the late reply. Thank you for pointing it out. It will be 
-replaced.
+> diff --git a/drivers/net/ethernet/microsoft/mana/gdma_main.c b/drivers/ne=
+t/ethernet/microsoft/mana/gdma_main.c
+> index 3bc3fff559991..767f11d5b351b 100644
+> --- a/drivers/net/ethernet/microsoft/mana/gdma_main.c
+> +++ b/drivers/net/ethernet/microsoft/mana/gdma_main.c
+[ ... ]
+> @@ -2262,6 +2267,20 @@ static void mana_gd_shutdown(struct pci_dev *pdev)
+>  	pci_disable_device(pdev);
+>  }
 
-Best regards,
-Hans
+Does this code need to explicitly call pci_disable_sriov() during driver
+remove and shutdown?
 
+If the PF driver is unbound while VFs are enabled, the PCI core logs a
+warning but does not automatically disable SR-IOV. With the VFs remaining
+active, could they interact with dead hardware or trigger host-side PF even=
+ts
+that rely on the freed gdma_context, resulting in a use-after-free?
 
-> 
-> Thank you,
-> Claudiu
+> +static int mana_sriov_configure(struct pci_dev *pdev, int numvfs)
+> +{
+> +	int err =3D 0;
+> +
+> +	dev_info(&pdev->dev, "Requested num VFs: %d\n", numvfs);
+> +
+> +	if (numvfs > 0)
+> +		err =3D pci_enable_sriov(pdev, numvfs);
+> +	else
+> +		pci_disable_sriov(pdev);
+> +
+> +	return err ? err : numvfs;
 
+If VFs are currently assigned to a guest VM (e.g., via VFIO), the PCI core's
+sriov_disable() will internally abort the teardown. Because
+pci_disable_sriov() returns void, will this function return 0 and falsely
+signal to userspace that the disable operation succeeded?
+
+Should this code check pci_vfs_assigned(pdev) and return -EPERM, or use
+the generic pci_sriov_configure_simple() helper instead?
+
+> +}
+> +
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508220412.1513=
+8-1-haiyangz@linux.microsoft.com?part=3D1
