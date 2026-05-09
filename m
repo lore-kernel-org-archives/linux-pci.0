@@ -1,447 +1,196 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6377A18A6A8;
-	Sat,  9 May 2026 01:31:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42B3618A92F;
+	Sat,  9 May 2026 03:28:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778290266; cv=none; b=YbBmV9KdhQbtw4Opo+qX4Fc9PpigzM2UsiAM2ZKIpL9ZBkB26kg2T68xJPMvPykc6zKZNi/qN5jl/mDJ9c0JEgyPiMKu6cQ0PZArcJa4mm5BTw5YS3TCKD0triwtUChROf0s3I9ajF3FL9oAmVJ2zeTkPQNnnWvh4LW9bdZQeyU=
+	t=1778297296; cv=none; b=lm8lAzAJNFAVpyHVO+tW1Nw7MBrov5OBVGVfswlmz+jnaRu31HfxZellvM5OLgljUNmcDHFstqbnTQJl2LZGytJnSltCN+fQGnMRb8g6roc/4W6fdQrFyxc4cR2vLBwPNcwv/kjM/QWAaIhp9bVQvddPWxSq/Kfi3HTXJgI1PE8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778290266; c=relaxed/simple;
-	bh=Fgd/eDqA/37nFk1Ds+aRyAKCIe4z24eAR1y3t8rjSS4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s7f4UATu6xfChdaoJYKF/uYBBY8+egdvdF2wMcn8NYwsjMRoigbYHr10kj8jiZiqvHH4vpm3gZKLw8IcUoL8NHzltVYmMn7jotENR9lUf6XC8styvY3odAc8Dx7aStUXmnswkpNMKrVVJLXWj8TpR0W4sFMMm788e1san5adfz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KPKnudQB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778297296; c=relaxed/simple;
+	bh=+g3LVpLAIYtG7MRn5pLcltFaa760xW206BEeENAcrqY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=bhoyMPtqbeO9D5jYuHEgpo6LV09vnPqjyx0xlVp94FE3hZEXb3ryax5e2muv03jMGHuX7+gzbp2h0B8E7jVUyjAiVbuPIOKwGxK5kOEALACTd+c6hlOiPnfKujskhZ+4XmbABPMSjt6L2PyMcovXW/59namRJsX5fS6z6kIj9H0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=3xqneVsJ; arc=none smtp.client-ip=113.46.200.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KPKnudQB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AD2CC2BCF4;
-	Sat,  9 May 2026 01:31:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778290266;
-	bh=Fgd/eDqA/37nFk1Ds+aRyAKCIe4z24eAR1y3t8rjSS4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=KPKnudQB6zUnCEKQuLEONK6XK6t/oOiRp5HQzaYlQV/dFGwd9sadG+3e5frVE6DCm
-	 YDa8lFYBGviMu6f/QUJT9R5dL2tdsRi1XrQ/DgH7LWfngd3AD9qJNluFym7UjJ82X+
-	 wpYFjftFeVGv+gQU4uanfK7se6tHIB5WDhBxtGbvZig7tPm/B0KuB/mq2LzLjS4QIK
-	 iJ0JTF5uTb3Xk7Oj1jZbiUwt8HfkNv1w/APU7hVTxGA5MgUq4b8amrzlxGjpvrpOmw
-	 agSKKQFrjZ1lxsJ9tKvowI2BusJByD8uIA1vMdmHIwvDLtBxCufgsSGW851Q3aC4T/
-	 +oxfRBVeUxo3g==
-Date: Sat, 9 May 2026 09:31:01 +0800
-From: "Peter Chen (CIX)" <peter.chen@kernel.org>
-To: pawell@cadence.com
-Cc: Roger Quadros <rogerq@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] usb: cdnsp: Add support for device-only configuration
-Message-ID: <af6OVX/Rh6YYW1qq@nchen-desktop>
-References: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="3xqneVsJ"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=8wsVxYBF+HbWZmM9SkeWkWH4YNIGWuIU3cJ+r0VuW+I=;
+	b=3xqneVsJflRqVAbIiABUazmktjpEv1n12IxUL7ZKZfedAKRZcVlhArLwRS0J5gnDV0qXrRqa8
+	2Ek/dtzZIsS8T7s8qwBPyPAJnlZomqgv5G30uux8IfC/hSbWzCqtFbbR52/eCY8mLp/Tc+62T6R
+	9lDDfDnNH/KeuT7MigtrI8o=
+Received: from mail.maildlp.com (unknown [172.19.163.0])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gCB7x3qHgz1T4Hv;
+	Sat,  9 May 2026 11:20:29 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id D910040537;
+	Sat,  9 May 2026 11:28:04 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Sat, 9 May 2026 11:28:04 +0800
+Message-ID: <f1f11651-c86d-47a9-974c-da0b3d423657@huawei.com>
+Date: Sat, 9 May 2026 11:28:03 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 4/7] vfio/pci: Add PCIe TPH interface with capability
+ query
+To: Alex Williamson <alex@shazbot.org>
+CC: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
+	<wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+References: <20260508064053.37529-1-fengchengwen@huawei.com>
+ <20260508064053.37529-5-fengchengwen@huawei.com>
+ <20260508164003.70918c0c@shazbot.org>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260508164003.70918c0c@shazbot.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On 26-05-08 12:06:39, Pawel Laszczak via B4 Relay wrote:
-> From: Pawel Laszczak <pawell@cadence.com>
+On 5/9/2026 6:40 AM, Alex Williamson wrote:
+> On Fri, 8 May 2026 14:40:50 +0800
+> Chengwen Feng <fengchengwen@huawei.com> wrote:
 > 
-> This patch introduces support for the Cadence USBSSP (cdnsp)
-> controller in hardware configurations where the Dual-Role Device (DRD)
-> register block is not implemented or is inaccessible.
+>> Add VFIO_DEVICE_PCI_TPH IOCTL to allow userspace to query device TPH
+>> capabilities, supported modes, and steering tag table information.
+>>
+>> Add module parameter 'enable_unsafe_tph_ds_mode' to restrict unsafe
+>> device-specific TPH mode to trusted userspace only.
+>>
+>> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+>> ---
+>>  drivers/vfio/pci/vfio_pci.c      |  13 ++-
+>>  drivers/vfio/pci/vfio_pci_core.c |  56 ++++++++++++-
+>>  include/linux/vfio_pci_core.h    |   3 +-
+>>  include/uapi/linux/vfio.h        | 133 +++++++++++++++++++++++++++++++
+>>  4 files changed, 202 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+>> index 0c771064c0b8..40bf5aa9fd0b 100644
+>> --- a/drivers/vfio/pci/vfio_pci.c
+>> +++ b/drivers/vfio/pci/vfio_pci.c
+>> @@ -60,6 +60,12 @@ static bool disable_denylist;
+>>  module_param(disable_denylist, bool, 0444);
+>>  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
+>>  
+>> +#ifdef CONFIG_PCIE_TPH
+>> +static bool enable_unsafe_tph_ds_mode;
+>> +module_param(enable_unsafe_tph_ds_mode, bool, 0444);
+>> +MODULE_PARM_DESC(enable_unsafe_tph_ds_mode, "Enable UNSAFE TPH device-specific (DS) mode. This mode provides weak isolation, cannot be safely used for virtual machines. If you do not know what this is for, step away. (default: false)");
+>> +#endif
+>> +
 > 
-> In such cases, the driver cannot rely on the DRD logic to manage roles
-> and must operate exclusively in a fixed peripheral/host mode.
+> Why is the "unsafe" aspect of this keyed on mode rather than storage
+> location?
 > 
-> The change in BAR indexing (from BAR 2 to BAR 1) is a direct
-> consequence of the 32-bit addressing used in this specific
-> DRD-disabled hardware layout, compared to the 64-bit addressing
-> used in DRD-enabled configurations.
-> 
-> Tested on a PCI platform with a hardware configuration that lacks
-> DRD support. Platform-side changes are included to support the PCI
-> glue layer's property injection to handle this specific layout.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com> # pci_ids.h
-> Signed-off-by: Pawel Laszczak <pawell@cadence.com>
-> ---
-> v3:
->   - Improved descriptions and comments for better clarity.
->   - Introduced the 'no_drd' property to indicate missing DRD register block.
->   - Added support for fixed host-only and device-only configurations.
->   - Ensured cdns_otg_disable_irq is called only when no_drd is false.
->   - Updated cdns_drd_gadget_on/off to ensure PHY mode is correctly 
->     handled even if DRD is disabled.
-> 
-> v2:
->   - Changed otg_irq to be optionali.
->   - Added cdns->no_drd check in cdns_power_is_lost.
->   - Added cdns->no_drd check in cdns_get_id.
-> ---
->  drivers/usb/cdns3/cdns3-plat.c | 26 ++++++++++++++----------
->  drivers/usb/cdns3/cdnsp-pci.c  | 46 +++++++++++++++++++++++++++++++++---------
->  drivers/usb/cdns3/core.c       |  3 ++-
->  drivers/usb/cdns3/core.h       |  4 ++++
->  drivers/usb/cdns3/drd.c        | 44 ++++++++++++++++++++++++++++++++++++++--
+> Currently the user cannot enable TPH, the capability is read-only, but
+> the user does have direct access to the MSI-X table.  We rely on an
+> agreement that the user needs to use SET_IRQS to allocate host vectors
+> and we use interrupt remapping as protection against abuse, but there's
+> no mediation of STs written directly to the MSI-X table.  If the device
+> supports IV mode with ST in the MSI-X table, nothing prevents the user
+> from writing those ST entries directly to the MSI-X table.  Therefore
+> doesn't it have the same security concern as DS mode?
 
-For cdns3 changes:
 
-Acked-by: Peter Chen <peter.chen@kernel.org>
+Agree, from this perspective, even if it is in MSI-X table, it is still unsafe.
+So TPH is unsafe as a whole, not just DS mode.
 
->  include/linux/pci_ids.h        |  1 +
->  6 files changed, 101 insertions(+), 23 deletions(-)
 > 
-> diff --git a/drivers/usb/cdns3/cdns3-plat.c b/drivers/usb/cdns3/cdns3-plat.c
-> index 3fe3109a3688..86c963a072db 100644
-> --- a/drivers/usb/cdns3/cdns3-plat.c
-> +++ b/drivers/usb/cdns3/cdns3-plat.c
-> @@ -81,6 +81,7 @@ static int cdns3_plat_probe(struct platform_device *pdev)
->  	if (cdns->pdata && cdns->pdata->override_apb_timeout)
->  		cdns->override_apb_timeout = cdns->pdata->override_apb_timeout;
->  
-> +	cdns->no_drd = device_property_read_bool(dev, "no_drd");
-
-When introduce a new property, please update binding doc accordingly.
-
-Peter
-
-> diff --git a/drivers/usb/cdns3/cdnsp-pci.c b/drivers/usb/cdns3/cdnsp-pci.c
-> index 432007cfe695..992700479172 100644
-> --- a/drivers/usb/cdns3/cdnsp-pci.c
-> +++ b/drivers/usb/cdns3/cdnsp-pci.c
-> @@ -19,6 +19,7 @@
->  
->  struct cdnsp_wrap {
->  	struct platform_device *plat_dev;
-> +	struct property_entry prop[3];
->  	struct resource dev_res[6];
->  	int devfn;
->  };
-> @@ -29,10 +30,15 @@ struct cdnsp_wrap {
->  #define RES_HOST_ID		3
->  #define RES_DEV_ID		4
->  #define RES_DRD_ID		5
-> -
-> +/* DRD PCI configuration - 64-bit addressing */
-> +/* First PCI function */
->  #define PCI_BAR_HOST		0
-> -#define PCI_BAR_OTG		0
->  #define PCI_BAR_DEV		2
-> +/* Second PCI function */
-> +#define PCI_BAR_OTG		0
-> +/* Device only PCI configuration - 32-bit addressing */
-> +/* First PCI function */
-> +#define PCI_BAR_ONLY_DEV	1
->  
->  #define PCI_DEV_FN_HOST_DEVICE	0
->  #define PCI_DEV_FN_OTG		1
-> @@ -65,6 +71,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
->  	struct cdnsp_wrap *wrap;
->  	struct resource *res;
->  	struct pci_dev *func;
-> +	bool no_drd = false;
->  	int ret = 0;
->  
->  	/*
-> @@ -75,11 +82,14 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
->  		    pdev->devfn != PCI_DEV_FN_OTG))
->  		return -EINVAL;
->  
-> +	if (pdev->device == PCI_DEVICE_ID_CDNS_UDC_USBSSP)
-> +		no_drd = true;
-> +
->  	func = cdnsp_get_second_fun(pdev);
-> -	if (!func)
-> +	if (!func && !no_drd)
->  		return -EINVAL;
->  
-> -	if (func->class == PCI_CLASS_SERIAL_USB_XHCI ||
-> +	if ((func && func->class == PCI_CLASS_SERIAL_USB_XHCI) ||
->  	    pdev->class == PCI_CLASS_SERIAL_USB_XHCI) {
->  		ret = -EINVAL;
->  		goto put_pci;
-> @@ -93,7 +103,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
->  
->  	pci_set_master(pdev);
->  
-> -	if (pci_is_enabled(func)) {
-> +	if (func && pci_is_enabled(func)) {
->  		wrap = pci_get_drvdata(func);
->  	} else {
->  		wrap = kzalloc_obj(*wrap);
-> @@ -106,10 +116,12 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
->  	res = wrap->dev_res;
->  
->  	if (pdev->devfn == PCI_DEV_FN_HOST_DEVICE) {
-> +		int bar_dev = no_drd ? PCI_BAR_ONLY_DEV : PCI_BAR_DEV;
-> +
->  		/* Function 0: host(BAR_0) + device(BAR_2). */
->  		dev_dbg(&pdev->dev, "Initialize Device resources\n");
-> -		res[RES_DEV_ID].start = pci_resource_start(pdev, PCI_BAR_DEV);
-> -		res[RES_DEV_ID].end = pci_resource_end(pdev, PCI_BAR_DEV);
-> +		res[RES_DEV_ID].start = pci_resource_start(pdev, bar_dev);
-> +		res[RES_DEV_ID].end = pci_resource_end(pdev, bar_dev);
->  		res[RES_DEV_ID].name = "dev";
->  		res[RES_DEV_ID].flags = IORESOURCE_MEM;
->  		dev_dbg(&pdev->dev, "USBSSP-DEV physical base addr: %pa\n",
-> @@ -145,9 +157,20 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
->  		wrap->dev_res[RES_IRQ_OTG_ID].flags = IORESOURCE_IRQ;
->  	}
->  
-> -	if (pci_is_enabled(func)) {
-> +	if (no_drd || pci_is_enabled(func)) {
-> +		u8 idx = 0;
-> +
->  		/* set up platform device info */
->  		pdata.override_apb_timeout = CHICKEN_APB_TIMEOUT_VALUE;
-> +
-> +		if (no_drd) {
-> +			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "peripheral");
-> +			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("no_drd");
-> +		} else {
-> +			wrap->prop[idx++] = PROPERTY_ENTRY_STRING("dr_mode", "otg");
-> +			wrap->prop[idx++] = PROPERTY_ENTRY_BOOL("usb-role-switch");
-> +		}
-> +
->  		memset(&plat_info, 0, sizeof(plat_info));
->  		plat_info.parent = &pdev->dev;
->  		plat_info.fwnode = pdev->dev.fwnode;
-> @@ -158,6 +181,7 @@ static int cdnsp_pci_probe(struct pci_dev *pdev,
->  		plat_info.dma_mask = pdev->dma_mask;
->  		plat_info.data = &pdata;
->  		plat_info.size_data = sizeof(pdata);
-> +		plat_info.properties = wrap->prop;
->  		wrap->devfn = pdev->devfn;
->  		/* register platform device */
->  		wrap->plat_dev = platform_device_register_full(&plat_info);
-> @@ -185,13 +209,17 @@ static void cdnsp_pci_remove(struct pci_dev *pdev)
->  	if (wrap->devfn == pdev->devfn)
->  		platform_device_unregister(wrap->plat_dev);
->  
-> -	if (!pci_is_enabled(func))
-> +	if (!func || !pci_is_enabled(func))
->  		kfree(wrap);
->  
->  	pci_dev_put(func);
->  }
->  
->  static const struct pci_device_id cdnsp_pci_ids[] = {
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
-> +	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC_USBSSP),
-> +	  .class = PCI_CLASS_SERIAL_USB_CDNS },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
->  	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
-> diff --git a/drivers/usb/cdns3/core.c b/drivers/usb/cdns3/core.c
-> index 6a8d1fefbc0d..504bdf13ea80 100644
-> --- a/drivers/usb/cdns3/core.c
-> +++ b/drivers/usb/cdns3/core.c
-> @@ -70,7 +70,8 @@ static void cdns_role_stop(struct cdns *cdns)
->  static void cdns_exit_roles(struct cdns *cdns)
->  {
->  	cdns_role_stop(cdns);
-> -	cdns_drd_exit(cdns);
-> +	if (!cdns->no_drd)
-> +		cdns_drd_exit(cdns);
->  }
->  
->  /**
-> diff --git a/drivers/usb/cdns3/core.h b/drivers/usb/cdns3/core.h
-> index bca973b999a4..8c492fda924c 100644
-> --- a/drivers/usb/cdns3/core.h
-> +++ b/drivers/usb/cdns3/core.h
-> @@ -84,6 +84,9 @@ struct cdns3_platform_data {
->   *                        value in CHICKEN_BITS_3 will be preserved.
->   * @gadget_init: pointer to gadget initialization function
->   * @host_init: pointer to host initialization function
-> + * @no_drd: DRD register block is inaccessible. The controller is hardwired to
-> + *          single role (host or device) or the logic for role switching is
-> + *          missing.
->   */
->  struct cdns {
->  	struct device			*dev;
-> @@ -124,6 +127,7 @@ struct cdns {
->  	u32                             override_apb_timeout;
->  	int (*gadget_init)(struct cdns *cdns);
->  	int (*host_init)(struct cdns *cdns);
-> +	bool				no_drd;
->  };
->  
->  int cdns_hw_role_switch(struct cdns *cdns);
-> diff --git a/drivers/usb/cdns3/drd.c b/drivers/usb/cdns3/drd.c
-> index 84fb38a5723a..f87cf85cb97a 100644
-> --- a/drivers/usb/cdns3/drd.c
-> +++ b/drivers/usb/cdns3/drd.c
-> @@ -87,6 +87,9 @@ int cdns_get_id(struct cdns *cdns)
->  {
->  	int id;
->  
-> +	if (cdns->no_drd)
-> +		return 0;
-> +
->  	id = readl(&cdns->otg_regs->sts) & OTGSTS_ID_VALUE;
->  	dev_dbg(cdns->dev, "OTG ID: %d", id);
->  
-> @@ -107,7 +110,7 @@ void cdns_clear_vbus(struct cdns *cdns)
->  {
->  	u32 reg;
->  
-> -	if (cdns->version != CDNSP_CONTROLLER_V2)
-> +	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
->  		return;
->  
->  	reg = readl(&cdns->otg_cdnsp_regs->override);
-> @@ -120,7 +123,7 @@ void cdns_set_vbus(struct cdns *cdns)
->  {
->  	u32 reg;
->  
-> -	if (cdns->version != CDNSP_CONTROLLER_V2)
-> +	if (cdns->version != CDNSP_CONTROLLER_V2 || cdns->no_drd)
->  		return;
->  
->  	reg = readl(&cdns->otg_cdnsp_regs->override);
-> @@ -181,6 +184,9 @@ int cdns_drd_host_on(struct cdns *cdns)
->  	u32 val, ready_bit;
->  	int ret;
->  
-> +	if (cdns->no_drd)
-> +		goto phy_set;
-> +
->  	/* Enable host mode. */
->  	writel(OTGCMD_HOST_BUS_REQ | OTGCMD_OTG_DIS,
->  	       &cdns->otg_regs->cmd);
-> @@ -197,6 +203,7 @@ int cdns_drd_host_on(struct cdns *cdns)
->  	if (ret)
->  		dev_err(cdns->dev, "timeout waiting for xhci_ready\n");
->  
-> +phy_set:
->  	phy_set_mode(cdns->usb2_phy, PHY_MODE_USB_HOST);
->  	phy_set_mode(cdns->usb3_phy, PHY_MODE_USB_HOST);
->  	return ret;
-> @@ -210,6 +217,9 @@ void cdns_drd_host_off(struct cdns *cdns)
->  {
->  	u32 val;
->  
-> +	if (cdns->no_drd)
-> +		goto phy_set;
-> +
->  	writel(OTGCMD_HOST_BUS_DROP | OTGCMD_DEV_BUS_DROP |
->  	       OTGCMD_DEV_POWER_OFF | OTGCMD_HOST_POWER_OFF,
->  	       &cdns->otg_regs->cmd);
-> @@ -218,6 +228,8 @@ void cdns_drd_host_off(struct cdns *cdns)
->  	readl_poll_timeout_atomic(&cdns->otg_regs->state, val,
->  				  !(val & OTGSTATE_HOST_STATE_MASK),
->  				  1, 2000000);
-> +
-> +phy_set:
->  	phy_set_mode(cdns->usb2_phy, PHY_MODE_INVALID);
->  	phy_set_mode(cdns->usb3_phy, PHY_MODE_INVALID);
->  }
-> @@ -234,6 +246,9 @@ int cdns_drd_gadget_on(struct cdns *cdns)
->  	u32 ready_bit;
->  	int ret, val;
->  
-> +	if (cdns->no_drd)
-> +		goto phy_set;
-> +
->  	/* switch OTG core */
->  	writel(OTGCMD_DEV_BUS_REQ | reg, &cdns->otg_regs->cmd);
->  
-> @@ -251,6 +266,7 @@ int cdns_drd_gadget_on(struct cdns *cdns)
->  		return ret;
->  	}
->  
-> +phy_set:
->  	phy_set_mode(cdns->usb2_phy, PHY_MODE_USB_DEVICE);
->  	phy_set_mode(cdns->usb3_phy, PHY_MODE_USB_DEVICE);
->  	return 0;
-> @@ -265,6 +281,9 @@ void cdns_drd_gadget_off(struct cdns *cdns)
->  {
->  	u32 val;
->  
-> +	if (cdns->no_drd)
-> +		goto phy_set;
-> +
->  	/*
->  	 * Driver should wait at least 10us after disabling Device
->  	 * before turning-off Device (DEV_BUS_DROP).
-> @@ -277,6 +296,8 @@ void cdns_drd_gadget_off(struct cdns *cdns)
->  	readl_poll_timeout_atomic(&cdns->otg_regs->state, val,
->  				  !(val & OTGSTATE_DEV_STATE_MASK),
->  				  1, 2000000);
-> +
-> +phy_set:
->  	phy_set_mode(cdns->usb2_phy, PHY_MODE_INVALID);
->  	phy_set_mode(cdns->usb3_phy, PHY_MODE_INVALID);
->  }
-> @@ -392,6 +413,19 @@ int cdns_drd_init(struct cdns *cdns)
->  	u32 state, reg;
->  	int ret;
->  
-> +	if (cdns->no_drd) {
-> +		cdns->dr_mode = usb_get_dr_mode(cdns->dev);
-> +		cdns->version = CDNSP_CONTROLLER_V2;
-> +
-> +		if (cdns->dr_mode != USB_DR_MODE_HOST &&
-> +		    cdns->dr_mode != USB_DR_MODE_PERIPHERAL) {
-> +			dev_err(cdns->dev, "Incorrect dr_mode\n");
-> +			return -EINVAL;
-> +		}
-> +
-> +		return 0;
-> +	}
-> +
->  	regs = devm_ioremap_resource(cdns->dev, &cdns->otg_res);
->  	if (IS_ERR(regs))
->  		return PTR_ERR(regs);
-> @@ -492,6 +526,9 @@ int cdns_drd_init(struct cdns *cdns)
->  
->  int cdns_drd_exit(struct cdns *cdns)
->  {
-> +	if (cdns->no_drd)
-> +		return 0;
-> +
->  	cdns_otg_disable_irq(cdns);
->  
->  	return 0;
-> @@ -500,6 +537,9 @@ int cdns_drd_exit(struct cdns *cdns)
->  /* Indicate the cdns3 core was power lost before */
->  bool cdns_power_is_lost(struct cdns *cdns)
->  {
-> +	if (cdns->no_drd)
-> +		return false;
-> +
->  	if (cdns->version == CDNS3_CONTROLLER_V0) {
->  		if (!(readl(&cdns->otg_v0_regs->simulate) & BIT(0)))
->  			return true;
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 24cb42f66e4b..a6b9b6f6d8cc 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2424,6 +2424,7 @@
->  #define PCI_DEVICE_ID_CDNS_USBSS	0x0100
->  #define PCI_DEVICE_ID_CDNS_USB		0x0120
->  #define PCI_DEVICE_ID_CDNS_USBSSP	0x0200
-> +#define PCI_DEVICE_ID_CDNS_UDC_USBSSP	0x0400
->  
->  #define PCI_VENDOR_ID_ARECA		0x17d3
->  #define PCI_DEVICE_ID_ARECA_1110	0x1110
+> Further, config space lives in the device and various devices are known
+> to have alternate means for accessing their config space.
+> Virtualization of config space is more to present the device in the VM
+> address space and bridge features between guest and host.  It's not
+> great as a security barrier.
 > 
-> ---
-> base-commit: 17c7841d09ee7d33557fd075562d9289b6018c90
-> change-id: 20260508-no_drd_config-ea76d1df87a3
-> 
-> Best regards,
-> --  
-> Pawel Laszczak <pawell@cadence.com>
-> 
-> 
+> Maybe it's really neither the mode nor storage location, and we need to
+> decide if TPH as a whole introduces any new security considerations.
 
--- 
+I will adjust the module parameter to control TPH globally instead of only DS mode.
 
-Best regards,
-Peter
+> It seems arguable whether we can actually prevent a device from
+> including arbitrary STs on TLPs in any case and maybe we're really only
+> exposing a curated programming interface.
+> 
+> ...
+>> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+>> index 5de618a3a5ee..81da2bd0c21b 100644
+>> --- a/include/uapi/linux/vfio.h
+>> +++ b/include/uapi/linux/vfio.h
+
+...
+
+>> +#define VFIO_DEVICE_PCI_TPH	_IO(VFIO_TYPE, VFIO_BASE + 22)
+>> +
+> 
+> This seems like the wrong shape to me and introduces yet another ioctl
+> multiplexer.  We already have that via the device feature interface.
+> I'd propose this only needs one new DEVICE_FEATURE ioctl, TPH_ST.  The
+> uAPI would look like:
+> 
+> struct vfio_device_feature_tph_st {
+> 	__u32 flags;
+> #define VFIO_TPH_ST_MEM_TYPE_PM	(1 << 0)
+> 	__u16 index;
+> 	__u16 count;
+> 	__u32 data[]; /* host CPU# on SET, ST value on GET */
+> }
+> 
+> The user can SET multiple STs at once that have the same mem_type
+> (assuming that's a reasonable limitation).  On SET, each {cpu#,
+
+Agree, using the same mem_type for a batch is a good idea.
+
+Because it could set multiple index, so how about:
+
+struct vfio_pci_tph_entry {
+	__u32 cpu;
+	__u16 val;	/* ST index on SET, ST value on GET */
+	__u16 reserved;
+}
+
+struct vfio_device_feature_tph_st {
+	__u32 op;
+#define VFIO_TPH_OP_GET_ST	0
+#define VFIO_TPH_OP_SET_ST	1
+	__u32 flags;
+#define VFIO_TPH_ST_MEM_TYPE_PM	(1 << 0)
+	__u16 count;
+	__u16 reserved1;
+	struct vfio_pci_tph_entry ents[];
+}
+
+> mem_type} is translated to a host value and stored internally.  A GET
+
+Should we store internally? How about writing directly to the device?
+
+> returns that translated ST value for DS use cases.
+> 
+> The user can use PROBE to determine if this feature is available.
+> 
+> We already provide the TPH capability read-only in config space, we can
+> use that rather than an explicit INFO/GET_CAP interface.
+
+OK
+
+> 
+> When the feature is available, the TPH control register is virtualized.
+> On enabling TPH via config space, vfio will store the translated ST
+> values to the appropriate location, or none, and enable TPH.  On SET
+> while already enabled, vfio will update both the internal table and the
+> device location (or none).  Thanks,
+> 
+> Alex
+
