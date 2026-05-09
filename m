@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C267D38AC9E;
-	Sat,  9 May 2026 13:07:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4A1738B140;
+	Sat,  9 May 2026 13:08:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778332081; cv=none; b=fwfMIcpgTF027xC7j7Lkq4sbSJp9BcykHXno+dfjixJLAhegibuu2VoLF6FWfUW5Soko4v9ZVXD9VngEuyvL5ArX6vPgXsoQ98M5zgjyqUToh9icme0RQSqY9JbIE7B/EcVDK7m+c9Ab0yct9QBG9ssqUXXGfIaqVdWHiMYUORo=
+	t=1778332087; cv=none; b=byDGd7ZaO8ULgZ1nC1De0ATwK2j0yxJiF916qlg8NXQ5lphd7zQrjGjYutVene0NMnS8rztS58EgWLrvPDTyFO1t7t71xdq5sF+QtFNQSIGIr4KQxKevQmS708X9fF4SUrrxm42XWOZ2kxk5OIw5iRvJmn9DQ3I/Fh9pDe6b1xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778332081; c=relaxed/simple;
-	bh=UXrQ3tikmHrAskmo748w8JQB3MhNi6dOmZluslyEjlM=;
+	s=arc-20240116; t=1778332087; c=relaxed/simple;
+	bh=8UsQ8ODIaKHNARGlNV8zeg4b5v5mx+oMLZjK3ISDOo0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=piB72aayhAzeQGrVNWXt+wS3pJV4S9tYSM4+6nnxUIkQj259qKHqg6vEpTwAVC/cDUWKjsnoBIS8qvF7lbgFJWMuoolAJUILsBZaANPPzLNONDEZ381c0pnhG4I1xIBURM6ohMTkOyiqkBTDw1yBxiMRVAvySoAJRWS9MP8IbX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MJuorTb6; arc=none smtp.client-ip=220.197.31.5
+	 MIME-Version; b=MF529WmYkz+szBWLAstv4UgOswp0b6T4jPsMZqMZ6+1fc3jaxUNFzFRM6OqK4Edu6VPkXQqVccn0T87uhDhZ6LMe9HVXMqeHSyWFP9N/X/pG+PrHDko7w9isn7wEZSgIfF9iNHE07Ov0hepiHJybrxNLTmFktRs8HvSaId2zn04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=kB3/v6PV; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MJuorTb6"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="kB3/v6PV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=+h
-	u6sR6qdLLOp02Nlw7V+LCLdEzkp8flEMxu7HQ10vI=; b=MJuorTb6jGZs5skNVq
-	Rqv29k0Qi1Z5DY+qhAo9uw+0D2tEvFiy2KgG79DLcnl6XIYRmTcBzjkhX26+a14S
-	7M5QXp9Wu8/Okn+WKNnFJc2oeWEZLGy+h0L+X5VEw4cIK7tYP/UrHxJXJ6FP1OQz
-	cRKA0NMqUYziAWzhH0iCL4VJs=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=G2
+	voV/4bTfj6ga8/syXqTbj2JOBf62JPJ24eOcc6mQ8=; b=kB3/v6PVGR57waqw8H
+	7lVlpNYlmM2x3xqBuFf5tpmDNRuKasIY7AmKafCk5/r+xxFTXxFQ+EUK4FmB8x9f
+	kjFuMzTO1cqgpyMFcYa8r+iM5VVsfNtYWrw3/gItJCXkkGETmpvzzVsTzKCR2dHJ
+	ZDBhgEU1GDkJx2lyStkWwgfYM=
 Received: from Precision-7960.. (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgDHYi+GMf9pRitfDA--.13014S5;
-	Sat, 09 May 2026 21:07:23 +0800 (CST)
+	by gzsmtp4 (Coremail) with SMTP id PygvCgDHYi+GMf9pRitfDA--.13014S4;
+	Sat, 09 May 2026 21:07:22 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -36,9 +36,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 3/3] PCI: cadence: Use dynamic PCIe capability offset in host driver
-Date: Sat,  9 May 2026 21:07:16 +0800
-Message-Id: <20260509130716.2104103-4-18255117159@163.com>
+Subject: [PATCH v2 2/3] PCI: cadence: Add cdns_pcie_get_pcie_cap() helper and cache capability offset
+Date: Sat,  9 May 2026 21:07:15 +0800
+Message-Id: <20260509130716.2104103-3-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260509130716.2104103-1-18255117159@163.com>
 References: <20260509130716.2104103-1-18255117159@163.com>
@@ -49,137 +49,71 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PygvCgDHYi+GMf9pRitfDA--.13014S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW3ArWDJrWDZr43KryrKFy5twb_yoW7AFWrpF
-	WDWFyIk3WIqrWY9an5A3WDZF13t3ZIy3srJws29w17ZF17CFyUGFW2gFn8tFZxGrZrXry7
-	X3WDtF9rGF4SvFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR04ibUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wvIbGn-MYtRRAAA39
+X-CM-TRANSID:PygvCgDHYi+GMf9pRitfDA--.13014S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KF45Jr1xur1kZw4DWr18AFb_yoW8uF45pF
+	WDWr1fKF1rJrW3u3Z3Aa1Yqr13tF90k3y7t392kr13Zr12kr1UGF12kFyYkF1akrW3Cr13
+	ZrWDtr9rWF1ayrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zKhF4OUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAvIbGn-MYueIAAA35
 
-The Cadence PCIe controller may place the PCI Express Capability
-structure at different offsets depending on SoC integration. The
-hardcoded CDNS_PCIE_RP_CAP_OFFSET (0xC0) is not universally valid.
+Add a helper cdns_pcie_get_pcie_cap() that finds and caches the
+PCIe Capability offset in struct cdns_pcie::pcie_cap. This avoids
+repeated searches and follows the pattern used in other PCIe drivers.
 
-Replace all uses of the fixed offset with the dynamically cached
-pcie->pcie_cap obtained via cdns_pcie_get_pcie_cap(). This affects:
-- Root Port training completion check
-- Link retraining
-- Root Port initialization (ASPM quirks)
+The helper uses cdns_pcie_find_capability() to locate PCI_CAP_ID_EXP
+and stores the result for later use.
 
-Also remove the now-unused CDNS_PCIE_RP_CAP_OFFSET definition from
-pcie-cadence-lga-regs.h.
-
-This change ensures correct operation across different Cadence IP
-generations (LGA and HPA) and SoC designs.
+This is a preparatory step for removing the hardcoded capability
+offset from host driver code.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/cadence/pcie-cadence-ep.c          | 5 +++--
- drivers/pci/controller/cadence/pcie-cadence-host-common.c | 4 ++--
- drivers/pci/controller/cadence/pcie-cadence-host-hpa.c    | 2 ++
- drivers/pci/controller/cadence/pcie-cadence-host.c        | 6 ++++--
- drivers/pci/controller/cadence/pcie-cadence-lga-regs.h    | 1 -
- 5 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/pci/controller/cadence/pcie-cadence.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index 38a0157b60dc..eeee954f7dc7 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -571,9 +571,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
- 	int max_epfs = sizeof(epc->function_num_map) * 8;
- 	int ret, epf, last_fn;
- 	u32 reg, value;
--	u8 cap;
-+	u8 cap = pcie->pcie_cap;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index c057f4b393e6..bbd275193bc1 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -219,6 +219,7 @@ struct cdns_plat_pcie_of_data {
+  *       wrapper
+  * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
+  * @debug_dir: debugfs node
++ * @pcie_cap: PCIe capability offset
+  */
+ struct cdns_pcie {
+ 	void __iomem		             *reg_base;
+@@ -233,6 +234,7 @@ struct cdns_pcie {
+ 	const  struct cdns_pcie_ops          *ops;
+ 	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
+ 	struct dentry			     *debug_dir;
++	u8				     pcie_cap;
+ };
  
--	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
- 	/*
- 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
- 	 * and can't be disabled anyway.
-@@ -690,6 +689,8 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 	}
- 	pcie->mem_res = res;
+ /**
+@@ -651,6 +653,22 @@ static inline int cdns_pcie_hpa_ep_setup(struct cdns_pcie_ep *ep)
  
-+	cdns_pcie_get_pcie_cap(pcie);
+ u8   cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap);
+ u16  cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap);
 +
- 	ep->max_regions = CDNS_PCIE_MAX_OB;
- 	of_property_read_u32(np, "cdns,max-outbound-regions", &ep->max_regions);
- 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-index 2b0211870f02..26b248231558 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-@@ -26,7 +26,7 @@ EXPORT_SYMBOL_GPL(bar_max_size);
- 
- int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
- {
--	u32 pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
-+	u32 pcie_cap_off = pcie->pcie_cap;
- 	unsigned long end_jiffies;
- 	u16 lnk_stat;
- 
-@@ -68,7 +68,7 @@ EXPORT_SYMBOL_GPL(cdns_pcie_host_wait_for_link);
- int cdns_pcie_retrain(struct cdns_pcie *pcie,
- 		      cdns_pcie_linkup_func pcie_link_up)
- {
--	u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
-+	u32 lnk_cap_sls, pcie_cap_off = pcie->pcie_cap;
- 	u16 lnk_stat, lnk_ctl;
- 	int ret = 0;
- 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-index 8bf7cc106413..512e243df737 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-@@ -355,6 +355,8 @@ int cdns_pcie_hpa_host_setup(struct cdns_pcie_rc *rc)
- 		rc->cfg_res = res;
- 	}
- 
-+	cdns_pcie_get_pcie_cap(pcie);
++/**
++ * cdns_pcie_get_pcie_cap() - Return cached PCIe Capability offset
++ * @pcie: Cadence PCIe instance
++ *
++ * Finds and caches the offset of PCI_CAP_ID_EXP on first call.
++ * Returns 0 if the capability is not present.
++ */
++static inline u8 cdns_pcie_get_pcie_cap(struct cdns_pcie *pcie)
++{
++	if (!pcie->pcie_cap)
++		pcie->pcie_cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
 +
- 	/* Put EROM Bar aperture to 0 */
- 	cdns_pcie_hpa_writel(pcie, REG_BANK_IP_CFG_CTRL_REG, CDNS_PCIE_EROM, 0x0);
- 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 873d496c440f..6f6d80840114 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -147,12 +147,12 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
- 	cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
- 	cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
- 
--	value = cdns_pcie_rp_readl(pcie, CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP);
-+	value = cdns_pcie_rp_readl(pcie, pcie->pcie_cap + PCI_EXP_LNKCAP);
- 	if (rc->quirk_broken_aspm_l0s)
- 		value &= ~PCI_EXP_LNKCAP_ASPM_L0S;
- 	if (rc->quirk_broken_aspm_l1)
- 		value &= ~PCI_EXP_LNKCAP_ASPM_L1;
--	cdns_pcie_rp_writel(pcie, CDNS_PCIE_RP_CAP_OFFSET + PCI_EXP_LNKCAP, value);
-+	cdns_pcie_rp_writel(pcie, pcie->pcie_cap + PCI_EXP_LNKCAP, value);
- 
- 	return 0;
- }
-@@ -410,6 +410,8 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 		return PTR_ERR(rc->cfg_base);
- 	rc->cfg_res = res;
- 
-+	cdns_pcie_get_pcie_cap(pcie);
++	return pcie->pcie_cap;
++}
 +
- 	ret = cdns_pcie_host_link_setup(rc);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h b/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
-index 857b2140c5d2..7b92812ed120 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
-@@ -133,7 +133,6 @@
+ bool cdns_pcie_linkup(struct cdns_pcie *pcie);
  
- /* Root Port Registers (PCI configuration space for the root port function) */
- #define CDNS_PCIE_RP_BASE	0x00200000
--#define CDNS_PCIE_RP_CAP_OFFSET 0xC0
- 
- /* Address Translation Registers */
- #define CDNS_PCIE_AT_BASE	0x00400000
+ void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
 -- 
 2.34.1
 
