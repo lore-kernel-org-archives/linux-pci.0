@@ -1,128 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15D41377003
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 11:45:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A08377550
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 12:26:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778499921; cv=none; b=rC1cFbVVkOp0KpdmaMDpjcCJbXyUZhDTBAHkSI/k1DOeP8rt4m4ilRq9zAw1WMU2zbkD4b/AvVNtgLznF+K30yf7Od3ToImHnp89336EDXs6DEaviFR2CA4gAmrNM248TXAgVJBvUFHgTarxAGwiahpVJOKPgIK8xgrqoMuDZFQ=
+	t=1778502394; cv=none; b=sQ2WLyqo/2fKrEL7u1RCwghU2KWs3m2FAlnL9CoZByeKNBD4e5T54cNRRSdUeTftM+0OLxJOchxGJt+AP65XLt7885DL5W2htxmao2+Rpdk+9g+xwoEbNh7MJwNkixQGEWPzaPRBWjDIT29M2msO1emcl8+MAYKovllO7ngM7ho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778499921; c=relaxed/simple;
-	bh=fz0jSbfuRK5dOsz4ATrwWYd/2Dc+G//arFfjMY262K8=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mXx3yLgp9cnpP2qvLVu0s5pX+CIm7GUYNaJip1T8ZpmbFvVE5elAAH4cg7rEsVEkiUpws6ZSVckiPoTMpLFvtdyYwZn2evoWna12TD1k9qvO+DEJxAZU3IxIfGFrcyqYQyXsoaUJehq3dEdAeYTcWZUQo3jJL3y+jOEP8P7zbK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZKCaDER+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778502394; c=relaxed/simple;
+	bh=iolC6bBCO1uBO8OTxwxvAtERm7HvcVUo1Pbh8DX4BIg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=alqDv/hNuTPTKqjGe0GXbZdVoVOmLwbDjgbxbQEUMCBhU9c0oCUt/5bHGELhWIQpqumKAJEG/HvUK7lBehzUukTVElmmQAJwc1khmwBYoBp0fkifW8yW3vUTTiQzgqxy/J0ZXbvuHObFNsWKRmk773CHsn0z8+Gi+MEYF/3kvxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hvkNlDzv; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZKCaDER+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5B52C2BCFA
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 11:45:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778499920;
-	bh=fz0jSbfuRK5dOsz4ATrwWYd/2Dc+G//arFfjMY262K8=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc:From;
-	b=ZKCaDER+DJme5wJWTQafzm+Y12dF5K0zl7V3ReqTTQVyxvz33OWYZcxNRgun06EEf
-	 OYWldwHN63zniJfSIUY2YVs75IOX15KiyVhH7H1nTyCKFifeXwA6AuF7FvUdi0aaLw
-	 bsYFfeZtax/SV6gZNYUUjTu+fFhAxeMtXvcte30VZaxip4KgrPkh4iBsmFP8a3QZq3
-	 4r82xjf57xQlAEcmVCKJ/eER8hFHN0XwH4U9IL1VxywzLjMZbIlShUcKgpS953Ljra
-	 H+B3fInPwWo2RYnQWKJCkwhz0kbVnjOwaQbg6LCtpRzM39sKH663EHN5T0B/X0POP+
-	 KsLO3e9ja/KTA==
-Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5a87edf88b3so3141687e87.0
-        for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 04:45:20 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ8960RCQCg1odljRuJ+lNieUH2Hh2s/aR51Y4nSQAuZyMoL/agoDy8jnM3aTWx3W56CF8KGLkIUlAE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxl8uhZkMHIK3uQLJcRLftPvKFiUp7XNIFX79DKu6BwSj62cTTb
-	yniDWFTpsAyonl3PVHSgC0i/w0WJ3SN5R1LCGGM0A9re3kb9JMNiRVGe3IISlyExn4iuT7QOs4U
-	wISo/1W1fJGdOlVmvDzANeFxV0FNZzhXHKj5yKcFofw==
-X-Received: by 2002:a05:6512:2247:b0:5a8:9bb6:230a with SMTP id
- 2adb3069b0e04-5a8b6e9020fmr2575074e87.18.1778499919417; Mon, 11 May 2026
- 04:45:19 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 11 May 2026 04:45:17 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 11 May 2026 04:45:17 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260507-pwrseq-m2-bt-v2-4-1740bd478539@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hvkNlDzv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778502391;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=0esOW+E5aORR+Jaz2Vzk879TLZQqwTPc1YcmsqDi+5U=;
+	b=hvkNlDzveI+838j5KLaXz6UOfLxTZug1xC35rm+iEBn31LknHoxwtDB6nnWDMVtC9/O6It
+	4fdMGieUyG0a8RmmCJMTS6cDrP7LcGhM/MArnUxIHgK3ioAjGLoSrGrjiUwGOfE/6c58g6
+	K13wMziBEmV+cMkx2b5I47kBoTQukCE=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-29-P12XTs3qP0Ocq_ZCqrkx6A-1; Mon,
+ 11 May 2026 08:26:29 -0400
+X-MC-Unique: P12XTs3qP0Ocq_ZCqrkx6A-1
+X-Mimecast-MFC-AGG-ID: P12XTs3qP0Ocq_ZCqrkx6A_1778502388
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8C823195607B;
+	Mon, 11 May 2026 12:26:26 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.32.142])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 5BCC91800286;
+	Mon, 11 May 2026 12:26:23 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: alex@shazbot.org
+Cc: bhelgaas@google.com,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Force PM reset for Qualcomm devices with NoSoftRst+
+Date: Mon, 11 May 2026 14:26:21 +0200
+Message-ID: <20260511122622.35311-1-jtornosm@redhat.com>
+In-Reply-To: <20260508111627.702c9be2@shazbot.org>
+References: <20260508111627.702c9be2@shazbot.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260507-pwrseq-m2-bt-v2-0-1740bd478539@oss.qualcomm.com> <20260507-pwrseq-m2-bt-v2-4-1740bd478539@oss.qualcomm.com>
-Date: Mon, 11 May 2026 04:45:17 -0700
-X-Gmail-Original-Message-ID: <CAMRc=McJj1Wp_h5ReTJ68ddmgCg3RDuo4Hqar71O8MBtqT5ryQ@mail.gmail.com>
-X-Gm-Features: AVHnY4LSPzVLt5LgdyZOlSqyDWYcSbRKhI4C6lR7JUAJAnXf0Vx4688SEvTLvXg
-Message-ID: <CAMRc=McJj1Wp_h5ReTJ68ddmgCg3RDuo4Hqar71O8MBtqT5ryQ@mail.gmail.com>
-Subject: Re: [PATCH v2 4/9] power: sequencing: pcie-m2: Create serdev for PCI
- devices present before probe
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
-	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-bluetooth@vger.kernel.org, Wei Deng <wei.deng@oss.qualcomm.com>, 
-	Luiz Augusto von Dentz <luiz.von.dentz@intel.com>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Shuai Zhang <quic_shuaz@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Thu, 7 May 2026 18:06:12 +0200, Manivannan Sadhasivam via B4 Relay
-<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->
-> So far, the driver is registering a notifier to create serdev for the PCI
-> devices that are going to be attached after probe. But it doesn't handle
-> the devices present before probe. Due to this, serdev is not getting
-> created for those existing devices.
->
-> Hence, create serdev for PCI devices available before probe as well.
->
-> Note that the serdev for available devices are created before
-> registering the notifier. There is a small window where a device could
-> appear after pwrseq_pcie_m2_create_serdev(), before notifier registration.
-> But since M.2 cards are fixed to a slot, they are mostly added either
-> before booting the host or after using hotplug. So this window is mostly
-> theoretical.
->
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> ---
->  drivers/power/sequencing/pwrseq-pcie-m2.c | 83 ++++++++++++++++++++++++++-----
->  1 file changed, 70 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> index 038271207a27..0a37a375a89d 100644
-> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> @@ -236,7 +236,7 @@ static int pwrseq_pcie_m2_create_bt_node(struct pwrseq_pcie_m2_ctx *ctx,
->  	return ret;
->  }
->
-> -static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx,
-> +static int __pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx,
->  					struct pci_dev *pdev)
+Hello Alex,
 
-It may just be a personal preference but I dislike the __ prefix that doesn't
-really indicate how the function is different from the one without it. I prefer
-the name to reflect that - if it's because the function expects a mutex to be
-already taken then it should be called something_something_unlocked() etc.
+Thank you again for your review.                                                                                                                                               
+                                                            
+> What does reset_methods sysfs attribute report for these devices on an
+> unpatched kernel?
+The kernel we use doesn't have CONFIG_PCI_RESET_SYSFS enabled,
+so reset_methods is not available. However, I can provide the actual
+behavior observed through testing and dmesg logs.
+ 
+> I'd tend to expect these are single-function devices where bus reset
+> would be available as a function level reset.
+Yes, these are single-function devices (PCI header type 00).
+For example, here's the ath11k device:                                                                                                                                                                                 lspci -xxx -s 0000:03:00.0 | head -2
+    03:00.0 Network controller: Qualcomm Technologies, Inc QCNFA765
+    00: cb 17 03 11 06 05 10 00 01 00 80 02 10 00 00 00                                                                                                                                                              
+                                                  ^^
+                                     Header type: 00 (single-function)
+ 
+> I'm very suspicious that this is just masking an underlying issue
+> relative to bus reset for these devices
+Yes, you are right, there is an underlying bus reset issue. Let me explain
+what I have observed through the testing:
+Testing showed no reset is performed at all. During both VM startup and
+virsh reset operations, there are no reset-related messages in dmesg.
+The reset hierarchy returns -ENOTTY at each step:
+  - No FLR (device doesn't advertise it)
+  - PM reset returns -ENOTTY (NoSoftRst+ flag)
+  - Bus reset apparently not attempted
+When testing the suggested quirk_no_flr() approach (which worked for
+mt7925e), dmesg shows secondary bus reset is attempted:
+  vfio-pci 0000:06:00.0: enabling device (0000 -> 0002)
+  vfio-pci 0000:06:00.0: resetting
+  pcieport 0000:00:1c.4: unlocked secondary bus reset via: __pci_reset_function_locked
+  vfio-pci 0000:06:00.0: reset done
+However, the device becomes unresponsive after this:
+  lspci -vvvvvvvvvvvv -s 0000:03:00.0
+    03:00.0 Network controller: Qualcomm Technologies, Inc (rev ff) (prog-if ff)
+        !!! Unknown header type 7f
+And all config space reads return 0xFF, indicating the device is not
+responding after bus reset.
+If we use PM reset (D3hot->D0) succeeds and the device works correctly
+through multiple VM lifecycles (startup, virsh reset, shutdown/restart).
+                                                                                                                                                                                                                     
+> especially if we haven't actually verified the device state is                                                                                                                                                   
+> actually reset on transition back to D0                                                                                                                                                                          
+The verification is functional: with our patch, the device successfully
+initializes in the guest after VM reset operations, and continues working
+through multiple reset cycles. Without a working reset (default kernel),
+WiFi devices (ath11k, ath12k) cannot be reused after VM termination, and
+modem devices (SDX62/SDX65) fail to initialize even on first VM assignment.
+                                                                                                                                                                                                                     
+Summary:
+You're correct that there's a bus reset issue, SBR breaks these devices.
+The question is whether we should:
+  1. Investigate why SBR breaks these single-function devices
+  2. Use PM reset which demonstrably works
+Option 1 may involve firmware-level investigation, while the PM reset
+approach provides a working solution.
+This situation is similar to existing quirks: quirk_no_flr() works around
+devices with broken FLR implementations. Here we're working around devices
+that incorrectly advertise NoSoftRst+ (preventing PM reset) while SBR doesn't
+work properly.
+I'm open to your guidance on the best path forward.
 
-Maybe call it pwrseq_pcie_m2_create_serdev_for_pci()? Or at least:
-pwrseq_pcie_m2_do_create_serdev()?
+Thanks
 
->  {
->  	struct serdev_controller *serdev_ctrl;
-> @@ -259,6 +259,16 @@ static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx,
->  		return 0;
->  	}
->
-> +	/* Bail out if the serdev device was already created for the PCI dev */
-> +	mutex_lock(&ctx->list_lock);
-> +	list_for_each_entry(pci_dev, &ctx->pci_devices, list) {
-> +		if (pci_dev->pdev == pdev) {
-> +			mutex_unlock(&ctx->list_lock);
-> +			return 0;
-> +		}
-> +	}
-> +	mutex_unlock(&ctx->list_lock);
+Best regards
+José Ignacio
 
-Is there any reason to not use guard() here?
-
-Bart
