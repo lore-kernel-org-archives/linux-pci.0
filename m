@@ -1,89 +1,196 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66B89356748;
-	Mon, 11 May 2026 23:26:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F9C535675D;
+	Mon, 11 May 2026 23:28:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778541968; cv=none; b=RyCyco02J8QZrRSXuHimKSNA1YW/EtclwLI924hP2A3hYN1tg+/4oGUhxlKfuZTFnsfsXlw7rEeeTx8O99rnPgs295/mVLQtLaBqnSDEm2bR/VQjvaR7RU+tzlKqcIdBZLabauEyjHtv41wMtHNwL15l1wuDsKsEDj94bUwLrso=
+	t=1778542133; cv=none; b=oPWnXGOFrjty8qBl9De+TO5xo5rfUSEhNYmcp0Q2VUDi4+e75J5BKZLGJ+HCIJJURID5lvVF4KWM5Wl9tkGJm9TodBbsSGNxIhjpd7BCO2i/cDUpE2EkBWQzdEsSxYJRzOJVSWiCL5/0EtsGeBJaC3gPZBesS2NBqr0SkFUhpBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778541968; c=relaxed/simple;
-	bh=FFxy2qGG5uICxZy6GlEVZYlyFPB95KU8iomidDtk2XA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=UHVbc3FnbmTboZT4yOPzmc3bV+Hr0F6O92mP/oVgWZT0pgxjiZ+uB/eFo1vIy1FZx9OtRXFflp8xXBtf3KFLQRQXv501T4iJ6XOfOKFOMcslA5JUvQI77a0Prq11l2a9aERi5qBDgQsTrHzVyvc//JFJytvLTXbQQdn+SXYaxoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k62h1kKb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778542133; c=relaxed/simple;
+	bh=aADp7DgVuAPyaGlpb+SO4KZbRsMSVdrHhsP3kBXCfLw=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 Mime-Version:Content-Type; b=XZKAwcAfXxSVBvFuwqCzR1LXAVBtAWuFYs+wmtGL7yPHxef7jz7gROz0+a+kOs8s9hjnjXq3pQ1LK1GCEnPFM/N0IOAJ7uqfJdDfsXooMDrRJTaw6zBG1B2WAR4LNu2n6Uiwz18JQBknq+nDGcgtyZH4DCdtWCgd4kwiuAA6SCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VKnAaPhY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k62h1kKb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15C8AC2BCB0;
-	Mon, 11 May 2026 23:26:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VKnAaPhY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5080EC2BCB0;
+	Mon, 11 May 2026 23:28:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778541968;
-	bh=FFxy2qGG5uICxZy6GlEVZYlyFPB95KU8iomidDtk2XA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=k62h1kKb8vIErULvwuFtu8BzMPVBtg/C0t94FaJwu1JkTOruCcndsTZXQ/GajYWxK
-	 wlFsLI8RTi2FRa60IHJNZb6wACBwwYmHR1LwDwalDHpWPNfrltv8hl/oaR0PHgrcw6
-	 HT1zLVJNCezcYuPq9xN8mEZ4RSh0Okom68+W11pLDGMgpC1wJLJSpUEpvhb60uEXnM
-	 vcXD+NNf747+JlPQcdLM1QyIpc4R7iEeY+y9D9EHuI6xfO1xFx7P9pi2GMnfm8vN7r
-	 BzmnWI+FL4JP94QNz1GsSk9LmkoTxlSs+wEqXDqWfVtOj4Boar94+Q7VEnrA/xqRLn
-	 s7JVqAKc3Td9Q==
-Date: Mon, 11 May 2026 18:26:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Florian Eckert <fe@dev.tdt.de>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Sajid Dalvi <sdalvi@google.com>,
-	Ajay Agarwal <ajayagarwal@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Eckert.Florian@googlemail.com, ms@dev.tdt.de
-Subject: Re: [PATCH v5 1/7] MAINTAINERS: Remove bouncing intel-gw maintainer
-Message-ID: <20260511232606.GA194054@bhelgaas>
+	s=k20201202; t=1778542133;
+	bh=aADp7DgVuAPyaGlpb+SO4KZbRsMSVdrHhsP3kBXCfLw=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=VKnAaPhYkMjXtNYBBpR+2rAoWThQGtiVYS0cvvCDMVWbZRVYbRy3R2a6Y7E0q7csH
+	 6MUQbAEo6sj2tW+YaiBaqK5Hrsac9zUd4kpCOT3RLz05zSkwSJOPzkOL7RMz7UDZRL
+	 AdcqDrpFllD4sG+JIgRgHV5Tg8Da6xoWM3ViLZjBcL+XgVSlhD0GvY30gG/ZWOE4l2
+	 lHYZiPfFVDQxyKBTAjM2qtCsoae5G0MWvTnrRghRLYM1rbsbt/qQLwLPP1KlLVkBex
+	 m4nmDCTq7Fm3lVw+mIqwmhIGcqCMYxNmEPyPQRuPE/H9Ed/PJxn3BtVezk/WJvf2yW
+	 ZA51GmYvWsOfQ==
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 75475F40069;
+	Mon, 11 May 2026 19:28:51 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-06.internal (MEProxy); Mon, 11 May 2026 19:28:51 -0400
+X-ME-Sender: <xms:M2YCamdbFM64ymqngWj5O329txdA3O7T--Vb61oKSNUrTeG5TrjH6w>
+    <xme:M2YCap34CBrDTBhQ4CwEYsKD_WHBOjjBPVinCH1bfp0TMjzxS8cY-WSx_y8bnVfJX
+    _6UIJWcnqhBIScn9pXo5JZyjrr9QExFUunM2kLonFsjCqab7Cwd>
+X-ME-Received: <xmr:M2YCaq9QUKhUqMN3glWylDp-vYyKfjBZZqt0UAu2djEQy34H5HKJfncVZE7FnfwiiFOyXEqlidVQMhTeP5rCIkbUMyHqqrUVRgI>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduvddtvdehucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepfffhvfevkfgjfhfugggtgfesthejredttddtjeenucfhrhhomhepfdffrghnucgh
+    ihhllhhirghmshculdhnvhhiughirgdmfdcuoegujhgsfieskhgvrhhnvghlrdhorhhgqe
+    enucggtffrrghtthgvrhhnpedtkeelkefgtdegudeiiedttdfgueegieekjeffueffueet
+    jeffkeevtefflefhheenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsth
+    gvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepughjsgifodhmvghsmhht
+    phgruhhthhhpvghrshhonhgrlhhithihqddujeejvdeftdegheehqdeffeefleegtdegje
+    dqughjsgifpeepkhgvrhhnvghlrdhorhhgsehfrghsthhmrghilhdrtghomhdpnhgspghr
+    tghpthhtohepvdekpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehtvghrrhihrd
+    gsohifmhgrnhesrghmugdrtghomhdprhgtphhtthhopegujhgsfieskhgvrhhnvghlrdho
+    rhhgpdhrtghpthhtohepjhhitgdvfeeskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepug
+    grvhgvsehsthhgohhlrggsshdrnhgvthdprhgtphhtthhopegurghvvgdrjhhirghnghes
+    ihhnthgvlhdrtghomhdprhgtphhtthhopegrlhhishhonhdrshgthhhofhhivghlugesih
+    hnthgvlhdrtghomhdprhgtphhtthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhm
+    pdhrtghpthhtohepshhhihhjuhdrjhhoshgvsehhuhgrfigvihdrtghomhdprhgtphhtth
+    hopehmihhnghdrlhhiseiiohhhohhmrghilhdrtghomh
+X-ME-Proxy: <xmx:M2YCaq10C2R19tgRVDbetC1eA6Y1ve7S_ozN2VQ7W1imQnHn_6TZOQ>
+    <xmx:M2YCat15BnSUZfq7j-azLAw0GkgNrJHlGVux7mFHPicElCdwRnFuAg>
+    <xmx:M2YCamuw78kLXFUdqy2k4BpVPSkoHDrbVM-y-kmY0lgntnoCAYi8rw>
+    <xmx:M2YCatbtSxrQ8fMcUmYP5btnJLC6pfsG6Hk_Pd4Rgoi6Cx4hIGcrDw>
+    <xmx:M2YCasJ70O4NK3-xFJ790GKeQhUzcgUhDb6l4YD4PXRCj_guGD2Ixa-A>
+Feedback-ID: i67ae4b3e:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 11 May 2026 19:28:50 -0400 (EDT)
+Date: Mon, 11 May 2026 16:28:49 -0700
+From: "Dan Williams (nvidia)" <djbw@kernel.org>
+To: "Bowman, Terry" <terry.bowman@amd.com>, 
+ "Dan Williams (nvidia)" <djbw@kernel.org>, 
+ Jonathan Cameron <jic23@kernel.org>
+Cc: dave@stgolabs.net, 
+ dave.jiang@intel.com, 
+ alison.schofield@intel.com, 
+ bhelgaas@google.com, 
+ shiju.jose@huawei.com, 
+ ming.li@zohomail.com, 
+ Smita.KoralahalliChannabasappa@amd.com, 
+ rrichter@amd.com, 
+ dan.carpenter@linaro.org, 
+ PradeepVineshReddy.Kodamati@amd.com, 
+ lukas@wunner.de, 
+ Benjamin.Cheatham@amd.com, 
+ sathyanarayanan.kuppuswamy@linux.intel.com, 
+ vishal.l.verma@intel.com, 
+ alucerop@amd.com, 
+ ira.weiny@intel.com, 
+ corbet@lwn.net, 
+ rafael@kernel.org, 
+ xueshuai@linux.alibaba.com, 
+ linux-cxl@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, 
+ linux-acpi@vger.kernel.org, 
+ linux-doc@vger.kernel.org, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>
+Message-ID: <6a026631b4f86_1b86a100d7@djbw-dev.notmuch>
+In-Reply-To: <09796934-e093-44e6-b6e2-2d0dd5a29673@amd.com>
+References: <20260505173029.2718246-1-terry.bowman@amd.com>
+ <20260505173029.2718246-3-terry.bowman@amd.com>
+ <20260507190836.70197e24@jic23-huawei>
+ <8913c666-a343-4717-8ab2-0b8546d1bdfb@amd.com>
+ <20260508150533.04e19cf9@jic23-huawei>
+ <69feaebd471c3_1b86a100b@djbw-dev.notmuch>
+ <09796934-e093-44e6-b6e2-2d0dd5a29673@amd.com>
+Subject: Re: [PATCH v17 02/11] cxl/ras: Unify Endpoint and Port AER trace
+ events
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260417-pcie-intel-gw-v5-1-0a2b933fe04f@dev.tdt.de>
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Apr 17, 2026 at 10:35:45AM +0200, Florian Eckert wrote:
-> The maintainer's email address has been bouncing for months. Mark the PCI
-> intel-gw driver as orphaned.
+Bowman, Terry wrote:
+> On 5/8/2026 10:49 PM, Dan Williams (nvidia) wrote:
+> > Jonathan Cameron wrote:
+> >> On Thu, 7 May 2026 13:33:45 -0500
+> >> "Bowman, Terry" <terry.bowman@amd.com> wrote:
+> > [..]
+> >>>> This concerns me (sorry I wasn't paying attention to the v16 thread).
+> >>>> It is a userspace regression against code that is out in the wild and typically
+> >>>> not updated in sync with the kernel.
+> >>>>
+> >>>> If you are suggesting breaking ras-daemon at the very least +CC the maintainer.
+> > 
+> > Sorry, that was not the intent, see below.
+> > 
+> >>>>
+> >>>> To get to a unified tracepoint add a new one that does what you want, but
+> >>>> maintain the existing ones as well.  Userspace can then migrate and maybe
+> >>>> in 5+ years time we can delete the non unified ones.
+> >>>>
+> >>>> No actually comments on the code, just left it all here for Mauro,
+> >>>>
+> >>>> Thanks,
+> >>>>
+> >>>> Jonathan
+> >>>>   
+> >>>
+> >>> Dan was clear about using a single set of CE and UE handlers for all CXL RAS 
+> >>> protocol errors. While I understand there may be concerns, please direct any 
+> >>> objections to Dan and clarify what changes are required to avoid this 
+> >>> repeatedly going back and forth.
+> >>>
+> >>> [1] https://lore.kernel.org/linux-cxl/69cb2d5ba3111_178904100b7@dwillia2-mobl4.notmuch/
+> >>
+> >> Sure - Dan's on this thread so I'm sure he'll see it sooner or later.
+> >>
+> >> Perhaps I'm missing something that makes this less critical than it appears.
+> > 
+> > No, it is breakage and a thinko on my part on the advice to Terry on the
+> > backwards compatibility rules for tracepoints. At the time I was only
+> > tracking data type and order of the payload. I.e. string at same
+> > position. However, the name of the argument is ABI.
+> > 
+> > Something like this incremental fixup I think gets this back on track.
+> > It keeps legacy ABI support for "memdev" field in the payload. It
+> > incrementally lets updated userspace understand "port" and "dport"
+> > events. It stops us from growing a new set of events just to update the
+> > arguments. It enhances the CPER events to now handle switch ports in
+> > addition to endpoint ports.
+> > 
+> > The bulk of the change is passing @port and @dport to the CXL trace
+> > events instead of a plain @dev.
+> > 
 > 
-> Signed-off-by: Florian Eckert <fe@dev.tdt.de>
+> Thanks Dan and Jonathan,
+> 
+> I have a few questions.
+> 
+> Does this miss logging the Upstream SwitchPort device errors? Add another 
+> entry "uport=$"?
+> 
+> How does the user know which of the devices (memdev, port, or dport) is the 
+> erroring device? Do the traces need another string variable inidicating which 
+> device triggered the error?
 
-I pulled this one into pci/for-linus because we can merge it for v7.1
-and avoid more bouncing.
+I expect that can be determined from what values get populated.
 
-Mani, if you add more intel-gw patches this cycle, you'll have to
-re-fetch the pci/controller/dwc-intel-gw branch first.
+Endpoint:
+memdev=memX port=endpointY dport= host=parent(memX)
 
-> ---
->  MAINTAINERS | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index d1cc0e12fe1f004da89b1aa339116908f642e894..725f333f265bef416b5144c56649cb6eae736e40 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -20518,9 +20518,8 @@ F:	Documentation/devicetree/bindings/pci/intel,keembay-pcie*
->  F:	drivers/pci/controller/dwc/pcie-keembay.c
->  
->  PCIE DRIVER FOR INTEL LGM GW SOC
-> -M:	Chuanhua Lei <lchuanhua@maxlinear.com>
->  L:	linux-pci@vger.kernel.org
-> -S:	Maintained
-> +S:	Orphan
->  F:	Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
->  F:	drivers/pci/controller/dwc/pcie-intel-gw.c
->  
-> 
-> -- 
-> 2.47.3
-> 
+Downstream:
+memdev= port=portX dport=dport_dev(dportY) host=uport_dev(portX)
+
+Upstream:
+memdev= port=portX dport= host=uport_dev(portX)
+
+If dport= is populated, that is the device that triggered the error,
+otherwise it is the host= value.
+
+> And, I need to confirm: the Endpoint is NULL unless the CXL Port is an Endpoint 
+> Port?
+
+You mean memdev is empty, right? 
