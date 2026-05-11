@@ -1,143 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68DD72E63C;
-	Mon, 11 May 2026 05:18:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B095C3A1C9;
+	Mon, 11 May 2026 06:00:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778476717; cv=none; b=N8CeBkoHSEQwKpChSrpRrzPa7hfuK6tIE83vcfH9HqVdb4U5ORxareL9fIhZqj489JLD3MByevtOwFPEwl0bH36Dr4fouNLwNhIm09Se7mjqh3czg2aQUlJdyeHdBPiu+HcFSLP6jTMP36poxqvJUeAPFhY7j5YrROB6y5M+YW4=
+	t=1778479239; cv=none; b=rG2FANMM9jnp/xHBHi02zu3jPKjkLC7sBXZlAB+fl7NtyyNQkfczkUheKilXeybtUukUDKw8L+y22IXoyJr96CWnLgQFGt6RpP4vZpAqrxoBVEBuRpE2QPESMraYtz+buVYbL8bAUxR+y4Kpk9kP/4LzXRq8zcdhlXac2Y0Kghs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778476717; c=relaxed/simple;
-	bh=DlsXme9lwoqKsJyGSBaGtI+ozuQkDWi5uzvbU8C2c5I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QB49FcpI5Tlzf0hQEdMDb1kLODH+vIxCcFehjB9eeRTsPdC5EJ6n3ZMQ6ERYPr5pwnquKvWZRNT0J2Lqwj5HWKaKB1CuSoW7MwFFeK/dtZISddaTsat41GYyQiCxxlBadkKc42SU5Es6lwlDv7F1uJBTPWg2NN87LUsdbLUWfD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A0IPhONn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778479239; c=relaxed/simple;
+	bh=qzQqZfZSMNTqD7LsufmnEvBX9ctnkAxDw7tRsRavm7c=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=gqpF5vWQ00vdKDHX8IunRvT8JbAjuKDla8TeIMsZYl+ZsVcJP66yFwpLjUGrgJYu3M5Kr8eFeVRRndmOYKnu3QdKKbx+MAbl10raNmLkuB8SScwdUE00ewvHr7tcj6Tjw1BWQSGMU6AkhokH3UedwkzHTuGECEqNDP59ZpkARKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=UqaKtZWj; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A0IPhONn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F31ABC2BCB0;
-	Mon, 11 May 2026 05:18:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778476717;
-	bh=DlsXme9lwoqKsJyGSBaGtI+ozuQkDWi5uzvbU8C2c5I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=A0IPhONnhKqguTZYEEPJfmmarergtLTe7mSrEWz5PN6QF7cnCSYkd/psKMt4cjrOA
-	 iPMZg2uf0DMUlg80+8RIvT6HZyor+xgMmBfmWNyMmJMfIDrRn9Dt7l/BQpjFalaRxn
-	 H7UXcyE2WHjJMAVqakihPkV1OUbFTRvxNK6I16Vcb6e3rL6der9faCerOOxCyiFn6C
-	 sxeaPKDNEjql2Hzl93lyBYKXl9/ShZTiBz6jAoAzt5uhiyhs756PQ2ybYTYgJGs6uI
-	 SiAI5AQKrpi7bWoZ+YmwJPK+xeL3gnS8t2PuKFUvZjdbLOxWJ07vze0/pdsRPsoXFS
-	 A/cGX5Bsb1I6w==
-Date: Mon, 11 May 2026 10:48:23 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	manivannan.sadhasivam@oss.qualcomm.com, Thierry Reding <treding@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	"David E. Box" <david.e.box@linux.intel.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Heiner Kallweit <hkallweit1@gmail.com>, 
-	Chia-Lin Kao <acelan.kao@canonical.com>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, 
-	Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, 
-	Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
- set by BIOS for devicetree platforms
-Message-ID: <fb6uzh3jfes3hky6fblpsh2vvg3daij5ogecydiuhmytxbglcb@tdqjcoxuymsk>
-References: <20260122152903.GA1247682@bhelgaas>
- <8d8b2244-2bf0-48cf-8fb8-9e47e197a62d@nvidia.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="UqaKtZWj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ci
+	VEneF3Qh8f1wr1k2uXvgD09Jme9v/azQpnKLjoB8g=; b=UqaKtZWj8XQB5l4ZDY
+	rnoYcIWW1IqDdmCII/fiPzwLnE0mHKerC3nAYqnIFlYz638umzJRVY5fskiIQfld
+	Xo2OqK4Hc6OITT/sfhSGpIa6yetipI+fDwJuPdObPxcOcWO3qkZesPEiERu0C8Mo
+	BhCTkBqUCuawAgKBpJ/6bD2LY=
+Received: from Precision-7960.. (unknown [])
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDn9yk8cAFqPHQVAw--.46705S9;
+	Mon, 11 May 2026 13:59:34 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	vigneshr@ti.com,
+	jingoohan1@gmail.com,
+	thomas.petazzoni@bootlin.com,
+	pali@kernel.org,
+	ryder.lee@mediatek.com,
+	claudiu.beznea.uj@bp.renesas.com,
+	mpillai@cadence.com
+Cc: robh@kernel.org,
+	s-vadapalli@ti.com,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	claudiu.beznea@tuxon.dev,
+	linux-mediatek@lists.infradead.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v3 7/7] PCI: rzg3s-host: Use common pci_host_common_link_train_delay() helper
+Date: Mon, 11 May 2026 13:59:23 +0800
+Message-Id: <20260511055923.37117-8-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260511055923.37117-1-18255117159@163.com>
+References: <20260511055923.37117-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <8d8b2244-2bf0-48cf-8fb8-9e47e197a62d@nvidia.com>
+X-CM-TRANSID:_____wDn9yk8cAFqPHQVAw--.46705S9
+X-Coremail-Antispam: 1Uf129KBjvdXoW7JFy7uw17AFWrCFyDAry7KFg_yoWkArg_u3
+	47CF9rAw45Kr9IkF12v3ySvFyYya4Iqr1jga1rK3W3JayjyFnYywn7ZFs0yr15u3W7J342
+	vrykCa48Cr93CjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRK0eHPUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwYIq2oBcEba-AAA3d
 
-On Thu, May 07, 2026 at 11:25:23AM +0100, Jon Hunter wrote:
-> Hi Bjorn, Mani,
-> 
-> On 22/01/2026 15:29, Bjorn Helgaas wrote:
-> > [+cc NVMe folks]
-> > 
-> > On Thu, Jan 22, 2026 at 12:12:42PM +0000, Jon Hunter wrote:
-> > > ...
-> > 
-> > > Since this commit was added in Linux v6.18, I have been observing a suspend
-> > > test failures on some of our boards. The suspend test suspends the devices
-> > > for 20 secs and before this change the board would resume in about ~27 secs
-> > > (including the 20 sec sleep). After this change the board would take over 80
-> > > secs to resume and this triggered a failure.
-> > > 
-> > > Looking at the logs, I can see it is the NVMe device on the board that is
-> > > having an issue, and I see the reset failing ...
-> > > 
-> > >   [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
-> > >    flow control rx/tx
-> > >   [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
-> > >    0 timeout, reset controller
-> > >   [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
-> > >   [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
-> > >   [ 1003.050481] OOM killer enabled.
-> > >   [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
-> > > 
-> > >  From the above timestamps the delay is coming from the NVMe. I see this
-> > > issue on several boards with different NVMe devices and I can workaround
-> > > this by disabling ASPM L0/L1 for these devices ...
-> > > 
-> > >   DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
-> > >   DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
-> > >   DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
-> > >   DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
-> > > 
-> > > I am curious if you have seen any similar issues?
-> > > 
-> > > Other PCIe devices seem to be OK (like the realtek r8169) but just
-> > > the NVMe is having issues. So I am trying to figure out the best way
-> > > to resolve this?
-> > 
-> > For context, "this commit" refers to f3ac2ff14834, modified by
-> > df5192d9bb0e:
-> > 
-> >    f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for devicetree platforms")
-> >    df5192d9bb0e ("PCI/ASPM: Enable only L0s and L1 for devicetree platforms")
-> > 
-> > The fact that this suspend issue only affects NVMe reminds me of the
-> > code in dw_pcie_suspend_noirq() [1] that bails out early if L1 is
-> > enabled because of some NVMe expectation:
-> > 
-> >    dw_pcie_suspend_noirq()
-> >    {
-> >      ...
-> >      /*
-> >       * If L1SS is supported, then do not put the link into L2 as some
-> >       * devices such as NVMe expect low resume latency.
-> >       */
-> >      if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
-> >        return 0;
-> >      ...
-> > 
-> > That suggests there's some NVMe/ASPM interaction that the PCI core
-> > doesn't understand yet.
-> > 
-> > [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/controller/dwc/pcie-designware-host.c?id=v6.18#n1146
-> 
-> 
-> I want to revisit this issue. From my perspective low-power suspend has now
-> been broken on some of our Tegra platforms (that have NVMe devices) since
-> v6.19 and so far this is no resolution to this issue. The patch that was
-> proposed to fix this [0] has been rejected by qualcomm and although this
-> does workaround the issue, my confidence that this is the right fix is now
-> low.
-> 
+Replace the unconditional msleep(100) with the common helper
+pci_host_common_link_train_delay(). The helper only waits when
+max_link_speed > 2, as required by PCIe r6.0 sec 6.6.1.
 
-The referenced patch is now merged into arm-soc for v7.2:
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?id=7602c0ec0bbfd3985d49f4f0cad281c1414008c9
+This avoids unnecessary delay for Gen1/Gen2 links while retaining
+the mandatory 100 ms for higher speeds.
 
-I hope this takes care of the issue you are dealing with.
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/pcie-rzg3s-host.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-- Mani
-
+diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/controller/pcie-rzg3s-host.c
+index d86e7516dcc2..66f687304c1c 100644
+--- a/drivers/pci/controller/pcie-rzg3s-host.c
++++ b/drivers/pci/controller/pcie-rzg3s-host.c
+@@ -35,6 +35,7 @@
+ #include <linux/slab.h>
+ #include <linux/units.h>
+ 
++#include "pci-host-common.h"
+ #include "../pci.h"
+ 
+ /* AXI registers */
+@@ -1663,7 +1664,7 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+ 	if (ret)
+ 		dev_info(dev, "Failed to set max link speed\n");
+ 
+-	msleep(PCIE_RESET_CONFIG_WAIT_MS);
++	pci_host_common_link_train_delay(host->max_link_speed);
+ 
+ 	return 0;
+ 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.34.1
+
