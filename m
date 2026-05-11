@@ -1,73 +1,73 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010008.outbound.protection.outlook.com [52.101.56.8])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013071.outbound.protection.outlook.com [40.93.201.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9202F8EAE;
-	Mon, 11 May 2026 04:47:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642C781ACA;
+	Mon, 11 May 2026 04:58:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.71
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778474871; cv=fail; b=XZ76RFBvTgAPBBL/iXYxmJy3m/kG1ddQjxp5wmOr/YQjSKTb3NmlZM5hqhh9o1H8KXZDw6IyeffE2ehs8WJFoh3Xbgi95NETwVJde9VK3H02UCj3kolgfE3UzS09SgFR6DrjVmJp6QKuV+bB7+GtozRclrxeJ3b0cSeww47EsJk=
+	t=1778475494; cv=fail; b=RPwtjG9z3k2M9L4IwBqWPpONBi5k84vm/WbY8BXBRE3oc7rT1L1Mi+mBlQdae9o/WPtzSJQibPNXW9D34Wg5+Y8q4NPsiJMlkfiDbLm0ib2yNc04nWrkWm/sl6VPds4amUpyu2r3IyWbgLjQfbdXbhsmEMylDT/HJtlHBPmDvpQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778474871; c=relaxed/simple;
-	bh=gjWrfxOy64X3w6rpP1qc9h3N2DarsRyIJXUxLSJ/Gqg=;
+	s=arc-20240116; t=1778475494; c=relaxed/simple;
+	bh=QLun6iKVAaL2uUMt1OXagFk57OAMn239CUQ5Hhaar5A=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=V5Gxf0ncSkiahhn9r93R5G8Yw4UBw0Jq8ah/GAzrU/0tMxCpDAygbBq3knckztxSBTnorihisW+r9/Fn/OC/KfkZn85nwzwESKhlcTBJCrjz/V5/Yvy6FmJ27GSaQBBHIb/S0f6LoeAytWJ4LgtDloc5jVCu+UoC62ZJRMMqAJ8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=aMByqYno; arc=fail smtp.client-ip=52.101.56.8
+	 In-Reply-To:Content-Type; b=szDYKO4NTEfd/AzNUjUaJftkXBxfl8q1ka/0GqmQUbQI+RtW3weQeavZnQnL1ZsbYQeUGuZOiwWvdE6ZoGGi1va70UkH8nzPAZ/oKmcGZKCaPoiHk6/K3CisI/YQ7bS8f6c74xzUmJnqKcFKtcuha+rS+7Rd0FzmkuPFOUVTPCw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=rli8qsfq; arc=fail smtp.client-ip=40.93.201.71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="aMByqYno"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="rli8qsfq"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Xf6l/FUR4qLudq7O5VerGiMPCh3FQ/tVxAyhW5NFs8wuJIYLHvXUD+vqzJmky592lQZculaOyP8euOgXkzANThXb3ML/vdeCMIIr5BdLn+cF08TdO8APeIIARXjQl2YA16GKQmXROBkouuTgx1bhPJe2mD7y2oMlWb8SoQmGUve6d0YGL8pQIfPuZInZfat/vlPSMKsbInkTGNuGTeVLBJgczxb61eRUB5CDWh0KUEStT0/HPNT1Oq+MdIaSk5kfmmt/nOwhhyMxkToYXZgFsfJvTJbK7kV4Psz2tYG4rN0XhzZ46xWY+XkaYZleArJScDT0c9X9VSxebpV9MTdI3g==
+ b=QPMVhP/t8NVkK8N5eRGSLI/85XTB9ZXNvil3Ld1Dm2ksSo77DW4hNoS05Fm7EmSjxM5FQWLfwnij59sWZ0C+XOYluJorZyTTaMiQ76q1jZOOrp5XyXnVXksrLLkCZ4CqCMOFc03SZ/0Olkb0GkWmt9/WE1K1ULRU89lIEDOZS3TUIkP7yI/AO2/EnPAk1o5ytZElapxhKI4KsvZ8zKE/2ajIdBiGGgfUUQP1muq+qfuV+EUAkb64LHgdymX3Cy8cxiZn00iPd4uZ2cxY+RJ/9NL0tCeXj/Cuk/RZ0wOLOOaVjxDC9Cr/3k7abVwl1Mzye9yIjjiAJGm+LnYSFPwEsw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dGVMIuyl2oEgx46bpgmlWni8peBq2DNW87xKvyjQBtw=;
- b=C1g+fbKD9OV20dWWL4mK/iereFF4ta26asdLxLZPpchAkhQMkM7LrSMUjrPY/O+H8ATu+XoZjPFzjkb+Jou7N6OOOBcO/nOhM71HBA+JAquKiQWLdy3cVDdSteHezHKFz1z2Li2YiSw/Q5MoPtJAxQTcZdwgmJ8DDWrKN5EUdBa/GLYkiMeBFxeEXujohKnsk1HW9tf769xnLrYl8LKwL61hPi2Svw2Pt+QSlbNdlVxi8HQkqV2MP/AgyuElreTmo7dtkiiW7FVSyV/gg3JALOfIY2YcIjP/t11wPeh/LxRavYesRhWkqtMk6dnbxgxJVbwJ+0+FWJUoieIU00dOWw==
+ bh=AG5MFqJFPmr2i7ZkApXiYwWPHzQorecZF5Z225qosSk=;
+ b=oPtTo6vUKkwKArTnbPtJa+WNEITrfzh/9sEo/i1EOFK8AVpUWhKlbivz4zvN7BlSBdExulBy6w+itFUArRF6TjNmxAFcZXABd5b9MU22mErVmwTkb2luIpfm31zTbLGRBR+pMIsgtYximj4GOYcLPn3gRLaJ/uuz1xftjzOC3Z1u1Yz1Csqh0fT4LXximyz6RDJ0oH+iRN6zgVnDgD3WmwPMR8QkIXv3ESVy3RxGwxD9qKsC9lvMF70JWwsqWRHa2vDZ+LmkjHe47yn/+j9MhaenAmjNZOmX59Afhh3FsRnGBpfRQjeczsqM3gUx1OOCqq1+Cog9Nn0wN2Y6if4IeQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ 198.47.23.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
  dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dGVMIuyl2oEgx46bpgmlWni8peBq2DNW87xKvyjQBtw=;
- b=aMByqYnoQxPAjaqHJIOfSwIjfUqf4qXaBgWTvKg660Auzb+zu7B+khoKeQHwvPAf8nUd4CbVUgLOHxWqHGufGUVaWN4bcH+QRkn8HMsF14I1HzzG8tHxg5u1Q2ZHnxjhmEVHI7vhq181Qn7fVxCFrL56zM2L1DS6D9Vot8uaFkA=
-Received: from BYAPR05CA0023.namprd05.prod.outlook.com (2603:10b6:a03:c0::36)
- by BLAPR10MB5105.namprd10.prod.outlook.com (2603:10b6:208:325::24) with
+ bh=AG5MFqJFPmr2i7ZkApXiYwWPHzQorecZF5Z225qosSk=;
+ b=rli8qsfq6ACjY6qsX/o9Tche2hFbf+St0X6n/i802i94y5Z6qwWf8p+uIYKAN+KyzEpWd2ftvXf0fRvNRrrH1ndkmGb09gbmUH2nX1otlD6F720qYZ3cs3TN4zQPiJ7kq8DFq+BeXHRjYpnFaYz9YO3JX7Uj+Xs2ApDM2JH03do=
+Received: from BL1PR13CA0435.namprd13.prod.outlook.com (2603:10b6:208:2c3::20)
+ by LV0PR10MB997614.namprd10.prod.outlook.com (2603:10b6:408:33d::15) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Mon, 11 May
- 2026 04:47:47 +0000
-Received: from CO1PEPF000075EE.namprd03.prod.outlook.com
- (2603:10b6:a03:c0:cafe::2d) by BYAPR05CA0023.outlook.office365.com
- (2603:10b6:a03:c0::36) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.22; Mon, 11 May
+ 2026 04:58:10 +0000
+Received: from BL6PEPF0001AB72.namprd02.prod.outlook.com
+ (2603:10b6:208:2c3:cafe::98) by BL1PR13CA0435.outlook.office365.com
+ (2603:10b6:208:2c3::20) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.14 via Frontend Transport; Mon, 11
- May 2026 04:47:47 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
+ May 2026 04:58:10 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.194)
  smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
  action=none header.from=ti.com;
 Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
-Received: from flwvzet200.ext.ti.com (198.47.21.194) by
- CO1PEPF000075EE.mail.protection.outlook.com (10.167.249.37) with Microsoft
+ 198.47.23.194 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.194; helo=lewvzet200.ext.ti.com; pr=C
+Received: from lewvzet200.ext.ti.com (198.47.23.194) by
+ BL6PEPF0001AB72.mail.protection.outlook.com (10.167.242.165) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.25.13 via Frontend Transport; Mon, 11 May 2026 04:47:46 +0000
-Received: from DFLE207.ent.ti.com (10.64.6.65) by flwvzet200.ext.ti.com
- (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
+ 15.21.25.13 via Frontend Transport; Mon, 11 May 2026 04:58:10 +0000
+Received: from DLEE207.ent.ti.com (157.170.170.95) by lewvzet200.ext.ti.com
+ (10.4.14.103) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Sun, 10 May
- 2026 23:47:44 -0500
-Received: from DFLE215.ent.ti.com (10.64.6.73) by DFLE207.ent.ti.com
- (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 23:58:10 -0500
+Received: from DLEE212.ent.ti.com (157.170.170.114) by DLEE207.ent.ti.com
+ (157.170.170.95) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Sun, 10 May
- 2026 23:47:44 -0500
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE215.ent.ti.com
- (10.64.6.73) with Microsoft SMTP Server (version=TLS1_2,
+ 2026 23:58:10 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DLEE212.ent.ti.com
+ (157.170.170.114) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Sun, 10 May 2026 23:47:44 -0500
+ Transport; Sun, 10 May 2026 23:58:09 -0500
 Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64B4lfx82936634;
-	Sun, 10 May 2026 23:47:42 -0500
-Message-ID: <2788061a-bb42-4a80-9537-6e8796d7a65e@ti.com>
-Date: Mon, 11 May 2026 10:17:40 +0530
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64B4w6kT2625561;
+	Sun, 10 May 2026 23:58:07 -0500
+Message-ID: <41c7dfa0-493a-4c85-bd71-003a4396426a@ti.com>
+Date: Mon, 11 May 2026 10:28:06 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -75,122 +75,119 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] PCI: cadence: Use dynamic PCIe capability offset
- in host driver
+Subject: Re: [PATCH v2 2/3] PCI: cadence: Add cdns_pcie_get_pcie_cap() helper
+ and cache capability offset
 To: Hans Zhang <18255117159@163.com>, <bhelgaas@google.com>,
 	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
 	<s-vadapalli@ti.com>
 CC: <robh@kernel.org>, <linux-pci@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>
 References: <20260509130716.2104103-1-18255117159@163.com>
- <20260509130716.2104103-4-18255117159@163.com>
+ <20260509130716.2104103-3-18255117159@163.com>
 Content-Language: en-US
 From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <20260509130716.2104103-4-18255117159@163.com>
+In-Reply-To: <20260509130716.2104103-3-18255117159@163.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000075EE:EE_|BLAPR10MB5105:EE_
-X-MS-Office365-Filtering-Correlation-Id: 13f5cb97-64a8-434d-39be-08deaf18723c
+X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB72:EE_|LV0PR10MB997614:EE_
+X-MS-Office365-Filtering-Correlation-Id: 24c93fba-bee6-4daf-05fb-08deaf19e66b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700016|82310400026|376014|56012099003|18002099003|22082099003;
+	BCL:0;ARA:13230040|376014|82310400026|36860700016|1800799024|18002099003|22082099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	rJ2qoRs4h9qNypR0qtkXt0m1INPwqoK7NQZdF4qtkJjMl/WrjEt3RR+j/+++9k/3qEnn1rHnWGUOexkCkfX5ApFg919lXD9J8VuVo00hmwUU8bd6jK5aH320b4dkEB1BNQdf+FVrgQjI6LEVuTqsewUd+gpA0xGrF1TgCs7uanbvsvwJpCBzq9OoRQqPUH1TkWN3H5brch1/tIXwrU1f3zJUiIDt3Bn/878Uv1hw2qJ7Ablt/zYcreKxlF3Hn0TcEoUMzrHsdbhtL8ZECk9feLVTAwvhgFMfvnR5vLL5iZ7gcDzkd6iUxm2/L6/BOnGDu0NqGrxh+wSfcOTzPhwEKlRGwXUJB5tkw9T7PathRr/pmvJ1eloSIGETQAVxTvrO934oohTGNrb970FvQ6fniBMbW4cc1yZBaIEktg0Wpo1h3weFcu8gKdH//etLRYXaFriSe/2PKedqOUmoMvnYRPaMWssw3OJTgKnSJHmbJIKE0fSGN3xVV4V5bUM1u2hxQa2yrczLmc68wCEx38dgRPhMMn6Ls3CCUdH5zmmuVG93Ug4PSmg26lC7SfYCUl+k7lQEqqoujQwCMM0WF0+UQhxOy5WVcaDSUDvQEaUembenipR/5mx7gWoJs+beaCHR6cpF8+auOMqEq8M4uiPY6/ebokaugzsL8xM6wCKhgtTNUhW7DtKS6xFDBg0K+ckMb083ESbEDQRQYE0cDT0d1uQN9DdFuvLQTFsWKXNKX2g=
+	zZtOoBg0T0AoUYpP1spJNi9pOa8gNGeeYWe0348huu5oST9wOFZhTlMF3dbXEOW8HiJFgBhddxydRamHrgIdZfWhCjemhdclmUE+A5oShkQZKKdyNPJlu3kGm+ObJjsdg/RjfjwCYs/o/It8ZvuNbiDfSi/ajbMuEfAtj/f76HwD2g65u//PL1U5GWoWtLnThim+1c0Jty/DzYlQJ/PrK8IZx3F6AdwEYqzoCr/HxEfujFzFdlOc9D0b8qHsjcO68a54inEpPGYN72KVg77i8e4r7C51mGmH1jMBs9xhEiUMea/sNgdu8RI9Aq1iEQM4dZfOg0Z1CgbVgoxAuqZBcny9ms/PgazZdeN0IwFbD/4UtvMrWVRnx6FbHEU6XHR22zuBbUmRbJzh0Z59Az5n6UAU+3bAPl5P9DI/gjLKZLMVjPu3NSjV7QLN8IXCE8FLNKFXU/chES1DaiDXZDGLTnaNQVAu5cmMcn2UJ/eAyqnXQsJEw/ii5Q2gLC16Hg6fMeO3POh5AmOf5GkT6SSPYA2LMEUqLy4Bqj+LvZyVnJzyfR9gZ+sFrZ5nnlQmw4mthBHbPjlHfh6Pqol/gSf34VeZOqEwsuxVCYFnVGAxMSuClIJ9gO7bUIn/tr0OQz0UTI6qWsFWjSErQ0/RMMzkfqsLqhHK1druBTdRhE+ewkJeNK8dph8oSM/YKfiBICPKUBnNFy6bGh3gk6i9XJy58TABQT3gHD8zLcHOPTWx+DI=
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(82310400026)(376014)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:198.47.23.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet200.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(82310400026)(36860700016)(1800799024)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	dy7gTrV51VqrwLNjpXMiW2ryj5mHDA4IUKna/XoIuZQkg9kw79RMBOlMeftnRm0VcS9uutkwnsHMt9AdK+VC6sa4OnDpWSKebnCSFgeZT+NARtkbj6p22WA8XhafUqeVVnKFu9qxwSYfxEIcB47qTHSQtF2L3UKWNw8MNVRS1iO9wytA9cbMCK9dvtlaFA+CNPPNFaEDv7IagI4s+6uz13L1ODAjd6N68K2OPZr0/TlQqhBGfphxdPpml1+tw0oflIjOKE/WKHak+0fqOv78nrjTHZaF2TnP5cIbHutzdOfOKDT7yjFrW+YUbgYrzllAJqHTKfl5l4NwBHJ/Z3ePl7/y3N2xoBP+iglbiPpFsQDd7jnXI2noeXl87fbP7g8NY+irBhA3qj9YstwAGG23fL8GeqVBK7KWcQM2/OwbuMwF1F0WU8BaoJVzhGEAmbH/
+	h7YtOal5GPDV1I9OAevZIrVW9S1Ec3sLnQmu4N+k5Gldbyb/pDnVCapjnAgMDyB8nltpIuMO04eaQ+xsgac3L/brEA+RJf3kZRId33wsXqX/+ZMIkH5lz6QeWRaZFD43Eiqv4MoxJqmwdYpDSnk/po2ZPKUcbnRsiScNJBYazDk5lMKQIpWfKSQY8+oS4h9CPd5d8ElPD4SH9SBsgeKPCg9PDidaRKv4fm9JkPaGUYCLHmGKwkW6zr2XF/dpH7YiEODzQlRxfHMsQAMwbC1MfVINkQveGZkavDRbmre2B9EKTgaZN2IHzWRU5N1JwYn4Fxqqj4j2AJD/BjaPzbSIstvTbCHzFLcOaTyyK6LFd0hqdt+i4i0d/c5rc49S8+V5tHxusoA1MxXQnOm0JIeQtz8MwW3USOgQXEolsZkDN5SPaCX5y4RbqrX3IieDn0jP
 X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 04:47:46.2551
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 04:58:10.6832
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 13f5cb97-64a8-434d-39be-08deaf18723c
+X-MS-Exchange-CrossTenant-Network-Message-Id: 24c93fba-bee6-4daf-05fb-08deaf19e66b
 X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.194];Helo=[lewvzet200.ext.ti.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CO1PEPF000075EE.namprd03.prod.outlook.com
+	BL6PEPF0001AB72.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB5105
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV0PR10MB997614
 
 Hi Hans,
 
 On 09/05/26 18:37, Hans Zhang wrote:
-> The Cadence PCIe controller may place the PCI Express Capability
-> structure at different offsets depending on SoC integration. The
-> hardcoded CDNS_PCIE_RP_CAP_OFFSET (0xC0) is not universally valid.
+> Add a helper cdns_pcie_get_pcie_cap() that finds and caches the
+> PCIe Capability offset in struct cdns_pcie::pcie_cap. This avoids
+> repeated searches and follows the pattern used in other PCIe drivers.
 > 
-> Replace all uses of the fixed offset with the dynamically cached
-> pcie->pcie_cap obtained via cdns_pcie_get_pcie_cap(). This affects:
-> - Root Port training completion check
-> - Link retraining
-> - Root Port initialization (ASPM quirks)
+> The helper uses cdns_pcie_find_capability() to locate PCI_CAP_ID_EXP
+> and stores the result for later use.
 > 
-> Also remove the now-unused CDNS_PCIE_RP_CAP_OFFSET definition from
-> pcie-cadence-lga-regs.h.
-> 
-> This change ensures correct operation across different Cadence IP
-> generations (LGA and HPA) and SoC designs.
+> This is a preparatory step for removing the hardcoded capability
+> offset from host driver code.
 > 
 > Signed-off-by: Hans Zhang <18255117159@163.com>
 > ---
->   drivers/pci/controller/cadence/pcie-cadence-ep.c          | 5 +++--
->   drivers/pci/controller/cadence/pcie-cadence-host-common.c | 4 ++--
->   drivers/pci/controller/cadence/pcie-cadence-host-hpa.c    | 2 ++
->   drivers/pci/controller/cadence/pcie-cadence-host.c        | 6 ++++--
->   drivers/pci/controller/cadence/pcie-cadence-lga-regs.h    | 1 -
->   5 files changed, 11 insertions(+), 7 deletions(-)
+>   drivers/pci/controller/cadence/pcie-cadence.h | 18 ++++++++++++++++++
+>   1 file changed, 18 insertions(+)
 > 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> index 38a0157b60dc..eeee954f7dc7 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-> @@ -571,9 +571,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
->   	int max_epfs = sizeof(epc->function_num_map) * 8;
->   	int ret, epf, last_fn;
->   	u32 reg, value;
-> -	u8 cap;
-> +	u8 cap = pcie->pcie_cap;
-
-Can we eliminate the use of 'cap' variable and use 'pcie->pcie_cap' 
-directly, just like in cdns_pcie_host_init_root_port()?
-
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+> index c057f4b393e6..bbd275193bc1 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence.h
+> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
+> @@ -219,6 +219,7 @@ struct cdns_plat_pcie_of_data {
+>    *       wrapper
+>    * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
+>    * @debug_dir: debugfs node
+> + * @pcie_cap: PCIe capability offset
+>    */
+>   struct cdns_pcie {
+>   	void __iomem		             *reg_base;
+> @@ -233,6 +234,7 @@ struct cdns_pcie {
+>   	const  struct cdns_pcie_ops          *ops;
+>   	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
+>   	struct dentry			     *debug_dir;
+> +	u8				     pcie_cap;
+>   };
 >   
-> -	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
->   	/*
->   	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
->   	 * and can't be disabled anyway.
-> @@ -690,6 +689,8 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
->   	}
->   	pcie->mem_res = res;
+>   /**
+> @@ -651,6 +653,22 @@ static inline int cdns_pcie_hpa_ep_setup(struct cdns_pcie_ep *ep)
 >   
-> +	cdns_pcie_get_pcie_cap(pcie);
+>   u8   cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap);
+>   u16  cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap);
 > +
->   	ep->max_regions = CDNS_PCIE_MAX_OB;
->   	of_property_read_u32(np, "cdns,max-outbound-regions", &ep->max_regions);
+> +/**
+> + * cdns_pcie_get_pcie_cap() - Return cached PCIe Capability offset
+> + * @pcie: Cadence PCIe instance
+> + *
+> + * Finds and caches the offset of PCI_CAP_ID_EXP on first call.
+> + * Returns 0 if the capability is not present.
+> + */
+> +static inline u8 cdns_pcie_get_pcie_cap(struct cdns_pcie *pcie)
+> +{
+> +	if (!pcie->pcie_cap)
+> +		pcie->pcie_cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
+> +
+> +	return pcie->pcie_cap;
+> +}
+> +
+
+This function is only used to find, and cache the offset of
+PCI_CAP_ID_EXP in pcie->pcie_cap. This is supposed to be called only by
+the cdns_pcie_*_setup() during the initialization. After that, whoever
+wants to use this cached offset can directly use pcie->pcie->offset
+instead of calling this function to return the offset. Hence, this
+function can be renamed as 'cdns_pcie_set_pcie_cap', and needs to return
+nothing (or can return error if it is unable to find the capability offset).
+
+Regards,
+Aksh Garg
+
+>   bool cdns_pcie_linkup(struct cdns_pcie *pcie);
 >   
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> index 2b0211870f02..26b248231558 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-> @@ -26,7 +26,7 @@ EXPORT_SYMBOL_GPL(bar_max_size);
->   
->   int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
->   {
-> -	u32 pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
-> +	u32 pcie_cap_off = pcie->pcie_cap;>   	unsigned long end_jiffies;
->   	u16 lnk_stat;
->   
-> @@ -68,7 +68,7 @@ EXPORT_SYMBOL_GPL(cdns_pcie_host_wait_for_link);
->   int cdns_pcie_retrain(struct cdns_pcie *pcie,
->   		      cdns_pcie_linkup_func pcie_link_up)
->   {
-> -	u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
-> +	u32 lnk_cap_sls, pcie_cap_off = pcie->pcie_cap;
->   	u16 lnk_stat, lnk_ctl;
->   	int ret = 0;
->   
+>   void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
+
