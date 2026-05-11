@@ -1,110 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C268D1A9FBD
-	for <linux-pci@vger.kernel.org>; Sat,  9 May 2026 22:05:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DFCE1CD2C;
+	Mon, 11 May 2026 04:25:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778364349; cv=none; b=lgBjv0ak3a/ilOXetBRJQ4ZN0ws6BwhJtuXv0n8lYSsf7UC7kNOgWkSwmkV+jmwKSnxKS0BKDEi6tZY1CMs31HB5Q20XM7Udn6BCSuFbU0HSB2IC+EqIqtxpYZ+viLO7YI3h+7KjeaaCNkg9EoAnWE9v+ZIMH+6Zzu732vJy/ug=
+	t=1778473544; cv=none; b=U03va5z+V+6ASpFMoWEL4Q5+I71QBEWxEG9fZ3IptcUpYobe7VcKFeBvvauVv8q1FxRkIg19vUJ4Eb1HutQ/zqmNVTIpW/gheU0HF/G7YQxQMRYDgM1OHtGvFoBqAFuh3x4ZUbEeqajYyvTNk5DOzc7mlN/gyOMKu/0CA8U8C9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778364349; c=relaxed/simple;
-	bh=amY7drjb/Q54+72Z8fnza2OBnLxuh96synD6u1epBEc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TEzUPx7HO2GwiQ1N3u4x0NLbucXfp9M/DsB3nGn7PFisfXApwG135N4N1dNsQGfVK6nqqYB5Cz5rP4vVPiyYe9tyixPLbmspgnMd/uG3r6LbUymiJxQaB08G8ub8LsssdpwBk5OWGbDASijO3DnOf0NX9uAfFJN+5tweBhGAfh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YHKyqiqj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778473544; c=relaxed/simple;
+	bh=rz5cDY4MNkFKlVez6VsZbm5d6GeZBlK0kvkHFRVzggk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SVYEKYhCzvq7UFOMyrFNojQGfWjHWkZYoNEqDoKpIUV5mVBW0w3e8WaRXozOuUnCt4R6PEsBYeY23fvK+sSOjYkkj4I8fL7rReJ//dI3soq57H+xpyTQbQhQg+6KoBKFuFM0xgcV6thQ36X/z8FA42GdjgqjKkfIWWoJTW/RCJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dTfwa1FG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YHKyqiqj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7510C2BCB2;
-	Sat,  9 May 2026 22:05:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dTfwa1FG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E292C2BCB0;
+	Mon, 11 May 2026 04:25:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778364349;
-	bh=amY7drjb/Q54+72Z8fnza2OBnLxuh96synD6u1epBEc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=YHKyqiqjZZV2p5qHIVmw+km56wTTnUrJHCZ2hLlZStGuBWWwOUpFN13+2Zru7joEN
-	 MLxSDf8l8LMYCU2+0vCt+ms3rceMIan/Kt32cDR2y+IXh5kenp+k84+4eehcyJfOER
-	 +hbFkrvJIPl+aAt9kfzWw4zz6tF9IwqAcSaw2KC0ZHzhMvnp3g5RmjOEwvxW9RHpys
-	 +5InhAQho2Vhiers3080s+cTWAywBYCU+0mEeLHm19GVAnyv9I1b3lQNtFBuyR9tz5
-	 abiy0s48OKkeEhZ7O52pAfVxfkOPudYijRAmKwJy4AqZAUUG4JpmEGfrRBoiyqfjln
-	 kpgOHwTWp+Y6w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH net-next] net: mana: Add handler for sriov configure
-Reply-To: sashiko@lists.linux.dev
-To: "Haiyang Zhang" <haiyangz@linux.microsoft.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260508220412.15138-1-haiyangz@linux.microsoft.com>
-References: <20260508220412.15138-1-haiyangz@linux.microsoft.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 09 May 2026 22:05:48 +0000
-Message-Id: <20260509220548.D7510C2BCB2@smtp.kernel.org>
+	s=k20201202; t=1778473543;
+	bh=rz5cDY4MNkFKlVez6VsZbm5d6GeZBlK0kvkHFRVzggk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dTfwa1FG+lMVBtjALeSfFUUec7s92aV0w2VM4s6kQ7e0FvpNf0AOHqyJUtm813hJ2
+	 WX5Cfsx77bQegIVFY76d3BuV1G0n6Cm4VZt4XQwUMPG0PAzLKsU6Mvu2Fmjo5b9Bbp
+	 LQrqzHhAvv4LpXR0wD0gs1+usHC1WVY0tAOl9qE68ixf9LNnEuvyCvuCV27DAhn1Ad
+	 c4MEcvLEkaHiCxTWQqhAkvTD8ckNZin8Gg8cixba5rAwE3+0erNfm/zy5V5gW1h0mo
+	 7dBtrU0Oji54s7R2Igxr7xDO+8OUaFLOsPq5BdthIuovnHhrn+VYStamB2fVRkTwqv
+	 nqrsLD7ljGgUw==
+Date: Mon, 11 May 2026 09:55:32 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
+	helgaas@kernel.org, linux-kernel@vger.kernel.org, s-vadapalli@ti.com, 
+	hans.zhang@cixtech.com, vigneshr@ti.com, danishanwar@ti.com
+Subject: Re: [PATCH] MAINTAINERS: Add Aksh Garg as PCI CADENCE reviewer
+Message-ID: <gizjfxvrl27kz5qb34mrnrlqzroemki5ifjpxztxlz64chsfie@ylfz5u6mvfbd>
+References: <20260508060951.840233-1-a-garg7@ti.com>
+ <12c2c868-a734-49f9-9938-77319b35da3d@163.com>
+ <d0fb1c9b-4331-4f28-a95e-0962a2c9dd77@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d0fb1c9b-4331-4f28-a95e-0962a2c9dd77@163.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Missing `pci_disable_sriov()` in PF driver's `remove` and `shutdow=
-n` paths causes resource leaks and potential Use-After-Free.
-- [Medium] Missing VF assignment check in `mana_sriov_configure` causes sil=
-ent failure when disabling SR-IOV.
---
+On Fri, May 08, 2026 at 07:34:01PM +0800, Hans Zhang wrote:
+> 
+> 
+> On 5/8/26 15:08, Hans Zhang wrote:
+> > Hi Aksh,
+> > 
+> > Let's wait for one day, or two days, to see if Vignesh is willing to do it.
+> > 
+> > For drivers/pci/controller/cadence, currently Aksh and Siddharth hope to
+> > become Reviewers. Manikandan believes that he can become a Maintainer. I
+> > myself also hope to apply for the role of maintainer. Then let's review
+> > the common driver related to Cadence PCIe IP, as well as the driver of
+> > the product.
+> > 
+> > Siddharth:
+> > Depending on the frequency with which we are able to Review patches
+> > consistently, we could eventually take up the role of being a Maintainer
+> > as well.
+> > 
+> 
+> 
+> Hi Aksh,
+> 
+> Privately, Vignesh has replied as follows:
+> 
+> Vignesh:
+> Agreed, I would prefer if Manikandan can own the driver as he would have
+> better visibility wrt IP documentations as part of Cadence.
+> 
+> Sorry, I don't have the bandwidth to own the driver. Siddharth and Aksh
+> can help review and test on all TI platforms with Cadence PCIe IP.
+> 
+> 
+> 
+> 
+> Could you please add Siddharth as a Reviewer? I and Manikandan are the
+> maintainers. Of course, we need to see if Bjorn and Mani agree. Then, send
+> this patch in the next version.
+> 
 
-commit 1f4061f22025ea097273f720b3bccac577e7d805
-Author: Haiyang Zhang <haiyangz@microsoft.com>
+$ git log --oneline --author=Manikandan drivers/pci/|wc -l
+4
 
-net: mana: Add handler for sriov configure
+I wouldn't vote a developer who has committed 4 patches for a driver to become
+a maintainer. But considering the fact that the driver is currently in 'Orphan'
+state, and the developer works for the company that owns the IP, I'm OK with it.
 
-This commit adds the sriov_configure callback to the mana pci_driver to han=
-dle
-SR-IOV configuration. It also exports pci_vf_drivers_autoprobe() and disabl=
-es
-VF autoprobe when running as a PF driver on bare metal.
+But atleast that patch has to come from him, stating that he wishes to maintain
+the driver. He can add reviewers in the same patch though.
 
-> diff --git a/drivers/net/ethernet/microsoft/mana/gdma_main.c b/drivers/ne=
-t/ethernet/microsoft/mana/gdma_main.c
-> index 3bc3fff559991..767f11d5b351b 100644
-> --- a/drivers/net/ethernet/microsoft/mana/gdma_main.c
-> +++ b/drivers/net/ethernet/microsoft/mana/gdma_main.c
-[ ... ]
-> @@ -2262,6 +2267,20 @@ static void mana_gd_shutdown(struct pci_dev *pdev)
->  	pci_disable_device(pdev);
->  }
+- Mani
 
-Does this code need to explicitly call pci_disable_sriov() during driver
-remove and shutdown?
-
-If the PF driver is unbound while VFs are enabled, the PCI core logs a
-warning but does not automatically disable SR-IOV. With the VFs remaining
-active, could they interact with dead hardware or trigger host-side PF even=
-ts
-that rely on the freed gdma_context, resulting in a use-after-free?
-
-> +static int mana_sriov_configure(struct pci_dev *pdev, int numvfs)
-> +{
-> +	int err =3D 0;
-> +
-> +	dev_info(&pdev->dev, "Requested num VFs: %d\n", numvfs);
-> +
-> +	if (numvfs > 0)
-> +		err =3D pci_enable_sriov(pdev, numvfs);
-> +	else
-> +		pci_disable_sriov(pdev);
-> +
-> +	return err ? err : numvfs;
-
-If VFs are currently assigned to a guest VM (e.g., via VFIO), the PCI core's
-sriov_disable() will internally abort the teardown. Because
-pci_disable_sriov() returns void, will this function return 0 and falsely
-signal to userspace that the disable operation succeeded?
-
-Should this code check pci_vfs_assigned(pdev) and return -EPERM, or use
-the generic pci_sriov_configure_simple() helper instead?
-
-> +}
-> +
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260508220412.1513=
-8-1-haiyangz@linux.microsoft.com?part=3D1
+-- 
+மணிவண்ணன் சதாசிவம்
