@@ -1,289 +1,376 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021078.outbound.protection.outlook.com [40.107.74.78])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CEB41E98FF;
-	Mon, 11 May 2026 06:09:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.78
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778479801; cv=fail; b=G+rvjlB/wgSMRWrinsSb9/pecb5DsJFY2yaIUZnwDviYxG6r6oEgDJLOWvwjHiqyf5VmfBw2XdE7ll1EdNtgLOtCVdlDTYLz4KiqWhMPT0uCi/idTkW1vj3f+3WR0wbImGzxnBWAtnPyTsqy+IcTo7JQUN5iJyO+e5rakkW9q9g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778479801; c=relaxed/simple;
-	bh=ZHEXPHE7Sj4iQbA+MqGqDdFWyDj6d6aTlkiULls5d04=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=DFp+AW8bugdtdKnnxFyJYIdV6Y3L1IXuLGiHOufgxc7Q9isoCmyOq5rJjHzcOfnBv9gNuUwWDCN81aa/Ch1mAHH+bQP6eIU5N98783AfYSY8WsVKfPmG60/he3TXXamMOJbwOTF2+Cz6Of9bpAvvTvO9g76YEV/5/6MTe6XaSDc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=J3opJHpU; arc=fail smtp.client-ip=40.107.74.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+Received: from ultrarisc.com (unknown [218.76.62.146])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BB5E22D248B;
+	Mon, 11 May 2026 06:15:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=218.76.62.146
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778480151; cv=none; b=luIU8tk9dYMwIcyKs2nxyg6txAPKIfKjVY223U105OBiJZbBqF0r48dDZq/LR6YIurMbSXPi7hMXDvi6rN+W6CyPpCfuNe2hjMkimITmu0HAtPRUrlxUOU49VLDmp5MP12GU7eFq4WEfAKt7Nr8CrkfZWBY14v3rFrZLrfhcHbk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778480151; c=relaxed/simple;
+	bh=GfcBItbzyybH1YaNl19S68Nh/5j3PYRsyCScPTxaEu4=;
+	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
+	 References:Date:Message-Id; b=CmOITC5gNp0NOtKR0jD/Rnzy6EhuNhNR/+E/OBqcd+byGscc+K47p/D2DGRoCMd2aJ/ugfp0wy5cfSmIbUyjdOcxY9pvAlS5O0W5/EtuJrfmYE4yvFQiinfoSSWhXwc+dDTesENev+D5SIiaG2kkR+Pa2b5CBlI2csbeVyCHhaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com; spf=pass smtp.mailfrom=ultrarisc.com; dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b=LgCeoHJv; arc=none smtp.client-ip=218.76.62.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ultrarisc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ultrarisc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="J3opJHpU"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=m9tv6SK907tOb1VuRto+0cYn7rtrKaqxpY4gXhiJvz2bEmaRFpo4qgnJ18ZuO7AFDiQF93q5ZvKzX37jWxk9o9sOgFN4Th2qoE3YafQzTYd/6w9pBCqXvyNaT8MuZGbJljcKJg3E5LDrEY5tPZEOhjDeWYqayBpd1+bs5EqMzIIShNTjDP2w5nFgTh9wFvSvIqAWVdGpLnW0hj37L1OZ2rwqv7qJ4vvpSpUC4JGstYKPgoaeegBT+FlqmdGA8jxa0JUqjL3yWzq4OSr76lmhKobeWj8Bk/itCQLbkM61FeqevMN8rGI4QShJFYGP/voiKfnaLfKrrh1fXiycWCIMrQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mX9M165fRjvNmMhzknORHu0YDmYXjBmi04RTHKz1AIg=;
- b=ic54fUxdqtKPadLpKr8JcFMar963+WaTqaFYPlRpZxYoIOKzICqEw8Yk7e1tA/sOgTwCOof03PTuwWsXxEeOBDoTjTWkPmAQxe9X2h5gKmV70mP7/pDMg7wObLIXwVFbFnHXrd2fD0mp+tuK52v23yYLkY3OUkDtA/rVm5+qrXT8WVcBUdiPQDoWKwZsP1436S6hKaRTA+JMAbSdj9N4BE6dkRvuzmjUvANZglchFBlPAtdaJm8a0CCxYIrPmaE1Ra27AX7dbZ9yk9do8Oftnbhsu6FIA5t/82wBHZeK2TatfNI2c4Quj/fobOykIFLLhMr9gzsMULnYsMoy4x9UWg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mX9M165fRjvNmMhzknORHu0YDmYXjBmi04RTHKz1AIg=;
- b=J3opJHpUwwrtUoP0ePFq6ZoG5oWEVRg2qTGJ/qTjDFZXnuGuIrauaWZkru7yEce1pCCs01gNUSGsALruqOX1HJmfWMprWXZZZ+/JGBEKLHLi+A76nYBmd5MGop4llP+IO/HWiqWiLfWgGWbwUFGT9jmEkUR5relcl/tsQO1flJs=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY4P286MB7208.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:368::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.22; Mon, 11 May
- 2026 06:09:56 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9846.025; Mon, 11 May 2026
- 06:09:55 +0000
-Date: Mon, 11 May 2026 15:09:54 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Max Boone <contact@maxboone.com>, Niklas Cassel <cassel@kernel.org>
-Cc: mani@kernel.org, frank.li@nxp.com, allenbh@gmail.com, 
-	bhanuseshukumar@gmail.com, bhelgaas@google.com, dave.jiang@intel.com, jdmason@kudzu.us, 
-	jingoohan1@gmail.com, kishon@kernel.org, kwilczynski@kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, lpieralisi@kernel.org, 
-	marco.crivellari@suse.com, mmaddireddy@nvidia.com, ntb@lists.linux.dev, robh@kernel.org, 
-	shinichiro.kawasaki@wdc.com, mboone@akamai.com
-Subject: Re: [PATCH v14 4/7] PCI: endpoint: pci-ep-msi: Refactor doorbell
- allocation for new backends
-Message-ID: <y2jqclduzd2zkolgxxavsu6uvu7wcjcbt4mi2rl75qpfan5a7r@x4i3siuuvixu>
-References: <2F694A6C-23BA-4025-ACD7-2751595982CB@maxboone.com>
- <afHQWdn2rmG4mAA4@ryzen>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <afHQWdn2rmG4mAA4@ryzen>
-X-ClientProxiedBy: TYCP286CA0178.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:3c6::9) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (1024-bit key) header.d=ultrarisc.com header.i=@ultrarisc.com header.b="LgCeoHJv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=ultrarisc.com; s=dkim; h=Received:MIME-Version:Content-Type:
+	Content-Transfer-Encoding:Subject:From:To:Cc:In-Reply-To:
+	References:Date:Message-Id; bh=7GzYADyAvoPjA/SmP0gQ9bvXyEvY4ldv6
+	QUkQ5iFUhg=; b=LgCeoHJvMlnsbhfWWwoSARFsnStQT+lgiyHzJ31gTTjq1Zmni
+	ixo6m94NHE18Z7ul6CfIZ88O41CAKaSguiAseCthCy4ox20BebfDbAIY6qbZSDP7
+	jqEKt/hUuUkZ0tS7Bjx8X2HM9RHOHDY002BRYDtSz9tDZjiZCJzdTS9www=
+Received: from [127.0.0.1] (unknown [192.168.100.1])
+	by localhost.localdomain (Coremail) with SMTP id AQAAfwAnEkOFcwFqKf4DAA--.3544S2;
+	Mon, 11 May 2026 14:13:25 +0800 (CST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB7208:EE_
-X-MS-Office365-Filtering-Correlation-Id: d898b5c5-3094-4e72-3252-08deaf23ec58
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|366016|7416014|376014|56012099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	qj/vl4fAd2hxQ1+lARKCCaj26GUyxfA6XUMdygmOpOMbUJt4VaYpEDJHFMhGucnd6ZAUwI4iR8Ov25lSQSs61Hz1CF4FkxHlau66YFGD4vRQwPw/fLvredo10TE+n3eBrib73qdZjgbD1nvpl4H/7xKl8P5nBNDzmEJLzaVRzQjrL41iGSSBEtmeVNQacHMYaQ5NNnzqQsh39cT4W9WwTioz3ALWc3jvJt5Np71D2hM1xSICfuVguWXNBSsAXf6ijpWitkKIk+3TQLWZxF9X70LmODoyui5+govGjfbg1O5gBunAvKl9bTqR9MXk1y0UF1EsCOW3vUTLgXqxzDzuCDlwXAGLK08hDrQOBwKpVylutYSwb9QGZWqIeeWhpehpnsCY6EI2Q1HWoCU4AJlo2GByza9HwU/tfoKsYU4te/UvoowgFMl3REKGT+YOBmiwgoe1G0kXtpt5buCaZ8mjGxE5SZbKz0ncjmPJEf4VpshxmhyTwxACNj8tt2qFdGBVkIqTboPcWdMDHmkS1w3CFG33rCu5KJ+jGyAVjRPoiW7/ZA69a3xoI45h8i3NnLtvJGClrNYW7cn3Ic0QNPUgxeOEg0rN/Na1+OLZ07UWNPFARcsLDS3u0XidFG3Oorooceo24quIaMlN+T0vAROOaQ==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(7416014)(376014)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cExINzEzNHJEdlJQNEtaUDE3dkI0NFE4WVdmWFRiNnFRbjY4UEFPSGRaeDhV?=
- =?utf-8?B?OXN1RE9oNzFiOFVwL0hsdWtVeEJpTlZtZTdNa2lRdllkbEVJN1NJZzNxem5Q?=
- =?utf-8?B?Mi9semt5SGVvTEZTYWt5R1I0RnIxb2Vyc0V4Uk5DMUtWUHFSMnhlY1g5M2F1?=
- =?utf-8?B?VVlnQkZzYlV6UksvUkxPa3lpa05xZ2g0YU11YkpzWHVObFF2QklqMDNDbktL?=
- =?utf-8?B?VW1UdzNBZ1hlUXJzdEh1OWVGTGN3S1Y5MWxiUExsRW5YQm5IcnJGYkhNRGg2?=
- =?utf-8?B?eVBBeFdLa1FmcUNvU3ZRTnk2UGJGWTFteG1zM2xCMGpBWUJXKysrK1plbFJ3?=
- =?utf-8?B?blJ4K2dKM29WUEU1RUg2MkZhdlV2Z2NScHhKQXV2TmkzR3RCZE5CSVBUME1w?=
- =?utf-8?B?NytWNERlQUU4bzRFc21xZlpWWlFORmpKaWFMQi9VRGNDdjdqemh6Q2NER0ZL?=
- =?utf-8?B?QTNHNVpQbFRneWJ6NlNLcndwVHhhYTBuamZCZjl1bjE0UlA0ZEc3aXd5WTRo?=
- =?utf-8?B?NktEY3JpRkltd1Z2TURRM0FOYXB5b3R3b2pYSUNaL3FhVFVubEtaSU1pQU5B?=
- =?utf-8?B?UDVna081NDEra2k5NTNtWHVTNjMvcCszVVV2bDJUNzVZTGc2MllyY2kyQmUx?=
- =?utf-8?B?cTVDZUlJaE9mSGpiUWNuVVUveTZPQUhOWVViaGVoclp4eUZvYW9MY2FWbkNH?=
- =?utf-8?B?RHRGV3MrRFRBOU5DaTZSZDJXdmNSVXVIYVVsOG5hUGdGN1pUZzlJVzJXalhj?=
- =?utf-8?B?bkNURnlPQ0VWa2duQW0xdktGVGNXRjVveEZRU2NLUjFYVTNoNEI0a0hZUDZZ?=
- =?utf-8?B?UjBQaEVrbUtOQ0tUME9GcHYxWXRIbDFrS00vTGkxNUU2T2diaVB2V0dKTnNy?=
- =?utf-8?B?LzBYV1NCc3lLWUxaTzVJa3d6MFFuZldwcVNqMzByREFKa25CYk1SaW4xUXZF?=
- =?utf-8?B?cTk2aWRaL21tMUxxUVpxakZXeUhkWkJZNmVPbS8xcVNsUGxxT1BYY2VWaCtO?=
- =?utf-8?B?TS9kaUJ4bXZPRG5qQlV2U2hydEZoMkppVlZjajgxaFVkeUJROEU5N05IandC?=
- =?utf-8?B?d2l4bHVCenF4eFplQmtjblZtS1R3Tjl5YVZIcFBGY1h4ZkgyTnRhck9KVzVZ?=
- =?utf-8?B?ZU5sZzh5VVBPMHc4RnBDelo2VUZUMWdYaFBOS1NpQVNvVWczejZSWVkvWXk5?=
- =?utf-8?B?dUhnOUUzN3hiblNrNnFrYVlzYnF2RW51SFp6YmVvRmsyTlRSMGdRUGFpTG1L?=
- =?utf-8?B?WU1zWGdRU0pmdmNraDg5VE5PWWF5eHhRYjNUYU9QWHViWW5saDNoZnVtaVM5?=
- =?utf-8?B?Tm1WMis0OVBMemNmNTJCNWU0SlRoUTdsbUNOL1NHS2Zhak5lWjlGSm9LMmd6?=
- =?utf-8?B?K0hVa201RjdOOXJibEZRSG05QjkvTjZpTi9wZ1NFQnppR3JVSlFOUERvc0ZQ?=
- =?utf-8?B?QkhCUk5jVFlFdGJ1MVNhU285ZmR4aEQrS2RjeWZuOUVRdWduWnVtSFhEVmxP?=
- =?utf-8?B?QXJqdkp1Y2hkQW5wcml0M0VtZzBudVBhWndncUNRbjRGSStOUysyN3JpaWEv?=
- =?utf-8?B?SUNVUVQ0V2hJUDNzNWIwZHV1ZzAxRW9uUXZsVGlHK1dTOGRQMEpzc0RFbWpU?=
- =?utf-8?B?aDRIZHRTWjVhZm1sZGpHUEowaUFxY1BrRk5oZkpzallWVS8zQlpaOGlPUFEx?=
- =?utf-8?B?YkJzQzhBOURrOFdRVjc1dHplZWpoZnVINDJJZDR2aW5uTFBhUGgrWVEwdUN1?=
- =?utf-8?B?U1k2QWQvSEdjcUYvOXpzUENSZ29XNkxTMTA1cE1pMmlQQWFsemxjZnJtK3cr?=
- =?utf-8?B?Yy9kQURzcEN4VjVGY1lzc0Z6ZUV0cXlWcXVRMEFsQWd5SUJFMzlyTFhSNnJG?=
- =?utf-8?B?bndSNC90QkQvZHhLZWtEUE5tQTB6NTFkNnFrVHBLUFRVZVhXVDFDRFlPNG9W?=
- =?utf-8?B?blRFMi9YeTR3YXVDNGhHclpDY2Q5c1U4UGlmeit3NjFGMmEvSnN5b2xsZHNl?=
- =?utf-8?B?QXpJWUJZY3Y5QUF0OFFYUDZ1V3kvVGlvMEgxaVVnS1N0QWh2Qlh5OS9neHRM?=
- =?utf-8?B?bWszRmxuMHgyNTN5RUhycmxkYW16RXRGQ0FtLzF4NW44TVAxNU82dzFZd2dG?=
- =?utf-8?B?WHd4RGRqS3pNVW5jQXhNcVBscXJxWkhYQWtkYTU5R3ROUzRuUmpMK3gwN2NP?=
- =?utf-8?B?ankvQnBiYW42OTVzUDFzWXhDN0FESlV0Y1VsNkFrTnhmekRBTndmZThvL2lV?=
- =?utf-8?B?SVM2NjFTNGdlWVJ6WURpMGJ1Rit5S014SUFqLzF5VDBNUXBCT21KbUJ6eC9O?=
- =?utf-8?B?OHVjOW9HZWlQQVZQaXVzU3E0WVo0Rjh3bDRKRmxkRzlibzZncTRWRkh4am9j?=
- =?utf-8?Q?UEhxDIVVthxmF2kCzKE3o28cP7UnFUwi3e+92?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: d898b5c5-3094-4e72-3252-08deaf23ec58
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 06:09:55.8405
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ffkAf9b2Sc22G2N4dbv9wFMpkFmKWXLy84znNz/Xa++xq+okRnURvC1DqUD9RSpnrKr4wdPyB/tW8U0anmfcKA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB7208
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v4 3/3] PCI: ultrarisc: Add UltraRISC DP1000 PCIe Root
+ Complex driver
+From: Jia Wang <wangjia@ultrarisc.com>
+To: Jia Wang <wangjia@ultrarisc.com>
+Cc: Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>, 
+ Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, 
+ Xincheng Zhang <zhangxincheng@ultrarisc.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, linux-riscv@lists.infradead.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org
+In-Reply-To: <20260427-ultrarisc-pcie-v4-3-98935f6cdfb5@ultrarisc.com>
+References: <20260427-ultrarisc-pcie-v4-0-98935f6cdfb5@ultrarisc.com>
+ <20260427-ultrarisc-pcie-v4-3-98935f6cdfb5@ultrarisc.com>
+Date: Mon, 11 May 2026 14:12:43 +0800
+Message-Id: <177847996346.3934882.9098618466749392519.b4-reply@b4>
+X-Mailer: b4 0.15-dev
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1778479963; l=9852;
+ i=wangjia@ultrarisc.com; s=20260309; h=from:subject:message-id;
+ bh=GfcBItbzyybH1YaNl19S68Nh/5j3PYRsyCScPTxaEu4=;
+ b=BhT8z1r5jP9SJbdRpme/+NSFgxpNJCZlt5ckjzIzClCP8LMJ39I5TaSuqQj/vEyQq2MHAxPKm
+ 0jWTmfVWkpjAl2eY1nQcHgo8gt7eBX1nfrU+wzuh091j5uwBjQN2QaF
+X-Developer-Key: i=wangjia@ultrarisc.com; a=ed25519;
+ pk=XvYkrelqJIIzobY7j+nIg8rsfv5kzaOzuc1UPhd087U=
+X-CM-TRANSID:AQAAfwAnEkOFcwFqKf4DAA--.3544S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3JFWUurWDCFy5Jr4xGry8Krg_yoWDJry5pa
+	y5GFWSyFWUJF45Ww4ay3Z8AF1aq3ZxCrWUWanFgw1293ZxZryUWFyvg34YyFn7GF4qgrWY
+	kw1Ykay7GanIgwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9l14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r1j6r1xM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Jr0_Gr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4j6r
+	4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
+	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+	n2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE-syl42xK82IYc2Ij64vIr41l4I
+	8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AK
+	xVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcV
+	AFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8I
+	cIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r
+	4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
+X-CM-SenderInfo: pzdqwylld63zxwud2x1vfou0bp/1tbiAQATEWn6usEAHQAfsp
 
-On Wed, Apr 29, 2026 at 11:33:13AM +0200, Niklas Cassel wrote:
-> On Tue, Apr 28, 2026 at 10:36:15PM +0200, Max Boone wrote:
-> > 
-> > I’m not very fond of keeping this implementation in the pci-ep-msi file,
-> > as the platform MSI and this implementation are both iiuc specific to
-> > the designware ep driver. Even more so because the MSI implementation
-> > is enabled by config rather than through device tree.
+On 2026-04-27 09:32 +0800, Jia Wang wrote:
+> From: Xincheng Zhang <zhangxincheng@ultrarisc.com>
 > 
-> Why do you think that the current code with DOMAIN_BUS_PLATFORM_MSI is
-> designware EPC specific?
+> Add DP1000 SoC PCIe Root Complex driver.
 > 
-> I don't see anything that is designware EPC specific.
+> The controller only supports 32-bit aligned configuration space accesses.
 > 
-> Sure, it relies on GIC ITS, but I don't see why non-designware EPCs can't
-> use GIC ITS.
+> Signed-off-by: Xincheng Zhang <zhangxincheng@ultrarisc.com>
+> Signed-off-by: Jia Wang <wangjia@ultrarisc.com>
+> ---
+>  MAINTAINERS                                  |   1 +
+>  drivers/pci/controller/dwc/Kconfig           |  12 ++
+>  drivers/pci/controller/dwc/Makefile          |   1 +
+>  drivers/pci/controller/dwc/pcie-designware.h |  22 ++++
+>  drivers/pci/controller/dwc/pcie-ultrarisc.c  | 175 +++++++++++++++++++++++++++
+>  5 files changed, 211 insertions(+)
 > 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 818685933541..16203b804c16 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -20589,6 +20589,7 @@ M:	Jia Wang <wangjia@ultrarisc.com>
+>  L:	linux-pci@vger.kernel.org
+>  S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/ultrarisc,dp1000-pcie.yaml
+> +F:	drivers/pci/controller/dwc/pcie-ultrarisc.c
+>  
+>  PCIE ENDPOINT DRIVER FOR QUALCOMM
+>  M:	Manivannan Sadhasivam <mani@kernel.org>
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index d0aa031397fa..06f7d98259cd 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -548,4 +548,16 @@ config PCIE_VISCONTI_HOST
+>  	  Say Y here if you want PCIe controller support on Toshiba Visconti SoC.
+>  	  This driver supports TMPV7708 SoC.
+>  
+> +config PCIE_ULTRARISC
+> +	tristate "UltraRISC PCIe host controller"
+> +	depends on ARCH_ULTRARISC || COMPILE_TEST
+> +	select PCIE_DW_HOST
+> +	select PCI_MSI
+> +	default y if ARCH_ULTRARISC
+> +	help
+> +	  Enables support for the PCIe controller in the UltraRISC SoC.
+> +	  This driver supports UR-DP1000 SoC.
+> +	  By default, this symbol is enabled when ARCH_ULTRARISC is active,
+> +	  requiring no further configuration on that platform.
+> +
+>  endmenu
+> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+> index 67ba59c02038..884c46b78e01 100644
+> --- a/drivers/pci/controller/dwc/Makefile
+> +++ b/drivers/pci/controller/dwc/Makefile
+> @@ -38,6 +38,7 @@ obj-$(CONFIG_PCIE_RCAR_GEN4) += pcie-rcar-gen4.o
+>  obj-$(CONFIG_PCIE_SPACEMIT_K1) += pcie-spacemit-k1.o
+>  obj-$(CONFIG_PCIE_STM32_HOST) += pcie-stm32.o
+>  obj-$(CONFIG_PCIE_STM32_EP) += pcie-stm32-ep.o
+> +obj-$(CONFIG_PCIE_ULTRARISC) += pcie-ultrarisc.o
+>  
+>  # The following drivers are for devices that use the generic ACPI
+>  # pci_root.c driver but don't support standard ECAM config access.
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index ae6389dd9caa..88dcb0e7943a 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -69,6 +69,8 @@
+>  
+>  /* Synopsys-specific PCIe configuration registers */
+>  #define PCIE_PORT_FORCE			0x708
+> +/* Bit[7:0] LINK_NUM: Link Number. Not used for endpoint */
+> +#define PORT_LINK_NUM_MASK		GENMASK(7, 0)
+>  #define PORT_FORCE_DO_DESKEW_FOR_SRIS	BIT(23)
+>  
+>  #define PCIE_PORT_AFR			0x70C
+> @@ -96,6 +98,26 @@
+>  #define PCIE_PORT_LANE_SKEW		0x714
+>  #define PORT_LANE_SKEW_INSERT_MASK	GENMASK(23, 0)
+>  
+> +/*
+> + * PCIE_TIMER_CTRL_MAX_FUNC_NUM: Timer Control and Max Function Number
+> + * Register.
+> + * This register holds the ack frequency, latency, replay, fast link
+> + * scaling timers, and max function number values.
+> + * Bit[30:29] FAST_LINK_SCALING_FACTOR: Fast Link Timer Scaling Factor.
+> + *   0x0 (SF_1024):Scaling Factor is 1024 (1ms is 1us).
+> + *     When the LTSSM is in Config or L12 Entry State, 1ms
+> + *     timer is 2us, 2ms timer is 4us and 3ms timer is 6us.
+> + *   0x1 (SF_256): Scaling Factor is 256 (1ms is 4us)
+> + *   0x2 (SF_64): Scaling Factor is 64 (1ms is 16us)
+> + *   0x3 (SF_16): Scaling Factor is 16 (1ms is 64us)
+> + */
+> +#define PCIE_TIMER_CTRL_MAX_FUNC_NUM	0x718
+> +#define PORT_FLT_SF_MASK	GENMASK(30, 29)
+> +#define PORT_FLT_SF_VAL_1024	0x0
+> +#define PORT_FLT_SF_VAL_256	0x1
+> +#define PORT_FLT_SF_VAL_64	0x2
+> +#define PORT_FLT_SF_VAL_16	0x3
+> +
+>  #define PCIE_PORT_DEBUG0		0x728
+>  #define PORT_LOGIC_LTSSM_STATE_MASK	0x3f
+>  #define PORT_LOGIC_LTSSM_STATE_L0	0x11
+> diff --git a/drivers/pci/controller/dwc/pcie-ultrarisc.c b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+> new file mode 100644
+> index 000000000000..7326bd446590
+> --- /dev/null
+> +++ b/drivers/pci/controller/dwc/pcie-ultrarisc.c
+> @@ -0,0 +1,175 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * DWC PCIe RC driver for UltraRISC SoCs
+> + *
+> + * Copyright (C) 2026 UltraRISC Technology (Shanghai) Co., Ltd.
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of_device.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +
+> +#include "pcie-designware.h"
+> +
+> +#define PCIE_CUS_CORE          0x400000
+> +
+> +#define LTSSM_ENABLE           BIT(7)
+> +#define FAST_LINK_MODE         BIT(12)
+> +#define HOLD_PHY_RST           BIT(14)
+> +#define L1SUB_DISABLE          BIT(15)
+> +
+> +#define ULTRARISC_PCIE_COMP_TIMEOUT_65_210MS	0x6
+> +
+> +static struct pci_ops ultrarisc_pci_ops = {
+> +	.map_bus = dw_pcie_own_conf_map_bus,
+> +	.read = pci_generic_config_read32,
+> +	.write = pci_generic_config_write32,
+> +};
+> +
+> +static int ultrarisc_pcie_host_init(struct dw_pcie_rp *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct pci_host_bridge *bridge = pp->bridge;
+> +	u8 cap_exp;
+> +	u32 val;
+> +
+> +	bridge->ops = &ultrarisc_pci_ops;
+> +
+> +	if (dw_pcie_link_up(pci))
+> +		return 0;
+> +
+> +	val = dw_pcie_readl_dbi(pci, PCIE_CUS_CORE);
+> +	val &= ~FAST_LINK_MODE;
+> +	dw_pcie_writel_dbi(pci, PCIE_CUS_CORE, val);
+> +
+> +	val = dw_pcie_readl_dbi(pci, PCIE_TIMER_CTRL_MAX_FUNC_NUM);
+> +	FIELD_MODIFY(PORT_FLT_SF_MASK, &val, PORT_FLT_SF_VAL_64);
+> +	dw_pcie_writel_dbi(pci, PCIE_TIMER_CTRL_MAX_FUNC_NUM, val);
+> +
+> +	cap_exp = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	val = dw_pcie_readl_dbi(pci, cap_exp + PCI_EXP_LNKCTL2);
+> +	FIELD_MODIFY(PCI_EXP_LNKCTL2_TLS, &val, PCI_EXP_LNKCTL2_TLS_16_0GT);
+> +	dw_pcie_writel_dbi(pci, cap_exp + PCI_EXP_LNKCTL2, val);
+> +
+> +	val = dw_pcie_readl_dbi(pci, PCIE_PORT_FORCE);
+> +	FIELD_MODIFY(PORT_LINK_NUM_MASK, &val, 0);
+> +	dw_pcie_writel_dbi(pci, PCIE_PORT_FORCE, val);
+> +
+> +	val = dw_pcie_readl_dbi(pci, cap_exp + PCI_EXP_DEVCTL2);
+> +	FIELD_MODIFY(PCI_EXP_DEVCTL2_COMP_TIMEOUT, &val,
+> +		     ULTRARISC_PCIE_COMP_TIMEOUT_65_210MS);
+> +	dw_pcie_writel_dbi(pci, cap_exp + PCI_EXP_DEVCTL2, val);
+> +
+> +	val = dw_pcie_readl_dbi(pci, PCIE_CUS_CORE);
+> +	val &= ~(HOLD_PHY_RST | L1SUB_DISABLE);
+> +	dw_pcie_writel_dbi(pci, PCIE_CUS_CORE, val);
+> +
+> +	return 0;
+> +}
+> +
+> +static void ultrarisc_pcie_pme_turn_off(struct dw_pcie_rp *pp)
+> +{
+> +	/*
+> +	 * DP1000 does not support sending PME_Turn_Off from the RC.
+> +	 * Keep this callback empty to skip the generic MSG TLP path.
+> +	 */
+> +}
+> +
+> +static const struct dw_pcie_host_ops ultrarisc_pcie_host_ops = {
+> +	.init = ultrarisc_pcie_host_init,
+> +	.pme_turn_off = ultrarisc_pcie_pme_turn_off,
+> +};
+> +
+> +static int ultrarisc_pcie_start_link(struct dw_pcie *pci)
+> +{
+> +	u32 val;
+> +
+> +	val = dw_pcie_readl_dbi(pci, PCIE_CUS_CORE);
+> +	val |= LTSSM_ENABLE;
+> +	dw_pcie_writel_dbi(pci, PCIE_CUS_CORE, val);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct dw_pcie_ops dw_pcie_ops = {
+> +	.start_link = ultrarisc_pcie_start_link,
+> +};
+> +
+> +static int ultrarisc_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct dw_pcie_rp *pp;
+> +	struct dw_pcie *pci;
+> +	int ret;
+> +
+> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> +	if (!pci)
+> +		return -ENOMEM;
+> +
+> +	pci->dev = dev;
+> +	pci->ops = &dw_pcie_ops;
+> +
+> +	/* Set a default value suitable for at most 16 in and 16 out windows */
+> +	pci->atu_size = SZ_8K;
+> +
+> +	pp = &pci->pp;
+> +
+> +	platform_set_drvdata(pdev, pci);
+> +
+> +	pp->num_vectors = MAX_MSI_IRQS;
+> +	/* No L2/L3 Ready indication is available on this platform. */
+> +	pp->skip_l23_ready = true;
+> +	pp->ops = &ultrarisc_pcie_host_ops;
+> +
+> +	ret = dw_pcie_host_init(pp);
+> +	if (ret) {
+> +		dev_err(dev, "Failed to initialize host\n");
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int ultrarisc_pcie_suspend_noirq(struct device *dev)
+> +{
+> +	struct dw_pcie *pci = dev_get_drvdata(dev);
+> +
+> +	return dw_pcie_suspend_noirq(pci);
+> +}
+> +
+> +static int ultrarisc_pcie_resume_noirq(struct device *dev)
+> +{
+> +	struct dw_pcie *pci = dev_get_drvdata(dev);
+> +
+> +	return dw_pcie_resume_noirq(pci);
+> +}
+> +
+> +static const struct dev_pm_ops ultrarisc_pcie_pm_ops = {
+> +	NOIRQ_SYSTEM_SLEEP_PM_OPS(ultrarisc_pcie_suspend_noirq,
+> +				  ultrarisc_pcie_resume_noirq)
+> +};
+> +
+> +static const struct of_device_id ultrarisc_pcie_of_match[] = {
+> +	{
+> +		.compatible = "ultrarisc,dp1000-pcie",
+> +	},
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, ultrarisc_pcie_of_match);
+> +
+> +static struct platform_driver ultrarisc_pcie_driver = {
+> +	.driver = {
+> +		.name	= "ultrarisc-pcie",
+> +		.of_match_table = ultrarisc_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+> +		.pm = &ultrarisc_pcie_pm_ops,
+> +	},
+> +	.probe = ultrarisc_pcie_probe,
+> +};
+> +module_platform_driver(ultrarisc_pcie_driver);
+> +
+> +MODULE_DESCRIPTION("UltraRISC DP1000 DWC PCIe host controller");
+> +MODULE_LICENSE("GPL");
 > 
-> > 
-> > Wouldn’t we want end-users to specify what kind of doorbell they want,
-> > as it seems to be that a more specific doorbell BAR layout can be 
-> > programmed with eDMA, allowing native support for nvmet’s doorbell
-> > BAR for example.
+> -- 
+> 2.34.1
 > 
-> I also wanted to use my designware based EPC for doorbells in nvmet-pci-epf,
-> specifically the support that Koichiro added for inbound subrange mapping.
-> 
-> However, most designware EPC have a strict alignment requirement
-> (CX_ATU_MIN_REGION_SIZE), which is often 4k.
-> 
-> This alignment requirement is there both on the PCI address (address within
-> the BAR, and for the physical memory address (target address)).
-> 
-> I thought that we could use the inbound subrange mapping and put the doorbells
-> in a separate inbound iATU, so we could remove polling in the nvmet-pci-epf
-> driver, just like they have done in the vNTB driver. However, it works in vNTB
-> because they have a register telling exactly which BAR and offset in that BAR
-> where the doorbells are.
-> In the NVMe PCIe Transport specification, the offset for the start of the
-> doorbells is fixed, at offset 0x1000 (4k) and the only thing you can change is
-> the stride between the doorbells.
-> 
-> Currently, a doorbell is a single 32-bit data, sure we could call
-> pci_epf_alloc_doorbell() with ("number of I/O queues" + 1 (admin queue)) * 2
-> (submission queue and completion queue).
-> 
-> However, the address which we get from pci_epf_alloc_doorbell() might not be
-> 4k aligned.
-> 
-> We have the function pci_epf_align_inbound_addr() which can split this
-> non-aligned address to a 4k aligned base + offset from that base.
-> 
-> However, that would also require the host side driver to write to this offset
-> from the start address. (See e.g. doorbell_offset in pci-epf-test.c).
-> 
-> So, basically, with the current limitation that the doorbells must start at
-> 0x1000, together with the fact that the doorbells returned from
-> pci_epf_alloc_doorbell() might have an arbitrary alignment, I don't see how
-> we could add support for doorbells in nvmet-pci-epf.
-> 
-> If we could supply an alignment requirement to pci_epf_alloc_doorbell(),
-> e.g. 4k, and the API is guaranteed to return an address that satisfies this
-> alignment requirement, then we would be good.
-> 
-> However, right now, we don't have such an API. We simple get an address
-> somewhere within the GIC ITS MMIO region.
-> 
-> 
-> > 
-> > Originally in a patchset by Frank Li the API that was proposed was more
-> > generic, and the pci-epc-msi implementation was chosen because there
-> > was only one implementation:
-> > - https://lore.kernel.org/imx/20231019150441.GA7254@thinkpad/
-> > - https://lore.kernel.org/imx/20231019172347.GC7254@thinkpad/
-> > 
-> > I’d personally prefer to see an abstraction that is weaved into pci-epc-core
-> > and pci-epf-core that can be implemented by drivers as they wish. While 
-> > still keeping the enum for different types.
-> > 
-> > That also gives room to pull a poll-mode doorbell into the pci-epc-core,
-> > which deduplicates that code from the nvmet and vntb epfs, and allows
-> > other functions to use RC->EP doorbells without needing to bother with
-> > writing the polling mechanism.
-> 
-> Sounds like a good idea.
+>
 
-Hi Max, Niklas,
+Gentle ping.
 
-First of all, sorry for the late reply. I was away from late April, then caught
-pneumonia and was out sick for a while...
+Best Regards,
+Jia Wang 
 
-- Regarding the common poll-mode doorbell:
 
-  I agree that it would be useful. I don't have a detailed implementation in
-  mind yet, but I can imagine it as the last-resort backend for
-  pci_epf_alloc_doorbell(), used when no interrupt-capable backend can be
-  allocated.
-
-  In that design, I don't think this necessarily depends on making the backend
-  type selectable by the caller. If I misunderstood what Max meant by "That also
-  gives room to pull...", please let me know.
-
-- Regarding the enum and explicit backend type selection:
-
-  Earlier revisions (~v4) were somewhat closer to that model, before v5 moved
-  the fallback selection behind pci_epf_alloc_doorbell():
-
-  https://lore.kernel.org/linux-pci/avey4i3lwcqt4wsy3y2wjlx7ixo7sqe64hngj2ne6vubl4mjzv@kaksbjkspifd/
-
-  For the current vntb/test users, I tried to keep the backend selection
-  transparent to the EPF. If the MSI-backed path is available and working,
-  explicitly asking for the embedded /eDMA fallback does not seem very useful.
-  That's why the path is tried only as a fallback.
-
-  That said, I'm not opposed to extending the API. For future users, it might
-  make sense to let callers express additional requirements or preferences.
-
-  Since this series has already been applied, I think this can be handled as
-  follow-up improvement work.
-
-Thank you both for the detailed and constructive discussion.
-
-Best regards,
-Koichiro
-
-> 
-> 
-> > 
-> > P.S. I’ve been working on a vfio-user based epc for development purposes
-> > personally, and the last hurdle before I want to send it in for comments is 
-> > support for doorbells, and came across this patchset checking if there’s
-> > any other activity in the space. Having an implementation-agnostic
-> > doorbell API in the EPF/EPC core would be very helpful to me.
-> 
-> I have looked at adding doorbell support to nvmet-pci-epf, but got stuck on
-> pci_epf_alloc_doorbell() returning an address that is not 4k aligned.
-> 
-> (Since the NVMe PCIe transport specification has the doorbells at a fixed
-> location, we can't change that.)
-> 
-> But if we could provide an "alignment" parameter to pci_epf_alloc_doorbell(),
-> then I think it is possible.
-> 
-> Sure, the GIC ITS MMIO area might be quite small, so it might not be able
-> satisfy such a request. E.g. on rk3588, the its1 MMIO region is 0x20000 (128k):
-> https://github.com/torvalds/linux/blob/v7.1-rc1/arch/arm64/boot/dts/rockchip/rk3588-base.dtsi#L2414
-> 
-> However, I have not idea of how much of this region the GIC driver uses for
-> actual registers, and how much of that region it can actually dedicate to
-> doorbells.
-> 
-> 
-> Kind regards,
-> Niklas
