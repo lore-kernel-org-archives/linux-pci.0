@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE4784D2ED6;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCFA14D2EE1;
 	Mon, 11 May 2026 19:16:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778526997; cv=none; b=KhtiEd6rwcxOnvlgsTfK0RiNlr4ZdUb9/37XRDtcxywaO2LPHqt8EiZJY7EFi59Ja6qkX2rbxKZFsbmqD3At7ZgV1yXDn2+O4IO9m0umNONRUgdkXlYHmNSKZcgnILeMVq1VyhE59g5y/DXgRrbQTHsYNZiPzSlc5qJzj8/VEMA=
+	t=1778526997; cv=none; b=cJUUfrse4VmwoVi8HsWE/ycJDYe3j8xzAadCvKGJDe9n75PGxi2DM8HyItNAFew9NU07TgaIqxc7tZrNP+6CrEl55w1WmOUfxic7UR2AiJkWKMMr1/tHyx490pyvZpDfv+TSGhlsk1s936Al5+eofXyBaNKe/hjwq3ujTXXsJ34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1778526997; c=relaxed/simple;
-	bh=dibbtsoHVtBkvjIbTYNSYlSZiq7/NvYCg+uFR3qLLxA=;
+	bh=Vp66/4W1YC49XTdSyJZKPiSjHEWIAa9U/V2nj1/SBBQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=G/Pqgyq8IZltU7aWh3HnZFhVDYZQlnN7FH9ReGHuFgf8otwNZt9UFfdqquybnwtAHYBUeEeIfr6bAR/CzYdGm+c20rzWN7kaGRUt/SEGjQ3Gz5xaAcusMls54d/4o81mD9ioo//qokQIJqGS45MuQ/YS5llQS4X/Bj2o26i+Fac=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QWwoa0Qz; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=oGdyoIDurd2M6V0iFr28F5mo/Yl+JEnvRAi421nLSxLHcmEVtspRR4tBOr1AZrp40MCWuaoqRy1TBPelQbRZWaiaX1joyMajEw9YUIDi8dmq9NXHpIYtROvGErKxoSMx9h+oNHRQB1n7v4hEJws25agEn970UKSMn6zo4mlh33k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DcrUOkkx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QWwoa0Qz"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7CA73C2BCFF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DcrUOkkx"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AB5C9C2BCB0;
 	Mon, 11 May 2026 19:16:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1778526997;
-	bh=dibbtsoHVtBkvjIbTYNSYlSZiq7/NvYCg+uFR3qLLxA=;
+	bh=Vp66/4W1YC49XTdSyJZKPiSjHEWIAa9U/V2nj1/SBBQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=QWwoa0QzFXzPLWW/PHcWVvdJPzqY7SXUJK+TDiUYaB2WZnc8LnPqAwR5PYklhHkmF
-	 C8sbEBya5ZauOLp78v0jHkbmKqJaiaB0jBFeyU+MzF1hT60oAbGIGWcMloD7fX+tOD
-	 B3m7nQ+sWxpyScL/fBhU623UhB+1TpiOnVhcjVlUeoPENrRcH1sYamoBXbpgtO6WfT
-	 Tw/f02vR2T3+5YrqEecyBeWar/Qc+VbNQayES2wLxXkrs3O6cXf6cqYzvSeL2bRC48
-	 tqY9aWVGvXORfCgczDwnTHmfwd5XbR3LZtQb4aV8an/BLTap0YQDfpdQ2b6aF0c19H
-	 xcXnkM0lQsKZQ==
+	b=DcrUOkkxN38uKQsTmd+fIy5SqFg4dv0nnFLKugec2e+ib/PMvbGZfDAxJO3LH7v0A
+	 PqRaqRrAswQVnvV/971GNYbJbGNvE/smvVv+z6VqWruWUOEbkS8ab1lOaz5LTd/hhe
+	 asmVJqox4Mwk9/E1B6/T8MyTgzfwBxaB6T6dOHWxQl5clWQAvivDY+im/AvSueUDBB
+	 cuN7spGuxCBeLxj3AsRc2JmNsmzS4RPbJlTU1NUawQ+uwb0J/jQYpqOwedST+kE/0R
+	 u0qdhideJ9+PQR4YFS4Gku+2FUweuZ8SpsORZhDR5LM4UpFZY/LxrCDufS0SWLr7LW
+	 QfCi0ij5//0cQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73DC9CD4840;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A496ECD37BE;
 	Mon, 11 May 2026 19:16:37 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Mon, 11 May 2026 14:16:17 -0500
-Subject: [PATCH v2 05/23] dmaengine: sdxi: Configure context tables
+Date: Mon, 11 May 2026 14:16:20 -0500
+Subject: [PATCH v2 08/23] dmaengine: sdxi: Install administrative context
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260511-sdxi-base-v2-5-889cfed17e3f@amd.com>
+Message-Id: <20260511-sdxi-base-v2-8-889cfed17e3f@amd.com>
 References: <20260511-sdxi-base-v2-0-889cfed17e3f@amd.com>
 In-Reply-To: <20260511-sdxi-base-v2-0-889cfed17e3f@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
@@ -54,11 +54,11 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
  Jonathan Cameron <jic23@kernel.org>, Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1778526994; l=6882;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1778526994; l=9146;
  i=nathan.lynch@amd.com; s=20260410; h=from:subject:message-id;
- bh=SJzCBbJFQwsyPu9ZY+bi1GfbFcp2Ugeir8s9gli+zx8=;
- b=PC/X78ReHlbxSzzDkjYMmCaUWPeUsaVWTpwro9y1f0Lauwi5uHvMJc9tiB5OsfRpcCs7WbWKW
- kYjdXpgN3LxANhYHG7rC5J+8+2I1f5T/KgiB1IAs2qULISOcwgjrzh+
+ bh=zMluVlkkmzpjmqYHOXc48W9FjdNuqtPoO9l8CtBuk0A=;
+ b=1u3g3JV7YIkZifyV+k4mGC6whHFFl+muZb0umcmKUNSkHLTQpSLoPxsqzgsHA9dlI3iEzOqhL
+ 89ZWU1odPtoCXUcZ6Sb7BJXL3WJzAcYPNwnYMVaiYSGhGMOftf6zMNx
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=PK4ozhq+/z9/2Jl5rgDmvHa9raVomv79qM8p1RAFpEw=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260410 with
@@ -68,210 +68,301 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-SDXI uses a two-level table hierarchy to track contexts. There is a
-single level 2 table per function which enumerates up to 512 level 1
-tables. Each level 1 table enumerates up to 128 contexts.
-
-Allocate and install the L2 table and a single L1 table, enough for
-context IDs 0-127 (i.e. the admin context with reserved id 0, plus 127
-client contexts). For now, to avoid dynamic management of additional
-L1 tables, cap ctl2.max_cxt to 127.
-
-Since the table allocations are devres-managed, there is no
-corresponding cleanup code required.
+Serialize the context control block, akey table, and L1 entry for the
+admin context, making its descriptor ring, write index, and context
+status block visible to the SDXI implementation once it is activated.
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/device.c | 40 +++++++++++++++++++++++++++++--
- drivers/dma/sdxi/hw.h     | 61 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/mmio.h   |  6 +++++
- drivers/dma/sdxi/sdxi.h   |  5 ++++
- 4 files changed, 110 insertions(+), 2 deletions(-)
+ drivers/dma/sdxi/context.c | 162 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/context.h |   7 ++
+ drivers/dma/sdxi/hw.h      |  15 +++++
+ drivers/dma/sdxi/sdxi.h    |   9 +++
+ 4 files changed, 193 insertions(+)
 
-diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
-index f9a9944ad892..6a2204ff7fde 100644
---- a/drivers/dma/sdxi/device.c
-+++ b/drivers/dma/sdxi/device.c
-@@ -8,11 +8,14 @@
- #include <linux/bitfield.h>
- #include <linux/delay.h>
- #include <linux/device.h>
-+#include <linux/dma-mapping.h>
- #include <linux/iopoll.h>
- #include <linux/jiffies.h>
-+#include <linux/log2.h>
- #include <linux/slab.h>
- #include <linux/time.h>
+diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
+index 27821cfaf031..c0b55c945cc4 100644
+--- a/drivers/dma/sdxi/context.c
++++ b/drivers/dma/sdxi/context.c
+@@ -7,16 +7,22 @@
  
+ #define pr_fmt(fmt)     "SDXI: " fmt
+ 
++#include <linux/align.h>
++#include <linux/bitfield.h>
+ #include <linux/bug.h>
+ #include <linux/cleanup.h>
+ #include <linux/device/devres.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/dmapool.h>
+ #include <linux/errno.h>
++#include <linux/iommu.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
++#include <asm/barrier.h>
++#include <asm/rwonce.h>
+ 
+ #include "context.h"
 +#include "hw.h"
- #include "mmio.h"
  #include "sdxi.h"
  
-@@ -136,7 +139,8 @@ static int sdxi_dev_stop(struct sdxi_dev *sdxi)
-  */
- static int sdxi_fn_activate(struct sdxi_dev *sdxi)
- {
--	u64 version, cap0, cap1, ctl2;
-+	u64 version, cap0, cap1, ctl2, cxt_l2, lv01_ptr;
-+	struct sdxi_cxt_L2_ent *L2_ent;
- 	int err;
- 
- 	/*
-@@ -160,7 +164,13 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
- 
- 	cap1 = sdxi_read64(sdxi, SDXI_MMIO_CAP1);
- 	sdxi->op_grp_cap = FIELD_GET(SDXI_MMIO_CAP1_OPB_000_CAP, cap1);
--	sdxi->max_cxtid = FIELD_GET(SDXI_MMIO_CAP1_MAX_CXT, cap1);
-+
-+	/*
-+	 * Constrain the number of client contexts supported by the
-+	 * driver to what fits in a single L1 table.
-+	 */
-+	sdxi->max_cxtid = min(SDXI_L1_TABLE_ENTRIES - 1,
-+			      FIELD_GET(SDXI_MMIO_CAP1_MAX_CXT, cap1));
- 
- 	/* Apply our configuration. */
- 	ctl2 = FIELD_PREP(SDXI_MMIO_CTL2_MAX_CXT, sdxi->max_cxtid);
-@@ -172,6 +182,32 @@ static int sdxi_fn_activate(struct sdxi_dev *sdxi)
- 			   FIELD_GET(SDXI_MMIO_CAP1_OPB_000_CAP, cap1));
- 	sdxi_write64(sdxi, SDXI_MMIO_CTL2, ctl2);
- 
-+	/* SDXI 1.0 4.1.8.2 Context Level 2 Table Setup */
-+	sdxi->L2_table = dmam_alloc_coherent(sdxi->dev,
-+					     sizeof(*sdxi->L2_table),
-+					     &sdxi->L2_dma, GFP_KERNEL);
-+	if (!sdxi->L2_table)
-+		return -ENOMEM;
-+
-+	cxt_l2 = FIELD_PREP(SDXI_MMIO_CXT_L2_PTR, sdxi->L2_dma >> ilog2(SZ_4K));
-+	sdxi_write64(sdxi, SDXI_MMIO_CXT_L2, cxt_l2);
-+
-+	/* SDXI 1.0 4.1.8.3 Context Level 1 Table Setup */
-+	sdxi->L1_table = dmam_alloc_coherent(sdxi->dev,
-+					     sizeof(*sdxi->L1_table),
-+					     &sdxi->L1_dma, GFP_KERNEL);
-+	if (!sdxi->L1_table)
-+		return -ENOMEM;
-+	/*
-+	 * SDXI 1.0 4.1.8.3.c: Initialize the Context level 2 table to
-+	 * point to the Context Level 1 [table].
-+	 */
-+	L2_ent = &sdxi->L2_table->entry[0];
-+	lv01_ptr = FIELD_PREP(SDXI_CXT_L2_ENT_VL, 1) |
-+		   FIELD_PREP(SDXI_CXT_L2_ENT_LV01_PTR,
-+			      sdxi->L1_dma >> ilog2(SZ_4K));
-+	L2_ent->lv01_ptr = cpu_to_le64(lv01_ptr);
-+
- 	return 0;
+ #define DEFAULT_DESC_RING_ENTRIES 1024
+@@ -106,6 +112,152 @@ static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
+ 	return_ptr(cxt);
  }
  
-diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
-new file mode 100644
-index 000000000000..df520ca7792b
---- /dev/null
-+++ b/drivers/dma/sdxi/hw.h
-@@ -0,0 +1,61 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/* Copyright Advanced Micro Devices, Inc. */
++struct sdxi_cxt_ctl_cfg {
++	dma_addr_t ds_ring_ptr;
++	dma_addr_t cxt_sts_ptr;
++	dma_addr_t write_index_ptr;
++	u32 ds_ring_sz;
++	u8 qos;
++	u8 csa;
++	bool se;
++};
++
++static int configure_cxt_ctl(struct sdxi_cxt_ctl *ctl, const struct sdxi_cxt_ctl_cfg *cfg)
++{
++	u64 ds_ring_ptr, cxt_sts_ptr, write_index_ptr;
++
++	write_index_ptr = FIELD_PREP(SDXI_CXT_CTL_WRITE_INDEX_PTR,
++				     cfg->write_index_ptr >> WRT_INDEX_PTR_SHIFT);
++	cxt_sts_ptr = FIELD_PREP(SDXI_CXT_CTL_CXT_STS_PTR,
++				 cfg->cxt_sts_ptr >> CXT_STATUS_PTR_SHIFT);
++
++	*ctl = (typeof(*ctl)) {
++		/*
++		 * ds_ring_ptr contains the validity bit and is updated
++		 * after a barrier is issued.
++		 */
++		.ds_ring_sz      = cpu_to_le32(cfg->ds_ring_sz),
++		.cxt_sts_ptr     = cpu_to_le64(cxt_sts_ptr),
++		.write_index_ptr = cpu_to_le64(write_index_ptr),
++	};
++
++	ds_ring_ptr = FIELD_PREP(SDXI_CXT_CTL_VL, 1) |
++		      FIELD_PREP(SDXI_CXT_CTL_QOS, cfg->qos) |
++		      FIELD_PREP(SDXI_CXT_CTL_SE, cfg->se) |
++		      FIELD_PREP(SDXI_CXT_CTL_CSA, cfg->csa) |
++		      FIELD_PREP(SDXI_CXT_CTL_DS_RING_PTR,
++				 cfg->ds_ring_ptr >> DESC_RING_BASE_PTR_SHIFT);
++	/* Ensure other fields are visible before hw sees vl=1. */
++	dma_wmb();
++	WRITE_ONCE(ctl->ds_ring_ptr, cpu_to_le64(ds_ring_ptr));
++
++	return 0;
++}
 +
 +/*
-+ * Control structures and constants defined in the SDXI specification,
-+ * with low-level accessors. The ordering of the structures here
-+ * follows the order of their definitions in the SDXI spec.
-+ *
-+ * Names of structures, members, and subfields (bit ranges within
-+ * members) are written to match the spec, generally. E.g. struct
-+ * sdxi_cxt_L2_ent corresponds to CXT_L2_ENT in the spec.
-+ *
-+ * Note: a member can have a subfield whose name is identical to the
-+ * member's name. E.g. CXT_L2_ENT's lv01_ptr.
-+ *
-+ * All reserved fields and bits (usually named "rsvd" or some
-+ * variation) must be set to zero by the driver unless otherwise
-+ * specified.
++ * Logical representation of CXT_L1_ENT subfields.
 + */
-+
-+#ifndef DMA_SDXI_HW_H
-+#define DMA_SDXI_HW_H
-+
-+#include <linux/bits.h>
-+#include <linux/build_bug.h>
-+#include <linux/types.h>
-+#include <asm/byteorder.h>
-+
-+/* SDXI 1.0 Table 3-2: Context Level 2 Table Entry (CXT_L2_ENT) */
-+struct sdxi_cxt_L2_ent {
-+	__le64 lv01_ptr;
-+#define SDXI_CXT_L2_ENT_VL       BIT_ULL(0)
-+#define SDXI_CXT_L2_ENT_LV01_PTR GENMASK_ULL(63, 12)
-+} __packed;
-+static_assert(sizeof(struct sdxi_cxt_L2_ent) == 8);
-+
-+/* SDXI 1.0 3.2.1 Context Level 2 Table */
-+#define SDXI_L2_TABLE_ENTRIES 512
-+struct sdxi_cxt_L2_table {
-+	struct sdxi_cxt_L2_ent entry[SDXI_L2_TABLE_ENTRIES];
++struct sdxi_cxt_L1_cfg {
++	dma_addr_t cxt_ctl_ptr;
++	dma_addr_t akey_ptr;
++	u32 cxt_pasid;
++	u32 opb_000_enb;
++	u16 max_buffer;
++	u8 akey_sz;
++	bool ka;
++	bool pv;
 +};
-+static_assert(sizeof(struct sdxi_cxt_L2_table) == 4096);
 +
-+/* SDXI 1.0 Table 3-3: Context Level 1 Table Entry (CXT_L1_ENT) */
-+struct sdxi_cxt_L1_ent {
-+	__le64 cxt_ctl_ptr;
-+	__le64 akey_ptr;
-+	__le32 misc0;
-+	__le32 opb_000_enb;
-+	__u8 rsvd_0[8];
-+} __packed;
-+static_assert(sizeof(struct sdxi_cxt_L1_ent) == 32);
++static int configure_L1_entry(struct sdxi_cxt_L1_ent *ent,
++			      const struct sdxi_cxt_L1_cfg *cfg)
++{
++	u64 cxt_ctl_ptr, akey_ptr;
++	u32 misc0;
 +
-+/* SDXI 1.0 3.2.2 Context Level 1 Table */
-+#define SDXI_L1_TABLE_ENTRIES 128
-+struct sdxi_cxt_L1_table {
-+	struct sdxi_cxt_L1_ent entry[SDXI_L1_TABLE_ENTRIES];
-+};
-+static_assert(sizeof(struct sdxi_cxt_L1_table) == 4096);
++	if (WARN_ON_ONCE(!IS_ALIGNED(cfg->cxt_ctl_ptr, SZ_64)))
++		return -EFAULT;
++	if (WARN_ON_ONCE(!IS_ALIGNED(cfg->akey_ptr, SZ_4K)))
++		return -EFAULT;
 +
-+#endif /* DMA_SDXI_HW_H */
-diff --git a/drivers/dma/sdxi/mmio.h b/drivers/dma/sdxi/mmio.h
-index c9a11c3f2f76..d8d631849938 100644
---- a/drivers/dma/sdxi/mmio.h
-+++ b/drivers/dma/sdxi/mmio.h
-@@ -19,6 +19,9 @@ enum sdxi_reg {
- 	SDXI_MMIO_CAP0       = 0x00200,
- 	SDXI_MMIO_CAP1       = 0x00208,
- 	SDXI_MMIO_VERSION    = 0x00210,
++	akey_ptr = FIELD_PREP(SDXI_CXT_L1_ENT_AKEY_SZ, cfg->akey_sz) |
++		   FIELD_PREP(SDXI_CXT_L1_ENT_AKEY_PTR,
++			      cfg->akey_ptr >> L1_CXT_AKEY_PTR_SHIFT);
 +
-+	/* SDXI 1.0 9.2 Context and RKey Table Registers */
-+	SDXI_MMIO_CXT_L2     = 0x10000,
++	misc0 = FIELD_PREP(SDXI_CXT_L1_ENT_PASID, cfg->cxt_pasid) |
++		FIELD_PREP(SDXI_CXT_L1_ENT_MAX_BUFFER, cfg->max_buffer);
++
++	*ent = (typeof(*ent)) {
++		/*
++		 * cxt_ctl_ptr contains the validity bit and is
++		 * updated after a barrier is issued.
++		 */
++		.akey_ptr    = cpu_to_le64(akey_ptr),
++		.misc0       = cpu_to_le32(misc0),
++		.opb_000_enb = cpu_to_le32(cfg->opb_000_enb),
++	};
++
++	cxt_ctl_ptr = FIELD_PREP(SDXI_CXT_L1_ENT_VL, 1) |
++		      FIELD_PREP(SDXI_CXT_L1_ENT_KA, cfg->ka) |
++		      FIELD_PREP(SDXI_CXT_L1_ENT_PV, cfg->pv) |
++		      FIELD_PREP(SDXI_CXT_L1_ENT_CXT_CTL_PTR,
++				 cfg->cxt_ctl_ptr >> L1_CXT_CTRL_PTR_SHIFT);
++	/* Ensure other fields are visible before hw sees vl=1. */
++	dma_wmb();
++	WRITE_ONCE(ent->cxt_ctl_ptr, cpu_to_le64(cxt_ctl_ptr));
++
++	return 0;
++}
++
++/*
++ * Make the context control structure hierarchy valid from the POV of
++ * the SDXI implementation. This may eventually involve allocation of
++ * a L1 table page, so it needs to be fallible.
++ */
++static int sdxi_publish_cxt(const struct sdxi_cxt *cxt)
++{
++	struct sdxi_cxt_ctl_cfg ctl_cfg;
++	struct sdxi_cxt_L1_cfg L1_cfg;
++	struct sdxi_cxt_L1_ent *ent;
++	u8 l1_idx;
++	int err;
++
++	if (WARN_ONCE(cxt->id > cxt->sdxi->max_cxtid,
++		      "can't install cxt with id %u (limit %u)",
++		      cxt->id, cxt->sdxi->max_cxtid))
++		return -EINVAL;
++
++	ctl_cfg = (typeof(ctl_cfg)) {
++		.se              = 1,
++		.csa             = 1,
++		.ds_ring_ptr     = cxt->sq->ring_dma,
++		.ds_ring_sz      = cxt->sq->ring_size >> 6,
++		.cxt_sts_ptr     = cxt->sq->cxt_sts_dma,
++		.write_index_ptr = cxt->sq->write_index_dma,
++	};
++
++	err = configure_cxt_ctl(cxt->cxt_ctl, &ctl_cfg);
++	if (err)
++		return err;
++
++	l1_idx = ID_TO_L1_INDEX(cxt->id);
++
++	ent = &cxt->sdxi->L1_table->entry[l1_idx];
++
++	L1_cfg = (typeof(L1_cfg)) {
++		.ka          = 1,
++		.pv          = 0,
++		.cxt_ctl_ptr = cxt->cxt_ctl_dma,
++		.akey_sz     = akey_table_order(cxt->akey_table),
++		.akey_ptr    = cxt->akey_table_dma,
++		.cxt_pasid   = IOMMU_NO_PASID,
++		.max_buffer  = 11, /* 4GB */
++		.opb_000_enb = cxt->sdxi->op_grp_cap,
++	};
++
++	return configure_L1_entry(ent, &L1_cfg);
++	/* todo: need to send DSC_CXT_UPD to admin */
++}
++
+ static void free_admin_cxt(void *ptr)
+ {
+ 	struct sdxi_dev *sdxi = ptr;
+@@ -115,13 +267,23 @@ static void free_admin_cxt(void *ptr)
+ 
+ int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
+ {
++	int err;
++	struct sdxi_sq *sq;
++
+ 	struct sdxi_cxt *cxt __free(sdxi_cxt) = sdxi_alloc_cxt(sdxi);
+ 	if (!cxt)
+ 		return -ENOMEM;
+ 
++	sq = cxt->sq;
++	/* SDXI 1.0 4.1.8.4.b: Set CXT_STS.state to CXTV_RUN. */
++	sq->cxt_sts->state = FIELD_PREP(SDXI_CXT_STS_STATE, CXTV_RUN);
+ 	cxt->id = SDXI_ADMIN_CXT_ID;
+ 	cxt->db = sdxi->dbs + cxt->id * sdxi->db_stride;
+ 
++	err = sdxi_publish_cxt(cxt);
++	if (err)
++		return err;
++
+ 	sdxi->admin_cxt = no_free_ptr(cxt);
+ 
+ 	return devm_add_action_or_reset(sdxi->dev, free_admin_cxt, sdxi);
+diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
+index a29387900df7..65b773446ba3 100644
+--- a/drivers/dma/sdxi/context.h
++++ b/drivers/dma/sdxi/context.h
+@@ -20,6 +20,13 @@ struct sdxi_akey_table {
+ 	struct sdxi_akey_ent entry[SZ_4K / sizeof(struct sdxi_akey_ent)];
  };
  
- /* SDXI 1.0 Table 9-2: MMIO_CTL0 */
-@@ -48,4 +51,7 @@ enum sdxi_reg {
- #define SDXI_MMIO_VERSION_MINOR GENMASK_ULL(7, 0)
- #define SDXI_MMIO_VERSION_MAJOR GENMASK_ULL(23, 16)
- 
-+/* SDXI 1.0 Table 9-9: MMIO_CXT_L2 */
-+#define SDXI_MMIO_CXT_L2_PTR GENMASK_ULL(63, 12)
++/* For encoding the akey table size in CXT_L1_ENT's akey_sz. */
++static inline u8 akey_table_order(const struct sdxi_akey_table *tbl)
++{
++	static_assert(sizeof(*tbl) == SZ_4K);
++	return 0;
++}
 +
- #endif  /* DMA_SDXI_MMIO_H */
+ /* Submission Queue */
+ struct sdxi_sq {
+ 	u32 ring_entries;
+diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
+index b66eb22f7f90..46424376f26f 100644
+--- a/drivers/dma/sdxi/hw.h
++++ b/drivers/dma/sdxi/hw.h
+@@ -45,8 +45,16 @@ static_assert(sizeof(struct sdxi_cxt_L2_table) == 4096);
+ /* SDXI 1.0 Table 3-3: Context Level 1 Table Entry (CXT_L1_ENT) */
+ struct sdxi_cxt_L1_ent {
+ 	__le64 cxt_ctl_ptr;
++#define SDXI_CXT_L1_ENT_VL             BIT_ULL(0)
++#define SDXI_CXT_L1_ENT_KA             BIT_ULL(1)
++#define SDXI_CXT_L1_ENT_PV             BIT_ULL(2)
++#define SDXI_CXT_L1_ENT_CXT_CTL_PTR    GENMASK_ULL(63, 6)
+ 	__le64 akey_ptr;
++#define SDXI_CXT_L1_ENT_AKEY_SZ        GENMASK_ULL(3, 0)
++#define SDXI_CXT_L1_ENT_AKEY_PTR       GENMASK_ULL(63, 12)
+ 	__le32 misc0;
++#define SDXI_CXT_L1_ENT_PASID          GENMASK(19, 0)
++#define SDXI_CXT_L1_ENT_MAX_BUFFER     GENMASK(23, 20)
+ 	__le32 opb_000_enb;
+ 	__u8 rsvd_0[8];
+ } __packed;
+@@ -62,10 +70,17 @@ static_assert(sizeof(struct sdxi_cxt_L1_table) == 4096);
+ /* SDXI 1.0 Table 3-4: Context Control (CXT_CTL) */
+ struct sdxi_cxt_ctl {
+ 	__le64 ds_ring_ptr;
++#define SDXI_CXT_CTL_VL             BIT_ULL(0)
++#define SDXI_CXT_CTL_QOS            GENMASK_ULL(3, 2)
++#define SDXI_CXT_CTL_SE             BIT_ULL(4)
++#define SDXI_CXT_CTL_CSA            BIT_ULL(5)
++#define SDXI_CXT_CTL_DS_RING_PTR    GENMASK_ULL(63, 6)
+ 	__le32 ds_ring_sz;
+ 	__u8 rsvd_0[4];
+ 	__le64 cxt_sts_ptr;
++#define SDXI_CXT_CTL_CXT_STS_PTR    GENMASK_ULL(63, 4)
+ 	__le64 write_index_ptr;
++#define SDXI_CXT_CTL_WRITE_INDEX_PTR GENMASK_ULL(63, 3)
+ 	__u8 rsvd_1[32];
+ } __packed;
+ static_assert(sizeof(struct sdxi_cxt_ctl) == 64);
 diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-index 84b87066f438..85ff17c48d40 100644
+index f723bead4d93..a0fef057b00b 100644
 --- a/drivers/dma/sdxi/sdxi.h
 +++ b/drivers/dma/sdxi/sdxi.h
-@@ -39,6 +39,11 @@ struct sdxi_dev {
- 	u16 max_cxtid;			/* Maximum context ID allowed. */
- 	u32 op_grp_cap;			/* supported operation group cap */
+@@ -15,6 +15,15 @@
  
-+	struct sdxi_cxt_L2_table *L2_table;
-+	dma_addr_t L2_dma;
-+	struct sdxi_cxt_L1_table *L1_table;
-+	dma_addr_t L1_dma;
+ #include "mmio.h"
+ 
++#define ID_TO_L1_INDEX(id)	((id) & 0x7F)
 +
- 	const struct sdxi_bus_ops *bus_ops;
- };
++#define DESC_RING_BASE_PTR_SHIFT	6
++#define CXT_STATUS_PTR_SHIFT		4
++#define WRT_INDEX_PTR_SHIFT		3
++
++#define L1_CXT_CTRL_PTR_SHIFT		6
++#define L1_CXT_AKEY_PTR_SHIFT		12
++
+ struct sdxi_dev;
  
+ /**
 
 -- 
 2.54.0
