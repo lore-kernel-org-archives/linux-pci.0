@@ -1,45 +1,61 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC8BD296BAF;
-	Mon, 11 May 2026 07:02:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB223128D4
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 07:08:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778482964; cv=none; b=RYqJkLWW6SDyMI9tR3HI0QxFWgd9INdP42CdPylbsh8j0+lH+ZUjdV/3iSzulThwVUPqIoP5uCdsoFt/lVtLMnwBxLo03qGZI5fDrbe7ktJ0KkpFTgcBBPhcowmUlR30Iy0wwR5TmlSehP+SzaNxC0M0buG2RxSNAwUb3vPVTSo=
+	t=1778483310; cv=none; b=Gf9Hd5zYOXJw3wO80tsmaP37b31ubTkfs5HKNZrBnTuvg6I+e8yy8ZqrHJDbTiaQj3Pjo9oqzyESFe0zOojNC5rB9rzMZ6qJcIfN/JbNArJVh1uVyn0Ez0WBRknRAQ9ZD2vZ02pspKKvEqez/5tUIgIvTyjojwNF287l7tNJPQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778482964; c=relaxed/simple;
-	bh=Tdh/N1hAlE0eVbohv0554EUeYZWyi42yp17TIjpju5g=;
+	s=arc-20240116; t=1778483310; c=relaxed/simple;
+	bh=KAHIMnwv+gqAXoXK80oRV3DKha7/OcRPDr9V6bsQ2TM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=odlzpxAlM39HRMwZXRDoerpdmuzZgcGJRcc+d3yWv4ZnPFixx/r9Su2CurI+bvBQtwTCos4i8XJ8dHQln4d1ZuMy6Xw5dk0jVBdfncnspN7cf9K8lvOsJO/qahbc3f1P0ssNNQW3w8QK6OltJlyh/cvPOq5Gp/vFajtufRExa4g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OHLDXMEP; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OHLDXMEP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25F36C2BCB0;
-	Mon, 11 May 2026 07:02:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778482964;
-	bh=Tdh/N1hAlE0eVbohv0554EUeYZWyi42yp17TIjpju5g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OHLDXMEPFhnZDfHYyDEV5HluzVN5NysVQFyveHi6v7Cwmy2warBhBJMzSqMWLQ4hY
-	 0GugpNj51s6Ah+Bmc8EEmgqQbmAu4UYyMqRj/8bww+Cyac+DR2d6INKbeSvhSASHWM
-	 CyQBcpQkbbXKLZsNWeGsADXKg3LSTYmnvc4iuPnvonT1VuCmTiPJeyu/HqHDxAgy1J
-	 0GYltnvXZs+anrTpbMeCaGzGf5L/cjcPojB6vWaRSt0vbmYLVfndNx9Bx3C20G1TlB
-	 2pbKXHZ/74Z0ZYrQh8zJQUmiYb5MAa1n16jri7Mi3w0RPE87UVQeEU0U7Co6JikQcF
-	 MQW/FE2gv/KCg==
-Date: Mon, 11 May 2026 16:02:42 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=BDcQAx5uE0EWXTKOOLfc0D4rj5DPF+JCPckCo0AKjc/Br5x5orzlQiuGehqjz1d4taUl4y4GhmQPaGmWaR6MoeVoLXOiAfMDtR4H3oATasuUEXDXtgk6sTDjlb1R/lcD+w1pe+gT33sAvUteNfRcowsJh5RNot8jsUZYh1i74x4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2bc7b311e77so4875695ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 00:08:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778483309; x=1779088109;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3Hfk+Vplo2Nldxf0hQNn3tt2Gcl/83+AmVyM1RsJVA0=;
+        b=A8VSaowOR5FdT9+LWhj7LilKBhH0aRXx58308ii+etzqKFrd3cozJuKJbKC8PmlI5V
+         eoHMHSrFA1hDj/L13BiQ7FPtZMWh5oOHUh4zNJHi+c+3eUf/0A08N3RGD+2DTSGkYESz
+         Tszd3K8Xbtvzb57eOVyh9WIAp6w/6DjTCMjt1SqTxhP/3l/S4mSOIb4iUVVDBY1gKSgq
+         BGLJf5qdq9T0rC+K2rZTeuVkZLWgzFlGsO6duFSR5cptFXWtYEiG+vnPcziVazt5Lv4C
+         eaLDthCd7fS4+yZnH5s/eusKV4a0M3JHPw9M4jNAu15tmiiGtvx213QFfcunHI0kCkkI
+         ZKhg==
+X-Forwarded-Encrypted: i=1; AFNElJ/k+cO4EzgUBbGxVscTk/fkaOsQa63NF5d1BW71gQUite0ZqUC0P9QGq2lzh7oGQxtBKQmQQLQCb6Y=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxrgSceqBt8Yhbbrdp6lkwLQ55hcDKqVAT5EeMZWsyh9ul1bXIB
+	27wR5V+KYZbw6nM6qV7gkKmq+xV8y5i6dFxq1SnL63QCvFejgWbe2g0b
+X-Gm-Gg: Acq92OFZj8xfUs1UbJfVbzZK5CXn1Y8cpTXhio2ZZjZW4sqM+5jev9Bl3oK1GyRWkuZ
+	/idQqXY6PJMfomHzTKfuC8zGg6RMnfrPu3umMwSlDZVFPZ1Q9ydWHkpYYy2J5HZHEYFCndqUK4E
+	xWwcmz1tcufGGdRQB8jlSrY6Za++t6B+c8GfgM+1r5IBmjgINtD6Qo0CELRyo0ca5j1Uc/J5LPy
+	ZfCGrvPAJUuxWFDv147LPsIGaGEV1GVRw3THQvqX8ggjRHKaTWFc9NWQN9OzbH+sWc3hWvmDYsL
+	quBaJ9jOgDAwNvhv1iyagU4yklbChry7aHTU/mVMJsV2dmpO/heAWrifl3ACDusDbqJvylrTcx9
+	mvJSHz6W5lv0c3q6cDqKEIKdFBW/7JfBSponFuc+C7+2stsAOScaWr4WznfKGzfyUu7aZP5Fwk3
+	+HwKh4kUIjoFiEsDqUugID3Ih29EeYcF9v57g8BcFEVyLmBp17zM/Inl6o/tLe8zw72h4dgJBIw
+	VjNY7E2Li3hcsAscqTnI4a38Z0LH1V82VzbCcTTaLh8sQOz9acNctu3YmIJZB5UAbevUGM8ef43
+	s5pUvQAHlfowWGpeFgQbwEvjrBn4vNJ9V9o+DTRbyQ==
+X-Received: by 2002:a17:903:46cb:b0:2b0:91e6:bc18 with SMTP id d9443c01a7336-2babce9ebe6mr153074745ad.14.1778483308713;
+        Mon, 11 May 2026 00:08:28 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1d52f1bsm95910695ad.37.2026.05.11.00.08.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 May 2026 00:08:28 -0700 (PDT)
+Date: Mon, 11 May 2026 16:08:27 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
 To: Hans Zhang <18255117159@163.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, mani@kernel.org, 
-	vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com, 
-	pali@kernel.org, ryder.lee@mediatek.com, claudiu.beznea.uj@bp.renesas.com, 
-	mpillai@cadence.com, robh@kernel.org, s-vadapalli@ti.com, linux-omap@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, claudiu.beznea@tuxon.dev, linux-mediatek@lists.infradead.org, 
-	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 4/7] PCI: dwc: Use common
- pci_host_common_link_train_delay() helper
-Message-ID: <20260511070139.GA1096586@rocinante>
-References: <20260511055923.37117-1-18255117159@163.com>
- <20260511055923.37117-5-18255117159@163.com>
+Cc: Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, 
+	helgaas@kernel.org, linux-kernel@vger.kernel.org, s-vadapalli@ti.com, 
+	hans.zhang@cixtech.com, vigneshr@ti.com, danishanwar@ti.com
+Subject: Re: [PATCH] MAINTAINERS: Add Aksh Garg as PCI CADENCE reviewer
+Message-ID: <20260511070612.GB1096586@rocinante>
+References: <20260508060951.840233-1-a-garg7@ti.com>
+ <12c2c868-a734-49f9-9938-77319b35da3d@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,20 +64,17 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260511055923.37117-5-18255117159@163.com>
+In-Reply-To: <12c2c868-a734-49f9-9938-77319b35da3d@163.com>
 
-Hello,
+> For drivers/pci/controller/cadence, currently Aksh and Siddharth hope to
+> become Reviewers. Manikandan believes that he can become a Maintainer.
 
-> -	/*
-> -	 * As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link
-> -	 * speeds greater than 5.0 GT/s, software must wait a minimum of 100 ms
-> -	 * after Link training completes before sending a Configuration Request.
-> -	 */
-> -	if (pci->max_link_speed > 2)
-> -		msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> +	pci_host_common_link_train_delay(pci->max_link_speed);
+Manikandan needs to also learn how to disable automatic responder, per:
 
-This comment could move to the helper you added.
+  "I am ooo for Diwali till 23rd October."
+
+This is a rather long break until October.  I am sure, a lot of the mailing
+list users already growing tired of receiving this all the time.
 
 Thank you!
 
