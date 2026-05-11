@@ -1,231 +1,162 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534FB3009F6
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 15:25:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF2D2E2DF3;
+	Mon, 11 May 2026 15:59:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778513107; cv=none; b=QwEYvUeHNc4kJZgtgPlVaY3yoAlkbOXsJFhiHlyKM2nShwPudct+xkdQjENXkjsi0HrvmvepnZ45ChXDgA2Ul0T82LUe+7KhVD5ee+0ZoGjDlsP1+pS61Fxyr4Ijh0JKcDbG6r7WUCX+bzgtOOZ6MoCJhejd4PAPkTKJFMh6paM=
+	t=1778515189; cv=none; b=JlctPGI8MLQZLqAQIzT5jSEA9LTQKaOEgsCtZfzMBAOxA5KiNPtBHryJnAX6BfaFBUDn/QP87wKzANkO4Og5JbJTBdr6pqr2ckCnn+NSDn5UwH8l+tHt+uZuSGMk9n9avZjccmF2THdB2cze2kBtlg0XentAg2GnSboPgYvz4Wc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778513107; c=relaxed/simple;
-	bh=+pg/9kMhQf48rIITwfb6CvpKHuU0Ao+CjZHjak26bbo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RbGZoNrQnyY+uSafX/Y45MZdi88XASqI839Ae+XULvOdooWEYajKRmXsEV2UuKSr9HBrPbbFik0glisT8YZC+rBAJNoQfwmGSd/Wg48DZVWxtaOjLwCNWJhhLYr7pGR3tOboazGh+7m/UU84exwocS0p/KS84eK2aSKXT325muc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RZfRYLeG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778515189; c=relaxed/simple;
+	bh=IvYGVBdGBDKMK1xIEzBMh1/yy9kpR/D9yP4RW3+Cb/c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gDxQ7Yn7qop317RBVLUbJ2R0Ef4iceb6N7MD/UXsU1Sk63qatQ+5Z8WTdqc3PfQgRTTlAu/cwtu4kMF/0AspNzndtoouL6pJB6FJWRBrwMfDWAdVhXb9Xdzb/is/nbfWmDZ2jlSp2pPTiB5l5cOmC1r0N8kTSBx22wzYs/K5hZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=IQ5mHGnc; arc=none smtp.client-ip=185.171.202.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RZfRYLeG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C21DC2BCFF
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 15:25:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778513107;
-	bh=+pg/9kMhQf48rIITwfb6CvpKHuU0Ao+CjZHjak26bbo=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=RZfRYLeGzYp7zsdwSzvdi8lHvx13Mp2xirE7+3rZXZ4rmiASQhgwdACIF+G2ZqpiR
-	 DX4FxIWM0kcZuO42aqbwNLFpvcG2nrMhNInwM4pZK2KLGZEayE2+nrf+6IjqpnqJvx
-	 lI4udyrFoQtfiFh9Zo/+sOaikNcAMDdfXwXa515yDJxSIBgA1k2dp+S2dYJMiMaqgb
-	 lGGVNAiAjxSPIo5VM/g1CDZJVB63S/BicYrEQYw9iNWyQHXqSqkTiloM68xBjyFI4v
-	 Rh2m+1SSfy5NTui2u027AgPZkHkdRI21Iqssfgj6gXIQycTSE1ZxJww/6yBEKaxZ7J
-	 IUVbAP/I67yhg==
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5a40cfab24dso4902193e87.2
-        for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 08:25:06 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ+VZ9YUTAYebh5OfB8QKQK7qfcZEMLETl6q2jgNtdcJe0D2eC6rpBeqT0CBY2JPW4S5blucdnWL4jg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxtx9kQF+2NxLReoy0SQyOF1pR3EMlpqXku6KCZ0Th8BBPUfkgs
-	LHyO+v/sqfz6LynCvtxhfXVX7addrt5mOF5rSjK/sVnD5Fj0WRMwuka/XGMfmYF7gMzPfExRWXA
-	T10SHIGolOMi/g1PUolgBDzfvi+ttPko=
-X-Received: by 2002:a05:6512:3d9e:b0:5a2:bedb:2119 with SMTP id
- 2adb3069b0e04-5a8a94bc40fmr5211116e87.26.1778513105192; Mon, 11 May 2026
- 08:25:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="IQ5mHGnc"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-04.galae.net (Postfix) with ESMTPS id D3BAFC5E14B;
+	Mon, 11 May 2026 16:00:36 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 3C5C860646;
+	Mon, 11 May 2026 15:59:47 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 87FEF11AF9E9C;
+	Mon, 11 May 2026 17:59:32 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1778515184; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=eyQuJkmyZiTdEHXz6zRZYqjFxw0mC3xdzkEgzi4rk8I=;
+	b=IQ5mHGncyHb+/IETZMBUYIZ588GI8J3VHGp1xBdPYtBr0TGez1t8FjwGCar5iJFePtQBM+
+	c1w2lgPYjjpfbeqjHn4tgPEGvoGN5f1vZyzR1q88lJYdu8qmN9ga+JlTT0VNMkZ+VkS/rl
+	5ASFVFZPdYWdLGdLVl9r81+GwLfcKb7BK+0tamiMld/D4ST0BTDW6A7FF0Sn2U39VcnIcH
+	ssz4UxZjm9ncSNDhUZUhg0H9A+tsNCt/5iQyWEVf5a6pQFkM7mURY2tW+AibDT0PbmNc2B
+	ttx2lS52bzHhqp0o8SHhYkNR7eWhR5uhFs85oOi6GBhab/iFq0BKksqnOuj4cQ==
+From: Herve Codina <herve.codina@bootlin.com>
+To: Andrew Lunn <andrew@lunn.ch>,
+	Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Keepax <ckeepax@opensource.cirrus.com>,
+	Richard Fitzgerald <rf@opensource.cirrus.com>,
+	David Rhodes <david.rhodes@cirrus.com>,
+	Linus Walleij <linusw@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Daniel Scally <djrscally@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Sakari Ailus <sakari.ailus@linux.intel.com>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Dan Williams <djbw@kernel.org>,
+	Lizhi Hou <lizhi.hou@amd.com>,
+	Herve Codina <herve.codina@bootlin.com>
+Cc: driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-sound@vger.kernel.org,
+	patches@opensource.cirrus.com,
+	linux-gpio@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: [PATCH v7 0/8] lan966x pci device: Add support for SFPs, PCI part
+Date: Mon, 11 May 2026 17:59:20 +0200
+Message-ID: <20260511155930.34604-1-herve.codina@bootlin.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJZ5v0iZN5NtUztqe=MxCRcXdBaaqzZ749OqSUkadwwBy0ugUQ@mail.gmail.com>
- <20260508214309.GA14699@bhelgaas>
-In-Reply-To: <20260508214309.GA14699@bhelgaas>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 11 May 2026 17:24:49 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0gU3fjh0czpp+7gC9EfRSwT2dUZQj0hSJR8VNwBLXM4PQ@mail.gmail.com>
-X-Gm-Features: AVHnY4L8vh7NmiWbS-Fdt7taHcBrWbfKKfUkJQ5hkWdcSdN32I8gQ39BGDBAm8A
-Message-ID: <CAJZ5v0gU3fjh0czpp+7gC9EfRSwT2dUZQj0hSJR8VNwBLXM4PQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>, sashiko-bot@kernel.org, 
-	linux-pci@vger.kernel.org, sashiko@lists.linux.dev, 
-	Marco Nenciarini <mnencia@kcore.it>, Michal Winiarski <michal.winiarski@intel.com>, 
-	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Eric Chanudet <echanude@redhat.com>, 
-	Jean Guyader <jean.guyader@gmail.com>, Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>, 
-	Mario Limonciello <superm1@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Fri, May 8, 2026 at 11:43=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Fri, May 08, 2026 at 02:51:37PM +0200, Rafael J. Wysocki wrote:
-> > On Fri, May 8, 2026 at 2:17=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.or=
-g> wrote:
-> > > On Tue, May 05, 2026 at 12:43:17PM +0200, Rafael J. Wysocki wrote:
-> > > > On Mon, May 4, 2026 at 11:17=E2=80=AFPM Bjorn Helgaas <helgaas@kern=
-el.org> wrote:
-> > > > ...
-> > >
-> > > > > If pci_power_up() is doing D3cold -> D0, main power is initially
-> > > > > off, so platform_pci_set_power_state(PCI_D0) would turn on main
-> > > > > power, which is a Fundamental Reset leaving the device in
-> > > > > D0uninitialized.  In general the device needs at least 100 ms
-> > > > > after that reset before any access, e.g., before the PMCSR read.
-> > > >
-> > > > Yes, it does in general, but that should be covered by
-> > > > platform_pci_set_power_state() because on some platforms the delay
-> > > > can be shorter.
-> > >
-> > > It's surprising to me that platform_pci_set_power_state() takes
-> > > care of that delay because there's so much PCIe infrastructure
-> > > (dependencies on link speed, RRS polling, Immediate Readiness,
-> > > Readiness Notifications, etc), much of which sounds more like
-> > > OS-level support than firmware support.
-> >
-> > It is kind of a mixed bag because it involves platform-specific
-> > operations (the PCIe spec doesn't define a standard method of
-> > transitioning devices in D3cold into D0).
-> >
-> > The consensus in the industry appears to be that if AML is used for
-> > carrying out D3cold->D0 transitions, it is expected to take the
-> > requisite delays into account.
-> >
-> > > But if platform_pci_set_power_state() does guarantee that the device
-> > > is Configuration-Ready, we should document that somewhere.
-> >
-> > It is more along the lines of what I said before: After
-> > platform_pci_set_power_state() the device is either
-> > Configuration-Ready, or inaccessible (in which case it can be assumed
-> > to have dropped off the bus, but this is all platform-specific, so on
-> > some platforms there may be ways to revive such devices).
->
-> If the device is Configuration-Ready or inaccessible after
-> platform_pci_set_power_state(PCI_D0), then I agree we shouldn't add
-> that delay in pci_power_up().
->
-> > That said, I'm all for documenting it.
->
-> Strawman below.  "Inaccessible upon return" is bound to lead to
-> questions, but if the PCI core can't do anything I don't know what
-> else to say.
->
->   diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->   index ed1b1d7a7b46..2b0513c35387 100644
->   --- a/drivers/pci/pci.c
->   +++ b/drivers/pci/pci.c
->   @@ -1068,6 +1068,12 @@ static inline bool platform_pci_power_manageable=
-(struct pci_dev *dev)
->           return acpi_pci_power_manageable(dev);
->    }
->
->   +/*
->   + * When setting power state to D0, platform_pci_set_power_state() ensu=
-res
->   + * main power is on and that any required delays after a transition to=
- D0
->   + * have been completed.  The device is either Configuration-Ready or
->   + * inaccessible upon return.
->   + */
+Hi,
 
-It looks as good as it gets to me, but I'd put it into pci_power_up()
-which is where it really matters.
+Previously, I sent a big picture series adding support for SFP ports
+available on the LAN966x PCI device [0].
 
->    static inline int platform_pci_set_power_state(struct pci_dev *dev,
->                                                  pci_power_t t)
->    {
->
-> > > > > If pci_power_up() is doing D3hot -> D0, the device already has
-> > > > > main power, so I suppose platform_pci_set_power_state(PCI_D0)
-> > > > > doesn't do anything.
-> > > >
-> > > > It may or may not.  Some platforms supply AML to run during D3hot -=
->
-> > > > D0 transitions (and the ACPI spec allows that).
-> > >
-> > > If the device started in D3hot, it never lost main power, and I
-> > > assumed platform_pci_set_power_state(PCI_D0) might just leave it in
-> > > D3hot.  It sounds like it takes it all the way to D0, although the
-> > > subsequent code that checks the PMCSR state does suggest that the
-> > > device might *not* be in D0:
-> >
-> > On platforms using ACPI, platform_pci_set_power_state() carries out
-> > the AML part of the transition which may do nothing for devices in
-> > D3hot (for instance, there may be an ACPI power resource that needs to
-> > be turned "on" in order to restore power to the device, but if the
-> > power resource is "on" already, say because it is shared with another
-> > device that is in D0 ATM, its state may not change).
-> >
-> > platform_pci_set_power_state() may also be a no-op for the given
-> > device (for example, if this is an add-on device without any
-> > associated AML).
-> >
-> > The rule of thumb is that if there is a programmatic way to remove
-> > power from a PCIe device (so it can go into D3cold), it is generally
-> > platform-specific and there should be a complementary programmatic way
-> > to do the reverse (also generally platform-specific).  Otherwise, the
-> > device can go only as deep as D3hot except when the system as a whole
-> > is powered down or it is on a Thunderbolt link that can be
-> > disconnected at any time etc.
-> >
-> > >     platform_pci_set_power_state(dev, PCI_D0);
-> > >
-> > >     pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-> > >     state =3D pmcsr & PCI_PM_CTRL_STATE_MASK;
-> > >     if (state =3D=3D PCI_D0)
-> > >       goto end;
-> > >
-> > >     pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
-> > >     if (state =3D=3D PCI_D3hot)
-> > >       pci_dev_d3_sleep(dev);
-> > >     ...
-> > >
-> > >   end:
-> > >
-> > > If platform_pci_set_power_state(PCI_D0) puts the device in D0 and
-> > > takes care of all the delays, "state" should always be PCI_D0, and we
-> > > shouldn't need the D3hot and D2 delays here.
-> >
-> > Well, not quite, as per the above.
->
-> OK, so after platform_pci_set_power_state(PCI_D0), the device may be
-> in D3hot in some cases.  Then there's a D3hot -> D0 transition, and we
-> do pci_dev_d3_sleep(), but not pci_dev_wait().  Sec 2.3.1 says RRS is
-> permitted after a D3hot to D0uninitialized, and pci_dev_wait() is what
-> waits and retries for the RRS case.
->
-> It looks to me like we need pci_dev_wait() after that transition when
-> No_Soft_Reset =3D=3D 0, i.e., something like the below.  Do you think thi=
-s
-> is unnecessary?
+In this series patches touch several parts and sub-system in the kernel.
+Reviews have be done and it makes sense to split the series and send
+parts separately.
 
-Well, let me turn this around: Is there any evidence that it is necessary?
+This current series is the extraction of patches related to issues in
+the PCI subsystem. It has to be seen as a continuation of the big
+picture series but related to this specific core part.
 
-I guess if it is not necessary, there will be no harm, but this is a
-performance-sensitive code path.
+Patches 1 to 6 introduce and use fw_devlink_set_device() in already
+existing code. No functional change but the introduction of the
+fw_devlink_set_device() wrapper.
 
->   diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->   index 8f7cfcc00090..ed1b1d7a7b46 100644
->   --- a/drivers/pci/pci.c
->   +++ b/drivers/pci/pci.c
->   @@ -1341,10 +1341,14 @@ int pci_power_up(struct pci_dev *dev)
->           pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
->
->           /* Mandatory transition delays; see PCI PM 1.2. */
->   -     if (state =3D=3D PCI_D3hot)
->   +     if (state =3D=3D PCI_D3hot) {
->                   pci_dev_d3_sleep(dev);
->   -     else if (state =3D=3D PCI_D2)
->   +             if (!(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET))
->   +                     pci_dev_wait(dev, "power up D3hot->D0",
->   +                                  PCIE_RESET_READY_POLL_MS);
->   +     } else if (state =3D=3D PCI_D2) {
->                   udelay(PCI_PM_D2_DELAY);
->   +     }
->
->    end:
->           dev->current_state =3D PCI_D0;
+Patches 7 and 8 fix fw_devlink issues specific to PCI and the
+device-tree nodes created during enumeration.
+
+[0] https://lore.kernel.org/all/20260325143555.451852-1-herve.codina@bootlin.com/
+
+Best regards,
+Hervé
+
+Changes:
+
+v6 -> v7
+
+  Rebase on top v7.1-rc1
+
+  - Patch 1
+     Add Cc stable. Needed for patches 11 and 12
+
+  - Patches 2 to 5
+    No changes
+
+  - Patch 6
+     Add Cc stable. Needed for patch 13
+     Add 'Acked-by: Bjorn Helgaas'
+
+  - Patch 7
+     Fix a typo in commit log
+     Add Fixes tag + Cc stable
+     Add 'Acked-by: Bjorn Helgaas'
+
+  - Patch 8
+     Add Fixes tag + Cc stable
+     Add 'Acked-by: Bjorn Helgaas'
+
+Older iterations:
+  Patches 6 to 13 in the big picture series
+  https://lore.kernel.org/all/20260325143555.451852-1-herve.codina@bootlin.com/
+
+Herve Codina (8):
+  driver core: fw_devlink: Introduce fw_devlink_set_device()
+  drivers: core: Use fw_devlink_set_device()
+  pinctrl: cs42l43: Use fw_devlink_set_device()
+  cxl/test: Use device_set_node()
+  cxl/test: Use fw_devlink_set_device()
+  PCI: of: Use fw_devlink_set_device()
+  PCI: of: Set fwnode device of newly created PCI device nodes
+  PCI: of: Remove fwnode_dev_initialized() call for a PCI root bridge
+    node
+
+ drivers/base/core.c                      |  4 ++--
+ drivers/pci/of.c                         | 10 ++++++++--
+ drivers/pinctrl/cirrus/pinctrl-cs42l43.c |  2 +-
+ include/linux/fwnode.h                   |  6 ++++++
+ tools/testing/cxl/test/cxl.c             |  4 ++--
+ 5 files changed, 19 insertions(+), 7 deletions(-)
+
+-- 
+2.54.0
+
