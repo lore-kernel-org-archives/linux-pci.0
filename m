@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80B394D2EF2;
-	Mon, 11 May 2026 21:09:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3A34D8D83;
+	Mon, 11 May 2026 21:09:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778533790; cv=none; b=ukQW9WPyrTFzMF2Vndj0IBqxlliznOyYSB3+h2s/ikzJZ39oJqiTOr2ZxIq9vtn4RrXeRyBCJ+VzHNj+j769RySe1fG+6566MMeJfzELpNjUF4kvdkpm/VAOhlOFLuqbQFYX0OA0Wr8rq1O0cWTFgBFwY9BDSW3rZ4R1gAvCTzs=
+	t=1778533791; cv=none; b=B53+MOkmnzP5A8UTFtL13E+iZEPgpiDyQGSS5M13Cvz1rBE/NEXNpabb0rBAQUk59kL3Jf9sqZbN7J0Fa/KQ1jTYqIQ2nDrZI9NUzGTcqzT3bDYgF30m7ebnV/NLRD2uFb00mBuFxh7z+XZisHOMGzHE+hC9ymV2s3DTpNjkXkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778533790; c=relaxed/simple;
-	bh=So38ME1vYHb9mQ3XtR6l+44EchNFkSfMlfW0YtBVrRE=;
+	s=arc-20240116; t=1778533791; c=relaxed/simple;
+	bh=7D4fT+zPuVHr8Q5e3aJoqT1YsGA8vp4dbvyoG9Ho010=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FN/mBsf++XlpnqCVRIQN6YHPyr2RsrhXqbIbzCdzMlU83jYIyKlakCA+YG/v6b1lOB0EjJ7qjBZyqQFAfoaAcg4xQcaZyhQhNhB7obpB7ctwnO3swWRGN1q2KWO4BMBBB19QstUzlqYVkQbIaBqmPHHouvMReqS6q5z+WIQIm9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BSfY9RU/; arc=none smtp.client-ip=198.175.65.13
+	 MIME-Version; b=oeWSwmzgGpLN4rBCxZl3lwO3r0RSrIf4aUtsuDwcbtPoa13k3LXUXJU16r+nY0chOIYvvdW5Eq3+qM/F4kF/J7VjnH5kz27NTNwr7oWiV0/JGyLO59/omBQG8rijQ5xDeWZidKb/uksTiiB5yn9Aj5sJUGbpIj8+c2+yBtL4Fww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S0WIbHX6; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BSfY9RU/"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S0WIbHX6"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778533788; x=1810069788;
+  t=1778533789; x=1810069789;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=So38ME1vYHb9mQ3XtR6l+44EchNFkSfMlfW0YtBVrRE=;
-  b=BSfY9RU/XeeU+RbVWRnBSWndO7zmbv4kdPbSE1bjwwAI3Iic9UDys3y2
-   dGS98GCFSSwnp+3PEE89PMyV62Tt4VEdtjWErrQVQimJX743RuLGfyHuu
-   nMYoScaQHujdjACXRrwGeKevwiUD+76D6sHkzGpOysGkRAXdLwgr9Pr2m
-   5ur0kh/8ny3RewwtmQpeA2/kxcNwzXkuw7FJBzrKaH0gHPbdJvxdH70V/
-   FBZCcDNqmiJaTZ9IASP2+J9YoWZcn/LRuXGsUqDjQ8jKbPmW+PWZ3HIxN
-   yH+XQgh5DIB0imXYiE1W2CfX7pU7NOw0HFkZQ/coYGnqlcmpcmEOVAy2T
+  bh=7D4fT+zPuVHr8Q5e3aJoqT1YsGA8vp4dbvyoG9Ho010=;
+  b=S0WIbHX679c7u8bx16Ow9EFpghEO+EZuLmcUQl0hdGxLoZ3MnHkCZH4J
+   qHQWs3Ep1G9NCXZOGoCMh3jgxNPIvjNFfhOLq4wK/Wl33NjL+6GSINESk
+   v+NNa1/X4NeLXw3ObLt6J4lTOZ7f/w5kzLqTBnbKUx4zJ16872LnMxnbi
+   +SGf8cIds3bLk+WH6cvpL6OgTJQg0vJ3TgMASC9WFYpspNLd0Dggs6G0C
+   4IRfcfSTeOlpMWzCN4AzBPhebQlAIynFTVVjCTmIGvGj9MLxawIpaX0bi
+   gLUklEP7EbNmRbb32cBNCivNTbhPXab/jMnOUpNLDrIgpzeZDMKFi2Afc
    Q==;
-X-CSE-ConnectionGUID: HLw7k6JLTbyenTtXlsXi7w==
-X-CSE-MsgGUID: Nxg5qg9BQwmp+pfg6Zuq4w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11783"; a="90534535"
+X-CSE-ConnectionGUID: /wDAKkzJRQm2waxvoqkXZg==
+X-CSE-MsgGUID: xCY47SMqRCmrGufkqJIqsQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11783"; a="90534540"
 X-IronPort-AV: E=Sophos;i="6.23,229,1770624000"; 
-   d="scan'208";a="90534535"
+   d="scan'208";a="90534540"
 Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 14:09:48 -0700
-X-CSE-ConnectionGUID: TGEMsOfeR1W3fvY+ldgqdw==
-X-CSE-MsgGUID: 1bNp4yDRSuKn1Hzk/KWBkA==
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 14:09:49 -0700
+X-CSE-ConnectionGUID: 8av0VsPhTCqXhjSJqqzqEA==
+X-CSE-MsgGUID: nZIVucqnQWCGTAFbfjo3Sg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,229,1770624000"; 
-   d="scan'208";a="241559246"
+   d="scan'208";a="241559254"
 Received: from rfrazer-mobl3.amr.corp.intel.com (HELO tfalcon-desk.attlocal.net) ([10.124.220.210])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 14:09:47 -0700
+  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2026 14:09:48 -0700
 From: Thomas Falcon <thomas.falcon@intel.com>
 To: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 Cc: "David E . Box" <david.e.box@linux.intel.com>,
@@ -54,9 +54,9 @@ Cc: "David E . Box" <david.e.box@linux.intel.com>,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Thomas Falcon <thomas.falcon@intel.com>
-Subject: [RFC PATCH v2 2/4] pcie/aspm: Enable all power-saving states during link state initialization
-Date: Mon, 11 May 2026 16:09:32 -0500
-Message-ID: <20260511210936.562622-3-thomas.falcon@intel.com>
+Subject: [RFC PATCH v2 3/4] pcie/aspm: Enable all hardware power-saving states by default
+Date: Mon, 11 May 2026 16:09:33 -0500
+Message-ID: <20260511210936.562622-4-thomas.falcon@intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20260511210936.562622-1-thomas.falcon@intel.com>
 References: <20260511210936.562622-1-thomas.falcon@intel.com>
@@ -68,81 +68,92 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Setting powersave and powersupersave states at ASPM
-link state initialization allows for a simpler and more
-maintainable enabling flow that presumes all advertised
-power states work. Restrict this behavior to systems
-with a BIOS release during or after 2025.
+For systems with a BIOS release date starting in 2025, default
+ASPM policy to powersupersave if supported in the ACPI FADT.
+Provide a flag, aspm_user_policy, tracking whether a user has
+requested a specific power state to give those precedence.
+Do not enable all states if user has chosen a specific policy
+or disabled ASPM using the pcie_aspm module parameter.
 
 Suggested-by: David E. Box <david.e.box@linux.intel.com>
 Signed-off-by: Thomas Falcon <thomas.falcon@intel.com>
 ---
-v2: -- pcie_aspm_legacy_config_check() returns bool instead of int
-    -- only log whether aspm is configured at build or boot time once
+v2: -- Removed extra whitespace
+    -- Fixed unbalanced brackets
+    -- Replaced second dmi_bios_year_check() with pcie_aspm_legacy_config_check()
 ---
- drivers/pci/pcie/aspm.c | 28 ++++++++++++++++++++++++----
- 1 file changed, 24 insertions(+), 4 deletions(-)
+ drivers/pci/pci-acpi.c  |  3 +++
+ drivers/pci/pcie/aspm.c | 16 ++++++++++++++++
+ include/linux/pci.h     |  1 +
+ 3 files changed, 20 insertions(+)
 
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 4d0f2cb6c695..c73a6b06fc43 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -1523,6 +1523,9 @@ static int __init acpi_pci_init(void)
+ 	if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+ 		pr_info("ACPI FADT declares the system doesn't support PCIe ASPM, so disable it\n");
+ 		pcie_no_aspm();
++	} else {
++		/* If ASPM is supported, configure the default policy here. */
++		pcie_aspm_policy_config_init();
+ 	}
+ 
+ 	if (acpi_pci_disabled)
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index cd23c1462502..e93b72494534 100644
+index e93b72494534..063ebe81a9cd 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -24,6 +24,7 @@
- #include <linux/printk.h>
- #include <linux/slab.h>
- #include <linux/time.h>
-+#include <linux/dmi.h>
+@@ -267,6 +267,8 @@ static int aspm_policy = POLICY_POWER_SUPERSAVE;
+ #else
+ static int aspm_policy;
+ #endif
++static int aspm_default_policy = POLICY_POWER_SUPERSAVE;
++static bool aspm_user_policy;
  
- #include "../pci.h"
+ static const char *policy_str[] = {
+ 	[POLICY_DEFAULT] = "default",
+@@ -1609,6 +1611,7 @@ static int pcie_aspm_set_policy(const char *val,
+ 	down_read(&pci_bus_sem);
+ 	mutex_lock(&aspm_lock);
+ 	aspm_policy = i;
++	aspm_user_policy = true;
+ 	list_for_each_entry(link, &link_list, sibling) {
+ 		pcie_config_aspm_link(link, policy_to_aspm_state(link));
+ 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
+@@ -1810,6 +1813,19 @@ static int __init pcie_aspm_disable(char *str)
  
-@@ -1057,6 +1058,23 @@ static void free_link_state(struct pcie_link_state *link)
- 	kfree(link);
- }
+ __setup("pcie_aspm=", pcie_aspm_disable);
  
-+static bool pcie_aspm_legacy_config_check(void)
++void __init pcie_aspm_policy_config_init(void)
 +{
-+	static bool legacy_aspm_config;
-+	static bool checked;
-+
-+	if (checked)
-+		return legacy_aspm_config;
-+	if (dmi_get_bios_year() < 2025)
-+		legacy_aspm_config = true;
-+
-+	pr_info_once("ASPM configuration is determined at %s time\n",
-+		     legacy_aspm_config ? "build" : "boot");
-+	checked = true;
-+
-+	return legacy_aspm_config;
++	/*
++	 * Set ASPM policy here, enabling all power-saving states
++	 * unless ASPM has been disabled or the user has already
++	 * requested a policy or the systems BIOS release date
++	 * is before the year 2025. Otherwise use BIOS defaults.
++	 */
++	if (!aspm_disabled && !aspm_user_policy &&
++	    !pcie_aspm_legacy_config_check())
++		aspm_policy = aspm_default_policy;
 +}
 +
- static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+ void pcie_no_aspm(void)
  {
- 	struct pci_dev *child;
-@@ -1196,8 +1214,9 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 	 * the BIOS's expectation, we'll do so once pci_enable_device() is
- 	 * called.
- 	 */
--	if (aspm_policy != POLICY_POWERSAVE &&
--	    aspm_policy != POLICY_POWER_SUPERSAVE) {
-+	if (!pcie_aspm_legacy_config_check() ||
-+	    (aspm_policy != POLICY_POWERSAVE &&
-+	     aspm_policy != POLICY_POWER_SUPERSAVE)) {
- 		pcie_config_aspm_path(link);
- 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
- 	}
-@@ -1379,8 +1398,9 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
- 	if (aspm_disabled || !link)
- 		return;
- 
--	if (aspm_policy != POLICY_POWERSAVE &&
--	    aspm_policy != POLICY_POWER_SUPERSAVE)
-+	if (!pcie_aspm_legacy_config_check() ||
-+	    (aspm_policy != POLICY_POWERSAVE &&
-+	     aspm_policy != POLICY_POWER_SUPERSAVE))
- 		return;
- 
- 	down_read(&pci_bus_sem);
+ 	/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c4454583c11..36fa5579709c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1915,6 +1915,7 @@ int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+ int pci_enable_link_state(struct pci_dev *pdev, int state);
+ int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
+ void pcie_no_aspm(void);
++void pcie_aspm_policy_config_init(void);
+ bool pcie_aspm_support_enabled(void);
+ bool pcie_aspm_enabled(struct pci_dev *pdev);
+ #else
 -- 
 2.43.0
 
