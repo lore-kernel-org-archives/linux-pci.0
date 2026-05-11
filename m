@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85637352C52;
-	Mon, 11 May 2026 06:01:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF4591E1DFC;
+	Mon, 11 May 2026 06:01:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778479312; cv=none; b=aLfp5d3Ch4vUg/Wa94hwhsr9F01BIEjJ8aTXNlLnLjxt2FNmLclHIpULj7yy0VkJ03GkyU4esR6/ot6tP+ZN5wxlQ0ZYoDYElS6/rT+r2DT8TsEEVhIoXm0xCfOwlJ1d6GbZFuWPHdYtOUM5gs5w6YTYKKEaz2TbHP7faqKPweo=
+	t=1778479315; cv=none; b=Ts+45kXGa8AENmXUX/7qWvInI6TMaW9Wkbhd4Y5TD+MzB4r4+puHJ4l1yzwvs52k3iVPe3n+tU0sFhLRUa2WFshwsACc8KZFqQMnmKJlQUJQUq+49D7ERVFwuddCqCwGm7O0/qrTZd39X7Uo0o4Fd6NOM0oZKA7Fm7TPwVPyfC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778479312; c=relaxed/simple;
-	bh=uGFlkESZeslg6/xCj0O+7hMaNsZM715EOfZvtiNdq9A=;
+	s=arc-20240116; t=1778479315; c=relaxed/simple;
+	bh=JGnORuPyUIrGJJCc8Wen2ejXoaRNQOlKuGiR3Bu1uRE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=a9eStA47p6ttUMyDdIasg5Gi5JH141etXRc9EZfd4CLH3prPpiokZNdQQIzKzAjeO3av+nPtWpfAiZObkpd/DPBr5R5dw8xbCgZw+XLT8QFWMjmO6W7egMU1TCalwz4QNYwi7X78AmWiHTba2Kf+z4IxDuMNqqmIH1hcYfGl4Ow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=n9yyHcx3; arc=none smtp.client-ip=117.135.210.2
+	 MIME-Version; b=TXAsIRiPhBvr2MczUDvdWI0RTrS7u81jErJn9/S4PbA6ZXPU1viZIR4vbdkl/t0Y7GKCIHRHw2c3Nyw/X6YSnF/8m+289BwcnH94omkvEeA38WbEZruIrzKliZzNX4pk1YdfNwowByisrlKJ6W6JIv7lfTVJopkLqlwdg9AE7xc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=C/CkCLCW; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="n9yyHcx3"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="C/CkCLCW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=1e
-	cGNcMfeL57lqoMV/cq9YpZtyuaLsHgkfsd6N4p2xk=; b=n9yyHcx3ovhtpJtiFB
-	NVilXX1R5JxVhSuWXygYOH1bVLWQ40P+/vTynDrH18LkYEjRqEGXDCzwdhp2Ty15
-	QZJiT4t+MSNNVKaHBsf7ngVKrNUMVNFpt0uUt0x9tVNjxXAdmZ3CrxAXTsum5/gZ
-	kmXqXY7peM6eIIvi7WeXUwaNk=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=gp
+	Th2sXANIfpdVqv2Gr/e9DfeCO6TQqHfjZ6e0H2hT0=; b=C/CkCLCW9LZ+dw6HvA
+	f+1uZgkftp911eDNvIcvsyxg2Hu9tQRKRfw8uN8BaErFVGXtnwHczQ7TO3wETDpZ
+	qzCTfEuQhqnTGQb/Pbz9/A7xN85k6wjC50GfbJpCLYPUadx0SCxhWHldNRulZF9O
+	cVzvb04Ushvf/0d6q6t5vFTk8=
 Received: from Precision-7960.. (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDn9yk8cAFqPHQVAw--.46705S7;
-	Mon, 11 May 2026 13:59:32 +0800 (CST)
+	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDn9yk8cAFqPHQVAw--.46705S6;
+	Mon, 11 May 2026 13:59:30 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -47,9 +47,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 5/7] PCI: aardvark: Add 100 ms delay after link training
-Date: Mon, 11 May 2026 13:59:21 +0800
-Message-Id: <20260511055923.37117-6-18255117159@163.com>
+Subject: [PATCH v3 4/7] PCI: dwc: Use common pci_host_common_link_train_delay() helper
+Date: Mon, 11 May 2026 13:59:20 +0800
+Message-Id: <20260511055923.37117-5-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260511055923.37117-1-18255117159@163.com>
 References: <20260511055923.37117-1-18255117159@163.com>
@@ -60,51 +60,52 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDn9yk8cAFqPHQVAw--.46705S7
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ZFWfGF4fJw1UXryftF1fZwb_yoW8GFWrpa
-	y3Cr9rtrs5tr43ua17Aa4fWFy3Wan0ka47Jr92gw13ZFnrKryUJr1jk3sagF17AFWvvr13
-	Ca45t3Z3Gr43Xa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zErb1nUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAQIq2oBcETnHQAA3G
+X-CM-TRANSID:_____wDn9yk8cAFqPHQVAw--.46705S6
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tw1rAFW5Cry3Wr45ArWxXrb_yoW8Xw15pa
+	98AFyFyFWrJF43uanrCasxZry5X3Z8Cay7GFZaga4fZ347ArZFqw10g34SqFyxJrZFvr1a
+	9r17tFnrGw4xAF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piQVy7UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAMHqmoBcEPnAAAA3V
 
-The Aardvark PCIe controller driver waits for the link to come up but
-does not implement the mandatory 100 ms delay after link training
-completes for speeds greater than 5.0 GT/s (PCIe r6.0 sec 6.6.1).
+The DWC driver already implements the 100 ms delay required by PCIe
+r6.0 sec 6.6.1 by checking pci->max_link_speed and calling msleep(100).
 
-The driver already maintains a 'link_gen' field that holds the negotiated
-link speed. Use it together with pci_host_common_link_train_delay() to
-insert the required delay immediately after confirming that the link
-is up.
+Replace the open-coded msleep() with the new common helper
+pci_host_common_link_train_delay() to reduce code duplication and
+improve maintainability. No functional change intended.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/pci-aardvark.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index e34bea1ff0ac..fd9c7d53e8a7 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -26,6 +26,7 @@
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index c11cf61b8319..7021d21bb601 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -22,6 +22,7 @@
+ #include <linux/sizes.h>
+ #include <linux/types.h>
  
-+#include "pci-host-common.h"
- #include "../pci.h"
- #include "../pci-bridge-emul.h"
++#include "../pci-host-common.h"
+ #include "../../pci.h"
+ #include "pcie-designware.h"
  
-@@ -350,8 +351,10 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
- 
- 	/* check if the link is up or not */
- 	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
--		if (advk_pcie_link_up(pcie))
-+		if (advk_pcie_link_up(pcie)) {
-+			pci_host_common_link_train_delay(pcie->link_gen);
- 			return 0;
-+		}
- 
- 		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+@@ -799,13 +800,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+ 		return -ETIMEDOUT;
  	}
+ 
+-	/*
+-	 * As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link
+-	 * speeds greater than 5.0 GT/s, software must wait a minimum of 100 ms
+-	 * after Link training completes before sending a Configuration Request.
+-	 */
+-	if (pci->max_link_speed > 2)
+-		msleep(PCIE_RESET_CONFIG_WAIT_MS);
++	pci_host_common_link_train_delay(pci->max_link_speed);
+ 
+ 	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
 -- 
 2.34.1
 
