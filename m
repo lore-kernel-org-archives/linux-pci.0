@@ -1,237 +1,194 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1D7B242DFEA;
-	Mon, 11 May 2026 16:24:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778516679; cv=none; b=SbXSi+sf9YhxfWO8VaQPs0YayLEUdMquPf+WX6Fp1m47dZwUJwiHYcC05rUDSgxiTWNDLJlqoQVCcJB38XLz6oVLfsPGWPD3o4a55L23S6GCL+lspnukBTdxDx4lq20mTKIZG4TsxJ2/y5v76ZInS2igTsSlqcFuiLcHQTqXDY8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778516679; c=relaxed/simple;
-	bh=G80ldcDStJWyidKCH3MjV5K4lu3Wp/Q7JaaBMXNCWZI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NPwAF3qu2XdqU/d7dZ3fhgvZrgsqE8e2CpfS0G8ckT58kkQetRvYhs+OZD4YKPo5jMd4sLAfgNjvOebEJN/6/h/2LkBNSzddIS/MD2vdlnwRD5EmlczBk4zhOfa6LmlUu3iF18LjVjBxUH0gWew8nnzX9fKX52f0MpzSkjxHfOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=rRaMCxER; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010055.outbound.protection.outlook.com [52.101.193.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B209936D9F8;
+	Mon, 11 May 2026 17:55:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.55
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778522130; cv=fail; b=uG5KBKMhRYCTbiGJxnIcis/xkj0MOJ4FwcRjSN+KaBnzni3AWaypwLrt+aENtuznjGFa4qbtSr6pZPzvDG/2e/Bht79FHn3Icb/3JaT1IcmZvOJ8TNATq9WTv+wskcNrIIkZZydnrHwCRDVrddcLqyonh5i2eLkD6aoL2s5+6bA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778522130; c=relaxed/simple;
+	bh=VTXAtXg/oekZxQDKx31V7DtosnQaDqEFuPS545G/K7s=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=K2wUicNclCl9H25VGudGq8j7crJAKlAEF6ESWURA/UM/ESp4Gy3slHZlyQEahdAL08aSZcVFScJ1rd6+5OQ/hRQu7by6qP1lgnznKU0sAmJ2IvS6477fKgAlpcVLykEFUUCeYg0rqFKuOqIc4v37U0qqDHORiMc53wjQ5ecWbVk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=hZh+hcFz; arc=fail smtp.client-ip=52.101.193.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="rRaMCxER"
-Received: from zhangyu-hyperv.mshome.net (unknown [167.220.233.27])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 7582120B7166;
-	Mon, 11 May 2026 09:24:31 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7582120B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1778516675;
-	bh=HFzTSaQ70veIfvuNDaz8Hy1Vs/v2M6n0NU+oyEGbXT8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=rRaMCxERGgqBHv0De4Z7eVTwbUpQznx8jHtzbE0N9WBswZhY3kjMDitss9lksuUba
-	 Ut0ciGpYy1kPhET2vuz7gBS1upW0sExBRaPfQ6q89e1kn0zCR/3Tug+vrPHzFTxTSK
-	 unVbiLewWGHRuzRu5T/eMAkBLO6YmKhfqOqBxVWk=
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: linux-kernel@vger.kernel.org,
-	linux-hyperv@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Cc: wei.liu@kernel.org,
-	kys@microsoft.com,
-	haiyangz@microsoft.com,
-	decui@microsoft.com,
-	longli@microsoft.com,
-	joro@8bytes.org,
-	will@kernel.org,
-	robin.murphy@arm.com,
-	bhelgaas@google.com,
-	kwilczynski@kernel.org,
-	lpieralisi@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	arnd@arndb.de,
-	jgg@ziepe.ca,
-	mhklinux@outlook.com,
-	jacob.pan@linux.microsoft.com,
-	tgopinath@linux.microsoft.com,
-	easwar.hariharan@linux.microsoft.com
-Subject: [PATCH v1 4/4] iommu/hyperv: Add page-selective IOTLB flush support
-Date: Tue, 12 May 2026 00:24:08 +0800
-Message-ID: <20260511162408.1180069-5-zhangyu1@linux.microsoft.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
-References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="hZh+hcFz"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=xysJptIXMaTUfU+hTbz+uW5QgNeTMKxY5aJFKbIeJc7RVkveTDMcmbvteEvEz41oRh8cTna0htqKfJJyWX8F7ILEsNhvJJ431pHlBq+8bwvAl+IbVCuTIC2eNomzRJj/AXRsGKHotUzo1kgad66dlfWWfKeh1upYEW0u9npuuBJ6crgSYqlhs1ntVNOukb3FJpIL0YPtesWEDzNWW4hl3derzndn1+k1tdapTpkltVpGo6G3lY0RjOWgFO1pjpKELlWM3QteBq2gh/W3EsS/a+fhlSIW9a0n22Gs8nxXSSMG4w6u3HMaeDp5DYbhpBAAlhHFza1TBssQO5JoW4dvlA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ZAoP9I2mQWJW6XPVtCHe8WcUbm4bm9nrK9aBpH3T4Gw=;
+ b=wDTbP0IgB9Y4/02hpqhFFCHiK5GggIN5cGkoegZav+bdjLasC92NQ7GsJlM/oFlFvVHyUSaB1cLdfmixeKl+eCKusdAtpv6R/tyLkP3U71jFr0yQG8bgIbTlzg6Bql74LUh2qan/HRpvnYhO+FQh7A8thLNwviUSctMsoIj+HL25l5XHaJoZD6PvMD1g+aFMbKJaQ9ay3KWN/QtbGx1yaoC2JgY/dhdVeNYuon62Z81BOu7MK+Y6t8eTGMXTuaAIFvQ8xl9UEoKlg7Z0qGKPZVWMe3Vlzj9Oq3dakNzLjY48vn1KqMp+ErHgkXzWFEkbCPqQGGikDD6dw+yUgb+dIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZAoP9I2mQWJW6XPVtCHe8WcUbm4bm9nrK9aBpH3T4Gw=;
+ b=hZh+hcFzTfuEdke97eB3oAYuEk8+x5ECJNxGLEI3JAl5CvBlaawl2rtvtDOoxqyFy/LwJoYHwZjbc1N+iC6EDhvmFQCZo1vhRN5z8rq+FTAK/eCHXeyviX2qaozRpClFMhZ1Vfxocg/d4S7ZnVMj7n48xutGuFV1aoEWPGwLumk=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from MW6PR12MB9020.namprd12.prod.outlook.com (2603:10b6:303:240::6)
+ by PH8PR12MB6916.namprd12.prod.outlook.com (2603:10b6:510:1bd::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Mon, 11 May
+ 2026 17:55:21 +0000
+Received: from MW6PR12MB9020.namprd12.prod.outlook.com
+ ([fe80::879c:bf22:f7a0:e8c8]) by MW6PR12MB9020.namprd12.prod.outlook.com
+ ([fe80::879c:bf22:f7a0:e8c8%6]) with mapi id 15.20.9891.021; Mon, 11 May 2026
+ 17:55:20 +0000
+Message-ID: <37fdf21a-3c6c-4b11-9b97-e84f86b702b3@amd.com>
+Date: Mon, 11 May 2026 12:55:16 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 11/23] dmaengine: sdxi: Add client context alloc and
+ release APIs
+To: Frank Li <Frank.li@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Wei Huang <wei.huang2@amd.com>,
+ Mario Limonciello <mario.limonciello@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Stephen Bates <Stephen.Bates@amd.com>, PradeepVineshReddy.Kodamati@amd.com,
+ John.Kariuki@amd.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
+References: <20260410-sdxi-base-v1-0-1d184cb5c60a@amd.com>
+ <20260410-sdxi-base-v1-11-1d184cb5c60a@amd.com>
+ <aeXhkIZgwGttlJB0@lizhi-Precision-Tower-5810>
+Content-Language: en-US
+From: "Lynch, Nathan" <nathan.lynch@amd.com>
+In-Reply-To: <aeXhkIZgwGttlJB0@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: DS7P220CA0026.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:8:223::18) To MW6PR12MB9020.namprd12.prod.outlook.com
+ (2603:10b6:303:240::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MW6PR12MB9020:EE_|PH8PR12MB6916:EE_
+X-MS-Office365-Filtering-Correlation-Id: 61472eab-b55c-4ad6-0158-08deaf8677ca
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|366016|56012099003|22082099003|18002099003|11063799003;
+X-Microsoft-Antispam-Message-Info:
+	LkkbSrYtAKgYfsLb7X9XArM6ygs2oMjnQQGwCOXzeATBafMC/CEdcf5sozL9GhX/qH/SgCSmjl0sGDw0Dx/fbvcCBoyl7LUEK1mNy+g2putkuKRnfV+x1m0SKkr6bL+P4GRF/ThtHr5FYlgX6pii2i/zsHl8UlIpi1BVhhG6Bc86Xif75XKJqc4XZa6fUT9M/F/l4A74qJ1yVzjncr8jv/5QpHsHiBsHpHFOrjK+GimA+SiHKsA7vsKRh0FYCAIB2infIx9r99An8zFLpQEe6I48ldJyND28vw2dR+ofCoFnoiWvQbekKb1CAq71yY0USJNBiZ+vcjTMzSuZRkxo3pZOdHcEaxNlPqt3rJK+M9Z63xmEmyqoHY+UuH4888gt1deO2OlJ2/tGHoFLQ/598spMGNhNnvjyL4truTi/vvPXZb3pwSQCajzZvq41k9d6Pn6NJaO06SX729m44KvpK1pWKTm71Q7fZKqzP4g1FBghSNWt3EOKODHcG4zcn4tO/sqpEonf9ErlAndRb3okjm8PwEJMcC/SKWzJLuqZiK+H/jU39blk0BmHmqP5/ZBz/k68F5RlQ3ctaIG8wmcAUssCifQV5rIcOt5R4yK1byqoCzLJTafgZ/VPMCuPcT96Nzgtgxqao1CX0rQxKpE7p5C8ZDbZ9EzueFpJidVk+iRlI6LV4RwLCnUjOMOIDUKj
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW6PR12MB9020.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(56012099003)(22082099003)(18002099003)(11063799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?eTU0RXl6Z0h2ZGJ1STBDUmx6WnpPb3RpSW1VazRwMkpNekpRczljZDBnTEx2?=
+ =?utf-8?B?eFlEbHhMUm85dkU3RFFNMm1QWGJNb3JlVXFPblN0QlkvSEJ4TVp6Q1hXTFgx?=
+ =?utf-8?B?TUdLY0JKRllZcVZ3bVlHaWs4OEpnaVY0ZllEcW00eWd1WGlCU011TmpzeGVI?=
+ =?utf-8?B?WlJQUTJKS1RjVytuaGpDREh1ZG92QjRkOFdmU2d4R0sxYWxOc3VGWTlDZXBk?=
+ =?utf-8?B?UjVYWjloUTdnNzNKRFhZT1FROGhyZ0R4NkFUbHJIb0FJaU5KRDlJb3RaMTZ0?=
+ =?utf-8?B?U0twU3M0eTBpUXM3bmZ1akFHQU5yVDlxb3M3dHhPL0N6S0cvVFowaVlkcTlH?=
+ =?utf-8?B?WlJJQVFiUHBnUEdLd1NBVVlGTUtaaldUVktpRVBISlI2V2c5VW1YUFlITHpV?=
+ =?utf-8?B?SGNMdzErWGNOc2lIU0FtK1EwYlRzcWFTdXkrRzZNS1FkNldFQkpIS2N3c2ds?=
+ =?utf-8?B?c0IzM3hCNUxabzg3Zlk0WE1UOW9ZL3pESVFKdnIycjhhNExkeEFSa2tHTU9H?=
+ =?utf-8?B?VFpBM1FqYmxDeksrVGI2bGVENldRYk1mTW5BOUpRTlZJdmxha0NjdkQyRHFF?=
+ =?utf-8?B?U1lJWUUyVlJaWG9JNzh5T2tCRTJqbHhNNFB2VWo4OStiOUJpMUE3NGJ5cVoy?=
+ =?utf-8?B?WTBrY3hSRFBrVXpOU0ZiSFYyUlB2SGZaR1R3TzFPT1JIWkcxRFBJZUIxdEQ2?=
+ =?utf-8?B?L05zN2ZGcEFTOUtQOWlkMjNVbnprdXpoSzFHUDc4c281YTNvUURoQVBYU0dx?=
+ =?utf-8?B?eldma3YvUkU3RmJENjhSSkYwQytjUjlpRGRrWHpSazFTaE1JSjV6cHFUUlpN?=
+ =?utf-8?B?bDJsbFJQcFJhYVlSZi9WOW1QdmdhdXpoYlhoNjB1c1paRGdwbnlsZ1JNMTd1?=
+ =?utf-8?B?bXhMSy82dEdzMHpSaW1jTDRCWG1Xb0VRNHZlY1ZRWDNteGxXZElGdXgwdnA3?=
+ =?utf-8?B?Q2hKVHN5SVQ1c0dyTGd6QzVLRzkyaXozSTR4a3ZMZFRqNGQ0QkNCNWorN2FT?=
+ =?utf-8?B?NmlyVlg1ajFsVkRPTlJ6emVWc3g5NlE3TmV2alZNaS9QbjVrbm52L241S0hq?=
+ =?utf-8?B?QTRjRU1GdmROalU2cGlMWk9tMC9VbGYxSEhFWkJ4YVNNSkNGSDRzdGNCQXBE?=
+ =?utf-8?B?Y3E4cmVieVlkMDh6dmYyQzYyeW1rS1ZnclJRb21YbkJNZDVRdG1rdkZNZjFn?=
+ =?utf-8?B?YTBHM3o0Q1FqdHc3YkVQSloweVBYTFA1YjR4V2tOd0R3V00vN2ZUSXJXOVBi?=
+ =?utf-8?B?QUh1NFVkdTV0NThaS1N0cUllbkQ3NTBENGZQY1EvTVpVZEJEaFBYUnB5dGRQ?=
+ =?utf-8?B?K0hPd1Rmek1uZ215c2RtQk54N3NHbW16QzljOGcveFNjM3p6QkRDTTVldnNy?=
+ =?utf-8?B?dFVSc2lCQkt1dm1KQkxkU2JQSEFiTlh2S0w5cUpVM2h0UCt1VjFrQTZzMFFx?=
+ =?utf-8?B?MzAwSHAyQ2NEZy9VbzZuSExzWlFpZkZNbUlsN2loS1hRemRTTHhsWnJ4M0Zs?=
+ =?utf-8?B?d2t3K3A3SkJHc254TUc2dm9LR2ZOL3pISUYxVjlUS3ZJbDl6V3dPNnkwQ2gx?=
+ =?utf-8?B?SDdWNUx0L1h1ZmEyaVhScFFxc0JzTVc3Z3RKNHNJUkh4R2h3YWJ4a0Y5M3pt?=
+ =?utf-8?B?ajcwZ2J4NnBrMnR1NmU4NGtGYkFSQmF5VFh0YmlMR1I2VVdJUWY3aFBaN1pN?=
+ =?utf-8?B?dzU0UzVaSU5YUDZqNXE0QWlOclRZcWdnSUNYVE5KcURLU0pTV0JnNnlQU2Js?=
+ =?utf-8?B?MFhLOGVzNGpTVHZtQlZRUGs2STQ2bnVsNmtKNURmZlh1SmE2dHN0RTdHZnQ5?=
+ =?utf-8?B?T0d5QUpFZ1JEYnUvNEZRZkZyQmxDcmxLYUFNNFlFZ3lIT2NQTmt6YWIwc0p5?=
+ =?utf-8?B?THVDM2w2b0ZueDM4L0wrN1RLeFYzRDhJemhHMEcxZzIweEl5QkhUdzVtRGRs?=
+ =?utf-8?B?bXRxeXozVXVqTTI2WGEyUnBBKzNLRTJVcjExY3BscGFxbXZSdnM3TklPYUN2?=
+ =?utf-8?B?cUU0aG1TeGZrNCtiMTNzYkRINHhuYWQrOXJHbXNSbW5aQnB1cVZXcFdGOUxT?=
+ =?utf-8?B?b1BpZXNGQmd3ejBVNmpsaUlZRUhHZU5IVFpnUTI5TmNrVEFDOWtFTVNQbnht?=
+ =?utf-8?B?TG5KY1djanVVc1k1dEJxanRPK0NOWDRKbVZWSmg5Y3RrTlpYcjFRdHlyM1Bu?=
+ =?utf-8?B?U0JkQnozUGpxMTJoMUpKYlh6UzI2eEk4UC9nVnBnaGNrUG5OanJRYWl1czNh?=
+ =?utf-8?B?Q1poU09zUUt1eTZuVWRIY01mYmdnYXZEMFdZYjhLQ0dLMXpnNUlMMnZ1ZUNr?=
+ =?utf-8?Q?Fim0vw/Suqg2YK59w1?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 61472eab-b55c-4ad6-0158-08deaf8677ca
+X-MS-Exchange-CrossTenant-AuthSource: MW6PR12MB9020.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 17:55:20.5114
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: KUUa65wQbt+CIpcXIP4yTT2ye6nKwPpw77F8TCqRk2byvrFRl5pDKaoC1TxpZYW9siD5XzHehTkefsAVBDfHzg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6916
 
-Add page-selective IOTLB flush using HVCALL_FLUSH_DEVICE_DOMAIN_LIST.
-This hypercall accepts a list of (page_number, page_mask_shift) entries,
-enabling finer-grained IOTLB invalidation compared to the domain-wide
-HVCALL_FLUSH_DEVICE_DOMAIN used by hv_iommu_flush_iotlb_all().
+Hi Frank,
 
-hv_iommu_fill_iova_list() decomposes a contiguous IOVA range into a
-minimal set of aligned power-of-two regions that fit in a single
-hypercall input page. When the range exceeds the page capacity, the
-code falls back to a full domain flush automatically.
+Just following up on one thing as I prepare to post v2.
 
-Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
----
- drivers/iommu/hyperv/iommu.c | 91 +++++++++++++++++++++++++++++++++++-
- include/hyperv/hvgdk_mini.h  |  1 +
- include/hyperv/hvhdk_mini.h  | 17 +++++++
- 3 files changed, 108 insertions(+), 1 deletion(-)
+On 4/20/2026 3:19 AM, Frank Li wrote:
+>> +/*
+>> + * Allocate the context ID; link the context back to the device;
+>> + * perform some final initialization of the context based on the ID
+>> + * allocated; update the context tables.
+>> + */
+>> +static int register_cxt(struct sdxi_dev *sdxi, struct sdxi_cxt *cxt)
+>> +{
+>> +     int err;
+>> +
+>> +     CLASS(sdxi_alloc_cxt_id, slot)(sdxi, cxt);
+>> +     if (slot.id < 0)
+>> +             return slot.id;
+> 
+> I like use cleanup to do this. define error macro, like cleanup.h
+> 
+>  *      ACQUIRE(pci_dev_try, lock)(dev);
+>  *      rc = ACQUIRE_ERR(pci_dev_try, &lock);
+> 
+> so hidden detail "id" in sdxi_alloc_cxt_id.
+> 
+> Or you can refer runtime pm method, save necceary information to "cxt"
+> 
+> DEFINE_GUARD_COND(pm_runtime_active, _try,
+>                   pm_runtime_get_active(_T, RPM_TRANSPARENT), _RET == 0)
+> 
+>> +
+>> +     cxt->sdxi = sdxi;
+>> +     cxt->id = slot.id;
+>> +     cxt->db = sdxi->dbs + slot.id * sdxi->db_stride;
+>> +
+>> +     err = sdxi_publish_cxt(cxt);
+>> +     if (err)
+>> +             return err;
+>> +
+>> +     take_sdxi_cxt_id(slot);
+> 
+> I undestand try to keep id to avoid call xa_erase. but it hidden too much
+> detail.
+> 
+> If only one error branch, using cleanup here have not bring too much beneafit.
+> 
+> 
+> Idealy logic
+> 
+>         id = __free(your_xa_erase) your_xa_alloc()
+>         ...
+>         ctx->id = no_free_ptr(id).
 
-diff --git a/drivers/iommu/hyperv/iommu.c b/drivers/iommu/hyperv/iommu.c
-index e5fc625314b5..3bca362b7815 100644
---- a/drivers/iommu/hyperv/iommu.c
-+++ b/drivers/iommu/hyperv/iommu.c
-@@ -486,10 +486,98 @@ static void hv_iommu_flush_iotlb_all(struct iommu_domain *domain)
- 	hv_flush_device_domain(to_hv_iommu_domain(domain));
- }
- 
-+/* Max number of iova_list entries in a single hypercall input page. */
-+#define HV_IOMMU_MAX_FLUSH_VA_COUNT \
-+	((HV_HYP_PAGE_SIZE - sizeof(struct hv_input_flush_device_domain_list)) / \
-+	 sizeof(union hv_iommu_flush_va))
-+
-+/* Returned by hv_iommu_fill_iova_list() when the range exceeds the capacity */
-+#define HV_IOMMU_FLUSH_VA_OVERFLOW	U16_MAX
-+
-+static inline u16 hv_iommu_fill_iova_list(union hv_iommu_flush_va *iova_list,
-+					  unsigned long start,
-+					  unsigned long end)
-+{
-+	unsigned long start_pfn = start >> PAGE_SHIFT;
-+	unsigned long end_pfn = PAGE_ALIGN(end) >> PAGE_SHIFT;
-+	unsigned long nr_pages = end_pfn - start_pfn;
-+	u16 count = 0;
-+
-+	while (nr_pages > 0) {
-+		unsigned long flush_pages;
-+		int order;
-+		unsigned long pfn_align;
-+		unsigned long size_align;
-+
-+		if (count >= HV_IOMMU_MAX_FLUSH_VA_COUNT) {
-+			count = HV_IOMMU_FLUSH_VA_OVERFLOW;
-+			break;
-+		}
-+
-+		if (start_pfn)
-+			pfn_align = __ffs(start_pfn);
-+		else
-+			pfn_align = BITS_PER_LONG - 1;
-+
-+		size_align = __fls(nr_pages);
-+		order = min(pfn_align, size_align);
-+		iova_list[count].page_mask_shift = order;
-+		iova_list[count].page_number = start_pfn;
-+
-+		flush_pages = 1UL << order;
-+		start_pfn += flush_pages;
-+		nr_pages -= flush_pages;
-+		count++;
-+	}
-+
-+	return count;
-+}
-+
-+static void hv_flush_device_domain_list(struct hv_iommu_domain *hv_domain,
-+					struct iommu_iotlb_gather *iotlb_gather)
-+{
-+	u64 status;
-+	u16 count;
-+	unsigned long flags;
-+	struct hv_input_flush_device_domain_list *input;
-+
-+	local_irq_save(flags);
-+
-+	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-+	memset(input, 0, sizeof(*input));
-+
-+	input->device_domain = hv_domain->device_domain;
-+	input->flags |= HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT;
-+	count = hv_iommu_fill_iova_list(input->iova_list,
-+					iotlb_gather->start,
-+					iotlb_gather->end);
-+	if (count == HV_IOMMU_FLUSH_VA_OVERFLOW) {
-+		/*
-+		 * Range exceeds hypercall page capacity. Fall back to a full
-+		 * domain flush.
-+		 */
-+		struct hv_input_flush_device_domain *flush_all = (void *)input;
-+
-+		memset(flush_all, 0, sizeof(*flush_all));
-+		flush_all->device_domain = hv_domain->device_domain;
-+		status = hv_do_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN,
-+					flush_all, NULL);
-+	} else {
-+		status = hv_do_rep_hypercall(
-+				HVCALL_FLUSH_DEVICE_DOMAIN_LIST,
-+				count, 0, input, NULL);
-+	}
-+
-+	local_irq_restore(flags);
-+
-+	if (!hv_result_success(status))
-+		pr_err("HVCALL_FLUSH_DEVICE_DOMAIN_LIST failed, status %lld\n", status);
-+}
-+
- static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
- 				struct iommu_iotlb_gather *iotlb_gather)
- {
--	hv_flush_device_domain(to_hv_iommu_domain(domain));
-+	hv_flush_device_domain_list(to_hv_iommu_domain(domain), iotlb_gather);
- 
- 	iommu_put_pages_list(&iotlb_gather->freelist);
- }
-@@ -543,6 +631,7 @@ static struct iommu_domain *hv_iommu_domain_alloc_paging(struct device *dev)
- 
- 	cfg.common.hw_max_vasz_lg2 = hv_iommu_device->max_iova_width;
- 	cfg.common.hw_max_oasz_lg2 = 52;
-+	cfg.common.features |= BIT(PT_FEAT_FLUSH_RANGE);
- 	cfg.top_level = (hv_iommu_device->max_iova_width > 48) ? 4 : 3;
- 
- 	ret = pt_iommu_x86_64_init(&hv_domain->pt_iommu_x86_64, &cfg, GFP_KERNEL);
-diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
-index 5bdbb44da112..eaaf87171478 100644
---- a/include/hyperv/hvgdk_mini.h
-+++ b/include/hyperv/hvgdk_mini.h
-@@ -496,6 +496,7 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
- #define HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9
- #define HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce
- #define HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0
-+#define HVCALL_FLUSH_DEVICE_DOMAIN_LIST			0x00d1
- #define HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7
- #define HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8
- #define HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db
-diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
-index 493608e791b4..f51d5d9467f1 100644
---- a/include/hyperv/hvhdk_mini.h
-+++ b/include/hyperv/hvhdk_mini.h
-@@ -671,4 +671,21 @@ struct hv_input_flush_device_domain {
- 	u32 reserved;
- } __packed;
- 
-+union hv_iommu_flush_va {
-+	u64 iova;
-+	struct {
-+		u64 page_mask_shift : 12;
-+		u64 page_number : 52;
-+	};
-+} __packed;
-+
-+
-+struct hv_input_flush_device_domain_list {
-+	struct hv_input_device_domain device_domain;
-+#define HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT (1 << 0)
-+	u32 flags;
-+	u32 reserved;
-+	union hv_iommu_flush_va iova_list[];
-+} __packed;
-+
- #endif /* _HV_HVHDK_MINI_H */
--- 
-2.52.0
+Non-pointer types tend to require a class for automatic cleanup AFAICT
+but I think I get pretty close to this in v2. I also reworked the
+context allocation logic to reserve IDs earlier.
 
