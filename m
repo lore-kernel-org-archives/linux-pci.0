@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556744D8D9E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741634D8DAF;
 	Mon, 11 May 2026 19:16:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778526998; cv=none; b=h5rAfZX438DbhqMqn0qAZKVvpjQI2sGSKZ43yOEH+ZP0owCnYyRe6l27GQYKI8+CjtnIryzvBi3d6LyNxkHCNAYzfcOTk8K9WMB7eyA9ZcGETnMGB0iE38teDWOOAK7bEnU7ZPPBPiXdR1uVSszOVJ7Z084kqc+BSz7G22Ra8cA=
+	t=1778526998; cv=none; b=KH1k2OVKfd+9kUNVp40iGm2Y5nPYSZI6HD4Mn26hOX7BBYRIvQDWSKNzWBy1+AxFm1jNxxYFvC5aLSt2frajyTmIl4gKDLh6BIfyLdpN/Ndwpcrp1sT3P4pud/Ze8BoMSC/Nh3VV1pBc/K8+8WmqU+k7iZuFABZdaj6lfgD8rlA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1778526998; c=relaxed/simple;
-	bh=Hk3pnE2NQWqwdbyzJmBvEdl46M8iH8HLuqpjBhV4E00=;
+	bh=ibxnlfdBjLtvx49zyRn8t48Qp5MAz+R/mdp0bQuvOu4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=gFgc6Pnv7HbYJ6/VJbKOSXtpD37f+H3GR0HF4UCY43IUDlhzjqSqaksaay+p/6ZzRx4NQkmEDxi8rdHkb0VDMSITE1arlqgCNbICiW7V4DZViSGvtmKazxAAx0Nte6TxRNNJoYCJF7PIe6CzEfepD++Hed4BSfZbTNvtbNJhIUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OVxDf8aC; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=XNHxRwMsxwTiH2nTecdhUOcBhgXA8seFQSWYhloHLnpvI2QRB8604x6z835SlWKCXPtQ5bitB3Z6ezaC/sEBMzAUeQ08kYejkegX3Fu39UNxgKcoUmswDmSNDSrBDK2OYSBfnO3fjxaCMlMyPwtygDN0JmSbLmncm9DSRNNcWQ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TXmBAj1U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OVxDf8aC"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 165BDC4AF49;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TXmBAj1U"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 41901C4AF0F;
 	Mon, 11 May 2026 19:16:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1778526998;
-	bh=Hk3pnE2NQWqwdbyzJmBvEdl46M8iH8HLuqpjBhV4E00=;
+	bh=ibxnlfdBjLtvx49zyRn8t48Qp5MAz+R/mdp0bQuvOu4=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=OVxDf8aCm4Zru4IvgzwXkQRrLAaI4sdpl28yIak7IQelqOpeLhzj7xMVpWhdnIb4h
-	 TQpRcY6F9zxDbdKG5i3vWCNfGv5L5BnRxY2bXQp5tpdKJpo3SO+5m0gB6lNtExitv9
-	 NLV6Bh1OJnoPqO7BiVrj7ad5SHzweN9tSKj2xizt6Kugm/viIF9ETUrPiysLbRy8Gg
-	 PyxDWRe7ohByqtvObHJqj2TENJQuuqQwJ+ZtFK4IL8uCasNq5vpdr1CgnJHEPZBtqY
-	 x3YPSTmldyDkQViHMTrjQe8BZpWJHpksaUq4/5CV3fT8G+cAHhCmEdMhTgGZbWg0i/
-	 SVuuZQFip21XQ==
+	b=TXmBAj1Ux+Psuy6KgmGUDY9qITCkwGtKh+ywlhY5RQCH2MAJJ8zBJMJTMpLsuQ6kl
+	 xEyQ994tEt4A6wzq7akhWP+BrCpHnGm8xMk7EAh2/N0ocARSDv2aT8k7HooXd6gA72
+	 hSdDBMFY9jLaCcAHIjrzFLX/siT1kVkb+uws3u4lJ4qq1F7K9LngYPRLTJ3ebrGJXC
+	 Pi5IXEtpeyjOMDHEqxbJOVHAv0WNonNpn6bga+VVxGBAwEpr5xsbskyyhxSIWqwwqR
+	 vHhlyNCj3dNfaTW8Kv85yVFZcmrrz5enoe69UP79XwCW3LGEMXr8yV9drKZk+A3qAG
+	 1fBifOXo8/qNQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01EE6CD4855;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FFB9CD4857;
 	Mon, 11 May 2026 19:16:38 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Mon, 11 May 2026 14:16:25 -0500
-Subject: [PATCH v2 13/23] dmaengine: sdxi: Add unit tests for descriptor
- ring reservations
+Date: Mon, 11 May 2026 14:16:28 -0500
+Subject: [PATCH v2 16/23] dmaengine: sdxi: Generic descriptor manipulation
+ helpers
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260511-sdxi-base-v2-13-889cfed17e3f@amd.com>
+Message-Id: <20260511-sdxi-base-v2-16-889cfed17e3f@amd.com>
 References: <20260511-sdxi-base-v2-0-889cfed17e3f@amd.com>
 In-Reply-To: <20260511-sdxi-base-v2-0-889cfed17e3f@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
@@ -53,13 +53,14 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  Stephen Bates <Stephen.Bates@amd.com>, Wei Huang <wei.huang2@amd.com>, 
  Wei Xu <weixugc@google.com>, dmaengine@vger.kernel.org, 
  linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- Jonathan Cameron <jic23@kernel.org>, Nathan Lynch <nathan.lynch@amd.com>
+ Jonathan Cameron <jic23@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+ Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1778526994; l=5269;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1778526994; l=4018;
  i=nathan.lynch@amd.com; s=20260410; h=from:subject:message-id;
- bh=PXDHT7Pgu67HfIa3CtBVAX9zuukW62nt8SgJBR84+X0=;
- b=ATgAovf39Bu8VlzKhiJIzCEVvnBT2wERu0O2oZlMMu5nRZnOnGCn2ZIX5LFWM4UTJ+BPwinwU
- XarF/PGupCxBJoNqGZDsfjnpEt+BnW6Czrn9Sc8UkBmQpkP8J0zeaAs
+ bh=CWw/LnMDvdhwLVv3mDj+Nnv+P4Rnl41ZD9nlo0X7QnE=;
+ b=GnIyDbAwT+HtcXUUYAUUWu6wuxscmHfZ5Z9weR8KErF2qlU3eOX15XufGJnYtZHhmhWJDExt3
+ WT8VMv934LcAgfuVOUNeGgvaJHggLhxwE5KtJk+N1SjhgQZIIV3dvT8
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=PK4ozhq+/z9/2Jl5rgDmvHa9raVomv79qM8p1RAFpEw=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260410 with
@@ -69,179 +70,130 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Add KUnit tests for the descriptor ring reservation API, covering:
+Introduce small helper functions for manipulating certain common
+properties of descriptors after their operation-specific encoding has
+been performed but before they are submitted.
 
-- Valid reservations: full-ring and single-slot after advancing the
-  read pointer.
+sdxi_desc_set_csb() associates an optional completion status block
+with a descriptor.
 
-- Error paths: zero or over-capacity count (-EINVAL), inconsistent
-  index state (-EIO), and insufficient space (-EBUSY).
+sdxi_desc_set_fence() forces retirement of any prior descriptors in
+the ring before the target descriptor is executed. This is useful for
+interrupt descriptors that signal the completion of an operation.
 
-A .kunitconfig is included ease of use:
+sdxi_desc_set_sequential() ensures that all writes from prior
+descriptor operations in the same context are made globally visible
+prior to making writes from the target descriptor globally visible.
 
-  $ tools/testing/kunit/kunit.py run \
-         --kunitconfig=drivers/dma/sdxi/.kunitconfig
+sdxi_desc_make_valid() sets the descriptor validity bit, transferring
+ownership of the descriptor from software to the SDXI
+implementation. (The implementation is allowed to execute the
+descriptor at this point, but the caller is still obligated to push
+the doorbell to ensure execution occurs.)
 
-No SDXI hardware is required to run these tests.
+Each of the preceding functions will warn if invoked on a descriptor
+that has already been released to the SDXI implementation (i.e. had
+its validity bit set).
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/.kunitconfig |   4 ++
- drivers/dma/sdxi/Kconfig      |   8 ++++
- drivers/dma/sdxi/Makefile     |   3 ++
- drivers/dma/sdxi/ring_kunit.c | 105 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 120 insertions(+)
+ drivers/dma/sdxi/descriptor.h | 64 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/hw.h         |  9 ++++++
+ 2 files changed, 73 insertions(+)
 
-diff --git a/drivers/dma/sdxi/.kunitconfig b/drivers/dma/sdxi/.kunitconfig
+diff --git a/drivers/dma/sdxi/descriptor.h b/drivers/dma/sdxi/descriptor.h
 new file mode 100644
-index 000000000000..a98cf19770f0
+index 000000000000..c0f01b1be726
 --- /dev/null
-+++ b/drivers/dma/sdxi/.kunitconfig
-@@ -0,0 +1,4 @@
-+CONFIG_KUNIT=y
-+CONFIG_DMADEVICES=y
-+CONFIG_SDXI=y
-+CONFIG_SDXI_KUNIT_TEST=y
-diff --git a/drivers/dma/sdxi/Kconfig b/drivers/dma/sdxi/Kconfig
-index a568284cd583..e616d3e323bc 100644
---- a/drivers/dma/sdxi/Kconfig
-+++ b/drivers/dma/sdxi/Kconfig
-@@ -6,3 +6,11 @@ config SDXI
- 	  Platform Data Mover devices. SDXI is a vendor-neutral
- 	  standard for a memory-to-memory data mover and acceleration
- 	  interface.
++++ b/drivers/dma/sdxi/descriptor.h
+@@ -0,0 +1,64 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef DMA_SDXI_DESCRIPTOR_H
++#define DMA_SDXI_DESCRIPTOR_H
 +
-+config SDXI_KUNIT_TEST
-+	tristate "SDXI unit tests" if !KUNIT_ALL_TESTS
-+	depends on SDXI && KUNIT
-+	default KUNIT_ALL_TESTS
-+	help
-+	  KUnit tests for parts of the SDXI driver. Does not require
-+	  SDXI hardware.
-diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-index 23536a1defc3..372f793c15b1 100644
---- a/drivers/dma/sdxi/Makefile
-+++ b/drivers/dma/sdxi/Makefile
-@@ -7,3 +7,6 @@ sdxi-objs += \
- 	ring.o
- 
- sdxi-$(CONFIG_PCI_MSI) += pci.o
-+
-+obj-$(CONFIG_SDXI_KUNIT_TEST) += \
-+	ring_kunit.o
-diff --git a/drivers/dma/sdxi/ring_kunit.c b/drivers/dma/sdxi/ring_kunit.c
-new file mode 100644
-index 000000000000..3bc7073e0c39
---- /dev/null
-+++ b/drivers/dma/sdxi/ring_kunit.c
-@@ -0,0 +1,105 @@
-+// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * SDXI descriptor ring management tests.
++ * Facilities for encoding SDXI descriptors.
 + *
 + * Copyright Advanced Micro Devices, Inc.
 + */
-+#include <kunit/device.h>
-+#include <kunit/test-bug.h>
-+#include <kunit/test.h>
-+#include <linux/container_of.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/module.h>
-+#include <linux/packing.h>
-+#include <linux/string.h>
 +
-+#include "ring.h"
++#include <linux/bitfield.h>
++#include <linux/ratelimit.h>
++#include <linux/types.h>
++#include <asm/byteorder.h>
 +
-+MODULE_IMPORT_NS("EXPORTED_FOR_KUNIT_TESTING");
++#include "hw.h"
 +
-+static void valid(struct kunit *t)
++static inline void sdxi_desc_vl_expect(const struct sdxi_desc *desc, bool expected)
 +{
-+	__le64 wi, ri;
-+	struct sdxi_ring_state r;
-+	struct sdxi_ring_resv resv;
-+	struct sdxi_desc *descs, *desc;
++	u8 vl = FIELD_GET(SDXI_DSC_VL, le32_to_cpu(desc->opcode));
 +
-+
-+	descs = kunit_kmalloc_array(t, SZ_1K, sizeof(descs[0]),
-+				    GFP_KERNEL | __GFP_ZERO);
-+	KUNIT_ASSERT_NOT_NULL(t, descs);
-+
-+	ri = wi = 0;
-+	sdxi_ring_state_init(&r, &ri, &wi, SZ_1K, descs);
-+
-+	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&r, r.entries, &resv), 0);
-+	KUNIT_EXPECT_EQ(t, resv.range.start, 0);
-+	KUNIT_EXPECT_EQ(t, resv.range.end, r.entries - 1);
-+	KUNIT_EXPECT_EQ(t, le64_to_cpu(wi), r.entries);
-+	sdxi_ring_resv_foreach(&resv, desc) {
-+		KUNIT_EXPECT_NOT_NULL_MSG(t, sdxi_ring_resv_next(&resv),
-+			"unexpected null descriptor for index %llu", resv.iter);
-+	}
-+
-+	ri = cpu_to_le64(1);
-+	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&r, 1, &resv), 0);
-+	KUNIT_EXPECT_EQ(t, le64_to_cpu(wi), r.entries + 1);
-+	KUNIT_EXPECT_NOT_NULL(t, sdxi_ring_resv_next(&resv));
++	WARN_RATELIMIT(vl != expected, "expected vl=%u but got %u\n", expected, vl);
 +}
 +
-+static void invalid(struct kunit *t)
++static inline void sdxi_desc_set_csb(struct sdxi_desc *desc, dma_addr_t addr)
 +{
-+	__le64 wi, ri;
-+	struct sdxi_ring_state rs;
-+	struct sdxi_ring_resv resv;
-+	struct sdxi_desc *descs;
-+
-+	descs = kunit_kmalloc_array(t, SZ_1K, sizeof(descs[0]),
-+				    GFP_KERNEL | __GFP_ZERO);
-+	KUNIT_ASSERT_NOT_NULL(t, descs);
-+
-+	ri = wi = 0;
-+	sdxi_ring_state_init(&rs, &ri, &wi, SZ_1K, descs);
-+
-+	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&rs, 0, &resv), -EINVAL);
-+	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&rs, rs.entries + 1, &resv), -EINVAL);
-+
-+	ri = cpu_to_le64(1);
-+	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&rs, 1, &resv), -EIO);
-+
-+	ri = 0;
-+	wi = cpu_to_le64(rs.entries);
-+	sdxi_ring_state_init(&rs, &ri, &wi, SZ_1K, descs);
-+	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&rs, 1, &resv), -EBUSY);
-+
-+	ri = cpu_to_le64(rs.entries);
-+	wi = cpu_to_le64(rs.entries + 1);
-+	sdxi_ring_state_init(&rs, &ri, &wi, SZ_1K, descs);
-+	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&rs, rs.entries, &resv), -EBUSY);
++	sdxi_desc_vl_expect(desc, 0);
++	desc->csb_ptr = cpu_to_le64(FIELD_PREP(SDXI_DSC_CSB_PTR, addr >> 5));
 +}
 +
-+static struct kunit_case testcases[] = {
-+	KUNIT_CASE(valid),
-+	KUNIT_CASE(invalid),
-+	{}
-+};
-+
-+static int setup_device(struct kunit *t)
++static inline void sdxi_desc_make_valid(struct sdxi_desc *desc)
 +{
-+	struct device *dev = kunit_device_register(t, "sdxi-mock-device");
++	u32 opcode = le32_to_cpu(desc->opcode);
 +
-+	KUNIT_ASSERT_NOT_ERR_OR_NULL(t, dev);
-+	t->priv = dev;
-+	return 0;
++	sdxi_desc_vl_expect(desc, 0);
++	FIELD_MODIFY(SDXI_DSC_VL, &opcode, 1);
++	/*
++	 * Once vl is set, no more modifications to the descriptor
++	 * payload are allowed. Ensure the vl update is ordered after
++	 * all other initialization of the descriptor.
++	 */
++	dma_wmb();
++	WRITE_ONCE(desc->opcode, cpu_to_le32(opcode));
 +}
 +
-+static struct kunit_suite generic_desc_ts = {
-+	.name = "SDXI descriptor ring management",
-+	.test_cases = testcases,
-+	.init = setup_device,
-+};
-+kunit_test_suite(generic_desc_ts);
++static inline void sdxi_desc_set_fence(struct sdxi_desc *desc)
++{
++	u32 opcode = le32_to_cpu(desc->opcode);
 +
-+MODULE_DESCRIPTION("SDXI descriptor ring tests");
-+MODULE_AUTHOR("Nathan Lynch");
-+MODULE_LICENSE("GPL");
++	sdxi_desc_vl_expect(desc, 0);
++	FIELD_MODIFY(SDXI_DSC_FE, &opcode, 1);
++	desc->opcode = cpu_to_le32(opcode);
++}
++
++static inline void sdxi_desc_set_sequential(struct sdxi_desc *desc)
++{
++	u32 opcode = le32_to_cpu(desc->opcode);
++
++	sdxi_desc_vl_expect(desc, 0);
++	FIELD_MODIFY(SDXI_DSC_SE, &opcode, 1);
++	desc->opcode = cpu_to_le32(opcode);
++}
++
++#endif /* DMA_SDXI_DESCRIPTOR_H */
+diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
+index 46424376f26f..cb1bed2f83f2 100644
+--- a/drivers/dma/sdxi/hw.h
++++ b/drivers/dma/sdxi/hw.h
+@@ -140,6 +140,15 @@ struct sdxi_desc {
+ 			__u8 operation[52];
+ 			__le64 csb_ptr;
+ 		);
++
++/* For opcode field */
++#define SDXI_DSC_VL  BIT(0)
++#define SDXI_DSC_SE  BIT(1)
++#define SDXI_DSC_FE  BIT(2)
++
++/* For csb_ptr field */
++#define SDXI_DSC_CSB_PTR GENMASK_ULL(63, 5)
++
+ 	};
+ } __packed;
+ static_assert(sizeof(struct sdxi_desc) == 64);
 
 -- 
 2.54.0
