@@ -1,241 +1,196 @@
-Received: from fout-a1-smtp.messagingengine.com (fout-a1-smtp.messagingengine.com [103.168.172.144])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010008.outbound.protection.outlook.com [52.101.56.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C0CD19067C;
-	Mon, 11 May 2026 04:36:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.144
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778474194; cv=none; b=arUuAVVXdGiNvDMYFVji8wVaf3y27ZbY1Uc2DWSGX5GToeun2jFfOAFbVlcq1FSIokUjKX88LpBlnKRQU30oAe6VN2bmTBQsiP4pG4OIoXC9cpUoEdn9g7+1HIsPXZKWWyK8dklBlJYCmBSN0qSAsukUzgWzKAHQraJBbF782ys=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778474194; c=relaxed/simple;
-	bh=TyzsigNPCkp3QLTPhvuM3vIwRzgIr6nm/JhARS3wwBQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tDimGG1HhcX8BNVGHQD2EtzOMimvf9YHoWy1CkBsaYd0a4YhOVLDOtDX20a74zRJ0oIGOznmD0ylrDjZssXyFJ4GoKFJBSfDwm3bArY5KuSyR3feHYBCM45lXknzJ/GU7O4pq6+mjrlkBiqZJdGiHEFOgGpmEKYsGsFRT46ZQiQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=JwivJHl4; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fKl4yaV1; arc=none smtp.client-ip=103.168.172.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9202F8EAE;
+	Mon, 11 May 2026 04:47:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.8
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778474871; cv=fail; b=XZ76RFBvTgAPBBL/iXYxmJy3m/kG1ddQjxp5wmOr/YQjSKTb3NmlZM5hqhh9o1H8KXZDw6IyeffE2ehs8WJFoh3Xbgi95NETwVJde9VK3H02UCj3kolgfE3UzS09SgFR6DrjVmJp6QKuV+bB7+GtozRclrxeJ3b0cSeww47EsJk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778474871; c=relaxed/simple;
+	bh=gjWrfxOy64X3w6rpP1qc9h3N2DarsRyIJXUxLSJ/Gqg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=V5Gxf0ncSkiahhn9r93R5G8Yw4UBw0Jq8ah/GAzrU/0tMxCpDAygbBq3knckztxSBTnorihisW+r9/Fn/OC/KfkZn85nwzwESKhlcTBJCrjz/V5/Yvy6FmJ27GSaQBBHIb/S0f6LoeAytWJ4LgtDloc5jVCu+UoC62ZJRMMqAJ8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=aMByqYno; arc=fail smtp.client-ip=52.101.56.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="JwivJHl4";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fKl4yaV1"
-Received: from phl-compute-09.internal (phl-compute-09.internal [10.202.2.49])
-	by mailfout.phl.internal (Postfix) with ESMTP id 3AABBEC00A5;
-	Mon, 11 May 2026 00:36:30 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-09.internal (MEProxy); Mon, 11 May 2026 00:36:30 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1778474190;
-	 x=1778560590; bh=vOSeOEo8R8er+06oeYobh51ZXZvoEwG8WPvF6EieTrs=; b=
-	JwivJHl4TnzbopRA0hUIYhRKHaU615vFjkIPVvLkiOTYU6hibpSZTQTW2FN/bxsQ
-	+RwcldEqbWRoDYUkYrD43K5GQe+eFIxbHx+thIvfjGDRQv5DHFOfaHwU/kKxru8h
-	4jjibG6XDVtvUtWn7gU4y1xY21Zei+W6egscWfU7DNyvZz85UjJLAThfKNfijBu3
-	d32lsl5faCjHBDy0ihk7yG2Vi9RScJdfCX+8MriyA0d9SjQxXqm7oSUryemw+wkT
-	g3JjElu3w51JUTfLG98BEy2kNLFbDK9NJ8A6ojBkY0jyhpPiGjFpvbMebhLecVJW
-	0MgqOAfCRcpZkltIonGM1Q==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778474190; x=
-	1778560590; bh=vOSeOEo8R8er+06oeYobh51ZXZvoEwG8WPvF6EieTrs=; b=f
-	Kl4yaV1hNUbxk+iBS3uTPPvqqcAPa7p9aLmFdlXAHyZzCd85vrtmwSL8xbyuooPh
-	BUScbEDz4i4MYXlKzsRhC3yfoS8tkpjTtQax8vFjUFYQut/tMlhop9d30eGEJD9t
-	qIOFEJBygy6365kFKs0hEJDEF3kjSP+08Nl1R+t0pmM+OlqW87r0Tyl4AYzhgELr
-	ersRtl7vgy4TXT/oUR0nXikvDr7NDeYDzml+XumBidEy6BrnlvywunR0/PZ0Z6f5
-	JxojjDMTxzSmp/k02huDc/1kvtl1mV2iTcp3ceP1+XLmHPIL6mTUjRJKdy1+vddX
-	9F26delnrQZ+1QQz1W8Zw==
-X-ME-Sender: <xms:zVwBanb-NHiluI-mIYXT3I0Ekv75YUIMIhDKMdoSbSj7-iJ8sH2tsw>
-    <xme:zVwBakribhZdiAN09vosR5d3TW9GR_pg3c_wlJkKm-cPUJMEU2lC-fyp25T-V0xRq
-    5-Gftd9xC4TCXL1ss2eXbASMfBTtoua4m15P1MMyLcJrOzCuKyoswk>
-X-ME-Received: <xmr:zVwBajQZC-yv25ItqYID1dKZmYu4MS4TydL0FtX3Dfwyq6RDx4m5rMNTE_Q>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduudektdefucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
-    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
-    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepvdekfeejkedvudfhudfhteekud
-    fgudeiteetvdeukedvheetvdekgfdugeevueeunecuvehluhhsthgvrhfuihiivgeptden
-    ucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhgpdhnsg
-    gprhgtphhtthhopeduuddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepfhgvnhhg
-    tghhvghnghifvghnsehhuhgrfigvihdrtghomhdprhgtphhtthhopehjghhgseiiihgvph
-    gvrdgtrgdprhgtphhtthhopeifrghthhhsrghlrgdrvhhithhhrghnrghgvgesrghrmhdr
-    tghomhdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtth
-    hopeifvghirdhhuhgrnhhgvdesrghmugdrtghomhdprhgtphhtthhopeifrghnghiihhho
-    uhdusehhihhsihhlihgtohhnrdgtohhmpdhrtghpthhtohepfigrnhhghihushhhrghnud
-    dvsehhuhgrfigvihdrtghomhdprhgtphhtthhopehlihhuhihonhhglhhonhhgsehhuhgr
-    figvihdrtghomhdprhgtphhtthhopehkvhhmsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:zVwBagpGM8SxEtsg_afTuzt3pY2GSKWhB3blOu68Vtapiomdyhjg_A>
-    <xmx:zVwBal3pxKfVxdFwYxBkllefX0jiZS6sbRl8kJAaU0uRhU6BXTfqSA>
-    <xmx:zVwBan5Vbt0phrwGQ1AukqkrcokHR_-dV6dOAR9inh0453FAjz18rg>
-    <xmx:zVwBahTUQkUyyAr5oCvr7Xsz8XgzYpFGoDTNzIqg3l4m5hSpsY8TnA>
-    <xmx:zlwBanHsx17zNSzUGNqOveovxYLoRcm8zN61G-XDWkk4qNCbV6PtmASf>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 11 May 2026 00:36:28 -0400 (EDT)
-Date: Sun, 10 May 2026 22:36:26 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
- <wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
- <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v8 4/7] vfio/pci: Add PCIe TPH interface with capability
- query
-Message-ID: <20260510223626.0ba9dc0b@shazbot.org>
-In-Reply-To: <f1f11651-c86d-47a9-974c-da0b3d423657@huawei.com>
-References: <20260508064053.37529-1-fengchengwen@huawei.com>
-	<20260508064053.37529-5-fengchengwen@huawei.com>
-	<20260508164003.70918c0c@shazbot.org>
-	<f1f11651-c86d-47a9-974c-da0b3d423657@huawei.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="aMByqYno"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Xf6l/FUR4qLudq7O5VerGiMPCh3FQ/tVxAyhW5NFs8wuJIYLHvXUD+vqzJmky592lQZculaOyP8euOgXkzANThXb3ML/vdeCMIIr5BdLn+cF08TdO8APeIIARXjQl2YA16GKQmXROBkouuTgx1bhPJe2mD7y2oMlWb8SoQmGUve6d0YGL8pQIfPuZInZfat/vlPSMKsbInkTGNuGTeVLBJgczxb61eRUB5CDWh0KUEStT0/HPNT1Oq+MdIaSk5kfmmt/nOwhhyMxkToYXZgFsfJvTJbK7kV4Psz2tYG4rN0XhzZ46xWY+XkaYZleArJScDT0c9X9VSxebpV9MTdI3g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=dGVMIuyl2oEgx46bpgmlWni8peBq2DNW87xKvyjQBtw=;
+ b=C1g+fbKD9OV20dWWL4mK/iereFF4ta26asdLxLZPpchAkhQMkM7LrSMUjrPY/O+H8ATu+XoZjPFzjkb+Jou7N6OOOBcO/nOhM71HBA+JAquKiQWLdy3cVDdSteHezHKFz1z2Li2YiSw/Q5MoPtJAxQTcZdwgmJ8DDWrKN5EUdBa/GLYkiMeBFxeEXujohKnsk1HW9tf769xnLrYl8LKwL61hPi2Svw2Pt+QSlbNdlVxi8HQkqV2MP/AgyuElreTmo7dtkiiW7FVSyV/gg3JALOfIY2YcIjP/t11wPeh/LxRavYesRhWkqtMk6dnbxgxJVbwJ+0+FWJUoieIU00dOWw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.21.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dGVMIuyl2oEgx46bpgmlWni8peBq2DNW87xKvyjQBtw=;
+ b=aMByqYnoQxPAjaqHJIOfSwIjfUqf4qXaBgWTvKg660Auzb+zu7B+khoKeQHwvPAf8nUd4CbVUgLOHxWqHGufGUVaWN4bcH+QRkn8HMsF14I1HzzG8tHxg5u1Q2ZHnxjhmEVHI7vhq181Qn7fVxCFrL56zM2L1DS6D9Vot8uaFkA=
+Received: from BYAPR05CA0023.namprd05.prod.outlook.com (2603:10b6:a03:c0::36)
+ by BLAPR10MB5105.namprd10.prod.outlook.com (2603:10b6:208:325::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Mon, 11 May
+ 2026 04:47:47 +0000
+Received: from CO1PEPF000075EE.namprd03.prod.outlook.com
+ (2603:10b6:a03:c0:cafe::2d) by BYAPR05CA0023.outlook.office365.com
+ (2603:10b6:a03:c0::36) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.14 via Frontend Transport; Mon, 11
+ May 2026 04:47:47 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
+Received: from flwvzet200.ext.ti.com (198.47.21.194) by
+ CO1PEPF000075EE.mail.protection.outlook.com (10.167.249.37) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.25.13 via Frontend Transport; Mon, 11 May 2026 04:47:46 +0000
+Received: from DFLE207.ent.ti.com (10.64.6.65) by flwvzet200.ext.ti.com
+ (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Sun, 10 May
+ 2026 23:47:44 -0500
+Received: from DFLE215.ent.ti.com (10.64.6.73) by DFLE207.ent.ti.com
+ (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Sun, 10 May
+ 2026 23:47:44 -0500
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE215.ent.ti.com
+ (10.64.6.73) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
+ Transport; Sun, 10 May 2026 23:47:44 -0500
+Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64B4lfx82936634;
+	Sun, 10 May 2026 23:47:42 -0500
+Message-ID: <2788061a-bb42-4a80-9537-6e8796d7a65e@ti.com>
+Date: Mon, 11 May 2026 10:17:40 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/3] PCI: cadence: Use dynamic PCIe capability offset
+ in host driver
+To: Hans Zhang <18255117159@163.com>, <bhelgaas@google.com>,
+	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
+	<s-vadapalli@ti.com>
+CC: <robh@kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+References: <20260509130716.2104103-1-18255117159@163.com>
+ <20260509130716.2104103-4-18255117159@163.com>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <20260509130716.2104103-4-18255117159@163.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF000075EE:EE_|BLAPR10MB5105:EE_
+X-MS-Office365-Filtering-Correlation-Id: 13f5cb97-64a8-434d-39be-08deaf18723c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|36860700016|82310400026|376014|56012099003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	rJ2qoRs4h9qNypR0qtkXt0m1INPwqoK7NQZdF4qtkJjMl/WrjEt3RR+j/+++9k/3qEnn1rHnWGUOexkCkfX5ApFg919lXD9J8VuVo00hmwUU8bd6jK5aH320b4dkEB1BNQdf+FVrgQjI6LEVuTqsewUd+gpA0xGrF1TgCs7uanbvsvwJpCBzq9OoRQqPUH1TkWN3H5brch1/tIXwrU1f3zJUiIDt3Bn/878Uv1hw2qJ7Ablt/zYcreKxlF3Hn0TcEoUMzrHsdbhtL8ZECk9feLVTAwvhgFMfvnR5vLL5iZ7gcDzkd6iUxm2/L6/BOnGDu0NqGrxh+wSfcOTzPhwEKlRGwXUJB5tkw9T7PathRr/pmvJ1eloSIGETQAVxTvrO934oohTGNrb970FvQ6fniBMbW4cc1yZBaIEktg0Wpo1h3weFcu8gKdH//etLRYXaFriSe/2PKedqOUmoMvnYRPaMWssw3OJTgKnSJHmbJIKE0fSGN3xVV4V5bUM1u2hxQa2yrczLmc68wCEx38dgRPhMMn6Ls3CCUdH5zmmuVG93Ug4PSmg26lC7SfYCUl+k7lQEqqoujQwCMM0WF0+UQhxOy5WVcaDSUDvQEaUembenipR/5mx7gWoJs+beaCHR6cpF8+auOMqEq8M4uiPY6/ebokaugzsL8xM6wCKhgtTNUhW7DtKS6xFDBg0K+ckMb083ESbEDQRQYE0cDT0d1uQN9DdFuvLQTFsWKXNKX2g=
+X-Forefront-Antispam-Report:
+	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(1800799024)(36860700016)(82310400026)(376014)(56012099003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	dy7gTrV51VqrwLNjpXMiW2ryj5mHDA4IUKna/XoIuZQkg9kw79RMBOlMeftnRm0VcS9uutkwnsHMt9AdK+VC6sa4OnDpWSKebnCSFgeZT+NARtkbj6p22WA8XhafUqeVVnKFu9qxwSYfxEIcB47qTHSQtF2L3UKWNw8MNVRS1iO9wytA9cbMCK9dvtlaFA+CNPPNFaEDv7IagI4s+6uz13L1ODAjd6N68K2OPZr0/TlQqhBGfphxdPpml1+tw0oflIjOKE/WKHak+0fqOv78nrjTHZaF2TnP5cIbHutzdOfOKDT7yjFrW+YUbgYrzllAJqHTKfl5l4NwBHJ/Z3ePl7/y3N2xoBP+iglbiPpFsQDd7jnXI2noeXl87fbP7g8NY+irBhA3qj9YstwAGG23fL8GeqVBK7KWcQM2/OwbuMwF1F0WU8BaoJVzhGEAmbH/
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 04:47:46.2551
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 13f5cb97-64a8-434d-39be-08deaf18723c
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CO1PEPF000075EE.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB5105
 
-On Sat, 9 May 2026 11:28:03 +0800
-fengchengwen <fengchengwen@huawei.com> wrote:
-> On 5/9/2026 6:40 AM, Alex Williamson wrote:
-> > On Fri, 8 May 2026 14:40:50 +0800
-> > Chengwen Feng <fengchengwen@huawei.com> wrote:
-> >> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> >> index 0c771064c0b8..40bf5aa9fd0b 100644
-> >> --- a/drivers/vfio/pci/vfio_pci.c
-> >> +++ b/drivers/vfio/pci/vfio_pci.c
-> >> @@ -60,6 +60,12 @@ static bool disable_denylist;
-> >>  module_param(disable_denylist, bool, 0444);
-> >>  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
-> >>  
-> >> +#ifdef CONFIG_PCIE_TPH
-> >> +static bool enable_unsafe_tph_ds_mode;
-> >> +module_param(enable_unsafe_tph_ds_mode, bool, 0444);
-> >> +MODULE_PARM_DESC(enable_unsafe_tph_ds_mode, "Enable UNSAFE TPH device-specific (DS) mode. This mode provides weak isolation, cannot be safely used for virtual machines. If you do not know what this is for, step away. (default: false)");
-> >> +#endif
-> >> +  
-> > 
-> > Why is the "unsafe" aspect of this keyed on mode rather than storage
-> > location?
-> > 
-> > Currently the user cannot enable TPH, the capability is read-only, but
-> > the user does have direct access to the MSI-X table.  We rely on an
-> > agreement that the user needs to use SET_IRQS to allocate host vectors
-> > and we use interrupt remapping as protection against abuse, but there's
-> > no mediation of STs written directly to the MSI-X table.  If the device
-> > supports IV mode with ST in the MSI-X table, nothing prevents the user
-> > from writing those ST entries directly to the MSI-X table.  Therefore
-> > doesn't it have the same security concern as DS mode?  
-> 
-> 
-> Agree, from this perspective, even if it is in MSI-X table, it is still unsafe.
-> So TPH is unsafe as a whole, not just DS mode.
-> 
-> > 
-> > Further, config space lives in the device and various devices are known
-> > to have alternate means for accessing their config space.
-> > Virtualization of config space is more to present the device in the VM
-> > address space and bridge features between guest and host.  It's not
-> > great as a security barrier.
-> > 
-> > Maybe it's really neither the mode nor storage location, and we need to
-> > decide if TPH as a whole introduces any new security considerations.  
-> 
-> I will adjust the module parameter to control TPH globally instead of
-> only DS mode.
+Hi Hans,
 
-I'm not convinced that's the right solution either.  It's a usage
-barrier if the TPH capability isn't exposed R/W, but does it guarantee
-the device won't make use of such TLPs anyway?  If the device has
-config space backdoors or can otherwise be manipulated to send these
-hints, a vfio-pci module option is just security theater.  It's also a
-burden for users and for each variant driver for devices supporting TPH.
-
-We do however need to consider how changing the behavior of the
-capability affects existing users, like QEMU.  We may need to consider
-two device features, one that only supports SET with no payload to
-enable virtualized access to the TPH capability and another that
-provides the ST handling interface.
-
-> > It seems arguable whether we can actually prevent a device from
-> > including arbitrary STs on TLPs in any case and maybe we're really
-> > only exposing a curated programming interface.
-> > 
-> > ...  
-> >> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> >> index 5de618a3a5ee..81da2bd0c21b 100644
-> >> --- a/include/uapi/linux/vfio.h
-> >> +++ b/include/uapi/linux/vfio.h  
+On 09/05/26 18:37, Hans Zhang wrote:
+> The Cadence PCIe controller may place the PCI Express Capability
+> structure at different offsets depending on SoC integration. The
+> hardcoded CDNS_PCIE_RP_CAP_OFFSET (0xC0) is not universally valid.
 > 
-> ...
+> Replace all uses of the fixed offset with the dynamically cached
+> pcie->pcie_cap obtained via cdns_pcie_get_pcie_cap(). This affects:
+> - Root Port training completion check
+> - Link retraining
+> - Root Port initialization (ASPM quirks)
 > 
-> >> +#define VFIO_DEVICE_PCI_TPH	_IO(VFIO_TYPE, VFIO_BASE + 22)
-> >> +  
-> > 
-> > This seems like the wrong shape to me and introduces yet another
-> > ioctl multiplexer.  We already have that via the device feature
-> > interface. I'd propose this only needs one new DEVICE_FEATURE
-> > ioctl, TPH_ST.  The uAPI would look like:
-> > 
-> > struct vfio_device_feature_tph_st {
-> > 	__u32 flags;
-> > #define VFIO_TPH_ST_MEM_TYPE_PM	(1 << 0)
-> > 	__u16 index;
-> > 	__u16 count;
-> > 	__u32 data[]; /* host CPU# on SET, ST value on GET */
-> > }
-> > 
-> > The user can SET multiple STs at once that have the same mem_type
-> > (assuming that's a reasonable limitation).  On SET, each {cpu#,  
+> Also remove the now-unused CDNS_PCIE_RP_CAP_OFFSET definition from
+> pcie-cadence-lga-regs.h.
 > 
-> Agree, using the same mem_type for a batch is a good idea.
+> This change ensures correct operation across different Cadence IP
+> generations (LGA and HPA) and SoC designs.
 > 
-> Because it could set multiple index, so how about:
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> ---
+>   drivers/pci/controller/cadence/pcie-cadence-ep.c          | 5 +++--
+>   drivers/pci/controller/cadence/pcie-cadence-host-common.c | 4 ++--
+>   drivers/pci/controller/cadence/pcie-cadence-host-hpa.c    | 2 ++
+>   drivers/pci/controller/cadence/pcie-cadence-host.c        | 6 ++++--
+>   drivers/pci/controller/cadence/pcie-cadence-lga-regs.h    | 1 -
+>   5 files changed, 11 insertions(+), 7 deletions(-)
 > 
-> struct vfio_pci_tph_entry {
-> 	__u32 cpu;
-> 	__u16 val;	/* ST index on SET, ST value on GET */
-> 	__u16 reserved;
-> }
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> index 38a0157b60dc..eeee954f7dc7 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> @@ -571,9 +571,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+>   	int max_epfs = sizeof(epc->function_num_map) * 8;
+>   	int ret, epf, last_fn;
+>   	u32 reg, value;
+> -	u8 cap;
+> +	u8 cap = pcie->pcie_cap;
 
-In the structure I proposed the user can set/get contiguous index
-ranges according to index and count, where the data field can then just
-be a u32 array.  Why does the user need to be able to set/get
-arbitrary, non-contiguous indexes?
+Can we eliminate the use of 'cap' variable and use 'pcie->pcie_cap' 
+directly, just like in cdns_pcie_host_init_root_port()?
 
-In a VM use case we'd likely be trapping individual writes, therefore
-we'd be intercepting one index at a time.
- 
-> struct vfio_device_feature_tph_st {
-> 	__u32 op;
-> #define VFIO_TPH_OP_GET_ST	0
-> #define VFIO_TPH_OP_SET_ST	1
-
-The vfio device feature interface already handles set/get, we don't
-need this.
-
-> 	__u32 flags;
-> #define VFIO_TPH_ST_MEM_TYPE_PM	(1 << 0)
-> 	__u16 count;
-> 	__u16 reserved1;
-> 	struct vfio_pci_tph_entry ents[];
-> }
-> 
-> > mem_type} is translated to a host value and stored internally.  A
-> > GET  
-> 
-> Should we store internally? How about writing directly to the device?
-
-Perhaps we should, but I think we need a flag to indicate whether we're
-virtualizing a write to hardware (capability or MSI-X table) or SET'ing
-an index that userspace will later retrieve for DS mode via GET.
-Otherwise we don't know until the mode bits are written which location,
-if any, the capability is actually using.  For example the device can
-support either MSI-X or capability locations, but enable DS mode.  For
-consistency though, it might make sense to write to an internal table
-regardless.  Thanks,
-
-Alex
+>   
+> -	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
+>   	/*
+>   	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
+>   	 * and can't be disabled anyway.
+> @@ -690,6 +689,8 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+>   	}
+>   	pcie->mem_res = res;
+>   
+> +	cdns_pcie_get_pcie_cap(pcie);
+> +
+>   	ep->max_regions = CDNS_PCIE_MAX_OB;
+>   	of_property_read_u32(np, "cdns,max-outbound-regions", &ep->max_regions);
+>   
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> index 2b0211870f02..26b248231558 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+> @@ -26,7 +26,7 @@ EXPORT_SYMBOL_GPL(bar_max_size);
+>   
+>   int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
+>   {
+> -	u32 pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
+> +	u32 pcie_cap_off = pcie->pcie_cap;>   	unsigned long end_jiffies;
+>   	u16 lnk_stat;
+>   
+> @@ -68,7 +68,7 @@ EXPORT_SYMBOL_GPL(cdns_pcie_host_wait_for_link);
+>   int cdns_pcie_retrain(struct cdns_pcie *pcie,
+>   		      cdns_pcie_linkup_func pcie_link_up)
+>   {
+> -	u32 lnk_cap_sls, pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
+> +	u32 lnk_cap_sls, pcie_cap_off = pcie->pcie_cap;
+>   	u16 lnk_stat, lnk_ctl;
+>   	int ret = 0;
+>   
