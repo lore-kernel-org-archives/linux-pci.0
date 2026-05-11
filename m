@@ -1,194 +1,393 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021116.outbound.protection.outlook.com [52.101.125.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8BB139BFF9
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 07:42:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778485357; cv=none; b=tVgjAsE7PmuP5Ho2mxppQjBy/tES1W1QynYJBo+M9qedph9PatpXHo9DdX6qxwJsDsC45JrG6RgqTIHt92eayhtT9jPUGq0XFSXOXjF6OGEE46fV94noTtNckIcQvIlBVXlKSC+2w8+i1cCfmfLnmeRVaVdJUYbr1lXQOtSZxi0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778485357; c=relaxed/simple;
-	bh=IxaTFWPs5AeZ9qDZDj/eON2uwYfQsG/fC5lChCcIAM4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=dCN4zH6w2l3SAt7s9FJP0FP0+gTOlgYfeLdgp2Tbpq3R3JGUcoIyk1rq/yedJdT2hCRfXfL/g3aQT6qKpsFQJOOvWDJgv7PvMMYTocUEEiE5z0LXQANkvAAXnKWi2Y0/bDV5H4o42tNtfkFU011uDkvqHvJPWuaCJwKKySUuinc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=alTkTJdE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=DjkuZaHw; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FC8E3AB294;
+	Mon, 11 May 2026 07:54:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.116
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778486091; cv=fail; b=n5exSZuEQipjMdP98VqSkFp2UHTHcaq1bynMHMe+PNXvX7YcUK4TW/1lM53MJgtKFbuH2YlSe9jFN0i16wuYyixwhc+uGZcU3Jkh3wFp4rdX+pX0O2fd2Qt+GjhcNi7TlAOTpGfgoCzyMmRThOR0Dbm3hWyygme6LXgLpIuh/ok=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778486091; c=relaxed/simple;
+	bh=jGqHnMhLU18YGefIwvZa+bkjRSf6P8ejD0QGy0P+CdM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=BDbW1SRZUSUlbkV8OtfXjPfbwCdrkglBTy7ygx2JBI7kUOmcwaerLEe+/3MkLVlv4I7ZK65khWBbdv+pK2Cgc8K2vUzjBgDx1fdHvwwCuzkovykF3dDhCdHuRFaIRiB0sVqy1pHBxzr6gw+6hH3FjVTSl1F4FGcisaCCj3XOwaM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=Q+HmyZiS; arc=fail smtp.client-ip=52.101.125.116
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="alTkTJdE";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="DjkuZaHw"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64B77ZTo519296
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 07:42:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=jWLYsunHeNy3UIObpc2vi2
-	o+8uNEW23EaFlmiFzQDvY=; b=alTkTJdEtLqWvggJGBWOL9xaM1ZyAvMKMX8zJ6
-	/WwWUeAIJlSXZkAe4t5oxhDzOc/YjEi3GWRzCop1CD9v+Dl54OE8XxEx7bSaK28j
-	1X0OkhRdpTALYRsPI2nzJJBPrYZHiEWfVOFdQmNwcIJoMYY/K5cIKcHyPaXIOPpx
-	4smM0C4ZU9s5XpKG22qg+yKeJd0v8C53R04gsBjCYFfinGXw1V5tIB4vQ6cGm0K7
-	A5Kg57NMTj9wqky0U89rM+hz3klpnXxs9s+2K0ZNpq32gaBUUpfhCIj9hf6XMJgs
-	1j55V9jgw6lJJ7iiJ3uVMXwdgGuteTVPCYKp2jYbS6Uc+JmQ==
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e1wpecy0x-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 07:42:31 +0000 (GMT)
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3663d5e9bf4so3542892a91.1
-        for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 00:42:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1778485351; x=1779090151; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=jWLYsunHeNy3UIObpc2vi2o+8uNEW23EaFlmiFzQDvY=;
-        b=DjkuZaHwTkwUUSSkyA4KUiAL2Zb5+uyz1vLcgjbeuv3t41JpbxRvLxBjIwmw1zwdxl
-         NtQtO0uXc9dsMOr52a1d5n3mV6YLcbBxNRzfOCDzcuSycYFBGRpsT1wTFDdYo3dZD963
-         Zfs8AyBI16x4gScgh2SpWBww7RT7KZL0DNLR5WuVGS4jmIyWQIeS3icnXIdQd29fTLP9
-         omn75FxrswIIbD7FHhvYDxq0EG5Y7cgy4oHbN/QX1/n9wub8io/85JuO6cWr/zl8Vod4
-         0n1qJ0Ie5FyXHU8OtEFpFa59k2aieFPOG0eDSRfFQZLcG9t0lq4GqYUBjbwtjUORkOdS
-         NrZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778485351; x=1779090151;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jWLYsunHeNy3UIObpc2vi2o+8uNEW23EaFlmiFzQDvY=;
-        b=s64OY5S7LqH/2tBXQnXxgpKq7hThaYhQSxJYaB5lNR4xGmDHeopeKWaXRQa05IJfkQ
-         NMQZg73juZff0fTzPXCifkWQIVeuKVOveTDC9pf9l204S0ETaoz/mnlAcsa7rCEDsLm6
-         +p5XsK2rfX81U0YiwbWbofYbqIbA7o0ORXVCm4m1QM+hFIdR/3x5j4+g5P1id4vO752e
-         YiWfT1RsDW8r8lw/pbbvOsDP+aDSqdRh+wntBS9kWQhN6dHPHB4vR/WnolEVIp7ym0A/
-         67NrKbNM6x5sQvHNUhFGLCWzlVDfOYsCnr9id7Eg/KhE1FtctkA736otZAp5o5dNwdpa
-         onQQ==
-X-Gm-Message-State: AOJu0Yyy3x+F3vzA97Pk9neAut0gAlLHIYTMUACvc1gEewK0XnnjcpxI
-	sRqgJPH/Krb5uqn1nlMDhEBGwEMtDnLcmDpK77BlAFDJflUOBKr17JRtXLDck1flg7xEtuMp3nJ
-	34Xp/Cc6fKHyK+0AuBBYDhakFaS9KYH0EXWRSKMHNcR7j7ikjHmqjDdUyl78Hlsj+aVJZC18=
-X-Gm-Gg: Acq92OEptqzsq+6Y2RpYl7l50gf/BrM4roVP+Ed6ZDCNauLrY4QXetg+MvmhJlIrg50
-	qAejWy+m7hvUzZAr9kAUxRNpN7WyC2Sm0uSlDmuRL12iTtEmXYCJi1zAy3UwiWcOQ9tYsvIq8Mw
-	MOQUmHq/PtJNVCK8DqZc1nt+w5cb76XtxNI/ib826kw4dwf5ZYZXhUpFkN4zer685AzQp2OmmyC
-	yPYN82Allk9NA2OknYHeE06ipbJU2DCy7XZWo3E7KDR/6ONvSZmjw36bPU6Zg5QW98qnlDDqklD
-	1hw+P/kGofjdDQphPPcTLoqumC8I9klCPvk9iqwuQ/E1NsNYorr00Nfv8+WKnzw6jtIdycE4yf5
-	IIULPkHMaYxmI5V2IGc6I15G1pd1RCGYQeVNj4N1jfUj9KGN4+dRZqWvA
-X-Received: by 2002:a17:90a:d607:b0:366:132:fda6 with SMTP id 98e67ed59e1d1-367d481a4e4mr8216254a91.11.1778485350571;
-        Mon, 11 May 2026 00:42:30 -0700 (PDT)
-X-Received: by 2002:a17:90a:d607:b0:366:132:fda6 with SMTP id 98e67ed59e1d1-367d481a4e4mr8216232a91.11.1778485350061;
-        Mon, 11 May 2026 00:42:30 -0700 (PDT)
-Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-367d64de478sm6724798a91.13.2026.05.11.00.42.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 May 2026 00:42:29 -0700 (PDT)
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Date: Mon, 11 May 2026 13:12:25 +0530
-Subject: [PATCH] PCI/ASPM: Mask ASPM states based on Devicetree properties
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="Q+HmyZiS"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=hcBUOsLdKGpS0/i0gl68s2eH9Dgx9pb24MxILQdsamO3ciR8xXFMBx6av2X3K5w77dNEEStYqPtzSqER1heqd/yHF6yb5FfQ1FEo4rb+0I7ubLSpPaq9bQvtdBtssYT+RRiyLc/MwY7DmB1cs2iRxphLnGEAOOZbPYMF/NrKH3RqaSoHgrC6JfQOSJROqmc1vuC0Me+VSimmRhlDgPtzPzagBZYIN0kA3K75Qmj560H8O/x+8WVNZjh1zC9Sv++r7ozjSTkES2YWG90v69c7cJ5gOAw7Zcw2Id9FzZeSkGE6kzUqbbqrWTF796kVWTrQ3cibo6fXOPKfPy4+CSiiMA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=aFDrYC6w+q6mJ0w1RLuJ6yPnsCBTypsYmOb5htjNS9U=;
+ b=dVZwSjQGh2yGVuSeyRY4kDAQffzVVCPL7KD9CX9yCDwIJLvEzUF1MXkAIh4v67Q20H0tLIEhYoECKMVGj9QqSRw2GQCcf4SZ72I2qbZDVGkGy58K5UiOaiEmNxMUHczU5DIgEqrnq9Yd5GpCR77Mor858dlE0UNaPWbHlrUslpnIokOB0uzx8gkyndT0hhfMxEWX2aNbqnbmW+g/KINal4dunlleA3oMa2wOv931eNO4HLCBuAMb0ZE2gFhRia+myEU6yPmtLSyU21Nk2F/ZY39mo7O2vEkdCmpCssdb3I0J051h0Xl9eLYg4p5eTvUoiplvaBmXjDCDeOzstyIIgA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=aFDrYC6w+q6mJ0w1RLuJ6yPnsCBTypsYmOb5htjNS9U=;
+ b=Q+HmyZiS1yM99ioUO5PRoMxOgDME+SLURcdR08RJgI+KG87vusiV96tWCroOlHwVMmfUE1rGkFCu7Rd365RRZh4WxBuPCHRTjz4wP1CWXVwfOxdj7Sf/v0DJg5RcUsLcOBNkcdvO4ZJnpvIFB9NE/Pyw2t1bazd7ZXETTqmMldI=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYCP286MB3724.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:3be::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.22; Mon, 11 May
+ 2026 07:54:39 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9846.025; Mon, 11 May 2026
+ 07:54:38 +0000
+Date: Mon, 11 May 2026 16:54:37 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
+	Allen Hubbe <allenbh@gmail.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>, 
+	Jerome Brunet <jbrunet@baylibre.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	ntb@lists.linux.dev
+Subject: Re: [PATCH v3 02/10] PCI: endpoint: pci-epf-vntb: Defer
+ pci_epc_raise_irq() out of atomic context
+Message-ID: <tinplj6cswgjn6x4hc3csqc6zt367kxdqgwjynudkfp7lpf2xg@mh4bbnkh65d6>
+References: <20260323031544.2598111-1-den@valinux.co.jp>
+ <20260323031544.2598111-3-den@valinux.co.jp>
+ <khzmasyosc7dsa7brifoblaa7x7m5tw53v3ws4kmitnqewxnu3@7kssuxojrsop>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <khzmasyosc7dsa7brifoblaa7x7m5tw53v3ws4kmitnqewxnu3@7kssuxojrsop>
+X-ClientProxiedBy: TYCP286CA0334.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:38e::12) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260511-aspm-v1-1-b4a9fe955cf9@oss.qualcomm.com>
-X-B4-Tracking: v=1; b=H4sIAGCIAWoC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzMDEyNL3cTiglzdlERT00RTEyNzy1QTJaDSgqLUtMwKsDHRsRB+cWlSVmp
- yCUivUm0tANjtNvBoAAAA
-X-Change-ID: 20260429-aspm-da55a54279e4
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, mani@kernel.org,
-        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1778485347; l=2653;
- i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
- bh=IxaTFWPs5AeZ9qDZDj/eON2uwYfQsG/fC5lChCcIAM4=;
- b=Ufr6D7e9wg8xF1mv8wFCFjhQm8YjzbCGgxo69Gn5uivnIZoTOx8SGFYDd9xc9K1UuvdPwJi2T
- oTVxhvMv7wEAZw+2IEN2C2A/DXJtcqPla7NMmA5yZLkgK11Z58Bba7z
-X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
- pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
-X-Proofpoint-GUID: 3oaoAIh9a2aMRq9UuIFp2WhSHSQbYUpr
-X-Proofpoint-ORIG-GUID: 3oaoAIh9a2aMRq9UuIFp2WhSHSQbYUpr
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTExMDA4MyBTYWx0ZWRfX6zjnYrGaoFcO
- Zj3K6TOzBwYZYUtMeSFu1bHH1fc2n7e64ZcjikRtR5ptVSsfya/irUWIQ7COhbuF/LV4uSW90Sd
- qYIkSvBCLmkJPWfgF76Q4ylFqel2RzgXrKq5y/7PsrkFXSzs1cCI43ZdFnzDmNa5XwwQbrPfWS6
- SdGvQpQcJBGjziUspS+GVJa15VYlvvuw113NUdhfIKH4ffcqOvQ6PM63N4FJ5W9mwi4qFJCfI8z
- UAF2+UpR7huz102ckuKfUyeoXXKEDOUkDfnztzfE1PJCElwHlegurTRXo97JXAC6i0KdNpEASl3
- i51shrG5nSZ5yIjlTwFRIKphwOXaZIhoF1bFnHnlLMG2z2WceypShmBP2G2WcG5l7vw319fIAJh
- ueLg4mwvdqe7yHWAAuH0mnFAMBBlG5mlffVkKZc+9l2XSidmlBa/D/JQzrR4I4xftuPNAnCieov
- ksv2pRpO6RbHoLenz4g==
-X-Authority-Analysis: v=2.4 cv=EeD4hvmC c=1 sm=1 tr=0 ts=6a018867 cx=c_pps
- a=0uOsjrqzRL749jD1oC5vDA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=NEAV23lmAAAA:8 a=EUspDBNiAAAA:8 a=wuQQqu7ThqwHlQwkt1oA:9 a=QEXdDO2ut3YA:10
- a=mQ_c8vxmzFEMiUWkPHU9:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-11_02,2026-05-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 priorityscore=1501 bulkscore=0 adultscore=0
- lowpriorityscore=0 malwarescore=0 clxscore=1015 impostorscore=0 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605110083
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB3724:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4e5eb43a-40b5-4424-bb38-08deaf328d29
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|10070799003|18002099003|22082099003|56012099003;
+X-Microsoft-Antispam-Message-Info:
+	oMqiQROMwIClm14A2LyjNX6o7Y1qkjyU0Mv3yxsmsHviES9eyFtnybBGhAWlhNFFla08M6I7WRWclGLDWrAF72o5gCELzWwwD847Ho9kHwh3FMSJf5uDqFMdLKPf9JTtX3Nq6CYusiX9gM/3Xv9uEXttyNQvQbyAlEUMaAufTylsuGF/VFpMjMHZermKgNS+k5MxbBdE+4uHihsk+KJCTkRn7x7LyoQuC+tm8BnuIVGldS/9ulz8hD9KKW0E1pEqK5KxOe85YjyMBNrC4tB8j+A/K+y9dqWN9C/r6a30BtmETEJf+mGLUTRtuUZnijDQ2T8AtQYIXdLHAXB47BEjHUxHhndwMXKmTKY5kbAzNNN82WwwLLQeundvOSoE/9jxug21740lO8qIMQsWJIKbC5XOfsyUHGPtURETYYpPJL02j8jBM7O/b0volzvQiDu/uedPnvpHTPuqJ5gLemkb90g9z6Uc6/udKbHRMmNRmAjpPCVmzJb0NqOXxQFO4Eqnh9sMIOmncnBeouzRMJr/wgtsEG5UlkC1CdruTMbHlAEDIH4h8RW6QwidPWtuHXlFZdpoVqZjrQLdwEL2v1Nb94oDxCsrcgaDDRpJ0FD+R67NCGVUA61ch0aDVaNQrkiT6Iq4YaqzuAonK3hGpYVLBw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(10070799003)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?WnlWWXJQYW93a3crbDRNYjNOYXhJaTRObE9zWFBHTWJrWjJYY0F4em9jNXRW?=
+ =?utf-8?B?UDRpVGJKMXNXNWxPa0NlUjlyb2dERGZybjlsYk5HZnc4bUNDdWhvZVI3Vktj?=
+ =?utf-8?B?VFlSOEI3NEdDODUwM1c5Z0NteWk4MmR2U29FczJMazNzNm1hOHAvMW85VGc5?=
+ =?utf-8?B?TU11Z01kdklTTE4yVmViZ2VqRi9mWGU3bldqSGNyVVNvMHdrdUR4cVhrSzFo?=
+ =?utf-8?B?NkpXNjZjRGFGY1RYVGl1dlFPZzg4YUsybjFiRGNIVWpLSlhYZXRFTVFUWmNJ?=
+ =?utf-8?B?dUFJR1pnN0p3R05tR25GNDZ3N1NVODlLZDgxRFMrdjA3dHJyblJvMVMycHZo?=
+ =?utf-8?B?TUFsc094WTJGTWJYWHhFZ1lYbEdCL3gwRjl2RTczUEsvUGU0alhwV1FSSkJB?=
+ =?utf-8?B?MnIwclRRMlJaSVpaZHZmOGhVTERJL1JPNndXbWtlODJKSlJNR2szZGRyNVdO?=
+ =?utf-8?B?c0dNQ0k2REs5MExnTmc4WXdTL0pzY0xrdlZaVzJuTHIwVC9ZYXBudGJtMEkw?=
+ =?utf-8?B?QTdxai82Q25jaXpKNDkxSFpscmY2a1d5b0FkWlBZQ2ZBVEJRQThmUS9uN0xj?=
+ =?utf-8?B?Z2ZRMEtrVGR5NVFkR3k0NXhxZkwyN05mZEFKcXJBWGhDKzZVeE5OeFJ0bzZh?=
+ =?utf-8?B?OXBWRXVsMjYySlNGZVZUelNjOVFxb3dtWStvVmpZVGpWM2EwZjBNRGlIOWND?=
+ =?utf-8?B?aWhFNmwvZWZYdWVtbHVMRFlqZSsvVmZBdFI5ZmgvZEx6YmFiajZKOTVvcVRq?=
+ =?utf-8?B?NHJNUUU1K0Noc2ZEUTR6UmRFd0VncFBlQkV1YWxmUTBtMC9mTWp1bG9icEhp?=
+ =?utf-8?B?bk9hVzFGSjBDNFlCdExHLzFBY2E3bWZ6QTdmNm1wTFpFTXhWcU02VkpWVnds?=
+ =?utf-8?B?d3hhTnZjM0RzclVaRXVqaFhmOEtFSHNHSzB5NjZXK0hXbWNITVJ3M2krbHRN?=
+ =?utf-8?B?b3Yya2xNZUxxcmtqbWFYbkZjbmQxOEwwMGEzNXBpc2tDaWRrTXJrYytObU9M?=
+ =?utf-8?B?WHBqL0xZYTM5bG5SQnVheDRnazBNdkpuNmhMa3h6S2kxbHdnQWtvQ1lRRDRt?=
+ =?utf-8?B?Z2lDUVJzRVhJVjZzc3BRSnQ5QWdoM2J4WnZFR2tWVlhQKzc1V0lzTlBpbjlp?=
+ =?utf-8?B?eE5mc214OWdmbDczYXUxbG1EdE9HV0ZlTWYrMnNYNDRVS0pyZUQxWlR2THVt?=
+ =?utf-8?B?VjlTZ1RtK28vOWpETDgraGtIUUdzdHBpdXRLZWtTYTdGaUFOKzNyL0pYbWxE?=
+ =?utf-8?B?Tms2YlJKbkRtNms2T2szTW1tL0twMkpzTEt3TjNPZGZVK0xpRnZZbXFSLzJp?=
+ =?utf-8?B?OEZzWlUrTmpCMlp4SUUvTHJEMWFJR3doRWRrYkRBOUdPQ1U5NWdHRWZLWjJh?=
+ =?utf-8?B?WXNNNWJUQlZvaU0rbEZOUTYxSHg1cmc1SXdNbXJvVGtvRXhkNEpqYUU0SDhj?=
+ =?utf-8?B?dDhCN3ZFSGs1SnI3WHNkUW1vRDVTM3hwd0dOeVBOTm0wSHpSK1VlQlZRRXNm?=
+ =?utf-8?B?OSt0d3ZMdzZTL1RCYTdaR3lRM3pIVHFIYkttSXVWYTA5NFdLQ3ZOWHVQL2hz?=
+ =?utf-8?B?ZWVrTXhXWVhzWG1GNlRDNmJEZWRPdmVEMkxjUHV3dWN6dzBVYUpwWjlzb0dT?=
+ =?utf-8?B?d1RQTzJaYkliR0kwT3pGQUhvR25Jd01qNEZZbVIvMXVBOFJDQXFOSVpkRWkx?=
+ =?utf-8?B?ZHZNV28yL3g0ZXdUeU13VXhaSFJKMG9Ccnd6QnJhRktpZ1cvS3JFd3NHbXRV?=
+ =?utf-8?B?UzZOZHlWQlo0cnRkVDFuU3VsM2s2K1A3SWh0cFFGOXBTUXFzWXJHRmFSSS9W?=
+ =?utf-8?B?enhhK05xbzNMTUozMWlhRkR2WWVnajFDT2k3YkUvUm8zOVhBOVV2WEI1c3dj?=
+ =?utf-8?B?aUhJZHlsVWFhUVU3SEozd2pza3FyTTduM05VcWtSb3JEZnU3cTlCZVdiS1Nn?=
+ =?utf-8?B?M1hsQmRvcDByemRCZEZqTzdFUjhYR09VVlgrMVlzUXBLbGVwMFBqS1RaNGsy?=
+ =?utf-8?B?NWRxYll1bjhxNHlsVFNheE5CNHFKU1RTNFNZODBuMUJiekJTZjVPRWZMd1NE?=
+ =?utf-8?B?Mzk4cVJWckVFSnBWZlY3MDNoaWFnL0pwMWdHbnZIL2gwZGxpdTZHcFF1Rm1v?=
+ =?utf-8?B?YU1QdElIc1EyOTBkWXpiekJudFdNemlKQmo5L0hVV2FuaWlMU0V6cy82SUIy?=
+ =?utf-8?B?SEVlN2x3UGpoSXVOMVpmMm4vZ1FIeE5NVmlNa0FndU1DWDRMdUNxdzZnQUZD?=
+ =?utf-8?B?TUNTT3ZTQmR2VHdtYzZSNGpUOThiaXkzbEo2a3h6VVVsZDJnWXlKRVQ2UlFP?=
+ =?utf-8?B?b1BXNHB1OXZoN0tab2phM1ZKT0RkREtYbWh6VEtQNHBkQWhNTThUZmsvNFdS?=
+ =?utf-8?Q?xxh19QuRJvXIdaXj68l9WW4fp12RYcafFzoBK?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4e5eb43a-40b5-4424-bb38-08deaf328d29
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 07:54:38.5572
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1pEHS5HqZadEXmlpCoKsDV4AARwgYq3o/0UgLFC2JYsyMPqOb+OzOannr70tk6Hhx9ziuEkbhp9i+pwot7JaFg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB3724
 
-Some platforms require selectively disabling specific ASPM states on a
-given PCIe link to avoid link instability or functional failures caused
-by board-level connectivity constraints such as PCB routing, connectors,
-slots, or external cabling.
+On Fri, May 01, 2026 at 09:56:36PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Mar 23, 2026 at 12:15:36PM +0900, Koichiro Den wrote:
+> > The NTB .peer_db_set() callback may be invoked from atomic context.
+> > pci-epf-vntb currently calls pci_epc_raise_irq() directly, but
+> > pci_epc_raise_irq() may sleep (it takes epc->lock).
+> > 
+> > Avoid sleeping in atomic context by coalescing doorbell bits into an
+> > atomic64 pending mask and raising MSIs from a work item. Limit the
+> > amount of work per run to avoid monopolizing the workqueue under a
+> > doorbell storm.
+> > 
+> > Fixes: e35f56bb0330 ("PCI: endpoint: Support NTB transfer between RC and EP")
+> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
+> > ---
+> > Changes since v2:
+> >   - Resolved a trivial context-only conflict after
+> >     d799984233a5 ("PCI: endpoint: pci-epf-vntb: Stop cmd_handler work in epf_ntb_epc_cleanup")
+> >     landed in pci/endpoint.
+> > 
+> >  drivers/pci/endpoint/functions/pci-epf-vntb.c | 106 +++++++++++++-----
+> >  1 file changed, 78 insertions(+), 28 deletions(-)
+> > 
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > index a75f8a30f8dc..bc3b3df53ddb 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> > @@ -69,6 +69,9 @@ static struct workqueue_struct *kpcintb_workqueue;
+> >  #define MAX_DB_COUNT			32
+> >  #define MAX_MW				4
+> >  
+> > +/* Limit per-work execution to avoid monopolizing kworker on doorbell storms. */
+> > +#define VNTB_PEER_DB_WORK_BUDGET	5
+> > +
+> >  enum epf_ntb_bar {
+> >  	BAR_CONFIG,
+> >  	BAR_DB,
+> > @@ -129,6 +132,8 @@ struct epf_ntb {
+> >  	u32 spad_count;
+> >  	u64 mws_size[MAX_MW];
+> >  	atomic64_t db;
+> > +	atomic64_t peer_db_pending;
+> > +	struct work_struct peer_db_work;
+> >  	u32 vbus_number;
+> >  	u16 vntb_pid;
+> >  	u16 vntb_vid;
+> > @@ -920,6 +925,8 @@ static int epf_ntb_epc_init(struct epf_ntb *ntb)
+> >  	INIT_DELAYED_WORK(&ntb->cmd_handler, epf_ntb_cmd_handler);
+> >  	queue_work(kpcintb_workqueue, &ntb->cmd_handler.work);
+> >  
+> > +	enable_work(&ntb->peer_db_work);
+> > +
+> >  	return 0;
+> >  
+> >  err_write_header:
+> > @@ -943,6 +950,7 @@ static int epf_ntb_epc_init(struct epf_ntb *ntb)
+> >  static void epf_ntb_epc_cleanup(struct epf_ntb *ntb)
+> >  {
+> >  	disable_delayed_work_sync(&ntb->cmd_handler);
+> > +	disable_work_sync(&ntb->peer_db_work);
+> 
+> Sashiko has flagged a couple of valid issues on this patch. Could you please
+> take a look?
+> https://sashiko.dev/#/patchset/20260323031544.2598111-1-den%40valinux.co.jp?part=2
 
-Devicetree initially supported disabling ASPM L0s via the 'aspm-no-l0s'
-property, and has since been extended to also allow disabling ASPM L1 and
-L1 PM Substates using the 'aspm-no-l1' [1] and 'aspm-no-l1ss' [2]
-properties. However, the ASPM driver does not currently account for these
-properties when determining the default ASPM link state.
+Hi Mani,
 
-Update ASPM link initialization to check for these Devicetree properties
-on either end of the link and mask the corresponding ASPM states from
-link->aspm_support before applying the default ASPM policy.
+Thanks for the pointer, and sorry for the late response.
 
-Link [1]: https://github.com/devicetree-org/dt-schema/pull/188
-Link [2]: https://github.com/devicetree-org/dt-schema/pull/190
+I revisited Sashiko's comments. My eralier reply [1] grouped the patch 2 reports
+too broadly under follow-up lifecycle work. After going through them again, I now
+think two of the issues are local enough to handle in this series, while the
+driver-unbind/.remove part remains part of the broader vNTB lifecycle work.
 
-Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
----
- drivers/pci/pcie/aspm.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+For the individual Sashiko reports against patch 2:
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 925373b98dff..3111ef7fd226 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -799,6 +799,13 @@ static void aspm_l1ss_init(struct pcie_link_state *link)
- 
- #define FLAG(x, y, d)	(((x) & (PCIE_LINK_STATE_##y)) ? d : "")
- 
-+static bool pcie_link_has_aspm_override(const struct pcie_link_state *link,
-+					const char *aspm)
-+{
-+	return (device_property_present(&link->pdev->dev, aspm) ||
-+		device_property_present(&link->downstream->dev, aspm));
-+}
-+
- static void pcie_aspm_override_default_link_state(struct pcie_link_state *link)
- {
- 	struct pci_dev *pdev = link->downstream;
-@@ -806,6 +813,15 @@ static void pcie_aspm_override_default_link_state(struct pcie_link_state *link)
- 
- 	/* For devicetree platforms, enable L0s and L1 by default */
- 	if (of_have_populated_dt()) {
-+		if (pcie_link_has_aspm_override(link, "aspm-no-l0s"))
-+			link->aspm_support &= ~PCIE_LINK_STATE_L0S;
-+
-+		if (pcie_link_has_aspm_override(link, "aspm-no-l1"))
-+			link->aspm_support &= ~PCIE_LINK_STATE_L1;
-+
-+		if (pcie_link_has_aspm_override(link, "aspm-no-l1ss"))
-+			link->aspm_support &= ~PCIE_LINK_STATE_L1SS;
-+
- 		if (link->aspm_support & PCIE_LINK_STATE_L0S)
- 			link->aspm_default |= PCIE_LINK_STATE_L0S;
- 		if (link->aspm_support & PCIE_LINK_STATE_L1)
+1). peer_db_pending
 
----
-base-commit: 254f49634ee16a731174d2ae34bc50bd5f45e731
-change-id: 20260429-aspm-da55a54279e4
+    The EPC unbind/bind path is already not fully safe today, independently of
+    this patch. Some of that was discussed and posted in [2], and the remaining
+    .remove work is still pending (sorry about the delay).
+
+    Nevertheless, patch 2 adds a new deferred doorbell state, so v4 will clear
+    peer_db_pending after disabling peer_db_work in epf_ntb_epc_cleanup() and
+    before enabling peer_db_work in epf_ntb_epc_init().  This is intended as
+    local hygiene for the new state, not as a claim that the whole EPC/EPF
+    lifecycle is fixed.
+
+2). ffs(db_bits) on a u64 mask
+
+    I agree this is worth cleaning up, although I would classify it as a
+    pre-existing hardening issue rather than a newly reachable bug in patch 2.
+    For valid doorbell masks, the bits are expected to be within the supported
+    doorbell range, so the upper-32-bit case should not be a normal input path.
+
+    Still, the callback takes a u64 mask and patch 2 stores/drains it in an
+    atomic64_t, so relying on ffs() implicitly truncating the value to int is
+    fragile for future changes. I will make the supported-mask invariant
+    explicit in v4 by masking unsupported bits before walking the mask and by
+    using a u64 bit iterator. This should not change the behaviour for valid
+    doorbell masks while keeping the existing DB#0 -> MSI #3 legacy mapping
+    unchanged.
+
+3). possible peer_db_work UAF on driver unbind
+
+    I still think this belongs to the broader vNTB lifecycle hardening work.
+    Driver unbind while still bound to an EPC is unsafe independently of this
+    patch, and the real fix needs a .remove implementation that unregisters the
+    NTB device and drains/cancels the work items, including the newly added
+    peer_db_work. I will handle this in the follow-up lifecycle series to [2]
+    and call it out in the v4 cover letter.
+
+So, I'm planning to include the following in v4 patch 2:
+  - For 1), clear peer_db_pending in epc_cleanup/init around peer_db_work.
+  - For 2), make the u64 doorbell mask handling explicit by masking unsupported
+    bits and iterating the mask as u64.
+
+Please let me know if you would prefer a different approach.
+
+[1] https://lore.kernel.org/linux-pci/7jkibbdz3m3vuq2kq2xxnkt2rjdt5v7itgowc7qormtwgnf6tv@krl5brfjul5y/
+[2] https://lore.kernel.org/all/20260226084142.2226875-1-den@valinux.co.jp/
 
 Best regards,
---  
-Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Koichiro
 
+> 
+> - Mani
+> 
+> >  	epf_ntb_mw_bar_clear(ntb, ntb->num_mws);
+> >  	epf_ntb_db_bar_clear(ntb);
+> >  	epf_ntb_config_sspad_bar_clear(ntb);
+> > @@ -1357,41 +1365,79 @@ static int vntb_epf_peer_spad_write(struct ntb_dev *ndev, int pidx, int idx, u32
+> >  	return 0;
+> >  }
+> >  
+> > +static void vntb_epf_peer_db_work(struct work_struct *work)
+> > +{
+> > +	struct epf_ntb *ntb = container_of(work, struct epf_ntb, peer_db_work);
+> > +	struct pci_epf *epf = ntb->epf;
+> > +	unsigned int budget = VNTB_PEER_DB_WORK_BUDGET;
+> > +	u8 func_no, vfunc_no;
+> > +	u32 interrupt_num;
+> > +	u64 db_bits;
+> > +	int ret;
+> > +
+> > +	if (!epf || !epf->epc)
+> > +		return;
+> > +
+> > +	func_no = epf->func_no;
+> > +	vfunc_no = epf->vfunc_no;
+> > +
+> > +	/*
+> > +	 * Drain doorbells from peer_db_pending in snapshots (atomic64_xchg()).
+> > +	 * Limit the number of snapshots handled per run so we don't monopolize
+> > +	 * the workqueue under a doorbell storm.
+> > +	 */
+> > +	while (budget--) {
+> > +		db_bits = atomic64_xchg(&ntb->peer_db_pending, 0);
+> > +		if (!db_bits)
+> > +			return;
+> > +
+> > +		while (db_bits) {
+> > +			/*
+> > +			 * pci_epc_raise_irq() for MSI expects a 1-based
+> > +			 * interrupt number. ffs() returns a 1-based index (bit
+> > +			 * 0 -> 1). We historically add +2 to compute
+> > +			 * interrupt_num.
+> > +			 *
+> > +			 * Legacy mapping (kept for compatibility):
+> > +			 *
+> > +			 *   MSI #1 : link event (reserved)
+> > +			 *   MSI #2 : unused (historical offset)
+> > +			 *   MSI #3 : doorbell bit 0 (DB#0)
+> > +			 *   MSI #4 : doorbell bit 1 (DB#1)
+> > +			 *   ...
+> > +			 *
+> > +			 * Do not change this mapping to avoid breaking
+> > +			 * interoperability with older peers.
+> > +			 */
+> > +			interrupt_num = ffs(db_bits) + 2;
+> > +			db_bits &= db_bits - 1;
+> > +
+> > +			ret = pci_epc_raise_irq(epf->epc, func_no, vfunc_no,
+> > +						PCI_IRQ_MSI, interrupt_num);
+> > +			if (ret)
+> > +				dev_err(&ntb->ntb.dev,
+> > +					"Failed to raise IRQ for interrupt_num %u: %d\n",
+> > +					interrupt_num, ret);
+> > +		}
+> > +	}
+> > +
+> > +	if (atomic64_read(&ntb->peer_db_pending))
+> > +		queue_work(kpcintb_workqueue, &ntb->peer_db_work);
+> > +}
+> > +
+> >  static int vntb_epf_peer_db_set(struct ntb_dev *ndev, u64 db_bits)
+> >  {
+> > -	u32 interrupt_num = ffs(db_bits) + 1;
+> >  	struct epf_ntb *ntb = ntb_ndev(ndev);
+> > -	u8 func_no, vfunc_no;
+> > -	int ret;
+> > -
+> > -	func_no = ntb->epf->func_no;
+> > -	vfunc_no = ntb->epf->vfunc_no;
+> >  
+> >  	/*
+> > -	 * pci_epc_raise_irq() for MSI expects a 1-based interrupt number.
+> > -	 * ffs() returns a 1-based index (bit 0 -> 1). interrupt_num has already
+> > -	 * been computed as ffs(db_bits) + 1 above. Adding one more +1 when
+> > -	 * calling pci_epc_raise_irq() therefore results in:
+> > -	 *
+> > -	 *   doorbell bit 0 -> MSI #3
+> > -	 *
+> > -	 * Legacy mapping (kept for compatibility):
+> > -	 *
+> > -	 *   MSI #1 : link event (reserved)
+> > -	 *   MSI #2 : unused (historical offset)
+> > -	 *   MSI #3 : doorbell bit 0 (DB#0)
+> > -	 *   MSI #4 : doorbell bit 1 (DB#1)
+> > -	 *   ...
+> > -	 *
+> > -	 * Do not change this mapping to avoid breaking interoperability with
+> > -	 * older peers.
+> > +	 * .peer_db_set() may be called from atomic context. pci_epc_raise_irq()
+> > +	 * can sleep (it takes epc->lock), so defer MSI raising to process
+> > +	 * context. Doorbell requests are coalesced in peer_db_pending.
+> >  	 */
+> > -	ret = pci_epc_raise_irq(ntb->epf->epc, func_no, vfunc_no,
+> > -				PCI_IRQ_MSI, interrupt_num + 1);
+> > -	if (ret)
+> > -		dev_err(&ntb->ntb.dev, "Failed to raise IRQ\n");
+> > +	atomic64_or(db_bits, &ntb->peer_db_pending);
+> > +	queue_work(kpcintb_workqueue, &ntb->peer_db_work);
+> >  
+> > -	return ret;
+> > +	return 0;
+> >  }
+> >  
+> >  static u64 vntb_epf_db_read(struct ntb_dev *ndev)
+> > @@ -1629,6 +1675,10 @@ static int epf_ntb_probe(struct pci_epf *epf,
+> >  	ntb->epf = epf;
+> >  	ntb->vbus_number = 0xff;
+> >  
+> > +	INIT_WORK(&ntb->peer_db_work, vntb_epf_peer_db_work);
+> > +	disable_work(&ntb->peer_db_work);
+> > +	atomic64_set(&ntb->peer_db_pending, 0);
+> > +
+> >  	/* Initially, no bar is assigned */
+> >  	for (i = 0; i < VNTB_BAR_NUM; i++)
+> >  		ntb->epf_ntb_bar[i] = NO_BAR;
+> > -- 
+> > 2.51.0
+> > 
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
+> 
