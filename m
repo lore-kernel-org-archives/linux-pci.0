@@ -1,196 +1,255 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F9C535675D;
-	Mon, 11 May 2026 23:28:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0325A363098
+	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 23:48:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778542133; cv=none; b=oPWnXGOFrjty8qBl9De+TO5xo5rfUSEhNYmcp0Q2VUDi4+e75J5BKZLGJ+HCIJJURID5lvVF4KWM5Wl9tkGJm9TodBbsSGNxIhjpd7BCO2i/cDUpE2EkBWQzdEsSxYJRzOJVSWiCL5/0EtsGeBJaC3gPZBesS2NBqr0SkFUhpBo=
+	t=1778543311; cv=none; b=ov+FRVDyjF8yeG0jFMIIaaNp9+bbvPWsI70Yzw6Ldax1/PMuaz4TVxbNOYO4TYaoOZzAil+h7sjemQQKRRnEE89OJa/Re8hlld0jer7Pl4KxNu51nXafV2TariCZ3UaN9sMkh3GJEoPawofAZ8yaEXc4Cis55oNrPIxTnYb2J0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778542133; c=relaxed/simple;
-	bh=aADp7DgVuAPyaGlpb+SO4KZbRsMSVdrHhsP3kBXCfLw=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=XZKAwcAfXxSVBvFuwqCzR1LXAVBtAWuFYs+wmtGL7yPHxef7jz7gROz0+a+kOs8s9hjnjXq3pQ1LK1GCEnPFM/N0IOAJ7uqfJdDfsXooMDrRJTaw6zBG1B2WAR4LNu2n6Uiwz18JQBknq+nDGcgtyZH4DCdtWCgd4kwiuAA6SCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VKnAaPhY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778543311; c=relaxed/simple;
+	bh=W9gY1oZGi2jL87aNtG+4iM5dzO0jzsNm8dS3YDV++m0=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=acumbdP0PnrfmVUmQDojNmQo4Ya3P1Yz1ZfaKm/16REZAX3h0mySZM37DbEU1lR1FKFoXG+MiD+zs1q/2hCGQI1Kae/0rT/EXpkjy8SLW3nyF9nhI0PDlvWbfY1thKHP1tw1W6lRHGwZwp7sE31b3kFIX1XWMopiJDDUx+1mWs0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qPSmZnKB; arc=none smtp.client-ip=209.85.214.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--vipinsh.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VKnAaPhY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5080EC2BCB0;
-	Mon, 11 May 2026 23:28:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778542133;
-	bh=aADp7DgVuAPyaGlpb+SO4KZbRsMSVdrHhsP3kBXCfLw=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=VKnAaPhYkMjXtNYBBpR+2rAoWThQGtiVYS0cvvCDMVWbZRVYbRy3R2a6Y7E0q7csH
-	 6MUQbAEo6sj2tW+YaiBaqK5Hrsac9zUd4kpCOT3RLz05zSkwSJOPzkOL7RMz7UDZRL
-	 AdcqDrpFllD4sG+JIgRgHV5Tg8Da6xoWM3ViLZjBcL+XgVSlhD0GvY30gG/ZWOE4l2
-	 lHYZiPfFVDQxyKBTAjM2qtCsoae5G0MWvTnrRghRLYM1rbsbt/qQLwLPP1KlLVkBex
-	 m4nmDCTq7Fm3lVw+mIqwmhIGcqCMYxNmEPyPQRuPE/H9Ed/PJxn3BtVezk/WJvf2yW
-	 ZA51GmYvWsOfQ==
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 75475F40069;
-	Mon, 11 May 2026 19:28:51 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-06.internal (MEProxy); Mon, 11 May 2026 19:28:51 -0400
-X-ME-Sender: <xms:M2YCamdbFM64ymqngWj5O329txdA3O7T--Vb61oKSNUrTeG5TrjH6w>
-    <xme:M2YCap34CBrDTBhQ4CwEYsKD_WHBOjjBPVinCH1bfp0TMjzxS8cY-WSx_y8bnVfJX
-    _6UIJWcnqhBIScn9pXo5JZyjrr9QExFUunM2kLonFsjCqab7Cwd>
-X-ME-Received: <xmr:M2YCaq9QUKhUqMN3glWylDp-vYyKfjBZZqt0UAu2djEQy34H5HKJfncVZE7FnfwiiFOyXEqlidVQMhTeP5rCIkbUMyHqqrUVRgI>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduvddtvdehucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevkfgjfhfugggtgfesthejredttddtjeenucfhrhhomhepfdffrghnucgh
-    ihhllhhirghmshculdhnvhhiughirgdmfdcuoegujhgsfieskhgvrhhnvghlrdhorhhgqe
-    enucggtffrrghtthgvrhhnpedtkeelkefgtdegudeiiedttdfgueegieekjeffueffueet
-    jeffkeevtefflefhheenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsth
-    gvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepughjsgifodhmvghsmhht
-    phgruhhthhhpvghrshhonhgrlhhithihqddujeejvdeftdegheehqdeffeefleegtdegje
-    dqughjsgifpeepkhgvrhhnvghlrdhorhhgsehfrghsthhmrghilhdrtghomhdpnhgspghr
-    tghpthhtohepvdekpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehtvghrrhihrd
-    gsohifmhgrnhesrghmugdrtghomhdprhgtphhtthhopegujhgsfieskhgvrhhnvghlrdho
-    rhhgpdhrtghpthhtohepjhhitgdvfeeskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepug
-    grvhgvsehsthhgohhlrggsshdrnhgvthdprhgtphhtthhopegurghvvgdrjhhirghnghes
-    ihhnthgvlhdrtghomhdprhgtphhtthhopegrlhhishhonhdrshgthhhofhhivghlugesih
-    hnthgvlhdrtghomhdprhgtphhtthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhm
-    pdhrtghpthhtohepshhhihhjuhdrjhhoshgvsehhuhgrfigvihdrtghomhdprhgtphhtth
-    hopehmihhnghdrlhhiseiiohhhohhmrghilhdrtghomh
-X-ME-Proxy: <xmx:M2YCaq10C2R19tgRVDbetC1eA6Y1ve7S_ozN2VQ7W1imQnHn_6TZOQ>
-    <xmx:M2YCat15BnSUZfq7j-azLAw0GkgNrJHlGVux7mFHPicElCdwRnFuAg>
-    <xmx:M2YCamuw78kLXFUdqy2k4BpVPSkoHDrbVM-y-kmY0lgntnoCAYi8rw>
-    <xmx:M2YCatbtSxrQ8fMcUmYP5btnJLC6pfsG6Hk_Pd4Rgoi6Cx4hIGcrDw>
-    <xmx:M2YCasJ70O4NK3-xFJ790GKeQhUzcgUhDb6l4YD4PXRCj_guGD2Ixa-A>
-Feedback-ID: i67ae4b3e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 11 May 2026 19:28:50 -0400 (EDT)
-Date: Mon, 11 May 2026 16:28:49 -0700
-From: "Dan Williams (nvidia)" <djbw@kernel.org>
-To: "Bowman, Terry" <terry.bowman@amd.com>, 
- "Dan Williams (nvidia)" <djbw@kernel.org>, 
- Jonathan Cameron <jic23@kernel.org>
-Cc: dave@stgolabs.net, 
- dave.jiang@intel.com, 
- alison.schofield@intel.com, 
- bhelgaas@google.com, 
- shiju.jose@huawei.com, 
- ming.li@zohomail.com, 
- Smita.KoralahalliChannabasappa@amd.com, 
- rrichter@amd.com, 
- dan.carpenter@linaro.org, 
- PradeepVineshReddy.Kodamati@amd.com, 
- lukas@wunner.de, 
- Benjamin.Cheatham@amd.com, 
- sathyanarayanan.kuppuswamy@linux.intel.com, 
- vishal.l.verma@intel.com, 
- alucerop@amd.com, 
- ira.weiny@intel.com, 
- corbet@lwn.net, 
- rafael@kernel.org, 
- xueshuai@linux.alibaba.com, 
- linux-cxl@vger.kernel.org, 
- linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, 
- linux-acpi@vger.kernel.org, 
- linux-doc@vger.kernel.org, 
- Mauro Carvalho Chehab <mchehab@kernel.org>
-Message-ID: <6a026631b4f86_1b86a100d7@djbw-dev.notmuch>
-In-Reply-To: <09796934-e093-44e6-b6e2-2d0dd5a29673@amd.com>
-References: <20260505173029.2718246-1-terry.bowman@amd.com>
- <20260505173029.2718246-3-terry.bowman@amd.com>
- <20260507190836.70197e24@jic23-huawei>
- <8913c666-a343-4717-8ab2-0b8546d1bdfb@amd.com>
- <20260508150533.04e19cf9@jic23-huawei>
- <69feaebd471c3_1b86a100b@djbw-dev.notmuch>
- <09796934-e093-44e6-b6e2-2d0dd5a29673@amd.com>
-Subject: Re: [PATCH v17 02/11] cxl/ras: Unify Endpoint and Port AER trace
- events
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qPSmZnKB"
+Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-2baf7378ad0so34190865ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 16:48:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1778543309; x=1779148109; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=VfwqHN43xnPfZz9FoZhoTr3j3r/6GeXBkPQenl4wh+g=;
+        b=qPSmZnKB/P7w+HvkG9Anyk9j9hdK/HuiCC4rHJy1javwinC80YZS8xvhyCeI2tQa/t
+         k8PZGuB4V6XSWBBmXJsqOY+/4GoE8P0eRcH1AmUbTqYflKtV4QH6+OQLPPvXJbwv60ov
+         rvf9N3Jt5ZEtc9DMjswjA9mBtazUcQsCat61mkZG7u5VysixzF0MSdN9ua380qKNl28C
+         Ndg0Zn4LyQcH8PbvxVmXCPPDyEGJuZYPqO+990ccYZGN1p/WGpNG1M9ttblVDaOL/gkQ
+         pR+GK3WeUqN3Aq7x1QVr9GwpfsWFy3ID7Qi2fHCPMSYlCOXRDJLyzCudstKX0ue+bX+l
+         Em+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778543309; x=1779148109;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VfwqHN43xnPfZz9FoZhoTr3j3r/6GeXBkPQenl4wh+g=;
+        b=Eu8Jm4J1lEz3KTg/darZibYxm/YY8WPWBLrfzHbBAS5nizocWz0nyTpEt9t2x2D1zZ
+         Oyj9h6QOiCXDBuYym71yf6C1bpQCWCMC2Wx+VwhZ2X3cC5wegOzNYJn4R7UizlbG6M+r
+         2xNK0HR9K3Ljs90amoZaN0hA6YY5FUWre1mpTydVg3FKvoEhB9UBgplC5adxxiv2QKC1
+         bLH6nOx54pBjlr/szJ7f8V2o4DBEOg4kyX2VEykFHtlYOF0f3BgTqkhIXpLrpp8RsLPR
+         KSNBEnGS8GXMUvZ7mHqNrqRmn0SNRW7d5iV4ae4kxGKaXNfLw/KIyEVeGWLMS05tA16k
+         FcBA==
+X-Forwarded-Encrypted: i=1; AFNElJ/bbj8DPLndkot2ytSJXvZDuyJq+Ifva9vLpFH6uitjHVQlgccYAOwhD6j6zvg4PPqFQJzI58KCliU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOgo86+mb1eAg8CNkVKKihYbx+yGjpE9qt6vXfGVCiXpj6Syyz
+	jzfbvCIMAitWETpsbkiMP/UpyrmwKwB6D3eImQkcC0rYSOgBflsiG5mXSsoOcJUwNFVc55vJma8
+	vcl+zkNDt/w==
+X-Received: from plup11.prod.google.com ([2002:a17:903:4b2b:b0:2ba:67f8:6257])
+ (user=vipinsh job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:b46:b0:2b2:eb9d:1648
+ with SMTP id d9443c01a7336-2ba79c25ad9mr285828335ad.37.1778543309191; Mon, 11
+ May 2026 16:48:29 -0700 (PDT)
+Date: Mon, 11 May 2026 16:47:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 7bit
+X-Mailer: git-send-email 2.54.0.563.g4f69b47b94-goog
+Message-ID: <20260511234802.2280368-1-vipinsh@google.com>
+Subject: [PATCH v4 00/16] vfio/pci: Base Live Update support for VFIO
+From: Vipin Sharma <vipinsh@google.com>
+To: kvm@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-pci@vger.kernel.org
+Cc: ajayachandra@nvidia.com, alex@shazbot.org, amastro@fb.com, 
+	ankita@nvidia.com, apopple@nvidia.com, chrisl@kernel.org, corbet@lwn.net, 
+	dmatlack@google.com, graf@amazon.com, jacob.pan@linux.microsoft.com, 
+	jgg@nvidia.com, jgg@ziepe.ca, jrhilke@google.com, julianr@linux.ibm.com, 
+	kevin.tian@intel.com, leon@kernel.org, leonro@nvidia.com, lukas@wunner.de, 
+	michal.winiarski@intel.com, parav@nvidia.com, pasha.tatashin@soleen.com, 
+	praan@google.com, pratyush@kernel.org, rananta@google.com, 
+	rientjes@google.com, rodrigo.vivi@intel.com, rppt@kernel.org, 
+	saeedm@nvidia.com, skhan@linuxfoundation.org, skhawaja@google.com, 
+	vipinsh@google.com, vivek.kasireddy@intel.com, witu@nvidia.com, 
+	yanjun.zhu@linux.dev, yi.l.liu@intel.com
+Content-Type: text/plain; charset="UTF-8"
 
-Bowman, Terry wrote:
-> On 5/8/2026 10:49 PM, Dan Williams (nvidia) wrote:
-> > Jonathan Cameron wrote:
-> >> On Thu, 7 May 2026 13:33:45 -0500
-> >> "Bowman, Terry" <terry.bowman@amd.com> wrote:
-> > [..]
-> >>>> This concerns me (sorry I wasn't paying attention to the v16 thread).
-> >>>> It is a userspace regression against code that is out in the wild and typically
-> >>>> not updated in sync with the kernel.
-> >>>>
-> >>>> If you are suggesting breaking ras-daemon at the very least +CC the maintainer.
-> > 
-> > Sorry, that was not the intent, see below.
-> > 
-> >>>>
-> >>>> To get to a unified tracepoint add a new one that does what you want, but
-> >>>> maintain the existing ones as well.  Userspace can then migrate and maybe
-> >>>> in 5+ years time we can delete the non unified ones.
-> >>>>
-> >>>> No actually comments on the code, just left it all here for Mauro,
-> >>>>
-> >>>> Thanks,
-> >>>>
-> >>>> Jonathan
-> >>>>   
-> >>>
-> >>> Dan was clear about using a single set of CE and UE handlers for all CXL RAS 
-> >>> protocol errors. While I understand there may be concerns, please direct any 
-> >>> objections to Dan and clarify what changes are required to avoid this 
-> >>> repeatedly going back and forth.
-> >>>
-> >>> [1] https://lore.kernel.org/linux-cxl/69cb2d5ba3111_178904100b7@dwillia2-mobl4.notmuch/
-> >>
-> >> Sure - Dan's on this thread so I'm sure he'll see it sooner or later.
-> >>
-> >> Perhaps I'm missing something that makes this less critical than it appears.
-> > 
-> > No, it is breakage and a thinko on my part on the advice to Terry on the
-> > backwards compatibility rules for tracepoints. At the time I was only
-> > tracking data type and order of the payload. I.e. string at same
-> > position. However, the name of the argument is ABI.
-> > 
-> > Something like this incremental fixup I think gets this back on track.
-> > It keeps legacy ABI support for "memdev" field in the payload. It
-> > incrementally lets updated userspace understand "port" and "dport"
-> > events. It stops us from growing a new set of events just to update the
-> > arguments. It enhances the CPER events to now handle switch ports in
-> > addition to endpoint ports.
-> > 
-> > The bulk of the change is passing @port and @dport to the CXL trace
-> > events instead of a plain @dev.
-> > 
-> 
-> Thanks Dan and Jonathan,
-> 
-> I have a few questions.
-> 
-> Does this miss logging the Upstream SwitchPort device errors? Add another 
-> entry "uport=$"?
-> 
-> How does the user know which of the devices (memdev, port, or dport) is the 
-> erroring device? Do the traces need another string variable inidicating which 
-> device triggered the error?
+Hello,
 
-I expect that can be determined from what values get populated.
+This series can be found on Github:
 
-Endpoint:
-memdev=memX port=endpointY dport= host=parent(memX)
+  https://github.com/shvipin/linux vfio/liveupdate/v4
 
-Downstream:
-memdev= port=portX dport=dport_dev(dportY) host=uport_dev(portX)
+It adds the base support to enable Live Update feature for VFIO devices.
 
-Upstream:
-memdev= port=portX dport= host=uport_dev(portX)
+In v3 of this series, both core PCI subsystem and VFIO changes were
+together. Based on the feedbacks on the patches, increasing
+complexities and the overall number of patches, we have split the effort
+in two parts, PCI and VFIO.
 
-If dport= is populated, that is the device that triggered the error,
-otherwise it is the host= value.
+v4 version of PCI work is here:
+  https://lore.kernel.org/linux-pci/20260423212316.3431746-1-dmatlack@google.com/
 
-> And, I need to confirm: the Endpoint is NULL unless the CXL Port is an Endpoint 
-> Port?
+This series is the VFIO part, built on top of PCI v4. Going forward,
+work on both subsystem will be independent and we may not be making same
+version releases in sync. However, VFIO changes will always be on the top of
+some version of PCI changes.
 
-You mean memdev is empty, right? 
+Overview
+--------
+
+This series made following changes to support VFIO live update:
+
+  1. VFIO Live Update feature is put behind VFIO_PCI_LIVEUPDATE config
+     option. It also requires that VFIO_DEVICE_CDEV config is enabled.
+  1. To keep things simple in this series, enabling this option will
+     disable VFIO_PCI_DMABUF. This is temporary.
+  1. A VFIO cdev FD can be preserved via Live Update session and
+     retrieved after kexec via the same session.
+  2. Getting the preserved device FD after kexec via legacy VFIO group
+     APIs or by directly opening /dev/vfio/devices/vfioX will error out.
+     User has to get the FD from Live Update subsystem.
+  3. For now, only FD is preserved, underlying device and its states are
+     not.
+  4. To keep the next kernel safe, just before the kexec, VFIO resets
+     the device, disables BME and restores the original state of the
+     device. This is temporary and will be removed when we have added
+     full support of the Live Update.
+  5. New VFIO selftests have been added which interacts with VFIO
+     - vfio_pci_liveupdate_uapi_test
+     - vfio_pci_liveupdate_kexec_test
+     liveupdate.
+  6. Documentations have been added for kernel docs.
+
+Dependencies
+------------
+
+This series has following dependencies as shown in the diagram
+
+    |---------------------------|
+    |         VFIO v4           |
+    |---------------------------|
+    |  Liveupdate Selftests[1]  |
+    |---------------------------|
+    |        PCI v4 [2]         |
+    |---------------------------|
+    |  Liveupdate Refcount [3]  |
+    |---------------------------|
+
+[1] https://lore.kernel.org/all/20260511201155.1488670-1-vipinsh@google.com/
+  These selftests changes are needed by other selftests also (iommu, kvm),
+  so, I have sent them separately.
+
+[2] https://lore.kernel.org/linux-pci/20260423212316.3431746-1-dmatlack@google.com/
+  This is the PCI v4, which adds the live update support in PCI core.
+
+[3] https://lore.kernel.org/lkml/20260423174032.3140399-1-dmatlack@google.com/
+  PCI v4 is dependent on this.
+
+Github branch I have mentioned at the top has all of these dependencies.
+
+Testing
+-------
+
+Series has been tested using new VFIO live update selftests in both qemu and
+bare-metal environment. In bare-metal environment, it was ran using the
+Intel DSA PCIe device.
+
+vfio_pci_liveupdate_kexec_test test is executed as following
+
+  $ ./setup.sh 0000:00:04.0
+  $ ./vfio_pci_liveupdate_kexec_test --stage 1 0000:6a:01.0
+  $ kexec --reuse-cmdline -l -s /boot/vmlinuz
+  $ kexec -e
+  $ ./setup.sh 0000:00:04.0
+  $ ./vfio_pci_liveupdate_kexec_test --stage 2 0000:6a:01.0
+
+Kernel commandline used for booting the VM and testing had following
+options passed
+  - liveupdate=on
+  - kho=on
+  - vfio_iommu_type1.allow_unsafe_interrupts=Y
+  - vfio_pci.enable_sriov=Y
+  - vfio_pci.disable_denylist=Y
+  - vfio.enable_unsafe_noiommu_mode=Y
+
+Changelog
+---------
+v4:
+ - Addressed sashiko feedback regarding issues in resetting the devize
+   in freeze
+ - Dropped the patch which was skipping reset of preserved VFIO device
+   after kexec when user opens the device. This will be added back in
+   future but for now not needed as freeze() is also resetting the
+   device before kexec.
+ - Kernel doc and comment updates based on feedbacks.
+
+v3: https://lore.kernel.org/kvm/20260323235817.1960573-1-dmatlack@google.com/
+
+v2: https://lore.kernel.org/kvm/20260129212510.967611-1-dmatlack@google.com/
+
+v1: https://lore.kernel.org/kvm/20251126193608.2678510-1-dmatlack@google.com/
+
+rfc: https://lore.kernel.org/kvm/20251018000713.677779-1-vipinsh@google.com/
+
+
+David Matlack (10):
+  vfio/pci: Notify PCI subsystem about devices preserved across Live
+    Update
+  vfio: Enforce preserved devices are retrieved via
+    LIVEUPDATE_SESSION_RETRIEVE_FD
+  vfio/pci: Store incoming Live Update state in struct
+    vfio_pci_core_device
+  docs: liveupdate: Add documentation for VFIO PCI
+  vfio: selftests: Add vfio_pci_liveupdate_uapi_test
+  vfio: selftests: Add Makefile support for TEST_GEN_PROGS_EXTENDED
+  vfio: selftests: Expose iommu_modes to tests
+  vfio: selftests: Expose low-level helper routines for setting up
+    struct vfio_pci_device
+  vfio: selftests: Verify that opening VFIO device fails during Live
+    Update
+  vfio: selftests: Add continuous DMA to vfio_pci_liveupdate_kexec_test
+
+Vipin Sharma (6):
+  vfio/pci: Register a file handler with Live Update Orchestrator
+  vfio/pci: Preserve vfio-pci device files across Live Update
+  vfio/pci: Retrieve preserved device files after Live Update
+  vfio: selftests: Build liveupdate library in VFIO selftests
+  vfio: selftests: Initialize vfio_pci_device using a VFIO cdev FD
+  vfio: selftests: Add vfio_pci_liveupdate_kexec_test
+
+ Documentation/core-api/liveupdate.rst         |   1 +
+ .../driver-api/vfio_pci_liveupdate.rst        |  23 ++
+ MAINTAINERS                                   |   2 +
+ drivers/vfio/device_cdev.c                    |  67 +++-
+ drivers/vfio/group.c                          |   9 +
+ drivers/vfio/pci/Kconfig                      |  16 +-
+ drivers/vfio/pci/Makefile                     |   1 +
+ drivers/vfio/pci/vfio_pci.c                   |  13 +-
+ drivers/vfio/pci/vfio_pci_core.c              |  62 ++--
+ drivers/vfio/pci/vfio_pci_liveupdate.c        | 349 ++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_priv.h              |  19 +
+ drivers/vfio/vfio.h                           |  18 +
+ drivers/vfio/vfio_main.c                      |  16 +-
+ include/linux/kho/abi/vfio_pci.h              |  43 +++
+ include/linux/vfio.h                          |  13 +
+ include/linux/vfio_pci_core.h                 |   2 +
+ tools/testing/selftests/vfio/Makefile         |  23 +-
+ .../vfio/lib/include/libvfio/iommu.h          |   2 +
+ .../lib/include/libvfio/vfio_pci_device.h     |   8 +
+ tools/testing/selftests/vfio/lib/iommu.c      |   4 +-
+ .../selftests/vfio/lib/vfio_pci_device.c      |  60 ++-
+ .../vfio/vfio_pci_liveupdate_kexec_test.c     | 256 +++++++++++++
+ .../vfio/vfio_pci_liveupdate_uapi_test.c      |  93 +++++
+ 23 files changed, 1041 insertions(+), 59 deletions(-)
+ create mode 100644 Documentation/driver-api/vfio_pci_liveupdate.rst
+ create mode 100644 drivers/vfio/pci/vfio_pci_liveupdate.c
+ create mode 100644 include/linux/kho/abi/vfio_pci.h
+ create mode 100644 tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test.c
+ create mode 100644 tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c
+
+
+base-commit: 2a4c0c11c0193889446cdb6f1540cc2b9aff97dd
+-- 
+2.54.0.563.g4f69b47b94-goog
+
