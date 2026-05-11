@@ -1,85 +1,58 @@
-Received: from smtpout-04.galae.net (smtpout-04.galae.net [185.171.202.116])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A520635950;
-	Mon, 11 May 2026 16:00:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.171.202.116
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BA11D428462;
+	Mon, 11 May 2026 16:24:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778515244; cv=none; b=kLvalKTGGwfkFnqaHuUiX++d/JErekEBsXJdWyjQPzrnKR6PxpxblVLJFFMg4PU9kHKfDUKsjxoVG58cO05pSRQkIBLpMlSfd2T4uo2FBOMseoWpGyaNVG4ee+6MUR8784aXUFgA5TVQRKLklra9auIFlbFjJakphlgkNCcNfQw=
+	t=1778516657; cv=none; b=Ys4EMr7YkAmTN0LSGJ4N5gWgmwh5loaM0XbnVroP+IuJjdUhivp5zFfJiTuPDiMoTApjfR0V7mj8i72GoLjILMlzpoQJE0RltB9cnSjLUM6Lh9yV/P4Wia71TTnhridJV+NQW+DCR7B/8O1rSLYCU13wzvk5lrq8ZCU/2mKa3fc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778515244; c=relaxed/simple;
-	bh=4TP647h6bUcWpLakNWuVEPNBqVaigqPU6a5rJXnvNrM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jRxpf8LkFOTdDQGWpNG0kj0bK+JFac03/gjfQ4cBAwuAcOMMJnzIzRkf3HJS2G4HZmL8+pjtNcTI/BZlZdeCWzZGE63++XlfSXt+jUXdWKFxMO1zbAIdHOgLSv9W2W0rjEaClz2uLx/pKqGCMmNgN29iGVzUhsWlHg37t39XtVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=Vj95Q6ZP; arc=none smtp.client-ip=185.171.202.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1778516657; c=relaxed/simple;
+	bh=A7DrKuKjFqBnsiYVQmkH3SPF4bmEh990rRhIOilh9r0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VWsUovGPapn9hnEwnDwrDCfnRdHu7BZ9UdaM/UxXH84XHJmzpqY0qMkfBli023VYQgXiD/wbFUPg0JFr57afLV0+DPJO6FcxKXGBE28jMvOVInRQJX1hUI5bqpk4uCO6kZnl3FldSET7+n1DMGw2LTzeH5hxhol8TMIo/crd0c0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=EBqZ3lvw; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Vj95Q6ZP"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-04.galae.net (Postfix) with ESMTPS id 17BCFC5E14B;
-	Mon, 11 May 2026 16:01:31 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 7D27B60646;
-	Mon, 11 May 2026 16:00:41 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id C4D7E11AF9F2D;
-	Mon, 11 May 2026 18:00:33 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1778515239; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding:in-reply-to:references;
-	bh=bKqIe7WRSBpcbkduycfdUius+fdoa8lS+ROf87HCzsw=;
-	b=Vj95Q6ZPshNanZOcR9ZKav90YIJrBT58CHMzeCV960whdbMmwRonhTR4DxYcbPkZDcIsUt
-	8Lo8LoH8LmUo6wLiqD2rMkT00ApFiamXjMMaoEmK5xSr7jHfeZwSws2M9Iutz9nHB8ev6U
-	K8zBaH+9GrYqtaXUqkjWsB3gz6gH79p+3FnbQIXgs9oEOEEVP2jv7BXCsPzy8CbNmyjbVy
-	tLbE2ssOjgosNUQC+Vzy69fiOvMOE42T1gnbo+/p9Lj4tr76+BB6/qijyXvrvZfzKPlPBg
-	3juJBPm6aCd8ozPqyt9ssknX7Xv8QcOjm6Ec5+EsvnwJW2BQ9jWrcB7bgHgQrQ==
-From: Herve Codina <herve.codina@bootlin.com>
-To: Andrew Lunn <andrew@lunn.ch>,
-	Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Charles Keepax <ckeepax@opensource.cirrus.com>,
-	Richard Fitzgerald <rf@opensource.cirrus.com>,
-	David Rhodes <david.rhodes@cirrus.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Daniel Scally <djrscally@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>,
-	Dan Williams <djbw@kernel.org>,
-	Lizhi Hou <lizhi.hou@amd.com>,
-	Herve Codina <herve.codina@bootlin.com>
-Cc: driver-core@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="EBqZ3lvw"
+Received: from zhangyu-hyperv.mshome.net (unknown [167.220.233.27])
+	by linux.microsoft.com (Postfix) with ESMTPSA id C0A4D20B7166;
+	Mon, 11 May 2026 09:24:08 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C0A4D20B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1778516653;
+	bh=73rJxfgCC5Iw4KlYZQwmxccecFIL/PKYVBRFOATZJGo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=EBqZ3lvwbrU/InU7SQvNY6nh5ozELraKlQuDboLwVcf0azCgvdrTBRntSMUFI6Xa5
+	 U2mm/6w3jl1ZYDXdk4Bf594KZbXt6L43dLrP6rFpYy+n0HzvHh2PbWBuW5qV+JGVoc
+	 YCtDSiP9x4Gu9oh+H1eY8w0BNqBG3XMwVI+Y6Xew=
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	iommu@lists.linux.dev,
 	linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org,
-	patches@opensource.cirrus.com,
-	linux-gpio@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v7 8/8] PCI: of: Remove fwnode_dev_initialized() call for a PCI root bridge node
-Date: Mon, 11 May 2026 17:59:28 +0200
-Message-ID: <20260511155930.34604-9-herve.codina@bootlin.com>
-X-Mailer: git-send-email 2.54.0
-In-Reply-To: <20260511155930.34604-1-herve.codina@bootlin.com>
-References: <20260511155930.34604-1-herve.codina@bootlin.com>
+	linux-arch@vger.kernel.org
+Cc: wei.liu@kernel.org,
+	kys@microsoft.com,
+	haiyangz@microsoft.com,
+	decui@microsoft.com,
+	longli@microsoft.com,
+	joro@8bytes.org,
+	will@kernel.org,
+	robin.murphy@arm.com,
+	bhelgaas@google.com,
+	kwilczynski@kernel.org,
+	lpieralisi@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	arnd@arndb.de,
+	jgg@ziepe.ca,
+	mhklinux@outlook.com,
+	jacob.pan@linux.microsoft.com,
+	tgopinath@linux.microsoft.com,
+	easwar.hariharan@linux.microsoft.com
+Subject: [PATCH v1 0/4] Hyper-V: Add para-virtualized IOMMU support for Linux guests
+Date: Tue, 12 May 2026 00:24:04 +0800
+Message-ID: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -87,58 +60,112 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
 
-During the instantiation of devices described by a device-tree overlay
-applied on a PCI device, devlink displays the following kind of debug
-messages instead of creating the expected links:
-   'Not linking xxxx - might never become dev'
+This patch series introduces a para-virtualized IOMMU driver for
+Linux guests running on Microsoft Hyper-V. The driver enables two
+primary use cases:
+  1) In-kernel DMA protection for devices assigned to the guest.
+  2) Device assignment to guest user space (e.g., via VFIO).
 
-Without those expected links, the device removal order cannot be
-correct.
+The driver implements the following core functionality:
+*   Hypercall-based Enumeration
+    Unlike traditional ACPI-based discovery (e.g., DMAR/IVRS),
+    this driver enumerates the Hyper-V IOMMU capabilities directly
+    via hypercalls. This approach allows the guest to discover
+    IOMMU presence and features without requiring specific virtual
+    firmware extensions or modifications.
 
-Those debug traces are printed by fw_devlink_create_devlink(). In our
-use case, they are all printed because the supplier of the link has at
-least one of its ancestor with its fwnode flag FWNODE_FLAG_INITIALIZED
-set.
+*   Domain Management
+    The driver manages IOMMU domains through a new set of Hyper-V
+    hypercall interfaces, handling domain allocation, attachment,
+    and detachment for endpoint devices.
 
-The culprit ancestor is the PCI root bridge.
+*   Nested Translation Support
+    This implementation leverages guest-managed stage-1 I/O page
+    tables nested with host stage-2 translations. It is built
+    upon the consolidated IOMMU page table framework (IOMMU_PT).
+    This design eliminates the need for emulating map operations.
+    Both Intel VT-d and AMD IOMMU platforms are supported.
 
-The fwnode related to the PCI root bridge is created dynamically by the
-of_pci_make_host_bridge_node() function. During this creation
-fwnode_dev_initialized() is called which set the FWNODE_FLAG_INITIALIZED
-flag.
+*   IOTLB Invalidation
+    IOTLB invalidation requests are marshaled and issued to the
+    hypervisor through the same hypercall mechanism. Both domain-
+    selective and page-selective flushes are supported.
 
-Calling fwnode_dev_initialized() tells devlink that the device related
-to this node is handled out of the driver core. This is not correct in
-our case. Indeed the device related to this firmware node is handled
-using driver core mechanisms and is fully compliant devlink
-expectations.
+Implementation Notes:
+*   Platform Support
+    The current implementation targets x86 platforms with Intel
+    VT-d and AMD IOMMU hardware.
 
-Simply remove the fwnode_dev_initialized() call. With that done, the
-devlink debug messages are no more displayed and links that were missing
-are correctly created.
+*   MSI Region Handling
+    The hardware MSI region is hard-coded to the standard x86
+    interrupt range (0xfee00000 - 0xfeefffff). Future updates may
+    allow this configuration to be queried via hypercalls if new
+    hardware platforms are to be supported.
 
-Fixes: 1f340724419e ("PCI: of: Create device tree PCI host bridge node")
-Cc: stable@vger.kernel.org
-Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/of.c | 1 -
- 1 file changed, 1 deletion(-)
+*   Reserved Regions (RMRR)
+    There is currently no requirement to support assigned devices with
+    ACPI RMRR limitations. Consequently, this patch series does not
+    specify or query reserved memory regions.
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 25fb02c3dc72..53a8a4f30eb6 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -811,7 +811,6 @@ void of_pci_make_host_bridge_node(struct pci_host_bridge *bridge)
- 	 */
- 	of_node_set_flag(np, OF_POPULATED);
- 	fw_devlink_set_device(&np->fwnode, &bridge->dev);
--	fwnode_dev_initialized(&np->fwnode, true);
- 
- 	ret = of_changeset_apply(cset);
- 	if (ret)
+Testing:
+This series has been validated with the following configurations:
+- Intel DSA devices assigned to the guest, tested with dmatest.
+- NVMe devices assigned to the guest on AMD platforms, tested
+  with fio.
+- dma_map_benchmark for DMA mapping performance evaluation.
+
+Changes since RFC v1 [1]:
+- Scoped platform support to x86 only (Intel VT-d and AMD IOMMU);
+  initialization now uses x86_init.iommu.iommu_init
+- Added page-selective IOTLB flush support (new Patch 4)
+- Disable device ATS in hv_iommu_release_device()
+- Addressed review comments from Michael Kelley:
+  - Reversed dependency: pvIOMMU exports registration API for
+    pci-hyperv to call, instead of pci-hyperv exporting
+    hv_build_logical_dev_id()
+  - Dropped separate output page allocation patch; hypercall input
+    and output now share the same per-CPU page
+  - Cleaned up Kconfig (removed PCI_HYPERV dependency, unnecessary
+    selects)
+  - Removed dev_list, per-domain spinlock, and syscore_ops
+  - Removed forward declarations by reordering functions
+  - Fixed typos, cleaned up Kconfig selects, improved pr_info
+    messages, etc.
+
+[1] https://lore.kernel.org/linux-hyperv/20251209051128.76913-1-zhangyu1@linux.microsoft.com/
+
+Easwar Hariharan (1):
+  iommu: Move Hyper-V IOMMU driver to its own subdirectory
+
+Wei Liu (1):
+  hyperv: Introduce new hypercall interfaces used by Hyper-V guest IOMMU
+
+Yu Zhang (2):
+  iommu/hyperv: Add para-virtualized IOMMU support for Hyper-V guest
+  iommu/hyperv: Add page-selective IOTLB flush support
+
+ MAINTAINERS                                   |   2 +-
+ arch/x86/hyperv/hv_init.c                     |   4 +
+ arch/x86/include/asm/mshyperv.h               |   4 +
+ drivers/iommu/Kconfig                         |  10 +-
+ drivers/iommu/Makefile                        |   2 +-
+ drivers/iommu/hyperv/Kconfig                  |  27 +
+ drivers/iommu/hyperv/Makefile                 |   3 +
+ drivers/iommu/hyperv/iommu.c                  | 794 ++++++++++++++++++
+ drivers/iommu/hyperv/iommu.h                  |  54 ++
+ .../irq_remapping.c}                          |   2 +-
+ drivers/pci/controller/pci-hyperv.c           |  19 +-
+ include/asm-generic/mshyperv.h                |  12 +
+ include/hyperv/hvgdk_mini.h                   |   9 +
+ include/hyperv/hvhdk_mini.h                   | 141 ++++
+ 14 files changed, 1070 insertions(+), 13 deletions(-)
+ create mode 100644 drivers/iommu/hyperv/Kconfig
+ create mode 100644 drivers/iommu/hyperv/Makefile
+ create mode 100644 drivers/iommu/hyperv/iommu.c
+ create mode 100644 drivers/iommu/hyperv/iommu.h
+ rename drivers/iommu/{hyperv-iommu.c => hyperv/irq_remapping.c} (99%)
+
 -- 
-2.54.0
+2.52.0
 
