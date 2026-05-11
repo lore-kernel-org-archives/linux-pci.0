@@ -1,160 +1,292 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from TYVP286CU001.outbound.protection.outlook.com (mail-japaneastazon11021113.outbound.protection.outlook.com [52.101.125.113])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28AB3313534
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 08:31:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778488317; cv=none; b=fawL3M0DiSWhyVUPfvh5KiBNYTb8DinbHjv7/8l60CPuNaDRNmeT9W7gJw3sc27aTeOItY+Fq0wVIrvICyOCR+t/LmfSxvlEXMpLQeG3l1duVT4NuJMCaG/Q/Yj0iLlTBKSLxpWv6c/76uxey0MK84qv5LML1HWGR3/cJlDk/VE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778488317; c=relaxed/simple;
-	bh=i9tc7b3tGnPfVh4mO5DDcpk5QiiUsLZXH/ljNKWngJ0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=e16e8Vm674hSfsnXMYOMZyQMc6Ir4LcEQBtqo1vOD0wng1iZGqcmu5D9r9nYrmvucP6zzP1nL2yrtytGzU6CTdsiLnSNniPceKKCxAqXyjDrBiM5drYU/9XrbKefZucxyHtqEQxzLklAnFo4Ts4YmWGW4+q4UDGqVKSQwm3sUT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UE1MQHTN; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=MYv9ZYwo; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4633A8740;
+	Mon, 11 May 2026 09:15:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.125.113
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778490924; cv=fail; b=TddR4qEW7xpZ+wnIjfmv2KbArNxTM1Xqy2xhHx37Z0CHBNoTxLTXRZBBPWjAnjTL3eBo4FlpzEt1KqiOTM0Yxm8g7RQDOQfZFqBgoKmXl2cf22kGRK/inWM/FTB/N+LENKXjZ7SfacAC5QM/fUkCSrEtn58Ya0cn31HiiRbKGzA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778490924; c=relaxed/simple;
+	bh=esjuMst9fmcKSZXI5WWtUivhiH3bcIPMyGTATVFW9EQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=fXt2sKSSP4HL68fO91pxs9IyQ5xkTYylMA3oHmus8nKka/VlQmJ3kBdjjVpmew1U8krkksvn6s1NWBw6PdMwnycCBB5Mz8UKnEIaez7jmb588AuvVgBlVXt025JYLiq03Bnzk7woazDJelLWkQ90iBaxpcFWcAzg/WnzZ407a4Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=akB3abc0; arc=fail smtp.client-ip=52.101.125.113
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UE1MQHTN";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="MYv9ZYwo"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64B7ALsw452887
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 08:31:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	liNuFjs0lWZuIiFKHVxV0Y8he+FIbK0rAFC9jD6OJfc=; b=UE1MQHTNKmIIkV/g
-	IdjogApqjJzYuBNq48UcVmK9kYIH9MMqjYki3DzKkC3dqs9QepTnNfgtQaf3EqT2
-	kGvD1CvhIS9/oDrzftuxekEBljeFCsiECbp4ZnaWLV1yhzQEgsAqQJ3aWjBhE/QZ
-	kKz7i+fUQTumDI4sE/oGzM6LiYVoiSa9J7l70vbwvoGmXAx9KPjg9W/WqCq54Q4q
-	IV3gl5iVON+Ah+cdzmtyEspmYy6RpQrs0gLwatD0GkjbdPJXIk+dP2sCPZlv5DWY
-	2Z4KddSZaXmGRDYNr4twTCNWdT0dx9Ikw6UE8GP/TOZa80iEHdltoR82gKn2zpLV
-	oTLX9Q==
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e3ag6g98q-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 08:31:50 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-8397b14a689so2611761b3a.2
-        for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 01:31:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1778488310; x=1779093110; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=liNuFjs0lWZuIiFKHVxV0Y8he+FIbK0rAFC9jD6OJfc=;
-        b=MYv9ZYwoH5ylsBtyoBPlTnJJYdvcKcJm5PUzdyLvc9MzKerCQ7nrjJt1CtHLC0BY9R
-         vQh6LXOOr801nzLuYzZ0cX+0cwdBwJKo0EH+2z5wyeSfCLDIyknsEcXKlRQ78i79AxTP
-         TI/mu0stCehCA/mTGLO03X4hXztq3rLOQSXyER8fIEZqIZFZC41130GcDYXKLOpr01ix
-         0FhAOArgrGP2PlSDEbU2FUG4pUJqMNEVJmqxSVD4Rj8/yeP9tChX6DLfkCK5aGeaMuyJ
-         PEyQQciReV+7dRyz3DdsVQljOEOb1yTibl8PWIOFqg9rJU7CrONeRctWAyCFVMVg3Fzu
-         2Hiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778488310; x=1779093110;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=liNuFjs0lWZuIiFKHVxV0Y8he+FIbK0rAFC9jD6OJfc=;
-        b=oTJe5IVPl9VyUh3xcId4y32V3S6mChaJgz7D8SfHQIfIHdGljHBLQhomWSDCjwtn4A
-         wp8785vFZ3Tb56yYWKPfX1lS2m1ctuFyj9Ym84yX0DPGQv0v5vawT9lL+gC1nwc/kY+k
-         lJj7jI3+CFQv0kxGVQT1VGaRQUNYofKyP3q6YSQ4dJVv/6q9JDYgbO89NvQYmHut8zVH
-         VPWQtF83icXtfqYjCWTf+sajjPwIQVkj9qPcAg2EWZOFucwICa02BlIzUPs9nZ3fK+Mv
-         g3YIlN3lBJykpqlj0p4ixkY0WvQghbXgD3LBrI7eVRMZkazcF2S2DxBhyr8DpB6HrYrL
-         2UgQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8n+PDrjXtX4GCxh70ROfaNOS6VSeEilUMOUodxU/oIJBU1GsiImQBvbTEimwN6fYXM8Og45EO5XYI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzp6V9EmdzF7idW13qSZBNugMXRx2O8UL/B14B101Ue1BGx6PyD
-	HEVrBiUA4tjc8OSUjvxeP/BdKhCtgSLcmbXoMKcTB27X9kz0egdLX0DAODDr++ijjTWZZKl4lY+
-	DlrbHZbHqj/hUg5kzFt/M4ZlTzii78gg0dXl1f9XCzKGYGx6dG62wHWg1ww34Edg=
-X-Gm-Gg: Acq92OFcTc/9gSR0yzS6trHxNRlWGETLsNs8cOtnqFBB2VX0sH1Wt3Bmj8VJT50o4Az
-	1/9g60g9Mnf5SKDR0ba99e625zMZMJSSCpUgOx6bfcAcyApF65VFj5UrWH8aib1R0e3rvkhlY5f
-	OHctMfCTYUWCFHc/Pj+mmtb5I0Ids+2uq6FM21iUCA8sQyQR7H+XyFEb+LmLgt3jAuEcuXveq3n
-	cVwSyEfMCNWrx2kMBYQh+Z+UWhKDEg3YR0EhueV3Wdihufzi9s+D8C7ttfaZM9KLWLeGGILMBbF
-	YfCUD3j9GNo/j4okpIcI6fAHihqASA4KvcUHLEi4Vlmx1TGo3Tn1m4AH/jFkKV6k/7pEKG7IhCv
-	Vb9Zs61cZBK2xipFN
-X-Received: by 2002:a05:6a00:310:b0:83d:446c:2a8c with SMTP id d2e1a72fcca58-83d446c2bb6mr8897240b3a.25.1778488309792;
-        Mon, 11 May 2026 01:31:49 -0700 (PDT)
-X-Received: by 2002:a05:6a00:310:b0:83d:446c:2a8c with SMTP id d2e1a72fcca58-83d446c2bb6mr8897201b3a.25.1778488309228;
-        Mon, 11 May 2026 01:31:49 -0700 (PDT)
-Received: from work.lan ([2409:4091:a0f4:6806:dc6a:a003:bc2d:d67d])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8396563f11csm24586408b3a.3.2026.05.11.01.31.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 May 2026 01:31:48 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Xincheng Zhang <zhangxincheng@ultrarisc.com>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>, Jia Wang <wangjia@ultrarisc.com>
-Cc: linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Conor Dooley <conor.dooley@microchip.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
-In-Reply-To: <20260427-ultrarisc-pcie-v4-0-98935f6cdfb5@ultrarisc.com>
-References: <20260427-ultrarisc-pcie-v4-0-98935f6cdfb5@ultrarisc.com>
-Subject: Re: (subset) [PATCH v4 0/3] riscv: Add PCIe support for UltraRISC
- DP1000 SoC
-Message-Id: <177848830296.12802.14978169328629266559.b4-ty@b4>
-Date: Mon, 11 May 2026 14:01:42 +0530
+	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="akB3abc0"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=P1tjfztp0vWXyjcqAq7KKEKXTHo/7+R5wc1EwaMq3/+lI8v+T2HJhgueRodjDvz9mUJxZYysMPGbsXALzSqUvJL0ntMJGRSdDtcaT/+iC+EPAmzkXUdTXvAQznI50gHmZ6J6YHa6GUpo7b5XVhj9mU6NQLVyiufFTC+E/n9KfcnO3uuhxcJuj1GVhmNF8VQZfR4onVgYfiYkGwODImXborfQeWHRyI6YFYIbz9pezf4AB/neYk/ahNN0uKq8JZn9/e3vRsZiUQkwA/Z810GVVYgJZ2hJlzLf11yYpTVnzFPJsD25LBJt2+kfYcrV2uK36/QfpEO1WOPMTjWnH+JUmQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=s5I2wthB6XPLf0dY9O4u4mdd66H3aYBOTpsWJRy+7T8=;
+ b=YjxiKtcBaRgQKbTXJC39xhD6HKWYcKOm+yopmiFLuW4eULf7rU+rtCiH3SAKnSfUR6Em4WzPdSjeTuIM2wz8j3HD7c9wK5VKkuicfonzwrzDxTQu+ifhQVgcOf0B6WXIG1jmjCXAvyNly24zLB/upqs2XEHDoxF+SS9H/3iTHc3Lo3g+gtnvcyeqld91dtRIxJumau7Ej0d2z8B3UVoJZYcBjN6s7QUIOeIaSGFubhahcJ8mSD+lpaOVPzZUOaZCSHdg9+TXOWQGlpmXdpRhJBpikwwmHMCMp98tJMV7iYVybV/2Ual4j/L4qMZZd6hoyOB0Fwp22vSgOQ9oA+D+ng==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
+ header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=s5I2wthB6XPLf0dY9O4u4mdd66H3aYBOTpsWJRy+7T8=;
+ b=akB3abc0QYeFI10ZppFhKTE3T69XWRto7OP5/B3sAIix+r8XAHV0fuOOGGTSIkrd40aNs12Xo7x+UtPTeLi73GAgl3INqBtYOtKQis57BgoanWM9aVNJHJSlWF/JDXtDR7317FNHpyENeVZb17+3yTa3PsCp0fexvRCYIF/w/ko=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=valinux.co.jp;
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
+ by TYCP286MB3313.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:2cb::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.22; Mon, 11 May
+ 2026 09:15:19 +0000
+Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9846.025; Mon, 11 May 2026
+ 09:15:19 +0000
+Date: Mon, 11 May 2026 18:15:17 +0900
+From: Koichiro Den <den@valinux.co.jp>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>, 
+	Allen Hubbe <allenbh@gmail.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>, 
+	Jerome Brunet <jbrunet@baylibre.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	ntb@lists.linux.dev
+Subject: Re: [PATCH v3 09/10] NTB: epf: Fix doorbell bitmask handling in
+ db_read/db_clear
+Message-ID: <ezsg6zt5xjvw6f4jwikflh6x3vx6zxu7npzol7x5syl2clmfph@ywfpdvhlddqn>
+References: <20260323031544.2598111-1-den@valinux.co.jp>
+ <20260323031544.2598111-10-den@valinux.co.jp>
+ <557gikafd5b5gryyosswktl7knexnu5gzhtd5ybgxkvdb56ftu@6ytkbxd5j57h>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <557gikafd5b5gryyosswktl7knexnu5gzhtd5ybgxkvdb56ftu@6ytkbxd5j57h>
+X-ClientProxiedBy: TY4P286CA0090.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:369::17) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:405:38f::10)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.0
-X-Authority-Analysis: v=2.4 cv=fOsJG5ae c=1 sm=1 tr=0 ts=6a0193f6 cx=c_pps
- a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22 a=VwQbUJbxAAAA:8
- a=l0vRmO6wWID8S7eiZWwA:9 a=QEXdDO2ut3YA:10 a=zc0IvFSfCIW2DFIPzwfm:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTExMDA5MyBTYWx0ZWRfX+eDQeID2DkKv
- tneTYfKiCd5EegSIY7mK4oJWN+bZV+yHghrGc5U5sQLnkY3iicdI93CnedEYmFBBg5ghq/aYJ94
- eJbKiBPIAcZaYNVXQ6QeR7VTSI/n66bBvg+UAyPzFTrHn3ggn8GQdb+S8UrZPWjllm+IAqyY1FG
- K+xzE0JBazjzOADIWDLrNwtZzvNQ006BZlcW6oQvEEQlmgnQrbLWsClGS3tUXdNATHyNa5kl6EP
- Up5zeWgjZqNjj06kCHsfphpNvnbCaGiGVCEC7sUnKFt0NeW9o54xMLr1ix/xyPzalD747/cGqz1
- 7/VPNI3abksd6nq5DLA5dQdk3sD7rwWfXfZWGn60D35sjTGo7AbX4hISMqrBftN3D/7vI0gTzV1
- OsbPSL+cFjKnVBWhPJR9+QyKm/P5xlc4660Bh0OZXC7fwb0xc6gzOgn2m/YFpFSOVHMSIymXqs2
- K/xpzFWFt5/MyWzSC5w==
-X-Proofpoint-GUID: GGjNSBqZEqmPrDhY_k5buqyS1xGSx5G-
-X-Proofpoint-ORIG-GUID: GGjNSBqZEqmPrDhY_k5buqyS1xGSx5G-
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-11_02,2026-05-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 clxscore=1015 impostorscore=0 bulkscore=0 suspectscore=0
- malwarescore=0 lowpriorityscore=0 phishscore=0 spamscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2604200000 definitions=main-2605110093
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYCP286MB3313:EE_
+X-MS-Office365-Filtering-Correlation-Id: a636ebb4-6944-48a8-26ff-08deaf3dd23d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|10070799003|366016|7416014|376014|56012099003|22082099003|18002099003|27256017;
+X-Microsoft-Antispam-Message-Info:
+	3df0QyqhiUfmDYf/6SLLpPUpbSBAIwa9Pc6TAq+0S1ewGhPr4qitoyEolY051R9KCZoOHUD8hyHXNSejeVN0d9oAbQ+9FcIyZTqHLroliOKTxfwtnjo2F7H1Kx3dZKvw5PK37sDCtl+idZHPCncRPovSrUHBN5qL6ZBYRYt4GN5MSVBH6kGT8PKIVQUXBQJRWbSumJbzAW5YIFgdGHJcdfy2R+okKJZ8I2JucDLGBigbKpX5vehto14ZiNBp1fwhSYwE1/JBfs8CtsAXlQku2LGnYw+yJztgLMc586upkeGZ2E4Fan9PI3v7ItaFUz+j5UpOUdhBme8E1WEjoFhyq1D2x9qY1gEnpH2nsMmg0o6hvKfMBQfCSObspPTVfqXgvx76qtQ2wlt0OsV9Y8u4DJl7P6abcWSVkHs4/+1lo0TC3A5BdtzJsBwQanDLjJQ31lfttwMd2Usf/Rb8yziezGCpYjopLvhVzWakWeDc71cqe46Shfk83D55AbrwhYK8i+6cUJt/UaJLDVFlSCpHupM2RCdA/5JYdIUIjQAh4cg+ZhlQ0XXyHqBFbXn1n14Mefy9zXfEHPJAgD9+VvCa9+LJSiShN6Hxs9UNVwQfb2QOA1QrasIcnbCQE8Te6GYwoc1h5ysuR9tu3p1lcE8iAy8JaT1lSRd2PSOkTdZwB0vEpYg5SqkePPRYnAikjmbG
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(7416014)(376014)(56012099003)(22082099003)(18002099003)(27256017);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NG1XcmZLNlZDWlB1RHpMcGNSWUJNU28xYWtnSDdNWHRNLzBVZEdxa28rMDRS?=
+ =?utf-8?B?WERBZHJOQ2VMY1RrcHlHZzRwVnNGbU05Y3JVdFM0blQvYkhlSGlxU1Zya1Z2?=
+ =?utf-8?B?NlROZjliZGl3T0QxUzcxTFlsUTZPbkg3WkR4dUovTjJOb2FYMm1DNVJNNUVw?=
+ =?utf-8?B?UTZBNTRXWGs3Wm5MUWZLRFpuOHJNL2JUb2FmYkE3ZUhCS1IvMjUwc3BRSjdC?=
+ =?utf-8?B?WjFtMi8vZ3VUb3ArVGxHMUcySlRMdnlLYzFuSDdXN2g3aXVMczVCVU13ZHJF?=
+ =?utf-8?B?ci9iN1ROZjZMUVF0eXhaWnpsVGcxQVNZRlh2elRiV0gxMXY3eGJKeUhyc0d1?=
+ =?utf-8?B?SmFKaWkxZmVJZnk0aFdUT2RoUEREQmRvU3FpSm5vd0NXMGJVTHFTS0JGa2Ey?=
+ =?utf-8?B?NTBNQVdpb3VNRWtRUFN1SzJwUXMxZWE5WmVQb3RlTTkxVDVrK01tMDlha1Fs?=
+ =?utf-8?B?ZXZIai9BMEVqRXdtdU9jd2hNRlA5NFlUR0d2b0ZLQ012cUlXRDQ0WGY0N1F5?=
+ =?utf-8?B?akJKRXMvS0FWZkZFcDRMWUF5UHZPSG9UbkRGcldScHByYjdSd25KTnpPamli?=
+ =?utf-8?B?QkMwZFFVT3NLYklCYTQrVWQ4R0dENzVDYlVQdVRBMEN4Wm1mcFdKQ3Bkalow?=
+ =?utf-8?B?ZXFrTlpuNDdmR0R4YThxUXBGN3N3dU9iN09lTkgwYURiSWJ5Y09hN0VNelpH?=
+ =?utf-8?B?N3VzRXRKZ0d0dnFpM3NoNG9VL1JMWGRRM2lwSmcvZ3FhS3hrWXJZSk9xamV0?=
+ =?utf-8?B?bzQ5Vk9ZWjM2MjVjMS9ybU9YaThtMVdZYzZFS2dadkVhUGQvUUtickM5VWkr?=
+ =?utf-8?B?ZzlQd0R2RnVJWkkwMThmNkhGMjlmR3FQWmRBMDBZQXhvMy9MVXBDYUlsRUFj?=
+ =?utf-8?B?R01wRitBbjdrL09JSDMrd1l3cVpodnN5RkFRL3k2TEw1WlFTWDU0ekJNdXlY?=
+ =?utf-8?B?UkpuOTNKa0w0MG9KdUQrNWJQdFVPcWxNeU5naDJrOXpKVkNpQmVPL0g4YURy?=
+ =?utf-8?B?RFNoV052dDgxQ3F0UUlRanVCL3dSQ0RDOGdlWVR5azRPTWFtdG93VHYybWxQ?=
+ =?utf-8?B?NEJ1WHFkdVJLYWNIc3dpMFFnODExcWU5WE5FWGoxNGJqanFYbXVtdzFDd2Fm?=
+ =?utf-8?B?eisvaVdLamF6cVBTVGVwaFRMODEzZTJTNEROZ2J3Nll0cSswcTg4QWdlYVpn?=
+ =?utf-8?B?SjFMRXFDek94ZlNkTWZHbTU1RTZnLzhJQ0pJYkhlWVduWDV2OXZBVndpZGpk?=
+ =?utf-8?B?MEtMbmZSZG5sS2hVMEtNTVNFVlJTbWlDNkVKZTdtYTVKK3RRYWJGczNEdU9J?=
+ =?utf-8?B?cTFUSzRxcHJ6cGxTaEhNSHQxdXdZRENqQUFDQzNOYmlkT1loWVU0QzBJRXpr?=
+ =?utf-8?B?b3dkZUN5TUtvZDZ1TDdheWd2NkpKYzRjeFI4cFRGc0JrNzRrSHpGKzJxQ2lh?=
+ =?utf-8?B?YmxnRVZ0bFE3d0lSNkEzZXdBNkRTMG53bFpOcHR0MEt2Mko0d21rRDFsYkJl?=
+ =?utf-8?B?RUV3MFBacnFsMnp0QlVoMXNldklRZ0V2K0UveHNNalVkRGpKM1pKS1NSRWRK?=
+ =?utf-8?B?ekp5U3Y5YUxNcjJkVTFoRUpBRjBXRkcvS1JXMmdjSzQ5dmJDNU1WM1pZTUFl?=
+ =?utf-8?B?SmlOeFZFR2NCTEVDc3doZVpCbldMS1ZkdXk2MUE5VlVDdHdzTFVCa2NXRzM0?=
+ =?utf-8?B?SC9uUzhCR3hkbk9jd1ZjTHdFZC95MjlheXRmVnRzQzdBY0RyaExIUFBod1dD?=
+ =?utf-8?B?d0xXZkV4RS8zaWRFZHh1WHBaSGZTdENyNGFkdEVpOVdxM1NDc3F0WHJEOGwy?=
+ =?utf-8?B?UWlSbTlrT1dUUzgvRmJkS0VJZGdWZ0IyMHExSFlGS2RyZ21XdEJjcFBXZkR5?=
+ =?utf-8?B?aFRPRGI1TVpORS9GcFM3elZtTTJDUXlEc1RYUFNOdTRCK0dDcE1RVTV5clVW?=
+ =?utf-8?B?OWhNK2FGbEppNVA3QlRFL0hkdjEzOWVYVWNzN2hMaEt6TTdFR1NLanUwMXFh?=
+ =?utf-8?B?b0UyWm9rSzU0anpySjdzSllGcUlRUXl0c1NOY2s1VStIR3ZtK0RrR0ZzZnQr?=
+ =?utf-8?B?UXFtRis2eTRraTJwTGgyNExUdjE2NUN1MGxFY0YxTDNQWW14VEdGZ3pIajJS?=
+ =?utf-8?B?Q0RXOWxoTUNJckkvcE5kZGs5TEZlMm1ibm5tY3NydTlMQXpDdFlmMnpnUnE5?=
+ =?utf-8?B?ajlZUWZyR2tWbFdmbjNlSHFlZVpJUzdxbWQ2d1lDVWRXcUhEdFJZSGNUbUw4?=
+ =?utf-8?B?N2pGQUY2TnFScnZKYWVrM3l2UkVNZk9vQUM0cTN1TlVVSHJFWVZva0U5bDZR?=
+ =?utf-8?B?NlJNQjgxUHNBdnlnSEUyTUZ1MGZQRWpkbzZxbHYwQnV3bWpwa01nZWNnaWR1?=
+ =?utf-8?Q?jArAv/V55CBNFT9LkomqkAtA623tUd5VPM/2/?=
+X-OriginatorOrg: valinux.co.jp
+X-MS-Exchange-CrossTenant-Network-Message-Id: a636ebb4-6944-48a8-26ff-08deaf3dd23d
+X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2026 09:15:18.9625
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: KsM1R7BeoZp2De4zOljsFN2FKVbyZKCOhMUWZkcXaYK25OCAyqUdR958clCMuuPHje3Mi5HRo3peMIlyiGj9SA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYCP286MB3313
 
-
-On Mon, 27 Apr 2026 09:32:09 +0800, Jia Wang wrote:
-> This patch series adds PCIe controller support for the UltraRISC DP1000 SoC.
-> The DP1000 is an 8-core 64-bit RISC-V SoC based on UltraRISC CP100 cores,
-> supporting RV64GCBHX ISA with Hardware Virtualization and RISC-V H(v1.0)
-> Extension.
+On Fri, May 01, 2026 at 09:59:42PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Mar 23, 2026 at 12:15:43PM +0900, Koichiro Den wrote:
+> > The EPF driver currently stores the incoming doorbell as a vector number
+> > (irq_no + 1) in db_val and db_clear() clears all bits unconditionally.
+> > This breaks db_read()/db_clear() semantics when multiple doorbells are
+> > used.
+> > 
+> > Store doorbells as a bitmask (BIT_ULL(vector)) and make
+> > db_clear(db_bits) clear only the specified bits. Use atomic64 operations
+> > as db_val is updated from interrupt context.
+> > 
+> > Fixes: 812ce2f8d14e ("NTB: Add support for EPF PCI Non-Transparent Bridge")
+> > Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> > Suggested-by: Dave Jiang <dave.jiang@intel.com>
+> > Signed-off-by: Koichiro Den <den@valinux.co.jp>
 > 
-> The PCIe controller is based on Synopsys DesignWare PCIe IP.
-> This series adds:
-> - Patch 1 adds the basic SoC family Kconfig support for UltraRISC platforms.
-> - Patch 2 adds the device tree bindings documentation for the PCIe controller.
-> - Patch 3 introduces the PCIe host controller driver.
+> On this patch too, but some pre-existing issues as well:
 > 
-> [...]
+> https://sashiko.dev/#/patchset/20260323031544.2598111-1-den%40valinux.co.jp?part=9
 
-Applied, thanks!
+Hi Mani,
 
-[2/3] dt-bindings: PCI: Add UltraRISC DP1000 PCIe controller
-      commit: 09b78d6ec24624c2f5192dbf0c6e05cad61c529d
-[3/3] PCI: ultrarisc: Add UltraRISC DP1000 PCIe Root Complex driver
-      commit: 34f9bebe1cf573cf9735a71c1d484b57f65e5314
+I also revisited Sashiko's feedback against patch 9.
+
+My current understanding is still that most of the underlying IRQ handling
+concerns are pre-existing. However, I realized that patch 9 does make one of
+them more relevant because this series starts giving the reported doorbell
+vector real per-vector semantics, so I think this should be fixed in this
+series.
+
+For the individual Sashiko reports against patch 9:
+
+1) irq_no derivation from the Linux IRQ number
+
+   The reverse calculation itself is not introduced by patch 9. The existing
+   code already derives irq_no from the Linux IRQ number and uses it as the
+   doorbell event number. Patch 9 preserves that assumption.
+
+   Still, I agree the assumption is fragile. Linux IRQ numbers are not the
+   device vector numbers, and the code should not rely on arithmetic on Linux
+   IRQ numbers to recover the device vector. Since I will respin in any case,
+   I'll resolve this as well in v4.
+
+   The IRQ series in [2] addresses the request_irq() unwind problem and avoids
+   calling pci_irq_vector() from hardirq context. It is already acked, but is
+   not visible in mainline yet. I will therefore make [2] an explicit
+   prerequisite for v4 and call that out in the cover letter.
+
+   So, on top of [2], v4 will replace the remaining irq_base-style vector
+   derivation with a per-vector IRQ context passed as request_irq()'s dev_id, so
+   the ISR receives the device vector index directly.
+
+2) unvalidated irq_no
+
+   This is also pre-existing in the sense that the current code already passes
+   the derived irq_no to ntb_db_event() without validation.
+
+   However, patch 9 additionally uses the derived value in BIT_ULL(), and this
+   series implements db_vector_count/mask(), so an invalid vector could lead to
+   both an invalid bit shift and wrong downstream per-vector doorbell handling.
+
+   So v4 will validate the doorbell vector before updating db_val and reporting
+   the doorbell event.
+
+3) request_irq() unwind / probe failure cleanup
+
+   This is the ntb_hw_epf IRQ lifetime issue I mentioned in [1], and what I was
+   trying to address in [2]. I still think this is orthogonal to the doorbell
+   bitmask semantics, so I'll keep [2] as a prerequisite rather than fold that
+   cleanup into this series.
+
+To summarize, I'm planning to include the following in v4:
+  - list [2] as an explicit prerequisite and call it out in the cover letter,
+  - stop deriving the device vector from Linux IRQ-number arithmetic by
+    using per-vector IRQ context for ntb_epf_vec_isr(), and
+  - validate the doorbell vector before BIT_ULL() and ntb_db_event().
+
+Please let me know if you would prefer a different split.
+
+[1] https://lore.kernel.org/linux-pci/7jkibbdz3m3vuq2kq2xxnkt2rjdt5v7itgowc7qormtwgnf6tv@krl5brfjul5y/
+[2] https://lore.kernel.org/ntb/20260304083028.1391068-1-den@valinux.co.jp/
 
 Best regards,
--- 
-Manivannan Sadhasivam <mani@kernel.org>
+Koichiro
 
+> 
+> - Mani
+> 
+> > ---
+> >  drivers/ntb/hw/epf/ntb_hw_epf.c | 10 ++++++----
+> >  1 file changed, 6 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
+> > index 67cdc5d729d5..741d30821390 100644
+> > --- a/drivers/ntb/hw/epf/ntb_hw_epf.c
+> > +++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
+> > @@ -6,6 +6,7 @@
+> >   * Author: Kishon Vijay Abraham I <kishon@ti.com>
+> >   */
+> >  
+> > +#include <linux/atomic.h>
+> >  #include <linux/delay.h>
+> >  #include <linux/module.h>
+> >  #include <linux/pci.h>
+> > @@ -108,7 +109,7 @@ struct ntb_epf_dev {
+> >  	unsigned int self_spad;
+> >  	unsigned int peer_spad;
+> >  
+> > -	int db_val;
+> > +	atomic64_t db_val;
+> >  	u64 db_valid_mask;
+> >  };
+> >  
+> > @@ -337,15 +338,16 @@ static irqreturn_t ntb_epf_vec_isr(int irq, void *dev)
+> >  	int irq_no;
+> >  
+> >  	irq_no = irq - pci_irq_vector(ndev->ntb.pdev, 0);
+> > -	ndev->db_val = irq_no + 1;
+> >  
+> >  	if (irq_no == EPF_IRQ_LINK) {
+> >  		ntb_link_event(&ndev->ntb);
+> >  	} else if (irq_no == EPF_IRQ_RESERVED_DB) {
+> >  		dev_warn_ratelimited(ndev->dev,
+> >  				     "Unexpected irq_no 1 received. Treat it as DB#0.\n");
+> > +		atomic64_or(BIT_ULL(0), &ndev->db_val);
+> >  		ntb_db_event(&ndev->ntb, 0);
+> >  	} else {
+> > +		atomic64_or(BIT_ULL(irq_no - EPF_IRQ_DB_START), &ndev->db_val);
+> >  		ntb_db_event(&ndev->ntb, irq_no - EPF_IRQ_DB_START);
+> >  	}
+> >  
+> > @@ -530,7 +532,7 @@ static u64 ntb_epf_db_read(struct ntb_dev *ntb)
+> >  {
+> >  	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
+> >  
+> > -	return ndev->db_val;
+> > +	return atomic64_read(&ndev->db_val);
+> >  }
+> >  
+> >  static int ntb_epf_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
+> > @@ -542,7 +544,7 @@ static int ntb_epf_db_clear(struct ntb_dev *ntb, u64 db_bits)
+> >  {
+> >  	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
+> >  
+> > -	ndev->db_val = 0;
+> > +	atomic64_and(~db_bits, &ndev->db_val);
+> >  
+> >  	return 0;
+> >  }
+> > -- 
+> > 2.51.0
+> > 
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
