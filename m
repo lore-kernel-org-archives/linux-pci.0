@@ -1,75 +1,255 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012042.outbound.protection.outlook.com [52.101.66.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE9DB4418F0;
-	Tue, 12 May 2026 07:14:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778570098; cv=none; b=rlY7FyS4hETruthHVZfwN4SiqRG375ttnAMX+XDivwWkxntdWkDw/l1gumkr8CEaFKCY10taq1L3U7Ia+CstsMXd34qUyTXOrHRJKrj0eMSiKpU2SaA+l1c9Rp29il12iYTgjLI3e5c0q2KxBMMmFrL3cgUQQXbdI0c9TeJ5a0I=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778570098; c=relaxed/simple;
-	bh=1Q4A1Q+QYp9tlNCUSo8+pB11jnBSTmWLxUPJejRy7uQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OjC8dHcnJOZ1rVD074QEPGkEkR5W72K7TL6Ek18H/vd5JJjfgYqZmTiBBz4cxw9jurWE13W2fIRYNOVWGzHuF+4cFC1rlR3cfNt60jP5I4/9OPlMWJsvu+wYXnxtLFmxG2frg+gd+oFHCNNzoz6mIj5fvWB+PWBp/QBWrCuoKfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b+IycF6/; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2AE3672AA;
+	Tue, 12 May 2026 07:41:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778571673; cv=fail; b=O+4qsdK2HtFCE1lUar8EbiUlsvBo3UzqiM7+BEYxy32zgc/u4yyCcyOFrKuC9Rj3QMCjGwZi63s7DOrLBT3utmTVqYyE6hylLNlO4hMXXFWtIuQpA+qoLDPlb/eE31XIz4bii7K655p0IWq2HHALo5Eya53klLeKmnM2FW/4q/U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778571673; c=relaxed/simple;
+	bh=CNk1/VYYXoaZgdP4XycOWkgbriMu5efa6Vh6YxI/agI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Hjb0fBpqRy1Z2rKYbF9DRD+GaAhfRgWmLc81yd7JXt20I9C6BtVCr50/iPUO28rahLKrHd/OaGu4AoOvKRSs0Bn+fEyXTAxTIK9Ij9u0qVwAvCsSbXYOzet0NuPFJgJgOdgvI7swLVQyVPmmA+HVRrZNRCJ/RaXu0H2dLAjevCo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=Zq8GpPrq; arc=fail smtp.client-ip=52.101.66.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b+IycF6/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 345A6C2BCB0;
-	Tue, 12 May 2026 07:14:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778570097;
-	bh=1Q4A1Q+QYp9tlNCUSo8+pB11jnBSTmWLxUPJejRy7uQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=b+IycF6/JGxzaOmea/L7dX3YcYpWRMeQYigppxCWGK83fhXhnd68xPVSnAukYO+nx
-	 KbpGO1P7ZrH95D5TyETTmw+U6JPP1+uCTHisELA/u85SDJ8aRbSYnQ0DecYxtisUTW
-	 eJwSo+3seiEYf0ZkVDU4QcXChUJQffuvrri27Mxzt+hg7TjVQJ8EtE3xVEDd5brHNP
-	 pJlIImkgCx1rQCJ8UmZOn3f7y+KalI/iVKA3nBVLjIajgnKeJHa6w3wtznloOnCIiz
-	 G2tfifp1WmFmLEUE187xCIe37mjVZibLWJ0Z0HewQDTOHE87iunynKyKk25thuVd9Y
-	 ljG+Hf52MbVXw==
-Date: Tue, 12 May 2026 16:14:55 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Hans Zhang <18255117159@163.com>, bhelgaas@google.com, 
-	lpieralisi@kernel.org, vigneshr@ti.com, jingoohan1@gmail.com, 
-	thomas.petazzoni@bootlin.com, pali@kernel.org, ryder.lee@mediatek.com, 
-	claudiu.beznea.uj@bp.renesas.com, mpillai@cadence.com, robh@kernel.org, s-vadapalli@ti.com, 
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, claudiu.beznea@tuxon.dev, 
-	linux-mediatek@lists.infradead.org, linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 4/7] PCI: dwc: Use common
- pci_host_common_link_train_delay() helper
-Message-ID: <20260512071423.GB3606279@rocinante>
-References: <20260511055923.37117-1-18255117159@163.com>
- <20260511055923.37117-5-18255117159@163.com>
- <20260511070139.GA1096586@rocinante>
- <6xcq6e6c2jc7wxhvv3kjwp5d2ik62ed7kukb3e62yogf3phtxk@6besox4h2v4n>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="Zq8GpPrq"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=iUYNdUd/RVQ2PysfT1FApZJAin2DaPTXjSfmmpOWpfNUZtejP5kmvUyDSndqtV6SikCr1bg03/xxEUUrSOkdwApaKM63ZYQP/lijnXGE9zR5cWIcS1c4UWD7y2GKloiBaokE9Z2BJPIPKqO0er/xA9P0yVOeqnO5EtiPAGVNOoe3XmeH5GjV+wMcOIDM+kvUrdg0y9Lboi6ZOWyI1xJx66r5lme6hpoUmN3Dxtdq2gt/pZDGxZ+SLmk7H9ZWQj+JiOYttflJ0vDMW2f2g2b3yl3lC2CqsRYr+AJ/Nprl17qbPqO3wBRK4fVBaUSvuq2KcCAwf09vGstC6PQDbe4JWw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5reOlBrBteyVoVzr0lZ4JGq3fTTcu8Hy4b+X9bzv8qo=;
+ b=rqgJSW7RyUhxJXQ8uy6PJ4GBbhUSEMLA1EvFHnqPmsRkiWf7um5UFsqn8GZiEajuJaZbbwBof4rYndjgh3D0tEq0sSN8nMUNsE991qXFkqxg+gwOCfDkQmr0kieTR28Ap+kxczdsPUuoCnB0Yz0kX61BzrP4zPcWyDR4enTnFplrJ1EQ0aig6t4UL0OBZ2Tm66ySSYMinIeRMD1zP0C++KOY1rJVKFvcYkHXHFUBBqVgINGY7+LJtfRt4sLRdHWe54WwsOUmLvrrxpuFiUDf77i1P40uDMTF67xYY1lIaMNkFXMwr7OY0MB7cSQ9/zKLnuDq/MiXnfN34EXAV2xadA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5reOlBrBteyVoVzr0lZ4JGq3fTTcu8Hy4b+X9bzv8qo=;
+ b=Zq8GpPrqnUOF8yidCu02FnIQV330BIeYgoJh7ZQDaoBEp9mvpEihPQUmITYS/x05DqCbHKwS+fnD9FoDSRbCHqNUUBNUmr5GLMddhPR/DugLaAf2RnlsJn8TMsmYAu8ioQbRU+avVbL9geXRtk1XKiyAflWdrzYYO83Y142qKPSa8NpZbFHHa7oxtwQLBZjPq6uc/CJ7/RWbWjST79gH8MAOJEBb/y1vpX7oiUgkjJdgOjS5zr2csJSAAQwuU1YkHR7ILbsHtb1wvJax+ckFD++NfJy0dr5UJAwfTu6yyvmxB2SiLSM1OpxMlNIy6i/7YTV7ZZ9orweSbnTwN4EjfA==
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ (2603:10a6:150:30c::14) by DU6PR04MB11159.eurprd04.prod.outlook.com
+ (2603:10a6:10:5c4::8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Tue, 12 May
+ 2026 07:41:02 +0000
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.20.9891.021; Tue, 12 May 2026
+ 07:41:02 +0000
+From: Hongxing Zhu <hongxing.zhu@nxp.com>
+To: Frank Li <frank.li@nxp.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
+	<mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>, "festevam@gmail.com"
+	<festevam@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "imx@lists.linux.dev"
+	<imx@lists.linux.dev>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "stable@vger.kernel.org"
+	<stable@vger.kernel.org>
+Subject: RE: [PATCH v1 1/2] PCI: imx6: Configure REF_USE_PAD before PHY reset
+ for i.MX95
+Thread-Topic: [PATCH v1 1/2] PCI: imx6: Configure REF_USE_PAD before PHY reset
+ for i.MX95
+Thread-Index: AQHc4c8Wv56A2tGrxUq9iXBTPnyLs7YKABvQ
+Date: Tue, 12 May 2026 07:41:02 +0000
+Message-ID:
+ <GV2PR04MB120199F3EAA4142DF4533229B8C392@GV2PR04MB12019.eurprd04.prod.outlook.com>
+References: <20260512052244.49414-1-hongxing.zhu@nxp.com>
+ <20260512052244.49414-2-hongxing.zhu@nxp.com>
+In-Reply-To: <20260512052244.49414-2-hongxing.zhu@nxp.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|DU6PR04MB11159:EE_
+x-ms-office365-filtering-correlation-id: 4423e6e3-d104-49c8-e57c-08deaff9d11e
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|7416014|19092799006|1800799024|366016|3023799003|22082099003|56012099003|11063799003|38070700021|921020|18002099003;
+x-microsoft-antispam-message-info:
+ 07fEPT8AU7kONsxmLPTxq4B+yunpZ3CEjlOLdo08JdGW6RFcbS+/fk7Iz75aWTLsnEphSUs0KCbUPkSSnuegEdaTvciiXjSoD9gYREGs+tnyZ6oK721x2vqrFV8q9KRfK1aum7/gFwbCtlWd1zwwn788jm6TuOCsan4HmVotUKtm16HL0ZYyKPZ5SNcFCNNF1dD8efBr4YxY/fQWTMkRv8lBJoWDxY5p/Ov4Qzgbad6V9GKCEnAo+WnIu/+oBhqxgJHB1tW6cGBH74Y8Cslo4HfY8Rp7p0kiZzgjnN9KVwYzblokOH7JEYUXcuUaUl/qB/g8zNkpYiCc91buN+31bfF2PvanoefuUHRFciNTsRUz9I53ESlnw3NFBas3Lkgj9/Y9uN7IV4eROH2zgZJBTLbnhzeIB9pIp99wvZ4ICcjoSP8Sy0tMt/ASKl1SdRc4ChJbYJeetF9NVwSaSG+zEgLKAyffRYsjQJOwBx6ikrIhnonJUvZ8VjoG6AoHKtfDAHf/XcU0pl5L/KVPYy07VhrEdNPV+w+8SvyhwkCq8g/VeHNHIeFFE521oWKnUHJ5C5kKCMw+GITIfSMSxZq84wglipwRPXM5yuPuqakrHcoHbbJbBf+G5Y3YwpgrtX4qHds1vkt41kIt1tiTPnXoQKMwtqH8LioLgTA/6T9gFRt+PyZHDfZPy0sIUR8xooZdK7QR+u+9vpdz3D2/f1/gogvL1QdspIHR3aURx0aFNGKwz5wHx4byTA9oUDhMk986jL6twUl3ZQA3pXSvzJ6aGw==
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(19092799006)(1800799024)(366016)(3023799003)(22082099003)(56012099003)(11063799003)(38070700021)(921020)(18002099003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?tKeHCDmx3Hg69pbScA6xmYh59aN6poaazAnhLNxZeiJSm0QREyMttaZaOPo5?=
+ =?us-ascii?Q?heZlHaMG2QaAkJ3ZqEmJMhRJ5BGI/uvmH8lDysLac1QeyDN8gTO7XaO9ow6T?=
+ =?us-ascii?Q?0c3MeMggdwrM42KimxXcsY4q+DOToLRqS4yROO9pW5r16mKUTnP6lTo8g2Kz?=
+ =?us-ascii?Q?TkqVs3NOl8xhRoQUzqaqK/aa9wsR1ImDfZlmEa6UJMyv2lOUpz0s6T3pzu41?=
+ =?us-ascii?Q?0kkrJPWaLk3YHVV4WQMVMFvJETN73Rf/O+OkRpiEd9ClhJhPFjGMXh2tpJ3c?=
+ =?us-ascii?Q?JSSei6g7rLW/s+Y+RDOkt1vdFDT0SvYLcMp1wv1Opw3MNxYJrcimiQxAD5UW?=
+ =?us-ascii?Q?8/OWXuv6FxXB0OEkYgeGoG79lAW54we7KSf1p6DEOiXlBEwsD9BElDLtmT/R?=
+ =?us-ascii?Q?GHl2g8mf7b7/AdLniFen+PQUNjheKnWSoBZz3V4ZmdcfyT9LAwdpQHizrIAd?=
+ =?us-ascii?Q?Brrl9fiyW84sntC1pnoeixYIoCV4mzrY+13JhQMFInp5GjZLdEjRuzADv0Xu?=
+ =?us-ascii?Q?QUjpCR42f5aMmmIbOMHMXkfvgxtZwflACfVQOyulKalJ1hKhE+L8QxJ68tw5?=
+ =?us-ascii?Q?7QKvfenI8qN5CFwGlARrDUyjS/GOn5CPfuk1Ajbir4jFlL4NSMWLSiDE83LS?=
+ =?us-ascii?Q?ueEFDEzyoQb9jwjH9L1xmKb38PlVnQyi2kGIe+xQZT/tVdrgkfUsvhOs+QzY?=
+ =?us-ascii?Q?gBAZ9Eg7jKimGvXJKXuvoVKpIXgjOkfgp6kGHgl2rr3BFHWxj3KNUM7ZpSo/?=
+ =?us-ascii?Q?s8nXk6ADPnQU/+C6ZIQEtoKd+qvv2SiayMfWMqf2tfwJ775TMQ5AnSqshzx8?=
+ =?us-ascii?Q?S2mY9A9FC40dMunYTEkXsMrP3tlpvRny7qsCfrf7E/9/u5k3u+Ku/WcjD+bs?=
+ =?us-ascii?Q?tnE/kKNQgvDF8Ih6ULKS3Cpec+u+XTbwKoxUGvyNMu40H4YyVEZPgig4Mr/L?=
+ =?us-ascii?Q?RagvGpU1XJusHITSzEjSKiI2jW9bqt0vGKV8FBOxoVBoTPTXrN2WWDnlzdNN?=
+ =?us-ascii?Q?FGBItdCf7aytV5Swl973Pm7YeeAfPmi3PtMemLg3rwtHMYihM8LxT9KiIEdk?=
+ =?us-ascii?Q?RJVeprr5i91yMqgNce8RVCW3GeYn5Sxpl5AyH5iehPbEilQum5tN/2n14Uyu?=
+ =?us-ascii?Q?V2nRNF0h5Ki8V4TOe1CEVJZdGVNDTK1/b+0mD78VHrb1iZgepyEsD5f+bJvL?=
+ =?us-ascii?Q?NnIiYOzm8RPxzZjCIbOyQw0dpvRFZ0Xby6K+9z1s6wvYzcUw/gvIVfJ/+2SQ?=
+ =?us-ascii?Q?QfNpm8aotGRbYR4zsY9v3IqKkROlERxQ40PwgnhBv0OMyDwy/NUDN3IuLuOi?=
+ =?us-ascii?Q?WJLFxs+VmAKo2QLD0fMxzUAwZZDykUdGIjGR9BC4Iu/FQkWq0Z9Jq+5ZJkci?=
+ =?us-ascii?Q?+5V0qTVgNEEpWuq4Al76uFkOILepczqskucwO6DGtaGbXX67mtE3ZKYO+twK?=
+ =?us-ascii?Q?w5VzA4uxHOMmuMCkTEo7fSMnpbNFZRo7WB5C0h0AkFy+HZ7iUipb8BtCKFbC?=
+ =?us-ascii?Q?kGtGFztI3gHvxg4SDVdcYsMXLvsPsrXY65dGWqPqeXuX/4ZcSrB/MFhYf+Aq?=
+ =?us-ascii?Q?ONAa12Fo19pdao1dLxQO70VyY920TROemBA/HL4xhJ15GA2gqkACKNdLfWIY?=
+ =?us-ascii?Q?hm5fnGyt0/JLUVI+kZIRodgcHq/YPFLTmPPg+rQMSGVc7qw9YlTx+kwIuDtn?=
+ =?us-ascii?Q?y20wWla20WALBte6+wo4AKYZ+DOcXHpiN/wq7Ms4Yd5iQlRV?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6xcq6e6c2jc7wxhvv3kjwp5d2ik62ed7kukb3e62yogf3phtxk@6besox4h2v4n>
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4423e6e3-d104-49c8-e57c-08deaff9d11e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 May 2026 07:41:02.3293
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: f2l0N6JszseBju28nxk4weVaH60aPxXbQ2i1fxV/qxmmLpELOOCWoPskJeZwHBYWkR7ombgpjbzowAJFgmSw9g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU6PR04MB11159
 
-Hello,
+> -----Original Message-----
+> From: Hongxing Zhu <hongxing.zhu@nxp.com>
+> Sent: Tuesday, May 12, 2026 1:23 PM
+> To: Frank Li <frank.li@nxp.com>; l.stach@pengutronix.de; lpieralisi@kerne=
+l.org;
+> kwilczynski@kernel.org; mani@kernel.org; robh@kernel.org;
+> bhelgaas@google.com; s.hauer@pengutronix.de; kernel@pengutronix.de;
+> festevam@gmail.com
+> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> imx@lists.linux.dev; linux-kernel@vger.kernel.org; Hongxing Zhu
+> <hongxing.zhu@nxp.com>; stable@vger.kernel.org
+> Subject: [PATCH v1 1/2] PCI: imx6: Configure REF_USE_PAD before PHY reset=
+ for
+> i.MX95
+>=20
+> According to the i.MX95 PCIe PHY Databook, the ref_use_pad signal in the
+> Common Block Signals section selects the reference clock source connected=
+ to
+> the PHY pads. Per the specification, any change to this input must be fol=
+lowed by
+> a PHY reset assertion to take effect.
+>=20
+> Move the REF_USE_PAD configuration before the PHY reset toggle to comply =
+with
+> the required initialization sequence.
+>=20
+> Fixes: 47f54a902dcd ("PCI: imx6: Toggle the core reset for i.MX95 PCIe")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 27 ++++++++++++++++++++++++---
+>  1 file changed, 24 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c
+> b/drivers/pci/controller/dwc/pci-imx6.c
+> index 1034ac5c5f5c1..c57f18d9e4ffa 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -137,6 +137,7 @@ struct imx_pcie_drvdata {
+>  	const u32 mode_off[IMX_PCIE_MAX_INSTANCES];
+>  	const u32 mode_mask[IMX_PCIE_MAX_INSTANCES];
+>  	const struct pci_epc_features *epc_features;
+> +	int (*init_pre_reset)(struct imx_pcie *pcie);
+>  	int (*init_phy)(struct imx_pcie *pcie);
+>  	int (*enable_ref_clk)(struct imx_pcie *pcie, bool enable);
+>  	int (*core_reset)(struct imx_pcie *pcie, bool assert); @@ -247,6 +248,2=
+4
+> @@ static unsigned int imx_pcie_grp_offset(const struct imx_pcie *imx_pci=
+e)
+>  	return imx_pcie->controller_id =3D=3D 1 ? IOMUXC_GPR16 :
+> IOMUXC_GPR14;  }
+>=20
+> +static int imx95_pcie_init_pre_reset(struct imx_pcie *imx_pcie) {
+> +	bool ext =3D imx_pcie->enable_ext_refclk;
+> +
+> +	/*
+> +	 * Regarding the Signal Descriptions of i.MX95 PCIe PHY, ref_use_pad is
+> +	 * used to select reference clock connected to a pair of pads.
+> +	 *
+> +	 * Any change in this input must be followed by phy_reset assertion.
+> +	 */
+> +
+> +	regmap_update_bits(imx_pcie->iomuxc_gpr,
+> IMX95_PCIE_SS_RW_REG_0,
+Sorry, the register name IMX95_PCIE_SS_RW_REG_0 is incorrect and should be
+replaced with IMX95_PCIE_PHY_GEN_CTRL. I will update this in the next versi=
+on.
 
-> > > -	/*
-> > > -	 * As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link
-> > > -	 * speeds greater than 5.0 GT/s, software must wait a minimum of 100 ms
-> > > -	 * after Link training completes before sending a Configuration Request.
-> > > -	 */
-> > > -	if (pci->max_link_speed > 2)
-> > > -		msleep(PCIE_RESET_CONFIG_WAIT_MS);
-> > > +	pci_host_common_link_train_delay(pci->max_link_speed);
-> > 
-> > This comment could move to the helper you added.
-> > 
-> 
-> Not required, as the macro definition in drivers/pci/pci.h already has an
-> elaborative comment with spec citation.
+> +			   IMX95_PCIE_REF_USE_PAD,
+> +			   ext ? IMX95_PCIE_REF_USE_PAD : 0);
+> +
+> +	return 0;
+> +}
+> +
+>  static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)  {
+>  	bool ext =3D imx_pcie->enable_ext_refclk; @@ -269,9 +288,6 @@ static
+> int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
+>  			IMX95_PCIE_PHY_CR_PARA_SEL,
+>  			IMX95_PCIE_PHY_CR_PARA_SEL);
+>=20
+> -	regmap_update_bits(imx_pcie->iomuxc_gpr,
+> IMX95_PCIE_PHY_GEN_CTRL,
+> -			   IMX95_PCIE_REF_USE_PAD,
+> -			   ext ? IMX95_PCIE_REF_USE_PAD : 0);
+>  	regmap_update_bits(imx_pcie->iomuxc_gpr,
+> IMX95_PCIE_SS_RW_REG_0,
+>  			   IMX95_PCIE_REF_CLKEN,
+>  			   ext ? 0 : IMX95_PCIE_REF_CLKEN);
+> @@ -1251,6 +1267,9 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp=
+)
+>  		pp->bridge->disable_device =3D imx_pcie_disable_device;
+>  	}
+>=20
+> +	if (imx_pcie->drvdata->init_pre_reset)
+> +		imx_pcie->drvdata->init_pre_reset(imx_pcie);
+> +
+>  	imx_pcie_assert_core_reset(imx_pcie);
+>  	imx_pcie_assert_perst(imx_pcie, true);
+>=20
+> @@ -1961,6 +1980,7 @@ static const struct imx_pcie_drvdata drvdata[] =3D =
+{
+>  		.mode_mask[0] =3D IMX95_PCIE_DEVICE_TYPE,
+>  		.core_reset =3D imx95_pcie_core_reset,
+>  		.init_phy =3D imx95_pcie_init_phy,
+> +		.init_pre_reset =3D imx95_pcie_init_pre_reset,
+>  		.wait_pll_lock =3D imx95_pcie_wait_for_phy_pll_lock,
+>  		.enable_ref_clk =3D imx95_pcie_enable_ref_clk,
+>  		.clr_clkreq_override =3D imx95_pcie_clr_clkreq_override, @@ -
+> 2016,6 +2036,7 @@ static const struct imx_pcie_drvdata drvdata[] =3D {
+>  		.ltssm_mask =3D IMX95_PCIE_LTSSM_EN,
+>  		.mode_off[0]  =3D IMX95_PE0_GEN_CTRL_1,
+>  		.mode_mask[0] =3D IMX95_PCIE_DEVICE_TYPE,
+> +		.init_pre_reset =3D imx95_pcie_init_pre_reset,
+>  		.init_phy =3D imx95_pcie_init_phy,
+>  		.core_reset =3D imx95_pcie_core_reset,
+>  		.wait_pll_lock =3D imx95_pcie_wait_for_phy_pll_lock,
+>=20
+> base-commit: e98d21c170b01ddef366f023bbfcf6b31509fa83
+> --
+> 2.37.1
 
-So it does, indeed.  Thank you for checking!
-
-	Krzysztof
