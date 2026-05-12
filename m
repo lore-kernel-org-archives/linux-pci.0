@@ -1,142 +1,203 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C05C7357CF9
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 18:59:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778612395; cv=none; b=PFpMSMcUu+mwh8hBeBm+sByZTLDGHif4hAIEUOUF6jacEVI0iY1UkPx7Ov+/1At5vU8sKGe9hzey8OiVxotC0rbbxniJkq73PJu46yQSYeScUjN4i3V/Qqgl+xgLZuBVL9uXXAPVrUsCYCmKrTD97jsK2KFy1ad9wir4hU9k3ss=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778612395; c=relaxed/simple;
-	bh=3TV/8sjMg41uVSyjTcoKqLqBXHun1ZRIa8Yr6xMYYA8=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fn+ZCBpe2LWx/whMJYIJVTpk+0vgXlNHp5hZP5I9zf7hzV1ux28055kLxDXh2i9Wh1cOxYzaO2UUPRg9YrIzQ/Po/hvdWpNCJCWdplo6wzQ1kwwxglDXPdPk5TjDgTgki9glYkavcQ14q64NyoYwNg+lf1V6l4HBOYH/CYoRwQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=OZ6Gka7F; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EFBC2EB5A6
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 20:39:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.47
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778618347; cv=pass; b=jZmOqsTxcIxAtggwaEkPs27ZlQaL1ALZSnxlAP7O2t5ghVs6u+vcv6UD+uf+eT2Qp0xn3wxWX9vMdWDwgmwqqIWj3G497RtGVsWelVhfW/03F7QE3qMc5+ki9RbHA3dv4Gh35gWlDx72QrZDGSgcAm0MKdKLrwierKc2AUnkx2E=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778618347; c=relaxed/simple;
+	bh=zBiVLUnLg55g+8umYtETpbTrhNPTIkasp6hQef2Bu40=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aHt//77xJX0Fh6lNKqMcn9Urks58ePEO63tBb1efoR6QaKQdLb4d//LQJAkZRuukZkXvEIJ6R7kn69CXRvFr/ssmuL7u3SNCiIT+kIrKq/2CSwhElW279FlJjIcJcEXmZeBTfAYumUzpqbozt2M/i3A79Bg7UnewdW8RZyuWdiI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D5zcGatA; arc=pass smtp.client-ip=209.85.218.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="OZ6Gka7F"
-Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64CGAQj1508833
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 11:59:53 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=s2048-2025-q2; bh=z/T90J2VcCXM9MrxBJ
-	/CnLMXPOreCP72V21n7qFI9lU=; b=OZ6Gka7FDAXsQJ0u6oXQsKuWd85z85ag1R
-	PT+/1D5B1vYX9KsrEMprX7KpupZjm4cKv4ekfO1OB8ujBzPqj1Ye7t5CFftuy3Fi
-	Iqto8iB83mWsy29a2wG9Okjz9pPBRecyUP/ALDSgrfGOunNv1iQgRkK07ZQwvnpj
-	HfKWPd7fl8BmrUusKr18+j5sqO/P+TlEsVD5hHxnCRGEAoC/UfRGNVLQ4qzBpQEs
-	Btq2ux6URiA0n6EvhR3qInBn2hxtPW6HeHW6R/YGMTee/AJ0/zagQagKSv9LtXWN
-	t2HWTU67OTSzr6L6bRgg8lvx5uHX3aO4GXTpN9SPGqmlEaqum0KQ==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4e3nvqb39y-9
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 11:59:53 -0700 (PDT)
-Received: from twshared2072.03.snb3.facebook.com (2620:10d:c085:108::4) by
- mail.thefacebook.com (2620:10d:c08b:78::2ac9) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.37; Tue, 12 May 2026 18:59:49 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id 0C5682923916A; Tue, 12 May 2026 11:47:55 -0700 (PDT)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon
- Romanovsky <leon@kernel.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <kvm@vger.kernel.org>,
-        <linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        Keith Busch
-	<kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-        Yishai Hadas
-	<yishaih@nvidia.com>, Zhiping Zhang <zhipingz@meta.com>
-Subject: [PATCH v3 0/2] vfio/dma-buf: add TPH support for peer-to-peer access
-Date: Tue, 12 May 2026 11:47:47 -0700
-Message-ID: <20260512184755.4137227-1-zhipingz@meta.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D5zcGatA"
+Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-bd11a3729e8so352068666b.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 13:39:05 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778618344; cv=none;
+        d=google.com; s=arc-20240605;
+        b=DZ+DrOulw/Fr2ZfpLB2iJTS+jQZQF0Pih4wUogLddE8eNS7krbkiQ/05JWmNrKXcdL
+         LMDLGVYFiTmK4AL96RgIP1MAPyUIc+heCvDfUs5MVCQAawG/7Fa5Iw3MNFbQTkHXUClJ
+         YVO1ZyjHnfK/lIxxVbHR6saiMDn+NqfFS09/NMI0iQqIDaebhswoeqMpOLl1gKFk4llk
+         9rAtzaiwIncQ7EPDDl0YeXRH0D0rU8RmEOEq5vobwAlVmCAc9N6ymsoX3Jt9wnZHKBAP
+         bMXx/iEDiJSZVMYnBftOhvTPHX5HUzL+O9CHPPWa3JifgrnXcP4tbV0Jg9hfc05P+VCN
+         ulxg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=llWupUFSzskJD5hTZJkuiFFKoMSFShu4eCtfvOZTUUM=;
+        fh=EuTCWd/h7j6tmaSWkQYHhqkBwLXz5T5PUhE/Z5NZo0Y=;
+        b=KJ8GHEj3GDnd5HmgU8FGhUYcqorkbNC+QqSvdZzcWAxCJMtiby+gFJbcmKSToCm95/
+         LTwuq2XuExRNsH7DYpZn6tO7L/5UzpccOMxc/yDzSXnesuxkCVyyHI4xgtxUPXfEBtUC
+         0VW0HvfdMPFwuudEyk56KOdtyKxnT8BatqJyq0O3Q5mkZQ0Nv07ggUfQMZ/F+5YxjZyE
+         bjzVCylOVhI0XLe74p+C8DZbz6m5vN2YNZk56yBqgPmi5Y61j3c33e6vrfdovKP2PhJz
+         MN1DtsCRqQcC262lXYEQ9zRKHw2/dboh4YRRFmY4pZP5ICoy9//2+FfIU0LjaNhHt09f
+         GGGA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778618344; x=1779223144; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=llWupUFSzskJD5hTZJkuiFFKoMSFShu4eCtfvOZTUUM=;
+        b=D5zcGatAgroGCV6AR8HGSePq6GMQ1csqfV5weBDFe8Rya1T/CPWF7dsBb4ZjE6808s
+         DGLZYfEE1FjyQR1vIDD7R5c6l0eO7+P+6gYiuAb7+pFgczwF6O7bEsUprL9SwpQOPu4/
+         274ALckdTR29bq9AWUePO/psC3b1Ir+yWGWCHUAAKldpSZnEXJcLetIHw8o6qN60cwUm
+         wJgzgam4+sUziwwcSBKe+vODO3N4ezhVU/6FNHvZh9XKT81BqsGg4JYXA8JZ7VB3bFEp
+         oEAafr9D4QLTGP+aeQXdJ1n13ErgQSNXnsxo7/FzQtQQn9vaOHIn7Q0AwQq+uMADY50R
+         z7sg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778618344; x=1779223144;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=llWupUFSzskJD5hTZJkuiFFKoMSFShu4eCtfvOZTUUM=;
+        b=iHp4T7AjnBmxVQmwV+0oKhS55AxkxanmJmD3hXGqXo04UOYaSQs27EaX/SLb8xOq+p
+         tLb8osKwFopxgTsZrb9xYaiPPZC6MFyXEeF5fTykBYSb/AdMYN3OjzGuzL1irmvO+h8q
+         /ikX2xLQhRZghVsz+5LXKn5be/LfBzAVWvpiqXJhTTsb9o40tqRsYa+Awo7T4jzSRZoT
+         DMI3A/KQyBmUr2m2ZL3+1XlIMX9MUe+Ma1JqJFaIoeXTnyIcyItaWnA8Rp9cWgtQSEUB
+         nx4bU7wwgIn6N5n6PekcA6kFzNXiV3qwq84UOLs150VBBthLJL9SmCh6rmL56KfvCV0+
+         aLMg==
+X-Gm-Message-State: AOJu0Ywr0Mv5e6/cRhHn8xo1HYYkOI7En/LUUzRDak1+226wULrT/ZdH
+	2XU5NEWaMq+UIiID8QnaifA3YkkMIuDhNwBkEbDCnN5+8WJA3E99nd7+rcgpZAwvrnw/mHaBSrG
+	WT+6oK3WUbs3nXHAaII+GDxffYWjqaZJ/C7ZJ
+X-Gm-Gg: Acq92OHapPC6wJfK/SPsxDDlFflCrssRQm+yt9Nukdj317l7/aPnbvFyi7HoXOOD2eb
+	KZuUOTGY4VAfvWn8mugm4Tj2vAhWpJOGsbb4IXmEGqG1nHM405pJ5FmZIxdzT02ph4c4nPdgNRD
+	mt+bu95ubEgh5+E8gpPQhamai8GBoZT06+psCrOSbH1zRz4YigLDyMmu3hMfBu7d6kS3BzeUt/f
+	lNJT/APypVMYyvkaMEKAysNCGsYkR3SqJUR0jp+T7Yp81tjZMaUzqPsp8UFpUHBcFjmptz1tqgE
+	7J65szedtqZ4GQqDpdr5KV7WYqWUfCeH4ohTKQYaVnZ8VTqDi1usTVpjOPweyzoHoPIqYu/Ec6r
+	DG3pGzH0freHE+YY1ZI8xmjdDNMO2FoI8OLcdBA0KxJ5SgPUbUKO5xeCmfw==
+X-Received: by 2002:a17:907:d20b:b0:bcb:9366:4cfb with SMTP id
+ a640c23a62f3a-bd3bf77975dmr24035166b.15.1778618343661; Tue, 12 May 2026
+ 13:39:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20260411043051.174309-1-rosenp@gmail.com> <7sibn6mlvuozzjuggu773w2eqjyb7dz34gkdrx7tzxyjbygfpx@hiqzen36nknm>
+In-Reply-To: <7sibn6mlvuozzjuggu773w2eqjyb7dz34gkdrx7tzxyjbygfpx@hiqzen36nknm>
+From: Rosen Penev <rosenp@gmail.com>
+Date: Tue, 12 May 2026 13:38:52 -0700
+X-Gm-Features: AVHnY4KsWYZ6_zXcVofKJP8g2qSPNYlnXAWpzEkGByljG0jrlubk0bgxqgbSAPo
+Message-ID: <CAKxU2N_WpHOLPyN6AfnK0CyoU1dkBsGivRvVZt1fnKMSpc3aVA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: mvebu: allocate ports with pcie struct
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTEyMDE5NiBTYWx0ZWRfXw26odXdE5Gr2
- BmSrg71u4Ts0FvY+Fv9dbn1XhoNTG3VzcKZduOmfIh8j4JHamjwpqeKNkpdvr14phPNxg64SUHf
- b6oRol3ngJnGCHAamx1ld8ttOuuhcaL3lGCbqwpanMYiagkjse/voaHKdZEgqv1qTNpZ8VduMYv
- NAWP05UmGdkOuwx+XLUqiA94yrnw3L+8sVcdOTKZ2t4HhQy7WCYZYYHGukG50+s92ISWpV3xA3f
- Z+cRYrD91Asj8HitIb+nzGGX3FRQsSdTBv0o21Qi5yCMr6xuTcjhlVGVXTOIZHKavW9vUp6u2ae
- Axd27rJGPYxYMLHAaPV8isfXmIgCn4//5duwuSrH3bDNbxwPNxtypvCrOt/xlrA+SWrs997IgLl
- Wy93Z8yk/9Z+/Mh2vSrCjnDMqdaaP7FDf3s+9ekMXgCaF7gbSrpMmbdMYLaI/QlVEPKpf1aSflz
- HkWZJlpCZO+eVabPBEg==
-X-Proofpoint-GUID: hFBqEo1tJaDVQhLriH-tjVK3_VOKQqDQ
-X-Proofpoint-ORIG-GUID: hFBqEo1tJaDVQhLriH-tjVK3_VOKQqDQ
-X-Authority-Analysis: v=2.4 cv=TfKmcxQh c=1 sm=1 tr=0 ts=6a0378a9 cx=c_pps
- a=CB4LiSf2rd0gKozIdrpkBw==:117 a=CB4LiSf2rd0gKozIdrpkBw==:17
- a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=PAz_-FQ8hEVmOPYdF0yf:22 a=VwQbUJbxAAAA:8 a=VabnemYjAAAA:8
- a=AwavuCtjv7QaUXewFCYA:9 a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-11_05,2026-05-08_02,2025-10-01_01
 
-This series adds TLP Processing Hints (TPH) support to the VFIO dma-buf
-export path, allowing importing drivers (e.g. mlx5) to use the exporter's
-steering tag when performing peer-to-peer DMA into a VFIO-owned device.
-
-Patch 1 adds the dma-buf get_tph callback and the new vfio uAPI.
-Patch 2 wires up the mlx5 RDMA driver as a consumer.
-
-Changes since v2:
-  - uAPI now carries both the 8-bit ST and 16-bit Extended ST values,
-    gated by a flags field, because the two are distinct namespaces in
-    the PCIe TPH ST table and a numeric range check on a single value
-    cannot pick the right one.=20
-  - Add pcie_tph_get_st_width() in <linux/pci-tph.h> so mlx5 doesn't
-    dereference pci_dev::tph_req_type directly.
-  - Validate that the TLP Processing Hint fits in the 2-bit spec field
-    in VFIO_DEVICE_FEATURE_DMA_BUF_TPH; previously an out-of-range
-    userspace value would be stored unchecked.
-  - Publish/consume ordering for the TPH metadata: writers store the
-    flags last with smp_store_release() under memory_lock; readers run
-    lockless with smp_load_acquire() on the flags. This avoids an
-    unprotected read in get_tph() and removes the AB-BA risk that
-    would appear if the reader took memory_lock while an importer held
-    dma_resv_lock.
-  - Convert vfio_pci_dma_buf::revoked from a bitfield to bool to
-    eliminate the cross-lock RMW on a shared bitfield byte (revoked is
-    written under dma_resv_lock; the new TPH fields are written under
-    memory_lock).
-  - mlx5 reuses the dma_buf pointer that the umem already resolved
-    instead of calling dma_buf_get(fd) a second time, closing a TOCTOU
-    where a concurrent dup2() could substitute a different dma_buf
-    between umem creation and the TPH lookup.
-  - mlx5 now tracks per-MR ownership of the allocated steering-tag
-    index (dmabuf_st_index / dmabuf_st_owned on mlx5_ib_mr) and frees
-    it both when the firmware mkey is destroyed and when the MR is
-    revoked-and-recycled into the FRMR pool.=20
-
-Previous link:
-v2: https://lore.kernel.org/linux-pci/20260430200704.352228-1-zhipingz@me=
-ta.com/
-
-Zhiping Zhang (2):
-  vfio: add dma-buf get_tph callback and DMA_BUF_TPH feature
-  RDMA/mlx5: get tph for p2p access when registering dma-buf mr
-
- drivers/infiniband/hw/mlx5/mlx5_ib.h          |   6 +
- drivers/infiniband/hw/mlx5/mr.c               |  72 ++++++++++-
- .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  27 +++--
- drivers/pci/tph.c                             |  20 ++++
- drivers/vfio/pci/vfio_pci_core.c              |   3 +
- drivers/vfio/pci/vfio_pci_dmabuf.c            | 113 +++++++++++++++++-
- drivers/vfio/pci/vfio_pci_priv.h              |  11 ++
- include/linux/dma-buf.h                       |  21 ++++
- include/linux/mlx5/driver.h                   |   7 ++
- include/linux/pci-tph.h                       |   2 +
- include/uapi/linux/vfio.h                     |  35 ++++++
- 11 files changed, 306 insertions(+), 11 deletions(-)
-
---=20
-2.52.0
-
+On Tue, May 12, 2026 at 4:29=E2=80=AFAM Manivannan Sadhasivam <mani@kernel.=
+org> wrote:
+>
+> On Fri, Apr 10, 2026 at 09:30:51PM -0700, Rosen Penev wrote:
+> > Use a flexible array member to combine allocations and simplify
+> > slightly.
+> >
+> > Add __counted_by for extra runtime analysis.
+> >
+> > Needed to move mvebu_pcie struct below others as flexible array members
+> > require full definitions.
+> >
+> > Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> > ---
+> >  drivers/pci/controller/pci-mvebu.c | 33 ++++++++++++------------------
+> >  1 file changed, 13 insertions(+), 20 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controlle=
+r/pci-mvebu.c
+> > index a72aa57591c0..dea50f6e88be 100644
+> > --- a/drivers/pci/controller/pci-mvebu.c
+> > +++ b/drivers/pci/controller/pci-mvebu.c
+> > @@ -78,18 +78,6 @@
+> >  #define PCIE_DEBUG_CTRL         0x1a60
+> >  #define  PCIE_DEBUG_SOFT_RESET               BIT(20)
+> >
+> > -struct mvebu_pcie_port;
+> > -
+> > -/* Structure representing all PCIe interfaces */
+> > -struct mvebu_pcie {
+> > -     struct platform_device *pdev;
+> > -     struct mvebu_pcie_port *ports;
+> > -     struct resource io;
+> > -     struct resource realio;
+> > -     struct resource mem;
+> > -     int nports;
+> > -};
+> > -
+> >  struct mvebu_pcie_window {
+> >       phys_addr_t base;
+> >       phys_addr_t remap;
+> > @@ -125,6 +113,16 @@ struct mvebu_pcie_port {
+> >       int intx_irq;
+> >  };
+> >
+> > +/* Structure representing all PCIe interfaces */
+> > +struct mvebu_pcie {
+> > +     struct platform_device *pdev;
+> > +     struct resource io;
+> > +     struct resource realio;
+> > +     struct resource mem;
+> > +     int nports;
+> > +     struct mvebu_pcie_port ports[] __counted_by(nports);
+> > +};
+> > +
+> >  static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 val,=
+ u32 reg)
+> >  {
+> >       writel(val, port->base + reg);
+> > @@ -1455,11 +1453,13 @@ static int mvebu_pcie_probe(struct platform_dev=
+ice *pdev)
+> >       struct device_node *child;
+> >       int num, i, ret;
+> >
+> > -     bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(struct mvebu_pc=
+ie));
+> > +     num =3D of_get_available_child_count(np);
+> > +     bridge =3D devm_pci_alloc_host_bridge(dev, struct_size(pcie, port=
+s, num));
+> >       if (!bridge)
+> >               return -ENOMEM;
+> >
+> >       pcie =3D pci_host_bridge_priv(bridge);
+> > +     pcie->nports =3D num;
+> >       pcie->pdev =3D pdev;
+> >       platform_set_drvdata(pdev, pcie);
+> >
+> > @@ -1467,12 +1467,6 @@ static int mvebu_pcie_probe(struct platform_devi=
+ce *pdev)
+> >       if (ret)
+> >               return ret;
+> >
+> > -     num =3D of_get_available_child_count(np);
+> > -
+> > -     pcie->ports =3D devm_kcalloc(dev, num, sizeof(*pcie->ports), GFP_=
+KERNEL);
+> > -     if (!pcie->ports)
+> > -             return -ENOMEM;
+> > -
+> >       i =3D 0;
+> >       for_each_available_child_of_node(np, child) {
+> >               struct mvebu_pcie_port *port =3D &pcie->ports[i];
+> > @@ -1488,7 +1482,6 @@ static int mvebu_pcie_probe(struct platform_devic=
+e *pdev)
+> >               port->dn =3D child;
+> >               i++;
+> >       }
+> > -     pcie->nports =3D i;
+>
+> So now, nports stays with of_get_available_child_count()?
+yes.
+>
+> - Mani
+>
+> --
+> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
+=E0=AF=8D =E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
+=E0=AF=8D
