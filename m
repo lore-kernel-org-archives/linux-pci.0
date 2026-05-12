@@ -1,208 +1,175 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA42A3E170C;
-	Tue, 12 May 2026 13:05:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC4BF349CEA
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 13:08:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778591119; cv=none; b=nrG9QSwS08DBzxK36pGDuhxejAZ/s+rF6ksxkqOiOKE8EjHW4NQDKKRKdJUTTdw5wk1/RmPrfpk6CvXhc9x8R2G0gGoM2RJo0AGo6hY0ssf0OHK6hWgcLOULr37deD3MtiVSFLf+aZHUjhYEIEt4gEcl2HUX/HTtRQmL4OzECYA=
+	t=1778591304; cv=none; b=pPHTLo9OETP4Hv/b7yADotjxNKTm9WCJGd/w+tey6uT9KkAwW/c/IFDeKG0qye6piPzyYFsHeLWo8IICsxOCYL3De7QWVD+y0yb20VL6R7jKR32ZLjCpcTHa20kQjAaRZ0y+5s/1JSJO/7cv25bH84tT5yhVZzaZR2TaZHZK9gM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778591119; c=relaxed/simple;
-	bh=bg4o7RwuuxEDvH8OIFEtF3dwjttBqocBKfhQEXr8ROo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HDKpqABcrzmwPQsI4f/FmfKV/T/YrqTNV4snvle7mohRa3fp6wgPR9pmrKS0LB7ENcAnUqZRzFHTUk6T0ljXlGTTFcGyaLZpKF/HxIkVShxqgKhJXjbBBODBbUr4RhzOb9s3fKxzT3exdwukK68bIkyto0GtDlVTYSa/lOzJVMU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IAJ4+SWW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778591304; c=relaxed/simple;
+	bh=w65/OBpwjh0uHiYjvr3D1UQQ5aaOwEqa/k9xp5C/d2c=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=XHqDDBT8RCn8kwiDbo919hqQrgSIbh+eUIOhWud20/qvJoz0yLwmMlgrQ6w/7GEDsnCTzy5Y/9bVCONOuxZVlEyEnEDSwnYuwXw3hlTPmQI1dioeNdkuWgBFg4mfZ8qF2VMlaNjJpW2cQduW+nZ5x186urE7A9ggLWqNwx3WKDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=LxwUDEPZ; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IAJ4+SWW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20081C2BCB0;
-	Tue, 12 May 2026 13:05:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778591119;
-	bh=bg4o7RwuuxEDvH8OIFEtF3dwjttBqocBKfhQEXr8ROo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IAJ4+SWW6dGKdQlvU4QHubSOcxUTtjskun01cJTOk3Rq+++/n/I9fNV1eawjLpMno
-	 2t+p9/OePnaKrEg6gZb+Dwq8dQpklF1ievE2b6SCHzbmjSTESi9AUzt4B5IOITc82D
-	 vjWplV2ktWv5fsndOHlm2sQV7UKAN2O9cmsZx9YM/G4dgZLdCa3WnARD7CEiz3MCOg
-	 FYTZIHEvZS2p8l/pvh83CLIZrX2/OoCpXlXqjxGZwPq4VerPZmZQvKCUHZWPz/aE9x
-	 k3uCwqq7ejXymYyBy1ongNdqkUVbYEpxsw1ajVMyTCwbyWilDhEwd5dFaSWVlquWdg
-	 lBPsLDyLnnZuQ==
-Date: Tue, 12 May 2026 18:35:11 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Mahesh Vaidya <mahesh.vaidya@altera.com>
-Cc: joyce.ooi@intel.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	subhransu.sekhar.prusty@altera.com, dinguyen@kernel.org
-Subject: Re: [PATCH 3/3] PCI: altera: add Agilex 5 support
-Message-ID: <46lb3ald2zwoum53oivvlgoy2uognjygkgtks5vcngqo4wxply@75a6zvxtfwes>
-References: <20260424094913.522123-1-mahesh.vaidya@altera.com>
- <20260424094913.522123-4-mahesh.vaidya@altera.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="LxwUDEPZ"
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gFH2p0y4Jz9tg0;
+	Tue, 12 May 2026 15:08:18 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1778591298; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ft/L4wZAPmSJEB9Bln0jcx6NFiGlgkESzfw6XkOBh78=;
+	b=LxwUDEPZJqvHlN6M+JZxT2h2AORKhEVZO7ACQmrAUJLl49rCkn1J82RkgeZRdgm+iKkgBn
+	PVRk89bhVAETSZ6fZZcri7gWboGS24xXqYOGfbQIk2OQ7l+6QAmhWnIKMyl5DVxXBWdlzr
+	er+dGsUef/nshUC5lI7pvPiQ+fYq4xqjdCidVFrcNXbX5MEvFEVGDo2TKku/hvNGkUG/Jb
+	BX7pNcyol1aXuSKSYyO/o1Lbn5uG70yzwHvYgw0fuwZF0zHWvsNg9SyBUNn24kd0O7hhpP
+	9+NdF38lT2SHaRiRWnhFS79LJk5Q6SMgeHswLw4gPcSc5NYifvTei/6W7taS1Q==
+Message-ID: <93690b2a576a6f91fe0b0e33193b11e3619e9f9a.camel@mailbox.org>
+Subject: Re: [PATCH v4 1/7] PCI/MSI: Split __pci_enable_msi_range() for reuse
+From: Philipp Stanner <phasta@mailbox.org>
+Reply-To: phasta@kernel.org
+To: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Nirmal Patel <nirmal.patel@linux.intel.com>, Jonathan Derrick
+ <jonathan.derrick@linux.dev>, Kurt Schwemmer
+ <kurt.schwemmer@microsemi.com>,  Logan Gunthorpe <logang@deltatee.com>,
+ Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
+Date: Tue, 12 May 2026 15:08:12 +0200
+In-Reply-To: <1777017460-243543-2-git-send-email-shawn.lin@rock-chips.com>
+References: <1777017460-243543-1-git-send-email-shawn.lin@rock-chips.com>
+	 <1777017460-243543-2-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260424094913.522123-4-mahesh.vaidya@altera.com>
+X-MBO-RS-META: etnyb4qju7g7ehi3ztggdxp7nhr6pnbm
+X-MBO-RS-ID: b9fa1b657a4235e5a25
 
-On Fri, Apr 24, 2026 at 02:49:13AM -0700, Mahesh Vaidya wrote:
-> Add PCIe root port controller support for the Agilex 5 (V4) family
+On Fri, 2026-04-24 at 15:57 +0800, Shawn Lin wrote:
+> Splits the __pci_enable_msi_range() function into two helper
+> functions without changing the original behavior. The purpose is to allow
+> future functions (particularly managed devres variants) to reuse these
+> components.
+>=20
+> The split is as follows:
+>=20
+> 1. pci_msi_range_alloc(): Handles the allocation logic, including
+> =C2=A0=C2=A0 parameter validation and vector number calculation. This fun=
+ction returns
+> =C2=A0=C2=A0 the calculated number of vectors or an error code.
+>=20
+> 2. pci_msi_range_init(): Handles the initialization of MSI context
+> =C2=A0=C2=A0 and the actual MSI capability setup. This function takes the=
+ pre-calculated
+> =C2=A0=C2=A0 number of vectors as input.
+>=20
+> 3. The original __pci_enable_msi_range() is now a wrapper that calls thes=
+e
+> =C2=A0=C2=A0 two helper functions in sequence, maintaining exact same beh=
+avior.
+>=20
+> This is a preparatory step for introducing devres-managed MSI allocation
+> API that will share the allocation logic while providing automatic cleanu=
+p
+> via devres.
 
-There is no 'root port controller'. Root Port and Controller (Root Complex) are
-two different IPs.
+nit: the actual goal is to remove the devres aspect from the pci_
+function.
 
-> of SoC FPGAs.
-> 
-> The Agilex 5 PCIe Hard IP reuses the same config-space access path
-> as Agilex 7 (V3). Root port and endpoint configuration reads/writes
-> use direct MMIO to the HIP and CRA regions.
-> 
-> The difference is in the HIP port-level registers (IRQ status and IRQ
-> enable). On V3 these are directly mapped through the HIP MMIO window.
-> On V4 these registers are only reachable through an indirect access
-> mailbox (CFG REG IA CTRL) in the PCIe Subsystem AXI-Lite interface,
-> documented in the GTS AXI Streaming IP for PCIe User Guide.
-> 
-> This adds:
-> - ALTERA_PCIE_V4 version and platform data
-> - Indirect register read/write helpers using readl_poll_timeout_atomic
-> - Chained IRQ handler (aglx5_isr) for the V4 interrupt path
-> - OF match for "altr,pcie-root-port-4.0"
-> 
-> Co-developed-by: Matthew Gerlach <matthew.gerlach@linux.intel.com>
-> Signed-off-by: Matthew Gerlach <matthew.gerlach@linux.intel.com>
-> Co-developed-by: Peter Colberg <peter.colberg@intel.com>
-> Signed-off-by: Peter Colberg <peter.colberg@intel.com>
-> Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
+>=20
+> No functional changes intended.
+>=20
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > ---
->  drivers/pci/controller/pcie-altera.c | 156 ++++++++++++++++++++++++++-
->  1 file changed, 155 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
-> index 025ba74d1ee2..db8149d84c96 100644
-> --- a/drivers/pci/controller/pcie-altera.c
-> +++ b/drivers/pci/controller/pcie-altera.c
-> @@ -12,6 +12,8 @@
->  #include <linux/irqchip/chained_irq.h>
->  #include <linux/irqdomain.h>
->  #include <linux/init.h>
-> +#include <linux/bitfield.h>
-> +#include <linux/iopoll.h>
->  #include <linux/module.h>
->  #include <linux/of.h>
->  #include <linux/of_pci.h>
-> @@ -93,16 +95,36 @@
->  #define AGLX_CFG_TARGET_LOCAL_2000	2
->  #define AGLX_CFG_TARGET_LOCAL_3000	3
->  
-> +/* PCIe subsystem indirect register access */
-> +#define PCIE_SS_IA_CTL			0xc8 /* control register */
-> +#define PCIE_SS_IA_FN_NUM		0xcc /* function number */
-> +#define PCIE_SS_IA_FN_WRDATA		0xd0 /* write data */
-> +#define PCIE_SS_IA_FN_RDDATA		0xd4 /* read data */
-> +
-> +/* PCIE_SS_IA_CTL bitfields */
-> +#define PCIE_SS_IA_CTL_INITIATE		BIT(0)
-> +#define PCIE_SS_IA_CTL_WRITE		BIT(1)
-> +#define PCIE_SS_IA_CTL_BYTE_EN		GENMASK(5, 2)
-> +#define PCIE_SS_IA_CTL_ADDR		GENMASK(31, 6)
-> +
-> +/* PCIE_SS_IA_FN_NUM function types */
-> +#define PCIE_SS_IA_FN_TYPE_HIP		2
-> +
-> +#define AGLX5_INDIRECT_SLEEP_US		1
-> +#define AGLX5_INDIRECT_TIMEOUT_US	1000
-> +
->  enum altera_pcie_version {
->  	ALTERA_PCIE_V1 = 0,
->  	ALTERA_PCIE_V2,
->  	ALTERA_PCIE_V3,
-> +	ALTERA_PCIE_V4,
->  };
->  
->  struct altera_pcie {
->  	struct platform_device	*pdev;
->  	void __iomem		*cra_base;
->  	void __iomem		*hip_base;
-> +	void __iomem		*controller_base;
->  	int			irq;
->  	u8			root_bus_nr;
->  	struct irq_domain	*irq_domain;
-> @@ -849,6 +871,98 @@ static void aglx_isr(struct irq_desc *desc)
->  	chained_irq_exit(chip, desc);
->  }
->  
-> +/*
-> + * Indirect register access to HIP registers via the PCIe Subsystem
-> + * AXI-Lite mailbox, documented in the GTS AXI Streaming IP for PCIe
-> + * User Guide. Called from chained IRQ handler (hardirq) and probe
-> + * (before handler is installed), so no locking is required.
-> + */
-> +static int aglx5_indirect_readl(const struct altera_pcie *pcie,
-> +				unsigned int addr, unsigned int *val)
-
-s/unsigned int/u32
-
-> +{
-> +	unsigned int ctl;
-
-s/unsigned int/u32
-
-> +	int ret;
-> +
-> +	writel(PCIE_SS_IA_FN_TYPE_HIP,
-> +	       pcie->controller_base + PCIE_SS_IA_FN_NUM);
-> +
-> +	ctl = FIELD_PREP(PCIE_SS_IA_CTL_ADDR, addr >> 2) |
-> +	      PCIE_SS_IA_CTL_BYTE_EN | PCIE_SS_IA_CTL_INITIATE;
-> +	writel(ctl, (pcie->controller_base + PCIE_SS_IA_CTL));
-> +
-> +	ret = readl_poll_timeout_atomic(pcie->controller_base + PCIE_SS_IA_CTL,
-> +					ctl, !(ctl & PCIE_SS_IA_CTL_INITIATE),
-> +					AGLX5_INDIRECT_SLEEP_US,
-> +					AGLX5_INDIRECT_TIMEOUT_US);
-> +	if (ret)
-> +		return ret;
-> +
-> +	*val = readl(pcie->controller_base + PCIE_SS_IA_FN_RDDATA);
-> +
-> +	return 0;
+>=20
+> Changes in v4: None
+> Changes in v3: None
+> Changes in v2: None
+>=20
+> =C2=A0drivers/pci/msi/msi.c | 30 ++++++++++++++++++++++++------
+> =C2=A01 file changed, 24 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 81d24a2..748dba6 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -420,11 +420,9 @@ static int msi_capability_init(struct pci_dev *dev, =
+int nvec,
+> =C2=A0	return __msi_capability_init(dev, nvec, masks);
+> =C2=A0}
+> =C2=A0
+> -int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+> -			=C2=A0=C2=A0 struct irq_affinity *affd)
+> +static int pci_msi_range_alloc(struct pci_dev *dev, int minvec, int maxv=
+ec)
+> =C2=A0{
+> =C2=A0	int nvec;
+> -	int rc;
+> =C2=A0
+> =C2=A0	if (!pci_msi_supported(dev, minvec) || dev->current_state !=3D PCI=
+_D0)
+> =C2=A0		return -EINVAL;
+> @@ -451,9 +449,13 @@ int __pci_enable_msi_range(struct pci_dev *dev, int =
+minvec, int maxvec,
+> =C2=A0	if (nvec < minvec)
+> =C2=A0		return -ENOSPC;
+> =C2=A0
+> -	rc =3D pci_setup_msi_context(dev);
+> -	if (rc)
+> -		return rc;
+> +	return nvec;
 > +}
 > +
-> +static int aglx5_indirect_writel(const struct altera_pcie *pcie,
-> +				 unsigned int addr, unsigned int val)
+> +static int pci_msi_range_init(struct pci_dev *dev, int minvec, int maxve=
+c,
+> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int nvec, struct irq_affinity *affd)
+> +{
+> +	int rc;
+> =C2=A0
+> =C2=A0	if (!pci_setup_msi_device_domain(dev, nvec))
+> =C2=A0		return -ENODEV;
+> @@ -481,6 +483,22 @@ int __pci_enable_msi_range(struct pci_dev *dev, int =
+minvec, int maxvec,
+> =C2=A0	}
+> =C2=A0}
+> =C2=A0
+> +int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+> +			=C2=A0=C2=A0 struct irq_affinity *affd)
 
-s/unsigned int/u32
+Doesn't that trigger a dead-code warning?
+
+
+P.
 
 > +{
-> +	unsigned int ctl;
-
-s/unsigned int/u32
-
-> +	int ret;
+> +	int nvec, rc;
 > +
-> +	writel(PCIE_SS_IA_FN_TYPE_HIP,
-> +	       pcie->controller_base + PCIE_SS_IA_FN_NUM);
-> +	writel(val, pcie->controller_base + PCIE_SS_IA_FN_WRDATA);
+> +	nvec =3D pci_msi_range_alloc(dev, minvec, maxvec);
+> +	if (nvec < 0)
+> +		return nvec;
 > +
-> +	ctl = FIELD_PREP(PCIE_SS_IA_CTL_ADDR, addr >> 2) |
-> +	      PCIE_SS_IA_CTL_BYTE_EN | PCIE_SS_IA_CTL_WRITE |
-> +	      PCIE_SS_IA_CTL_INITIATE;
-> +	writel(ctl, pcie->controller_base + PCIE_SS_IA_CTL);
+> +	rc =3D pci_setup_msi_context(dev);
+> +	if (rc)
+> +		return rc;
 > +
-> +	ret = readl_poll_timeout_atomic(pcie->controller_base + PCIE_SS_IA_CTL,
-> +					ctl, !(ctl & PCIE_SS_IA_CTL_INITIATE),
-> +					AGLX5_INDIRECT_SLEEP_US,
-> +					AGLX5_INDIRECT_TIMEOUT_US);
+> +	return pci_msi_range_init(dev, minvec, maxvec, nvec, affd);
+> +}
 > +
-> +	return ret;
+> =C2=A0/**
+> =C2=A0 * pci_msi_vec_count - Return the number of MSI vectors a device ca=
+n send
+> =C2=A0 * @dev: device to report about
 
-return readl_poll_timeout_atomic();
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
