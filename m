@@ -1,157 +1,93 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 534CA2701D9;
-	Tue, 12 May 2026 23:46:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74C045A79B;
+	Tue, 12 May 2026 23:50:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778629589; cv=none; b=plmlEbQ90em4q5B6qXUqojw89ko1pqFfIVyCbxDKLSspa1Zv3OQQVoB8uQbtdRmi6LVHg8MlL/u8md6EvAz6r2o1jyR0fplfQnSj7AoEF9J4Ealpyqss4JK67D7LbbQrFA0JRrBlWPHJojR0z3kajQJ2Xkxz0P0R/T//yZIIqaM=
+	t=1778629813; cv=none; b=cSiR3irTalwwBmOWCHJ4RlUS+RLU1wIHQGnIiWMyj7mZ3SVvpiZTdrY1AX77PxOYB4xVofFTWswmjhjYJAJZVtZLSh3popAelkPbHRp2PMM9xCR3AtHyKhUfZcHbOxUPcl66Xmll32zymoxmZOFap3hMPgek8GLntP6Q/jaT720=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778629589; c=relaxed/simple;
-	bh=FTJzMUtpDxMsViv9QqRBnWPgeawjazxvHzHLI5HSyaM=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tGIqtuVjZcrhSe3kjPe9n8VaQcfGDTnZ9hoz9wHD/T/liTOf/JymIo0gHEtCTeql9ThSvtdYkV1WvAvjUPpDwJYYM9l9f7n3K5Xb4k4IB0fu1lj0818r2tc6mWOV7IPNDpOgmLKHQJWnP7BK8sYnpNvfF2DRv64M7iVhNtx4V9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=jVClisg0; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1778629813; c=relaxed/simple;
+	bh=D2Apb4mo/DjBMATLVGSmW8AQLQ/RsvYCHxwcl+h3Llk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=M9DCjIIN/pDBXLTQG1kjJPCDBIuGWCXxRo1ibh4P9yzwTZIaPAnYjZX32QQvjHHnt045jNvM2p39NUd0TehA9qufI/dtlMRYtG5z8GULezfjLgANwc8ks+WTx61U+r23YhT2wDAZVM2nMEMkUvlL5mEvq4E4SH72U9Sh/1fL+C8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lLB4CYo4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="jVClisg0"
-Received: from localhost (unknown [20.236.10.120])
-	by linux.microsoft.com (Postfix) with ESMTPSA id E180F20B7166;
-	Tue, 12 May 2026 16:46:21 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E180F20B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1778629583;
-	bh=f4N/wfKln7imnALeCnQutar/c2KnFHRrOnxltkjQEgc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=jVClisg0i96folTh6S1DuF9lPpJ0SGE8UPnaUlN9nS/TOaFQKIlgmbsBoSFv2bjdw
-	 KoA+3M8t/s/LZ8VpxsaoHfToOesSG0zfO4Vj4nfiALtbfzf5aUFkS+me9FxKmw0IHR
-	 gSbfgJ4YspiLPcVU/PVyumPHwgSp4ZCiAUSMSIXQ=
-Date: Tue, 12 May 2026 16:46:23 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Mukesh R <mrathor@linux.microsoft.com>
-Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
- wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
- namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
- anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, kys@microsoft.com,
- haiyangz@microsoft.com, decui@microsoft.com, longli@microsoft.com,
- tglx@kernel.org, mingo@redhat.com, bp@alien8.de,
- dave.hansen@linux.intel.com, x86@kernel.org, joro@8bytes.org,
- will@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
- bhelgaas@google.com, arnd@arndb.de, jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH V3 01/11] iommu/hyperv: Rename hyperv-iommu.c to
- hyperv-irq.c
-Message-ID: <20260512164623.0000273f@linux.microsoft.com>
-In-Reply-To: <20260512020259.1678627-2-mrathor@linux.microsoft.com>
-References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
-	<20260512020259.1678627-2-mrathor@linux.microsoft.com>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lLB4CYo4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F769C2BCB0;
+	Tue, 12 May 2026 23:50:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778629813;
+	bh=D2Apb4mo/DjBMATLVGSmW8AQLQ/RsvYCHxwcl+h3Llk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=lLB4CYo4qeILNpPhF8zqVYX5OA8PVvwLrUy1TXtrKlXizsRyBgFQB6VXEUMjH4dPR
+	 KF5eJVoGmPa/+OfM9UDG/WqVv8oPz3R9v7QNRRZ9m7PIKHjwUSipuEd/quTe/IkPet
+	 PwAViB5PesFY/0YUXxjfwaIDoLIGTXhG79diBd4jz7MsmgODmDnF73dx1OiWLF4bwB
+	 G4VSU8B+ADc6d5W2WOi6+7M3L4Axh/rwQtMebCSu9EzHJcFDF4Fnc2WAdDs47I3gLz
+	 prTQlIS67f9xVmUv3TH6t9w0B28q5AXYrARFd3VS266XoMiXXRnmeWFvqCzd0QkV8H
+	 CJJfbETrt8Ozw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 01/23] PCI: Add SNIA SDXI accelerator sub-class
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: Frank.Li@kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-1-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-1-889cfed17e3f@amd.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 12 May 2026 23:50:12 +0000
+Message-Id: <20260512235013.1F769C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-Hi Mukesh,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] PCI_CLASS_ACCELERATOR_SDXI is incorrectly defined as a 24-bit va=
+lue instead of a standard 16-bit sub-class code.
+- [Low] The newly added PCI_CLASS_ACCELERATOR_SDXI class code is missing fr=
+om the Rust PCI class bindings.
+--
 
-On Mon, 11 May 2026 19:02:49 -0700
-Mukesh R <mrathor@linux.microsoft.com> wrote:
+commit 5c21a6a19a3c154b4d13c65d1905d5ed4e273dd8
+Author: Nathan Lynch <nathan.lynch@amd.com>
 
-> This file actually implements irq remapping, so rename to more
-> appropriate hyperv-irq.c. A new file to implement hyperv iommu will
-> be introduced later.  Also, it should not be tied to HYPERV_IOMMU,
-> but to CONFIG_HYPERV and IRQ_REMAP. The file already has #ifdef
-> CONFIG_IRQ_REMAP.
->=20
-> Reviewed-by: Anirudh Rayabharam (Microsoft) <anirudh@anirudhrb.com>
-> Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
-> ---
->  MAINTAINERS                                    | 2 +-
->  drivers/iommu/Makefile                         | 2 +-
->  drivers/iommu/{hyperv-iommu.c =3D> hyperv-irq.c} | 6 +++---
-Given that we have multiple Hyper-V IOMMU-related files =E2=80=94 this rena=
-med
-hyperv-irq.c, the existing hyperv-iommu code, iommu-root (this
-series) and the recently posted guest pvIOMMU driver =E2=80=94 should we cr=
-eate
-a drivers/iommu/hyperv/ directory to consolidate them?
+PCI: Add SNIA SDXI accelerator sub-class
 
->  drivers/iommu/irq_remapping.c                  | 2 +-
->  4 files changed, 6 insertions(+), 6 deletions(-)
->  rename drivers/iommu/{hyperv-iommu.c =3D> hyperv-irq.c} (99%)
->=20
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index d1cc0e12fe1f..f803a6a38fee 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11914,7 +11914,7 @@ F:	drivers/clocksource/hyperv_timer.c
->  F:	drivers/hid/hid-hyperv.c
->  F:	drivers/hv/
->  F:	drivers/input/serio/hyperv-keyboard.c
-> -F:	drivers/iommu/hyperv-iommu.c
-> +F:	drivers/iommu/hyperv-irq.c
->  F:	drivers/net/ethernet/microsoft/
->  F:	drivers/net/hyperv/
->  F:	drivers/pci/controller/pci-hyperv-intf.c
-> diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
-> index 0275821f4ef9..335ea77cced6 100644
-> --- a/drivers/iommu/Makefile
-> +++ b/drivers/iommu/Makefile
-> @@ -30,7 +30,7 @@ obj-$(CONFIG_TEGRA_IOMMU_SMMU) +=3D tegra-smmu.o
->  obj-$(CONFIG_EXYNOS_IOMMU) +=3D exynos-iommu.o
->  obj-$(CONFIG_FSL_PAMU) +=3D fsl_pamu.o fsl_pamu_domain.o
->  obj-$(CONFIG_S390_IOMMU) +=3D s390-iommu.o
-> -obj-$(CONFIG_HYPERV_IOMMU) +=3D hyperv-iommu.o
-> +obj-$(CONFIG_HYPERV) +=3D hyperv-irq.o
->  obj-$(CONFIG_VIRTIO_IOMMU) +=3D virtio-iommu.o
->  obj-$(CONFIG_IOMMU_SVA) +=3D iommu-sva.o
->  obj-$(CONFIG_IOMMU_IOPF) +=3D io-pgfault.o
-> diff --git a/drivers/iommu/hyperv-iommu.c b/drivers/iommu/hyperv-irq.c
-> similarity index 99%
-> rename from drivers/iommu/hyperv-iommu.c
-> rename to drivers/iommu/hyperv-irq.c
-> index 479103261ae6..d11076f906fb 100644
-> --- a/drivers/iommu/hyperv-iommu.c
-> +++ b/drivers/iommu/hyperv-irq.c
-> @@ -8,6 +8,8 @@
->   * Author : Lan Tianyu <Tianyu.Lan@microsoft.com>
->   */
+This commit adds the sub-class code for the SNIA Smart Data Accelerator
+Interface (SDXI) to the PCI IDs list.
+
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 24cb42f66e4b6..83ab3f27eb5a2 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -154,6 +154,7 @@
 > =20
-> +#ifdef CONFIG_IRQ_REMAP
-> +
->  #include <linux/types.h>
->  #include <linux/interrupt.h>
->  #include <linux/irq.h>
-> @@ -24,8 +26,6 @@
-> =20
->  #include "irq_remapping.h"
-> =20
-> -#ifdef CONFIG_IRQ_REMAP
-> -
->  /*
->   * According 82093AA IO-APIC spec , IO APIC has a 24-entry Interrupt
->   * Redirection Table. Hyper-V exposes one single IO-APIC and so
-> define @@ -331,4 +331,4 @@ static const struct irq_domain_ops
-> hyperv_root_ir_domain_ops =3D { .free =3D hyperv_root_irq_remapping_free,
->  };
-> =20
-> -#endif
-> +#endif  /* CONFIG_IRQ_REMAP */
-> diff --git a/drivers/iommu/irq_remapping.c
-> b/drivers/iommu/irq_remapping.c index c2443659812a..41bf65e4ea88
-> 100644 --- a/drivers/iommu/irq_remapping.c
-> +++ b/drivers/iommu/irq_remapping.c
-> @@ -108,7 +108,7 @@ int __init irq_remapping_prepare(void)
->  	else if (IS_ENABLED(CONFIG_AMD_IOMMU) &&
->  		 amd_iommu_irq_ops.prepare() =3D=3D 0)
->  		remap_ops =3D &amd_iommu_irq_ops;
-> -	else if (IS_ENABLED(CONFIG_HYPERV_IOMMU) &&
-> +	else if (IS_ENABLED(CONFIG_HYPERV) &&
->  		 hyperv_irq_remap_ops.prepare() =3D=3D 0)
->  		remap_ops =3D &hyperv_irq_remap_ops;
->  	else
+>  #define PCI_BASE_CLASS_ACCELERATOR	0x12
+>  #define PCI_CLASS_ACCELERATOR_PROCESSING	0x1200
+> +#define PCI_CLASS_ACCELERATOR_SDXI		0x120100
 
+The commit message mentions adding a sub-class code, but is it expected to
+define this as a 24-bit value?
+
+Other generic sub-class macros in this file are standard 16-bit constants,
+like the adjacent PCI_CLASS_ACCELERATOR_PROCESSING (0x1200). Drivers
+traditionally apply an 8-bit left shift to them when populating ID tables:
+
+    .class =3D PCI_CLASS_ACCELERATOR_SDXI << 8
+
+If this standard idiom is used with a 24-bit macro, it will result in a
+malformed 32-bit class code (0x12010000) and break device matching. Should
+this be defined as 0x1201 instead?
+
+Additionally, does this new class code need to be added to the Rust PCI cla=
+ss
+bindings? It appears to be missing from the define_all_pci_classes! macro in
+rust/kernel/pci/id.rs, which explicitly mirrors these C macros to expose
+them to Rust drivers.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D1
