@@ -1,130 +1,130 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D242E1A9B24
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 00:46:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57428188596
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 00:46:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778546770; cv=none; b=U6slOcrAPBBVi+dVhbYUzlyRTFKYV47RkmfQkWUvKoIA4DTXjyFdfseavffQV27/+mX9pXnyX2pBpam4ScT5OpjjxrYDiwAsWuieEhXUgnFNmhNx/y1TzrgkAm4mtlJV/f56Xt6kNKF5K2LikrxNTOxHRhQdmPP/8JYGJXPo52c=
+	t=1778546785; cv=none; b=VeIWDT5VOD5Ff6NyNNOPi17n9YRRkfJBYmhXqR2BD2wdLtQME8Qjvqy4AWjpbUb0vd37xDt/XO3pH8tp8ctOltBPySRr/p7JFtOgP6fCdoXcOVy2TCfexbX8VE5XMSXx5ZL16cZGMUucbL6glRPQHVzf9Shyx0e/5ssSZUgLe8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778546770; c=relaxed/simple;
-	bh=xE4vkaMk5lE+B0S8YaszX+ozSsx9d4gTmBXg8P1TonI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CzD1KbFuFM+tkpCwrLD7/i/K1maBQZr9oaDum+fBqFLnf/CBOAQWm4b477BI5tMRQ5lv/67ifr9o4ILgE36b2HGBSVBKlAmcQbaFfeSaSTkgzSo+9JXlvXUeAMVy0ZWGnNClGMwpM3MczQG2dK3Py7M3dcpVvyw8S7mirGz9gzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=j6vcLSG4; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778546785; c=relaxed/simple;
+	bh=jKnne6m8czSI6RbrKq62WPQhY/TFhfbjcXMlvDX2aDc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hq0DsAn5e2aBx1D+43uWcKaeWCGWkDssjnl34TYVerUTJ47Pt2jJONNp4wh5l+ok5E0CxbDrfBoAMMnACO93BsnciHbHtDtyTFyAH0P+d3BY9nTMaoCEempG6uwQv9fHfoim9fUdlO51eWcUvf2WWUSIDX7dfL/Rw15LRaTgY/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fz6pqo63; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="j6vcLSG4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=+skjbmQLDZgwLVaOtZ8JrPlL7Tx42Vts5r4FyPVp1qM=;
-	b=j6vcLSG4dX5lzREXH8TlUfVXHdaM51rrQlq10wnP9keQVDvi5wVBZun3ArDM9s
-	3A1i32kapYqeUnjsi2Ehi/4vt9Dl3L1BKACYnsHC3Nl2D5mfQsZzpQBR6MAuhCPn
-	faRzKWVjIpnG+DPeyL+VvVEVB660gqM44YrGxYPKcKikI=
-Received: from [192.168.50.71] (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgC3qgs2eAJquqyVEA--.4962S2;
-	Tue, 12 May 2026 08:45:42 +0800 (CST)
-Message-ID: <982ada81-7f17-47f8-9b23-6e5c59f627eb@163.com>
-Date: Tue, 12 May 2026 08:45:41 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fz6pqo63"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B82F7C2BCB0;
+	Tue, 12 May 2026 00:46:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778546784;
+	bh=jKnne6m8czSI6RbrKq62WPQhY/TFhfbjcXMlvDX2aDc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=fz6pqo63Ez0A4BsC9bCj3a60U7OyKiC9i4dcppA3ZUTVRTPtXN2jQxbnLZjHdki8p
+	 U+WzfMT3171C660IkUQOVx0gbaZW3tMZljQxf2T8SbfxMrUhawSTkM5pAoZPPf3N0D
+	 NIJQcsRfApu7xNgEEnFDAiGeHH2L3CV4fIso2yuGbrQJM2cVLAB5iXzGzUY+irz+Up
+	 d9Me7BDXJjMQ9UOgMtu+TAkTluulcCSRmcm02OM97X3BBHoJ+dfCPMQ2YtTNQKXIdy
+	 o+pU6fWVFrBQepymtKw25EOzBz+soRMtUy81PU9Y2Rx67poNhNqhCh42H0450xSqkZ
+	 K/BAjYczEWHOw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI/ASPM: Mask ASPM states based on Devicetree
+ properties
+Reply-To: sashiko@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511-aspm-v1-1-b4a9fe955cf9@oss.qualcomm.com>
+References: <20260511-aspm-v1-1-b4a9fe955cf9@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 12 May 2026 00:46:24 +0000
+Message-Id: <20260512004624.B82F7C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/7] PCI: Add pci_host_common_link_train_delay() helper
-To: sashiko@lists.linux.dev
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-References: <20260511055923.37117-2-18255117159@163.com>
- <20260512000723.2F382C2BCB0@smtp.kernel.org>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260512000723.2F382C2BCB0@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PSgvCgC3qgs2eAJquqyVEA--.4962S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxurWUAr1UXFyxCryDur17Jrb_yoW5Zr4Dpa
-	yrGa42yF1kJw1Yvws7X3W8Za4Ygan5JayUCrn5G3s2yrnxZ3savrWF9ayS9F1xur4DZF1Y
-	va15K3ZxArsYyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pN388UUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBZG6WoCeDYyNgAA3f
 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Modifying `link->aspm_support` bypasses `pcie_config_aspm_l1ss()`,=
+ failing to disable ASPM L1 Substates in hardware if the bootloader previou=
+sly enabled them.
+- [Medium] The `aspm-no-l1` override only masks `PCIE_LINK_STATE_L1` from `=
+link->aspm_support`, failing to mask the functionally dependent L1 PM Subst=
+ates (`PCIE_LINK_STATE_L1SS`), leading to sysfs inconsistency.
+--
 
+commit 3739505256d4ced724de1faf6f3f111a9994fa59
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-On 5/12/26 08:07, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
-> - [High] Negative error codes passed as `max_link_speed` silently bypass the mandatory PCIe delay.
-> - [Medium] Architectural modularity violation by placing a generic PCIe helper in an ECAM framework header.
-> - [Low] The helper API relies on raw integer values for link speed instead of the typed `enum pci_bus_speed`, creating a brittle interface.
-> --
-> 
-> commit 47720e87ef05a9f0115d64b2e2d6eaa190242b88
-> Author: Hans Zhang <18255117159@163.com>
-> 
-> PCI: Add pci_host_common_link_train_delay() helper
-> 
-> This commit introduces a static inline helper to wait 100 ms after link
-> training completes if the maximum link speed is greater than 5.0 GT/s,
-> satisfying the PCIe r6.0 specification.
-> 
->> diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
->> index b5075d4bd7eb3..d709f7e3e11a3 100644
->> --- a/drivers/pci/controller/pci-host-common.h
->> +++ b/drivers/pci/controller/pci-host-common.h
-> 
-> This isn't a bug, but this places a generic PCIe helper inside an ECAM
-> framework header. Unrelated host controller drivers will have to include
-> an ECAM-specific header just to use this delay function.
-> 
-> Should this generic helper be placed in a more widely accessible internal
-> header like drivers/pci/pci.h?
+PCI/ASPM: Mask ASPM states based on Devicetree properties
 
-No, Mani suggested placing it in the pci-host-common.h file.
+This commit updates ASPM link initialization to check for aspm-no-l0s,
+aspm-no-l1, and aspm-no-l1ss Devicetree properties. It masks the
+corresponding ASPM states from link->aspm_support before applying the
+default ASPM policy.
 
-> 
-> [ ... ]
-> 
->> @@ -20,4 +23,18 @@ void pci_host_common_remove(struct platform_device *pdev);
->>   
->>   struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
->>   	struct pci_host_bridge *bridge, const struct pci_ecam_ops *ops);
->> +
->> +/**
->> + * pci_host_common_link_train_delay - Wait 100 ms if link speed > 5 GT/s
->> + * @max_link_speed: the maximum link speed (2 = 5.0 GT/s, 3 = 8.0 GT/s, ...)
->> + *
->> + * Must be called after Link training completes and before the first
->> + * Configuration Request is sent.
->> + */
->> +static inline void pci_host_common_link_train_delay(int max_link_speed)
-> 
-> This isn't a bug, but relying on raw integer values for link speed instead
-> of enum pci_bus_speed creates a brittle interface.
-> 
-> The PCI subsystem uses enum pci_bus_speed for link speeds, where
-> PCIE_SPEED_2_5GT is 20 and PCIE_SPEED_5_0GT is 21. If a driver mistakenly
-> passes an enum pci_bus_speed, the condition greater than 2 will evaluate
-> to true for all speeds, applying the delay unconditionally.
-> 
->> +{
->> +	if (max_link_speed > 2)
-> 
-> Will negative error codes passed as max_link_speed silently bypass the
-> mandatory PCIe delay?
-> 
-> Drivers retrieve the maximum link speed using of_pci_get_max_link_speed(),
-> which returns -EINVAL if the max-link-speed property is missing from the
-> device tree.
-> 
-> If -EINVAL is passed directly to this helper, the condition evaluates to
-> false and the 100 ms delay is skipped. If the hardware supports greater
-> than 5.0 GT/s, skipping this delay violates the PCIe r6.0 specification.
-> 
->> +		msleep(PCIE_RESET_CONFIG_WAIT_MS);
->> +}
->> +
->>   #endif
-> 
+Link: https://github.com/devicetree-org/dt-schema/pull/188
+Link: https://github.com/devicetree-org/dt-schema/pull/190
 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 925373b98dff0..3111ef7fd226e 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+
+[ ... ]
+
+> @@ -806,6 +813,15 @@ static void pcie_aspm_override_default_link_state(st=
+ruct pcie_link_state *link)
+> =20
+>  	/* For devicetree platforms, enable L0s and L1 by default */
+>  	if (of_have_populated_dt()) {
+> +		if (pcie_link_has_aspm_override(link, "aspm-no-l0s"))
+> +			link->aspm_support &=3D ~PCIE_LINK_STATE_L0S;
+> +
+> +		if (pcie_link_has_aspm_override(link, "aspm-no-l1"))
+> +			link->aspm_support &=3D ~PCIE_LINK_STATE_L1;
+
+Should this also clear PCIE_LINK_STATE_L1SS?
+
+If we clear only PCIE_LINK_STATE_L1, link->aspm_capable will retain the
+L1SS bits while dropping the L1 bit. The sysfs visibility check in
+aspm_ctrl_attrs_are_visible() relies on aspm_capable, which means the main
+L1 control attribute will be hidden, but the L1.1 and L1.2 substate
+attributes will be incorrectly exposed.
+
+Any userspace attempts to enable these exposed L1SS attributes via sysfs
+will silently fail, as pcie_config_aspm_link() enforces:
+
+if (!(state & PCIE_LINK_STATE_L1))
+        state &=3D ~PCIE_LINK_STATE_L1SS;
+
+> +
+> +		if (pcie_link_has_aspm_override(link, "aspm-no-l1ss"))
+> +			link->aspm_support &=3D ~PCIE_LINK_STATE_L1SS;
+
+Will modifying link->aspm_support here bypass disabling ASPM L1 Substates
+in hardware if the bootloader previously enabled them?
+
+By clearing bits from link->aspm_support, the changes propagate to
+link->aspm_capable. Later, when the kernel applies the ASPM policy in
+pcie_config_aspm_link(), the hardware update for L1SS is guarded by:
+
+if (link->aspm_capable & PCIE_LINK_STATE_L1SS)
+
+Because the capability bit was cleared by the DT override, the kernel skips
+calling pcie_config_aspm_l1ss() entirely, leaving the hardware actively
+using L1SS if the firmware or bootloader had enabled it.
+
+Would setting bits in link->aspm_disable instead (similar to
+pci_disable_link_state()) correctly disable these states in hardware
+while keeping aspm_capable intact?
+
+> +
+>  		if (link->aspm_support & PCIE_LINK_STATE_L0S)
+>  			link->aspm_default |=3D PCIE_LINK_STATE_L0S;
+>  		if (link->aspm_support & PCIE_LINK_STATE_L1)
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-aspm-v1-1-=
+b4a9fe955cf9@oss.qualcomm.com?part=3D1
