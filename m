@@ -1,158 +1,97 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C7CF531986C;
-	Tue, 12 May 2026 02:12:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1F18344021
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 02:15:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778551976; cv=none; b=lp05WH0MOcrEafMwPaj5AmbtGcoh5WKxXlvVK03jlFlng25XAcKr0kjxf4ySHjehH5tYPa0iA96AbsJ3W6SPweS19490lbBm3kTE8OYOwG9BN0fTWEZ0QPDb+yaU10645d1m/uUHHwzdBHt3lmudTeX8DUsbkhfmfkhIOumA060=
+	t=1778552139; cv=none; b=nfjkwrZ60+qEyXucd4mwrBXRyrt5tRdXzJixfIvBRq35vzwEuLKVuE7mv3l4z5kBX43G2DCCCREIRly/H4VbeKMjZoVl20onVwhNwLtaV4uuf5V0aL02xLwwDjWndCCeecriCPctiE75KuQ3kA9WO+Qe1/SrDCWpVPrT+Kl6mb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778551976; c=relaxed/simple;
-	bh=PIMOM+38WPisoeckzuWM0T2Ojwc3Get4Tkda0krDR+8=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jCFxOkoYfb0ljcfGtEhAdK6KJmwdqHnFn30Nf80JMotpS0Zyn7bP08vs95IJKuRttKrJB+XZ6BJRPseJY69VGk9CZgxXMSkV/H/g57yuJErwKkGhZ7dDUnHm6nJ7R+WUSvVI9NI9gKElzrNRa0A7PRd5kT3Fmt0u7Bg1ocJ5D2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=XxPNjBtV; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1778552139; c=relaxed/simple;
+	bh=4DBG1Pe2aLoZysjPj+j6Ne+9lyMohfpW2PKzDmPMB+U=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=U3x0pYn6g80DYBaSt76oLgRSL4gHlYSg/V0uBIOJz5/Fy3e7eU4ZYwt2/lgHJVUxyu0FqxSYcjhuIM15PoZ2lo90vKOS0JE4KCtHoTqlu5tIqMwtB/EJYBQOD7S61z01XW+vtnKCsuV2CNHsm5oBn//i/nekQhLLbNVMiSYLVqM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sLptwYu9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="XxPNjBtV"
-Received: from mrdev.corp.microsoft.com (unknown [40.118.131.60])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 56AFB20B7169;
-	Mon, 11 May 2026 19:12:52 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 56AFB20B7169
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1778551972;
-	bh=KS6l/b5Uv4heu85TppZODlG7u81WUffqR10quhteBFk=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=XxPNjBtV27aOt6CeSGnryK55XK8T2s7g2tD1ERx19lyhuoiTS7cvCXnoI2Z6mKFYT
-	 cCck0odpK+MNIWycV968leTigXYb/d4Sfmb8q+4XrdV8rtDkZIRNsqDiUWP6VBLmK/
-	 2QSfhd4+YyiqkUc9G2WiCwErPwZx3RHoE5u6iGbY=
-From: Mukesh R <mrathor@linux.microsoft.com>
-To: hpa@zytor.com,
-	robin.murphy@arm.com,
-	robh@kernel.org,
-	linux-hyperv@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org
-Subject: [PATCH V1 3/3] mshv: Implement guest irq migration for passthru devices
-Date: Mon, 11 May 2026 19:12:42 -0700
-Message-ID: <20260512021242.1679786-4-mrathor@linux.microsoft.com>
-X-Mailer: git-send-email 2.51.2.vfs.0.1
-In-Reply-To: <20260512021242.1679786-1-mrathor@linux.microsoft.com>
-References: <20260512021242.1679786-1-mrathor@linux.microsoft.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sLptwYu9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 572A3C2BCB0;
+	Tue, 12 May 2026 02:15:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778552139;
+	bh=4DBG1Pe2aLoZysjPj+j6Ne+9lyMohfpW2PKzDmPMB+U=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=sLptwYu9mhYv/GBZ9p0gvJqgg3VUWcSICFvEtRYueINLwShJ0r0+OqrOfeT5lSw29
+	 ke9A/2yvkKwKk9mTtWBdznMSgraJtcKYcmyRiuRB5FtaP+c/D1j7vfMh7KuxL9Yl35
+	 W1cWpbTzc8uNezauIRgulXf2Pgppbk4BlbQTNkHSleG8fBXn5XSRaRUT2qPKGTLagg
+	 IGTzC46E8JfrEMLTANTVkjJw4gLs1IKlBasUsz55UxoL8yJPIYU3zJiFvVMmW/WGaK
+	 HpwVhHP/ho1ZJyGagSLy8DOV5VkIf70BhpcQoxtHRh+Rh5XJTnUn6VWRXrhmF3Heg4
+	 /TtPIqBsY6F3Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 7/7] PCI: rzg3s-host: Use common
+ pci_host_common_link_train_delay() helper
+Reply-To: sashiko@lists.linux.dev
+To: "Hans Zhang" <18255117159@163.com>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+In-Reply-To: <20260511055923.37117-8-18255117159@163.com>
+References: <20260511055923.37117-8-18255117159@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 12 May 2026 02:15:38 +0000
+Message-Id: <20260512021539.572A3C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Ask the hypervisor to retarget interrupts to new guest cpu or vector
-upon guest irq migration. This happens in the irqfd update path.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The mandatory link training delay is bypassed when 'max-link-speed=
+' is missing from the device tree, violating PCIe r6.0 requirements for Gen=
+3+ devices.
+--
 
-Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
----
- drivers/hv/mshv_eventfd.c | 78 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 76 insertions(+), 2 deletions(-)
+commit afb29b744bdf8f1be85fd9c879cf2af33e736d5a
+Author: Hans Zhang <18255117159@163.com>
 
-diff --git a/drivers/hv/mshv_eventfd.c b/drivers/hv/mshv_eventfd.c
-index 1f5c1e9ee9b7..c05201d857fd 100644
---- a/drivers/hv/mshv_eventfd.c
-+++ b/drivers/hv/mshv_eventfd.c
-@@ -192,6 +192,77 @@ static int mshv_map_device_interrupt(u64 ptid, union hv_device_id hv_devid,
- 
- }
- 
-+/* NOTE: caller does spin_lock_irq on pt_irqfds_lock, hence no disable here */
-+static void mshv_do_guest_irq_retarget(u64 partid, struct mshv_irqfd *irqfd)
-+{
-+	int rc, var_size;
-+	u64 status;
-+	union hv_device_id hv_devid;
-+	struct hv_input_get_vp_set_from_mda *mda_input;
-+	union hv_output_get_vp_set_from_mda *mda_output;
-+	struct hv_retarget_device_interrupt *remap_inp;
-+	struct pci_dev *pdev;
-+	struct irq_data *irqdata;
-+	struct mshv_lapic_irq *lapic_irq = &irqfd->irqfd_lapic_irq;
-+	struct hv_interrupt_entry *inte = NULL;
-+
-+	if (!irqfd->irqfd_girq_ent.girq_entry_valid ||
-+	    irqfd->irqfd_bypass_prod == NULL)
-+		return;
-+
-+	rc = mshv_parse_mshv_irqfd(irqfd, &pdev, &irqdata);
-+	if (rc)
-+		return;
-+
-+	inte = irqdata->chip_data;
-+	if (inte == NULL)
-+		return;
-+
-+	hv_devid.as_uint64 = hv_devid_from_pdev(pdev);
-+
-+
-+	mda_input = *this_cpu_ptr(hyperv_pcpu_input_arg);
-+	mda_output = *this_cpu_ptr(hyperv_pcpu_output_arg);
-+
-+	rc = hv_vpset_from_hyp_disabled(mda_input, mda_output, lapic_irq,
-+					partid);
-+	if (rc)
-+		return;
-+
-+	remap_inp = *this_cpu_ptr(hyperv_pcpu_input_arg);
-+	memset(remap_inp, 0, sizeof(*remap_inp));
-+
-+	rc = hv_copy_vpset(&remap_inp->int_target.vp_set,
-+			   &mda_output->target_vpset);
-+	if (rc <= 0) {
-+		pr_err("Hyper-V: ptid %lld - vpset copy failed (%d)\n",
-+		       partid, rc);
-+		return;
-+	}
-+
-+	/*
-+	 * var-sized hcall: var-size starts after vp_mask (thus vp_set.format
-+	 * does not count, but vp_set.valid_bank_mask does).
-+	 */
-+	var_size = rc + 1;
-+
-+	remap_inp->partition_id = partid;
-+	remap_inp->device_id = hv_devid.as_uint64;
-+	remap_inp->int_target.vector = lapic_irq->lapic_vector;
-+	remap_inp->int_target.flags = HV_DEVICE_INTERRUPT_TARGET_PROCESSOR_SET;
-+
-+	remap_inp->int_entry.source = inte->source;
-+	remap_inp->int_entry.msi_entry.as_uint64 = inte->msi_entry.as_uint64;
-+
-+	status = hv_do_rep_hypercall(HVCALL_RETARGET_INTERRUPT, 0, var_size,
-+				     remap_inp, NULL);
-+
-+	if (!hv_result_success(status))
-+		hv_status_err(status, "pt:%lld vec:%d lapic-id:%lld\n",
-+			      partid, lapic_irq->lapic_vector,
-+			      lapic_irq->lapic_apic_id);
-+}
-+
- static int mshv_unmap_device_interrupt(union hv_device_id hv_devid,
- 				       struct hv_interrupt_entry *irq_entry)
- {
-@@ -729,9 +800,12 @@ static void mshv_irqfd_update(struct mshv_partition *pt,
- 			      struct mshv_irqfd *irqfd)
- {
- 	write_seqcount_begin(&irqfd->irqfd_irqe_sc);
--	irqfd->irqfd_girq_ent = mshv_ret_girq_entry(pt,
--						    irqfd->irqfd_irqnum);
-+	irqfd->irqfd_girq_ent = mshv_ret_girq_entry(pt, irqfd->irqfd_irqnum);
- 	mshv_copy_girq_info(&irqfd->irqfd_girq_ent, &irqfd->irqfd_lapic_irq);
-+
-+#if IS_ENABLED(CONFIG_X86_64)
-+	mshv_do_guest_irq_retarget(pt->pt_id, irqfd);
-+#endif
- 	write_seqcount_end(&irqfd->irqfd_irqe_sc);
- }
- 
--- 
-2.51.2.vfs.0.1
+PCI: rzg3s-host: Use common pci_host_common_link_train_delay() helper
 
+Replace the unconditional msleep(100) with the common helper
+pci_host_common_link_train_delay(). The helper only waits when
+max_link_speed > 2, as required by PCIe r6.0 sec 6.6.1.
+
+> diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/contr=
+oller/pcie-rzg3s-host.c
+> index d86e7516dcc29..66f687304c1cb 100644
+> --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+
+[ ... ]
+
+> @@ -1663,7 +1664,7 @@ rzg3s_pcie_host_setup(struct rzg3s_pcie_host *host,
+>  	if (ret)
+>  		dev_info(dev, "Failed to set max link speed\n");
+> =20
+> -	msleep(PCIE_RESET_CONFIG_WAIT_MS);
+> +	pci_host_common_link_train_delay(host->max_link_speed);
+
+If the max-link-speed property is missing from the device tree,
+of_pci_get_max_link_speed() returns -EINVAL.
+
+While rzg3s_pcie_set_max_link_speed() correctly handles this negative
+value by falling back to hardware capabilities, host->max_link_speed
+remains -EINVAL.
+
+When this negative value is passed to pci_host_common_link_train_delay(),
+the internal check (max_link_speed > 2) evaluates to false.
+
+Could this cause a regression by inadvertently bypassing the mandatory link
+training delay for Gen3 or higher devices that lack the max-link-speed
+device tree property?
+
+> =20
+>  	return 0;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511055923.3711=
+7-1-18255117159@163.com?part=3D7
