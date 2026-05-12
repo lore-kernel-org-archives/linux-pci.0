@@ -1,98 +1,61 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BC49383304;
-	Tue, 12 May 2026 10:07:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9011A349CE5;
+	Tue, 12 May 2026 10:17:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.133.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778580479; cv=none; b=SWRt15mpw1P1IuzIOXh9W6RxlZVj5do7XuZRLFVADw8sjKriD9GW/kRX+5sD1N/KBJov/VDrnTsr9QDgXXqlk++Lzk5yZ5AiIgNcrN0YW8uVuzWPPLaVO4HNuWZPbf34S2adFT+8PdGURWhZpL0WNrYpKjn1xzAyt55mWXqh5MU=
+	t=1778581059; cv=none; b=mMtBleyae2Yd0xszi9jRI+w0K9hMlX2WHFKCVHvy3xqy/A8HIuTFP8i+bIBt9CSP1kP/Fo9G+hJHKmLaIPxT4Q+JvDaSEoDTQ17Qh0Rbbb850OxA5uNLNFxGJa93/xBK/5U61+yQnGcZrfQMeNlCvRT9u6NzB8PFSZ/jlVXruQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778580479; c=relaxed/simple;
-	bh=eQ9jfRVoFQSsfWSxqwqwQP+2I8qoE/A3eF1LrMm6Hls=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=j888roYU/yuA2+nyqkzgvXq8W6VZnt6QXVJWRBfjBSJjH+iY1VxyDnhFjEYYbohppL36T4fjcVP7DjDrpxz4XQow/ydoOeLbQLD0j4g2k8IXrKihN6scrtY/clyHtQDzWQTJYf/SAJfaoVIp6X3NdHY1p/NVBv61fTOLEPpx3ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=l11nVtHh; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="l11nVtHh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=rq4RL+Vka9BqWTh+n74cXJ8jiIkAjFYQA9ezbcVKwM8=;
-	b=l11nVtHhS05LPBjraPnJUV3epcd49eg7vnfCSTy3DkvxfB/Iem6EvnQ4JrZ+O3
-	BhcY7irXVFlck61xjPG4X8Hus9w0cfkoycqGiyCMqQ/WFdniOD93FdgJ9AxJeoGe
-	dVHmA2apbi2ME13a7dgimnGQ49LaIn7Vkbs2WArMTitJE=
-Received: from [192.168.50.71] (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgB3yRC0+wJqHlnODQ--.89S2;
-	Tue, 12 May 2026 18:06:46 +0800 (CST)
-Message-ID: <a28b7442-8bd6-4a05-8864-af6c0ad35a2c@163.com>
-Date: Tue, 12 May 2026 18:06:44 +0800
+	s=arc-20240116; t=1778581059; c=relaxed/simple;
+	bh=hzU9k6HaHL1llKdrLAId26dy9cEGrc2zJdgulN8HJIo=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=RttAd058Bw7aKol0Q+amH2zXUS3PfGE99KdEtqbUQErnnriDCBmmpeazv+Yzo99JkA0nYGez50SuUY1KCv75BGxZso+99Sk2taVuKVq5oHkdL8BlComEDgScH6HNsdpo6ytQNAI66Hja4Rxte3YfEUY4TvLV3uQjzJyH8byT4tE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk; spf=none smtp.mailfrom=orcam.me.uk; arc=none smtp.client-ip=78.133.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orcam.me.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=orcam.me.uk
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+	id 2286392009C; Tue, 12 May 2026 12:17:29 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by angie.orcam.me.uk (Postfix) with ESMTP id 1D9D592009B;
+	Tue, 12 May 2026 11:17:29 +0100 (BST)
+Date: Tue, 12 May 2026 11:17:29 +0100 (BST)
+From: "Maciej W. Rozycki" <macro@orcam.me.uk>
+To: Leon Romanovsky <leon@kernel.org>, 
+    Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
+    =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
+    linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
+    linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: Export pci_parent_bus_reset() for drivers
+ to use
+In-Reply-To: <20260512090006.GQ15586@unreal>
+Message-ID: <alpine.DEB.2.21.2605121104560.46195@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2605050042390.46195@angie.orcam.me.uk> <alpine.DEB.2.21.2605050051390.46195@angie.orcam.me.uk> <20260512090006.GQ15586@unreal>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 4/7] PCI: dwc: Use common
- pci_host_common_link_train_delay() helper
-To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, mani@kernel.org,
- vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com,
- pali@kernel.org, ryder.lee@mediatek.com, claudiu.beznea.uj@bp.renesas.com,
- mpillai@cadence.com, robh@kernel.org, s-vadapalli@ti.com,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- claudiu.beznea@tuxon.dev, linux-mediatek@lists.infradead.org,
- linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260511055923.37117-1-18255117159@163.com>
- <20260511055923.37117-5-18255117159@163.com>
- <20260511070139.GA1096586@rocinante>
- <e600d0a4-b93e-425f-a5f1-c76802c65622@163.com>
- <20260512071328.GA3606279@rocinante>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260512071328.GA3606279@rocinante>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PygvCgB3yRC0+wJqHlnODQ--.89S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Gr47XFW5ZryfKF15WryDWrg_yoWxuFg_u3
-	y8Awn7ur43XF93WwsIyrn8XFnxX34DuFWFqry0vrW2gw1jga1qyrsIgFs5ta1xC3y7JF47
-	JF1vkw1xKwn3ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUjeT5PUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xZH6moC+7ZuEQAA3K
+Content-Type: text/plain; charset=US-ASCII
 
+On Tue, 12 May 2026, Leon Romanovsky wrote:
 
-
-On 5/12/26 15:14, Krzysztof Wilczyński wrote:
-> Hello,
+> > Export pci_parent_bus_reset() so that drivers do not duplicate it.  
+> > Document the interface.
+[...]
 > 
->>>> -	/*
->>>> -	 * As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link
->>>> -	 * speeds greater than 5.0 GT/s, software must wait a minimum of 100 ms
->>>> -	 * after Link training completes before sending a Configuration Request.
->>>> -	 */
->>>> -	if (pci->max_link_speed > 2)
->>>> -		msleep(PCIE_RESET_CONFIG_WAIT_MS);
->>>> +	pci_host_common_link_train_delay(pci->max_link_speed);
->>>
->>> This comment could move to the helper you added.
->>
->> Hi Krzysztof,
->>
->> Will add.
+> I wouldn't recommend doing this solely for hfi1. The driver is likely to be
+> removed or significantly changed soon.
 > 
-> No need.  Per Mani's feedback about macro being well documented.
-> 
+> https://lore.kernel.org/linux-rdma/177516078937.637585.1447184858924347033.stgit@awdrv-04.cornelisnetworks.com/
 
-Hi Krzysztof,
+ Thank you for the pointer.  FWIW as per the cover letter I have no own 
+interest in the driver and offered this cleanup as a general code quality 
+improvement.
 
-Okay.
+ Dennis, please clarify your position, and if you'd rather this change 
+wasn't made, then I'll drop the patches from my local verification setup 
+and won't offer them again.
 
-Best regards,
-Hans
-
-> Thank you nonetheless!
-> 
-> 	Krzysztof
-
+  Maciej
