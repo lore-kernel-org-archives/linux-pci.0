@@ -1,149 +1,215 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013034.outbound.protection.outlook.com [40.107.201.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A48FC33122D
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 08:49:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778575769; cv=none; b=r2jbYrdbneBveZTmeQ8NPLnjHoCCSewcrle9m+uowb85Ds4daZunIYqUR2EEX7PrInEYtIz5nXpI+xEmPYuB11yJ4m9JGlLquWF14nj6kfDgqDynQrnpGaS5npp3QNwEf+s9h+5pEBy+bfRpiWgbpGpXGzwdzy7pVjZW3xRZVUA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778575769; c=relaxed/simple;
-	bh=kxE7z7lCTZJMfdC0VMVr+zdZMIIkKpe/SkkBc7Oedpg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=YsWToOoU2uh4XnH557871PTOKnpMNUbaTNCfm4GQWbmPa2dvEwE2dYp7RmcKAHxdFRXvSdK6Ph2FGvYXWhdGgQgAWxBqbUvByv3JYLWZ2TT3s6t7KOMpy4o89UmGS9Zkf1Eupm517HjpDeM/UlxqSP+gAcLs3S739VnPcgJBZlM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Me6nH9O0; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=VlY+53BF; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26F2E392C36;
+	Tue, 12 May 2026 08:50:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.34
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778575839; cv=fail; b=JtNnwh3ENq7hPh+5UilcQR900GZU6NdabMPX/Dt3Ayzw9jC14DqPzAqXoT+VG1f1HG0dd+A02yaoxa3amJn+KDrm8w6ddQBL7k1WMl7VizS0L7XFWHGiNwmKEXj9fPigoAMuR8FeMqXCM05bbUfHsLb+hXCDf2iqMqlAS/RPidA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778575839; c=relaxed/simple;
+	bh=wmly2BU9iMWVyUyGZfal6r4oVZCn1PmFMhRFNHxSq/s=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=UuSF+AZZiaS4uuY+BxNgc4DuyB2z1S9vAFYdbCPQzRfMuO5mMKlrtlRyeUvAJH/GU7YEBoxbn0/CaATBlGo1jPBU6b8fna1AdlF/27O5ZqIeeo9h3IaTdVDYVaF8c2Lndy6EDCmXgGDrvhP3kEHK7KTz9NaRE2xPSPHgqGSC/J0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=DmWSy/C+; arc=fail smtp.client-ip=40.107.201.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Me6nH9O0";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="VlY+53BF"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64C5K7R02994873
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 08:49:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	DFIMQq5sZaAx7AxbAUXAmZ3pH2PXw1sOxfR1/xNVXQM=; b=Me6nH9O0sIbzDsal
-	serlx21cCIX7bzitKAfRNBNhbrnA+SIJSl+egG24pmiEEet6ABzehV9KN1h9JeGS
-	Rq3uUaGVltRhJb89ua52c6tNnF42qxUnBdUJBVQbU+2hpaJ8AU8o03y0lkJOqdzN
-	amQCMgkSCGfPEWcla6ivFd/1ZexXmKqaOt5fhnVPJ/1kCFtziRwSbhO0VBv79Mw7
-	tpYnsQLsNGQoV5loCcXydI4Hq045qh1MQDoTjg3Dh/dwPNFIK2IIOiShW7grkSIw
-	skmHtvXEsYUvYBJMsxXZsncfMtsbu9aDgjYpjlxIciNjmeyg9Bbp1H31gWPkrC2l
-	4S3hew==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e3nv0tbev-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 08:49:20 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b4654f9bb6so57172245ad.2
-        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 01:49:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1778575759; x=1779180559; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DFIMQq5sZaAx7AxbAUXAmZ3pH2PXw1sOxfR1/xNVXQM=;
-        b=VlY+53BFPzGvjDt+JpwD84/qv2rbnvDiDaM88i3vMOSw8kCgNAmsd2WvfCo93tUytP
-         wHJvTTHCqRHPFPZiolNjTV8WIxwqzv0hV3/qeucnfkR5hCMm2Ubk8Na8TjwEe4xu41GK
-         o6ph1hHE7ZHalwH+DeMNLmkU1o3J4bZir4LqE4G/a4dHHA4ttqdOsduLC2mZoBF1k+Mc
-         gEimGfUMKMtqSNpRjthp6URhkVut7Fok7dohQ+8NQjLNJRENEJG57UT1jm/5wR25pfUQ
-         ZzYHqOAoBK8oWhYHtcTr/ntqPbBmma1vZevUK61lpwFgu8aIBK2/nZZP80WzzvHgHiog
-         5rvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778575759; x=1779180559;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=DFIMQq5sZaAx7AxbAUXAmZ3pH2PXw1sOxfR1/xNVXQM=;
-        b=OrDNbdVZDng1ZzYOZ/WVVtQ6TWD3osaQouqZraRKfUUUhltpKrglJkob/d0T4M4W3Y
-         tmXR3uJTTZCaTMOiqrVqRCCVgTnOvWAgx5aHSKCYUfOlxaMlNbS734K2c9rbMGVDSmyF
-         C+MYlqnmr0BjvN6ei3qV138EcPVPRkh+yqvsLQXItbhE/2VqPFm8I4dja7GxASUYkvtS
-         5eveofKTdpWETQmK6uItlOCefP5bD96PodxgjuyVN9WZDx4HOzrqE190qe7KRGx4dBKD
-         Hg6pwrklsUxh+d0FdXZqx1UURo8Ehl6xRaqu2lemva18Kl47Dc7oBtrWSJVvSPTJkev8
-         wIPw==
-X-Gm-Message-State: AOJu0YwC8/2DnLypgFMDK+Kw4WRTzcgqFejIMdQurcBTYCf4R8DFnScj
-	Hvg/QBfasUPF7hQQxXH7uEcI8Ncu/pekBX5PLkyOneV+n5L/yMB4FyhmdmDLgOxmssh8zfw9cxo
-	/0vn9EQ+VPbWZ4wsLhQeTgHWDkssmTOFOz7aY9LD51n5DmX925DECMlv6GkqUJZo+ZvhdNe0=
-X-Gm-Gg: Acq92OGFS2XObUCT0JnAlzocOeJ3DP/MN+km8Lty9b2H7ayhjS7qkULYfiXAq0BaDHP
-	Di8RWLqoz2FHUEaXNyAVnZnPHEyjhV9cUASmF3XHlZhw7p7qPf9WcPqaVbuJiVtqTWMi7hxbQsu
-	JN6aztl2BL1CtVlU5XiTjbIIhz4TD5L5F7rJ3ycmKHIBw5l5LYmrQQxUrIqYSmP/noUTbvlgSkQ
-	20tUOB2pDqdFhA5K5/mbJQBKu5w+487YGZbWitN5kRbINyk6v4tAYD6G0PdB0WUzP1ePERpx59R
-	/nPi4CgAPnZv6Wbe2/ZiwBDjh0ABMA3iqSO1VKKpx8RMaJGejOAbdB7BSgit4opSYXoa/e2Plz0
-	BuscPphryeTYQfHzwJRNJ
-X-Received: by 2002:a17:90b:184d:b0:368:cefe:ddd0 with SMTP id 98e67ed59e1d1-368cefee0bdmr754874a91.15.1778575759346;
-        Tue, 12 May 2026 01:49:19 -0700 (PDT)
-X-Received: by 2002:a17:90b:184d:b0:368:cefe:ddd0 with SMTP id 98e67ed59e1d1-368cefee0bdmr754854a91.15.1778575758795;
-        Tue, 12 May 2026 01:49:18 -0700 (PDT)
-Received: from [192.168.1.102] ([120.56.206.29])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-368acbdea2asm1024252a91.1.2026.05.12.01.49.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 May 2026 01:49:18 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Huacai Chen <chenhuacai@kernel.org>, Rong Zhang <i@rong.moe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        "Lain \"Fearyncess\" Yang" <i@lain.vg>
-In-Reply-To: <20260501-ls7a-bridge-fixes-v2-1-69fa93683805@rong.moe>
-References: <20260501-ls7a-bridge-fixes-v2-1-69fa93683805@rong.moe>
-Subject: Re: [PATCH v2] PCI: loongson: Do not ignore downstream devices on
- external bridges
-Message-Id: <177857575510.14291.11844057354546678918.b4-ty@b4>
-Date: Tue, 12 May 2026 14:19:15 +0530
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="DmWSy/C+"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=XeP60HKMc+E4buZDocaTgoJLakLPWT9OEQqbsZ6i5P0oGfjAzhIdQOe49kT/K6UPdvZHT2DP3o67vvXFZR1xxhC2dOiOUpiy6Eq52dU35K1LwsygLPKjVoPBLXvvE0SCI8j7pzqftOA/tYMz1JNGzADEM/1EtZB+ckeC4Q2Fijx57pRlmb4FR1wBzmFh1QCh29kmZEAM0o0TY/vC+faWIe3R/LI9TgHXAR+jqJ0bmMga5N2wV/NxEuhdIpD56dAh9vs/Tum4sOoKSTJ9Bha3SAzAMXNGv5d9PyVs+4WR3EYorRfQ85JmgoDGUDBX2G00bDJhDzmCE1rYW9TQsew80w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/3LdLYi7Md5XIu970C4vvC1ugoCcp6VmCiC2KAgtHQ8=;
+ b=Y0MqkGGiDoTYnR+EqZb9mNszvxzNTe/pWxt62/ClOB9xh/L5ZV7eHpuUMwtKITnpQakQPTDkuA+HzYsGGZo6B7Ab7RWgvSyVMnvNO3+kuPJV+KeGEuHF6Cy6XFjYd116i/olGjvJKrtekDHHLfb+50mFNtRF7SqdM2YupvwoFGBGYH9770XksGak5rmIScz+5/Hyrn8MFXTeQWRnUhTFutxAuExA+yrdUzedbDZRnOpKxDTN24AVOFqV8pTMPRwFCvEnbQHS8SG2WNlLztBYDy01Cb1UzvJLqwg4sG8uqkMqyQxwreo9TWR0FehFpoul2YHoN/ynZmUVw5zQ09YbnQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/3LdLYi7Md5XIu970C4vvC1ugoCcp6VmCiC2KAgtHQ8=;
+ b=DmWSy/C+hsoqPP4vOE/HUFiTRZyspfPE1YUjfHPAI7GeuI/lPiI4CbpMG8IqkHPChfeBjcH0CrAP/yuozruFCJm7bO1xPgHAxUwyokmzG6d+5lLUk7wCSkGRbYMKUVEFrwD4vZ5D/gcDgKS+KdFjN1l5yCzFgQ1X2e4i03+XI4ee5811xUphR7PGD6IoEEFLedXJYjIWtespgOZCtZydRVPzVzPT0h2uiqVVRkOwKr28I5O5nUVaWZYBniMeki5f0WuICyk++SE8Rbo17oT6Ecmh4CULosHfadRU9crrR9G0lkkJewuY2fUOP8OKuv21TuALQY8ncpQ0kiHlBNzPKA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
+ by PH7PR12MB8595.namprd12.prod.outlook.com (2603:10b6:510:1b5::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Tue, 12 May
+ 2026 08:50:26 +0000
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391%6]) with mapi id 15.20.9913.009; Tue, 12 May 2026
+ 08:50:26 +0000
+Message-ID: <24bd48a3-0169-4877-bef5-1ca0712c1f44@nvidia.com>
+Date: Tue, 12 May 2026 09:50:20 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] PCI: tegra194: Use aspm-l1-entry-delay-ns DT property
+ for L1 entrance latency
+To: Manikanta Maddireddy <mmaddireddy@nvidia.com>, bhelgaas@google.com,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ thierry.reding@gmail.com, kishon@kernel.org, arnd@arndb.de,
+ gregkh@linuxfoundation.org, Frank.Li@nxp.com, den@valinux.co.jp,
+ hongxing.zhu@nxp.com, jingoohan1@gmail.com, vidyas@nvidia.com,
+ cassel@kernel.org, 18255117159@163.com
+Cc: linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260512034821.1320714-1-mmaddireddy@nvidia.com>
+From: Jon Hunter <jonathanh@nvidia.com>
+Content-Language: en-US
+In-Reply-To: <20260512034821.1320714-1-mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PA7P264CA0168.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:102:36f::16) To DS2PR12MB9750.namprd12.prod.outlook.com
+ (2603:10b6:8:2b0::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.0
-X-Authority-Analysis: v=2.4 cv=PN0/P/qC c=1 sm=1 tr=0 ts=6a02e990 cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=QuRtzvr4xB5J0le8HPcEzQ==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22
- a=VwQbUJbxAAAA:8 a=tdyrT-Nty_aWwaTIZgAA:9 a=QEXdDO2ut3YA:10
- a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-GUID: LmGXB42azFshZnO1WVb778-_3uedHwDF
-X-Proofpoint-ORIG-GUID: LmGXB42azFshZnO1WVb778-_3uedHwDF
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTEyMDA4OCBTYWx0ZWRfX8UKbUnBbSucU
- Y3alLpXsoEayF12yscJfeSub1/MZxBe0uBOpUiy5acXR/EzEJVgByD1i5bPEXG3STApSzo0blro
- Ot/mGLQ5FtEwpQCaYNxraFX/eg/6QtnJ8niC1OacbRllXksAMuiQmSJ2C0/z40c5ivzFo8Zydah
- ys0UZpRjlkvPgkeO8q42fTljfK36ABkug0O7W3/iKfP+mVhohJMYRi9B0r6U60t3Qha1GOWB4QB
- dd1P5SA65pkjY3aHTR3+cGexrML7PU/ZleriAoPH33PIf2rsHub/6Jbp95knp/SuPFb8wH160Rf
- VupqSBwVlexbbl6UyrhYEhhMeGU5P91/fc0fQgztSiWplr2R9y/oxedqsIwKbOQ0at4VRCnaAGS
- VIEOsio45Ah6/pEqddw14ZdrvAppXYkfdTbhqLJTFlfXDdE99LNKyTZncka0yJKYNlBO2K74zUH
- uGRLs1Y7zBHuM11pocQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-11_05,2026-05-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 suspectscore=0 adultscore=0 clxscore=1015 spamscore=0
- impostorscore=0 phishscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605050000 definitions=main-2605120088
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|PH7PR12MB8595:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3ab1e951-60fe-41b0-209c-08deb00382da
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|22082099003|18002099003|11063799003|921020|56012099003|3023799003;
+X-Microsoft-Antispam-Message-Info:
+	RafzeZR4+eMrshRzlVktRDAY1nEZbi+FBLZubi6vDEu6sANOAGigtW/U6vi3e7AqInWxxW+9TG7AZTl/e9RZZYqzqQgs+UCa3QcsYkt+fr2PPSRb6JixZZTuY7AlJSmzEAm/W77VZDK/fltamUc/attyyTgXv2sTURHBWrB6EKdzv4QgAkX/c1BciOA5DjQpk9NyNJwDZzLsIMBGi7zKEaKZg91PmWNe/j8ChehfvWC6g1vjnKXUz8hh6x0r/6hRu00FM2nj84iNK9cYtUhMZ6s/j/FtzTeaxvxA9xZqioUZ734mzzJRPbTO0oSCm4W2BE96ReR6LKiJw6XdJdQENu9WYArCwnx07iixb+WC2O8Xz/hi4Asjpw/7fJ73gGbHu4JVWFVcVWlJ3dRc/6yIAONk9Tyg6YyBUEtC6DEyf4KkiyMx1a17w3yDoNA9bOBo0DENeq6zijosq/DmHZgfWjktgD8KCR15XUPxrCJhubENc9Fn08HZMQcJlWnsgXXjkRjyrOFJZWVO7KlHWJJKHvEFZQdfQ1aboIa3VqYKyTGuoSRUuVM/hVPAPj4fBNU7ZzyRMDn0LaMw8bDFiIlazhDHoWnQ4fXapDNxSJT5KhFiAx9EJLx+j+azwsF0xNF7gbx4jHuqNt3CCWwBHiz2GaOeJGmDxCZonSf+s3ehRr8tZuj21fCYCFMMlH8Hij134BJCU7yoV/YsRoWP9XVZYN7F2F1Eyaolx5eGC9YGcT0=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(22082099003)(18002099003)(11063799003)(921020)(56012099003)(3023799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?aWhxTzYrK3dsd0hxZnNRd1lHNnBidmJDN3cvc2ZRSk1WTUFWd05ETVhOdU9N?=
+ =?utf-8?B?V2UwMzNkNGtnZ2ltSW81c1JLbDhJTEQ0U3dBZ0lIWklCaTIrS2dFRmpQNW05?=
+ =?utf-8?B?cStqd1FyV0JmMngyYXZYU0NiZ2o3NmlMN3hyK3ZUVWoybHZXelloN09IWTR6?=
+ =?utf-8?B?YzRTYlB1NmE5VERad09QYXMzU3pvNUdpdlpybGd2VWxFL2c3M3BTNEFrWFkx?=
+ =?utf-8?B?N2J3MTBVK0RwNk1Vdy9iK3pJVlZDdDFsN1FxSVhiMGpxaTB0dzFJQ0JGTUtk?=
+ =?utf-8?B?c2NKMHRSWTR4cWxBR0hlaGxWNUl3ZXZRZGNtM3l6K1FWY1VnNXZRcjBxOHda?=
+ =?utf-8?B?M0dSODRYdDNMZ3RpMmR4Y1JLd1JlcTNjUmtIeUdQc3Bqb2UwOGRRYnRMZHVZ?=
+ =?utf-8?B?c25pNmZlZ0xPVUdpdEJ2QjU0S3VicHlhdE1xK0Nzb1lvK3JWc3Z2czZvOGxE?=
+ =?utf-8?B?bVR0NERNYmFsNTFrbjBsRTFrczUxa3FIclBzandqeHpjclJpck9SRjYvUVBE?=
+ =?utf-8?B?bTgzeGk4UzJIQzhmRmJvY1NyejFrUnVETXdPSWQrVWlFcjl5akpmYUVxSng3?=
+ =?utf-8?B?eXVrNXEzU3JCZlJSQWhHaldMRGk2a3hpemNpYTZUSisxMmdqckNKVjIwbldP?=
+ =?utf-8?B?L3pFSmd0TXRrRHYweHZXcGYvWnJTZFpNbGo2YVlqZ0ZuazUrRkRBZ1BHUjh0?=
+ =?utf-8?B?UlR0a1BpSXoyK0ZiUEE5ai8wLzJ3Vy9XM2RwN1dCWDNML0hDZVRyWGxoVkpq?=
+ =?utf-8?B?RzNxVnh3SE5Vd0RvV3VKMFdBUW5iaXVONEhlV1VqY1UyN2VEcWhYaFozN1Y1?=
+ =?utf-8?B?aEMzM2NsQ1BZdGlKN2YrdWoyclNWdWg2QUxNUklRM1R2YStoYVJTaGVhNnZz?=
+ =?utf-8?B?cEExeFdDSXl0SjVHYjMyOUZjRzdNWlNVaXg4a1VFQVVKamtoSDhBMnpFbnFQ?=
+ =?utf-8?B?TE15b3JnWFVkWThOUmExNkE4SlRwMHNRd05NaCs4WFFndWpudlFRMHNiVVhS?=
+ =?utf-8?B?MllIdStOZnlOdmpSZ2FKQnZBdnNFSTByNkdQbnVicmxlOU1QUm40V2xTWUlx?=
+ =?utf-8?B?VXZ1a2xzaC9kdTdqRDEwWngrUW9FUnlpSDVRMUQwUHFPd1J6eFVLQXdZK1R5?=
+ =?utf-8?B?SHNUTnRYelZwc2QzK1pvRnZYWXl6bjlJL082OW9KZUhXYmxKdFlMbEh5TlJV?=
+ =?utf-8?B?T2E4blF1ZnRqQUhlOTlIbER4TDJEbkRjWDVGREMreS9aaFd3aTIzSDdiaURP?=
+ =?utf-8?B?cEU4VXVsbVF2a1kvd3ZrN1BDRTRPcGIyWWE2MFlyb2JNVzlzME1VcDBkdzF5?=
+ =?utf-8?B?cS9SWncrNU04azNjVGNLbW9pQmxZSDlXb3FhS0FiTUhEcnRjVlloZ0FzQURX?=
+ =?utf-8?B?RjA0Z2JHQzJDeFk2bmR2SUozeU1qdmpCUFVzS0QvVi9FdzBmMUlFMUluVVBP?=
+ =?utf-8?B?LzR4Y2g5d0h1aUUrT3hMMmRqU21Zby83RXptYVFuSlRIVCs5STFRWUc4S09p?=
+ =?utf-8?B?NjNQUUNKS0x4OEJsZklHckhyczd2UlFpL05kcVZiQ2N0MFkrTVZqODlUTWVI?=
+ =?utf-8?B?czZ4cndCV3dvT0hNNnpNQXovelBHSCtocUtkbTVRcjEzTjNmUnZQWlYyTDU2?=
+ =?utf-8?B?c1AvRHVlSDQvQjhGWUZvNjRhMStVTFh3STNkUlpJVHNUcGNva1NBb2JwWjlu?=
+ =?utf-8?B?KzdINDlXbHdZOUZaSEVKaFl0Q1pOTytvUXFsQlVtcmh6VFg0c2doVHF5L05Y?=
+ =?utf-8?B?WXBRcHhXcGltQ2VBUXIrbEp6SEd4U2g5aHJGamhUbER3RnpuUWJvS2dyQXFr?=
+ =?utf-8?B?amVUZkV0b3Qya0tuSzJiWFdxcmU0TWZNMEI4T2N0RENoTVdCYnd2RzZyTXVx?=
+ =?utf-8?B?YUJQeVY0eldSSjFtUVVScml2NW1qK0xIOHdEOVF1Q2JRWktaRVBEYUdPVjMr?=
+ =?utf-8?B?T1RQZkpSNWkxY0lyVmVXc0Fpdyt0Zkh1N0NlM0RlWVRsM3hDdmdrN3hMUUkw?=
+ =?utf-8?B?QVJ5bVl5SlhhUFhHZ2RQTmpDMlM4UUdFMC9HN1MzdmxDN0g0MHJraUpTQlNJ?=
+ =?utf-8?B?NmVaaFZ0L3hoZDM3QWRhNzF5SExHQ1Uxa2owbUpzTTUzNHZxUEIyTGt1RWw1?=
+ =?utf-8?B?Ujd0b0ZkcXl4c0NXSGZ3OGt4eGo3NHdWbE1Ka0lEK2t5dXJiS3cvR0VVeTZQ?=
+ =?utf-8?B?c0RkYXVpZ09CK1hyR0JZZXJiWEVBRVJjQnQ0NnlPRGh3WFptTkhvdTBJb2Fy?=
+ =?utf-8?B?WjY5ZlRGcE5rUmVPQzlzNDlGQVdkUkgvT1c4UE9MVnB3NnNvVHRUblBWL0t4?=
+ =?utf-8?B?VVJiMDU3VzNRbFN0ZStueHRTdkZHWld5NHdzNi92WmFKNTNpamUyQT09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ab1e951-60fe-41b0-209c-08deb00382da
+X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2026 08:50:26.0724
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: a3xMKUO5RDiifIMepvDZ55PE71cslvNCXPevh/iMUsWDbfv0RfVC7b/+0XoP5UEeETCq7BsG5RQTe7Lpp+BaPA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB8595
 
 
-On Fri, 01 May 2026 02:45:23 +0800, Rong Zhang wrote:
-> Loongson PCI host controllers have a hardware quirk that requires
-> software to ignore downstream devices with device number > 0 on the
-> internal bridges. The current implementation applies the workaround to
-> all non-root buses, which breaks external bridges (e.g., PCIe switches)
-> with multiple downstream devices.
+On 12/05/2026 04:48, Manikanta Maddireddy wrote:
+> Program ASPM L1 entrance latency from the optional aspm-l1-entry-delay-ns
+> device tree property. Convert the value from nanoseconds to a hardware
+> encoded 3-bit value that is equal to log2(ns/1000) + 1. If the property
+> is absent or greater than 7 (the maximum latency value supported), then
+> default to 7.
 > 
-> Fix it by only applying the workaround to internal bridges.
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2: Fixed commit message as per review comments.
 > 
-> [...]
+>   drivers/pci/controller/dwc/pcie-tegra194.c | 14 ++++++++++++++
+>   1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 9dcfa194050e..c9716d614451 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -18,6 +18,7 @@
+>   #include <linux/interrupt.h>
+>   #include <linux/iopoll.h>
+>   #include <linux/kernel.h>
+> +#include <linux/log2.h>
+>   #include <linux/module.h>
+>   #include <linux/of.h>
+>   #include <linux/of_pci.h>
+> @@ -272,6 +273,7 @@ struct tegra_pcie_dw {
+>   	u32 aspm_cmrt;
+>   	u32 aspm_pwr_on_t;
+>   	u32 aspm_l0s_enter_lat;
+> +	u32 aspm_l1_enter_lat;
+>   
+>   	struct regulator *pex_ctl_supply;
+>   	struct regulator *slot_ctl_3v3;
+> @@ -715,6 +717,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
+>   	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
+>   	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
+>   	val |= (pcie->aspm_l0s_enter_lat << PORT_AFR_L0S_ENTRANCE_LAT_SHIFT);
+> +	val &= ~PORT_AFR_L1_ENTRANCE_LAT_MASK;
+> +	val |= (pcie->aspm_l1_enter_lat << PORT_AFR_L1_ENTRANCE_LAT_SHIFT);
+>   	val |= PORT_AFR_ENTER_ASPM;
+>   	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
+>   }
+> @@ -1115,6 +1119,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+>   {
+>   	struct platform_device *pdev = to_platform_device(pcie->dev);
+>   	struct device_node *np = pcie->dev->of_node;
+> +	u32 val;
+>   	int ret;
+>   
+>   	pcie->dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+> @@ -1141,6 +1146,15 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+>   		dev_info(pcie->dev,
+>   			 "Failed to read ASPM L0s Entrance latency: %d\n", ret);
+>   
+> +	/* Default to max latency of 7. */
+> +	pcie->aspm_l1_enter_lat = 7;
+> +	ret = of_property_read_u32(np, "aspm-l1-entry-delay-ns", &val);
+> +	if (!ret) {
+> +		u32 us = max(val / 1000, 1U);
+> +
+> +		pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7);
+> +	}
+> +
+>   	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
+>   	if (ret < 0) {
+>   		dev_err(pcie->dev, "Failed to read num-lanes: %d\n", ret);
 
-Applied, thanks!
 
-[1/1] PCI: loongson: Do not ignore downstream devices on external bridges
-      commit: 1389ab9bf9f627d4daed86f492091b00f110aa86
+Reviewed-by: Jon Hunter <jonathanh@nvidia.com>
 
-Best regards,
+Thanks!
+Jon
+
 -- 
-Manivannan Sadhasivam <mani@kernel.org>
+nvpublic
 
