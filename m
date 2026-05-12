@@ -1,32 +1,32 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09921448D5
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 00:44:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204412248A0;
+	Tue, 12 May 2026 00:45:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778546701; cv=none; b=PIQyEB0lGiSB6IzLtDApCPtWnuiD8x5JqYQeWTGpi4XUgVKtUO2jtGZo3SRRCecr6mtw3OvOOw3U1LhD993kxq6YKxboYPyhHLsMQfIGe7Fbav81grJ5F2TpKU44ruGYgUc0N2h86xtqPjRbX0gIcO7d1IjPgcbq2UiMRclG9xQ=
+	t=1778546704; cv=none; b=GwpFw002BC6nR3txoSr13UPr9fjGGUaBFNViWu3I0cUao5pX2giRtR9ceUEBh/IjoX1SbbEESJyh//6xo7VtDQu5J1XesztMI9V3qn1Hx3CslMUbiVQxZLNrfY4DYiRy9onrJsV61fAVZifX0pfAhstYUs+mewBXhC91yGSB+qk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778546701; c=relaxed/simple;
-	bh=Qb6skaRFvARfQituJbTnVTEdzNhiETeENg6NcMq2z3o=;
+	s=arc-20240116; t=1778546704; c=relaxed/simple;
+	bh=egVlnENSjE1EiKQJL7+FPZSb9mHITMVnPukdSuzhfyg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Rth+UdkI02cYa+Is4l9A4p223iR1WZ4cSbmYUVpyxq8SCJ2DEpVygpsbHt/Ra9oxOGnrpz/7bO3FAl2QDE2rgIitQ2pE56PwhzOSM3u0PLi/hXPMRgfheTHz56sdmQkvcxgT+PKlM0s433kzxz/ONUUQ4Kkv0od1IoFvhTDoyk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nnNhBqO+; arc=none smtp.client-ip=117.135.210.3
+	 In-Reply-To:Content-Type; b=iKmlgqU1rxyUldxJ2QQ9cZlCk9m8kCZtfzUBk88OfCmAwCzhh6sDB5G/V63rsnKof6wUkyh2CQgkDLn0KjupGVxzAOy14Ym8kUm1LN3/osdFRtM3N6hvuQCSHRZkhFOLtmXNI+JA6JZXfs10BXUva3wqwqyf1kTHb9a25br5OsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=EvZQJOfL; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nnNhBqO+"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="EvZQJOfL"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=IVtRKKYH3GrG84xaJANJeNCyAfAgs7lgPSkb+N9RnpQ=;
-	b=nnNhBqO+Iyc5SeW2Sewqpuzwcr/jesOwtA13DiAOXzfxus0/YO+6lilE435+vL
-	eatKs8hbQLgH5+TfllMLAh277tO3q/ikO80MHIMYK/EP7iAyxFA35qUFsdk7w8Wi
-	SNtlo/aOGTxmGkMnPYPvyaLgpIx/GFZx+3JW49wfdvJtA=
+	Content-Type; bh=gO3h51HYtv45xRJLIzc56DgmssLAn+8K3ewRnk2t304=;
+	b=EvZQJOfLau2GLCePkzSv5c0l+dA27qxpzkxxL5lydx66r3WLqhxpI3fKMj1KiS
+	ZRdD1T3DnPc55HvlgsmcvMs0Dh+SPbQrrf66mVJOEmMs+JbGFu1jqbAGCaYUL9m3
+	6zTeWutdfZPmgzL3ffeXvEBEjWbdwcmOTqCyqMOupook0=
 Received: from [192.168.50.71] (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgC3qgv0dwJqg4yVEA--.4946S2;
-	Tue, 12 May 2026 08:44:36 +0800 (CST)
-Message-ID: <7bbe1c68-6829-4d1b-ba81-acc5af89d5a1@163.com>
-Date: Tue, 12 May 2026 08:44:35 +0800
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wBXb4PPdwJq8dJuAw--.7483S2;
+	Tue, 12 May 2026 08:44:00 +0800 (CST)
+Message-ID: <e600d0a4-b93e-425f-a5f1-c76802c65622@163.com>
+Date: Tue, 12 May 2026 08:43:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,73 +34,56 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/7] PCI: cadence: Add post-link delay for LGA and
- j721e glue driver
-To: sashiko@lists.linux.dev
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-References: <20260511055923.37117-3-18255117159@163.com>
- <20260512002408.101ADC2BCB0@smtp.kernel.org>
+Subject: Re: [PATCH v3 4/7] PCI: dwc: Use common
+ pci_host_common_link_train_delay() helper
+To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, mani@kernel.org,
+ vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com,
+ pali@kernel.org, ryder.lee@mediatek.com, claudiu.beznea.uj@bp.renesas.com,
+ mpillai@cadence.com, robh@kernel.org, s-vadapalli@ti.com,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ claudiu.beznea@tuxon.dev, linux-mediatek@lists.infradead.org,
+ linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260511055923.37117-1-18255117159@163.com>
+ <20260511055923.37117-5-18255117159@163.com>
+ <20260511070139.GA1096586@rocinante>
 Content-Language: en-US
 From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260512002408.101ADC2BCB0@smtp.kernel.org>
+In-Reply-To: <20260511070139.GA1096586@rocinante>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PSgvCgC3qgv0dwJqg4yVEA--.4946S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7KFW8KFWUJw4xWryrKrykZrb_yoW8ArWfpF
-	W7u3yfWF48XrW5WanrA3W5X3Waq3Z5C3yUGrsagw18XF1akr9xGFy2qFyfCa9akFZrAw1x
-	Xwnxtw12gw1avFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pKYLyiUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xQ22WoCd-TncQAA3t
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wBXb4PPdwJq8dJuAw--.7483S2
+X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvj4REfOzUUUUU
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBAt0GoCd9AlOQAA36
 
 
 
-On 5/12/26 08:24, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [Low] Compilation error in `j721e_pcie_set_link_speed` due to incorrect structure member access on a pointer.
-> --
+On 5/11/26 15:02, Krzysztof Wilczyński wrote:
+> Hello,
 > 
-> commit b3897a7e50194e1f9cc94b232c615c7f8f651006
-> Author: Hans Zhang <18255117159@163.com>
+>> -	/*
+>> -	 * As per PCIe r6.0, sec 6.6.1, a Downstream Port that supports Link
+>> -	 * speeds greater than 5.0 GT/s, software must wait a minimum of 100 ms
+>> -	 * after Link training completes before sending a Configuration Request.
+>> -	 */
+>> -	if (pci->max_link_speed > 2)
+>> -		msleep(PCIE_RESET_CONFIG_WAIT_MS);
+>> +	pci_host_common_link_train_delay(pci->max_link_speed);
 > 
-> PCI: cadence: Add post-link delay for LGA and j721e glue driver
-> 
-> The Cadence LGA PCIe host controller lacks the mandatory 100 ms delay after
-> link training completes for speeds > 5.0 GT/s. This commit adds a
-> max_link_speed field to struct cdns_pcie and inserts the required delay
-> after the link has been successfully established.
-> 
->> diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
->> index bfdfe98d5aba7..ee85b8e04f5b8 100644
->> --- a/drivers/pci/controller/cadence/pci-j721e.c
->> +++ b/drivers/pci/controller/cadence/pci-j721e.c
->> @@ -206,6 +206,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
->>   	    (pcie_get_link_speed(link_speed) == PCI_SPEED_UNKNOWN))
->>   		link_speed = 2;
->>   
->> +	pcie->cdns_pcie.max_link_speed = link_speed;
-> 
-> Will this cause a compilation error?
+> This comment could move to the helper you added.
 
-Sorry. Will change.
+Hi Krzysztof,
+
+Will add.
 
 Best regards,
 Hans
 
+
 > 
-> Looking at struct j721e_pcie, cdns_pcie is defined as a pointer:
+> Thank you!
 > 
-> struct j721e_pcie {
-> 	struct cdns_pcie	*cdns_pcie;
-> 	struct clk		*refclk;
-> 	...
-> };
-> 
-> Does this need to use the arrow operator instead of a dot
-> (pcie->cdns_pcie->max_link_speed) so it correctly accesses the
-> max_link_speed member?
-> 
->>   	val = link_speed - 1;
->>   	ret = regmap_update_bits(syscon, offset, GENERATION_SEL_MASK, val);
->>   	if (ret)
-> 
+> 	Krzysztof
 
