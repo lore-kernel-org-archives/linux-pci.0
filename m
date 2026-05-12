@@ -1,123 +1,212 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f74.google.com (mail-ed1-f74.google.com [209.85.208.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CC1B39E9C3;
-	Tue, 12 May 2026 14:06:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AADDA395AEC
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 16:21:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778594802; cv=none; b=BMJHkGrWfj2JkwkadD/5qJpymwA72Wa/+psikkLdjd/skSKQzsZgKwvaS6i7uoDxg4gN8T1bHX8aP0ES/xtzfM9toza6ilGlD8B+ypk36UOyfwNuHfh5inE4znkZ2Ay984cZw0TRZBpSOQ2hWpikuJ000LhSrtamV0kNoFjUw1I=
+	t=1778602910; cv=none; b=AkKtvUk+bxEx7rYA7y3fFHZUphd9I7BTwgCYYoojoWN5iyTm9JSvu3sQHfUL4YZixEfYl9Uasi59aDSTPZEfOWPNY1/W6jIaPTChNHO8wp5pX22DKaZhGY86tgTFY5/c7u821IJjDD3TMrkh5ED06r2qH1QpDnjgxKnRDxkn+mk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778594802; c=relaxed/simple;
-	bh=sCdTEzy+9QK/GAC04dwJjssIvAEaneP0B0TsanrVNU0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=coYhsrOVuCdgRHQFZ5VPFSLnpWZR4O6YZ6tMqtVdj0ErdJzSrIVn8qgl05Nz+Oew5mSjSxSj2Nwj47R2x60FnT6G8MycOTiaK+V6Myq1kM3372zfVM1w1SN7CUx1rKIxgK7smLOdltbzzUVX3kPgUjGIxyLwGk4EtA6jVP8bIX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mDZKGB4K; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778602910; c=relaxed/simple;
+	bh=Oph/YYZUN1eVVob1hwraR+iR6aig1Z0jrnNZaGi31r0=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=ds/eq8ARra37wad5gwbktCg2jwI+qHD8b9kXnWKFdqvOgyCXSLi+f+h4xc6Yqx9pp0M97CsXaR7J8Nio2Ps4rwQpX3m6VSmO+uroLuvPTd4l0CelIMrO7jnwaDiw6fqWqp9xkFdBbHmG+NNp5xPD4LqfNH5bCphIm9+AF2jB9H4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mFD3POVC; arc=none smtp.client-ip=209.85.208.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mDZKGB4K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4D46C2BCB0;
-	Tue, 12 May 2026 14:06:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778594802;
-	bh=sCdTEzy+9QK/GAC04dwJjssIvAEaneP0B0TsanrVNU0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mDZKGB4K/KBTh0Hm7t50LbJjRocFOeAjXT7hnG3mtf0eR5wpLkBPGFChYay35v5jR
-	 ydExe4pHsdItNrltZjn0Zl/A1JOLcD7mSI+mP/isxUIBIurNBAVrRShc6A+D6yxg+3
-	 Vtbr4nhW6DufgKxyIA66OT8C+PXB2nXdhPXaPP/y6lvYMkSJajNohSDH5Hmyv9+Cfc
-	 1Ce/VN1TCfraCWHNezX4SKDa4bORpvEXKO2RQa2WMBfGWHhu2J4ZnnYF4E6ANe1TpT
-	 Q8KxiX7IK7Y9CzE/AnWNzG7Z9bRu1p3tQPtnHltGqqdxEFaFn+FX8MvN7ivhfgkdQE
-	 HoCvd9wnsUc3w==
-Date: Tue, 12 May 2026 19:36:31 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Frank Li <Frank.Li@nxp.com>
-Cc: Vinod Koul <vkoul@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	Chaitanya Kulkarni <kch@nvidia.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	"David S. Miller" <davem@davemloft.net>, Nicolas Ferre <nicolas.ferre@microchip.com>, 
-	Alexandre Belloni <alexandre.belloni@bootlin.com>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
-	Koichiro Den <den@valinux.co.jp>, Niklas Cassel <cassel@kernel.org>, dmaengine@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
-	mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev
-Subject: Re: [PATCH v4 7/9] nvmet: pci-epf: Use
- dmaengine_prep_config_single_safe() API
-Message-ID: <xebioeyo4eecaj3sum6scttqqmubpcqutzdcrpjquvtmoaiskm@d2y744phmffd>
-References: <20260506-dma_prep_config-v4-0-85b3d22babff@nxp.com>
- <20260506-dma_prep_config-v4-7-85b3d22babff@nxp.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mFD3POVC"
+Received: by mail-ed1-f74.google.com with SMTP id 4fb4d7f45d1cf-6805f45c06dso2355105a12.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 09:21:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1778602906; x=1779207706; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=J0Ccv1UfqMOOxOflEQc2h7d3MsFikd1q1lwa5Y7ivPA=;
+        b=mFD3POVC9qY/ic6ZJ+BkpohBgk7qXAJYvBh4LkRWTzE9UwLeT8JAQUPLrULIyzb5f5
+         gF6E07xDy0UUKPoATYOOAiPqSxaE8eNlGAP384xZwLAkRcrKnpCLvOexAmYNTzJbDuma
+         Ty/Aixp2nIfKRcia21wnRfmo9y19c34c+00xJkzsf/u+pJCKISfjmGuX3QdjV2JPftiu
+         P1Eer5wlEvbCE4Ywhbvze2xiY6u+LT6qG9ywa8KIMkZ20MOCyCnea22WWiHENlp8a5CL
+         0UjLCa9jTwavJHfiQqzctzlZcJJXZoQ6ZiUAC12BcRG1KkzjaeOzFR2cVVr3MTr6kWcm
+         O9OQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778602906; x=1779207706;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=J0Ccv1UfqMOOxOflEQc2h7d3MsFikd1q1lwa5Y7ivPA=;
+        b=ZcHrrFKMkoPQO2kolRxIpYYbXKjhy/sh6JImKapRPD9IlnnJSymPln1k/C/mmy5SSG
+         d/Cwv+wRT0mEfLT/JktLP+F3G7BcP10qZLxrX4WemlnPt5qJ1WR38GwHXE2cTS4HVPe7
+         P+2MG47kgGSPrstN0lp77UcXZakzyXa8So0p1e1zKQpzkCvBvcZ9oUPmKaArTLOfax5+
+         e9UQMfVG7CXhzsYyf/vvJjZ5vVtrIa5DQfdagnfCpuPCSGjnqLHYZndYbtKD14dEtf35
+         ns+tXaBrKuntbv9W8PP5DlbubMLqJ2G77iEM7eaH/wJbEY9Xvzeq6UgIZhDEQLmkjYaQ
+         snig==
+X-Forwarded-Encrypted: i=1; AFNElJ8yEytOuu4iUY/yU9IviIji+y486SDqbLpUNZhlt6vvdghlnfXUHHvIHCD9g9Du1L01wtCDrtYewgQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGt4lEhX6L/Mg6I9zYJZPIHEjLE/6KSJLIF9J/b5FFbZTNHARg
+	RR4mKiR4iyqQRJRmikZvaDGBBTWpZNABBscofC2cYLSMPPPRiNj7DzGfuVFUATU4ONhq//Z22rn
+	AYGDv8NejXXsh1fiUxg==
+X-Received: from edbij16.prod.google.com ([2002:a05:6402:1590:b0:672:29ae:9a33])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6402:158d:b0:677:15b6:4d6b with SMTP id 4fb4d7f45d1cf-680d02f613cmr2154738a12.26.1778602905910;
+ Tue, 12 May 2026 09:21:45 -0700 (PDT)
+Date: Tue, 12 May 2026 16:21:44 +0000
+In-Reply-To: <20260429175016.7915-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260506-dma_prep_config-v4-7-85b3d22babff@nxp.com>
+Mime-Version: 1.0
+References: <20260429175016.7915-1-djeffery@redhat.com>
+Message-ID: <9huzh5ocmwdj.fsf@tarunix.c.googlers.com>
+Subject: Re: [PATCH v15 0/5] shut down devices asynchronously
+From: tarunsahu@google.com
+To: David Jeffery <djeffery@redhat.com>, linux-kernel@vger.kernel.org, 
+	driver-core@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>
+Cc: Pasha Tatashin <tatashin@google.com>, 
+	"=?utf-8?B?TWljaGHFgiBDxYJhcGk=?= =?utf-8?B?xYRza2k=?=" <mclapinski@google.com>, Jordan Richards <jordanrichards@google.com>, 
+	Ewan Milne <emilne@redhat.com>, John Meneghini <jmeneghi@redhat.com>, 
+	"Lombardi, Maurizio" <mlombard@redhat.com>, Stuart Hayes <stuart.w.hayes@gmail.com>, 
+	Laurence Oberman <loberman@redhat.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	John Garry <john.g.garry@oracle.com>, kexec@lists.infradead.org, 
+	David Jeffery <djeffery@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, May 06, 2026 at 04:44:19PM -0400, Frank Li wrote:
-> Use the new dmaengine_prep_config_single_safe() API to combine the
-> configuration and descriptor preparation into a single call.
-> 
-> Since dmaengine_prep_config_single_safe() performs the configuration and
-> preparation atomically and the mutex can be removed.
-> 
-> Tested-by: Niklas Cassel <cassel@kernel.org>
-> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+David Jeffery <djeffery@redhat.com> writes:
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+FWIW,
+I have tested this series by opting it for NVMe devices and observed
+significant performance benefit (from 9 sec to 2 sec).
 
-- Mani
+Please feel free to use
+Tested-by: Tarun Sahu <tarunsahu@google.com>
 
-> ---
->  drivers/nvme/target/pci-epf.c | 18 ++++--------------
->  1 file changed, 4 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/nvme/target/pci-epf.c b/drivers/nvme/target/pci-epf.c
-> index 2afe8f4d0e46104a1b3c98db3905cf33e8c9e011..04d8f48d6950349ca97d2dbeae4e38e4714ad0d4 100644
-> --- a/drivers/nvme/target/pci-epf.c
-> +++ b/drivers/nvme/target/pci-epf.c
-> @@ -388,22 +388,15 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_pci_epf *nvme_epf,
->  		return -EINVAL;
->  	}
+> This patchset allows the kernel to shutdown devices asynchronously and
+> unrelated async devices to be shut down in parallel to each other.
+>
+> Only devices which explicitly enable it are shut down asynchronously. The
+> default is for a device to be shut down from the synchronous shutdown loop.
+>
+> This can dramatically reduce system shutdown/reboot time on systems that
+> have multiple devices that take many seconds to shut down (like certain
+> NVMe drives). On one system tested, the shutdown time went from 11 minutes
+> without this patch to 55 seconds with the patch. And on another system from
+> 80 seconds to 11.
+>
+> And thank you to everyone who has spent some of their valuable time
+> providing reviews, suggestions, criticisms, or tests on the various
+> iterations of this patchset.
+>
+>
+> Changes from V14:
+>
+> Remove unneeded use of '!!' with boolean type
+>
+> Changes from V13:
+>
+> Remove duplicate flagging of async shutdown on scsi hosts/targets/devices
+>
+> Changes from V12:
+>
+> Only acquire a parent reference if acquiring the parent's lock
+> device_enable_async_shutdown should return void
+> Minor comment and description cleanups
+>
+> Changes from V11:
+>
+>   * Swap the order of the first two patches
+>   * Rework conditional parent locking so that lock and unlock no longer use
+>     separate conditional checks
+>   * Remove an used variable
+>   * Comment and description text cleanups
+>
+> Changes from V10:
+>
+> Reworked to more closely match the design used for async suspend
+>   * No longer uses async subsystem cookies for synchronization
+>   * Minimized changes to struct device
+>   * Enable async shutdown for pci and scsi devices which support async suspend
+>
+> Changes from V9:
+>
+> Address resource and timing issues when spawning a unique async thread
+> for every device during shutdown:
+>   * Make the asynchronous threads able to shut down multiple devices,
+>     instead of spawning a unique thread for every device.
+>   * Modify core kernel async code with a custom wake function so it
+>     doesn't wake up a thread waiting to synchronize on a cookie until
+>     the cookie has reached the desired value, instead of waking up
+>     every waiting thread to check the cookie every time an async thread
+>     ends.
+>
+> Changes from V8:
+>
+> Deal with shutdown hangs resulting when a parent/supplier device is
+>   later in the devices_kset list than its children/consumers:
+>   * Ignore sync_state_only devlinks for shutdown dependencies
+>   * Ignore shutdown_after for devices that don't want async shutdown
+>   * Add a sanity check to revert to sync shutdown for any device that
+>     would otherwise wait for a child/consumer shutdown that hasn't
+>     already been scheduled
+>
+> Changes from V7:
+>
+> Do not expose driver async_shutdown_enable in sysfs.
+> Wrapped a long line.
+>
+> Changes from V6:
+>
+> Removed a sysfs attribute that allowed the async device shutdown to be
+> "on" (with driver opt-out), "safe" (driver opt-in), or "off"... what was
+> previously "safe" is now the only behavior, so drivers now only need to
+> have the option to enable or disable async shutdown.
+>
+> Changes from V5:
+>
+> Separated into multiple patches to make review easier.
+> Reworked some code to make it more readable
+> Made devices wait for consumers to shut down, not just children
+>   (suggested by David Jeffery)
+>
+> Changes from V4:
+>
+> Change code to use cookies for synchronization rather than async domains
+> Allow async shutdown to be disabled via sysfs, and allow driver opt-in or
+>   opt-out of async shutdown (when not disabled), with ability to control
+>   driver opt-in/opt-out via sysfs
+>   
+> Changes from V3:
+>
+> Bug fix (used "parent" not "dev->parent" in device_shutdown)
 >  
-> -	mutex_lock(lock);
-> -
->  	dma_dev = dmaengine_get_dma_device(chan);
->  	dma_addr = dma_map_single(dma_dev, seg->buf, seg->length, dir);
->  	ret = dma_mapping_error(dma_dev, dma_addr);
->  	if (ret)
-> -		goto unlock;
-> -
-> -	ret = dmaengine_slave_config(chan, &sconf);
-> -	if (ret) {
-> -		dev_err(dev, "Failed to configure DMA channel\n");
-> -		goto unmap;
-> -	}
-> +		return ret;
+> Changes from V2:
 >  
-> -	desc = dmaengine_prep_slave_single(chan, dma_addr, seg->length,
-> -					   sconf.direction, DMA_CTRL_ACK);
-> +	desc = dmaengine_prep_config_single_safe(chan, dma_addr, seg->length,
-> +						 sconf.direction,
-> +						 DMA_CTRL_ACK, &sconf);
->  	if (!desc) {
->  		dev_err(dev, "Failed to prepare DMA\n");
->  		ret = -EIO;
-> @@ -426,9 +419,6 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_pci_epf *nvme_epf,
->  unmap:
->  	dma_unmap_single(dma_dev, dma_addr, seg->length, dir);
+> Removed recursive functions to schedule children to be shutdown before
+>   parents, since existing device_shutdown loop will already do this
 >  
-> -unlock:
-> -	mutex_unlock(lock);
-> -
->  	return ret;
->  }
->  
-> 
+> Changes from V1:
+>
+> Rewritten using kernel async code (suggested by Lukas Wunner)
+>
+>
+> Stuart Hayes (2):
+>   driver core: separate function to shutdown one device
+>   driver core: do not always lock parent in shutdown
+>
+> David Jeffery (3):
+>   driver core: async device shutdown infrastructure
+>   PCI: Enable async shutdown support
+>   scsi: Enable async shutdown support
+>
+>  drivers/base/base.h       |   2 +
+>  drivers/base/core.c       | 180 ++++++++++++++++++++++++++++++--------
+>  drivers/pci/probe.c       |   2 +
+>  drivers/scsi/hosts.c      |   2 +
+>  drivers/scsi/scsi_sysfs.c |   3 +
+>  include/linux/device.h    |  14 ++-
+>  6 files changed, 166 insertions(+), 37 deletions(-)
+>
 > -- 
-> 2.43.0
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+> 2.53.0
