@@ -1,185 +1,228 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0014ca01.pphosted.com (mx0a-0014ca01.pphosted.com [208.84.65.235])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28E333CFF61
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 05:39:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778564374; cv=none; b=KRde2MCTBI5o5YRMD7sznGWfMk00HnLXcKOLuPXPUL3AbGaNyrEJdEUaIaWxHJUiIq1bsyyzxAB0S3ndXmGj0hqbZ49n0DtXSE5MaL/ZI2BLR/YfK7pl6twuUzLGKb9gjKgnOEshfeDC8X7jioiq010ZCPOF/vdyyJ9HeJojkCs=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778564374; c=relaxed/simple;
-	bh=0qmNZ8+q3BJWMc2ioSyoBvo1zE0dng861aBkK2fa4xI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KLx9gxp/dvFPvLbWUzp4j8z+AOfX/gF03wetyP7bq8YZIJHg8Bny/TqiFf73T18rQ2N2xFkNKOuU3r3vmzyuBaPKjbotzeVuw3izY+42IEiVQeyeMKv3ralnaCr58YcPxEvMlkMgW1tYYeZzsz6A/DOfYcUEKseGjTBl6/N6rZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=fN2kZVE8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dSPZ1tnu; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF9A54657DB;
+	Tue, 12 May 2026 06:16:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=208.84.65.235
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778566605; cv=fail; b=LGyEIEzZASCvsju6ueGZ8y0IBCX8/NCXAfvPjH8Iu6Bdtw0mJf+mppZ6rUpV0VAOe8p5Gwc1wPph8sGAWb0hY1pJdpivX8eDT1eTP2x2l90ETPuGAwEFGNK2mx/54NOToE4glz5aPo0op/2vLAz7oqTFKG/TrEhTyRlJhwsBHzY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778566605; c=relaxed/simple;
+	bh=eAOqAiR9g3ZfFNA0TCPFd5/M8iCJKjAbZrFJ7mu35mY=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=eI0ePhj5H0AompMlcJPkt1XtZBWR6wfip5M0YxHBaik6HbXMHrNEktTPcXN+5nX10041J+5nWeivX8rBAs4+vbGoa9WgDb0TbWkLLfKD/hPJJL1Ip28PZ/7XbH1KsPQTY1rGXm0nRH8/6l3pP1/1EWfN3xxvTI1bFdts5/LP5ew=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cadence.com; spf=pass smtp.mailfrom=cadence.com; dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b=gwMgtPVm; dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b=zQ9Aq6tK; arc=fail smtp.client-ip=208.84.65.235
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cadence.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cadence.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="fN2kZVE8";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dSPZ1tnu"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64C5PNZl2172834
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 05:39:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b="gwMgtPVm";
+	dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b="zQ9Aq6tK"
+Received: from pps.filterd (m0042385.ppops.net [127.0.0.1])
+	by mx0a-0014ca01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64C1hSUm1932457;
+	Mon, 11 May 2026 23:16:17 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	2R3YimF/KydOq9roznHyrcrTN3jOxsCUbDTEFZaIuqY=; b=fN2kZVE8r2c00G/+
-	sCe8xvNMkULQrJW2iuXQ+nmLP4PtP+AW7rPjv3LLyuVlt55jRwHWa7M+Vs9tIafl
-	vfYqzx53oZx7vRFkZ4nPAZT9Ju/99xi1JAtpoKzS7ULbdl0qzIEjn5eutbGuKPZV
-	3KLvPflONDbQdkPRWGacl/o4Wl3h/bF3INoDMbPuVF+7E1NNLD4BAiCWF6Xf/3k0
-	5pjCkMS60Ds87LApQGKkbdeTh8+fRkZZwIDdqXBYATA+NwIf2/hNdmBpOW8sgHzF
-	PNrZB5nEQMvzmU0lGZDowCnZZkn3Qq8KQssyTPfXAYgPg1S/zh/llIfoaw/JLDVz
-	LG69cg==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e3nvj9nu7-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 05:39:28 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-368b0dc7731so324137a91.3
-        for <linux-pci@vger.kernel.org>; Mon, 11 May 2026 22:39:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1778564367; x=1779169167; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2R3YimF/KydOq9roznHyrcrTN3jOxsCUbDTEFZaIuqY=;
-        b=dSPZ1tnu0EqKBK1YZbXSx/p5f3oaq56zKNYWMrXgWkj4FLP8ApqmsIWjeHVXi4TXLA
-         syrXQp1J0NG4OOxeA94d5jWVlzmNUmvpJ5V9Ss+Sx4bRvYvXoRwyl3xLwt8CN3blKshc
-         G/wzotLzKoVB7RAtIPG2PRcuCx8DiJRqZO4VL83uG9QAhE6FWCxpQEzP2jTTyPSXeTuh
-         pOzcUfMOJSBM+icDeOJVPdye4kaJ1GztqxSWHiXnRWXpJ2Du7wotPBNXPFxqXIW9jvTB
-         q8V3NufhdHg7670kuaVPc9ieIp+rFSRh/3HIRFhrDtTWqtDcza17cCY+w/e2mgAFay/n
-         hxxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778564367; x=1779169167;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=2R3YimF/KydOq9roznHyrcrTN3jOxsCUbDTEFZaIuqY=;
-        b=RxSza5RGkB6uQdzUV1oVyug4sBtXwEh6Pmc3VkAwB/Si47q9uu8YFkqBSBw684ETQZ
-         IVPPOUl5IVLm+Nl42PALOw1YTYyxfJHTS3AJnvnsVKLcOQv1c80lx9KK4AnK/5G0ggVV
-         XjwyWN2o12drQrU5y9plR/+8DmMMhelavm0OGjX/ph88m0h8r8zVbLgqiFvN03DTzBT/
-         ibXzl7n/xhhGFW7fjNfT+A0aKtpVfW1d8vOXUByLKqu071Dvvh/qMIdWBVB9WZ2fd5WL
-         odCcId4sUvyzMr5fQZTGnHeY7FAwIoctzMmV/imDzYhapk5Cp8Vb/dufeMmPzutdDhQZ
-         ajhQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/j81FgZqdpT7QI/2txWgAw3KPf0WP+/c2FAJTWEUthu9SIC8shhBcOyIsc9UsKOhkpmA94taLU4gE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyPW7bCGtaILY7k9La/I4rDPgVd+5yN5OB6XDKAaUe+tXipGkaq
-	S2zePxFwXCHT8eIyPVVflxbneMlHQ53v/6QK0F/dsskuIZ4aLRcBP2TwWYOOk20QZ3Cd1kAZFya
-	HGpsjJkkihTG2Yi4cmcXftrlliWl3woanmmemEKS+HeJtNRrZn8mk13auKyIV6ro=
-X-Gm-Gg: Acq92OHWE7n9LSFz682DXjsTatTqCQLax7HBp5j3e/fV4hMaEbOgqv9PNOsEdBnFc+1
-	EOBf7IiZd9zwQ4uehiRJEB6OlQ9FqSQ1NaMdAHPRm91fvY4SLtPAP51yVAe1Yrc/1ndCmxX0Hz+
-	8/EVKG8HKZcRSnCMVedKwSOTxuY3bQ3S3OFgGmiryoqNTOEs2n2K8E59YTVaN0K3nwKhOD1TCfn
-	qi2GTlcEQ4pnTP1rR4N0p2w+mQlC+qoZtBjzcpHPDXZfZD0X4bT27O0mGZ/CfxvfVVXHJij861V
-	dhKxACgx08/ehtc7jP0sUYF8Gy7n0TicsxOu7XQ2fTgI5QYDka1TIPHdg7LpPRcx9fw+ghJUUUy
-	8hvcF+7wwU0OmiTQahfPR8DYX/vG2RtRYwpQnARe9mTLqJhP2ZfuppcI=
-X-Received: by 2002:a17:90b:3c0a:b0:367:e244:4c40 with SMTP id 98e67ed59e1d1-367e24450c9mr12345458a91.26.1778564367206;
-        Mon, 11 May 2026 22:39:27 -0700 (PDT)
-X-Received: by 2002:a17:90b:3c0a:b0:367:e244:4c40 with SMTP id 98e67ed59e1d1-367e24450c9mr12345436a91.26.1778564366702;
-        Mon, 11 May 2026 22:39:26 -0700 (PDT)
-Received: from [10.218.18.194] ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-368ac4cfc83sm732628a91.0.2026.05.11.22.39.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 11 May 2026 22:39:26 -0700 (PDT)
-Message-ID: <f8d71952-b814-4865-a1cf-77dd47380e7d@oss.qualcomm.com>
-Date: Tue, 12 May 2026 11:09:22 +0530
+	:message-id:mime-version:references:subject:to; s=proofpoint;
+	 bh=4Gz9TXBjAZS8QTR16KOzvvUalP5yfHJO6qcONA8WOc0=; b=gwMgtPVmbYLw
+	89VTD/dfACy5iqliVzmGk9AYVu6fyM30OMoWV0YVbznceiLrZxFYe8CtHQLklmxe
+	ug6NBH3dGqgROFmhKFaAHW+rj1lJTQeGESV1E4EeQWscHPW4/MbDYias36TV/zMB
+	TbBqKbZRBLNZg/kWJMYqytBdKTTTnK8U8/QmOaKSO/h4VhQidJR0KoWNLjHOFkMT
+	A/TwlJ+a6uBGggbclBPcxqxdRb9/6q/AHRuMqf5AhsQBOeWmo/i7HScHKgPjXCfX
+	N0KSp3r5UZjcTVq23sQe4wGYoqbtamQA/F+nFOB/6rSwC+i+n8P7/Kq6xy6ualTK
+	2DT4JQx4vQ==
+Received: from co1pr03cu002.outbound.protection.outlook.com (mail-westus2azon11010040.outbound.protection.outlook.com [52.101.46.40])
+	by mx0a-0014ca01.pphosted.com (PPS) with ESMTPS id 4e3nw6t4n2-1
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Mon, 11 May 2026 23:16:17 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=KkLkgFJ8uLKBQsO7gKOutd0TYRSVN7w0q5jb4IgsIJD7Dzufr1OCTJsqvcSpFklOdo+F9jG95gPz6nXOJb89b/+gh9TTu5lCjGDILTTkS7gxvHHmGtBFlvxmNU7HbF854oxhBKOu5Da5NHt+UoZXR3phhJe354WtMZNDGe5kdd2X/axRXVRYyutAyVQNfg1gMv0iWZSOeitMwrMdX09StmbIntoeYrKp2iqSqq+q5XlNiC5VkeeClebyvsndyI/vrWWUVUnjAo0Jdu/Rgnuagpk1mL+IWF6rN7S8ZsCY7CsaqLFuXsq/SlwK9B0NaLI6pLxKd7flCr1xCP0THsGtww==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4Gz9TXBjAZS8QTR16KOzvvUalP5yfHJO6qcONA8WOc0=;
+ b=tQuXcomKvYgGHRaJ0CCm0mgaoytCNntYM78CU53x5uY8l6/c0YXIbaKaBXfwd7dt/pZ+yfElTQhI0UeeaRr7t4yao9qFi514KBmDzGriaj8SyvnV8WVIe3fBRTSRPuepS2ZWsO1IE4Dood1/gAQfxO5tkVS0xbA80fFTSMwytyr+8fuHLal8C4caJYIu5nnZT7jjlIpXxoPCFQoEzJX7wrZ/YRhOxkZH+F+s8aJjd/wfm4DqgF7/hfff+e9NrU9eNMmzC5BpYXx5DnnYBJOx0xCeqsO84pYxFn1O6g3hislOMviOweamOCBMhKI5sJHFMwATZFovdw3TqD5VoscVPw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cadence.com; dmarc=pass action=none header.from=cadence.com;
+ dkim=pass header.d=cadence.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4Gz9TXBjAZS8QTR16KOzvvUalP5yfHJO6qcONA8WOc0=;
+ b=zQ9Aq6tKkFlmfFcCJdVMgxucPSQ1ReDCvz7nzzFUGUES+I295qOi4L6l9AQUXDFrZCxcg2XHCykE/v/d3T/5lw8UV9B3rCrGHo+mQv0CK3RXJTnT+rwWNddb66P61urAKNbRDOeV5vNLExzP7Jke7jocMU8TxMfQZ2REdugowIT+yJd7rLx3NAlSbjVNsy9Lfk9Xa0R4tYXEoY9wzExDDxblrW8q5HBYBKp8WqJ2c6ZKYBS0I1ZVfjz6UyEeIeD4LXGpQ8x4sdNDVFzjbGTRv+GsixT5pjNeEug4A1EzKh3cG8iQwcAoXnyM82gsSRqza7879dqBisDxz1VaavT0Wg==
+Received: from PH7PR07MB9538.namprd07.prod.outlook.com (2603:10b6:510:203::19)
+ by IA1PR07MB11605.namprd07.prod.outlook.com (2603:10b6:208:59f::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.15; Tue, 12 May
+ 2026 06:16:15 +0000
+Received: from PH7PR07MB9538.namprd07.prod.outlook.com
+ ([fe80::9088:4354:91a3:3bbe]) by PH7PR07MB9538.namprd07.prod.outlook.com
+ ([fe80::9088:4354:91a3:3bbe%7]) with mapi id 15.20.9891.021; Tue, 12 May 2026
+ 06:16:14 +0000
+From: Pawel Laszczak <pawell@cadence.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Peter Chen <peter.chen@kernel.org>, Roger Quadros <rogerq@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>,
+        "linux-usb@vger.kernel.org"
+	<linux-usb@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3] usb: cdnsp: Add support for device-only configuration
+Thread-Topic: [PATCH v3] usb: cdnsp: Add support for device-only configuration
+Thread-Index: AQHc3tA7khmSlPRP10aynj5gM8QRpLYENDeAgAW7lwA=
+Date: Tue, 12 May 2026 06:16:14 +0000
+Message-ID:
+ <PH7PR07MB95387990CD79E876AE0E376FDD392@PH7PR07MB9538.namprd07.prod.outlook.com>
+References: <20260508-no_drd_config-v3-1-0614f5044721@cadence.com>
+ <20260508144241.GC85390@bhelgaas>
+In-Reply-To: <20260508144241.GC85390@bhelgaas>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-dg-rorf: true
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH7PR07MB9538:EE_|IA1PR07MB11605:EE_
+x-ms-office365-filtering-correlation-id: 63d2741b-879f-4e7b-e8f2-08deafedf89f
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|1800799024|366016|38070700021|22082099003|18002099003|56012099003|11063799003;
+x-microsoft-antispam-message-info:
+ eBVUA9eTblCGr/C60/cfK6LMrXI+hIj7sImb5GdLUGfDfHCH+EwFp8J42y+s9d3p9bVmx+dS54o8w6zkwgNdsfZzOCK8i6JhvV5viGk0SQRMdkxw2ORIDbXA4j/qvrBamKSjuDs2zeaaVcLmU/DSQpOONTDSOmBfx4QOGZGcBra5fXXz1V2+1TZQcMOdgKSPIqj9mieewJvCC2j6ySZxbdlh9DFIDGmNuXIHYX8JDvo/ANeoRo7Yz9wdd9h4ph7Yy0Z0axP3IF4haXYhcQClFQcsD9UFhUUzYIJuNYXh/aArGQDjP+DSnGG0lmHCMNfAs9BFK4DSJpK4oTGINYv9BvPlu8+4P7Jz7qkDZhRJEIHH+lk+MgH9UaSCyQk+163BsOnEGrFaDqeBxoQyIlgZHbNfVFMfJglUa6KndHkSJyu38p1NR+b8kyW5uM8CQnYM85CKVvrcOimdR2ZM+iOESAKrqmOLj/pEI0qmWSPHO/Fi/MNNL01xCiGyXrQLMnS31heSrl+GA6wkUcaxJXCTK6g8qXoykYZcKMMcfaK6vaC6b+isgj1+7K1B6RFy/aYQeDXsBtNYpjhGQuFZjah/+aNg1eNkcRNnmp8jR8EcvhJqUJQ/jgGsxi3VLtR07KFkJZIkmyUac97SJWufJVeXMa7nV1pwNS2XEdAJoQXbEQaHCf8Wpu51KLLAUrn82kvLTupLCdsZ1sENQp5SsjMFIA==
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR07MB9538.namprd07.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(38070700021)(22082099003)(18002099003)(56012099003)(11063799003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?oeL/bX7ridnt+t0qNhfzLrgbRyIOQnYztIlw34uQ2YyHjbEtjxE9eCTasvpW?=
+ =?us-ascii?Q?oGT9Htp8qLDttEC67wE77e9iNDO/Uzox5rvYuveLjpONkDwcLCLhqxN8yLag?=
+ =?us-ascii?Q?0yywDOGijQsrfcDogxlDj+7JmWsO8MbeAZI2Y3bXGL8LCGq6DX6sRTVDJIN3?=
+ =?us-ascii?Q?VfmtMNB6CHnEt/x1OZs2d4D2qM4f0oqXwu7v5nA+3ofYa0iJoxjRPlvp+j+z?=
+ =?us-ascii?Q?uUHrRWeA7FwmvTZOFzJWIEtUImrI+sFP6qSmzzCEC60ztYjZVURZujaAVKgg?=
+ =?us-ascii?Q?WlD0TD6v3hobPwxi2Ythqq45jTKhR4lcuDNN/u7JDCr0UrvJtzi0OVqcaU3A?=
+ =?us-ascii?Q?HsCzNZfm8OGIoLrCs2PF6tSTjQjYbyeIByj3+IhGyDgYqQ/QngvTuJsPrhOb?=
+ =?us-ascii?Q?Wh8hftUJmno2tqgiBhu1cEO2L0BLdmjKX2m+pEJtUJ1WYGGZ3mI7a/VzsVfk?=
+ =?us-ascii?Q?dQsPv73GXBCzl2/zcpCjasabHMxj1dOJezNzUlIrVUQlo5iljkcHRtd+GXxx?=
+ =?us-ascii?Q?3B5WUir7P5wt5aD30Sx6KgE5ypkEBciNV6SQ7GO4RLYSE5djoaKvPeIU0IG+?=
+ =?us-ascii?Q?Su3EnV6QezAXINX8mhx1TRhFIOAmLIW+OQwjys0x2HJrfn82I3Cyq/Qv7EYE?=
+ =?us-ascii?Q?Mzj1P5+/hbheaDGgc9WXTDo4+femyUze3PC+75EG1ipIGpqke7p5r5Mwz9Yt?=
+ =?us-ascii?Q?dFCymunjfWVGtTIYH9jEBapON+nYOE+33UCR0auzkeun7RmADUNKdXtbyIpw?=
+ =?us-ascii?Q?+YMRMy5m+OYHA1GzmJYdfnH8PD48Lm3shHwF3eqcyz3nhkMFQZXhITKOMfQA?=
+ =?us-ascii?Q?fcG2I39QW3nfeCLK5h3ewF5grdKA8rQceoVO40hOlntuoCffVRP/HEwgreQL?=
+ =?us-ascii?Q?8r1XRvwq7k809hptMZ6VBD2iL+6Vhzg8zWPM995DV7rIZGJMAFt5vPZQ258i?=
+ =?us-ascii?Q?Y11UdrxqnZTyOHuueyq0svW6rKMeIi0WRQ5GW/c/2eHxjcWFUaOY+moONZjH?=
+ =?us-ascii?Q?mBHJ/HoKazR54TeMczEr6psk2hjlx1UAidXB0Iwj3aykA9QHiqMdizarnYEn?=
+ =?us-ascii?Q?Fv29XyQHJ9oFAwx31MZ9odr//3Omw6zIKs40J8oYgz/NCx3Wm/HItHIOJhWx?=
+ =?us-ascii?Q?+TdEFk1mv8AZ1vBsKg1CPTOKTBBKAz7ZscYw7pWIJKVIEyipBNimDWIAi444?=
+ =?us-ascii?Q?GLSR43y+TpW94O7t2x69ArhwJ5jIa9VZvHIAPY/Z0tllPeZVcLnREKPjyVzx?=
+ =?us-ascii?Q?q5FerPTLZ5TQNqMc5kp90JjQSEV89DZ/oUoAQ0ck/RVoy5lRpT7E3GAE4a1Y?=
+ =?us-ascii?Q?+yQHkhDA4UPTPryPQ/q9ucgYB5EfDSp8hul1VQsqlBz50CNDsLXefYUMzqhg?=
+ =?us-ascii?Q?WFPU+ptYu/XuPJdskHif2N8iJjg8XGtOYP35s81K10BXTrT9uoYl9UoR+ZsN?=
+ =?us-ascii?Q?Fvd4PYaGznYIJG117A6avPwg70n4PIlspu4Y4BYAY0psePrC1Xd5KoiiJ8/1?=
+ =?us-ascii?Q?jPAdWqmoFRibVzSFKhmmX03lgwBueF1KZUIatb2T09lcXUbdyzztuHjHnrI5?=
+ =?us-ascii?Q?iZ6nQDzthukNd5WXE2wa9OYgobwZ2qzZ5KJghx7/ZY9SxYC7pHJDOuoj8C7u?=
+ =?us-ascii?Q?I09mLy00RgE7BSovwJGJFPDRQLR3l0ESMnyXAZqoOP5qQig3hFN1weopjv2k?=
+ =?us-ascii?Q?6pcc07hsfa5wLCEcdsgR88yRSOG8df2PMWj3occdIVYNuU3J0VZPfMFt5J7o?=
+ =?us-ascii?Q?SXIvN97pEw=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] pci: quirks: Advertise D3cold capability for UPD720201
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20260430211443.GA440215@bhelgaas>
-Content-Language: en-US
-From: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
-In-Reply-To: <20260430211443.GA440215@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: iZu_csokacj32joAHgSAifvFbNnT7sKW
-X-Proofpoint-GUID: iZu_csokacj32joAHgSAifvFbNnT7sKW
-X-Authority-Analysis: v=2.4 cv=H8brBeYi c=1 sm=1 tr=0 ts=6a02bd10 cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=EUspDBNiAAAA:8 a=i-3TK1uhxxqyyY9NkTsA:9 a=QEXdDO2ut3YA:10
- a=rl5im9kqc5Lf4LNbBjHf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTEyMDA1MiBTYWx0ZWRfX63jg0jSskqDL
- uvIuLAnwxZYPxhNQcUhBaLD/Du0xsE0w9NXasNbVyycTrXZwesFgFCBaI2eBDLY06v04OOrGa2Z
- qHJX3i1vZqEHYRzfOAmg/irxrVymHbBrfBZMnVPP5OWCezmqT9JPdBxi4gqlLKQBopx3+QxgYNZ
- 1Z5uY5G9DfGfz3teERrxM77XlxQ4p2ka1ZFy9jhA0RBUNz5OGpKhJdaS7QfC1dLQXbEGk1dIj9n
- +WbePZ9LZJP5E/sBXlKt3/yqoIs4/eNleXObpUdqd6Ve0oXeIYCC7cJn3wS3QbWFkTraRe4iO2m
- E9chdRNqOEWe6PpS0JPmSTKjFJnW2GjkTukcoMkgxxMt1dPzHd4DaOq9l+hlkpAWCsQS8fW9TLZ
- EzNEPfIiKOP/MO6rLBST2TrX2c1PPHLA35tNzqeEHuaaiUah3hvTFC06qUsM6tT9foKZE3aSQDn
- tpitTpgFSASvxpkoDew==
+X-Exchange-RoutingPolicyChecked:
+	DJM55KIHZ96KctYXj1PlgazQ2M7MvG0LHjcco/yEIkgVVehIq631BsELvR0K1nTdwcXRP2/JT/OfmVA0U+Fc9I4RigSHg8lFBV2vn6ryE5cQSIWGOCSnKlqZ5w5mb1nJyzIvVUSD8DqkM9MrR8ED0i6pC+MWotaFh5mtMaBw6SXIP4QHDHCIysH0jOISWPufJTu4dp1Nruh0X9wPbc1TkrqqC/VxbNZCOgxCuylMq1u3qbkKpUKFPv/4U9OBIDfk737eQfxKApfUiWXUyJGNa4KHZoTWndXWVJy3gC8tw5dyESVdyY425cG/nmU1nPiw5546qpXTQoufTXvcBsa7AQ==
+X-OriginatorOrg: cadence.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR07MB9538.namprd07.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 63d2741b-879f-4e7b-e8f2-08deafedf89f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 May 2026 06:16:14.5910
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: uGEvwYCQ7bXXLP9A4kl3KH3hWQcpq4sI0H8H7H7x6aCAn1baVEQtgsmcyw+2iKKz5qRZkPEqS+T3cIIL5otbt0xPgDpbSLBqNIUqfBxbpKs=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR07MB11605
+X-Proofpoint-GUID: vXUvlOCOl6EMCEWGsDdGiW6AubuuLRPe
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTEyMDA1NyBTYWx0ZWRfX81/uAvWaF0K8
+ s9WGNIUXb+It7/3BvLqa1spxCNgib6Im4P9SmE8uLZkrtvXontyokdG20QcancyZwXEAYqk/aRW
+ GHAlM1+wQzjq+i/Hh/8yMh7e0vjYX+maH49yRNsa40dAXN4AbOsfbGgs7bROac+xCFAsIYWH1Ct
+ EdbJ38W3z32CO1j2LBxq/m9niZT1TvtsAdU8UFCnqzv758aFN1pIwmOzQIqOsjefv2t+IJxxfaG
+ y+OZMTJNXj8ZSfJ6RtqJEw5VG8WaSFAYWqumjH0/QiyZ0TD+NFw7qYIB0mm1ynGBwa02zYVlzdO
+ HqDFJq0KJ7LxmqFKAxSGctoUzLMkqq93HwB3EassRGEVTbh8K1qS/cJn+dK9MtmNeoPJ+1ES+//
+ TQB+lenldSHk18x/qZ6HcC6MLsP6ERdULcYewwjbZVfN+wPdvSKiEdS5VJL8e2+4scz3vwM2lCU
+ 6GILnqk+rmwWi+I6QbQ==
+X-Authority-Analysis: v=2.4 cv=Yow/gYYX c=1 sm=1 tr=0 ts=6a02c5b1 cx=c_pps
+ a=AQ8jqBFaYtg5UXnSSWtk/A==:117 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=NGcC8JguVDcA:10 a=Zpq2whiEiuAA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=W8fx6O4W8wtO2w6lYej3:22 a=jPItpJ3sizTKmla2ehJN:22 a=uherdBYGAAAA:8
+ a=VwQbUJbxAAAA:8 a=Br2UW1UjAAAA:8 a=1XWaLZrsAAAA:8 a=EPu3sM6_wX8Dz0J9X44A:9
+ a=CjuIK1q_8ugA:10 a=WmXOPjafLNExVIMTj843:22
+X-Proofpoint-ORIG-GUID: vXUvlOCOl6EMCEWGsDdGiW6AubuuLRPe
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-05-11_05,2026-05-08_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 clxscore=1015 impostorscore=0 malwarescore=0 phishscore=0
- spamscore=0 bulkscore=0 suspectscore=0 priorityscore=1501 adultscore=0
+X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check
+ score=0 bulkscore=0 impostorscore=0 malwarescore=0 phishscore=0 clxscore=1011
+ suspectscore=0 adultscore=0 lowpriorityscore=0 priorityscore=1501 spamscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605050000 definitions=main-2605120052
-
-
-On 5/1/2026 2:44 AM, Bjorn Helgaas wrote:
-> On Thu, Apr 30, 2026 at 10:12:18AM +0530, Sushrut Shree Trivedi wrote:
->> PCIe-to-USB bridge UPD720201 does not advertise D3cold
->> support until firmware is loaded post pci enumeration.
->> This results in upd blocking D3cold entry during system
->> suspend and causing overall failure to enter XO
->> shutdown.
-> I think you're saying that the PM Capability in config space changes
-> when the firmware is loaded.  That makes me worry about what *other*
-> config space changes might happen when the firmware is loaded.
-> There's all sorts of stuff we do during enumeration that depends on
-> what's in config space.
-
-Yeah, that's a valid concern here but we checked with renesas also and
-they have confirmed this is the only delta in PCI config space before/after
-firmware loading.
+ reason=mlx scancount=1 engine=8.22.0-2605050000 definitions=main-2605120057
 
 >
->> Hence, add a quirk to advertise D3cold PME capability
->> since the HW actually supports and advertises it post
->> firmware loading.
+>On Fri, May 08, 2026 at 12:06:39PM +0200, Pawel Laszczak via B4 Relay wrot=
+e:
+>> From: Pawel Laszczak <pawell@cadence.com>
 >>
->> Signed-off-by: Sushrut Shree Trivedi <sushrut.trivedi@oss.qualcomm.com>
->> ---
->>   drivers/pci/quirks.c | 10 ++++++++++
->>   1 file changed, 10 insertions(+)
+>> This patch introduces support for the Cadence USBSSP (cdnsp)
+>> controller in hardware configurations where the Dual-Role Device (DRD)
+>> register block is not implemented or is inaccessible.
 >>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index caaed1a01dc0..c32617ed33aa 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -6381,3 +6381,13 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
->>   #endif
->> +
->> +/*
->> + * Renesas PCIe-to-USB bridge UPD720201 does not advertise D3cold
->> + * capability by default until firmware is loaded post-enumeration.
-> There are several mentions of "Renesas UPD720201/UPD720202 USB 3.0
-> xHCI Host Controller" in the tree.  I assume this is the same device?
-> If so, I think it'd be worth using similar terminology, i.e., "USB
-> xHCI host controller" instead of "PCIe-to-USB bridge"
-ACK'd.
+>> In such cases, the driver cannot rely on the DRD logic to manage roles
+>> and must operate exclusively in a fixed peripheral/host mode.
+>>
+>> The change in BAR indexing (from BAR 2 to BAR 1) is a direct
+>> consequence of the 32-bit addressing used in this specific
+>> DRD-disabled hardware layout, compared to the 64-bit addressing
+>> used in DRD-enabled configurations.
+>>
+>> Tested on a PCI platform with a hardware configuration that lacks
+>> DRD support. Platform-side changes are included to support the PCI
+>> glue layer's property injection to handle this specific layout.
+>>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com> # pci_ids.h
 >
->> +static void quirk_enable_d3cold(struct pci_dev *dev)
->> +{
->> +	dev->pme_support = dev->pme_support | (1 << PCI_D3cold);
->> +}
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_RENESAS, 0x0014, quirk_enable_d3cold);
-> How do we know that FINAL fixups happen after firmware loading?
-FINAL fixups would actually happen before firmware-loading because firmware
-is loaded as part of xhci host controller driver probe. That shouldn't 
-be an issue
-because we know post successful firmware loading, D3cold is supported by
-the xHCI controller. In the odd scenario that FW loading fails, xHCI 
-controller
-functionality will be completely broken and it makes sense to put it in 
-D3cold.
+>I did ack this
+>(https://urldefense.com/v3/__https://lore.kernel.org/linux-
+>pci/20260331181209.GA148250@bhelgaas/__;!!EHscmS1ygiU1lA!FuLlHX77O5
+>UQAo4VHUkfgZidHZN93lMxhVIR_vVAG4bwI0IoUUHK7pB-CiNE7-
+>PxraJZow0ZH7Q5BGk$ ) but I
+>wish I had added a note about why.  Usually we don't add things to
+>pci_ids.h unless they're used by more than one driver.  This (slightly)
+>simplifies backporting things.
+>
+>Fine as-is, but if you respin for other reasons, you could consider moving
+>it to cdnsp-pci.c.
+>
+>> +++ b/include/linux/pci_ids.h
+>
+> *      Do not add new entries to this file unless the definitions
+> *      are shared between multiple drivers.
+> */
+>
+>> +#define PCI_DEVICE_ID_CDNS_UDC_USBSSP	0x0400
+>
+>Looks like this #define could go in cdnsp-pci.c, since that's the only
+>place it's used.
+
+Hi Bjorn,
+thank you for the feedback. I'll move the PCI_DEVICE_ID_CDNS_UDC_USBSSP
+definition to cdnsp-pci.c in the next version (v4) to keep pci_ids.h clean.
+
+Best regards,
+Pawel
