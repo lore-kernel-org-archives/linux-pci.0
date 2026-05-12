@@ -1,149 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CDBA386C15
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 10:49:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C14D934A795
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 11:20:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778582985; cv=none; b=Ar8azmEqnct1Bg607ZtKdvasC8xcQyqYDDiUZxKPzVhoVyo8AlHh4x571+CZg7aOnuEVDcovnYcECTQkCorT0BLCFMnaa64JhUoTlo+8L715QwmnswEWGqkjwltj7KcuQZG/bY5ZgQ7u9vW7Lt5615HU2IrKScLwbh10xewxBzo=
+	t=1778584818; cv=none; b=VloZzfDwe0HM33wXJMVYfvIUBBgGW0tL7YcW6zfFF0qeEk8gxPip9BlsZKGL5OJBRLBPL3DoEfaTlGOfhiQ2iJHIwnAsGssr8AGNN/HdqkDgSvnb9vgkV8esNtIjhBYMA/STNRG8dh5RyYjAzbsB3HvublkFyLj9iwWAmMUziDQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778582985; c=relaxed/simple;
-	bh=C4k6pp80hnQQsLLDSWMWa+xYXh2iAo+/ZwCtVZ+IPx0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RSxidsMIzY6wMXA3I38XoUuHuu3PYEM72EVrPCr/n2RE0Ox4kQ3CC8N8Sn2ecxmtUtFV6wmVapfCg3EE7IW1vyYhbMpK0EjtMGWOEeg51RUik8oZ8Gy6vVgorTMqb67okLi5H753JTRhohPsMHf/wzP7/vzDe2Et3DYEmYx5kHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pfmAuk+F; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778584818; c=relaxed/simple;
+	bh=2p+lNICb9cWfaeqzZv2pgYPaDmTz4es/bzDHy35iR4M=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=V0OpN+VFwuXm/6KAO7gPQLsQxKZfx24oQNq183nZQvUBya7dpyj7wgCIGiCXNgGOQuwvSVenAapRNP0kw/QrAujEe2bDHyRvYjJp6+x9yXPTUo5LtW3m5QO1aJeEI4lyJN35eW3NMvrVfamF9LY6BJF9YgUeu6r+h57Vk88q+/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gmMXd897; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=DnrVzCNL; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pfmAuk+F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5955BC2BD00
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 10:49:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778582985;
-	bh=C4k6pp80hnQQsLLDSWMWa+xYXh2iAo+/ZwCtVZ+IPx0=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=pfmAuk+FtPjx6gnE97rP0bq2NvVALLry2WJV5whroEp2kIZyhamjjk8HDzPqD8ImP
-	 TS2pOV5ADQt+ULbDtM3g5w5YYYKU1LFUqnvjZ6G/A5LJRpjWZyHDPfYtGhhvEr5+2x
-	 fHKN0QKhRcKDXy2RZi1OSsxKxiOZAWOB68JeDpDPYtzYme3i7JGc2vxtI5qbbqGE72
-	 3cXq/lv5TAxnSOzc+Wa4oIPcK1CBndv71R3YkNrbb1RH8/cQutv0fdOxk16ibxarYP
-	 0LzV1BjM1xLL3rUBLa+Q/oygFFJ3Y+mxnvt133ZNKd55Nkfr8UUubbrcJcq+tC3fQR
-	 pcWf+p+NW768A==
-Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-5a748d5ece4so5115071e87.2
-        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 03:49:45 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ+jApkGSANpvtwuB/D+0WQ72zIxt6yvJSNYW8GpW1CHWIaSjG3ckpkOeAKNe+8j+iIb6rdTlbygxDs=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy04Pl+ymPT9hO0KdM2heysvGsQFxSqM9Hd2H8thl5XfF5qwVRZ
-	V0rd2x9il6Bbd9XsqZkzDdnb1PkUP7nUXaU3gepiZfVFXldAFKPU84U7dRa9+Vqg6n4ezMVYdUo
-	Tzb5BfDOzH0OjIdTp5C5ZfLgRaVZSxHU=
-X-Received: by 2002:a05:6512:203:b0:5a8:8891:ca2d with SMTP id
- 2adb3069b0e04-5a88891ca48mr6876042e87.6.1778582983671; Tue, 12 May 2026
- 03:49:43 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gmMXd897";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="DnrVzCNL"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64CB28Yq2186598
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 11:20:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	NJbIF9+SuZ3GL14xJaxGIOFdDBHJdVFEIgFFkSn2788=; b=gmMXd897x1jIorbf
+	dUHWp6M/MMuyaT0uJJxCsKmpuLRhP3qjnFVafvpSsCILY13VJYzkwQC5KNuTeQnT
+	akDeIAFXULAVeC3Nry9CsKT080tbZxEJoDPNgepxQRd3AxSZfKUQ4pXutor9iGog
+	IDXF7oGDY/tCvWI5B6Kcy8c8cAFFNudwBQVa3b9qlx9r60qt+jiUM+DNG+JmteDz
+	rMSKLrUI52HCUknO1TNsC6WWjNxcjUsTOCi6rqCbzO5AqWmt6ufqf9PaIQDgDGA/
+	i4AufnT6xOY6zA4sWuB+1YVgrvqr7Joxz4LUwIAmkcDVlsef13ZNZds3vYVRAL3G
+	iJfwfA==
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e3nv0tw5e-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 11:20:17 +0000 (GMT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c829366cf25so2109718a12.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 04:20:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1778584816; x=1779189616; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NJbIF9+SuZ3GL14xJaxGIOFdDBHJdVFEIgFFkSn2788=;
+        b=DnrVzCNLcr6jyU5+0wXV7g0NoGM1aPd25GaqIeCUCehKXhO0afQhmwkZ3RDFC3Ieq1
+         e8VYuRrVqTl2Eq5H1wjpRxmWAxyH05D0DYfrDdS+n4SoPrRA5oyrXDkFe46a/7+pYeYv
+         PX6F0cIPSlAjQXZHZJeYCMdrCNg/mFYPcydgkbjbnxIKpEkK/0jTIUUUUxujrxV5H6Wh
+         ybZgrw7ptWo6ErQ5QN/FnSg6+O7PyhZBAySy+Q3pnIuxlXQ5tlxIDqvjz0X89xoyV96v
+         D4CHLzDvplmimWiQDFIIwC3SVC+eCpQbDTobQi098gCCQFLNvLvCa/exQPvGjgCMMcDB
+         2GSA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778584816; x=1779189616;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=NJbIF9+SuZ3GL14xJaxGIOFdDBHJdVFEIgFFkSn2788=;
+        b=jxbeFSQT3HMoOK4NmPueR+V/l1HospPTypH5mSa6WmyCQzuH0dnH7kTRm0xeBZppJI
+         PL+mO9W88W+tXk9j5dHLihzS/63Ql6pzeEWGQi3rx3VJhR5moMiXz/GzmDdygou/0nit
+         +ZeVE81PvsT0CznAUhMwRCk2hJX8vSkvALXmHpZ6OtYfXHR8m+tvzIhgXU1S4a913zon
+         TgD6UTH+lhlJWs+9JNcXr3DcIpZ7XR5SBqKd32hmjnlDR0QJe2MwSXNWh9+dP4cOzq+u
+         7GbawMZkQzI6oycRyPPPGjMBYLRKbmkAAUR9wu7uqcmZUcLfYTKjR+CxwVg1rhTrXs46
+         M4ug==
+X-Gm-Message-State: AOJu0YxNWjLMoCWSImrfWCpuirE2C0XzdsTCmvooBla4VHCc1zjXgU5y
+	c0ntxkm7oyC46It+ToPcOCEpgjQOSyfA16X0KypEY7jNDccnFdq+4dWfPJdAq65SASGFqSd3Kue
+	4IlzDuEgLcW6KYHA0NN2A4sNNpoFwJoaR6Jc7VwvFIjqhYLzP5uNC5+mfNT61z1Y=
+X-Gm-Gg: Acq92OGMM+r/zVx/6w+yMSTYWYdmJgsNLSO7bBNVHPFm+pv9puOvYM8/TkDcuO32mBe
+	knM3efbg/LbxYQh8jlFiLmee9KdBRWOJa05ROkB10knRz0l6PL7uvZTC7Hwh4wHWOsG/IeZ5KSj
+	nThI82s2TA4Lqr+KQ5CySPPaeohIJ04v0Bo3+Ou7t9bZMkZFIwE0QjvZifFzNzNSzfs6tihZwf5
+	SyxG6Ma7/qv78Egd7ljQc7R3X+VmSx3yFCdUNcKdmS967yUS3Q8LObeRLpxPYX9OCphX4IbKN+g
+	OC/Q3ALiY6osYmEQt02gPvTu7FCsmLqOuBxlLBfFAj74nEpjNek2eAOY5wXc3z/6kZYc9Mo9uWB
+	42dS5wC3Hqdwq/km0eKlD
+X-Received: by 2002:a05:6a00:2e87:b0:82f:5034:77a4 with SMTP id d2e1a72fcca58-83a5c4be2eemr28652198b3a.21.1778584816301;
+        Tue, 12 May 2026 04:20:16 -0700 (PDT)
+X-Received: by 2002:a05:6a00:2e87:b0:82f:5034:77a4 with SMTP id d2e1a72fcca58-83a5c4be2eemr28652147b3a.21.1778584815690;
+        Tue, 12 May 2026 04:20:15 -0700 (PDT)
+Received: from [192.168.1.102] ([120.56.206.29])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83965b333f2sm28587654b3a.20.2026.05.12.04.20.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 May 2026 04:20:15 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Jian Yang <jian.yang@mediatek.com>
+Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Project_Global_Chrome_Upstream_Group@mediatek.com,
+        chuanjia.liu@mediatek.com, yonglong.wu@mediatek.com
+In-Reply-To: <20260413071401.1151-1-jian.yang@mediatek.com>
+References: <20260413071401.1151-1-jian.yang@mediatek.com>
+Subject: Re: [PATCH 0/2] PCI: mediatek-gen3: Fix the control timing of
+ PERST#
+Message-Id: <177858481069.17084.1434409769087889023.b4-ty@b4>
+Date: Tue, 12 May 2026 16:50:10 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAJZ5v0gU3fjh0czpp+7gC9EfRSwT2dUZQj0hSJR8VNwBLXM4PQ@mail.gmail.com>
- <20260512000112.GA194667@bhelgaas>
-In-Reply-To: <20260512000112.GA194667@bhelgaas>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 12 May 2026 12:49:31 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0hS7fJ3-MEb3fKU7xs7fEOi6CDSj=AfAor02qM=HGpGAA@mail.gmail.com>
-X-Gm-Features: AVHnY4KRtcb2f84wLbl1V0OhJkkCljQZZxaIDm0IhrJ2oN6qs7XVUUgTmOYhZDU
-Message-ID: <CAJZ5v0hS7fJ3-MEb3fKU7xs7fEOi6CDSj=AfAor02qM=HGpGAA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Drop unnecessary retries when restoring BARs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>, sashiko-bot@kernel.org, 
-	linux-pci@vger.kernel.org, sashiko@lists.linux.dev, 
-	Marco Nenciarini <mnencia@kcore.it>, Michal Winiarski <michal.winiarski@intel.com>, 
-	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Eric Chanudet <echanude@redhat.com>, 
-	Jean Guyader <jean.guyader@gmail.com>, Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>, 
-	Mario Limonciello <superm1@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.0
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTEyMDExNyBTYWx0ZWRfX7j0BsYlk1yem
+ LXBdhm7kyAoDv3jhGClyjuUjLYd6rSUPAvkxnlWwnIC12/84/YZ9fHfEJx2xVJi9AxCCZG29ozI
+ QMSmtIX1TCAfIaPLKphVutr6lcxPxHN4iGLlmR6hG8/j0dFGvUdq6olpioePXoeGgD33Jm5c/2A
+ qh5LojDa36eTdreFKmXSjwBf/Bf8IFcUHvsngBEMl52fcmrgoJuGb21Io+Ap1dSj3Xa/7LFzVj7
+ dB8BeIkK8GgEEHwffa5LVVl5gcSyowSfUA73Ns692QtBaWEDFknSgy64qgwjZrFd0EtCY5irf4V
+ qPhPjvfTBNEWRVXflb1aMkopRwfm91DBna6nTAcsgjGtL1ETZdgfxPhxhOMmfK1Z3zMtGVY+9zK
+ a3qFhLr1P4XqB4bFjz/r5NeN5QOEbthDcfPs3ysfKcjIBBoLHRUKxhswKwP89Wc1DcdKAJapa3A
+ XSWbLxiJNwGAZ+ZgjcQ==
+X-Authority-Analysis: v=2.4 cv=bpB8wkai c=1 sm=1 tr=0 ts=6a030cf1 cx=c_pps
+ a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=QuRtzvr4xB5J0le8HPcEzQ==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=VwQbUJbxAAAA:8 a=bPlxViFAvYB88tiJ6gEA:9 a=QEXdDO2ut3YA:10
+ a=3WC7DwWrALyhR5TkjVHa:22
+X-Proofpoint-GUID: HL3IH7-LTgL3SHC3bVbxBSSUV5IcprhV
+X-Proofpoint-ORIG-GUID: HL3IH7-LTgL3SHC3bVbxBSSUV5IcprhV
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-11_05,2026-05-08_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 phishscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
+ priorityscore=1501 adultscore=0 impostorscore=0 clxscore=1015 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605050000 definitions=main-2605120117
 
-On Tue, May 12, 2026 at 2:01=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Mon, May 11, 2026 at 05:24:49PM +0200, Rafael J. Wysocki wrote:
-> > On Fri, May 8, 2026 at 11:43=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.o=
-rg> wrote:
-> > > On Fri, May 08, 2026 at 02:51:37PM +0200, Rafael J. Wysocki wrote:
-> > > > On Fri, May 8, 2026 at 2:17=E2=80=AFAM Bjorn Helgaas <helgaas@kerne=
-l.org> wrote:
-> > > > > On Tue, May 05, 2026 at 12:43:17PM +0200, Rafael J. Wysocki wrote=
-:
-> > > > > > On Mon, May 4, 2026 at 11:17=E2=80=AFPM Bjorn Helgaas <helgaas@=
-kernel.org> wrote:
-> > ...
->
-> > > > >     platform_pci_set_power_state(dev, PCI_D0);
-> > > > >
-> > > > >     pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-> > > > >     state =3D pmcsr & PCI_PM_CTRL_STATE_MASK;
-> > > > >     if (state =3D=3D PCI_D0)
-> > > > >       goto end;
-> > > > >
-> > > > >     pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
-> > > > >     if (state =3D=3D PCI_D3hot)
-> > > > >       pci_dev_d3_sleep(dev);
-> > > > >     ...
-> > > > >
-> > > > >   end:
-> > ...
->
-> > > OK, so after platform_pci_set_power_state(PCI_D0), the device may be
-> > > in D3hot in some cases.  Then there's a D3hot -> D0 transition, and w=
-e
-> > > do pci_dev_d3_sleep(), but not pci_dev_wait().  Sec 2.3.1 says RRS is
-> > > permitted after a D3hot to D0uninitialized, and pci_dev_wait() is wha=
-t
-> > > waits and retries for the RRS case.
-> > >
-> > > It looks to me like we need pci_dev_wait() after that transition when
-> > > No_Soft_Reset =3D=3D 0, i.e., something like the below.  Do you think=
- this
-> > > is unnecessary?
-> >
-> > Well, let me turn this around: Is there any evidence that it is necessa=
-ry?
->
-> PCIe r7.0, sec 2.3.1, includes this:
->
->   =E2=97=A6 For Configuration Requests only, if Device Readiness Status i=
-s not
->     supported, following reset it is permitted for a Function to
->     terminate the request and indicate that it is temporarily unable
->     to process the Request, but will be able to process the Request in
->     the future - in this case, the Request Retry Status (RRS)
->     Completion Status must be used (see =C2=A7 Section 6.6 ). Valid reset
->     conditions after which a device/Function is permitted to return
->     RRS in response to a Configuration Request are:
->
->     =E2=96=AA Cold, Warm, and Hot Resets
->     =E2=96=AA FLRs
->     =E2=96=AA A reset initiated in response to a D3Hot to D0uninitialized
->       device state transition
->
-> When No_Soft_Reset =3D=3D 0, the D3hot->D0 transition is to
-> D0uninitialized, so I think the device is allowed to respond with RRS.
->
-> For the D3hot->D0 case, pci_power_up() already calls
-> pci_dev_d3_sleep(), which waits the 10ms required by sec 5.9, but it
-> does not currently account for an RRS response after that.
->
-> My argument is that if the device *does* respond with RRS, subsequent
-> config reads in callers of pci_power_up() will see invalid ~0 data
-> even though the device may become ready in the future.
->
-> For example, pci_set_full_power_state() reads PCI_PM_CTRL and may
-> incorrectly complain "Refused to change power state from D3hot to D0".
 
-Fair enough.
+On Mon, 13 Apr 2026 15:13:54 +0800, Jian Yang wrote:
+> The purpose of this patch series is to fix the PERST# control timing
+> in the MediaTek PCIe Gen3 controller driver so that it complies with
+> the PCIe CEM specification.
+> 
+> In the current MediaTek PCIe Gen3 controller driver, there are two
+> issues with PERST# timing:
+> 1. During the power-up phase (i.e., before PCIe link-up), on some
+> MediaTek SoCs PERST# is de-asserted before the REFCLK becomes stable;
+> 2. During system shutdown, PERST# is not asserted before power is
+> removed.
+> 
+> [...]
 
-> > I guess if it is not necessary, there will be no harm, but this is a
-> > performance-sensitive code path.
->
-> If the device is already Configuration-Ready, pci_dev_wait() will do
-> one additional config read, see a valid Vendor/Device ID, and won't
-> wait at all.
+Applied, thanks!
 
-One extra config read shouldn't make a measurable difference.
+[1/2] PCI: mediatek-gen3: Fix PERST# control timing during system startup
+      commit: bcc32882066156029e1e9ea16a3c3b8f3100cc3d
+[2/2] PCI: mediatek-gen3: Add a shutdown callback to cotnrol PERST# signal
+      commit: c019c3ad821ec38ee158cda4be5ab8e39d2d5c6b
+
+Best regards,
+-- 
+Manivannan Sadhasivam <mani@kernel.org>
+
