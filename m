@@ -1,145 +1,134 @@
-Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28CFA3B9D8D
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 21:00:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778619622; cv=pass; b=f3Lod07Oh9PzZJcCovFMudunMGAM08/f0LaCxql2nSxp9e8c3lRcyfogo26hkHKmaxfSkASj5y87hrOSUdzEXNjUlXeIsXcAshLPADmnKo2L7IqehK3RKk62ogdDgbb1/LDNTMOzWD6UMr9pV/O6T5iC038IGHWkDdqm1FkKpao=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778619622; c=relaxed/simple;
-	bh=yjcYpwM0bNWA8F+oMBSlbnJX7nZ+1khq657ozFenk1Q=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GsJ+4NTerVhrmgVx77mW/rHm9XWWj+feZzp+aZVjpm5O2Wm9sbGUUdiD4ecl7fNMXjkkF0PmpE738LMUUyfyY/zqUwEYfQquMHmgtYiiT1ggoSInTZ1DluZIr+MeSWNGriDl45OJHZq8+mlOJO9Y9jtYDq3ISxE5A1d4wYzc8lE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=KYU5vNgn; arc=pass smtp.client-ip=74.125.82.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590C337206D
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 21:24:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778621072; cv=none; b=KO8SRZCgiX18Bk60K+vRuOmd1CWwRkbq+bAzWfHrTkWd6kv6p44ojeXdsoH7S2luGTC8pLh+EMbd2K0fSXR3y1gvh39Ehjg9pHJ7LsrbHfSEP4iiLIDBiineVsndOED7paVUNemrYt24Wv67VoNYeh42a+Xgk+gyExY+L/hFVPI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778621072; c=relaxed/simple;
+	bh=x+mBFqZCy0/lg4AwvtKW+2fdL6v3igWT0DYWn1j3ON0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=CbI5Topu3OdbUiTSjhTmJIGvwMtqKmzQgwENMYjspgtG55It1HbLHjt99X+VrTWivB94IvDKisJ1f4birTAlYUjrPxb5YcyenetPjn3fELj0iOZ50e3kJciXSUxo9yjeR4qRx7ToyrryMFG0a4ipr7NL39gd5oZElUfxfhVQjdY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X8SOd+KM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="KYU5vNgn"
-Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-1331e851faaso1460239c88.1
-        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 14:00:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778619619; cv=none;
-        d=google.com; s=arc-20240605;
-        b=F6v5EdRAPCFW8ob1yN03uw0NQrNFMxNmVitqQ4ZnaDiO8oNw3SXnWyAGN5tUFCGXXj
-         G0m3iNoo4sfVIB06ih4uA6oUq2UTRUz8IE0c7+J/SexLWcKQI8X7gT52ZRn7yituTMyc
-         lal44rZ8pIT4SzLpm9JbVlDd9eEL8hh0gs7b+z4n17KqqUIeZdp5fRUchB71w4aY01ed
-         MTE8vF5RLx+7RC8V/IiSdFwLULyOUtxFk/j6MUo8vdZmyyHxaARGeB2iZa/M04O0EoxS
-         Apx89oxQkTl42Otc/wdzfRfbqA4DECzSjAMi8ET+e42bDm+au2d4bDVSbtU/D4F9x69j
-         NtAg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9t69VAH4Nc1O0MVDyKt+JQMOR1DA7dJ94HBiu06W+HM=;
-        fh=xwYph5mYrFb3HJTafmjx5hwf5UjJiMr5yKKEM1LFasM=;
-        b=Hi9RO6RqPEU7C9RZ2med7vgLh9KpLrzU2H5NuYj4ct9ltKy8IVVNsVleiQtxKZxrTU
-         SyK0M1BXm7YjqwKrrRJkuPMkcHa7gnbXv07wpnaA8gchTtCydbZiJ6Hjd9p+aY0T2Gt8
-         /v/hJlDVaE+L7r9MeqvKG9njR8GZ73B3y6W+yqZtPX1uls2NyjbmS62VglOy33ZfIxc0
-         /vjiI/BKcBypjD61PCUVxeJvaqiIwsnJEPobO1tPrcg7AbWMY1q27iqG/OrciKdgE7Y3
-         Ymm6gG8TA2zcZxQkd4OIYtISEBXcQUfpV9FvQN67tHZQK8q5SkBA5N6YZPol0BhFJ/N0
-         vSow==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1778619619; x=1779224419; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9t69VAH4Nc1O0MVDyKt+JQMOR1DA7dJ94HBiu06W+HM=;
-        b=KYU5vNgnDBBJPuWlxf7lFR91IHbrV8OkzR3trOdGVz4KIMAWskUuH1oyFcJQNd0DRu
-         w9wrP8xMj0EL1TuFo8QxPIdL2PJ17f1TJ6tlpbG9ibsue1EWsKm6FER6163MD3rEZQ6S
-         iJAACQAzV1vdNBgf3Jy/7BRVoaRtfrELpuEeQpbRdfEAi6Bf8w0RhPg4jSA+Nna7c7Ap
-         ighJ8xRz8+xXr1/s0ERILzp1adkUgDz/0kgugFZc1kLMlPBW9FYVRTeGm3CoBPJDynEV
-         3orwTuARevjTMKC6XyOm4eEemo8WIm4W6GukN+crwCdqN3ZWdkD9/9216JtUvUvbSv2f
-         oZXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778619619; x=1779224419;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=9t69VAH4Nc1O0MVDyKt+JQMOR1DA7dJ94HBiu06W+HM=;
-        b=cDEj1Y3gkpTr6mmF5TX0SYp/ti6cHs2ccHeuZDSdP5Fe4BH1Js2mV4rgz0eQUjz2CS
-         kY09DPlk/zITeEbRjkd67zwESZkJ46hiz3UKCrHBpLgbcNq79+49TBJ+8gL+iv/9L5uV
-         dBcCc7E/zNJF0A/GwmFiwMOYqnEcsbPwYvVgDynLrXYl6zaIBD2PDnbP/D/Rc+O8NUZB
-         fX26wUiUpRHu3D3voklpeHyHbz2ZcA6p6kPKAq7/IxGqZhTVDJwdOzNnyte+RlS9Kc0s
-         o2EP/RIzRh+IxlGwyePlgl31uXi/itLRC7kTENJP46IAlRBZXxJKJGcbLJ+OefZKuacq
-         VUjg==
-X-Forwarded-Encrypted: i=1; AFNElJ9vt/o6POeGVtNwr01vwL13Dj4J4temhgsVHj0n3Id0EhoyS5a1enHL2lJIIfQSYzOOUo2J3SmLE4w=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywyz8B+imAbm9cHmx0QoqZ+MvJWZDOcuuSV+XPmuZMus5nq9IMD
-	4I1+LiUGe/7tBem+tD5RFafpKtop6c53cUqKjQ9SYfmkdXLaQaTedNdrJGQitmAQopS9oWPOtuQ
-	OK6VLSvwmXsQpRboZJZ3r0b+wPV4cPsFwYvqcP5oa
-X-Gm-Gg: Acq92OEBb5DOKuqKFFX4RD5aXlgg8CFYrIADuEGRkGqALLELMa1YbFtO9FML26MkeWU
-	3456q9wNayI6E1y09gMqcXXnSDOMvH8EVHtl1KqHjurMRxNuJclYRp7/4PIZXZuu0TMHYGNL3LL
-	cFL+5YEhC4tw1/JuOxFsaOlEsAXBTSXR135Eb6rdjyPIRp2Cw7ezQ84ZnsshqA2/Cq+J7kv6PPN
-	dsEQ5NZEPEkE/1s0/Ludo+XxQImHhoK69xWB4fWFIpMynKgQ9xkQ04wf3yhngeT3RWp+79Khy3d
-	duwvflN1JxL58W3YeBM=
-X-Received: by 2002:a05:7022:2394:b0:11a:fb0a:ceca with SMTP id
- a92af1059eb24-1333b2d9c6bmr3134966c88.16.1778619618598; Tue, 12 May 2026
- 14:00:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X8SOd+KM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB324C2BCB0;
+	Tue, 12 May 2026 21:24:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778621072;
+	bh=x+mBFqZCy0/lg4AwvtKW+2fdL6v3igWT0DYWn1j3ON0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=X8SOd+KMo3FbRuVAALtlQhubnNSsBOGToGNWv7ouTFT8MxY1nzCy0Hajihet/oiLD
+	 bZMtEZtJI+QjpGsOFJiMoK5gMnlaxCgAZuD1d9iGS5eFNsf3K3dR50jk0pxrzbfQtL
+	 rXTZfWeNm0OQIXjy8bOKaW17KXVMS2kH9chi/+tc7VcWUzT6I55k1hC3iRF+Oaq+Xk
+	 MsMoWGjGktSz4TSH8O7HJUY9EJW8iJmEKrpZhHeSW6wmABYPxTOSFrPu2F83OqcKN2
+	 pMZutM6y3ELAYWwYHTv5Zi1r93MUYAACNogTL6oBF5ZiTGArLDlBmKb11tZ7d08u7Z
+	 tlgIl0H9Mp1hA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v1 2/4] hyperv: Introduce new hypercall interfaces used
+ by Hyper-V guest IOMMU
+Reply-To: sashiko@lists.linux.dev
+To: "Yu Zhang" <zhangyu1@linux.microsoft.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511162408.1180069-3-zhangyu1@linux.microsoft.com>
+References: <20260511162408.1180069-3-zhangyu1@linux.microsoft.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 12 May 2026 21:24:31 +0000
+Message-Id: <20260512212431.CB324C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260511234802.2280368-1-vipinsh@google.com> <20260511234802.2280368-3-vipinsh@google.com>
-In-Reply-To: <20260511234802.2280368-3-vipinsh@google.com>
-From: David Matlack <dmatlack@google.com>
-Date: Tue, 12 May 2026 13:59:51 -0700
-X-Gm-Features: AVHnY4KwNtssIpJT8BgW9ND1vjmOC-DKwSQu-Dn5zwJb7fp396v17OflLbojuVc
-Message-ID: <CALzav=fR8c2tYj9jeOc_K=xoupxAfWMHmk0ipDniSXg6uGiFYA@mail.gmail.com>
-Subject: Re: [PATCH v4 02/16] vfio/pci: Preserve vfio-pci device files across
- Live Update
-To: Vipin Sharma <vipinsh@google.com>
-Cc: kvm@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	linux-pci@vger.kernel.org, ajayachandra@nvidia.com, alex@shazbot.org, 
-	amastro@fb.com, ankita@nvidia.com, apopple@nvidia.com, chrisl@kernel.org, 
-	corbet@lwn.net, graf@amazon.com, jacob.pan@linux.microsoft.com, 
-	jgg@nvidia.com, jgg@ziepe.ca, jrhilke@google.com, julianr@linux.ibm.com, 
-	kevin.tian@intel.com, leon@kernel.org, leonro@nvidia.com, lukas@wunner.de, 
-	michal.winiarski@intel.com, parav@nvidia.com, pasha.tatashin@soleen.com, 
-	praan@google.com, pratyush@kernel.org, rananta@google.com, 
-	rientjes@google.com, rodrigo.vivi@intel.com, rppt@kernel.org, 
-	saeedm@nvidia.com, skhan@linuxfoundation.org, skhawaja@google.com, 
-	vivek.kasireddy@intel.com, witu@nvidia.com, yanjun.zhu@linux.dev, 
-	yi.l.liu@intel.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, May 11, 2026 at 4:48=E2=80=AFPM Vipin Sharma <vipinsh@google.com> w=
-rote:
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Low] Missing 4-byte padding in `struct hv_input_create_device_domain` re=
+sulting in an unaligned ABI structure size.
+- [Low] Preprocessor macros are defined inside structure definitions.
+--
 
-> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-> index c12d614fc6c4..019de053f116 100644
-> --- a/drivers/vfio/pci/Kconfig
-> +++ b/drivers/vfio/pci/Kconfig
-> @@ -45,13 +45,15 @@ config VFIO_PCI_IGD
->
->  config VFIO_PCI_LIVEUPDATE
->         bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
-> -       depends on PCI_LIVEUPDATE
-> +       depends on PCI_LIVEUPDATE && VFIO_DEVICE_CDEV
->         help
->           Support for preserving devices bound to vfio-pci across a Live
->           Update. This option should only be enabled by developers workin=
-g on
->           implementing this support. Once enough support has landed in th=
-e
->           kernel, this option will no longer be marked EXPERIMENTAL.
->
-> +         Enabling this will disable support for VFIO PCI DMA buffer.
+commit 424b106dd2a0b2fe17c666987a01e49923b0b297
+Author: Wei Liu <wei.liu@kernel.org>
+
+hyperv: Introduce new hypercall interfaces used by Hyper-V guest IOMMU
+
+This commit introduces new hypercall interfaces to support the Hyper-V guest
+IOMMU, which allows child partitions to interact with the facility for devi=
+ce,
+domain, and IOTLB management.
+
+> diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
+> index b4cb2fa26e9bc..493608e791b45 100644
+> --- a/include/hyperv/hvhdk_mini.h
+> +++ b/include/hyperv/hvhdk_mini.h
+
+[ ... ]
+
+> +struct hv_input_create_device_domain {
+> +	struct hv_input_device_domain device_domain;
+> +	union hv_create_device_domain_flags create_device_domain_flags;
+> +} __packed;
+
+Should this structure include a 4-byte padding field at the end?
+
+Since the device_domain field is 24 bytes and the create_device_domain_flags
+field is 4 bytes, the structure size is exactly 28 bytes. Other hypercall
+structures in this file explicitly use padding to maintain an 8-byte aligned
+size.
+
+While this might work for a single invocation, if this structure is ever us=
+ed
+in a rep (array) hypercall, would the 28-byte stride misalign subsequent
+elements and cause the hypercall to fail?
+
+[ ... ]
+
+> +struct hv_output_get_iommu_capabilities {
+> +	u32 size;
+> +	u16 reserved;
+> +	u8  max_iova_width;
+> +	u8  max_pasid_width;
 > +
->           If you don't know what to do here, say N.
->
->  endif
-> @@ -68,7 +70,7 @@ config VFIO_PCI_ZDEV_KVM
->           To enable s390x KVM vfio-pci extensions, say Y.
->
->  config VFIO_PCI_DMABUF
-> -       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
-> +       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER &&=
- !VFIO_PCI_LIVEUPDATE
+> +#define HV_IOMMU_CAP_PRESENT (1ULL << 0)
+> +#define HV_IOMMU_CAP_S2 (1ULL << 1)
+> +#define HV_IOMMU_CAP_S1 (1ULL << 2)
+> +#define HV_IOMMU_CAP_S1_5LVL (1ULL << 3)
+> +#define HV_IOMMU_CAP_PASID (1ULL << 4)
+> +#define HV_IOMMU_CAP_ATS (1ULL << 5)
+> +#define HV_IOMMU_CAP_PRI (1ULL << 6)
 
-Why does enabling VFIO_PCI_LIVEUPDATE require disabling
-VFIO_PCI_DMABUF? I saw the cover letter says "to keep things simple",
-but what specific problem does this solve or simplify?
+This isn't a bug, but should these preprocessor macros be moved outside of =
+the
+structure definition?
+
+Macros do not respect C scope, so placing them inside the structure definit=
+ion
+violates standard kernel coding style conventions and might falsely imply t=
+hey
+are locally scoped.
+
+> +
+> +	u64 iommu_cap;
+> +	u64 pgsize_bitmap;
+> +} __packed;
+
+[ ... ]
+
+> +struct hv_output_get_logical_device_property {
+> +#define HV_DEVICE_IOMMU_ENABLED (1ULL << 0)
+
+Similarly, could this macro be moved outside the structure definition to ad=
+here
+to conventional kernel styling?
+
+> +	u64 device_iommu;
+> +	u64 reserved;
+> +} __packed;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511162408.1180=
+069-1-zhangyu1@linux.microsoft.com?part=3D2
