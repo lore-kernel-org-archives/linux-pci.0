@@ -1,549 +1,235 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011025.outbound.protection.outlook.com [40.107.208.25])
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010068.outbound.protection.outlook.com [52.101.69.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64FB93CF940;
-	Tue, 12 May 2026 16:31:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B437C3C37A3;
+	Tue, 12 May 2026 16:42:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.68
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778603470; cv=fail; b=ZN87KnIg/kqJLqRavRRZfd2wm8VRcwo3Sl7CGYs+O3VztTw+RnahzP3G0nCVXRduR0gg+psWGrw09qAcZ/Nkw6ltNRd/z/Cqbf2dfxbWErtb7jNJ+/bxho5KuLtIx3X5UB2FtuEF3Pm4CuHwDUCxMIVXIH8MyCaTyzsJuqJxJMs=
+	t=1778604147; cv=fail; b=XOWK+s2qT28FUeougpXpjEcfK5PfbtjiMhDo1SzXfitVHtWKeknxylHvpB+iXK98/U/fW7ddGupYLvZT7q4BLFjg4p0Xh6XQoBZTeDdpCbtU3Z5U0YndV8ypsAQOXHQOONFOZpFaBT/FkX0BdmmSodVEXYM60EpxqaqssFVKG9E=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778603470; c=relaxed/simple;
-	bh=JIysg0PlO+UdBGxFmX4V3Oiqgc6bsUaROuNcK0F5VIc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tbpja6BpZr+VUAkgwyO/bRHej/Rl9Ov97b4urbnay8ZJUdanztOq2wUFirEH5I7tJMbosjFL0lYXRc9ZW9A8Q86abIX1kwEa7dkkPH8kopz+YDKLGqe/hVLDppQZLA3UVbQPcwKAf/JBjsGVDOjKZU60lKt2A8nUyEmTZO1gr0o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=Bl+SYa1H; arc=fail smtp.client-ip=40.107.208.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1778604147; c=relaxed/simple;
+	bh=wlLaLjwVm8P+teLdMlCHZUiTw4NrLDFUxmwHVL51UZY=;
+	h=From:Subject:Date:Message-Id:Content-Type:To:Cc:MIME-Version; b=WUDSh8M/ypVSv6DdMDmRtsBY7HI/nw11Wc4XKfh0dbj3/zpgqnxEdThrB2IUGPuSXN0A2xgfgxs1ioB6JCsfvZW3HpiP5s11avUVfsrdvSvMOvCNJCwQescC+YznPPWYCf6wnNO937ZimKT0MAtcThndUs6RxE6XhMnEn1bkO2c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=csbAVl4Z; arc=fail smtp.client-ip=52.101.69.68
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="Bl+SYa1H"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="csbAVl4Z"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=tr5n8FS4ooTNqVfGwasHwM6y0SHjhrvI3HjupcaE7Ogs+NqovwBJFB9CFbRjF3saoRxBPeMv689dtCfzjgaACL4lwu8CiuzsTa23oewQvOB2cp7uqnuIZxrY8Q5YnBF9MSfWXxBl4XmiaEJTr2Uji73NnXYPKxeVzufKq9xDT+odIwDonqDEMvQEm9MvRylOxa56QL14pPEAo2Rnya+mnquKnlT3QqVsiaNJ0WguN28giJtdgPxO7cUni0Gemc356sj+nLsmA3yI2WA7HXg6XI4HzMBgzlNE+8o0ZGSGqqgZMMDbQxQwrDX43Dcw2H0x6gL8QUtquvsrJbKDeGZY0g==
+ b=rSJBTZ3E6VXbaV1j0crVQxeRbIXVVgpepYBhEz72ykZlebCZWo7xSrFuqEKnC8voatGit95kjve3zJscih2ADsnJaWQF+jWpiE2ea6S09m0yvw4IgXW5M9+iAFnB0iOlDSRr7U1D7LzK/1EiBrzyLzB/K3WQeMejsVi7/o9fe+I3I0vBEK6gubluQAh2Lki6v25LI7lTwZZuPGCQjW2OAond88lLNgl97BWG6MwS15Yqy5W5yrb4wXzCcfdE6z98yZ89kwwOth+omec0fHWQAJtz8kK2m6urcmM8HwJlL6Kot2MR/VmeopllgBj1dI+R8EM+jS+GnEMN6QGoyhg9aQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nLu7dpHaRJU2pATb+/e+KsDmXm23I3snVN5laseNgcA=;
- b=YpwTaeSIsmYP4bHo5fXQ0TGBdKNj0rfkfv8vRsdvDjETOS1JlhCMT3lNzSjqaiL6Ybz9hR5zT+FR9Pr2ZcY9VQ+ZmGQYc43RLvgZJnUWIbpJSmDXGnJPERYGbbbqG4vdnarnrPuWqRe7ey6ySxp2xDpmLudtwapKuo7swqiMbBS/ayxejwb/geNe7UzBk2nmdScQHTl1ZngM+onds2qLYUmxD9FJ8Nsk3rqlqO5ubQdIiNzkUsxpt1MuMRDw1hw7UDCCYDFkh3z4RR6q+gQ9vzydrFFgJnRh3fBhu8hFdpLnRyP4Dje/qHCiv8nGMq9vSBCaEThPlg7UoJ0gCAgjlQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=Eq2h5RM1/L8vFedoB8rsrQMwm66AH3QbzYks3ONAKUs=;
+ b=nBPam9nm5q0uYZtOFaddI+4/Mq6+5DWYg8c5jUpiXyVohmv5ow3t/SB9MHSfKJKk13fRaUbjrC4gZKLd/gOq5wQLcEVM2uO6gxZA3Ja6qQeGWF65MWOoaQIbSEZNmyiIGwDaX08k6vu+Kzhw/VyaA1QBgwz9shrPxH1TFu70201GocBgANtObRXNCZG6A9IDN7tm8+hxadaPWOHQ2VP72+9DVqB52fG3qcm6RY44eXATdDLJ3/Y/WdKt0yK7YAJ8eHZ/eFEICLtjWHi1M0aE3c5GfUl7YnwgZG5OQJGCO4oj73gPA8llCV/gFZ2+gPYWiF20493AvA7m4o8x9DTwmA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nLu7dpHaRJU2pATb+/e+KsDmXm23I3snVN5laseNgcA=;
- b=Bl+SYa1H1Xm4XM7qEQsvLzNy4rAj7VLew0uPYi4+nnJENTiaTfFRhPvxfDCcJAjsdJjPP5NfnZvCJEhYD+w/OkHO3p6Qd8yJtbmhq47Vfcz75MA9SxTDIqoeOHenzHcAxn0bsI6e/K4HAIIglOqdpEu+3NTPn65Ll9bf2pqV9QqMGZy1bJXI2fuS4xEUexHbVKQXq7W74NGb9TXYzRq28yXIc2H9fFaQD4wQ8T8f+TOX7acDXuosqUvhRolEbFFqB3Efjd8cKD9wvBg6wv8Jg0Oc6SV6AU9w8Qy++J1oOVWiM4yW4mmPYLE+dtP8H9XU7BppVVb+49wO5ZllROLuoQ==
-Received: from SJ0PR13CA0174.namprd13.prod.outlook.com (2603:10b6:a03:2c7::29)
- by CY3PR12MB9555.namprd12.prod.outlook.com (2603:10b6:930:10a::14) with
+ bh=Eq2h5RM1/L8vFedoB8rsrQMwm66AH3QbzYks3ONAKUs=;
+ b=csbAVl4Za/16z4Rb8Cl1pUfo7UeyVAsOOgHmaA2TA2l8JwX9XnQRIsuITJ928BpiLHHsVjn+hbG3sCg9S3W06mAXuBT/epoQkxO25pcSWxtU2JQltfQzplx6mHgUFtwgD+KQlAY05VzTlMJTHWJ3Qp1yQfdvgyIUjIlvQZKxCoum+drtiIjnI2VkHZbgvR4eM0gnxp3ZLjEXjOvBkcZyBcYMG98jQ2nKCBy+UnvEkcIVH0DmOztycTdk6J3oeNZzN7F1zoyoKtw41sBpCJ/GRXsUkjRFmgjkFxBNG1+56minZai6fWP5kfZ0eDij7VWdSM6zbtnVrS+lHZA3sg9veQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by GV2PR04MB11834.eurprd04.prod.outlook.com (2603:10a6:150:2d5::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Tue, 12 May
- 2026 16:31:01 +0000
-Received: from SJ1PEPF00001CE8.namprd03.prod.outlook.com
- (2603:10b6:a03:2c7:cafe::61) by SJ0PR13CA0174.outlook.office365.com
- (2603:10b6:a03:2c7::29) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.16 via Frontend Transport; Tue, 12
- May 2026 16:31:01 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- SJ1PEPF00001CE8.mail.protection.outlook.com (10.167.242.24) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.25.13 via Frontend Transport; Tue, 12 May 2026 16:31:00 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 12 May
- 2026 09:30:35 -0700
-Received: from vidyas-server.nvidia.com (10.126.231.37) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Tue, 12 May 2026 09:30:32 -0700
-From: Vidya Sagar <vidyas@nvidia.com>
-To: <bhelgaas@google.com>
-CC: <vsethi@nvidia.com>, <sdonthineni@nvidia.com>, <kthota@nvidia.com>,
-	<sagar.tv@gmail.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>
-Subject: [PATCH] PCI: Save/restore Device 3 control and clear stale 14-bit Tag enables
-Date: Tue, 12 May 2026 22:00:12 +0530
-Message-ID: <20260512163012.2336191-1-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.25.1
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Tue, 12 May
+ 2026 16:42:22 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%3]) with mapi id 15.20.9891.021; Tue, 12 May 2026
+ 16:42:21 +0000
+From: Frank Li <Frank.Li@nxp.com>
+Subject: [PATCH v5 0/9] dmaengine: Add new API to combine configuration and
+ descriptor preparation
+Date: Tue, 12 May 2026 12:41:58 -0400
+Message-Id: <20260512-dma_prep_config-v5-0-26865bf7d935@nxp.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAFZYA2oC/23NTQrCMBCG4auUrI1MJpk0uvIeIpLmp2ZhW1opl
+ dK7GwVRqctvwvNmZkPoUxjYvphZH8Y0pLbJgzYFcxfb1IEnnzdDQBIIivurPXd96M6ubWKquSY
+ lSvCoyCLLKr/FNL2Kx1PelzTc2v7++mAUz+u7ZVatUXDgJNUOHAUR0B6aqdu69sqepRG/tPijM
+ WsHJZQ7I7VA86vlW2sQQGsts7ZGGZAao1f4q9VHE+i1VlkbqqRHrGwV40cvy/IAu7Sb7GYBAAA
+ =
+X-Change-ID: 20251204-dma_prep_config-654170d245a2
+To: Vinod Koul <vkoul@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ "David S. Miller" <davem@davemloft.net>, 
+ Nicolas Ferre <nicolas.ferre@microchip.com>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Koichiro Den <den@valinux.co.jp>, 
+ Niklas Cassel <cassel@kernel.org>
+Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ imx@lists.linux.dev, Frank Li <Frank.Li@nxp.com>, 
+ Damien Le Moal <dlemoal@kernel.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1778604135; l=3320;
+ i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
+ bh=wlLaLjwVm8P+teLdMlCHZUiTw4NrLDFUxmwHVL51UZY=;
+ b=sBczamGhvm6KDIBZvI8uIuZCeJ/4/uMU70wyXArZpcG/SfFTZstwYagyDXZXCCxUB169wGBKE
+ GLaaMjykVP4CK0iUNzt4bdhLKEtLoSLmv3n95/yGQ7Qr8aekwpZNmsZ
+X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
+ pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
+X-ClientProxiedBy: SJ0PR13CA0213.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c1::8) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail203.nvidia.com (10.129.68.9) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF00001CE8:EE_|CY3PR12MB9555:EE_
-X-MS-Office365-Filtering-Correlation-Id: 19c76336-2468-4fb9-142a-08deb043daa0
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|GV2PR04MB11834:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5403a4cd-7d04-47be-d7e5-08deb0457043
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|36860700016|1800799024|82310400026|56012099003|18092099006|18002099003|11063799003;
+	BCL:0;ARA:13230040|52116014|7416014|376014|1800799024|366016|19092799006|11063799003|18002099003|56012099003|38350700014|921020;
 X-Microsoft-Antispam-Message-Info:
-	IcTFfCFwxJ7y0kP4t0dVA2o37aDZa1QUom7nuieu/VVSdCqEPpSTlIVPM/zAyTjFSNVmFlFLRGwG2R6BHbsf61r4jDbVWVWCo14++VcyF4MjYKXYp1OSg5ztnAYGTr2rxEL7vcyBEvoEll+syAbt8Uz17vJB0wtpVRsVG4hXTlY2Oh2CCV6QmaE9vSRkn7HJSIDywQ2jPCdR10ITzHkWQqyX0QP0pO7FkbflMHin0jNYi34BHfhWu+bok023LVhbyem8Uq5WH5jWV+fCMKzUzxz2i0yMgDf0LpvDgkRwTqwqBLkgVBs1pRACjBaQbZLKoY0fRlk2ObhzLnZ8JmzOjtzrQY+0Y3NIU1e3FLe0hUGj1mfSc5VCZeEGKfUYwMFr7UIEO77PdbwJDCToDc1gdG2n0MVfdqnmMkiuC7ah8hv2zGqQCOJIQnt/lSA8pidrahbKFZIYf5FPR5zATby9bNdUwsGdMOtYfgKjtWTIc4ndausa7hc6BYKfdqrXS5EBlDeLFI3cEkBsrhIzdnyd699qMJSY49Kwi+dyX0xQWN4nsQLtW6lsOraOG0yuf8LAr/uLXYDvUO4sD2MJI3e5dvtLi/hLKssD5bsJN3U7XOI2c1iUw0VrKn2d4t+cymjjM5GfXZUeXmEleNH20pzBI73aa+qPJcoHRswz7tmcLLxomeg2jREneH86Q6etrBEkptw2rIyyAZQs8cNYgpBVX6z2rVMBqpLpJSzeeXd4mdA=
+	6J9ZSDuIWfhNRDz102kwKa+Y3USH5Sfo8aRPZlOxSxzARSp2R/JP4XgYUKIcYTxOOJPDqINO15t6jjL7VkBnwvoeXpSLa2mgZB7CA/Zx/EsVcJz37G9iZ8wL+uHNH4ooaw9CXrCK4C1lnYrndGoRujrwIV9pI25RZlYFGaFuMcisIk8PXEtfv+kM6thuxAs4XqOw6Aq5ev4k6+cTZncgFGZjlPyPU4lwbXNmaW/CMnC/UgHSvMIaCRggkA76S2RS7J0LxmiZSDYUshqzevskqNc8QTKrGKUXK/4I3vrv4zS4B9h2OdN4muBiBZrYwFB7VtpbRmSK/JqB5L9ga6K1OhkZshlUMiJag/rZxRis8UwXmtI2cUrcw1NkZDN41+4OhNVzYiVN393m0RArYxp7xw7SxBBkccWR8ln8jFGBz69dfwzxSAxsFVavohlIsM/SJ/XLeXxYgJ2tILHR0uU0/lssDlnpJnPU2ac5bWjgJcras1owodtERCO+MI7qFTD/y/5nkA/4F6I3S7h6iE1e0eZ+hbAJ64zVLkPcdfQDAY4t0I0jdCIfIlEPBngyCc9bFCkDhFcPfghyRUaq77lGfydTXV/x6nXOFD/26QwV5HWces9mvkJh6bJDOziX7sKuPGuH13iE+bpLknVlsytoVhg5LNC7Ilj3v+abGNDisr0Ca42sJA2oItgBD9i8CmLAlGaNYRUjYtMuXlrncRQExciJZNGJH0/I6dG/c6zLEKVbmEWFUG46pN1cgjsFqzvfVjJKT5gsaXu6gbgt0kN+Dw==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(36860700016)(1800799024)(82310400026)(56012099003)(18092099006)(18002099003)(11063799003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(52116014)(7416014)(376014)(1800799024)(366016)(19092799006)(11063799003)(18002099003)(56012099003)(38350700014)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	3YUDhXC4Y3Vk5CGuOEBWkropcwuICZb7m87ZQwRNle594UZvg59Z/+V37I5iqwBUnERxTb9swcRoQ22mASwlQXAjP6p3SVr8u67DnHCcq77d5vuErXdtT3N671Aa4IYUC7GKUhKjGEsWClcRYPYjLBGKFAnt3HlufkCQLHa/rgaQ+ZSM2Lg44tOShaQXT1+QI+q4JIQdPz3UkLAEC3121GmeIhP/44rDh3LTHp2ZUWQrPK6se4vckx0/IMhLPdinICgjYJ1QxhfxydtwUm+hsKTQxSbut78XSCn3ptapwvjIgH276Z7dFSYLtJm8ztRppA78egRszoavY3VD3tGJWre9o1uZjifwIfuIb6pxMZ1sJkcWVaj9BTPA299DilF55AyhiE9q/VVD0nBl7kcjZYa8CxjWWpNKCeRqpWJierizV7NhCKPBBYYRjQfzQkhJ
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2026 16:31:00.9788
+	=?utf-8?B?YjV3MG1aYWhXbTJyVERMTHgrbVRSdHZqbW54dU5PenpmZmNaZG5lNXlTaUZ0?=
+ =?utf-8?B?VGFHWmxnSXMrQ1dRNFppdCs2TTJCekZpT3hSNGVhaGVmdzVkRS93NjVMcXor?=
+ =?utf-8?B?WWgrR3ovNlAxd01mYldTTTU2clVzdnhuN3FkTmMxZndvZDhVbk9ZRk1LZ1E2?=
+ =?utf-8?B?aFVjREp1Vng0bzVmdWwxUjhBUTBPbGhaeW9WeGoyWE93cWJDRWV5TThYVDFY?=
+ =?utf-8?B?eHNmYjZZOUNwRWE3ZkpjRDkzMHRQYVZ3UUNGMWFZUnF5Q2YwVkV1ZTVKaGRt?=
+ =?utf-8?B?OWtOSWdXTVhBKzFSSFUvNWxKTnhCRHJ0VENYTmFJTjh4azhFLzZyd1JpT2to?=
+ =?utf-8?B?UFIxQWsvczkrRFJhSGJPVEJFUXZYSmwrTmNCaExIcTI2TzgxMlRna2tpZ3Ix?=
+ =?utf-8?B?dk1IbVFvMDQ2QWxKbkUvZVo1WFRYYit5ekQ5UjkyTWZ6WnVGNTVLZlhzKyts?=
+ =?utf-8?B?WTVhemVLdHY0VjQ0QVFUWUM1TUZWa2Q4dEplZFFmclAzWlFsOU9iMGp6VFZp?=
+ =?utf-8?B?OUd3TUNtbzN5ZlhHR3ZpUzZFTVFpdkp0Unlwa0djZVMwM3pkZWY2b0U4YWpR?=
+ =?utf-8?B?WXJuQlVIQkpobnJ4WW9wNE02QUhXUmx6YXdaY2c3elRYMHVUQ05CYlRKSkJL?=
+ =?utf-8?B?T1NWMm55ZE5RKytFNHhzR2E1RTFBUjc1dlBHZmNTVUU5ZWlxb01zRHdnRnUy?=
+ =?utf-8?B?Y0JML3IxQlFMSll6ZHpXOTYzOGk0eVQ3VERMRXVpSjFlcUt3TFV6a3I0Mk9t?=
+ =?utf-8?B?bzRpT0MrSFY3TEhESWRrdmpick8raEFqNUhyQUZLWDI2RFNYbWpHTjhlNndj?=
+ =?utf-8?B?SjhKbFBrUU1aU251NW9JQlVlbGJSaWlyNWN3RGthWHk0TDZRbjBJMXZ2QW5z?=
+ =?utf-8?B?NjdWTHhxZEpjWkcxYUdDeDFUakZ5YjFuZWUxdmVRUlVBT0cwaVdFYm1teDhX?=
+ =?utf-8?B?WTRIUHVqZm01SUdEa1M5RGJVbEN4VFpDSmhPRmVvRTBISXU3OGwyWEMrb21u?=
+ =?utf-8?B?dzVTUjB4OFBGenRWZ0ZNNkp0UUtkV1RwL3ZwOEg0dThzVFFYM1gvMVlXOFIw?=
+ =?utf-8?B?dklLWDRLSStJM2xGa0tzaXZkS0IxKzRIQnB2MS9YZVZwaGlPb0JxQ2thQzRE?=
+ =?utf-8?B?Rzl3aExJamoyQkFuZjY5b1llUEE0emFhbFJsalprVVcrRStJVDFNU3EvSFB3?=
+ =?utf-8?B?ejhRbk9iL0t4Q3BoYzdWWThlU2RuR2Z5K1ZRdkE4RGlJQmZDejhMREpXWmlM?=
+ =?utf-8?B?R2R0ak1SWXVEcXk2dTFZRElTcm5qV0luR1l4SlZMYlhqa1I2azZZR1FLaUl3?=
+ =?utf-8?B?M3ptTVFoYjd6UDdZNGRBSjFZZjJ3UDYyL3RpbExkd2J5ekJpalFlY2lMYUxK?=
+ =?utf-8?B?WExDc3RoaDNOYjFJWFNqbVYxTGRGc3pLTVRGNmIrYVdrNjY3T0NCamhiZ3lR?=
+ =?utf-8?B?MXpuaXdaVWx1b3pMRkkwSzFSeHZqTk94U3BQZzBZT3owTmdEc0RkaDF6ditI?=
+ =?utf-8?B?L3R0b2lOd0VXSldlTkRIblN0K203eWxCa0Q5bjlRYXlHM0ZpN3ZUNC9KdVpi?=
+ =?utf-8?B?Y3VUQjJVZGxydVd0WEZZbHMzRGF2R2hrUVVTZzNVY21RSW5ER09Ba0tVRkpr?=
+ =?utf-8?B?WWhOUG1SS1piOXVlclRrdFFlVTJPQWVjZDNVcGdkeWJwOFhWK3VDb05MWXlB?=
+ =?utf-8?B?WHgvTnp2c2pDVUl5L1RSYk9XY2xKekNUMWdnRW5KQlAvUjArZlVXR283Z093?=
+ =?utf-8?B?UnJNWlRIVlg0Wm82YytBeVRkRm9Va3llVlhlTDJSYUpqd3BlMUtFVW5weEtq?=
+ =?utf-8?B?UzB6TFVwbk1aMHUzME5BV3B5Nmd0bDFoOWw5ZWRzakdCSDJDcHdxcTNZZHZa?=
+ =?utf-8?B?V20yWlZ6SytVRkJTRlRmK0xxMWN1SHNkWmdJM3FXUGdWanp5S2RjOHN4YWgy?=
+ =?utf-8?B?RitSRFdZNkNhUG5LMEhNbHhLaVZTVkhQQkkzWWtCZHVJSlZqejhyZTZRSzdB?=
+ =?utf-8?B?YXJyNTFEcDZ4bVZGcmhCS0JYd1NQV3NzdzNMVytrUEtaOEx6Z0I2V1VLYStz?=
+ =?utf-8?B?MVdaS1M1RmJYR3EvR3QvaVBTa1ZldE1iU1o2c3pOai9Zck4wcmRDNFNpVlRV?=
+ =?utf-8?B?QW44V0tZNUJyZmdOcVU0QStQdmdMeTFpZmFHaCtpN0xoY2E1S2hwOE1XSnZS?=
+ =?utf-8?B?OHdqMVJEMzliS25Cbi95RjFlNzF5OTk1bEFOVHpsUWhoaUk0T3VhaGpRSHdB?=
+ =?utf-8?B?MS82ZTgzcjZxdWZ2S3hoYWJ2UnlCbUdUMjFsZlVrNWtFanhKZDBMNEZMNmty?=
+ =?utf-8?B?aitrZXU1OTZXblJuWlp3WTNZdTlYajBPS0Fydks1dzM5Q3kzZDZJUT09?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5403a4cd-7d04-47be-d7e5-08deb0457043
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2026 16:42:21.7519
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 19c76336-2468-4fb9-142a-08deb043daa0
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ1PEPF00001CE8.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY3PR12MB9555
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: U7aS6GjOkDyip/8A9OMmMWZEyOWkH1jyPJWlVGmyLtYCZpkywZcyqmqBrGAmrpFzcr+/B7SvU0+4LHF4DiTAgQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV2PR04MB11834
 
-The Device 3 Extended Capability (DEV3_CTL) lets software enable a
-device's 14-Bit Tag Requester and 14-Bit Tag Completer behavior.
-Those enable bits, however, are only meaningful while the link
-operates in flit mode; in non-flit mode the upper 4 tag bits are not
-transmitted on the wire, so a requester that still has them enabled
-emits TLPs whose completions the requester can no longer match. The
-visible symptom on the first downstream TLP after such a reset is
-Completion Timeout plus Unexpected Completion on the root/switch
-port.
+Previously, configuration and preparation required two separate calls. This
+works well when configuration is done only once during initialization.
 
-The PCI core currently does not save/restore DEV3_CTL, and nothing
-re-evaluates the 14-Bit Tag enable bits when the link mode changes.
-Across a Secondary Bus Reset, DPC trigger/release, slot reset, AER
-bus reset, FLR, or D3cold->D0 bridge resume the link can come back
-in non-flit mode while DEV3_CTL still advertises 14-bit tagging,
-which breaks the very first config read the kernel issues to the
-endpoint.
+However, in cases where the burst length or source/destination address must
+be adjusted for each transfer, calling two functions is verbose.
 
-Address this with two complementary pieces of work in one patch:
+	if (dmaengine_slave_config(chan, &sconf)) {
+		dev_err(dev, "DMA slave config fail\n");
+		return -EIO;
+	}
 
-1. Save and restore DEV3_CTL across pci_save_state() /
-   pci_restore_state().  Allocate the save buffer in pci_dev3_init()
-   for every PCIe device that exposes the Device 3 Extended
-   Capability, save DEV3_CTL only (DEV3_STA is RW1C and not
-   restored), and on restore sanitize the saved value: if the device
-   advertises 14-Bit Tag support but flit mode is no longer active
-   (checked via the live LNKSTA2.Flit_Mode and DEV3_STA.Segment
-   Captured), drop PCI_DEV3_CTL_14BIT_TAG_REQ_EN and
-   PCI_DEV3_CTL_14BIT_TAG_COMP_EN before writing DEV3_CTL back.
+	tx = dmaengine_prep_slave_single(chan, dma_local, len, dir, flags);
 
-   This covers every path that goes through pci_dev_restore(),
-   including the endpoint side of SBR/slot reset/D3cold resume.
+After new API added
 
-2. Add pci_bridge_refresh_14bit_tag() and call it from the two
-   universal choke points where the link mode can change but
-   pci_dev_restore() does not necessarily run on the bridge itself:
+	tx = dmaengine_prep_config_single(chan, dma_local, len, dir, flags, &sconf);
 
-     - pci_bridge_wait_for_secondary_bus() runs after every family
-       of bridge-mediated reset (SBR via pci_bridge_secondary_bus_
-       reset(), DPC release via dpc_reset_link(), AER bus reset via
-       pci_bus_error_reset(), slot reset via pciehp_reset_slot(),
-       and D3cold->D0 resume via pci_pm_bridge_power_up_actions()).
-       The helper is called there immediately after the link is
-       known active but before pci_dev_wait() issues the first
-       downstream config read, so the requester is fixed up before
-       any TLP is sent.
+Additional, prevous two calls requires additional locking to ensure both
+steps complete atomically.
 
-     - __pcie_update_link_speed() is where bus->flit_mode is
-       authoritatively updated whenever the kernel observes a link
-       change: initial enumeration, manual pcie_retrain_link()
-       (ASPM common-clock, target-speed change), bwctrl IRQ from
-       autonomous HW speed changes, and the pciehp link-status
-       poll.  Calling the helper there covers retrain paths that
-       never go through pci_bridge_wait_for_secondary_bus().
+    mutex_lock()
+    dmaengine_slave_config()
+    dmaengine_prep_slave_single()
+    mutex_unlock()
 
-   The helper re-reads the bridge's own LNKSTA2.Flit_Mode, fixes the
-   bridge's DEV3_CTL first (because the bridge is the requester for
-   outbound config/MMIO TLPs and is what produces the post-reset
-   error storm), refreshes bus->flit_mode, then walks the
-   subordinate bus to fix every device that advertises 14-Bit Tag
-   support.  All bridge accesses are to the bridge's own config
-   space on the primary bus, so the fix runs safely before any
-   potentially-broken downstream TLP.  Operation is idempotent:
-   hardware is touched only when the enable bits are set and flit
-   is no longer active.
+after new API added, mutex lock can be moved. See patch
+     nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
 
-   To call the helper from __pcie_update_link_speed(), move that
-   function's body from a static inline in drivers/pci/pci.h to an
-   ordinary out-of-line definition in drivers/pci/probe.c (pure
-   refactor, no functional change for existing callers).
-
-Also add the missing DEV3 14-Bit Tag bit names to
-include/uapi/linux/pci_regs.h:
-PCI_DEV3_CAP_14BIT_TAG_{COMP,REQ} and
-PCI_DEV3_CTL_14BIT_TAG_{COMP,REQ}_EN.
-
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
 ---
- drivers/pci/pci.c             | 213 ++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |  17 +--
- drivers/pci/probe.c           |  32 +++++
- include/uapi/linux/pci_regs.h |   4 +
- 4 files changed, 254 insertions(+), 12 deletions(-)
+Changes in v5:
+- collect Mani's reviewed-by tags
+- use kernel doc for new APIs.
+- Link to v4: https://lore.kernel.org/r/20260506-dma_prep_config-v4-0-85b3d22babff@nxp.com
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0be4e263bca0..ad1a282a4e63 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1682,6 +1682,199 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
- 	pcie_capability_write_word(dev, PCI_EXP_SLTCTL2, cap[i++]);
- }
- 
-+static int pci_save_dev3_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	u32 *cap;
-+	int pos;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DEV3);
-+	if (!pos)
-+		return 0;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DEV3);
-+	if (!save_state)
-+		return -ENOMEM;
-+
-+	cap = (u32 *)&save_state->cap.data[0];
-+	pci_read_config_dword(dev, pos + PCI_DEV3_CTL, &cap[0]);
-+
-+	return 0;
-+}
-+
-+static void pci_restore_dev3_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	u32 *cap, val, dev3_cap, dev3_sta;
-+	u16 lnksta2 = 0;
-+	bool flit_now;
-+	int pos;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DEV3);
-+	if (!pos)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DEV3);
-+	if (!save_state)
-+		return;
-+
-+	cap = (u32 *)&save_state->cap.data[0];
-+	val = cap[0];
-+
-+	/*
-+	 * The 14-Bit Tag enable bits in DEV3_CTL are only valid in flit
-+	 * mode.  On devices that advertise 14-Bit Tag support, sanitize
-+	 * the saved value before writing it back, so that callers that
-+	 * issue further TLPs through this device after restore see a
-+	 * coherent enable state.  On other devices (and for any other
-+	 * DEV3_CTL bits, including future architected or vendor-specific
-+	 * ones), the saved value is written back unchanged.
-+	 *
-+	 * Note: bridge-side and link-event paths are handled separately by
-+	 * pci_bridge_refresh_14bit_tag(), which runs from
-+	 * pci_bridge_wait_for_secondary_bus() and __pcie_update_link_speed()
-+	 * and clears the bits directly in hardware as soon as the link is
-+	 * observed to leave flit mode.  This function's responsibility is
-+	 * narrowed to the save-buffer-restore path.
-+	 */
-+	pci_read_config_dword(dev, pos + PCI_DEV3_CAP, &dev3_cap);
-+	if (dev3_cap & (PCI_DEV3_CAP_14BIT_TAG_REQ |
-+			PCI_DEV3_CAP_14BIT_TAG_COMP)) {
-+		/*
-+		 * Re-check link state here too: pci_restore_state() may run
-+		 * on paths where the link has changed mode but
-+		 * pci_bridge_refresh_14bit_tag() has not yet been called for
-+		 * this device.  Check both LNKSTA2.Flit_Mode (link-level)
-+		 * and DEV3_STA.Segment Captured (end-to-end); both must be
-+		 * active for 14-bit tags.  Refresh bus->flit_mode and
-+		 * dev->fm_enabled in lock-step.
-+		 */
-+		pci_read_config_dword(dev, pos + PCI_DEV3_STA, &dev3_sta);
-+		dev->fm_enabled = !!(dev3_sta & PCI_DEV3_STA_SEGMENT);
-+
-+		pcie_capability_read_word(dev, PCI_EXP_LNKSTA2, &lnksta2);
-+		flit_now = !!(lnksta2 & PCI_EXP_LNKSTA2_FLIT);
-+		if (dev->bus)
-+			dev->bus->flit_mode = flit_now;
-+
-+		if ((!dev->fm_enabled || !flit_now) &&
-+		    (val & (PCI_DEV3_CTL_14BIT_TAG_REQ_EN |
-+			    PCI_DEV3_CTL_14BIT_TAG_COMP_EN))) {
-+			val &= ~(PCI_DEV3_CTL_14BIT_TAG_REQ_EN |
-+				 PCI_DEV3_CTL_14BIT_TAG_COMP_EN);
-+			cap[0] = val;
-+			pci_info(dev, "clearing 14-bit tag enable: flit mode no longer active (LNKSTA2=%#06x, DEV3_STA=%#010x)\n",
-+				 lnksta2, dev3_sta);
-+		}
-+	}
-+
-+	pci_write_config_dword(dev, pos + PCI_DEV3_CTL, val);
-+}
-+
-+/*
-+ * Clear DEV3_CTL.14-Bit Tag {Req,Comp} Enable on @dev if flit mode is
-+ * no longer active.  Touches only @dev's own config space, so it is safe
-+ * to call on a bridge before the first downstream TLP is issued after a
-+ * reset.
-+ *
-+ * 14-Bit Tag enables are only meaningful in flit mode.  If the link came
-+ * back as non-flit (e.g. after SBR, DPC, slot reset, or D3cold resume),
-+ * a requester that still has these bits set will emit TLPs the completer
-+ * cannot match, producing Completion Timeout plus Unexpected Completion
-+ * on the first transaction.
-+ */
-+static void __pci_dev_clear_stale_14bit_tag(struct pci_dev *dev, bool flit_now)
-+{
-+	u32 dev3_cap, dev3_ctl, dev3_sta;
-+	int pos;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DEV3);
-+	if (!pos)
-+		return;
-+
-+	pci_read_config_dword(dev, pos + PCI_DEV3_CAP, &dev3_cap);
-+	if (!(dev3_cap & (PCI_DEV3_CAP_14BIT_TAG_REQ |
-+			  PCI_DEV3_CAP_14BIT_TAG_COMP)))
-+		return;
-+
-+	pci_read_config_dword(dev, pos + PCI_DEV3_STA, &dev3_sta);
-+	dev->fm_enabled = !!(dev3_sta & PCI_DEV3_STA_SEGMENT);
-+
-+	if (flit_now && dev->fm_enabled)
-+		return;
-+
-+	pci_read_config_dword(dev, pos + PCI_DEV3_CTL, &dev3_ctl);
-+	if (!(dev3_ctl & (PCI_DEV3_CTL_14BIT_TAG_REQ_EN |
-+			  PCI_DEV3_CTL_14BIT_TAG_COMP_EN)))
-+		return;
-+
-+	dev3_ctl &= ~(PCI_DEV3_CTL_14BIT_TAG_REQ_EN |
-+		      PCI_DEV3_CTL_14BIT_TAG_COMP_EN);
-+	pci_write_config_dword(dev, pos + PCI_DEV3_CTL, dev3_ctl);
-+	pci_info(dev, "cleared 14-bit Tag enable: flit mode no longer active (DEV3_STA=%#010x)\n",
-+		 dev3_sta);
-+}
-+
-+/**
-+ * pci_bridge_refresh_14bit_tag - Drop stale 14-Bit Tag enables across a link
-+ * @bridge: PCIe bridge whose link may have changed mode
-+ *
-+ * Re-evaluate the bridge's own DEV3_CTL 14-Bit Tag enables against the
-+ * live LNKSTA2.Flit_Mode, then walk the bridge's subordinate bus and do
-+ * the same for every device that advertises 14-Bit Tag support.  Also
-+ * refresh bus->flit_mode so the rest of the PCI core sees a consistent
-+ * view of the link.
-+ *
-+ * Called from every kernel-visible link state change site:
-+ *   - pci_bridge_wait_for_secondary_bus() (covers SBR, DPC release, slot
-+ *     reset, AER bus reset, bridge D3cold->D0 resume).
-+ *   - __pcie_update_link_speed() (covers manual retrain, bwctrl IRQ,
-+ *     hotplug link status check, initial enumeration).
-+ *
-+ * Safe to call repeatedly; only writes hardware when the enable bits are
-+ * set and flit mode is no longer active.
-+ */
-+void pci_bridge_refresh_14bit_tag(struct pci_dev *bridge)
-+{
-+	struct pci_bus *bus;
-+	struct pci_dev *child;
-+	u16 lnksta2 = 0;
-+	bool flit_now;
-+
-+	if (!bridge || !pci_is_pcie(bridge))
-+		return;
-+
-+	pcie_capability_read_word(bridge, PCI_EXP_LNKSTA2, &lnksta2);
-+	flit_now = !!(lnksta2 & PCI_EXP_LNKSTA2_FLIT);
-+
-+	/*
-+	 * Fix the bridge itself first.  The bridge is the requester for
-+	 * outbound config/MMIO TLPs, so stale 14-bit Tag enables here are
-+	 * what produce the post-reset Completion Timeout / Unexpected
-+	 * Completion failure.
-+	 */
-+	__pci_dev_clear_stale_14bit_tag(bridge, flit_now);
-+
-+	bus = bridge->subordinate;
-+	if (!bus)
-+		return;
-+
-+	bus->flit_mode = flit_now;
-+
-+	/*
-+	 * Walk the secondary bus.  pci_restore_dev3_state() only fires on
-+	 * paths that go through pci_dev_restore(); DPC release, hotplug
-+	 * link status updates, and similar paths do not.  Fix those too.
-+	 */
-+	down_read(&pci_bus_sem);
-+	list_for_each_entry(child, &bus->devices, bus_list)
-+		__pci_dev_clear_stale_14bit_tag(child, flit_now);
-+	up_read(&pci_bus_sem);
-+}
-+
- static int pci_save_pcix_state(struct pci_dev *dev)
- {
- 	int pos;
-@@ -1738,6 +1931,10 @@ int pci_save_state(struct pci_dev *dev)
- 	if (i != 0)
- 		return i;
- 
-+	i = pci_save_dev3_state(dev);
-+	if (i != 0)
-+		return i;
-+
- 	i = pci_save_pcix_state(dev);
- 	if (i != 0)
- 		return i;
-@@ -1815,6 +2012,7 @@ static void pci_restore_config_space(struct pci_dev *pdev)
- void pci_restore_state(struct pci_dev *dev)
- {
- 	pci_restore_pcie_state(dev);
-+	pci_restore_dev3_state(dev);
- 	pci_restore_pasid_state(dev);
- 	pci_restore_pri_state(dev);
- 	pci_restore_ats_state(dev);
-@@ -4745,6 +4943,14 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
- 		pci_dbg(dev, "waiting %d ms for downstream link\n", delay);
- 		msleep(delay);
- 
-+		/*
-+		 * The link has had a chance to come back; refresh the
-+		 * bridge's (and subtree's) DEV3_CTL 14-Bit Tag enables
-+		 * against the live LNKSTA2.Flit_Mode before we issue the
-+		 * first config TLP to the child.
-+		 */
-+		pci_bridge_refresh_14bit_tag(dev);
-+
- 		if (!pci_dev_wait(child, reset_type, PCI_RESET_WAIT - delay))
- 			return 0;
- 
-@@ -4772,6 +4978,13 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
- 		return -ENOTTY;
- 	}
- 
-+	/*
-+	 * Link is up.  Refresh the bridge's (and subtree's) DEV3_CTL
-+	 * 14-Bit Tag enables against the live LNKSTA2.Flit_Mode before
-+	 * we issue the first config TLP to the child below.
-+	 */
-+	pci_bridge_refresh_14bit_tag(dev);
-+
- 	return pci_dev_wait(child, reset_type,
- 			    PCIE_RESET_READY_POLL_MS - delay);
- }
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 19660d068fb7..a47a0f3ad2e2 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -633,21 +633,14 @@ enum pcie_link_change_reason {
- 	PCIE_HOTPLUG,
- };
- 
--static inline void __pcie_update_link_speed(struct pci_bus *bus,
--					    enum pcie_link_change_reason reason,
--					    u16 linksta, u16 linksta2)
--{
--	bus->cur_bus_speed = pcie_link_speed[linksta & PCI_EXP_LNKSTA_CLS];
--	bus->flit_mode = (linksta2 & PCI_EXP_LNKSTA2_FLIT) ? 1 : 0;
--
--	trace_pcie_link_event(bus,
--			     reason,
--			     FIELD_GET(PCI_EXP_LNKSTA_NLW, linksta),
--			     linksta & PCI_EXP_LNKSTA_LINK_STATUS_MASK);
--}
-+void __pcie_update_link_speed(struct pci_bus *bus,
-+			      enum pcie_link_change_reason reason,
-+			      u16 linksta, u16 linksta2);
- 
- void pcie_update_link_speed(struct pci_bus *bus, enum pcie_link_change_reason reason);
- 
-+void pci_bridge_refresh_14bit_tag(struct pci_dev *bridge);
-+
- /* Single Root I/O Virtualization */
- struct pci_sriov {
- 	int		pos;		/* Capability position */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 748c7a198262..27eb97b22c36 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -826,6 +826,30 @@ const char *pci_speed_string(enum pci_bus_speed speed)
- }
- EXPORT_SYMBOL_GPL(pci_speed_string);
- 
-+void __pcie_update_link_speed(struct pci_bus *bus,
-+			      enum pcie_link_change_reason reason,
-+			      u16 linksta, u16 linksta2)
-+{
-+	bus->cur_bus_speed = pcie_link_speed[linksta & PCI_EXP_LNKSTA_CLS];
-+	bus->flit_mode = (linksta2 & PCI_EXP_LNKSTA2_FLIT) ? 1 : 0;
-+
-+	trace_pcie_link_event(bus,
-+			      reason,
-+			      FIELD_GET(PCI_EXP_LNKSTA_NLW, linksta),
-+			      linksta & PCI_EXP_LNKSTA_LINK_STATUS_MASK);
-+
-+	/*
-+	 * Re-evaluate DEV3_CTL 14-Bit Tag enables on this bridge and its
-+	 * subordinate bus.  Any time bus->flit_mode is updated, the link
-+	 * has just changed state; if flit mode is no longer active, the
-+	 * bridge and downstream devices must drop their 14-Bit Tag enables
-+	 * before further TLPs are issued, or the requester (the bridge)
-+	 * will tag config/MMIO requests with 14-bit tags that the
-+	 * completer can no longer echo back in non-flit mode.
-+	 */
-+	pci_bridge_refresh_14bit_tag(bus->self);
-+}
-+
- void pcie_update_link_speed(struct pci_bus *bus,
- 			    enum pcie_link_change_reason reason)
- {
-@@ -2320,11 +2344,19 @@ static void pci_dev3_init(struct pci_dev *pdev)
- {
- 	u16 cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DEV3);
- 	u32 val = 0;
-+	int err;
- 
- 	if (!cap)
- 		return;
- 	pci_read_config_dword(pdev, cap + PCI_DEV3_STA, &val);
- 	pdev->fm_enabled = !!(val & PCI_DEV3_STA_SEGMENT);
-+
-+	/* Save buffer for DEV3_CTL only; DEV3_STA is RW1C and is not restored. */
-+	err = pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_DEV3,
-+					  sizeof(u32));
-+	if (err)
-+		pci_warn(pdev,
-+			 "unable to preallocate Device 3 save buffer\n");
- }
- 
- /**
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 14f634ab9350..6e00dbdf04eb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1254,7 +1254,11 @@
- 
- /* Device 3 Extended Capability */
- #define PCI_DEV3_CAP		0x04	/* Device 3 Capabilities Register */
-+#define  PCI_DEV3_CAP_14BIT_TAG_COMP	0x00000004 /* 14-Bit Tag Completer Supported */
-+#define  PCI_DEV3_CAP_14BIT_TAG_REQ	0x00000008 /* 14-Bit Tag Requester Supported */
- #define PCI_DEV3_CTL		0x08	/* Device 3 Control Register */
-+#define  PCI_DEV3_CTL_14BIT_TAG_COMP_EN	0x00000002 /* 14-Bit Tag Completer Enable */
-+#define  PCI_DEV3_CTL_14BIT_TAG_REQ_EN	0x00000004 /* 14-Bit Tag Requester Enable */
- #define PCI_DEV3_STA		0x0c	/* Device 3 Status Register */
- #define  PCI_DEV3_STA_SEGMENT	0x8	/* Segment Captured (end-to-end flit-mode detected) */
- 
--- 
-2.25.1
+Changes in v4:
+- remove void* context in config_prep() callback
+- use spin lock to protect config() and prep().
+- Link to v3: https://lore.kernel.org/r/20260105-dma_prep_config-v3-0-a8480362fd42@nxp.com
+
+Changes in v3:
+- collect review tags
+- create safe version in framework
+- Link to v2: https://lore.kernel.org/r/20251218-dma_prep_config-v2-0-c07079836128@nxp.com
+
+Changes in v2:
+- Use name dmaengine_prep_config_single() and dmaengine_prep_config_sg()
+- Add _safe version to avoid confuse, which needn't additional mutex.
+- Update document/
+- Update commit message. add () for function name. Use upcase for subject.
+- Add more explain for remove lock.
+- Link to v1: https://lore.kernel.org/r/20251208-dma_prep_config-v1-0-53490c5e1e2a@nxp.com
+
+---
+Frank Li (9):
+      dmaengine: Add API to combine configuration and preparation (sg and single)
+      dmaengine: Add safe API to combine configuration and preparation
+      PCI: endpoint: pci-epf-test: Use dmaenigne_prep_config_single() to simplify code
+      dmaengine: dw-edma: Use new .device_prep_config_sg() callback
+      dmaengine: dw-edma: Pass dma_slave_config to dw_edma_device_transfer()
+      nvmet: pci-epf: Remove unnecessary dmaengine_terminate_sync() on each DMA transfer
+      nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
+      PCI: epf-mhi: Use dmaengine_prep_config_single() to simplify code
+      crypto: atmel: Use dmaengine_prep_config_single() API
+
+ Documentation/driver-api/dmaengine/client.rst |   9 ++
+ drivers/crypto/atmel-aes.c                    |  10 +-
+ drivers/dma/dmaengine.c                       |   2 +
+ drivers/dma/dw-edma/dw-edma-core.c            |  41 +++++--
+ drivers/nvme/target/pci-epf.c                 |  21 +---
+ drivers/pci/endpoint/functions/pci-epf-mhi.c  |  52 +++------
+ drivers/pci/endpoint/functions/pci-epf-test.c |   8 +-
+ include/linux/dmaengine.h                     | 148 ++++++++++++++++++++++++--
+ 8 files changed, 207 insertions(+), 84 deletions(-)
+---
+base-commit: b9303e6bff706758c167af686b5315ad00233bf8
+change-id: 20251204-dma_prep_config-654170d245a2
+
+Best regards,
+--
+Frank Li <Frank.Li@nxp.com>
 
