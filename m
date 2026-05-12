@@ -1,108 +1,112 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.34.181.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA822FD1AA;
-	Tue, 12 May 2026 08:27:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A5B4ADD85;
+	Tue, 12 May 2026 08:43:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.34.181.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778574445; cv=none; b=J5zJ4Oij8q+ulhS+F9D7/eVyC1KfUtl4Dm6j0lW9q2DZrfCOQS+lvdtdskm6fOVLttFivgfsJfG4AJIN5fGuvzWYiTF28/OdO8P7l69MDEPLWX32q+e/QnhP57ZYmLCGORjg/JgIcoppah3XFhWzQ6Dgz3fjFjgC6QE/v/jVtNQ=
+	t=1778575413; cv=none; b=cNHZcpdJsl+ygGfn9eMRMR2uYBqFaigY851jdvgSXL9TQv5CJkQVSwYKG+rgQa/TnFy6X5ndhax/t8y1FQtIbsne7Qdn0LylvSAuwyDF/ezbZL246BPvpKnkhjd4ABCIp+6DG0NQuX17xiXkdcG2bSt2dFk+tZ+Unp/pBCX3PUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778574445; c=relaxed/simple;
-	bh=MGxfkB4f1YPzv+2rQ0ibvF//HUAcwxsbrKYfamaw4gw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J4wItfaRNfSF5CQQjDJJKMv5nXBpmWv5278W1ji00k+xjHZz0FMee19Yv8EZs8CNGGc5rpo8ZJQvSGDgigJuGWqP7xV+pgbchl4DRufTISGOZd97jKUvTujz7VG3xUo+Q2kGE8y4AQAQc4MlsM2dkBKshIC/80wUJ0FSrNHNANs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mxP6UpVR; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1778575413; c=relaxed/simple;
+	bh=oI4YbKwga5mAud22gJRAy9x+oiS3jV+SeTUTJdgcZpo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=R2lNb8S2sxp3U9UPfP2ugazcYyg01TCOJPl0C/qvwAXQhw5frd5mpkWSA/Y5AJaKLMtXJhSmY/U3XugDzbFGRI6/txdXNoiRaR2u2ALzFhjUZX06EMzIDKlTDa0yaElmhfwrpeoNqIHei5okKWLPvYqUOCqDDiO9gLgacOTz1ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=PD4Ffk/g; arc=none smtp.client-ip=52.34.181.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mxP6UpVR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778574444; x=1810110444;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=MGxfkB4f1YPzv+2rQ0ibvF//HUAcwxsbrKYfamaw4gw=;
-  b=mxP6UpVRGvhUe7dC+OOKTGn5nONjvvjbQXAm9BlNlFIKEu3u0SNM8G/W
-   dbM9sWVgTqvY5wGXltcPHbDfnTKiB2m53oS8RBuLyTFk5mMZnh5BZppXn
-   g9bZNVr08iYBtVdJO7h1aNna86vJIVdAooYl0qdywfTVEWXTr1uWepHIr
-   C0TcuSHm9CBPisgDAz0v/CWbibZxuLGHtHqnVOGROL7JSEKBHr0IveSry
-   /Et8TLggmDoRfSTkK33mldZnhZI9hV5ZdHL8PLuDrnrmI/QQeIu9hwRsW
-   yqvZaFg2T5BaavA2Pe3n1ue6pESDt7Qvf2q7cLM5LpFAyxPxf2SlQ4DDy
-   A==;
-X-CSE-ConnectionGUID: cX8URBfgTy6fINTtW9bZ0g==
-X-CSE-MsgGUID: GSY7K2HoSoinQCH/rVW7rw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11783"; a="67005853"
-X-IronPort-AV: E=Sophos;i="6.23,230,1770624000"; 
-   d="scan'208";a="67005853"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 01:27:23 -0700
-X-CSE-ConnectionGUID: oL6Qld/uRB+lKqPw/BF18A==
-X-CSE-MsgGUID: t8LGiDMoQ1OO5IoNe+vLIA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,230,1770624000"; 
-   d="scan'208";a="233388576"
-Received: from kniemiec-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.112])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 01:27:15 -0700
-Date: Tue, 12 May 2026 11:27:12 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Charles Keepax <ckeepax@opensource.cirrus.com>,
-	Richard Fitzgerald <rf@opensource.cirrus.com>,
-	David Rhodes <david.rhodes@cirrus.com>,
-	Linus Walleij <linusw@kernel.org>, Len Brown <lenb@kernel.org>,
-	Daniel Scally <djrscally@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Alison Schofield <alison.schofield@intel.com>,
-	Vishal Verma <vishal.l.verma@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>, Dan Williams <djbw@kernel.org>,
-	Lizhi Hou <lizhi.hou@amd.com>, driver-core@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-sound@vger.kernel.org, patches@opensource.cirrus.com,
-	linux-gpio@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>
-Subject: Re: [PATCH v7 5/8] cxl/test: Use fw_devlink_set_device()
-Message-ID: <agLkYL3B4woGIDCP@ashevche-desk.local>
-References: <20260511155930.34604-1-herve.codina@bootlin.com>
- <20260511155930.34604-6-herve.codina@bootlin.com>
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="PD4Ffk/g"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1778575404; x=1810111404;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=dKN+2ZEAVXH7CDPcSWltN5Ct4zDBfKhT15rL40JkLZs=;
+  b=PD4Ffk/gREckhIgRmtpchVvRMjV+cPE25j3JUQs/VYb1SyqTuNr2NOlu
+   bhiy78e75zO1oF4W9CwBl57jUyfhsyKkGg4I4zeLc9ZKCfMmcXLBPiJZL
+   6Sr9vPgrSAUkc0/RpyGprZxRwdmBYGz/5H4ZZwANB4C//bD0CLhF03jSI
+   l0MHZg01xB0JgJwykAqLIPkxEs6XDKtyeybIJ9If4p0Cp6y1li4fN84Gm
+   UXYTAUmgUyTt/kkiqJ661o6943MW7oOpCAgkDVeFSCw05H3MC4+fSFsLk
+   lhyvCRCaxyrpkQZf7/aVKkuO7XWJ1LcJaEOzY+jxz7B7daaePbZ691co6
+   Q==;
+X-CSE-ConnectionGUID: ELZo8o+fSpeequ03M+1Hzg==
+X-CSE-MsgGUID: pr1doGV8S7GeTirC7o6MKw==
+X-IronPort-AV: E=Sophos;i="6.23,230,1770595200"; 
+   d="scan'208";a="19414108"
+Received: from ip-10-5-0-115.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.0.115])
+  by internal-pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 08:43:20 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:6847]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.8.77:2525] with esmtp (Farcaster)
+ id 85fb1caa-6e75-469b-8614-2accbaa9e8c3; Tue, 12 May 2026 08:43:20 +0000 (UTC)
+X-Farcaster-Flow-ID: 85fb1caa-6e75-469b-8614-2accbaa9e8c3
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Tue, 12 May 2026 08:43:18 +0000
+Received: from dev-dsk-ravib-2a-f2262d1b.us-west-2.amazon.com (10.169.187.85)
+ by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Tue, 12 May 2026 08:43:18 +0000
+From: Ravi Kumar Bandi <ravib@amazon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<ravib@amazon.com>
+Subject: [PATCH] PCI/sysfs: Check IORESOURCE_DISABLED in resource mmap handler
+Date: Tue, 12 May 2026 08:43:15 +0000
+Message-ID: <20260512084315.32564-1-ravib@amazon.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260511155930.34604-6-herve.codina@bootlin.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D033UWA004.ant.amazon.com (10.13.139.85) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On Mon, May 11, 2026 at 05:59:25PM +0200, Herve Codina wrote:
-> The code set directly fwnode.dev field.
-> 
-> Use the dedicated fw_devlink_set_device() helper to perform this
-> operation.
+pci_mmap_resource() does not check IORESOURCE_DISABLED before mapping
+a PCI BAR resource into userspace. This allows new mmaps to succeed
+even after a device has been marked disabled or soft-unplugged by the
+driver to prevent further access.
 
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Add the check to return -ENODEV when the resource is disabled, blocking
+new userspace mmaps of BAR resources after device removal.
 
+Tested by marking the PCI BAR resource as disabled and verifying that
+a subsequent mmap attempt fails with -ENODEV.
+
+$ sudo python3 -c "
+import os, mmap, errno
+try:
+    fd = os.open('/sys/bus/pci/devices/0001:01:00.0/resource0',os.O_RDONLY)
+    mmap.mmap(fd, 4096, access=mmap.ACCESS_READ)
+    print('mmap succeeded')
+except OSError as e:
+    print(f'mmap failed - {e}')
+"
+mmap failed - [Errno 19] No such device
+$
+
+Signed-off-by: Ravi Kumar Bandi <ravib@amazon.com>
+---
+ drivers/pci/pci-sysfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d37860841260..61ae259f8ca8 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1089,6 +1089,9 @@ static int pci_mmap_resource(struct kobject *kobj, const struct bin_attribute *a
+ 	if (ret)
+ 		return ret;
+ 
++	if (res->flags & IORESOURCE_DISABLED)
++		return -ENODEV;
++
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.47.3
 
