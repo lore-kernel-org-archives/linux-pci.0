@@ -1,134 +1,100 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590C337206D
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 21:24:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A438A366831;
+	Tue, 12 May 2026 21:25:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778621072; cv=none; b=KO8SRZCgiX18Bk60K+vRuOmd1CWwRkbq+bAzWfHrTkWd6kv6p44ojeXdsoH7S2luGTC8pLh+EMbd2K0fSXR3y1gvh39Ehjg9pHJ7LsrbHfSEP4iiLIDBiineVsndOED7paVUNemrYt24Wv67VoNYeh42a+Xgk+gyExY+L/hFVPI=
+	t=1778621141; cv=none; b=TL1SylxGhEh1bWa8aCMx62ih0T7ZMScy1n4Wa5ie+R6jXpI/Svtjxv2P8J/J3ZazvlqJPncdiIPPW1bXuuhE0m9Lt2JgetKfgg/HPJbPXozK+xvVhvJ8cV8orwsRW81RA0g6qTMyBG7nArPTBaPLhaD0zqaS6UhPO7cFMi83N2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778621072; c=relaxed/simple;
-	bh=x+mBFqZCy0/lg4AwvtKW+2fdL6v3igWT0DYWn1j3ON0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CbI5Topu3OdbUiTSjhTmJIGvwMtqKmzQgwENMYjspgtG55It1HbLHjt99X+VrTWivB94IvDKisJ1f4birTAlYUjrPxb5YcyenetPjn3fELj0iOZ50e3kJciXSUxo9yjeR4qRx7ToyrryMFG0a4ipr7NL39gd5oZElUfxfhVQjdY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X8SOd+KM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778621141; c=relaxed/simple;
+	bh=EJnWDfRo+uPbHrOqa3qgWqMaN3gN4wh4Fsfhj1nSvLQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rAqg+pHM6zNxQt2xjlxDqH/EE5ny+cm72zIO7mlLUsAoF7iU496c7f4qLcOqwkYwJLBDcfMMPKZNSv3SvWtBVvV2cTyFrmxyfTKY4/jKrc/oPu+/pwDCXdkDTMEtJyomzsiu9R1iQZqjEEV9nTGbgZW6+WEdUlLZh9QwOECA+RA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Avt+EHCV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X8SOd+KM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB324C2BCB0;
-	Tue, 12 May 2026 21:24:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Avt+EHCV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 208D5C2BCB0;
+	Tue, 12 May 2026 21:25:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778621072;
-	bh=x+mBFqZCy0/lg4AwvtKW+2fdL6v3igWT0DYWn1j3ON0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=X8SOd+KMo3FbRuVAALtlQhubnNSsBOGToGNWv7ouTFT8MxY1nzCy0Hajihet/oiLD
-	 bZMtEZtJI+QjpGsOFJiMoK5gMnlaxCgAZuD1d9iGS5eFNsf3K3dR50jk0pxrzbfQtL
-	 rXTZfWeNm0OQIXjy8bOKaW17KXVMS2kH9chi/+tc7VcWUzT6I55k1hC3iRF+Oaq+Xk
-	 MsMoWGjGktSz4TSH8O7HJUY9EJW8iJmEKrpZhHeSW6wmABYPxTOSFrPu2F83OqcKN2
-	 pMZutM6y3ELAYWwYHTv5Zi1r93MUYAACNogTL6oBF5ZiTGArLDlBmKb11tZ7d08u7Z
-	 tlgIl0H9Mp1hA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 2/4] hyperv: Introduce new hypercall interfaces used
- by Hyper-V guest IOMMU
-Reply-To: sashiko@lists.linux.dev
-To: "Yu Zhang" <zhangyu1@linux.microsoft.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260511162408.1180069-3-zhangyu1@linux.microsoft.com>
-References: <20260511162408.1180069-3-zhangyu1@linux.microsoft.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 12 May 2026 21:24:31 +0000
-Message-Id: <20260512212431.CB324C2BCB0@smtp.kernel.org>
+	s=k20201202; t=1778621141;
+	bh=EJnWDfRo+uPbHrOqa3qgWqMaN3gN4wh4Fsfhj1nSvLQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Avt+EHCVMfTlk+wRz1p7d5iQ9oECUodk6IeA/e2U+soWUXY8AjlhsEDpTMMnR3Q09
+	 5NfG8l208seCxH/fqWx/SbhOPY4X375jr4U/+gR/wKrrZquUgQocXIOoZeYIY+z4e/
+	 YEJdarFRN4W+2E/gPLS6wJ8wjP7cgClBzWhi5f9U939wrj9lCpEVjHqK9pztnX7eB7
+	 5VGlzvJNRvs0vqpV558tHFtUlJDFhQuLvx5lofEmQ04MkPAPyElARm0O6CyQGwrn7l
+	 wG2lfhs2tRHwdjh+xGSxKLD6rRP9KVGLstZp9y9DYzdzyXn8F1xn/cceXiYRzWNNkq
+	 sQ/u3r0OL3DeA==
+Received: by pali.im (Postfix)
+	id 0526AB57; Tue, 12 May 2026 23:25:31 +0200 (CEST)
+Date: Tue, 12 May 2026 23:25:31 +0200
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	mani@kernel.org, vigneshr@ti.com, jingoohan1@gmail.com,
+	thomas.petazzoni@bootlin.com, ryder.lee@mediatek.com,
+	jianjun.wang@mediatek.com, claudiu.beznea.uj@bp.renesas.com,
+	mpillai@cadence.com, robh@kernel.org, s-vadapalli@ti.com,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org,
+	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 6/8] PCI: aardvark: Add 100 ms delay after link
+ training
+Message-ID: <20260512212531.jupoocz7acv22qyg@pali>
+References: <20260506152346.166056-1-18255117159@163.com>
+ <20260506152346.166056-7-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260506152346.166056-7-18255117159@163.com>
+User-Agent: NeoMutt/20180716
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Low] Missing 4-byte padding in `struct hv_input_create_device_domain` re=
-sulting in an unaligned ABI structure size.
-- [Low] Preprocessor macros are defined inside structure definitions.
---
+On Wednesday 06 May 2026 23:23:44 Hans Zhang wrote:
+> The Aardvark PCIe controller driver waits for the link to come up but
+> does not implement the mandatory 100 ms delay after link training
+> completes for speeds greater than 5.0 GT/s (PCIe r6.0 sec 6.6.1).
+> 
+> The driver already maintains a 'link_gen' field that holds the negotiated
+> link speed. Use it together with pcie_wait_after_link_train() to insert
+> the required delay immediately after confirming that the link is up.
+> 
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index e34bea1ff0ac..526351c21c49 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -350,8 +350,10 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
+>  
+>  	/* check if the link is up or not */
+>  	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+> -		if (advk_pcie_link_up(pcie))
+> +		if (advk_pcie_link_up(pcie)) {
+> +			pcie_wait_after_link_train(pcie->link_gen);
+>  			return 0;
+> +		}
+>  
+>  		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+>  	}
+> -- 
+> 2.34.1
+> 
 
-commit 424b106dd2a0b2fe17c666987a01e49923b0b297
-Author: Wei Liu <wei.liu@kernel.org>
+Are you sure that this is correct to do? Have you checked the A3720
+Functional Specification which describes how to bring PCIe link up?
 
-hyperv: Introduce new hypercall interfaces used by Hyper-V guest IOMMU
+A3720 PCIe controller is buggy and needs more timing hacks to make it
+behave. Playing with random sleeps can break its internal logic.
+I'm not sure if it could be safe without proper testing.
 
-This commit introduces new hypercall interfaces to support the Hyper-V guest
-IOMMU, which allows child partitions to interact with the facility for devi=
-ce,
-domain, and IOTLB management.
-
-> diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
-> index b4cb2fa26e9bc..493608e791b45 100644
-> --- a/include/hyperv/hvhdk_mini.h
-> +++ b/include/hyperv/hvhdk_mini.h
-
-[ ... ]
-
-> +struct hv_input_create_device_domain {
-> +	struct hv_input_device_domain device_domain;
-> +	union hv_create_device_domain_flags create_device_domain_flags;
-> +} __packed;
-
-Should this structure include a 4-byte padding field at the end?
-
-Since the device_domain field is 24 bytes and the create_device_domain_flags
-field is 4 bytes, the structure size is exactly 28 bytes. Other hypercall
-structures in this file explicitly use padding to maintain an 8-byte aligned
-size.
-
-While this might work for a single invocation, if this structure is ever us=
-ed
-in a rep (array) hypercall, would the 28-byte stride misalign subsequent
-elements and cause the hypercall to fail?
-
-[ ... ]
-
-> +struct hv_output_get_iommu_capabilities {
-> +	u32 size;
-> +	u16 reserved;
-> +	u8  max_iova_width;
-> +	u8  max_pasid_width;
-> +
-> +#define HV_IOMMU_CAP_PRESENT (1ULL << 0)
-> +#define HV_IOMMU_CAP_S2 (1ULL << 1)
-> +#define HV_IOMMU_CAP_S1 (1ULL << 2)
-> +#define HV_IOMMU_CAP_S1_5LVL (1ULL << 3)
-> +#define HV_IOMMU_CAP_PASID (1ULL << 4)
-> +#define HV_IOMMU_CAP_ATS (1ULL << 5)
-> +#define HV_IOMMU_CAP_PRI (1ULL << 6)
-
-This isn't a bug, but should these preprocessor macros be moved outside of =
-the
-structure definition?
-
-Macros do not respect C scope, so placing them inside the structure definit=
-ion
-violates standard kernel coding style conventions and might falsely imply t=
-hey
-are locally scoped.
-
-> +
-> +	u64 iommu_cap;
-> +	u64 pgsize_bitmap;
-> +} __packed;
-
-[ ... ]
-
-> +struct hv_output_get_logical_device_property {
-> +#define HV_DEVICE_IOMMU_ENABLED (1ULL << 0)
-
-Similarly, could this macro be moved outside the structure definition to ad=
-here
-to conventional kernel styling?
-
-> +	u64 device_iommu;
-> +	u64 reserved;
-> +} __packed;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511162408.1180=
-069-1-zhangyu1@linux.microsoft.com?part=3D2
+And IIRC A3720 PCIe controller is just PCIe2.0 with 5 GT/s.
