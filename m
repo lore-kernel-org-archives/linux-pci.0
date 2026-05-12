@@ -1,130 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 133201448D5
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 00:44:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D09921448D5
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 00:44:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778546651; cv=none; b=F9EXKVv1d1DEEn+6fsySgvb3boTellha1Ogu4nNGK4NmCbDYRA6BSCwt/jDQPFmaI9baq1CRkZbDP0o6sj9p/AotUin4QEiXL7YTgUdrBs/xja1O4vMBWsVH1Ui4+mkXEVHiyIpKBfSd7fmIEYeX8RiHxA74IoiEMkuGDUJ/mB4=
+	t=1778546701; cv=none; b=PIQyEB0lGiSB6IzLtDApCPtWnuiD8x5JqYQeWTGpi4XUgVKtUO2jtGZo3SRRCecr6mtw3OvOOw3U1LhD993kxq6YKxboYPyhHLsMQfIGe7Fbav81grJ5F2TpKU44ruGYgUc0N2h86xtqPjRbX0gIcO7d1IjPgcbq2UiMRclG9xQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778546651; c=relaxed/simple;
-	bh=4ZWkVf9u/8wTuDGHDpw7AcCFPqEWMtYG7dm6iFF8G2w=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=FjsUtvi8mi/i9jcqLYX3PUhBka++ZOF0RNDyssXWC2N/vc4eNfBVdqq/A9OBUWAruwMNRCG+BgocSokmpnABMYsg+ZzQjoVIHhJ2qXA1YOFsfoqKkYM0oDEavYWOVBs7v5VgzhLWt3hhiGpk7IkvGalDPk9PKZ/LQDVZdhX9HGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cG8fZuMM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778546701; c=relaxed/simple;
+	bh=Qb6skaRFvARfQituJbTnVTEdzNhiETeENg6NcMq2z3o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Rth+UdkI02cYa+Is4l9A4p223iR1WZ4cSbmYUVpyxq8SCJ2DEpVygpsbHt/Ra9oxOGnrpz/7bO3FAl2QDE2rgIitQ2pE56PwhzOSM3u0PLi/hXPMRgfheTHz56sdmQkvcxgT+PKlM0s433kzxz/ONUUQ4Kkv0od1IoFvhTDoyk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nnNhBqO+; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cG8fZuMM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ACB1C2BCB0;
-	Tue, 12 May 2026 00:44:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778546650;
-	bh=4ZWkVf9u/8wTuDGHDpw7AcCFPqEWMtYG7dm6iFF8G2w=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=cG8fZuMM2ThIaFC3IsUGlHRouJFNkEyiVum4K/Di1+k8qslsbPX5c/OthAEfUN4jD
-	 ck/LMjLSeTqvFxyDefkPYYSZqQZU3XKYBK7ZzdY4TI2AcAOYAJuoYZM2lv0TQwEBXr
-	 CJ0eizmTvbVVlDQlJysO5LyJANnV5oUmNa9GZG0q3gz/z2WWfJUnHeL2mA31dFSuJ0
-	 fgbh/lV4z64ZaKaUo4lqN6+GpazmjRmveFVNCkJYdOwGv0icmbqr28bwoglNRBltJw
-	 d2CBJQ5C2HpulK8iFhEChDFVvIW0iOslUKNA+Eh5bgmWu039XO2kPt1UZRAxVGm08L
-	 EzBpkxJeLj5ow==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 3/7] PCI: cadence: HPA: Add post-link delay
-Reply-To: sashiko@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260511055923.37117-4-18255117159@163.com>
-References: <20260511055923.37117-4-18255117159@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 12 May 2026 00:44:10 +0000
-Message-Id: <20260512004410.8ACB1C2BCB0@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nnNhBqO+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=IVtRKKYH3GrG84xaJANJeNCyAfAgs7lgPSkb+N9RnpQ=;
+	b=nnNhBqO+Iyc5SeW2Sewqpuzwcr/jesOwtA13DiAOXzfxus0/YO+6lilE435+vL
+	eatKs8hbQLgH5+TfllMLAh277tO3q/ikO80MHIMYK/EP7iAyxFA35qUFsdk7w8Wi
+	SNtlo/aOGTxmGkMnPYPvyaLgpIx/GFZx+3JW49wfdvJtA=
+Received: from [192.168.50.71] (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgC3qgv0dwJqg4yVEA--.4946S2;
+	Tue, 12 May 2026 08:44:36 +0800 (CST)
+Message-ID: <7bbe1c68-6829-4d1b-ba81-acc5af89d5a1@163.com>
+Date: Tue, 12 May 2026 08:44:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/7] PCI: cadence: Add post-link delay for LGA and
+ j721e glue driver
+To: sashiko@lists.linux.dev
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+References: <20260511055923.37117-3-18255117159@163.com>
+ <20260512002408.101ADC2BCB0@smtp.kernel.org>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260512002408.101ADC2BCB0@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PSgvCgC3qgv0dwJqg4yVEA--.4946S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KFW8KFWUJw4xWryrKrykZrb_yoW8ArWfpF
+	W7u3yfWF48XrW5WanrA3W5X3Waq3Z5C3yUGrsagw18XF1akr9xGFy2qFyfCa9akFZrAw1x
+	Xwnxtw12gw1avFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pKYLyiUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xQ22WoCd-TncQAA3t
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Missing device tree property silently disables the mandatory 100 m=
-s PCIe link training delay.
-- [High] The function `cdns_pcie_hpa_host_link_setup()` aborts the entire P=
-CIe root complex probe if no downstream endpoint is connected.
---
 
-commit 53fefd8ead01e523abe2d99bb9e1db2677c7f7ec
-Author: Hans Zhang <18255117159@163.com>
 
-PCI: cadence: HPA: Add post-link delay
+On 5/12/26 08:24, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [Low] Compilation error in `j721e_pcie_set_link_speed` due to incorrect structure member access on a pointer.
+> --
+> 
+> commit b3897a7e50194e1f9cc94b232c615c7f8f651006
+> Author: Hans Zhang <18255117159@163.com>
+> 
+> PCI: cadence: Add post-link delay for LGA and j721e glue driver
+> 
+> The Cadence LGA PCIe host controller lacks the mandatory 100 ms delay after
+> link training completes for speeds > 5.0 GT/s. This commit adds a
+> max_link_speed field to struct cdns_pcie and inserts the required delay
+> after the link has been successfully established.
+> 
+>> diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+>> index bfdfe98d5aba7..ee85b8e04f5b8 100644
+>> --- a/drivers/pci/controller/cadence/pci-j721e.c
+>> +++ b/drivers/pci/controller/cadence/pci-j721e.c
+>> @@ -206,6 +206,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie *pcie,
+>>   	    (pcie_get_link_speed(link_speed) == PCI_SPEED_UNKNOWN))
+>>   		link_speed = 2;
+>>   
+>> +	pcie->cdns_pcie.max_link_speed = link_speed;
+> 
+> Will this cause a compilation error?
 
-This commit updates the Cadence HPA link setup function to include a=20
-100 ms delay after link training completes for speeds greater than=20
-5.0 GT/s. It also reads the max-link-speed device tree property to=20
-initialize the max link speed if it hasn't been set by a glue driver.
+Sorry. Will change.
 
-> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/dri=
-vers/pci/controller/cadence/pcie-cadence-host-hpa.c
-> index 0f540bed58e88..8ef58ed01daaa 100644
-> --- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
-[ ... ]
-> @@ -304,6 +306,8 @@ int cdns_pcie_hpa_host_link_setup(struct cdns_pcie_rc=
- *rc)
->  	ret =3D cdns_pcie_host_wait_for_link(pcie, cdns_pcie_hpa_link_up);
->  	if (ret)
->  		dev_dbg(dev, "PCIe link never came up\n");
-> +	else
-> +		pci_host_common_link_train_delay(pcie->max_link_speed);
-> =20
->  	return ret;
+Best regards,
+Hans
 
-This isn't a regression introduced by this patch, but since we are modifyin=
-g=20
-this function, does returning ret here abort the entire PCIe root complex=20
-probe if no downstream endpoint is connected?
+> 
+> Looking at struct j721e_pcie, cdns_pcie is defined as a pointer:
+> 
+> struct j721e_pcie {
+> 	struct cdns_pcie	*cdns_pcie;
+> 	struct clk		*refclk;
+> 	...
+> };
+> 
+> Does this need to use the arrow operator instead of a dot
+> (pcie->cdns_pcie->max_link_speed) so it correctly accesses the
+> max_link_speed member?
+> 
+>>   	val = link_speed - 1;
+>>   	ret = regmap_update_bits(syscon, offset, GENERATION_SEL_MASK, val);
+>>   	if (ret)
+> 
 
-When no endpoint is connected, cdns_pcie_host_wait_for_link() returns=20
--ETIMEDOUT. Returning that error back to the caller causes=20
-cdns_pcie_hpa_host_setup() to fail initialization.=20
-
-Could this break hotplug functionality or standard empty-slot handling=20
-when the slot is unoccupied at boot?
-
->  }
-> @@ -313,6 +317,7 @@ int cdns_pcie_hpa_host_setup(struct cdns_pcie_rc *rc)
-[ ... ]
-> @@ -343,6 +348,9 @@ int cdns_pcie_hpa_host_setup(struct cdns_pcie_rc *rc)
->  		rc->cfg_res =3D res;
->  	}
-> =20
-> +	if (pcie->max_link_speed < 1)
-> +		pcie->max_link_speed =3D of_pci_get_max_link_speed(np);
-
-If the max-link-speed property is missing from the device tree,=20
-of_pci_get_max_link_speed() will return -EINVAL.
-
-Will assigning this negative error code directly to pcie->max_link_speed=20
-cause the post-link delay check to fail?
-
-When pci_host_common_link_train_delay() is called:
-
-static inline void pci_host_common_link_train_delay(int max_link_speed)
-{
-        if (max_link_speed > 2)
-                msleep(PCIE_RESET_CONFIG_WAIT_MS);
-}
-
-Since -EINVAL is a negative value, the condition max_link_speed > 2=20
-evaluates to false. This appears to silently bypass the required 100 ms=20
-delay for Gen3+ speeds entirely.
-
-Should the return value of of_pci_get_max_link_speed() be validated=20
-before assignment?
-
-> +
->  	/* Put EROM Bar aperture to 0 */
->  	cdns_pcie_hpa_writel(pcie, REG_BANK_IP_CFG_CTRL_REG, CDNS_PCIE_EROM, 0x=
-0);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511055923.3711=
-7-1-18255117159@163.com?part=3D3
