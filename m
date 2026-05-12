@@ -1,288 +1,248 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FAB837C917
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 13:28:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3424D39EB74;
+	Tue, 12 May 2026 14:01:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778592512; cv=none; b=IyeDk4JY6imTJJ3HH3bNzVjzjFv2CVYQrxUqY6heJdcEMKNY1BflLu4PBRNhC4LQmgO5XV3Om00BmmPhF8iJq5AG7fhrm7Ymb3TJwvnSUEEJ4AsDgkgokjLPSxPrSENPyCH2ZQdeRyZ0H1qJUdOaGvc7x1cHLbgOZSPRH0vQ1Eg=
+	t=1778594461; cv=none; b=TiJyVN0Bp0AdIWVSrnAKcGvL0dn2jZe6DNyVhq00h3eFKXSHIFuiWCWElNRMwna8KL4ajpa/WU0udMXqfFs5Ag5xo0geyYFvZI29pjTZS5hOFB1V0JN8xAzHf+tgvBHgr4mEOUL1Wk60iDhVomrY+w5eG3y8Wbk+6HNU+BXBRvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778592512; c=relaxed/simple;
-	bh=yIiVK1T3FAAQiAh3sp1XgyZQCA7MMuMyr+6wiiABQeg=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oPZ3Ao2dJDlSbQDL/pv7a+/WTP0x8JLFsji4MtXIPh7wsrtH+GiX2YrjFQXZufIIMJ3nwJ4PZo6EanBbChjqVXe8Y0LdxA5MgbtcEZFbNYtDl1ZRSobVdx5FZkzs4HqpJq8r7aravk+Af8Mbx3dIdgVYYcGA29Q3DOyGAUidhbA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=LQ+2Rr97; arc=none smtp.client-ip=80.241.56.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1778594461; c=relaxed/simple;
+	bh=73KY+PJnQz0DVDO55WQRtqfL9KC8eXib5SBHC0nL4q0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gdkJXMUubQZowBBm/+8VeZwJZxpzDyeTlMw0ZoYP9fzJPZaCVzaMexoPmpBOf/ezjy4X1fvRDkDGJLPI2TCFTNyNfX6fXdyRwmhNB/W+LH34X/Al05Z2qtp4/a4DnB32J/LUCamUCw3OEvYBtofQaxwwa6JdEl38g0e8x/ICFxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZsrKNSBj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="LQ+2Rr97"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4gFHTx0z45z9vHM;
-	Tue, 12 May 2026 15:28:21 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1778592501; h=from:from:reply-to:reply-to:subject:subject:date:date:
-	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-	 content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VFQVW3C2zZ8UnxQwxrQ7SLfCMsFxRwa+IsrHeD666I4=;
-	b=LQ+2Rr97yQ/Dcql7EmUiL+F0elE4KGjKyyd7F9DShMrFzy8PMRPsdyV8vMQu8FYAJa5NS5
-	Rd4zxuEpB4+uJbqwm7P56/ySNWP9ba1/VQhVNzKup6pqBNah0YCA0m1Z5xi8xcOS0gD5T9
-	K+4wm+4KOsDvknLNBjZm/PHr1vGr8JBVW9t0StVlqetcZK1yvn46tDM+iBfuH8reDfK4Yg
-	i/h7a2Py8Uy1Uc+iYmkkn4d2hxh1E5jSW0XgWApKvGOfqwY42hFNHsEBPWJZbKD/XFVLEO
-	4p1Vwrup5fpsyxnsptO5g6oGO0xfCjEcHesZOMURHQIDVkLlG8gyEsGkuKZDww==
-Message-ID: <a608578c7818cd25df79c1c76fed3486d747e1af.camel@mailbox.org>
-Subject: Re: [PATCH v4 5/7] PCI/MSI: Add Devres managed IRQ vectors
- allocation
-From: Philipp Stanner <phasta@mailbox.org>
-Reply-To: phasta@kernel.org
-To: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nirmal Patel <nirmal.patel@linux.intel.com>, Jonathan Derrick
- <jonathan.derrick@linux.dev>, Kurt Schwemmer
- <kurt.schwemmer@microsemi.com>,  Logan Gunthorpe <logang@deltatee.com>,
- Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
-Date: Tue, 12 May 2026 15:28:17 +0200
-In-Reply-To: <1777017460-243543-6-git-send-email-shawn.lin@rock-chips.com>
-References: <1777017460-243543-1-git-send-email-shawn.lin@rock-chips.com>
-	 <1777017460-243543-6-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZsrKNSBj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9917AC2BCB0;
+	Tue, 12 May 2026 14:00:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778594461;
+	bh=73KY+PJnQz0DVDO55WQRtqfL9KC8eXib5SBHC0nL4q0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZsrKNSBjdZ8JvOL/tIch5tetu7d3acvdP5ngcZ/dXyTCzoko34LlvoSPIZ9/qZlTh
+	 egHfZkdRrTx0Uo21xIA5NrREt/v2pxE1tzGFKPJIfrK6gqDKzfGJ3R8bLpd6+VzY4G
+	 gMNIe8FwHDcazuujib9FDMzNaCbiMrLeWcOVu3JN/Iwn4/zsD+wa3OsS8Yus8UGDMM
+	 sSS8ohJOJOuDov8UFLtFUZUhUFBKXasF5J2Omz892ggz40wNHyHEIDI+ZLVcbpmo3L
+	 IZAxFO9v/6onKxqq9P2tadE/BIjvjeMkudjmW/IkUThvGD/EhwRAkXAfDPmPOkfdLY
+	 w5/HoxASJrzgA==
+Date: Tue, 12 May 2026 19:30:37 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Frank Li <Frank.Li@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	Chaitanya Kulkarni <kch@nvidia.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
+	"David S. Miller" <davem@davemloft.net>, Nicolas Ferre <nicolas.ferre@microchip.com>, 
+	Alexandre Belloni <alexandre.belloni@bootlin.com>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
+	Koichiro Den <den@valinux.co.jp>, Niklas Cassel <cassel@kernel.org>, dmaengine@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev
+Subject: Re: [PATCH v4 1/9] dmaengine: Add API to combine configuration and
+ preparation (sg and single)
+Message-ID: <77s7y2zu5y2jtauczrqvdtedrhqsmtcnkic2zgm77xopcyazxm@xubtnmcppcni>
+References: <20260506-dma_prep_config-v4-0-85b3d22babff@nxp.com>
+ <20260506-dma_prep_config-v4-1-85b3d22babff@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MBO-RS-META: o8tp7ajawszhd9ashfgtckbhhpd73eqg
-X-MBO-RS-ID: 7b5368d078e698a0201
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260506-dma_prep_config-v4-1-85b3d22babff@nxp.com>
 
-On Fri, 2026-04-24 at 15:57 +0800, Shawn Lin wrote:
-> There is a long-standing design ambiguity in the PCI/MSI subsystem
-> regarding the management of IRQ vectors. Currently, the management
-> operates in a "hybrid" mode. Sometimes it's handled by devres but
-> sometimes not, creating potential for resource management bugs.
->=20
-> Historically, pcim_enable_device() implicitly triggers automatic IRQ
-> vector management when calling pci_alloc_irq_vectors[_affinity], as
-> pcim_enable_device() sets the is_managed flag, thus pcim_msi_release()
-> will register a cleanup action. However, using pci_enable_device()
-> will not make pci_alloc_irq_vectors[_affinity] register a cleanup
-> action.
->=20
-> This ambiguity causes problems when drivers follow a common but
-> hazardous pattern:
-> 1. Using pcim_enable_device() (which implicitly marks IRQs as managed)
-> 2. Explicitly calling pci_alloc_irq_vectors() for IRQ allocation
-> 3. Also calling pci_free_irq_vectors() in error paths or remove routines
->=20
-> In this scenario, the devres framework may attempt to free the IRQ
-> vectors a second time upon device release, leading to double-free
-> issues. Analysis of the tree shows this hazardous pattern exists
-> in multiple drivers, while 37 other drivers correctly rely solely
-> on the implicit cleanup.
->=20
-> To resolve this ambiguity, introduce explicit managed APIs for IRQ
-> vector allocation:
-> - pcim_alloc_irq_vectors()
-> - pcim_alloc_irq_vectors_affinity()
->=20
-> These functions are the devres-managed counterparts to
-> pci_alloc_irq_vectors[_affinity](). Drivers that wish to have
-> devres-managed IRQ vectors should use these new APIs instead.
->=20
-> The long-term goal is to convert all drivers which use pcim_enable_device=
-()
-> in combination with pci_alloc_irq_vectors[_affinity]() to use these manag=
-ed
-> functions, and eventually remove the problematic hybrid management
-> pattern from pcim_enable_device() and pcim_setup_msi_release() entirely.
-> This patch lays the foundation by introducing the APIs.
+On Wed, May 06, 2026 at 04:44:13PM -0400, Frank Li wrote:
+> Previously, configuration and preparation required two separate calls. This
+> works well when configuration is done only once during initialization.
+> 
+> However, in cases where the burst length or source/destination address must
+> be adjusted for each transfer, calling two functions is verbose and
+> requires additional locking to ensure both steps complete atomically.
+> 
+> Add a new API dmaengine_prep_config_single() and dmaengine_prep_config_sg()
+> and callback device_prep_config_sg() that combines configuration and
+> preparation into a single operation. If the configuration argument is
+> passed as NULL, fall back to the existing implementation.
+> 
+> Tested-by: Niklas Cassel <cassel@kernel.org>
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
 
-Cool stuff.
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 
+My only concern is that since these APIs are defined as 'inline' functions,
+adding more code will end up increasing the kernel Image size.
 
-Though what I'd also do is to warn somewhere about the current API
-being hybrid and fishy and therefore users should be careful with
-pcim_enable_device().
-That's not the case right now, is it?
+- Mani
 
-
-Regards
-P.
-
->=20
-> Suggested-by: Philipp Stanner <phasta@kernel.org>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->=20
 > ---
->=20
-> Changes in v4:
-> - Rework to create dedicated devres-managed function (Philipp)
->=20
-> Changes in v3:
-> - Rework the commit message and function doc (Philipp)
-> - Remove setting is_msi_managed flag from new APIs (Philipp)
->=20
-> Changes in v2:
-> - Rebase
-> - Introduce patches only for PCI subsystem to convert the API
->=20
-> =C2=A0drivers/pci/msi/api.c | 84 ++++++++++++++++++++++++++++++++++++++++=
-+++++++++++
-> =C2=A0include/linux/pci.h=C2=A0=C2=A0 | 22 ++++++++++++++
-> =C2=A02 files changed, 106 insertions(+)
->=20
-> diff --git a/drivers/pci/msi/api.c b/drivers/pci/msi/api.c
-> index c18559b..405da7b 100644
-> --- a/drivers/pci/msi/api.c
-> +++ b/drivers/pci/msi/api.c
-> @@ -297,6 +297,90 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *d=
-ev, unsigned int min_vecs,
-> =C2=A0EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
-> =C2=A0
-> =C2=A0/**
-> + * pcim_alloc_irq_vectors - devres managed pci_alloc_irq_vectors()
-> + * @dev: the PCI device to operate on
-> + * @min_vecs: minimum number of vectors required (must be >=3D 1)
-> + * @max_vecs: maximum (desired) number of vectors
-> + * @flags: flags for this allocation, see pci_alloc_irq_vectors()
-> + *
-> + * This is a device resource managed version of pci_alloc_irq_vectors().
-> + * Interrupt vectors are automatically freed on driver detach by devres.
-> + * Drivers MUST NOT call pci_free_irq_vectors().
-> + *
-> + * Returns number of vectors allocated (which might be smaller than
-> + * @max_vecs) on success, or a negative error code on failure.
-> + */
-> +int pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
-> +			=C2=A0=C2=A0 unsigned int max_vecs, unsigned int flags)
+> change in v4
+> - drop context in device_prep_config_sg()
+> 
+> change in v3
+> - remove Deprecated for callback device_prep_slave_sg().
+> - Move condition check before sg init.
+> - split function at return type.
+> - move safe version to next patch
+> 
+> change in v2
+> - add () for function
+> - use short name device_prep_sg(), remove "slave" and "config". the 'slave'
+> is reduntant. after remove slave, the function name is difference existed
+> one, so remove _config suffix.
+> ---
+>  Documentation/driver-api/dmaengine/client.rst |  9 ++++
+>  include/linux/dmaengine.h                     | 63 +++++++++++++++++++++++----
+>  2 files changed, 64 insertions(+), 8 deletions(-)
+> 
+> diff --git a/Documentation/driver-api/dmaengine/client.rst b/Documentation/driver-api/dmaengine/client.rst
+> index d491e385d61a98b8a804cd823caf254a2dc62cf4..5ee5d4a3596dd986b02f1bce3078ca6c4c1fb45a 100644
+> --- a/Documentation/driver-api/dmaengine/client.rst
+> +++ b/Documentation/driver-api/dmaengine/client.rst
+> @@ -80,6 +80,10 @@ The details of these operations are:
+>  
+>    - slave_sg: DMA a list of scatter gather buffers from/to a peripheral
+>  
+> +  - config_sg: Similar with slave_sg, just pass down dma_slave_config
+> +    struct to avoid calling dmaengine_slave_config() every time adjusting the
+> +    burst length or the FIFO address is needed.
+> +
+>    - peripheral_dma_vec: DMA an array of scatter gather buffers from/to a
+>      peripheral. Similar to slave_sg, but uses an array of dma_vec
+>      structures instead of a scatterlist.
+> @@ -106,6 +110,11 @@ The details of these operations are:
+>  		unsigned int sg_len, enum dma_data_direction direction,
+>  		unsigned long flags);
+>  
+> +     struct dma_async_tx_descriptor *dmaengine_prep_config_sg(
+> +		struct dma_chan *chan, struct scatterlist *sgl,
+> +		unsigned int sg_len, enum dma_transfer_direction dir,
+> +		unsigned long flags, struct dma_slave_config *config);
+> +
+>       struct dma_async_tx_descriptor *dmaengine_prep_peripheral_dma_vec(
+>  		struct dma_chan *chan, const struct dma_vec *vecs,
+>  		size_t nents, enum dma_data_direction direction,
+> diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+> index b3d251c9734e95e1b75cf6763d4d2c3a1c6a9910..defa377d2ef54d94e6337cdfa7826a091295535e 100644
+> --- a/include/linux/dmaengine.h
+> +++ b/include/linux/dmaengine.h
+> @@ -835,6 +835,7 @@ struct dma_filter {
+>   *	where the address and size of each segment is located in one entry of
+>   *	the dma_vec array.
+>   * @device_prep_slave_sg: prepares a slave dma operation
+> + * @device_prep_config_sg: prepares a slave DMA operation with dma_slave_config
+>   * @device_prep_dma_cyclic: prepare a cyclic dma operation suitable for audio.
+>   *	The function takes a buffer of size buf_len. The callback function will
+>   *	be called after period_len bytes have been transferred.
+> @@ -934,6 +935,10 @@ struct dma_device {
+>  		struct dma_chan *chan, struct scatterlist *sgl,
+>  		unsigned int sg_len, enum dma_transfer_direction direction,
+>  		unsigned long flags, void *context);
+> +	struct dma_async_tx_descriptor *(*device_prep_config_sg)(
+> +		struct dma_chan *chan, struct scatterlist *sgl,
+> +		unsigned int sg_len, enum dma_transfer_direction direction,
+> +		unsigned long flags, struct dma_slave_config *config);
+>  	struct dma_async_tx_descriptor *(*device_prep_dma_cyclic)(
+>  		struct dma_chan *chan, dma_addr_t buf_addr, size_t buf_len,
+>  		size_t period_len, enum dma_transfer_direction direction,
+> @@ -974,22 +979,44 @@ static inline bool is_slave_direction(enum dma_transfer_direction direction)
+>  	       (direction == DMA_DEV_TO_DEV);
+>  }
+>  
+> -static inline struct dma_async_tx_descriptor *dmaengine_prep_slave_single(
+> -	struct dma_chan *chan, dma_addr_t buf, size_t len,
+> -	enum dma_transfer_direction dir, unsigned long flags)
+> +static inline struct dma_async_tx_descriptor *
+> +dmaengine_prep_config_single(struct dma_chan *chan, dma_addr_t buf, size_t len,
+> +			     enum dma_transfer_direction dir,
+> +			     unsigned long flags,
+> +			     struct dma_slave_config *config)
+>  {
+>  	struct scatterlist sg;
+> +
+> +	if (!chan || !chan->device)
+> +		return NULL;
+> +
+>  	sg_init_table(&sg, 1);
+>  	sg_dma_address(&sg) = buf;
+>  	sg_dma_len(&sg) = len;
+>  
+> -	if (!chan || !chan->device || !chan->device->device_prep_slave_sg)
+> +	if (chan->device->device_prep_config_sg)
+> +		return chan->device->device_prep_config_sg(chan, &sg, 1, dir,
+> +							   flags, config);
+> +
+> +	if (config)
+> +		if (dmaengine_slave_config(chan, config))
+> +			return NULL;
+> +
+> +	if (!chan->device->device_prep_slave_sg)
+>  		return NULL;
+>  
+>  	return chan->device->device_prep_slave_sg(chan, &sg, 1,
+>  						  dir, flags, NULL);
+>  }
+>  
+> +static inline struct dma_async_tx_descriptor *
+> +dmaengine_prep_slave_single(struct dma_chan *chan, dma_addr_t buf, size_t len,
+> +			    enum dma_transfer_direction dir,
+> +			    unsigned long flags)
 > +{
-> +	return pcim_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 flags, NULL);
-> +}
-> +EXPORT_SYMBOL(pcim_alloc_irq_vectors);
-> +
-> +/**
-> + * pcim_alloc_irq_vectors_affinity - devres managed pci_alloc_irq_vector=
-s_affinity()
-> + * @dev: the PCI device to operate on
-> + * @min_vecs: minimum number of vectors required (must be >=3D 1)
-> + * @max_vecs: maximum (desired) number of vectors
-> + * @flags: flags for this allocation, see pci_alloc_irq_vectors()
-> + * @affd: optional description of the affinity requirements
-> + *
-> + * This is a device resource managed version of pci_alloc_irq_vectors_af=
-finity().
-> + * Interrupt vectors are automatically freed on driver detach by devres.
-> + * Drivers MUST NOT call pci_free_irq_vectors().
-> + *
-> + * Returns number of vectors allocated (which might be smaller than
-> + * @max_vecs) on success, or a negative error code on failure.
-> + */
-> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int mi=
-n_vecs,
-> +				=C2=A0=C2=A0=C2=A0 unsigned int max_vecs, unsigned int flags,
-> +				=C2=A0=C2=A0=C2=A0 struct irq_affinity *affd)
-> +{
-> +	struct irq_affinity msi_default_affd =3D {0};
-> +	int nvecs =3D -ENOSPC;
-> +
-> +	if (flags & PCI_IRQ_AFFINITY) {
-> +		if (!affd)
-> +			affd =3D &msi_default_affd;
-> +	} else {
-> +		if (WARN_ON(affd))
-> +			affd =3D NULL;
-> +	}
-> +
-> +	if (flags & PCI_IRQ_MSIX) {
-> +		nvecs =3D __pcim_enable_msix_range(dev, NULL, min_vecs, max_vecs,
-> +						 affd, flags);
-> +		if (nvecs > 0)
-> +			return nvecs;
-> +	}
-> +
-> +	if (flags & PCI_IRQ_MSI) {
-> +		nvecs =3D __pcim_enable_msi_range(dev, min_vecs, max_vecs, affd);
-> +		if (nvecs > 0)
-> +			return nvecs;
-> +	}
-> +
-> +	/* use INTx IRQ if allowed */
-> +	if (flags & PCI_IRQ_INTX) {
-> +		if (min_vecs =3D=3D 1 && dev->irq) {
-> +			/*
-> +			 * Invoke the affinity spreading logic to ensure that
-> +			 * the device driver can adjust queue configuration
-> +			 * for the single interrupt case.
-> +			 */
-> +			if (affd)
-> +				kfree(irq_create_affinity_masks(1, affd));
-> +			pci_intx(dev, 1);
-> +			return 1;
-> +		}
-> +	}
-> +
-> +	return nvecs;
-> +}
-> +EXPORT_SYMBOL(pcim_alloc_irq_vectors_affinity);
-> +
-> +/**
-> =C2=A0 * pci_irq_vector() - Get Linux IRQ number of a device interrupt ve=
-ctor
-> =C2=A0 * @dev: the PCI device to operate on
-> =C2=A0 * @nr:=C2=A0 device-relative interrupt vector index (0-based); has=
- different
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2c44545..6eab553 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1770,6 +1770,12 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev =
-*dev, unsigned int min_vecs,
-> =C2=A0				=C2=A0=C2=A0 unsigned int max_vecs, unsigned int flags,
-> =C2=A0				=C2=A0=C2=A0 struct irq_affinity *affd);
-> =C2=A0
-> +int pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
-> +			=C2=A0=C2=A0 unsigned int max_vecs, unsigned int flags);
-> +int pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int mi=
-n_vecs,
-> +				=C2=A0=C2=A0=C2=A0 unsigned int max_vecs, unsigned int flags,
-> +				=C2=A0=C2=A0=C2=A0 struct irq_affinity *affd);
-> +
-> =C2=A0bool pci_msix_can_alloc_dyn(struct pci_dev *dev);
-> =C2=A0struct msi_map pci_msix_alloc_irq_at(struct pci_dev *dev, unsigned =
-int index,
-> =C2=A0				=C2=A0=C2=A0=C2=A0=C2=A0 const struct irq_affinity_desc *affdes=
-c);
-> @@ -1812,6 +1818,22 @@ pci_alloc_irq_vectors(struct pci_dev *dev, unsigne=
-d int min_vecs,
-> =C2=A0					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 flags, NULL);
-> =C2=A0}
-> =C2=A0
-> +static inline int
-> +pcim_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_ve=
-cs,
-> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int max_vecs, unsigned =
-int flags,
-> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct irq_affinity *aff_desc)
-> +{
-> +	return pci_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 flags, aff_desc);
-> +}
-> +static inline int
-> +pcim_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
-> +		=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int max_vecs, unsigned int fla=
-gs)
-> +{
-> +	return pcim_alloc_irq_vectors_affinity(dev, min_vecs, max_vecs,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 flags, NULL);
+> +	return dmaengine_prep_config_single(chan, buf, len, dir, flags, NULL);
 > +}
 > +
-> =C2=A0static inline bool pci_msix_can_alloc_dyn(struct pci_dev *dev)
-> =C2=A0{ return false; }
-> =C2=A0static inline struct msi_map pci_msix_alloc_irq_at(struct pci_dev *=
-dev, unsigned int index,
+>  /**
+>   * dmaengine_prep_peripheral_dma_vec() - Prepare a DMA scatter-gather descriptor
+>   * @chan: The channel to be used for this descriptor
+> @@ -1010,17 +1037,37 @@ static inline struct dma_async_tx_descriptor *dmaengine_prep_peripheral_dma_vec(
+>  							    dir, flags);
+>  }
+>  
+> -static inline struct dma_async_tx_descriptor *dmaengine_prep_slave_sg(
+> -	struct dma_chan *chan, struct scatterlist *sgl,	unsigned int sg_len,
+> -	enum dma_transfer_direction dir, unsigned long flags)
+> +static inline struct dma_async_tx_descriptor *
+> +dmaengine_prep_config_sg(struct dma_chan *chan, struct scatterlist *sgl,
+> +			 unsigned int sg_len, enum dma_transfer_direction dir,
+> +			 unsigned long flags, struct dma_slave_config *config)
+>  {
+> -	if (!chan || !chan->device || !chan->device->device_prep_slave_sg)
+> +	if (!chan || !chan->device)
+> +		return NULL;
+> +
+> +	if (chan->device->device_prep_config_sg)
+> +		return chan->device->device_prep_config_sg(chan, sgl, sg_len,
+> +				dir, flags, config);
+> +
+> +	if (config)
+> +		if (dmaengine_slave_config(chan, config))
+> +			return NULL;
+> +
+> +	if (!chan->device->device_prep_slave_sg)
+>  		return NULL;
+>  
+>  	return chan->device->device_prep_slave_sg(chan, sgl, sg_len,
+>  						  dir, flags, NULL);
+>  }
+>  
+> +static inline struct dma_async_tx_descriptor *
+> +dmaengine_prep_slave_sg(struct dma_chan *chan, struct scatterlist *sgl,
+> +			unsigned int sg_len, enum dma_transfer_direction dir,
+> +			unsigned long flags)
+> +{
+> +	return dmaengine_prep_config_sg(chan, sgl, sg_len, dir, flags, NULL);
+> +}
+> +
+>  #ifdef CONFIG_RAPIDIO_DMA_ENGINE
+>  struct rio_dma_ext;
+>  static inline struct dma_async_tx_descriptor *dmaengine_prep_rio_sg(
+> 
+> -- 
+> 2.43.0
+> 
 
+-- 
+மணிவண்ணன் சதாசிவம்
