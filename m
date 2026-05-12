@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 535FC3672B9
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 12:58:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA42A3E170C;
+	Tue, 12 May 2026 13:05:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778590683; cv=none; b=nYNpd2txJziRB1ID4NggRVoGrHKdQyZ/SZz2RkMuC7SlabV2iXy90huDAHM1RgSYPUNy0aRIIk9046STXV6lyGRZ3g4aYwYZ7vpilY0dW4749L6+7sf5YSCAcaq+7G0WZSEMKdV8yRIvXPybEHAmS0WG14xPIM0MoNbcF0DY81g=
+	t=1778591119; cv=none; b=nrG9QSwS08DBzxK36pGDuhxejAZ/s+rF6ksxkqOiOKE8EjHW4NQDKKRKdJUTTdw5wk1/RmPrfpk6CvXhc9x8R2G0gGoM2RJo0AGo6hY0ssf0OHK6hWgcLOULr37deD3MtiVSFLf+aZHUjhYEIEt4gEcl2HUX/HTtRQmL4OzECYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778590683; c=relaxed/simple;
-	bh=5bWaVVBc4qz0lgeFG+CvhrffOUhq7nziLUWowWvD7b4=;
+	s=arc-20240116; t=1778591119; c=relaxed/simple;
+	bh=bg4o7RwuuxEDvH8OIFEtF3dwjttBqocBKfhQEXr8ROo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TtdCPRutqAqc2ygmFOQChytcnAVZqQpYVVEaSHBIe3T4eBkVTZezEc7T43fDHI6eptUsioOmDaAwQ85mXrB7jHyAC4XH81Av2BA57zhKS60vFTdEn0dDkPc/XxMkam3ItNbVD8TNiui2jKJbj5qP0Lsc8aqmlCrX6SyT4LvXUv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G7I3XcRa; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=HDKpqABcrzmwPQsI4f/FmfKV/T/YrqTNV4snvle7mohRa3fp6wgPR9pmrKS0LB7ENcAnUqZRzFHTUk6T0ljXlGTTFcGyaLZpKF/HxIkVShxqgKhJXjbBBODBbUr4RhzOb9s3fKxzT3exdwukK68bIkyto0GtDlVTYSa/lOzJVMU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IAJ4+SWW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G7I3XcRa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53625C2BCB0;
-	Tue, 12 May 2026 12:58:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IAJ4+SWW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 20081C2BCB0;
+	Tue, 12 May 2026 13:05:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778590683;
-	bh=5bWaVVBc4qz0lgeFG+CvhrffOUhq7nziLUWowWvD7b4=;
+	s=k20201202; t=1778591119;
+	bh=bg4o7RwuuxEDvH8OIFEtF3dwjttBqocBKfhQEXr8ROo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=G7I3XcRai1GgCYtcEiFZB2eloWb2rgFKvYcSLguN6Q6U2Jszj5PRGir9zrPMuWZNd
-	 lHLxn1G5iXm2wR1SPgzB8zn8pZ+IEgqFIh7xOyahAd/dV1tWoRdVkDHHSXcVg4DGEF
-	 MsOeTjG+7jsUuPtMlSqEGMzg8yO2c18ztv5+VSMnbKbG8npl9SD01m2/Nbxuu2yakb
-	 I1ItCoMd7qNbbzH8obPcap4WbCtGFit7fBP8g1QezdpN7Jr5PUW5u1n5KQVQvLbWBU
-	 yaj/MhmNSINpv/MR/WpDwLN7dTN1x6E3lUwx2ttnjb79I3S0jp3dHCuWCG9TFyPNJi
-	 yxJVD9L28x40g==
-Date: Tue, 12 May 2026 18:27:56 +0530
+	b=IAJ4+SWW6dGKdQlvU4QHubSOcxUTtjskun01cJTOk3Rq+++/n/I9fNV1eawjLpMno
+	 2t+p9/OePnaKrEg6gZb+Dwq8dQpklF1ievE2b6SCHzbmjSTESi9AUzt4B5IOITc82D
+	 vjWplV2ktWv5fsndOHlm2sQV7UKAN2O9cmsZx9YM/G4dgZLdCa3WnARD7CEiz3MCOg
+	 FYTZIHEvZS2p8l/pvh83CLIZrX2/OoCpXlXqjxGZwPq4VerPZmZQvKCUHZWPz/aE9x
+	 k3uCwqq7ejXymYyBy1ongNdqkUVbYEpxsw1ajVMyTCwbyWilDhEwd5dFaSWVlquWdg
+	 lBPsLDyLnnZuQ==
+Date: Tue, 12 May 2026 18:35:11 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Nirmal Patel <nirmal.patel@linux.intel.com>, Jonathan Derrick <jonathan.derrick@linux.dev>, 
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>, Logan Gunthorpe <logang@deltatee.com>, 
-	Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 7/7] PCI: vmd: Replace pci_alloc_irq_vectors() with
- pcim_alloc_irq_vectors()
-Message-ID: <hivymkgzg7dl7rj6dkstgo4ejgdby5rb3c2ndiy7eipk5hcqai@bjmke2xzs2u2>
-References: <1777017460-243543-1-git-send-email-shawn.lin@rock-chips.com>
- <1777017460-243543-8-git-send-email-shawn.lin@rock-chips.com>
+To: Mahesh Vaidya <mahesh.vaidya@altera.com>
+Cc: joyce.ooi@intel.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
+	robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	subhransu.sekhar.prusty@altera.com, dinguyen@kernel.org
+Subject: Re: [PATCH 3/3] PCI: altera: add Agilex 5 support
+Message-ID: <46lb3ald2zwoum53oivvlgoy2uognjygkgtks5vcngqo4wxply@75a6zvxtfwes>
+References: <20260424094913.522123-1-mahesh.vaidya@altera.com>
+ <20260424094913.522123-4-mahesh.vaidya@altera.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,52 +46,163 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1777017460-243543-8-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <20260424094913.522123-4-mahesh.vaidya@altera.com>
 
-On Fri, Apr 24, 2026 at 03:57:40PM +0800, Shawn Lin wrote:
-> Replace pci_alloc_irq_vectors() with pcim_alloc_irq_vectors() to
-> explicitly request devres-managed interrupt vectors. This makes the
-> driver's intention clear and avoids the ambiguous implicit management
-> previously provided by pcim_enable_device().
-> 
-> The change prepares the driver for the eventual removal of the hybrid
-> IRQ management pattern from pcim_enable_device(), ensuring consistent
-> resource management through devres.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On Fri, Apr 24, 2026 at 02:49:13AM -0700, Mahesh Vaidya wrote:
+> Add PCIe root port controller support for the Agilex 5 (V4) family
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+There is no 'root port controller'. Root Port and Controller (Root Complex) are
+two different IPs.
+
+> of SoC FPGAs.
+> 
+> The Agilex 5 PCIe Hard IP reuses the same config-space access path
+> as Agilex 7 (V3). Root port and endpoint configuration reads/writes
+> use direct MMIO to the HIP and CRA regions.
+> 
+> The difference is in the HIP port-level registers (IRQ status and IRQ
+> enable). On V3 these are directly mapped through the HIP MMIO window.
+> On V4 these registers are only reachable through an indirect access
+> mailbox (CFG REG IA CTRL) in the PCIe Subsystem AXI-Lite interface,
+> documented in the GTS AXI Streaming IP for PCIe User Guide.
+> 
+> This adds:
+> - ALTERA_PCIE_V4 version and platform data
+> - Indirect register read/write helpers using readl_poll_timeout_atomic
+> - Chained IRQ handler (aglx5_isr) for the V4 interrupt path
+> - OF match for "altr,pcie-root-port-4.0"
+> 
+> Co-developed-by: Matthew Gerlach <matthew.gerlach@linux.intel.com>
+> Signed-off-by: Matthew Gerlach <matthew.gerlach@linux.intel.com>
+> Co-developed-by: Peter Colberg <peter.colberg@intel.com>
+> Signed-off-by: Peter Colberg <peter.colberg@intel.com>
+> Signed-off-by: Mahesh Vaidya <mahesh.vaidya@altera.com>
+> ---
+>  drivers/pci/controller/pcie-altera.c | 156 ++++++++++++++++++++++++++-
+>  1 file changed, 155 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+> index 025ba74d1ee2..db8149d84c96 100644
+> --- a/drivers/pci/controller/pcie-altera.c
+> +++ b/drivers/pci/controller/pcie-altera.c
+> @@ -12,6 +12,8 @@
+>  #include <linux/irqchip/chained_irq.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/init.h>
+> +#include <linux/bitfield.h>
+> +#include <linux/iopoll.h>
+>  #include <linux/module.h>
+>  #include <linux/of.h>
+>  #include <linux/of_pci.h>
+> @@ -93,16 +95,36 @@
+>  #define AGLX_CFG_TARGET_LOCAL_2000	2
+>  #define AGLX_CFG_TARGET_LOCAL_3000	3
+>  
+> +/* PCIe subsystem indirect register access */
+> +#define PCIE_SS_IA_CTL			0xc8 /* control register */
+> +#define PCIE_SS_IA_FN_NUM		0xcc /* function number */
+> +#define PCIE_SS_IA_FN_WRDATA		0xd0 /* write data */
+> +#define PCIE_SS_IA_FN_RDDATA		0xd4 /* read data */
+> +
+> +/* PCIE_SS_IA_CTL bitfields */
+> +#define PCIE_SS_IA_CTL_INITIATE		BIT(0)
+> +#define PCIE_SS_IA_CTL_WRITE		BIT(1)
+> +#define PCIE_SS_IA_CTL_BYTE_EN		GENMASK(5, 2)
+> +#define PCIE_SS_IA_CTL_ADDR		GENMASK(31, 6)
+> +
+> +/* PCIE_SS_IA_FN_NUM function types */
+> +#define PCIE_SS_IA_FN_TYPE_HIP		2
+> +
+> +#define AGLX5_INDIRECT_SLEEP_US		1
+> +#define AGLX5_INDIRECT_TIMEOUT_US	1000
+> +
+>  enum altera_pcie_version {
+>  	ALTERA_PCIE_V1 = 0,
+>  	ALTERA_PCIE_V2,
+>  	ALTERA_PCIE_V3,
+> +	ALTERA_PCIE_V4,
+>  };
+>  
+>  struct altera_pcie {
+>  	struct platform_device	*pdev;
+>  	void __iomem		*cra_base;
+>  	void __iomem		*hip_base;
+> +	void __iomem		*controller_base;
+>  	int			irq;
+>  	u8			root_bus_nr;
+>  	struct irq_domain	*irq_domain;
+> @@ -849,6 +871,98 @@ static void aglx_isr(struct irq_desc *desc)
+>  	chained_irq_exit(chip, desc);
+>  }
+>  
+> +/*
+> + * Indirect register access to HIP registers via the PCIe Subsystem
+> + * AXI-Lite mailbox, documented in the GTS AXI Streaming IP for PCIe
+> + * User Guide. Called from chained IRQ handler (hardirq) and probe
+> + * (before handler is installed), so no locking is required.
+> + */
+> +static int aglx5_indirect_readl(const struct altera_pcie *pcie,
+> +				unsigned int addr, unsigned int *val)
+
+s/unsigned int/u32
+
+> +{
+> +	unsigned int ctl;
+
+s/unsigned int/u32
+
+> +	int ret;
+> +
+> +	writel(PCIE_SS_IA_FN_TYPE_HIP,
+> +	       pcie->controller_base + PCIE_SS_IA_FN_NUM);
+> +
+> +	ctl = FIELD_PREP(PCIE_SS_IA_CTL_ADDR, addr >> 2) |
+> +	      PCIE_SS_IA_CTL_BYTE_EN | PCIE_SS_IA_CTL_INITIATE;
+> +	writel(ctl, (pcie->controller_base + PCIE_SS_IA_CTL));
+> +
+> +	ret = readl_poll_timeout_atomic(pcie->controller_base + PCIE_SS_IA_CTL,
+> +					ctl, !(ctl & PCIE_SS_IA_CTL_INITIATE),
+> +					AGLX5_INDIRECT_SLEEP_US,
+> +					AGLX5_INDIRECT_TIMEOUT_US);
+> +	if (ret)
+> +		return ret;
+> +
+> +	*val = readl(pcie->controller_base + PCIE_SS_IA_FN_RDDATA);
+> +
+> +	return 0;
+> +}
+> +
+> +static int aglx5_indirect_writel(const struct altera_pcie *pcie,
+> +				 unsigned int addr, unsigned int val)
+
+s/unsigned int/u32
+
+> +{
+> +	unsigned int ctl;
+
+s/unsigned int/u32
+
+> +	int ret;
+> +
+> +	writel(PCIE_SS_IA_FN_TYPE_HIP,
+> +	       pcie->controller_base + PCIE_SS_IA_FN_NUM);
+> +	writel(val, pcie->controller_base + PCIE_SS_IA_FN_WRDATA);
+> +
+> +	ctl = FIELD_PREP(PCIE_SS_IA_CTL_ADDR, addr >> 2) |
+> +	      PCIE_SS_IA_CTL_BYTE_EN | PCIE_SS_IA_CTL_WRITE |
+> +	      PCIE_SS_IA_CTL_INITIATE;
+> +	writel(ctl, pcie->controller_base + PCIE_SS_IA_CTL);
+> +
+> +	ret = readl_poll_timeout_atomic(pcie->controller_base + PCIE_SS_IA_CTL,
+> +					ctl, !(ctl & PCIE_SS_IA_CTL_INITIATE),
+> +					AGLX5_INDIRECT_SLEEP_US,
+> +					AGLX5_INDIRECT_TIMEOUT_US);
+> +
+> +	return ret;
+
+return readl_poll_timeout_atomic();
 
 - Mani
-
-> ---
-> 
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
-> 
->  drivers/pci/controller/vmd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index d4ae250..d8de63a 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -684,8 +684,8 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
->  	if (vmd->msix_count < 0)
->  		return -ENODEV;
->  
-> -	vmd->msix_count = pci_alloc_irq_vectors(dev, vmd->first_vec + 1,
-> -						vmd->msix_count, PCI_IRQ_MSIX);
-> +	vmd->msix_count = pcim_alloc_irq_vectors(dev, vmd->first_vec + 1,
-> +						 vmd->msix_count, PCI_IRQ_MSIX);
->  	if (vmd->msix_count < 0)
->  		return vmd->msix_count;
->  
-> -- 
-> 2.7.4
-> 
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
