@@ -1,74 +1,49 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F310F395AEF
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 10:18:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B4AC7395AD7;
+	Tue, 12 May 2026 10:26:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778581082; cv=none; b=ZHo5kNlEgB7VekWw6xpt44ttysGuw1UwTO0+2i4MZhVEGkcOSYoHZAlLuRv3TECZKcIbvafKqsQrg/FXbweh8j+dU0CKGnuKud2FEsFU9V385nRW7+l4NrnKo6EjlsdUdVDDRGJ7DA1v0aj1ac31nsgDvdXLjnOIS25PeUsCOMo=
+	t=1778581576; cv=none; b=o0CFFvPjQAWCQSCvw0dq927zKUFdEfSQR6zhJBnHuEdRNLGwhECOJ3T2LXMTTyi0QtJbJjkzT6E30ygBNS5yfJfSxIsmiZ11fBf5xAdKgkeibonzW5T29O8juVzKlxonH5FNuMYYMrbt8+dlxqPCmdcdkKDb14b3LbPTVK6RuRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778581082; c=relaxed/simple;
-	bh=1ihYxeZy0xVM4ZTgNCYSrPgt5wfbDLc6o4wFztW63Us=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Jn89x+Mm6ZVhzk/5egANltWFhjZ56hqSdKmbIIkbvfHE2Yr8d0TWLfftC7/JPqNux0Yi40xtHOJ9aRhcZHJG3RC0eYJPuaEokCa7l4PGIgmFLXiGh6+7ETntcMMh75xcE0t9VaE0euIWCpi4hQKnuFCPndR6nfLpWvJmqVcOd9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=esjjwCl0; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778581576; c=relaxed/simple;
+	bh=p2px6H+WTEk/NCl9roM9isjrVup2rBnxKf5K7cPz+1o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dSdgfipbHOeQFXS/KxHHH5fF/6kmBAIC73We9rB7KvpOQFlGxOdGTVD50r7O/nUCDYWQO35NjI2mWGqFj5Nu6+rwDK2Du//2Vnxn+pHj9Z10CCCx/oHK6vSKFo8pOgpTqoBEZOssFb2duMnyvvf/zTEDddqsadIhZ+6O+2iz4Cc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=bKog0cPf; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="esjjwCl0"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-48984d29fe3so56596235e9.0
-        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 03:18:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778581079; x=1779185879; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2BPjmQ+e1w3H/ZdOVio7epboMKxq2EH1m6tGkpmimMY=;
-        b=esjjwCl0osSmx+RA4ehzn6n7aLqcdNz+6/yp79ri/ENWuUFygsWNf2d125LBUq5FPi
-         AkVWWzxFc++jxNtcfQh08ppm3t1w7FsjHyp+2kad9pEg2SJU/vpsy0TE9Hq4B4Fwv4qf
-         lmqevuIMgI5JJUllh6MJQvvaltgZn9abPLo0UscAAuefs2EFjq6s++BYgK1Tbl0w7vct
-         If/LAJ9oYedE74mTSb1ZK/Xo3MLbACL8MVnL1aVXADt9SOpFPth9RwR4PedmLS28jKcP
-         v1SdxFXslI2BfpPo+zqrULfrV5d/zqDk/QVZU+BmCOlW6YKRBeYbVTUHwaAqy7Z7cDSG
-         gbhA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778581079; x=1779185879;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=2BPjmQ+e1w3H/ZdOVio7epboMKxq2EH1m6tGkpmimMY=;
-        b=nGbnCTp2NUI1o/24Uz/QbS5trKGXxVBrE/aXUeDNds9rCBWoyD3EkiDMkrzby8xxzQ
-         upP3keCXOEhev+2c9h5vTxAuId069BCngxhvqGesDnNUjHV32KaRXE13XB9aD8dSA92n
-         /PWxY0m9+dhbDsLGpnB7KbsGe/VS6oiD2XbnCKuIUGVdQhefoXSpPhcqznE4ZufQqj07
-         xtLrpmb+ISsjRNmOVHLQD78atHjTtHIlgidiBKQtwRuyDDAc5BHQRSliHS4JGO43Fe5s
-         +hw+LRYpuZMeOzdiz6B71zJvi1cpO1HKt6P7O9bFwKccItALIXuyo5VOskvIgrAbD8Zd
-         rjpw==
-X-Forwarded-Encrypted: i=1; AFNElJ+Bz0vVDG+RVzjFw8KQ/yGsA03hTIN3fkvFpk8yOT/JRezoOhwPh8IH2ZZCJQAXPAO0wFuzB7WuyQc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy9L7ipRarQrytug3HNBJdM6Lh74g/HyoGswbK5NEc4+UtjF9Up
-	HZlMEJt8dV13elI9yWKwAprB0je6+dB4WJ9MHGWBlOEbkR5ComC4HHeIRyvOcmmLkaA=
-X-Gm-Gg: Acq92OGs7EWJBXJc9+IcVRnurMzY7UcIht8xem2W56ITwx0y+C6orp573seRurNzYB5
-	rSegiPR7lRCIFoFqJvYxm3l/BynmjDTmmFl9P3PF6KfTtJx7uqUj8eeukc6FwbDLTqHUl0+aBTh
-	N8iul7mzIM34OoiQmXEBle6qj1cS0exPYLssGimeBgA5lgfZ5SLS+kzPryGGfxW5/N/3eYlwmhb
-	5Ixfo4Pdipnmt8Z+cwirlDPpYSR9WNQlHCj8URr0kdBov74qZZhsU1NP/aIe2cLIlwpLcyKym06
-	RG5v9xnwEXRYhDF0XVbKvGGQ+YFmKH/lEtxdWCUolXQu/oJ6j02em4lRL1ontWJhWRH5lPwSdPH
-	glqi4VH/LP2ra4YRGY0jSnfM6GzUnqOTZfHT7b+BINf7KuIis17Ffyyekk91n8v5aDFmMWGapMi
-	GnnICDCnvhRbD/wNB2r5E=
-X-Received: by 2002:a05:600c:474b:b0:488:9e54:94c0 with SMTP id 5b1f17b1804b1-48e8fe5017fmr34845395e9.8.1778581078730;
-        Tue, 12 May 2026 03:17:58 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48e8f3c65f2sm24709975e9.1.2026.05.12.03.17.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 May 2026 03:17:58 -0700 (PDT)
-Date: Tue, 12 May 2026 13:17:55 +0300
-From: Dan Carpenter <error27@gmail.com>
-To: Shradha Todi <shradha.t@samsung.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Fan Ni <fan.ni@samsung.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] PCI: dwc: Fix signedness bug in fault injection test code
-Message-ID: <agL-Uwfn26SI4Gb0@stanley.mountain>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="bKog0cPf"
+Received: by linux.microsoft.com (Postfix, from userid 1099)
+	id 52D5C20B7166; Tue, 12 May 2026 03:26:12 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 52D5C20B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1778581572;
+	bh=A3fdTJavZcamyWjE/iWjcMnfv2Zd92fLhKuCUIKfZB0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bKog0cPfmxc/YHvPjQ/jWyN0newyW9ui6x3e20xbi6xQ+BpUdZy5Yh9z/eorOYtBm
+	 vLTg9j+Vp7KQj0497z94XKR8bMrJEixzBr+0+nW9N62QQ3QVFCuWEYnApYmsdbIOp4
+	 E15RVLhktN4Fw5j7ulpQ5bWYl5Z8lb4VxMgmwyGE=
+Date: Tue, 12 May 2026 03:26:12 -0700
+From: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH V3 01/11] iommu/hyperv: Rename hyperv-iommu.c to
+ hyperv-irq.c
+Message-ID: <agMARN3DHTFPeHFH@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
+ <20260512020259.1678627-2-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,47 +52,95 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
+In-Reply-To: <20260512020259.1678627-2-mrathor@linux.microsoft.com>
 
-The kstrtou32() function returns negative error code or zero on success.
-However, in this case "val" is a u32 and the function returns signed
-longs so negative error codes from kstrtou32() are returned as high
-positive values.
-
-Store the error code in an int instead.
-
-Fixes: d20ee8e2dbd6 ("PCI: dwc: Add debugfs based Error Injection support for DWC")
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
- drivers/pci/controller/dwc/pcie-designware-debugfs.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-index 945f8f9b6d0e..a6737bdc46ac 100644
---- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-@@ -305,6 +305,7 @@ static ssize_t err_inj_write(struct file *file, const char __user *buf,
- 	u32 val, counter, vc_num, err_group, type_mask;
- 	int val_diff = 0;
- 	char *kern_buf;
-+	int ret;
- 
- 	err_group = err_inj_list[pdata->idx].err_inj_group;
- 	type_mask = err_inj_type_mask[err_group];
-@@ -326,10 +327,10 @@ static ssize_t err_inj_write(struct file *file, const char __user *buf,
- 			return -EINVAL;
- 		}
- 	} else {
--		val = kstrtou32(kern_buf, 0, &counter);
--		if (val) {
-+		ret = kstrtou32(kern_buf, 0, &counter);
-+		if (ret) {
- 			kfree(kern_buf);
--			return val;
-+			return ret;
- 		}
- 	}
- 
--- 
-2.53.0
-
+On Mon, May 11, 2026 at 07:02:49PM -0700, Mukesh R wrote:
+> This file actually implements irq remapping, so rename to more appropriate
+> hyperv-irq.c. A new file to implement hyperv iommu will be introduced
+> later.  Also, it should not be tied to HYPERV_IOMMU, but to CONFIG_HYPERV
+> and IRQ_REMAP. The file already has #ifdef CONFIG_IRQ_REMAP.
+> 
+> Reviewed-by: Anirudh Rayabharam (Microsoft) <anirudh@anirudhrb.com>
+Reviewed-by: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
+> Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
+> ---
+>  MAINTAINERS                                    | 2 +-
+>  drivers/iommu/Makefile                         | 2 +-
+>  drivers/iommu/{hyperv-iommu.c => hyperv-irq.c} | 6 +++---
+>  drivers/iommu/irq_remapping.c                  | 2 +-
+>  4 files changed, 6 insertions(+), 6 deletions(-)
+>  rename drivers/iommu/{hyperv-iommu.c => hyperv-irq.c} (99%)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index d1cc0e12fe1f..f803a6a38fee 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -11914,7 +11914,7 @@ F:	drivers/clocksource/hyperv_timer.c
+>  F:	drivers/hid/hid-hyperv.c
+>  F:	drivers/hv/
+>  F:	drivers/input/serio/hyperv-keyboard.c
+> -F:	drivers/iommu/hyperv-iommu.c
+> +F:	drivers/iommu/hyperv-irq.c
+>  F:	drivers/net/ethernet/microsoft/
+>  F:	drivers/net/hyperv/
+>  F:	drivers/pci/controller/pci-hyperv-intf.c
+> diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
+> index 0275821f4ef9..335ea77cced6 100644
+> --- a/drivers/iommu/Makefile
+> +++ b/drivers/iommu/Makefile
+> @@ -30,7 +30,7 @@ obj-$(CONFIG_TEGRA_IOMMU_SMMU) += tegra-smmu.o
+>  obj-$(CONFIG_EXYNOS_IOMMU) += exynos-iommu.o
+>  obj-$(CONFIG_FSL_PAMU) += fsl_pamu.o fsl_pamu_domain.o
+>  obj-$(CONFIG_S390_IOMMU) += s390-iommu.o
+> -obj-$(CONFIG_HYPERV_IOMMU) += hyperv-iommu.o
+> +obj-$(CONFIG_HYPERV) += hyperv-irq.o
+>  obj-$(CONFIG_VIRTIO_IOMMU) += virtio-iommu.o
+>  obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
+>  obj-$(CONFIG_IOMMU_IOPF) += io-pgfault.o
+> diff --git a/drivers/iommu/hyperv-iommu.c b/drivers/iommu/hyperv-irq.c
+> similarity index 99%
+> rename from drivers/iommu/hyperv-iommu.c
+> rename to drivers/iommu/hyperv-irq.c
+> index 479103261ae6..d11076f906fb 100644
+> --- a/drivers/iommu/hyperv-iommu.c
+> +++ b/drivers/iommu/hyperv-irq.c
+> @@ -8,6 +8,8 @@
+>   * Author : Lan Tianyu <Tianyu.Lan@microsoft.com>
+>   */
+>  
+> +#ifdef CONFIG_IRQ_REMAP
+> +
+>  #include <linux/types.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/irq.h>
+> @@ -24,8 +26,6 @@
+>  
+>  #include "irq_remapping.h"
+>  
+> -#ifdef CONFIG_IRQ_REMAP
+> -
+>  /*
+>   * According 82093AA IO-APIC spec , IO APIC has a 24-entry Interrupt
+>   * Redirection Table. Hyper-V exposes one single IO-APIC and so define
+> @@ -331,4 +331,4 @@ static const struct irq_domain_ops hyperv_root_ir_domain_ops = {
+>  	.free = hyperv_root_irq_remapping_free,
+>  };
+>  
+> -#endif
+> +#endif  /* CONFIG_IRQ_REMAP */
+> diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+> index c2443659812a..41bf65e4ea88 100644
+> --- a/drivers/iommu/irq_remapping.c
+> +++ b/drivers/iommu/irq_remapping.c
+> @@ -108,7 +108,7 @@ int __init irq_remapping_prepare(void)
+>  	else if (IS_ENABLED(CONFIG_AMD_IOMMU) &&
+>  		 amd_iommu_irq_ops.prepare() == 0)
+>  		remap_ops = &amd_iommu_irq_ops;
+> -	else if (IS_ENABLED(CONFIG_HYPERV_IOMMU) &&
+> +	else if (IS_ENABLED(CONFIG_HYPERV) &&
+>  		 hyperv_irq_remap_ops.prepare() == 0)
+>  		remap_ops = &hyperv_irq_remap_ops;
+>  	else
+> -- 
+> 2.51.2.vfs.0.1
+> 
