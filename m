@@ -1,147 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C27BA3D5C32;
-	Tue, 12 May 2026 16:55:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0503D45E4
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 17:17:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778604932; cv=none; b=dV1eaiVCXsR20PFgJpMYZe/XYdCANK4Prd9QqZzdB5T8f2DWNiFYmUiNXmX6jGW1Pmfcn5Uzsjew+F7p7pD09bZsc9X24G6MiOr26ipk0ZPhZ2RmtGKnKaWgJrYo5em96gVrEXxukBBaS34/I/jcfg6Yk/0c8ceTeFE3/yyKYLY=
+	t=1778606242; cv=none; b=TfsOIVqr9xFZCcf+C8haLhFp/q38eDD+TMHPO0H+dxbwer8fo+X66V8GfQb4tB8emL0lOF91hUBncZ4BHkJZa8kMcGufBJSZByFQPZqBu63/yXqnQOMejG3O347AtTDZEUR2Z2lLMm/BKn7qcllPjgVviVFahwME3kjco8YgSmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778604932; c=relaxed/simple;
-	bh=pguv4GSXU7BP/JNG5kiQEzdZlyeJ+Sv9kgdzi0t0K8c=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=RM9KTFK/nFYACVsY9NsD+0duk+Qzpa8ftBxYDcRkaKOudiYRbC2D7vd3rJeFvQKqKkJdh7pk/HfkvHpRqhF30j5el7moiLhzi3wZE+1aRgDdP1/EcEWpIuXX+6KrLc6/14UO9GQpmXeZBgeKwH2d/I8hd2Gc4M76Qf9f9xtKFsg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gv4pzI/u; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778606242; c=relaxed/simple;
+	bh=Oe/GIsy89lagNeD0WEvmK0wnd8GTxbtSRowCVJCo/cU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=a61Xac6ZeTPHRlrAyWgs7DhjASSp1wTUhKlmNx/YG/2jRGcMvVvHqf3eBQh4gvE42YAfiFht3EddSz0p7AB/bGnY2PuYiqYAILD//ZB4z/4fjjXiqhS8q9fh3mEEPsWkigqnw67TWBr9n1GwxTcz9D+CaJp0HzrhETuzswu9Fqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dU9PXVvd; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gv4pzI/u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C933C2BCB0;
-	Tue, 12 May 2026 16:55:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778604932;
-	bh=pguv4GSXU7BP/JNG5kiQEzdZlyeJ+Sv9kgdzi0t0K8c=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=Gv4pzI/uNym+Mv45u+BRyY2N9xKTgbdjxcyZjvn8rG4ReH2QmMXQVZ6MI1RU676iI
-	 J+s+z/ek2a/IJjaf5BoQajRQOwcORVvDihPWbsuKv7303mNp71iDtshM3MUgFYtu7m
-	 HabnrAW2Oo7BaHUwYznx83HEVd1TToxW6zlTjFshhPqHxTngQJuNQ5mWR2e/6GzVjW
-	 CQZCq0UtMDJ0+vPX1cMQeGbujB9aK4xUhWPM7t1qciYK4BMhqJBqGw7liVa/vUYWpr
-	 q+vcOzPxZxWcIpIpWHg+jM2ckyFU7m/NZ51xg6QrwwBPhFcsyeI1C+XLG3JYHnJJ+l
-	 13jZHuoAKBI0w==
-Date: Tue, 12 May 2026 11:55:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Message-ID: <20260512165530.GA228087@bhelgaas>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dU9PXVvd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778606240;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Oe/GIsy89lagNeD0WEvmK0wnd8GTxbtSRowCVJCo/cU=;
+	b=dU9PXVvdN8q7hA+xFPFP/6E23uMZANb9QKt7BMJ6ti8AbMedZQI1ehvzt3ZGVlABAdepTo
+	ykyQWp7fke91yOM4jd7u4iBdbOwGvPYFnXmEmbxvpW1FZgtUuBwzxz5vCvmwQwOS4L4JBP
+	MGN2NuZlbgoyexmW+EV1AxCM6QNmY/4=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-561-OgCnxmSiMES3zTvADWRj8g-1; Tue,
+ 12 May 2026 13:17:16 -0400
+X-MC-Unique: OgCnxmSiMES3zTvADWRj8g-1
+X-Mimecast-MFC-AGG-ID: OgCnxmSiMES3zTvADWRj8g_1778606235
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 86FE71800283;
+	Tue, 12 May 2026 17:17:15 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.159])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ABD9A19560A2;
+	Tue, 12 May 2026 17:17:13 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: alex@shazbot.org
+Cc: bhelgaas@google.com,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Force PM reset for Qualcomm devices with NoSoftRst+
+Date: Tue, 12 May 2026 19:17:11 +0200
+Message-ID: <20260512171712.910994-1-jtornosm@redhat.com>
+In-Reply-To: <20260511133643.73a16e69@shazbot.org>
+References: <20260511133643.73a16e69@shazbot.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260413140339.16238-3-cjd@cjdns.fr>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On Mon, Apr 13, 2026 at 02:03:39PM +0000, Caleb James DeLisle wrote:
-> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
-> 
-> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
-> require re-training after startup.
+Hello Alex,
 
-> +#include <asm-generic/errno-base.h>
+Thank you again for your detailed feedback and help
 
-Looks odd; why is this here?  There are basically no other drivers
-that do this.
+>>> What does reset_methods sysfs attribute report for these devices on an
+>>> unpatched kernel?
+Sorry for my earlier confusion about CONFIG_PCI_RESET_SYSFS - I now understand
+the reset_method sysfs file has been available for a long time without any
+config option.
 
-> @@ -1149,6 +1234,46 @@ static int mtk_pcie_probe(struct platform_device *pdev)
->  	if (err)
->  		goto put_resources;
->  
-> +	/* EN7528 PCIe initially comes up as Gen1 even if Gen2 is supported.
-> +	 * The cannonical way to achieve Gen2 is to re-train the link
-> +	 * immediately after setup. However, to save a lot of duplicated code
-> +	 * we use pcie_retrain_link() which is usable once we have the pci_dev
-> +	 * struct for the bridge, i.e. after pci_host_probe(). */
+Testing confirms only "bus" reset is available on default kernel for these
+Qualcomm devices. PM reset returns -ENOTTY (blocked by NoSoftRst+ flag), and
+FLR is not advertised. This confirms the default kernel has no working reset
+method for these devices.
 
-s/cannonical/canonical/
+> Then why aren't we setting quirks to use quirk_no_bus_reset() for these
+> devices?
+You're right. I am going to try quirk_no_bus_reset() to disable the broken
+SBR method.
 
-> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN) {
-> +		int slot = of_get_pci_domain_nr(dev->of_node);
+> PS - D3cold might be an interesting reset method that could be implemented
+> for single function endpoints in slots that support it.
+I like the suggestion, I am going to implement a generic d3cold as a general
+PCI core reset method for single-function devices (not only for Qualcomm).
+I have seen that using pci_set_power_state(dev, PCI_D3cold), if no _PR3
+support by the platform, it will use D3hot fallback.
 
-I suppose of_get_pci_domain_nr() is sort of an implicit way to
-identify the Gen2 ports?  Worth at least a comment about this DT
-connection.  Maybe it could be replaced by using
-pcie_get_supported_speeds() or similar?
+The combination of quirk_no_bus_reset() + general d3cold reset method can
+provide a much better solution for these devices and the new reset method
+allows the configuration if necessary.
+I'll send a next version with this.
 
-> +		struct pci_dev *rc = NULL;
+Thanks
 
-s/rc/rp/ to avoid confusing "root port" for "return code" or "root
-complex".
+Best regards
+José Ignacio
 
-> +		int ret = -ENOENT;
-> +
-> +		if (slot >= 0)
-> +			rc = pci_get_slot(host->bus, PCI_DEVFN(slot, 0));
-
-Instead of fiddling with pci_get_slot(), which adds refcount issues
-and artificial device/function number dependencies, I think it would
-be better to iterate over the devices on host->bus, e.g., with
-"for_each_pci_bridge(dev, host->bus)" as in iproc_pcie_setup().
-
-> +		if (rc) {
-> +			ret = -EOPNOTSUPP;
-> +
-> +			/* pcie_retrain_link() is not an exported symbol but
-> +			 * this driver supports being built as a loadable
-> +			 * module. Someone using this on an EN7528 should make
-> +			 * it builtin, or accept Gen1 PCI. */
-> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
-> +			ret = pcie_retrain_link(rc, true);
-> +#endif
-
-This looks like a confusing user experience if built as a module, with
-no hint to the user about why the link is slower than it should be.
-I guess "failed to retrain" is a bit of a hint, but it's not really a
-clue about how to fix it.
-
-> +		}
-> +
-> +		if (ret) {
-> +			dev_info(dev, "port%d failed to retrain %pe\n", slot,
-> +				 ERR_PTR(ret));
-
-This is basically an error path and there's nothing else to do, so if
-you return directly here (especially if you factor this to a separate
-function), the "normal" path below can be unindented.
-
-> +		} else {
-> +			u16 lnksta;
-> +			u32 speed;
-> +
-> +			pcie_capability_read_word(rc, PCI_EXP_LNKSTA, &lnksta);
-> +			speed = lnksta & PCI_EXP_LNKSTA_CLS;
-> +
-> +			dev_info(dev, "port%d link retrained, speed %s\n", slot,
-> +				 pci_speed_string(pcie_link_speed[speed]));
-> +		}
-> +	}
-
-Maybe factor the retrain block into a helper function.
-
-I'm sort of squinting at this whole link retrain thing to begin with.
-After the controller is configured correctly, the hardware is supposed
-to train the link automatically by itself.
-
-Did something change between mtk_pcie_startup_port_en7528() and now
-that means the link will train at Gen2?  Whatever that change is,
-could it be done in mtk_pcie_startup_port_en7528()?
-
-What happens when the downstream device is put in D3cold and the link
-retrains after power is restored?  Does it train at Gen2 then, without
-assistance like this?
