@@ -1,107 +1,243 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012062.outbound.protection.outlook.com [52.101.53.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93FB38E5EF;
-	Tue, 12 May 2026 09:00:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778576415; cv=none; b=aby/uR5TV29Cd5wfX0/C/a5CGzipHlH0ekGRljx3xmLBVOopZ03LNtQ1nkSAtM2Dk0UydS8lWsNkso1CwedbAqxNHvlwJaFe60na+18AbMY9IOvXRjtcS6YS3wfiin54SQtQ7bmEnEuYuutK4e5LD/zWgkE2QoEnTxa1+eyflZ8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778576415; c=relaxed/simple;
-	bh=mRO6HYK8zR58M6WfaxPSs3TTYuHgr1rfoSMZvltT5Ek=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DHKyPuAIQYSxWg7KXjsedCsT9rpRinKfP/FQd4mvR/fpShFSkC+JNFo/1ziSH4oFaXxYcTxGxP4Jt15BnOAD1f3nhtKKM67im6uaiX5GQlLxs4hBhQcI++9JzMenJkk9j/dfV0REnZfCOPZsxDcsQR1nc8px8u3aoTz3OvNJJ/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HmGoSe9l; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CC95313267;
+	Tue, 12 May 2026 09:08:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.62
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778576887; cv=fail; b=OSGy5zWLodGjW2DwGXdHdU5R4DI6pepkYDKdEqG9Xmn/3b6zkjn055m9N8Mku1lVWDuAtsMDzFOKT51aEFWWjRO8NQRltwinS+r1dTCewCIOqgXHpCDnG34QUtq+WusC9neTRY7z/3b3HMDRYdHhnOLy8KNblKa3Sx9HLAWUpRo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778576887; c=relaxed/simple;
+	bh=sGhagKF8D/dGZyE9sweEsOvovtj985bFmPIVN8o8A2U=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=krq/vZ67l+bkkpzxoU8Y9rdg/WLySDjsiuwsKriqjvs40uT5c/4oVj3kDlCikgd67AHCCxU++ulka+K6/nw0OMkvouiVBLFxqtYmVaXzCaQOtdZuB1S3iNjZe3hV4vZalFg2pVrt5PhnKGEpsnQRJhe7g5h3/aYu3DthqyQhqj0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=BSWEWcHF; arc=fail smtp.client-ip=52.101.53.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HmGoSe9l"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FE54C2BCB0;
-	Tue, 12 May 2026 09:00:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778576414;
-	bh=mRO6HYK8zR58M6WfaxPSs3TTYuHgr1rfoSMZvltT5Ek=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HmGoSe9lsUNpwoy/lvxKquP+ymuUlNC3VAZXr/92XEC1koEnGibsSOWCVwBwJaFYH
-	 FQp+iABDOF3ELbIza7XiAAiGxvM00tI1ezL8508fErWV2/eN4FHRjgZ7PgoqE4AeE6
-	 P+wlowBZWcvUO2jiQ7N3plciNsK2ISZSPVZiaRigBejXfpwU4Hc+UrkonUfkRI9K53
-	 Lc3V590nAT9vzI6wsoykrT4F37GpfprRXaeuT2ro3Efw5DqIlS78PJw8X6SF4ngU02
-	 CZSdrX5zjL5AjIu4Jn167ZPpvvnQemnK5eBLyi+osCGYRzbhMPMh/boJM+RjSr9xSZ
-	 LGp5oTyl+TFaw==
-Date: Tue, 12 May 2026 12:00:06 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Export pci_parent_bus_reset() for drivers to
- use
-Message-ID: <20260512090006.GQ15586@unreal>
-References: <alpine.DEB.2.21.2605050042390.46195@angie.orcam.me.uk>
- <alpine.DEB.2.21.2605050051390.46195@angie.orcam.me.uk>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="BSWEWcHF"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=NlJH3vZzvYak4CpQJYKCXhsqlbQBCth0pQut3d2uFk4Rm0zJMl0hQGh+VpetCTQyMeOuQPrFE4qj868wYaNAHzjz8f48SnvB4eYjDNA1a9Sd/L+X6ZSBFYeFZleIoY3jKE1zUppzO/Ml9g0B89IqPT474cgLtYghGqbnPtvc9/VfzOnjIEQnF4F4NsI6C4t4DmLgDmJEPdptalgtUwG3dfe7idWrXALgWXqm63dKISofyfmPk4qw7IHeO3ldO3xtwDu0B146Ci6+6hj4qJrQkhD2E5KlZZLLDnsxY7aySlnHZ5FcbRgAcMWjq5kRXhu9y/KOlvVnD+cyLKmIecj1Yg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=T9QzAAl68wtZoJQd0DnxRnCA8MhxTHhlTljt9q9Acjs=;
+ b=ky3s+7yEoPqIGwjvhLEJG3h302JdQqkSHq5xo2fgpQlo/+LyTdGf3HghXsJtJ+eDJXNRNS41qc9MAOp4ztV0kq05fEvn3m8rT2nAIfx1yvP3zLd2Zdt2erCxNw10z4/spd/9+uFhzkm5SP+/fawY3rVyTLSRR+3GVvf8tcvi2xLj9r7LoO3+3y0fmY+Jd/l9NOvqdkfg/BjqZUtUw93sv3sJAivxd6nb0pA7U9eMn7mhM3Z0sr0IiZoIQ8hy+Lft9WjwStwYh8VCRe8zONYjdeb0QO7bxCaX0bupP/FQmwr4qiJaUmbQRL99jT6CauwqJitpnDuVSKIuxC0OtqE5lg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=T9QzAAl68wtZoJQd0DnxRnCA8MhxTHhlTljt9q9Acjs=;
+ b=BSWEWcHF2RJM9/c1IL1BZIg7ylaLsOWQN5cZg351TCXkOix3PTsWGrbv+rembRI2+lavGlA8dyjxkAidy5ky4auyU6SPyYjmB+qUYMi1GajtVfAvHSHpiaNxCwMgzkXDoz6zJUuGP8yyLSsG7Lxatb1BAOxjtiAO5mKM+YUT6F2O/rSJBlYO5BC6RMRTR2vMniNzdxmnmMIxcbUoSZIj9xRdi0s6yLCRCBB78h9FdAN1FFy3eUfBqeLZltQC5GWo6MmE+EofkYz17W8DEXv1T1qtpsdXlyCx85vV9qFj4HWK39mC1qpf0p/judQ1dZ8jtOI8WFaFe+xa3QghjER8fg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com (2603:10b6:8:2b0::12)
+ by SN7PR12MB7980.namprd12.prod.outlook.com (2603:10b6:806:341::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Tue, 12 May
+ 2026 09:07:56 +0000
+Received: from DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391]) by DS2PR12MB9750.namprd12.prod.outlook.com
+ ([fe80::56a8:d6bf:e24c:b391%6]) with mapi id 15.20.9913.009; Tue, 12 May 2026
+ 09:07:56 +0000
+Message-ID: <daa93cc4-090a-4eb0-91c3-029e0b037b71@nvidia.com>
+Date: Tue, 12 May 2026 10:07:50 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
+ set by BIOS for devicetree platforms
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ manivannan.sadhasivam@oss.qualcomm.com, Thierry Reding <treding@nvidia.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ "David E. Box" <david.e.box@linux.intel.com>,
+ Kai-Heng Feng <kai.heng.feng@canonical.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Heiner Kallweit <hkallweit1@gmail.com>,
+ Chia-Lin Kao <acelan.kao@canonical.com>,
+ "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+ Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ linux-nvme@lists.infradead.org
+References: <20260122152903.GA1247682@bhelgaas>
+ <8d8b2244-2bf0-48cf-8fb8-9e47e197a62d@nvidia.com>
+ <fb6uzh3jfes3hky6fblpsh2vvg3daij5ogecydiuhmytxbglcb@tdqjcoxuymsk>
+From: Jon Hunter <jonathanh@nvidia.com>
+Content-Language: en-US
+In-Reply-To: <fb6uzh3jfes3hky6fblpsh2vvg3daij5ogecydiuhmytxbglcb@tdqjcoxuymsk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: PR3P189CA0044.EURP189.PROD.OUTLOOK.COM
+ (2603:10a6:102:53::19) To DS2PR12MB9750.namprd12.prod.outlook.com
+ (2603:10b6:8:2b0::12)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.2605050051390.46195@angie.orcam.me.uk>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS2PR12MB9750:EE_|SN7PR12MB7980:EE_
+X-MS-Office365-Filtering-Correlation-Id: e09265a6-54cf-44c5-a0f3-08deb005f504
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|11063799003|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	NbYr1Y5KIznVwVovOKiWiEEcUmUliD6RdJw8CKP8lXtf524mFXKya2VIURsqRsHGby0CcnjQZ64Kqee1Onrx/XvsTffZpm9o2scDhuVYTpFN8V+0lDtlBUvi8WnQjpAbQrSLqyUtHqtNA/Xca/+NvkvBjesL4gQSr9X4968ri5y9fN2WnfdE1GwV51LxXViZadP70+QZpnMG6J9oOAn/3F9jVBSGpWxt43927brgl7tG6fPL9xB6ViM58//oIEBAUx0snSqCFZeTjpRIB3VmZYpCFxg0ePU3DZiicZ1zNQ9kDkxBco74a8YiGg+UITXNIe+uOSkcVBOpTFJFqY7vm9CCaBCcjvF3nlRkX9+ngT42G82WZePAvrG+e3xl97UkmAi3oCJ2nUKk+G0coVUXJZ1LqUq270kXX5IliUNTrCs8Jc3gN+jefK7qgGy911CVZk9bbfNmchOs1D37C11JOrSUKhCdO56ibVGPyZAaNqEEOG0qT40i48HoW+QpOyTePwUCU8mTpmemswC44tyIgpAn1GA9X/mUyxvATKqsnHw30ylBHTKyveJJkCBstqBWxcps0P9t8o4eB2W4w2hfrk3j+DmgLGJ8njL+kxZMaAvqyBJxXYH6q6e6PXYq8tdt7SRGV6Q4aRgjKh5ucMw1pQRh2P5+177WvgrsQadSBcXTcbb9rUWdQLp1bSp5ru3b
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS2PR12MB9750.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(11063799003)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?SnUwU005bGZZcmVlOWFzeTNjTHFkdEsycExLT2NVam5jMGVwY1l5aUZOUFJE?=
+ =?utf-8?B?RWtwTkxmQjRYYzJmNFpjZHEzZGdsT2tjcU1wcUk1Yk8xOEhyWnI5RXFQZkFj?=
+ =?utf-8?B?N1FnOW9ST0F6Nnd1YTJrcE5JQWllc000cHlZTkZ1dnZHQTZnQ2x4OXJxbHVM?=
+ =?utf-8?B?dzRZVWI2WTlOM01IVXI3ZUlaSU9wR3RSQXJQQlBBUHdkL05sMDhycTNJL2ZH?=
+ =?utf-8?B?b3I4OVlHQ0NWWmY3SmVvdlNtUW41aWRJMnNPTm54dGN2OVV6UTQxblo1cWdO?=
+ =?utf-8?B?T1FwelZzdW41NUtmK1p5a3pOOG5TUDVZZDVUTEtTQTZZNUdxeEFCWVZjMk1m?=
+ =?utf-8?B?bDB0VEo4YVpFVEtNMHBCd2UzeU4rd1M5dU56Y3YyeVZiVklrd1JtUm93dnhY?=
+ =?utf-8?B?OG02OW9YM0xROGE5NlNIRTc2R1NheGdVMWVxOWtkZGg5aW1UUFlHdTdNQk9Y?=
+ =?utf-8?B?SWd6cEhBTE9YYkhkZWxHanpWek9Sb1lZeGEyQ3pjczZieUlHQzVMYWJzc1V6?=
+ =?utf-8?B?eWxXcXd0OUxzSzR5UlljdWtYaWkzVGdtSDZ5bnQ3OFpQTVFrV1k0YjdUZjJz?=
+ =?utf-8?B?MTFzSmR2WTFaWHAzUmZXRHk0TkJLdVlwbmxpVkZNeTVEeGFML1NrVDBDOHAz?=
+ =?utf-8?B?aFVBWVBVYTJUTkE5cElvUU9iS2hJUkdWVUVRSUxEb2dobWtWRitoYWRNVnQ0?=
+ =?utf-8?B?L1l1RkFrNDl0bm56c212VDYvN0M5Umt0cjI4dmw0VGhNMC93cm41Q05mZEFq?=
+ =?utf-8?B?K1ZmdUU1SEc3dXl4UjNUbmZHWnJuZzh3d3NLR2dLK3E4LzBpMng3RG9TaUI3?=
+ =?utf-8?B?ZDZDTnczOFJva08rSGM3QzF2SUYwajNWb2NwU3pXd2lxZXJldEFZUWM5UFFa?=
+ =?utf-8?B?RnBQT3lqQzg2bDZvb0Nmck1ESnZqYnljN1lsV2RPdEt2Y1VLaFJhKzdVMmE2?=
+ =?utf-8?B?eWE2QzkvUUM0eHV1V3NtU1hMSUd2TjcwVGlPSkhQYWxYU3ZNRFRWUFl3ZEY0?=
+ =?utf-8?B?MlVyaUpiem12d3dVTC9CL2VlelNnRFZTUEgySHRTYjIycGRFd3JBazN5YTlq?=
+ =?utf-8?B?d1dBdDZPQWhIcjJjOFI5OG44MVVNY0ZveXlvYWVsR3dOWit6NDY4UVVFQ3Fv?=
+ =?utf-8?B?RjBIWlNxdi9BUDRVaEtrcDJab01ia092SlFkUkFJWnFFYVhndWRCUVl2S1pJ?=
+ =?utf-8?B?UXFZR1VpbmRla0xlNDI1NzBUOTdhVmtWQjlMSjkvYzVvaFRCSlFwSEtXUmJC?=
+ =?utf-8?B?M01NZGVrR0R5NnQ2VXdndjlXbUFyM3VmTTlqUks1WVJJUExSdW9RYjFtckNp?=
+ =?utf-8?B?UGlieGdST3k5dkEraTh0czJwNTkwYzZzVHk1RjBVNk9XUTVxa2lvaVpDVW1T?=
+ =?utf-8?B?M3U5NllGaU9udXpWWGdzcjZZODRST09DKzlKdm9QOTk3WU5yTzdER3Vvb3hB?=
+ =?utf-8?B?ZkpvS0wrSkJOVHF5ZTY2ZnZ2NDlVdGFtNTRQcFkwVFhxQUZuVWkxd1ZtZlc4?=
+ =?utf-8?B?ZlhvM3RCMkpOMmZrdjJEYlhRc29iQTNpNDFTS0Z3OE9jbzFlM2djVFgrWE5H?=
+ =?utf-8?B?bloxd0U0OERiK1JuSTJ5SHU4TmVSSy9Neml1TnJ3WWRkYkNkdEVJY0lWZ2pz?=
+ =?utf-8?B?QnV0K0wvRVY2MmcwRHBSQ2tUWE5jdjVZU3c0NkVVY1Z3dGxTaWRXWk1MeUQv?=
+ =?utf-8?B?RjE3MFd2RDJ6YmI2RHM0RWtVUDdGYjJyeVJ3S3EvOWZKMlptcEV0WldYVkxj?=
+ =?utf-8?B?Sy84d3lqcmVUdHRLdG85MkhDQ1pQYkt4RnR5UVozdmFNU1dSWFdvMDcvVFdG?=
+ =?utf-8?B?M29QU2RqQzBHcHBlU3F2QVNqR1E5dnNLL2lJNVVONjNqVDZWb3dCZ3pVSHZm?=
+ =?utf-8?B?d0t1dVNpbXo3YnNLRW1oWnZUNGsxR0hrRVlTcFNHYVJJMTZtTkZSUUM1R1Z0?=
+ =?utf-8?B?dUJncCtVc0hLR3pVUUt1T2cwTGlrQTBlOXN2c2kwa0NKdittWFQvYzBMeXF0?=
+ =?utf-8?B?dmRURHRHL2lhakFkS0hSNURLMGJjbnJnRU9SekVQT2tNd2F1L29ZRlNFdGJF?=
+ =?utf-8?B?Z1d1dG9aQmtveFlMeGZST0lHS0twOE0vL25oZWg3YUMxSkZXVTd1VkNhSGVp?=
+ =?utf-8?B?SE5wczlLYThoUTk2S3hqTEN4N1NCcnA1OFNZUndsc3ZKYXMzZW1VQ3JmMUc5?=
+ =?utf-8?B?ZFRLWDlXMEdTN0tKSlpDSnM4Mm5CZ2k1YTV3YUxLUXNObG5TSXZwRTRqeHR3?=
+ =?utf-8?B?Q3gzWTM4dnoxdzFrSHFmY1YwakR6aytsc2EzMFFwVHB0MGg1b05ORDAyTHN6?=
+ =?utf-8?B?dXRlQWVGRW9MWWt5UVhZM0tqVVoxSmlTeUllZG5tUmdwcE5aUXJ0QT09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e09265a6-54cf-44c5-a0f3-08deb005f504
+X-MS-Exchange-CrossTenant-AuthSource: DS2PR12MB9750.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2026 09:07:56.6054
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: OmQG54zDgOQYH1tyUkn4lTxkMW7AlXC7VtSKGjuG661BpjD1sMXNJbfJdI5vwTh39UjmzQnEeS1STyuvyKRX7g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7980
 
-On Tue, May 05, 2026 at 01:03:39AM +0100, Maciej W. Rozycki wrote:
-> Export pci_parent_bus_reset() so that drivers do not duplicate it.  
-> Document the interface.
-> 
-> Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
-> ---
-> Changes from v1, 
-> <https://lore.kernel.org/r/alpine.DEB.2.21.2306200231020.14084@angie.orcam.me.uk/>:
-> 
-> - Reword function description so as to list the return values separately.
-> ---
->  drivers/pci/pci.c   |   17 ++++++++++++++++-
->  include/linux/pci.h |    1 +
->  2 files changed, 17 insertions(+), 1 deletion(-)
-> 
-> linux-pci-parent-bus-reset-export.diff
-> Index: linux-macro/drivers/pci/pci.c
-> ===================================================================
-> --- linux-macro.orig/drivers/pci/pci.c
-> +++ linux-macro/drivers/pci/pci.c
-> @@ -4833,7 +4833,21 @@ int pci_bridge_secondary_bus_reset(struc
->  }
->  EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
->  
-> -static int pci_parent_bus_reset(struct pci_dev *dev, bool probe)
-> +/**
-> + * pci_parent_bus_reset - Reset a device via its upstream PCI bridge
-> + * @dev: Device to reset.
-> + * @probe: Only check if reset is possible if TRUE, actually reset if FALSE.
-> + *
-> + * Perform a device reset by requesting a secondary bus reset via the
-> + * device's immediate upstream PCI bridge.  Return failure if the reset
-> + * failed or it could not have been issued in the first place because
-> + * the device is not on a secondary bus of any PCI bridge or it wouldn't
-> + * be the only device reset.  If probing, then only verify whether it
-> + * would be possible to issue a reset.
-> + *
-> + * Returns: 0 if successful or -ENOTTY otherwise.
-> + */
-> +int pci_parent_bus_reset(struct pci_dev *dev, bool probe)
->  {
->  	struct pci_dev *pdev;
->  
-> @@ -4850,6 +4864,7 @@ static int pci_parent_bus_reset(struct p
->  
->  	return pci_bridge_secondary_bus_reset(dev->bus->self);
->  }
-> +EXPORT_SYMBOL_GPL(pci_parent_bus_reset);
 
-I wouldn't recommend doing this solely for hfi1. The driver is likely to be
-removed or significantly changed soon.
+On 11/05/2026 06:18, Manivannan Sadhasivam wrote:
+> On Thu, May 07, 2026 at 11:25:23AM +0100, Jon Hunter wrote:
+>> Hi Bjorn, Mani,
+>>
+>> On 22/01/2026 15:29, Bjorn Helgaas wrote:
+>>> [+cc NVMe folks]
+>>>
+>>> On Thu, Jan 22, 2026 at 12:12:42PM +0000, Jon Hunter wrote:
+>>>> ...
+>>>
+>>>> Since this commit was added in Linux v6.18, I have been observing a suspend
+>>>> test failures on some of our boards. The suspend test suspends the devices
+>>>> for 20 secs and before this change the board would resume in about ~27 secs
+>>>> (including the 20 sec sleep). After this change the board would take over 80
+>>>> secs to resume and this triggered a failure.
+>>>>
+>>>> Looking at the logs, I can see it is the NVMe device on the board that is
+>>>> having an issue, and I see the reset failing ...
+>>>>
+>>>>    [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
+>>>>     flow control rx/tx
+>>>>    [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
+>>>>     0 timeout, reset controller
+>>>>    [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
+>>>>    [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
+>>>>    [ 1003.050481] OOM killer enabled.
+>>>>    [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
+>>>>
+>>>>   From the above timestamps the delay is coming from the NVMe. I see this
+>>>> issue on several boards with different NVMe devices and I can workaround
+>>>> this by disabling ASPM L0/L1 for these devices ...
+>>>>
+>>>>    DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
+>>>>    DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
+>>>>    DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
+>>>>    DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
+>>>>
+>>>> I am curious if you have seen any similar issues?
+>>>>
+>>>> Other PCIe devices seem to be OK (like the realtek r8169) but just
+>>>> the NVMe is having issues. So I am trying to figure out the best way
+>>>> to resolve this?
+>>>
+>>> For context, "this commit" refers to f3ac2ff14834, modified by
+>>> df5192d9bb0e:
+>>>
+>>>     f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for devicetree platforms")
+>>>     df5192d9bb0e ("PCI/ASPM: Enable only L0s and L1 for devicetree platforms")
+>>>
+>>> The fact that this suspend issue only affects NVMe reminds me of the
+>>> code in dw_pcie_suspend_noirq() [1] that bails out early if L1 is
+>>> enabled because of some NVMe expectation:
+>>>
+>>>     dw_pcie_suspend_noirq()
+>>>     {
+>>>       ...
+>>>       /*
+>>>        * If L1SS is supported, then do not put the link into L2 as some
+>>>        * devices such as NVMe expect low resume latency.
+>>>        */
+>>>       if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
+>>>         return 0;
+>>>       ...
+>>>
+>>> That suggests there's some NVMe/ASPM interaction that the PCI core
+>>> doesn't understand yet.
+>>>
+>>> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/controller/dwc/pcie-designware-host.c?id=v6.18#n1146
+>>
+>>
+>> I want to revisit this issue. From my perspective low-power suspend has now
+>> been broken on some of our Tegra platforms (that have NVMe devices) since
+>> v6.19 and so far this is no resolution to this issue. The patch that was
+>> proposed to fix this [0] has been rejected by qualcomm and although this
+>> does workaround the issue, my confidence that this is the right fix is now
+>> low.
+>>
+> 
+> The referenced patch is now merged into arm-soc for v7.2:
+> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?id=7602c0ec0bbfd3985d49f4f0cad281c1414008c9
+> 
+> I hope this takes care of the issue you are dealing with.
 
-https://lore.kernel.org/linux-rdma/177516078937.637585.1447184858924347033.stgit@awdrv-04.cornelisnetworks.com/
+Well yes this patch does fix issues for us. However, I am still a bit 
+confused about this whole thing given that this patch does not work for 
+all qualcomm platforms. Anyway, I guess we have not seen any other 
+issues so far with the above and so may be we can consider this closed 
+for now.
 
 Thanks
+Jon
+
+-- 
+nvpublic
+
