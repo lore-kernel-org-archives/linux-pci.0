@@ -1,182 +1,148 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010041.outbound.protection.outlook.com [52.101.56.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F0B31FC7C5;
-	Tue, 12 May 2026 03:49:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778557750; cv=fail; b=TeyWfhvlXzEq1yFGK3ggVkKM+ZePlAvEJGbQQPmePcObiQ2hIX1L3lgFISfXU1ibVqAfLbnBAPcEDv49dRVdNZs9LyBT/xHyNUqEOmShISm4D1YlfRUJ3XQbuXloZTuvZfA19XO5sZ1jkygsrBMFkR17n0YN21d0ApC0RLB348s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778557750; c=relaxed/simple;
-	bh=eztzXSkubUZLBk2u6XLMaJZ4iZa9Ee86XkOboq40T78=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oE/Sngd2YPLwSAy9l+Rkri2CTk71TnbsC8Tdat5nWXknksDJyF/eQyMqEG+wcHoQFIgdDtGOaQsfpQ4LEntPg01CVToUAg7z3K7dJrHD9bG3O+MRbgEp01HAdQVfCJB0tlR44N8qnOelNVh5HjQP1CUufnERV/coCpeu4/8f+uY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=nzD5eKvV; arc=fail smtp.client-ip=52.101.56.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2FDFE31B838;
+	Tue, 12 May 2026 04:59:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778561946; cv=none; b=WVwEhq3XEYnzj7vQ4TOa5tBEz4KFEVP/t8PqWg2b5U7eTnD9J5Cap9ZdqcQBVXjvn0cCO1V2wJWSSF8msHvqlDMewRKO4VSvGY+SYm1hIViSlvWcSeK/1jxJ9icTaTs2a+T30mE7qU+/+iDaax5C2Y2az1qGQnNAPctMTIwJO7o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778561946; c=relaxed/simple;
+	bh=TvQkbCpBAwWmu/+s0/683PQaLuNtS6G4/9C8St/egB4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EraGqvQVrJkJgZ0tnnxmEzl9wbK/TQ6DpRbn923qDgOFq1L0vmqz1DHgWkNCTjkqs1a1Dj7/iw5Mgtsj56SBwa+M25chOjKuHj4e4lMKaTZP5P7jIhoYfJ2/3PDcET5SNjDeohXQjqV4cFds/7qk8RphkueQUQY4294NKp5tUqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=CI1ArQZT; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="nzD5eKvV"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CZEVTMRz0wFi00ejMJysqzKQcfVSzg3y3j5HEaw/drOo+Aoa6SeX7C8SV8CO/sCdRQQ3i8XKWruSrQUK/kolEEqf3bkrzfbGXRcsxpOuTPZqN66KEaAHOMyiRlBvn8o2Ih0coBa3FOceOk8MJX8FjMUF5dWmkkC2+nFnN6S6zmEfjOa/qvOjuwnl0nztxbwDzKWG+vxd1XN0GFPhj1msuj8aTAPhPEXgKgPAzQjRj/xUtzk6ituecP1aPAX2ev9B9LVzn3ktH/bLcq9afretqoM5jCeDO1sXhQGFMOeXfTQcyoHTJRJ+NXKkS9XWbVh49+pxr1cnQMFBCH4LbstjVg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5ecMQe61b8N3/ZS8u5Y6p0n0ZLxDZrZSDlb5LGNE3tE=;
- b=XvPG56m9W8J3xffszDqM11n9bQx273Pg+WI5jXHZXvuuecd6Dzz7HlLpWojkXbvf26KP7JHw9eZLVkFZLyP0Swm9dkCDUwiCe3FsVgam6LPaVbp76rDS1ju0Ygym8XEhyxLelHYTl6al/ZBaDynNKFerKuMLHMswfV8n9oP6+ZbVN7VSvufD+MNns48rOu0COQu1mU49oN+LxB4wBOGt8PH9ji71tvhPO+ceXKc9a1OrPJ67sNu4Gtd5O6V4bMzFRYSSIYarglsjPS7ENmfP/vRnSSO1VFLtxtciarK33agXGyH2rGZQn7979RAzzjhDTwedVMlAHBVoMRP6jS4z/w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5ecMQe61b8N3/ZS8u5Y6p0n0ZLxDZrZSDlb5LGNE3tE=;
- b=nzD5eKvVX2lxhbBjY93mBwfRoWLFSQTbn/sjM5I6q8PtfMsijxV1LMrqI3RCeejMvIzRV0QPjlrIXeIQVyWwCz28efkyc6K/CcAPC0MxqwJVYPu/r7so9NpvLXls5SRVfRzaGcjLrbLn+FJdcQVmIQ3Hi/Pdd9h2bIiOaip+U952eAsT1kvCs/leOJNc68Y68L1sLbES8+Lw0hGj9uWgw9Ox9QwFyA6R4iyHqEBtKcfF0/Feg6DGYXWCAbDfFwCj0thpHXqbJMtLr1jl3lG+zTNo+sVQ0GsH5F7P3xa6AMsYh0Od6jSXGmA7a8Li4l8A+B+zib1v65Z6Zz5NBe5bhw==
-Received: from MW4PR03CA0360.namprd03.prod.outlook.com (2603:10b6:303:dc::35)
- by DS0PR12MB9445.namprd12.prod.outlook.com (2603:10b6:8:1a1::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.23; Tue, 12 May
- 2026 03:49:03 +0000
-Received: from MWH0EPF000C6189.namprd02.prod.outlook.com
- (2603:10b6:303:dc:cafe::59) by MW4PR03CA0360.outlook.office365.com
- (2603:10b6:303:dc::35) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9891.23 via Frontend Transport; Tue,
- 12 May 2026 03:49:03 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- MWH0EPF000C6189.mail.protection.outlook.com (10.167.249.121) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.25.13 via Frontend Transport; Tue, 12 May 2026 03:49:03 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 11 May
- 2026 20:48:44 -0700
-Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.37) by
- rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Mon, 11 May 2026 20:48:36 -0700
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-	<conor+dt@kernel.org>, <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-	<kishon@kernel.org>, <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-	<Frank.Li@nxp.com>, <den@valinux.co.jp>, <hongxing.zhu@nxp.com>,
-	<jingoohan1@gmail.com>, <vidyas@nvidia.com>, <cassel@kernel.org>,
-	<18255117159@163.com>
-CC: <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH v2] PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance latency
-Date: Tue, 12 May 2026 09:18:21 +0530
-Message-ID: <20260512034821.1320714-1-mmaddireddy@nvidia.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="CI1ArQZT"
+Received: by linux.microsoft.com (Postfix, from userid 1099)
+	id DEA0C20B7166; Mon, 11 May 2026 21:59:01 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com DEA0C20B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1778561941;
+	bh=Ct2zox4LNaFQs4SrzFzo0qnDAt+wwOMkCjNjaObBP1w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CI1ArQZT/OgZjHmn5SqzOI3XEf+nL8o+BsRStOnwZlz8wxDQD4IR5dy7KhF3EJ/07
+	 CvPNuDOYl3oTa6fNTLp8vxKJqlp5IycfbM3mCaopVnC0m9AZb+ZmGyLfgWW/9ulLps
+	 1kWRQAVeDL7y+MELf57k41+iMf4N6Ld0Lj8hdXvQ=
+Date: Mon, 11 May 2026 21:59:01 -0700
+From: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Subject: Re: [PATCH V1 1/3] mshv: Import declarations for irq remap and add
+ irqbypass support
+Message-ID: <agKzlfagq4Sh7ua3@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20260512021242.1679786-1-mrathor@linux.microsoft.com>
+ <20260512021242.1679786-2-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWH0EPF000C6189:EE_|DS0PR12MB9445:EE_
-X-MS-Office365-Filtering-Correlation-Id: cbf9e444-873f-4728-b7ce-08deafd968ec
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|36860700016|376014|82310400026|11063799003|3023799003|56012099003|921020|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	pg+F2XR8frh8JhxD9AxhkRGkIbOzzyvyzuudFRaJyqUVWvCZ0/D87JhwQhribgS8EtNk/jdHj3GOPqFF9jGdap+GCLVRFSrmuiqFQhJGEaNMQNiYpevbzeBDx7IKxCHGCqSbdrYJdFEiEm/8ZpoNT5xNMa7oUfO6IzZqwbSbn/t2rqh6U6aC5xTTyJuFliJmU3SZg+EeYWUF/y9slNEOz3428C8V+zSm6wif3e7K/0boUZNVq09KSdlTZDRzpq2odv74zzuT4UmC6iagQO/7c6OSQc3pBXFUNIhm2YmxKU7Qz2cmDTynuh1Vh6kALO74n6wSpnFnJGDeP8a7IKl+hgPvFvDHfVkqeK4WXKjFHhJXAVS3Pn+0JRGOuRLrL1ParYRjGBCNc5wADgLrz/LTcp2J2XU0EtHua1l4xlBmg+h0Jcy1tkhPOetclbCfCOCf9kp+hmyqpcyw2SjDCrvYMQmWwhJ5L4fxjZa3r6975V/8AOwgMDTgvqmW/92Zyb9B9OgrRdHKPvkSknhAEAo2EXlI72X0wiIGxMeiTGwa57OgIexigD4t6EmfYaSt2S4zQw+2g4XbuLl2FLyCJxaU3iyrgPrBCJFmdgWxp5HbnNc0a8DPyHVdRaKFHkrp1QaZHuESUpo0fYIGSqzf4DOWRjOysa/NkWLXC9/v4fNxeTsv0ucy2206+RZVnqclBArwYCrmtcfirYKgG6FNE6f1x7s0gOh+69bVss9I+tqM+f6iPPkKEkTOhlyN9elpGVRHN10JoyLCzg3u+d/uJd60qw==
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(36860700016)(376014)(82310400026)(11063799003)(3023799003)(56012099003)(921020)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	f18g1QyUfC3lfR375X5XQjFex1E+iaMhaOaDx911NdaanwxpAncOaynNsoeds9P6LhYRDOCAoZ7h+ajtEObcON5cBdbEW2sb0XQj077pmV+5mw8LRKNx3GrhvWk2JwXSGIFSiju5i/9k4XeJBLdJI6VwMwTcKheRXkcybjVI8TvsrszxEOeSfj08lhBsC2v22ZIIq+CH8ypKf7/6wWX3Zv2XcI/DwmG6IaP2f7kFoepVIxMkEoBzybT7pcIVvSLYi0229GanhOHGnCQpWzqulaN3H9hrd9N/oveDakI7MkKOT6mYdNmGIzyTAytRRzvX0Wg6GLhXAtM3inn1wN26PFyKeJUXIImbhW+Gw28JIBsI48B8ooaocyWvPBuBiwBD+xw955j/txuJf2sGNprswf2ZVsmiywQpN4Pr0WJyzGsowcOqVdm2v22CpZ6ku3Qz
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 May 2026 03:49:03.4850
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: cbf9e444-873f-4728-b7ce-08deafd968ec
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	MWH0EPF000C6189.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB9445
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260512021242.1679786-2-mrathor@linux.microsoft.com>
 
-Program ASPM L1 entrance latency from the optional aspm-l1-entry-delay-ns
-device tree property. Convert the value from nanoseconds to a hardware
-encoded 3-bit value that is equal to log2(ns/1000) + 1. If the property
-is absent or greater than 7 (the maximum latency value supported), then
-default to 7.
-
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
----
-V2: Fixed commit message as per review comments.
-
- drivers/pci/controller/dwc/pcie-tegra194.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 9dcfa194050e..c9716d614451 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -18,6 +18,7 @@
- #include <linux/interrupt.h>
- #include <linux/iopoll.h>
- #include <linux/kernel.h>
-+#include <linux/log2.h>
- #include <linux/module.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-@@ -272,6 +273,7 @@ struct tegra_pcie_dw {
- 	u32 aspm_cmrt;
- 	u32 aspm_pwr_on_t;
- 	u32 aspm_l0s_enter_lat;
-+	u32 aspm_l1_enter_lat;
- 
- 	struct regulator *pex_ctl_supply;
- 	struct regulator *slot_ctl_3v3;
-@@ -715,6 +717,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
- 	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
- 	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
- 	val |= (pcie->aspm_l0s_enter_lat << PORT_AFR_L0S_ENTRANCE_LAT_SHIFT);
-+	val &= ~PORT_AFR_L1_ENTRANCE_LAT_MASK;
-+	val |= (pcie->aspm_l1_enter_lat << PORT_AFR_L1_ENTRANCE_LAT_SHIFT);
- 	val |= PORT_AFR_ENTER_ASPM;
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
- }
-@@ -1115,6 +1119,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
- {
- 	struct platform_device *pdev = to_platform_device(pcie->dev);
- 	struct device_node *np = pcie->dev->of_node;
-+	u32 val;
- 	int ret;
- 
- 	pcie->dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -1141,6 +1146,15 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
- 		dev_info(pcie->dev,
- 			 "Failed to read ASPM L0s Entrance latency: %d\n", ret);
- 
-+	/* Default to max latency of 7. */
-+	pcie->aspm_l1_enter_lat = 7;
-+	ret = of_property_read_u32(np, "aspm-l1-entry-delay-ns", &val);
-+	if (!ret) {
-+		u32 us = max(val / 1000, 1U);
-+
-+		pcie->aspm_l1_enter_lat = min(ilog2(us) + 1, 7);
-+	}
-+
- 	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
- 	if (ret < 0) {
- 		dev_err(pcie->dev, "Failed to read num-lanes: %d\n", ret);
--- 
-2.34.1
-
+On Mon, May 11, 2026 at 07:12:40PM -0700, Mukesh R wrote:
+> For the irq map/remap hypercalls, copy relevant data structures from
+> hypervisor public headers into Linux equivalents. Also, update Kconfig and
+> mshv_irqfd for irqbypass. Please note, irqbypass is required for doing
+> passthru on MSHV. This because there is really no way of knowing the linux
+> irq in the mshv_irqfd_assign and mshv_irqfd_update paths without it. The
+> linux irq is setup upfront by VFIO before irqfd assign/update happens.
+> 
+Reviewed-by: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
+> Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
+> ---
+>  drivers/hv/Kconfig          |  1 +
+>  drivers/hv/mshv_eventfd.h   |  3 +++
+>  include/hyperv/hvgdk_mini.h |  3 +++
+>  include/hyperv/hvhdk.h      | 17 +++++++++++++++++
+>  4 files changed, 24 insertions(+)
+> 
+> diff --git a/drivers/hv/Kconfig b/drivers/hv/Kconfig
+> index 7937ac0cbd0f..c831fe25ca2b 100644
+> --- a/drivers/hv/Kconfig
+> +++ b/drivers/hv/Kconfig
+> @@ -75,6 +75,7 @@ config MSHV_ROOT
+>  	# no particular order, making it impossible to reassemble larger pages
+>  	depends on PAGE_SIZE_4KB
+>  	select EVENTFD
+> +	select IRQ_BYPASS_MANAGER
+>  	select VIRT_XFER_TO_GUEST_WORK
+>  	select HMM_MIRROR
+>  	select MMU_NOTIFIER
+> diff --git a/drivers/hv/mshv_eventfd.h b/drivers/hv/mshv_eventfd.h
+> index 464c6b81ab33..ff4dd24b8ad4 100644
+> --- a/drivers/hv/mshv_eventfd.h
+> +++ b/drivers/hv/mshv_eventfd.h
+> @@ -9,6 +9,7 @@
+>  #define __LINUX_MSHV_EVENTFD_H
+>  
+>  #include <linux/poll.h>
+> +#include <linux/irqbypass.h>
+>  
+>  #include "mshv.h"
+>  #include "mshv_root.h"
+> @@ -37,6 +38,8 @@ struct mshv_irqfd {
+>  	struct mshv_irqfd_resampler	    *irqfd_resampler;
+>  	struct eventfd_ctx		    *irqfd_resamplefd;
+>  	struct hlist_node		     irqfd_resampler_hnode;
+> +	struct irq_bypass_consumer	     irqfd_bypass_cons;
+> +	struct irq_bypass_producer	    *irqfd_bypass_prod;
+>  };
+>  
+>  void mshv_eventfd_init(struct mshv_partition *partition);
+> diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
+> index da622fb06440..1ef480825705 100644
+> --- a/include/hyperv/hvgdk_mini.h
+> +++ b/include/hyperv/hvgdk_mini.h
+> @@ -59,6 +59,8 @@ struct hv_u128 {
+>  #define HV_PARTITION_ID_INVALID		((u64)0)
+>  #define HV_PARTITION_ID_SELF		((u64)-1)
+>  
+> +#define HV_MAX_VPS    256               /* HV_MAXIMUM_PROCESSORS */
+> +
+>  /* Hyper-V specific model specific registers (MSRs) */
+>  
+>  #if defined(CONFIG_X86)
+> @@ -508,6 +510,7 @@ union hv_vp_assist_msr_contents {	 /* HV_REGISTER_VP_ASSIST_PAGE */
+>  #define HVCALL_UNMAP_VP_STATE_PAGE			0x00e2
+>  #define HVCALL_GET_VP_STATE				0x00e3
+>  #define HVCALL_SET_VP_STATE				0x00e4
+> +#define HVCALL_GET_VPSET_FROM_MDA                       0x00e5
+>  #define HVCALL_GET_VP_CPUID_VALUES			0x00f4
+>  #define HVCALL_GET_PARTITION_PROPERTY_EX		0x0101
+>  #define HVCALL_MMIO_READ				0x0106
+> diff --git a/include/hyperv/hvhdk.h b/include/hyperv/hvhdk.h
+> index 5e83d3714966..d0a892347ab1 100644
+> --- a/include/hyperv/hvhdk.h
+> +++ b/include/hyperv/hvhdk.h
+> @@ -952,4 +952,21 @@ struct hv_input_modify_sparse_spa_page_host_access {
+>  #define HV_MODIFY_SPA_PAGE_HOST_ACCESS_LARGE_PAGE      0x4
+>  #define HV_MODIFY_SPA_PAGE_HOST_ACCESS_HUGE_PAGE       0x8
+>  
+> +#ifdef CONFIG_X86
+> +
+> +struct hv_input_get_vp_set_from_mda {   /* HV_OUTPUT_GET_VP_SET_FROM_MDA */
+> +	u64 target_partid;
+> +	u64 dest_address;
+> +	u8  input_vtl;
+> +	u8  destmode_logical;         /* true => mode is logical */
+> +	u16 reserved0;                /* mbz */
+> +	u32 reserved1;                /* mbz */
+> +} __packed;
+> +
+> +union hv_output_get_vp_set_from_mda {  /* HV_OUTPUT_GET_VP_SET_FROM_MDA */
+> +	struct hv_vpset target_vpset;
+> +	u64 bitset_buffer[HV_GENERIC_SET_QWORD_COUNT(HV_MAX_VPS)];
+> +} __packed;
+> +
+> +#endif /* CONFIG_X86 */
+>  #endif /* _HV_HVHDK_H */
+> -- 
+> 2.51.2.vfs.0.1
+> 
