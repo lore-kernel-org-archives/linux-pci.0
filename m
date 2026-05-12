@@ -1,102 +1,78 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0503D45E4
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 17:17:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262483E0738;
+	Tue, 12 May 2026 17:41:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778606242; cv=none; b=TfsOIVqr9xFZCcf+C8haLhFp/q38eDD+TMHPO0H+dxbwer8fo+X66V8GfQb4tB8emL0lOF91hUBncZ4BHkJZa8kMcGufBJSZByFQPZqBu63/yXqnQOMejG3O347AtTDZEUR2Z2lLMm/BKn7qcllPjgVviVFahwME3kjco8YgSmo=
+	t=1778607717; cv=none; b=iIAekx22FMZk81TAdUnQK3QorNhcOzFXJWPpaprAKBpheQu9CVSRCZK696pdNNYdknumuZll1cqjJobXA9YKjO56Fin9JMHewXulNPtU/WSznUCflEnq0fIQwYvTg8yiBJjLlkc+cQex4VlfDK5tqozFgM56gH1bGdj+Red/gRc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778606242; c=relaxed/simple;
-	bh=Oe/GIsy89lagNeD0WEvmK0wnd8GTxbtSRowCVJCo/cU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a61Xac6ZeTPHRlrAyWgs7DhjASSp1wTUhKlmNx/YG/2jRGcMvVvHqf3eBQh4gvE42YAfiFht3EddSz0p7AB/bGnY2PuYiqYAILD//ZB4z/4fjjXiqhS8q9fh3mEEPsWkigqnw67TWBr9n1GwxTcz9D+CaJp0HzrhETuzswu9Fqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dU9PXVvd; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778607717; c=relaxed/simple;
+	bh=0IBJXkR3QCl3CT5FkY4S+RQddewS2cZDu4PxcyWGpoU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=cQzOgjFcMryBPZ2kgsQO7oEIWRmrCJsn2nIbuOL6SpzRHuO9aiX+yBchPo5p7zqlO8MsRJequwneDvfzTvhQYAa+YIVEfEo80uGony2h0fHU75RnWPmnAhU+olV+JIwGXHA4sjUFHTk63Mf1Sg7aXjkiDTQHtPFfCXRD3GOgBUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Che5QV00; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dU9PXVvd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778606240;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Oe/GIsy89lagNeD0WEvmK0wnd8GTxbtSRowCVJCo/cU=;
-	b=dU9PXVvdN8q7hA+xFPFP/6E23uMZANb9QKt7BMJ6ti8AbMedZQI1ehvzt3ZGVlABAdepTo
-	ykyQWp7fke91yOM4jd7u4iBdbOwGvPYFnXmEmbxvpW1FZgtUuBwzxz5vCvmwQwOS4L4JBP
-	MGN2NuZlbgoyexmW+EV1AxCM6QNmY/4=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-561-OgCnxmSiMES3zTvADWRj8g-1; Tue,
- 12 May 2026 13:17:16 -0400
-X-MC-Unique: OgCnxmSiMES3zTvADWRj8g-1
-X-Mimecast-MFC-AGG-ID: OgCnxmSiMES3zTvADWRj8g_1778606235
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 86FE71800283;
-	Tue, 12 May 2026 17:17:15 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.159])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ABD9A19560A2;
-	Tue, 12 May 2026 17:17:13 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: alex@shazbot.org
-Cc: bhelgaas@google.com,
-	jtornosm@redhat.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Force PM reset for Qualcomm devices with NoSoftRst+
-Date: Tue, 12 May 2026 19:17:11 +0200
-Message-ID: <20260512171712.910994-1-jtornosm@redhat.com>
-In-Reply-To: <20260511133643.73a16e69@shazbot.org>
-References: <20260511133643.73a16e69@shazbot.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Che5QV00"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB22BC2BCC7;
+	Tue, 12 May 2026 17:41:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778607717;
+	bh=0IBJXkR3QCl3CT5FkY4S+RQddewS2cZDu4PxcyWGpoU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Che5QV00iFYIcYW67C/V6FoPD/zC+BRZYm143CseiGHCH40Xv7qm9FTbs0zrB0DF3
+	 YYR+GPabRRhfPzFgVXLdndX1CyXE00MYpIHkJD83f4rt2Ceris3q/PBHzFhbuSfOTf
+	 /0rjfEU18/sLHQIbaLzcBmzLTcAn1OFDeU1PNxWnP2pWDlXohws/jdvOpOj1Rby1Rp
+	 2JhZ9nqJkzfulFInDenjgMnCUsm0q8AaNF2Av5bl8zO6OZYRTcFO2zQEd1PZQoj38Y
+	 CdMCnQXz08exHWiFqLwNVvEWRuLvsviyv/u1GaAj/jF1TGXSaRTTsrK6Tjxj2OvQlT
+	 9X9vRwg1AG0XA==
+Date: Tue, 12 May 2026 12:41:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH V3 08/11] PCI: hv: VMBus and PCI device IDs for PCI
+ passthru
+Message-ID: <20260512174155.GA231433@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260512020259.1678627-9-mrathor@linux.microsoft.com>
 
-Hello Alex,
+On Mon, May 11, 2026 at 07:02:56PM -0700, Mukesh R wrote:
+> On Hyper-V, most hypercalls related to PCI passthru to map/unmap regions,
+> interrupts, etc need a device ID as a parameter. This device ID refers
+> to that specific device during the lifetime of passthru.
+> 
+> An L1VH VM only contains VMBus based devices. A device ID for a VMBus
+> device is slightly different in that it uses the hv_pcibus_device info
+> for building it to make sure it matches exactly what the hypervisor
+> expects. This VMBus based device ID is needed when attaching devices in
+> an L1VH based guest VM. Add a function to build and export it. Before
+> building it, a check is done to make sure the device is a valid VMBus
+> device.
+> 
+> In remaining cases, PCI device ID is used. So, also make PCI device ID
+> build function hv_build_devid_type_pci() public.
 
-Thank you again for your detailed feedback and help
+The subject line should start with a verb to help say what this patch
+does.  I guess it's something about adding a function to build the
+device IDs expected by the hypervisor?  Would be good to include the
+function name too, e.g., something like this:
 
->>> What does reset_methods sysfs attribute report for these devices on an
->>> unpatched kernel?
-Sorry for my earlier confusion about CONFIG_PCI_RESET_SYSFS - I now understand
-the reset_method sysfs file has been available for a long time without any
-config option.
-
-Testing confirms only "bus" reset is available on default kernel for these
-Qualcomm devices. PM reset returns -ENOTTY (blocked by NoSoftRst+ flag), and
-FLR is not advertised. This confirms the default kernel has no working reset
-method for these devices.
-
-> Then why aren't we setting quirks to use quirk_no_bus_reset() for these
-> devices?
-You're right. I am going to try quirk_no_bus_reset() to disable the broken
-SBR method.
-
-> PS - D3cold might be an interesting reset method that could be implemented
-> for single function endpoints in slots that support it.
-I like the suggestion, I am going to implement a generic d3cold as a general
-PCI core reset method for single-function devices (not only for Qualcomm).
-I have seen that using pci_set_power_state(dev, PCI_D3cold), if no _PR3
-support by the platform, it will use D3hot fallback.
-
-The combination of quirk_no_bus_reset() + general d3cold reset method can
-provide a much better solution for these devices and the new reset method
-allows the configuration if necessary.
-I'll send a next version with this.
-
-Thanks
-
-Best regards
-José Ignacio
-
+  PCI: hv: Add foo() to build hypervisor device IDs
