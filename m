@@ -1,178 +1,135 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48755383986
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 13:26:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 604281D63E4;
+	Tue, 12 May 2026 13:27:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778592372; cv=none; b=nggZobrAJDc0BW5ddZ2Kq3SgUi6P2Z1rAf5JqNWIjKawjDAK/yErM0Vc66sgOqiTsha9B0fNkyELqcGVbXR3mqid61zFG2jWiXF/05m2CWubgfjnPY45+6UoUBKdhvjRkfba559rfZbDQQx0hKnqSnmZt4BA31jgurDXwEqXcjQ=
+	t=1778592421; cv=none; b=j/3hI3NeMQ0fclXcRx0JbcKBETN4VCWxRpgLfn5S1yD90pkQXVLiyqSoGJrC4PScNgvBIUv1TOlVCm9gEqLKm5saGkZGQ3JVNVpRLPn6p81VCACKearMDDREPRonfVByD2GCivvWJMoXMDYQoHxX6SEoz/urpgTKlsE1IRwPoN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778592372; c=relaxed/simple;
-	bh=lHaAg/49p3Hnpa/UhIqJB38hpeP/7+IkMxw02qU8whA=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=P4cn3qlhQfxk26PpDhH7XokbwxRgR+OGT3LEx4UpeJc8RSMODq04xGoUXg+Zd6eKscqvUd6zC6WQ24IG7LP3cZeBR6biV6l6MJlmpAfdY6c81sUCWCN74MieMosfEX061f5opVVxTY5XmZXJ4Tft8KJBKvxC73amq6KsKkxJB40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=D4F9eNfp; arc=none smtp.client-ip=80.241.56.161
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1778592421; c=relaxed/simple;
+	bh=N1R7TqmycjTX2xwMWBpyDMY64Xdu0Sxh/2pss/RBKaE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i/PMsuXMKxn91Uh57dyUjznBdZVLPWqAIWA58x6ihhyTsO3Z/9PvlisF7/s3BkFhBSqhpUFy3XnrUNP+/dNV5nW+C2ua+Aq6qFy2K0HdrJX85wl/gurTrWYeGTcV+VvwE8CcBrTaTPJTYssysgo/gf6lC+mbMEJsIEtlTle0uMY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKYk/TZy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="D4F9eNfp"
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4gFHRM6BGYz9ttC;
-	Tue, 12 May 2026 15:26:07 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1778592367; h=from:from:reply-to:reply-to:subject:subject:date:date:
-	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-	 content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bgUehIJtWSrqShxnCXqkAFiccdaaJ1oL8KTJ9x4nj0Y=;
-	b=D4F9eNfpZx2rAGlH0fDH3H7c5FS3q2I741o2CH2XNOBe7JSVGAWDNCy3Ohr47NzLySFCrX
-	shREGUnNtLsEyw9eQbcBi0SKwAmqJnA/bbfJEiwel1hRUNhBhd4GDQEf3Asy+2Hz37CaI0
-	DvDDhXrsMzzy4BOLQ3MrnAh2R0yJ+ebRMKNb4X5HH2kioymS1KiIC1BLW9mQu6aqQni0EN
-	7VeOQgzUm95mmDQV51+yQVJCga6J35T/jEiSYmOR2MKGLpDE8am018XBCreLcn5lVh5b5Q
-	4OdxRo7V8FHhM6JU/lQN/H2tZPt8AQ9xuH2iR4LhMoB+gxN9rK/6CYjq/uDmkg==
-Message-ID: <c133ec95f31874624349d38f67362bc5589fb80f.camel@mailbox.org>
-Subject: Re: [PATCH v4 4/7] PCI/MSI: Introduce __pcim_enable_msix_range()
-From: Philipp Stanner <phasta@mailbox.org>
-Reply-To: phasta@kernel.org
-To: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Nirmal Patel <nirmal.patel@linux.intel.com>, Jonathan Derrick
- <jonathan.derrick@linux.dev>, Kurt Schwemmer
- <kurt.schwemmer@microsemi.com>,  Logan Gunthorpe <logang@deltatee.com>,
- Philipp Stanner <phasta@kernel.org>, linux-pci@vger.kernel.org
-Date: Tue, 12 May 2026 15:26:00 +0200
-In-Reply-To: <1777017460-243543-5-git-send-email-shawn.lin@rock-chips.com>
-References: <1777017460-243543-1-git-send-email-shawn.lin@rock-chips.com>
-	 <1777017460-243543-5-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKYk/TZy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 484FBC2BCB0;
+	Tue, 12 May 2026 13:26:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778592421;
+	bh=N1R7TqmycjTX2xwMWBpyDMY64Xdu0Sxh/2pss/RBKaE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cKYk/TZy3Ie0pFOp7a9/YmoLU7+Wmas6Ib9z0fwDYQcgzHEqK7gvOBcL3Zqq1B8yc
+	 ahYsJFyBNCY3nbSltUHnMiLSNcuwC/WeuTvQTUH+xwrd7cDJoV9p7Ej6BnRlO6UxLi
+	 QL4yU1XXw/1ycML975bp0e+jYaXs90knhVNeWyTw1352l8LuuMfOi2A8eCv0mPFzrr
+	 tiOACA5MdfvtInsdlpyshTsDFR2oAmL9LzPnQZFFRb2AeANRdq4yp7jwp9FW36r9cV
+	 jIi+ZDT0OnAbk9b5IxjVqfCdDKNvh+tUsbnikNisjdGKVCi5/qb+9hB+2Tlx75uv8V
+	 KrX19J514c9FA==
+Date: Tue, 12 May 2026 18:56:51 +0530
+From: "mani@kernel.org" <mani@kernel.org>
+To: Hongxing Zhu <hongxing.zhu@nxp.com>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>, 
+	"robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>, 
+	"conor+dt@kernel.org" <conor+dt@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>, 
+	Frank Li <frank.li@nxp.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>, 
+	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
+	"festevam@gmail.com" <festevam@gmail.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
+	"imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 1/3] dt-bindings: PCI: imx6q-pcie: Add intr, aer and
+ pme interrupts
+Message-ID: <t3d2s6rl25ywobis4xiwwdvjrccua2qrpwfsxqpvp6qw5pzofa@kjm4wzcpjcli>
+References: <20260430050954.3467984-1-hongxing.zhu@nxp.com>
+ <20260430050954.3467984-2-hongxing.zhu@nxp.com>
+ <20260430-proud-ammonite-of-gaiety-abaafc@quoll>
+ <AM0PR04MB52202A13D528B3AE16C3616A8C352@AM0PR04MB5220.eurprd04.prod.outlook.com>
+ <55258a51-9cdb-451c-be06-74b9b3020cbc@kernel.org>
+ <GV2PR04MB12019F5425D6EB9AE52FC32CE8C3C2@GV2PR04MB12019.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MBO-RS-META: 3ty19d58rpczd9ewd9j3176m5orf3wup
-X-MBO-RS-ID: 3915287758bcc66bcba
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <GV2PR04MB12019F5425D6EB9AE52FC32CE8C3C2@GV2PR04MB12019.eurprd04.prod.outlook.com>
 
-On Fri, 2026-04-24 at 15:57 +0800, Shawn Lin wrote:
-> Introduce __pcim_enable_msix_range(), a devres-managed variant of
-> __pci_enable_msix_range(). Similar to the previously added MSI variant,
-> this function provides automatic cleanup of MSI-X interrupts via devres,
-> reducing the risk of resource leaks and simplifying driver error handling=
-.
->=20
-> This function is particularly useful for drivers that already use
-> pcim_enable_device() and want consistent devres management for all
-> PCI resources, including MSI-X interrupts.
->=20
-> Drivers can replace calls to __pci_enable_msix_range() with
-> __pcim_enable_msix_range() to benefit from automatic cleanup without
-> changing their core logic. The flags parameter (e.g., PCI_IRQ_VIRTUAL)
-> is fully supported and passed through to the underlying functions.
->=20
-> This completes the set of devres-managed MSI/MSI-X allocation functions,
-> providing a consistent API for driver authors who prefer automatic
-> resource management.
->=20
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
->=20
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
->=20
-> =C2=A0drivers/pci/msi/msi.c | 22 ++++++++++++++++++++++
-> =C2=A0drivers/pci/msi/msi.h |=C2=A0 2 ++
-> =C2=A02 files changed, 24 insertions(+)
->=20
-> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-> index 0aaff57..8fdf40d 100644
-> --- a/drivers/pci/msi/msi.c
-> +++ b/drivers/pci/msi/msi.c
-> @@ -930,6 +930,28 @@ int __pci_enable_msix_range(struct pci_dev *dev, str=
-uct msix_entry *entries,
-> =C2=A0	return pci_msix_range_init(dev, entries, minvec, nvec, hwsize, aff=
-d);
-> =C2=A0}
-> =C2=A0
-> +int __pcim_enable_msix_range(struct pci_dev *dev, struct msix_entry *ent=
-ries,
-> +			=C2=A0=C2=A0=C2=A0=C2=A0 int minvec, int maxvec, struct irq_affinity =
-*affd,
-> +			=C2=A0=C2=A0=C2=A0=C2=A0 int flags)
-> +{
-> +	int hwsize, nvec, rc;
-> +
-> +	hwsize =3D pci_msix_range_alloc(dev, entries, minvec,
-> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 maxvec, flags, &nvec);
-> +	if (hwsize < 0)
-> +		return hwsize;
-> +
-> +	rc =3D msi_setup_device_data(&dev->dev);
+On Thu, May 07, 2026 at 08:04:22AM +0000, Hongxing Zhu wrote:
+> > -----Original Message-----
+> > From: Krzysztof Kozlowski <krzk@kernel.org>
+> > Sent: Thursday, April 30, 2026 6:49 PM
+> > To: Hongxing Zhu <hongxing.zhu@nxp.com>
+> > Cc: robh@kernel.org; krzk+dt@kernel.org; conor+dt@kernel.org;
+> > bhelgaas@google.com; Frank Li <frank.li@nxp.com>; l.stach@pengutronix.de;
+> > lpieralisi@kernel.org; kwilczynski@kernel.org; mani@kernel.org;
+> > s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com; linux-
+> > pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > devicetree@vger.kernel.org; imx@lists.linux.dev; linux-kernel@vger.kernel.org
+> > Subject: Re: [PATCH v3 1/3] dt-bindings: PCI: imx6q-pcie: Add intr, aer and pme
+> > interrupts
+> > 
+> > On 30/04/2026 10:37, Hongxing Zhu wrote:
+> > >> -----Original Message-----
+> > >> From: Krzysztof Kozlowski <krzk@kernel.org>
+> > >> Sent: Thursday, April 30, 2026 4:04 PM
+> > >> To: Hongxing Zhu <hongxing.zhu@nxp.com>
+> > >> Cc: robh@kernel.org; krzk+dt@kernel.org; conor+dt@kernel.org;
+> > >> bhelgaas@google.com; Frank Li <frank.li@nxp.com>;
+> > >> l.stach@pengutronix.de; lpieralisi@kernel.org;
+> > >> kwilczynski@kernel.org; mani@kernel.org; s.hauer@pengutronix.de;
+> > >> kernel@pengutronix.de; festevam@gmail.com; linux-
+> > >> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > >> devicetree@vger.kernel.org; imx@lists.linux.dev;
+> > >> linux-kernel@vger.kernel.org
+> > >> Subject: Re: [PATCH v3 1/3] dt-bindings: PCI: imx6q-pcie: Add intr,
+> > >> aer and pme interrupts
+> > >>
+> > >> On Thu, Apr 30, 2026 at 01:09:52PM +0800, Richard Zhu wrote:
+> > >>> Add 'intr', 'aer', and 'pme' interrupt entries to the i.MX6Q PCIe
+> > >>> binding to support PCIe event-based interrupts for general
+> > >>> controller events, Advanced Error Reporting, and Power Management Events
+> > respectively.
+> > >>>
+> > >>> These interrupts are optional for existing variants (imx6q, imx6sx,
+> > >>> imx6qp, imx7d, imx8mq, imx8mm, imx8mp) to maintain backward
+> > >>> compatibility with existing device trees.
+> > >>>
+> > >>> For fsl,imx95-pcie, all 5 interrupts (msi, dma, intr, aer, pme) are
+> > >>> mandatory due to hardware requirements.
+> > >>>
+> > >>> This introduces an ABI requirement for fsl,imx95-pcie. The i.MX95
+> > >>> hardware requires dedicated interrupt lines for AER, PME, and
+> > >>> general controller events due to its redesigned interrupt
+> > >>> architecture. i.MX95 cannot function correctly without explicit
+> > >>> interrupt routing for error handling, power management and link event
+> > detection.
+> > >>
+> > >> fsl,imx95-pcie was added more than two years ago, so how it cannot
+> > >> function correctly? Are you saying that for two years you had here
+> > >> completely broken code?
+> > >>
+> > >> If this wasn't tested for two years, how can we believe anything is tested now?
+> > > The basic PCIe functionality has been working since the initial
+> > > fsl,imx95-pcie support. However, AER (Advanced Error Reporting) and
+> > > link up/down detection were not previously enabled. This patch-set
+> > > adds and verifies support for these advanced features.
+> > >
+> > 
+> > That is not what you said in the commit msg.
+> Hi Krzysztof:
+> Sorry for the delayed response due to a holiday.
+> After reviewing this patch-set again, I'd like to suggest an alternative
+> approach: would it be possible to mark these newly added interrupts as
+> optional?
 
-Uh uh... wait a second.
+Yes, since even without these interrupts, PCIe functionality still works. Only
+issue is that it cannot report error and recover from LDn.
 
-msi_setup_device_data() also invokes devres below the surface:
+- Mani
 
-int msi_setup_device_data(struct device *dev)
-{
-	struct msi_device_data *md;
-	int ret, i;
-
-	if (dev->msi.data)
-		return 0;
-
-	md =3D devres_alloc(msi_device_data_release, sizeof(*md), GFP_KERNEL);
-
-
-Do you have an idea whether that is a problem?
-
-Looks suspicious to me. That's more than just automatic memory
-management.
-
-
-Sorry for just seeing that now. I might have seen that last year and
-concluded it's one of the reasons why porting is difficult.. can't
-remember anymore.
-
-
-P.
-
-
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc =3D devm_add_action(&dev->dev, pcim_msi_release, dev);
-> +	if (rc)
-> +		return rc;
-> +
-> +	return pci_msix_range_init(dev, entries, minvec, nvec, hwsize, affd);
-> +}
-> +
-> =C2=A0void __pci_restore_msix_state(struct pci_dev *dev)
-> =C2=A0{
-> =C2=A0	struct msi_desc *entry;
-> diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
-> index 81c6b099..e6364a8 100644
-> --- a/drivers/pci/msi/msi.h
-> +++ b/drivers/pci/msi/msi.h
-> @@ -97,6 +97,8 @@ int __pci_enable_msi_range(struct pci_dev *dev, int min=
-vec, int maxvec, struct i
-> =C2=A0int __pcim_enable_msi_range(struct pci_dev *dev, int minvec, int ma=
-xvec, struct irq_affinity *affd);
-> =C2=A0int __pci_enable_msix_range(struct pci_dev *dev, struct msix_entry =
-*entries, int minvec,
-> =C2=A0			=C2=A0=C2=A0=C2=A0 int maxvec,=C2=A0 struct irq_affinity *affd, =
-int flags);
-> +int __pcim_enable_msix_range(struct pci_dev *dev, struct msix_entry *ent=
-ries, int minvec,
-> +			=C2=A0=C2=A0=C2=A0=C2=A0 int maxvec,=C2=A0 struct irq_affinity *affd,=
- int flags);
-> =C2=A0void __pci_restore_msi_state(struct pci_dev *dev);
-> =C2=A0void __pci_restore_msix_state(struct pci_dev *dev);
-> =C2=A0
-
+-- 
+மணிவண்ணன் சதாசிவம்
