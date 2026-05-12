@@ -1,147 +1,146 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F23B7382385
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 21:35:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A3E38657D
+	for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 21:40:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778621711; cv=none; b=bDv2leYlW1Ue/yCC3UPgGK54cmK0AfvHrddzxSch5oqW1tFMpCVc4P+KQgywYGKvfTl/YE02p0q33Ua8xM9Voqi0nqyGWOp4IDfNAhQXDdW88E5+GG1U0/oV28pRdyPZKxz8Yj9/ISehu37a+mOWHwZikp/81zLOq0w8/Al2AjE=
+	t=1778622024; cv=none; b=QWiCYlDzJN3YS/HxRnjBKVjHqh1Dws3ncU/sN6a1SFtJUAq+MCH7i+n+uQj16UcKF0TUi97SHBymxXaDyPLx0NmHNQ7gcNk6+HBVRb2noCnaKgRYe6XUg9o+PqGcpuG7mvljiVvpXwZm8wdPXhY4sK/FLW4HFMyML4V+4khGjwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778621711; c=relaxed/simple;
-	bh=PEOmvNsR7miHR6u/q8r4CNw7yS2s5vHkS9dA9BkAhk0=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=NJU6Vx4EoxMqZ2Mmp70O81Vn40DVBRqkRfXCyWEuhdumTjiDmKwUSoC1zVWssgsSaPBX9GNu5xR+8c6Q0faF4TcC2pAYaXfSiGh1/StKZQPJsHnuLWvg4zIfpngTMBiQpHNZQhU+gFDGTOrj1hZQuSwJprTyT9iQWMvnY5bw2Rk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IjkYozA+; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1778622024; c=relaxed/simple;
+	bh=sTJxJ/xasIqDRCeYM0JtmkGU7hXrTwpbCDass0bVHps=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pH4aMTlSg1Qaits9OnQXvSqbsH17LcCsyhHox1QjOla9lNVQX4Zk+ZdMWwrLLUUdtS0hopwugq6/auxT3jwyTYTt0oH0e689Xo+5gWfNkJJRo5pgAiOtqzQJZ9QMg+aJLO7SWGK7n8+MURHM6K+iPRmfj9Qyvkix51R/fG8Ulxc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OQWdnaij; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IjkYozA+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778621709; x=1810157709;
-  h=date:from:to:cc:subject:message-id;
-  bh=PEOmvNsR7miHR6u/q8r4CNw7yS2s5vHkS9dA9BkAhk0=;
-  b=IjkYozA+s4xqqNg+Aqk2RqOtGBV1Ee+sjZVXd64azLzzkDwGR4GQVUM4
-   7M2i9KISZrFIZAGMFQC6NYmpqYLc+JOfLB0JRDraYW1FYblAqclv8BQM/
-   5ukMDmFIIBcnYtsQUsQNH9BZ+l57fk0YL4ekM6ygvFSiZPduhax6dkiih
-   gi+2+laaHBR90j4gyrvTehcEfGWi9BooIDEdE92Qdxdp+MeV7FaU25MSK
-   LN0jcFWbGLPaRjxfEGvXDHqn4L+GptrPL1HZmjYu4MuMiup7QdpK6Pszb
-   uHtTmjy/SSr/9D8E4OnADijEKYHIzS2gvh4XWTrrTUk3Wr1qLhqGFHnGG
-   w==;
-X-CSE-ConnectionGUID: 14rm6TYXTLGJ9kI73A3Jbg==
-X-CSE-MsgGUID: S7mX1rFtQ8CUrKqi/MQ5kg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11784"; a="105000328"
-X-IronPort-AV: E=Sophos;i="6.23,231,1770624000"; 
-   d="scan'208";a="105000328"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2026 14:35:08 -0700
-X-CSE-ConnectionGUID: v63fCwEvSQ2iENIcrSgIkg==
-X-CSE-MsgGUID: 6VCdDVbhTJ6BD9Xd9VaO7Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,231,1770624000"; 
-   d="scan'208";a="233608543"
-Received: from lkp-server01.sh.intel.com (HELO dca79079c3eb) ([10.239.97.150])
-  by fmviesa010.fm.intel.com with ESMTP; 12 May 2026 14:35:07 -0700
-Received: from kbuild by dca79079c3eb with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wMukq-000000002rT-2hl8;
-	Tue, 12 May 2026 21:35:04 +0000
-Date: Wed, 13 May 2026 05:34:34 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- 83dd9effefa2e9da58ccd37059a11820fc05caf4
-Message-ID: <202605130526.j5jKizCY-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OQWdnaij"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2bccb978bd9so15257985ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 May 2026 14:40:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778622022; x=1779226822; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=LuJpPqhDcONg49vri+mgJGghvc2o/ilLGU2ZfssziEI=;
+        b=OQWdnaijZ1h7L8r1EP1KKJUSbtDYxqsiw2/0vKLvMvQLdrb9ZVGnOOp2Gbe+jUMvYP
+         PVCkgYSFZtaLFcaLWJxW4EL95IZznbDnPWDEsv845ZFoxjpn+JZSxi2ASVX/asrez5N3
+         C++ah2Bt+sYUOE4mVfIa3Hiovmzn8uVee1VKr8VwD2DQFKyJ9B/UAWk4wH7g121HrhSb
+         9EnoRB2tI4jdGbHrVW1IT0Q6ChG15TTtxdvMgF+15GAdv/tyoXrKB+reAvow7lj5cgx0
+         e9IzOSlonqDlYRfOaIVga0qdurXUtBxkpjQKvhUPhCp7xT82X3TCCo/X0gP7wMsORNae
+         mZlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778622022; x=1779226822;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LuJpPqhDcONg49vri+mgJGghvc2o/ilLGU2ZfssziEI=;
+        b=ld2FfhXrjZUXePJPkmB8PpcQv4EzHCdCVs6fhfLM7+QGYN9P3Df8bZGtVFe9ItS+Lz
+         1S4GYzIg0eLRJ29sLcVs7noEXp7mbcUBuS+sPDwjheycbatrYtdSvsDDTGIWK1zYIYUc
+         dfkcmGH09G+w4wWdpyYm92w0/D/RVtq0mfZP4NDTbfS2CyY/D9u/7otdEW6caZIUI7Xg
+         HPvx7eCL7q6CqnuaealFMyhhRgBxJCD63gkEZpSi7Zuw4Q5NzixRWrZFtvPPCmniXzWh
+         S7+sgI0BkZM6qaF9L9iRTtXHdIMmI7BrkivGxCe4+r54uEXkxstPZaLAZ8EgWAwwmev3
+         Ji/g==
+X-Forwarded-Encrypted: i=1; AFNElJ9AEsNAXurcAaw328WdJPm4y+LCN0XqEg0PAQTW+JHQzhOyhksHnTiguWEgjrsV8qkTlLiet4GMxo8=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxp+IHfImthYJJbqkUIAj8nq4Kfyn30ygsiyxotFZy1z70rSA4q
+	BXswHRkFsNyEpGod4UxyFwc5/6ADJK3hQQUjFQN07hhGeCWEIDqvBbmY
+X-Gm-Gg: Acq92OGYe+DaovLmCEFzd6RxVJpgh0xOw+dbDbkxpotJNLmXftqbsourM/yI3J5rvI8
+	MeHB65HBzpdW6Y5e5ibSfaWIx6KlojaF9SUkbiEhYSrPeIR+jNhderxxRp9QQJ3BF4ETAryh7Fi
+	/KA0j+fnuG1uFnw3h0YDqdvwWoSgQSYMWhCgJpJ+p8Ehve0grz6ZZoqVDRV7MkKoTJ881TBvJfN
+	ciM755IpcaGHzJEYKmp3DCBn252VBwaMVW3TKFevZp3kHJpVO9n7fnzVNYAucwwi+j6ARdBOHdu
+	1vqjTbuN4Qn34Zxf3r05nS+4yjnAUmqg48lI83ih3FAAW0G+iiq7J0fDO40T7vez3SDGhCFqKWR
+	xSP2beuzo1lhAe9bvoTqs9ERcJFeWi/bXfX5f6hq1PFW3fN1TacD72JdWJo8bDjfhNys8nAF3YO
+	dfqcRiDMgCcZy4I7flwTD0HQoQd+gPIZw=
+X-Received: by 2002:a17:903:3b8e:b0:2ba:7617:a755 with SMTP id d9443c01a7336-2bcfd48ace8mr55972255ad.25.1778622022203;
+        Tue, 12 May 2026 14:40:22 -0700 (PDT)
+Received: from mincom1 ([27.232.220.10])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2baf1d409eesm143949895ad.32.2026.05.12.14.40.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 May 2026 14:40:21 -0700 (PDT)
+From: Jihong Min <hurryman2212@gmail.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mathias Nyman <mathias.nyman@intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Basavaraj Natikar <Basavaraj.Natikar@amd.com>,
+	linux-usb@vger.kernel.org,
+	linux-hwmon@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jihong Min <hurryman2212@gmail.com>
+Subject: [PATCH v5 0/2] AMD Promontory 21 xHCI temperature sensor support
+Date: Wed, 13 May 2026 06:39:08 +0900
+Message-ID: <20260512213910.871859-1-hurryman2212@gmail.com>
+X-Mailer: git-send-email 2.53.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: 83dd9effefa2e9da58ccd37059a11820fc05caf4  MAINTAINERS: Remove Chuanhua Lei as PCIe intel-gw maintainer
+Hi,
 
-elapsed time: 956m
+This series adds temperature monitoring for AMD Promontory 21 (PROM21)
+xHCI PCI functions.
 
-configs tested: 70
-configs skipped: 3
+Patch 1 adds a small PROM21-specific xHCI PCI glue driver. USB host
+operation is delegated to the common xhci-pci code, while the PROM21 glue
+publishes an auxiliary device for optional sensor support.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Patch 2 adds an auxiliary-bus hwmon driver that binds to that auxiliary
+device and exposes the PROM21 xHCI temperature value as temp1_input.
 
-tested configs:
-alpha                   allnoconfig    gcc-15.2.0
-alpha                  allyesconfig    gcc-15.2.0
-alpha                     defconfig    gcc-15.2.0
-arc                    allmodconfig    gcc-15.2.0
-arc                     allnoconfig    gcc-15.2.0
-arc                    allyesconfig    gcc-15.2.0
-arc                       defconfig    gcc-15.2.0
-arm                     allnoconfig    clang-23
-arm                    allyesconfig    gcc-15.2.0
-arm64                  allmodconfig    clang-19
-arm64                   allnoconfig    gcc-15.2.0
-arm64       randconfig-001-20260513    clang-23
-arm64       randconfig-002-20260513    clang-23
-arm64       randconfig-003-20260513    gcc-12.5.0
-arm64       randconfig-004-20260513    clang-17
-csky                   allmodconfig    gcc-15.2.0
-csky                    allnoconfig    gcc-15.2.0
-csky                      defconfig    gcc-15.2.0
-csky        randconfig-001-20260513    gcc-13.4.0
-csky        randconfig-002-20260513    gcc-10.5.0
-hexagon                allmodconfig    clang-17
-hexagon                 allnoconfig    clang-23
-hexagon                   defconfig    clang-23
-i386                   allmodconfig    gcc-14
-i386                    allnoconfig    gcc-14
-i386                   allyesconfig    gcc-14
-i386                      defconfig    clang-20
-i386        randconfig-011-20260512    gcc-14
-i386        randconfig-012-20260512    clang-20
-i386        randconfig-013-20260512    clang-20
-i386        randconfig-014-20260512    clang-20
-i386        randconfig-015-20260512    gcc-14
-i386        randconfig-016-20260512    gcc-14
-i386        randconfig-017-20260512    gcc-14
-loongarch              allmodconfig    clang-19
-loongarch               allnoconfig    clang-23
-m68k                   allmodconfig    gcc-15.2.0
-m68k                    allnoconfig    gcc-15.2.0
-m68k                   allyesconfig    gcc-15.2.0
-microblaze              allnoconfig    gcc-15.2.0
-microblaze             allyesconfig    gcc-15.2.0
-mips                   allmodconfig    gcc-15.2.0
-mips                    allnoconfig    gcc-15.2.0
-mips                   allyesconfig    gcc-15.2.0
-nios2                   allnoconfig    gcc-11.5.0
-openrisc               allmodconfig    gcc-15.2.0
-openrisc                allnoconfig    gcc-15.2.0
-parisc                 allmodconfig    gcc-15.2.0
-parisc                  allnoconfig    gcc-15.2.0
-parisc                 allyesconfig    gcc-15.2.0
-powerpc                allmodconfig    gcc-15.2.0
-powerpc                 allnoconfig    gcc-15.2.0
-riscv                   allnoconfig    gcc-15.2.0
-riscv                  allyesconfig    clang-16
-s390                   allmodconfig    clang-18
-s390                    allnoconfig    clang-23
-s390                   allyesconfig    gcc-15.2.0
-sh                     allmodconfig    gcc-15.2.0
-sh                      allnoconfig    gcc-15.2.0
-sh                     allyesconfig    gcc-15.2.0
-sparc                   allnoconfig    gcc-15.2.0
-sparc64                allmodconfig    clang-23
-um                     allmodconfig    clang-19
-um                      allnoconfig    clang-23
-um                     allyesconfig    gcc-14
-x86_64                 allmodconfig    clang-20
-x86_64                  allnoconfig    clang-20
-x86_64                 allyesconfig    clang-20
-x86_64                rhel-9.4-rust    clang-20
-xtensa                  allnoconfig    gcc-15.2.0
+The hwmon driver reads the sensor through a vendor index/data register pair
+in the xHCI PCI MMIO BAR. It does not wake the parent PCI device for hwmon
+reads; if the parent is suspended, the read returns -ENODATA.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Changes in v5:
+- Add support for AMD 1022:43fc PROM21 xHCI controllers and document the
+  new PCI ID.
+- Make USB_XHCI_PCI_PROM21 depend on X86 and default to USB_XHCI_PCI.
+- Keep the PROM21 PCI glue built-in-only when enabled, while allowing the
+  hwmon sensor driver to be built as a separate module.
+- Move PROM21 xHCI PCI device IDs to xhci-pci.h so xhci-pci.c and
+  xhci-pci-prom21.c use shared definitions.
+- Pass the parent PCI device, MMIO base, and resource length to the hwmon
+  driver through platform data defined in a common header, instead of
+  inspecting the parent driver's drvdata from the hwmon driver.
+- Remove the private hwmon mutex and rely on hwmon core serialization for
+  this driver's callbacks.
+- Clarify that the driver only serializes its own hwmon callbacks and does
+  not synchronize with firmware, SMM, ACPI AML, or other possible users of
+  the PROM21 vendor index/data register pair.
+- Use readb() for the temperature data register, validate the value before
+  writing the output pointer, and drop the 0xff invalid-value check.
+- Use pm_runtime_put() after successful reads with the parent device active
+  so the PM core can re-evaluate the parent device's idle state.
+- Simplify the documentation and use more precise terminology for the
+  supported device.
+
+Jihong Min (2):
+  usb: xhci-pci: add AMD Promontory 21 PCI glue
+  hwmon: add AMD Promontory 21 xHCI temperature sensor support
+
+ Documentation/hwmon/index.rst                 |   1 +
+ Documentation/hwmon/prom21-xhci.rst           | 101 ++++++++
+ drivers/hwmon/Kconfig                         |  10 +
+ drivers/hwmon/Makefile                        |   1 +
+ drivers/hwmon/prom21-xhci.c                   | 238 ++++++++++++++++++
+ drivers/usb/host/Kconfig                      |  20 ++
+ drivers/usb/host/Makefile                     |   1 +
+ drivers/usb/host/xhci-pci-prom21.c            | 123 +++++++++
+ drivers/usb/host/xhci-pci.c                   |  11 +
+ drivers/usb/host/xhci-pci.h                   |   3 +
+ include/linux/platform_data/usb-xhci-prom21.h |  22 ++
+ 11 files changed, 531 insertions(+)
+ create mode 100644 Documentation/hwmon/prom21-xhci.rst
+ create mode 100644 drivers/hwmon/prom21-xhci.c
+ create mode 100644 drivers/usb/host/xhci-pci-prom21.c
+ create mode 100644 include/linux/platform_data/usb-xhci-prom21.h
+
+-- 
+2.53.0
