@@ -1,177 +1,175 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68B413A1A59;
-	Wed, 13 May 2026 12:05:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE294345CD8
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 12:24:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778673934; cv=none; b=LXULx2sWZi/OBWZpIcXAA8smktbXcCJyroRFzQNGW32QbKmMAYsP1R+g/mmbr1oq46gpSRIp5/nQmDcVw7Tc5pvkr6fnJ9OIustNqKQaz2pfmXDR/5BfKNpI5thf3atbjiLSdRNDPDU1I011qY0kIVbDS7st9sRwW1U/An9Kkcc=
+	t=1778675042; cv=none; b=XU6Z5F4mueUK6qe75fU+qW5FGGIZISEAbyWpZxbeWNYyi0ta3IKoZ8/CyEMG9m5mWchtvAv1ndJFzCtSBp+uhM9PstPLRQos6NR9QtgWlKZNURYaTpxgeGzknBS5VYju29SZCtGRazFeVeezfMkEKWtlUblRlvZaxxEn93tVNqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778673934; c=relaxed/simple;
-	bh=39nYSZaV3j83HDUonnKcXqsRKn17XSxxGgOmt1v/RPc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VhYcgjOu02LxNSF2Mobas9kx5JaEQsEhbbzNezR8gag+YorKs7RAijy3ylpsPQiUfKI+oS6I8JCpDqIM9oUWHMUqhjsLMx4HCXyD2fygVltxwnpqsU2OV0al6oOT9qIFtJLxcp04I+E/CzU6G1fn56GKSyDhXbu4MYGK2y0AA9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ROcWTAJ4; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1778675042; c=relaxed/simple;
+	bh=lIozm580QVseEfafixzD/2ghGcrM+HimVm3zC6i5++M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ovya1gpL8VXI4Bg3fnld2qRUlvHWV+BKByqsI67DCVXSgKJF//sb8trJD1BZAMk4YrVBD91+KNhDat46DlLuzbPvLZtzASlWATrc3gNpz/jsjsFdPPZ3P4zWhT+57bb/Xle7WrzGHlgdpeU6Ff3Xr8RavXyTN0M96Dwc/op00GE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Q4qkdpDA; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ROcWTAJ4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=NoxHw9X5uLYqX0VGCmzJi8dSOhpSVxm1bkDTTdtKtL4=;
-	b=ROcWTAJ4/4iBfCwUFYjSNQWRV0Fx+uhu5J73ghQUJpvVY9x4mEScyrwTNB1BeO
-	p3MCJF2w9izWG3VNi+yzKh7C7h+c8C+M0A+YEdiDVuH0CzkueeRbNY6Jljn8efme
-	RZvrlUfl/v8PEkdUkSiS0c2zbBEHRoT77jHR5a3i86aBA=
-Received: from [192.168.50.71] (unknown [])
-	by gzsmtp1 (Coremail) with SMTP id PCgvCgB31+_gaARqvCzjDQ--.6052S2;
-	Wed, 13 May 2026 20:04:48 +0800 (CST)
-Message-ID: <329f790d-303e-42a5-874f-8eeb616352d7@163.com>
-Date: Wed, 13 May 2026 20:04:47 +0800
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q4qkdpDA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1778675039;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Q2BuRMaZwe2gPBAfnao93Zz1+V5eakDSMF2oBOxmE+g=;
+	b=Q4qkdpDAnWG30qApByxfHbaUlw/iXbF6qiM4kvLNeKs75q3O1eS9N3RB3er5opBe96ory3
+	Vd1neRiZlY4sIXhL2tHekggwN10XCDOPut52udJnmmDghd4kMeiHqF72CkgvwCWa5/Haku
+	Qjq6wktCSul4dfXwUI9sEyDIZvnqxlY=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-396-dJgsGdOCOdCY43Sj5eKWYA-1; Wed,
+ 13 May 2026 08:23:58 -0400
+X-MC-Unique: dJgsGdOCOdCY43Sj5eKWYA-1
+X-Mimecast-MFC-AGG-ID: dJgsGdOCOdCY43Sj5eKWYA_1778675037
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3B757180034C;
+	Wed, 13 May 2026 12:23:57 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.110])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 343D71955D84;
+	Wed, 13 May 2026 12:23:54 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v3 1/2] PCI: Add D3cold as general reset method
+Date: Wed, 13 May 2026 14:23:48 +0200
+Message-ID: <20260513122349.268753-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/2] PCI: cadence: Add debugfs property to provide
- LTSSM status of the PCIe link
-To: Aksh Garg <a-garg7@ti.com>,
- Manikandan Karunakaran Pillai <mpillai@cadence.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
- "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
- "mani@kernel.org" <mani@kernel.org>
-Cc: "robh@kernel.org" <robh@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Siddharth Vadapalli <s-vadapalli@ti.com>
-References: <20260508034101.1910036-1-18255117159@163.com>
- <20260508034101.1910036-3-18255117159@163.com>
- <3ab81da4-a745-4e85-8aa3-3a217e3fdcbe@ti.com>
- <BY5PR07MB6705FFD54E7D97EF5AB0A211A2062@BY5PR07MB6705.namprd07.prod.outlook.com>
- <f8ada2e3-15c2-43b1-b013-2f3fd263f25f@ti.com>
- <c0bd820d-9716-4109-9d5e-7e72e0716cf1@163.com>
- <31b5f0ad-70a5-4397-8740-6808d0266a7e@ti.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <31b5f0ad-70a5-4397-8740-6808d0266a7e@ti.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PCgvCgB31+_gaARqvCzjDQ--.6052S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr13Cw1kKw1xGw43XFWUJwb_yoW5ur1fpa
-	9xGF1FkFs8XrW0yFn2vF1fWFyF9rn8tFW5ur1kK34Uua4qqr95ZrsYyrWj9FsxurWqkr43
-	Kw48A343Aw4YyrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U5sqAUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwwDtkWoEaOCTYQAA3r
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
+Add D3cold power cycle as a general PCI reset method, available for
+single-function devices. This provides a more robust reset mechanism
+than D3hot for devices where a full power cycle is beneficial.
 
+The implementation uses pci_set_power_state(dev, PCI_D3cold), which
+automatically handles platform differences:
+- Platforms WITH _PR3 ACPI power resources: true D3cold (power cycle)
+- Platforms WITHOUT _PR3: automatic fallback to D3hot transition
 
-On 5/13/26 19:30, Aksh Garg wrote:
-> 
-> 
-> On 13/05/26 14:25, Hans Zhang wrote:
->>
->>
->> On 5/13/26 16:34, Aksh Garg wrote:
->>
->>>>>
->>>>
->>>> The above LTSSM states are internal LTSSM encoding states and may 
->>>> not be available for software to use.
->>>> The LTSSM states in the document pointed by Aksh (TI Soc) are the 
->>>> states  available in all cadence controllers.
->>>
->>> Is this true for HPA IPs as well? The test performed by Hans:
->>> root@orangepi6plus:~# cat /sys/kernel/debug/cdns_pcie_a0*/ltss*
->>> L0_STATE (0x29)
->>> L0_STATE (0x29)
->>> L0_STATE (0x29)
->>>
->>> This implies that the L0_STATE LTSSM state is mapped to 0x29 (41) there,
->>> which according to your response is internal LTSSM encoding, and hence
->>> the register read should have resulted in 0x10 instead of 0x29.
->>>
->>
->> Hi Aksh,
->>
->>
->> For HPA, my view is similar to that of DWC - it requires a common 
->> internal LTSSM state. For each of its own Root Port drivers, a 
->> callback can be used to implement the reading of LTSSM. This part can 
->> be referred to as the implementation of the function in DWC.
->>
->>
->> static inline enum dw_pcie_ltssm dw_pcie_get_ltssm(struct dw_pcie *pci)
->> {
->>      u32 val;
->>
->>      if (pci->ops && pci->ops->get_ltssm)
->>          return pci->ops->get_ltssm(pci);
->>
->>      val = dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG0);
->>
->>      return (enum dw_pcie_ltssm)FIELD_GET(PORT_LOGIC_LTSSM_STATE_MASK, 
->> val);
->> }
->>
->>
->> static int ltssm_status_show(struct seq_file *s, void *v)
->> {
->>      struct dw_pcie *pci = s->private;
->>      enum dw_pcie_ltssm val;
->>
->>      val = dw_pcie_get_ltssm(pci);
->>      seq_printf(s, "%s (0x%02x)\n", dw_pcie_ltssm_status_string(val), 
->> val);
->>
->>      return 0;
->> }
->>
->>
->>
->> For example, it can be modified as follows. Of course, the function 
->> name will start with "cdns".
->>
->> For LGA IP, currently we will allow each Root Port driver to implement 
->> the corresponding ops::get_ltssm() by itself.
->>
->> static int ltssm_status_show(struct seq_file *s, void *v)
->> {
->>      struct dw_pcie *pci = s->private;
->>      enum dw_pcie_ltssm val;
->>
->>      if (pci->ops && pci->ops->get_ltssm)
->>          val = pci->ops->get_ltssm(pci);
->>      else
->>          val = dw_pcie_get_ltssm(pci);
->>      seq_printf(s, "%s (0x%02x)\n", dw_pcie_ltssm_status_string(val), 
->> val);
->>
->>      return 0;
->> }
->>
-> 
-> The process above tells how to read the register and get the LTSSM
-> state values. However, my concern is whether we require different LTSSM
-> state encoding in your debugfs patch, one for LGA, and other for HPA.
-> This is because the L0_state seems to have different values in the LTSSM
-> fields of different IPs. On LGA, the L0_state seems to have value as
-> 0x10 in the register (as can be seen in the J7200 TRM). On HPA, the
-> L0_state seems to have value of 0x29 in the register (as can be seen in
-> your test logs in the cover letter). Hence, if we want to print the
-> LTSSM state string in the debugfs, then for LGA IPs, 0x10 value should
-> print L0_STATE, and for HPA IPs, 0x41 value should print L0_state.
-> 
+D3cold reset is placed at the end of the reset hierarchy as a last
+resort before giving up, since it provides a strong reset when other
+methods are unavailable or broken.
 
-Hi Aksh,
+Reset hierarchy with this change:
+1. device_specific
+2. acpi
+3. flr
+4. af_flr
+5. pm (D3hot via config space)
+6. bus (SBR)
+7. cxl_bus
+8. d3cold (NEW - power cycle with D3hot fallback)
 
-Yes, different codes will be used. The reason for this was because of 
-the result I obtained from consulting Manikandan. This time, it was a 
-problem identified by Sashiko's review. So, we need to ask you and 
-Manikandan to confirm this LTSSM code again.
+This benefits devices that:
+- Have broken or missing FLR
+- Advertise NoSoftRst+ incorrectly (blocking D3hot PM reset)
+- Have broken bus reset implementations
+- Need power cycle for reliable reset
+- Are used in VFIO passthrough scenarios
 
+Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+---
+v3: Implement d3cold as a general PCI core reset method instead of
+  device-specific quirk approach from v2 (Alex Williamson suggestion)
+v2: https://lore.kernel.org/all/20260508145153.717641-2-jtornosm@redhat.com/
 
-Best regards,
-Hans
+ drivers/pci/pci.c   | 41 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  2 +-
+ 2 files changed, 42 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8f7cfcc00090..6da8feff7ccc 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4491,6 +4491,46 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+ 	return ret;
+ }
+ 
++/**
++ * pci_d3cold_reset - Put device into D3cold (or D3hot) and back to D0 for reset
++ * @dev: PCI device to reset
++ * @probe: if true, check if D3cold reset is supported; if false, perform reset
++ *
++ * Attempt to reset the device by transitioning through D3cold and back to D0.
++ * On platforms with ACPI _PR3 power resources, this performs a true D3cold
++ * power cycle (actual power removal). On platforms without _PR3 support,
++ * pci_set_power_state() automatically falls back to D3hot, providing a
++ * D3hot->D0 reset transition.
++ *
++ * Only available for single-function devices to avoid affecting other
++ * functions in multi-function devices.
++ *
++ * Returns 0 if device can be/was reset this way, -ENOTTY if not supported,
++ * or other negative error code on failure.
++ */
++static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
++{
++	int ret;
++
++	if (dev->multifunction)
++		return -ENOTTY;
++
++	if (probe) {
++		if (!pci_pr3_present(dev))
++			pci_dbg(dev, "d3cold reset: no _PR3 support, will use D3hot fallback\n");
++		return 0;
++	}
++
++	if (dev->current_state != PCI_D0)
++		return -EINVAL;
++
++	ret = pci_set_power_state(dev, PCI_D3cold);
++	if (ret)
++		return ret;
++
++	return pci_set_power_state(dev, PCI_D0);
++}
++
+ /**
+  * pcie_wait_for_link_status - Wait for link status change
+  * @pdev: Device whose link to wait for.
+@@ -5065,6 +5105,7 @@ const struct pci_reset_fn_method pci_reset_fn_methods[] = {
+ 	{ pci_pm_reset, .name = "pm" },
+ 	{ pci_reset_bus_function, .name = "bus" },
+ 	{ cxl_reset_bus_function, .name = "cxl_bus" },
++	{ pci_d3cold_reset, .name = "d3cold" },
+ };
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c4454583c11..1ca7b880ead7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -51,7 +51,7 @@
+ 			       PCI_STATUS_PARITY)
+ 
+ /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
+-#define PCI_NUM_RESET_METHODS 8
++#define PCI_NUM_RESET_METHODS 9
+ 
+ #define PCI_RESET_PROBE		true
+ #define PCI_RESET_DO_RESET	false
+-- 
+2.53.0
 
