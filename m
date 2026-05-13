@@ -1,98 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D86C324716;
-	Wed, 13 May 2026 23:15:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BBB83876DF
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 23:22:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778714159; cv=none; b=cn9RTdk+Yrp4TxIkOYQMvw5l+hRNAXOR3hVCf73wDApr+vvk0awlkDO5bxQLb9Ppyna8GE4q/noWN6AGjh7CdT07wg383G8q/nPHPrcJWy2QpSJcZ/GNYihl+oEHVMk9tkFfogjnJCltbDwGX9/HpwaRxseHEbV/3ZC83y8/j2g=
+	t=1778714534; cv=none; b=bSfXY+Q9luvyCYmX5eLm6w6y9YqGUwtRODZeWkyH3+uTB8yqPh26Dq9MLdK+hxmViLYP0p3ALdr+wLvmwfGJXLyIcZ0SBIBLtQrdgrG8mxG9IqjFTmY2BXm4WhEeN/1dlNtAcNfYeX7bIEl67THTZ5VKgGDPAAmxIEMou4VrofI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778714159; c=relaxed/simple;
-	bh=MVk6jb5+GkT5DVuM/HR3gjPwoz3JXsYZFjvxYAUvIYA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eauTKEU5766Nt9+PFK9GV8mb2vpiBGhvxAu76bkj2DkJH6m7I+hckLlUaDU7pG7sGOgtVu0eQsIsep0LQfJ76V599iNIek8k1qoibgsQy9FluXYxSNIXWiMCWUHbN18v1d6VWGAJqoddmugW3GxHp13IEo7GDii6/fX7QtIfhAw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oOC64afI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778714534; c=relaxed/simple;
+	bh=FzVSdJvqlS+XUnHgO5gZ/csdhO+MZYA/ic4K5IooeFA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=u1VFlU82tlurAsS70mAqsi9SdHsHwmiv4h2wq1Jc4s79TqivaLWqJkZmz+rOA4jDAlR+yPP7qSim5Ko9sgc8fN/ASqENTsUaH2IJF60U9CBAXNcu5EHdyAZeC4E7WkhZL/8HojiQqQW0xQ4MgPxV1LHXfqua04u8GIxZkKsPD7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QiGehHfi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oOC64afI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B443C19425;
-	Wed, 13 May 2026 23:15:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QiGehHfi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C318FC19425;
+	Wed, 13 May 2026 23:22:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778714158;
-	bh=MVk6jb5+GkT5DVuM/HR3gjPwoz3JXsYZFjvxYAUvIYA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oOC64afIrDERd2fOrXgXfbN4m/Xur81K87ISHnIHzR0TlMceY1eoGi2GrQRGiLZdg
-	 pleJb6E3c9C8oX69vcVnoPK+kpjn9q8hJzWrf6hjQqYE+eL0hKcZspbUcAPNEUDsJU
-	 6qJ110qgu6axlR3qRYuODw7eCVWxTYUhV3cVLCQG1jemBxC+pwxEr3jBP15aTATfUR
-	 dnO4UjPqLFjJrVNhheiAqBX1X2qWZ4eQ+S7keDWowaCH8Xx27QstBlBIqeK7juguAV
-	 dBPK9V9uwnUqtmu00mo0gyjPRj74woaTLrAhW4WmIdzTvXolxbIpc4/G+4lnZuX7Kf
-	 squxFvozDUqAg==
-Date: Wed, 13 May 2026 18:15:50 -0500
-From: Rob Herring <robh@kernel.org>
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Ryder Lee <ryder.lee@mediatek.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: PCI: mediatek-gen3: Allow memory-region for
- restricted DMA buffer
-Message-ID: <20260513231550.GA2280946-robh@kernel.org>
-References: <20260508063633.3894348-1-wenst@chromium.org>
+	s=k20201202; t=1778714533;
+	bh=FzVSdJvqlS+XUnHgO5gZ/csdhO+MZYA/ic4K5IooeFA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=QiGehHfiWdGJdhDui86/fAqBdnv4tyV40eIta5b9cne9xDBmmNOFJOQBC77L6xZn9
+	 GXHH42NY14+u0LrJuV+0ezdJ/4BtKHn6d8d9fGsg5yOJuMU14LcqMoqZ2PLjs+llnO
+	 wVF+SPQX8CU1dnvXuK1uJXszBDLL7pz+pZIkaY4lGAy+oTqMZIburxo3+YkYIMKWZU
+	 eGlYqHI+SMlqTXjKlZqrIlTJuxRrljDOOPVR0xbMUbeq32BFdbZxF66Q+exwfPKF4x
+	 piLIkvgMDZaeXxPlhwg5rzy6JTVjI5CE6n6ptzWw7CgFVYSJ8GbIscV+smIfQ2sJM8
+	 iOefddfBCw7WA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 16/16] vfio: selftests: Add continuous DMA to
+ vfio_pci_liveupdate_kexec_test
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Vipin Sharma" <vipinsh@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511234802.2280368-17-vipinsh@google.com>
+References: <20260511234802.2280368-17-vipinsh@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 13 May 2026 23:22:13 +0000
+Message-Id: <20260513232213.C318FC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260508063633.3894348-1-wenst@chromium.org>
 
-On Fri, May 08, 2026 at 02:36:32PM +0800, Chen-Yu Tsai wrote:
-> On some SoCs without an IOMMU behind the PCIe controller, the PCIe
-> controller memory access could be limited to a small region by the
-> firmware configuring a memory protection unit. This memory region
-> must be assigned to the PCIe controller so that the OS knows to
-> use that region. Otherwise PCIe devices would not work properly.
-> 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] Missing PROT_READ flag in mmap() causes segmentation fault on re=
+ad.
+- [Low] Incorrect memset size in dma_memcpy_start() leaves half of the tran=
+sfer buffer uninitialized.
+--
 
-What you are describing is dma-ranges. Why not use that?
+commit 4781683698837fa3bf4dcf765b9c536579e8545a
+Author: David Matlack <dmatlack@google.com>
 
+vfio: selftests: Add continuous DMA to vfio_pci_liveupdate_kexec_test
 
-> Allow the memory-region property with one item pointing to a
-> restricted DMA buffer.
-> 
-> Signed-off-by: Chen-Yu Tsai <wenst@chromium.org>
-> ---
-> This patch compliments another patch that moved the memory-region from
-> the PCIe device to the PCIe controller [1].
-> 
-> [1] https://lore.kernel.org/all/20260430120725.241779-1-wenst@chromium.org/
-> 
->  Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-> index 4db700fc36ba..4a9e41d01628 100644
-> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-> @@ -115,6 +115,10 @@ properties:
->    power-domains:
->      maxItems: 1
->  
-> +  memory-region:
-> +    maxItems: 1
-> +    description: phandle to restricted DMA buffer
+This commit adds a long-running DMA memcpy operation to the Live Update kex=
+ec
+test to ensure continuous DMAs do not lead to system instability.
+
+> diff --git a/tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test.=
+c b/tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test.c
+> index 65c48196e44e7..36bddfbb88ed2 100644
+> --- a/tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test.c
+> +++ b/tools/testing/selftests/vfio/vfio_pci_liveupdate_kexec_test.c
+
+[ ... ]
+
+> +static void dma_memcpy_start(struct vfio_pci_device *device)
+> +{
+> +	void *src =3D memcpy_region.vaddr, *dst;
+> +	u64 count, size;
 > +
->    mediatek,pbus-csr:
->      $ref: /schemas/types.yaml#/definitions/phandle-array
->      items:
-> -- 
-> 2.54.0.563.g4f69b47b94-goog
-> 
+> +	size =3D min_t(u64, memcpy_region.size / 2, device->driver.max_memcpy_s=
+ize);
+> +	dst =3D src + size;
+> +
+> +	/*
+> +	 * Rough Math: If we assume the device will perform memcpy at a rate of
+> +	 * 30GB/s then 7200GB of transfers will run for about 4 minutes.
+> +	 */
+> +	count =3D (u64)7200 * SZ_1G / size;
+> +	count =3D min_t(u64, count, device->driver.max_memcpy_count);
+> +
+> +	memset(src, 1, size / 2);
+> +	memset(dst, 0, size / 2);
+
+Does this leave half of the transfer buffer uninitialized?
+
+The transfer size is calculated as size, but the initialization loop
+only covers size / 2 bytes. When vfio_pci_driver_memcpy_start() initiates
+the DMA transfer of size bytes, the device will read from the uninitialized
+second half of the buffer.
+
+> +
+> +	printf("Kicking off %lu DMA memcpy operations of size 0x%lx...\n", coun=
+t, size);
+> +	vfio_pci_driver_memcpy_start(device,
+> +				     to_iova(device, src),
+> +				     to_iova(device, dst),
+> +				     size, count);
+> +}
+> +
+> +static void dma_memfd_map(struct vfio_pci_device *device, int fd)
+> +{
+> +	void *vaddr;
+> +
+> +	vaddr =3D mmap(NULL, MEMFD_SIZE, PROT_WRITE, MAP_SHARED, fd, 0);
+
+Does this mmap() call need the PROT_READ flag?
+
+The DMA buffer is mapped with only PROT_WRITE, but the test subsequently
+performs read operations on this mapped memory:
+
+dma_memcpy_one()
+    VFIO_ASSERT_EQ(memcmp(src, dst, size), 0);
+
+On architectures that enforce strict memory permissions and do not
+implicitly grant read access for write-only mappings, this will cause a
+segmentation fault.
+
+> +	VFIO_ASSERT_NE(vaddr, MAP_FAILED);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511234802.2280=
+368-1-vipinsh@google.com?part=3D16
