@@ -1,99 +1,94 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC9023BE623;
-	Wed, 13 May 2026 21:39:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 057A73C3781;
+	Wed, 13 May 2026 21:43:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778708376; cv=none; b=LCIXCUdDUCfflZUcEL6RtSD71xe3x3oRZBdXa+OebhOwGTHK+lgP8Bl1B3saH3FpmS2yUqpQI2eGlN91pXLvzujC1rtkoxDAWsDGaQDxRW22vl0o2vX+dKFflizC6aZta6XlUQ90/6JHFDDiYLXchOBcqYDHuuQUSB6BY4EsVYY=
+	t=1778708613; cv=none; b=E2D2Y0Wea9UnRTzlI6z9qEUNT0baczm1QoyUusdy8gY9TWjdGuMp4/56gNlM8MRIjRzUHnhs+yQ05ubJ7GnwsY/YaY/CZAEkq8drjfUiXI1R7DeSBXJJ4hf5bDTm0bV+anhvptunGaOzUi71teOoUcFDH+5iKJkw5DYjf1+yBUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778708376; c=relaxed/simple;
-	bh=6RVOmCpQqd6bhxaLMGhb4U6J1qkZVEls47foBVVVlWE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aemCg32OMzEeATg6CvXX+SD3e/WK6ibgYFFVGahtUII9kNX6hO48HS4QyjQy5xWx4XXjk41pZs5bnexbWCFQ1RsBzTzY6JInJkyFVJg6ixTja/MdUYI7i0SgxotPBx+HMj0AixAQSYvfDl+FPmoJz9nAErFfBqpVB6cuef+E7EY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=pass smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=Lc/WHbHo; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjdns.fr
+	s=arc-20240116; t=1778708613; c=relaxed/simple;
+	bh=LT8Be7Q4Bi/XtelKyT3U23dHJqp7FkMFF//vn8LYL9s=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=qSeqNnf8Qn+0CqYyelbPbTdlNy4NyKFSvIb8M7cEqk0jcy0A6B2haFXjwMayJeVlIJowjIUOHW5eP5HllMyBOdbKB3fQHfWHKwuN+huL0mCe73svaFbAN+RMCL9aUK/fC7azbZXkAKMiRWtqBSnLStBgpHkg6zl2zJ9sM4aadgE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nm6Mo8xQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="Lc/WHbHo"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 4F6DB3C8C8F;
-	Wed, 13 May 2026 23:39:25 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1778708371; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:content-language:in-reply-to:references;
-	bh=1AX2j8H+A9JJ6yxGxOWqpensFj//EnHL/7eUxAjSl/I=;
-	b=Lc/WHbHo6a9u6xmgYh9JFLTTLxmnZik9YBZLUFRc57EWchl2Eg4uXIQCWY7k+OnBLTjdwu
-	qxjHsclPdRzQqAuCjpi7pk8KISVj2Zc5/siysgyuBSm6/urCAWjQQcQq+5l8bUAQrH+pgZ
-	C4irwC4MDy2qO2WlIHaMj7AcMOOO/EAty83qcFnMBSV1Mt0hBvRCM7rmgSoOhUkdBKzpvQ
-	1YRyUymTm5n2s38oZw/GL3J8YadgMbiIxQXB6OQfu2lQTRYMkfbRmCkyghGAbVP0FH10hd
-	JxruONLBXC9OKB+N2laE7YjZv4OuT5NsszQj3P2HBw8t5PUc/NoKNEVDFUfj1g==
-Message-ID: <65792ada-5e9d-4e3f-aa79-bb4a8ffd9161@cjdns.fr>
-Date: Wed, 13 May 2026 23:39:25 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nm6Mo8xQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67B7AC19425;
+	Wed, 13 May 2026 21:43:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778708612;
+	bh=LT8Be7Q4Bi/XtelKyT3U23dHJqp7FkMFF//vn8LYL9s=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Nm6Mo8xQ2zXpJKHexPXmHPRrkolH9pKoUK5XOkv5YzPpitvR2GTk+n5nBZtShkFur
+	 ra4J0fo5F0oE3oFsGLlDSu2c5Z4XlcRJxYHrbu4BGG2DWU1JIN9h6leuBa2zFKUrx2
+	 IMec4JSSZ9BI5qI4989bBCiEQH+B9h55ARDzu3Fmc+RwpFyCbdHwVQ6RCXqQOULqMp
+	 Oe4WJ+X8uMa+nYDYtqAFxUT4XIJaY52sYimFQ1f5hzUNLW4HQcIMhzew4EQDeW92Jx
+	 5Y+lIPP2/QrsVRGOPEj1NW+ibNDfV0SDDE48PpkeD4JfOcn2/bbOK43PgIZ3VEG6ii
+	 WZ6BlHeojGTWw==
+Date: Wed, 13 May 2026 16:43:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sai Krishna Musham <sai.krishna.musham@amd.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
+	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, cassel@kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	michal.simek@amd.com, bharat.kumar.gogada@amd.com,
+	thippeswamy.havalige@amd.com
+Subject: Re: [PATCH RESEND] PCI: amd-mdb: Assert PERST# on shutdown
+Message-ID: <20260513214331.GA339797@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
- naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
- kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
- krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
- linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260513210759.GA331283@bhelgaas>
-Content-Language: en-US
-From: Caleb James DeLisle <cjd@cjdns.fr>
-In-Reply-To: <20260513210759.GA331283@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260427121227.290604-1-sai.krishna.musham@amd.com>
 
+On Mon, Apr 27, 2026 at 05:42:27PM +0530, Sai Krishna Musham wrote:
+> Add a shutdown handler for the AMD MDB PCIe host controller that
+> asserts the PERST# signal via GPIO before the system powers off or
+> reboots. This ensures the connected PCIe endpoint is held in reset
+> during shutdown.
 
-On 13/05/2026 23:07, Bjorn Helgaas wrote:
-> On Wed, May 13, 2026 at 07:16:52PM +0000, Caleb James DeLisle wrote:
->> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
->>
->> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
->> require re-training after startup.
-> s/re-training/retraining/
-OK
->
->> + * @MTK_PCIE_RETRAIN: Re-train link to bridge after startup because some
->> + *                    Gen2-capable devices start as Gen1.
-> s/Re-train/Retrain/ to make this consistent and more greppable.
-> Also more instances below.
-OK
->
->> + * as Gen1, and must be re-trained once after initial configuration in order to
->> + * only Gen1 capable. Therefore it is most convenient to re-train every port
->> +	return dev_err_probe(dev, ret, "root bridge not found\n");
-> "Root bridge" is not a term used by the specs, but in common usage it
-> refers to the host bridge, i.e., the RC.  In this case, you didn't
-> find a "Root Port".
-OK Thanks
->
->> +found_port:
->> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
->> +		/* Let it go because the device will work as Gen1 */
->> +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
-> I suppose this will cause a warning even in cases where Gen2 is
-> impossible, e.g., the endpoint only supports Gen1?
+I see a few other drivers (dwc/pci-imx6.c, dwc/pcie-fu740.c,
+pcie-iproc-platform.c) that do something similar, but it doesn't look
+consistent.  *Should* this be consistent across all drivers?
 
-Correct indeed.
-
-I imagine in most cases, if the port is Gen1 only then board integrator 
-uses a Gen1 card as well, so I could try being fancy and probe the card 
-to see if it supports Gen2. In OpenWrt the PCI driver is always built-in 
-so I didn't really consider this something to worry about.
-
-What's your preference?
-
-Thanks,
-
-Caleb
-
+> Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-amd-mdb.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-amd-mdb.c b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> index 7e50e11fbffd..69d21b4727e4 100644
+> --- a/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> +++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> @@ -507,6 +507,14 @@ static int amd_mdb_pcie_probe(struct platform_device *pdev)
+>  	return amd_mdb_add_pcie_port(pcie, pdev);
+>  }
+>  
+> +static void amd_mdb_pcie_shutdown(struct platform_device *pdev)
+> +{
+> +	struct amd_mdb_pcie *pcie = platform_get_drvdata(pdev);
+> +
+> +	if (pcie->perst_gpio)
+> +		gpiod_set_value_cansleep(pcie->perst_gpio, 1);
+> +}
+> +
+>  static const struct of_device_id amd_mdb_pcie_of_match[] = {
+>  	{
+>  		.compatible = "amd,versal2-mdb-host",
+> @@ -521,6 +529,7 @@ static struct platform_driver amd_mdb_pcie_driver = {
+>  		.suppress_bind_attrs = true,
+>  	},
+>  	.probe = amd_mdb_pcie_probe,
+> +	.shutdown = amd_mdb_pcie_shutdown,
+>  };
+>  
+>  builtin_platform_driver(amd_mdb_pcie_driver);
+> -- 
+> 2.43.0
+> 
