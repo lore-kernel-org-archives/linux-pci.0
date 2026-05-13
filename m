@@ -1,115 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F03D737BE6B;
-	Wed, 13 May 2026 05:01:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E5623A984;
+	Wed, 13 May 2026 05:07:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778648480; cv=none; b=r4gv0bDI0w5PtyhsQ/RMsDrUX2hhdz2r6EPqZisSdAxbPI7YxqhmsxEToEuXhbQQ6hZWkuPiJHKN61kNXurFCByeoSNCtT4/ZDQ8WY67bXHoNNRxGnDqkx0dlEe5xdTQDnuKq0GDJSi0DqNTYghYdWWTCnyzvpixVTHyOl/Lfkk=
+	t=1778648824; cv=none; b=rFTFflUMJsLo9d/XEj/R+mgRA8Qgkp+0QAOuA9GvUQ2pyU24hrTHh5+vtXzpXKaxfqiAvkwJCPcgggUJkKwfCUYcLldb2Bkhy8YqlWpRQ4GixvIDTP7c1HZa+r6egzFdiAL8B26JyrYddTYaWeNnxom9OT/HN946RF8V5GafDTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778648480; c=relaxed/simple;
-	bh=n/stMvyJlEXzKn+ZF094sGM2wBa3LCnzIqinZ5s+tUE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ib3VoKG1AguNGcdycG3jO0osFnugyRhnbkndT+41dmH0d0XR/lDjOZXViz0B2WQ71cTtBoQBaAam3bN3K2mrFFr6OVWseMRSnggx97E8AxDRrrO5rZFvGvKMDYutJH2NxaLoy6wZLw8is147KDlCKGV7Il/NTRtUrijJuEEhNQ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TK4vsnIr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778648824; c=relaxed/simple;
+	bh=Od8jQ7HppMWceeFf2Wz1PMSY1Oj7ZTXnse5bp6MWPgI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ITKqWJGNF/73JnfP1JeIh/Sk37MgFNzb2IHUy4rmqdf0ROoHMwZRsnqULFRe54ExhiLvyC4n2T9mgkdgokGvd8CLYzaNw9IA9Qpol3N5pva2YzIwdlqVYGPcLVxLXpDajsnP/UDjfaQxhRb73yDTRSwnlOPsUN3SNqd2Em7JncY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qgC2fiWG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TK4vsnIr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B37AC2BCB7;
-	Wed, 13 May 2026 05:01:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qgC2fiWG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED8BC2BCB7;
+	Wed, 13 May 2026 05:07:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778648479;
-	bh=n/stMvyJlEXzKn+ZF094sGM2wBa3LCnzIqinZ5s+tUE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=TK4vsnIr9LuwE5Ldmr2NGJogwYvcr83QdkyDjxeVNxd12hP6/op2pFyepgfrZJVF1
-	 1Y3Z9qdAPpRzrS7NP/KTvxiUKisoWzjQgLSAtJsrN82e7ZSJzDcPp2l3ctT2L7PJZL
-	 xXYOns35LcVJGCJjH19Lsn/qSX6iMJV+CNnBsoch3HltKveH2SgKpMZMm7p1MEiS0b
-	 BLPXB04/qsvMRAmX3LA66eSHglvqDljBaN17fiXp05I1RVfvg153J7lH1qw3BUpSN/
-	 Qc+wvdSP6sXXQWSCSU23ltKLcQvFV0YH4u5fMUvhfTiAC+BFlCfnF554KZ7bbdOzzy
-	 MomNMyGZyWOpA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v1 1/2] PCI: imx6: Configure REF_USE_PAD before PHY
- reset for i.MX95
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Richard Zhu" <hongxing.zhu@nxp.com>
-Cc: imx@lists.linux.dev, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260512052244.49414-2-hongxing.zhu@nxp.com>
-References: <20260512052244.49414-2-hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 05:01:19 +0000
-Message-Id: <20260513050119.9B37AC2BCB7@smtp.kernel.org>
+	s=k20201202; t=1778648823;
+	bh=Od8jQ7HppMWceeFf2Wz1PMSY1Oj7ZTXnse5bp6MWPgI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qgC2fiWGaFx565UsEzgDHXGiXp50zB4X9zvT4iVLodn9o3flW8VoJCS5NzC2/yFA6
+	 oWE70/AMSAku740cdOvj9f/u062UzaTOGRBlIgXyoiK1bY1bFrheirLIgD5YsZisNX
+	 C3bSbnVJs+pPmnz597WZ+nr8s1tBkQfoK6EHL7IAt2OBF9VjAHqDzcRdqUA/TC/Kib
+	 F3McmMmHC1fpiLmsscdzzVS7XrEssw0ck0XRWC7lnWnIhvbyuyJik9lLM1rSgy0AII
+	 Go4TOwfPdVr8QNj2mvysSkMzPhwLFwYoBubi/o4AnLNOVwaDEVB2r8GIXZpsvCdcvB
+	 /t+X9tN6chHEg==
+Date: Wed, 13 May 2026 14:07:02 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Ravi Kumar Bandi <ravib@amazon.com>
+Cc: bhelgaas@google.com, ilpo.jarvinen@linux.intel.com, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/sysfs: Check IORESOURCE_DISABLED in resource mmap
+ handler
+Message-ID: <20260513043934.GA4124219@rocinante>
+References: <20260512094621.GB1539393@rocinante>
+ <20260513040401.16035-1-ravib@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260513040401.16035-1-ravib@amazon.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Hardware configuration error due to incorrect register usage for R=
-EF_USE_PAD
---
+Hello,
 
-commit 26a2cb6a0671cc76e166c2fbcbd3fac6623c8d77
-Author: Richard Zhu <hongxing.zhu@nxp.com>
+> Thank you, but as you suggested above, I will update the patch to use
+> pci_dev_is_disconnected() instead.
 
-PCI: imx6: Configure REF_USE_PAD before PHY reset for i.MX95
+There also exists pci_device_is_present() which would attempt an actual
+read of a vendor/device IDs, so if this succeeds, then you have a more
+solid assurance that the device should be working.  However, this adds
+latency, and there might be side-effects, potentially...
 
-This commit moves the REF_USE_PAD configuration before the PHY reset toggle
-to comply with the required initialization sequence for the i.MX95 PCIe PHY.
+I wonder, if for you, you could forfeit setting any flags on a resource,
+which drivers don't customarily do, such that we would only rely on
+checking pci_dev_is_disconnected() on our side, so to speak.
 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controll=
-er/dwc/pci-imx6.c
-> index e35044cc52185..d2df0f4819bb0 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-[ ... ]
-> @@ -247,6 +248,24 @@ static unsigned int imx_pcie_grp_offset(const struct=
- imx_pcie *imx_pcie)
->  	return imx_pcie->controller_id =3D=3D 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
->  }
-> =20
-> +static int imx95_pcie_init_pre_reset(struct imx_pcie *imx_pcie)
-> +{
-> +	bool ext =3D imx_pcie->enable_ext_refclk;
-> +
-> +	/*
-> +	 * Regarding the Signal Descriptions of i.MX95 PCIe PHY, ref_use_pad is
-> +	 * used to select reference clock connected to a pair of pads.
-> +	 *
-> +	 * Any change in this input must be followed by phy_reset assertion.
-> +	 */
-> +
-> +	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_SS_RW_REG_0,
-> +			   IMX95_PCIE_REF_USE_PAD,
-> +			   ext ? IMX95_PCIE_REF_USE_PAD : 0);
+We won't be setting any precedent here, as the helpers such as
+pci_read_config_byte(), perform this check internally already.
 
-Does this code update the correct register?
+Bjorn and Ilpo might have different take on this, though.
 
-In the original code below, IMX95_PCIE_REF_USE_PAD was written to
-IMX95_PCIE_PHY_GEN_CTRL. Here it is being written to IMX95_PCIE_SS_RW_REG_0,
-which could fail to select the reference clock and inadvertently corrupt
-bit 17 of IMX95_PCIE_SS_RW_REG_0.
+Thank you!
 
-> +
-> +	return 0;
-> +}
-> +
->  static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
->  {
->  	bool ext =3D imx_pcie->enable_ext_refclk;
-> @@ -269,9 +288,6 @@ static int imx95_pcie_init_phy(struct imx_pcie *imx_p=
-cie)
->  			IMX95_PCIE_PHY_CR_PARA_SEL,
->  			IMX95_PCIE_PHY_CR_PARA_SEL);
-> =20
-> -	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_GEN_CTRL,
-> -			   IMX95_PCIE_REF_USE_PAD,
-> -			   ext ? IMX95_PCIE_REF_USE_PAD : 0);
->  	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_SS_RW_REG_0,
->  			   IMX95_PCIE_REF_CLKEN,
->  			   ext ? 0 : IMX95_PCIE_REF_CLKEN);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512052244.4941=
-4-1-hongxing.zhu@nxp.com?part=3D1
+	Krzysztof
