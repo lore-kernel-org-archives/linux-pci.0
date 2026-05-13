@@ -1,201 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 058E336F8EB
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 21:05:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2BB8363084;
+	Wed, 13 May 2026 21:08:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778706360; cv=none; b=VnDA+66Vadn1LtenDcOroCQiQm4x83t8jbWckU0OBOssvRevDPmsrkIygrCF2DU5DCIRG0gZUuHqCYCWb+0VJ20HvSXqjkFi0DTHmwBu1UIosXlHVjl0tqiy+/xO4M/jurIUoG50ZHPlgPjrejiR/UqIY1ozp8n1mT+Muew8p2s=
+	t=1778706481; cv=none; b=CwdjMHUpfJdmffC2lIx504FsXR6pLERbDoysZ+5gxu9eM13P9DFv9+I/yhEuji5EL34d9wHIefi0OVCjv1r0x0SoBjOaNWAc+doluZhTxtdZZTs3iG9ARRjZxS5FK0SmlcemF+YgA+Du6gMV5pFPuGHLxnK/JJvzS5XQPrWLitg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778706360; c=relaxed/simple;
-	bh=YJUDZCocSPa/5vYv0pjJtraKotnhCzR0nvUxjKRwXj4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IYHZgmB8f+WqTcJo7m6GWQCgLIuaMvg5rdzWcIv8eUABAYUJfcjqO7i9HJX2Skd5NsbzzU2nXW2G2mwCEJnIcZP7GREqRLyqkEmYfkTqzzkmSIr/ckTTd0nBOpk0ubfY9vHjNyqsbtPo0G5n1xn81qJtmmweU36Ij9GpDeaqVig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d2cUyO50; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778706481; c=relaxed/simple;
+	bh=oZWjXoMfghGHXHjku6nYK8etJGovo5hAboXQRgBbDiA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ubr4KZfCjVwt020fceQ99hLhZXstMSSuJrp75UWC9N0HcTLOypCEXHnLVdZ+R7Da/ZLWzUmkrvZ59j1JIcxdZ984rbbrirXDrvld9kFJQFhvNGeDO3C9HV0RGYuxflRKnSDX9Y6YIBT+O8aZ8nsVLpo83STnxXnjaMpNOUBJWq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tTJrOW8p; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d2cUyO50"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80CE0C19425;
-	Wed, 13 May 2026 21:05:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tTJrOW8p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57C8AC19425;
+	Wed, 13 May 2026 21:08:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778706359;
-	bh=YJUDZCocSPa/5vYv0pjJtraKotnhCzR0nvUxjKRwXj4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=d2cUyO50PmP4lbkbF/U+Sh1Y/cayof9HOQm5JEE4cOyjUHreTCyJF0QQdjdwxBvFI
-	 5kyDTFMZiF9dwxl0XaW3aX+vGV9MrxfQx6TvPsd1wdE//FwHRD+0Rn63lvZcjvXWYq
-	 1/Jvqlz30LR2ZOpsdfNh8TZjR2gBO2r9YWcSRYBXRxFE1+VncY6H9VPzRr57VJc55/
-	 gWg46WGpDaMu0zzfZvCsgbu06DbYG/XeDsjHlSav+CrRbUtxQH63zVYr9ELKEhcAFR
-	 WN0HXvabAH7l99REcxTO2EUKj2wJhmZhS7PL3Iq4UxhT7wP4TM6FOdFebGJUMYjUA8
-	 i24WI5j0DpFLw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v9 4/5] vfio/pci: Add PCIe TPH configuration space
- virtualization
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260512080329.42593-5-fengchengwen@huawei.com>
-References: <20260512080329.42593-5-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 21:05:58 +0000
-Message-Id: <20260513210559.80CE0C19425@smtp.kernel.org>
+	s=k20201202; t=1778706480;
+	bh=oZWjXoMfghGHXHjku6nYK8etJGovo5hAboXQRgBbDiA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=tTJrOW8pBXpiXtwhfnE6UWwdLxO53d1pwvpe7uI7N4M7CX1Us1bPLq9hhLUtDSxAG
+	 D+cZ6gVbRPfpAzHT6qorwXZlomfIKWPz2KMP0UDJXdly4bx5AG1orv4lolo3v3HT4Y
+	 ryQU+fFjkkwZJ4qoISUSPRmvFuxNW2xu1pbIHs5+Hz6FqwEHYAZ8JuFB1eGAYXOt9m
+	 3Js0oCfogVLgFCq7fjm8S8/UKFVpP1Rx2/y1DW9MKclsjbNYcl29PJZa53gRxVoP6T
+	 IDATbx2MyIjaUp3bvIsI2TDVMfWPPWCu0PzMnHCmaLqwwJa4uHp25f9G4kRFuzetnM
+	 /oDTdFgyJfpKw==
+Date: Wed, 13 May 2026 16:07:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
+	naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
+Message-ID: <20260513210759.GA331283@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260513191652.3200607-3-cjd@cjdns.fr>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
-- [Critical] Concurrent userspace config writes cause data races that corru=
-pt struct pci_dev bitfields.
-- [High] pcie_disable_tph() is called on a suspended device, causing invali=
-d PCI configuration space accesses.
-- [High] Returning error codes from the config write function fails the `pw=
-rite` syscall, breaking VM migration and restoration.
-- [High] Idempotent or read-modify-write operations on the TPH Control Regi=
-ster by the guest fail with a fatal error.
-- [Medium] TPH mediation logic completely ignores the guest's requested Req=
-uester Enable state.
---
+On Wed, May 13, 2026 at 07:16:52PM +0000, Caleb James DeLisle wrote:
+> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
+> 
+> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
+> require re-training after startup.
 
-commit 273d5243ed79b3842db13976044c596f4d95a83f
-Author: Chengwen Feng <fengchengwen@huawei.com>
+s/re-training/retraining/
 
-vfio/pci: Add PCIe TPH configuration space virtualization
+> + * @MTK_PCIE_RETRAIN: Re-train link to bridge after startup because some
+> + *                    Gen2-capable devices start as Gen1.
 
-Add support for virtualizing the PCIe TPH (Transaction Processing Hints)
-control register. TPH may break platform isolation, so add a module
-parameter "enable_unsafe_tph" to allow administrators to globally control
-this feature.
+s/Re-train/Retrain/ to make this consistent and more greppable.
+Also more instances below.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
-ci_config.c
-> index a10ed733f0e3a..efb413ce78170 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
+> + * as Gen1, and must be re-trained once after initial configuration in order to
+> + * only Gen1 capable. Therefore it is most convenient to re-train every port
 
-[ ... ]
+> +	return dev_err_probe(dev, ret, "root bridge not found\n");
 
-> @@ -313,6 +316,35 @@ static int vfio_virt_config_read(struct vfio_pci_cor=
-e_device *vdev, int pos,
->  	return count;
->  }
-> =20
-> +static int vfio_pci_tph_config_write(struct vfio_pci_core_device *vdev, =
-int pos,
-> +				     int count, struct perm_bits *perm,
-> +				     int offset, __le32 val)
-> +{
-> +	u32 data =3D le32_to_cpu(val);
-> +	int ret;
-> +
-> +	if (!enable_unsafe_tph)
-> +		return -EOPNOTSUPP;
-> +
-> +	if (count !=3D 4 || offset !=3D PCI_TPH_CTRL)
-> +		return -EINVAL;
+"Root bridge" is not a term used by the specs, but in common usage it
+refers to the host bridge, i.e., the RC.  In this case, you didn't
+find a "Root Port".
 
-Will returning negative error codes like -EOPNOTSUPP or -EINVAL here propag=
-ate
-to the pwrite() syscall and abort VM migration?=20
+> +found_port:
+> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
+> +		/* Let it go because the device will work as Gen1 */
+> +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
 
-During state restoration, hypervisors typically restore the entire config
-space, including read-only and unsupported capability fields. Should these
-writes be silently dropped by returning count instead?
-
-> +
-> +	/* Only permit write TPH mode. */
-> +	data &=3D PCI_TPH_CTRL_MODE_SEL_MASK;
-
-Does this logic ignore the guest's requested Requester Enable state?
-
-The TPH Requester Enable field is in bits 8-9 of the TPH Control Register,
-but this masks the data using the ST Mode mask (bits 0-2). If a guest OS
-tries to disable TPH by clearing the Requester Enable bits while leaving ST
-Mode unchanged, won't this mistakenly see the non-zero mode and call
-pcie_enable_tph()?
-
-> +	if (data > PCI_TPH_ST_DS_MODE)
-> +		return -EINVAL;
-> +
-> +	if (data =3D=3D PCI_TPH_ST_NS_MODE) {
-> +		pcie_disable_tph(vdev->pdev);
-> +		return 4;
-> +	}
-> +
-> +	ret =3D pcie_enable_tph(vdev->pdev, data);
-
-Can concurrent userspace config writes cause data races here?=20
-
-Since this is invoked during the pwrite system call without holding a
-device-level lock, concurrent calls to pcie_enable_tph() or
-pcie_disable_tph() will perform unprotected read-modify-write operations on
-pdev->tph_enabled.=20
-
-As tph_enabled is a C bitfield adjacent to other critical bitfields like
-msi_enabled, could this clobber unrelated PCI features?
-
-> +	if (ret)
-> +		return -EIO;
-
-Could this cause a fatal error if the guest OS performs an idempotent write?
-
-If the guest OS performs a read-modify-write on the PCI_TPH_CTRL register
-when TPH is already active, pcie_enable_tph() returns -EBUSY. Returning -EIO
-here would propagate to userspace and likely crash the VM.
-
-> +	return 4;
-> +}
-
-[ ... ]
-
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 3f8d093aacf8a..cc13fc8eea9da 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-
-[ ... ]
-
-> @@ -736,6 +738,9 @@ void vfio_pci_core_close_device(struct vfio_device *c=
-ore_vdev)
->  #endif
->  	vfio_pci_dma_buf_cleanup(vdev);
-> =20
-> +	/* Disable TPH when userspace closes the device FD */
-> +	pcie_disable_tph(vdev->pdev);
-> +
->  	vfio_pci_core_disable(vdev);
-
-Is it safe to call pcie_disable_tph() here before vfio_pci_core_disable()
-wakes the device?=20
-
-If the device is currently in a suspended low-power state (D3), calling
-pcie_disable_tph() will write to the config space, which could cause
-Unsupported Request (UR) Master Aborts on the PCIe bus and trigger AER
-faults.
-
-> =20
->  	mutex_lock(&vdev->igate);
-
-[ ... ]
-
-> @@ -2205,6 +2210,9 @@ int vfio_pci_core_register_device(struct vfio_pci_c=
-ore_device *vdev)
->  	if (!disable_idle_d3)
->  		pm_runtime_put(dev);
-> =20
-> +	/* Disable TPH when taking over ownership of the device */
-> +	pcie_disable_tph(pdev);
-> +
->  	ret =3D vfio_register_group_dev(&vdev->vdev);
-
-Could this also access the config space of a suspended device?
-
-pm_runtime_put() is called right before this, which allows the device to
-suspend. Writing to the TPH Control Register while the device is in D3
-would violate physical state machine constraints.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512080329.4259=
-3-1-fengchengwen@huawei.com?part=3D4
+I suppose this will cause a warning even in cases where Gen2 is
+impossible, e.g., the endpoint only supports Gen1?
