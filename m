@@ -1,126 +1,202 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011053.outbound.protection.outlook.com [52.101.65.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73DBC3B1034;
-	Wed, 13 May 2026 20:00:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778702410; cv=none; b=SRDtmjEyXvBl07rBhz0fhO4pfljKJTdQEJugvQTR5AVfwgLh9aqSzrjvTucjvtfl99EyGrYIrIcO+euOuF/VHON1yeImo904Anfd/NVVtPbaV2NgiOJhZrLkBdk9z8qPnDczC+nxBJY2iGDUnPl+wauR0DrmJnmmJLqRHLeA82k=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778702410; c=relaxed/simple;
-	bh=MyeugStu5BAvNjTeTDQo2ztI5l0SON+1OLxginf/62s=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DVJIeWO+eqBNlEY45hobSY8/eBKg3n+H0YyoRWk+lYwxgCHe+o/V5lJ2SOQTv87ehX7xKkMpthHLNnNg6lIuwNYwGUd80o1wC2Zg+JynmbyzO6AGtjkgWKSJCLUcTxj8IuReHPyd5K3cp6ZZq1DdMR7rN0o78wPR4HOrKOTYEAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eei8K786; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E99C3B2D04;
+	Wed, 13 May 2026 20:02:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.53
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778702528; cv=fail; b=XZsMbZC19yWI/tM30wq9nzBUoBe40Gd9amlgm6e9HSQhsJjs5bb6jitb63TKUHeFGgoKzh0R15qfr3FiBoVFMcRsPAka2E7Gp6JU2xk1xl1emk2Mq/9unFHiapj7OelRgKv7HgCtcT0+ezbYEwMYHIRHInWpbAWqtS9IpdybovQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778702528; c=relaxed/simple;
+	bh=etsvsByZVRQSFgNrYH8kO6CE1graSCzJoCbGaUp6jL0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=KIChjcPN2rG8sOtTJw+a33BwVoKoqJbW8ynR4lhbL2kkrQYlyUe4GlA3Gvw1lbbUp2px/6HGDDY0P6DTNS5tVvG/4d4AzivPuC4th+h/pLyeQgfjQk5ZG7Wzsh/N3aH0ABoUeMQE+QhxTYMK286WJb0LMGzPdysR+yFLKNCF48w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=CvZL+tk3; arc=fail smtp.client-ip=52.101.65.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eei8K786"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC469C19425;
-	Wed, 13 May 2026 20:00:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778702410;
-	bh=MyeugStu5BAvNjTeTDQo2ztI5l0SON+1OLxginf/62s=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=Eei8K786p8FJjhwVp2C4HdbRYn+Hcro6Ryduv6K3hu/OqMZzWFqxRUvnqJwvhUTLu
-	 3tvuDBdfBdSr8erw0qS3uhl/nrpbHQHhiRhFY2x8g1PfMQR1tUQJch9dxGX37s+8mi
-	 x3iyQuIjVjsBwxNuULpau+W/vyft9ZIVdcsvIrAGuUXh9j66IrCLOpN5QYW7Xe+Pci
-	 TN/waxduGk/XCzXJvqp1Tv612PaBZcphK3s+/Ub4zP9zTdWlBXG0szFfWEk9XsYC3E
-	 n4jLVyGmHAVfNzafoTm6b+2az0s96tiy5tmsu2rN02LTALB6G1kgVoFW3K/S/A/2WH
-	 eKV+9qRoCFP+w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V3 11/11] mshv: Mark mem regions as non-movable upfront
- if device passthru
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mukesh R" <mrathor@linux.microsoft.com>
-Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
-In-Reply-To: <20260512020259.1678627-12-mrathor@linux.microsoft.com>
-References: <20260512020259.1678627-12-mrathor@linux.microsoft.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 20:00:09 +0000
-Message-Id: <20260513200009.DC469C19425@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="CvZL+tk3"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=oRAqFeTMeY1ZkQxsPjKsth6wlhz13eQUEoNQI9+6g399DZbbgx3CExFHHxebeGg2wRMusf5oiiWDJENmFP+EHNvh/0eVyZh6Yq3Kzv/m4YnnVU9YyxmlUC9/cNS7ctigo5bb0GQKY9ZZyRWMJA4rXrS5Dgz5HcCwDvdNjzB++mgA+Pf/J2dUDOMB5Dzh61hKJz3n4gTIugM5TKpozfH1EO4ySJzkmUHI1uLxdUnJAtY5X20is+ZSvfqfZPnT1mxhvawB3awGXbakW9i73kDhdubH5A3UVqKLCB4cfTvQn+GbKAE5nmrbSH7SJ9aX/aZBFYuXExAG+GTUbvQaKElMaA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OxVGY6ZomFFsxcAzoqaARvSJ99j79UJxDISKXFZOQg4=;
+ b=XuYI8kCG7LUbDpiONF+UV6NDRmUZ8t43a+oxMQLCgtO3ZeWI0nv1uMeVyGBql25+7nwSrk/UttUcyWjmRmYczHqQCJ0ZAa+ThsKJN6x7oqm0PW89lAbpHlphkcYjnfVB8lZjqJYmvP65Q6uxkstm7fA5c9eH23/1lfEvMI0UMHkobU3OkG8Si40ctLzwdEkG+GSgQl55oNR50K19QpYwyeDJ9BsiJ5s43lqhX6LoGWeBhCNe54uPN9TX6TgjNBmCrCnSRT0tEFPwv+YoYnJmwelcO70ErxILGV6RhZrUNegyr/u9iwPFp+vs0B2jyLdmryjfyuB2te/umyRMJpO5RA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OxVGY6ZomFFsxcAzoqaARvSJ99j79UJxDISKXFZOQg4=;
+ b=CvZL+tk3rkczodIrAPql8D0cEhOxGGC4dwP4yXLmYS/GAIJrV6IrY5C2qZUrmyEjHF175AQk84BfTiPyH2C8mM4JzIyB2wmEX53NASGIykrYnaMrZsP8wK1IcVgaTKCXpAzDZysQKdvtqnnZk+wNECEPQkCPTrG5Mr/Ol6aGRrFu9DtWNGk5/arf0WUeEz9ZYQjxteW6gS2dyfptiunrk+XrmN7XwSJ8CZbGN/Tu49E0/HgqWnSUvIangL7k+k1th8f6j6ezOT5OxQxJZ4XJvZTR8+QiVD1qIfXL57kAZ+iW6pDMTFxGfk9/DrrV41BsmxRoExYQiWPw6Oyt0khv7Q==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by GV1PR04MB9200.eurprd04.prod.outlook.com (2603:10a6:150:2b::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Wed, 13 May
+ 2026 20:02:00 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%3]) with mapi id 15.20.9913.009; Wed, 13 May 2026
+ 20:01:59 +0000
+Date: Wed, 13 May 2026 16:01:50 -0400
+From: Frank Li <Frank.li@nxp.com>
+To: "Lynch, Nathan" <nathan.lynch@amd.com>
+Cc: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Rientjes <rientjes@google.com>, John.Kariuki@amd.com,
+	Kinsey Ho <kinseyho@google.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	PradeepVineshReddy.Kodamati@amd.com,
+	Shivank Garg <shivankg@amd.com>,
+	Stephen Bates <Stephen.Bates@amd.com>,
+	Wei Huang <wei.huang2@amd.com>, Wei Xu <weixugc@google.com>,
+	dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jonathan Cameron <jic23@kernel.org>
+Subject: Re: [PATCH v2 23/23] dmaengine: sdxi: Add DMA engine provider
+Message-ID: <agTYrii5kLS3tHsx@lizhi-Precision-Tower-5810>
+References: <20260511-sdxi-base-v2-0-889cfed17e3f@amd.com>
+ <20260511-sdxi-base-v2-23-889cfed17e3f@amd.com>
+ <agJAeVtiJnQ1In6_@lizhi-Precision-Tower-5810>
+ <187196b2-fe7c-4d1d-af9d-0df7bf1d0159@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <187196b2-fe7c-4d1d-af9d-0df7bf1d0159@amd.com>
+X-ClientProxiedBy: BYAPR02CA0064.namprd02.prod.outlook.com
+ (2603:10b6:a03:54::41) To PA4PR04MB9366.eurprd04.prod.outlook.com
+ (2603:10a6:102:2a9::8)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|GV1PR04MB9200:EE_
+X-MS-Office365-Filtering-Correlation-Id: 89d36fde-03fd-45da-d5a5-08deb12a7e21
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|52116014|376014|7416014|366016|19092799006|11063799003|56012099003|22082099003|18002099003|4143699003|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	FWQ9vPKw6yClzMJmNp7pB5H8Ycb+jlqvtVwnwsSunBeXrflgZl7p8Xsc4Nz85bsWx6ONFPrT70n/5CLIDyHP2F0lWyA5u/kQ174yZUJs5T/pNt4X6Ms/hTCYesUvJ8xGGinabjq3jXmmsWSwvja85bbv2VmhCQ2acq6sl7ifhHYMYXpIWTLDlfBs1lcqrZxWMbsmCDAbgCbjCf/s8w1vsZgnvC/n627PeCW3mbhVIi5oCcpIgy3/PsbiTzzfZ2zEUUD3oxqhhL4pgGooq7gIeLFuhXBRN7jeqyGBtYU+UlWYFc6Qua1oFa9JCubcMFBUgkV4xY/DTAw6JJkQdtQK55IpoJivqZy6eclSJKAVVavHhG6w53GCvQj6IKV3gh3b8gHRt8VaFb7KI2+h3vzbJEdBwBK2w5SoZVnGiOOxxTaikx+fG1NlWwRH1Zn/nK3QaWC3FyXYhNPy9sLjbqYDBW0GkTB1tEYGs5C5Wo2un9n3/MbOF6r31xZqk/rgoyehw16Fnlz0hcjlf6XenGMyd6n55zLX+D2PnHolI3EKOunyAEv4xtFkdWOnhKY9ewmvfYkneFa7cfzgoWTbUthkvwyuqI+qD6EVmdp2tXDR44vKputYwHZC/xBzzAdsc8G7nq5ukaN3ReaEGpykJfXXb77X99X/F4s4PcU8UHXGBla5F2D98DmhgeIDZkRCSaHGsj9wyrisYry/dNNP0nHQnpRHPV6SlDNkbqxMgHpvlilEW3BZulOOaeSyOGP/NhST
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(52116014)(376014)(7416014)(366016)(19092799006)(11063799003)(56012099003)(22082099003)(18002099003)(4143699003)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?W5fSyvCwEwqQSFfF1TGGyFnu3YFGj7od4+lHzCDDqlHHi3DzUEkm7CDe6EQN?=
+ =?us-ascii?Q?zMUzGhqsEJYX9yKTadOHswUjUSxxX1P43wCLYA27xj4D2f8mLSEp6GWzP/4r?=
+ =?us-ascii?Q?oYnVU5exEuTzdR6G7Ma3qVzlEl6/aScCBuX4VuyG1BlNR/ypvQzs79GCXvHW?=
+ =?us-ascii?Q?47Wxdf4IWCOpOqaNOm7FTO+WaZQSK0VYTCS44c1qpMK2xt/DCLFSzocsnurh?=
+ =?us-ascii?Q?bny2OYwOeOsP06tRe0/PmJ7RxUKth/GFrk9TM1jRWP3yMR00hCzvdvkubzTV?=
+ =?us-ascii?Q?7M0jXz253Q/fB9j/bFGq2SC1Zjlw1yMCGUyn6jzAWDtr+DExDinwe+Tqzl0Q?=
+ =?us-ascii?Q?TS9bi6yLZ+0XkBju1k2dc6f7r58GEWD0rMtHAUhhaSmqK2Xje1AeF7zHihAc?=
+ =?us-ascii?Q?8asylDZFQd+U3B3jsUfd0HRyM6DLL7F66XijO3VfuFwZYwIZ5K+8on6FKi49?=
+ =?us-ascii?Q?bpYfxtFvPIzSCuowSW2KvjXvJuqK25TFmAO8sjm4P1NHaRE7W118pLR0hWEb?=
+ =?us-ascii?Q?OlnM8pla8k62nc7+7ipxnbG5yLjzuuOFBftVNezvVXBYaas4oB000cr1O6FA?=
+ =?us-ascii?Q?dA0TizmS7fCEZxww7b7cbP/kvGmaCS5X4PEHj8AipRQwZtXEPGP8txHpxVJ1?=
+ =?us-ascii?Q?3KezrQJuSkuxRlGsEaZU10/PQmaEDPu1HQFSzqq78ua5kn7X9Eko+S1uKa+h?=
+ =?us-ascii?Q?lemshuKy/tFeE2ctT4OI3yF9EPxh8e4UTYn86gS7ovnvSz60CkLrByg/OPMc?=
+ =?us-ascii?Q?hEs1znsv+pXxR73IL1UIe4dVA6jqq1q4pIoVjZw4zyfxwmTt3MAuqwdIeLGc?=
+ =?us-ascii?Q?bWtOsz/wOJHSYfAm8y2Ol8loSGSwbzTwUNayCkPq6sgnqcFJM1Ju462uPnHS?=
+ =?us-ascii?Q?UBy8m/q4RupzPndYyWOh/HjbVpAr5HHK8RmLzoGSBIQm8RsW7hDqfYbjf5f2?=
+ =?us-ascii?Q?45egWJFWwKcBUwgvkr9Yk6GGueOE3nkQvQHLOfMkPfq8GB/vocRq1FipEXPl?=
+ =?us-ascii?Q?cuqfJtqWk+ucckLwVnXPRqMsv+z60LbdNmKKbI9EYav6H7IUMMyHxR0NrGBN?=
+ =?us-ascii?Q?N/AgBGONg/mP0wfuHsRf4egsKjQ6UC8a9LFLz2puDwko/X1SWYVa6qNvTfdt?=
+ =?us-ascii?Q?TK1OnPogBmwo2K4Q7JeP6LRmPU7Y49xp+3i1bzm25gXWKlUAu7Cfa5zGHjyP?=
+ =?us-ascii?Q?tlRukUF8RnRb7pzNwck+NeZRnvbwRblNXBHXXY6HDs0WHKBmRgN/WmjM3UZ/?=
+ =?us-ascii?Q?v6BgtHyVUMKrEFB2UTKgRmjstNq+rEdIy1Zyvw3WdUWReF6QdoInht5PbGKi?=
+ =?us-ascii?Q?Edu6sPS08zDOght23qh8DAFvsAuqIoZaSjXEc5d9QOgkIzJm2G/dDcQjslIo?=
+ =?us-ascii?Q?uEGXUeaN5es42jyzu3XoxXooPRdZCv8PtV8klqFjCCTrqUpC17JCftD/dWsB?=
+ =?us-ascii?Q?NENBeTsEtcaL2pq/A0O7k0u+/Ui2kP+DW5n3WEn5rh2PG+gD3H77xUQNtXCq?=
+ =?us-ascii?Q?o35UP17x4Q46WEwBAA3dgDs1Tk6d9NBWYgLMu9p8gT+o8HFbE2yzVKVE2rLU?=
+ =?us-ascii?Q?orbuuLsfqzqGR+meF4DzHP+dqynDjbHMBaixgYLZUvpex9Ig0yFp4eMFatk/?=
+ =?us-ascii?Q?2Iwmje75jM5VDaT+QukQ4gWT5xxe4oAhyLfp9VnNyXndxJDuvW45ZyyzMxCL?=
+ =?us-ascii?Q?EC5yIz100SpG2M1v3kVzquc4Ct9wh3+clNBKVCTdXGCJY0M0?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 89d36fde-03fd-45da-d5a5-08deb12a7e21
+X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2026 20:01:59.8311
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RpfGPD2GQ83q0KUhdBKfbQGy0wMGHGJSU2DWZyPlA8JgfL3OnSZOVbvAFXluS4+tGayP9fZbcluCuolGuDZFfw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB9200
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [Critical] Failing `copy_to_user` during device creation bypasses the `pt=
-_regions_pinned` enforcement while leaving the device fully accessible.
-- [High] Device creation does not validate or pin pre-existing memory regio=
-ns, allowing an unsafe mix of movable regions and device passthrough.
-- [High] Missing synchronization between device creation and region creatio=
-n allows concurrent bypass of the pinning constraint.
---
+On Mon, May 11, 2026 at 05:28:01PM -0500, Lynch, Nathan wrote:
+> On 5/11/2026 3:47 PM, Frank Li wrote:
+> >> +static struct dma_async_tx_descriptor *
+> >> +sdxi_dma_prep_memcpy(struct dma_chan *dma_chan, dma_addr_t dst,
+> >> +		     dma_addr_t src, size_t len, unsigned long flags)
+> >> +{
+> >> +	struct sdxi_akey_ent *akey = to_sdxi_dma_chan(dma_chan)->akey;
+> >> +	struct sdxi_cxt *cxt = to_sdxi_dma_chan(dma_chan)->cxt;
+> >> +	u16 akey_index = sdxi_akey_index(cxt, akey);
+> >> +	struct sdxi_dma_desc *sddesc;
+> >> +	struct sdxi_copy copy = {
+> >> +		.src = src,
+> >> +		.dst = dst,
+> >> +		.src_akey = akey_index,
+> >> +		.dst_akey = akey_index,
+> >> +		.len = len,
+> >> +	};
+> >> +
+> >> +	/*
+> >> +	 * Perform a trial encode to a dummy descriptor on the stack
+> >> +	 * so we can reject bad inputs without touching the ring
+> >> +	 * state.
+> >> +	 */
+> >> +	if (sdxi_encode_copy(&(struct sdxi_desc){}, &copy))
+> >> +		return NULL;
+> >> +
+> >> +	sddesc = (flags & DMA_PREP_INTERRUPT) ?
+> >> +		prep_memcpy_intr(dma_chan, &copy) :
+> >> +		prep_memcpy_polled(dma_chan, &copy);
+> >
+> > Maybe I am wrong. According to my understand "DMA_PREP_INTERRUPT" is trigger
+> > irq when complete.  without DMA_PREP_INTERRUPT, don't trigger irq when
+> > complete, not means use polling.
+>
+> OK, my choice of function names there arises from the dmatest 'polled'
+> parameter which selects the completion signaling mode. I can rename it
+> to prep_memcpy_nointr() or otherwise refactor to avoid the confusion, if
+> that's the issue.
 
-commit add8cd40c15400cf2b19c8993ce14d4b4a7adef6
-Author: Mukesh R <mrathor@linux.microsoft.com>
+suppose only one line difference between prep_memcpy_intr() and prep_memcpy_polled()
 
-mshv: Mark mem regions as non-movable upfront if device passthru
+prep_memcpy(dma_chan, &copy, flags)
+{
+	...
+	if (flags & DMA_PREP_INTERRUPT)
+		... enable_irq
+	else
+		... disable_irq
+}
 
-This commit ensures that if a VM is started with a device attached, its
-memory regions are marked as non-movable upfront to allow the use of SLAT
-for IOMMU. It also adds a boot parameter to disable movable pages globally.
+of cause prep_memcpy_nointr() also okay.
 
-> diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
-> index a7864463961bc..ac71534733bd8 100644
-> --- a/drivers/hv/mshv_root_main.c
-> +++ b/drivers/hv/mshv_root_main.c
+Frank
 
-[ ... ]
-
-> @@ -1303,6 +1307,12 @@ static void mshv_async_hvcall_handler(void *data, =
-u64 *status)
->  	*status =3D partition->async_hypercall_status;
->  }
-> =20
-> +static bool mshv_do_pt_regions_pinned(struct mshv_partition *pt)
-> +{
-> +	return pt->pt_regions_pinned || mshv_partition_encrypted(pt) ||
-> +	       hv_no_movbl_pgs;
-> +}
-
-Is there a potential race condition here between device creation and region
-creation?
-
-pt->pt_regions_pinned is written in mshv_partition_ioctl_create_device()
-without holding any locks. Concurrently, mshv_partition_create_region()
-reads this flag via mshv_do_pt_regions_pinned() without synchronization.
-
-If a region is created while a concurrent device creation thread is about to
-set pt_regions_pinned to true, could the region incorrectly be instantiated
-as movable while a passthrough device is active?
-
-[ ... ]
-
-> @@ -1808,6 +1818,9 @@ static long mshv_partition_ioctl_create_device(stru=
-ct mshv_partition *partition,
->  	if (copy_to_user(uarg, &devargk, sizeof(devargk)))
->  		return -EFAULT;    /* cleanup in mshv_device_fop_release() */
-> =20
-> +	/* For now, all regions must be pinned if there is device passthru. */
-> +	partition->pt_regions_pinned =3D true;
-
-If the copy_to_user() fails, the function returns early and skips setting
-pt_regions_pinned to true. However, anon_inode_getfd() has already installed
-the file descriptor in the process's file descriptor table, meaning the
-device remains fully accessible. Can this allow userspace to bypass the
-pt_regions_pinned enforcement?
-
-Additionally, when a device is attached, this sets pt_regions_pinned to true
-for future memory region creations. Does this handle the case where a
-partition already has existing memory regions?
-
-If userspace creates movable regions first and then attaches a device, is
-there a risk that page migration could cause the device to DMA into incorre=
-ct
-physical memory?
-
->  	return 0;
-> =20
->  undo_out:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512020259.1678=
-627-1-mrathor@linux.microsoft.com?part=3D11
+>
+>
+> > for example,
+> > tx1 = prep(flags = 0)
+> > submit(tx1);
+> > tx2 = prep(flags = DMA_PREP_INTERRUPT)
+> > submit(tx2);
+> >
+> > issue_pending();
+> >
+> > DMA Consummer just expect get irq when tx2 complete to reduce irq numbers.
+>
+> Yes, I believe the SDXI DMA provider satisfies this expectation as
+> currently written.
+>
+> > If using polling here, it will reduce transfer efficacy.
+>
+> The SDXI code does not poll for any descriptor's status unless the
+> dmaengine API asks it to, I think? E.g. via device_tx_status().
