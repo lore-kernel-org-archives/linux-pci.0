@@ -1,77 +1,189 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D453B9943;
-	Wed, 13 May 2026 22:06:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA6101A6808;
+	Wed, 13 May 2026 22:17:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778709976; cv=none; b=kRimtMftjGotRCte1UcSk0ikIsuiSStdWOHNQYv96arMghYE34DV0fL1Zic+P6QDBtbfi4KztTo88po+6Y+b4kWJVdzqqomQ9iQ3QMxJYyViYn/jcbNs4IKwdmscvtfdXWZSSRvN3/Ncje55qNyMM3SeGRv4XuCl4YuhDEoJF5A=
+	t=1778710656; cv=none; b=rzmwQ+61TFEOzX2eFGIbyST0UhvFMWE6vp0eI//DQ56ipve6yavBIXK8X91An9DVR+JBUgIZeRufzKm/4/iTfEgMKE/llNLYPT0DPBwc6Nn8MH4Jd8La1cH7qfInSCazqooBREr1rCDlGjR7Z0wSCZIfzI3AiJM/5HH71m2lftw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778709976; c=relaxed/simple;
-	bh=SLtUZuE6eCsfJ26y0lN0VMH2gCaWGCYQmYw6nlqF/tw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=byELvQ0u8fp9zfPiWS/YyttXi929rhsCVUzvMehzhX9fbbZcxMGg8g+zi7CMlF2Rq+/RkHit1eeTdompEm4zhWQR1RQq3AgzBWvdc/h4XhrjoBISsJ3OSkcuj649frvt9AoZJAkGxGlfEE6DdVmVUXHgaBVt/5coNCZoJtTqqPE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iKlNtMsx; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778710656; c=relaxed/simple;
+	bh=j2JAT8iJ0OX2hgxLa9bhcFJssnJ2VuqS9i5kRa9oxe8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=CB6Vbu6Wt2zPghIgfHttAnb4w2QGIc3rOPoUkeDdDKj5e7K8MZodSsvIvYQaZ0RP4e0V5tRexA1CgrTDiY+fry6o64NBg31Pwl0aaEfjkUyIyr9rlgN9bb05ew8N642RrOiLpNX48fLs+n/V9qA9gkj3dkgqYaQzgLsWmL+fUeU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bJbdvDXC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iKlNtMsx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12129C19425;
-	Wed, 13 May 2026 22:06:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bJbdvDXC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D635C19425;
+	Wed, 13 May 2026 22:17:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778709976;
-	bh=SLtUZuE6eCsfJ26y0lN0VMH2gCaWGCYQmYw6nlqF/tw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=iKlNtMsxO8YS65qWNkC+Igkes3nSBBPFNoNOGWHh1xmPes8LhvqktmDIQl6T7V1wd
-	 F5DhkQSKsroXc4idKz4sjmjMtnLTTEECeQij+Pn+umz31TtVu8pXSLmnPNBjtandzc
-	 KvV0w8drrLjeSHQ9v4/jwjHJHhRycEAABi8+thwgutnz1i8MQdBw7areXuJ28sYCCU
-	 1Inr6U6FlQWOw3Rj/ZK82cEbX5DnYOgSc+sKH9yLl/DYi+MojvIXGzTt+vC7YKkDan
-	 wZhGRHOMhUBxs7uouy2ojlPxZoAnvL45Chj5cPDTR7jeVTb6R1rnhHNJkFuNmW6Kl3
-	 FWHC1Ts9Xi7kQ==
-Date: Wed, 13 May 2026 17:06:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Message-ID: <20260513220610.GA341225@bhelgaas>
+	s=k20201202; t=1778710656;
+	bh=j2JAT8iJ0OX2hgxLa9bhcFJssnJ2VuqS9i5kRa9oxe8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=bJbdvDXCdBNM5qrWGGxd94hul9TDkBT4pPk+lFK3GrxfyzPP8yhFAQH3ARoBB/xaE
+	 EwMi3T/KNsstlKnyskF9QIh360DYe81d2Sch95j7tEs9TFNgGNCoAUBOBXnJ1WV410
+	 D/xjE33JHsJmGccM7E7bfW/nhsuxgullBkAxIItENQEbk3SRjkI/L+nCnS3XExYm4S
+	 QlIrwWoUVmFEOJ+pPreVNolEDwxU7e9qgvslqgpwfEJqFF9c7OwxgzuIn+mErqCiqY
+	 I+zm9hXAMlX+xE9hwol6uVcVkHaGeL1Sij8C1iFu9Nw14Wq+dymLpIK5iQupLsPBOs
+	 iz4jgLi0wpz9A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 22/23] dmaengine: sdxi: MSI/MSI-X vector allocation
+ and mapping
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: linux-pci@vger.kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-22-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-22-889cfed17e3f@amd.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 13 May 2026 22:17:35 +0000
+Message-Id: <20260513221736.2D635C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <65792ada-5e9d-4e3f-aa79-bb4a8ffd9161@cjdns.fr>
 
-On Wed, May 13, 2026 at 11:39:25PM +0200, Caleb James DeLisle wrote:
-> On 13/05/2026 23:07, Bjorn Helgaas wrote:
-> > On Wed, May 13, 2026 at 07:16:52PM +0000, Caleb James DeLisle wrote:
-> > > Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
-> > > 
-> > > These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
-> > > require re-training after startup.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [Critical] Hardware is stopped AFTER tearing down active software context=
+s, leading to use-after-free and DMA corruption.
+- [High] Missing pci_free_irq_vectors() in error paths and during unregistr=
+ation.
+- [High] sdxi_alloc_vector() incorrectly allocates vector 0, conflicting wi=
+th the dedicated error log interrupt.
+--
 
-> > > +found_port:
-> > > +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
-> > > +		/* Let it go because the device will work as Gen1 */
-> > > +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
-> >
-> > I suppose this will cause a warning even in cases where Gen2 is
-> > impossible, e.g., the endpoint only supports Gen1?
-> 
-> Correct indeed.
-> 
-> I imagine in most cases, if the port is Gen1 only then board integrator uses
-> a Gen1 card as well, so I could try being fancy and probe the card to see if
-> it supports Gen2. In OpenWrt the PCI driver is always built-in so I didn't
-> really consider this something to worry about.
+commit e45016c3a6e72f74d9db1a7a06247322707bec64
+Author: Nathan Lynch <nathan.lynch@amd.com>
 
-Probing the downstream device sounds like overkill because it hasn't
-been enumerated yet and there's no good place to check after it is
-enumerated.  I would consider just logging one message as "info"
-instead of "warn", maybe in mtk_pcie_startup_port_en7528()?
+dmaengine: sdxi: MSI/MSI-X vector allocation and mapping
+   =20
+During PCI probe, allocate a vector per context supported by the function
+as reported by the capability register, plus one for the error log
+interrupt. Introduce sdxi_alloc_vector() and sdxi_free_vector() which are
+wrappers around the IDA tracking the allocated vector range. Also introduce
+sdxi_vector_to_irq() to translate the device-relative index to the Linux
+IRQ number.
+
+> diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
+> index cc289b271ae22..79bd776394790 100644
+> --- a/drivers/dma/sdxi/device.c
+> +++ b/drivers/dma/sdxi/device.c
+
+[ ... ]
+
+> @@ -347,5 +349,7 @@ void sdxi_unregister(struct device *dev)
+>  		sdxi_cxt_exit(cxt);
+>  	xa_destroy(&sdxi->client_cxts);
+> =20
+> +	ida_destroy(&sdxi->vectors);
+> +
+>  	sdxi_dev_stop(sdxi);
+>  }
+
+This isn't an issue introduced by this patch, but does this sequence lead t=
+o a
+use-after-free?
+
+sdxi_unregister() iterates over client_cxts and calls sdxi_cxt_exit() for a=
+ll
+active contexts, which frees their descriptor rings and control structures.
+Only afterwards does it call sdxi_dev_stop() to stop the hardware.
+
+Because the hardware is still active, it may continue to write to the freed
+DMA memory. Additionally, since the DMA engine unregistration happens later
+via devres, active DMA channels will still hold pointers to the freed
+contexts, leading to a double-free when devres triggers
+sdxi_dma_free_chan_resources().
+
+> diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
+> index 0f72cd359cf5c..67e28b8d7f94d 100644
+> --- a/drivers/dma/sdxi/pci.c
+> +++ b/drivers/dma/sdxi/pci.c
+
+[ ... ]
+
+> @@ -49,12 +52,35 @@ static int sdxi_pci_init(struct sdxi_dev *sdxi)
+>  		return dev_err_probe(dev, PTR_ERR(sdxi->dbs),
+>  				     "failed to map doorbell region\n");
+> =20
+> +	/*
+> +	 * Allocate the minimum required set of vectors plus one for
+> +	 * each client context supported by the function.
+> +	 */
+> +	cap1_max_cxt =3D FIELD_GET(SDXI_MMIO_CAP1_MAX_CXT,
+> +				 sdxi_read64(sdxi, SDXI_MMIO_CAP1));
+> +	vecs =3D pci_alloc_irq_vectors(pdev, SDXI_MIN_VECTORS,
+> +				     SDXI_MIN_VECTORS + cap1_max_cxt,
+> +				     PCI_IRQ_MSI | PCI_IRQ_MSIX);
+> +	if (vecs < 0)
+> +		return dev_err_probe(dev, vecs,
+> +				     "failed to allocate MSIs (max_cxt=3D%u)\n",
+> +				     cap1_max_cxt);
+> +
+> +	sdxi->nr_vectors =3D vecs;
+
+Are the allocated IRQ vectors leaked on error paths and driver unbind?
+
+Looking at sdxi_register() in drivers/dma/sdxi/device.c, if
+sdxi_device_init() fails after sdxi->bus_ops->init() succeeds:
+
+sdxi_register()
+    err =3D sdxi->bus_ops->init(sdxi);
+    if (err)
+        return err;
+
+    return sdxi_device_init(sdxi);
+
+There does not seem to be a way to free the vectors since sdxi_bus_ops lacks
+a deinit callback. Similarly, sdxi_unregister() cannot release the IRQ
+vectors when the driver unbinds.
+
+> diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
+> index 1786da7642cc8..11773162c023d 100644
+> --- a/drivers/dma/sdxi/sdxi.h
+> +++ b/drivers/dma/sdxi/sdxi.h
+
+[ ... ]
+
+> @@ -59,12 +80,48 @@ struct sdxi_dev {
+>  	struct dma_pool *cxt_ctl_pool;
+>  	struct dma_pool *cst_blk_pool;
+> =20
+> +	unsigned int nr_vectors;
+> +	struct ida vectors;
+> +
+>  	struct sdxi_cxt *admin_cxt;
+>  	struct xarray client_cxts; /* context id -> (struct sdxi_cxt *) */
+> =20
+>  	const struct sdxi_bus_ops *bus_ops;
+>  };
+> =20
+> +/**
+> + * sdxi_alloc_vector() - Allocate an interrupt vector.
+> + *
+> + * A vector that will have the same lifetime as the device does not
+> + * need to be released explicitly. Otherwise the vector must be
+> + * released with sdxi_free_vector().
+> + */
+> +static inline int sdxi_alloc_vector(struct sdxi_dev *sdxi)
+> +{
+> +	return ida_alloc_max(&sdxi->vectors, sdxi->nr_vectors - 1,
+> +			     GFP_KERNEL);
+> +}
+
+Will this code allocate vector 0 and conflict with the error log interrupt?
+
+The commit message and SDXI_ERROR_VECTOR define vector 0 as reserved for the
+error log interrupt. However, ida_alloc_max() starts searching for free IDs
+at index 0.
+
+Since vector 0 is never pre-allocated or explicitly reserved in the IDA
+during initialization, the first caller to sdxi_alloc_vector() will be
+mistakenly assigned vector 0, causing completion interrupts and error log
+interrupts to conflict.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D22
