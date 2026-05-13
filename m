@@ -1,224 +1,193 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 86FF043CEEF;
-	Wed, 13 May 2026 15:17:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3D5481FCE;
+	Wed, 13 May 2026 15:43:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778685448; cv=none; b=oYZUTJMPMawg+m5aFsPU4iLDBU3xxezIuT7z7ijMhZ1gIpAql/w08PaY/LkLM64L+95MFE5+lzwil6xSZ71VK49/qhqRrCmj8LgvcrmuBShYlMjV7rIQtSsD+3QXNgak92Xdc3/8G3uZsq7d1hHRzaBsAPx2uKnJaNhW3kWvaMM=
+	t=1778687004; cv=none; b=Vfxe+/NHVWdRgJEjWVgnfkAAnBsy5+vXm1wtI3YHy109aHGSbJM2yu+baZ8mwZkPvXN5MgZN1ytSKYUDGmz7zw9lsU11qKYXDjY8FmbXEerQg7Wyw8A4HuKQIXaw84tT4gp5733rWJuAjcH7kooRNMDvmw8tQQy5tQR0A54x5JY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778685448; c=relaxed/simple;
-	bh=tY9ISkh+nnLDO6OGB8+yrgnNLLQICyw/IV1SGILZbYg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cFRZib2aE+5YItk07ZrqCl4qLn/yUzmtl6vgFnkaxNIjtR7GXR8d98pbt1X2oOGyIWyKz88CI0CqXE8953OoamtmgbKVZ5lPcjloL0DqeIiOdC59MvAb9MJfIv8q5wH5hdXaRmDNoqRrwSOkGWBOBbR+stb+Qkt7pPyJ9+eNR+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=D4YxqIZp; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1778687004; c=relaxed/simple;
+	bh=4348Bg4OX8AmIIgZS2UacQbwCc9cgmpFgCKy3RODCc4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B5u7UIZgX7+H1+/Zjgsr8pY9Q8vFVkppIAeYKPHHJ/2l+vc4pC/GIiNp7gbXYHniqtZM3wlRbaoPXXAVlVjMLJ0e/6/pqXWButYo+1vkq0/Yl8Q0/49AxSm/f+gL58wJilTs7feFf1iiqVR6oTT4Thy5QbQ/Emd1/J+GmXZmllA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=L012HT/t; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="D4YxqIZp"
-Received: by linux.microsoft.com (Postfix, from userid 1099)
-	id 88B8D20B7166; Wed, 13 May 2026 08:17:24 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 88B8D20B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1778685444;
-	bh=5XoM16CEZZE8M5BaxgKJXAh20v7TUVYYdgK20TKPEhA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=D4YxqIZpbq2XAdD+wfF0R3t/Y0ELxE3A6QI/uL8o0lyq0Q98fejUJ7I/8DDIoD/KF
-	 XEjs+Q2KDipKSU0rrUriah/+B+0fXJmNgQvqS5UHCgrMvoQ0GPB6k6ZtFTB9ghyMrD
-	 HpGTqVusaeX2gTlvVieL/fFLvul6aMu65H6TQ+ag=
-Date: Wed, 13 May 2026 08:17:24 -0700
-From: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
-To: Mukesh R <mrathor@linux.microsoft.com>
-Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
-	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
-	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
-	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
-	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
-	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
-	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
-	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
-	jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH V3 08/11] PCI: hv: VMBus and PCI device IDs for PCI
- passthru
-Message-ID: <agSWBJFQreXDuF3u@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
- <20260512020259.1678627-9-mrathor@linux.microsoft.com>
- <agST9ZRXNWhbUGMY@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="L012HT/t"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id AC2FF3BDE5B;
+	Wed, 13 May 2026 17:43:15 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1778687000; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:content-language:in-reply-to:references;
+	bh=Nfdnbqd2LxVZhZX0Pup+3P9y4kLutFweTWOYtAxVc84=;
+	b=L012HT/t1T1chI7dzvaKSbn2KnTDs4x3NUTNN49HvRDNpQh6uj72wLpX1s73kgfcsd/QVL
+	JVY8h3M4oq/y30hakAa9HFd5nDwrgpWb3yYJXsgquv0Ra+yLE8dw4sZPs0wnslKKKN2R8n
+	FQx+Jo7DhdUPxSRRQpoJMHCuSbjUaCV0M8uDKANY4gcUmYVdmAAxLn3zaPEtMtrRll1PYw
+	E0A3WIzC9oUmiT4aPNMmg2pvzD2eOpihbtq9GQQMIi0b8IYx0BgscJE3V6zGP7mzsuGyH8
+	2mrwP/KUnNAWU0sl6zgpaIHqfAZZ6Ln6g9tcIGjMsPKIdY6gyowicWjGAGNuaQ==
+Message-ID: <b0756d38-cf8d-47fa-8c9c-4840af9736f5@cjdns.fr>
+Date: Wed, 13 May 2026 17:43:14 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <agST9ZRXNWhbUGMY@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH v5 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
+ naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
+ linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260512165530.GA228087@bhelgaas>
+Content-Language: en-US
+From: Caleb James DeLisle <cjd@cjdns.fr>
+In-Reply-To: <20260512165530.GA228087@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Wed, May 13, 2026 at 08:08:37AM -0700, Souradeep Chakrabarti wrote:
-> On Mon, May 11, 2026 at 07:02:56PM -0700, Mukesh R wrote:
-> > On Hyper-V, most hypercalls related to PCI passthru to map/unmap regions,
-> > interrupts, etc need a device ID as a parameter. This device ID refers
-> > to that specific device during the lifetime of passthru.
-> > 
-> > An L1VH VM only contains VMBus based devices. A device ID for a VMBus
-> > device is slightly different in that it uses the hv_pcibus_device info
-> > for building it to make sure it matches exactly what the hypervisor
-> > expects. This VMBus based device ID is needed when attaching devices in
-> > an L1VH based guest VM. Add a function to build and export it. Before
-> > building it, a check is done to make sure the device is a valid VMBus
-> > device.
-> > 
-> > In remaining cases, PCI device ID is used. So, also make PCI device ID
-> > build function hv_build_devid_type_pci() public.
-> >
-Reviewed-by: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
-> Reviewed-by: Souradeep Chakrabarti <schakrabarti@microsoft.com>
-> > Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
-> > ---
-> >  arch/x86/hyperv/irqdomain.c         |  9 +++++----
-> >  arch/x86/include/asm/mshyperv.h     |  6 ++++++
-> >  drivers/pci/controller/pci-hyperv.c | 24 ++++++++++++++++++++++++
-> >  include/asm-generic/mshyperv.h      | 11 +++++++++++
-> >  4 files changed, 46 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
-> > index b3ad50a874dc..8780573a4332 100644
-> > --- a/arch/x86/hyperv/irqdomain.c
-> > +++ b/arch/x86/hyperv/irqdomain.c
-> > @@ -112,7 +112,7 @@ static int get_rid_cb(struct pci_dev *pdev, u16 alias, void *data)
-> >  	return 0;
-> >  }
-> >  
-> > -static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
-> > +u64 hv_build_devid_type_pci(struct pci_dev *pdev)
-> >  {
-> >  	int pos;
-> >  	union hv_device_id hv_devid;
-> > @@ -172,8 +172,9 @@ static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
-> >  	}
-> >  
-> >  out:
-> > -	return hv_devid;
-> > +	return hv_devid.as_uint64;
-> >  }
-> > +EXPORT_SYMBOL_GPL(hv_build_devid_type_pci);
-> >  
-> >  /*
-> >   * hv_map_msi_interrupt() - Map the MSI IRQ in the hypervisor.
-> > @@ -196,7 +197,7 @@ int hv_map_msi_interrupt(struct irq_data *data,
-> >  
-> >  	msidesc = irq_data_get_msi_desc(data);
-> >  	pdev = msi_desc_to_pci_dev(msidesc);
-> > -	hv_devid = hv_build_devid_type_pci(pdev);
-> > +	hv_devid.as_uint64 = hv_build_devid_type_pci(pdev);
-> >  	cpu = cpumask_first(irq_data_get_effective_affinity_mask(data));
-> >  
-> >  	return hv_map_interrupt(hv_devid, false, cpu, cfg->vector,
-> > @@ -271,7 +272,7 @@ static int hv_unmap_msi_interrupt(struct pci_dev *pdev,
-> >  {
-> >  	union hv_device_id hv_devid;
-> >  
-> > -	hv_devid = hv_build_devid_type_pci(pdev);
-> > +	hv_devid.as_uint64 = hv_build_devid_type_pci(pdev);
-> >  	return hv_unmap_interrupt(hv_devid.as_uint64, irq_entry);
-> >  }
-> >  
-> > diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
-> > index f64393e853ee..2ef34001f8d3 100644
-> > --- a/arch/x86/include/asm/mshyperv.h
-> > +++ b/arch/x86/include/asm/mshyperv.h
-> > @@ -248,6 +248,12 @@ void hv_crash_asm_end(void);
-> >  static inline void hv_root_crash_init(void) {}
-> >  #endif  /* CONFIG_MSHV_ROOT && CONFIG_CRASH_DUMP */
-> >  
-> > +#if IS_ENABLED(CONFIG_HYPERV_IOMMU)
-> > +u64 hv_build_devid_type_pci(struct pci_dev *pdev);
-> > +#else
-> > +static inline u64 hv_build_devid_type_pci(struct pci_dev *pdev) { return 0; }
-> > +#endif /* IS_ENABLED(CONFIG_HYPERV_IOMMU) */
-> > +
-> >  #else /* CONFIG_HYPERV */
-> >  static inline void hyperv_init(void) {}
-> >  static inline void hyperv_setup_mmu_ops(void) {}
-> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> > index cfc8fa403dad..50d793ca8f31 100644
-> > --- a/drivers/pci/controller/pci-hyperv.c
-> > +++ b/drivers/pci/controller/pci-hyperv.c
-> > @@ -573,6 +573,7 @@ struct hv_pci_compl {
-> >  };
-> >  
-> >  static void hv_pci_onchannelcallback(void *context);
-> > +static bool hv_vmbus_pci_device(struct pci_bus *pbus);
-> >  
-> >  #ifdef CONFIG_X86
-> >  #define DELIVERY_MODE		APIC_DELIVERY_MODE_FIXED
-> > @@ -1005,6 +1006,24 @@ static struct irq_domain *hv_pci_get_root_domain(void)
-> >  static void hv_arch_irq_unmask(struct irq_data *data) { }
-> >  #endif /* CONFIG_ARM64 */
-> >  
-> > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev)
-> > +{
-> > +	struct hv_pcibus_device *hbus;
-> > +	struct pci_bus *pbus = pdev->bus;
-> > +
-> > +	if (!hv_vmbus_pci_device(pbus))
-> > +		return 0;
-> > +
-> > +	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
-> > +
-> > +	return	(hbus->hdev->dev_instance.b[5] << 24) |
-> > +		(hbus->hdev->dev_instance.b[4] << 16) |
-> > +		(hbus->hdev->dev_instance.b[7] << 8) |
-> > +		(hbus->hdev->dev_instance.b[6] & 0xf8) |
-> > +		PCI_FUNC(pdev->devfn);
-> > +}
-> > +EXPORT_SYMBOL_GPL(hv_pci_vmbus_device_id);
-> > +
-> >  /**
-> >   * hv_pci_generic_compl() - Invoked for a completion packet
-> >   * @context:		Set up by the sender of the packet.
-> > @@ -1403,6 +1422,11 @@ static struct pci_ops hv_pcifront_ops = {
-> >  	.write = hv_pcifront_write_config,
-> >  };
-> >  
-> > +static bool hv_vmbus_pci_device(struct pci_bus *pbus)
-> > +{
-> > +	return pbus->ops == &hv_pcifront_ops;
-> > +}
-> > +
-> >  /*
-> >   * Paravirtual backchannel
-> >   *
-> > diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyperv.h
-> > index e8cbc4e3f7ad..25ac7ca0fd8b 100644
-> > --- a/include/asm-generic/mshyperv.h
-> > +++ b/include/asm-generic/mshyperv.h
-> > @@ -204,6 +204,9 @@ extern u64 (*hv_read_reference_counter)(void);
-> >  /* Sentinel value for an uninitialized entry in hv_vp_index array */
-> >  #define VP_INVAL	U32_MAX
-> >  
-> > +/* Forward declarations */
-> > +struct pci_dev;
-> > +
-> >  int __init hv_common_init(void);
-> >  void __init hv_get_partition_id(void);
-> >  void __init hv_common_free(void);
-> > @@ -316,6 +319,14 @@ void hv_para_set_synic_register(unsigned int reg, u64 val);
-> >  void hyperv_cleanup(void);
-> >  bool hv_query_ext_cap(u64 cap_query);
-> >  void hv_setup_dma_ops(struct device *dev, bool coherent);
-> > +
-> > +#if IS_ENABLED(CONFIG_PCI_HYPERV)
-> > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev);
-> > +#else
-> > +static inline u64 hv_pci_vmbus_device_id(struct pci_dev *pdev)
-> > +{ return 0; }
-> > +#endif /* IS_ENABLED(CONFIG_PCI_HYPERV) */
-> > +
-> >  #else /* CONFIG_HYPERV */
-> >  static inline void hv_identify_partition_type(void) {}
-> >  static inline bool hv_is_hyperv_initialized(void) { return false; }
-> > -- 
-> > 2.51.2.vfs.0.1
-> > 
+
+On 12/05/2026 18:55, Bjorn Helgaas wrote:
+> On Mon, Apr 13, 2026 at 02:03:39PM +0000, Caleb James DeLisle wrote:
+>> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
+>>
+>> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
+>> require re-training after startup.
+>> +#include <asm-generic/errno-base.h>
+> Looks odd; why is this here?  There are basically no other drivers
+> that do this.
+
+
+Whoops :facepalm:, must have been coding in my sleep and I wanted ENOENT.
+
+
+>
+>> @@ -1149,6 +1234,46 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+>>   	if (err)
+>>   		goto put_resources;
+>>   
+>> +	/* EN7528 PCIe initially comes up as Gen1 even if Gen2 is supported.
+>> +	 * The cannonical way to achieve Gen2 is to re-train the link
+>> +	 * immediately after setup. However, to save a lot of duplicated code
+>> +	 * we use pcie_retrain_link() which is usable once we have the pci_dev
+>> +	 * struct for the bridge, i.e. after pci_host_probe(). */
+> s/cannonical/canonical/
+OK
+>
+>> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN) {
+>> +		int slot = of_get_pci_domain_nr(dev->of_node);
+> I suppose of_get_pci_domain_nr() is sort of an implicit way to
+> identify the Gen2 ports?  Worth at least a comment about this DT
+> connection.  Maybe it could be replaced by using
+> pcie_get_supported_speeds() or similar?
+
+
+The explanation for this is here: 
+https://lore.kernel.org/linux-mips/20260413140339.16238-1-cjd@cjdns.fr/T/#m6d893b861425378c0d094a142e6191d59dcc5192 
+- and please do weigh in if you think I ought to change the logic there.
+
+
+However you raise a good point about re-training Gen1 links, currently 
+we're attempting to re-train everything. All of these hubs self-identify 
+as Gen2 so we can't short-circuit with pcie_get_supported_speeds(). 
+Re-training will remain at Gen1 if either the PHY is a Gen1-only PHY, or 
+if the actual card (e.g. wifi chip) only supports Gen1. My feeling is 
+that matching on the PHY DT node and short-circuiting is not a good 
+idea, but I can improve the comment a bit.
+
+
+>
+>> +		struct pci_dev *rc = NULL;
+> s/rc/rp/ to avoid confusing "root port" for "return code" or "root
+> complex".
+OK
+>
+>> +		int ret = -ENOENT;
+>> +
+>> +		if (slot >= 0)
+>> +			rc = pci_get_slot(host->bus, PCI_DEVFN(slot, 0));
+> Instead of fiddling with pci_get_slot(), which adds refcount issues
+> and artificial device/function number dependencies, I think it would
+> be better to iterate over the devices on host->bus, e.g., with
+> "for_each_pci_bridge(dev, host->bus)" as in iproc_pcie_setup().
+Oh great, thank you !
+>
+>> +		if (rc) {
+>> +			ret = -EOPNOTSUPP;
+>> +
+>> +			/* pcie_retrain_link() is not an exported symbol but
+>> +			 * this driver supports being built as a loadable
+>> +			 * module. Someone using this on an EN7528 should make
+>> +			 * it builtin, or accept Gen1 PCI. */
+>> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
+>> +			ret = pcie_retrain_link(rc, true);
+>> +#endif
+> This looks like a confusing user experience if built as a module, with
+> no hint to the user about why the link is slower than it should be.
+> I guess "failed to retrain" is a bit of a hint, but it's not really a
+> clue about how to fix it.
+My logic was that the person whose going to configure a kernel for one 
+of these things is pretty advanced - probably an OpenWRT developer - so 
+they don't need that much hand-holding. But I guess it doesn't cost that 
+much to add an `if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))` with a warning log.
+>
+>> +		}
+>> +
+>> +		if (ret) {
+>> +			dev_info(dev, "port%d failed to retrain %pe\n", slot,
+>> +				 ERR_PTR(ret));
+> This is basically an error path and there's nothing else to do, so if
+> you return directly here (especially if you factor this to a separate
+> function), the "normal" path below can be unindented.
+Indeed, and if "not a builtin" is handled separately then this is truly 
+an unexpected error so it's quite reasonable to goto put_resources.
+>
+>> +		} else {
+>> +			u16 lnksta;
+>> +			u32 speed;
+>> +
+>> +			pcie_capability_read_word(rc, PCI_EXP_LNKSTA, &lnksta);
+>> +			speed = lnksta & PCI_EXP_LNKSTA_CLS;
+>> +
+>> +			dev_info(dev, "port%d link retrained, speed %s\n", slot,
+>> +				 pci_speed_string(pcie_link_speed[speed]));
+>> +		}
+>> +	}
+> Maybe factor the retrain block into a helper function.
+Makes sense.
+> I'm sort of squinting at this whole link retrain thing to begin with.
+> After the controller is configured correctly, the hardware is supposed
+> to train the link automatically by itself.
+>
+> Did something change between mtk_pcie_startup_port_en7528() and now
+> that means the link will train at Gen2?  Whatever that change is,
+> could it be done in mtk_pcie_startup_port_en7528()?
+Per the comment with the misspelled "canonical", the reference code 
+finds and pokes the re-training registers immediately during setup, but 
+doing that manually is a fair bit of code and it's nicer to wait until 
+the registers are mapped and use pcie_retrain_link().
+> What happens when the downstream device is put in D3cold and the link
+> retrains after power is restored?  Does it train at Gen2 then, without
+> assistance like this?
+
+I just tried pulling the driver from the wifi and then unbinding the 
+bridge, then re-scanning. All throughout the process current_link_speed 
+remains at 5.0. You're much more knowledgeable in this than me, but if I 
+had a guess, I'd say this was a hardware bug that was fixed in 
+subsequent versions (MT7621) and the workaround was to do a retrain once 
+immediately after setup. But I don't want to warrant that as true 
+because it's just me guessing...
+
+
+Thanks,
+
+Caleb
+
+
