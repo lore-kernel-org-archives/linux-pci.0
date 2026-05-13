@@ -1,150 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08E2D13C9C4;
-	Wed, 13 May 2026 03:47:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A52B375F7C;
+	Wed, 13 May 2026 03:54:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778644046; cv=none; b=lGEBOpN9SCLR9rXuVkfugDfvrThx5oCXiGNOh6Qn8zR571z6j0QsSv6VamjucK/wxwbQ1ws64zHb5nWWWACCU42W4DKyy96r/44RoVv8a9qXjK6m06eWfrk3OijAau1mbEURTo46fo4Y+wpP34lsh4fMruCFCqwTA7DWpAq1pr4=
+	t=1778644472; cv=none; b=VVrkpfAcFiOYgf+0qUfK3teHiCzZg1sFrlKqGAhaF7Ym9hr9floeYaoCz5C2CJF28gGa88rSZYCh6QCXTP3CO0bT6pKMFueikqwKsHRBgwyw0ZSqBCFcQn1Tch9W1yYc7RoKVDMp/yKjfTo8DuQbM1qISQBYoLAm5S7w4hZBuDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778644046; c=relaxed/simple;
-	bh=sB0XN6DaT6zUC4dJmgjwjt6U3vW+Dq1Rmj2P+21bPx0=;
+	s=arc-20240116; t=1778644472; c=relaxed/simple;
+	bh=p4u93eZYM7ImmEMVxoOiAAqCgTpTSRI042sRxK1qoek=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=uxesw3VQMOZD4m8WNiz8n+lczeETqZuomgJ++SdZCV8k/rBXdHWvTjbnsNH2efFR5k9OWvkkAHedxk2eXfKAVvTZXzXVS/UvV57Y+KRoMLcT10DayuvS7upz7RswIvxGjYJaq9BwbTSS6FJOb/b1VF5BGbAxi5W9N+WtKPpdDY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t6txehS0; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=d+hvmhxLfntk+WbmY/7aD0VknEDwsdA4V0xTG9Ca/+Y5swrqIyA8mrVB5SroHFNZZNfEDSnQXM/tmpZhE9xrhD0ujqzzXMk5mz1OY3Yla0u++CywdbReZ3OVakxjFYUcdEA9PZd1LqEt4mH69rt1xgC3PO84bUKPiAXOkrQ6H/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FLOY+Hp/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t6txehS0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CBDCC2BCC7;
-	Wed, 13 May 2026 03:47:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FLOY+Hp/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41FEFC2BCC7;
+	Wed, 13 May 2026 03:54:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778644045;
-	bh=sB0XN6DaT6zUC4dJmgjwjt6U3vW+Dq1Rmj2P+21bPx0=;
+	s=k20201202; t=1778644471;
+	bh=p4u93eZYM7ImmEMVxoOiAAqCgTpTSRI042sRxK1qoek=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=t6txehS0LF3Ls2h5BwbS72+A0ovtQC3qPZHZRd7PnkV6LjarYstJAxg14DdVrqkMg
-	 +jJYMnF4Tajj8PTwCSv531Rs48Z20G4t9dAZLt9Loi9/uWwDQSzXXhb3lIM4MMowy7
-	 u3PYOYgY/6mG/3YWh3dggydSNBsAx5mEcZtQ4BggwQhEDAY2uVp0AJq8Az9tSKQcRU
-	 TF3qw6zC3fgWDDoTxXMXcfH7wOfIDLjcdNAd56AdmmU8XDrDWYuABIAArIXSxa9vzo
-	 oe2u+pHtVJmmfD8iPvBJqJYFu9qWWfVyOCqCqrR5W7oLovl6XCPeImyVt3Jsi9m/dS
-	 AGs0dz8vrq97A==
+	b=FLOY+Hp/LYnNHfJh86CHnyGWTG0G8wwrWyPrCavpinVbn2kYpTPxKC3gvXgh/CqdU
+	 qRb4tpfvd/KXzloBIzYfWaacxcg7Xbe4C6mzmsRIXYjOFc16PU2wK9ViOAAL6WYWzd
+	 SCCnhoVSg+DgPehJBUSU6g7cTWMzTuI02RkyyP9iqIChuklRhJd7J6T69X9eePXgJO
+	 626du6/d1rMV0x6QtWBnXQyCtXafAY8e0ge24Ns6Wv10miwfuvHudoqFzfbYG1B/sv
+	 2z1vKLPKic3j1PVuXz+OdjzCoR7vzrCTCcx6woCLnW5jrxAwOoSBrVoMZeCGNo+DP7
+	 fAeil9AVNnhMQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V3 03/11] mshv: Provide a way to get partition ID if
- running in a VMM process
+Subject: Re: [PATCH v2 10/23] dmaengine: sdxi: Complete administrative
+ context jump start
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mukesh R" <mrathor@linux.microsoft.com>
-Cc: linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org
-In-Reply-To: <20260512020259.1678627-4-mrathor@linux.microsoft.com>
-References: <20260512020259.1678627-4-mrathor@linux.microsoft.com>
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: vkoul@kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-10-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-10-889cfed17e3f@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 03:47:25 +0000
-Message-Id: <20260513034725.7CBDCC2BCC7@smtp.kernel.org>
+Date: Wed, 13 May 2026 03:54:30 +0000
+Message-Id: <20260513035431.41FEFC2BCC7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Tying VM partition IDs to process TGIDs (`current->tgid`) is an ar=
-chitectural flaw causing isolation breakage and security risks.
-- [High] `mshv_current_partid()` returns a raw partition ID without taking =
-a reference, creating a TOCTOU vulnerability.
-- [High] Pre-existing Use-After-Free in `destroy_partition()` due to RCU-00=
-1 violation during VP teardown.
+- [High] Using a non-atomic 64-bit fallback for a hardware doorbell registe=
+r causes torn writes and device state corruption on 32-bit architectures.
 --
 
-commit 528e38745b2ae16c0fd8ad4876d893d1b1fea027
-Author: Mukesh R <mrathor@linux.microsoft.com>
+commit 1c8a47b1b7cac23ca82b3d7ffe7b54c6cf98827e
+Author: Nathan Lynch <nathan.lynch@amd.com>
+dmaengine: sdxi: Complete administrative context jump start
 
-mshv: Provide a way to get partition ID if running in a VMM process
+This commit completes the SDXI administrative context initialization by
+writing to its doorbell once the function is placed in the active state.
+It introduces a new helper function for pushing the doorbell, which will
+be used across all descriptor submission paths.
 
-This commit introduces mshv_current_partid() to allow retrieving the
-partition id for the current vmm process. It adds a pt_vmm_tgid field
-to the mshv_partition struct and sets it during partition creation.
-The partition id is found by iterating the global hash table.
-
-> diff --git a/drivers/hv/mshv_root_main.c b/drivers/hv/mshv_root_main.c
-> index bd1359eb58dd4..02c107458be90 100644
-> --- a/drivers/hv/mshv_root_main.c
-> +++ b/drivers/hv/mshv_root_main.c
-> @@ -1908,6 +1908,27 @@ mshv_partition_release(struct inode *inode, struct=
- file *filp)
->  	return 0;
->  }
+> diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
+> index 65b773446ba31..8dd6beb7a6424 100644
+> --- a/drivers/dma/sdxi/context.h
+> +++ b/drivers/dma/sdxi/context.h
+> @@ -7,6 +7,7 @@
+>  #define DMA_SDXI_CONTEXT_H
 > =20
-> +/* Given a process tgid, return partition id if it is a VMM process */
-> +u64 mshv_current_partid(void)
+>  #include <linux/dma-mapping.h>
+> +#include <linux/io-64-nonatomic-lo-hi.h>
+
+Does including linux/io-64-nonatomic-lo-hi.h in a shared header risk
+polluting the compilation unit? It appears this might blindly convert all
+missing 64-bit I/O operations into non-atomic fallbacks for any file that
+includes context.h.
+
+>  #include <linux/types.h>
+> =20
+>  #include "hw.h"
+
+[ ... ]
+
+> @@ -58,4 +59,9 @@ struct sdxi_cxt {
+> =20
+>  int sdxi_admin_cxt_init(struct sdxi_dev *sdxi);
+> =20
+> +static inline void sdxi_cxt_push_doorbell(struct sdxi_cxt *cxt, u64 inde=
+x)
 > +{
-> +	struct mshv_partition *pt;
-> +	int i;
-> +	u64 ret_ptid =3D HV_PARTITION_ID_INVALID;
-> +
-> +	rcu_read_lock();
-> +
-> +	hash_for_each_rcu(mshv_root.pt_htable, i, pt, pt_hnode) {
-> +		if (pt->pt_vmm_tgid =3D=3D current->tgid) {
+> +	iowrite64(index, cxt->db);
 
-Is tying the partition id to the process tgid safe?
+On 32-bit architectures without native 64-bit I/O, the non-atomic fallback
+splits this 64-bit write into two 32-bit writes (lower 32 bits, then upper
+32 bits).
 
-Since a single vmm process can create multiple partitions, this loop returns
-the first partition matching the tgid. This could result in pci passthrough
-operations being misrouted to the wrong partition if a process manages
-multiple virtual machines.
+Since this is a doorbell register that triggers hardware actions, could a t=
+orn
+write expose a transient, invalid index to the device before the upper bits
+are written?
 
-Also, since the partition's lifecycle is tied to an anonymous file descript=
-or,
-passing the fd to another process and exiting would break
-mshv_current_partid() for the new process.
+For example, if the index crosses a 32-bit boundary, the hardware might
+observe a corrupted index and begin processing an invalid ring state.
 
-Additionally, if the operating system recycles the old tgid, an unrelated
-process might gain access to the partition id.
-
-Should explicit file descriptor tracking be used instead of global process
-ids?
-
-> +			ret_ptid =3D pt->pt_id;
-> +			break;
-> +		}
-> +	}
-> +
-> +	rcu_read_unlock();
-> +	return ret_ptid;
-
-Does returning a raw partition id without taking a reference create a race
-condition?
-
-After rcu_read_unlock() is called and the pt_id is returned, a concurrent
-thread in the vmm could close the partition's file descriptor, causing the
-partition to be deleted in the hypervisor.
-
-If the hypervisor recycles the pt_id for a newly created partition belonging
-to a completely different process, the pending iommu attachment or pci
-passthrough hypercall will use the stale pt_id.
-
-Can this allow the vmm to inadvertently attach its devices to an unrelated
-partition?
+Should the driver depend on CONFIG_64BIT if atomic 64-bit writes are
+mandatory, or use a safe, hardware-specific 32-bit doorbell mechanism
+instead?
 
 > +}
-
-This isn't a regression in this patch, but looking at the partition lifecyc=
-le
-code, does destroy_partition() have a use-after-free?
-
-destroy_partition() frees the virtual processor structures (kfree(vp))
-before calling remove_partition(partition), which removes the partition
-from the rcu-protected global hash table (pt_htable) and calls
-synchronize_rcu().
-
-Because the partition remains visible to rcu readers during the teardown lo=
-op,
-can an interrupt handler (e.g., in mshv_synic.c) call mshv_partition_find(),
-successfully retrieve the partition, and read
-vp =3D partition->pt_vp_array[vp_index]?
-
-If this happens concurrently with or immediately after kfree(vp), the
-interrupt handler would access freed memory.
+> +
+>  #endif /* DMA_SDXI_CONTEXT_H */
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512020259.1678=
-627-1-mrathor@linux.microsoft.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D10
