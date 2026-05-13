@@ -1,127 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11AA720010A;
-	Wed, 13 May 2026 14:48:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD4B25B0B6;
+	Wed, 13 May 2026 14:48:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778683702; cv=none; b=AWP0FkMnLRwyE74o4Ul7kkCLztZsQqJzN1hDHs7v0MZPKcPEReX3/aS+Wgu9fIAh3G5uM3RNAuVw15z674OliBF+WWYMhseMRMoqN4Op6/BzQQBS9QELhXA4NJwAwg1Po5P5pl2XJplTj2QqPQfbktLxk0EKfDDMKIUDibL3fow=
+	t=1778683733; cv=none; b=F0Q56HjnCd86u54NzAx5HiTrnRTtHJqq1YRpPvfNQKReCdZf3P2HnUzmUMMHBdDcw37dUQK6GyCs2zCaX+a41BJQbjz+TL2OQ8FpLazEDqe9zfBJXTyqwEwPm15h2V59G5YaBGfCI+c0r5JWoaFFwOdqXzaDZZqgFNbJ96joHt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778683702; c=relaxed/simple;
-	bh=nEmiCF6b5LfZ2kHKUKhThiK1MHbozn7yi/GBKke71jQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Zf97vQGICdXNrsV9h7MoMNUyD7Tko+K6Nrf5XhnixckkxSjaDwjy/UwmQt2M3D0V4KXPVU3urcX90J3UbzYeuOOWeL3TRwkdIKGFD+oPwGJD1gcokT3LcfEvFWLrBsQaJj0B9OHK9kxygCSQCSS5SV6cwNdnS0sdJxfBeqeLFAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cM/nbQZn; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cM/nbQZn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0142CC19425;
-	Wed, 13 May 2026 14:48:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778683701;
-	bh=nEmiCF6b5LfZ2kHKUKhThiK1MHbozn7yi/GBKke71jQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=cM/nbQZnxhoUBvxlr1XOcfgS13OwM6T6zV6y5h9LOS52MIjJvsxz1bkELetuRrynP
-	 buoOLf9sCIXeM7onQX+aEzf/vZwhofMcQopZR/mfuH6cvmGhkd0DVzC/eKAklpRJe5
-	 y24RrLjap7NeSbZuh7yJR8OgDejSZ2/JrGvgVE9Ekr6hjJCNxRX9G9upIpBjJFVJ6k
-	 xzLrMfpTPM8duhRB2qjAuuV0WsJOh74R40c+i5/nlxaFb1a/4P3NHOsKFKFRRjX5Fh
-	 E9fD1sKAzyNFqrdNv/kpCF4gxaKT41u5c8jEQtJzDx/C7Tylt9vwHO9+zjvSPnoR+O
-	 M5Fur968h7POA==
-Message-ID: <c94e9352-91e3-4bc0-bb29-f522c78b03ab@kernel.org>
-Date: Wed, 13 May 2026 09:48:19 -0500
+	s=arc-20240116; t=1778683733; c=relaxed/simple;
+	bh=ykGdJ8cXkbJJE2UzOEUH+vK4xWORellzvzyNIe/AE0Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bDXzegVyjed+DiMyQJb05y8Ps5oQ0VpnF8MmMd7dmhSeLYT0mVK/9un/lHFdn06iqYijexnxGTOwsK2R9SnRaAfPKehncXhlA+TcB6lbN5TYCgjYKblpvgbrSfzd/Puo3ZJoa9clR8zmalUIlrUvU8eDP2f0cgmv+az/edAbEzg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 190E11060C;
+	Wed, 13 May 2026 16:39:24 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 078286016B8F; Wed, 13 May 2026 16:39:24 +0200 (CEST)
+Date: Wed, 13 May 2026 16:39:24 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, alex@shazbot.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] PCI: Add D3cold as general reset method
+Message-ID: <agSNHLc_Sc_G-7vz@wunner.de>
+References: <20260513122349.268753-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 0/2] AMD Promontory 21 xHCI temperature sensor support
-Content-Language: en-US
-To: Jihong Min <hurryman2212@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>
-Cc: Guenter Roeck <linux@roeck-us.net>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>,
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260512213910.871859-1-hurryman2212@gmail.com>
-From: Mario Limonciello <superm1@kernel.org>
-In-Reply-To: <20260512213910.871859-1-hurryman2212@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260513122349.268753-1-jtornosm@redhat.com>
 
+On Wed, May 13, 2026 at 02:23:48PM +0200, Jose Ignacio Tornos Martinez wrote:
+> Add D3cold power cycle as a general PCI reset method, available for
+> single-function devices. This provides a more robust reset mechanism
+> than D3hot for devices where a full power cycle is beneficial.
+> 
+> The implementation uses pci_set_power_state(dev, PCI_D3cold), which
+> automatically handles platform differences:
+> - Platforms WITH _PR3 ACPI power resources: true D3cold (power cycle)
+> - Platforms WITHOUT _PR3: automatic fallback to D3hot transition
 
+Why fall back to D3hot, even though the name of the reset method
+suggests it uses D3cold?  If D3cold isn't supported, I'd just not
+expose the new reset method.
 
-On 5/12/26 16:39, Jihong Min wrote:
-> Hi,
-> 
-> This series adds temperature monitoring for AMD Promontory 21 (PROM21)
-> xHCI PCI functions.
-> 
-> Patch 1 adds a small PROM21-specific xHCI PCI glue driver. USB host
-> operation is delegated to the common xhci-pci code, while the PROM21 glue
-> publishes an auxiliary device for optional sensor support.
-> 
-> Patch 2 adds an auxiliary-bus hwmon driver that binds to that auxiliary
-> device and exposes the PROM21 xHCI temperature value as temp1_input.
-> 
-> The hwmon driver reads the sensor through a vendor index/data register pair
-> in the xHCI PCI MMIO BAR. It does not wake the parent PCI device for hwmon
-> reads; if the parent is suspended, the read returns -ENODATA.
-> 
-> Changes in v5:
-> - Add support for AMD 1022:43fc PROM21 xHCI controllers and document the
->    new PCI ID.
-> - Make USB_XHCI_PCI_PROM21 depend on X86 and default to USB_XHCI_PCI.
-> - Keep the PROM21 PCI glue built-in-only when enabled, while allowing the
->    hwmon sensor driver to be built as a separate module.
-> - Move PROM21 xHCI PCI device IDs to xhci-pci.h so xhci-pci.c and
->    xhci-pci-prom21.c use shared definitions.
-> - Pass the parent PCI device, MMIO base, and resource length to the hwmon
->    driver through platform data defined in a common header, instead of
->    inspecting the parent driver's drvdata from the hwmon driver.
-> - Remove the private hwmon mutex and rely on hwmon core serialization for
->    this driver's callbacks.
-> - Clarify that the driver only serializes its own hwmon callbacks and does
->    not synchronize with firmware, SMM, ACPI AML, or other possible users of
->    the PROM21 vendor index/data register pair.
-> - Use readb() for the temperature data register, validate the value before
->    writing the output pointer, and drop the 0xff invalid-value check.
-> - Use pm_runtime_put() after successful reads with the parent device active
->    so the PM core can re-evaluate the parent device's idle state.
-> - Simplify the documentation and use more precise terminology for the
->    supported device.
-> 
-> Jihong Min (2):
->    usb: xhci-pci: add AMD Promontory 21 PCI glue
->    hwmon: add AMD Promontory 21 xHCI temperature sensor support
-> 
->   Documentation/hwmon/index.rst                 |   1 +
->   Documentation/hwmon/prom21-xhci.rst           | 101 ++++++++
->   drivers/hwmon/Kconfig                         |  10 +
->   drivers/hwmon/Makefile                        |   1 +
->   drivers/hwmon/prom21-xhci.c                   | 238 ++++++++++++++++++
->   drivers/usb/host/Kconfig                      |  20 ++
->   drivers/usb/host/Makefile                     |   1 +
->   drivers/usb/host/xhci-pci-prom21.c            | 123 +++++++++
->   drivers/usb/host/xhci-pci.c                   |  11 +
->   drivers/usb/host/xhci-pci.h                   |   3 +
->   include/linux/platform_data/usb-xhci-prom21.h |  22 ++
->   11 files changed, 531 insertions(+)
->   create mode 100644 Documentation/hwmon/prom21-xhci.rst
->   create mode 100644 drivers/hwmon/prom21-xhci.c
->   create mode 100644 drivers/usb/host/xhci-pci-prom21.c
->   create mode 100644 include/linux/platform_data/usb-xhci-prom21.h
-> 
+> Reset hierarchy with this change:
+> 1. device_specific
+> 2. acpi
+> 3. flr
+> 4. af_flr
+> 5. pm (D3hot via config space)
+> 6. bus (SBR)
+> 7. cxl_bus
+> 8. d3cold (NEW - power cycle with D3hot fallback)
 
-Thanks for the driver.  I think this looks good now, and thank you 
-especially for documenting your reverse engineering efforts that led to 
-it.  If there are problems in the future I'm supposing it's going to be 
-based upon the calculations with the magic values to scale numbers.
+I'd call it "powercycle" for clarity but that's just my preferred
+bikeshed color.
 
-There isn't a lot that can be done in the event that BIOS is accessing 
-the same register pairs, but since you identified that this is exactly 
-how Windows HWInfo64 does it too; this is 'probably' low risk.
+> +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	int ret;
+> +
+> +	if (dev->multifunction)
+> +		return -ENOTTY;
+> +
+> +	if (probe) {
+> +		if (!pci_pr3_present(dev))
+> +			pci_dbg(dev, "d3cold reset: no _PR3 support, will use D3hot fallback\n");
+> +		return 0;
+> +	}
 
-Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
+So I'd just return -ENOTTY here in the !pci_pr3_present() case
+and I'd do that for probe == 0 as well.
+
+Thanks,
+
+Lukas
