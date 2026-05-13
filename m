@@ -1,178 +1,180 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD2872DC783;
-	Wed, 13 May 2026 03:17:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D53FA357D0D
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 03:24:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778642232; cv=none; b=kjSWgwBw6krwpJppAZik7ui4/3Yhp8/QL7D6tLwBLrmgtB9MzEUdbddRBQeS4AntQ2yXh8PIcPbpE9s3Rk/AxHzKkhA2QSj0aMLAPTLEQVl2ptiPNjonvVDz6KTJJenFgL2cvmQbtpPF+DXhI/73LDoLtjmgS6dlraY+Fhis3BM=
+	t=1778642664; cv=none; b=fVEe14smDyG4E+jbh+CUqErSn81C5bb0qC34A779QFVU/r7yOmZwC78m/WDAN7jzwZY73AJVyPkDCJOZ7txx8Ckc4B+0f8WXjsFhYkmsAugn3se+xdIVyAixUOioMj+EIP0oYNwyvP4iV4saY7zV0TFxdjH7yDGOH3Im/oWWLoA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778642232; c=relaxed/simple;
-	bh=261QrCzm5wQlkATed6WV5DebKEWtyQ4gJAg0Mh3ASTA=;
+	s=arc-20240116; t=1778642664; c=relaxed/simple;
+	bh=i5L4QdNWBgfBsSPDUx6ZlPtZz4s003INAcRT3ugW1RY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nHu97CimdRN65b6ecwYDb6wGnBbc57Rc55oTfhVNUAKhTHFvQa+AvuJpDEsGIznxGvLvDhBDhvaWcpwPrGSt4NHJYm39JOoxl1JiztEQzda1m2coCNksnz99xKiyTUU2Mbvj1Tjg67WzI/mh1el9y+557+1cSti9zQA1efqgH5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rARrtI9q; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=hRlnMx0+htfKxvWNCO0Hd+S7kUmXj3etEzeohXb9V+jd0bDqGJj6988bThA0+rnJ2P4HDgL90xrt72fOPHvbGRQ+kSHEDB2h5btYsR/KalL5AXrmRY48tjmkdBGCTfexN3e9xZ7FkFQfNnQL2JbuY1/f/1Ow005Y5k6YIO+rcdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DEsxjzp+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rARrtI9q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C8EDC2BCB0;
-	Wed, 13 May 2026 03:17:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DEsxjzp+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A921C2BCB0;
+	Wed, 13 May 2026 03:24:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778642232;
-	bh=261QrCzm5wQlkATed6WV5DebKEWtyQ4gJAg0Mh3ASTA=;
+	s=k20201202; t=1778642664;
+	bh=i5L4QdNWBgfBsSPDUx6ZlPtZz4s003INAcRT3ugW1RY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=rARrtI9qawKFlel7AoFRytTdOd3x7gEzddWIZHYA2aV6x3kagMycmDynGWRI/1P8C
-	 BxcWHvcjYUzhyxp2iomWwHtlXgy4xAkqT+AiMCd4SlhvYXBsOlszx3sVWT1VNFi/r8
-	 14Oc5JXWf9mMzxfgO5U0/oIUI+GXgEC4egidEHVIaLKpvgAMOmpvThag0mFzIwoBg8
-	 I3Av3VvcE5JZhJ12j0ASTTwYs1FYKNF55un8M3S+FWsC9PLYYO/wP6ZW2+jJj9l9Kp
-	 cjVzKnA3dgXpN2JjzH97Jx6qMEO7maS/ITJR5rTszmgkR8o0J3DV3kPUUEQgd62RK/
-	 9P/Y6PqCYUXNQ==
+	b=DEsxjzp+c4sRo15PD3fn/OgFd9bw9bO+lbimM6wIrNDVR9h7lRHDUJKZ68sxlHWZq
+	 XSYX6jCCQqED8YAEe+kGp1ponoa6Yo8nBsv2Yi/VJnwsZr2Dc8z4XXQldv/pG3Be3C
+	 gBngmnh74LbySFKjNNgRkd3UKt9Lho5smIq2BLFkl3UhwJuG0N+2f6HZBTc7p+FLnR
+	 DWPufw/ZhBZYxDadgQfsNu3lRyug0OWJXgX10iJrNF+Issr5vzdn+g9oKKiqu5IJ5W
+	 bOnl/P2UheAsmCf5fZs4gyN/1w3RD5bvP44eKijzvi+LjlF+mneib5s2mQz6bo/Q/H
+	 zhj3eSMkp9NYw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 08/23] dmaengine: sdxi: Install administrative
- context
+Subject: Re: [PATCH v4 02/16] vfio/pci: Preserve vfio-pci device files
+ across Live Update
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260511-sdxi-base-v2-8-889cfed17e3f@amd.com>
-References: <20260511-sdxi-base-v2-8-889cfed17e3f@amd.com>
+To: "Vipin Sharma" <vipinsh@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511234802.2280368-3-vipinsh@google.com>
+References: <20260511234802.2280368-3-vipinsh@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 03:17:11 +0000
-Message-Id: <20260513031712.0C8EDC2BCB0@smtp.kernel.org>
+Date: Wed, 13 May 2026 03:24:23 +0000
+Message-Id: <20260513032424.5A921C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [Critical] Hardware Use-After-Free due to missing admin context teardown
-- [High] Torn writes on 32-bit platforms exposing incomplete addresses to h=
-ardware
-- [Medium] Incorrect error check for `dma_pool_zalloc()` using the DMA hand=
-le instead of the virtual pointer
+- [High] Time-of-Check to Time-of-Use (TOCTOU) race condition when validati=
+ng `vdev->irq_type`.
+- [High] Post-freeze access vulnerability allows userspace to re-activate t=
+he device.
+- [High] Silent failure of `vfio_pci_core_try_reset()` leaves the device in=
+ an inconsistent state.
+- [Medium] Missing `kho_is_enabled()` check before calling KHO preservation=
+ APIs.
+- [Medium] Missing INTx disable before device reset may cause spurious inte=
+rrupts.
 --
 
-commit 794d6cb84f7ad6a7699311744a5e9c87b9d20316
-Author: Nathan Lynch <nathan.lynch@amd.com>
+commit 8744f868d8d8c3c92253e4db7b371be095529dce
+Author: Vipin Sharma <vipinsh@google.com>
 
-dmaengine: sdxi: Install administrative context
+vfio/pci: Preserve vfio-pci device files across Live Update
 
-This commit serializes the context control block, akey table, and L1 entry =
-for
-the admin context. It makes the descriptor ring, write index, and context
-status block visible to the SDXI implementation once activated.
+Implement the live update file handler callbacks to preserve a vfio-pci
+device across a Live Update. State about each device is serialized into
+a new ABI struct vfio_pci_core_device_ser and preserved using KHO and LUO.
 
-> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-> index 27821cfaf0311..c0b55c945cc4e 100644
-> --- a/drivers/dma/sdxi/context.c
-> +++ b/drivers/dma/sdxi/context.c
-
-[ ... ]
-
-> @@ -106,6 +112,152 @@ static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_=
-dev *sdxi)
+> diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/vf=
+io_pci_liveupdate.c
+> index 1c74854600ea4..5cc57bf39dbee 100644
+> --- a/drivers/vfio/pci/vfio_pci_liveupdate.c
+> +++ b/drivers/vfio/pci/vfio_pci_liveupdate.c
 
 [ ... ]
 
-> +static int configure_cxt_ctl(struct sdxi_cxt_ctl *ctl, const struct sdxi=
-_cxt_ctl_cfg *cfg)
-> +{
-> +	u64 ds_ring_ptr, cxt_sts_ptr, write_index_ptr;
-
-[ ... ]
-
-> +	ds_ring_ptr =3D FIELD_PREP(SDXI_CXT_CTL_VL, 1) |
-> +		      FIELD_PREP(SDXI_CXT_CTL_QOS, cfg->qos) |
-> +		      FIELD_PREP(SDXI_CXT_CTL_SE, cfg->se) |
-> +		      FIELD_PREP(SDXI_CXT_CTL_CSA, cfg->csa) |
-> +		      FIELD_PREP(SDXI_CXT_CTL_DS_RING_PTR,
-> +				 cfg->ds_ring_ptr >> DESC_RING_BASE_PTR_SHIFT);
-> +	/* Ensure other fields are visible before hw sees vl=3D1. */
-> +	dma_wmb();
-> +	WRITE_ONCE(ctl->ds_ring_ptr, cpu_to_le64(ds_ring_ptr));
-
-Can this introduce a regression with torn writes on 32-bit platforms?
-
-Since the driver does not strictly depend on 64BIT in Kconfig, writing a
-64-bit structure pointer that also contains the valid bit (VL=3D1 at bit 0)
-via WRITE_ONCE() translates to two separate 32-bit stores.
-
-If the compiler orders the lower 32-bit store before the upper 32-bit store,
-could the hardware concurrently read the descriptor and fetch from an
-incomplete, torn physical address?
-
+> +static int vfio_pci_liveupdate_preserve(struct liveupdate_file_op_args *=
+args)
+>  {
+> -	return -EOPNOTSUPP;
+> +	struct vfio_device *device =3D vfio_device_from_file(args->file);
+> +	struct vfio_pci_core_device_ser *ser;
+> +	struct vfio_pci_core_device *vdev;
+> +	struct pci_dev *pdev;
 > +
+> +	vdev =3D container_of(device, struct vfio_pci_core_device, vdev);
+> +	pdev =3D vdev->pdev;
+> +
+> +	ser =3D kho_alloc_preserve(sizeof(*ser));
+
+Is it safe to call kho_alloc_preserve() without first checking if the KHO
+subsystem is enabled via kho_is_enabled()?
+
+Unconditionally allocating and preserving memory might add tracking state to
+folios that will never be utilized if the subsystem is disabled.
+
+[ ... ]
+
+> +static int vfio_pci_liveupdate_freeze(struct liveupdate_file_op_args *ar=
+gs)
+> +{
+> +	struct vfio_device *device =3D vfio_device_from_file(args->file);
+> +	struct vfio_pci_core_device *vdev;
+> +	struct pci_dev *pdev;
+> +	int ret;
+> +
+> +	vdev =3D container_of(device, struct vfio_pci_core_device, vdev);
+> +	pdev =3D vdev->pdev;
+> +
+> +	guard(mutex)(&device->dev_set->lock);
+> +
+> +	/*
+> +	 * Userspace must disable interrupts on the device prior to freeze so
+> +	 * that the device does not send any interrupts until new interrupt
+> +	 * handlers have been established by the next kernel.
+> +	 */
+> +	if (vdev->irq_type !=3D VFIO_PCI_NUM_IRQS) {
+
+Does this check need to hold vdev->igate?
+
+Without the mutex, could a concurrent ioctl() such as VFIO_DEVICE_SET_IRQS
+modify the irq_type immediately after this check passes, allowing the device
+to generate interrupts during kexec?
+
+> +		pci_err(pdev, "Freeze failed! Interrupts are still enabled.\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	guard(rwsem_write)(&vdev->memory_lock);
+
+[ ... ]
+
+> +	/*
+> +	 * Reset is a temporary measure to provide kernel after kexec a clean
+> +	 * device while VFIO live update work is under development and not
+> +	 * fully supported.  It will go away once continuous DMA support is
+> +	 * added to device preservation.
+> +	 */
+> +	vfio_pci_zap_bars(vdev);
+> +	ret =3D pci_load_saved_state(pdev, vdev->pci_saved_state);
+> +	if (ret)
+> +		return ret;
+> +	pci_clear_master(pdev);
+
+Does the PCI_COMMAND register need to have PCI_COMMAND_INTX_DISABLE explici=
+tly
+written prior to calling vfio_pci_core_try_reset()?
+
+I noticed that the standard disable path in vfio_pci_core_disable() does th=
+is
+to prevent spurious interrupts from firing during the hardware reset.
+
+> +	vfio_pci_core_try_reset(vdev);
+
+If vfio_pci_core_try_reset() silently fails because it cannot acquire the P=
+CI
+locks or because the device does not support reset, the kexec will still
+proceed.
+
+Could this allow the next kernel to inherit a device that still has active =
+DMA
+engines or internal state?
+
+> +	pci_restore_state(pdev);
 > +	return 0;
 > +}
-> +
-> +/*
-> + * Logical representation of CXT_L1_ENT subfields.
-> + */
 
-[ ... ]
+Once vfio_pci_liveupdate_freeze() completes and releases the locks, what
+prevents userspace threads from issuing new write(), mmap(), or ioctl() cal=
+ls
+on the device file descriptor?
 
-> +static int configure_L1_entry(struct sdxi_cxt_L1_ent *ent,
-> +			      const struct sdxi_cxt_L1_cfg *cfg)
-> +{
-
-[ ... ]
-
-> +	cxt_ctl_ptr =3D FIELD_PREP(SDXI_CXT_L1_ENT_VL, 1) |
-> +		      FIELD_PREP(SDXI_CXT_L1_ENT_KA, cfg->ka) |
-> +		      FIELD_PREP(SDXI_CXT_L1_ENT_PV, cfg->pv) |
-> +		      FIELD_PREP(SDXI_CXT_L1_ENT_CXT_CTL_PTR,
-> +				 cfg->cxt_ctl_ptr >> L1_CXT_CTRL_PTR_SHIFT);
-> +	/* Ensure other fields are visible before hw sees vl=3D1. */
-> +	dma_wmb();
-> +	WRITE_ONCE(ent->cxt_ctl_ptr, cpu_to_le64(cxt_ctl_ptr));
-
-Similarly, could this 64-bit WRITE_ONCE() cause torn writes on 32-bit
-platforms, exposing an incomplete physical address to the hardware?
-
-> +
-> +	return 0;
-> +}
-> +
-
-[ ... ]
-
-> +static void free_admin_cxt(void *ptr)
-> +{
-> +	struct sdxi_dev *sdxi =3D ptr;
-> +
-> +	sdxi_free_cxt(sdxi->admin_cxt);
-> +}
-
-Does this sequence cause a use-after-free regression?
-
-In sdxi_publish_cxt(), the admin context is published to the hardware by
-setting the valid bit (VL=3D1) in the L1_table.
-
-When the context is torn down via the devres cleanup action free_admin_cxt(=
-),
-it directly invokes sdxi_free_cxt(), which frees the DMA memory for the
-context control block, descriptor ring, and akey table.
-
-However, the VL bit in the hardware's L1 table entry is never cleared. Could
-this leave the hardware actively fetching from freed physical addresses?
-
-Additionally, looking at the sdxi_alloc_cxt() implementation, the return va=
-lue
-of dma_pool_zalloc() is checked via the DMA address instead of the virtual
-pointer:
-
-	cxt->cxt_ctl =3D dma_pool_zalloc(sdxi->cxt_ctl_pool, GFP_KERNEL,
-				       &cxt->cxt_ctl_dma);
-	if (!cxt->cxt_ctl_dma)
-		return NULL;
-
-Since physical address 0 is a valid DMA address on many architectures and I=
-OMMU
-configurations, could this regression incorrectly abort initialization if a
-successful allocation returns DMA address 0? Should this code check the
-returned virtual pointer (!cxt->cxt_ctl) instead?
+Because kexec doesn't freeze userspace tasks, could a concurrent thread
+re-enable DMA and interrupts on the device right before the kexec jump,
+risking memory corruption in the successor kernel?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
-v2-0-889cfed17e3f@amd.com?part=3D8
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511234802.2280=
+368-1-vipinsh@google.com?part=3D2
