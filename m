@@ -1,80 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2BB8363084;
-	Wed, 13 May 2026 21:08:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5DC2385D72
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 21:12:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778706481; cv=none; b=CwdjMHUpfJdmffC2lIx504FsXR6pLERbDoysZ+5gxu9eM13P9DFv9+I/yhEuji5EL34d9wHIefi0OVCjv1r0x0SoBjOaNWAc+doluZhTxtdZZTs3iG9ARRjZxS5FK0SmlcemF+YgA+Du6gMV5pFPuGHLxnK/JJvzS5XQPrWLitg=
+	t=1778706771; cv=none; b=Bhjz5RofXgdxY+kUGBODrvUVLDEDlgttuIH8eJTOI3nbbMjsKQbEG95rHHpH5+v1Ksjhl0fYrRjGFwvJ4K0ncGvYDEVrv1I6Zzb7gBynDT6tuEgPwvqrYzIElGVBOS7i3GGhMjZSF3riSAsoYlLIi8ApwqPOX+jtG+7Rv4TEhiY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778706481; c=relaxed/simple;
-	bh=oZWjXoMfghGHXHjku6nYK8etJGovo5hAboXQRgBbDiA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ubr4KZfCjVwt020fceQ99hLhZXstMSSuJrp75UWC9N0HcTLOypCEXHnLVdZ+R7Da/ZLWzUmkrvZ59j1JIcxdZ984rbbrirXDrvld9kFJQFhvNGeDO3C9HV0RGYuxflRKnSDX9Y6YIBT+O8aZ8nsVLpo83STnxXnjaMpNOUBJWq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tTJrOW8p; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778706771; c=relaxed/simple;
+	bh=2unqWykgfHgjydLg8gQ/WlLIyZfE+woLrUNg6m1VJ2I=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=aEVLs6oO3UVGsD5wryms9Zss8Z5Sv4qIrKSUzO14slXRPZrv+DDdG0F1tynQG+kya70xmqMkYltbO7Lxo2XMCAynsMM6eSrmpyroSKko+9YiiJS6nsDtSYUnKnjuxsxuMkb0o3a2KK/FTsGDabBe/d+fZRNo0HBcK3VIuUzR0B8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hA41h300; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tTJrOW8p"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57C8AC19425;
-	Wed, 13 May 2026 21:08:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hA41h300"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 258CAC19425;
+	Wed, 13 May 2026 21:12:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778706480;
-	bh=oZWjXoMfghGHXHjku6nYK8etJGovo5hAboXQRgBbDiA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=tTJrOW8pBXpiXtwhfnE6UWwdLxO53d1pwvpe7uI7N4M7CX1Us1bPLq9hhLUtDSxAG
-	 D+cZ6gVbRPfpAzHT6qorwXZlomfIKWPz2KMP0UDJXdly4bx5AG1orv4lolo3v3HT4Y
-	 ryQU+fFjkkwZJ4qoISUSPRmvFuxNW2xu1pbIHs5+Hz6FqwEHYAZ8JuFB1eGAYXOt9m
-	 3Js0oCfogVLgFCq7fjm8S8/UKFVpP1Rx2/y1DW9MKclsjbNYcl29PJZa53gRxVoP6T
-	 IDATbx2MyIjaUp3bvIsI2TDVMfWPPWCu0PzMnHCmaLqwwJa4uHp25f9G4kRFuzetnM
-	 /oDTdFgyJfpKw==
-Date: Wed, 13 May 2026 16:07:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Message-ID: <20260513210759.GA331283@bhelgaas>
+	s=k20201202; t=1778706771;
+	bh=2unqWykgfHgjydLg8gQ/WlLIyZfE+woLrUNg6m1VJ2I=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=hA41h300cmlt2oSa6ac7rgUNksNwTlznzL0eXxMFXMKWJXeEa9BuPxaVXip2PaWRv
+	 p9cYp3Y3M9npSH6XwjHL1plXR0WsrOd+k9kGDz0hY2Zg1O6VQW3w6EEhSBoORth3BW
+	 MRLuM6mbeNhPWhERV8Kcsa716Tikmcuxyg2s4rFQIKIv10FuVkiuO+/YUoelptpmRf
+	 g/wxSHIYSuB92Ma/6f16O4zLZsT2iJoOC/UMEY9Gi7qwo0CAUbDgwgMK8Id6aW6FQq
+	 plYcvGg8ZOASK2SLzbCJEgj9KXRp/QoIgd2nXe3+vfvY9NNP+c8JPTpPffkEWZjLto
+	 cCzUmL6STDbkw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 09/16] vfio: selftests: Add
+ vfio_pci_liveupdate_uapi_test
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Vipin Sharma" <vipinsh@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511234802.2280368-10-vipinsh@google.com>
+References: <20260511234802.2280368-10-vipinsh@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 13 May 2026 21:12:50 +0000
+Message-Id: <20260513211251.258CAC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260513191652.3200607-3-cjd@cjdns.fr>
 
-On Wed, May 13, 2026 at 07:16:52PM +0000, Caleb James DeLisle wrote:
-> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
-> 
-> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
-> require re-training after startup.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] FIXTURE_TEARDOWN unconditionally dereferences NULL pointers and =
+closes stdin if FIXTURE_SETUP fails.
+- [Low] The test file fails to build due to missing dependencies, headers, =
+and undefined functions.
+--
 
-s/re-training/retraining/
+commit 483a2948059fa012eaf9d233845cda79f05f7acb
+Author: David Matlack <dmatlack@google.com>
 
-> + * @MTK_PCIE_RETRAIN: Re-train link to bridge after startup because some
-> + *                    Gen2-capable devices start as Gen1.
+vfio: selftests: Add vfio_pci_liveupdate_uapi_test
 
-s/Re-train/Retrain/ to make this consistent and more greppable.
-Also more instances below.
+Add a selftest to exercise preserving a various VFIO files through
+/dev/liveupdate. Ensure that VFIO cdev device files can be preserved and
+everything else (group-based device files, group files, and container
+files) all fail.
 
-> + * as Gen1, and must be re-trained once after initial configuration in order to
-> + * only Gen1 capable. Therefore it is most convenient to re-train every port
+> diff --git a/tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c=
+ b/tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c
+> new file mode 100644
+> index 0000000000000..1d89b08ab0a4a
+> --- /dev/null
+> +++ b/tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c
+> @@ -0,0 +1,93 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +
+> +#include <libliveupdate.h>
 
-> +	return dev_err_probe(dev, ret, "root bridge not found\n");
+Are there missing files or dependencies in this commit? This test fails to
+build because <libliveupdate.h> does not exist anywhere in the source tree.
 
-"Root bridge" is not a term used by the specs, but in common usage it
-refers to the host bridge, i.e., the RC.  In this case, you didn't
-find a "Root Port".
+Also, luo_session_preserve_fd() has no userspace implementation available (=
+it
+only exists as an internal static kernel function).
 
-> +found_port:
-> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
-> +		/* Let it go because the device will work as Gen1 */
-> +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
+Additionally, the vfio selftest Makefile depends on
+../liveupdate/lib/libliveupdate.mk (introduced by a missing commit), which
+is completely missing from the tree. This results in immediate compilation
+and linker failures.
 
-I suppose this will cause a warning even in cases where Gen2 is
-impossible, e.g., the endpoint only supports Gen1?
+[ ... ]
+
+> +FIXTURE_SETUP(vfio_pci_liveupdate_uapi_test)
+> +{
+> +	self->luo_fd =3D luo_open_device();
+> +	ASSERT_GE(self->luo_fd, 0);
+> +
+> +	self->session_fd =3D luo_create_session(self->luo_fd, "session");
+> +	ASSERT_GE(self->session_fd, 0);
+> +
+> +	self->iommu =3D iommu_init(variant->iommu_mode);
+> +	self->device =3D vfio_pci_device_init(device_bdf, self->iommu);
+> +}
+> +
+> +FIXTURE_TEARDOWN(vfio_pci_liveupdate_uapi_test)
+> +{
+> +	vfio_pci_device_cleanup(self->device);
+> +	iommu_cleanup(self->iommu);
+> +	close(self->session_fd);
+> +	close(self->luo_fd);
+
+Will this cause a segmentation fault if an assertion fails during setup?
+
+In the kselftest framework, the fixture state (self) is zero-initialized via
+mmap. If an assertion in FIXTURE_SETUP fails (for example,
+ASSERT_GE(self->luo_fd, 0)), the framework aborts setup and immediately cal=
+ls
+FIXTURE_TEARDOWN.
+
+Since self->device and self->iommu would be unassigned and thus NULL in this
+scenario, vfio_pci_device_cleanup() and iommu_cleanup() will dereference
+NULL pointers.
+
+Additionally, since self->session_fd would be 0, close(self->session_fd) wi=
+ll
+inadvertently close stdin.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511234802.2280=
+368-1-vipinsh@google.com?part=3D9
