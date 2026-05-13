@@ -1,63 +1,63 @@
-Received: from pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com [35.155.198.111])
+Received: from pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.13.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41EDD42A9D;
-	Wed, 13 May 2026 04:04:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.155.198.111
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4784134DCE3;
+	Wed, 13 May 2026 04:13:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.13.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778645074; cv=none; b=epmixKtcGkDmZLFdIx+lsamGfRW/TLxQX9qzhud2plPmbYFOnntA0LzZ/qycZil/iA4OA9lcOPbu9uyvVsIWXjd45DGTr2P1dp59+1wKH98PDQXj+8o6BueDoGfNlb5Gw9rLR7Jc4pw1FJtGCFPwHO6wzkOqRVnklDbwK4zrJAE=
+	t=1778645627; cv=none; b=cXMWmikVaP7nzrf8FgPvfyawCi0/FSckvmfHqzDkjempzU3wCTFeQF1WGHGEKi0vDKIjWV5wHqb4hYIXQjk6NYZ8ZqqS7POekqeLGSqHvr6oGdKQSYac8dfd5wPinIgVEfsonbfUa7sOTevH5CjuL5g+tTKuLCrNcvBleO0/i5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778645074; c=relaxed/simple;
-	bh=k7MpM86QtfCu3jCwWUvM4gQU7osAdzHNw2Jg+7b+Ctc=;
+	s=arc-20240116; t=1778645627; c=relaxed/simple;
+	bh=K3hvB9fLQwEw2xVdBUs65ubLt508ojRUBv+xEHUgaK4=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nB5DzMFJq+dAwRXX2KOu9vOfPwmTeh2KUlM0uGMd5pypyanpM7aZ25tI1PJB45nXiK0/X3/Kmi0LGEloTz+pLXToxjromUwEH/F0s/FPMmRAs39blhUgGx51ggfWm4PobPnCOFxuztjDsCTjfs5r0oE9X+X4ILRrT5ytzGd0vLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=XWjGf7Uw; arc=none smtp.client-ip=35.155.198.111
+	 MIME-Version:Content-Type; b=DoEppKI8n391QRJY61FaHwfIeHzT6MEg5xWbVD1Q+dkH44uky25uwR4Cbvzj6lnK3ww+qrVZwGL9PG5oWW1ORIH4zPExEqVVGTnyYbN2GJhYEJyvl7+fV/GuJhtUSbHmi2G7GYcxRhdLm4m+xzF7uRlql2fTnuh23UPBm9y/bMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=TFDWDx64; arc=none smtp.client-ip=52.13.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="XWjGf7Uw"
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="TFDWDx64"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1778645073; x=1810181073;
+  t=1778645626; x=1810181626;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=a/xbs8//p25Kr8lBeXV8kTA+S6A+9JLDKOrRl+rfB5I=;
-  b=XWjGf7UwU1w3YruG4TuMfl9uhwb5jFSQhzWaEazox63LPVvU4HNejZLc
-   6SgPZBkNKlOtcPwXn8GW1+XWQzmAR96tpYctWIksqmQb+EdNGzPqmLdRD
-   NxvX+a6K562e5n46OEA1BKor+w9j0ii9Ys/kIzLFNZbGh1ASRBOsT++K0
-   hvCbymxHNrzqI+PaugJj3nEA6S0epkRohvtUSrYnhXxChUlP5faKQhH4T
-   P/L6pnLDm3hCCX2V7DoypZIxEPSYCaRYQeG6s6Vodv2XHhdzGdqnsFqwF
-   kweBuncEcMzSXhS07zoqYHenrdi7KHCt6oeMQqqBmy5+TnfFGqPPabhnq
+  bh=Ah3cGmdxUquVZwb4HjqZ6FMc2kUwi/RScc7qdhhywBI=;
+  b=TFDWDx64lomMjRdY0b9bpulnK83nUvuBhhbGWGd8TGA40KIi+gvzJsqM
+   bvNEjW/tQxxtZ7llMgtPFXvVid1XJ/FlGStzi6XPLcrxHuUJ3pXQQVBIv
+   JhCaWtEp0UCk+CWm1w+KDzszblwZXGGhcwcPvrKl3Qf8gfbCDv0E5NaAj
+   Obym6GvbsxoqqvFI8+v1/JNdl+MqsqAfjJZn70/DBuunouyK10Yj1WlNB
+   TcTRxjUhz6hPlVVW0NB9sPbg5Dg/EiRe/+sXuXoO3xovr2fb0DcucX72t
+   OOTwxl+dIwUBIZocQcQmh4NGtKfwfRZQnLpyRPri2WjHR2WLJEfc6GJHs
    g==;
-X-CSE-ConnectionGUID: B+wgS5R1QICO2DEDLqId4A==
-X-CSE-MsgGUID: ngLVMkJvR0iO5EtPhnbpRQ==
+X-CSE-ConnectionGUID: 9tEWjWGYTaW8GfGAvUpj/g==
+X-CSE-MsgGUID: HZZ3ET5eTISsmPe3GQaOQA==
 X-IronPort-AV: E=Sophos;i="6.23,232,1770595200"; 
-   d="scan'208";a="19399220"
-Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
-  by internal-pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2026 04:04:32 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:24470]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.34.21:2525] with esmtp (Farcaster)
- id a2f9d8bf-51cb-4fe9-afc0-ed16f0efb342; Wed, 13 May 2026 04:04:32 +0000 (UTC)
-X-Farcaster-Flow-ID: a2f9d8bf-51cb-4fe9-afc0-ed16f0efb342
+   d="scan'208";a="19497983"
+Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
+  by internal-pdx-out-005.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2026 04:13:45 +0000
+Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.111:27159]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.33.132:2525] with esmtp (Farcaster)
+ id 8cffdc27-fff1-4184-a0a3-dac8f8b0addf; Wed, 13 May 2026 04:13:45 +0000 (UTC)
+X-Farcaster-Flow-ID: 8cffdc27-fff1-4184-a0a3-dac8f8b0addf
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Wed, 13 May 2026 04:04:31 +0000
+ Wed, 13 May 2026 04:13:44 +0000
 Received: from dev-dsk-ravib-2a-f2262d1b.us-west-2.amazon.com (10.169.187.85)
  by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
- Wed, 13 May 2026 04:04:30 +0000
+ Wed, 13 May 2026 04:13:44 +0000
 From: Ravi Kumar Bandi <ravib@amazon.com>
-To: <kwilczynski@kernel.org>
-CC: <bhelgaas@google.com>, <ilpo.jarvinen@linux.intel.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<ravib@amazon.com>
-Subject: Re: [PATCH] PCI/sysfs: Check IORESOURCE_DISABLED in resource mmap handler
-Date: Wed, 13 May 2026 04:04:01 +0000
-Message-ID: <20260513040401.16035-1-ravib@amazon.com>
+To: <ravib@amazon.com>, <kwilczynski@kernel.org>,
+	<ilpo.jarvinen@linux.intel.com>
+CC: <bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: [PATCH v2] PCI/sysfs: Check if device disabled in resource mmap handler
+Date: Wed, 13 May 2026 04:13:32 +0000
+Message-ID: <20260513041332.24105-1-ravib@amazon.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260512094621.GB1539393@rocinante>
-References: <20260512094621.GB1539393@rocinante>
+In-Reply-To: <20260512084315.32564-1-ravib@amazon.com>
+References: <20260512084315.32564-1-ravib@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,81 +66,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: EX19D033UWA001.ant.amazon.com (10.13.139.103) To
+X-ClientProxiedBy: EX19D043UWA003.ant.amazon.com (10.13.139.31) To
  EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-On Tue, May 12, 2026 at 18:26:14 +0900, Krzysztof wrote:
+pci_mmap_resource() does not check if device is enabled before mapping
+a PCI BAR resource into userspace. This allows new mmaps to succeed
+even after a device has been marked disabled or soft-unplugged by the
+driver to prevent further access.
 
-> > > > pci_mmap_resource() does not check IORESOURCE_DISABLED before mapping
-> > > > a PCI BAR resource into userspace. This allows new mmaps to succeed
-> > > > even after a device has been marked disabled or soft-unplugged by the
-> > > > driver to prevent further access.
-> > >
-> > > Which driver disables resources?  Would this be some Amazon-specific thing
-> > > you are trying to fix?  Or are you just manually disabling a given device
-> > > using sysfs, or something like this?
-> > >
-> > > What is your use case here?
+Add the check to return -ENODEV when the resource is disabled, blocking
+new userspace mmaps of BAR resources after device removal.
 
-Thank you Krzysztof, Ilpo for reviewing the patch.
+Tested by marking the PCI BAR resource as disabled and verifying that
+a subsequent mmap attempt fails with -ENODEV.
 
-The use case is surprise removal of the PCIe device that does not have a
-PRSNT# routed to the CPU. Based on other internal states, the
-proprietary endpoint driver marks the BAR resources as disabled by
-updating this flag to prevent further userspace access to the mermory
-regions (mmap) to prevent kernel hang/crash. Currently, BAR memory
-regions will be allowed to be mmapped using the sysfs resource files
-even if drivers soft_unplug the device.
+$ sudo python3 -c "
+import os, mmap, errno
+try:
+    fd = os.open('/sys/bus/pci/devices/0001:01:00.0/resource0',os.O_RDONLY)
+    mmap.mmap(fd, 4096, access=mmap.ACCESS_READ)
+    print('mmap succeeded')
+except OSError as e:
+    print(f'mmap failed - {e}')
+"
+mmap failed - [Errno 19] No such device
+$
 
-> > > For "soft-unplugged" device we have pci_dev_set_disconnected(), but this
-> > > does not check current flags set.
+Signed-off-by: Ravi Kumar Bandi <ravib@amazon.com>
+---
+ drivers/pci/pci-sysfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Thanks for the suggestion. pci_dev_set_disconnected() couldn't be used
-directly as it's defined in drivers/pci/pci.h and not part of exported
-kernel headers, the endpoint driver is currently setting it as below
-along with the flags:
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d37860841260..83d580256c4b 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1089,6 +1089,9 @@ static int pci_mmap_resource(struct kobject *kobj, const struct bin_attribute *a
+ 	if (ret)
+ 		return ret;
+ 
++	if (pci_dev_is_disconnected(pdev))
++		return -ENODEV;
++
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+-- 
+2.47.3
 
-    xchg(&dev->error_state, pci_channel_io_perm_failure);
-    smp_wmb();
-
-    [...]
-
-        pdev->resource[bar].flags |= IORESOURCE_DISABLED;
-
-    [...]
-
-I'll replace checking for IORESOURCE_DISABLED flag
-with pci_dev_is_disconnected() instead and make endpoint driver adapt
-to using pci_dev_set_disconnected().
-
-> > > > Add the check to return -ENODEV when the resource is disabled, blocking
-> > > > new userspace mmaps of BAR resources after device removal.
-> > > >
-> > > > Tested by marking the PCI BAR resource as disabled and verifying that
-> > > > a subsequent mmap attempt fails with -ENODEV.
-> > >
-> > > Can you explain how did you do this?
-
-Based on the internal logic, endpoint driver sets the resource flags as
-below to indicate soft_unplug, which pci-sysfs use to to reject mmap
-of the resources.
-
-    pdev->resource[bar].flags |= IORESOURCE_DISABLED;
-
-> > > > @@ -1089,6 +1089,9 @@ static int pci_mmap_resource(struct kobject *kobj
-> > > >   if (ret)
-> > > >           return ret;
-> > > >
-> > > > + if (res->flags & IORESOURCE_DISABLED)
-> > > > +         return -ENODEV;
-> > > > +
-> > >
-> > > This probably would be better if it checked IORESOURCE_DISABLED and
-> > > IORESOURCE_UNSET, but then probably using resource_assigned() would
-> > > be even better.
-
-Thank you, but as you suggested above, I will update the patch to use
-pci_dev_is_disconnected() instead.
-
-Regards,
-Ravi Kumar Bandi
