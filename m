@@ -1,96 +1,122 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E700538CFE9
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 20:19:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 529D330F7F7;
+	Wed, 13 May 2026 20:21:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778703544; cv=none; b=MvEk+S9nXeNyYggWWSYlkhhFrgCmyDSFkxm665OXdhHfxrZMh6PRm2j3CK8ALvPz1DtXS5HYU5UUOCRAtHdLoGs6F2xJWrRAFDCFaTJotz4EXWbftn35420qXKozs35Hup7eH8j4UQCn9EjiWu7o9YMOR8QoM+pYYzvsZXKEjXc=
+	t=1778703676; cv=none; b=pVJsT0md80tSV9hql+lQcQcdovUqhrr4GCtQqcccyXyz2Z1aSIjtXHNGqzyOYteiwmXbZUHRZoPdrx1FVaGFeBoHrC2rrK2AsmVAQIR5CsQTBjkYlfcvZj5DCA4HZytlSkwLvx7CGAJBJkFO9KjIVLb38Gj6EZqf5DUWbWTYdho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778703544; c=relaxed/simple;
-	bh=HPahXOTOfqqzxfO/3Y20EBKQUIYHMc9TxRyDMQg3sBI=;
+	s=arc-20240116; t=1778703676; c=relaxed/simple;
+	bh=tdRb6uTF26YxJafhOlxG2RkhZSnSyrlLFAf4EcUzkcE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=T0qhXrEhGjU3EUa1jPHV5pSMxJbXj3/7qsxBKOuMr5RmfU5T0TZxYLCXzKaGPCSmzHjBxLZU2fzLf4skp+UViUOe0tmWsG6wMboOjmwr15A2hXcgXM16z24WAx1VkpsOirPxk2kgPh32rk+JDQOOyuUkmspopjBqMKBLGYE5YIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jyVc4Pcf; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=QhukJAmvInU/5rbDsp/n04wO4XEQ54JggrHJTpVqFMemdXJcpWdwjXYG+i04B+qjSzR8cNUFuXzw22t9PmY7x7w5gXr2oqlVpy73EQgv40fYmzWc3ijXiIRNO8sRqwNP+1koxcNOvsGibKu9XFpDM3L+b32fim9RfSIqc4Eonmo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aWZXrEpO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jyVc4Pcf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71E6DC19425;
-	Wed, 13 May 2026 20:19:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aWZXrEpO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B748AC19425;
+	Wed, 13 May 2026 20:21:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778703543;
-	bh=HPahXOTOfqqzxfO/3Y20EBKQUIYHMc9TxRyDMQg3sBI=;
+	s=k20201202; t=1778703676;
+	bh=tdRb6uTF26YxJafhOlxG2RkhZSnSyrlLFAf4EcUzkcE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=jyVc4PcfW1IXgPeRcelT1DaHiVua05VhAnRWQj9kgfKqgyAVxP8f+xu3fgHA0VS9A
-	 kRJeD0TOikibgRMBTkpjP7npM9Fn1RZ0VWFaMXhab5vloMkLrm6JcAw9PmwnGKibxy
-	 CTWwQzQO8Q6BP3k/PCTGm6NEK5Dj2qU9mtJfWO7vGdcqQYbYg6wjj76zPm4sD16QKk
-	 MU/0fBFR1mNeI0Tnrldq02+urzxg3lkJRABZHJQdZVfOZAfS4J4PkZjUxpLaEKZYPG
-	 1Ip/cXLGwqlln5drYLkmo4P5y4Kd49S1zs155mBm3qXSanshtNhlPJFBuaE437C0Yt
-	 7th9JSt4YZMpQ==
+	b=aWZXrEpO+kmajpTnUTyUMRgurh4imzjJW8Ny/s2noG9yHQA4zQGPs3+sTusFeKCNV
+	 HOW7TrbzaYFqXZphoG0uznTjp0o+z8yVIlzd+0tDX2e9SOP6/sCp5RJ37wWDJ4hmXA
+	 qlCV9RDV0vFrqO0tecuX+8Zsu/4yROQ9gKg2oeMPbuhRQFI+kbWNGhnJmGiJGNvUVk
+	 rG19GKfAOf2MsdvP6VNcL8ol+GQpEduom4sUsqQ1STDY+HeWHpEUpQxItW30sBuV6C
+	 3RI05/loxLedndcFVcLh5U4g7lJ+ov9A0juL53s6W32QhLyVngJrmBnWEu1aYn4fPG
+	 3N3sdd928Cy6A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: dwc: Fix signedness bug in fault injection test
- code
+Subject: Re: [PATCH v2 16/23] dmaengine: sdxi: Generic descriptor
+ manipulation helpers
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Dan Carpenter" <error27@gmail.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <agL-Uwfn26SI4Gb0@stanley.mountain>
-References: <agL-Uwfn26SI4Gb0@stanley.mountain>
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-16-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-16-889cfed17e3f@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 20:19:02 +0000
-Message-Id: <20260513201903.71E6DC19425@smtp.kernel.org>
+Date: Wed, 13 May 2026 20:21:14 +0000
+Message-Id: <20260513202115.B748AC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Register accesses without ensuring active power state (missing pm_=
-runtime).
+- [High] Data race and TOCTOU race in descriptor ownership validation defea=
+ts the safety check.
+- [Medium] Severe performance degradation due to Read-Modify-Write (RMW) on=
+ Write-Combining (WC) DMA memory.
 --
 
-commit 4899a9300a95dd54caf44bf07153849d88f68ae7
-Author: Dan Carpenter <error27@gmail.com>
+commit 54eb4223ce2b3ad6354bf153f2d7fc8aa53474e0
+Author: Nathan Lynch <nathan.lynch@amd.com>
 
-PCI: dwc: Fix signedness bug in fault injection test code
+dmaengine: sdxi: Generic descriptor manipulation helpers
 
-This commit fixes a signedness bug in the fault injection debugfs handler.
-It ensures that negative error codes from kstrtou32 are properly handled by
-storing the return value in an int instead of a u32.
+Introduce small helper functions for manipulating certain common properties
+of descriptors after their operation-specific encoding has been performed b=
+ut
+before they are submitted.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drive=
-rs/pci/controller/dwc/pcie-designware-debugfs.c
-> index d0884253be97e..4bfc1748f2d73 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+> diff --git a/drivers/dma/sdxi/descriptor.h b/drivers/dma/sdxi/descriptor.h
+> new file mode 100644
+> index 0000000000000..c0f01b1be726d
+> --- /dev/null
+> +++ b/drivers/dma/sdxi/descriptor.h
 [ ... ]
-> @@ -327,10 +328,10 @@ static ssize_t err_inj_write(struct file *file, con=
-st char __user *buf,
->  			return -EINVAL;
->  		}
->  	} else {
-> -		val =3D kstrtou32(kern_buf, 0, &counter);
-> -		if (val) {
-> +		ret =3D kstrtou32(kern_buf, 0, &counter);
-> +		if (ret) {
->  			kfree(kern_buf);
-> -			return val;
-> +			return ret;
->  		}
->  	}
+> +static inline void sdxi_desc_vl_expect(const struct sdxi_desc *desc, boo=
+l expected)
+> +{
+> +	u8 vl =3D FIELD_GET(SDXI_DSC_VL, le32_to_cpu(desc->opcode));
+> +
+> +	WARN_RATELIMIT(vl !=3D expected, "expected vl=3D%u but got %u\n", expec=
+ted, vl);
+> +}
 
-This isn't a regression introduced by this commit, but is it safe to access
-the hardware registers immediately after this block without ensuring the
-device is in an active power state?
+The descriptor ring is often mapped as DMA coherent memory, which on many
+architectures is Write-Combining or uncached. Does reading desc->opcode
+here and in the calling functions trigger synchronous, non-posted PCIe read=
+s?
 
-This function handles user writes to debugfs, which can happen at any time.
-If the PCIe controller is runtime-suspended, accessing its memory-mapped
-registers via dw_pcie_readl_dbi() might cause a bus hang or kernel panic.
+If these helpers are called directly on the DMA ring, this read-modify-write
+pattern might cause multiple PCIe reads per descriptor and artificially cap
+the DMA engine's throughput. Is there a way to redesign the API to avoid
+reading from the ring, perhaps by returning the modified opcode or passing
+it as state?
 
-Would it make sense to call pm_runtime_get_sync() before interacting with
-the hardware registers later in this function?
+[ ... ]
+
+> +static inline void sdxi_desc_set_fence(struct sdxi_desc *desc)
+> +{
+> +	u32 opcode =3D le32_to_cpu(desc->opcode);
+> +
+> +	sdxi_desc_vl_expect(desc, 0);
+
+Can this double-read sequence lead to a time-of-check to time-of-use race?
+
+If the driver erroneously calls this helper on an active descriptor (vl=3D1=
+),
+the first read of desc->opcode into the local opcode variable fetches vl=3D=
+1.
+If the hardware then completes the operation and writes vl=3D0 to desc->opc=
+ode
+in memory, the second read inside sdxi_desc_vl_expect() fetches vl=3D0.
+
+The validation check would then succeed, bypassing the WARN_RATELIMIT safety
+net. The helper then writes back the stale local opcode (which still has
+vl=3D1) to memory, silently re-submitting the completed descriptor.
+
+Could desc->opcode be read exactly once using READ_ONCE(), and that local
+value passed into sdxi_desc_vl_expect() to avoid this race?
+
+> +	FIELD_MODIFY(SDXI_DSC_FE, &opcode, 1);
+> +	desc->opcode =3D cpu_to_le32(opcode);
+> +}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/agL-Uwfn26SI4Gb0@st=
-anley.mountain?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D16
