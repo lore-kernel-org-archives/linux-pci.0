@@ -1,193 +1,149 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF3D5481FCE;
-	Wed, 13 May 2026 15:43:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA5614DB55E
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 17:27:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778687004; cv=none; b=Vfxe+/NHVWdRgJEjWVgnfkAAnBsy5+vXm1wtI3YHy109aHGSbJM2yu+baZ8mwZkPvXN5MgZN1ytSKYUDGmz7zw9lsU11qKYXDjY8FmbXEerQg7Wyw8A4HuKQIXaw84tT4gp5733rWJuAjcH7kooRNMDvmw8tQQy5tQR0A54x5JY=
+	t=1778693226; cv=none; b=e/QeLmWfMuqB50NgqOOJbeWlTbbYUmUh0nsBfFphVclngD8w9fHTYFYrVLuT4H23prB4jogl304Dp7yjHNGeIF/9QEAzCFSX5dMX/HeLKsmXiKm1ycZYQrdX+nLdG2yeoq9qv0RdAP9/Zh2OSCsf5U7D9+FlFCx3cP99HY+mx24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778687004; c=relaxed/simple;
-	bh=4348Bg4OX8AmIIgZS2UacQbwCc9cgmpFgCKy3RODCc4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B5u7UIZgX7+H1+/Zjgsr8pY9Q8vFVkppIAeYKPHHJ/2l+vc4pC/GIiNp7gbXYHniqtZM3wlRbaoPXXAVlVjMLJ0e/6/pqXWButYo+1vkq0/Yl8Q0/49AxSm/f+gL58wJilTs7feFf1iiqVR6oTT4Thy5QbQ/Emd1/J+GmXZmllA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=L012HT/t; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
+	s=arc-20240116; t=1778693226; c=relaxed/simple;
+	bh=O1b+SfnjfBVwZ9Btj9JuKHcRH5RyaKxhIP4cGrIU1o4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QwJmGsln2hEu9T0qNb1XvJki1XREu1BzZQ6MybwHStPvH01gS9zttODBfNvHt8IOTSNn3iKM5ZETTO9+GU6YqZQfVZuZr2WTQLhgoiLyFj0Yu+lKrJJ3gLv+9HjHy3vKrs98zWwdozlcx5XVpZGUAq2PaarbKzdihs7V22mcYIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LLNQYyOP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="L012HT/t"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id AC2FF3BDE5B;
-	Wed, 13 May 2026 17:43:15 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1778687000; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:content-language:in-reply-to:references;
-	bh=Nfdnbqd2LxVZhZX0Pup+3P9y4kLutFweTWOYtAxVc84=;
-	b=L012HT/t1T1chI7dzvaKSbn2KnTDs4x3NUTNN49HvRDNpQh6uj72wLpX1s73kgfcsd/QVL
-	JVY8h3M4oq/y30hakAa9HFd5nDwrgpWb3yYJXsgquv0Ra+yLE8dw4sZPs0wnslKKKN2R8n
-	FQx+Jo7DhdUPxSRRQpoJMHCuSbjUaCV0M8uDKANY4gcUmYVdmAAxLn3zaPEtMtrRll1PYw
-	E0A3WIzC9oUmiT4aPNMmg2pvzD2eOpihbtq9GQQMIi0b8IYx0BgscJE3V6zGP7mzsuGyH8
-	2mrwP/KUnNAWU0sl6zgpaIHqfAZZ6Ln6g9tcIGjMsPKIdY6gyowicWjGAGNuaQ==
-Message-ID: <b0756d38-cf8d-47fa-8c9c-4840af9736f5@cjdns.fr>
-Date: Wed, 13 May 2026 17:43:14 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LLNQYyOP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F705C19425;
+	Wed, 13 May 2026 17:27:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778693226;
+	bh=O1b+SfnjfBVwZ9Btj9JuKHcRH5RyaKxhIP4cGrIU1o4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LLNQYyOPctqZivTQLpp0rLRMhlKQJCnTWrGwRTYi0KvGIJymSkg7QDfre0k1QF9TU
+	 JjoHLoyT442KDTovYcRatiK7XAXKdHyyt+PQUAA0tKWJStPhsFhNsEfBi2oOdLr0a/
+	 P3bQIK4vKMX0AkUEC5ldo2r5lPG8rkfuQLhpNuwEWF8vyQbertehI/seCuNvWWipuE
+	 wEJ/VScFuq2XSX5itCkRjJUhbGFObl4D0n5JekKoT9kCQXceLwPRLF15HuNQLiUhro
+	 3sfbzMw41YYsCU/DMOWZF/+7tSP+/PB1O4CfrF/gWcmKqeaDEnvrgJ6WkbJ0ar0x4E
+	 frNbRdbGNWsBg==
+Date: Wed, 13 May 2026 22:57:01 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: allocate ports with pcie struct
+Message-ID: <qb6nxxkowjgrsscddbmorh2z27uwwtceohokjtathytzdvqe75@apahvpqwrht2>
+References: <20260411043051.174309-1-rosenp@gmail.com>
+ <7sibn6mlvuozzjuggu773w2eqjyb7dz34gkdrx7tzxyjbygfpx@hiqzen36nknm>
+ <CAKxU2N_WpHOLPyN6AfnK0CyoU1dkBsGivRvVZt1fnKMSpc3aVA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH v5 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
- naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
- kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
- krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
- linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260512165530.GA228087@bhelgaas>
-Content-Language: en-US
-From: Caleb James DeLisle <cjd@cjdns.fr>
-In-Reply-To: <20260512165530.GA228087@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAKxU2N_WpHOLPyN6AfnK0CyoU1dkBsGivRvVZt1fnKMSpc3aVA@mail.gmail.com>
 
+On Tue, May 12, 2026 at 01:38:52PM -0700, Rosen Penev wrote:
+> On Tue, May 12, 2026 at 4:29 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Fri, Apr 10, 2026 at 09:30:51PM -0700, Rosen Penev wrote:
+> > > Use a flexible array member to combine allocations and simplify
+> > > slightly.
+> > >
+> > > Add __counted_by for extra runtime analysis.
+> > >
+> > > Needed to move mvebu_pcie struct below others as flexible array members
+> > > require full definitions.
+> > >
+> > > Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> > > ---
+> > >  drivers/pci/controller/pci-mvebu.c | 33 ++++++++++++------------------
+> > >  1 file changed, 13 insertions(+), 20 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> > > index a72aa57591c0..dea50f6e88be 100644
+> > > --- a/drivers/pci/controller/pci-mvebu.c
+> > > +++ b/drivers/pci/controller/pci-mvebu.c
+> > > @@ -78,18 +78,6 @@
+> > >  #define PCIE_DEBUG_CTRL         0x1a60
+> > >  #define  PCIE_DEBUG_SOFT_RESET               BIT(20)
+> > >
+> > > -struct mvebu_pcie_port;
+> > > -
+> > > -/* Structure representing all PCIe interfaces */
+> > > -struct mvebu_pcie {
+> > > -     struct platform_device *pdev;
+> > > -     struct mvebu_pcie_port *ports;
+> > > -     struct resource io;
+> > > -     struct resource realio;
+> > > -     struct resource mem;
+> > > -     int nports;
+> > > -};
+> > > -
+> > >  struct mvebu_pcie_window {
+> > >       phys_addr_t base;
+> > >       phys_addr_t remap;
+> > > @@ -125,6 +113,16 @@ struct mvebu_pcie_port {
+> > >       int intx_irq;
+> > >  };
+> > >
+> > > +/* Structure representing all PCIe interfaces */
+> > > +struct mvebu_pcie {
+> > > +     struct platform_device *pdev;
+> > > +     struct resource io;
+> > > +     struct resource realio;
+> > > +     struct resource mem;
+> > > +     int nports;
+> > > +     struct mvebu_pcie_port ports[] __counted_by(nports);
+> > > +};
+> > > +
+> > >  static inline void mvebu_writel(struct mvebu_pcie_port *port, u32 val, u32 reg)
+> > >  {
+> > >       writel(val, port->base + reg);
+> > > @@ -1455,11 +1453,13 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> > >       struct device_node *child;
+> > >       int num, i, ret;
+> > >
+> > > -     bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct mvebu_pcie));
+> > > +     num = of_get_available_child_count(np);
+> > > +     bridge = devm_pci_alloc_host_bridge(dev, struct_size(pcie, ports, num));
+> > >       if (!bridge)
+> > >               return -ENOMEM;
+> > >
+> > >       pcie = pci_host_bridge_priv(bridge);
+> > > +     pcie->nports = num;
+> > >       pcie->pdev = pdev;
+> > >       platform_set_drvdata(pdev, pcie);
+> > >
+> > > @@ -1467,12 +1467,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> > >       if (ret)
+> > >               return ret;
+> > >
+> > > -     num = of_get_available_child_count(np);
+> > > -
+> > > -     pcie->ports = devm_kcalloc(dev, num, sizeof(*pcie->ports), GFP_KERNEL);
+> > > -     if (!pcie->ports)
+> > > -             return -ENOMEM;
+> > > -
+> > >       i = 0;
+> > >       for_each_available_child_of_node(np, child) {
+> > >               struct mvebu_pcie_port *port = &pcie->ports[i];
+> > > @@ -1488,7 +1482,6 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+> > >               port->dn = child;
+> > >               i++;
+> > >       }
+> > > -     pcie->nports = i;
+> >
+> > So now, nports stays with of_get_available_child_count()?
+> yes.
 
-On 12/05/2026 18:55, Bjorn Helgaas wrote:
-> On Mon, Apr 13, 2026 at 02:03:39PM +0000, Caleb James DeLisle wrote:
->> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
->>
->> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
->> require re-training after startup.
->> +#include <asm-generic/errno-base.h>
-> Looks odd; why is this here?  There are basically no other drivers
-> that do this.
+But do you really want to configure disabled ports as well? I wouldn't want to
+do that.
 
+- Mani
 
-Whoops :facepalm:, must have been coding in my sleep and I wanted ENOENT.
-
-
->
->> @@ -1149,6 +1234,46 @@ static int mtk_pcie_probe(struct platform_device *pdev)
->>   	if (err)
->>   		goto put_resources;
->>   
->> +	/* EN7528 PCIe initially comes up as Gen1 even if Gen2 is supported.
->> +	 * The cannonical way to achieve Gen2 is to re-train the link
->> +	 * immediately after setup. However, to save a lot of duplicated code
->> +	 * we use pcie_retrain_link() which is usable once we have the pci_dev
->> +	 * struct for the bridge, i.e. after pci_host_probe(). */
-> s/cannonical/canonical/
-OK
->
->> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN) {
->> +		int slot = of_get_pci_domain_nr(dev->of_node);
-> I suppose of_get_pci_domain_nr() is sort of an implicit way to
-> identify the Gen2 ports?  Worth at least a comment about this DT
-> connection.  Maybe it could be replaced by using
-> pcie_get_supported_speeds() or similar?
-
-
-The explanation for this is here: 
-https://lore.kernel.org/linux-mips/20260413140339.16238-1-cjd@cjdns.fr/T/#m6d893b861425378c0d094a142e6191d59dcc5192 
-- and please do weigh in if you think I ought to change the logic there.
-
-
-However you raise a good point about re-training Gen1 links, currently 
-we're attempting to re-train everything. All of these hubs self-identify 
-as Gen2 so we can't short-circuit with pcie_get_supported_speeds(). 
-Re-training will remain at Gen1 if either the PHY is a Gen1-only PHY, or 
-if the actual card (e.g. wifi chip) only supports Gen1. My feeling is 
-that matching on the PHY DT node and short-circuiting is not a good 
-idea, but I can improve the comment a bit.
-
-
->
->> +		struct pci_dev *rc = NULL;
-> s/rc/rp/ to avoid confusing "root port" for "return code" or "root
-> complex".
-OK
->
->> +		int ret = -ENOENT;
->> +
->> +		if (slot >= 0)
->> +			rc = pci_get_slot(host->bus, PCI_DEVFN(slot, 0));
-> Instead of fiddling with pci_get_slot(), which adds refcount issues
-> and artificial device/function number dependencies, I think it would
-> be better to iterate over the devices on host->bus, e.g., with
-> "for_each_pci_bridge(dev, host->bus)" as in iproc_pcie_setup().
-Oh great, thank you !
->
->> +		if (rc) {
->> +			ret = -EOPNOTSUPP;
->> +
->> +			/* pcie_retrain_link() is not an exported symbol but
->> +			 * this driver supports being built as a loadable
->> +			 * module. Someone using this on an EN7528 should make
->> +			 * it builtin, or accept Gen1 PCI. */
->> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
->> +			ret = pcie_retrain_link(rc, true);
->> +#endif
-> This looks like a confusing user experience if built as a module, with
-> no hint to the user about why the link is slower than it should be.
-> I guess "failed to retrain" is a bit of a hint, but it's not really a
-> clue about how to fix it.
-My logic was that the person whose going to configure a kernel for one 
-of these things is pretty advanced - probably an OpenWRT developer - so 
-they don't need that much hand-holding. But I guess it doesn't cost that 
-much to add an `if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))` with a warning log.
->
->> +		}
->> +
->> +		if (ret) {
->> +			dev_info(dev, "port%d failed to retrain %pe\n", slot,
->> +				 ERR_PTR(ret));
-> This is basically an error path and there's nothing else to do, so if
-> you return directly here (especially if you factor this to a separate
-> function), the "normal" path below can be unindented.
-Indeed, and if "not a builtin" is handled separately then this is truly 
-an unexpected error so it's quite reasonable to goto put_resources.
->
->> +		} else {
->> +			u16 lnksta;
->> +			u32 speed;
->> +
->> +			pcie_capability_read_word(rc, PCI_EXP_LNKSTA, &lnksta);
->> +			speed = lnksta & PCI_EXP_LNKSTA_CLS;
->> +
->> +			dev_info(dev, "port%d link retrained, speed %s\n", slot,
->> +				 pci_speed_string(pcie_link_speed[speed]));
->> +		}
->> +	}
-> Maybe factor the retrain block into a helper function.
-Makes sense.
-> I'm sort of squinting at this whole link retrain thing to begin with.
-> After the controller is configured correctly, the hardware is supposed
-> to train the link automatically by itself.
->
-> Did something change between mtk_pcie_startup_port_en7528() and now
-> that means the link will train at Gen2?  Whatever that change is,
-> could it be done in mtk_pcie_startup_port_en7528()?
-Per the comment with the misspelled "canonical", the reference code 
-finds and pokes the re-training registers immediately during setup, but 
-doing that manually is a fair bit of code and it's nicer to wait until 
-the registers are mapped and use pcie_retrain_link().
-> What happens when the downstream device is put in D3cold and the link
-> retrains after power is restored?  Does it train at Gen2 then, without
-> assistance like this?
-
-I just tried pulling the driver from the wifi and then unbinding the 
-bridge, then re-scanning. All throughout the process current_link_speed 
-remains at 5.0. You're much more knowledgeable in this than me, but if I 
-had a guess, I'd say this was a hardware bug that was fixed in 
-subsequent versions (MT7621) and the workaround was to do a retrain once 
-immediately after setup. But I don't want to warrant that as true 
-because it's just me guessing...
-
-
-Thanks,
-
-Caleb
-
-
+-- 
+மணிவண்ணன் சதாசிவம்
