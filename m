@@ -1,94 +1,176 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 057A73C3781;
-	Wed, 13 May 2026 21:43:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3142C3C9885;
+	Wed, 13 May 2026 21:55:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778708613; cv=none; b=E2D2Y0Wea9UnRTzlI6z9qEUNT0baczm1QoyUusdy8gY9TWjdGuMp4/56gNlM8MRIjRzUHnhs+yQ05ubJ7GnwsY/YaY/CZAEkq8drjfUiXI1R7DeSBXJJ4hf5bDTm0bV+anhvptunGaOzUi71teOoUcFDH+5iKJkw5DYjf1+yBUg=
+	t=1778709315; cv=none; b=e1yduajV+iJcN8VhMGl0bYAZfoL/zsDCZNNiA+nQztYJDEvjqp7ty5JIbkuVw60xySEp9+WcRGZyq0XsiundMvN+ZBYBf13Dhdw3gA28XkzBH9oZfVWhEymsYWmkYmZbCKCwCSla4pBopwUn5wxIF9Srk/XP/N09W9nJGJAVtQw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778708613; c=relaxed/simple;
-	bh=LT8Be7Q4Bi/XtelKyT3U23dHJqp7FkMFF//vn8LYL9s=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=qSeqNnf8Qn+0CqYyelbPbTdlNy4NyKFSvIb8M7cEqk0jcy0A6B2haFXjwMayJeVlIJowjIUOHW5eP5HllMyBOdbKB3fQHfWHKwuN+huL0mCe73svaFbAN+RMCL9aUK/fC7azbZXkAKMiRWtqBSnLStBgpHkg6zl2zJ9sM4aadgE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nm6Mo8xQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778709315; c=relaxed/simple;
+	bh=rClCLv508MgKfMk65rpVSbbndmrOOFfdMf+W8DfDhlA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Fl4jjTaQQ1qufrg39f0yLZaJzGOCplQwltdGiN1GJOwpZHxe5RqI/ey1cCKGX7WzncUn5PI7VaxoQXakFL1ofNIs5wHGa7anoeIpSOq/xukgdlP/8bIpygxZo2sX887ya4JzgplNQP/nv5rPZFgU+2DScJKHSYlDJfpbFNtQ1ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WSUNMpLw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nm6Mo8xQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67B7AC19425;
-	Wed, 13 May 2026 21:43:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WSUNMpLw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD78DC19425;
+	Wed, 13 May 2026 21:55:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778708612;
-	bh=LT8Be7Q4Bi/XtelKyT3U23dHJqp7FkMFF//vn8LYL9s=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=Nm6Mo8xQ2zXpJKHexPXmHPRrkolH9pKoUK5XOkv5YzPpitvR2GTk+n5nBZtShkFur
-	 ra4J0fo5F0oE3oFsGLlDSu2c5Z4XlcRJxYHrbu4BGG2DWU1JIN9h6leuBa2zFKUrx2
-	 IMec4JSSZ9BI5qI4989bBCiEQH+B9h55ARDzu3Fmc+RwpFyCbdHwVQ6RCXqQOULqMp
-	 Oe4WJ+X8uMa+nYDYtqAFxUT4XIJaY52sYimFQ1f5hzUNLW4HQcIMhzew4EQDeW92Jx
-	 5Y+lIPP2/QrsVRGOPEj1NW+ibNDfV0SDDE48PpkeD4JfOcn2/bbOK43PgIZ3VEG6ii
-	 WZ6BlHeojGTWw==
-Date: Wed, 13 May 2026 16:43:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sai Krishna Musham <sai.krishna.musham@amd.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
-	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, cassel@kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	michal.simek@amd.com, bharat.kumar.gogada@amd.com,
-	thippeswamy.havalige@amd.com
-Subject: Re: [PATCH RESEND] PCI: amd-mdb: Assert PERST# on shutdown
-Message-ID: <20260513214331.GA339797@bhelgaas>
+	s=k20201202; t=1778709314;
+	bh=rClCLv508MgKfMk65rpVSbbndmrOOFfdMf+W8DfDhlA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=WSUNMpLw3+lNg2crcjQLDqtZO+qoEYIhOQOP58HAXlprmYemZpWCQD4skpr7uUPiQ
+	 AdtJQ2cNNawYqKgGd2Bo2JRpzkCwe+qp93ua79eNYiTxeC9/oMSkGfhdS4aMExrhmE
+	 NuOagihDMlLNED7/cT+1jnPa0aZf0JxNn9BhGQIZOnH9oHgPDgPAHoJxqVKtLQetkN
+	 l+Mo/fqzUdOuJUU6m2KtvFOPIu9h3+dwMkr+PAZoi4U+BlMbNIiF5YY9W3W9+oC979
+	 IGIWW1LlxhzLK5tZLJhqrHhvRGkEh2j9RcyO3jY/vpBmfW2v28IjGm8rM/XCuLKrOz
+	 QIWMtgLDlS3NA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 21/23] dmaengine: sdxi: Add unit tests for descriptor
+ encoding
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-21-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-21-889cfed17e3f@amd.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 13 May 2026 21:55:14 +0000
+Message-Id: <20260513215514.AD78DC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260427121227.290604-1-sai.krishna.musham@amd.com>
 
-On Mon, Apr 27, 2026 at 05:42:27PM +0530, Sai Krishna Musham wrote:
-> Add a shutdown handler for the AMD MDB PCIe host controller that
-> asserts the PERST# signal via GPIO before the system powers off or
-> reboots. This ensures the connected PCIe endpoint is held in reset
-> during shutdown.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [Medium] Tests for `copy`, `cxt_start`, and `cxt_stop` bypass the `packin=
+g` API verification by directly checking encoded descriptor fields.
+- [Low] The `cxt_stop` test incorrectly references the `cxt_start` union me=
+mber when verifying fields.
+- [Low] The `sdxi_serialize_nop` encoder is entirely omitted from the test =
+suite.
+- [Low] The test suite setup function (`generic_desc_setup_device`) registe=
+rs an unused mock device.
+--
 
-I see a few other drivers (dwc/pci-imx6.c, dwc/pcie-fu740.c,
-pcie-iproc-platform.c) that do something similar, but it doesn't look
-consistent.  *Should* this be consistent across all drivers?
+commit aa4cdaba4b4a985bdcf2f80d3a44e02557352cc5
+Author: Nathan Lynch <nathan.lynch@amd.com>
+Subject: dmaengine: sdxi: Add unit tests for descriptor encoding
 
-> Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
-> ---
->  drivers/pci/controller/dwc/pcie-amd-mdb.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-amd-mdb.c b/drivers/pci/controller/dwc/pcie-amd-mdb.c
-> index 7e50e11fbffd..69d21b4727e4 100644
-> --- a/drivers/pci/controller/dwc/pcie-amd-mdb.c
-> +++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
-> @@ -507,6 +507,14 @@ static int amd_mdb_pcie_probe(struct platform_device *pdev)
->  	return amd_mdb_add_pcie_port(pcie, pdev);
->  }
->  
-> +static void amd_mdb_pcie_shutdown(struct platform_device *pdev)
+This commit adds KUnit tests for encoding descriptors in the SDXI driver.
+The tests use the packing API to decode descriptors produced by the driver
+to verify the correct bit offsets without relying on bitmask macros.
+
+> Test the encoder function for each descriptor type currently used by
+> the driver.
+
+Does this statement overlook the sdxi_serialize_nop encoder? It appears the
+test suite entirely omits tests for sdxi_serialize_nop, leaving this API
+untested.
+
+> diff --git a/drivers/dma/sdxi/descriptor_kunit.c b/drivers/dma/sdxi/descr=
+iptor_kunit.c
+> new file mode 100644
+> index 0000000000000..1f3c2e7ab2ddf
+> --- /dev/null
+> +++ b/drivers/dma/sdxi/descriptor_kunit.c
+
+[ ... ]
+
+> +static void copy(struct kunit *t)
 > +{
-> +	struct amd_mdb_pcie *pcie = platform_get_drvdata(pdev);
+
+[ ... ]
+
+> +	KUNIT_EXPECT_EQ(t, 0,
+> +			sdxi_encode_copy(&desc,
+> +					 &(struct sdxi_copy) {
+> +						 .src =3D 0x1000,
+> +						 .dst =3D 0x2000,
+> +						 .len =3D 0x100,
+> +						 .src_akey =3D 1,
+> +						 .dst_akey =3D 2,
+> +					 }));
+> +	KUNIT_EXPECT_EQ(t, 0x1000, le64_to_cpu(desc.copy.addr0));
+> +	KUNIT_EXPECT_EQ(t, 0x2000, le64_to_cpu(desc.copy.addr1));
+> +	KUNIT_EXPECT_EQ(t, 0x100, 1 + le32_to_cpu(desc.copy.size));
+> +	KUNIT_EXPECT_EQ(t, 1, le16_to_cpu(desc.copy.akey0));
+> +	KUNIT_EXPECT_EQ(t, 2, le16_to_cpu(desc.copy.akey1));
+
+The commit message states the tests use the packing API to decode descripto=
+rs
+without relying on bitmask definitions. Do these assertions bypass the pack=
+ing
+API verification by directly reading the encoded descriptor fields from the
+struct?
+
+If the struct layout in the header file is incorrect, could this allow both=
+ the
+driver and test code to share the same bug undetected?
+
+[ ... ]
+
+> +static void cxt_start(struct kunit *t)
+> +{
+> +	struct unpacked_desc unpacked;
+> +	struct sdxi_cxt_start start =3D {
+> +		.range =3D sdxi_cxt_range_single(2),
+> +	};
+> +	struct sdxi_desc desc;
 > +
-> +	if (pcie->perst_gpio)
-> +		gpiod_set_value_cansleep(pcie->perst_gpio, 1);
+> +	desc_poison(&desc);
+> +	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_cxt_start(&desc, &start));
+> +
+> +	unpack_cxt_start(&unpacked, &desc);
+> +
+> +	/* Check op-specific fields. */
+> +	KUNIT_EXPECT_EQ(t, 0, desc.cxt_start.vflags);
+
+Does this also bypass the packing API by directly reading the encoded descr=
+iptor
+field instead of verifying via the unpacked struct?
+
+[ ... ]
+
+> +static void cxt_stop(struct kunit *t)
+> +{
+> +	struct unpacked_desc unpacked;
+> +	struct sdxi_cxt_stop stop =3D {
+> +		.range =3D sdxi_cxt_range_single(2),
+> +	};
+> +	struct sdxi_desc desc;
+> +
+> +	desc_poison(&desc);
+> +	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_cxt_stop(&desc, &stop));
+> +
+> +	unpack_cxt_stop(&unpacked, &desc);
+> +
+> +	/* Check op-specific fields. */
+> +	KUNIT_EXPECT_EQ(t, 0, desc.cxt_start.vflags);
+
+In addition to bypassing the packing API, does this incorrectly reference t=
+he
+cxt_start union member instead of cxt_stop when verifying fields?
+
+[ ... ]
+
+> +static int generic_desc_setup_device(struct kunit *t)
+> +{
+> +	struct device *dev =3D kunit_device_register(t, "sdxi-mock-device");
+> +
+> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(t, dev);
+> +	t->priv =3D dev;
+> +	return 0;
 > +}
-> +
->  static const struct of_device_id amd_mdb_pcie_of_match[] = {
->  	{
->  		.compatible = "amd,versal2-mdb-host",
-> @@ -521,6 +529,7 @@ static struct platform_driver amd_mdb_pcie_driver = {
->  		.suppress_bind_attrs = true,
->  	},
->  	.probe = amd_mdb_pcie_probe,
-> +	.shutdown = amd_mdb_pcie_shutdown,
->  };
->  
->  builtin_platform_driver(amd_mdb_pcie_driver);
-> -- 
-> 2.43.0
-> 
+
+Is this mock device actually used by any of the tests in this suite? Lookin=
+g at
+the test cases, they appear to operate exclusively on memory buffers without
+requiring a device.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D21
