@@ -1,220 +1,295 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06AB328136F;
-	Wed, 13 May 2026 13:31:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B14341065;
+	Wed, 13 May 2026 14:31:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778679093; cv=none; b=k9Q+HGIb+8LQDl8xRWTR6bHum1WfdvPK4MwRJ+Bv7Z/R88htqHfXhSb4YvE3AUf0NaB+1cN8lHy0KyA00LlUEWHXIkoRzy8cWQBY4O4L9LswY7pLM/xO3eDyBmEPQk9Mk4FThg5sLqsZJWAwzOrUocRSquByuy1+4x1CaDXpypM=
+	t=1778682718; cv=none; b=DDclK1O0gwS4XmcHRVJSaUAOFmKM6BaV7fVwx0qT3ZZfJwuYfnsUbtkoZnLXUxDORvXdhn8FSvl1MXVwdV3VEKZDVcU5CVK8AzLekUgvGcGtWbBUxBB7NLnQjbR0yZZrgU9KSKFK2DAzplVqqkrY9BiTEvZKvn65p2fbXuZVq9Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778679093; c=relaxed/simple;
-	bh=6mAKEgLgpZ+5k4w4TKPXW22pRH1yfidthSFNEbQzbb8=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=IcbskN24I1LPLCeyo5HjHAeaGTV8hWKqqzjDlNi03w5rI6o/fNfssJDtkOjhnHh9WSGyzoBsd5r82vlSQLlFLHz9HG8DmrhvQlQqSj53lvqdqBSp6HA1JUT0n9Jt5+LdPPH78GNA9Ev17fs4Q1F6y54cziVb2kQ3GtCjL3Ed0No=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=T+fLBrSM; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=tI3VY/Ws; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1778682718; c=relaxed/simple;
+	bh=q5+gkIQ8WoDNLECCchYc8sA8GMbZ8W7SV0eUdH+eKkc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DlHrpdmQUaaYwhvWdmuZmfVbKxr1/gE8sobgQWbRqHI/AqpM7+iIbbb99LMGQDuXsfwDCq/eWvTLSsrQ9rgDJAee+bNCoQE+hZ2W6xGDy7tN5lXDGNolq/QvayF35tMPUiK9x3md/CMMwtA6OTdV+BDucr33Du6cmmItwl2cGr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=B/XCR+Dp; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="T+fLBrSM";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="tI3VY/Ws"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.phl.internal (Postfix) with ESMTP id 21B2CEC01F3;
-	Wed, 13 May 2026 09:31:29 -0400 (EDT)
-Received: from phl-imap-18 ([10.202.2.89])
-  by phl-compute-02.internal (MEProxy); Wed, 13 May 2026 09:31:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1778679089;
-	 x=1778765489; bh=xb+VuXdX+Y9hjQ+T925tr2yq3MyNGh4USiEHA2WGkvQ=; b=
-	T+fLBrSM8htrRXAXKiTF3dZtDXybwuX6jQ+hQ+AWM/HQM0bMy60ijCISQgNAYXH7
-	Kpa/jPMB/MF0j9OrJ9rfljQL1PKUBhst4tlFam/B/xziPEZB4Nn4Nj7SukvVNuey
-	hPNVLJnMawcIg81ggFAH1OuyT9Z+0mMWQT4fQgONeH2VVm5dgIs0dxqOZlARLR5Y
-	fywx+d5i2pje3hI/yDLJQ3zEQJT5ZlTv4EGin6+Vz1s/iBjBpBws5net+PVwJsoG
-	9oFaSD4Q8wB5KXE1/7kDqxLZhRX3t9R2/q+NCbh+p9SR0ERY6dh+zLC67kZjfoV+
-	QKj7vCEXyeqyq/wL1aNRVw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778679089; x=
-	1778765489; bh=xb+VuXdX+Y9hjQ+T925tr2yq3MyNGh4USiEHA2WGkvQ=; b=t
-	I3VY/WsQDnsmVikIgjxPRMPvvpTVWVTP+I1uStaPQ/VP9w+bDAKsgTiGUsZPu/jv
-	2e0LCCC+OMV+u/yCjGVhmV00dH+zTlfvDysQKCFDJSbAWFs3j00HFwNrl0aq45f8
-	33Or8qciwPk3xfn+HEWuU/AW7lNg9ZpHR3Q38Bg2VWNjt4wK2qbTJqzNMlerZgx/
-	lM3dts3UnWlK4BUNqLt5OYkenhOSVZ/CPOko4QF47hT6gfF50lj/F4zlC2rggZfO
-	QrBWQ3Z0xfNMcsQCcRpbxfg8fbzm1BEczfDIYjgbCMq2fpx+EhGKNqrPThXBiFwM
-	0JQAPErwdEeeYqPqfgRVw==
-X-ME-Sender: <xms:MH0Eau6CI0MbAoIxeA6keTyUrF7WsRH_onf5HGh7m7VFgb6MsC-wrw>
-    <xme:MH0Eaitnt3DjVSRZxMPrtwPKHOhRi9BbmVq2MRrnCDkbKYtddW1Un7_EBvbJwwTEX
-    4F8t_M3TOEw-LhFyoJN10rjvIlzEHKzdtym5UZYlL2X8n-iZNKgyg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduvdegjeekucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehlvgig
-    ucghihhllhhirghmshhonhdfuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtf
-    frrghtthgvrhhnpefftdeggfeiveejteehhfeuffeggeeiuedvuefgieehjeegheeugedv
-    heeltdelvdenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuih
-    iivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdho
-    rhhgpdhnsggprhgtphhtthhopeegpdhmohguvgepshhmthhpohhuthdprhgtphhtthhope
-    gshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtohepjhhtohhrnhhoshhm
-    sehrvgguhhgrthdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvg
-    hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdr
-    khgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:MH0EalgL22CWsenOqM8z5r4TGzXZHpZ_opsFIUQjC3GkUau-mjUFLA>
-    <xmx:MX0EalcyKx3OlflRFDxgYOeqg4nAvBLMGvUdPaPotH_FKVawzirQ_A>
-    <xmx:MX0EaomsvZxqnCcyuKBz1YcQAJ1bKcglaaJtzyaamqel8FX50R1MGA>
-    <xmx:MX0EautyPh2YcTbADs50I0RzZw_koGRjx7fGOhyxKtzOB3nLuYgx9w>
-    <xmx:MX0EagdCMj6QaWOTL0mUHjebXZLVQXXavGAS11EA0cTZDIOy6iofr8PL>
-Feedback-ID: i03f14258:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id E240215C008E; Wed, 13 May 2026 09:31:28 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="B/XCR+Dp"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 718B23BAFBE;
+	Wed, 13 May 2026 16:31:36 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1778682702; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:content-language:in-reply-to:references;
+	bh=wGwrTVlpyBxr5qWW8aL6TnSMvsiSJT067Q2+nosA5bY=;
+	b=B/XCR+DppU55EwSeXtuREkvRdYJcODV2tA4Bs+pSGoSOsZcxKQlZn49Y9eVK1VjaQBuULO
+	AAC/1kQThRW+65OdfiVAVA8bHancXLltsLEA7UxbqVilt8Y7kxTzFCQ89L+K9kyRD5mhCF
+	OpwGEShdNuRwHXCBnn/9Yo33iDHQvDMnypXTRAtsdLBDRad+aRdbX9/0bRkZgOAv+t3xQW
+	5bGyg5CdU3KYaDUvWkSekOwAwDHzM/CXVIDGSMsEX+9mFEEokHNR9RdZ2eqjKzDnx3vn5u
+	VDPHUsA4wc2z3DIZZBVH85Zkz2jmoMsaLywFmhdOex+0J2g2ThWLzyFBdm/NCA==
+Message-ID: <a4f84ba5-fe28-4674-b91b-33438f5478fb@cjdns.fr>
+Date: Wed, 13 May 2026 16:31:32 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AAQk2_-bpYfJ
-Date: Wed, 13 May 2026 07:31:08 -0600
-From: "Alex Williamson" <alex@shazbot.org>
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>,
- "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <2c4dbba3-f9ed-48d9-a0c4-d590904f3fdf@app.fastmail.com>
-In-Reply-To: <20260513122349.268753-1-jtornosm@redhat.com>
-References: <20260513122349.268753-1-jtornosm@redhat.com>
-Subject: Re: [PATCH v3 1/2] PCI: Add D3cold as general reset method
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH v5 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
+ naseefkm@gmail.com, ryder.lee@mediatek.com, helgaas@kernel.org,
+ lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
+ linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260413140339.16238-1-cjd@cjdns.fr>
+ <20260413140339.16238-3-cjd@cjdns.fr>
+ <duchbakmiuf4ffmhgkoioq3qpxaybcevtcdduwiv2gf56j5ncr@kszd5v54ph3q>
+Content-Language: en-US
+From: Caleb James DeLisle <cjd@cjdns.fr>
+In-Reply-To: <duchbakmiuf4ffmhgkoioq3qpxaybcevtcdduwiv2gf56j5ncr@kszd5v54ph3q>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Wed, May 13, 2026, at 6:23 AM, Jose Ignacio Tornos Martinez wrote:
-> Add D3cold power cycle as a general PCI reset method, available for
-> single-function devices. This provides a more robust reset mechanism
-> than D3hot for devices where a full power cycle is beneficial.
->
-> The implementation uses pci_set_power_state(dev, PCI_D3cold), which
-> automatically handles platform differences:
-> - Platforms WITH _PR3 ACPI power resources: true D3cold (power cycle)
-> - Platforms WITHOUT _PR3: automatic fallback to D3hot transition
->
-> D3cold reset is placed at the end of the reset hierarchy as a last
-> resort before giving up, since it provides a strong reset when other
-> methods are unavailable or broken.
->
-> Reset hierarchy with this change:
-> 1. device_specific
-> 2. acpi
-> 3. flr
-> 4. af_flr
-> 5. pm (D3hot via config space)
-> 6. bus (SBR)
-> 7. cxl_bus
-> 8. d3cold (NEW - power cycle with D3hot fallback)
->
-> This benefits devices that:
-> - Have broken or missing FLR
-> - Advertise NoSoftRst+ incorrectly (blocking D3hot PM reset)
-> - Have broken bus reset implementations
-> - Need power cycle for reliable reset
-> - Are used in VFIO passthrough scenarios
->
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-> ---
-> v3: Implement d3cold as a general PCI core reset method instead of
->   device-specific quirk approach from v2 (Alex Williamson suggestion)
-> v2: https://lore.kernel.org/all/20260508145153.717641-2-jtornosm@redhat.com/
->
->  drivers/pci/pci.c   | 41 +++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  2 +-
->  2 files changed, 42 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f7cfcc00090..6da8feff7ccc 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4491,6 +4491,46 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
->  	return ret;
->  }
-> 
-> +/**
-> + * pci_d3cold_reset - Put device into D3cold (or D3hot) and back to D0 
-> for reset
-> + * @dev: PCI device to reset
-> + * @probe: if true, check if D3cold reset is supported; if false, 
-> perform reset
-> + *
-> + * Attempt to reset the device by transitioning through D3cold and 
-> back to D0.
-> + * On platforms with ACPI _PR3 power resources, this performs a true 
-> D3cold
-> + * power cycle (actual power removal). On platforms without _PR3 
-> support,
-> + * pci_set_power_state() automatically falls back to D3hot, providing a
-> + * D3hot->D0 reset transition.
-> + *
-> + * Only available for single-function devices to avoid affecting other
-> + * functions in multi-function devices.
-> + *
-> + * Returns 0 if device can be/was reset this way, -ENOTTY if not 
-> supported,
-> + * or other negative error code on failure.
-> + */
-> +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
-> +{
-> +	int ret;
-> +
-> +	if (dev->multifunction)
-> +		return -ENOTTY;
-> +
-> +	if (probe) {
-> +		if (!pci_pr3_present(dev))
-> +			pci_dbg(dev, "d3cold reset: no _PR3 support, will use D3hot 
-> fallback\n");
 
-This fall through is invalid, if D3cold can't be reached the reset should be handled by pci_pm_reset() where NoSoftRst is honored.  pci_pr3_preset() should be tested in all cases, not just probe.  I think we also need to test device flags that would prevent a D3cold transition, like pci_pm_reset().  Thanks,
+On 12/05/2026 13:55, Manivannan Sadhasivam wrote:
+> On Mon, Apr 13, 2026 at 02:03:39PM +0000, Caleb James DeLisle wrote:
+>> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
+>>
+>> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
+>> require re-training after startup.
+>>
+>> Co-developed-by: Ahmed Naseef <naseefkm@gmail.com>
+>> Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
+>> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+>> ---
+>>   drivers/pci/controller/Kconfig         |   2 +-
+>>   drivers/pci/controller/pcie-mediatek.c | 133 +++++++++++++++++++++++++
+>>   2 files changed, 134 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+>> index 686349e09cd3..5808d5e407fd 100644
+>> --- a/drivers/pci/controller/Kconfig
+>> +++ b/drivers/pci/controller/Kconfig
+>> @@ -209,7 +209,7 @@ config PCI_MVEBU
+>>   
+>>   config PCIE_MEDIATEK
+>>   	tristate "MediaTek PCIe controller"
+>> -	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
+>> +	depends on ARCH_AIROHA || ARCH_MEDIATEK || ECONET || COMPILE_TEST
+>>   	depends on OF
+>>   	depends on PCI_MSI
+>>   	select IRQ_MSI_LIB
+>> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+>> index 75722524fe74..915a35825ce1 100644
+>> --- a/drivers/pci/controller/pcie-mediatek.c
+>> +++ b/drivers/pci/controller/pcie-mediatek.c
+>> @@ -7,6 +7,7 @@
+>>    *	   Honghui Zhang <honghui.zhang@mediatek.com>
+>>    */
+>>   
+>> +#include <asm-generic/errno-base.h>
+>>   #include <linux/clk.h>
+>>   #include <linux/delay.h>
+>>   #include <linux/iopoll.h>
+>> @@ -14,6 +15,7 @@
+>>   #include <linux/irqchip/chained_irq.h>
+>>   #include <linux/irqchip/irq-msi-lib.h>
+>>   #include <linux/irqdomain.h>
+>> +#include <linux/kconfig.h>
+>>   #include <linux/kernel.h>
+>>   #include <linux/mfd/syscon.h>
+>>   #include <linux/msi.h>
+>> @@ -77,6 +79,7 @@
+>>   
+>>   #define PCIE_CONF_VEND_ID	0x100
+>>   #define PCIE_CONF_DEVICE_ID	0x102
+>> +#define PCIE_CONF_REV_CLASS	0x104
+>>   #define PCIE_CONF_CLASS_ID	0x106
+>>   
+>>   #define PCIE_INT_MASK		0x420
+>> @@ -89,6 +92,11 @@
+>>   #define MSI_MASK		BIT(23)
+>>   #define MTK_MSI_IRQS_NUM	32
+>>   
+>> +#define EN7528_HOST_MODE	0x00804201
+>> +#define EN7528_LINKUP_REG	0x50
+>> +#define EN7528_RC0_LINKUP	BIT(1)
+>> +#define EN7528_RC1_LINKUP	BIT(2)
+>> +
+>>   #define PCIE_AHB_TRANS_BASE0_L	0x438
+>>   #define PCIE_AHB_TRANS_BASE0_H	0x43c
+>>   #define AHB2PCIE_SIZE(x)	((x) & GENMASK(4, 0))
+>> @@ -148,12 +156,15 @@ struct mtk_pcie_port;
+>>    * @MTK_PCIE_FIX_DEVICE_ID: host's device ID needed to be fixed
+>>    * @MTK_PCIE_NO_MSI: Bridge has no MSI support, and relies on an external block
+>>    * @MTK_PCIE_SKIP_RSTB: Skip calling RSTB bits on PCIe probe
+>> + * @MTK_PCIE_RETRAIN: Re-train link to bridge after startup because some
+>> + *                    Gen2-capable devices start as Gen1.
+>>    */
+>>   enum mtk_pcie_quirks {
+>>   	MTK_PCIE_FIX_CLASS_ID = BIT(0),
+>>   	MTK_PCIE_FIX_DEVICE_ID = BIT(1),
+>>   	MTK_PCIE_NO_MSI = BIT(2),
+>>   	MTK_PCIE_SKIP_RSTB = BIT(3),
+>> +	MTK_PCIE_RETRAIN = BIT(4),
+>>   };
+>>   
+>>   /**
+>> @@ -753,6 +764,80 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+>>   	return 0;
+>>   }
+>>   
+>> +static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
+>> +{
+>> +	struct mtk_pcie *pcie = port->pcie;
+>> +	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+>> +	struct resource *mem = NULL;
+>> +	struct resource_entry *entry;
+>> +	u32 val, link_mask;
+>> +	int err;
+>> +
+>> +	entry = resource_list_first_type(&host->windows, IORESOURCE_MEM);
+>> +	if (entry)
+>> +		mem = entry->res;
+>> +	if (!mem)
+>> +		return -EINVAL;
+>> +
+>> +	if (!pcie->cfg) {
+>> +		dev_err(pcie->dev, "EN7528: pciecfg syscon not available\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	/* Assert all reset signals */
+>> +	writel(0, port->base + PCIE_RST_CTRL);
+>> +
+>> +	/*
+>> +	 * Enable PCIe link down reset, if link status changed from link up to
+>> +	 * link down, this will reset MAC control registers and configuration
+>> +	 * space.
+>> +	 */
+>> +	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
+>> +
+>> +	msleep(PCIE_T_PVPERL_MS);
+>> +
+>> +	/* De-assert PHY, PE, PIPE, MAC and configuration reset */
+>> +	val = readl(port->base + PCIE_RST_CTRL);
+>> +	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
+>> +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
+>> +	writel(val, port->base + PCIE_RST_CTRL);
+>> +
+>> +	writel(PCIE_CLASS_CODE | PCIE_REVISION_ID,
+>> +	       port->base + PCIE_CONF_REV_CLASS);
+>> +	writel(EN7528_HOST_MODE, port->base);
+>> +
+>> +	link_mask = (port->slot == 0) ? EN7528_RC0_LINKUP : EN7528_RC1_LINKUP;
+>> +
+>> +	/* 100ms timeout value should be enough for Gen1/2 training */
+>> +	err = regmap_read_poll_timeout(pcie->cfg, EN7528_LINKUP_REG, val,
+>> +				       !!(val & link_mask), 20,
+>> +				       PCI_PM_D3COLD_WAIT * USEC_PER_MSEC);
+>> +	if (err) {
+>> +		dev_err(pcie->dev, "EN7528: port%d link timeout\n", port->slot);
+>> +		return -ETIMEDOUT;
+>> +	}
+>> +
+>> +	/* Activate INTx interrupts */
+>> +	val = readl(port->base + PCIE_INT_MASK);
+>> +	val &= ~INTX_MASK;
+>> +	writel(val, port->base + PCIE_INT_MASK);
+>> +
+>> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+>> +		mtk_pcie_enable_msi(port);
+>> +
+>> +	/* Set AHB to PCIe translation windows */
+>> +	val = lower_32_bits(mem->start) |
+>> +	      AHB2PCIE_SIZE(fls(resource_size(mem)));
+>> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+>> +
+>> +	val = upper_32_bits(mem->start);
+>> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
+>> +
+>> +	writel(WIN_ENABLE, port->base + PCIE_AXI_WINDOW0);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>   static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
+>>   				      unsigned int devfn, int where)
+>>   {
+>> @@ -1149,6 +1234,46 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+>>   	if (err)
+>>   		goto put_resources;
+>>   
+>> +	/* EN7528 PCIe initially comes up as Gen1 even if Gen2 is supported.
+>> +	 * The cannonical way to achieve Gen2 is to re-train the link
+>> +	 * immediately after setup. However, to save a lot of duplicated code
+>> +	 * we use pcie_retrain_link() which is usable once we have the pci_dev
+>> +	 * struct for the bridge, i.e. after pci_host_probe(). */
+> Use below style:
+>
+> 	/*
+> 	 * ...
+> 	 */
 
-Alex
 
-> +		return 0;
-> +	}
-> +
-> +	if (dev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	ret = pci_set_power_state(dev, PCI_D3cold);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return pci_set_power_state(dev, PCI_D0);
-> +}
-> +
->  /**
->   * pcie_wait_for_link_status - Wait for link status change
->   * @pdev: Device whose link to wait for.
-> @@ -5065,6 +5105,7 @@ const struct pci_reset_fn_method 
-> pci_reset_fn_methods[] = {
->  	{ pci_pm_reset, .name = "pm" },
->  	{ pci_reset_bus_function, .name = "bus" },
->  	{ cxl_reset_bus_function, .name = "cxl_bus" },
-> +	{ pci_d3cold_reset, .name = "d3cold" },
->  };
-> 
->  /**
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2c4454583c11..1ca7b880ead7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -51,7 +51,7 @@
->  			       PCI_STATUS_PARITY)
-> 
->  /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
-> -#define PCI_NUM_RESET_METHODS 8
-> +#define PCI_NUM_RESET_METHODS 9
-> 
->  #define PCI_RESET_PROBE		true
->  #define PCI_RESET_DO_RESET	false
-> -- 
-> 2.53.0
+Right, sorry, thanks.
+
+
+>> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN) {
+>> +		int slot = of_get_pci_domain_nr(dev->of_node);
+> The returned value is not the slot number, but domain number. Both are different
+> numbering schemes.
+>
+>> +		struct pci_dev *rc = NULL;
+>> +		int ret = -ENOENT;
+>> +
+>> +		if (slot >= 0)
+>> +			rc = pci_get_slot(host->bus, PCI_DEVFN(slot, 0));
+> This looks wrong. If your intention is to find the Root Port of the hierarchy,
+> then you should do:
+>
+> 		pci_get_slot(host->bus, PCI_DEVFN(0, 0));
+
+
+Thank you for your review. What's happening here is the hardware exposes 
+two sets of registers for the two devices, but it expects that they 
+might all be controlled by one driver instance - so they hard-wired the 
+second root hub to slot 1. The Mediatek driver here wants to be 
+instantiated twice, so we end up with something like this:
+
+
+0000:00:00.0 PCI bridge: MEDIATEK Corp. Device 0810 (rev 03)
+0000:01:00.0 Network controller: MEDIATEK Corp. MT7662E 802.11ac PCI 
+Express Wireless Network Adapter
+0001:00:01.0 PCI bridge: MEDIATEK Corp. Device 0811 (rev 02)
+0001:01:00.0 Network controller: MEDIATEK Corp. MT7603E 802.11bgn PCI 
+Express Wireless Network Adapter
+
+So when it's domain 1, it's also slot 1 (unless the DT is written 
+backwards).
+
+
+The original code from Ahmed Naseef used a loop with pci_get_class() to 
+get all of the bridges that were on the right bus, but it was pointed 
+out in an earlier review that this would also re-train any hypothetical 
+bridge downstream of the root. So the current code specifically 
+re-trains the right bridge.
+
+I can re-send with this explanation wrapped up in the comment, or I 
+guess I could write a loop that tries slot 0 and 1 to find the bridge, 
+but I feel like the loop is a bit hair-splitting so I think my 
+preference would be to just explain it better.
+
+WDYT?
+
+Caleb
+
+
+>
+> - Mani
+>
