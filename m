@@ -1,43 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF73641C30A;
-	Wed, 13 May 2026 12:52:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD9D3822A2;
+	Wed, 13 May 2026 12:54:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778676760; cv=none; b=Z+gFlerOl8T4c7IxnK6d+h6A9M4e0GFlfECD+S3W7tSZmog/GWIF3Mu5em5BW6ep1l4SBg7VSlj73yEIEo3mCg6jHKJiGJhcd3SBV0uldr/+lbrK7p+keTnoRoc5LQUiHDikz+mgrcr3QD0XEbDJn+EMtF8S7tj/jcQaQ0fzP+0=
+	t=1778676859; cv=none; b=AwMxg/I84PUB1UTw9GQVwnsY5Omkg47C7AXXhb2VaM6EV5ruvq8yggecyAj7bMUDHL7ttgvBeIjgblejyljuzccv9a0ZcaBwgYbONoOzx1JLkLuaCgr9RhtVpJ3ysYnKa47cKVyQopRhVslPXRlfiyMIx5/yjWLs4Hw6djoP7lk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778676760; c=relaxed/simple;
-	bh=kLTK/bjgxEcA7FIN/QpTOpfPGhPJk2zZod3r8xLxVps=;
+	s=arc-20240116; t=1778676859; c=relaxed/simple;
+	bh=OJsyPInWocERSlgb3lGrySA04TNXJ5H6Jbb87o9N/Cc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LD08vFRHSO51hpYB2OjiyZHI8RhuNSzKnfoM6X8s2DqUaFNhbmj8NiFhYxvG4Bib4UZkWDzF3YLsWd5PjKY+Y7X5WaOxWmRMZ9eymjhl/7dxDShqy+/zrhSAsu2Mfh7pSGnIPFHlFyul8jKac2n/TEugl2peqNk9Gp/8aan4Vc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cg5GAfJh; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=GNe6RmhoYFiDISr+yXKHvwXQKFbdPoD7/kYD/6g1ddDOqiUdoPakOovMV1xR+WTbIGjeEu1rPBN9c0Vy6lJhikKHFNd50HdpZkdZhtzMQCt9q5KKo77qrhPhD8faCU/x73bySicqjHfJaowqTVcICjQk6GNNBI+LJl2/c0RhtUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uJ5I5+Yk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cg5GAfJh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96C1BC2BCB7;
-	Wed, 13 May 2026 12:52:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uJ5I5+Yk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29595C2BCB7;
+	Wed, 13 May 2026 12:54:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778676759;
-	bh=kLTK/bjgxEcA7FIN/QpTOpfPGhPJk2zZod3r8xLxVps=;
+	s=k20201202; t=1778676859;
+	bh=OJsyPInWocERSlgb3lGrySA04TNXJ5H6Jbb87o9N/Cc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cg5GAfJh490o7/brWMxykaQ4QK8UP3NqybpVGK2l/AF1VRKYcSqjZW6RsBkqRK9mo
-	 0sBcUrEiijyM/vKj7Aer/iPy6TbYBXzufkE41xqLlxXFGNJQEHV6vuSPSuxhA4FOpt
-	 TuR38Kn2rmvG2HiL/w+yzEy654DFxyP73xba2m+syBvjiwUAqFxhtBDdvDrRHj6Kkx
-	 wMXh4UXTqrZGoUcZCga91hueS2QXKq0QQEgkOgITsN2B9WguufzBBxtFccl2OAy5FS
-	 8vI7F33N6m7b5V93SZmO/rikUmN5HWpp72N6RnjehYAW+32zVlMXhs6g22cFKnIi5v
-	 S582DQTqffMPA==
-Date: Wed, 13 May 2026 18:22:31 +0530
+	b=uJ5I5+YkGU5icYwDDOor0lyCEDnpEp9LhRrSFFDCoFEPgE7JNApXC/WnfYN9qDUFp
+	 UyQfvZN2TMo8HJFly1mwz4+SgD3uL9ZZvXx1pwHH+5h1QHMh2NxS6bNMkF+OmKeP8I
+	 rlL0+1JqNzY8+zCXpVRxwrUO2GqQUOswEIfv9huNf+vAky0KtTcv5FS81DzG9g663z
+	 BWwLdOH2h0RotH8thYCc+ge9nUuRA2iBL6IUOaDglUKYHS9cBILFMKo9A770dw7gFt
+	 Kk0GpPngRw677wuxR0CwEZbZPLdxWXf65LpifrmDUendiZRMq44u/DsIMXs4mGdZ/c
+	 Q6IAwNDfQ4JjA==
+Date: Wed, 13 May 2026 18:24:08 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH v5 0/3] PCI: qcom: Program T_POWER_ON value for L1.2 exit
- timing
-Message-ID: <sf23jm4by4uvqu7vrzc6gwnh2e7hhhdk5rthjsj6s2onm3cnyf@clb6k72o6g2k>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	LKML <linux-kernel@vger.kernel.org>, mayank.rana@oss.qualcomm.com, quic_vbadigan@quicinc.com, 
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: Re: [PATCH v5 1/3] PCI/ASPM: Add helper to encode L1SS T_POWER_ON
+ fields
+Message-ID: <krw54q4tkodjfoatbqtccxj6q3v5dg62uv2ipybnp3vjshqkus@kernwmwlqepy>
 References: <20260428-t_power_on_fux-v5-0-f1ef926a91ff@oss.qualcomm.com>
+ <20260428-t_power_on_fux-v5-1-f1ef926a91ff@oss.qualcomm.com>
+ <bc3a5f58-676a-3634-6b8f-bffc91d25265@linux.intel.com>
+ <28c30ddb-f46a-458d-9680-eac1ce8c5b68@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,95 +51,97 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260428-t_power_on_fux-v5-0-f1ef926a91ff@oss.qualcomm.com>
+In-Reply-To: <28c30ddb-f46a-458d-9680-eac1ce8c5b68@oss.qualcomm.com>
 
-On Tue, Apr 28, 2026 at 02:07:14PM +0530, Krishna Chaitanya Chundru wrote:
-> The T_POWER_ON indicates the time (in μs) that a Port requires the port
-> on the opposite side of Link to wait in L1.2.Exit after sampling CLKREQ#
-> asserted before actively driving the interface. This value is used by
-> the ASPM driver to compute the LTR_L1.2_THRESHOLD.
+On Wed, Apr 29, 2026 at 08:34:58AM +0530, Krishna Chaitanya Chundru wrote:
 > 
-> Currently, qcom root port exposes T_POWER_ON value of zero in the L1SS
-> capability registers, leading to incorrect LTR_L1.2_THRESHOLD calculations,
-> which can result in improper L1.2 exit behavior and can trigger AER's.
 > 
-> In this series, qcom controller drivers read the devicetree property
-> "t-power-on" which got merged recently[1], and use that value to over
-> write default/wrong value.
+> On 4/28/2026 2:57 PM, Ilpo Järvinen wrote:
+> > On Tue, 28 Apr 2026, Krishna Chaitanya Chundru wrote:
+> >
+> >> Add a shared helper to encode the PCIe L1 PM Substates T_POWER_ON
+> >> parameter into the T_POWER_ON Scale and T_POWER_ON Value fields.
+> >>
+> >> This helper can be used by the controller drivers to change the
+> >> default/wrong value of T_POWER_ON in L1ss capability register to
+> >> avoid incorrect calculation of LTR_L1.2_THRESHOLD value.
+> >>
+> >> The helper converts a T_POWER_ON time specified in microseconds into
+> >> the appropriate scale/value encoding defined by the PCIe spec r7.0,
+> >> sec 7.8.3.2. Values that exceed the maximum encodable range are clamped
+> >> to the largest representable encoding.
+> >>
+> >> Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >> Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> >> ---
+> >>  drivers/pci/pci.h       |  6 ++++++
+> >>  drivers/pci/pcie/aspm.c | 40 ++++++++++++++++++++++++++++++++++++++++
+> >>  2 files changed, 46 insertions(+)
+> >>
+> >> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> >> index 4a14f88e543a..c379befe1ebe 100644
+> >> --- a/drivers/pci/pci.h
+> >> +++ b/drivers/pci/pci.h
+> >> @@ -1110,6 +1110,7 @@ void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked);
+> >>  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
+> >>  void pci_configure_ltr(struct pci_dev *pdev);
+> >>  void pci_bridge_reconfigure_ltr(struct pci_dev *pdev);
+> >> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value);
+> >>  #else
+> >>  static inline void pcie_aspm_remove_cap(struct pci_dev *pdev, u32 lnkcap) { }
+> >>  static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
+> >> @@ -1118,6 +1119,11 @@ static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev, bool locked)
+> >>  static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
+> >>  static inline void pci_configure_ltr(struct pci_dev *pdev) { }
+> >>  static inline void pci_bridge_reconfigure_ltr(struct pci_dev *pdev) { }
+> >> +static inline void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+> >> +{
+> >> +	*scale = 0;
+> >> +	*value = 0;
+> >> +}
+> >>  #endif
+> >>  
+> >>  #ifdef CONFIG_PCIE_ECRC
+> >> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> >> index 925373b98dff..457d469b8d49 100644
+> >> --- a/drivers/pci/pcie/aspm.c
+> >> +++ b/drivers/pci/pcie/aspm.c
+> >> @@ -525,6 +525,46 @@ static u32 calc_l12_pwron(struct pci_dev *pdev, u32 scale, u32 val)
+> >>  	return 0;
+> >>  }
+> >>  
+> >> +/**
+> >> + * pcie_encode_t_power_on - Encode T_POWER_ON into scale and value fields
+> >> + * @t_power_on_us: T_POWER_ON time in microseconds
+> >> + * @scale: Encoded T_POWER_ON Scale (0..2)
+> >> + * @value: Encoded T_POWER_ON Value
+> >> + *
+> >> + * T_POWER_ON is encoded as:
+> >> + *   T_POWER_ON(us) = scale_unit(us) * value
+> >> + *
+> >> + * where scale_unit is selected by @scale:
+> >> + *   0: 2us
+> >> + *   1: 10us
+> >> + *   2: 100us
+> >> + *
+> >> + * If @t_power_on_us exceeds the maximum representable value, the result
+> >> + * is clamped to the largest encodable T_POWER_ON.
+> >> + *
+> >> + * See PCIe r7.0, sec 7.8.3.2.
+> >> + */
+> >> +void pcie_encode_t_power_on(u16 t_power_on_us, u8 *scale, u8 *value)
+> > Hi,
+> >
+> > I don't know how the type for t_power_on_us was picked but if it was 
+> > arbitrary decision, I suggest you just go with 32-bit input.
+> The maximum value of the T power ON is 3100us, so we are using u16 here.
 > 
-> To convert T_POWER_ON in to T_POWER_ON_SCALE & T_POWER_ON_VALUE created
-> a pcie_encode_t_power_on() helper in aspm.c and also created
-> dw_pcie_program_t_power_on() helper for other drivers to use these
-> helpers.
-> 
-> Link [1]: https://lore.kernel.org/all/20260205093346.667898-1-krishna.chundru@oss.qualcomm.com/
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-Series LGTM!
-
-@Bjorn: Could you please ack patch 1 if you are OK with it?
+FWIW, I made sure dt-binding restricts the max value to 3100us:
+https://github.com/devicetree-org/dt-schema/commit/3579443c5d2f5a8bbedd1ad8e6cc634ce0aa02e3
 
 - Mani
-
-> ---
-> Changes in v5:
-> - Initialize *scale & *value to zero incase of ASPM is disabled pointed
->   by sashiko.
-> - Use dwc readl & writel API's instead of direct readl & writel pointed
->   by sashiko
-> - couple of nits (Mani).
-> - Link to v4: https://lore.kernel.org/r/20260404-t_power_on_fux-v4-0-2891391177f4@oss.qualcomm.com
-> 
-> Changes in v4:
-> - calculate maxv from PCI_L1SS_CTL2_T_PWR_ON_VALUE to PCI_L1SS_CAP_P_PWR_ON_VALUE (Mani).
-> - added a todo to move the reading the devicetree from qcom driver to
->   dwc once multi root port parsing support is added (Mani).
-> - Link to v3: https://lore.kernel.org/r/20260311-t_power_on_fux-v3-0-9b1f1d09c6f3@oss.qualcomm.com
-> 
-> Changes in v3:
-> - move pcie_encode_t_power_on() include/linux/pci.h to
->   drivers/pci/pci.h (Bjorn).
-> - couple of changes in commit text and variable name like t_power_on (Bjorn).
-> - remove return 0 from qcom_pcie_configure_ports (Bjorn).
-> - used FIELD_MODIFY instead of FIELD_PREP (Bjorn).
-> - Link to v2: https://lore.kernel.org/r/20260223-t_power_on_fux-v2-0-20c921262709@oss.qualcomm.com
-> 
-> Changes in v2:
-> - Instead of hard coding the values in the driver, created a devicetree
->   property "t-power-on" to program it (Bjorn & Mani).
-> - Link to v1: https://lore.kernel.org/r/20251104-t_power_on_fux-v1-1-eb5916e47fd7@oss.qualcomm.com
-> 
-> To: Bjorn Helgaas <bhelgaas@google.com>
-> To: Jingoo Han <jingoohan1@gmail.com>
-> To: Manivannan Sadhasivam <mani@kernel.org>
-> To: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> To: Krzysztof Wilczyński <kwilczynski@kernel.org>
-> To: Rob Herring <robh@kernel.org>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-arm-msm@vger.kernel.org
-> 
-> ---
-> Krishna Chaitanya Chundru (3):
->       PCI/ASPM: Add helper to encode L1SS T_POWER_ON fields
->       PCI: dwc: Add helper to Program T_POWER_ON
->       PCI: qcom: Program T_POWER_ON
-> 
->  drivers/pci/controller/dwc/pcie-designware.c | 28 +++++++++++++++++++
->  drivers/pci/controller/dwc/pcie-designware.h |  1 +
->  drivers/pci/controller/dwc/pcie-qcom.c       | 14 ++++++++++
->  drivers/pci/pci.h                            |  6 +++++
->  drivers/pci/pcie/aspm.c                      | 40 ++++++++++++++++++++++++++++
->  5 files changed, 89 insertions(+)
-> ---
-> base-commit: 3b3bea6d4b9c162f9e555905d96b8c1da67ecd5b
-> change-id: 20251104-t_power_on_fux-70dc68377941
-> 
-> Best regards,
-> --  
-> Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
