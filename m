@@ -1,180 +1,164 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D53FA357D0D
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 03:24:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBED3357D0D;
+	Wed, 13 May 2026 03:26:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778642664; cv=none; b=fVEe14smDyG4E+jbh+CUqErSn81C5bb0qC34A779QFVU/r7yOmZwC78m/WDAN7jzwZY73AJVyPkDCJOZ7txx8Ckc4B+0f8WXjsFhYkmsAugn3se+xdIVyAixUOioMj+EIP0oYNwyvP4iV4saY7zV0TFxdjH7yDGOH3Im/oWWLoA=
+	t=1778642780; cv=none; b=L+dyl5GUfuLz3fJX16BVKF8q1Od6377W45xQBlOarA7+5XChFPB7V8trlV7yehDgnwa3BEJfsewEnr44ge1g/9iW1cnVouRC5JmsN73wDJED9gRZ2F61TpsM1lXwo4+vgLpEqPRJ5NlNC+ZK8r5HJuACXyT9cPhX6yDYwzUO7jU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778642664; c=relaxed/simple;
-	bh=i5L4QdNWBgfBsSPDUx6ZlPtZz4s003INAcRT3ugW1RY=;
+	s=arc-20240116; t=1778642780; c=relaxed/simple;
+	bh=A79S49VJDCMOREwNe+qoBpxMC873Ismfrsl1AsaZR4E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hRlnMx0+htfKxvWNCO0Hd+S7kUmXj3etEzeohXb9V+jd0bDqGJj6988bThA0+rnJ2P4HDgL90xrt72fOPHvbGRQ+kSHEDB2h5btYsR/KalL5AXrmRY48tjmkdBGCTfexN3e9xZ7FkFQfNnQL2JbuY1/f/1Ow005Y5k6YIO+rcdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DEsxjzp+; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=B62kUHvJ40/gfyqRgw4kTtC97zsGYYMft+2OWBUrW/2STdbXkisQcG7mkdIKLl9xxyKMc/lSYu9pNKiiGZ9oc50SodytQel+yjAB/T9NazcgjtjjEIjtLmldWcNc9nYwBgzHTQI7GMHtP0ez4c0sICJlqioj3/krCVkkXdKQTig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oitYgmE6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DEsxjzp+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A921C2BCB0;
-	Wed, 13 May 2026 03:24:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oitYgmE6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 618D9C2BCB0;
+	Wed, 13 May 2026 03:26:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778642664;
-	bh=i5L4QdNWBgfBsSPDUx6ZlPtZz4s003INAcRT3ugW1RY=;
+	s=k20201202; t=1778642780;
+	bh=A79S49VJDCMOREwNe+qoBpxMC873Ismfrsl1AsaZR4E=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=DEsxjzp+c4sRo15PD3fn/OgFd9bw9bO+lbimM6wIrNDVR9h7lRHDUJKZ68sxlHWZq
-	 XSYX6jCCQqED8YAEe+kGp1ponoa6Yo8nBsv2Yi/VJnwsZr2Dc8z4XXQldv/pG3Be3C
-	 gBngmnh74LbySFKjNNgRkd3UKt9Lho5smIq2BLFkl3UhwJuG0N+2f6HZBTc7p+FLnR
-	 DWPufw/ZhBZYxDadgQfsNu3lRyug0OWJXgX10iJrNF+Issr5vzdn+g9oKKiqu5IJ5W
-	 bOnl/P2UheAsmCf5fZs4gyN/1w3RD5bvP44eKijzvi+LjlF+mneib5s2mQz6bo/Q/H
-	 zhj3eSMkp9NYw==
+	b=oitYgmE6X9He/OPEGSuR1FnpCdPT4eVF7aOR36uJXbmroGqm3uXiCgKbMxdurpwPR
+	 5m16inG+4+S6+8Mjxezs/p+xvpQenjLui/ldjK4ah/SPB5WmsHl6zurl8o2ekkbQJa
+	 W2xaorAS6/ZN36a3t90jb0WsQzY1nDUbV79/XNaeidYMQ6/9GdTsJgzY3uD+OCT6AI
+	 fOalJExJ8IWMS6JYMrlNRR7ftgS9INOVfuYQB8ZKqq1o6u6rCMluTCAPIsD7EHWYXJ
+	 sOYgaT5rBjya+BamZP/ZFS8d5imq15VC/ycAEsKEXfy2UntM+9jA3UpNjY2BTjrWzx
+	 J6QeObH/J0jTw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 02/16] vfio/pci: Preserve vfio-pci device files
- across Live Update
+Subject: Re: [PATCH V3 02/11] x86/hyperv: Cosmetic changes in irqdomain.c
+ for readability
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vipin Sharma" <vipinsh@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260511234802.2280368-3-vipinsh@google.com>
-References: <20260511234802.2280368-3-vipinsh@google.com>
+To: "Mukesh R" <mrathor@linux.microsoft.com>
+Cc: linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260512020259.1678627-3-mrathor@linux.microsoft.com>
+References: <20260512020259.1678627-3-mrathor@linux.microsoft.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 03:24:23 +0000
-Message-Id: <20260513032424.5A921C2BCB0@smtp.kernel.org>
+Date: Wed, 13 May 2026 03:26:19 +0000
+Message-Id: <20260513032620.618D9C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Time-of-Check to Time-of-Use (TOCTOU) race condition when validati=
-ng `vdev->irq_type`.
-- [High] Post-freeze access vulnerability allows userspace to re-activate t=
-he device.
-- [High] Silent failure of `vfio_pci_core_try_reset()` leaves the device in=
- an inconsistent state.
-- [Medium] Missing `kho_is_enabled()` check before calling KHO preservation=
- APIs.
-- [Medium] Missing INTx disable before device reset may cause spurious inte=
-rrupts.
+- [High] Resource leak in `hv_msi_domain_free()` when freeing multiple IRQs.
+- [High] Uninitialized memory write to hardware MSI registers in `hv_irq_co=
+mpose_msi_msg()` error paths.
+- [High] Invalid hardware state read in `hv_build_devid_type_pci()` for Typ=
+e 0 PCI-X leaf devices.
 --
 
-commit 8744f868d8d8c3c92253e4db7b371be095529dce
-Author: Vipin Sharma <vipinsh@google.com>
+commit 8c84576bf69ec6b4d58407408095bf71a9940bf2
+Author: Mukesh R <mrathor@linux.microsoft.com>
 
-vfio/pci: Preserve vfio-pci device files across Live Update
+x86/hyperv: Cosmetic changes in irqdomain.c for readability
 
-Implement the live update file handler callbacks to preserve a vfio-pci
-device across a Live Update. State about each device is serialized into
-a new ABI struct vfio_pci_core_device_ser and preserved using KHO and LUO.
+Make cosmetic changes such as renaming variables for consistency, fixing
+checkpatch warnings, updating indentation, and replacing spaces with tabs.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/vf=
-io_pci_liveupdate.c
-> index 1c74854600ea4..5cc57bf39dbee 100644
-> --- a/drivers/vfio/pci/vfio_pci_liveupdate.c
-> +++ b/drivers/vfio/pci/vfio_pci_liveupdate.c
-
+> diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
+> --- a/arch/x86/hyperv/irqdomain.c
+> +++ b/arch/x86/hyperv/irqdomain.c
 [ ... ]
-
-> +static int vfio_pci_liveupdate_preserve(struct liveupdate_file_op_args *=
-args)
+> @@ -115,67 +112,71 @@ static int get_rid_cb(struct pci_dev *pdev, u16 ali=
+as, void *data)
+>  	return 0;
+>  }
+> =20
+> -static union hv_device_id hv_build_pci_dev_id(struct pci_dev *dev)
+> +static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
 >  {
-> -	return -EOPNOTSUPP;
-> +	struct vfio_device *device =3D vfio_device_from_file(args->file);
-> +	struct vfio_pci_core_device_ser *ser;
-> +	struct vfio_pci_core_device *vdev;
-> +	struct pci_dev *pdev;
-> +
-> +	vdev =3D container_of(device, struct vfio_pci_core_device, vdev);
-> +	pdev =3D vdev->pdev;
-> +
-> +	ser =3D kho_alloc_preserve(sizeof(*ser));
+[ ... ]
+> -	if (data.bridge) {
+> -		int pos;
+> +	if (data.bridge =3D=3D NULL)
+> +		goto out;
+> =20
+> -		/*
+> -		 * Microsoft Hypervisor requires a bus range when the bridge is
+> -		 * running in PCI-X mode.
+[ ... ]
+> -		pos =3D pci_find_capability(data.bridge, PCI_CAP_ID_PCIX);
+> -		if (pos) {
+> -			u16 status;
+> +	pos =3D pci_find_capability(data.bridge, PCI_CAP_ID_PCIX);
+> +	if (pos) {
+> +		u16 status;
 
-Is it safe to call kho_alloc_preserve() without first checking if the KHO
-subsystem is enabled via kho_is_enabled()?
+If the leaf device is on the root bus, data.bridge will point to the leaf
+device itself (a Type 0 device) after pci_for_each_dma_alias() completes.
+Does this code incorrectly assume data.bridge is always a Type 1 bridge?
 
-Unconditionally allocating and preserving memory might add tracking state to
-folios that will never be utilized if the subsystem is disabled.
+If it evaluates a Type 0 device here, reading PCI_X_BRIDGE_SSTATUS aliases
+the Type 0 Command register. This could cause the code to read standard
+Type 1 PCI_SECONDARY_BUS and PCI_SUBORDINATE_BUS offsets (which fall into
+the middle of BAR2 for a Type 0 device), sending arbitrary BAR values as
+shadow bus ranges to the hypervisor.
 
 [ ... ]
+> @@ -249,10 +253,8 @@ static void hv_irq_compose_msi_msg(struct irq_data *=
+data, struct msi_msg *msg)
+>  	}
+> =20
+>  	stored_entry =3D kzalloc_obj(*stored_entry, GFP_ATOMIC);
+> -	if (!stored_entry) {
+> -		pr_debug("%s: failed to allocate chip data\n", __func__);
+> +	if (!stored_entry)
+>  		return;
+> -	}
 
-> +static int vfio_pci_liveupdate_freeze(struct liveupdate_file_op_args *ar=
-gs)
-> +{
-> +	struct vfio_device *device =3D vfio_device_from_file(args->file);
-> +	struct vfio_pci_core_device *vdev;
-> +	struct pci_dev *pdev;
-> +	int ret;
-> +
-> +	vdev =3D container_of(device, struct vfio_pci_core_device, vdev);
-> +	pdev =3D vdev->pdev;
-> +
-> +	guard(mutex)(&device->dev_set->lock);
-> +
-> +	/*
-> +	 * Userspace must disable interrupts on the device prior to freeze so
-> +	 * that the device does not send any interrupts until new interrupt
-> +	 * handlers have been established by the next kernel.
-> +	 */
-> +	if (vdev->irq_type !=3D VFIO_PCI_NUM_IRQS) {
+If kzalloc_obj() or hv_map_msi_interrupt() fails, this returns early
+without populating the struct msi_msg *msg parameter.
 
-Does this check need to hold vdev->igate?
-
-Without the mutex, could a concurrent ioctl() such as VFIO_DEVICE_SET_IRQS
-modify the irq_type immediately after this check passes, allowing the device
-to generate interrupts during kexec?
-
-> +		pci_err(pdev, "Freeze failed! Interrupts are still enabled.\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	guard(rwsem_write)(&vdev->memory_lock);
+Since callers (like msi_domain_activate() or irq_chip_compose_msi_msg())
+allocate msg on the stack and cannot check for errors due to the void
+return type, does this result in uninitialized stack memory being blindly
+written to the hardware MSI registers?
 
 [ ... ]
+> @@ -344,13 +351,15 @@ static int hv_msi_domain_alloc(struct irq_domain *d=
+, unsigned int virq, unsigned
+>  		return ret;
+> =20
+>  	for (int i =3D 0; i < nr_irqs; ++i) {
+> -		irq_domain_set_info(d, virq + i, 0, &hv_pci_msi_controller, NULL,
+> -				    handle_edge_irq, NULL, "edge");
+> +		irq_domain_set_info(d, virq + i, 0, &hv_pci_msi_controller,
+> +				    NULL, handle_edge_irq, NULL, "edge");
+>  	}
+> +
+>  	return 0;
+>  }
+> =20
+> -static void hv_msi_domain_free(struct irq_domain *d, unsigned int virq, =
+unsigned int nr_irqs)
+> +static void hv_msi_domain_free(struct irq_domain *d, unsigned int virq,
+> +			       unsigned int nr_irqs)
+>  {
+>  	for (int i =3D 0; i < nr_irqs; ++i) {
+>  		struct irq_data *irqd =3D irq_domain_get_irq_data(d, virq);
 
-> +	/*
-> +	 * Reset is a temporary measure to provide kernel after kexec a clean
-> +	 * device while VFIO live update work is under development and not
-> +	 * fully supported.  It will go away once continuous DMA support is
-> +	 * added to device preservation.
-> +	 */
-> +	vfio_pci_zap_bars(vdev);
-> +	ret =3D pci_load_saved_state(pdev, vdev->pci_saved_state);
-> +	if (ret)
-> +		return ret;
-> +	pci_clear_master(pdev);
+Does this loop leak chip_data and leave IRQs mapped in the hypervisor for
+the remaining nr_irqs - 1 IRQs?
 
-Does the PCI_COMMAND register need to have PCI_COMMAND_INTX_DISABLE explici=
-tly
-written prior to calling vfio_pci_core_try_reset()?
+It appears to call irq_domain_get_irq_data() using the base virq on every
+iteration instead of virq + i, causing hv_teardown_msi_irq() to be
+repeatedly invoked on the first IRQ only.
 
-I noticed that the standard disable path in vfio_pci_core_disable() does th=
-is
-to prevent spurious interrupts from firing during the hardware reset.
-
-> +	vfio_pci_core_try_reset(vdev);
-
-If vfio_pci_core_try_reset() silently fails because it cannot acquire the P=
-CI
-locks or because the device does not support reset, the kexec will still
-proceed.
-
-Could this allow the next kernel to inherit a device that still has active =
-DMA
-engines or internal state?
-
-> +	pci_restore_state(pdev);
-> +	return 0;
-> +}
-
-Once vfio_pci_liveupdate_freeze() completes and releases the locks, what
-prevents userspace threads from issuing new write(), mmap(), or ioctl() cal=
-ls
-on the device file descriptor?
-
-Because kexec doesn't freeze userspace tasks, could a concurrent thread
-re-enable DMA and interrupts on the device right before the kexec jump,
-risking memory corruption in the successor kernel?
+> @@ -362,6 +371,7 @@ static void hv_msi_domain_free(struct irq_domain *d, =
+unsigned int virq, unsigned
+> =20
+>  		hv_teardown_msi_irq(to_pci_dev(desc->dev), irqd);
+>  	}
+> +
+>  	irq_domain_free_irqs_top(d, virq, nr_irqs);
+>  }
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511234802.2280=
-368-1-vipinsh@google.com?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512020259.1678=
+627-1-mrathor@linux.microsoft.com?part=3D2
