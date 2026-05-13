@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D80123C2E;
-	Wed, 13 May 2026 00:05:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E79319C542
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 00:25:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778630726; cv=none; b=hC7Lx10Z6WmyiFA4SneZLZOVKx+aLXQ/35fJsm4OqUXVct08LBK/3QIM/MPa91DPhe1ZP3LuWQd2/wzm+/TyLhE+vWY3IokyZt7buS5hyLU7mvOjFEHamz+G2skC/f5Uhu0LwBZuLQyud9vAKfZrRfg7hqkjCOzhJC+8/M5WKTU=
+	t=1778631926; cv=none; b=PnrNh4ukpo0i1EmyL2hWJT4bBGW418QP+dyIX0P8+dJVjP0bJsHi4frJ4UqnAw/3Y2JPuqqDOt0ljvBbww4X/e0WdiscBGI2WSmAOmNIIKRqQ9zdYVgWnZNLWF9Bw9W3N+rgYSX1dvoNCFmupxjLrA5BVGcfzEsp/CWiuKfPLGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778630726; c=relaxed/simple;
-	bh=RZYvMUBsdqb2XFXXfibRFHhK/Al0aA4SFrf3esDhf6U=;
+	s=arc-20240116; t=1778631926; c=relaxed/simple;
+	bh=6mzKBl6KjEpsHZBCdEjRf5ocmdF7DRWjwcoir2Rza4U=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=H3d3wcqYqFR3ICfObWUMMAjCkZywUdDXgxiERFD6C7KNrcOvAbyp6rj+JLeSl+tT2s9IQkV6k1miD5zY7dkz8KEuIPCSgYrj12eQZ9nOqgiQI6384gvSUn3QbeSRnoMGmUewJPepNMX7izkQ4A/4tPUu1V6/neTsB6FwnOKlZYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sKRRdxpK; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=B0V9OZHDvKT5xdFc5ZYXy4jyAeTuYTaApazIjsSMo/jCBcbHFYYS8ZvA1Vz/xjRdHQ5djyJguhWA59uJZLHEUFTk8Sn5nAciw3IMeVxG8ioqSkwS7hSVkptwaFsaxc4poCoP5AQkBuXb9d5ndEXAR0x3u+ZPkM9uELJqKEcysoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CicQe5s1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sKRRdxpK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55647C2BCB0;
-	Wed, 13 May 2026 00:05:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CicQe5s1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FEEBC2BCB0;
+	Wed, 13 May 2026 00:25:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778630726;
-	bh=RZYvMUBsdqb2XFXXfibRFHhK/Al0aA4SFrf3esDhf6U=;
+	s=k20201202; t=1778631925;
+	bh=6mzKBl6KjEpsHZBCdEjRf5ocmdF7DRWjwcoir2Rza4U=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=sKRRdxpK557JEXjoTU1/nT7ZiTx4pS8l0Nk9MoNYsDdpsiUejQILvIrrhJQCi7nkR
-	 aZ3gFxV0OToQ76xzoW6nluXiA6QX1vVnGaQJXmUtufRTdZceZaK0Uh9mGjUWhXNcXc
-	 IPSF1f3Cnd89e94KjCkvltB5VkQx5ZVukt2elcYiYhYsJyyKe87N1JtIs6kUtpqBen
-	 TC5whJvwjGnrqq5G9EfSWg3ACEV0jho05E+K7/fM66rI9MB5z2fulHjjYiBTMpPPA+
-	 yv2Vo2yNRh+xSqb/gVvTOz2uj8kSrxtYKAMMajH1a/pt3EJfjMv98wrlj3kTd9uq2t
-	 hkIvTyrAT4bFQ==
+	b=CicQe5s1YU7/iFr8QMrWqphySlccleD6G3gz5MdHy7z3K2yk4NBlEL70z+JXtvLiJ
+	 Y4tOKLPSvOAdRV/YH6fKDp31rqdzKvDoW1OGmknE0B21xG7NhkYJYKPfN5Ni+rbVfm
+	 shr0SmusarcHLvTZZE+qaUPy1o3uR7So58OakJzA2i4C/AL9IkjO4Gxg254OeRkqi3
+	 IGak3fGIMC6gTXw7oVoV8TmgenKmGNXFKXkGGpfld6VuLre4G2LYdZWq3Udfw3ZlXd
+	 pat5Qtwvu4UzWrUHcYw+D/Ztr1HCA86MoUm79OI/x3ZyXMykoB20M4nKCsGjqjWbrH
+	 d9u08ZIDh1+MA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 03/23] dmaengine: sdxi: Add PCI initialization
+Subject: Re: [RFC PATCH v2 1/4] pcie/aspm: Add debug logging for aspm policy
+ config
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260511-sdxi-base-v2-3-889cfed17e3f@amd.com>
-References: <20260511-sdxi-base-v2-3-889cfed17e3f@amd.com>
+To: "Thomas Falcon" <thomas.falcon@intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511210936.562622-2-thomas.falcon@intel.com>
+References: <20260511210936.562622-2-thomas.falcon@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 00:05:25 +0000
-Message-Id: <20260513000526.55647C2BCB0@smtp.kernel.org>
+Date: Wed, 13 May 2026 00:25:25 +0000
+Message-Id: <20260513002525.8FEEBC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,67 +46,89 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The Kconfig symbol `CONFIG_SDXI` lacks a dependency on `PCI` or `P=
-CI_MSI`, and the Makefile conditionally links `pci.o` using `sdxi-$(CONFIG_=
-PCI_MSI) +=3D pci.o`.
-- [Low] The return value of `dma_set_mask_and_coherent()` is ignored in `sd=
-xi_pci_init()`.
+- [Low] Dead code when attempting to log Clock PM state in ASPM debug outpu=
+t.
+- [Low] Unconditional and potentially misleading debug logging for ASPM lin=
+k configuration.
 --
 
-commit bdb690a4c497e7a353f0143e03e32ba75daa6013
-Author: Nathan Lynch <nathan.lynch@amd.com>
+commit 364db9458a74bb3fb257b69effddd2f95f805170
+Author: Thomas Falcon <thomas.falcon@intel.com>
 
-dmaengine: sdxi: Add PCI initialization
+pcie/aspm: Add debug logging for aspm policy config
 
-This commit adds PCI initialization to bind an SDXI device via the class
-code. It maps the control registers and doorbell region, managing resources
-with devres and registering the device with the generic SDXI core.
+Include additional logging for ASPM and Clock PM state changes
+keeping track of code flow and enabled power saving states.
 
-> diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-> new file mode 100644
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/Makefile
-> @@ -0,0 +1,6 @@
-> +# SPDX-License-Identifier: GPL-2.0
-> +obj-$(CONFIG_SDXI) +=3D sdxi.o
-> +
-> +sdxi-objs +=3D device.o
-> +
-> +sdxi-$(CONFIG_PCI_MSI) +=3D pci.o
-
-If CONFIG_SDXI is enabled but CONFIG_PCI_MSI is disabled, pci.o is omitted
-from the build. Because pci.c is the only file containing the driver
-registration macro (module_pci_driver) and the module license declaration,
-would this result in a module that lacks an initialization entry point and
-fails to load properly while also tainting the kernel?
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 925373b98dff0..cd23c1462502f 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
 
 [ ... ]
 
-> diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
-> new file mode 100644
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/pci.c
+> @@ -961,11 +964,14 @@ static void pcie_config_aspm_link(struct pcie_link_=
+state *link, u32 state)
+>  	state &=3D (link->aspm_capable & ~link->aspm_disable);
+> =20
+>  	/* Can't enable any substates if L1 is not enabled */
+> -	if (!(state & PCIE_LINK_STATE_L1))
+> +	if (!(state & PCIE_LINK_STATE_L1)) {
+> +		pci_dbg(parent, "ASPM: L1 not enabled, disabling L1 substates\n");
+>  		state &=3D ~PCIE_LINK_STATE_L1SS;
+> +	}
+> =20
+>  	/* Spec says both ports must be in D0 before enabling PCI PM substates*/
+>  	if (parent->current_state !=3D PCI_D0 || child->current_state !=3D PCI_=
+D0) {
+> +		pci_dbg(parent, "ASPM: Both ports are not in D0, disable PCI PM L1 sub=
+states unless explicitly enabled\n");
+>  		state &=3D ~PCIE_LINK_STATE_L1_SS_PCIPM;
+>  		state |=3D (link->aspm_enabled & PCIE_LINK_STATE_L1_SS_PCIPM);
+>  	}
+
+Are these debug statements being printed more often than intended?
+
+Since these prints happen unconditionally before the early return check:
+
+    if (link->aspm_enabled =3D=3D state)
+        return;
+
+enabling dynamic debugging will output these messages even if the device=20
+states already match the requested state and no hardware configuration is=20
+actually applied.
+
 [ ... ]
-> +static int sdxi_pci_init(struct sdxi_dev *sdxi)
-> +{
-> +	struct pci_dev *pdev =3D sdxi_to_pci_dev(sdxi);
-> +	struct device *dev =3D &pdev->dev;
-> +	int ret;
-> +
-> +	ret =3D pcim_enable_device(pdev);
-> +	if (ret)
-> +		return dev_err_probe(dev, ret, "failed to enable device\n");
-> +
-> +	dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
 
-The return value of dma_set_mask_and_coherent() is ignored here. If the
-platform or IOMMU does not support 64-bit DMA, this function returns an err=
-or
-code and leaves the device's DMA mask at its default 32-bit value.
+> @@ -997,16 +1005,34 @@ static void pcie_config_aspm_link(struct pcie_link=
+_state *link, u32 state)
 
-Is it expected to proceed without handling the fallback or logging a warnin=
-g?
+[ ... ]
+
+> +	pci_dbg(parent, "ASPM: enabled states:%s%s%s%s%s%s%s%s\n",
+> +		FLAG(state, L0S_UP, " L0s-Upstream"),
+> +		FLAG(state, L0S_DW, " L0s-Downstream"),
+> +		FLAG(state, L1, " L1"),
+> +		FLAG(state, L1_1, " ASPM-L1.1"),
+> +		FLAG(state, L1_2, " ASPM-L1.2"),
+> +		FLAG(state, L1_1_PCIPM, " PCI-PM-L1.1"),
+> +		FLAG(state, L1_2_PCIPM, " PCI-PM-L1.2"),
+> +		FLAG(state, CLKPM, " ClockPM"));
+
+Is it possible for the CLKPM flag to ever be true here?
+
+It looks like the PCIE_LINK_STATE_CLKPM bit is masked out earlier in the
+function when verifying capabilities:
+
+    state &=3D (link->aspm_capable & ~link->aspm_disable);
+
+Since the CLKPM bit is outside the 7-bit range of aspm_capable, this bit
+is never present in the state mask at this point, so the macro will always
+evaluate to an empty string.=20
+
+Because the Clock PM state change is already correctly logged in=20
+pcie_set_clkpm(), does this FLAG check need to be included here?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
-v2-0-889cfed17e3f@amd.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511210936.5626=
+22-1-thomas.falcon@intel.com?part=3D1
