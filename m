@@ -1,166 +1,279 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 71FCA37C101;
-	Wed, 13 May 2026 01:31:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55A1137C0F3;
+	Wed, 13 May 2026 01:33:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778635898; cv=none; b=bMsvXElgIt2QT9x4CZSDPe76Mx4rlOW+7nvAa+CSLQOFICYILrj7WewzE6+GHgfBX7ZQy6WW0I1Zx6CXYAyJHsH1S4CsvZYYrV0+RGO9ZT37G7f9ECdmUOrhYYci1GXJG13xX6fHOCmrYmWad34xB3OHM8fZsbka9Y0qgR6e5ig=
+	t=1778636031; cv=none; b=gCyhdx6rDWZBxPXijBUBkwj1oM+tEcDzuUoLzUCW/lsDn7ROYoBHSr1gq8Ca6/p90EUGVrGOQObcTYjGgle4051fvsvLM2naAjzRrdqZ0yOP0xsYfPKGJ9NNZ88rNKik+dRKmRCSVcUYonKGxRo7YoeL5j/Xh8y0uUJG6ftlXMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778635898; c=relaxed/simple;
-	bh=H/di9LyEpiVEUN8fxJ5PF/SzJf2jvuHtmB37+wS3jvA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pKuUx4oENw9+NEyucEauHdeHMB5i00L/H3IHxE8bKf7U9VSnOCOrkC9IxjytAgIh++gbT2XsWTbedtwBnTXu7qzu0c6Dv0Xk+myKjtflsSipaimKQn+7sjP1TOaCC/B3LqlQkQ8quRK89BjlS7STTX0SM3WMtI8rPy20CpiiMpU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=ZqYJyYOv; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1778636031; c=relaxed/simple;
+	bh=rcRXXg7UbH+EbZfmiUxU8wywsb+Gdo2u01va/RHA5bs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=dBYArhUbaYkdkMrATlmyxGMwU3cSfBIbrpOD8wcTP5W9bSnuQVI4wUJnvyFbfjjd9bahUCRdF5qNUQOsGIiTtHFclAFaRnCKcSgYbYMN9LKBLHlkXqpy5nFM2hSZBcwKfccMVdf1vcnQuR3k7qGfsUSHwPDjDatOmTvJ3bNrfCg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=GpqnqSW9; arc=none smtp.client-ip=113.46.200.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="ZqYJyYOv"
-Received: from [192.168.0.88] (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
-	by linux.microsoft.com (Postfix) with ESMTPSA id A4C2020B7166;
-	Tue, 12 May 2026 18:31:29 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com A4C2020B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1778635890;
-	bh=5q9rABfO0Gt/Q6Q3CrN73o4OycY5uJbilUt6FU0JSwI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZqYJyYOvPj+UHa/jWI4PsDmDD5HCuVDNxuPcN1m3CAsdwhUsrIfpnnpQjzdM7z5Qy
-	 chKuGoqKEcjc+pQY40Wiii7Ze3QJhBv9q3Joe+LCwRcOwoU0pTvZwKHnbvfEqewRIe
-	 v9p/A0syWXxuKg6nZGqzUWN0H09hyXTolArvoUWs=
-Message-ID: <79f714df-c072-989a-c95d-989ea6b6f08b@linux.microsoft.com>
-Date: Tue, 12 May 2026 18:31:31 -0700
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="GpqnqSW9"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=4MWMrthRhdSdwUjqWPGVf9+M+ttsxk6C6GE7zy72DVU=;
+	b=GpqnqSW9DnQUvT/4OaKJjJbTQqrAQrBOKrhN5dxvRHERrIAOoabqj5gmZM7XwiyD022cWBNM4
+	GmR0cyhybc6ygTmrymtmyisAD576FqZgPfX19Lj2UKO2borJwIraf81eNaOQK/UmSFFcrCjlGQD
+	YPfvZ5rO27ylzaZIxcgMJho=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gFbQ15Ms5z1T4HC;
+	Wed, 13 May 2026 09:26:01 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 9E81120104;
+	Wed, 13 May 2026 09:33:42 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 13 May 2026 09:33:41 +0800
+Message-ID: <e6928a10-77b1-4fdf-8bc3-cd0154b4d4c5@huawei.com>
+Date: Wed, 13 May 2026 09:33:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH V3 01/11] iommu/hyperv: Rename hyperv-iommu.c to
- hyperv-irq.c
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] vfio: add dma-buf get_tph callback and DMA_BUF_TPH
+ feature
+To: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>, <kvm@vger.kernel.org>,
+	<linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <dri-devel@lists.freedesktop.org>, Keith Busch
+	<kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>, Yishai Hadas
+	<yishaih@nvidia.com>
+References: <20260512184755.4137227-1-zhipingz@meta.com>
+ <20260512184755.4137227-2-zhipingz@meta.com>
 Content-Language: en-US
-To: Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
- mhklinux@outlook.com, muislam@microsoft.com, namjain@linux.microsoft.com,
- magnuskulke@linux.microsoft.com, anbelski@linux.microsoft.com,
- linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
- iommu@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-arch@vger.kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
- decui@microsoft.com, longli@microsoft.com, tglx@kernel.org,
- mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
- joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
- kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de
-References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
- <20260512020259.1678627-2-mrathor@linux.microsoft.com>
- <20260512164623.0000273f@linux.microsoft.com>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <20260512164623.0000273f@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260512184755.4137227-2-zhipingz@meta.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On 5/12/26 16:46, Jacob Pan wrote:
-> Hi Mukesh,
+Hi Zhiping,
+
+I have several suggestions:
+
+1. In struct vfio_device_feature_dma_buf_tph, steering_tag is defined as
+   __u16, but PCIe TPH base steering tag is only 8-bit. We can use __u8
+   for steering_tag to shrink structure size and reduce reserved padding.
+
+2. The flags field seems unnecessary. We can use value 0 of steering_tag
+   or steering_tag_ext to indicate the corresponding ST entry is not
+   available, which simplifies the uAPI design.
+
+3. All TPH metadata fields (st, ext st, ph) fit within 32 bits. We can
+   wrap them into a union with atomic_t, then use atomic read/write
+   instead of memory_lock plus smp_load_acquire/smp_store_release. This
+   makes lockless access cleaner and avoids ordering maintenance.
+
+For details, see the text.
+
+On 5/13/2026 2:47 AM, Zhiping Zhang wrote:
+> Add a dma-buf callback that returns raw TPH metadata from the exporter
+> so peer devices can reuse the steering tag and processing hint
+> associated with a VFIO-exported buffer. Add a new
+> VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl that takes the fd from
+> VFIO_DEVICE_FEATURE_DMA_BUF along with the TPH values, validates the fd
+> is a vfio-exported dma-buf belonging to this device, and stores the TPH
+> metadata under memory_lock. The existing VFIO_DEVICE_FEATURE_DMA_BUF
+> uAPI is unchanged.
 > 
-> On Mon, 11 May 2026 19:02:49 -0700
-> Mukesh R <mrathor@linux.microsoft.com> wrote:
+> 8-bit ST and 16-bit Extended ST are distinct namespaces in the PCIe TPH
+> ST table (firmware reports them as separate fields with separate
+> validity bits in the ACPI _DSM ST table), so the uAPI carries both
+> values along with a flags field that indicates which value(s) are
+> valid for this device. The exporter selects the value that matches the
+> importer's requested width and returns -EOPNOTSUPP if that width is
+> not present, instead of substituting a value across namespaces.
 > 
->> This file actually implements irq remapping, so rename to more
->> appropriate hyperv-irq.c. A new file to implement hyperv iommu will
->> be introduced later.  Also, it should not be tied to HYPERV_IOMMU,
->> but to CONFIG_HYPERV and IRQ_REMAP. The file already has #ifdef
->> CONFIG_IRQ_REMAP.
->>
->> Reviewed-by: Anirudh Rayabharam (Microsoft) <anirudh@anirudhrb.com>
->> Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
->> ---
->>   MAINTAINERS                                    | 2 +-
->>   drivers/iommu/Makefile                         | 2 +-
->>   drivers/iommu/{hyperv-iommu.c => hyperv-irq.c} | 6 +++---
-> Given that we have multiple Hyper-V IOMMU-related files ? this renamed
-> hyperv-irq.c, the existing hyperv-iommu code, iommu-root (this
-> series) and the recently posted guest pvIOMMU driver ? should we create
-> a drivers/iommu/hyperv/ directory to consolidate them?
+> Publish the TPH fields under memory_lock and gate readers on a
+> release/acquire on the flags field; this lets get_tph() run lockless
+> and avoids inverting the memory_lock -> dma_resv_lock ordering set up
+> by vfio_pci_dma_buf_move(). Convert the @revoked bitfield to a plain bool
+> so concurrent updates of @revoked (under dma_resv_lock) and the new TPH
+> fields (under memory_lock) cannot race on a shared bitfield byte.
 
-This came up briefly during synup with arm64 devs whether to split
-the file into arch specific and common. We decided to wait till arm is
-working so we can tell how intrusive the #ifdefs are. We can decide as
-part of the arm port patches. I am ok also if you want to do it as part
-of the pv-iommu patches as follow up once this is merged.
+The commit log includes many implementation details, why not remove or simply it.
 
-Thanks,
--Mukesh
+> 
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> 
+> ---
+>  drivers/vfio/pci/vfio_pci_core.c   |   3 +
+>  drivers/vfio/pci/vfio_pci_dmabuf.c | 113 ++++++++++++++++++++++++++++-
+>  drivers/vfio/pci/vfio_pci_priv.h   |  11 +++
+>  include/linux/dma-buf.h            |  21 ++++++
+>  include/uapi/linux/vfio.h          |  35 +++++++++
+>  5 files changed, 182 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 3f8d093aacf8..94aa6dd95701 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1534,6 +1534,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+>  		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
+>  	case VFIO_DEVICE_FEATURE_DMA_BUF:
+>  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
+> +	case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
+> +		return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
+> +							 argsz);
+>  	default:
+>  		return -ENOTTY;
+>  	}
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> index f87fd32e4a01..28247602e359 100644
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> @@ -19,7 +19,23 @@ struct vfio_pci_dma_buf {
+>  	u32 nr_ranges;
+>  	struct kref kref;
+>  	struct completion comp;
+> -	u8 revoked : 1;
+> +	/*
+> +	 * TPH metadata published by VFIO_DEVICE_FEATURE_DMA_BUF_TPH and
+> +	 * consumed by the @get_tph dma-buf callback.
+> +	 *
+> +	 * @tph_flags is the publish/consume gate: writers populate
+> +	 * @steering_tag, @steering_tag_ext and @ph first, then store
+> +	 * @tph_flags with smp_store_release(); readers do
+> +	 * smp_load_acquire(&tph_flags) before accessing the value fields.
+> +	 * @tph_flags == 0 means "TPH not set". Writers serialize via
+> +	 * vdev->memory_lock; readers are lockless to avoid AB-BA against
+> +	 * the dma_resv_lock held by importers.
+> +	 */
+> +	u32 tph_flags;
 
->>   drivers/iommu/irq_remapping.c                  | 2 +-
->>   4 files changed, 6 insertions(+), 6 deletions(-)
->>   rename drivers/iommu/{hyperv-iommu.c => hyperv-irq.c} (99%)
->>
->> diff --git a/MAINTAINERS b/MAINTAINERS
->> index d1cc0e12fe1f..f803a6a38fee 100644
->> --- a/MAINTAINERS
->> +++ b/MAINTAINERS
->> @@ -11914,7 +11914,7 @@ F:	drivers/clocksource/hyperv_timer.c
->>   F:	drivers/hid/hid-hyperv.c
->>   F:	drivers/hv/
->>   F:	drivers/input/serio/hyperv-keyboard.c
->> -F:	drivers/iommu/hyperv-iommu.c
->> +F:	drivers/iommu/hyperv-irq.c
->>   F:	drivers/net/ethernet/microsoft/
->>   F:	drivers/net/hyperv/
->>   F:	drivers/pci/controller/pci-hyperv-intf.c
->> diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
->> index 0275821f4ef9..335ea77cced6 100644
->> --- a/drivers/iommu/Makefile
->> +++ b/drivers/iommu/Makefile
->> @@ -30,7 +30,7 @@ obj-$(CONFIG_TEGRA_IOMMU_SMMU) += tegra-smmu.o
->>   obj-$(CONFIG_EXYNOS_IOMMU) += exynos-iommu.o
->>   obj-$(CONFIG_FSL_PAMU) += fsl_pamu.o fsl_pamu_domain.o
->>   obj-$(CONFIG_S390_IOMMU) += s390-iommu.o
->> -obj-$(CONFIG_HYPERV_IOMMU) += hyperv-iommu.o
->> +obj-$(CONFIG_HYPERV) += hyperv-irq.o
->>   obj-$(CONFIG_VIRTIO_IOMMU) += virtio-iommu.o
->>   obj-$(CONFIG_IOMMU_SVA) += iommu-sva.o
->>   obj-$(CONFIG_IOMMU_IOPF) += io-pgfault.o
->> diff --git a/drivers/iommu/hyperv-iommu.c b/drivers/iommu/hyperv-irq.c
->> similarity index 99%
->> rename from drivers/iommu/hyperv-iommu.c
->> rename to drivers/iommu/hyperv-irq.c
->> index 479103261ae6..d11076f906fb 100644
->> --- a/drivers/iommu/hyperv-iommu.c
->> +++ b/drivers/iommu/hyperv-irq.c
->> @@ -8,6 +8,8 @@
->>    * Author : Lan Tianyu <Tianyu.Lan@microsoft.com>
->>    */
->>   
->> +#ifdef CONFIG_IRQ_REMAP
->> +
->>   #include <linux/types.h>
->>   #include <linux/interrupt.h>
->>   #include <linux/irq.h>
->> @@ -24,8 +26,6 @@
->>   
->>   #include "irq_remapping.h"
->>   
->> -#ifdef CONFIG_IRQ_REMAP
->> -
->>   /*
->>    * According 82093AA IO-APIC spec , IO APIC has a 24-entry Interrupt
->>    * Redirection Table. Hyper-V exposes one single IO-APIC and so
->> define @@ -331,4 +331,4 @@ static const struct irq_domain_ops
->> hyperv_root_ir_domain_ops = { .free = hyperv_root_irq_remapping_free,
->>   };
->>   
->> -#endif
->> +#endif  /* CONFIG_IRQ_REMAP */
->> diff --git a/drivers/iommu/irq_remapping.c
->> b/drivers/iommu/irq_remapping.c index c2443659812a..41bf65e4ea88
->> 100644 --- a/drivers/iommu/irq_remapping.c
->> +++ b/drivers/iommu/irq_remapping.c
->> @@ -108,7 +108,7 @@ int __init irq_remapping_prepare(void)
->>   	else if (IS_ENABLED(CONFIG_AMD_IOMMU) &&
->>   		 amd_iommu_irq_ops.prepare() == 0)
->>   		remap_ops = &amd_iommu_irq_ops;
->> -	else if (IS_ENABLED(CONFIG_HYPERV_IOMMU) &&
->> +	else if (IS_ENABLED(CONFIG_HYPERV) &&
->>   		 hyperv_irq_remap_ops.prepare() == 0)
->>   		remap_ops = &hyperv_irq_remap_ops;
->>   	else
+As subsequent comments, can proceed without tph_flags
+
+> +	u16 steering_tag;
+> +	u16 steering_tag_ext;
+> +	u8 ph;
+
+struct dma_buf_tph {
+        union {
+                atomic_t val;
+                struct {
+                        u16 st_ext;
+                        u8 st;
+                        u8 ph;
+                };
+        };
+};
+Set and get are done with atomic operation, no need for lock
+
+> +	bool revoked;
+>  };
+>  
+>  static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
+> @@ -69,6 +85,35 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
+>  	return ret;
+>  }
+>  
+
+...
+
+>  
+> +	/**
+> +	 * @get_tph:
+> +	 * @dmabuf: DMA buffer for which to retrieve TPH metadata
+> +	 * @steering_tag: Returns the raw TPH steering tag for @st_width
+> +	 * @ph: Returns the TPH processing hint (2-bit value)
+> +	 * @st_width: Consumer's supported steering tag width in bits (8 or 16)
+> +	 *
+> +	 * Return the TPH (TLP Processing Hints) metadata associated with this
+> +	 * DMA buffer for the requested steering-tag width. 8-bit ST and 16-bit
+> +	 * Extended ST are distinct namespaces in the PCIe TPH ST table, so the
+> +	 * exporter must select the value that matches @st_width and must not
+> +	 * substitute one for the other.
+> +	 *
+> +	 * Return 0 on success, -EOPNOTSUPP if no metadata is available for the
+> +	 * requested width, or -EINVAL if @st_width is not 8 or 16.
+> +	 *
+> +	 * This callback is optional.
+> +	 */
+> +	int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph,
+> +		       u8 st_width);
+
+how about rename steering_tag to st?
+
+> +
+>  	/**
+>  	 * @map_dma_buf:
+>  	 *
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 5de618a3a5ee..53b2bbd9fc1e 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+> @@ -1534,6 +1534,41 @@ struct vfio_device_feature_dma_buf {
+>   */
+>  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+>  
+> +/**
+> + * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) metadata
+> + * with a vfio-exported dma-buf. The dma-buf must have been created by
+> + * VFIO_DEVICE_FEATURE_DMA_BUF on this device.
+> + *
+> + * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA_BUF.
+> + *
+> + * 8-bit ST (steering_tag) and 16-bit Extended ST (steering_tag_ext) are
+> + * distinct namespaces in the PCIe TPH ST table; userspace should populate
+> + * the value(s) it has from the firmware ST table for this device and set
+> + * the matching VFIO_DMA_BUF_TPH_ST / VFIO_DMA_BUF_TPH_ST_EXT bit in @flags.
+> + * An importer requests a specific width and receives the matching value;
+> + * if the requested width is not present, the importer is told TPH is
+> + * unavailable for this dma-buf.
+> + *
+> + * ph is the 2-bit TLP Processing Hint and must be in the range [0, 3].
+> + *
+> + * The user must set TPH on the dma-buf before the importer consumes it.
+> + *
+> + * Return: 0 on success, -errno on failure.
+
+-1 and errno is set on failure.
+
+> + */
+> +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
+> +
+> +#define VFIO_DMA_BUF_TPH_ST		(1 << 0)  /* steering_tag valid */
+> +#define VFIO_DMA_BUF_TPH_ST_EXT		(1 << 1)  /* steering_tag_ext valid */
+
+It could be represented by judge whether steering_tag/ext == 0
+
+> +
+> +struct vfio_device_feature_dma_buf_tph {
+> +	__s32	dmabuf_fd;
+> +	__u32	flags;
+> +	__u16	steering_tag;
+> +	__u16	steering_tag_ext;
+> +	__u8	ph;
+> +	__u8	reserved[3];
+
+How about:
+struct vfio_device_feature_dma_buf_tph {
+	__s32	dmabuf_fd;
+	__u16	st_ext;
+	__u8	st;
+	__u8	ph;
+}
+If st_ext is not zero means it valid, and also with st field.
+
+Thanks
+
+> +};
+> +
+>  /* -------- API for Type1 VFIO IOMMU -------- */
+>  
+>  /**
 
