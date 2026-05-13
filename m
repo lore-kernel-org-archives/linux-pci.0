@@ -1,210 +1,145 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46E7A38A72A;
-	Wed, 13 May 2026 22:24:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7409738F630
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 22:43:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778711081; cv=none; b=NJ+cocXJM6zpbt7a+7uY4aY/YYx9GcN5znuXkJ2gQ+BFDjfwnoixtIPe7FK4YkUKKVQsSpfo9YXlOrOBvBISUQO1zy1j7u4A3Pn5af/EHz5QpWf51QS6SMjRzZ/UmncUNJ8ywIihA9VKKArR5lEMkDmyogMj3osLnmhl3WfexC8=
+	t=1778712184; cv=none; b=bLwYFE95oyITc9PKHurlEJ/TpkOTt3OInj1pVvuvoCf/0X7ViTlkZKLZeY3rAkdmQMy/h5vwu3PoV/lUBqhGinV5xh5yj3O2x2wKhYeyRirOqJhSPqrcM8QAHWyULOn6JrdfqNg4Lqq5aXBYzw73Kw957DNLl93FUuJNpw2V+SU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778711081; c=relaxed/simple;
-	bh=9izmYS1Q0D0k4I5HeNs52Eo1sxcceosqE8+HHZxbOIE=;
+	s=arc-20240116; t=1778712184; c=relaxed/simple;
+	bh=CbvHdVmtLmzyOYmag/VF+OxC3FrvmW+yoxtC2Fz6tHI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OfPdW5dAI8bVGSThqrLmEwsnXEu/TCdoN5ZdlZOurj6lHj3MwKCAbL+1asxeF6RD3ep/24XvE5GRZvI0iGTyDOSF2FGbzr2bBFkvFUxdmtkybYm8YoWdH0PBiiFpLPVrexiBrUzAf+PYXVrNbG4HHOSGbD9kUAY2Hlg4zbHpVzw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l+7WKc7V; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=gR2aVeH4r7cY1CJkHtZNnBxZtb0wHs20l1doMqgLUr6arJ0e9vPO2Uw3OPVgMMBHX1oTXKuzufAlbvowd6+eWg8C3eyDgmMraQM4veIkCdeqrT78dQnZ6bnVMl1AWhFFL0fG/0x2PjM5LJ9JeXZaiTEdwgbv0KHFaYP6Rg7zgAA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Use3xgIz; arc=none smtp.client-ip=74.125.82.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l+7WKc7V"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778711081; x=1810247081;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=9izmYS1Q0D0k4I5HeNs52Eo1sxcceosqE8+HHZxbOIE=;
-  b=l+7WKc7VNxY1IOo7DgEdrccsk53XUds9IBpmBAN+Pl7Amm6In742Noky
-   hmugLLbOFACHEqCGAVsowxLi6F7HjdW/ohVzUux4BeIm5p4MAf/qdng3X
-   kXoDoARVjHap8DExUqALTeYdZjefv8WZRV9f4sGDXyEMIuidCNKzu+IuY
-   nmpZd4OPth+Y6szK6IEQ+niqlitdY7lb5FT+Cx09CCAAhg3WFhInbsBve
-   eJUNbxia4FGa7+oEDmYxiSllSvMcKk8s5LVdEDU3y8CZB2VUIsdEjOu5B
-   aL0uJ/VsGXVVZUhmt1k9JJRAh640CBYh5qhZ2TkXQHGfPt/qeP9xDkxmA
-   w==;
-X-CSE-ConnectionGUID: HeoKUxw0TretPt3ixJioyQ==
-X-CSE-MsgGUID: sUnKKMVkRt29P/AruSoPPw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11785"; a="79545926"
-X-IronPort-AV: E=Sophos;i="6.23,233,1770624000"; 
-   d="scan'208";a="79545926"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2026 15:24:40 -0700
-X-CSE-ConnectionGUID: 5twPmlezQ+m5PPCvlGRG0Q==
-X-CSE-MsgGUID: V9jclXIDSDaPJYHx+rFwIg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,233,1770624000"; 
-   d="scan'208";a="237345529"
-Received: from lkp-server01.sh.intel.com (HELO dca79079c3eb) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 13 May 2026 15:24:38 -0700
-Received: from kbuild by dca79079c3eb with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wNI0I-000000005Dr-3o3n;
-	Wed, 13 May 2026 22:24:34 +0000
-Date: Thu, 14 May 2026 06:23:54 +0800
-From: kernel test robot <lkp@intel.com>
-To: hangej <hangej@amazon.com>, bhelgaas@google.com
-Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dwmw2@infradead.org,
-	kexec@lists.infradead.org, hangej@amazon.com
-Subject: Re: [PATCH] pci_crash: capture PCI config space at panic time
-Message-ID: <202605140624.Tw71sECt-lkp@intel.com>
-References: <20260512162402.1929687-1-hangej@amazon.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Use3xgIz"
+Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-1336742714fso1257c88.1
+        for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 15:43:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1778712182; x=1779316982; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=tnJie4MGAhTdVxrHjidSSamJhN69/aqRYywXACZbNwg=;
+        b=Use3xgIz1P1CfZlxC6+U66ye5caojrgyweuvT7Y7eF45D7beXv8OhMminEaBm0+ur2
+         BGzf4QZpmDKevhb84zyDqGQlpK+7Ijagi3TJaW+u9aBQEN0pSPjy6FoYTwtSksVxMDGv
+         rECIjTMtdAK5dAnYhUlf15ScqHW0YYRRQhuYKPXgS3MZrivQsYGLBbT/4lgCAEtxZi/2
+         QCdtvvYvLL8+s1tHLm/AAJJKsEOzwxJu3P6XV5rZgRdDCbvpSXXCbKebSc+0BVw9uU7V
+         7WV4FIw7DsUc8qXWT7FJ3Tg3yGvu9fgiLOnCqBynpzlXP/o4TooGcBzEfzh1X8ogth2x
+         lDsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778712182; x=1779316982;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tnJie4MGAhTdVxrHjidSSamJhN69/aqRYywXACZbNwg=;
+        b=APPYNPj2jFcXyFQvGpLGowC0zKdGcFoLiK3bVvLd7ADpp+QyWhUDAdxxAaBuzFEnfY
+         4u/O04oZkhjw9iibaAG5dBnUBd26s8EZlHc0EsOvz29t/w2M9BlXXGp5U2jDDEALfVKu
+         ulOYocm/pBE4tvbO986USmdyXZw23qYildk2TLWl7gkiVJF8pZZzOECtl6zuHFmIzyEU
+         hfc+WpEk7S10n2PbEYmkbkf1anATd0rMQKOyri8nzfJrhcilqgl2+UPI6G+CIZD9cCeX
+         BSUdEWiUGJJFOdioVcjE7dgZ1zm55npoiKxfYnSFmXuopaBOZaH+ThibwrnWYsFbPjpK
+         Rclw==
+X-Forwarded-Encrypted: i=1; AFNElJ8cIzzaYzUemagqTd9exxJMzk+PiyHkYgGguHDDwvE/pe2wXTjSL8v06790IWb4v/dH3XMcmyPkg4I=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw+o3ItgrQt5VsfQhfOH2mxBk8I3ClwBUGzERADmlKBfwN9dg/l
+	fgzSMDUBbWGHzWRhuqXW3JLbUjgNz52yV+8GGp54aDWk2SrntZHxdffFTPwiLSgzUQ==
+X-Gm-Gg: Acq92OE4faRpQKdZvRtD5s4uzTAGVmXGkpPVWjAq5jvQfL0/bYk94uRCfmSUXX96Jgd
+	/dD/uby3VCDcjLzMtWOr9/1nB6dwLm0lTvYrK1gjUegR3Z+XOsi6wyr+EZCS81JFBZPNPUWwTFa
+	x34LOQ5CjHvTJ7FrHdGCmuGN5xMR4Q/rlUwvF+hSU5zGjissAkoSWOLtitYXVUm6orXeWGh5a4R
+	wRRx6tQvYkxALZk457GNegTlDwLZwWlArIo4dHubZ8F05SDPkWkoTNSh8Uhq40au1icep6NyFu1
+	4fkqGttckHIrJJofdumXX4mt1p5Q3ALup4SiNuCoNbtC834WeJxgGgPYBDGmjDdTyw4ptG1iVbr
+	nqM5y8lz0Jpn/2PcUhH4FBYTujZQdY7DzxisW8mwwGWh6OVErq7u+YoLKjAi38SjDaaN894tIss
+	wRLgNxuuHZKa6p9oGdSK+XAvDOhUI/MK5GD/rNodc6p+kEdKWak1AnsSrJrIkDJMSD9cwoHg==
+X-Received: by 2002:a05:7022:128b:b0:12b:ff98:1ed9 with SMTP id a92af1059eb24-134cb8274dfmr82086c88.12.1778712180853;
+        Wed, 13 May 2026 15:43:00 -0700 (PDT)
+Received: from google.com (153.46.83.34.bc.googleusercontent.com. [34.83.46.153])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30293e2e3c0sm939009eec.3.2026.05.13.15.42.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 May 2026 15:43:00 -0700 (PDT)
+Date: Wed, 13 May 2026 22:42:56 +0000
+From: Samiullah Khawaja <skhawaja@google.com>
+To: Vipin Sharma <vipinsh@google.com>
+Cc: David Matlack <dmatlack@google.com>, kvm@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-pci@vger.kernel.org, ajayachandra@nvidia.com, alex@shazbot.org, amastro@fb.com, 
+	ankita@nvidia.com, apopple@nvidia.com, chrisl@kernel.org, corbet@lwn.net, 
+	graf@amazon.com, jacob.pan@linux.microsoft.com, jgg@nvidia.com, jgg@ziepe.ca, 
+	jrhilke@google.com, julianr@linux.ibm.com, kevin.tian@intel.com, leon@kernel.org, 
+	leonro@nvidia.com, lukas@wunner.de, michal.winiarski@intel.com, parav@nvidia.com, 
+	pasha.tatashin@soleen.com, praan@google.com, pratyush@kernel.org, rananta@google.com, 
+	rientjes@google.com, rodrigo.vivi@intel.com, rppt@kernel.org, saeedm@nvidia.com, 
+	skhan@linuxfoundation.org, vivek.kasireddy@intel.com, witu@nvidia.com, yanjun.zhu@linux.dev, 
+	yi.l.liu@intel.com
+Subject: Re: [PATCH v4 02/16] vfio/pci: Preserve vfio-pci device files across
+ Live Update
+Message-ID: <agT9bYpXskVwW0E_@google.com>
+References: <20260511234802.2280368-1-vipinsh@google.com>
+ <20260511234802.2280368-3-vipinsh@google.com>
+ <CALzav=fR8c2tYj9jeOc_K=xoupxAfWMHmk0ipDniSXg6uGiFYA@mail.gmail.com>
+ <20260512211412.GA2819150.vipinsh@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20260512162402.1929687-1-hangej@amazon.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260512211412.GA2819150.vipinsh@google.com>
 
-Hi hangej,
+On Tue, May 12, 2026 at 02:29:19PM -0700, Vipin Sharma wrote:
+>On Tue, May 12, 2026 at 01:59:51PM -0700, David Matlack wrote:
+>> On Mon, May 11, 2026 at 4:48 PM Vipin Sharma <vipinsh@google.com> wrote:
+>>
+>> > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+>> > index c12d614fc6c4..019de053f116 100644
+>> > --- a/drivers/vfio/pci/Kconfig
+>> > +++ b/drivers/vfio/pci/Kconfig
+>> > @@ -45,13 +45,15 @@ config VFIO_PCI_IGD
+>> >
+>> >  config VFIO_PCI_LIVEUPDATE
+>> >         bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
+>> > -       depends on PCI_LIVEUPDATE
+>> > +       depends on PCI_LIVEUPDATE && VFIO_DEVICE_CDEV
+>> >         help
+>> >           Support for preserving devices bound to vfio-pci across a Live
+>> >           Update. This option should only be enabled by developers working on
+>> >           implementing this support. Once enough support has landed in the
+>> >           kernel, this option will no longer be marked EXPERIMENTAL.
+>> >
+>> > +         Enabling this will disable support for VFIO PCI DMA buffer.
+>> > +
+>> >           If you don't know what to do here, say N.
+>> >
+>> >  endif
+>> > @@ -68,7 +70,7 @@ config VFIO_PCI_ZDEV_KVM
+>> >           To enable s390x KVM vfio-pci extensions, say Y.
+>> >
+>> >  config VFIO_PCI_DMABUF
+>> > -       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
+>> > +       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER && !VFIO_PCI_LIVEUPDATE
+>>
+>> Why does enabling VFIO_PCI_LIVEUPDATE require disabling
+>> VFIO_PCI_DMABUF? I saw the cover letter says "to keep things simple",
+>> but what specific problem does this solve or simplify?
+>
+>I should have provided more details there.
+>
+>When device is getting reset in vfio_pci_liveupdate_freeze(), we are
+>zapping userspace mapped bars, we also need to use
+>vfio_pci_dma_buf_move() to revoke dma buffer access or
+>vfio_pci_dma_buf_cleanup() combination. Cleanup takes the memory lock
+>which freeze already takes, and there are some refcounts which are
+>managed in both of these APIs. This was causing complexities with code
+>flow based on result of pci_load_saved_state(). All this was adding more
+>refactoring than I wanted in the series.
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on pci/next]
-[also build test ERROR on pci/for-linus linus/master v7.1-rc3 next-20260508]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/hangej/pci_crash-capture-PCI-config-space-at-panic-time/20260514-000653
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20260512162402.1929687-1-hangej%40amazon.com
-patch subject: [PATCH] pci_crash: capture PCI config space at panic time
-config: x86_64-randconfig-161-20260514 (https://download.01.org/0day-ci/archive/20260514/202605140624.Tw71sECt-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-smatch: v0.5.0-9185-gbcc58b9c
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260514/202605140624.Tw71sECt-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202605140624.Tw71sECt-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> kernel/pci_crash.c:661:25: error: no member named 'aer_cap' in 'struct pci_dev'
-     661 |                                 if (!pdev || !pdev->aer_cap)
-         |                                               ~~~~  ^
-   kernel/pci_crash.c:666:19: error: no member named 'aer_cap' in 'struct pci_dev'
-     666 |                                                              pdev->aer_cap + PCI_ERR_ROOT_STATUS,
-         |                                                              ~~~~  ^
-   2 errors generated.
-
-
-vim +661 kernel/pci_crash.c
-
-   599	
-   600	/**
-   601	 * pci_crash_save() - Capture PCI config space at crash time
-   602	 *
-   603	 * Called from crash_save_vmcoreinfo() inside __crash_kexec(), which
-   604	 * runs before machine_kexec() boots the crash kernel.  This is the
-   605	 * only reliable capture point -- panic notifiers run AFTER kexec by
-   606	 * default (crash_kexec_post_notifiers=0).
-   607	 *
-   608	 * Capture check (capture param):
-   609	 *   always  -- capture unconditionally
-   610	 *   aer     -- quick-scan root port AER ROOT_STATUS for uncorrectable
-   611	 *             errors; skip if none found
-   612	 *
-   613	 * When capture=always, captures on every panic.
-   614	 * This is useful for cascading failures: a PCI link-down can cause
-   615	 * an MCE or NMI watchdog timeout before DPC/AER fires, so the crash
-   616	 * reason is UNKNOWN but AER registers may still hold error state.
-   617	 *
-   618	 * Reads config space fresh -- successful reads get current register
-   619	 * state, failed reads (offline devices) write 0xFFFFFFFF.
-   620	 *
-   621	 * Flushes both buffer and pagemap from CPU cache to RAM so data
-   622	 * survives kexec into crash kernel.
-   623	 */
-   624	void pci_crash_save(void)
-   625	{
-   626		struct pci_crash_pagemap *pm;
-   627		unsigned long cflags;
-   628		unsigned int num_devs;
-   629		size_t pm_size;
-   630		size_t buf_size;
-   631		void *buffer;
-   632	
-   633		num_devs = READ_ONCE(pci_crash_num_devs);
-   634		if (num_devs == 0)
-   635			return;
-   636	
-   637		/* Pairs with smp_wmb() in rebuild -- ensures buffer/pagemap visible */
-   638		smp_rmb();
-   639	
-   640		buffer = READ_ONCE(pci_crash_buffer);
-   641		buf_size = READ_ONCE(pci_crash_buffer_size);
-   642		pm = READ_ONCE(pci_crash_pagemap);
-   643		pm_size = READ_ONCE(pci_crash_pagemap_size);
-   644		if (!buffer || buf_size == 0)
-   645			return;
-   646	
-   647		cflags = READ_ONCE(capture_flags);
-   648		if (!(cflags & PCI_CRASH_CAPTURE_ALWAYS)) {
-   649			if (cflags & PCI_CRASH_CAPTURE_AER) {
-   650				struct pci_dev **devs = READ_ONCE(pci_crash_devs);
-   651				unsigned int i;
-   652				bool pci_error_found = false;
-   653	
-   654				if (!devs)
-   655					return;
-   656	
-   657				for (i = 0; i < num_devs; i++) {
-   658					struct pci_dev *pdev = devs[i];
-   659					u32 status;
-   660	
- > 661					if (!pdev || !pdev->aer_cap)
-   662						continue;
-   663	
-   664					if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT) {
-   665						pci_read_config_dword(pdev,
-   666								     pdev->aer_cap + PCI_ERR_ROOT_STATUS,
-   667								     &status);
-   668						if (status & PCI_ERR_ROOT_UNCOR_RCV) {
-   669							pci_error_found = true;
-   670							break;
-   671						}
-   672					}
-   673				}
-   674	
-   675				if (!pci_error_found) {
-   676					pr_emerg("no PCI errors detected, skipping capture\n");
-   677					return;
-   678				}
-   679			} else {
-   680				return;
-   681			}
-   682		}
-   683	
-   684		pci_crash_fill_buffer(buffer, num_devs);
-   685	
-   686		/*
-   687		 * Flush buffer and pagemap from CPU cache to RAM so the
-   688		 * crash kernel sees our writes after kexec.
-   689		 */
-   690		pci_crash_flush_dcache(buffer, buf_size);
-   691	
-   692		if (pm && pm_size > 0)
-   693			pci_crash_flush_dcache(pm, pm_size);
-   694	
-   695		pr_emerg("CAPTURE: %u devices, %zu bytes\n",
-   696			 num_devs, buf_size);
-   697	}
-   698	EXPORT_SYMBOL_GPL(pci_crash_save);
-   699	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Maybe we can return -EOPNOTSUPP if any dmabufs for this vfio cdev are
+exported during preserve?
+>
+>I decided to just drop the change and disable the support of DMA Buffer for
+>now to keep number of patches less in the series. This will go away once
+>we remove reset condition in freeze.
