@@ -1,176 +1,77 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3142C3C9885;
-	Wed, 13 May 2026 21:55:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D453B9943;
+	Wed, 13 May 2026 22:06:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778709315; cv=none; b=e1yduajV+iJcN8VhMGl0bYAZfoL/zsDCZNNiA+nQztYJDEvjqp7ty5JIbkuVw60xySEp9+WcRGZyq0XsiundMvN+ZBYBf13Dhdw3gA28XkzBH9oZfVWhEymsYWmkYmZbCKCwCSla4pBopwUn5wxIF9Srk/XP/N09W9nJGJAVtQw=
+	t=1778709976; cv=none; b=kRimtMftjGotRCte1UcSk0ikIsuiSStdWOHNQYv96arMghYE34DV0fL1Zic+P6QDBtbfi4KztTo88po+6Y+b4kWJVdzqqomQ9iQ3QMxJYyViYn/jcbNs4IKwdmscvtfdXWZSSRvN3/Ncje55qNyMM3SeGRv4XuCl4YuhDEoJF5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778709315; c=relaxed/simple;
-	bh=rClCLv508MgKfMk65rpVSbbndmrOOFfdMf+W8DfDhlA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Fl4jjTaQQ1qufrg39f0yLZaJzGOCplQwltdGiN1GJOwpZHxe5RqI/ey1cCKGX7WzncUn5PI7VaxoQXakFL1ofNIs5wHGa7anoeIpSOq/xukgdlP/8bIpygxZo2sX887ya4JzgplNQP/nv5rPZFgU+2DScJKHSYlDJfpbFNtQ1ic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WSUNMpLw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778709976; c=relaxed/simple;
+	bh=SLtUZuE6eCsfJ26y0lN0VMH2gCaWGCYQmYw6nlqF/tw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=byELvQ0u8fp9zfPiWS/YyttXi929rhsCVUzvMehzhX9fbbZcxMGg8g+zi7CMlF2Rq+/RkHit1eeTdompEm4zhWQR1RQq3AgzBWvdc/h4XhrjoBISsJ3OSkcuj649frvt9AoZJAkGxGlfEE6DdVmVUXHgaBVt/5coNCZoJtTqqPE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iKlNtMsx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WSUNMpLw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD78DC19425;
-	Wed, 13 May 2026 21:55:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iKlNtMsx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12129C19425;
+	Wed, 13 May 2026 22:06:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778709314;
-	bh=rClCLv508MgKfMk65rpVSbbndmrOOFfdMf+W8DfDhlA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=WSUNMpLw3+lNg2crcjQLDqtZO+qoEYIhOQOP58HAXlprmYemZpWCQD4skpr7uUPiQ
-	 AdtJQ2cNNawYqKgGd2Bo2JRpzkCwe+qp93ua79eNYiTxeC9/oMSkGfhdS4aMExrhmE
-	 NuOagihDMlLNED7/cT+1jnPa0aZf0JxNn9BhGQIZOnH9oHgPDgPAHoJxqVKtLQetkN
-	 l+Mo/fqzUdOuJUU6m2KtvFOPIu9h3+dwMkr+PAZoi4U+BlMbNIiF5YY9W3W9+oC979
-	 IGIWW1LlxhzLK5tZLJhqrHhvRGkEh2j9RcyO3jY/vpBmfW2v28IjGm8rM/XCuLKrOz
-	 QIWMtgLDlS3NA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 21/23] dmaengine: sdxi: Add unit tests for descriptor
- encoding
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260511-sdxi-base-v2-21-889cfed17e3f@amd.com>
-References: <20260511-sdxi-base-v2-21-889cfed17e3f@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 21:55:14 +0000
-Message-Id: <20260513215514.AD78DC19425@smtp.kernel.org>
+	s=k20201202; t=1778709976;
+	bh=SLtUZuE6eCsfJ26y0lN0VMH2gCaWGCYQmYw6nlqF/tw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=iKlNtMsxO8YS65qWNkC+Igkes3nSBBPFNoNOGWHh1xmPes8LhvqktmDIQl6T7V1wd
+	 F5DhkQSKsroXc4idKz4sjmjMtnLTTEECeQij+Pn+umz31TtVu8pXSLmnPNBjtandzc
+	 KvV0w8drrLjeSHQ9v4/jwjHJHhRycEAABi8+thwgutnz1i8MQdBw7areXuJ28sYCCU
+	 1Inr6U6FlQWOw3Rj/ZK82cEbX5DnYOgSc+sKH9yLl/DYi+MojvIXGzTt+vC7YKkDan
+	 wZhGRHOMhUBxs7uouy2ojlPxZoAnvL45Chj5cPDTR7jeVTb6R1rnhHNJkFuNmW6Kl3
+	 FWHC1Ts9Xi7kQ==
+Date: Wed, 13 May 2026 17:06:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
+	naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
+Message-ID: <20260513220610.GA341225@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <65792ada-5e9d-4e3f-aa79-bb4a8ffd9161@cjdns.fr>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [Medium] Tests for `copy`, `cxt_start`, and `cxt_stop` bypass the `packin=
-g` API verification by directly checking encoded descriptor fields.
-- [Low] The `cxt_stop` test incorrectly references the `cxt_start` union me=
-mber when verifying fields.
-- [Low] The `sdxi_serialize_nop` encoder is entirely omitted from the test =
-suite.
-- [Low] The test suite setup function (`generic_desc_setup_device`) registe=
-rs an unused mock device.
---
+On Wed, May 13, 2026 at 11:39:25PM +0200, Caleb James DeLisle wrote:
+> On 13/05/2026 23:07, Bjorn Helgaas wrote:
+> > On Wed, May 13, 2026 at 07:16:52PM +0000, Caleb James DeLisle wrote:
+> > > Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
+> > > 
+> > > These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
+> > > require re-training after startup.
 
-commit aa4cdaba4b4a985bdcf2f80d3a44e02557352cc5
-Author: Nathan Lynch <nathan.lynch@amd.com>
-Subject: dmaengine: sdxi: Add unit tests for descriptor encoding
+> > > +found_port:
+> > > +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
+> > > +		/* Let it go because the device will work as Gen1 */
+> > > +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
+> >
+> > I suppose this will cause a warning even in cases where Gen2 is
+> > impossible, e.g., the endpoint only supports Gen1?
+> 
+> Correct indeed.
+> 
+> I imagine in most cases, if the port is Gen1 only then board integrator uses
+> a Gen1 card as well, so I could try being fancy and probe the card to see if
+> it supports Gen2. In OpenWrt the PCI driver is always built-in so I didn't
+> really consider this something to worry about.
 
-This commit adds KUnit tests for encoding descriptors in the SDXI driver.
-The tests use the packing API to decode descriptors produced by the driver
-to verify the correct bit offsets without relying on bitmask macros.
-
-> Test the encoder function for each descriptor type currently used by
-> the driver.
-
-Does this statement overlook the sdxi_serialize_nop encoder? It appears the
-test suite entirely omits tests for sdxi_serialize_nop, leaving this API
-untested.
-
-> diff --git a/drivers/dma/sdxi/descriptor_kunit.c b/drivers/dma/sdxi/descr=
-iptor_kunit.c
-> new file mode 100644
-> index 0000000000000..1f3c2e7ab2ddf
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/descriptor_kunit.c
-
-[ ... ]
-
-> +static void copy(struct kunit *t)
-> +{
-
-[ ... ]
-
-> +	KUNIT_EXPECT_EQ(t, 0,
-> +			sdxi_encode_copy(&desc,
-> +					 &(struct sdxi_copy) {
-> +						 .src =3D 0x1000,
-> +						 .dst =3D 0x2000,
-> +						 .len =3D 0x100,
-> +						 .src_akey =3D 1,
-> +						 .dst_akey =3D 2,
-> +					 }));
-> +	KUNIT_EXPECT_EQ(t, 0x1000, le64_to_cpu(desc.copy.addr0));
-> +	KUNIT_EXPECT_EQ(t, 0x2000, le64_to_cpu(desc.copy.addr1));
-> +	KUNIT_EXPECT_EQ(t, 0x100, 1 + le32_to_cpu(desc.copy.size));
-> +	KUNIT_EXPECT_EQ(t, 1, le16_to_cpu(desc.copy.akey0));
-> +	KUNIT_EXPECT_EQ(t, 2, le16_to_cpu(desc.copy.akey1));
-
-The commit message states the tests use the packing API to decode descripto=
-rs
-without relying on bitmask definitions. Do these assertions bypass the pack=
-ing
-API verification by directly reading the encoded descriptor fields from the
-struct?
-
-If the struct layout in the header file is incorrect, could this allow both=
- the
-driver and test code to share the same bug undetected?
-
-[ ... ]
-
-> +static void cxt_start(struct kunit *t)
-> +{
-> +	struct unpacked_desc unpacked;
-> +	struct sdxi_cxt_start start =3D {
-> +		.range =3D sdxi_cxt_range_single(2),
-> +	};
-> +	struct sdxi_desc desc;
-> +
-> +	desc_poison(&desc);
-> +	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_cxt_start(&desc, &start));
-> +
-> +	unpack_cxt_start(&unpacked, &desc);
-> +
-> +	/* Check op-specific fields. */
-> +	KUNIT_EXPECT_EQ(t, 0, desc.cxt_start.vflags);
-
-Does this also bypass the packing API by directly reading the encoded descr=
-iptor
-field instead of verifying via the unpacked struct?
-
-[ ... ]
-
-> +static void cxt_stop(struct kunit *t)
-> +{
-> +	struct unpacked_desc unpacked;
-> +	struct sdxi_cxt_stop stop =3D {
-> +		.range =3D sdxi_cxt_range_single(2),
-> +	};
-> +	struct sdxi_desc desc;
-> +
-> +	desc_poison(&desc);
-> +	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_cxt_stop(&desc, &stop));
-> +
-> +	unpack_cxt_stop(&unpacked, &desc);
-> +
-> +	/* Check op-specific fields. */
-> +	KUNIT_EXPECT_EQ(t, 0, desc.cxt_start.vflags);
-
-In addition to bypassing the packing API, does this incorrectly reference t=
-he
-cxt_start union member instead of cxt_stop when verifying fields?
-
-[ ... ]
-
-> +static int generic_desc_setup_device(struct kunit *t)
-> +{
-> +	struct device *dev =3D kunit_device_register(t, "sdxi-mock-device");
-> +
-> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(t, dev);
-> +	t->priv =3D dev;
-> +	return 0;
-> +}
-
-Is this mock device actually used by any of the tests in this suite? Lookin=
-g at
-the test cases, they appear to operate exclusively on memory buffers without
-requiring a device.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
-v2-0-889cfed17e3f@amd.com?part=3D21
+Probing the downstream device sounds like overkill because it hasn't
+been enumerated yet and there's no good place to check after it is
+enumerated.  I would consider just logging one message as "info"
+instead of "warn", maybe in mtk_pcie_startup_port_en7528()?
