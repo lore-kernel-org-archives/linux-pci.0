@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E79319C542
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 00:25:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 287B416A956;
+	Wed, 13 May 2026 00:33:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778631926; cv=none; b=PnrNh4ukpo0i1EmyL2hWJT4bBGW418QP+dyIX0P8+dJVjP0bJsHi4frJ4UqnAw/3Y2JPuqqDOt0ljvBbww4X/e0WdiscBGI2WSmAOmNIIKRqQ9zdYVgWnZNLWF9Bw9W3N+rgYSX1dvoNCFmupxjLrA5BVGcfzEsp/CWiuKfPLGI=
+	t=1778632433; cv=none; b=GuppEm9LLOTuvJydUyjMplFWF8aveGcvw5jYjIA30r6V2bBSD2+aA3nz9bw2fFDiDB1wHfomhawqMerQfCS1K+ji8E7ZPQ+ZUiIq/IIBn9Y2XqjanOgisrowWJ5EX699hvjQ6k7/D2T+cLKmp4dFQm/5Lgv60dINUHGhi98XQ0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778631926; c=relaxed/simple;
-	bh=6mzKBl6KjEpsHZBCdEjRf5ocmdF7DRWjwcoir2Rza4U=;
+	s=arc-20240116; t=1778632433; c=relaxed/simple;
+	bh=rzqdocAEdSWJhzFLVINqGo1xbNeff/zHALmKudjklVA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=B0V9OZHDvKT5xdFc5ZYXy4jyAeTuYTaApazIjsSMo/jCBcbHFYYS8ZvA1Vz/xjRdHQ5djyJguhWA59uJZLHEUFTk8Sn5nAciw3IMeVxG8ioqSkwS7hSVkptwaFsaxc4poCoP5AQkBuXb9d5ndEXAR0x3u+ZPkM9uELJqKEcysoE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CicQe5s1; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=NGdHAQSCeouPxkm01pSYWz9BtEhqqGgZRk3U/Gn7qgPR0t15ojraCCvjBNgSnFU33FKuQ3bOopqgzfrzajgiF54ywMVM53kKVUZKPHrjHR1I6/tp4IynmEnpPJ2P1HlKE4gPw5sGA6QBkqa7f1H6etIuV1Gxnum80yKCP7XJJQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQUyi0SD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CicQe5s1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FEEBC2BCB0;
-	Wed, 13 May 2026 00:25:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQUyi0SD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EDB2C2BCB0;
+	Wed, 13 May 2026 00:33:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778631925;
-	bh=6mzKBl6KjEpsHZBCdEjRf5ocmdF7DRWjwcoir2Rza4U=;
+	s=k20201202; t=1778632432;
+	bh=rzqdocAEdSWJhzFLVINqGo1xbNeff/zHALmKudjklVA=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=CicQe5s1YU7/iFr8QMrWqphySlccleD6G3gz5MdHy7z3K2yk4NBlEL70z+JXtvLiJ
-	 Y4tOKLPSvOAdRV/YH6fKDp31rqdzKvDoW1OGmknE0B21xG7NhkYJYKPfN5Ni+rbVfm
-	 shr0SmusarcHLvTZZE+qaUPy1o3uR7So58OakJzA2i4C/AL9IkjO4Gxg254OeRkqi3
-	 IGak3fGIMC6gTXw7oVoV8TmgenKmGNXFKXkGGpfld6VuLre4G2LYdZWq3Udfw3ZlXd
-	 pat5Qtwvu4UzWrUHcYw+D/Ztr1HCA86MoUm79OI/x3ZyXMykoB20M4nKCsGjqjWbrH
-	 d9u08ZIDh1+MA==
+	b=hQUyi0SDHsGlDjsOhG0iLZS97DigC7rF6v9r3PhICs1G5mKokEqXeTxK95qVxQYBZ
+	 2hAL2cYC8BcANBsrXvA9t+x1mb0YP3QXYBiG1vFMiN3Hh4pm+4ZTczVJSXgzhunEhu
+	 kUMR3mSKWjRERP0G7xnW+AcrpOciHUOXDerBYcbpF92CKqcfmVH8jzPsq3+tVsfPca
+	 Vg1RrQjY7+YePbrgHM+EXEdxatQRNR/sRJbJUmWM5NkcBs98W4DwiivP6nY3gPgRk3
+	 faaDZpxORy5C+jEU60jarw8hn4ikavQ0xqCOjAyszOUX3TueOiNGz40jj/t7BaJKJD
+	 zP0+YpfbZwIEQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC PATCH v2 1/4] pcie/aspm: Add debug logging for aspm policy
- config
+Subject: Re: [PATCH v2 04/23] dmaengine: sdxi: Feature discovery and initial
+ configuration
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Thomas Falcon" <thomas.falcon@intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260511210936.562622-2-thomas.falcon@intel.com>
-References: <20260511210936.562622-2-thomas.falcon@intel.com>
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-4-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-4-889cfed17e3f@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 00:25:25 +0000
-Message-Id: <20260513002525.8FEEBC2BCB0@smtp.kernel.org>
+Date: Wed, 13 May 2026 00:33:52 +0000
+Message-Id: <20260513003352.8EDB2C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,89 +46,122 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Low] Dead code when attempting to log Clock PM state in ASPM debug outpu=
-t.
-- [Low] Unconditional and potentially misleading debug logging for ASPM lin=
-k configuration.
+- [High] Hardware state machine mismanagement and TOCTOU race during device=
+ initialization.
+- [Low] Use of 64-bit MMIO accessors without proper fallback causes build f=
+ailures on 32-bit architectures.
 --
 
-commit 364db9458a74bb3fb257b69effddd2f95f805170
-Author: Thomas Falcon <thomas.falcon@intel.com>
+commit 20635a3fda61c4d58fcd763198caf0840128ff21
+Author: Nathan Lynch <nathan.lynch@amd.com>
 
-pcie/aspm: Add debug logging for aspm policy config
+dmaengine: sdxi: Feature discovery and initial configuration
 
-Include additional logging for ASPM and Clock PM state changes
-keeping track of code flow and enabled power saving states.
+Discover via the capability registers the doorbell region stride, the
+maximum supported context ID, the operation groups implemented, and
+limits on buffer and control structure sizes. The driver has the
+option of writing more conservative limits to the ctl2 register, but
+it uses those supplied by the implementation for now.
 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 925373b98dff0..cd23c1462502f 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-
+> diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
+> index b718ce04afa07..f9a9944ad8929 100644
+> --- a/drivers/dma/sdxi/device.c
+> +++ b/drivers/dma/sdxi/device.c
 [ ... ]
-
-> @@ -961,11 +964,14 @@ static void pcie_config_aspm_link(struct pcie_link_=
-state *link, u32 state)
->  	state &=3D (link->aspm_capable & ~link->aspm_disable);
-> =20
->  	/* Can't enable any substates if L1 is not enabled */
-> -	if (!(state & PCIE_LINK_STATE_L1))
-> +	if (!(state & PCIE_LINK_STATE_L1)) {
-> +		pci_dbg(parent, "ASPM: L1 not enabled, disabling L1 substates\n");
->  		state &=3D ~PCIE_LINK_STATE_L1SS;
+> @@ -5,14 +5,180 @@
+> +/* Get the device to the GSV_STOP state. */
+> +static int sdxi_dev_stop(struct sdxi_dev *sdxi)
+> +{
+> +	enum sdxi_fn_gsv status =3D sdxi_dev_gsv(sdxi);
+> +	int ret;
+> +
+> +	dev_dbg(sdxi->dev, "attempting stop, current state: %s\n",
+> +		gsv_str(status));
+> +
+> +	switch (status) {
+> +	case SDXI_GSV_INIT:
+> +	case SDXI_GSV_ACTIVE:
+> +		sdxi_write_fn_gsr(sdxi, SDXI_GSRV_STOP_SF);
+> +		break;
+> +	case SDXI_GSV_STOPG_SF:
+> +		sdxi_write_fn_gsr(sdxi, SDXI_GSRV_STOP_HD);
+> +		break;
+> +	case SDXI_GSV_STOPG_HD:
+> +	case SDXI_GSV_ERROR:
+> +		/*
+> +		 * If hard-stopping, there's nothing to do but wait.
+> +		 * If in error state, the reset is issued below.
+> +		 */
+> +		break;
+> +	default:
+> +		/* Unrecognized state; try a reset. */
+> +		sdxi_write_fn_gsr(sdxi, SDXI_GSRV_RESET);
+> +		break;
 > +	}
-> =20
->  	/* Spec says both ports must be in D0 before enabling PCI PM substates*/
->  	if (parent->current_state !=3D PCI_D0 || child->current_state !=3D PCI_=
-D0) {
-> +		pci_dbg(parent, "ASPM: Both ports are not in D0, disable PCI PM L1 sub=
-states unless explicitly enabled\n");
->  		state &=3D ~PCIE_LINK_STATE_L1_SS_PCIPM;
->  		state |=3D (link->aspm_enabled & PCIE_LINK_STATE_L1_SS_PCIPM);
->  	}
 
-Are these debug statements being printed more often than intended?
+If the device is already in the SDXI_GSV_STOP state, does the switch fall
+through to the default case and unintentionally issue a reset?
 
-Since these prints happen unconditionally before the early return check:
-
-    if (link->aspm_enabled =3D=3D state)
-        return;
-
-enabling dynamic debugging will output these messages even if the device=20
-states already match the requested state and no hardware configuration is=20
-actually applied.
+The subsequent read_poll_timeout() check would then immediately return succ=
+ess
+because the state evaluates as STOP before the background reset actually be=
+gins.
+Could this allow the reset to proceed in the background while the driver
+continues with initialization, potentially wiping the configuration?
 
 [ ... ]
+> +/*
+> + * See SDXI 1.0 4.1.8 Activation of the SDXI Function by Software.
+> + */
+> +static int sdxi_fn_activate(struct sdxi_dev *sdxi)
+> +{
+> +	u64 version, cap0, cap1, ctl2;
+> +	int err;
+> +
+> +	/*
+> +	 * Clear any existing configuration from MMIO_CTL0 and ensure
+> +	 * the function is in GSV_STOP state.
+> +	 */
+> +	sdxi_write64(sdxi, SDXI_MMIO_CTL0, 0);
+> +	err =3D sdxi_dev_stop(sdxi);
 
-> @@ -997,16 +1005,34 @@ static void pcie_config_aspm_link(struct pcie_link=
-_state *link, u32 state)
+Does writing 0 to SDXI_MMIO_CTL0 implicitly write SDXI_GSRV_RESET (value 0)
+to the FN_GSR command field?
+
+If so, sdxi_dev_stop() might read a stale device state while the hardware is
+processing the reset, and overwrite the command field with a conflicting co=
+mmand
+like SDXI_GSRV_STOP_SF. Can this lead to a hardware state machine conflict?
 
 [ ... ]
+> diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
+> index d4c61ca2f875f..84b87066f438d 100644
+> --- a/drivers/dma/sdxi/sdxi.h
+> +++ b/drivers/dma/sdxi/sdxi.h
+[ ... ]
+> @@ -30,9 +34,24 @@ struct sdxi_dev {
+> +static inline u64 sdxi_read64(const struct sdxi_dev *sdxi, enum sdxi_reg=
+ reg)
+> +{
+> +	return ioread64(sdxi->ctrl_regs + reg);
+> +}
+> +
+> +static inline void sdxi_write64(struct sdxi_dev *sdxi, enum sdxi_reg reg=
+, u64 val)
+> +{
+> +	iowrite64(val, sdxi->ctrl_regs + reg);
+> +}
 
-> +	pci_dbg(parent, "ASPM: enabled states:%s%s%s%s%s%s%s%s\n",
-> +		FLAG(state, L0S_UP, " L0s-Upstream"),
-> +		FLAG(state, L0S_DW, " L0s-Downstream"),
-> +		FLAG(state, L1, " L1"),
-> +		FLAG(state, L1_1, " ASPM-L1.1"),
-> +		FLAG(state, L1_2, " ASPM-L1.2"),
-> +		FLAG(state, L1_1_PCIPM, " PCI-PM-L1.1"),
-> +		FLAG(state, L1_2_PCIPM, " PCI-PM-L1.2"),
-> +		FLAG(state, CLKPM, " ClockPM"));
+Can this cause build failures on 32-bit architectures?
 
-Is it possible for the CLKPM flag to ever be true here?
+The functions use ioread64() and iowrite64(), which typically rely on readq=
+()
+and writeq() that are not defined on 32-bit platforms.
 
-It looks like the PCIE_LINK_STATE_CLKPM bit is masked out earlier in the
-function when verifying capabilities:
-
-    state &=3D (link->aspm_capable & ~link->aspm_disable);
-
-Since the CLKPM bit is outside the 7-bit range of aspm_capable, this bit
-is never present in the state mask at this point, so the macro will always
-evaluate to an empty string.=20
-
-Because the Clock PM state change is already correctly logged in=20
-pcie_set_clkpm(), does this FLAG check need to be included here?
+Although linux/io-64-nonatomic-lo-hi.h is included at the top of the file,
+the code does not use the macros actually provided by that header
+(e.g., ioread64_lo_hi()).
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511210936.5626=
-22-1-thomas.falcon@intel.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D4
