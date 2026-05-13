@@ -1,117 +1,331 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B48B3401A06
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 12:24:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05626360EF1;
+	Wed, 13 May 2026 12:41:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778675051; cv=none; b=ujBKnJk8CpukulE7GFzIDcIXRPDDpcG3MqpIJAa0EulTZvgrbRGzF16gR8NDu8heWb4ZAtV/73c91bs3k2Qf0pQjFch7hitdlJTB2AUE0+mdzx4aOzn8lbsnf+5xk4vRjkKZUWtHJM6LwSLycxdnE+NmvNzIaA+JU4x0zqJxfSY=
+	t=1778676087; cv=none; b=J0Rcc4K06yFNNrBag8Awy8wbORhMcCqVMf0xLpbqo51798SDYa4PlyDcwG4P8/eksccDy+8jLkdJhVUDmWcKEMt+fXJY9Bz7qd7aOwLcaiOLchofzKORfJeNPJivEjMlteLXOBF6iqNY7FYBGBKQcMfB2XyQmvyiWuOZLh0B/7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778675051; c=relaxed/simple;
-	bh=Qw7EmANXXZ/3LVJG07S3ZA5FOZib+h+6FFOJe1eDYwc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mrXiNJSUssyAH/Di+8K5DRjvCIBFb5siDVlXfxPWlu7BwAXJN68JwIiySR/gcWc9M6jS7M7XBNaPWMgS02JYcEiMKLd5mGwyYizyNhc7B65w2F0jebfxlgefZf8UCPVxrOpLR5mgPhBHLGEq8GA7gEBfHjC6QNQVZ/sdSIuRttw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=HgxgamXA; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1778676087; c=relaxed/simple;
+	bh=vH2mzStKt1hov8XZrortvHdz5QEOqNQPNbfe69Mz8Qc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VUcIpVdnke2Xi8i/5GMfagsWTArvud7AOOlKR2UXODKCBACmJQW4iWJSiw+he1Wt0ec4qgNpeA/Pcck7IPDREpGdMxttW2RWAmvcLD1N9pyJKYVFB72qCh0BI3OTfrfTfFbW4XhTncT0otm2f3vtQDlXSx3NubFJqcDFZnIbKwY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nDpIoc5Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HgxgamXA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1778675048;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VibxllrwfZ+Olr8/pslJuB6WWRQE69TiRFLko78sNoM=;
-	b=HgxgamXAmjpoUmCBiIJVBFVCtr6drTUwpEyVIJyQqRJGoAeYXfUeN2yb9rhN3Es5VDo9Mv
-	1VgPKa953MxSDAqISGJFedNLCNaLSKTlZgpnS26RH/qu9663DMaZcXm3GbY5co0jcWOl9I
-	CXzXwi7eff92Nfbtav4i1VmcxP9jU0c=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-322-de5PqA9bOvyeOQD16-IoyA-1; Wed,
- 13 May 2026 08:24:05 -0400
-X-MC-Unique: de5PqA9bOvyeOQD16-IoyA-1
-X-Mimecast-MFC-AGG-ID: de5PqA9bOvyeOQD16-IoyA_1778675044
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5B901195608B;
-	Wed, 13 May 2026 12:24:04 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.110])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 94A7A1953952;
-	Wed, 13 May 2026 12:24:02 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com,
-	alex@shazbot.org
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v3 2/2] PCI: Disable broken bus reset on Qualcomm devices
-Date: Wed, 13 May 2026 14:23:49 +0200
-Message-ID: <20260513122349.268753-2-jtornosm@redhat.com>
-In-Reply-To: <20260513122349.268753-1-jtornosm@redhat.com>
-References: <20260513122349.268753-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nDpIoc5Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D2EAC2BCB7;
+	Wed, 13 May 2026 12:41:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778676086;
+	bh=vH2mzStKt1hov8XZrortvHdz5QEOqNQPNbfe69Mz8Qc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=nDpIoc5ZJndZCLVpCp9mrnweAmEcFduOkP1OZjT2RZqYI7Jbg23BdgQVTvK60/M13
+	 rUVQnq7sFo5KJKc1FBxqtf2mxdTX9twS7I6cFdK1d+PS1hoyzd8qD+r0IsitpfeL9y
+	 LmxgNk8s/Q+JgM/JcwIMkcIlXWe3HFlH4F7FYRWEMylt2vIjol7RILntoSC4rpt9QN
+	 ZVmTB2r87FUPf3IxvwWvYXhTUcsmqJf83Ua4jrMgEgc4raHTBeH5FQRo33P5luW5fw
+	 f2mzOT+aLds34n4zIIRgaBgeaNZM8fIUSmJHtslpzGtAP2FZQfeUa60i85Fq/MXZAX
+	 QHgT1ulTSVcKA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH V3 09/11] x86/hyperv: Implement Hyper-V virtual IOMMU
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Mukesh R" <mrathor@linux.microsoft.com>
+Cc: linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260512020259.1678627-10-mrathor@linux.microsoft.com>
+References: <20260512020259.1678627-10-mrathor@linux.microsoft.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 13 May 2026 12:41:25 +0000
+Message-Id: <20260513124126.7D2EAC2BCB7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Some Qualcomm PCIe devices do not properly support Secondary Bus Reset
-(SBR). These devices have no FLR capability and advertise NoSoftRst+
-(blocking PM reset), leaving bus reset as the only available method.
-However, bus reset does not work reliably for these devices.
-
-The problem manifests in VFIO passthrough scenarios with these affected
-devices:
-
-- ath11k WiFi (17cb:1103): Normal VM operation works fine, including
-  clean shutdown/reboot. However, when the VM terminates uncleanly
-  (crash, force-off), VFIO attempts to reset the device before it can
-  be assigned to another VM. Without a working reset method, the device
-  remains in an undefined state, preventing reuse.
-
-- ath12k WiFi (17cb:1107): Same behavior as ath11k.
-
-- SDX62/SDX65 5G modems (17cb:0308): Never successfully initialize even
-  on first VM assignment without proper reset capability.
-
-Disable bus reset for these devices (following the pattern of other
-Atheros/Qualcomm devices) so the d3cold reset method (added in previous
-patch) is used instead, which provides working reset via D3cold power
-cycle or D3hot fallback.
-
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
-v3: Try to address Alex Williamson comments:
-    - Change from PCI_DEV_FLAGS_FORCE_PM_RESET quirk (v2) to quirk_no_bus_reset
-    - Rely on d3cold general reset method (patch 1) instead of forcing PM reset
-v2: https://lore.kernel.org/all/20260508145153.717641-2-jtornosm@redhat.com/
-
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 000000000000..111111111111 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3789,6 +3789,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0034, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003e, quirk_no_bus_reset);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1103, quirk_no_bus_reset); /* ath11k */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1107, quirk_no_bus_reset); /* ath12k */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x0308, quirk_no_bus_reset); /* SDX62/SDX65 */
-
- /*
-  * Root port on some Cavium CN8xxx chips do not successfully complete a bus
+Thank you for your contribution! Sashiko AI review found 10 potential issue=
+(s) to consider:
+- [Critical] `hv_iommu_unmap_pages` makes a rep hypercall but ignores the c=
+ompletion count, leaving pages permanently mapped.
+- [Critical] Integer truncation in `hv_iommu_unmap_pages` causes incomplete=
+ hardware unmapping.
+- [Critical] Global `unique_id` data race leads to IOMMU domain collisions =
+and cross-VM DMA sharing.
+- [High] The `sscanf` return value check in `hv_iommu_probe_device` breaks =
+the loop on success instead of failure.
+- [High] Partial unmaps corrupt the interval tree state, desynchronizing ha=
+rdware and software.
+- [High] Unsafe interval tree iteration leads to skipped nodes during remov=
+al.
+- [High] Memory leak of interval tree nodes on domain free.
+- [High] Ignoring `gfp` flags causes premature OOM and risks sleeping in at=
+omic context.
+- [Medium] Missing NULL check on `mapped` pointer in fast path.
+- [Low] The `__setup` handlers violate the API by returning 0.
 --
-2.53.0
 
+commit 4a3c258bcace1805e7afe537c6eb3e451a6fd030
+Author: Mukesh R <mrathor@linux.microsoft.com>
+
+x86/hyperv: Implement Hyper-V virtual IOMMU
+
+Add a new file to implement management of device domains, mapping and
+unmapping of IOMMU memory, and other iommu_ops to fit within the VFIO
+framework for PCI passthru on Hyper-V running Linux as baremetal root
+or L1VH root.
+
+> diff --git a/drivers/iommu/hyperv-iommu-root.c b/drivers/iommu/hyperv-iom=
+mu-root.c
+> new file mode 100644
+> index 0000000000000..a2e0f6cc78e66
+> --- /dev/null
+> +++ b/drivers/iommu/hyperv-iommu-root.c
+
+[ ... ]
+
+> +static char *pci_devs_to_skip;
+> +static int __init hv_iommu_setup_skip(char *str)
+> +{
+> +	pci_devs_to_skip =3D str;
+> +
+> +	return 0;
+> +}
+
+Should this return 1 instead of 0? Returning 0 causes the kernel to print an
+unknown command line parameters warning and passes the parameters to the in=
+it
+process.
+
+> +/* hv_iommu_skip=3D(SSSS:BB:DD.F)(SSSS:BB:DD.F) */
+> +__setup("hv_iommu_skip=3D", hv_iommu_setup_skip);
+> +
+> +bool hv_no_attdev;	 /* disable direct device attach for passthru */
+> +EXPORT_SYMBOL_GPL(hv_no_attdev);
+> +static int __init setup_hv_no_attdev(char *str)
+> +{
+> +	hv_no_attdev =3D true;
+> +	return 0;
+> +}
+
+Should this also return 1 instead of 0 to indicate the parameter was handle=
+d?
+
+[ ... ]
+
+> +static struct iommu_domain *hv_iommu_domain_alloc_paging(struct device *=
+dev)
+> +{
+> +	struct hv_domain *hvdom;
+> +	int rc;
+
+[ ... ]
+
+> +	/* Called under iommu group mutex, so single threaded */
+> +	if (++unique_id =3D=3D HV_DEVICE_DOMAIN_ID_S2_NULL)   /* ie, UINTMAX */
+> +		goto out_err;
+
+Can this increment of unique_id race if called concurrently?
+
+iommu_domain_alloc() can be called by subsystems without holding global or
+group locks. If multiple allocations race, it could assign identical domid_=
+num
+values to different domains, which might place them in the same S2 domain.
+
+[ ... ]
+
+> +static void hv_iommu_domain_free(struct iommu_domain *immdom)
+> +{
+> +	struct hv_domain *hvdom =3D to_hv_domain(immdom);
+> +	unsigned long flags;
+> +	u64 status;
+> +	struct hv_input_delete_device_domain *input;
+> +
+> +	if (hv_special_domain(hvdom))
+> +		return;
+> +
+> +	if (!hv_dom_owner_is_vmm(hvdom) || hv_no_attdev) {
+
+[ ... ]
+
+> +	}
+> +
+> +	kfree(hvdom);
+> +}
+
+Does this code leak the interval tree nodes?
+
+It looks like the remaining struct hv_iommu_mapping nodes in
+hvdom->mappings_tree are not freed before kfree(hvdom).
+
+[ ... ]
+
+> +static int hv_iommu_add_tree_mapping(struct hv_domain *hvdom,
+> +				     unsigned long iova, phys_addr_t paddr,
+> +				     size_t size, u32 flags)
+> +{
+> +	unsigned long irqflags;
+> +	struct hv_iommu_mapping *mapping;
+> +
+> +	mapping =3D kzalloc(sizeof(*mapping), GFP_ATOMIC);
+
+Should this use the gfp flag passed into hv_iommu_map_pages() instead of
+GFP_ATOMIC? It might avoid failing prematurely under memory pressure when t=
+he
+caller can sleep.
+
+[ ... ]
+
+> +static size_t hv_iommu_del_tree_mappings(struct hv_domain *hvdom,
+> +					unsigned long iova, size_t size)
+> +{
+> +	unsigned long flags;
+> +	size_t unmapped =3D 0;
+> +	unsigned long last =3D iova + size - 1;
+> +	struct hv_iommu_mapping *mapping =3D NULL;
+> +	struct interval_tree_node *node, *next;
+> +
+> +	spin_lock_irqsave(&hvdom->mappings_lock, flags);
+> +	next =3D interval_tree_iter_first(&hvdom->mappings_tree, iova, last);
+> +	while (next) {
+> +		node =3D next;
+> +		mapping =3D container_of(node, struct hv_iommu_mapping, iova);
+> +		next =3D interval_tree_iter_next(node, iova, last);
+> +
+> +		/* Trying to split a mapping? Not supported for now. */
+> +		if (mapping->iova.start < iova)
+> +			break;
+
+Does breaking out early here leave stale mappings in the tree?
+
+If the target region is unmapped in hardware, the tracking node would remai=
+n,
+causing stale lookups. Also, if unmapping the head of a mapping, is the
+entire node deleted even though the tail is still mapped?
+
+> +
+> +		unmapped +=3D mapping->iova.last - mapping->iova.start + 1;
+> +
+> +		interval_tree_remove(node, &hvdom->mappings_tree);
+
+Can erasing the node corrupt the iteration?
+
+Since interval_tree_remove() rebalances the tree and alters parent pointers,
+calling interval_tree_iter_next(next) on the next loop iteration might skip
+overlapping nodes.
+
+[ ... ]
+
+> +static int hv_iommu_map_pages(struct iommu_domain *immdom, ulong iova,
+> +			      phys_addr_t paddr, size_t pgsize, size_t pgcount,
+> +			      int prot, gfp_t gfp, size_t *mapped)
+> +{
+> +	u32 map_flags;
+> +	int ret;
+> +	u64 status;
+> +	unsigned long npages, done =3D 0;
+> +	struct hv_domain *hvdom =3D to_hv_domain(immdom);
+> +	size_t size =3D pgsize * pgcount;
+> +
+> +	map_flags =3D HV_MAP_GPA_READABLE;	/* required */
+> +	map_flags |=3D prot & IOMMU_WRITE ? HV_MAP_GPA_WRITABLE : 0;
+> +
+> +	ret =3D hv_iommu_add_tree_mapping(hvdom, iova, paddr, size, map_flags);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (hvdom->attached_dom) {
+> +		*mapped =3D size;
+> +		return 0;
+> +	}
+
+Is it possible for mapped to be NULL here?
+
+The fast path assigns to *mapped without validating the pointer, while later
+in the function there are defensive checks like if (mapped).
+
+[ ... ]
+
+> +		if (hv_result(status) =3D=3D HV_STATUS_INSUFFICIENT_MEMORY) {
+> +			ret =3D hv_call_deposit_pages(NUMA_NO_NODE,
+> +						    hv_current_partition_id,
+> +						    256);
+
+Could this trigger a sleeping in atomic context bug?
+
+hv_call_deposit_pages() typically performs sleepable allocations, but the
+caller of hv_iommu_map_pages() might have provided a non-sleeping gfp flag
+which was not forwarded.
+
+[ ... ]
+
+> +static size_t hv_iommu_unmap_pages(struct iommu_domain *immdom, ulong io=
+va,
+> +				   size_t pgsize, size_t pgcount,
+> +				   struct iommu_iotlb_gather *gather)
+> +{
+> +	unsigned long flags, npages;
+> +	struct hv_input_unmap_device_gpa_pages *input;
+> +	u64 status;
+> +	struct hv_domain *hvdom =3D to_hv_domain(immdom);
+> +	size_t unmapped, size =3D pgsize * pgcount;
+
+[ ... ]
+
+> +	npages =3D size >> HV_HYP_PAGE_SHIFT;
+> +
+> +	local_irq_save(flags);
+> +	input =3D *this_cpu_ptr(hyperv_pcpu_input_arg);
+> +	memset(input, 0, sizeof(*input));
+> +
+> +	input->device_domain.partition_id =3D HV_PARTITION_ID_SELF;
+> +	input->device_domain.domain_id.type =3D HV_DEVICE_DOMAIN_TYPE_S2;
+> +	input->device_domain.domain_id.id =3D hvdom->domid_num;
+> +	input->target_device_va_base =3D iova;
+> +
+> +	status =3D hv_do_rep_hypercall(HVCALL_UNMAP_DEVICE_GPA_PAGES, npages,
+> +				     0, input, NULL);
+
+Can npages be truncated here?
+
+The hypercall parameter rep_count in hv_do_rep_hypercall() expects a u16.
+If npages is >=3D 65536, it would be silently truncated, causing incomplete
+unmapping in the hardware.
+
+Does this also need a loop to handle partial completions?
+
+hv_do_rep_hypercall() might only partially complete. Since the completion c=
+ount
+from hv_repcomp(status) is ignored, remaining pages could be left fully
+mapped in the hardware.
+
+[ ... ]
+
+> +static struct iommu_device *hv_iommu_probe_device(struct device *dev)
+> +{
+> +	if (!dev_is_pci(dev))
+> +		return ERR_PTR(-ENODEV);
+> +
+> +	if (pci_devs_to_skip && *pci_devs_to_skip) {
+> +		int rc, pos =3D 0;
+> +		int parsed;
+> +		int segment, bus, slot, func;
+> +		struct pci_dev *pdev =3D to_pci_dev(dev);
+> +
+> +		do {
+> +			parsed =3D 0;
+> +
+> +			rc =3D sscanf(pci_devs_to_skip + pos, " (%x:%x:%x.%x) %n",
+> +				    &segment, &bus, &slot, &func, &parsed);
+> +			if (rc)
+> +				break;
+
+Should this check for failure instead of success?
+
+sscanf() returns the number of successfully matched items. If it succeeds, =
+rc
+will be 4, causing the loop to break prematurely without checking the parsed
+values against the device.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512020259.1678=
+627-1-mrathor@linux.microsoft.com?part=3D9
