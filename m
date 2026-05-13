@@ -1,167 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 287B416A956;
-	Wed, 13 May 2026 00:33:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9168198E91
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 00:40:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778632433; cv=none; b=GuppEm9LLOTuvJydUyjMplFWF8aveGcvw5jYjIA30r6V2bBSD2+aA3nz9bw2fFDiDB1wHfomhawqMerQfCS1K+ji8E7ZPQ+ZUiIq/IIBn9Y2XqjanOgisrowWJ5EX699hvjQ6k7/D2T+cLKmp4dFQm/5Lgv60dINUHGhi98XQ0M=
+	t=1778632821; cv=none; b=EWZLwb3Z0JdXWknjaVPVqEhwDpI+aYNj3vv/93Gn0AZdxDq40NA//Ab8Eq6fI0fnbPxu4uAAJrvTrajtyBdPJcM54P5nLdD4lNEMN0zjP3dATanLUAmGxI1AxQxzbUlNsIpcd6MCE3pBthk7Fy3y2FKbYqibKB9s9/W9HsW1Jco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778632433; c=relaxed/simple;
-	bh=rzqdocAEdSWJhzFLVINqGo1xbNeff/zHALmKudjklVA=;
+	s=arc-20240116; t=1778632821; c=relaxed/simple;
+	bh=8BoHbLquRWo4w8oMVtxj9O290ZkdAst0zvKaNGkehCU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NGdHAQSCeouPxkm01pSYWz9BtEhqqGgZRk3U/Gn7qgPR0t15ojraCCvjBNgSnFU33FKuQ3bOopqgzfrzajgiF54ywMVM53kKVUZKPHrjHR1I6/tp4IynmEnpPJ2P1HlKE4gPw5sGA6QBkqa7f1H6etIuV1Gxnum80yKCP7XJJQQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hQUyi0SD; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=UHsc8y8xeCtLoZ4UrDNPUXlX/rw8eqgc6EHfEvkJsRSLlFMYXdURuLScja28Bxk/78mKofeIJrwbs7k60WJ43eaHyuyjEOatupEfDM9cK8bRT2bMKmgU3rJ/ovFzsunWOLfGr1OGnivGjWSgWY7OU9nBMZoFPDvWM6kmq55RF1U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ht87K3u/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hQUyi0SD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EDB2C2BCB0;
-	Wed, 13 May 2026 00:33:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ht87K3u/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31420C2BCB0;
+	Wed, 13 May 2026 00:40:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778632432;
-	bh=rzqdocAEdSWJhzFLVINqGo1xbNeff/zHALmKudjklVA=;
+	s=k20201202; t=1778632821;
+	bh=8BoHbLquRWo4w8oMVtxj9O290ZkdAst0zvKaNGkehCU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=hQUyi0SDHsGlDjsOhG0iLZS97DigC7rF6v9r3PhICs1G5mKokEqXeTxK95qVxQYBZ
-	 2hAL2cYC8BcANBsrXvA9t+x1mb0YP3QXYBiG1vFMiN3Hh4pm+4ZTczVJSXgzhunEhu
-	 kUMR3mSKWjRERP0G7xnW+AcrpOciHUOXDerBYcbpF92CKqcfmVH8jzPsq3+tVsfPca
-	 Vg1RrQjY7+YePbrgHM+EXEdxatQRNR/sRJbJUmWM5NkcBs98W4DwiivP6nY3gPgRk3
-	 faaDZpxORy5C+jEU60jarw8hn4ikavQ0xqCOjAyszOUX3TueOiNGz40jj/t7BaJKJD
-	 zP0+YpfbZwIEQ==
+	b=Ht87K3u/oLF0gCzfMuRC2spPIIb0zeY4enqaSL1S0xxpojuSE7Hx6A2WLtMOzMYVQ
+	 M41S1UNQfO5P8FXxD5QK/bF/wnsv7foVY35yZgNVO2GL1FmxGCJ2FjssGqamIYjX2I
+	 qCvdesJRBSuZa34SoXexc1cSk1HRKSQxjyP0KwnPnnznVqVhHDwYtKOdLcDfhojyM8
+	 kWxBdjkyJWmWtCfSioVYQBEgAVenSUaW21TaAZVk0incTyGDKA2ZZrVqfnRupblsG4
+	 tuaJWnG9ep817ynF4A5CNRqRXYZgdAWYEYUXryPbmEBqkFMnz093gtqtW0izhM6g2y
+	 yGpYIIT+dKiXw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/23] dmaengine: sdxi: Feature discovery and initial
- configuration
+Subject: Re: [RFC PATCH v2 2/4] pcie/aspm: Enable all power-saving states
+ during link state initialization
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260511-sdxi-base-v2-4-889cfed17e3f@amd.com>
-References: <20260511-sdxi-base-v2-4-889cfed17e3f@amd.com>
+To: "Thomas Falcon" <thomas.falcon@intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511210936.562622-3-thomas.falcon@intel.com>
+References: <20260511210936.562622-3-thomas.falcon@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 00:33:52 +0000
-Message-Id: <20260513003352.8EDB2C2BCB0@smtp.kernel.org>
+Date: Wed, 13 May 2026 00:40:20 +0000
+Message-Id: <20260513004021.31420C2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Hardware state machine mismanagement and TOCTOU race during device=
- initialization.
-- [Low] Use of 64-bit MMIO accessors without proper fallback causes build f=
-ailures on 32-bit architectures.
+- [High] Data race and missing memory barriers in lazy initialization of `p=
+cie_aspm_legacy_config_check()`
+- [Medium] Implicit reliance on `dmi_get_bios_year()` error code evaluating=
+ as a chronological year
+- [Low] Misleading log message claiming ASPM configuration occurs at 'build=
+' time, and stale code comments
 --
 
-commit 20635a3fda61c4d58fcd763198caf0840128ff21
-Author: Nathan Lynch <nathan.lynch@amd.com>
+commit 5d1b20da84d0615c569d56fd7efaa7c241b6e329
+Author: Thomas Falcon <thomas.falcon@intel.com>
 
-dmaengine: sdxi: Feature discovery and initial configuration
+pcie/aspm: Enable all power-saving states during link state initialization
 
-Discover via the capability registers the doorbell region stride, the
-maximum supported context ID, the operation groups implemented, and
-limits on buffer and control structure sizes. The driver has the
-option of writing more conservative limits to the ctl2 register, but
-it uses those supplied by the implementation for now.
+This commit enables setting powersave and powersupersave states during
+ASPM link state initialization. It restricts this behavior to systems
+with a BIOS release during or after 2025 to simplify the enabling flow.
 
-> diff --git a/drivers/dma/sdxi/device.c b/drivers/dma/sdxi/device.c
-> index b718ce04afa07..f9a9944ad8929 100644
-> --- a/drivers/dma/sdxi/device.c
-> +++ b/drivers/dma/sdxi/device.c
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index cd23c1462502f..e93b724945341 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+
 [ ... ]
-> @@ -5,14 +5,180 @@
-> +/* Get the device to the GSV_STOP state. */
-> +static int sdxi_dev_stop(struct sdxi_dev *sdxi)
+
+> @@ -1057,6 +1058,23 @@ static void free_link_state(struct pcie_link_state=
+ *link)
+>  	kfree(link);
+>  }
+> =20
+> +static bool pcie_aspm_legacy_config_check(void)
 > +{
-> +	enum sdxi_fn_gsv status =3D sdxi_dev_gsv(sdxi);
-> +	int ret;
+> +	static bool legacy_aspm_config;
+> +	static bool checked;
 > +
-> +	dev_dbg(sdxi->dev, "attempting stop, current state: %s\n",
-> +		gsv_str(status));
+> +	if (checked)
+> +		return legacy_aspm_config;
+> +	if (dmi_get_bios_year() < 2025)
+> +		legacy_aspm_config =3D true;
+
+When dmi_get_bios_year() returns -ENXIO (-6) on systems without DMI support
+(like Device Tree based ARM64 or PowerPC), won't it evaluate as less than
+2025?
+
+Does this unintentionally classify all non-DMI platforms as legacy systems
+regardless of their actual age?
+
 > +
-> +	switch (status) {
-> +	case SDXI_GSV_INIT:
-> +	case SDXI_GSV_ACTIVE:
-> +		sdxi_write_fn_gsr(sdxi, SDXI_GSRV_STOP_SF);
-> +		break;
-> +	case SDXI_GSV_STOPG_SF:
-> +		sdxi_write_fn_gsr(sdxi, SDXI_GSRV_STOP_HD);
-> +		break;
-> +	case SDXI_GSV_STOPG_HD:
-> +	case SDXI_GSV_ERROR:
-> +		/*
-> +		 * If hard-stopping, there's nothing to do but wait.
-> +		 * If in error state, the reset is issued below.
-> +		 */
-> +		break;
-> +	default:
-> +		/* Unrecognized state; try a reset. */
-> +		sdxi_write_fn_gsr(sdxi, SDXI_GSRV_RESET);
-> +		break;
-> +	}
+> +	pr_info_once("ASPM configuration is determined at %s time\n",
+> +		     legacy_aspm_config ? "build" : "boot");
+> +	checked =3D true;
 
-If the device is already in the SDXI_GSV_STOP state, does the switch fall
-through to the default case and unintentionally issue a reset?
+Are we missing memory barriers here?
 
-The subsequent read_poll_timeout() check would then immediately return succ=
-ess
-because the state evaluates as STOP before the background reset actually be=
-gins.
-Could this allow the reset to proceed in the background while the driver
-continues with initialization, potentially wiping the configuration?
+During concurrent PCIe device enumeration, if one thread sets
+legacy_aspm_config =3D true and then checked =3D true:
 
-[ ... ]
-> +/*
-> + * See SDXI 1.0 4.1.8 Activation of the SDXI Function by Software.
-> + */
-> +static int sdxi_fn_activate(struct sdxi_dev *sdxi)
-> +{
-> +	u64 version, cap0, cap1, ctl2;
-> +	int err;
+Thread A:
+    legacy_aspm_config =3D true;
+    checked =3D true;
+
+Could weak memory ordering cause Thread B to observe checked =3D=3D true but
+read a stale uninitialized legacy_aspm_config value of false, leading to
+a regression where unsupported systems bypass the legacy ASPM delay?
+
+Also, this isn't a bug, but does ASPM configuration really occur at "build"
+time on legacy systems, or is it deferred until runtime when the device
+driver calls pci_enable_device()?
+
+The log message might be misleading for system administrators.
+
 > +
-> +	/*
-> +	 * Clear any existing configuration from MMIO_CTL0 and ensure
-> +	 * the function is in GSV_STOP state.
-> +	 */
-> +	sdxi_write64(sdxi, SDXI_MMIO_CTL0, 0);
-> +	err =3D sdxi_dev_stop(sdxi);
-
-Does writing 0 to SDXI_MMIO_CTL0 implicitly write SDXI_GSRV_RESET (value 0)
-to the FN_GSR command field?
-
-If so, sdxi_dev_stop() might read a stale device state while the hardware is
-processing the reset, and overwrite the command field with a conflicting co=
-mmand
-like SDXI_GSRV_STOP_SF. Can this lead to a hardware state machine conflict?
-
-[ ... ]
-> diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-> index d4c61ca2f875f..84b87066f438d 100644
-> --- a/drivers/dma/sdxi/sdxi.h
-> +++ b/drivers/dma/sdxi/sdxi.h
-[ ... ]
-> @@ -30,9 +34,24 @@ struct sdxi_dev {
-> +static inline u64 sdxi_read64(const struct sdxi_dev *sdxi, enum sdxi_reg=
- reg)
-> +{
-> +	return ioread64(sdxi->ctrl_regs + reg);
+> +	return legacy_aspm_config;
 > +}
 > +
-> +static inline void sdxi_write64(struct sdxi_dev *sdxi, enum sdxi_reg reg=
-, u64 val)
-> +{
-> +	iowrite64(val, sdxi->ctrl_regs + reg);
-> +}
+>  static int pcie_aspm_sanity_check(struct pci_dev *pdev)
+>  {
+>  	struct pci_dev *child;
 
-Can this cause build failures on 32-bit architectures?
+[ ... ]
 
-The functions use ioread64() and iowrite64(), which typically rely on readq=
-()
-and writeq() that are not defined on 32-bit platforms.
+> @@ -1196,8 +1214,9 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>  	 * the BIOS's expectation, we'll do so once pci_enable_device() is
+>  	 * called.
+>  	 */
 
-Although linux/io-64-nonatomic-lo-hi.h is included at the top of the file,
-the code does not use the macros actually provided by that header
-(e.g., ioread64_lo_hi()).
+This isn't a bug, but should the comment block above be updated to reflect
+that POLICY_POWERSAVE configurations are now applied immediately on modern
+systems instead of being deferred?
+
+> -	if (aspm_policy !=3D POLICY_POWERSAVE &&
+> -	    aspm_policy !=3D POLICY_POWER_SUPERSAVE) {
+> +	if (!pcie_aspm_legacy_config_check() ||
+> +	    (aspm_policy !=3D POLICY_POWERSAVE &&
+> +	     aspm_policy !=3D POLICY_POWER_SUPERSAVE)) {
+>  		pcie_config_aspm_path(link);
+>  		pcie_set_clkpm(link, policy_to_clkpm_state(link));
+>  	}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
-v2-0-889cfed17e3f@amd.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511210936.5626=
+22-1-thomas.falcon@intel.com?part=3D2
