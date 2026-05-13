@@ -1,103 +1,132 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4311E33CEA7;
-	Wed, 13 May 2026 05:09:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D3AE3A4509;
+	Wed, 13 May 2026 05:21:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778648972; cv=none; b=Wf/f1H1oso7OxOak8b+tJ1ONiSltdxsT6ykeg2lfgGsTB9UYQVN0iqpQQX4Z47yw9JpF5cQaIKrCNWCbDHs/1eVTh3aRAVgFkOGkoaRRIV/ZCSVg9P8C1v8Cb/gYM9WzM/BxPjp+sxMnYDve7WdAlEZoaMwIiocHdr9cL+7oGiE=
+	t=1778649697; cv=none; b=sO/K5kFQUMSTntu4VcCLpx1ZYfZaF/Z28k5Fr8qUmf9ILxrt5tbblt1mwRuHWMAhxyeYX9D4LdVnB6TfFnWaCbZYIun+Ui2K08r+QXI6q6t8V1th3EeK0GpNyRN1ZOydBAH4gko4/tXiDNz48BX/J4Zq6TvBXKpo7ow+CAQveAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778648972; c=relaxed/simple;
-	bh=vSpNICj8FRQIEEplzSitQ31XDKoymAyfswGV6NdN8H4=;
+	s=arc-20240116; t=1778649697; c=relaxed/simple;
+	bh=LvrOMRiTy1xiaYbaN6mRTkorUA/sQQV3b5cPoBYx5g4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OVaLTQzIOCugWzHRYwju0MzgbtJa8tEBJfFlaRvgvyAHlSee+sojh+thAKhJPfmR85Gq9/CMi7JB/2kB8J58vdPCwjDxl7087WKDhhGPmpUZ6uI4vDtUCamQXTYRdwHvkTS3VDGnjxJ5VC6zySKl/8D0rTCoVp/XzA0jgqTPYeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TnA+kn23; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=TfiySKEM2vonwwmWaOv1+mnMArrw+erD9YquGrNq2klcrm4vZpVIgvyeGQV9JkC8qCH1GfULfhTgA5q4K40Qtnid9BGs8N8sz4NagFvkBCrDYG66v17iN/PoAacKdsWtk2QV/GJOxIfDj1Uvkwt2Kr+pUkhTYRXi5sPT09LiSzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oytO2Ddn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TnA+kn23"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE056C2BCB7;
-	Wed, 13 May 2026 05:09:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oytO2Ddn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14261C4AF0B;
+	Wed, 13 May 2026 05:21:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778648971;
-	bh=vSpNICj8FRQIEEplzSitQ31XDKoymAyfswGV6NdN8H4=;
+	s=k20201202; t=1778649697;
+	bh=LvrOMRiTy1xiaYbaN6mRTkorUA/sQQV3b5cPoBYx5g4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=TnA+kn23Tskn9jdTf6JaNOmtSa4ZcyDVXVu39JvahSuh8a+7EfknI0Eh118ou/9aV
-	 bXWprt+JgzLYqxv7kRmlvPfOkrzLhRAoLzd0aZPT/sFR1UyR8gzJxZ5xklxiJBMXTF
-	 FanGiPEi837LDXZBJObxaDKgE34Q6CnVP2ttNa9icNamOLNjgiNl/tCAmZOZ8NNp6e
-	 VvI0gVmfSBkG6urFvbhmidgJ2I8IjWpcbmFmuz+FqsWLs9ri8C2nbSYqsFr5oIP0R/
-	 1zrYgja/oM2igPV8MDSJrhXyKtHQlz/SZ76C7ZEmCF4KnmO4bBmAyMVlwC0TZjk6WZ
-	 TzZqisJ58yzCA==
+	b=oytO2DdnzOuHajReHF+Q0sBveCnaKZSoqxds+KcANs3CB/NUJ8FTz9zqrgaUp60so
+	 qjo9XdGWmNfm8q4D1CeD1XU3Ke8HZsZ/YYbA3A9hZFBDnCHbxDHkrUkw+ZAMkbVweG
+	 07ItZ9+vi8Pp0PlMt5vO6TLGPbBarCYzQqx01xe6DmzKhGpEFaIV7wREsbYh2EJykb
+	 cikYVipdwWCegue1qQ/zMu7o0Yg1YFYAXUii50oCORVci9mHkw+jLly+KK0S0aEMVE
+	 MSq0LSAy15bRobrRyxev4J+z3o7uEKo5QgK5M3ftnZCV373hdkhj5//OqdAeneIYMD
+	 tYRHdCP6FW5+w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V3 05/11] mshv: Implement mshv bridge device for VFIO
+Subject: Re: [PATCH v2 12/23] dmaengine: sdxi: Add descriptor ring
+ management
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Mukesh R" <mrathor@linux.microsoft.com>
-Cc: linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260512020259.1678627-6-mrathor@linux.microsoft.com>
-References: <20260512020259.1678627-6-mrathor@linux.microsoft.com>
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: dmaengine@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-12-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-12-889cfed17e3f@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 05:09:31 +0000
-Message-Id: <20260513050931.BE056C2BCB7@smtp.kernel.org>
+Date: Wed, 13 May 2026 05:21:36 +0000
+Message-Id: <20260513052137.14261C4AF0B@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [High] Unprotected access to `pt_devices` list and missing lockdep assert=
-ion.
-- [Low] The `mshv_vfio_device_ops` structure is missing the `const` qualifi=
-er.
+- [High] Unkillable task hang and Use-After-Free in ring reservation during=
+ device removal or hardware wedge.
+- [High] Potential torn reads of the shared 64-bit read index on 32-bit arc=
+hitectures permanently wedge the ring.
+- [Low] Macro `sdxi_ring_resv_foreach` evaluates the `resv_` argument multi=
+ple times.
 --
 
-commit 96ab470ecc51b095ed8b1538e4abdf37d030b039
-Author: Mukesh R <mrathor@linux.microsoft.com>
-Subject: mshv: Implement mshv bridge device for VFIO
+commit fb903a32d5204efe5e95d75203c430ca1c4e7e8d
+Author: Nathan Lynch <nathan.lynch@amd.com>
 
-This commit introduces a new VFIO-MSHV bridge pseudo device file, adapted
-from KVM's VFIO bridge. It provides the necessary device operations to link
-VFIO files with an MSHV partition.
+dmaengine: sdxi: Add descriptor ring management
 
-> diff --git a/drivers/hv/mshv_vfio.c b/drivers/hv/mshv_vfio.c
+This commit introduces a library for managing SDXI descriptor ring state,
+encapsulating free space checks, write index updates, and reservation
+iteration. It provides blocking and non-blocking reservation APIs and
+mechanisms to iterate over descriptors within a reservation.
+
+> diff --git a/drivers/dma/sdxi/ring.c b/drivers/dma/sdxi/ring.c
 > new file mode 100644
-> index 0000000000000..00a97920e25ba
+> index 0000000000000..91b28c7afbbf9
 > --- /dev/null
-> +++ b/drivers/hv/mshv_vfio.c
+> +++ b/drivers/dma/sdxi/ring.c
 [ ... ]
-> +static long mshv_vfio_create_device(struct mshv_device *mshvdev)
+> +static u64 sdxi_ring_state_load_ridx(struct sdxi_ring_state *rs)
 > +{
-> +	struct mshv_device *tmp;
-> +	struct mshv_vfio *mshv_vfio;
-> +
-> +	/* Only one VFIO "device" per VM */
-> +	hlist_for_each_entry(tmp, &mshvdev->device_pt->pt_devices,
-> +			     device_ptnode)
-> +		if (tmp->device_ops =3D=3D &mshv_vfio_device_ops)
-> +			return -EBUSY;
+> +	lockdep_assert_held(&rs->lock);
+> +	return le64_to_cpu(READ_ONCE(*rs->read_index_ptr));
+> +}
 
-Are we missing a lockdep assertion here to ensure the partition lock is hel=
-d?
+Can this result in a torn read on 32-bit architectures? READ_ONCE() on a
+64-bit variable expands to two 32-bit load instructions on 32-bit systems.
 
-Since this iterates over the pt_devices list to enforce a singleton device,
-could concurrent ioctl calls bypass this check and corrupt the hlist if the
-caller doesn't acquire the lock?
+Since the SDXI hardware updates this memory location concurrently via DMA,
+the CPU might observe a torn value if the read occurs while the index
+crosses a 32-bit boundary. This could produce a massively inflated read
+index, causing the subsequent check in sdxi_ring_try_reserve() to
+permanently return -EIO.
 
 [ ... ]
+> +/* Blocking ring reservation. Retries until success or non-transient err=
+or. */
+> +int sdxi_ring_reserve(struct sdxi_ring_state *rs, size_t nr,
+> +		      struct sdxi_ring_resv *resv)
+> +{
+> +	int ret;
+> +
+> +	wait_event(rs->wqh,
+> +		   (ret =3D sdxi_ring_try_reserve(rs, nr, resv)) !=3D -EBUSY);
+> +
+> +	return ret;
+> +}
 
-> +struct mshv_device_ops mshv_vfio_device_ops =3D {
-> +	.device_name =3D "mshv-vfio",
-> +	.device_create =3D mshv_vfio_create_device,
-> +	.device_release =3D mshv_vfio_release_device,
-> +	.device_set_attr =3D mshv_vfio_set_attr,
-> +	.device_has_attr =3D mshv_vfio_has_attr,
-> +};
+Does this wait_event() need to handle timeouts or signals? If the hardware
+wedges or the device is hot-unplugged, the read index will never advance,
+leaving tasks permanently hung in TASK_UNINTERRUPTIBLE sleep.
 
-Should mshv_vfio_device_ops be declared as const?
+Furthermore, if the driver is unbound and destroys the wait queue while
+tasks are still waiting here, could this result in a use-after-free and
+subsequent kernel panic when the scheduler interacts with the freed wait
+queue?
 
-The structure consists entirely of function pointers and is never modified
-after initialization. Making it const would place it in read-only memory.
+[ ... ]
+> diff --git a/drivers/dma/sdxi/ring.h b/drivers/dma/sdxi/ring.h
+> new file mode 100644
+> index 0000000000000..d5682687c05cd
+> --- /dev/null
+> +++ b/drivers/dma/sdxi/ring.h
+[ ... ]
+> +#define sdxi_ring_resv_foreach(resv_, desc_)			\
+> +	for (sdxi_ring_resv_reset(resv_),			\
+> +	     desc_ =3D sdxi_ring_resv_next(resv_);		\
+> +	     desc_;						\
+> +	     desc_ =3D sdxi_ring_resv_next(resv_))
+
+This isn't a bug, but this macro evaluates the resv_ argument multiple time=
+s.
+If a caller passes an expression with side effects, it could cause unintend=
+ed
+behavior.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512020259.1678=
-627-1-mrathor@linux.microsoft.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D12
