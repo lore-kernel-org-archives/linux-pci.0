@@ -1,289 +1,224 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36BD5481240;
-	Wed, 13 May 2026 15:16:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 86FF043CEEF;
+	Wed, 13 May 2026 15:17:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778685365; cv=none; b=PtsNdz43Mv6fOzO7SC9N5jIVTyEKy5QVt4hoM4KSMsBbFj7ItXxLv31lgTBDowW5puZclb6WocFRP1s3gLS0pEPoXVE6/MmNBD8FJ7GFrTuhyynoollFmrKXdIBHveoRS9oiAcV0Wgq1oIXeNr97mcVWO5SJZ0w6VbKDRhwillA=
+	t=1778685448; cv=none; b=oYZUTJMPMawg+m5aFsPU4iLDBU3xxezIuT7z7ijMhZ1gIpAql/w08PaY/LkLM64L+95MFE5+lzwil6xSZ71VK49/qhqRrCmj8LgvcrmuBShYlMjV7rIQtSsD+3QXNgak92Xdc3/8G3uZsq7d1hHRzaBsAPx2uKnJaNhW3kWvaMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778685365; c=relaxed/simple;
-	bh=Qr59HtP9Zgp/V56Jm262L8hRrPIv+Nz+L0CNZ475ahU=;
+	s=arc-20240116; t=1778685448; c=relaxed/simple;
+	bh=tY9ISkh+nnLDO6OGB8+yrgnNLLQICyw/IV1SGILZbYg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=itEhweiCoqq8jL5s4FC+H3ZXtp24ntvcb5DexYQnprJbnHSFYWfbdE6YSnSjOls6r6F6e1G+3OGa9BYkyo9ktsCfP3OsI7bbmHkRdm6wJV2No3VflhszXamAYD7Ui/nqzZAGYy3MC16jMcjaU5CYgqbo/Xs9pf9fWhe5r888hDc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mw8syf0t; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=cFRZib2aE+5YItk07ZrqCl4qLn/yUzmtl6vgFnkaxNIjtR7GXR8d98pbt1X2oOGyIWyKz88CI0CqXE8953OoamtmgbKVZ5lPcjloL0DqeIiOdC59MvAb9MJfIv8q5wH5hdXaRmDNoqRrwSOkGWBOBbR+stb+Qkt7pPyJ9+eNR+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=D4YxqIZp; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mw8syf0t"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B72CC19425;
-	Wed, 13 May 2026 15:15:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778685365;
-	bh=Qr59HtP9Zgp/V56Jm262L8hRrPIv+Nz+L0CNZ475ahU=;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="D4YxqIZp"
+Received: by linux.microsoft.com (Postfix, from userid 1099)
+	id 88B8D20B7166; Wed, 13 May 2026 08:17:24 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 88B8D20B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1778685444;
+	bh=5XoM16CEZZE8M5BaxgKJXAh20v7TUVYYdgK20TKPEhA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mw8syf0t1LTy/rYy41FwGIkdZEqs+d3+Vq/XNIqXGctaaXb8l10cAnw9d3l0q6IeX
-	 MDcJIS1lyABM9H+sfldovDr14kZZbADdcFR1+S98AIIuXjeYcSrjCCwFsmQlDh43gj
-	 PLi/3VA3/mz0BJco3Zw+PXOXie1lHvpPEpbA0idJ/rN24qA3rG2pw1c0jxKWE8/zjs
-	 AvjoFviUCMYz3NpIH2tEs9tyRUxGKcSHh/AZFqU0YtuIc2DS3pX+X6HdKAtKGZUrrg
-	 0zIrHmT8IwUI/QkXuC2VRuleJZvXCx+9ABIRsy/W7XwkZ9vzwSrlh3FMCgbmtaET/h
-	 J96zM5usGg/bw==
-Date: Wed, 13 May 2026 20:45:55 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org, 
-	naseefkm@gmail.com, ryder.lee@mediatek.com, helgaas@kernel.org, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
-	ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Message-ID: <sgnuiodetvin6qw2zehgqxvv2wncjzwzu4mpccmu6yytochc3h@5akmnrqxox2k>
-References: <20260413140339.16238-1-cjd@cjdns.fr>
- <20260413140339.16238-3-cjd@cjdns.fr>
- <duchbakmiuf4ffmhgkoioq3qpxaybcevtcdduwiv2gf56j5ncr@kszd5v54ph3q>
- <a4f84ba5-fe28-4674-b91b-33438f5478fb@cjdns.fr>
+	b=D4YxqIZpbq2XAdD+wfF0R3t/Y0ELxE3A6QI/uL8o0lyq0Q98fejUJ7I/8DDIoD/KF
+	 XEjs+Q2KDipKSU0rrUriah/+B+0fXJmNgQvqS5UHCgrMvoQ0GPB6k6ZtFTB9ghyMrD
+	 HpGTqVusaeX2gTlvVieL/fFLvul6aMu65H6TQ+ag=
+Date: Wed, 13 May 2026 08:17:24 -0700
+From: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH V3 08/11] PCI: hv: VMBus and PCI device IDs for PCI
+ passthru
+Message-ID: <agSWBJFQreXDuF3u@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
+ <20260512020259.1678627-9-mrathor@linux.microsoft.com>
+ <agST9ZRXNWhbUGMY@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <a4f84ba5-fe28-4674-b91b-33438f5478fb@cjdns.fr>
+In-Reply-To: <agST9ZRXNWhbUGMY@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
 
-On Wed, May 13, 2026 at 04:31:32PM +0200, Caleb James DeLisle wrote:
-> 
-> On 12/05/2026 13:55, Manivannan Sadhasivam wrote:
-> > On Mon, Apr 13, 2026 at 02:03:39PM +0000, Caleb James DeLisle wrote:
-> > > Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
-> > > 
-> > > These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
-> > > require re-training after startup.
-> > > 
-> > > Co-developed-by: Ahmed Naseef <naseefkm@gmail.com>
-> > > Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
-> > > Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
-> > > ---
-> > >   drivers/pci/controller/Kconfig         |   2 +-
-> > >   drivers/pci/controller/pcie-mediatek.c | 133 +++++++++++++++++++++++++
-> > >   2 files changed, 134 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> > > index 686349e09cd3..5808d5e407fd 100644
-> > > --- a/drivers/pci/controller/Kconfig
-> > > +++ b/drivers/pci/controller/Kconfig
-> > > @@ -209,7 +209,7 @@ config PCI_MVEBU
-> > >   config PCIE_MEDIATEK
-> > >   	tristate "MediaTek PCIe controller"
-> > > -	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
-> > > +	depends on ARCH_AIROHA || ARCH_MEDIATEK || ECONET || COMPILE_TEST
-> > >   	depends on OF
-> > >   	depends on PCI_MSI
-> > >   	select IRQ_MSI_LIB
-> > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > > index 75722524fe74..915a35825ce1 100644
-> > > --- a/drivers/pci/controller/pcie-mediatek.c
-> > > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > > @@ -7,6 +7,7 @@
-> > >    *	   Honghui Zhang <honghui.zhang@mediatek.com>
-> > >    */
-> > > +#include <asm-generic/errno-base.h>
-> > >   #include <linux/clk.h>
-> > >   #include <linux/delay.h>
-> > >   #include <linux/iopoll.h>
-> > > @@ -14,6 +15,7 @@
-> > >   #include <linux/irqchip/chained_irq.h>
-> > >   #include <linux/irqchip/irq-msi-lib.h>
-> > >   #include <linux/irqdomain.h>
-> > > +#include <linux/kconfig.h>
-> > >   #include <linux/kernel.h>
-> > >   #include <linux/mfd/syscon.h>
-> > >   #include <linux/msi.h>
-> > > @@ -77,6 +79,7 @@
-> > >   #define PCIE_CONF_VEND_ID	0x100
-> > >   #define PCIE_CONF_DEVICE_ID	0x102
-> > > +#define PCIE_CONF_REV_CLASS	0x104
-> > >   #define PCIE_CONF_CLASS_ID	0x106
-> > >   #define PCIE_INT_MASK		0x420
-> > > @@ -89,6 +92,11 @@
-> > >   #define MSI_MASK		BIT(23)
-> > >   #define MTK_MSI_IRQS_NUM	32
-> > > +#define EN7528_HOST_MODE	0x00804201
-> > > +#define EN7528_LINKUP_REG	0x50
-> > > +#define EN7528_RC0_LINKUP	BIT(1)
-> > > +#define EN7528_RC1_LINKUP	BIT(2)
-> > > +
-> > >   #define PCIE_AHB_TRANS_BASE0_L	0x438
-> > >   #define PCIE_AHB_TRANS_BASE0_H	0x43c
-> > >   #define AHB2PCIE_SIZE(x)	((x) & GENMASK(4, 0))
-> > > @@ -148,12 +156,15 @@ struct mtk_pcie_port;
-> > >    * @MTK_PCIE_FIX_DEVICE_ID: host's device ID needed to be fixed
-> > >    * @MTK_PCIE_NO_MSI: Bridge has no MSI support, and relies on an external block
-> > >    * @MTK_PCIE_SKIP_RSTB: Skip calling RSTB bits on PCIe probe
-> > > + * @MTK_PCIE_RETRAIN: Re-train link to bridge after startup because some
-> > > + *                    Gen2-capable devices start as Gen1.
-> > >    */
-> > >   enum mtk_pcie_quirks {
-> > >   	MTK_PCIE_FIX_CLASS_ID = BIT(0),
-> > >   	MTK_PCIE_FIX_DEVICE_ID = BIT(1),
-> > >   	MTK_PCIE_NO_MSI = BIT(2),
-> > >   	MTK_PCIE_SKIP_RSTB = BIT(3),
-> > > +	MTK_PCIE_RETRAIN = BIT(4),
-> > >   };
-> > >   /**
-> > > @@ -753,6 +764,80 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> > >   	return 0;
-> > >   }
-> > > +static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
-> > > +{
-> > > +	struct mtk_pcie *pcie = port->pcie;
-> > > +	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-> > > +	struct resource *mem = NULL;
-> > > +	struct resource_entry *entry;
-> > > +	u32 val, link_mask;
-> > > +	int err;
-> > > +
-> > > +	entry = resource_list_first_type(&host->windows, IORESOURCE_MEM);
-> > > +	if (entry)
-> > > +		mem = entry->res;
-> > > +	if (!mem)
-> > > +		return -EINVAL;
-> > > +
-> > > +	if (!pcie->cfg) {
-> > > +		dev_err(pcie->dev, "EN7528: pciecfg syscon not available\n");
-> > > +		return -EINVAL;
-> > > +	}
-> > > +
-> > > +	/* Assert all reset signals */
-> > > +	writel(0, port->base + PCIE_RST_CTRL);
-> > > +
-> > > +	/*
-> > > +	 * Enable PCIe link down reset, if link status changed from link up to
-> > > +	 * link down, this will reset MAC control registers and configuration
-> > > +	 * space.
-> > > +	 */
-> > > +	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-> > > +
-> > > +	msleep(PCIE_T_PVPERL_MS);
-> > > +
-> > > +	/* De-assert PHY, PE, PIPE, MAC and configuration reset */
-> > > +	val = readl(port->base + PCIE_RST_CTRL);
-> > > +	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-> > > +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
-> > > +	writel(val, port->base + PCIE_RST_CTRL);
-> > > +
-> > > +	writel(PCIE_CLASS_CODE | PCIE_REVISION_ID,
-> > > +	       port->base + PCIE_CONF_REV_CLASS);
-> > > +	writel(EN7528_HOST_MODE, port->base);
-> > > +
-> > > +	link_mask = (port->slot == 0) ? EN7528_RC0_LINKUP : EN7528_RC1_LINKUP;
-> > > +
-> > > +	/* 100ms timeout value should be enough for Gen1/2 training */
-> > > +	err = regmap_read_poll_timeout(pcie->cfg, EN7528_LINKUP_REG, val,
-> > > +				       !!(val & link_mask), 20,
-> > > +				       PCI_PM_D3COLD_WAIT * USEC_PER_MSEC);
-> > > +	if (err) {
-> > > +		dev_err(pcie->dev, "EN7528: port%d link timeout\n", port->slot);
-> > > +		return -ETIMEDOUT;
-> > > +	}
-> > > +
-> > > +	/* Activate INTx interrupts */
-> > > +	val = readl(port->base + PCIE_INT_MASK);
-> > > +	val &= ~INTX_MASK;
-> > > +	writel(val, port->base + PCIE_INT_MASK);
-> > > +
-> > > +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> > > +		mtk_pcie_enable_msi(port);
-> > > +
-> > > +	/* Set AHB to PCIe translation windows */
-> > > +	val = lower_32_bits(mem->start) |
-> > > +	      AHB2PCIE_SIZE(fls(resource_size(mem)));
-> > > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-> > > +
-> > > +	val = upper_32_bits(mem->start);
-> > > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
-> > > +
-> > > +	writel(WIN_ENABLE, port->base + PCIE_AXI_WINDOW0);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > >   static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
-> > >   				      unsigned int devfn, int where)
-> > >   {
-> > > @@ -1149,6 +1234,46 @@ static int mtk_pcie_probe(struct platform_device *pdev)
-> > >   	if (err)
-> > >   		goto put_resources;
-> > > +	/* EN7528 PCIe initially comes up as Gen1 even if Gen2 is supported.
-> > > +	 * The cannonical way to achieve Gen2 is to re-train the link
-> > > +	 * immediately after setup. However, to save a lot of duplicated code
-> > > +	 * we use pcie_retrain_link() which is usable once we have the pci_dev
-> > > +	 * struct for the bridge, i.e. after pci_host_probe(). */
-> > Use below style:
+On Wed, May 13, 2026 at 08:08:37AM -0700, Souradeep Chakrabarti wrote:
+> On Mon, May 11, 2026 at 07:02:56PM -0700, Mukesh R wrote:
+> > On Hyper-V, most hypercalls related to PCI passthru to map/unmap regions,
+> > interrupts, etc need a device ID as a parameter. This device ID refers
+> > to that specific device during the lifetime of passthru.
 > > 
-> > 	/*
-> > 	 * ...
-> > 	 */
-> 
-> 
-> Right, sorry, thanks.
-> 
-> 
-> > > +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN) {
-> > > +		int slot = of_get_pci_domain_nr(dev->of_node);
-> > The returned value is not the slot number, but domain number. Both are different
-> > numbering schemes.
+> > An L1VH VM only contains VMBus based devices. A device ID for a VMBus
+> > device is slightly different in that it uses the hv_pcibus_device info
+> > for building it to make sure it matches exactly what the hypervisor
+> > expects. This VMBus based device ID is needed when attaching devices in
+> > an L1VH based guest VM. Add a function to build and export it. Before
+> > building it, a check is done to make sure the device is a valid VMBus
+> > device.
 > > 
-> > > +		struct pci_dev *rc = NULL;
-> > > +		int ret = -ENOENT;
-> > > +
-> > > +		if (slot >= 0)
-> > > +			rc = pci_get_slot(host->bus, PCI_DEVFN(slot, 0));
-> > This looks wrong. If your intention is to find the Root Port of the hierarchy,
-> > then you should do:
+> > In remaining cases, PCI device ID is used. So, also make PCI device ID
+> > build function hv_build_devid_type_pci() public.
+> >
+Reviewed-by: Souradeep Chakrabarti <schakrabarti@linux.microsoft.com>
+> Reviewed-by: Souradeep Chakrabarti <schakrabarti@microsoft.com>
+> > Signed-off-by: Mukesh R <mrathor@linux.microsoft.com>
+> > ---
+> >  arch/x86/hyperv/irqdomain.c         |  9 +++++----
+> >  arch/x86/include/asm/mshyperv.h     |  6 ++++++
+> >  drivers/pci/controller/pci-hyperv.c | 24 ++++++++++++++++++++++++
+> >  include/asm-generic/mshyperv.h      | 11 +++++++++++
+> >  4 files changed, 46 insertions(+), 4 deletions(-)
 > > 
-> > 		pci_get_slot(host->bus, PCI_DEVFN(0, 0));
-> 
-> 
-> Thank you for your review. What's happening here is the hardware exposes two
-> sets of registers for the two devices, but it expects that they might all be
-> controlled by one driver instance - so they hard-wired the second root hub
-> to slot 1. The Mediatek driver here wants to be instantiated twice, so we
-> end up with something like this:
-> 
-> 
-> 0000:00:00.0 PCI bridge: MEDIATEK Corp. Device 0810 (rev 03)
-> 0000:01:00.0 Network controller: MEDIATEK Corp. MT7662E 802.11ac PCI Express
-> Wireless Network Adapter
-> 0001:00:01.0 PCI bridge: MEDIATEK Corp. Device 0811 (rev 02)
-> 0001:01:00.0 Network controller: MEDIATEK Corp. MT7603E 802.11bgn PCI
-> Express Wireless Network Adapter
-> 
-> So when it's domain 1, it's also slot 1 (unless the DT is written
-> backwards).
-> 
-
-Oops! Thanks for the explanation.
-
-> 
-> The original code from Ahmed Naseef used a loop with pci_get_class() to get
-> all of the bridges that were on the right bus, but it was pointed out in an
-> earlier review that this would also re-train any hypothetical bridge
-> downstream of the root. So the current code specifically re-trains the right
-> bridge.
-> 
-> I can re-send with this explanation wrapped up in the comment, or I guess I
-> could write a loop that tries slot 0 and 1 to find the bridge, but I feel
-> like the loop is a bit hair-splitting so I think my preference would be to
-> just explain it better.
-> 
-> WDYT?
-> 
-
-Adding comments with the above info would suffice.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+> > diff --git a/arch/x86/hyperv/irqdomain.c b/arch/x86/hyperv/irqdomain.c
+> > index b3ad50a874dc..8780573a4332 100644
+> > --- a/arch/x86/hyperv/irqdomain.c
+> > +++ b/arch/x86/hyperv/irqdomain.c
+> > @@ -112,7 +112,7 @@ static int get_rid_cb(struct pci_dev *pdev, u16 alias, void *data)
+> >  	return 0;
+> >  }
+> >  
+> > -static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
+> > +u64 hv_build_devid_type_pci(struct pci_dev *pdev)
+> >  {
+> >  	int pos;
+> >  	union hv_device_id hv_devid;
+> > @@ -172,8 +172,9 @@ static union hv_device_id hv_build_devid_type_pci(struct pci_dev *pdev)
+> >  	}
+> >  
+> >  out:
+> > -	return hv_devid;
+> > +	return hv_devid.as_uint64;
+> >  }
+> > +EXPORT_SYMBOL_GPL(hv_build_devid_type_pci);
+> >  
+> >  /*
+> >   * hv_map_msi_interrupt() - Map the MSI IRQ in the hypervisor.
+> > @@ -196,7 +197,7 @@ int hv_map_msi_interrupt(struct irq_data *data,
+> >  
+> >  	msidesc = irq_data_get_msi_desc(data);
+> >  	pdev = msi_desc_to_pci_dev(msidesc);
+> > -	hv_devid = hv_build_devid_type_pci(pdev);
+> > +	hv_devid.as_uint64 = hv_build_devid_type_pci(pdev);
+> >  	cpu = cpumask_first(irq_data_get_effective_affinity_mask(data));
+> >  
+> >  	return hv_map_interrupt(hv_devid, false, cpu, cfg->vector,
+> > @@ -271,7 +272,7 @@ static int hv_unmap_msi_interrupt(struct pci_dev *pdev,
+> >  {
+> >  	union hv_device_id hv_devid;
+> >  
+> > -	hv_devid = hv_build_devid_type_pci(pdev);
+> > +	hv_devid.as_uint64 = hv_build_devid_type_pci(pdev);
+> >  	return hv_unmap_interrupt(hv_devid.as_uint64, irq_entry);
+> >  }
+> >  
+> > diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
+> > index f64393e853ee..2ef34001f8d3 100644
+> > --- a/arch/x86/include/asm/mshyperv.h
+> > +++ b/arch/x86/include/asm/mshyperv.h
+> > @@ -248,6 +248,12 @@ void hv_crash_asm_end(void);
+> >  static inline void hv_root_crash_init(void) {}
+> >  #endif  /* CONFIG_MSHV_ROOT && CONFIG_CRASH_DUMP */
+> >  
+> > +#if IS_ENABLED(CONFIG_HYPERV_IOMMU)
+> > +u64 hv_build_devid_type_pci(struct pci_dev *pdev);
+> > +#else
+> > +static inline u64 hv_build_devid_type_pci(struct pci_dev *pdev) { return 0; }
+> > +#endif /* IS_ENABLED(CONFIG_HYPERV_IOMMU) */
+> > +
+> >  #else /* CONFIG_HYPERV */
+> >  static inline void hyperv_init(void) {}
+> >  static inline void hyperv_setup_mmu_ops(void) {}
+> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > index cfc8fa403dad..50d793ca8f31 100644
+> > --- a/drivers/pci/controller/pci-hyperv.c
+> > +++ b/drivers/pci/controller/pci-hyperv.c
+> > @@ -573,6 +573,7 @@ struct hv_pci_compl {
+> >  };
+> >  
+> >  static void hv_pci_onchannelcallback(void *context);
+> > +static bool hv_vmbus_pci_device(struct pci_bus *pbus);
+> >  
+> >  #ifdef CONFIG_X86
+> >  #define DELIVERY_MODE		APIC_DELIVERY_MODE_FIXED
+> > @@ -1005,6 +1006,24 @@ static struct irq_domain *hv_pci_get_root_domain(void)
+> >  static void hv_arch_irq_unmask(struct irq_data *data) { }
+> >  #endif /* CONFIG_ARM64 */
+> >  
+> > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev)
+> > +{
+> > +	struct hv_pcibus_device *hbus;
+> > +	struct pci_bus *pbus = pdev->bus;
+> > +
+> > +	if (!hv_vmbus_pci_device(pbus))
+> > +		return 0;
+> > +
+> > +	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+> > +
+> > +	return	(hbus->hdev->dev_instance.b[5] << 24) |
+> > +		(hbus->hdev->dev_instance.b[4] << 16) |
+> > +		(hbus->hdev->dev_instance.b[7] << 8) |
+> > +		(hbus->hdev->dev_instance.b[6] & 0xf8) |
+> > +		PCI_FUNC(pdev->devfn);
+> > +}
+> > +EXPORT_SYMBOL_GPL(hv_pci_vmbus_device_id);
+> > +
+> >  /**
+> >   * hv_pci_generic_compl() - Invoked for a completion packet
+> >   * @context:		Set up by the sender of the packet.
+> > @@ -1403,6 +1422,11 @@ static struct pci_ops hv_pcifront_ops = {
+> >  	.write = hv_pcifront_write_config,
+> >  };
+> >  
+> > +static bool hv_vmbus_pci_device(struct pci_bus *pbus)
+> > +{
+> > +	return pbus->ops == &hv_pcifront_ops;
+> > +}
+> > +
+> >  /*
+> >   * Paravirtual backchannel
+> >   *
+> > diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyperv.h
+> > index e8cbc4e3f7ad..25ac7ca0fd8b 100644
+> > --- a/include/asm-generic/mshyperv.h
+> > +++ b/include/asm-generic/mshyperv.h
+> > @@ -204,6 +204,9 @@ extern u64 (*hv_read_reference_counter)(void);
+> >  /* Sentinel value for an uninitialized entry in hv_vp_index array */
+> >  #define VP_INVAL	U32_MAX
+> >  
+> > +/* Forward declarations */
+> > +struct pci_dev;
+> > +
+> >  int __init hv_common_init(void);
+> >  void __init hv_get_partition_id(void);
+> >  void __init hv_common_free(void);
+> > @@ -316,6 +319,14 @@ void hv_para_set_synic_register(unsigned int reg, u64 val);
+> >  void hyperv_cleanup(void);
+> >  bool hv_query_ext_cap(u64 cap_query);
+> >  void hv_setup_dma_ops(struct device *dev, bool coherent);
+> > +
+> > +#if IS_ENABLED(CONFIG_PCI_HYPERV)
+> > +u64 hv_pci_vmbus_device_id(struct pci_dev *pdev);
+> > +#else
+> > +static inline u64 hv_pci_vmbus_device_id(struct pci_dev *pdev)
+> > +{ return 0; }
+> > +#endif /* IS_ENABLED(CONFIG_PCI_HYPERV) */
+> > +
+> >  #else /* CONFIG_HYPERV */
+> >  static inline void hv_identify_partition_type(void) {}
+> >  static inline bool hv_is_hyperv_initialized(void) { return false; }
+> > -- 
+> > 2.51.2.vfs.0.1
+> > 
