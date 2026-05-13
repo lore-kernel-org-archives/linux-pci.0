@@ -1,153 +1,164 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980C33A71B8;
-	Wed, 13 May 2026 05:48:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1FD57083C;
+	Wed, 13 May 2026 06:31:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778651300; cv=none; b=i7ztI1LYe3wXpdhyYdyr/O1Doihs+e8ypwOEjC3gOzFgHHL4vVdEwVr+i9ljD2xqtxP/g+kWq2LWGoMiFbMCoYjhabf972WSwZ8DefWO1tSad8aDhw4p9acOikeEqid45p4OMg9tLDk1zS0WVnWtHWsijegh+UVLBYBvUPbE4yQ=
+	t=1778653906; cv=none; b=WsVKmwB8lzeXLIOW3nhdwQySiy9J/M48XBvIeZwVN8MW45G2naBVdjzEoNFIdoLdGsxyVWildy/BKmrtwngrE56m1892KVg9+8//7Bpbkt2/u7Kd+fpaM2ZaQ4o1s4hDq/TQcPFpzqZQOdpD3BaWSVweyn8GHqlRLtUdPZWaa7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778651300; c=relaxed/simple;
-	bh=3Wkm0ngZUbNKuDF21VSGvej0CaJ2Mz0hkkTQOCXZzO0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tYKPOWMT0Xgqw1urOwQZcl+oqA98j0FSuMynpvH9q5zuKMOPntOc7HDGCoWZRAsglypHthpv7a2e3/YSCHXJCvqTHNJM4LpVmciWNiHeAUr2cP4+H28iZFEpNLaA9IBUyAFY3BpnYTTpRGQrTjNlyKG6/6l2SPNtPIhis0wxE6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NsGB1zth; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778653906; c=relaxed/simple;
+	bh=dVOFz/bl1fNPd0bokrJcl/tAwN7bpIUq/3LFpzWp43Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rVpjs27UKJkpJ22k5Ib9h1vYjWVZiF1hMSFsseVN7QS9fItJFvT6/qerCKa8JyDi5T6KcBiEUFbknPL7Vu7+dIOeSNUH5d5DYbzlrwlrKgBQV4Ykkq2KHBodPgli6z9ehmnBJFeJvkhFeU+Komf/eZfybaLniIT2O0GqZKTpf6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uqdZ45UX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NsGB1zth"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0AD5C2BCB7;
-	Wed, 13 May 2026 05:48:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uqdZ45UX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F359C2BCB7;
+	Wed, 13 May 2026 06:31:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778651300;
-	bh=3Wkm0ngZUbNKuDF21VSGvej0CaJ2Mz0hkkTQOCXZzO0=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=NsGB1zthK4OvMg3oVnnQr8YMv7+qgYipTAZAWGyacINEPLXNn449VEHGXQiJtY1V9
-	 Xwi02zXjJvbexn7lrBXrODCrr2rNfUZ0GVEN5O4R/jaAtSc78eSGmdmBb66mfHAE/v
-	 cPVae+RRLOfY/ldE63GidfkD1C0sTnrSVgPrOp+N9rCimZDZyig/ei5t8pftZxTxJZ
-	 dUyc+IO7G9pnK9aQGffx1d8MwF6PC+T0zzxFBTjKKS1Ptgtyc0nki3fdngjT/lp5cs
-	 zzYmUOc9PR8mOPKeKRNhuQhDXDOTEqzaOOjh4HKofL1D0wnvb4b265WVn2dE5N3M6Z
-	 OmlhodKk6N4fw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 13/23] dmaengine: sdxi: Add unit tests for descriptor
- ring reservations
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org
-In-Reply-To: <20260511-sdxi-base-v2-13-889cfed17e3f@amd.com>
-References: <20260511-sdxi-base-v2-13-889cfed17e3f@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 05:48:19 +0000
-Message-Id: <20260513054819.E0AD5C2BCB7@smtp.kernel.org>
+	s=k20201202; t=1778653906;
+	bh=dVOFz/bl1fNPd0bokrJcl/tAwN7bpIUq/3LFpzWp43Y=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uqdZ45UXAX1WAlZgKRMy0HztMJ7Bdo6H23kfG1Whj8GIFyR5UFFzqD0wF96AALbn2
+	 vzWEVoeaF5HNiu6zoy8+UpVk2pCgEy8Ilm+Om3XBiPq17bi/3Q+f86U6dB+XZUwz0Q
+	 sY/IiNQDMMnW5KQKuJQtzdFi86MrtfXTn1ZaOyFYof+QG5XRPsU9ojAbP0cedXUj2Z
+	 Biqu1EVdKMgwKlN0GDy37F0FxemOLyCn9HXCFY05bF257zs09G9nQnekx+/mY6+18A
+	 v6QBVgJqZ1whX1koob6aDDsbx1mFUDt4NrPxgBHO8EYgE+x3xOEwXAXFqSY/AdLCOg
+	 ZCqRoM7ND7KMA==
+Date: Wed, 13 May 2026 09:31:41 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: fengchengwen <fengchengwen@huawei.com>,
+	Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-rdma@vger.kernel.org,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, Keith Busch <kbusch@kernel.org>,
+	Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+	kvm@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] vfio: add dma-buf get_tph callback and
+ DMA_BUF_TPH feature
+Message-ID: <20260513063141.GC15586@unreal>
+References: <20260430200704.352228-1-zhipingz@meta.com>
+ <20260430200704.352228-2-zhipingz@meta.com>
+ <09995589-b81d-4cb7-a313-15a943d8b28d@huawei.com>
+ <CAH3zFs2x2QebpqDC0qwQg_GP2FVs-qqNxPupck40cEHNrBMEsA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAH3zFs2x2QebpqDC0qwQg_GP2FVs-qqNxPupck40cEHNrBMEsA@mail.gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [Medium] The `sdxi_ring_resv_foreach` loop double-advances the iterator, =
-silently skipping half of the descriptors.
-- [Medium] The `invalid` test intentionally triggers a `WARN_ONCE`, which w=
-ill crash CI systems running with `panic_on_warn`.
-- [Low] The mock device allocated in the test suite's init function is comp=
-letely unused.
---
+On Wed, May 06, 2026 at 11:23:19AM -0700, Zhiping Zhang wrote:
+> On Tue, May 5, 2026 at 11:58 PM fengchengwen <fengchengwen@huawei.com> wrote:
+> >
+> > >
+> > On 5/1/2026 4:06 AM, Zhiping Zhang wrote:
+> > > Add a dma-buf callback that returns raw TPH metadata from the exporter
+> > > so peer devices can reuse the steering tag and processing hint
+> > > associated with a VFIO-exported buffer.
+> > >
+> > > Add a new VFIO_DEVICE_FEATURE_DMA_BUF_TPH ioctl that takes the fd from
+> > > VFIO_DEVICE_FEATURE_DMA_BUF along with a steering tag and processing
+> > > hint, validates the fd is a vfio-exported dma-buf belonging to this
+> > > device, and stores the TPH values under memory_lock. This keeps the
+> > > existing VFIO_DEVICE_FEATURE_DMA_BUF uAPI completely unchanged.
+> > >
+> > > The user sequences setting TPH on the dma-buf before the importer
+> > > consumes it.
+> > >
+> > > Add an st_width parameter to get_tph() so the exporter can reject
+> > > steering tags that exceed the consumer's supported width (8 vs 16 bit).
+> > > When no TPH metadata was supplied, get_tph() returns -EOPNOTSUPP.
+> > >
+> > > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> > >
+> > > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> > > --- a/drivers/vfio/pci/vfio_pci_core.c
+> > > +++ b/drivers/vfio/pci/vfio_pci_core.c
+> > > @@ -1534,6 +1534,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+> > >               return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
+> > >       case VFIO_DEVICE_FEATURE_DMA_BUF:
+> > >               return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
+> > > +     case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
+> > > +             return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
+> > > +                                                      argsz);
+> > >       default:
+> > >               return -ENOTTY;
+> > >       }
+> > > diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > > --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > > +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+> > > @@ -19,6 +19,9 @@ struct vfio_pci_dma_buf {
+> > >       u32 nr_ranges;
+> > >       struct kref kref;
+> > >       struct completion comp;
+> > > +     u16 steering_tag;
+> > > +     u8 ph;
+> > > +     u8 tph_present : 1;
+> > >       u8 revoked : 1;
+> > >  };
+> > >
+> > > @@ -69,6 +72,22 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attachment,
+> > >       return ret;
+> > >  }
+> > >
+> > > +static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, u16 *steering_tag,
+> > > +                                 u8 *ph, u8 st_width)
+> > > +{
+> > > +     struct vfio_pci_dma_buf *priv = dmabuf->priv;
+> > > +
+> > > +     if (!priv->tph_present)
+> > > +             return -EOPNOTSUPP;
+> > > +
+> > > +     if (st_width < 16 && priv->steering_tag > ((1U << st_width) - 1))
+> > > +             return -EINVAL;
+> >
+> > The checker will failed in following cases:
+> > 1. If the exporter passed 8bit st, and importer support 16bit st, then it will pass
+> >    the checker.
+> > 2. The exporter enabled 16bit st and its st is < 256 (note: the pcie protocol doesn't
+> >    restrict 16bit-st must >=256), and importer only support 8bit st, then it will also
+> >    pass the checker
+> >
+> > Suggest userspace passing both st(8bit) and extend-st(16bit), and importer chose the
+> > right one.
+> >
+> 
+>  Agreed — 8-bit ST and 16-bit Extended ST are distinct namespaces
+> (firmware returns
+> them as separate fields with separate validity bits), so a numeric
+> range check is insufficient.
+> For v3 I'll change the uAPI to carry both, gated by a flags field:
+> 
+>   #define VFIO_DMA_BUF_TPH_ST (1 << 0)  /* steering_tag valid */
+>   #define VFIO_DMA_BUF_TPH_ST_EXT (1 << 1)  /* steering_tag_ext valid
+> */
+>   struct vfio_device_feature_dma_buf_tph {
+>       __s32 dmabuf_fd;
+>       __u32 flags;
+>       __u16 steering_tag;       /* 8-bit ST */
+>       __u16 steering_tag_ext;   /* 16-bit Extended ST */
 
-commit 810cd03f2a72b539ae4d775dcbc2ceb2fa73ee06
-Author: Nathan Lynch <nathan.lynch@amd.com>
+I wonder whether `steering_tag` and `steering_tag_ext` can coexist  
+and hold different values at the same time.
 
-dmaengine: sdxi: Add unit tests for descriptor ring reservations
+BTW, please send your patches with diffstat.
 
-This commit adds KUnit tests for the SDXI descriptor ring reservation
-API. It covers valid reservations as well as error paths, and does not
-require hardware to execute.
+Thanks
 
-> diff --git a/drivers/dma/sdxi/ring_kunit.c b/drivers/dma/sdxi/ring_kunit.c
-> new file mode 100644
-> index 0000000000000..3bc7073e0c39a
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/ring_kunit.c
-
-[ ... ]
-
-> +static void valid(struct kunit *t)
-> +{
-> +	__le64 wi, ri;
-> +	struct sdxi_ring_state r;
-> +	struct sdxi_ring_resv resv;
-> +	struct sdxi_desc *descs, *desc;
-> +
-> +
-> +	descs =3D kunit_kmalloc_array(t, SZ_1K, sizeof(descs[0]),
-> +				    GFP_KERNEL | __GFP_ZERO);
-> +	KUNIT_ASSERT_NOT_NULL(t, descs);
-> +
-> +	ri =3D wi =3D 0;
-> +	sdxi_ring_state_init(&r, &ri, &wi, SZ_1K, descs);
-> +
-> +	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&r, r.entries, &resv), 0);
-> +	KUNIT_EXPECT_EQ(t, resv.range.start, 0);
-> +	KUNIT_EXPECT_EQ(t, resv.range.end, r.entries - 1);
-> +	KUNIT_EXPECT_EQ(t, le64_to_cpu(wi), r.entries);
-> +	sdxi_ring_resv_foreach(&resv, desc) {
-> +		KUNIT_EXPECT_NOT_NULL_MSG(t, sdxi_ring_resv_next(&resv),
-> +			"unexpected null descriptor for index %llu", resv.iter);
-> +	}
-
-Does this loop double-advance the iterator? The sdxi_ring_resv_foreach
-macro already calls sdxi_ring_resv_next() on each iteration to populate
-the desc variable. Calling sdxi_ring_resv_next() again inside the loop
-body means we silently skip half of the descriptors in the ring. Should
-this assert directly on the desc variable instead?
-
-> +
-> +	ri =3D cpu_to_le64(1);
-> +	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&r, 1, &resv), 0);
-> +	KUNIT_EXPECT_EQ(t, le64_to_cpu(wi), r.entries + 1);
-> +	KUNIT_EXPECT_NOT_NULL(t, sdxi_ring_resv_next(&resv));
-> +}
-> +
-> +static void invalid(struct kunit *t)
-> +{
-> +	__le64 wi, ri;
-> +	struct sdxi_ring_state rs;
-> +	struct sdxi_ring_resv resv;
-> +	struct sdxi_desc *descs;
-> +
-> +	descs =3D kunit_kmalloc_array(t, SZ_1K, sizeof(descs[0]),
-> +				    GFP_KERNEL | __GFP_ZERO);
-> +	KUNIT_ASSERT_NOT_NULL(t, descs);
-> +
-> +	ri =3D wi =3D 0;
-> +	sdxi_ring_state_init(&rs, &ri, &wi, SZ_1K, descs);
-> +
-> +	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&rs, 0, &resv), -EINVAL);
-> +	KUNIT_EXPECT_EQ(t, sdxi_ring_try_reserve(&rs, rs.entries + 1, &resv), -=
-EINVAL);
-
-Will these tests trigger the WARN_ONCE in sdxi_ring_try_reserve() when
-given an invalid size? Unconditionally hitting a WARN path in a KUnit
-test will cause kernel panics on CI systems configured with panic_on_warn.
-
-> +
-> +	ri =3D cpu_to_le64(1);
-
-[ ... ]
-
-> +static int setup_device(struct kunit *t)
-> +{
-> +	struct device *dev =3D kunit_device_register(t, "sdxi-mock-device");
-> +
-> +	KUNIT_ASSERT_NOT_ERR_OR_NULL(t, dev);
-> +	t->priv =3D dev;
-> +	return 0;
-> +}
-
-This isn't a bug, but is this mock device setup needed? Neither the valid
-nor invalid test cases appear to access t->priv or require a device pointer
-for the ring APIs being tested.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
-v2-0-889cfed17e3f@amd.com?part=3D13
+>       __u8  ph;
+>       __u8  reserved[3];
+>   };
+> 
+> get_tph() then picks the field matching the importer's st_width and
+> returns -EOPNOTSUPP
+> if that one isn't valid.
+> 
+> Thanks,
+> Zhiping
