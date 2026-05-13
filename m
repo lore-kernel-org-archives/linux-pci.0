@@ -1,92 +1,210 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AA5E38A71F;
-	Wed, 13 May 2026 22:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46E7A38A72A;
+	Wed, 13 May 2026 22:24:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778710662; cv=none; b=sZ14spCnvjQrh0LUTHBB+os7PJeCGlfqgPMVz45heN+nFFyeFUELMM+jkXajatUVrKEqyMjcdKpJQ6i+a7PWdrKnQS0Mo00tzt600ocduyjEt+OfWeI+re5gMfXcGbsvYvA9Iyai3DCqKpQIASuB9VPU0bW/9tJjVjhS2PBaL0M=
+	t=1778711081; cv=none; b=NJ+cocXJM6zpbt7a+7uY4aY/YYx9GcN5znuXkJ2gQ+BFDjfwnoixtIPe7FK4YkUKKVQsSpfo9YXlOrOBvBISUQO1zy1j7u4A3Pn5af/EHz5QpWf51QS6SMjRzZ/UmncUNJ8ywIihA9VKKArR5lEMkDmyogMj3osLnmhl3WfexC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778710662; c=relaxed/simple;
-	bh=DM5wkCIvvuKASVggBvkbZnE+/JqP1QkZQRpsXhaqRqA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XAWuEIfsM2sz5kEBgJgeai1XhMy/y87KpBFJ7ZavxrOugXiqATsGE1oQDgleGQ7oknvB6y9iFTNHAdXNiDjvDh71n2L0vIOmh7NPO1bCHfraPi23/tRdhToiUoOjvyNyuG+jokeFY9snJkCERmI9LN71zUKSpiPPGfPwWnwSeoE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=fe/S48NX; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
+	s=arc-20240116; t=1778711081; c=relaxed/simple;
+	bh=9izmYS1Q0D0k4I5HeNs52Eo1sxcceosqE8+HHZxbOIE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OfPdW5dAI8bVGSThqrLmEwsnXEu/TCdoN5ZdlZOurj6lHj3MwKCAbL+1asxeF6RD3ep/24XvE5GRZvI0iGTyDOSF2FGbzr2bBFkvFUxdmtkybYm8YoWdH0PBiiFpLPVrexiBrUzAf+PYXVrNbG4HHOSGbD9kUAY2Hlg4zbHpVzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l+7WKc7V; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="fe/S48NX"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 459783C8F22;
-	Thu, 14 May 2026 00:17:29 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1778710657; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:content-language:in-reply-to:references;
-	bh=rDpeY0azgQhPIjMW6FFMgw4pOGnlBJkPZ7F8T8UR+wU=;
-	b=fe/S48NXC9NYKwChLEwX2ExRJRHkb/3N6Q7wdjxH/mS4vhdNVQUVRVTFFFR12Ii0UZSmQI
-	6zUZPj6aY4WwNVZczx0x0UvRJtvShWe5U6Gj3JVBKlVNdDsO1bkuf+uUAKNVGZkzr7NSSC
-	YOG+tGwsWAl0WRqx/idbRUUuWaAB9PZHLG0ItZJmfBM/He6KAQQySJ0NqAEc2g2JnAp8a1
-	jPeDtXchccYB1U5nSQPmmST0MvNy91a0iXH1IRr2mgvxJOgCi/xY7fdlTe8lHaOgutq7r9
-	W4tq0E9umhZmxyB5WTjiDe48fO14sRdHwWpHUzzsH23GkZTOkTiJ6y2i+SDqog==
-Message-ID: <64d29cc5-8021-402c-b6c4-47bcf4c4f814@cjdns.fr>
-Date: Thu, 14 May 2026 00:17:28 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l+7WKc7V"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1778711081; x=1810247081;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=9izmYS1Q0D0k4I5HeNs52Eo1sxcceosqE8+HHZxbOIE=;
+  b=l+7WKc7VNxY1IOo7DgEdrccsk53XUds9IBpmBAN+Pl7Amm6In742Noky
+   hmugLLbOFACHEqCGAVsowxLi6F7HjdW/ohVzUux4BeIm5p4MAf/qdng3X
+   kXoDoARVjHap8DExUqALTeYdZjefv8WZRV9f4sGDXyEMIuidCNKzu+IuY
+   nmpZd4OPth+Y6szK6IEQ+niqlitdY7lb5FT+Cx09CCAAhg3WFhInbsBve
+   eJUNbxia4FGa7+oEDmYxiSllSvMcKk8s5LVdEDU3y8CZB2VUIsdEjOu5B
+   aL0uJ/VsGXVVZUhmt1k9JJRAh640CBYh5qhZ2TkXQHGfPt/qeP9xDkxmA
+   w==;
+X-CSE-ConnectionGUID: HeoKUxw0TretPt3ixJioyQ==
+X-CSE-MsgGUID: sUnKKMVkRt29P/AruSoPPw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11785"; a="79545926"
+X-IronPort-AV: E=Sophos;i="6.23,233,1770624000"; 
+   d="scan'208";a="79545926"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2026 15:24:40 -0700
+X-CSE-ConnectionGUID: 5twPmlezQ+m5PPCvlGRG0Q==
+X-CSE-MsgGUID: V9jclXIDSDaPJYHx+rFwIg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,233,1770624000"; 
+   d="scan'208";a="237345529"
+Received: from lkp-server01.sh.intel.com (HELO dca79079c3eb) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 13 May 2026 15:24:38 -0700
+Received: from kbuild by dca79079c3eb with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wNI0I-000000005Dr-3o3n;
+	Wed, 13 May 2026 22:24:34 +0000
+Date: Thu, 14 May 2026 06:23:54 +0800
+From: kernel test robot <lkp@intel.com>
+To: hangej <hangej@amazon.com>, bhelgaas@google.com
+Cc: oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dwmw2@infradead.org,
+	kexec@lists.infradead.org, hangej@amazon.com
+Subject: Re: [PATCH] pci_crash: capture PCI config space at panic time
+Message-ID: <202605140624.Tw71sECt-lkp@intel.com>
+References: <20260512162402.1929687-1-hangej@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
- naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
- kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
- krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
- linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260513220610.GA341225@bhelgaas>
-Content-Language: en-US
-From: Caleb James DeLisle <cjd@cjdns.fr>
-In-Reply-To: <20260513220610.GA341225@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260512162402.1929687-1-hangej@amazon.com>
+
+Hi hangej,
+
+kernel test robot noticed the following build errors:
+
+[auto build test ERROR on pci/next]
+[also build test ERROR on pci/for-linus linus/master v7.1-rc3 next-20260508]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/hangej/pci_crash-capture-PCI-config-space-at-panic-time/20260514-000653
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20260512162402.1929687-1-hangej%40amazon.com
+patch subject: [PATCH] pci_crash: capture PCI config space at panic time
+config: x86_64-randconfig-161-20260514 (https://download.01.org/0day-ci/archive/20260514/202605140624.Tw71sECt-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+smatch: v0.5.0-9185-gbcc58b9c
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260514/202605140624.Tw71sECt-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202605140624.Tw71sECt-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> kernel/pci_crash.c:661:25: error: no member named 'aer_cap' in 'struct pci_dev'
+     661 |                                 if (!pdev || !pdev->aer_cap)
+         |                                               ~~~~  ^
+   kernel/pci_crash.c:666:19: error: no member named 'aer_cap' in 'struct pci_dev'
+     666 |                                                              pdev->aer_cap + PCI_ERR_ROOT_STATUS,
+         |                                                              ~~~~  ^
+   2 errors generated.
 
 
-On 14/05/2026 00:06, Bjorn Helgaas wrote:
-> On Wed, May 13, 2026 at 11:39:25PM +0200, Caleb James DeLisle wrote:
->> On 13/05/2026 23:07, Bjorn Helgaas wrote:
->>> On Wed, May 13, 2026 at 07:16:52PM +0000, Caleb James DeLisle wrote:
->>>> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
->>>>
->>>> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
->>>> require re-training after startup.
->>>> +found_port:
->>>> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
->>>> +		/* Let it go because the device will work as Gen1 */
->>>> +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
->>> I suppose this will cause a warning even in cases where Gen2 is
->>> impossible, e.g., the endpoint only supports Gen1?
->> Correct indeed.
->>
->> I imagine in most cases, if the port is Gen1 only then board integrator uses
->> a Gen1 card as well, so I could try being fancy and probe the card to see if
->> it supports Gen2. In OpenWrt the PCI driver is always built-in so I didn't
->> really consider this something to worry about.
-> Probing the downstream device sounds like overkill because it hasn't
-> been enumerated yet and there's no good place to check after it is
-> enumerated.  I would consider just logging one message as "info"
-> instead of "warn", maybe in mtk_pcie_startup_port_en7528()?
+vim +661 kernel/pci_crash.c
 
+   599	
+   600	/**
+   601	 * pci_crash_save() - Capture PCI config space at crash time
+   602	 *
+   603	 * Called from crash_save_vmcoreinfo() inside __crash_kexec(), which
+   604	 * runs before machine_kexec() boots the crash kernel.  This is the
+   605	 * only reliable capture point -- panic notifiers run AFTER kexec by
+   606	 * default (crash_kexec_post_notifiers=0).
+   607	 *
+   608	 * Capture check (capture param):
+   609	 *   always  -- capture unconditionally
+   610	 *   aer     -- quick-scan root port AER ROOT_STATUS for uncorrectable
+   611	 *             errors; skip if none found
+   612	 *
+   613	 * When capture=always, captures on every panic.
+   614	 * This is useful for cascading failures: a PCI link-down can cause
+   615	 * an MCE or NMI watchdog timeout before DPC/AER fires, so the crash
+   616	 * reason is UNKNOWN but AER registers may still hold error state.
+   617	 *
+   618	 * Reads config space fresh -- successful reads get current register
+   619	 * state, failed reads (offline devices) write 0xFFFFFFFF.
+   620	 *
+   621	 * Flushes both buffer and pagemap from CPU cache to RAM so data
+   622	 * survives kexec into crash kernel.
+   623	 */
+   624	void pci_crash_save(void)
+   625	{
+   626		struct pci_crash_pagemap *pm;
+   627		unsigned long cflags;
+   628		unsigned int num_devs;
+   629		size_t pm_size;
+   630		size_t buf_size;
+   631		void *buffer;
+   632	
+   633		num_devs = READ_ONCE(pci_crash_num_devs);
+   634		if (num_devs == 0)
+   635			return;
+   636	
+   637		/* Pairs with smp_wmb() in rebuild -- ensures buffer/pagemap visible */
+   638		smp_rmb();
+   639	
+   640		buffer = READ_ONCE(pci_crash_buffer);
+   641		buf_size = READ_ONCE(pci_crash_buffer_size);
+   642		pm = READ_ONCE(pci_crash_pagemap);
+   643		pm_size = READ_ONCE(pci_crash_pagemap_size);
+   644		if (!buffer || buf_size == 0)
+   645			return;
+   646	
+   647		cflags = READ_ONCE(capture_flags);
+   648		if (!(cflags & PCI_CRASH_CAPTURE_ALWAYS)) {
+   649			if (cflags & PCI_CRASH_CAPTURE_AER) {
+   650				struct pci_dev **devs = READ_ONCE(pci_crash_devs);
+   651				unsigned int i;
+   652				bool pci_error_found = false;
+   653	
+   654				if (!devs)
+   655					return;
+   656	
+   657				for (i = 0; i < num_devs; i++) {
+   658					struct pci_dev *pdev = devs[i];
+   659					u32 status;
+   660	
+ > 661					if (!pdev || !pdev->aer_cap)
+   662						continue;
+   663	
+   664					if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT) {
+   665						pci_read_config_dword(pdev,
+   666								     pdev->aer_cap + PCI_ERR_ROOT_STATUS,
+   667								     &status);
+   668						if (status & PCI_ERR_ROOT_UNCOR_RCV) {
+   669							pci_error_found = true;
+   670							break;
+   671						}
+   672					}
+   673				}
+   674	
+   675				if (!pci_error_found) {
+   676					pr_emerg("no PCI errors detected, skipping capture\n");
+   677					return;
+   678				}
+   679			} else {
+   680				return;
+   681			}
+   682		}
+   683	
+   684		pci_crash_fill_buffer(buffer, num_devs);
+   685	
+   686		/*
+   687		 * Flush buffer and pagemap from CPU cache to RAM so the
+   688		 * crash kernel sees our writes after kexec.
+   689		 */
+   690		pci_crash_flush_dcache(buffer, buf_size);
+   691	
+   692		if (pm && pm_size > 0)
+   693			pci_crash_flush_dcache(pm, pm_size);
+   694	
+   695		pr_emerg("CAPTURE: %u devices, %zu bytes\n",
+   696			 num_devs, buf_size);
+   697	}
+   698	EXPORT_SYMBOL_GPL(pci_crash_save);
+   699	
 
-Works for me, worth noting if anybody adds a startup for another device 
-which has this quirk, they'll also need to copy the log line - but it's 
-highly likely that no other such device exists, and duplicating 3 lines 
-of code is not the end of the world.
-
-
-Thanks,
-
-Caleb
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
