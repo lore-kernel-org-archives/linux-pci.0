@@ -1,122 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 529D330F7F7;
-	Wed, 13 May 2026 20:21:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C57436A03B
+	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 20:28:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778703676; cv=none; b=pVJsT0md80tSV9hql+lQcQcdovUqhrr4GCtQqcccyXyz2Z1aSIjtXHNGqzyOYteiwmXbZUHRZoPdrx1FVaGFeBoHrC2rrK2AsmVAQIR5CsQTBjkYlfcvZj5DCA4HZytlSkwLvx7CGAJBJkFO9KjIVLb38Gj6EZqf5DUWbWTYdho=
+	t=1778704096; cv=none; b=S08jNYgzjUEYClyga+obg5jL33uwaWgipYlsvmIiORYwHlnmPuArQBxgn1eFpfJSw2r/wOMTXcGatGIM6LUjkB4u7I+7ykR0vj8KWSqtqxQhJ/lCV8D4XbiZh8VXFjGiIXo5IZKLmDOe64Oey1xxINH5//piNh6u1Mu71H8IdJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778703676; c=relaxed/simple;
-	bh=tdRb6uTF26YxJafhOlxG2RkhZSnSyrlLFAf4EcUzkcE=;
+	s=arc-20240116; t=1778704096; c=relaxed/simple;
+	bh=7jcX3rkjLPtPOHeK9kz3zJ+5nh1FhELcCL/ofnAuCK8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QhukJAmvInU/5rbDsp/n04wO4XEQ54JggrHJTpVqFMemdXJcpWdwjXYG+i04B+qjSzR8cNUFuXzw22t9PmY7x7w5gXr2oqlVpy73EQgv40fYmzWc3ijXiIRNO8sRqwNP+1koxcNOvsGibKu9XFpDM3L+b32fim9RfSIqc4Eonmo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aWZXrEpO; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=EonzVHqIykLg9EXh7teeqRDg/eqHauEgVj3ef/8Lkm8+WwBehX0s6Q4f5FX+Cl7QcYQ50NHa8+nAUXz7L+llR73G7g3JPRhK7nkBLRMS4wMHJgQoNEJ6S922U4gCoAmInCHBh2rxbj4fxU4pkwR75gasC8ffjU3/mXxYOkgQiek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lLQEiqL3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aWZXrEpO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B748AC19425;
-	Wed, 13 May 2026 20:21:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lLQEiqL3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 097ADC19425;
+	Wed, 13 May 2026 20:28:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778703676;
-	bh=tdRb6uTF26YxJafhOlxG2RkhZSnSyrlLFAf4EcUzkcE=;
+	s=k20201202; t=1778704096;
+	bh=7jcX3rkjLPtPOHeK9kz3zJ+5nh1FhELcCL/ofnAuCK8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=aWZXrEpO+kmajpTnUTyUMRgurh4imzjJW8Ny/s2noG9yHQA4zQGPs3+sTusFeKCNV
-	 HOW7TrbzaYFqXZphoG0uznTjp0o+z8yVIlzd+0tDX2e9SOP6/sCp5RJ37wWDJ4hmXA
-	 qlCV9RDV0vFrqO0tecuX+8Zsu/4yROQ9gKg2oeMPbuhRQFI+kbWNGhnJmGiJGNvUVk
-	 rG19GKfAOf2MsdvP6VNcL8ol+GQpEduom4sUsqQ1STDY+HeWHpEUpQxItW30sBuV6C
-	 3RI05/loxLedndcFVcLh5U4g7lJ+ov9A0juL53s6W32QhLyVngJrmBnWEu1aYn4fPG
-	 3N3sdd928Cy6A==
+	b=lLQEiqL3qTDx0DcXj10SdfwucxRC45xBYZk2ZLT+47lt1t0+Y/sdTOZpuh0o9z8/a
+	 7wfe5mrStgdtviMoV5m32dR0WFS8KGajTVShmLwh0EO+21n+C3NINAHMtfnls5xEXR
+	 75kZ7rw4bmM21TBXamCYTuwJMXPO1f8FTbtrRv85JpqHdpV16UMdAJhb47eWJ+/h5T
+	 uPJn8VZ/JxlqZmmIDAGJmQQTOu6n4ei7pmWCPeVD43pFB1pYoc9r6+8nnssniLWGZd
+	 ccoVLQ6RR2z4Kvhkx2imD2KYSm+jLIPHxWF5d68UgyVSAj3tTj1JaB1hepdsvFby9G
+	 R7Yxx9YrAWRjw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 16/23] dmaengine: sdxi: Generic descriptor
- manipulation helpers
+Subject: Re: [PATCH v4 08/16] vfio: selftests: Build liveupdate library in
+ VFIO selftests
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: Frank.Li@kernel.org, dmaengine@vger.kernel.org, vkoul@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260511-sdxi-base-v2-16-889cfed17e3f@amd.com>
-References: <20260511-sdxi-base-v2-16-889cfed17e3f@amd.com>
+To: "Vipin Sharma" <vipinsh@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260511234802.2280368-9-vipinsh@google.com>
+References: <20260511234802.2280368-9-vipinsh@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 20:21:14 +0000
-Message-Id: <20260513202115.B748AC19425@smtp.kernel.org>
+Date: Wed, 13 May 2026 20:28:15 +0000
+Message-Id: <20260513202816.097ADC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Data race and TOCTOU race in descriptor ownership validation defea=
-ts the safety check.
-- [Medium] Severe performance degradation due to Read-Modify-Write (RMW) on=
- Write-Combining (WC) DMA memory.
+- [Low] The VFIO selftest Makefile includes `../liveupdate/lib/libliveupdat=
+e.mk`, which does not exist, causing a build failure and leaving `LIBLIVEUP=
+DATE_O` undefined.
 --
 
-commit 54eb4223ce2b3ad6354bf153f2d7fc8aa53474e0
-Author: Nathan Lynch <nathan.lynch@amd.com>
+commit d3eae23e3b6d5e95208bbaa8caae8ddebad58cb5
+Author: Vipin Sharma <vipinsh@google.com>
 
-dmaengine: sdxi: Generic descriptor manipulation helpers
+vfio: selftests: Build liveupdate library in VFIO selftests
 
-Introduce small helper functions for manipulating certain common properties
-of descriptors after their operation-specific encoding has been performed b=
-ut
-before they are submitted.
+Import and build the liveupdate selftest library in VFIO selftests to allow
+using liveupdate ioctls.
 
-> diff --git a/drivers/dma/sdxi/descriptor.h b/drivers/dma/sdxi/descriptor.h
-> new file mode 100644
-> index 0000000000000..c0f01b1be726d
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/descriptor.h
-[ ... ]
-> +static inline void sdxi_desc_vl_expect(const struct sdxi_desc *desc, boo=
-l expected)
-> +{
-> +	u8 vl =3D FIELD_GET(SDXI_DSC_VL, le32_to_cpu(desc->opcode));
-> +
-> +	WARN_RATELIMIT(vl !=3D expected, "expected vl=3D%u but got %u\n", expec=
-ted, vl);
-> +}
+> diff --git a/tools/testing/selftests/vfio/Makefile b/tools/testing/selfte=
+sts/vfio/Makefile
+> index 0684932d91bfc..7865b2aa011c3 100644
+> --- a/tools/testing/selftests/vfio/Makefile
+> +++ b/tools/testing/selftests/vfio/Makefile
+> @@ -20,6 +20,7 @@ TEST_FILES +=3D scripts/setup.sh
+> =20
+>  include ../lib.mk
+>  include lib/libvfio.mk
+> +include ../liveupdate/lib/libliveupdate.mk
 
-The descriptor ring is often mapped as DMA coherent memory, which on many
-architectures is Write-Combining or uncached. Does reading desc->opcode
-here and in the calling functions trigger synchronous, non-posted PCIe read=
-s?
+Is it possible this file is missing from the tree?
 
-If these helpers are called directly on the DMA ring, this read-modify-write
-pattern might cause multiple PCIe reads per descriptor and artificially cap
-the DMA engine's throughput. Is there a way to redesign the API to avoid
-reading from the ring, perhaps by returning the modified opcode or passing
-it as state?
+Neither the lib directory nor the libliveupdate.mk file appear to exist und=
+er
+tools/testing/selftests/liveupdate/. This will cause a build failure since
+make requires the included file to be present.
 
-[ ... ]
+> =20
+>  CFLAGS +=3D -I$(top_srcdir)/tools/include
+>  CFLAGS +=3D -MD
+> @@ -27,11 +28,15 @@ CFLAGS +=3D $(EXTRA_CFLAGS)
+> =20
+>  LDFLAGS +=3D -pthread
+> =20
+> -$(TEST_GEN_PROGS): %: %.o $(LIBVFIO_O)
+> -	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $< $(LIBVFIO_O) $(LDLIBS) -o $@
+> +LIBS_O :=3D $(LIBVFIO_O)
+> +LIBS_O +=3D $(LIBLIVEUPDATE_O)
 
-> +static inline void sdxi_desc_set_fence(struct sdxi_desc *desc)
-> +{
-> +	u32 opcode =3D le32_to_cpu(desc->opcode);
-> +
-> +	sdxi_desc_vl_expect(desc, 0);
-
-Can this double-read sequence lead to a time-of-check to time-of-use race?
-
-If the driver erroneously calls this helper on an active descriptor (vl=3D1=
-),
-the first read of desc->opcode into the local opcode variable fetches vl=3D=
-1.
-If the hardware then completes the operation and writes vl=3D0 to desc->opc=
-ode
-in memory, the second read inside sdxi_desc_vl_expect() fetches vl=3D0.
-
-The validation check would then succeed, bypassing the WARN_RATELIMIT safety
-net. The helper then writes back the stale local opcode (which still has
-vl=3D1) to memory, silently re-submitting the completed descriptor.
-
-Could desc->opcode be read exactly once using READ_ONCE(), and that local
-value passed into sdxi_desc_vl_expect() to avoid this race?
-
-> +	FIELD_MODIFY(SDXI_DSC_FE, &opcode, 1);
-> +	desc->opcode =3D cpu_to_le32(opcode);
-> +}
+Since the libliveupdate.mk inclusion fails, LIBLIVEUPDATE_O remains undefin=
+ed
+here. Does this also cause missing object files during linking?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
-v2-0-889cfed17e3f@amd.com?part=3D16
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511234802.2280=
+368-1-vipinsh@google.com?part=3D8
