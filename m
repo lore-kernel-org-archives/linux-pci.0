@@ -1,98 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com [35.155.198.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8885639734B
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 03:58:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41EDD42A9D;
+	Wed, 13 May 2026 04:04:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.155.198.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778644734; cv=none; b=WhcxzZ+Y4Vjo0Aed49nkl5T7RuVJelDRZaEjy9GFgAcdsVhP1to27A9HjKh2EdCH3u0WL4qyUxkK2Fos9HI8dAYGetk0crdXnMR/4MooT1EuAGqWV6zXzcbQes7inTwdFXaID/3fXL89NOGPkP8EdYquGb9MdthpDZzSol349qo=
+	t=1778645074; cv=none; b=epmixKtcGkDmZLFdIx+lsamGfRW/TLxQX9qzhud2plPmbYFOnntA0LzZ/qycZil/iA4OA9lcOPbu9uyvVsIWXjd45DGTr2P1dp59+1wKH98PDQXj+8o6BueDoGfNlb5Gw9rLR7Jc4pw1FJtGCFPwHO6wzkOqRVnklDbwK4zrJAE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778644734; c=relaxed/simple;
-	bh=zPzfMCz3c4jliJ8m565eugL/iH+vQvnrlYj7sEjQK1I=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=EBUQBEeL+VEGkqFpSCpN0RZ+dxvgobnbJgUH1lXVehuqsu/BWqJI9+3vlcjnG1phRr0/XI2NH2/wtdBz7UHikoTd17GfdByK1kSaL79XrTKMY9vIG6cCzbasMoyhufv/HJPz81sv59jYfaKiTsSNqc7rJgJBP9IKEZXcND4Mp3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sV+xtr8n; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778645074; c=relaxed/simple;
+	bh=k7MpM86QtfCu3jCwWUvM4gQU7osAdzHNw2Jg+7b+Ctc=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nB5DzMFJq+dAwRXX2KOu9vOfPwmTeh2KUlM0uGMd5pypyanpM7aZ25tI1PJB45nXiK0/X3/Kmi0LGEloTz+pLXToxjromUwEH/F0s/FPMmRAs39blhUgGx51ggfWm4PobPnCOFxuztjDsCTjfs5r0oE9X+X4ILRrT5ytzGd0vLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=XWjGf7Uw; arc=none smtp.client-ip=35.155.198.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sV+xtr8n"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21C09C2BCC9;
-	Wed, 13 May 2026 03:58:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778644734;
-	bh=zPzfMCz3c4jliJ8m565eugL/iH+vQvnrlYj7sEjQK1I=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=sV+xtr8nxmA7tq+nBDzOS/YqhwzRB7S5HnlB3vdjH3BFD+B88eMThFnWWY8sHnkAU
-	 C9AjxW0PmyrUgj67ojBohxKGM/RYERCv5JbCDfoARfSQn0jgI2KJe0rgZ8ammkdPYJ
-	 qv3gSdCMmEq9V3deXn4vg6dY/biUwcsVDTmW5PcauXFsStjJNYH5lUXAJt3KOdMYze
-	 AqDLes6tk1EJQe1Om4q+e8XW9QiMO4NJrwP0LWxbGYJS6woVOVKwDZokGO4TFXNL1j
-	 0UNQ5UIetWmeAU1TZ0q5vszgaM7ibi6JjHvC7UjpQK6xleeyPbGXLlujZJ+Q4AuDhS
-	 HZxAbW5ROId6w==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: tegra194: Use aspm-l1-entry-delay-ns DT
- property for L1 entrance latency
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manikanta Maddireddy" <mmaddireddy@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260512034821.1320714-1-mmaddireddy@nvidia.com>
-References: <20260512034821.1320714-1-mmaddireddy@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 03:58:53 +0000
-Message-Id: <20260513035854.21C09C2BCC9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="XWjGf7Uw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1778645073; x=1810181073;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=a/xbs8//p25Kr8lBeXV8kTA+S6A+9JLDKOrRl+rfB5I=;
+  b=XWjGf7UwU1w3YruG4TuMfl9uhwb5jFSQhzWaEazox63LPVvU4HNejZLc
+   6SgPZBkNKlOtcPwXn8GW1+XWQzmAR96tpYctWIksqmQb+EdNGzPqmLdRD
+   NxvX+a6K562e5n46OEA1BKor+w9j0ii9Ys/kIzLFNZbGh1ASRBOsT++K0
+   hvCbymxHNrzqI+PaugJj3nEA6S0epkRohvtUSrYnhXxChUlP5faKQhH4T
+   P/L6pnLDm3hCCX2V7DoypZIxEPSYCaRYQeG6s6Vodv2XHhdzGdqnsFqwF
+   kweBuncEcMzSXhS07zoqYHenrdi7KHCt6oeMQqqBmy5+TnfFGqPPabhnq
+   g==;
+X-CSE-ConnectionGUID: B+wgS5R1QICO2DEDLqId4A==
+X-CSE-MsgGUID: ngLVMkJvR0iO5EtPhnbpRQ==
+X-IronPort-AV: E=Sophos;i="6.23,232,1770595200"; 
+   d="scan'208";a="19399220"
+Received: from ip-10-5-9-48.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.9.48])
+  by internal-pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2026 04:04:32 +0000
+Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.51:24470]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.34.21:2525] with esmtp (Farcaster)
+ id a2f9d8bf-51cb-4fe9-afc0-ed16f0efb342; Wed, 13 May 2026 04:04:32 +0000 (UTC)
+X-Farcaster-Flow-ID: a2f9d8bf-51cb-4fe9-afc0-ed16f0efb342
+Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
+ EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Wed, 13 May 2026 04:04:31 +0000
+Received: from dev-dsk-ravib-2a-f2262d1b.us-west-2.amazon.com (10.169.187.85)
+ by EX19D001UWA001.ant.amazon.com (10.13.138.214) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.37;
+ Wed, 13 May 2026 04:04:30 +0000
+From: Ravi Kumar Bandi <ravib@amazon.com>
+To: <kwilczynski@kernel.org>
+CC: <bhelgaas@google.com>, <ilpo.jarvinen@linux.intel.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<ravib@amazon.com>
+Subject: Re: [PATCH] PCI/sysfs: Check IORESOURCE_DISABLED in resource mmap handler
+Date: Wed, 13 May 2026 04:04:01 +0000
+Message-ID: <20260513040401.16035-1-ravib@amazon.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20260512094621.GB1539393@rocinante>
+References: <20260512094621.GB1539393@rocinante>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D033UWA001.ant.amazon.com (10.13.139.103) To
+ EX19D001UWA001.ant.amazon.com (10.13.138.214)
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] L1 entrance latency calculation prevents programming a hardware =
-value of 0.
---
+On Tue, May 12, 2026 at 18:26:14 +0900, Krzysztof wrote:
 
-commit 63300af08363595c90cc1e642b1cf857792eae94
-Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > > > pci_mmap_resource() does not check IORESOURCE_DISABLED before mapping
+> > > > a PCI BAR resource into userspace. This allows new mmaps to succeed
+> > > > even after a device has been marked disabled or soft-unplugged by the
+> > > > driver to prevent further access.
+> > >
+> > > Which driver disables resources?  Would this be some Amazon-specific thing
+> > > you are trying to fix?  Or are you just manually disabling a given device
+> > > using sysfs, or something like this?
+> > >
+> > > What is your use case here?
 
-PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance laten=
-cy
+Thank you Krzysztof, Ilpo for reviewing the patch.
 
-This commit parses the aspm-l1-entry-delay-ns device tree property to
-configure the ASPM L1 entrance latency. It converts the delay from
-nanoseconds to a 3-bit hardware encoding.
+The use case is surprise removal of the PCIe device that does not have a
+PRSNT# routed to the CPU. Based on other internal states, the
+proprietary endpoint driver marks the BAR resources as disabled by
+updating this flag to prevent further userspace access to the mermory
+regions (mmap) to prevent kernel hang/crash. Currently, BAR memory
+regions will be allowed to be mmapped using the sysfs resource files
+even if drivers soft_unplug the device.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/con=
-troller/dwc/pcie-tegra194.c
-> index 9dcfa194050e7..c9716d6144517 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-[ ... ]
-> @@ -1141,6 +1146,15 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pci=
-e_dw *pcie)
->  		dev_info(pcie->dev,
->  			 "Failed to read ASPM L0s Entrance latency: %d\n", ret);
-> =20
-> +	/* Default to max latency of 7. */
-> +	pcie->aspm_l1_enter_lat =3D 7;
-> +	ret =3D of_property_read_u32(np, "aspm-l1-entry-delay-ns", &val);
-> +	if (!ret) {
-> +		u32 us =3D max(val / 1000, 1U);
-> +
-> +		pcie->aspm_l1_enter_lat =3D min(ilog2(us) + 1, 7);
+> > > For "soft-unplugged" device we have pci_dev_set_disconnected(), but this
+> > > does not check current flags set.
 
-The commit message states the value is converted to a hardware encoded 3-bit
-value that is equal to log2(ns/1000) + 1. Does this calculation prevent
-programming a hardware value of 0?
+Thanks for the suggestion. pci_dev_set_disconnected() couldn't be used
+directly as it's defined in drivers/pci/pci.h and not part of exported
+kernel headers, the endpoint driver is currently setting it as below
+along with the flags:
 
-By using max(val / 1000, 1U), the minimum value for us is 1. Since
-ilog2(1) + 1 is 1, pcie->aspm_l1_enter_lat can never evaluate to 0.
+    xchg(&dev->error_state, pci_channel_io_perm_failure);
+    smp_wmb();
 
-If the hardware supports an encoded value of 0 to represent delays less than
-1us, this logic prevents configuring it.
+    [...]
 
-> +	}
-> +
->  	ret =3D of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
+        pdev->resource[bar].flags |= IORESOURCE_DISABLED;
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512034821.1320=
-714-1-mmaddireddy@nvidia.com?part=3D1
+    [...]
+
+I'll replace checking for IORESOURCE_DISABLED flag
+with pci_dev_is_disconnected() instead and make endpoint driver adapt
+to using pci_dev_set_disconnected().
+
+> > > > Add the check to return -ENODEV when the resource is disabled, blocking
+> > > > new userspace mmaps of BAR resources after device removal.
+> > > >
+> > > > Tested by marking the PCI BAR resource as disabled and verifying that
+> > > > a subsequent mmap attempt fails with -ENODEV.
+> > >
+> > > Can you explain how did you do this?
+
+Based on the internal logic, endpoint driver sets the resource flags as
+below to indicate soft_unplug, which pci-sysfs use to to reject mmap
+of the resources.
+
+    pdev->resource[bar].flags |= IORESOURCE_DISABLED;
+
+> > > > @@ -1089,6 +1089,9 @@ static int pci_mmap_resource(struct kobject *kobj
+> > > >   if (ret)
+> > > >           return ret;
+> > > >
+> > > > + if (res->flags & IORESOURCE_DISABLED)
+> > > > +         return -ENODEV;
+> > > > +
+> > >
+> > > This probably would be better if it checked IORESOURCE_DISABLED and
+> > > IORESOURCE_UNSET, but then probably using resource_assigned() would
+> > > be even better.
+
+Thank you, but as you suggested above, I will update the patch to use
+pci_dev_is_disconnected() instead.
+
+Regards,
+Ravi Kumar Bandi
