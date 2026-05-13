@@ -1,174 +1,220 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 336C247CC97;
-	Wed, 13 May 2026 13:20:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06AB328136F;
+	Wed, 13 May 2026 13:31:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778678422; cv=none; b=b83BXK1gtrogaecLtzEyh0wW+AlJ0Fwn3oeCEoYxzWFJKUjCDRAcFdwLFwXRwmRXq+4tWIOoHQJYsl39PDdJC/qQ9Q+BwZiOhQsZI1Nc6lCO5gYRSCI6Pv3wg6wrVpjwyNRwbz1jd3lMjnzNaADGIsdqPQwT/49sNJVFFwKC2UA=
+	t=1778679093; cv=none; b=k9Q+HGIb+8LQDl8xRWTR6bHum1WfdvPK4MwRJ+Bv7Z/R88htqHfXhSb4YvE3AUf0NaB+1cN8lHy0KyA00LlUEWHXIkoRzy8cWQBY4O4L9LswY7pLM/xO3eDyBmEPQk9Mk4FThg5sLqsZJWAwzOrUocRSquByuy1+4x1CaDXpypM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778678422; c=relaxed/simple;
-	bh=S1BvYYSJE5VcerFQf1EGsA9bOPQ2bXNuvJNtcspmZMc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n2z/VzjtVy+inBeFsSEdWGmD2D5M9zb724thx5hHSjlsaubigsOswTS755I7s5I6ydFBk5rp9rEHuJREw9JQSdNektOtP8F999CL58jRxER2Ae2mDb9IGmiuFBWSzIs/tXqJgbarpw0MgjhgIOP5BjGtD9UyKWsWfW8tCbbiLFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oOOXw93G; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778679093; c=relaxed/simple;
+	bh=6mAKEgLgpZ+5k4w4TKPXW22pRH1yfidthSFNEbQzbb8=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=IcbskN24I1LPLCeyo5HjHAeaGTV8hWKqqzjDlNi03w5rI6o/fNfssJDtkOjhnHh9WSGyzoBsd5r82vlSQLlFLHz9HG8DmrhvQlQqSj53lvqdqBSp6HA1JUT0n9Jt5+LdPPH78GNA9Ev17fs4Q1F6y54cziVb2kQ3GtCjL3Ed0No=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=T+fLBrSM; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=tI3VY/Ws; arc=none smtp.client-ip=103.168.172.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oOOXw93G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58D35C2BCF5;
-	Wed, 13 May 2026 13:20:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778678421;
-	bh=S1BvYYSJE5VcerFQf1EGsA9bOPQ2bXNuvJNtcspmZMc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=oOOXw93GvA6+1amZ9s2I820J3rT+oiFMY8pXrlRLSph1Y05NEtpVVjTwU3pm2zIA3
-	 8WLw2KH8MCz2Tjgv9MmyxPsKk/vKWWLTemrNznjiwMO/vFohGAIiMUPUhP++TekKqC
-	 UjgQsTi8/RkFcTuAGVGvQ9lSHA7oBAfRnrHPYhnx7rNTy24tjiFD77+DvqyktiEyXG
-	 wVznEz3Wo99Wx7BJAOVWbhhD5i5CfOcMfTQKMqryi5lg/qsBsI3QHttObxelPJRsxu
-	 asYHMW+pPgFIDlY8cU2maG/pMooJ/OFAnulPM2P1DbHvJFlbX/0wYOK314MRR7HAqe
-	 4ip8G5aDODncw==
-Date: Wed, 13 May 2026 18:50:12 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com, 
-	bjorn.andersson@oss.qualcomm.com
-Subject: Re: [PATCH v5 4/5] PCI: dwc: Use common D3cold eligibility helper in
- suspend path
-Message-ID: <psbhxfox2dwdwv7m773xociaq3z5ns2ktognhu6hvoyptkoxvy@x6s4rkdq3dhj>
-References: <20260429-d3cold-v5-0-89e9735b9df6@oss.qualcomm.com>
- <20260429-d3cold-v5-4-89e9735b9df6@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="T+fLBrSM";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="tI3VY/Ws"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfout.phl.internal (Postfix) with ESMTP id 21B2CEC01F3;
+	Wed, 13 May 2026 09:31:29 -0400 (EDT)
+Received: from phl-imap-18 ([10.202.2.89])
+  by phl-compute-02.internal (MEProxy); Wed, 13 May 2026 09:31:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1778679089;
+	 x=1778765489; bh=xb+VuXdX+Y9hjQ+T925tr2yq3MyNGh4USiEHA2WGkvQ=; b=
+	T+fLBrSM8htrRXAXKiTF3dZtDXybwuX6jQ+hQ+AWM/HQM0bMy60ijCISQgNAYXH7
+	Kpa/jPMB/MF0j9OrJ9rfljQL1PKUBhst4tlFam/B/xziPEZB4Nn4Nj7SukvVNuey
+	hPNVLJnMawcIg81ggFAH1OuyT9Z+0mMWQT4fQgONeH2VVm5dgIs0dxqOZlARLR5Y
+	fywx+d5i2pje3hI/yDLJQ3zEQJT5ZlTv4EGin6+Vz1s/iBjBpBws5net+PVwJsoG
+	9oFaSD4Q8wB5KXE1/7kDqxLZhRX3t9R2/q+NCbh+p9SR0ERY6dh+zLC67kZjfoV+
+	QKj7vCEXyeqyq/wL1aNRVw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778679089; x=
+	1778765489; bh=xb+VuXdX+Y9hjQ+T925tr2yq3MyNGh4USiEHA2WGkvQ=; b=t
+	I3VY/WsQDnsmVikIgjxPRMPvvpTVWVTP+I1uStaPQ/VP9w+bDAKsgTiGUsZPu/jv
+	2e0LCCC+OMV+u/yCjGVhmV00dH+zTlfvDysQKCFDJSbAWFs3j00HFwNrl0aq45f8
+	33Or8qciwPk3xfn+HEWuU/AW7lNg9ZpHR3Q38Bg2VWNjt4wK2qbTJqzNMlerZgx/
+	lM3dts3UnWlK4BUNqLt5OYkenhOSVZ/CPOko4QF47hT6gfF50lj/F4zlC2rggZfO
+	QrBWQ3Z0xfNMcsQCcRpbxfg8fbzm1BEczfDIYjgbCMq2fpx+EhGKNqrPThXBiFwM
+	0JQAPErwdEeeYqPqfgRVw==
+X-ME-Sender: <xms:MH0Eau6CI0MbAoIxeA6keTyUrF7WsRH_onf5HGh7m7VFgb6MsC-wrw>
+    <xme:MH0Eaitnt3DjVSRZxMPrtwPKHOhRi9BbmVq2MRrnCDkbKYtddW1Un7_EBvbJwwTEX
+    4F8t_M3TOEw-LhFyoJN10rjvIlzEHKzdtym5UZYlL2X8n-iZNKgyg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduvdegjeekucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
+    gurhepofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehlvgig
+    ucghihhllhhirghmshhonhdfuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtf
+    frrghtthgvrhhnpefftdeggfeiveejteehhfeuffeggeeiuedvuefgieehjeegheeugedv
+    heeltdelvdenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuih
+    iivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdho
+    rhhgpdhnsggprhgtphhtthhopeegpdhmohguvgepshhmthhpohhuthdprhgtphhtthhope
+    gshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtohepjhhtohhrnhhoshhm
+    sehrvgguhhgrthdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvg
+    hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdr
+    khgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:MH0EalgL22CWsenOqM8z5r4TGzXZHpZ_opsFIUQjC3GkUau-mjUFLA>
+    <xmx:MX0EalcyKx3OlflRFDxgYOeqg4nAvBLMGvUdPaPotH_FKVawzirQ_A>
+    <xmx:MX0EaomsvZxqnCcyuKBz1YcQAJ1bKcglaaJtzyaamqel8FX50R1MGA>
+    <xmx:MX0EautyPh2YcTbADs50I0RzZw_koGRjx7fGOhyxKtzOB3nLuYgx9w>
+    <xmx:MX0EagdCMj6QaWOTL0mUHjebXZLVQXXavGAS11EA0cTZDIOy6iofr8PL>
+Feedback-ID: i03f14258:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id E240215C008E; Wed, 13 May 2026 09:31:28 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260429-d3cold-v5-4-89e9735b9df6@oss.qualcomm.com>
+X-ThreadId: AAQk2_-bpYfJ
+Date: Wed, 13 May 2026 07:31:08 -0600
+From: "Alex Williamson" <alex@shazbot.org>
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <2c4dbba3-f9ed-48d9-a0c4-d590904f3fdf@app.fastmail.com>
+In-Reply-To: <20260513122349.268753-1-jtornosm@redhat.com>
+References: <20260513122349.268753-1-jtornosm@redhat.com>
+Subject: Re: [PATCH v3 1/2] PCI: Add D3cold as general reset method
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On Wed, Apr 29, 2026 at 12:12:26PM +0530, Krishna Chaitanya Chundru wrote:
-> Previously, the driver skipped putting the link into L2/device state in
-> D3cold whenever L1 ASPM was enabled, since some devices (e.g. NVMe) expect
-> low resume latency and may not tolerate deeper power states. However, such
-> devices typically remain in D0 and are already covered by the new helper's
-> requirement that all endpoints be in D3hot before the devices under host
-> bridge may enter D3cold.
-> 
-> So, replace the local L1/L1SS-based check in dw_pcie_suspend_noirq() with
-> the shared pci_host_common_d3cold_possible() helper to decide whether the
-> devices under host bridge can safely transition to D3cold.
-> 
-> In addition, propagate PME-from-D3cold capability information from the
-> helper and record it in skip_pwrctrl_off. Some devices (e.g. M.2 cards
-> without auxiliary power) may lose PME detection when main power is
-> removed, even if they advertise PME-from-D3cold support. This allows
-> controller power-off to be skipped when required to preserve wakeup
-> functionality.
-> 
-
-But you are unconditionally keeping the devices in power ON state even if they
-are not M.2 based. We should be able to get this information from the pwrctrl
-driver through an API since it has the knowledge of the power supplies. But it
-can be done in a follow-up series.
-
-I'll add TODO while applying.
-
-- Mani
-
-> Update the suspended flag in dw_pcie_resume_noirq() only after the PCIe
-> link resumes successfully, to avoid marking the controller active when
-> link resume fails.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+On Wed, May 13, 2026, at 6:23 AM, Jose Ignacio Tornos Martinez wrote:
+> Add D3cold power cycle as a general PCI reset method, available for
+> single-function devices. This provides a more robust reset mechanism
+> than D3hot for devices where a full power cycle is beneficial.
+>
+> The implementation uses pci_set_power_state(dev, PCI_D3cold), which
+> automatically handles platform differences:
+> - Platforms WITH _PR3 ACPI power resources: true D3cold (power cycle)
+> - Platforms WITHOUT _PR3: automatic fallback to D3hot transition
+>
+> D3cold reset is placed at the end of the reset hierarchy as a last
+> resort before giving up, since it provides a strong reset when other
+> methods are unavailable or broken.
+>
+> Reset hierarchy with this change:
+> 1. device_specific
+> 2. acpi
+> 3. flr
+> 4. af_flr
+> 5. pm (D3hot via config space)
+> 6. bus (SBR)
+> 7. cxl_bus
+> 8. d3cold (NEW - power cycle with D3hot fallback)
+>
+> This benefits devices that:
+> - Have broken or missing FLR
+> - Advertise NoSoftRst+ incorrectly (blocking D3hot PM reset)
+> - Have broken bus reset implementations
+> - Need power cycle for reliable reset
+> - Are used in VFIO passthrough scenarios
+>
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 > ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 15 +++++++--------
->  drivers/pci/controller/dwc/pcie-designware.h      |  1 +
->  2 files changed, 8 insertions(+), 8 deletions(-)
+> v3: Implement d3cold as a general PCI core reset method instead of
+>   device-specific quirk approach from v2 (Alex Williamson suggestion)
+> v2: https://lore.kernel.org/all/20260508145153.717641-2-jtornosm@redhat.com/
+>
+>  drivers/pci/pci.c   | 41 +++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  2 +-
+>  2 files changed, 42 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f7cfcc00090..6da8feff7ccc 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4491,6 +4491,46 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+>  	return ret;
+>  }
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index c9517a348836..9e409a1909e6 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -16,9 +16,11 @@
->  #include <linux/msi.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/pci.h>
->  #include <linux/pci_regs.h>
->  #include <linux/platform_device.h>
->  
-> +#include "../pci-host-common.h"
->  #include "../../pci.h"
->  #include "pcie-designware.h"
->  
-> @@ -1218,18 +1220,14 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
->  
->  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  {
-> -	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	bool pme_capable = false;
->  	int ret = 0;
->  	u32 val;
->  
->  	if (!dw_pcie_link_up(pci))
->  		goto stop_link;
->  
-> -	/*
-> -	 * If L1SS is supported, then do not put the link into L2 as some
-> -	 * devices such as NVMe expect low resume latency.
-> -	 */
-> -	if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
-> +	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
->  		return 0;
->  
->  	if (pci->pp.ops->pme_turn_off) {
-> @@ -1273,6 +1271,7 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  	udelay(1);
->  
->  stop_link:
-> +	pci->pp.skip_pwrctrl_off = pme_capable;
->  	dw_pcie_stop_link(pci);
->  	if (pci->pp.ops->deinit)
->  		pci->pp.ops->deinit(&pci->pp);
-> @@ -1290,8 +1289,6 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
->  	if (!pci->suspended)
->  		return 0;
->  
-> -	pci->suspended = false;
-> -
->  	if (pci->pp.ops->init) {
->  		ret = pci->pp.ops->init(&pci->pp);
->  		if (ret) {
-> @@ -1313,6 +1310,8 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
->  	if (pci->pp.ops->post_init)
->  		pci->pp.ops->post_init(&pci->pp);
->  
-> +	pci->suspended = false;
+> +/**
+> + * pci_d3cold_reset - Put device into D3cold (or D3hot) and back to D0 
+> for reset
+> + * @dev: PCI device to reset
+> + * @probe: if true, check if D3cold reset is supported; if false, 
+> perform reset
+> + *
+> + * Attempt to reset the device by transitioning through D3cold and 
+> back to D0.
+> + * On platforms with ACPI _PR3 power resources, this performs a true 
+> D3cold
+> + * power cycle (actual power removal). On platforms without _PR3 
+> support,
+> + * pci_set_power_state() automatically falls back to D3hot, providing a
+> + * D3hot->D0 reset transition.
+> + *
+> + * Only available for single-function devices to avoid affecting other
+> + * functions in multi-function devices.
+> + *
+> + * Returns 0 if device can be/was reset this way, -ENOTTY if not 
+> supported,
+> + * or other negative error code on failure.
+> + */
+> +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	int ret;
 > +
->  	return 0;
->  
->  err_stop_link:
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 3e69ef60165b..e759c5c7257e 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -450,6 +450,7 @@ struct dw_pcie_rp {
->  	bool			ecam_enabled;
->  	bool			native_ecam;
->  	bool                    skip_l23_ready;
-> +	bool			skip_pwrctrl_off;
->  };
->  
->  struct dw_pcie_ep_ops {
-> 
-> -- 
-> 2.34.1
-> 
+> +	if (dev->multifunction)
+> +		return -ENOTTY;
+> +
+> +	if (probe) {
+> +		if (!pci_pr3_present(dev))
+> +			pci_dbg(dev, "d3cold reset: no _PR3 support, will use D3hot 
+> fallback\n");
 
--- 
-மணிவண்ணன் சதாசிவம்
+This fall through is invalid, if D3cold can't be reached the reset should be handled by pci_pm_reset() where NoSoftRst is honored.  pci_pr3_preset() should be tested in all cases, not just probe.  I think we also need to test device flags that would prevent a D3cold transition, like pci_pm_reset().  Thanks,
+
+Alex
+
+> +		return 0;
+> +	}
+> +
+> +	if (dev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	ret = pci_set_power_state(dev, PCI_D3cold);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return pci_set_power_state(dev, PCI_D0);
+> +}
+> +
+>  /**
+>   * pcie_wait_for_link_status - Wait for link status change
+>   * @pdev: Device whose link to wait for.
+> @@ -5065,6 +5105,7 @@ const struct pci_reset_fn_method 
+> pci_reset_fn_methods[] = {
+>  	{ pci_pm_reset, .name = "pm" },
+>  	{ pci_reset_bus_function, .name = "bus" },
+>  	{ cxl_reset_bus_function, .name = "cxl_bus" },
+> +	{ pci_d3cold_reset, .name = "d3cold" },
+>  };
+> 
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2c4454583c11..1ca7b880ead7 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -51,7 +51,7 @@
+>  			       PCI_STATUS_PARITY)
+> 
+>  /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
+> -#define PCI_NUM_RESET_METHODS 8
+> +#define PCI_NUM_RESET_METHODS 9
+> 
+>  #define PCI_RESET_PROBE		true
+>  #define PCI_RESET_DO_RESET	false
+> -- 
+> 2.53.0
