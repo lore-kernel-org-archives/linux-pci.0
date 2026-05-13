@@ -1,202 +1,353 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021141.outbound.protection.outlook.com [40.107.74.141])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 866DC3955D5;
-	Wed, 13 May 2026 02:49:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.141
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778640593; cv=fail; b=OWI4Dm7aaV0gEaRNqZDnXfyCnFt6pvFocknasrAfo/reFlT+FAzvQWmom0ar7hLFM6nDRDRSl11lI1uYj/kcY/HBgHg/C8Hb/uWa4HTz+lqNyVcSgXg/xusNZ9IiVac6W5Y3amcxpqoiOEV2s6ZwogdN7TlUoHHECE2OP6KdC/M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778640593; c=relaxed/simple;
-	bh=rSNa5GdSieh2JrgTXN05hXZmGomfIzxTerPvH8zLZ8Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=svGBIbQlajE0N8jP7zHnB4cqXr5K026nZ4Ik+ocDlRl8lWKVAJCY26KUSGl4uXjPRpE1to1TLH4nkBv/kbM4UVjjotYKI5Rq91KqQuvynkuPKw3AVtPDKy7HPh3qFvAJd0j1ZzqRFRcUBD8+eyk5rBoxvUfWMoZBmraX/AWhm3o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=wkOqlJbJ; arc=fail smtp.client-ip=40.107.74.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3233B2DC350;
+	Wed, 13 May 2026 03:04:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778641483; cv=none; b=Ngc8fpjWGl4JvK2BU8GIa+xMwiq7sHyopY3GcTCi+XEUxq7O/4ADEizJe78Wd6+IC3x9xUDs28HFcUMv6Knza0LXSnjbyHvL0d8N7wXzRLzkaiVVwEQEgcA3Wmcsk+alm0bKtmUKZS+Fi0sW+6Gv0R1YLB/X8Aj2jJK7OhWKFbk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778641483; c=relaxed/simple;
+	bh=LHWj/Yo9I0tGpb2nw+/jL4FGaK4wCeoS7AnfcacE584=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=C5d5Fap8dO1dc2KAFLqY3dqT5gvqrBszvzZUCCLIZw+d+wTdj1Earn+JM0mtSaoNEJQWFsfPUc5FlpFKXMHiL7RQhuxYq4CZRj5rsNVWbYR/84D95J3hjsTGYEEDi8+GYR/SM8mfX0bZLDtJV/MP8jtTEaT29RFy3KVUZXrLoAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=lxuzGXJY; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="wkOqlJbJ"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=S4JxyO27jp6EJcXU6T76fe1hu0KMJtb3j7rZyKSjImbzFFVIp2YZuYnzdBqYyqfdsdvezMcvv+ONixwAYkg38SurxV2LlMaTqKv2WrG6DRiNx3F8+aUf6fIl+PDBKbCQKusi77jeuKFiD9AWMq9WAD+8EelzdHK+zaZd5T8IW3CAKPMH6lcQqMq+zgVz6CUKxi4yd+TBK0fFOVVmBGTz52F9NpJElcuS9OvdyFm/8FXd/QZ5vcmElu4TkEXG+Tn091MITeNFvA//QIc8afVui7wKoM1d1uyEft1My599TJ0XnY9GIbliDI6FimmR9Djs3Hf0ijuxqo7a48Z97G9QnA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KKuHLLbTi5qHpvX+OPrWd55qEw4mRBx93vObvXCWRnQ=;
- b=UCR5Q3VduITTzQ/XEZEE0iTVZ2pKdi2GrsiKu5TT0gZoSEUA5XTi6sRIEUCGodAPyauxZ4KESGIMUwGFLaJkXu4gSh6vWWTGMOrDssMxVW8tn4/a+Y1262ok+8VWw8247X61CqTA6JbJ5u4w8jcU7S+j1WT/D+zFWgmF0uf7mCoil6DZyWO3VoE1D/rTEhUD7H/2XfVg0dQOLcDY2y0fExFtOK1LLHPD/VRPi2Hjdnmvo6UqO3MZm8F6BodQg7qnLJqftZ3w4Nzf0KlXRPqzl19VtOWGZu3Qbrty/GTHYz5VgyJUGD1c2VO68OffKv9aSPU8JlbaXfDQSJ/6wKIeKw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KKuHLLbTi5qHpvX+OPrWd55qEw4mRBx93vObvXCWRnQ=;
- b=wkOqlJbJMCGdG+2ym0sH8I5mDT/UhdZCqHp5v+EDy4RRyQqngYi1Y0Dbe9aW87IGvHoXun5WiM31AT/5PUUF6uYTUlUcMfb2XinGTLnwMnVzz0IhLIJBSA5NEZq+vLE0RWvahkGyWHKkK6nMfs4TcdBp5XzeIVSBi6ygxFLTDbE=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TYRP286MB5341.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:191::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Wed, 13 May
- 2026 02:49:36 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.20.9846.025; Wed, 13 May 2026
- 02:49:36 +0000
-From: Koichiro Den <den@valinux.co.jp>
-To: Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Jerome Brunet <jbrunet@baylibre.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	ntb@lists.linux.dev
-Subject: [PATCH v4 12/12] NTB: epf: Implement db_vector_count/mask for doorbells
-Date: Wed, 13 May 2026 11:49:23 +0900
-Message-ID: <20260513024923.451765-13-den@valinux.co.jp>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260513024923.451765-1-den@valinux.co.jp>
-References: <20260513024923.451765-1-den@valinux.co.jp>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0240.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:3c7::16) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="lxuzGXJY"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gFdbl6PsCz9vDp;
+	Wed, 13 May 2026 05:04:35 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1778641475;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kK9d3ZvVKNoGYZSkiMBYoDg4t9ccaUY0WVOAwtSkcbY=;
+	b=lxuzGXJYotgpr9YTwC4uq5ONN+785yc6vgi7uwcodBSDpoaVZjPeTwF4yYljUnRQiMqyWX
+	rsrf2/0Tp1NzL62c7IRLYm9iIXziAvpUlRgWGjsAagBT5Tbz3pA6Z0vu8PiReLo7lm+m2o
+	q1iVrvSkZRbX8XKr6w38N48bjEsZq2k85tdvD1KYuDTdGnqmhnx7rWeZq2QGu7TkOnRqrU
+	rZlplKUys1wFYBv4oUk20YBpz1Ex8a1SFrThByw1GYkWGxXl7cNRn2JUWI/YS9r8Ir7fGv
+	fQaAgZks9BIPAGPp5j2GS26kU5w3JdIgshkxXRmxTp5k9eq9zQk2jYUWlEc8rw==
+Message-ID: <4dd30518-1e20-45b8-b3b9-994f6cb3f25b@mailbox.org>
+Date: Wed, 13 May 2026 05:01:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TYRP286MB5341:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9dba584f-c089-4dc5-1986-08deb09a453d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|10070799003|7416014|376014|1800799024|366016|921020|22082099003|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	GrNbonOmiTKIgRnbp6WJqcMS+7RVnjlwH3hu0ynBkMrKpAdsQL5Lme2y9YCv6sc+GLZohC8fKZm2XhD7GFKFn1uMXKVts9NyC+D1SDChxmr/R21/v5z6prgJDJNdR6/9ymDx2aO6SkFAPhv8UIgF3sXDKjC1K6DZsYtkbeMbm4vB5rjBiK6ted7KB3C5+qZnPPv3Awvcj+4wDvy8JNTKYXpgjFRJPOW5pbUAnCq5E0TYJ4idnBqXdPW8FYco7Rrt1KpghOTciu3T2cwTzV8nyOvhjMZMp1AmzxLm0C7brBiP/YeXf4nivb7VddtrnlnWwt2JxRhF4MdivcX6ATFjguDfbf41MHWefDZiC461CL0iAdVc9XFpqSbqSKiq8FxfEiKK/xpk0FcbyZWO+5SkONM+oX968pxZPdws0lV1Gto20gPcSGCCbKYM0W81Q3Kt3YokesYERrk5mrX3RjntKqgQYW5v/SVd5Xj0FIhUYRO1kiFCDHBnXpqN28XiAaxwKBvJ/3HKNVIai+6JUH9RkPo4slEkMb+wjF3N/WSzWIcPoKMGSdYOd9/9Uivi6UOMlZMZnMw1JHSbjLMHjCvK8zNr117dc9/RNjFA3aDs51rO3Q8LbWJDqmf0MZr06vetB/gD7gxsCzDemD7XgSx1rN5UnxSBz/hNpwmKeZYjZvcckfX6QZNuMYL/SEe5Pfw2gygdcBP7zA3yhAETIhQISyNO+t6yC6w2ecIUlZ+UbH0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(7416014)(376014)(1800799024)(366016)(921020)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?NkRoPflSrss+RJB1soZQrNOJ7vgiRuo99Q3rhX7uS/Ln//m4/1UwP7Azja6V?=
- =?us-ascii?Q?fMIImaqv1HEeug8uzkj0NYkV2GzUhAK0EYTjC6tPPlwgF3uR5oZqc1xSCNmo?=
- =?us-ascii?Q?XWpVJT3FbFd5ceA+QgTWvyfi5gUoLwMUyIzpWLRIlHuBAEkUPRynEyZbcr++?=
- =?us-ascii?Q?1OFMe3CE4KFQ3SHVmCboyvzp9AmCv9Nk7xyt8G7fHuPoLtIIXtNuFEGqrwW9?=
- =?us-ascii?Q?2JYCk0QCVAzX5xbovJPiRD34/V0PEglBX6yF/OGjk9NUNiEWogAqkOfCB0eR?=
- =?us-ascii?Q?ui3/XLoQkbE/JAT1D4rPndqSIkn77leMNbVEtIczL61zaXNvOixWzbPJujc4?=
- =?us-ascii?Q?ESOlnjgZDvb/vAfY3sQH24YUkhzZ79XIQpGgIfbFUTEViJRbQFWAI7qy7Fw+?=
- =?us-ascii?Q?w/vcwe3hc0zab+QhTdwoRigTdOySuSqCjASUDo7SCh+vBq5JtheeYITi57fn?=
- =?us-ascii?Q?BPSnuejHYdxqUNkZeaTmZD88JBd90RgR/+rY36dmGTdRvDkdJQ8GGBD5jbtt?=
- =?us-ascii?Q?CrdNvjBnp9S0iPn80hqo5MrwFTZsC0CO6wVA4SEERvRUGnUntaxNMuDBp049?=
- =?us-ascii?Q?86b2+8lTxitXUzpZBmnJc4Ld/txJscEK4Kzt4DR/cVEumTICtI5N6Mcab7th?=
- =?us-ascii?Q?yPAyzKNtyK0i8yUAn0XVE/8Pny85m4ONSnjlU+DZX2DbqsAL0GuJrtbYSrIj?=
- =?us-ascii?Q?2l/Jc4Oou9dOyAP7LpiXTFrtGPYWfEmQAJxLTiayY8FW9I1+Umev1QQlZLpa?=
- =?us-ascii?Q?hVmJof5oDdJnHiUVVVVZpN3fgNNn6mc+WHJBa4AuPPRYFHlf9+oglq95PD4u?=
- =?us-ascii?Q?YK23Na8GgjvZm29w8IWc6A7fRqZAad4FpzIKi7iq3nib3xKTGAXPkMaD4TKR?=
- =?us-ascii?Q?iylfCDJxHIfk0MfMQVbDf9dQa71cKHq3T4B5e/95JLRsXfNJrIcDBTbmkj7e?=
- =?us-ascii?Q?P8Z489MDHb/z1pTawHhdGnS6pI2CDK7IviT/O84Lv5G6I1PeHWoDKnBRVa2y?=
- =?us-ascii?Q?3WBgeOvdfmr+hj7wnRXsG9Oj1IC4Gwv0sbnsQkGhCN39pOyw7+WlXL8qs1Sl?=
- =?us-ascii?Q?nTEZ92iOepERXpt97M0kHr3AcFfFP9i+tyiYZ9sKyXiyPrC+/Uu4Ei50t8cW?=
- =?us-ascii?Q?BH6hDGBaoiQnlOOVmtpQM15XULhYlpYh1H0NkaQtdR6WPkMQzZTwkmV+5+PG?=
- =?us-ascii?Q?VQI2fY7BdHRcLg5Iz0gK2PotHe1n+ZdQ7ro0RbcjhW1wgHO3sAIO/QEwvTGv?=
- =?us-ascii?Q?gMUIqku04aEwznsltkus3Kr/OWL8rff4Pewum4yzD19LGtDyAUQ9STA0316U?=
- =?us-ascii?Q?XUOZw5H7x6riC88m7T9XWeEuqJdpCED7WWCPKSWVHii7RGkDFXYiTnl4SP/F?=
- =?us-ascii?Q?kGNugVPPbxv4KIlL6ziXMA/WmCY8jpceSuk1Q089iWuczKyieRiVU3W8a415?=
- =?us-ascii?Q?Ycv7kRdIBZEnNktYlDsMjlsYSVJS9Nb7Sn2GA1hupNs4+ZhOb9I9pFnWBcMB?=
- =?us-ascii?Q?aMSB0GeKfxRO8pYyG6x0z53xt++luzltVz4cwZMHs887JwbdufCCaE3ljNEM?=
- =?us-ascii?Q?tj+AWq7xln+1uYhTZD/gQ9Pk8DE6sTGULgq1qbNayqQiJFLtT2mOywWJbSMM?=
- =?us-ascii?Q?7TO0m9N7DTmrJoni44eeYglSvUf0jvK9DbjK+DWyfaTh6zP/Kqh9PmwsP+q7?=
- =?us-ascii?Q?Ej36SQVF/zj/Ldx7BVdI6TKehLH1ApuQYYfVVR9zi3aUzaKljBsHBAKWI4LE?=
- =?us-ascii?Q?Rdf342giYsM+odQgInW+fHPGCPnhf2r9CuTogG0vB7IBYA2RkilZ?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9dba584f-c089-4dc5-1986-08deb09a453d
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2026 02:49:36.6864
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: SpCusXmzrimXrKEvSgLFxDR3ppeitLrXMDmY+Rzewf8aTMms7n5q/1kjFnupHkL+ejZipWtfp8T1rN7TZMCjPw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRP286MB5341
+Subject: Re: [PATCH] PCI: rcar-gen4: Limit Max_Read_Request_Size and
+ Max_Payload_Size to 256 Bytes
+To: Koichiro Den <den@valinux.co.jp>
+Cc: linux-pci@vger.kernel.org, stable@vger.kernel.org,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+References: <20260425233845.459175-1-marek.vasut+renesas@mailbox.org>
+ <oeb2uiudm7afzzzy3f5rykzctfnxlsydit6ww5raohcbxo3v34@hmnqr2ud42kq>
+ <66d050f4-5d21-43e0-af8e-39a0d6c4b0ec@mailbox.org>
+ <wpv2alxxrf5jtdyoz5kpry6446srz2k7jc3lbwuwwbfvswjuce@i75vxrpxw4ox>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <wpv2alxxrf5jtdyoz5kpry6446srz2k7jc3lbwuwwbfvswjuce@i75vxrpxw4ox>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: h4afhqz6czuhp538apcbdzd3e6zdmmqq
+X-MBO-RS-ID: bdae9c0e2e6b95635c5
 
-Implement .db_vector_count and .db_vector_mask so ntb core/clients can
-map doorbell events to per-vector work.
+On 5/11/26 4:20 PM, Koichiro Den wrote:
 
-Report vectors as 0..(db_count - 2) (skipping the unused slot) and return
-BIT_ULL(db_vector) for the corresponding doorbell bit. Use
-ntb_epf_db_vector_count() for bounds checks in ntb_epf_db_vector_mask(), so
-the same lower-bound guard is applied before building the bitmask.
+Hello Den-san,
 
-Signed-off-by: Koichiro Den <den@valinux.co.jp>
----
-Changes since v3:
-  - Reuse ntb_epf_db_vector_count() from ntb_epf_db_vector_mask() for bounds.
-  - Return 0 when db_count is below NTB_EPF_MIN_DB_COUNT.
-  - Drop Reviewed-by tags due to the changes.
+>>> 2. Did you also happen to test V4H/V4M in endpoint (EP) mode, with the local
+>>>      eDMA engine issuing MRd requests toward host memory?
+>>
+>> I was not able to test this configuration.
+>>
+>> Is it possible to perform this test with a single device, by having the eDMA
+>> do local-memory-read-to-local-memory-write transfers, maybe using
+>> PIPE_LOOPBACK/LOOPBACK_ENABLE bits, or do I need two devices with NTB
+>> connection between them ?
+>>
+>> In case it is the later, could you please briefly describe the S4 NTB setup
+>> you use, so I could try to replicate it locally ?
+> 
+> My setup was a two-board setup:
+> 
+>    S4 Spider as RC <-> S4 Spider as EP, connected with OCuLink.
+> 
+> It is unfortunately not a small standalone reproducer. The setup was based on
+> the following RFC v4 series:
+> 
+>    [RFC PATCH v4 00/38] NTB transport backed by PCI EP embedded DMA
+>    https://lore.kernel.org/all/20260118135440.1958279-1-den@valinux.co.jp/
+> 
+> In particular, the workaround patch I used in the RFC series was:
+> 
+>    [RFC PATCH v4 31/38] NTB: epf: Add per-SoC quirk to cap MRRS for DWC eDMA (128B for R-Car)
+>    https://lore.kernel.org/all/20260118135440.1958279-32-den@valinux.co.jp/
+> 
+> Note that in that workaround I only capped MRRS (i.e. I did not add an MPS cap).
+> At least in that setup, avoiding 256B MRd requests was enough to make the
+> visible corruption disappear.
 
- drivers/ntb/hw/epf/ntb_hw_epf.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+I have been investigating the MPSS/MPS/MRRS a bit deeper. I did not make 
+the connection between your last observation in your previous email, 
+which already hinted at what the issue might be, the MPSS bitfield, 
+TYPE00 and TYPE01 accesses until today and one more nudge from 
+Manivannan in the MPSS direction. Thank you both for those two items.
 
-diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
-index 10618e462229..af5755472842 100644
---- a/drivers/ntb/hw/epf/ntb_hw_epf.c
-+++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
-@@ -434,6 +434,36 @@ static u64 ntb_epf_db_valid_mask(struct ntb_dev *ntb)
- 	return ntb_ndev(ntb)->db_valid_mask;
- }
- 
-+static int ntb_epf_db_vector_count(struct ntb_dev *ntb)
-+{
-+	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
-+	unsigned int db_count = ndev->db_count;
-+
-+	/*
-+	 * db_count includes an extra skipped slot due to the legacy
-+	 * doorbell layout. Expose only the real doorbell vectors.
-+	 */
-+	if (db_count < NTB_EPF_MIN_DB_COUNT)
-+		return 0;
-+
-+	return db_count - 1;
-+}
-+
-+static u64 ntb_epf_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-+{
-+	int nr_vec;
-+
-+	/*
-+	 * db_count includes one skipped slot in the legacy layout. Valid
-+	 * doorbell vectors are therefore [0 .. (db_count - 2)].
-+	 */
-+	nr_vec = ntb_epf_db_vector_count(ntb);
-+	if (db_vector < 0 || db_vector >= nr_vec)
-+		return 0;
-+
-+	return BIT_ULL(db_vector);
-+}
-+
- static int ntb_epf_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
- {
- 	return 0;
-@@ -568,6 +598,8 @@ static const struct ntb_dev_ops ntb_epf_ops = {
- 	.spad_count		= ntb_epf_spad_count,
- 	.peer_mw_count		= ntb_epf_peer_mw_count,
- 	.db_valid_mask		= ntb_epf_db_valid_mask,
-+	.db_vector_count	= ntb_epf_db_vector_count,
-+	.db_vector_mask		= ntb_epf_db_vector_mask,
- 	.db_set_mask		= ntb_epf_db_set_mask,
- 	.mw_set_trans		= ntb_epf_mw_set_trans,
- 	.mw_clear_trans		= ntb_epf_mw_clear_trans,
+It seems that for S4, the latest documentation rev.1.30 indicates 
+EXPCAP1F MPSS as read-write and configurable between 128B and 256B for 
+TYPE00 (EP) access , but read-only and set to fixed 128B for TYPE01 (RC) 
+access .
+
+If the S4 PCIe in RC mode is only capable of 128B long TLPs and in EP 
+mode is capable of 128B or 256B long TLPs, this might explain why you 
+observe corruption with 256B long TLPs between two S4 Spiders. The S4 
+Spider in EP mode might work just fine with another RC which can do 256B 
+long TLPs.
+
+I still do not understand one more observation -- if I configure V4H 
+PCIe as RC, and read out EXPCAP1F register MPSS field, it reads as 256B 
+(value 3'b001). I would expect EXPCAP1F register MPSS field to read out 
+as (default) 128B in this RC case. The V4H documentation indicates 
+EXPCAP1F MPSS as read-ONLY and set to fixed 256B for TYPE00 (EP) access, 
+but read-WRITE and set to 128B for TYPE01 (RC) access , which I think 
+might be a documentation issue. I also do not rewrite the EXPCAP1F MPSS 
+in any way.
+
+If the V4H is also capable of only 128B TLPs in RC mode, then this patch 
+would require additional adjustment and would have to limit TLP length 
+based on configuration -- 128B for RC, 256B for EP.
+
+I will now ask for documentation clarification.
+
+> At a high level, the EP side exposes the vNTB endpoint function, and the RC side
+> uses the NTB data path which is backed by the EP-local eDMA through that vNTB
+> function. For the RC-to-EP data path, the EP-local eDMA acts as the requester:
+> it issues MRd requests toward remote RC memory, receives the CplD payloads, and
+> writes the data into EP-side memory. In other words, this is a DMA read transfer
+> from the point of view of the EP-local eDMA.
+
+I understand. If the S4 EP has MPSS set to 256 Bytes (and possibly also 
+MPS), but the S4 RC may (*) be limited to MPSS and MPS 128 Bytes, I 
+wonder if the MRd from the EP-local DMA sent to RC might be causing 
+malfunction on the RC side.
+
+(*) to be determined, I will ask.
+
+> I have not tried PIPE_LOOPBACK/LOOPBACK_ENABLE. Given how heavy the setup
+> described above is, I am not asking you to reproduce the whole thing just for
+> this patch. Also, I do not want this NTB/eDMA observation to block your v2. For
+> now, please treat it as a separate observation from the RC/NVMe issue. I will
+> continue the investigation on my side and let you know if I can narrow down
+> where the corruption occurs.
+
+I very much appreciate your input, and in light of it, I believe this 
+patch does need an update.
+
+As for local Oculink setup options, I already had a closer look as well.
+
+>>> Your commit message
+>>>      describes an NVMe device as the requester, but I'm wondering whether the same
+>>>      256B limit was also verified for the R-Car EP DMA requester path.
+>>
+>> This part I currently can not answer, I'm sorry.
+>>
+>> ...
+>>
+>> I made the following two observations in the meantime.
+>>
+>> First, I wrote two SSDs, Crucial P5 Plus SSD without HMPRE (without host
+>> memory buffer) and XPG GAMMIX P55 with HMPRE (with host memory buffer) with
+>> 4 GiB of random data on another system (iMX8M Plus, ARM64 with DWC PCIe
+>> controller too), then I did a read back and compared the data, the writen
+>> and read-back data matched.
+>>
+>> Then I plugged both SSDs into V4H Sparrow Hawk _without_ this patch, and I
+>> did read back of data:
+>>
+>> - Crucial P5 Plus SSD without HMPRE (without host memory buffer)
+>>    -> Data read back match data written on iMX8M Plus, OK
+>> - XPG GAMMIX P55 with HMPRE (with host memory buffer)
+>>    -> Data read back match data written on iMX8M Plus, OK
+>>
+>> Then I wrote 512 Byte of data into the Crucial P5 Plus SSD without HMPRE on
+>> V4H Sparrow Hawk and did read back again.
+>>    -> Data read back does NOT match data written, NG
+>>
+>> That would indicate that:
+>> - WRITE transfers from SSD to DRAM are OK
+>> - READ transfers from DRAM to SSD are corrupted at 256 Bytes boundary
+>>
+>> That would indicate that we need _at_least_ the 256 Bytes limit, likely on
+>> both MPS and MRRS.
+>>
+>> Second, I got a report of another SSD for which this patch is not
+>> sufficient. I currently do not have access to that SSD, but I will ask for
+>> access and investigate. That may shed some light on the 128 Byte limit
+>> below.
+> 
+> Thank you for sharing these observations.
+> Interesting, that second point may indeed help determine whether my 128B
+> observation in the past is related to the same underlying issue, or is a purely
+> eDMA/NTB-specific one.
+
+Could you please have a look at the beginning of this email too ? I 
+wonder if the TYPE00/TYPE01 accesses might have different TLP size 
+limitations.
+
+>>> (*) The background for my question 2:
+>>>
+>>>      I only have access to S4 Spider boards. In my RC <-> EP setup, where the EP
+>>>      side uses the local eDMA engine to issue MRd requests toward the RC, 256-byte
+>>>      MRd requests still appear to corrupt the transferred data.
+>>
+>> Is the corruption deterministic in some way, i.e. are the same bytes of the
+>> transferred data corrupted every time, or is the corruption "random" ?
+> 
+> The exact corrupted values were not deterministic, but the offsets where the
+> corruption occurred were fairly consistent.
+> 
+> Let me quote from my earlier RFC patch:
+> (https://lore.kernel.org/all/20260118135440.1958279-32-den@valinux.co.jp/)
+> 
+>    [...]
+>    * On some R-Car platforms using the Synopsys DWC PCIe + eDMA we
+>    * observe data corruption on RC->EP Remote DMA Read paths whenever
+>    * the EP issues large MRd requests. The corruption consistently
+>    * hits the tail of each 256-byte segment (e.g. offsets
+>    * 0x00E0..0x00FF within a 256B block, and again at 0x01E0..0x01FF
+>    * for larger transfers).
+>    [...]
+
+I see.
+
+>> Does the corruption happen even on singular MRd transfer, or does it happen
+>> only when a lot of traffic is sent across the NTB link? I wonder if this
+>> corruption might be DRAM bandwidth related, i.e. whether the DMA does
+>> possibly saturate the DRAM controller with write requests and make the
+>> system run out of DRAM bandwidth.
+> 
+> It occurred even with a single eDMA read transfer. It was not a symptom only
+> observable under high load.
+
+That rules out my hypothesis that this might be link stability related, 
+or memory or interconnect pressure related. Thank you for this input.
+
+>>> With the following
+>>>      change on top of your patch, my DMA-read tests become stable:
+>>
+>> [...]
+>>
+>>>      One detail which might be important is that limiting only MPS does not appear
+>>>      to be sufficient in my setup. MPS=128B with MRRS=256B still seems broken,
+>>>      while MPS=128B with MRRS=128B works fine. I wonder whether this is because
+>>>      the "MPS" term in the min(MRRS, MPS) limit for DMA read transfers may
+>>>      effectively be tied to the DMA read buffer segment size / MPSS rather than
+>>>      only to DevCtl.MPS. I'm not sure about this yet though.
+>>
+>> I think setting MPS=128B MRRS=256B only leads to the transfer being split
+>> into 2 x 128B TLPs sent across the PCIe link, but in the end, 2 x 128 Bytes
+>> of data are received (in some order) into the read segment buffer and
+>> reordered, and 1 x 256 Bytes are written from read segment buffer into the
+>> memory as a single write.
+>>
+>> In case of MPS=256B MRRS=256B, only one 256B TLP is sent across the link, 1
+>> x 256 Bytes of data are received into the read segment buffer with no
+>> reordering necessary, and 1 x 256 Bytes are still written from read segment
+>> buffer into the memory as a single write.
+>>
+>> => For MPS=128B/MPS=256B and MRRS=256B, there is difference in the
+>>     transfer format between PCIe and DMA, but there is no difference
+>>     between DMA and DRAM .
+>>
+>> But in case of MRRS=128B and transfer of 256 Bytes, 2 x 128 Bytes of data
+>> are received into (separate? (*)) entries in read segment buffer, and 2 x
+>> 128 Bytes are written from (separate?) entries in read segment buffer into
+>> the memory as two separate writes . Could this different memory write
+>> pattern be responsible for the (lack of) corruption ?
+>>
+>> Do you know whether the data are corrupted on the PCIe-to-DMA side (when the
+>> data are received from the PCIe side and written into the read buffer
+>> segment) or on the DMA-to-DRAM side (on read from read segment buffer or on
+>> write into DRAM) ?
+> 
+> Unfortunately I cannot distinguish these from software alone. I only observed
+> the final destination buffer contents after the eDMA read transfer completed.
+
+I understand.
+
+>> (*) Since the read segment buffer has 16 x 256 Byte segments, with 16 DMA
+>> tags and never more than 16 MRd requests in flight, I think it is likely
+>> that each MRd data land in separate read segment buffer segment. But this
+>> information comes from another datasheet, not V4H one.
+>>
+>>>      One more thing I noticed in the manuals:
+>>>
+>>>        R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025:
+>>>          Type00 MPSS initial = 256B, PCI R, Internal R/W
+>>>          Type01 MPSS initial = 128B, PCI R, Internal R
+>>>
+>>>        R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025
+>>>          Type00 MPSS initial = 256B, PCI R, Internal R
+>>>          Type01 MPSS initial = 128B, PCI R, Internal R/W
+>>>
+>>>      I'm still unsure, but this difference might be relevant. In particular, in
+>>>      V4H/V4M RC mode your patch programs DevCtl.MPS to 256B, but does not change
+>>>      Type01 MPSS. I wonder if the Type01 MPSS should also be updated to 256B first
+>>>      on SoCs where the manual says it is writable from the internal bus, or if I'm
+>>>      missing something here.
+>>
+>> This is a very good point.
+>>
+>> The R-Car S4 RM Rev.1.20 lists Type00 MPSS as Internal R and Type01 MPSS as
+>> Internal R/W. This was updated in RM Rev.1.30 to Type 00 Internal R/W and
+>> Type 01 Internal R. It is possible this change is going to be added into the
+>> V4H RM in the future too. That would likely imply, that Type01 MPSS is not
+>> programmable.
+>>
+>> I don't think Type1 affects RC operation, but does it affect NTB ?
+> 
+> I have no evidence that Type1 affects NTB either. It was just a speculative idea
+> based on the difference I saw in the manuals.
+> 
+> Your inference, i.e. that the S4 RM Rev.1.30 may reflect the intended access
+> attributes and the V4H RM may later get a similar correction, sounds reasonable
+> to me.
+> 
+> I had not checked the S4 RM Rev.1.20, so I missed that change. Thanks for
+> pointing it out.
+
+I have now checked 4 S4, 10 V4H, 6 V4M reference manual versions and 
+there are subtle changes. I asked for clarification. If I learn 
+anything, I will let you know.
+
+I did not make the connection between your aforementioned observation, 
+MPSS, and TYPE00 and TYPE01 accesses until today, now I realized there 
+might be different TLP size limits for RC and EP modes.
+
+>> [...]
+>>
+>> Thank you for your help!
+> 
+> Thank you for investigating this and for the very helpful analysis.
+> I will let you know if I find anything more.
+
+Likewise, thank you for your help !
+
 -- 
-2.51.0
-
+Best regards,
+Marek Vasut
