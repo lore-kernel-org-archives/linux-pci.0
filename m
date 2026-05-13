@@ -1,70 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E5623A984;
-	Wed, 13 May 2026 05:07:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4311E33CEA7;
+	Wed, 13 May 2026 05:09:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778648824; cv=none; b=rFTFflUMJsLo9d/XEj/R+mgRA8Qgkp+0QAOuA9GvUQ2pyU24hrTHh5+vtXzpXKaxfqiAvkwJCPcgggUJkKwfCUYcLldb2Bkhy8YqlWpRQ4GixvIDTP7c1HZa+r6egzFdiAL8B26JyrYddTYaWeNnxom9OT/HN946RF8V5GafDTs=
+	t=1778648972; cv=none; b=Wf/f1H1oso7OxOak8b+tJ1ONiSltdxsT6ykeg2lfgGsTB9UYQVN0iqpQQX4Z47yw9JpF5cQaIKrCNWCbDHs/1eVTh3aRAVgFkOGkoaRRIV/ZCSVg9P8C1v8Cb/gYM9WzM/BxPjp+sxMnYDve7WdAlEZoaMwIiocHdr9cL+7oGiE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778648824; c=relaxed/simple;
-	bh=Od8jQ7HppMWceeFf2Wz1PMSY1Oj7ZTXnse5bp6MWPgI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ITKqWJGNF/73JnfP1JeIh/Sk37MgFNzb2IHUy4rmqdf0ROoHMwZRsnqULFRe54ExhiLvyC4n2T9mgkdgokGvd8CLYzaNw9IA9Qpol3N5pva2YzIwdlqVYGPcLVxLXpDajsnP/UDjfaQxhRb73yDTRSwnlOPsUN3SNqd2Em7JncY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qgC2fiWG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778648972; c=relaxed/simple;
+	bh=vSpNICj8FRQIEEplzSitQ31XDKoymAyfswGV6NdN8H4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=OVaLTQzIOCugWzHRYwju0MzgbtJa8tEBJfFlaRvgvyAHlSee+sojh+thAKhJPfmR85Gq9/CMi7JB/2kB8J58vdPCwjDxl7087WKDhhGPmpUZ6uI4vDtUCamQXTYRdwHvkTS3VDGnjxJ5VC6zySKl/8D0rTCoVp/XzA0jgqTPYeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TnA+kn23; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qgC2fiWG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED8BC2BCB7;
-	Wed, 13 May 2026 05:07:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TnA+kn23"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE056C2BCB7;
+	Wed, 13 May 2026 05:09:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778648823;
-	bh=Od8jQ7HppMWceeFf2Wz1PMSY1Oj7ZTXnse5bp6MWPgI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qgC2fiWGaFx565UsEzgDHXGiXp50zB4X9zvT4iVLodn9o3flW8VoJCS5NzC2/yFA6
-	 oWE70/AMSAku740cdOvj9f/u062UzaTOGRBlIgXyoiK1bY1bFrheirLIgD5YsZisNX
-	 C3bSbnVJs+pPmnz597WZ+nr8s1tBkQfoK6EHL7IAt2OBF9VjAHqDzcRdqUA/TC/Kib
-	 F3McmMmHC1fpiLmsscdzzVS7XrEssw0ck0XRWC7lnWnIhvbyuyJik9lLM1rSgy0AII
-	 Go4TOwfPdVr8QNj2mvysSkMzPhwLFwYoBubi/o4AnLNOVwaDEVB2r8GIXZpsvCdcvB
-	 /t+X9tN6chHEg==
-Date: Wed, 13 May 2026 14:07:02 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Ravi Kumar Bandi <ravib@amazon.com>
-Cc: bhelgaas@google.com, ilpo.jarvinen@linux.intel.com, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/sysfs: Check IORESOURCE_DISABLED in resource mmap
- handler
-Message-ID: <20260513043934.GA4124219@rocinante>
-References: <20260512094621.GB1539393@rocinante>
- <20260513040401.16035-1-ravib@amazon.com>
+	s=k20201202; t=1778648971;
+	bh=vSpNICj8FRQIEEplzSitQ31XDKoymAyfswGV6NdN8H4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=TnA+kn23Tskn9jdTf6JaNOmtSa4ZcyDVXVu39JvahSuh8a+7EfknI0Eh118ou/9aV
+	 bXWprt+JgzLYqxv7kRmlvPfOkrzLhRAoLzd0aZPT/sFR1UyR8gzJxZ5xklxiJBMXTF
+	 FanGiPEi837LDXZBJObxaDKgE34Q6CnVP2ttNa9icNamOLNjgiNl/tCAmZOZ8NNp6e
+	 VvI0gVmfSBkG6urFvbhmidgJ2I8IjWpcbmFmuz+FqsWLs9ri8C2nbSYqsFr5oIP0R/
+	 1zrYgja/oM2igPV8MDSJrhXyKtHQlz/SZ76C7ZEmCF4KnmO4bBmAyMVlwC0TZjk6WZ
+	 TzZqisJ58yzCA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH V3 05/11] mshv: Implement mshv bridge device for VFIO
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Mukesh R" <mrathor@linux.microsoft.com>
+Cc: linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260512020259.1678627-6-mrathor@linux.microsoft.com>
+References: <20260512020259.1678627-6-mrathor@linux.microsoft.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 13 May 2026 05:09:31 +0000
+Message-Id: <20260513050931.BE056C2BCB7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260513040401.16035-1-ravib@amazon.com>
 
-Hello,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Unprotected access to `pt_devices` list and missing lockdep assert=
+ion.
+- [Low] The `mshv_vfio_device_ops` structure is missing the `const` qualifi=
+er.
+--
 
-> Thank you, but as you suggested above, I will update the patch to use
-> pci_dev_is_disconnected() instead.
+commit 96ab470ecc51b095ed8b1538e4abdf37d030b039
+Author: Mukesh R <mrathor@linux.microsoft.com>
+Subject: mshv: Implement mshv bridge device for VFIO
 
-There also exists pci_device_is_present() which would attempt an actual
-read of a vendor/device IDs, so if this succeeds, then you have a more
-solid assurance that the device should be working.  However, this adds
-latency, and there might be side-effects, potentially...
+This commit introduces a new VFIO-MSHV bridge pseudo device file, adapted
+from KVM's VFIO bridge. It provides the necessary device operations to link
+VFIO files with an MSHV partition.
 
-I wonder, if for you, you could forfeit setting any flags on a resource,
-which drivers don't customarily do, such that we would only rely on
-checking pci_dev_is_disconnected() on our side, so to speak.
+> diff --git a/drivers/hv/mshv_vfio.c b/drivers/hv/mshv_vfio.c
+> new file mode 100644
+> index 0000000000000..00a97920e25ba
+> --- /dev/null
+> +++ b/drivers/hv/mshv_vfio.c
+[ ... ]
+> +static long mshv_vfio_create_device(struct mshv_device *mshvdev)
+> +{
+> +	struct mshv_device *tmp;
+> +	struct mshv_vfio *mshv_vfio;
+> +
+> +	/* Only one VFIO "device" per VM */
+> +	hlist_for_each_entry(tmp, &mshvdev->device_pt->pt_devices,
+> +			     device_ptnode)
+> +		if (tmp->device_ops =3D=3D &mshv_vfio_device_ops)
+> +			return -EBUSY;
 
-We won't be setting any precedent here, as the helpers such as
-pci_read_config_byte(), perform this check internally already.
+Are we missing a lockdep assertion here to ensure the partition lock is hel=
+d?
 
-Bjorn and Ilpo might have different take on this, though.
+Since this iterates over the pt_devices list to enforce a singleton device,
+could concurrent ioctl calls bypass this check and corrupt the hlist if the
+caller doesn't acquire the lock?
 
-Thank you!
+[ ... ]
 
-	Krzysztof
+> +struct mshv_device_ops mshv_vfio_device_ops =3D {
+> +	.device_name =3D "mshv-vfio",
+> +	.device_create =3D mshv_vfio_create_device,
+> +	.device_release =3D mshv_vfio_release_device,
+> +	.device_set_attr =3D mshv_vfio_set_attr,
+> +	.device_has_attr =3D mshv_vfio_has_attr,
+> +};
+
+Should mshv_vfio_device_ops be declared as const?
+
+The structure consists entirely of function pointers and is never modified
+after initialization. Making it const would place it in read-only memory.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512020259.1678=
+627-1-mrathor@linux.microsoft.com?part=3D5
