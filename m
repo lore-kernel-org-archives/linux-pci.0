@@ -1,140 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 003393AA51F;
-	Wed, 13 May 2026 21:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC9023BE623;
+	Wed, 13 May 2026 21:39:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778708026; cv=none; b=bz6LmDY91Y8V1xiHfrs4rFSrZ3re96tRNqlIp/no+5bTp9+GE2AQ6K4CAblSvFRwtz4WQT5iKBS+ZevTIUapQRv3PzPdeuiY7pOzsg3ixYmkeeHitDzvy1HQD/lHpOuoiSeJyq3u+YHE0YOHjGZ8HLjATtFo3LvplcjYIbndoys=
+	t=1778708376; cv=none; b=LCIXCUdDUCfflZUcEL6RtSD71xe3x3oRZBdXa+OebhOwGTHK+lgP8Bl1B3saH3FpmS2yUqpQI2eGlN91pXLvzujC1rtkoxDAWsDGaQDxRW22vl0o2vX+dKFflizC6aZta6XlUQ90/6JHFDDiYLXchOBcqYDHuuQUSB6BY4EsVYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778708026; c=relaxed/simple;
-	bh=bR0mp0ecxGbJT4NksY4PMCNuzcnckZFsd72iD3+rYYY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tWb/OookmzWHGRP9yjAnIf3Gc1s2fq6lO8ILca7FgJoYnfG3da+7JB+9hDSvjcNG6gimJtFSUlTgwFXJwzzVyIriqJktNzdYEnkVzSLejDHtxmvR7jBXKj/xtSpaAYlW2z7qGEntQgl3JJ+WFdbtyu40PjJmbXZpDTrbumvwm5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hWZqYlMm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778708376; c=relaxed/simple;
+	bh=6RVOmCpQqd6bhxaLMGhb4U6J1qkZVEls47foBVVVlWE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aemCg32OMzEeATg6CvXX+SD3e/WK6ibgYFFVGahtUII9kNX6hO48HS4QyjQy5xWx4XXjk41pZs5bnexbWCFQ1RsBzTzY6JInJkyFVJg6ixTja/MdUYI7i0SgxotPBx+HMj0AixAQSYvfDl+FPmoJz9nAErFfBqpVB6cuef+E7EY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=pass smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=Lc/WHbHo; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hWZqYlMm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61D7FC19425;
-	Wed, 13 May 2026 21:33:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778708025;
-	bh=bR0mp0ecxGbJT4NksY4PMCNuzcnckZFsd72iD3+rYYY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=hWZqYlMm+FVvPjaFXIQhUxGEeNMqZl9/O2kFmm1TBQTFVBtKVV8aCNZPe4wJSLbt5
-	 UqgAbrGs8U0KNc6RHegvqZWNCcuGGBTgULXQYXuFOsrDQWTGJJykuQb3oENN5yGqlq
-	 aP+c+uvIlc0CHaZEGs1TXA5SMdNQve9aWv3LgUNq2FXgMMC3qbJJULY+KnIymOVPYS
-	 la8qfH6wsfIScdd0lk00I6ya2Y8A66+mnDBXuKqf2c5oD+N0/4kJvJXUXYlYldcKwn
-	 XU2nba3WlyL0FYPQBnny03AsQMIis1YgthfZMZD2Atw+36Qgu9ZF2Y8SoHvvpoTKy+
-	 yif0zY51PQhJA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 20/23] dmaengine: sdxi: Encode nop, copy, and
- interrupt descriptors
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260511-sdxi-base-v2-20-889cfed17e3f@amd.com>
-References: <20260511-sdxi-base-v2-20-889cfed17e3f@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 21:33:44 +0000
-Message-Id: <20260513213345.61D7FC19425@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="Lc/WHbHo"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 4F6DB3C8C8F;
+	Wed, 13 May 2026 23:39:25 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1778708371; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:content-language:in-reply-to:references;
+	bh=1AX2j8H+A9JJ6yxGxOWqpensFj//EnHL/7eUxAjSl/I=;
+	b=Lc/WHbHo6a9u6xmgYh9JFLTTLxmnZik9YBZLUFRc57EWchl2Eg4uXIQCWY7k+OnBLTjdwu
+	qxjHsclPdRzQqAuCjpi7pk8KISVj2Zc5/siysgyuBSm6/urCAWjQQcQq+5l8bUAQrH+pgZ
+	C4irwC4MDy2qO2WlIHaMj7AcMOOO/EAty83qcFnMBSV1Mt0hBvRCM7rmgSoOhUkdBKzpvQ
+	1YRyUymTm5n2s38oZw/GL3J8YadgMbiIxQXB6OQfu2lQTRYMkfbRmCkyghGAbVP0FH10hd
+	JxruONLBXC9OKB+N2laE7YjZv4OuT5NsszQj3P2HBw8t5PUc/NoKNEVDFUfj1g==
+Message-ID: <65792ada-5e9d-4e3f-aa79-bb4a8ffd9161@cjdns.fr>
+Date: Wed, 13 May 2026 23:39:25 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
+ naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
+ linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260513210759.GA331283@bhelgaas>
+Content-Language: en-US
+From: Caleb James DeLisle <cjd@cjdns.fr>
+In-Reply-To: <20260513210759.GA331283@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [Medium] User-triggerable WARN_ON_ONCE() for data-path validation poses a=
- Denial of Service risk.
-- [Medium] Integer overflow in buffer overlap calculation allows invalid co=
-nfigurations to bypass validation.
-- [Low] Redundant clamp_val() operation acts as dead code.
---
 
-commit cfd7b5f9b8481ef46337c6e93c25ab0383c6dbcc
-Author: Nathan Lynch <nathan.lynch@amd.com>
+On 13/05/2026 23:07, Bjorn Helgaas wrote:
+> On Wed, May 13, 2026 at 07:16:52PM +0000, Caleb James DeLisle wrote:
+>> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
+>>
+>> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
+>> require re-training after startup.
+> s/re-training/retraining/
+OK
+>
+>> + * @MTK_PCIE_RETRAIN: Re-train link to bridge after startup because some
+>> + *                    Gen2-capable devices start as Gen1.
+> s/Re-train/Retrain/ to make this consistent and more greppable.
+> Also more instances below.
+OK
+>
+>> + * as Gen1, and must be re-trained once after initial configuration in order to
+>> + * only Gen1 capable. Therefore it is most convenient to re-train every port
+>> +	return dev_err_probe(dev, ret, "root bridge not found\n");
+> "Root bridge" is not a term used by the specs, but in common usage it
+> refers to the host bridge, i.e., the RC.  In this case, you didn't
+> find a "Root Port".
+OK Thanks
+>
+>> +found_port:
+>> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
+>> +		/* Let it go because the device will work as Gen1 */
+>> +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
+> I suppose this will cause a warning even in cases where Gen2 is
+> impossible, e.g., the endpoint only supports Gen1?
 
-dmaengine: sdxi: Encode nop, copy, and interrupt descriptors
+Correct indeed.
 
-Introduce low-level support for serializing nop, copy, and interrupt
-operations to the descriptor ring of a client context. Each operation
-has a dedicated encoder function overlaying the generic sdxi_desc struct.
+I imagine in most cases, if the port is Gen1 only then board integrator 
+uses a Gen1 card as well, so I could try being fancy and probe the card 
+to see if it supports Gen2. In OpenWrt the PCI driver is always built-in 
+so I didn't really consider this something to worry about.
 
-> diff --git a/drivers/dma/sdxi/descriptor.c b/drivers/dma/sdxi/descriptor.c
-> index be2a9244ce194..41019e747528c 100644
-> --- a/drivers/dma/sdxi/descriptor.c
-> +++ b/drivers/dma/sdxi/descriptor.c
+What's your preference?
 
-[ ... ]
+Thanks,
 
-> +VISIBLE_IF_KUNIT int __must_check sdxi_encode_size32(u64 size, __le32 *d=
-est)
-> +{
-> +	/*
-> +	 * sizes are encoded as value - 1:
-> +	 * value    encoding
-> +	 *     1           0
-> +	 *     2           1
-> +	 *   ...
-> +	 *    4G  0xffffffff
-> +	 */
-> +	if (WARN_ON_ONCE(size > SZ_4G) ||
-> +	    WARN_ON_ONCE(size =3D=3D 0))
-> +		return -EINVAL;
+Caleb
 
-Could this WARN_ON_ONCE() be triggered by invalid input from a client driver
-or userspace?
-
-If the system is configured with panic_on_warn, passing an invalid length
-like 0 might trigger a kernel panic. Should this gracefully return -EINVAL
-without the warning?
-
-> +	size =3D clamp_val(size, 1, SZ_4G);
-
-This isn't a bug, but is this clamp_val() necessary?
-
-The previous if statement already returns -EINVAL if the size is outside
-these bounds, so this clamping operation might be redundant.
-
-> +	*dest =3D cpu_to_le32((u32)(size - 1));
-> +	return 0;
-> +}
-
-[ ... ]
-
-> +int sdxi_encode_copy(struct sdxi_desc *desc, const struct sdxi_copy *par=
-ams)
-> +{
-
-[ ... ]
-
-> +	/*
-> +	 * Reject overlapping src and dst. "Software ... shall not
-> +	 * overlap the source buffer, destination buffer, Atomic
-> +	 * Return Data, or completion status block." - SDXI 1.0 5.6
-> +	 * Memory Consistency Model
-> +	 */
-> +	if (range_overlaps(&(const struct range) {
-> +				   .start =3D params->src,
-> +				   .end   =3D params->src + params->len - 1,
-> +			   },
-> +			   &(const struct range) {
-> +				   .start =3D params->dst,
-> +				   .end   =3D params->dst + params->len - 1,
-> +			   }))
-
-Does this calculation overflow if an IOMMU assigns an address near U64_MAX?
-
-If params->src + params->len wraps around, the end address could become
-smaller than the start address. This might bypass the range_overlaps()
-check, allowing overlapping or invalid wrapping buffers to be submitted.
-
-> +		return -EINVAL;
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
-v2-0-889cfed17e3f@amd.com?part=3D20
