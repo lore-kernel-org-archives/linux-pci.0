@@ -1,117 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABDC23AC0DE
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 19:16:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E2C33ACF00;
+	Wed, 13 May 2026 19:17:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778699786; cv=none; b=PjVxaEK0yG6J4ndD8kdLTPqA1G/DyfTeZgeBdAQ4l0wg33O5i/4F405wgfH0nbO3OXJLDBD7Rt80g0XNEw+TOwjokUIQd0DWSEcFfAwyjgh4mIlGaWIb7lkJ1uDIqOhfTvsXTbW5UMvnG/oLW56+v033lpBIvD08H85fyMv6bIo=
+	t=1778699829; cv=none; b=O/F9CEhmXHLnShzJK0KS/zqblWoF9TrGEKRz/VCKbFAHp81ts1K5hw5ETOvQ+d/QivlUV/eSl0XPZT4IhEZ9QsowLaPhhJyGjIsaIbNB0Hy+uGQ5zXppdruGIPLuA3xdmkevrLMnJhLPwR+D/3ywpMs5be24YKmVOiFwyhioLn0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778699786; c=relaxed/simple;
-	bh=GxINWssdYtgsv17qlu3qU+affijQB4fKCvNc5xtFrTs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=dTlj0IRIE8lnjkoupESv5xTW7kUEAdNno66oJZEgPVrDKhy1JyF7OnsJae3tVIn9lSl+hmXw69dY6yM+HSK2b2xbMbivCGb7aHHTKd4YjuSNlLqhrLNx0TJogJsiocHBluzNFWrf4MrmumAOMpFHvg8+N/PdDGMMEKcF5DHKeFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pdoj2hd8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778699829; c=relaxed/simple;
+	bh=hSjtIQ/fZl4T5bmFyiUQg/HBlMC5ZbSw248owHN+e6U=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uFb+iOIpwdj6NCCZPekBXysb2Me/heCBCEZO7aq0duqCWp9Rl9pWB4ncW2+r54KnAWTvyq61p4AYF6N32m4Bq5O1q0AwwXl5/m+64wV+rkQu7SFpJRa1pWkXkQhwVygSSEqZ1rD7EVubabknDEcOto8FUPyax+6S2eZO7Qc3tB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=j+DVAufe; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pdoj2hd8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E8D5C19425;
-	Wed, 13 May 2026 19:16:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778699786;
-	bh=GxINWssdYtgsv17qlu3qU+affijQB4fKCvNc5xtFrTs=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=Pdoj2hd8Wbfnww7tskxZA4xeW+1tnCKYyZFZhwi0vCHzu9vFiGE7tdVkHMXycJdDN
-	 XaALTSWLnM+Ajo+/7Moo6RRqH+KRBt46QUctGurN9R9+RzrX8dwpqcFKtWuJ0R7yOo
-	 pcp1V+oB3fgoQAd2JH1qlAhhVSvtPrdnH7+i4aLjQAec9x75v0JVgqAsE9OYqiSm1O
-	 WB9ZvY0YfKpkLhsKRi+1zMhKJf1yAn2h+xQ/WftBIBQ5Oo5WQ8PLMAKY15/t8JUAfD
-	 BTnO6S2PQDfRTBI6EAKo7wk42EUWlU7AdoBvTPvbaaulTbhLjKXnHBPhK+crownHgY
-	 1qEQy9ZBGLXTw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 05/16] vfio: Enforce preserved devices are retrieved
- via LIVEUPDATE_SESSION_RETRIEVE_FD
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vipin Sharma" <vipinsh@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260511234802.2280368-6-vipinsh@google.com>
-References: <20260511234802.2280368-6-vipinsh@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 19:16:25 +0000
-Message-Id: <20260513191626.2E8D5C19425@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="j+DVAufe"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id BEA863C5B23;
+	Wed, 13 May 2026 21:17:00 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1778699824; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding; bh=t+hA9k+ktRJ0aukF5hp1hKdiqKCa091x1jCP/SKfXF8=;
+	b=j+DVAufeDZjhm7TVd0m6Vhn8/jd/o6UvgXoKucLvwZtovmZDE9DoKj/+D2jKipDrOLHA6r
+	esKS6GH6jWTWG0fhTafcmUiufkHR7QoMUal241QSxD017W2bkgWbON87SBcYgb0baexLu4
+	Yi9BiBCaSztuzR6enPJSwpxVik9KyJ/wyOMrQo9LCFlXigeo7WK4eW2vR22KnBCI6BD2x+
+	yjNsF4auaQ1mcZSwLtZtb7WVaNk9g2nsaCF1UNXciAMpC+IABB1c5LrhNOvxDYtG5K3BR2
+	fc4sL3xV9IZxunsIppR9rueicaV5C+Y5urGGv8Rj+XxEkxYjsi2qFsBOhB1hbg==
+From: Caleb James DeLisle <cjd@cjdns.fr>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@vger.kernel.org,
+	naseefkm@gmail.com,
+	ryder.lee@mediatek.com,
+	helgaas@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Caleb James DeLisle <cjd@cjdns.fr>
+Subject: [PATCH v6 0/2] Add EcoNet EN7528 (and EN751221) PCIe support.
+Date: Wed, 13 May 2026 19:16:50 +0000
+Message-Id: <20260513191652.3200607-1-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] Bus-specific (PCI) knowledge is hardcoded into the generic VFIO cor=
-e.
---
+Changes from v5:
+* s/errno-base.h/errno.h/
+* Breakout mtk_pcie_retrain() into a function
+* Use for_each_pci_bridge() to find root bridge
+* v5: https://lore.kernel.org/linux-mips/20260413140339.16238-1-cjd@cjdns.fr/
 
-commit 15f88d928c47afcb61541ee71ab7eb8d8e0b7766
-Author: David Matlack <dmatlack@google.com>
+Changes from v4:
+* Fixed missing Acked-by
+* Rebased to 66672af7a095d89f082c5327f3b15bc2f93d558e
+* v4: https://lore.kernel.org/linux-mips/20260404182854.2183651-1-cjd@cjdns.fr/
 
-vfio: Enforce preserved devices are retrieved via LIVEUPDATE_SESSION_RETRIE=
-VE_FD
+Changes from v3:
+* s/initiallized/initialized/
+* Use PCIE_T_PVPERL_MS for sleep time
+* Use PCI_PM_D3COLD_WAIT for startup wait time
+* Clarify comment "Activate INTx interrupts"
+* Add MTK_PCIE_RETRAIN quirk for devices which require link re-train
+* Do not retrain *all* bridges, only root bridge
+* Better comments and logging in retraining logic
+* v3: https://lore.kernel.org/linux-mips/20260320094212.696671-1-cjd@cjdns.fr/
 
-This commit enforces that incoming VFIO devices preserved across a kexec
-must be retrieved via LIVEUPDATE_SESSION_RETRIEVE_FD. Opening them via their
-character device or VFIO_GROUP_GET_DEVICE_FD will fail with -EBUSY to
-prevent initializing the device without the preserved state.
+Changes from v2:
+* mediatek-pcie.yaml -> s/power-domain/power-domains/ and drop example
+* Patch 3 dropped as it has been applied (Thanks!)
+* v2: https://lore.kernel.org/linux-mips/20260316155157.679533-1-cjd@cjdns.fr/
 
-> diff --git a/drivers/vfio/vfio.h b/drivers/vfio/vfio.h
-> index 0854f3fa1a220..5269fe021ee3a 100644
-> --- a/drivers/vfio/vfio.h
-> +++ b/drivers/vfio/vfio.h
-> @@ -11,6 +11,7 @@
->  #include <linux/cdev.h>
->  #include <linux/module.h>
->  #include <linux/vfio.h>
-> +#include <linux/pci.h>
+Changes from v1:
+* mediatek-pcie.yaml slot0 needs device-type = "pci", fix dt_binding_check
+Link: https://lore.kernel.org/linux-mips/177334026016.3889069.9474337544951486443.robh@kernel.org
+* v1: https://lore.kernel.org/linux-mips/20260312165332.569772-1-cjd@cjdns.fr/
 
-[ ... ]
+This was split from a larger PCIe patchset which crossed multiple
+subsystems. I'm not labeling this a v3 because it's a new patchset, but
+I'm keeping the historical record anyway.
 
-> @@ -461,4 +462,21 @@ static inline void vfio_device_debugfs_init(struct v=
-fio_device *vdev) { }
->  static inline void vfio_device_debugfs_exit(struct vfio_device *vdev) { }
->  #endif /* CONFIG_VFIO_DEBUGFS */
-> =20
-> +#ifdef CONFIG_PCI_LIVEUPDATE
-> +static inline bool vfio_liveupdate_incoming_is_preserved(struct vfio_dev=
-ice *device)
-> +{
-> +	struct device *d =3D device->dev;
-> +
-> +	if (dev_is_pci(d))
-> +		return to_pci_dev(d)->liveupdate_incoming;
+Changes from econet-pcie v2:
+* mediatek-pcie.yaml add missing constraints to PCI node properties
+* econet-pcie v2: https://lore.kernel.org/linux-mips/20260309131818.74467-1-cjd@cjdns.fr
 
-Is it acceptable to hardcode bus-specific PCI knowledge into the generic
-VFIO core?
+Changes from econet-pcie v1:
+* pcie-mediatek.c Exclude pcie_retrain_link() when building as a module
+* econet-pcie v1: https://lore.kernel.org/linux-mips/20260303190948.694783-1-cjd@cjdns.fr/
 
-The VFIO subsystem is designed to be bus-agnostic and relies on
-struct vfio_device to abstract bus-specific details. By including
-linux/pci.h in the generic drivers/vfio/vfio.h header and explicitly
-calling dev_is_pci() and to_pci_dev(), this introduces bus-specific
-logic into the core framework.
 
-Could a generic state flag be set on the struct vfio_device object by the
-bus driver (like vfio-pci) during registration or initialization instead?
+Caleb James DeLisle (2):
+  dt-bindings: PCI: mediatek: Add support for EcoNet EN7528
+  PCI: mediatek: Add support for EcoNet EN7528 SoC
 
-> +
-> +	return false;
-> +}
-> +#else
-> +static inline bool vfio_liveupdate_incoming_is_preserved(struct vfio_dev=
-ice *device)
-> +{
-> +	return false;
-> +}
-> +#endif /* CONFIG_PCI_LIVEUPDATE */
-> +
->  #endif
+ .../bindings/pci/mediatek-pcie.yaml           |  26 +++
+ drivers/pci/controller/Kconfig                |   2 +-
+ drivers/pci/controller/pcie-mediatek.c        | 150 ++++++++++++++++++
+ 3 files changed, 177 insertions(+), 1 deletion(-)
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511234802.2280=
-368-1-vipinsh@google.com?part=3D5
+
+base-commit: e98d21c170b01ddef366f023bbfcf6b31509fa83
+-- 
+2.39.5
+
