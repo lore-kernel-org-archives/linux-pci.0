@@ -1,295 +1,127 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B14341065;
-	Wed, 13 May 2026 14:31:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11AA720010A;
+	Wed, 13 May 2026 14:48:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778682718; cv=none; b=DDclK1O0gwS4XmcHRVJSaUAOFmKM6BaV7fVwx0qT3ZZfJwuYfnsUbtkoZnLXUxDORvXdhn8FSvl1MXVwdV3VEKZDVcU5CVK8AzLekUgvGcGtWbBUxBB7NLnQjbR0yZZrgU9KSKFK2DAzplVqqkrY9BiTEvZKvn65p2fbXuZVq9Y=
+	t=1778683702; cv=none; b=AWP0FkMnLRwyE74o4Ul7kkCLztZsQqJzN1hDHs7v0MZPKcPEReX3/aS+Wgu9fIAh3G5uM3RNAuVw15z674OliBF+WWYMhseMRMoqN4Op6/BzQQBS9QELhXA4NJwAwg1Po5P5pl2XJplTj2QqPQfbktLxk0EKfDDMKIUDibL3fow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778682718; c=relaxed/simple;
-	bh=q5+gkIQ8WoDNLECCchYc8sA8GMbZ8W7SV0eUdH+eKkc=;
+	s=arc-20240116; t=1778683702; c=relaxed/simple;
+	bh=nEmiCF6b5LfZ2kHKUKhThiK1MHbozn7yi/GBKke71jQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DlHrpdmQUaaYwhvWdmuZmfVbKxr1/gE8sobgQWbRqHI/AqpM7+iIbbb99LMGQDuXsfwDCq/eWvTLSsrQ9rgDJAee+bNCoQE+hZ2W6xGDy7tN5lXDGNolq/QvayF35tMPUiK9x3md/CMMwtA6OTdV+BDucr33Du6cmmItwl2cGr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=B/XCR+Dp; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
+	 In-Reply-To:Content-Type; b=Zf97vQGICdXNrsV9h7MoMNUyD7Tko+K6Nrf5XhnixckkxSjaDwjy/UwmQt2M3D0V4KXPVU3urcX90J3UbzYeuOOWeL3TRwkdIKGFD+oPwGJD1gcokT3LcfEvFWLrBsQaJj0B9OHK9kxygCSQCSS5SV6cwNdnS0sdJxfBeqeLFAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cM/nbQZn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="B/XCR+Dp"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 718B23BAFBE;
-	Wed, 13 May 2026 16:31:36 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1778682702; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:content-language:in-reply-to:references;
-	bh=wGwrTVlpyBxr5qWW8aL6TnSMvsiSJT067Q2+nosA5bY=;
-	b=B/XCR+DppU55EwSeXtuREkvRdYJcODV2tA4Bs+pSGoSOsZcxKQlZn49Y9eVK1VjaQBuULO
-	AAC/1kQThRW+65OdfiVAVA8bHancXLltsLEA7UxbqVilt8Y7kxTzFCQ89L+K9kyRD5mhCF
-	OpwGEShdNuRwHXCBnn/9Yo33iDHQvDMnypXTRAtsdLBDRad+aRdbX9/0bRkZgOAv+t3xQW
-	5bGyg5CdU3KYaDUvWkSekOwAwDHzM/CXVIDGSMsEX+9mFEEokHNR9RdZ2eqjKzDnx3vn5u
-	VDPHUsA4wc2z3DIZZBVH85Zkz2jmoMsaLywFmhdOex+0J2g2ThWLzyFBdm/NCA==
-Message-ID: <a4f84ba5-fe28-4674-b91b-33438f5478fb@cjdns.fr>
-Date: Wed, 13 May 2026 16:31:32 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cM/nbQZn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0142CC19425;
+	Wed, 13 May 2026 14:48:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778683701;
+	bh=nEmiCF6b5LfZ2kHKUKhThiK1MHbozn7yi/GBKke71jQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=cM/nbQZnxhoUBvxlr1XOcfgS13OwM6T6zV6y5h9LOS52MIjJvsxz1bkELetuRrynP
+	 buoOLf9sCIXeM7onQX+aEzf/vZwhofMcQopZR/mfuH6cvmGhkd0DVzC/eKAklpRJe5
+	 y24RrLjap7NeSbZuh7yJR8OgDejSZ2/JrGvgVE9Ekr6hjJCNxRX9G9upIpBjJFVJ6k
+	 xzLrMfpTPM8duhRB2qjAuuV0WsJOh74R40c+i5/nlxaFb1a/4P3NHOsKFKFRRjX5Fh
+	 E9fD1sKAzyNFqrdNv/kpCF4gxaKT41u5c8jEQtJzDx/C7Tylt9vwHO9+zjvSPnoR+O
+	 M5Fur968h7POA==
+Message-ID: <c94e9352-91e3-4bc0-bb29-f522c78b03ab@kernel.org>
+Date: Wed, 13 May 2026 09:48:19 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH v5 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
- naseefkm@gmail.com, ryder.lee@mediatek.com, helgaas@kernel.org,
- lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org,
- krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
- linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260413140339.16238-1-cjd@cjdns.fr>
- <20260413140339.16238-3-cjd@cjdns.fr>
- <duchbakmiuf4ffmhgkoioq3qpxaybcevtcdduwiv2gf56j5ncr@kszd5v54ph3q>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 0/2] AMD Promontory 21 xHCI temperature sensor support
 Content-Language: en-US
-From: Caleb James DeLisle <cjd@cjdns.fr>
-In-Reply-To: <duchbakmiuf4ffmhgkoioq3qpxaybcevtcdduwiv2gf56j5ncr@kszd5v54ph3q>
+To: Jihong Min <hurryman2212@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Mathias Nyman <mathias.nyman@intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260512213910.871859-1-hurryman2212@gmail.com>
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <20260512213910.871859-1-hurryman2212@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Last-TLS-Session-Version: TLSv1.3
 
 
-On 12/05/2026 13:55, Manivannan Sadhasivam wrote:
-> On Mon, Apr 13, 2026 at 02:03:39PM +0000, Caleb James DeLisle wrote:
->> Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
->>
->> These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
->> require re-training after startup.
->>
->> Co-developed-by: Ahmed Naseef <naseefkm@gmail.com>
->> Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
->> Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
->> ---
->>   drivers/pci/controller/Kconfig         |   2 +-
->>   drivers/pci/controller/pcie-mediatek.c | 133 +++++++++++++++++++++++++
->>   2 files changed, 134 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
->> index 686349e09cd3..5808d5e407fd 100644
->> --- a/drivers/pci/controller/Kconfig
->> +++ b/drivers/pci/controller/Kconfig
->> @@ -209,7 +209,7 @@ config PCI_MVEBU
->>   
->>   config PCIE_MEDIATEK
->>   	tristate "MediaTek PCIe controller"
->> -	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
->> +	depends on ARCH_AIROHA || ARCH_MEDIATEK || ECONET || COMPILE_TEST
->>   	depends on OF
->>   	depends on PCI_MSI
->>   	select IRQ_MSI_LIB
->> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
->> index 75722524fe74..915a35825ce1 100644
->> --- a/drivers/pci/controller/pcie-mediatek.c
->> +++ b/drivers/pci/controller/pcie-mediatek.c
->> @@ -7,6 +7,7 @@
->>    *	   Honghui Zhang <honghui.zhang@mediatek.com>
->>    */
->>   
->> +#include <asm-generic/errno-base.h>
->>   #include <linux/clk.h>
->>   #include <linux/delay.h>
->>   #include <linux/iopoll.h>
->> @@ -14,6 +15,7 @@
->>   #include <linux/irqchip/chained_irq.h>
->>   #include <linux/irqchip/irq-msi-lib.h>
->>   #include <linux/irqdomain.h>
->> +#include <linux/kconfig.h>
->>   #include <linux/kernel.h>
->>   #include <linux/mfd/syscon.h>
->>   #include <linux/msi.h>
->> @@ -77,6 +79,7 @@
->>   
->>   #define PCIE_CONF_VEND_ID	0x100
->>   #define PCIE_CONF_DEVICE_ID	0x102
->> +#define PCIE_CONF_REV_CLASS	0x104
->>   #define PCIE_CONF_CLASS_ID	0x106
->>   
->>   #define PCIE_INT_MASK		0x420
->> @@ -89,6 +92,11 @@
->>   #define MSI_MASK		BIT(23)
->>   #define MTK_MSI_IRQS_NUM	32
->>   
->> +#define EN7528_HOST_MODE	0x00804201
->> +#define EN7528_LINKUP_REG	0x50
->> +#define EN7528_RC0_LINKUP	BIT(1)
->> +#define EN7528_RC1_LINKUP	BIT(2)
->> +
->>   #define PCIE_AHB_TRANS_BASE0_L	0x438
->>   #define PCIE_AHB_TRANS_BASE0_H	0x43c
->>   #define AHB2PCIE_SIZE(x)	((x) & GENMASK(4, 0))
->> @@ -148,12 +156,15 @@ struct mtk_pcie_port;
->>    * @MTK_PCIE_FIX_DEVICE_ID: host's device ID needed to be fixed
->>    * @MTK_PCIE_NO_MSI: Bridge has no MSI support, and relies on an external block
->>    * @MTK_PCIE_SKIP_RSTB: Skip calling RSTB bits on PCIe probe
->> + * @MTK_PCIE_RETRAIN: Re-train link to bridge after startup because some
->> + *                    Gen2-capable devices start as Gen1.
->>    */
->>   enum mtk_pcie_quirks {
->>   	MTK_PCIE_FIX_CLASS_ID = BIT(0),
->>   	MTK_PCIE_FIX_DEVICE_ID = BIT(1),
->>   	MTK_PCIE_NO_MSI = BIT(2),
->>   	MTK_PCIE_SKIP_RSTB = BIT(3),
->> +	MTK_PCIE_RETRAIN = BIT(4),
->>   };
->>   
->>   /**
->> @@ -753,6 +764,80 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
->>   	return 0;
->>   }
->>   
->> +static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
->> +{
->> +	struct mtk_pcie *pcie = port->pcie;
->> +	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
->> +	struct resource *mem = NULL;
->> +	struct resource_entry *entry;
->> +	u32 val, link_mask;
->> +	int err;
->> +
->> +	entry = resource_list_first_type(&host->windows, IORESOURCE_MEM);
->> +	if (entry)
->> +		mem = entry->res;
->> +	if (!mem)
->> +		return -EINVAL;
->> +
->> +	if (!pcie->cfg) {
->> +		dev_err(pcie->dev, "EN7528: pciecfg syscon not available\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	/* Assert all reset signals */
->> +	writel(0, port->base + PCIE_RST_CTRL);
->> +
->> +	/*
->> +	 * Enable PCIe link down reset, if link status changed from link up to
->> +	 * link down, this will reset MAC control registers and configuration
->> +	 * space.
->> +	 */
->> +	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
->> +
->> +	msleep(PCIE_T_PVPERL_MS);
->> +
->> +	/* De-assert PHY, PE, PIPE, MAC and configuration reset */
->> +	val = readl(port->base + PCIE_RST_CTRL);
->> +	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
->> +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
->> +	writel(val, port->base + PCIE_RST_CTRL);
->> +
->> +	writel(PCIE_CLASS_CODE | PCIE_REVISION_ID,
->> +	       port->base + PCIE_CONF_REV_CLASS);
->> +	writel(EN7528_HOST_MODE, port->base);
->> +
->> +	link_mask = (port->slot == 0) ? EN7528_RC0_LINKUP : EN7528_RC1_LINKUP;
->> +
->> +	/* 100ms timeout value should be enough for Gen1/2 training */
->> +	err = regmap_read_poll_timeout(pcie->cfg, EN7528_LINKUP_REG, val,
->> +				       !!(val & link_mask), 20,
->> +				       PCI_PM_D3COLD_WAIT * USEC_PER_MSEC);
->> +	if (err) {
->> +		dev_err(pcie->dev, "EN7528: port%d link timeout\n", port->slot);
->> +		return -ETIMEDOUT;
->> +	}
->> +
->> +	/* Activate INTx interrupts */
->> +	val = readl(port->base + PCIE_INT_MASK);
->> +	val &= ~INTX_MASK;
->> +	writel(val, port->base + PCIE_INT_MASK);
->> +
->> +	if (IS_ENABLED(CONFIG_PCI_MSI))
->> +		mtk_pcie_enable_msi(port);
->> +
->> +	/* Set AHB to PCIe translation windows */
->> +	val = lower_32_bits(mem->start) |
->> +	      AHB2PCIE_SIZE(fls(resource_size(mem)));
->> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
->> +
->> +	val = upper_32_bits(mem->start);
->> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
->> +
->> +	writel(WIN_ENABLE, port->base + PCIE_AXI_WINDOW0);
->> +
->> +	return 0;
->> +}
->> +
->>   static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
->>   				      unsigned int devfn, int where)
->>   {
->> @@ -1149,6 +1234,46 @@ static int mtk_pcie_probe(struct platform_device *pdev)
->>   	if (err)
->>   		goto put_resources;
->>   
->> +	/* EN7528 PCIe initially comes up as Gen1 even if Gen2 is supported.
->> +	 * The cannonical way to achieve Gen2 is to re-train the link
->> +	 * immediately after setup. However, to save a lot of duplicated code
->> +	 * we use pcie_retrain_link() which is usable once we have the pci_dev
->> +	 * struct for the bridge, i.e. after pci_host_probe(). */
-> Use below style:
->
-> 	/*
-> 	 * ...
-> 	 */
 
+On 5/12/26 16:39, Jihong Min wrote:
+> Hi,
+> 
+> This series adds temperature monitoring for AMD Promontory 21 (PROM21)
+> xHCI PCI functions.
+> 
+> Patch 1 adds a small PROM21-specific xHCI PCI glue driver. USB host
+> operation is delegated to the common xhci-pci code, while the PROM21 glue
+> publishes an auxiliary device for optional sensor support.
+> 
+> Patch 2 adds an auxiliary-bus hwmon driver that binds to that auxiliary
+> device and exposes the PROM21 xHCI temperature value as temp1_input.
+> 
+> The hwmon driver reads the sensor through a vendor index/data register pair
+> in the xHCI PCI MMIO BAR. It does not wake the parent PCI device for hwmon
+> reads; if the parent is suspended, the read returns -ENODATA.
+> 
+> Changes in v5:
+> - Add support for AMD 1022:43fc PROM21 xHCI controllers and document the
+>    new PCI ID.
+> - Make USB_XHCI_PCI_PROM21 depend on X86 and default to USB_XHCI_PCI.
+> - Keep the PROM21 PCI glue built-in-only when enabled, while allowing the
+>    hwmon sensor driver to be built as a separate module.
+> - Move PROM21 xHCI PCI device IDs to xhci-pci.h so xhci-pci.c and
+>    xhci-pci-prom21.c use shared definitions.
+> - Pass the parent PCI device, MMIO base, and resource length to the hwmon
+>    driver through platform data defined in a common header, instead of
+>    inspecting the parent driver's drvdata from the hwmon driver.
+> - Remove the private hwmon mutex and rely on hwmon core serialization for
+>    this driver's callbacks.
+> - Clarify that the driver only serializes its own hwmon callbacks and does
+>    not synchronize with firmware, SMM, ACPI AML, or other possible users of
+>    the PROM21 vendor index/data register pair.
+> - Use readb() for the temperature data register, validate the value before
+>    writing the output pointer, and drop the 0xff invalid-value check.
+> - Use pm_runtime_put() after successful reads with the parent device active
+>    so the PM core can re-evaluate the parent device's idle state.
+> - Simplify the documentation and use more precise terminology for the
+>    supported device.
+> 
+> Jihong Min (2):
+>    usb: xhci-pci: add AMD Promontory 21 PCI glue
+>    hwmon: add AMD Promontory 21 xHCI temperature sensor support
+> 
+>   Documentation/hwmon/index.rst                 |   1 +
+>   Documentation/hwmon/prom21-xhci.rst           | 101 ++++++++
+>   drivers/hwmon/Kconfig                         |  10 +
+>   drivers/hwmon/Makefile                        |   1 +
+>   drivers/hwmon/prom21-xhci.c                   | 238 ++++++++++++++++++
+>   drivers/usb/host/Kconfig                      |  20 ++
+>   drivers/usb/host/Makefile                     |   1 +
+>   drivers/usb/host/xhci-pci-prom21.c            | 123 +++++++++
+>   drivers/usb/host/xhci-pci.c                   |  11 +
+>   drivers/usb/host/xhci-pci.h                   |   3 +
+>   include/linux/platform_data/usb-xhci-prom21.h |  22 ++
+>   11 files changed, 531 insertions(+)
+>   create mode 100644 Documentation/hwmon/prom21-xhci.rst
+>   create mode 100644 drivers/hwmon/prom21-xhci.c
+>   create mode 100644 drivers/usb/host/xhci-pci-prom21.c
+>   create mode 100644 include/linux/platform_data/usb-xhci-prom21.h
+> 
 
-Right, sorry, thanks.
+Thanks for the driver.  I think this looks good now, and thank you 
+especially for documenting your reverse engineering efforts that led to 
+it.  If there are problems in the future I'm supposing it's going to be 
+based upon the calculations with the magic values to scale numbers.
 
+There isn't a lot that can be done in the event that BIOS is accessing 
+the same register pairs, but since you identified that this is exactly 
+how Windows HWInfo64 does it too; this is 'probably' low risk.
 
->> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN) {
->> +		int slot = of_get_pci_domain_nr(dev->of_node);
-> The returned value is not the slot number, but domain number. Both are different
-> numbering schemes.
->
->> +		struct pci_dev *rc = NULL;
->> +		int ret = -ENOENT;
->> +
->> +		if (slot >= 0)
->> +			rc = pci_get_slot(host->bus, PCI_DEVFN(slot, 0));
-> This looks wrong. If your intention is to find the Root Port of the hierarchy,
-> then you should do:
->
-> 		pci_get_slot(host->bus, PCI_DEVFN(0, 0));
-
-
-Thank you for your review. What's happening here is the hardware exposes 
-two sets of registers for the two devices, but it expects that they 
-might all be controlled by one driver instance - so they hard-wired the 
-second root hub to slot 1. The Mediatek driver here wants to be 
-instantiated twice, so we end up with something like this:
-
-
-0000:00:00.0 PCI bridge: MEDIATEK Corp. Device 0810 (rev 03)
-0000:01:00.0 Network controller: MEDIATEK Corp. MT7662E 802.11ac PCI 
-Express Wireless Network Adapter
-0001:00:01.0 PCI bridge: MEDIATEK Corp. Device 0811 (rev 02)
-0001:01:00.0 Network controller: MEDIATEK Corp. MT7603E 802.11bgn PCI 
-Express Wireless Network Adapter
-
-So when it's domain 1, it's also slot 1 (unless the DT is written 
-backwards).
-
-
-The original code from Ahmed Naseef used a loop with pci_get_class() to 
-get all of the bridges that were on the right bus, but it was pointed 
-out in an earlier review that this would also re-train any hypothetical 
-bridge downstream of the root. So the current code specifically 
-re-trains the right bridge.
-
-I can re-send with this explanation wrapped up in the comment, or I 
-guess I could write a loop that tries slot 0 and 1 to find the bridge, 
-but I feel like the loop is a bit hair-splitting so I think my 
-preference would be to just explain it better.
-
-WDYT?
-
-Caleb
-
-
->
-> - Mani
->
+Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
