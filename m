@@ -1,382 +1,179 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011068.outbound.protection.outlook.com [52.101.65.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22D9C42A9D;
-	Wed, 13 May 2026 02:45:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778640324; cv=none; b=ko6Msz1+ssy9SPKDVtkA54qzRkEXqAY+rouJ9+v5QPTyNKU/gRkKaeTwmTiDJ4Dc9vNmCbX53W06ELbDv3CGAqk2UopTC7MhILhh4ZmUnajT7dWUEk5hXg1gnDZKaZ41FB9FSZcktiCtyXuoX4AE08I6AjbY53/Dx6WUH8Q34dM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778640324; c=relaxed/simple;
-	bh=UwYemmp61xQRMFa6jBcYjstuhyetmLZIy0nZsYupAwk=;
-	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=kF0VURnnvDpqotO6WO7L0NdSfcap7ZtjpPLFBAlar4BjFgVbEVBLUtV5tW9blNYhW9Cwnn2QzDuBVxkm+kHQ5ikpshtVwhMzp0yw8VrO+Ibkgtzl7c1B6nTQCHsHcuMiKd4riDSEhOweVx9EjEbxpjpUAL0/tvUYtmpVhH0NsmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HOahXm95; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D98E134B1AD;
+	Wed, 13 May 2026 02:49:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.68
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778640544; cv=fail; b=kANjdPyrAYembw1bvFb6qRAY2teSqPWHNz5lpvqcTcgVEpEhYNU9kdoE/pI6f17JzYKccoDHRBQSFA9DZa2gC7HYAriCylHPSGT6DGe+D27VARwt/CuLXQZVzs2F61avBW3tmZSPxK42aT2xmju5Fxy+m3HH2hn+Ftn65Vlbh5E=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778640544; c=relaxed/simple;
+	bh=BDhW4bZAFNPH9QuDpRxTn7IzO4Um/Ji1DpaAJRIP7iA=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=hFyxdbVFHyAfLhe39GOZtTyhQjCayG6qAc4MwVaHA29OW4gdf9f369fY8/cLisusWfy4z+JTkxmYhG0qaRtNDbDB3aoIhMDhdQqGC3ftFPy9CYoUVM7nk0F7DyvIL+loS6wXrRfu1d8g5F4JaQNc9b7TiPIR8J8y2C7D2n/eOg0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=dUdsH0y/; arc=fail smtp.client-ip=52.101.65.68
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HOahXm95"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C08CC2BCF7;
-	Wed, 13 May 2026 02:45:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778640324;
-	bh=UwYemmp61xQRMFa6jBcYjstuhyetmLZIy0nZsYupAwk=;
-	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
-	b=HOahXm955JdVByP6APo32i6eNnOG7fSU0bLaiqQZ+hrEXMCAt1oEIz0RIIadUOZ0Y
-	 nmaIeI9+Lo0pXZde9v76XKla7wW7TRWlUnoWZ9+hX1q3ytsEw8R+e6cv0vGdnaUkVg
-	 S9V+L2a+CFwLR9ZLomDSbVuKfKY0eXg3kZYXXTPkQ81z+3LTqEaHWRDC6ZqGhXIXQZ
-	 EOHRp6v/VRIBUu/AW7BrD8zDL3O3cn8I4VKxves7owcXLzzLf99zDr2ZMCqUnoAiEH
-	 3ztkSa4032HCV0j9ZEQhCQUVw+xAbSGZBvGHKvcLvFglaVjpssJ2ppOaQCj8f4tAys
-	 cJB31Je33TAxg==
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 4B377F40075;
-	Tue, 12 May 2026 22:45:22 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Tue, 12 May 2026 22:45:22 -0400
-X-ME-Sender: <xms:wuUDajjKKO_O8LlX0OCmKeu6Bq-4zyOWdf_czDjdiAMvldmeAJSP1A>
-    <xme:wuUDars5T4LCkVRlCfClti9_p7nakcN3vuFvUc4XFaUASZauin99g56JyGyUaz62B
-    KjgxGGUCWZ5f4WaUUOBQJiu79T-K13rx5V50N-bBavbfWhwnwgHsq0>
-X-ME-Received: <xmr:wuUDatzvRajzSuvRx4DgD1dqqgrDpSRwGOEf7jChiAlRyDu41Vbny_nPqr8-rWQ-ZJrjE29_DYccT1qQC5gGenj7xXOcGKkhJIs>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduvdefheduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevkfgjfhfugggtgfesthejredttddtjeenucfhrhhomhepfdffrghnucgh
-    ihhllhhirghmshculdhnvhhiughirgdmfdcuoegujhgsfieskhgvrhhnvghlrdhorhhgqe
-    enucggtffrrghtthgvrhhnpedvgeehieekteelueffueehfeejjedvjedvveetfefgffev
-    hedvuedvffevffdvheenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrih
-    hlfhhrohhmpegujhgsfidomhgvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqudej
-    jedvfedtgeehhedqfeeffeelgedtgeejqdgujhgsfieppehkvghrnhgvlhdrohhrghesfh
-    grshhtmhgrihhlrdgtohhmpdhnsggprhgtphhtthhopedvgedpmhhouggvpehsmhhtphho
-    uhhtpdhrtghpthhtohepshhmrgguhhgrvhgrnhesnhhvihguihgrrdgtohhmpdhrtghpth
-    htohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthhopegurghnrdhj
-    rdifihhllhhirghmshesihhnthgvlhdrtghomhdprhgtphhtthhopegurghvvgdrjhhirg
-    hnghesihhnthgvlhdrtghomhdprhgtphhtthhopehjohhnrghthhgrnhdrtggrmhgvrhho
-    nheshhhurgifvghirdgtohhmpdhrtghpthhtohepihhrrgdrfigvihhnhiesihhnthgvlh
-    drtghomhdprhgtphhtthhopehvihhshhgrlhdrlhdrvhgvrhhmrgesihhnthgvlhdrtgho
-    mhdprhgtphhtthhopegrlhhishhonhdrshgthhhofhhivghlugesihhnthgvlhdrtghomh
-    dprhgtphhtthhopegurghvvgesshhtghholhgrsghsrdhnvght
-X-ME-Proxy: <xmx:wuUDahMQQTCinQeCGi8yG2YCv9ZChfVAX366Guu3tNNxXO0ktSl15A>
-    <xmx:wuUDav0pZpTkXgHeoXpD8J-Al1pSrco8jsHoRM2xIrM_Zu_AP7vWOw>
-    <xmx:wuUDapE_UYZ6aYq4ymUjV1ggxM4Wx9Ms6VZDDt-k_K1pyFi5HJCI0Q>
-    <xmx:wuUDamipKFaPmyJBV_4dYMAUHd_gFMN9OhF0_OBeK5mJXGqL9kil6g>
-    <xmx:wuUDaiejrJLre83hDihTWwCkZqRB0dJabyAq1S7j4-YkhVU9edxl_qtM>
-Feedback-ID: i67ae4b3e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 12 May 2026 22:45:21 -0400 (EDT)
-Date: Tue, 12 May 2026 19:45:20 -0700
-From: "Dan Williams (nvidia)" <djbw@kernel.org>
-To: smadhavan@nvidia.com, 
- bhelgaas@google.com, 
- dan.j.williams@intel.com, 
- dave.jiang@intel.com, 
- jonathan.cameron@huawei.com, 
- ira.weiny@intel.com, 
- vishal.l.verma@intel.com, 
- alison.schofield@intel.com, 
- dave@stgolabs.net
-Cc: alwilliamson@nvidia.com, 
- jeshuas@nvidia.com, 
- vsethi@nvidia.com, 
- skancherla@nvidia.com, 
- vaslot@nvidia.com, 
- sdonthineni@nvidia.com, 
- mhonap@nvidia.com, 
- vidyas@nvidia.com, 
- jan@nvidia.com, 
- mochs@nvidia.com, 
- dschumacher@nvidia.com, 
- linux-cxl@vger.kernel.org, 
- linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org, 
- Srirangan Madhavan <smadhavan@nvidia.com>
-Message-ID: <6a03e5c099d98_123a100e3@djbw-dev.notmuch>
-In-Reply-To: <20260306092322.148765-6-smadhavan@nvidia.com>
-References: <20260306092322.148765-1-smadhavan@nvidia.com>
- <20260306092322.148765-6-smadhavan@nvidia.com>
-Subject: Re: [PATCH v5 5/7] cxl: Add CXL DVSEC reset sequence and flow
- orchestration
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="dUdsH0y/"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=enwbVocNBPcLhF7Lx6ZcDpggCyo9olMHMZ2cO99uq8KrD20ijvSxmpcqv848642flaLYnvxMjP/g8i1wxzy88TwtDNpFjVNsSlzf0pODaFqqgSjgQtwnMSTKyLoZXVZ+LknVXcbd1uEUw8AoSMno6DvLp/6ilcsvg05feMjEvOFsA90TFVf8YRH1eZKxvkxNpPw63L3qnN14LsUMDX53xG4/ego3eFxw/yOTH/lIDUGYCSnoJ8aDm6Wil8pDSLl2Gf1ss9QsW57yTgqfxpFivZA8pF9OCnpFtnWEIfW71xq2fMJG1gVgeLFTPrnNonfUetGM8QqlWXjTTqaG8suS+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0PW1M58tpd29WwbhOV5Jq2RAaBXYu1zUOI3XdAjEj+4=;
+ b=L7aMu5kb2VWPfgFi3UwOBDHCklq2alghwde88Q/EcCddIp/dji7XwO8lhcBjEE4nEUo9xe9JfQb2z1383VmAsM6XwjI4HQJ/sw8pmqlujqEIM2bQ5HpTKHvlU/NqinaodlThdP36SqV9Uj6wnCoVBsMV5VSVsEr02zKf6UZgywflda0pZC2ODAVEsN/BSzB489cgxoYFZdQbMGiiYI0Wc8tScuiMvCMhsQ6oMlcLk6QgeaRAeFzBsU4W27vMvu37u/K6REqHXrZe2ZRg7b6PMR9RPcKQMiKqXeDLSQrsHv+sL7rDsRlR2tD+86TlR30E91BM+nbDfK/IrUNg4JGdlA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0PW1M58tpd29WwbhOV5Jq2RAaBXYu1zUOI3XdAjEj+4=;
+ b=dUdsH0y/xImyonO75C5H8/hNxUqAoF91q2KufktWfS9ukYMESHD0omH9IOkb8esUdQLRWXlevfYqBQitqSK1m+UyLY01C7mjyISsMpnu0f1N05e6ErSivpg9VMppY3sYmoKOzQd9P2x3MAkq1EMwhzKVeDC0KJDEfLVrWUcQEz/7lGqDXv/TfekHkE8aeFbXchgzy2IaUaXJysAeewoh9fr+0BRZhE4dCuTeWf6e4/Cgp5PZSlKcKJr49t11rhBb2pWt65Aifey+EU4FK56ZW6eORUy2FjHpOeIQ//yge+Y8yhgLScurP2IH3dlpn+gigYu14hGYMcb10m8Lwzs+JA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from VI0PR04MB12008.eurprd04.prod.outlook.com
+ (2603:10a6:800:317::15) by DB9PR04MB9867.eurprd04.prod.outlook.com
+ (2603:10a6:10:4c0::8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Wed, 13 May
+ 2026 02:48:59 +0000
+Received: from VI0PR04MB12008.eurprd04.prod.outlook.com
+ ([fe80::3e42:1e5:5955:d68a]) by VI0PR04MB12008.eurprd04.prod.outlook.com
+ ([fe80::3e42:1e5:5955:d68a%5]) with mapi id 15.20.9913.009; Wed, 13 May 2026
+ 02:48:59 +0000
+From: Richard Zhu <hongxing.zhu@nxp.com>
+To: robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	bhelgaas@google.com,
+	frank.li@nxp.com,
+	l.stach@pengutronix.de,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	s.hauer@pengutronix.de,
+	kernel@pengutronix.de,
+	festevam@gmail.com
+Cc: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v4 0/3] Add root port reset to support link recovery
+Date: Wed, 13 May 2026 10:50:58 +0800
+Message-Id: <20260513025101.1498104-1-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.37.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI2P153CA0009.APCP153.PROD.OUTLOOK.COM
+ (2603:1096:4:140::18) To VI0PR04MB12008.eurprd04.prod.outlook.com
+ (2603:10a6:800:317::15)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: VI0PR04MB12008:EE_|DB9PR04MB9867:EE_
+X-MS-Office365-Filtering-Correlation-Id: 75a3b22f-c7e8-4589-6c58-08deb09a2eb0
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|52116014|7416014|376014|19092799006|921020|38350700014|11063799003|3023799003|56012099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	VUY9LYFLtNeKtGOaXNjQ1lwPmTWpPomyB8Y4cpJFhrcqekkY7F2JDhWfLYBatG5XYXZI77tbOrDrjzTF4dRsL6Xazlf0HMznlVIQR6tISPvtGNsf8q51UuHyCmardfjTCVwU3pygEBG45DKe/hmBjsoUQBWHB5nfNvKxmrwuU08MwV3xFbZCIsITLJDW+XMgdKWvHanCGhA8HE0jWAESzIt885CFRODS7kMEh7m/c52cSTuWTpQVVtt36oF2Yw1RBWa9L2EB2VaVAUMKVJcBAeK4Wpq3gQjaJN2Ksrv7WobrAriNIPS8ZlJ8zIWfqQONgcrE4PSnhz8TNYJn+fx7d7C6zxYA6VcPLJZlQcUdohg4LnsDTtPcxoSM7EzSKfc+1hGMvJt5FPCvZnWRuuuAPPkvKJqlnFwNfFClf2LnaCjWKE9tPeU5ImIKcjxf3mYbBxV5na/0gjE92XewsF6JvM+9iBVgIpc8yXPPuxiHrAC4QsbvjH6waVfd8vGRNe6ACGaZrdlZW0GTIOKnbhz4rdFmcRjBnPmS4lsHrV4Tz8dKmQC88XVRILEkojGfoqL2tfrKEYtIM0pOADUoqLdnT1gI3fGteapCFFbtBp621mvBbQKKGIkHrLv20oA0e9M5lJUlWQ3XCUFtCpSXb+zVRZQz75fVlivRbAlMoEhKzQss2/9o/hIu+KWljI5MQjC96ViAfdkArGjEk6dWkUeUVKMrii7J9FKrsenOmvFXPqE9ks6vbrNcp1Bh5FNUdamgyApB5SwIcXlIdu+A5An89w==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12008.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(52116014)(7416014)(376014)(19092799006)(921020)(38350700014)(11063799003)(3023799003)(56012099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?CyyYZIZEdIHgiLErNAkXsr762jqozCLkzV3dvfHHB89Qu7V6GqH4Eafv6dqy?=
+ =?us-ascii?Q?MgDVOBXjdacxutOvis75nxqEEZ1+JAYso+V0LxTy03U0ZgIXnJPpES1tYyTT?=
+ =?us-ascii?Q?zhJ/N3ZKIIWoFpJhg4olJEuQCGl8R2FG8WgOHxNdTzPom256B8Tlq8vYg6S+?=
+ =?us-ascii?Q?gFlgql6QHoUCH5s4vWux3r+V7GzjnOc34sNQkJic/M1zGjlbQ7Wi4afw+aR7?=
+ =?us-ascii?Q?unjbWXrKM3NZlTlmEFmYlV1TAHJtLTjvSa+5tNlyQpDtoETVe9dqN/YRIbYJ?=
+ =?us-ascii?Q?d4VCl9baaNVrOl2UIkx9SbclhRpoMZ6/TfYwjWrWibN7Efm2c6WxVz3is1w0?=
+ =?us-ascii?Q?K1RUBZMbVDvnXGKiio4TbzEDf2HFdBcSheuuiTAdsSlb85JITDEaBX6dy148?=
+ =?us-ascii?Q?S7wfpUSwohB2jfrrldQhrJw5RzJdUK2lCZjNbeBA+GRUU9Z0PUcUTXuUV2b+?=
+ =?us-ascii?Q?cueo0mXe8ieTrijXCuVckTr19UcrCHMrdmhnGzzsXCV0NxjHGKJ2hLmW2D38?=
+ =?us-ascii?Q?p0sJA3GiceXlLdSwJWxKHHYpemPGfl4py4adJesm20/yC7E/OudQk51/FR/B?=
+ =?us-ascii?Q?gpQbJS/zT9oQSXdtGyCoJT9XXOi0Fl6u+RMV8iUP8Bhv2ChzxnDQCwanYrby?=
+ =?us-ascii?Q?ESSrdZ/u6x+8nrBMb5eicJLKRw5Up8B5OCQznHzge2xV/lOt2O5hhUX8IxQv?=
+ =?us-ascii?Q?7w1klxHqSKDZxyIISICzN13e8GxfSdx1tMnZoypp0PsCiF7D7LZSWyH6Dkql?=
+ =?us-ascii?Q?gdCd7bIi7IQNAht2eXsxsMmrN/kLIaiqRveRJrAF3nc0ekonIdH12tGAPsHd?=
+ =?us-ascii?Q?RHJX+aWSInnsPuC+xkZsYOCtbgxOLnLJ0g7A2Tzh7lD2yuG4RZdVGE7XOT64?=
+ =?us-ascii?Q?8hScyYpXk/HuX7Gyi/pejyIeFFtDdLhke+Glsn6kJL7bg3roVbUS8tTtCHAI?=
+ =?us-ascii?Q?mm6JkVw3fDn5C9kU1fY0SqgJhFoPyzdO8jAba4lLaHTDqN+PCzgIrGy6yIFJ?=
+ =?us-ascii?Q?Q7rm9FN/h0AEBVxhISEf88wfOqYC7M2G/cFGCLSoYgknwxGRMEY//cNEzJal?=
+ =?us-ascii?Q?drEnthl6l3NF26OXeRh5fg3t5aTdpSRwU03aPT5/XBGd1H6lF8V/GIX3E08j?=
+ =?us-ascii?Q?lYXPKmnO/G5EZYu17GeLFsrn6Fl2bfshdUW9wJfzquV/wOPuBebORJrnaD/O?=
+ =?us-ascii?Q?7soNhNgOcBIAzPDNaKin7nPKvovq6L46JQAf+IhohNai7ShE0ZhUnD0hixZs?=
+ =?us-ascii?Q?QSQUe+AgB227/ttnBclib2a4BgQtGZy5UQZF5Sf5lll9mAYsSQ9Eg3/8SIro?=
+ =?us-ascii?Q?J0L7qt+6c71to4RTmgNsvKsronObURBUN1iHW7S5XByEeuaFOvbiUCaNwjar?=
+ =?us-ascii?Q?sbrp67mzAykTTWAwVa+15SZ0ryCX8DhOdONf/ogbLpNcDxZeNJYB2L0j0reS?=
+ =?us-ascii?Q?m/wjW0YaUjipQE2STnmFcaBWauV4KY6EgTufHrKCMnY2ZcDcOsbokBub9Nx0?=
+ =?us-ascii?Q?p3XUOifQ0v+jltdCtspMvCOjhW9R0ATdAxsQobcEgheG3vHCul24lnxvsJJP?=
+ =?us-ascii?Q?2utR4bTf62lIERk+5+IyG3BJ5CN96ngHm8gfbFKNgeZt6RSeo3yCzQCCYnGG?=
+ =?us-ascii?Q?1PZ6hrIGzRAdPoAxezYDn4cx2DNVPUCHX4/0jRXJ84LCv7QM4dn6P0Mzbd50?=
+ =?us-ascii?Q?UWu8k+IPDAz46TbQrZ6N7ivGLQ3scvs4IrOClnXjKUupa2YrX02L/x+AmW4Z?=
+ =?us-ascii?Q?qlLHXHsAOQ=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 75a3b22f-c7e8-4589-6c58-08deb09a2eb0
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12008.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 May 2026 02:48:59.0315
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: VZbUmvxspe6Y3XCm5FBf7HBrQP0TBydAceCEwrzPiClxvcZqheh1/uzagDVTsneVutMGrh4gjSX4l4/iXc7Exw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB9867
 
-smadhavan@ wrote:
-> From: Srirangan Madhavan <smadhavan@nvidia.com>
+Based on the following patch-set[1] issued by Mani.
+Add support for resetting the Root Port for i.MX PCIe to enable link recovery.
 
-Hi Srirangan, some comments below:
+[1] [v7,0/4] PCI: Add support for resetting the Root Ports in a platform specific way
 
-> cxl_dev_reset() implements the hardware reset sequence:
-> optionally enable memory clear, initiate reset via
-> CTRL2, wait for completion, and re-enable caching.
-> 
-> cxl_do_reset() orchestrates the full reset flow:
->   1. CXL pre-reset: mem offlining and cache flush (when memdev present)
->   2. PCI save/disable: pci_dev_save_and_disable() automatically saves
->      CXL DVSEC and HDM decoder state via PCI core hooks
->   3. Sibling coordination: save/disable CXL.cachemem sibling functions
->   4. Execute CXL DVSEC reset
->   5. Sibling restore: always runs to re-enable sibling functions
->   6. PCI restore: pci_dev_restore() automatically restores CXL state
-> 
-> The CXL-specific DVSEC and HDM save/restore is handled
-> by the PCI core's CXL save/restore infrastructure (drivers/pci/cxl.c).
+PCIe links can go down due to various unexpected circumstances. This patch series
+adds root port reset support for link recovery on i.MX PCIe controllers when the
+optional "intr" interrupt is present.
 
-I think the PCI core rules for pci_save_and_disable() really only work
-for a device that can be reliably quarantined off the bus simply by
-writing to its command register. I am also uncomfortable saving new MMIO
-data with new iomap mappings at pci_save_state() time, remapping MMIO
-space, and rewriting the command register at pci_restore_state() time.
-That feels like it is stretching the PCI state save model, and runs
-counter to other MMIO restore scenarios.
+When a link down event is detected, the root port reset uninitializes and
+reinitializes the PCIe controller, then restarts the PCIe link.
 
-Lets start with assuming similar behavior to MSI where restoration of
-MMIO is driven from other cached configuration, not PCI state save. For
-example, for MSI there is nothing to do at restore time if a driver has
-not first enabled interrupts.
+On i.MX95 platforms, link events and PME share the same interrupt line.
+Link event interrupts cannot use only an IRQ thread handler because the PME
+driver uses request_irq() to bind the PME interrupt directly with only the
+IRQF_SHARED flag set.
 
-The similarity for CXL would be that if nothing has ever registered a
-CXL memdev then it is indeterminate whether Linux has ever successfully
-parsed the CXL configuration and "enabled CXL".
+To address this, we register one handler with IRQF_SHARED for link event
+interrupts and manipulate the enable bits of link events to ensure the same
+interrupt source is triggered only once at a time.
 
-The downside of this is losing the ability to save firmware initiated
-CXL state from PCI reset paths. That loss is mitigated somewhat by SBR
-masking and the fact that FLR does not reset CXL state. So those resets
-do not destroy CXL HDM state by default.
+Additionally, this series adds 'intr', 'aer', and 'pme' interrupt entries to
+the i.MX6Q PCIe binding to support PCIe event-based interrupts for general
+controller events, Advanced Error Reporting, and Power Management Events
+respectively.
 
-Otherwise, if cxl_reset moves to a cxl_memdev sysfs attribute then the
-PCI ABI stays free of CXL concerns. More below:
+Changes in v4:
+- Set these new added three interrupts as optional interrupt.
 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/core/pci.c | 181 ++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 179 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index b6f10a2cb404..c758b3f1b3f9 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -1078,7 +1078,7 @@ static int cxl_reset_collect_sibling(struct pci_dev *func, void *data)
->  	return 0;
->  }
-> 
-> -static void __maybe_unused cxl_pci_functions_reset_prepare(struct cxl_reset_context *ctx)
-> +static void cxl_pci_functions_reset_prepare(struct cxl_reset_context *ctx)
->  {
->  	struct pci_dev *pdev = ctx->target;
->  	struct cxl_reset_walk_ctx wctx;
-> @@ -1103,7 +1103,7 @@ static void __maybe_unused cxl_pci_functions_reset_prepare(struct cxl_reset_cont
->  	}
->  }
-> 
-> -static void __maybe_unused cxl_pci_functions_reset_done(struct cxl_reset_context *ctx)
-> +static void cxl_pci_functions_reset_done(struct cxl_reset_context *ctx)
->  {
->  	int i;
-> 
-> @@ -1116,3 +1116,180 @@ static void __maybe_unused cxl_pci_functions_reset_done(struct cxl_reset_context
->  	ctx->pci_functions = NULL;
->  	ctx->pci_func_count = 0;
->  }
-> +
-> +/*
-> + * CXL device reset execution
-> + */
-> +static int cxl_dev_reset(struct pci_dev *pdev, int dvsec)
-> +{
-> +	static const u32 reset_timeout_ms[] = { 10, 100, 1000, 10000, 100000 };
-> +	u16 cap, ctrl2, status2;
-> +	u32 timeout_ms;
-> +	int rc, idx;
-> +
-> +	if (!pci_wait_for_pending_transaction(pdev))
-> +		pci_err(pdev, "timed out waiting for pending transactions\n");
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, &ctrl2);
-> +	if (rc)
-> +		return rc;
-> +
-> +	/*
-> +	 * Disable caching and initiate cache writeback+invalidation if the
-> +	 * device supports it. Poll for completion.
-> +	 * Per CXL r3.2 section 9.6, software may use the cache size from
-> +	 * DVSEC CXL Capability2 to compute a suitable timeout; we use a
-> +	 * default of 10ms.
-> +	 */
-> +	if (cap & PCI_DVSEC_CXL_CACHE_WBI_CAPABLE) {
-> +		u32 wbi_poll_us = 100;
-> +		s32 wbi_remaining_us = 10000;
-> +
-> +		ctrl2 |= PCI_DVSEC_CXL_DISABLE_CACHING;
-> +		rc = pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2,
-> +					   ctrl2);
-> +		if (rc)
-> +			return rc;
-> +
-> +		ctrl2 |= PCI_DVSEC_CXL_INIT_CACHE_WBI;
-> +		rc = pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2,
-> +					   ctrl2);
-> +		if (rc)
-> +			return rc;
-> +
-> +		do {
-> +			usleep_range(wbi_poll_us, wbi_poll_us + 1);
-> +			wbi_remaining_us -= wbi_poll_us;
-> +			rc = pci_read_config_word(pdev,
-> +						  dvsec + PCI_DVSEC_CXL_STATUS2,
-> +						  &status2);
-> +			if (rc)
-> +				return rc;
-> +		} while (!(status2 & PCI_DVSEC_CXL_CACHE_INV) &&
-> +			 wbi_remaining_us > 0);
-> +
-> +		if (!(status2 & PCI_DVSEC_CXL_CACHE_INV)) {
-> +			pci_err(pdev, "CXL cache WB+I timed out\n");
-> +			return -ETIMEDOUT;
-> +		}
-> +	} else if (cap & PCI_DVSEC_CXL_CACHE_CAPABLE) {
-> +		ctrl2 |= PCI_DVSEC_CXL_DISABLE_CACHING;
-> +		rc = pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2,
-> +					   ctrl2);
-> +		if (rc)
-> +			return rc;
-> +	}
-> +
-> +	if (cap & PCI_DVSEC_CXL_RST_MEM_CLR_CAPABLE) {
-> +		rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2,
-> +					  &ctrl2);
-> +		if (rc)
-> +			return rc;
-> +
-> +		ctrl2 |= PCI_DVSEC_CXL_RST_MEM_CLR_EN;
-> +		rc = pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2,
-> +					   ctrl2);
-> +		if (rc)
-> +			return rc;
-> +	}
-> +
-> +	idx = FIELD_GET(PCI_DVSEC_CXL_RST_TIMEOUT, cap);
-> +	if (idx >= ARRAY_SIZE(reset_timeout_ms))
-> +		idx = ARRAY_SIZE(reset_timeout_ms) - 1;
-> +	timeout_ms = reset_timeout_ms[idx];
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, &ctrl2);
-> +	if (rc)
-> +		return rc;
-> +
-> +	ctrl2 |= PCI_DVSEC_CXL_INIT_CXL_RST;
-> +	rc = pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, ctrl2);
-> +	if (rc)
-> +		return rc;
-> +
-> +	msleep(timeout_ms);
+Changes in v3:
+- Don't add a new if:block; Drop the maxItems constraint of the interrupts
+  property for i.MX95 PCIe.
+- Add constraints for the interrupts property for other variants.
+- Regarding the ABI break: add descriptions explaining why these new
+  interrupts are mandatory and required by i.MX95 PCIe.
 
-Should this be msleep(max(100, timeout_ms)) just to honor the
-specification note:
+Changes in v2:
+- Constrain the new added three interrupt entries to be valid only for the
+  i.MX95 variant using conditional schemas
 
-"9.7.3 CXL Reset and Request Retry Status (RRS) ...The device behavior
-in response to Configuration Space access to the device within 100 ms of
-initiating a CXL Reset is undefined"
+[PATCH v4 1/3] dt-bindings: PCI: imx6q-pcie: Add intr, aer and pme
+[PATCH v4 2/3] arm64: dts: imx95: Add dma, intr, aer and pme
+[PATCH v4 3/3] PCI: imx6: Add root port reset to support link
 
-...not sure why the specification allowed for devices to specify less
-than 100ms timeout values.
+Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml |   6 +++++
+arch/arm64/boot/dts/freescale/imx95.dtsi                  |  16 +++++++++---
+drivers/pci/controller/dwc/pci-imx6.c                     | 123 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+3 files changed, 141 insertions(+), 4 deletions(-)
 
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_STATUS2,
-> +				  &status2);
-> +	if (rc)
-> +		return rc;
-> +
-> +	if (status2 & PCI_DVSEC_CXL_RST_ERR) {
-> +		pci_err(pdev, "CXL reset error\n");
-> +		return -EIO;
-> +	}
-> +
-> +	if (!(status2 & PCI_DVSEC_CXL_RST_DONE)) {
-> +		pci_err(pdev, "CXL reset timeout\n");
-> +		return -ETIMEDOUT;
-> +	}
-> +
-> +	rc = pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, &ctrl2);
-> +	if (rc)
-> +		return rc;
-> +
-> +	ctrl2 &= ~PCI_DVSEC_CXL_DISABLE_CACHING;
-> +	rc = pci_write_config_word(pdev, dvsec + PCI_DVSEC_CXL_CTRL2, ctrl2);
-> +	if (rc)
-> +		return rc;
-> +
-> +	return 0;
-> +}
-> +
-> +static int match_memdev_by_parent(struct device *dev, const void *parent)
-> +{
-> +	return is_cxl_memdev(dev) && dev->parent == parent;
-> +}
-> +
-> +static int cxl_do_reset(struct pci_dev *pdev)
-> +{
-> +	struct cxl_reset_context ctx = { .target = pdev };
-> +	struct cxl_memdev *cxlmd = NULL;
-> +	struct device *memdev = NULL;
-> +	int dvsec, rc;
-> +
-> +	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_DEVICE);
-> +	if (!dvsec)
-> +		return -ENODEV;
-> +
-> +	memdev = bus_find_device(&cxl_bus_type, NULL, &pdev->dev,
-> +				 match_memdev_by_parent);
-> +	if (memdev) {
-> +		cxlmd = to_cxl_memdev(memdev);
-> +		guard(device)(&cxlmd->dev);
-
-This guard scope ends at this bracket, so it is a nop.
-
-> +	}
-> +
-> +	mutex_lock(&cxl_reset_mutex);
-> +	pci_dev_lock(pdev);
-
-Given that CXL drivers create memdevs the lock ordering needs to be
-pci_dev_lock(), then guard(device)(&cxlmd->dev).
-
-> +	if (cxlmd) {
-> +		rc = cxl_reset_prepare_memdev(cxlmd);
-
-Ok, so per the lead in comment, a cxl_memdev becomes a requirement, not
-a trigger for opportunistic safety.
-
-I do think it ultimately begs the question of whether the PCI core
-should one day automatically register cxl devices for this purpose. For
-now the assumption is a driver, like vfio-pci, has registered a memdev
-to get a memX/cxl_reset interface published in sysfs.
-
-The presence of a cxl_memdev allows coordinating not only region
-discovery, but also reconfiguration locking. With the memdev we have a
-chance to ask the questions:
-
-1/ are any cacheable mappings of this device established?
-2/ is that answer durable for the duration of the reset?
-3/ can the HDM configuration be recovered from the cxl_memdev to
-   cxl_root decoder association?
-
-In the short term the fastest answers to those questions is just walk
-the memdev and cxl root, in the longer term I would be open to building
-more CXL awareness into the core so that CXL reset does not need a
-driver loaded.
-
-As for the safety guarantees, I do not think cxl_reset_prepare_memdev()
-should be trying to hot unplug memory. Either the caller has arranged
-for CXL to be idle or the reset fails.
-
-With cxl_acpi and cxl_mem loaded you can pin down the HPA space for the
-duration of the reset. It has a chance to be compatible with all CXL
-reset use cases.
