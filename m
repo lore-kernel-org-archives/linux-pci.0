@@ -1,127 +1,157 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5DC2385D72
-	for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 21:12:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87C763A8749;
+	Wed, 13 May 2026 21:18:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778706771; cv=none; b=Bhjz5RofXgdxY+kUGBODrvUVLDEDlgttuIH8eJTOI3nbbMjsKQbEG95rHHpH5+v1Ksjhl0fYrRjGFwvJ4K0ncGvYDEVrv1I6Zzb7gBynDT6tuEgPwvqrYzIElGVBOS7i3GGhMjZSF3riSAsoYlLIi8ApwqPOX+jtG+7Rv4TEhiY=
+	t=1778707096; cv=none; b=YhEto2J/v8Ftqo4Hqn9kP+QzXF/+tkynVO/CblLBhfBOlvYbEdjr1LyFwzEBkKMMzznLmy6NjpS1xsZGtE92dgshddzrtyrlgsZiVJVTq1UnUjWnCkofPq10HQjR/r9qw+asBh8kYIqnFH53pahpApvSoKU+8E4nzRga72BH+fI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778706771; c=relaxed/simple;
-	bh=2unqWykgfHgjydLg8gQ/WlLIyZfE+woLrUNg6m1VJ2I=;
+	s=arc-20240116; t=1778707096; c=relaxed/simple;
+	bh=6ucYjxGnrgPafSUH/kWExeUbJ7BGbVQ69Gi+lvyBYmM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=aEVLs6oO3UVGsD5wryms9Zss8Z5Sv4qIrKSUzO14slXRPZrv+DDdG0F1tynQG+kya70xmqMkYltbO7Lxo2XMCAynsMM6eSrmpyroSKko+9YiiJS6nsDtSYUnKnjuxsxuMkb0o3a2KK/FTsGDabBe/d+fZRNo0HBcK3VIuUzR0B8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hA41h300; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=NqM4qY+DaVBmokwkwnF+tvFTii4G8rURcX8xBHcdhFJxbufYjSCdsX4YmzjG7hb2pIJV4o/9tCkfjCOCBM61O1RuSNb4bRaToH7gox2QGgUMclRJw19fR+VgAwq2/O+zX0PkLwB9wAhu48OXa9KVn2km1ZE+AkdqbLqbfOVWX9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dKKLLNPr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hA41h300"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 258CAC19425;
-	Wed, 13 May 2026 21:12:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dKKLLNPr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6486C19425;
+	Wed, 13 May 2026 21:18:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778706771;
-	bh=2unqWykgfHgjydLg8gQ/WlLIyZfE+woLrUNg6m1VJ2I=;
+	s=k20201202; t=1778707096;
+	bh=6ucYjxGnrgPafSUH/kWExeUbJ7BGbVQ69Gi+lvyBYmM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=hA41h300cmlt2oSa6ac7rgUNksNwTlznzL0eXxMFXMKWJXeEa9BuPxaVXip2PaWRv
-	 p9cYp3Y3M9npSH6XwjHL1plXR0WsrOd+k9kGDz0hY2Zg1O6VQW3w6EEhSBoORth3BW
-	 MRLuM6mbeNhPWhERV8Kcsa716Tikmcuxyg2s4rFQIKIv10FuVkiuO+/YUoelptpmRf
-	 g/wxSHIYSuB92Ma/6f16O4zLZsT2iJoOC/UMEY9Gi7qwo0CAUbDgwgMK8Id6aW6FQq
-	 plYcvGg8ZOASK2SLzbCJEgj9KXRp/QoIgd2nXe3+vfvY9NNP+c8JPTpPffkEWZjLto
-	 cCzUmL6STDbkw==
+	b=dKKLLNPrRBoJDcXhL+YW99iDV6d0LsdoE7dOE3pNOyj6nFxeiTLRscqs5WmzaBtuo
+	 YL7xhV+aeGUnbe5yEBVeZ+rPWQd/9U4thO3zTHgejrjYjOIzejTeHWZYdm0JwNqDb2
+	 PsUYUIWoOExkvcFxIpoTmC/NoCr3ProA3hIWhb1GdC9stEcWpxAD9mWyQwi6N4wiZe
+	 ilUy8mW9Q8B70kNW8RUeIxJXcmCe1mtX20nLAY61EOTmL4jmJi4RALsP26l/mU5Jkh
+	 mkbC45m0Orhg0Q+fMnkgnQt4nAa5rU5N8XvlNPYCZYESjf/RdjXCy7nl+hl1Sm7D0L
+	 PB+WXxPfOpX8w==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 09/16] vfio: selftests: Add
- vfio_pci_liveupdate_uapi_test
+Subject: Re: [PATCH v2 19/23] dmaengine: sdxi: Provide context start and
+ stop APIs
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vipin Sharma" <vipinsh@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260511234802.2280368-10-vipinsh@google.com>
-References: <20260511234802.2280368-10-vipinsh@google.com>
+To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
+Cc: vkoul@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org
+In-Reply-To: <20260511-sdxi-base-v2-19-889cfed17e3f@amd.com>
+References: <20260511-sdxi-base-v2-19-889cfed17e3f@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 13 May 2026 21:12:50 +0000
-Message-Id: <20260513211251.258CAC19425@smtp.kernel.org>
+Date: Wed, 13 May 2026 21:18:15 +0000
+Message-Id: <20260513211815.D6486C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Medium] FIXTURE_TEARDOWN unconditionally dereferences NULL pointers and =
-closes stdin if FIXTURE_SETUP fails.
-- [Low] The test file fails to build due to missing dependencies, headers, =
-and undefined functions.
+- [Critical] DMA Use-After-Free due to missing hardware abort on polling ti=
+meout.
+- [High] Silent teardown failure in `sdxi_stop_cxt()` leads to active conte=
+xt Use-After-Free.
+- [Medium] Race condition in `sdxi_completion_poll()` causes false timeouts=
+ due to thread preemption.
 --
 
-commit 483a2948059fa012eaf9d233845cda79f05f7acb
-Author: David Matlack <dmatlack@google.com>
+commit 5b80fef0d376d25e0f86622539d35c12aa0571d5
+Author: Nathan Lynch <nathan.lynch@amd.com>
 
-vfio: selftests: Add vfio_pci_liveupdate_uapi_test
+dmaengine: sdxi: Provide context start and stop APIs
 
-Add a selftest to exercise preserving a various VFIO files through
-/dev/liveupdate. Ensure that VFIO cdev device files can be preserved and
-everything else (group-based device files, group files, and container
-files) all fail.
-
-> diff --git a/tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c=
- b/tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c
-> new file mode 100644
-> index 0000000000000..1d89b08ab0a4a
-> --- /dev/null
-> +++ b/tools/testing/selftests/vfio/vfio_pci_liveupdate_uapi_test.c
-> @@ -0,0 +1,93 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +
-> +#include <libliveupdate.h>
-
-Are there missing files or dependencies in this commit? This test fails to
-build because <libliveupdate.h> does not exist anywhere in the source tree.
-
-Also, luo_session_preserve_fd() has no userspace implementation available (=
+This commit introduces high-level context start and stop APIs for SDXI clie=
+nts.
+It implements sdxi_start_cxt() and sdxi_stop_cxt() which operate on struct
+sdxi_cxt objects to encapsulate administrative descriptor submission and wa=
 it
-only exists as an internal static kernel function).
+for completion.
 
-Additionally, the vfio selftest Makefile depends on
-../liveupdate/lib/libliveupdate.mk (introduced by a missing commit), which
-is completely missing from the tree. This results in immediate compilation
-and linker failures.
+> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
+> index 56e21aa088577..28eb4ccd6c1d4 100644
+> --- a/drivers/dma/sdxi/context.c
+> +++ b/drivers/dma/sdxi/context.c
 
 [ ... ]
 
-> +FIXTURE_SETUP(vfio_pci_liveupdate_uapi_test)
+> @@ -335,6 +337,81 @@ int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
+>  	return devm_add_action_or_reset(sdxi->dev, free_admin_cxt, sdxi);
+>  }
+> =20
+> +int sdxi_start_cxt(struct sdxi_cxt *cxt)
 > +{
-> +	self->luo_fd =3D luo_open_device();
-> +	ASSERT_GE(self->luo_fd, 0);
-> +
-> +	self->session_fd =3D luo_create_session(self->luo_fd, "session");
-> +	ASSERT_GE(self->session_fd, 0);
-> +
-> +	self->iommu =3D iommu_init(variant->iommu_mode);
-> +	self->device =3D vfio_pci_device_init(device_bdf, self->iommu);
+
+[ ... ]
+
+> +	struct sdxi_completion *sc __free(sdxi_completion) =3D
+> +		sdxi_completion_alloc(cxt->sdxi);
+
+[ ... ]
+
+> +	return sdxi_completion_poll(sc);
 > +}
-> +
-> +FIXTURE_TEARDOWN(vfio_pci_liveupdate_uapi_test)
+
+If sdxi_completion_poll() times out, it returns -ETIMEDOUT and the
+cleanup runs, freeing the DMA-mapped completion memory.
+
+Because the hardware operation is not aborted on timeout, is it possible for
+the device to eventually complete the delayed operation and write to the
+freed DMA address?
+
+Also, does sdxi_completion_poll() have a race condition that could cause
+false timeouts?
+
+Looking at the implementation of sdxi_completion_poll():
+
+	while (le64_to_cpu(READ_ONCE(sc->cst_blk->signal)) !=3D 0) {
+		if (time_after(jiffies, deadline))
+			return -ETIMEDOUT;
+		cpu_relax();
+	}
+
+If the polling thread is preempted immediately after the READ_ONCE evaluati=
+on,
+time_after() might evaluate to true upon resumption. Even if the hardware
+successfully updates the signal during the preemption window, wouldn't this
+return -ETIMEDOUT without a final check of the signal?
+
+> +void sdxi_stop_cxt(struct sdxi_cxt *cxt)
 > +{
-> +	vfio_pci_device_cleanup(self->device);
-> +	iommu_cleanup(self->iommu);
-> +	close(self->session_fd);
-> +	close(self->luo_fd);
+> +	struct sdxi_cxt *adm =3D to_admin_cxt(cxt);
+> +	struct sdxi_desc *stop, *sync;
+> +	struct sdxi_ring_resv resv;
+> +	int err;
+> +
+> +	might_sleep();
+> +
+> +	struct sdxi_completion *sc __free(sdxi_completion) =3D
+> +		sdxi_completion_alloc(cxt->sdxi);
+> +
+> +	if (!sc)
+> +		return;
 
-Will this cause a segmentation fault if an assertion fails during setup?
+Since sdxi_stop_cxt() returns void, memory allocation failures here are
+silently ignored.
 
-In the kselftest framework, the fixture state (self) is zero-initialized via
-mmap. If an assertion in FIXTURE_SETUP fails (for example,
-ASSERT_GE(self->luo_fd, 0)), the framework aborts setup and immediately cal=
-ls
-FIXTURE_TEARDOWN.
+If this happens, the caller won't know the stop command failed and might
+proceed to tear down the context rings and buffers while the hardware is
+still active.
 
-Since self->device and self->iommu would be unassigned and thus NULL in this
-scenario, vfio_pci_device_cleanup() and iommu_cleanup() will dereference
-NULL pointers.
+Can this regression lead to the hardware accessing freed memory when it
+continues fetching from the torn-down rings?
 
-Additionally, since self->session_fd would be 0, close(self->session_fd) wi=
-ll
-inadvertently close stdin.
+> +
+> +	/* This is not how to stop the admin context. */
+> +	if (WARN_ON(adm =3D=3D cxt))
+> +		return;
+> +
+> +	err =3D sdxi_ring_reserve(adm->ring_state, 2, &resv);
+> +	if (WARN_ON_ONCE(err))
+> +		return;
+
+Similarly, if sdxi_ring_reserve() fails, the function returns without
+stopping the hardware context, which may also cause the caller to free
+resources that the active hardware might still access.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511234802.2280=
-368-1-vipinsh@google.com?part=3D9
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-base-=
+v2-0-889cfed17e3f@amd.com?part=3D19
