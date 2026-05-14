@@ -1,66 +1,38 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0D70286D5C;
-	Thu, 14 May 2026 12:51:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D398E3DDDAB
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 13:14:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778763065; cv=none; b=oJUG2qpx5KM4mwYC++EXEIMHYCtpDCiUIAxRxSpa0oRNLbQgUfisluwIV68OgbnFSg/IhszxMojkk/ek2S0QhGam5PNk8Ogzc1AabvU9PweGwYO5TEEDVCQwpEtaeSzXC9InKtOCrNJ2eemg9JRNtNyFu7ZdiGWCg0CyhbvcVMY=
+	t=1778764476; cv=none; b=Rx69bdAhPNo+gHrqTHJ9PiH9OzEjRWmbnDhAqoMZ9hdYebpi2cU+J/fy8/YGuY9fG1Ez2zDwr/5yGHIy/FnLNxluSwPCHN6NXQAWUA1YktWlBsJYE4knIQrieUd89ok0fbKC7HFDngmcCfW7qgVZ1k7q5SPgrWiqaGBnAhQ4bJs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778763065; c=relaxed/simple;
-	bh=T6e1Sy8/8NgyzN/WXbmfEYNcRDAnhEjQBXWZGy3LDwE=;
+	s=arc-20240116; t=1778764476; c=relaxed/simple;
+	bh=yx/cPMS1qJ5xcr0TGlPslnMkQCE425HEeu6EigOp36M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WlTA3mwxoFlsOdY5fY+KgcFLFFUpumH6MZxOd08d4jI0eavrIrwSQwfLJdO7lZRzIMFvvKxomOtYZEfSFW6Jhl5L2va5ruA5Qbq/xm/pGdOXTUGtwSUSMIT5BDn4jxqQ6swgSor1AZgbdaVP9Pf8lLqYB0P2/uxiWsZl8FLKR1s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=j45x8lE0; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="j45x8lE0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778763064; x=1810299064;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=T6e1Sy8/8NgyzN/WXbmfEYNcRDAnhEjQBXWZGy3LDwE=;
-  b=j45x8lE0t8GVbQZrlylp2KdE47FG4oTEmrXKxuRCdCvCEdFnPwz0+ITd
-   bEj8YCyxn1T+sOHNY1NihIjW7f92iFVN7BnCxqxxLAl320FvM42HXbKJd
-   A2GzdHTMPAP2hSLuhrYAAgBGUAz5z+k/nuTsZ+Wvokv9JmCIhPGHCiUJ6
-   AfZ3VCrzzzsPHS8fSShuB94zN+1M+iou0RVGyr28FjuQrxOtPT+Xp86dp
-   9WRHt2YsrBOuxTeGSfwT9xV3+1/2bsGONN9FjvFPLuzbxl4XVpYp2gPLX
-   kL7z1WMEsNa34YZ/4nPqiOC1nFlWvbvwrfZQxgMD5JYiwilVS5WcmDbKx
-   A==;
-X-CSE-ConnectionGUID: cbWJlWolSv+uNGDSypJxkw==
-X-CSE-MsgGUID: 2bOk1rGyRoq7hgWmpl9YhA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11785"; a="90806968"
-X-IronPort-AV: E=Sophos;i="6.23,234,1770624000"; 
-   d="scan'208";a="90806968"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2026 05:51:04 -0700
-X-CSE-ConnectionGUID: OoEm0waPTuODUxq408AFCA==
-X-CSE-MsgGUID: pz6o/H9EThWOPESAHnbf6A==
-X-ExtLoop1: 1
-Received: from igk-lkp-server01.igk.intel.com (HELO bdf09bfdbd5f) ([10.211.93.152])
-  by fmviesa003.fm.intel.com with ESMTP; 14 May 2026 05:50:58 -0700
-Received: from kbuild by bdf09bfdbd5f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wNVWi-000000008ob-0WmY;
-	Thu, 14 May 2026 12:50:56 +0000
-Date: Thu, 14 May 2026 14:50:17 +0200
-From: kernel test robot <lkp@intel.com>
-To: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com,
-	pali@kernel.org, ryder.lee@mediatek.com, jianjun.wang@mediatek.com,
-	claudiu.beznea.uj@bp.renesas.com, mpillai@cadence.com
-Cc: oe-kbuild-all@lists.linux.dev, robh@kernel.org, s-vadapalli@ti.com,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Hans Zhang <18255117159@163.com>
-Subject: Re: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link
- training
-Message-ID: <202605141445.2Ag4i8fZ-lkp@intel.com>
-References: <20260506152346.166056-9-18255117159@163.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=SHcJblka5/L0XGaOP/fF9HMz3BUcXzMvZWcjk379F0BRpfSTvF8XVYcP0Rgu6ZhRa3AgC1nLNV8/htaJxkQcn2iTWcF6wwSiP9RXtneO1XV0aSsPvHRTPVIBMu/MJsVJRP6RjzlhvWTxeI+C2ZyXZtXLUYixO4MracuU2+DPAeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id CBD9DC24;
+	Thu, 14 May 2026 15:14:30 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id A338E6016B85; Thu, 14 May 2026 15:14:30 +0200 (CEST)
+Date: Thu, 14 May 2026 15:14:30 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Alistair Francis <alistair23@gmail.com>
+Cc: sashiko@lists.linux.dev, linux-pci@vger.kernel.org, ojeda@kernel.org
+Subject: Re: [PATCH 10/18] PCI/CMA: Validate Subject Alternative Name in
+ certificates
+Message-ID: <agXKtgC7iG9BoiW8@wunner.de>
+References: <20260508031710.514574-11-alistair.francis@wdc.com>
+ <20260508035806.0EE8DC2BCB0@smtp.kernel.org>
+ <CAKmqyKMti4wxuU-uRcLXLnXpXTHGajHkx=7zt54FDLUry+mP6Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,58 +41,184 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260506152346.166056-9-18255117159@163.com>
+In-Reply-To: <CAKmqyKMti4wxuU-uRcLXLnXpXTHGajHkx=7zt54FDLUry+mP6Q@mail.gmail.com>
 
-Hi Hans,
+On Thu, May 14, 2026 at 12:45:46PM +1000, Alistair Francis wrote:
+> On Fri, May 8, 2026 at 1:58 PM <sashiko-bot@kernel.org> wrote:
+> > > +++ b/drivers/pci/Makefile
+> > > -obj-$(CONFIG_PCI_CMA)                += cma.o
+> > > +obj-$(CONFIG_PCI_CMA)                += cma.o cma.asn1.o
+> > > +$(obj)/cma.o:                        $(obj)/cma.asn1.h
+> > > +$(obj)/cma.asn1.o:           $(obj)/cma.asn1.c $(obj)/cma.asn1.h
+> >
+> > If CONFIG_PCI_CMA is configured as a loadable module, will Kbuild compile
+> > two separate modules (cma.ko and cma.asn1.ko)?
+> >
+> > Because the ASN.1 compiler does not export the cma_decoder symbol, would
+> > the cma.ko module fail to link during modpost with an undefined symbol
+> > error?
+> >
+> > Should these objects be bundled into a composite object instead? For
+> > example:
+> >
+> > cma_module-y := cma.o cma.asn1.o
+> > obj-$(CONFIG_PCI_CMA) += cma_module.o
+> 
+> This seems correct
 
-kernel test robot noticed the following build warnings:
+Hallucination alert:
 
-[auto build test WARNING on a293ec25d59dd96309058c70df5a4dd0f889a1e4]
+CONFIG_PCI_CMA is bool, so cannot be configured as a loadable module.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-Add-pcie_wait_after_link_train-helper/20260514-132815
-base:   a293ec25d59dd96309058c70df5a4dd0f889a1e4
-patch link:    https://lore.kernel.org/r/20260506152346.166056-9-18255117159%40163.com
-patch subject: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link training
-config: x86_64-rhel-9.4 (https://download.01.org/0day-ci/archive/20260514/202605141445.2Ag4i8fZ-lkp@intel.com/config)
-compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260514/202605141445.2Ag4i8fZ-lkp@intel.com/reproduce)
+> > > +     if (tag != ASN1_UTF8STR ||
+> > > +         vlen != ctx->expected_len ||
+> > > +         memcmp(value, ctx->expected_name, vlen) != 0) {
+> >
+> > Does this perform a strict case-sensitive comparison of the Subject
+> > Alternative Name?
+> >
+> > If a device vendor provisions the certificate using uppercase hexadecimal
+> > letters (a common standard for hardware IDs), could this strict memcmp()
+> > erroneously reject a valid device?
+> 
+> This is incorrect though, as the case is specified in the PCI spec
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202605141445.2Ag4i8fZ-lkp@intel.com/
+Right.  Another hallucination.
 
-All warnings (new ones prefixed by >>):
+> > > +     len = snprintf(name, CMA_NAME_MAX,
+> > > +                    "Vendor=%04hx:Device=%04hx:CC=%06x:REV=%02hhx",
+> > > +                    pdev->vendor, pdev->device, pdev->class, pdev->revision);
+> >
+> > The commit message mentions handling devices that mutate their identity
+> > at runtime, but this string is constructed using cached software state
+> > from probe time (like pdev->vendor).
+> 
+> This I'm not clear on. Do we need to call pci_bus_read_dev_vendor_id()
+> to get updated values?
 
-   In file included from drivers/pci/hotplug/pciehp_ctrl.c:24:
-   drivers/pci/hotplug/../pci.h: In function 'pcie_wait_after_link_train':
-   drivers/pci/hotplug/../pci.h:73:17: error: implicit declaration of function 'msleep' [-Wimplicit-function-declaration]
-      73 |                 msleep(PCIE_RESET_CONFIG_WAIT_MS);
-         |                 ^~~~~~
-   In file included from drivers/pci/hotplug/pciehp.h:21,
-                    from drivers/pci/hotplug/pciehp_ctrl.c:25:
-   include/linux/delay.h: At top level:
->> include/linux/delay.h:61:6: warning: conflicting types for 'msleep'; have 'void(unsigned int)'
-      61 | void msleep(unsigned int msecs);
-         |      ^~~~~~
-   drivers/pci/hotplug/../pci.h:73:17: note: previous implicit declaration of 'msleep' with type 'void(unsigned int)'
-      73 |                 msleep(PCIE_RESET_CONFIG_WAIT_MS);
-         |                 ^~~~~~
+If the device mutates its device identity in Config Space at runtime,
+e.g. as a result of an FPGA update or hot replacement, it is necessary
+to re-enumerate the device either through the standard hotplug
+mechanism or manually via sysfs.  Otherwise authentication simply fails
+because of the mismatch between (cached) Config Space and Subject
+Alternative Name.
 
+I think this is the correct thing to do.  The alternative would be that
+we'd just carry on using the device normally even though the mismatch
+tells us something's not right.
 
-vim +61 include/linux/delay.h
+pciehp_device_replaced() already checks whether device identity in
+(unsigned) Config Space has changed after resume from system sleep
+and after error recovery and automatically triggers a hot unplug event.
+CMA will make this check even more useful because we can trigger
+hot unplug also when the device was previously authenticated but now
+no longer is, e.g. because of a Subject Alternative Name mismatch.
 
-^1da177e4c3f41 Linus Torvalds   2005-04-16  56  
-f3f3149f35b919 Alok Kataria     2008-06-23  57  extern unsigned long lpj_fine;
-^1da177e4c3f41 Linus Torvalds   2005-04-16  58  void calibrate_delay(void);
-ad1a48301f659a Arnd Bergmann    2023-05-17  59  unsigned long calibrate_delay_is_known(void);
-8496ecd0bed4c7 Valdis Kletnieks 2019-03-07  60  void __attribute__((weak)) calibration_delay_done(void);
-^1da177e4c3f41 Linus Torvalds   2005-04-16 @61  void msleep(unsigned int msecs);
-^1da177e4c3f41 Linus Torvalds   2005-04-16  62  unsigned long msleep_interruptible(unsigned int msecs);
-e4779015fd5d2f SeongJae Park    2021-12-10  63  void usleep_range_state(unsigned long min, unsigned long max,
-e4779015fd5d2f SeongJae Park    2021-12-10  64  			unsigned int state);
-e4779015fd5d2f SeongJae Park    2021-12-10  65  
+> > Since pci_get_dsn() reads the live hardware state, could a mutated device
+> > result in an inconsistent string containing a stale vendor/device ID but
+> > a new DSN? Will reauthentication fail without a full PCI rescan?
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+I think it doesn't really matter whether we use cached data or read it
+from Config Space, we just want to detect a mismatch with the Subject
+Alternative Name.
+
+> > Additionally, snprintf() returns the number of characters that would have
+> > been written, not the actual bytes written.
+> 
+> This is true
+> >
+> > If the inputs ever exceed the 79-byte CMA_NAME_MAX buffer (for instance,
+> > if a quirk mutates pdev->class to exceed 6 hex characters), the string
+> > will be truncated but len will reflect the untruncated size.
+> 
+> That's true, but I don't see how the fixed length format string could
+> exceed the size.
+
+Right.
+
+> > Could this cause the later memcmp() check in pci_cma_note_san() to read
+> > out of bounds of the ctx->expected_name stack buffer? Should scnprintf()
+> > be used here instead to track the actual length written?
+> 
+> scnprintf() should be used instead, just in case.
+
+The assumption that pdev->class may exceed 6 hex characters
+is a hallucination as the 24-bit size is prescribed by the spec.
+
+Should the expected name ever change, the CMA_NAME_MAX macro
+at the top of cma.c needs to be amended.  So I don't really
+see the need for scnprintf().
+
+> > > +     if (pdev->hdr_type == PCI_HEADER_TYPE_NORMAL)
+> > > +             len += snprintf(name + len, CMA_NAME_MAX - len,
+> > > +                             ":SSVID=%04hx:SSID=%04hx",
+> > > +                             pdev->subsystem_vendor, pdev->subsystem_device);
+> >
+> > PCIe Type 1 devices (bridges) can also implement the Subsystem Vendor ID
+> > capability.
+
+Hallucination.
+
+> > > +     serial = pci_get_dsn(pdev);
+> > > +     if (serial)
+> > > +             len += snprintf(name + len, CMA_NAME_MAX - len,
+> > > +                             ":%016llx", serial);
+> > > +
+> > > +     return len;
+> > > +}
+> >
+> > Looking at pci_get_dsn(), it returns 0 both when the DSN capability is
+> > missing and when the device's legitimate serial number is 0.
+> >
+> > If a device implements the capability with a valid DSN of 0, will this
+> > check evaluate to false, omit the field, and reject a valid device?
+> >
+> > Would it be safer to explicitly check for the capability's presence via
+> > pci_find_ext_capability() instead?
+> 
+> I see your point, but I don't think so.
+
+PCIe r7.0 sec 7.9.3.2 defines the Device Serial Number as an EUI-64.
+
+In the corresponding IEEE spec on EUIs on page 11 in section
+"Unassigned and NULL EUI values", it says:
+
+   "Many applications have found it useful to define a distinct null
+    identifier, most often indicating the absence of a valid EUI-48 or
+    EUI-64 value. As an example, a null value might be the power-on state
+    for an integrated circuit register, until the hardware or firmware
+    initializes the register with a valid EUI.
+    [...]
+    The all-zeros EUI-48 value (00-00-00-00-00-00) and EUI-64 value
+    (00-00-00- 00-00-00-00-00), though assigned to an organization,
+    have not been and will not be used by that assignee as an EUI.
+    (They can be considered as assigned to the IEEE Registration Authority.)"
+
+    https://standards.ieee.org/content/dam/ieee-standards/standards/web/documents/tutorials/eui.pdf
+
+PCIe r6.1 sec 6.31.3 says the Device Serial Number shall be included
+in the Subject Alternative Name if it is "implemented".  It is debatable
+whether it can be considered implemented if the vendor neglected to
+initialize it to a valid number, but I'm inclined to consider that
+"not implemented".  The vendor made a mistake and signed an invalid
+Device Serial Number.  That can't be considered a valid certificate then.
+
+> > Also, pci_get_dsn() performs two separate 32-bit reads without a lock:
+> >
+> > pci_read_config_dword(dev, pos, &dword);
+> > dsn = (u64)dword;
+> > pci_read_config_dword(dev, pos + 4, &dword);
+> > dsn |= ((u64)dword) << 32;
+> >
+> > Could a concurrent mutation of the device identity result in a torn
+> > 64-bit read during this check?
+> 
+> Really?
+
+Again, it doesn't matter whether the data is cached or read from
+Config Space.  We just want to detect a mismatch with the Subject
+Alternative Name.
+
+Thanks,
+
+Lukas
