@@ -1,123 +1,130 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C0DC4279E5;
-	Thu, 14 May 2026 15:13:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43F423E1CE6;
+	Thu, 14 May 2026 15:24:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778771641; cv=none; b=hj6qd464lbsxvr56PaTmyvCJFi1VrbgoPWmkXDkydt9v49grzLKoPT8jhJK55BNu/FPFE40Fodf1xM5ju9lyH1sL/1NutK+Wa4xVg5hcaM/+fmKK5wLuaOFZOKgEMUjIsPh9kF6BV9q9U/LMFeviAsTzQawN7bjELHVrXr7dsVc=
+	t=1778772294; cv=none; b=IVNAcWNuHuAAX/sPZnw6/OxJxDy/ODGxa7p6O6BqNCFkzAlpmEHv5uY/lBMLBi/NFKEOIWo7J002wS1swh5LsTOnSoYulq8HKelBm+/DkHfuO8WNFZTcxntAxAEOfCci/CEBf8pdvlQlS5afHwV5H91MyfIzU8/rwWWHS2D+VN4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778771641; c=relaxed/simple;
-	bh=1fLj/3UDcUb4DWtfM+X9V4E1moL+DU6awV2sMe6DZv8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=o0gwtAdM8On8WhlqaUuQ8kSlzwL51xkMvIiRoQWl81kmS2wGOvrn2OiirfMMynCoIxTthXCEQTR1se/RwmnWqDSjtxC8Dv7mfnVPrVQm3OcRRvsvVSAOA37/Q0JmdjFxUCWq8qBCxTo3vlz9qivsBk17agnY+G0k/iXCHCAvHeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=H1KKMG8M; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
+	s=arc-20240116; t=1778772294; c=relaxed/simple;
+	bh=pp56e/DCHOxZ+Eut9lk+188HvenrbqBoOLsSg2cmQrA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Ie48xO3Sj9ThQNnW2lXqflut6yPWZ2Ld28F4zn7ZNjsZ6XKp6YEdJuxETfbXg4IxLTfS1tJxCYmtW/UaGmzuLonQSt6Yzwk4CVFKfmSocTX2LQ9YC0vp9vbxqqiaTmDAg5rkUMjGRu4kGt00SwoE0DUVy040KoLAHvXCsHNMW8U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I7CpSyu+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="H1KKMG8M"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 1D32C3DF7EE;
-	Thu, 14 May 2026 17:13:22 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1778771614; h=from:subject:date:message-id:to:cc:mime-version:
-	 content-transfer-encoding; bh=q+XOzO01lqse48UlRSnZqwHKzFzjG64h+3jGPYOVm1k=;
-	b=H1KKMG8Mc66rKsTOOXWAJbYTMHZSes8FuW9hFLOdOwoKTB+bCeObYamYRjLwEMCe6f0vpd
-	PzMZYeHTYlNptrWQDPBo0/wPF0MlD1fFlTO8JGQu8B8PXWQtbhIZjLv/XzLSJnPsQflJ+9
-	P90sQJDsclxOMyfRawemtGmjGrqkZFbUfOOciEgbDgRIfUpbwC5wmv3f0XJUSHlhd3EvcL
-	Eqk4MTxYt/i0BkLHEKV/NfHGKk0BrQiBxpODZqekRHe0bPGiE4DdYxN4hxF5WywGGAcY0j
-	KEDdqFLkJYOLmOG1sTdr+E85H96g4IfW8NeNVsqzyXStbaFa23/2X0qV8rM9PA==
-From: Caleb James DeLisle <cjd@cjdns.fr>
-To: linux-pci@vger.kernel.org
-Cc: linux-mips@vger.kernel.org,
-	naseefkm@gmail.com,
-	ryder.lee@mediatek.com,
-	helgaas@kernel.org,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Caleb James DeLisle <cjd@cjdns.fr>
-Subject: [PATCH v7 0/2] Add EcoNet EN7528 (and EN751221) PCIe support.
-Date: Thu, 14 May 2026 15:13:16 +0000
-Message-Id: <20260514151318.3444959-1-cjd@cjdns.fr>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I7CpSyu+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A92DC2BCB3;
+	Thu, 14 May 2026 15:24:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778772294;
+	bh=pp56e/DCHOxZ+Eut9lk+188HvenrbqBoOLsSg2cmQrA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=I7CpSyu+P0Xv1f+CwVAtXHqRkk2+3kFBG1SJBrfAI4kfjGfXc0ZsrbSOdmQaoRfIf
+	 8XA+X02uEBJTAtt85EtEM1LP7exZNpI46fEhlfsFlbhxKP57S5AO+yHTHn6EM9XTTF
+	 xeffW52S7EUxnBn2bLlQvLYkCSalCLmKdOOgVI6nVJ0Ft8H7xq0eq0fotAQbr3r2l2
+	 QyTkHkLoqw/l2Sly+MXmK1JxNcCtWWhMrX15qzkPJ022tHz5pC2n8DJ+Aq9aZ8CDmh
+	 QK/1gbinOmpMPrPyaHwXyyfaQm9G9/sqjtmARkjbuFTXpefsA3ctOPOY406Vdx5L0Z
+	 S3+DSW+jrw8ZA==
+From: Pratyush Yadav <pratyush@kernel.org>
+To: Samiullah Khawaja <skhawaja@google.com>
+Cc: Vipin Sharma <vipinsh@google.com>,  David Matlack <dmatlack@google.com>,
+  kvm@vger.kernel.org,  linux-doc@vger.kernel.org,
+  linux-kernel@vger.kernel.org,  linux-kselftest@vger.kernel.org,
+  linux-pci@vger.kernel.org,  ajayachandra@nvidia.com,  alex@shazbot.org,
+  amastro@fb.com,  ankita@nvidia.com,  apopple@nvidia.com,
+  chrisl@kernel.org,  corbet@lwn.net,  graf@amazon.com,
+  jacob.pan@linux.microsoft.com,  jgg@nvidia.com,  jgg@ziepe.ca,
+  jrhilke@google.com,  julianr@linux.ibm.com,  kevin.tian@intel.com,
+  leon@kernel.org,  leonro@nvidia.com,  lukas@wunner.de,
+  michal.winiarski@intel.com,  parav@nvidia.com,
+  pasha.tatashin@soleen.com,  praan@google.com,  pratyush@kernel.org,
+  rananta@google.com,  rientjes@google.com,  rodrigo.vivi@intel.com,
+  rppt@kernel.org,  saeedm@nvidia.com,  skhan@linuxfoundation.org,
+  vivek.kasireddy@intel.com,  witu@nvidia.com,  yanjun.zhu@linux.dev,
+  yi.l.liu@intel.com
+Subject: Re: [PATCH v4 02/16] vfio/pci: Preserve vfio-pci device files
+ across Live Update
+In-Reply-To: <agT9bYpXskVwW0E_@google.com> (Samiullah Khawaja's message of
+	"Wed, 13 May 2026 22:42:56 +0000")
+References: <20260511234802.2280368-1-vipinsh@google.com>
+	<20260511234802.2280368-3-vipinsh@google.com>
+	<CALzav=fR8c2tYj9jeOc_K=xoupxAfWMHmk0ipDniSXg6uGiFYA@mail.gmail.com>
+	<20260512211412.GA2819150.vipinsh@google.com>
+	<agT9bYpXskVwW0E_@google.com>
+Date: Thu, 14 May 2026 17:24:46 +0200
+Message-ID: <2vxzcxyy9fpd.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Changes from v6:
-* s/reset/resets/ in .yaml
-* s/re-train/retrain/g
-* s/Root bridge/Root port/
-* If module not builtin, log at mtk_pcie_startup_port_en7528()
-* Do not fail if error in mtk_pcie_retrain()
-* v6: https://lore.kernel.org/linux-mips/20260513191652.3200607-1-cjd@cjdns.fr
+On Wed, May 13 2026, Samiullah Khawaja wrote:
 
-Changes from v5:
-* s/errno-base.h/errno.h/
-* Breakout mtk_pcie_retrain() into a function
-* Use for_each_pci_bridge() to find root bridge
-* v5: https://lore.kernel.org/linux-mips/20260413140339.16238-1-cjd@cjdns.fr/
+> On Tue, May 12, 2026 at 02:29:19PM -0700, Vipin Sharma wrote:
+>>On Tue, May 12, 2026 at 01:59:51PM -0700, David Matlack wrote:
+>>> On Mon, May 11, 2026 at 4:48=E2=80=AFPM Vipin Sharma <vipinsh@google.co=
+m> wrote:
+>>>
+>>> > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+>>> > index c12d614fc6c4..019de053f116 100644
+>>> > --- a/drivers/vfio/pci/Kconfig
+>>> > +++ b/drivers/vfio/pci/Kconfig
+>>> > @@ -45,13 +45,15 @@ config VFIO_PCI_IGD
+>>> >
+>>> >  config VFIO_PCI_LIVEUPDATE
+>>> >         bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
+>>> > -       depends on PCI_LIVEUPDATE
+>>> > +       depends on PCI_LIVEUPDATE && VFIO_DEVICE_CDEV
+>>> >         help
+>>> >           Support for preserving devices bound to vfio-pci across a L=
+ive
+>>> >           Update. This option should only be enabled by developers wo=
+rking on
+>>> >           implementing this support. Once enough support has landed i=
+n the
+>>> >           kernel, this option will no longer be marked EXPERIMENTAL.
+>>> >
+>>> > +         Enabling this will disable support for VFIO PCI DMA buffer.
+>>> > +
+>>> >           If you don't know what to do here, say N.
+>>> >
+>>> >  endif
+>>> > @@ -68,7 +70,7 @@ config VFIO_PCI_ZDEV_KVM
+>>> >           To enable s390x KVM vfio-pci extensions, say Y.
+>>> >
+>>> >  config VFIO_PCI_DMABUF
+>>> > -       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
+>>> > +       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFE=
+R && !VFIO_PCI_LIVEUPDATE
+>>>
+>>> Why does enabling VFIO_PCI_LIVEUPDATE require disabling
+>>> VFIO_PCI_DMABUF? I saw the cover letter says "to keep things simple",
+>>> but what specific problem does this solve or simplify?
+>>
+>>I should have provided more details there.
+>>
+>>When device is getting reset in vfio_pci_liveupdate_freeze(), we are
+>>zapping userspace mapped bars, we also need to use
+>>vfio_pci_dma_buf_move() to revoke dma buffer access or
+>>vfio_pci_dma_buf_cleanup() combination. Cleanup takes the memory lock
+>>which freeze already takes, and there are some refcounts which are
+>>managed in both of these APIs. This was causing complexities with code
+>>flow based on result of pci_load_saved_state(). All this was adding more
+>>refactoring than I wanted in the series.
+>
+> Maybe we can return -EOPNOTSUPP if any dmabufs for this vfio cdev are
+> exported during preserve?
 
-Changes from v4:
-* Fixed missing Acked-by
-* Rebased to commit 66672af7a095 ("Add linux-next specific files for 20260410")
-* v4: https://lore.kernel.org/linux-mips/20260404182854.2183651-1-cjd@cjdns.fr/
+Whichever way you go with, a TODO/comment would be nice to have so
+someone (including future you) looking at this code knows why this
+restriction exists.
 
-Changes from v3:
-* s/initiallized/initialized/
-* Use PCIE_T_PVPERL_MS for sleep time
-* Use PCI_PM_D3COLD_WAIT for startup wait time
-* Clarify comment "Activate INTx interrupts"
-* Add MTK_PCIE_RETRAIN quirk for devices which require link re-train
-* Do not retrain *all* bridges, only root bridge
-* Better comments and logging in retraining logic
-* v3: https://lore.kernel.org/linux-mips/20260320094212.696671-1-cjd@cjdns.fr/
-
-Changes from v2:
-* mediatek-pcie.yaml -> s/power-domain/power-domains/ and drop example
-* Patch 3 dropped as it has been applied (Thanks!)
-* v2: https://lore.kernel.org/linux-mips/20260316155157.679533-1-cjd@cjdns.fr/
-
-Changes from v1:
-* mediatek-pcie.yaml slot0 needs device-type = "pci", fix dt_binding_check
-Link: https://lore.kernel.org/linux-mips/177334026016.3889069.9474337544951486443.robh@kernel.org
-* v1: https://lore.kernel.org/linux-mips/20260312165332.569772-1-cjd@cjdns.fr/
-
-This was split from a larger PCIe patchset which crossed multiple
-subsystems. I'm not labeling this a v3 because it's a new patchset, but
-I'm keeping the historical record anyway.
-
-Changes from econet-pcie v2:
-* mediatek-pcie.yaml add missing constraints to PCI node properties
-* econet-pcie v2: https://lore.kernel.org/linux-mips/20260309131818.74467-1-cjd@cjdns.fr
-
-Changes from econet-pcie v1:
-* pcie-mediatek.c Exclude pcie_retrain_link() when building as a module
-* econet-pcie v1: https://lore.kernel.org/linux-mips/20260303190948.694783-1-cjd@cjdns.fr/
-
-Caleb James DeLisle (2):
-  dt-bindings: PCI: mediatek: Add support for EcoNet EN7528
-  PCI: mediatek: Add support for EcoNet EN7528 SoC
-
- .../bindings/pci/mediatek-pcie.yaml           |  26 +++
- drivers/pci/controller/Kconfig                |   2 +-
- drivers/pci/controller/pcie-mediatek.c        | 155 ++++++++++++++++++
- 3 files changed, 182 insertions(+), 1 deletion(-)
-
-
-base-commit: e98d21c170b01ddef366f023bbfcf6b31509fa83
--- 
-2.39.5
-
+--=20
+Regards,
+Pratyush Yadav
