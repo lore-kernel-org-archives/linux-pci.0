@@ -1,183 +1,145 @@
-Received: from mail-dy1-f174.google.com (mail-dy1-f174.google.com [74.125.82.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643F4232395
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 01:13:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA7DD199FAB;
+	Thu, 14 May 2026 01:16:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778721186; cv=none; b=qt1LaZT/oI6tZ/ndOp5bGRxUMXu5JTqTYqpyCYD9Yp0S9eVGzjJSilGlm/Y0ywR4VEe/58jATnomkHwG50WeRLehgKPkKECgr7siejXWUJx+IgUPNkHdEVvCZWYH9dEbUlq3F08Y8YYKgQqvdM/YYBdhh6RU7VJyadltDlC1K8I=
+	t=1778721381; cv=none; b=QogNnEmwoOq4pa2LhUL+iKw5JBkp61htkM6KmVyPUnBau2/asC52Fo162josYnNcxIFWyJaLPxLM4hnMjuDIk4NctGOX9CpetwTei/yjkh9cTJvd4ao1JwRtrQkS0M5BC3MjX8d0mdPIRitGgLRoqlkJvnu8WNqR192RM+nMbAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778721186; c=relaxed/simple;
-	bh=h5sRpSvv5ewpxrWmSf4c1Mm5BU2vq2QQAQuHblNbf8g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pd2ewf0RwgW4AhibXrlBpsFPhM6mpC1YA/auJHuPIckFv1UQxDPmpp/6YuzfoviYwx36J/S4Y3mfgaHhCGqYSW1/dw/e0xGuZFo2lVJCkxP3nGjTvnoYj2CH7HNldNQkatEUrRsz8FWTzAcylhUCF7ETwjkd79dR3184naRiwS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e1JgTdI3; arc=none smtp.client-ip=74.125.82.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778721381; c=relaxed/simple;
+	bh=3T4/l0cYcsvO43u+Nr4UWLZS9aaPPniMiBrtIhuG2Zk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=AdXfGCCeLBjaYa8xglK3Rm8aDe0DD2xmVvv1D92EarRgPk09WhVE+PfmD/rnFgBz159YISju/nmbhAh7+5ke8sWv5ZiCWq6XvQbS5duNcCm/7FOSDAvFXL7GsLt61ddEiv/Fm2hGCH8EC+pBL5k8Uuq/k2otcFIdbF+ERfH+oUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=slLnwpqD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e1JgTdI3"
-Received: by mail-dy1-f174.google.com with SMTP id 5a478bee46e88-2f33ae12f97so2704632eec.1
-        for <linux-pci@vger.kernel.org>; Wed, 13 May 2026 18:13:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778721184; x=1779325984; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=zLByGVIEiJruERfsAKZLAy9/W44wFfK1yKm81wN6g8Y=;
-        b=e1JgTdI3TKnXYL6DbAHENnt8z/FPlB3D1AfFSsVWHZ0DoRGzvcCTkVOmEnjZMADmFx
-         nkgKwN6Ahpf/Js41MmLqxl7FpttseXfHTUvSDIKb2yYmL2rVSKqfFzspOPUcuqamJ0Gj
-         n+imAlWliZL7xJmoA12q0Z4qt1yIbv+mktLV/zqUQaL1gZEJQeBKXcV3ISjvxzzFJS5X
-         FLapCXMz0a+aIiR3MjX0TftxDiDxEVLs8l+FwIdJmGG7IPS4BcAnvQ2wR4MixkmbLi1P
-         eH4KphyZRC9gE2yXYRTkPl5xEiOuBP3S5AoHlrCweLY0gr2ksyIdKZp8uqP4nRil6pyv
-         V4fA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778721184; x=1779325984;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zLByGVIEiJruERfsAKZLAy9/W44wFfK1yKm81wN6g8Y=;
-        b=nB4sBO9HZbstC2Fo0b2F+9w/JzMJDOLaxuJrWircnN+/dDr720V843anrVO/aSbmMU
-         Uf04sUHS+p3w2SmpcJK7nxsD8WgskPzbifqp8dyf1RH8dIsWSDevknlVPurft0SeZ1NP
-         NfQ4CdaOi0yBai0oVlW9bmOJo1gVylKK9VRkcaEc8bcX7fIjIDaLS32cig3+V2Sq9LVw
-         fsU3zOotRPWa44/UF39EVf/0Vg+3JJNM2T6aA3ALX3XNOPy9vudSNdp9ZBCC36HnMu61
-         mXknt2rbIFzZcMvrVAqaLBzOb6O+s8XcZ27Cogi35BQAQgX7Hb8dhZ6t38v1ZRid62cQ
-         pxkQ==
-X-Gm-Message-State: AOJu0YyxPoavDMM70xpQAbNZgVkZOEHFIKDAgg4KJ1h+jkklM32fb50I
-	AvQwoiXwsejpUn0oj4j5r+LJ3EOCbT8NtvkeadBkGHZLX3VHcW/HoExj
-X-Gm-Gg: Acq92OHcGZiBWdgVQHhTDXTX5x2sESqYhLQwMKLbklw8ceQn1+dmG7P6hmu88eIMo2Y
-	d8P2igvjmCDz+cJiITI/Ghf2M+9DeYLcfb3F7B5W08px0IOgCdYigTvhYZnUVzl7R++fxIOQp92
-	QMVChQqXGeL9mqsVxnT2p/3qkKByVcxKq9XZaaAh1fMUUNnuEUvnaQQO9aYTBsUqOcH64m8MG6Z
-	h/Fsiv7RDpWMhcVgrXVe5BfLPH8lYCS3lvwpx6bA3HET+ipU0rHoC42WBsxbY3szOZfrY+2yqI8
-	Hj4U3Rsmz+cERzt1Du1IpOacSAwH3cBwD1SdFykqSRVhx0EUB4ZNp5ft8MyLCgZBNsNQcSNx7Ev
-	8rMVMPB15Zbi236lwgyTSyjNi5LcnYyjuxL4Usa/sz+/YT0PSKX4h8OJpungbqIdaenqZoun8RE
-	dEB9VD3dhiikpJlh2QvXOuUO5LuftOSTm2y6ebW8JcKFqLdSYtAy4QDdYGMBCT9eUowfOPFO9D
-X-Received: by 2002:a05:7300:e430:b0:2e7:c701:aa85 with SMTP id 5a478bee46e88-30118e9ffb4mr3730892eec.17.1778721184397;
-        Wed, 13 May 2026 18:13:04 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30296dcb6adsm1338240eec.15.2026.05.13.18.13.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 May 2026 18:13:03 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <831850c4-af36-4323-87f0-3add11da9583@roeck-us.net>
-Date: Wed, 13 May 2026 18:13:02 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="slLnwpqD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 065FDC19425;
+	Thu, 14 May 2026 01:16:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778721381;
+	bh=3T4/l0cYcsvO43u+Nr4UWLZS9aaPPniMiBrtIhuG2Zk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=slLnwpqDAuifXWl50CVAEz85b8gjXuXA3eEV0RMXaoF7f3W0RQfRwVBYHBPBdLYSl
+	 8de0kYgqB7Gg/VWfJImW7lXSNKw8qDr7tenRCrSFbChbuOV3CVEwRWxD+1/zF+k4kH
+	 Awy5uWgh67GfqlEhEsO209odkjPzaXVY1/xZUOQKgZ/didqe43PRj7/rwM44sWD9bC
+	 ddwWOFIbrmfIIOw1PNORAeT9VsewlQV/3C9tRCJeXBUX9M6ikEmz/wq9LRq/hhzuMw
+	 hvTqijyVCca8uGS5tb23SMKnzzpDep1vEvrANJz/osbWB3jo+4uH++N9BYHvhMOlfT
+	 bFX7L0Genh8hw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 7/9] nvmet: pci-epf: Use
+ dmaengine_prep_config_single_safe() API
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Frank Li" <Frank.Li@nxp.com>
+Cc: vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, imx@lists.linux.dev, dmaengine@vger.kernel.org
+In-Reply-To: <20260512-dma_prep_config-v5-7-26865bf7d935@nxp.com>
+References: <20260512-dma_prep_config-v5-7-26865bf7d935@nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 14 May 2026 01:16:20 +0000
+Message-Id: <20260514011621.065FDC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/2] hwmon: add AMD Promontory 21 xHCI temperature
- sensor support
-To: sashiko-reviews@lists.linux.dev, Jihong Min <hurryman2212@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-hwmon@vger.kernel.org
-References: <20260512213910.871859-3-hurryman2212@gmail.com>
- <20260514010045.D9B52C19425@smtp.kernel.org>
-Content-Language: en-US
-From: Guenter Roeck <linux@roeck-us.net>
-Autocrypt: addr=linux@roeck-us.net; keydata=
- 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
- np3900V20aS7eD9K8GTU0TGC1pyz6IVJwIE=
-In-Reply-To: <20260514010045.D9B52C19425@smtp.kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 5/13/26 18:00, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Using readb() on a 32-bit PCIe MMIO vendor data register may cause unsupported request faults.
-> --
-> 
-> commit 9f079250f98377be1d241f6f3c08a14ae44d8785
-> Author: Jihong Min <hurryman2212@gmail.com>
-> 
-> hwmon: add AMD Promontory 21 xHCI temperature sensor support
-> 
-> Add an auxiliary-bus hwmon driver for the temperature sensor exposed by
-> AMD Promontory 21 (PROM21) xHCI PCI functions.
-> 
->> diff --git a/drivers/hwmon/prom21-xhci.c b/drivers/hwmon/prom21-xhci.c
->> new file mode 100644
->> index 0000000000000..7124824a1f5ed
->> --- /dev/null
->> +++ b/drivers/hwmon/prom21-xhci.c
-> 
-> [ ... ]
-> 
->> +static int prom21_xhci_read_temp_raw_restore_index(struct prom21_xhci *hwmon,
->> +						   u8 *raw)
->> +{
->> +	struct device *dev = &hwmon->pdev->dev;
->> +	u32 index;
->> +	u8 data;
->> +	int ret;
->> +
->> +	ret = prom21_xhci_pm_get(hwmon);
->> +	if (ret)
->> +		return ret;
->> +
->> +	index = readl(hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
->> +	/* Select the PROM21 temperature register through the vendor index. */
->> +	writel(PROM21_XHCI_TEMP_SELECTOR,
->> +	       hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
->> +	data = readb(hwmon->regs + PROM21_XHCI_DATA_OFFSET);
-> 
-> Is it safe to use readb() on this 32-bit PCIe MMIO vendor data register?
-> 
-> Many PCIe controllers and peripheral MMIO implementations strictly require
-> 32-bit transactions. Issuing an 8-bit read can result in a PCIe unsupported
-> request, which may return 0xff or trigger a fatal PCIe error.
-> 
-> Could this instead use readl() and mask out the lowest 8 bits?
-> 
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Removing the DMA serialization mutex causes severe CPU starvation,=
+ spurious timeouts, and cascading DMA transfer aborts.
+- [Low] Unused local variable triggers a compiler warning and leaves dead m=
+utexes in the device structure.
+--
 
-Good question. Any reason for using readb() instead of readl() ?
+commit 4b68a703ef44d7ed4b6b20d869ad94bab23d5076
+Author: Frank Li <Frank.Li@nxp.com>
 
-Thanks,
-Guenter
+nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
 
->> +	/* Restore the previous vendor index register value. */
->> +	writel(index, hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
->> +	readl(hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
-> 
+This commit uses the new dmaengine_prep_config_single_safe() API to combine
+DMA configuration and descriptor preparation into a single call. It also
+removes the mutex that was previously used in the DMA transfer path.
 
+> Since dmaengine_prep_config_single_safe() performs the configuration and
+> preparation atomically and the mutex can be removed.
+
+Is this description entirely accurate?
+
+While the configuration and preparation might now be atomic, the mutex also
+strictly serialized the DMA transaction pipeline.
+
+> diff --git a/drivers/nvme/target/pci-epf.c b/drivers/nvme/target/pci-epf.c
+> index 2afe8f4d0e461..04d8f48d69503 100644
+> --- a/drivers/nvme/target/pci-epf.c
+> +++ b/drivers/nvme/target/pci-epf.c
+> @@ -388,22 +388,15 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_=
+pci_epf *nvme_epf,
+>  		return -EINVAL;
+>  	}
+> =20
+> -	mutex_lock(lock);
+
+Does removing this mutex introduce concurrency regressions with the shared =
+DMA
+channel during the wait phase?
+
+With the mutex removed, multiple concurrent NVMe worker threads can submit
+transfers to the same channel. Since dma_sync_wait() busy-waits using
+cpu_relax(), could multiple threads spinning simultaneously lead to severe =
+CPU
+starvation?
+
+Additionally, dma_sync_wait() has a hardcoded 5-second timeout computed at
+entry. If concurrent transfers queue up, could later transfers spuriously
+time out while waiting for earlier ones to finish in hardware?
+
+If a spurious timeout occurs, the error path further down calls
+dmaengine_terminate_sync(chan). Does this unconditionally abort all active
+and pending transfers on the shared channel, potentially causing cascading
+data transfer failures?
+
+Could unbounded concurrent submissions also exhaust the DMA channel's
+fixed-size descriptor pool under load?
+
+> -
+>  	dma_dev =3D dmaengine_get_dma_device(chan);
+>  	dma_addr =3D dma_map_single(dma_dev, seg->buf, seg->length, dir);
+>  	ret =3D dma_mapping_error(dma_dev, dma_addr);
+>  	if (ret)
+> -		goto unlock;
+> -
+> -	ret =3D dmaengine_slave_config(chan, &sconf);
+> -	if (ret) {
+> -		dev_err(dev, "Failed to configure DMA channel\n");
+> -		goto unmap;
+> -	}
+> +		return ret;
+
+[ ... ]
+
+> @@ -426,9 +419,6 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_pc=
+i_epf *nvme_epf,
+>  unmap:
+>  	dma_unmap_single(dma_dev, dma_addr, seg->length, dir);
+> =20
+> -unlock:
+> -	mutex_unlock(lock);
+> -
+>  	return ret;
+>  }
+
+This isn't a bug, but does leaving the local lock variable and its assignme=
+nts
+in the preceding switch statement trigger a -Wunused-but-set-variable compi=
+ler
+warning?
+
+Also, since dma_rx_lock and dma_tx_lock in struct nvmet_pci_epf are no
+longer used anywhere else, should they be removed from the structure to avo=
+id
+leaving dead code?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512-dma_prep_c=
+onfig-v5-0-26865bf7d935@nxp.com?part=3D7
