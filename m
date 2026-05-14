@@ -1,177 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F3FF36A349;
-	Thu, 14 May 2026 11:35:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 647DB394497;
+	Thu, 14 May 2026 11:48:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778758515; cv=none; b=B+uUIsh4cTvvO/ttyoCiS9XgDH6VRboQuOUKkvS/tOC7PPOS4Uf6xlF0bZQZh+BKw+I4P70FA/Z4iYlamkRovZ1xnY9g/mCGkKAQ8QaiYGcpy8ifTZQs0J6F6njx9zjdyLzBSflDW7MkcD2bdeKchzUfLzum+P2bZnZuyP1EPIA=
+	t=1778759303; cv=none; b=Roa05BX1mlY5GdjhEU0SX9PyL/5TrsdihWlIsEkrUmPfOKq+tCMBXieK/DjfSs4Jzden9SVwZX2mkp3FMV4dQwLiAcbFCzPc8L8m8rVcKTJB6KHf41NNGOEo4H2dPByENnWOdzYiaDOWGtfmX2N8X0M773uiqTTMdcyv29lXYDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778758515; c=relaxed/simple;
-	bh=nR1W5quuMzbgSWhodreIJr6oCScftENTAMR9uGrNBns=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hhNYVa4TDZZNuSMgXYe+9JKeAf7WfYjOHcc26q9xqK7AEbVe6HWPYQtign3y/wnZbw4F1kcoNcVc5r6Nro8fdPY540rycrLsQclmthmFGrZ4vlUdPyXAuWYocfbOC7DZM1jBfRmd02epr4mnYLWoZpXoMtxZH4a5UKCT01/E1bk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GSo8bNnu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778759303; c=relaxed/simple;
+	bh=Tik/ttiPEf3boJrncLYTc95FREntdpzwwu/j1xZKytg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=a09INwfVpw0/dvNfRrsexyUuEAiAGslWxhKyFwyP7GGU88UD4uR4NtoB7ywmowqYJfYMhhhTbSNWs9UJ3xY9LIUFCcVZpMAxwBA2QT6J+/oUfQ8M9wQ2k0fTGyApsIAd8IX4LXKq+rbk5CDRFV6oc2LiPA+zQ1FUSK3gsro1pCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iD/M1vNH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GSo8bNnu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15297C2BCB3;
-	Thu, 14 May 2026 11:35:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iD/M1vNH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72C81C2BCB3;
+	Thu, 14 May 2026 11:48:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778758514;
-	bh=nR1W5quuMzbgSWhodreIJr6oCScftENTAMR9uGrNBns=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=GSo8bNnuWrYdFDysbeLdJLOKJoN9zm0A2JMtsyjfmGyc6i54/xPGcFnc2pYV4BhAY
-	 rmKvgsJfMC/XUfGj4/tqCyIj4jeEX/NjVG+Z0xXK2cCgAqL90Y+op7dVNT0wxzEmrG
-	 aeHv6pvNCdnxslcQPesj6UYv6DULAMNETDItNAe67NIHvqSaHhKKkiOBkJ9RU3B0UO
-	 VHnZ80kYRI1oM1CMdo0Rhfj2NASPPC6wtUyb3/IVJxtf7G0yihouIEwn5CwRx9P3Wg
-	 CbSA/Wk0OiiUMG3e0sT6pionmEcR4njCNlfjBF41ANTVZRIM5CkV91iY6tGkfLsYp8
-	 OPev0IRkzal/A==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Caleb James DeLisle" <cjd@cjdns.fr>
-Cc: krzk+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260513191652.3200607-3-cjd@cjdns.fr>
-References: <20260513191652.3200607-3-cjd@cjdns.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 14 May 2026 11:35:13 +0000
-Message-Id: <20260514113514.15297C2BCB3@smtp.kernel.org>
+	s=k20201202; t=1778759303;
+	bh=Tik/ttiPEf3boJrncLYTc95FREntdpzwwu/j1xZKytg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=iD/M1vNHVKXp0H/ZB8IuDyYPotjiQCAOb3xe/kYJbrjn35JYYdNfHRF7PJaltT272
+	 yf9JsfZ6If/Xw2mQpGpK+HRQsAyhCxe91Vv5R/8G50T+low5zJ5dn7iYyNo3ulUs5F
+	 oxsyYObrfOdLUulzPoIgTEdGIl7WIwQ04I4x6TMXJ1zQ/3qMqEB5bjvUcCME/If49/
+	 FdBzMFGrbN+W1YYgGe82cs/GNm48y7EUOsfYtg7oO62GVxiT1kwbZ3ryb6cdqYFP5t
+	 9qZfcckHmZyWP6LSa3yM/pTqo80poAJtY2ylSEvDEmgv0HOlAz9o7r3znVlmCILXmx
+	 EFnVAZc3zjM5A==
+Date: Thu, 14 May 2026 17:18:14 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: PCI: mediatek-gen3: Allow memory-region for
+ restricted DMA buffer
+Message-ID: <qnikqcqoiw7z2yh5wruqcli3rk56yomyymghzivlcmekp2blwc@dfhsfl3sqcla>
+References: <20260508063633.3894348-1-wenst@chromium.org>
+ <locoul5wdzuvvmm7mqpuntjqu4o75gmyd5npgfqrw3zuwsrse6@dhrjggs4cihh>
+ <CAGXv+5GAaMQbaoUVr5zcwtHaofyXwHz03TxBe-QyWj_sNoQZsg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAGXv+5GAaMQbaoUVr5zcwtHaofyXwHz03TxBe-QyWj_sNoQZsg@mail.gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
-s) to consider:
-- [High] Use-after-free on probe error path due to missing pci_remove_root_=
-bus().
-- [High] Hardware is exposed to endpoint drivers before link retraining com=
-pletes, causing MMIO failures.
-- [High] mtk_pcie_retrain() only retrains the first root port, ignoring oth=
-ers.
-- [Medium] Data race and potential use-after-free due to unprotected iterat=
-ion of the PCI bus list.
-- [Medium] Truncation of 64-bit resource_size_t in fls() causes incorrect A=
-XI window size calculation.
-- [Medium] Silent feature degradation when the driver is compiled as a load=
-able module.
---
+On Thu, May 14, 2026 at 03:54:29PM +0800, Chen-Yu Tsai wrote:
+> On Thu, May 14, 2026 at 1:23 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Fri, May 08, 2026 at 02:36:32PM +0800, Chen-Yu Tsai wrote:
+> > > On some SoCs without an IOMMU behind the PCIe controller, the PCIe
+> > > controller memory access could be limited to a small region by the
+> > > firmware configuring a memory protection unit. This memory region
+> > > must be assigned to the PCIe controller so that the OS knows to
+> > > use that region. Otherwise PCIe devices would not work properly.
+> > >
+> >
+> > So this means, the PCIe devices can only access a specific carveout memory
+> > configured by MPU for DMA? If so, you should use 'dma-ranges' as suggested by
+> > Rob.
+> >
+> > 'memory-region' also serves the purpose, but for PCI, we have the dedicated
+> > 'dma-ranges' property.
+> 
+> I think I need some sort of guide on writing the 'dma-ranges' property,
+> because it is not working for me.
+> 
+> I'm adding
+> 
+>     dma-ranges = <0x42000000 0 0x00000000 0 0xc0000000 0 0x4000000>;
+> 
 
-commit 940197600e9e8eb5cb8f108830edfaee6eeb6d16
-Author: Caleb James DeLisle <cjd@cjdns.fr>
+So the device DMA address start from 0x0? Isn't it a 1:1 mapping?
 
-PCI: mediatek: Add support for EcoNet EN7528 SoC
+	dma-ranges = <0x42000000 0 0xc0000000 0 0xc0000000 0 0x4000000>;
 
-This commit adds support for the PCIe controller on the EcoNet EN7528 and
-EN751221 SoCs. It includes logic to re-train Gen2 capable ports that
-initially start at Gen1 speeds.
+- Mani
 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/control=
-ler/pcie-mediatek.c
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-[ ... ]
-> @@ -753,6 +764,132 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie=
-_port *port)
->  	return 0;
->  }
-> =20
-> +static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
-> +{
-[ ... ]
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		mtk_pcie_enable_msi(port);
-> +
-> +	/* Set AHB to PCIe translation windows */
-> +	val =3D lower_32_bits(mem->start) |
-> +	      AHB2PCIE_SIZE(fls(resource_size(mem)));
-
-Does passing resource_size(mem) to fls() risk truncating 64-bit values?
-Since resource_size_t can be a 64-bit integer and fls() expects a 32-bit
-unsigned int, an exact 4GB window (0x100000000) or larger could truncate
-to 0, leading to an incorrect translation window size. Should this use
-fls64() instead?
-
-> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-[ ... ]
-> +static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *=
-host)
-> +{
-> +	struct pci_dev *rp;
-> +	int ret =3D -ENOENT;
-> +	u16 lnksta =3D 0;
-> +	u32 speed;
-> +
-> +	for_each_pci_bridge(rp, host->bus) {
-> +		if (pci_pcie_type(rp) =3D=3D PCI_EXP_TYPE_ROOT_PORT)
-> +			goto found_port;
-> +	}
-
-By jumping to found_port immediately upon finding the first root port, does
-this skip retraining for any subsequent ports (like RC1 on the EN7528)? The
-commit message mentions it is most convenient to re-train every port after
-startup.
-
-Also, is it safe to iterate host->bus->devices via for_each_pci_bridge()
-and use the rp device pointer without holding down_read(&pci_bus_sem) or
-taking a reference via pci_dev_get()? Since this function runs after
-pci_host_probe() finishes, could the device list change concurrently?
-
-> +
-> +	/* Should not happen */
-> +	return dev_err_probe(dev, ret, "root bridge not found\n");
-> +
-> +found_port:
-> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK)) {
-> +		/* Let it go because the device will work as Gen1 */
-> +		dev_warn(dev, "module must be built-in to retrain to Gen2\n");
-> +		return 0;
-> +	}
-> +
-> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
-> +	ret =3D pcie_retrain_link(rp, true);
-> +#endif
-
-If the driver is built as a loadable module, this skips link retraining and
-silently leaves the hardware operating at Gen1 speeds. Is there a way to
-achieve consistent hardware capabilities regardless of the build
-configuration without relying on IS_BUILTIN checks?
-
-> +
-> +	if (ret)
-> +		return dev_err_probe(dev, ret, "failed to retrain port\n");
-[ ... ]
-> @@ -1149,6 +1286,11 @@ static int mtk_pcie_probe(struct platform_device *=
-pdev)
->  	err =3D pci_host_probe(host);
->  	if (err)
->  		goto put_resources;
-> =20
-> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN)
-> +		err =3D mtk_pcie_retrain(dev, host);
-> +	if (err)
-> +		goto put_resources;
-> +
->  	return 0;
-> =20
->  put_resources:
-
-Since mtk_pcie_retrain() is called after pci_host_probe() returns, are the
-devices exposed to endpoint drivers before the link retraining completes?
-
-If endpoint drivers are actively probing and communicating with the hardware
-via MMIO while the link is forced into the Recovery state, could this cause
-transactions to fail or timeout?
-
-Additionally, if mtk_pcie_retrain() fails, the code jumps to put_resources
-and returns an error. This causes devres to free the host bridge memory.
-However, since pci_host_probe() already fully registered the PCI root bus
-and its child devices, does this error path leave dangling references in the
-PCI subsystem by failing to call pci_stop_root_bus() and
-pci_remove_root_bus() before freeing resources?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260513191652.3200=
-607-1-cjd@cjdns.fr?part=3D2
+-- 
+மணிவண்ணன் சதாசிவம்
