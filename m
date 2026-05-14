@@ -1,110 +1,312 @@
-Received: from outbound.mr.icloud.com (mr-2001f-snip4-7.eps.apple.com [57.103.68.60])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEABF3FA5F5
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 14:29:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.68.60
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AD4B3112AD;
+	Thu, 14 May 2026 15:13:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778768984; cv=none; b=Pe9sXuWbnSCGBQFSk7gtRiBsY5H8ntPQmjE2c53i0XRRQji9FjR9toQnYVeYRMQO+c96y7XECVOVa6I1vpT0hS4iRifzVPBEcEzzfHsY6CIGCsOMTb/rWbxcoN6ZkuzMnpmcMIQ3ImDMoTiHL/rlJ9HjiEeotte7zIJrbjBTT+s=
+	t=1778771639; cv=none; b=VHpPbut8SvJnEFcZp3Sq43pr5NiyZ0GRYI30Y+m9HQuYfh8S7EvJGNUin9xJk85Q51O7i+RxnRnlx8AMxnIE8gzsy/3wNyEN3JRTQJbQDAO341L2Dl3/5PWwKw+fhHOU2wzRIqlsWgGRHKFcyBfRGuexLheUiuYCmuts4yOxEp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778768984; c=relaxed/simple;
-	bh=apfiA1cyuebfnJCwwK+v2w0GMpzMc1iTPf97Sc3qVZg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZxPK5PZJ8iUf+Tu6oYlL2d4BrDoQYOiTEErPnpl3yc9S+F27SpGMtX63O2g3d26a3/SZBYiOL7Lerw2LDU3YG3AKbMpcXG5s9KpOZPBLy3ReplDZ1187ZGRB9eZTLHXYC08uczEdBXmWrSX0Ls6XapVZ19aco+9T2ZVeO4SgccQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=j6DBgwRx; arc=none smtp.client-ip=57.103.68.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1778771639; c=relaxed/simple;
+	bh=2vxVWbCEFhroNy6FC1SCInMlHyLocFTO0lIu7nTbaV8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=dvbOK2zG0E00T4h5FY6NvqQSbLV7UFlBt5apjOvu4Gqh5Ns3fjyX7vxCXugMvzzs54pegGngPQ2Km9GsMYNAzstBPsfgiiVVRQdUW5u6ygpMCm+YIi8UG03kY5SXqt/EcrfLqA++WslgyI6mFhLkKHoSbFltg7iqPX9D/9JGkMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=d7HHbXcB; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="j6DBgwRx"
-Received: from outbound.mr.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-west-2a-100-percent-3 (Postfix) with ESMTPS id 646211800136;
-	Thu, 14 May 2026 14:29:41 +0000 (UTC)
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhJC0MCWBxCCUAdXA9cEhVdRVsYRRlLHVgWAV8GWXIZWhRcGFNFUR9UWFUJCgNHAksBXgxZWQBBCzhaDlsERxQXG1wAFxlRTQxYWwhbBA8fTAxRAkIFVl5UCh0EVAddBV1WUAJaS0IES0VoXAVcHEAXSB1faktWFAQRUAFYHlZeWhdeTVoCVk0FSQJaBA0HEwxVUloDWx9EDU0LQA8OAkgUSlBZBVxTRwlMAV0AK1sTVRdGCRkIXR0HWEcURw4PGVoUXBhT
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778768982; x=1781360982; bh=xdOFhRK+BndMXFoccb5KRWPPSr0SfUNYq4YCKjDeRD0=; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:x-icloud-hme; b=j6DBgwRxhwc6NsD8oQyOTekj7woRqNM6895kDcQ0X3QAetQDeQ4WWFYa/yfqbTZESyfCvPoFXC1PvJJg33VH4md8GTnHJ5DBQ7FtyK4XeF1smkxOXen+5sRamwJx98T1Bh839/f9353tiKLU0KoaEreaxR7MBNjq/9zsH6HyYodLtJungsBs67MTnpadyfagbHdnEm421Dvb29Bp3JDr00vPzFibRY2UNpIRb/PFpshKh+cq4muM8sQ8q8LEMMFLEW41fc3l442a6iLX3qWHY+yFl+O+5LH+BoPcjhdBTNzQ44NyDvxjx2mxxqODImnKRapy1ZLtmVhk98UuWHeKXQ==
-Received: from [192.168.89.3] (unknown [17.57.152.38])
-	by p00-icloudmta-asmtp-us-west-2a-100-percent-3 (Postfix) with ESMTPSA id 0540218006C9;
-	Thu, 14 May 2026 14:29:39 +0000 (UTC)
-Message-ID: <1173f5c5-a740-4458-8e08-2c427a704207@icloud.com>
-Date: Thu, 14 May 2026 23:29:36 +0900
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="d7HHbXcB"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id D85A43DF5A3;
+	Thu, 14 May 2026 17:13:39 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1778771623; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=5YiLLvhj0LrC++mIg5Uun2rSHvq7Hc6ZeS3hm3nXW+Y=;
+	b=d7HHbXcB4McBS/Q5wYwNAAxQ1pUntqKIFzhq0itPi7avZcI6So+ZQlOSqGTSq1BlH1Oa7O
+	QLWklWR6hsV0Xlt0L9THKpDoY3BvodIrfbULiftm0UMewKdvs0UmF3Z0aViPOGTW0OAl5g
+	dDagLHpLVvExr4eKgUkFGspaP4rK482nwLF55CTsdF7HiyfGveOf98+S9ZtsYjWocZFrdd
+	Yqd2Y7tKbL7HWApIfA+uag36KLxJmKOO1q8U0SFG9x75sQN/4gpKYEYrndUcg6lHq3I5Mb
+	lgzSHtsROT8UO7VMfB/Bwc2TY/ydqsMuU8K2w5ul5Bp+rDP1mYkfxwtwB8VQkw==
+From: Caleb James DeLisle <cjd@cjdns.fr>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@vger.kernel.org,
+	naseefkm@gmail.com,
+	ryder.lee@mediatek.com,
+	helgaas@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Caleb James DeLisle <cjd@cjdns.fr>
+Subject: [PATCH v7 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
+Date: Thu, 14 May 2026 15:13:18 +0000
+Message-Id: <20260514151318.3444959-3-cjd@cjdns.fr>
+In-Reply-To: <20260514151318.3444959-1-cjd@cjdns.fr>
+References: <20260514151318.3444959-1-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
-To: Guenter Roeck <linux@roeck-us.net>, sashiko-reviews@lists.linux.dev,
- Jihong Min <hurryman2212@gmail.com>
-Cc: linux-hwmon@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260512213910.871859-2-hurryman2212@gmail.com>
- <20260514004055.1BBCAC19425@smtp.kernel.org>
- <110e9a0d-bc91-4959-8a7b-1a055d0b49f7@roeck-us.net>
-Content-Language: en-US
-From: Jihong Min <hurryman2212@icloud.com>
-In-Reply-To: <110e9a0d-bc91-4959-8a7b-1a055d0b49f7@roeck-us.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Authority-Info-Out: v=2.4 cv=Uqpu9uwB c=1 sm=1 tr=0 ts=6a05dc55
- cx=c_apl:c_pps:t_out a=9OgfyREA4BUYbbCgc0Y0oA==:117
- a=9OgfyREA4BUYbbCgc0Y0oA==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=z0MguAZywq-667BnQBMA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=PgRulw5oR9JgysbTFEid:22 a=oa2-kN79Xhin27rcel9q:22
-X-Proofpoint-ORIG-GUID: W6ODzCiIRAmxc73BlqpCyQLG1kjttXL_
-X-Proofpoint-GUID: W6ODzCiIRAmxc73BlqpCyQLG1kjttXL_
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE0MDE0NiBTYWx0ZWRfX8fsNMcdv6CsL
- VMMxVHn4LO1M7eTXwvVSCiBIKc2yN7xflFOHBg00vKlUCJsfw2KeAlDMu+AtupuLTP6S6vInGY8
- LicgSQpPbMkvnPXETv1CQ4VvLuVAVd/l5EhfCPqSwFeLpqOReNhYfozE+qxLELGXYZCLHXs2eLb
- ABpIE/4yQXEF1a6AaPcg4CRf2WcbzI+Gu5QvZ7fvB+W0T0sFKOWD2Dth/WzJrSimaoC9yu95CC7
- 5lMSWRZK0H3e5lvrcsikorJZIsxApi9wM0lpLLJrhmIqQQlZUJnIQaZnaFwAKShFk1RQkd1T09z
- 9uM9Ff+oGtNbSzPSHUwww3RomDaFgN+RTuLJoXsQNxYjaT0p/dXrmOm/5W9lGg=
+X-Last-TLS-Session-Version: TLSv1.3
 
+Add support for the PCIe present on the EcoNet EN7528 (and EN751221) SoCs.
 
-On 5/14/26 10:20, Guenter Roeck wrote:
->>> +    prom21_auxdev->auxdev =
->>> +        auxiliary_device_create(&pdev->dev, KBUILD_MODNAME, "hwmon",
->>> +                    &prom21_auxdev->pdata,
->>> +                    (pci_domain_nr(pdev->bus) << 16) |
->>> +                        pci_dev_id(pdev));
->>
->> Does left-shifting pci_domain_nr() introduce a signed integer overflow
->> regression?
->>
->> The function pci_domain_nr() returns a signed int, which can be up to 
->> 0xFFFF
->> on ACPI systems. Left-shifting a value of 0x8000 or greater by 16 bits
->> alters the sign bit of a 32-bit int, resulting in undefined behavior 
->> in C.
->>
->> Would casting the return value to an unsigned integer, such as
->> (u32)pci_domain_nr(pdev->bus) << 16, avoid this overflow?
->>
-> FWIW, I don't think that is a real problem. auxiliary_device_create()
-> takes an int as id parameter, so the result would be converted back to 
-> int
-> anyway. Maybe use "(pci_domain_nr(pdev->bus) & 0x7fff) << 16" instead,
-> but I don't know if that adds any practical value.
->
-> Thanks,
-> Guenter
->
-For the auxiliary device id issue, after thinking about it a bit more, I 
-think
-a simpler approach is to avoid encoding the PCI domain/BDF into the 
-auxiliary
-id. The auxiliary id only needs to make the auxiliary device name unique;
-userspace identification is already tied to the parent PCI function.
+These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
+require re-training after startup.
 
-So instead of:
+Co-developed-by: Ahmed Naseef <naseefkm@gmail.com>
+Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
+Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+---
+ drivers/pci/controller/Kconfig         |   2 +-
+ drivers/pci/controller/pcie-mediatek.c | 155 +++++++++++++++++++++++++
+ 2 files changed, 156 insertions(+), 1 deletion(-)
 
-   (pci_domain_nr(pdev->bus) << 16) | pci_dev_id(pdev)
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 2247709ef6d6..8a3a31b2bc12 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -209,7 +209,7 @@ config PCI_MVEBU
+ 
+ config PCIE_MEDIATEK
+ 	tristate "MediaTek PCIe controller"
+-	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
++	depends on ARCH_AIROHA || ARCH_MEDIATEK || ECONET || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_MSI
+ 	select IRQ_MSI_LIB
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 75722524fe74..3d5e2279286a 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -9,11 +9,13 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/errno.h>
+ #include <linux/iopoll.h>
+ #include <linux/irq.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqchip/irq-msi-lib.h>
+ #include <linux/irqdomain.h>
++#include <linux/kconfig.h>
+ #include <linux/kernel.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/msi.h>
+@@ -77,6 +79,7 @@
+ 
+ #define PCIE_CONF_VEND_ID	0x100
+ #define PCIE_CONF_DEVICE_ID	0x102
++#define PCIE_CONF_REV_CLASS	0x104
+ #define PCIE_CONF_CLASS_ID	0x106
+ 
+ #define PCIE_INT_MASK		0x420
+@@ -89,6 +92,11 @@
+ #define MSI_MASK		BIT(23)
+ #define MTK_MSI_IRQS_NUM	32
+ 
++#define EN7528_HOST_MODE	0x00804201
++#define EN7528_LINKUP_REG	0x50
++#define EN7528_RC0_LINKUP	BIT(1)
++#define EN7528_RC1_LINKUP	BIT(2)
++
+ #define PCIE_AHB_TRANS_BASE0_L	0x438
+ #define PCIE_AHB_TRANS_BASE0_H	0x43c
+ #define AHB2PCIE_SIZE(x)	((x) & GENMASK(4, 0))
+@@ -148,12 +156,15 @@ struct mtk_pcie_port;
+  * @MTK_PCIE_FIX_DEVICE_ID: host's device ID needed to be fixed
+  * @MTK_PCIE_NO_MSI: Bridge has no MSI support, and relies on an external block
+  * @MTK_PCIE_SKIP_RSTB: Skip calling RSTB bits on PCIe probe
++ * @MTK_PCIE_RETRAIN: Retrain link to bridge after startup because some
++ *                    Gen2-capable devices start as Gen1.
+  */
+ enum mtk_pcie_quirks {
+ 	MTK_PCIE_FIX_CLASS_ID = BIT(0),
+ 	MTK_PCIE_FIX_DEVICE_ID = BIT(1),
+ 	MTK_PCIE_NO_MSI = BIT(2),
+ 	MTK_PCIE_SKIP_RSTB = BIT(3),
++	MTK_PCIE_RETRAIN = BIT(4),
+ };
+ 
+ /**
+@@ -753,6 +764,135 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+ 	return 0;
+ }
+ 
++static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
++{
++	struct mtk_pcie *pcie = port->pcie;
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct resource *mem = NULL;
++	struct resource_entry *entry;
++	u32 val, link_mask;
++	int err;
++
++	entry = resource_list_first_type(&host->windows, IORESOURCE_MEM);
++	if (entry)
++		mem = entry->res;
++	if (!mem)
++		return -EINVAL;
++
++	if (!pcie->cfg) {
++		dev_err(pcie->dev, "EN7528: pciecfg syscon not available\n");
++		return -EINVAL;
++	}
++
++	/* Assert all reset signals */
++	writel(0, port->base + PCIE_RST_CTRL);
++
++	/*
++	 * Enable PCIe link down reset, if link status changed from link up to
++	 * link down, this will reset MAC control registers and configuration
++	 * space.
++	 */
++	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
++
++	msleep(PCIE_T_PVPERL_MS);
++
++	/* De-assert PHY, PE, PIPE, MAC and configuration reset */
++	val = readl(port->base + PCIE_RST_CTRL);
++	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
++	       PCIE_MAC_SRSTB | PCIE_CRSTB;
++	writel(val, port->base + PCIE_RST_CTRL);
++
++	writel(PCIE_CLASS_CODE | PCIE_REVISION_ID,
++	       port->base + PCIE_CONF_REV_CLASS);
++	writel(EN7528_HOST_MODE, port->base);
++
++	link_mask = (port->slot == 0) ? EN7528_RC0_LINKUP : EN7528_RC1_LINKUP;
++
++	/* 100ms timeout value should be enough for Gen1/2 training */
++	err = regmap_read_poll_timeout(pcie->cfg, EN7528_LINKUP_REG, val,
++				       !!(val & link_mask), 20,
++				       PCI_PM_D3COLD_WAIT * USEC_PER_MSEC);
++	if (err) {
++		dev_err(pcie->dev, "EN7528: port%d link timeout\n", port->slot);
++		return -ETIMEDOUT;
++	}
++
++	/* Activate INTx interrupts */
++	val = readl(port->base + PCIE_INT_MASK);
++	val &= ~INTX_MASK;
++	writel(val, port->base + PCIE_INT_MASK);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		mtk_pcie_enable_msi(port);
++
++	/* Set AHB to PCIe translation windows */
++	val = lower_32_bits(mem->start) |
++	      AHB2PCIE_SIZE(fls(resource_size(mem)));
++	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
++
++	val = upper_32_bits(mem->start);
++	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
++
++	writel(WIN_ENABLE, port->base + PCIE_AXI_WINDOW0);
++
++	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))
++		dev_info(pcie->dev,
++			 "module not built-in, Gen2 unavailable even if supported\n");
++
++	return 0;
++}
++
++/**
++ * mtk_pcie_retrain - retrain the root bridge link if needed
++ * @dev: The device, for use in logging
++ * @host: The host bridge which contains the link
++ *
++ * Due to what is likely a hardware bug, some devices (notably EcoNet) start up
++ * as Gen1, and must be retrained once after initial configuration in order to
++ * reach Gen2.
++ *
++ * These devices always self-identify as Gen2 capable, but sometimes the PHY is
++ * only capable of Gen1 operation, and sometimes the PCIe card (e.g. wifi) is
++ * only Gen1 capable. Therefore it is most convenient to retrain every port
++ * after startup.
++ */
++static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *host)
++{
++	struct pci_dev *rp;
++	int ret = -ENOENT;
++	u16 lnksta = 0;
++	u32 speed;
++
++	/* Should already have been warned about during startup_port */
++	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))
++		return 0;
++
++	for_each_pci_bridge(rp, host->bus) {
++		if (pci_pcie_type(rp) == PCI_EXP_TYPE_ROOT_PORT)
++			goto found_port;
++	}
++
++	/* Should not happen */
++	return dev_err_probe(dev, ret, "root port not found\n");
++
++found_port:
++
++#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
++	ret = pcie_retrain_link(rp, true);
++#endif
++
++	if (ret)
++		return dev_err_probe(dev, ret, "failed to retrain port\n");
++
++	pcie_capability_read_word(rp, PCI_EXP_LNKSTA, &lnksta);
++	speed = lnksta & PCI_EXP_LNKSTA_CLS;
++
++	dev_info(dev, "link retrained, speed %s\n",
++		 pci_speed_string(pcie_link_speed[speed]));
++
++	return 0;
++}
++
+ static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
+ 				      unsigned int devfn, int where)
+ {
+@@ -1149,6 +1289,13 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	if (err)
+ 		goto put_resources;
+ 
++	/*
++	 * Ignore error because pci_host_probe() was already called, and in any
++	 * case it is possible that the port will still work as Gen1.
++	 */
++	if (pcie->soc->quirks & MTK_PCIE_RETRAIN)
++		mtk_pcie_retrain(dev, host);
++
+ 	return 0;
+ 
+ put_resources:
+@@ -1264,8 +1411,16 @@ static const struct mtk_pcie_soc mtk_pcie_soc_mt7629 = {
+ 	.quirks = MTK_PCIE_FIX_CLASS_ID | MTK_PCIE_FIX_DEVICE_ID,
+ };
+ 
++static const struct mtk_pcie_soc mtk_pcie_soc_en7528 = {
++	.ops = &mtk_pcie_ops_v2,
++	.startup = mtk_pcie_startup_port_en7528,
++	.setup_irq = mtk_pcie_setup_irq,
++	.quirks = MTK_PCIE_RETRAIN,
++};
++
+ static const struct of_device_id mtk_pcie_ids[] = {
+ 	{ .compatible = "airoha,an7583-pcie", .data = &mtk_pcie_soc_an7583 },
++	{ .compatible = "econet,en7528-pcie", .data = &mtk_pcie_soc_en7528 },
+ 	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
+ 	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
+ 	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_mt2712 },
+-- 
+2.39.5
 
-I plan to use an IDA-allocated id:
-
-   id = ida_alloc(&prom21_xhci_auxdev_ida, GFP_KERNEL);
-   auxiliary_device_create(..., id);
-   ida_free(&prom21_xhci_auxdev_ida, id);
-
-This avoids both the signed shift concern and PCI domain 
-truncation/masking.
