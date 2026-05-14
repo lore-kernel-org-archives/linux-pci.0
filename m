@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD6C1221DB6;
-	Thu, 14 May 2026 06:42:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8909534DB52;
+	Thu, 14 May 2026 06:46:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778740963; cv=none; b=gOno/4hTLL/AmOZQG8h71Yc9RPx2KGTpLl5KnAMq/BtVfSKmlTakjazBOtj429V3i+TIBqIWgOlRyICu9L5mvdbvZqiIXjCSA/GXL2XpLMny+WwBKV+MAQNVtz0ONVl/1TtzD7rJMjDWtCHKyiwuQaiHAuQWjyIRLZuM+VkybKs=
+	t=1778741185; cv=none; b=tE/Ora7uhlpGTo6+2UnGoIpyL66f5/9pw2h6g5QoRZaB7RRtAZXs3c7uy3xkC/IXYm9gw5W4C/vlBAfAE0iclZUdjrFbNpqS6iKMSAtl1VcyOYyaP6Snv6pogilRHdNYVYTGWrNWYir6IXP3GjfhNIXrPk1WQAeeB2I/h1warSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778740963; c=relaxed/simple;
-	bh=u6Fv4WkWRbnSt3GLKcz8V9+xRKv5gNL94RdpSbTxSKU=;
+	s=arc-20240116; t=1778741185; c=relaxed/simple;
+	bh=+pSCK8MFVryMnnZmvC/b8KJiZO6ZDcD27J+P7yy8oQo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LxXVkv2jxi5qzjoWhWpPKB0mJ/1IzU21jodDc7cuolOCbVasUr9mLWSZoZI+mz29h9ky2OgMvq3U7b9ZGPJGVsCjjufC09JM3E00BwlJBeHNL0BVsoXv5rBV0mqorDbOd39vwJWkY0LB6X9xGjWwoV9bjuo6Dlb8afF191Ztgrg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BRP9w5RW; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=oB+2yuvkY6AYPeFdovG+FGZs+AU0IFPrpcY1pazWyKtbCVgjcMjth7M6E4E3SxJpJXcBsn9984sJE/soreQGB8bFnzS8OknBDjS84Jr67E0riAfQp41jmIFfDLsTWpUu6lM6WcCRFhEAtnK20s+WWm3A2csvUp+OV+MS7qNooY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zb5j9ke/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BRP9w5RW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CA4AC2BCB7;
-	Thu, 14 May 2026 06:42:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zb5j9ke/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9DD6C2BCB7;
+	Thu, 14 May 2026 06:46:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778740963;
-	bh=u6Fv4WkWRbnSt3GLKcz8V9+xRKv5gNL94RdpSbTxSKU=;
+	s=k20201202; t=1778741185;
+	bh=+pSCK8MFVryMnnZmvC/b8KJiZO6ZDcD27J+P7yy8oQo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BRP9w5RWQyD9boQWSYflutS/uF/Jr4aFBSoJD/xQmVS4SZ6CfaByKwo7oTDvl5rqf
-	 e53gIbu724mcQwQNNdg6W0SmcGAv50YSEl1BpNdDSaHLPKqmfavveLBiJp+M/7HpRs
-	 uu2fa80OU/3FQYXWTSjpNavl3W/anMStzhc5T6aU4qECLK0RgH5J2TZT7VRVTIKWYk
-	 ygjtSoRqhOQefRzLMlWenSRXPC20u/sDrpMrDIXUXEGV6hbXcg3ZO3qCUl/Ls5wBqr
-	 AMoEkpdon3IWZ45pvo1rQ/zGBQKEPe+wU+XheZS9mnucUM/ksNSzZSdKzHClzkjo1e
-	 L5vZUenp3mV7g==
-Date: Thu, 14 May 2026 15:42:41 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Thomas =?utf-8?Q?Wei=C3=9Fschuh?= <linux@weissschuh.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: Manage hotplug attributes through group and
- make slot attributes const
-Message-ID: <20260514063920.GA1038693@rocinante>
-References: <20260514-sysfs-const-pci-hotplug-v1-0-3b0b6c6f7481@weissschuh.net>
+	b=Zb5j9ke/Swv4KLXs6VVV3pffw6yVgoMpoFff7OVWjLED1Yvvu6NJjk/kVryQYQPcd
+	 2otgj6unGNeZBSuNf5uw6f53aWOlREpqnAugfCaqquHs+TxZeDfYrSWn6/ZTUS/2xt
+	 XPxAtAXdBW5FlPVnvlHwxNUacpRY3gbzolXV5fVuJ51UOns0krc7qCy4hLEsx8yWnl
+	 ssUl4CL4hpK6HBiRTf1iamKq4o0ycsngtcmkSYv4ZPAgIrB7HPkByWKl/DIegE/jiJ
+	 T/m/oKN814fMqKdi4H/FiYlNiT7A7FTJMZ1JrOCJT4gtdcNl9JFo/4q5bL+Ub9psGE
+	 8QO9Bi+ciEb0g==
+Date: Thu, 14 May 2026 12:16:17 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+	bjorn.andersson@oss.qualcomm.com, konradybcio@kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, wenst@chromium.org, arnd@arndb.de, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Subject: Re: [PATCH v2] arm64: defconfig: Enable PCI M.2 power sequencing
+ driver
+Message-ID: <q45pxcrka3k7w7zqeyh26mow3yf2ukqogscm5b33ehumbyvuuz@wjrawz6xthjy>
+References: <20260501164440.11788-1-manivannan.sadhasivam@oss.qualcomm.com>
+ <d04d7187-54ba-4ba7-b7d3-131fd4f3a98f@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,14 +47,35 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260514-sysfs-const-pci-hotplug-v1-0-3b0b6c6f7481@weissschuh.net>
+In-Reply-To: <d04d7187-54ba-4ba7-b7d3-131fd4f3a98f@kernel.org>
 
-Hello,
+On Wed, May 13, 2026 at 09:41:42PM +0200, Krzysztof Kozlowski wrote:
+> On 01/05/2026 18:44, Manivannan Sadhasivam wrote:
+> > POWER_SEQUENCING_PCIE_M2 driver handles power supply to the PCIe M.2
+> > connectors and is required on wide variety of ARM64 platforms such as
+> > Qcom Snapdragon X Elite laptops and Mediatek Dojo Chromebooks.
+> > 
+> > Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > ---
+> > 
+> > Changes in v2:
+> > 
+> > * Dropped PCI_PWRCTRL_GENERIC change since it was already applied
+> > * Reworded commit message to include ARM64 platforms making use of this driver
+> > * Added R-b tag
+> > 
+> 
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+> 
+> CC list suggests this will go via Bjorn's tree, but I think it did not
+> happen. Can you double check no one picked it up and send it to the
+> soc@lists.linux.dev in such case?
+> 
 
-> Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+Looks like Bjorn didn't pick it up. I'll send it to soc list.
 
-No cover letter?
+- Mani
 
-Thank you!
-
-	Krzysztof
+-- 
+மணிவண்ணன் சதாசிவம்
