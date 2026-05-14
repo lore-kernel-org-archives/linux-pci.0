@@ -1,129 +1,110 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from outbound.mr.icloud.com (mr-2001f-snip4-7.eps.apple.com [57.103.68.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A6883D8909;
-	Thu, 14 May 2026 14:23:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEABF3FA5F5
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 14:29:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.68.60
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778768586; cv=none; b=VZlOztjbkNVVhWvDFCWFXPJWf0mNAROwNt8JabWQDcI3OKQ5bu+LedcTXfCZS4I6YdOaaSf0CY4IxQfxjKfblPoWbIbZuuKaum+mnEIYeKZwCoMgEATxAVocSFuC39IncpT0sbWF53Sg473ngWReVN7eyton3boEXQwxjxpwBFc=
+	t=1778768984; cv=none; b=Pe9sXuWbnSCGBQFSk7gtRiBsY5H8ntPQmjE2c53i0XRRQji9FjR9toQnYVeYRMQO+c96y7XECVOVa6I1vpT0hS4iRifzVPBEcEzzfHsY6CIGCsOMTb/rWbxcoN6ZkuzMnpmcMIQ3ImDMoTiHL/rlJ9HjiEeotte7zIJrbjBTT+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778768586; c=relaxed/simple;
-	bh=1+cb2sStXOE2OW7LJ8lDA5+VJbnboBqGunLXZmnPBgo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hgPztxvrqEcmk/zc3swr4cHuloq7IsR2ey0nbDLg+979xJHO4xba3XDoi+m1ssBuD3SChmmBs3sl6jETgWC7d1laKkZySI7mz5Rh9lTGBLgc4UmiigwmNsXhDR4mSR5OFF1CMMh7QLGVDKLoFk3ezts221oI4/k0NPewc188YgM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lI1Yhih7; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1778768984; c=relaxed/simple;
+	bh=apfiA1cyuebfnJCwwK+v2w0GMpzMc1iTPf97Sc3qVZg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZxPK5PZJ8iUf+Tu6oYlL2d4BrDoQYOiTEErPnpl3yc9S+F27SpGMtX63O2g3d26a3/SZBYiOL7Lerw2LDU3YG3AKbMpcXG5s9KpOZPBLy3ReplDZ1187ZGRB9eZTLHXYC08uczEdBXmWrSX0Ls6XapVZ19aco+9T2ZVeO4SgccQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=j6DBgwRx; arc=none smtp.client-ip=57.103.68.60
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lI1Yhih7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778768585; x=1810304585;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=1+cb2sStXOE2OW7LJ8lDA5+VJbnboBqGunLXZmnPBgo=;
-  b=lI1Yhih7xhY0J50+y0WpMg1JB5vhOPfLdi65KNFsozWaOgtV4NHn8kxo
-   /pQL9E/ikLObOCtZwROsGxcmyMMlvBYCjSHIvWV/k3eGYmpZkbM6z8Acy
-   YNPHrwDm/RAMWQewQPoU/54EL0VXt3Py1XmXbvrmKbaJg3Wfk/bMMZ4Pc
-   kjrCvy7Q5nWZMMKsP75P0VRKSFHQnHW9WEiud30eq4CvaiA0SjRE/eu5n
-   tjAuzGg6V3NrNV/AGG8+fax51wazuE9Z0ZyxPdE8tY6hdG/Pw0xTt3MXd
-   /fytuKNFfh9L8p80rU3i55pnc9SS8yq0B/TERKbvNe4iYWTJpICVZWFV0
-   g==;
-X-CSE-ConnectionGUID: bIOZ9Tw+Q7GbEsTprHoD5Q==
-X-CSE-MsgGUID: gzeav3UCQD6WTML3CbnnFw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11786"; a="79422775"
-X-IronPort-AV: E=Sophos;i="6.23,234,1770624000"; 
-   d="scan'208";a="79422775"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2026 07:23:04 -0700
-X-CSE-ConnectionGUID: MoTmitk+SYGyMdDayYUivQ==
-X-CSE-MsgGUID: j2Ra0cpgRtCqNzrKqlrxCg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,234,1770624000"; 
-   d="scan'208";a="238289913"
-Received: from igk-lkp-server01.igk.intel.com (HELO bdf09bfdbd5f) ([10.211.93.152])
-  by orviesa008.jf.intel.com with ESMTP; 14 May 2026 07:22:59 -0700
-Received: from kbuild by bdf09bfdbd5f with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wNWxk-000000008or-1YWQ;
-	Thu, 14 May 2026 14:22:56 +0000
-Date: Thu, 14 May 2026 16:22:22 +0200
-From: kernel test robot <lkp@intel.com>
-To: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
-	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-	vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com,
-	pali@kernel.org, ryder.lee@mediatek.com, jianjun.wang@mediatek.com,
-	claudiu.beznea.uj@bp.renesas.com, mpillai@cadence.com
-Cc: oe-kbuild-all@lists.linux.dev, robh@kernel.org, s-vadapalli@ti.com,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Hans Zhang <18255117159@163.com>
-Subject: Re: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link
- training
-Message-ID: <202605141646.YYkbS6Hg-lkp@intel.com>
-References: <20260506152346.166056-9-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="j6DBgwRx"
+Received: from outbound.mr.icloud.com (unknown [127.0.0.2])
+	by p00-icloudmta-asmtp-us-west-2a-100-percent-3 (Postfix) with ESMTPS id 646211800136;
+	Thu, 14 May 2026 14:29:41 +0000 (UTC)
+X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhJC0MCWBxCCUAdXA9cEhVdRVsYRRlLHVgWAV8GWXIZWhRcGFNFUR9UWFUJCgNHAksBXgxZWQBBCzhaDlsERxQXG1wAFxlRTQxYWwhbBA8fTAxRAkIFVl5UCh0EVAddBV1WUAJaS0IES0VoXAVcHEAXSB1faktWFAQRUAFYHlZeWhdeTVoCVk0FSQJaBA0HEwxVUloDWx9EDU0LQA8OAkgUSlBZBVxTRwlMAV0AK1sTVRdGCRkIXR0HWEcURw4PGVoUXBhT
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778768982; x=1781360982; bh=xdOFhRK+BndMXFoccb5KRWPPSr0SfUNYq4YCKjDeRD0=; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:x-icloud-hme; b=j6DBgwRxhwc6NsD8oQyOTekj7woRqNM6895kDcQ0X3QAetQDeQ4WWFYa/yfqbTZESyfCvPoFXC1PvJJg33VH4md8GTnHJ5DBQ7FtyK4XeF1smkxOXen+5sRamwJx98T1Bh839/f9353tiKLU0KoaEreaxR7MBNjq/9zsH6HyYodLtJungsBs67MTnpadyfagbHdnEm421Dvb29Bp3JDr00vPzFibRY2UNpIRb/PFpshKh+cq4muM8sQ8q8LEMMFLEW41fc3l442a6iLX3qWHY+yFl+O+5LH+BoPcjhdBTNzQ44NyDvxjx2mxxqODImnKRapy1ZLtmVhk98UuWHeKXQ==
+Received: from [192.168.89.3] (unknown [17.57.152.38])
+	by p00-icloudmta-asmtp-us-west-2a-100-percent-3 (Postfix) with ESMTPSA id 0540218006C9;
+	Thu, 14 May 2026 14:29:39 +0000 (UTC)
+Message-ID: <1173f5c5-a740-4458-8e08-2c427a704207@icloud.com>
+Date: Thu, 14 May 2026 23:29:36 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260506152346.166056-9-18255117159@163.com>
-
-Hi Hans,
-
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on a293ec25d59dd96309058c70df5a4dd0f889a1e4]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-Add-pcie_wait_after_link_train-helper/20260514-132815
-base:   a293ec25d59dd96309058c70df5a4dd0f889a1e4
-patch link:    https://lore.kernel.org/r/20260506152346.166056-9-18255117159%40163.com
-patch subject: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link training
-config: arm64-allnoconfig-bpf (https://download.01.org/0day-ci/archive/20260514/202605141646.YYkbS6Hg-lkp@intel.com/config)
-compiler: aarch64-linux-gnu-gcc (Debian 14.2.0-19) 14.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260514/202605141646.YYkbS6Hg-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202605141646.YYkbS6Hg-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from drivers/pci/controller/pci-thunder-pem.c:16:
-   drivers/pci/controller/../pci.h: In function 'pcie_wait_after_link_train':
->> drivers/pci/controller/../pci.h:73:17: error: implicit declaration of function 'msleep' [-Wimplicit-function-declaration]
-      73 |                 msleep(PCIE_RESET_CONFIG_WAIT_MS);
-         |                 ^~~~~~
---
-   In file included from drivers/pci/controller/dwc/pcie-al.c:14:
-   drivers/pci/controller/dwc/../../pci.h: In function 'pcie_wait_after_link_train':
->> drivers/pci/controller/dwc/../../pci.h:73:17: error: implicit declaration of function 'msleep' [-Wimplicit-function-declaration]
-      73 |                 msleep(PCIE_RESET_CONFIG_WAIT_MS);
-         |                 ^~~~~~
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
+To: Guenter Roeck <linux@roeck-us.net>, sashiko-reviews@lists.linux.dev,
+ Jihong Min <hurryman2212@gmail.com>
+Cc: linux-hwmon@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260512213910.871859-2-hurryman2212@gmail.com>
+ <20260514004055.1BBCAC19425@smtp.kernel.org>
+ <110e9a0d-bc91-4959-8a7b-1a055d0b49f7@roeck-us.net>
+Content-Language: en-US
+From: Jihong Min <hurryman2212@icloud.com>
+In-Reply-To: <110e9a0d-bc91-4959-8a7b-1a055d0b49f7@roeck-us.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Authority-Info-Out: v=2.4 cv=Uqpu9uwB c=1 sm=1 tr=0 ts=6a05dc55
+ cx=c_apl:c_pps:t_out a=9OgfyREA4BUYbbCgc0Y0oA==:117
+ a=9OgfyREA4BUYbbCgc0Y0oA==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
+ a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=z0MguAZywq-667BnQBMA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=PgRulw5oR9JgysbTFEid:22 a=oa2-kN79Xhin27rcel9q:22
+X-Proofpoint-ORIG-GUID: W6ODzCiIRAmxc73BlqpCyQLG1kjttXL_
+X-Proofpoint-GUID: W6ODzCiIRAmxc73BlqpCyQLG1kjttXL_
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE0MDE0NiBTYWx0ZWRfX8fsNMcdv6CsL
+ VMMxVHn4LO1M7eTXwvVSCiBIKc2yN7xflFOHBg00vKlUCJsfw2KeAlDMu+AtupuLTP6S6vInGY8
+ LicgSQpPbMkvnPXETv1CQ4VvLuVAVd/l5EhfCPqSwFeLpqOReNhYfozE+qxLELGXYZCLHXs2eLb
+ ABpIE/4yQXEF1a6AaPcg4CRf2WcbzI+Gu5QvZ7fvB+W0T0sFKOWD2Dth/WzJrSimaoC9yu95CC7
+ 5lMSWRZK0H3e5lvrcsikorJZIsxApi9wM0lpLLJrhmIqQQlZUJnIQaZnaFwAKShFk1RQkd1T09z
+ 9uM9Ff+oGtNbSzPSHUwww3RomDaFgN+RTuLJoXsQNxYjaT0p/dXrmOm/5W9lGg=
 
 
-vim +/msleep +73 drivers/pci/controller/../pci.h
+On 5/14/26 10:20, Guenter Roeck wrote:
+>>> +    prom21_auxdev->auxdev =
+>>> +        auxiliary_device_create(&pdev->dev, KBUILD_MODNAME, "hwmon",
+>>> +                    &prom21_auxdev->pdata,
+>>> +                    (pci_domain_nr(pdev->bus) << 16) |
+>>> +                        pci_dev_id(pdev));
+>>
+>> Does left-shifting pci_domain_nr() introduce a signed integer overflow
+>> regression?
+>>
+>> The function pci_domain_nr() returns a signed int, which can be up to 
+>> 0xFFFF
+>> on ACPI systems. Left-shifting a value of 0x8000 or greater by 16 bits
+>> alters the sign bit of a 32-bit int, resulting in undefined behavior 
+>> in C.
+>>
+>> Would casting the return value to an unsigned integer, such as
+>> (u32)pci_domain_nr(pdev->bus) << 16, avoid this overflow?
+>>
+> FWIW, I don't think that is a real problem. auxiliary_device_create()
+> takes an int as id parameter, so the result would be converted back to 
+> int
+> anyway. Maybe use "(pci_domain_nr(pdev->bus) & 0x7fff) << 16" instead,
+> but I don't know if that adds any practical value.
+>
+> Thanks,
+> Guenter
+>
+For the auxiliary device id issue, after thinking about it a bit more, I 
+think
+a simpler approach is to avoid encoding the PCI domain/BDF into the 
+auxiliary
+id. The auxiliary id only needs to make the auxiliary device name unique;
+userspace identification is already tied to the parent PCI function.
 
-    62	
-    63	/**
-    64	 * pcie_wait_after_link_train - Wait 100 ms if link speed > 5 GT/s
-    65	 * @max_link_speed: the maximum link speed (2 = 5.0 GT/s, 3 = 8.0 GT/s, ...)
-    66	 *
-    67	 * Must be called after Link training completes and before the first
-    68	 * Configuration Request is sent.
-    69	 */
-    70	static inline void pcie_wait_after_link_train(int max_link_speed)
-    71	{
-    72		if (max_link_speed > 2)
-  > 73			msleep(PCIE_RESET_CONFIG_WAIT_MS);
-    74	}
-    75	
+So instead of:
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+   (pci_domain_nr(pdev->bus) << 16) | pci_dev_id(pdev)
+
+I plan to use an IDA-allocated id:
+
+   id = ida_alloc(&prom21_xhci_auxdev_ida, GFP_KERNEL);
+   auxiliary_device_create(..., id);
+   ida_free(&prom21_xhci_auxdev_ida, id);
+
+This avoids both the signed shift concern and PCI domain 
+truncation/masking.
