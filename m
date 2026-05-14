@@ -1,363 +1,204 @@
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azolkn19012021.outbound.protection.outlook.com [52.103.10.21])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEEAF3314C4;
-	Thu, 14 May 2026 18:14:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.10.21
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778782469; cv=fail; b=b/Oi+0eWxLpH1caWzw71emkzvdi5zGCNg838jNUiev/+rTkbIyQX/EEL4So1wyPjp+OFItjtD4R7tKA2nF7nBqY53Ys7ZVtiwWzMtzsYrqC1kfUGJ+iMo9TcS+TwhChZRf19PD5vUEpdfYY0oA5NSeahVxGD3bKsdAhCuOWq55E=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778782469; c=relaxed/simple;
-	bh=jg67jzHh+HbmeJos/RB4PK/r7fg/cWQA7nKYNKn2+io=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=D1el1ylx/5dYW/X1YStddUnDeG17+5d1B+g9SkK0IgK1pCQj84Eg2SmQ4unpWH/JA8sUYPg2wftVVGFowzQvtt8XfF+QZuU+n9ejbwOUd4BT01l7GIqlJqimgTxC8t2xStL4NbhpEYIML9MEG8sxfvYW14hFcceYw+xxoEUxm9U=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=pM9Yl7Pr; arc=fail smtp.client-ip=52.103.10.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1810F38BF9A
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:16:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778782590; cv=none; b=G++27pdTuUN27RjiEAIsIfTQCOz6RFvWl7M7qsldRQY/ZjOFMcgzz2dnRJG4ocx+5czS87uOe/yPhy6UxtQDLSln6mYhDpjH0UeseM/ougXrLLB1P+XXh7KcWCHOp9+ZqSUDrkc2ASWgMsg+Wnn2zBoqP30sS+M3pjc8bxIwBHo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778782590; c=relaxed/simple;
+	bh=LlKBPVfZt6k55SzB3EeP58F5fOxBhXQRYxzjH7+tFVE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i/uK6ZbpNUbokxLPV4LhzTqC3yWEflLGT5zI/LYn3HAuTfedNGQWJ/YJIKCaQtMVYhmyw9AJYlPn3AWdK9it/HmLYIATO39xfkdIhB/soKD0+wQRY07ls2UppIBf0jIyFIznPEeP3KR4ycNmJa0VnmFfo02XcRHtsKwGUbhgDXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=rJ/GZfDg; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="pM9Yl7Pr"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OXgPLaCLY4rMH3Og1h7Qw9kWDdY6Yr00OFkwGJmqAtEbAVIecZx0X9gyAE7OSBbEqFzQ7IYy5Poc9swOkTyPV9MnvW+0Witx32J0s7rQ5ey4A1ClncImJyrBV0P4hWK/CErQZKqYnNZPj3MhQvad7c3Svg3f5kmOrIYWLPGxdl6oHIzW6xSzoN9kE/bURkazdKD8RIWjlSqzU2gh8zBMmzcde9zP48lnHe5jq557K3c+xiFCNoCbt5eOTErML4df+GmaupL8JCzUSiBzTHMAEtkxPaCc47DCkcxZyROnYhOSPLJ3WhcI01+OXI+3somjNanNjX+d30Y7Ct0UtjShHA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=l/nXmxllZKjopD4HXX4xjOuAhRarBk2K3K2207sOxks=;
- b=esqZ8mP42kglYUKqaJr8aqnuweS28QV+kN0nBOl/yBFaD0aIJe14WgaSUf01XBK4isC5TXnEqrDHpBV2gKgbU+5spyWL9TgvhhLnmHLmoM/yFdYdILNZZXV6bLQem5thFdCyC+G9ZLDrmNo9Opbv+QSsWGGfdJPOX1P6mgcDWDppe6dOPMKNAD4keIur6eMUw0ZYklCkFKdTDKz65I30/nH+lrNNsYntn3DRPUGjQQ5RuLPIQcAO5qqdao6YaLRP5iz6wXx/XdWYvG6laoWNnv2j7KEEMxrLrlLUxsIsJJik4r9BBinp5abmNS2XXFJn9olQLHVv/HGWlWunxjZDaA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=l/nXmxllZKjopD4HXX4xjOuAhRarBk2K3K2207sOxks=;
- b=pM9Yl7PrzsMdgPOuBCrn9PuuNIukYiVXXUysAcDdIJWRQz4X2x+BIr9Q5bV6beZhJlqYnIIaqJnob6B0RO648idfpam+v8VGJwQVnV3afs3E0sdKil4iXkYjc4KloFES4cMfhhLxo3lM++LUDbZpljNjHhLw8jb+3pUOPlrTzpUvxpT0+1bv6hs1FCBz/FviojH6UDIPWQiTx/1fuiFlraMD+IKsyaZkxezAgWAmlQIIAiGBw+8NCEdVJOSTZb0KQIUeAqFlq7KUh+2OCXUfP1FIUQJegYKOndkJIdhiwMhwYlh7uWsGexMAlEsQaPGvEw31dQzg+oTl4j5iZzw6eQ==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by SN7PR02MB9284.namprd02.prod.outlook.com (2603:10b6:806:349::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.20; Thu, 14 May
- 2026 18:14:25 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::900:1ccf:2b1e:52b6%6]) with mapi id 15.20.9913.009; Thu, 14 May 2026
- 18:14:22 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-hyperv@vger.kernel.org"
-	<linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev"
-	<iommu@lists.linux.dev>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org"
-	<linux-arch@vger.kernel.org>
-CC: "wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com"
-	<kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
-	"decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com"
-	<longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>,
-	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
-	<robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
-	"robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
-	"jgg@ziepe.ca" <jgg@ziepe.ca>, Michael Kelley <mhklinux@outlook.com>,
-	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>,
-	"tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>,
-	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>
-Subject: RE: [PATCH v1 4/4] iommu/hyperv: Add page-selective IOTLB flush
- support
-Thread-Topic: [PATCH v1 4/4] iommu/hyperv: Add page-selective IOTLB flush
- support
-Thread-Index: AQHc4WKquRiuLrUu+ESNYKKX1F+8PLYN2DNA
-Date: Thu, 14 May 2026 18:14:22 +0000
-Message-ID:
- <SN6PR02MB41577D5EEC884EAE8AF5E14ED4072@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
- <20260511162408.1180069-5-zhangyu1@linux.microsoft.com>
-In-Reply-To: <20260511162408.1180069-5-zhangyu1@linux.microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|SN7PR02MB9284:EE_
-x-ms-office365-filtering-correlation-id: 176ee885-ef26-4254-dbe8-08deb1e49fee
-x-microsoft-antispam:
- BCL:0;ARA:14566002|41001999006|8062599012|31061999003|19110799012|8060799015|15080799012|51005399006|19101099003|13091999003|55001999006|37011999003|440099028|12091999003|102099032|3412199025|40105399003|1710799026;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?Bfq63xbgmaWXMhmd3V/ohR8hFTiOKX7wYTfficjCSmuBmRgJ2atiyfoTNhBk?=
- =?us-ascii?Q?LCHTwHYof2OKY9sL4o4YUDoGkG8aZVHoDsU1b59k/277qx5XbIJ60ozFky4w?=
- =?us-ascii?Q?NBZTt+mOtct+pIfdS0nXn1FFCP/FDDLfxQiAsqRHz3d6NDsNJFTpEYx9L8fB?=
- =?us-ascii?Q?inuLThmM1l1n2qnOY1Fv4MRfxwKHwsJjbgdaYYiZPzXuYeDbticLgVEkiN7J?=
- =?us-ascii?Q?T7JNZy7x0UWf9hjyVmwm0HObbO6yhWI3Ej2AQKY+3rY1JUbxI3b3Brl5/qMF?=
- =?us-ascii?Q?frTbIRFIDEkelBJj2P3xgEoOBcnjfIoYbuJfuxqYsyksh0EptVNUHMoeEeuO?=
- =?us-ascii?Q?sKU2+ymYNxOr3Xjuq5PnMODiXSnlLYBKHRjhQvg7eEWCQdnC38j6YpW7SKC0?=
- =?us-ascii?Q?h0A7JR9CVXuHeoMaYhcp81nxmi0yUeL4P5nPH0O+UgYDf9G3ozXjfrWon1Ef?=
- =?us-ascii?Q?vtPKlVvQXuuC+H2wB3e+pZlVUeOMZHNUHnuOI148wZ0HY3nkLb2B/0W8lsVz?=
- =?us-ascii?Q?spEGeuUwGP6OV5Tn8uTOC6Jj8ETI8uwcFDXCxF9xiIAhShPQxAOD6L9mrS++?=
- =?us-ascii?Q?OAArjjsQWnnreSSLELnHXeMiOh9fgGex9+U5hlIGsTgz1H1iEYgqz5SJOMBL?=
- =?us-ascii?Q?nugv+kbyN8F6GacvgRoOx2/bW9x9TxWa5SDKG8iKpSzVA8cIdzFqMCKN9o1D?=
- =?us-ascii?Q?INNE+5YZKazIhLzr2zBOsfJJbceEqgVoLVjT3uJdeBOIhnxVquLYmawsc80z?=
- =?us-ascii?Q?/F/EJ7SLfCnaGlMuMv8cuOm/b+E3ITXi47pxyI0F/zlXpjs9EMJSazx8BLyf?=
- =?us-ascii?Q?RUt6Tb/NatW17BBPvjfvhNM/+MWOitrt2wMPwp16tAG+DaWkIPpSYY0eBEU0?=
- =?us-ascii?Q?lVWM2vYrBsCT/Dn0OvCIoSuCmnfgrHTKYHCJr2pHBoipIfZQt543QXc6SW7D?=
- =?us-ascii?Q?OugC8nQYC0GqACb5qzofnDRNpxoebDAJ7Q3r1gHe/41sZm52wPIe9IRFR+c4?=
- =?us-ascii?Q?rYwzrriZfzVjJGr9g0LraCZAPrAlcQYN1UWIy4sVFP0H3QafdiSw8NbaYGLQ?=
- =?us-ascii?Q?vuSjMKnt8rIidQDzs6qWVVdjauWDejpCcFOc18iDgKkL38egIiYsvLKNG029?=
- =?us-ascii?Q?LKlAOPytnklY?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?dEQpon4sqieqq7YaLzJNvYgpFZJxR0n8prTeQk6+x1ge7QFFcN/vPz3X0qEN?=
- =?us-ascii?Q?P2T17hAu/9RFn87ZsP/eryYvaJaovEGy+gGiO1xSVp8xUKCEYX/lCIkWdS1K?=
- =?us-ascii?Q?b/kw3j/k670pZAew31VY+loaARpKq5MF6ivsB1sLq4br49c5QR4D2HDtcSMi?=
- =?us-ascii?Q?3ZBZk3Z9ewP4q4CNIdms3lsAykYXA9nhmji1MrNV/akTCAKTqhH5W+fpzhH2?=
- =?us-ascii?Q?8zy6q45ImIraw8Zffy7VUlgvrGjJVRPeWHBmyrECHmSCJaywggq+t9NDPkmL?=
- =?us-ascii?Q?A5G48bY0z5lgRdo5U9lTcCrb0rbjYRbCur5RfEfkKKUVL5ae+URsx5wCsO04?=
- =?us-ascii?Q?X1OLZ6k0neFPeeGQbXYcgwX+SPhLn11qvlionQZSMy7wyBrsJpr26Dp2Fk/S?=
- =?us-ascii?Q?yC4APtckfzZf2qtG/LYA6totU8EXEQpDgIRJOGWgB08t+GaSiWCHShlx1RVZ?=
- =?us-ascii?Q?Ejz0G/lWMbN6gLqrIIqixfTGGKb/uCfQZNtBvh05v0j17EYMOA84sZ1j3PtK?=
- =?us-ascii?Q?+w0JPYuvLxTu8rskySTcoTavMld+vHx4/oece3gTAs4/UQheo/VSkf4fisqx?=
- =?us-ascii?Q?624n0XP7iq10g9o/jkuZRQSUYGi2zmweJIpF3aFkzgiknhDmPHsCYJTtnLZM?=
- =?us-ascii?Q?CMQAcvFm0jMUh2Ehw+ksVyiIAuWMEsC79cJKbDO80bQkWCWBr0GjuWD8yhg+?=
- =?us-ascii?Q?l5vRVIhFhWApf83fcEVccYWW7fPnQ8BN8zyQ61V4W79HmL8ohB934YWTYib1?=
- =?us-ascii?Q?/KT7bqLcQHNwf/+ELrNgEWya3YlQbGygAg7kDyZ9iJ+BZUjUNHivKGRelZE1?=
- =?us-ascii?Q?258/1KeDwXBp55RbA1so5UrQKsk29r9eFuKgv8c7WPr3VTzsRo3mfMWPEDGr?=
- =?us-ascii?Q?w+W2aW7snexulnQbmOqcRoyOEsowN48frZjiXlZBUqt2Lh7Jv9f/ZfFYzTZ1?=
- =?us-ascii?Q?yNMaDnefS/XBzk/Y+ELhlSFFJPy8Hllbyplr+CsyvG3Siv6gbZjl1tJe7NCC?=
- =?us-ascii?Q?0ig9YnSoGoZdWJskjl374Ms/+Gc9JzCAbqANO0PW5FWa3J5dTui20H97/DMN?=
- =?us-ascii?Q?2L8KnoDi1MKBZMOaA0HROPJspOqp1MyKB0obz4EvNPZ4vuX1OaryM61Q1N9E?=
- =?us-ascii?Q?YL+0Ub+dBNQFXbSNUAUY60EtE8ci1pFe42n4EB4Mlzw+37JWrf72c2obJh3P?=
- =?us-ascii?Q?XlrQny9Ilr4g7IkJle1kN9YkjIV0OWuXsnxS0TfZNUVVcASKlEDJFVVLnKVg?=
- =?us-ascii?Q?jkLY2dWtEM8l0br+uEKx+Zl6cgEDnwi3UYWr7Mejo8LqM0Cgahr4ejitDQoX?=
- =?us-ascii?Q?eY3RHSOk5lalcIFYdSXFfUbXVyt+ytYJl3vR18T1Ml39O4EmuLPv0c2hdSvh?=
- =?us-ascii?Q?nmw0u94=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="rJ/GZfDg"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2ba856db1c0so56452855ad.3
+        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 11:16:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1778782588; x=1779387388; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=cC7g+W3PbRFAIT/5EGy8Wrg/Kml67wts/KuJpeskYOY=;
+        b=rJ/GZfDgfcAmw1vrvcJc+HRb+nNtYLtBwyaLyb3o8inqT1ptgURMkrhRoq473A7Id/
+         b2ShMof7HqiRD/yvI1xSgbxCRF5Odbu2Pjadxi49O6cq7rQaBCZUM2dcy8lbC4EKiEt5
+         HLb7hQ7810fd8lRPbzVjdO+76jWGkXjFJmeTnGtRcDFXf80jLEC+5d1heSoUSCCfcLw6
+         jXV3Dy6Iai3ouaX9iVcRBfHzxZHiu/4CnAQwUzHU3s9ubdqGv+xFJ+OCFTomfTUOI59r
+         LV4QqhrNnGG2gcmmbrJC0VwHtDTByZ3cy9yyAUhwXQW7UeTSteqJe6G0UKJTUD5P6aEL
+         Vs8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778782588; x=1779387388;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=cC7g+W3PbRFAIT/5EGy8Wrg/Kml67wts/KuJpeskYOY=;
+        b=HThcGSZfXG4vpohSOfMFe25BqsSTWDv45R8EcQjkeVKCDhyEXf8YqjdVtr2QiR9Sp2
+         oNQk5dx8Fl0XIDqPJkawlTJJpf+cRMERAOvnVuZBcFh9fIWdTjSTYEBQ+iojkAbTQHTh
+         0OdB33A0Kj/ljZxfNX+HAtanzGGd9YNjf0/giotksnlmp5g266pGLt3RZpws7k6RSQ/q
+         kLPWi0Zx7ADRMdD70qICXR3cu/DSvo3FeMlRFMC4uqGEwnTbtSMbbV/xV/YaHDiKaVVV
+         3ABDuZ8Odxf4WMrhJ7s6YO8a8WaX6lmqnGFhTqY0mK6BIsN04hclkF48TTOaPGzNqqjo
+         rCNg==
+X-Gm-Message-State: AOJu0YxdkwFpU5dTVhZu2Ugymf99zO984enc3iLvWkQ433yLsGIUZUdY
+	kRlAKZvFH9y40Ru4DR121hNSx/UyzBzTolozHAzQcTITckf0TD8otu/uCvIK/LNjDQ==
+X-Gm-Gg: Acq92OHRaUU2AAdO4/wfWSX+4jMUOEPzgxbse4Cd/OQI0782goorHCKYpfUKdJb6WbZ
+	k66SGwnXQUcrvHKB5+DGauGWM/BtprWfn/QKAJbbkfyCge6axag54c+2LP0hhpTgN/zaSr/jRbP
+	Igqg20iW1k09+aRSbvJFmN80apJchyB5Uat7GLw+17bAKVkJNXggq3H6DEpZ6Jzvf5GdbA2GUT1
+	Wzl++UsCVWglx7ul3xOBW5sgBfFpFvFwcZjblhwegqSUpU9ks552SkgZSrXYVXP4L8We0UML71S
+	smqHPtOqj/I4ibmldAullD/i6wVqOR0R+a2nBeVr18FqAT2V3l2PyrDZqcx5HG9cdTXf46TeID+
+	eXn5ME2x+OSZyKhz59317JPiFFigslx477GL7plpCl53XnrJOubHiSkxACsh5+gBlmM8cKdUxFz
+	6P25XnlQV7crvYEtFtGyAMccnP2Zpijys+XNR0WdcQwZR0RLlsJrk3+tUnP+ce26qEH+xhjq3j
+X-Received: by 2002:a17:903:22cc:b0:2b2:6b58:9317 with SMTP id d9443c01a7336-2bd7e91e3a2mr6066215ad.39.1778782587583;
+        Thu, 14 May 2026 11:16:27 -0700 (PDT)
+Received: from google.com (56.149.168.34.bc.googleusercontent.com. [34.168.149.56])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5c263a0fsm33093835ad.37.2026.05.14.11.16.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 May 2026 11:16:27 -0700 (PDT)
+Date: Thu, 14 May 2026 18:16:23 +0000
+From: David Matlack <dmatlack@google.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 02/11] PCI: liveupdate: Track outgoing preserved PCI
+ devices
+Message-ID: <agYRd0xQs0r8OOKA@google.com>
+References: <20260512184846.119396-3-dmatlack@google.com>
+ <20260514003111.4F10AC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 176ee885-ef26-4254-dbe8-08deb1e49fee
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 May 2026 18:14:22.7024
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR02MB9284
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260514003111.4F10AC19425@smtp.kernel.org>
 
-From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Monday, May 11, 2026 9:=
-24 AM
->=20
-> Add page-selective IOTLB flush using HVCALL_FLUSH_DEVICE_DOMAIN_LIST.
-> This hypercall accepts a list of (page_number, page_mask_shift) entries,
-> enabling finer-grained IOTLB invalidation compared to the domain-wide
-> HVCALL_FLUSH_DEVICE_DOMAIN used by hv_iommu_flush_iotlb_all().
->=20
-> hv_iommu_fill_iova_list() decomposes a contiguous IOVA range into a
-> minimal set of aligned power-of-two regions that fit in a single
-> hypercall input page. When the range exceeds the page capacity, the
-> code falls back to a full domain flush automatically.
->=20
-> Signed-off-by: Yu Zhang <zhangyu1@linux.microsoft.com>
-> Signed-off-by: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
-> ---
->  drivers/iommu/hyperv/iommu.c | 91 +++++++++++++++++++++++++++++++++++-
->  include/hyperv/hvgdk_mini.h  |  1 +
->  include/hyperv/hvhdk_mini.h  | 17 +++++++
->  3 files changed, 108 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/iommu/hyperv/iommu.c b/drivers/iommu/hyperv/iommu.c
-> index e5fc625314b5..3bca362b7815 100644
-> --- a/drivers/iommu/hyperv/iommu.c
-> +++ b/drivers/iommu/hyperv/iommu.c
-> @@ -486,10 +486,98 @@ static void hv_iommu_flush_iotlb_all(struct iommu_d=
-omain *domain)
->  	hv_flush_device_domain(to_hv_iommu_domain(domain));
->  }
->=20
-> +/* Max number of iova_list entries in a single hypercall input page. */
-> +#define HV_IOMMU_MAX_FLUSH_VA_COUNT \
-> +	((HV_HYP_PAGE_SIZE - sizeof(struct hv_input_flush_device_domain_list)) =
-/ \
-> +	 sizeof(union hv_iommu_flush_va))
-> +
-> +/* Returned by hv_iommu_fill_iova_list() when the range exceeds the capa=
-city */
-> +#define HV_IOMMU_FLUSH_VA_OVERFLOW	U16_MAX
-> +
-> +static inline u16 hv_iommu_fill_iova_list(union hv_iommu_flush_va *iova_=
-list,
-> +					  unsigned long start,
-> +					  unsigned long end)
-> +{
-> +	unsigned long start_pfn =3D start >> PAGE_SHIFT;
-> +	unsigned long end_pfn =3D PAGE_ALIGN(end) >> PAGE_SHIFT;
-
-"end" is an inclusive end address per comment in struct iommu_iotlb_gather.
-So a page aligned value would typically have 0xFFF as the low order 12 bits=
-,
-and PAGE_ALIGN() will do the right thing. But I don't think the value is
-*required* to be page aligned.  If the value of "end" had 0x000 as the
-low order 12 bits, the above calculation would fail to include the page
-that has the address ending in 0x000.  I think it needs to be
-PAGE_ALIGN(end + 1) in order to work correctly for this corner case.=20
-
-> +	unsigned long nr_pages =3D end_pfn - start_pfn;
-> +	u16 count =3D 0;
-> +
-> +	while (nr_pages > 0) {
-> +		unsigned long flush_pages;
-> +		int order;
-> +		unsigned long pfn_align;
-> +		unsigned long size_align;
-> +
-> +		if (count >=3D HV_IOMMU_MAX_FLUSH_VA_COUNT) {
-> +			count =3D HV_IOMMU_FLUSH_VA_OVERFLOW;
-> +			break;
-> +		}
-> +
-> +		if (start_pfn)
-> +			pfn_align =3D __ffs(start_pfn);
-
-I don't understand why __ffs() is correct here. I would expect
-__fls() so it is consistent with the calculation of size_align. But I
-can only surmise how the hypercall works since there's no
-documentation, so maybe my understanding of the hypercall is
-wrong.   If __ffs really is correct, a comment explaining why
-would help. :-)
-
-> +		else
-> +			pfn_align =3D BITS_PER_LONG - 1;
-> +
-> +		size_align =3D __fls(nr_pages);
-> +		order =3D min(pfn_align, size_align);
-> +		iova_list[count].page_mask_shift =3D order;
-> +		iova_list[count].page_number =3D start_pfn;
-> +
-> +		flush_pages =3D 1UL << order;
-> +		start_pfn +=3D flush_pages;
-> +		nr_pages -=3D flush_pages;
-> +		count++;
-> +	}
-> +
-> +	return count;
-> +}
-> +
-> +static void hv_flush_device_domain_list(struct hv_iommu_domain *hv_domai=
-n,
-> +					struct iommu_iotlb_gather *iotlb_gather)
-> +{
-> +	u64 status;
-> +	u16 count;
-> +	unsigned long flags;
-> +	struct hv_input_flush_device_domain_list *input;
-> +
-> +	local_irq_save(flags);
-> +
-> +	input =3D *this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	memset(input, 0, sizeof(*input));
-> +
-> +	input->device_domain =3D hv_domain->device_domain;
-> +	input->flags |=3D HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT;
-
-I would suggest moving the memset() and setting the input fields down
-under the "else" below so that they are parallel with the flush all case.
-
-> +	count =3D hv_iommu_fill_iova_list(input->iova_list,
-> +					iotlb_gather->start,
-> +					iotlb_gather->end);
-> +	if (count =3D=3D HV_IOMMU_FLUSH_VA_OVERFLOW) {
-> +		/*
-> +		 * Range exceeds hypercall page capacity. Fall back to a full
-> +		 * domain flush.
-> +		 */
-> +		struct hv_input_flush_device_domain *flush_all =3D (void *)input;
-> +
-> +		memset(flush_all, 0, sizeof(*flush_all));
-> +		flush_all->device_domain =3D hv_domain->device_domain;
-> +		status =3D hv_do_hypercall(HVCALL_FLUSH_DEVICE_DOMAIN,
-> +					flush_all, NULL);
-> +	} else {
-> +		status =3D hv_do_rep_hypercall(
-> +				HVCALL_FLUSH_DEVICE_DOMAIN_LIST,
-> +				count, 0, input, NULL);
-> +	}
-> +
-> +	local_irq_restore(flags);
-> +
-> +	if (!hv_result_success(status))
-> +		pr_err("HVCALL_FLUSH_DEVICE_DOMAIN_LIST failed, status %lld\n", status=
-);
-
-As Sashiko pointed out, a failure here can lead to all kinds of trouble bec=
-ause
-of leaving unflushed entries. Maybe a WARN() is more appropriate? Also, may=
-be
-a failure in the list flush should try a flush all as a fallback, with the =
-WARN()
-only if the flush all fails.
-
-> +}
-> +
->  static void hv_iommu_iotlb_sync(struct iommu_domain *domain,
->  				struct iommu_iotlb_gather *iotlb_gather)
->  {
-> -	hv_flush_device_domain(to_hv_iommu_domain(domain));
-> +	hv_flush_device_domain_list(to_hv_iommu_domain(domain), iotlb_gather);
->=20
->  	iommu_put_pages_list(&iotlb_gather->freelist);
->  }
-> @@ -543,6 +631,7 @@ static struct iommu_domain *hv_iommu_domain_alloc_pag=
-ing(struct device *dev)
->=20
->  	cfg.common.hw_max_vasz_lg2 =3D hv_iommu_device->max_iova_width;
->  	cfg.common.hw_max_oasz_lg2 =3D 52;
-> +	cfg.common.features |=3D BIT(PT_FEAT_FLUSH_RANGE);
->  	cfg.top_level =3D (hv_iommu_device->max_iova_width > 48) ? 4 : 3;
->=20
->  	ret =3D pt_iommu_x86_64_init(&hv_domain->pt_iommu_x86_64, &cfg,
-> GFP_KERNEL);
-> diff --git a/include/hyperv/hvgdk_mini.h b/include/hyperv/hvgdk_mini.h
-> index 5bdbb44da112..eaaf87171478 100644
-> --- a/include/hyperv/hvgdk_mini.h
-> +++ b/include/hyperv/hvgdk_mini.h
-> @@ -496,6 +496,7 @@ union hv_vp_assist_msr_contents {	 /*
-> HV_REGISTER_VP_ASSIST_PAGE */
->  #define HVCALL_GET_GPA_PAGES_ACCESS_STATES		0x00c9
->  #define HVCALL_CONFIGURE_DEVICE_DOMAIN			0x00ce
->  #define HVCALL_FLUSH_DEVICE_DOMAIN			0x00d0
-> +#define HVCALL_FLUSH_DEVICE_DOMAIN_LIST			0x00d1
->  #define HVCALL_ACQUIRE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d7
->  #define HVCALL_RELEASE_SPARSE_SPA_PAGE_HOST_ACCESS	0x00d8
->  #define HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY	0x00db
-> diff --git a/include/hyperv/hvhdk_mini.h b/include/hyperv/hvhdk_mini.h
-> index 493608e791b4..f51d5d9467f1 100644
-> --- a/include/hyperv/hvhdk_mini.h
-> +++ b/include/hyperv/hvhdk_mini.h
-> @@ -671,4 +671,21 @@ struct hv_input_flush_device_domain {
->  	u32 reserved;
->  } __packed;
->=20
-> +union hv_iommu_flush_va {
-> +	u64 iova;
-> +	struct {
-> +		u64 page_mask_shift : 12;
-> +		u64 page_number : 52;
-> +	};
-> +} __packed;
-> +
-> +
-> +struct hv_input_flush_device_domain_list {
-> +	struct hv_input_device_domain device_domain;
-> +#define HV_FLUSH_DEVICE_DOMAIN_LIST_IOMMU_FORMAT (1 << 0)
-> +	u32 flags;
-> +	u32 reserved;
-> +	union hv_iommu_flush_va iova_list[];
-> +} __packed;
-> +
->  #endif /* _HV_HVHDK_MINI_H */
+On 2026-05-14 12:31 AM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> - [Critical] Dangling pointer in dev->liveupdate.outgoing causes Use-After-Free memory corruption and state leaks if a device is not properly unpreserved.
+> - [High] Missing `kho_is_enabled()` check in `pci_flb_preserve()` violates KHO subsystem guidelines.
 > --
-> 2.52.0
->=20
+> 
+> commit f946f5d8b0614325899345e29b5315ff6d5139e9
+> Author: David Matlack <dmatlack@google.com>
+> 
+> PCI: liveupdate: Track outgoing preserved PCI devices
+> 
+> This patch adds APIs to allow drivers to notify the PCI core of which devices
+> are being preserved across a Live Update. It allocates a struct pci_ser via
+> the KHO subsystem to track the outgoing preserved devices.
+> 
+> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> > --- a/drivers/pci/liveupdate.c
+> > +++ b/drivers/pci/liveupdate.c
+> 
+> [ ... ]
+> 
+> > @@ -74,27 +110,30 @@ static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
+> >  
+> >  	size = struct_size_t(struct pci_ser, devices, max_nr_devices);
+> >  
+> > -	ser = kho_alloc_preserve(size);
+> > -	if (IS_ERR(ser))
+> > -		return PTR_ERR(ser);
+> > +	outgoing->ser = kho_alloc_preserve(size);
+> 
+> Does this allocation need to be gated by kho_is_enabled()?
 
+No, if kho_is_enabled() is false then liveupdate_register_flb() would
+have returned -EOPNOTSUPP and thus this callback would never be run.
+
+> 
+> If KHO is disabled, kho_alloc_preserve() will silently add tracking state
+> that will never be used.
+> 
+> > +	if (IS_ERR(outgoing->ser)) {
+> > +		kfree(outgoing);
+> > +		return PTR_ERR(outgoing->ser);
+> > +	}
+> >  
+> >  	pr_debug("Preserved struct pci_ser with room for %u devices\n",
+> >  		 max_nr_devices);
+> 
+> [ ... ]
+> 
+> >  static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
+> >  {
+> > -	struct pci_ser *ser = args->obj;
+> > +	struct pci_flb_outgoing *outgoing = args->obj;
+> >  
+> > -	WARN_ON_ONCE(ser->nr_devices);
+> > -	kho_unpreserve_free(ser);
+> > +	WARN_ON_ONCE(outgoing->ser->nr_devices);
+> > +	kho_unpreserve_free(outgoing->ser);
+> > +	kfree(outgoing);
+> 
+> If a driver fails to unpreserve a device before the FLB is torn down, this
+> WARN_ON_ONCE triggers, but the memory is still freed.
+> 
+> Does this leave dev->liveupdate.outgoing pointing to freed memory?
+
+Yes, if a driver unpreserves a device without notifying the PCI core
+then that would lead to the PCI core having a pointer to freed memory.
+
+I can make this code more robust against buggy drivers in v6.
+
+> 
+> >  
+> >  	pr_debug("Unpreserved struct pci_ser\n");
+> >  }
+> 
+> [ ... ]
+> 
+> > +void pci_liveupdate_unpreserve(struct pci_dev *dev)
+> > +{
+> > +	struct pci_flb_outgoing *outgoing = NULL;
+> > +	struct pci_dev_ser *dev_ser;
+> > +	struct pci_ser *ser;
+> > +	int ret;
+> > +
+> > +	ret = liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void **)&outgoing);
+> > +
+> > +	if (ret || !outgoing) {
+> > +		pci_warn(dev, "Cannot unpreserve device without outgoing Live Update state\n");
+> > +		return;
+> > +	}
+> > +
+> > +	guard(mutex)(&outgoing->lock);
+> > +	ser = outgoing->ser;
+> > +
+> > +	guard(write_lock)(&dev->liveupdate.lock);
+> > +
+> > +	dev_ser = dev->liveupdate.outgoing;
+> > +	if (!dev_ser) {
+> > +		pci_warn(dev, "Cannot unpreserve device that is not preserved\n");
+> > +		return;
+> > +	}
+> > +
+> > +	pci_info(dev, "Device will no longer be preserved across next Live Update\n");
+> > +	ser->nr_devices--;
+> > +	memset(dev_ser, 0, sizeof(*dev_ser));
+> 
+> If dev->liveupdate.outgoing was left dangling from a previous torn-down
+> session, can this corrupt memory?
+> 
+> If a new Live Update session starts, pci_liveupdate_unpreserve() would
+> fetch the new outgoing FLB but operate on the old dangling
+> dev->liveupdate.outgoing pointer.
+> 
+> Does this code cause a use-after-free in the memset() here, as well as
+> corrupt the new session's counter when decrementing ser->nr_devices?
+
+I will clean up any dangling pointers during pci_flb_unpreserve() in v6
+to protect the PCI core against buggy drivers.
+
+> 
+> > +	dev->liveupdate.outgoing = NULL;
+> > +}
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260512184846.119396-1-dmatlack@google.com?part=2
