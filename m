@@ -1,147 +1,128 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7563334D38B
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:49:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CC2B33DEE0;
+	Thu, 14 May 2026 18:52:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778784543; cv=none; b=e5VuFdWG3glyRg5KZsKgl3i4Kv/yVJzMWD9U0ogBUfbVR3GAq18T79UvrazYsAOkhJk/xO72SmVDErdY8NX1vnHfFes9/UBo0ADrpNOsjRgo0KmowDQgx2phC9c5cUwBEp+m+AmD8JaClobJsAgiIhg5oK0Cz1t4KeRhhaku7Xs=
+	t=1778784731; cv=none; b=SQMS0+p75h2xCPleahDCek2E8m7eZAeINxQuBJtvSn024w2bm94C6gwOjrBSReRb8eIKq0thG61aZWmlrytoUgh5EgkRjwNOs5vfbpRJTMjsN/ce2D/nHMY06/XeTkIy09D8CTVRHD63S9Bj5GoH34JDbBX3bCL6kZy1ksyFBRA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778784543; c=relaxed/simple;
-	bh=S+HQA3DBDmaAzjxiWBE3o5kycRdNrVouq6LdlBu+WoI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HBHLm4syrab0VNuhNAOs+zn+QJixxftLSi+S3tXR5uZr8SAOFLdO4h6gvXKHoRBrMqjp8xRpWeGOaUHE0Hh0bvCZ19h2bSLL4mHKH0yIZq6nUolMDXftnEECZHv6sxFRLf+yyCEWv1KI5tUyz6BkR8txJo3D8UhTLAg58vlon24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ksZVlJBt; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1778784731; c=relaxed/simple;
+	bh=memKOZyPomJFumSLFhdkKwDo6BDW8hqipAsmwAWhpIs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=U0NhOS+F4NcBhvwGAE6HIbI1R/03PDZlb1N7PKxZ7yqK0fGM5W7HfUsRLDezTK8NyFp4+1uUa0ROL8zMBGft1yjTJM4qjodwhWe4NKtNGaKKZZYzHrhnka+BYTlmaUa5HahpyBNKRPJgAoOXe9kEtiCnzwinEosizk25xTxTZ/U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cbKaFRyd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ksZVlJBt"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-366330b6751so5704820a91.1
-        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 11:49:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1778784539; x=1779389339; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=O8yEpAjdQMsKna7KcQWgbLZNAzQyoKwhHcUHxguzEl8=;
-        b=ksZVlJBtWe+Clccx3ppCKa4KZMoqb4PLVRm5w58MZc0Q22R7p+zxIjU8W8oRXX198o
-         zhGjEy29yc2pkfUFJmbJToIgtWGjqJUyNU3jtwNQBNMleErrv52w+LhZ0gJNqESSn8k/
-         hwrE+uZZAb+se3V8CGlpDt4w/dRoN4SPyPX2DhviW7Gm50xCgK8ti4L/C3CFwMGPdm9V
-         erPWt8NTEInNhqAH/F/iAoDWW4bNYs/LPMkhGEa66piZcp3O3d5tCmYr5UrT58RF/r3G
-         2WpdoP8x+brkxk9qu8pSZRBVl6K4s5wssPqz+B+Sd95LIWqpD0cHVxyKjAi/kmT+VtIZ
-         MQFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778784539; x=1779389339;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=O8yEpAjdQMsKna7KcQWgbLZNAzQyoKwhHcUHxguzEl8=;
-        b=LL8EGK2lSWYa9xfxJ007uuhkzBykxus0h4UKqqGPZfS4cZ2sopwU3helVJg+OoedMj
-         JquGWjdYfol0QHdRKBDTIIvzTtJ2QpsrJfot4Z4N08Apx8kmVzgv0D8QVQ4UHlpLQfp9
-         zC2OdKeZutCYNWhXyOwF5hCEzSSnUEBkcQF4ade0Mphlx2EhJ1QVqYqLqO5ImF2JmAXR
-         MuO05qzc7KUmApMDYrCuvgkNrYjnKz8q0rmHJKorPRoCxqiPaAkiu+NiWUwhkr0gWDjs
-         I6Gh9MOP06/O8KmyC9ujuwYAHa2cO2rxtny8Bjk/xTnXjrLdJHEAmQc6wbwLRVZg6OoC
-         vy1A==
-X-Gm-Message-State: AOJu0YzP0vq37ezgXHfg1CHma7QaMgdMoHF5AGRmMoNXNJcLKXxYr7mT
-	x8pluqCobOIx06CTJiSbwF+L5QF5wz/6OeUOMiUA23EAHLdkUaLPeiut4kcHCujFqg==
-X-Gm-Gg: Acq92OGcIcOMf8HZro2IYsde9QAidnAvo5R52mrfrAqDxw2icC5v1vkDp3l7OUVN54S
-	3mXfzBaLNktckA6ItgsN0bld7l06p6vhAqBO4lnrJz/A4e47VzYd2f2Y4g1Lbpg2MF1AMrs4TTr
-	dXBtldQfMKNBJpFWUdbWhuj+m1bFQo194/TI0HuTDnLfD9qRB+wJVh4a+9tsRuz7//EtH0r8ODh
-	TypqaO/SZQ4Cg5w4YCFoosXTaDNgU1/nXI2USWMU4eBXj2NdqdPYH9VvbRpv4cg+H/HbiZYrakW
-	ZFKZc6+Gl3/F4/BFTuBmo1vt4vvqedHP5a7bePUfAXFs0MYv8FcekHyJRPl2lMXcy9L1f7TEJGI
-	6ncLExuMBM/pnw02QOtA0gl4tLr+WRL6olFFXgHlHwD+HcgDjwtgFPJbhX+gYexjZRNu0u8plAJ
-	dWNdOkKt8Mb1yQsgVLgq25/hQIrEmCOJunoEOWKf+uHBZAb0M6LCC7mQ5AJGUArPc3rvDoLZYE
-X-Received: by 2002:a17:90b:3dc4:b0:365:fca2:8bdd with SMTP id 98e67ed59e1d1-36951778509mr672982a91.0.1778784538661;
-        Thu, 14 May 2026 11:48:58 -0700 (PDT)
-Received: from google.com (56.149.168.34.bc.googleusercontent.com. [34.168.149.56])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-369517a820fsm315498a91.10.2026.05.14.11.48.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 May 2026 11:48:58 -0700 (PDT)
-Date: Thu, 14 May 2026 18:48:55 +0000
-From: David Matlack <dmatlack@google.com>
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 09/11] PCI: liveupdate: Freeze preservation status
- during shutdown
-Message-ID: <agYZF7W-hRtj_IX6@google.com>
-References: <20260512184846.119396-10-dmatlack@google.com>
- <20260514031440.483F0C19425@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cbKaFRyd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96E9FC2BCB3;
+	Thu, 14 May 2026 18:52:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778784730;
+	bh=memKOZyPomJFumSLFhdkKwDo6BDW8hqipAsmwAWhpIs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=cbKaFRyd0WCGeCa+r1LHnslwN6FX3tkbvShV11NORRwPqWfPT451r43V7qhMpLjBl
+	 O1iX0NsU/+SGjSUZjFj5OoH6HIlPrBH/ZRI5iaK2Tv5q3MoGyDnzldZqy9stSYIs0L
+	 YnDni6YIIqd+g3TDSv6SpjV7OOeMeprmhSTUpv1XitG42gS0CQL6NbgGgsr1SzhJS9
+	 RAof1NcVvsDoF+8kJCTtEgOocj15Mf3sj4nP9vUaGqndO8CQ7KWOjOzbEI+kX0FrSF
+	 tcgeLfwHWFpofHmiPeCEy8hJBD0chYYf+vdOusiddv7kkKfZLyhtulvgR6r6jLQ8F3
+	 71I/Z3vwgawSg==
+Message-ID: <e0129a50-11d9-4212-99ca-4e7f4e862030@kernel.org>
+Date: Thu, 14 May 2026 13:52:08 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260514031440.483F0C19425@smtp.kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] PCI: Wait for device readiness after D3hot ->
+ D0uninitialized transition
+Content-Language: en-US
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+ Marco Nenciarini <mnencia@kcore.it>,
+ Michal Winiarski <michal.winiarski@intel.com>,
+ Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+ Eric Chanudet <echanude@redhat.com>, Jean Guyader <jean.guyader@gmail.com>,
+ Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Gary Li <Gary.Li@amd.com>
+References: <20260514153124.404060-1-bhelgaas@google.com>
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <20260514153124.404060-1-bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 2026-05-14 03:14 AM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
-> - [High] Preservation rollback fails if the device is concurrently frozen, breaking bridge hierarchy invariants.
-> - [Low] Syntax error in the !CONFIG_PCI_LIVEUPDATE stub for pci_liveupdate_freeze().
-> --
+On 5/14/26 10:31, Bjorn Helgaas wrote:
+> For a device that advertises No_Soft_Reset == 0, a transition from D3hot to
+> D0uninitialized is a soft reset, and the resulting internal device state is
+> undefined.
 > 
-> commit f49768e50767ced554fd83ab7e5016423c3d87a2
-> Author: David Matlack <dmatlack@google.com>
+> A transition from D3hot to D0uninitialized requires a minimum delay of
+> 10 msec before accessing the device, but after that delay, the device is
+> permitted to respond to config requests with RRS completion status if it
+> needs more time to initialize (PCIe r7.0, sec 2.3.1).
 > 
-> PCI: liveupdate: Freeze preservation status during shutdown
+> Call pci_dev_wait() after pci_power_up() performs a D3hot->D0uninitialized
+> transition to ensure the device is ready to accept config accesses, as is
+> done after the similar transition in pci_pm_reset().
 > 
-> Freeze a device's outgoing preservation status (preserved or not preserved)
-> during shutdown. This enables the PCI core and drivers to safely make
-> decisions based on the device's preservation status during shutdown.
+> If the device is already ready, this is essentially a no-op except for one
+> additional config read.
 > 
-> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > index 6ab03bd548b37..825166a579130 100644
-> > --- a/drivers/pci/liveupdate.c
-> > +++ b/drivers/pci/liveupdate.c
-> > @@ -334,6 +334,11 @@ static int pci_liveupdate_unpreserve_device(struct pci_ser *ser, struct pci_dev
-> >  
-> >  	guard(write_lock)(&dev->liveupdate.lock);
-> >  
-> > +	if (dev->liveupdate.frozen) {
-> > +		pci_WARN(dev, 1, "Cannot unpreserve device after it is frozen!\n");
-> > +		return -EINVAL;
-> > +	}
-> 
-> During preservation rollback, can this check leave a child device preserved
-> while its parent is not?
-> 
-> If pci_liveupdate_preserve_path() successfully preserves a child device,
-> but fails to preserve the parent bridge, it attempts to roll back by calling
-> pci_liveupdate_unpreserve_device() on the child.
-> 
-> If a concurrent system shutdown calls pci_liveupdate_freeze() on the child
-> device before this rollback occurs, this check will return -EINVAL and
-> fail the rollback.
-> 
-> Does this result in a broken topology being passed to the incoming kernel?
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Hm yes that race does look possible. Will fix in v6.
+Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
 
-> 
-> [ ... ]
-> 
-> > diff --git a/drivers/pci/liveupdate.h b/drivers/pci/liveupdate.h
-> > index fd7693c7ddd21..30deaa673efed 100644
-> > --- a/drivers/pci/liveupdate.h
-> > +++ b/drivers/pci/liveupdate.h
-> [ ... ]
-> > @@ -26,6 +27,10 @@ static inline void pci_liveupdate_cleanup_device(struct pci_dev *dev)
-> >  {
-> >  }
-> >  
-> > +static inline void pci_liveupdate_freeze(struct pci_dev *dev);
-> > +{
-> > +}
-> 
-> Does this stray semicolon after the function signature cause a compilation
-> error for kernels built without CONFIG_PCI_LIVEUPDATE?
+BTW -
 
-Yup, Mike Rapoport and kernel-test-robot also flagged this off-list.
-Will fix in v6.
+This reminds me of an attempt I had at solving a similar issue a few 
+years back.  It would be a nice side effect if this actually solves that 
+  issue too.
 
+https://lore.kernel.org/linux-pci/20240823154023.360234-3-superm1@kernel.org/
+
+> ---
+>   drivers/pci/pci.c | 18 ++++++++++++++++--
+>   1 file changed, 16 insertions(+), 2 deletions(-)
 > 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20260512184846.119396-1-dmatlack@google.com?part=9
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f7cfcc00090..9d0fc9fbb76a 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1301,6 +1301,16 @@ int pci_power_up(struct pci_dev *dev)
+>   	pci_power_t state;
+>   	u16 pmcsr;
+>   
+> +	/*
+> +	 * When setting power state to D0, platform_pci_set_power_state()
+> +	 * ensures main power is on.  If it puts the device in D0, it also
+> +	 * completes any required delays after the transition; if it leaves
+> +	 * the device in D1, D2, or D3hot, we use the PM Capability to
+> +	 * transition to D0.
+> +	 *
+> +	 * In all cases, the device is either Configuration-Ready or
+> +	 * inaccessible upon return.
+> +	 */
+>   	platform_pci_set_power_state(dev, PCI_D0);
+>   
+>   	if (!dev->pm_cap) {
+> @@ -1341,10 +1351,14 @@ int pci_power_up(struct pci_dev *dev)
+>   	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
+>   
+>   	/* Mandatory transition delays; see PCI PM 1.2. */
+> -	if (state == PCI_D3hot)
+> +	if (state == PCI_D3hot) {
+>   		pci_dev_d3_sleep(dev);
+> -	else if (state == PCI_D2)
+> +		if (!(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET))
+> +			pci_dev_wait(dev, "power up D3hot->D0uninitialized",
+> +				     PCIE_RESET_READY_POLL_MS);
+> +	} else if (state == PCI_D2) {
+>   		udelay(PCI_PM_D2_DELAY);
+> +	}
+>   
+>   end:
+>   	dev->current_state = PCI_D0;
+
