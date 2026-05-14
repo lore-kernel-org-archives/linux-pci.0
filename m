@@ -1,73 +1,72 @@
-Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 854402D836D
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:27:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4524939E184
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:39:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778783258; cv=none; b=mElL3RXFAGyg0CQfbZ3jv74PITZuyZJ1RtiAMl+D1UEdWMhnoO1Hfg28mWb0k8vMAWKDZZpbq4CjcKyQH2w7Bo7NxUBrB/fv+0ED0A5K3Pdqq8dXZSTwNJeIrut5c1cDqMdheWZ+oI+GOWWHX+vyk1tPJe+ghBFfdVOTIJ79GQM=
+	t=1778783968; cv=none; b=gkI6eNdRu7u6U6XkqdSDxg62pP+Cx+4FiIPpYm4CZrMk535JHGag0iUfWUxYOS40t8xxtn72bneq8pWRBKRCDCAz+zblARk/GhcjvW4S85TLAq+Iz8/4t7WScwYvmPgB8QXwM/l/kJ/SKqMu9QHHH0qUCGg/zbYJVrYqfTqz+KQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778783258; c=relaxed/simple;
-	bh=aVw1OWGbmIDbHVY3BwLts2n5HpVXMHPTRJSvQJGBYAk=;
+	s=arc-20240116; t=1778783968; c=relaxed/simple;
+	bh=IrF0zGrTHmpd++IPJHJubaUM4ePJN6hA/bybSS4Ofz0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jMAB0IUL0PgZ2wFNyeEpWslaSuhgWEthDkA5T/IeYO3N1+SITKrLvkQBQ31Jp25TmvyxJODK9S+A1RMqADY3+UdQeG1gw9QYWXgQpgMXWAl6fvCWAM88C+u3fE15HIhMUxrEEcLd2FQxtBaUDWA+x5xOCOvgMJXKEiqyrjOprbg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NlvwFhUX; arc=none smtp.client-ip=74.125.82.49
+	 Content-Type:Content-Disposition:In-Reply-To; b=hCj/py0AZPNuZLok3FcR8bKyQS2AXop12KDQ63aZe3C6pU44s5gEfrpQNbCfd7MmzibOfFIxPvnEI1OQQ0Ji2J9m2ke9cLKnCB29SvbHqjkdof7zAFwcMqnWPcaRMwBwr2ysAqzvd9yxftLyHVXiH9PjGZkvHsStftAjn7ajN3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=oktT/2bO; arc=none smtp.client-ip=209.85.210.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NlvwFhUX"
-Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-1335cb20406so419068c88.0
-        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 11:27:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="oktT/2bO"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-8379e010b01so3709933b3a.1
+        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 11:39:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1778783256; x=1779388056; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1778783966; x=1779388766; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=hg6IMrnQ8rIdunh62Bq5pOIvEVv9aCeOeb/XYHKMD4Q=;
-        b=NlvwFhUXvDffAFrg7hKwyMtr7FnZj/7wZaozXd5FSEGmXEscBfh6J92v6sgjl4PMTT
-         Ys4tc0urHRIr1jYTy6mRDmCGpDLsI2X7/vOaiixd+6myCkFLFQfWszrGqAhFO65DFEnY
-         ISJ10DauWKPdf8+e6q3lgl85QBTP86sLg1OhRhW+fXVKzZ/qnHlW2G6qXwCbbn/jYH9r
-         MzhtQLrwyvHfrorCgYf764SPdOtBJ/v9YBCVwz5rfcmIdUgCbxJeLAZQ8d1m/Dhhjoy4
-         oEnvxTTJhgAXUkqhhTF85DVfFrTEQsmrgTLLeKSHMpPPh5Vfg4afMTUZ6Zt2DJ7PnsDo
-         asWA==
+        bh=lLOCOr0MLE6BsBE2JUx9eHh9btnIM0Pqg1T53aQwE2M=;
+        b=oktT/2bOGngaOZbyc1bGvG6ObOMcAOiXB+hG5FXR0Y0BLqvQb6I9+E+Nuv1w+AiVub
+         lX0Od10rC9g26LYFsVI0I3BJhwCcmSQ2jpD1pBYUGenXN+C2i6mw8FvxoGH4jqQllgZ+
+         1zQQx+urO4KeHFfkripg6/Hp2VyleHtitu8zeLDbhMmoMP/VkV9wE0j3GH2t6QCHYO9K
+         WNPprZqd0E0HAo5ZzY7o8uc8EsVPewjJZKTMBjoGX06l8po35CrS01GxLgW1T4AtDZFy
+         fuH443MAUseUwaDCMqW3dy1vdn1lEoEsUkcrKbeR9eg2MY1a2ZleeHj2MaFcCTckj8pH
+         aGAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778783256; x=1779388056;
+        d=1e100.net; s=20251104; t=1778783966; x=1779388766;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hg6IMrnQ8rIdunh62Bq5pOIvEVv9aCeOeb/XYHKMD4Q=;
-        b=X7i1QrJ9gVq22s0+Q9+6/ezv5Phd4pnBi14JmEolylynGeaVFzMutyG58T0puYBUi3
-         Q332fP2ldhY/oVxgaop82S/W1DSV0zTTImD8B9qmD4r8XJVK3iuhuwTltLLWxR+SRGQf
-         EMP9kg85/4MCQ/mW+lpZFUolfl8WgrDem5cLSUgqOZSWH+EoNT7iLoV+0ZEqHyogwusV
-         EV+Y34bZZQc9C1u5NRAkuLL7cPMtO8D9JeadJqvuRIGH9CiqmHTv39qSC7R+HSgbzLLJ
-         4Rtx1ptekXwYtw7Ypyzp91BugunrCZuIlZZFY9SDMQ2C7hIlTplUd7q2nvEsmX0664iG
-         rMCg==
-X-Gm-Message-State: AOJu0YwZ1Cfdq/jYcOtaYi9b/DeSmEPUBk6lXkcXtLb2P/8hyENL/J+L
-	tdStid6I+wGlWaiy4/9Fnm/6HsU7RYzD10QuPvkmp6S+MgQMq8DyB04IX+dEytjiIyO9fcjfc3H
-	5AGibQw==
-X-Gm-Gg: Acq92OEIxl6fkWAAcTLxJEkMUrpmm4mwQpYBTt2eOl6n+nH1kln/MIYjEMaegxQh9Ed
-	fRyhZpS4JU7kkbvl3KQkAImpoogJA5D9hZk+9r1mY/KAWpXPUJq/2l2AjZNFLI/VkHW7cXYxOYt
-	rctRIM+BFwXNVzNdSSfPfNjAKhznoq+y6Gh6IPGr9K1ufI/N/BaFHn0lhqpw2EMfgqRSizYy++p
-	31Qeh/usLIya04zMlrGwjq6kKxokY7ufE/ASVJV/i7maet1rhOFKmt+1KgHbuZIpl69UUn5fTUn
-	luYAVBe3XrHKb95KrGjANjznjk0abfWRuDtpQUkpUZlqIoXVkvp/NjhZetMWAVRt2mGWBrWZOaJ
-	NpZX/hYy2/w7TGkUD55iNTngezs8dEUS5sInCJGT5QWaIw15SRwQBl4LuA93QYgxCMfteWiE44U
-	6dYDyd0CBMPh1UBC6vLbWWQLQfAUF2e7itgt9bF0GHPr0Ea+TQc2ehhczU5JcimLfL09GuntQcR
-	CfioW23pCQ=
-X-Received: by 2002:a05:7022:41a7:b0:134:def6:e70b with SMTP id a92af1059eb24-1350451e322mr126140c88.6.1778783254874;
-        Thu, 14 May 2026 11:27:34 -0700 (PDT)
+        bh=lLOCOr0MLE6BsBE2JUx9eHh9btnIM0Pqg1T53aQwE2M=;
+        b=gtu155ePEQ5U8bVf8yegwjChUgBNXlmJEH/dXlMqnICs9XLA4m5jPCiQOXup4Vr+6/
+         vsS4Q03hYl1le4JsSGv6iu5tlnjdnr0wZrmlzWYwgS4dTRAfZq7EJ4XSipuLLWF/43tG
+         x+EnfahK0LemaDh+G4b1UBD25aMpeJE1Egbfv8OgP7Wd33SbaD0czY08zHD4l/kdaF67
+         JbjZVZZ+KV4gLI2CcHhkAlIL5YjC6N1YqJpS+Gse+OjNUfVtkZWcJ2vnNm/YveRzr1tG
+         JTaxgYsjg8F2RKVKgI4+mJB0ZCMBkdQihkfW9EU5aDLFhJdx7rGBgVoO0Nq1yKR3zw1f
+         AwMw==
+X-Gm-Message-State: AOJu0YwVCMMKo78SRa2xEaWmfD30qbOySpBQup3u5C5mTg8b8FFItW7N
+	zsPzeRH9TC/JawfawffO9pIvNNi/1bPL8o8bAnOXKP0+odSg3I2uc0LytK+TudeFEQ==
+X-Gm-Gg: Acq92OGZcLTdF2hgmAKdoFUnmhTN6BXgDv6q/+qkWiGAsfGNnCP2Gzsy2Jnpwxs1bfx
+	3kUuc5UjSrZxGf734+ayKt9u3hcvw1TEPeQObl7vmESeKQYO1XJEe9tqv6oqkPirF6G0+WQZsZO
+	dKV+knXpoOeyB4KlSm0y8iCCtXlopMfw8E4vaGV7CIN+08aM97G8OsszzFywKwEl9FSA+mWDsfs
+	CBE76bo7rmRdHJQBYFUqYLUJRwTutd0M5wjm+o6kZxDeatFxBGbYtr0ZwJiHAL9ZcepqJU+dPFV
+	kN2r6cbIvrjKBCHx/cLVh4M+v93mrIBt0rb/K/NANXCHvMgQeWKSGNJDpsovhNenlbVfl4YsA7Z
+	V65bujcirv1rcPBFA/qceX54fLREK88lcgLCBk9iNIzbl4PdSkPqsg3/51Z/fvq/1zae+8I8l3k
+	rGQW/O/jCzXZTRGsVUqBXx8SPIlZkB08W6Q6edryyia7NbLkKPwAhh1ymjeYZ0sTzpoW1VlAp51
+	oetM2GIdTI=
+X-Received: by 2002:a05:6a00:ad5:b0:823:cbb:a484 with SMTP id d2e1a72fcca58-83f33cbf6abmr694029b3a.14.1778783965954;
+        Thu, 14 May 2026 11:39:25 -0700 (PDT)
 Received: from google.com (56.149.168.34.bc.googleusercontent.com. [34.168.149.56])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-134cf44668asm4587270c88.6.2026.05.14.11.27.34
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83f19c78844sm3268209b3a.47.2026.05.14.11.39.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 May 2026 11:27:34 -0700 (PDT)
-Date: Thu, 14 May 2026 18:27:30 +0000
+        Thu, 14 May 2026 11:39:25 -0700 (PDT)
+Date: Thu, 14 May 2026 18:39:22 +0000
 From: David Matlack <dmatlack@google.com>
 To: sashiko-reviews@lists.linux.dev
 Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 03/11] PCI: liveupdate: Track incoming preserved PCI
- devices
-Message-ID: <agYUEtoSFyvJewNg@google.com>
-References: <20260512184846.119396-4-dmatlack@google.com>
- <20260514010518.B0B41C19425@smtp.kernel.org>
+Subject: Re: [PATCH v5 05/11] PCI: liveupdate: Keep bus numbers constant
+ during Live Update
+Message-ID: <agYW2pLTsjwuNBg2@google.com>
+References: <20260512184846.119396-6-dmatlack@google.com>
+ <20260514013646.C4F8BC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,207 +76,80 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260514010518.B0B41C19425@smtp.kernel.org>
+In-Reply-To: <20260514013646.C4F8BC19425@smtp.kernel.org>
 
-On 2026-05-14 01:05 AM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 6 potential issue(s) to consider:
-> - [High] Integer truncation in `pci_ser_xa_key()` drops the upper 16 bits of the PCI domain.
-> - [High] Memory leak of KHO-preserved physical pages in the error path of `pci_flb_retrieve()`.
-> - [High] Subsystem guide violation: `pci_flb_preserve()` calls a KHO serialization API without checking `kho_is_enabled()`.
-> - [High] Data corruption in `pci_liveupdate_unpreserve()` due to decrementing `ser->nr_devices` without compacting the array.
-> - [High] Use-after-free risk because `pci_flb_unpreserve()` leaves dangling pointers in `dev->liveupdate.outgoing`.
-> - [High] `pci_liveupdate_finish()` calls `pci_liveupdate_flb_put_incoming()` under a write lock, risking a sleep-in-atomic bug.
+On 2026-05-14 01:36 AM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
+> - [High] Bridge bus numbers are inadvertently cleared for 'broken' topologies during Live Update, modifying the hardware fabric and disrupting active memory transactions.
 > --
 > 
-> commit 46fdddc110c525ef02301643989348b7f03a10c0
+> commit 0f468978660735d49ff81fb445992a21db06f9ce
 > Author: David Matlack <dmatlack@google.com>
 > 
-> PCI: liveupdate: Track incoming preserved PCI devices
+> PCI: liveupdate: Keep bus numbers constant during Live Update
 > 
-> This commit adds support for tracking pci devices preserved across a kexec
-> via live update. It introduces setup and cleanup hooks for the pci core to
-> manage the incoming live update state of these devices.
+> During Live Update, preserved devices must be allowed to continue performing
+> memory transactions. This commit modifies the PCI core to always inherit
+> bridge bus numbers when any devices are preserved, avoiding topology
+> changes that could disrupt ongoing operations.
 > 
-> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > index 9c4582ecd55cc..f14396dd14773 100644
-> > --- a/drivers/pci/liveupdate.c
-> > +++ b/drivers/pci/liveupdate.c
-> > @@ -85,6 +101,21 @@ struct pci_flb_outgoing {
-> >  	struct mutex lock;
-> >  };
-> >  
-> > +/**
-> > + * struct pci_flb_incoming - Incoming PCI FLB object
-> > + * @ser: The incoming struct pci_ser from the previous kernel.
-> > + * @xa: Xarray used to quickly lookup devices in @ser.
-> > + */
-> > +struct pci_flb_incoming {
-> > +	struct pci_ser *ser;
-> > +	struct xarray xa;
-> > +};
-> > +
-> > +static unsigned long pci_ser_xa_key(u32 domain, u16 bdf)
-> > +{
-> > +	return domain << 16 | bdf;
-> > +}
-> 
-> Can this integer shift truncate the upper 16 bits of the pci domain?
-> 
-> Because domain is a u32, the shift expression evaluates as a 32-bit integer.
-> This discards the upper 16 bits before the result is promoted to the 64-bit
-> unsigned long return type.
-> 
-> If devices are in domains >= 0x10000, this will produce colliding keys,
-> causing them to overwrite each other in the xarray.
-> 
-> Could this be cast before the shift, such as
-> ((unsigned long)domain << 16) | bdf?
-
-Ah I thought I had fixed that in v5. Will fix in v6.
-
-> > +
-> >  static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
-> >  {
-> >  	struct pci_flb_outgoing *outgoing;
-> 
-> Does this function need to check kho_is_enabled() before proceeding?
-> 
-> According to the kho subsystem guidelines, all callers of serialization-side
-> kho APIs (like kho_alloc_preserve() used later in this function) must
-> gate their usage on kho_is_enabled().
-> 
-> Failing to check the enabled state can cause null pointer dereferences or
-> silently add useless tracking state that will never be used.
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index b5fdc5017f921..08ea9324647ba 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
 > 
 > [ ... ]
 > 
-> > @@ -140,13 +171,44 @@ static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
+> > @@ -1497,8 +1505,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+> >  		 * do in the second pass.
+> >  		 */
+> >  		if (!pass) {
+> > -			if (pcibios_assign_all_busses() || broken)
+> > -
+> > +			if (assign_new_buses || broken)
+> >  				/*
+> >  				 * Temporarily disable forwarding of the
+> >  				 * configuration cycles on all bridges in
+> > @@ -1512,6 +1519,12 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+> >  			goto out;
+> >  		}
 > 
-> Can pci_flb_unpreserve() cause a use-after-free risk by leaving dangling
-> pointers?
+> Does this code accidentally clear the secondary and subordinate bus numbers
+> for bridges with a "broken" configuration during a Live Update?
 > 
-> When an outgoing live update is aborted, this function frees the outgoing->ser
-> memory via kho_unpreserve_free(). However, it does not clear the
-> dev->liveupdate.outgoing pointers in the pci devices that were already
-> preserved.
+> In the first pass (!pass), if the bridge topology is invalid (broken == 1),
+> the code enters the if (assign_new_buses || broken) branch and executes a
+> pci_write_config_dword() that disables configuration cycles.
 > 
-> If a new live update is initiated and pci_liveupdate_unpreserve() is called
-> on those devices, it will execute memset(dev_ser, 0, ...) on the dangling
-> dev->liveupdate.outgoing pointer, corrupting memory.
+> Since the pci_liveupdate_inherit_buses() safety check happens after this
+> block, the hardware fabric gets modified before the early return. Can this
+> disrupt ongoing memory transactions for preserved downstream devices?
 
-This was addressed in the patch 2 thread.
+No, it is on purpose, not accidental.
+
+If the bridges bus secondary and/or subordinate bus numbers are
+misconfigured during a Live Update then the options are:
+
+ 1. Proceed with enumeration with the misconfigured
+    secondary/subordinate numbers.
+ 2. Clear the misconfigured numbers and refuse to enumerate further.
+ 3. Clear the misconfigured numbers and then assign new bus numbers.
+
+(1) seems like a bad idea to try to proceed with a misconfigured bridge.
+(3) could lead to the bus numbers assigned to preserved endpoints
+changing, which could lead to corruption (e.g. memory transactions being
+routed to the wrong devices). (2) seems like the only sane option.
 
 > 
-> >  
-> >  static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
-> >  {
-> > -	args->obj = phys_to_virt(args->data);
-> > +	struct pci_flb_incoming *incoming;
-> > +	int i, ret;
-> > +
-> > +	incoming = kmalloc_obj(*incoming);
-> > +	if (!incoming)
-> > +		return -ENOMEM;
-> > +
-> > +	incoming->ser = phys_to_virt(args->data);
-> > +
-> > +	xa_init(&incoming->xa);
-> > +
-> > +	for (i = 0; i < incoming->ser->max_nr_devices; i++) {
-> > +		struct pci_dev_ser *dev_ser = &incoming->ser->devices[i];
-> > +		unsigned long key;
-> > +
-> > +		if (!dev_ser->refcount)
-> > +			continue;
-> > +
-> > +		key = pci_ser_xa_key(dev_ser->domain, dev_ser->bdf);
-> > +		ret = xa_err(xa_store(&incoming->xa, key, dev_ser, GFP_KERNEL));
-> > +		if (ret) {
-> > +			xa_destroy(&incoming->xa);
-> > +			kfree(incoming);
-> > +			return ret;
+> > +		if (pci_liveupdate_inherit_buses()) {
+> > +			pci_err(dev, "Cannot reconfigure bridge during Live Update!\n");
+> > +			pci_err(dev, "Downstream devices will not be enumerated!\n");
+> > +			goto out;
 > > +		}
-> 
-> Does this error path leak the preserved physical pages?
-> 
-> If xa_store() fails, this returns an error code without calling
-> kho_restore_free(incoming->ser). Because the function returns an error and
-> does not populate args->obj, the live update core will not call the .finish
-> callback to clean up the memory.
-
-Yes if retrieve fails then the preserved struct pci_ser gets leaked. The
-user is likely going to reboot the system anyway since the preserved
-devices will not able to be retrieved, so I don't think leaking is a
-problem in practice. But I also don't see any reason why we have to leak
-it. I will free it in v6.
-
-> 
-> [ ... ]
-> 
-> > @@ -268,6 +330,163 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
-> 
-> Can pci_liveupdate_unpreserve() corrupt the live update tracking state by
-> leaving holes in the array?
-> 
-> Looking at the body of pci_liveupdate_unpreserve():
-> 
-> drivers/pci/liveupdate.c:pci_liveupdate_unpreserve() {
->     ...
->     ser->nr_devices--;
->     memset(dev_ser, 0, sizeof(*dev_ser));
->     ...
-> }
-> 
-> If a device other than the most recently preserved one is unpreserved, this
-> leaves a hole in the array and moves the allocation cursor backward.
-> Subsequent device preservations will overwrite currently preserved, valid
-> devices at that index.
-
-Leaving a hole in the array is the intention. ser->nr_devices is not a
-cursor, it is the number of valid (non-hole) elements of the devices
-array. pci_liveupdate_preserve() specifically walks through the entire
-array to find the first non-hole to use for the next device.
-
-> [ ... ]
-> 
-> > +void pci_liveupdate_finish(struct pci_dev *dev)
-> > +{
-> > +	guard(write_lock)(&dev->liveupdate.lock);
 > > +
-> > +	if (!dev->liveupdate.incoming) {
-> > +		pci_warn(dev, "Cannot finish preserving an unpreserved device\n");
-> > +		return;
-> > +	}
-> > +
-> > +	pci_info(dev, "Device is finished participating in Live Update\n");
-> > +
-> > +	/*
-> > +	 * Drop the refcount so this device does not get treated as an incoming
-> > +	 * device again, e.g. in case pci_liveupdate_setup_device() gets called
-> > +	 * again because the device is hot-plugged.
-> > +	 */
-> > +	dev->liveupdate.incoming->refcount = 0;
-> > +	dev->liveupdate.incoming = NULL;
-> > +
-> > +	/* Drop this device's reference on the incoming FLB. */
-> > +	pci_liveupdate_flb_put_incoming();
-> > +}
-> 
-> Can calling pci_liveupdate_flb_put_incoming() under a write lock cause a
-> sleep-in-atomic bug?
-> 
-> This function calls pci_liveupdate_flb_put_incoming() while holding
-> dev->liveupdate.lock (an rwlock) for writing. If the put function acquires a
-> sleepable lock internally, calling it from atomic context will trigger a bug.
-> 
-> This contrasts with pci_liveupdate_cleanup_device() which drops the lock
-> first using scoped_guard().
-
-Ah I fixed this in a later patch in the series but forgot to also
-address it in this intermediate state. Will fix in v6.
-
+> >  		/* Clear errors */
+> >  		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+> >
 > 
 > -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20260512184846.119396-1-dmatlack@google.com?part=3
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260512184846.119396-1-dmatlack@google.com?part=5
