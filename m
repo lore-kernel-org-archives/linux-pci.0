@@ -1,125 +1,102 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60CEE2E8DEA;
-	Thu, 14 May 2026 00:40:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 656B01531C8;
+	Thu, 14 May 2026 01:00:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778719255; cv=none; b=RXnqKEa9qzdR7IvJx681E4b77yy3t2bQNQsrTi6ixuHUayWWd1k+NouhtlDMO2+dfcyiWLbx0zSwYkrkTvypJ/hRZx6ppEUPO7jX/q6i0O8mXomCICK038R2XzmL1H2j1ZsWX5yD/wbSEJU836Ovy+jgj9oeWC0f+XuvmIdyJiY=
+	t=1778720446; cv=none; b=oOy3P8EezyJX/uEkO9hI4ySRSrqv9oYXm8MfWpIkHN0qqGJ2ojzPeUmaan4vRSfv63pKctGj4URNDrcWoJXM0PtuHC72GZVYQRpIw38A6gm9axO/VJDlG72O45yhrahIA3ZY2/nBqkH73H9QzH9xiJ5eMQhPkfcjD/Y/4hpByP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778719255; c=relaxed/simple;
-	bh=9xPoi/jOuwJ24aHDa6rb5dxZ5tEHkzImVHb7GEE3Ank=;
+	s=arc-20240116; t=1778720446; c=relaxed/simple;
+	bh=c0dvtN3hG6NA848503CiLGO4uQ5N2nrPxiII+aSKRwY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pWe8BGEW5raWGrA3k1rOM1kRZHODxHjnI93vMZsvyNZ/ZkSmg9XzYptQDfTZeH5E4Vmh1u3PpsaKKbP517bMMGV6X334Tbkbc0kwQZGzgnf47dApB2iu73OSrMtu93o1rpjVor5tJI0nXjuzWZMURpI7XexrR291oLaXIBv8zBM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WwALq+zL; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=KvIB/3AEGLWD1yycd2TSjHJjuT8pnGkOaVau81eQ0HYQijWO25I2hWaOS8wpJ6O7H2hlkvMwHFX/Q0MyPwjwH2El8ZWYesna12SolRFnp1lErQttjOxwRVSDkY48xFV3zrkxdz3vefZ8XxYZrX6FEJHMyFP5+YH4DVI/AkkCIyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JTosgnBZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WwALq+zL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BBCAC19425;
-	Thu, 14 May 2026 00:40:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JTosgnBZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9B52C19425;
+	Thu, 14 May 2026 01:00:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778719255;
-	bh=9xPoi/jOuwJ24aHDa6rb5dxZ5tEHkzImVHb7GEE3Ank=;
+	s=k20201202; t=1778720446;
+	bh=c0dvtN3hG6NA848503CiLGO4uQ5N2nrPxiII+aSKRwY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=WwALq+zLr6juGAVWrscXnuOn6M+Si5TMteJB+GlzHW2Ua9l/ulr3ZqFHDIoqxBLIb
-	 PsXuSuvGg1sWjx4YeukBgtb52oaRaGE4srSMeiv4gLcwxlru211RTF5oPyfY3NVpwX
-	 RjsyS3yLRE15Szc26kgtaNVBqqz0tR+E5W1j9PpyLSZfIvgIVU0NMEIBY7Ed3P81j3
-	 kJ4vG+OYVhVKHzNMUOpK9owGmrcpvOPOfceZlaNHJJ6utHDOugmWc+cKHjv7EvLnhR
-	 LYdwAVb2g2qsJJga3NlxT7KQBG4MvwfpaOZPvAKoS//6P/b7v7PBE2O6rvGSm2dZ1w
-	 Awwq7LSKuCOHw==
+	b=JTosgnBZPajai8gk08RhnzAdba4SJkF0nuui6R0J7gWEFtnPzXaakiHCIfY5ME0o/
+	 H1tr2qTYjOgqgaOq5Av1E3eSuT9h6GguE72r03LveTp1ynnxIeWeVG0r2L/idn27TL
+	 NkWSmtzDPSrnMl9ZVl4/QVQdn8CHSFDXINC/rYTOzqgWR2XZtheWUZUCEgRlKGfeAI
+	 UigXMLS4PJhKvHcIyLu1pshpvZXNaIMlIfDzzTpkXOPDgVNqBhTLa9WE9hIkp81k+w
+	 MnVRnMELOKQm4YnofwQXN5v8oHciRXNZlgpBFL6ix3wnTyv1WDfjExQ3Iy7Vq+lKvP
+	 kBWKRKzKqJi8g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
+Subject: Re: [PATCH v5 2/2] hwmon: add AMD Promontory 21 xHCI temperature
+ sensor support
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Jihong Min" <hurryman2212@gmail.com>
-Cc: linux-hwmon@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260512213910.871859-2-hurryman2212@gmail.com>
-References: <20260512213910.871859-2-hurryman2212@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-hwmon@vger.kernel.org
+In-Reply-To: <20260512213910.871859-3-hurryman2212@gmail.com>
+References: <20260512213910.871859-3-hurryman2212@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 14 May 2026 00:40:54 +0000
-Message-Id: <20260514004055.1BBCAC19425@smtp.kernel.org>
+Date: Thu, 14 May 2026 01:00:45 +0000
+Message-Id: <20260514010045.D9B52C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The Kconfig dependency `depends on USB_XHCI_PCI=3Dy` completely di=
-sables PROM21 support for systems where the core driver is built as a modul=
-e.
-- [Low] Signed integer overflow when calculating the auxiliary device ID.
+- [High] Using readb() on a 32-bit PCIe MMIO vendor data register may cause=
+ unsupported request faults.
 --
 
-commit 20f4e35b2f88ebe2b8988b4f07fe7cc28199096b
+commit 9f079250f98377be1d241f6f3c08a14ae44d8785
 Author: Jihong Min <hurryman2212@gmail.com>
-Subject: usb: xhci-pci: add AMD Promontory 21 PCI glue
 
-This commit adds a small PCI glue driver for AMD Promontory 21 xHCI
-controllers. It binds the controllers, delegates USB host operation to
-the common xHCI PCI core, and creates an auxiliary device for optional
-temperature sensor support.
+hwmon: add AMD Promontory 21 xHCI temperature sensor support
 
-> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-> --- a/drivers/usb/host/Kconfig
-> +++ b/drivers/usb/host/Kconfig
+Add an auxiliary-bus hwmon driver for the temperature sensor exposed by
+AMD Promontory 21 (PROM21) xHCI PCI functions.
 
-[ ... ]
-
-> @@ -42,6 +42,26 @@ config USB_XHCI_PCI
->  	depends on USB_PCI
->  	default y
-> =20
-> +config USB_XHCI_PCI_PROM21
-> +	bool "AMD Promontory 21 xHCI PCI support"
-> +	depends on X86
-> +	depends on USB_XHCI_PCI=3Dy
-
-Does depending strictly on USB_XHCI_PCI=3Dy cause a configuration regression
-for most distributions where the core driver is configured as a module?
-
-The driver source appears fully capable of being built as a module, using
-module-related macros and module_pci_driver().
-
-If the intent is to prevent an early boot mismatch where xhci-pci is
-built-in but the PROM21 glue is a module, could this instead be a tristate
-option using depends on USB_XHCI_PCI and depends on !(USB_XHCI_PCI=3Dy && m=
-)?
-This would enforce the boot constraint while preserving support for modular
-kernel builds.
-
-[ ... ]
-
-> diff --git a/drivers/usb/host/xhci-pci-prom21.c b/drivers/usb/host/xhci-p=
-ci-prom21.c
+> diff --git a/drivers/hwmon/prom21-xhci.c b/drivers/hwmon/prom21-xhci.c
+> new file mode 100644
+> index 0000000000000..7124824a1f5ed
 > --- /dev/null
-> +++ b/drivers/usb/host/xhci-pci-prom21.c
+> +++ b/drivers/hwmon/prom21-xhci.c
 
 [ ... ]
 
-> +static int prom21_xhci_create_auxdev(struct pci_dev *pdev)
+> +static int prom21_xhci_read_temp_raw_restore_index(struct prom21_xhci *h=
+wmon,
+> +						   u8 *raw)
 > +{
-> +	struct prom21_xhci_auxdev *prom21_auxdev;
-> +	struct usb_hcd *hcd =3D pci_get_drvdata(pdev);
+> +	struct device *dev =3D &hwmon->pdev->dev;
+> +	u32 index;
+> +	u8 data;
+> +	int ret;
+> +
+> +	ret =3D prom21_xhci_pm_get(hwmon);
+> +	if (ret)
+> +		return ret;
+> +
+> +	index =3D readl(hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
+> +	/* Select the PROM21 temperature register through the vendor index. */
+> +	writel(PROM21_XHCI_TEMP_SELECTOR,
+> +	       hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
+> +	data =3D readb(hwmon->regs + PROM21_XHCI_DATA_OFFSET);
 
-[ ... ]
+Is it safe to use readb() on this 32-bit PCIe MMIO vendor data register?
 
-> +	prom21_auxdev->auxdev =3D
-> +		auxiliary_device_create(&pdev->dev, KBUILD_MODNAME, "hwmon",
-> +					&prom21_auxdev->pdata,
-> +					(pci_domain_nr(pdev->bus) << 16) |
-> +						pci_dev_id(pdev));
+Many PCIe controllers and peripheral MMIO implementations strictly require
+32-bit transactions. Issuing an 8-bit read can result in a PCIe unsupported
+request, which may return 0xff or trigger a fatal PCIe error.
 
-Does left-shifting pci_domain_nr() introduce a signed integer overflow
-regression?
+Could this instead use readl() and mask out the lowest 8 bits?
 
-The function pci_domain_nr() returns a signed int, which can be up to 0xFFFF
-on ACPI systems. Left-shifting a value of 0x8000 or greater by 16 bits
-alters the sign bit of a 32-bit int, resulting in undefined behavior in C.
-
-Would casting the return value to an unsigned integer, such as
-(u32)pci_domain_nr(pdev->bus) << 16, avoid this overflow?
+> +	/* Restore the previous vendor index register value. */
+> +	writel(index, hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
+> +	readl(hwmon->regs + PROM21_XHCI_INDEX_OFFSET);
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512213910.8718=
-59-1-hurryman2212@gmail.com?part=3D1
+59-1-hurryman2212@gmail.com?part=3D2
