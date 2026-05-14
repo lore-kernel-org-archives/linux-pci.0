@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB6901A7264
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 00:31:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD93A26F476;
+	Thu, 14 May 2026 00:38:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778718671; cv=none; b=L5VZWydqBjbM2cqIG87ATCv4UMCO+4ZoRMLrCgCc4gD4l89zYTc8QAI4hTLQKKubG9W2fZ53KUq6FIgPpCb9J1ZpVclUBjJw4ApWgFEQBcKj+LPokNfbJKyJ+yXcHekFyCqK4cP2GCUXjxbYGBH9pcxTYlDeQiGLmyq843+Qp80=
+	t=1778719126; cv=none; b=CWc7R5HpIrm4wy5dUoO3urzFP8tSOy+ArjNm9cvP5NsYm493xabtmnZ4OymUkIy/vjD1IxoPuq236E8q83QY8yjcT8kJF5I/T1vgsSx1t90xRJdV8eKqdNOID2DI4Et/YW17lGF6bKaJAk2XUCyTXxkWK9+jsc621nOFdL3dEEA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778718671; c=relaxed/simple;
-	bh=ny0DGr1WaS4NIgror2ddRvWLPRA5lhFwfQFTvUe7MFc=;
+	s=arc-20240116; t=1778719126; c=relaxed/simple;
+	bh=0pm2so/gT8FBwtcqO3Wc625VGbJi1uk65jlu5tB71k0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=lPkTyl6bZQ/8oYmai1MB1kPLC7mnSiKDlgttJHswjI6pulq7w2xlx5uSdCRCeuO/BDYn2jrg6800yrt2D3R8om3hBlvfjcgswxr27WivTGxxfsH4AFC6KzfHqBsb5PYCX3tyU5UvEhXBzID6HukZaVbSSAfh+Z/aiYEM8oTkgH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AN44Wrg7; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=cHEkIaBJfLmrnF3LjCMuBgCTiY+++C212h52jA/HeLCjnhAPCEHcGpxjrUvaYlCjQikD8xIznv8zvv+2sqLVTyN2AYiWMFexQlz2lLfJvj5HLO7xRNFKGFaogNudFwG1tIEUB3u7eaLpHDbuWcXlh9RD6e8K8UJppctBmfBABFc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dmUVjk0V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AN44Wrg7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F10AC19425;
-	Thu, 14 May 2026 00:31:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dmUVjk0V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CBB2C19425;
+	Thu, 14 May 2026 00:38:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778718671;
-	bh=ny0DGr1WaS4NIgror2ddRvWLPRA5lhFwfQFTvUe7MFc=;
+	s=k20201202; t=1778719126;
+	bh=0pm2so/gT8FBwtcqO3Wc625VGbJi1uk65jlu5tB71k0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=AN44Wrg7n4tGbgEONLwUqck4mCIBCSwVNHuyyDQOnMpPRgwjcxRiwLskAglE4uJDt
-	 RyzMFxmlWj2BOiYrO2Q751XgYsMMDZuUOpOFBoyUmCLN5gpRqqLhQHC5AYeCrHmKIY
-	 5HU9tdpcW6IYQEUllKvSoYf0o+s4rUcgVMeUtuZfEmrPll0DFQXfoUyOBUstlxfo0J
-	 4zxiI24dSp59NU6AdZkvBXaigDecxCkc537ZxKC9fGZES3H3R+NIcpz/50iOikjlEq
-	 E7dg82YsKSl7xirdtvBCR4ulAPsz95de5eKjMVraO5w/qbU8AVwgFdYlxxv9U0oI5J
-	 CP8aWtqWf2krA==
+	b=dmUVjk0V6c3cIOQmVYOme1LOWxhrUKp5FhM1cWIovvW2z2o9QnlNrLHCsJeZf1J6N
+	 IRjjW16wKRp0F/+3PtCDEYkQa4llwobDFZZs0PIwGD8YgkexjZ9EXFtKIaRojr/CC8
+	 ITZgYUaTJxG6+HSFfGabOSsp92U4ewqvZiljTSUjDroYd6c2+Azu6VbLvKesBNEQRM
+	 5LakxrBYShlmh65Kx2zCosafj4AV8DlV0FjQBniRRvNEtrWHGIxLfJZqyEvMfsEeBJ
+	 uORTBsbuOrq7kGogBxd/AbTwQS/5e+a1Tu8ypbxIjueshqb1Mir4jAyeIgSgHjS1zx
+	 mwM1J/VaUjTtQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 02/11] PCI: liveupdate: Track outgoing preserved PCI
- devices
+Subject: Re: [PATCH v5 5/9] dmaengine: dw-edma: Pass dma_slave_config to
+ dw_edma_device_transfer()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Matlack" <dmatlack@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260512184846.119396-3-dmatlack@google.com>
-References: <20260512184846.119396-3-dmatlack@google.com>
+To: "Frank Li" <Frank.Li@nxp.com>
+Cc: vkoul@kernel.org, imx@lists.linux.dev, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260512-dma_prep_config-v5-5-26865bf7d935@nxp.com>
+References: <20260512-dma_prep_config-v5-5-26865bf7d935@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 14 May 2026 00:31:10 +0000
-Message-Id: <20260514003111.4F10AC19425@smtp.kernel.org>
+Date: Thu, 14 May 2026 00:38:45 +0000
+Message-Id: <20260514003846.0CBB2C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,121 +46,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Critical] Dangling pointer in dev->liveupdate.outgoing causes Use-After-=
-Free memory corruption and state leaks if a device is not properly unpreser=
-ved.
-- [High] Missing `kho_is_enabled()` check in `pci_flb_preserve()` violates =
-KHO subsystem guidelines.
+- [High] The `dw_edma_device_prep_config_sg` function ignores the return va=
+lue of `dw_edma_device_config` and proceeds to use an explicitly rejected c=
+onfiguration for DMA transfers.
+- [High] The implementation fails to achieve the claimed "atomic configurat=
+ion" because it locklessly mutates shared channel state, corrupting concurr=
+ently active DMA transfers.
 --
 
-commit f946f5d8b0614325899345e29b5315ff6d5139e9
-Author: David Matlack <dmatlack@google.com>
+commit 8f2944930122fd18a6a04f03176bb9c6eddcd9ba
+Author: Frank Li <Frank.Li@nxp.com>
 
-PCI: liveupdate: Track outgoing preserved PCI devices
+dmaengine: dw-edma: Pass dma_slave_config to dw_edma_device_transfer()
 
-This patch adds APIs to allow drivers to notify the PCI core of which devic=
-es
-are being preserved across a Live Update. It allocates a struct pci_ser via
-the KHO subsystem to track the outgoing preserved devices.
+This commit passes dma_slave_config to dw_edma_device_transfer() to
+support atomic configuration and descriptor preparation when a non-NULL
+configuration is provided to device_prep_config_sg().
 
-> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> --- a/drivers/pci/liveupdate.c
-> +++ b/drivers/pci/liveupdate.c
-
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
+edma-core.c
+> index f7f58b0010e26..ec6f6b1e48256 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
 [ ... ]
+> @@ -595,7 +610,7 @@ dw_edma_device_prep_config_sg(struct dma_chan *dchan,=
+ struct scatterlist *sgl,
+>  	if (config)
+>  		dw_edma_device_config(dchan, config);
 
-> @@ -74,27 +110,30 @@ static int pci_flb_preserve(struct liveupdate_flb_op=
-_args *args)
-> =20
->  	size =3D struct_size_t(struct pci_ser, devices, max_nr_devices);
-> =20
-> -	ser =3D kho_alloc_preserve(size);
-> -	if (IS_ERR(ser))
-> -		return PTR_ERR(ser);
-> +	outgoing->ser =3D kho_alloc_preserve(size);
+Should we check the return value of dw_edma_device_config() here?
 
-Does this allocation need to be gated by kho_is_enabled()?
+If an invalid configuration is passed, dw_edma_device_config() returns
+-EINVAL. By ignoring the return value, the code proceeds to extract the
+source and destination addresses from the explicitly rejected configuration
+via dw_edma_device_get_config(), potentially resulting in descriptors
+prepared with unvalidated hardware parameters.
 
-If KHO is disabled, kho_alloc_preserve() will silently add tracking state
-that will never be used.
+Additionally, the commit message states this change supports atomic
+configuration, but dw_edma_device_config() mutates shared channel state:
 
-> +	if (IS_ERR(outgoing->ser)) {
-> +		kfree(outgoing);
-> +		return PTR_ERR(outgoing->ser);
-> +	}
-> =20
->  	pr_debug("Preserved struct pci_ser with room for %u devices\n",
->  		 max_nr_devices);
+dw_edma_device_config() {
+        ...
+        if (cfg_non_ll || non_ll)
+                chan->non_ll =3D true;
+        ...
+        memcpy(&chan->config, config, sizeof(*config));
+}
 
-[ ... ]
+Since the dmaengine API allows concurrent descriptor preparations when
+device_prep_config_sg is provided, could this cause a data race on
+chan->config and chan->non_ll?
 
->  static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
->  {
-> -	struct pci_ser *ser =3D args->obj;
-> +	struct pci_flb_outgoing *outgoing =3D args->obj;
-> =20
-> -	WARN_ON_ONCE(ser->nr_devices);
-> -	kho_unpreserve_free(ser);
-> +	WARN_ON_ONCE(outgoing->ser->nr_devices);
-> +	kho_unpreserve_free(outgoing->ser);
-> +	kfree(outgoing);
+If chan->non_ll is actively read by the interrupt handler to dictate
+hardware execution mode, could modifying it while preparing a new descriptor
+dynamically corrupt the execution mode of currently active transfers?
 
-If a driver fails to unpreserve a device before the FLB is torn down, this
-WARN_ON_ONCE triggers, but the memory is still freed.
-
-Does this leave dev->liveupdate.outgoing pointing to freed memory?
-
-> =20
->  	pr_debug("Unpreserved struct pci_ser\n");
+> -	return dw_edma_device_transfer(&xfer);
+> +	return dw_edma_device_transfer(&xfer, dw_edma_device_get_config(dchan, =
+config));
 >  }
 
-[ ... ]
-
-> +void pci_liveupdate_unpreserve(struct pci_dev *dev)
-> +{
-> +	struct pci_flb_outgoing *outgoing =3D NULL;
-> +	struct pci_dev_ser *dev_ser;
-> +	struct pci_ser *ser;
-> +	int ret;
-> +
-> +	ret =3D liveupdate_flb_get_outgoing(&pci_liveupdate_flb, (void **)&outg=
-oing);
-> +
-> +	if (ret || !outgoing) {
-> +		pci_warn(dev, "Cannot unpreserve device without outgoing Live Update s=
-tate\n");
-> +		return;
-> +	}
-> +
-> +	guard(mutex)(&outgoing->lock);
-> +	ser =3D outgoing->ser;
-> +
-> +	guard(write_lock)(&dev->liveupdate.lock);
-> +
-> +	dev_ser =3D dev->liveupdate.outgoing;
-> +	if (!dev_ser) {
-> +		pci_warn(dev, "Cannot unpreserve device that is not preserved\n");
-> +		return;
-> +	}
-> +
-> +	pci_info(dev, "Device will no longer be preserved across next Live Upda=
-te\n");
-> +	ser->nr_devices--;
-> +	memset(dev_ser, 0, sizeof(*dev_ser));
-
-If dev->liveupdate.outgoing was left dangling from a previous torn-down
-session, can this corrupt memory?
-
-If a new Live Update session starts, pci_liveupdate_unpreserve() would
-fetch the new outgoing FLB but operate on the old dangling
-dev->liveupdate.outgoing pointer.
-
-Does this code cause a use-after-free in the memset() here, as well as
-corrupt the new session's counter when decrementing ser->nr_devices?
-
-> +	dev->liveupdate.outgoing =3D NULL;
-> +}
-
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512184846.1193=
-96-1-dmatlack@google.com?part=3D2
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512-dma_prep_c=
+onfig-v5-0-26865bf7d935@nxp.com?part=3D5
