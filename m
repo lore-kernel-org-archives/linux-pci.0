@@ -1,232 +1,129 @@
-Received: from outbound.st.icloud.com (p-east2-cluster4-host1-snip4-5.eps.apple.com [57.103.78.156])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C01443DC4AF
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 13:44:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.103.78.156
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A6883D8909;
+	Thu, 14 May 2026 14:23:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778766281; cv=none; b=r79ByhU+ZO/uPlkuOQRoSq1arke5LEs46dFw9rx2wYSyYDvWEB/Rg7nC+GaSdT4un3dUXPYgNIsR5F9zdiAVuE3NJuFt4wEja7wBaXOOzbeka1B/1p8JxS3D79yj7N69fRSwGyEQObaN37BKdjOr2EEUT1+cGNxm1o7g2oVkNNg=
+	t=1778768586; cv=none; b=VZlOztjbkNVVhWvDFCWFXPJWf0mNAROwNt8JabWQDcI3OKQ5bu+LedcTXfCZS4I6YdOaaSf0CY4IxQfxjKfblPoWbIbZuuKaum+mnEIYeKZwCoMgEATxAVocSFuC39IncpT0sbWF53Sg473ngWReVN7eyton3boEXQwxjxpwBFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778766281; c=relaxed/simple;
-	bh=A8U1xY12M3A2wyf9roouYoZwYJjaLgjYvrZuEznIDZc=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=Vq56sUSJMiVxtjSE+Vm02ol4GiXsJsWDKQBbH7xE/yJoGqjtmRhwZkQ9LqMckP3qsgCOcVoawiEpd40MY5Dk2lrO4e29tqoIUuCjoLAofsRalE/rcFp0xo7YnnsvFJ8cQeVSk6W9tH8ZxkLCOzGQJrhy8RZ2gvfhxb75U59h6bI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=k8vSg3ai; arc=none smtp.client-ip=57.103.78.156
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1778768586; c=relaxed/simple;
+	bh=1+cb2sStXOE2OW7LJ8lDA5+VJbnboBqGunLXZmnPBgo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hgPztxvrqEcmk/zc3swr4cHuloq7IsR2ey0nbDLg+979xJHO4xba3XDoi+m1ssBuD3SChmmBs3sl6jETgWC7d1laKkZySI7mz5Rh9lTGBLgc4UmiigwmNsXhDR4mSR5OFF1CMMh7QLGVDKLoFk3ezts221oI4/k0NPewc188YgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lI1Yhih7; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="k8vSg3ai"
-Received: from outbound.st.icloud.com (unknown [127.0.0.2])
-	by p00-icloudmta-asmtp-us-east-1a-100-percent-7 (Postfix) with ESMTPS id D1BCC18027E3;
-	Thu, 14 May 2026 13:44:35 +0000 (UTC)
-X-ICL-Out-Info: HUtFAUMEWwJACUgBTUQeDx5WFlZNRAJCTQhJC0MCWBxCCUAdXA9cEhVdRVsYRRlLHVgWAV8GWXIZWhRcGFNFUR9UWFUJCgNHAksBXgxZWQBBCzhaDlsERxQXG1wAFxlRTQxYWwhbBA8fTAxRAkIFVl5KDB0EVAddBV1WUAJaS0IES0VoXAVcHEAXSB1faktWFAQRUAFYHlZeWhdeTVoCVk0FGQpdVgkBQwtVCgsPXR9EDUAFQA9ZBkMUSAQODlNXQ19PBloPK1sTVRdGCRkIXR0HWEcURw4PGVoUXBhT
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com; s=1a1hai; t=1778766278; x=1781358278; bh=X0zygd0f1+Tax4Vkbl7Qijv7ri6A554qWT7Lzx5ilPQ=; h=Message-ID:Date:MIME-Version:Subject:From:To:Content-Type:x-icloud-hme; b=k8vSg3aiBCfjArhKnjHRotf9JVdZ/pHbvTs9cGw7EffQnzd6btXejB1IQ9IMvSrUp17y8Xovm0euLC8+pGtxk4yfmALL7OFl0ZXk0w0R/+iuLXQtIyi4qrt1XLpsrZFVtp+fnJ52iQCTgTASvJ0pY8j9vs3KlnuhxkfSIZw2switjnvTTB8GRHfaI/taoHlQFVfRclddKKczioSGUI6qOuTmqn+vwJ4/4xUuCHRK9wxniOsF4Mo0iZo1s3U1wW0itIEEQ8gmoA4I/P3xpXeIX3fptlHBM7oNjBnnjBx4qxXsI1PwDqxDrnsAS0SBvVKswZ39Se0RYPvXs9GrDDWyRA==
-Received: from [192.168.89.3] (unknown [17.42.251.67])
-	by p00-icloudmta-asmtp-us-east-1a-100-percent-7 (Postfix) with ESMTPSA id 7567E1800DA1;
-	Thu, 14 May 2026 13:44:32 +0000 (UTC)
-Message-ID: <a90ab332-9f86-4486-8243-07c98e3f7578@icloud.com>
-Date: Thu, 14 May 2026 22:44:30 +0900
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lI1Yhih7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1778768585; x=1810304585;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=1+cb2sStXOE2OW7LJ8lDA5+VJbnboBqGunLXZmnPBgo=;
+  b=lI1Yhih7xhY0J50+y0WpMg1JB5vhOPfLdi65KNFsozWaOgtV4NHn8kxo
+   /pQL9E/ikLObOCtZwROsGxcmyMMlvBYCjSHIvWV/k3eGYmpZkbM6z8Acy
+   YNPHrwDm/RAMWQewQPoU/54EL0VXt3Py1XmXbvrmKbaJg3Wfk/bMMZ4Pc
+   kjrCvy7Q5nWZMMKsP75P0VRKSFHQnHW9WEiud30eq4CvaiA0SjRE/eu5n
+   tjAuzGg6V3NrNV/AGG8+fax51wazuE9Z0ZyxPdE8tY6hdG/Pw0xTt3MXd
+   /fytuKNFfh9L8p80rU3i55pnc9SS8yq0B/TERKbvNe4iYWTJpICVZWFV0
+   g==;
+X-CSE-ConnectionGUID: bIOZ9Tw+Q7GbEsTprHoD5Q==
+X-CSE-MsgGUID: gzeav3UCQD6WTML3CbnnFw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11786"; a="79422775"
+X-IronPort-AV: E=Sophos;i="6.23,234,1770624000"; 
+   d="scan'208";a="79422775"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2026 07:23:04 -0700
+X-CSE-ConnectionGUID: MoTmitk+SYGyMdDayYUivQ==
+X-CSE-MsgGUID: j2Ra0cpgRtCqNzrKqlrxCg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,234,1770624000"; 
+   d="scan'208";a="238289913"
+Received: from igk-lkp-server01.igk.intel.com (HELO bdf09bfdbd5f) ([10.211.93.152])
+  by orviesa008.jf.intel.com with ESMTP; 14 May 2026 07:22:59 -0700
+Received: from kbuild by bdf09bfdbd5f with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wNWxk-000000008or-1YWQ;
+	Thu, 14 May 2026 14:22:56 +0000
+Date: Thu, 14 May 2026 16:22:22 +0200
+From: kernel test robot <lkp@intel.com>
+To: Hans Zhang <18255117159@163.com>, bhelgaas@google.com,
+	lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+	vigneshr@ti.com, jingoohan1@gmail.com, thomas.petazzoni@bootlin.com,
+	pali@kernel.org, ryder.lee@mediatek.com, jianjun.wang@mediatek.com,
+	claudiu.beznea.uj@bp.renesas.com, mpillai@cadence.com
+Cc: oe-kbuild-all@lists.linux.dev, robh@kernel.org, s-vadapalli@ti.com,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org,
+	linux-renesas-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Hans Zhang <18255117159@163.com>
+Subject: Re: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link
+ training
+Message-ID: <202605141646.YYkbS6Hg-lkp@intel.com>
+References: <20260506152346.166056-9-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
-From: Jihong Min <hurryman2212@icloud.com>
-To: Guenter Roeck <linux@roeck-us.net>, sashiko-reviews@lists.linux.dev,
- Jihong Min <hurryman2212@gmail.com>
-Cc: linux-hwmon@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260512213910.871859-2-hurryman2212@gmail.com>
- <20260514004055.1BBCAC19425@smtp.kernel.org>
- <110e9a0d-bc91-4959-8a7b-1a055d0b49f7@roeck-us.net>
- <1f296d29-3d43-4dd3-b751-8a0892b4095a@icloud.com>
-Content-Language: en-US
-In-Reply-To: <1f296d29-3d43-4dd3-b751-8a0892b4095a@icloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: IUO5mu-FEVIVRFQpvEyvaEJFKi_7noXr
-X-Authority-Info-Out: v=2.4 cv=PJICOPqC c=1 sm=1 tr=0 ts=6a05d1c4
- cx=c_apl:c_pps:t_out a=YrL12D//S6tul8v/L+6tKg==:117
- a=YrL12D//S6tul8v/L+6tKg==:17 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=x7bEGLp0ZPQA:10 a=5jDBv52wX64A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8 a=OENqQS9qO4l8JokY8NoA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=PgRulw5oR9JgysbTFEid:22 a=oa2-kN79Xhin27rcel9q:22
-X-Proofpoint-GUID: IUO5mu-FEVIVRFQpvEyvaEJFKi_7noXr
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE0MDEzOCBTYWx0ZWRfX/clbLfrG89WI
- J9qsJJr1gPDSk3TswECra8u5+1SQPs22sHR/drfKxnstCo/41V9O/XzdV7QrhKrj2TpOk+3nhlW
- 3fxPkjZ+qZFn0ksLT+IazQpAVTUfcySWYz3V9h0gsADFv+1V1gAcgpHwej8YFhLliLZ1hZl8KiF
- slE0vbjvB4FgrOCLaKwakP/tgCMSm0H4UooWhvhY77vH2MmoDpdjxf1BITVtRM9EafCvVqtfInU
- +p694q9Gqz/ZDlfdNx+7jAy4xZMXg1l8XLzdbEkFKAAPt9DMd+su9Nwa+Koy9IXq+kMCzxw5kpJ
- wHBI6LtQdFcrLPSSaHvGz8QkSJELveKios+rUUtrSGeFEGrKqI1tF7beRYIOz0=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260506152346.166056-9-18255117159@163.com>
+
+Hi Hans,
+
+kernel test robot noticed the following build errors:
+
+[auto build test ERROR on a293ec25d59dd96309058c70df5a4dd0f889a1e4]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-Add-pcie_wait_after_link_train-helper/20260514-132815
+base:   a293ec25d59dd96309058c70df5a4dd0f889a1e4
+patch link:    https://lore.kernel.org/r/20260506152346.166056-9-18255117159%40163.com
+patch subject: [PATCH v2 8/8] PCI: rzg3s-host: Add 100 ms delay after link training
+config: arm64-allnoconfig-bpf (https://download.01.org/0day-ci/archive/20260514/202605141646.YYkbS6Hg-lkp@intel.com/config)
+compiler: aarch64-linux-gnu-gcc (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260514/202605141646.YYkbS6Hg-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202605141646.YYkbS6Hg-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   In file included from drivers/pci/controller/pci-thunder-pem.c:16:
+   drivers/pci/controller/../pci.h: In function 'pcie_wait_after_link_train':
+>> drivers/pci/controller/../pci.h:73:17: error: implicit declaration of function 'msleep' [-Wimplicit-function-declaration]
+      73 |                 msleep(PCIE_RESET_CONFIG_WAIT_MS);
+         |                 ^~~~~~
+--
+   In file included from drivers/pci/controller/dwc/pcie-al.c:14:
+   drivers/pci/controller/dwc/../../pci.h: In function 'pcie_wait_after_link_train':
+>> drivers/pci/controller/dwc/../../pci.h:73:17: error: implicit declaration of function 'msleep' [-Wimplicit-function-declaration]
+      73 |                 msleep(PCIE_RESET_CONFIG_WAIT_MS);
+         |                 ^~~~~~
 
 
-On 5/14/26 22:38, Jihong Min wrote:
->
-> On 5/14/26 10:20, Guenter Roeck wrote:
->> On 5/13/26 17:40, sashiko-bot@kernel.org wrote:
->>> Thank you for your contribution! Sashiko AI review found 2 potential 
->>> issue(s) to consider:
->>> - [High] The Kconfig dependency `depends on USB_XHCI_PCI=y` 
->>> completely disables PROM21 support for systems where the core driver 
->>> is built as a module.
->>> - [Low] Signed integer overflow when calculating the auxiliary 
->>> device ID.
->>> -- 
->>>
->>> commit 20f4e35b2f88ebe2b8988b4f07fe7cc28199096b
->>> Author: Jihong Min <hurryman2212@gmail.com>
->>> Subject: usb: xhci-pci: add AMD Promontory 21 PCI glue
->>>
->>> This commit adds a small PCI glue driver for AMD Promontory 21 xHCI
->>> controllers. It binds the controllers, delegates USB host operation to
->>> the common xHCI PCI core, and creates an auxiliary device for optional
->>> temperature sensor support.
->>>
->>>> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
->>>> --- a/drivers/usb/host/Kconfig
->>>> +++ b/drivers/usb/host/Kconfig
->>>
->>> [ ... ]
->>>
->>>> @@ -42,6 +42,26 @@ config USB_XHCI_PCI
->>>>       depends on USB_PCI
->>>>       default y
->>>>   +config USB_XHCI_PCI_PROM21
->>>> +    bool "AMD Promontory 21 xHCI PCI support"
->>>> +    depends on X86
->>>> +    depends on USB_XHCI_PCI=y
->>>
->>> Does depending strictly on USB_XHCI_PCI=y cause a configuration 
->>> regression
->>> for most distributions where the core driver is configured as a module?
->>>
->>> The driver source appears fully capable of being built as a module, 
->>> using
->>> module-related macros and module_pci_driver().
->>>
->>> If the intent is to prevent an early boot mismatch where xhci-pci is
->>> built-in but the PROM21 glue is a module, could this instead be a 
->>> tristate
->>> option using depends on USB_XHCI_PCI and depends on !(USB_XHCI_PCI=y 
->>> && m)?
->>> This would enforce the boot constraint while preserving support for 
->>> modular
->>> kernel builds.
->>>
->>
->> That makes sense to me. That would be stronger than using default (which
->> was my idea of dealing with the problem). Restricting the code to 
->> USB_XHCI_PCI=y
->> seems to be a bit extreme.
->
-> Hi Guenter,
->
-> I looked more closely at the Kconfig part of the Sashiko suggestion.
->
-> The concern itself is valid: the v5 dependency on USB_XHCI_PCI=y is too
-> strict because it prevents the PROM21 PCI glue from being built when
-> USB_XHCI_PCI=m.
->
-> However, I do not think the suggested expression works as intended:
->
->   depends on !(USB_XHCI_PCI=y && m)
->
-> With Kconfig tristate logic, `m` is a tristate literal, not "this 
-> symbol is
-> being built as a module". If USB_XHCI_PCI=y, then:
->
->   USB_XHCI_PCI=y && m  => m
->   !(USB_XHCI_PCI=y && m) => m
->
-> So the dependency becomes `m`, which limits USB_XHCI_PCI_PROM21 to `m` 
-> instead
-> of allowing `y`. That is the opposite of what we need for the built-in
-> xhci-pci case.
->
-> The combinations I think we want are:
->
->   USB_XHCI_PCI=y  -> USB_XHCI_PCI_PROM21=y or n, but not m
->   USB_XHCI_PCI=m  -> USB_XHCI_PCI_PROM21=m or n
->   USB_XHCI_PCI=n  -> USB_XHCI_PCI_PROM21=n
->
-> I see a few possible ways to handle this:
->
-> 1. Keep USB_XHCI_PCI_PROM21 as a visible tristate:
->
->      config USB_XHCI_PCI_PROM21
->        tristate "AMD Promontory 21 xHCI PCI support"
->        depends on X86
->        depends on USB_XHCI_PCI
->        default USB_XHCI_PCI
->        select AUXILIARY_BUS
->
->    This supports USB_XHCI_PCI=m, but it still lets a user select the 
-> unsafe
->    USB_XHCI_PCI=y / USB_XHCI_PCI_PROM21=m combination.
->
-> 2. Keep it visible and rely on help text to warn users not to select 
-> `m` when
->    USB_XHCI_PCI=y.
->
->    This is simple, but it does not actually prevent the bad combination.
->
-> 3. Use IS_REACHABLE() in xhci-pci.c instead of IS_ENABLED().
->
->    That would prevent built-in xhci-pci from rejecting PROM21 devices 
-> when the
->    PROM21 glue is only available as a module. However, it also means the
->    PROM21 glue/hwmon path would not be used in that configuration 
-> unless the
->    PCI device is rebound later, so I do not think it is ideal.
->
-> 4. Make USB_XHCI_PCI_PROM21 a hidden tristate that follows USB_XHCI_PCI:
->
->      config USB_XHCI_PCI_PROM21
->        tristate
->        depends on X86
->        depends on USB_XHCI_PCI
->        default USB_XHCI_PCI
->        select AUXILIARY_BUS
->
->    Then the value follows the common xhci-pci driver:
->
->      USB_XHCI_PCI=y  -> USB_XHCI_PCI_PROM21=y
->      USB_XHCI_PCI=m  -> USB_XHCI_PCI_PROM21=m
->      USB_XHCI_PCI=n  -> USB_XHCI_PCI_PROM21=n
->
->    This prevents the unsafe y/m split while still supporting modular
->    USB_XHCI_PCI builds. The actual user-visible sensor option remains
->    SENSORS_PROM21_XHCI.
->
-> My current preference is option 4, because the PROM21 PCI glue is not 
-> really a
-> user-facing feature by itself. It exists so the common xhci-pci driver 
-> can hand
-> PROM21 devices to the PROM21-specific glue and so the optional hwmon 
-> driver can
-> bind through the auxiliary device. The user-visible part remains the 
-> hwmon
-> sensor driver.
->
-> Does that sound reasonable to you, or would you prefer one of the other
-> approaches?
->
-> Thanks,
-> Jihong
->
-One follow-up to my previous mail:
+vim +/msleep +73 drivers/pci/controller/../pci.h
 
-If we go with option 4 and make USB_XHCI_PCI_PROM21 a hidden tristate
-symbol, I think its help text should probably be removed as well, since the
-symbol would no longer have a user-visible prompt.
+    62	
+    63	/**
+    64	 * pcie_wait_after_link_train - Wait 100 ms if link speed > 5 GT/s
+    65	 * @max_link_speed: the maximum link speed (2 = 5.0 GT/s, 3 = 8.0 GT/s, ...)
+    66	 *
+    67	 * Must be called after Link training completes and before the first
+    68	 * Configuration Request is sent.
+    69	 */
+    70	static inline void pcie_wait_after_link_train(int max_link_speed)
+    71	{
+    72		if (max_link_speed > 2)
+  > 73			msleep(PCIE_RESET_CONFIG_WAIT_MS);
+    74	}
+    75	
 
-The user-visible option would remain SENSORS_PROM21_XHCI, where the hwmon
-sensor help text can stay.
-
-Does that sound right?
-
-Thanks,
-Jihong
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
