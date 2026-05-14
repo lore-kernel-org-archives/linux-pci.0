@@ -1,99 +1,118 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 443C32FDC30
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 01:47:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E9F925B0BA;
+	Thu, 14 May 2026 01:49:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778723223; cv=none; b=QI0HuVMBFE941Cmvhp3E3zW/HdHa5oGSkiwqQmzPmzh8Dca0s2kCRA7uDnfZRSFYWCK4+gzwxelhGdEfRhlHUWTnP9b14vazJqtXPT24tLF1yGH3PbIEnhkYeXN5gBbInwX3ckqD7YpV3GMLWRNxrmudpJs9QtZ/uHaJLT62XYM=
+	t=1778723370; cv=none; b=a08nzKLZ0qBtiPsrzlWfc8az84NwIrdB2prVn21Ck2ETORkwW/Fq13DzpoHgWHdfSquAR08hWZfPvP/rxkC7HWwLfZ1jvXpTtWRDgxDD2qSswycuAMoDNChUItLOtXZdD15r998siqZZ5TOe6Zcck5g2tvenWHL8zsgWOv9G9DA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778723223; c=relaxed/simple;
-	bh=PfmsXm2mdbhrvgf2sJed5utrda9tfjVi/R2MPTg8HIU=;
+	s=arc-20240116; t=1778723370; c=relaxed/simple;
+	bh=mhIgowFJ/NsjjgimUMPdzodKvuhjEXH3/32vBatMPR8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RNpF3AAVY9DdYKv/xHJffRmumpzaBtbJl8jBa7Y0EQZlwmpPWL4RPp9mkeHQfUH+GEllGipPj/VI3GFG8/0aFBAFwIfrDq/vIRUAF7i/vrOdUngjH6PE2AZPl+4AhLxqfZccFCate/fU9NpQTju+G5xWpXL0OANjJ1bXEwCltM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BXdi72y9; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=dFnQu4lJfkz1eqdJ4yUcv1iLoiTlZswu7d8QbpTVpeCF7mKViIBOGV7CuKTO4ceOUwUGXG7i0gatbaf2V1+i+VKmoGM8sPj4TkEY19aqQ2UIWzaO1IuQ+ifbulEh+5369PHtXK1A6fD4hjmCInrh+7zSc/ZlZDRh3xtMGwv49Mc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W/GaKFj7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BXdi72y9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D411AC19425;
-	Thu, 14 May 2026 01:47:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W/GaKFj7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F6C2C19425;
+	Thu, 14 May 2026 01:49:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778723223;
-	bh=PfmsXm2mdbhrvgf2sJed5utrda9tfjVi/R2MPTg8HIU=;
+	s=k20201202; t=1778723369;
+	bh=mhIgowFJ/NsjjgimUMPdzodKvuhjEXH3/32vBatMPR8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=BXdi72y9R5Cy7sNnvoL8q+j7R7b8SV3jOb6JEpWUhUiPrKQ8OYLSmTKtTL/nM++oY
-	 y5PEMZNlnmdl0fPR6B+3igByUyKQDb5b56HdZQU+pLmD4D46Qzsr7ITKuBMPQbRUDD
-	 3qHdiv92NfmLYWVVKPSn9lG3wAe4P+79fWpb273N8tO0OD/JJ+qw6R8FayETRi0OH4
-	 ISVYgU+h+x8FWJpxfWukyhERRlb/0ExfRbtVasZlHh9tGhXq5bO/wWAewGEluYS/Ff
-	 ivJ54GEXE2bcWE9oa5dPrP6D3UIy7LAAD2fzSQaxgsp/MXik1WlPz/kbCLY5lMJl4k
-	 5SC2w4ijLgJXg==
+	b=W/GaKFj79nddJanysnTGVv0wLCr6CLSodE93+jhA6kS7k5/eSiqk2+vqtffuhHdi+
+	 Siz0DRqZGeIWfcuy8IbK8ihO8KeljBv/zzPfVlaAzmgqw4bRD7QNdLr8RoVMADy6et
+	 B/+zk6J2aw2fEs3YyIMXbA5IYsjzElhy2kIj/0ro+9sMDr8oM2SzXTP8WTdd/+Jfpk
+	 sT/C6l+WpoelcnasXwCllDPyfOJLkj90LTuNAJaoMV/xG73Fnx53DY6LUGjkxrsAY9
+	 p0BjzAsCvQdMF7JJ9GpmOH/zLNJnHz+qPVFSLuvP7Y4S62K8UjvR6Hbgp+8/OuCIxl
+	 HzwnWDzVJyMMg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI/sysfs: Check if device disabled in resource mmap
- handler
+Subject: Re: [PATCH v5 9/9] crypto: atmel: Use
+ dmaengine_prep_config_single() API
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ravi Kumar Bandi" <ravib@amazon.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260513041332.24105-1-ravib@amazon.com>
-References: <20260513041332.24105-1-ravib@amazon.com>
+To: "Frank Li" <Frank.Li@nxp.com>
+Cc: imx@lists.linux.dev, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org
+In-Reply-To: <20260512-dma_prep_config-v5-9-26865bf7d935@nxp.com>
+References: <20260512-dma_prep_config-v5-9-26865bf7d935@nxp.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 14 May 2026 01:47:02 +0000
-Message-Id: <20260514014702.D411AC19425@smtp.kernel.org>
+Date: Thu, 14 May 2026 01:49:23 +0000
+Message-Id: <20260514014929.7F6C2C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The `pci_dev_is_disconnected()` check fails to block mmaps on soft=
--unplugged devices and contradicts the commit's stated intent.
+- [Medium] Mismatch between the commit message and the actual API used.
+- [Medium] The patch masks specific DMA configuration error codes, uncondit=
+ionally returning -ENOMEM on failure.
 --
 
-commit fff70a5b941929593fed8b551604aadd9e28748d
-Author: Ravi Kumar Bandi <ravib@amazon.com>
+commit 05fb1a88b098522438016a4c4b3491605a64cf5f
+Author: Frank Li <Frank.Li@nxp.com>
 
-PCI/sysfs: Check if device disabled in resource mmap handler
+crypto: atmel: Use dmaengine_prep_config_single() API
 
-This commit adds a check to pci_mmap_resource() to prevent mapping a PCI BAR
-resource into userspace if the device is disconnected. The stated intent is=
- to
-block new mmaps after a device has been marked disabled or soft-unplugged.
+This commit refactors atmel_aes_dma_transfer_start() to use a new combined
+DMA engine API for configuration and scatterlist preparation. The commit
+message notes that this is intended to simplify the code with no functional
+change.
 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index d37860841260c..83d580256c4b2 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1089,6 +1089,9 @@ static int pci_mmap_resource(struct kobject *kobj, =
-const struct bin_attribute *a
->  	if (ret)
->  		return ret;
+> crypto: atmel: Use dmaengine_prep_config_single() API
+>=20
+> Using new API dmaengine_prep_config_single() to simple code.
+
+This isn't a bug, but the commit message and subject mention
+dmaengine_prep_config_single(), while the code actually introduces and uses
+dmaengine_prep_config_sg().
+
+> diff --git a/drivers/crypto/atmel-aes.c b/drivers/crypto/atmel-aes.c
+> index b393689400b4c..d890b5a277b9c 100644
+> --- a/drivers/crypto/atmel-aes.c
+> +++ b/drivers/crypto/atmel-aes.c
+
+[ ... ]
+
+> @@ -820,12 +819,9 @@ static int atmel_aes_dma_transfer_start(struct atmel=
+_aes_dev *dd,
+>  		return -EINVAL;
+>  	}
 > =20
-> +	if (pci_dev_is_disconnected(pdev))
-> +		return -ENODEV;
-> +
+> -	err =3D dmaengine_slave_config(dma->chan, &config);
+> -	if (err)
+> -		return err;
+> -
+> -	desc =3D dmaengine_prep_slave_sg(dma->chan, dma->sg, dma->sg_len, dir,
+> -				       DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
+> +	desc =3D dmaengine_prep_config_sg(dma->chan, dma->sg, dma->sg_len, dir,
+> +					DMA_PREP_INTERRUPT | DMA_CTRL_ACK,
+> +					&config);
+>  	if (!desc)
+>  		return -ENOMEM;
 
-The commit message mentions that this change prevents new mmaps after a dev=
-ice
-has been marked disabled or soft-unplugged. Does this check accurately capt=
-ure
-a soft-unplug?
+The commit message states there is no functional change, but does this alter
+the error propagation?
 
-Looking at pci_dev_is_disconnected(), it strictly checks if the device's
-error_state is pci_channel_io_perm_failure. This state is typically set
-during surprise hotplug removals or fatal PCIe errors.
+In the original code, if dmaengine_slave_config() failed, its specific error
+code was returned to the caller. Looking at the definition of
+dmaengine_prep_config_sg(), it returns NULL if the underlying
+dmaengine_slave_config() call fails:
 
-During a graceful driver unbind or a soft-removal via sysfs, the error_state
-remains pci_channel_io_normal. Would a concurrent mmap() on an already-open
-file descriptor still succeed during the window before the sysfs files are
-completely removed, bypassing this protection?
+include/linux/dmaengine.h:dmaengine_prep_config_sg() {
+        ...
+        if (config)
+                if (dmaengine_slave_config(chan, config))
+                        return NULL;
+        ...
+}
 
-Additionally, if the intention was to literally check if the device is disa=
-bled
-(as the commit subject suggests), would that introduce a regression for
-userspace? Valid userspace tools, such as X servers or VFIO utilities, often
-map PCI BARs prior to explicitly enabling the device.
+Since atmel_aes_dma_transfer_start() now handles a NULL return by returning
+-ENOMEM, might this mask configuration errors by presenting them as
+out-of-memory failures instead of their original error codes?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260513041332.2410=
-5-1-ravib@amazon.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512-dma_prep_c=
+onfig-v5-0-26865bf7d935@nxp.com?part=3D9
