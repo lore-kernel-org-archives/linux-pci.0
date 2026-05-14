@@ -1,176 +1,283 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2F432D836D
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:19:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 854402D836D
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:27:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778782752; cv=none; b=cdfKa/hVFvhWn7Me7wgZG7/0/yRCe7vmkPhQn62CAKOK6MV5A4va3QA5XSsc+Oirolz5PdLh3BHHuDBGY2kNuvSwAUr8YCqzQJc3NqMMHDJxu9RjFDUyES9rDzbBefJ9JLK1/6XfCK84BijINbsmKpW0l47jpvCDVK08YxvTzDM=
+	t=1778783258; cv=none; b=mElL3RXFAGyg0CQfbZ3jv74PITZuyZJ1RtiAMl+D1UEdWMhnoO1Hfg28mWb0k8vMAWKDZZpbq4CjcKyQH2w7Bo7NxUBrB/fv+0ED0A5K3Pdqq8dXZSTwNJeIrut5c1cDqMdheWZ+oI+GOWWHX+vyk1tPJe+ghBFfdVOTIJ79GQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778782752; c=relaxed/simple;
-	bh=jRLJlDscFGlmVeGiHZHxkedxmQ5eRcIqyRMqxJE8fQs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZFBIQJDJvYmDy+p8OLiTo1zfH/gGF4ary/Jy6blzFaTuathWYDRMDA7XMILi1Wu2nan8OGAekCbkSYFPD8p1fu1MtBSgdKDepPTpobJsMAglEXIFW+oz6Wnd1oT3eLyYdPlpgMmHUSZ1CLXhGv5MZ+EV14RE7lGT5Y4iTmB9yQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ja2Yoyu9; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=XdC2lUxk; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1778783258; c=relaxed/simple;
+	bh=aVw1OWGbmIDbHVY3BwLts2n5HpVXMHPTRJSvQJGBYAk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jMAB0IUL0PgZ2wFNyeEpWslaSuhgWEthDkA5T/IeYO3N1+SITKrLvkQBQ31Jp25TmvyxJODK9S+A1RMqADY3+UdQeG1gw9QYWXgQpgMXWAl6fvCWAM88C+u3fE15HIhMUxrEEcLd2FQxtBaUDWA+x5xOCOvgMJXKEiqyrjOprbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NlvwFhUX; arc=none smtp.client-ip=74.125.82.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ja2Yoyu9";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="XdC2lUxk"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64EBeWwu2841093
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:19:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=Ua2mw29cbC0ENuBTMoANjxbBI7lNjtC/MKm
-	egco5xxc=; b=Ja2Yoyu9f4JQJKBqq6+mxRlSCIXOQIgmNMD8gS52XzYNqL75sTZ
-	CnXIyvtxBcuuYBQxu53NrCOnQhSkviasSmf8Vt5vmxNQQwUgekmrtZoRUOf13kar
-	tTqSX2ymGVQgGeZ88MTtI58roTDys1KW0qHqRcRPOOS9jSp54nfSPO4oNknVQKgz
-	z/PXDyoXY5nlNz4BB/UHePJvNdKK+/TALaDoo7RTiJ3utRRRhb/7RPIUGGKybQ1g
-	dZJvwAYRHXPtYjWz9JTM0OHJFV/o/h34/+Jz7Kobzr0F27zWwfHPkIndv2L9liWm
-	ZCoSCuw+rlOGPXqzywtPA0fxKSYJAZZmS+A==
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e5899tqbs-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:19:08 +0000 (GMT)
-Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c828cee4fcdso3101143a12.3
-        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 11:19:08 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NlvwFhUX"
+Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-1335cb20406so419068c88.0
+        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 11:27:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1778782747; x=1779387547; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ua2mw29cbC0ENuBTMoANjxbBI7lNjtC/MKmegco5xxc=;
-        b=XdC2lUxk3lw9YroPoHmwI3NQ+rnOkoiINdk2AZqMlFFl/AQiE/6001l9Tt11JmOBRX
-         hWpsKNLS1L+3/hgtstQLTcO3/fVTTeKDVZhtHh38Hf7qpW0+oYf2avH31np9AlqYPn/1
-         8fhHCoh92Z2UALGA4iCpatZ4Orp7RslhwA7u84L/KOQkakP2ZH4MmLcfBbFU4ldfxwde
-         MviCxMK4+8A4H4y7y4Dit8PUXOmTGSoMrHJ2TvtYCFL8VXLVaLn8cYcCUq2KwozrQl4y
-         YmI8K+FyuoJRAf4s6p0OyIxO741K70o488gNWlxfCDjLWDXjk5Ow08oqjc8wsMHF4WKl
-         NwIA==
+        d=google.com; s=20251104; t=1778783256; x=1779388056; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=hg6IMrnQ8rIdunh62Bq5pOIvEVv9aCeOeb/XYHKMD4Q=;
+        b=NlvwFhUXvDffAFrg7hKwyMtr7FnZj/7wZaozXd5FSEGmXEscBfh6J92v6sgjl4PMTT
+         Ys4tc0urHRIr1jYTy6mRDmCGpDLsI2X7/vOaiixd+6myCkFLFQfWszrGqAhFO65DFEnY
+         ISJ10DauWKPdf8+e6q3lgl85QBTP86sLg1OhRhW+fXVKzZ/qnHlW2G6qXwCbbn/jYH9r
+         MzhtQLrwyvHfrorCgYf764SPdOtBJ/v9YBCVwz5rfcmIdUgCbxJeLAZQ8d1m/Dhhjoy4
+         oEnvxTTJhgAXUkqhhTF85DVfFrTEQsmrgTLLeKSHMpPPh5Vfg4afMTUZ6Zt2DJ7PnsDo
+         asWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778782747; x=1779387547;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ua2mw29cbC0ENuBTMoANjxbBI7lNjtC/MKmegco5xxc=;
-        b=iehygjgyBndWiow918a3eLH+xGPpzX9jHg1gHeYuGbmoZhMqrn8apvaXxhVpvA3y+y
-         9He7Hi9FYv2YHp3LE1K76TAEfbd9H2XrJKw5SFFTmSlKNTlO8JJnfyKHHJFjNcvZGzm9
-         PQ0Svwouc6yG97zEBfFHfYdZCotV55OqJO0sPqfdBdg2UyUA/IcSVTA34PvahP/Cngl4
-         DdR+giOOL3DEkhOyVJ4lZp0E1pKRtsOyeQ8nIIcLEMbzLQQ47GXpRqgrA6XShjv6tQeJ
-         5EtXyQKpxnkHTXNOEAG8rOMr60fepuDmIbiedplVjYvSJ0in18Rp2T0qxiY/NgqoTQ/I
-         kxzg==
-X-Forwarded-Encrypted: i=1; AFNElJ8C01qX/9O3aEnTL+NA1+xAxiqZs2GjpkSHREtF4WbPFdr0ZbL1fy7FGVd0Spp4nIF7RyiHVm1YmmI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQUcy8hb1TTH4LgWgkMRsZljsRvla+o338ZtAphjeaEmE/5lq6
-	6uJzm0AnTpuyupxGkkGhPGE32H/gl8DVwi6LGMaN+0J3ffesuFbrvbaoqVLB/8GeJkEecOEVb9P
-	+xkeKrqBW2xrkjIvDC6AbbphUQTcKimGoJrxixGlxm3L9NP9lBWMv4ut6Gw+JqoM=
-X-Gm-Gg: Acq92OEpMkTHP3YGeqtrGkbVK1Kl5op4qImOWnmJ+G6y6lHP++Nh8/WcpQsIfj/HTKy
-	bgr2KCbBb7H75fFMIlJOKjNovhfTltgK66RKEh4F+FYF5L4JlpHPydjXBmDCAIJ+jq6rTrJTBzl
-	0k21gTQ4M/B4mK4Y9RxfpewKQc5CSw86yCukEwWAp+rhGwrsBLCCT+j3044aTXo6918eFLlKHHN
-	2QAYN8dcxACUHkO67RSFI3oGqRRLdy1nwUGpnYDUHzmL64LHCWdvtj4e6k0hUQfUAZHNwJALlYK
-	QTPp9+5UIsCwYVPcIafIuXy1cg1HtjKxDeQ51zHME03CfWBMWTEuxJqMo9SRqOibaMEqIUM42iI
-	97zdNRbUXCVi3+YRKRxbXuQFvM2opty/qxy/hSHKZLnuSpn4sIFghZ5DydCMXotRgqATUa6qgeC
-	QqoSAF2UCAgkagMdn9ZDvka6uT+OJt
-X-Received: by 2002:a05:6a00:94c4:b0:836:5c3c:2054 with SMTP id d2e1a72fcca58-83f33d5401amr656277b3a.37.1778782747218;
-        Thu, 14 May 2026 11:19:07 -0700 (PDT)
-X-Received: by 2002:a05:6a00:94c4:b0:836:5c3c:2054 with SMTP id d2e1a72fcca58-83f33d5401amr656234b3a.37.1778782746619;
-        Thu, 14 May 2026 11:19:06 -0700 (PDT)
-Received: from hu-ymg-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83f19c7ed3fsm3355974b3a.45.2026.05.14.11.19.03
+        d=1e100.net; s=20251104; t=1778783256; x=1779388056;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hg6IMrnQ8rIdunh62Bq5pOIvEVv9aCeOeb/XYHKMD4Q=;
+        b=X7i1QrJ9gVq22s0+Q9+6/ezv5Phd4pnBi14JmEolylynGeaVFzMutyG58T0puYBUi3
+         Q332fP2ldhY/oVxgaop82S/W1DSV0zTTImD8B9qmD4r8XJVK3iuhuwTltLLWxR+SRGQf
+         EMP9kg85/4MCQ/mW+lpZFUolfl8WgrDem5cLSUgqOZSWH+EoNT7iLoV+0ZEqHyogwusV
+         EV+Y34bZZQc9C1u5NRAkuLL7cPMtO8D9JeadJqvuRIGH9CiqmHTv39qSC7R+HSgbzLLJ
+         4Rtx1ptekXwYtw7Ypyzp91BugunrCZuIlZZFY9SDMQ2C7hIlTplUd7q2nvEsmX0664iG
+         rMCg==
+X-Gm-Message-State: AOJu0YwZ1Cfdq/jYcOtaYi9b/DeSmEPUBk6lXkcXtLb2P/8hyENL/J+L
+	tdStid6I+wGlWaiy4/9Fnm/6HsU7RYzD10QuPvkmp6S+MgQMq8DyB04IX+dEytjiIyO9fcjfc3H
+	5AGibQw==
+X-Gm-Gg: Acq92OEIxl6fkWAAcTLxJEkMUrpmm4mwQpYBTt2eOl6n+nH1kln/MIYjEMaegxQh9Ed
+	fRyhZpS4JU7kkbvl3KQkAImpoogJA5D9hZk+9r1mY/KAWpXPUJq/2l2AjZNFLI/VkHW7cXYxOYt
+	rctRIM+BFwXNVzNdSSfPfNjAKhznoq+y6Gh6IPGr9K1ufI/N/BaFHn0lhqpw2EMfgqRSizYy++p
+	31Qeh/usLIya04zMlrGwjq6kKxokY7ufE/ASVJV/i7maet1rhOFKmt+1KgHbuZIpl69UUn5fTUn
+	luYAVBe3XrHKb95KrGjANjznjk0abfWRuDtpQUkpUZlqIoXVkvp/NjhZetMWAVRt2mGWBrWZOaJ
+	NpZX/hYy2/w7TGkUD55iNTngezs8dEUS5sInCJGT5QWaIw15SRwQBl4LuA93QYgxCMfteWiE44U
+	6dYDyd0CBMPh1UBC6vLbWWQLQfAUF2e7itgt9bF0GHPr0Ea+TQc2ehhczU5JcimLfL09GuntQcR
+	CfioW23pCQ=
+X-Received: by 2002:a05:7022:41a7:b0:134:def6:e70b with SMTP id a92af1059eb24-1350451e322mr126140c88.6.1778783254874;
+        Thu, 14 May 2026 11:27:34 -0700 (PDT)
+Received: from google.com (56.149.168.34.bc.googleusercontent.com. [34.168.149.56])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-134cf44668asm4587270c88.6.2026.05.14.11.27.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 May 2026 11:19:06 -0700 (PDT)
-From: Yadu M G <yadu.mg@oss.qualcomm.com>
-To: shawn.lin@rock-chips.com
-Cc: jingoohan1@gmail.com, mani@kernel.org, lpieralisi@kernel.org,
-        kwilczynski@kernel.org, bhelgaas@google.com, robh@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: dwc: Initialize pp->lock before MSI domain registration
-Date: Thu, 14 May 2026 23:49:01 +0530
-Message-ID: <20260514181901.315647-1-yadu.mg@oss.qualcomm.com>
-X-Mailer: git-send-email 2.43.0
+        Thu, 14 May 2026 11:27:34 -0700 (PDT)
+Date: Thu, 14 May 2026 18:27:30 +0000
+From: David Matlack <dmatlack@google.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 03/11] PCI: liveupdate: Track incoming preserved PCI
+ devices
+Message-ID: <agYUEtoSFyvJewNg@google.com>
+References: <20260512184846.119396-4-dmatlack@google.com>
+ <20260514010518.B0B41C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE0MDE4MyBTYWx0ZWRfX8wspimzQZwjA
- QgpDn50vRQ0qxFdbA2Yu2ti9XOTTZdzxksbLhNh87MU123hiw3W4JtkaHPOljG23SxyOPcdE6wN
- uegXERmUXCNkRwcGNdF3B4XuDBwtTlYUI7F8NxIQ2fvAonbrkXrygJvnLEvvguoaVsns/SJG8FI
- jd9abxSp4oU2HLQ3EtfGdVOgrABH1IdL4KF+A8M8F3jp6+meusYWhVTK1ZBIrdM2yxjKcRYXsUs
- XJHifc3pZ/Vr9L3tIaHb2V1A6xt/klmQxhJ80lmm7vZwcnH6pb8IdMu89Y3cEXC3K/iP4FXzZu2
- 2e+3su7urHReRl/gK35fI994IwuTh9PjUDmIRqJxnZmpGZ7h34IrK3e+WqEcWGB50zgqVJRrRS2
- m/X2K9SXPav4ZqgQxuZ8Dax+BhYs59Z3MxmcfbUCuamnsO9hwO9ofrlySRBETNbg0tP7HlkDcD1
- 4c8peb883YAAM422H8A==
-X-Proofpoint-ORIG-GUID: R7ZTcREC0KhUXYsFFIByGlZ87b9Gq0gP
-X-Authority-Analysis: v=2.4 cv=N6AZ0W9B c=1 sm=1 tr=0 ts=6a06121c cx=c_pps
- a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22 a=EUspDBNiAAAA:8
- a=zSJiG3aQ0SmOekOxMd4A:9 a=_Vgx9l1VpLgwpw_dHYaR:22
-X-Proofpoint-GUID: R7ZTcREC0KhUXYsFFIByGlZ87b9Gq0gP
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-14_04,2026-05-13_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 priorityscore=1501 bulkscore=0 malwarescore=0 clxscore=1015
- impostorscore=0 lowpriorityscore=0 phishscore=0 adultscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605050000 definitions=main-2605140183
+In-Reply-To: <20260514010518.B0B41C19425@smtp.kernel.org>
 
-A lockdep warning is observed during boot on a Qcom firmware managed
-platform:
+On 2026-05-14 01:05 AM, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 6 potential issue(s) to consider:
+> - [High] Integer truncation in `pci_ser_xa_key()` drops the upper 16 bits of the PCI domain.
+> - [High] Memory leak of KHO-preserved physical pages in the error path of `pci_flb_retrieve()`.
+> - [High] Subsystem guide violation: `pci_flb_preserve()` calls a KHO serialization API without checking `kho_is_enabled()`.
+> - [High] Data corruption in `pci_liveupdate_unpreserve()` due to decrementing `ser->nr_devices` without compacting the array.
+> - [High] Use-after-free risk because `pci_flb_unpreserve()` leaves dangling pointers in `dev->liveupdate.outgoing`.
+> - [High] `pci_liveupdate_finish()` calls `pci_liveupdate_flb_put_incoming()` under a write lock, risking a sleep-in-atomic bug.
+> --
+> 
+> commit 46fdddc110c525ef02301643989348b7f03a10c0
+> Author: David Matlack <dmatlack@google.com>
+> 
+> PCI: liveupdate: Track incoming preserved PCI devices
+> 
+> This commit adds support for tracking pci devices preserved across a kexec
+> via live update. It introduces setup and cleanup hooks for the pci core to
+> manage the incoming live update state of these devices.
+> 
+> > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> > index 9c4582ecd55cc..f14396dd14773 100644
+> > --- a/drivers/pci/liveupdate.c
+> > +++ b/drivers/pci/liveupdate.c
+> > @@ -85,6 +101,21 @@ struct pci_flb_outgoing {
+> >  	struct mutex lock;
+> >  };
+> >  
+> > +/**
+> > + * struct pci_flb_incoming - Incoming PCI FLB object
+> > + * @ser: The incoming struct pci_ser from the previous kernel.
+> > + * @xa: Xarray used to quickly lookup devices in @ser.
+> > + */
+> > +struct pci_flb_incoming {
+> > +	struct pci_ser *ser;
+> > +	struct xarray xa;
+> > +};
+> > +
+> > +static unsigned long pci_ser_xa_key(u32 domain, u16 bdf)
+> > +{
+> > +	return domain << 16 | bdf;
+> > +}
+> 
+> Can this integer shift truncate the upper 16 bits of the pci domain?
+> 
+> Because domain is a u32, the shift expression evaluates as a 32-bit integer.
+> This discards the upper 16 bits before the result is promoted to the 64-bit
+> unsigned long return type.
+> 
+> If devices are in domains >= 0x10000, this will produce colliding keys,
+> causing them to overwrite each other in the xarray.
+> 
+> Could this be cast before the shift, such as
+> ((unsigned long)domain << 16) | bdf?
 
-  INFO: trying to register non-static key.
-  The code is fine but needs lockdep annotation, or maybe
-  you didn't initialize this object before use?
-  turning off the locking correctness validator.
-  ...
-  Call trace:
-   register_lock_class+0x128/0x4d8
-   __lock_acquire+0x110/0x1db0
-   lock_acquire+0x278/0x3d8
-   _raw_spin_lock_irq+0x6c/0xc0
-   dw_pcie_irq_domain_alloc+0x48/0x190
-   irq_domain_alloc_irqs_parent+0x2c/0x48
-   msi_domain_alloc+0x90/0x160
-  ...
+Ah I thought I had fixed that in v5. Will fix in v6.
 
-dw_pcie_irq_domain_alloc() takes pp->lock while allocating MSI
-interrupts. pp->lock is initialized in dw_pcie_host_init(). However, on
-Qcom firmware managed platforms the MSI domain is allocated from a
-custom .msi_init callback by calling dw_pcie_allocate_domains()
-directly, bypassing dw_pcie_host_init(). This leaves pp->lock without a
-lockdep key and triggers the warning when MSI vectors are later
-allocated.
+> > +
+> >  static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
+> >  {
+> >  	struct pci_flb_outgoing *outgoing;
+> 
+> Does this function need to check kho_is_enabled() before proceeding?
+> 
+> According to the kho subsystem guidelines, all callers of serialization-side
+> kho APIs (like kho_alloc_preserve() used later in this function) must
+> gate their usage on kho_is_enabled().
+> 
+> Failing to check the enabled state can cause null pointer dereferences or
+> silently add useless tracking state that will never be used.
+> 
+> [ ... ]
+> 
+> > @@ -140,13 +171,44 @@ static void pci_flb_unpreserve(struct liveupdate_flb_op_args *args)
+> 
+> Can pci_flb_unpreserve() cause a use-after-free risk by leaving dangling
+> pointers?
+> 
+> When an outgoing live update is aborted, this function frees the outgoing->ser
+> memory via kho_unpreserve_free(). However, it does not clear the
+> dev->liveupdate.outgoing pointers in the pci devices that were already
+> preserved.
+> 
+> If a new live update is initiated and pci_liveupdate_unpreserve() is called
+> on those devices, it will execute memset(dev_ser, 0, ...) on the dangling
+> dev->liveupdate.outgoing pointer, corrupting memory.
 
-Initialize pp->lock in dw_pcie_allocate_domains() before registering the
-MSI IRQ domain so direct callers from custom .msi_init() paths always
-have a properly initialized lock. Keep the existing initialization in
-dw_pcie_host_init(), since pp->lock is also used by legacy INTx handling
-and may be taken from glue .init() callbacks even when MSI is disabled.
+This was addressed in the patch 2 thread.
 
-Signed-off-by: Yadu M G <yadu.mg@oss.qualcomm.com>
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+> 
+> >  
+> >  static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
+> >  {
+> > -	args->obj = phys_to_virt(args->data);
+> > +	struct pci_flb_incoming *incoming;
+> > +	int i, ret;
+> > +
+> > +	incoming = kmalloc_obj(*incoming);
+> > +	if (!incoming)
+> > +		return -ENOMEM;
+> > +
+> > +	incoming->ser = phys_to_virt(args->data);
+> > +
+> > +	xa_init(&incoming->xa);
+> > +
+> > +	for (i = 0; i < incoming->ser->max_nr_devices; i++) {
+> > +		struct pci_dev_ser *dev_ser = &incoming->ser->devices[i];
+> > +		unsigned long key;
+> > +
+> > +		if (!dev_ser->refcount)
+> > +			continue;
+> > +
+> > +		key = pci_ser_xa_key(dev_ser->domain, dev_ser->bdf);
+> > +		ret = xa_err(xa_store(&incoming->xa, key, dev_ser, GFP_KERNEL));
+> > +		if (ret) {
+> > +			xa_destroy(&incoming->xa);
+> > +			kfree(incoming);
+> > +			return ret;
+> > +		}
+> 
+> Does this error path leak the preserved physical pages?
+> 
+> If xa_store() fails, this returns an error code without calling
+> kho_restore_free(incoming->ser). Because the function returns an error and
+> does not populate args->obj, the live update core will not call the .finish
+> callback to clean up the memory.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index c9517a348836..de316f103c73 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -215,6 +215,13 @@ int dw_pcie_allocate_domains(struct dw_pcie_rp *pp)
- 		.host_data	= pp,
- 	};
- 
-+	/*
-+	 * Initialize pp->lock here to cover direct callers from custom
-+	 * .msi_init() paths (e.g. firmware-managed platforms) that
-+	 * bypass dw_pcie_host_init().
-+	 */
-+	raw_spin_lock_init(&pp->lock);
-+
- 	pp->irq_domain = msi_create_parent_irq_domain(&info, &dw_pcie_msi_parent_ops);
- 	if (!pp->irq_domain) {
- 		dev_err(pci->dev, "Failed to create IRQ domain\n");
--- 
-2.43.0
+Yes if retrieve fails then the preserved struct pci_ser gets leaked. The
+user is likely going to reboot the system anyway since the preserved
+devices will not able to be retrieved, so I don't think leaking is a
+problem in practice. But I also don't see any reason why we have to leak
+it. I will free it in v6.
 
+> 
+> [ ... ]
+> 
+> > @@ -268,6 +330,163 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
+> 
+> Can pci_liveupdate_unpreserve() corrupt the live update tracking state by
+> leaving holes in the array?
+> 
+> Looking at the body of pci_liveupdate_unpreserve():
+> 
+> drivers/pci/liveupdate.c:pci_liveupdate_unpreserve() {
+>     ...
+>     ser->nr_devices--;
+>     memset(dev_ser, 0, sizeof(*dev_ser));
+>     ...
+> }
+> 
+> If a device other than the most recently preserved one is unpreserved, this
+> leaves a hole in the array and moves the allocation cursor backward.
+> Subsequent device preservations will overwrite currently preserved, valid
+> devices at that index.
+
+Leaving a hole in the array is the intention. ser->nr_devices is not a
+cursor, it is the number of valid (non-hole) elements of the devices
+array. pci_liveupdate_preserve() specifically walks through the entire
+array to find the first non-hole to use for the next device.
+
+> [ ... ]
+> 
+> > +void pci_liveupdate_finish(struct pci_dev *dev)
+> > +{
+> > +	guard(write_lock)(&dev->liveupdate.lock);
+> > +
+> > +	if (!dev->liveupdate.incoming) {
+> > +		pci_warn(dev, "Cannot finish preserving an unpreserved device\n");
+> > +		return;
+> > +	}
+> > +
+> > +	pci_info(dev, "Device is finished participating in Live Update\n");
+> > +
+> > +	/*
+> > +	 * Drop the refcount so this device does not get treated as an incoming
+> > +	 * device again, e.g. in case pci_liveupdate_setup_device() gets called
+> > +	 * again because the device is hot-plugged.
+> > +	 */
+> > +	dev->liveupdate.incoming->refcount = 0;
+> > +	dev->liveupdate.incoming = NULL;
+> > +
+> > +	/* Drop this device's reference on the incoming FLB. */
+> > +	pci_liveupdate_flb_put_incoming();
+> > +}
+> 
+> Can calling pci_liveupdate_flb_put_incoming() under a write lock cause a
+> sleep-in-atomic bug?
+> 
+> This function calls pci_liveupdate_flb_put_incoming() while holding
+> dev->liveupdate.lock (an rwlock) for writing. If the put function acquires a
+> sleepable lock internally, calling it from atomic context will trigger a bug.
+> 
+> This contrasts with pci_liveupdate_cleanup_device() which drops the lock
+> first using scoped_guard().
+
+Ah I fixed this in a later patch in the series but forgot to also
+address it in this intermediate state. Will fix in v6.
+
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260512184846.119396-1-dmatlack@google.com?part=3
