@@ -1,130 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43F423E1CE6;
-	Thu, 14 May 2026 15:24:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D6093FFAB4;
+	Thu, 14 May 2026 15:31:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778772294; cv=none; b=IVNAcWNuHuAAX/sPZnw6/OxJxDy/ODGxa7p6O6BqNCFkzAlpmEHv5uY/lBMLBi/NFKEOIWo7J002wS1swh5LsTOnSoYulq8HKelBm+/DkHfuO8WNFZTcxntAxAEOfCci/CEBf8pdvlQlS5afHwV5H91MyfIzU8/rwWWHS2D+VN4=
+	t=1778772694; cv=none; b=OvfhM27CV4uWX86WBFmlWyVl4obqVPCzegelwJYlxRWx/pYay3rpXctV/BGClPIHiaLZC3pdrdk5rO0uSgIP+LJZiL3gvltSnSswn3uKgHWJ0d2XtT4M2hU4TfZTL6TxnIDvjzcmmAANJYcHqfdqXpLV2NPQZBR9NFWllsuFxt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778772294; c=relaxed/simple;
-	bh=pp56e/DCHOxZ+Eut9lk+188HvenrbqBoOLsSg2cmQrA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Ie48xO3Sj9ThQNnW2lXqflut6yPWZ2Ld28F4zn7ZNjsZ6XKp6YEdJuxETfbXg4IxLTfS1tJxCYmtW/UaGmzuLonQSt6Yzwk4CVFKfmSocTX2LQ9YC0vp9vbxqqiaTmDAg5rkUMjGRu4kGt00SwoE0DUVy040KoLAHvXCsHNMW8U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I7CpSyu+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778772694; c=relaxed/simple;
+	bh=LiYaJOmBKU1FAMC6RdffSt+hxtJlS5cM7eTKtw5eDWI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rJDXka+HTXvcwimB1+6F6xsOrNXpZLfJ6e3SrAmcaR91+MbvD7mwHVP4qmWn3E49784vtWLRoQiz9wcWyqFGTJGfUCOVxtqFRIgqbM4OBhL3UZavXMb7DVMkvnvC9TQvm8K0zUtq49jDunXzooSG8eWlfpoJ5SW+sX3ScSdFH2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=opsu9bxc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I7CpSyu+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A92DC2BCB3;
-	Thu, 14 May 2026 15:24:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="opsu9bxc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C2F5C2BCB3;
+	Thu, 14 May 2026 15:31:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778772294;
-	bh=pp56e/DCHOxZ+Eut9lk+188HvenrbqBoOLsSg2cmQrA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=I7CpSyu+P0Xv1f+CwVAtXHqRkk2+3kFBG1SJBrfAI4kfjGfXc0ZsrbSOdmQaoRfIf
-	 8XA+X02uEBJTAtt85EtEM1LP7exZNpI46fEhlfsFlbhxKP57S5AO+yHTHn6EM9XTTF
-	 xeffW52S7EUxnBn2bLlQvLYkCSalCLmKdOOgVI6nVJ0Ft8H7xq0eq0fotAQbr3r2l2
-	 QyTkHkLoqw/l2Sly+MXmK1JxNcCtWWhMrX15qzkPJ022tHz5pC2n8DJ+Aq9aZ8CDmh
-	 QK/1gbinOmpMPrPyaHwXyyfaQm9G9/sqjtmARkjbuFTXpefsA3ctOPOY406Vdx5L0Z
-	 S3+DSW+jrw8ZA==
-From: Pratyush Yadav <pratyush@kernel.org>
-To: Samiullah Khawaja <skhawaja@google.com>
-Cc: Vipin Sharma <vipinsh@google.com>,  David Matlack <dmatlack@google.com>,
-  kvm@vger.kernel.org,  linux-doc@vger.kernel.org,
-  linux-kernel@vger.kernel.org,  linux-kselftest@vger.kernel.org,
-  linux-pci@vger.kernel.org,  ajayachandra@nvidia.com,  alex@shazbot.org,
-  amastro@fb.com,  ankita@nvidia.com,  apopple@nvidia.com,
-  chrisl@kernel.org,  corbet@lwn.net,  graf@amazon.com,
-  jacob.pan@linux.microsoft.com,  jgg@nvidia.com,  jgg@ziepe.ca,
-  jrhilke@google.com,  julianr@linux.ibm.com,  kevin.tian@intel.com,
-  leon@kernel.org,  leonro@nvidia.com,  lukas@wunner.de,
-  michal.winiarski@intel.com,  parav@nvidia.com,
-  pasha.tatashin@soleen.com,  praan@google.com,  pratyush@kernel.org,
-  rananta@google.com,  rientjes@google.com,  rodrigo.vivi@intel.com,
-  rppt@kernel.org,  saeedm@nvidia.com,  skhan@linuxfoundation.org,
-  vivek.kasireddy@intel.com,  witu@nvidia.com,  yanjun.zhu@linux.dev,
-  yi.l.liu@intel.com
-Subject: Re: [PATCH v4 02/16] vfio/pci: Preserve vfio-pci device files
- across Live Update
-In-Reply-To: <agT9bYpXskVwW0E_@google.com> (Samiullah Khawaja's message of
-	"Wed, 13 May 2026 22:42:56 +0000")
-References: <20260511234802.2280368-1-vipinsh@google.com>
-	<20260511234802.2280368-3-vipinsh@google.com>
-	<CALzav=fR8c2tYj9jeOc_K=xoupxAfWMHmk0ipDniSXg6uGiFYA@mail.gmail.com>
-	<20260512211412.GA2819150.vipinsh@google.com>
-	<agT9bYpXskVwW0E_@google.com>
-Date: Thu, 14 May 2026 17:24:46 +0200
-Message-ID: <2vxzcxyy9fpd.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	s=k20201202; t=1778772694;
+	bh=LiYaJOmBKU1FAMC6RdffSt+hxtJlS5cM7eTKtw5eDWI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=opsu9bxc48ChHYwfeRDyx8+YWq2rRN6rJmtKNdpeI5MNnoZtjjsjlMR7cABM0FnR+
+	 cpJMRAmol3Ina24CuW8KamIentVElZ1Ps1rfFgWiFQan/87EsMMiyhMBf3du85pZPh
+	 E5uFfJhXUrH/wTZfgKcekiWca9/SOI/5+HZqA5nPLDqO9jVEv5TLDgPFCT6m7p/1eF
+	 xtqbPgQ7p4fvwCI83UVkzxDbirmHeX8lwuG06yVFV7jAsK3In6uzlwore4zNN7rNtC
+	 bexmMQObxFCIV95qzp62InlYIk8JE50G2rE3tSs76zNJWlf94OE/kj9JxXnYGjnjKp
+	 y8KJeED+2ZMcw==
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Marco Nenciarini <mnencia@kcore.it>,
+	Michal Winiarski <michal.winiarski@intel.com>,
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+	Eric Chanudet <echanude@redhat.com>,
+	Jean Guyader <jean.guyader@gmail.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Sinan Kaya <okaya@kernel.org>,
+	Mario Limonciello <superm1@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v1] PCI: Wait for device readiness after D3hot -> D0uninitialized transition
+Date: Thu, 14 May 2026 10:31:24 -0500
+Message-ID: <20260514153124.404060-1-bhelgaas@google.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 13 2026, Samiullah Khawaja wrote:
+For a device that advertises No_Soft_Reset == 0, a transition from D3hot to
+D0uninitialized is a soft reset, and the resulting internal device state is
+undefined.
 
-> On Tue, May 12, 2026 at 02:29:19PM -0700, Vipin Sharma wrote:
->>On Tue, May 12, 2026 at 01:59:51PM -0700, David Matlack wrote:
->>> On Mon, May 11, 2026 at 4:48=E2=80=AFPM Vipin Sharma <vipinsh@google.co=
-m> wrote:
->>>
->>> > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
->>> > index c12d614fc6c4..019de053f116 100644
->>> > --- a/drivers/vfio/pci/Kconfig
->>> > +++ b/drivers/vfio/pci/Kconfig
->>> > @@ -45,13 +45,15 @@ config VFIO_PCI_IGD
->>> >
->>> >  config VFIO_PCI_LIVEUPDATE
->>> >         bool "VFIO PCI support for Live Update (EXPERIMENTAL)"
->>> > -       depends on PCI_LIVEUPDATE
->>> > +       depends on PCI_LIVEUPDATE && VFIO_DEVICE_CDEV
->>> >         help
->>> >           Support for preserving devices bound to vfio-pci across a L=
-ive
->>> >           Update. This option should only be enabled by developers wo=
-rking on
->>> >           implementing this support. Once enough support has landed i=
-n the
->>> >           kernel, this option will no longer be marked EXPERIMENTAL.
->>> >
->>> > +         Enabling this will disable support for VFIO PCI DMA buffer.
->>> > +
->>> >           If you don't know what to do here, say N.
->>> >
->>> >  endif
->>> > @@ -68,7 +70,7 @@ config VFIO_PCI_ZDEV_KVM
->>> >           To enable s390x KVM vfio-pci extensions, say Y.
->>> >
->>> >  config VFIO_PCI_DMABUF
->>> > -       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFER
->>> > +       def_bool y if VFIO_PCI_CORE && PCI_P2PDMA && DMA_SHARED_BUFFE=
-R && !VFIO_PCI_LIVEUPDATE
->>>
->>> Why does enabling VFIO_PCI_LIVEUPDATE require disabling
->>> VFIO_PCI_DMABUF? I saw the cover letter says "to keep things simple",
->>> but what specific problem does this solve or simplify?
->>
->>I should have provided more details there.
->>
->>When device is getting reset in vfio_pci_liveupdate_freeze(), we are
->>zapping userspace mapped bars, we also need to use
->>vfio_pci_dma_buf_move() to revoke dma buffer access or
->>vfio_pci_dma_buf_cleanup() combination. Cleanup takes the memory lock
->>which freeze already takes, and there are some refcounts which are
->>managed in both of these APIs. This was causing complexities with code
->>flow based on result of pci_load_saved_state(). All this was adding more
->>refactoring than I wanted in the series.
->
-> Maybe we can return -EOPNOTSUPP if any dmabufs for this vfio cdev are
-> exported during preserve?
+A transition from D3hot to D0uninitialized requires a minimum delay of
+10 msec before accessing the device, but after that delay, the device is
+permitted to respond to config requests with RRS completion status if it
+needs more time to initialize (PCIe r7.0, sec 2.3.1).
 
-Whichever way you go with, a TODO/comment would be nice to have so
-someone (including future you) looking at this code knows why this
-restriction exists.
+Call pci_dev_wait() after pci_power_up() performs a D3hot->D0uninitialized
+transition to ensure the device is ready to accept config accesses, as is
+done after the similar transition in pci_pm_reset().
 
---=20
-Regards,
-Pratyush Yadav
+If the device is already ready, this is essentially a no-op except for one
+additional config read.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8f7cfcc00090..9d0fc9fbb76a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1301,6 +1301,16 @@ int pci_power_up(struct pci_dev *dev)
+ 	pci_power_t state;
+ 	u16 pmcsr;
+ 
++	/*
++	 * When setting power state to D0, platform_pci_set_power_state()
++	 * ensures main power is on.  If it puts the device in D0, it also
++	 * completes any required delays after the transition; if it leaves
++	 * the device in D1, D2, or D3hot, we use the PM Capability to
++	 * transition to D0.
++	 *
++	 * In all cases, the device is either Configuration-Ready or
++	 * inaccessible upon return.
++	 */
+ 	platform_pci_set_power_state(dev, PCI_D0);
+ 
+ 	if (!dev->pm_cap) {
+@@ -1341,10 +1351,14 @@ int pci_power_up(struct pci_dev *dev)
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
+ 
+ 	/* Mandatory transition delays; see PCI PM 1.2. */
+-	if (state == PCI_D3hot)
++	if (state == PCI_D3hot) {
+ 		pci_dev_d3_sleep(dev);
+-	else if (state == PCI_D2)
++		if (!(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET))
++			pci_dev_wait(dev, "power up D3hot->D0uninitialized",
++				     PCIE_RESET_READY_POLL_MS);
++	} else if (state == PCI_D2) {
+ 		udelay(PCI_PM_D2_DELAY);
++	}
+ 
+ end:
+ 	dev->current_state = PCI_D0;
+-- 
+2.51.0
+
