@@ -1,93 +1,166 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A29073A6B76;
-	Thu, 14 May 2026 22:54:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9B5926FA7A
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 23:27:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778799268; cv=none; b=N+wn4le9WiJwQgmjRePl/3o5LjxvtdPrPXYVb40A1MoXW2paOpTdVUGC9Vv0xuaaBAWKVxWr0ETpkM1ghI9Lf/bleqA7CNpoiOi0nrEwaUjNX90y9fAZ+ZyBBtJUMfod758h9ShwroFENpl8AfT1jvMCWVIFM8/df0o6O4Ne5mw=
+	t=1778801271; cv=none; b=oDdOTx6sj0pNAFobPgTPBiNbdnUP73UPafkoyQo8Iyqbu9R4X85vPTCyGPnAS8Xf/8ypeLQm6IqJsQvjNlCqjrT8nPhnjhsrqmXc7UsLvwPCWy1jF0QF0mzKMTDVoXz0dcp/lbMPTHqzqJDDYKYXkEICe4psAE5VTvSiyJihAeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778799268; c=relaxed/simple;
-	bh=V28hjOaAnmBMgpEZgMkM6AYG1yahj8QOBtL7VQ6JgnI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=aiNbnrH0sJkAUE0k4eK6NBrliHKelnIFMd/jG8LGh0X0f0jyA46QNpxAQKhFJofKrY9aBfRabUON5GJojfXnSiY5A3L65eU+lKcQeqxmqMPgX1iOkYnXq5DDVDEqB66uojdtIg30sb6AlwWaKgjIfGBKGdN79ZaQgkPfVGyyuMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mfai8ns5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778801271; c=relaxed/simple;
+	bh=cDsQUC5dcuU8uM3N1XfJd0Y+6nbWHt9+od8jW7wX3h8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=fgIaZStVmPjpCPhEqq5iUfWK61APHQPCGQJ88r+AiB8KnEFqFcxxj9PGwNY8u+RP08Q6u2oV2kScD02f181W+473iFWJJjygB3ax5ShQg/HhhQvNtTHlJoFUMC+0DAVQef4aCbQRl+KYSKGhHNjCijHnM8G2snbineII4c7TohE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZvtcjqgU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mfai8ns5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22180C2BCB3;
-	Thu, 14 May 2026 22:54:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZvtcjqgU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED8DC2BCB3;
+	Thu, 14 May 2026 23:27:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778799268;
-	bh=V28hjOaAnmBMgpEZgMkM6AYG1yahj8QOBtL7VQ6JgnI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=mfai8ns5UAvaEaXCXFbfsG4ecZWU/uEml4YgLDNYlV/hKZVkdvlw3jiEZbEXTc1qZ
-	 kOv6oj+t0pwKkrkoIfurPX5B8qzlIl1GGihmiOHKPoGjjf+LAzKhPN/wJffHjxJm8I
-	 KNkHZhuf9r3fqK2XpnC7Xh0EM9pHpq7xDlgqlrDV0/Iz/ifFH1gYhz8/kgq/PRW/vO
-	 scYbo8/UeG948JXcXtahYX4SkYg5fIhMBR1i29WoC8fnsKNS9+Nau3DCgridNAK/ed
-	 OG5D4uPIYOGVbc46fX/49GT7fYKY7kJD3lpIT3kD6p+8/qbeCT8WrkIDIZZaaCc9tY
-	 +VlbvzSObHe/A==
-Date: Thu, 14 May 2026 17:54:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>,
-	Lukas Wunner <lukas@wunner.de>, linux-pm@vger.kernel.org
-Subject: Re: [PATCH] PCI/ASPM: Enable L0s/L1 for removable devices when BIOS
- didn't configure ASPM
-Message-ID: <20260514225426.GA441423@bhelgaas>
+	s=k20201202; t=1778801271;
+	bh=cDsQUC5dcuU8uM3N1XfJd0Y+6nbWHt9+od8jW7wX3h8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=ZvtcjqgUNJ6hSYBdfI9oUFx4SWOu5P2a4SfsLFv8JBWZXaMzs0u3TtK1yL2IMiJhg
+	 B1LrC8VhSQThQ8+lidxlgvAdrcjhGCgeq5NIEFVVhPxsW5Sl10IQEPAtc0HvxOZwke
+	 71XE5O52RQrGV2bSCJ2srSsfaBnDoQHHL6+eyHjg3qM6Bk7OQrY5YlX2mWmCbK8w0v
+	 /f6Gy2VVhvI6CqZuR/V50SPMgJHhb3eZ8Rzsiv2MT8pCqNFnRJwSMRfT2VJMuaxPox
+	 +mfJbff9z9jPG4zJOgXALFKiiFWIHcFeX572qU9mygjlY+3ZjaH9Hvmlfu2doleI8q
+	 LW/mhIwdWCAyg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v16 5/7] vfio-pci/zdev: Add a device feature for error
+ information
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Farhan Ali" <alifm@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260514180059.1553-6-alifm@linux.ibm.com>
+References: <20260514180059.1553-6-alifm@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 14 May 2026 23:27:50 +0000
+Message-Id: <20260514232751.8ED8DC2BCB3@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <3c6a9ff7-95b2-47dd-87c2-62eec4aefbb1@amd.com>
 
-On Thu, May 14, 2026 at 12:14:29PM -0500, Mario Limonciello wrote:
-> On 5/6/26 10:27, Bjorn Helgaas wrote:
-> > On Wed, May 06, 2026 at 10:10:47AM -0500, Mario Limonciello wrote:
-> > > On 5/5/26 23:53, Mika Westerberg wrote:
-> > > > On Tue, May 05, 2026 at 08:09:22PM +0200, Rafael J. Wysocki wrote:
-> > > > > On Tue, May 5, 2026 at 12:53 AM Mario Limonciello
-> > > > > <mario.limonciello@amd.com> wrote:
-> > > ...
-> > 
-> > > > > > +        * For devicetree platforms, enable L0s and L1 by default.
-> > > > > > +        *
-> > > > > > +        * For removable devices (e.g., Thunderbolt/USB4), enable L0s and L1
-> > > > > > +        * by default if BIOS didn't configure any ASPM states. This handles
-> > > > > > +        * hotplugged devices where firmware may not have configured ASPM.
-> > > > > > +        */
-> > > > 
-> > > > Only L1 is supported over TB/USB4 tunnel (no L0s, no L1 substates). The
-> > > > PCIe endpoint and the downstream port it connects to of course can support
-> > > > the full range as that's a real PCIe link.
-> > > 
-> > > OK - the comment should be updated but I do expect that below code
-> > > (link->aspm_support) should remain OK.
-> > 
-> > TB/USB4 are examples of removable devices but they're not the only
-> > ones, so I think it's OK for the comment to mention L0s.  In fact, it
-> > *should* mention L0s since the code below includes L0s, and mentioning
-> > only L1 would just be confusing.
-> > 
-> It sounds like you're suggesting no changes to this proposal then, right?
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Critical] Unlocking an unheld mutex (`pending_errs_lock`) in `zpci_event=
+_attempt_error_recovery()`
+- [High] UAPI structure `vfio_device_feature_zpci_err` contains compiler-de=
+pendent bitfields and implicit padding, breaking ABI
+--
 
-I'm fine with the comment mentioning "L0s and L1", which matches the
-code:
+commit 034b8d0077a811c23deeb80ce7c989b1da79571b
+Author: Farhan Ali <alifm@linux.ibm.com>
 
-  if (link->aspm_support & PCIE_LINK_STATE_L0S)
-          link->aspm_default |= PCIE_LINK_STATE_L0S;
-  if (link->aspm_support & PCIE_LINK_STATE_L1)
-          link->aspm_default |= PCIE_LINK_STATE_L1;
+vfio-pci/zdev: Add a device feature for error information
 
-Sashiko had several comments.  I'm hoping for those to be addressed or
-responded to.  Unfortunately the complexity of the ASPM code means the
-sashiko comments are also very complicated and a lot of work to go
-though.
+This commit adds a new device feature to expose platform-specific PCI error
+information for zPCI devices to userspace. This allows userspace to take
+appropriate actions for error recovery.
+
+> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
+> index ad273decb1c2b..ec42b81eff330 100644
+> --- a/arch/s390/pci/pci_event.c
+> +++ b/arch/s390/pci/pci_event.c
+> @@ -75,6 +75,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
+>  	return 0;
+>  }
+
+While reviewing this code, I noticed a regression introduced by the precedi=
+ng
+patch in the series ("s390/pci: Store PCI error information for passthrough
+devices").
+
+Will this result in unlocking an unheld mutex?
+
+In zpci_event_attempt_error_recovery(), if mediated_recovery is true,
+the pending_errs_lock is explicitly unlocked:
+
+    if (mediated_recovery) {
+        pr_info("%s: Leaving recovery of pass-through device to user-space\=
+n",
+                pci_name(pdev));
+        ers_res =3D PCI_ERS_RESULT_RECOVERED;
+        status_str =3D "in progress";
+        mutex_unlock(&zdev->pending_errs_lock);
+        goto out_unlock;
+    }
+
+However, mediated_recovery is set by calling zpci_store_pci_error(),
+which uses scope-based locking:
+
+    guard(mutex)(&zdev->pending_errs_lock);
+
+Since the guard automatically releases the lock when zpci_store_pci_error()
+returns, does the explicit unlock in zpci_event_attempt_error_recovery()
+cause a double-unlock panic or lockdep splat?
+
+[ ... ]
+
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 5de618a3a5eee..3eead86a00ab2 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+[ ... ]
+> @@ -1534,6 +1534,36 @@ struct vfio_device_feature_dma_buf {
+>   */
+>  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+> =20
+> +/**
+> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information=
+ to
+> + * userspace for vfio-pci devices on s390. On s390, PCI error recovery
+> + * involves platform firmware and notification to operating systems is d=
+one
+> + * by architecture specific mechanism. Exposing this information to
+> + * userspace allows it to take appropriate actions to handle an
+> + * error on the device. The ioctl returns -ENOMSG if there are no pending
+> + * PCI errors.
+> + */
+> +
+> +struct vfio_device_feature_zpci_err {
+> +	__u32 feature_flags;		/* Indicate future features */
+> +	__u32 reserved1;
+> +	__u32 fh;			/* function handle */
+> +	__u32 fid;			/* function id */
+> +	__u32 ett		:  4;	/* expected table type */
+> +	__u32 mvn		: 12;	/* MSI vector number */
+> +	__u32 dmaas		:  8;	/* DMA address space */
+> +	__u32 reserved2		:  6;
+> +	__u32 q			:  1;	/* event qualifier */
+> +	__u32 rw		:  1;	/* read/write */
+> +	__u64 faddr;			/* failing address */
+
+Does the use of C bitfields here break UAPI ABI stability?
+
+Bitfield memory layout and ordering are entirely compiler and architecture
+dependent. Additionally, there appears to be a 4-byte implicit compiler
+padding hole before the 8-byte aligned faddr field, and a 4-byte trailing
+padding.
+
+On 31-bit s390 compat user space environments, the __u64 alignment requirem=
+ent
+may differ (4-byte alignment), making the structure 68 bytes instead of 72
+bytes. This mismatch causes vfio_check_feature() to incorrectly reject
+valid 31-bit ioctls with -EINVAL.
+
+Can these bitfields be replaced with explicit integer types (e.g. __u32)
+paired with macros for masks, and explicit padding fields added to guarantee
+identical layouts across all ABIs and eliminate implicit compiler padding?
+
+> +	__u32 reserved3;
+> +	__u16 reserved4;
+> +	__u16 pec;			/* PCI event code */
+> +	__u8 reserved5[28];		/* Allow for future expansion */
+> +};
+> +
+> +#define VFIO_DEVICE_FEATURE_ZPCI_ERROR 13
+> +
+>  /* -------- API for Type1 VFIO IOMMU -------- */
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260514180059.1553=
+-1-alifm@linux.ibm.com?part=3D5
