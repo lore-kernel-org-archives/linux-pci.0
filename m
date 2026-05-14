@@ -1,166 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9B5926FA7A
-	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 23:27:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C1C525B094
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 23:54:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778801271; cv=none; b=oDdOTx6sj0pNAFobPgTPBiNbdnUP73UPafkoyQo8Iyqbu9R4X85vPTCyGPnAS8Xf/8ypeLQm6IqJsQvjNlCqjrT8nPhnjhsrqmXc7UsLvwPCWy1jF0QF0mzKMTDVoXz0dcp/lbMPTHqzqJDDYKYXkEICe4psAE5VTvSiyJihAeQ=
+	t=1778802858; cv=none; b=LwggL9WdkuGGMtjGw3gFsydflZGVNySqfXqxXjcTWzdd+MVmp84gVCFJFfQZqUx9H15/CvyaagKz+WBYl/6D1CwyhzN2CsaZJxcptWXHfest0khoyHUX/F9iR3/YPQfmyx01vaH4zmY8e8EIkpi4VM9f6JBOvBclKmFYzM8MU7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778801271; c=relaxed/simple;
-	bh=cDsQUC5dcuU8uM3N1XfJd0Y+6nbWHt9+od8jW7wX3h8=;
+	s=arc-20240116; t=1778802858; c=relaxed/simple;
+	bh=p0iMVr5QVckOlPgRzh0RiVMNdLhdT7gcmOI8WZD6zHI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fgIaZStVmPjpCPhEqq5iUfWK61APHQPCGQJ88r+AiB8KnEFqFcxxj9PGwNY8u+RP08Q6u2oV2kScD02f181W+473iFWJJjygB3ax5ShQg/HhhQvNtTHlJoFUMC+0DAVQef4aCbQRl+KYSKGhHNjCijHnM8G2snbineII4c7TohE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZvtcjqgU; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=kDVCiQWd4fIETgFfcYWV0eiixGYVe3/WvFz1EdnhlLeXLCe6uNk/azhBgHib4mWKLjTWI6xjL79Q8XQ3g/88WeqE3AP6K6h7b72s48uKcYqVzFZfPkOW9rZNha054oTKajTDkOMnNs9HBH7LSlnB5FSl3j7R/gmUpgEoq4FQEEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LliiaeRS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZvtcjqgU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED8DC2BCB3;
-	Thu, 14 May 2026 23:27:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LliiaeRS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D992C2BCB3;
+	Thu, 14 May 2026 23:54:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778801271;
-	bh=cDsQUC5dcuU8uM3N1XfJd0Y+6nbWHt9+od8jW7wX3h8=;
+	s=k20201202; t=1778802858;
+	bh=p0iMVr5QVckOlPgRzh0RiVMNdLhdT7gcmOI8WZD6zHI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=ZvtcjqgUNJ6hSYBdfI9oUFx4SWOu5P2a4SfsLFv8JBWZXaMzs0u3TtK1yL2IMiJhg
-	 B1LrC8VhSQThQ8+lidxlgvAdrcjhGCgeq5NIEFVVhPxsW5Sl10IQEPAtc0HvxOZwke
-	 71XE5O52RQrGV2bSCJ2srSsfaBnDoQHHL6+eyHjg3qM6Bk7OQrY5YlX2mWmCbK8w0v
-	 /f6Gy2VVhvI6CqZuR/V50SPMgJHhb3eZ8Rzsiv2MT8pCqNFnRJwSMRfT2VJMuaxPox
-	 +mfJbff9z9jPG4zJOgXALFKiiFWIHcFeX572qU9mygjlY+3ZjaH9Hvmlfu2doleI8q
-	 LW/mhIwdWCAyg==
+	b=LliiaeRSm1KjfjjYKvPw3d/aphrUirbG0GpUyg7dNAfK9QJfMW0D+rMO7T0IA1tZT
+	 MzTeSgpxSwXueypGM2+PjHF6BWPulUuLRgwtAoScJM2/AVGs4u3gltSVd/yTGDJiR0
+	 7/L2dt4ON2HWBRu89uHk4rBTjgu9fYpuFXorUhmO7dTUibh6DavBJgUWrQ7LYpSyAQ
+	 5IVlW5rPO/mIkFESf2aGvYkUzZX4u+oSyWtWEHK9bmcVUYb92JIPn6qlFYn4ilO5yw
+	 ENReiwD6kucraoG+DwSoRePkzmqRyOo7rSUHjgvyqEcbqecPrYXbkKhiVXPIfRwSaA
+	 s7vprH/yNUKZA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v16 5/7] vfio-pci/zdev: Add a device feature for error
- information
+Subject: Re: [PATCH v16 6/7] vfio/pci: Add a reset_done callback for
+ vfio-pci driver
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Farhan Ali" <alifm@linux.ibm.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260514180059.1553-6-alifm@linux.ibm.com>
-References: <20260514180059.1553-6-alifm@linux.ibm.com>
+In-Reply-To: <20260514180059.1553-7-alifm@linux.ibm.com>
+References: <20260514180059.1553-7-alifm@linux.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 14 May 2026 23:27:50 +0000
-Message-Id: <20260514232751.8ED8DC2BCB3@smtp.kernel.org>
+Date: Thu, 14 May 2026 23:54:16 +0000
+Message-Id: <20260514235417.7D992C2BCB3@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
-- [Critical] Unlocking an unheld mutex (`pending_errs_lock`) in `zpci_event=
-_attempt_error_recovery()`
-- [High] UAPI structure `vfio_device_feature_zpci_err` contains compiler-de=
-pendent bitfields and implicit padding, breaking ABI
+- [Critical] Concurrent execution of `vfio_pci_core_aer_reset_done` and `vf=
+io_pci_core_disable` causes a Use-After-Free and data race on saved state.
+- [High] UAPI breakage and runtime state corruption due to `reset_done` unc=
+onditionally restoring initialization state.
+- [Medium] The error return value of `pci_load_saved_state()` is ignored, l=
+eading to potentially corrupted state restoration.
 --
 
-commit 034b8d0077a811c23deeb80ce7c989b1da79571b
+commit 50de5d9e39c609551f40181c5b1916513f9d200a
 Author: Farhan Ali <alifm@linux.ibm.com>
 
-vfio-pci/zdev: Add a device feature for error information
+vfio/pci: Add a reset_done callback for vfio-pci driver
 
-This commit adds a new device feature to expose platform-specific PCI error
-information for zPCI devices to userspace. This allows userspace to take
-appropriate actions for error recovery.
+On error recovery for a PCI device bound to vfio-pci driver, we want to
+recover the state of the device to its last known saved state. The callback
+restores the state of the device to its initial saved state.
 
-> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
-> index ad273decb1c2b..ec42b81eff330 100644
-> --- a/arch/s390/pci/pci_event.c
-> +++ b/arch/s390/pci/pci_event.c
-> @@ -75,6 +75,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
->  	return 0;
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+
+[ ... ]
+
+> @@ -2255,6 +2255,17 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
+ruct pci_dev *pdev,
 >  }
-
-While reviewing this code, I noticed a regression introduced by the precedi=
-ng
-patch in the series ("s390/pci: Store PCI error information for passthrough
-devices").
-
-Will this result in unlocking an unheld mutex?
-
-In zpci_event_attempt_error_recovery(), if mediated_recovery is true,
-the pending_errs_lock is explicitly unlocked:
-
-    if (mediated_recovery) {
-        pr_info("%s: Leaving recovery of pass-through device to user-space\=
-n",
-                pci_name(pdev));
-        ers_res =3D PCI_ERS_RESULT_RECOVERED;
-        status_str =3D "in progress";
-        mutex_unlock(&zdev->pending_errs_lock);
-        goto out_unlock;
-    }
-
-However, mediated_recovery is set by calling zpci_store_pci_error(),
-which uses scope-based locking:
-
-    guard(mutex)(&zdev->pending_errs_lock);
-
-Since the guard automatically releases the lock when zpci_store_pci_error()
-returns, does the explicit unlock in zpci_event_attempt_error_recovery()
-cause a double-unlock panic or lockdep splat?
-
-[ ... ]
-
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 5de618a3a5eee..3eead86a00ab2 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-[ ... ]
-> @@ -1534,6 +1534,36 @@ struct vfio_device_feature_dma_buf {
->   */
->  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
 > =20
-> +/**
-> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information=
- to
-> + * userspace for vfio-pci devices on s390. On s390, PCI error recovery
-> + * involves platform firmware and notification to operating systems is d=
-one
-> + * by architecture specific mechanism. Exposing this information to
-> + * userspace allows it to take appropriate actions to handle an
-> + * error on the device. The ioctl returns -ENOMSG if there are no pending
-> + * PCI errors.
-> + */
+> +static void vfio_pci_core_aer_reset_done(struct pci_dev *pdev)
+> +{
+> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
 > +
-> +struct vfio_device_feature_zpci_err {
-> +	__u32 feature_flags;		/* Indicate future features */
-> +	__u32 reserved1;
-> +	__u32 fh;			/* function handle */
-> +	__u32 fid;			/* function id */
-> +	__u32 ett		:  4;	/* expected table type */
-> +	__u32 mvn		: 12;	/* MSI vector number */
-> +	__u32 dmaas		:  8;	/* DMA address space */
-> +	__u32 reserved2		:  6;
-> +	__u32 q			:  1;	/* event qualifier */
-> +	__u32 rw		:  1;	/* read/write */
-> +	__u64 faddr;			/* failing address */
 
-Does the use of C bitfields here break UAPI ABI stability?
+Since pci_error_handlers->reset_done can be invoked by the PCI core at the
+end of any device reset, including those initiated by userspace via the
+VFIO_DEVICE_RESET ioctl, could this unconditionally overwrite the runtime
+userspace configurations with the initial host state?
 
-Bitfield memory layout and ordering are entirely compiler and architecture
-dependent. Additionally, there appears to be a 4-byte implicit compiler
-padding hole before the 8-byte aligned faddr field, and a 4-byte trailing
-padding.
+> +	if (!vdev->pci_saved_state)
+> +		return;
 
-On 31-bit s390 compat user space environments, the __u64 alignment requirem=
-ent
-may differ (4-byte alignment), making the structure 68 bytes instead of 72
-bytes. This mismatch causes vfio_check_feature() to incorrectly reject
-valid 31-bit ioctls with -EINVAL.
+Is there a potential use-after-free race on vdev->pci_saved_state here if a
+user concurrently closes the VFIO file descriptor?
 
-Can these bitfields be replaced with explicit integer types (e.g. __u32)
-paired with macros for masks, and explicit padding fields added to guarantee
-identical layouts across all ABIs and eliminate implicit compiler padding?
+In vfio_pci_core_disable(), vdev->pci_saved_state can be freed via
+pci_load_and_free_saved_state() before acquiring the PCI device lock. Since
+this callback does not synchronize with the VFIO teardown path, could the
+AER thread see vdev->pci_saved_state as valid, but then pass a dangling
+pointer to pci_load_saved_state() after it is freed?
 
-> +	__u32 reserved3;
-> +	__u16 reserved4;
-> +	__u16 pec;			/* PCI event code */
-> +	__u8 reserved5[28];		/* Allow for future expansion */
-> +};
 > +
-> +#define VFIO_DEVICE_FEATURE_ZPCI_ERROR 13
-> +
->  /* -------- API for Type1 VFIO IOMMU -------- */
+> +	pci_load_saved_state(pdev, vdev->pci_saved_state);
+
+Should the return value of pci_load_saved_state() be checked here?
+
+If it returns an error due to mismatched capability sizes, the partial
+memcpy into pdev->saved_config_space is kept. Proceeding to call
+pci_restore_state() might then push an inconsistent state to the hardware.
+
+> +	pci_restore_state(pdev);
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260514180059.1553=
--1-alifm@linux.ibm.com?part=3D5
+-1-alifm@linux.ibm.com?part=3D6
