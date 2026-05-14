@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD93A26F476;
-	Thu, 14 May 2026 00:38:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0CD32D1F44
+	for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 00:39:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778719126; cv=none; b=CWc7R5HpIrm4wy5dUoO3urzFP8tSOy+ArjNm9cvP5NsYm493xabtmnZ4OymUkIy/vjD1IxoPuq236E8q83QY8yjcT8kJF5I/T1vgsSx1t90xRJdV8eKqdNOID2DI4Et/YW17lGF6bKaJAk2XUCyTXxkWK9+jsc621nOFdL3dEEA=
+	t=1778719178; cv=none; b=W8tC0ELz2CaNnvIwpadbGsDlVGGh/fogO4GIHISYyI2oW4WU3PXZ3bjmhGDVEEUDl55zLFvZQmVK62adlsaxaLFfu1aZe8eLhLurOD96GUJ6ICzB/1dlbVBcEYvjxeQWrLzYa14knEthK6DBiwiR1hUYVcdIN3EfdohqxI7TqWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778719126; c=relaxed/simple;
-	bh=0pm2so/gT8FBwtcqO3Wc625VGbJi1uk65jlu5tB71k0=;
+	s=arc-20240116; t=1778719178; c=relaxed/simple;
+	bh=YLuCkPVaXzuTJiDoZ125Ok8dadZxlKDubk/Qc4d+GEc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cHEkIaBJfLmrnF3LjCMuBgCTiY+++C212h52jA/HeLCjnhAPCEHcGpxjrUvaYlCjQikD8xIznv8zvv+2sqLVTyN2AYiWMFexQlz2lLfJvj5HLO7xRNFKGFaogNudFwG1tIEUB3u7eaLpHDbuWcXlh9RD6e8K8UJppctBmfBABFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dmUVjk0V; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=P1ONk7DG0PENyQubRD/kGvugvF/1lpn/80AQEQItQPu93JqXWxnct3VxfdaWHKAA9pl8RVkKllV52m2GO7KvubV2ml05ytsE/zBYFbGhUDEp4LmxEvOlC/jkEhHpwwSO/oo/OF8HmzTgVXi8yEeungG5/RqPGAbaosRd0XnsTJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uG5PjWVJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dmUVjk0V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CBB2C19425;
-	Thu, 14 May 2026 00:38:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uG5PjWVJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BDEDC19425;
+	Thu, 14 May 2026 00:39:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778719126;
-	bh=0pm2so/gT8FBwtcqO3Wc625VGbJi1uk65jlu5tB71k0=;
+	s=k20201202; t=1778719178;
+	bh=YLuCkPVaXzuTJiDoZ125Ok8dadZxlKDubk/Qc4d+GEc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=dmUVjk0V6c3cIOQmVYOme1LOWxhrUKp5FhM1cWIovvW2z2o9QnlNrLHCsJeZf1J6N
-	 IRjjW16wKRp0F/+3PtCDEYkQa4llwobDFZZs0PIwGD8YgkexjZ9EXFtKIaRojr/CC8
-	 ITZgYUaTJxG6+HSFfGabOSsp92U4ewqvZiljTSUjDroYd6c2+Azu6VbLvKesBNEQRM
-	 5LakxrBYShlmh65Kx2zCosafj4AV8DlV0FjQBniRRvNEtrWHGIxLfJZqyEvMfsEeBJ
-	 uORTBsbuOrq7kGogBxd/AbTwQS/5e+a1Tu8ypbxIjueshqb1Mir4jAyeIgSgHjS1zx
-	 mwM1J/VaUjTtQ==
+	b=uG5PjWVJ91Cg5ZG1UP4X1SguU3tLOvLuOS93OAgoBQNNItWS9yV1i9ECvDABKMtIJ
+	 x2mpwuLWgoHkv6gDsvh8crPltFDbI85F8u/IRcSlfMhDyoMMyIylhneSP5QKM3XBN4
+	 Bpq4q+rajiYY1cLeV/Qs6hfuLrlXhm3JC4R8NG20QutyHxAJsqmwSkK65DtwHkxKC/
+	 URKhpwCEufIvUMQn4r9bvyumAXmOUaJWFlbsDOmOg8d47mI30EglURhp9Xj8pdKsSZ
+	 f6Bn6lmgUfCVGX68TxfjdfKYza5olY/FdTMHzbj0hagRrz9AMUAXAbD/aiCzZsoKd/
+	 YOrVMbZ6w6cjw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 5/9] dmaengine: dw-edma: Pass dma_slave_config to
- dw_edma_device_transfer()
+Subject: Re: [PATCH v3 2/2] RDMA/mlx5: get tph for p2p access when
+ registering dma-buf mr
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Frank Li" <Frank.Li@nxp.com>
-Cc: vkoul@kernel.org, imx@lists.linux.dev, dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260512-dma_prep_config-v5-5-26865bf7d935@nxp.com>
-References: <20260512-dma_prep_config-v5-5-26865bf7d935@nxp.com>
+To: "Zhiping Zhang" <zhipingz@meta.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260512184755.4137227-3-zhipingz@meta.com>
+References: <20260512184755.4137227-3-zhipingz@meta.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 14 May 2026 00:38:45 +0000
-Message-Id: <20260514003846.0CBB2C19425@smtp.kernel.org>
+Date: Thu, 14 May 2026 00:39:37 +0000
+Message-Id: <20260514003938.8BDEDC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,66 +46,103 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The `dw_edma_device_prep_config_sg` function ignores the return va=
-lue of `dw_edma_device_config` and proceeds to use an explicitly rejected c=
-onfiguration for DMA transfers.
-- [High] The implementation fails to achieve the claimed "atomic configurat=
-ion" because it locklessly mutates shared channel state, corrupting concurr=
-ently active DMA transfers.
+- [High] Use-after-handoff / Race condition of MR object after pushing to F=
+RMR pool
+- [High] Memory leak of `mlx5_st_idx_data` in `mlx5_st_dealloc_index()`
 --
 
-commit 8f2944930122fd18a6a04f03176bb9c6eddcd9ba
-Author: Frank Li <Frank.Li@nxp.com>
+commit 2db4c0c9ad5981da4be78d996f10a6b611b880e0
+Author: Zhiping Zhang <zhipingz@meta.com>
+RDMA/mlx5: get tph for p2p access when registering dma-buf mr
 
-dmaengine: dw-edma: Pass dma_slave_config to dw_edma_device_transfer()
+This commit queries dma-buf TPH metadata when registering a dma-buf MR for
+peer-to-peer access and translates the raw steering tag into an mlx5 ST
+index. It also tracks the per-MR ownership of the allocated mlx5 ST index
+on the MR and releases it once the firmware mkey no longer references it.
 
-This commit passes dma_slave_config to dw_edma_device_transfer() to
-support atomic configuration and descriptor preparation when a non-NULL
-configuration is provided to device_prep_config_sg().
-
-> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-=
-edma-core.c
-> index f7f58b0010e26..ec6f6b1e48256 100644
-> --- a/drivers/dma/dw-edma/dw-edma-core.c
-> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
+/mr.c
+> index 3b6da45061a55..84d570f7cafb9 100644
+> --- a/drivers/infiniband/hw/mlx5/mr.c
+> +++ b/drivers/infiniband/hw/mlx5/mr.c
 [ ... ]
-> @@ -595,7 +610,7 @@ dw_edma_device_prep_config_sg(struct dma_chan *dchan,=
- struct scatterlist *sgl,
->  	if (config)
->  		dw_edma_device_config(dchan, config);
+> @@ -1378,8 +1439,15 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_i=
+b_mr *mr)
+>  	int ret;
+> =20
+>  	if (mr->ibmr.frmr.pool && !mlx5_umr_revoke_mr_with_lock(mr) &&
+> -	    !ib_frmr_pool_push(mr->ibmr.device, &mr->ibmr))
+> +	    !ib_frmr_pool_push(mr->ibmr.device, &mr->ibmr)) {
+> +		/*
+> +		 * The mkey has been revoked: firmware no longer references
+> +		 * dmabuf_st_index, so release it before this mr re-enters
+> +		 * the FRMR cache for reuse by another registration.
+> +		 */
+> +		mlx5_ib_mr_put_dmabuf_st(mr);
+>  		return 0;
+> +	}
 
-Should we check the return value of dw_edma_device_config() here?
+Does this introduce a race condition with MR reuse?
 
-If an invalid configuration is passed, dw_edma_device_config() returns
--EINVAL. By ignoring the return value, the code proceeds to extract the
-source and destination addresses from the explicitly rejected configuration
-via dw_edma_device_get_config(), potentially resulting in descriptors
-prepared with unvalidated hardware parameters.
+If ib_frmr_pool_push() succeeds, the MR is immediately inserted into the
+FRMR pool and becomes available for concurrent reuse by other threads.
+However, the boolean short-circuit evaluation causes
+mlx5_ib_mr_put_dmabuf_st(mr) to execute after the push completes.
 
-Additionally, the commit message states this change supports atomic
-configuration, but dw_edma_device_config() mutates shared channel state:
+If another thread pops the MR and begins reinitialization before
+mlx5_ib_mr_put_dmabuf_st(mr) executes, could the original thread read and
+modify the newly owned MR state concurrently? This seems like it could
+result in freeing the wrong steering tag index and corrupting the MR state.
 
-dw_edma_device_config() {
-        ...
-        if (cfg_non_ll || non_ll)
-                chan->non_ll =3D true;
-        ...
-        memcpy(&chan->config, config, sizeof(*config));
+> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/n=
+et/ethernet/mellanox/mlx5/core/lib/st.c
+> index 997be91f0a135..c5058557c7f03 100644
+> --- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> +++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+[ ... ]
+> @@ -152,6 +147,20 @@ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, e=
+num tph_mem_type mem_type,
+>  	mutex_unlock(&st->lock);
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(mlx5_st_alloc_index_by_tag);
+> +
+> +int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
+> +			unsigned int cpu_uid, u16 *st_index)
+> +{
+> +	u16 tag;
+> +	int ret;
+> +
+> +	ret =3D pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return mlx5_st_alloc_index_by_tag(dev, tag, st_index);
+> +}
+>  EXPORT_SYMBOL_GPL(mlx5_st_alloc_index);
+> =20
+>  int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index)
+
+While looking at these changes which tie the ST allocation to the MR
+lifecycle, it appears there is a pre-existing memory leak in
+mlx5_st_dealloc_index():
+
+drivers/net/ethernet/mellanox/mlx5/core/lib/st.c:mlx5_st_dealloc_index() {
+	if (refcount_dec_and_test(&idx_data->usecount)) {
+		xa_erase(&st->idx_xa, st_index);
+	}
 }
 
-Since the dmaengine API allows concurrent descriptor preparations when
-device_prep_config_sg is provided, could this cause a data race on
-chan->config and chan->non_ll?
+When the reference count drops to 0, xa_erase() is called to remove the
+element from the XArray, but the underlying pointer is never freed with
+kfree().
 
-If chan->non_ll is actively read by the interrupt handler to dictate
-hardware execution mode, could modifying it while preparing a new descriptor
-dynamically corrupt the execution mode of currently active transfers?
-
-> -	return dw_edma_device_transfer(&xfer);
-> +	return dw_edma_device_transfer(&xfer, dw_edma_device_get_config(dchan, =
-config));
->  }
+Because this patch introduces per-MR allocation and deallocation of ST
+indices tied to the lifetime of dma-buf MRs, could a user space application
+repeatedly register and deregister dmabuf MRs to silently leak kernel
+memory and eventually exhaust system memory?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512-dma_prep_c=
-onfig-v5-0-26865bf7d935@nxp.com?part=3D5
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260512184755.4137=
+227-1-zhipingz@meta.com?part=3D2
