@@ -1,71 +1,75 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A74044A710
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 11:10:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 663CA478E42
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 11:10:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778843411; cv=none; b=BM94LB+JRwrhJzS8R14lLw30D0yP+bWaDfdRldtWUqk4IIorp8L1V5wXOrQs+9IeDY8lS7QLnpz5TPkjZ8YZhLRdwVMnxp4vaZfhQYDuv0ruZF1tI+V44ErylXM+sUIfSXNR74BVG5PNJO0zaytoKaVPPWp0yLA3oqzFXMqJPFI=
+	t=1778843414; cv=none; b=cSEcORUxRf4z+Qjp3ikqm+k6UcIK2iSA58/boCi/Lj834gbLABxXHDoblIlJxAMcsc1Od3eadqzqxwNdZYbJDn8Z+1Zk/fhC1o8An77U23ghglA7+iyOKFY1EJ85Xb4j4Yi689AeJpHMlBxJ4BPIsqbejIniWPHeukjCGDkLtW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778843411; c=relaxed/simple;
-	bh=LYybX/vUqdwR2xiT9wIfcDWmsX8nGUpxSamDsxvKbtg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=mWd7m5n6W1LYdqr4k5MurUUXrBaBw4cSldwbWQYeDsAFNl/RdTjxaUK9ddiRTvkDR1kLDDNYXHbULU/zqlYqom7uivGFLnNRj47WV9KtXStUCw2qROBGfmlhbkUr0BkpgFO5EAOYXaB/X7Oq8fJGTKaQPe8t9UqZn1CWnDlFC+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k+zO03t3; arc=none smtp.client-ip=209.85.215.171
+	s=arc-20240116; t=1778843414; c=relaxed/simple;
+	bh=eyLj1Y8O3foCF54U8Qz86c9Ndu4lUoiNJ1e4LruAnnQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=JGj3kdByzdsvbiSPoORe3MpZ1jT6lodJAh5xgQdmhhQGacCZOTMAGGbcra5NpeE93jZQrk4KFZyKWyNs5ik5rVnxXeXucusUVP5FDLMsUjOviQlvOoC51XLTH+vBARbOM8IP0hqznjZiUwIWwJw4RaXzSH7CYT31E7U62Bmk+vA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p6aJjsXw; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k+zO03t3"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-c80167f5716so4060709a12.2
-        for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 04:10:10 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p6aJjsXw"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2ba21d32776so61775875ad.2
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 04:10:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778843410; x=1779448210; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=jV8777/fPwmr9JKYBjcGgveZ+Vz7Llcck9xzkIvVy9Q=;
-        b=k+zO03t3xoOdoRysHjU1gK0E4He4GiN+OlBDVI8RBGo+neCPa/iGpTagAhSsNCXEr1
-         AXKfR0csm1Dv632/NPg7hlVQy8j1XXpQKAUA8MVtzGW52GeGy0nqggo+skT6wc9467Cw
-         Xgx6Ly4Y7behpMOmVuvK80pmXCxBJYIvo/a+JNb+zEjRU0AE08pbaZ/7IGfQyNxcNBsV
-         KXGf2YJLJIgtCjpqR9NFyOizOmKDxlQBZzGZAiZgjXVhIJHp+alTEf9SBtWtuMzxWcO3
-         HQ7ma9bD4TKmFO2h1N8U5/taLLr6MPRYIBnEUgH2/WosP9wEOLSwkhC8t98aUcBY76al
-         jNXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778843410; x=1779448210;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20251104; t=1778843412; x=1779448212; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=jV8777/fPwmr9JKYBjcGgveZ+Vz7Llcck9xzkIvVy9Q=;
-        b=NPAredfSU39Y9s0IOThPWO+dWvsG32k8iEfWyBDS52tY2fXGVYzuR1XUc+SdtX3/66
-         taij3Iz1D+GxjjYaP7WGddA/PkFUjHdBhrLDCvHjGsySekQwwfde/qtWrrCAKdYlujDW
-         dFP1s19El0F0z2vtvUZoLBNYsJ0I8C+wPuaVS8sdMxpuYMleMQNNBEJJPz2fAtxYWFg+
-         9ebEX5kCkUX/MDY4BpFaipr35FNzn3OKB4ilXGw/hRAaYpHQhzbiUfg/UJaUTzmPqfit
-         9pK3dmV+cW3yrNu158S9RCMhSHUE3wwVzT3e5ctD8oyWd+HE81F8c20v/Hxtb6US5R2t
-         9DgA==
-X-Forwarded-Encrypted: i=1; AFNElJ9DAteV8QaLhZENcEVJQ7dIjTWwZg7nOkQBe7RuNp84POR+wZWY0ViyJyUeMt11WgYrIxrJHFblBoA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxBpkHlMPvUtNpKvDZWRK/r3zFw+BHeVS0czcVZeo2ltTsr3xhl
-	o3Ixu0T1HMTTybww2YoROM6MyXZkqExXHx+Ll9BZ7I3zXDADwYEchut/
-X-Gm-Gg: Acq92OEOH0/B8E1scNFMLxcivNIK/AX7aaeVe8DsUMoyXlY8EIOBxX7faYeLud32v/Y
-	Jijm2nmsQFpcIww8ES4Sbv1aDMfefPh6OmiZ/Yh/1cZK5OAhFSNihQe5FwL9pJMgcrsBkKJw7Ql
-	i6yidXdZB/Vk8EkS9v36icuY+zt5k47dAYZFC+GapNmeLiap1rzTBQet6SyV0YmJAivgwgt6+dm
-	30spya0VNTCHVpPKiE/KR8S/h5CMPQk+YHtLsqsl9HxMOex6hjlWjMahxV69ROaf8wrV8sZDX2V
-	Pgbak/cn1Zh8sApwwznVyNgaSLw73JvL9m2D0XxnPyvV0sEUFIiJnnVJRdhGkx+QPYqm29PHMf8
-	jF6gGYWxCfgoSOlXUnwvfWPqYoUxml3Dunzk6I7YSPKoROkJIbzA93V8ImBll1y5NLKgWh2d9A8
-	rBPbJ2b6u0csq/oMvRYn2Fjsqr5x01TzmgutsUqREc
-X-Received: by 2002:a17:903:fa5:b0:2b4:5cb8:99eb with SMTP id d9443c01a7336-2bd7e8bd34fmr42942105ad.27.1778843409597;
-        Fri, 15 May 2026 04:10:09 -0700 (PDT)
+        bh=PlIr2DfZQIdjqO1PohDAMuDJ1pNth5joQyu5k813drM=;
+        b=p6aJjsXw/9iH6YDyNytS0udeVf0hoZS1yfFPZF/jx2ZBjoSO/wINSzlmWa59+QYtj/
+         VbvIX4Xf7X7MrAUrZAjcWzgBBL0D4KgvTZ+qVvGveR6bR5JprzkN1PiUw4ZDhfRPZRhx
+         rc3zgaNM546EZdhmOOAq2YElVFS854QwxMsDkEyhoovV41Bbjl777wwO/tISESnIokKq
+         A6JG8tUGf5UY2VFtHbLDhjvnzJ1ksIzqWEzzJ633cI2LdG4Hb7UN5GAZ3tCcQ0KOCePp
+         Q08pPtnQUCBiNtudZbyXONBXwY7DG5+MuQnNOLj/DTRa8spy5vVY0NgvIp15ilDfNfa9
+         BrUw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778843412; x=1779448212;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=PlIr2DfZQIdjqO1PohDAMuDJ1pNth5joQyu5k813drM=;
+        b=AB6QdETJu3SQBKvflppGX0PBAN5wXpL+W+zxDEGMFF/OdjZ1TN2U47u7jgMtekrVjG
+         odTvjgJu9NTfiogkkr6UryRXgR02U4vN7X1mtfAVpULJujd3nPm6N4czqOGyFS7J0828
+         B1ma3Wpbb8DDKtBxxxRFCIWJXF1kwkCrI8QyKTbOH31gdnztoNRW1kc7JydrMkw76d0U
+         HtmV4TJWsl5NxObNMOlFvld1zGs9mzm+5GB2pbWNWzzTSkG5OAz0Ti4mGeUHwoNn7nE9
+         PkwwyaYjvA2GsCvPwtcsy+psSGVcP8dUVGVgj4F7ISTDURI0kr7B7Fq+XA15VBDCmHnL
+         Ukcg==
+X-Forwarded-Encrypted: i=1; AFNElJ/dndsN32BDquFOtQBbL+htD68WB7BewJGYIotLuTcvsUftNvCpD0VoquaCocDDJsJdu5RGRPvmrAQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwG5kLJSvRxZqNQFPQdB4Z6yf4zR5t++E5Uc73cx9sl5Q4nFAhu
+	HZZhB3ZHPtv8/IRXRHqLsvMxnBuLm5xUf3Mz4LNb55RD+yxVP6fUrnQP
+X-Gm-Gg: Acq92OF693Dehzh6xBy1NAASuvC7FmuFt5cu5L2np8XspLlziMI+gjTvY3xopVd+/Qn
+	sq8KS8MTJc710Au1jt8F1VBlyWqEKm/AyOjk/Te/kGlhaXH/p05ybs2FE/9vvItHydmh7Jy3plC
+	kK1JO0WNzQRlzBamuFad2Xfwxp8D+FXqm82JJZrtQ+L20nzCLKaprVd9+KedKluQ/la3VeKy/mm
+	8KATzh+hYmDaQr3i3M1mBVoW4hwL6fcHIhy3aVgCZ+30+5i+O9PL1rZkeE02pQW8VmPgaYReGnP
+	pGEf8DW24Ej4dCEyTHgwOHI1d1WkRmMX+gRetpGEInaZEv9Ub41HNjxa4ZrtUg4M6n25BD5LTzM
+	8G1jPiv5pjUiXpNm5IAJAFP5TUAFJ5sAKBOjHdD+xPaM9rpxo+2UQLYLLn6G7z8RUDnWQsjBMyb
+	yNpU3LCIucXD7uPLYpIGdW5WU5aP++jHItKF5c3S/R
+X-Received: by 2002:a17:902:f788:b0:2b0:61c2:8e83 with SMTP id d9443c01a7336-2bd7e88f4a9mr40644855ad.20.1778843412499;
+        Fri, 15 May 2026 04:10:12 -0700 (PDT)
 Received: from localhost.localdomain ([2405:201:d008:80b:a00:27ff:feb6:42dd])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5c264241sm54566645ad.36.2026.05.15.04.10.07
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5c264241sm54566645ad.36.2026.05.15.04.10.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 May 2026 04:10:09 -0700 (PDT)
+        Fri, 15 May 2026 04:10:11 -0700 (PDT)
 From: Pramod Maurya <pramod.nexgen@gmail.com>
 To: bhelgaas@google.com
 Cc: kees@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	pramod.nexgen@gmail.com
-Subject: [PATCH v1 0/1] PCI: ibmphp: Simplify ibmphp_init_devno() parameter
-Date: Fri, 15 May 2026 07:09:43 -0400
-Message-ID: <20260515110944.216993-1-pramod.nexgen@gmail.com>
+Subject: [PATCH v1 1/1] PCI: ibmphp: Simplify ibmphp_init_devno() to take struct slot *
+Date: Fri, 15 May 2026 07:09:44 -0400
+Message-ID: <20260515110944.216993-2-pramod.nexgen@gmail.com>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260515110944.216993-1-pramod.nexgen@gmail.com>
+References: <20260515110944.216993-1-pramod.nexgen@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -74,43 +78,98 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ibmphp_init_devno() in the IBM PCI Hot Plug controller driver takes a
-struct slot ** (double pointer) parameter, but the function never
-re-assigns the pointer itself -- it only dereferences it to read and
-write the slot's fields.  The double indirection is therefore
-unnecessary and makes the code harder to read.
+ibmphp_init_devno() takes a struct slot ** parameter but only ever
+dereferences it to access the slot's fields.  No re-assignment of the
+pointer itself is performed, so the double indirection is unnecessary.
 
-Root cause:
-  The function was originally written with a struct slot ** parameter,
-  perhaps anticipating that the pointer might need to be re-assigned,
-  but this never happens in practice.  All accesses inside the function
-  are of the form (*cur_slot)->field, which is equivalent to
-  cur_slot->field when the parameter is a struct slot *.
+Simplify the function to take a struct slot * instead, update all
+internal accesses from (*cur_slot)-> to cur_slot->, and update the
+single call site in ibmphp_ebda.c to pass tmp_slot directly instead
+of &tmp_slot.
 
-Fix:
-  - Change the parameter type from struct slot ** to struct slot *.
-  - Replace all (*cur_slot)->field accesses with cur_slot->field.
-  - Add the parameter name to the declaration in ibmphp.h and move
-    the comment to its own line to stay within 100 columns.
-  - Update the single call site in ibmphp_ebda.c to pass tmp_slot
-    directly instead of &tmp_slot.
-
-Note: a few pre-existing CHECK-level style issues (cast spacing,
-debug() argument alignment) appear in the diff because the changed
-lines are touched by this patch.  They are not introduced by this
-change and are left for a separate cleanup.
-
-This patch has been validated with scripts/checkpatch.pl --strict and
-produces 0 errors, 0 warnings, and 0 checks introduced by this patch.
-
-Pramod Maurya (1):
-  PCI: ibmphp: Simplify ibmphp_init_devno() to take struct slot *
-
+Signed-off-by: Pramod Maurya <pramod.nexgen@gmail.com>
+---
  drivers/pci/hotplug/ibmphp.h      |  3 ++-
  drivers/pci/hotplug/ibmphp_core.c | 30 +++++++++++++++---------------
  drivers/pci/hotplug/ibmphp_ebda.c |  2 +-
  3 files changed, 18 insertions(+), 17 deletions(-)
 
+diff --git a/drivers/pci/hotplug/ibmphp.h b/drivers/pci/hotplug/ibmphp.h
+index c248a09be7b5..e80c45eeaa73 100644
+--- a/drivers/pci/hotplug/ibmphp.h
++++ b/drivers/pci/hotplug/ibmphp.h
+@@ -733,7 +733,8 @@ struct controller {
+ 
+ /* Functions */
+ 
+-int ibmphp_init_devno(struct slot **);	/* This function is called from EBDA, so we need it not be static */
++/* ibmphp_ebda.c calls this, so it cannot be static */
++int ibmphp_init_devno(struct slot *cur_slot);
+ int ibmphp_do_disable_slot(struct slot *slot_cur);
+ int ibmphp_update_slot_info(struct slot *);	/* This function is called from HPC, so we need it to not be static */
+ int ibmphp_configure_card(struct pci_func *, u8);
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index aca86c092d4a..b122769baee1 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -109,7 +109,7 @@ static int __init get_max_slots(void)
+  * Parameters: struct slot
+  * Returns 0 or errors
+  */
+-int ibmphp_init_devno(struct slot **cur_slot)
++int ibmphp_init_devno(struct slot *cur_slot)
+ {
+ 	struct irq_routing_table *rtable;
+ 	int len;
+@@ -130,21 +130,21 @@ int ibmphp_init_devno(struct slot **cur_slot)
+ 		return -1;
+ 	}
+ 	for (loop = 0; loop < len; loop++) {
+-		if ((*cur_slot)->number == rtable->slots[loop].slot &&
+-		    (*cur_slot)->bus == rtable->slots[loop].bus) {
+-			(*cur_slot)->device = PCI_SLOT(rtable->slots[loop].devfn);
++		if (cur_slot->number == rtable->slots[loop].slot &&
++		    cur_slot->bus == rtable->slots[loop].bus) {
++			cur_slot->device = PCI_SLOT(rtable->slots[loop].devfn);
+ 			for (i = 0; i < 4; i++)
+-				(*cur_slot)->irq[i] = IO_APIC_get_PCI_irq_vector((int) (*cur_slot)->bus,
+-						(int) (*cur_slot)->device, i);
+-
+-			debug("(*cur_slot)->irq[0] = %x\n",
+-					(*cur_slot)->irq[0]);
+-			debug("(*cur_slot)->irq[1] = %x\n",
+-					(*cur_slot)->irq[1]);
+-			debug("(*cur_slot)->irq[2] = %x\n",
+-					(*cur_slot)->irq[2]);
+-			debug("(*cur_slot)->irq[3] = %x\n",
+-					(*cur_slot)->irq[3]);
++				cur_slot->irq[i] = IO_APIC_get_PCI_irq_vector((int) cur_slot->bus,
++						(int) cur_slot->device, i);
++
++			debug("cur_slot->irq[0] = %x\n",
++					cur_slot->irq[0]);
++			debug("cur_slot->irq[1] = %x\n",
++					cur_slot->irq[1]);
++			debug("cur_slot->irq[2] = %x\n",
++					cur_slot->irq[2]);
++			debug("cur_slot->irq[3] = %x\n",
++					cur_slot->irq[3]);
+ 
+ 			debug("rtable->exclusive_irqs = %x\n",
+ 					rtable->exclusive_irqs);
+diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
+index c1939b88e75b..0b018ae3b348 100644
+--- a/drivers/pci/hotplug/ibmphp_ebda.c
++++ b/drivers/pci/hotplug/ibmphp_ebda.c
+@@ -880,7 +880,7 @@ static int __init ebda_rsrc_controller(void)
+ 			if (rc)
+ 				goto error;
+ 
+-			rc = ibmphp_init_devno(&tmp_slot);
++			rc = ibmphp_init_devno(tmp_slot);
+ 			if (rc)
+ 				goto error;
+ 			tmp_slot->hotplug_slot.ops = &ibmphp_hotplug_slot_ops;
 -- 
 2.52.0
 
