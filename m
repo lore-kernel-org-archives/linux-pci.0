@@ -1,175 +1,186 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 663CA478E42
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 11:10:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 829AA47B435
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 11:26:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778843414; cv=none; b=cSEcORUxRf4z+Qjp3ikqm+k6UcIK2iSA58/boCi/Lj834gbLABxXHDoblIlJxAMcsc1Od3eadqzqxwNdZYbJDn8Z+1Zk/fhC1o8An77U23ghglA7+iyOKFY1EJ85Xb4j4Yi689AeJpHMlBxJ4BPIsqbejIniWPHeukjCGDkLtW8=
+	t=1778844364; cv=none; b=CQ5DH2zK26B+hl216k/1qcz/jM9/AY5/0S1utN3PB4nKL2Elmr7oMlqDNotJmeuaECmRh83lHcnjq3qMTqkCKV2JfAYC+Qu7ZXSZA982HIjQj7e2SxeGsqnl7bas0JuivxSA7WQTFHLaxDP6oBI+BILGbzCUPdMd5fVNCK4shXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778843414; c=relaxed/simple;
-	bh=eyLj1Y8O3foCF54U8Qz86c9Ndu4lUoiNJ1e4LruAnnQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JGj3kdByzdsvbiSPoORe3MpZ1jT6lodJAh5xgQdmhhQGacCZOTMAGGbcra5NpeE93jZQrk4KFZyKWyNs5ik5rVnxXeXucusUVP5FDLMsUjOviQlvOoC51XLTH+vBARbOM8IP0hqznjZiUwIWwJw4RaXzSH7CYT31E7U62Bmk+vA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p6aJjsXw; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778844364; c=relaxed/simple;
+	bh=/LZHi44rc23cSc8wdozn8/ZO259B4hlDc6puJPaejnc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=qK7YB2VH7uTwVv2XkZOHUKd0dxJ+V93mm5IdzbMbkaUPVQWq3TMT3Ywg+oAMccY1bPWimEA4g9WFAxk6wzbXTh0w/vzqL8CwFyNC8SY6qWHvoEgqTwHpnh7HMVqHDKyWAA++IE8P7Pp4IXWeeG0sJbwltebtn2E/xzVHyC0V2ww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gs7NDF65; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p6aJjsXw"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2ba21d32776so61775875ad.2
-        for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 04:10:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778843412; x=1779448212; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PlIr2DfZQIdjqO1PohDAMuDJ1pNth5joQyu5k813drM=;
-        b=p6aJjsXw/9iH6YDyNytS0udeVf0hoZS1yfFPZF/jx2ZBjoSO/wINSzlmWa59+QYtj/
-         VbvIX4Xf7X7MrAUrZAjcWzgBBL0D4KgvTZ+qVvGveR6bR5JprzkN1PiUw4ZDhfRPZRhx
-         rc3zgaNM546EZdhmOOAq2YElVFS854QwxMsDkEyhoovV41Bbjl777wwO/tISESnIokKq
-         A6JG8tUGf5UY2VFtHbLDhjvnzJ1ksIzqWEzzJ633cI2LdG4Hb7UN5GAZ3tCcQ0KOCePp
-         Q08pPtnQUCBiNtudZbyXONBXwY7DG5+MuQnNOLj/DTRa8spy5vVY0NgvIp15ilDfNfa9
-         BrUw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778843412; x=1779448212;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=PlIr2DfZQIdjqO1PohDAMuDJ1pNth5joQyu5k813drM=;
-        b=AB6QdETJu3SQBKvflppGX0PBAN5wXpL+W+zxDEGMFF/OdjZ1TN2U47u7jgMtekrVjG
-         odTvjgJu9NTfiogkkr6UryRXgR02U4vN7X1mtfAVpULJujd3nPm6N4czqOGyFS7J0828
-         B1ma3Wpbb8DDKtBxxxRFCIWJXF1kwkCrI8QyKTbOH31gdnztoNRW1kc7JydrMkw76d0U
-         HtmV4TJWsl5NxObNMOlFvld1zGs9mzm+5GB2pbWNWzzTSkG5OAz0Ti4mGeUHwoNn7nE9
-         PkwwyaYjvA2GsCvPwtcsy+psSGVcP8dUVGVgj4F7ISTDURI0kr7B7Fq+XA15VBDCmHnL
-         Ukcg==
-X-Forwarded-Encrypted: i=1; AFNElJ/dndsN32BDquFOtQBbL+htD68WB7BewJGYIotLuTcvsUftNvCpD0VoquaCocDDJsJdu5RGRPvmrAQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwG5kLJSvRxZqNQFPQdB4Z6yf4zR5t++E5Uc73cx9sl5Q4nFAhu
-	HZZhB3ZHPtv8/IRXRHqLsvMxnBuLm5xUf3Mz4LNb55RD+yxVP6fUrnQP
-X-Gm-Gg: Acq92OF693Dehzh6xBy1NAASuvC7FmuFt5cu5L2np8XspLlziMI+gjTvY3xopVd+/Qn
-	sq8KS8MTJc710Au1jt8F1VBlyWqEKm/AyOjk/Te/kGlhaXH/p05ybs2FE/9vvItHydmh7Jy3plC
-	kK1JO0WNzQRlzBamuFad2Xfwxp8D+FXqm82JJZrtQ+L20nzCLKaprVd9+KedKluQ/la3VeKy/mm
-	8KATzh+hYmDaQr3i3M1mBVoW4hwL6fcHIhy3aVgCZ+30+5i+O9PL1rZkeE02pQW8VmPgaYReGnP
-	pGEf8DW24Ej4dCEyTHgwOHI1d1WkRmMX+gRetpGEInaZEv9Ub41HNjxa4ZrtUg4M6n25BD5LTzM
-	8G1jPiv5pjUiXpNm5IAJAFP5TUAFJ5sAKBOjHdD+xPaM9rpxo+2UQLYLLn6G7z8RUDnWQsjBMyb
-	yNpU3LCIucXD7uPLYpIGdW5WU5aP++jHItKF5c3S/R
-X-Received: by 2002:a17:902:f788:b0:2b0:61c2:8e83 with SMTP id d9443c01a7336-2bd7e88f4a9mr40644855ad.20.1778843412499;
-        Fri, 15 May 2026 04:10:12 -0700 (PDT)
-Received: from localhost.localdomain ([2405:201:d008:80b:a00:27ff:feb6:42dd])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5c264241sm54566645ad.36.2026.05.15.04.10.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 May 2026 04:10:11 -0700 (PDT)
-From: Pramod Maurya <pramod.nexgen@gmail.com>
-To: bhelgaas@google.com
-Cc: kees@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	pramod.nexgen@gmail.com
-Subject: [PATCH v1 1/1] PCI: ibmphp: Simplify ibmphp_init_devno() to take struct slot *
-Date: Fri, 15 May 2026 07:09:44 -0400
-Message-ID: <20260515110944.216993-2-pramod.nexgen@gmail.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260515110944.216993-1-pramod.nexgen@gmail.com>
-References: <20260515110944.216993-1-pramod.nexgen@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gs7NDF65"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C43EDC2BCB0;
+	Fri, 15 May 2026 11:26:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778844364;
+	bh=/LZHi44rc23cSc8wdozn8/ZO259B4hlDc6puJPaejnc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=gs7NDF65qFNfTgx1y+OU5jGdL0ICXAfGXFf217sDFBG21TT0rOLDg8ZtJq2me0vce
+	 WPGtHiNrKFwpCHxpQEg6g5HkpyqwgCqxZmlvFQNRjbpf/D3f9+kGe3W/xHvUtsgyvE
+	 mB5hgg+htqSU4dDrxod7o+D5VzX+R5XG8DVp8IOj5OZvn9gSJcRmKGlk0QbGPHuGQu
+	 e/DPFX673DzvcDcX7fM+tR5XE+Z557jChr6uOfa45I2bPlUHtnhHtDPdd50khShTrG
+	 oReaYlGWuhzNs46wAcr/LSMBma07d1z8glqsssfg71S1DIPbe/2AUhWGoJ5DeeqO1D
+	 0nB+21mgPz2qQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v10 4/5] vfio/pci: Add PCIe TPH configuration space
+ virtualization
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260515094040.38496-5-fengchengwen@huawei.com>
+References: <20260515094040.38496-5-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 15 May 2026 11:26:03 +0000
+Message-Id: <20260515112603.C43EDC2BCB0@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-ibmphp_init_devno() takes a struct slot ** parameter but only ever
-dereferences it to access the slot's fields.  No re-assignment of the
-pointer itself is performed, so the double indirection is unnecessary.
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
+s) to consider:
+- [High] Hardware configuration space is accessed while the device may be i=
+n a suspended (D3) power state.
+- [High] Valid sub-dword (1-byte or 2-byte) writes to the TPH control regis=
+ter are silently dropped.
+- [High] The guest's requested configuration for the TPH Requester Enable f=
+ield is ignored and improperly overridden.
+- [High] Unchecked return values from `pcie_enable_tph()` lead to state des=
+ynchronization and permanently broken TPH after reset or mode changes.
+- [High] Concurrent config space writes to the TPH control register cause d=
+ata races on `struct pci_dev` bitfields.
+--
 
-Simplify the function to take a struct slot * instead, update all
-internal accesses from (*cur_slot)-> to cur_slot->, and update the
-single call site in ibmphp_ebda.c to pass tmp_slot directly instead
-of &tmp_slot.
+commit 11f3d46be6bcfc08d1a080f85c6eb8e89f3bdbb3
+Author: Chengwen Feng <fengchengwen@huawei.com>
+Subject: vfio/pci: Add PCIe TPH configuration space virtualization
 
-Signed-off-by: Pramod Maurya <pramod.nexgen@gmail.com>
----
- drivers/pci/hotplug/ibmphp.h      |  3 ++-
- drivers/pci/hotplug/ibmphp_core.c | 30 +++++++++++++++---------------
- drivers/pci/hotplug/ibmphp_ebda.c |  2 +-
- 3 files changed, 18 insertions(+), 17 deletions(-)
+This commit adds support for virtualizing the PCIe TPH (Transaction
+Processing Hints) control register in vfio-pci. It introduces a module
+parameter to globally control TPH support and mediates TPH control
+register writes to only allow valid mode settings.
 
-diff --git a/drivers/pci/hotplug/ibmphp.h b/drivers/pci/hotplug/ibmphp.h
-index c248a09be7b5..e80c45eeaa73 100644
---- a/drivers/pci/hotplug/ibmphp.h
-+++ b/drivers/pci/hotplug/ibmphp.h
-@@ -733,7 +733,8 @@ struct controller {
- 
- /* Functions */
- 
--int ibmphp_init_devno(struct slot **);	/* This function is called from EBDA, so we need it not be static */
-+/* ibmphp_ebda.c calls this, so it cannot be static */
-+int ibmphp_init_devno(struct slot *cur_slot);
- int ibmphp_do_disable_slot(struct slot *slot_cur);
- int ibmphp_update_slot_info(struct slot *);	/* This function is called from HPC, so we need it to not be static */
- int ibmphp_configure_card(struct pci_func *, u8);
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index aca86c092d4a..b122769baee1 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -109,7 +109,7 @@ static int __init get_max_slots(void)
-  * Parameters: struct slot
-  * Returns 0 or errors
-  */
--int ibmphp_init_devno(struct slot **cur_slot)
-+int ibmphp_init_devno(struct slot *cur_slot)
- {
- 	struct irq_routing_table *rtable;
- 	int len;
-@@ -130,21 +130,21 @@ int ibmphp_init_devno(struct slot **cur_slot)
- 		return -1;
- 	}
- 	for (loop = 0; loop < len; loop++) {
--		if ((*cur_slot)->number == rtable->slots[loop].slot &&
--		    (*cur_slot)->bus == rtable->slots[loop].bus) {
--			(*cur_slot)->device = PCI_SLOT(rtable->slots[loop].devfn);
-+		if (cur_slot->number == rtable->slots[loop].slot &&
-+		    cur_slot->bus == rtable->slots[loop].bus) {
-+			cur_slot->device = PCI_SLOT(rtable->slots[loop].devfn);
- 			for (i = 0; i < 4; i++)
--				(*cur_slot)->irq[i] = IO_APIC_get_PCI_irq_vector((int) (*cur_slot)->bus,
--						(int) (*cur_slot)->device, i);
--
--			debug("(*cur_slot)->irq[0] = %x\n",
--					(*cur_slot)->irq[0]);
--			debug("(*cur_slot)->irq[1] = %x\n",
--					(*cur_slot)->irq[1]);
--			debug("(*cur_slot)->irq[2] = %x\n",
--					(*cur_slot)->irq[2]);
--			debug("(*cur_slot)->irq[3] = %x\n",
--					(*cur_slot)->irq[3]);
-+				cur_slot->irq[i] = IO_APIC_get_PCI_irq_vector((int) cur_slot->bus,
-+						(int) cur_slot->device, i);
-+
-+			debug("cur_slot->irq[0] = %x\n",
-+					cur_slot->irq[0]);
-+			debug("cur_slot->irq[1] = %x\n",
-+					cur_slot->irq[1]);
-+			debug("cur_slot->irq[2] = %x\n",
-+					cur_slot->irq[2]);
-+			debug("cur_slot->irq[3] = %x\n",
-+					cur_slot->irq[3]);
- 
- 			debug("rtable->exclusive_irqs = %x\n",
- 					rtable->exclusive_irqs);
-diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-index c1939b88e75b..0b018ae3b348 100644
---- a/drivers/pci/hotplug/ibmphp_ebda.c
-+++ b/drivers/pci/hotplug/ibmphp_ebda.c
-@@ -880,7 +880,7 @@ static int __init ebda_rsrc_controller(void)
- 			if (rc)
- 				goto error;
- 
--			rc = ibmphp_init_devno(&tmp_slot);
-+			rc = ibmphp_init_devno(tmp_slot);
- 			if (rc)
- 				goto error;
- 			tmp_slot->hotplug_slot.ops = &ibmphp_hotplug_slot_ops;
--- 
-2.52.0
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
+ci_config.c
+> index a10ed733f0e3a..907b7a16ac0c6 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+[ ... ]
+> @@ -313,6 +316,31 @@ static int vfio_virt_config_read(struct vfio_pci_cor=
+e_device *vdev, int pos,
+>  	return count;
+>  }
+> =20
+> +static int vfio_pci_tph_config_write(struct vfio_pci_core_device *vdev, =
+int pos,
+> +				     int count, struct perm_bits *perm,
+> +				     int offset, __le32 val)
+> +{
+> +	u32 data =3D le32_to_cpu(val);
+> +
+> +	if (!enable_unsafe_tph)
+> +		return count;
+> +
+> +	if (count !=3D 4 || offset !=3D PCI_TPH_CTRL)
+> +		return count;
 
+Does this hardcoded check drop valid sub-dword (1-byte or 2-byte) writes fr=
+om
+a guest OS attempting to change the ST Mode?
+
+The PCIe specification allows configuration space accesses of 1, 2, or 4
+bytes.
+
+> +
+> +	/* Only permit write TPH mode. */
+> +	data &=3D PCI_TPH_CTRL_MODE_SEL_MASK;
+
+Does masking with PCI_TPH_CTRL_MODE_SEL_MASK ignore the Requester Enable
+(REQ_EN) field (bits 8-9)?
+
+If a guest clears REQ_EN to explicitly disable TPH but leaves the ST Mode
+non-zero (e.g., IV Mode), data evaluates as non-zero. The handler would
+then call pcie_enable_tph(), which forces REQ_EN to the host's supported
+value and enables TPH on the physical hardware instead of disabling it.
+
+> +	if (data > PCI_TPH_ST_DS_MODE)
+> +		return count;
+> +
+> +	if (data !=3D PCI_TPH_ST_NS_MODE)
+> +		pcie_enable_tph(vdev->pdev, data);
+
+Is it safe to ignore the return value of pcie_enable_tph()?
+
+If a guest attempts to change from one ST mode to another, or attempts to
+re-enable TPH after a Function Level Reset (FLR) where hardware registers
+are cleared but pdev->tph_enabled remains 1, pcie_enable_tph() returns
+-EBUSY or -EINVAL.
+
+Ignoring this might leave the guest assuming success while TPH remains
+broken until the device is closed.
+
+Additionally, pcie_enable_tph() and pcie_disable_tph() modify the
+tph_enabled:1 bitfield in struct pci_dev. Since VFIO only holds a read
+lock during config writes, can concurrent writes to the TPH capability
+cause a read-modify-write data race on adjacent bitfields in the same
+machine word (such as msi_enabled), potentially corrupting PCI device state?
+
+> +	else
+> +		pcie_disable_tph(vdev->pdev);
+> +
+> +	return count;
+> +}
+> +
+[ ... ]
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 3f8d093aacf8a..cc13fc8eea9da 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+[ ... ]
+> @@ -736,6 +738,9 @@ void vfio_pci_core_close_device(struct vfio_device *c=
+ore_vdev)
+>  #endif
+>  	vfio_pci_dma_buf_cleanup(vdev);
+> =20
+> +	/* Disable TPH when userspace closes the device FD */
+> +	pcie_disable_tph(vdev->pdev);
+> +
+
+Could the device still be in the suspended (D3) power state from previous
+runtime PM or guest operations when pcie_disable_tph() is called here,
+since it executes before vfio_pci_core_disable()?
+
+Accessing hardware configuration space while the device is in D3 causes
+unsupported requests (UR) and master aborts.
+
+>  	vfio_pci_core_disable(vdev);
+> =20
+[ ... ]
+> @@ -2205,6 +2210,9 @@ int vfio_pci_core_register_device(struct vfio_pci_c=
+ore_device *vdev)
+>  	if (!disable_idle_d3)
+>  		pm_runtime_put(dev);
+> =20
+> +	/* Disable TPH when taking over ownership of the device */
+> +	pcie_disable_tph(pdev);
+> +
+
+Can pcie_disable_tph() safely access the hardware configuration space here?
+
+Since pm_runtime_put() was called immediately prior, the device may have
+already transitioned to the D3 state, which could trigger unsupported
+requests if the configuration space is accessed.
+
+>  	ret =3D vfio_register_group_dev(&vdev->vdev);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260515094040.3849=
+6-1-fengchengwen@huawei.com?part=3D4
