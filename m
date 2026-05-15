@@ -1,62 +1,61 @@
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 837243A7593;
-	Fri, 15 May 2026 14:23:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6159A37F015;
+	Fri, 15 May 2026 14:23:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778854985; cv=none; b=JAdUlLe9TPPtsWV1mFHNHTKz3fODm3CgonmVLY2Xv/aKe7eukw2HA/FJMeTxBjQwgOwnVcSut63YyPm5ttIYZ0496o2ZnprRa4TULT6xlN7ijv8ZmyayOHO3OBlvDuoHOjKi88chCVDADO64vorsITGPkh743MrikG0b+86s3w4=
+	t=1778854987; cv=none; b=ucXK+G4Is2YIK+agsyD95J2HUJAhyPBfzy7jj3jZJfQryho3Ayi7VMETG+XDURgxykNeLIqYEfrRxIVMz/ctxXvjmy4Qr9H4tP5Js2H5XzGHQ9v9txoY++PZdDSMlt7jip2CLqqe+73zDV95RndG024J1wh9WfTNeTIXPjgbIlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778854985; c=relaxed/simple;
-	bh=S4I6ZH4b/aezVLAu179Bv6f/dKyh1M8Z4R1vqZCaxvk=;
+	s=arc-20240116; t=1778854987; c=relaxed/simple;
+	bh=XpSydRBxT4Tx9uG/K7wJ/j4v7NjShbeWAJefrXdls4g=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=SLz2LrSEHf0a7Kg1X5p+Adk6Asm4arHHkGReroZM43u4rQn3ZQRD3e7TW7bSvpp5M4q1ugB0aek00W+YiRPoMbXE5z9VHzvHq7x2+r9swZNVshB16CW6cJKujeHGchvtqyijxNfFP/pRA6mk2BSZNMRE3t9dn5fKmf7hK8su/9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=PmCOX4/0; arc=none smtp.client-ip=148.163.156.1
+	 In-Reply-To:To:Cc; b=sotogsar9DZ1xntuAiV1wtT7zyDcfW+ZVEcvrlmIedYdY/kHK0oQIKu9NyEhibHWvEctQKUCyjVuHJp6f0Lm2TSPJ0gOXI0wAY5xNw2Zi4KJXvYGj1O64z7C8IaGyrX4vDmyW4kBhOMWQncnualHATCltciKnEWUJmwmImY1O8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=JKCe1194; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="PmCOX4/0"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FBTiU64090474;
-	Fri, 15 May 2026 14:22:32 GMT
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="JKCe1194"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FBH4RO394204;
+	Fri, 15 May 2026 14:22:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=ePXGiG
-	32ePZCUq++ub2uUTWLQnF7fF/+KzdsGsly5x0=; b=PmCOX4/0aDo+7UG5tlvAVb
-	cSqcZxIBQZOEiPJSh4+qXG6v2FjUarxGVwKQ5cXQR/8uewD8qIw+Vawiy84A8YHQ
-	/qVHweI/4f4GY0s7Oq8hiqWnoXG3raQ7VcwH9r37S2nY7Wd6DfpBBPqFMbb9Oe/p
-	IjU3wCZCTIra2FiLH2Uvdg7RBPQlEHAV4zh2MRE1yNqU55p4wGmvlnxOykpM9kcC
-	mlbFYWEgSgeJAvhRmjCM2rv4EK2gbo/XIcVTlAXsULiSzDO954jQT6+MfqaiJO97
-	1MxwZylCEliWo7BKTXmjUKmwnHO3O8Htri0k8j0q4DGJRrNY6c0+wdpR0QGRpylg
+	:message-id:mime-version:references:subject:to; s=pp1; bh=ufGlv0
+	CVGjiDuGZD9L5jSfGD3Qkubf2rfZSAyyegaMI=; b=JKCe11946uEaM37tUPyS9y
+	+GBxXV5ecwZBQGE0MG4VXlSrNehAMbch2D7dDWZrZycQBS1ldFCCiHMj1JuZ5yPY
+	icRai+mkrMt/HT8ndPt5ABv8XmVAI48Co4KO97PEtDj85CHe1Im0jjBL5OXR0gYU
+	wJsBhcNMQtI03lEMPQlMavDm4KAEDRjiIn4wHiUvrCb0cGK1nbFZLMTlK+3xgsBs
+	ButtUnAXawJ1NqpcQif3FkFW9zK+6xTnKsIg88JNRZLTdEpmYWOwdgQW7egbjttN
+	1Kmoe9a4vSz5RNHoqkTR2EzSdFRc6orkdtFnXNLJP5UnVrw+To+I9TlTn0hi7Wrg
 	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e5m93ukk5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 May 2026 14:22:31 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64FE975D007100;
-	Fri, 15 May 2026 14:22:30 GMT
-Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e5kvcbvvb-1
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e5m8vbkuv-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Fri, 15 May 2026 14:22:30 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64FE9Ft3006470;
+	Fri, 15 May 2026 14:22:29 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e5kvckveb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 15 May 2026 14:22:29 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64FEMRbE27722094
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64FEMPAo31195568
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 15 May 2026 14:22:27 GMT
+	Fri, 15 May 2026 14:22:26 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1B94120040;
-	Fri, 15 May 2026 14:22:27 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id F10DC20043;
+	by IMSVA (Postfix) with ESMTP id DB78920040;
 	Fri, 15 May 2026 14:22:25 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id BFEF620043;
+	Fri, 15 May 2026 14:22:24 +0000 (GMT)
 Received: from [192.168.178.55] (unknown [9.87.148.246])
 	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 15 May 2026 14:22:25 +0000 (GMT)
+	Fri, 15 May 2026 14:22:24 +0000 (GMT)
 From: Gerd Bayer <gbayer@linux.ibm.com>
-Date: Fri, 15 May 2026 16:22:05 +0200
-Subject: [PATCH 3/5] powerpc/pci: Use official API to iterate over PCI
- buses
+Date: Fri, 15 May 2026 16:22:04 +0200
+Subject: [PATCH 2/5] arm/pci: Use official API to iterate over PCI buses
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -65,7 +64,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260515-priv_root_buses-v1-3-f8e393c57390@linux.ibm.com>
+Message-Id: <20260515-priv_root_buses-v1-2-f8e393c57390@linux.ibm.com>
 References: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
 In-Reply-To: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
 To: Richard Henderson <richard.henderson@linaro.org>,
@@ -86,27 +85,27 @@ Cc: Yinghai Lu <yinghai@kernel.org>, linux-alpha@vger.kernel.org,
 X-Mailer: b4 0.14.3
 X-TM-AS-GCONF: 00
 X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-ORIG-GUID: FFfQU0OrTn0zzdD30lRJSC_3o5nA81Sl
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDE0MyBTYWx0ZWRfX0MJB1F+swIDZ
- cDbREqzjGwweWu9LtDXzqRraaE00hp2HmBvfB4Hdb0TMN5q6RdAnSW4eAjeWA1X9W/H5swreQqp
- 9L66gh7eZsV+DgyIZf/hOUx1xInEx3cLbpln7ZRsgL8MfywX2Wwq6hdlDJfAZppxDcNFMm30gpC
- zPDwRlo2T/Gf1oSUQV3Hp7AHmsDlX1Ft0OUUscMuas1Rz83PCQ7yRVGQ82Rg5M0DZkbwW8ybBfb
- 8IKWlZ5qmxWgzgNOakRqpaQ/mYzWsmEZaq4Myj0x6NzuYeAfD5jKeMHH1oPKAMfwDSqSD9yGJ6C
- jBQxuEIyLd6LZf1dIfGW1L6mYWivyHAs5kFyht1FrSXycpTyfwdfRn/s7+SqkI68NpBXyTB4+r9
- a1agbgMlTSMm0jSzZoMts6TwiGLH4V2/Gr704LRE2nxwtEI3Y2schRKqyJBI23fEm4psOjl9YVa
- J1XDIe2C9Nm4pboY0Sw==
-X-Authority-Analysis: v=2.4 cv=ZZEt8MVA c=1 sm=1 tr=0 ts=6a072c28 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+X-Proofpoint-ORIG-GUID: aFzaU5N9Oxsa1AO5roV0iznLLypVfmcE
+X-Authority-Analysis: v=2.4 cv=duXrzVg4 c=1 sm=1 tr=0 ts=6a072c27 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
  a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8
- a=Nc3X6MLr1OvL3U8oulEA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: wCwM_yqRW6cn_hXtPnpJTdbPYVQduWPs
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
+ a=HxxVBxD7FXS1ytRSE9oA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: Vk9kN3RNJI3bq8vbFbT44kmcusmLN0wu
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDE0MyBTYWx0ZWRfX7dDcHAfANlOI
+ GKwpojpJaG7R1bvch3otKbJzIwMp0BiWYn7rHqHR3N9164Ug1+J362q2Fem5JBuahC6NVudBKnc
+ LLC3VjG7QHU2CqVb3hnUmY4HfpmYn/dT+/Ky1s+Yr9BZfEZfWgtdTYF5jLuRUNYt/v7RkiuB0FU
+ y4FIqW1KYb5BlSaehRP+Ni/edGqSaZSLIDHFyOZevqI53BWkXgM2pqJEO0K7Bx3w0gHqPC+YMdz
+ dqwwGhGSECKYNwXWsBxZ4IN+4iA+nemw20T8fMpQN1I2y7XdzS5d62Fki2F5QytcYa5Dr7bYutI
+ 3x4suhzacH5WtZfDYgGF16sQaz9Oi1z9DR7g2g4nQNaEiuUe7qsJkKqwjZx+chY1C76yhNxMvWy
+ 1eKwF+edzqgjeT36CHG5SB8yhBWF4FCjWXuakv5486/oTMfIqCOUWEiMl8gHyfmB+SS4oy+9SBG
+ 4PohG+EbdVb16N2Spaw==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-05-15_03,2026-05-13_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 priorityscore=1501 malwarescore=0 bulkscore=0 impostorscore=0
- phishscore=0 spamscore=0 lowpriorityscore=0 suspectscore=0 adultscore=0
+ malwarescore=0 clxscore=1015 priorityscore=1501 phishscore=0 bulkscore=0
+ adultscore=0 impostorscore=0 lowpriorityscore=0 suspectscore=0 spamscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605150143
 
@@ -116,59 +115,25 @@ pci_root_buses private to PCI core.
 
 Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
 ---
- arch/powerpc/kernel/pci-common.c | 7 ++++---
- arch/powerpc/kernel/pci_64.c     | 4 ++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ arch/arm/kernel/bios32.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 8efe95a0c4ff..1e0be7bcaa56 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1417,10 +1417,10 @@ static void __init pcibios_reserve_legacy_regions(struct pci_bus *bus)
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index ac0e890510da..35642c9ba054 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -59,9 +59,9 @@ static void pcibios_bus_report_status(struct pci_bus *bus, u_int status_mask, in
  
- void __init pcibios_resource_survey(void)
+ void pcibios_report_status(u_int status_mask, int warn)
  {
--	struct pci_bus *b;
-+	struct pci_bus *b = NULL;
+-	struct pci_bus *bus;
++	struct pci_bus *bus = NULL;
  
- 	/* Allocate and assign resources */
--	list_for_each_entry(b, &pci_root_buses, node)
-+	while ((b = pci_find_next_bus(b)) != NULL)
- 		pcibios_allocate_bus_resources(b);
- 	if (!pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
- 		pcibios_allocate_resources(0);
-@@ -1432,7 +1432,8 @@ void __init pcibios_resource_survey(void)
- 	 * bus available resources to avoid allocating things on top of them
- 	 */
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		list_for_each_entry(b, &pci_root_buses, node)
-+		b = NULL; /* Start all over */
-+		while ((b = pci_find_next_bus(b)) != NULL)
- 			pcibios_reserve_legacy_regions(b);
- 	}
+-	list_for_each_entry(bus, &pci_root_buses, node)
++	while ((bus = pci_find_next_bus(bus)) != NULL)
+ 		pcibios_bus_report_status(bus, status_mask, warn);
+ }
  
-diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
-index e27342ef128b..f816d063b984 100644
---- a/arch/powerpc/kernel/pci_64.c
-+++ b/arch/powerpc/kernel/pci_64.c
-@@ -227,7 +227,7 @@ SYSCALL_DEFINE3(pciconfig_iobase, long, which, unsigned long, in_bus,
- 			  unsigned long, in_devfn)
- {
- 	struct pci_controller* hose;
--	struct pci_bus *tmp_bus, *bus = NULL;
-+	struct pci_bus *tmp_bus = NULL, *bus = NULL;
- 	struct device_node *hose_node;
- 
- 	/* Argh ! Please forgive me for that hack, but that's the
-@@ -248,7 +248,7 @@ SYSCALL_DEFINE3(pciconfig_iobase, long, which, unsigned long, in_bus,
- 	 * used on pre-domains setup. We return the first match
- 	 */
- 
--	list_for_each_entry(tmp_bus, &pci_root_buses, node) {
-+	while ((tmp_bus = pci_find_next_bus(tmp_bus)) != NULL) {
- 		if (in_bus >= tmp_bus->number &&
- 		    in_bus <= tmp_bus->busn_res.end) {
- 			bus = tmp_bus;
 
 -- 
 2.54.0
