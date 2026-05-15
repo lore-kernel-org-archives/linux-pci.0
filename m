@@ -1,142 +1,122 @@
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com [209.85.167.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8F453E51F2
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 09:16:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778836594; cv=pass; b=gLFXT055Dcs7CrVTGRjChxp+ybGW199xQmGdSxUinX2L7TABQX+ktttBGvrWyifj1+ajxXmJdAJnGh1sRA+EVjsSLqbSXfvr+E58GUWoGPA+GqhGCZbwEfnt/G5gpxeI4raRVfFzNSFTD9z91OTdMUMXlMrjc7unBRhB1lZyun4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778836594; c=relaxed/simple;
-	bh=O1osj9DRGlh7LQXczkymCUHM69wwL6MiPTCJNt7k5Zc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=NvHkPAj2Gqyr74dunc3GLfFD2yvToW2QOX8ihwo5gNw1QPUi+5ZF5RnI3fefDqKxnbguA31Hr54KaEVpFSkGu4YSMB6OuyAclTGt/P+KtLU787KHKBPAFbmes0k0jpWLzG8ndyIw5gqKzltwvz306MVmcgSs4djrFxzR4/Mu0zU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=daLT55mO; arc=pass smtp.client-ip=209.85.167.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE6E38425D;
+	Fri, 15 May 2026 09:40:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778838051; cv=none; b=srdbDzlipvb6ReeD0okKhZHkjgqtVwh8a7HwUcdrrhqJyiiU0MCMcH4LZR1FsGPeyCB79fUzxbAiV6AGDVD4zU5ikmv2GttKk6Cwrq6Qs/WLyw55U+y6sCk+FbZzkgFXllGVjEORAmmfxA/4lxGCJwGcrW1NLhG2Xq6/fUe7mpw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778838051; c=relaxed/simple;
+	bh=q99zQIrIlObfiWoEEgi97UC/wlsiARIA353VLO+1Xq4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=capVB3jpnBZ+tnO34IbIa8YO4RCVHTcnzG/04MajgNdGTk5g+DvKUjqgZcR0fbxDAwjzeycqEytCvxY88M/5oXLJKb5OBT6FfRnHz1DuqXJMIM0iy60J//CnfUr2NO4L5K2S7RWs9HDDiA6ixQpZMTPAW2u+iIWnup3JbRynSmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=3p98aDdL; arc=none smtp.client-ip=113.46.200.224
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="daLT55mO"
-Received: by mail-lf1-f49.google.com with SMTP id 2adb3069b0e04-5a8ee4b703fso2748668e87.0
-        for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 02:16:32 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778836591; cv=none;
-        d=google.com; s=arc-20240605;
-        b=UllssEI+LxV4ztQzvjf41ncUtvvjaFAeGwDG2CrJZ8hxo1txHMfJnjfYWY9BG3Q5Q2
-         cJ7AB2qLcka+sabYRqboC2BKH7dOs0AP54Ac7AJyoO9YdK7Juc4MSL2FF8btQS/sJD+g
-         wD8bhz2HB9nPVlQjy5cTYDKtSIyVeEEhJKR93FAlY8b+tEhErDYyQCyTqhCzJ1BwIeDw
-         ZVkFC6TuavMSbdze0U/U8RoSZ7BfXE7HLFByUb/FH94xN+yXSAEGUpY0LcktZiFsOiBW
-         NfRyvND1Tww6iGrvjZnzEjgIl+ts48LC1VZeRolbv9R2VIMcZJ/94819jZZqE60+maKf
-         UFkQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=GOPcS/H8/U6wPcyzeNn2Tnxkz+5P1nEugos5oRv4JHk=;
-        fh=pQq+obxAZCUGhsqh52E4PYNWi5jCZZ+8dNuyrY8wpTo=;
-        b=j2FxVWNbZ7L8ojTr5/q6Y4UKJ4qlTCvpuCoLAVMqbK9DhY28++Wiq86QuGub6vdKUG
-         C0nuEX6qfivmRruahNSiBTd6vAbo2mWq3PMhqi+FJpMdUi77ZXzx5ZhL8Ph9gYvd55RL
-         GUQ+8aXDpFv4Fc+rgXXNA6ECW0RoMO1pI4T7jZDb7VR+9eIdFVGwLSV3Wpn4QPPEhe34
-         H6XCqo7xc1lCgJtIkNC3isLI/Td0eL4bMO+HMPwn9rFYwDM+FQJMu+PMDn3J56Lbwy4+
-         ayKL7T/duL2vIKp/b4T44lPl/m6AQeSEOzngm3ETNRz2DYtA2Rs36x3M6tAz3DsqLQIK
-         4kog==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1778836591; x=1779441391; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GOPcS/H8/U6wPcyzeNn2Tnxkz+5P1nEugos5oRv4JHk=;
-        b=daLT55mOoeJ/6ZiYq0of3mLN1STCti1NRMqhacQG4vwStEjQgbhSvSjip0uUYd9T7J
-         JGDghNUbdpipTj9z0zTjdtaB17o1p/4SdLcV8DqL4OMlV3Il3aNXvORGCpADSS3DHyGb
-         PAapOkhfjcJt5NpuCVaf/M9TFdFlM8trUmk9E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778836591; x=1779441391;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=GOPcS/H8/U6wPcyzeNn2Tnxkz+5P1nEugos5oRv4JHk=;
-        b=KBGBpNLwZPCWJn2FBKu5LNxqErGtzBTTTpMTTK+wqLcVUoFengMa8L/kNZXMUw2Pwa
-         o1wAoY/Ghj5YHgZUPZa8uEvlJ/lO2wdQty41D3b+j8GYhTe4ej8JpGpn+AcSQ1Rb/PXy
-         eJYQ5AOTfkVo8APSvqg581H/fSxrvImZ6Xeg3yh8N72CceSHD6hbozfjF94Dr/8SBo9Q
-         icdkSBcyw9wIAIVpL3lEWjcCks0XK3X2VnVZZaiNcU2wFfV3Br/jmtUTyoWttZEefKTE
-         3gDhmWbb3DwB+SxYMClHZdtvbI2UrpnijR5Nb5Hn4ZFCYRvXjp8/SptfYH5wT61Iu7bb
-         VZPg==
-X-Forwarded-Encrypted: i=1; AFNElJ/KLRZSVAMFrz0pCF2DGvNCQS4dXXpkpCHbS6Nly17R4hPIMdi2PbvZUUp4QNF1U8F6A3rQQe1xhkU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YykEeZSPnmSp10PsVahpzYhKUsGHe+vtI6fgT/AS3lQcclJJDwm
-	nUSWX3uuTAT4Ce9Osk8djJAMFUSnWMFxOLPfWzsDyjHRFlxO5PiQXj5BruuMsW/WIwUInyC6F1F
-	MASvaa3q5yNj28WMYBd1xqOHI9IHz1zaXpd+iNfJj
-X-Gm-Gg: Acq92OGHTMJEDXjMJGMT2aBJjz4udLDXXwr+4E7eHITRUXcC6WpTd7Rr58RO1xDsXpe
-	X7i4PZWlIMb2WZmLxlmuhNMTSwo9G8ndrHExLuZdSPbJp+mAm1Z/etjF6GF6esmOSiBvHImEgbu
-	tI9xO61eW+bNcrAsZBwVK98A2jGfMjU6hFXgrTqLzTFze3dBfbchoTv02RdPUhPN6DUCu7eNTYR
-	s10aEpOpzoFhrpoMGWbuaK6CE7m1Sq9PgRF9p//1GLQu6/Igpb7HwUGdh4AXInoRMfqnFB0AcAd
-	0vm+Lj+EWaWGDfl729Abn36gHu8ogvKgmx/Oqg==
-X-Received: by 2002:a05:6512:3a87:b0:5a8:9d61:d89b with SMTP id
- 2adb3069b0e04-5aa0e74cb3dmr743386e87.37.1778836591069; Fri, 15 May 2026
- 02:16:31 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="3p98aDdL"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=0XfJjo1/meNT94b8bXEXbgagMtQ4mZwRr9rrykaSRiY=;
+	b=3p98aDdLM4R7Sv9pWUYl+SxKMx8O8EkBpSUKnDsglp44/FaP37oe9uspXyMUpZTM2XjaeDUNL
+	PwfNEI88JSwJmK8sUgscUQv2Lxr2esEH0pSJsrvkZRtUNkgz50irRICCd57NaIrB9pcI/O2w23H
+	jw4MUL+6TQDkgfB/l6f6fuU=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4gH2796QY7z1cyR0;
+	Fri, 15 May 2026 17:33:09 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id ED9CE40563;
+	Fri, 15 May 2026 17:40:46 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 15 May 2026 17:40:46 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <alex@shazbot.org>, <jgg@ziepe.ca>
+CC: <wathsala.vithanage@arm.com>, <helgaas@kernel.org>, <wei.huang2@amd.com>,
+	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH v10 0/5] vfio/pci: Add PCIe TPH support
+Date: Fri, 15 May 2026 17:40:35 +0800
+Message-ID: <20260515094040.38496-1-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260508063633.3894348-1-wenst@chromium.org> <locoul5wdzuvvmm7mqpuntjqu4o75gmyd5npgfqrw3zuwsrse6@dhrjggs4cihh>
- <CAGXv+5GAaMQbaoUVr5zcwtHaofyXwHz03TxBe-QyWj_sNoQZsg@mail.gmail.com> <qnikqcqoiw7z2yh5wruqcli3rk56yomyymghzivlcmekp2blwc@dfhsfl3sqcla>
-In-Reply-To: <qnikqcqoiw7z2yh5wruqcli3rk56yomyymghzivlcmekp2blwc@dfhsfl3sqcla>
-From: Chen-Yu Tsai <wenst@chromium.org>
-Date: Fri, 15 May 2026 17:16:19 +0800
-X-Gm-Features: AVHnY4IdOj2VyhMXhY8fbMZzGCWoX3mgZBp9t_yv23cB0YsfCPC7Ce9B5m4dook
-Message-ID: <CAGXv+5GBraoTrQatQdrM5b+dOteL_Y5K7_UQBUt-2L1x=c94KA@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: PCI: mediatek-gen3: Allow memory-region for
- restricted DMA buffer
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
-	Ryder Lee <ryder.lee@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On Thu, May 14, 2026 at 7:48=E2=80=AFPM Manivannan Sadhasivam <mani@kernel.=
-org> wrote:
->
-> On Thu, May 14, 2026 at 03:54:29PM +0800, Chen-Yu Tsai wrote:
-> > On Thu, May 14, 2026 at 1:23=E2=80=AFPM Manivannan Sadhasivam <mani@ker=
-nel.org> wrote:
-> > >
-> > > On Fri, May 08, 2026 at 02:36:32PM +0800, Chen-Yu Tsai wrote:
-> > > > On some SoCs without an IOMMU behind the PCIe controller, the PCIe
-> > > > controller memory access could be limited to a small region by the
-> > > > firmware configuring a memory protection unit. This memory region
-> > > > must be assigned to the PCIe controller so that the OS knows to
-> > > > use that region. Otherwise PCIe devices would not work properly.
-> > > >
-> > >
-> > > So this means, the PCIe devices can only access a specific carveout m=
-emory
-> > > configured by MPU for DMA? If so, you should use 'dma-ranges' as sugg=
-ested by
-> > > Rob.
-> > >
-> > > 'memory-region' also serves the purpose, but for PCI, we have the ded=
-icated
-> > > 'dma-ranges' property.
-> >
-> > I think I need some sort of guide on writing the 'dma-ranges' property,
-> > because it is not working for me.
-> >
-> > I'm adding
-> >
-> >     dma-ranges =3D <0x42000000 0 0x00000000 0 0xc0000000 0 0x4000000>;
-> >
->
-> So the device DMA address start from 0x0? Isn't it a 1:1 mapping?
+This patchset enables userspace control over PCIe TPH steering tags,
+motivated by the following considerations:
 
-I actually don't know. But
+1. Why userspace needs the capability to control steering tags:
+   When PCIe devices are fully owned by userspace workloads such as DPDK
+   and SPDK, only userspace has full knowledge of core binding policies
+   and traffic distribution strategies. Without this series, userspace
+   cannot enable TPH or configure steering tags, leaving built-in PCIe
+   performance optimizations unused in high-throughput polling I/O
+   scenarios.
 
->         dma-ranges =3D <0x42000000 0 0xc0000000 0 0xc0000000 0 0x4000000>=
-;
+2. Why this interface must be implemented in VFIO:
+   VFIO is the standard, secure community solution for granting full
+   PCIe device ownership to userspace. Existing kernel TPH interfaces
+   are designed purely for in-kernel drivers. For user-owned devices,
+   VFIO provides the only isolated and correct path to expose per-device
+   TPH management.
 
-this didn't work either.
+TPH supports both IV and DS modes. Since both modes could introduces
+cross-VM isolation risks such as untrusted guests programming arbitrary
+steering tags to impact other domains:
+1. If ST location in MSI-X table, untrusted guests may program the
+   MSI-X table.
+2. If ST don't locate in MSI-X or CAP, untrusted guests may program the
+   device-specific register.
+So a new module parameter `enable_unsafe_tph` is added. It defaults to
+off, and blocks all unsafe TPH operations when disabled.
+
+Based on earlier RFC work by Wathsala Vithanage
+
+v10:
+- Fix Sashiko review comments:
+  - Fix TPH virtualization write return negetive val of 4/5 commit
+  - Fix don't support probe feature of 5/5 commit
+  - Fix return positive val if copy_to_user fail of 5/5 commit
+v9:
+- Address Alex's comment on VFIO part: adopt device feature scheme
+- Remove pcie_tph_get_st_table_size and add pcie_tph_is_enabled
+  depending on the implementation requirements
+v8:
+- Make GET_ST op could retrieve CPU's steer tags for DS mode.
+  note: the original impl could for DS mode + No ST Table, the
+  background is that we found one netcard defined ST table with DS
+  mode, but also need to config set ST by device-specific way.
+- Support verify index when SET_ST.
+- Fix Sashiko review comments:
+  1. Add fix pcie_tph_get_st_table_size for msi-x table commit
+  2. Add argsz validation for GET/SET_ST copy st
+  3. Verify mem-type when SET_ST with cpu=U32_MAX
+
+Chengwen Feng (5):
+  PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+  PCI/TPH: Export pcie_tph_get_st_modes() for external use
+  PCI/TPH: Add pcie_tph_enabled_mode() helper
+  vfio/pci: Add PCIe TPH configuration space virtualization
+  vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST for TPH ST entry management
+
+ drivers/pci/tph.c                  |  38 ++++++++---
+ drivers/vfio/pci/vfio_pci.c        |  13 +++-
+ drivers/vfio/pci/vfio_pci_config.c |  29 +++++++++
+ drivers/vfio/pci/vfio_pci_core.c   | 101 ++++++++++++++++++++++++++++-
+ include/linux/pci-tph.h            |  10 +++
+ include/linux/vfio_pci_core.h      |   3 +-
+ include/uapi/linux/vfio.h          |  41 ++++++++++++
+ 7 files changed, 224 insertions(+), 11 deletions(-)
+
+-- 
+2.17.1
+
