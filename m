@@ -1,129 +1,216 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C3B923EAA4;
-	Fri, 15 May 2026 12:47:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73195357D1A;
+	Fri, 15 May 2026 13:34:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778849251; cv=none; b=j4KT1oC+Mw4OOwYHrBKFhIC7nm79C9m2DYC1GoqP34t1yrFgIBnjYYsIgp8lGiYLkWAeRL5HWEc8VExVP2TaaEELhJ36MVIXLXxTdsMbXtlMPEc9oz+M+KhFAqBFd7XxdlTb/YziKbTfSKCI2DshSNd0jVSHu/+O5q+80sy+aow=
+	t=1778852101; cv=none; b=K7fd655GP7bqi6WyTmvCqyYh3ULYeGgiuB7wBzsOXQrkudp9S09k9psqs2XDB6DudP+yKDmd3WHsKcZFku4U+qoEs/nvlSIMyuqqUUYoCaG3a7GA2d1krz4jVoHyOXeMi7pz0tfg0umAuvBmfDTUxEI5QZLXCJ1Pdy+XroEOLSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778849251; c=relaxed/simple;
-	bh=RutxBLw/fTqyWYne9ALFxGxyYBTrKY4dBcGpCUx/QLM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s/vXb38MEd3LGKbObNlz2AXx+e5iwDBUgcZEiea+fnHfd8NBth1oiORZCh8yvU6THAEWcfLxWVc3aTdKZEOIF0Cf1Pzx43MJlgihp+xQ7biAP4pfECLtub9fhY/XuUu3/XePyBU3NQORMRFdtKkh9NNCPHngsKCYo+wmM58Kkkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EOqYLJxf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778852101; c=relaxed/simple;
+	bh=NCET79qZworMeGxlUtbnqOq50zq63+sJvrMAPaiTqmg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a9CPVksvQrO3dx4CavoXGlaJi1OhsuSxYum/qMc1BFiY2Hd+GrN0qLAfQD+MH9a512AQb2sgNDkRwJISj8ziHUBA2HzimkaYSQs+YdSeQuatoNf4ADV9t1MZdpj8AYZS3LwOKa/bah9o1GSnNEo+U4zAChOMHkdj+JMUrfzJ6YY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=bknCUXBu; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EOqYLJxf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 065FCC2BCB7;
-	Fri, 15 May 2026 12:47:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778849250;
-	bh=RutxBLw/fTqyWYne9ALFxGxyYBTrKY4dBcGpCUx/QLM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=EOqYLJxfBaT3DbXlN83O21rR2IWjpFpD16bBcbsEFx+OwTxbhNN8iNRxIdg03WBX2
-	 g7HhVxvca6FcFAZc39BfEDW0kd2AvxAElL5X4jNDWx+6L0xYfbtYLasXHr4hOESWI6
-	 50MLH7eiRkxoftXw93sMVQ5SOAM5SsRk0DExr2wJOyPWOa+75JWEviB1Edo/nSLOcD
-	 skcDlEbcV+BFAdOUQmhVehP644dOep+jnmoWJSRd76omn+4GVHDDu38RU3hyvvTrBJ
-	 unreLhq+tgTsVGEpkopvbOf6c476Fp8EMpAs56uI9rhnV6XEoFTYwX7B5BHeyx41LJ
-	 rZhGMYQr2nmdA==
-Date: Fri, 15 May 2026 18:17:22 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Aksh Garg <a-garg7@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, 
-	kwilczynski@kernel.org, bhelgaas@google.com, corbet@lwn.net, kishon@kernel.org, 
-	skhan@linuxfoundation.org, lukas@wunner.de, cassel@kernel.org, alistair@alistair23.me, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, s-vadapalli@ti.com, 
-	danishanwar@ti.com, srk@ti.com
-Subject: Re: [PATCH v3 3/4] PCI: endpoint: Add API for DOE initialization and
- setup in EPC core
-Message-ID: <mn7rnqdunp4mq45a7ypf26rfpzjr2gik7w4p7hpj4x3r3fzfzz@dlrsn27u5mbf>
-References: <20260427051725.223704-1-a-garg7@ti.com>
- <20260427051725.223704-4-a-garg7@ti.com>
- <m4z3q3pe3ro5vkl4uq4zkewpjdqccgeact2hj4tjnkonttx4vr@ndan37zzwgxc>
- <3853ba15-d096-4cf4-b52f-8a2e5f50fe53@ti.com>
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="bknCUXBu"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id A16943E2A72;
+	Fri, 15 May 2026 15:34:54 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1778852095; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:content-language:in-reply-to:references;
+	bh=A5zmeGSN+y1eB9ovPme0Em/fslZDHREQBQZ+/qd911k=;
+	b=bknCUXBuLti5q0f9ZMuKNon9Wcm1gf0EoenQcEslk0B5FVXdV+2X2kW0LD9tnYtzibTkzY
+	2xmgv3xDCCMYbiFyncIidH+FzGnveyQ9thlEN4oCeSsG6VqhyR1KtZIx11kh0cNP2LEPQ5
+	ZrBt3OCBMS5GNfu/aU8QHq4BGZC3eX1fLnVITWfH+yo1U74DVfsD5s7umqPfxFYVVXlfru
+	bqAsoz5pCG1meAVhV9rC21jzByOt2z3ZBSf5V5wT9nDvLgEWeJ309jwCRQ7xBVOroKXlTU
+	DqNxRDOZsXpIxE49PP514pWOB41vutfRJt4cAOe7a0+yAPL+kNrQPBns2CsEKA==
+Message-ID: <22d7274b-640a-470e-86b0-997a4b6e102d@cjdns.fr>
+Date: Fri, 15 May 2026 15:34:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird Beta
+Subject: Re: [PATCH v7 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
+To: sashiko-reviews@lists.linux.dev, Bjorn Helgaas <helgaas@kernel.org>
+Cc: robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org
+References: <20260514151318.3444959-3-cjd@cjdns.fr>
+ <20260514210141.2DEF2C2BCB3@smtp.kernel.org>
+Content-Language: en-US
+From: Caleb James DeLisle <cjd@cjdns.fr>
+In-Reply-To: <20260514210141.2DEF2C2BCB3@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <3853ba15-d096-4cf4-b52f-8a2e5f50fe53@ti.com>
+X-Last-TLS-Session-Version: TLSv1.3
 
-On Fri, May 15, 2026 at 10:21:52AM +0530, Aksh Garg wrote:
-> 
-> 
-> On 14/05/26 13:38, Manivannan Sadhasivam wrote:
-> > On Mon, Apr 27, 2026 at 10:47:24AM +0530, Aksh Garg wrote:
-> > > Add pci_epc_setup_doe() API in EPC core driver to initialize and setup
-> > > the DOE framework for an endpoint controller. The API discovers the DOE
-> > > capabilities (extended capability ID 0x2E), and registers each discovered
-> > > DOE mailbox for all the functions in the endpoint controller. This API
-> > > should be invoked by the controller driver during probe based on the
-> > > doe_capable feature.
-> > > 
-> > > Add pci_epc_destroy_doe() API in EPC core driver for cleanup of DOE
-> > > resources, which should be invoked by the controller driver during
-> > > controller cleanup based on the doe_capable feature.
-> > > 
-> > > Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-> > > Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-> > > Signed-off-by: Aksh Garg <a-garg7@ti.com>
-> > > ---
-> > > 
-> > > Changes from v2 to v3:
-> > > - Rebased on 7.1-rc1.
-> > > 
-> > > Changes since v1:
-> > > - New patch added to v2 (not present in v1)
-> > > 
-> > > v2: https://lore.kernel.org/all/20260401073022.215805-4-a-garg7@ti.com/
-> > > 
-> > > This patch is introduced based on the feedback provided by Manivannan
-> > > Sadhasivam at [1].
-> > > 
-> > 
-> > Sweet! But I was expecting you to add atleast one EPC driver implementation to
-> > make use of these APIs.
-> > 
-> > Also, why can't you call these APIs from the EPC core directly? Maybe during
-> > pci_epc_init_notify() once the register accesses become valid.
-> 
-> Can we add the DOE initialization API to pci_epc_init_notify()? This
-> API seems to be called to notify the EPF drivers that the EPC device's
-> initialization has been completed, as the name and description suggests.
+Regarding this, I could use some advice. Bjorn I tagged you in because 
+you're probably best to have an opinion here.
 
-That's correct. But there is no harm in calling something like
-pci_epc_init_capabilities() inside its definition. Only concern would be that
-pci_epc_init_notify() is mostly called from threaded IRQ handlers. So loading
-the handler would not be recommended. But since it is threaded anyway and we
-don't have a better place to call, it would be OK.
 
-We could've called this from pci_epc_{create/start}, but some controllers won't
-allow accessing CSRs without REFCLK. So only after pci_init_notify(), CSRs can
-be accessed.
+On 14/05/2026 23:01, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
+> - [High] mtk_pcie_retrain() iterates the PCI bus without locks and holds an unreferenced device pointer, leading to a Use-After-Free.
+> - [High] mtk_pcie_retrain() only retrains the first root port, silently ignoring any other ports on the same host.
+> - [High] Link retraining occurs after downstream endpoint drivers are probed, causing a race condition that can lead to system crashes.
+> - [High] Calling virt_to_phys() on an __iomem pointer causes undefined behavior and potential memory corruption.
+> - [Medium] The IS_BUILTIN() workaround silently degrades hardware capabilities when the driver is compiled as a module.
+> --
+>
+> commit 08338fe344200ef55148194108ab3b65616af7c7
+> Author: Caleb James DeLisle <cjd@cjdns.fr>
+> Subject: PCI: mediatek: Add support for EcoNet EN7528 SoC
+>
+> This commit adds support for the PCIe controller found on EcoNet EN7528 SoCs.
+> It introduces a hardware quirk to retrain the link after startup, as some
+> ports capable of Gen2 operation will initially start at Gen1 speeds.
+>
+>> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+>> --- a/drivers/pci/controller/pcie-mediatek.c
+>> +++ b/drivers/pci/controller/pcie-mediatek.c
+> [ ... ]
+>> @@ -753,6 +764,135 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+> [ ... ]
+>> +	/* Activate INTx interrupts */
+>> +	val = readl(port->base + PCIE_INT_MASK);
+>> +	val &= ~INTX_MASK;
+>> +	writel(val, port->base + PCIE_INT_MASK);
+>> +
+>> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+>> +		mtk_pcie_enable_msi(port);
+> Is it safe to call mtk_pcie_enable_msi() here? Looking at
+> mtk_pcie_enable_msi(), it calculates the message address using:
+>
+>      virt_to_phys(port->base + PCIE_MSI_VECTOR)
+>
+> Since port->base is an ioremapped __iomem pointer, passing it to
+> virt_to_phys() produces undefined behavior and could return a garbage
+> physical address. If this address overlaps with valid physical RAM mapped
+> for DMA, could memory writes from the PCIe endpoint corrupt random system
+> memory?
+Learned a few things from that note. Seems ioremap is just giving us a 
+KSEG1 address and virt_to_phys() is getting the real address back. In 
+any case I'm just doing what the driver already does.
+>
+>> +
+>> +	/* Set AHB to PCIe translation windows */
+> [ ... ]
+>> +static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *host)
+>> +{
+>> +	struct pci_dev *rp;
+>> +	int ret = -ENOENT;
+>> +	u16 lnksta = 0;
+>> +	u32 speed;
+>> +
+>> +	/* Should already have been warned about during startup_port */
+>> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))
+>> +		return 0;
+>> +
+>> +	for_each_pci_bridge(rp, host->bus) {
+>> +		if (pci_pcie_type(rp) == PCI_EXP_TYPE_ROOT_PORT)
+>> +			goto found_port;
+>> +	}
+>> +
+>> +	/* Should not happen */
+>> +	return dev_err_probe(dev, ret, "root port not found\n");
+>> +
+>> +found_port:
+> The commit message mentions that it is most convenient to retrain every port
+> after startup. Does the goto found_port here unintentionally skip all
+> subsequent root ports by breaking out of the loop after the first match?
+There aren't any.
+>
+> Also, is it safe to traverse host->bus->devices via for_each_pci_bridge()
+> without holding the pci_bus_sem read lock? If a device is concurrently added
+> or removed, this might lead to list corruption.
+>
+> Finally, pcie_retrain_link() is a sleepable function. Because the code does
+> not acquire a reference to the root port via pci_dev_get() before sleeping,
+> could a concurrent removal event free the pci_dev structure and result in a
+> use-after-free?
 
-> As 'pci_epc_doe_setup' is a part of EPC initialization, I thought the
-> EPC drivers should call this API before calling the pci_epc_init_notify().
-> 
-> However, I agree with your suggestion to call the DOE setup API directly
-> from the EPC core instead of sprinkling over the EPC drivers. I would
-> recommend renaming the pci_epc_init_notify() API (and hence the
-> pci_epc_deinit_notify() as well) to something like pci_epc_init_complete(),
-> and add the DOE setup API/logic just before the
-> logic of notifying the EPF devices.
-> 
 
-No need to rename this API. Just use as is:
+Okay here's the one I have a question about:
 
-	pci_epc_init_notify()
-		-> pci_epc_init_capabilities()
-			-> pci_epc_init_doe()
-		-> epf->event_ops->epc_init()
+There's a bunch of related issues here, and I don't see any way to 
+perfectly resolve all of them without moving retrain up before 
+pci_host_probe(), but as noted previously without a mapped bus I can't 
+just call pcie_retrain_link() and I have to - at worst - manually find 
+the registers which is an annoying amount of additional code.
 
-- Mani
+ From the vendor code, it looks like it should be about 50-70 lines of 
+code to do this manually. The question is, is this race adding more 
+complexity than that code?
 
--- 
-மணிவண்ணன் சதாசிவம்
+I think wrapping the mtk_pcie_retrain() call in a 
+pci_lock_rescan_remove() lock should stop any downstream probing while 
+pcie_retrain_link() sleeps, but if it happens that a downstream device 
+ends up probing on a different CPU, in the moment 
+between pci_host_probe() and pci_lock_rescan_remove(), we still have the 
+problem of retraining while the device is setting up. Though this is 
+admittedly a pretty tiny race window.
+
+So I think the options are:
+
+1. Do nothing
+
+2. Add pci_lock_rescan_remove() - I'm not informed enough to know if 
+this can introduce other issues...
+
+3. Give up on using pcie_retrain_link() and do it manually before 
+pci_host_probe()
+
+
+I'm leaning toward #2 but I also don't know what I don't know, so I 
+could use a little advice.
+
+
+
+>
+>> +
+>> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
+>> +	ret = pcie_retrain_link(rp, true);
+>> +#endif
+> Does this silently degrade hardware capabilities when the driver is compiled
+> as a loadable module? The Kconfig definition allows CONFIG_PCIE_MEDIATEK to
+> be a tristate module, so users compiling it as a module might find their PCIe
+> devices permanently stuck at Gen1 speeds.
+Handled in the if statement above, noted in previous version of the patch.
+>
+>> +
+>> +	if (ret)
+> [ ... ]
+>> @@ -1149,6 +1289,13 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+>>   	if (err)
+>>   		goto put_resources;
+>>   
+>> +	/*
+>> +	 * Ignore error because pci_host_probe() was already called, and in any
+>> +	 * case it is possible that the port will still work as Gen1.
+>> +	 */
+>> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN)
+>> +		mtk_pcie_retrain(dev, host);
+>> +
+>>   	return 0;
+> Does retraining the link at this stage introduce a race condition with
+> downstream endpoints?
+>
+> By the time pci_host_probe() completes successfully, the PCIe bus is fully
+> enumerated and downstream endpoint drivers (such as NVMe or WiFi) have been
+> probed. If those drivers are actively issuing MMIO or DMA requests, forcing
+> the physical link into the Recovery state could cause PCIe completion timeouts
+> and potentially lead to fatal kernel crashes.
+
+Issue noted above.
+
+
+Thanks,
+
+Caleb
+
+
