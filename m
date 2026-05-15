@@ -1,28 +1,28 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010032.outbound.protection.outlook.com [52.101.46.32])
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012014.outbound.protection.outlook.com [40.107.200.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996DC3E0257;
-	Fri, 15 May 2026 07:09:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35BA33E025D;
+	Fri, 15 May 2026 07:09:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.14
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778828986; cv=fail; b=dasJp8fO49c8feI/AI688vtccW7Yj7t7VETygGvFiUHn5/1Lxh2z4dHdx6EVFdy6SGyFVbWNYYEb7/u1H4MC9T08sNiyMR4u+XYPT5SkBkVL67nYDuEcbbcOqa1Hj9UUQDRDdGx+ti+//3yhWa4sU0xnhBeW45PlE6VXtcGLpJQ=
+	t=1778828987; cv=fail; b=ZgIybLmrBsJHWPjjoalkjyZBEQhsCvoLZLLijIzVzrhW6V4Ap8RE05iUy0nbfVFLtzxfz7VBPMwsslPHeYBbGGT2NKx5ujhMq5gAGeMtZt/f3uW71mRqDbbjdQd6CXyBzH+bflMsMx77QLIJXZpc6Y2XxZs95bUpUBMOajIKWng=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778828986; c=relaxed/simple;
-	bh=39yERHy2piAZMWQqp4n5G78w9FNQfZXZFEubiB+bKvQ=;
+	s=arc-20240116; t=1778828987; c=relaxed/simple;
+	bh=68U2Kqa+te7Ae8SRw88kMIDXb68bu6bYOZw6FXxnVIs=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Gw1G7c5Se/cUAgdpbnj1i1KTac0/N1bWf8mx5A9/8W4EhgPeqogchHstOV0IM4up5cxW2M6c12sNbTHwrsYbHG6lAQkhk3NgcL+V5f7N4UFjdBywoy+dqqJ4aTUWgjF4MGh9CBq342ILupLaeQ1LFaw0AyBXOtmQEpphPU3q63I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=s9QeFk4B; arc=fail smtp.client-ip=52.101.46.32
+	 MIME-Version:Content-Type; b=dNnt7LZdJJ5hOyrAyBp/gnA4h7Ib8oE9A0PVz5XMrDmRRkyYgXb7B1xVBAwmdp2Ck53QnC9wkIOrZEEhK7gWMQh93oHpfwIZ7Yfg7O3+aj2qD6G20BEfifhTeXyo8y69lNwzkHPI21r1tJVGqJRAvStqP+VzR/V1LcTO9mW4iDA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=uuSgKALS; arc=fail smtp.client-ip=40.107.200.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="s9QeFk4B"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="uuSgKALS"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=v1Gq/wSsMX7T07S8lSf283fL5j0sa9zm5eBCV0Y7MIKJxBUMzCl2Won8UfVakf5oOJXIp/kG6+9+QaDBu/AuKB4VOXW1uBVpli3AztKYCkbMyVpPqmHQ3l64KrcyeHGzZW9wOmp40HmSUROtKgVeaKnxQzmsq5qNj1UzAhaR6URo6GfRVQEXj1TMUosFiE02B5rzDBJ5bd5dBHDPut+X93sxr2U0r5qYn+UD2oNRcHrQ9KqyTVrkS4mHjRkWcvWUaiGmOenducqGISqnH3Y/DmWTc094SdObnojuf2wnUrBwek4IVaZZxgG5pldkqYGT4zGY9pFyIXim66FCUQQMMQ==
+ b=RfqNB4in+huBiva6n0meKSaiouNxbB/Ndi+659iATNc6viu92Q+OP+Guf2LM7JQNNmOhEbgZVITxxxCcb3iW8sgE7tnnLttp8BiIq8JwbuSuz8XEGS+QhzamctMDFA8n5YIRufgm5d1dA8rlKadgLA2syn1N0cQonDfYfbNUUb9jkIhxhEarJivGGJbxTadSXJ5gCywmt5ZSbP88HeHG0SEd1pfiWn3yti20Uan50ml9rIS5b/a62IEJdR/mgeWmdlRlJPJdWP0VLtsk1Jqk3EV4UO3Bh5/5ELbDk0Oh9DKyUB3o+OUKbxL1+UR8himWLZLMxpPRTpVhUzNAQxXdcw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JcYIAl8I/1iR5yjAzZBsJzy2RNe0cvxv915aFRG7yJw=;
- b=D3kQ+aKZzFMyAy4uJK3YlmOa+qL4s/QeUGkeKAHMteo3mApXB0s+EWnxo3lWoQVQw7ZKGAwVP8UJl0NG01ZdKsBtvO/T22ceoEWHYcQ7zOWg7chpOk0qi9Dw77xVtq4weRpqvwBiY2MuTHnoWtBaMxP01CSgndogvUUvdYFySMD2qLa9p6yXSfKIGD5xolG3AgBjxnumcBfSNkBjdVjpPs70xULl/RPkyQuHVjfiYa/pcxn/W0QJaAJBd1RTjyHcoA0fDr+md1LhHLzNL9GpCdrE5hSHZCGiAVv9rqL6V1/Ef+kAIrT0CkB9Uam54u08MaAAazF+k50T07smC0lLHQ==
+ bh=AJtdrYPAtXaqRdCZtfAq/F3/atWN6XaO1vmvAFeyAGU=;
+ b=XWYiOD+Mf8gQ4VRj1XtQgm+rJ4yoIQtBawomW0WNbLhhkuyfbPG5ZFGn6G6mfcUIfazLBpYQCKQILOQ44R2R3uJpr7IbmEQgsOk+3XqbnEfUVQzefExRv2HYWOEfr9O3IbA9//spOpEcimyzCKoHCAKEy/AILjQNR5bLiMZoF/tNoLvMXkng3fYxyvAxjB3n6BpwnuIQlmSrIzVKDaoOQJZOd31Vtb+RWJjEL6j/OkkhXdTVqDxH+vUIDTX/VTsfONdIEvpJiTjMFTd/c+YceWYfvuSXY5sYFy2rLHJoStWgeCTTls9Uha+hH4yIRTpqhNuLopOPtdbb3k6tnnbYQg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -30,18 +30,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JcYIAl8I/1iR5yjAzZBsJzy2RNe0cvxv915aFRG7yJw=;
- b=s9QeFk4BKgYdfhOD4SVDJ5HdIgLj6e0xnE0jnkq/cU+28U1a4XP6+DdvO+wj1gjsxC+tgk6lotmO9ajuegvCFxnY1g2T/p6p87F5w8zO9r4aXUu38KoM5vvyIRyIM+asmWI/ECDoSQMXLGcyQ7v+LuS4RTay2ubxJn2GsNqNRtyRAyyF2EstsoP3F4rEG0+tMuS6NKIq5ajNaI2/NOm66ShpVYYy6fNpZHsl8L8ed3zVj8BWaj7ACE0d0AVu6R98bE6fv717ut+/gUMWyF/SDF4ti58VYBszjLbAooekKLBCrPpiWUW0jWALWb9C1CtmEhVY92vZw9rWSDZwX7DaWw==
-Received: from MW4PR03CA0276.namprd03.prod.outlook.com (2603:10b6:303:b5::11)
- by BN5PR12MB9510.namprd12.prod.outlook.com (2603:10b6:408:2ac::9) with
+ bh=AJtdrYPAtXaqRdCZtfAq/F3/atWN6XaO1vmvAFeyAGU=;
+ b=uuSgKALS4tqdRp0kHGwUuq821KnZapySdVdIJpoSH656fPRFhXfj4opPNezROV/ZdngmB9KVUx0OVGFjLJuNVR+/rKReWp+C5ySfErAru6V35gEwL09yFJ7aLA+9/T/E/UR1kwmKp1ZNrJmydw7DwUByDweBFrlIp/mqFjTn1QytLwtPdVdLeDITKpuwo+gVIXr37/lbWORfeq5PRL54U91pvsaTaware/9xZYDL94sEMNRhS+Cxk5nYra2W1Ye5zpIP/MpWRq6FFDaZitnw70aQhsejk+ztoS3zsD+tMGdOztF3vqdvlgwHi69yHZi2DYqbOrSsFmmcqBhjGl8Vqg==
+Received: from SJ0PR13CA0013.namprd13.prod.outlook.com (2603:10b6:a03:2c0::18)
+ by MN0PR12MB6272.namprd12.prod.outlook.com (2603:10b6:208:3c0::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9891.21; Fri, 15 May
- 2026 07:09:40 +0000
-Received: from CO1PEPF00012E83.namprd03.prod.outlook.com
- (2603:10b6:303:b5:cafe::a6) by MW4PR03CA0276.outlook.office365.com
- (2603:10b6:303:b5::11) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9891.20 via Frontend Transport; Fri,
- 15 May 2026 07:09:39 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.19; Fri, 15 May
+ 2026 07:09:39 +0000
+Received: from CO1PEPF00012E7D.namprd03.prod.outlook.com
+ (2603:10b6:a03:2c0:cafe::66) by SJ0PR13CA0013.outlook.office365.com
+ (2603:10b6:a03:2c0::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.19 via Frontend Transport; Fri, 15
+ May 2026 07:09:38 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,17 +49,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- CO1PEPF00012E83.mail.protection.outlook.com (10.167.249.58) with Microsoft
+ CO1PEPF00012E7D.mail.protection.outlook.com (10.167.249.52) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.25.13 via Frontend Transport; Fri, 15 May 2026 07:09:39 +0000
+ 15.21.25.13 via Frontend Transport; Fri, 15 May 2026 07:09:38 +0000
 Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 15 May
- 2026 00:08:31 -0700
+ 2026 00:08:24 -0700
 Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.37) by
  rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Fri, 15 May 2026 00:08:24 -0700
+ 15.2.2562.20; Fri, 15 May 2026 00:08:17 -0700
 From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
 	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
@@ -70,9 +70,9 @@ To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
 	<18255117159@163.com>
 CC: <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH v3 2/2] arm64: tegra: fix aspm-l1-entry-delay-ns L1 latency cells
-Date: Fri, 15 May 2026 12:37:53 +0530
-Message-ID: <20260515070753.3852840-3-mmaddireddy@nvidia.com>
+Subject: [PATCH v3 1/2] PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance latency
+Date: Fri, 15 May 2026 12:37:52 +0530
+Message-ID: <20260515070753.3852840-2-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260515070753.3852840-1-mmaddireddy@nvidia.com>
 References: <20260515070753.3852840-1-mmaddireddy@nvidia.com>
@@ -89,283 +89,113 @@ X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
  rnnvmail201.nvidia.com (10.129.68.8)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF00012E83:EE_|BN5PR12MB9510:EE_
-X-MS-Office365-Filtering-Correlation-Id: 293468a8-de00-476c-0fb3-08deb250ee45
+X-MS-TrafficTypeDiagnostic: CO1PEPF00012E7D:EE_|MN0PR12MB6272:EE_
+X-MS-Office365-Filtering-Correlation-Id: 074afe4b-70ca-4b24-f3ea-08deb250edaa
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|36860700016|376014|82310400026|921020|22082099003|56012099003|11063799003|18002099003;
+	BCL:0;ARA:13230040|376014|1800799024|7416014|36860700016|82310400026|56012099003|22082099003|18002099003|11063799003|921020;
 X-Microsoft-Antispam-Message-Info:
-	mQZ84L8n6qzX9dQeSxXJf68bEgTsBeiRDprSL8zzeR9oeJ6oYdZ6kxI9yZIi0nuqf2YUwBf4zwRzOyQqmKDuuflKU/zTgWyp6usqDBp3O5QrMTjrbAdh5mk4So6nx9PPGyOZAKC3jzPmyY/pWh+monhq0UStGrXBLjhVqosdM4KeOu+ff+I430domplBAxew/HWDrqAvwYxbK2NRQJNt5fpyohgZrNBybe/cHWiUq5XgYs2u0tFsH7dVGxHXQ9vqXDc1LGFMuU43QkC4vQ4MZ8ZYurfeUa5W3Mm8qPPb8jZWjaric3+gaZHQY7rj8eMoEdCBj+hMH3tr6lEnpr6zbii4N2gNxnzcGRHXB1CVY239Zj7F4GUgtt9F+TeqpXLXR+mHxKYTNc/5TGIlxJjeTc+O7AbADWU0VSxzJarYq9N+64dFzMTk0v6bchylwWXlEI7JK3K9fF9Ofvlz0sUQfPBX+RNfSOmyhgCLgFmbb1ZQfId9RNAf6vM3tsqkLEO3cEA9EhwRqQxDPFzzKC/oag7reFqwIUi7Og17yNs2YryJNt1/zRW381eTsW1DAGvrnaI/itKZrMxebg+aHjVt6yUUod6MIXiNKEK+5Tizzsa7esHNI8uPNmwcY7dbqzI8v1MJw1UDub3PZ0Df95+gAQi9RGrmTUzYlE4TnLf8mnBwi+oljTgZn5F5Q3Ntadbeja0LnZq/xlKu3Z9V+cbSVi43yUAl88GZSqSMNkIBcj03c7xTFd5DjsV64DQNqOgKV7iasBcdVbKEGMzLCK4QEg==
+	8AVR+UD9xTpcRxD2M9YnIhS12cysQEGatGyNHgIFxn/lvYpAxheWmOn8RVST4IjilY2hoFaVmCi5dReqWI5TCLnWWNOg6pgVXAeioYKWYPHpGdbJQtLF/OQkFlyikiaCoMKZi2j1sXSA1oSxM6cmsh84TLQFD68Dowrm5Nfw5maLOGkOKRaBkvHi2Py4VejHTjfWMA1BpeDWGHTU5g3tkBNq1VLbMxmxKvcmuldZQfLnyOnUhflXUWQEMGgxQ9Hj1DgVH8Vv0HOfpWaNFVHrj1dh2Cn+DYYHot787a2Pa1K4iMoVevX4L1qmFhgcf00xFIxVIVOKZAwW5GobyY2n+fpBL+mhuzQBXu2QwpJ8rxxa6nDIm/O/4mWJj8R7qkN1BQ3kiDtsvvnZOXaVQJaYBIQqRT9gbLJc3Y5gV39SqYsjPflT0J36fUHRBgGTkq6TTqWWfTievC7jWbeQeXrC5gaJK0uZOOLvFOYfvqY8RxGLlD0zZX5csw5k9+kxQ0OF2v6SmhgEq5tW7i5LkP/oMl7IehOqzQaVshoOMA+VHSA4Lb0wRd8ZtNwnYA8yVof+5Bm3SvWzSEmCYPx2S06ubYcMrG55qrN0heaRolKvNW4BybUDGAAd7XL5LKcqhA9oc4/o5sK0NgOc6OLR+xPakHoM1iAToRojud8Rp/BZezkcvO4zy1JMQdigj49R4gWYQXhnDSTNsqX6x9M0Kw3XqoN0Sy+sFMSlMQZCZ04pyJvo78wpdzUqSYABwqwQk1SZXIuEXsgsvpRqdkIcwabHXQ==
 X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(36860700016)(376014)(82310400026)(921020)(22082099003)(56012099003)(11063799003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(36860700016)(82310400026)(56012099003)(22082099003)(18002099003)(11063799003)(921020);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	uTlaA/8293qCHfmH31lgZkNlb+G7wIluLbLqUloIojCKbQqUxhmy4PYedAnDCe3f54ycbrHCwlJRmnbIk3DCBHEtRXGKBEzSP2TFrV5G+pc5NyqJ/QLPKZbpS9+R+vnB/Bw+WK4bxaYuGX9xzdZw6nCaZJOJ9ilylF/vvuh5nR+wwSsmK3pfQtqSVq0NiwX93N+0CHaWpw3j3zMatELz4ggZHZq9AQDAY6kcnLpxPafMHGpyg0zaIWuIeS8Lqe/TEJ5W764vXkWDur69LzQyOdDFdOUIMHUqsfKkScWf5+LpTvK1TvZHNGbYCNdwWXtgdu8v/ujlWBgPzjs6mdT6g63gtsmGF9Xsg4DRjBK2tUf/+FYL/mYl0OQ28p2kW5qxIsgL9/hryvsrrEVD4dYXxjcj1VT0PS1g4Xx+zp9l8tEtQS1b5/GK/crUa5szZYxU
+	Fj8O/HBDIZ5ZgqRhzqzX50mvt+Iw4dBu42E+iVyHUm5JURmlyaWs8wpwWX2pmvr64bkF6GkixiPdlO54FS0X/rfgVs8oNnk/5dnAs/CDAt5EL8R2EIe4rEfcX3vxN5T/kdUHxMyuJ8bzQqFHMWAnVzYjYyuHxoqfIp/qSd/5FZeGWsPM2/w7hJPw9ykYnjWkUwdCOqvG/Y+jdKTa2jWuFJJcY05nMX2MfqRA4OniEkEctmEJcezPbol8kl81KMDXrIVVCyVtRT8TumWPRp3Iwa4nGV4vhVKep4qFF0ljSZco1Nv1j3hdlv2xtg6M4aa2ipefdVyFFO/yFoQOiGDWicvugHD291+I6FIyQdy+bkCSD93dCAt1iRQ4B47TvP4qWLiXEHgqmIvOMepwKXzPVEF1PNslfSnaOYTzvbl6pv4aNqiy18YEZqLXuB2rI3p3
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2026 07:09:39.6250
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2026 07:09:38.6329
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 293468a8-de00-476c-0fb3-08deb250ee45
+X-MS-Exchange-CrossTenant-Network-Message-Id: 074afe4b-70ca-4b24-f3ea-08deb250edaa
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	CO1PEPF00012E83.namprd03.prod.outlook.com
+	CO1PEPF00012E7D.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN5PR12MB9510
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6272
 
-The Tegra194 PCIe driver converts aspm-l1-entry-delay-ns to whole ms
-with ceiling division, then derives the Synopsys DesignWare PORT_AFR L1
-entrance latency encoding as min(order_base_2(us), 7).
+Program the Synopsys DesignWare PORT_AFR L1 entrance latency field from the
+optional aspm-l1-entry-delay-ns device tree property (nanoseconds).
 
-The nanosecond values from the Fixes tag below round up to 4, 8, and 16 us,
-selecting PORT_AFR L1 entrance latency codes 2, 3, and 4 respectively.
-Raise the programmed latency so the PORT_AFR codes are 3 / 4 / 5
-(8 / 16 / 32 us buckets) instead of 2 / 3 / 4 (4 / 8 / 16 us).
+Convert delay to whole microseconds with ceiling division (DIV_ROUND_UP),
+then derive the 3-bit hw encoding as the minimum of order_base_2(us) and 7.
+If the property is not present or cannot be read, default to 7.
 
-- tegra194.dtsi: 4000 -> 8000 ns (all listed controllers)
-- tegra234.dtsi: 8000 -> 16000 ns (Root Port), 16000 -> 32000 ns (Endpoint)
+Hardware encoding (PORT_AFR L1 entrance latency, bits 27:29):
 
-Fixes: d60ed99f1c9e ("arm64: tegra: Add aspm-l1-entry-delay-ns to PCIe nodes")
+  +--------------------------+----------+
+  | Advertised maximum       | Code     |
+  +--------------------------+----------+
+  | Maximum of 1 us          | 000b     |
+  +--------------------------+----------+
+  | Maximum of 2 us          | 001b     |
+  +--------------------------+----------+
+  | Maximum of 4 us          | 010b     |
+  +--------------------------+----------+
+  | Maximum of 8 us          | 011b     |
+  +--------------------------+----------+
+  | Maximum of 16 us         | 100b     |
+  +--------------------------+----------+
+  | Maximum of 32 us         | 101b     |
+  +--------------------------+----------+
+  | Maximum of 64 us         | 110b     |
+  +--------------------------+----------+
+  | Rest                     | 111b     |
+  +--------------------------+----------+
+
 Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- arch/arm64/boot/dts/nvidia/tegra194.dtsi | 18 ++++++-------
- arch/arm64/boot/dts/nvidia/tegra234.dtsi | 32 ++++++++++++------------
- 2 files changed, 25 insertions(+), 25 deletions(-)
+V2: Fixed commit message as per review comments.
+V3: Fixed encoding to handle all cases per above table.
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra194.dtsi b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-index 1d659454a6f9..7bbf0e892724 100644
---- a/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-@@ -2382,7 +2382,7 @@ pcie@14100000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
+ drivers/pci/controller/dwc/pcie-tegra194.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 9dcfa194050e..5309a2f1356d 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -272,6 +272,7 @@ struct tegra_pcie_dw {
+ 	u32 aspm_cmrt;
+ 	u32 aspm_pwr_on_t;
+ 	u32 aspm_l0s_enter_lat;
++	u32 aspm_l1_enter_lat;
  
- 			bus-range = <0x0 0xff>;
+ 	struct regulator *pex_ctl_supply;
+ 	struct regulator *slot_ctl_3v3;
+@@ -715,6 +716,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
+ 	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
+ 	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
+ 	val |= (pcie->aspm_l0s_enter_lat << PORT_AFR_L0S_ENTRANCE_LAT_SHIFT);
++	val &= ~PORT_AFR_L1_ENTRANCE_LAT_MASK;
++	val |= (pcie->aspm_l1_enter_lat << PORT_AFR_L1_ENTRANCE_LAT_SHIFT);
+ 	val |= PORT_AFR_ENTER_ASPM;
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
+ }
+@@ -1115,6 +1118,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+ {
+ 	struct platform_device *pdev = to_platform_device(pcie->dev);
+ 	struct device_node *np = pcie->dev->of_node;
++	u32 val;
+ 	int ret;
  
-@@ -2435,7 +2435,7 @@ pcie@14120000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
+ 	pcie->dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+@@ -1141,6 +1145,15 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+ 		dev_info(pcie->dev,
+ 			 "Failed to read ASPM L0s Entrance latency: %d\n", ret);
  
- 			bus-range = <0x0 0xff>;
- 
-@@ -2488,7 +2488,7 @@ pcie@14140000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -2541,7 +2541,7 @@ pcie@14160000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -2587,7 +2587,7 @@ pcie-ep@14160000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
- 
- 			interconnects = <&mc TEGRA194_MEMORY_CLIENT_PCIE4R &emc>,
- 					<&mc TEGRA194_MEMORY_CLIENT_PCIE4W &emc>;
-@@ -2634,7 +2634,7 @@ pcie@14180000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -2680,7 +2680,7 @@ pcie-ep@14180000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
- 
- 			interconnects = <&mc TEGRA194_MEMORY_CLIENT_PCIE0R &emc>,
- 					<&mc TEGRA194_MEMORY_CLIENT_PCIE0W &emc>;
-@@ -2730,7 +2730,7 @@ pcie@141a0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -2779,7 +2779,7 @@ pcie-ep@141a0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <4000>;
-+			aspm-l1-entry-delay-ns = <8000>;
- 
- 			interconnects = <&mc TEGRA194_MEMORY_CLIENT_PCIE5R &emc>,
- 					<&mc TEGRA194_MEMORY_CLIENT_PCIE5W &emc>;
-diff --git a/arch/arm64/boot/dts/nvidia/tegra234.dtsi b/arch/arm64/boot/dts/nvidia/tegra234.dtsi
-index 75bb9a0ad027..8e0c51e496e2 100644
---- a/arch/arm64/boot/dts/nvidia/tegra234.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra234.dtsi
-@@ -4532,7 +4532,7 @@ pcie@140a0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -4587,7 +4587,7 @@ pcie@140c0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -4642,7 +4642,7 @@ pcie@140e0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -4689,7 +4689,7 @@ pcie-ep@140e0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <16000>;
-+			aspm-l1-entry-delay-ns = <32000>;
- 
- 			interconnects = <&mc TEGRA234_MEMORY_CLIENT_PCIE10AR &emc>,
- 					<&mc TEGRA234_MEMORY_CLIENT_PCIE10AW &emc>;
-@@ -4738,7 +4738,7 @@ pcie@14100000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -4793,7 +4793,7 @@ pcie@14120000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -4848,7 +4848,7 @@ pcie@14140000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -4903,7 +4903,7 @@ pcie@14160000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -4945,7 +4945,7 @@ pcie-ep@14160000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <16000>;
-+			aspm-l1-entry-delay-ns = <32000>;
- 
- 			interconnects = <&mc TEGRA234_MEMORY_CLIENT_PCIE4R &emc>,
- 				      <&mc TEGRA234_MEMORY_CLIENT_PCIE4W &emc>;
-@@ -4992,7 +4992,7 @@ pcie@14180000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -5047,7 +5047,7 @@ pcie@141a0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -5094,7 +5094,7 @@ pcie-ep@141a0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <16000>;
-+			aspm-l1-entry-delay-ns = <32000>;
- 
- 			interconnects = <&mc TEGRA234_MEMORY_CLIENT_PCIE5R &emc>,
- 					<&mc TEGRA234_MEMORY_CLIENT_PCIE5W &emc>;
-@@ -5143,7 +5143,7 @@ pcie@141c0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -5190,7 +5190,7 @@ pcie-ep@141c0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <16000>;
-+			aspm-l1-entry-delay-ns = <32000>;
- 
- 			interconnects = <&mc TEGRA234_MEMORY_CLIENT_PCIE6AR &emc>,
- 					<&mc TEGRA234_MEMORY_CLIENT_PCIE6AW &emc>;
-@@ -5239,7 +5239,7 @@ pcie@141e0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <8000>;
-+			aspm-l1-entry-delay-ns = <16000>;
- 
- 			bus-range = <0x0 0xff>;
- 
-@@ -5286,7 +5286,7 @@ pcie-ep@141e0000 {
- 			nvidia,aspm-cmrt-us = <60>;
- 			nvidia,aspm-pwr-on-t-us = <20>;
- 			nvidia,aspm-l0s-entrance-latency-us = <3>;
--			aspm-l1-entry-delay-ns = <16000>;
-+			aspm-l1-entry-delay-ns = <32000>;
- 
- 			interconnects = <&mc TEGRA234_MEMORY_CLIENT_PCIE7AR &emc>,
- 					<&mc TEGRA234_MEMORY_CLIENT_PCIE7AW &emc>;
++	/* Default to max latency of 7. */
++	pcie->aspm_l1_enter_lat = 7;
++	ret = of_property_read_u32(np, "aspm-l1-entry-delay-ns", &val);
++	if (!ret) {
++		u32 us = DIV_ROUND_UP(val, 1000);
++
++		pcie->aspm_l1_enter_lat = min_t(u32, order_base_2(us), 7);
++	}
++
+ 	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
+ 	if (ret < 0) {
+ 		dev_err(pcie->dev, "Failed to read num-lanes: %d\n", ret);
 -- 
 2.34.1
 
