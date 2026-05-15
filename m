@@ -1,202 +1,152 @@
-Received: from fout-b8-smtp.messagingengine.com (fout-b8-smtp.messagingengine.com [202.12.124.151])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC9040B6D8;
-	Fri, 15 May 2026 16:52:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF78282F3A
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 16:52:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778863930; cv=none; b=rZFQ633TMJmQ3kDj5QYHq6Vkus7ab053UvVQDzuEMtTMkv8WSiuQdRVDSHJusOwdJQd/uxW5TB/IaW0MaylT2PlnBcYAVKDt41PzyFPqYmyW4pUNtFZGgNN2SpwbD7RW/ofWJy5uTf3ExRvekZhxrQIBwgLFWw3p0+0Ak1EyJZg=
+	t=1778863955; cv=none; b=DvPmT/9auw717/l4uT29uY5jfSgtaoA46QRZXqzy1rl7X2hApNup5M9L0MIgjGD3B5oQAZksLJpeOxBnSDMPBn76Fz8Nw2UW8dVg7i8MW2xSY7j3XL31+eUapalbtc6lw8S0QUvq+XUkHgicIOvUQglvs+8NjahaXLf8/JjT03Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778863930; c=relaxed/simple;
-	bh=XUt+qDZuvmeMKzNhPUVeBrnoF1tfZAaOTunhYvVhKgw=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XrPx5ymyR0eBvmwzRtI/sB01BfyCJ1nNADMHVZ+3Ck0KfODqPTZ20V/jqZzT6vBFEOaf9Jz06fBliIrB6z3UcHn+jNxYRLIO9Gyc+673hJMlR0zpdmGzcI6CQs2ireutPAOoeBWbyJ4QkD9ZJi42RS9yB8dmFQgTOMJo1g8FrV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=oCSgKgai; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=sezACROT; arc=none smtp.client-ip=202.12.124.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1778863955; c=relaxed/simple;
+	bh=T3GjOTpYeHPz53pVwWaV3M8mUgMyc/KwFdDndBzPMLs=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=aU2OzRpFuqk3UfGrjUxCSGqt7WZvqXCUmsNSnWtrml5deD5lJEpoaxig6wCTAY91CKesVbFoSOB7Ga0fA0Q2aaBnecy92RBy/INjXagpEw4oJwRd9o2YM6rqt4gf/l5VT4zUaYG3rqOYRZlPunYz984afufCwCGrN05lNQiRTCc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=X+KT3E+8; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=BfcwHV0X; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="oCSgKgai";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="sezACROT"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfout.stl.internal (Postfix) with ESMTP id CD4CE1D000BC;
-	Fri, 15 May 2026 12:52:06 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Fri, 15 May 2026 12:52:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1778863926;
-	 x=1778950326; bh=bQeaDmipB8BpaTWUW4seEEeoE8dKC3jLG474aLzcMFg=; b=
-	oCSgKgailXwY5FnNk8gEGKYII6n43nUa9tEqgqs5upxhoZnmQWh0gWG8/nBEp7Ru
-	F6mda/359zgzp8wR4uL8BbPMEADY+svHrYeFs/7d5xuBiAiJjEdjsPP47ntC8dlH
-	aSKhydsUUgfPL0Jo6qKb0CKVBddMmeNVo7YNqQz+CjkDdbwyDkLyHwFbUuJA5jKy
-	e8gFzTYP4rPDKhGhuEMIo/1SgiQKuJCcDgR25Rdy1VTmPoOsxvRBJ6oNC5A8GucI
-	toFT3Q9B7pkWmnNqAFCYqalyHVlR+b4DaegA4CgUmoCWdvSfIUcc8+2aZ/RJxeZi
-	eDcqOyuKaa2pjQYJ6SpJRw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1778863926; x=
-	1778950326; bh=bQeaDmipB8BpaTWUW4seEEeoE8dKC3jLG474aLzcMFg=; b=s
-	ezACROT5fKD/m95BWp4n0H18dIElCpzGCFvXK1ijND8EhkiuyEBJUrAhn6nHr5x8
-	j7iNJI8D9AQQknd5LbQW57okwkYN8zM2Jb/MJvqXr1G+zySolJArnY521/URPzMG
-	NoD3FF45CDDeCgp80lx37WbRHW1jd/duEq3ptoYQ3TYcC6QN4PvwQZna5pGJNJJK
-	x49QJ13Fo8Nawu1f8ABalKq/j3RlhW0oLKsHeAEab5zKuzGMxdvGEmsPgWJ2jxb8
-	KbiKaG2tmWJDV/xGBuo3J9I3uVHa/SeIZHSmLGlru24HQUPeOergKPHtcc6ur//W
-	/dxZdfkTG3ZrTD3F3W6RQ==
-X-ME-Sender: <xms:Nk8HaqtaUVyJSiLUpGiCwUjPaVCvW6kQgFQS6C2JeGU3-lqbE3m5uA>
-    <xme:Nk8Hag9nXsvHb_Cy5w098QKKDtjYQ9RMySBL5Cdy9cVEZHv7A4uVtnKZ4SQlcDxbG
-    ZwJJmSUKmDbEkqo6UNw7pv8vpFtk5BESga-bbNB-suVxTQbwOZs9Q>
-X-ME-Received: <xmr:Nk8Hal0Ys6BHUwAby6EVZwBT3qUZlZK73Dutb2F5RH1T578AhYPqO2_kZj8>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddufedtleefucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
-    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
-    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepvdekfeejkedvudfhudfhteekud
-    fgudeiteetvdeukedvheetvdekgfdugeevueeunecuvehluhhsthgvrhfuihiivgeptden
-    ucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhgpdhnsg
-    gprhgtphhtthhopeehpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehjthhorhhn
-    ohhsmhesrhgvughhrghtrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghssehgohhogh
-    hlvgdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghr
-    nhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvg
-    hlrdhorhhgpdhrtghpthhtoheprghlvgigsehshhgriigsohhtrdhorhhg
-X-ME-Proxy: <xmx:Nk8HalBH3XOL1XLaW1lBxYIeW7Bn2p3Bp1NJRWpipN2fha4e1mW0Wg>
-    <xmx:Nk8HaheFQpfQ0NXyXt__SoGyT0gIre-XuYxGrBddlRsd3LS-KTkTnA>
-    <xmx:Nk8Hai6WisXShgOFeJlgZDiTVQa_wdo1ny9d5DGhFzcYh7A1yPArWw>
-    <xmx:Nk8HakWgGj6hBeC2GuK4dHQVWmzGOuyrhek31oCaypiO4deh-lyldQ>
-    <xmx:Nk8Hannnjssil9jtziSIEV3PWNJxGlmx9Zl4mJq59XE2_elE60CVDNJq>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 15 May 2026 12:52:05 -0400 (EDT)
-Date: Fri, 15 May 2026 10:52:03 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH v3 1/2] PCI: Add D3cold as general reset method
-Message-ID: <20260515105203.12b14c5a@shazbot.org>
-In-Reply-To: <20260514122316.23467-1-jtornosm@redhat.com>
-References: <2c4dbba3-f9ed-48d9-a0c4-d590904f3fdf@app.fastmail.com>
-	<20260514122316.23467-1-jtornosm@redhat.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="X+KT3E+8";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="BfcwHV0X"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FB6WtV4020724
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 16:52:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	/E17C5QueuzhDFwixsSiDn3qQUgxnX0ykvGt2FzYvao=; b=X+KT3E+834oakU/J
+	eVSbdNhZYzTmaAMsh5iuoaPwLN9ekmHaPUFkui8Ht7UfHp6aeV/hbyxtCwK9UAkT
+	3jKs2oLBbDMjDgdOWxpk7KsX/oM7/XhPmuRnQG0w1rG2AIo9TN+AUi6TH35bfaCo
+	T19xt2PwsmiIcq3uCTQEd9Oo/YLDa3Hj5VNCllWaat0JqL7oixEB8HMP/KjK/AoF
+	ahmnjI03WXkF7ZHoj5vdE8dtUJJzjxgYLcvKy1bhjDDFgyrNB7DibaTfCOSicmxI
+	Q8bNQty3wWLT5xJfsofZihrnYT9bkZ5rhR5pEdCn9NNnr+6JzCCu6gTuaWf1V+g8
+	A1mx+g==
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e5m1rv3ka-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 16:52:33 +0000 (GMT)
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2ba5f794825so572895ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 09:52:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1778863953; x=1779468753; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/E17C5QueuzhDFwixsSiDn3qQUgxnX0ykvGt2FzYvao=;
+        b=BfcwHV0XAZ7TVFWp778rjjb/WSNtwZOOSg9lt0d9LF2NV1UIGJXQCys6nnSfpEMKEw
+         Jaz5LEzvnp8guXoZYzsga64f1aWPpzSfn6u4fSnDhKRXQshDBCJBxK4AHhodvvN1RcDP
+         nNIfFw7cvH28Rj3hCgvqJfqm7edD4e4YrK5nI1TkAz080DUd+YykyjgEaR+Y7umBoAvU
+         ARa5hs7mC2O1oY106tk6fUO9G30DXDHaqrVEk1xQtg979TOa6b2p3VX+yul6s6nnKWg3
+         51Fo707m699tjoecl424wlWXKaXzVInVxVH1MATSiXVUTKOY5rMTI7qII/RnbHj0QwZo
+         3Qzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778863953; x=1779468753;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=/E17C5QueuzhDFwixsSiDn3qQUgxnX0ykvGt2FzYvao=;
+        b=DsaFYXWUukz6A+P21ctzismRLbvVUtp2yFqXyWjqpYeb8zESaGb/XsEHtnxkWnHfrx
+         cwT0g7ZkYITXoDhMyVMqeC1pYJeaVFHb9K4kFMAa9iXd4ewO7WcexOLwjf7LYLfj06Nl
+         PEK3CjetXQz36Pe45MUme9JReCR4dlGjL+9ZszbiCN8aWdNzIcEhnE7U3PEfwKEw0VWN
+         ews8wWshj5uZFxhZTi6yGjOqiMKzN/1ZYwC7QRX/rkBSXxiEFwVbkulGR0QEj99+dYRK
+         +jyg+0zjbVQvdBjsUnaO9nU21UD+emGa+ANqQgr1Xxhu0DVTJ4vT1uiTdVmUWlqj2Jp3
+         rWdw==
+X-Forwarded-Encrypted: i=1; AFNElJ9OHBSZiI9PVwBKMW5XQ5xZJMRVTWwYg0+CFzsrwgtxsjISbk9lSKWMtofChUoJG+Ws9xIwsJdKu6I=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz4oDvVtXVxWYp9nIcdncQGAHzo/pN265oUOlC1SPMM8UaG1TUe
+	ExU7LNMhEK6LlJFfX3yEyPPCrP9rERgDKYPNaMQgP80Vs2RzdJSzgbgW0p21pEmNfHfoya3kUk+
+	JbGj5UWXoP87yKqIB2ceQPTZMZ4xn8VfiVO2tJntVDaQNBGcRqugaX5iKfr2PRxY=
+X-Gm-Gg: Acq92OEssFDhhIbG1YL0m0HEsDUbzWu6maoE8Yz/BwDbWQkMyweXrV2lRlNmp0Eq3Ef
+	ygWqiohqk58fWTc6zz3I/tta5mvSqGtDJ45DslbmiTpbkoBzLHQ9UNOv8u6CRU5UKpd0IWo6/18
+	11mn5mGewSFLoKvv2Hz78aMjb2n0LUR9B++ym+WIlhOW0aRRSbLItMtylMHUiIpiQ6q2ctxsl35
+	El/SqNQbIQ3bANpXptLZRgh/fl9sIXeRwdmTTkZyAu2p8TIwqrpn66ETYdfRHI5RR4O0m5Z3wpo
+	thQ76xXdeqSBVpWVroOloq0I+IVyVG4s+wCxH4pihNrK46dOU+sek3pHS50to64m93dB3Rnj3bI
+	30TPYwoDaPLYuf883pyOa
+X-Received: by 2002:a17:902:8689:b0:2b2:5258:a23d with SMTP id d9443c01a7336-2bd7e7dcb05mr39484375ad.14.1778863952712;
+        Fri, 15 May 2026 09:52:32 -0700 (PDT)
+X-Received: by 2002:a17:902:8689:b0:2b2:5258:a23d with SMTP id d9443c01a7336-2bd7e7dcb05mr39484065ad.14.1778863952139;
+        Fri, 15 May 2026 09:52:32 -0700 (PDT)
+Received: from [192.168.1.11] ([120.60.141.122])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5cfe49a4sm58330965ad.38.2026.05.15.09.52.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 May 2026 09:52:31 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Qiang Yu <qiang.yu@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+In-Reply-To: <20260508-mix_perst_phy_dts-v1-1-9eff6ee9b51a@oss.qualcomm.com>
+References: <20260508-mix_perst_phy_dts-v1-1-9eff6ee9b51a@oss.qualcomm.com>
+Subject: Re: [PATCH] PCI: qcom: Handle mixed PERST#/PHY DT configuration
+Message-Id: <177886394865.8489.5707435379388898546.b4-ty@kernel.org>
+Date: Fri, 15 May 2026 22:22:28 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
+X-Proofpoint-GUID: 79REveAPZPvwvoOh7_pQsqMEL9dgvaW-
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDE3MSBTYWx0ZWRfX1XKMQZyVL1bW
+ 9HwdK5pUBfSRSWs8WS3AqvCklsoUrU7mkhgSyN7+uOdb/keYdZJPZUIZ8g+4bDS2XIN2CqbMt02
+ jDrLDqGaeTriMRkwgM83ABLgxoFvIztqZEfMiYFhWBur8l1Y1nhP+dAvGD8UUJjJM7dzXcCc2up
+ Dg8ZViHMgHeTnoZ8fPuBO9uf6DBpXAi5dIDaxLVIBG+JSf2mDdojIEvqT031iwIIwZ3VaYq31c3
+ j/d/3Un/TTuZddxqygMpdrezlgZw7dW3S9qvoVlQqBjyDQ5eX4VdP3aUrfQ3vcHYuUf/e8htQkN
+ MsjCjWcX2E+AoAveFrHSJ5uNFIPFnZN1cBqx8dQ5xkA1cJYjdZ8y7iYBwJR5fvNfaLHLfLSF4n0
+ jMTlaLFoNNySd7kibs95jN2oNRq3OeFGJ4AuR0HICdJxRshaDiPFpaF4C8u46KGQWWfeiYLicrs
+ SQnsxM/91pQ2lvBJJqA==
+X-Proofpoint-ORIG-GUID: 79REveAPZPvwvoOh7_pQsqMEL9dgvaW-
+X-Authority-Analysis: v=2.4 cv=JPELdcKb c=1 sm=1 tr=0 ts=6a074f51 cx=c_pps
+ a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=8TBCxnFsifAbGBbxUCxq8g==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=VwQbUJbxAAAA:8 a=JucjwYXNH_3_nybdtf0A:9 a=QEXdDO2ut3YA:10
+ a=GvdueXVYPmCkWapjIL-Q:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-15_04,2026-05-15_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 clxscore=1015 phishscore=0 priorityscore=1501 spamscore=0
+ malwarescore=0 suspectscore=0 impostorscore=0 adultscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605150171
 
-On Thu, 14 May 2026 14:23:15 +0200
-Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 
-> Hello Alex,
+On Fri, 08 May 2026 02:54:19 -0700, Qiang Yu wrote:
+> The driver currently supports two PERST# and PHY DT configuration. In one
+> case, PHY, PERST#, are described in the RC node. In the other case, they
+> are described in the RP node.
 > 
-> Thank you again for your feedbak.
+> A mixed setup is not supported. One common example is PHY on the RP node
+> while PERST# remains on the RC node. In that case the driver goes through
+> the RP parse path, does not find PERST# on RP, and does not report an
+> error because PERST# is optional. Probe can then succeed silently while
+> PERST# is left uncontrolled, and PCIe endpoints fails to work later. This
+> silent probe success makes debugging difficult.
 > 
-> > This fall through is invalid, if D3cold can't be reached the reset should
-> > be handled by pci_pm_reset() where NoSoftRst is honored.  pci_pr3_preset()
-> > should be tested in all cases, not just probe.  I think we also need to
-> > test device flags that would prevent a D3cold transition,
-> > like pci_pm_reset().  Thanks,  
-> Ok, I've implemented it as a strict method (only when _PR3 is present) as
-> you suggested for the next version. I think it can be very helpful.
-> 
-> However, I'm facing a challenge with a part of our deployment scenario and
-> if possible I would appreciate your guidance (spoiler: d3hot possibility
-> would be very helpful).
-> 
-> Let me comment on about this setup in our lab:
-> - Qualcomm WiFi cards (ath11k 17cb:1103, ath12k 17cb:1107) and modems
->   (SDX62/SDX65 17cb:0308)
-> - M.2 format devices using passive PCIe adapters (not native M.2 slots)
-> Problem:
-> - No FLR capability on devices
-> - NoSoftRst+ set (blocks PM reset)
-> - SBR broken through passive adapters (PERST# signal not properly wired)
-> - No _PR3 ACPI resources for standard PCIe slots (only for native M.2/
->   Thunderbolt)
-> - d3cold_allowed=1 but pci_pr3_present() returns false
-> Result:
-> Default kernel has no working reset method (reset_methods shows only "bus"
-> which doesn't work).
-> 
-> I've tested the D3hot transition behavior and this is what I see before/
-> after:
-> - Command register: Cleared to 0x0000 (device disabled)
-> - BARs: Preserved (0x84200004 unchanged)
-> - Device successfully reinitializes and works in VFIO passthrough, so we
->   can use it.
+> [...]
 
-Are you testing with the patch that marks these devices
-PCI_DEV_FLAGS_NO_BUS_RESET?
+Applied, thanks!
 
-I want to be sure that bouncing the device through D3hot is actually an
-improvement versus no reset at all, and we're not just performing a
-no-op reset to avoid the bus reset.
+[1/1] PCI: qcom: Handle mixed PERST#/PHY DT configuration
+      commit: d160e4d32a8b94e534f7c491374b99cf44baa4e0
 
-That said, if you're testing before BAR restore and those registers
-aren't being cleared, this seems at best a device specific reset, but
-evidence is a bit sketchy.  In the general case, a transition through
-D3hot for a device that does not claim NoSoftRst- cannot be consider to
-satisfy a reset request.
- 
-> I don't dare to generalize D3hot in pci_pm_reset() with something like:
-> if (csr & PCI_PM_CTRL_NO_SOFT_RESET) {
->   pci_read_config_word(dev, dev->pm_cap + PCI_PM_PMC, &pmc);
-> 
->   /* If device supports D3hot, try reset despite NoSoftRst */
->   if (!pmc & PCI_PM_CAP_D3HOT_MASK)
->     return -ENOTTY;
-> }
-> because some devices could truly advertise NoSoftRst+ and d3hot could not be
-> usable as a reset.
+Best regards,
+-- 
+Manivannan Sadhasivam <mani@kernel.org>
 
-This should be the default, no assumed reset.  The device is
-specifically able to indicate soft reset via D3hot.
-
-> I don't know if some device-specific quirk could be acceptable to bypass
-> NoSoftRst check for these Qualcomm devices (similar to
-> PCI_DEV_FLAGS_FORCE_PM_RESET from v2), although d3hot is usable in these
-> cases.
-> 
-> Or maybe the generalization could be to create a user parameter to bypass
-> PCI_PM_CTRL_NO_SOFT_RESET for the configured device. This would be manual but
-> at least it would allow the device to work on VMs.
-
-vfio-pci will try to put unused device into a low power state when
-they're unused.  If the kernel exposes no function level reset
-mechanism, wouldn't the device experience D3hot after some idle timeout
-and then be usable again?  Could you otherwise set the device power
-state via sysfs?  It's certainly possible to create a userspace vfio
-stub driver that uses the low-power ioctl to trigger D3hot.
-
-Unfortunately not all devices are sufficiently spec compliant to work
-cleanly with vfio, especially consumer grade devices without vendor
-involvement.
-
-> And finally, what I would choose: move pm to the end of the resets methods
-> ignoring NoSoftRst, prioritizing hardware resets first (FLR, bus, d3cold)
-> and using d3hot as the last resource if none of the others work. But this is
-> an important change and there could be some reasons for pm positioning that
-> I ignore, so if you don't mind I would like to consult you first.
-
-We're getting into policy there, where the purpose of exposing
-reset_methods through sysfs is to allow userspace to define policy.
-There's obviously some policy in the default ordering, but we generally
-take the approach of flagging broken resets rather than enforcing an
-order.  In general I agree with your suspicion of pm reset, there's no
-hard definition of a soft reset in the spec afaik.  In fact, QEMU tries
-to infer whether the vfio reset ioctl likely implements pm reset by
-looking at the device features and will prefer a bus reset when the
-alternative is likely a pm reset.
-
-If you can block the known broken resets and manage to trigger a D3hot
-transition externally, that may provide a reasonably useful
-environment.  We've also been known to implement the sketchier resets
-that can't fully be justified as a kernel quirk in QEMU itself.  Thanks,
-
-Alex
