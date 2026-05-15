@@ -1,73 +1,73 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011045.outbound.protection.outlook.com [52.101.52.45])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012051.outbound.protection.outlook.com [40.93.195.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F0CE3DA7FD;
-	Fri, 15 May 2026 04:52:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E06CD357D04;
+	Fri, 15 May 2026 05:35:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778820729; cv=fail; b=leTJycNQqkYKDQ7wtm1N2WrydhiT1qDeLcJD5bR8ei3J245Ic9R6Sib+9nx6Hn/frHxNvuzSUm+ZEs8NK7Nnk/1AjdzMQ+ep/IVmrJ/ZP9/vGSeGs/IVFp5FoJWYXTw/79aQTyR03ZUBGJsOoakNdLl6zXz9VKVCSSEdmz5rumU=
+	t=1778823341; cv=fail; b=dPwMkpfYAbjRySdW1O60MiRDd1f96mcWMWdGpj3w9yUpoMZBw1M1VrgrIQs8yLkZtw3ndYF6fFSvFkrsXCOyyd7waJprX4qJR9DIKXh8u/8nRfayuieUBnHFx1sxgXJOWxPJRXB/+PllA6EHSLlY5pBvOOaqE305Y1QfDpaJmjI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778820729; c=relaxed/simple;
-	bh=QYRLtShICPaN5Cn9tnZtiNBm64yDXghHct/wFOMdjQ0=;
+	s=arc-20240116; t=1778823341; c=relaxed/simple;
+	bh=CTdunFb9XmE2IgM1TJcpZzwqL9t2+vqAK8SjmAgGBzA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=S2QkRNSIKbL0O8+mY8JQR6wfJ2Fk/T7X2kgz+BF+n1rAkIvNds1PNwy3Nc48DvywYBz+3YLgivoT6M/LejvP5fdXjU9eTRIo8TXgt68/Ya5pM6oS/rFPuPQKHKDD6CMKfXE8BZoNo24B91aoOJQ3YjJY417Oj8NFYOcpm1AOnTo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=Iu35Uo2o; arc=fail smtp.client-ip=52.101.52.45
+	 In-Reply-To:Content-Type; b=NPQJZaR+e0l0UFSES3CIuacDfdaI8SdLc2PPvxmv/TgqjUQmWkbCO+PxmzPXP5BLGIoGORtw+yBcnK6WVxjKv2cxOgdKowjcfvqb9xprOF6ddF5oz05saV8NTAwhWyI5suC93N7ldT+ULt54Yn53wlUcuDhE3z2EJSS13/WbYJA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=iO5/aCtX; arc=fail smtp.client-ip=40.93.195.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Iu35Uo2o"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="iO5/aCtX"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=vlbFdr3vW2O2Vy93bseHH8m9B24QIjcwBmVKRltx0jS1NoyFHAYjIKr7hIVpUd3IwX8xUU1uZ0j0uphikl5I7dhXKiKwyaxaSH1nsEWd6+1VrRerOSF6I/OYwd9ZzhAGh4yor6bzHYvtz6AcIWej2/+IfT3xN/v7pVjxqxsyO/WV99YcTeDUdNQEIRh5myrJMQjq8G6J5YFEMNP/J+vggGV550X//s1yqsZCDmfhmKV1HSnUmODnPgFBJAgIladB8RcLkN8hVEqPKXJXANCupKeG9DFXRvsV1k3ZRIrJ5ggslAtmfHuX4B2enMI0denNVgpzF795h4ufMjXkdxMQ4g==
+ b=wWEy3m1CCm/kJobFWwUtpwEvRGVct/TwVWQJeQAmSrgB5wEaeo5t+OqhMi5EGO/NW2S0Q68BuSwOEivY2rZXzfdGcr+xpfMzmHFHV89sDbiMVwoj8UORI65o2Injdog8NFc57bYeVacoFCo/wlkafcvqPTt81WaxIMdNEeSRN6dAQF9wREGPX0qfvgMbtXwniil5Tqne+SJvmIV2YWEa6hCF+J1EJojPw2mml6lQw2OMrGH/wL9lfnIXH/qkS0YZ6DdGzzLTQhuF9BS/vDhOqU1ZFyIN/BNqiNldB0nWtiUxpNjDo4zyAOzi467FVDkWMju95HvGDv8xSMyJR224Dw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ql/yWFbe6jeVzVyeeXr/zEdyk2wzBWjtashLsUzKeVY=;
- b=SwNKzf19Ve6AW3rGl/gODc4SIYQLfcCUpV9U8U8F8F2mDwIMNPj3YdID11gdgJgVALhTASnIxGsYZkZ6y2qWMiOXcI4CvbostLLAr3lae+6+tIFVgU2VRdA2txr7XDRpEjcfMk/VbKEnJl4Oj7SeUTfMoeZ1LxOSifUo+JYeeFDYKv3QmFa4d4godFYxa7er9Q/6gT9+GZBgJdrI7RfVuCLHRy+5dnAD/V4cAvoxrim6J2UXbwSJjd7hjlibnlsgCVK29DdXYDVol62E26PDWkW2XJ0dvODhkr8tcnPXpGXlg5YqxPIKOpyTqI9UOlwdeo0ACqywNBnDGFlFs5ZdhA==
+ bh=NfR2N+7HONfR0l8sb2acFHBQ2o/gQUb2J6EwbfYoAjc=;
+ b=lCXQUTI7q2TDGnhKm2QCIVeECDjKnfu8tczOMTe3DO2F31JLEdYn9Pc+dm+52J67f11ODigtbv1W5BW5TEH/neTIqoUuhCJMBTVhod0FvJBFTPZtXt766SVBzrENcTuiQ4CweU6mqCVrF1T/7EeecGpTuDMaVUXHRfgKPQqJ+hVQ7axkHrqcY5xdPBXVpNv0lqoXyrqSsf2ku9zlWiet6TS/rREy3dKsGtyhOG69tK3WkVJC3XWEhe/WUTa7sB5p//OqLgY6a+DKPzaQcnnqXUjtLyEnp4yaziKYsM1Rda54K+GXLeus7ANBVHoBdXJBqC90r/i6QRXodERZiQCYkQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.21.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ 198.47.23.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
  dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ql/yWFbe6jeVzVyeeXr/zEdyk2wzBWjtashLsUzKeVY=;
- b=Iu35Uo2o7z2D3la+9sdxRdUsf4GExee3M8/B+ogp9Ali6W8F8o7GfbGOoGRjPkP5HeQRErMC+NYOqhi/HbUsz6Pm4Q7XZNtd0qXx+48/tI2sODzntI7mbauY0SgBdsdP9u3BM9wE2nhsBhTJJ9i46XKhMVGMAwyDyCchQ/mL3dQ=
-Received: from BN0PR04CA0078.namprd04.prod.outlook.com (2603:10b6:408:ea::23)
- by DS0PR10MB6798.namprd10.prod.outlook.com (2603:10b6:8:13c::20) with
+ bh=NfR2N+7HONfR0l8sb2acFHBQ2o/gQUb2J6EwbfYoAjc=;
+ b=iO5/aCtXMWjh2ct7AwxNuL3upnT2pTUmpXdpEtBrHQLeKtMoV5nq1ZCmVGVdd2/SrmCYTU3EmT/nDylWc+4Bdg5U60sX0HgzDVUCO2a1Im7ES2595anXkBE6zg2PFgUzVlr1OhsoRM2GXMDPxIwGrW7wiMU9E19zumdxCaYX5Xs=
+Received: from PH0PR07CA0105.namprd07.prod.outlook.com (2603:10b6:510:4::20)
+ by DSWPR10MB997800.namprd10.prod.outlook.com (2603:10b6:8:36c::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Fri, 15 May
- 2026 04:52:02 +0000
-Received: from BN2PEPF00004FC1.namprd04.prod.outlook.com
- (2603:10b6:408:ea:cafe::b9) by BN0PR04CA0078.outlook.office365.com
- (2603:10b6:408:ea::23) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.18 via Frontend Transport; Fri, 15
- May 2026 04:52:02 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
+ 2026 05:35:35 +0000
+Received: from SA2PEPF00003F63.namprd04.prod.outlook.com
+ (2603:10b6:510:4:cafe::81) by PH0PR07CA0105.outlook.office365.com
+ (2603:10b6:510:4::20) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.19 via Frontend Transport; Fri, 15
+ May 2026 05:35:35 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
  smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
  action=none header.from=ti.com;
 Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
-Received: from flwvzet200.ext.ti.com (198.47.21.194) by
- BN2PEPF00004FC1.mail.protection.outlook.com (10.167.243.187) with Microsoft
+ 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
+Received: from lewvzet201.ext.ti.com (198.47.23.195) by
+ SA2PEPF00003F63.mail.protection.outlook.com (10.167.248.38) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.25.13 via Frontend Transport; Fri, 15 May 2026 04:52:00 +0000
-Received: from DFLE202.ent.ti.com (10.64.6.60) by flwvzet200.ext.ti.com
- (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Thu, 14 May
- 2026 23:51:58 -0500
-Received: from DFLE202.ent.ti.com (10.64.6.60) by DFLE202.ent.ti.com
- (10.64.6.60) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Thu, 14 May
- 2026 23:51:58 -0500
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE202.ent.ti.com
- (10.64.6.60) with Microsoft SMTP Server (version=TLS1_2,
+ 15.21.25.13 via Frontend Transport; Fri, 15 May 2026 05:35:35 +0000
+Received: from DLEE206.ent.ti.com (157.170.170.90) by lewvzet201.ext.ti.com
+ (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 15 May
+ 2026 00:35:35 -0500
+Received: from DLEE202.ent.ti.com (157.170.170.77) by DLEE206.ent.ti.com
+ (157.170.170.90) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 15 May
+ 2026 00:35:34 -0500
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE202.ent.ti.com
+ (157.170.170.77) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Thu, 14 May 2026 23:51:58 -0500
+ Transport; Fri, 15 May 2026 00:35:34 -0500
 Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64F4prfX3129581;
-	Thu, 14 May 2026 23:51:53 -0500
-Message-ID: <3853ba15-d096-4cf4-b52f-8a2e5f50fe53@ti.com>
-Date: Fri, 15 May 2026 10:21:52 +0530
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64F5ZT5w3770419;
+	Fri, 15 May 2026 00:35:30 -0500
+Message-ID: <20dce1c6-d24d-4344-86a9-f434fe52038b@ti.com>
+Date: Fri, 15 May 2026 11:05:29 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -75,8 +75,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/4] PCI: endpoint: Add API for DOE initialization and
- setup in EPC core
+Subject: Re: [PATCH v3 2/4] PCI: endpoint: Add DOE mailbox support for
+ endpoint functions
 To: Manivannan Sadhasivam <mani@kernel.org>
 CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
 	<kwilczynski@kernel.org>, <bhelgaas@google.com>, <corbet@lwn.net>,
@@ -85,257 +85,216 @@ CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
 	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
 References: <20260427051725.223704-1-a-garg7@ti.com>
- <20260427051725.223704-4-a-garg7@ti.com>
- <m4z3q3pe3ro5vkl4uq4zkewpjdqccgeact2hj4tjnkonttx4vr@ndan37zzwgxc>
+ <20260427051725.223704-3-a-garg7@ti.com>
+ <hohf2lui4dyu6fzypl7kkwfvgf73ldmvinok7dfukhaornhkqp@n336bwjkvb6f>
 Content-Language: en-US
 From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <m4z3q3pe3ro5vkl4uq4zkewpjdqccgeact2hj4tjnkonttx4vr@ndan37zzwgxc>
+In-Reply-To: <hohf2lui4dyu6fzypl7kkwfvgf73ldmvinok7dfukhaornhkqp@n336bwjkvb6f>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN2PEPF00004FC1:EE_|DS0PR10MB6798:EE_
-X-MS-Office365-Filtering-Correlation-Id: 37040f4d-3174-4b84-489d-08deb23db38e
+X-MS-TrafficTypeDiagnostic: SA2PEPF00003F63:EE_|DSWPR10MB997800:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8141f763-dd88-4430-087d-08deb243c9ea
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|1800799024|82310400026|7416014|376014|4143699003|56012099003|22082099003|18002099003;
+	BCL:0;ARA:13230040|82310400026|1800799024|7416014|376014|36860700016|4143699003|3023799003|22082099003|18002099003|56012099003;
 X-Microsoft-Antispam-Message-Info:
-	lnm0o5QpqWkLQLEx2iXX7rOXLcO8geyLjEOoxiwnJOhM56pwBwpn1Tn7naR8cFNFq2vH1YEwXyxsXTuaQqA32ePAxoQYFJkZknexN4KCXk4YMXv1jQOILqN+3eblfsGMMWpMyXxh+QE6OR+hIgfPqCgkk4Qi3bvqQOyEskNZtvmlxcn/O81vUGaDFmQAwcAoa8VMB4QId1h1nQ4Lrt0sz4ugmmPxM9XpPJd9Qj3DDoEK7KFMAErhhrOfssj2KujPiMFClcPw1jgWPABkrDpE4W8WuWnIDjpXm91GctNhHby0xVTbNzWYyyX9DA5H8eJ1MhDQmK+8PE3Bo/iwTFgWgsgOl9SppPVF/2ZibIzymz2euRhw6c0nrVQ1ZT2/wiqsD2ZOUeB0lb9hi5yME134iAPytckX7iRAJOcoOf91F0CK/U6XHsRv5ZZ+vH3GwF/V8IOczUrRa79ZWN2xa0LLjQCW1Fn4N+Xm7vfIxGdn2qcppFTO4LaHOkh21+O4AK/LJIPsgZnOUqpr0EjYJ1Nu5HvYNdCuomg3YHBxNsxQDTBDw5eamG3fvtOTxbTcFjGqyIV/wCRnvVDoNnD2eVbEKPV8KncyLlKuO9MnwPo/DKY9GfCOL+0Th/GDA0sqnrjGkg66CK6C3QADtSEGOymXrwRU1VZ4hnyJM0qkMXgAdmJB7W4qYIuLPfxkegi48b9+t1y9vpDPsrO1djVLJ4unbZZ+/gVVFCxPLKNxohERfw4=
+	80HXb9wl7ydUyXf7yx5gtY7n9VTOMdKPqSikuJ/wU7IDGWQeQEarfXY/x63Z9xwTKsjdMjs0e39TOM/8M2VEt1Wo+dYGBy2FcxKndgnhNVBwDDUrPKMw6uSpDs9tzwIJWTc8iSwf/K54A9fwcTHl9evIZL9k2l3mt0hgYdGaMb3GD8VE31AD01vhAwKKXrMDymAdGOboVBS3xY1mX/vx3rbwfhHlbFNMXhrQmRrcwHccUo191m/MlIAME2icz1Cs3jygrYoNOhOc9KXFGLJaEqfdMV8RaSTZqp2aNy07J9xGCZ4avE36daQ3PQ1jyHLYZl5T//aZTxmCAOIoxwwlp4nrM8hC8t+6xy8//U7Aqy53yHyaLuJyhxkT6ymmRZxtOvIWmn5dujObZ8meKdQu7sZkl9GKwXGw6z/sTI3Bf9Uf/MVFTg5KoIgOjOJ66JJEEzOi5NoIhT38jftaQarpsxEzxoiLAAyjLuK5A4cdgmXE+1Ah7alUDwijQyjMB8rlstSnLaznTCGgjA1V7MWfgNhmkxOSjl7cRL0gdLkOzEzHNjOvduNu0eF1z3YnxJ/NAmMeUI0qgd2zLHF4t5J9TwenMoy+OE+WlNhM2GVjGJharRW26G+32JZ1CuzVgqM8YwU1Xf79RCXdTGcqwjtUKtM3AXTopLXdvCy1mjxBCuTQWps1KQI9XHrp54mjyiRpve+w9gHGTpVOf/CXh2BwG1yBdg9zCK0M5XK/UU5vfTM=
 X-Forefront-Antispam-Report:
-	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(82310400026)(7416014)(376014)(4143699003)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(7416014)(376014)(36860700016)(4143699003)(3023799003)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	gN+pG27q8lTZSdU8XLntk9vBk4EjdISbTYxaopsCwqLB5gx69SuncTRZb7KXbOKtiFXD8vsFM48bhtHDCkfslPtKNB0h97aL99VvcmLmMdo1jbzMMcDsC2Gatv1/vH8kzlVeEH7z35+kCFx4A/lOOX1S4xkMOzcyJ9RXEUtmd9FZFHUWYwc7OCLP4D0BIRSRyQ4P+Iiq1P0NrodeHl6t0i3PZdmUsxnlV+817sq2n6Z/NjHgpru21KGJIPjZ2aQYrlFmbUjf5rmChS4ZTnj+2366oXnYqsJiiohfcBATWpzBTTarpIM7KdjoidoDGAbmdEdufCOBJ9nHHdm7SzE7sufpveO3GWfxMcV/RUptiJqjZ3pgyD/LQIr2Wrksjapdmd0K+NCE1GcLW4AeMqDfFLwzO/LTTKj7az76NalVv/nAdg1UWoG+2OvOqXhC5Bf2
+	52OQlcvlLrqAuO6fRQK+W/RBcPsXKdXcQHeqqcmNn6kHbVhIu5gyCVdSSvFJGTd23A8L1a3w/eLXzqEMPsle9ks6ehrjhFZKpV87RMC8asRY0WNm17v+wEWOedz0hw1qTz2n2jMYK1mg8UZU+tLPO9Lck8qUjBiAKG6Rn06XjrEngF8JsoIRbrRzu70OIeH379HU6e7dad0KE9zdECpCaFZVCAf5ERdYYhY5ntpoM7aVbQ6kc3ldHOuEZC3YvCGXcm/hvs0Y1H1htz/VnD1GIMl3qVCdgAy7nbpLT20Mn4R7Ub7VxaOYU785qHTUguWjarhrIyVn1G4NoJ4y7mMy0BKMwWQUY4GwQ2zb/YB/fdkwCEyo4KbFvfIk7xAgVVWjFVWLAuLf3xYIdYGXRyAgBXGrct5LlMjfmjhc6aU0HUVefTwewU6Wus9v1WNLXocg
 X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2026 04:52:00.7166
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2026 05:35:35.2527
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 37040f4d-3174-4b84-489d-08deb23db38e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8141f763-dd88-4430-087d-08deb243c9ea
 X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BN2PEPF00004FC1.namprd04.prod.outlook.com
+	SA2PEPF00003F63.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6798
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSWPR10MB997800
 
 
 
-On 14/05/26 13:38, Manivannan Sadhasivam wrote:
-> On Mon, Apr 27, 2026 at 10:47:24AM +0530, Aksh Garg wrote:
->> Add pci_epc_setup_doe() API in EPC core driver to initialize and setup
->> the DOE framework for an endpoint controller. The API discovers the DOE
->> capabilities (extended capability ID 0x2E), and registers each discovered
->> DOE mailbox for all the functions in the endpoint controller. This API
->> should be invoked by the controller driver during probe based on the
->> doe_capable feature.
+On 14/05/26 13:33, Manivannan Sadhasivam wrote:
+> On Mon, Apr 27, 2026 at 10:47:23AM +0530, Aksh Garg wrote:
+>> DOE (Data Object Exchange) is a standard PCIe extended capability
+>> feature introduced in the Data Object Exchange (DOE) ECN for
+>> PCIe r5.0. It provides a communication mechanism primarily used for
+>> implementing PCIe security features such as device authentication, and
+>> secure link establishment. Think of DOE as a sophisticated mailbox
+>> system built into PCIe. The root complex can send structured requests
+>> to the endpoint device through DOE mailboxes, and the endpoint device
+>> responds with appropriate data.
 >>
->> Add pci_epc_destroy_doe() API in EPC core driver for cleanup of DOE
->> resources, which should be invoked by the controller driver during
->> controller cleanup based on the doe_capable feature.
+>> Add the DOE support for PCIe endpoint devices, enabling endpoint
+>> functions to process the DOE requests from the host. The implementation
+>> provides framework APIs for EPC core driver and controller drivers to
+>> register mailboxes, and request processing with workqueues ensuring
+>> sequential handling per mailbox, and parallel handling across mailboxes.
+>> The Discovery protocol is handled internally by the DOE core.
+>>
+>> This implementation complements the existing DOE implementation for
+>> root complex in drivers/pci/doe.c.
 >>
 >> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 >> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 >> Signed-off-by: Aksh Garg <a-garg7@ti.com>
 >> ---
->>
->> Changes from v2 to v3:
->> - Rebased on 7.1-rc1.
->>
->> Changes since v1:
->> - New patch added to v2 (not present in v1)
->>
->> v2: https://lore.kernel.org/all/20260401073022.215805-4-a-garg7@ti.com/
->>
->> This patch is introduced based on the feedback provided by Manivannan
->> Sadhasivam at [1].
->>
-> 
-> Sweet! But I was expecting you to add atleast one EPC driver implementation to
-> make use of these APIs.
-> 
-> Also, why can't you call these APIs from the EPC core directly? Maybe during
-> pci_epc_init_notify() once the register accesses become valid.
-
-Can we add the DOE initialization API to pci_epc_init_notify()? This
-API seems to be called to notify the EPF drivers that the EPC device's
-initialization has been completed, as the name and description suggests.
-As 'pci_epc_doe_setup' is a part of EPC initialization, I thought the
-EPC drivers should call this API before calling the pci_epc_init_notify().
-
-However, I agree with your suggestion to call the DOE setup API directly
-from the EPC core instead of sprinkling over the EPC drivers. I would
-recommend renaming the pci_epc_init_notify() API (and hence the
-pci_epc_deinit_notify() as well) to something like 
-pci_epc_init_complete(), and add the DOE setup API/logic just before the
-logic of notifying the EPF devices.
-
-Please suggest if the above would be acceptable.
-
-Regards,
-Aksh Garg
-
-> 
-> - Mani
-> 
->> [1]: https://lore.kernel.org/all/p57x6jleaim5w7t2k3v7tioujnaxuovfpj5euop5ogefvw23se@y5fw3che5p5d/
->>
->>   drivers/pci/endpoint/pci-epc-core.c | 71 +++++++++++++++++++++++++++++
->>   include/linux/pci-epc.h             | 21 +++++++++
->>   2 files changed, 92 insertions(+)
->>
->> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
->> index 6c3c58185fc5..5a95a07b7d3a 100644
->> --- a/drivers/pci/endpoint/pci-epc-core.c
->> +++ b/drivers/pci/endpoint/pci-epc-core.c
->> @@ -14,6 +14,8 @@
->>   #include <linux/pci-epf.h>
->>   #include <linux/pci-ep-cfs.h>
->>   
->> +#include "../pci.h"
 >> +
->>   static const struct class pci_epc_class = {
->>   	.name = "pci_epc",
->>   };
->> @@ -548,6 +550,75 @@ void pci_epc_mem_unmap(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->>   }
->>   EXPORT_SYMBOL_GPL(pci_epc_mem_unmap);
->>   
->> +/**
->> + * pci_epc_doe_setup() - Setup and discover DOE mailboxes for all functions
->> + * @epc: the EPC device on which DOE mailboxes has to be setup
->> + *
->> + * Discover DOE (Data Object Exchange) capabilities for all physical functions
->> + * in the endpoint controller and register DOE mailboxes.
->> + *
->> + * This API should be called by the controller driver during initialization
->> + * if DOE support is available (indicated by doe_capable in pci_epc_features).
->> + *
->> + * RETURNS: 0 on success, -errno on failure
+>> +/*
+>> + * Global registry of protocol handlers.
+>> + * When a new DOE protocol, library is added, add an entry to this array.
 >> + */
->> +int pci_epc_doe_setup(struct pci_epc *epc)
->> +{
->> +	u16 cap_offset = 0;
->> +	u8 func_no;
->> +	int ret;
+>> +static const struct pci_doe_protocol pci_doe_protocols[] = {
+>> +	{
+>> +		.vid = PCI_VENDOR_ID_PCI_SIG,
+>> +		.type = PCI_DOE_FEATURE_DISCOVERY,
+>> +		.handler = pci_ep_doe_handle_discovery,
+>> +	},
+>> +};
 >> +
->> +	if (!epc || !epc->ops || !epc->ops->find_ext_capability)
->> +		return -EINVAL;
->> +
->> +	/* Initialize DOE framework for this controller */
->> +	ret = pci_ep_doe_init(epc);
->> +	if (ret)
->> +		return ret;
->> +
->> +	/* Discover DOE capabilities for all functions */
->> +	for (func_no = 0; func_no < epc->max_functions; func_no++) {
->> +		while ((cap_offset = epc->ops->find_ext_capability(epc, func_no, 0,
->> +								   cap_offset,
->> +								   PCI_EXT_CAP_ID_DOE))) {
->> +			/* Register this DOE mailbox */
->> +			ret = pci_ep_doe_add_mailbox(epc, func_no, cap_offset);
->> +			if (ret) {
->> +				dev_err(&epc->dev,
->> +					"[pf%d:offset %x] failed to add DOE mailbox\n",
->> +					func_no, cap_offset);
->> +			}
->> +		}
->> +	}
->> +
->> +	dev_dbg(&epc->dev, "DOE mailboxes setup complete\n");
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_epc_doe_setup);
+>> +/*
+>> + * Combines function number and capability offset into a unique lookup key
+>> + * for storing/retrieving DOE mailboxes in an xarray.
+>> + */
+>> +#define PCI_DOE_MB_KEY(func, offset) \
+>> +	(((unsigned long)(func) << 16) | (offset))
+>> +#define PCI_DOE_PROTOCOL_COUNT        ARRAY_SIZE(pci_doe_protocols)
 >> +
 >> +/**
->> + * pci_epc_doe_destroy() - Destroy and cleanup DOE mailboxes
->> + * @epc: the EPC device on which DOE mailboxes has to be destroyed
+>> + * pci_ep_doe_init() - Initialize the DOE framework for a controller in EP mode
+>> + * @epc: PCI endpoint controller
 >> + *
->> + * Destroy all DOE mailboxes registered on this endpoint controller and
->> + * free associated resources.
->> + *
->> + * This API should be called by the controller driver during controller cleanup
->> + * if DOE support is available (indicated by doe_capable in pci_epc_features).
+>> + * Initialize the DOE framework data structures. This only initializes
+>> + * the xarray that will hold the mailboxes.
 >> + *
 >> + * RETURNS: 0 on success, -errno on failure
+> 
+> kernel-doc format to describe return value is 'Return:' or 'Returns:".
+
+Thanks for pointing this out. I will update this.
+
+> 
 >> + */
->> +int pci_epc_doe_destroy(struct pci_epc *epc)
+>> +int pci_ep_doe_init(struct pci_epc *epc)
 >> +{
 >> +	if (!epc)
 >> +		return -EINVAL;
 >> +
->> +	pci_ep_doe_destroy(epc);
->> +	dev_dbg(&epc->dev, "DOE mailboxes destroyed\n");
+>> +	xa_init(&epc->doe_mbs);
 >> +	return 0;
 >> +}
->> +EXPORT_SYMBOL_GPL(pci_epc_doe_destroy);
+>> +EXPORT_SYMBOL_GPL(pci_ep_doe_init);
 >> +
->>   /**
->>    * pci_epc_clear_bar() - reset the BAR
->>    * @epc: the EPC device for which the BAR has to be cleared
->> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
->> index dd26294c8175..7b0f258ef330 100644
->> --- a/include/linux/pci-epc.h
->> +++ b/include/linux/pci-epc.h
->> @@ -84,6 +84,8 @@ struct pci_epc_map {
->>    * @start: ops to start the PCI link
->>    * @stop: ops to stop the PCI link
->>    * @get_features: ops to get the features supported by the EPC
->> + * @find_ext_capability: ops to find extended capability offset for a function
->> + *			 in endpoint controller
->>    * @owner: the module owner containing the ops
->>    */
->>   struct pci_epc_ops {
->> @@ -115,6 +117,8 @@ struct pci_epc_ops {
->>   	void	(*stop)(struct pci_epc *epc);
->>   	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
->>   						       u8 func_no, u8 vfunc_no);
->> +	u16	(*find_ext_capability)(struct pci_epc *epc, u8 func_no,
->> +				       u8 vfunc_no, u16 start, u8 cap);
->>   	struct module *owner;
->>   };
->>   
->> @@ -270,6 +274,7 @@ struct pci_epc_bar_desc {
->>    * @msi_capable: indicate if the endpoint function has MSI capability
->>    * @msix_capable: indicate if the endpoint function has MSI-X capability
->>    * @intx_capable: indicate if the endpoint can raise INTx interrupts
->> + * @doe_capable: indicate if the endpoint function has DOE capability
->>    * @bar: array specifying the hardware description for each BAR
->>    * @align: alignment size required for BAR buffer allocation
->>    */
->> @@ -280,6 +285,7 @@ struct pci_epc_features {
->>   	unsigned int	msi_capable : 1;
->>   	unsigned int	msix_capable : 1;
->>   	unsigned int	intx_capable : 1;
->> +	unsigned int	doe_capable : 1;
->>   	struct	pci_epc_bar_desc bar[PCI_STD_NUM_BARS];
->>   	size_t	align;
->>   };
->> @@ -368,6 +374,21 @@ int pci_epc_mem_map(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->>   void pci_epc_mem_unmap(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->>   		       struct pci_epc_map *map);
->>   
->> +#ifdef CONFIG_PCI_ENDPOINT_DOE
->> +int pci_epc_doe_setup(struct pci_epc *epc);
->> +int pci_epc_doe_destroy(struct pci_epc *epc);
->> +#else
->> +static inline int pci_epc_doe_setup(struct pci_epc *epc)
+
+[...]
+
+>> +
+>> +/**
+>> + * pci_ep_doe_process_request() - Process DOE request on endpoint
+>> + * @epc: PCI endpoint controller
+>> + * @func_no: Physical function number
+>> + * @cap_offset: DOE capability offset
+>> + * @vendor: Vendor ID from request header
+>> + * @type: Protocol type from request header
+>> + * @request: Request payload in CPU-native format
+>> + * @request_sz: Size of request payload (bytes)
+>> + * @complete: Callback to invoke upon completion
+>> + *
+>> + * Asynchronously process a DOE request received on the endpoint. The request
+>> + * payload should not include the DOE header (vendor/type/length). The protocol
+>> + * handler will allocate the response buffer, which the caller (controller driver)
+>> + * must free after use.
+>> + *
+>> + * This function returns immediately after queuing the request. The completion
+>> + * callback will be invoked asynchronously from workqueue context once the
+>> + * request is processed. The callback receives the function number and capability
+>> + * offset to identify the mailbox, along with a status code (0 on success, -errno
+>> + * on failure), and other required arguments.
+>> + *
+>> + * As per DOE specification, a mailbox processes one request at a time.
+>> + * Therefore, this function will never be called concurrently for the same
+>> + * mailbox by different callers.
+>> + *
+>> + * The caller is responsible for the conversion of the received DOE request
+>> + * with le32_to_cpu() before calling this function.
+>> + * Similarly, it is responsible for converting the response payload with
+>> + * cpu_to_le32() before sending it back over the DOE mailbox.
+>> + *
+>> + * The caller is also responsible for ensuring that the request size
+>> + * is within the limits defined by PCI_DOE_MAX_LENGTH.
+>> + *
+>> + * RETURNS: 0 if the request was successfully queued, -errno on failure
+>> + */
+>> +int pci_ep_doe_process_request(struct pci_epc *epc, u8 func_no, u16 cap_offset,
+>> +			       u16 vendor, u8 type, const void *request, size_t request_sz,
+>> +			       pci_ep_doe_complete_t complete)
 >> +{
->> +	return -EOPNOTSUPP;
->> +}
+>> +	struct pci_ep_doe_mb *doe_mb;
+>> +	struct pci_ep_doe_task *task;
+>> +	int rc;
 >> +
->> +static inline int pci_epc_doe_destroy(struct pci_epc *epc)
->> +{
->> +	return -EOPNOTSUPP;
->> +}
->> +#endif
+>> +	doe_mb = pci_ep_doe_get_mailbox(epc, func_no, cap_offset);
+>> +	if (!doe_mb) {
+>> +		kfree(request);
+>> +		return -ENODEV;
+>> +	}
 >> +
->>   #else
->>   static inline void pci_epc_init_notify(struct pci_epc *epc)
->>   {
->> -- 
->> 2.34.1
->>
+>> +	task = kzalloc_obj(*task, GFP_KERNEL);
+>> +	if (!task) {
+>> +		kfree(request);
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	task->feat.vid = vendor;
+>> +	task->feat.type = type;
+>> +	task->request_pl = request;
+>> +	task->request_pl_sz = request_sz;
+>> +	task->response_pl = NULL;
+>> +	task->response_pl_sz = 0;
+>> +	task->complete = complete;
+>> +
+>> +	rc = pci_ep_doe_submit_task(doe_mb, task);
+>> +	if (rc) {
+>> +		kfree(request);
+>> +		kfree(task);
+>> +		return rc;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_ep_doe_process_request);
+> 
+> So who is supposed to call this API? EPC driver that receives the DOE interrupt?
+
+Yes, the EPC drivers that receive the DOE interrupts are expected to
+call this API.
+
+> But I don't see the any callers of this and below exported APIs in this series.
+> Either you should add the callers or limit this series just to adding the DOE
+> skeleton implementation with a clear follow-up.
+
+I currently am working on the EPC driver implementation for a platform
+which has not been up-streamed yet. I plan to use these APIs to support
+the DOE feature for that driver. Currently, I am not aware of any
+platform whose EPC driver supports DOE feature and its interrupts, hence
+I see no real callers of these APIs to include in this patch series.
+
+Would it be appropriate to add a dummy [NOT-FOR-MERGING] demonstration
+patch over an existing EPC driver, showing how these DOE APIs would be
+integrated into an EPC driver?
+
+> 
+> But since you've limited the scope of this series to support only DOE Discovery
+> Data Object Protocol, it'd be good to add the EPC implementation to get the full
+> picture.>
+> - Mani
 > 
 
