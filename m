@@ -1,68 +1,73 @@
-Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011045.outbound.protection.outlook.com [52.101.52.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 281A12741A0
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 01:49:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.49
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778809794; cv=none; b=N2886FBbaetyDO+ZdQoa5AmENWU5rR43FpVbshKhOtm+gXVOjsw5L8s/q6m4w/zFm9TzZBP9V/QouSZAAN2lsbTsjvSIaewUXvLSMRg7j0hdltKTDbg+8H4IB9DAMVmjyfLGyBdpkyyq23WkV7XQM0lH++vDcw1m8ck4E/FyGtk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778809794; c=relaxed/simple;
-	bh=SIkgv8WQ93LCQ71jhhL3Di/xP8TbuCuowvj1KosLZko=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=X0AxvKiABWjVPeOpJhoi3iAagUOvuztEQBF5W9dq/n6pndV9fkzYobpvh5l3U7/JJ1K7a3LQMvvJIUvqiKra4P0sj4Prz6gqoCCn9ij6lIUzKuQ6Kai6B86E6Ee10y3DfRiPky1kNa29MITdg4VQ2xJmShtEWO3fkGeF13BbErc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=oWBhPXr0; arc=none smtp.client-ip=74.125.82.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F0CE3DA7FD;
+	Fri, 15 May 2026 04:52:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1778820729; cv=fail; b=leTJycNQqkYKDQ7wtm1N2WrydhiT1qDeLcJD5bR8ei3J245Ic9R6Sib+9nx6Hn/frHxNvuzSUm+ZEs8NK7Nnk/1AjdzMQ+ep/IVmrJ/ZP9/vGSeGs/IVFp5FoJWYXTw/79aQTyR03ZUBGJsOoakNdLl6zXz9VKVCSSEdmz5rumU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1778820729; c=relaxed/simple;
+	bh=QYRLtShICPaN5Cn9tnZtiNBm64yDXghHct/wFOMdjQ0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=S2QkRNSIKbL0O8+mY8JQR6wfJ2Fk/T7X2kgz+BF+n1rAkIvNds1PNwy3Nc48DvywYBz+3YLgivoT6M/LejvP5fdXjU9eTRIo8TXgt68/Ya5pM6oS/rFPuPQKHKDD6CMKfXE8BZoNo24B91aoOJQ3YjJY417Oj8NFYOcpm1AOnTo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=Iu35Uo2o; arc=fail smtp.client-ip=52.101.52.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oWBhPXr0"
-Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-12c1a170a50so12195286c88.0
-        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 18:49:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778809792; x=1779414592; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=zrNDITa07PIrUrnI0P0l/esE24/KQSx6Tox+P9NMGxo=;
-        b=oWBhPXr0SycOWAmTPteIs17tKJBKkiUQxpVoUCn7ddRMGeMbZSgoaVGcRJ/OeFEntF
-         TnJgPbe1AdXoUBSPoJR51y/8dY5QUn1n9VIaY5Omuj7au3txbRX3fifNKE8B751aZd6Q
-         UzYZbKuwPdyKS6z7BsARsIjXuvVP9nBU+1mlwQadJyKT4XeaJG5FvliDHSDacX0hbahi
-         4wz/vyQNg4vCsg6EKP0yQypUz1HB/gA3C71EJFuemGN1ZnjH+KqAG6oPpZ2FOde5SaIW
-         bIpa+fuhGLYa1zmVQCgVxjY7rbxx4IP3FypX88VKVK2Zp9ONFaz8b9NNmkqFwukoC/wp
-         yyYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778809792; x=1779414592;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:sender:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zrNDITa07PIrUrnI0P0l/esE24/KQSx6Tox+P9NMGxo=;
-        b=DCY14I/6GanRahDMdwWmhjK0dIAalXre68bbj59o4+G357miPKdt0FGJYdK/pVoaSB
-         fXdJVT/kXWp2yNGx4VQ9ockBi4DunUS/2uDN2Vr7tiuSMvosu44mWByBHnTIeTLGZNaR
-         VpKlg9rdW9gPQoaCnkovzdlOA13gxaUGKc/kN6l4D0d/FomK1f1lLMo5JVi4iD6LiFZi
-         S8DNde4L3kjXfXZDkxxMi83tULF1myXsY/ScmyI5myDqlH+mBrldLM0gHvX19muVPf/Q
-         NlI8uuRsDtsC0/WU8tCprVkPObOyeaVS+FCigqS45NUjhJU4MQIjwV03Jtny4zmToJYZ
-         +uiQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/h9+N1TYyBnfdzpRliirb3e+kkqrQNvRk0yrI3Q4kD5PKzSwb4HVoGHgaYlfx4DsEaVq6gj5Pl6O0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzfbR8jX4AtqcIM1rzNx20glLzMKUqNu5AVV14Pi83Rw6JvN3yS
-	BFGDC0RJ3q/rXoYqJgCo3G8NWeBwRk4g8+jJ2H+4HLaXvZquq+Bq3KbY
-X-Gm-Gg: Acq92OHGj7mBtbzW6IEiJGfdtAHybOiI7Q3Y7ZcZe+RwsUY2sxxX1xaOFd1ebqmUs8J
-	i0v780AB8wUZWdNKvRLNpGj6eYpOG/SHGrgFwZ+g9bPqpS6JKh4bIJn9vPDGh7ml578OtpxcwEm
-	B+Tk2aaUp8avS4AqPFE966jQ0ucQz40c9NHWNY38xr1rQhZfRFgZ7kL1ucNcy2yxgMjoeHcg4qy
-	Of+FRDtxo0aOBpEb7zXHLCs3nKMkKQUbnUjX0b46Kb9qDN/PZ7VmaB2Y47bZz4hb87Y+XTU2zXB
-	nprhm355M1cctVM3SVqAfiPUWlpBbFUwBW9qwE0GJPTX8P+boG6pHBp5hVWyCRLINpgNkjMTTr4
-	qmwEo05HsXhRAketsvWiiqot1RDCP4hUyaHOAjFLvzDHpP89RWq4oNnacgYtsM1VR1aFbZwm1KU
-	Ye5PG5ahEg3zIEv3ma4gz5v19VfX0vpMgqvSP4cPQ8QVlX2iLlQdkBSwsaoEKUsZdTYJ6KGJkR8
-	khmtg4yPbU=
-X-Received: by 2002:a05:7022:311:b0:12d:b396:eaed with SMTP id a92af1059eb24-1350440ae04mr818420c88.9.1778809792003;
-        Thu, 14 May 2026 18:49:52 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-134cbed2232sm7676638c88.7.2026.05.14.18.49.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 May 2026 18:49:51 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <a1ada282-ecc4-4b9f-a479-c5bddf25e641@roeck-us.net>
-Date: Thu, 14 May 2026 18:49:50 -0700
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Iu35Uo2o"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=vlbFdr3vW2O2Vy93bseHH8m9B24QIjcwBmVKRltx0jS1NoyFHAYjIKr7hIVpUd3IwX8xUU1uZ0j0uphikl5I7dhXKiKwyaxaSH1nsEWd6+1VrRerOSF6I/OYwd9ZzhAGh4yor6bzHYvtz6AcIWej2/+IfT3xN/v7pVjxqxsyO/WV99YcTeDUdNQEIRh5myrJMQjq8G6J5YFEMNP/J+vggGV550X//s1yqsZCDmfhmKV1HSnUmODnPgFBJAgIladB8RcLkN8hVEqPKXJXANCupKeG9DFXRvsV1k3ZRIrJ5ggslAtmfHuX4B2enMI0denNVgpzF795h4ufMjXkdxMQ4g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ql/yWFbe6jeVzVyeeXr/zEdyk2wzBWjtashLsUzKeVY=;
+ b=SwNKzf19Ve6AW3rGl/gODc4SIYQLfcCUpV9U8U8F8F2mDwIMNPj3YdID11gdgJgVALhTASnIxGsYZkZ6y2qWMiOXcI4CvbostLLAr3lae+6+tIFVgU2VRdA2txr7XDRpEjcfMk/VbKEnJl4Oj7SeUTfMoeZ1LxOSifUo+JYeeFDYKv3QmFa4d4godFYxa7er9Q/6gT9+GZBgJdrI7RfVuCLHRy+5dnAD/V4cAvoxrim6J2UXbwSJjd7hjlibnlsgCVK29DdXYDVol62E26PDWkW2XJ0dvODhkr8tcnPXpGXlg5YqxPIKOpyTqI9UOlwdeo0ACqywNBnDGFlFs5ZdhA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.21.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ql/yWFbe6jeVzVyeeXr/zEdyk2wzBWjtashLsUzKeVY=;
+ b=Iu35Uo2o7z2D3la+9sdxRdUsf4GExee3M8/B+ogp9Ali6W8F8o7GfbGOoGRjPkP5HeQRErMC+NYOqhi/HbUsz6Pm4Q7XZNtd0qXx+48/tI2sODzntI7mbauY0SgBdsdP9u3BM9wE2nhsBhTJJ9i46XKhMVGMAwyDyCchQ/mL3dQ=
+Received: from BN0PR04CA0078.namprd04.prod.outlook.com (2603:10b6:408:ea::23)
+ by DS0PR10MB6798.namprd10.prod.outlook.com (2603:10b6:8:13c::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Fri, 15 May
+ 2026 04:52:02 +0000
+Received: from BN2PEPF00004FC1.namprd04.prod.outlook.com
+ (2603:10b6:408:ea:cafe::b9) by BN0PR04CA0078.outlook.office365.com
+ (2603:10b6:408:ea::23) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.18 via Frontend Transport; Fri, 15
+ May 2026 04:52:02 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.194)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.194 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.194; helo=flwvzet200.ext.ti.com; pr=C
+Received: from flwvzet200.ext.ti.com (198.47.21.194) by
+ BN2PEPF00004FC1.mail.protection.outlook.com (10.167.243.187) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.25.13 via Frontend Transport; Fri, 15 May 2026 04:52:00 +0000
+Received: from DFLE202.ent.ti.com (10.64.6.60) by flwvzet200.ext.ti.com
+ (10.248.192.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Thu, 14 May
+ 2026 23:51:58 -0500
+Received: from DFLE202.ent.ti.com (10.64.6.60) by DFLE202.ent.ti.com
+ (10.64.6.60) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Thu, 14 May
+ 2026 23:51:58 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE202.ent.ti.com
+ (10.64.6.60) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
+ Transport; Thu, 14 May 2026 23:51:58 -0500
+Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64F4prfX3129581;
+	Thu, 14 May 2026 23:51:53 -0500
+Message-ID: <3853ba15-d096-4cf4-b52f-8a2e5f50fe53@ti.com>
+Date: Fri, 15 May 2026 10:21:52 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,215 +75,267 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
-To: Jihong Min <hurryman2212@icloud.com>, sashiko-reviews@lists.linux.dev,
- Jihong Min <hurryman2212@gmail.com>
-Cc: linux-hwmon@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260512213910.871859-2-hurryman2212@gmail.com>
- <20260514004055.1BBCAC19425@smtp.kernel.org>
- <110e9a0d-bc91-4959-8a7b-1a055d0b49f7@roeck-us.net>
- <1f296d29-3d43-4dd3-b751-8a0892b4095a@icloud.com>
- <a90ab332-9f86-4486-8243-07c98e3f7578@icloud.com>
+Subject: Re: [PATCH v3 3/4] PCI: endpoint: Add API for DOE initialization and
+ setup in EPC core
+To: Manivannan Sadhasivam <mani@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<kwilczynski@kernel.org>, <bhelgaas@google.com>, <corbet@lwn.net>,
+	<kishon@kernel.org>, <skhan@linuxfoundation.org>, <lukas@wunner.de>,
+	<cassel@kernel.org>, <alistair@alistair23.me>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
+References: <20260427051725.223704-1-a-garg7@ti.com>
+ <20260427051725.223704-4-a-garg7@ti.com>
+ <m4z3q3pe3ro5vkl4uq4zkewpjdqccgeact2hj4tjnkonttx4vr@ndan37zzwgxc>
 Content-Language: en-US
-From: Guenter Roeck <linux@roeck-us.net>
-Autocrypt: addr=linux@roeck-us.net; keydata=
- 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
- np3900V20aS7eD9K8GTU0TGC1pyz6IVJwIE=
-In-Reply-To: <a90ab332-9f86-4486-8243-07c98e3f7578@icloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <m4z3q3pe3ro5vkl4uq4zkewpjdqccgeact2hj4tjnkonttx4vr@ndan37zzwgxc>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN2PEPF00004FC1:EE_|DS0PR10MB6798:EE_
+X-MS-Office365-Filtering-Correlation-Id: 37040f4d-3174-4b84-489d-08deb23db38e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|1800799024|82310400026|7416014|376014|4143699003|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	lnm0o5QpqWkLQLEx2iXX7rOXLcO8geyLjEOoxiwnJOhM56pwBwpn1Tn7naR8cFNFq2vH1YEwXyxsXTuaQqA32ePAxoQYFJkZknexN4KCXk4YMXv1jQOILqN+3eblfsGMMWpMyXxh+QE6OR+hIgfPqCgkk4Qi3bvqQOyEskNZtvmlxcn/O81vUGaDFmQAwcAoa8VMB4QId1h1nQ4Lrt0sz4ugmmPxM9XpPJd9Qj3DDoEK7KFMAErhhrOfssj2KujPiMFClcPw1jgWPABkrDpE4W8WuWnIDjpXm91GctNhHby0xVTbNzWYyyX9DA5H8eJ1MhDQmK+8PE3Bo/iwTFgWgsgOl9SppPVF/2ZibIzymz2euRhw6c0nrVQ1ZT2/wiqsD2ZOUeB0lb9hi5yME134iAPytckX7iRAJOcoOf91F0CK/U6XHsRv5ZZ+vH3GwF/V8IOczUrRa79ZWN2xa0LLjQCW1Fn4N+Xm7vfIxGdn2qcppFTO4LaHOkh21+O4AK/LJIPsgZnOUqpr0EjYJ1Nu5HvYNdCuomg3YHBxNsxQDTBDw5eamG3fvtOTxbTcFjGqyIV/wCRnvVDoNnD2eVbEKPV8KncyLlKuO9MnwPo/DKY9GfCOL+0Th/GDA0sqnrjGkg66CK6C3QADtSEGOymXrwRU1VZ4hnyJM0qkMXgAdmJB7W4qYIuLPfxkegi48b9+t1y9vpDPsrO1djVLJ4unbZZ+/gVVFCxPLKNxohERfw4=
+X-Forefront-Antispam-Report:
+	CIP:198.47.21.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet200.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(36860700016)(1800799024)(82310400026)(7416014)(376014)(4143699003)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	gN+pG27q8lTZSdU8XLntk9vBk4EjdISbTYxaopsCwqLB5gx69SuncTRZb7KXbOKtiFXD8vsFM48bhtHDCkfslPtKNB0h97aL99VvcmLmMdo1jbzMMcDsC2Gatv1/vH8kzlVeEH7z35+kCFx4A/lOOX1S4xkMOzcyJ9RXEUtmd9FZFHUWYwc7OCLP4D0BIRSRyQ4P+Iiq1P0NrodeHl6t0i3PZdmUsxnlV+817sq2n6Z/NjHgpru21KGJIPjZ2aQYrlFmbUjf5rmChS4ZTnj+2366oXnYqsJiiohfcBATWpzBTTarpIM7KdjoidoDGAbmdEdufCOBJ9nHHdm7SzE7sufpveO3GWfxMcV/RUptiJqjZ3pgyD/LQIr2Wrksjapdmd0K+NCE1GcLW4AeMqDfFLwzO/LTTKj7az76NalVv/nAdg1UWoG+2OvOqXhC5Bf2
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2026 04:52:00.7166
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 37040f4d-3174-4b84-489d-08deb23db38e
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.194];Helo=[flwvzet200.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN2PEPF00004FC1.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6798
 
-On 5/14/26 06:44, Jihong Min wrote:
-> 
-> On 5/14/26 22:38, Jihong Min wrote:
->>
->> On 5/14/26 10:20, Guenter Roeck wrote:
->>> On 5/13/26 17:40, sashiko-bot@kernel.org wrote:
->>>> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
->>>> - [High] The Kconfig dependency `depends on USB_XHCI_PCI=y` completely disables PROM21 support for systems where the core driver is built as a module.
->>>> - [Low] Signed integer overflow when calculating the auxiliary device ID.
->>>> -- 
->>>>
->>>> commit 20f4e35b2f88ebe2b8988b4f07fe7cc28199096b
->>>> Author: Jihong Min <hurryman2212@gmail.com>
->>>> Subject: usb: xhci-pci: add AMD Promontory 21 PCI glue
->>>>
->>>> This commit adds a small PCI glue driver for AMD Promontory 21 xHCI
->>>> controllers. It binds the controllers, delegates USB host operation to
->>>> the common xHCI PCI core, and creates an auxiliary device for optional
->>>> temperature sensor support.
->>>>
->>>>> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
->>>>> --- a/drivers/usb/host/Kconfig
->>>>> +++ b/drivers/usb/host/Kconfig
->>>>
->>>> [ ... ]
->>>>
->>>>> @@ -42,6 +42,26 @@ config USB_XHCI_PCI
->>>>>       depends on USB_PCI
->>>>>       default y
->>>>>   +config USB_XHCI_PCI_PROM21
->>>>> +    bool "AMD Promontory 21 xHCI PCI support"
->>>>> +    depends on X86
->>>>> +    depends on USB_XHCI_PCI=y
->>>>
->>>> Does depending strictly on USB_XHCI_PCI=y cause a configuration regression
->>>> for most distributions where the core driver is configured as a module?
->>>>
->>>> The driver source appears fully capable of being built as a module, using
->>>> module-related macros and module_pci_driver().
->>>>
->>>> If the intent is to prevent an early boot mismatch where xhci-pci is
->>>> built-in but the PROM21 glue is a module, could this instead be a tristate
->>>> option using depends on USB_XHCI_PCI and depends on !(USB_XHCI_PCI=y && m)?
->>>> This would enforce the boot constraint while preserving support for modular
->>>> kernel builds.
->>>>
->>>
->>> That makes sense to me. That would be stronger than using default (which
->>> was my idea of dealing with the problem). Restricting the code to USB_XHCI_PCI=y
->>> seems to be a bit extreme.
->>
->> Hi Guenter,
->>
->> I looked more closely at the Kconfig part of the Sashiko suggestion.
->>
->> The concern itself is valid: the v5 dependency on USB_XHCI_PCI=y is too
->> strict because it prevents the PROM21 PCI glue from being built when
->> USB_XHCI_PCI=m.
->>
->> However, I do not think the suggested expression works as intended:
->>
->>   depends on !(USB_XHCI_PCI=y && m)
->>
->> With Kconfig tristate logic, `m` is a tristate literal, not "this symbol is
->> being built as a module". If USB_XHCI_PCI=y, then:
->>
->>   USB_XHCI_PCI=y && m  => m
->>   !(USB_XHCI_PCI=y && m) => m
->>
->> So the dependency becomes `m`, which limits USB_XHCI_PCI_PROM21 to `m` instead
->> of allowing `y`. That is the opposite of what we need for the built-in
->> xhci-pci case.
->>
->> The combinations I think we want are:
->>
->>   USB_XHCI_PCI=y  -> USB_XHCI_PCI_PROM21=y or n, but not m
->>   USB_XHCI_PCI=m  -> USB_XHCI_PCI_PROM21=m or n
->>   USB_XHCI_PCI=n  -> USB_XHCI_PCI_PROM21=n
->>
->> I see a few possible ways to handle this:
->>
->> 1. Keep USB_XHCI_PCI_PROM21 as a visible tristate:
->>
->>      config USB_XHCI_PCI_PROM21
->>        tristate "AMD Promontory 21 xHCI PCI support"
->>        depends on X86
->>        depends on USB_XHCI_PCI
->>        default USB_XHCI_PCI
->>        select AUXILIARY_BUS
->>
->>    This supports USB_XHCI_PCI=m, but it still lets a user select the unsafe
->>    USB_XHCI_PCI=y / USB_XHCI_PCI_PROM21=m combination.
->>
->> 2. Keep it visible and rely on help text to warn users not to select `m` when
->>    USB_XHCI_PCI=y.
->>
->>    This is simple, but it does not actually prevent the bad combination.
->>
->> 3. Use IS_REACHABLE() in xhci-pci.c instead of IS_ENABLED().
->>
->>    That would prevent built-in xhci-pci from rejecting PROM21 devices when the
->>    PROM21 glue is only available as a module. However, it also means the
->>    PROM21 glue/hwmon path would not be used in that configuration unless the
->>    PCI device is rebound later, so I do not think it is ideal.
->>
->> 4. Make USB_XHCI_PCI_PROM21 a hidden tristate that follows USB_XHCI_PCI:
->>
->>      config USB_XHCI_PCI_PROM21
->>        tristate
->>        depends on X86
->>        depends on USB_XHCI_PCI
->>        default USB_XHCI_PCI
->>        select AUXILIARY_BUS
->>
->>    Then the value follows the common xhci-pci driver:
->>
->>      USB_XHCI_PCI=y  -> USB_XHCI_PCI_PROM21=y
->>      USB_XHCI_PCI=m  -> USB_XHCI_PCI_PROM21=m
->>      USB_XHCI_PCI=n  -> USB_XHCI_PCI_PROM21=n
->>
->>    This prevents the unsafe y/m split while still supporting modular
->>    USB_XHCI_PCI builds. The actual user-visible sensor option remains
->>    SENSORS_PROM21_XHCI.
->>
->> My current preference is option 4, because the PROM21 PCI glue is not really a
->> user-facing feature by itself. It exists so the common xhci-pci driver can hand
->> PROM21 devices to the PROM21-specific glue and so the optional hwmon driver can
->> bind through the auxiliary device. The user-visible part remains the hwmon
->> sensor driver.
->>
->> Does that sound reasonable to you, or would you prefer one of the other
->> approaches?
->>
->> Thanks,
->> Jihong
->>
-> One follow-up to my previous mail:
-> 
-> If we go with option 4 and make USB_XHCI_PCI_PROM21 a hidden tristate
-> symbol, I think its help text should probably be removed as well, since the
-> symbol would no longer have a user-visible prompt.
-> 
-Agreed.
 
-> The user-visible option would remain SENSORS_PROM21_XHCI, where the hwmon
-> sensor help text can stay.
-> 
-> Does that sound right?
-> 
-Yes.
 
-Thanks,
-Guenter
+On 14/05/26 13:38, Manivannan Sadhasivam wrote:
+> On Mon, Apr 27, 2026 at 10:47:24AM +0530, Aksh Garg wrote:
+>> Add pci_epc_setup_doe() API in EPC core driver to initialize and setup
+>> the DOE framework for an endpoint controller. The API discovers the DOE
+>> capabilities (extended capability ID 0x2E), and registers each discovered
+>> DOE mailbox for all the functions in the endpoint controller. This API
+>> should be invoked by the controller driver during probe based on the
+>> doe_capable feature.
+>>
+>> Add pci_epc_destroy_doe() API in EPC core driver for cleanup of DOE
+>> resources, which should be invoked by the controller driver during
+>> controller cleanup based on the doe_capable feature.
+>>
+>> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+>> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+>> Signed-off-by: Aksh Garg <a-garg7@ti.com>
+>> ---
+>>
+>> Changes from v2 to v3:
+>> - Rebased on 7.1-rc1.
+>>
+>> Changes since v1:
+>> - New patch added to v2 (not present in v1)
+>>
+>> v2: https://lore.kernel.org/all/20260401073022.215805-4-a-garg7@ti.com/
+>>
+>> This patch is introduced based on the feedback provided by Manivannan
+>> Sadhasivam at [1].
+>>
+> 
+> Sweet! But I was expecting you to add atleast one EPC driver implementation to
+> make use of these APIs.
+> 
+> Also, why can't you call these APIs from the EPC core directly? Maybe during
+> pci_epc_init_notify() once the register accesses become valid.
+
+Can we add the DOE initialization API to pci_epc_init_notify()? This
+API seems to be called to notify the EPF drivers that the EPC device's
+initialization has been completed, as the name and description suggests.
+As 'pci_epc_doe_setup' is a part of EPC initialization, I thought the
+EPC drivers should call this API before calling the pci_epc_init_notify().
+
+However, I agree with your suggestion to call the DOE setup API directly
+from the EPC core instead of sprinkling over the EPC drivers. I would
+recommend renaming the pci_epc_init_notify() API (and hence the
+pci_epc_deinit_notify() as well) to something like 
+pci_epc_init_complete(), and add the DOE setup API/logic just before the
+logic of notifying the EPF devices.
+
+Please suggest if the above would be acceptable.
+
+Regards,
+Aksh Garg
+
+> 
+> - Mani
+> 
+>> [1]: https://lore.kernel.org/all/p57x6jleaim5w7t2k3v7tioujnaxuovfpj5euop5ogefvw23se@y5fw3che5p5d/
+>>
+>>   drivers/pci/endpoint/pci-epc-core.c | 71 +++++++++++++++++++++++++++++
+>>   include/linux/pci-epc.h             | 21 +++++++++
+>>   2 files changed, 92 insertions(+)
+>>
+>> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+>> index 6c3c58185fc5..5a95a07b7d3a 100644
+>> --- a/drivers/pci/endpoint/pci-epc-core.c
+>> +++ b/drivers/pci/endpoint/pci-epc-core.c
+>> @@ -14,6 +14,8 @@
+>>   #include <linux/pci-epf.h>
+>>   #include <linux/pci-ep-cfs.h>
+>>   
+>> +#include "../pci.h"
+>> +
+>>   static const struct class pci_epc_class = {
+>>   	.name = "pci_epc",
+>>   };
+>> @@ -548,6 +550,75 @@ void pci_epc_mem_unmap(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_epc_mem_unmap);
+>>   
+>> +/**
+>> + * pci_epc_doe_setup() - Setup and discover DOE mailboxes for all functions
+>> + * @epc: the EPC device on which DOE mailboxes has to be setup
+>> + *
+>> + * Discover DOE (Data Object Exchange) capabilities for all physical functions
+>> + * in the endpoint controller and register DOE mailboxes.
+>> + *
+>> + * This API should be called by the controller driver during initialization
+>> + * if DOE support is available (indicated by doe_capable in pci_epc_features).
+>> + *
+>> + * RETURNS: 0 on success, -errno on failure
+>> + */
+>> +int pci_epc_doe_setup(struct pci_epc *epc)
+>> +{
+>> +	u16 cap_offset = 0;
+>> +	u8 func_no;
+>> +	int ret;
+>> +
+>> +	if (!epc || !epc->ops || !epc->ops->find_ext_capability)
+>> +		return -EINVAL;
+>> +
+>> +	/* Initialize DOE framework for this controller */
+>> +	ret = pci_ep_doe_init(epc);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	/* Discover DOE capabilities for all functions */
+>> +	for (func_no = 0; func_no < epc->max_functions; func_no++) {
+>> +		while ((cap_offset = epc->ops->find_ext_capability(epc, func_no, 0,
+>> +								   cap_offset,
+>> +								   PCI_EXT_CAP_ID_DOE))) {
+>> +			/* Register this DOE mailbox */
+>> +			ret = pci_ep_doe_add_mailbox(epc, func_no, cap_offset);
+>> +			if (ret) {
+>> +				dev_err(&epc->dev,
+>> +					"[pf%d:offset %x] failed to add DOE mailbox\n",
+>> +					func_no, cap_offset);
+>> +			}
+>> +		}
+>> +	}
+>> +
+>> +	dev_dbg(&epc->dev, "DOE mailboxes setup complete\n");
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_epc_doe_setup);
+>> +
+>> +/**
+>> + * pci_epc_doe_destroy() - Destroy and cleanup DOE mailboxes
+>> + * @epc: the EPC device on which DOE mailboxes has to be destroyed
+>> + *
+>> + * Destroy all DOE mailboxes registered on this endpoint controller and
+>> + * free associated resources.
+>> + *
+>> + * This API should be called by the controller driver during controller cleanup
+>> + * if DOE support is available (indicated by doe_capable in pci_epc_features).
+>> + *
+>> + * RETURNS: 0 on success, -errno on failure
+>> + */
+>> +int pci_epc_doe_destroy(struct pci_epc *epc)
+>> +{
+>> +	if (!epc)
+>> +		return -EINVAL;
+>> +
+>> +	pci_ep_doe_destroy(epc);
+>> +	dev_dbg(&epc->dev, "DOE mailboxes destroyed\n");
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(pci_epc_doe_destroy);
+>> +
+>>   /**
+>>    * pci_epc_clear_bar() - reset the BAR
+>>    * @epc: the EPC device for which the BAR has to be cleared
+>> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+>> index dd26294c8175..7b0f258ef330 100644
+>> --- a/include/linux/pci-epc.h
+>> +++ b/include/linux/pci-epc.h
+>> @@ -84,6 +84,8 @@ struct pci_epc_map {
+>>    * @start: ops to start the PCI link
+>>    * @stop: ops to stop the PCI link
+>>    * @get_features: ops to get the features supported by the EPC
+>> + * @find_ext_capability: ops to find extended capability offset for a function
+>> + *			 in endpoint controller
+>>    * @owner: the module owner containing the ops
+>>    */
+>>   struct pci_epc_ops {
+>> @@ -115,6 +117,8 @@ struct pci_epc_ops {
+>>   	void	(*stop)(struct pci_epc *epc);
+>>   	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
+>>   						       u8 func_no, u8 vfunc_no);
+>> +	u16	(*find_ext_capability)(struct pci_epc *epc, u8 func_no,
+>> +				       u8 vfunc_no, u16 start, u8 cap);
+>>   	struct module *owner;
+>>   };
+>>   
+>> @@ -270,6 +274,7 @@ struct pci_epc_bar_desc {
+>>    * @msi_capable: indicate if the endpoint function has MSI capability
+>>    * @msix_capable: indicate if the endpoint function has MSI-X capability
+>>    * @intx_capable: indicate if the endpoint can raise INTx interrupts
+>> + * @doe_capable: indicate if the endpoint function has DOE capability
+>>    * @bar: array specifying the hardware description for each BAR
+>>    * @align: alignment size required for BAR buffer allocation
+>>    */
+>> @@ -280,6 +285,7 @@ struct pci_epc_features {
+>>   	unsigned int	msi_capable : 1;
+>>   	unsigned int	msix_capable : 1;
+>>   	unsigned int	intx_capable : 1;
+>> +	unsigned int	doe_capable : 1;
+>>   	struct	pci_epc_bar_desc bar[PCI_STD_NUM_BARS];
+>>   	size_t	align;
+>>   };
+>> @@ -368,6 +374,21 @@ int pci_epc_mem_map(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>   void pci_epc_mem_unmap(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>   		       struct pci_epc_map *map);
+>>   
+>> +#ifdef CONFIG_PCI_ENDPOINT_DOE
+>> +int pci_epc_doe_setup(struct pci_epc *epc);
+>> +int pci_epc_doe_destroy(struct pci_epc *epc);
+>> +#else
+>> +static inline int pci_epc_doe_setup(struct pci_epc *epc)
+>> +{
+>> +	return -EOPNOTSUPP;
+>> +}
+>> +
+>> +static inline int pci_epc_doe_destroy(struct pci_epc *epc)
+>> +{
+>> +	return -EOPNOTSUPP;
+>> +}
+>> +#endif
+>> +
+>>   #else
+>>   static inline void pci_epc_init_notify(struct pci_epc *epc)
+>>   {
+>> -- 
+>> 2.34.1
+>>
+> 
 
