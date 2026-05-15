@@ -1,300 +1,192 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012051.outbound.protection.outlook.com [40.93.195.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E06CD357D04;
-	Fri, 15 May 2026 05:35:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C879363C66
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 05:50:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.41
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778823341; cv=fail; b=dPwMkpfYAbjRySdW1O60MiRDd1f96mcWMWdGpj3w9yUpoMZBw1M1VrgrIQs8yLkZtw3ndYF6fFSvFkrsXCOyyd7waJprX4qJR9DIKXh8u/8nRfayuieUBnHFx1sxgXJOWxPJRXB/+PllA6EHSLlY5pBvOOaqE305Y1QfDpaJmjI=
+	t=1778824215; cv=pass; b=jvVkK3QVqzC6bn7AeiN18zCszlDko9I2z8EkJxRm+0LTB70KDzU761y/3/U9hjzsIlO/2AJGV6v0wWdBvAlz6ycX5szBzupli9NsYX6ezHCRdZ+dy7kzLlC0kNu1XLLPVb2VEj23a+pd+UMsR25W2OTzvrc3e1NLV1qbjBi8NfU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778823341; c=relaxed/simple;
-	bh=CTdunFb9XmE2IgM1TJcpZzwqL9t2+vqAK8SjmAgGBzA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=NPQJZaR+e0l0UFSES3CIuacDfdaI8SdLc2PPvxmv/TgqjUQmWkbCO+PxmzPXP5BLGIoGORtw+yBcnK6WVxjKv2cxOgdKowjcfvqb9xprOF6ddF5oz05saV8NTAwhWyI5suC93N7ldT+ULt54Yn53wlUcuDhE3z2EJSS13/WbYJA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=iO5/aCtX; arc=fail smtp.client-ip=40.93.195.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1778824215; c=relaxed/simple;
+	bh=nzhCIyjq9dCkSwtjw+Q759vI6aIMENQjE3TsKI87kZ4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KP2UxquIYwKDflqPqDqaGte0nMtESQZTA1w7m2V9CDVIx2Kwy7jkZ0Bsvx/NiYeqDTC8q4kLJuOosmFUxGlWbbushpDAvBIbQdCOSjMkirCa8+q7lKK/hIc5b4tqppdbOse09vaSsTJJKjKZeETG6RJyi76ZBNfAvusou7q4jjI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JFe3Worf; arc=pass smtp.client-ip=209.85.218.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="iO5/aCtX"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=wWEy3m1CCm/kJobFWwUtpwEvRGVct/TwVWQJeQAmSrgB5wEaeo5t+OqhMi5EGO/NW2S0Q68BuSwOEivY2rZXzfdGcr+xpfMzmHFHV89sDbiMVwoj8UORI65o2Injdog8NFc57bYeVacoFCo/wlkafcvqPTt81WaxIMdNEeSRN6dAQF9wREGPX0qfvgMbtXwniil5Tqne+SJvmIV2YWEa6hCF+J1EJojPw2mml6lQw2OMrGH/wL9lfnIXH/qkS0YZ6DdGzzLTQhuF9BS/vDhOqU1ZFyIN/BNqiNldB0nWtiUxpNjDo4zyAOzi467FVDkWMju95HvGDv8xSMyJR224Dw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NfR2N+7HONfR0l8sb2acFHBQ2o/gQUb2J6EwbfYoAjc=;
- b=lCXQUTI7q2TDGnhKm2QCIVeECDjKnfu8tczOMTe3DO2F31JLEdYn9Pc+dm+52J67f11ODigtbv1W5BW5TEH/neTIqoUuhCJMBTVhod0FvJBFTPZtXt766SVBzrENcTuiQ4CweU6mqCVrF1T/7EeecGpTuDMaVUXHRfgKPQqJ+hVQ7axkHrqcY5xdPBXVpNv0lqoXyrqSsf2ku9zlWiet6TS/rREy3dKsGtyhOG69tK3WkVJC3XWEhe/WUTa7sB5p//OqLgY6a+DKPzaQcnnqXUjtLyEnp4yaziKYsM1Rda54K+GXLeus7ANBVHoBdXJBqC90r/i6QRXodERZiQCYkQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.23.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NfR2N+7HONfR0l8sb2acFHBQ2o/gQUb2J6EwbfYoAjc=;
- b=iO5/aCtXMWjh2ct7AwxNuL3upnT2pTUmpXdpEtBrHQLeKtMoV5nq1ZCmVGVdd2/SrmCYTU3EmT/nDylWc+4Bdg5U60sX0HgzDVUCO2a1Im7ES2595anXkBE6zg2PFgUzVlr1OhsoRM2GXMDPxIwGrW7wiMU9E19zumdxCaYX5Xs=
-Received: from PH0PR07CA0105.namprd07.prod.outlook.com (2603:10b6:510:4::20)
- by DSWPR10MB997800.namprd10.prod.outlook.com (2603:10b6:8:36c::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Fri, 15 May
- 2026 05:35:35 +0000
-Received: from SA2PEPF00003F63.namprd04.prod.outlook.com
- (2603:10b6:510:4:cafe::81) by PH0PR07CA0105.outlook.office365.com
- (2603:10b6:510:4::20) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.19 via Frontend Transport; Fri, 15
- May 2026 05:35:35 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
-Received: from lewvzet201.ext.ti.com (198.47.23.195) by
- SA2PEPF00003F63.mail.protection.outlook.com (10.167.248.38) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.25.13 via Frontend Transport; Fri, 15 May 2026 05:35:35 +0000
-Received: from DLEE206.ent.ti.com (157.170.170.90) by lewvzet201.ext.ti.com
- (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 15 May
- 2026 00:35:35 -0500
-Received: from DLEE202.ent.ti.com (157.170.170.77) by DLEE206.ent.ti.com
- (157.170.170.90) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 15 May
- 2026 00:35:34 -0500
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE202.ent.ti.com
- (157.170.170.77) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Fri, 15 May 2026 00:35:34 -0500
-Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64F5ZT5w3770419;
-	Fri, 15 May 2026 00:35:30 -0500
-Message-ID: <20dce1c6-d24d-4344-86a9-f434fe52038b@ti.com>
-Date: Fri, 15 May 2026 11:05:29 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JFe3Worf"
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-bd0fc4c336eso938796366b.3
+        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 22:50:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778824213; cv=none;
+        d=google.com; s=arc-20240605;
+        b=hD4AOPicuIhYTklKZxNZBxAmAL1Bp97jnFVVSLx5cFU85eNDGCr/GlcKl1q6HJ2lfg
+         y9mthqdfEMc24Lzbbd/ZownRKQpf5ucM7psp8DweJg2y0U8cQsmFN8pXmCq382sJt17C
+         E1tYWRguAi+HyRcAt2YG5zlY5/lkxUuIK88BXRTTCloTT/ew3oEYCrxbes43nwNTMj1F
+         lm379x2Edp5KhkKoKp0S/LPZtBw2Jwo9PIlFvznAmisJ1X4A/9XT/Y9p36EPGewDRN41
+         SDfu63Drnz2IRhBwIt0cXLeG4c96zEKImPkpsrWLfoVS0hJ+W0+hoCBzaeSsd2YL0SO0
+         9ICw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=w273JBfFAtK7fZhrin4tOyF9swchXPtxmQn41Rpjp3U=;
+        fh=zLsDTHEHFho6W4Kdi4+pxKDOXg6ocArDvAVGFpTXsk0=;
+        b=ISzE9wPt60LeoShLEI0Er31qJj8swi4aGVCZYAdST5VLyianqLkutUyCBXqCiIosUo
+         cWJW0PT4yHtLUj9Hqscc9Js5GwH/J9zw2KcDwm5KPT4VKodh8lpLZLKPZWxM+LNF1KZd
+         Gqm0PA4kLP5vaS4GFNI6m0ybVS/BKHA2VNL4wYQRBuyNuZCq6HLRztDByDQYlGtRw6RV
+         nCp1fPxq7wEVbFH22gI2sZEFpdf/8ytOIs51MiSCkV04zXO2yhnXzV+tBU8HrKH1hm61
+         teU9DaHW+bjaVzkEeiLkYLTwL/skXYBZbwX6mVGh2iSp+kYdBvzRDGsxKU1nJlN2Hpcd
+         cAZQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1778824213; x=1779429013; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=w273JBfFAtK7fZhrin4tOyF9swchXPtxmQn41Rpjp3U=;
+        b=JFe3Worf1ZVFhemrBt9Q7tj3FHueD+JT96nrPq8B9R1UhAKiEssAKtgQ23kMHx0OXc
+         wYZlujkYW1G1yTqF0bHeeiec+TbMhy2Gl1C5MyeYBjmh6OorsWsBXYiTBdxYsKKrPAQf
+         ZnfYKW1pwclNKGLH/AoNBPpqcOpSjSA3hU2h4/j2ujp7TiEo9hqfppElLTE4OPefADW0
+         bo7exsvtXChAU39fNDKU0k8wlMKervmDafPcqyjbIGjTYKsURpDtk33Cx7pcsH3MWBW/
+         YB4r97t8seQRIRso7Jdqbpok/g71Dd9zPNzM0TD0p/XYeqSZXEA7QErO7qN0caN0m36J
+         m2tA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778824213; x=1779429013;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=w273JBfFAtK7fZhrin4tOyF9swchXPtxmQn41Rpjp3U=;
+        b=nFh+1mZC61ReGkvRqptV3+i+mpeTeKfU/+IjYEdSCS9u8KO4+YcPgsgzi887bllPFJ
+         A/2C/eJoFWKQLaigXcYwj8P33VTUdeJDahhpv9G1I11WeMnVh6+64AMJB37RXK8RQz8l
+         qDX/iUgod4DTiawWaQ0ZOybY+Zro1aylL3BmqXBvwCKcRwAi3XWYpq8ztPLPwhOUjXdl
+         yHBhEZwhThxEnnrcUKDT1ASYwxTmE7ToCwb3h1G7nwb2GlH28BQTsr9YW+Z0z61d05zV
+         ugurjNfxmy+sZX8Vj/0N6/kJ3NoZNROjN6a47dLd4X/2l2qvx12+3vlKlbEIHKSTgPgk
+         SfUw==
+X-Forwarded-Encrypted: i=1; AFNElJ9qzGuhOHgcRMab7xlp3ZNtcDvsULzN79NJVUonU61ABVCWAdZljf6gB9cBhK+SS7wqa6OvpB+LadI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxZup+cOuTlk7YcOlduIk5/ozvmgScphPErMOHU0ts3+5vhNx0A
+	dtXdp7tAT7j1RK84ga7WEWnQTEx4cLjHKPT8i8qejDE8Yjvcr93NUan+ZsDTKHr3xBZE7PMbOWw
+	9V4oWMUDlWd7Vl7RbItm4DJMCSI4jhNQ=
+X-Gm-Gg: Acq92OE7xIzWSstr3QMREVooaCp0eaRy1kCsn84rb9+RrE1tlamcHqVaRSNgt+rjQwi
+	EJ81UovagUm9Azys2eUICq1KYeJ6fH63e8LRmPzRnciQBGrGoY0y5xyVYy4H9iTVMQOCo1kl/SW
+	7pGJnQWN99zZvwiPSusuBeet0J7x3hakS5hB0O/qM2OOMmkbIuzNFhsndVPyoZXPXH7+VqgO2si
+	1dxnSyrK206lUyJ1AJsykjmnhUBNweF/AKnU3OduTSFS62Fb/O8oqfwbrDpus2QG0fpewV9KWfI
+	S5090df7R1gvktGT3nqsVPzWxyFYXFofOWP8Pg==
+X-Received: by 2002:a17:907:d06:b0:bc4:d93b:2078 with SMTP id
+ a640c23a62f3a-bd5177b1eb7mr127852466b.12.1778824212515; Thu, 14 May 2026
+ 22:50:12 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/4] PCI: endpoint: Add DOE mailbox support for
- endpoint functions
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<kwilczynski@kernel.org>, <bhelgaas@google.com>, <corbet@lwn.net>,
-	<kishon@kernel.org>, <skhan@linuxfoundation.org>, <lukas@wunner.de>,
-	<cassel@kernel.org>, <alistair@alistair23.me>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
-References: <20260427051725.223704-1-a-garg7@ti.com>
- <20260427051725.223704-3-a-garg7@ti.com>
- <hohf2lui4dyu6fzypl7kkwfvgf73ldmvinok7dfukhaornhkqp@n336bwjkvb6f>
-Content-Language: en-US
-From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <hohf2lui4dyu6fzypl7kkwfvgf73ldmvinok7dfukhaornhkqp@n336bwjkvb6f>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA2PEPF00003F63:EE_|DSWPR10MB997800:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8141f763-dd88-4430-087d-08deb243c9ea
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|7416014|376014|36860700016|4143699003|3023799003|22082099003|18002099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	80HXb9wl7ydUyXf7yx5gtY7n9VTOMdKPqSikuJ/wU7IDGWQeQEarfXY/x63Z9xwTKsjdMjs0e39TOM/8M2VEt1Wo+dYGBy2FcxKndgnhNVBwDDUrPKMw6uSpDs9tzwIJWTc8iSwf/K54A9fwcTHl9evIZL9k2l3mt0hgYdGaMb3GD8VE31AD01vhAwKKXrMDymAdGOboVBS3xY1mX/vx3rbwfhHlbFNMXhrQmRrcwHccUo191m/MlIAME2icz1Cs3jygrYoNOhOc9KXFGLJaEqfdMV8RaSTZqp2aNy07J9xGCZ4avE36daQ3PQ1jyHLYZl5T//aZTxmCAOIoxwwlp4nrM8hC8t+6xy8//U7Aqy53yHyaLuJyhxkT6ymmRZxtOvIWmn5dujObZ8meKdQu7sZkl9GKwXGw6z/sTI3Bf9Uf/MVFTg5KoIgOjOJ66JJEEzOi5NoIhT38jftaQarpsxEzxoiLAAyjLuK5A4cdgmXE+1Ah7alUDwijQyjMB8rlstSnLaznTCGgjA1V7MWfgNhmkxOSjl7cRL0gdLkOzEzHNjOvduNu0eF1z3YnxJ/NAmMeUI0qgd2zLHF4t5J9TwenMoy+OE+WlNhM2GVjGJharRW26G+32JZ1CuzVgqM8YwU1Xf79RCXdTGcqwjtUKtM3AXTopLXdvCy1mjxBCuTQWps1KQI9XHrp54mjyiRpve+w9gHGTpVOf/CXh2BwG1yBdg9zCK0M5XK/UU5vfTM=
-X-Forefront-Antispam-Report:
-	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(7416014)(376014)(36860700016)(4143699003)(3023799003)(22082099003)(18002099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	52OQlcvlLrqAuO6fRQK+W/RBcPsXKdXcQHeqqcmNn6kHbVhIu5gyCVdSSvFJGTd23A8L1a3w/eLXzqEMPsle9ks6ehrjhFZKpV87RMC8asRY0WNm17v+wEWOedz0hw1qTz2n2jMYK1mg8UZU+tLPO9Lck8qUjBiAKG6Rn06XjrEngF8JsoIRbrRzu70OIeH379HU6e7dad0KE9zdECpCaFZVCAf5ERdYYhY5ntpoM7aVbQ6kc3ldHOuEZC3YvCGXcm/hvs0Y1H1htz/VnD1GIMl3qVCdgAy7nbpLT20Mn4R7Ub7VxaOYU785qHTUguWjarhrIyVn1G4NoJ4y7mMy0BKMwWQUY4GwQ2zb/YB/fdkwCEyo4KbFvfIk7xAgVVWjFVWLAuLf3xYIdYGXRyAgBXGrct5LlMjfmjhc6aU0HUVefTwewU6Wus9v1WNLXocg
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2026 05:35:35.2527
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8141f763-dd88-4430-087d-08deb243c9ea
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SA2PEPF00003F63.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DSWPR10MB997800
+References: <20260508031710.514574-1-alistair.francis@wdc.com>
+ <20260508031710.514574-2-alistair.francis@wdc.com> <73b1ecdf-8754-4c17-88af-671246a6787d@de.bosch.com>
+In-Reply-To: <73b1ecdf-8754-4c17-88af-671246a6787d@de.bosch.com>
+From: Alistair Francis <alistair23@gmail.com>
+Date: Fri, 15 May 2026 15:49:45 +1000
+X-Gm-Features: AVHnY4K0YlVX7ccrCIg2Am5gWOTSrQqEJ5vMNkhmej-0Kw8vU5JM9pQx9xSl9Ws
+Message-ID: <CAKmqyKO+Pzj_z_r_tmVCuTt4gacrF9M74WknciGCbHGyBn5L=A@mail.gmail.com>
+Subject: Re: [PATCH 01/18] rust: add untrusted data abstraction
+To: Dirk Behme <dirk.behme@de.bosch.com>
+Cc: alistair@alistair23.me, linux-kernel@vger.kernel.org, lukas@wunner.de, 
+	Jonathan.Cameron@huawei.com, bhelgaas@google.com, 
+	rust-for-linux@vger.kernel.org, akpm@linux-foundation.org, 
+	linux-cxl@vger.kernel.org, djbw@kernel.org, linux-pci@vger.kernel.org, 
+	alex.gaynor@gmail.com, wilfred.mallawa@wdc.com, gary@garyguo.net, 
+	bjorn3_gh@protonmail.com, benno.lossin@proton.me, aliceryhl@google.com, 
+	boqun.feng@gmail.com, a.hindborg@kernel.org, tmgross@umich.edu, 
+	ojeda@kernel.org, Simona Vetter <simona.vetter@ffwll.ch>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, May 8, 2026 at 3:18=E2=80=AFPM Dirk Behme <dirk.behme@de.bosch.com>=
+ wrote:
+>
+> Hi Alistair,
+>
+> On 08.05.2026 05:16, alistair23@gmail.com wrote:
+> > From: Benno Lossin <benno.lossin@proton.me>
+> >
+> > When reading data from userspace, hardware or other external untrusted
+> > sources, the data must be validated before it is used for logic within
+> > the kernel. This abstraction provides a generic newtype wrapper
+> > `Untrusted`; it prevents direct access to the inner type. The only way
+> > to use the underlying data is to call `.validate()` on such a value.
+> >
+> > Doing so utilizes the new `Validate` trait that is responsible for all
+> > of the validation logic. This trait gives access to the inner value of
+> > `Untrusted` by means of another newtype wrapper `Unvalidated`. In
+> > contrast to `Untrusted`, `Unvalidated` allows direct access and
+> > additionally provides several helper functions for slices.
+> >
+> > Having these two different newtype wrappers is an idea from Simona
+> > Vetter. It has several benefits: it fully prevents safe access to the
+> > underlying value of `Untrusted` without going through the `Validate`
+> > API. Additionally, it allows one to grep for validation logic by simply
+> > looking for `Unvalidated<`.
+> >
+> > Any API that reads data from an untrusted source should return
+> > `Untrusted<T>` where `T` is the type of the underlying untrusted data.
+> > This generic allows other abstractions to return their custom type
+> > wrapped by `Untrusted`, signaling to the caller that the data must be
+> > validated before use. This allows those abstractions to be used both in
+> > a trusted and untrusted manner, increasing their generality.
+> > Additionally, using the arbitrary self types feature, APIs can be
+> > designed to explicitly read untrusted data:
+> >
+> >      impl MyCustomDataSource {
+> >          pub fn read(self: &Untrusted<Self>) -> &Untrusted<[u8]>;
+> >      }
+> >
+> > Cc: Simona Vetter <simona.vetter@ffwll.ch>
+> > Signed-off-by: Benno Lossin <benno.lossin@proton.me>
+> > Message-ID: <20240925205244.873020-2-benno.lossin@proton.me>
+>
+>
+> Today, randomly, I was about to ask Benno if there are any plans to
+> continue with his great untrusted work. Just to find that you are
+> carrying this forward. Many thanks!
+>
+> While trying to figure out some history of this patch, it looks to me
+> that the version you are using is Benno's v2:
+>
+> https://lore.kernel.org/rust-for-linux/20240925205244.873020-2-benno.loss=
+in@proton.me/
+>
+> ?
+>
+> While the latest version from Benno I found is a v4:
+>
+> https://lore.kernel.org/rust-for-linux/20250814124424.516191-3-lossin@ker=
+nel.org/
+>
+> Is there any reason not to use that?
 
+Nope, there isn't, I just didn't know it existed. I have updated to
+using the v4 submission
 
-On 14/05/26 13:33, Manivannan Sadhasivam wrote:
-> On Mon, Apr 27, 2026 at 10:47:23AM +0530, Aksh Garg wrote:
->> DOE (Data Object Exchange) is a standard PCIe extended capability
->> feature introduced in the Data Object Exchange (DOE) ECN for
->> PCIe r5.0. It provides a communication mechanism primarily used for
->> implementing PCIe security features such as device authentication, and
->> secure link establishment. Think of DOE as a sophisticated mailbox
->> system built into PCIe. The root complex can send structured requests
->> to the endpoint device through DOE mailboxes, and the endpoint device
->> responds with appropriate data.
->>
->> Add the DOE support for PCIe endpoint devices, enabling endpoint
->> functions to process the DOE requests from the host. The implementation
->> provides framework APIs for EPC core driver and controller drivers to
->> register mailboxes, and request processing with workqueues ensuring
->> sequential handling per mailbox, and parallel handling across mailboxes.
->> The Discovery protocol is handled internally by the DOE core.
->>
->> This implementation complements the existing DOE implementation for
->> root complex in drivers/pci/doe.c.
->>
->> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
->> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
->> Signed-off-by: Aksh Garg <a-garg7@ti.com>
->> ---
->> +
->> +/*
->> + * Global registry of protocol handlers.
->> + * When a new DOE protocol, library is added, add an entry to this array.
->> + */
->> +static const struct pci_doe_protocol pci_doe_protocols[] = {
->> +	{
->> +		.vid = PCI_VENDOR_ID_PCI_SIG,
->> +		.type = PCI_DOE_FEATURE_DISCOVERY,
->> +		.handler = pci_ep_doe_handle_discovery,
->> +	},
->> +};
->> +
->> +/*
->> + * Combines function number and capability offset into a unique lookup key
->> + * for storing/retrieving DOE mailboxes in an xarray.
->> + */
->> +#define PCI_DOE_MB_KEY(func, offset) \
->> +	(((unsigned long)(func) << 16) | (offset))
->> +#define PCI_DOE_PROTOCOL_COUNT        ARRAY_SIZE(pci_doe_protocols)
->> +
->> +/**
->> + * pci_ep_doe_init() - Initialize the DOE framework for a controller in EP mode
->> + * @epc: PCI endpoint controller
->> + *
->> + * Initialize the DOE framework data structures. This only initializes
->> + * the xarray that will hold the mailboxes.
->> + *
->> + * RETURNS: 0 on success, -errno on failure
-> 
-> kernel-doc format to describe return value is 'Return:' or 'Returns:".
+>
+> While at this, do you have any plan to add the `Validate` trait as well?
+>
+> https://lore.kernel.org/rust-for-linux/20250814124424.516191-4-lossin@ker=
+nel.org/
 
-Thanks for pointing this out. I will update this.
+I am using the `Validate` trait, so yes :) I have pulled in patched 1,
+2 and 3 from the v4 series.
 
-> 
->> + */
->> +int pci_ep_doe_init(struct pci_epc *epc)
->> +{
->> +	if (!epc)
->> +		return -EINVAL;
->> +
->> +	xa_init(&epc->doe_mbs);
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_ep_doe_init);
->> +
+>
+> Thanks
+>
+> Dirk
+>
+> P.S.: Carrying this patch forward, please check if it needs an update
+> regarding new "rules". E.g. it looks to me that there should be an
+> update regarding the vertical style for imports?
+>
+> https://docs.kernel.org/rust/coding-guidelines.html#imports
 
-[...]
+Thanks, I have fixed that up.
 
->> +
->> +/**
->> + * pci_ep_doe_process_request() - Process DOE request on endpoint
->> + * @epc: PCI endpoint controller
->> + * @func_no: Physical function number
->> + * @cap_offset: DOE capability offset
->> + * @vendor: Vendor ID from request header
->> + * @type: Protocol type from request header
->> + * @request: Request payload in CPU-native format
->> + * @request_sz: Size of request payload (bytes)
->> + * @complete: Callback to invoke upon completion
->> + *
->> + * Asynchronously process a DOE request received on the endpoint. The request
->> + * payload should not include the DOE header (vendor/type/length). The protocol
->> + * handler will allocate the response buffer, which the caller (controller driver)
->> + * must free after use.
->> + *
->> + * This function returns immediately after queuing the request. The completion
->> + * callback will be invoked asynchronously from workqueue context once the
->> + * request is processed. The callback receives the function number and capability
->> + * offset to identify the mailbox, along with a status code (0 on success, -errno
->> + * on failure), and other required arguments.
->> + *
->> + * As per DOE specification, a mailbox processes one request at a time.
->> + * Therefore, this function will never be called concurrently for the same
->> + * mailbox by different callers.
->> + *
->> + * The caller is responsible for the conversion of the received DOE request
->> + * with le32_to_cpu() before calling this function.
->> + * Similarly, it is responsible for converting the response payload with
->> + * cpu_to_le32() before sending it back over the DOE mailbox.
->> + *
->> + * The caller is also responsible for ensuring that the request size
->> + * is within the limits defined by PCI_DOE_MAX_LENGTH.
->> + *
->> + * RETURNS: 0 if the request was successfully queued, -errno on failure
->> + */
->> +int pci_ep_doe_process_request(struct pci_epc *epc, u8 func_no, u16 cap_offset,
->> +			       u16 vendor, u8 type, const void *request, size_t request_sz,
->> +			       pci_ep_doe_complete_t complete)
->> +{
->> +	struct pci_ep_doe_mb *doe_mb;
->> +	struct pci_ep_doe_task *task;
->> +	int rc;
->> +
->> +	doe_mb = pci_ep_doe_get_mailbox(epc, func_no, cap_offset);
->> +	if (!doe_mb) {
->> +		kfree(request);
->> +		return -ENODEV;
->> +	}
->> +
->> +	task = kzalloc_obj(*task, GFP_KERNEL);
->> +	if (!task) {
->> +		kfree(request);
->> +		return -ENOMEM;
->> +	}
->> +
->> +	task->feat.vid = vendor;
->> +	task->feat.type = type;
->> +	task->request_pl = request;
->> +	task->request_pl_sz = request_sz;
->> +	task->response_pl = NULL;
->> +	task->response_pl_sz = 0;
->> +	task->complete = complete;
->> +
->> +	rc = pci_ep_doe_submit_task(doe_mb, task);
->> +	if (rc) {
->> +		kfree(request);
->> +		kfree(task);
->> +		return rc;
->> +	}
->> +
->> +	return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(pci_ep_doe_process_request);
-> 
-> So who is supposed to call this API? EPC driver that receives the DOE interrupt?
-
-Yes, the EPC drivers that receive the DOE interrupts are expected to
-call this API.
-
-> But I don't see the any callers of this and below exported APIs in this series.
-> Either you should add the callers or limit this series just to adding the DOE
-> skeleton implementation with a clear follow-up.
-
-I currently am working on the EPC driver implementation for a platform
-which has not been up-streamed yet. I plan to use these APIs to support
-the DOE feature for that driver. Currently, I am not aware of any
-platform whose EPC driver supports DOE feature and its interrupts, hence
-I see no real callers of these APIs to include in this patch series.
-
-Would it be appropriate to add a dummy [NOT-FOR-MERGING] demonstration
-patch over an existing EPC driver, showing how these DOE APIs would be
-integrated into an EPC driver?
-
-> 
-> But since you've limited the scope of this series to support only DOE Discovery
-> Data Object Protocol, it'd be good to add the EPC implementation to get the full
-> picture.>
-> - Mani
-> 
-
+Alistair
