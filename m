@@ -1,49 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1536A3DC87D;
-	Fri, 15 May 2026 18:14:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78AF430C153
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 18:23:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778868873; cv=none; b=Y7SmRBDoO3p+FvWq/uT/pCRExozupZxAr3Crzuk+OmE9RDoMU+bPbftif2jJg7lLWDvG53Js3DaqXxjshFIX/PTQzEGcfayZch7BYubC6DmA/AIPjPSHFm6vtZDTfZXqV0O6JD5rM7wiFTOvtU96L9gAjwNoKEgkB2MBQJTkRFg=
+	t=1778869406; cv=none; b=l8vAIylA26ilYJeAkhb4IFXgOq0nWa3We0I3aKjMUJ0oyuEWK21tI3ty3JfFJHCY7VYdyPV6FBAdeuu2gr4R61hem4AKUfCDu2aiP7UAnxtLXn5Fs9P3c3PwQi92gR9rVwkCqwCS+52NzdmPYqJkmk4lgHODBvSMbaLGKgF2Bm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778868873; c=relaxed/simple;
-	bh=s/joay8SWXDw6yqU8I34kjBc3z3fFJJ+aAAgSOP8Uj8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=uDPH6tw3xBb/W4lhqNi++z9r2NL1ILZAjwCDdOlfDnmNnhq3MBOwKybVgMiYXLiJ2aI6mz2YH7HeuKG+xVuQThCOFA0fcT5+wLqUnzTsFvqEQOrzX1HNxih3uDx3cJ5rarP+BDDgFhSY3S5mqloW+7LVp1RJG+cpUiUwBt402GY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p71fEosA; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778869406; c=relaxed/simple;
+	bh=gMaEvicj1lkTTKjknQzylRPd7tw3CbzIlWyBBZkqlhE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uLvhb847Z7VWF22ZA8KBDo8/mWiP0gfJvxDEdfCqdsitXMDurLNtGcceslgAjlSGbC1FCNyU+/DNlDoFbpAToJU//HRWcu/NWguhXAOdW97Si/zeWzCxqlp2tvp3VK09ukwNWoDRDsSaFNh6fY2VvZpi3gs5R82b4RDfg3VbAjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=k9ar4Jio; arc=none smtp.client-ip=209.85.160.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p71fEosA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1072C2BCB0;
-	Fri, 15 May 2026 18:14:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778868872;
-	bh=s/joay8SWXDw6yqU8I34kjBc3z3fFJJ+aAAgSOP8Uj8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=p71fEosAwm4sa42reA6Ycd/eE63vRXoa7txtMBRP1VFKeeDqUzCs4g9/HbDEkuCpT
-	 DUapKMiyCA2gZXO2Gqg2cKGbxhn/1AK/DM9XmCqgiU1NAqvcxJGxrriVHCFhcdYmnf
-	 EZsQpiMmyS8ZxBr474vAZ+dDEXahUaRx4CBDKSNDr70Hcm4dyd0b285ihsZWV8f3dT
-	 f18V4u7Iq1U15rocD4iVQaJHrAoMSC2UxVINZ36Oc5V5j6LW9sEvSxjzBtdpYwk9l7
-	 a0hAfrjfTSvruuVkIl5LhyM6r6tEWjXkYRIZmp+3D7qkjBzGYKPS2g2KVWRSwCGmvN
-	 j44S0+P85PbiA==
-Date: Fri, 15 May 2026 13:14:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Florian Fainelli <florian.fainelli@broadcom.com>
-Cc: linux-pci@vger.kernel.org, Dom Cobley <popcornmix@gmail.com>,
-	Phil Elwell <phil@raspberrypi.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Hans Zhang <18255117159@163.com>,
-	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-rpi-kernel@lists.infradead.org>,
-	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: brcmstb: Assign pcie->gen from
- of_pci_get_max_link_speed()
-Message-ID: <20260515181431.GA505137@bhelgaas>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="k9ar4Jio"
+Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-50fbd79350dso2070211cf.3
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 11:23:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1778869403; x=1779474203; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OQNJjeOCe7S+U51t5FVhB76I4sx7yhCYVtg8gepAxec=;
+        b=k9ar4JioCr7PMwm3IFL/V1gS4qbnNYXjESygqFknkEVOcMtvBp/ZLENxK/R++emVRS
+         Ezlr+J3zGCYZXg50ek9wta6Z6s/ldjH3ggZVY7lqfdXIrjCmccOJgblHHMKaVLVgVgCO
+         +pX6bFf2RIXeTU5g51Ph/PYUyTKt3Uq24hiX0kSTM2eZ6lwCTTv/GpRe+iJgEqNXqEhc
+         QPdVrO0M5CW162/CFbdXxDuzMAekPO2u6Yy1n27LXZLRm7NQxIRv8sfhQCmsg/xlRmW2
+         r05yl1IH8n17wu+9EyyqOEzId4pnPcvi9IXVSzivi9ikr+mLdfhVYupevfbB1XoGYyH6
+         Rzzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778869403; x=1779474203;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OQNJjeOCe7S+U51t5FVhB76I4sx7yhCYVtg8gepAxec=;
+        b=SXk74KQnM2sMRsTLIu6bvpqNOUE3spN1yHwU3eH9lhez0Ms1KxK7iiLYPg3IciCWv5
+         LcyV6FpyHvOsDVSLhMWH91/oCIu/cKfgL1Mv+nhO5h70jAUS97l5UVwPL8C/5148lh6/
+         ANsy/ArKUDJMCns7eFWSbA4hvHJjIO4GsE8rsP4zDLKuD2tGOUdBpW7T3SC5/eqlghEK
+         0OVgwbVk9g2kCwH0M5JiUdM2e7EEComm/SP5ayLSunZAEKoA2cOz8moqaeEnUnNK8Q4O
+         YrsoHtIT5TluXcRf3gpSBZDnJxJGj5DEU9SX0YNft+l2aC0x37oIroWshZSkIwzvhnR9
+         DkYg==
+X-Forwarded-Encrypted: i=1; AFNElJ8IXZ3GJw40+hLUtYyec0xJAlx7f8LFU6sHgUOVbSBSVGwDTHCeOlNEeT5a1mbzXlGp7wNO8s3Z00o=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxVed2MKoZPDgIeziX6qAohzfZT/WQ3wXfJn/6dzSE1gwObRHOR
+	07ocdyN1jbvW74e/K5zhesWJYJ1QXp8kCCQ1BklhnG/lm5J3CBxHhqGaKx91ZWXtiNE=
+X-Gm-Gg: Acq92OH68wcMmHOTYo4WVcV257njp36Xr7yFQ9kk+N7M05wlCEMOK1XNX4jL+JBtdY1
+	hiOZfHfZbEOaKVuej0WpFot9PvewRej4cQin7xAzVs6tu5GSpNLvWPEUXQelwkhuZ+UcxUMItiU
+	nJONeW+Fw8Nrpx9nIFSvBz/NLPRoya3aPcP4BN8P2qzFVHqcQMkfc+oL8+PEzmCbMMxoNBkQyVT
+	9aoSkO8RvMxEBS3RMFQeqoS6mpda09UCf2ApGeUcOloiJd6wpFF+QqvLhWXfBJ8RFbK61cc4qRs
+	3otnMu0p/3hysA1D9pp7Bm9js4cDNLPAxpK23V56Id//B08xuiur06rZOse2S1SRbx+iB5KndH7
+	pTP9PiXs8RSHBZmvrymoewhOTpjoDYYtIsIaN+6bGbEjG9cBpHLJ4Q0h5qS5lxicpk59Dz3GrjD
+	gwYNHkll4KgO0VHxlFAwPuxHrRMzQmBOw+r2rsr1P9KHcXDOL31boRmf+SOgvlRKo5GAEiq9WJ1
+	Vr2Eg==
+X-Received: by 2002:ac8:5742:0:b0:509:2858:3c63 with SMTP id d75a77b69052e-5165a0703c1mr72758491cf.23.1778869403362;
+        Fri, 15 May 2026 11:23:23 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51645801211sm50772901cf.20.2026.05.15.11.23.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 May 2026 11:23:22 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wNxBy-00000007tTG-1fso;
+	Fri, 15 May 2026 15:23:22 -0300
+Date: Fri, 15 May 2026 15:23:22 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: hpa@zytor.com, robin.murphy@arm.com, robh@kernel.org,
+	wei.liu@kernel.org, mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
+	jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH V3 09/11] x86/hyperv: Implement Hyper-V virtual IOMMU
+Message-ID: <20260515182322.GI7702@ziepe.ca>
+References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
+ <20260512020259.1678627-10-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,54 +89,50 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260506164537.103196-1-florian.fainelli@broadcom.com>
+In-Reply-To: <20260512020259.1678627-10-mrathor@linux.microsoft.com>
 
-On Wed, May 06, 2026 at 09:45:37AM -0700, Florian Fainelli wrote:
-> After commit 03f920936977 ("PCI: controller: Validate max-link-speed"),
-> pcie->gen stopped being assigned and as a result the established PCIe
-> link would stop supporting Gen3 speeds on 2712 since pcie->gen is used
-> to populate LnkCntl2 and LnkCap in brcm_pcie_set_gen().
-> 
-> Whether the 'max-link-speed' property is not specified, or it exceeds
-> Gen3, resort to the HW defaults.
-> 
-> Link: https://github.com/raspberrypi/linux/issues/7343
-> Reported-by: Dom Cobley <popcornmix@gmail.com>
-> Reported-by: Phil Elwell <phil@raspberrypi.com>
-> Fixes: 03f920936977 ("PCI: controller: Validate max-link-speed")
-> Signed-off-by: Florian Fainelli <florian.fainelli@broadcom.com>
-> Change-Id: Ic5431469dd7a6c8b391f84f27119dad876256880
+On Mon, May 11, 2026 at 07:02:57PM -0700, Mukesh R wrote:
+> +static struct iommu_domain *hv_iommu_domain_alloc_paging(struct device *dev)
+> +{
+> +	struct hv_domain *hvdom;
+> +	int rc;
+> +
+> +	if (hv_l1vh_partition() && !hv_curr_thread_is_vmm()) {
+> +		pr_err("Hyper-V: l1vh iommu does not support host devices\n");
+> +		return NULL;
+> +	}
+> +
+> +	hvdom = kzalloc(sizeof(struct hv_domain), GFP_KERNEL);
+> +	if (hvdom == NULL)
+> +		return NULL;
+> +
+> +	spin_lock_init(&hvdom->mappings_lock);
+> +	hvdom->mappings_tree = RB_ROOT_CACHED;
+> +
+> +	/* Called under iommu group mutex, so single threaded */
+> +	if (++unique_id == HV_DEVICE_DOMAIN_ID_S2_NULL)   /* ie, UINTMAX */
+> +		goto out_err;
+> +
+> +	hvdom->domid_num = unique_id;
+> +	hvdom->partid = hv_get_current_partid();
+> +	hvdom->iommu_dom.geometry = default_geometry;
+> +	hvdom->iommu_dom.pgsize_bitmap = HV_IOMMU_PGSIZES;
+> +
+> +	/* For guests, by default we do direct attaches, so no domain in hyp */
+> +	if (hv_dom_owner_is_vmm(hvdom) && !hv_no_attdev)
+> +		hvdom->attached_dom = true;
 
-Applied to pci/for-linus for v7.1, thanks!
+What are you thinking sending something like this?!?!?
 
-Sashiko pointed out a couple issues, but they're unrelated to this
-patch, so I'll watch for future patches to address them.
+The function is called *alloc domain PAGING*, it does not, and can not
+allocate weird "special" domains that are not PAGING domains. I just
+spent a long time removing all this kind of crazyness from drivers.
 
-> ---
-> Changes in v2:
-> 
-> - utilize of_pci_get_max_link_speed() directly
-> - also validate against exceeding Gen3
-> 
->  drivers/pci/controller/pcie-brcmstb.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-> index 714bcab97b60..08a0e7091ced 100644
-> --- a/drivers/pci/controller/pcie-brcmstb.c
-> +++ b/drivers/pci/controller/pcie-brcmstb.c
-> @@ -2072,8 +2072,10 @@ static int brcm_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(pcie->clk);
->  
->  	ret = of_pci_get_max_link_speed(np);
-> -	if (pcie_get_link_speed(ret) == PCI_SPEED_UNKNOWN)
-> +	if (ret < 0 || ret > 3)
->  		pcie->gen = 0;
-> +	else
-> +		pcie->gen = ret;
->  
->  	pcie->ssc = of_property_read_bool(np, "brcm,enable-ssc");
->  
-> -- 
-> 2.34.1
-> 
+There is alot of other things I don't like in this patch, but this is
+too much.
+
+You have to drop this "direct attach" idea from the first iteration,
+Linux can't do it without alot more work, you should start with the
+basic paging domain mode.
+
+Jason
