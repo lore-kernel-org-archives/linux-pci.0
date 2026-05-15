@@ -1,48 +1,46 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F4991F30A4;
-	Fri, 15 May 2026 12:34:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2A60038F95A;
+	Fri, 15 May 2026 12:38:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778848477; cv=none; b=lkUaYva+lOz5Ge7eG6ROKFZ9w3kdKDLXg5wM9NoV2qs/OH42FCr0ZkQA8ibtg0y5RwHeWcfdChLFwYYPpAqD9qLQxWqx7Jo9r9QftjdUvSrTwxLiqIwKKQgFlY4agbLC9CUsOCCOcJ9g7NC5O3yRf5wv2eEpMITCZ8pdqoy+bEo=
+	t=1778848713; cv=none; b=CqYKsJ+kr954R9yCe7tD2wNW4y8M30Uq+NVOQ+Rh3he5HxGUKwqhdb0vw63htS8A3x2cUhEBxt8sbD2eckfzmdc9m54ItUm8FhMVrjIVOrnxIGsijaZCiNjY6q7+iyf0Q4A+2dhO8RkP+JzTrmlVSYw7ksp0dxfjsiKVsVwrXOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778848477; c=relaxed/simple;
-	bh=JbXnvVyBQOQm3POKkCXAnCMirmd5M25Arn9QV67e5KY=;
+	s=arc-20240116; t=1778848713; c=relaxed/simple;
+	bh=QkyGtymRwTBhyCo+ftYaceSh3xAwbb+WqGHKEO0jwkM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b3SyWbUHTuwZrW9o56FjGYM7n+b053cxzXR28HAq5wgvr2++kiivRRKsu2qV21C+fY96laFHcMfpawECA/Rz/0U+GbWivGxr+fJLdpZ35OK7BumBjVHvPFoOz+pWZ2xHXRvv3FyXIs1A8fQ1NAAnjqbDp4o5TuLu6kPRd0XDFmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=khL1kYnx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nZxjpuSDs27GTEpvKau1D773GslNvqWCGgPI1aYTZMl06zl8KvJdDk3cb46xFfOwAZmPFafdiUrpEnss89300CvmEejNsatSzz2/mo9MyvvYCCF2nNtraxUbYva+yxLGtIw0bdPxzCfA9NxuKjztWC5lWeRfxcjU/WpGVS7eeFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=WS/Zdg8A; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="khL1kYnx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A907C2BCB0;
-	Fri, 15 May 2026 12:34:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778848477;
-	bh=JbXnvVyBQOQm3POKkCXAnCMirmd5M25Arn9QV67e5KY=;
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="WS/Zdg8A"
+Received: from localhost (unknown [167.220.233.27])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 5F50920B7166;
+	Fri, 15 May 2026 05:38:27 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 5F50920B7166
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1778848707;
+	bh=1OXr0xlN0CYrNFpGl0atHJ7aaaV0aDo3N3oIZvGVagY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=khL1kYnxGQq5eSnbqjbwdr/JJ1zAxr2qRthtVT3dNo1OtwC3Zpr2b/hkfWfyZkw7q
-	 XzibwMOjiMYRkgjBCVrJgxS1L9ItMrsL+Sv4L+rkDOx1K8gQeG8kExobc/b6mFaPb+
-	 9Po/gxOjJH7MpII79MKJN/bb25dNvh7aQtq0OeT0jdbpent7uyCHWE7zazApElnMEB
-	 Vb7xOgeUcDNAtklcn88V3LDgq9G/WanrwPtzG0qeraRf2rpoNW8EESmPRbffykltJK
-	 flKIn2VP8ot2i3W15LvUX0+BYj3nxV50Zjy65sdUhUThQbb8SyxHP0O++O6z+kl1Xc
-	 /WOLrBa8UnnVg==
-Date: Fri, 15 May 2026 18:04:29 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Ryder Lee <ryder.lee@mediatek.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: PCI: mediatek-gen3: Allow memory-region for
- restricted DMA buffer
-Message-ID: <2tq4zy3zhcrz25rl2qhdsxvoedcry4z3v2lmmropesxqgzhtlp@fn6htdl74ogu>
-References: <20260508063633.3894348-1-wenst@chromium.org>
- <locoul5wdzuvvmm7mqpuntjqu4o75gmyd5npgfqrw3zuwsrse6@dhrjggs4cihh>
- <CAGXv+5GAaMQbaoUVr5zcwtHaofyXwHz03TxBe-QyWj_sNoQZsg@mail.gmail.com>
- <qnikqcqoiw7z2yh5wruqcli3rk56yomyymghzivlcmekp2blwc@dfhsfl3sqcla>
- <CAGXv+5GBraoTrQatQdrM5b+dOteL_Y5K7_UQBUt-2L1x=c94KA@mail.gmail.com>
+	b=WS/Zdg8AIi53513pxUnOp+s9InaN9MqXm8Ct+gGszuzww7WhyOeKAYEzmZFH5C4LC
+	 N4WtvrNmTKru+L4Wvy3/mrpRLUIzp7SXf695evqMQzpXzI0vKmUPA9CTnkBUTlDJm0
+	 b1d2IH7XXgyxFJYnqOG7QsvllXFywc14HtOV6AzY=
+Date: Fri, 15 May 2026 20:38:29 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	iommu@lists.linux.dev, linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, 
+	wei.liu@kernel.org, kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com, 
+	longli@microsoft.com, joro@8bytes.org, will@kernel.org, robin.murphy@arm.com, 
+	bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org, mani@kernel.org, 
+	robh@kernel.org, arnd@arndb.de, jgg@ziepe.ca, mhklinux@outlook.com, 
+	tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com
+Subject: Re: [PATCH v1 3/4] iommu/hyperv: Add para-virtualized IOMMU support
+ for Hyper-V guest
+Message-ID: <af2mt3eqnadczs2u2psmsdevjhshsl3v6vamtnde2c44mjealc@3yon3hsi7idi>
+References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
+ <20260511162408.1180069-4-zhangyu1@linux.microsoft.com>
+ <20260513113952.00005b20@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,54 +50,147 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGXv+5GBraoTrQatQdrM5b+dOteL_Y5K7_UQBUt-2L1x=c94KA@mail.gmail.com>
+In-Reply-To: <20260513113952.00005b20@linux.microsoft.com>
 
-On Fri, May 15, 2026 at 05:16:19PM +0800, Chen-Yu Tsai wrote:
-> On Thu, May 14, 2026 at 7:48 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> >
-> > On Thu, May 14, 2026 at 03:54:29PM +0800, Chen-Yu Tsai wrote:
-> > > On Thu, May 14, 2026 at 1:23 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > >
-> > > > On Fri, May 08, 2026 at 02:36:32PM +0800, Chen-Yu Tsai wrote:
-> > > > > On some SoCs without an IOMMU behind the PCIe controller, the PCIe
-> > > > > controller memory access could be limited to a small region by the
-> > > > > firmware configuring a memory protection unit. This memory region
-> > > > > must be assigned to the PCIe controller so that the OS knows to
-> > > > > use that region. Otherwise PCIe devices would not work properly.
-> > > > >
-> > > >
-> > > > So this means, the PCIe devices can only access a specific carveout memory
-> > > > configured by MPU for DMA? If so, you should use 'dma-ranges' as suggested by
-> > > > Rob.
-> > > >
-> > > > 'memory-region' also serves the purpose, but for PCI, we have the dedicated
-> > > > 'dma-ranges' property.
-> > >
-> > > I think I need some sort of guide on writing the 'dma-ranges' property,
-> > > because it is not working for me.
-> > >
-> > > I'm adding
-> > >
-> > >     dma-ranges = <0x42000000 0 0x00000000 0 0xc0000000 0 0x4000000>;
-> > >
-> >
-> > So the device DMA address start from 0x0? Isn't it a 1:1 mapping?
+[...]
+> > diff --git a/drivers/iommu/hyperv/Kconfig
+> > b/drivers/iommu/hyperv/Kconfig index 30f40d867036..9e658d5c9a77 100644
+> > --- a/drivers/iommu/hyperv/Kconfig
+> > +++ b/drivers/iommu/hyperv/Kconfig
+> > @@ -8,3 +8,20 @@ config HYPERV_IOMMU
+> >  	help
+> >  	  Stub IOMMU driver to handle IRQs to support Hyper-V Linux
+> >  	  guest and root partitions.
+> > +
+> > +if HYPERV_IOMMU
+> > +config HYPERV_PVIOMMU
+> > +	bool "Microsoft Hypervisor para-virtualized IOMMU support"
+> > +	depends on X86 && HYPERV
+> > +	select IOMMU_API
+> > +	select GENERIC_PT
+> > +	select IOMMU_PT
+> > +	select IOMMU_PT_X86_64
+> nit:
+> If HYPERV_PVIOMMU is enabled on a (hypothetical) platform with
+> GENERIC_ATOMIC64=y, the select would force-enable IOMMU_PT_X86_64 even
+> though its depends on is unsatisfied — leading to a build failure.
 > 
-> I actually don't know. But
+> In practice this can't happen today because HYPERV_PVIOMMU already
+> depends on X86 && HYPERV, and x86 never sets GENERIC_ATOMIC64. But
+> adding the explicit guard is more defensive.
+> i.e.
+>        depends on !GENERIC_ATOMIC64    # for cmpxchg64 in IOMMU_PT
 > 
-> >         dma-ranges = <0x42000000 0 0xc0000000 0 0xc0000000 0 0x4000000>;
+
+Good point. Will add "depends on !GENERIC_ATOMIC64".
+
+[...]
+
+> > +
+> > +/*
+> > + * Look up the logical device ID for a vPCI device. Returns 0 on
+> > success
+> > + * with *logical_id filled in; -ENODEV if no entry registered for
+> > this
+> > + * device's vPCI bus.
+> > + */
+> > +static int hv_iommu_lookup_logical_dev_id(struct pci_dev *pdev, u64
+> > *logical_id) +{
+> > +	struct hv_pci_busdata *bus;
+> > +	int domain = pci_domain_nr(pdev->bus);
+> > +	int ret = -ENODEV;
+> > +
+> > +	spin_lock(&hv_iommu_pci_bus_lock);
+> this is called under local_irq_save, should use  raw_spinlock_t for RT
+> kernel?
 > 
-> this didn't work either.
+
+Yes, this is problematic on PREEMPT_RT. Michael also suggested hoisting
+the lookup before the local_irq_save() section instead of using a raw
+spinlock, which I think is a great idea - all 3 call sites (detach_dev,
+attach_dev, get_logical_device_property) will be changed.
+
+> > +	list_for_each_entry(bus, &hv_iommu_pci_bus_list, list) {
+> > +		if (bus->pci_domain_nr == domain) {
+> > +			*logical_id =
+> > (u64)bus->logical_dev_id_prefix |
+> > +				      PCI_FUNC(pdev->devfn);
+> > +			ret = 0;
+> > +			break;
+> > +		}
+> > +	}
+> > +	spin_unlock(&hv_iommu_pci_bus_lock);
+> > +	return ret;
+> > +}
+> > +
+
+[...]
+
+> > +static void hv_iommu_release_device(struct device *dev)
+> > +{
+> > +	struct hv_iommu_endpoint *vdev = dev_iommu_priv_get(dev);
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +
+> > +	if (pdev->ats_enabled)
+> > +		pci_disable_ats(pdev);
+> > +
+> > +	dev_iommu_priv_set(dev, NULL);
+> > +	set_dma_ops(dev, NULL);
+> I don't think this is necessary.
+> 
+
+Oh, yes. Thanks!
+
+> > +
+> > +	kfree(vdev);
+> > +}
+> > +
+> > +static struct iommu_group *hv_iommu_device_group(struct device *dev)
+> > +{
+> > +	if (dev_is_pci(dev))
+> > +		return pci_device_group(dev);
+> > +	else
+> > +		return generic_device_group(dev);
+> non pci device already rejected during attach, maybe we should warn
+> here?
+>         WARN_ON_ONCE(1);
+>         return generic_device_group(dev);
+> 
+
+Good idea. Will add WARN_ON_ONCE(1).
+
+> > +}
+> > +
+> > +static int hv_configure_device_domain(struct hv_iommu_domain
+> > *hv_domain, u32 domain_type) +{
+> > +	u64 status;
+> > +	unsigned long flags;
+> > +	struct pt_iommu_x86_64_hw_info pt_info;
+> > +	struct hv_input_configure_device_domain *input;
+> > +
+> > +	local_irq_save(flags);
+> > +
+> > +	input = *this_cpu_ptr(hyperv_pcpu_input_arg);
+> > +	memset(input, 0, sizeof(*input));
+> > +	input->device_domain = hv_domain->device_domain;
+> > +	input->settings.flags.blocked = (domain_type ==
+> > IOMMU_DOMAIN_BLOCKED);
+> > +	input->settings.flags.translation_enabled = (domain_type !=
+> > IOMMU_DOMAIN_IDENTITY); +
+> Should this be:
+> input->settings.flags.translation_enabled =
+>      (domain_type & __IOMMU_DOMAIN_PAGING);
+> Otherwise, blocked domain will have translation enabled. Maybe add some
+> explanation of what HV expects.
+> 
+I do agree this is not intuitive, but current hypervisor implementation
+requires "blocked == 1" to be paired with "translation_enabled = 1",
+otherwise it returns HV_STATUS_INVALID_PARAMETER. But I can add some
+comment at least.
+
+Thanks for the thorough review, Jacob!
+
+B.R.
+Yu
 
 
-Hmm. Can you print the DMA address programmed to the device? i.e., the address
-returned by dma_map_single() in the driver.
-
-Also, using prefetchable flag is not correct for DMA memory. You should use:
-
-	dma-ranges = <0x02000000 0 0xc0000000 0 0xc0000000 0 0x4000000>;
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
