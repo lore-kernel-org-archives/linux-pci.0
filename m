@@ -1,192 +1,193 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011061.outbound.protection.outlook.com [40.107.208.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C879363C66
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 05:50:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71C983E0257;
+	Fri, 15 May 2026 07:08:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.61
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778824215; cv=pass; b=jvVkK3QVqzC6bn7AeiN18zCszlDko9I2z8EkJxRm+0LTB70KDzU761y/3/U9hjzsIlO/2AJGV6v0wWdBvAlz6ycX5szBzupli9NsYX6ezHCRdZ+dy7kzLlC0kNu1XLLPVb2VEj23a+pd+UMsR25W2OTzvrc3e1NLV1qbjBi8NfU=
+	t=1778828925; cv=fail; b=IpMRXF3GfLsHUm82n8tLCld1nGdRbNCPCLcXsvWNz0a8ewqtNwbTttqU0m17/FfOFhDZH54vgIzolX8fZAwUtxEw03Wx5Lh57u+5XLAMQ473H1UQ6d19xTsrPrQ5Z8G/yD04DRRrtxsvCJKbFXL7NIwUq2CmjFmDHF/zHeDlDt0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778824215; c=relaxed/simple;
-	bh=nzhCIyjq9dCkSwtjw+Q759vI6aIMENQjE3TsKI87kZ4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KP2UxquIYwKDflqPqDqaGte0nMtESQZTA1w7m2V9CDVIx2Kwy7jkZ0Bsvx/NiYeqDTC8q4kLJuOosmFUxGlWbbushpDAvBIbQdCOSjMkirCa8+q7lKK/hIc5b4tqppdbOse09vaSsTJJKjKZeETG6RJyi76ZBNfAvusou7q4jjI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JFe3Worf; arc=pass smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1778828925; c=relaxed/simple;
+	bh=Q5NGTSvEq3GrFjF1Z94ZBza13X4bnVlIYUUK1TUebcA=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=J8olNBJKs0Z5XROlXyJwvzsCo0+bs2crpDqA1vBmjdhVAod0IFZLeTYkEB14BpPjR3c6kocOuBTBu6nUdnQkhmA4eZtbYjiwabGqKjrl9O2iOw0TjlDGTnpCttFwcNj0IjpnkkRFP62AN1kwCin7c8KDCzz2dvJR6XzJeOAgiqM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=QW5MtuDw; arc=fail smtp.client-ip=40.107.208.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JFe3Worf"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-bd0fc4c336eso938796366b.3
-        for <linux-pci@vger.kernel.org>; Thu, 14 May 2026 22:50:14 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1778824213; cv=none;
-        d=google.com; s=arc-20240605;
-        b=hD4AOPicuIhYTklKZxNZBxAmAL1Bp97jnFVVSLx5cFU85eNDGCr/GlcKl1q6HJ2lfg
-         y9mthqdfEMc24Lzbbd/ZownRKQpf5ucM7psp8DweJg2y0U8cQsmFN8pXmCq382sJt17C
-         E1tYWRguAi+HyRcAt2YG5zlY5/lkxUuIK88BXRTTCloTT/ew3oEYCrxbes43nwNTMj1F
-         lm379x2Edp5KhkKoKp0S/LPZtBw2Jwo9PIlFvznAmisJ1X4A/9XT/Y9p36EPGewDRN41
-         SDfu63Drnz2IRhBwIt0cXLeG4c96zEKImPkpsrWLfoVS0hJ+W0+hoCBzaeSsd2YL0SO0
-         9ICw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=w273JBfFAtK7fZhrin4tOyF9swchXPtxmQn41Rpjp3U=;
-        fh=zLsDTHEHFho6W4Kdi4+pxKDOXg6ocArDvAVGFpTXsk0=;
-        b=ISzE9wPt60LeoShLEI0Er31qJj8swi4aGVCZYAdST5VLyianqLkutUyCBXqCiIosUo
-         cWJW0PT4yHtLUj9Hqscc9Js5GwH/J9zw2KcDwm5KPT4VKodh8lpLZLKPZWxM+LNF1KZd
-         Gqm0PA4kLP5vaS4GFNI6m0ybVS/BKHA2VNL4wYQRBuyNuZCq6HLRztDByDQYlGtRw6RV
-         nCp1fPxq7wEVbFH22gI2sZEFpdf/8ytOIs51MiSCkV04zXO2yhnXzV+tBU8HrKH1hm61
-         teU9DaHW+bjaVzkEeiLkYLTwL/skXYBZbwX6mVGh2iSp+kYdBvzRDGsxKU1nJlN2Hpcd
-         cAZQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778824213; x=1779429013; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=w273JBfFAtK7fZhrin4tOyF9swchXPtxmQn41Rpjp3U=;
-        b=JFe3Worf1ZVFhemrBt9Q7tj3FHueD+JT96nrPq8B9R1UhAKiEssAKtgQ23kMHx0OXc
-         wYZlujkYW1G1yTqF0bHeeiec+TbMhy2Gl1C5MyeYBjmh6OorsWsBXYiTBdxYsKKrPAQf
-         ZnfYKW1pwclNKGLH/AoNBPpqcOpSjSA3hU2h4/j2ujp7TiEo9hqfppElLTE4OPefADW0
-         bo7exsvtXChAU39fNDKU0k8wlMKervmDafPcqyjbIGjTYKsURpDtk33Cx7pcsH3MWBW/
-         YB4r97t8seQRIRso7Jdqbpok/g71Dd9zPNzM0TD0p/XYeqSZXEA7QErO7qN0caN0m36J
-         m2tA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778824213; x=1779429013;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=w273JBfFAtK7fZhrin4tOyF9swchXPtxmQn41Rpjp3U=;
-        b=nFh+1mZC61ReGkvRqptV3+i+mpeTeKfU/+IjYEdSCS9u8KO4+YcPgsgzi887bllPFJ
-         A/2C/eJoFWKQLaigXcYwj8P33VTUdeJDahhpv9G1I11WeMnVh6+64AMJB37RXK8RQz8l
-         qDX/iUgod4DTiawWaQ0ZOybY+Zro1aylL3BmqXBvwCKcRwAi3XWYpq8ztPLPwhOUjXdl
-         yHBhEZwhThxEnnrcUKDT1ASYwxTmE7ToCwb3h1G7nwb2GlH28BQTsr9YW+Z0z61d05zV
-         ugurjNfxmy+sZX8Vj/0N6/kJ3NoZNROjN6a47dLd4X/2l2qvx12+3vlKlbEIHKSTgPgk
-         SfUw==
-X-Forwarded-Encrypted: i=1; AFNElJ9qzGuhOHgcRMab7xlp3ZNtcDvsULzN79NJVUonU61ABVCWAdZljf6gB9cBhK+SS7wqa6OvpB+LadI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZup+cOuTlk7YcOlduIk5/ozvmgScphPErMOHU0ts3+5vhNx0A
-	dtXdp7tAT7j1RK84ga7WEWnQTEx4cLjHKPT8i8qejDE8Yjvcr93NUan+ZsDTKHr3xBZE7PMbOWw
-	9V4oWMUDlWd7Vl7RbItm4DJMCSI4jhNQ=
-X-Gm-Gg: Acq92OE7xIzWSstr3QMREVooaCp0eaRy1kCsn84rb9+RrE1tlamcHqVaRSNgt+rjQwi
-	EJ81UovagUm9Azys2eUICq1KYeJ6fH63e8LRmPzRnciQBGrGoY0y5xyVYy4H9iTVMQOCo1kl/SW
-	7pGJnQWN99zZvwiPSusuBeet0J7x3hakS5hB0O/qM2OOMmkbIuzNFhsndVPyoZXPXH7+VqgO2si
-	1dxnSyrK206lUyJ1AJsykjmnhUBNweF/AKnU3OduTSFS62Fb/O8oqfwbrDpus2QG0fpewV9KWfI
-	S5090df7R1gvktGT3nqsVPzWxyFYXFofOWP8Pg==
-X-Received: by 2002:a17:907:d06:b0:bc4:d93b:2078 with SMTP id
- a640c23a62f3a-bd5177b1eb7mr127852466b.12.1778824212515; Thu, 14 May 2026
- 22:50:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="QW5MtuDw"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jP5xYQxJI9GIbz46r+dVMfLer3endOP5wvExlk5paQcHvUQ7iIcrisDe2Tydyng/xGZjkmYekHVSB0depWMlZ0eo/KmyXQzrbdRtjW3XBQ7dGeJnYEjyAiZVlU+6ZOpDISWujmvXlYzEXajE1EEJrhMKC+2oE0yiN1WRA4q029RxCvgNMX9z6kfqFtSjCzbJtL+F9el3AKsY3VUlnBg2C1pclzFNJ06e3Rrd2qh5W8O/HOU8in0zk3nhcNmLFOgQOMimjQXW3Np2T+QZ4DSDGyDdiyePB6txHYOEQOuQqBzYzgQPTysgIggHBiXbypNywREbP0M/gdTuuoL8+ttvMw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4laBi1LKyn8Z/hLB9W/4VE3TFeYSxDwCtBgDfW/ysxk=;
+ b=mXh9UFE4+TmWc/iGjWM7WRNWGMf0ebDsABcBU7ZE9D+By3Bonndo6vQK4y2UVpcjW9r8nhKmC/LQW90O6+lfi60TJ+RwDjFqMPzHcEWE0Hq1bplyFYvT3OvNAR69hLt5f2pvKhjIPOBnLvihMT6NsvkYe86ctpwGyygEoMS6Dwbq1OjQLu+N2JwdfvRvxw2BEvB0t5KbdGjrkUAyo865SJFTOHQxSXomdVujyTkNTUo+vSpwKcB6GK3faIkN1WQmeWQgJ+tnApvyezq+WS6C1+vW/vdJEX+5NtoY63VjuoIDdXdna30E6zTRunjP/aFoYWktaz7XWeHzNO3Ad7N0nA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4laBi1LKyn8Z/hLB9W/4VE3TFeYSxDwCtBgDfW/ysxk=;
+ b=QW5MtuDwDbKN9PUurqiJexQ+hEUo/T+Bm5l3zoJUSFXInXddjDg9Y0Lcjy6rJbX2k7zjphX6Lvr377Nj2tLSzX4TW3aNShb4E3+RCxVB5ncujWQHLUrDfQLdBfz1DfZPyIPjkCdgoykA71fgCxtlt5ORRPpgc/Dzkk1wyQYG9v2JuovUCoEqLo5ySYAgh+hCKPIe+BGfezQS6wr5UweQTjNkXNvtfJVnNMRcvnlPsY6ZdSVMHvNU1IiCa49S/kkTI7Q6MTbA4yBW0RbdQegRBvOWjO//AW/JuwWIPemJ1bOplrhWCea9TaIwU3Wtlx+bU2SSQHzg3mosmr5gtr7Egg==
+Received: from DM6PR03CA0018.namprd03.prod.outlook.com (2603:10b6:5:40::31) by
+ PH8PR12MB7352.namprd12.prod.outlook.com (2603:10b6:510:214::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Fri, 15 May
+ 2026 07:08:36 +0000
+Received: from DM2PEPF00003FC4.namprd04.prod.outlook.com
+ (2603:10b6:5:40:cafe::83) by DM6PR03CA0018.outlook.office365.com
+ (2603:10b6:5:40::31) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9913.14 via Frontend Transport; Fri,
+ 15 May 2026 07:08:36 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ DM2PEPF00003FC4.mail.protection.outlook.com (10.167.23.22) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.25.13 via Frontend Transport; Fri, 15 May 2026 07:08:36 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Fri, 15 May
+ 2026 00:08:17 -0700
+Received: from mmaddireddy-ubuntu.nvidia.com (10.126.231.37) by
+ rnnvmail201.nvidia.com (10.129.68.8) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Fri, 15 May 2026 00:08:10 -0700
+From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
+	<mani@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+	<conor+dt@kernel.org>, <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+	<kishon@kernel.org>, <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
+	<Frank.Li@nxp.com>, <den@valinux.co.jp>, <hongxing.zhu@nxp.com>,
+	<jingoohan1@gmail.com>, <vidyas@nvidia.com>, <cassel@kernel.org>,
+	<18255117159@163.com>
+CC: <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH v3 0/2] PCI: tegra194: ASPM L1 entrance latency from device tree
+Date: Fri, 15 May 2026 12:37:51 +0530
+Message-ID: <20260515070753.3852840-1-mmaddireddy@nvidia.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260508031710.514574-1-alistair.francis@wdc.com>
- <20260508031710.514574-2-alistair.francis@wdc.com> <73b1ecdf-8754-4c17-88af-671246a6787d@de.bosch.com>
-In-Reply-To: <73b1ecdf-8754-4c17-88af-671246a6787d@de.bosch.com>
-From: Alistair Francis <alistair23@gmail.com>
-Date: Fri, 15 May 2026 15:49:45 +1000
-X-Gm-Features: AVHnY4K0YlVX7ccrCIg2Am5gWOTSrQqEJ5vMNkhmej-0Kw8vU5JM9pQx9xSl9Ws
-Message-ID: <CAKmqyKO+Pzj_z_r_tmVCuTt4gacrF9M74WknciGCbHGyBn5L=A@mail.gmail.com>
-Subject: Re: [PATCH 01/18] rust: add untrusted data abstraction
-To: Dirk Behme <dirk.behme@de.bosch.com>
-Cc: alistair@alistair23.me, linux-kernel@vger.kernel.org, lukas@wunner.de, 
-	Jonathan.Cameron@huawei.com, bhelgaas@google.com, 
-	rust-for-linux@vger.kernel.org, akpm@linux-foundation.org, 
-	linux-cxl@vger.kernel.org, djbw@kernel.org, linux-pci@vger.kernel.org, 
-	alex.gaynor@gmail.com, wilfred.mallawa@wdc.com, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, benno.lossin@proton.me, aliceryhl@google.com, 
-	boqun.feng@gmail.com, a.hindborg@kernel.org, tmgross@umich.edu, 
-	ojeda@kernel.org, Simona Vetter <simona.vetter@ffwll.ch>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: rnnvmail202.nvidia.com (10.129.68.7) To
+ rnnvmail201.nvidia.com (10.129.68.8)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM2PEPF00003FC4:EE_|PH8PR12MB7352:EE_
+X-MS-Office365-Filtering-Correlation-Id: 547c9b00-996f-4053-7414-08deb250c860
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|7416014|1800799024|376014|82310400026|18002099003|56012099003|921020|11063799003;
+X-Microsoft-Antispam-Message-Info:
+	fdOurUt1Ku2rihoSipUMVe1bm06k1Ll1kYTQk+gWt4C6jwtbJKrOi3oeS3JmKbsf9DGhRhtOUczHi+5lnVPVxk+6zPYdlnvVgzFpEUxKi8NXCHmd7kPgqmyCEoc+P1nxfejPzbrleWjoHsJAQez67tjUDdfQf9HTKiXsj/oR7QxVpT7wd/otwmIZrh1rE0LNuUmyEdtt3qJBIbSAl1Tczjw/K7+UyYzq47xDgwzAoKc3rvjLc1mPuWlL5aQ5gZdMg3wrQgvtpFfMkEaQcjgIF3aH31nNqk9iN8qLKZKo6sdA+U32yACMJKZRfrSPWq1gHvfBYjJ/OOhmjIOM7oqgOtU7XqgnnAmNL9+7oodHBdKkM1iV/apnfMev9PKUeTkDX0OuZgN56wrUUhQo17BsP3fTwyptghP9A5kR6BHIrYFOXF3WJiI3QmMUV/Q0qdkhGfM2rcz8dn49qgLoST5yYCG+SVBEq4DUXkpVF2kIWsH2wc+PURBBX4hdghuOJUXt7MYJXowhoPXsoHvxedFII2RPeWVP1tYiRibz1ixdW1ANP+1iUJXaiua9RPxy3+dV0Ef81FbVxcBzDqV5C6tSUUmcuFaTUolz5BHxNF+S3FnOeo8MdTjJD1QNvgPiZwtThZGux921rA6Ir+4HMU7IdKo7MIfERYwDWADrWyO11kfAt4I65FQ/PpbM/cUnbursALQABzXe3CJ8knJC1rJFnqnYF3wDP16svuVIAhBnrPiPRYJYwjjUgv94pQhemiEYSuIy32vy9jkvy8Vwf8Ni0Q==
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(7416014)(1800799024)(376014)(82310400026)(18002099003)(56012099003)(921020)(11063799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	FYfvMSfZBXMBkQuv6NqJ61Hn/6Ji/iL82rD+JOtyOXSFQaue5pHkylAjUM38b5rgC6xLVsjQ243GkNRFX/LaqAevMxDvMQqlfIROoDuv/M9qurjQeMT+Yrd4Vns6edi+eOJp9R3wu51pvf6KINUKBrcSFHdJgtbOrs1qC0CkpS295b0ru+eIBS/C5oDXyM9AvxDhwN/20tx59JiDJwVJkOcHV4lLmS4xMx4/1bFXqTDPGF2d1ewv4DeCVEZYhQpe7Qus5bxw7TqToaXYMqMYcYNGWEGfQFqUPW1AWnaDTVqy4moZ43PpzJdnGCDuvy2EbfUilDaKzm28ZvKo6ebYAG06BW3DOO7G3H+wS2+Ovhh4lnLeIwIrjZ+Mv1o7Ty6JDNBIcUZbkKE5mMggdn/1goJOWjbO3YaOzHZ1f1AY5rYW15UWIj0g6d7cEk8DoaSC
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 May 2026 07:08:36.0641
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 547c9b00-996f-4053-7414-08deb250c860
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DM2PEPF00003FC4.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB7352
 
-On Fri, May 8, 2026 at 3:18=E2=80=AFPM Dirk Behme <dirk.behme@de.bosch.com>=
- wrote:
->
-> Hi Alistair,
->
-> On 08.05.2026 05:16, alistair23@gmail.com wrote:
-> > From: Benno Lossin <benno.lossin@proton.me>
-> >
-> > When reading data from userspace, hardware or other external untrusted
-> > sources, the data must be validated before it is used for logic within
-> > the kernel. This abstraction provides a generic newtype wrapper
-> > `Untrusted`; it prevents direct access to the inner type. The only way
-> > to use the underlying data is to call `.validate()` on such a value.
-> >
-> > Doing so utilizes the new `Validate` trait that is responsible for all
-> > of the validation logic. This trait gives access to the inner value of
-> > `Untrusted` by means of another newtype wrapper `Unvalidated`. In
-> > contrast to `Untrusted`, `Unvalidated` allows direct access and
-> > additionally provides several helper functions for slices.
-> >
-> > Having these two different newtype wrappers is an idea from Simona
-> > Vetter. It has several benefits: it fully prevents safe access to the
-> > underlying value of `Untrusted` without going through the `Validate`
-> > API. Additionally, it allows one to grep for validation logic by simply
-> > looking for `Unvalidated<`.
-> >
-> > Any API that reads data from an untrusted source should return
-> > `Untrusted<T>` where `T` is the type of the underlying untrusted data.
-> > This generic allows other abstractions to return their custom type
-> > wrapped by `Untrusted`, signaling to the caller that the data must be
-> > validated before use. This allows those abstractions to be used both in
-> > a trusted and untrusted manner, increasing their generality.
-> > Additionally, using the arbitrary self types feature, APIs can be
-> > designed to explicitly read untrusted data:
-> >
-> >      impl MyCustomDataSource {
-> >          pub fn read(self: &Untrusted<Self>) -> &Untrusted<[u8]>;
-> >      }
-> >
-> > Cc: Simona Vetter <simona.vetter@ffwll.ch>
-> > Signed-off-by: Benno Lossin <benno.lossin@proton.me>
-> > Message-ID: <20240925205244.873020-2-benno.lossin@proton.me>
->
->
-> Today, randomly, I was about to ask Benno if there are any plans to
-> continue with his great untrusted work. Just to find that you are
-> carrying this forward. Many thanks!
->
-> While trying to figure out some history of this patch, it looks to me
-> that the version you are using is Benno's v2:
->
-> https://lore.kernel.org/rust-for-linux/20240925205244.873020-2-benno.loss=
-in@proton.me/
->
-> ?
->
-> While the latest version from Benno I found is a v4:
->
-> https://lore.kernel.org/rust-for-linux/20250814124424.516191-3-lossin@ker=
-nel.org/
->
-> Is there any reason not to use that?
+This series programs Synopsys DesignWare ASPM L1 entrance latency on NVIDIA
+Tegra194/234 PCIe controllers from an optional device tree property and
+corrects the default nanosecond cells so the PORT_AFR field advertises the
+intended latency buckets.
 
-Nope, there isn't, I just didn't know it existed. I have updated to
-using the v4 submission
+Background
+----------
+The controller exposes L1 entrance latency in PCI Express PORT_AFR (DW DBI),
+bits 27:29.  Software must select a 3-bit code for the maximum L1 entry delay
+the platform can tolerate.  Patch 1 reads aspm-l1-entry-delay-ns (nanoseconds),
+converts to whole microseconds with ceiling division (DIV_ROUND_UP), and
+programs min(order_base_2(us), 7) into PORT_AFR during ASPM init.  If the
+property is absent, the driver keeps the existing default (code 7).
 
->
-> While at this, do you have any plan to add the `Validate` trait as well?
->
-> https://lore.kernel.org/rust-for-linux/20250814124424.516191-4-lossin@ker=
-nel.org/
+PORT_AFR L1 entrance latency encoding (bits 27:29)
+--------------------------------------------------
+  +--------------------------+----------+
+  | Advertised maximum       | Code     |
+  +--------------------------+----------+
+  | Maximum of 1 us          | 000b     |
+  +--------------------------+----------+
+  | Maximum of 2 us          | 001b     |
+  +--------------------------+----------+
+  | Maximum of 4 us          | 010b     |
+  +--------------------------+----------+
+  | Maximum of 8 us          | 011b     |
+  +--------------------------+----------+
+  | Maximum of 16 us         | 100b     |
+  +--------------------------+----------+
+  | Maximum of 32 us         | 101b     |
+  +--------------------------+----------+
+  | Maximum of 64 us         | 110b     |
+  +--------------------------+----------+
+  | Rest                     | 111b     |
+  +--------------------------+----------+
 
-I am using the `Validate` trait, so yes :) I have pulled in patched 1,
-2 and 3 from the v4 series.
+Patch summary
+-------------
+ 1/2  PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance
+      latency
 
->
-> Thanks
->
-> Dirk
->
-> P.S.: Carrying this patch forward, please check if it needs an update
-> regarding new "rules". E.g. it looks to me that there should be an
-> update regarding the vertical style for imports?
->
-> https://docs.kernel.org/rust/coding-guidelines.html#imports
+      Add driver support described above.  v1 and v2 could not program
+      encoding 0 (000b, 1 us bucket); v3 uses order_base_2(us) so values map
+      to the table.
 
-Thanks, I have fixed that up.
+ 2/2  arm64: tegra: fix aspm-l1-entry-delay-ns L1 latency cells
 
-Alistair
+      Commit d60ed99f1c9e ("arm64: tegra: Add aspm-l1-entry-delay-ns to PCIe
+      nodes") added 4000 / 8000 / 16000 ns cells.  After ceiling conversion
+      those are 4 / 8 / 16 us, yielding PORT_AFR codes 2 / 3 / 4.  The
+      intended advertisement is codes 3 / 4 / 5 (8 / 16 / 32 us buckets).
+      Double each nanosecond cell:
+
+        tegra194.dtsi: 4000 -> 8000 ns (all Root Port and Endpoint nodes)
+        tegra234.dtsi: 8000 -> 16000 ns (Root Port), 16000 -> 32000 ns (Endpoint)
+
+      With the v3 driver mapping in place, the original nanosecond cells no
+      longer yield the intended PORT_AFR codes; doubling them restores codes
+      3 / 4 / 5 as described above.
+
+      Fixes: d60ed99f1c9e ("arm64: tegra: Add aspm-l1-entry-delay-ns to PCIe nodes")
+
+Testing
+-------
+ - Verified device tree parsing and PORT_AFR encoding on target hardware.
+ - Exercised boundary nanosecond values with a temporary debug patch.
+ - Built on x86_64 (previous revision exposed a tree build failure).
+
+Manikanta Maddireddy (2):
+  PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance
+    latency
+  arm64: tegra: fix aspm-l1-entry-delay-ns L1 latency cells
+
+ arch/arm64/boot/dts/nvidia/tegra194.dtsi   | 18 ++++++------
+ arch/arm64/boot/dts/nvidia/tegra234.dtsi   | 32 +++++++++++-----------
+ drivers/pci/controller/dwc/pcie-tegra194.c | 13 +++++++++
+ 3 files changed, 38 insertions(+), 25 deletions(-)
+
+-- 
+2.34.1
