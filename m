@@ -1,152 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E73513BFAD4;
-	Fri, 15 May 2026 16:58:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 756EC4EA381
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 17:10:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778864285; cv=none; b=Te0++CG79iaZBPGHlPBRkpsrC0gZ/L9gY/uJRSDGr0QHBgdiOe5BcRclv6thsH4fp/qQm+VrQMJ86wmmNcoaJnun3qBIM95lht7JRViJK41t1VhwaFsx3eJiNPSC8ewmf597xUyB30Dd3JSx0tb4zsKaAuddRpv4WTjDMd3/OVY=
+	t=1778865052; cv=none; b=tgaY9KWDnMakgyD2X4LWUBcjM5pkTXdEaaY5yHLwPnLZMbb+9EQyBeohBCWC10dGitJfhGT+h5Bua3xL7hdCulayQ+7PT+Rw1aItVZiM04BY63OAZmriAzXm/j9d9luMHhh1MwbvX3VtJ4w9i1WZnKWBOwZkaHAugOCCmeY78zE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778864285; c=relaxed/simple;
-	bh=2z5dLIWyL/gV1rAo31oirSt/RVWW0XQ4DifQczJePGI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FgNPqKE5fv05x0Sra9ZYGtUhBTVGv9CA+h5Gg6ATi8bO0j3/r03LLckbRZTh2P2IvCGf88BGUu3WAGs+G5XXgCuNjz2Aezb8aSXfQOmaI3kwKVncKPWBv7xzV00XKbES0hZknBi9BHnniMB3IaA1OhNjw3jieXgm5yAP3+0Wc2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HnufnKRZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778865052; c=relaxed/simple;
+	bh=3Tl5aQy2w6IrccP/oBSguy3DD60hEyRLFgCvPwyaGF0=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=tqwbiUGdfFiixDFKwfrwS4+ilXOJlvRSnUQgukHyhc9WEaTwaplXp3a9BPRsUCA2c9gUfsndRQ9RI+iBKbaQn0AdBPkF8wrpKoyJw3yeKsVtj3H9DwnqbNuxZq70MNOiq+y/ia5X317QGqJ5Sf7SIBaqy8tJhDh4NCUKWMjwhWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Vt/W4/ZE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=HYb4Xja7; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HnufnKRZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EE8AC2BCB3;
-	Fri, 15 May 2026 16:57:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778864283;
-	bh=2z5dLIWyL/gV1rAo31oirSt/RVWW0XQ4DifQczJePGI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HnufnKRZfSdE7NKiVIkh8SzMZ2amgPWr0mdJncaBe+aG4KWO/zp+vLxAajbedi7FS
-	 b0zrl4MVSTnTtguuW9Ns0M+VFlzwwLo3mG2DkbaeExbvnlsaSNWLOQdhX8hQzbZo/Y
-	 lrM699UVFIkjtTtEEKz4+o4n/y9ZJVRdTKvoesVlNAeQmjXNWiSyWcPuXYQVCCnF/r
-	 kDZx/6/JrTSufawkMoMXxYUpVZj8M34oR9RtwMweLiVt+Tp2KPyYemeBpW8ecASvQU
-	 RBXPYe6XMGQezQvP2wa+/fslwbs1mVIqj4dyikM619smxSRzaHRitYfR4vTpqNqohH
-	 fE+JrFZQ5w45w==
-Date: Fri, 15 May 2026 22:27:48 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	Jonathan Hunter <jonathanh@nvidia.com>, Lyude Paul <lyude@redhat.com>, 
-	Danilo Krummrich <dakr@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Mikko Perttunen <mperttunen@nvidia.com>, Dmitry Osipenko <digetx@gmail.com>, 
-	Mauro Carvalho Chehab <mchehab@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Mathias Nyman <mathias.nyman@intel.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org, linux-media@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-usb@vger.kernel.org, Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH 5/9] PCI: tegra: Explicitly specify PMC instance to use
-Message-ID: <5gtqxwkjw6adv65tz7ji5wxdyscqe5zlk2ugkogrsrnwituhhm@f3iaamhyxdcm>
-References: <20260506-pmc-v1-0-a6de5da7216b@nvidia.com>
- <20260506-pmc-v1-5-a6de5da7216b@nvidia.com>
- <rt3tpcu7eucylbxurtvraghnyljkv52zau75jwkkbtyfslc2ox@2bjkryjd4nqp>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Vt/W4/ZE";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="HYb4Xja7"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FB1riM3197662
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 17:10:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	7J3thL3GCbBboipeCsQGXuYdZX1osalYVS/liyYpuX0=; b=Vt/W4/ZEBO4rtbth
+	qWohdHMfN0rnbYTHu21stt0jb0kA0IfY8QKPwKx56++woTM1LZzwhmeVm9NZ531U
+	uwqbn58PBl67Vt6mXcW3x4ev+rAL9PoLjln6ih80bSV6LFfFW24aJtK8vi8SZfxy
+	vxiiDYB7+9zld/t67cFGuiLxPtYYpLiRfUpBMFSXMIZ8fvyZlOFv+V5Ah4IJlqFJ
+	fpIapO38VaHrryghBJMCBsRse2kjib5FAzTYTAvpzj3AwrnOGDnoo6Pzw3dhuWEU
+	GAmOhOeHq9xORYRBRSDFnWIFze5dL/nNG4aoNfAy+VKImrJTRwaJJJzLlG2FtujR
+	nXjyjQ==
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4e5m1qc5mk-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 17:10:50 +0000 (GMT)
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2b9b8137828so1491655ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 10:10:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1778865049; x=1779469849; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7J3thL3GCbBboipeCsQGXuYdZX1osalYVS/liyYpuX0=;
+        b=HYb4Xja7bGg6hq+EcbT9JtSYzzZLUY6zfg4Ov+JYVCsFW3dYXlCzvjsrsqmb+orOu9
+         ShOX0vB4GdltsLqEdO1ckrP8GQQOx8UzEPy5NwRMxPeOXNkqEZ4PG4tBR+3RZ9pmivz2
+         8x+2xr7b9Rzyx5wnDuiSXka6bcmMNiy/bPJNB7CjP9b50s0laHhagvCQlyExsmgG4hpN
+         kqWsoJ5KeyCy8sNSL9kNReImTioO/50DGGYuJA5MrhdVb86YEOQcpeRGt7gFPKcsE7Pn
+         uMRKnRvaO2poIaiu/R+gbIThvt38nDWk0y+5qIUbZkOLWLMTEHD9Rd0XZmVO7DhQGGuR
+         CS5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1778865049; x=1779469849;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=7J3thL3GCbBboipeCsQGXuYdZX1osalYVS/liyYpuX0=;
+        b=Q5EyW6ZWE6hAwoTEpFT59RIyELYzBelRw1OV0hAeZAoFwfIRxFFY7mG3U/HJoCdmm5
+         lsc6+VysM8GZN4l144OCzFKv1dsjMcbNMWpTxevgjDvR9IOzqK4b/LNH0mvEhiZi1Pmu
+         LOJ4xcjmCcnTj/V1Lj9kc/I+ZjPPJfrt1GfJfS4gkoT+xnTQO3HcNF3dsGbfhiyVBKb7
+         uq3fIOJpaB1GsxoFfqSJHcRQRa6fXLQ7r/39F/h3jeJt57P+jwUIAWwU0EDO+a4OB6LI
+         KvFOTTWB/lngFuyqs/qnIsS2aMgsBZIc9TyxnQv6DmWeoVO7ez1xAEtA9XcNJhlvdOFO
+         XZOg==
+X-Gm-Message-State: AOJu0YyDwTWIeW1lgyyOsNEKxw7RDa7PNoByy+mquhXtAjG27WcG5zxl
+	ymW8qpI+IOB7fQqUE+4hXDXiYcAQl91BALVNjxULJ2HFL9ZIOh5zqCe9l3urfWvgsRcZS665uoS
+	lZso+OaZBuxdtCTkygiV1mXJ3aLsPfWm4vvhXkPmYW+RwKntdRvlfbQ1yGsGAAU8=
+X-Gm-Gg: Acq92OGSG5cti5buc3ZAbNMSfuhZAFk4N0S7qcS7XJ/wqZG4MW18vLW/ZGGlXLDpAiw
+	WZ8q8z0A2WgLiswSt2uVUqgItgk9kuKi0hgeL4hmossUWgSwShN2Kqu4EK4efCg/mLJi1ccEV/b
+	N4SV6dzFb/a51Y/r3B+zT3SW4OLii8XiMGozpd3650npeM+9/Vtm5Ut391cHkNDHIr2wIqXFU4V
+	kIiYgnOvw9IKhW15c5PCIBIF/wuPVYbxUO00+fmgX1y5htn+SG41N1gbPbz49Ut1I1mOzagcgdg
+	zuz97tw2efLsKyea5cIOSEdjXkKPtZkasOmw3HLcwrpXDey3diGFxOTLam5AZ1CB7q+buSzgHCJ
+	3MukbIAaxs3NqpXU2T6ft
+X-Received: by 2002:a17:903:13c8:b0:2bd:8395:feca with SMTP id d9443c01a7336-2bd839605e4mr45821805ad.23.1778865049253;
+        Fri, 15 May 2026 10:10:49 -0700 (PDT)
+X-Received: by 2002:a17:903:13c8:b0:2bd:8395:feca with SMTP id d9443c01a7336-2bd839605e4mr45821425ad.23.1778865048670;
+        Fri, 15 May 2026 10:10:48 -0700 (PDT)
+Received: from [192.168.1.11] ([120.60.141.122])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5d234540sm64176835ad.79.2026.05.15.10.10.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 May 2026 10:10:47 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Chen-Yu Tsai <wenst@chromium.org>
+Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+In-Reply-To: <20260505105918.1823170-1-wenst@chromium.org>
+References: <20260505105918.1823170-1-wenst@chromium.org>
+Subject: Re: [PATCH] PCI: mediatek-gen3: Do full device power down on
+ removal
+Message-Id: <177886504429.10117.12525954278575161298.b4-ty@kernel.org>
+Date: Fri, 15 May 2026 22:40:44 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <rt3tpcu7eucylbxurtvraghnyljkv52zau75jwkkbtyfslc2ox@2bjkryjd4nqp>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
+X-Proofpoint-GUID: 1wx3oMHGqDR-xAfDlAw_JWvLpXwukFUN
+X-Authority-Analysis: v=2.4 cv=GulyPE1C c=1 sm=1 tr=0 ts=6a07539a cx=c_pps
+ a=cmESyDAEBpBGqyK7t0alAg==:117 a=8TBCxnFsifAbGBbxUCxq8g==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=VwQbUJbxAAAA:8 a=Gg1cva48JAy7FFupKUQA:9 a=QEXdDO2ut3YA:10
+ a=1OuFwYUASf3TG4hYMiVC:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDE3NSBTYWx0ZWRfX9GP20NDEMylO
+ HUmp+wt1aKZOcVy+mepAL4prMRMlIQn8qWX3wFoPBFoYFfMvfHKc9W8uQf5hkCV/nLMoL6xGTwe
+ YTBczJDMDzCNTbQO7LzJZpiylyjTZdQjfMsU+eDV3s1E+i0AhMpRrXfOuv0p57zqW5K2mYTNZti
+ 40UlPH557IMnzAZ+INvc0FP9+hMj3CtOyDz0i+DnRGDA8HiQJE0JJPAKLlmRxW2eXYWNmkRVbqN
+ 2462IkvIftDdrk3zYNrYoCVzmdtPN/CYxzZofl1Mub7RLTIwUg0UTqTe7ygzTjT3OD/bag4ImcZ
+ YS6p+NNYKEK1fQwsv1r89FGkruXqEgZc+8HWA/AZQatJC+H87Fh7lJLyKcBWhEj1sF3msqq8C6h
+ To6szhUDG0aP307kXMubXdq7DtCCphLS0QBwtAJTd+LyomfE0HSfRwHDPHjn2N4e/pIJg9dGh/N
+ EAd0DIlRhIc2hNgfwgw==
+X-Proofpoint-ORIG-GUID: 1wx3oMHGqDR-xAfDlAw_JWvLpXwukFUN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-15_04,2026-05-15_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 malwarescore=0 clxscore=1015 impostorscore=0 bulkscore=0
+ lowpriorityscore=0 phishscore=0 suspectscore=0 priorityscore=1501 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605150175
 
-On Fri, May 15, 2026 at 10:26:12PM +0530, Manivannan Sadhasivam wrote:
-> On Wed, May 06, 2026 at 03:41:56PM +0200, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> > 
-> > Currently the kernel relies on a global variable to reference the PMC
-> > context. Use an explicit lookup for the PMC and pass that to the public
-> > PMC APIs.
-> > 
-> > Signed-off-by: Thierry Reding <treding@nvidia.com>
-> > ---
-> >  drivers/pci/controller/pci-tegra.c | 20 +++++++++++++++-----
-> >  1 file changed, 15 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-> > index 512309763d1f..2c6c521e6901 100644
-> > --- a/drivers/pci/controller/pci-tegra.c
-> > +++ b/drivers/pci/controller/pci-tegra.c
-> > @@ -340,6 +340,8 @@ struct tegra_pcie {
-> >  	struct reset_control *afi_rst;
-> >  	struct reset_control *pcie_xrst;
-> >  
-> > +	struct tegra_pmc *pmc;
-> > +
-> >  	bool legacy_phy;
-> >  	struct phy *phy;
-> >  
-> > @@ -1165,7 +1167,7 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-> >  	clk_disable_unprepare(pcie->afi_clk);
-> >  
-> >  	if (!dev->pm_domain)
-> > -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> > +		tegra_pmc_powergate_power_off(pcie->pmc, TEGRA_POWERGATE_PCIE);
-> >  
-> >  	err = regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
-> >  	if (err < 0)
-> > @@ -1183,7 +1185,7 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-> >  	reset_control_assert(pcie->pex_rst);
-> >  
-> >  	if (!dev->pm_domain)
-> > -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> > +		tegra_pmc_powergate_power_off(pcie->pmc, TEGRA_POWERGATE_PCIE);
-> >  
-> >  	/* enable regulators */
-> >  	err = regulator_bulk_enable(pcie->num_supplies, pcie->supplies);
-> > @@ -1191,12 +1193,14 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-> >  		dev_err(dev, "failed to enable regulators: %d\n", err);
-> >  
-> >  	if (!dev->pm_domain) {
-> > -		err = tegra_powergate_power_on(TEGRA_POWERGATE_PCIE);
-> > +		err = tegra_pmc_powergate_power_on(pcie->pmc,
-> > +						   TEGRA_POWERGATE_PCIE);
-> >  		if (err) {
-> >  			dev_err(dev, "failed to power ungate: %d\n", err);
-> >  			goto regulator_disable;
-> >  		}
-> > -		err = tegra_powergate_remove_clamping(TEGRA_POWERGATE_PCIE);
-> > +		err = tegra_pmc_powergate_remove_clamping(pcie->pmc,
-> > +							  TEGRA_POWERGATE_PCIE);
-> >  		if (err) {
-> >  			dev_err(dev, "failed to remove clamp: %d\n", err);
-> >  			goto powergate;
-> > @@ -1234,7 +1238,7 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
-> >  	clk_disable_unprepare(pcie->afi_clk);
-> >  powergate:
-> >  	if (!dev->pm_domain)
-> > -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
-> > +		tegra_pmc_powergate_power_off(pcie->pmc, TEGRA_POWERGATE_PCIE);
-> >  regulator_disable:
-> >  	regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
-> >  
-> > @@ -1432,6 +1436,12 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
-> >  		return err;
-> >  	}
-> >  
-> > +	pcie->pmc = devm_tegra_pmc_get(dev);
-> > +	if (IS_ERR(pcie->pmc)) {
-> > +		dev_err_probe(dev, PTR_ERR(pcie->pmc), "failed to get PMC\n");
-> > +		return err;
+
+On Tue, 05 May 2026 18:59:16 +0800, Chen-Yu Tsai wrote:
+> When power control for downstream devices was introduced in the
+> mediatek-gen3 PCIe controller driver, only the power to the downstream
+> devices was cut when the controller driver is removed. This matched
+> existing behavior, but in hindsight a proper power down sequence should
+> have been followed.
 > 
-> As Sashiko pointed out, you need to return dev_err_probe() directly.
+> Call mtk_pcie_devices_power_down() on driver removal so that in addition
+> to removing power from the downstream devices, PERST# is asserted.
 > 
+> [...]
 
-With the change,
+Applied, thanks!
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+[1/1] PCI: mediatek-gen3: Do full device power down on removal
+      commit: 2b16d6b9de2f00fd8ecc433b15205c18f8276b3e
 
-Feel free to take it through Tegra tree.
-
-- Mani
-
+Best regards,
 -- 
-மணிவண்ணன் சதாசிவம்
+Manivannan Sadhasivam <mani@kernel.org>
+
