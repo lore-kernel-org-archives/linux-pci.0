@@ -1,83 +1,88 @@
-Received: from outbound.baidu.com (mx21.baidu.com [220.181.3.85])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 3897526ED3E
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 01:04:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.181.3.85
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEF3336A030
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 01:27:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778807069; cv=none; b=t8OWkY1ZTbcPs0l3ldzNNOXkZ4cCc/zg1LUW/yPUEhbeORysBiOunXIF0iWi6y7AnwQ+6ZoeXasU5CTzSMWJ/jO6g4OdZhRjt7660GN1npHR8bgEIeU4VclzTy0XwHuRM15VJmdCbVHbHdp/WP4ENmc+m00O/QzZSVTOcJxH798=
+	t=1778808431; cv=none; b=pe87rfI87r3luRKOWbAjjYDtmBgTH8JUkVfnN9dkyPqOX+23UAR+OgpdNogjVUWCZCAoIDjr/wmMT2z+T/NHtu4Ax01uEs5wf1uo7OZLHxNHn/JoTw6HzDKENijroiknHrOPkTucsV5pAiaqdS9r9+mWDRYPjbbJihpI48KpEwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778807069; c=relaxed/simple;
-	bh=Pp2XdUbL6cDiOBigDPPY+4jPM4epWg6B3Z+coj9SyeQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MGAjmXdgNuOTX0l4YehURULSi+a+0JieKDjbf27Kmf2y0a3bR6oBaJmzojumOOw9TIcdF7cwjom/9JKH5FNr5SInD3zL7E6/RAVcCK0nfCQZvXyLOeujgLu2LPSah2B1YdjiBA69XO6ABzqo8dfX1gnAr67extYDnD88Qx5IwXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com; spf=pass smtp.mailfrom=baidu.com; dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b=ooUBJKVI; arc=none smtp.client-ip=220.181.3.85
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baidu.com
+	s=arc-20240116; t=1778808431; c=relaxed/simple;
+	bh=jds/KUEnMypQxF/dsmHVwU7tav2q16u3klT9lSJO4Dw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Okmoi3DovR9CItHwpwOCWu3YvTDJtzoPd4LmU8PZbMGBJ+tmJIwUPeFMay4Mc1H+grVgAA07NSORKWdeykm/lk3YMDys7NLiHfbinLW42VNvr4dZ1NClvkAHq1EIql4GgaessR4SqyS8K3rl/Aw49xnAv9K4IGSQMJJcrXe9bkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TKn5CzOw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b="ooUBJKVI"
-X-MD-Sfrom: lirongqing@baidu.com
-X-MD-SrcIP: 172.31.50.47
-From: lirongqing <lirongqing@baidu.com>
-To: Ryder Lee <ryder.lee@mediatek.com>, Jianjun Wang
-	<jianjun.wang@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan
- Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	<linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-arm-kernel@lists.infradead.org>
-CC: Li RongQing <lirongqing@baidu.com>
-Subject: [PATCH] PCI: mediatek: Fix operator precedence in PCIE_FTS_NUM_L0 macro
-Date: Thu, 14 May 2026 20:55:52 -0400
-Message-ID: <20260515005552.2343-1-lirongqing@baidu.com>
-X-Mailer: git-send-email 2.17.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TKn5CzOw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B9D4C2BCB3;
+	Fri, 15 May 2026 01:27:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1778808431;
+	bh=jds/KUEnMypQxF/dsmHVwU7tav2q16u3klT9lSJO4Dw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TKn5CzOw33zLhbULxmodZj4uSBxZUoymOm3B0RWi06fo/Tj2RARVGhm2M6dBAApiH
+	 hZdpobN+XsohyfcO+zcpdWbhWFuz+9THuBp/UQBrRu5mAHgEFO/nDgHtth+FviXQem
+	 /K4dEkKuze88YD2gaGUbeg7IO9LX6wXwlPwCBdpv1unf/Vvd3zNC9AwuirSn1ocquu
+	 LPtaOWT8gpJtSbqvCL/0WpfaECf1gYilANfyrwqjI1psxqkVZxVBgU0Xr/WW5ke+JY
+	 OFrjwxtt27geZM/MJWdFqpITcKcRyFl7HDV6OxZY+YyfPMsF26p1GhijOUUowI4pYB
+	 AURsy24vtCkRw==
+Date: Fri, 15 May 2026 10:27:09 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: lirongqing <lirongqing@baidu.com>
+Cc: Ryder Lee <ryder.lee@mediatek.com>, 
+	Jianjun Wang <jianjun.wang@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, 
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mediatek: Fix operator precedence in
+ PCIE_FTS_NUM_L0 macro
+Message-ID: <20260515012505.GA3166828@rocinante>
+References: <20260515005552.2343-1-lirongqing@baidu.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: bjkjy-exc11.internal.baidu.com (172.31.51.11) To
- bjkjy-exc3.internal.baidu.com (172.31.50.47)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=baidu.com;
-	s=selector1; t=1778806563;
-	bh=uNqStT8E7cOnItJb8DaxzYvszxZpCiV3YjJwPZLjb1g=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type;
-	b=ooUBJKVI2+swknCdj2TDWMe1BIWC7Qnu8l114SYQ6Gq/3B8sO+4E3jVsJfBHN2zQk
-	 IaX/KfEFkxi9JritkMiARAq2lxsKqjGDrsKhEKumwkfrUFITXZCE5zJ2con5ONQbjP
-	 MXKVhE9Wi3DG+ZT/MXoSudZ4j3YLr+2skKyHQTOeVGfjcRQzdPuT4kKBq7d+oNHYUp
-	 Hpj/+EkDhb2KBqVbkKLLnSVaFxIm4KFdKGIjT7Zt0orUjA/0KzLTEjal4tzOBNq9xH
-	 /tje3G0z/YAqgwLMdstofbFHz9B5Edl2LT1LwRrUUuO9bU1/gCIcf5OFeDLer7vNQP
-	 9SKky8N8INiow==
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260515005552.2343-1-lirongqing@baidu.com>
 
-From: Li RongQing <lirongqing@baidu.com>
+Hello,
 
-The original PCIE_FTS_NUM_L0(x) macro was buggy due to improper operator
-precedence, where ((x) & 0xff << 8) was evaluated as ((x) & 0xff00).
+> The original PCIE_FTS_NUM_L0(x) macro was buggy due to improper operator
+> precedence, where ((x) & 0xff << 8) was evaluated as ((x) & 0xff00).
+> 
+> Instead of just fixing the parentheses, use the standard FIELD_PREP()
+> macro. This makes the code more robust by automatically handling masks
+> and shifts, while also adding compile-time type and range checking to
+> ensure the value fits within PCIE_FTS_NUM_MASK.
+> 
+> Fixes: 637cfacae96f ("PCI: mediatek: Add MediaTek PCIe host controller support")
+> Signed-off-by: Li RongQing <lirongqing@baidu.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 7572252..00f0e29 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -61,7 +61,7 @@
+>  /* MediaTek specific configuration registers */
+>  #define PCIE_FTS_NUM		0x70c
+>  #define PCIE_FTS_NUM_MASK	GENMASK(15, 8)
+> -#define PCIE_FTS_NUM_L0(x)	((x) & 0xff << 8)
+> +#define PCIE_FTS_NUM_L0(x)	FIELD_PREP(PCIE_FTS_NUM_MASK, x)
 
-Instead of just fixing the parentheses, use the standard FIELD_PREP()
-macro. This makes the code more robust by automatically handling masks
-and shifts, while also adding compile-time type and range checking to
-ensure the value fits within PCIE_FTS_NUM_MASK.
+Aww.  Nice catch!  Thank you for fixing this!
 
-Fixes: 637cfacae96f ("PCI: mediatek: Add MediaTek PCIe host controller support")
-Signed-off-by: Li RongQing <lirongqing@baidu.com>
----
- drivers/pci/controller/pcie-mediatek.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Happy to offer:
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 7572252..00f0e29 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -61,7 +61,7 @@
- /* MediaTek specific configuration registers */
- #define PCIE_FTS_NUM		0x70c
- #define PCIE_FTS_NUM_MASK	GENMASK(15, 8)
--#define PCIE_FTS_NUM_L0(x)	((x) & 0xff << 8)
-+#define PCIE_FTS_NUM_L0(x)	FIELD_PREP(PCIE_FTS_NUM_MASK, x)
- 
- #define PCIE_FC_CREDIT		0x73c
- #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
--- 
-2.9.4
+  Reviewed-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 
+All the best,
+
+	Krzysztof
