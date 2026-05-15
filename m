@@ -1,61 +1,61 @@
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFF5A3B19DB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB90C3A7F4A;
 	Fri, 15 May 2026 14:23:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778854990; cv=none; b=TautddhYmE2gyKkCttUcI5TVDjVqACXJsVn7suLJP1l2kU7rp+u0wxUv1IQ1O9hud5caJuj1rZMEWhhUIj2uh7gRPpNz6qpbJwnLCovyTwUs/7WxYr4GyL7r/wt7Ibwq52zSMEyxk1CcnuRAwFo1TLYxlYRiQFmr4r33E6wvPuA=
+	t=1778854991; cv=none; b=fMV4LzXNKjXgqllxkB3FHAJGZgpMiJyEEXjbRVgd0ELlzQW/3t0xU6MgvGMk6wWbSMXlV6PRBpHtvCj2xY4u1adN1IjeXQsNKNla3c4vS1AMaCAeKO6sIQ0dxyHMPT02y8B6B7SbRxbfG5cRMUbd16+JC+ZkchD58aJABHHDNA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778854990; c=relaxed/simple;
-	bh=6WBKg3Z6d6bDxwbEE57rV0gZXpgH4cYTHFISRN8uP/4=;
+	s=arc-20240116; t=1778854991; c=relaxed/simple;
+	bh=w1eXmpId7yyOOzcXkGPGQpOGf77h78576U5/zFLJkmA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=maiXLQvLlRV88ccxQDLKb0Mg0GtqzapDxAt+Pgmtj5jn4Op0NQ/hZFiPS8laDktVCxCVyiPYa+KD00oTt9opNRYQ43cJ2TScTHW26GkETwfmafeJR/JnJIFLKrVhz9dF+a1Z7Bxr5/sYpJxJzafZWC4/nq89LOFAqvlHwi3ZNbw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=DQyfFv7h; arc=none smtp.client-ip=148.163.156.1
+	 In-Reply-To:To:Cc; b=Fj0kh/+14Cn0bhmdaLvj7V50DBszFbfKEOLD4QHy1N3gZByz/ZbO6/Uq8FRjfBmvrMqK7rcdQhrEbzootku7KF3tFtlx6pBkUd0l+a9VJoFsK1A8YWIdaif+X5ylVOFqUhGkO62UtvrLsuICuzi0Rx9U6ZNlJ6ktlVckG/i/sH0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=bRyihCop; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="DQyfFv7h"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="bRyihCop"
 Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FAWWhF3950751;
-	Fri, 15 May 2026 14:22:34 GMT
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FBY8BR3953235;
+	Fri, 15 May 2026 14:22:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=sSrBZL
-	pLsG21cYV5sFRehKkQIMmaXEBuOlBtNeue/K0=; b=DQyfFv7hqyMqDY11+8o6y2
-	Gb8giGVwPZ25I3udbDcpgZX8ubOe6/CS+Oh2WAGQQ4QO4NGF7Z6QH+82qkC2uDxu
-	QEA7br6P123CEF/PgSu12dmD/Zf1Gx+EAgApa0HRteFFkN+F79C7Q38mQzm2zv18
-	+9sOHLEKAn6yio/1+xTNAbxStGxNvCqx/dHMZJVaUI/e8gLGt8+zIraYFYrBtovd
-	/4+Ale/7IfWRAiLfvYAhWOCvWygF65fkaTfDWvRkdo7VkHXJSVCt703YjzKBjBCl
-	nSrT+0QpCNKO/uoXYcdMMrP/xevd9XGOIKsK4s+vYhfn9wYA835pr/Fb/LY8I+0A
+	:message-id:mime-version:references:subject:to; s=pp1; bh=P8kcyQ
+	qXjPJl/wA2iNvOTp3xe+f0bXif7P+1RpYbGxs=; b=bRyihCopm4HbUs3qahWe3e
+	lfJYr3QO0rv4sAtIn0VzH1vDfDfyXbiKXTDLrqnZ9KhEJ5+wlVdYoKgAZ0tH9cpA
+	DYY/qen8cmtFxdI+O4TiX7GbHw6QwBACXtB5VHkGZArq3OC1ZuC4/sVkD+Wkqwyz
+	W8srPe8/l/OeOOS7Gc1y8Satyi/gHETCpI6e+2o1w+//NWON6n/SnJOMt99utcpZ
+	wWzSJqeh2Oh2fDDleJ+ISEw5BLP7CkIHLVIGFrl12sBHzJPon1ETHG8XYYn5nG/7
+	aBVHw+slhi0aCv0nzAuRL1MSaxjsDFUqpYNbQgb22urh+71uyVXq0J+fFF9xxV4w
 	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e5m8ybkfb-1
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e5m8ybkfc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 15 May 2026 14:22:34 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64FE9ECB022649;
+	Fri, 15 May 2026 14:22:33 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4e5kvcuvay-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Fri, 15 May 2026 14:22:33 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64FE9Dxo026631;
-	Fri, 15 May 2026 14:22:32 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4e5kvckvdu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 15 May 2026 14:22:32 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64FEMS1545089222
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64FEMTTB53412222
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 15 May 2026 14:22:28 GMT
+	Fri, 15 May 2026 14:22:29 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 445612004D;
+	by IMSVA (Postfix) with ESMTP id 844BD20040;
+	Fri, 15 May 2026 14:22:29 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 59E7420043;
 	Fri, 15 May 2026 14:22:28 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 309FA20043;
-	Fri, 15 May 2026 14:22:27 +0000 (GMT)
 Received: from [192.168.178.55] (unknown [9.87.148.246])
 	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 15 May 2026 14:22:27 +0000 (GMT)
+	Fri, 15 May 2026 14:22:28 +0000 (GMT)
 From: Gerd Bayer <gbayer@linux.ibm.com>
-Date: Fri, 15 May 2026 16:22:06 +0200
-Subject: [PATCH 4/5] x86/pci: Use official API to iterate over PCI buses
+Date: Fri, 15 May 2026 16:22:07 +0200
+Subject: [PATCH 5/5] PCI: Make pci_root_buses private to PCI core
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -64,7 +64,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260515-priv_root_buses-v1-4-f8e393c57390@linux.ibm.com>
+Message-Id: <20260515-priv_root_buses-v1-5-f8e393c57390@linux.ibm.com>
 References: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
 In-Reply-To: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
 To: Richard Henderson <richard.henderson@linaro.org>,
@@ -85,21 +85,21 @@ Cc: Yinghai Lu <yinghai@kernel.org>, linux-alpha@vger.kernel.org,
 X-Mailer: b4 0.14.3
 X-TM-AS-GCONF: 00
 X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: 9Fn6JSOYn5leHLgBxi1ZPSEXCI3IZ1Fr
+X-Proofpoint-GUID: 2_E4E5fQqGK_gdgWkz3XVFqX2Y64d0U-
 X-Authority-Analysis: v=2.4 cv=Os5/DS/t c=1 sm=1 tr=0 ts=6a072c2a cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
  a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
  a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=OS3CRczKEtLnDcx_Za4A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: Hovlul_bhRsIek30WEVnGj5qQFZaeLIw
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDE0MyBTYWx0ZWRfX8fTqgyx8V9Rj
- 7PIPlXLIF2L+55hDHOOLgFHrNMNvc+E9B/YgLccoZ9JbpahswH+v0GcPtNUy1Fj/4YbDFMmjpN5
- dsOAzBtjiTJGzessVoH9tOvhsmvQqkhRJYcrYG4+sPegQbIJZrtixlITfUPJUTFb+b8jrwPmd89
- xzvZcmH0VHM0f9gFbct8PjAQfk/vjPi9eVEyl2gTNvoonUq3wIEvqxS1yQ7vPgwHle4FiApuoLw
- lEOE9WqGAblLXwLwbBGJwjUi63SlvtDBcXrNMK0MnmgPskxcksDNPcdzhHif80L4SQjmEHID0lH
- WVpnEqFSmDr2BJVq1aCE1we6mrvOrz14mU99t6i0yH5u3MS1pGOSD5+2ojbUXsIfqat+2BNPngS
- ZNds6u3CUxixk0LLa9V5IyiZvcIlKW666DsSaV8LZXI+t1aQFLBxNxT/c9fr0dJ8Ch0oqjZU8+s
- T9qrTeS+f9x7LA7dKfA==
+ a=28hvmymbyGcFHlkD5P8A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: gbZhqh0AjV2r8Vc2qnzG8viGM-BWhP2c
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDE0MyBTYWx0ZWRfX8z4Tzbj1mY3i
+ OEcTYAqVviT097HtrxKeQs5QgPSSPoxwMDRWUARFq9HWbqoZOmAO3g/f2FiP4CHxWVz+kvd9yyI
+ fdlfRR+Ij9IyF52PMHC3ST7BN9J7msYmDV+CBuCut9r4jshOtyh52Q4gMy5Cxh2QBay1MC6JWny
+ SMVEgbAiFwzafkGzqPBBkIcToihe3YzCW0yAcq2hevlIfDOeWt7qHJZcsZbvVvZ0JEZQBqBeQTm
+ MxWdTKx3rMRXOWoBQSz6I7xJY4nOrvnLx7i9Ojl9IGga3ItD9V2gGjkAoJczV6Kq0tOIyQFH99u
+ Ge+o32YtYT7Wgp1zKUvHYBZu3P3hI41t6EFW1lDD4JWY+4i8xdvvyzf6z0bXRtD4blf/Whzr0Sk
+ ogX/QCjpchV5L71bBnKKutAPOnuPlng/sh5Y6E9GCCRy6dxMggiXe5ocOFOQ1vbopuFIIloL/Zq
+ WuNcajT4UphwmTXDVcQ==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-05-15_03,2026-05-13_01,2025-10-01_01
@@ -109,55 +109,60 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605150143
 
-Replace iterating over pci_root_buses with the official
-pci_find_next_bus() call provided by PCI core. This allows to make
-pci_root_buses private to PCI core.
+After all users of pci_root_buses external to PCI core have been
+converted to using pci_find_next_bus(), move its declaration to the
+PCI core code and stop exporting the symbol.
 
 Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
 ---
- arch/x86/pci/i386.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/pci/pci.h   | 3 +++
+ drivers/pci/probe.c | 2 --
+ include/linux/pci.h | 4 ----
+ 3 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index e2de26b82940..194d0fa3cec8 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -357,10 +357,10 @@ static void pcibios_allocate_rom_resources(struct pci_bus *bus)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4a14f88e543a..1f36d400c9e0 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -366,6 +366,9 @@ static inline void pci_create_legacy_files(struct pci_bus *bus) { }
+ static inline void pci_remove_legacy_files(struct pci_bus *bus) { }
+ #endif
  
- static int __init pcibios_assign_resources(void)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *bus = NULL;
++/* List of all known PCI buses */
++extern struct list_head pci_root_buses;
++
+ /* Lock for read/write access to pci device and bus lists */
+ extern struct rw_semaphore pci_bus_sem;
+ extern struct mutex pci_slot_mutex;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b63cd0c310bc..2e97ab125ead 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -33,9 +33,7 @@ static struct resource busn_resource = {
+ 	.flags	= IORESOURCE_BUS,
+ };
  
- 	if (!(pci_probe & PCI_ASSIGN_ROMS))
--		list_for_each_entry(bus, &pci_root_buses, node)
-+		while ((bus = pci_find_next_bus(bus)) != NULL)
- 			pcibios_allocate_rom_resources(bus);
+-/* Ugh.  Need to stop exporting this to modules. */
+ LIST_HEAD(pci_root_buses);
+-EXPORT_SYMBOL(pci_root_buses);
  
- 	pci_assign_unassigned_resources();
-@@ -390,16 +390,18 @@ void pcibios_resource_survey_bus(struct pci_bus *bus)
+ static LIST_HEAD(pci_domain_busn_res_list);
  
- void __init pcibios_resource_survey(void)
- {
--	struct pci_bus *bus;
-+	struct pci_bus *bus = NULL;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c4454583c11..1c4610848b5c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1192,10 +1192,6 @@ extern enum pcie_bus_config_types pcie_bus_config;
  
- 	DBG("PCI: Allocating resources\n");
+ extern const struct bus_type pci_bus_type;
  
--	list_for_each_entry(bus, &pci_root_buses, node)
-+	while ((bus = pci_find_next_bus(bus)) != NULL)
- 		pcibios_allocate_bus_resources(bus);
- 
--	list_for_each_entry(bus, &pci_root_buses, node)
-+	bus = NULL; /* start all over */
-+	while ((bus = pci_find_next_bus(bus)) != NULL)
- 		pcibios_allocate_resources(bus, 0);
--	list_for_each_entry(bus, &pci_root_buses, node)
-+	bus = NULL; /* start all over */
-+	while ((bus = pci_find_next_bus(bus)) != NULL)
- 		pcibios_allocate_resources(bus, 1);
- 
- 	e820__reserve_resources_late();
+-/* Do NOT directly access these two variables, unless you are arch-specific PCI
+- * code, or PCI core code. */
+-extern struct list_head pci_root_buses;	/* List of all known PCI buses */
+-
+ void pcibios_resource_survey_bus(struct pci_bus *bus);
+ void pcibios_bus_add_device(struct pci_dev *pdev);
+ void pcibios_add_bus(struct pci_bus *bus);
 
 -- 
 2.54.0
