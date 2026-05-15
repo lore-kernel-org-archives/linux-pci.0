@@ -1,73 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEF3336A030
-	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 01:27:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5768237104C
+	for <linux-pci@vger.kernel.org>; Fri, 15 May 2026 01:37:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778808431; cv=none; b=pe87rfI87r3luRKOWbAjjYDtmBgTH8JUkVfnN9dkyPqOX+23UAR+OgpdNogjVUWCZCAoIDjr/wmMT2z+T/NHtu4Ax01uEs5wf1uo7OZLHxNHn/JoTw6HzDKENijroiknHrOPkTucsV5pAiaqdS9r9+mWDRYPjbbJihpI48KpEwE=
+	t=1778809020; cv=none; b=kebkbL/rp5ukaha7pvHCuPA+vhhiIkb8Szaxk/2FLooEm4beFKD+2lxn9rKh1kjKcUdZS1i6tyTgj1XrrOzDV57e87zsdSn9f5/yJ/KHY2Isxw1qIXhv6ZOaalCMOAHW5b5KkLyggXWnmk+w6haSJlI98+yp8RU0xFcRLwKpvpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778808431; c=relaxed/simple;
-	bh=jds/KUEnMypQxF/dsmHVwU7tav2q16u3klT9lSJO4Dw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Okmoi3DovR9CItHwpwOCWu3YvTDJtzoPd4LmU8PZbMGBJ+tmJIwUPeFMay4Mc1H+grVgAA07NSORKWdeykm/lk3YMDys7NLiHfbinLW42VNvr4dZ1NClvkAHq1EIql4GgaessR4SqyS8K3rl/Aw49xnAv9K4IGSQMJJcrXe9bkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TKn5CzOw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778809020; c=relaxed/simple;
+	bh=Ka3rYjcHv5fDpaxp5l/D8Ef3lLVdGTHdLn01Z9GUC8I=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=BmfkP7WknBWpmkcLX86KgXjr+gn1W3mRv9dNFepql211jdoZusfSaSs/wXGFR1DfAgFHsjjPJzT5flSKmnKch9tEk4h4h/UAWdYCUclzKv4UxzZEoDEdQt1exI3h+JCjf5pEDEiWYfqHGOQ7fo8mWSaZ9SbT3N3qozDSwJHFSXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S1dp8erG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TKn5CzOw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B9D4C2BCB3;
-	Fri, 15 May 2026 01:27:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S1dp8erG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC03BC2BCC7;
+	Fri, 15 May 2026 01:36:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778808431;
-	bh=jds/KUEnMypQxF/dsmHVwU7tav2q16u3klT9lSJO4Dw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TKn5CzOw33zLhbULxmodZj4uSBxZUoymOm3B0RWi06fo/Tj2RARVGhm2M6dBAApiH
-	 hZdpobN+XsohyfcO+zcpdWbhWFuz+9THuBp/UQBrRu5mAHgEFO/nDgHtth+FviXQem
-	 /K4dEkKuze88YD2gaGUbeg7IO9LX6wXwlPwCBdpv1unf/Vvd3zNC9AwuirSn1ocquu
-	 LPtaOWT8gpJtSbqvCL/0WpfaECf1gYilANfyrwqjI1psxqkVZxVBgU0Xr/WW5ke+JY
-	 OFrjwxtt27geZM/MJWdFqpITcKcRyFl7HDV6OxZY+YyfPMsF26p1GhijOUUowI4pYB
-	 AURsy24vtCkRw==
-Date: Fri, 15 May 2026 10:27:09 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: lirongqing <lirongqing@baidu.com>
-Cc: Ryder Lee <ryder.lee@mediatek.com>, 
-	Jianjun Wang <jianjun.wang@mediatek.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, 
-	linux-arm-kernel@lists.infradead.org
+	s=k20201202; t=1778809020;
+	bh=Ka3rYjcHv5fDpaxp5l/D8Ef3lLVdGTHdLn01Z9GUC8I=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=S1dp8erGDErc0l+ZAKI38nNX37869Zl2TP8jk6UsGw69bo4yOOgA1sga8itkjW90Q
+	 dN1VtQNDwUL44CtnaD1qM3WAe9a7uH/ZfnY6oyA9oyrn79NDmubTcoAbTDkhyDZpSB
+	 kGP5tGayf8rT2d2caT8aOOhMOrK/SVubETYLEp3YoK4QtX4JaLmL/0yZd6WmDSmfiW
+	 1JnNpSaMhsEwIY9OI1KsrlsFhV1Qp/bUxnmvmN+BsM0Qw+ltktMGIeLJDuZldyQwWe
+	 pNgbqFjQ8yNHJdPd3yJT2jkxTKUAsQNziyk6+Ft1zAQdNwgUx8Vlo2c/d+1VWsbBeE
+	 4nN1AZCipnuxg==
+From: sashiko-bot@kernel.org
 Subject: Re: [PATCH] PCI: mediatek: Fix operator precedence in
  PCIE_FTS_NUM_L0 macro
-Message-ID: <20260515012505.GA3166828@rocinante>
+Reply-To: sashiko-reviews@lists.linux.dev
+To: lirongqing <lirongqing@baidu.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260515005552.2343-1-lirongqing@baidu.com>
 References: <20260515005552.2343-1-lirongqing@baidu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 15 May 2026 01:36:59 +0000
+Message-Id: <20260515013659.DC03BC2BCC7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260515005552.2343-1-lirongqing@baidu.com>
 
-Hello,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Fixing the macro changes the configured FTS number from 0 to 80, c=
+onflicting with the comment requiring 250 and potentially breaking L0s link=
+ recovery.
+- [Low] Missing explicit inclusion of `<linux/bitfield.h>` for `FIELD_PREP(=
+)`.
+--
 
-> The original PCIE_FTS_NUM_L0(x) macro was buggy due to improper operator
-> precedence, where ((x) & 0xff << 8) was evaluated as ((x) & 0xff00).
-> 
-> Instead of just fixing the parentheses, use the standard FIELD_PREP()
-> macro. This makes the code more robust by automatically handling masks
-> and shifts, while also adding compile-time type and range checking to
-> ensure the value fits within PCIE_FTS_NUM_MASK.
-> 
-> Fixes: 637cfacae96f ("PCI: mediatek: Add MediaTek PCIe host controller support")
-> Signed-off-by: Li RongQing <lirongqing@baidu.com>
-> ---
->  drivers/pci/controller/pcie-mediatek.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> index 7572252..00f0e29 100644
+commit be16aaf8543160340df684dc520cc762167effe3
+Author: Li RongQing <lirongqing@baidu.com>
+
+PCI: mediatek: Fix operator precedence in PCIE_FTS_NUM_L0 macro
+
+The original PCIE_FTS_NUM_L0(x) macro was buggy due to improper operator
+precedence, where ((x) & 0xff << 8) was evaluated as ((x) & 0xff00).
+
+Instead of just fixing the parentheses, use the standard FIELD_PREP()
+macro. This makes the code more robust by automatically handling masks
+and shifts, while also adding compile-time type and range checking to
+ensure the value fits within PCIE_FTS_NUM_MASK.
+
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/control=
+ler/pcie-mediatek.c
+> index 75722524fe744..00f0e29183f2b 100644
 > --- a/drivers/pci/controller/pcie-mediatek.c
 > +++ b/drivers/pci/controller/pcie-mediatek.c
 > @@ -61,7 +61,7 @@
@@ -77,12 +78,41 @@ Hello,
 > -#define PCIE_FTS_NUM_L0(x)	((x) & 0xff << 8)
 > +#define PCIE_FTS_NUM_L0(x)	FIELD_PREP(PCIE_FTS_NUM_MASK, x)
 
-Aww.  Nice catch!  Thank you for fixing this!
+Should this file explicitly include <linux/bitfield.h> for FIELD_PREP()?
 
-Happy to offer:
+While the file compiles on ARM/ARM64 due to implicit inclusion via
+<linux/irq.h> and <asm/ptrace.h>, missing the explicit include can cause
+build failures on other architectures like x86 during COMPILE_TEST.
 
-  Reviewed-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Does this change introduce a regression in L0s link recovery by altering
+the configured Fast Training Sequence (FTS) number?
 
-All the best,
+The driver configures the FTS number here:
 
-	Krzysztof
+drivers/pci/controller/pcie-mediatek.c:mtk_pcie_startup_port() {
+    ...
+	/* configure RC FTS number to 250 when it leaves L0s */
+	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
+	       pcie->base + PCIE_CFG_ADDR);
+	val =3D readl(pcie->base + PCIE_CFG_DATA);
+	val &=3D ~PCIE_FTS_NUM_MASK;
+	val |=3D PCIE_FTS_NUM_L0(0x50);
+    ...
+}
+
+Before this patch, the macro evaluated to 0 because 0x50 & 0xff00 is 0.
+
+This value of 0 might be safely interpreted by some hardware as 256,
+satisfying the comment's requirement of 250.
+
+By fixing the macro, the driver will now actively write 0x50 (80) to the
+register instead of 0.
+
+Since the comment explicitly requires 250, could reducing this to 80 cause
+link recovery to fail?
+
+Is 0xfa (250) the intended value here instead of 0x50?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260515005552.2343=
+-1-lirongqing@baidu.com?part=3D1
