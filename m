@@ -1,161 +1,175 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22D8248165B;
-	Fri, 15 May 2026 14:03:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 837243A7593;
+	Fri, 15 May 2026 14:23:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778853815; cv=none; b=C95ykyC/15OypWHFXAQPoSZH9SYEFI0NICKxK2Xm1VxY6Gnte61Dvrc9dIJGWWKDPCQsgWI6JIACVH+RRbex5wNbDL9RqED1/ufyBXgHjgjO3qiTOIPNse3novgrE0TbzmmZ72tvNZQQm8RGQPo95F31koewO74z7fs/6lLygsM=
+	t=1778854985; cv=none; b=JAdUlLe9TPPtsWV1mFHNHTKz3fODm3CgonmVLY2Xv/aKe7eukw2HA/FJMeTxBjQwgOwnVcSut63YyPm5ttIYZ0496o2ZnprRa4TULT6xlN7ijv8ZmyayOHO3OBlvDuoHOjKi88chCVDADO64vorsITGPkh743MrikG0b+86s3w4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778853815; c=relaxed/simple;
-	bh=THepJCgpUxWChlmlguKiqTsHKzo8gpZHAZ3bAUrUMC0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pILgJFzLznl+jJMhwveoSuVDyYjw5wkS0vTjtvwo5s/CzjcAm4ZyByRGoB88ftdQJz/kqjC0CkXT+dMymUjFZKufNF3gjRHOfF22zGm6kWJBWonoc8b0XsizqD0fI2cTlIUmOCGz/fj7eyZRxeEAT2LqnBeb9gcc2fwrtWc9uO4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hJDzijur; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1778854985; c=relaxed/simple;
+	bh=S4I6ZH4b/aezVLAu179Bv6f/dKyh1M8Z4R1vqZCaxvk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=SLz2LrSEHf0a7Kg1X5p+Adk6Asm4arHHkGReroZM43u4rQn3ZQRD3e7TW7bSvpp5M4q1ugB0aek00W+YiRPoMbXE5z9VHzvHq7x2+r9swZNVshB16CW6cJKujeHGchvtqyijxNfFP/pRA6mk2BSZNMRE3t9dn5fKmf7hK8su/9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=PmCOX4/0; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hJDzijur"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 11D19C2BCB0;
-	Fri, 15 May 2026 14:03:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778853814;
-	bh=THepJCgpUxWChlmlguKiqTsHKzo8gpZHAZ3bAUrUMC0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hJDzijurGGw+DiCB3xBKurgrwkDrrQc5TUP6IcV+SnACcdl8SxgpK5us6K651Pot5
-	 dhd2HPWSQ2346dQF1RgmA17LOi0rddECLG3SG0bZ8ZGkViBm4ttvWg6LdQsXomxPAT
-	 /MDe9oax9ZnF6gjZODNqBUdvH9p+/a/kDfdBZYkaA2LD3+G6RWmu1I+Gnwg/73Z5fn
-	 Lt+R2ANKoo1BYeWIKNGFl21PNUC6xfT4VtN0wEMBW1XzeAXs39UhMj7Y5eCBAbENrs
-	 fsssaG7obrfD7EpOf+zdLlP8WvD4zZ4ELCcEGGFFO9J4Gk2n8EXV9gpCsx/3fzdSrt
-	 bscA7TG1BWMPQ==
-Date: Fri, 15 May 2026 19:33:20 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jon Hunter <jonathanh@nvidia.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	manivannan.sadhasivam@oss.qualcomm.com, Thierry Reding <treding@nvidia.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	"David E. Box" <david.e.box@linux.intel.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Heiner Kallweit <hkallweit1@gmail.com>, 
-	Chia-Lin Kao <acelan.kao@canonical.com>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, 
-	Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, 
-	Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states
- set by BIOS for devicetree platforms
-Message-ID: <dskf3ribxxu3rvt5jwsq43oz4gnyskcz7th7h5jysrj2bo2bfb@r7m6ifhqdjof>
-References: <20260122152903.GA1247682@bhelgaas>
- <8d8b2244-2bf0-48cf-8fb8-9e47e197a62d@nvidia.com>
- <fb6uzh3jfes3hky6fblpsh2vvg3daij5ogecydiuhmytxbglcb@tdqjcoxuymsk>
- <daa93cc4-090a-4eb0-91c3-029e0b037b71@nvidia.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="PmCOX4/0"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64FBTiU64090474;
+	Fri, 15 May 2026 14:22:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=ePXGiG
+	32ePZCUq++ub2uUTWLQnF7fF/+KzdsGsly5x0=; b=PmCOX4/0aDo+7UG5tlvAVb
+	cSqcZxIBQZOEiPJSh4+qXG6v2FjUarxGVwKQ5cXQR/8uewD8qIw+Vawiy84A8YHQ
+	/qVHweI/4f4GY0s7Oq8hiqWnoXG3raQ7VcwH9r37S2nY7Wd6DfpBBPqFMbb9Oe/p
+	IjU3wCZCTIra2FiLH2Uvdg7RBPQlEHAV4zh2MRE1yNqU55p4wGmvlnxOykpM9kcC
+	mlbFYWEgSgeJAvhRmjCM2rv4EK2gbo/XIcVTlAXsULiSzDO954jQT6+MfqaiJO97
+	1MxwZylCEliWo7BKTXmjUKmwnHO3O8Htri0k8j0q4DGJRrNY6c0+wdpR0QGRpylg
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e5m93ukk5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 15 May 2026 14:22:31 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64FE975D007100;
+	Fri, 15 May 2026 14:22:30 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e5kvcbvvb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 15 May 2026 14:22:30 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64FEMRbE27722094
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 15 May 2026 14:22:27 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1B94120040;
+	Fri, 15 May 2026 14:22:27 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id F10DC20043;
+	Fri, 15 May 2026 14:22:25 +0000 (GMT)
+Received: from [192.168.178.55] (unknown [9.87.148.246])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 15 May 2026 14:22:25 +0000 (GMT)
+From: Gerd Bayer <gbayer@linux.ibm.com>
+Date: Fri, 15 May 2026 16:22:05 +0200
+Subject: [PATCH 3/5] powerpc/pci: Use official API to iterate over PCI
+ buses
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <daa93cc4-090a-4eb0-91c3-029e0b037b71@nvidia.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260515-priv_root_buses-v1-3-f8e393c57390@linux.ibm.com>
+References: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
+In-Reply-To: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
+To: Richard Henderson <richard.henderson@linaro.org>,
+        Matt Turner <mattst88@gmail.com>, Magnus Lindholm <linmag7@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-alpha@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        Gerd Bayer <gbayer@linux.ibm.com>
+X-Mailer: b4 0.14.3
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-ORIG-GUID: FFfQU0OrTn0zzdD30lRJSC_3o5nA81Sl
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE1MDE0MyBTYWx0ZWRfX0MJB1F+swIDZ
+ cDbREqzjGwweWu9LtDXzqRraaE00hp2HmBvfB4Hdb0TMN5q6RdAnSW4eAjeWA1X9W/H5swreQqp
+ 9L66gh7eZsV+DgyIZf/hOUx1xInEx3cLbpln7ZRsgL8MfywX2Wwq6hdlDJfAZppxDcNFMm30gpC
+ zPDwRlo2T/Gf1oSUQV3Hp7AHmsDlX1Ft0OUUscMuas1Rz83PCQ7yRVGQ82Rg5M0DZkbwW8ybBfb
+ 8IKWlZ5qmxWgzgNOakRqpaQ/mYzWsmEZaq4Myj0x6NzuYeAfD5jKeMHH1oPKAMfwDSqSD9yGJ6C
+ jBQxuEIyLd6LZf1dIfGW1L6mYWivyHAs5kFyht1FrSXycpTyfwdfRn/s7+SqkI68NpBXyTB4+r9
+ a1agbgMlTSMm0jSzZoMts6TwiGLH4V2/Gr704LRE2nxwtEI3Y2schRKqyJBI23fEm4psOjl9YVa
+ J1XDIe2C9Nm4pboY0Sw==
+X-Authority-Analysis: v=2.4 cv=ZZEt8MVA c=1 sm=1 tr=0 ts=6a072c28 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VnNF1IyMAAAA:8
+ a=Nc3X6MLr1OvL3U8oulEA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: wCwM_yqRW6cn_hXtPnpJTdbPYVQduWPs
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-15_03,2026-05-13_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 priorityscore=1501 malwarescore=0 bulkscore=0 impostorscore=0
+ phishscore=0 spamscore=0 lowpriorityscore=0 suspectscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605150143
 
-On Tue, May 12, 2026 at 10:07:50AM +0100, Jon Hunter wrote:
-> 
-> On 11/05/2026 06:18, Manivannan Sadhasivam wrote:
-> > On Thu, May 07, 2026 at 11:25:23AM +0100, Jon Hunter wrote:
-> > > Hi Bjorn, Mani,
-> > > 
-> > > On 22/01/2026 15:29, Bjorn Helgaas wrote:
-> > > > [+cc NVMe folks]
-> > > > 
-> > > > On Thu, Jan 22, 2026 at 12:12:42PM +0000, Jon Hunter wrote:
-> > > > > ...
-> > > > 
-> > > > > Since this commit was added in Linux v6.18, I have been observing a suspend
-> > > > > test failures on some of our boards. The suspend test suspends the devices
-> > > > > for 20 secs and before this change the board would resume in about ~27 secs
-> > > > > (including the 20 sec sleep). After this change the board would take over 80
-> > > > > secs to resume and this triggered a failure.
-> > > > > 
-> > > > > Looking at the logs, I can see it is the NVMe device on the board that is
-> > > > > having an issue, and I see the reset failing ...
-> > > > > 
-> > > > >    [  945.754939] r8169 0007:01:00.0 enP7p1s0: Link is Up - 1Gbps/Full -
-> > > > >     flow control rx/tx
-> > > > >    [ 1002.467432] nvme nvme0: I/O tag 12 (400c) opcode 0x9 (Admin Cmd) QID
-> > > > >     0 timeout, reset controller
-> > > > >    [ 1002.493713] nvme nvme0: 12/0/0 default/read/poll queues
-> > > > >    [ 1003.050448] nvme nvme0: ctrl state 1 is not RESETTING
-> > > > >    [ 1003.050481] OOM killer enabled.
-> > > > >    [ 1003.054035] nvme nvme0: Disabling device after reset failure: -19
-> > > > > 
-> > > > >   From the above timestamps the delay is coming from the NVMe. I see this
-> > > > > issue on several boards with different NVMe devices and I can workaround
-> > > > > this by disabling ASPM L0/L1 for these devices ...
-> > > > > 
-> > > > >    DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5011, quirk_disable_aspm_l0s_l1);
-> > > > >    DECLARE_PCI_FIXUP_HEADER(0x15b7, 0x5036, quirk_disable_aspm_l0s_l1);
-> > > > >    DECLARE_PCI_FIXUP_HEADER(0x1b4b, 0x1322, quirk_disable_aspm_l0s_l1);
-> > > > >    DECLARE_PCI_FIXUP_HEADER(0xc0a9, 0x540a, quirk_disable_aspm_l0s_l1);
-> > > > > 
-> > > > > I am curious if you have seen any similar issues?
-> > > > > 
-> > > > > Other PCIe devices seem to be OK (like the realtek r8169) but just
-> > > > > the NVMe is having issues. So I am trying to figure out the best way
-> > > > > to resolve this?
-> > > > 
-> > > > For context, "this commit" refers to f3ac2ff14834, modified by
-> > > > df5192d9bb0e:
-> > > > 
-> > > >     f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for devicetree platforms")
-> > > >     df5192d9bb0e ("PCI/ASPM: Enable only L0s and L1 for devicetree platforms")
-> > > > 
-> > > > The fact that this suspend issue only affects NVMe reminds me of the
-> > > > code in dw_pcie_suspend_noirq() [1] that bails out early if L1 is
-> > > > enabled because of some NVMe expectation:
-> > > > 
-> > > >     dw_pcie_suspend_noirq()
-> > > >     {
-> > > >       ...
-> > > >       /*
-> > > >        * If L1SS is supported, then do not put the link into L2 as some
-> > > >        * devices such as NVMe expect low resume latency.
-> > > >        */
-> > > >       if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
-> > > >         return 0;
-> > > >       ...
-> > > > 
-> > > > That suggests there's some NVMe/ASPM interaction that the PCI core
-> > > > doesn't understand yet.
-> > > > 
-> > > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/controller/dwc/pcie-designware-host.c?id=v6.18#n1146
-> > > 
-> > > 
-> > > I want to revisit this issue. From my perspective low-power suspend has now
-> > > been broken on some of our Tegra platforms (that have NVMe devices) since
-> > > v6.19 and so far this is no resolution to this issue. The patch that was
-> > > proposed to fix this [0] has been rejected by qualcomm and although this
-> > > does workaround the issue, my confidence that this is the right fix is now
-> > > low.
-> > > 
-> > 
-> > The referenced patch is now merged into arm-soc for v7.2:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?id=7602c0ec0bbfd3985d49f4f0cad281c1414008c9
-> > 
-> > I hope this takes care of the issue you are dealing with.
-> 
-> Well yes this patch does fix issues for us. However, I am still a bit
-> confused about this whole thing given that this patch does not work for all
-> qualcomm platforms.
+Replace iterating over pci_root_buses with the official
+pci_find_next_bus() call provided by PCI core. This allows to make
+pci_root_buses private to PCI core.
 
-That's because, on Qcom SoCs, we use different kind of FW implementations. But
-I'm trying to address Qcom problems in a different way altogether now.
+Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+---
+ arch/powerpc/kernel/pci-common.c | 7 ++++---
+ arch/powerpc/kernel/pci_64.c     | 4 ++--
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-> Anyway, I guess we have not seen any other issues so far
-> with the above and so may be we can consider this closed for now.
-> 
-
-Thanks!
-
-- Mani
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 8efe95a0c4ff..1e0be7bcaa56 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1417,10 +1417,10 @@ static void __init pcibios_reserve_legacy_regions(struct pci_bus *bus)
+ 
+ void __init pcibios_resource_survey(void)
+ {
+-	struct pci_bus *b;
++	struct pci_bus *b = NULL;
+ 
+ 	/* Allocate and assign resources */
+-	list_for_each_entry(b, &pci_root_buses, node)
++	while ((b = pci_find_next_bus(b)) != NULL)
+ 		pcibios_allocate_bus_resources(b);
+ 	if (!pci_has_flag(PCI_REASSIGN_ALL_RSRC)) {
+ 		pcibios_allocate_resources(0);
+@@ -1432,7 +1432,8 @@ void __init pcibios_resource_survey(void)
+ 	 * bus available resources to avoid allocating things on top of them
+ 	 */
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		list_for_each_entry(b, &pci_root_buses, node)
++		b = NULL; /* Start all over */
++		while ((b = pci_find_next_bus(b)) != NULL)
+ 			pcibios_reserve_legacy_regions(b);
+ 	}
+ 
+diff --git a/arch/powerpc/kernel/pci_64.c b/arch/powerpc/kernel/pci_64.c
+index e27342ef128b..f816d063b984 100644
+--- a/arch/powerpc/kernel/pci_64.c
++++ b/arch/powerpc/kernel/pci_64.c
+@@ -227,7 +227,7 @@ SYSCALL_DEFINE3(pciconfig_iobase, long, which, unsigned long, in_bus,
+ 			  unsigned long, in_devfn)
+ {
+ 	struct pci_controller* hose;
+-	struct pci_bus *tmp_bus, *bus = NULL;
++	struct pci_bus *tmp_bus = NULL, *bus = NULL;
+ 	struct device_node *hose_node;
+ 
+ 	/* Argh ! Please forgive me for that hack, but that's the
+@@ -248,7 +248,7 @@ SYSCALL_DEFINE3(pciconfig_iobase, long, which, unsigned long, in_bus,
+ 	 * used on pre-domains setup. We return the first match
+ 	 */
+ 
+-	list_for_each_entry(tmp_bus, &pci_root_buses, node) {
++	while ((tmp_bus = pci_find_next_bus(tmp_bus)) != NULL) {
+ 		if (in_bus >= tmp_bus->number &&
+ 		    in_bus <= tmp_bus->busn_res.end) {
+ 			bus = tmp_bus;
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.54.0
+
