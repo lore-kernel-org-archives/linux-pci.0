@@ -1,42 +1,39 @@
 Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50ADD3E2778;
-	Sat, 16 May 2026 15:37:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9503633B6C2;
+	Sat, 16 May 2026 15:39:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778945868; cv=none; b=BV3Es+FD5V+AmRpND82zBnGmzVNdxLdQBFvIu20QE/rFt7SDSmRX5g8W7ljLWUnsVm0Z5e/gEtW1JoRH9nG0DlC7iWfjHcegVQK8Egi6zBP919CNw7kcYd0sjJcIflu9bOruiSq0bbEy5Iscdf3VI37vyA+HonZBh8PTw4Swas8=
+	t=1778945979; cv=none; b=iT1jXhSoxgAudrsq/ftpMz/POBFN5OJHq0kXMHpv8kSeRSUKz8YtIj7W1u37Pwq8rPCPQbj9+ZIePgd+HdTeDpW4LhhNeBIpqg4+MfT/OvzKfUbqOGX2pmB/xkbw5wFfu28DPKEx21TR6RZ3rn1aJ/I+X9ocxbc7CzfIH/Ycgao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778945868; c=relaxed/simple;
-	bh=XYlkniTWrW9P2XjmDdZTdrggbOC19WNlRek/UVF+f2U=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=QjHTIT2SIWtXvhxV0/Eb1PQ7xdth2y0HADD6f4D1QmYba5ahGw5BQXZJE+7iVtQhX4n52nTzrC5KjY65sjYSDEt98af6U6QBQJwGbWu970zAGzYPB9vaH/U5RFwnf/3LEnVpQCINyorYDvxtKsV+UcFtYotpMZU6IKF0bHX8Hu4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=F06O7FmN; arc=none smtp.client-ip=117.135.210.3
+	s=arc-20240116; t=1778945979; c=relaxed/simple;
+	bh=lvEUvbtIjyb3eE+XVZArod+nmwHZzuRJ16wcQU/Xu4o=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=foCwjUrBApogQsZLBwzbJJlSzwu3UvwlXmeZ3BRD07NnKFcdNgi812fmO/n8Skm2E4dtT5CEoW+47/vo/GFbwIi0KFTNulbm1bGxY9N7Q0c2H0So6Q2a46ZQoQNf47XtOWJq68gRNW1/gOkG1M+KjF2U1KTs6vrDw+Ej1WBYblQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=d2QmB9eo; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="F06O7FmN"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="d2QmB9eo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=kF
-	ul8ZfF4h9/iqiGeB/9BT7X97REYF0Qo8nJs905hxw=; b=F06O7FmNHOG6IceKog
-	StInFeWDBKPNmY5ZQ40NfLIxEBnBS1qEl9lFr7JxTNFzCuy3LT6YUZUISYG7z7Tz
-	M4a1Muf4B9hK5X0A39uk3GGL2sIFSN5voCEn0jXh0a8a9GmxG5pv617T0XXAzQ0u
-	vgGAd0FDb1wViNWWCUbdDZqB4=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=7j
+	5CDU0URFs1JHVW/teG8LXt9sldBcK/VZWwCoLPTn0=; b=d2QmB9eoJfN4H8jgzK
+	isoUWshJ0VQrkkZ16xJurPpKgUo4dkF2FHYYtQZ8bmk7Nb1OFZRDgxEUXAxA/l/w
+	0Xs5cG9hn3WiU4s55HKy70NeCzeQZ8oO0V9nxvifysixOpAfyAk2Aej8s5OUbJRp
+	J5v8mlRRJK6y6iPo11zGDYBOg=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3XzoajwhqfCYHBw--.40848S5;
-	Sat, 16 May 2026 23:37:00 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3XzoajwhqfCYHBw--.40848S2;
+	Sat, 16 May 2026 23:36:58 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	mani@kernel.org
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 3/3] PCI: cadence: Use common TLP type macros
-Date: Sat, 16 May 2026 23:36:57 +0800
-Message-Id: <20260516153657.65214-4-18255117159@163.com>
+Subject: [PATCH 0/3] PCI: Unify TLP type definitions across controller drivers
+Date: Sat, 16 May 2026 23:36:54 +0800
+Message-Id: <20260516153657.65214-1-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260516153657.65214-1-18255117159@163.com>
-References: <20260516153657.65214-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,57 +41,54 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3XzoajwhqfCYHBw--.40848S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tryfZr1DKF18Gw4rAFy8uFg_yoW5JFW3pa
-	48Ar4rAF1SqF42v3yvk3Z5Aa4fJFZFvFnrGw1kKr45W3Z3Ar1xWF4Iqr98JF9IqrnrX3Zr
-	Z34UGr9rWF45W3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR0PfdUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxByHK2oIjxyg7wAA3K
+X-CM-TRANSID:_____wD3XzoajwhqfCYHBw--.40848S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Ww4kZryUAw1xAF1fZw1fZwb_yoW8Cr18pa
+	y3tay3Zr1xta13uFs3Z3W8Zr1Yv3Z3CayUWrsFgw1SqF9IkFyUtry8tr1rXFy3JrW0qwnI
+	kr4jgr97GFsrArDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pirOzxUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwxuGKmoIjxuaDQAA3V
 
-The Cadence HPA driver uses hardcoded constants (0x0, 0x2, 0x4, 0x5,
-0x10) to program the outbound region type. Replace them with the newly
-introduced common TLP type macros from pci.h for better readability
-and maintainability.
+This series replaces scattered hardcoded values and private macros for
+PCIe TLP type fields with a single set of common definitions in pci.h.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
+Background:
+PCIe Transaction Layer Packets (TLPs) have a Type field (bits 4:0 of
+byte 0) that identifies the request type. Different controller drivers
+(dwc, cadence, aspeed, mediatek) currently use either magic numbers or
+their own macro names for these values, hurting code readability and
+maintainability.
+
+Changes:
+- Patch 1: Introduce common macros in pci.h and convert aspeed/mediatek.
+- Patch 2: Convert dwc driver (includes tegra194-acpi glue).
+- Patch 3: Convert cadence driver.
+
+All replacements are compile-time constant substitutions with identical
+numeric values, so no runtime behavior change.
+
 ---
- .../pci/controller/cadence/pcie-cadence-hpa-regs.h   | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+When I was integrating the DWC driver into the firmware of the GPU, 
+discovered that the TLP type field of the iATU was similar to that
+in drivers/pci/pci.h. Therefore, I wanted to make the code uniform.
+---
+Hans Zhang (3):
+  PCI: Add common TLP type macros and convert aspeed/mediatek
+  PCI: dwc: Replace ATU type macros with common TLP type macros
+  PCI: cadence: Use common TLP type macros
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-hpa-regs.h b/drivers/pci/controller/cadence/pcie-cadence-hpa-regs.h
-index 026e131600de..72299121fd44 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-hpa-regs.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence-hpa-regs.h
-@@ -14,6 +14,8 @@
- #include <linux/phy/phy.h>
- #include <linux/bitfield.h>
- 
-+#include "../../pci.h"
-+
- /* High Performance Architecture (HPA) PCIe controller registers */
- #define CDNS_PCIE_HPA_IP_REG_BANK		0x01000000
- #define CDNS_PCIE_HPA_IP_CFG_CTRL_REG_BANK	0x01003C00
-@@ -119,15 +121,15 @@
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC0(r)                (0x1008 + ((r) & 0x1F) * 0x0080)
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK         GENMASK(28, 24)
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MEM  \
--	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, 0x0)
-+	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, PCIE_TLP_TYPE_MEM_RDWR)
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_IO   \
--	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, 0x2)
-+	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, PCIE_TLP_TYPE_IO_RDWR)
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0  \
--	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, 0x4)
-+	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, PCIE_TLP_TYPE_CFG0_RDWR)
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1  \
--	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, 0x5)
-+	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, PCIE_TLP_TYPE_CFG1_RDWR)
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_NORMAL_MSG  \
--	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, 0x10)
-+	FIELD_PREP(CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MASK, PCIE_TLP_TYPE_MSG)
- 
- /* Region r Outbound PCIe Descriptor Register */
- #define CDNS_PCIE_HPA_AT_OB_REGION_DESC1(r)        (0x100C + ((r) & 0x1F) * 0x0080)
+ .../cadence/pcie-cadence-hpa-regs.h           | 12 ++++++-----
+ .../pci/controller/dwc/pcie-designware-ep.c   |  6 +++---
+ .../pci/controller/dwc/pcie-designware-host.c | 20 +++++++++----------
+ drivers/pci/controller/dwc/pcie-designware.c  |  2 +-
+ drivers/pci/controller/dwc/pcie-designware.h  |  5 -----
+ .../pci/controller/dwc/pcie-tegra194-acpi.c   |  4 ++--
+ drivers/pci/controller/pcie-aspeed.c          |  8 ++++----
+ drivers/pci/controller/pcie-mediatek.c        |  8 ++------
+ drivers/pci/pci.h                             |  9 +++++----
+ 9 files changed, 34 insertions(+), 40 deletions(-)
+
+
+base-commit: 6916d5703ddf9a38f1f6c2cc793381a24ee914c6
 -- 
 2.34.1
 
