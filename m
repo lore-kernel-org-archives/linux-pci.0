@@ -1,29 +1,29 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9DB53E1681;
-	Sat, 16 May 2026 15:37:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E9373E3C69;
+	Sat, 16 May 2026 15:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778945849; cv=none; b=MY5VvGdfC+0Yo/M324mACXW8kJG5hTT1Ht260r71bPuyaKJc1rqZlZhuTTAht0JN30CU3zzNviDEZgrXuhReX7OX2kE38l9L7TWJdusnV7D0uDXU8PqRTUnKd2z6DjBRG609xPo5EsojtIxBF598YN/uuAu4S9r3l/y0fY06mMY=
+	t=1778945853; cv=none; b=TBc9LOSFvcn59TlHp665RrDLJgiZ4URH6FXY8iQJxnjrJ7c2hbjTs4N3SkUoNjvZ3YDj5/A2uQAdopP7iQTbpXYmGd/H4okbOg4VUL2nB7vi7piQPUl9sKkgK5qLKpCm08ReyQehT5HxPbxgmETjK1WL1RIJE3RM/ZoO22i+4NA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778945849; c=relaxed/simple;
-	bh=xVMH3n7NRFYIPigyREaHQtmQL1K/uVZzkSPEzToAtlE=;
+	s=arc-20240116; t=1778945853; c=relaxed/simple;
+	bh=h/qzQYlE7lUe5P8Av6aQLnQFrUQVp75HdpY89nVwQwc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IZibRpa516S9pNUkqMvtpFkGh4gIAAOLDhAJY8jQhekjuJ3XltSopQwhrPfFcxaPhJyIODWGPSrn02nRM1GAo0PdHTTRP16abKVUVRrOe8viody1OBj3roj61rg11Z4dFqlrv8ry6kE8LS+Ctj1rW9AC5jOu9UTPRuCdcLtZjuk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GI++QG0x; arc=none smtp.client-ip=220.197.31.5
+	 MIME-Version; b=b1YBezeZlX+n0niCBZ9frAZWTg0a/S61zp6RqCUvOtaXYQMMsNogs3KLJUuk03h8xDT8Pkbz7ZVxRJdfNi1+GMXE4hVOstk8/zMMwdaxVPHK8o8NZahXI64Azh0f8PDhHU+sbBpuzDFV0UgI2HvtWSQ2gYiqh8unRLX8gmpA15g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=WzSS3PZw; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GI++QG0x"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="WzSS3PZw"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Zj
-	/PBTSQI0lK9i31CmFmrK/4+AXwZDcQLoEZ32R5WEk=; b=GI++QG0xeypFB2F913
-	TejzxaAvcr4z0upzQzC2KRwoMY+7SIbw/JTTqKbwSKuf7SMMfXfp/Piv3PTWchct
-	Ot/l9ZiNia/scmwrG4xR9H5XACKHl8QLKXWSuVdIKzXsiaBDTxs2+V5kxOkQD1Je
-	9pgzMu7D1P65+CTEprgiC/feA=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=4B
+	+PdJ0CMlJUVeqlTg08VI37BUIgRRoNVGBsNRbSpds=; b=WzSS3PZwJH/n5W6ZLV
+	8228URS9IEO9q/8s+CY+v05Tt0gL2hNXQ4stAZnnWs/jCqvSyMKcjEv7Tv4RsPA8
+	/f0TTeLHjxZs8GMYDQbC0UqBaZ+CmpCa+QF2Yd4H8RXatINN3pRmkJmir3Z1F6dG
+	6qDt5UeE9GaBCa8EhnGkbs8/U=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3XzoajwhqfCYHBw--.40848S3;
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3XzoajwhqfCYHBw--.40848S4;
 	Sat, 16 May 2026 23:36:59 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
@@ -31,9 +31,9 @@ To: bhelgaas@google.com,
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 1/3] PCI: Add common TLP type macros and convert aspeed/mediatek
-Date: Sat, 16 May 2026 23:36:55 +0800
-Message-Id: <20260516153657.65214-2-18255117159@163.com>
+Subject: [PATCH 2/3] PCI: dwc: Replace ATU type macros with common TLP type macros
+Date: Sat, 16 May 2026 23:36:56 +0800
+Message-Id: <20260516153657.65214-3-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260516153657.65214-1-18255117159@163.com>
 References: <20260516153657.65214-1-18255117159@163.com>
@@ -44,121 +44,193 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3XzoajwhqfCYHBw--.40848S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW3Wr15Zr4UWw1UZFykXr1fJFb_yoW7GF1fpr
-	15JFWSvr1YqwsxAFn0qa1DJ3WrXFnIkFnrG3sI93y3Was3Ga4xCr4Fg3y5GwnxXr4IqryU
-	Zw4jvw18GFnxKrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zCjgUcUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBuGKmoIjxug5AAA3B
+X-CM-TRANSID:_____wD3XzoajwhqfCYHBw--.40848S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW3Xw4xtr4UGFW7Gw4DGF18AFb_yoW3Gw4DpF
+	W5JFWSyF18JFsxuFs0y3WDZF1Sy3ZI9FyUGrsxW34Iqa4Iyry8Kr48ArW3K3saqr40yrWS
+	yw1aq34xJa13GFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRF4E_UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBuGKmoIjxug6QAA3M
 
-Introduce a set of unified TLP type macros in pci.h according to PCIe
-r7.0, sec 2.2.1:
+The dwc driver defines its own ATU type macros (PCIE_ATU_TYPE_MEM,
+PCIE_ATU_TYPE_IO, PCIE_ATU_TYPE_CFG0, PCIE_ATU_TYPE_CFG1,
+PCIE_ATU_TYPE_MSG) with the same numerical values as the newly
+introduced common TLP type macros.
 
-  - PCIE_TLP_TYPE_MEM_RDWR   (0x00) for Memory Read/Write
-  - PCIE_TLP_TYPE_IO_RDWR    (0x02) for I/O Read/Write
-  - PCIE_TLP_TYPE_CFG0_RDWR  (0x04) for Type 0 Config Read/Write
-  - PCIE_TLP_TYPE_CFG1_RDWR  (0x05) for Type 1 Config Read/Write
-  - PCIE_TLP_TYPE_MSG        (0x10) for Message Request (routing to RC)
-
-These replace the old per-driver hardcoded values or local macros, and
-also replace the previous PCIE_TLP_TYPE_CFG0_RD/WR and
-PCIE_TLP_TYPE_CFG1_RD/WR definitions which had identical numeric values.
-The read/write distinction is already handled by the TLP Format field
-(Fmt), so a single type macro suffices.
-
-Convert the aspeed and mediatek drivers to use the new macros, and remove
-the obsolete definitions from pci.h.
+Remove the local definitions and switch all dwc users to the common
+PCIE_TLP_TYPE_* macros. This eliminates redundancy and improves
+consistency across PCI controller drivers.
 
 No functional change intended.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/pcie-aspeed.c   | 8 ++++----
- drivers/pci/controller/pcie-mediatek.c | 8 ++------
- drivers/pci/pci.h                      | 9 +++++----
- 3 files changed, 11 insertions(+), 14 deletions(-)
+ .../pci/controller/dwc/pcie-designware-ep.c   |  6 +++---
+ .../pci/controller/dwc/pcie-designware-host.c | 20 +++++++++----------
+ drivers/pci/controller/dwc/pcie-designware.c  |  2 +-
+ drivers/pci/controller/dwc/pcie-designware.h  |  5 -----
+ .../pci/controller/dwc/pcie-tegra194-acpi.c   |  4 ++--
+ 5 files changed, 16 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-aspeed.c b/drivers/pci/controller/pcie-aspeed.c
-index 6acfae7d026e..9aa9e14c6148 100644
---- a/drivers/pci/controller/pcie-aspeed.c
-+++ b/drivers/pci/controller/pcie-aspeed.c
-@@ -127,19 +127,19 @@
- #define CFG0_READ_FMTTYPE                                        \
- 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                     \
- 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_NO_DATA, \
--				       PCIE_TLP_TYPE_CFG0_RD))
-+				       PCIE_TLP_TYPE_CFG0_RDWR))
- #define CFG0_WRITE_FMTTYPE                                    \
- 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                  \
- 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_DATA, \
--				       PCIE_TLP_TYPE_CFG0_WR))
-+				       PCIE_TLP_TYPE_CFG0_RDWR))
- #define CFG1_READ_FMTTYPE                                        \
- 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                     \
- 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_NO_DATA, \
--				       PCIE_TLP_TYPE_CFG1_RD))
-+				       PCIE_TLP_TYPE_CFG1_RDWR))
- #define CFG1_WRITE_FMTTYPE                                    \
- 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                  \
- 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_DATA, \
--				       PCIE_TLP_TYPE_CFG1_WR))
-+				       PCIE_TLP_TYPE_CFG1_RDWR))
- #define CFG_PAYLOAD_SIZE		0x01 /* 1 DWORD */
- #define TLP_HEADER_BYTE_EN(x, y)	((GENMASK((x) - 1, 0) << ((y) % 4)))
- #define TLP_GET_VALUE(x, y, z)	\
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 75722524fe74..fda4658ba9f1 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -111,10 +111,6 @@
- #define APP_CFG_REQ		BIT(0)
- #define APP_CPL_STATUS		GENMASK(7, 5)
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index d4dc3b24da60..461f7fc62e85 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -584,9 +584,9 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
  
--#define CFG_WRRD_TYPE_0		4
--#define CFG_WR_FMT		2
--#define CFG_RD_FMT		0
--
- #define CFG_DW0_LENGTH(length)	((length) & GENMASK(9, 0))
- #define CFG_DW0_TYPE(type)	(((type) << 24) & GENMASK(28, 24))
- #define CFG_DW0_FMT(fmt)	(((fmt) << 29) & GENMASK(31, 29))
-@@ -295,7 +291,7 @@ static int mtk_pcie_hw_rd_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
- 	u32 tmp;
+ config_atu:
+ 	if (!(flags & PCI_BASE_ADDRESS_SPACE))
+-		type = PCIE_ATU_TYPE_MEM;
++		type = PCIE_TLP_TYPE_MEM_RDWR;
+ 	else
+-		type = PCIE_ATU_TYPE_IO;
++		type = PCIE_TLP_TYPE_IO_RDWR;
  
- 	/* Write PCIe configuration transaction header for Cfgrd */
--	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_RD_FMT),
-+	writel(CFG_HEADER_DW0(PCIE_TLP_TYPE_CFG0_RDWR, PCIE_TLP_FMT_3DW_NO_DATA),
- 	       port->base + PCIE_CFG_HEADER0);
- 	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
- 	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
-@@ -325,7 +321,7 @@ static int mtk_pcie_hw_wr_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
- 			      int where, int size, u32 val)
- {
- 	/* Write PCIe configuration transaction header for Cfgwr */
--	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_WR_FMT),
-+	writel(CFG_HEADER_DW0(PCIE_TLP_TYPE_CFG0_RDWR, PCIE_TLP_FMT_3DW_DATA),
- 	       port->base + PCIE_CFG_HEADER0);
- 	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
- 	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4a14f88e543a..23ad51e4c434 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -71,10 +71,11 @@ struct pcie_tlp_log;
- #define PCIE_TLP_FMT_4DW_DATA		0x03 /* 4DW header, with data */
+ 	if (epf_bar->num_submap)
+ 		ret = dw_pcie_ep_ib_atu_addr(ep, func_no, type, epf_bar);
+@@ -659,7 +659,7 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+ 	struct dw_pcie_ob_atu_cfg atu = { 0 };
  
- /* Type of TLP; PCIe r7.0, sec 2.2.1 */
--#define PCIE_TLP_TYPE_CFG0_RD		0x04 /* Config Type 0 Read Request */
--#define PCIE_TLP_TYPE_CFG0_WR		0x04 /* Config Type 0 Write Request */
--#define PCIE_TLP_TYPE_CFG1_RD		0x05 /* Config Type 1 Read Request */
--#define PCIE_TLP_TYPE_CFG1_WR		0x05 /* Config Type 1 Write Request */
-+#define PCIE_TLP_TYPE_MEM_RDWR		0x00 /* Memory Read/Write Request */
-+#define PCIE_TLP_TYPE_IO_RDWR		0x02 /* I/O Read/Write Request */
-+#define PCIE_TLP_TYPE_CFG0_RDWR		0x04 /* Config Type 0 Read/Write Request */
-+#define PCIE_TLP_TYPE_CFG1_RDWR		0x05 /* Config Type 1 Read/Write Request */
-+#define PCIE_TLP_TYPE_MSG		0x10 /* Message With/Without data Request */
+ 	atu.func_no = func_no;
+-	atu.type = PCIE_ATU_TYPE_MEM;
++	atu.type = PCIE_TLP_TYPE_MEM_RDWR;
+ 	atu.parent_bus_addr = addr - pci->parent_bus_offset;
+ 	atu.pci_addr = pci_addr;
+ 	atu.size = size;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index c9517a348836..b0ff421dbb5b 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -434,7 +434,7 @@ static int dw_pcie_config_ecam_iatu(struct dw_pcie_rp *pp)
+ 	 * remaining buses need type 1 iATU configuration.
+ 	 */
+ 	atu.index = 0;
+-	atu.type = PCIE_ATU_TYPE_CFG0;
++	atu.type = PCIE_TLP_TYPE_CFG0_RDWR;
+ 	atu.parent_bus_addr = pp->cfg0_base + SZ_1M;
+ 	/* 1MiB is to cover 1 (bus) * 32 (devices) * 8 (functions) */
+ 	atu.size = SZ_1M;
+@@ -450,7 +450,7 @@ static int dw_pcie_config_ecam_iatu(struct dw_pcie_rp *pp)
  
- /* Message Routing (r[2:0]); PCIe r6.0, sec 2.2.8 */
- #define PCIE_MSG_TYPE_R_RC	0
+ 	/* Configure remaining buses in type 1 iATU configuration */
+ 	atu.index = 1;
+-	atu.type = PCIE_ATU_TYPE_CFG1;
++	atu.type = PCIE_TLP_TYPE_CFG1_RDWR;
+ 	atu.parent_bus_addr = pp->cfg0_base + SZ_2M;
+ 	atu.size = (SZ_1M * bus_range_max) - SZ_2M;
+ 	atu.ctrl2 = PCIE_ATU_CFG_SHIFT_MODE_ENABLE;
+@@ -745,9 +745,9 @@ static void __iomem *dw_pcie_other_conf_map_bus(struct pci_bus *bus,
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+ 
+ 	if (pci_is_root_bus(bus->parent))
+-		type = PCIE_ATU_TYPE_CFG0;
++		type = PCIE_TLP_TYPE_CFG0_RDWR;
+ 	else
+-		type = PCIE_ATU_TYPE_CFG1;
++		type = PCIE_TLP_TYPE_CFG1_RDWR;
+ 
+ 	atu.type = type;
+ 	atu.parent_bus_addr = pp->cfg0_base - pci->parent_bus_offset;
+@@ -774,7 +774,7 @@ static int dw_pcie_rd_other_conf(struct pci_bus *bus, unsigned int devfn,
+ 		return ret;
+ 
+ 	if (pp->cfg0_io_shared) {
+-		atu.type = PCIE_ATU_TYPE_IO;
++		atu.type = PCIE_TLP_TYPE_IO_RDWR;
+ 		atu.parent_bus_addr = pp->io_base - pci->parent_bus_offset;
+ 		atu.pci_addr = pp->io_bus_addr;
+ 		atu.size = pp->io_size;
+@@ -800,7 +800,7 @@ static int dw_pcie_wr_other_conf(struct pci_bus *bus, unsigned int devfn,
+ 		return ret;
+ 
+ 	if (pp->cfg0_io_shared) {
+-		atu.type = PCIE_ATU_TYPE_IO;
++		atu.type = PCIE_TLP_TYPE_IO_RDWR;
+ 		atu.parent_bus_addr = pp->io_base - pci->parent_bus_offset;
+ 		atu.pci_addr = pp->io_bus_addr;
+ 		atu.size = pp->io_size;
+@@ -908,7 +908,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 		if (resource_type(entry->res) != IORESOURCE_MEM)
+ 			continue;
+ 
+-		atu.type = PCIE_ATU_TYPE_MEM;
++		atu.type = PCIE_TLP_TYPE_MEM_RDWR;
+ 		atu.parent_bus_addr = entry->res->start - pci->parent_bus_offset;
+ 		atu.pci_addr = entry->res->start - entry->offset;
+ 
+@@ -951,7 +951,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 	if (pp->io_size) {
+ 		if (ob_iatu_index < pci->num_ob_windows) {
+ 			atu.index = ob_iatu_index;
+-			atu.type = PCIE_ATU_TYPE_IO;
++			atu.type = PCIE_TLP_TYPE_IO_RDWR;
+ 			atu.parent_bus_addr = pp->io_base - pci->parent_bus_offset;
+ 			atu.pci_addr = pp->io_bus_addr;
+ 			atu.size = pp->io_size;
+@@ -1013,7 +1013,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 
+ 			window_size = MIN(pci->region_limit + 1, res_size);
+ 			ret = dw_pcie_prog_inbound_atu(pci, ib_iatu_index,
+-						       PCIE_ATU_TYPE_MEM, res_start,
++						       PCIE_TLP_TYPE_MEM_RDWR, res_start,
+ 						       res_start - entry->offset, window_size);
+ 			if (ret) {
+ 				dev_err(pci->dev, "Failed to set DMA range %pr\n",
+@@ -1194,7 +1194,7 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
+ 
+ 	atu.code = PCIE_MSG_CODE_PME_TURN_OFF;
+ 	atu.routing = PCIE_MSG_TYPE_R_BC;
+-	atu.type = PCIE_ATU_TYPE_MSG;
++	atu.type = PCIE_TLP_TYPE_MSG;
+ 	atu.size = resource_size(pci->pp.msg_res);
+ 	atu.index = pci->pp.msg_atu_index;
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index c11cf61b8319..813f4baa7c62 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -568,7 +568,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+ 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
+ 
+ 	val = PCIE_ATU_ENABLE | atu->ctrl2;
+-	if (atu->type == PCIE_ATU_TYPE_MSG) {
++	if (atu->type == PCIE_TLP_TYPE_MSG) {
+ 		/* The data-less messages only for now */
+ 		val |= PCIE_ATU_INHIBIT_PAYLOAD | atu->code;
+ 	}
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 3e69ef60165b..d8d83156fb9d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -170,11 +170,6 @@
+ #define PCIE_ATU_VIEWPORT_SIZE		0x2C
+ #define PCIE_ATU_REGION_CTRL1		0x000
+ #define PCIE_ATU_INCREASE_REGION_SIZE	BIT(13)
+-#define PCIE_ATU_TYPE_MEM		0x0
+-#define PCIE_ATU_TYPE_IO		0x2
+-#define PCIE_ATU_TYPE_CFG0		0x4
+-#define PCIE_ATU_TYPE_CFG1		0x5
+-#define PCIE_ATU_TYPE_MSG		0x10
+ #define PCIE_ATU_TD			BIT(8)
+ #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
+ #define PCIE_ATU_REGION_CTRL2		0x004
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194-acpi.c b/drivers/pci/controller/dwc/pcie-tegra194-acpi.c
+index 55f61914a986..2d737b49ea8f 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194-acpi.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194-acpi.c
+@@ -86,11 +86,11 @@ static void __iomem *tegra194_map_bus(struct pci_bus *bus,
+ 
+ 	if (bus->parent->number == cfg->busr.start) {
+ 		if (PCI_SLOT(devfn) == 0)
+-			type = PCIE_ATU_TYPE_CFG0;
++			type = PCIE_TLP_TYPE_CFG0_RDWR;
+ 		else
+ 			return NULL;
+ 	} else {
+-		type = PCIE_ATU_TYPE_CFG1;
++		type = PCIE_TLP_TYPE_CFG1_RDWR;
+ 	}
+ 
+ 	program_outbound_atu(pcie_ecam, 0, type, cfg->res.start, busdev,
 -- 
 2.34.1
 
