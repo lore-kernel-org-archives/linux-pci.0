@@ -1,51 +1,32 @@
-Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.102])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D597F21FF2E
-	for <linux-pci@vger.kernel.org>; Sat, 16 May 2026 14:29:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.102
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DD943DD866;
+	Sat, 16 May 2026 14:45:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778941756; cv=none; b=HM129ze3b9HLR8M/cO+AV+SoHls2nc+MPIw/7XkD/V6hQ9D7wT4Bv5Cq/3y+hkNbNfmbbiIX2Ei71KKk+/CxYf29ReI1o6sFRfOq7NrkJevvj3O587ltUiBwgSOdlzYzHC/ICM4jX45ifIB6+jE4NqkZlcZSAF7j3E0I8sZJWFU=
+	t=1778942714; cv=none; b=jJ3cqMVfwbK9QKcSwx43jdzwfiiEeyUM/7z1jAhTGkHesx94E1TYJzNcno7BNxtXyq+HPmENgjFjX6qwIMJTFNs48ARIuCIDl8sQOf2tL9qS3j81IZ5vvFw1BIlpfhckSAscpiJFvZjTrMJsXH40o3tQFvQ8CSogpwqkdfL6tkE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778941756; c=relaxed/simple;
-	bh=yukteMTgTuhy1Dq2+g/KgyS8/y3jlepnBgX+ZS9OVbQ=;
+	s=arc-20240116; t=1778942714; c=relaxed/simple;
+	bh=epTGRPWzV6+K3O3zcKKOG00QfmV9kCPMEsckxIfQDvw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=n6qvQLtEWULP2gv9tta4t10NicDzvrjtcmkwHGZyeK+f/xsOu7L+ygdYCT1poH7camXctyuW0B/Wlp1MbB/ws2qkjU4uiU+uKOxNeTz6FqVFFrJOVcjUzKkCfgOQ0VURKpWKaAQUl6RNbC0P/AaC2wx74oLXe2Fi7gPIEGJQ6aQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=gATPLSjA; arc=none smtp.client-ip=188.68.63.102
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
+	 In-Reply-To:Content-Type; b=b/Y6XzS/2G4GbWWnjkaXxIXpwGLcAHTc8Gjl4zmNe6FPUZTB9m6AsftiF4JVY2VUoE8++zwxy5mekFCm1Bzwcb/cz9xtiyjVdwaqA3aS74vTGOJq8GnI6NKh1tuz+wNOImx6VWn81kLauo1MeHufhajuGCh8Fbob1fdOkNf6JWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=qIGAsd97; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="gATPLSjA"
-Received: from mors-relay-2502.netcup.net (localhost [127.0.0.1])
-	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4gHmfG5bj7z66jn;
-	Sat, 16 May 2026 16:29:10 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
-	s=key2; t=1778941750;
-	bh=yukteMTgTuhy1Dq2+g/KgyS8/y3jlepnBgX+ZS9OVbQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gATPLSjAYvxMsT/1uAdYhW++Vylj1A5SRxHOytn4GHdFnn5ViwWO1d8139MHfjZlZ
-	 IpmYZK/Rs4CH4hvr2V9QKKYb76DLvDhB16+N5rX2+tsaPLRVyGnydjZ+AyMxeIMUaq
-	 fanRQROox52mW5WNQsEbQWOpD06xy3ga86ooKxz+bGD6RxZWkIbnDzBwciBMykW1RX
-	 TelXZMoTxdSdMLetVALkJnXhKy5pONAq5PmcAcOzVV7u1FN36lMJYIyQvf6eQQ0RAn
-	 smwL6Ff/BhShR5yh2RJVDvtCQHw12QWckagqN8w41jX0t5RQdzmZFc94OCxZQnJ7Hu
-	 /s9uZwzxhCtuw==
-Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
-	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4gHmfG4tz4z4xbK;
-	Sat, 16 May 2026 16:29:10 +0200 (CEST)
-Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4gHmfF5s6vz8sZh;
-	Sat, 16 May 2026 16:29:09 +0200 (CEST)
-Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
-	by mxe9fb.netcup.net (Postfix) with ESMTPSA id DD45B6178E;
-	Sat, 16 May 2026 16:29:08 +0200 (CEST)
-Authentication-Results: mxe9fb;
-        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
-Received-SPF: pass (mxe9fb: connection is authenticated)
-Message-ID: <449c834d-d115-4242-aa5a-43daa085f178@leemhuis.info>
-Date: Sat, 16 May 2026 16:29:07 +0200
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="qIGAsd97"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=kmvwfkH0kUT4ovZfaf31wcVb+3lCh71uuMmH3at3mlA=;
+	b=qIGAsd97WZVWu7srcWt/8pndRoZS8ryWYiTBOG1VBTaQbY4aIDfAOdrFB7l8qy
+	IjJn6PHxOHrV4rb/WcCWperB8SQRzGsh8BAYJ4i/VNQP8537vGLcs/bXFxbNCGFm
+	XLoRnfNsWis7KWpzjPtjwh6BJ3Fp2n2/i1Y0l6l7LlpLs=
+Received: from [IPV6:240e:b8f:91b3:d000:e64f:a9a6:8381:1b5e] (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgCnVRfNgghqJv1sEw--.40513S2;
+	Sat, 16 May 2026 22:44:30 +0800 (CST)
+Message-ID: <52130a6a-46f5-4090-b155-2137b5d8cd6e@163.com>
+Date: Sat, 16 May 2026 22:44:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,498 +34,64 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION] PCI BAR allocation/D3cold failure: NVIDIA MX250
- inaccessible since Kernel 6.x on Acer Swift 3 (SF314-56G)
-To: Matthias Dittrich <dittrich.m@gmx.net>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
- regressions@lists.linux.dev, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?=
- <ilpo.jarvinen@linux.intel.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <20260501165542.GA491695@bhelgaas>
- <561131dd-0e42-437a-9724-a036238a9bb4@gmx.net>
- <5f716613-d996-46db-96ec-6c0251219922@gmx.net>
-From: Thorsten Leemhuis <regressions@leemhuis.info>
-Content-Language: de-DE, en-US
-In-Reply-To: <5f716613-d996-46db-96ec-6c0251219922@gmx.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-PPP-Message-ID: <177894174919.1511302.2101319284274074505@mxe9fb.netcup.net>
-X-Rspamd-Server: rspamd-worker-8404
-X-Rspamd-Queue-Id: DD45B6178E
-X-NC-CID: OqpIY/ucfpDW55AsFxvLV+hqQujyKKeSDZS991UWzVt84ZfMPbw=
+Subject: Re: [PATCH v1 0/3] PCI: Encapsulate pcie_link_speed array access
+To: bhelgaas@google.com, Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260315160057.127639-1-18255117159@163.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260315160057.127639-1-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PSgvCgCnVRfNgghqJv1sEw--.40513S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7CrW5KF17Kw1kKFWxuFykZrb_yoW8Ww1fpa
+	43Wr4Yvr47Ja1Yya9xua1jvryYq3ZxAr4Igryjgw48ZFnxGFy7Wayxtr45uFya9r4Yvr1a
+	qF47t34ruFnrAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziA9N3UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCww9wFGoIgs-bBwAA3b
 
-On 5/16/26 12:16, Matthias Dittrich wrote:
-> 
-> I completed the bisect test between kernel 5.15 und 5.16 and found the
-> commit and now have reproducible revert-test results. I used the
-> bisect.sh (attached ) for automation. Testing criteria was status rev ff
-> (bad) or rev a1 (good).  As it was the first indicator for me on Ubuntu.
-> I also used olddefconfig as I know this config worked before.
->
-> The identified commit (see final-bisect-log.txt) is:
-> # first bad commit: [a1224f34d72a103829d6953935d6c6621f135b83] ACPI: PM:
-> Check states of power resources during initialization
+Hi,
 
-Thx for the bisection. Not my area of expertise, so the following might
-send everyone in the wrong direction, nevertheless FWIW:
+Gentle ping.
 
-That commit caused trouble on two other machines and DMI quirks were
-added to make them work again; see 9b04d99788cf47 ("ACPI: PM: Do not
-turn of unused power resources on the Toshiba Click Mini") [v6.4-rc1]
-and cd7ef20ba8c6e9 ("ACPI: PM: Add unused power resource quirk for
-THUNDEROBOT ZERO") [v7.0-rc1] for details. Wonder if the problem on your
-machine is similar.
+Best regards,
+Hans
 
-Ciao, Thorsten
-
-> Additionally testing (see Abschlusstest.txt):
-> 
->   * Verification with Parent commit test: git checkout
->     a1224f34d72a103829d6953935d6c6621f135b83~1
->       o lspci reports `rev a1` and  `nvidia-smi` works correctly
->   * Revert test on 5.16 with git revert --no-commit
->     a1224f34d72a103829d6953935d6c6621f135b83
->       o     lspci reports `rev a1` and  `nvidia-smi` works correctly
->   * Revert test on 6.1 with git revert --no-commit
->     a1224f34d72a103829d6953935d6c6621f135b83
->       o lspci reports `rev a1` and  `nvidia-smi` works correctly
-> 
-> With kernels like 6.2 and newer "git revert" result in an error and
-> stops (transleted to english):
-> 
-> git revert --no-commit a1224f34d72a103829d6953935d6c6621f135b83 Auto-
-> merging drivers/acpi/power.c CONFLICT (content): Merge conflict in
-> drivers/acpi/power.c error: could not revert a1224f34d72a... (ACPI: PM:
-> Check states of power resources during initialization) Hint: After
-> resolving the conflicts, mark the corrected paths with: Hint: 'git add
-> <paths>' or 'git rm <paths>'
-> 
-> All tests have been done with Ubuntu 22.04. 
-> 
-> Let me know if I can test anything further.
-> 
-> 
-> Test summary Ubuntu:
-> 
-> Test Case
-> 
-> 	
-> 
-> Kernel / Commit
-> 
-> 	
-> 
-> Modification
-> 
-> 	
-> 
-> PCI State
-> 
-> 	
-> 
-> |Nvidia-smi/
-> NVIDIA Driver|
-> 
-> 	
-> 
-> Result
-> 
-> Baseline good
-> Ubuntu 22.04
-> 
-> 	
-> 
-> Linux 5.15
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> |rev a1|
-> 
-> 	
-> 
-> works
-> 
-> 	
-> 
-> GOOD
-> 
-> Baseline bad
-> 
-> 	
-> 
-> Linux 5.16
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> |rev ff|
-> 
-> 	
-> 
-> fails
-> 
-> 	
-> 
-> BAD
-> 
-> Bisect parent
-> 
-> 	
-> 
-> |a1224f34...~1|
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> |rev a1|
-> 
-> 	
-> 
-> works
-> 
-> 	
-> 
-> GOOD
-> 
-> First bad commit
-> 
-> 	
-> 
-> |a1224f34...|
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> |rev ff|
-> 
-> 	
-> 
-> fails
-> 
-> 	
-> 
-> BAD
-> 
-> Revert verification
-> 
-> 	
-> 
-> |a1224f34...|
-> 
-> 	
-> 
-> reverted
-> 
-> 	
-> 
-> |rev a1|
-> 
-> 	
-> 
-> works
-> 
-> 	
-> 
-> GOOD
-> 
-> Forward revert test
-> 
-> 	
-> 
-> Linux 6.1
-> 
-> 	
-> 
-> reverted
-> 
-> 	
-> 
-> |rev a1|
-> 
-> 	
-> 
-> works
-> 
-> 	
-> 
-> GOOD
-> 
-> Ubuntu 22.04 (standard)
-> 
-> 	
-> 
-> Linux 6.8
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> |rev ff|
-> 
-> 	
-> 
-> fails
-> 
-> 	
-> 
-> BAD
-> 
-> Modern revert attempt
-> 
-> 	
-> 
-> Linux 6.2
-> 
-> 	
-> 
-> revert attempted
-> 
-> 	
-> 
-> conflict in |drivers/acpi/power.c|
-> 
-> 	
-> 
-> n/a
-> 
-> 	
-> 
-> not testable
-> 
-> *Linux 5.15 is the standard in Ubuntu 20.04 but also available as
-> downgrade in Ubuntu 22.04
-> 
-> Test summary CachyOS:
-> 
-> Test Case
-> 
-> 	
-> 
-> Kernel / Commit
-> 
-> 	
-> 
-> Modification
-> 
-> 	
-> 
-> PCI State
-> 
-> 	
-> 
-> |Nvidia-smi/
-> NVIDIA Driver|
-> 
-> 	
-> 
-> Result
-> 
-> Standard
-> 
-> 	
-> 
-> Linux 7.0.2
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> |rev a1|
-> 
-> 	
-> 
-> fails
-> 
-> 	
-> 
-> BAD
-> 
-> LTS
-> 
-> 	
-> 
-> Linux 6.18
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> |rev a1|
-> 
-> 	
-> 
-> fails
-> 
-> 	
-> 
-> BAD
-> 
-> Start parameter
-> 
-> 	
-> 
-> |Linux ||7.0.2|
-> 
-> 	
-> 
-> start parameter
-> 
-> 	
-> 
-> |-|
-> 
-> 	
-> 
-> fails
-> 
-> 	
-> 
-> BAD
-> 
-> git
-> 
-> 	
-> 
-> |Linux ||5.15|
-> 
-> 	
-> 
-> none
-> 
-> 	
-> 
-> 
-> 	
-> 
-> 
-> 	
-> 
-> not testable system freeze
-> 
-> git
-> 
-> 	
-> 
-> |Linux ||7.0.2|
-> 
-> 	
-> 
-> revert attempted
-> 
-> 	
-> 
-> 
-> 	
-> 
-> 
-> 	
-> 
-> not testable
-> 
-> 
-> Kind regards,
-> Matthias
-> 
-> Am 11.05.2026 um 11:34 schrieb Matthias Dittrich:
->>
->> Dear Bjorn,
->>
->> Thank you for the quick response. For transparency, I used the AI tool
->> Gemini during the bug-fixing and testing process. I am not an IT
->> specialist and therefore cannot fully verify all of the AI’s
->> conclusions in my last mail.
->>
->> All kernels were tested manually by installing the OS and kernel. The
->> recommended boot parameters were also tested manually. The logs sent
->> previously and in this mail are raw terminal outputs generated from
->> the commands listed in the "Skript" file.
->>
->>
->> The dmesg and |lspci|output from the newest CachyOS kernel is
->> attached. Additionally, the following commands were also run for the
->> Ubuntu 5.15 kernel for comparison:
->>
->> dmesg
->> sudo lspci -vv > lspci-vv-ubuntu2205-K515-good.txt
->> sudo lspci -vvv > lspci-vvv-ubuntu2205-K515-good.txt
->> sudo lspci -vvxxxx > lspci-vvxxxx-ubuntu2205-K515-good.txt
->> sudo lspci -s 02:00.0 -vvxxxx > lspci_gpu_$(uname -r).txt
->> sudo lspci -t > lspci_tree_$(uname -r).txt
->>
->>
->> Gemini recommended performing a git bisect with optimized parameters
->> to reduce compilation time.
->>
->>   * Before starting the bisect tests, I tested different kernel
->>     revisions. The "git" kernel 5.15 (with localmodconfig) appears to
->>     work just like the newer Ubuntu 5.15 kernel, as the graphics card
->>     status is shown as |(rev a1)|. The earliest kernel revision where
->>     the status changes to |(rev ff)|starts with kernel 5.16 (tested
->>     with localmodconfig). However, the NVIDIA driver itself could not
->>     be tested.
->>   * The bisect between 5.15 and 5.16 result in|
->>      [342a67f0884293639bd17ea44df754ead799e669]|| NFS: Label the
->>     dentry with a verifier in nfs_link(), nfs_symlink()|, which seems
->>     incorrect, as the verification using |git checkout
->>     342a67f0884293639bd17ea44df754ead799e669~1|also failed.
->>   * An automated bisect was attempted without localmodconfig, but
->>     there were technical issues and I have not yet been able to
->>     complete the testing.
->>
->> I also noticed that the |lspci|results differ between CachyOS and Ubuntu:
->>
->> 02:00.0 3D controller: NVIDIA Corporation GP108M [GeForce MX250] (rev a1)
->>
->>   * |(rev a1)|— Ubuntu 22.04 Kernel 5.15 (works), CachyOS Kernel 6.1
->>     LTS and Kernel 7, but NVIDIA MX150 does not work
->>   * |(rev ff)|— Ubuntu 22.04 Kernel 5.16 and newer (localmodconfig)
->>     and Kernel 6.8 and NVIDIA MX150 does not work
->>
->> Kind regards,
->> Matthias
->>
->>
->>
->> Am 01.05.2026 um 18:55 schrieb Bjorn Helgaas:
->>> [+cc Ilpo]
->>>
->>> On Fri, May 01, 2026 at 10:13:41AM +0200, Matthias Dittrich wrote:
->>>> Dear Kernel Developers,
->>>>
->>>> I found a regression and did my best to identify the issue and find a
->>>> workaround, but I am not a developer. I also published the regression in the
->>>> NVIDIA Linux Developer Forum, but it appears to be a kernel regression and
->>>> not a driver issue, as the latest drivers work on older kernels (e.g., 5.15)
->>>> but fail on anything 6.x+. I did not perform a git bisect as compiling on
->>>> this i5-8265U - because of its low performance I can only compile one kernel
->>>> over night.
->>>>
->>>> **Description:**
->>>> The NVIDIA MX250 GPU on Acer Swift 3 (SF314-56G / BIOS 1.14) is inaccessible
->>>> on any Linux distribution using Kernel 6.x or 7.x. The device fails to
->>>> initialize during the driver probe routine.
->>> Thanks for the report.  With the newest kernel available to you, can
->>> you please capture the complete dmesg and output of "sudo lspci -vv"?
->>> Don't filter out things that don't seem relevant; we can easily do
->>> that.
->>>
->>> Bjorn
+On 3/16/26 00:00, Hans Zhang wrote:
+> Hi,
+> 
+> This series encapsulates the pcie_link_speed array by introducing a
+> public helper function to_pcie_link_speed() and converting all direct
+> array accesses to use this helper. This improves code maintainability,
+> reduces exposure of internal data structures, and makes future changes
+> to link speed mapping easier.
+> 
+> Patch 1 moves to_pcie_link_speed() from pci.c to probe.c and exports it.
+> Patch 2 converts the sysfs show function and an inline helper in pci.h
+> to use the new helper.
+> Patch 3 removes the now-unused extern declaration of the array from pci.h.
+> 
+> 
+> Based on this series of patch submissions:
+> https://patchwork.kernel.org/project/linux-pci/cover/20260313165522.123518-1-18255117159@163.com/
+> 
+> Hans Zhang (3):
+>    PCI: Move to_pcie_link_speed() to probe.c and export it
+>    PCI: Use to_pcie_link_speed() for link speed conversion
+>    PCI: Remove extern declaration of pcie_link_speed array
+> 
+>   drivers/pci/pci-sysfs.c | 2 +-
+>   drivers/pci/pci.c       | 5 -----
+>   drivers/pci/pci.h       | 3 +--
+>   drivers/pci/probe.c     | 7 ++++++-
+>   include/linux/pci.h     | 1 +
+>   5 files changed, 9 insertions(+), 9 deletions(-)
+> 
+> 
+> base-commit: 1c9982b4961334c1edb0745a04cabd34bc2de675
+> prerequisite-patch-id: 7b106b4bc491747237b75c9364a500eb8cfd31a0
+> prerequisite-patch-id: 0fabd60d739c45e76d4fb87cc008697f92e7164e
+> prerequisite-patch-id: 83fa7afd2c83f62058b212e93cfea72596389f76
+> prerequisite-patch-id: 145833e2f270b51817275764d5a578addf6f3709
+> prerequisite-patch-id: cda29dea578c6213dd799dfd7b5ae5e02c7f455d
 
