@@ -1,285 +1,550 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from relay.yourmailgateway.de (relay.yourmailgateway.de [188.68.63.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CF691E4BE
-	for <linux-pci@vger.kernel.org>; Sat, 16 May 2026 13:30:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D597F21FF2E
+	for <linux-pci@vger.kernel.org>; Sat, 16 May 2026 14:29:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=188.68.63.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778938245; cv=none; b=IwrDY2uk7/l9xxTK+z3+eGg3VBVpLkpuv0+Sva5gD/TjOUbCzJxRYLQxD6HD34FRniD8stzkEUY9sbHKBvlAIZrIaXlBYwyg1ghauJJozlYjyvZxRBkkqtwU0jc93RRMOvi31nac8J/Wf1mLul0Iof5OwVnL+xuCxkX7K2sBb2E=
+	t=1778941756; cv=none; b=HM129ze3b9HLR8M/cO+AV+SoHls2nc+MPIw/7XkD/V6hQ9D7wT4Bv5Cq/3y+hkNbNfmbbiIX2Ei71KKk+/CxYf29ReI1o6sFRfOq7NrkJevvj3O587ltUiBwgSOdlzYzHC/ICM4jX45ifIB6+jE4NqkZlcZSAF7j3E0I8sZJWFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778938245; c=relaxed/simple;
-	bh=6mvZQ/u0CrM7HtYjyDGFPrGyvFr/ZQQRHu65uCF+Of0=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=eRTOJtk4KGBOBIw5rxBmgOOAGtpwPoCMSWDzbcLGJZu8kQgMvTwo+IayS3Wa5nPS3MExAlYk7OFDNOeFzI5XLGrvMnNuCrkMBx1JNqOV2EV/s0XHqcAQ55ZgpXHZFOwFtvMzUokRFB3HV80HUf2Rnw/AwItFoR8qylGgALxCiOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=claNZmHw; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1778941756; c=relaxed/simple;
+	bh=yukteMTgTuhy1Dq2+g/KgyS8/y3jlepnBgX+ZS9OVbQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=n6qvQLtEWULP2gv9tta4t10NicDzvrjtcmkwHGZyeK+f/xsOu7L+ygdYCT1poH7camXctyuW0B/Wlp1MbB/ws2qkjU4uiU+uKOxNeTz6FqVFFrJOVcjUzKkCfgOQ0VURKpWKaAQUl6RNbC0P/AaC2wx74oLXe2Fi7gPIEGJQ6aQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=gATPLSjA; arc=none smtp.client-ip=188.68.63.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="claNZmHw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1778938244; x=1810474244;
-  h=date:from:to:cc:subject:message-id;
-  bh=6mvZQ/u0CrM7HtYjyDGFPrGyvFr/ZQQRHu65uCF+Of0=;
-  b=claNZmHw+LUdSI57VB8P+V/7pTx3ZtY5LYr0vcfjwuvr6O/yFRyRQwOu
-   /lYARTqIW0BfA2p7EcBn5sXVpbaZL/OcV62Gsamolzu+keefVH9GuvXWU
-   g9cw9elvWE1HZ2iCEKnSJxk8cQLDPdLYQ34tUgiRLVhcfZBr1xrbXIO9f
-   uIBGzG1Kwtd2xbkfqMqaJBhUB4WgBoyGfkc1jRDZGAIVwjHLP5emA3VuE
-   ld/VZxOYG9RRSUhNyYuZsnaX53El+uj1LENS1iFzNNJKntg7rTuopCPRl
-   7VDOXtstIT6+ydg2bcxD5Z/Q2BetC/r5wh3757rooK+EzFMZPJU1yjQLK
-   Q==;
-X-CSE-ConnectionGUID: CZZ6Kf7ZQi+G2Hdkz3rk7g==
-X-CSE-MsgGUID: Jp7JwOtFQyS3XDP6Y4Yv0A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11788"; a="91328412"
-X-IronPort-AV: E=Sophos;i="6.23,238,1770624000"; 
-   d="scan'208";a="91328412"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2026 06:30:43 -0700
-X-CSE-ConnectionGUID: +R33BmJ4RLuSmi1oibxJpw==
-X-CSE-MsgGUID: gv9mlynGS7yyy/hDthaMzw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,238,1770624000"; 
-   d="scan'208";a="235929963"
-Received: from lkp-server01.sh.intel.com (HELO d94e5e629b2d) ([10.239.97.150])
-  by fmviesa007.fm.intel.com with ESMTP; 16 May 2026 06:30:41 -0700
-Received: from kbuild by d94e5e629b2d with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wOF6F-000000000r0-0iwv;
-	Sat, 16 May 2026 13:30:39 +0000
-Date: Sat, 16 May 2026 21:29:52 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/mediatek-gen3] BUILD SUCCESS
- 2b16d6b9de2f00fd8ecc433b15205c18f8276b3e
-Message-ID: <202605162142.RDZfNNnK-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="gATPLSjA"
+Received: from mors-relay-2502.netcup.net (localhost [127.0.0.1])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4gHmfG5bj7z66jn;
+	Sat, 16 May 2026 16:29:10 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leemhuis.info;
+	s=key2; t=1778941750;
+	bh=yukteMTgTuhy1Dq2+g/KgyS8/y3jlepnBgX+ZS9OVbQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=gATPLSjAYvxMsT/1uAdYhW++Vylj1A5SRxHOytn4GHdFnn5ViwWO1d8139MHfjZlZ
+	 IpmYZK/Rs4CH4hvr2V9QKKYb76DLvDhB16+N5rX2+tsaPLRVyGnydjZ+AyMxeIMUaq
+	 fanRQROox52mW5WNQsEbQWOpD06xy3ga86ooKxz+bGD6RxZWkIbnDzBwciBMykW1RX
+	 TelXZMoTxdSdMLetVALkJnXhKy5pONAq5PmcAcOzVV7u1FN36lMJYIyQvf6eQQ0RAn
+	 smwL6Ff/BhShR5yh2RJVDvtCQHw12QWckagqN8w41jX0t5RQdzmZFc94OCxZQnJ7Hu
+	 /s9uZwzxhCtuw==
+Received: from policy02-mors.netcup.net (unknown [46.38.225.35])
+	by mors-relay-2502.netcup.net (Postfix) with ESMTPS id 4gHmfG4tz4z4xbK;
+	Sat, 16 May 2026 16:29:10 +0200 (CEST)
+Received: from mxe9fb.netcup.net (unknown [10.243.12.53])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by policy02-mors.netcup.net (Postfix) with ESMTPS id 4gHmfF5s6vz8sZh;
+	Sat, 16 May 2026 16:29:09 +0200 (CEST)
+Received: from [IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f] (unknown [IPv6:2a02:8108:8984:1d00:a0cf:1912:4be:477f])
+	by mxe9fb.netcup.net (Postfix) with ESMTPSA id DD45B6178E;
+	Sat, 16 May 2026 16:29:08 +0200 (CEST)
+Authentication-Results: mxe9fb;
+        spf=pass (sender IP is 2a02:8108:8984:1d00:a0cf:1912:4be:477f) smtp.mailfrom=regressions@leemhuis.info smtp.helo=[IPV6:2a02:8108:8984:1d00:a0cf:1912:4be:477f]
+Received-SPF: pass (mxe9fb: connection is authenticated)
+Message-ID: <449c834d-d115-4242-aa5a-43daa085f178@leemhuis.info>
+Date: Sat, 16 May 2026 16:29:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] PCI BAR allocation/D3cold failure: NVIDIA MX250
+ inaccessible since Kernel 6.x on Acer Swift 3 (SF314-56G)
+To: Matthias Dittrich <dittrich.m@gmx.net>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ regressions@lists.linux.dev, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?=
+ <ilpo.jarvinen@linux.intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <20260501165542.GA491695@bhelgaas>
+ <561131dd-0e42-437a-9724-a036238a9bb4@gmx.net>
+ <5f716613-d996-46db-96ec-6c0251219922@gmx.net>
+From: Thorsten Leemhuis <regressions@leemhuis.info>
+Content-Language: de-DE, en-US
+In-Reply-To: <5f716613-d996-46db-96ec-6c0251219922@gmx.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-PPP-Message-ID: <177894174919.1511302.2101319284274074505@mxe9fb.netcup.net>
+X-Rspamd-Server: rspamd-worker-8404
+X-Rspamd-Queue-Id: DD45B6178E
+X-NC-CID: OqpIY/ucfpDW55AsFxvLV+hqQujyKKeSDZS991UWzVt84ZfMPbw=
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek-gen3
-branch HEAD: 2b16d6b9de2f00fd8ecc433b15205c18f8276b3e  PCI: mediatek-gen3: Do full device power down on removal
+On 5/16/26 12:16, Matthias Dittrich wrote:
+> 
+> I completed the bisect test between kernel 5.15 und 5.16 and found the
+> commit and now have reproducible revert-test results. I used the
+> bisect.sh (attached ) for automation. Testing criteria was status rev ff
+> (bad) or rev a1 (good).  As it was the first indicator for me on Ubuntu.
+> I also used olddefconfig as I know this config worked before.
+>
+> The identified commit (see final-bisect-log.txt) is:
+> # first bad commit: [a1224f34d72a103829d6953935d6c6621f135b83] ACPI: PM:
+> Check states of power resources during initialization
 
-elapsed time: 1205m
+Thx for the bisection. Not my area of expertise, so the following might
+send everyone in the wrong direction, nevertheless FWIW:
 
-configs tested: 208
-configs skipped: 9
+That commit caused trouble on two other machines and DMI quirks were
+added to make them work again; see 9b04d99788cf47 ("ACPI: PM: Do not
+turn of unused power resources on the Toshiba Click Mini") [v6.4-rc1]
+and cd7ef20ba8c6e9 ("ACPI: PM: Add unused power resource quirk for
+THUNDEROBOT ZERO") [v7.0-rc1] for details. Wonder if the problem on your
+machine is similar.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Ciao, Thorsten
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                        nsimosci_defconfig    gcc-15.2.0
-arc                            randconfig-001    gcc-8.5.0
-arc                   randconfig-001-20260516    gcc-8.5.0
-arc                            randconfig-002    gcc-8.5.0
-arc                   randconfig-002-20260516    gcc-8.5.0
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                                 defconfig    gcc-15.2.0
-arm                            randconfig-001    gcc-8.5.0
-arm                   randconfig-001-20260516    gcc-8.5.0
-arm                            randconfig-002    gcc-8.5.0
-arm                   randconfig-002-20260516    gcc-8.5.0
-arm                            randconfig-003    gcc-8.5.0
-arm                   randconfig-003-20260516    gcc-8.5.0
-arm                            randconfig-004    gcc-8.5.0
-arm                   randconfig-004-20260516    gcc-8.5.0
-arm64                            allmodconfig    clang-19
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260516    gcc-9.5.0
-arm64                 randconfig-002-20260516    gcc-9.5.0
-arm64                 randconfig-003-20260516    gcc-9.5.0
-arm64                 randconfig-004-20260516    gcc-9.5.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260516    gcc-9.5.0
-csky                  randconfig-002-20260516    gcc-9.5.0
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon               randconfig-001-20260516    gcc-11.5.0
-hexagon               randconfig-002-20260516    gcc-11.5.0
-i386                             alldefconfig    gcc-14
-i386                             allmodconfig    clang-20
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386                             allyesconfig    gcc-14
-i386                 buildonly-randconfig-001    clang-20
-i386        buildonly-randconfig-001-20260516    clang-20
-i386                 buildonly-randconfig-002    clang-20
-i386        buildonly-randconfig-002-20260516    clang-20
-i386                 buildonly-randconfig-003    clang-20
-i386        buildonly-randconfig-003-20260516    clang-20
-i386                 buildonly-randconfig-004    clang-20
-i386        buildonly-randconfig-004-20260516    clang-20
-i386                 buildonly-randconfig-005    clang-20
-i386        buildonly-randconfig-005-20260516    clang-20
-i386                 buildonly-randconfig-006    clang-20
-i386        buildonly-randconfig-006-20260516    clang-20
-i386                                defconfig    gcc-15.2.0
-i386                           randconfig-001    clang-20
-i386                  randconfig-001-20260516    clang-20
-i386                           randconfig-002    clang-20
-i386                  randconfig-002-20260516    clang-20
-i386                           randconfig-003    clang-20
-i386                  randconfig-003-20260516    clang-20
-i386                           randconfig-004    clang-20
-i386                  randconfig-004-20260516    clang-20
-i386                           randconfig-005    clang-20
-i386                  randconfig-005-20260516    clang-20
-i386                           randconfig-006    clang-20
-i386                  randconfig-006-20260516    clang-20
-i386                           randconfig-007    clang-20
-i386                  randconfig-007-20260516    clang-20
-i386                  randconfig-011-20260516    gcc-14
-i386                  randconfig-012-20260516    gcc-14
-i386                  randconfig-013-20260516    gcc-14
-i386                  randconfig-014-20260516    gcc-14
-i386                  randconfig-015-20260516    gcc-14
-i386                  randconfig-016-20260516    gcc-14
-i386                  randconfig-017-20260516    gcc-14
-loongarch                        allmodconfig    clang-19
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260516    gcc-11.5.0
-loongarch             randconfig-002-20260516    gcc-11.5.0
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                           ip32_defconfig    clang-23
-nios2                            allmodconfig    clang-23
-nios2                             allnoconfig    clang-23
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260516    gcc-11.5.0
-nios2                 randconfig-002-20260516    gcc-11.5.0
-openrisc                         allmodconfig    clang-23
-openrisc                          allnoconfig    clang-23
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260516    gcc-12.5.0
-parisc                randconfig-002-20260516    gcc-12.5.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc               randconfig-001-20260516    gcc-12.5.0
-powerpc               randconfig-002-20260516    gcc-12.5.0
-powerpc                     tqm8560_defconfig    gcc-15.2.0
-powerpc64             randconfig-001-20260516    gcc-12.5.0
-powerpc64             randconfig-002-20260516    gcc-12.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260516    gcc-15.2.0
-riscv                 randconfig-002-20260516    gcc-15.2.0
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260516    gcc-15.2.0
-s390                  randconfig-002-20260516    gcc-15.2.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                    randconfig-001-20260516    gcc-15.2.0
-sh                    randconfig-002-20260516    gcc-15.2.0
-sparc                             allnoconfig    clang-23
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260516    gcc-8.5.0
-sparc                 randconfig-002-20260516    gcc-8.5.0
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260516    gcc-8.5.0
-sparc64               randconfig-002-20260516    gcc-8.5.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260516    gcc-8.5.0
-um                    randconfig-002-20260516    gcc-8.5.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260516    gcc-14
-x86_64      buildonly-randconfig-002-20260516    gcc-14
-x86_64      buildonly-randconfig-003-20260516    gcc-14
-x86_64      buildonly-randconfig-004-20260516    gcc-14
-x86_64      buildonly-randconfig-005-20260516    gcc-14
-x86_64      buildonly-randconfig-006-20260516    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260516    gcc-14
-x86_64                randconfig-002-20260516    gcc-14
-x86_64                randconfig-003-20260516    gcc-14
-x86_64                randconfig-004-20260516    gcc-14
-x86_64                randconfig-005-20260516    gcc-14
-x86_64                randconfig-006-20260516    gcc-14
-x86_64                         randconfig-011    clang-20
-x86_64                randconfig-011-20260516    clang-20
-x86_64                         randconfig-012    clang-20
-x86_64                randconfig-012-20260516    clang-20
-x86_64                         randconfig-013    clang-20
-x86_64                randconfig-013-20260516    clang-20
-x86_64                         randconfig-014    clang-20
-x86_64                randconfig-014-20260516    clang-20
-x86_64                         randconfig-015    clang-20
-x86_64                randconfig-015-20260516    clang-20
-x86_64                         randconfig-016    clang-20
-x86_64                randconfig-016-20260516    clang-20
-x86_64                randconfig-071-20260516    gcc-14
-x86_64                randconfig-072-20260516    gcc-14
-x86_64                randconfig-073-20260516    gcc-14
-x86_64                randconfig-074-20260516    gcc-14
-x86_64                randconfig-075-20260516    gcc-14
-x86_64                randconfig-076-20260516    gcc-14
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                           allyesconfig    clang-23
-xtensa                randconfig-001-20260516    gcc-8.5.0
-xtensa                randconfig-002-20260516    gcc-8.5.0
+> Additionally testing (see Abschlusstest.txt):
+> 
+>   * Verification with Parent commit test: git checkout
+>     a1224f34d72a103829d6953935d6c6621f135b83~1
+>       o lspci reports `rev a1` and  `nvidia-smi` works correctly
+>   * Revert test on 5.16 with git revert --no-commit
+>     a1224f34d72a103829d6953935d6c6621f135b83
+>       o     lspci reports `rev a1` and  `nvidia-smi` works correctly
+>   * Revert test on 6.1 with git revert --no-commit
+>     a1224f34d72a103829d6953935d6c6621f135b83
+>       o lspci reports `rev a1` and  `nvidia-smi` works correctly
+> 
+> With kernels like 6.2 and newer "git revert" result in an error and
+> stops (transleted to english):
+> 
+> git revert --no-commit a1224f34d72a103829d6953935d6c6621f135b83 Auto-
+> merging drivers/acpi/power.c CONFLICT (content): Merge conflict in
+> drivers/acpi/power.c error: could not revert a1224f34d72a... (ACPI: PM:
+> Check states of power resources during initialization) Hint: After
+> resolving the conflicts, mark the corrected paths with: Hint: 'git add
+> <paths>' or 'git rm <paths>'
+> 
+> All tests have been done with Ubuntu 22.04. 
+> 
+> Let me know if I can test anything further.
+> 
+> 
+> Test summary Ubuntu:
+> 
+> Test Case
+> 
+> 	
+> 
+> Kernel / Commit
+> 
+> 	
+> 
+> Modification
+> 
+> 	
+> 
+> PCI State
+> 
+> 	
+> 
+> |Nvidia-smi/
+> NVIDIA Driver|
+> 
+> 	
+> 
+> Result
+> 
+> Baseline good
+> Ubuntu 22.04
+> 
+> 	
+> 
+> Linux 5.15
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> |rev a1|
+> 
+> 	
+> 
+> works
+> 
+> 	
+> 
+> GOOD
+> 
+> Baseline bad
+> 
+> 	
+> 
+> Linux 5.16
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> |rev ff|
+> 
+> 	
+> 
+> fails
+> 
+> 	
+> 
+> BAD
+> 
+> Bisect parent
+> 
+> 	
+> 
+> |a1224f34...~1|
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> |rev a1|
+> 
+> 	
+> 
+> works
+> 
+> 	
+> 
+> GOOD
+> 
+> First bad commit
+> 
+> 	
+> 
+> |a1224f34...|
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> |rev ff|
+> 
+> 	
+> 
+> fails
+> 
+> 	
+> 
+> BAD
+> 
+> Revert verification
+> 
+> 	
+> 
+> |a1224f34...|
+> 
+> 	
+> 
+> reverted
+> 
+> 	
+> 
+> |rev a1|
+> 
+> 	
+> 
+> works
+> 
+> 	
+> 
+> GOOD
+> 
+> Forward revert test
+> 
+> 	
+> 
+> Linux 6.1
+> 
+> 	
+> 
+> reverted
+> 
+> 	
+> 
+> |rev a1|
+> 
+> 	
+> 
+> works
+> 
+> 	
+> 
+> GOOD
+> 
+> Ubuntu 22.04 (standard)
+> 
+> 	
+> 
+> Linux 6.8
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> |rev ff|
+> 
+> 	
+> 
+> fails
+> 
+> 	
+> 
+> BAD
+> 
+> Modern revert attempt
+> 
+> 	
+> 
+> Linux 6.2
+> 
+> 	
+> 
+> revert attempted
+> 
+> 	
+> 
+> conflict in |drivers/acpi/power.c|
+> 
+> 	
+> 
+> n/a
+> 
+> 	
+> 
+> not testable
+> 
+> *Linux 5.15 is the standard in Ubuntu 20.04 but also available as
+> downgrade in Ubuntu 22.04
+> 
+> Test summary CachyOS:
+> 
+> Test Case
+> 
+> 	
+> 
+> Kernel / Commit
+> 
+> 	
+> 
+> Modification
+> 
+> 	
+> 
+> PCI State
+> 
+> 	
+> 
+> |Nvidia-smi/
+> NVIDIA Driver|
+> 
+> 	
+> 
+> Result
+> 
+> Standard
+> 
+> 	
+> 
+> Linux 7.0.2
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> |rev a1|
+> 
+> 	
+> 
+> fails
+> 
+> 	
+> 
+> BAD
+> 
+> LTS
+> 
+> 	
+> 
+> Linux 6.18
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> |rev a1|
+> 
+> 	
+> 
+> fails
+> 
+> 	
+> 
+> BAD
+> 
+> Start parameter
+> 
+> 	
+> 
+> |Linux ||7.0.2|
+> 
+> 	
+> 
+> start parameter
+> 
+> 	
+> 
+> |-|
+> 
+> 	
+> 
+> fails
+> 
+> 	
+> 
+> BAD
+> 
+> git
+> 
+> 	
+> 
+> |Linux ||5.15|
+> 
+> 	
+> 
+> none
+> 
+> 	
+> 
+> 
+> 	
+> 
+> 
+> 	
+> 
+> not testable system freeze
+> 
+> git
+> 
+> 	
+> 
+> |Linux ||7.0.2|
+> 
+> 	
+> 
+> revert attempted
+> 
+> 	
+> 
+> 
+> 	
+> 
+> 
+> 	
+> 
+> not testable
+> 
+> 
+> Kind regards,
+> Matthias
+> 
+> Am 11.05.2026 um 11:34 schrieb Matthias Dittrich:
+>>
+>> Dear Bjorn,
+>>
+>> Thank you for the quick response. For transparency, I used the AI tool
+>> Gemini during the bug-fixing and testing process. I am not an IT
+>> specialist and therefore cannot fully verify all of the AI’s
+>> conclusions in my last mail.
+>>
+>> All kernels were tested manually by installing the OS and kernel. The
+>> recommended boot parameters were also tested manually. The logs sent
+>> previously and in this mail are raw terminal outputs generated from
+>> the commands listed in the "Skript" file.
+>>
+>>
+>> The dmesg and |lspci|output from the newest CachyOS kernel is
+>> attached. Additionally, the following commands were also run for the
+>> Ubuntu 5.15 kernel for comparison:
+>>
+>> dmesg
+>> sudo lspci -vv > lspci-vv-ubuntu2205-K515-good.txt
+>> sudo lspci -vvv > lspci-vvv-ubuntu2205-K515-good.txt
+>> sudo lspci -vvxxxx > lspci-vvxxxx-ubuntu2205-K515-good.txt
+>> sudo lspci -s 02:00.0 -vvxxxx > lspci_gpu_$(uname -r).txt
+>> sudo lspci -t > lspci_tree_$(uname -r).txt
+>>
+>>
+>> Gemini recommended performing a git bisect with optimized parameters
+>> to reduce compilation time.
+>>
+>>   * Before starting the bisect tests, I tested different kernel
+>>     revisions. The "git" kernel 5.15 (with localmodconfig) appears to
+>>     work just like the newer Ubuntu 5.15 kernel, as the graphics card
+>>     status is shown as |(rev a1)|. The earliest kernel revision where
+>>     the status changes to |(rev ff)|starts with kernel 5.16 (tested
+>>     with localmodconfig). However, the NVIDIA driver itself could not
+>>     be tested.
+>>   * The bisect between 5.15 and 5.16 result in|
+>>      [342a67f0884293639bd17ea44df754ead799e669]|| NFS: Label the
+>>     dentry with a verifier in nfs_link(), nfs_symlink()|, which seems
+>>     incorrect, as the verification using |git checkout
+>>     342a67f0884293639bd17ea44df754ead799e669~1|also failed.
+>>   * An automated bisect was attempted without localmodconfig, but
+>>     there were technical issues and I have not yet been able to
+>>     complete the testing.
+>>
+>> I also noticed that the |lspci|results differ between CachyOS and Ubuntu:
+>>
+>> 02:00.0 3D controller: NVIDIA Corporation GP108M [GeForce MX250] (rev a1)
+>>
+>>   * |(rev a1)|— Ubuntu 22.04 Kernel 5.15 (works), CachyOS Kernel 6.1
+>>     LTS and Kernel 7, but NVIDIA MX150 does not work
+>>   * |(rev ff)|— Ubuntu 22.04 Kernel 5.16 and newer (localmodconfig)
+>>     and Kernel 6.8 and NVIDIA MX150 does not work
+>>
+>> Kind regards,
+>> Matthias
+>>
+>>
+>>
+>> Am 01.05.2026 um 18:55 schrieb Bjorn Helgaas:
+>>> [+cc Ilpo]
+>>>
+>>> On Fri, May 01, 2026 at 10:13:41AM +0200, Matthias Dittrich wrote:
+>>>> Dear Kernel Developers,
+>>>>
+>>>> I found a regression and did my best to identify the issue and find a
+>>>> workaround, but I am not a developer. I also published the regression in the
+>>>> NVIDIA Linux Developer Forum, but it appears to be a kernel regression and
+>>>> not a driver issue, as the latest drivers work on older kernels (e.g., 5.15)
+>>>> but fail on anything 6.x+. I did not perform a git bisect as compiling on
+>>>> this i5-8265U - because of its low performance I can only compile one kernel
+>>>> over night.
+>>>>
+>>>> **Description:**
+>>>> The NVIDIA MX250 GPU on Acer Swift 3 (SF314-56G / BIOS 1.14) is inaccessible
+>>>> on any Linux distribution using Kernel 6.x or 7.x. The device fails to
+>>>> initialize during the driver probe routine.
+>>> Thanks for the report.  With the newest kernel available to you, can
+>>> you please capture the complete dmesg and output of "sudo lspci -vv"?
+>>> Don't filter out things that don't seem relevant; we can easily do
+>>> that.
+>>>
+>>> Bjorn
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
