@@ -1,97 +1,164 @@
 Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DD943DD866;
-	Sat, 16 May 2026 14:45:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9DB53E1681;
+	Sat, 16 May 2026 15:37:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778942714; cv=none; b=jJ3cqMVfwbK9QKcSwx43jdzwfiiEeyUM/7z1jAhTGkHesx94E1TYJzNcno7BNxtXyq+HPmENgjFjX6qwIMJTFNs48ARIuCIDl8sQOf2tL9qS3j81IZ5vvFw1BIlpfhckSAscpiJFvZjTrMJsXH40o3tQFvQ8CSogpwqkdfL6tkE=
+	t=1778945849; cv=none; b=MY5VvGdfC+0Yo/M324mACXW8kJG5hTT1Ht260r71bPuyaKJc1rqZlZhuTTAht0JN30CU3zzNviDEZgrXuhReX7OX2kE38l9L7TWJdusnV7D0uDXU8PqRTUnKd2z6DjBRG609xPo5EsojtIxBF598YN/uuAu4S9r3l/y0fY06mMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778942714; c=relaxed/simple;
-	bh=epTGRPWzV6+K3O3zcKKOG00QfmV9kCPMEsckxIfQDvw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=b/Y6XzS/2G4GbWWnjkaXxIXpwGLcAHTc8Gjl4zmNe6FPUZTB9m6AsftiF4JVY2VUoE8++zwxy5mekFCm1Bzwcb/cz9xtiyjVdwaqA3aS74vTGOJq8GnI6NKh1tuz+wNOImx6VWn81kLauo1MeHufhajuGCh8Fbob1fdOkNf6JWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=qIGAsd97; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1778945849; c=relaxed/simple;
+	bh=xVMH3n7NRFYIPigyREaHQtmQL1K/uVZzkSPEzToAtlE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=IZibRpa516S9pNUkqMvtpFkGh4gIAAOLDhAJY8jQhekjuJ3XltSopQwhrPfFcxaPhJyIODWGPSrn02nRM1GAo0PdHTTRP16abKVUVRrOe8viody1OBj3roj61rg11Z4dFqlrv8ry6kE8LS+Ctj1rW9AC5jOu9UTPRuCdcLtZjuk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GI++QG0x; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="qIGAsd97"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GI++QG0x"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=kmvwfkH0kUT4ovZfaf31wcVb+3lCh71uuMmH3at3mlA=;
-	b=qIGAsd97WZVWu7srcWt/8pndRoZS8ryWYiTBOG1VBTaQbY4aIDfAOdrFB7l8qy
-	IjJn6PHxOHrV4rb/WcCWperB8SQRzGsh8BAYJ4i/VNQP8537vGLcs/bXFxbNCGFm
-	XLoRnfNsWis7KWpzjPtjwh6BJ3Fp2n2/i1Y0l6l7LlpLs=
-Received: from [IPV6:240e:b8f:91b3:d000:e64f:a9a6:8381:1b5e] (unknown [])
-	by gzsmtp2 (Coremail) with SMTP id PSgvCgCnVRfNgghqJv1sEw--.40513S2;
-	Sat, 16 May 2026 22:44:30 +0800 (CST)
-Message-ID: <52130a6a-46f5-4090-b155-2137b5d8cd6e@163.com>
-Date: Sat, 16 May 2026 22:44:29 +0800
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Zj
+	/PBTSQI0lK9i31CmFmrK/4+AXwZDcQLoEZ32R5WEk=; b=GI++QG0xeypFB2F913
+	TejzxaAvcr4z0upzQzC2KRwoMY+7SIbw/JTTqKbwSKuf7SMMfXfp/Piv3PTWchct
+	Ot/l9ZiNia/scmwrG4xR9H5XACKHl8QLKXWSuVdIKzXsiaBDTxs2+V5kxOkQD1Je
+	9pgzMu7D1P65+CTEprgiC/feA=
+Received: from zhb.. (unknown [])
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3XzoajwhqfCYHBw--.40848S3;
+	Sat, 16 May 2026 23:36:59 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	mani@kernel.org
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH 1/3] PCI: Add common TLP type macros and convert aspeed/mediatek
+Date: Sat, 16 May 2026 23:36:55 +0800
+Message-Id: <20260516153657.65214-2-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260516153657.65214-1-18255117159@163.com>
+References: <20260516153657.65214-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 0/3] PCI: Encapsulate pcie_link_speed array access
-To: bhelgaas@google.com, Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260315160057.127639-1-18255117159@163.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260315160057.127639-1-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PSgvCgCnVRfNgghqJv1sEw--.40513S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7CrW5KF17Kw1kKFWxuFykZrb_yoW8Ww1fpa
-	43Wr4Yvr47Ja1Yya9xua1jvryYq3ZxAr4Igryjgw48ZFnxGFy7Wayxtr45uFya9r4Yvr1a
-	qF47t34ruFnrAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziA9N3UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCww9wFGoIgs-bBwAA3b
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3XzoajwhqfCYHBw--.40848S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW3Wr15Zr4UWw1UZFykXr1fJFb_yoW7GF1fpr
+	15JFWSvr1YqwsxAFn0qa1DJ3WrXFnIkFnrG3sI93y3Was3Ga4xCr4Fg3y5GwnxXr4IqryU
+	Zw4jvw18GFnxKrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zCjgUcUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBuGKmoIjxug5AAA3B
 
-Hi,
+Introduce a set of unified TLP type macros in pci.h according to PCIe
+r7.0, sec 2.2.1:
 
-Gentle ping.
+  - PCIE_TLP_TYPE_MEM_RDWR   (0x00) for Memory Read/Write
+  - PCIE_TLP_TYPE_IO_RDWR    (0x02) for I/O Read/Write
+  - PCIE_TLP_TYPE_CFG0_RDWR  (0x04) for Type 0 Config Read/Write
+  - PCIE_TLP_TYPE_CFG1_RDWR  (0x05) for Type 1 Config Read/Write
+  - PCIE_TLP_TYPE_MSG        (0x10) for Message Request (routing to RC)
 
-Best regards,
-Hans
+These replace the old per-driver hardcoded values or local macros, and
+also replace the previous PCIE_TLP_TYPE_CFG0_RD/WR and
+PCIE_TLP_TYPE_CFG1_RD/WR definitions which had identical numeric values.
+The read/write distinction is already handled by the TLP Format field
+(Fmt), so a single type macro suffices.
 
-On 3/16/26 00:00, Hans Zhang wrote:
-> Hi,
-> 
-> This series encapsulates the pcie_link_speed array by introducing a
-> public helper function to_pcie_link_speed() and converting all direct
-> array accesses to use this helper. This improves code maintainability,
-> reduces exposure of internal data structures, and makes future changes
-> to link speed mapping easier.
-> 
-> Patch 1 moves to_pcie_link_speed() from pci.c to probe.c and exports it.
-> Patch 2 converts the sysfs show function and an inline helper in pci.h
-> to use the new helper.
-> Patch 3 removes the now-unused extern declaration of the array from pci.h.
-> 
-> 
-> Based on this series of patch submissions:
-> https://patchwork.kernel.org/project/linux-pci/cover/20260313165522.123518-1-18255117159@163.com/
-> 
-> Hans Zhang (3):
->    PCI: Move to_pcie_link_speed() to probe.c and export it
->    PCI: Use to_pcie_link_speed() for link speed conversion
->    PCI: Remove extern declaration of pcie_link_speed array
-> 
->   drivers/pci/pci-sysfs.c | 2 +-
->   drivers/pci/pci.c       | 5 -----
->   drivers/pci/pci.h       | 3 +--
->   drivers/pci/probe.c     | 7 ++++++-
->   include/linux/pci.h     | 1 +
->   5 files changed, 9 insertions(+), 9 deletions(-)
-> 
-> 
-> base-commit: 1c9982b4961334c1edb0745a04cabd34bc2de675
-> prerequisite-patch-id: 7b106b4bc491747237b75c9364a500eb8cfd31a0
-> prerequisite-patch-id: 0fabd60d739c45e76d4fb87cc008697f92e7164e
-> prerequisite-patch-id: 83fa7afd2c83f62058b212e93cfea72596389f76
-> prerequisite-patch-id: 145833e2f270b51817275764d5a578addf6f3709
-> prerequisite-patch-id: cda29dea578c6213dd799dfd7b5ae5e02c7f455d
+Convert the aspeed and mediatek drivers to use the new macros, and remove
+the obsolete definitions from pci.h.
+
+No functional change intended.
+
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/pcie-aspeed.c   | 8 ++++----
+ drivers/pci/controller/pcie-mediatek.c | 8 ++------
+ drivers/pci/pci.h                      | 9 +++++----
+ 3 files changed, 11 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-aspeed.c b/drivers/pci/controller/pcie-aspeed.c
+index 6acfae7d026e..9aa9e14c6148 100644
+--- a/drivers/pci/controller/pcie-aspeed.c
++++ b/drivers/pci/controller/pcie-aspeed.c
+@@ -127,19 +127,19 @@
+ #define CFG0_READ_FMTTYPE                                        \
+ 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                     \
+ 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_NO_DATA, \
+-				       PCIE_TLP_TYPE_CFG0_RD))
++				       PCIE_TLP_TYPE_CFG0_RDWR))
+ #define CFG0_WRITE_FMTTYPE                                    \
+ 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                  \
+ 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_DATA, \
+-				       PCIE_TLP_TYPE_CFG0_WR))
++				       PCIE_TLP_TYPE_CFG0_RDWR))
+ #define CFG1_READ_FMTTYPE                                        \
+ 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                     \
+ 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_NO_DATA, \
+-				       PCIE_TLP_TYPE_CFG1_RD))
++				       PCIE_TLP_TYPE_CFG1_RDWR))
+ #define CFG1_WRITE_FMTTYPE                                    \
+ 	FIELD_PREP(ASPEED_TLP_COMMON_FIELDS,                  \
+ 		   ASPEED_TLP_FMT_TYPE(PCIE_TLP_FMT_3DW_DATA, \
+-				       PCIE_TLP_TYPE_CFG1_WR))
++				       PCIE_TLP_TYPE_CFG1_RDWR))
+ #define CFG_PAYLOAD_SIZE		0x01 /* 1 DWORD */
+ #define TLP_HEADER_BYTE_EN(x, y)	((GENMASK((x) - 1, 0) << ((y) % 4)))
+ #define TLP_GET_VALUE(x, y, z)	\
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 75722524fe74..fda4658ba9f1 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -111,10 +111,6 @@
+ #define APP_CFG_REQ		BIT(0)
+ #define APP_CPL_STATUS		GENMASK(7, 5)
+ 
+-#define CFG_WRRD_TYPE_0		4
+-#define CFG_WR_FMT		2
+-#define CFG_RD_FMT		0
+-
+ #define CFG_DW0_LENGTH(length)	((length) & GENMASK(9, 0))
+ #define CFG_DW0_TYPE(type)	(((type) << 24) & GENMASK(28, 24))
+ #define CFG_DW0_FMT(fmt)	(((fmt) << 29) & GENMASK(31, 29))
+@@ -295,7 +291,7 @@ static int mtk_pcie_hw_rd_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
+ 	u32 tmp;
+ 
+ 	/* Write PCIe configuration transaction header for Cfgrd */
+-	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_RD_FMT),
++	writel(CFG_HEADER_DW0(PCIE_TLP_TYPE_CFG0_RDWR, PCIE_TLP_FMT_3DW_NO_DATA),
+ 	       port->base + PCIE_CFG_HEADER0);
+ 	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
+ 	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
+@@ -325,7 +321,7 @@ static int mtk_pcie_hw_wr_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
+ 			      int where, int size, u32 val)
+ {
+ 	/* Write PCIe configuration transaction header for Cfgwr */
+-	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_WR_FMT),
++	writel(CFG_HEADER_DW0(PCIE_TLP_TYPE_CFG0_RDWR, PCIE_TLP_FMT_3DW_DATA),
+ 	       port->base + PCIE_CFG_HEADER0);
+ 	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
+ 	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4a14f88e543a..23ad51e4c434 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -71,10 +71,11 @@ struct pcie_tlp_log;
+ #define PCIE_TLP_FMT_4DW_DATA		0x03 /* 4DW header, with data */
+ 
+ /* Type of TLP; PCIe r7.0, sec 2.2.1 */
+-#define PCIE_TLP_TYPE_CFG0_RD		0x04 /* Config Type 0 Read Request */
+-#define PCIE_TLP_TYPE_CFG0_WR		0x04 /* Config Type 0 Write Request */
+-#define PCIE_TLP_TYPE_CFG1_RD		0x05 /* Config Type 1 Read Request */
+-#define PCIE_TLP_TYPE_CFG1_WR		0x05 /* Config Type 1 Write Request */
++#define PCIE_TLP_TYPE_MEM_RDWR		0x00 /* Memory Read/Write Request */
++#define PCIE_TLP_TYPE_IO_RDWR		0x02 /* I/O Read/Write Request */
++#define PCIE_TLP_TYPE_CFG0_RDWR		0x04 /* Config Type 0 Read/Write Request */
++#define PCIE_TLP_TYPE_CFG1_RDWR		0x05 /* Config Type 1 Read/Write Request */
++#define PCIE_TLP_TYPE_MSG		0x10 /* Message With/Without data Request */
+ 
+ /* Message Routing (r[2:0]); PCIe r6.0, sec 2.2.8 */
+ #define PCIE_MSG_TYPE_R_RC	0
+-- 
+2.34.1
 
