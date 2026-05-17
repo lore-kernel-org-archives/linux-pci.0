@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F49364A8C
-	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:48:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D93F70830
+	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:50:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778978881; cv=none; b=NtZlxcATKKarfZ/zXMXMjnX7PNL2zy7Kc6ZOU1ooV4cdYYPgyDzi8VVxYhYHDcQUuO55s7EOsclRde/eXxPdYY/Cuzkoz7+7VQcxaKqwveHTAhswUEOe3ZxitA5hx9rwxtJ1e5ElAWbMBM32cq8Os1kGcdjJyE8PviKnzZ4un38=
+	t=1778979052; cv=none; b=lXRY1I5LSg4dgYmdBfrT2Nocus9h7f1k7ulX/hhfCkiKrCCIJxMSHsGqxLMkk/9o1i6wJ6a7E1Aw8noq1tjSLofFRhVxvdXDa0cDcttB2vkdVQbjQXRqtrbg1oDHtJ63pOsBOQb9vTbKsbKVDqx2s9GsoWPBmMtdVrOONMQLy5A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778978881; c=relaxed/simple;
-	bh=Pv8JRgsRYA+GpO+uIE0LtznSmw+HDpDdr/kDFLdb2UI=;
+	s=arc-20240116; t=1778979052; c=relaxed/simple;
+	bh=xjLGZtNRXyrMgvECd+wfmTybTmFTbeJdKC9lYetOFgU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=poIw5COnetRDKQVg2z9veHnhR/y/ectkQfvGUZNPkhQrUGEO68qbNdWQo4MI2JTmZ9OQNVYQg5lG7FOAHEXT2wHfYaLYaCMVkB6rTf2xu1cujOZvw5YmsHjuThXUOlhWRUak1X7f5AD3jQPvZ++VmGtEOIUGvxqEqfhXS8zgHHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eOPA+0Wn; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=nfWCUi6DVmwcidzka9rC1P7jbIF81VIaP+G5y4OH6782AYXKysrNKNgYTXfZFFELE+vCBZASQGQHV/nmm66qFT2QLEN5ZC7hFJTWNJf/Tc6HgbFeX7K+P3mp7+vh9UoHWb9jWAc1aaiKmUjC+Z5C+R/4164lU0PbrYYs2XjtbHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HtW8ZD4X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eOPA+0Wn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7903BC19425;
-	Sun, 17 May 2026 00:48:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HtW8ZD4X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0C78C19425;
+	Sun, 17 May 2026 00:50:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778978880;
-	bh=Pv8JRgsRYA+GpO+uIE0LtznSmw+HDpDdr/kDFLdb2UI=;
+	s=k20201202; t=1778979052;
+	bh=xjLGZtNRXyrMgvECd+wfmTybTmFTbeJdKC9lYetOFgU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=eOPA+0WnRjoSnRNBenPqooLDnur9Vv8QiCOP23JQ1LK1w/W24NT5tH1M2VLu0K12/
-	 xxeBmM4V4126ZfVosqiv+Jy642vq9N8kz6t1YXwZA0VAfh/IYncgHq50ghHG8qvRKJ
-	 +Nz2j2abRacy3Paznb39wfROROXhCH6HzPK/F7WLf3ZKcMv8YYB8w1e5sqv6kp/0PZ
-	 lMTcMeHoHdCmqpWBgqb2stjw3W0h+AIhjyaUVj2UfXWiOVuBK+VzQdP7WYPPuXO0bP
-	 8Mr5hNMWzia2qvawGVK9RBKmjoeUhnoO8fBNTq3QYftIfNhGtLEoESTKr76DNz2ZS+
-	 sYBk26U/ZKQMA==
+	b=HtW8ZD4X9GXrlcwrz6FAFIpmh/0ZZO+0vMGBcEGKVLTCY9oWLrzTAIPtVJ2GTLCQr
+	 wiwzNGhzzK45aBZhVQzV/mEqm3Kx3ezR82XOkxNiDm9EZVeCnNcwqcvTXyDicEmICS
+	 AGmH698YW7HhavDILfmiMZIangGM68lP6drGTF/KvM0vDXfL4lrlxh8lv3yDGnQK1n
+	 iDR/BmJ+tx3yyTO6GoOLh78kZNxUP3GpCkwErc+KFCHP+2yoGhc9At7CjEQb/it73B
+	 LvpL62N7dMJpkM+UK1E6Wp+MsOia4QxvVs9sLqSJ1kofxJxRpHP+Hm6AK4pSU+B89r
+	 oMpvTFAUmngAw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH REF v3 27/27] gpu: drm: tyr: use lifetime for IoMem
+Subject: Re: [PATCH REF v3 25/27] gpu: nova-core: unregister sysmem flush
+ page from Drop
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
 Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260517000149.3226762-28-dakr@kernel.org>
-References: <20260517000149.3226762-28-dakr@kernel.org>
+In-Reply-To: <20260517000149.3226762-26-dakr@kernel.org>
+References: <20260517000149.3226762-26-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 17 May 2026 00:47:59 +0000
-Message-Id: <20260517004800.7903BC19425@smtp.kernel.org>
+Date: Sun, 17 May 2026 00:50:51 +0000
+Message-Id: <20260517005051.E0C78C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,67 +46,106 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] Meaningful mismatch between the commit message and the code rega=
-rding the I/O memory type.
-- [Low] The `dev` parameter is now unused in `issue_soft_reset` and `l2_pow=
-er_on`.
+- [High] Hardware Teardown Order Inversion due to Rust struct drop order
+- [High] PCIe Posted Write Race leading to potential DMA Use-After-Free
 --
 
-commit 763cc0c53067cdbb12995b72ad25897a1324b9d9
+commit 1e4442de0219b840e2a05e974e6828767c51d68c
 Author: Danilo Krummrich <dakr@kernel.org>
 
-gpu: drm: tyr: use lifetime for IoMem
-   =20
-This commit simplifies the memory mapping during probe by using the mapped
-memory directly and eliminating the Arc<Devres<IoMem>> indirection, which
-also makes Register::read/write infallible.
+gpu: nova-core: unregister sysmem flush page from Drop
 
-> Take advantage of the lifetime-parameterized IoMem<'bound> to use the
-> memory mapping directly during probe, eliminating the Arc<Devres<IoMem>>
-> indirection.
+This commit automatically unregisters the sysmem flush page by
+implementing the Drop trait for SysmemFlush and storing a bound
+reference. This removes the need for manual unregister calls and the
+Gpu unbind method.
 
-The commit message mentions using the lifetime-parameterized IoMem<'bound>,
-but the code changes the type alias to kernel::io::Mmio<SZ_2M> which lacks
-a lifetime parameter. Is this difference intentional?
+Link: https://lore.kernel.org/all/20260409-fix-systemflush-v1-1-a1d6c968f17=
+c@nvidia.com/
 
-> diff --git a/drivers/gpu/drm/tyr/driver.rs b/drivers/gpu/drm/tyr/driver.rs
-> index 8c916913e9765..884c20ec18cef 100644
-> --- a/drivers/gpu/drm/tyr/driver.rs
-> +++ b/drivers/gpu/drm/tyr/driver.rs
+> diff --git a/drivers/gpu/nova-core/fb.rs b/drivers/gpu/nova-core/fb.rs
+> index bdd5eed760e17..a707fbfe3ced4 100644
+> --- a/drivers/gpu/nova-core/fb.rs
+> +++ b/drivers/gpu/nova-core/fb.rs
+
 [ ... ]
-> @@ -65,11 +63,11 @@ pub(crate) struct TyrDrmDeviceData {
->      pub(crate) gpu_info: GpuInfo,
->  }
+
+> @@ -70,19 +69,18 @@ pub(crate) fn register(
+>          Ok(Self {
+>              chipset,
+>              device: dev.into(),
+> +            bar,
+>              page,
+>          })
+>      }
+> +}
 > =20
-> -fn issue_soft_reset(dev: &Device<Bound>, iomem: &Devres<IoMem>) -> Resul=
-t {
-> -    regs::GPU_CMD.write(dev, iomem, regs::GPU_CMD_SOFT_RESET)?;
-> +fn issue_soft_reset(dev: &Device<Bound>, iomem: &IoMem) -> Result {
-> +    regs::GPU_CMD.write(iomem, regs::GPU_CMD_SOFT_RESET);
-
-Does the dev parameter still need to be in the function signature here? It
-appears to be unused now that it is no longer passed to regs::GPU_CMD.write=
-().
-
-[ ... ]
-> diff --git a/drivers/gpu/drm/tyr/gpu.rs b/drivers/gpu/drm/tyr/gpu.rs
-> index a88775160f981..bb0473c85bf78 100644
-> --- a/drivers/gpu/drm/tyr/gpu.rs
-> +++ b/drivers/gpu/drm/tyr/gpu.rs
-[ ... ]
-> @@ -208,11 +206,11 @@ fn from(value: u32) -> Self {
->  }
+> -    /// Unregister the managed sysmem flush page.
+> -    ///
+> -    /// In order to gracefully tear down the GPU, users must make sure t=
+o call this method before
+> -    /// dropping the object.
+> -    pub(crate) fn unregister(&self, bar: &Bar0) {
+> +impl Drop for SysmemFlush<'_> {
+> +    fn drop(&mut self) {
+>          let hal =3D hal::fb_hal(self.chipset);
 > =20
->  /// Powers on the l2 block.
-> -pub(crate) fn l2_power_on(dev: &Device<Bound>, iomem: &Devres<IoMem>) ->=
- Result {
-> -    regs::L2_PWRON_LO.write(dev, iomem, 1)?;
-> +pub(crate) fn l2_power_on(dev: &Device<Bound>, iomem: &IoMem) -> Result {
-> +    regs::L2_PWRON_LO.write(iomem, 1);
+> -        if hal.read_sysmem_flush_page(bar) =3D=3D self.page.dma_handle()=
+ {
+> -            let _ =3D hal.write_sysmem_flush_page(bar, 0).inspect_err(|e=
+| {
+> +        if hal.read_sysmem_flush_page(self.bar) =3D=3D self.page.dma_han=
+dle() {
+> +            let _ =3D hal.write_sysmem_flush_page(self.bar, 0).inspect_e=
+rr(|e| {
 
-Are there any remaining uses for the dev parameter in this function, or
-could it be removed from the signature?
+Could this lead to a race condition with the PCIe bus?
+
+PCIe MMIO writes are posted, so the write to 0 might be buffered in the
+PCIe root complex and not immediately reach the GPU. Because the Drop
+implementation finishes right after the write, the page field will drop and
+free the underlying DMA memory.
+
+Is it possible the GPU could attempt to write to the freed sysmem flush page
+before the MMIO write actually reaches the hardware? Would adding a register
+read-back here help flush the posted write before the memory gets freed?
+
+>                  dev_warn!(
+>                      &self.device,
+>                      "failed to unregister sysmem flush page: {:?}\n",
+
+[ ... ]
+
+> diff --git a/drivers/gpu/nova-core/gpu.rs b/drivers/gpu/nova-core/gpu.rs
+> index 03295fa6fb321..c17d068b35eb4 100644
+> --- a/drivers/gpu/nova-core/gpu.rs
+> +++ b/drivers/gpu/nova-core/gpu.rs
+> @@ -228,7 +228,7 @@ pub(crate) struct Gpu<'bound> {
+>      bar: &'bound Bar0,
+>      /// System memory page required for flushing all pending GPU-side me=
+mory writes done through
+>      /// PCIE into system memory, via sysmembar (A GPU-initiated HW memor=
+y-barrier operation).
+> -    sysmem_flush: SysmemFlush,
+> +    sysmem_flush: SysmemFlush<'bound>,
+>      /// GSP falcon instance, used for GSP boot up and cleanup.
+>      gsp_falcon: Falcon<GspFalcon>,
+>      /// SEC2 falcon instance, used for GSP boot up and cleanup.
+
+With the explicit unbind call removed, the code now relies entirely on Rust=
+'s
+drop semantics for cleanup.
+
+Since Rust drops struct fields in declaration order (top-to-bottom),
+sysmem_flush will be dropped before gsp_falcon, sec2_falcon, and gsp.
+
+If any of these subsequent components perform hardware teardown or memory
+flushes in their Drop implementations, could they attempt to use the sysmem
+flush page after it has been unregistered and freed?
+
+Does sysmem_flush need to be placed at the end of the Gpu struct to ensure
+correct first-in-last-out teardown ordering?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260517000149.3226=
-762-1-dakr@kernel.org?part=3D27
+762-1-dakr@kernel.org?part=3D25
