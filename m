@@ -1,218 +1,106 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 894A733A9E9
-	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 04:41:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D63C241695;
+	Sun, 17 May 2026 08:07:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778992901; cv=none; b=AagltevksWuz3uMaQ2Fm37i0wRkoRqjMems/eAjE51BYgA+uV9e9EyCLEBE892Ro8w78d7AuKrJbqycDqDVLSVPLhDlvNakqDYqdkLgwF5tVThkwXtyl8ubj/ASfWKOJ4zxwWyeLOfNjZuvpyaaESah6KNZvMWGj8RGjg3vp4lU=
+	t=1779005271; cv=none; b=VGPcmd1T8lZJDKREkHFvUHpHIANCdhflUCVvC0A55/b2GwWU48R3aZVI0gZ8JhJWx8vU3p3oyhFkE4YWDS6JKThbr6H7n6hnvBEGoM1V1mYvuakDgIbEc9KoB4dQ+WAHqPqBG2AeSU3NTPj+dO0CeJ9jISmPKALE04oOxzety84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778992901; c=relaxed/simple;
-	bh=qSD1iAiziV1PDbFRDFZu8LZXTjF64/acluP8JL+NbBw=;
+	s=arc-20240116; t=1779005271; c=relaxed/simple;
+	bh=q4n6M7y1hdiajGaA5S3Dv718bzU2NlS/k4sv46Jo9PE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fMtCg83LuQiAVzNuUXAPbtTFkW31WA+sIpQ/w0BeOSW1TveMcC0h7dMzVk+RtWwvnrytC0vxxpBdhyQWTtvp0nSu90r+0R0LsQx4J/CP7Xgq4dbHXYy6T0FtfgTbIreusdSLDNpvEVsKSLFaGVsi0xcW6LZggmL7QBPzHg+91N8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fVqfhXZ2; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=I1C/6J9KKnZUW9bhasSz81bKDfHIWYsG5JKYARGSu/2YmsQnjP6qTEHYRcNkX7DQCdq9SDDh7Z8Pv+GI5SujlXP5zKOWpXo1s+582wX5BWwER37Z+8O87uT7DjBKO8s27Fcw3SN4/J2fPWm8YQWwIfcziKCRJ4G+Q+jFXcjhVA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=juFrhcRZ; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fVqfhXZ2"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-83ef8b48f94so929968b3a.0
-        for <linux-pci@vger.kernel.org>; Sat, 16 May 2026 21:41:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1778992900; x=1779597700; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=tgM/imni8OBMR+8bMpL6Wt69F8bl6c0wLVOsI5NzgJI=;
-        b=fVqfhXZ2tUJKIkkMxdJ0XiBqWCn+ZMvwFaMmCDV7L6XQPSfsqVVu5Km9sSXC1vSNNi
-         Af1OofJviuyCpK23hKnZ/RLBmvI53JuDYj3EuZCi3LMHyAj5oiOvjLCSAnYVOpzjS+Sb
-         +k7sDTEqW3yv0raRphl1ocqJhCaexhShnhb85v2uktKNsUdSmekvwqUwmlo5ZwoMMstQ
-         7RXkmg34jQdIJVC2fyCyiEVeqM5waf4N8Jh11pMyJuYmQbKe3tEvLqoujuhgxiStoFAp
-         WKTvcrR/FvlgnduSEeLROSG3IMaJSZPh/jvK0vPFY31Vwyd2OE3X24VQ1uu6CDDWx2PQ
-         F50A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1778992900; x=1779597700;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tgM/imni8OBMR+8bMpL6Wt69F8bl6c0wLVOsI5NzgJI=;
-        b=fnf9rsfLglgxJP9g3mu9X509xlLsV+X7CK7vjSEFtN4GXEtrnv3/R3Gh3NQ6LwiTXU
-         kCBYCGJ4QubsFLs2hBznf4DMQLyjbz1qfvGnBrz71MnsdhlWQyPP6E0c+wA0g6ZLo7k6
-         rfx59tRSpu1VSozAx3cRBuAQcnFXZ2LHh0Wwrj4moxZYflxMX4sLhsJutkh0gGPq2scI
-         gih8jnovdARxsm3UqAr19YyaJI5YlJ7tfmRr1RtZWxik3vwxvVUc7tcEbne7BLQleDTu
-         i19698Tq3kKhZKF2NTu0QRWhqKDlw1rKGrbPn1EZmswqKaxPzdYk5ImKdMewCQNso1Rk
-         AMNQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/Kcgi95OweJoBGTb7gftvsAapU9q7MLTKYnINktrvaovXsezduF1M5EcKr6hcEQ9Es/hBpwk3dDO8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyFV9Ayj5bx9M6bvzOoTlRxZfT35OT1F5wuczHPDDwN4CAmF+MV
-	K94hoKvz6vsUNcBxELa1u7PP7QgnzcOPS8j6W5/mCEwBvqBJ5+pRqLRt
-X-Gm-Gg: Acq92OE3cFRqFFjGU/we8eh6r+81pSr8MqYcidcwJcGvJCf92X4yj5ruRP0TLCJYrQc
-	TqdQCWkmGgc96y9DBc4K5dLkppVNkZheqzClMhg5GtL7G2VIznSeCY7PnibLdOa2F4BvL3fc4El
-	5dsxp8xY74OXh5MVsg4k1LR+RngwuXCbBzDgTXwnRD9Sjvwz8emKU31aiCZGxev2ctWO2p+tVxn
-	NW0GRv75q9SICjFah10ypk93mcTYE7JzExqXg+1fPVb3vYsBsVSeILQC69bXYeMTHe11AjZvN/d
-	XI8/DJChNqUkjwOOSqdlptEdKFhEr9AETsPvUh63Xm94V+iVXHSm0uhvfT0PQpagkTyUY3IogSq
-	3AdF9649oW3PKo8pmvTCglWrJ0dMg3Ogp/V5juDbFBo+s3ah3mIRaoqjWU6WtdY0ewcvt0WBxmk
-	vut2A0yTUBOEXcZmGwcbjXZzw=
-X-Received: by 2002:a05:6a00:414e:b0:82f:4a4d:377e with SMTP id d2e1a72fcca58-83f33d9d741mr10897233b3a.28.1778992899922;
-        Sat, 16 May 2026 21:41:39 -0700 (PDT)
-Received: from localhost ([2001:19f0:8001:1b2d:5400:5ff:fefa:a95d])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83f19c5b4bfsm10862196b3a.28.2026.05.16.21.41.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 16 May 2026 21:41:39 -0700 (PDT)
-Date: Sun, 17 May 2026 12:41:07 +0800
-From: Inochi Amaoto <inochiama@gmail.com>
-To: sashiko-reviews@lists.linux.dev, Inochi Amaoto <inochiama@gmail.com>
-Cc: conor+dt@kernel.org, linux-pci@vger.kernel.org, robh@kernel.org, 
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 5/5] PCI: spacemit-k1: Add Spacemit K3 PCIe host
- controller support
-Message-ID: <aglGV-bsTxiJcjVs@inochi.infowork>
-References: <20260517014841.254085-6-inochiama@gmail.com>
- <20260517031620.E1854C2BCB7@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="juFrhcRZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779005270; x=1810541270;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=q4n6M7y1hdiajGaA5S3Dv718bzU2NlS/k4sv46Jo9PE=;
+  b=juFrhcRZ2QFp07fyRbxAnjayL6J4g81wFcLpF1CuLbAd8NTVW4vtFVTg
+   DmdHM41MiVblm3bxylGxMVkTJrnX7Zjp+lyDhteKzW7nb0SyJaTv6KFFZ
+   FKKWml49ce8a5BDedL+GN1bFxU7JUwchCU8Uce4Q3HjxXciOKCU+eQe17
+   pn91Qr5b5k81vzeG4ArkPP+sVN8+DmO9VgIvWjV4DPPVeel3v4VWwPC1R
+   2VJ7hCvGMPY9N8efXCLMG/sQXPs9kH6tF7qeeOVW91ltY6nzdVJsP+F/Y
+   CiRimfrOoBbbskvMYHhtalDMyegrF61MOungDUTaiI8Rb6MqcNBxp/w0M
+   A==;
+X-CSE-ConnectionGUID: G4EiOwl2QQKmHDfML/XewQ==
+X-CSE-MsgGUID: EnDJgfURQU6k9WH+XXD4vA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11788"; a="90996057"
+X-IronPort-AV: E=Sophos;i="6.23,239,1770624000"; 
+   d="scan'208";a="90996057"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2026 01:07:49 -0700
+X-CSE-ConnectionGUID: M99lICK9TzyYIdfFvW7whw==
+X-CSE-MsgGUID: jCiv8IbFQ96OYGlLHmFF1A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,239,1770624000"; 
+   d="scan'208";a="232735120"
+Received: from slindbla-desk.ger.corp.intel.com (HELO localhost) ([10.245.245.182])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 May 2026 01:07:42 -0700
+Date: Sun, 17 May 2026 11:07:40 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Inochi Amaoto <inochiama@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
+	Alex Elder <elder@riscstar.com>, Nam Cao <namcao@linutronix.de>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v2 2/5] PCI: spacemit-k1: Add multiple PHY handles support
+Message-ID: <agl3TJrvJMtEpHyl@ashevche-desk.local>
+References: <20260517014841.254085-1-inochiama@gmail.com>
+ <20260517014841.254085-3-inochiama@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260517031620.E1854C2BCB7@smtp.kernel.org>
+In-Reply-To: <20260517014841.254085-3-inochiama@gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Sun, May 17, 2026 at 03:16:20AM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
-> - [High] MMIO registers are accessed before the controller's clocks are enabled, leading to a synchronous external abort or system crash.
-> - [High] Incorrect use of `u32_replace_bits()` combined with bitwise OR (`|=`) fails to clear existing bits.
-> - [High] Missing Root Complex mode configuration for the K3 controller due to a copy-paste error.
-> - [Medium] A bitmask macro for a completely different field is incorrectly passed as the replacement value to `u32_replace_bits()`, writing unexpected values.
-> - [Medium] Asymmetric teardown: `k1_pcie_deinit()` fails to assert reset on the K3 controller because it uses a reset line the controller is explicitly configured to ignore.
-> --
-> 
-> commit 2826ac7fe9e0d0c0dd248a7fc412ce12f4d7b491
-> Author: Inochi Amaoto <inochiama@gmail.com>
-> 
-> PCI: spacemit-k1: Add Spacemit K3 PCIe host controller support
-> 
-> This commit adds host controller support for the Spacemit K3 PCIe IP. It
-> introduces K3-specific initialization, PHY enablement, and MSI host setup,
-> hooking these into the existing spacemit-k1 driver.
-> 
-> > diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > index 7f6f1df31cd81..7854d26220a98 100644
-> > --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> > +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> [ ... ]
-> > @@ -262,6 +278,152 @@ static const struct dw_pcie_ops k1_pcie_ops = {
-> [ ... ]
-> > +static int k3_pcie_init(struct dw_pcie_rp *pp)
-> > +{
-> [ ... ]
-> > +	/*
-> > +	 * Put the controller in root complex mode, and indicate that
-> > +	 * Vaux (3.3v) is present.
-> > +	 */
-> > +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> > +			PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
-> 
-> Does this code configure the controller as a Root Complex? 
-> 
-> The comment mentions putting the controller in root complex mode, but the 
-> register write only sets the PERSTN bits. In the K1 initialization, this is 
-> done by setting DEVICE_TYPE_RC, which appears to be missing here.
-> 
+On Sun, May 17, 2026 at 09:48:37AM +0800, Inochi Amaoto wrote:
+> The PCIe controller on Spacemit K3 may use multiple PHYs at the
+> same time. The feature is not support by the current driver.
+> So extend the PHY definition to support multiple PHY handles.
 
-Unlike K1, K3 does not needs this.
+...
 
-> > +
-> > +	val = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
-> > +	val = u32_replace_bits(val, GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE,
-> > +			       GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
-> 
-> Is the replacement value intended to be GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE? 
-> 
-> This passes a bitmask macro for a completely different field into 
-> u32_replace_bits(), which shifts the value into the target mask and writes an 
-> unexpected value into the register.
-> 
+> +	k1->phy = devm_kmalloc_array(dev, 1, sizeof(*k1->phy), GFP_KERNEL);
 
-The GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE should be BIT(7),
-it is a mistake.
+Hmm... What's the point in having _array(1) ? devm_kmalloc() should suffice.
 
-> > +	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, val);
-> [ ... ]
-> > +static int k3_pcie_msi_host_init(struct dw_pcie_rp *pp)
-> > +{
-> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > +	u32 val;
-> > +
-> > +	dw_pcie_dbi_ro_wr_en(pci);
-> > +
-> > +	val = dw_pcie_readl_dbi(pci, COHERENCY_CONTROL_3_OFF);
-> > +	val |= u32_replace_bits(val, K3_CACHE_MSTR_AWCACHE_BEHAVIOR,
-> > +				K3_CACHE_MSTR_AWCACHE_MODE);
-> 
-> Will this clear the existing bits correctly? 
-> 
-> The u32_replace_bits() macro returns the fully modified 32-bit word. By using 
-> the bitwise OR assignment (|=), the original bits from val are ORed with the 
-> new bits, leaving any originally set bits as 1 instead of clearing them.
-> 
+> +	if (!k1->phy)
+> +		return -ENOMEM;
 
-Yes, it is wrong, I will fix it.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-> > +	dw_pcie_writel_dbi(pci, COHERENCY_CONTROL_3_OFF, val);
-> [ ... ]
-> > +static const struct dw_pcie_host_ops k3_pcie_host_ops = {
-> > +	.init		= k3_pcie_init,
-> > +	.deinit		= k1_pcie_deinit,
-> 
-> Can k1_pcie_deinit() successfully assert the reset for the K3 controller? 
-> 
-> During initialization, k3_pcie_init() sets PCIE_IGNORE_PERSTN in 
-> PCIE_CONTROL_LOGIC. If k1_pcie_deinit() attempts to assert reset using 
-> PCIE_RC_PERST, the hardware might ignore it, leaving the device improperly 
-> reset during teardown.
-> 
-> > +	.msi_init	= k3_pcie_msi_host_init,
-> > +};
-> [ ... ]
-> > +static void k3_pcie_clear_irq_status(struct k1_pcie *k1,
-> > +				     u32 *status0, u32 *status1, u32 *status2)
-> > +{
-> > +	*status0 = readl_relaxed(k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> > +	*status1 = readl_relaxed(k1->link + INTR_STATUS);
-> > +	*status2 = readl_relaxed(k1->link + K3_ADDR_INTR_STATUS1);
-> > +
-> > +	writel_relaxed(*status0, k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> > +	writel_relaxed(*status1, k1->link + INTR_STATUS);
-> > +	writel_relaxed(*status2, k1->link + K3_ADDR_INTR_STATUS1);
-> > +}
-> > +
-> > +static int k3_pcie_parse_port(struct k1_pcie *k1)
-> > +{
-> [ ... ]
-> > +	k1->phy_count = i;
-> > +	if (k1->phy_count == 0)
-> > +		return -EINVAL;
-> > +
-> > +	k3_pcie_clear_irq_status(k1, &status0, &status1, &status2);
-> > +
-> > +	return 0;
-> > +}
-> 
-> Could accessing these MMIO registers before the clocks are enabled cause a
-> synchronous external abort?
-> 
 
-No problems, these register is always ready.
-
-> The probe function calls parse_port() before dw_pcie_host_init(). This means
-> k3_pcie_clear_irq_status() performs direct MMIO reads and writes to the 
-> k1->link registers before k1_pcie_enable_resources() is called later in 
-> k3_pcie_init(). 
-> 
-> Accessing an unclocked peripheral can cause a bus stall on ARM/RISC-V 
-> architectures.
-> 
-> -- 
-> Sashiko AI review · https://sashiko.dev/#/patchset/20260517014841.254085-1-inochiama@gmail.com?part=5
