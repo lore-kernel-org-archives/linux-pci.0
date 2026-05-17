@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86FB5194AE6
-	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:36:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03A6E194AE6
+	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:37:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778978214; cv=none; b=bhXTQJ0m7dGYneZsqBQPhS42h2BFTsYk8EY6MvK+TQxVbZEvRz/DmUGWwcGW7GPdYpq7hxzQs99g4UxVkYTx5zl6tRmewwUzhl+I5kWo8EmJ+p8b63dJ6i3Q9tx9ofbR2IyhUwGCJKC05E+s5iWbfoTUpXzss9+g++EisYYNVQ4=
+	t=1778978247; cv=none; b=PeY/egw9VzU6wWNriw3oZfuf2GB5OjMDjvbpSs6EGlf9XwEF7+IDOAF3m34/6c59exPgk9oyPMr+YN5fdZ9uA8bry+u5QfQOv1keCizYtk9LXGGu2wybnRcJ0EGHowZueIaew652vIB1bIrtksMlgkPWQPyV45zk0iXmeg5Xd38=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778978214; c=relaxed/simple;
-	bh=P9fl85RrEDsBRrnNJjxhnFCDFMApq7oBYTsCyRUexr8=;
+	s=arc-20240116; t=1778978247; c=relaxed/simple;
+	bh=6af3TVwIWJxSLiuDG/PMKOR+kezaTBO/gp03QFSEDgU=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=a8vtI50DhDsDk1ZYUyubrHECFRg2fWHF0NlDmOEV4P+wpjbirUAE28hk/lXgoytJd9uzXLrjTYrastDUXVe0j+cRnMWY23fUilEw7ImUS7UQrIejPjpcFbn9YD9MGOQW+3JEXDLehrAkgaQW8OKFvyvHuzQzR+wo3yZcpqjf1BE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=II2Hd+vU; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=ky75WWV+sWhu87625lvIHru9Du9RNYUH9PyGWqTTnElLSK9fqSXW/jX0dZUqNpqtKklwO7W18p0k7GHSP8bmelels4pXb7kyE81Ll3lpxGNnFS1V8TwOB9zzGQghw3RtIAUIrbm9hkQ73S8Pul6TXlWv5qUQ0AFhmgY4Ws3rHjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XyQuUNuD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="II2Hd+vU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0ADB1C19425;
-	Sun, 17 May 2026 00:36:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XyQuUNuD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 880B5C19425;
+	Sun, 17 May 2026 00:37:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778978214;
-	bh=P9fl85RrEDsBRrnNJjxhnFCDFMApq7oBYTsCyRUexr8=;
+	s=k20201202; t=1778978246;
+	bh=6af3TVwIWJxSLiuDG/PMKOR+kezaTBO/gp03QFSEDgU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=II2Hd+vU/iE89caQCppeW/gaome1qyPZ0HazY/rmbtxNSCgzTw6wsbShW1WfsN4jV
-	 7T9pUMkDgOdLxkvksIDarB/NR6VdOQYcC2HHGLRxXe4rpa7qNrRl7r4e5Lkfdis9gR
-	 Kg67b448PiDLlh4fR8aTK1/yS8CJMtQn23M9h4YPTfekR6UXLL2ue/KH3yJKxXA3s/
-	 N3cagD3QIBvu4mjtxJNRp9dX/DLyn5BZ+6uQKZcAf1nUiBH4JVPG9by69v6eeMFvra
-	 3eoa2iD5+H5rFgN563taLLEUnLrnFpVBg+4T0n+nnj7eIyyQF+jh5jipNZksFOCt9h
-	 hOBFZYHn2sbug==
+	b=XyQuUNuDvkqUFL0i0DqujHLTqhbTxEQPVOEBiHZZWGbicbLtCFvoXtK+5qjGRsf6l
+	 79ZosBh+rAbRRK7Eigros1uAXOcE90h0h7UP1yC/xmAkKJ/qAjv9z/54hmClN60gaB
+	 Htbtf9bbF1MmsAP619w5BQAYMemsb4WlggWcvhkp2Gh80aHGh+oYmVCN/j23X84/Ye
+	 e2RGxz1Ij64keTfJkhn1V9i6VBLQoDAcg0MfmD/nNO8a5EhAKc+RIWEUB9YcqwYf3i
+	 0DEGrecloszR9It5R9olyPjY93wAyUZ6MPhN+Rnj7yHuiQucBe2Mo7XZUf/CGMXjCT
+	 CLwu3inRityZw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 07/27] rust: auxiliary: implement Sync for
- Device<Bound>
+Subject: Re: [PATCH v3 04/27] rust: driver core: drop drvdata before devres
+ release
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260517000149.3226762-8-dakr@kernel.org>
-References: <20260517000149.3226762-8-dakr@kernel.org>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260517000149.3226762-5-dakr@kernel.org>
+References: <20260517000149.3226762-5-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 17 May 2026 00:36:53 +0000
-Message-Id: <20260517003654.0ADB1C19425@smtp.kernel.org>
+Date: Sun, 17 May 2026 00:37:26 +0000
+Message-Id: <20260517003726.880B5C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,45 +46,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Low] The commit implements `Sync` for `Device<device::Bound>` but omits =
-the corresponding `Send` implementation.
+- [Critical] Moving `post_unbind_rust()` before `devres_release_all()` subv=
+erts the LIFO devres teardown order, leading to a Use-After-Free (UAF) when=
+ devm-managed resources are accessed after driver data is dropped.
 --
 
-commit 2db1931adb556a37661b5663fe290ef2d37425ff
+commit b146fb08eba0390797844ff1665d36d951226d10
 Author: Danilo Krummrich <dakr@kernel.org>
-rust: auxiliary: implement Sync for Device<Bound>
 
-This commit implements the Sync trait for Device<Bound> in the auxiliary
-bus abstraction. This allows drivers to safely store shared references to
-the bound device in their private data.
+rust: driver core: drop drvdata before devres release
 
-> diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
-> --- a/rust/kernel/auxiliary.rs
-> +++ b/rust/kernel/auxiliary.rs
+This commit moves the execution of the Rust-specific post_unbind_rust
+callback to occur before devres_release_all() in device_unbind_cleanup().
+It aims to allow Rust driver structs to hold direct references to
+devres-managed resources by ensuring the private data is dropped before
+devres actions are released.
 
-[ ... ]
-
-> @@ -369,6 +369,10 @@ unsafe impl Send for Device {}
->  // (i.e. `Device<Normal>) are thread safe.
->  unsafe impl Sync for Device {}
+> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+> index 5799a60fd0585..be59d2e13a157 100644
+> --- a/drivers/base/dd.c
+> +++ b/drivers/base/dd.c
+> @@ -593,9 +593,9 @@ static DEVICE_ATTR_RW(state_synced);
 > =20
-> +// SAFETY: Same as `Device<Normal>` -- the underlying `struct auxiliary_=
-device` is the same;
-> +// `Bound` is a zero-sized type-state marker that does not affect thread=
- safety.
-> +unsafe impl Sync for Device<device::Bound> {}
+>  static void device_unbind_cleanup(struct device *dev)
+>  {
+> -	devres_release_all(dev);
+>  	if (dev->driver->p_cb.post_unbind_rust)
+>  		dev->driver->p_cb.post_unbind_rust(dev);
+> +	devres_release_all(dev);
 
-Should we also implement Send for Device<device::Bound>?
+Does this regression subvert the devres teardown order, potentially leading
+to a use-after-free?
 
-The commit message correctly notes that the Bound type-state marker is
-zero-sized and does not alter the thread safety properties of the underlying
-auxiliary_device struct. However, omitting the Send implementation creates
-an API asymmetry compared to Device<Normal>.
+The devres framework enforces a last-in, first-out teardown order. Device
+drivers typically allocate their private driver data first, then register
+active endpoints like devm_request_irq, multifunction child devices, or
+sysfs attributes.
 
-Because ARef<T> requires T: Send + Sync for the reference-counted pointer
-itself to be Send, the missing Send implementation prevents drivers from
-safely sending an ARef<Device<Bound>> across threads.
+By moving the destruction of the driver's private data before
+devres_release_all(), any devm-managed resource will remain active and
+exposed to hardware interrupts or userspace after the driver's data has
+already been freed.
+
+Additionally, dev_set_drvdata(dev, NULL) is only called later in this
+function. If an external event occurs between post_unbind_rust() and
+devres_release_all(), or if a devm action callback internally retrieves
+the context using dev_get_drvdata(), could this dereference a dangling
+pointer to the already-freed driver data?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260517000149.3226=
-762-1-dakr@kernel.org?part=3D7
+762-1-dakr@kernel.org?part=3D4
