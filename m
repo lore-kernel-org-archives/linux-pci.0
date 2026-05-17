@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A3AC1C860C
-	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:29:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B23D2405C33
+	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:31:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778977743; cv=none; b=M+hwsV2gQOByXAKqSV+nC3RfIaawFTuTdLZKM15E3zgNuE+3BcxtQAWgpmbvH6+Tkc10sDKrwSkPXCZ531B9nFS0dH/aMB/NPqCRBbS7uDj4yblQiXnjCYCRRncBk6Rxwu6IZVT0++dozgbkOgIp5U0+tmT8wzy8a5YitIDDJ/A=
+	t=1778977870; cv=none; b=CgXctsiA/WbCCymu+9JCbu66RMuu/V51XPTEyeb1mRm4qcgaBIAMvH0hY4B8qynpOb5IuvDpqhChaFx9nL1geAWQQNNWTV5TeItCBXZQPwPF7fE+px3IJ+M+fHaDMsVPP3qtsDx8VW6kbuy51X27QgwDs50qB9UYeQ63Ba74yyE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778977743; c=relaxed/simple;
-	bh=k0ftk8Tc+E6+PE/gKUBAEMDt7fGdHyBsiLYxmo3uaFE=;
+	s=arc-20240116; t=1778977870; c=relaxed/simple;
+	bh=2JeRY33NrMemsvhHfc5uGOKh1xBHQcuxBtIzuTYpR2o=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=m7IDz9Z++K5UNxHGeFfgsdJQQQD1u1dCl9Ex1KqREVlkn05TWajxFGc/Uh1GGcPicluM3vR4+kkVjQEBL8MW/2//WEHzB83U+boeUfdhRZWy90gx4wNJtrA/kl6An1bFS1mFFW7m8IiCai4kzlvlLUKpN9TutXo0gfqdG/Qxynk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tny1m5ob; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=eauo62YdywmbdsN07oreLT6mjrh25wfoC1YVOeBKLbjbToYf8U8IThqMk3SHUFvVBYmQYfWd7wVJmj5UFvAtoXrdb9feuqUIKcetq33c1FE7bVmMUYjZdJsIUn/b+iup0ZbdeOtZwAPNLFIjP7rp19kE3HiO2sasGA5waav60gY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=twDFBEgP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tny1m5ob"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26386C19425;
-	Sun, 17 May 2026 00:29:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="twDFBEgP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 259EBC19425;
+	Sun, 17 May 2026 00:31:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778977743;
-	bh=k0ftk8Tc+E6+PE/gKUBAEMDt7fGdHyBsiLYxmo3uaFE=;
+	s=k20201202; t=1778977870;
+	bh=2JeRY33NrMemsvhHfc5uGOKh1xBHQcuxBtIzuTYpR2o=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=Tny1m5obBdFV1c7L+MODbIH93kEvNz9zrxfk2VF5tWx0XW+cBE+j9fwUk7Ss/ayxT
-	 jNkKINRY8+2gc2G1+/tVMMWjVxtVTpdvx38nPciFU8ujWgTybXkk6mg+B8rcLszRNU
-	 ojof4Z/f1pQaHqb3YoWDKeR8VMQ2JicR04/3jqmb8U88MFzaQ2Gjhq+3+OIkjey1IO
-	 iDF9zDxfEi0V1CDdXryiSOMUgb5XVkKiw8ODXCmbohtcH2ulUYiSh6z0zqw/spQBiH
-	 XSdN5CXiaosvlorYZaPMcvctXlc4bM35t2L3KFe8g5AwNUPYbACXaKM1SDk7G8X/fB
-	 LHcGCR6U1P4Sw==
+	b=twDFBEgPRyGjPm2ySU03+Wg6MNdwpqMHRinS2MlVk3//TGTdmlFoF5t+4MuOf05/Y
+	 aM1u0NHH7NdneHxk8oDESENE8hGcEXNn5GuvO/YqoVOfQitKj7pJIneHIk7JDx/9+7
+	 acFNC2jsANd/E7tq99oifPWuxv91KcJegDDb+0Rj6Q2PVhk7DieEzul3c97RsXIK+/
+	 +AKGsUCirm/dutGo+wE8IJQmzZ81fg8SaaZhXIkdwctYuK8zQOzkXDA4FfIl7LmE8E
+	 czauIc/6FKM7z8XFrN9t+N2wzfrT9LaxwN77MiEYsZ0b3/nM5CJGCd/gWQh1fIAOKb
+	 odabDzhde4sUw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 10/27] rust: pci: make Driver trait
- lifetime-parameterized
+Subject: Re: [PATCH v3 17/27] rust: auxiliary: generalize Registration over
+ ForLt
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260517000149.3226762-11-dakr@kernel.org>
-References: <20260517000149.3226762-11-dakr@kernel.org>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260517000149.3226762-18-dakr@kernel.org>
+References: <20260517000149.3226762-18-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 17 May 2026 00:29:02 +0000
-Message-Id: <20260517002903.26386C19425@smtp.kernel.org>
+Date: Sun, 17 May 2026 00:31:09 +0000
+Message-Id: <20260517003110.259EBC19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,111 +46,139 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The introduction of the `'bound` lifetime parameter allows drivers=
- to capture short-lived references into driver private data, leading to a f=
-ormal use-after-free (provenance violation) and Undefined Behavior when acc=
-essed later.
-- [Low] The signature of `unbind` in `samples/rust/rust_driver_pci.rs` does=
- not match the newly parameterized `pci::Driver` trait, causing a compilati=
-on error.
+- [Critical] Unsound lifetime erasure in `Registration::new` allows safe co=
+de to trigger Use-After-Free.
+- [Critical] Lockless read and premature teardown of `registration_data_rus=
+t` causes Use-After-Free.
 --
 
-commit e20151fd03221a2c3958612a0dabaa50cdd67768
+commit c525b4daa575d3a91524d98a70e2c2b7a56eca5b
 Author: Danilo Krummrich <dakr@kernel.org>
 
-rust: pci: make Driver trait lifetime-parameterized
+rust: auxiliary: generalize Registration over ForLt
+   =20
+Generalize Registration<T> to Registration<F: ForLt> and
+Device::registration_data<F: ForLt>() to return Pin<&F::Of<'_>>.
+The stored 'static lifetime is shortened to the borrow lifetime of &self
+via ForLt::cast_ref; ForLt's covariance guarantee makes this sound.
 
-This changes the pci::Driver trait to add a 'bound lifetime to the
-associated Data type, allowing bus device private data to capture the
-device and driver bound lifetime.
+> diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
+> index 3f1e2966c03aa..db3d56106ea28 100644
+> --- a/rust/kernel/auxiliary.rs
+> +++ b/rust/kernel/auxiliary.rs
+> @@ -271,12 +272,16 @@ pub fn parent(&self) -> &device::Device<device::Bou=
+nd> {
+> =20
+>      /// Returns a pinned reference to the registration data set by the r=
+egistering (parent) driver.
+>      ///
+> -    /// Returns [`EINVAL`] if `T` does not match the type used by the pa=
+rent driver when calling
+> +    /// `F` is the [`ForLt`](trait@ForLt) encoding of the data type. The=
+ returned
+> +    /// reference has its lifetime shortened from `'static` to `&self`'s=
+ borrow lifetime via
+> +    /// [`ForLt::cast_ref`].
+> +    ///
+> +    /// Returns [`EINVAL`] if `F` does not match the type used by the pa=
+rent driver when calling
+>      /// [`Registration::new()`].
+>      ///
+>      /// Returns [`ENOENT`] if no registration data has been set, e.g. wh=
+en the device was
+>      /// registered by a C driver.
+> -    pub fn registration_data<T: 'static>(&self) -> Result<Pin<&T>> {
+> +    pub fn registration_data<F: ForLt>(&self) -> Result<Pin<&F::Of<'_>>>=
+ {
+>          // SAFETY: By the type invariant, `self.as_raw()` is a valid `st=
+ruct auxiliary_device`.
+>          let ptr =3D unsafe { (*self.as_raw()).registration_data_rust };
 
-> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-> index c06ac3fb2a64f..8060861199d41 100644
-> --- a/rust/kernel/pci.rs
-> +++ b/rust/kernel/pci.rs
+Does this lockless read of registration_data_rust allow a use-after-free?
+
+While this wasn't introduced by this patch, it appears to remain a
+vulnerability in the code modified here. In Registration::drop(), the memory
+backing this pointer is freed via Pin::from_foreign(...), but dropping the
+Registration (when the parent device unbinds) does not guarantee the
+struct auxiliary_device is destroyed.
+
+Other kernel threads might still hold a reference to the auxiliary device
+(e.g., via ARef<Device>). When Registration::drop() frees the data, it
+doesn't set registration_data_rust to NULL.
+
+Without synchronization, could another thread with an ARef<Device> call
+the safe registration_data() method after the devres has unwound and access
+freed memory?
+
+Should the registration data be freed in the auxiliary device's release
+callback instead, or should proper synchronization be introduced?
 
 [ ... ]
 
-> @@ -130,7 +130,7 @@ extern "C" fn remove_callback(pdev: *mut bindings::pc=
-i_dev) {
->          // SAFETY: `remove_callback` is only ever called after a success=
-ful call to
->          // `probe_callback`, hence it's guaranteed that `Device::set_drv=
-data()` has been called
->          // and stored a `Pin<KBox<T::Data>>`.
-> -        let data =3D unsafe { pdev.as_ref().drvdata_borrow::<T::Data>() =
-};
-> +        let data =3D unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>=
->() };
-
-Does this lead to a formal use-after-free and provenance violation under
-Rust's aliasing rules?
-
-In probe_callback, a reference to pdev is created with a lifetime restricted
-to the callback's scope, which is stored in Data<'probe>.
-
-Since set_drvdata stores this data by converting it to a raw pointer, the
-'probe lifetime formally ends when probe_callback returns.
-
-Between probe and remove, the C subsystem can mutate the pci_dev struct usi=
-ng
-its parent raw pointer, which invalidates the child reference created during
-probe.
-
-When remove_callback calls drvdata_borrow, does this execute an unchecked
-transmute from the expired 'probe lifetime to a fresh 'remove lifetime?
-
-When the driver accesses these references, will it use a reference with an
-invalidated provenance tag and trigger undefined behavior?
-
-Would it be safer to use ARef<Device>, which stores a raw pointer and creat=
-es
-fresh references on demand, rather than circumventing the borrow checker wi=
-th
-synthetic lifetimes?
-
-[ ... ]
-
-> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_p=
-ci.rs
-> index f43c6a660b395..30b9311812f3e 100644
-> --- a/samples/rust/rust_driver_pci.rs
-> +++ b/samples/rust/rust_driver_pci.rs
-> @@ -140,11 +140,14 @@ fn config_space(pdev: &pci::Device<Bound>) {
+> @@ -389,43 +399,51 @@ struct RegistrationData<T> {
+> -impl<T: Send + Sync + 'static> Registration<T> {
+> +impl<F: ForLt> Registration<F>
+> +where
+> +    for<'a> F::Of<'a>: Send + Sync,
+> +{
+>      /// Create and register a new auxiliary device with the given regist=
+ration data.
+>      ///
+>      /// The `data` is owned by the registration and can be accessed thro=
+ugh the auxiliary device
+>      /// via [`Device::registration_data()`].
+> -    pub fn new<E>(
+> -        parent: &device::Device<device::Bound>,
+> +    pub fn new<'bound, E>(
+> +        parent: &'bound device::Device<device::Bound>,
+>          name: &CStr,
+>          id: u32,
+>          modname: &CStr,
+> -        data: impl PinInit<T, E>,
+> +        data: impl PinInit<F::Of<'bound>, E>,
+>      ) -> Result<Devres<Self>>
+>      where
+>          Error: From<E>,
+>      {
+>          let data =3D KBox::pin_init::<Error>(
+>              try_pin_init!(RegistrationData {
+> -                type_id: TypeId::of::<T>(),
+> +                type_id: TypeId::of::<F::Of<'static>>(),
+>                  data <- data,
+>              }),
+>              GFP_KERNEL,
+>          )?;
 > =20
->  impl pci::Driver for SampleDriver {
->      type IdInfo =3D TestIndex;
-> -    type Data =3D Self;
-> +    type Data<'bound> =3D Self;
-> =20
->      const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PCI_TABLE;
-> =20
-> -    fn probe(pdev: &pci::Device<Core>, info: &Self::IdInfo) -> impl PinI=
-nit<Self, Error> {
-> +    fn probe<'bound>(
-> +        pdev: &'bound pci::Device<Core>,
-> +        info: &'bound Self::IdInfo,
-> +    ) -> impl PinInit<Self, Error> + 'bound {
->          pin_init::pin_init_scope(move || {
->              let vendor =3D pdev.vendor_id();
->              dev_dbg!(
+> +        // SAFETY: Lifetimes are erased and do not affect layout, so Reg=
+istrationData<F::Of<'bound>>
+> +        // and RegistrationData<F::Of<'static>> have identical represent=
+ation.
+> +        let data: Pin<KBox<RegistrationData<F::Of<'static>>>> =3D
+> +            unsafe { core::mem::transmute(data) };
 
-Does the unbind method in this file also need to be updated to match the new
-pci::Driver trait signature?
+Can this transmute allow safe code to trigger a use-after-free?
 
-Since the trait adds a 'bound lifetime parameter to unbind, failing to upda=
-te
-the implementation here leaves elided lifetimes that resolve to two separate
-anonymous lifetimes.
+Since Registration::new accepts parent: &'bound device::Device and
+data: impl PinInit<F::Of<'bound>, E>, Rust's lifetime covariance allows cal=
+lers
+to borrow parent for an arbitrarily short lifetime (e.g., the scope of a
+stack variable inside the probe function) and pass data containing
+references bounded by that short lifetime.
 
-Will the compiler reject this with a lifetime parameter mismatch error,
-breaking the build?
+This function unsafely uses core::mem::transmute to erase this lifetime
+to 'static. Since it returns a Devres<Registration<F>> which has no lifetime
+parameters, it is treated as 'static, allowing safe Rust code to place the
+Devres into the parent device's devres list.
 
-I note this regression is fixed later in the patch series by the commit
-"samples: rust: rust_driver_pci: use HRT lifetime for Bar", but does it bre=
-ak
-git bisectability here?
+When the local stack variables go out of scope, won't the Devres still hold
+the data, causing an exploitable use-after-free when
+Device::registration_data() is called or when Registration::drop() cleans u=
+p?
+
+Should Registration::new be marked unsafe so the caller guarantees the
+references outlive the device's bound state, or should the API be redesigned
+to structurally capture the lifetime?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260517000149.3226=
-762-1-dakr@kernel.org?part=3D10
+762-1-dakr@kernel.org?part=3D17
