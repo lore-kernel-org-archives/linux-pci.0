@@ -1,147 +1,156 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36F401FC10C
-	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:25:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A3AC1C860C
+	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 00:29:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1778977534; cv=none; b=IOGembllTtsLPFTr2qaTpHpnWwQ6ijn03bQtCBOS8b41Z5ZqnFZtJEUSeCF5lFuF+A3VlFwnEZWk2sqqeF8o8KJzzXIK47zx7bmQsTSPpnM7FmzJTktiviRvBkY1y2kq0lZ+rB8LW5mXl0554J1ZgN3ReUfcnDIbzEd5H2QTTTE=
+	t=1778977743; cv=none; b=M+hwsV2gQOByXAKqSV+nC3RfIaawFTuTdLZKM15E3zgNuE+3BcxtQAWgpmbvH6+Tkc10sDKrwSkPXCZ531B9nFS0dH/aMB/NPqCRBbS7uDj4yblQiXnjCYCRRncBk6Rxwu6IZVT0++dozgbkOgIp5U0+tmT8wzy8a5YitIDDJ/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1778977534; c=relaxed/simple;
-	bh=Qkj8J/EYOsrSguYoMRhn6nmbR0F8itfIo+57PhXr/vU=;
+	s=arc-20240116; t=1778977743; c=relaxed/simple;
+	bh=k0ftk8Tc+E6+PE/gKUBAEMDt7fGdHyBsiLYxmo3uaFE=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ecSYgmLUky+Fqg7RblSFJQbrg1iUR70ypHM62WLeQufcotYZ/Y/5G1s+HoypL5SffVFHXe40pNzw3Z/NJFYLAT+Ig13WdSporMVYRNlLaAaQyo2EM1/whT4HVyKQg98kCT8nVJhkxNwS8ZR0BYsugIKmnukAFVzP9H+VXCYOivw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sOR61rfN; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=m7IDz9Z++K5UNxHGeFfgsdJQQQD1u1dCl9Ex1KqREVlkn05TWajxFGc/Uh1GGcPicluM3vR4+kkVjQEBL8MW/2//WEHzB83U+boeUfdhRZWy90gx4wNJtrA/kl6An1bFS1mFFW7m8IiCai4kzlvlLUKpN9TutXo0gfqdG/Qxynk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tny1m5ob; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sOR61rfN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABB17C19425;
-	Sun, 17 May 2026 00:25:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tny1m5ob"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26386C19425;
+	Sun, 17 May 2026 00:29:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1778977533;
-	bh=Qkj8J/EYOsrSguYoMRhn6nmbR0F8itfIo+57PhXr/vU=;
+	s=k20201202; t=1778977743;
+	bh=k0ftk8Tc+E6+PE/gKUBAEMDt7fGdHyBsiLYxmo3uaFE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=sOR61rfN9CiWE0yvYWryhwyl42JSIJhefrKQL5c45zmS5bF06rb3QPX7Mra2FGdS6
-	 MTqXt3JQTtjjRvATtP0d6H+FnlCg6RRSmZo3AmMWmQ/fLrcE5fHHt8CVdOpqCbsTMv
-	 XKW0QwuUpwCfU+UZXaNiS5B0KJFUodOIKdD172iJamRuH7ug6gNyodorYOlWswW7EF
-	 kIbCZcpkmWXulwZmdkvnR4bBvIZjW6Cn1wJhfuMfF6cnwMuqubGZ6Az/pPZonAlRbt
-	 iyfWOp7thENe19SrTt7NFZUqVpcZBUx2WCgvUg6SCCyTorsnSkjeBak6wznPcWjUq2
-	 c7IVoliOjcoig==
+	b=Tny1m5obBdFV1c7L+MODbIH93kEvNz9zrxfk2VF5tWx0XW+cBE+j9fwUk7Ss/ayxT
+	 jNkKINRY8+2gc2G1+/tVMMWjVxtVTpdvx38nPciFU8ujWgTybXkk6mg+B8rcLszRNU
+	 ojof4Z/f1pQaHqb3YoWDKeR8VMQ2JicR04/3jqmb8U88MFzaQ2Gjhq+3+OIkjey1IO
+	 iDF9zDxfEi0V1CDdXryiSOMUgb5XVkKiw8ODXCmbohtcH2ulUYiSh6z0zqw/spQBiH
+	 XSdN5CXiaosvlorYZaPMcvctXlc4bM35t2L3KFe8g5AwNUPYbACXaKM1SDk7G8X/fB
+	 LHcGCR6U1P4Sw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 13/27] rust: usb: make Driver trait
+Subject: Re: [PATCH v3 10/27] rust: pci: make Driver trait
  lifetime-parameterized
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
 Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260517000149.3226762-14-dakr@kernel.org>
-References: <20260517000149.3226762-14-dakr@kernel.org>
+In-Reply-To: <20260517000149.3226762-11-dakr@kernel.org>
+References: <20260517000149.3226762-11-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sun, 17 May 2026 00:25:33 +0000
-Message-Id: <20260517002533.ABB17C19425@smtp.kernel.org>
+Date: Sun, 17 May 2026 00:29:02 +0000
+Message-Id: <20260517002903.26386C19425@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Critical] Use-After-Free vulnerability due to incorrect `'bound` lifetim=
-e on dynamic `DeviceId`.
-- [High] Soundness violation and FFI lifetime bypass in driver data retriev=
-al.
-- [Low] Commit message incorrectly references `unbind()` instead of `discon=
-nect()`.
+- [High] The introduction of the `'bound` lifetime parameter allows drivers=
+ to capture short-lived references into driver private data, leading to a f=
+ormal use-after-free (provenance violation) and Undefined Behavior when acc=
+essed later.
+- [Low] The signature of `unbind` in `samples/rust/rust_driver_pci.rs` does=
+ not match the newly parameterized `pci::Driver` trait, causing a compilati=
+on error.
 --
 
-commit 92ace0018c4af4c9a4ccdae5f9dd912c5a7f6ab0
+commit e20151fd03221a2c3958612a0dabaa50cdd67768
 Author: Danilo Krummrich <dakr@kernel.org>
 
-rust: usb: make Driver trait lifetime-parameterized
+rust: pci: make Driver trait lifetime-parameterized
 
-This commit introduces a 'bound lifetime parameter to the usb::Driver::Data
-associated type. This allows driver private data to store references direct=
-ly
-instead of relying on Devres. The probe and disconnect callbacks are updated
-to use this lifetime.
+This changes the pci::Driver trait to add a 'bound lifetime to the
+associated Data type, allowing bus device private data to capture the
+device and driver bound lifetime.
 
-> The probe() and unbind() callbacks thus gain a 'bound lifetime parameter
-> on the methods themselves; avoiding a global lifetime on the trait impl.
-
-This isn't a bug, but the commit message references unbind() instead of
-disconnect(). The USB subsystem specifically uses disconnect(), whereas
-unbind() is typically used by other bus types like platform drivers.
-
-> diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
-> index 995221d327b89..ec67e4d2416f1 100644
-> --- a/rust/kernel/usb.rs
-> +++ b/rust/kernel/usb.rs
+> diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
+> index c06ac3fb2a64f..8060861199d41 100644
+> --- a/rust/kernel/pci.rs
+> +++ b/rust/kernel/pci.rs
 
 [ ... ]
 
-> @@ -110,7 +110,7 @@ extern "C" fn disconnect_callback(intf: *mut bindings=
-::usb_interface) {
->          // SAFETY: `disconnect_callback` is only ever called after a suc=
-cessful call to
+> @@ -130,7 +130,7 @@ extern "C" fn remove_callback(pdev: *mut bindings::pc=
+i_dev) {
+>          // SAFETY: `remove_callback` is only ever called after a success=
+ful call to
 >          // `probe_callback`, hence it's guaranteed that `Device::set_drv=
 data()` has been called
 >          // and stored a `Pin<KBox<T::Data>>`.
-> -        let data =3D unsafe { dev.drvdata_borrow::<T::Data>() };
-> +        let data =3D unsafe { dev.drvdata_borrow::<T::Data<'_>>() };
-> =20
->          T::disconnect(intf, data);
->      }
+> -        let data =3D unsafe { pdev.as_ref().drvdata_borrow::<T::Data>() =
+};
+> +        let data =3D unsafe { pdev.as_ref().drvdata_borrow::<T::Data<'_>=
+>() };
 
-Does this violate the type matching contract of ForeignOwnable?
+Does this lead to a formal use-after-free and provenance violation under
+Rust's aliasing rules?
 
-The data is originally stored in probe_callback() with a local 'probe lifet=
-ime
-but is retrieved here with a newly instantiated local '_ lifetime.
+In probe_callback, a reference to pdev is created with a lifetime restricted
+to the callback's scope, which is stored in Data<'probe>.
 
-If a driver implements Data<'bound> such that it is invariant over 'bound
-(for example, by using interior mutability like Cell<&'bound Interface>), t=
-hen
-T::Data<'probe> and T::Data<'_> are formally different types in Rust.
+Since set_drvdata stores this data by converting it to a raw pointer, the
+'probe lifetime formally ends when probe_callback returns.
 
-Transmuting between invariant types with different lifetimes could violate =
-the
-safety preconditions of ForeignOwnable and bypass the borrow checker's abil=
-ity
-to verify constraints across the FFI boundary.
+Between probe and remove, the C subsystem can mutate the pci_dev struct usi=
+ng
+its parent raw pointer, which invalidates the child reference created during
+probe.
+
+When remove_callback calls drvdata_borrow, does this execute an unchecked
+transmute from the expired 'probe lifetime to a fresh 'remove lifetime?
+
+When the driver accesses these references, will it use a reference with an
+invalidated provenance tag and trigger undefined behavior?
+
+Would it be safer to use ARef<Device>, which stores a raw pointer and creat=
+es
+fresh references on demand, rather than circumventing the borrow checker wi=
+th
+synthetic lifetimes?
 
 [ ... ]
 
-> @@ -315,16 +319,19 @@ pub trait Driver {
->      ///
->      /// Called when a new USB interface is bound to this driver.
->      /// Implementers should attempt to initialize the interface here.
-> -    fn probe(
-> -        interface: &Interface<device::Core>,
-> -        id: &DeviceId,
-> -        id_info: &Self::IdInfo,
-> -    ) -> impl PinInit<Self::Data, Error>;
+> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_p=
+ci.rs
+> index f43c6a660b395..30b9311812f3e 100644
+> --- a/samples/rust/rust_driver_pci.rs
+> +++ b/samples/rust/rust_driver_pci.rs
+> @@ -140,11 +140,14 @@ fn config_space(pdev: &pci::Device<Bound>) {
+> =20
+>  impl pci::Driver for SampleDriver {
+>      type IdInfo =3D TestIndex;
+> -    type Data =3D Self;
+> +    type Data<'bound> =3D Self;
+> =20
+>      const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PCI_TABLE;
+> =20
+> -    fn probe(pdev: &pci::Device<Core>, info: &Self::IdInfo) -> impl PinI=
+nit<Self, Error> {
 > +    fn probe<'bound>(
-> +        interface: &'bound Interface<device::Core>,
-> +        id: &'bound DeviceId,
-> +        id_info: &'bound Self::IdInfo,
-> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound;
+> +        pdev: &'bound pci::Device<Core>,
+> +        info: &'bound Self::IdInfo,
+> +    ) -> impl PinInit<Self, Error> + 'bound {
+>          pin_init::pin_init_scope(move || {
+>              let vendor =3D pdev.vendor_id();
+>              dev_dbg!(
 
-Can tying the id parameter to the 'bound lifetime result in a use-after-fre=
-e?
+Does the unbind method in this file also need to be updated to match the new
+pci::Driver trait signature?
 
-When a device is bound using a dynamic ID (added via the new_id sysfs
-attribute), the USB core passes a pointer to a dynamically allocated
-struct usb_dynid to the probe function via usb_match_dynamic_id().
+Since the trait adds a 'bound lifetime parameter to unbind, failing to upda=
+te
+the implementation here leaves elided lifetimes that resolve to two separate
+anonymous lifetimes.
 
-Userspace can remove dynamic IDs at any time using the remove_id sysfs
-attribute, which unlinks and frees the usb_dynid without checking if any
-currently bound devices matched against it.
+Will the compiler reject this with a lifetime parameter mismatch error,
+breaking the build?
 
-If a Rust driver safely stores the id reference in its private Data<'bound>
-based on this lifetime guarantee, it could hold a dangling pointer once the
-dynamic ID is removed, potentially causing a use-after-free later during
-the device's lifecycle.
+I note this regression is fixed later in the patch series by the commit
+"samples: rust: rust_driver_pci: use HRT lifetime for Bar", but does it bre=
+ak
+git bisectability here?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260517000149.3226=
-762-1-dakr@kernel.org?part=3D13
+762-1-dakr@kernel.org?part=3D10
