@@ -1,189 +1,407 @@
-Received: from out-170.mta0.migadu.com (out-170.mta0.migadu.com [91.218.175.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BFFC2F3C0E
-	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 19:04:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 083002F0661
+	for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 21:21:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779044669; cv=none; b=hDkmxZY/akDQU1oR+SDVOzObIbDCA0J0XDqB7atCxsQOFVGGbZAiYjh4erSzwkapclGQyPqzfsfKZRJgrAs/1wc+9m9HWyPAPLsnL8BFGEMuIwCqoF3nRCKCSfRJBDDCyYL9cRwRg4hitdbkttPJApEzx/+QX2HcOF243xsHCmw=
+	t=1779052915; cv=none; b=lRvRL7MeOb4GZAjL5kb2TBkdUX5BaKp8ou9oZKknvLGi+BgFdB1sBuYVCYchHw/7vPCR7MfROmNVBxoGt0IAZc1wFFSRxbxT2Y7e5VV+QrKcuwqw9WwIYyrveub133jsU7Gh+YmCRFtKtLlbyPWLO3zWlh9zFVvWj5Uv5wKp3Rs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779044669; c=relaxed/simple;
-	bh=g79u3gMKe4oZqB979X3yLwiUop9hrYjCE/ZQ9QdtcQ0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bNszFTb/vEyf430ZgTFukEOz9OL1Se8D+zcgmqh1MXdQghkQAv2EqQauBVx25sgE7a0Cjprq8UNLKPWQX8w3Rj/AP1PEUYdm3IKblizfxJypRv4D8mlap1Ai9j970w+rxTfGKHY3O3QcvI+tNNegeob/R8YKyO1B+2DKOnhqAQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gkFieru9; arc=none smtp.client-ip=91.218.175.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1779052915; c=relaxed/simple;
+	bh=b6yLdFKopyjDfx4WQ3C6hq8Xo8sq+E0p6lNCXgLfYbQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=D3+H1MnF9y4DL6k45flc7g09L2C0staZKdyVFzk9h0fN5kmE7zLFWlwPXbB2qVfCQRYcfs4Rgz+/DhWq4DhLT2nlkvBGBOz8tcnekxUSU4yNnVQ84XOucFVyVg845Qoeu8CR+3IgXj0hiaJP9ZJn8vGGHiRpd2rPLihnr/wqsm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=p5XZ1M2c; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gkFieru9"
-Message-ID: <65228806-6ed3-4577-9037-13fd5eb8f9b6@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1779044655;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ocLUawCgIiqgFoSO6rtDbcAWX6JsO4JMBPCybL4HayA=;
-	b=gkFieru93xndDsQeIR8L/2dWYTkeYNnvRucTZ9LF4xAIwFi8WXcjrY2y6m1YkqL2Y6qXyK
-	nLaxwIy6lgJQFur4fYsW9J/s+HrOFNCk0oIqo2jzUFKu4fiCHeDb3OYg7GWHR3xxNBaQ7Q
-	IZ+6RApE0nMovOtW1+xr+7ARRbFzvN4=
-Date: Sun, 17 May 2026 12:04:04 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p5XZ1M2c"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-48984d29fe3so17147165e9.0
+        for <linux-pci@vger.kernel.org>; Sun, 17 May 2026 14:21:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779052912; x=1779657712; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=47iB118/0PzBRujH61PMBcnpDbponJHAi7Tbqe+j/Zw=;
+        b=p5XZ1M2cULdQiprPiupCg6Lz5TrkXDprEZaPHGSCBum314zmP8JNYrzqfZ6BfTxtSx
+         DGl/gnRMMAFPEbWfUVmdXbh+ZnhDLxN/jW6hMB6d07DAt8efYfqzPyQRPoHuSdqPhQ2k
+         tRH2fpsxPPhynyHJvPAvouXz6KkPuLdHxmfn2IkagG1CStK2u8nF6GXKVFiDUSIeOa+I
+         0741ifzUMb/j6nsRkX0Rqn2tANpvwCGPSxSxHxrvf/2ObZKajf47QZHjguDgpoC+wiaf
+         pJcq80yWCSJ71AcM7UfrQGfFxtxqz/o7Fum9VunE8ZbQBPMTTRimf+unTWnNGOgx2RvI
+         YRdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779052912; x=1779657712;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=47iB118/0PzBRujH61PMBcnpDbponJHAi7Tbqe+j/Zw=;
+        b=JsA1gxcn4DVAFDiFZGWt1a0acyrlvWxb5rsOMKIjeYGWSk8BpbehzlBWAGwzWCVKSi
+         NkmhtUkzG3EyTMo6EvchCbUq2cBjD19V8l6XRr9fi+TJbK2nuBW6FdkcvTqxAy/zWyNW
+         /+u8p5caC3lOBN70OTshinPq6n7wDyPuE5eofMwhWlXSVvQt/5oYZv5zU9HVI0spMvqe
+         P0jfBQ6TpzOrXEbPdYAXgp3XO3+tdAAZ8ZkTPg9cEymZpCt7qFcmmItH+sMEFxulD3N1
+         1CPfxO0ZXeFduS7uGpBJqRyPx/VH8gVOWsnwxICnwAbzzaT/leSmayOUh+6VFHtEJEzS
+         istw==
+X-Forwarded-Encrypted: i=1; AFNElJ+QbSYSlEj+OcvtDIOVwQXciMnCDAOSP+60A1/6ihhfIB+Susyej1hU74gj0ixLzQsBOqm57xbkh6s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwyIalAAswQxjv9HtJ00Kvxf5SwwhD+fnGusZYKCa7YXS59zljT
+	LF86c7HIPvFbNKPSBYk7FQzgbV54zOfSh3nwyizvhPnNgG2SS9Ka3PkU
+X-Gm-Gg: Acq92OHDL7oXHYXAWHwntiikasNyLdibTZvmlGfUtQAkwxn6MADUhmXZkt1l0X6DAl9
+	w2b4VRwetZPw+xztTwa1KnwJtTUPXRi3pU9T/9Z6NJmam0Xvps+ybGv/ya6URA9Laz+54MbChsB
+	/fD03VBLOIx8S0Clb39k2zbosCGHd5e9vBA2I6ggBM+5OB5+nSy7Q6/exbsKw8oMwri4lQpcgy8
+	idG1+SjH2nRGElF746cZqCrrAEjVeqWC/JzudfbNrEoGeuIElF8XhGSLc2K40KV7voOSto4CJWg
+	VEAHkhBEOEIxhNN3Cu79gQ7eU8y8U/wc6876OQKcY+1HxYzDCN46wr11LgljQ/BCKqy5RzP1V4d
+	YxDxFGXLcM18fAfiF5a5ds9CsASQApV/Wk2HLNbysT8pbyjUX2lpuIlYD3Vr+93bVEE/EDO9tKA
+	+VR09Uw8vID7744i2peGvG/vzMUWQVO4+e0h2Zm6VaXYA=
+X-Received: by 2002:a05:600c:4fc9:b0:48e:706b:53e3 with SMTP id 5b1f17b1804b1-48fe60e51eamr169141375e9.1.1779052912227;
+        Sun, 17 May 2026 14:21:52 -0700 (PDT)
+Received: from foxbook (bfk48.neoplus.adsl.tpnet.pl. [83.28.48.48])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48febf80d04sm66981515e9.36.2026.05.17.14.21.50
+        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
+        Sun, 17 May 2026 14:21:51 -0700 (PDT)
+Date: Sun, 17 May 2026 23:21:47 +0200
+From: Michal Pecio <michal.pecio@gmail.com>
+To: Jihong Min <hurryman2212@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mathias Nyman
+ <mathias.nyman@intel.com>, Guenter Roeck <linux@roeck-us.net>, Jonathan
+ Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, Mario
+ Limonciello <mario.limonciello@amd.com>, Basavaraj Natikar
+ <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, "Mario Limonciello
+ (AMD)" <superm1@kernel.org>, Yaroslav Isakov <yaroslav.isakov@gmail.com>
+Subject: Re: [PATCH v6 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
+Message-ID: <20260517232147.34931718.michal.pecio@gmail.com>
+In-Reply-To: <20260517130407.795157-2-hurryman2212@gmail.com>
+References: <20260517130407.795157-1-hurryman2212@gmail.com>
+	<20260517130407.795157-2-hurryman2212@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4 05/16] vfio: Enforce preserved devices are retrieved
- via LIVEUPDATE_SESSION_RETRIEVE_FD
-To: Vipin Sharma <vipinsh@google.com>, kvm@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org,
- "yanjun.zhu@linux.dev" <yanjun.zhu@linux.dev>
-Cc: ajayachandra@nvidia.com, alex@shazbot.org, amastro@fb.com,
- ankita@nvidia.com, apopple@nvidia.com, chrisl@kernel.org, corbet@lwn.net,
- dmatlack@google.com, graf@amazon.com, jacob.pan@linux.microsoft.com,
- jgg@nvidia.com, jgg@ziepe.ca, jrhilke@google.com, julianr@linux.ibm.com,
- kevin.tian@intel.com, leon@kernel.org, leonro@nvidia.com, lukas@wunner.de,
- michal.winiarski@intel.com, parav@nvidia.com, pasha.tatashin@soleen.com,
- praan@google.com, pratyush@kernel.org, rananta@google.com,
- rientjes@google.com, rodrigo.vivi@intel.com, rppt@kernel.org,
- saeedm@nvidia.com, skhan@linuxfoundation.org, skhawaja@google.com,
- vivek.kasireddy@intel.com, witu@nvidia.com, yi.l.liu@intel.com
-References: <20260511234802.2280368-1-vipinsh@google.com>
- <20260511234802.2280368-6-vipinsh@google.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Zhu Yanjun <yanjun.zhu@linux.dev>
-In-Reply-To: <20260511234802.2280368-6-vipinsh@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-
-在 2026/5/11 16:47, Vipin Sharma 写道:
-> From: David Matlack <dmatlack@google.com>
->
-> Enforce that files for incoming (preserved by previous kernel) VFIO
-> devices are retrieved via LIVEUPDATE_SESSION_RETRIEVE_FD rather than by
-> opening the corresponding VFIO character device or via
-> VFIO_GROUP_GET_DEVICE_FD.
->
-> Both of these methods would result in VFIO initializing the device
-> without access to the preserved state of the device passed by the
-> previous kernel.
->
-> Reviewed-by: Pranjal Shrivastava <praan@google.com>
-> Signed-off-by: David Matlack <dmatlack@google.com>
-> Co-developed-by: Vipin Sharma <vipinsh@google.com>
-> Signed-off-by: Vipin Sharma <vipinsh@google.com>
+On Sun, 17 May 2026 22:04:06 +0900, Jihong Min wrote:
+> AMD Promontory 21 (PROM21) xHCI controllers use generic xHCI
+> operation, but the PCI function also exposes optional
+> controller-specific sensor functionality. Add a small PROM21 PCI glue
+> driver for AMD 1022:43fc and 1022:43fd controllers.
+> 
+> The driver delegates USB host operation to the common xhci-pci core,
+> collects the parent-provided MMIO resource data, and creates a "hwmon"
+> auxiliary device for optional child drivers. Failure to create the
+> auxiliary device is logged but does not fail the xHCI probe, since the
+> auxiliary device is only needed for sensor support.
+> 
+> Make the PROM21 PCI glue a hidden Kconfig tristate that follows
+> USB_XHCI_PCI. This keeps the glue built in with a built-in xhci-pci core
+> and builds it as a module with a modular xhci-pci core. A built-in
+> xhci-pci core must not hand PROM21 controllers to a PROM21 glue driver
+> that is only available as a module, otherwise USB behind those controllers
+> can be unavailable during initramfs and PROM21 temperature sensor support
+> may not appear until the controller is rebound after the module loads.
+> 
+> Assisted-by: Codex:gpt-5.5
+> Signed-off-by: Jihong Min <hurryman2212@gmail.com>
+> Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
+> Tested-by: Yaroslav Isakov <yaroslav.isakov@gmail.com>
 > ---
->   drivers/vfio/device_cdev.c             |  8 ++++++++
->   drivers/vfio/group.c                   |  9 +++++++++
->   drivers/vfio/pci/vfio_pci_liveupdate.c |  6 ++++++
->   drivers/vfio/vfio.h                    | 18 ++++++++++++++++++
->   4 files changed, 41 insertions(+)
->
-> diff --git a/drivers/vfio/device_cdev.c b/drivers/vfio/device_cdev.c
-> index 1ab07ccaf3ab..4df0495941c6 100644
-> --- a/drivers/vfio/device_cdev.c
-> +++ b/drivers/vfio/device_cdev.c
-> @@ -49,6 +49,14 @@ static int vfio_device_cdev_open(struct vfio_device *device, struct file **filep
->   		}
->   
->   		*filep = file;
-> +	} else if (vfio_liveupdate_incoming_is_preserved(device)) {
-> +		/*
-> +		 * Since it is live update preserved device, it must be
-> +		 * retrieved via LIVEUPDATE_SESSION_RETRIEVE_FD instead of
-> +		 * opening /dev/vfio/devices/vfioX.
-> +		 */
-> +		ret = -EBUSY;
-> +		goto err_free_device_file;
+>  drivers/usb/host/Kconfig                      |   7 +
+>  drivers/usb/host/Makefile                     |   1 +
+>  drivers/usb/host/xhci-pci-prom21.c            | 136 ++++++++++++++++++
+>  drivers/usb/host/xhci-pci.c                   |  11 ++
+>  drivers/usb/host/xhci-pci.h                   |   3 +
+>  include/linux/platform_data/usb-xhci-prom21.h |  22 +++
+>  6 files changed, 180 insertions(+)
+>  create mode 100644 drivers/usb/host/xhci-pci-prom21.c
+>  create mode 100644 include/linux/platform_data/usb-xhci-prom21.h
+> 
+> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+> index 0a277a07cf70..89bf262235e1 100644
+> --- a/drivers/usb/host/Kconfig
+> +++ b/drivers/usb/host/Kconfig
+> @@ -42,6 +42,13 @@ config USB_XHCI_PCI
+>  	depends on USB_PCI
+>  	default y
+>  
+> +config USB_XHCI_PCI_PROM21
+> +	tristate
+> +	depends on X86
+> +	depends on USB_XHCI_PCI
+> +	default USB_XHCI_PCI
+> +	select AUXILIARY_BUS
+> +
 
-When vfio_liveupdate_incoming_is_preserved(device) returns true, 
-vfio_device_put_registration(device) is not called in this path.
+Instead of the X86 heuristic, would it be possible to build glue
+code if and only if SENSORS_PROM21_XHCI is enabled?
 
-Is vfio_device_put_registration(device) instead invoked from the 
-err_free_device_file error handling path?
+This seems to work:
 
-Zhu Yanjun
+ config SENSORS_PROM21_XHCI
+        tristate "AMD Promontory 21 xHCI temperature sensor"
+-       depends on USB_XHCI_PCI_PROM21
++       depends on USB_XHCI_PCI
 
->   	}
->   
->   	file->private_data = df;
-> diff --git a/drivers/vfio/group.c b/drivers/vfio/group.c
-> index b2299e5bc6df..62b4eaabc829 100644
-> --- a/drivers/vfio/group.c
-> +++ b/drivers/vfio/group.c
-> @@ -316,6 +316,15 @@ static int vfio_group_ioctl_get_device_fd(struct vfio_group *group,
->   	if (IS_ERR(device))
->   		return PTR_ERR(device);
->   
-> +	/*
-> +	 * This device was preserved across a Live Update. Accessing it via
-> +	 * VFIO_GROUP_GET_DEVICE_FD is not allowed.
-> +	 */
-> +	if (vfio_liveupdate_incoming_is_preserved(device)) {
-> +		vfio_device_put_registration(device);
-> +		return -EBUSY;
+ config USB_XHCI_PCI_PROM21
+        tristate
+-       depends on X86
+        depends on USB_XHCI_PCI
+-       default USB_XHCI_PCI
++       default USB_XHCI_PCI if SENSORS_PROM21_XHCI != 'n'
+        select AUXILIARY_BUS
+
+I don't know if it's the best way, perhaps it would be preferable for
+the hwmon driver to select the glue, but then I'm not sure how to force
+glue to become 'y' when xhci-pci is 'y'.
+
+>  config USB_XHCI_PCI_RENESAS
+>  	tristate "Support for additional Renesas xHCI controller with firmware"
+>  	depends on USB_XHCI_PCI
+> diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
+> index a07e7ba9cd53..174580c1281a 100644
+> --- a/drivers/usb/host/Makefile
+> +++ b/drivers/usb/host/Makefile
+> @@ -71,6 +71,7 @@ obj-$(CONFIG_USB_UHCI_HCD)	+= uhci-hcd.o
+>  obj-$(CONFIG_USB_FHCI_HCD)	+= fhci.o
+>  obj-$(CONFIG_USB_XHCI_HCD)	+= xhci-hcd.o
+>  obj-$(CONFIG_USB_XHCI_PCI)	+= xhci-pci.o
+> +obj-$(CONFIG_USB_XHCI_PCI_PROM21)	+= xhci-pci-prom21.o
+>  obj-$(CONFIG_USB_XHCI_PCI_RENESAS)	+= xhci-pci-renesas.o
+>  obj-$(CONFIG_USB_XHCI_PLATFORM) += xhci-plat-hcd.o
+>  obj-$(CONFIG_USB_XHCI_HISTB)	+= xhci-histb.o
+> diff --git a/drivers/usb/host/xhci-pci-prom21.c b/drivers/usb/host/xhci-pci-prom21.c
+> new file mode 100644
+> index 000000000000..be0933ca5c62
+> --- /dev/null
+> +++ b/drivers/usb/host/xhci-pci-prom21.c
+> @@ -0,0 +1,136 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * AMD Promontory 21 xHCI host controller PCI Bus Glue.
+> + *
+> + * This does not add any PROM21-specific USB or xHCI operation. It exists only
+> + * to publish an auxiliary device for integrated temperature sensor support.
+> + *
+> + * Copyright (C) 2026 Jihong Min <hurryman2212@gmail.com>
+> + */
+> +
+> +#include <linux/auxiliary_bus.h>
+> +#include <linux/device/devres.h>
+> +#include <linux/errno.h>
+> +#include <linux/idr.h>
+> +#include <linux/module.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_data/usb-xhci-prom21.h>
+> +#include <linux/usb.h>
+> +#include <linux/usb/hcd.h>
+> +
+> +#include "xhci-pci.h"
+> +
+> +struct prom21_xhci_auxdev {
+> +	struct auxiliary_device *auxdev;
+> +	struct prom21_xhci_pdata pdata;
+> +	int id;
+> +};
+> +
+> +static DEFINE_IDA(prom21_xhci_auxdev_ida);
+> +
+> +static void prom21_xhci_auxdev_release(struct device *dev, void *res)
+> +{
+> +	struct prom21_xhci_auxdev *prom21_auxdev = res;
+> +
+> +	auxiliary_device_destroy(prom21_auxdev->auxdev);
+> +	ida_free(&prom21_xhci_auxdev_ida, prom21_auxdev->id);
+> +}
+> +
+> +static int prom21_xhci_create_auxdev(struct pci_dev *pdev)
+> +{
+> +	struct prom21_xhci_auxdev *prom21_auxdev;
+> +	struct usb_hcd *hcd = pci_get_drvdata(pdev);
+> +
+> +	if (!hcd)
+> +		return -ENODEV;
+
+Shouldn't be necessary after successful xhci_pci_common_probe().
+
+> +
+> +	prom21_auxdev = devres_alloc(prom21_xhci_auxdev_release,
+> +				     sizeof(*prom21_auxdev), GFP_KERNEL);
+> +	if (!prom21_auxdev)
+> +		return -ENOMEM;
+> +
+> +	prom21_auxdev->pdata.pdev = pdev;
+> +	prom21_auxdev->pdata.regs = hcd->regs;
+> +	prom21_auxdev->pdata.rsrc_len = hcd->rsrc_len;
+> +
+> +	prom21_auxdev->id = ida_alloc(&prom21_xhci_auxdev_ida, GFP_KERNEL);
+> +	if (prom21_auxdev->id < 0) {
+> +		int ret = prom21_auxdev->id;
+> +
+> +		devres_free(prom21_auxdev);
+> +		return ret;
 > +	}
 > +
->   	fd = FD_ADD(O_CLOEXEC, vfio_device_open_file(device));
->   	if (fd < 0)
->   		vfio_device_put_registration(device);
-> diff --git a/drivers/vfio/pci/vfio_pci_liveupdate.c b/drivers/vfio/pci/vfio_pci_liveupdate.c
-> index 11c3bc8a8dcd..731a3e34085f 100644
-> --- a/drivers/vfio/pci/vfio_pci_liveupdate.c
-> +++ b/drivers/vfio/pci/vfio_pci_liveupdate.c
-> @@ -47,6 +47,12 @@
->    *   ...
->    *   ioctl(session_fd, LIVEUPDATE_SESSION_FINISH, ...);
->    *
-> + * .. note::
-> + *    After kexec, if a device was preserved by the previous kernel, attempting
-> + *    to open a new file for the device via its character device
-> + *    (``/dev/vfio/devices/X``) or via ``VFIO_GROUP_GET_DEVICE_FD`` will fail
-> + *    with ``-EBUSY``.
+> +	prom21_auxdev->auxdev = auxiliary_device_create(&pdev->dev,
+> +							KBUILD_MODNAME, "hwmon",
+> +							&prom21_auxdev->pdata,
+> +							prom21_auxdev->id);
+> +	if (!prom21_auxdev->auxdev) {
+> +		ida_free(&prom21_xhci_auxdev_ida, prom21_auxdev->id);
+> +		devres_free(prom21_auxdev);
+> +		return -ENOMEM;
+
+The usual "goto error" pattern could be used instead of increasingly
+long sequences of xxx_free() calls.
+
+> +	}
+> +
+> +	devres_add(&pdev->dev, prom21_auxdev);
+> +	return 0;
+> +}
+> +
+> +static void prom21_xhci_destroy_auxdev(struct pci_dev *pdev)
+> +{
+> +	devres_release(&pdev->dev, prom21_xhci_auxdev_release, NULL, NULL);
+> +}
+> +
+
+It seems that these three functions above are everything that you truly
+want to add; the rest is boilerplate required by this two-module scheme
+to work, plus ID tables which must be duplicated and kept in sync.
+
+I wonder if a separate module is really justified, as opposed to simply
+linking this file into xhci_pci.ko when directed by Kconfig.
+
+The downside would be slightly higher memory usage on systems where the
+hwmon driver is enabled but not needed. OTOH, same systems would likely
+see reduced disk waste.
+
+> +static int prom21_xhci_probe(struct pci_dev *dev,
+> +			     const struct pci_device_id *id)
+> +{
+> +	int retval;
+> +
+> +	retval = xhci_pci_common_probe(dev, id);
+> +	if (retval)
+> +		return retval;
+> +
+> +	retval = prom21_xhci_create_auxdev(dev);
+> +	if (retval) {
+> +		/*
+> +		 * The auxiliary device only provides optional temperature sensor
+> +		 * support. Keep the xHCI controller usable if it fails.
+> +		 */
+> +		dev_err(&dev->dev,
+> +			"failed to create PROM21 hwmon auxiliary device: %d\n",
+> +			retval);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void prom21_xhci_remove(struct pci_dev *dev)
+> +{
+> +	prom21_xhci_destroy_auxdev(dev);
+> +	xhci_pci_remove(dev);
+> +}
+> +
+> +static const struct pci_device_id pci_ids[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_PROM21_XHCI_43FC) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_PROM21_XHCI_43FD) },
+> +	{ /* end: all zeroes */ }
+> +};
+> +MODULE_DEVICE_TABLE(pci, pci_ids);
+> +
+> +static struct pci_driver prom21_xhci_driver = {
+> +	.name = "xhci-pci-prom21",
+> +	.id_table = pci_ids,
+> +
+> +	.probe = prom21_xhci_probe,
+> +	.remove = prom21_xhci_remove,
+> +
+> +	.shutdown = usb_hcd_pci_shutdown,
+> +	.driver = {
+> +		.pm = pm_ptr(&usb_hcd_pci_pm_ops),
+> +	},
+> +};
+> +module_pci_driver(prom21_xhci_driver);
+> +
+> +MODULE_AUTHOR("Jihong Min <hurryman2212@gmail.com>");
+> +MODULE_DESCRIPTION("AMD Promontory 21 xHCI PCI Host Controller Driver");
+> +MODULE_IMPORT_NS("xhci");
+> +MODULE_LICENSE("GPL");
+> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+> index 585b2f3117b0..039c26b241d0 100644
+> --- a/drivers/usb/host/xhci-pci.c
+> +++ b/drivers/usb/host/xhci-pci.c
+> @@ -696,12 +696,23 @@ static const struct pci_device_id pci_ids_renesas[] = {
+>  	{ /* end: all zeroes */ }
+>  };
+>  
+> +/* handled by xhci-pci-prom21 if enabled */
+> +static const struct pci_device_id pci_ids_prom21[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_PROM21_XHCI_43FC) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_PROM21_XHCI_43FD) },
+> +	{ /* end: all zeroes */ }
+> +};
+> +
+>  static int xhci_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  {
+>  	if (IS_ENABLED(CONFIG_USB_XHCI_PCI_RENESAS) &&
+>  			pci_match_id(pci_ids_renesas, dev))
+>  		return -ENODEV;
+>  
+> +	if (IS_ENABLED(CONFIG_USB_XHCI_PCI_PROM21) &&
+> +	    pci_match_id(pci_ids_prom21, dev))
+> +		return -ENODEV;
+> +
+>  	return xhci_pci_common_probe(dev, id);
+>  }
+>  
+> diff --git a/drivers/usb/host/xhci-pci.h b/drivers/usb/host/xhci-pci.h
+> index e87c7d9d76b8..11f435f94322 100644
+> --- a/drivers/usb/host/xhci-pci.h
+> +++ b/drivers/usb/host/xhci-pci.h
+> @@ -4,6 +4,9 @@
+>  #ifndef XHCI_PCI_H
+>  #define XHCI_PCI_H
+>  
+> +#define PCI_DEVICE_ID_AMD_PROM21_XHCI_43FC	0x43fc
+> +#define PCI_DEVICE_ID_AMD_PROM21_XHCI_43FD	0x43fd
+> +
+>  int xhci_pci_common_probe(struct pci_dev *dev, const struct pci_device_id *id);
+>  void xhci_pci_remove(struct pci_dev *dev);
+>  
+> diff --git a/include/linux/platform_data/usb-xhci-prom21.h b/include/linux/platform_data/usb-xhci-prom21.h
+> new file mode 100644
+> index 000000000000..ee672ad452a8
+> --- /dev/null
+> +++ b/include/linux/platform_data/usb-xhci-prom21.h
+> @@ -0,0 +1,22 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +/*
+> + * AMD Promontory 21 xHCI auxiliary device platform data.
 > + *
->    * Restrictions
->    * ============
->    *
-> diff --git a/drivers/vfio/vfio.h b/drivers/vfio/vfio.h
-> index 0854f3fa1a22..5269fe021ee3 100644
-> --- a/drivers/vfio/vfio.h
-> +++ b/drivers/vfio/vfio.h
-> @@ -11,6 +11,7 @@
->   #include <linux/cdev.h>
->   #include <linux/module.h>
->   #include <linux/vfio.h>
-> +#include <linux/pci.h>
->   
->   struct iommufd_ctx;
->   struct iommu_group;
-> @@ -461,4 +462,21 @@ static inline void vfio_device_debugfs_init(struct vfio_device *vdev) { }
->   static inline void vfio_device_debugfs_exit(struct vfio_device *vdev) { }
->   #endif /* CONFIG_VFIO_DEBUGFS */
->   
-> +#ifdef CONFIG_PCI_LIVEUPDATE
-> +static inline bool vfio_liveupdate_incoming_is_preserved(struct vfio_device *device)
-> +{
-> +	struct device *d = device->dev;
+> + * Copyright (C) 2026 Jihong Min <hurryman2212@gmail.com>
+> + */
 > +
-> +	if (dev_is_pci(d))
-> +		return to_pci_dev(d)->liveupdate_incoming;
+> +#ifndef _LINUX_PLATFORM_DATA_USB_XHCI_PROM21_H
+> +#define _LINUX_PLATFORM_DATA_USB_XHCI_PROM21_H
 > +
-> +	return false;
-> +}
-> +#else
-> +static inline bool vfio_liveupdate_incoming_is_preserved(struct vfio_device *device)
-> +{
-> +	return false;
-> +}
-> +#endif /* CONFIG_PCI_LIVEUPDATE */
+> +#include <linux/compiler_types.h>
+> +#include <linux/types.h>
 > +
->   #endif
-
--- 
-Best Regards,
-Yanjun.Zhu
-
+> +struct pci_dev;
+> +
+> +struct prom21_xhci_pdata {
+> +	struct pci_dev *pdev;
+> +	void __iomem *regs;
+> +	resource_size_t rsrc_len;
+> +};
+> +
+> +#endif
+> -- 
+> 2.53.0
+> 
