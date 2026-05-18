@@ -1,148 +1,196 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF3947CC79
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 12:56:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779109002; cv=none; b=uYv+G9lbvmYMbmuN6kXCnCBvbbZ79Qq4PJq84aV8yZbKHFmJo66BbaoovV7WaEZcqExcORrT/ruMv8bn6eLJFwQ4wKcZjeN8Qu6+nynYGkhCE2uYdgbRcmPQJYo3+o7ClFH+7P0V1kjZqT7IFt4C07lwxVtaaqVBU9+IUJxkhKY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779109002; c=relaxed/simple;
-	bh=dzIg7kNVi7MkJMwhoMoGEZ8pVxyubd9pLC0fL8/grVA=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=TkWql5OjsP9t+J8xUnHTBzzYaX2umf8Xx4iQqqRSiTfXE94Pzd6NRmLIlEK9b7VSKEa5EznDcv82FWKexhIqj9I5hzh9qMOHf0HXwfedQXPUNTjzYrhQ8NAE9jTVCypkktl3NQGwOLW9iSL9cVVXDDPBxeE7Q0+HZIrq7rUuaKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xMF5m3HU; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD78C3F8EAF
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 13:23:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.167.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779110636; cv=pass; b=ZURRgKL1AtHKS8ByNVdcnec/pZHZuD0pHykzp0IiIHRJeNzqzKQrhIv09/FvU91Xzr7ULzEFw3gA69ag2Z27QH5KKyriAEYQV3J8Aq4P/y/qjn3JntIFC9gMN+MugA4+PYOK0IPd8B65HqxEAiGbb0KWlPxgt+7qpohqDcZLnGU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779110636; c=relaxed/simple;
+	bh=r8uqepWtcWCbo3g8XZJgo8dJTIh+Bn53roFrsh/VdHg=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=AS8O+IDu2uB69mODjsgdEh8r3dt++XX4+vLP80Tcv/pi9XBVBG7KNdxC7p5xwgrAuoFhmep4PGtjRGU2g5B/RLO9m5PAwj2usQmA+3H/xXHUv0aqGvnyxmCIcchVLB0kN//erEucnjKxtb/wmePe37AfnrSZBoVvcpK258Nm9ho=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=IAgMEVnM; arc=pass smtp.client-ip=209.85.167.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arista.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xMF5m3HU"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4891c00e7aeso15733245e9.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 05:56:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="IAgMEVnM"
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-5aa0862dda1so3151421e87.1
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 06:23:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1779110629; cv=none;
+        d=google.com; s=arc-20240605;
+        b=T7c9fEWSZkdfAMmQYgoCCVd7wdfR+9E1bNqWZihkXMg7IKaPGuuPX2QEDDf1eBvySf
+         fBlI2tR9Mz0k51vpVxRNh9pPS6cqsfT3AOerU+r0nYEqlThCjYQ3Ih8qgvLFPRXEDth+
+         mTWjzcDgaRQNX+33tu67C/Mdk5gvhqeHa2x1zw589QYUoAPpW8CKdWTWh9JnoFNweu5b
+         WPeYvm30AblTPzUjM/2jiesz+qr+7UzpOh6vpmeiPSYkEL1tQg/ysMO0aoYkJelZ7agc
+         zV9XXbxyAXjXpqdwceZfPcKlX9yQjzlE9VT1TFrFgoYDimH9MVKHu9sLTcjiLslWWdsA
+         x46Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=iqfmEHThWndcoL8uij8sV8NK0VPjWDK3IFq607zTzh4=;
+        fh=1QNRJUQSCPl+1p7yfiXJtfw2CJt6d13R4gD3RZZBrgY=;
+        b=AjxKwSBF+Yx2vXspHNFdiY/bFis5YsbvaB8qpHs6+Of58xqu4FLGyizsLv2ade6h7X
+         1IFESnIxcdpx6TJfInlbpu3MSfPNtonA/u+U4AfdD3T/hdymwITBPEQEtr61EC9afB4E
+         clnaRl3Uje9vlG/HI2xc+zMhA5phXMKZGUfSpHZGm8QNu343Ma5nSyWXIhj8oHZF7ct9
+         99Wgy79nrab0PE8NT/MeArFogJx1vaP50XRObWu18MBpllDNhmPyM+VspEEJ1+AvSOa5
+         k7yWIhrtirJ5ud4F4NR4y+tpqs7lxV3+9HF0kbUKqv2+ZnIZxMYhVu3f2Krmj7abznKd
+         WnpQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1779108998; x=1779713798; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fTzZu6PNEHK5eJaUTG9yj4SnM6fDyLlKBKNjBkf8mjE=;
-        b=xMF5m3HU75h9Z2d2ZNZ+E103DgQDjdYCGfqJlHfWZSfJ5Lh0cS3QB8bUmmhTdF3feR
-         +nLBwU6WKK05H37ewE8CKtH9ay02TtzHlk1SSNBhxjJFkvHLj2S4KKmNPwLyYMjaiYai
-         tSvgdOvmCSmOIMLc+MoYI7MsgCmGvryNZSJkRiYvYr+ewZMcItTsCxgDQ1B/ruNlIu0U
-         0eECc6km1ZcQX3jNpfCiHzxvAO9eExG9IfzYgD3t8m+U/hv7YRu6CFHlCtEwJ8Xj+tRq
-         7O8iKAaVM9njgQrWbg9VXLzvF2xJ5NWndwAxzjeJwncouDJeNhaKF1MVFHNT69tS1Hcm
-         RRaA==
+        d=arista.com; s=google; t=1779110629; x=1779715429; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=iqfmEHThWndcoL8uij8sV8NK0VPjWDK3IFq607zTzh4=;
+        b=IAgMEVnMi1RJzReH/uLaU/G976gdfc3xFwpfpAmbKgbyWMG5nI02yfsLgVE/4ywLs+
+         3KGu1Q5e2IEhaTWv4dTnDC2MefgpN5wjGvAtqe3Hu89gz2XfwT+Cz9KAKs01a/RO6YJ3
+         jvVYguNthWc+c9ZajHgIA99LWNm4OaaONII6liMlgLx2DhgJR/9BbsnRbf4L/VPIGeWk
+         7Mpo76+ZG7DMku1KY8zHrtwCYUW+EQMJ9HHE8DTW5yFlygCUDubK9nplOVOUY6XSQaXh
+         Y45cKEtGT8NMemCYTxVBzNHkpTV7dpRKRpSRNvU03evGIX4BrLKUfhWHPZB0186od+vf
+         Q7VQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779108998; x=1779713798;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=fTzZu6PNEHK5eJaUTG9yj4SnM6fDyLlKBKNjBkf8mjE=;
-        b=biIYwQYtsXaaAAOdzvgJDCdRasRDKh2P6/h8mOq8+Okya0U4yUbn0WKA7jNu5Bnxy3
-         WjtNQo/PYWjsWMyWQNwl3/6a82HAE8cLeueb5pFYI5+PP/qbM9xGDdbDf2rxGDEzrvzK
-         CZGhodQP1x6RswXhDYhoRqXlWgnwBrSqkwhHNO9lXafU0JuRSu/mcJhzfWh5hC29zFHX
-         Z1FYbT4hOLFX9Vb+usfgefBH/qhHnL+3vdtuQ0WeBnUkUU7VCeOiEQ5pZFdJGF9s7dDX
-         ma5ZXEf/aQc/aIz/GFzuOenJ0BD1GC2FlVKtYSo1GYA1Z31pi5LwFGA/WDwZxiNIhtFr
-         02rA==
-X-Gm-Message-State: AOJu0YyBgakT0Ud72D1I3ABxTCD3A7CWJWGjxzMqvhcYUE9G8eLZTm2I
-	/l0L03kRvhbYLyLLov5LKUGHDPzTyV0JjvoFHld798W2XOO9f9//wVcXGR0i0vLgnOE=
-X-Gm-Gg: Acq92OEaoonvAh7GcJ4nB4/Rds6jRe2nygOk1NCqmoqmBL1IDQm6FKf3kIG9Y90Pc10
-	VksumJrrpfa/e6Au2WIL8/m9+fsyBqy70Erfb03NuIxV6xO96VG021y64vLQ4dxZrD5ZAe4bbOh
-	6cXesTFAXweVXcfJScrBqo7ehwARdfrmAUYznCshNDBk8m12elySXcUrYd/iMqmiqn2Xo00YQbA
-	u4dRbwHGdGj9FR5If3gEcTS0nulJkCq1SFptGSY7Vc2uqGRsVWxgSSlUhf6Z3lZT4wTe2T5rD9L
-	fyCCLzGk2SFygZa53vz12DIzjF3IvpPb/Lf/cnm/8dk5cPzYOPj2u7Mqigs2/QQFFed/Nrd5/Oz
-	uj/nl0nhhSsH697rGAoHi//fjixF8Qdf5AAnZSULW4EKqgFoIlPnc8uOTWmrXRaW5QgyQaiiPSR
-	aAVe01TpyWq+jFr+uscFbVO+30Q7u3Issp52GxreBsJB7BE8KBtkuBkktmRSqvm6OjAEoHhWj+U
-	UX5iIxS4fV/ggWMyg==
-X-Received: by 2002:a05:600c:34cc:b0:48e:60a3:220a with SMTP id 5b1f17b1804b1-48fe59af1cemr249848065e9.0.1779108997664;
-        Mon, 18 May 2026 05:56:37 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:106d:1080:1029:e3c5:362e:1250? ([2a01:e0a:106d:1080:1029:e3c5:362e:1250])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48fe537c516sm276340275e9.13.2026.05.18.05.56.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 May 2026 05:56:37 -0700 (PDT)
-Message-ID: <08de1873-d2d8-4387-8521-7161ad71ee46@linaro.org>
-Date: Mon, 18 May 2026 14:56:36 +0200
+        d=1e100.net; s=20251104; t=1779110629; x=1779715429;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=iqfmEHThWndcoL8uij8sV8NK0VPjWDK3IFq607zTzh4=;
+        b=dIIqoCC6CD32fcKBspmwhiFq9Oqzc1YUpfKmGJh3fnjYi4+W3o9SUgwzUCpZ4sHhPU
+         kYPvt205nHqNh377Ew9/GrT0SRaT/iHysuPQKus/6QJd/Hla2NqzbcfeZOkxMDNuXGRb
+         cosRp3h31rDpZQLY/hCqtfwW5y9FnoWPw4m+mzTHh47fkcm+ZrdJwSfqgAEGPaKfnCNv
+         KaFQ7XRz2Ma2HRwsH2qMmEJ3KO+gnU8HsVzpuzw8fzMWEtLdf8R0LC9enDNOGYG4ZG8Z
+         oPmJiiHZPAv+JVCcXNXdOUZJYNuVYQJXOka53Z6C4afJje05JeDCHEsJjc+canAmWCEw
+         alCQ==
+X-Forwarded-Encrypted: i=1; AFNElJ++Fc+g6Sqr87Z638GSTw7PjxZeyrk9fmZvg/HgLjjiI78Nw1lFgQTcy/Gcb8/zbiF2lU/wm9bT2nw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyua9Utqoz4MlIgNOUpMthEo+YtJDojsDBTkIk+SChu2UHCkdnU
+	UW91aFplJgve3oEYC+9e4V4Yc/4YdYmVTZVkNtzKd7pWS5HsxJmuoSsUu/Ea8RnBzVoEXtBxZRi
+	HzTSXNCVpijQwc3iLaxtDn+w4NF1ACUCXouLrGt7j
+X-Gm-Gg: Acq92OHsvUzyPyN9iB7M4tBkRt0BhsJiiyFTPLVKu2QPZbAUFe5FRW7/CIO8ye6FfRc
+	dKN2Tu6frkN+eCw1UsIcgyqRZncatQ+R/q9dgTnvA7rgp/Qkqmc0EFVsvJxCBAU080g0LkUfQx7
+	a+ECwvSeWb7vex09V/LSohA3Nyy+JvA4IRcPbFM1O9tWLnFbkfh20nufnVfvo5l0VPpFQvy+hkO
+	nuriFVUKe11jxMXumt8CJ/xDu2H8JtRRiTCj0MtaFBEbC+MqkdFrg9XR9RO+A8qxcSytYnB7OYQ
+	+kkGh1IxkXw6T73c3fc=
+X-Received: by 2002:a05:6512:3d04:b0:5a2:b8cf:39ce with SMTP id
+ 2adb3069b0e04-5aa0e7428damr4225351e87.10.1779110628885; Mon, 18 May 2026
+ 06:23:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Neil Armstrong <neil.armstrong@linaro.org>
-Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH] PCI: meson: Propagate devm_add_action_or_reset() failure
-To: Shuvam Pandey <shuvampandey1@gmail.com>, Yue Wang <yue.wang@Amlogic.com>,
- "Lorenzo Pieralisi <lpieralisi@kernel.org>" <kwilczynski@kernel.org>,
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Kevin Hilman <khilman@baylibre.com>,
- Jerome Brunet <jbrunet@baylibre.com>,
- Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <177909148011.9588.6639767953842842291@gmail.com>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <177909148011.9588.6639767953842842291@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Yury Murashka <yurypm@arista.com>
+Date: Mon, 18 May 2026 14:23:36 +0100
+X-Gm-Features: AVHnY4JOrJy53gmu77kAh1twBosgSM7U8IAMkHT73ISMbEifpQmD_iNo2Y-2TdY
+Message-ID: <CAPzpGcRCTCZtaX1EVaJNZ103THZKsoszZduY7=gwfYdcrMo-SQ@mail.gmail.com>
+Subject: [PATCH] PCI/AER: Clear non-fatal errors on AER recovery failure
+To: bhelgaas@google.com, mahesh@linux.ibm.com
+Cc: oohall@gmail.com, corbet@lwn.net, skhan@linuxfoundation.org, 
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	Yury Murashka <yurypm@arista.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 5/18/26 10:04, Shuvam Pandey wrote:
-> meson_pcie_probe_clock() enables a clock and then registers a devres
-> action to disable it during teardown. If devm_add_action_or_reset()
-> fails, it runs the action immediately, disabling the clock.
-> 
-> The return value is currently ignored, so on that failure path
-> meson_pcie_probe_clock() returns the disabled clock and probe continues.
-> Return the error so the existing probe error path unwinds normally.
-> 
-> Fixes: 9c0ef6d34fdbf ("PCI: amlogic: Add the Amlogic Meson PCIe controller driver")
-> Signed-off-by: Shuvam Pandey <shuvampandey1@gmail.com>
-> ---
->   drivers/pci/controller/dwc/pci-meson.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-> index 0694084f612b..8d495bcc3a41 100644
-> --- a/drivers/pci/controller/dwc/pci-meson.c
-> +++ b/drivers/pci/controller/dwc/pci-meson.c
-> @@ -204,7 +204,9 @@ static inline struct clk *meson_pcie_probe_clock(struct device *dev,
->   		return ERR_PTR(ret);
->   	}
->   
-> -	devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
-> +	ret = devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
-> +	if (ret)
-> +		return ERR_PTR(ret);
->   
->   	return clk;
->   }
+pci_aer_clear_nonfatal_status() is not called when AER recovery fails.
+If a new AER error is subsequently reported, the AER driver calls
+find_source_device() to find the source of the error. It rescans the
+whole bus and picks the first device reporting an AER error. Because the
+previous error was never cleared, the error is attributed to the wrong
+device and AER recovery is started for the wrong device.
 
-Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+Add a kernel boot parameter pci=aer_clear_on_recovery_failure to clear
+AER error status even when recovery fails, preventing stale errors from
+causing incorrect device identification on subsequent AER events.
 
-Thanks,
-Neil
+Signed-off-by: Yury Murashka <yurypm@arista.com>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  5 +++++
+ drivers/pci/pci.c                               |  2 ++
+ drivers/pci/pci.h                               |  2 ++
+ drivers/pci/pcie/err.c                          | 13 +++++++++++++
+ 4 files changed, 22 insertions(+)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt
+b/Documentation/admin-guide/kernel-parameters.txt
+index 4d0f545fb..5a9e266f5 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -5301,6 +5301,11 @@ Kernel parameters
+                nomio           [S390] Do not use MIO instructions.
+                norid           [S390] ignore the RID field and force use of
+                                one PCI domain per PCI function
++               aer_clear_on_recovery_failure
++                               [PCIE] If the PCIEAER kernel config parameter is
++                               enabled, this kernel boot option can be used to
++                               enable AER errors cleanup even if error recovery
++                               failed.
+                notph           [PCIE] If the PCIE_TPH kernel config parameter
+                                is enabled, this kernel boot option can be used
+                                to disable PCIe TLP Processing Hints support
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d34266651..701459c62 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6769,6 +6769,8 @@ static int __init pci_setup(char *str)
+                                disable_acs_redir_param = str + 18;
+                        } else if (!strncmp(str, "config_acs=", 11)) {
+                                config_acs_param = str + 11;
++                       } else if (!strncmp(str,
+"aer_clear_on_recovery_failure", 29)) {
++                               pci_enable_aer_clear_on_recovery_failure();
+                        } else {
+                                pr_err("PCI: Unknown option `%s'\n", str);
+                        }
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4a14f88e5..093a7c896 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -1292,6 +1292,7 @@ int pci_aer_clear_status(struct pci_dev *dev);
+ int pci_aer_raw_clear_status(struct pci_dev *dev);
+ void pci_save_aer_state(struct pci_dev *dev);
+ void pci_restore_aer_state(struct pci_dev *dev);
++void pci_enable_aer_clear_on_recovery_failure(void);
+ #else
+ static inline void pci_no_aer(void) { }
+ static inline void pci_aer_init(struct pci_dev *d) { }
+@@ -1301,6 +1302,7 @@ static inline int pci_aer_clear_status(struct
+pci_dev *dev) { return -EINVAL; }
+ static inline int pci_aer_raw_clear_status(struct pci_dev *dev) {
+return -EINVAL; }
+ static inline void pci_save_aer_state(struct pci_dev *dev) { }
+ static inline void pci_restore_aer_state(struct pci_dev *dev) { }
++static inline void pci_enable_aer_clear_on_recovery_failure(void) { }
+ #endif
+
+ #ifdef CONFIG_ACPI
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index bebe4bc11..29d655a34 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -21,6 +21,13 @@
+ #include "portdrv.h"
+ #include "../pci.h"
+
++static int enable_aer_clear_on_recovery_failure;
++
++void pci_enable_aer_clear_on_recovery_failure(void)
++{
++       enable_aer_clear_on_recovery_failure = 1;
++}
++
+ static pci_ers_result_t merge_result(enum pci_ers_result orig,
+                                  enum pci_ers_result new)
+ {
+@@ -289,6 +296,12 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+        return status;
+
+ failed:
++       if (enable_aer_clear_on_recovery_failure &&
++           (host->native_aer || pcie_ports_native)) {
++               pcie_clear_device_status(dev);
++               pci_aer_clear_nonfatal_status(dev);
++       }
++
+        pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
+
+        pci_walk_bridge(bridge, report_perm_failure_detected, NULL);
+--
+2.51.0
