@@ -1,107 +1,201 @@
-Received: from mail.zeus03.de (zeus03.de [194.117.254.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D9A4346AC2
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 05:16:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.117.254.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7948F3DEAFB;
+	Mon, 18 May 2026 06:22:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779081404; cv=none; b=BVz2/oaOxISLN26X3V7RJcANVSGB2B8JI9EYNqleID6eDP64kvVPIzxF8v4/ACzRrdwte8yV4xZLaQJ6EEL/7QKg3OF4ttCVCMS+abOJbDJKgdtj8bX6qwNl/L2ME4zg+Un2GldR5DwMJmv+/TGjwhgB8iSrGo8C4OQPB0Q4fhM=
+	t=1779085335; cv=none; b=BVuGDrd1n/UjxhO8jvpizdlwIcCdVBJCIP2M0XmNIqsX7M0DMiRyY6vuAvMnBtE85NZoohKfaNkub1uxsyS0ZFvAE3LnVxDeN7/6oosRd1y7YixeRz9eP52h0YBfWJC6sZWIlrpbGToTRAazGx0Gbbh4mUa/GJJ22VVGfY5LLWk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779081404; c=relaxed/simple;
-	bh=hOCKadUSTf3cQEUxxUGF55QCfpFY88BMmKN6ZyP3iYw=;
+	s=arc-20240116; t=1779085335; c=relaxed/simple;
+	bh=zkFDJF7fz51FV37iDY2VAna6p1X471J7zJme82WLsjs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IvYD1Wagqddy2gCgfj6/wIwprepaLHc+V0+8cM003rxkjUYJEnxpZQffwusx36Cyf6Eyf5BqfEzm4/AjoGNmpP6UFatkmhiXPdVjiSmYkcr55mgFGCT21dhShLcxdI9jcwmQN9IQrwFG+cnTXSw3jSHnj2ilLLz4CXwPtqkc9M8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sang-engineering.com; spf=pass smtp.mailfrom=sang-engineering.com; dkim=pass (2048-bit key) header.d=sang-engineering.com header.i=@sang-engineering.com header.b=LkhpJKV/; arc=none smtp.client-ip=194.117.254.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sang-engineering.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sang-engineering.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=n1Vrs8IFQUHV/p5C/Qa0s8FVDpC3r/fT+ZS6SU0Nin6OOAzSTNTIyoIR9m7rNji4qJ7u8a8cgydTn3sUTTRp1lhzrQpTq40EQmIGptgMnCdsnTJHqDwtiwwJmAc3kjSjmTFlAO25WNWLNJTxFgV/qStPujboqRBVjskijPNxCro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S+kE7lok; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sang-engineering.com header.i=@sang-engineering.com header.b="LkhpJKV/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	sang-engineering.com; h=date:from:to:cc:subject:message-id
-	:references:mime-version:content-type:in-reply-to; s=k1; bh=cmB9
-	EF7ivBtKGUG96g1Savi2M0luLEIRM5gfPbIQyiA=; b=LkhpJKV/Wfuy6DaJ9+ka
-	qurX96LoHx9xnrs64dm3h4h1ChxQtKZNoOk1dNSBZAFqo5fhxFDQTTcrdBDXVvHZ
-	Z3T66UGyA270vWeM4+o4Ipw5EeX4xU33tlt7+BB9zulum4DKCGQ/wCSgP+xqJWqN
-	iz+vr99tSYZNzpCK6NtDmMGqe4boElRzaeFvQojwYjAaHd4OnZHtGO7GTWBZWwyi
-	KvCgAMQ7FmP4+47jAnWFa9BqcHAMh4KwfGaq3a0X/I63utx4Oibnmxl26ZWLcUlS
-	nyOopuxl2H+WO+W/YxJKcuoKy/kJr+pM0QH4NdnDTSo5LSIjYn6j9fXthjiNbIwP
-	zg==
-Received: (qmail 869130 invoked from network); 18 May 2026 07:16:30 +0200
-Received: by mail.zeus03.de with UTF8SMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 18 May 2026 07:16:30 +0200
-X-UD-Smtp-Session: l3s3148p1@Hz5LqhBSRqQujnuR
-Date: Mon, 18 May 2026 07:16:29 +0200
-From: Wolfram Sang <wsa+renesas@sang-engineering.com>
-To: Ethan Nelson-Moore <enelsonmoore@gmail.com>
-Cc: linux-doc@vger.kernel.org, devicetree@vger.kernel.org,
-	workflows@vger.kernel.org, linux-arch@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-i2c@vger.kernel.org,
-	linux-iio@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pwm@vger.kernel.org,
-	linux-hardening@vger.kernel.org, linux-kbuild@vger.kernel.org,
-	linux-csky@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Daniel Lezcano <daniel.lezcano@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>, Alex Shi <alexs@kernel.org>,
-	Yanteng Si <si.yanteng@linux.dev>, Dongliang Mu <dzm91@hust.edu.cn>,
-	Hu Haowen <2023002089@link.tyut.edu.cn>,
-	Dinh Nguyen <dinguyen@kernel.org>, Kees Cook <kees@kernel.org>,
-	Oleg Nesterov <oleg@redhat.com>, Will Deacon <will@kernel.org>,
-	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Nick Piggin <npiggin@gmail.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>,
-	Dave Penkler <dpenkler@gmail.com>,
-	Andi Shyti <andi.shyti@kernel.org>,
-	Jonathan Cameron <jic23@kernel.org>,
-	David Lechner <dlechner@baylibre.com>,
-	Nuno =?utf-8?B?U8Oh?= <nuno.sa@analog.com>,
-	Andy Shevchenko <andy@kernel.org>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Subject: Re: [PATCH] nios2: remove the architecture
-Message-ID: <agqgrTBkVGBt_f28@ninjato>
-References: <20260518042833.272221-1-enelsonmoore@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S+kE7lok"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A01CC2BCB7;
+	Mon, 18 May 2026 06:22:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779085332;
+	bh=zkFDJF7fz51FV37iDY2VAna6p1X471J7zJme82WLsjs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=S+kE7lokwNjnm9hvlBCtnLv445qG+GCXIVjLfHmeChC4oyGZnd/ILC768x1ScWGb7
+	 GvnjSzMy7vYc5k+AqXhnZcQ4h9c7m3vrO9MBM/QOqMv6dXuiUlmFvip/GX+7jnfw7T
+	 OohmcKlf7aH+0dKHk5EY0JoQSb1OrL7wyVYnq/Dmp4d8+52y5HJK0DX+7VpqX13DR5
+	 EXSDqXNCb97kCJBHm7KOsbaUAniKBxvLmrtOjkAjsuUMFcKKPxY3LQYs9XqfJaJe8d
+	 A1t65qfPm/zHB2RUDbCOeYniRrnfabTDQRI7AE8OEWqId1Fb5l9+IgOMefKbErftE2
+	 0f6l7jrFmYABw==
+Date: Mon, 18 May 2026 11:51:56 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: manivannan.sadhasivam@oss.qualcomm.com, 
+	Bjorn Helgaas <bhelgaas@google.com>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+	Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	Lukas Wunner <lukas@wunner.de>, Richard Zhu <hongxing.zhu@nxp.com>, 
+	Brian Norris <briannorris@chromium.org>, Wilson Ding <dingwei@marvell.com>, Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH v7 0/4] PCI: Add support for resetting the Root Ports in
+ a platform specific way
+Message-ID: <tgsh3cum6qxrqjzbdeqjsp6bf7cqedj7il77hww3oxecadndin@idjnwib7cz4z>
+References: <20260310-pci-port-reset-v7-0-9dd00ccc25ab@oss.qualcomm.com>
+ <abFMa6DCGGLUHddA@fedora>
+ <dp2rem4gj7zhfgykvekmcrhq4ticm6m6ido6tbgflwzfcuuwkl@4wuxgle27eyx>
+ <srdn3bspgwff7f7tnst7wzg4us4buifrv7o3ylo527hmuciyl3@6ioyrl6rfhaz>
+ <abk3rU2EDKjkefUD@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20260518042833.272221-1-enelsonmoore@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <abk3rU2EDKjkefUD@ryzen>
 
-On Sun, May 17, 2026 at 09:28:33PM -0700, Ethan Nelson-Moore wrote:
-> The Nios II architecture is a soft-core architecture developed by
-> Altera (since acquired by Intel) and intended to run on their FPGAs.
+On Tue, Mar 17, 2026 at 12:16:47PM +0100, Niklas Cassel wrote:
+> On Wed, Mar 11, 2026 at 08:44:15PM +0530, Manivannan Sadhasivam wrote:
+> > On Wed, Mar 11, 2026 at 08:09:53PM +0530, Manivannan Sadhasivam wrote:
+> > > On Wed, Mar 11, 2026 at 12:05:15PM +0100, Niklas Cassel wrote:
+> > > > On Tue, Mar 10, 2026 at 07:31:58PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> > > > > Changes in v7:
+> > > > > - Dropped Rockchip Root port reset patch due to reported issues. But the series
+> > > > >   works on other platforms as tested by others.
+> > > > 
+> > > > Are you referring to
+> > > > 
+> > > > ## On EP side:
+> > > > # echo 0 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start && \
+> > > >   sleep 0.1 && echo 1 > /sys/kernel/config/pci_ep/controllers/a40000000.pcie-ep/start
+> > > > 
+> > > > Then running pcitest only having 7 / 16 tests passed ?
+> > > > 
+> > > > If so, isn't that a problem also for qcom?
+> > > > 
+> > > 
+> > > No, tests are passing on my setup after link up.
+> > > 
+> > > > 
+> > > > There is no chance that the patch:
+> > > > "misc: pci_endpoint_test: Add AER error handlers"
+> > > > improves things in this regard?
+> > > > 
+> > > > Or will it simply avoid the "AER: device recovery failed" print?
+> > > > 
+> > > 
+> > > Yes, as mentioned in the commit message, it just avoids the AER recovery failure
+> > > message.
+> > > 
+> > 
+> > I also realized that Endpoint state is not saved in all the code paths. So the
+> > pci_endpoint_test driver has to save/restore the state also. But it is still not
+> > clear why that didn't help you.
+> > 
+> > Can you share the snapshot of the entire config space before and after reset
+> > using 'lspci -xxxx -s "0000:01:00"'?
 > 
-> Licenses for the architecture have not been available for purchase
-> since 2024 [1], and support for it has been removed from GCC 15 [2],
-> Buildroot [3], and QEMU [4].
+> If I don't add something like:
 > 
-> Given all of these factors, it is time to remove Nios II support from
-> the kernel. The maintainer stated in 2024 that they were planning to do
-> so soon [5], but this did not come to pass.
+> diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+> index 1eced7a419eb..9d7ee39164d4 100644
+> --- a/drivers/misc/pci_endpoint_test.c
+> +++ b/drivers/misc/pci_endpoint_test.c
+> @@ -1059,6 +1059,9 @@ static int pci_endpoint_test_set_irq(struct pci_endpoint_test *test,
+>                 return ret;
+>         }
+>  
+> +       pr_info("saving PCI state (irq_type: %d)\n", req_irq_type);
+> +       pci_save_state(pdev);
+> +
+>         return 0;
+>  }
+>  
+> @@ -1453,6 +1456,7 @@ static pci_ers_result_t pci_endpoint_test_error_detected(struct pci_dev *pdev,
+>  
+>  static pci_ers_result_t pci_endpoint_test_slot_reset(struct pci_dev *pdev)
+>  {
+> +       pci_restore_state(pdev);
+>         return PCI_ERS_RESULT_RECOVERED;
+>  }
 > 
-> Remove Nios II support from the kernel and move the former maintainer
-> to CREDITS. Thank you, Dinh Nguyen, for maintaining Nios II support!
+> On top of your patch.
 > 
-> References:
-> [1] https://docs.altera.com/v/u/docs/781327/is-discontinuing-ip-ordering-codes-listed-in-pdn2312-for-nios-ii-ip
-> [2] https://gcc.gnu.org/git/?p=gcc.git;a=commitdiff;h=e876acab6cdd84bb2b32c98fc69fb0ba29c81153
-> [3] https://github.com/buildroot/buildroot/commit/6775ccc5a199d574ad70b5f79ec58cce97a07c6f
-> [4] https://github.com/qemu/qemu/commit/6c3014858c4c0024dd0560f08a6eda0f92f658d6
-> [5] https://sourceware.org/pipermail/newlib/2024/021083.html
+> Then all the BAR tests + MSI and MSI-X tests fail.
 > 
-> Signed-off-by: Ethan Nelson-Moore <enelsonmoore@gmail.com>
+> There is a huge difference in lspci -vvv output (as I guess is expected),
+> including all BARs being marked as disabled.
+> 
+> 
+> With the patch above. There is zero difference before/after reset, and all
+> the BAR tests pass. However, MSI/MSI-X tests still fail with:
+> 
+> # pci_endpoint_test.c:143:MSI_TEST:Expected 0 (0) == ret (-110) 
+> # pci_endpoint_test.c:143:MSI_TEST:Test failed for MSI1
+> 
+> ETIMEDOUT.
+> 
+> This suggests that pci_endpoint_test on the host side did not receive an
+> interrupt.
+> 
+> I don't know why, but considering that lspci output is now (with the
+> save+restore) identical, I assume that the problem is not related to
+> the host. Unless somehow the host will use a new/different MSI address
+> after the root port has been reset, and we restore the old MSI address,
+> but looking at the code, dw_pcie_msi_init() is called by
+> dw_pcie_setup_rc(), so I would expect the MSI address to be the same.
+> 
 
-Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com> # for I2C
+Hi Niklas,
 
+When I rebased this series on top of v7.1-rc1, I ended up seeing the issue what
+you described here (not sure why I didn't see it earlier). So after the Root
+Port reset, MSI tests fail, but BAR tests succeed. Also, I got IOMMU faults on
+the host after endpoint triggers MSI.
+
+I investigated it and found that the MSI iATU mapping gets cleared in hw after
+LDn happens. But the host continues to use the same address/size for the
+endpoint MSI even after reset. Due to this, the existing checks in
+dw_pcie_ep_raise_msi_irq() don't pass and the stale MSI iATU mapping gets
+reused.
+
+The fix would be to clear the mapping in dw_pcie_ep_cleanup(), which gets called
+as part of the PERST# assert/deassert sequence post LDn and also set
+msi_iatu_mapped flag to 'false'. This will force dw_pcie_ep_raise_msi_irq() to
+use fresh iATU mapping when it gets called for the first time:
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index d4dc3b24da60..4ae0e1b55f39 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -1035,6 +1035,11 @@ void dw_pcie_ep_cleanup(struct dw_pcie_ep *ep)
+ {
+        struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
++       if (ep->msi_iatu_mapped) {
++               dw_pcie_ep_unmap_addr(ep->epc, 0, 0, ep->msi_mem_phys);
++               ep->msi_iatu_mapped = false;
++       }
++
+        dwc_pcie_debugfs_deinit(pci);
+        dw_pcie_edma_remove(pci);
+ }
+
+With this change, MSI works after Root Port reset without any issues on our Qcom
+endpoint/host setup.
+
+Please test this change on your rockchip setup as well. You have to make sure
+that dw_pcie_ep_cleanup() is called during PERST# assert/deassert.
+
+I'm going to respin the series with this fix. If you confirm it works for you,
+then we can merge your Rockchip Root Port change.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
