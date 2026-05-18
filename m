@@ -1,161 +1,175 @@
-Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011052.outbound.protection.outlook.com [40.107.208.52])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA073F075B;
-	Mon, 18 May 2026 15:42:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779118926; cv=fail; b=LILItxo2Xvob+z1KaanVewv4xI5BTt8O4s/UJr7syjSeFZhP0PIcOf+0XaidZZVF7m2ADxbrJA+RgtevNOf2Lo54sMC0wBO4Ex0XqMBTgqiZYehnc9YTpiVAZFgQolOH754GEJv6/kyuCWDOAuNUsrSEFkXlB0WcM2pIN6vx2Rg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779118926; c=relaxed/simple;
-	bh=ViY3bm2bC8Fu7h41iHOKOmXCLh4gRCw3++oGcTXTdyk=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=q4IKdrWrFIHSn5x8dhssBxGuflqyj4u+zMjuflF0bp8mx/jsudos2mOy+YD+V3boN3vQifZdPQHy2JTRxeEesZwv4nnZ0oU8TPHd6RROIH3QXfIwOEl+DeMbFa2TqkoVDiKgP7cGAW1qjux/jR2TdeI0WMnGca0jLx1GKSUhBlM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=kMH7/M0W; arc=fail smtp.client-ip=40.107.208.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 581904F5E0;
+	Mon, 18 May 2026 15:46:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779119190; cv=none; b=pQeo5YlXJRi8hpW1eRjSlQRFcVJq4rwuHpLJXTwL+Dy0drB/ABF3NTEuLeuzdxdQzV7splxo/jxL9zXdyx6LlNtMukPBEIj54HQorvBz/gi+EDpeM3bG3UR+qONybVt6wVY5dwkIHiukFE63rpjdKfIQ74y7lfcdGpZddxf38rU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779119190; c=relaxed/simple;
+	bh=AjL8N2LVB/OojDQzv9xLNPYHoiSC52XQwwBwyjGPaZc=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Wz47uap9KV8jhcXIBc9sJDoXkk7owEY6dpz5zIbEeabqwMbngd0rrTlPirnQDUWeaTI7WfWhbAPhHddrO+EdlT8eejOT3AVIuIr4ntWjdhsAf40kDQqkBsrD8izROkiUIqm/Y0FQRJ/LiRJI/fdccLEBMy0/xVTdf/2qYPPX4iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=DaZ69NTy; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="kMH7/M0W"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Be5HkI41PB5G/qBUB6ujSOuvvaR7CSGTc2fpI5Yox/vJ0ia38Sqxhe52h2+MCSG8UVKE4ZkEfHIHkxOWQ/fmrAUvhLhh6C4FBGqUOlp8jf17VjMwvCgubsrd+ZwniMV+ufMty9zm67g1LREsww+iSdvL/a39iYiGRdSkACSeIx5k5HwCOtyzcxHZyth4T+4tIAeH+NHZ+/huAqQLWjqz7wjz6vvsJAvmdVsoMDKnGcDZx7g8sJm7AoQAAkVsQjNOK1VwNRanhaJAciaH/yXmyygVOFJrGdyZpvKOJsvDBl4smxXhuy5sRPn4vkRgywuZ0GBUhhySIVM1+VsyMLvgpQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ViY3bm2bC8Fu7h41iHOKOmXCLh4gRCw3++oGcTXTdyk=;
- b=FNFSQ4mVOBjZNtimr5LTIk32Kkex3EXz+HW0Xmnay1/Nl2gCGfg/yv5/besRsVke8SM0FyDcT3hBh53n/P6oGnYsr9MTZ6pbk1YOA2ZNdp8mpmP/22qxCypiAxlRtvmGIKY77oaH+cRRqtVAQRPq7xH2rnWs8rdtZfdJccQdd6t8AheMoM8XGEqa2XtUKYZ7IWwC4CmNyaL02a1MuzZ51votNzGakQUSer3+r7NRH+HbO+He5oqRMzDnVL4Id+cf4muSiugJVaUTqvZ2bEtJfThIkh6sOQKuDtt0uNC+e+NPsU71k685LcVX1T7QMitQkF63pKLxEvu188ttnsMf5w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ViY3bm2bC8Fu7h41iHOKOmXCLh4gRCw3++oGcTXTdyk=;
- b=kMH7/M0W4Az7w8l4yFCNWtyNlWZWQrvPafbuyLPTC2zBfZhs0U5tlyEW68CF64oizaYIoxxyXOsClDYyWViu2yPnplVjSIWqczlw9uTfTIXpSXzJO1qVpjdv/GWL9X+gB9EU7GfOvg8TWJDqap5ibK4LlybIn2UHNDCS9dKH5Z9hb6T/0eq8Ej/RR97Z75m0lPyCVp+dd80oUAyJw4AzdI8fJv8yEvq4k9yyIfiJzLy7Ll2AYdICOvOqKLu9Ubxp5T2ZUnX/8ouLTmk4fHQt/nNDjQsjYqxDQ7Qy1uAUy7QWWiiLYmyqQJ4LEbHLND5jjTxvhzZNbPL715HNqDpvDw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by DS5PPFA33D606F8.namprd12.prod.outlook.com (2603:10b6:f:fc00::65b) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Mon, 18 May
- 2026 15:41:55 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0025.022; Mon, 18 May 2026
- 15:41:55 +0000
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="DaZ69NTy"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64I5TeTc3681418;
+	Mon, 18 May 2026 15:45:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=yMnLBz
+	Y0p0Cd+gtn+Agv9RdL/bu0d4IkitP7BLovXc0=; b=DaZ69NTy6khgPB2oBKO7hR
+	qPq1BlhIydDYngtnammgp3r0aiYWbExr0FbdV/xb+TqO/7WqXypPeXYGOX2Py7sr
+	s6ee4AP4dfeo8FQKPiXw6YQ9w6op/QP2mfQ3yNsPaah26bKRJCdbv/0h20/3auf6
+	NIvK6HIW7oxbP+1AK+jGsDirK6ZdtSEC8G29/iQq0TBb4JtPeBTwTvlXKXOeoq10
+	WCFTMBSh2iWsbbjSH7yYr/ODAz4MyeydG+0SVeIeBazfBY6qmKQZTUPj8DwhflAW
+	KppGsoV+1A0CTdXRPfMYUJQ8auXLDUBuMt98G8TmNZWej1KXsfl53WhMVapG1lMQ
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h9xrw5t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 May 2026 15:45:55 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64IFdCpG023083;
+	Mon, 18 May 2026 15:45:54 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e75kxx9m5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 May 2026 15:45:54 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64IFjonp30474780
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 18 May 2026 15:45:50 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9B7CF2004D;
+	Mon, 18 May 2026 15:45:50 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5194A2004B;
+	Mon, 18 May 2026 15:45:50 +0000 (GMT)
+Received: from [9.52.210.163] (unknown [9.52.210.163])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 18 May 2026 15:45:50 +0000 (GMT)
+Message-ID: <c12e2f60504c8988a172cd947fc5a07f5cf9148c.camel@linux.ibm.com>
+Subject: Re: [PATCH 2/5] arm/pci: Use official API to iterate over PCI buses
+From: Gerd Bayer <gbayer@linux.ibm.com>
+To: Russell King <linux@armlinux.org.uk>
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-alpha@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        Richard Henderson
+	 <richard.henderson@linaro.org>,
+        Matt Turner <mattst88@gmail.com>, Magnus
+ Lindholm <linmag7@gmail.com>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Michael Ellerman	 <mpe@ellerman.id.au>,
+        Nicholas Piggin
+ <npiggin@gmail.com>,
+        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin"
+ <hpa@zytor.com>, Gerd Bayer <gbayer@linux.ibm.com>
+Date: Mon, 18 May 2026 17:45:50 +0200
+In-Reply-To: <20260515-priv_root_buses-v1-2-f8e393c57390@linux.ibm.com>
+References: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
+	 <20260515-priv_root_buses-v1-2-f8e393c57390@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 00:41:51 +0900
-Message-Id: <DILX0OR9JATR.2OO0HM7QBN5AU@nvidia.com>
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <aliceryhl@google.com>, <david.m.ertman@intel.com>, <ira.weiny@intel.com>,
- <leon@kernel.org>, <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-Subject: Re: [PATCH v3 14/27] rust: i2c: make Driver trait
- lifetime-parameterized
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-15-dakr@kernel.org>
-In-Reply-To: <20260517000149.3226762-15-dakr@kernel.org>
-X-ClientProxiedBy: TY4P286CA0080.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:36d::12) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|DS5PPFA33D606F8:EE_
-X-MS-Office365-Filtering-Correlation-Id: 65e8fe79-ad86-47a3-b6be-08deb4f3fd11
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|10070799003|18002099003|22082099003|56012099003|4143699003|11063799003;
-X-Microsoft-Antispam-Message-Info:
-	wxFOcRBaBQ1JEoMWSHlnjdpZV/AGlVdras2r8fJg7L5hQNR+6UD4hlho2ivf9EEun/CQeWu3JBlEO2YTS5nvFBbp0QcsifSsf/6TihO0XfsTwAGBo7iYptMTYBg4sbMYfNi03A01EyrbB3oZbpcjVnn0QHBTERcVFHU8f9zXKg0mmSthGIw6Y0l/sYeXbRfpJgg917HA412YlmHjYUm7ajMGckAaQO03qHmMSzP76efl5J5GL6JlSHRVIAHNDnLPC1Pca4Jt5CjWK4dRThXePWV0k7X4/rfqyLdn8aaDy/sgAiduTewKbHHqD6C5cN/UkHv6sXhxZ4rsnOajEfh5ccpZI3c2r025YDG0A3SBSjK2aIbbMY9j1UPvQ+Qovn41e72Brk4mzAoosr7TvFQZn1OnM4NhCQShkQn/LLAYQ4l1vs61eNVZqRP8JS2bbrQZKMv9C7iIXIvnp0Mb9gblQDRPHoTLCCJxkqVGY7+TKM3GRa231as9szV1Rk5P+2ullV3gLEuFaJzOGgAXmM5kInIGI14vsJkSHmToK9TyTdpSXupYBC+wLjqX2or3zSvkmLluT1VQvReuV2wp3AvL7fuSGFwRXek8qP4yqCYjbmq7NjNAJRBaV8sJ1sdu4M8qNAUUj9mJIqQUUq1cfFIFEDN8APueG+8gxji8YFh3awaH2+uuE9oRDzYYrYB17e2b
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(10070799003)(18002099003)(22082099003)(56012099003)(4143699003)(11063799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UHprMTJtSDRtbG1LNXVDQ2xWVzNEMEtlWi9BbGFNalR6cmVWQVJmQ3BXczZI?=
- =?utf-8?B?TjlDaThSd0IrSENoVVdYU2tyNFJ3cnRSOU1PRXVRbzZ6TWJacFh5OXJRVVBE?=
- =?utf-8?B?NjVzdXY5R1FMelhqalNtZ1RpT0xySEpqZUpCK0NoMUhLM2tZNGlGRENLS1cz?=
- =?utf-8?B?VS8rOVQ4QmlzZG04OUNhTnR2ZUEyQXZBMlFQUVRRT2VRRUJuMldBYlQ3OGFR?=
- =?utf-8?B?cXlpV24rL0ZiZHlhbk9DRzUzV3ZqZlBtNDVYZzVyV1hsemtzM1RlOGZwbEZN?=
- =?utf-8?B?U2QxMnYzS2lpRFV4RUkyUTlyK2t2RmQ2dFlUVlEwWjJLQWdlaEFqYTFWdjc1?=
- =?utf-8?B?NHBpTTExTmlOOGZUL28zOTNMY0ZIb0VDSEw0MERJWTA2V2dhbDdSSm51cWFI?=
- =?utf-8?B?THU4YnZtTzFkWTdYV3E0QytVam5YVDRiQ0hHNjBQSmhwanFuN2lyQnhLalY5?=
- =?utf-8?B?ZmZpZkJ4THNISDh1WGpXUGlkcXd6clBhUHE2czdkWWNTNktpU1pkZUxNVHAy?=
- =?utf-8?B?MVNSTnJEVjAwMVQzb3FxdklLZURTeHo1bE9kUWJPRFJoWkhYTXhVZXdNNER3?=
- =?utf-8?B?dGFaa1Y5WkU3WTZ4Wk1nMjIrK3RjYk5rUkIyMFhHS1pHL0gzYkZLWUdiWDAx?=
- =?utf-8?B?L1JJZVlFUGY5WVVVRVFydFJWZnZpbm80ZVUvM1FIakVTUFhYREFNN2N1T3Ro?=
- =?utf-8?B?c29WQjJlRXZNL2t3T2J1Z0RTNjR3OEQwYnFVa2xPb1RsTGxJNmtTU3c0cW9U?=
- =?utf-8?B?SWY3bHJnZzIvT1N0U2dCMERmZ084ZWpCK0ZQY2lEKzQzcndaTWdvSlBzK1lp?=
- =?utf-8?B?VXpyaHNHRXRycE1rN3dTSkRhaVM2SFByNnZHcUNEK003NVc2Ky9USkJXRUZk?=
- =?utf-8?B?UnZEd1NzNEFMZUtBTnpFZmo3bzVWOVIrZE9VY3FXY2lmaURRbkI5MnM2Q0FI?=
- =?utf-8?B?d1ZqSjhRVUFCMVlLaXdnMDkvLzBNQTlodXFUWjFQdzlZcTJBcjJndnZDRXBZ?=
- =?utf-8?B?ZFhCa242YTVWZFZpMXlMM1BzRE5HL2syeWtHdVEyN01WSkdBVTN5YlQwRTJl?=
- =?utf-8?B?czFodDlDSVdSTFlGOTBaVTZPSXNyWGRlcmh4QnVPZ2ZpQjc1VjljUlZXak10?=
- =?utf-8?B?SWcyaGFEY2pROVFIUytRMDlLTkdvcC9BbEpUZ2dzK3JXY1lucDI4S056MjZL?=
- =?utf-8?B?OHlRY0RRWDNEMFVFejlmMFZXOHZmdWE5NFpWTGNhNVpMdXEyN0dzZ0g0cjYz?=
- =?utf-8?B?emc3ZjAwTjVESHhxU0UxYVJ6RzkvaDVjNjJyajlnQnBDV1VMY3A2aEdUcHpU?=
- =?utf-8?B?a3VFN1duZEhmckhPcW5CWkhEWVVVdEloMHJkUmdqYVlmVDFvTVhJMTUvR1Nx?=
- =?utf-8?B?SUJGRmYrM1Zod3pWT0NYTXQ5UllVK0tPaXRHTTJYTkNYRXE1cFNLVUkzUThC?=
- =?utf-8?B?TWE5Z2RtSnB0cG9VaVI3Nm1QNXpGamRYUHMwZnIyVVFndTZwZ2RkVVpQVUs4?=
- =?utf-8?B?Y0JlMGpycENVZVgwRE02cmFVTWtPM1BLRjgrOUdnUlRXZWdUVmxjK2xGYS9T?=
- =?utf-8?B?QVZoQnU4UUVkNGI1TTZoQlVIbFA1NGhIbFJ1VXA5SUxnbUlRd3Bha0pBYVhz?=
- =?utf-8?B?bG5UQnFPSTRWVVViNGJvd1N6RU5BN0k4Yi9TTFB4Zi9BdFpXbEQ5SXR5Q1VY?=
- =?utf-8?B?K1JwbGJlZUhLU2EvZGMwWVBlSmZzUDBYdkkyMGNCZHpyWmwxQVdJN0Z2QmdC?=
- =?utf-8?B?N21uMGN6dm5iSmJ5b2ZvVDE0K3NnS0x3V3hBUFZrRWNLY2dWN2Q0Z3AycVlQ?=
- =?utf-8?B?ZkZsVW93TmZFU201NGNIVW1YZUdJdFRzRCtZejJJU2QxdVBaTmhyTUVCY040?=
- =?utf-8?B?b3RFOWxUNUJ1d3lJZUwzRnFnL1FxN3J3cElPRTNhUXZVT2tWRGFDbVY0SmNP?=
- =?utf-8?B?YVBHaDJBeUhjTjlUODNjT3laTDl4VDlPWWYzTmFpOHFQc3ZETXJGOGN5VUNG?=
- =?utf-8?B?dWhsdDRnd2xtV0U5OWJrM083Q09hckpIMUJTTmlaVVpYZkdhd3FnRFlEZjlV?=
- =?utf-8?B?RmlBcndScFgzSHhZR3hLRW1iTVZlT0l2c3ppOGdPSU1oOUI2RGcxZ2lHMWda?=
- =?utf-8?B?dUpsVGZEYjVJaHdDU3FWZlRXUnNZWm5iSm1PUEZxaFgvVzlVbFZqb1prbVJX?=
- =?utf-8?B?TXd2T0pWVnNrRzJyb1NKOUl0d1lpREc1UEFiVkVkTGF6a2FaZkNxTGJsVGNX?=
- =?utf-8?B?WkNPV0xUdkd4c3NCSWlCTitGWm90cDU1emZ3N0dlcHZYeStJMjR2SzJFQUJ5?=
- =?utf-8?B?SjJoRUdqV25LY0RJeDNYNHdyd3VCMXlWL1hTWkV5TlZjb2gyZnZtZWN2MU15?=
- =?utf-8?Q?MvvTl6FAfwnbGslnZWmRhCC53BIj+rfc8bj6Y9PGlXOWn?=
-X-MS-Exchange-AntiSpam-MessageData-1: Xx7G0hPD+2bO3g==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 65e8fe79-ad86-47a3-b6be-08deb4f3fd11
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 May 2026 15:41:55.0684
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: u+QiD+lFZEwiVFpDzVCLcEDP5RiBVA/KbATrbcfvVQfJsbHrsSBB7e4llAF6xGRIOYPjUcC/SniCiO0GHBugBQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS5PPFA33D606F8
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE4MDE1MyBTYWx0ZWRfX8r3cbmeKr0/7
+ ZjyyZTE/MFfCBi9GbmXKpcNX+lwwkqC/9EqO4bFEKkV0WxHMu8YU0cBV1HoQiap3G8VrbbOhPqX
+ cIVfyD5AhPx1YaItAYhYQCGqrHOagMWcAE3rumBa5VM1U0HRMmzgHAH8cxXQLRwUG9a7zv+SoSh
+ c2bAAz/2ICYd/8D8AkBWM3CQq/JaA5wrKvpxgQtOs5xg1QKftyVzMr4wwI5LtajgClZtVrhMJcE
+ TN1xSrsUsMzR8prwkGf/BQuS4GKBSgJKfIIz4XO23oksI0bbnyKrllJJq05fOGQeK9FvA9zifSt
+ ILHC+u9s2O+MSeSQYqvF/D1QBzQMRoScTjrbjFUP295QGllnikQaHWgnadjneqDXfBgv2UOSqOF
+ zBcOuQSW//l0VWrlAEwh+SLRmdEalckBAM9FewQOuKevizxfqy2W4DKwOdIVrPNhLkEftxXcmQk
+ LX9aKHmREnD9ktNyOWQ==
+X-Authority-Analysis: v=2.4 cv=BNuDalQG c=1 sm=1 tr=0 ts=6a0b3433 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=c92rfblmAAAA:8
+ a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=FcXVdTTBcE9J8dFX6AQA:9 a=QEXdDO2ut3YA:10
+ a=GvGzcOZaWPEFPQC_NcjD:22
+X-Proofpoint-ORIG-GUID: xIpXrCK9Gg9N_OlSikDLILgWx7FxlsfY
+X-Proofpoint-GUID: FH1kcY4D8qIED2hpPqBlCS4uqhpURrUR
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-18_03,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 priorityscore=1501 malwarescore=0 impostorscore=0 suspectscore=0
+ lowpriorityscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605180153
 
-On Sun May 17, 2026 at 9:01 AM JST, Danilo Krummrich wrote:
-> Add a 'bound lifetime to the associated Data, changing type Data to type
-> Data<'bound>.
->
-> This allows the driver's bus device private data to capture the device /
-> driver bound lifetime; device resources can be stored directly by
-> reference rather than requiring Devres.
->
-> The probe() and unbind() callbacks thus gain a 'bound lifetime parameter
-> on the methods themselves; avoiding a global lifetime on the trait impl.
->
-> Existing drivers set type Data<'bound> =3D Self, preserving the current
-> behavior.
->
-> Acked-by: Igor Korotin <igor.korotin@linux.dev>
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+On Fri, 2026-05-15 at 16:22 +0200, Gerd Bayer wrote:
+> Replace iterating over pci_root_buses with the official
+> pci_find_next_bus() call provided by PCI core. This allows to make
+> pci_root_buses private to PCI core.
+>=20
+> Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
+> ---
+>  arch/arm/kernel/bios32.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index ac0e890510da..35642c9ba054 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -59,9 +59,9 @@ static void pcibios_bus_report_status(struct pci_bus *b=
+us, u_int status_mask, in
+> =20
+>  void pcibios_report_status(u_int status_mask, int warn)
+>  {
+> -	struct pci_bus *bus;
+> +	struct pci_bus *bus =3D NULL;
+> =20
+> -	list_for_each_entry(bus, &pci_root_buses, node)
+> +	while ((bus =3D pci_find_next_bus(bus)) !=3D NULL)
+>  		pcibios_bus_report_status(bus, status_mask, warn);
+>  }
+> =20
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Hi Russell,
+
+Sashiko
+https://sashiko.dev/#/message/20260515145940.E85AAC2BCB0%40smtp.kernel.org
+reported:
+
+> Since pci_find_next_bus() unconditionally acquires the pci_bus_sem read-w=
+rite
+> semaphore using down_read(), this introduces a blocking operation into th=
+at
+> atomic path:
+>=20
+> dc21285_abort_irq() [hardirq context]
+>   pcibios_report_status()
+>     pci_find_next_bus()
+>       down_read(&pci_bus_sem) [sleeps]
+>=20
+> Does this path need an alternative approach to safely iterate over the bu=
+ses
+> without taking a sleeping lock?
+
+IMHO, it looks like this entire pcibios_report_status() iterating over
+all PCI buses and all their devices would be better off if moved
+outside of the hardirq context?
+
+Or could pcibios_report_status() be converted to use
+for_each_pci_device()?
+
+Any suggestions welcome...
+Gerd
