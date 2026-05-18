@@ -1,143 +1,165 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643FE23A566
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 16:47:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5E2048B398;
+	Mon, 18 May 2026 16:56:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779122840; cv=none; b=uiXGzuLDSYrExwPFbBiySLa8MPdwG2/lEsJ4I6ZvtrvgPQaPGTbKfUqTFIsSzkKagaMP9Pxo4kiXkrkprKUleS4ihZxPN7gyn+EXYrUeySV9xFeTGcz8oYjwHiQse+qcq2wMj4nI1GxWQ8ENP6Kj9PY6lCgoid0rZRy+pt/g11U=
+	t=1779123399; cv=none; b=OXpBp15sdTIQ/wOP1zqZclZ9YPOKQ8nuFwPiZx/cJ7S8/wIxXgyo7tkYs9kYWPdrqGT0Hv13xqGiRcCFVCFBIQtngn8Bw+9uQhP9kxdejFARV+3ytxmtzwzyPPPRJFEb+AjBUPDrGeq5taDGNzqiE0wITMa02BxwLZT91BGc8Nc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779122840; c=relaxed/simple;
-	bh=uZJ/xSOMto8dGbxnTVpZw9SBqppTOhKt7BGw30Zdg+A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uZFgytV+XIBdgusEGW/vPxtBfcfM1F/ZW0DOROY1uRWiVGkxkZXQpZaYlV7z+Q6L/vydIT1R3NdHh/1DpSsyETFJmB4Qg7l0IlDKQO+/CxdhjkPVluvdZYOhZxZEY2kqeWSzLlLI9fRCyqElehetvsBxJjEpEr9pN8wDgn4syG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=nKukTcqo; arc=none smtp.client-ip=209.85.214.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1779123399; c=relaxed/simple;
+	bh=SJp6gypjAIfD2fhuQhFY+xDUer/dMRcd2rSnFRful1E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EVuyAO7nqp1ZpCn+K5z3i+evSqrT8R5unKH2NeYKJ3J6EswnG9Dsr4klDYYZRRruXPD+8akc9CxXNMeOne9sfnNxGB7oNy+PTuZoHOkN0/zhdBIjHrCJK1OHGxLLbfk2ag1QUqHWUB7rr1byEIyHsZ0M3re+8ka5FN83S+YjLj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=HFsEYyeE; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nKukTcqo"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2ba3b9bcf69so295ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 09:47:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1779122838; x=1779727638; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=fRb534kT/Y8t4mzJvcjyqqGoTPac4Acgjf8YBCzvDuA=;
-        b=nKukTcqo6THU3OJrpAZjK+bkMEcD/wiQoHRer+Og2CBzHbtgb4Sxvj6QI0GyTuQyoH
-         c45n5GNsFhUTLX42jW7A1iDGbJzepcqxkrQnL8ZYFZ9/2sleWwKrNS44PGA1MNTwiYV4
-         RN/QCeg87CWqEBqb9FBJ6AE1L8SB7Zb+Fic1/gahaHux++tEmJS5cs4fkZUBx4V88e39
-         FrejJ/ET+aasIe8L3bLmMBbBvW+Mp/rSNoJnoi3Jt5uTg31e3nRPIW88BBcJKUEhPucU
-         Ko4KIVt0GjTqhxfGBGz8e5dqiuEfPvnhECe+0LvEPS4MH/r86qWzgr8wBfcY2bJApQg6
-         pVcQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779122838; x=1779727638;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fRb534kT/Y8t4mzJvcjyqqGoTPac4Acgjf8YBCzvDuA=;
-        b=dwj1oQuBB4lpe0MyjUx81gb222maRvanimwh67eLanx36CO6RS7D8vaKFagD5MiID9
-         HYmLr4300hUXE8ZKO+Ffxtl5YWg38TFPSTM6dYcOO32KTJkrYj9vnlwEfUpfNdTtU3nX
-         xkmxNqbLyNPIuOQ1m7bOtCZprVJSgLWthdW/pqkDP514pWLKz750OPoIGEe+pLdjjwFn
-         TP+dsFrBekSS3oE+ZVXqW8+pdrvzIxlCJhKPokLu3CJijms3eN7adpt9BtXX04Dnn+rr
-         IeDzceZePDdnKyj9yw6CyzcrFYGV8zw05159lnKz6yn3GhhQmvwf2Tg+5Q7wg8iCfVc/
-         qNeA==
-X-Forwarded-Encrypted: i=1; AFNElJ9euRCRy6KOBMXIYM6g+aGSJH16SyYIaG3E5hEyks2R4HK5SToRFflOR81bxdVHc9lT08sgnY037nU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyATYpYGFrexjXgdBRAoI1wS1tY2WFS4ihJhyjdunTL8qqwDGwm
-	2bmAzC9imlxPXl+uLTyWF78mY+OPTnPrSLFFl3mVQYxOHnNiX8SBjCzVOm7lsBSw1Q==
-X-Gm-Gg: Acq92OFdyT1IOHtJJS5fcgd5iLgeAS8sdQNfvwXPQ13Cx/+DqAd54QnPCW1NOBdOZSA
-	T8Jf3gQLmjVT3mUHmtGmgMERPNJWjXSJeLT0g5dsqYNQKyc4B7/AU6hzXao0yIKW+wVnYun46xB
-	S/MIslZAdjnh9twgKiA4OE/Cv2TKStxtEtHRQ+1f+90ul7dCMqi34JoHkAB4a2zO6KM6FBvFsux
-	lZebvrfCrMv3g3blUEWGbWlfzOS5c8Wz1TjuIKJsUj+0ZCx35khRSwF2V1iXxt9eKCEFOeTD544
-	N1egZ143cBvTrzfGtjTrwoBI/iKqrBPXH6l4R5//AK8U5TJzXivBaCSaSl3T6DOKZxcaiZkntB9
-	dSHYO9uCQkiqBS43Qha+rFJbKvhwglGv3kIsVCESuBIEf7b53nhI6ZzBrasFRRXbl6CAGsQSh/l
-	DRTmRkbIflqfhkQBjfdyGL9nlMWyRJcUg2Ls+fIaAMNBKPXU7teWx1IS0thtxYiHpW511wumk=
-X-Received: by 2002:a17:902:e550:b0:2b4:6153:e541 with SMTP id d9443c01a7336-2bdb3064621mr2846235ad.3.1779122837181;
-        Mon, 18 May 2026 09:47:17 -0700 (PDT)
-Received: from google.com (176.13.105.34.bc.googleusercontent.com. [34.105.13.176])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c82bafb0a3esm14196811a12.0.2026.05.18.09.47.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2026 09:47:16 -0700 (PDT)
-Date: Mon, 18 May 2026 09:47:12 -0700
-From: Vipin Sharma <vipinsh@google.com>
-To: Zhu Yanjun <yanjun.zhu@linux.dev>
-Cc: kvm@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-pci@vger.kernel.org, 
-	ajayachandra@nvidia.com, alex@shazbot.org, amastro@fb.com, ankita@nvidia.com, 
-	apopple@nvidia.com, chrisl@kernel.org, corbet@lwn.net, dmatlack@google.com, 
-	graf@amazon.com, jacob.pan@linux.microsoft.com, jgg@nvidia.com, jgg@ziepe.ca, 
-	jrhilke@google.com, julianr@linux.ibm.com, kevin.tian@intel.com, leon@kernel.org, 
-	leonro@nvidia.com, lukas@wunner.de, michal.winiarski@intel.com, parav@nvidia.com, 
-	pasha.tatashin@soleen.com, praan@google.com, pratyush@kernel.org, rananta@google.com, 
-	rientjes@google.com, rodrigo.vivi@intel.com, rppt@kernel.org, saeedm@nvidia.com, 
-	skhan@linuxfoundation.org, skhawaja@google.com, vivek.kasireddy@intel.com, witu@nvidia.com, 
-	yi.l.liu@intel.com
-Subject: Re: [PATCH v4 05/16] vfio: Enforce preserved devices are retrieved
- via LIVEUPDATE_SESSION_RETRIEVE_FD
-Message-ID: <20260518164045.GB3281683.vipinsh@google.com>
-References: <20260511234802.2280368-1-vipinsh@google.com>
- <20260511234802.2280368-6-vipinsh@google.com>
- <65228806-6ed3-4577-9037-13fd5eb8f9b6@linux.dev>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="HFsEYyeE"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64I5mPPd3350414;
+	Mon, 18 May 2026 16:56:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=WYLmot
+	f6AJZhFv1QcOAgrB7Bt0BiDWEclGamt2r/t/M=; b=HFsEYyeE2+HFtvl7R9ywWJ
+	F+rB9A5cdsbbpO7hALk5QETBVEtqG/xaEnRWRw+E/9eKrqz2aLGIssy/ZBDCY7D4
+	bIGxYMgPjMGRssdW8pac+bSUq9pFZaE9Uy69sFWjtSz6e6YhWYoAdTsPvzgJtjny
+	mrgYAks3zd+Yv3csnWKkmriEh9LItgC/1PkOX6F2gUnw9TZI2HuR3yykPkiDLxwb
+	mdWDff/7gbA9ZbuPmWTl/kz9wOAQtmRuopPeg2LggEQMkKP7ZIf/vuRugPlvhZNb
+	2UWoo9A2+BJ199ta0Pc7ckm5TDKnm9QNnvLP2YJCu5uFNRcKeDm15eJ9jQj0K7pw
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h74s6se-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 May 2026 16:56:32 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64IGs9dY030635;
+	Mon, 18 May 2026 16:56:31 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4e73wjxv2g-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 18 May 2026 16:56:31 +0000 (GMT)
+Received: from smtpav03.dal12v.mail.ibm.com (smtpav03.dal12v.mail.ibm.com [10.241.53.102])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64IGuUFg30999232
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 18 May 2026 16:56:30 GMT
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 98F7C5803F;
+	Mon, 18 May 2026 16:56:30 +0000 (GMT)
+Received: from smtpav03.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1C52358056;
+	Mon, 18 May 2026 16:56:30 +0000 (GMT)
+Received: from [9.61.241.47] (unknown [9.61.241.47])
+	by smtpav03.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Mon, 18 May 2026 16:56:30 +0000 (GMT)
+Message-ID: <57cb4b55-1305-4936-bf17-1c57532bea0a@linux.ibm.com>
+Date: Mon, 18 May 2026 09:56:29 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <65228806-6ed3-4577-9037-13fd5eb8f9b6@linux.dev>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v16 4/7] s390/pci: Store PCI error information for
+ passthrough devices
+To: Niklas Schnelle <schnelle@linux.ibm.com>, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, alex@shazbot.org, mjrosato@linux.ibm.com
+References: <20260514180059.1553-1-alifm@linux.ibm.com>
+ <20260514180059.1553-5-alifm@linux.ibm.com>
+ <388849fec888031cfbbe227c587a92521243e83e.camel@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <388849fec888031cfbbe227c587a92521243e83e.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=ffCdDUQF c=1 sm=1 tr=0 ts=6a0b44c1 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
+ a=vYJSjNBhiLaGWKpjGKMA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: 3HavXvzlBjH7k9Q6QLFTo9bvBRaL_ywE
+X-Proofpoint-GUID: 3HavXvzlBjH7k9Q6QLFTo9bvBRaL_ywE
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE4MDE2NCBTYWx0ZWRfX4Opn6vHqHFeG
+ M5uYjdWU7IOmpT/VKdHgP2VdBhy/xBcgya4l22ckheLkZZzjYgYXxdWV9eA6OgPApZIAfAVJgEU
+ oenmO0yjvaENAk7TiAkHY5k/64iOzZsQN4CO/ENMDRIoh3hB55vnIjJuE+8YDAO6z0RGER2c3gH
+ sdKtC3MGkaStbg/WEFY/lN+CeUHvStBbzfwbfCcWDDPnZP3RaUInU4BaWnWBz8A6wltHOVJ03Aw
+ jHyLYvBta5byMf1vNzF3OdXXcsJoL0F5M4wgiPwfaZL1cnA9Nl4XQb1rNqCXxeL/BAXNUxclnKe
+ hCBssx1rzheeesqHAOUWaPFfDBtj1ISvgWpAN8ZPdDVABKZLpbsAWIz9BwHGpaBVymj5BwvpfC6
+ UCzkZTH8r837lyyDZGu1MKFZ0U4m1CXBpLGXUJJT38X7h+HtggXLUDhJ1KvLmOSTiDlFtBgbP8F
+ iMKTcbSRy2L/O3lAMyg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-18_03,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 spamscore=0 phishscore=0 suspectscore=0 adultscore=0
+ clxscore=1015 impostorscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605180164
 
-On Sun, May 17, 2026 at 12:04:04PM -0700, Zhu Yanjun wrote:
-> 
-> 在 2026/5/11 16:47, Vipin Sharma 写道:
-> > From: David Matlack <dmatlack@google.com>
-> > 
-> > Enforce that files for incoming (preserved by previous kernel) VFIO
-> > devices are retrieved via LIVEUPDATE_SESSION_RETRIEVE_FD rather than by
-> > opening the corresponding VFIO character device or via
-> > VFIO_GROUP_GET_DEVICE_FD.
-> > 
-> > Both of these methods would result in VFIO initializing the device
-> > without access to the preserved state of the device passed by the
-> > previous kernel.
-> > 
-> > Reviewed-by: Pranjal Shrivastava <praan@google.com>
-> > Signed-off-by: David Matlack <dmatlack@google.com>
-> > Co-developed-by: Vipin Sharma <vipinsh@google.com>
-> > Signed-off-by: Vipin Sharma <vipinsh@google.com>
-> > ---
-> >   drivers/vfio/device_cdev.c             |  8 ++++++++
-> >   drivers/vfio/group.c                   |  9 +++++++++
-> >   drivers/vfio/pci/vfio_pci_liveupdate.c |  6 ++++++
-> >   drivers/vfio/vfio.h                    | 18 ++++++++++++++++++
-> >   4 files changed, 41 insertions(+)
-> > 
-> > diff --git a/drivers/vfio/device_cdev.c b/drivers/vfio/device_cdev.c
-> > index 1ab07ccaf3ab..4df0495941c6 100644
-> > --- a/drivers/vfio/device_cdev.c
-> > +++ b/drivers/vfio/device_cdev.c
-> > @@ -49,6 +49,14 @@ static int vfio_device_cdev_open(struct vfio_device *device, struct file **filep
-> >   		}
-> >   		*filep = file;
-> > +	} else if (vfio_liveupdate_incoming_is_preserved(device)) {
-> > +		/*
-> > +		 * Since it is live update preserved device, it must be
-> > +		 * retrieved via LIVEUPDATE_SESSION_RETRIEVE_FD instead of
-> > +		 * opening /dev/vfio/devices/vfioX.
-> > +		 */
-> > +		ret = -EBUSY;
-> > +		goto err_free_device_file;
-> 
-> When vfio_liveupdate_incoming_is_preserved(device) returns true,
-> vfio_device_put_registration(device) is not called in this path.
-> 
-> Is vfio_device_put_registration(device) instead invoked from the
-> err_free_device_file error handling path?
 
-Yes, at the end of vfio_device_cdev_open(), goto label first frees the
-device file object and then calls the vfio_device_put_registration().
-This is the same error handlign flow as in the if(!file) {} code in the
-above function.
+On 5/18/2026 3:07 AM, Niklas Schnelle wrote:
+> On Thu, 2026-05-14 at 11:00 -0700, Farhan Ali wrote:
+>> For a passthrough device we need co-operation from user space to recover
+>> the device. This would require to bubble up any error information to user
+>> space.  Let's store this error information for passthrough devices, so it
+>> can be retrieved later.
+>>
+>> We can now have userspace drivers (vfio-pci based) on s390x. The userspace
+>> drivers will not have any KVM fd and so no kzdev associated with them. So
+>> we need to update the logic for detecting passthrough devices to not depend
+>> on struct kvm_zdev.
+>>
+>> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
+>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+>> ---
+>>   arch/s390/include/asm/pci.h      |  30 ++++++++
+>>   arch/s390/pci/pci.c              |   1 +
+>>   arch/s390/pci/pci_event.c        | 114 +++++++++++++++++--------------
+>>   drivers/vfio/pci/vfio_pci_zdev.c |  18 ++++-
+>>   4 files changed, 109 insertions(+), 54 deletions(-)
+>>
+> --- snip ---
+>> @@ -216,12 +223,23 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
+>>   		goto out_unlock;
+>>   	}
+>>   
+>> +	mediated_recovery = zpci_store_pci_error(pdev, ccdf) == 0 ? true : false;
+>> +
+> This incorrectly treats it as not-mediated recovery when the queue runs
+> full and zpci_store_pci_error() returns -ENOMEM (Sashiko also noticed
+> this though the explanation is a bit hard to read).
 
+Yes, will fix in next revision.
+
+
+>
+>>   	ers_res = zpci_event_notify_error_detected(pdev, driver);
+>>   	if (ers_result_indicates_abort(ers_res)) {
+>>   		status_str = "failed (abort on detection)";
+>>   		goto out_unlock;
+>>   	}
+>>   
+>> +	if (mediated_recovery) {
+>> +		pr_info("%s: Leaving recovery of pass-through device to user-space\n",
+>> +			pci_name(pdev));
+>> +		ers_res = PCI_ERS_RESULT_RECOVERED;
+>> +		status_str = "in progress";
+>> +		mutex_unlock(&zdev->pending_errs_lock);
+> The unlock here seems like a bad leftover from the previous code.
+> You're not holding that lock here. (Also found by Sashiko).
+
+Ugh yes, left this from last version. Will fix.
+
+Thanks
+
+Farhan
+
+>
+>> +		goto out_unlock;
+>> +	}
+>> +
+> --- snip ---
