@@ -1,199 +1,132 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DB6B3932CE
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 20:30:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD541377ED9
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 20:34:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779136253; cv=none; b=bpDi+KP/EIBH+2DOHPDo6+zXEcJ9fsMHvvVb95j8Zbp2HgrCEeIKQrr+YcvNDcGgd8X/yvqnjoyQbJ3JOLBimQBn+bDIFauLYwQBLach0pFlGzWo4+S8kUik9d1IFDtaoAit5gy8e9WFBKVjrNFE89Q5lgno/Up8UevBhLLST+8=
+	t=1779136453; cv=none; b=gs7ANWjNLlJRdljoKEWbrOZTMguRl5u736FmbqnpdsCW74xAO3LEMYLsg5SoveYFktN7Ary5os/OLeP0dyXU36Z6gnFmwPxRT1VCF58mnuYae8VPAxQMAXNzBn0lqj0wGqlLxNUG2HCnMMBVem3ai9HNTktrH+CR4yYc1ZklA60=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779136253; c=relaxed/simple;
-	bh=+AXWZ7VWZu++/J9Ox1DjhblJnRVzqBe9blE5RidmFX0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=n7Kzz54tF5Jfb3vgRpXrPiZvx2RdSHCSV3LxNdJcOXzHsGBBYoeDs3kvhFARLkMpWF7wBlvXuDnFHAWEKgIG5U1HGSPOgvhbkVoQYWP5SrUCUl86urLPTtBKQTRCDHENtQrLXP/KtgLX9HQdnB+Y7M/k0OwaU8Z/D2rrKBi2I9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JxZfAP/4; arc=none smtp.client-ip=209.85.214.180
+	s=arc-20240116; t=1779136453; c=relaxed/simple;
+	bh=6I+QElhAtc/8WabSKYbV0PXAFvgWpATjbvBd61/xDHI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=XKmKB/aJCzrpkGnYxdmqPp16XNZhQGBDhgNiDKGJgIu5r/5Oi3QmgIwaGcKO4TPIunULR7cLgtWd3Kua6Mx3CXhuc0lyLPHqbBvaO3Vo/YAu4Cml3ULoHgmh2LcToo2ppwf9ycudJa+X0URGyNitS6VDNvaW2+EAE6JCoD2N8rA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=drMkUY+c; arc=none smtp.client-ip=209.85.221.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JxZfAP/4"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2bd266f6fc0so13146855ad.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 13:30:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="drMkUY+c"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-44dd5cb0f81so2513946f8f.0
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 13:34:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779136252; x=1779741052; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=DlBfJe+9ZxBm7v8GCX+TON5gbGwp1e0878LuEL7rsgM=;
-        b=JxZfAP/4U5fDo6s60PKFQHaFHBl+YMl8Uninfca6pyHv78ysYZBWfH+or94oSdEgZX
-         GZGCn5UyLeefVm2gTHCSvCplLNp1lDG/0dydv9OjH4GOSzYk6xY9vTgPRTIrZLGNlqQB
-         U8xdxdefwUbwh9MAe6PiFVc+0KZitzA4ZyDhFYbFd43cuNCMWFwFn/xUGGoTDd3uCHzQ
-         iqtNJVMWRL5PLHypnsnfdR8EFoKLgodcTRDvRuGLBPxCOkSIGAdF2G7EIvcIpWL8DlxT
-         nc8qgZcW5XQd47jwnb8CQI2W9pfW5ehvCRiVOnGXh0wp583XSswrNEZHH0jUjwnY89JW
-         gAYw==
+        d=gmail.com; s=20251104; t=1779136450; x=1779741250; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sTgYcEc55BDnl6ROBsBVO2eyQ8MbIi/0Xe4r8X6dKhw=;
+        b=drMkUY+ciugqawq3ukBhLpwunBhAUQuwYrkglE29OG13pigY/pc31FwwbTyX/UZQXe
+         keRKJUNZE0nRVsHt5XnQumz+hBjSdwSeURsAkBI2KFQjFT7tMtvVZbPkLtbfh5NzX39a
+         xa/WHepdwHjbmnJLqiHhLIveq7BtmV4usTMl9r92d1oLK8zj0ryJcS70kPlVc4e9grtp
+         sU0yfVkkEIb71vFGBsVluQJVF7qCYX+UGd11pPUAZAAVN0dtOMBawuirOSg18uqHz4yN
+         +VDc3Q36ODvlFvsKV1sAWcO+fQHCTKznwNAvm7qKXeWUwk4jCZHBn6KQj0V8KD3eAdpO
+         9RNw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779136252; x=1779741052;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=DlBfJe+9ZxBm7v8GCX+TON5gbGwp1e0878LuEL7rsgM=;
-        b=Z0c4DEgbjMULoJWngXU3tdXuSbeoP9vjvzzLuJrE61fAUHve+wd+pw+65sNa/dHzlj
-         pUndkdSPk6Vc4FmO9GEmXH8h23l9u7ln40QsExyqEHOBbZIx7dDfgU56UY662PGLBxAK
-         28mrZzLDa1zP9E2aOOxPrR7vrv+PVw5B7ZaIg4rWl2kHAkck1ItRawtHbLue6PciDTug
-         3DyqQ7vfKsQrJhOE7fpUSA1miEb64c4B9afdEayK4vH7kRYMe2vCVCssMOeZUEwC+C9s
-         NmfsysNGUXn0SkVZXmzcRKsMr8XWXy+8GtdJ8J+RLwQVRc7MQ576ie5n12BRxYnd12qn
-         dZhA==
-X-Forwarded-Encrypted: i=1; AFNElJ+MQRBxen3gO4K2E6zK4gwktXZxRiLDFCa1p7a0iLw3ri4OXipMFrjiMUj3x+QRMNquTTlvwQvjPRg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkJ+3pSxSBVnUOpT+WP95J+wUyDsjqNxoENDvrQG3MkSUTw7eE
-	+lgzzMoxqpdefy452GPADitqsZeaRj2yXw4sfdZGN52roaUZw83wXZ4g
-X-Gm-Gg: Acq92OHlk6cVympWmJhF50BZtnArSB1xQW24w5phL3UGJZCddk52Xj3XJl1i1KEJQU/
-	5LVZQxU4yGmEmTpOT49onUzPDy5HlOeXYKjJ3p1UkNSwbfOJ9HscTXu2ANV2aGQdnmX7haja8Hl
-	ZIkFMte8Ca2bChRdPcgtuY/x617P/AuqzCAbj5/3OEvHem3DJtMpfEG/KaoSDSJg0xI2zueBbUx
-	WOr6+u0AxdcCLrz+5jPxf+5oVpMyWctnC5+wQlE0Ko8vZkaYEsq7gF949ctvVBkFdH8P21jk6j8
-	vfk4MKOl8Y3K2wJ9G1qTZ01hOKt4YCql5JwLBJ15ka6OsAtVVsBvp14MNgM8Tz4YnbbwmF2NjDE
-	IFDF7suOL8JQ6qv0e2xsMDUHJ48oh0UuvhRAxq0RnRIlOTowmN3w6CkhaWIpJ0pRHkEEW1ujPRO
-	TuEnMWUvZM41Sezx4HcYyj9ps+6fYFpZA=
-X-Received: by 2002:a17:902:d511:b0:2b0:6e60:9582 with SMTP id d9443c01a7336-2bd7e8cb160mr173923295ad.18.1779136251551;
-        Mon, 18 May 2026 13:30:51 -0700 (PDT)
-Received: from [192.168.89.2] ([119.214.48.64])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bd5bd60275sm150934905ad.7.2026.05.18.13.30.48
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 May 2026 13:30:51 -0700 (PDT)
-Message-ID: <144ec61c-4cc1-4986-a16c-7c1b99f3a72e@gmail.com>
-Date: Tue, 19 May 2026 05:30:47 +0900
+        d=1e100.net; s=20251104; t=1779136450; x=1779741250;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=sTgYcEc55BDnl6ROBsBVO2eyQ8MbIi/0Xe4r8X6dKhw=;
+        b=Az2Ec4r5BfmuR5mVaYgkHDmuk9JiXICVZIU4hcnu+RbR6QYmH0HJcMbhCawaerqpsS
+         Z1unlu/8y7nlxSQLSvz7u7nNZoEGz90t9jQBoP22f6qkNgWdnCv+InHBMNdl1OP+CJnI
+         lRgrXveJBkWX3JELIIXlIf+UlT3SqOquPp+8E853C2N7o1ckK1mQhkGLS2RtF32J0Ryn
+         v0DP25irJSAqMIfo6MiYmJpHm4nEML+Z5Tyj6dVvKaxlR2sL+AHnPutMxS7/wV8lGLI5
+         L4R04XLPfRlWXZkGPZDiXdkpqxzaB+mDdqdF6ZXopWAafslZnnEDp3yxtjJk5zTAzX4l
+         5l1g==
+X-Forwarded-Encrypted: i=1; AFNElJ+QdCiLeXDEvWLJkb/HAfVI+ynLEKTgd+78YELS/htwwqn89k++V0KCKtynNuXyy3jKT2MdHKjngJI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzS//teMj1myjKnP5206vHj9xwUWtr0cJktN7+HZoIRTloAwkiL
+	a+bECFvdi9XGu2vyhUMCiBV1qCfn0DDs8kbYVzhh4qj50R+ts/R94q7U
+X-Gm-Gg: Acq92OElMRp3gX24aZWExI1b8lqYqCh98w1yzxabHOR7iqCrNlnY0T1PWOkHDYm5ZDd
+	kDK0hlHTBp12nWKYXsOXl0XnILPppZ+HJac3MzU/n9R3U3QqPqdfRbDRuPweIVxfJqk0WoB8Ga4
+	PLekk/DCWHZdeT8Lj15sNrSL+VRL3Cka4mvvlPbLsV/529fRIaOkRGu0b6mYFKgYEuoj8idQsZZ
+	UOT3upU3RyKJ9a40AYkuoNit4Q+JbXlI6/mSDGUyuZxFSq1mmsrVFs9zCmWtxOAO6jCVaU2V0pC
+	uPj6KzWwVyQVpoO/KtsUqH7eQ+eA63U2XPehcJp5VdGrn1uzuzKD3pCSxZooOsLisEyO/0J1V/H
+	yR2/f2TvCayeIjOJizgr++LphVe7J+NScnJD9RAmJJZmRy3KcXq9+vVDGGpoDXL7HWWryIPDYFM
+	kJ7tcV7rdLt5zFaazXInSWpzS+G35DIXnoGaSmpDb+/W0=
+X-Received: by 2002:a05:6000:402c:b0:453:9897:76aa with SMTP id ffacd0b85a97d-45d93eccfbfmr34057576f8f.21.1779136450085;
+        Mon, 18 May 2026 13:34:10 -0700 (PDT)
+Received: from foxbook (bfk48.neoplus.adsl.tpnet.pl. [83.28.48.48])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45d9ec3b18fsm36967631f8f.11.2026.05.18.13.34.08
+        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
+        Mon, 18 May 2026 13:34:09 -0700 (PDT)
+Date: Mon, 18 May 2026 22:34:05 +0200
+From: Michal Pecio <michal.pecio@gmail.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Jihong Min <hurryman2212@gmail.com>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Mathias Nyman <mathias.nyman@intel.com>,
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
+ Mario Limonciello <mario.limonciello@amd.com>, Basavaraj Natikar
+ <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
+ linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, "Mario Limonciello
+ (AMD)" <superm1@kernel.org>, Yaroslav Isakov <yaroslav.isakov@gmail.com>
+Subject: Re: [PATCH v6 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
+Message-ID: <20260518223405.06cd8fbd.michal.pecio@gmail.com>
+In-Reply-To: <f05e075d-a87e-49b5-95f8-5858d21acf64@roeck-us.net>
+References: <20260517130407.795157-1-hurryman2212@gmail.com>
+	<20260517130407.795157-2-hurryman2212@gmail.com>
+	<20260517232147.34931718.michal.pecio@gmail.com>
+	<f05e075d-a87e-49b5-95f8-5858d21acf64@roeck-us.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
-To: Michal Pecio <michal.pecio@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Mathias Nyman <mathias.nyman@intel.com>, Guenter Roeck <linux@roeck-us.net>,
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- Mario Limonciello <mario.limonciello@amd.com>,
- Basavaraj Natikar <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- "Mario Limonciello (AMD)" <superm1@kernel.org>,
- Yaroslav Isakov <yaroslav.isakov@gmail.com>
-References: <20260517130407.795157-1-hurryman2212@gmail.com>
- <20260517130407.795157-2-hurryman2212@gmail.com>
- <20260517232147.34931718.michal.pecio@gmail.com>
-Content-Language: en-US
-From: Jihong Min <hurryman2212@gmail.com>
-In-Reply-To: <20260517232147.34931718.michal.pecio@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
+On Mon, 18 May 2026 03:55:52 -0700, Guenter Roeck wrote:
+> On 5/17/26 14:21, Michal Pecio wrote:
+> > Instead of the X86 heuristic, would it be possible to build glue
+> > code if and only if SENSORS_PROM21_XHCI is enabled?
+> > 
+> > This seems to work:
+> > 
+> >   config SENSORS_PROM21_XHCI
+> >          tristate "AMD Promontory 21 xHCI temperature sensor"
+> > -       depends on USB_XHCI_PCI_PROM21
+> > +       depends on USB_XHCI_PCI
+> > 
+> >   config USB_XHCI_PCI_PROM21
+> >          tristate
+> > -       depends on X86
+> >          depends on USB_XHCI_PCI
+> > -       default USB_XHCI_PCI
+> > +       default USB_XHCI_PCI if SENSORS_PROM21_XHCI != 'n'
+> >          select AUXILIARY_BUS
+> > 
+> > I don't know if it's the best way, perhaps it would be preferable for
+> > the hwmon driver to select the glue, but then I'm not sure how to force
+> > glue to become 'y' when xhci-pci is 'y'.
+> >   
+> 
+> Unless I am missing something, that would disable the entire controller
+> if the hwmon device is not enabled. That seems a bit draconian to me.
 
+I haven't tested (I don't have this chipset), but it should work like
+the similar xhci-pci-renesas module, which I'm familiar with.
 
-On 5/18/26 06:21, Michal Pecio wrote:
- > Instead of the X86 heuristic, would it be possible to build glue
- > code if and only if SENSORS_PROM21_XHCI is enabled?
- >
- > This seems to work:
- >
- >   config SENSORS_PROM21_XHCI
- >          tristate "AMD Promontory 21 xHCI temperature sensor"
- > -       depends on USB_XHCI_PCI_PROM21
- > +       depends on USB_XHCI_PCI
- >
- >   config USB_XHCI_PCI_PROM21
- >          tristate
- > -       depends on X86
- >          depends on USB_XHCI_PCI
- > -       default USB_XHCI_PCI
- > +       default USB_XHCI_PCI if SENSORS_PROM21_XHCI != 'n'
- >          select AUXILIARY_BUS
- >
- > I don't know if it's the best way, perhaps it would be preferable for
- > the hwmon driver to select the glue, but then I'm not sure how to force
- > glue to become 'y' when xhci-pci is 'y'.
+When the special unicorn module is disabled by Kconfig, xhci-pci no
+longer rejects its devices and works with them normally, like it always
+did before the unicorn module even existed.
 
-I think I should keep the current hidden glue option for now.
+It should be the same with xhci-pci-prom21. You don't need to enable
+this module to use USB, only for the special functions. So if hwmon
+is disabled then you can disable it too.
 
-The PROM21 PCI glue is part of the PCI binding path for the xHCI controller
-when enabled, while SENSORS_PROM21_XHCI is only the optional user-visible
-hwmon driver. Tying the glue to the hwmon option would make the sensor 
-option
-affect which driver binds the USB controller. As Guenter pointed out, that
-would be too strong; the USB controller should not depend on whether the
-optional hwmon driver is enabled.
+I always found this dual-driver solution (for Renesas) rather ugly and
+confusing, but so far it's the least bad option tried. Hmm, maybe the
+next iteration should be an aux bus interface for FW loaders...
 
-So I would prefer to keep USB_XHCI_PCI_PROM21 as hidden plumbing that 
-follows
-USB_XHCI_PCI, and keep SENSORS_PROM21_XHCI as the user-visible sensor 
-option.
-
- > +static int prom21_xhci_create_auxdev(struct pci_dev *pdev)
- > +{
- > +	struct prom21_xhci_auxdev *prom21_auxdev;
- > +	struct usb_hcd *hcd = pci_get_drvdata(pdev);
- > +
- > +	if (!hcd)
- > +		return -ENODEV;
- >
- > Shouldn't be necessary after successful xhci_pci_common_probe().
-
-Agreed. I removed the unnecessary NULL check from
-prom21_xhci_create_auxdev() locally for v7.
-
- > +	prom21_auxdev->id = ida_alloc(&prom21_xhci_auxdev_ida, GFP_KERNEL);
- > +	if (prom21_auxdev->id < 0) {
- > +		int ret = prom21_auxdev->id;
- > +
- > +		devres_free(prom21_auxdev);
- > +		return ret;
- > +	}
- > +
- > +	prom21_auxdev->auxdev = auxiliary_device_create(&pdev->dev,
- > +							KBUILD_MODNAME, "hwmon",
- > +							&prom21_auxdev->pdata,
- > +							prom21_auxdev->id);
- > +	if (!prom21_auxdev->auxdev) {
- > +		ida_free(&prom21_xhci_auxdev_ida, prom21_auxdev->id);
- > +		devres_free(prom21_auxdev);
- > +		return -ENOMEM;
- >
- > The usual "goto error" pattern could be used instead of increasingly
- > long sequences of xxx_free() calls.
-
-Agreed. I changed prom21_xhci_create_auxdev() to use a goto-based 
-cleanup path
-locally for v7.
-
- > It seems that these three functions above are everything that you truly
- > want to add; the rest is boilerplate required by this two-module scheme
- > to work, plus ID tables which must be duplicated and kept in sync.
- >
- > I wonder if a separate module is really justified, as opposed to simply
- > linking this file into xhci_pci.ko when directed by Kconfig.
- >
- > The downside would be slightly higher memory usage on systems where the
- > hwmon driver is enabled but not needed. OTOH, same systems would likely
- > see reduced disk waste.
-
-I understand the concern. Linking the PROM21 auxiliary-device publisher
-into xhci_pci.ko would reduce some boilerplate and avoid the extra PCI
-driver, while still keeping the hwmon driver itself separate.
-
-The reason I kept the current split is that the earlier review direction
-was to keep the hwmon functionality out of xhci-pci and bind a
-drivers/hwmon driver through an auxiliary device. The current PROM21 PCI
-glue keeps the PROM21-specific auxiliary-device lifetime handling outside
-the common xhci-pci driver and leaves xhci-pci.c with only the PCI ID
-handoff, similar in spirit to the Renesas handoff path.
-
-That said, I agree this is a tradeoff. If Mathias or the USB maintainers
-prefer the PROM21 auxiliary-device publisher to be linked into xhci_pci.ko
-instead of being a separate PCI glue driver, I can rework it in that
-direction while still keeping the hwmon driver under drivers/hwmon and
-bound through the auxiliary bus.
-
-
-Sincerely,
-Jihong Min
-
+Regards,
+Michal
