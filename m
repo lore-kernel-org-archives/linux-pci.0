@@ -1,68 +1,67 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79FAD478E3A
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 12:56:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF3947CC79
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 12:56:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779108994; cv=none; b=fkOGvXi8K/oovoPS9DBZQAHO4lzyilsACwMU+4d4MN+zKqcnt5GAr2//m7XrGKy90pRSxJGrKOybuwieHY1JHVqW7KrkmmatPU1qNIOZJIb/z2nmua0APs4OLsDiS5pKlc2mUB/DAY9wR1pgnXF4pDw5PI7EmJfTZmgu5CqZ0r8=
+	t=1779109002; cv=none; b=uYv+G9lbvmYMbmuN6kXCnCBvbbZ79Qq4PJq84aV8yZbKHFmJo66BbaoovV7WaEZcqExcORrT/ruMv8bn6eLJFwQ4wKcZjeN8Qu6+nynYGkhCE2uYdgbRcmPQJYo3+o7ClFH+7P0V1kjZqT7IFt4C07lwxVtaaqVBU9+IUJxkhKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779108994; c=relaxed/simple;
-	bh=kco9FgaHAutdRiTPkddUHa9bLHZ0mO6w8WIhDAQ6930=;
+	s=arc-20240116; t=1779109002; c=relaxed/simple;
+	bh=dzIg7kNVi7MkJMwhoMoGEZ8pVxyubd9pLC0fL8/grVA=;
 	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=QcczNyRnTfIG9MNoYxzs7beofEK0FKZk0TklQ+gEjTYpfz/osnwqgeSA3zwiv5GY+p4aMRA+RTCgDWHpejyXgVp/oaTQIh3ulOWYCeyYo0pKcg28V1uoZRdQ8A601lfN1XBZmDM+yXYnguQX4F5XY3gOox8PXs0MLU5v1Jn/U7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=YWvpbK4c; arc=none smtp.client-ip=209.85.221.50
+	 In-Reply-To:Content-Type; b=TkWql5OjsP9t+J8xUnHTBzzYaX2umf8Xx4iQqqRSiTfXE94Pzd6NRmLIlEK9b7VSKEa5EznDcv82FWKexhIqj9I5hzh9qMOHf0HXwfedQXPUNTjzYrhQ8NAE9jTVCypkktl3NQGwOLW9iSL9cVVXDDPBxeE7Q0+HZIrq7rUuaKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xMF5m3HU; arc=none smtp.client-ip=209.85.128.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YWvpbK4c"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-43d77f6092eso1164197f8f.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 05:56:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xMF5m3HU"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-4891c00e7aeso15733245e9.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 05:56:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1779108991; x=1779713791; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1779108998; x=1779713798; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:organization:autocrypt
          :content-language:references:cc:to:subject:reply-to:from:user-agent
          :mime-version:date:message-id:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=wG5JigRzl+8hFDlaIdzHX8LNfceobFw3oJ/CoEjhnh4=;
-        b=YWvpbK4ctR/tjezU8WDv++zsPtkmnAKG+/b1TNZIaAhuwemh1ZWabyRz8xY1mJ44Jp
-         dla290t4cRYfiuxf9woSIjyxfBl0Ef1JBP/PaiO5p1sC/e1F+IbXOyM9JoJdzJmWKh+t
-         zyVbKe0L9R4fxXqypwxYKdVNp8WoJXzS4T5dhucZf37OPmripz/BLXshXkVCLhbP4fg+
-         BJ7BDgjJCNP6MPeiqy22kLWI8AoY7eAG9VtYnfkbsNHHxIZWYYS8mgCu4evsbHyHNPCW
-         SAh4eyFKVsBE3KqPzP23/KY7Q5ohEXsglQ7V6Wa+ULLXMBp5Ucg8di5oXrgXj/z/Lb0a
-         zLjw==
+        bh=fTzZu6PNEHK5eJaUTG9yj4SnM6fDyLlKBKNjBkf8mjE=;
+        b=xMF5m3HU75h9Z2d2ZNZ+E103DgQDjdYCGfqJlHfWZSfJ5Lh0cS3QB8bUmmhTdF3feR
+         +nLBwU6WKK05H37ewE8CKtH9ay02TtzHlk1SSNBhxjJFkvHLj2S4KKmNPwLyYMjaiYai
+         tSvgdOvmCSmOIMLc+MoYI7MsgCmGvryNZSJkRiYvYr+ewZMcItTsCxgDQ1B/ruNlIu0U
+         0eECc6km1ZcQX3jNpfCiHzxvAO9eExG9IfzYgD3t8m+U/hv7YRu6CFHlCtEwJ8Xj+tRq
+         7O8iKAaVM9njgQrWbg9VXLzvF2xJ5NWndwAxzjeJwncouDJeNhaKF1MVFHNT69tS1Hcm
+         RRaA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779108991; x=1779713791;
+        d=1e100.net; s=20251104; t=1779108998; x=1779713798;
         h=content-transfer-encoding:in-reply-to:organization:autocrypt
          :content-language:references:cc:to:subject:reply-to:from:user-agent
          :mime-version:date:message-id:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=wG5JigRzl+8hFDlaIdzHX8LNfceobFw3oJ/CoEjhnh4=;
-        b=USAez3nSYcpGA5tnGzy+WtL1PT0U/Ukkw6cgQFSrkPLCZjUDiELvXMc33iYubiOr+0
-         VirUZv1Etc2QVxvxwUEbKuOP3aQ/jiLC2AJGEhKjD161l20KocmUjrSnrGwkXak+1dIa
-         hR0LQ6ZGsPuLppjaucIX4FlGSIXCjxKHk9BpNkanDrd4wCW+HcasCaRvai/dOHBarPZ9
-         UwG05K1tEr0CydumsO/S4NDRZ6Q8O0RprLi5/afDrdxUrNv26pGufWVPK3iCZ6ylSRCy
-         l+q/ePcWmnH+fPhGk1JsA9Wp1KLC5oW8sil3sAZDbZGODlQXiIuT6OSLlJrMIIHIDN2d
-         YHLg==
-X-Forwarded-Encrypted: i=1; AFNElJ+032PAFZrbRyA+Y6Hi+vOXthVrqlasuGW1g9DF4H5nlGdniqMS58+actupVRPgQ8jcZdS2xJl3Xxg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxp45eToPSir2oZjcTDFPuVCP1ILoqNU/Um9qAwMmTWBqCI7Eux
-	CEwIfjuUzwbk1DfZgz97TWjdNKQjL9EnTipdm0jBceMxUZtsHgL+FmUhSQifxezz2Ao=
-X-Gm-Gg: Acq92OH04Q3GTdjkVCPjUNXLz0xMViPN+PKKAPk9YjXX4cPfHAuO/JJcaU08jQVZuOq
-	xE/vwytvnHVUsjWlG9LYbDSqxI2regLOgAu3ky2eZBj5JYFiT56VgEPnX8eKp10kuPObHsbqN/g
-	TPGkFBR9HA8FNaBSZlfwHzAWlnHXGjyzAhnMpWFEGKTMqQCkMeZv86RYPNbc6xKDHWbe8lHHhpT
-	FBj7xC1R3JlvLnO3x9EySsAcroj1pIT7xwFXDvn4+UVx3b98ktJh5x+LGBB5FXkuib1511x4Snc
-	cHoC2Lwz5RSGMAb8vmCiYzg0RTZUdEXE9q8dJ937mm5v1NIlu8ywDBOT8STywDmhQcKMULysOwJ
-	b5GeuKpnFwXb3cJ/Qvrd3svBM9kq5A9BbXetVde6SsPpxjewkaVRJqHddnC5zXQy9iET0Ix5jlq
-	aaC+d98lUcLN6faJ59SqCH1RM8h0dJclO4xwLbMAMwEEENWHhoF/yZLVIJo601YeKkiWJl9zyrG
-	aUzqM0=
-X-Received: by 2002:a05:6000:603:b0:45d:3aa3:7f76 with SMTP id ffacd0b85a97d-45e5c5ebd5amr24498434f8f.33.1779108990553;
-        Mon, 18 May 2026 05:56:30 -0700 (PDT)
+        bh=fTzZu6PNEHK5eJaUTG9yj4SnM6fDyLlKBKNjBkf8mjE=;
+        b=biIYwQYtsXaaAAOdzvgJDCdRasRDKh2P6/h8mOq8+Okya0U4yUbn0WKA7jNu5Bnxy3
+         WjtNQo/PYWjsWMyWQNwl3/6a82HAE8cLeueb5pFYI5+PP/qbM9xGDdbDf2rxGDEzrvzK
+         CZGhodQP1x6RswXhDYhoRqXlWgnwBrSqkwhHNO9lXafU0JuRSu/mcJhzfWh5hC29zFHX
+         Z1FYbT4hOLFX9Vb+usfgefBH/qhHnL+3vdtuQ0WeBnUkUU7VCeOiEQ5pZFdJGF9s7dDX
+         ma5ZXEf/aQc/aIz/GFzuOenJ0BD1GC2FlVKtYSo1GYA1Z31pi5LwFGA/WDwZxiNIhtFr
+         02rA==
+X-Gm-Message-State: AOJu0YyBgakT0Ud72D1I3ABxTCD3A7CWJWGjxzMqvhcYUE9G8eLZTm2I
+	/l0L03kRvhbYLyLLov5LKUGHDPzTyV0JjvoFHld798W2XOO9f9//wVcXGR0i0vLgnOE=
+X-Gm-Gg: Acq92OEaoonvAh7GcJ4nB4/Rds6jRe2nygOk1NCqmoqmBL1IDQm6FKf3kIG9Y90Pc10
+	VksumJrrpfa/e6Au2WIL8/m9+fsyBqy70Erfb03NuIxV6xO96VG021y64vLQ4dxZrD5ZAe4bbOh
+	6cXesTFAXweVXcfJScrBqo7ehwARdfrmAUYznCshNDBk8m12elySXcUrYd/iMqmiqn2Xo00YQbA
+	u4dRbwHGdGj9FR5If3gEcTS0nulJkCq1SFptGSY7Vc2uqGRsVWxgSSlUhf6Z3lZT4wTe2T5rD9L
+	fyCCLzGk2SFygZa53vz12DIzjF3IvpPb/Lf/cnm/8dk5cPzYOPj2u7Mqigs2/QQFFed/Nrd5/Oz
+	uj/nl0nhhSsH697rGAoHi//fjixF8Qdf5AAnZSULW4EKqgFoIlPnc8uOTWmrXRaW5QgyQaiiPSR
+	aAVe01TpyWq+jFr+uscFbVO+30Q7u3Issp52GxreBsJB7BE8KBtkuBkktmRSqvm6OjAEoHhWj+U
+	UX5iIxS4fV/ggWMyg==
+X-Received: by 2002:a05:600c:34cc:b0:48e:60a3:220a with SMTP id 5b1f17b1804b1-48fe59af1cemr249848065e9.0.1779108997664;
+        Mon, 18 May 2026 05:56:37 -0700 (PDT)
 Received: from ?IPV6:2a01:e0a:106d:1080:1029:e3c5:362e:1250? ([2a01:e0a:106d:1080:1029:e3c5:362e:1250])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45da0a1aeafsm38940230f8f.23.2026.05.18.05.56.29
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48fe537c516sm276340275e9.13.2026.05.18.05.56.36
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 May 2026 05:56:30 -0700 (PDT)
-Message-ID: <940d7714-4303-4e82-a006-3066d2165844@linaro.org>
-Date: Mon, 18 May 2026 14:56:29 +0200
+        Mon, 18 May 2026 05:56:37 -0700 (PDT)
+Message-ID: <08de1873-d2d8-4387-8521-7161ad71ee46@linaro.org>
+Date: Mon, 18 May 2026 14:56:36 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,13 +69,18 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: neil.armstrong@linaro.org
+From: Neil Armstrong <neil.armstrong@linaro.org>
 Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
 Subject: Re: [PATCH] PCI: meson: Propagate devm_add_action_or_reset() failure
-To: sashiko-reviews@lists.linux.dev, Shuvam Pandey <shuvampandey1@gmail.com>
-Cc: linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org
+To: Shuvam Pandey <shuvampandey1@gmail.com>, Yue Wang <yue.wang@Amlogic.com>,
+ "Lorenzo Pieralisi <lpieralisi@kernel.org>" <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Kevin Hilman <khilman@baylibre.com>,
+ Jerome Brunet <jbrunet@baylibre.com>,
+ Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 References: <177909148011.9588.6639767953842842291@gmail.com>
- <20260518082022.F4229C2BCB7@smtp.kernel.org>
 Content-Language: en-US, fr
 Autocrypt: addr=neil.armstrong@linaro.org; keydata=
  xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
@@ -103,67 +107,42 @@ Autocrypt: addr=neil.armstrong@linaro.org; keydata=
  4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
  QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
 Organization: Linaro
-In-Reply-To: <20260518082022.F4229C2BCB7@smtp.kernel.org>
+In-Reply-To: <177909148011.9588.6639767953842842291@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 5/18/26 10:20, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> - [High] Missing `.remove` callback or `.suppress_bind_attrs = true` leaves PCI subsystem and PHY active after driver unbind.
-> --
+On 5/18/26 10:04, Shuvam Pandey wrote:
+> meson_pcie_probe_clock() enables a clock and then registers a devres
+> action to disable it during teardown. If devm_add_action_or_reset()
+> fails, it runs the action immediately, disabling the clock.
 > 
-> commit fde9e1cd9d05730f72b074fa8edf3a1233d11384
-> Author: Shuvam Pandey <shuvampandey1@gmail.com>
+> The return value is currently ignored, so on that failure path
+> meson_pcie_probe_clock() returns the disabled clock and probe continues.
+> Return the error so the existing probe error path unwinds normally.
 > 
-> PCI: meson: Propagate devm_add_action_or_reset() failure
+> Fixes: 9c0ef6d34fdbf ("PCI: amlogic: Add the Amlogic Meson PCIe controller driver")
+> Signed-off-by: Shuvam Pandey <shuvampandey1@gmail.com>
+> ---
+>   drivers/pci/controller/dwc/pci-meson.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> This commit updates meson_pcie_probe_clock() to check the return value
-> of devm_add_action_or_reset(). If it fails, the error is returned so
-> that the probe error path can unwind normally.
-> 
->> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
->> index 0694084f612b7..8d495bcc3a41a 100644
->> --- a/drivers/pci/controller/dwc/pci-meson.c
->> +++ b/drivers/pci/controller/dwc/pci-meson.c
->> @@ -204,7 +204,9 @@ static inline struct clk *meson_pcie_probe_clock(struct device *dev,
->>   		return ERR_PTR(ret);
->>   	}
->>   
->> -	devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
->> +	ret = devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
->> +	if (ret)
->> +		return ERR_PTR(ret);
-> 
-> This isn't a bug introduced by this patch, but could this driver be unbound
-> via sysfs, triggering a use-after-free?
-> 
-> The meson_pcie_probe() function registers the PCI host controller via
-> dw_pcie_host_init(&pci->pp) and powers on the PHY via meson_pcie_power_on().
-> 
-> However, the driver does not implement a .remove callback to call
-> dw_pcie_host_deinit() and meson_pcie_power_off(), nor does it set
-> .suppress_bind_attrs = true in its platform_driver struct.
-> 
-> If the driver is unbound via /sys/bus/platform/drivers/meson-pcie/unbind,
-> the device core will trigger devres cleanup. This frees the mp structure,
-> unmaps IO memory, disables clocks, and releases resets.
-> 
-> Because the PCI subsystem is never explicitly unregistered via
-> dw_pcie_host_deinit(), the PCI core retains references to the destroyed root
-> bus and freed structures.
-> 
-> Can a subsequent access by the PCI subsystem or userspace cause a
-> use-after-free and system crash?
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+> index 0694084f612b..8d495bcc3a41 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -204,7 +204,9 @@ static inline struct clk *meson_pcie_probe_clock(struct device *dev,
+>   		return ERR_PTR(ret);
+>   	}
+>   
+> -	devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
+> +	ret = devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
+> +	if (ret)
+> +		return ERR_PTR(ret);
+>   
+>   	return clk;
+>   }
 
-This probably a bug to fix, but totally unrelated to this change
+Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
 
-> 
-> Additionally, the PHY is left permanently powered on without its required
-> clocks. Should the driver either implement a proper teardown in a .remove
-> hook or prevent unbinding by setting .suppress_bind_attrs = true?
-> 
->>   
->>   	return clk;
->>   }
-> 
-
+Thanks,
+Neil
