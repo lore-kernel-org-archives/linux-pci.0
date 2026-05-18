@@ -1,113 +1,206 @@
-Received: from outbound.baidu.com (mx13.baidu.com [220.181.3.100])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F0D374E7A
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 02:27:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.181.3.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7B56363C73;
+	Mon, 18 May 2026 02:27:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779071248; cv=none; b=aDghsGo5En4cdbUnISol4wIGVO38voWA4iLjMRbnAy79H96B4Uoik9pqjZ4++PylRoWRxxiqR7gd0NTPGy8vwmwj9pGbPyk9RdT5NKAeFHAMAdxyKDLHDdZnFc7Kuko5xstpZ2PP3XcRXfe7Z6Z4kzl7S66E/N48Nj+kHv86lAg=
+	t=1779071251; cv=none; b=FmiR4CZrboJHdohk+u0CHZXcv4SUWrjprzyZ1+cZc9eqsyNTXON/eE2B8rjtBeVy2CrRx3JdleaK+vf9AIHlyNAWX9nYhDcp6exwdk9az5T4yOCbI0MQOmrYkx8sufOsay7UJ45tJ72J829NM2ePSB5L9mKqT8AOkJT98Dvyw6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779071248; c=relaxed/simple;
-	bh=GR2ljKzz2wXbI7ZVf5CBx4/ATIw2MezJuryvKZTmZcg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=TlkrJHevRsQ7ycTKBpVrFgeCuqgSlfdZUQjRUyvB62Z5T3CxqDWZz7CYq7DPDjcj9IQ8BIkEf36imS64wyWqrJagJgoSBDJ6xEM7kJGmDQ+J9ZA6fJkQ3nb/1vl2dVkgTnQTo/9CLKkiQtGBmJQmTz9gwmP4fARYXoyc9dzzZX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com; spf=pass smtp.mailfrom=baidu.com; dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b=UVyyIPMK; arc=none smtp.client-ip=220.181.3.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=baidu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baidu.com
+	s=arc-20240116; t=1779071251; c=relaxed/simple;
+	bh=IVbMXQqM2Bn7sOEUeEQORms1jBrbEI3760tzh9Ck+BQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=p2KJue7k8x8zHljMerhbIRBz4oD8jK6M5tJjNsUx+HK8DTErf9wGkKqakNHylfylYNydadgxxIDNjlPSm1sCimOs/Hxbtc+QsABX7u6Wv3jle1LJbnbBaqsVYwhqEBngmfGnvF5etwu5qN0W79x/6H+Z+XqcdeTcbRiPEnzqz7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=kBTQhQCI; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baidu.com header.i=@baidu.com header.b="UVyyIPMK"
-X-MD-Sfrom: lirongqing@baidu.com
-X-MD-SrcIP: 172.31.3.13
-From: "Li,Rongqing(ACG CCN)" <lirongqing@baidu.com>
-To: "sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>,
-	"ryder.lee@mediatek.com" <ryder.lee@mediatek.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: =?utf-8?B?562U5aSNOiBb5aSW6YOo6YKu5Lu2XSBSZTogW1BBVENIXSBQQ0k6IG1lZGlh?=
- =?utf-8?B?dGVrOiBGaXggb3BlcmF0b3IgcHJlY2VkZW5jZSBpbiBQQ0lFX0ZUU19OVU1f?=
- =?utf-8?Q?L0_macro?=
-Thread-Topic: =?utf-8?B?W+WklumDqOmCruS7tl0gUmU6IFtQQVRDSF0gUENJOiBtZWRpYXRlazogRml4?=
- =?utf-8?B?IG9wZXJhdG9yIHByZWNlZGVuY2UgaW4gUENJRV9GVFNfTlVNX0wwIG1hY3Jv?=
-Thread-Index: AQHc5AWXYaLu9BycNkOmHpzKnChg0bYNyH2AgAVIyXA=
-Date: Mon, 18 May 2026 02:25:10 +0000
-Message-ID: <953a48ccc3a94a29887a8059edc21a2a@baidu.com>
-References: <20260515005552.2343-1-lirongqing@baidu.com>
- <20260515013659.DC03BC2BCC7@smtp.kernel.org>
-In-Reply-To: <20260515013659.DC03BC2BCC7@smtp.kernel.org>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="kBTQhQCI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=EYVk2L7I2QIK8AhvMjLLHdrrsojKjMfLBqXUy02+ir4=;
+	b=kBTQhQCIoq8v86RJMFxAhrpvkm4JDnb3AdG8EsT7oF0PyLaGrwAF2BLwa7YO99
+	HsOqXJKyKQblBNa0w3yzb+/OgSnhOs5ioTb0ADm4ljh/6Q21SptZJTZF+/Ky15EU
+	MRdgwcr7v/UIBdynGlWp7NsfZ1Kibo1fN4UQ0BEq20aBo=
+Received: from [192.168.50.71] (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wCnwlLPeApq_iX2Bw--.49104S2;
+	Mon, 18 May 2026 10:26:24 +0800 (CST)
+Message-ID: <c909a890-65cb-444f-9b4f-9482d2f71c6d@163.com>
+Date: Mon, 18 May 2026 10:26:23 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=baidu.com;
-	s=selector1; t=1779071113;
-	bh=GR2ljKzz2wXbI7ZVf5CBx4/ATIw2MezJuryvKZTmZcg=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type;
-	b=UVyyIPMKt/PVGOdbFBl7BnPTSMhqDqVq/YAHkI9LEI17hr71TtX+e6dSQVk0Mq6kY
-	 AkuJiKYRnlEwJAmOvNB9E4asNEtUSKnd1QR9MBd+NbitQTC/eNSzFQzuqIiHEOP7o3
-	 wRoT+U3jnmbkR/7jrsNs7bFp+tXg0M+mtCd5L7e1kwG0EImRlSrQf/0gogQ6SX4wad
-	 p/TbInXktMk3rPtlOyylWJEa/7gOKnTJcQqog2WURgP0LYlIgvgAWUgSpavIl2hHDs
-	 2oaftnGrEzuYooM/xnW/WMXHGnfDL1aXi+8tkPFbyYnXorWXvkfjrDqm6uRudSXO8N
-	 ph7hZIQtrbRrA==
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/7] PCI: cadence: Add post-link delay for LGA and
+ j721e glue driver
+To: Manikandan Karunakaran Pillai <mpillai@cadence.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+ "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+ "mani@kernel.org" <mani@kernel.org>, "vigneshr@ti.com" <vigneshr@ti.com>,
+ "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+ "thomas.petazzoni@bootlin.com" <thomas.petazzoni@bootlin.com>,
+ "ryder.lee@mediatek.com" <ryder.lee@mediatek.com>,
+ "claudiu.beznea.uj@bp.renesas.com" <claudiu.beznea.uj@bp.renesas.com>
+Cc: "robh@kernel.org" <robh@kernel.org>,
+ "s-vadapalli@ti.com" <s-vadapalli@ti.com>,
+ "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "claudiu.beznea@tuxon.dev" <claudiu.beznea@tuxon.dev>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20260518004246.1384532-1-18255117159@163.com>
+ <20260518004246.1384532-3-18255117159@163.com>
+ <DM6PR07MB67169B65E6B826E24A8E64AEA2032@DM6PR07MB6716.namprd07.prod.outlook.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <DM6PR07MB67169B65E6B826E24A8E64AEA2032@DM6PR07MB6716.namprd07.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wCnwlLPeApq_iX2Bw--.49104S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxKr1DuryxGFW5Jw1fGFyUWrg_yoW7XFyxpa
+	yUGFWfG3WxXFWY9an7Z3W5XFyaqFn0k3srGws293Wxur17Cr9xJF42gF1fXFZxKrWqyr12
+	vF1DtF9Fgr1ayFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U4UDXUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwxBvE2oKeNARAAAA32
 
-DQo+IA0KPiBUaGFuayB5b3UgZm9yIHlvdXIgY29udHJpYnV0aW9uISBTYXNoaWtvIEFJIHJldmll
-dyBmb3VuZCAyIHBvdGVudGlhbCBpc3N1ZShzKQ0KPiB0byBjb25zaWRlcjoNCj4gLSBbSGlnaF0g
-Rml4aW5nIHRoZSBtYWNybyBjaGFuZ2VzIHRoZSBjb25maWd1cmVkIEZUUyBudW1iZXIgZnJvbSAw
-IHRvIDgwLA0KPiBjb25mbGljdGluZyB3aXRoIHRoZSBjb21tZW50IHJlcXVpcmluZyAyNTAgYW5k
-IHBvdGVudGlhbGx5IGJyZWFraW5nIEwwcyBsaW5rDQo+IHJlY292ZXJ5Lg0KDQpUaGlzIHJlcXVp
-cmVzIGNvbmZpcm1hdGlvbiBmcm9tIE1lZGlhVGVrDQoNCg0KPiAtIFtMb3ddIE1pc3NpbmcgZXhw
-bGljaXQgaW5jbHVzaW9uIG9mIGA8bGludXgvYml0ZmllbGQuaD5gIGZvciBgRklFTERfUFJFUCgp
-YC4NCg0KVGhpcyBpc24ndCBhbiBpc3N1ZS4gVGhlIGN1cnJlbnQgZmlsZSBpbmNsdWRlcyAuLi9w
-Y2kuaCwgYW5kIC4uL3BjaS5oIGluY2x1ZGVzIGxpbnV4L2JpdGZpZWxkLmgNCg0KVGhhbmtzDQoN
-CltMaSxSb25ncWluZ10gDQoNCj4gLS0NCj4gDQo+IGNvbW1pdCBiZTE2YWFmODU0MzE2MDM0MGRm
-Njg0ZGM1MjBjYzc2MjE2N2VmZmUzDQo+IEF1dGhvcjogTGkgUm9uZ1FpbmcgPGxpcm9uZ3FpbmdA
-YmFpZHUuY29tPg0KPiANCj4gUENJOiBtZWRpYXRlazogRml4IG9wZXJhdG9yIHByZWNlZGVuY2Ug
-aW4gUENJRV9GVFNfTlVNX0wwIG1hY3JvDQo+IA0KPiBUaGUgb3JpZ2luYWwgUENJRV9GVFNfTlVN
-X0wwKHgpIG1hY3JvIHdhcyBidWdneSBkdWUgdG8gaW1wcm9wZXINCj4gb3BlcmF0b3IgcHJlY2Vk
-ZW5jZSwgd2hlcmUgKCh4KSAmIDB4ZmYgPDwgOCkgd2FzIGV2YWx1YXRlZCBhcyAoKHgpICYgMHhm
-ZjAwKS4NCj4gDQo+IEluc3RlYWQgb2YganVzdCBmaXhpbmcgdGhlIHBhcmVudGhlc2VzLCB1c2Ug
-dGhlIHN0YW5kYXJkIEZJRUxEX1BSRVAoKSBtYWNyby4NCj4gVGhpcyBtYWtlcyB0aGUgY29kZSBt
-b3JlIHJvYnVzdCBieSBhdXRvbWF0aWNhbGx5IGhhbmRsaW5nIG1hc2tzIGFuZCBzaGlmdHMsDQo+
-IHdoaWxlIGFsc28gYWRkaW5nIGNvbXBpbGUtdGltZSB0eXBlIGFuZCByYW5nZSBjaGVja2luZyB0
-byBlbnN1cmUgdGhlIHZhbHVlDQo+IGZpdHMgd2l0aGluIFBDSUVfRlRTX05VTV9NQVNLLg0KPiAN
-Cj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLW1lZGlhdGVrLmMN
-Cj4gPiBiL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvcGNpZS1tZWRpYXRlay5jDQo+ID4gaW5kZXgg
-NzU3MjI1MjRmZTc0NC4uMDBmMGUyOTE4M2YyYiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Bj
-aS9jb250cm9sbGVyL3BjaWUtbWVkaWF0ZWsuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2NvbnRy
-b2xsZXIvcGNpZS1tZWRpYXRlay5jDQo+ID4gQEAgLTYxLDcgKzYxLDcgQEANCj4gPiAgLyogTWVk
-aWFUZWsgc3BlY2lmaWMgY29uZmlndXJhdGlvbiByZWdpc3RlcnMgKi8NCj4gPiAgI2RlZmluZSBQ
-Q0lFX0ZUU19OVU0JCTB4NzBjDQo+ID4gICNkZWZpbmUgUENJRV9GVFNfTlVNX01BU0sJR0VOTUFT
-SygxNSwgOCkNCj4gPiAtI2RlZmluZSBQQ0lFX0ZUU19OVU1fTDAoeCkJKCh4KSAmIDB4ZmYgPDwg
-OCkNCj4gPiArI2RlZmluZSBQQ0lFX0ZUU19OVU1fTDAoeCkJRklFTERfUFJFUChQQ0lFX0ZUU19O
-VU1fTUFTSywgeCkNCj4gDQo+IFNob3VsZCB0aGlzIGZpbGUgZXhwbGljaXRseSBpbmNsdWRlIDxs
-aW51eC9iaXRmaWVsZC5oPiBmb3IgRklFTERfUFJFUCgpPw0KPiANCj4gV2hpbGUgdGhlIGZpbGUg
-Y29tcGlsZXMgb24gQVJNL0FSTTY0IGR1ZSB0byBpbXBsaWNpdCBpbmNsdXNpb24gdmlhDQo+IDxs
-aW51eC9pcnEuaD4gYW5kIDxhc20vcHRyYWNlLmg+LCBtaXNzaW5nIHRoZSBleHBsaWNpdCBpbmNs
-dWRlIGNhbiBjYXVzZSBidWlsZA0KPiBmYWlsdXJlcyBvbiBvdGhlciBhcmNoaXRlY3R1cmVzIGxp
-a2UgeDg2IGR1cmluZyBDT01QSUxFX1RFU1QuDQo+IA0KPiBEb2VzIHRoaXMgY2hhbmdlIGludHJv
-ZHVjZSBhIHJlZ3Jlc3Npb24gaW4gTDBzIGxpbmsgcmVjb3ZlcnkgYnkgYWx0ZXJpbmcgdGhlDQo+
-IGNvbmZpZ3VyZWQgRmFzdCBUcmFpbmluZyBTZXF1ZW5jZSAoRlRTKSBudW1iZXI/DQo+IA0KPiBU
-aGUgZHJpdmVyIGNvbmZpZ3VyZXMgdGhlIEZUUyBudW1iZXIgaGVyZToNCj4gDQo+IGRyaXZlcnMv
-cGNpL2NvbnRyb2xsZXIvcGNpZS1tZWRpYXRlay5jOm10a19wY2llX3N0YXJ0dXBfcG9ydCgpIHsN
-Cj4gICAgIC4uLg0KPiAJLyogY29uZmlndXJlIFJDIEZUUyBudW1iZXIgdG8gMjUwIHdoZW4gaXQg
-bGVhdmVzIEwwcyAqLw0KPiAJd3JpdGVsKFBDSUVfQ09ORl9BRERSKFBDSUVfRlRTX05VTSwgZnVu
-Yywgc2xvdCwgMCksDQo+IAkgICAgICAgcGNpZS0+YmFzZSArIFBDSUVfQ0ZHX0FERFIpOw0KPiAJ
-dmFsID0gcmVhZGwocGNpZS0+YmFzZSArIFBDSUVfQ0ZHX0RBVEEpOw0KPiAJdmFsICY9IH5QQ0lF
-X0ZUU19OVU1fTUFTSzsNCj4gCXZhbCB8PSBQQ0lFX0ZUU19OVU1fTDAoMHg1MCk7DQo+ICAgICAu
-Li4NCj4gfQ0KPiANCj4gQmVmb3JlIHRoaXMgcGF0Y2gsIHRoZSBtYWNybyBldmFsdWF0ZWQgdG8g
-MCBiZWNhdXNlIDB4NTAgJiAweGZmMDAgaXMgMC4NCj4gDQo+IFRoaXMgdmFsdWUgb2YgMCBtaWdo
-dCBiZSBzYWZlbHkgaW50ZXJwcmV0ZWQgYnkgc29tZSBoYXJkd2FyZSBhcyAyNTYsDQo+IHNhdGlz
-ZnlpbmcgdGhlIGNvbW1lbnQncyByZXF1aXJlbWVudCBvZiAyNTAuDQo+IA0KPiBCeSBmaXhpbmcg
-dGhlIG1hY3JvLCB0aGUgZHJpdmVyIHdpbGwgbm93IGFjdGl2ZWx5IHdyaXRlIDB4NTAgKDgwKSB0
-byB0aGUNCj4gcmVnaXN0ZXIgaW5zdGVhZCBvZiAwLg0KPiANCj4gU2luY2UgdGhlIGNvbW1lbnQg
-ZXhwbGljaXRseSByZXF1aXJlcyAyNTAsIGNvdWxkIHJlZHVjaW5nIHRoaXMgdG8gODAgY2F1c2UN
-Cj4gbGluayByZWNvdmVyeSB0byBmYWlsPw0KPiANCj4gSXMgMHhmYSAoMjUwKSB0aGUgaW50ZW5k
-ZWQgdmFsdWUgaGVyZSBpbnN0ZWFkIG9mIDB4NTA/DQo+IA0KPiAtLQ0KPiBTYXNoaWtvIEFJDQo+
-IHJldmlldyDCtyBodHRwczovL3Nhc2hpa28uZGV2LyMvcGF0Y2hzZXQvMjAyNjA1MTUwMDU1NTIu
-MjM0My0xLWxpcm9uZ3Fpbg0KPiBnQGJhaWR1LmNvbT9wYXJ0PTENCg==
+
+
+On 5/18/26 10:12, Manikandan Karunakaran Pillai wrote:
+> 
+> 
+>> EXTERNAL MAIL
+>>
+>>
+>> The Cadence LGA (Legacy Architecture IP) PCIe host controller currently
+>> lacks the mandatory 100 ms delay after link training completes for speeds
+>>> 5.0 GT/s, as required by PCIe r6.0 sec 6.6.1.
+>>
+>> Add a 'max_link_speed' field to struct cdns_pcie. In the common host
+>> layer function cdns_pcie_host_start_link(), after the link has been
+>> successfully established, call pci_host_common_link_train_delay() to
+>> insert the required delay.
+>>
+>> For the j721e glue driver, set cdns_pcie.max_link_speed from the existing
+>> link speed logic. For other LGA-based glue drivers (sky1, sg2042), the
+>> common LGA host setup (pcie-cadence-host.c) provides a fallback reading
+>> of the device tree property "max-link-speed" when available. This ensures
+>> that the delay is not missed on those platforms once they enable the
+>> property.
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> ---
+>> drivers/pci/controller/cadence/pci-j721e.c                | 1 +
+>> drivers/pci/controller/cadence/pcie-cadence-host-common.c | 4 ++++
+>> drivers/pci/controller/cadence/pcie-cadence-host.c        | 4 ++++
+>> drivers/pci/controller/cadence/pcie-cadence.h             | 2 ++
+>> 4 files changed, 11 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/cadence/pci-j721e.c
+>> b/drivers/pci/controller/cadence/pci-j721e.c
+>> index bfdfe98d5aba..ae916e7b1927 100644
+>> --- a/drivers/pci/controller/cadence/pci-j721e.c
+>> +++ b/drivers/pci/controller/cadence/pci-j721e.c
+>> @@ -206,6 +206,7 @@ static int j721e_pcie_set_link_speed(struct j721e_pcie
+>> *pcie,
+>> 	    (pcie_get_link_speed(link_speed) == PCI_SPEED_UNKNOWN))
+>> 		link_speed = 2;
+>>
+>> +	pcie->cdns_pcie->max_link_speed = link_speed;
+>> 	val = link_speed - 1;
+>> 	ret = regmap_update_bits(syscon, offset, GENERATION_SEL_MASK,
+>> val);
+>> 	if (ret)
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+>> b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+>> index 2b0211870f02..18e4b6c760b5 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
+>> @@ -14,6 +14,7 @@
+>>
+>> #include "pcie-cadence.h"
+>> #include "pcie-cadence-host-common.h"
+>> +#include "../pci-host-common.h"
+>>
+>> #define LINK_RETRAIN_TIMEOUT HZ
+>>
+>> @@ -115,6 +116,9 @@ int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc,
+>> 	if (!ret && rc->quirk_retrain_flag)
+>> 		ret = cdns_pcie_retrain(pcie, pcie_link_up);
+>>
+>> +	if (!ret)
+>> +		pci_host_common_link_train_delay(pcie->max_link_speed);
+>> +
+>> 	return ret;
+>> }
+>> EXPORT_SYMBOL_GPL(cdns_pcie_host_start_link);
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> b/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> index 0bc9e6e90e0e..058e4e619654 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+>> @@ -13,6 +13,7 @@
+>>
+>> #include "pcie-cadence.h"
+>> #include "pcie-cadence-host-common.h"
+>> +#include "../../pci.h"
+>>
+>> static u8 bar_aperture_mask[] = {
+>> 	[RP_BAR0] = 0x1F,
+>> @@ -397,6 +398,9 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+>> 	rc->device_id = 0xffff;
+>> 	of_property_read_u32(np, "device-id", &rc->device_id);
+>>
+>> +	if (pcie->max_link_speed < 1)
+>> +		pcie->max_link_speed = of_pci_get_max_link_speed(np);
+>> +
+> Why is the conditional if required here as during cdns_pcie_host_setup(), the value of
+> max_link_speed is expected to be '0', unless specifically initialized by the platform code separately.
+> 
+> What happens if the max_link_speed is not defined in the corresponding dts ? Would not the -EINVAL returned from the function create issues ?
+
+Hi Manikandan,
+
+Please see:
+
+https://github.com/torvalds/linux/blob/v7.1-rc4/drivers/pci/controller/dwc/pcie-designware.c#L191
+
+
+Best regards,
+Hans
+
+> 
+>> 	pcie->reg_base = devm_platform_ioremap_resource_byname(pdev,
+>> "reg");
+>> 	if (IS_ERR(pcie->reg_base)) {
+>> 		dev_err(dev, "missing \"reg\"\n");
+>> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h
+>> b/drivers/pci/controller/cadence/pcie-cadence.h
+>> index 574e9cf4d003..042a4c49bb9a 100644
+>> --- a/drivers/pci/controller/cadence/pcie-cadence.h
+>> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
+>> @@ -86,6 +86,7 @@ struct cdns_plat_pcie_of_data {
+>>   * @ops: Platform-specific ops to control various inputs from Cadence PCIe
+>>   *       wrapper
+>>   * @cdns_pcie_reg_offsets: Register bank offsets for different SoC
+>> + * @max_link_speed: Maximum supported link speed
+>>   */
+>> struct cdns_pcie {
+>> 	void __iomem		             *reg_base;
+>> @@ -98,6 +99,7 @@ struct cdns_pcie {
+>> 	struct device_link	             **link;
+>> 	const  struct cdns_pcie_ops          *ops;
+>> 	const  struct cdns_plat_pcie_of_data *cdns_pcie_reg_offsets;
+>> +	int				     max_link_speed;
+>> };
+>>
+>> /**
+>> --
+>> 2.43.0
+
