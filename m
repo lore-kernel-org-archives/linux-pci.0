@@ -1,147 +1,355 @@
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C100739903E
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 21:37:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D2D6396591;
+	Mon, 18 May 2026 21:54:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779140240; cv=none; b=DdU3v5CfmcZ8NQ3r+f9kupDwoFgPvKmEnlyIbl5G5Unmij/8m98LhvhnzhgvKffpFXFoahn89VZEAUfkqADHRxwScfFQ/+9BWDL49BpdRfWqNj7bd+Qv6OIJOJf+Tl+X3LICWHrFmS/VYiw3lDr/cdfqN6Wdp0cEeLttF3YPpZ4=
+	t=1779141282; cv=none; b=UudxRBwnEVoxOYGMy699BI9JF0G6NKdqphXy0fAMGOTFzajMdLGfImWhRQbK0NpNXXEpln/z82ttgiITzGhhjCvx7rMttln8oDacrLPjqM/NynXDJjjerEU0XOIQXb4/kV2Z9C3nE6FbVuX+U/3+5yJdVmPk7P32Hs53qVT6wYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779140240; c=relaxed/simple;
-	bh=i43GTxdyMK+VdcaWSoLpBbK8zz90hQn9yi4OJpouGdo=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e+kPanhO/ZWKbX7JySNpqo/KalVdqlrKDS9wzKDEF58BVvF4DYVsiy2VhWuIqjyd2HRQ/fGf2ooZQo8NVE3uw2KxJKg2ao8CpB5JvX8DCJj3q2LU7m0QOwdbgeb6YffzAsvQDnFs5C/bt6x/N1Dvl8Eo9zQV/KEgt2drRJB2KUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=P9w1Fmt5; arc=none smtp.client-ip=209.85.221.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779141282; c=relaxed/simple;
+	bh=ki+WAIPbNAWpazR1F6aQA4RCiLjMbpvfPl2mcjH3Wi4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=HVoeeY+Vvqb4fOKGiBnhVTDyhOGGIgUuWh27tF37XkJEa8Oey3dnCrr7cEHMAfFHmLU1/RaD/KmaHRkadB01g66K++bjFSrglvxX2go0snGL2Y7dDNAAyx0jlRDd8lGG4/gGzvJo9uVhp41UapVPRszZFV0oYTeFev1opmNLjLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WsQ14Wha; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P9w1Fmt5"
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-4526a8170ceso1243685f8f.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 14:37:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779140237; x=1779745037; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FBg9aPiRES77DI0TewWq2NXl4MY6GQ2hEKLNnK9/Z5g=;
-        b=P9w1Fmt5l8L3QQ9qR3mbGw8wUtGTw0raoIOd+cap/Bp+FqKCLQPn2RMSRnmv9oKlqy
-         dx5NAZzydEyMmoU4GQ8o0hwrXZ+rRz2hhVfr0xBAUNDNyIwhMS0xLKw3x3VzsXF/dxNG
-         Ejz0hSI475pAFdproGW3ONtMUq91F6Qq7ccDs05JvP6bU1v6WdtNtgBlYu34k596amrj
-         1xueNXvAlhTd9WT0bxGxfJKcm3XQwO6n1kSqMFAgQzko3h8B2dMQmihRhinqumzLkG7A
-         /yj7W+0pK4afsc14djjxNS3peijYZ0wmryV5qvcpblB4uV9jWwQgRUzcBt4WQkrjoWKk
-         4smg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779140237; x=1779745037;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=FBg9aPiRES77DI0TewWq2NXl4MY6GQ2hEKLNnK9/Z5g=;
-        b=ELnATWPe0MfbBUQ+OGJff6RPUE1NBDA+lj8cwERfpQnjKcJ+6GxU8mRLI5VGEQM3VK
-         z0/4mP7xrYs9e5HMhqLtz9kBTAbzbIJN4JlLOnGXMZ8TxeHh6ItI0Ias865j5jZYZ0/z
-         9NAczYUcYKmrwrCG4cXWHFSRYVKloiT11pCiDncowXN/tMG7DQR2fwzj1v9NqM2eQ+EK
-         jGrjQsrdwyy2PkPn0fs4GdDlBjeeMO6VhvQ7yldXgFl8Dtid82tmZJm5Da6fOWllKOXe
-         IRYL1KjmFeeEADaNEVqFjsvFJp2ZEjUu4tAmcrF2mbPDrHezVEL9xUMhxeGSvCqH5jhc
-         uZfg==
-X-Forwarded-Encrypted: i=1; AFNElJ/4P8MaAKsGs3JBzbmiEGNpuqLyULL7BW3UXTyJDfK97oDjbtpX79DJwuB2g8valDthRI4QRZ1QuQU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwLqlePielMtwX8HbmdJfaFx89L/0M7ZIZxqzOMpIWVEj6dJI3q
-	dHN5PIPUvbQahbB7/9wvP6HEui8XK8nUpCtjfcjJ7m33YBZwBpzMtzxR
-X-Gm-Gg: Acq92OFTjfbBQRvoMWk/ielJjGHefSkKmbHoVqLKCDjjV2NFAGNsrSdmLt7peM62MMO
-	KfVWdzuM5DQdIS5bQwg4JEQwvitDdooIPYyRFGwXpZUFdwzOO74ndEOfrIPHMkTcSiKXOxCsfvm
-	JdQWeqQ+Dh/P/89w4OgDdvuvY6GUGkd7lxzEMtA/wou/isLzvWNjE3gKpErJzrxZwF81GSRjDT3
-	3aO0R5ppQ+lFLmK57hvs//YxRW68M4KkGvi14pmvTyL2mj9ldyK0o3l7/PxbrMwyTO2O9XGD7pl
-	rE1rAx6p+luQ7IUzSgvYy8DCj8Up2RkiIazZpEauh/HAwjknjYgMNXg+r+7Tbz4BgOurgTp+Z1W
-	rz/sBxvz3T9b2GpS9w3nK5iYOjAF6owQF2haZ7fk0sh1ql9ACS3jJMbZE7+qi5GRF9L1XYoe5Zv
-	cWy1GnfDUrdMwr8I5pnchxsC4GROrq6XpP
-X-Received: by 2002:a05:6000:4014:b0:441:1fa5:4577 with SMTP id ffacd0b85a97d-45e5c5f20f3mr25992706f8f.26.1779140237042;
-        Mon, 18 May 2026 14:37:17 -0700 (PDT)
-Received: from foxbook (bfk48.neoplus.adsl.tpnet.pl. [83.28.48.48])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45da0a19a0csm38301497f8f.20.2026.05.18.14.37.15
-        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
-        Mon, 18 May 2026 14:37:16 -0700 (PDT)
-Date: Mon, 18 May 2026 23:37:11 +0200
-From: Michal Pecio <michal.pecio@gmail.com>
-To: Jihong Min <hurryman2212@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mathias Nyman
- <mathias.nyman@intel.com>, Guenter Roeck <linux@roeck-us.net>, Jonathan
- Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, Mario
- Limonciello <mario.limonciello@amd.com>, Basavaraj Natikar
- <Basavaraj.Natikar@amd.com>, linux-usb@vger.kernel.org,
- linux-hwmon@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, "Mario Limonciello
- (AMD)" <superm1@kernel.org>, Yaroslav Isakov <yaroslav.isakov@gmail.com>
-Subject: Re: [PATCH v6 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
-Message-ID: <20260518233711.4c99cc72.michal.pecio@gmail.com>
-In-Reply-To: <144ec61c-4cc1-4986-a16c-7c1b99f3a72e@gmail.com>
-References: <20260517130407.795157-1-hurryman2212@gmail.com>
-	<20260517130407.795157-2-hurryman2212@gmail.com>
-	<20260517232147.34931718.michal.pecio@gmail.com>
-	<144ec61c-4cc1-4986-a16c-7c1b99f3a72e@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WsQ14Wha"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D9D1C2BCB7;
+	Mon, 18 May 2026 21:54:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779141282;
+	bh=ki+WAIPbNAWpazR1F6aQA4RCiLjMbpvfPl2mcjH3Wi4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=WsQ14Whao+YjbvkEBuvLzjGzaNQsqdep0iI3lXuleKCJDGe1a1R8qsbC7ULTGAIOD
+	 Wy2wCO1HEiiu7+60VNwB5tX58hBKWyWS8aOC47UFaO7QW8RtW0Zs2Zp4PxRT3wmI1y
+	 grPJwd/xTHmjk/eTFoP9xwM7RyzsRrDp5rvjm7le7cRnL5lHDcM9rpk/n3n/VPB/JO
+	 TPKpDj8imYzMNxmpDwXrlY0jAUd4BdsUzjwbP/blOeTqQkCbAM7l25l9htf/eM/z2y
+	 snaHHBC9susfhCU6W0OmE9u/bGK4cCahtjtSUyXeKzmk2PTSi1a8+UR0y6O9E0741e
+	 tFtsniosvCjQw==
+Date: Mon, 18 May 2026 16:54:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tony Nguyen <anthony.l.nguyen@intel.com>
+Cc: davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+	edumazet@google.com, andrew+netdev@lunn.ch, netdev@vger.kernel.org,
+	Phani R Burra <phani.r.burra@intel.com>, larysa.zaremba@intel.com,
+	przemyslaw.kitszel@intel.com, aleksander.lobakin@intel.com,
+	sridhar.samudrala@intel.com, anjali.singhai@intel.com,
+	michal.swiatkowski@linux.intel.com, maciej.fijalkowski@intel.com,
+	emil.s.tantilov@intel.com, madhu.chittim@intel.com,
+	joshua.a.hay@intel.com, jacob.e.keller@intel.com,
+	jayaprakash.shanmugam@intel.com, jiri@resnulli.us, horms@kernel.org,
+	corbet@lwn.net, richardcochran@gmail.com, linux-doc@vger.kernel.org,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	Bharath R <bharath.r@intel.com>,
+	Samuel Salin <Samuel.salin@intel.com>,
+	Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
+	Philipp Stanner <phasta@kernel.org>
+Subject: Re: [PATCH net-next v3 02/14] libie: add PCI device initialization
+ helpers to libie
+Message-ID: <20260518215441.GA640516@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260515224443.2772147-3-anthony.l.nguyen@intel.com>
 
-On Tue, 19 May 2026 05:30:47 +0900, Jihong Min wrote:
-> On 5/18/26 06:21, Michal Pecio wrote:
->  > Instead of the X86 heuristic, would it be possible to build glue
->  > code if and only if SENSORS_PROM21_XHCI is enabled?
->  >
->  > This seems to work:
->  >
->  >   config SENSORS_PROM21_XHCI
->  >          tristate "AMD Promontory 21 xHCI temperature sensor"
->  > -       depends on USB_XHCI_PCI_PROM21
->  > +       depends on USB_XHCI_PCI
->  >
->  >   config USB_XHCI_PCI_PROM21
->  >          tristate
->  > -       depends on X86
->  >          depends on USB_XHCI_PCI
->  > -       default USB_XHCI_PCI
->  > +       default USB_XHCI_PCI if SENSORS_PROM21_XHCI != 'n'
->  >          select AUXILIARY_BUS
->  >
->  > I don't know if it's the best way, perhaps it would be preferable
->  > for the hwmon driver to select the glue, but then I'm not sure how
->  > to force glue to become 'y' when xhci-pci is 'y'.  
+[+cc Philipp]
+
+On Fri, May 15, 2026 at 03:44:26PM -0700, Tony Nguyen wrote:
+> From: Phani R Burra <phani.r.burra@intel.com>
 > 
-> I think I should keep the current hidden glue option for now.
-> 
-> The PROM21 PCI glue is part of the PCI binding path for the xHCI
-> controller when enabled, while SENSORS_PROM21_XHCI is only the
-> optional user-visible hwmon driver. Tying the glue to the hwmon
-> option would make the sensor option affect which driver binds the USB
-> controller.
+> Add support functions for drivers to configure PCI functionality and access
+> MMIO space.
 
-That's true.
-Making this possible is the whole purpose of "if IS_ENABLED" here:
+This looks kind of like what pcim_iomap_range() does, i.e., a way to
+ioremap (BAR-idx, offset, size) pieces of PCI BARs.  That sounds like
+useful functionality.
 
->  static int xhci_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  {
->  	if (IS_ENABLED(CONFIG_USB_XHCI_PCI_RENESAS) &&
->  			pci_match_id(pci_ids_renesas, dev))
->  		return -ENODEV;
->  
-> +	if (IS_ENABLED(CONFIG_USB_XHCI_PCI_PROM21) &&
-> +	    pci_match_id(pci_ids_prom21, dev))
-> +		return -ENODEV;
+Is there something Intel-specific or even ethernet-specific about
+this?  If devm_* and pcim_* don't do what you need, maybe they should
+be extended or this could be made generic so any drivers could use it?
+
+This looks like a mix of managed (pcim_enable_device(),
+pcim_request_region()), and unmanaged (ioremap(), iounmap()) things.
+I haven't looked at how all this is used, but it's pretty easy to get
+things wrong when mixing models.
+
+> +++ b/drivers/net/ethernet/intel/libie/pci.c
+> @@ -0,0 +1,208 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/* Copyright (C) 2025 Intel Corporation */
 > +
->  	return xhci_pci_common_probe(dev, id);
->  }
-
-Currently, you have a weird situation where xhci-pci-prom21 always
-binds on x86 and xhci-pci on other platforms (with the unofficial PCIe
-card you mentioned), plus the sensor cannot work on other platforms.
-
-> As Guenter pointed out, that would be too strong; the USB controller
-> should not depend on whether the optional hwmon driver is enabled.
-
-One could further argue that neither should it care whether some hwmon
-driver exists at all, or which kernel releases it exists in :)
-
-Regards,
-Michal
+> +#include <linux/intel/libie/pci.h>
+> +
+> +/**
+> + * libie_find_mmio_region - find MMIO region containing a range
+> + * @mmio_list: list that contains MMIO region info
+> + * @offset: range start offset
+> + * @size: range size
+> + * @bar_idx: BAR index containing the range to search
+> + *
+> + * Return: pointer to a MMIO region overlapping with the range in any way or
+> + *	   NULL if no such region is mapped.
+> + */
+> +static struct libie_pci_mmio_region *
+> +libie_find_mmio_region(const struct list_head *mmio_list,
+> +		       resource_size_t offset, resource_size_t size,
+> +		       int bar_idx)
+> +{
+> +	resource_size_t end_offset = offset + size;
+> +	struct libie_pci_mmio_region *mr;
+> +
+> +	list_for_each_entry(mr, mmio_list, list) {
+> +		resource_size_t mr_end = mr->offset + mr->size;
+> +		resource_size_t mr_start = mr->offset;
+> +
+> +		if (mr->bar_idx != bar_idx)
+> +			continue;
+> +		if (offset < mr_end && end_offset > mr_start)
+> +			return mr;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +/**
+> + * __libie_pci_get_mmio_addr - get the MMIO virtual address
+> + * @mmio_info: contains list of MMIO regions
+> + * @offset: register offset to find
+> + * @num_args: number of additional arguments present
+> + *
+> + * This function finds the virtual address of a register offset by iterating
+> + * through the non-linear MMIO regions that are mapped by the driver.
+> + *
+> + * Return: valid MMIO virtual address or NULL.
+> + */
+> +void __iomem *__libie_pci_get_mmio_addr(struct libie_mmio_info *mmio_info,
+> +					resource_size_t offset,
+> +					int num_args, ...)
+> +{
+> +	struct libie_pci_mmio_region *mr;
+> +	int bar_idx = 0;
+> +	va_list args;
+> +
+> +	if (num_args) {
+> +		va_start(args, num_args);
+> +		bar_idx = va_arg(args, int);
+> +		va_end(args);
+> +	}
+> +
+> +	list_for_each_entry(mr, &mmio_info->mmio_list, list)
+> +		if (bar_idx == mr->bar_idx && offset >= mr->offset &&
+> +		    offset < mr->offset + mr->size) {
+> +			offset -= mr->offset;
+> +
+> +			return mr->addr + offset;
+> +		}
+> +
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(__libie_pci_get_mmio_addr, "LIBIE_PCI");
+> +
+> +/**
+> + * __libie_pci_map_mmio_region - map PCI device MMIO region
+> + * @mmio_info: struct to store the mapped MMIO region
+> + * @offset: MMIO region start offset
+> + * @size: MMIO region size
+> + * @num_args: number of additional arguments present
+> + *
+> + * Return: true on success, false on memory map failure.
+> + */
+> +bool __libie_pci_map_mmio_region(struct libie_mmio_info *mmio_info,
+> +				 resource_size_t offset,
+> +				 resource_size_t size, int num_args, ...)
+> +{
+> +	struct pci_dev *pdev = mmio_info->pdev;
+> +	struct libie_pci_mmio_region *mr;
+> +	resource_size_t pa;
+> +	void __iomem *va;
+> +	int bar_idx = 0;
+> +	va_list args;
+> +
+> +	if (num_args) {
+> +		va_start(args, num_args);
+> +		bar_idx = va_arg(args, int);
+> +		va_end(args);
+> +	}
+> +
+> +	if (offset + size > pci_resource_len(pdev, bar_idx))
+> +		return false;
+> +
+> +	mr = libie_find_mmio_region(&mmio_info->mmio_list, offset, size,
+> +				    bar_idx);
+> +	if (mr) {
+> +		pci_warn(pdev,
+> +			 "Mapping of BAR%u (offset=%llu, size=%llu) intersecting region (offset=%llu, size=%llu) already exists\n",
+> +			 bar_idx, (unsigned long long)mr->offset,
+> +			 (unsigned long long)mr->size,
+> +			 (unsigned long long)offset, (unsigned long long)size);
+> +		return mr->offset <= offset &&
+> +		       mr->offset + mr->size >= offset + size;
+> +	}
+> +
+> +	pa = pci_resource_start(pdev, bar_idx) + offset;
+> +	va = ioremap(pa, size);
+> +	if (!va) {
+> +		pci_err(pdev, "Failed to map BAR%u region\n", bar_idx);
+> +		return false;
+> +	}
+> +
+> +	mr = kvzalloc_obj(*mr);
+> +	if (!mr) {
+> +		iounmap(va);
+> +		return false;
+> +	}
+> +
+> +	mr->addr = va;
+> +	mr->offset = offset;
+> +	mr->size = size;
+> +	mr->bar_idx = bar_idx;
+> +
+> +	list_add_tail(&mr->list, &mmio_info->mmio_list);
+> +
+> +	return true;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(__libie_pci_map_mmio_region, "LIBIE_PCI");
+> +
+> +/**
+> + * libie_pci_unmap_fltr_regs - unmap selected PCI device MMIO regions
+> + * @mmio_info: contains list of MMIO regions to unmap
+> + * @fltr: returns true, if region is to be unmapped
+> + */
+> +void libie_pci_unmap_fltr_regs(struct libie_mmio_info *mmio_info,
+> +			       bool (*fltr)(struct libie_mmio_info *mmio_info,
+> +					    struct libie_pci_mmio_region *reg))
+> +{
+> +	struct libie_pci_mmio_region *mr, *tmp;
+> +
+> +	list_for_each_entry_safe(mr, tmp, &mmio_info->mmio_list, list) {
+> +		if (!fltr(mmio_info, mr))
+> +			continue;
+> +		iounmap(mr->addr);
+> +		list_del(&mr->list);
+> +		kvfree(mr);
+> +	}
+> +}
+> +EXPORT_SYMBOL_NS_GPL(libie_pci_unmap_fltr_regs, "LIBIE_PCI");
+> +
+> +/**
+> + * libie_pci_unmap_all_mmio_regions - unmap all PCI device MMIO regions
+> + * @mmio_info: contains list of MMIO regions to unmap
+> + */
+> +void libie_pci_unmap_all_mmio_regions(struct libie_mmio_info *mmio_info)
+> +{
+> +	struct libie_pci_mmio_region *mr, *tmp;
+> +
+> +	list_for_each_entry_safe(mr, tmp, &mmio_info->mmio_list, list) {
+> +		iounmap(mr->addr);
+> +		list_del(&mr->list);
+> +		kvfree(mr);
+> +	}
+> +}
+> +EXPORT_SYMBOL_NS_GPL(libie_pci_unmap_all_mmio_regions, "LIBIE_PCI");
+> +
+> +/**
+> + * libie_pci_init_dev - enable and reserve PCI regions of the device
+> + * @pdev: PCI device information
+> + *
+> + * Return: %0 on success, -%errno on failure.
+> + */
+> +int libie_pci_init_dev(struct pci_dev *pdev)
+> +{
+> +	int err;
+> +
+> +	err = pcim_enable_device(pdev);
+> +	if (err)
+> +		return err;
+> +
+> +	for (int bar = 0; bar < PCI_STD_NUM_BARS; bar++)
+> +		if (pci_resource_flags(pdev, bar) & IORESOURCE_MEM) {
+> +			err = pcim_request_region(pdev, bar, pci_name(pdev));
+> +			if (err)
+> +				return err;
+> +		}
+> +
+> +	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+> +	if (err)
+> +		return err;
+> +
+> +	pci_set_master(pdev);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_NS_GPL(libie_pci_init_dev, "LIBIE_PCI");
+> +
+> +MODULE_DESCRIPTION("Common Ethernet PCI library");
+> +MODULE_LICENSE("GPL");
+> diff --git a/include/linux/intel/libie/pci.h b/include/linux/intel/libie/pci.h
+> new file mode 100644
+> index 000000000000..effd072c55c8
+> --- /dev/null
+> +++ b/include/linux/intel/libie/pci.h
+> @@ -0,0 +1,56 @@
+> +/* SPDX-License-Identifier: GPL-2.0-only */
+> +/* Copyright (C) 2025 Intel Corporation */
+> +
+> +#ifndef __LIBIE_PCI_H
+> +#define __LIBIE_PCI_H
+> +
+> +#include <linux/pci.h>
+> +
+> +/**
+> + * struct libie_pci_mmio_region - structure for MMIO region info
+> + * @list: used to add a MMIO region to the list of MMIO regions in
+> + *	  libie_mmio_info
+> + * @addr: virtual address of MMIO region start
+> + * @offset: start offset of the MMIO region
+> + * @size: size of the MMIO region
+> + * @bar_idx: BAR index to which the MMIO region belongs to
+> + */
+> +struct libie_pci_mmio_region {
+> +	struct list_head	list;
+> +	void __iomem		*addr;
+> +	resource_size_t		offset;
+> +	resource_size_t		size;
+> +	u16			bar_idx;
+> +};
+> +
+> +/**
+> + * struct libie_mmio_info - contains list of MMIO regions
+> + * @pdev: PCI device pointer
+> + * @mmio_list: list of MMIO regions
+> + */
+> +struct libie_mmio_info {
+> +	struct pci_dev		*pdev;
+> +	struct list_head	mmio_list;
+> +};
+> +
+> +#define libie_pci_map_mmio_region(mmio_info, offset, size, ...)	\
+> +	__libie_pci_map_mmio_region(mmio_info, offset, size,		\
+> +				     COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
+> +
+> +#define libie_pci_get_mmio_addr(mmio_info, offset, ...)		\
+> +	__libie_pci_get_mmio_addr(mmio_info, offset,			\
+> +				   COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
+> +
+> +bool __libie_pci_map_mmio_region(struct libie_mmio_info *mmio_info,
+> +				 resource_size_t offset, resource_size_t size,
+> +				 int num_args, ...);
+> +void __iomem *__libie_pci_get_mmio_addr(struct libie_mmio_info *mmio_info,
+> +					resource_size_t offset,
+> +					int num_args, ...);
+> +void libie_pci_unmap_all_mmio_regions(struct libie_mmio_info *mmio_info);
+> +void libie_pci_unmap_fltr_regs(struct libie_mmio_info *mmio_info,
+> +			       bool (*fltr)(struct libie_mmio_info *mmio_info,
+> +					    struct libie_pci_mmio_region *reg));
+> +int libie_pci_init_dev(struct pci_dev *pdev);
+> +
+> +#endif /* __LIBIE_PCI_H */
+> -- 
+> 2.47.1
+> 
