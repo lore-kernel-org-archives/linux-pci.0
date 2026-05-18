@@ -1,160 +1,164 @@
-Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012006.outbound.protection.outlook.com [40.107.200.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 496CD282F00;
-	Mon, 18 May 2026 14:55:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.6
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779116140; cv=fail; b=sTb9A8x457JHYThNZ2TyY0sBSDkd4I5R4hBvZeYi3x0v5umAfLwbzWtZJqobkwPRRyFm3HJiiE0D5tVKq2HIirrmdduWTp6xJB2GeDb1Rd6anLbI1yVBNeDLkhb+G1tUHWaCvJqfYs3o+vk01yd+au8Utc1azjztTjS9Wecrj+k=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779116140; c=relaxed/simple;
-	bh=lH6hedU/H2IOx1vw8q32rm9CLcN1HAthAx3w/4dIUv0=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=fPxPujYW2ECSPBhuPce6rp8KFrR7dbyroDbr5O9pGhX5NcrOmctZc/VG6ylMEf1FnAkKO/imYWxL9GiusabZPYgnRRXu5/B/3aEJjRIbJiNQ2D1zhtemXBpNyjlbjw/fNNeLgM/MNVblGoFN0//ZHMlwW7z2L8r0Bey5tm9bgfY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=dIIqHo2V; arc=fail smtp.client-ip=40.107.200.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E5922FF65B;
+	Mon, 18 May 2026 14:59:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779116377; cv=none; b=N5tTkik2LXp1zdzF7nlKbkSfuBh7KxcG5cxwYpehbXD9yr0s3C7QFt0OFXg8hFPHhrvlR3lhDj1IdtoGJJ4NQOmOdyTFCwCGs6xKJBsHNBtIijwr+miYIGo1F5ipoWQL+KpmNbscQs+jru0BFIkIceYNlz3rga49lKzvgVYNTbE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779116377; c=relaxed/simple;
+	bh=5tZEGCo7wCfylxqFJDnXkP1AKDZPWVP0KlTUW5f53Fs=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=ARK8fYYOFa7KZNHMrPCyLQ1Y4GUpB+IKI/n3WVkqJfHN+s/7hHVnlPYsnFL6jwBpyYirvOuMw7Itxbm0jdP/nRJSpuDimacK04/tktYYvXofn/RNhZeejhyVGjc0Xdn/RJjh0TUJ1qH1Eh7N0rYmRHK5YSc+mqsnxXSmyk618mk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=naUlmNLd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="dIIqHo2V"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=weUuIsPN4SnCO8puvYfdq05fmL6TUCUyxBPJdnWi77KqvRzJBO9iEzn0/K5sYSMEul6ij5VpKGcitnNi0ozt2vwNArC75m3kI2YMZJ4LuEM5qRRbILnmjpTESKg0iNlSRMZMfIzXHktzv7UQTxKqFAkt7juShruG8axSjhAnzK7cSGaS19If9UAEYBcZBVIYY43MIGnp1tU8IbWjt7uF8MhxVK3HJbpMhRs1gUwBqcg4VtfLIlVLOrnkxcwIMsdQGK1ByXfgUZkNNc8+mdMHFyBn2qhcZ7kKpKEVREGNezy77QAMuWwm1wgcl04C0IB8JEtf15qsIKtOjmWtath/XQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lH6hedU/H2IOx1vw8q32rm9CLcN1HAthAx3w/4dIUv0=;
- b=hP++NCJkQ1xWueo08zqdnLfpPZdDkJ8P4oQlidEbkZOhHrWM07DxrOnrEAhKPnmBA1zcZs38R+x+s5FGFpKbFuuCPCy4R2RDsS8YgUOdLhViMJ/2TJ3e2xzMcF9aadY2RzXwsirtnPbsIjyV0lTDZRpb6zWhsFzbkcz6wV03dyufESGQ2L4qB/MV5LyViNLvm1JPIk8kbWMtnqAnn6v0D7CBeowiGH0kn4fmNHjUEKwjcDQgWgqPzg7Fr6R7aoy2KUzsM0wz0wLMn8S3naJjh1MiQclJXdpzbreGxEUiFGTzUDLh8EqokibvxC14ziM3tADsJ1Gk6BhRK8q4qGxcrg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lH6hedU/H2IOx1vw8q32rm9CLcN1HAthAx3w/4dIUv0=;
- b=dIIqHo2V9KxThRIvW4KHm8RLg+YuiZpBqdEcsjbACR/eJLo8cO/icfBJQKKJgX5Eqios8anW//u2IG6gIXRLEBfWa9Uu96tpJUEH11bdmHO6hXM7YD9kivXNFhSpID967nW6LW65kj6i4noTd4btrAn1fgZGMRqH/eG3YKCsa+PWeyvSY6X1RIZOunjp71MSIv7k9CCY0keI45eEDkV3rwVwcGXl7hT17nEcxPcU9RHzu17QgYZACp1CBf6kFc4c4wNWuq7hiQa0N+hl8HvD/7DZIt3PFWB3eagnthO+buHY7n58fDloaW79iT30BxvpAKuE6BAFKKjx0NLvGBmpdQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by CH1PPF12253E83C.namprd12.prod.outlook.com (2603:10b6:61f:fc00::606) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.11; Mon, 18 May
- 2026 14:55:29 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0025.022; Mon, 18 May 2026
- 14:55:25 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 18 May 2026 23:55:22 +0900
-Message-Id: <DILW13F30IR6.2VYUDF0GDK2ZS@nvidia.com>
-Subject: Re: [PATCH v3 11/27] rust: platform: make Driver trait
- lifetime-parameterized
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <aliceryhl@google.com>, <david.m.ertman@intel.com>, <ira.weiny@intel.com>,
- <leon@kernel.org>, <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-12-dakr@kernel.org>
-In-Reply-To: <20260517000149.3226762-12-dakr@kernel.org>
-X-ClientProxiedBy: TY1PR01CA0192.jpnprd01.prod.outlook.com (2603:1096:403::22)
- To CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="naUlmNLd"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AF662C2BCC6;
+	Mon, 18 May 2026 14:59:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779116376;
+	bh=5tZEGCo7wCfylxqFJDnXkP1AKDZPWVP0KlTUW5f53Fs=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=naUlmNLdzZNdmF7I8FSq4MwSTlr544XWn9m+fXzeUJkpc9N/dije1ZXLtebKtGzq7
+	 TDA0XIb8bj9GWvSTkRvHot5/WNhv1k0oO8UD/6uJG8dNDaPgWdPNph+E8VINcC2lgQ
+	 W928pSMWtGdDEiGTQ377zxGrn4V4CBt+593BBFP6efF7if9GE2QkkBIOyDNizF29Na
+	 mPOawKdW3CJXxLikh4Hws1jLR4peo0MUBRY9cKNR57GembAPZvkkDWJVIUx5ROZRta
+	 JYb5OECoxx9HXbSCeX0Yuu1Jt+rxtyGUqr28rDHa1cJTw5nKxbkGdanxZS3IA4OQBi
+	 I5Qy64WH5aZXA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0E8FCD4F4A;
+	Mon, 18 May 2026 14:59:36 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Mon, 18 May 2026 20:29:14 +0530
+Subject: [PATCH v8 2/5] PCI/ERR: Add support for resetting the Root Ports
+ in a platform specific way
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CH1PPF12253E83C:EE_
-X-MS-Office365-Filtering-Correlation-Id: b1a2bcc3-de2b-4e48-45d8-08deb4ed7e80
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|10070799003|376014|1800799024|7416014|22082099003|18002099003|11063799003|56012099003|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	7/AN8z/cLmuEw3Ke1dVJuE2LmJ8tjut45Qv0gwV8HZJk53VAp2L6fKwD9URg8z19I/64LWkkMccODiqmQuJ3ZQ5z3VlWtr5k5GCe0AJ6uZvgBKs0j47eFjcujQE8qSBPmsGcUGKW+Ia9KBEsSJfqadcrAbWdd1k+RwM2PloXVBpuZM5TIaSOVt+f9I+yQcZ0pehP3tWk8+XltUrI9BqMmxGmg974JIsfeG9d29UvkVuMEl27Tojyml9/2CnosGHWRRzHKvGVKwFbEnnvSVwVG8ozadixSELTgr7vi7wSMfkVj6xjyasY3tUId8d+o2xu0Ke8ooeWkQ8W8avjB/O8jAsOEwZ/Ihqt3peh/oJoV6ejFKjeMTl66GpLeK4rAMToLWHoLJc5ud8XLZqJ+2UsPLEPtfVQFR1mhtYM5p8JpWJcyjEeL+HFtCeqe/r4HmNAJatuUdlYGcm21nTQlNn7PVOaZeTLld2J4PEOXSyhTvCKXHWleKnCwyVTy32vRbAbr26FeCj1ON8rqSKS60idImFilGY43LICqzNvLmJVgEcPznyzGctdh6fuS22yYVYDHTGurtUQLcvvWr0IGN94zPlDfuEuiLvQ942H4VzbMrKoENsPtyAhM0RxuFPMMJOjndxzvbVULZ6n4GtcN5xiymFqV+gE0fJ+a7E+aypWDcCfoKmkmaP7HO/4JIUhEKmw
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(10070799003)(376014)(1800799024)(7416014)(22082099003)(18002099003)(11063799003)(56012099003)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Uk03MTEycXRTdTdOaEw3Z3pSd3pIeDZmR2dZZFd5YTBXem90dkJCUjBuVEhu?=
- =?utf-8?B?L1dXZnpxUDhWeTUza1JiYVI3aGZKa3JkNWIvL2s2d1ExOHRrQ3lZd25YT2dY?=
- =?utf-8?B?OGRrbW52VzJidU9aaHVQOEc5NnMrMkNETHgzTloyUjA3Z2xScnVERElwZi9q?=
- =?utf-8?B?cUJQYmt5NHpPYU9xOHJYLzFnTHpLM25ObVI4bmo5YU5FbmMwcU01QThlYjQ0?=
- =?utf-8?B?UDkxMjBwYkJua1Bpa09FL1p4VVF5ZXpmb2VFUjg0L0VzcHQwNXpjOGp5U0lX?=
- =?utf-8?B?bXNpSVdhRzB5amJCb3VxUXVrMk9rV3NDSVFZZCsvYkQ1cm1MWUZkWkpNWXdx?=
- =?utf-8?B?ajZYc0ZXL1pIRmxnc0RHTFRodVgyZDYrcjM1OTNnUXJsOHpZcDNVRHJFME9U?=
- =?utf-8?B?M2kyZDdpZFVOeXZNdUhXQTRQZzZ3VE03LzZwRXVpZ3VEMS9QTWtHZHZ3NURk?=
- =?utf-8?B?QWFmVUMwSG1WNnZaWjhIR1lOMEd6a0dyUmJqdXRYTkowRjFMTkhTQ1B6ZGlw?=
- =?utf-8?B?RzhFbHUvSlEvek5CVVpTUFJrd3BQcklKbTYwd043bm4zeHdpZFJ0Uy96dEd2?=
- =?utf-8?B?YWp3UWNMUG1wcW9iTkMycFlqd3UySmhFMlVlWXROaSt0MnJsQVVjSU05eFhj?=
- =?utf-8?B?Nk1abXlOckZzakFOZVg5TSsvN2JYMkxGWXQzVXFQUFI4TkdxS2E0TWVWVHJh?=
- =?utf-8?B?VnNUWDd0STZUL3ZpSEdQOGVHRy96Tkp3Y25GVTVKQ0RhOWd4UC9CVkw4WGIx?=
- =?utf-8?B?enZTWFhnTjRzeHJEUTJTQ2ZFaDJENVR5eVFDRWl3S01YaUVJS1dJcTk1V1VE?=
- =?utf-8?B?bmo5WnVWaXdFSFo3blhPZS9ZSTVQVDZLSUcvSUQySFM1dnRBQ0s1eUphdFJk?=
- =?utf-8?B?a3NTamdCQVc5U3dMTzJrVk53WENiRXRVRWo1NVNOMzJNYm1obFBIdk5ZQUp6?=
- =?utf-8?B?NlhNVVZGV2tKd2FQS1hvL1lneVlBUkZJT1RHaFVjL2ZYMGEvT3lKWnBhSUE0?=
- =?utf-8?B?S2tTeFBDVnhwUFgxMi9XQ2toVTE4TGlnTTcrNUhmWm05YnE4ZG5odGhHb3dn?=
- =?utf-8?B?cGtaWXlKc2F4dVVGL2tUNUNWOEFUaG54dzMzVEVhaTd6SGMwZnV0b21FNTJw?=
- =?utf-8?B?REN3TmZvcHphU3BQYUFRTzlLd1B3czVZK0p5VWtKWmlQVzYvcTBnQnFVU1VY?=
- =?utf-8?B?eVZrUFhiR2ozRFc2SGpwTmQxNkZpNlA4eFdjT0tudEs0ZFkxUVBzNm5nL1Rq?=
- =?utf-8?B?QmVIRTFvSTdJVmI1ZVB6OTEzaEtNZ0hJQlZ1OVgybG9JMVQ5aEtaV011T0Vz?=
- =?utf-8?B?enpIdE91bUc4ckZDMktuUERvTjd1SCtVNGx2SFpxaFVTanFHa3Q1VTJwZ1BN?=
- =?utf-8?B?K3JZRW10TjZ2dS9uWklNUWxiSGdjUHptSEc2TGNhU245bUFSZEVsWFUxQzBO?=
- =?utf-8?B?OWtGZDg2L0F2cDZOQU51d0VnRFl5bmJXT1BiVVdMdlVTM256dUZYc0ExeUE0?=
- =?utf-8?B?aUx2M3dIS28zeXJaUjlaYXM1cHFmakZVZHZ4ZWFONHlPUFlWMTVpbXlXV29T?=
- =?utf-8?B?QzdDSlViNDc1dnkzQmZ1QTZnWThPZU4zWnhKN3h3b01zMlFtQnZ6V0t3c3cr?=
- =?utf-8?B?YzB2dWRCQkx5aXpCZjYxV1ZXSGk0ZGZwbzVKekEyWi9IZVVGUm1SaGtnL0dQ?=
- =?utf-8?B?d2liK1dRRjQ2LzFySjliUjY4aG1zNU9wNE81MnZzdFZjeGM1V2JQaFhpRkg1?=
- =?utf-8?B?UGVGbWluUmt5bVdsNm42TStYc2VGV1pLeEhKTTk0VHNRdTJLMWYvNzVvQ0Rz?=
- =?utf-8?B?NG1uM3U2L0ZHYUdGNEpPcTdpOUlMVFd4dGJVWTdDMTVFcVBSbG1jdUN0Nzkr?=
- =?utf-8?B?TUQ5c1cyOFRUNXEwUXZaUkk1SnkrOEtUSVBRNEs2S2FGTEdwYnh1QW9naExk?=
- =?utf-8?B?NExxdUwzQTBROWI2MEJJTWFqQWRnemtiWkt3QmdKMU1jOE4zc1NMWEhTSU1B?=
- =?utf-8?B?RmpJOVA4N1doVzFVTk1zVXA1dy9XWXBUNUZUSmVYcDJ6K0V2aEpYWnh4Qno4?=
- =?utf-8?B?REVUK1I2bzJnYVZ2UEl0MjJzWTJIdG05RlZuT1J4QkJwWWJaYW9scllHUGtY?=
- =?utf-8?B?UENRcXZxQW81SVVuVnFyWDRzcmlmWU1odG9lbVJmc3I2aThaSXZVZnB6aExB?=
- =?utf-8?B?Tm43STUyS3l2bGVCWURSYzFlUHllUmpLYjV0S0E0aFA5SU9ISzU1N2YrOEJT?=
- =?utf-8?B?UThvamEzNEZZaUIrdjhESUh0cXFUU2VLTlNDVzFGc3hRbTRCK2RyQVdWMFRO?=
- =?utf-8?B?eWFKcVA3bHNoNmVjK3owcFlJdGNsSmpUblJHWit3SjAyMlkwVVlldFJuU3h4?=
- =?utf-8?Q?Blxg8U64md30M7r1KBR2BPCw0WBwXH0kvQbUTmmYhCaji?=
-X-MS-Exchange-AntiSpam-MessageData-1: WZ+GVvcCSgmhsA==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b1a2bcc3-de2b-4e48-45d8-08deb4ed7e80
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 May 2026 14:55:25.7490
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iWwGVtCgPEBQvpeuyUtFk/T7co+0YzuRnsIHtJXG00sw6L6uXv8Byb6775UZhza+ZnNaCM5EobeUmO4K+v72gw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH1PPF12253E83C
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260518-pci-port-reset-v8-2-eb5a7d331dfc@oss.qualcomm.com>
+References: <20260518-pci-port-reset-v8-0-eb5a7d331dfc@oss.qualcomm.com>
+In-Reply-To: <20260518-pci-port-reset-v8-0-eb5a7d331dfc@oss.qualcomm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
+ Oliver O'Halloran <oohall@gmail.com>, Will Deacon <will@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Heiko Stuebner <heiko@sntech.de>, Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, 
+ linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+ Niklas Cassel <cassel@kernel.org>, 
+ Wilfred Mallawa <wilfred.mallawa@wdc.com>, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ mani@kernel.org, Lukas Wunner <lukas@wunner.de>, 
+ Richard Zhu <hongxing.zhu@nxp.com>, Brian Norris <briannorris@chromium.org>, 
+ Wilson Ding <dingwei@marvell.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Frank Li <Frank.Li@nxp.com>, Manivannan Sadhasivam <mani@kernel.org>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3066;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=fadAkZ1kLRIswT7sEoWlHZDHy4GXaK/5Uzi4qJOgymI=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqCylUQC0CnLltOm2LNknUaTUAACpnCJ3VV59Bw
+ 195OG/pDUuJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCagspVAAKCRBVnxHm/pHO
+ 9Ub5B/wJfDUeumCQbnp9zPxpqe1kXfqsDRckD1Y5ckykPBLsLrTsZvBCYNgP40Uiypr1/Coi7ii
+ uYM6xto+vGX13yv/p3MQMaWV2oi56o1f93EGeMLvTPJF7Qiy84R27MhA3mcx0P++l7TtopIXRmn
+ SE4LeuFrPvyR5Xn5g6pIplxseyrK+JZml11C9C7jb/9PDcYHQIScAKsqoxmp6mI7uf6o7yFdewa
+ a3fdUuBCrXostKMruQIAgv7ZPND7Dbg1+bdPC088nKamGAJ7rLST2LgiyAQI/7i65wdM6qcziYE
+ /HK1vK7WcJA9s/F9r+k5K+TLAu5/YkNJAR7UnQ6AA+cN8nHS
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On Sun May 17, 2026 at 9:00 AM JST, Danilo Krummrich wrote:
-> Add a 'bound lifetime to the associated Data, changing type Data to type
-> Data<'bound>.
->
-> This allows the driver's bus device private data to capture the device /
-> driver bound lifetime; device resources can be stored directly by
-> reference rather than requiring Devres.
->
-> The probe() and unbind() callbacks thus gain a 'bound lifetime parameter
-> on the methods themselves; avoiding a global lifetime on the trait impl.
->
-> Existing drivers set type Data<'bound> =3D Self, preserving the current
-> behavior.
->
-> Acked-by: Uwe Kleine-K=C3=B6nig <ukleinek@kernel.org>
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+From: Manivannan Sadhasivam <mani@kernel.org>
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Some host bridge devices require resetting the Root Ports in a platform
+specific way to recover them from error conditions such as Fatal AER
+errors, Link Down etc... So introduce pci_host_bridge::reset_root_port()
+callback and call it from pcibios_reset_secondary_bus() if available. Also,
+save the Root Port config space before reset and restore it afterwards.
+
+The 'reset_root_port' callback is responsible for resetting the given Root
+Port referenced by the 'pci_dev' pointer in a platform specific way and
+bring it back to the working state if possible. If any error occurs during
+the reset operation, relevant errno should be returned.
+
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Tested-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Tested-by: Richard Zhu <hongxing.zhu@nxp.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+---
+ drivers/pci/pci.c      | 13 +++++++++++++
+ drivers/pci/pcie/err.c |  5 -----
+ include/linux/pci.h    |  1 +
+ 3 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8f7cfcc00090..651505b3bd60 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4809,6 +4809,19 @@ void pci_reset_secondary_bus(struct pci_dev *dev)
+ 
+ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+ {
++	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
++	int ret;
++
++	if (pci_is_root_bus(dev->bus) && host->reset_root_port) {
++		ret = host->reset_root_port(host, dev);
++		if (ret)
++			pci_err(dev, "Failed to reset Root Port: %d\n", ret);
++		else
++			pci_restore_state(dev);
++
++		return;
++	}
++
+ 	pci_reset_secondary_bus(dev);
+ }
+ 
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index bebe4bc111d7..13b9d9eb714f 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -256,11 +256,6 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	}
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+-		/*
+-		 * TODO: Should call platform-specific
+-		 * functions to reset slot before calling
+-		 * drivers' slot_reset callbacks?
+-		 */
+ 		status = PCI_ERS_RESULT_RECOVERED;
+ 		pci_dbg(bridge, "broadcast slot_reset message\n");
+ 		pci_walk_bridge(bridge, report_slot_reset, &status);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c4454583c11..439dbd0d9184 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -646,6 +646,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	int (*enable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
+ 	void (*disable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
++	int (*reset_root_port)(struct pci_host_bridge *bridge, struct pci_dev *dev);
+ 	void		*release_data;
+ 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
+ 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+
+-- 
+2.48.1
+
+
