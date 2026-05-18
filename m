@@ -1,120 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F05F23EBF04;
-	Mon, 18 May 2026 10:29:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAED23446CE
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 10:45:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779100188; cv=none; b=nmgplg1DN3hmdRnolfzxYECS084uTwzvT2nCQOy3bjum5TTwJAsuKsicpiTZT3S1f2AdWAZRPz2oNeb7Ka+uwrnzl7fM6mWSW8I0LjkYV5BxJluEJIX/YkCWJGdD+TI2niIvbjjeHCW82OZBgq35sz+Ty+ZtVwG9lh1fRS0iqA8=
+	t=1779101131; cv=none; b=cCU2JyDeS4dZ5/d/ZANlF/lyJdTlMKFK/J9AMP3BhsaXKI3eKgUGNQuYxezWgr5OXi2hK6wuKH9JPV8gynrryegvtHpOyvi0H7tPjNlVZt5GaU2n4Pv27wariVZtU0u534Yx0MYAQyJ7akwq1Ts/ot7LpBbQWjOxwjLTL7eb+Sc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779100188; c=relaxed/simple;
-	bh=b5XaSFM4Gu7wo+De12pHlflAfIst6aIF3A0eU6HrYMw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QpZLxGFuaOAMbK+q2qbl/EZ2/gNJiNt78P5KAb53JhT16U3ycAqhNUsYsfvRg1e2XAnGkfTOuPh12KWEW2ry+lglghLDDQS1P76yvY2d47lOmAc5YIQeJvQYef+DRJv+Q8SiNzfBpzEkW0XY7d91RiwvleEyT4l9eshor4wZsKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hHhKr2rm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779101131; c=relaxed/simple;
+	bh=6pBus6iTOgZXozhWSNePG8HoOoa1gUbo5YbkymdkIEk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=pm7+vrtawj3Jxnmz1vQAL6ileHnfxOp0/kAa9fES/MGpxK6L0Rk08/3FI60qCcknJCptz6B6NXIN8+CdthClqDAVU2Uj5MJNKTEKI1tndxQT7TGujI9wY2+1kYi93TXOJW4OSf5Y7SpbflMLmlv6RjSxmRq/VmSAr956tAxnnjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AWPvQQds; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hHhKr2rm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F07FDC2BCB7;
-	Mon, 18 May 2026 10:29:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AWPvQQds"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57CE6C2BCB8;
+	Mon, 18 May 2026 10:45:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779100187;
-	bh=b5XaSFM4Gu7wo+De12pHlflAfIst6aIF3A0eU6HrYMw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=hHhKr2rmQGrEPC+PnWEL+0ZaW1Qhz5z3yVy3ZhMfbNJZzZ6zOhwd8qCdOSCpi+Y2/
-	 JYcYj3JgsIe9DrXuxLB9zS0i1HEpgHtFtI3TTGGJRiF6JVc2KHj5F5M0rGUEGfiHcO
-	 NnQdQ09Hr665MY02lj9j9ANuYB5td+X7mIOJdvTc+xp8h6FukCbh/y/TDdN2AoKihQ
-	 ahnWYeniNCKLGfqsBz1osLtk9O6LiqFj7jcSJZXj9zX20zk9KG6kCTGbOSZPVmPtVk
-	 QtV70ZjuWFFhCu+5U4hBloAgiWtaMKsLBydsnpRLLttQhCMdFVnAH2eZRbUQqaquJz
-	 ZMlONAJV89E3A==
-Date: Mon, 18 May 2026 15:59:36 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <brgl@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+	s=k20201202; t=1779101130;
+	bh=6pBus6iTOgZXozhWSNePG8HoOoa1gUbo5YbkymdkIEk=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=AWPvQQdsWtME3wSQ+EQbS30iMbzWXVX28v1DfxzyZqjHIribPJWiWOfLkRdmoILzv
+	 bY40DG5+fMCUBe9QfNwWrJqVYQvMda1s+WaxOmadre56VILhEUZvirajT0BtPl3gwp
+	 ODwInCAP407y+yOlYTUr6KR4HLwFSl2jtqRi0/GrW9ORqU+0UOoJolwBrvnCXr6z/6
+	 zYx6pJk2Xr5Y9XUChen8B/v4tjFZFR22Eo5OmlLv5cC8kNFlGisxVpVEC44129dkfI
+	 om10CakxPblez7/QfIss4U6MouRxwJkFHhRDUUs5OjzRD50MPag9macYlTQZdimh7s
+	 2OhmPpi/z+YFQ==
+From: sashiko-bot@kernel.org
 Subject: Re: [PATCH] PCI/pwrctrl: lock device when calling device_is_bound()
-Message-ID: <4oz6tpma3be53kn4ndtsabcudl7ln2nzbzutcdf6idolkddwct@v4k4k6bua3l5>
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Bartosz Golaszewski" <bartosz.golaszewski@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260518100700.47581-1-bartosz.golaszewski@oss.qualcomm.com>
 References: <20260518100700.47581-1-bartosz.golaszewski@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 18 May 2026 10:45:29 +0000
+Message-Id: <20260518104530.57CE6C2BCB8@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260518100700.47581-1-bartosz.golaszewski@oss.qualcomm.com>
 
-On Mon, May 18, 2026 at 12:07:00PM +0200, Bartosz Golaszewski wrote:
-> The kerneldoc for device_is_bound() states that it must be called with
-> the device lock taken. Synchronize the two calls in pwrctrl core.
-> 
-> Fixes: b35cf3b6aa1e ("PCI/pwrctrl: Add APIs to power on/off pwrctrl devices")
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] If a device fails to power on (or is probe deferred), its successf=
+ully powered-on children and previous siblings within its subtree are not p=
+owered off, causing a resource leak.
+--
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+commit 9be02f191b459f8fb2b5eb9ee177a3aa7076d6f1
+Author: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
 
-- Mani
+PCI/pwrctrl: lock device when calling device_is_bound()
 
-> ---
->  drivers/pci/pwrctrl/core.c | 26 +++++++++++++++-----------
->  1 file changed, 15 insertions(+), 11 deletions(-)
-> 
+This commit adds device locking around device_is_bound() calls in the
+PCI power control core to satisfy its kerneldoc requirements.
+
 > diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-> index 97cff5b8ca88..cd08d590483b 100644
+> index 97cff5b8ca885..cd08d590483b8 100644
 > --- a/drivers/pci/pwrctrl/core.c
 > +++ b/drivers/pci/pwrctrl/core.c
-> @@ -161,10 +161,12 @@ static void pci_pwrctrl_power_off_device(struct device_node *np)
->  	if (!pdev)
->  		return;
->  
-> -	if (device_is_bound(&pdev->dev)) {
-> -		ret = __pci_pwrctrl_power_off_device(&pdev->dev);
-> -		if (ret)
-> -			dev_err(&pdev->dev, "Failed to power off device: %d", ret);
-> +	scoped_guard(device, &pdev->dev) {
-> +		if (device_is_bound(&pdev->dev)) {
-> +			ret = __pci_pwrctrl_power_off_device(&pdev->dev);
-> +			if (ret)
-> +				dev_err(&pdev->dev, "Failed to power off device: %d", ret);
-> +		}
->  	}
->  
->  	platform_device_put(pdev);
-> @@ -205,7 +207,7 @@ static int __pci_pwrctrl_power_on_device(struct device *dev)
+
+[ ... ]
+
+> @@ -205,7 +207,7 @@ static int __pci_pwrctrl_power_on_device(struct devic=
+e *dev)
 >  static int pci_pwrctrl_power_on_device(struct device_node *np)
 >  {
 >  	struct platform_device *pdev;
 > -	int ret;
-> +	int ret = 0;
->  
+> +	int ret =3D 0;
+> =20
 >  	for_each_available_child_of_node_scoped(np, child) {
->  		ret = pci_pwrctrl_power_on_device(child);
-> @@ -217,12 +219,14 @@ static int pci_pwrctrl_power_on_device(struct device_node *np)
+>  		ret =3D pci_pwrctrl_power_on_device(child);
+> @@ -217,12 +219,14 @@ static int pci_pwrctrl_power_on_device(struct devic=
+e_node *np)
 >  	if (!pdev)
 >  		return 0;
->  
+> =20
 > -	if (device_is_bound(&pdev->dev)) {
-> -		ret = __pci_pwrctrl_power_on_device(&pdev->dev);
+> -		ret =3D __pci_pwrctrl_power_on_device(&pdev->dev);
 > -	} else {
 > -		/* FIXME: Use blocking wait instead of probe deferral */
 > -		dev_dbg(&pdev->dev, "driver is not bound\n");
-> -		ret = -EPROBE_DEFER;
+> -		ret =3D -EPROBE_DEFER;
 > +	scoped_guard(device, &pdev->dev) {
 > +		if (device_is_bound(&pdev->dev)) {
-> +			ret = __pci_pwrctrl_power_on_device(&pdev->dev);
+> +			ret =3D __pci_pwrctrl_power_on_device(&pdev->dev);
 > +		} else {
 > +			/* FIXME: Use blocking wait instead of probe deferral */
 > +			dev_dbg(&pdev->dev, "driver is not bound\n");
-> +			ret = -EPROBE_DEFER;
+> +			ret =3D -EPROBE_DEFER;
 > +		}
 >  	}
->  
+> =20
 >  	platform_device_put(pdev);
-> -- 
-> 2.47.3
-> 
 
--- 
-மணிவண்ணன் சதாசிவம்
+This problem wasn't introduced by this patch, but does returning here leak
+resources on probe deferral?
+
+If a device fails to power on or is probe deferred, the function returns
+the error without reverting the state of the children that were already
+successfully powered on in the for_each_available_child_of_node_scoped()
+loop above.
+
+The top-level caller pci_pwrctrl_power_on_devices() catches the error and
+executes the err_power_off cleanup path, but that path only cleans up fully
+successful top-level sibling trees up to the failing node. It appears to
+skip the partially-powered subtree of the failing node itself.
+
+Since probe deferrals are a normal and frequently repeated process during
+system boot, could these leaked refcounts accumulate and eventually cause
+resource exhaustion?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260518100700.4758=
+1-1-bartosz.golaszewski@oss.qualcomm.com?part=3D1
