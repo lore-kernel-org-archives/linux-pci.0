@@ -1,77 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C2AF37266D;
-	Mon, 18 May 2026 16:11:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0598D48BD5B;
+	Mon, 18 May 2026 16:12:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779120668; cv=none; b=bIXyjvgwB9ruEK+2uBI5bgbqewB2xMcl9FkC8X7ZlYPL66l3A5U3fM/WKdc72ALWORtpUD9pxuPXmg+sPrvcmcJhrdP1M6oYgceNtq9r3wVt6Ked+bbxVKN5EQJYbtptV+6MKA1y9BD7p5SUeG7O5HJNm4n2fBzsbJMZ272eVRE=
+	t=1779120757; cv=none; b=SiuXccqyJX9YlDvTloKlib2k5tl2ppOcDO3LxzhK3pgxf28w5TAn1/ibRudzWmFCSPhXH+aEwmsEChGCkaxjJ0vMBynKiwaEclEEjhSxN978ylmtr8W4YUGi8MMP/Ya8Es5m5FGGJyI0PwfYeKwq5aQZLU371FChgtcrcXGnz3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779120668; c=relaxed/simple;
-	bh=T//OFr0mDkF3tjl7LVEO5CAeVXbcx9hS1UZdVnD6HbY=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:From:Subject:Cc:
-	 References:In-Reply-To; b=HfiVZrow7Loo7i+aPTrvLp/jduAP0TWNpylAoqf6RF/Yj9lv9rO/GFZP+NpHMZmIvw90iQqFSodtygrQSjCWIGLOMdDYZGuOxizfsKI5RY379NGMC4PWHUxcdnt5B0tcPIs5hupPddosr43FHr7EyRRI/Hwu+tBtAVxlCcFUqEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n6oBjBu2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779120757; c=relaxed/simple;
+	bh=3bBrs7mGRW350IS29w5MjBEpH7kFoVKDOCVdn0zMrgM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=kagTRQvQoVQ9B4F/kEv5bF4rGEStS+FiGlLYpkc/4ZyKMqjNafVSVdKvvTAbfRHSZYf2JapEuaA1pGYkQA5SNtvwJwcxfbfH6rLCa78pEt8HGrcip9LdKOe9mqi7Pi79YAGnV/jng+lUgsEMwZpETIxBoAdCwMFL/j31Gx9TcIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n4GvXNNT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n6oBjBu2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 958D6C2BCB7;
-	Mon, 18 May 2026 16:11:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n4GvXNNT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 146AEC2BCB7;
+	Mon, 18 May 2026 16:12:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779120666;
-	bh=T//OFr0mDkF3tjl7LVEO5CAeVXbcx9hS1UZdVnD6HbY=;
-	h=Date:To:From:Subject:Cc:References:In-Reply-To:From;
-	b=n6oBjBu2u5eB7+AzCKDXdsSysgW9ESFJCjw3WVuUNdCBHbWUXCdjX1Arojah/0BdF
-	 nKNBuUS5VOqDCgFOEZMV1yU9JkRhCsl8h9NawTLNDeE7w1I3bteaVKpduxkna8iFlB
-	 aeJ9dlodQK+ADM0SgQ99v0qvaFxHitbemJgWAIxq9ad3rnXru+dxFQR6lnciSr5D3e
-	 0mEs08OWS64wVltIxzrYvWEVU3TT6g++3+x27u+ef9Ru5OtEZ472Mdd9Xm50v8GzoC
-	 MNef426y7LLrakd0VPAH+efoP9eiJ0Enyl66yUIolFpGjhiUaOHbI1QiVkt99VNOS9
-	 RcrPOg2IoQLtg==
+	s=k20201202; t=1779120756;
+	bh=3bBrs7mGRW350IS29w5MjBEpH7kFoVKDOCVdn0zMrgM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=n4GvXNNTLDRPKdDUuTDOqA6d+VcvH4IVk+HWxsByWKShb+KY+r3yBvPjQDkmaQ3vu
+	 vXqP5EGV/2SwVzCx2GJrtoofvq7r0Db/Oz0Xx7BzrxnVEZYxWDzVS1T0dlyShfAWxN
+	 NOXgCFHjMIW5NYQYzVoreEmijWJt5c1Yr0uqmAkxHVqnz0mM9a8hbx+ew2gIYfxZJu
+	 tLZUk5lB6iTJdk4O32FTCZngNrqkHyGyMM2VBWIUgN96lroOR9Fdk3N5+MDiSYLpPY
+	 xvBv+t8drksaqX84E3SWF887NWPqez0u+AJotgBDb6iHhjG6BkdKyFbdz52gEpPoxr
+	 SaqhAlIYRDuJw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 1/4] dt-bindings: PCI: renesas,r9a08g045-pcie: Add
+ RZ/V2H(P) support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: Prabhakar <prabhakar.csengg@gmail.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, wsa+renesas@sang-engineering.com, robh@kernel.org, conor+dt@kernel.org
+In-Reply-To: <20260518155324.168948-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20260518155324.168948-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 18 May 2026 16:12:33 +0000
+Message-Id: <20260518161236.146AEC2BCB7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 18 May 2026 18:10:58 +0200
-Message-Id: <DILXMZIF3NYC.2G7E0DEBJS90R@kernel.org>
-To: "Gary Guo" <gary@garyguo.net>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v3 10/27] rust: pci: make Driver trait
- lifetime-parameterized
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <acourbot@nvidia.com>, <aliceryhl@google.com>, <david.m.ertman@intel.com>,
- <ira.weiny@intel.com>, <leon@kernel.org>, <viresh.kumar@linaro.org>,
- <m.wilczynski@samsung.com>, <ukleinek@kernel.org>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <abdiel.janulgue@gmail.com>,
- <robin.murphy@arm.com>, <markus.probst@posteo.de>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-11-dakr@kernel.org>
- <DILWWIPKW00V.2W06IJU4ET4AX@garyguo.net>
-In-Reply-To: <DILWWIPKW00V.2W06IJU4ET4AX@garyguo.net>
 
-On Mon May 18, 2026 at 5:36 PM CEST, Gary Guo wrote:
->> +    fn probe<'bound>(
->> +        pdev: &'bound pci::Device<Core>,
->
-> This is technically incorrect, as the `Device<Core>` only lives as long a=
-s the
-> callback. Having `'bound` would be incorrect.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The patch mandates `linux,pci-domain` to identify the hardware con=
+troller instance and determine system controller register offsets, which is=
+ a Device Tree architectural violation.
+--
 
-I think that's more on the theoretical side, as Core is not Sync, but I agr=
-ee it
-makes sense to address.
+commit ed13e82a06909d08d89ba9cf97e57413bb3dc6c8
+Author: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
-> or perhaps by adding a lifetime to `Core<'_>`
->
->     pdev: &'bound pci::Device<Core<'_>>,
+dt-bindings: PCI: renesas,r9a08g045-pcie: Add RZ/V2H(P) support
+   =20
+This commit adds support for the PCIe controller found on the Renesas
+RZ/V2H(P) SoC. It makes the linux,pci-domain and num-lanes properties
+mandatory for identifying the controller instance and mapping system
+controller registers.
 
-This seems reasonable.
+>     Unlike earlier SoCs supported by this driver which only feature a sin=
+gle
+>     PCIe controller, the RZ/V2H(P) SoC implements two controllers. Both
+>     controllers rely on the system controller (`sysc`) for configuration,
+>     but the required registers reside at different offsets for each insta=
+nce.
+>     To correctly identify the controller instance and map the correspondi=
+ng
+>     system controller registers, make the "linux,pci-domain" and "num-lan=
+es"
+>     properties mandatory for this SoC and restrict their values according=
+ to
+>     the hardware capabilities.
+
+Is it appropriate to use linux,pci-domain to identify the hardware
+controller instance?
+
+Device Tree is designed to describe hardware rather than software policy
+or configuration. The linux,pci-domain property is an OS-specific hint
+used to assign logical PCI domain numbers.
+
+Using it to identify hardware instances strictly couples the hardware
+register mapping to an OS numbering scheme.
+
+> diff --git a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie=
+.yaml b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> index 90086909e9210..149a2973b16eb 100644
+> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+[ ... ]
+> @@ -235,6 +238,20 @@ allOf:
+>            maxItems: 1
+>          reset-names:
+>            maxItems: 1
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: renesas,r9a09g057-pcie
+> +    then:
+> +      properties:
+> +        linux,pci-domain:
+> +          enum: [0, 1]
+
+Does limiting this to [0, 1] cause a regression for valid software
+configurations?
+
+For example, if a board with multiple PCIe controllers assigns domains 2
+and 3 to these instances to avoid conflicts, the binding will fail
+validation and the driver will fail to probe.
+
+Could the hardware instances instead be identified via standard hardware
+descriptive mechanisms, such as their physical base address (reg),
+standard aliases, or by adding a phandle specifier argument to
+renesas,sysc?
+
+> +        num-lanes:
+> +          enum: [2, 4]
+> +      required:
+> +        - linux,pci-domain
+> +        - num-lanes
+> =20
+>  unevaluatedProperties: false
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260518155324.1689=
+48-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=3D1
