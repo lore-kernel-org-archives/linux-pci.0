@@ -1,235 +1,159 @@
-Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
+Received: from DUZPR83CU001.outbound.protection.outlook.com (mail-northeuropeazon11012060.outbound.protection.outlook.com [52.101.66.60])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD8233CFF6C;
-	Mon, 18 May 2026 07:17:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779088640; cv=none; b=stcCO2NffzUz0M8yetQ/jSiCqYxKXRXht7ErYjdFPfEoejLs/BSTkGzNJIIF5Y1Pe0ut4j/h8U9bZWWawlM5buY26CI5lsYSGW8iJL0wvMTz7AsltAiCGEDVKzZ2/Y4NtZZaAMij2N0aBaW/CF0r9rKjrv+ROM8knP+0XnmqlNc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779088640; c=relaxed/simple;
-	bh=o8eLjUQkuvsL1FKPcs3YE4j08s3yIbUK0muDFcZ1FxM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ozOuShKuy3sYgsFI0pnX0CVUxAZqDpNrq0EWRjxxQxiBLk70U7diLnUMtoW2jKvDOSmH2xU0tNGvIoTiaF8nSNqXsreh/97OPs4hETw9lmtNU0RHLwvRBNr/5C11NiXibOyNk8/RdoFsqMnAeCfEDAOtOK0TxGEnLZa1b0bUez4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ewwUsivG; arc=none smtp.client-ip=113.46.200.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B2F3D0BEC;
+	Mon, 18 May 2026 07:25:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.66.60
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779089112; cv=fail; b=fYSNM3rUaO/0uvkZav/xOPWdv5TwLHOgCSo+LVWcbvwZ2pCT9gJNNPdhI63904uTP+/CPLT0z8mBLyoW8ojAhvkUYqSBlJpZIPf0miAMCPSOTg6IUbQ7cUGrUZj8eCYZI7Cm8YJZoIMtbLSEePyQU8c9zZyHAO0+/EnAFG4dXwE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779089112; c=relaxed/simple;
+	bh=HFS/NhNIYDirClWue6ntXNahzmzA6sdQ8PXP7wpXv2U=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=VpCAT+NLD0UuStBxBU9y8wZJpGeJuPp+eyyU1AQ+3PqDTkI8tQfLQxHM1OWThk8RoLi8D/wGltmdkdVcUga2z+QSFNBCpLvVelVb1fhkXgDwU8anLmhQWXNaPFDbu0GMWjpQ8Bp/zjKIL6tdhd/HLtd3bzPWmufESkVB3S/LlJ0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=b7MbKcJm; arc=fail smtp.client-ip=52.101.66.60
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ewwUsivG"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=O9poNl7JiB+slh1Y/FAdzAMu97p+lu0DcFbusjSfUp0=;
-	b=ewwUsivG8cLY2GeWRe7Fp53x7VW7Px1qeauHk2w+yGs9hqDBj2jlzD+OgiZk2FFwqwv5phx4B
-	mJpP318zYdlXhwxIyojLV+umR8Fs9MJIl5gQ1tGoZ9dK3Pri43y6pnEOc7gHwzfa1hkC5a8J9Fc
-	E6oBIupQLaHLnRW9LkR0lFs=
-Received: from mail.maildlp.com (unknown [172.19.162.197])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gJpns5HL3z1T4Fn;
-	Mon, 18 May 2026 15:09:21 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0ED4940576;
-	Mon, 18 May 2026 15:17:10 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 18 May 2026 15:17:09 +0800
-From: Chengwen Feng <fengchengwen@huawei.com>
-To: <alex@shazbot.org>, <jgg@ziepe.ca>
-CC: <wathsala.vithanage@arm.com>, <helgaas@kernel.org>, <wei.huang2@amd.com>,
-	<wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v11 5/5] vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST for TPH ST entry management
-Date: Mon, 18 May 2026 15:17:01 +0800
-Message-ID: <20260518071701.25177-6-fengchengwen@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20260518071701.25177-1-fengchengwen@huawei.com>
-References: <20260518071701.25177-1-fengchengwen@huawei.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="b7MbKcJm"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=sQSoTJ3f+TijBJ8od9ziXzfLlst2BgwnVfK0NKzry0UGn+ptFv1u00WEER8K3xWvGBwikHRKdqmQJqK8iEq/4r6WuTJjD1GPPjzf8zVaux4hwGZ5Wq/uc2ofJDAhLaQLnRJoU3C70gQXtZQ2nnaV/hXqH9USrZAwFeNesE7604UUR3OTA6kpBukP87HRbPbnlCiU252N0a6JXNfHy35UTlW+OFus3eDwNy1dckiP3Q+/4blgsxGiMaLahzmPE3KVwM01Oh961EipiNE2i0KY+j7prM4v0of/W1hUVwA+EtFgSE+Wgu6L9OKEjNmKFt4K5BF048hlmPoOgpXr6AQUSw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=HFS/NhNIYDirClWue6ntXNahzmzA6sdQ8PXP7wpXv2U=;
+ b=Y/w0n3egZN40VPxvWcCvN3/JhB+FkLZOGpu42XyP/JKxVALkFecuRcYtwGdzt4xzQYqdZJ2CSVLjy1cjPSzf2kD6Uoq7hYyR9BY8nGwW5NCMyyltkTD+T2/uq4XqizMvL54GCIZfIC14orv/UmVafVgSASMf5H58QK0f9JLplvBp2MdH1lt8qocK7omsiEJ9JzQ3RS9XTTNcXvVgps2Tekj+UjtsgIfpZCcDf0P5GI910Bzf7D/e9TBtl+G5sldaEMDaVMC631gi7tLRtYbeQGV3e9ddFpZ9qPj4MSjA1PcdIpZAr/3eTpzMKMC4e2g5uF1HJc3d2bI2fJ1BO47HxQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HFS/NhNIYDirClWue6ntXNahzmzA6sdQ8PXP7wpXv2U=;
+ b=b7MbKcJmJLOTx8iePjs/XrneDuU/wGbQBQSG9W9O0fRpX/MlJ1cJrhv2/C3Y2TQO/at2ul5kH6strFfY21DaSyMIOoxYAlFLbOSrgTDVAAZIo5CKAnX6Kjgm+M4R2B3axw3EpBRFta6YnQqSXlnM3OSuT4eXcdFrH7ttYVjSJDwRngemag9etTrQ4dgZ0PozoxHPO+w/M2ygLvcEKz/yyPGRCfpruVWuMy2WdabhGjKD71O7OnzpPfda52tyN91QT0tLTtlTQ3qO8xW8JnaOp2BRVtfm9h32KY5s/IpULJC5N+E5Y9I0kSgBavKIbsfDIPLI9ikMbjefzhBfmqd4aw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ (2603:10a6:150:30c::14) by VI0PR04MB10998.eurprd04.prod.outlook.com
+ (2603:10a6:800:262::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.22; Mon, 18 May
+ 2026 07:25:06 +0000
+Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
+ ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0025.022; Mon, 18 May 2026
+ 07:25:06 +0000
+From: Richard Zhu <hongxing.zhu@nxp.com>
+To: frank.li@nxp.com,
+	l.stach@pengutronix.de,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	s.hauer@pengutronix.de,
+	kernel@pengutronix.de,
+	festevam@gmail.com
+Cc: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/2] PCI: imx6: Fix i.MX95 PCIe PHY initialization sequence
+Date: Mon, 18 May 2026 15:27:13 +0800
+Message-Id: <20260518072715.3166514-1-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.37.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: JH0PR02CA0026.apcprd02.prod.outlook.com
+ (2603:1096:990:76::24) To GV2PR04MB12019.eurprd04.prod.outlook.com
+ (2603:10a6:150:30c::14)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
- kwepemk500009.china.huawei.com (7.202.194.94)
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB12019:EE_|VI0PR04MB10998:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4526562b-6125-48ae-f5ae-08deb4ae9572
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|366016|376014|52116014|7416014|1800799024|18002099003|56012099003|38350700014|921020|11063799003;
+X-Microsoft-Antispam-Message-Info:
+	gVN9IBVyQWfnFj+7l1Bid0mcSGJeJs0Jezu+TGhb4k84a0zKaFCFCG4BAApxz76hhsT+L+azm9g3MfgkT0fc9a+uIQ9xMBDpQJSpZu/4KCsDWJxnTWqU32mjW9cG45rIqrqaHBTWQEqaiLYxHoy0No2PBGmyONmVsB2fDuWc/++O57esD/6ihDym0IKPoELV6HpnIYnLlK7iw1i30Xio5B4rqQKdv0qa/+h6bxdBElFASkuLaeE39NaaZgwYy0azoCxFzaOKkdStAH7T3W6hMgVtDfjkzk84upEzJBXLYi1kJXbD2XIaG5Qi9NmQI55H8/jtViDp4xP7J3/0Dn8m6TSo7KWHQ7tYJ7hheMcrEaIXKh3sSlOIgP0CTtAE4WJuDuQYoxCPTkjVjgqqFON8Xxr0Hpr7muTnrQenlNBBsoe1SSTP6KBULaGopCRR/puOUnf2CY8AIj+VA8ZOActf3qfMITdXT+3Y9YFm0HexSfBiW9geypAV7mrvBoOg07PExgH/PAFhnb6mT8mjNrSoKckFDSLMnIRjvHHi3I79z9Q5r+9ODh3t2LVw7/ERn/+Ko6vIUn6BJ/pngPBMC1iaGPVKAI4LMVJQyEldL6SNX+6UL47J9hMCB8saSHNMsddiOn5b+fiy0Jn7fM62MslWN/WU1jwkxqgJsLd7tfzMogXDP/jaFmoDoqKChnFxbK3UvYRjo+y/NEPM3oZAZWZFNx2Z4s4uKkBHNO1HcCMH4dUfvAzo+bHnCbylagjMT+bstClkBrxywveqaqU6O0timw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(376014)(52116014)(7416014)(1800799024)(18002099003)(56012099003)(38350700014)(921020)(11063799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?1GlGPqCbyGRyp8JKoc/vS8SJb59bWYMaXIEuHNTQhU7SIGr9KOJ8cm00LH/t?=
+ =?us-ascii?Q?kgypoFm2qkxV0cF7s3LAsQlrRhs8x4XuFgylgPnnhcnrB3K1qPu3ED/XVAPN?=
+ =?us-ascii?Q?eP4OhGM9T3r4KlnQ/HUOJEbh9Ea5n/OlgNROqCmScQ1NJPukPzhD/n3RXroG?=
+ =?us-ascii?Q?XlAzKDIAZ9xXt7JGgQtu5VnT1+DrQsAVUkVOZN5tYnpqxRk4o1wNPuVlFBMy?=
+ =?us-ascii?Q?+glsFpyNsOwEYl0SO0/dY9Ja9PrW54Lt1TTzsYdBwGr2OeO7OHMMxJHHBxew?=
+ =?us-ascii?Q?zrd+ei3UI76FJNVmycfOjmJHXGOIK1xR5vxuM/KCCRGcZAHHMAevQdJime+P?=
+ =?us-ascii?Q?TxWWgmls19LM6SWrFFdL3APJR8xMdYzPyejnxLxAzzNH3YVv/gGHNywEeVm8?=
+ =?us-ascii?Q?mGdOU+7xwnGqRtCozJRv+yl+m1aIUtZ9WpzaM1vBX9ZQADhfxi26MKyo8JE7?=
+ =?us-ascii?Q?16yNpRh7B66KBYYDf/JiV7JQMV8xUMop+l3C0auzylxke6/LaRHhmXvWXBKj?=
+ =?us-ascii?Q?AvhniJXHZDTH1gDuyI3u+ROM+JdTluw0e51EfFjeBLYL8oMwnPsr3bD5i0/X?=
+ =?us-ascii?Q?sqUrihF5ZTL19kqGmK6KJABRzdrD362T9HepVMKrj5spa+8atyKSYzMgJnK/?=
+ =?us-ascii?Q?fxMqcO8wmO40PL4BGmGMcFnpxPf6CFiq7q+DubGKDLRM1w6WCf4eZqfnVamJ?=
+ =?us-ascii?Q?Qe3clzKgYxjnn6KqvAVf0WBmpMEzqCWPbXiMFxf8WERqXD8kYodybGPszt7Z?=
+ =?us-ascii?Q?jclnXTo9pop1zxaPQwBJMis65dDciaEP07cPHFuhg2M8m/Z7lI4BFqY35WGr?=
+ =?us-ascii?Q?bP8QBMzU7UPPzo/BIGPebSXYLLX98rRWN92RevqAGEXYnxe8CNq0akf8BBPW?=
+ =?us-ascii?Q?W2Xg6iaRq+2vOIgxBpEUyNFp2DkcCRnjVT1G3Q/hzv24f8YRnJj06xQnxJC0?=
+ =?us-ascii?Q?bRqJ4IV8R3Z0PK4IgtrsAFwPbfaZYSCWdZ9OizTyYu41NGgu4zP0FcI6qfhy?=
+ =?us-ascii?Q?jAvwkVeS1w8w8AMxtI3DeoNjX0Pr6NgefJ50YjVEJdybqgxnQZAxAwq/YP9n?=
+ =?us-ascii?Q?9d5UST4vhE54p/o0uJRhk2dI8VTLK4QgxzCmlQab4AHFNvI4uCEAin5xWZq+?=
+ =?us-ascii?Q?eJBGVAgX7m7IPm+bWU4bIvfGnzSwe39NmswjiqQ/aChoclFsSSjv9JMHR7qh?=
+ =?us-ascii?Q?kvJoKG0wifPHzZL2vfjWd/XD/j8Lk+IJcSqhfzfVh/UiaK/3mSiDpYNwBgbR?=
+ =?us-ascii?Q?N+8/lhgSCXgJaE7vfVs/N/+jqgjU2ngLPWPc36EKqQeBIJ9NYuPY4HXCx8de?=
+ =?us-ascii?Q?hJ45u9tgjnsSXo1CBcrz3XXFaOZ0/BDKOg1wADwA9FVQbYEf8AyLcavYrKgN?=
+ =?us-ascii?Q?Kz57t9Nqw/sZPM2sIhFyM9cebX+DACZQZ0HehAInKdgQUhYy2cZgjwHRHC9Q?=
+ =?us-ascii?Q?gzvzhWRuFYfbPMcemXFQtjkUjDeru30HlSYutk5bo9YM/G6iGLSxeZO2tVRE?=
+ =?us-ascii?Q?2g13SZZRsX6Rvd+eGKHOd+icugyUfgb8hjdb7bZxqfeUJiHttEMt5Gaky18z?=
+ =?us-ascii?Q?rpyntqEGVN6PjcYdMUYBrrTC4mN481FOXZ+JABiHFgQUTWy8wxYfpupVaV/X?=
+ =?us-ascii?Q?wKW31sVk/La1D+DLYkTxa2n1nttJkivXUD9OhKGnDjqR1VAiN5qxublL3vfc?=
+ =?us-ascii?Q?MvhDoCIXb5hIG4+5qtlJLuZXAISmXZYwNWi47l1CbL+BRkGIIEFPiXGY1txJ?=
+ =?us-ascii?Q?VS/Oe7mUGA=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4526562b-6125-48ae-f5ae-08deb4ae9572
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 May 2026 07:25:06.0362
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: snQ32qS5c8rmHucTt+WRFwFEaQ/HnhMlEmXYp+jNATOUrFvFiafhqOYFzwvKcEBINRW7eHSaFhKFa2/Gg/d1mQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB10998
 
-Add VFIO_DEVICE_FEATURE_TPH_ST to allow userspace to manage PCIe TPH
-Steering Tag entries.
+This series addresses PHY initialization sequence issues for i.MX95 PCIe
+that were identified through careful review of the i.MX95 PCIe PHY Databook.
 
-SET: Program contiguous ST entries when ST table resides in TPH Capability
-     or MSI-X table. U32_MAX CPU ID clears the corresponding ST entry.
-GET: Retrieve ST values per CPU ID, only available in DS mode.
+The current implementation does not strictly follow the timing requirements
+specified in the PHY documentation for reference clock configuration and
+PHY reset sequencing. These violations can potentially lead to unreliable
+PHY initialization.
 
-Both operations are only valid when TPH is enabled on the device.
+Patch 1 ensures that the REF_USE_PAD configuration is applied before the
+PHY reset is toggled, as required by the Common Block Signals specification.
+Any change to ref_use_pad must be followed by a PHY reset assertion to take
+effect properly.
 
-Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
----
- drivers/vfio/pci/vfio_pci_core.c | 91 ++++++++++++++++++++++++++++++++
- include/uapi/linux/vfio.h        | 41 ++++++++++++++
- 2 files changed, 132 insertions(+)
+Patch 2 corrects the ref_clk_en signal timing by moving its manipulation
+into the reference clock enable function. This ensures the reference clock
+is stable before ref_clk_en is asserted and before the PHY reset is
+de-asserted, meeting the PHY's power sequencing requirements.
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 0d0140202280..13a22c1d6ea6 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1558,6 +1558,95 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
- 	return 0;
- }
- 
-+static int vfio_pci_core_feature_tph_st(struct vfio_pci_core_device *vdev,
-+					u32 flags,
-+					struct vfio_device_feature_tph_st __user *arg,
-+					size_t argsz)
-+{
-+	bool is_set = !!(flags & VFIO_DEVICE_FEATURE_SET);
-+	struct vfio_device_feature_tph_st tph_st;
-+	struct pci_dev *pdev = vdev->pdev;
-+	enum tph_mem_type mtype;
-+	int i, j, ret;
-+	u32 *cpus;
-+	u16 st;
-+
-+	guard(mutex)(&vdev->tph_lock);
-+
-+	ret = vfio_check_feature(flags, argsz,
-+				 VFIO_DEVICE_FEATURE_GET |
-+				 VFIO_DEVICE_FEATURE_SET,
-+				 sizeof(tph_st));
-+	if (ret <= 0)
-+		return ret;
-+
-+	if (!enable_unsafe_tph ||
-+		pcie_tph_enabled_mode(pdev) == PCI_TPH_ST_NS_MODE)
-+		return -EOPNOTSUPP;
-+	if (!is_set && pcie_tph_enabled_mode(pdev) != PCI_TPH_ST_DS_MODE)
-+		return -EOPNOTSUPP;
-+	if (is_set && pcie_tph_get_st_table_loc(pdev) == PCI_TPH_LOC_NONE)
-+		return -EOPNOTSUPP;
-+
-+	if (copy_from_user(&tph_st, arg, sizeof(tph_st)))
-+		return -EFAULT;
-+
-+	if (tph_st.count == 0 || tph_st.count > VFIO_TPH_ST_MAX_COUNT ||
-+		tph_st.flags > VFIO_TPH_ST_MEM_TYPE_PM)
-+		return -EINVAL;
-+	if (!is_set && tph_st.index != 0)
-+		return -EINVAL;
-+	if (is_set && (tph_st.index >= VFIO_TPH_ST_MAX_COUNT ||
-+		       tph_st.index + tph_st.count > VFIO_TPH_ST_MAX_COUNT))
-+		return -EINVAL;
-+
-+	cpus = memdup_array_user(&arg->data, tph_st.count, sizeof(*cpus));
-+	if (IS_ERR(cpus))
-+		return PTR_ERR(cpus);
-+
-+	mtype = tph_st.flags & VFIO_TPH_ST_MEM_TYPE_PM ? TPH_MEM_TYPE_PM :
-+							 TPH_MEM_TYPE_VM;
-+	if (!is_set) {
-+		for (i = 0; i < tph_st.count; i++) {
-+			ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);
-+			if (ret)
-+				goto out;
-+			cpus[i] = st;
-+		}
-+		goto out;
-+	}
-+
-+	for (i = 0; i < tph_st.count; i++) {
-+		if (cpus[i] == U32_MAX) {
-+			ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, 0);
-+			if (ret)
-+				goto out;
-+			continue;
-+		}
-+
-+		ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);
-+		if (ret)
-+			goto out;
-+		ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, st);
-+		if (ret)
-+			goto out;
-+	}
-+
-+out:
-+	if (!is_set && !ret) {
-+		if (copy_to_user(&arg->data, cpus,
-+			tph_st.count * sizeof(*cpus)))
-+			ret = -EFAULT;
-+	}
-+	if (is_set && ret) {
-+		/* Roll back previously programmed entries to 0 */
-+		for (j = 0; j < i; j++)
-+			pcie_tph_set_st_entry(pdev, tph_st.index + j, 0);
-+	}
-+	kfree(cpus);
-+	return ret;
-+}
-+
- int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 				void __user *arg, size_t argsz)
- {
-@@ -1576,6 +1665,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
- 	case VFIO_DEVICE_FEATURE_DMA_BUF:
- 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-+	case VFIO_DEVICE_FEATURE_TPH_ST:
-+		return vfio_pci_core_feature_tph_st(vdev, flags, arg, argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 5de618a3a5ee..aca39d4e5307 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -1534,6 +1534,47 @@ struct vfio_device_feature_dma_buf {
-  */
- #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
- 
-+/**
-+ * VFIO_DEVICE_FEATURE_TPH_ST - Get/Set PCIe TPH Steering Tag (ST) entries
-+ *
-+ * Provides userspace interface to manage PCIe TPH ST table entries.
-+ * This feature is only available when device TPH is enabled.
-+ *
-+ * Upon VFIO_DEVICE_FEATURE_SET:
-+ *   Program contiguous ST table entries from the starting @index.
-+ *   Valid only for hardware with ST table located in TPH Capability
-+ *   space or MSI-X table. If an entry CPU ID is specified as U32_MAX,
-+ *   the corresponding ST entry will be cleared. @index and @count define
-+ *   the contiguous entry range to be programmed.
-+ *   If any entry programming fails, the operation will roll back and
-+ *   clear all entries that were successfully programmed before the error.
-+ *
-+ * Upon VFIO_DEVICE_FEATURE_GET:
-+ *   Retrieve the ST value mapped to each given CPU ID in the @data array.
-+ *   Userspace fills @data with CPU ID array, the interface returns each
-+ *   CPU's corresponding ST value back in place.
-+ *   Valid only when TPH DS mode is enabled.
-+ *
-+ * @flags: Operation flags (VFIO_TPH_ST_MEM_TYPE_*).
-+ * @index: Starting ST entry index, only valid for FEATURE_SET.
-+ * @count: Number of contiguous entries to access.
-+ * @data: Array of CPU IDs for both SET and GET. On SET it programs ST for
-+ *        each CPU; on GET it returns the mapped ST value of each CPU.
-+ *
-+ * This feature is gated by enable_unsafe_tph module parameter.
-+ */
-+#define VFIO_DEVICE_FEATURE_TPH_ST	13
-+
-+struct vfio_device_feature_tph_st {
-+	__u32 flags;
-+#define VFIO_TPH_ST_MEM_TYPE_VM		(0U << 0)
-+#define VFIO_TPH_ST_MEM_TYPE_PM		(1U << 0)
-+	__u16 index;
-+	__u16 count;
-+#define VFIO_TPH_ST_MAX_COUNT		2048
-+	__u32 data[] __counted_by(count);
-+};
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
--- 
-2.17.1
+Together, these patches ensure proper PHY initialization sequence compliance
+and improve the reliability of PCIe operation on i.MX95 platforms.
+
+Changes in v2:
+Correct the register when configure REF_USE_PAD bit.
+Rebase to controller/dwc-imx6 branch of pci git repo.
+Collect the Reviewed-by tag.
+
+[PATCH v2 1/2] PCI: imx6: Configure REF_USE_PAD before PHY reset for
+[PATCH v2 2/2] PCI: imx6: Assert ref_clk_en after reference clock
+
+drivers/pci/controller/dwc/pci-imx6.c | 53 +++++++++++++++++++++++++++++++++++++++++++++--------
+1 file changed, 45 insertions(+), 8 deletions(-)
 
