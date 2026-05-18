@@ -1,151 +1,133 @@
-Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013069.outbound.protection.outlook.com [40.107.201.69])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB5C73FBB7D;
-	Mon, 18 May 2026 15:46:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.69
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779119208; cv=fail; b=dcXXtfShCJwPqdSDXNas/iD1ybMauTUtDpOoNH5aBk+9aAvNWmqB0IQ/mslTLUKpSwrZ9oPwKNvz+I/rRgh8h8Tot5UovcIttqgND91mXQMpj0qeXnI1xsYc63unpPko65iFLZKibTzLUKOtP2Abqr1DWXGzsLvn4PjxTyJlM3c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779119208; c=relaxed/simple;
-	bh=KPjvj9emmxpviieJ0oZD+xoD2E8SVItaZQ6AffDsyTQ=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=inbjvgNQkVSMuepneQN91mV7oRxKkPHEU1OEcWJDSb6pVR5o+5eWGrf6mD4Rx+NMyHtT/98rxr3rW7fOApQi9k5XqOECiOX1KL1TwjYizR7yNV3MOVuU1YpunlPVOuLYS3pqE7xT1k0qsoYlQ3Ix51HpPHXgO/NngoKvEKKNmMo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=pl1CfxI6; arc=fail smtp.client-ip=40.107.201.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C1F3F9F5E
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 15:53:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779119621; cv=none; b=aM2IzwhhUJAheuMydJlLWCkzRPBf1euppYCwfn0HHYjN1YA1B7ehLGsye2n763yw38HqzV1QHlf/dPyLHe76DqQjZrS/FcPb8o2HawLndwVUMxRp9FmFsj3gHG9cqZ3xNqJ94VZ5jIOxabfPuOMSrr7ydAxp3gHgzTAI9UVE1dk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779119621; c=relaxed/simple;
+	bh=ilxXJ6f6ocM13VA/URJIbBBqXtBkN2Q+ruqs2Cl8XYk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Y8LQwatbTLzouxTyzcbJs6uUkzNSzj8+LqP9PQ4RbDOhOt1JngOu+iu4z+HdEyyWXJKwcD4oN0VZR4gFHWVLUlNQPHEpqcr91x0aU/De2S65NXWsFH4R+Spi3ZnOWFsFgQzsEb9d9fZ9ZhPy5VDtgPMnA44+EUGIzis3LyE4HWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gooXQ9tM; arc=none smtp.client-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="pl1CfxI6"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=giLwvE3FXMwKhw5K84l+TmTL4D+7yv7REbJXRnSZkf0sMZ1SP3g1pCaSPm3jhAxFHEA/x/PAKVnwRTydm4m60ri1/Ti39GNz6WbJI/3sbHyu4pUZWTLyKB71wOleS/F/4Ba/FD4TkrohMcTbV7qn6VExbW3ZC2G3uL5qRSjSJ1jzWQZksiiX/fONrwQU7zf2NsdLaUklgs3SVpbzF94g3cDAY4ebLRrd0Mvf2cLk+vbmJ/rzRki17QlxpJGl5xSr9M51tJFuK6xgHdOdyIz5h0np216cMLRMmhCiwNhgT91WwyPdk+5nau9BTU3PqpSYoX6cJ5TIjv+JBdcd31VSVw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KPjvj9emmxpviieJ0oZD+xoD2E8SVItaZQ6AffDsyTQ=;
- b=ebv1KdNML0s+Sw2OCIhPtCH6nuAv7tmnAWPH1FQc2KGlaLm6k6UPCrcixD8UJkzzFS+nB/6fZZ4kJoJWcMWHnQ8WYqJZdK1kpq+9dqGXj7Hm7ZyRhjlEIwS+7Fqz15Tr7a4blHukZoP5NN7plVEQyTgvhDcMT8rkmbdKmqyFd0obvY30HRUUjmBGs6jMR9i0hHqugvpOf6o2akvo0BLEnZ7GpxDnB0MFA8sJzdLUzf0b7RHgCNbgE/B3ORobJRPChadvsn92WievKVhdJ8BmK83YQhO12gxxXZUcaJfMrzEB8eXET1Xyyb3kuZmmyNz4+f9PT6rJGXArW99+irr2ug==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KPjvj9emmxpviieJ0oZD+xoD2E8SVItaZQ6AffDsyTQ=;
- b=pl1CfxI645FLgWOhYA0rQMEOxLpVM78wyq0uYADpceBwQu1Ddc3www2DvaIa7Kg+GfOMM5xXRtsIRGxXp4G9LM/seb4c6/HVQxUo+OsTmxf8EZ7ANSoht9Z5k7qOUrXL80xzWt6HU8p0XFpb518KIvijLU1qvxJT7E/1OWBNHcIGFm/efV49GUtoYKzQ2Pg1Z9QJ0a1ts/iLAfEfXzKaMbGc+I6B6As9zFkPPil2sxu76+Xy2CA8J80jtUsNbW3MstcdxCd3H5W2T8ZAC94lCKagkneGMhaJoTD2BGArk0E4lyl6VV0z3fwHDisN3f0SQYEiqpcsvQYGfwAKgP2F3A==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by CY3PR12MB9577.namprd12.prod.outlook.com (2603:10b6:930:109::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.21; Mon, 18 May
- 2026 15:46:29 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0025.022; Mon, 18 May 2026
- 15:46:28 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 00:46:24 +0900
-Message-Id: <DILX46DSEV6A.22GRBTCULNEQL@nvidia.com>
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <aliceryhl@google.com>, <david.m.ertman@intel.com>, <ira.weiny@intel.com>,
- <leon@kernel.org>, <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-Subject: Re: [PATCH v3 15/27] rust: driver: update module documentation for
- GAT-based Data type
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-16-dakr@kernel.org>
-In-Reply-To: <20260517000149.3226762-16-dakr@kernel.org>
-X-ClientProxiedBy: TYCPR01CA0203.jpnprd01.prod.outlook.com
- (2603:1096:405:7a::12) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gooXQ9tM"
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-488a14c31eeso15065365e9.0
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 08:53:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779119612; x=1779724412; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=zmgE78suZlMwwBJChVhs0s2vjaTS32du2erStadTtvQ=;
+        b=gooXQ9tM/GQEQRs8OsgB52bzqkPnODTR/xxTtxJX7Qi87/5Y6v5lmiY5CxCW+ReCKl
+         Dt+cVV7oYneyVB7uPlgJ4abvdmzrv5AVq2nQGH1GxdHXok4NlpAOkKG0uzyLfsDidHb3
+         RGkKocbrqeNv5kjxFD6tabvxEkMzzrDBDSyxDm4SJQsKe4AT1h1b0G88HbbJ90AJAGbE
+         r6+z6uDDKrci6dVLE69QRbuEd8hjQSBX26Ys9guPengfpbf4AzaAilAe01I3qfg2yld3
+         w3Ut/LFpRffT8hcyCkmYVGpYwzS3XeoO1+MNgc03l2BmMeD8Iy6twnPsAeAFqc1Ub4Ou
+         dglg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779119612; x=1779724412;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zmgE78suZlMwwBJChVhs0s2vjaTS32du2erStadTtvQ=;
+        b=Y5USmoS2We7nfVQLdSrrPehdRGJnMtoBl174H8RD5YBQPUcTSsFolUETNSvWkHLnV6
+         kIPe0VXRSgAhyY+bcxb8EXVttRTnUgxZrL9mG5Phv/Fd/DFNgZFu1JGvTdOtH5ti71H2
+         s7dGf0RbEX2GfOkIBr/uFv71mkqkmKeCGcSfarmNfITZ6B+5tcLJWWhj/4NA7B8tn/B4
+         SH3GYTPWM73ZNeC6WxWuAytYUGqx61lEAQaZioTFA7xgUz+KWmlBeGAuop2y8mbFKb4H
+         mPWjd1Jmo3DtcaJ5P/Trdl4/TCmJpf9ZbZolZV9QF5qyNZXmHZPMKfp7i285oCRDJHzA
+         0aTg==
+X-Gm-Message-State: AOJu0Yzb3lP4WVQQp+0e4WWqt2ld/rciJvv1KN0HWU80uNQji+7sB+fF
+	7gWsTKCZPDp4vnNSJLdO8xvZAcKjJARrZz6qUOJUhsBwUujuR/31bkbO
+X-Gm-Gg: Acq92OEokdlP6ha+RG/kFBXF2yMQGZYor1TCCyndh0RQmOKp80fCPdShw6WfL34oIN6
+	z8AMyMmxxfsqSbxAIXOc/48zb3x5FMn6MVaLQts1UahLmfJNOemcUmr8/XnzUm9li5K+c/P1tTP
+	Kk48Png/cbwRH5GlfKDxRhSuQSTIe500FGAuxedwFAftYOgom0fdubqGshEStghiRKcaX9YyOU3
+	zubFlYnuaIIGo+UioINOGqdmkTa7u8f93NSew1NJZbDKzNoR6gG+BzCvFpEpu9L1U5/EmgMg6P4
+	yl1dp999ALB5rx43jiuq/P5pGQcQg+AWG20OCDsTFUsUnpe7d00vV/aHLGxhpn+UyCZ1blVmITG
+	AOYg20LpOWwKdsQzpDddDVZ2girM4ewa2k2O6ZcZ2TXipmvvI/iDyglk8RjScnUBZIR9FJtzwtY
+	tZHvnM9Kpq8UNv1GrbjAMuQ8r7mb5YC3ulm4gR8UIS7k2Yi0DQnbK2vEV8C9u02/CAOpcqaPoyE
+	ydF5d+7PynTvDQS+vmbl89g/ZBKwWNcsfhd5oyMzOZpV2zE
+X-Received: by 2002:a05:600c:4e46:b0:48a:75b9:5e07 with SMTP id 5b1f17b1804b1-48fe60d576dmr255690515e9.11.1779119612345;
+        Mon, 18 May 2026 08:53:32 -0700 (PDT)
+Received: from iku.Home ([2a06:5906:61b:2d00:2409:d26f:6d8b:b2cc])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48fe4c8344asm450054575e9.1.2026.05.18.08.53.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 May 2026 08:53:31 -0700 (PDT)
+From: Prabhakar <prabhakar.csengg@gmail.com>
+X-Google-Original-From: Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Prabhakar <prabhakar.csengg@gmail.com>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH v2 0/4] Add PCIe support for RZ/V2H(P) SoC
+Date: Mon, 18 May 2026 16:53:20 +0100
+Message-ID: <20260518155324.168948-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CY3PR12MB9577:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3d8f797f-b3e3-4e0f-584c-08deb4f49ffd
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|376014|7416014|366016|4143699003|11063799003|56012099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	NZMI1PfBJj4DqA/ECEQAMkNYstnVwLwibUsaIXVny3WABnnj7BvGwkYA5TrW9MC2eTepBcOw1sFTC5uMBxVLo5sHZC59ScLZz2vyaIrOSGLroVHmqqi+kQn0j/GprMTlhSyPaaIt5DOeAkl05yFzZBDSESQoyphly0MpWecCWd98f0NA7Ti1rGPCIZlGIcE+csRERnOg+5v3YYCEwhiCIT/BY0EYLHUe9K7ZyVFMWSLhafGmDKb6MHpiMQOYV+j9rVb8QFdogFi4lP1UKv4LDJdA5qlcmaTyehZmPNgcALasXTP/MLfJxm4cv6AeKiJCjj4cM9JY+5bfe9bsGjAQ9UKC+fI4Pnm954cdLoLxqjFIWgeiw8TvOb2FgOJEkhwrJ8SAfbHmYh/dC6IhPb73jIAsFo7x97mqY8drPSp83gAlutfv2ZJXdYz/gsPSSAHynTd+cvAcYsUMsoeCcgaRMmBzwO+4IpcJ7K2GqL12gE0RsleKKdbVHbA5tRnpE4KfckPQwuhB94Pak+P6N5S3c0OP8s7l6TE50Yn4IEOoIGUHkzUNjxbv73WtsNhG/NypJE1iayYFF3TzBEMfHX8KHY5yEjf3UL43WjOHC379rbqc8iXTb1hYr7/szesd91rd3AUvof47T8m+4xhfoxEd1N+jc1T+7zcBb5d0Do29LV78QKXWkkhYiewikJv+9Vmg
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(376014)(7416014)(366016)(4143699003)(11063799003)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?ZkVzMTRzK0k2N05OZEYwY3NLNUp3U2d2dmVKSG9YVWxOZDd2bU14REJkWDd5?=
- =?utf-8?B?YUFDYjBNVFRzK0ZxalBsRWo3bU1qUnBYWnFCT0xkZmQ3WERobUh1MzZjQlcz?=
- =?utf-8?B?bE1wQituWXErY3RqUmcvUjg4NEpKMkkxY3d2UlV5VzJzQmpYZ01XN0hFbDNW?=
- =?utf-8?B?cjhkbWp5TmEvV1VMZndlaVk1bUVMY2pqNW1wektic3dJYkcyMzhja0FhWjZF?=
- =?utf-8?B?Q0c0ZFhYQ295YzA2K2llb3dYRVlsMll4K0o0NkJHRjhaQTdxbUNLaXpuVE5X?=
- =?utf-8?B?VlVqa3BxNXcwdHZGci9aNW8raTB1eXhiY0djeCtzc1BCU0QxRVJKYzRuam05?=
- =?utf-8?B?SHZ1UDhhM0NVSmtUZ1RCa3c0TnpVeVROaDJtdEt2V2tpUDV2Q1R6UWduWW01?=
- =?utf-8?B?ZFd6eGhwZTFYdjB0a09YME92S3FyZHBScDJFSFZyaHV0MTVlZ0dMZElXQlRI?=
- =?utf-8?B?czF4N0dRZDdJVGo3bC9FSERXeVFPNjNzbVVHNVJlTVJFV1lBMEJrYmorZjJR?=
- =?utf-8?B?Tk5rZ0lpTWRDYmxDR1N1d3FBcGhVeHFpNkNRMnZnWW9pUVZsTVZSckZMYVE0?=
- =?utf-8?B?ZHdTc1Y1VGhFQkl5M0wxUzBESG1sZTVSN2R3RndQeW11ZXRaZUZ5UUpweXN0?=
- =?utf-8?B?Q05YYml6Sy9GZkNuOWtQYjBaVzlrOEw0Nk4wcjM2VmhnU25Od0ROd2d3NWZy?=
- =?utf-8?B?UUoyZTEyaXNyZitMVjBQY0NJNUNERGJjN2dUdHdTbmtiejdZcUxGaWRlbnB2?=
- =?utf-8?B?MGluZXZ2MWpXemthNlg2Y3AwM3NZbjcvRnZxRW05NW9yaWhPckVHWEJHNUc1?=
- =?utf-8?B?ZjFRU3FReFUxUHR3ZDNBNG1Dcm9weVM4V0JDU1ZjNlFIL1RrVHAvSVJmYnNB?=
- =?utf-8?B?dC8wYW1iOFdEQzNSVGdPWDdBdFd1V1NxRFd3azU0bGxwWmo2Zmtia0pwT3FJ?=
- =?utf-8?B?R0hzOExIMUp2ako2T3Z6TXFGM25FU3hoU3pkdVFyakJUdlk0T1RBQnhBYVZ2?=
- =?utf-8?B?eXBBdGhXcGpSUk9JL2NtVHFmV0p5VFpydldGVzlkQmdLL2d1bkRiMDd4b0Zw?=
- =?utf-8?B?M2xMWjN5RDMzVjBsQnNlMDB5Z0trNlR5aFRldFFMK2ZpYUlVUVpNWHYxa04z?=
- =?utf-8?B?RHdZdno3MHAyeWZ6Y093eUV4U0VzZDF4UFYrMm84cU1FYWY1ODBPMkVDN2tZ?=
- =?utf-8?B?OGZTOTNBSlBhV3hxNk1HWUpqTmF2NXU1cHY5K0tHVnI2ak9SSEFwMFF6dlpu?=
- =?utf-8?B?VEk3K3JIZU9sTnA5TWJQamJpeXUxZFNCUFAvYXZGTnV1TUxHZDRObm9JdUZJ?=
- =?utf-8?B?QW9HdVBnd0lZaG1RVUpnNFJBMU9uVHFFQ0gwYkh6bkoydnZ5YlU4bzYrRGFh?=
- =?utf-8?B?c3FXZ25mL09PdktDL0FpV0RpMEphRGNteThEZndrV0liVVpwUlprRGlEa3Jq?=
- =?utf-8?B?SXo5QkMybDV4MktURFZuWEZ5Zzlia083dGtzalJSZzhtTTdnSWN0bzFxRTlR?=
- =?utf-8?B?TGUyRytoOEFmMW5VWGJ6NUVRR1ZEd3BjdXp4engrZkZoMHVNVUNneUNPby9N?=
- =?utf-8?B?NHZVd2F1bnVDbmdVNUZjVTRldzVQUzZUSE82UVZHOEtWcUxvVnNoVUhPS1F4?=
- =?utf-8?B?WDJkYzJQU1hDME1iWHQzNmowSWRJM2pXY1dxYTI4S0Nwd2FNZEtsNHR5VFJN?=
- =?utf-8?B?R1J0NG1tOWxmRXNaVE5sUmpOdlp3b3RORUpsVi9jcC9vZkJLdU53anhBQmkw?=
- =?utf-8?B?ZWFoNFNRQVVMb1dnVndyaE1XRHY1aGppOExZTThabUk2MlBlS2p4WjdqMVdR?=
- =?utf-8?B?b0UrcXAzRmc2ZTFjaUt2aWZZMi9aTEltK2tHTXYvcXh0TVQwalRwMlZMVWxz?=
- =?utf-8?B?QmVEWm1LN25DT2daQVY3U2tiRWF3UE1XeW1MNFJTckNhSFFINmZ1dGlGaEN4?=
- =?utf-8?B?eGtJcVFuM0hzNjlRWVF6NzVkUGU2MzZSUnhjNU1ZekFDTWMrZ1VTeGpBa3RV?=
- =?utf-8?B?VTZLcFZsSktvaldhVnJxR3dwUjRwSzBJQ0RkVU5ScFVFV1ZYVFcrVEZEb1NX?=
- =?utf-8?B?ZVdKcVo4d2Y4cmQ1blJ2ODkwdEdBbkI3UUR2d1JWdlQ5Yy9OMzZCU3BTeDZp?=
- =?utf-8?B?L3QxZXNWOG4xZzFId2dlU3ptU2c2R0grRENnRGY3cnl6bGZ6b1pvS1FmOU5w?=
- =?utf-8?B?bU14ZVpXMmpSaVN5UGllQnVnOVhaVkQwdFo5TE9ldytpNW9sUHFCNm9xWHFF?=
- =?utf-8?B?a1ZTbzl1Vy83S2NBZys3VEdYMFlRZTdlaWY5QlF6T0t3dC9JaEJrS001Unht?=
- =?utf-8?B?aXh1bk5mNU1VNFZXaHBQOE1JMUlyTnBDWU1uQUpDLy9Gb3V5eGlnRjFDOHdv?=
- =?utf-8?Q?2QoXHGBQvswuUKQB89v12Sh3HocvLkRu5PHBjzCc9twCd?=
-X-MS-Exchange-AntiSpam-MessageData-1: vsMinfR2al6TMQ==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3d8f797f-b3e3-4e0f-584c-08deb4f49ffd
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 May 2026 15:46:28.4742
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: R8mx/3gJt+M1N1A2pTHIJo2+COo9tpch7nR1TiTqD80KJ7wTCefdqaBzQG/JnHHoKNs2BOTA3mR0hk/TtdW3Pw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY3PR12MB9577
+Content-Transfer-Encoding: 8bit
 
-On Sun May 17, 2026 at 9:01 AM JST, Danilo Krummrich wrote:
-> Now that all bus driver traits use type Data<'bound>: 'bound, update the
-> illustrative driver trait in the module documentation to reflect the GAT
-> pattern and lifetime-parameterized callbacks.
->
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+Hi all,
+
+This series adds support for the PCIe host controllers found on the
+Renesas RZ/V2H(P) SoCs. The RZ/V2H(P) controller includes additional
+features for PCIe lane control and supports multilink operation with
+two independent controllers.
+
+v1->v2:
+- Dropped RZ/V2N DT binding patch as it has been merged in the
+  pci/dt-binding branch.
+- Dropped un-necessary new line in schema.
+- Renamed RZG3S_PCIE_CHANNEL_ID* to RZG3S_PCIE_CONTROLLER_ID* for clarity.
+- Added locks to protect shared lane configuration state and
+  prevent concurrent access issues during probe.
+- Added cleanup action to release lanes on driver removal.
+- Reconfigured RZG3S_SYSC_FUNC_ID_LINK_MASTER in resume path.
+- Renamed num_channels to num_pcie_controllers for clarity.
+- Updated commit messages for clarity in patches 1-4.
+
+note, the dt binding patch applies on top of pci/dt-binding branch.
+
+Cheers,
+Prabhakar
+
+Lad Prabhakar (4):
+  dt-bindings: PCI: renesas,r9a08g045-pcie: Add RZ/V2H(P) support
+  PCI: rzg3s-host: Use shared reset controls for power domain resets
+  PCI: rzg3s-host: Prepare System Controller handling for multiple
+    controllers
+  PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
+
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  |  21 +-
+ drivers/pci/controller/pcie-rzg3s-host.c      | 229 ++++++++++++++++--
+ 2 files changed, 231 insertions(+), 19 deletions(-)
+
+
+base-commit: d2fc550dfe13eef91b065af7a12348ba4162ac04
+-- 
+2.54.0
+
