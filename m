@@ -1,135 +1,299 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fhigh-b8-smtp.messagingengine.com (fhigh-b8-smtp.messagingengine.com [202.12.124.159])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D9C1352C4E
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 17:06:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96B352494D8;
+	Mon, 18 May 2026 17:16:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.159
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779123976; cv=none; b=rCZIhNcgcUFnWRbBz50f9ApGnjpZs+FJrh89Y2apyIlrZ/ocde45lQc0qOzO/eXud1HWl1wc3AxrXDNSCJnoATNHZ9XX1/im3oxq5u/ELnLDBYx4F6W180Hhx964462ow8GnSpnivQflE/02mODaGvx9dFEq/mrIaFjcX3Le7oE=
+	t=1779124564; cv=none; b=SDqopOFxdM7RuWnuDdWh1GkiwEYM1x99skL2UWAl6QF2UnhBjpUtcOF+b7l5iSX6j9DVVxAhMjthdLrZ1OLnEVH/5/O0Oz85ZRy3CI+eKvTY+KRPGRnBAK3Kj/UCgEpgo856TRdipZGxz2ZecGl5Ohyv0uxRt/0xkSgoUDRH/wE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779123976; c=relaxed/simple;
-	bh=qACc7jkiN2tn8itG+iPm58U9NJ9vJrsA274Qf7Q9SVA=;
-	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=ckC2HVKSz/aBzupkXlvzsLUXfMkgLLD4oDOE9Whgpl+cqN8etmUc8kcHQEfdCb6k1+NHCMx/cnFqeyCDfr232Rp9BpacPbAWM90nkMelAbU0Ug/e6En7lkhYcZBxDlUPqtAwDI1jxK1ga+siRQO1G2+srFbMP0nIO+FZwIobkQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VDFZaCr8; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779124564; c=relaxed/simple;
+	bh=ltw+MBUsozEFsHhnuh3NDNvRxc/gxh9k/yfsr8FqJWU=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=eaWGmoFW9di9jscULC0ifXRC30p/Mebx5gOFzMXKZ+zySq7Ecp/ZDc8VVsy9c6z/qRrZXR9sBHQnSd3oxlM/FTD4hQcFUQS+DA0zfu1MGrfoyPf8fOxhl4Lgh/iLzK9F45YXLW9DH2J1Ehzxvz3bDAmySF3+EoqSCUCEc1ghZJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=yWPDVs08; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=poopsm07; arc=none smtp.client-ip=202.12.124.159
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VDFZaCr8"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-835386ff122so2703802b3a.3
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 10:06:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779123975; x=1779728775; darn=vger.kernel.org;
-        h=cc:to:subject:date:from:references:in-reply-to:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=zllnXd80rkp5aHt7G7/Ts91W3aw+U7xcISZlpRJwkn8=;
-        b=VDFZaCr8EfAQRle4XMus9cIfAxtfYiT2gib2oG62i1Jxid0hNgEHXi3CDFSl9Uj0mX
-         muUxHtwDs9Dv/YziEoyur44NZUaSn8Tl2pZZ9lJnOay64LDqoQFytBF5XQNPrM5wXUbu
-         5JIS6ksLSLAusVbfx6yFoctddOpldgoVj9w0t3YhKl+tZfzKJV9XVVpsGUEpZlZnE91h
-         BMeqwWUc1L1fYaURWEQ5lNMKo8EaCv8G77kaTTzbkeryVL4/bwgZsVlA6V90bKWpz5Nt
-         ZvqC5R+AQFb8n/vX8ICQBTXGlMEadaQKrOfojfkEaRjb9xmwBrcn40U7r2BLxlAgcunH
-         hDBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779123975; x=1779728775;
-        h=cc:to:subject:date:from:references:in-reply-to:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zllnXd80rkp5aHt7G7/Ts91W3aw+U7xcISZlpRJwkn8=;
-        b=kY+eaP/8DonIZhHmN7my2S3NQYCT0l2YrZNzgT42KqPoQJGawgmRO0yJemY0XBl0QO
-         3+XZDcVQQcuDAoYjCLiyLoaIFJuyCMJuZqhW1gdjxDhrYT8s1p9O+dQqWc1lNrtf/kpW
-         4noKJs4sb6TKpr4Utm42aPsYHaEhE/Z69m50y+jtnovn4HR7WxxOB9aMeCZmDh5zO20A
-         pm6cuNrdWFN6spjQsCwD0UxeOFwpqqXuCERKGOl/vntKUkDo4ESwjKdHxMBWbpRe0pwb
-         dkJYOf+ZqwSpc38n0RdNw4z4Yjaupd5n2MIDVBDGRD6mgOwOTnJujulXutKPTWhplljV
-         Zmgg==
-X-Forwarded-Encrypted: i=1; AFNElJ8FEA3gEPNvMt3oAt8VAf+OGw9k8i5gP7ewxEr47EkVCa/DjuLAf4kcFWvHGM2ccFHtJhMCR7xvrjw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy1HoY2homBhjj1e3I+KABRsiWRJmIubc44ms7PoSLWFZhu8z7x
-	Mz9kDGSH+gvEuNeFBtvQfvfylpBX0oIG830CS5GndaZu0QwXe9YQLYUdVgkqDHiq
-X-Gm-Gg: Acq92OFauzzPj7cSkugZNbVeLNkg0orEFkyUI2Ga8q9v1bLrloR17UDP5qaeqNEX+3x
-	o6oq2I10fjm9ZeIodcAH5i2bIV4m1Gyy9OI/juYRvemECkPRpRwYBwdhdbjQkdEWDL0mcudz+33
-	LIiq47bL58MmzPV7IO9ONjr9OojyTKwH1MLEE2DJ6wahY3xC5DmuduUImB2uopv2SHh4vYDomzY
-	AO9E9lhRVeXdOsIroJrtC21bLDcGXchXx0drhGfD7dSK3MR2kUkknWhuc2gfpy6dbDQ90/FF8xY
-	LbUUBHl1HKMvejsh+kMHe52ZHBXbvYmrn6GT3Kewd7xq9m4U5oOoYs9hwiR94+MQrOCNgWnyGqG
-	43VWL7ClQxzc+E9noYwf7fC1LUUobHdWHVudpK1krRY6qBMezPx3PVV4KEqSwFL9V8MTBr6EbWt
-	EvQYwjjqE6ngDQw933gEPM6Nf71u8LP4aOfRwx/+86XTSJvhZYQHBiMT5QGF3fd+zPp5s/WQc3y
-	mEqBKRZ7BdNsiVSXQ==
-X-Received: by 2002:aa7:88d1:0:b0:83d:b0a0:90e3 with SMTP id d2e1a72fcca58-83f33c344a1mr16612881b3a.31.1779123974543;
-        Mon, 18 May 2026 10:06:14 -0700 (PDT)
-Received: from 1.0.0.127.in-addr.arpa ([110.44.115.146])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-83f19c7ed3fsm14932377b3a.45.2026.05.18.10.06.08
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 18 May 2026 10:06:14 -0700 (PDT)
-Message-ID: <1a0c86ab264cdc1c79c917e984b90991af51d827.1779123847.git.shuvampandey1@gmail.com>
-In-Reply-To: =?utf-8?q?=3C0f97352506d8d813f70f441de4d63fcd5b7d1c3e=2E1779123?=
- =?utf-8?q?847=2Egit=2Eshuvampandey1=40gmail=2Ecom=3E?=
-References: =?utf-8?q?=3C0f97352506d8d813f70f441de4d63fcd5b7d1c3e=2E17791238?=
- =?utf-8?q?47=2Egit=2Eshuvampandey1=40gmail=2Ecom=3E?=
-From: Shuvam Pandey <shuvampandey1@gmail.com>
-Date: Mon, 18 May 2026 22:44:18 +0545
-Subject: [PATCH 2/2] PCI: meson: Add missing remove callback
-To: Jingoo Han <jingoohan1@gmail.com>,
-    Manivannan Sadhasivam <mani@kernel.org>,
-    Lorenzo Pieralisi <lpieralisi@kernel.org>,
-    =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-    Bjorn Helgaas <bhelgaas@google.com>,
-    Yue Wang <yue.wang@Amlogic.com>,
-    Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Rob Herring <robh@kernel.org>,
-    Kevin Hilman <khilman@baylibre.com>,
-    Jerome Brunet <jbrunet@baylibre.com>,
-    Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-    Fan Ni <fan.ni@samsung.com>,
-    Shradha Todi <shradha.t@samsung.com>,
-    Hanjie Lin <hanjie.lin@amlogic.com>,
-    linux-pci@vger.kernel.org,
-    linux-amlogic@lists.infradead.org,
-    linux-arm-kernel@lists.infradead.org,
-    linux-kernel@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="yWPDVs08";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="poopsm07"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 70DE27A00BC;
+	Mon, 18 May 2026 13:16:00 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-06.internal (MEProxy); Mon, 18 May 2026 13:16:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1779124560;
+	 x=1779210960; bh=0vhcXeLYKKSuo11LoXLfb6OBiyx8QacR2oJ/fQatqhU=; b=
+	yWPDVs08mFEQgMqDKRj3RuuiTCYVROe1tYyGHyg+wCtI/CuSCbYGla09ZhtFHevi
+	hfwjUiXdJF6F4kf9QOGfWiYp2hde6eDZ3FnMsgKRO16dOrbhH0sssJZhd16aG55U
+	magITZ+CSDB1Q81j0btwUl1k73all6u5yNPTUgd1TrVrP4uzVkJS3owOXk5Kdri5
+	59lYHzmIEXilegu0rGoitG20sMrxoDroWi2Ozgg7fXrIBNqlU5GmHKBUWSruTy+f
+	c++ycaLnASbQHOMKfXmvkVMPK/RNhDamgPIRf7rAQFdfIO2sT4bLVQozQeh7QrH1
+	QXM4UrwY/VZrz7xtr4B4MA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779124560; x=
+	1779210960; bh=0vhcXeLYKKSuo11LoXLfb6OBiyx8QacR2oJ/fQatqhU=; b=p
+	oopsm07eLdkzONWRFpQv5AQ13JK5aJ3LijHIoEEqOLmv+6emHB5/pJwwDhfiFGCK
+	ZL2Z1OVBQZESmjatU9yxh6vGliJx9ATjE2TA/KxWozrLIrlImTYK3GHGXKGns/nD
+	xOk4blBH61fwSa3gU0Onxl4ZdYlBRXHn2b1aVaaisXa5xdUX014IFm62gLHD6L8c
+	s0dhmBlA7y53Wlh43+oBEQnnDRfGBYRLyEmckEjAHWObtcFLnpT7raJrp0uNnY+y
+	Nqq3A34t+7awllfMdnDC4fvirEw+8fd2N1LLCuPT3IndzUIksMTbl57Pdl00b/jQ
+	5H3uMlaZ2qU+s7HXrG/gg==
+X-ME-Sender: <xms:T0kLal37qmAa7kJPRbJ9MbJ07lu1dGO_dBA3Mk39DRxgh5B63_7OhQ>
+    <xme:T0kLatm-_6viAm7rpt7YuF6dGzBWVjrjj2C-fp1bS0hBjUd979nL8pFFxsFFtGEKB
+    Vs-C-qGLXTedYmDthddjrAhdTIJP5iJuXsJ0flJVk0MIcbdswzCyw>
+X-ME-Received: <xmr:T0kLal_1fFQw1K79xJI9eByDtuqfgoZDp5M-pU2_SgXGnrIyQSL4R4j7ycY>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddufeelgeegucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
+    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
+    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepkeehjeeitefffeeuieetjedtje
+    ffvdelledvuedvffdvfeetgefhveekuedvfedvnecuffhomhgrihhnpehkvghrnhgvlhdr
+    ohhrghenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohephedpmhhouggvpehs
+    mhhtphhouhhtpdhrtghpthhtohepjhhtohhrnhhoshhmsehrvgguhhgrthdrtghomhdprh
+    gtphhtthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtoheplhhi
+    nhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuh
+    igqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopegrlhgv
+    giesshhhrgiisghothdrohhrgh
+X-ME-Proxy: <xmx:T0kLaiotONeXA1PvUobZhTag2dYdDMjyPVSI4BH5rwjGC3emrBZn-Q>
+    <xmx:T0kLauk-cICKyt_3hswYMUEdw0eajMbYnrTspwc0csgTrea-S5tkAQ>
+    <xmx:T0kLaphgjYyWQ5D2DAdo--yYRUVJ_ohHgQMatDoJ942RLt-sUFBclw>
+    <xmx:T0kLamcL3gF0Olr5TZB7TqxnWIZzfVydGuJtAYi-36HGMeqe5ezt3w>
+    <xmx:UEkLahvY-Y505ppXM4o1aGI1pjQKKTBDX6chArYlphhUCLDmELE0x1h4>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 18 May 2026 13:15:59 -0400 (EDT)
+Date: Mon, 18 May 2026 11:15:55 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH v4 2/3] PCI: Add soft reset method as last resort
+Message-ID: <20260518111555.6b1ce60d@shazbot.org>
+In-Reply-To: <20260518124836.460805-3-jtornosm@redhat.com>
+References: <20260518124836.460805-1-jtornosm@redhat.com>
+	<20260518124836.460805-3-jtornosm@redhat.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-meson_pcie_probe() powers on the PHY and registers the DesignWare host
-bridge with dw_pcie_host_init(), but the driver has no remove callback.
-On driver unbind or module unload, the driver core therefore proceeds to
-devres cleanup without first unregistering the host bridge or powering off
-the PHY.
+On Mon, 18 May 2026 14:48:34 +0200
+Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 
-Add a remove callback that deinitializes the DesignWare host bridge and
-powers off the PHY while device-managed resources are still valid.
+> Add a software-initiated "soft" reset method that attempts D3hot->D0
+> transition as an absolute last resort when all other reset methods
+> have failed.
+> 
+> Some devices incorrectly advertise NoSoftRst+ (blocking PM reset) but
+> the D3hot transition does provide sufficient reset for certain use cases,
+> particularly VFIO passthrough scenarios. This method provides a "better
+> than nothing" option when the device would otherwise have no reset
+> capability.
+> 
+> The method only becomes available when:
+> - pci_pm_reset() is unavailable (typically blocked by NoSoftRst+)
+> - pci_d3cold_reset() is unavailable (no platform _PR3 support)
+> - Device has PM capability (required for D3hot transition)
+> 
+> Extract the D3hot transition logic into a shared helper function
+> (pci_do_d3hot_transition) used by both pci_pm_reset and pci_soft_reset.
+> 
+> Reset hierarchy with this change:
+> 1. device_specific
+> 2. acpi
+> 3. flr
+> 4. af_flr
+> 5. pm (proper method, checks NoSoftRst)
+> 6. bus
+> 7. cxl_bus
+> 8. d3cold (requires _PR3)
+> 9. soft (NEW - D3hot without NoSoftRst check, absolute last resort)
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> ---
+> v4: Implements D3hot transition as last resort when pm/d3cold unavailable
+> v3: https://lore.kernel.org/all/20260513122349.268753-1-jtornosm@redhat.com/
+> 
+>  drivers/pci/pci.c   | 98 ++++++++++++++++++++++++++++++++++-----------
+>  include/linux/pci.h |  2 +-
+>  2 files changed, 76 insertions(+), 24 deletions(-)
 
-Fixes: 9c0ef6d34fdb ("PCI: amlogic: Add the Amlogic Meson PCIe controller driver")
-Signed-off-by: Shuvam Pandey <shuvampandey1@gmail.com>
----
- drivers/pci/controller/dwc/pci-meson.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+NAK.  This cannot happen as a general case, it will cause vfio-pci to
+report reset capabilities for essentially all devices, whether
+validated or not.
 
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index 0694084f6..c96e2244a 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -451,6 +451,14 @@ static int meson_pcie_probe(struct platform_device *pdev)
- 	return ret;
- }
+The suggestion was that for devices where this has proven "better than
+nothing", we could think about a device specific version of this,
+matching devices IDs, not a fall-through for any device.
+
+Given the "partial reset" nature of this, even on the target device, I
+still wonder though whether userspace cannot already handle this by
+forcing the power state through sysfs prior to assigning.  Thanks,
+
+Alex 
  
-+static void meson_pcie_remove(struct platform_device *pdev)
-+{
-+	struct meson_pcie *mp = platform_get_drvdata(pdev);
-+
-+	dw_pcie_host_deinit(&mp->pci.pp);
-+	meson_pcie_power_off(mp);
-+}
-+
- static const struct of_device_id meson_pcie_of_match[] = {
- 	{
- 		.compatible = "amlogic,axg-pcie",
-@@ -464,6 +472,7 @@ MODULE_DEVICE_TABLE(of, meson_pcie_of_match);
- 
- static struct platform_driver meson_pcie_driver = {
- 	.probe = meson_pcie_probe,
-+	.remove = meson_pcie_remove,
- 	.driver = {
- 		.name = "meson-pcie",
- 		.of_match_table = meson_pcie_of_match,
--- 
-2.50.1 (Apple Git-155)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 839903b59698..8dad386bd65d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4437,6 +4437,43 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
+>  	return ret;
+>  }
+>  
+> +/**
+> + * pci_do_d3hot_transition - Perform D3hot->D0 power state transition
+> + * @dev: Device to transition
+> + *
+> + * Common helper to perform D3hot->D0 transition for PM-based reset methods.
+> + * Handles IOMMU preparation, state transition, and waiting for device ready.
+> + */
+> +static int pci_do_d3hot_transition(struct pci_dev *dev)
+> +{
+> +	u16 csr;
+> +	int ret;
+> +
+> +	if (dev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	ret = pci_dev_reset_iommu_prepare(dev);
+> +	if (ret) {
+> +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &csr);
+> +	csr &= ~PCI_PM_CTRL_STATE_MASK;
+> +	csr |= PCI_D3hot;
+> +	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+> +	pci_dev_d3_sleep(dev);
+> +
+> +	csr &= ~PCI_PM_CTRL_STATE_MASK;
+> +	csr |= PCI_D0;
+> +	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+> +	pci_dev_d3_sleep(dev);
+> +
+> +	ret = pci_dev_wait(dev, "PM D3hot->D0", PCIE_RESET_READY_POLL_MS);
+> +	pci_dev_reset_iommu_done(dev);
+> +	return ret;
+> +}
+> +
+>  /**
+>   * pci_pm_reset - Put device into PCI_D3 and back into PCI_D0.
+>   * @dev: Device to reset.
+> @@ -4455,7 +4492,6 @@ static int pci_af_flr(struct pci_dev *dev, bool probe)
+>  static int pci_pm_reset(struct pci_dev *dev, bool probe)
+>  {
+>  	u16 csr;
+> -	int ret;
+>  
+>  	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
+>  		return -ENOTTY;
+> @@ -4467,28 +4503,7 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+>  	if (probe)
+>  		return 0;
+>  
+> -	if (dev->current_state != PCI_D0)
+> -		return -EINVAL;
+> -
+> -	ret = pci_dev_reset_iommu_prepare(dev);
+> -	if (ret) {
+> -		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+> -		return ret;
+> -	}
+> -
+> -	csr &= ~PCI_PM_CTRL_STATE_MASK;
+> -	csr |= PCI_D3hot;
+> -	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+> -	pci_dev_d3_sleep(dev);
+> -
+> -	csr &= ~PCI_PM_CTRL_STATE_MASK;
+> -	csr |= PCI_D0;
+> -	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
+> -	pci_dev_d3_sleep(dev);
+> -
+> -	ret = pci_dev_wait(dev, "PM D3hot->D0", PCIE_RESET_READY_POLL_MS);
+> -	pci_dev_reset_iommu_done(dev);
+> -	return ret;
+> +	return pci_do_d3hot_transition(dev);
+>  }
+>  
+>  /**
+> @@ -4530,6 +4545,42 @@ static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+>  	return pci_set_power_state(dev, PCI_D0);
+>  }
+>  
+> +/**
+> + * pci_soft_reset - Software-initiated reset via D3hot as last resort
+> + * @dev: PCI device to reset
+> + * @probe: if true, check if soft reset is supported; if false, perform reset
+> + *
+> + * Attempt a software-initiated reset via D3hot->D0 transition as an absolute
+> + * last resort when all other reset methods have failed. This method only
+> + * becomes available if the device has PM capability, pci_pm_reset() is blocked
+> + * (typically by NoSoftRst+), and pci_d3cold_reset() is not available.
+> + *
+> + * Some devices incorrectly advertise NoSoftRst+ but D3hot transition does
+> + * provide sufficient reset for certain use cases (e.g., VFIO passthrough).
+> + * This method provides a "better than nothing" option when the device would
+> + * otherwise have no reset capability.
+> + *
+> + * Returns 0 if device can be/was reset this way, -ENOTTY if a better reset
+> + * method is available (pm or d3cold) or device lacks PM capability, or other
+> + * negative error code on failure.
+> + */
+> +static int pci_soft_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	if (pci_pm_reset(dev, true) == 0)
+> +		return -ENOTTY;
+> +
+> +	if (pci_d3cold_reset(dev, true) == 0)
+> +		return -ENOTTY;
+> +
+> +	if (!dev->pm_cap)
+> +		return -ENOTTY;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	return pci_do_d3hot_transition(dev);
+> +}
+> +
+>  /**
+>   * pcie_wait_for_link_status - Wait for link status change
+>   * @pdev: Device whose link to wait for.
+> @@ -5105,6 +5156,7 @@ const struct pci_reset_fn_method pci_reset_fn_methods[] = {
+>  	{ pci_reset_bus_function, .name = "bus" },
+>  	{ cxl_reset_bus_function, .name = "cxl_bus" },
+>  	{ pci_d3cold_reset, .name = "d3cold" },
+> +	{ pci_soft_reset, .name = "soft" },
+>  };
+>  
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1ca7b880ead7..bcd2987b868b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -51,7 +51,7 @@
+>  			       PCI_STATUS_PARITY)
+>  
+>  /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
+> -#define PCI_NUM_RESET_METHODS 9
+> +#define PCI_NUM_RESET_METHODS 10
+>  
+>  #define PCI_RESET_PROBE		true
+>  #define PCI_RESET_DO_RESET	false
 
