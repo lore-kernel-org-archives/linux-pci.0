@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A11EF146A66
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 08:14:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D00B3E0759
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 08:20:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779092083; cv=none; b=CYpKfi5XGYCEWwalWF58gO64E6aYodmMTpL1Nt0E9DCYUyRhVFqCu7lu52thWNBAIIqkBrnQDhPgz9xItWJK8l/+6NPJacbBHrX/owEjGYoUtxY/PYImsm4/9a1LLZZnF+bCvNt+shpT7M3iPgpq6n79IUKN87MP5gFx6yPl3JM=
+	t=1779092423; cv=none; b=apojaJcH6zItFbqAn77JmWFBOsT5A+Ww53psc/6zVFqvNHVc1Yu1eRWGAGhLEqOzVqwo1kQS/7tRrTBtwdbAUtDmBM9KjgZNwxvWj/DdwBBGwoAHKFZ/atipv4LRC1gWXwSLaGSn4mbSgdXGcxXhQhuUgbUqhSNuyh+z9que3No=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779092083; c=relaxed/simple;
-	bh=Ssc49JI/u9fqeDRpaZWEcr/nzFG7y4jetbvMexFQocY=;
+	s=arc-20240116; t=1779092423; c=relaxed/simple;
+	bh=FurP3HEQ9b9LHdO+CXg7i/LiT5Ml3ld200d24ik4tk8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=maCnG5536ZYqXob0ACIJPRkDwoKhDdBsi0cxhqL81BJ7V7wmBmUF+Jd4tkNZOhyCv7Zv6fNht8p0A5PbYyyTz09OgU7wpoJFchN1TylUoYCsa0AVGXrV7cOI2HleyxFuyrtX3OB8Ru8n69EQ3BQ12Ysv0Om8U6wPixrifI8Kntk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qe/fAfkg; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=jcPaO0y+v+b037U6/nXAawe8MxLdlwAl6hfQEeD17tDhW8aL4zi9PFsjhtZ2sDNKMwRk/tRtf+vkMtvoHdHuVtw33IEbo22oq/ViJos7kjbPk+cdMc3bXrbOvJ/JtNijOY/fDGga6xaWXzIEIip0WQDyaJ2IbDc2nN4xEMpiAF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E8VzRWfI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qe/fAfkg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 295C1C2BCB7;
-	Mon, 18 May 2026 08:14:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E8VzRWfI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F4229C2BCB7;
+	Mon, 18 May 2026 08:20:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779092083;
-	bh=Ssc49JI/u9fqeDRpaZWEcr/nzFG7y4jetbvMexFQocY=;
+	s=k20201202; t=1779092423;
+	bh=FurP3HEQ9b9LHdO+CXg7i/LiT5Ml3ld200d24ik4tk8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=qe/fAfkgU5BxvN62RAqhhqVfCbp0RfUVV4vmbAwMHIGkhayBf1S7Xsh5NmHI6jaCn
-	 vShyA4YfOUKx+ILnRi0Pc4ZdYfrjOlbrOBQdc5ThzPyJMBHtuL9m7ZrsESv1AhSgpf
-	 CLkmkWWHxqqgY0aYGzQ0EErCW2i7GIe5ajW4NfxmBJe7w2xbspTWMurfxbzfZdxki5
-	 8JEqCJl9Vp7fulk1VmGx6mkFoW0dLY1xiD0QXL9bUbVmripbUdNzFz5g+mpg9k2R36
-	 a5uI3xqP6HZUMuI3TKAKOMZLMU8Meq44djcQCq4/eq1NWosmwduNwZF8Qy1b2rt6nA
-	 ypg/xUZgfxOlA==
+	b=E8VzRWfIuz2gxpz/5L+hEaJsK01wu6jxOZUqeMAh7xgBX9u/1WeWq7MZaFFxUwYI3
+	 jiQCtW0VjSPwmJ0WGwrKwnqx7qytSdk0o0wRDgnq7b88ESkXv6MJ91zqg+RwEu+r99
+	 D8TZ0YZQxl+R5JLqQzBTtRLcQxC4pIWh0F3bKclyl3M16OpTrCA/QzkcA9BXnR+3TY
+	 VwVsEt/2rfs154rYBZQV0KkfsTUWLF0aNJrchLKdiIHHO+tJsOFajcqv87QSxkgP6d
+	 OL1l5rDg6WridJ1+BiUxrPKF0fRyL4WWJdQ+SDKeGCn3YcyqSJTz3aUgw69a/9RFhk
+	 +/mTbP4FyUkWQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v11 3/5] PCI/TPH: Add pcie_tph_enabled_mode() helper
+Subject: Re: [PATCH] PCI: meson: Propagate devm_add_action_or_reset()
+ failure
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260518071701.25177-4-fengchengwen@huawei.com>
-References: <20260518071701.25177-4-fengchengwen@huawei.com>
+To: "Shuvam Pandey" <shuvampandey1@gmail.com>
+Cc: neil.armstrong@linaro.org, linux-amlogic@lists.infradead.org, linux-pci@vger.kernel.org
+In-Reply-To: <177909148011.9588.6639767953842842291@gmail.com>
+References: <177909148011.9588.6639767953842842291@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 18 May 2026 08:14:42 +0000
-Message-Id: <20260518081443.295C1C2BCB7@smtp.kernel.org>
+Date: Mon, 18 May 2026 08:20:22 +0000
+Message-Id: <20260518082022.F4229C2BCB7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,74 +46,63 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] `pcie_tph_enabled_mode()` conflates the "disabled" state with th=
-e valid `PCI_TPH_ST_NS_MODE` (No ST Mode), returning 0 for both.
+- [High] Missing `.remove` callback or `.suppress_bind_attrs =3D true` leav=
+es PCI subsystem and PHY active after driver unbind.
 --
 
-commit 054f3de083c771d0143aa6293e77e165e4c44a41
-Author: Chengwen Feng <fengchengwen@huawei.com>
+commit fde9e1cd9d05730f72b074fa8edf3a1233d11384
+Author: Shuvam Pandey <shuvampandey1@gmail.com>
 
-PCI/TPH: Add pcie_tph_enabled_mode() helper
+PCI: meson: Propagate devm_add_action_or_reset() failure
 
-This commit adds a helper to query the enabled TPH mode on a PCI device,
-useful for drivers like VFIO-PCI that need to validate TPH state.
+This commit updates meson_pcie_probe_clock() to check the return value
+of devm_add_action_or_reset(). If it fails, the error is returned so
+that the probe error path can unwind normally.
 
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index ba31b010f67ad..91c1e83410a3e 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-[ ... ]
-> @@ -451,6 +451,18 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
->  }
->  EXPORT_SYMBOL(pcie_enable_tph);
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/control=
+ler/dwc/pci-meson.c
+> index 0694084f612b7..8d495bcc3a41a 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -204,7 +204,9 @@ static inline struct clk *meson_pcie_probe_clock(stru=
+ct device *dev,
+>  		return ERR_PTR(ret);
+>  	}
 > =20
-> +/**
-> + * pcie_tph_enabled_mode - Get current enabled TPH mode
-> + * @pdev: PCI device
-> + *
-> + * Return the enabled TPH mode (IV/DS) or 0 if disabled.
-> + */
-> +int pcie_tph_enabled_mode(struct pci_dev *pdev)
-> +{
-> +	return pdev->tph_enabled ? pdev->tph_mode : 0;
+> -	devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
+> +	ret =3D devm_add_action_or_reset(dev, meson_pcie_disable_clock, clk);
+> +	if (ret)
+> +		return ERR_PTR(ret);
 
-Will returning 0 when TPH is disabled cause issues for generic callers
-trying to differentiate between a disabled state and an active "No ST Mode"?
+This isn't a bug introduced by this patch, but could this driver be unbound
+via sysfs, triggering a use-after-free?
 
-Since PCI_TPH_ST_NS_MODE is defined as 0, 0 is a valid active TPH mode
-supported and enabled via pcie_enable_tph(pdev, 0).
+The meson_pcie_probe() function registers the PCI host controller via
+dw_pcie_host_init(&pci->pp) and powers on the PHY via meson_pcie_power_on().
 
-If a generic driver uses this helper as a boolean check, for example:
+However, the driver does not implement a .remove callback to call
+dw_pcie_host_deinit() and meson_pcie_power_off(), nor does it set
+.suppress_bind_attrs =3D true in its platform_driver struct.
 
-    if (pcie_tph_enabled_mode(pdev))
-        pcie_disable_tph(pdev);
+If the driver is unbound via /sys/bus/platform/drivers/meson-pcie/unbind,
+the device core will trigger devres cleanup. This frees the mp structure,
+unmaps IO memory, disables clocks, and releases resets.
 
-it will incorrectly evaluate to false for NS mode, failing to properly
-disable TPH.
+Because the PCI subsystem is never explicitly unregistered via
+dw_pcie_host_deinit(), the PCI core retains references to the destroyed root
+bus and freed structures.
 
-Could this return a negative error code (e.g., -EINVAL or -ENODATA) when TPH
-is disabled to avoid aliasing an active state with the disabled state?
+Can a subsequent access by the PCI subsystem or userspace cause a
+use-after-free and system crash?
 
-> +}
-> +EXPORT_SYMBOL(pcie_tph_enabled_mode);
-> +
-[ ... ]
-> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-> index 5772d48ea4446..28d0fa7621465 100644
-> --- a/include/linux/pci-tph.h
-> +++ b/include/linux/pci-tph.h
-[ ... ]
-> @@ -42,6 +43,8 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *d=
-ev,
->  static inline void pcie_disable_tph(struct pci_dev *pdev) { }
->  static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
->  { return -EINVAL; }
-> +static inline int pcie_tph_enabled_mode(struct pci_dev *pdev)
-> +{ return 0; }
+Additionally, the PHY is left permanently powered on without its required
+clocks. Should the driver either implement a proper teardown in a .remove
+hook or prevent unbinding by setting .suppress_bind_attrs =3D true?
 
-Does this stub need to be updated to match as well if a negative error code
-is used for the disabled state?
+> =20
+>  	return clk;
+>  }
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260518071701.2517=
-7-1-fengchengwen@huawei.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/177909148011.9588.6=
+639767953842842291@gmail.com?part=3D1
