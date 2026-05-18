@@ -1,122 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8556A3F5BD9
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 13:27:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578D7311C11
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 13:49:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779110862; cv=none; b=lnQwEiSSxa2UY/Kchc8cxx/YmRlzE/R+3lGSa1wEfV/tsb8xEUFkuSOPvajkbtI3lga3iUOEagZL6rSx7Vj1zIrGYPZe8eLnO5lKIFZzsXsPVM3fYmFs7t3BbKSXZvnx/lm4jwlgZ84ReodOKGAh+DDTirHWy+RNoDrHBqJBBro=
+	t=1779112140; cv=none; b=Sm9cwLZ4HSKBCJEZAGlE8cbuenrjuTp+xs00ADRY7ErBBIPOlHIC7MH3j2Gywot3OdRDSyuloXHC+UzOykzhLgExBRTGrLmrabsOUG5D5pssM6mFq7adtiUwHAOc3ptPlCK8bt5MLkrc8zpLl04I3LAdFmwsQlXxOe3/AJloL7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779110862; c=relaxed/simple;
-	bh=H156xECZKMyfkA+3Nd3RTpikNosqoW2RefcphARjSrU=;
+	s=arc-20240116; t=1779112140; c=relaxed/simple;
+	bh=oI0IOMsaL6X+6wbd1vI4T6tSbewf5q1qz7CMDoAwhe0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=k0XBxiFI9hSA895DB6r/6C3h3Vt8FFpComXY5EhqmZ90Arl6sSLimckCqVDYkpy02k9sQn5P36lhD7x6Dhoh9IW1z47XFDtCbZfzQYvVLBqYH382tos/SHIkPvpHPfZSvYLV6IwgC2MPTi4MUP4PqS2WpxrnjRS/hKZe86HKR8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ra/6vALy; arc=none smtp.client-ip=10.30.226.201
+	 Message-Id; b=s8+RmlloeAwChFYtQNIDyZuex1IqbxQSj2Pb7twgKnUpRrPBnc4PO2SvLaiMTb2M+XWS4liL8J/Tc76Z5nhKHsCPLOShbeY6KBUmuEx6GI5tK8nLjug9VgVWKKG0nOZ01yuodOG1wr1q51/X/5DBmOXu4fP0GAsw7HlnyrZKS14=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=k4P7q5lj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ra/6vALy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 107D1C2BCB7;
-	Mon, 18 May 2026 13:27:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="k4P7q5lj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2033C2BCB7;
+	Mon, 18 May 2026 13:48:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779110862;
-	bh=H156xECZKMyfkA+3Nd3RTpikNosqoW2RefcphARjSrU=;
+	s=k20201202; t=1779112139;
+	bh=oI0IOMsaL6X+6wbd1vI4T6tSbewf5q1qz7CMDoAwhe0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=Ra/6vALyIv5Kah9nEZTsmwyydwMTElh9B8Tmrhi9cz74m6Q4ijFBoZWDXQNokHrKo
-	 +GVjx7fx+VzSENA1Gi39V8ccUElu/81uKsmk1060dhvCrLmREBxOwO9MReV1uEIYKz
-	 kzT4MN+RYDxgIoq4IRoKEGCNEiCl2WTbMkO92N34Hct4DZc9b1ACrtTCLgb9F52BKn
-	 MTTmURMw/fTwOK98xvbzbflhBj7rfn8LROpVm1rneW6A8uQuM2mncnhYZJWX/N7izx
-	 7lklEPW3hwbC9rRxV2sMjZbG4gytUmPxAbbK0n4vb5/xLcFHekfrfVSGI8HdCSdN1y
-	 n9Ojsnnk+zOzA==
+	b=k4P7q5lj3XBOZyQSyrztLN2j/ECU34opAfRCsQQS/oEWp2y5ues8uX8Vb1mOI2Pca
+	 5S9iO9S8hCYeCX+Wj06qocGiu4aW+ZGBbp3XzKifC0Cs5QrGudg/vaUjvEcQcQ/dtH
+	 7TbmYfPvhMsHlOYhRSYx0zN2MFR7If5+ASVFx/IpGwz//A6JTjd5kPX/I8JMbrpk1X
+	 FjeITG+zICf3IvrJ7mKbqZk/L3V/TocsjsIzg8uCubc4b8t8askq5vtu45YchXwv7b
+	 bjQFD6f8qma475jcxdGjQE0Xf1qPjf1Rom9Vh96NvyvTViGpcawG9atLPHZ0QYbiWq
+	 ldG424POWDX4Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 1/3] PCI: Add d3cold as general reset method
+Subject: Re: [PATCH v4 2/3] PCI: Add soft reset method as last resort
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260518124836.460805-2-jtornosm@redhat.com>
-References: <20260518124836.460805-2-jtornosm@redhat.com>
+In-Reply-To: <20260518124836.460805-3-jtornosm@redhat.com>
+References: <20260518124836.460805-3-jtornosm@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 18 May 2026 13:27:41 +0000
-Message-Id: <20260518132742.107D1C2BCB7@smtp.kernel.org>
+Date: Mon, 18 May 2026 13:48:59 +0000
+Message-Id: <20260518134859.C2033C2BCB7@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Critical] Missing IOMMU preparation and completion calls in the `pci_d3c=
-old_reset` flow.
-- [High] Missing wait for device readiness (CRS polling) after transitionin=
-g from D3cold back to D0.
-- [High] Bypassing device quirks and user constraints (`dev->no_d3cold` and=
- `dev->d3cold_allowed`) for D3cold transitions.
+- [Critical] pci_soft_reset() falsely reports a successful reset for NoSoft=
+Rst+ devices, destroying hardware isolation guarantees for VFIO passthrough.
+- [High] pci_soft_reset() bypasses the PCI_DEV_FLAGS_NO_PM_RESET quirk, for=
+cing unprotected hardware power state transitions on vulnerable devices.
 --
 
-commit 6ccb7429bcb1b8c8a16f329c1b8caf009c316653
+commit 9f864e1927975542a72967bb27f8a02e42ade61b
 Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: PCI: Add d3cold as general reset method
 
-This commit adds a new PCI reset method using D3cold power cycling for
-single-function devices. It utilizes ACPI _PR3 power resources to physically
-cut power to the device.
+PCI: Add soft reset method as last resort
+
+This commit adds a software-initiated reset method that attempts a D3hot to=
+ D0
+transition as a last resort when all other reset methods fail. It extracts =
+the
+transition logic into a shared helper function used by both the standard po=
+wer
+management reset and the new fallback soft reset.
 
 > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f7cfcc000901..839903b596982 100644
+> index 839903b596982..970928d09fe19 100644
 > --- a/drivers/pci/pci.c
 > +++ b/drivers/pci/pci.c
-
 [ ... ]
-
-> +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+> @@ -4491,6 +4474,38 @@ static int pci_pm_reset(struct pci_dev *dev, bool =
+probe)
+>  	return ret;
+>  }
+> =20
+> +/**
+> + * pci_pm_reset - Put device into PCI_D3 and back into PCI_D0.
+[ ... ]
+> +static int pci_pm_reset(struct pci_dev *dev, bool probe)
 > +{
-> +	int ret;
+> +	u16 csr;
 > +
-> +	if (dev->multifunction)
+> +	if (!dev->pm_cap || dev->dev_flags & PCI_DEV_FLAGS_NO_PM_RESET)
+> +		return -ENOTTY;
+[ ... ]
+> @@ -4530,6 +4545,42 @@ static int pci_d3cold_reset(struct pci_dev *dev, b=
+ool probe)
+>  	return pci_set_power_state(dev, PCI_D0);
+>  }
+> =20
+> +/**
+> + * pci_soft_reset - Software-initiated reset via D3hot as last resort
+[ ... ]
+> +static int pci_soft_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	if (pci_pm_reset(dev, true) =3D=3D 0)
 > +		return -ENOTTY;
 > +
-> +	if (!pci_pr3_present(dev))
+> +	if (pci_d3cold_reset(dev, true) =3D=3D 0)
+> +		return -ENOTTY;
+> +
+> +	if (!dev->pm_cap)
 > +		return -ENOTTY;
 > +
 > +	if (probe)
 > +		return 0;
-
-Could this transition devices into D3cold even if they have the state
-explicitly disabled via quirks or user constraints?
-
-Should this check dev->no_d3cold and dev->d3cold_allowed before proceeding
-with the transition?
-
 > +
-> +	if (dev->current_state !=3D PCI_D0)
-> +		return -EINVAL;
-> +
-> +	ret =3D pci_set_power_state(dev, PCI_D3cold);
-
-Does this reset method need to pause IOMMU fault handling and wait for
-pending DMA transactions before dropping physical power?
-
-Other reset methods like pci_pm_reset() call pci_dev_reset_iommu_prepare()
-before performing the hardware reset. Is similar synchronization required
-here to prevent IOMMU faults?
-
-> +	if (ret)
-> +		return ret;
-> +
-> +	return pci_set_power_state(dev, PCI_D0);
+> +	return pci_do_d3hot_transition(dev);
 > +}
 
-Does the device require time to reinitialize its link and internal state
-after returning to PCI_D0?
+Does this sequence introduce a regression by bypassing the
+PCI_DEV_FLAGS_NO_PM_RESET quirk?
 
-The generic reset handler will immediately invoke pci_dev_restore() after
-this returns. Should this function call pci_dev_wait() to check for
-Configuration Request Retry Status (CRS) clearance, similar to how
-pci_pm_reset() waits?
+When pci_pm_reset() is called with probe set to true, it returns -ENOTTY if
+the device has the PCI_DEV_FLAGS_NO_PM_RESET flag set. Since -ENOTTY is not=
+ 0,
+pci_soft_reset() will proceed and unconditionally execute
+pci_do_d3hot_transition().
 
-Also, if pci_dev_reset_iommu_prepare() is needed earlier in this function,
-should pci_dev_reset_iommu_done() be called here before returning?
+Could this force a power state transition on vulnerable devices that were
+explicitly blacklisted from power management resets?
+
+Additionally, does bypassing the NoSoftRst check globally introduce a
+regression in device sanitization for compliant hardware?
+
+The PCI specification defines the NoSoftRst bit to indicate that a device
+retains its internal state during a D3hot to D0 transition. If a compliant
+device correctly implements NoSoftRst set to 1, this fallback method will
+falsely report a successful reset without actually scrubbing the device
+context.
+
+Since security boundaries like VFIO passthrough rely on pci_reset_function()
+to guarantee complete device sanitization between VMs, can this global
+fallback allow state contamination or data leaks?
+
+Would it be safer to handle devices that incorrectly advertise NoSoftRst via
+device-specific quirks instead of a global bypass?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260518124836.4608=
-05-1-jtornosm@redhat.com?part=3D1
+05-1-jtornosm@redhat.com?part=3D2
