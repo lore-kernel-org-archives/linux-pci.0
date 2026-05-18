@@ -1,175 +1,151 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from CH4PR04CU002.outbound.protection.outlook.com (mail-northcentralusazon11013069.outbound.protection.outlook.com [40.107.201.69])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 581904F5E0;
-	Mon, 18 May 2026 15:46:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779119190; cv=none; b=pQeo5YlXJRi8hpW1eRjSlQRFcVJq4rwuHpLJXTwL+Dy0drB/ABF3NTEuLeuzdxdQzV7splxo/jxL9zXdyx6LlNtMukPBEIj54HQorvBz/gi+EDpeM3bG3UR+qONybVt6wVY5dwkIHiukFE63rpjdKfIQ74y7lfcdGpZddxf38rU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779119190; c=relaxed/simple;
-	bh=AjL8N2LVB/OojDQzv9xLNPYHoiSC52XQwwBwyjGPaZc=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Wz47uap9KV8jhcXIBc9sJDoXkk7owEY6dpz5zIbEeabqwMbngd0rrTlPirnQDUWeaTI7WfWhbAPhHddrO+EdlT8eejOT3AVIuIr4ntWjdhsAf40kDQqkBsrD8izROkiUIqm/Y0FQRJ/LiRJI/fdccLEBMy0/xVTdf/2qYPPX4iw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=DaZ69NTy; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB5C73FBB7D;
+	Mon, 18 May 2026 15:46:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.201.69
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779119208; cv=fail; b=dcXXtfShCJwPqdSDXNas/iD1ybMauTUtDpOoNH5aBk+9aAvNWmqB0IQ/mslTLUKpSwrZ9oPwKNvz+I/rRgh8h8Tot5UovcIttqgND91mXQMpj0qeXnI1xsYc63unpPko65iFLZKibTzLUKOtP2Abqr1DWXGzsLvn4PjxTyJlM3c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779119208; c=relaxed/simple;
+	bh=KPjvj9emmxpviieJ0oZD+xoD2E8SVItaZQ6AffDsyTQ=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=inbjvgNQkVSMuepneQN91mV7oRxKkPHEU1OEcWJDSb6pVR5o+5eWGrf6mD4Rx+NMyHtT/98rxr3rW7fOApQi9k5XqOECiOX1KL1TwjYizR7yNV3MOVuU1YpunlPVOuLYS3pqE7xT1k0qsoYlQ3Ix51HpPHXgO/NngoKvEKKNmMo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=pl1CfxI6; arc=fail smtp.client-ip=40.107.201.69
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="DaZ69NTy"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64I5TeTc3681418;
-	Mon, 18 May 2026 15:45:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=yMnLBz
-	Y0p0Cd+gtn+Agv9RdL/bu0d4IkitP7BLovXc0=; b=DaZ69NTy6khgPB2oBKO7hR
-	qPq1BlhIydDYngtnammgp3r0aiYWbExr0FbdV/xb+TqO/7WqXypPeXYGOX2Py7sr
-	s6ee4AP4dfeo8FQKPiXw6YQ9w6op/QP2mfQ3yNsPaah26bKRJCdbv/0h20/3auf6
-	NIvK6HIW7oxbP+1AK+jGsDirK6ZdtSEC8G29/iQq0TBb4JtPeBTwTvlXKXOeoq10
-	WCFTMBSh2iWsbbjSH7yYr/ODAz4MyeydG+0SVeIeBazfBY6qmKQZTUPj8DwhflAW
-	KppGsoV+1A0CTdXRPfMYUJQ8auXLDUBuMt98G8TmNZWej1KXsfl53WhMVapG1lMQ
-	==
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h9xrw5t-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 18 May 2026 15:45:55 +0000 (GMT)
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma11.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64IFdCpG023083;
-	Mon, 18 May 2026 15:45:54 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e75kxx9m5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 18 May 2026 15:45:54 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64IFjonp30474780
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 18 May 2026 15:45:50 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9B7CF2004D;
-	Mon, 18 May 2026 15:45:50 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5194A2004B;
-	Mon, 18 May 2026 15:45:50 +0000 (GMT)
-Received: from [9.52.210.163] (unknown [9.52.210.163])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 18 May 2026 15:45:50 +0000 (GMT)
-Message-ID: <c12e2f60504c8988a172cd947fc5a07f5cf9148c.camel@linux.ibm.com>
-Subject: Re: [PATCH 2/5] arm/pci: Use official API to iterate over PCI buses
-From: Gerd Bayer <gbayer@linux.ibm.com>
-To: Russell King <linux@armlinux.org.uk>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-alpha@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        Richard Henderson
-	 <richard.henderson@linaro.org>,
-        Matt Turner <mattst88@gmail.com>, Magnus
- Lindholm <linmag7@gmail.com>,
-        Madhavan Srinivasan <maddy@linux.ibm.com>,
-        Michael Ellerman	 <mpe@ellerman.id.au>,
-        Nicholas Piggin
- <npiggin@gmail.com>,
-        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@kernel.org>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen
- <dave.hansen@linux.intel.com>, x86@kernel.org,
-        "H. Peter Anvin"
- <hpa@zytor.com>, Gerd Bayer <gbayer@linux.ibm.com>
-Date: Mon, 18 May 2026 17:45:50 +0200
-In-Reply-To: <20260515-priv_root_buses-v1-2-f8e393c57390@linux.ibm.com>
-References: <20260515-priv_root_buses-v1-0-f8e393c57390@linux.ibm.com>
-	 <20260515-priv_root_buses-v1-2-f8e393c57390@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="pl1CfxI6"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=giLwvE3FXMwKhw5K84l+TmTL4D+7yv7REbJXRnSZkf0sMZ1SP3g1pCaSPm3jhAxFHEA/x/PAKVnwRTydm4m60ri1/Ti39GNz6WbJI/3sbHyu4pUZWTLyKB71wOleS/F/4Ba/FD4TkrohMcTbV7qn6VExbW3ZC2G3uL5qRSjSJ1jzWQZksiiX/fONrwQU7zf2NsdLaUklgs3SVpbzF94g3cDAY4ebLRrd0Mvf2cLk+vbmJ/rzRki17QlxpJGl5xSr9M51tJFuK6xgHdOdyIz5h0np216cMLRMmhCiwNhgT91WwyPdk+5nau9BTU3PqpSYoX6cJ5TIjv+JBdcd31VSVw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KPjvj9emmxpviieJ0oZD+xoD2E8SVItaZQ6AffDsyTQ=;
+ b=ebv1KdNML0s+Sw2OCIhPtCH6nuAv7tmnAWPH1FQc2KGlaLm6k6UPCrcixD8UJkzzFS+nB/6fZZ4kJoJWcMWHnQ8WYqJZdK1kpq+9dqGXj7Hm7ZyRhjlEIwS+7Fqz15Tr7a4blHukZoP5NN7plVEQyTgvhDcMT8rkmbdKmqyFd0obvY30HRUUjmBGs6jMR9i0hHqugvpOf6o2akvo0BLEnZ7GpxDnB0MFA8sJzdLUzf0b7RHgCNbgE/B3ORobJRPChadvsn92WievKVhdJ8BmK83YQhO12gxxXZUcaJfMrzEB8eXET1Xyyb3kuZmmyNz4+f9PT6rJGXArW99+irr2ug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KPjvj9emmxpviieJ0oZD+xoD2E8SVItaZQ6AffDsyTQ=;
+ b=pl1CfxI645FLgWOhYA0rQMEOxLpVM78wyq0uYADpceBwQu1Ddc3www2DvaIa7Kg+GfOMM5xXRtsIRGxXp4G9LM/seb4c6/HVQxUo+OsTmxf8EZ7ANSoht9Z5k7qOUrXL80xzWt6HU8p0XFpb518KIvijLU1qvxJT7E/1OWBNHcIGFm/efV49GUtoYKzQ2Pg1Z9QJ0a1ts/iLAfEfXzKaMbGc+I6B6As9zFkPPil2sxu76+Xy2CA8J80jtUsNbW3MstcdxCd3H5W2T8ZAC94lCKagkneGMhaJoTD2BGArk0E4lyl6VV0z3fwHDisN3f0SQYEiqpcsvQYGfwAKgP2F3A==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
+ by CY3PR12MB9577.namprd12.prod.outlook.com (2603:10b6:930:109::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.21; Mon, 18 May
+ 2026 15:46:29 +0000
+Received: from CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
+ ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0025.022; Mon, 18 May 2026
+ 15:46:28 +0000
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 19 May 2026 00:46:24 +0900
+Message-Id: <DILX46DSEV6A.22GRBTCULNEQL@nvidia.com>
+Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
+ <aliceryhl@google.com>, <david.m.ertman@intel.com>, <ira.weiny@intel.com>,
+ <leon@kernel.org>, <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
+ <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
+ <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
+ <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
+Subject: Re: [PATCH v3 15/27] rust: driver: update module documentation for
+ GAT-based Data type
+From: "Alexandre Courbot" <acourbot@nvidia.com>
+To: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260517000149.3226762-1-dakr@kernel.org>
+ <20260517000149.3226762-16-dakr@kernel.org>
+In-Reply-To: <20260517000149.3226762-16-dakr@kernel.org>
+X-ClientProxiedBy: TYCPR01CA0203.jpnprd01.prod.outlook.com
+ (2603:1096:405:7a::12) To CH2PR12MB3990.namprd12.prod.outlook.com
+ (2603:10b6:610:28::18)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE4MDE1MyBTYWx0ZWRfX8r3cbmeKr0/7
- ZjyyZTE/MFfCBi9GbmXKpcNX+lwwkqC/9EqO4bFEKkV0WxHMu8YU0cBV1HoQiap3G8VrbbOhPqX
- cIVfyD5AhPx1YaItAYhYQCGqrHOagMWcAE3rumBa5VM1U0HRMmzgHAH8cxXQLRwUG9a7zv+SoSh
- c2bAAz/2ICYd/8D8AkBWM3CQq/JaA5wrKvpxgQtOs5xg1QKftyVzMr4wwI5LtajgClZtVrhMJcE
- TN1xSrsUsMzR8prwkGf/BQuS4GKBSgJKfIIz4XO23oksI0bbnyKrllJJq05fOGQeK9FvA9zifSt
- ILHC+u9s2O+MSeSQYqvF/D1QBzQMRoScTjrbjFUP295QGllnikQaHWgnadjneqDXfBgv2UOSqOF
- zBcOuQSW//l0VWrlAEwh+SLRmdEalckBAM9FewQOuKevizxfqy2W4DKwOdIVrPNhLkEftxXcmQk
- LX9aKHmREnD9ktNyOWQ==
-X-Authority-Analysis: v=2.4 cv=BNuDalQG c=1 sm=1 tr=0 ts=6a0b3433 cx=c_pps
- a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=c92rfblmAAAA:8
- a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=FcXVdTTBcE9J8dFX6AQA:9 a=QEXdDO2ut3YA:10
- a=GvGzcOZaWPEFPQC_NcjD:22
-X-Proofpoint-ORIG-GUID: xIpXrCK9Gg9N_OlSikDLILgWx7FxlsfY
-X-Proofpoint-GUID: FH1kcY4D8qIED2hpPqBlCS4uqhpURrUR
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-18_03,2026-05-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 priorityscore=1501 malwarescore=0 impostorscore=0 suspectscore=0
- lowpriorityscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605180153
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|CY3PR12MB9577:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3d8f797f-b3e3-4e0f-584c-08deb4f49ffd
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|10070799003|376014|7416014|366016|4143699003|11063799003|56012099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	NZMI1PfBJj4DqA/ECEQAMkNYstnVwLwibUsaIXVny3WABnnj7BvGwkYA5TrW9MC2eTepBcOw1sFTC5uMBxVLo5sHZC59ScLZz2vyaIrOSGLroVHmqqi+kQn0j/GprMTlhSyPaaIt5DOeAkl05yFzZBDSESQoyphly0MpWecCWd98f0NA7Ti1rGPCIZlGIcE+csRERnOg+5v3YYCEwhiCIT/BY0EYLHUe9K7ZyVFMWSLhafGmDKb6MHpiMQOYV+j9rVb8QFdogFi4lP1UKv4LDJdA5qlcmaTyehZmPNgcALasXTP/MLfJxm4cv6AeKiJCjj4cM9JY+5bfe9bsGjAQ9UKC+fI4Pnm954cdLoLxqjFIWgeiw8TvOb2FgOJEkhwrJ8SAfbHmYh/dC6IhPb73jIAsFo7x97mqY8drPSp83gAlutfv2ZJXdYz/gsPSSAHynTd+cvAcYsUMsoeCcgaRMmBzwO+4IpcJ7K2GqL12gE0RsleKKdbVHbA5tRnpE4KfckPQwuhB94Pak+P6N5S3c0OP8s7l6TE50Yn4IEOoIGUHkzUNjxbv73WtsNhG/NypJE1iayYFF3TzBEMfHX8KHY5yEjf3UL43WjOHC379rbqc8iXTb1hYr7/szesd91rd3AUvof47T8m+4xhfoxEd1N+jc1T+7zcBb5d0Do29LV78QKXWkkhYiewikJv+9Vmg
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(376014)(7416014)(366016)(4143699003)(11063799003)(56012099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?ZkVzMTRzK0k2N05OZEYwY3NLNUp3U2d2dmVKSG9YVWxOZDd2bU14REJkWDd5?=
+ =?utf-8?B?YUFDYjBNVFRzK0ZxalBsRWo3bU1qUnBYWnFCT0xkZmQ3WERobUh1MzZjQlcz?=
+ =?utf-8?B?bE1wQituWXErY3RqUmcvUjg4NEpKMkkxY3d2UlV5VzJzQmpYZ01XN0hFbDNW?=
+ =?utf-8?B?cjhkbWp5TmEvV1VMZndlaVk1bUVMY2pqNW1wektic3dJYkcyMzhja0FhWjZF?=
+ =?utf-8?B?Q0c0ZFhYQ295YzA2K2llb3dYRVlsMll4K0o0NkJHRjhaQTdxbUNLaXpuVE5X?=
+ =?utf-8?B?VlVqa3BxNXcwdHZGci9aNW8raTB1eXhiY0djeCtzc1BCU0QxRVJKYzRuam05?=
+ =?utf-8?B?SHZ1UDhhM0NVSmtUZ1RCa3c0TnpVeVROaDJtdEt2V2tpUDV2Q1R6UWduWW01?=
+ =?utf-8?B?ZFd6eGhwZTFYdjB0a09YME92S3FyZHBScDJFSFZyaHV0MTVlZ0dMZElXQlRI?=
+ =?utf-8?B?czF4N0dRZDdJVGo3bC9FSERXeVFPNjNzbVVHNVJlTVJFV1lBMEJrYmorZjJR?=
+ =?utf-8?B?Tk5rZ0lpTWRDYmxDR1N1d3FBcGhVeHFpNkNRMnZnWW9pUVZsTVZSckZMYVE0?=
+ =?utf-8?B?ZHdTc1Y1VGhFQkl5M0wxUzBESG1sZTVSN2R3RndQeW11ZXRaZUZ5UUpweXN0?=
+ =?utf-8?B?Q05YYml6Sy9GZkNuOWtQYjBaVzlrOEw0Nk4wcjM2VmhnU25Od0ROd2d3NWZy?=
+ =?utf-8?B?UUoyZTEyaXNyZitMVjBQY0NJNUNERGJjN2dUdHdTbmtiejdZcUxGaWRlbnB2?=
+ =?utf-8?B?MGluZXZ2MWpXemthNlg2Y3AwM3NZbjcvRnZxRW05NW9yaWhPckVHWEJHNUc1?=
+ =?utf-8?B?ZjFRU3FReFUxUHR3ZDNBNG1Dcm9weVM4V0JDU1ZjNlFIL1RrVHAvSVJmYnNB?=
+ =?utf-8?B?dC8wYW1iOFdEQzNSVGdPWDdBdFd1V1NxRFd3azU0bGxwWmo2Zmtia0pwT3FJ?=
+ =?utf-8?B?R0hzOExIMUp2ako2T3Z6TXFGM25FU3hoU3pkdVFyakJUdlk0T1RBQnhBYVZ2?=
+ =?utf-8?B?eXBBdGhXcGpSUk9JL2NtVHFmV0p5VFpydldGVzlkQmdLL2d1bkRiMDd4b0Zw?=
+ =?utf-8?B?M2xMWjN5RDMzVjBsQnNlMDB5Z0trNlR5aFRldFFMK2ZpYUlVUVpNWHYxa04z?=
+ =?utf-8?B?RHdZdno3MHAyeWZ6Y093eUV4U0VzZDF4UFYrMm84cU1FYWY1ODBPMkVDN2tZ?=
+ =?utf-8?B?OGZTOTNBSlBhV3hxNk1HWUpqTmF2NXU1cHY5K0tHVnI2ak9SSEFwMFF6dlpu?=
+ =?utf-8?B?VEk3K3JIZU9sTnA5TWJQamJpeXUxZFNCUFAvYXZGTnV1TUxHZDRObm9JdUZJ?=
+ =?utf-8?B?QW9HdVBnd0lZaG1RVUpnNFJBMU9uVHFFQ0gwYkh6bkoydnZ5YlU4bzYrRGFh?=
+ =?utf-8?B?c3FXZ25mL09PdktDL0FpV0RpMEphRGNteThEZndrV0liVVpwUlprRGlEa3Jq?=
+ =?utf-8?B?SXo5QkMybDV4MktURFZuWEZ5Zzlia083dGtzalJSZzhtTTdnSWN0bzFxRTlR?=
+ =?utf-8?B?TGUyRytoOEFmMW5VWGJ6NUVRR1ZEd3BjdXp4engrZkZoMHVNVUNneUNPby9N?=
+ =?utf-8?B?NHZVd2F1bnVDbmdVNUZjVTRldzVQUzZUSE82UVZHOEtWcUxvVnNoVUhPS1F4?=
+ =?utf-8?B?WDJkYzJQU1hDME1iWHQzNmowSWRJM2pXY1dxYTI4S0Nwd2FNZEtsNHR5VFJN?=
+ =?utf-8?B?R1J0NG1tOWxmRXNaVE5sUmpOdlp3b3RORUpsVi9jcC9vZkJLdU53anhBQmkw?=
+ =?utf-8?B?ZWFoNFNRQVVMb1dnVndyaE1XRHY1aGppOExZTThabUk2MlBlS2p4WjdqMVdR?=
+ =?utf-8?B?b0UrcXAzRmc2ZTFjaUt2aWZZMi9aTEltK2tHTXYvcXh0TVQwalRwMlZMVWxz?=
+ =?utf-8?B?QmVEWm1LN25DT2daQVY3U2tiRWF3UE1XeW1MNFJTckNhSFFINmZ1dGlGaEN4?=
+ =?utf-8?B?eGtJcVFuM0hzNjlRWVF6NzVkUGU2MzZSUnhjNU1ZekFDTWMrZ1VTeGpBa3RV?=
+ =?utf-8?B?VTZLcFZsSktvaldhVnJxR3dwUjRwSzBJQ0RkVU5ScFVFV1ZYVFcrVEZEb1NX?=
+ =?utf-8?B?ZVdKcVo4d2Y4cmQ1blJ2ODkwdEdBbkI3UUR2d1JWdlQ5Yy9OMzZCU3BTeDZp?=
+ =?utf-8?B?L3QxZXNWOG4xZzFId2dlU3ptU2c2R0grRENnRGY3cnl6bGZ6b1pvS1FmOU5w?=
+ =?utf-8?B?bU14ZVpXMmpSaVN5UGllQnVnOVhaVkQwdFo5TE9ldytpNW9sUHFCNm9xWHFF?=
+ =?utf-8?B?a1ZTbzl1Vy83S2NBZys3VEdYMFlRZTdlaWY5QlF6T0t3dC9JaEJrS001Unht?=
+ =?utf-8?B?aXh1bk5mNU1VNFZXaHBQOE1JMUlyTnBDWU1uQUpDLy9Gb3V5eGlnRjFDOHdv?=
+ =?utf-8?Q?2QoXHGBQvswuUKQB89v12Sh3HocvLkRu5PHBjzCc9twCd?=
+X-MS-Exchange-AntiSpam-MessageData-1: vsMinfR2al6TMQ==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3d8f797f-b3e3-4e0f-584c-08deb4f49ffd
+X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 May 2026 15:46:28.4742
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: R8mx/3gJt+M1N1A2pTHIJo2+COo9tpch7nR1TiTqD80KJ7wTCefdqaBzQG/JnHHoKNs2BOTA3mR0hk/TtdW3Pw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY3PR12MB9577
 
-On Fri, 2026-05-15 at 16:22 +0200, Gerd Bayer wrote:
-> Replace iterating over pci_root_buses with the official
-> pci_find_next_bus() call provided by PCI core. This allows to make
-> pci_root_buses private to PCI core.
->=20
-> Signed-off-by: Gerd Bayer <gbayer@linux.ibm.com>
-> ---
->  arch/arm/kernel/bios32.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index ac0e890510da..35642c9ba054 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -59,9 +59,9 @@ static void pcibios_bus_report_status(struct pci_bus *b=
-us, u_int status_mask, in
-> =20
->  void pcibios_report_status(u_int status_mask, int warn)
->  {
-> -	struct pci_bus *bus;
-> +	struct pci_bus *bus =3D NULL;
-> =20
-> -	list_for_each_entry(bus, &pci_root_buses, node)
-> +	while ((bus =3D pci_find_next_bus(bus)) !=3D NULL)
->  		pcibios_bus_report_status(bus, status_mask, warn);
->  }
-> =20
+On Sun May 17, 2026 at 9:01 AM JST, Danilo Krummrich wrote:
+> Now that all bus driver traits use type Data<'bound>: 'bound, update the
+> illustrative driver trait in the module documentation to reflect the GAT
+> pattern and lifetime-parameterized callbacks.
+>
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 
-Hi Russell,
-
-Sashiko
-https://sashiko.dev/#/message/20260515145940.E85AAC2BCB0%40smtp.kernel.org
-reported:
-
-> Since pci_find_next_bus() unconditionally acquires the pci_bus_sem read-w=
-rite
-> semaphore using down_read(), this introduces a blocking operation into th=
-at
-> atomic path:
->=20
-> dc21285_abort_irq() [hardirq context]
->   pcibios_report_status()
->     pci_find_next_bus()
->       down_read(&pci_bus_sem) [sleeps]
->=20
-> Does this path need an alternative approach to safely iterate over the bu=
-ses
-> without taking a sleeping lock?
-
-IMHO, it looks like this entire pcibios_report_status() iterating over
-all PCI buses and all their devices would be better off if moved
-outside of the hardirq context?
-
-Or could pcibios_report_status() be converted to use
-for_each_pci_device()?
-
-Any suggestions welcome...
-Gerd
+Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
