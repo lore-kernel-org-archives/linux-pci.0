@@ -1,147 +1,151 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16A96391828
-	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 19:33:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD560390229
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 19:38:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779132782; cv=none; b=neWfxRkbN1u/GDOgAbCqD5p02ER6d9zn5NZPY1Q535/ZU7G8+FyW/ffqMXSCSuusRJKoxH8wmOjpK3dhuxXhOXGKGkNvU52rpL+HCDh21ULBNI1JU1AXK0Xg+mj1dKQ+lV2l/Cmmw4eCVHMzvmqzQPQA55cbp0h6YQ2PLAoMaeQ=
+	t=1779133106; cv=none; b=SY0F5g4Ns9LijFCxcjh+yFXJsrBBPj6yrfVZJY+3FQg8KsnbpbW9wWGTlsQMnKDVyAnx1LU6ZFYN7vEnRvvXe4jdg4dhBoxRyB/ZrHKLCsBDpIpkK8D1Bz6A/c27qnPuCpdWrQsMBrImlNPTR5/rDBJxugUFuCJmepYkar9Jl4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779132782; c=relaxed/simple;
-	bh=MIwWzoNcld1di3sRY67JHF3L4tOIb9uRI+f7jDr1q6U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DVOlDMJKjCOx/MtcMJgpKOuHPDIRoc7HmAl8jBQs2ayCoScNFmsbB1htAkAE8cKQpSQhUCgB/yk7f9bb5mnOokPVI9Hb+tQQIAGhJ7Xdy/zSOxbfJnaHDmcHv9UsGWNQZxJMwAXA/th5l9xxFbSA/B6u4o2/vm+11ru+D1QbqH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LLAlnJXS; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1779133106; c=relaxed/simple;
+	bh=deN0GC2SDjpo00D+j8kF3BaRV5F6uBlPHfj7/kmXDcM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lrFprLiekUO3kAbi22Mq/Jip49K3oCbUrho/SksJqR5AArWeYcrF8G2qvXiRc80AswlxnnClASBr8bok9WQDiQ87x0yXhXd2Tbonc4raYtq8vMdWAkccszJw/tvb+pxSj+Nd18AgruK75eXFURWhFbZfIheRv2/NXe9cKdkH8qw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UB9Rv2AZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LLAlnJXS"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1779132780;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6NRtUq4tdDKEDZRdGQPjS5xvGqYmmi7/Q1au3JiknCE=;
-	b=LLAlnJXSt148hRLLszn9ILP7rubIMjy5mo+twiiaYuzQ7Vd+65IRokuUVkbVaSTLTIgkXc
-	qVHRUP6wwl/t3HkGnLBox/dFNjtEkVMxjtAHaxcyAAIZnmx745ojsKeuoOKd25caZrXoa2
-	smG1Lk8Ih9eoqaOGuyBYNUnxS7rHNww=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-597-PTUTGaNwPNeIevaoNKwCVQ-1; Mon,
- 18 May 2026 15:32:56 -0400
-X-MC-Unique: PTUTGaNwPNeIevaoNKwCVQ-1
-X-Mimecast-MFC-AGG-ID: PTUTGaNwPNeIevaoNKwCVQ_1779132774
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7B13A1956089;
-	Mon, 18 May 2026 19:32:54 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.65.152])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0E4BD18004A3;
-	Mon, 18 May 2026 19:32:48 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: linux-kernel@vger.kernel.org,
-	driver-core@lists.linux.dev,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>
-Cc: Tarun Sahu <tarunsahu@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	=?UTF-8?q?Micha=C5=82=20C=C5=82api=C5=84ski?= <mclapinski@google.com>,
-	Jordan Richards <jordanrichards@google.com>,
-	Ewan Milne <emilne@redhat.com>,
-	John Meneghini <jmeneghi@redhat.com>,
-	"Lombardi, Maurizio" <mlombard@redhat.com>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>,
-	Laurence Oberman <loberman@redhat.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	kexec@lists.infradead.org,
-	David Jeffery <djeffery@redhat.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>
-Subject: [PATCH 5/5] scsi: Enable async shutdown support
-Date: Mon, 18 May 2026 15:32:04 -0400
-Message-ID: <20260518193204.14273-6-djeffery@redhat.com>
-In-Reply-To: <20260518193204.14273-1-djeffery@redhat.com>
-References: <20260518193204.14273-1-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UB9Rv2AZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3040C2BCF5
+	for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 19:38:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779133106;
+	bh=deN0GC2SDjpo00D+j8kF3BaRV5F6uBlPHfj7/kmXDcM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=UB9Rv2AZ5SnoNl39Hix4kXS0GjvIk6J3LK0WZBhSiqsADHCXEdYnt5DwDSZkx63qV
+	 /BNvoRsouWOnIkZFj93ixlVBPENCNFW4AwoEYyd4X1IN5YN543vzOUwNrvBJnVqffH
+	 LJxWRpdBvx3k0sBeDG2Yug8U/JaNXQtQwr8IZA7dgFMC+ukH9ZKvxKgzrY2NTidzJC
+	 yeY3xp7gOvpLudNfK7w8oSo69FRe4sqg6H1zfMUHSOPPbZl5rEaC8zHori7uXhWDf3
+	 AZG0nDMKD0MRxs1nyz4A+DD9I3i8bskF87AyGMNjlYwsTucq6yqGQFpmr4BmHl0pqt
+	 zHzVpkwW7IuCQ==
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-38e84ed22bdso34193001fa.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 12:38:26 -0700 (PDT)
+X-Gm-Message-State: AOJu0Yx/td6oPVHb3NoJmesiFbs0MzhMRn+X8Gp7n26V+Gjv/Epprmkm
+	tcw0M6vru+Kq1xmQJkg7lDbnyk0Gy/Ux03lNqe2HQQBrpYVk6uXxpclC0bZkjMD9WGLjNv8Rw1Z
+	EDrp+qhDL3N8jiK8Yeej1UTfztaoA4lA=
+X-Received: by 2002:a05:6512:1243:b0:5a7:4699:d851 with SMTP id
+ 2adb3069b0e04-5aa0e73f5f4mr5128555e87.7.1779133104721; Mon, 18 May 2026
+ 12:38:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+References: <20260518191220.636213-1-bhelgaas@google.com> <20260518191220.636213-3-bhelgaas@google.com>
+In-Reply-To: <20260518191220.636213-3-bhelgaas@google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Mon, 18 May 2026 21:38:12 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0iU=0SHXK9RngiYCwz5XZ0mJ+L5iy-FSWhytNgJbCam0A@mail.gmail.com>
+X-Gm-Features: AVHnY4K5iH8pv-2trv6c4mXKXOKu2MrZZ0Gsqfr7J1WN1EN8U3ufFO0zvztWvWI
+Message-ID: <CAJZ5v0iU=0SHXK9RngiYCwz5XZ0mJ+L5iy-FSWhytNgJbCam0A@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] PCI: Wait for device readiness after D3hot ->
+ D0uninitialized transition
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, "Rafael J . Wysocki" <rafael@kernel.org>, 
+	Lukas Wunner <lukas@wunner.de>, Marco Nenciarini <mnencia@kcore.it>, 
+	Michal Winiarski <michal.winiarski@intel.com>, Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, 
+	Eric Chanudet <echanude@redhat.com>, Jean Guyader <jean.guyader@gmail.com>, 
+	Alex Williamson <alex@shazbot.org>, Sinan Kaya <okaya@kernel.org>, 
+	Mario Limonciello <superm1@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, 
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Like scsi's async suspend support, allow scsi devices to be shut down
-asynchronously to reduce system shutdown time.
+On Mon, May 18, 2026 at 9:12=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> From: Bjorn Helgaas <helgaas@kernel.org>
+>
+> For a device that advertises No_Soft_Reset =3D=3D 0, a transition from D3=
+hot to
+> D0uninitialized is a soft reset, and the resulting internal device state =
+is
+> undefined.
+>
+> Per PCIe r7.0, sec 2.3.1, a transition from D3hot to D0uninitialized
+> mandates a minimum 10 ms delay before accessing the device. Following thi=
+s
+> delay, the device is permitted to respond to initial configuration reques=
+ts
+> with a Request Retry Status (RRS) completion status if it needs more time
+> to initialize.
+>
+> Call pci_dev_wait() after pci_power_up() performs a D3hot->D0uninitialize=
+d
+> transition to ensure the device is ready to accept config accesses, as is
+> done after the similar transition in pci_pm_reset().
+>
+> If the device is already ready, this is essentially a no-op except for on=
+e
+> additional config read.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci.c | 24 ++++++++++++++++++++++--
+>  1 file changed, 22 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 5a9af0bb2c71..8228d2782f95 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1300,7 +1300,18 @@ int pci_power_up(struct pci_dev *dev)
+>         bool need_restore;
+>         pci_power_t state;
+>         u16 pmcsr;
+> +       int ret;
+>
+> +       /*
+> +        * When setting power state to D0, platform_pci_set_power_state()
+> +        * ensures main power is on.  If it puts the device in D0, it als=
+o
+> +        * completes any required delays after the transition; if it leav=
+es
+> +        * the device in D1, D2, or D3hot, we use the PM Capability to
+> +        * transition to D0.
+> +        *
+> +        * In all cases, the device is either Configuration-Ready or
+> +        * inaccessible upon return.
+> +        */
+>         platform_pci_set_power_state(dev, PCI_D0);
+>
+>         if (!dev->pm_cap) {
+> @@ -1341,10 +1352,19 @@ int pci_power_up(struct pci_dev *dev)
+>         pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
+>
+>         /* Mandatory transition delays; see PCI PM 1.2. */
+> -       if (state =3D=3D PCI_D3hot)
+> +       if (state =3D=3D PCI_D3hot) {
+>                 pci_dev_d3_sleep(dev);
+> -       else if (state =3D=3D PCI_D2)
+> +               if (!(pmcsr & PCI_PM_CTRL_NO_SOFT_RESET)) {
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
-Tested-by: Laurence Oberman <loberman@redhat.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Pasha Tatashin <pasha.tatashin@soleen.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
----
- drivers/scsi/hosts.c      | 2 ++
- drivers/scsi/scsi_sysfs.c | 3 +++
- 2 files changed, 5 insertions(+)
+Hmm.  The pmcsr value here is from before the pci_write_config_word(),
+so AFAICS it should be updated after the write.
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..bf691acc7a67 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -273,6 +273,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	pm_runtime_set_active(&shost->shost_gendev);
- 	pm_runtime_enable(&shost->shost_gendev);
- 	device_enable_async_suspend(&shost->shost_gendev);
-+	dev_set_async_shutdown(&shost->shost_gendev);
- 
- 	error = device_add(&shost->shost_gendev);
- 	if (error)
-@@ -282,6 +283,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	get_device(shost->shost_gendev.parent);
- 
- 	device_enable_async_suspend(&shost->shost_dev);
-+	dev_set_async_shutdown(&shost->shost_dev);
- 
- 	get_device(&shost->shost_gendev);
- 	error = device_add(&shost->shost_dev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index dfc3559e7e04..8fd317aef37b 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1386,6 +1386,7 @@ static int scsi_target_add(struct scsi_target *starget)
- 	pm_runtime_set_active(&starget->dev);
- 	pm_runtime_enable(&starget->dev);
- 	device_enable_async_suspend(&starget->dev);
-+	dev_set_async_shutdown(&starget->dev);
- 
- 	return 0;
- }
-@@ -1412,6 +1413,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	transport_configure_device(&starget->dev);
- 
- 	device_enable_async_suspend(&sdev->sdev_gendev);
-+	dev_set_async_shutdown(&sdev->sdev_gendev);
- 	scsi_autopm_get_target(starget);
- 	pm_runtime_set_active(&sdev->sdev_gendev);
- 	if (!sdev->rpm_autosuspend)
-@@ -1431,6 +1433,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	}
- 
- 	device_enable_async_suspend(&sdev->sdev_dev);
-+	dev_set_async_shutdown(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
--- 
-2.53.0
+This means an additional config space access and I wonder if it can be
+added to pci_dev_wait()?
 
+> +                       ret =3D pci_dev_wait(dev, "power up D3hot->D0unin=
+itialized",
+> +                                          PCIE_RESET_READY_POLL_MS);
+> +                       if (ret) {
+> +                               dev->current_state =3D PCI_D3cold;
+> +                               return -EIO;
+> +                       }
+> +               }
+> +       } else if (state =3D=3D PCI_D2) {
+>                 udelay(PCI_PM_D2_DELAY);
+> +       }
+>
+>  end:
+>         dev->current_state =3D PCI_D0;
+> --
