@@ -1,125 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31373327C0D;
-	Tue, 19 May 2026 19:36:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612813ACA42;
+	Tue, 19 May 2026 19:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779219414; cv=none; b=J/F5/jNo9bn4P+DWkQmXLKX5GG+T11VQBnR0BkLhaRis9olUgnF48oQHl+nWrGOnFqmdlndl+ToETO5iud4eiivBzkLEadfmuslZCbmbUHR8itdxfhj26pEGwx1AJ0asr7NHkiHqxz3u08QYfEQDn18DnkrELuMpLMdtuu5MhSg=
+	t=1779220363; cv=none; b=DDsUMcECS42F0ZOdV/FqMUu+viWbZ/VX9Xhknxt5lwGA3xWiJToObgqRqCHbhSHBDB/T9f7P7z6NXCcqopkk+u7exOk8C4Y+sIKXvhUPItm/Gk2yJxCGMCFWBEYd+yp7LPdkNLumJ20kj8mMOZHzmkPazh45/IcbhgWY2da0vio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779219414; c=relaxed/simple;
-	bh=XrTaU0zXVXOmf8pCUBn5T700clsPXs6t+wtPQD/DKys=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=rpYNAdRN1DPb+tw9FZZ3xObeSHDqAzXvKqDtIDWk3HvHWSUKfYpW1SMQ/0EorSpiuIP5Ia15V4pOsaCEY5oNhMbvpiIfEYN1HfIAqJMCRivrcIrJYF6A3uj9BdK0rHonJm/8c98U7DSwObexQk14ZZ4SCUXm9d46XPDmhUxrws0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hOBYQZpO; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779220363; c=relaxed/simple;
+	bh=SdXZVxKDS/E22tM60k2sCFv0iWcUBjCeDq8WfJ9NFwU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=a1PI63ocFT1+kdTI6XKFgCgw0TXVPIighqAFYGS1QI86TX23HjdE9cDiIrYM2xmPfuq5acWdjXh2UtRAJVO1A5xLjAsTxgjxHa3I7CltDv+kQEBdjQy4h8L2uwKO/AJ4xPBxGzkt1kG/JeKGDCc5jZ6XomG+TBU8PwXHDHQhWEA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=fvLphWla; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=eVPIpxu3; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hOBYQZpO"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 05A641F000E9;
-	Tue, 19 May 2026 19:36:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779219411;
-	bh=9zWCT6L164MPpYxvYUUjyVKQRnNx7/uPmsbeHhH1oG0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=hOBYQZpO0e5XVVO2zoVjayrxSbwRpUYoEspSmgSZEssnaM0rlFey8b0rrdN6hHa/S
-	 YYHhOnIlzQfHOHq4vRYUL1BJ+81JZJXEpIIeUGJAK1kgsruLHfVECy0Q12LHNTXv1x
-	 h8bzSY2wPKz+tS7IArsZYnRqR2Te7xVKbARE9af8YXEIa4nUNtOQw8SuXYjczAq9RG
-	 2zE7IJm0aQdh0Kw+LDghyeoGwhLxf0S5zO5weZuODHmeteQ2M1O7yMZfN9vxn5V+wD
-	 kYzFQvjTFbDXdS+rlXFCYjnZX5aFo2ckcyEkdz6NZO0E88o2gwwt4dxTvgll+cv5Jq
-	 i92uvT88ytZUQ==
-Date: Tue, 19 May 2026 14:36:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: jgg@nvidia.com, will@kernel.org, robin.murphy@arm.com,
-	bhelgaas@google.com, joro@8bytes.org, praan@google.com,
-	baolu.lu@linux.intel.com, kevin.tian@intel.com,
-	miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, dan.j.williams@intel.com,
-	jonathan.cameron@huawei.com, vsethi@nvidia.com,
-	linux-cxl@vger.kernel.org, nirmoyd@nvidia.com
-Subject: Re: [PATCH v4 1/3] PCI: Allow ATS to be always on for CXL.cache
- capable devices
-Message-ID: <20260519193649.GA715262@bhelgaas>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="fvLphWla";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="eVPIpxu3"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gKlgz6NX9z9vZM;
+	Tue, 19 May 2026 21:52:31 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1779220351;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=6+gHbvvlhDemo3w9adfFUwk9pQ6tK8KAjIOj3e4wzKM=;
+	b=fvLphWlagDBdTtnoDJj5sKKo2BifUn7BFweLnIiyBTxOTaGwI5+qWtbdwfxE/104skmNVm
+	2DN60Y7/JmFf6WscglwJIE/ZgdgPvK7gfbwsHYOdRBr0tJwHz/PjBcKtZNAwdKuyHs2It6
+	ZbMsdEh/R+Sb+ru/u6TjORd70vO/eWRl48zEhGCZhuJiviA/qPfXKQCAs+BlmGEQUcZ7sH
+	5VOSeTzYk9hacOY0ZSW83F50q9iM/gmmwj7idoXwa45oMY8y2wJARfIytwbEy5hrhFh7ok
+	9zEXe4dl67NNS8IU+oF1mEGFcJ5KDfLiZYN/hCO7tx3t2wbQkFL5VGZsZSc90g==
+Authentication-Results: outgoing_mbo_mout;
+	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=eVPIpxu3;
+	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1779220349;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=6+gHbvvlhDemo3w9adfFUwk9pQ6tK8KAjIOj3e4wzKM=;
+	b=eVPIpxu3La2lPp//8dopxrDiUtv4WgrACZaJuLWaNLSMUPhfdsQhSuYUY4GJFp/aFENPM6
+	VsGmDO5d9ifKWWF4zo2NhKdPtjaz3x7Ey4mK920TaQ1kpyZtSEleBhmbureYBqgzau8ikm
+	ua8Zj2OlwV4ivoH+oaj3uC5SO6SV9j+tfyb3OMj0OeEHFKOa4MeiuD/smt6Wpy6K8YL9Oa
+	GdN5BFkn4w690+49UtxUyuu2CCEpmy2j1XTNEvlfQbF+SWNdhJav/YYQ1gSaXPNzzwDvay
+	84vYCMiZyH4Eed/bOV8M9aIbXbutelb95ZmCRvi9kWFpULVLX9HQP197i2MRoQ==
+To: linux-pci@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	stable@vger.kernel.org,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Koichiro Den <den@valinux.co.jp>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH v2] PCI: rcar-gen4: Limit Max_Read_Request_Size and Max_Payload_Size to 256 Bytes
+Date: Tue, 19 May 2026 21:51:13 +0200
+Message-ID: <20260519195219.189323-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f6734b9dad0050138676f11ecd14e9db1cf6b697.1777269009.git.nicolinc@nvidia.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-MBO-RS-ID: f04e75fb567f9f9b0a0
+X-MBO-RS-META: wus7jgw9quh84oma7m16itugiwa3uu39
+X-Rspamd-Queue-Id: 4gKlgz6NX9z9vZM
 
-On Sun, Apr 26, 2026 at 10:54:00PM -0700, Nicolin Chen wrote:
-> Controlled by the IOMMU driver, ATS is usually enabled "on demand" when a
-> given PASID on a device is attached to an I/O page table. This is working
-> even when a device has no translation on its RID (i.e., the RID is IOMMU
-> bypassed).
-> 
-> However, certain PCIe devices require non-PASID ATS on their RID even when
-> the RID is IOMMU bypassed. Call this "always on".
-> 
-> For example, CXL spec r4.0 notes in sec 3.2.5.13 Memory Type on CXL.cache:
->  "To source requests on CXL.cache, devices need to get the Host Physical
->   Address (HPA) from the Host by means of an ATS request on CXL.io."
-> 
-> In other words, the CXL.cache capability requires ATS; otherwise, it can't
-> access host physical memory.
-> 
-> Introduce a new pci_ats_always_on() helper for the IOMMU driver to scan a
-> PCI device and shift ATS policies between "on demand" and "always on".
-> 
-> Add the support for CXL.cache devices first. Pre-CXL devices will be added
-> in quirks.c file.
-> 
-> Note that pci_ats_always_on() validates against pci_ats_supported(), so we
-> ensure that untrusted devices (e.g. external ports) will not be always on.
-> This maintains the existing ATS security policy regarding potential side-
-> channel attacks via ATS.
+R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
+Max_Payload_Size (MPS). PCIe specification indicates that the MPS
+must not exceed minimum MPS of any element along the packet path.
+Force limit Max_Payload_Size to at most 256 Bytes for each device
+connected to this PCIe controller.
 
-IMO this doesn't really fit in the PCI core.  ats.c encapsulates
-discovery and provides interfaces to access the ATS Capability, but
-the users of those interfaces are all outside the PCI core.
+R-Car Gen4 Reference Manual, chapter 104.4.8 Usage notes for
+MRRS (Max Read Request Size) states:
+  Please set "Max Read Request Size" to 128 bytes or 256 bytes.
+  If "Max Read Request Size" is set to anything other than the
+  above, the transferred data will not match the expected value.
+This limitation also seems the apply to devices issuing MRd TLP.
+This limitation can be triggered by using non-HMB NVMe SSD with
+Max_Read_Request_Size 512 Bytes, for example Crucial P5 Plus.
+Any write into the SSD (MRd TLP issued by the SSD) longer than
+256 Bytes wraps around at 256 Byte boundary, and the same data
+are written into the SSD starting at offset 0 and at 256 Bytes.
+Force limit Max_Read_Request_Size to at most 256 Bytes for each
+device connected to this PCIe controller to avoid this behavior.
 
-The decision to enable enable ATS for CXL.cache devices is fine but
-it's really an IOMMU usage policy, and I think it should be
-implemented in the IOMMU core.  All the pieces needed
-(pci_ats_disabled(), pci_ats_supported(), pci_find_dvsec_capability())
-are already exported.
+An non-HMB (Host Memory Buffer) NVMe SSD can be identified using
+the following command. Affected SSD reports 'hmpre' field as 0:
+"
+$ nvme id-ctrl /dev/nvme0 | grep hmpre
+hmpre     : 0
+"
 
-One motivation for putting this in the PCI core was to use the quirk
-infrastructure, but this series doesn't use any of that.  It doesn't
-declare any fixups, e.g., DECLARE_PCI_FIXUP_FINAL, and it doesn't
-update any state cached by the PCI core.
+The symptom is a read from the SSD which wraps around at 256 Byte
+boundary. The test for this symptom can be implemented by writing
+512 Byte of random data into the SSD and reading the data back. If
+the read back data repeat after 256 Bytes, the device is affected.
+"
+$ dd if=/dev/urandom of=/tmp/data.bin bs=256 count=2 \
+  dd if=/tmp/data.bin of=/dev/nvme0n1 bs=256 count=2 \
+  dd if=/dev/nvme0n1 bs=256 count=2 of=/tmp/readback.bin
+"
 
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -1349,6 +1349,7 @@
->  /* CXL r4.0, 8.1.3: PCIe DVSEC for CXL Device */
->  #define PCI_DVSEC_CXL_DEVICE				0
->  #define  PCI_DVSEC_CXL_CAP				0xA
-> +#define   PCI_DVSEC_CXL_CACHE_CAPABLE			_BITUL(0)
+Expected data:
+"
+$ hexdump -vC /tmp/data.bin
+00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca
+00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b
+...
+00000100  7a ce 3c b2 e1 d5 d9 11  88 63 10 59 76 3c dc 32 <-- random
+00000110  72 32 2a 7d a3 e1 aa 13  7c da 58 a1 7b 21 11 50 <-- data
+"
 
-This makes good sense, I'm fine with adding
-PCI_DVSEC_CXL_CACHE_CAPABLE.
+Faulty readback, collected without this change in place:
+"
+$ hexdump -vC /tmp/readback.bin
+00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <---.
+00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-. |
+...                                                          | |
+00000100  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <-:-+- repeated
+00000110  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-+--- data
+     ^^^
+      |
+      '--- Repeat starts at offset 0x100 = 256 Bytes
+"
 
-> +bool pci_ats_always_on(struct pci_dev *pdev)
-> +{
-> +	if (pci_ats_disabled() || !pci_ats_supported(pdev))
-> +		return false;
+Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
+Cc: stable@vger.kernel.org
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+---
+Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Koichiro Den <den@valinux.co.jp>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+NOTE: - Possible EP mode limit of 128 Bytes is currently pending
+        documentation team input
+V2: - Dispose of the reprogramming of MPS/MRRS altogether
+    - Dispose of the entire fixup quirk
+    - Replace both with bridge enable_device hook
+    - Limit MPS/MRRS along the entire packet path to follow
+      MRRS limitation requirement
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 51 +++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-Isn't this the same as:
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 8b03c42f8c84c..9fe34ca7ce532 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -305,6 +305,54 @@ static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
+ 	return rcar;
+ }
+ 
++static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
++					struct pci_dev *dev)
++{
++	/*
++	 * R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
++	 * Max_Payload_Size (MPS). PCIe specification indicates that the MPS
++	 * must not exceed minimum MPS of any element along the packet path.
++	 * Force limit Max_Payload_Size to at most 256 Bytes for each device
++	 * connected to this PCIe controller.
++	 *
++	 * For details, refer to chapter "104.1.1 Features" in either of:
++	 * R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025 or
++	 * R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025 or
++	 * R-Car V4M R19UH0217EJ0100 Rev.1.00 Dec. 12, 2025.
++	 */
++	if (pcie_get_mps(dev) > 256) {
++		pci_info(dev, "Limiting MPS to 256 bytes\n");
++		pcie_set_mps(dev, 256);
++	}
++
++	/*
++	 * R-Car Gen4 Reference Manual, chapter 104.4.8 Usage notes for
++	 * MRRS (Max Read Request Size) states:
++	 *   Please set "Max Read Request Size" to 128 bytes or 256 bytes.
++	 *   If "Max Read Request Size" is set to anything other than the
++	 *   above, the transferred data will not match the expected value.
++	 * This limitation also seems the apply to devices issuing MRd TLP.
++	 * This limitation can be triggered by using non-HMB NVMe SSD with
++	 * Max_Read_Request_Size 512 Bytes, for example Crucial P5 Plus.
++	 * Any write into the SSD (MRd TLP issued by the SSD) longer than
++	 * 256 Bytes wraps around at 256 Byte boundary, and the same data
++	 * are written into the SSD starting at offset 0 and at 256 Bytes.
++	 * Force limit Max_Read_Request_Size to at most 256 Bytes for each
++	 * device connected to this PCIe controller to avoid this behavior.
++	 *
++	 * For details, refer to aforementioned chapter in either of:
++	 * R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025 or
++	 * R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025 or
++	 * R-Car V4M R19UH0217EJ0100 Rev.1.00 Dec. 12, 2025,
++	 */
++	if (pcie_get_readrq(dev) > 256) {
++		pci_info(dev, "Limiting MRRS to 256 bytes\n");
++		pcie_set_readrq(dev, 256);
++	}
++
++	return 0;
++}
++
+ /* Host mode */
+ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+ {
+@@ -313,6 +361,9 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
+ 	int ret;
+ 	u32 val;
+ 
++	if (pp->bridge)
++		pp->bridge->enable_device = rcar_gen4_pcie_enable_device;
++
+ 	gpiod_set_value_cansleep(dw->pe_rst, 1);
+ 
+ 	ret = rcar_gen4_pcie_common_init(rcar);
+-- 
+2.53.0
 
-  if (!pci_ats_supported(pdev))
-    return false;
-
-If pci_ats_disabled(), dev->ats_cap should be zero, so
-pci_ats_supported() should always return false.
-
-> +
-> +	/* A VF inherits its PF's requirement for ATS function */
-> +	if (pdev->is_virtfn)
-> +		pdev = pci_physfn(pdev);
-> +
-> +	return pci_cxl_ats_always_on(pdev);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ats_always_on);
