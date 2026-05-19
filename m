@@ -1,154 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D8472E7F2C
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 20:20:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C7613BB680
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 20:25:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779222039; cv=none; b=dHQnIxV7qEBHIx1hJFnhucC+5TO27+LlRpkyMnK7r/k7YX7YNYdUR1m5RvzkQX2Dl4kEVAAXOv0bNCSV5gbPdaWwVe/TTBpbL6Xs2qdC3HuOZiWoS06BVLtjiQM0VStgiH+kOyUbNTvMy9EbsHcnEK9q4Dbj9NqqaDVr4XR6mH0=
+	t=1779222330; cv=none; b=j82FZFSo1frvoVxAYbMqihbQvwEOcqB/P9tXrvSWoHi3gQetyUSsP7jji99UK+ydHq8lb13F99e+q9kw5CoDV2yuBrVa3i2zamfT/awtak5yVRbcZziugVd1SzzxtwFv4r0CMtjQSZ/bE/Tbkl/YjqmBLjGqaFHo1w/WjnGFxtM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779222039; c=relaxed/simple;
-	bh=kdcdDapsnJrrQTjmcpp09M3kacJWrMllUuW0i7zmzTE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=u5i+nvVQL1JAt0RLXaPKH+IBfR7GSFoYQtY/BdG3ZQXpoWc9TH1fmPZ53cvdEtnOI0nTP+d9R12Vy5qCh7GtDlqwYDmmOGRFo0eqYRKN/Og+zYLH+SSgJsHLk1Mhu1qD9xpmPxdV2ph9HZalM7ux6WtzzTsjYJ/xkEDIBxXgtss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=on2Hb9lu; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779222330; c=relaxed/simple;
+	bh=dA37R4YtoSYDx/LRAb6HTe3J+AD7RYOx5pXSv+u8r8I=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LSmqTHtuZYW+OyOde+4l207N9tN4hh4zQ02AywPhhVUgxU03TYQVhrelT6udaCT/yC9G6HK4lJyGB0xBPkvXcP95eWg0K4bFSNqlllHW69JH05Q9W4Oewh980I35x4mWQgsUXPZYc+Jz50XFwEvYIVIHo9RkSn49BXHFz9I/9tE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=MtUMjghr; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="on2Hb9lu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BD001F000E9;
-	Tue, 19 May 2026 20:20:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779222037;
-	bh=56BG0fytKuf5O6ZguHl+i4rl3SKw258mcxkLyAQQ8Rk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=on2Hb9luBmWa+j+nZoOyb1rFGyVPuT5vsQzdMQRlc5RpLP0B5K7PXFXvtgHLe/60a
-	 ADFq+avcm3s5EjH9egHWt5kGa4MbJ4dn5iBXf1BqJo8rgUNHYXNzsuNxzL5pOxHEjz
-	 yfpa6a+2SkWOBjgvku+YAdXb6zFhRxyDoI1GWpJ/xd2zCo7IFS7pzTnlzlnKkPKtJg
-	 ZZ+7km3o4uQRSbZymiYAHEXOwWDp9iFQoDvrAUs2sESGAxZWimeHMfROuh3huRG97s
-	 rab202cNswcpRNAnxzcAnfpJe78wBnFIOqm1yOj8uV2+Edy6SPUd+HmLsid9QEbu0m
-	 gKqMz11VTaTbg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2] PCI: rcar-gen4: Limit Max_Read_Request_Size and
- Max_Payload_Size to 256 Bytes
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Marek Vasut" <marek.vasut+renesas@mailbox.org>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-In-Reply-To: <20260519195219.189323-1-marek.vasut+renesas@mailbox.org>
-References: <20260519195219.189323-1-marek.vasut+renesas@mailbox.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 19 May 2026 20:20:36 +0000
-Message-Id: <20260519202037.8BD001F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="MtUMjghr"
+Received: from pps.filterd (m0528008.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64JKJBfM3374226
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 13:25:28 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=rbYQZfT6xz9UhXToVb8wAi/NM8rY7U8L5aP4mxh8ef0=; b=MtUMjghr/Ra4
+	BYZTh/gh7rLL8iSFD01ZRiUU0lM5+FjgixhztW4Lq8CLxVsfHyAbgZXmqPoc/Eca
+	QbiImoM326mVvAGWiAhiBM9z6T5HCYc32EocwLvtbpUrBniLkIvkd9hQDUri+xqs
+	X+tSgcvBEajUxSI5QMD+jWSJs1priMPz+Zo5bcr5U1VyFW9QwlUho4RI7hpWli5B
+	/JpNdlj7+DQWXo9dy3AZra2abYTIklgyDEAveiW9wPtxitLiSQ1XISWlrj2WLHU8
+	nAduPhDSyH4CkKQ9RpiJZ3lsAbaRjNj3ojPjfM7GQh+K/A+kBJvtb7Xy1FhS+SUa
+	amxjUSKHrg==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4e8xsxr15c-6
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 13:25:28 -0700 (PDT)
+Received: from twshared132777.16.frc2.facebook.com (2620:10d:c0a8:fe::f072) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.37; Tue, 19 May 2026 20:25:24 +0000
+Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
+	id 3130E2F3ADAE5; Tue, 19 May 2026 13:14:06 -0700 (PDT)
+From: Zhiping Zhang <zhipingz@meta.com>
+To: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon
+ Romanovsky <leon@kernel.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>, <kvm@vger.kernel.org>,
+        <linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        Keith Busch
+	<kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+        Yishai Hadas
+	<yishaih@nvidia.com>, Zhiping Zhang <zhipingz@meta.com>
+Subject: [PATCH v4 2/3] PCI/TPH: expose the enabled TPH requester type
+Date: Tue, 19 May 2026 13:13:50 -0700
+Message-ID: <20260519201401.1558410-3-zhipingz@meta.com>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260519201401.1558410-1-zhipingz@meta.com>
+References: <20260519201401.1558410-1-zhipingz@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTE5MDIwNCBTYWx0ZWRfXw5ttJN2gTCfh
+ s8kmkbEFaiZooCrU588c8NtOfxnl1z6Npe8dyGQuQWnQh3k0lVvi4nBEzviuWnQ+27cjKJh28jw
+ h1EGVHSrEQCqu8QPJ7EjUEj5tmVUmYg51mo88G0LU4lqrMUs65NEFrswoSMckjfJQH7K+W+oq/h
+ x+hirfIdQYB2A3FibYeSMVqqIt41LojG0o4uUdCfI5mCQJzTx8ppbQz5jgs+P9nl+0SRFif+z9A
+ JRLyVICozfRH8mq6xJbL2umie4nvuFc+bX5FIwirCWsskj9yh3z+eCwTgAvcjSN/Swb8pGx5ZCx
+ r+n3ryoX5xuVwh1aCLag3GqsM1uTPEV8HSsyKex0Nsn/iWR04uY3hPXSgX0T5GZIQrfZIze5Myk
+ xsLzEshreCOgfgebbM5XRys/O7UCVINkRrRDZSoXhWJn3z2vS8+LhXpqKcA7mqYqJ8Mh7egskf5
+ 2liNr+QDO96cif1x/aQ==
+X-Proofpoint-GUID: cmkPI5mDGr7bpW4ECBiHQh2qaoyJT7Et
+X-Proofpoint-ORIG-GUID: cmkPI5mDGr7bpW4ECBiHQh2qaoyJT7Et
+X-Authority-Analysis: v=2.4 cv=BLyDalQG c=1 sm=1 tr=0 ts=6a0cc738 cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
+ a=_1IyUuN4QrATX339ibzo:22 a=VabnemYjAAAA:8 a=YRoFvhOfcVPyCIBj9wAA:9
+ a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-19_05,2026-05-18_01,2025-10-01_01
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Dynamically modifying a device's Max_Payload_Size (MPS) in the ena=
-ble_device hook breaks PCIe fabric consistency and causes Malformed TLP err=
-ors.
-- [High] Endpoint drivers can bypass the Max_Read_Request_Size (MRRS) limit=
-ation because the bridge's no_inc_mrrs flag is not set.
-- [Medium] Ignoring the return values of pcie_set_mps() and pcie_set_readrq=
-() allows devices to operate in an unsafe state if the limits cannot be app=
-lied.
---
+Add pcie_tph_enabled_req_type() so drivers can query the enabled TPH
+requester mode without reaching into pci_dev internals. A
+!CONFIG_PCIE_TPH stub returns PCI_TPH_REQ_DISABLE so callers need no
+ifdef.
 
-commit a6b8290401b7fa98e699e975574f47bfb1d20609
-Author: Marek Vasut <marek.vasut+renesas@mailbox.org>
+Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+---
+ drivers/pci/tph.c       | 12 ++++++++++++
+ include/linux/pci-tph.h |  2 ++
+ 2 files changed, 14 insertions(+)
 
-PCI: rcar-gen4: Limit Max_Read_Request_Size and Max_Payload_Size to 256 Byt=
-es
-
-This patch introduces a workaround for an R-Car Gen4 PCIe controller=20
-hardware limitation where the Max_Payload_Size (MPS) and=20
-Max_Read_Request_Size (MRRS) must not exceed 256 bytes. It implements=20
-an enable_device hook to force limit these values to prevent data=20
-corruption with certain NVMe SSDs.
-
-Cc: stable@vger.kernel.org
-
-> diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/co=
-ntroller/dwc/pcie-rcar-gen4.c
-> index 8b03c42f8c84c..9fe34ca7ce532 100644
-> --- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-[ ... ]
-> +static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
-> +					struct pci_dev *dev)
-> +{
-[ ... ]
-> +	if (pcie_get_mps(dev) > 256) {
-> +		pci_info(dev, "Limiting MPS to 256 bytes\n");
-> +		pcie_set_mps(dev, 256);
-
-[Severity: High]
-Will modifying the Max_Payload_Size locally in the enable_device hook=20
-desynchronize it from the rest of the PCIe fabric?=20
-
-The PCIe specification and Linux PCI core generally manage MPS uniformly=20
-across the hierarchy during boot via pcie_bus_configure_settings().=20
-Because this hook runs later during driver probe via pci_enable_device(),=20
-if the upstream Root Port or Switch retains a larger MPS and transmits a=20
-TLP exceeding 256 bytes, could the downstream device drop it as a Malformed=
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 91145e8d9d95..6c4492075ae9 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -174,6 +174,18 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+ }
+ EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
 =20
-TLP and cause a fatal link error?=20
-
-Would it be safer to restrict the Root Port's MPS capabilities before=20
-enumeration so the core logic correctly scales the entire fabric?
-
-> +	}
-> +
-[ ... ]
-> +	if (pcie_get_readrq(dev) > 256) {
-> +		pci_info(dev, "Limiting MRRS to 256 bytes\n");
-> +		pcie_set_readrq(dev, 256);
-> +	}
-> +
-> +	return 0;
-
-[Severity: Medium]
-Should the return values of pcie_set_mps() and pcie_set_readrq() be=20
-checked and propagated here?=20
-
-Both functions can return negative error codes on failure. By ignoring=20
-these return values and unconditionally returning 0, the device could=20
-be fully enabled even if the configuration writes fail, leaving the system=
++/**
++ * pcie_tph_enabled_req_type - Return the device's enabled TPH requester=
+ type
++ * @pdev: PCI device to query
++ *
++ * Return: PCI_TPH_REQ_DISABLE, PCI_TPH_REQ_TPH_ONLY or PCI_TPH_REQ_EXT_=
+TPH.
++ */
++u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
++{
++	return pdev->tph_req_type;
++}
++EXPORT_SYMBOL(pcie_tph_enabled_req_type);
++
+ /*
+  * Return the size of ST table. If ST table is not in TPH Requester Exte=
+nded
+  * Capability space, return 0. Otherwise return the ST Table Size + 1.
+diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+index be68cd17f2f8..fe572737b409 100644
+--- a/include/linux/pci-tph.h
++++ b/include/linux/pci-tph.h
+@@ -30,6 +30,7 @@ void pcie_disable_tph(struct pci_dev *pdev);
+ int pcie_enable_tph(struct pci_dev *pdev, int mode);
+ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
+ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
++u8 pcie_tph_enabled_req_type(struct pci_dev *pdev);
+ #else
+ static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
+ 					unsigned int index, u16 tag)
+@@ -41,6 +42,7 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *d=
+ev,
+ static inline void pcie_disable_tph(struct pci_dev *pdev) { }
+ static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
+ { return -EINVAL; }
++static inline u8 pcie_tph_enabled_req_type(struct pci_dev *pdev) { retur=
+n 0; }
+ #endif
 =20
-silently vulnerable to the data corruption described in the commit message.
-
-> +}
-> +
->  /* Host mode */
->  static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
->  {
-> @@ -313,6 +361,9 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp=
- *pp)
->  	int ret;
->  	u32 val;
-> =20
-> +	if (pp->bridge)
-> +		pp->bridge->enable_device =3D rcar_gen4_pcie_enable_device;
-
-[Severity: High]
-Could endpoint drivers (like high-performance network or storage drivers) o=
-r=20
-userspace via sysfs subsequently increase the MRRS above 256 bytes?=20
-
-Because the host bridge's no_inc_mrrs flag is not set, a downstream=20
-driver can call pcie_set_readrq() and silently bypass this workaround,=20
-re-enabling the data corruption vulnerability.=20
-
-Should pp->bridge->no_inc_mrrs =3D 1 be set during this initialization=20
-to enforce the limit permanently?
-
-> +
->  	gpiod_set_value_cansleep(dw->pe_rst, 1);
-> =20
->  	ret =3D rcar_gen4_pcie_common_init(rcar);
-
+ #endif /* LINUX_PCI_TPH_H */
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260519195219.1893=
-23-1-marek.vasut+renesas@mailbox.org?part=3D1
+2.53.0-Meta
