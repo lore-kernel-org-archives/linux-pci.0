@@ -1,231 +1,263 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from CY7PR03CU001.outbound.protection.outlook.com (mail-westcentralusazon11010014.outbound.protection.outlook.com [40.93.198.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 024933ACEE2;
-	Tue, 19 May 2026 07:21:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779175318; cv=none; b=JhKoqqWi0QtcCTEX7TWmYosdTcBMYyNYtEpEEDiKuv1+7GpqkoDsa9tWWkHZzyk12exBVSg3SR/1HMzvFOAwbogwHCfMGTlwjy24HW+Yrv77JwhPrR9cYWrFHDZpQUX3ij+icRKsL+9ymOeZxM3aXYMF88m/8zT5DjoszNvlJdU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779175318; c=relaxed/simple;
-	bh=/sqDR+DAm77iAdHtKSPJrjJ/DUFVxpoRznwkUPqzbvg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SwTZWHAfM+s/r+r+hvmbbtYvfZCHGOtO/YKba2qKQsAY96obV3zzgjqchT/iL/S8/txxKdKEPPcLv3lC4SBI3JXSz3bQVRunyYX4QyOHZ22gfHufl24t1kjRXSMUiuNvLP01rCFUMSt2deEhFt4HbXvr+7QIm3PRZzahuatDEdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L89bXobs; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E3363DBD4D;
+	Tue, 19 May 2026 07:56:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.198.14
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779177415; cv=fail; b=VZF6ZgOK3YRwCMu27ISLfQ4ap44TIj6zbo0Iqz6r1LllMGEsvBRfGabgNuBgIYAMo89Wv/PKqf9v94ta7zRGVCJJghxiycAGej4oXJSFDzigSrFm9RydfsObAzUnMdU9qsDOB8Bvuia4IndDLcSNy9NTbWO0sRb2SFrT1NsHemM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779177415; c=relaxed/simple;
+	bh=GOwAIrKvLyQYd7LAM1Qd00xQWmFuloY7PcA2+Nz2U6w=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=ubJuQOsV2ySh0H0oXYZwITvv5JXkgw8XpwD+iRmTCn1U9iOP8QMptBvoXHk2w6DqoqlX0ItYLMIROpa0EYX5UFQhHwT5DQWI8YtLIwVzNK+yayHbDKJj7kIma9cXNdR66C5hEURlC6PuUDduJJK/YW9rBScTcoRegv5C8u2HAfc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=K8d/my81; arc=fail smtp.client-ip=40.93.198.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L89bXobs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A1EFC2BCC6;
-	Tue, 19 May 2026 07:21:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779175317;
-	bh=/sqDR+DAm77iAdHtKSPJrjJ/DUFVxpoRznwkUPqzbvg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=L89bXobsAp2zYYvGxZx9Xi60sTPBm6auqQlqdg2AjCN43HBANRrT/DU8OPXp60EeV
-	 9Jpq/aKhILIqh4rgK9OqbAVpVTqjicHoUm/PCrFtzJpkjwhd1OJeFxJe/n5M577dsN
-	 ++CTfsUp9tFSRoD62GgzC/zl62RVAoe35aqCq+n/YbUKbMP4IlKSmeh63FGCZQkJFr
-	 vZq60ZuM+Ox9EVC/lszFEf/gIxxz6WYW9bjmj4NtoDoMK7TwDzrVn6NFdaPUEn5/Mw
-	 QeKaKxK1+Hld00KSlHVRS0ud12icsY27FiJdyxSegquqHjzrYaONobmwfh0zvXI5c3
-	 3wXiBEAYyKvgw==
-Date: Tue, 19 May 2026 12:51:49 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Chen-Yu Tsai <wenst@chromium.org>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Ryder Lee <ryder.lee@mediatek.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: PCI: mediatek-gen3: Allow memory-region for
- restricted DMA buffer
-Message-ID: <rphuqwucr2r6gsgrkzkpzy7fn4qa7q4afzbwtzae53dtudmush@kxtzdoq426uz>
-References: <20260508063633.3894348-1-wenst@chromium.org>
- <locoul5wdzuvvmm7mqpuntjqu4o75gmyd5npgfqrw3zuwsrse6@dhrjggs4cihh>
- <CAGXv+5GAaMQbaoUVr5zcwtHaofyXwHz03TxBe-QyWj_sNoQZsg@mail.gmail.com>
- <qnikqcqoiw7z2yh5wruqcli3rk56yomyymghzivlcmekp2blwc@dfhsfl3sqcla>
- <CAGXv+5GBraoTrQatQdrM5b+dOteL_Y5K7_UQBUt-2L1x=c94KA@mail.gmail.com>
- <2tq4zy3zhcrz25rl2qhdsxvoedcry4z3v2lmmropesxqgzhtlp@fn6htdl74ogu>
- <CAGXv+5GRBv8+pLbb-AyFW0cAx=c45JhWd-odzJGDdWABKQLaqg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="K8d/my81"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=qA3yqXoiwmpwJrlSptTohBx/RbWV45IZqaulsbaQ4daEeXrA/wR2GfNRlixLugxcnA6T+uVUdq6Cqjnc5BYQxjIZRGuSGI8Yj6gZeHvCxof3RDt0fTaYtZhSq/XEowbVD/gC/lEdg+6kmlf0AGcv6aB1+sozocdzVhBmPkNH9JMBoEqUsAU7MajP561a3TRc0lGvs+nzdmwiXEZURpGzABkCxxya+fjl9cwIQw+qki3VDwxcvS6j8EIe9xYU/LL7WQIyBy0rOlfwBz50A5S93Tf68Jb6S/gJDewXAFfkJx0WMVuqQcH5KCx8y4cklwRH6ZNzyvvCcQH/ZjmSBppsrg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xgxJ4IwLzaTyszhQpN8IhZmLl8MUpEf1tZISNg6rVPc=;
+ b=hxGahSKxC8UxHbcwOzoVufnJuQG697FfvkgMFzlBfNTZX5lOLjZ5/CS+unblm6jjhr3dzJY1YfZHgjKr32mqy+cGNQ8yJHV/aaOjlOjSzn0Pa3pTmSt9nWihCDxWaMPWfjrpW33ruDJ/dsFQ9C+9W981ocYIbM2f+iRJGIwb1Djppmr+cX5OVYgHwKQcHR6jNWp5MKHbhcLwg2fAZpAYJPVLVORHmwNE+7ByK+iaaNs3zdabHfXYmbbh04VxmeWa2EO90jfIg0QppItDbMz8EIhv3hEtsjnS2XjRjAfd3mOGlanb5WUAdoG4KY6n5hpWhrD20CloLm7vLbMjWhsxAg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xgxJ4IwLzaTyszhQpN8IhZmLl8MUpEf1tZISNg6rVPc=;
+ b=K8d/my81Jx6D2vNrf2lfae1fg40tnORpu+ZxFgRg77eGKdhRKKRBp0UeQL8R4FqKN9QtFNI46Yex/xczkNG84v9a+DUDxpxIGMHxJT+XnETXYSSpN/y52lmYjge2J41SXmmADsEY9lX+TryzHa9GQrThBAiPSg2ptShZjxhCPcXtHXZlQH9zhOyvZ9lI7sS2JdwMmFLfpzWkJxxYG8vuBnVQkTLlDbgcbchtwIsS1sOrer8gzDJ5gPu8K7Kq1h9IAah5hBUgBzeR5nNYzTkZjFS910fFrmEYsZ08rIRSyFVfOUNUk/xCO3AOXPg1I5RbFJo0KaLCrrkvvmVqez9xaQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB2353.namprd12.prod.outlook.com (2603:10b6:207:4c::31)
+ by CYXPR12MB9428.namprd12.prod.outlook.com (2603:10b6:930:d5::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9913.12; Tue, 19 May
+ 2026 07:56:49 +0000
+Received: from BL0PR12MB2353.namprd12.prod.outlook.com
+ ([fe80::99b:dcff:8d6d:78e0]) by BL0PR12MB2353.namprd12.prod.outlook.com
+ ([fe80::99b:dcff:8d6d:78e0%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
+ 07:56:49 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 19 May 2026 16:56:44 +0900
+Message-Id: <DIMHR3ZPEL92.2HVZ0FGPM54MF@nvidia.com>
+Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
+Subject: Re: [PATCH v3 17/27] rust: auxiliary: generalize Registration over
+ ForLt
+From: "Eliot Courtney" <ecourtney@nvidia.com>
+To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
+ <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
+ <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
+ <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260517000149.3226762-1-dakr@kernel.org>
+ <20260517000149.3226762-18-dakr@kernel.org>
+In-Reply-To: <20260517000149.3226762-18-dakr@kernel.org>
+X-ClientProxiedBy: TYCP286CA0113.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:29c::10) To BL0PR12MB2353.namprd12.prod.outlook.com
+ (2603:10b6:207:4c::31)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGXv+5GRBv8+pLbb-AyFW0cAx=c45JhWd-odzJGDdWABKQLaqg@mail.gmail.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL0PR12MB2353:EE_|CYXPR12MB9428:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4ac30055-e64e-40f7-e598-08deb57c2e1f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|366016|376014|1800799024|7416014|18002099003|22082099003|3023799003|4143699003|921020|56012099003|11063799003;
+X-Microsoft-Antispam-Message-Info:
+	QccTMzLd6GA+tNH5ycDTllH4+AXow1QdMm5KD8nkR+K1vetg7vGJ7DnhGrVmziABtbivPdmTlouLOitug3Rv6yfdrrFSaVYCtwmW3yr+QdPMzMK8hgVvPL76hQu4egUHw2umLWAhH87ZnB/c+lkoTyZ2RbSG7u66Xhq/HBM4wQcnWdXirr2IuYvxXfMHswAoL6991gKhncirgbUkljMtVbhKRpNfE+lb93ljeP6EFrCYCJWMPQAFuzJ0Fj/UeYbv1sAyqfakEKm2+zX/cy34h0HjrE1lVp00G6AmMIrndrAIIUgpJUuKiqOebelRwoqu7M2T0eQLTQaElse//8MOy763eZBxt3ljzckEdY5Z874VKc9AOPaHQwYogPM8r0CQ2V/JO2ZIPhJTswudLX9pSrHcntTU+Ao5F7x4/ttK/BoESO5JM8vVlONpdAUhHt72NvZX2Xob5KC7/7R7YJOy52QdeRt2kDhjePmSf017Hg+UWlDi9yfP2ExWtvgI6FumUbkRoo3h7AISZZLgKYKxs7huuGavK/Px6v3uzaw/xMPQEhIfFQGP2oqOHPPDGPcKcdGfgjgurnhB9DTGlYHP2UAE4ewi14vSGAxBTSYQEPKk3xTiNWesf2OovZCt0PG5nPswKzjHet8HsttdkX/LD38B4V+n9Qy3b5/+BvIJ79Z6QKmRz1MmFAPm4PvpCOEJ10nCv9UQ98Vkp+/rULcaI7nQcWvEyDeVyAqw9GBzT5I=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2353.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(366016)(376014)(1800799024)(7416014)(18002099003)(22082099003)(3023799003)(4143699003)(921020)(56012099003)(11063799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?c3d3VHIyNnprSERnK2ZPMEpFRFFQNTlaSG9vWWdPMXpNMTdzQkJ3U1JKY3RE?=
+ =?utf-8?B?VFdqekhyRFp5M2pIOWh2YVo0Qk11TEdnV2x1TG4wNERWTjJITHFXcEI4NzRM?=
+ =?utf-8?B?aVFZQktrVmkwMDVRZHZsOWd6Wlc4TTlCS3hKdmpBWE1TOGxIMTFyVlZtc2hY?=
+ =?utf-8?B?V3M2SDVjWjBWZ0FHSzFsd01kallTVTkvRUZReHYwOTRoZlRzeG5VTUNVeW9x?=
+ =?utf-8?B?TjQ4QTN3U0Qyb2RFSCt0eUFBL1k4dlo2d3BHYXR4UXJqYVl5bTIyb3lVTVRu?=
+ =?utf-8?B?Y2g2NVhzS1JqZFlOeG9IcGJtakR4RUdXWk5DSlArb2RiTFcrUHZkenk3Tytq?=
+ =?utf-8?B?OTZkb1pvalBCM0lFd2hYVGU5ZE1IdjZRMk92WmNLT1h1OFRXV1p4MjQveFRH?=
+ =?utf-8?B?WkRHMElodlcrNnRJaFZFbndWRU1kR2pSTlE2YkRraGRsb3JlRHRhK3RkUXcw?=
+ =?utf-8?B?ekxGSTd0QVp3Q1FPdGhzckNzUHYwSGxGYU43ZEJ3dkJuSEhNK1NWckNwTFdy?=
+ =?utf-8?B?Yy9rZktaY0tjaW5CZkhBbXFxQXEvdzMvMGZkNmxTNnJjcmZ6YXNDUmJ6a0s5?=
+ =?utf-8?B?Umpsd0pHbkdzSFRZbThRbzM1eFhXTUdGUHE4ZGZwL2JzTnR1WUJvaWx1cXZP?=
+ =?utf-8?B?aHBHWThoVFVldzVEV2x4aGEwaGpGcldKOGVoWllqUDhMNFRNcWp2OVEydEQ3?=
+ =?utf-8?B?OFc0WWtxRnZzVG1tSDFhLzlpSm1DaWFLZ2hLeHQxbjhRTm1OdUljZ0FzKzlJ?=
+ =?utf-8?B?UVhyQTh3RlFyeDJETVZ0TjNxalh6enEwamNqTE1VR3lSckRramZiQWhCSVhB?=
+ =?utf-8?B?eGFaYjNlNjdLcUlnbGozZ3ExbzUyUk1IcEhIb2EvSnYxU0oyMDF6N0pFL2Y3?=
+ =?utf-8?B?VWhzTWZCWWxIbUQ4T1JoWXVOajdWeWx5RXRkNmhJallBdWZCY1BHbWpvbVU2?=
+ =?utf-8?B?ODhaTFdJWjJhZXI3QjZ2eTRjUGF1Y2QxdzNGMnZxbzBoVk94T3ljWGI0WmU4?=
+ =?utf-8?B?RmNrb2VRd0h0WmIyUnBwVk5UZ3BTZjZwcGhpMW5ubmZtZXdqd3MxR3BRd3Bl?=
+ =?utf-8?B?UGZGdE0xTnp2UFNaaXl6UlMwODk0aVZka2c0OVkrQTMxVkpqYnArYzRsc2Jy?=
+ =?utf-8?B?WnBFVy9vMXNiSXpmQk90Q2dNYnl0M2l3T1BKNzFBdW9SUHI0ZXVxcFFOZzFV?=
+ =?utf-8?B?UGdzejhEc3E4eUdXbXZVZ1BqVUx6NXhKUEpKNjdTV1VmbHhKZEJVQWsrdzFx?=
+ =?utf-8?B?VnVPNmIwMDRZaDVjWmNMbHl6eW1IbjRNaWE5TUR1Mlg0ZngyWmtZVTRybGov?=
+ =?utf-8?B?a1RSaUxYYjFCeGdiYVNBUXN2Yko0TkU2Q1g2dW1Tc1RyUWZQdXU1TFBoeXBq?=
+ =?utf-8?B?ZzFHMUZEZ1RjOEJoK2tuNGlsYUk3VE00eTZIODRwdkE4NUZEeklVaFZKL2Rj?=
+ =?utf-8?B?NzdtMmYrZDB4bEZGZDJjaitxazdDOUtKN3l3ZzF3UmFpQncvU2JMdkdsSE9n?=
+ =?utf-8?B?TTRQVVZXVzJad1NWWHhJS3BTeFJxU0N1OE00dzNTcWU4V0YwcmNod2dpT1Uw?=
+ =?utf-8?B?Y0dMa0VGMjB3VmdLU0JwdGlkeHdwcnM1RENjZjJMd01LZ2tlVU9Hc2R1TERj?=
+ =?utf-8?B?aGkrNWRWTnBmdXVQU2gxODQ2ZFFVRFhpTUozTGpxZ01rSXk0YjdHSEluZEZa?=
+ =?utf-8?B?clZIVEM1V0Nobmw1MDRBUk45QW1sd3VBL09naERycUU3ZVRyQ2pWM01WSnFk?=
+ =?utf-8?B?ZWFxNS9IL1Zab0Y4aWNscVNIaWVmME1reE56SDkrbFozMnB0YmRuR1Z0aXZK?=
+ =?utf-8?B?VG1ZYWdoRk5LMGVIOWNWUnVOcTN0T0NpZGpMTjZYd2hhMVY4amRLSTV1V0c2?=
+ =?utf-8?B?SU9MeTV6c3Mra3dlMDlCd3NaSko1R3hHR0lxRUJES1g3Z0tQZ2ZUYlBkd3NZ?=
+ =?utf-8?B?azQxVEhFSzUySnNwR1hxMWhvWkd5T1gvYnVUYWZFOVI0YWZnTjRqOUZOUjFO?=
+ =?utf-8?B?cjVFSTFSa214UEZWTzdBY2VZZlVFYVEzQVFDVGQxdE5CRzNkT0Nsb1BSNlNv?=
+ =?utf-8?B?SVFrZ0gwVXJ3S2JMZzJUaXYyMldHTGlSTVg2ekQ0S3pOUnltNXlyeGQ3V1Ew?=
+ =?utf-8?B?TUJUaWNHMmo0MlpIZFgrZFNJaFc3czR5OWFUZWoxcHJrd2tYeHY5ZldKQXBp?=
+ =?utf-8?B?ZmRDYUZreWtjQmdNeHYwUDdhUzdFOStkNHhYclovSTZnNVRpRGVZT3VsdVcv?=
+ =?utf-8?B?eTR4d2NJZzl5bEp0SzlOYXdFbzJTYWhkVTl0VElmUjVhaWNYU01KMlhoZGxv?=
+ =?utf-8?B?a3JMcU5wRlFKalkyMHFxNnNRd3lJcEtXN2QrQ3plQW9VWG01M0xTL1F1clls?=
+ =?utf-8?Q?U0jeTM+jkoIWdiG43pIoOsmD15gGaS/V6hss8/oDVC3LE?=
+X-MS-Exchange-AntiSpam-MessageData-1: auFU/Y0FqoTg9Q==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4ac30055-e64e-40f7-e598-08deb57c2e1f
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2353.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 07:56:49.1098
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: DLw25qw/t1HCLBu4EMNVBMYkzeqzLNi0c9oRne5+LV9GHebhEoOysyCEN1W3o4EJ6rD/TfbK2lbzeYeoMKgDeg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CYXPR12MB9428
 
-On Mon, May 18, 2026 at 05:02:11PM +0800, Chen-Yu Tsai wrote:
-> On Fri, May 15, 2026 at 8:34 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> >
-> > On Fri, May 15, 2026 at 05:16:19PM +0800, Chen-Yu Tsai wrote:
-> > > On Thu, May 14, 2026 at 7:48 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > >
-> > > > On Thu, May 14, 2026 at 03:54:29PM +0800, Chen-Yu Tsai wrote:
-> > > > > On Thu, May 14, 2026 at 1:23 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > > > >
-> > > > > > On Fri, May 08, 2026 at 02:36:32PM +0800, Chen-Yu Tsai wrote:
-> > > > > > > On some SoCs without an IOMMU behind the PCIe controller, the PCIe
-> > > > > > > controller memory access could be limited to a small region by the
-> > > > > > > firmware configuring a memory protection unit. This memory region
-> > > > > > > must be assigned to the PCIe controller so that the OS knows to
-> > > > > > > use that region. Otherwise PCIe devices would not work properly.
-> > > > > > >
-> > > > > >
-> > > > > > So this means, the PCIe devices can only access a specific carveout memory
-> > > > > > configured by MPU for DMA? If so, you should use 'dma-ranges' as suggested by
-> > > > > > Rob.
-> > > > > >
-> > > > > > 'memory-region' also serves the purpose, but for PCI, we have the dedicated
-> > > > > > 'dma-ranges' property.
-> > > > >
-> > > > > I think I need some sort of guide on writing the 'dma-ranges' property,
-> > > > > because it is not working for me.
-> > > > >
-> > > > > I'm adding
-> > > > >
-> > > > >     dma-ranges = <0x42000000 0 0x00000000 0 0xc0000000 0 0x4000000>;
-> > > > >
-> > > >
-> > > > So the device DMA address start from 0x0? Isn't it a 1:1 mapping?
-> > >
-> > > I actually don't know. But
-> > >
-> > > >         dma-ranges = <0x42000000 0 0xc0000000 0 0xc0000000 0 0x4000000>;
-> > >
-> > > this didn't work either.
-> >
-> >
-> > Hmm. Can you print the DMA address programmed to the device? i.e., the address
-> > returned by dma_map_single() in the driver.
-> 
-> On a working system still using the restricted-dma-pool memory region,
-> it gives something like 0x00000000c0009000, so indeed it is 1:1 mapping?
+On Sun May 17, 2026 at 9:01 AM JST, Danilo Krummrich wrote:
+> Generalize Registration<T> to Registration<F: ForLt> and
+> Device::registration_data<F: ForLt>() to return Pin<&F::Of<'_>>.
+>
+> The stored 'static lifetime is shortened to the borrow lifetime of &self
+> via ForLt::cast_ref; ForLt's covariance guarantee makes this sound.
+>
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+> ---
+>  drivers/gpu/nova-core/driver.rs       |  4 +-
+>  rust/kernel/auxiliary.rs              | 68 +++++++++++++++++----------
+>  samples/rust/rust_driver_auxiliary.rs |  8 ++--
+>  3 files changed, 52 insertions(+), 28 deletions(-)
+>
+> diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driv=
+er.rs
+> index fe4eafe1ebf0..ab0d7f2b516c 100644
+> --- a/drivers/gpu/nova-core/driver.rs
+> +++ b/drivers/gpu/nova-core/driver.rs
+> @@ -21,6 +21,7 @@
+>          },
+>          Arc,
+>      },
+> +    types::ForLt,
+>  };
+> =20
+>  use crate::gpu::Gpu;
+> @@ -32,7 +33,8 @@
+>  pub(crate) struct NovaCore {
+>      #[pin]
+>      pub(crate) gpu: Gpu,
+> -    _reg: Devres<auxiliary::Registration<()>>,
+> +    #[allow(clippy::type_complexity)]
+> +    _reg: Devres<auxiliary::Registration<ForLt!(())>>,
+>  }
+> =20
+>  const BAR0_SIZE: usize =3D SZ_16M;
+> diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
+> index 3f1e2966c03a..db3d56106ea2 100644
+> --- a/rust/kernel/auxiliary.rs
+> +++ b/rust/kernel/auxiliary.rs
+> @@ -20,6 +20,7 @@
+>      },
+>      prelude::*,
+>      types::{
+> +        ForLt,
+>          ForeignOwnable,
+>          Opaque, //
+>      },
+> @@ -271,12 +272,16 @@ pub fn parent(&self) -> &device::Device<device::Bou=
+nd> {
+> =20
+>      /// Returns a pinned reference to the registration data set by the r=
+egistering (parent) driver.
+>      ///
+> -    /// Returns [`EINVAL`] if `T` does not match the type used by the pa=
+rent driver when calling
+> +    /// `F` is the [`ForLt`](trait@ForLt) encoding of the data type. The=
+ returned
+> +    /// reference has its lifetime shortened from `'static` to `&self`'s=
+ borrow lifetime via
+> +    /// [`ForLt::cast_ref`].
+> +    ///
+> +    /// Returns [`EINVAL`] if `F` does not match the type used by the pa=
+rent driver when calling
+>      /// [`Registration::new()`].
+>      ///
+>      /// Returns [`ENOENT`] if no registration data has been set, e.g. wh=
+en the device was
+>      /// registered by a C driver.
+> -    pub fn registration_data<T: 'static>(&self) -> Result<Pin<&T>> {
+> +    pub fn registration_data<F: ForLt>(&self) -> Result<Pin<&F::Of<'_>>>=
+ {
+>          // SAFETY: By the type invariant, `self.as_raw()` is a valid `st=
+ruct auxiliary_device`.
+>          let ptr =3D unsafe { (*self.as_raw()).registration_data_rust };
+>          if ptr.is_null() {
+> @@ -289,18 +294,23 @@ pub fn registration_data<T: 'static>(&self) -> Resu=
+lt<Pin<&T>> {
+> =20
+>          // SAFETY: `ptr` is non-null and was set via `into_foreign()` in=
+ `Registration::new()`;
+>          // `RegistrationData` is `#[repr(C)]` with `type_id` at offset 0=
+, so reading a `TypeId`
+> -        // at the start of the allocation is valid regardless of `T`.
+> +        // at the start of the allocation is valid regardless of `F`.
+>          let type_id =3D unsafe { ptr.cast::<TypeId>().read() };
+> -        if type_id !=3D TypeId::of::<T>() {
+> +        if type_id !=3D TypeId::of::<F::Of<'static>>() {
+>              return Err(EINVAL);
+>          }
 
-It has to be 1:1 mapping.
+This seems a little dangerous to me, since the caller can specify the
+ForLt type which means it can rewrite the lifetime of the ForLt encoded
+type to be whatever it wants. The runtime check here only looks at the
+typeid of the encoded type but can't check the mapping from forlt::of
+given lifetime to actual underlying type lifetime instantiation.
+For example, in the next patch on the sample aux driver you can do:
 
-> These are for the RX/TX descriptors [1][2].
-> 
-> When using dma-ranges, the failure is from dma_alloc_coherent() [3][4],
-> which is the descriptor ring. On a working system, this is something
-> like 0x00000000c0c9d000, so again 1:1.
-> 
-> [1] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L221
-> [2] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L829
-> [3] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L192
-> [4] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L265
-> 
-> > Also, using prefetchable flag is not correct for DMA memory. You should use:
-> >
-> >         dma-ranges = <0x02000000 0 0xc0000000 0 0xc0000000 0 0x4000000>;
-> 
-> This didn't work either. What exactly is supposed to handle dma-ranges?
-> I see some code parsing it in the PCI core, but it just saves it to a list.
-> 
+```
+let data =3D adev.registration_data::<ForLt!(for<'a> Data<'static>)>()?;
+let pdev: &'static pci::Device<Bound> =3D data.parent;
+```
 
-I think the failure is due to marking the memory as 'reserved' in DT. With
-'dma-ranges', the allocator will only ensure that the allocated memory stays
-within this limit. But the allocator itself will not use this property to
-allocate from the reserved region.
+and mint a 'static reference to a bound device, which seems unsound to
+me. So maybe this needs to store the typeid of F instead? so that it can
+store the actual mapping from forlt lifetime to underlying type
+lifetimes.
 
-Now, I'm not sure if you can reliably get dma-ranges to work for this usecase
-of forcing the dma_alloc_coherent() to use the reserved memory.
+Overall I feel it's unfortunate to have this be a runtime check though.
+What about requiring all device ids declared to be supported by an aux
+bus driver to have the same rust registration data type? Not sure how
+common it is to want to have the same aux bus driver support a very
+hetereogenous set of aux bus devices though. I think getting rid of the
+runtime check was discussed on the other patch series adding the rust
+sideband registration data on the C side, but if there's not much real
+use case for hetereogenous registration data types in a single aux bus
+driver then it might be worth the added safety. WDYT?
 
-So looks like 'memory-region' is your only option here.
-
-- Mani
-
-> 
-> Here's a function graph trace for the dma_alloc_coherent() call:
-> 
-> funcgraph_entry:                   |  dma_alloc_attrs() {
-> funcgraph_entry:        6.538 us   |    dma_alloc_from_dev_coherent(); (ret=0x0)
-> funcgraph_entry:                   |    dma_direct_alloc() {
-> funcgraph_entry:                   |      __dma_direct_alloc_pages.isra.0() {
-> funcgraph_entry:        4.846 us   |        dma_alloc_contiguous(); (ret=0x0)
-> funcgraph_entry:                   |        __alloc_pages_noprof() {
-> funcgraph_entry:                   |          __alloc_frozen_pages_noprof() {
-> funcgraph_entry:        5.539 us   |            fs_reclaim_acquire();
-> (ret=0xffffff80c7dcd580)
-> funcgraph_entry:        5.077 us   |            fs_reclaim_release();
-> (ret=0xffffff80c7dcd580)
-> funcgraph_entry:                   |            __might_sleep() {
-> funcgraph_entry:        5.153 us   |              __might_resched(); (ret=0x0)
-> funcgraph_exit:       + 16.230 us  |            } (ret=0x0)
-> funcgraph_entry:        5.077 us   |
-> __next_zones_zonelist(); (ret=0xffffffd055d598e0)
-> funcgraph_entry:                   |            get_page_from_freelist() {
-> funcgraph_entry:                   |              _raw_spin_trylock() {
-> funcgraph_entry:        5.385 us   |
-> do_raw_spin_trylock(); (ret=0x1)
-> funcgraph_exit:       + 16.923 us  |              } (ret=0x1)
-> funcgraph_entry:                   |              _raw_spin_unlock() {
-> funcgraph_entry:        5.077 us   |
-> do_raw_spin_unlock(); (ret=0x1)
-> funcgraph_exit:       + 16.538 us  |              } (ret=0x100000001)
-> funcgraph_exit:       + 54.231 us  |            } (ret=0xfffffffec051c540)
-> funcgraph_exit:       ! 123.462 us |          } (ret=0xfffffffec051c540)
-> funcgraph_exit:       ! 134.692 us |        } (ret=0xfffffffec051c540)
-> funcgraph_entry:                   |        __free_pages() {
-> funcgraph_entry:                   |          ___free_pages() {
-> funcgraph_entry:                   |            __free_frozen_pages() {
-> funcgraph_entry:        5.538 us   |
-> __get_pfnblock_flags_mask.isra.0(); (ret=0x0)
-> funcgraph_entry:                   |              _raw_spin_trylock() {
-> funcgraph_entry:        5.077 us   |
-> do_raw_spin_trylock(); (ret=0x1)
-> funcgraph_exit:       + 16.538 us  |              } (ret=0x1)
-> funcgraph_entry:        5.385 us   |
-> free_frozen_page_commit(); (ret=0x1)
-> funcgraph_entry:                   |              _raw_spin_unlock() {
-> funcgraph_entry:        5.077 us   |
-> do_raw_spin_unlock(); (ret=0x1)
-> funcgraph_exit:       + 16.385 us  |              } (ret=0x100000001)
-> funcgraph_exit:       + 75.000 us  |            } (ret=0x0)
-> funcgraph_exit:       + 86.230 us  |          } (ret=0x0)
-> funcgraph_exit:       + 97.384 us  |        } (ret=0x0)
-> funcgraph_exit:       ! 262.846 us |      } (ret=0x0)
-> funcgraph_exit:       ! 274.538 us |    } (ret=0x0)
-> funcgraph_exit:       ! 309.077 us |  } (ret=0x0)
-> 
-> 
-> And here are kernel logs for all the system's memory regions:
-> 
-> Reserved memory: created DMA memory pool at 0x000000013ff00000, size 1 MiB
-> OF: reserved mem: initialized node audio-dma-pool, compatible id shared-dma-pool
-> OF: reserved mem: 0x000000013ff00000..0x000000013fffffff (1024 KiB)
-> nomap non-reusable audio-dma-pool
-> OF: reserved mem: 0x00000000ffe65000..0x00000000fff64fff (1024 KiB)
-> map non-reusable ramoops
-> Reserved memory: created DMA memory pool at 0x0000000050000000, size 41 MiB
-> OF: reserved mem: initialized node scp@50000000, compatible id shared-dma-pool
-> OF: reserved mem: 0x0000000050000000..0x00000000528fffff (41984 KiB)
-> nomap non-reusable scp@50000000
-> cma: Reserved 16 MiB at 0x00000000c3000000
-> 
-> Zone ranges:
->   DMA      [mem 0x0000000040000000-0x00000000c3ffffff]
->   DMA32    [mem 0x00000000c4000000-0x00000000ffffffff]
->   Normal   [mem 0x0000000100000000-0x000000013fffffff]
-> 
-> Early memory node ranges
->   node   0: [mem 0x0000000040000000-0x000000004fffffff]
->   node   0: [mem 0x0000000050000000-0x00000000528fffff]
->   node   0: [mem 0x0000000052900000-0x00000000545fffff]
->   node   0: [mem 0x0000000054700000-0x00000000ffdfffff]
->   node   0: [mem 0x0000000100000000-0x000000013fefffff]
->   node   0: [mem 0x000000013ff00000-0x000000013fffffff]
-> 
-> software IO TLB: area num 8.
-> software IO TLB: mapped [mem 0x00000000bf000000-0x00000000c3000000] (64MB)
-> 
-> 
-> So I think it could be that the usable memory has all been given away to
-> other bits? But then dma_alloc_contiguous() returned NULL.
-> 
-> 
-> ChenYu
-
--- 
-மணிவண்ணன் சதாசிவம்
