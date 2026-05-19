@@ -1,108 +1,321 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 989672F8EBB
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 11:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60796331A63
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 11:33:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779190210; cv=none; b=pVtwiOS+4aUcxk7p7oHoqUZgAHercp4Gk1uerD7iJe5K+q7Fo3T2wnXWFYAQ42vLfp12NSXvG1XX46fnVxN751rUDz44LL+e1AYY82cp2okPRUNvF9zxJfwro5FZA2TVvdyYoF6DTl9LiKoxAuiCDXmprfXRNxvMcqP5IVV5Ty4=
+	t=1779190393; cv=none; b=nyJ1oGlRetSQ14aK5xlP0gW4/k+e9LwQy3/51WaQRwRXzZcyoVInS+GRayZerT2Ht6XdVNldkUls4jHa9VBdPV4SJes4Ki5Gj3UU19UIycu/g5V8r39Gj7Qfu5BQXvseS7xfs4gotxEDbm92tbqZ1mAOdKmEJ28vZC6aylmm5E8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779190210; c=relaxed/simple;
-	bh=3WRfoTMcNYnRYQns7IRrmMKg1AwpqTCV7QwJHTTEReo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OS/UgS32JziYOHwSaWoXcheMM4PDnhOnorqOO0+fItmOOJs3qZj1FL4fMZ4d0Vr+bhZnl5ksP/5IeIdDlKLO07qjaTRvfyHSSO2RfHqwHCkut5oC2M4j2l/Ap12nuLQT05WPKCSxN+bMd41HHWkks43Sw5ipuRfH0dSl7IsJBp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zeq6KllO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779190393; c=relaxed/simple;
+	bh=VtFNGi2rh8z8LKwcNsmKQCrOlXlGg21QM342iXgF/tc=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=Gk78/6l8K/sfdI7qFZ04j07c3jYdAzmVbtAHV2IVaixMu0OqXoxcMyym5UdVtitFQWaRtrOh2wUhnEXooeA2XNSSIVzQhpTRO+s2yQvuiFoP0wRFjDwnIGvCB+Em3yMOovkMbro5xyqzO/YPiXczbf7PWo/7j1XYr4ff/092Akk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Zt8mNjQo; arc=none smtp.client-ip=198.175.65.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zeq6KllO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17C9AC2BCB3;
-	Tue, 19 May 2026 11:30:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779190210;
-	bh=3WRfoTMcNYnRYQns7IRrmMKg1AwpqTCV7QwJHTTEReo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=Zeq6KllOqsyE6iQkekGCXSMol5OO0Pco4whwJ7dvDHUHplo8VujyFnv9/8VbIx8pW
-	 QghKplRWMZBaZhcOvj5z5U2mMaGRmnGSH29k7LHy2BBT6w78xaUkCa4dDOEX/FUYjl
-	 Yq0/vew89xtw2YRV7MxRiviWrfnUBQMoi9bYPsufonbW/NUErFBioEXcbOZlw3Y1aH
-	 OjT05yLSVNmgPkoaVUaJEe3mvDbaUtc5Ap8hJYe/7YkftqANtzqinTKapIPqU8lDBn
-	 K3ww6EQkAYZ762dbEP4kGaNJMMlc4CgI74Z73XJ3Squ89aUL6FrH69t8VgbKpr8BJq
-	 SPFgQ4folufvA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 7/9] Bluetooth: hci_qca: Add M.2 Bluetooth device
- support using pwrseq
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Zt8mNjQo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779190391; x=1810726391;
+  h=date:from:to:cc:subject:message-id;
+  bh=VtFNGi2rh8z8LKwcNsmKQCrOlXlGg21QM342iXgF/tc=;
+  b=Zt8mNjQoV95jX0HgNPJVm9PM07wOLqY6G9bGY6AprmKrWAS5dLeEt+q0
+   yMl0ZYejgm8csbWy9PXez2Kc+1ELg+1G693kWzGwlk86Vhbj7leG7cwzR
+   UvsxFMwyykY9YvQ6mypeQgu0HYlbY4YZBXWi0hZFiT0PguBz3070FDz1y
+   CG61wd8MIKh+o9okeEr+6F2gHWtSXNdsqGrJ0hi5BsPd2ineMvnvAASpq
+   9u+9jGpX+hAXSq32zAdbYp6dur4yoexFxZD5GArERA1iZ36i1CkbPpuTi
+   DfPRTbYU6tz+3745wakn9GGB3wf/TP/Dy/Ykfy5dYlmRS5d+7B4R+jiGP
+   Q==;
+X-CSE-ConnectionGUID: 8T7eqHh8QjidmUFMsM/4bQ==
+X-CSE-MsgGUID: 9pp5aqUbRLanlGAJkhHkZQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11790"; a="80044179"
+X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
+   d="scan'208";a="80044179"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 04:33:11 -0700
+X-CSE-ConnectionGUID: CnMWg5JlSNqhT69IxPCnWA==
+X-CSE-MsgGUID: 5D+MfJAISl2mi5ZgxJK0/Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
+   d="scan'208";a="244718063"
+Received: from lkp-server02.sh.intel.com (HELO 30e86e9c1927) ([10.239.97.151])
+  by orviesa005.jf.intel.com with ESMTP; 19 May 2026 04:33:09 -0700
+Received: from kbuild by 30e86e9c1927 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wPIgz-000000000xv-2OX0;
+	Tue, 19 May 2026 11:32:59 +0000
+Date: Tue, 19 May 2026 19:31:45 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260519-pwrseq-m2-bt-v3-7-b39dc2ae3966@oss.qualcomm.com>
-References: <20260519-pwrseq-m2-bt-v3-7-b39dc2ae3966@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 19 May 2026 11:30:09 +0000
-Message-Id: <20260519113010.17C9AC2BCB3@smtp.kernel.org>
+Subject: [pci:pwrctrl] BUILD SUCCESS
+ 548f3d287d92bcbc908b02db57fb889f8a8276a0
+Message-ID: <202605191938.rfEE10b5-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Resource leak due to `devm_pwrseq_get()` being tied to the parent =
-UART controller device instead of the serdev device being probed.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pwrctrl
+branch HEAD: 548f3d287d92bcbc908b02db57fb889f8a8276a0  PCI/pwrctrl: Lock device when calling device_is_bound()
+
+elapsed time: 731m
+
+configs tested: 244
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-23
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                            randconfig-001    gcc-8.5.0
+arc                   randconfig-001-20260519    clang-23
+arc                   randconfig-001-20260519    gcc-8.5.0
+arc                            randconfig-002    gcc-8.5.0
+arc                   randconfig-002-20260519    clang-23
+arc                   randconfig-002-20260519    gcc-8.5.0
+arm                               allnoconfig    clang-23
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                              allyesconfig    gcc-15.2.0
+arm                                 defconfig    gcc-15.2.0
+arm                            randconfig-001    gcc-8.5.0
+arm                   randconfig-001-20260519    clang-23
+arm                   randconfig-001-20260519    gcc-8.5.0
+arm                            randconfig-002    gcc-8.5.0
+arm                   randconfig-002-20260519    clang-23
+arm                   randconfig-002-20260519    gcc-8.5.0
+arm                            randconfig-003    gcc-8.5.0
+arm                   randconfig-003-20260519    clang-23
+arm                   randconfig-003-20260519    gcc-8.5.0
+arm                            randconfig-004    gcc-8.5.0
+arm                   randconfig-004-20260519    clang-23
+arm                   randconfig-004-20260519    gcc-8.5.0
+arm                       spear13xx_defconfig    gcc-15.2.0
+arm64                            allmodconfig    clang-19
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260519    gcc-8.5.0
+arm64                 randconfig-002-20260519    gcc-8.5.0
+arm64                 randconfig-003-20260519    gcc-8.5.0
+arm64                 randconfig-004-20260519    gcc-8.5.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260519    gcc-8.5.0
+csky                  randconfig-002-20260519    gcc-8.5.0
+hexagon                          allmodconfig    clang-17
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    clang-23
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon                        randconfig-001    gcc-11.5.0
+hexagon               randconfig-001-20260519    gcc-10.5.0
+hexagon               randconfig-001-20260519    gcc-11.5.0
+hexagon                        randconfig-002    gcc-11.5.0
+hexagon               randconfig-002-20260519    gcc-10.5.0
+hexagon               randconfig-002-20260519    gcc-11.5.0
+i386                             allmodconfig    clang-20
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260519    gcc-12
+i386        buildonly-randconfig-002-20260519    gcc-12
+i386        buildonly-randconfig-003-20260519    gcc-12
+i386        buildonly-randconfig-004-20260519    gcc-12
+i386        buildonly-randconfig-005-20260519    gcc-12
+i386        buildonly-randconfig-006-20260519    gcc-12
+i386                                defconfig    gcc-15.2.0
+i386                           randconfig-001    gcc-14
+i386                  randconfig-001-20260519    gcc-14
+i386                           randconfig-002    gcc-14
+i386                  randconfig-002-20260519    gcc-14
+i386                           randconfig-003    gcc-14
+i386                  randconfig-003-20260519    gcc-14
+i386                           randconfig-004    gcc-14
+i386                  randconfig-004-20260519    gcc-14
+i386                           randconfig-005    gcc-14
+i386                  randconfig-005-20260519    gcc-14
+i386                           randconfig-006    gcc-14
+i386                  randconfig-006-20260519    gcc-14
+i386                           randconfig-007    gcc-14
+i386                  randconfig-007-20260519    gcc-14
+i386                  randconfig-011-20260519    gcc-14
+i386                  randconfig-012-20260519    gcc-14
+i386                  randconfig-013-20260519    gcc-14
+i386                  randconfig-014-20260519    gcc-14
+i386                  randconfig-015-20260519    gcc-14
+i386                  randconfig-016-20260519    gcc-14
+i386                  randconfig-017-20260519    gcc-14
+loongarch                        allmodconfig    clang-19
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    clang-23
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch                      randconfig-001    gcc-11.5.0
+loongarch             randconfig-001-20260519    clang-18
+loongarch             randconfig-001-20260519    gcc-10.5.0
+loongarch             randconfig-001-20260519    gcc-11.5.0
+loongarch                      randconfig-002    gcc-11.5.0
+loongarch             randconfig-002-20260519    gcc-10.5.0
+loongarch             randconfig-002-20260519    gcc-11.5.0
+loongarch             randconfig-002-20260519    gcc-15.2.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                             allyesconfig    gcc-15.2.0
+m68k                                defconfig    clang-19
+m68k                        m5407c3_defconfig    gcc-15.2.0
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+nios2                         10m50_defconfig    gcc-11.5.0
+nios2                            allmodconfig    clang-23
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-23
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                          randconfig-001    gcc-11.5.0
+nios2                 randconfig-001-20260519    gcc-10.5.0
+nios2                 randconfig-001-20260519    gcc-11.5.0
+nios2                          randconfig-002    gcc-11.5.0
+nios2                 randconfig-002-20260519    gcc-10.5.0
+nios2                 randconfig-002-20260519    gcc-11.5.0
+openrisc                         allmodconfig    clang-23
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    clang-23
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-23
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                         randconfig-001    gcc-8.5.0
+parisc                randconfig-001-20260519    gcc-8.5.0
+parisc                         randconfig-002    gcc-8.5.0
+parisc                randconfig-002-20260519    gcc-8.5.0
+parisc64                            defconfig    clang-19
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-23
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc                        randconfig-001    gcc-8.5.0
+powerpc               randconfig-001-20260519    gcc-8.5.0
+powerpc                        randconfig-002    gcc-8.5.0
+powerpc               randconfig-002-20260519    gcc-8.5.0
+powerpc64                      randconfig-001    gcc-8.5.0
+powerpc64             randconfig-001-20260519    gcc-8.5.0
+powerpc64             randconfig-002-20260519    gcc-8.5.0
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260519    gcc-13.4.0
+riscv                 randconfig-002-20260519    gcc-13.4.0
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260519    gcc-13.4.0
+s390                  randconfig-002-20260519    gcc-13.4.0
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-23
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                          landisk_defconfig    gcc-15.2.0
+sh                    randconfig-001-20260519    gcc-13.4.0
+sh                    randconfig-002-20260519    gcc-13.4.0
+sparc                             allnoconfig    clang-23
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260519    gcc-14.3.0
+sparc                 randconfig-002-20260519    gcc-14.3.0
+sparc64                          allmodconfig    clang-23
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260519    gcc-14.3.0
+sparc64               randconfig-002-20260519    gcc-14.3.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260519    gcc-14.3.0
+um                    randconfig-002-20260519    gcc-14.3.0
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260519    gcc-14
+x86_64      buildonly-randconfig-002-20260519    gcc-14
+x86_64      buildonly-randconfig-003-20260519    gcc-14
+x86_64      buildonly-randconfig-004-20260519    gcc-14
+x86_64      buildonly-randconfig-005-20260519    gcc-14
+x86_64      buildonly-randconfig-006-20260519    gcc-14
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260519    clang-20
+x86_64                randconfig-002-20260519    clang-20
+x86_64                randconfig-003-20260519    clang-20
+x86_64                randconfig-004-20260519    clang-20
+x86_64                randconfig-005-20260519    clang-20
+x86_64                randconfig-006-20260519    clang-20
+x86_64                         randconfig-011    clang-20
+x86_64                randconfig-011-20260519    clang-20
+x86_64                         randconfig-012    clang-20
+x86_64                randconfig-012-20260519    clang-20
+x86_64                         randconfig-013    clang-20
+x86_64                randconfig-013-20260519    clang-20
+x86_64                         randconfig-014    clang-20
+x86_64                randconfig-014-20260519    clang-20
+x86_64                         randconfig-015    clang-20
+x86_64                randconfig-015-20260519    clang-20
+x86_64                         randconfig-016    clang-20
+x86_64                randconfig-016-20260519    clang-20
+x86_64                randconfig-071-20260519    gcc-14
+x86_64                randconfig-072-20260519    gcc-14
+x86_64                randconfig-073-20260519    gcc-14
+x86_64                randconfig-074-20260519    gcc-14
+x86_64                randconfig-075-20260519    gcc-14
+x86_64                randconfig-076-20260519    gcc-14
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-23
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-23
+xtensa                           allyesconfig    gcc-15.2.0
+xtensa                randconfig-001-20260519    gcc-14.3.0
+xtensa                randconfig-002-20260519    gcc-14.3.0
+
 --
-
-commit cdecabb47fcbe744365c9b9d2fe977b061bcd9d4
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-
-Bluetooth: hci_qca: Add M.2 Bluetooth device support using pwrseq
-
-This commit adds support for controlling the power supply to an M.2 Bluetoo=
-th
-device using the uart pwrseq device. It retrieves the pwrseq device if an
-OF graph link is present on the controller device.
-
-> diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
-> index cd1834246b479..c83fe72bc5499 100644
-> --- a/drivers/bluetooth/hci_qca.c
-> +++ b/drivers/bluetooth/hci_qca.c
-[ ... ]
-> @@ -2443,6 +2444,18 @@ static int qca_serdev_probe(struct serdev_device *=
-serdev)
->  	case QCA_WCN6750:
->  	case QCA_WCN6855:
->  	case QCA_WCN7850:
-> +		/*
-> +		 * OF graph link is only present for BT devices attached through
-> +		 * the M.2 Key E connector.
-> +		 */
-> +		if (of_graph_is_present(dev_of_node(&serdev->ctrl->dev))) {
-> +			qcadev->bt_power->pwrseq =3D devm_pwrseq_get(&serdev->ctrl->dev,
-> +								   "uart");
-
-Does this leak the pwrseq descriptor if the probe fails later or the driver
-is unbound?
-
-By passing &serdev->ctrl->dev to devm_pwrseq_get(), the devres cleanup
-action is attached to the parent UART controller's lifecycle rather than the
-Bluetooth serdev device (&serdev->dev) currently being probed.
-
-If the driver probe fails in subsequent steps (like hci_uart_register_devic=
-e),
-the driver core cleans up devres allocations for &serdev->dev, but this
-allocation would remain permanently attached to the still-active parent
-&serdev->ctrl->dev device.
-
-Could this cause multiple leaks and keep the provider's module reference
-elevated during repeated probe deferrals or bind/unbind cycles?
-
-> +			if (IS_ERR(qcadev->bt_power->pwrseq))
-> +				return PTR_ERR(qcadev->bt_power->pwrseq);
-> +			break;
-> +		}
-> +
->  		if (!device_property_present(&serdev->dev, "enable-gpios")) {
->  			/*
->  			 * Backward compatibility with old DT sources. If the
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260519-pwrseq-m2-=
-bt-v3-0-b39dc2ae3966@oss.qualcomm.com?part=3D7
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
