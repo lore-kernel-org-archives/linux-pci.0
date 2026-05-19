@@ -1,346 +1,234 @@
-Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010065.outbound.protection.outlook.com [52.101.61.65])
+Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011046.outbound.protection.outlook.com [52.101.70.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0828C377EC1;
-	Tue, 19 May 2026 06:02:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5A4633345A;
+	Tue, 19 May 2026 06:07:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.46
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779170577; cv=fail; b=k5AKiPWZfJU4DMRZVtGzNSQvsHl30HpDX/Lz4y07peOa+tpvsRFiVVeFxzyGS5ahC56FUwWleOPhOaahGkTo6qrvdP7depsxuVFby+Aw7rlrIQ/fPBQ/tVzJhnM5HSojyznpkWMbP4PnSdq09EtpHB9m5n5L/ptrNqZvMuqUHvY=
+	t=1779170862; cv=fail; b=WqRGaPAcTMLiEGzsfSFkLz/jLLrWXuGn25M512KZ1KeV0qxRut1ZaoJSOfMKjtWjYnwqYg/viQKmugrTs9Lt8kvUrQfu4LJPDH013gJF81OiluzWqp+ibSMPlC4GlyUsh3UrH8Wb8KX2+pJ8NiQOEo9TPEbFlNNIAC3hnqTeyeM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779170577; c=relaxed/simple;
-	bh=rX7s/f1QeE7jLuUoDDuGWVVd6j2C3seLFpY4KkXPjF8=;
-	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
-	 In-Reply-To:MIME-Version; b=co2HE82BAVoJAvG51EEKKTBndNhLFK+/WBOZYOi/BuDdoKV+kdijW7vF9D188dZ5AW8QoaEmWiAKDvOFVhuF7decmm8F23jfdjwW3AQfbtEYQAE8pvThQVRbYciUMbZw0us4HCce7iErsDGHRE1CoR3I5mWtf+7yV6LtBTNO4/k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=nwbnVKPA; arc=fail smtp.client-ip=52.101.61.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1779170862; c=relaxed/simple;
+	bh=KQdYfG8LWmcKAK/vHp/PJu3LNmgr2Jvwc0vcoSI2gZ8=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=Qvdy6OBKcFkrht7zA88b32a4Hl2BLakgGc+hZ3sHR7DNF5NjsTqpz0ir/uOVKX+8wFW7SpfkFN+axe3YYLlQSRQmxbdV7geTGBRe+PhdcnCux7ZhOgGdKdw2VEoHAYEEIyelE3ljWoPu8k+RY8hW4eB10oNmJJw3srjX8GyiJIU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=e51gipR/; arc=fail smtp.client-ip=52.101.70.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="nwbnVKPA"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="e51gipR/"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=EGNurKtGTeOPiqhSI6dvpYiEAlff/oaHEt4YNuzYZFDIv2Eit0+JoSh7VQ5aljlv0IbCSGbFZia4KXpbj7xj06PBH/Y7wDyX3GVLCpugzjXNz2LwRH87zuJScb8/WO8cRWTO/Mi6CzbqIhzP0ZQDRJtVSuttHVkwZbMBwsSM4xUjwJnJOAnmclvaAhBQgGH+D7N6mdkBbVV0CpGKWn189EmmCOfGvnkjsvWwPoEc4rOp+VNkcSWXQsMgMhnMqzBx1Nmuj4roTJomRCrPzoKdJXWoXCGILXLYJKSFdvuMMv+SpBq6+KqrNHkAj6kUmvJOsJIMZwAJMkPZEihNs17S9g==
+ b=M0ypARikfLi83QDP2mARi6hjNtroxNgp/WwzQF2nvGpKFs6/844TvvbGtm+8xGjFgIKfm8j9k4v1mU3LajqjTS9V1JEtCQagLm3DLGdq7oNenIxOmUyIghrsqJ9z7OrVwBNkCFPREbCTAKCyQjvjWz9Fj0AnAK0cURHCgH4CMSBfG0rKVS8zLAUuCjBL4hMTKX7/lYvMIoeIeQV6V8D5mJ84JIU0HGwdRm26jWmBpEAP+Gk90zhw6hQCfqR0lF/Q0bqESjhWXH7kQexO3LFeTSragQzf7/RABtTXA49MNK4o9msrnxjf3N0wDG3RpslBUiZdaHWDB3GThuH4O39q6Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LNdaC7G16O/x/qWJzZhSHkZU8K79nDCKxprnsOyDUbw=;
- b=LtVaTI8Dscn/WqKHEeSWuNPy2UiZqSJESkkklBsbrGbmmAUBuTRKo/4ZDWb8CcD3U7ZMKxnJyDvTiEwS2sct8wTMdOB9qwvMQS//YAaMwnuGVzrwcjgc6quQO52J8icbApT5DwD3Pe1IDLAeypvBEsub2I5yFfZoVXZrg737WnzXIGlZiJ7LfSXpy7pe4itdc86lXmw+dbDDCfMl31+LIymZVUPYS0CqobtpfHSCqDMvd6AWa1dZTGrg5RvQdYwecUFVSHO+fJWZJ+8CjiPZXP9q4MeBrQy5EZ3rh5inKJ/LS5H8r4SOa+N94cawRG9EROo8OpngbELm5OubBmgRRA==
+ bh=KQdYfG8LWmcKAK/vHp/PJu3LNmgr2Jvwc0vcoSI2gZ8=;
+ b=uWC7F7GHvVHq9AUDkyRdHbX/EsdpXvPsKAQ8BSJpLGszqYoXDS8Qk91xzGYkxgweKHYgyHcaDgnhvbJWF1BsGQPieSVRHTaO605S3H419cj+9aEvirL/jGVb/OWn1iyDkSmE5MD0JunBeKZ1koF5WxlsgtmkDH4RCyvbwczcDYxoNrelrXHcapfQjlySyXqQiKubC1dFP9S4+czpE203VfEh6MxV2X9j2H9N531iur2NuSCvlYTyhksRBp4USI2gCOOrinrHhND22TXJ7uCcvv8+x4NMhzuC5QmNSekxcKAwI/zJzzNPPmfClMLoE2aiHpDGDrbtIINCuL8kT6wNIw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LNdaC7G16O/x/qWJzZhSHkZU8K79nDCKxprnsOyDUbw=;
- b=nwbnVKPAwYOLsD23lmLlKrEThPBPCzfTIvc84sTW5kzPtVjX16BQBDsYUxOGDVy2E2wc6yP5wnv0I23skeuzXjuPpPJMnAkUauYysz0dqsQRPx+34Zvysbc/Djg5IiB7NBgBLPC1noEBOyBeHBda4eZIa6/dEafOTcRkSjr3wfX/ZDTzzTVvwU7o7s8oCgTeMe1WWqTaRxYuk4tnhoNCnzaFgisR5L+EFy57v8k9uQ3Qn+CYUjxe22J0gDlP1Z+bz6Hr7ccjqa7dEVRfcvg0YjzZ45uz8nOW6BGRQFFy9wczx/8pagehVsN3ePstxlMkiG/ANcmsM+M28tv8+vprAg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com (2603:10b6:207:4c::31)
- by DS0PR12MB9324.namprd12.prod.outlook.com (2603:10b6:8:1b6::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.23; Tue, 19 May
- 2026 06:02:48 +0000
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0]) by BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
- 06:02:48 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 15:02:43 +0900
-Message-Id: <DIMFBTLBNISD.W92F9DWEFSX@nvidia.com>
-Subject: Re: [PATCH v3 16/27] rust: types: add `ForLt` trait for
- higher-ranked lifetime support
-From: "Eliot Courtney" <ecourtney@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
- <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
- <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
-Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-17-dakr@kernel.org>
-In-Reply-To: <20260517000149.3226762-17-dakr@kernel.org>
-X-ClientProxiedBy: TYCPR01CA0193.jpnprd01.prod.outlook.com
- (2603:1096:400:2b0::12) To BL0PR12MB2353.namprd12.prod.outlook.com
- (2603:10b6:207:4c::31)
+ bh=KQdYfG8LWmcKAK/vHp/PJu3LNmgr2Jvwc0vcoSI2gZ8=;
+ b=e51gipR/7A8/pdx+r1x7EuQeHYPGGl8SzCKPAR3mOQegpF12nPY35atkd9xzIP+hHuaxqgnpN+QCYTpX6uymt9Dk9VhtguSw2S4RJGHu2sAxTAM3Vrc6E54Q6Hhv1CvifoE7LO21y/TRUrN8QxKyFF/vdrpegjwlXJ2EsMLr0GgYFzwhikZtMPigkleqtNm5JT6dgHXBTPVyvpfy1SEHK0XLh/K0+ZKtcNkovjJgZoMTeo1sOCuimsS28jYD8VmvtG3kK/MtYzQq6EmHlrbsUnS0GFmqCzBjslT3XUR2IPnPtOcjwqCC9DlQJbgGLBimnnza9z3+ffSb1WCO4ZuxGg==
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13) by GVXPR04MB12092.eurprd04.prod.outlook.com
+ (2603:10a6:150:316::15) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.21; Tue, 19 May
+ 2026 06:07:36 +0000
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.21.0025.022; Tue, 19 May 2026
+ 06:07:35 +0000
+From: "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>
+To: "mani@kernel.org" <mani@kernel.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "conor+dt@kernel.org"
+	<conor+dt@kernel.org>, Frank Li <frank.li@nxp.com>, "s.hauer@pengutronix.de"
+	<s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, Hongxing Zhu
+	<hongxing.zhu@nxp.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH V14 02/12] PCI: host-generic: Add common helpers for
+ parsing Root Port properties
+Thread-Topic: [PATCH V14 02/12] PCI: host-generic: Add common helpers for
+ parsing Root Port properties
+Thread-Index: AQHc0jsxliV0xf54o0mI/gzBxIIshLYMsR4AgAbuO4CAAWOHAIAAA5AA
+Date: Tue, 19 May 2026 06:07:35 +0000
+Message-ID:
+ <VI0PR04MB12114CD0320BB9956CC14B1B392002@VI0PR04MB12114.eurprd04.prod.outlook.com>
+References: <20260422093549.407022-3-sherry.sun@nxp.com>
+ <20260513224944.GA341451@bhelgaas>
+ <VI0PR04MB1211452312EB9BC6EF1ED2E0192032@VI0PR04MB12114.eurprd04.prod.outlook.com>
+ <xyued2adtz2fs47nnl537aef7rsjuhswivcaieh6lxhlxpohkr@gpxmdcpczik7>
+In-Reply-To: <xyued2adtz2fs47nnl537aef7rsjuhswivcaieh6lxhlxpohkr@gpxmdcpczik7>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|GVXPR04MB12092:EE_
+x-ms-office365-filtering-correlation-id: a8d61987-5e5f-4d51-353e-08deb56cec49
+x-ms-exchange-sharedmailbox-routingagent-processed: True
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|7416014|376014|19092799006|366016|1800799024|38070700021|56012099003|18002099003|22082099003|4143699003|4133799003|11063799003;
+x-microsoft-antispam-message-info:
+ LyO3DAxt0HMPQcpBCKc3tcvk515xo05/5lJHfr5dp3cPuUl1T2++RgP56f+foguLUFDb/Ccl12LQhnXUIT7GqA3WeH7LxtvarfzlgrY8Kt8RlYWGOk1i517PPckRpjJJ3MJrFfVtCCwRtIBWP6q9mfARaKY+CC+p/DPzHYe9y/8gDPc3gGzNC2zyaPB3bTQiwbYPb1aA0ViFad+6oUSxqK/x4T+1fbjdlFmECKML/X78ToiKrQfYmBQKPqye7fn7VnQXNx1DBh9OIEjrOsUk/FXSK3Pm2zo8kx4d1g6eN2RjBSQi3PIC4IwsECKQxwS0ENW88XSPBURE29g8U6Nl9zJ1mMOxM+HLMZ7G50pGRhepU91dqMn6NEDK6XQzJsOQASlcK/+DFV1uoRydOFDC5s0pRpRnn7z5nxDxLy+Kl+yCwtyetPGu2Th3GPDSJPCp0yPs5+IGYOihaGzlRkNxK+6dneLCCfAXMuOHz8wi7YLgI8cq0diQGaXCxmCr8fILj2zLbQlbPtAvHXSDadUAszMefeUD85zMpHTllTZNL4wzcYavbMoqWbVWWsTSWLplAxy1mKM5LE1EOXjHhnJMfh5P0vo0b0jM6UXkZkV5KlIg3JuqHp6QvyMjxMN+8jAq9LElKJ1cJRNYc5SydwhCaurNv/RYBAaHKL/iIYDoTD510NaIOC8kC8NQMAEmf78J
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(19092799006)(366016)(1800799024)(38070700021)(56012099003)(18002099003)(22082099003)(4143699003)(4133799003)(11063799003);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?dS9XRWgwK0JSWWltcnVETlk3bytkNUd0T21XamthdktvQmpPMDFiVUgvVCs0?=
+ =?utf-8?B?YVptc0tpa2pKWGx6Zi9BaGJDa3BoRmpYeFl5Y1lTalJ2ZnhFYncyMnhrakQ4?=
+ =?utf-8?B?Si9UQmorQVY3VTNpVUtuaVF6bm1rSndlTzJrV0ljZFhLV1VUbTQ5MVQ0R0Fn?=
+ =?utf-8?B?RGtyYk5QUVJDb2o1TDlQbFNtTXVhb1oycVVTblREa01rcmtwbExuWnhGNUFX?=
+ =?utf-8?B?ZFl5KzJVVWxmSGJxY2VFdjZTeW1NWnBVdENDLzJCaUQ1Q1h5bncyVnpjTVR1?=
+ =?utf-8?B?cW5CYTZaMUVSRFg5YmdXcGg2d0JUMGZiemljai9xYVcxaThUMzQvUzN4WVZx?=
+ =?utf-8?B?cS96c0ZiRXU2cDhYdVRGTHlCdW5memZ2YWhwRXV2YysxYjE2S3BDQk9XQ05M?=
+ =?utf-8?B?dWNoanNySVRVSStCd0RZbXJnY2dycE14R29EY1ZuMmJXb0w4eFJ4bzBwcGY4?=
+ =?utf-8?B?eFMvNE1DeTVkckt4cnp1Z3ErRWoyU2xDQUlYQkhMTXdqZEJMUWN5bURwSklp?=
+ =?utf-8?B?OXBmSkVTTXhUVnJDZFFkRy9yM0FybUgzUDFyZGNXUEk2eFhmekhha29neWZ1?=
+ =?utf-8?B?V0VsYVYvMm9KL2xoZnZVV01NNGszamc4ZU04YkNqRzVKaEY5RW85N2g0Rk5w?=
+ =?utf-8?B?OHY0Y0VQSnl4UXFCZXMrVXY3bm1zWUFjMTh2VHdvd2ZPdTlQUU5kUHV6UXZj?=
+ =?utf-8?B?M0ZmeWV3elVZdGd5WUppT3N0YTZxekVxc05YQjhJTGQ1ZHlBak1SbHJqYzFR?=
+ =?utf-8?B?UW9pNWh5Nk1hOGdZcVp6NDdNcW9HYmFFZW9iNVMrV0QzakRHT0NWSWYvdjly?=
+ =?utf-8?B?eDdmdVU4VGFXdWMxWUF1SkpPcDMvNW8wbkRJMVpoR2dCMEF4VWJHQkxyWC84?=
+ =?utf-8?B?TCs1TjFsNFJocEtUWWtCdy9rQ2tsN2FOM2lXa1lOZ1FuOXdpYXZvQmp5c2ZU?=
+ =?utf-8?B?VDB6YXYxdlhRUE9VNlNMMUw1ZXlwT1ZvNkk1c3g0aktuTFBqTlBqZ3FkNmlH?=
+ =?utf-8?B?cElDbTZFWndxWllGZFNpakhzb3NJemt4NUVVQng5VHliNWpxYVhZMjBpMEMv?=
+ =?utf-8?B?ZVN0QU5GQ1p5cDE5ZkFoQm02WTFWbjRMb0x1STNGRkdOb1duQlliT0pETXVM?=
+ =?utf-8?B?ZUN3SHo2a3VNNWNUdVJRU0o5ZGhXUVFrYXE3Nnc0QUxEcDBtK1lralNSM3NX?=
+ =?utf-8?B?OGRKeERET0NaRndtSEJuZ1QrWGd4MlMxRmRtdmlHbkpKd1c2dlFPNERUZFFC?=
+ =?utf-8?B?Q2dpMkRXaVhLMVlUeW1ES0NmMGdjNXNoa1paZUFZSU53VlVQRkZJcXdBbHBk?=
+ =?utf-8?B?VHJtWHh3OVRXdzkwV2tWZW1SaXhpWWhhMG5JS0dmV0hIMDUxV1pLdjlJenhP?=
+ =?utf-8?B?OUVaM1ZmejNIWXJmWUxLdFpwVGd2VE5yOGh1TG5EejMyejd0cDZmaFlQZkk1?=
+ =?utf-8?B?Zks2NGpUazRhWVFOTjdDVGpTNk81azYvZU9zeFJHeCtyM09SdWxOQlRZSVk4?=
+ =?utf-8?B?ODVWZHRzRHhVZjAySndmTWxwYTAvbDdibmYzMVZETUxpSGM0eW5TWDVBTDV3?=
+ =?utf-8?B?MlVPQmdDRUQvdHhRWVlqMms2V1lacWovL2JNeUxxTGd2WEM4K0w2T3h4K1BP?=
+ =?utf-8?B?VWIrV2ZtKzNCL0xiSm41aFdSL0llT2VicDF2ZU1DMjBuRGh6ZzVoYXVUOUdV?=
+ =?utf-8?B?T0F0enNmcEppdC8wM3ZwL3NiUytoSXh3QThIb1AreFFUakxOcjQxd2IvSXN6?=
+ =?utf-8?B?eG9xcHVMSm5OS2Y5NXE0T2llSmc1TDlmOXZ5M25idmUxcFlkMFZrY1l4WFJX?=
+ =?utf-8?B?dysxaDhzNTE5STI1M2lnK0FwVXRqSlFqaml6RmFmNmZvRThaSmJqdUFFbGNI?=
+ =?utf-8?B?VkhPc2FCODFVdHhTUVNES2dXNWs1RXk4eU04SG1KMTdMWHZ0U3ZlUFVGVzlI?=
+ =?utf-8?B?aSs1YjQ0ZStxMFpKNzVuTFp4YkhyV3R1UHJPMDJ5RE43dktrWW95ZVpJT09C?=
+ =?utf-8?B?aTZPbTBFQ2MvU01ZeUY1dDZydldJLzBhcm1DSE15ZmZtdDhjNCtBTTlyMkIv?=
+ =?utf-8?B?b3VHOTdhN0tvaW1oZVZJb0VTZWY4cXQ3OTZoUVp2ZC9ZUmVCcUVmZVJHb0tV?=
+ =?utf-8?B?SjFoUTByY1hpaEpLalV5Rjg3MzhKOG9QWG0zTFd1bDNPYnhwemI0c3NOa2ZJ?=
+ =?utf-8?B?MTh3VkEySGRMTFZvRm11RGU3bUxBb2tVSm0yL29NK2dybDVMOFViUTI3Vytz?=
+ =?utf-8?B?UHZVSVE4aHkwM3JwVTNzTzNOZVpIZEt3R0w1aENINVkzOExSR2lyQWlhNjJW?=
+ =?utf-8?Q?UeL5VoM2FxczAWs9hP?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL0PR12MB2353:EE_|DS0PR12MB9324:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7322857b-7c52-404b-f9d5-08deb56c407e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|10070799003|366016|7416014|376014|921020|22082099003|56012099003|18002099003|11063799003|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	0lWfuFz7AKNW9Mg5vN+5gyaoLX47JwVu3LjaA74wHapXto0njrz8zzIaOENlY7+ywP3vH7C8B04VvwGOXGV9Zmpj76J3Eyl4PToE2StQkDi+XsiQxCvf8OVlVsBaN7rnX5hcrEopIoEJQLOkSv0N3YnEiTzxM9XJzsIiUyy6C+awWSUkmmPQHh/KIjsHSfAVju3MlEzALLYF5tAkpCRZ5FLH7MREzNHUk+axlKedEpm3m55yHVR9R06YtqFJdNOn08aoSc9b5x5alPZuwYtKtKlKJZ6nQFIjnpLsEXlRsY1t0et7kCI8KCJCjeeDZ9Nxd1kYkCoEmsVJiO4VkjjUcD7gyFVU3IXolq2iZCTzyfJLI/qQEX997Y8UPHmPgtG7FHTZ76KrkjbeWKGPasdy5rNpgy5aMLIgPYIz0u5/oNg53feyQaffuQKE7yhQE2ZoXNNPkwWb7IISTsT/HAILk4H0UXEmoZSl+mZQXpBhmvucTF+zsduUMe9HhnO5EhVS03jaDxfwNY2VnJ7zGjXnBxMqE2GTZBga+aGpFGSKsUrngCfMYUJ8xgqNsinIAxcvyUZbEnxKXOytgo6aNamqFELw1W68jkdD1/k+Bsq7xC8w1cSymOrzT730bJPEg3eOkXHphQiouKMPpzsIZjZeX6p1vl3WycY9yjq21yeuYbSMluB575hyaJSjkGSYSOLu8ZiAKZ4DVYSDHhFd32NEZ3/Q6D0+CWBGqPhfE6VoCN5sJal3vv82M+UJeBcm1zhF
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2353.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(7416014)(376014)(921020)(22082099003)(56012099003)(18002099003)(11063799003)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dzdVVkV1ak5DNzE4L2dIbGs5UllmekNuWHdqUmNlY3N2Z1dVanF6UXl3c0FO?=
- =?utf-8?B?bnQ2ZU1yeHhkbm5Xcm1mOWhVejlKdG1Gd0RxQlpDWW8wZkp1T0tieEhvY2du?=
- =?utf-8?B?OXFFRU8zbkF2K2xsa0I3VWdCRkg1eCtNUUJVVXhBck9qZytGTnNZWEd2cjY2?=
- =?utf-8?B?YW1YbFVoRkZsNExwclFXRjAyUjA1QWdjaTYraHhkMlptYXowbGhuSlNLSity?=
- =?utf-8?B?WkhVWkRsYkx5UDY0SXlGZkhYTStkMnNsTkc1T3RVdjkza1hCYjF2QW1mWExH?=
- =?utf-8?B?YmZ2bHh3U2tYczY5SnA3RGJwQWgrbTZJeUt3UFBPMUpYWDlWSEl3anloS2c2?=
- =?utf-8?B?by9OZGxWdmpONitzODhFVWw5Y0RtckNUeTQvdDZ3aWw3WElzOCtGY0Z6TW0y?=
- =?utf-8?B?NURyYTdYTTZWOGFrYW51YW1vTlJidUFJK3A2eWZ6anEyME5BMTczU0RYSHpz?=
- =?utf-8?B?WFFTMzlsR3h0UzNmbUh4ZE9QeTFrLzhRNXZNMnVNNTJuY3I2N05sWkMySTBk?=
- =?utf-8?B?UElybFdGN0UvclI2RktvVGM4dGM2WVY4a3FmK2xvb1AvNFZjbkZLejIwd0F2?=
- =?utf-8?B?RWZlUHp0MnRSZndER2V5aXdNNmdwUDJjUTVHTldqaTJaelRPYUFRcWVEM1NT?=
- =?utf-8?B?MG55UjVHSlRRU2Vlbm80SncrOWFMMW1Ic1ZLSEMzWEFORVBHbHZjckUyNmNW?=
- =?utf-8?B?TTd3YTRmaWdpeDREZjVyWFBGSGpiRmJJd045a2l0N0xvSTdXNHNqMU12Vy81?=
- =?utf-8?B?WHMwQnlVbWRPZVhySk1LV1RCVXNIa2RMMkNIajZ1NzBUQ3dFT0FBTzd1eUl2?=
- =?utf-8?B?YUd0L1BSa202Q1dubHFoRWJSVktweFhlMnFSSmlSaHFMOHV3dU5tenlNa0E5?=
- =?utf-8?B?RFBhYmRMRitiY3FFNmZlTHZlOFVhUVc3ZE1vd1Y2U2EyVFZ0QklEZXVBd1ZO?=
- =?utf-8?B?UHdnYkM1dFlMK3BkRUJsQmdMQ0R0M1AzZlB2dStBUlhXeVJaQlU3UFFoelFk?=
- =?utf-8?B?T3VRYkYvYjZHNFh0a0lrSm50SE9XZDFnSTluOXQzd3NSc1hQdlhvUG1CV2Zj?=
- =?utf-8?B?RWRzN2VHR2JpaWp4aW1yVnZ2bWQwRVhUa0dmNVh1cWNRRDBEdU5lYnVLYWZn?=
- =?utf-8?B?ck03UEVZSFc4eUVtalhwQ0d6cWdFVUpnTzJucmlydU5QN1JRZjdlamZMdzMw?=
- =?utf-8?B?c1NFQUNxbG9zMEFtb0h1V2Q3QmJVb1FJT21MdDZyQWhONWpSdlFuTnNGN3NC?=
- =?utf-8?B?Q2NWNHlMOTY1WXRwcnVDa0hEWXM1a2xhMnhjbDZ3YkxMa05ML3Ywajk3Rm9s?=
- =?utf-8?B?enNna3NJWVpDNTlNRmdxU01tNGsydGxSTHZvKzdJU1FjYWVpTXArOG5nZlVm?=
- =?utf-8?B?MVprajVwQUtZSVRFUHhVUjBacWtJbHlpV05EdllyendvYjlKRjBLdmYvOExk?=
- =?utf-8?B?Nnpsd0RlQ0lHTUJ3OGFBekQ4YndBRFQ2THh1d3BMbjZOZEFHRjRTQzF2TUlv?=
- =?utf-8?B?ZzUyYjIvV1JVTUJaVHBNQnVrSVo1RTBRVDF6dEJuQXlnNjA3Nk5lUWtnd3BD?=
- =?utf-8?B?bHJKTURKTDJKQkZ1VWg2a2cxSWltSEJZOVF1V0kxK2lyWDRjazFTNExoTmRn?=
- =?utf-8?B?MXZCNkVYVXltaC8yS3U4bkNOVWt2V0ZyMUtFSWRkVkc0VlIyZHRUa0dpbkE0?=
- =?utf-8?B?R1hXMkxhRjJPd2M0NVorNytMWnczZmNvRlVSbVFUdVoyblhudkd0ZWFPWUp6?=
- =?utf-8?B?ZHZJMVQ4VkhIaStYMjRZZ2pUSmZjNHVNcWkweTQvc2lZcXk1UldkTFJHY3BQ?=
- =?utf-8?B?R29XWG0wWnNpTlpwNUcxOFdNMGZLck4wRkd5RXpkNjZaMkNpaTJOMjBKeFJ1?=
- =?utf-8?B?RloxMTBqUlFWTEJNbk1wbDAvelNqNUpJeVRDVDhGOGQ4QmVHTzA2WVRJRGRY?=
- =?utf-8?B?NVpkOFMwdzJqWU9FclluaVJHaFMzVldaaVkrWWZtdXZMbXp1dCs2Y2I5KzRr?=
- =?utf-8?B?Vi8rTmVjZmtVNTBKQm9YbzJyRk96MUNPWjZmYjNPa3dRN08wZ0VXdC8vakt0?=
- =?utf-8?B?MDBER3cvQUlITkFwL3BrN0xyRjNWbVZ6dmlZTHdVRU5Uc0dtY2Z6WW82M2x5?=
- =?utf-8?B?dTZLN0ZSdTNpckV3cEpLNnQxMFg3WUFYZjYxN3JiSHl3TUNWL2dsVkc2ZzhE?=
- =?utf-8?B?SHNHNWRMMVRacmx4WlNXcmdqU2s1NFF6M2IrQTk4T29KQ3ZocEJEYUVpNk5R?=
- =?utf-8?B?Ny83M0VVS2FWNEM0bk84ZUtQUVdsQ2NxOCthWTlsdGxuc09oV3o1cXNvWk1Y?=
- =?utf-8?B?cmVQRFlPWDJubnhBdDFRZFRUdVpmTGRtaG95d1MzMVM3UnNLSnVYTUZ6Nm0w?=
- =?utf-8?Q?Y9P8+OH5Ga6nl3XMvt6YkB8/9xppwXQdN27cGtuqMBv9n?=
-X-MS-Exchange-AntiSpam-MessageData-1: Bln8lmQoQGVdOg==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7322857b-7c52-404b-f9d5-08deb56c407e
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2353.namprd12.prod.outlook.com
+X-OriginatorOrg: oss.nxp.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 06:02:48.4095
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a8d61987-5e5f-4d51-353e-08deb56cec49
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 May 2026 06:07:35.8174
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: UVD2qkaNC64neci8tnrQ3k/quiGMzKglR+i6XxqZ+iqVxenTp/mHdCXAWoSEejxwoPMcTkh3PaaPlcGpRxojIw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB9324
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: SZz7sAE5uffTakniNveQUSfs1fwmt4/x/bpxYZFBGMdFWDLoQi2vxaJNBoEBWbIeQX36Hqc8qyV9fgYYLVlyNg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB12092
 
-On Sun May 17, 2026 at 9:01 AM JST, Danilo Krummrich wrote:
-> From: Gary Guo <gary@garyguo.net>
->
-> There are a few cases, e.g. when dealing with data referencing each other=
-,
-> one might want to write code that are generic over lifetimes. For example=
-,
-> if you want take a function that takes `&'a Foo` and gives `Bar<'a>`, you
-> can write:
->
->     f: impl for<'a> FnOnce(&'a Foo) -> Bar<'a>,
->
-> However, it becomes tricky when you want that function to not have a fixe=
-d
-> `Bar`, but have it be generic again. In this case, one needs something th=
-at
-> is generic over types that are themselves generic over lifetimes.
->
-> `ForLt` provides such support. It provides a trait `ForLt` which describe=
-s
-> a type generic over lifetime. One may use `ForLt::Of<'a>` to get an
-> instance of a type for a specific lifetime.
->
-> For the case of cross referencing, one would almost always want the
-> lifetime to be covariant. Therefore this is also made a requirement for t=
-he
-> `ForLt` trait, so functions with `ForLt` trait bound can assume covarianc=
-e.
->
-> A macro `ForLt!()` is provided to be able to obtain a type that implement=
-s
-> `ForLt`. For example, `ForLt!(for<'a> Bar<'a>)` would yield a type that
-> `<TheType as ForLt>::Of<'a>` is `Bar<'a>`. This also works with lifetime
-> elision, e.g. `ForLt!(Bar<'_>)` or for types without lifetime at all, e.g=
-.
-> `ForLt!(u32)`.
->
-> The API design draws inspiration from the higher-kinded-types [1] crate,
-> however different design decision has been taken (e.g. covariance
-> requirement) and the implementation is independent.
->
-> License headers use "Apache-2.0 OR MIT" because I anticipate this to be
-> used in pin-init crate too which is licensed as such.
->
-> Link: https://docs.rs/higher-kinded-types/ [1]
->
-> Signed-off-by: Gary Guo <gary@garyguo.net>
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
-> ---
-
-> +trait TypeExt {
-> +    fn expand_elided_lifetime(&self, explicit_lt: &Lifetime) -> Type;
-> +    fn replace_lifetime(&self, src: &Lifetime, dst: &Lifetime) -> Type;
-> +    fn has_lifetime(&self, lt: &Lifetime) -> bool;
-> +}
-> +
-> +impl TypeExt for Type {
-> +    fn expand_elided_lifetime(&self, explicit_lt: &Lifetime) -> Type {
-> +        struct ElidedLifetimeExpander<'a>(&'a Lifetime);
-> +
-> +        impl VisitMut for ElidedLifetimeExpander<'_> {
-> +            fn visit_lifetime_mut(&mut self, lifetime: &mut Lifetime) {
-> +                // Expand explicit `'_`
-> +                if lifetime.ident =3D=3D "_" {
-> +                    *lifetime =3D self.0.clone();
-> +                }
-> +            }
-> +
-> +            fn visit_type_reference_mut(&mut self, reference: &mut syn::=
-TypeReference) {
-> +                syn::visit_mut::visit_type_reference_mut(self, reference=
-);
-> +
-> +                if reference.lifetime.is_none() {
-> +                    reference.lifetime =3D Some(self.0.clone());
-> +                }
-> +            }
-> +        }
-> +
-> +        let mut ret =3D self.clone();
-> +        ElidedLifetimeExpander(explicit_lt).visit_type_mut(&mut ret);
-> +        ret
-> +    }
-> +
-> +    fn replace_lifetime(&self, src: &Lifetime, dst: &Lifetime) -> Type {
-> +        struct LifetimeReplacer<'a>(&'a Lifetime, &'a Lifetime);
-> +
-> +        impl VisitMut for LifetimeReplacer<'_> {
-> +            fn visit_lifetime_mut(&mut self, lifetime: &mut Lifetime) {
-> +                if lifetime.ident =3D=3D self.0.ident {
-> +                    *lifetime =3D self.1.clone();
-> +                }
-> +            }
-> +        }
-> +
-> +        let mut ret =3D self.clone();
-> +        LifetimeReplacer(src, dst).visit_type_mut(&mut ret);
-> +        ret
-> +    }
-> +
-> +    fn has_lifetime(&self, lt: &Lifetime) -> bool {
-> +        struct HasLifetime<'a>(&'a Lifetime, bool);
-> +
-> +        impl Visit<'_> for HasLifetime<'_> {
-> +            fn visit_lifetime(&mut self, lifetime: &Lifetime) {
-> +                if lifetime.ident =3D=3D self.0.ident {
-> +                    self.1 =3D true;
-> +                }
-> +            }
-> +        }
-> +
-> +        let mut visitor =3D HasLifetime(lt, false);
-> +        visitor.visit_type(self);
-> +        visitor.1
-> +    }
-> +}
-> +
-> +struct Prover<'a>(&'a Lifetime, Vec<&'a Type>);
-> +
-> +impl<'a> Prover<'a> {
-> +    /// Prove that `ty` is covariant over `'lt`.
-> +    ///
-> +    /// This also needs to prove that it'll be wellformed for any instan=
-ce of `'lt`.
-> +    /// It can be assumed that `ty` will be wellformed if `'lt` is subst=
-ituted to `'static`.
-> +    fn prove(&mut self, ty: &'a Type) {
-> +        match ty {
-> +            Type::Paren(ty) =3D> self.prove(&ty.elem),
-> +            Type::Group(ty) =3D> self.prove(&ty.elem),
-> +
-> +            // No lifetime involved
-> +            Type::Never(_) =3D> {}
-> +
-> +            // `[T; N]` and `[T]` is covariant over `T`.
-> +            Type::Array(ty) =3D> self.prove(&ty.elem),
-> +            Type::Slice(ty) =3D> self.prove(&ty.elem),
-> +
-> +            Type::Tuple(ty) =3D> {
-> +                for elem in &ty.elems {
-> +                    self.prove(elem);
-> +                }
-> +            }
-> +
-> +            // `*const T` is covariant over `T`
-> +            Type::Ptr(ty) if ty.const_token.is_some() =3D> self.prove(&t=
-y.elem),
-> +
-> +            // `&T` is covariant over `T` and lifetime.
-> +            //
-> +            // Note that if we encounter `&'other_lt T`, then we still n=
-eed to make sure the type
-> +            // is wellformed if `T` involves `&'lt`, so we defer to the =
-compiler.
-> +            //
-> +            // This is to block cases like `ForLt!(for<'a> &'static &'a =
-u32)`, as the presence of
-> +            // the type implies `'a: 'static` but this is unsound.
-> +            Type::Reference(ty)
-> +                if ty.mutability.is_none() && ty.lifetime.as_ref() =3D=
-=3D Some(self.0) =3D>
-> +            {
-> +                self.prove(&ty.elem)
-> +            }
-> +
-> +            // `&[mut] T` is covariant over lifetime.
-> +            // In case we have `&[mut] NoLifetime`, we don't need to do =
-additional checks.
-> +            Type::Reference(ty) if !ty.elem.has_lifetime(self.0) =3D> ()=
-,
-> +
-> +            // No mention of lifetime at all, no need to perform compile=
-r check.
-> +            ty if !ty.has_lifetime(self.0) =3D> (),
-
-This treats macros as not having a lifetime, but it allows this which is
-not covariant for 'a IIUC:
-
-```
-trait Trait {}
-
-macro_rules! asdf {
-  () =3D> { dyn Trait };
-}
-
-type NotCovariant =3D ForLt!(for<'a> &'a mut asdf!());
-```
-
-And you can get rid of the macro too:
-
-```
-type NotCovariant =3D ForLt!(for<'a> &'a mut dyn Trait);
-```
-
-These are not covariant because dyn Trait has an elided +'a lifetime.
-
-I feel that the syntactic checking is kinda difficult to get right since
-it would need to handle all ways lifetimes can be elided now and in the
-future.
-
-Would it be that bad to always emit the proofs?
-
+PiBTdWJqZWN0OiBSZTogW1BBVENIIFYxNCAwMi8xMl0gUENJOiBob3N0LWdlbmVyaWM6IEFkZCBj
+b21tb24gaGVscGVycyBmb3INCj4gcGFyc2luZyBSb290IFBvcnQgcHJvcGVydGllcw0KPg0KPiBP
+biBNb24sIE1heSAxOCwgMjAyNiBhdCAwODo0MjozOEFNICswMDAwLCBTaGVycnkgU3VuIHdyb3Rl
+Og0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCBWMTQgMDIvMTJdIFBDSTogaG9zdC1nZW5lcmlj
+OiBBZGQgY29tbW9uIGhlbHBlcnMNCj4gPiA+IGZvciBwYXJzaW5nIFJvb3QgUG9ydCBwcm9wZXJ0
+aWVzDQo+ID4gPg0KPiA+ID4gT24gV2VkLCBBcHIgMjIsIDIwMjYgYXQgMDU6MzU6MzlQTSArMDgw
+MCwgU2hlcnJ5IFN1biB3cm90ZToNCj4gPiA+ID4gSW50cm9kdWNlIGdlbmVyaWMgaGVscGVyIGZ1
+bmN0aW9ucyB0byBwYXJzZSBSb290IFBvcnQgZGV2aWNlIHRyZWUNCj4gPiA+ID4gbm9kZXMgYW5k
+IGV4dHJhY3QgY29tbW9uIHByb3BlcnRpZXMgbGlrZSByZXNldCBHUElPcy4gVGhpcyBhbGxvd3MN
+Cj4gPiA+ID4gbXVsdGlwbGUgUENJIGhvc3QgY29udHJvbGxlciBkcml2ZXJzIHRvIHNoYXJlIHRo
+ZSBzYW1lIHBhcnNpbmcgbG9naWMuDQo+ID4gPiA+DQo+ID4gPiA+IERlZmluZSBzdHJ1Y3QgcGNp
+X2hvc3RfcG9ydCB0byBob2xkIGNvbW1vbiBSb290IFBvcnQgcHJvcGVydGllcw0KPiA+ID4gPiAo
+Y3VycmVudGx5IG9ubHkgbGlzdCBvZiBQRVJTVCMgR1BJTyBkZXNjcmlwdG9ycykgYW5kIGFkZA0K
+PiA+ID4gPiBwY2lfaG9zdF9jb21tb25fcGFyc2VfcG9ydHMoKSB0byBwYXJzZSBSb290IFBvcnQg
+bm9kZXMgZnJvbSBkZXZpY2UNCj4gPiA+IHRyZWUuDQo+ID4gPiA+DQo+ID4gPiA+IEFsc28gYWRk
+IHRoZSAncG9ydHMnIGxpc3QgdG8gc3RydWN0IHBjaV9ob3N0X2JyaWRnZSBmb3IgYmV0dGVyDQo+
+ID4gPiA+IG1haW50YWluIHBhcnNlZCBSb290IFBvcnQgaW5mb3JtYXRpb24uDQo+ID4gPiA+IC4u
+Lg0KPiA+ID4NCj4gPiA+ID4gK3N0YXRpYyBpbnQgcGNpX2hvc3RfY29tbW9uX3BhcnNlX3BvcnQo
+c3RydWN0IGRldmljZSAqZGV2LA0KPiA+ID4gPiArICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgIHN0cnVjdCBwY2lfaG9zdF9icmlkZ2UgKmJyaWRnZSwNCj4gPiA+ID4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJ1Y3QgZGV2aWNlX25vZGUgKm5vZGUp
+IHsNCj4gPiA+ID4gKyAgICAgICBzdHJ1Y3QgcGNpX2hvc3RfcG9ydCAqcG9ydDsNCj4gPiA+ID4g
+KyAgICAgICBpbnQgcmV0Ow0KPiA+ID4gPiArDQo+ID4gPiA+ICsgICAgICAgcG9ydCA9IGRldm1f
+a3phbGxvYyhkZXYsIHNpemVvZigqcG9ydCksIEdGUF9LRVJORUwpOw0KPiA+ID4gPiArICAgICAg
+IGlmICghcG9ydCkNCj4gPiA+ID4gKyAgICAgICAgICAgICAgIHJldHVybiAtRU5PTUVNOw0KPiA+
+ID4gPiArDQo+ID4gPiA+ICsgICAgICAgSU5JVF9MSVNUX0hFQUQoJnBvcnQtPnBlcnN0KTsNCj4g
+PiA+ID4gKw0KPiA+ID4gPiArICAgICAgIHJldCA9IHBjaV9ob3N0X2NvbW1vbl9wYXJzZV9wZXJz
+dChkZXYsIHBvcnQsIG5vZGUpOw0KPiA+ID4gPiArICAgICAgIGlmIChyZXQpDQo+ID4gPiA+ICsg
+ICAgICAgICAgICAgICByZXR1cm4gcmV0Ow0KPiA+ID4gPiArDQo+ID4gPiA+ICsgICAgICAgLyoN
+Cj4gPiA+ID4gKyAgICAgICAgKiAxLiBQRVJTVCMgZm91bmQgaW4gUlAgb3IgaXRzIGNoaWxkIG5v
+ZGVzIC0gbGlzdCBpcyBub3QgZW1wdHksIGNvbnRpbnVlDQo+ID4gPiA+ICsgICAgICAgICogMi4g
+UEVSU1QjIG5vdCBmb3VuZCBpbiBSUC9jaGlsZHJlbiwgYnV0IGZvdW5kIGluIFJDIG5vZGUgLQ0K
+PiA+ID4gPiArcmV0dXJuIC0NCj4gPiA+IEVOT0RFVg0KPiA+ID4gPiArICAgICAgICAqICAgIHRv
+IGZhbGxiYWNrIGxlZ2FjeSBiaW5kaW5nDQo+ID4gPiA+ICsgICAgICAgICogMy4gUEVSU1QjIG5v
+dCBmb3VuZCBhbnl3aGVyZSAtIGxpc3QgaXMgZW1wdHksIGNvbnRpbnVlDQo+ID4gPiA+ICsob3B0
+aW9uYWwNCj4gPiA+IFBFUlNUIykNCj4gPiA+ID4gKyAgICAgICAgKi8NCj4gPiA+ID4gKyAgICAg
+ICBpZiAobGlzdF9lbXB0eSgmcG9ydC0+cGVyc3QpKSB7DQo+ID4gPiA+ICsgICAgICAgICAgICAg
+ICBpZiAob2ZfcHJvcGVydHlfcHJlc2VudChkZXYtPm9mX25vZGUsICJyZXNldC1ncGlvcyIpIHx8
+DQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAgb2ZfcHJvcGVydHlfcHJlc2VudChkZXYtPm9m
+X25vZGUsICJyZXNldC1ncGlvIikpDQo+ID4gPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHJl
+dHVybiAtRU5PREVWOw0KPiA+ID4NCj4gPiA+IFRoaXMgZG9lc24ndCBzZWVtIHJpZ2h0IHRvIG1l
+LiAgVGhlIHBhcnNlciBvZiBwZXItUm9vdCBQb3J0DQo+ID4gPiBwcm9wZXJ0aWVzIHNob3VsZCBu
+b3QgYmUgcmVzcG9uc2libGUgZm9yIGRlY2lkaW5nIHdoZXRoZXIgbGVnYWN5DQo+ID4gPiBtZXRo
+b2RzIGFyZSB2YWxpZCwgaS5lLiwgd2hldGhlciBhIHByb3BlcnR5IGlzIGluIHRoZSBSb290IENv
+bXBsZXgNCj4gPiA+IG5vZGUuICBJIHRoaW5rIGl0J3MgdXAgdG8gdGhlIGNhbGxlciB0byBkZWNp
+ZGUgd2hldGhlciBpdCBuZWVkcyB0byBsb29rDQo+IGVsc2V3aGVyZS4NCj4gPiA+DQo+ID4gPiBJ
+IGRvbid0IHRoaW5rIHRoaXMgZXZlbiBuZWVkcyB0byByZXR1cm4gYSAic3VjY2Vzcy9mYWlsdXJl
+IiB2YWx1ZQ0KPiA+ID4gYmVjYXVzZSB0aGVyZSBtYXkgYmUgbW9yZSBwcm9wZXJ0aWVzIGluIHRo
+ZSBmdXR1cmUsIGFuZCBub3QgYWxsIHdpbGwNCj4gPiA+IGJlIHJlcXVpcmVkLiAgVGhpcyBmdW5j
+dGlvbiBjYW4ndCB0ZWxsIHdoaWNoIHByb3BlcnRpZXMgYSBzcGVjaWZpYw0KPiA+ID4gZHJpdmVy
+IHJlcXVpcmVzIGFuZCB3aGljaCBhcmUgb3B0aW9uYWwuDQo+ID4gPg0KPiA+ID4gVGhlIGNhbGxl
+ciBjYW4gY2hlY2sgd2hldGhlciB3ZSBmb3VuZCB3aGF0IGl0IG5lZWRzIGFuZCBmYWxsIGJhY2sg
+dG8NCj4gPiA+IGEgbGVnYWN5IG1ldGhvZCBhcyBuZWVkZWQuDQo+ID4NCj4gPiBIaSBCam9ybiwN
+Cj4gPiBUaGUgY29kZSBoZXJlIHdhcyBzdWdnZXN0ZWQgYnkgTWFuaSwNCj4gaHR0cHM6Ly9sb3Jl
+LmtlLw0KPiBybmVsLm9yZyUyRmFsbCUyRmxuenByenJkd3JhN3BuN2Q2bTNzYmo1cHZqeTY0Ymx3
+cGpsNmkzbG1sbmZieWhvNjNiJTQNCj4gMGN6cHlocGd6NXZ1bSUyRiZkYXRhPTA1JTdDMDIlN0Nz
+aGVycnkuc3VuJTQwbnhwLmNvbSU3QzRmZTkwNGE0DQo+IDVkZDI0MjExM2MwMDA4ZGViNTZhZDQ5
+NCU3QzY4NmVhMWQzYmMyYjRjNmZhOTJjZDk5YzVjMzAxNjM1JTdDMA0KPiAlN0MwJTdDNjM5MTQ3
+NjY3NjEwODEwMDAzJTdDVW5rbm93biU3Q1RXRnBiR1pzYjNkOGV5SkZiWEIwZQ0KPiBVMWhjR2tp
+T25SeWRXVXNJbFlpT2lJd0xqQXVNREF3TUNJc0lsQWlPaUpYYVc0ek1pSXNJa0ZPSWpvaVRXRnBi
+Q0kNCj4gc0lsZFVJam95ZlElM0QlM0QlN0MwJTdDJTdDJTdDJnNkYXRhPWpvODc1aUdpbzE5djV4
+bGxDSiUyRnhhM3hRTw0KPiBCUlVYQTZQTGsxbGxEOCUyRlA3MCUzRCZyZXNlcnZlZD0wLg0KPiA+
+IEkgdGhpbmsgeW91ciBzdWdnZXN0aW9uIGhlcmUgaXMgcmVhc29uYWJsZSwgdGhlIHBlci1Sb290
+IFBvcnQgcGFyc2VyDQo+ID4gc2hvdWxkbid0IGNoZWNrIHRoZSBSQy1sZXZlbCBiaW5kaW5nLiBU
+aGF0J3MgYSBwb2xpY3kgZGVjaXNpb24gdGhhdCBiZWxvbmdzIHRvDQo+IHRoZSBjYWxsZXIuDQo+
+ID4NCj4gPiBIaSBNYW5pLCBpZiB5b3UgYWxzbyBhZ3JlZSwgSSdsbCByZXdvcmsgdGhpcyBzbyB0
+aGF0Og0KPiA+IDEuIHBjaV9ob3N0X2NvbW1vbl9wYXJzZV9wb3J0KCkgb25seSBwYXJzZXMgcHJv
+cGVydGllcyBmcm9tIHRoZSBSb290DQo+IFBvcnQNCj4gPiAgICAgKGFuZCBpdHMgY2hpbGRyZW4p
+IHdpdGhvdXQgY2hlY2tpbmcgdGhlIFJDIG5vZGUuDQo+ID4gMi4gVGhlIGZ1bmN0aW9uIHdvbid0
+IHJldHVybiBmYWlsdXJlIGZvciAicHJvcGVydHkgbm90IGZvdW5kIiAtIGl0IHdpbGwgb25seQ0K
+PiByZXR1cm4NCj4gPiAgICAgIGVycm9ycyBmb3IgcmVhbCBmYWlsdXJlcyAoZS5nLiwgLUVOT01F
+TSwgR1BJTyBhY3F1aXNpdGlvbiBlcnJvcnMpLg0KPiA+IDMuIFRoZSBsZWdhY3kgZmFsbGJhY2sg
+bG9naWMgd2lsbCBiZSBtb3ZlZCB0byB0aGUgY2FsbGVyLCB3aGljaCBjYW4gaW5zcGVjdCB0aGUN
+Cj4gPiAgICAgIHBhcnNlZCByZXN1bHQgYW5kIGRlY2lkZSB3aGV0aGVyIHRvIGZhbGwgYmFjayB0
+byB0aGUgbGVnYWN5IGJpbmRpbmcuDQo+ID4NCj4NCj4gRmluZSB3aXRoIG1lLiBUaGUgcmVhc29u
+IGZvciBzdWdnZXN0aW5nIGZhbGxiYWNrIHdpdGhpbiB0aGlzIEFQSSBpdHNlbGYgd2FzIHRvDQo+
+IGF2b2lkIGR1cGxpY2F0aW5nIHRoZSBmYWxsYmFjayBjb2RlIGFzIGl0IHdpbGwgYmUgbW9zdGx5
+IGdlbmVyaWMuIEJ1dCBJIGRvIGFncmVlDQo+IHdpdGggQmpvcm4gb24gdGhlIGZhY3QgdGhhdCBp
+bmRpdmlkdWFsIGhvc3QgY29udHJvbGxlciBkcml2ZXJzIG1pZ2h0IGhhdmUNCj4gb3B0aW9uYWwg
+cHJvcGVydGllcyBpbiB0aGUgUkMgbm9kZSBhbmQgd2UgY2FuJ3QgaW5jb3Jwb3JhdGUgYWxsIG9m
+IHRoZW0gaGVyZS4NCj4NCj4gQnV0IG5vIG5lZWQgdG8gcmV3b3JrIHRoaXMgc2VyaWVzIGFzIGl0
+IGdvdCBhcHBsaWVkIGZvciB2Ny4yLiBZb3UgY2FuIHNlbmQNCj4gcmV3b3JrIHBhdGNoZXMgb24g
+dG9wIG9mIHRoaXMgc2VyaWVzLg0KPg0KT2ssIHdpbGwgZG8sIHRoYW5rcyENCg0KQmVzdCBSZWdh
+cmRzDQpTaGVycnkNCg==
