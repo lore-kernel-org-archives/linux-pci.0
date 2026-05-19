@@ -1,365 +1,158 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022123.outbound.protection.outlook.com [52.101.101.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740643EA952
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 15:18:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779203940; cv=none; b=avjEEcc2pjjDiBShSsDE3QmsEIbQVcz1dx1KtSkLcV9vnUMYNfCF4tOEEaMRDJQ1e+TwfxaF3yPD9Wt3jjKZQkvqUMSHTP/bw+QCw4Blch69b9Xur5s+GrCoNBpnVuhN8rK/dmcWT9QKdzHFFJvfTnjYL0TQ1LFmI3XdFhQ3ZRI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779203940; c=relaxed/simple;
-	bh=7pFLF5lAH2RiF4umgaRXLKdvBvrD5RFzjd5Nvv5651I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rvEN3nZLlsp1XPD6nEGlsOQqh4F2OozGIWyhHwUjE46CzZmFnjAe8dXkzCzd/Dx9gaik+GDtfrIse54wxiHoY144E4KQQhop57RN6OR89Vw19oO2QAnGcIMk+vRNpJhsIDBq7FO1CA0evgyGBjYzI6Er5EhsizrLDDFsxxWaI28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LtIRBf0z; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9234C33ADA7;
+	Tue, 19 May 2026 15:48:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.123
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779205705; cv=fail; b=AtD2zkXadoveNLP/tUC2M3qTMM5nF3VGO5T11So6cF4eObQuKzr6RZyTvA8eIJ3z3DJ77V5xzAgkGwey4T/JmzHykQakB7ovZSPXyMxR7JOOQV9aP3rlo+V9azRKeqU3sCqmTqCfl6cC5yFYXolLldErqRnInwaFZrBMR103FKQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779205705; c=relaxed/simple;
+	bh=0U+bE0GH80QNa3QmCjlE1/NR5gN3L5OJqWl0IEqtBoM=;
+	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
+	 In-Reply-To:MIME-Version; b=ZWjuWB54RR5sOnkwmRZLGkW0PKUY7OlOa4hIYJhRdJwhF5POPP2g6IMEGdCkSxhspsM7ocezjWNCzM7i0vErskEncmnlLSe0Ar2uilVgfcC/bxSxdF9xWXsBVBduJ5QYl8ONfdpUjTM4t4/icgZlOh0LsndOcWkjFVdtnz0eFsc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=YZO5qgVg; arc=fail smtp.client-ip=52.101.101.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LtIRBf0z"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779203938; x=1810739938;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=7pFLF5lAH2RiF4umgaRXLKdvBvrD5RFzjd5Nvv5651I=;
-  b=LtIRBf0zeNL/yMCldprgpi8m/hyyLx3b0vX+SvO3O0KyqSR5zCjh0eBX
-   SVztw2frYiKmKwdEOua/eHye3+JXkAnCcrC3azMK0CBMMirpPS3bZmzm8
-   mCfdCUzKF1p/lfmowpD0wUfyB7Zb6H9f83/IRcp0WTLggZxB557XwYlAm
-   61h5jnTdg9QwfLtFnWYGw4iaZt/idpTx3K/vXAd7x3Xk6D9oX8+dDtYLr
-   ivzAmcz9yMfDCsE+e2KX7GsSthIC+5L+0V+HG9iUUoD10ykdC+U4PleWH
-   Kiu/sIRUhl0INoNNuBU8xK5sQ+wyYOq2X3fFBr1FmgrMskHIDz01zdwtr
-   g==;
-X-CSE-ConnectionGUID: ZTYgPLGITXilOCUOVYJAzg==
-X-CSE-MsgGUID: 4K5agc+ZSLip5XFeEIyDug==
-X-IronPort-AV: E=McAfee;i="6800,10657,11791"; a="79984969"
-X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="79984969"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 08:18:57 -0700
-X-CSE-ConnectionGUID: A3cwTvutSemz7kMNGpXsNw==
-X-CSE-MsgGUID: ccSfMjybQZKYZ6Vhvsxr3A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="244788872"
-Received: from zp3110c002s0704.zpn.intel.com ([10.219.117.38])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 08:18:56 -0700
-From: Nirmal Patel <nirmal.patel@linux.intel.com>
-To: <linux-pci@vger.kernel.org>,
-	nirmal.patel@intel.com
-Cc: Nirmal Patel <nirmal.patel@linux.intel.com>
-Subject: [PATCH v2] PCI: vmd: Add feature to scan BIOS enumerated devices.
-Date: Tue, 19 May 2026 15:18:32 +0000
-Message-ID: <20260519151832.9005-1-nirmal.patel@linux.intel.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="YZO5qgVg"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=yRpwW0PCxwh20hRlzwFLuyb9z/GyFUyOMJvos+65Nex/3gj5XHE+NmTpXr2SadRe/v1Qp9gGD2R0lGYxpRLBw9gPJjsM8B6G0kExDSrwcI/edGuhV6DGnPrbzg2CxYN1uEBahz3QZnlpS9QBlOWOgt8IzwCsHC99YfTgjVBFJnzGhLfdS8Y/eTFe6tjABe1ey7P3PshdSY+M43YVyomKLjsiczJtIgvDTBHza1P0GJKe5KAiOu+LCudCSFCUb3B9DURI43R7bbszBYH5j3tEncr5IV/VfXHR/DdVof3KnTnK4ivjOeUhZmPXFKqAGi8hYDCK4f7OeuOTadCE6vqHrg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hWUpNM7isxXKoTib7UuSwPZ6InS/Xn57Xzna6dhmB1I=;
+ b=vpNd+9yzPPYkjjKPFQVHu/Dr3/7czcgLVQ/cR9PHumt3E1h/PAM3/FyJuw25E+kz/cA7KDODO623dw5xYFrZ7Qrisnl5sAx1gt+xHyvkh8Y2U7SDpR3XjmVZ1EPnnqnDTMdm/rsz2sqDMAABFpWogqzESaLNqoAuolAnQgDx3FNLYTkXTxq59thr38Q1rGW7jJAqZgleoJE7ChgeEsrlqIraZruoo2sAuBOA/1l8x3ApAYVTeeYyO/jrfZIqxvvt19vFwcwElTtQkpy3VuCAj0tHD1tP0IxiVe9CeSXQsbMUHxiuCHMmsFDE/EbCWeUt4s/B+hvBN4A+I6krIEkYkA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hWUpNM7isxXKoTib7UuSwPZ6InS/Xn57Xzna6dhmB1I=;
+ b=YZO5qgVgeV0vuIXrNPpSCJUlkkBKOGHAtZOahQ+Qy420B7V58v0iczWs3nt2yNjixQ9V+sjNoo5D2IPqIUfFsGmxRX5YKFDwqj31iP6INcvQe4dJiJhv2vb7EtVD81i5oOioNJAFA7ehebrxW+LdRp2OJ2vOK2V+zL3Gzk6p2Ao=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by LO0P265MB7106.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2ef::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.24; Tue, 19 May
+ 2026 15:48:20 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
+ 15:48:20 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 19 May 2026 16:48:19 +0100
+Message-Id: <DIMRS6NPT1VN.3BHXH00SPJAVI@garyguo.net>
+From: "Gary Guo" <gary@garyguo.net>
+To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
+ <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
+ <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
+ <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
+Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
+Subject: Re: [PATCH v3 18/27] samples: rust: rust_driver_auxiliary: showcase
+ lifetime-bound registration data
+X-Mailer: aerc 0.21.0
+References: <20260517000149.3226762-1-dakr@kernel.org>
+ <20260517000149.3226762-19-dakr@kernel.org>
+In-Reply-To: <20260517000149.3226762-19-dakr@kernel.org>
+X-ClientProxiedBy: LO4P302CA0006.GBRP302.PROD.OUTLOOK.COM
+ (2603:10a6:600:2c2::12) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO0P265MB7106:EE_
+X-MS-Office365-Filtering-Correlation-Id: 55851b44-38a6-4204-6a42-08deb5be0d0c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|10070799003|22082099003|18002099003|56012099003|921020|4143699003;
+X-Microsoft-Antispam-Message-Info:
+	TLnXgxONmda0WJH3qIUlNo+VVH6jafTaqeptpIYNaFHvuaU0jTPYL7MKC8JVFNLGq545DZ+wIZ5XC88/sGd1gfBRgwP3dmNMa4zmp4kILC1ePFoNo7I23MHK4fYCKXi0IDGg/xBoGzKU8Rw03Esk59YW/8dKEWAYjN9wjmmRh7HUUTR4T0MkMnTsPzb24EeyGE1slnGOIyuwMirzkS5WEMCb3NA4eNjvY6iYTLTk7O4U5lW36A2e7+EZ1DqDygCw8vlRFF1k0dy4IUhi8t7bYUcHhikjRDoj7prw8Uz9KEuETIMTVQWQauQdT/+KBAWngk2qIfLMPbd5fNvxcnQqdnynbs7ux6VAafuxFq9ldTrmIr+HTNry5TIBPc8fMQO5zCXRLb/dPhrxa/1+sTJz98uY5IJUMZ2Gt5dJUAQl1xUPDTmgYUerK092u12kZykb5Dqp9oGtcsqmLHn/VB+zvs8+rm4Q/f6EJmlrVkJlQ8aE5L8N4F8A+IJE8B5LgL89TpvC0vesAzz68ZZRd4ZoUuJzFAb7DdU6y6MUJghvyffw0uQ+CJomE+mzpoDO121nCghon2fBaeOggQp6W/Vo/Vv/3pSu/6gpS2uj4F4JKzMhtRIoQ/qcAdZdj0f35zNohUXTL3NGm+6ALU8wjPK2ojZeGH/Xph0P0hR8udDFmh9992WYIm7/nQeNisQDpXM1AzfvRFsCPUW0CKq1XrD6YLhAXZ2OdoYpu2ylDm4FbaA=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(10070799003)(22082099003)(18002099003)(56012099003)(921020)(4143699003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?T0pKZjlDbGhmMmZnbUdjbHVEZkJRc29tU3BoRUVoalhienpYTHI1MTBPUnNP?=
+ =?utf-8?B?cCtTeUNUZ2kyWEhmWkxyWit1Z0k5QlFHYlo0ZXhjRWFDS21uZzhCaFE2YTNh?=
+ =?utf-8?B?SWtmWTdLSmtjVlF6VytNdjJMc2laV3huTmJuL3BibHE3L25WQ3dLbUM5Mm1M?=
+ =?utf-8?B?OE0veDVRUzhqTTBTRGhLRVhhZEs0R0tEa3Fod09GcWl5cHNzOWJoaUtUa0JV?=
+ =?utf-8?B?U0NoTG9JRlJGTlBDTWJxUituMHcrRUJNb3hUSHNyU0VvYnlDbmFidWsrZ2ly?=
+ =?utf-8?B?eWlhSEZ0RjByVk9kbkUyamY0SG9FN3VBdVRUeDJDUFlKakliSzhORE1FR0d1?=
+ =?utf-8?B?UXBIaWVnNjM5NDl1MG9qU0lEeUJiRjNBUkpoOTgyWlB2Mitoa3NNK0lueS9j?=
+ =?utf-8?B?dHhsZTNRUVhUOHo1T0tFbnBTZyttVkxtckRRYU1jZjFtSkFXWmZQYnJSSFEx?=
+ =?utf-8?B?TUlFZWRBQVRiSnNJUm13bXFZOFA5RkdpRGhBM3lwbEN0emJwQ2FhR2hOOUlo?=
+ =?utf-8?B?bkNEQ0hMeTFLUXIrOEIzd09RK0Y2Tzh1bEsxMUpJSU4rM2FqSFVDRy9jOEtZ?=
+ =?utf-8?B?cnlTTklLeUorbnFnL1VtalhSc0xRbEJaVHZTQkJ0emZMSTA3UGczT0YrcGVv?=
+ =?utf-8?B?WWVWeHNaMDgvaVdWdlI1ZW1YVFkzaEV4Z0lyMThOSnoxVHErNThjdmdUWmNi?=
+ =?utf-8?B?VjV6cC82S2E4a2Z2d3VjSzFqNkZ0YW1hT2Z1UWNNTTNtNjBSeS9aVU4zaGNw?=
+ =?utf-8?B?WDk5ZGZscWZpakVuOFZzaS9COWhlRUkrV1FtcXk5QXMxUGJEMzdVSHBUSlNM?=
+ =?utf-8?B?c3dKZHY2dW4wdlUxd0dQNmkrSnUya2g2WjBsZFo4eENmQi91MXYxRGU0MlBI?=
+ =?utf-8?B?b0M3UDM0Nm0yV1NnU0UvbU5aQVRDNEZVaFVMMmh5OFJEWXl4Rzc4QjJTZk1k?=
+ =?utf-8?B?cVA1QlhQbWpZb21BVDVTVytjQmt6Q2VXTGszRXVrcGhmQWRXYmNkQ3k2TTJG?=
+ =?utf-8?B?RGo2ajVDU3p4b2FlT3UxN0lBRERUb25ZcXVOSFdpZURrNDRiaWU2UDhWUEZh?=
+ =?utf-8?B?WjlYOFUySWh1VjJBaGJsMUp3TU9pNzRtdlJBcW5ueFNLQ2h2aHJsQWZHZ09w?=
+ =?utf-8?B?N2pQSEZPTE53UEw3cmJEbE14ZFhFMHRHSHBqdWlua2FSVW5CMkw4QmNZUG5P?=
+ =?utf-8?B?VjJod1UvaEpqQ09Ka0dBNzhsR0lZOXJMcXhhdnhVL3FWVGpWYmY5WmNsV3BG?=
+ =?utf-8?B?NnlIWUg0MjQxbWIwU2dGOTlaVG5xV0NkeCtxRWZRN255bDlwQ09ucWJsckpH?=
+ =?utf-8?B?UmN3SkhMc09TRGhHaGRKNmlicmt0UVNHMWlsT0JBeHk3eHlCS0NmN2M3cmJ0?=
+ =?utf-8?B?ZC9Vb1EwR3kxVGk1cVJVYVYyNkpub2R0TGk3MEJDcEF0QVd5T2hIejN6ZURJ?=
+ =?utf-8?B?Q29pbSthSm55cFkxcDdpTjZxYkhpOEZ2M3FRbmNqcm5nVFpGc2cweWoxUVB2?=
+ =?utf-8?B?NUVzbUp4blJDMzIzeUlZZWlaK0d1L3dBN0wvRkpybFFTcWwxdmlDNVphejBD?=
+ =?utf-8?B?UkRwYW5tNFNTN2Y0aklZUHF6YWxDaURnNEEyaHV6WGpxaXZZbmx4eE5LTlBt?=
+ =?utf-8?B?dkhlTWJFdDF0eWlpRTJzbVl6WXNCMCtxNUpYM0dGTHlJWDJCSkJoUUx5L3ZF?=
+ =?utf-8?B?TW03YW9EOUxHMnhIc0UrelhBTGNUNHF6czAxS1hoRktDNTkvb3phMDRyL3Br?=
+ =?utf-8?B?SXdHSUZSR056bklwUUNJZmxPQkNKWm9ha0J2SGhSQnJYclFkRzNVQ01IUElP?=
+ =?utf-8?B?WlV0alB3OHhMYk1qZzU0R1BLd2h1OHk3MVRHTnBFMU10dVZVSERmY0RGTDBZ?=
+ =?utf-8?B?WWk2SGFKUCtzOXQxOTFiSThrMld5OElEMHROUE5WaGRhLytZdlYzcG5TMkZP?=
+ =?utf-8?B?ZFVoKzZoY3c0dDQ4OVRkcmJJOW1uR1BDdEp2U0E0c0hVa1Y0SFN0NU9GQ1Jl?=
+ =?utf-8?B?TW9yeXZFLzZ1S1lBYkxCWUZDM01qTG1oditLNWtCaVRoM3V1cHNDTDhVdUxW?=
+ =?utf-8?B?a0Z6WU5Pb2cwQ05QS01iUDFxRThiTzYwNzBhQjRsU2VIRkx0OVYvRXJHRmtr?=
+ =?utf-8?B?YVRhY056YzNtMm8xWS96L3BUNjN4dUlVUlNaUlgrK2lBUkM1ZnNQWVkzZGZY?=
+ =?utf-8?B?bGlNeVVKb1RiV1h6eFFWMWVISWhNamcyNjlPUXdEZlhaMlF6aEJST01IbWh0?=
+ =?utf-8?B?OVZncjN5L0xmQnk1UGxWaTBFWklLQzJtTXJ3UWNCbE5ESmcxVWVmSzlERFVF?=
+ =?utf-8?B?SFBuTVRsWXZhL2EzaGtubjEwbGJaZVplcVZrYkt5Uy9mQXN5d1RuUT09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 55851b44-38a6-4204-6a42-08deb5be0d0c
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 15:48:20.1181
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: DOx5HxDHDPe/UVF51/IDZDABq7NPyv9n7j+yeNLExQ+awgE75Ijj8Mfgaz0ZvzE6BrhW/2iSfvtljCKnsl8RCQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB7106
 
-Newer VMD  with device ID 0x28c1 has unique settings compared to its
-predecessor where BIOS enumerates the entire VMD device tree and
-assigns respective configurations.
+On Sun May 17, 2026 at 1:01 AM BST, Danilo Krummrich wrote:
+> Make the Data struct lifetime-parameterized, storing a reference to the
+> parent pci::Device<Bound>. This demonstrates that registration data can
+> hold device resources tied to the parent driver's lifetime.
+>=20
+> In connect(), retrieve the parent PCI device from the registration data
+> rather than casting through adev.parent().
+>=20
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 
-VMD configuration BAR0 carries over from GNR legacy VMD as the mechanism
-to access the configuration space of the devices owned by VMD. The size
-of this window is fixed at 256 MB, where each function consumes 4 KB and
-every bus consumes 1 MB.
+Reviewed-by: Gary Guo <gary@garyguo.net>
 
-The shadow and scratchpad registers have been relocated from the VMD
-configuration space to the VMD MMIO space in VMD BAR4/BAR5, otherwise
-refers to as MEMBAR2 or MSI-X bar.
-
-VMD MSI-X remapping enable/disable is no longer supported.
-
-All the VMD driver code needs to do is to obtain bus hide range along
-with shadow register values set by BIOS and perform a bus scan.
-
-The patch also involves small refactoring of vmd_enable_domain function.
-
-Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
----
-v2 : Using PCI features flag instead of devic ID and fixing corner cases
-     for vmd_remove_irq.
----
- drivers/pci/controller/vmd.c | 173 +++++++++++++++++++++++++++--------
- include/linux/pci_ids.h      |   1 +
- 2 files changed, 135 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index d4ae250d4bc6..ca8738285659 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -37,6 +37,11 @@
- #define MB2_SHADOW_OFFSET	0x2000
- #define MB2_SHADOW_SIZE		16
- 
-+/* DMR BAR4 register offsets */
-+#define SHADOW_MEMBAR1_28C1		0x2818 /* MEMBAR1 physical address */
-+#define SHADOW_MEMBAR2_28C1		0x2820 /* MEMBAR2 physical address */
-+#define BASE_ID_REG_28C1		0x2840
-+
- enum vmd_features {
- 	/*
- 	 * Device may contain registers which hint the physical location of the
-@@ -77,6 +82,15 @@ enum vmd_features {
- 	 * proper power management of the SoC.
- 	 */
- 	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
-+
-+	/*
-+	 * Newer VMD  with device ID 0x28c1 has unique settings compared to its
-+	 * predecessor where BIOS enumerates the entire VMD device tree and
-+	 * stores respective configurations including bus start range and
-+	 * shadow registers in VMD MMIO space in VMD BAR4/BAR5, otherwise refers
-+	 * to as MEMBAR2 or MSI-X bar.
-+	 */
-+	VMD_FEAT_USE_BIOS_INFO		= (1 << 6),
- };
- 
- #define VMD_BIOS_PM_QUIRK_LTR	0x1003	/* 3145728 ns */
-@@ -142,6 +156,7 @@ struct vmd_dev {
- 	u8			first_vec;
- 	char			*name;
- 	int			instance;
-+	unsigned long		features;
- };
- 
- static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
-@@ -374,6 +389,8 @@ static void vmd_set_msi_remapping(struct vmd_dev *vmd, bool enable)
- 
- static void vmd_remove_irq_domain(struct vmd_dev *vmd)
- {
-+	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
-+		return;
- 	/*
- 	 * Some production BIOS won't enable remapping between soft reboots.
- 	 * Ensure remapping is restored before unloading the driver.
-@@ -393,7 +410,12 @@ static void __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
- 				  unsigned int devfn, int reg, int len)
- {
- 	unsigned int busnr_ecam = bus->number - vmd->busn_start;
--	u32 offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
-+	u32 offset;
-+
-+	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
-+		busnr_ecam = bus->number;
-+
-+	offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
- 
- 	if (offset + len >= resource_size(&vmd->dev->resource[VMD_CFGBAR]))
- 		return NULL;
-@@ -661,6 +683,46 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
- 	return 0;
- }
- 
-+static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
-+				       resource_size_t *offset1,
-+				       resource_size_t *offset2)
-+{
-+	u64 phys1, phys2, bar4_2840;
-+	void __iomem *bar4;
-+	u32 base_id;
-+	u8 base_bus;
-+
-+
-+	bar4 = pci_ioremap_bar(vmd->dev, 4);
-+	if (!bar4)
-+		return -ENOMEM;
-+
-+	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical addresses. */
-+	phys1 = readq(bar4 + SHADOW_MEMBAR1_28C1);
-+	phys2 = readq(bar4 + SHADOW_MEMBAR2_28C1);
-+
-+	/*
-+	 * Read and set bus start number from Base ID register.
-+	 * 24-bit Base ID register is part of 64-bit shadowed reqid hide
-+	 * range register and holds segment, bus, device and function.
-+	 */
-+	bar4_2840 = readq(bar4 + BASE_ID_REG_28C1);
-+	base_id = bar4_2840 & 0xFFFFFF;
-+	base_bus = base_id >> 8;
-+	vmd->busn_start = base_bus;
-+
-+	/* Calculate offsets like vmd_get_phys_offsets() does. */
-+	if (phys1)
-+		*offset1 = vmd->dev->resource[VMD_MEMBAR1].start -
-+			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
-+	if (phys2)
-+		*offset2 = vmd->dev->resource[VMD_MEMBAR2].start -
-+			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
-+
-+	pci_iounmap(vmd->dev, bar4);
-+	return 0;
-+}
-+
- static irqreturn_t vmd_irq(int irq, void *data)
- {
- 	struct vmd_irq_list *irqs = data;
-@@ -711,6 +773,55 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
- 	return 0;
- }
- 
-+static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
-+					unsigned long features,
-+					resource_size_t *membar2_offset,
-+					resource_size_t *offset1,
-+					resource_size_t *offset2)
-+{
-+	int ret;
-+
-+	/*
-+	 * Shadow registers may exist in certain VMD device ids which allow
-+	 * guests to correctly assign host physical addresses to the root ports
-+	 * and child devices. These registers will either return the host value
-+	 * or 0, depending on an enable bit in the VMD device.
-+	 */
-+	/*
-+	 * For certain VMD devices (i.e. 0x28C1), BIOS places device info
-+	 * in BAR4 shadow registers to determine the base bus number and memory
-+	 * offsets.
-+	 */
-+	if (features & VMD_FEAT_USE_BIOS_INFO) {
-+		if (resource_type(&vmd->dev->resource[4]) == IORESOURCE_MEM) {
-+			*membar2_offset = SHADOW_MEMBAR1_28C1 + MB2_SHADOW_SIZE;
-+			ret = vmd_get_bus_info_from_bar4(vmd, offset1, offset2);
-+			if (ret)
-+				return ret;
-+		}
-+	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
-+		*membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
-+		ret = vmd_get_phys_offsets(vmd, true, offset1, offset2);
-+		if (ret)
-+			return ret;
-+	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
-+		ret = vmd_get_phys_offsets(vmd, false, offset1, offset2);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/*
-+	 * Certain VMD devices may have a root port configuration option which
-+	 * limits the bus range to between 0-127, 128-255, or 224-255.
-+	 */
-+	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
-+		ret = vmd_get_bus_number_start(vmd);
-+		if (ret)
-+			return ret;
-+	}
-+	return 0;
-+}
-+
- /*
-  * Since VMD is an aperture to regular PCIe root ports, only allow it to
-  * control features that the OS is allowed to control on the physical PCI bus.
-@@ -784,38 +895,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	struct pci_dev *dev;
- 	int ret;
- 
--	/*
--	 * Shadow registers may exist in certain VMD device ids which allow
--	 * guests to correctly assign host physical addresses to the root ports
--	 * and child devices. These registers will either return the host value
--	 * or 0, depending on an enable bit in the VMD device.
--	 */
--	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
--		membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
--		ret = vmd_get_phys_offsets(vmd, true, &offset[0], &offset[1]);
--		if (ret)
--			return ret;
--	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
--		ret = vmd_get_phys_offsets(vmd, false, &offset[0], &offset[1]);
--		if (ret)
--			return ret;
--	}
--
--	/*
--	 * Certain VMD devices may have a root port configuration option which
--	 * limits the bus range to between 0-127, 128-255, or 224-255
--	 */
--	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
--		ret = vmd_get_bus_number_start(vmd);
--		if (ret)
--			return ret;
--	}
-+	ret = vmd_prepare_offsets_and_bus(vmd, features, &membar2_offset,
-+					  &offset[0], &offset[1]);
-+	if (ret)
-+		return ret;
- 
- 	res = &vmd->dev->resource[VMD_CFGBAR];
- 	vmd->resources[0] = (struct resource) {
- 		.name  = "VMD CFGBAR",
- 		.start = vmd->busn_start,
--		.end   = vmd->busn_start + (resource_size(res) >> 20) - 1,
-+		.end   = (resource_size(res) >> 20) - 1,
- 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
- 	};
- 
-@@ -868,19 +957,21 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	 * acceptable because the guest is usually CPU-limited and MSI
- 	 * remapping doesn't become a performance bottleneck.
- 	 */
--	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
--	    offset[0] || offset[1]) {
--		ret = vmd_alloc_irqs(vmd);
--		if (ret)
--			return ret;
-+	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
-+		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-+		    offset[0] || offset[1]) {
-+			ret = vmd_alloc_irqs(vmd);
-+			if (ret)
-+				return ret;
- 
--		vmd_set_msi_remapping(vmd, true);
-+			vmd_set_msi_remapping(vmd, true);
- 
--		ret = vmd_create_irq_domain(vmd);
--		if (ret)
--			return ret;
--	} else {
--		vmd_set_msi_remapping(vmd, false);
-+			ret = vmd_create_irq_domain(vmd);
-+			if (ret)
-+				return ret;
-+		} else {
-+			vmd_set_msi_remapping(vmd, false);
-+		}
- 	}
- 
- 	pci_add_resource(&resources, &vmd->resources[0]);
-@@ -998,6 +1089,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	vmd->dev = dev;
- 	vmd->sysdata.domain = PCI_DOMAIN_NR_NOT_SET;
-+	vmd->features = features;
- 	vmd->instance = ida_alloc(&vmd_instance_ida, GFP_KERNEL);
- 	if (vmd->instance < 0)
- 		return vmd->instance;
-@@ -1114,6 +1206,9 @@ static const struct pci_device_id vmd_ids[] = {
- 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
- 				VMD_FEAT_HAS_BUS_RESTRICTIONS |
- 				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
-+	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_28C1),
-+		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
-+				VMD_FEAT_USE_BIOS_INFO,},
- 	{PCI_VDEVICE(INTEL, 0x467f),
- 		.driver_data = VMD_FEATS_CLIENT,},
- 	{PCI_VDEVICE(INTEL, 0x4c3d),
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 24cb42f66e4b..2a8ebe7df92e 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2889,6 +2889,7 @@
- #define PCI_DEVICE_ID_INTEL_HDA_ICH8	0x284b
- #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850
- #define PCI_DEVICE_ID_INTEL_VMD_28C0	0x28c0
-+#define PCI_DEVICE_ID_INTEL_VMD_28C1    0x28c1
- #define PCI_DEVICE_ID_INTEL_ICH9_0	0x2910
- #define PCI_DEVICE_ID_INTEL_ICH9_2	0x2912
- #define PCI_DEVICE_ID_INTEL_ICH9_3	0x2913
--- 
-2.52.0
+> ---
+>  samples/rust/rust_driver_auxiliary.rs | 27 ++++++++++++++++-----------
+>  1 file changed, 16 insertions(+), 11 deletions(-)
 
