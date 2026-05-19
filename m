@@ -1,240 +1,346 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010065.outbound.protection.outlook.com [52.101.61.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2107836A023
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 06:01:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779170520; cv=none; b=n/Pqmij9rdK4ykfSmredIh1anjHviN8i88BsDoo7mkyr8vnmeXSoHW7u0i2HH/2/ltPZh2DrShWTX+Z9uXEHvhujysePxPo1F/L9vCLlxgE1RwwI4uTBJWrToGi7YnW0Fkn79erR6Py2hjRbcHACMVutIlHjP7mhV0CTGw8hUgk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779170520; c=relaxed/simple;
-	bh=8P3G/BaSOJSPeCocjgLO1IQV8xlBw8sUlQYqk+yngnA=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=AMWs1dhmO2XFbZr31eGzCr5W5MxQejqKH4EzOpMcAV//LtWH82yRPKRYlK3DwryHsT3aUCIvJ5A1GVpYQJDzT2CeAx6ilIVyGbmIfcPO2tnvjoqjKMxsTHUxzQy2NQWDO+UKrvhxk3qzOuR2mMtFLLM7x6EjvTQq986H51WMgg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=avdtTN6V; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0828C377EC1;
+	Tue, 19 May 2026 06:02:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.61.65
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779170577; cv=fail; b=k5AKiPWZfJU4DMRZVtGzNSQvsHl30HpDX/Lz4y07peOa+tpvsRFiVVeFxzyGS5ahC56FUwWleOPhOaahGkTo6qrvdP7depsxuVFby+Aw7rlrIQ/fPBQ/tVzJhnM5HSojyznpkWMbP4PnSdq09EtpHB9m5n5L/ptrNqZvMuqUHvY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779170577; c=relaxed/simple;
+	bh=rX7s/f1QeE7jLuUoDDuGWVVd6j2C3seLFpY4KkXPjF8=;
+	h=Content-Type:Date:Message-Id:Subject:From:To:Cc:References:
+	 In-Reply-To:MIME-Version; b=co2HE82BAVoJAvG51EEKKTBndNhLFK+/WBOZYOi/BuDdoKV+kdijW7vF9D188dZ5AW8QoaEmWiAKDvOFVhuF7decmm8F23jfdjwW3AQfbtEYQAE8pvThQVRbYciUMbZw0us4HCce7iErsDGHRE1CoR3I5mWtf+7yV6LtBTNO4/k=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=nwbnVKPA; arc=fail smtp.client-ip=52.101.61.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="avdtTN6V"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779170519; x=1810706519;
-  h=date:from:to:cc:subject:message-id;
-  bh=8P3G/BaSOJSPeCocjgLO1IQV8xlBw8sUlQYqk+yngnA=;
-  b=avdtTN6V1vQrN5tE6U1poeqO2990t9CaarvMDG3JYVE/ft4NKisxpgkR
-   p7UvlNHadhPHHVYqc0zMW2f0aSzDNgV4YADS1AU4XhczqOBY1btTWrsnB
-   znnys8e16hCeQxXYG7GKX+OqPNqFa9tU/NCkdajbeeXQyhAQd8sh/PuO8
-   ffMK7pSsz8EYPTV8AYPovo6nissfwzCv/KQ18PNvBHwE01CBgvomkoE9m
-   wHn339sPNmpnjHrNH+4GcuIH7xzLFbYdE16S0Wf47omxn+6NM4ui+2UT7
-   8kGUKZaOkDswyr6lc2aQSrH0t6/XEbWtPgI+aKFb0QquV3SWuD2kboZ2h
-   A==;
-X-CSE-ConnectionGUID: S7YjNndqRuqanxfxuAjI7A==
-X-CSE-MsgGUID: QdlkZ0QrSUywxHzXgmn10Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11790"; a="97472248"
-X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="97472248"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2026 23:01:58 -0700
-X-CSE-ConnectionGUID: I8C1O1F2QcquakCRcPXNSQ==
-X-CSE-MsgGUID: kxDpwN79QziMhBmv0WAfug==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="239917059"
-Received: from lkp-server02.sh.intel.com (HELO 30e86e9c1927) ([10.239.97.151])
-  by orviesa007.jf.intel.com with ESMTP; 18 May 2026 23:01:57 -0700
-Received: from kbuild by 30e86e9c1927 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wPDWc-000000000YJ-0SmI;
-	Tue, 19 May 2026 06:01:54 +0000
-Date: Tue, 19 May 2026 14:01:38 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/mediatek-gen3] BUILD SUCCESS
- d39d55d7411c18ca6aeb63aafa8035f4ad8b317f
-Message-ID: <202605191431.y5qnTiH5-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="nwbnVKPA"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=EGNurKtGTeOPiqhSI6dvpYiEAlff/oaHEt4YNuzYZFDIv2Eit0+JoSh7VQ5aljlv0IbCSGbFZia4KXpbj7xj06PBH/Y7wDyX3GVLCpugzjXNz2LwRH87zuJScb8/WO8cRWTO/Mi6CzbqIhzP0ZQDRJtVSuttHVkwZbMBwsSM4xUjwJnJOAnmclvaAhBQgGH+D7N6mdkBbVV0CpGKWn189EmmCOfGvnkjsvWwPoEc4rOp+VNkcSWXQsMgMhnMqzBx1Nmuj4roTJomRCrPzoKdJXWoXCGILXLYJKSFdvuMMv+SpBq6+KqrNHkAj6kUmvJOsJIMZwAJMkPZEihNs17S9g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LNdaC7G16O/x/qWJzZhSHkZU8K79nDCKxprnsOyDUbw=;
+ b=LtVaTI8Dscn/WqKHEeSWuNPy2UiZqSJESkkklBsbrGbmmAUBuTRKo/4ZDWb8CcD3U7ZMKxnJyDvTiEwS2sct8wTMdOB9qwvMQS//YAaMwnuGVzrwcjgc6quQO52J8icbApT5DwD3Pe1IDLAeypvBEsub2I5yFfZoVXZrg737WnzXIGlZiJ7LfSXpy7pe4itdc86lXmw+dbDDCfMl31+LIymZVUPYS0CqobtpfHSCqDMvd6AWa1dZTGrg5RvQdYwecUFVSHO+fJWZJ+8CjiPZXP9q4MeBrQy5EZ3rh5inKJ/LS5H8r4SOa+N94cawRG9EROo8OpngbELm5OubBmgRRA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LNdaC7G16O/x/qWJzZhSHkZU8K79nDCKxprnsOyDUbw=;
+ b=nwbnVKPAwYOLsD23lmLlKrEThPBPCzfTIvc84sTW5kzPtVjX16BQBDsYUxOGDVy2E2wc6yP5wnv0I23skeuzXjuPpPJMnAkUauYysz0dqsQRPx+34Zvysbc/Djg5IiB7NBgBLPC1noEBOyBeHBda4eZIa6/dEafOTcRkSjr3wfX/ZDTzzTVvwU7o7s8oCgTeMe1WWqTaRxYuk4tnhoNCnzaFgisR5L+EFy57v8k9uQ3Qn+CYUjxe22J0gDlP1Z+bz6Hr7ccjqa7dEVRfcvg0YjzZ45uz8nOW6BGRQFFy9wczx/8pagehVsN3ePstxlMkiG/ANcmsM+M28tv8+vprAg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB2353.namprd12.prod.outlook.com (2603:10b6:207:4c::31)
+ by DS0PR12MB9324.namprd12.prod.outlook.com (2603:10b6:8:1b6::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.23; Tue, 19 May
+ 2026 06:02:48 +0000
+Received: from BL0PR12MB2353.namprd12.prod.outlook.com
+ ([fe80::99b:dcff:8d6d:78e0]) by BL0PR12MB2353.namprd12.prod.outlook.com
+ ([fe80::99b:dcff:8d6d:78e0%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
+ 06:02:48 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 19 May 2026 15:02:43 +0900
+Message-Id: <DIMFBTLBNISD.W92F9DWEFSX@nvidia.com>
+Subject: Re: [PATCH v3 16/27] rust: types: add `ForLt` trait for
+ higher-ranked lifetime support
+From: "Eliot Courtney" <ecourtney@nvidia.com>
+To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
+ <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
+ <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
+ <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
+Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260517000149.3226762-1-dakr@kernel.org>
+ <20260517000149.3226762-17-dakr@kernel.org>
+In-Reply-To: <20260517000149.3226762-17-dakr@kernel.org>
+X-ClientProxiedBy: TYCPR01CA0193.jpnprd01.prod.outlook.com
+ (2603:1096:400:2b0::12) To BL0PR12MB2353.namprd12.prod.outlook.com
+ (2603:10b6:207:4c::31)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL0PR12MB2353:EE_|DS0PR12MB9324:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7322857b-7c52-404b-f9d5-08deb56c407e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|10070799003|366016|7416014|376014|921020|22082099003|56012099003|18002099003|11063799003|4143699003;
+X-Microsoft-Antispam-Message-Info:
+	0lWfuFz7AKNW9Mg5vN+5gyaoLX47JwVu3LjaA74wHapXto0njrz8zzIaOENlY7+ywP3vH7C8B04VvwGOXGV9Zmpj76J3Eyl4PToE2StQkDi+XsiQxCvf8OVlVsBaN7rnX5hcrEopIoEJQLOkSv0N3YnEiTzxM9XJzsIiUyy6C+awWSUkmmPQHh/KIjsHSfAVju3MlEzALLYF5tAkpCRZ5FLH7MREzNHUk+axlKedEpm3m55yHVR9R06YtqFJdNOn08aoSc9b5x5alPZuwYtKtKlKJZ6nQFIjnpLsEXlRsY1t0et7kCI8KCJCjeeDZ9Nxd1kYkCoEmsVJiO4VkjjUcD7gyFVU3IXolq2iZCTzyfJLI/qQEX997Y8UPHmPgtG7FHTZ76KrkjbeWKGPasdy5rNpgy5aMLIgPYIz0u5/oNg53feyQaffuQKE7yhQE2ZoXNNPkwWb7IISTsT/HAILk4H0UXEmoZSl+mZQXpBhmvucTF+zsduUMe9HhnO5EhVS03jaDxfwNY2VnJ7zGjXnBxMqE2GTZBga+aGpFGSKsUrngCfMYUJ8xgqNsinIAxcvyUZbEnxKXOytgo6aNamqFELw1W68jkdD1/k+Bsq7xC8w1cSymOrzT730bJPEg3eOkXHphQiouKMPpzsIZjZeX6p1vl3WycY9yjq21yeuYbSMluB575hyaJSjkGSYSOLu8ZiAKZ4DVYSDHhFd32NEZ3/Q6D0+CWBGqPhfE6VoCN5sJal3vv82M+UJeBcm1zhF
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2353.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(10070799003)(366016)(7416014)(376014)(921020)(22082099003)(56012099003)(18002099003)(11063799003)(4143699003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?dzdVVkV1ak5DNzE4L2dIbGs5UllmekNuWHdqUmNlY3N2Z1dVanF6UXl3c0FO?=
+ =?utf-8?B?bnQ2ZU1yeHhkbm5Xcm1mOWhVejlKdG1Gd0RxQlpDWW8wZkp1T0tieEhvY2du?=
+ =?utf-8?B?OXFFRU8zbkF2K2xsa0I3VWdCRkg1eCtNUUJVVXhBck9qZytGTnNZWEd2cjY2?=
+ =?utf-8?B?YW1YbFVoRkZsNExwclFXRjAyUjA1QWdjaTYraHhkMlptYXowbGhuSlNLSity?=
+ =?utf-8?B?WkhVWkRsYkx5UDY0SXlGZkhYTStkMnNsTkc1T3RVdjkza1hCYjF2QW1mWExH?=
+ =?utf-8?B?YmZ2bHh3U2tYczY5SnA3RGJwQWgrbTZJeUt3UFBPMUpYWDlWSEl3anloS2c2?=
+ =?utf-8?B?by9OZGxWdmpONitzODhFVWw5Y0RtckNUeTQvdDZ3aWw3WElzOCtGY0Z6TW0y?=
+ =?utf-8?B?NURyYTdYTTZWOGFrYW51YW1vTlJidUFJK3A2eWZ6anEyME5BMTczU0RYSHpz?=
+ =?utf-8?B?WFFTMzlsR3h0UzNmbUh4ZE9QeTFrLzhRNXZNMnVNNTJuY3I2N05sWkMySTBk?=
+ =?utf-8?B?UElybFdGN0UvclI2RktvVGM4dGM2WVY4a3FmK2xvb1AvNFZjbkZLejIwd0F2?=
+ =?utf-8?B?RWZlUHp0MnRSZndER2V5aXdNNmdwUDJjUTVHTldqaTJaelRPYUFRcWVEM1NT?=
+ =?utf-8?B?MG55UjVHSlRRU2Vlbm80SncrOWFMMW1Ic1ZLSEMzWEFORVBHbHZjckUyNmNW?=
+ =?utf-8?B?TTd3YTRmaWdpeDREZjVyWFBGSGpiRmJJd045a2l0N0xvSTdXNHNqMU12Vy81?=
+ =?utf-8?B?WHMwQnlVbWRPZVhySk1LV1RCVXNIa2RMMkNIajZ1NzBUQ3dFT0FBTzd1eUl2?=
+ =?utf-8?B?YUd0L1BSa202Q1dubHFoRWJSVktweFhlMnFSSmlSaHFMOHV3dU5tenlNa0E5?=
+ =?utf-8?B?RFBhYmRMRitiY3FFNmZlTHZlOFVhUVc3ZE1vd1Y2U2EyVFZ0QklEZXVBd1ZO?=
+ =?utf-8?B?UHdnYkM1dFlMK3BkRUJsQmdMQ0R0M1AzZlB2dStBUlhXeVJaQlU3UFFoelFk?=
+ =?utf-8?B?T3VRYkYvYjZHNFh0a0lrSm50SE9XZDFnSTluOXQzd3NSc1hQdlhvUG1CV2Zj?=
+ =?utf-8?B?RWRzN2VHR2JpaWp4aW1yVnZ2bWQwRVhUa0dmNVh1cWNRRDBEdU5lYnVLYWZn?=
+ =?utf-8?B?ck03UEVZSFc4eUVtalhwQ0d6cWdFVUpnTzJucmlydU5QN1JRZjdlamZMdzMw?=
+ =?utf-8?B?c1NFQUNxbG9zMEFtb0h1V2Q3QmJVb1FJT21MdDZyQWhONWpSdlFuTnNGN3NC?=
+ =?utf-8?B?Q2NWNHlMOTY1WXRwcnVDa0hEWXM1a2xhMnhjbDZ3YkxMa05ML3Ywajk3Rm9s?=
+ =?utf-8?B?enNna3NJWVpDNTlNRmdxU01tNGsydGxSTHZvKzdJU1FjYWVpTXArOG5nZlVm?=
+ =?utf-8?B?MVprajVwQUtZSVRFUHhVUjBacWtJbHlpV05EdllyendvYjlKRjBLdmYvOExk?=
+ =?utf-8?B?Nnpsd0RlQ0lHTUJ3OGFBekQ4YndBRFQ2THh1d3BMbjZOZEFHRjRTQzF2TUlv?=
+ =?utf-8?B?ZzUyYjIvV1JVTUJaVHBNQnVrSVo1RTBRVDF6dEJuQXlnNjA3Nk5lUWtnd3BD?=
+ =?utf-8?B?bHJKTURKTDJKQkZ1VWg2a2cxSWltSEJZOVF1V0kxK2lyWDRjazFTNExoTmRn?=
+ =?utf-8?B?MXZCNkVYVXltaC8yS3U4bkNOVWt2V0ZyMUtFSWRkVkc0VlIyZHRUa0dpbkE0?=
+ =?utf-8?B?R1hXMkxhRjJPd2M0NVorNytMWnczZmNvRlVSbVFUdVoyblhudkd0ZWFPWUp6?=
+ =?utf-8?B?ZHZJMVQ4VkhIaStYMjRZZ2pUSmZjNHVNcWkweTQvc2lZcXk1UldkTFJHY3BQ?=
+ =?utf-8?B?R29XWG0wWnNpTlpwNUcxOFdNMGZLck4wRkd5RXpkNjZaMkNpaTJOMjBKeFJ1?=
+ =?utf-8?B?RloxMTBqUlFWTEJNbk1wbDAvelNqNUpJeVRDVDhGOGQ4QmVHTzA2WVRJRGRY?=
+ =?utf-8?B?NVpkOFMwdzJqWU9FclluaVJHaFMzVldaaVkrWWZtdXZMbXp1dCs2Y2I5KzRr?=
+ =?utf-8?B?Vi8rTmVjZmtVNTBKQm9YbzJyRk96MUNPWjZmYjNPa3dRN08wZ0VXdC8vakt0?=
+ =?utf-8?B?MDBER3cvQUlITkFwL3BrN0xyRjNWbVZ6dmlZTHdVRU5Uc0dtY2Z6WW82M2x5?=
+ =?utf-8?B?dTZLN0ZSdTNpckV3cEpLNnQxMFg3WUFYZjYxN3JiSHl3TUNWL2dsVkc2ZzhE?=
+ =?utf-8?B?SHNHNWRMMVRacmx4WlNXcmdqU2s1NFF6M2IrQTk4T29KQ3ZocEJEYUVpNk5R?=
+ =?utf-8?B?Ny83M0VVS2FWNEM0bk84ZUtQUVdsQ2NxOCthWTlsdGxuc09oV3o1cXNvWk1Y?=
+ =?utf-8?B?cmVQRFlPWDJubnhBdDFRZFRUdVpmTGRtaG95d1MzMVM3UnNLSnVYTUZ6Nm0w?=
+ =?utf-8?Q?Y9P8+OH5Ga6nl3XMvt6YkB8/9xppwXQdN27cGtuqMBv9n?=
+X-MS-Exchange-AntiSpam-MessageData-1: Bln8lmQoQGVdOg==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7322857b-7c52-404b-f9d5-08deb56c407e
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2353.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 06:02:48.4095
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: UVD2qkaNC64neci8tnrQ3k/quiGMzKglR+i6XxqZ+iqVxenTp/mHdCXAWoSEejxwoPMcTkh3PaaPlcGpRxojIw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB9324
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek-gen3
-branch HEAD: d39d55d7411c18ca6aeb63aafa8035f4ad8b317f  PCI: mediatek-gen3: Do full device power down on removal
+On Sun May 17, 2026 at 9:01 AM JST, Danilo Krummrich wrote:
+> From: Gary Guo <gary@garyguo.net>
+>
+> There are a few cases, e.g. when dealing with data referencing each other=
+,
+> one might want to write code that are generic over lifetimes. For example=
+,
+> if you want take a function that takes `&'a Foo` and gives `Bar<'a>`, you
+> can write:
+>
+>     f: impl for<'a> FnOnce(&'a Foo) -> Bar<'a>,
+>
+> However, it becomes tricky when you want that function to not have a fixe=
+d
+> `Bar`, but have it be generic again. In this case, one needs something th=
+at
+> is generic over types that are themselves generic over lifetimes.
+>
+> `ForLt` provides such support. It provides a trait `ForLt` which describe=
+s
+> a type generic over lifetime. One may use `ForLt::Of<'a>` to get an
+> instance of a type for a specific lifetime.
+>
+> For the case of cross referencing, one would almost always want the
+> lifetime to be covariant. Therefore this is also made a requirement for t=
+he
+> `ForLt` trait, so functions with `ForLt` trait bound can assume covarianc=
+e.
+>
+> A macro `ForLt!()` is provided to be able to obtain a type that implement=
+s
+> `ForLt`. For example, `ForLt!(for<'a> Bar<'a>)` would yield a type that
+> `<TheType as ForLt>::Of<'a>` is `Bar<'a>`. This also works with lifetime
+> elision, e.g. `ForLt!(Bar<'_>)` or for types without lifetime at all, e.g=
+.
+> `ForLt!(u32)`.
+>
+> The API design draws inspiration from the higher-kinded-types [1] crate,
+> however different design decision has been taken (e.g. covariance
+> requirement) and the implementation is independent.
+>
+> License headers use "Apache-2.0 OR MIT" because I anticipate this to be
+> used in pin-init crate too which is licensed as such.
+>
+> Link: https://docs.rs/higher-kinded-types/ [1]
+>
+> Signed-off-by: Gary Guo <gary@garyguo.net>
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+> ---
 
-elapsed time: 720m
+> +trait TypeExt {
+> +    fn expand_elided_lifetime(&self, explicit_lt: &Lifetime) -> Type;
+> +    fn replace_lifetime(&self, src: &Lifetime, dst: &Lifetime) -> Type;
+> +    fn has_lifetime(&self, lt: &Lifetime) -> bool;
+> +}
+> +
+> +impl TypeExt for Type {
+> +    fn expand_elided_lifetime(&self, explicit_lt: &Lifetime) -> Type {
+> +        struct ElidedLifetimeExpander<'a>(&'a Lifetime);
+> +
+> +        impl VisitMut for ElidedLifetimeExpander<'_> {
+> +            fn visit_lifetime_mut(&mut self, lifetime: &mut Lifetime) {
+> +                // Expand explicit `'_`
+> +                if lifetime.ident =3D=3D "_" {
+> +                    *lifetime =3D self.0.clone();
+> +                }
+> +            }
+> +
+> +            fn visit_type_reference_mut(&mut self, reference: &mut syn::=
+TypeReference) {
+> +                syn::visit_mut::visit_type_reference_mut(self, reference=
+);
+> +
+> +                if reference.lifetime.is_none() {
+> +                    reference.lifetime =3D Some(self.0.clone());
+> +                }
+> +            }
+> +        }
+> +
+> +        let mut ret =3D self.clone();
+> +        ElidedLifetimeExpander(explicit_lt).visit_type_mut(&mut ret);
+> +        ret
+> +    }
+> +
+> +    fn replace_lifetime(&self, src: &Lifetime, dst: &Lifetime) -> Type {
+> +        struct LifetimeReplacer<'a>(&'a Lifetime, &'a Lifetime);
+> +
+> +        impl VisitMut for LifetimeReplacer<'_> {
+> +            fn visit_lifetime_mut(&mut self, lifetime: &mut Lifetime) {
+> +                if lifetime.ident =3D=3D self.0.ident {
+> +                    *lifetime =3D self.1.clone();
+> +                }
+> +            }
+> +        }
+> +
+> +        let mut ret =3D self.clone();
+> +        LifetimeReplacer(src, dst).visit_type_mut(&mut ret);
+> +        ret
+> +    }
+> +
+> +    fn has_lifetime(&self, lt: &Lifetime) -> bool {
+> +        struct HasLifetime<'a>(&'a Lifetime, bool);
+> +
+> +        impl Visit<'_> for HasLifetime<'_> {
+> +            fn visit_lifetime(&mut self, lifetime: &Lifetime) {
+> +                if lifetime.ident =3D=3D self.0.ident {
+> +                    self.1 =3D true;
+> +                }
+> +            }
+> +        }
+> +
+> +        let mut visitor =3D HasLifetime(lt, false);
+> +        visitor.visit_type(self);
+> +        visitor.1
+> +    }
+> +}
+> +
+> +struct Prover<'a>(&'a Lifetime, Vec<&'a Type>);
+> +
+> +impl<'a> Prover<'a> {
+> +    /// Prove that `ty` is covariant over `'lt`.
+> +    ///
+> +    /// This also needs to prove that it'll be wellformed for any instan=
+ce of `'lt`.
+> +    /// It can be assumed that `ty` will be wellformed if `'lt` is subst=
+ituted to `'static`.
+> +    fn prove(&mut self, ty: &'a Type) {
+> +        match ty {
+> +            Type::Paren(ty) =3D> self.prove(&ty.elem),
+> +            Type::Group(ty) =3D> self.prove(&ty.elem),
+> +
+> +            // No lifetime involved
+> +            Type::Never(_) =3D> {}
+> +
+> +            // `[T; N]` and `[T]` is covariant over `T`.
+> +            Type::Array(ty) =3D> self.prove(&ty.elem),
+> +            Type::Slice(ty) =3D> self.prove(&ty.elem),
+> +
+> +            Type::Tuple(ty) =3D> {
+> +                for elem in &ty.elems {
+> +                    self.prove(elem);
+> +                }
+> +            }
+> +
+> +            // `*const T` is covariant over `T`
+> +            Type::Ptr(ty) if ty.const_token.is_some() =3D> self.prove(&t=
+y.elem),
+> +
+> +            // `&T` is covariant over `T` and lifetime.
+> +            //
+> +            // Note that if we encounter `&'other_lt T`, then we still n=
+eed to make sure the type
+> +            // is wellformed if `T` involves `&'lt`, so we defer to the =
+compiler.
+> +            //
+> +            // This is to block cases like `ForLt!(for<'a> &'static &'a =
+u32)`, as the presence of
+> +            // the type implies `'a: 'static` but this is unsound.
+> +            Type::Reference(ty)
+> +                if ty.mutability.is_none() && ty.lifetime.as_ref() =3D=
+=3D Some(self.0) =3D>
+> +            {
+> +                self.prove(&ty.elem)
+> +            }
+> +
+> +            // `&[mut] T` is covariant over lifetime.
+> +            // In case we have `&[mut] NoLifetime`, we don't need to do =
+additional checks.
+> +            Type::Reference(ty) if !ty.elem.has_lifetime(self.0) =3D> ()=
+,
+> +
+> +            // No mention of lifetime at all, no need to perform compile=
+r check.
+> +            ty if !ty.has_lifetime(self.0) =3D> (),
 
-configs tested: 163
-configs skipped: 1
+This treats macros as not having a lifetime, but it allows this which is
+not covariant for 'a IIUC:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+```
+trait Trait {}
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-arc                              alldefconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-15.2.0
-arc                   randconfig-001-20260519    clang-23
-arc                   randconfig-002-20260519    clang-23
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                              allyesconfig    gcc-15.2.0
-arm                   randconfig-001-20260519    clang-23
-arm                   randconfig-002-20260519    clang-23
-arm                   randconfig-003-20260519    clang-23
-arm                   randconfig-004-20260519    clang-23
-arm                       spear13xx_defconfig    gcc-15.2.0
-arm64                            allmodconfig    clang-19
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                 randconfig-001-20260519    gcc-8.5.0
-arm64                 randconfig-002-20260519    gcc-8.5.0
-arm64                 randconfig-003-20260519    gcc-8.5.0
-arm64                 randconfig-004-20260519    gcc-8.5.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                  randconfig-001-20260519    gcc-8.5.0
-csky                  randconfig-002-20260519    gcc-8.5.0
-hexagon                          allmodconfig    clang-17
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon               randconfig-001-20260519    gcc-10.5.0
-hexagon               randconfig-002-20260519    gcc-10.5.0
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386                 buildonly-randconfig-001    gcc-12
-i386        buildonly-randconfig-001-20260519    gcc-12
-i386                 buildonly-randconfig-002    gcc-12
-i386        buildonly-randconfig-002-20260519    gcc-12
-i386                 buildonly-randconfig-003    gcc-12
-i386        buildonly-randconfig-003-20260519    gcc-12
-i386                 buildonly-randconfig-004    gcc-12
-i386        buildonly-randconfig-004-20260519    gcc-12
-i386                 buildonly-randconfig-005    gcc-12
-i386        buildonly-randconfig-005-20260519    gcc-12
-i386                 buildonly-randconfig-006    gcc-12
-i386        buildonly-randconfig-006-20260519    gcc-12
-i386                  randconfig-011-20260519    gcc-14
-i386                  randconfig-012-20260519    gcc-14
-i386                  randconfig-013-20260519    gcc-14
-i386                  randconfig-014-20260519    gcc-14
-i386                  randconfig-015-20260519    gcc-14
-i386                  randconfig-016-20260519    gcc-14
-i386                  randconfig-017-20260519    gcc-14
-loongarch                        allmodconfig    clang-19
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260519    gcc-10.5.0
-loongarch             randconfig-002-20260519    gcc-10.5.0
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                        bcm47xx_defconfig    clang-18
-nios2                         10m50_defconfig    gcc-11.5.0
-nios2                            allmodconfig    clang-23
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260519    gcc-10.5.0
-nios2                 randconfig-002-20260519    gcc-10.5.0
-openrisc                         allmodconfig    clang-23
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                randconfig-001-20260519    gcc-8.5.0
-parisc                randconfig-002-20260519    gcc-8.5.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc               randconfig-001-20260519    gcc-8.5.0
-powerpc               randconfig-002-20260519    gcc-8.5.0
-powerpc64             randconfig-001-20260519    gcc-8.5.0
-powerpc64             randconfig-002-20260519    gcc-8.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                 randconfig-001-20260519    gcc-13.4.0
-riscv                 randconfig-002-20260519    gcc-13.4.0
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                  randconfig-001-20260519    gcc-13.4.0
-s390                  randconfig-002-20260519    gcc-13.4.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                          landisk_defconfig    gcc-15.2.0
-sh                    randconfig-001-20260519    gcc-13.4.0
-sh                    randconfig-002-20260519    gcc-13.4.0
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-15.2.0
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260519    gcc-14
-x86_64      buildonly-randconfig-002-20260519    gcc-14
-x86_64      buildonly-randconfig-003-20260519    gcc-14
-x86_64      buildonly-randconfig-004-20260519    gcc-14
-x86_64      buildonly-randconfig-005-20260519    gcc-14
-x86_64      buildonly-randconfig-006-20260519    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-011-20260519    clang-20
-x86_64                randconfig-012-20260519    clang-20
-x86_64                randconfig-013-20260519    clang-20
-x86_64                randconfig-014-20260519    clang-20
-x86_64                randconfig-015-20260519    clang-20
-x86_64                randconfig-016-20260519    clang-20
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                           allyesconfig    clang-23
+macro_rules! asdf {
+  () =3D> { dyn Trait };
+}
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+type NotCovariant =3D ForLt!(for<'a> &'a mut asdf!());
+```
+
+And you can get rid of the macro too:
+
+```
+type NotCovariant =3D ForLt!(for<'a> &'a mut dyn Trait);
+```
+
+These are not covariant because dyn Trait has an elided +'a lifetime.
+
+I feel that the syntactic checking is kinda difficult to get right since
+it would need to handle all ways lifetimes can be elided now and in the
+future.
+
+Would it be that bad to always emit the proofs?
+
