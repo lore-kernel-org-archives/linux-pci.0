@@ -1,135 +1,145 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4EF4033F5B1;
-	Tue, 19 May 2026 05:41:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 196FF34D910;
+	Tue, 19 May 2026 05:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779169301; cv=none; b=gccSR8RCsc8jv8niYQkP1AGnAAZxfoSFhu9VjsEjA7cauhp3YDsGd5Ka6Asyz0gm7vClrIpLPda1Z9RI6uC4yDmWhc4y5lVyls1lGg+Rge4jTJFsvJ8T9aQQ95Rzk6sapDTTSwEiVZlQyGVXdddKou3C4MRi7Y8i9nhNscq/SzE=
+	t=1779169956; cv=none; b=mgKogYilTUliwsMwZjgCNPjDwtYRu6oOZwbv3UzqCpERl/RSmDSV6Yf2pgRaIMzYZC623nYdEFBSnq2awO03shGs575hDuc+OGjjP1m/FPIJh6LrMQ0r0IT/9nOHWnC15gLt3Z1f92fpBAlwBiVLVBUZ7XjNQSW5ZIa4LWU/+rA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779169301; c=relaxed/simple;
-	bh=o/yS0uOYS4L22n6+JUVWldOroJpthMRMLg3OceU4NKQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JgQv6xXT2AleoXDST26oz7qakMU62qy5S/iYAGKIv9xuuqJS90PVWZY7X2Gx4WGuoklIdZUXO/+Pqd0fkMK1jlWCgGZSYSoza6azWtYNq1ruwEkYLDHlP/diGvNPyQk/RlQQ+7lQqeo/qvq5PyPMZUy9cPl6fflOpIXmVYOK1jc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=QBHBXOX7; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1779169956; c=relaxed/simple;
+	bh=K7UKJ6sYP2y8DZracD2ty+9g+TETER+ES7eLcMmhpa0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RmTOTzqtxttlY+ECoqnlkSD9ogc2Npa2+CnICLKAO0O+JzFKKi44N57IhA4Ae96M+IcEAF9fcuclZlJDOfE9InB6wPywo9PWXDwXJ/CdrJtxUUe/5YEt965PtmXMcIjHa8Vy3el8m/1eYDTQJGs5V8uUxtmYDwzDCKngH3fzr+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hle+rkwI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="QBHBXOX7"
-Received: from localhost (unknown [20.236.10.129])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 0A10320B7166;
-	Mon, 18 May 2026 22:41:31 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0A10320B7166
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1779169293;
-	bh=9aRpORwCZcDZFRWxP8HU9OITjEdjOoC0GPbZGiL6PAE=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=QBHBXOX7NdP4TdXu30LQKuB2NYOv84+TiJbyOMei9/B5p2NONJonvvHwp8+UGl7Di
-	 xGY46GW2lgvUSxky3V6/VCwTuYnggPWiGgKUQD9n1qKLoY7She5JEnC9buZni3H2Cc
-	 bHezQ7XDvQcwggOxNVSG9QFaENzjE6xuHjR66ZHI=
-Date: Mon, 18 May 2026 22:41:36 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Mukesh R <mrathor@linux.microsoft.com>, hpa@zytor.com,
- robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
- mhklinux@outlook.com, muislam@microsoft.com, namjain@linux.microsoft.com,
- magnuskulke@linux.microsoft.com, anbelski@linux.microsoft.com,
- linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
- iommu@lists.linux.dev, linux-pci@vger.kernel.org,
- linux-arch@vger.kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
- decui@microsoft.com, longli@microsoft.com, tglx@kernel.org,
- mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
- x86@kernel.org, joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
- kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de,
- jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH V3 09/11] x86/hyperv: Implement Hyper-V virtual IOMMU
-Message-ID: <20260518224136.0000403e@linux.microsoft.com>
-In-Reply-To: <20260515182322.GI7702@ziepe.ca>
-References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
-	<20260512020259.1678627-10-mrathor@linux.microsoft.com>
-	<20260515182322.GI7702@ziepe.ca>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hle+rkwI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 065E6C2BCB3;
+	Tue, 19 May 2026 05:52:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779169955;
+	bh=K7UKJ6sYP2y8DZracD2ty+9g+TETER+ES7eLcMmhpa0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hle+rkwIjgCpLvvRebMQjZUD4RpHe4vaD/NMGctxBCcJgKhOh/KxmTkh1IEWPeE0o
+	 HvgQadE+/aDUPAjYedw+3kXpGLh501Egr0d3XQUWNHNcZyIqtSmVCE+paU4g1TV3Yv
+	 mqX0kdDhiSwhrU8Q3e5Fi/sXH0TVxvuGTvwmLtXk8la7G8uqONvLtzi2UxI5LEJ3V5
+	 QK3zQ8TBGnDL3bLaILxx3Z9xPCMNObwlzppslIwRzOueLfLeqRiQf2T3Xdw2Ia2q5o
+	 Vc4zt4fBuUlGStJjsL5LNl3L1MAKli7+a3rCiBXuW7D+4MmTZ4Baf+hdRTTcW1mFL4
+	 fTuYlLiQaLyDA==
+Date: Tue, 19 May 2026 11:22:26 +0530
+From: "mani@kernel.org" <mani@kernel.org>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, 
+	"robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>, 
+	"conor+dt@kernel.org" <conor+dt@kernel.org>, Frank Li <frank.li@nxp.com>, 
+	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>, 
+	"festevam@gmail.com" <festevam@gmail.com>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>, 
+	Hongxing Zhu <hongxing.zhu@nxp.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>, 
+	"imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH V14 02/12] PCI: host-generic: Add common helpers for
+ parsing Root Port properties
+Message-ID: <xyued2adtz2fs47nnl537aef7rsjuhswivcaieh6lxhlxpohkr@gpxmdcpczik7>
+References: <20260422093549.407022-3-sherry.sun@nxp.com>
+ <20260513224944.GA341451@bhelgaas>
+ <VI0PR04MB1211452312EB9BC6EF1ED2E0192032@VI0PR04MB12114.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <VI0PR04MB1211452312EB9BC6EF1ED2E0192032@VI0PR04MB12114.eurprd04.prod.outlook.com>
 
-Hi Jason,
+On Mon, May 18, 2026 at 08:42:38AM +0000, Sherry Sun wrote:
+> > Subject: Re: [PATCH V14 02/12] PCI: host-generic: Add common helpers for
+> > parsing Root Port properties
+> > 
+> > On Wed, Apr 22, 2026 at 05:35:39PM +0800, Sherry Sun wrote:
+> > > Introduce generic helper functions to parse Root Port device tree
+> > > nodes and extract common properties like reset GPIOs. This allows
+> > > multiple PCI host controller drivers to share the same parsing logic.
+> > >
+> > > Define struct pci_host_port to hold common Root Port properties
+> > > (currently only list of PERST# GPIO descriptors) and add
+> > > pci_host_common_parse_ports() to parse Root Port nodes from device
+> > tree.
+> > >
+> > > Also add the 'ports' list to struct pci_host_bridge for better
+> > > maintain parsed Root Port information.
+> > > ...
+> > 
+> > > +static int pci_host_common_parse_port(struct device *dev,
+> > > +				      struct pci_host_bridge *bridge,
+> > > +				      struct device_node *node)
+> > > +{
+> > > +	struct pci_host_port *port;
+> > > +	int ret;
+> > > +
+> > > +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+> > > +	if (!port)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	INIT_LIST_HEAD(&port->perst);
+> > > +
+> > > +	ret = pci_host_common_parse_perst(dev, port, node);
+> > > +	if (ret)
+> > > +		return ret;
+> > > +
+> > > +	/*
+> > > +	 * 1. PERST# found in RP or its child nodes - list is not empty, continue
+> > > +	 * 2. PERST# not found in RP/children, but found in RC node - return -
+> > ENODEV
+> > > +	 *    to fallback legacy binding
+> > > +	 * 3. PERST# not found anywhere - list is empty, continue (optional
+> > PERST#)
+> > > +	 */
+> > > +	if (list_empty(&port->perst)) {
+> > > +		if (of_property_present(dev->of_node, "reset-gpios") ||
+> > > +		    of_property_present(dev->of_node, "reset-gpio"))
+> > > +			return -ENODEV;
+> > 
+> > This doesn't seem right to me.  The parser of per-Root Port properties should
+> > not be responsible for deciding whether legacy methods are valid, i.e.,
+> > whether a property is in the Root Complex node.  I think it's up to the caller
+> > to decide whether it needs to look elsewhere.
+> > 
+> > I don't think this even needs to return a "success/failure" value because there
+> > may be more properties in the future, and not all will be required.  This
+> > function can't tell which properties a specific driver requires and which are
+> > optional.
+> > 
+> > The caller can check whether we found what it needs and fall back to a legacy
+> > method as needed.
+> 
+> Hi Bjorn,
+> The code here was suggested by Mani, https://lore.kernel.org/all/lnzprzrdwra7pn7d6m3sbj5pvjy64blwpjl6i3lmlnfbyho63b@czpyhpgz5vum/.
+> I think your suggestion here is reasonable, the per-Root Port parser shouldn't
+> check the RC-level binding. That's a policy decision that belongs to the caller.
+> 
+> Hi Mani, if you also agree, I'll rework this so that:
+> 1. pci_host_common_parse_port() only parses properties from the Root Port
+>     (and its children) without checking the RC node.
+> 2. The function won't return failure for "property not found" - it will only return
+>      errors for real failures (e.g., -ENOMEM, GPIO acquisition errors).
+> 3. The legacy fallback logic will be moved to the caller, which can inspect the
+>      parsed result and decide whether to fall back to the legacy binding.
+> 
 
-On Fri, 15 May 2026 15:23:22 -0300
-Jason Gunthorpe <jgg@ziepe.ca> wrote:
+Fine with me. The reason for suggesting fallback within this API itself was to
+avoid duplicating the fallback code as it will be mostly generic. But I do agree
+with Bjorn on the fact that individual host controller drivers might have
+optional properties in the RC node and we can't incorporate all of them here.
 
-> On Mon, May 11, 2026 at 07:02:57PM -0700, Mukesh R wrote:
-> > +static struct iommu_domain *hv_iommu_domain_alloc_paging(struct
-> > device *dev) +{
-> > +	struct hv_domain *hvdom;
-> > +	int rc;
-> > +
-> > +	if (hv_l1vh_partition() && !hv_curr_thread_is_vmm()) {
-> > +		pr_err("Hyper-V: l1vh iommu does not support host
-> > devices\n");
-> > +		return NULL;
-> > +	}
-> > +
-> > +	hvdom =3D kzalloc(sizeof(struct hv_domain), GFP_KERNEL);
-> > +	if (hvdom =3D=3D NULL)
-> > +		return NULL;
-> > +
-> > +	spin_lock_init(&hvdom->mappings_lock);
-> > +	hvdom->mappings_tree =3D RB_ROOT_CACHED;
-> > +
-> > +	/* Called under iommu group mutex, so single threaded */
-> > +	if (++unique_id =3D=3D HV_DEVICE_DOMAIN_ID_S2_NULL)   /* ie,
-> > UINTMAX */
-> > +		goto out_err;
-> > +
-> > +	hvdom->domid_num =3D unique_id;
-> > +	hvdom->partid =3D hv_get_current_partid();
-> > +	hvdom->iommu_dom.geometry =3D default_geometry;
-> > +	hvdom->iommu_dom.pgsize_bitmap =3D HV_IOMMU_PGSIZES;
-> > +
-> > +	/* For guests, by default we do direct attaches, so no
-> > domain in hyp */
-> > +	if (hv_dom_owner_is_vmm(hvdom) && !hv_no_attdev)
-> > +		hvdom->attached_dom =3D true; =20
->=20
-> What are you thinking sending something like this?!?!?
->=20
-> The function is called *alloc domain PAGING*, it does not, and can not
-> allocate weird "special" domains that are not PAGING domains. I just
-> spent a long time removing all this kind of crazyness from drivers.
->=20
-> There is alot of other things I don't like in this patch, but this is
-> too much.
->=20
-> You have to drop this "direct attach" idea from the first iteration,
-> Linux can't do it without alot more work, you should start with the
-> basic paging domain mode.
->=20
-Just wondering what work is needed to support this "direct attach"? I
-felt this issue is due to trying to cram two distinct domain types
-(paging domain & direct attach) into the VFIO container model where
-only unmanaged paging domain is supported.
+But no need to rework this series as it got applied for v7.2. You can send
+rework patches on top of this series.
 
-I am thinking if we were to switch to iommufd and let user(vmm) have
-direct control of HWPT, vmm will be able to selectively use a
-different domain type to handle direct attach. IMHO, it is essentially
-the same as attaching nest parent domain without nested domain
-immediately attached. The unprivileged guest may attach nested domain
-directly with Hyper-V if nested translation is needed.
+- Mani
 
-I understand nest parent is still a paging domain today and it is
-expected to work with nested domain. So maybe we can make iommufd
-accept nest parent w/o paging? i.e. no map/unmap and do not call
-iopt_table_add_domain()? or maybe a new object?
-
-=46rom this driver POV, it will allocate a 2nd stage only domain with
-different domain ops (w/o map/unmap) for "direct attach" thus avoid this
-hack.
-
-Thanks,
-
-Jacob
+-- 
+மணிவண்ணன் சதாசிவம்
