@@ -1,129 +1,172 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC18340416;
-	Tue, 19 May 2026 13:07:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0CF14028CC
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 13:20:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779196039; cv=none; b=kbjcHD1X0kjCwbq6M4HhtkDnGbEb+x+GtcKHpQmjTVFQkGJ1LB4Y6b2+rFaMUaAinV0IeiodiI7gLSZgDuz5azTMyb3NItu+gmgyAgBXcjEaOsx90L1+oaA0qULKtUDYZvZlOz2mlw0crqAtn4mzj+NkLqpS/qmsiwJ77W1GmdM=
+	t=1779196817; cv=none; b=R4G3kS4zK5v206+WgRS+yD8+s+ce0HHoKS0153781VNOUpIrvchXI8SDVcW3efaC4H+flxSeWB3vfs3nc860mQ7xejYHn47O41X+BKqAn4I0oHYLAzRfiy4a2vkt3RaPVAzXzFSKSEjjJiL+nWsxqiygoZHVD+/HuWjmNNsuUP8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779196039; c=relaxed/simple;
-	bh=OugdVeCobSnxk7atKWujQ4WieCK7dcTCbEIrkN3ZV8U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C96Ke0sQkKoNxBXpRUNT3KytE1qbnNMK+SfeMI5AaZcovKUFcoFv6YenBymyxFzEn1UWgv5uTNvq70T1xs+ebfkrn4qZoR7NLkn58a5eQaWZYo39e1coSSwmIYhpa3w1O/52ayfoq75Dj7i7qVdpy2YNsFQXvbm+7ogngDkd8DI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EWBkg5eQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779196817; c=relaxed/simple;
+	bh=xvpPbiLINaV8j62MwagLWorgWpNxIkyqbNZl16oa3f0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=nnCKxXa/2OcuftnsrQ4eJgjDE7pTkzj28P4rKYAtTM0mm9c2NqQCwFg/fgRmj6dqjw58KOOYGIGD+wiLIZRTfzXQCpEahjof+pmH1Mf/2sqPC5L8Uuq72vr1D0ZZ+1QF5A5N1XbvbOdjubdzToEb8uBAw1ZfC48AvRsCdUl7mTA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C2h1cbru; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EWBkg5eQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 072C8C2BCB3;
-	Tue, 19 May 2026 13:07:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C2h1cbru"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63E1BC2BCB3;
+	Tue, 19 May 2026 13:20:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779196039;
-	bh=OugdVeCobSnxk7atKWujQ4WieCK7dcTCbEIrkN3ZV8U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=EWBkg5eQe+ynpI1zcXySYzK91vsyED6f6TbzzpcCh726nCfEF9G/s0Or3E8rlkvnD
-	 aKMtgkG6lvrujLv1HaslX9JZbdSwOtIx1vEx4nOhmi2Xfvkb1Q7bFz+pgfX+2PC//n
-	 A4VMOeUlWBMej3VIVp2o3U7u20dXQtql2kubjigzSaqq6OfVG45RWM9DuLfJLWfndU
-	 B7v3TiseJBEC47lavYb946FWgF6EtWPDxD7ldeyHbFSHANaoThHliR8FdEcNS+wzv6
-	 SL3gkHNW/b/vUEenVESNaIrJPOjMc+7PJuwqcsE2mxKGG9jJwE/y+qRIn3vlxKe3ag
-	 o/kh1wSiSFupQ==
-Date: Tue, 19 May 2026 18:37:11 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Matthew Leung <matthew.leung@oss.qualcomm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: qcom: Add PCIe support for upcoming Hawi SoC
-Message-ID: <jtaqjariqueifpo4cbi5jogdrkfll7e4ddf5geupjebhj6mni3@hknbfb5z6uei>
-References: <20260508-hawi-pcie-v1-0-0c910906f7e5@oss.qualcomm.com>
- <20260514172151.GA410819@bhelgaas>
- <agYjMZX/cYijEBOm@hu-mattleun-lv.qualcomm.com>
+	s=k20201202; t=1779196817;
+	bh=xvpPbiLINaV8j62MwagLWorgWpNxIkyqbNZl16oa3f0=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=C2h1cbruUgSA3CTpUZ/zQDuJAQEIIQAzkr8e6W35JAehYdArMiDsX+wKQ2jQgK0i/
+	 cF/t4aYJetmBUEuBTgGhGiyO5K3Zf6lLJ84nAk4PSKIqmZ3h15e02pcis0hn08Vnb7
+	 BLwYp673Upplsf28T3VKVuIaOmo/jZ1wYF9SVo6q9mKwfZbVpQBQrAMpeOuAk8WbxX
+	 xXeVNe99GG9yoSpSOu0c1BBDkcgXPDcWDmn8Dmpr6Ixqqz1RtDU717sf1qmOg8ewjO
+	 ZE6XmX4WhDmCaSpUJDF1fiAY236Z+xywd75nvAm7zYdeBM1ydJteQmea0OObm+RHJS
+	 aMZr5FsFwAWPA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 2/3] PCI: cadence: Add HPA IP debugfs for LTSSM
+ status
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Hans Zhang" <18255117159@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260519123609.1595280-3-18255117159@163.com>
+References: <20260519123609.1595280-3-18255117159@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 19 May 2026 13:20:16 +0000
+Message-Id: <20260519132017.63E1BC2BCB3@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <agYjMZX/cYijEBOm@hu-mattleun-lv.qualcomm.com>
 
-On Thu, May 14, 2026 at 12:32:01PM -0700, Matthew Leung wrote:
-> On Thu, May 14, 2026 at 12:21:51PM -0500, Bjorn Helgaas wrote:
-> > On Fri, May 08, 2026 at 01:02:13AM +0000, Matthew Leung wrote:
-> > > This series adds PCIe support for the Qualcomm Hawi SoC. The Hawi
-> > > platform features two PCIe controllers: one capable of Gen3 x2 operation
-> > > and one capable of Gen4 x1 operation. The first patch adds the device
-> > > tree bindings documentation for the Hawi PCIe controller, and the second
-> > > patch adds driver support by enabling the Hawi compatible string in the
-> > > existing qcom PCIe driver.
-> > > 
-> > > This series depends on the following prerequisite series:
-> > > - [PATCH v3 0/7] clk: qcom: Add initial clock controllers for the
-> > >   upcoming Hawi SoC (Change-ID: 20260316-clk-hawi-1ad4cad36d6a:v3)
-> > > - [PATCH v4 0/2] interconnect: qcom: Add support for upcoming Hawi SoC
-> > >   (Change-ID: 20260311-icc-hawi-d6dc165f8935:v4)
-> > > 
-> > > These dependencies add necessary headers for running dt_binding_check
-> > > against the binding.
-> > 
-> > These apply cleanly to v7.1-rc1.  I suppose the dt_binding_check thing
-> > is the only real dependency?  Is there anything we need to do to
-> > enforce the dependency when these get merged upstream during the merge
-> > window?
-> > 
-> 
-> Yes, the dependencies are only needed for running dt_binding_check as
-> the example dts snippet would produce an error on the missing headers.
-> The patches should apply and build cleanly otherwise.
-> 
-> I thought this check could be a problem for merging so added the
-> dependencies for completeness. If the binding check isn't a concern, I
-> can drop the dependencies.
-> 
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] Unprotected hardware register access in the debugfs read callback =
+can cause a kernel panic if the device is runtime suspended.
+- [High] Race condition during root bus teardown due to missing `pci_lock_r=
+escan_remove()`.
+- [Medium] Debugfs feature silently fails to initialize when compiled as a =
+module due to incorrect Kconfig and preprocessor macro interaction.
+- [Medium] The patch implicitly introduces critical behavioral changes (roo=
+t bus teardown) not mentioned in the commit message.
+--
 
-No, the dependencies are needed. It is also an indication that we cannot merge
-this PCIe binding change, until the dependent headers are merged to mainline.
+commit 32300cb8f3d354c5d2edc089c48c2f9d49fdb425
+Author: Hans Zhang <18255117159@163.com>
 
-dt_binding_check should not fail in linux-next or in mainline.
+PCI: cadence: Add HPA IP debugfs for LTSSM status
 
-- Mani
+This commit adds debugfs support for HPA-based Cadence PCIe controllers to
+allow users to read the current LTSSM state. It also introduces root bus
+teardown logic during device removal.
 
-> > > Signed-off-by: Matthew Leung <matthew.leung@oss.qualcomm.com>
-> > > ---
-> > > Matthew Leung (2):
-> > >       dt-bindings: PCI: qcom: Document the Hawi PCIe Controller
-> > >       PCI: qcom: Add support for Hawi
-> > > 
-> > >  .../devicetree/bindings/pci/qcom,hawi-pcie.yaml    | 188 +++++++++++++++++++++
-> > >  drivers/pci/controller/dwc/pcie-qcom.c             |   1 +
-> > >  2 files changed, 189 insertions(+)
-> > > ---
-> > > base-commit: 4cd074ae20bbcc293bbbce9163abe99d68ae6ae0
-> > > change-id: 20260506-hawi-pcie-f61435ca420c
-> > > prerequisite-change-id: 20260316-clk-hawi-1ad4cad36d6a:v3
-> > > prerequisite-patch-id: c4fbb0620d748d7f1ee675ade5167775bd31c8ac
-> > > prerequisite-patch-id: ae5e212518cc333a1a93564cabfc6abd128df664
-> > > prerequisite-patch-id: 3c3816e0d595589fc02383f10e48c83a61fdc9d1
-> > > prerequisite-patch-id: cbc13fb819d1c1ee77957393f0958f05db8db864
-> > > prerequisite-patch-id: 17e2c0cfbbea826fefa1c67d0f5dc2094ab73d76
-> > > prerequisite-patch-id: 150dc74750377f4558deab6b179632872bcbb71c
-> > > prerequisite-patch-id: 38fe0da5b18610aeb32c7154f9e50187ccaec6a4
-> > > prerequisite-change-id: 20260311-icc-hawi-d6dc165f8935:v4
-> > > prerequisite-patch-id: a1ff655f0b21d6259b158ad9f99a95bde31257e6
-> > > prerequisite-patch-id: db21b6b20451be8475129faece7ef4191d41273c
-> > 
-> > I don't know where any of these change-ids or patch-ids come from.
-> 
-> These were generated by b4 after adding the change-id metadata for the
-> dependencies.
-> 
-> They should refer to the change-ids of the respective patch series:
-> - https://lore.kernel.org/all/20260506-clk-hawi-v3-0-530b538679f1@oss.qualcomm.com/
-> - https://lore.kernel.org/all/20260506-icc-hawi-v4-0-35447fdc482b@oss.qualcomm.com/
+> Add debugfs support for HPA-based Cadence PCIe controllers. A new file
+> 'ltssm_status' is created under debugfs, allowing users to read the
+> current LTSSM state as a string and raw value.
 
--- 
-மணிவண்ணன் சதாசிவம்
+This isn't a bug, but the patch appears to introduce behavioral changes for
+root bus teardown (adding pci_stop_root_bus() and pci_remove_root_bus() via
+cdns_pcie_hpa_host_disable()) that aren't mentioned in the commit message.
+
+Should this bus teardown logic be split into a separate patch, or documented
+in the commit message?
+
+> diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/control=
+ler/cadence/Kconfig
+> index 9e651d5459735..cb010bc97aad3 100644
+> --- a/drivers/pci/controller/cadence/Kconfig
+> +++ b/drivers/pci/controller/cadence/Kconfig
+> @@ -6,6 +6,15 @@ menu "Cadence-based PCIe controllers"
+>  config PCIE_CADENCE
+>  	tristate
+> =20
+> +config PCIE_CADENCE_DEBUGFS
+> +	tristate "Cadence PCIe debugfs entries"
+
+Could this cause silent failures if configured as a module?
+
+If a user configures this as a module (=3Dm), Kbuild will define
+CONFIG_PCIE_CADENCE_DEBUGFS_MODULE instead of CONFIG_PCIE_CADENCE_DEBUGFS.
+
+Because pcie-cadence.h guards the function declarations with
+#ifdef CONFIG_PCIE_CADENCE_DEBUGFS, the core drivers will compile against
+the empty static inline dummy functions instead.
+
+Additionally, if we fix the macro to use IS_ENABLED(), would it cause linker
+errors if the core driver is built-in (=3Dy) but the debugfs is built as a
+module (=3Dm)?
+
+Should this configuration option be changed to a bool?
+
+[ ... ]
+
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-debugfs.c b/driv=
+ers/pci/controller/cadence/pcie-cadence-debugfs.c
+> new file mode 100644
+> index 0000000000000..97c5deef2b1ab
+> --- /dev/null
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+[ ... ]
+> +static int ltssm_status_show(struct seq_file *s, void *v)
+> +{
+> +	struct cdns_pcie *pci =3D s->private;
+> +	enum cdns_pcie_hpa_ltssm hpa_ltssm;
+> +	const char *str_ltssm;
+> +	u32 val;
+> +
+> +	if (pci->is_hpa) {
+> +		val =3D cdns_pcie_hpa_readl(pci, REG_BANK_IP_REG,
+> +					  CDNS_PCIE_HPA_PHY_DBG_STS_REG0);
+
+Could accessing this register cause a kernel panic if the device is
+runtime suspended?
+
+Cadence PCIe platform drivers rely on runtime power management and will gate
+clocks and power domains when idle.
+
+If a user reads this debugfs file while the controller is runtime suspended,
+will reading the memory-mapped register of a powered-off IP block trigger
+a synchronous external abort?
+
+Should this hardware access be wrapped with pm_runtime_get_sync(pci->dev)
+and pm_runtime_put(pci->dev)?
+
+[ ... ]
+
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c b/dri=
+vers/pci/controller/cadence/pcie-cadence-host-hpa.c
+> index 0f540bed58e88..abc1d0e58b981 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
+[ ... ]
+> +void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc)
+> +{
+> +	struct pci_host_bridge *bridge;
+> +
+> +	cdns_pcie_debugfs_deinit(&rc->pcie);
+> +	bridge =3D pci_host_bridge_from_priv(rc);
+> +	pci_stop_root_bus(bridge->bus);
+> +	pci_remove_root_bus(bridge->bus);
+> +}
+
+Could this lead to a race condition during root bus teardown?
+
+Calling pci_stop_root_bus() and pci_remove_root_bus() without holding the
+PCI rescan lock allows race conditions with concurrent PCI rescan or hotplug
+operations triggered via sysfs.
+
+While this pattern might have been copied from a pre-existing function like
+cdns_pcie_host_disable(), does it need to be fixed here to prevent
+use-after-free or system crashes?
+
+Should these operations be protected by acquiring the lock using
+pci_lock_rescan_remove() and pci_unlock_rescan_remove()?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260519123609.1595=
+280-1-18255117159@163.com?part=3D2
