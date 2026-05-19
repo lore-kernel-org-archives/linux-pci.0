@@ -1,170 +1,143 @@
-Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021130.outbound.protection.outlook.com [52.101.100.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 532A545107A;
-	Tue, 19 May 2026 12:47:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.100.130
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779194860; cv=fail; b=DLo85GRr982xeSxhyYTvTG48WXXqicyXc4cfKyukRGcEaA6LfV6G9t2/k86TUPwtMM80M1Kl6NhCROUIcfvmTmvEgNmHdOG9x9Uak2CH2l9k9cp1k+rFJ3yaj/LajDP4Dcr7kYcJJMfso4+hQoGASy8rr7/XaXkOQCq4sE1GX3U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779194860; c=relaxed/simple;
-	bh=fA4Ig80fZ25cn1JTGDIME4spac698o/L/cEDJtNt05U=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=Ao9nsga24UGKnm42Zg9RevrG6CerkJQndGVlhxn5k9Gx/1WbYtYbvWWN8O2JnkOyZHWrJfuVYHpbNh4zpzU10J5uC6QGRynj8F4Mi+VsIQFb5CPB2fj7/90OZmacIzrs8ppiw2h7iQRAWDgg/OzktusTM3EfoINV+MxwOremKE8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=rKjTFYk1; arc=fail smtp.client-ip=52.101.100.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BD84A341E
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 12:52:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779195129; cv=none; b=eFJEd7k3kvOMCKcTK2ndRZfRhUOjFuVOb/bLx9m6J8A6U+IXwlpZteJ/iplD2dYRSah7UXqr59Ge6lgGN5ildrUpGRR8ezFup7pfSxk4/PrRoGtw7MJveNds5FAcTYnt8z7Sd6fqlJuy6LJNJ+ymO6wcE2JJH4CMKnajoogm94o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779195129; c=relaxed/simple;
+	bh=Cj+9AGLaj6N5gNCq9PN/+geG3jfXVteqrgLjuRvx6n8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OKJa3/IGpVaaRqL6MQa2SKlsyCIJ7jl0yxHV8t75/5CP8bTdZJVtEL+48pVbZOJZb4FA1TKL5RjZ8j+jz1wLNFheFQtXTFhk8+IULsN7QvL8LElA29Z05Lfa7bbToS39rCT8ZsLw4rRNjBeLFhgOF38MwERuUMAdQuIMXi/n/Uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=AZFapDe6; arc=none smtp.client-ip=209.85.222.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="rKjTFYk1"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=rxlCrhMYXAE45+YPvXNJ2mVu3kTQDsWP48JOC5ccWng9YQ8gChMu3t3TkcDK/QCD71iUMX/wO4ehv1d9UJX9MBSwV3HaQ6PvyJNZsxTGE9xxA46u3L8hcyaqNXRtfOnxBqnZ8/dGyYMC0NU52pfI3qmSsLuwTruy1ei4/sji0Rv65kHicS+AoRsyRS9LMC9oNSpTTpWJvxJmViTvfP3K3bsoRljZEG4oaw3sxEpz4/48IW3D8EhuZ2n8PGF1Hz95z8ctADZniZNdutupYkgoJe13Xt5ZqJUXd+PI81igdev+iV41GqtWwLzLovICnIWMwOXoJym+QeDbJN3Rked7HA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ld/otdAD4WsAh1XYxTXsHMScyFQMkq/DJK9eg01P2wk=;
- b=eDr2Fy57DjTqjk8kVO/cLnnVzA6CHd4trt5RbJrL94vXpvh3VxdXPDV2o43FBX6ElkxpRGd9S0OqvfkUT+7Ua5A4kudZqLDt2lx2/uLHDgtMWo4eTf8mTjoWknQ2FMpWAWHuxhN44NMrLNRWn1+MqfH61oG7IRpClnUjYvq9RLXSpOVyUN5/D6mRL6MtYWkqL+36U2SHQWFZXq9kdFVrG3NW1vT8pW7ac2Kj8qVtw3Qpw4TIFzB4FmDU1AvoL8pyLQdaL4nK7ClJGrtqo6TvXKDQLSpyIZJ6PVll/NAYl3/WhGrkw4JocRHoBxQAYC1lo3YC6c3/n5tZO6CkGM2GXA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ld/otdAD4WsAh1XYxTXsHMScyFQMkq/DJK9eg01P2wk=;
- b=rKjTFYk1VhLK4arScsDjW1ZBdnLvjii6br3WQ9SHUVuWCvJ9Ay1795V3B/QOEl39bc+m7/Mh8uqrJCm0vjIEgl77CPiGHCSp9sRy8hX4/eS5tdgsBHRLOS/UeB8HRtJBB20sgvsn26CCNDj3nTLkQNC8b8MqNpxmKYK9XvBgqlg=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LOAP265MB8966.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:498::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.14; Tue, 19 May
- 2026 12:47:36 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
- 12:47:36 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 13:47:35 +0100
-Message-Id: <DIMNXSX1MADQ.2FKCD6LOB1SP2@garyguo.net>
-Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-Subject: Re: [PATCH v3 04/27] rust: driver core: drop drvdata before devres
- release
-From: "Gary Guo" <gary@garyguo.net>
-To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
- <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
- <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
-X-Mailer: aerc 0.21.0
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-5-dakr@kernel.org>
-In-Reply-To: <20260517000149.3226762-5-dakr@kernel.org>
-X-ClientProxiedBy: LO4P123CA0361.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:18e::6) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="AZFapDe6"
+Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-90d13fa59e8so366006885a.2
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 05:52:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1779195127; x=1779799927; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=DOCS522Pm9afH3DTI+hcdRgkcQjsqwF0dA1bA5ZkKZc=;
+        b=AZFapDe63IIqwh5Nq8h1Q8jil2q6xV2puAm2XBSaUlSkNNWR6bel4Kx+kamGhm8+sF
+         s38iylU78T4pqAaPvJzWOX+5u651wZaVODwSm30e1pTsPf+n/YKHJDSkz3+ni31FydH4
+         N5v9b0EHDdC7PXxCeFQ4Kr4nkl+gPYC1/e3CqWIyA8dm9nYzdR5mCOLFz5+ZpYykr3fN
+         /ApvtaDGVtMPigrD1TxE8J5rmOjkHcqkLh8XlpSRocsxAzYsityhmRjlo/A6RBPLgD+T
+         ob54Brye3ZmQskyoZ9wQsadzEI03a51+crhkkiBcv3ZbZ21X/lETo0TTshfGsChAJ8Sv
+         3VBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779195127; x=1779799927;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=DOCS522Pm9afH3DTI+hcdRgkcQjsqwF0dA1bA5ZkKZc=;
+        b=Q757u38H8lcRKUR8yUVnxbMS7Jwx2unNbYke/xI6e5Zzp0qh6cBGloZ8KvDRH1DAz7
+         2cn4oEUUoeigJyoeLasVpb1SlBDYhc0vrJB5OHVComUwvYWEmYgEoIi5hE4KBcWFJjPy
+         4rq+y0caGm6viuZiAe8XSStYa51FTVUyDFh2oFjhiF9UgukwYSzqoDN9U7aiZR3NOL+P
+         Wj7TqPyaOa2nnVLMZCkfx1g4JIrogPT/vyd52cqXh7cYZzo+gogQsXqoFdi6HmDZeWEm
+         143F3pSt6y0WiFdeoiOOqEzgwyHRlTLl/sHu6V0jRDOPw4tRqxGPOfp/WbS/MvOtBK7s
+         tggg==
+X-Forwarded-Encrypted: i=1; AFNElJ/fTI5s7jEMzDNnJ76HlReqOJDpW1W5tVHK8eQFjhA/r3Dyo03jsyJbF4NbYO5kIM5FIH53RcAGfnM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywr2iAPDe4IqMVeu/5sUWOHYs3wZv9bU6aXEwwng+ueG2chuVja
+	Te0yOil6WpkdjJHR6IJ2n7GjnWI6xa5dgOTJ/eVF3LtY2ImqUPcOY6X0eHS6hhlN/Ao=
+X-Gm-Gg: Acq92OFvDBxld6rnCa4DwonQx+CESXp2YOd19/7BmpcqNHm+JXUI9GOjij5i6mpeecm
+	BRkvNURxMnHM3ildVCAPN/lDK1+VNHhcTgiD4KyVc4ZW11EaAxFkbjfY5CjynPOlGOGYWjhb2kF
+	rvo76kQWIv5ArTUIRn3mS0BrFAoVTAcMGd6hdukvUYU5r8Q8VLn+5DORrbPJbS6sKHPITVXFmYO
+	Pz+p9tZCOg+IVX8gGF0INHrEdagPz02IcMyteKRyEtwlQX9IiZjqAxvzlLbS20ZI7sT7kt5byCM
+	0PS3pny/nHb/xwC08ClGvlS8/WDqbcWjCTHVX5U2xoQu8fGSFR583kjLl3kfGvjVLcAYLLz5aR/
+	c+QdRbWU/kW+i8sUXhpr9moNhjIn81la+tZrz+CBNcCvXPXFHMGKjzRmLSwQkOt8Fft8k/sxQYy
+	I3pxadspWOAz/Bg3mDnqMHsR8xg3xYCeUsXf4ua5aSvX1q+Svf32vNcYO12pauQz9Gnhu4eMmkx
+	tMeWA==
+X-Received: by 2002:a05:620a:170c:b0:910:5637:4bec with SMTP id af79cd13be357-911cd1752admr2935359485a.18.1779195127354;
+        Tue, 19 May 2026 05:52:07 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-910baf2236fsm1823801385a.20.2026.05.19.05.52.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 May 2026 05:52:06 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wPJva-0000000Eg2n-14zp;
+	Tue, 19 May 2026 09:52:06 -0300
+Date: Tue, 19 May 2026 09:52:06 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Jacob Pan <jacob.pan@linux.microsoft.com>
+Cc: Mukesh R <mrathor@linux.microsoft.com>, hpa@zytor.com,
+	robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
+	mhklinux@outlook.com, muislam@microsoft.com,
+	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
+	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
+	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
+	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
+	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de
+Subject: Re: [PATCH V3 09/11] x86/hyperv: Implement Hyper-V virtual IOMMU
+Message-ID: <20260519125206.GY7702@ziepe.ca>
+References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
+ <20260512020259.1678627-10-mrathor@linux.microsoft.com>
+ <20260515182322.GI7702@ziepe.ca>
+ <20260518224136.0000403e@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LOAP265MB8966:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3ade7bcf-fd42-4386-8ab5-08deb5a4cd7c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|10070799003|56012099003|18002099003|22082099003|921020|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	ajyzLDqN185pVN9YK23OGfKfRDBpa7aseeYRJz0+SGVTnULNpfRnaf544PV1g9E2tjJwKH7ahgOePJqx8jY8de24zFhMk7cUBczvBOME0+NXfEYMVQKs9t+3gSLzyPHG9w3xinhCFj9X33f5R+hHAXL6Kk2YAITgWNSJCgtzs/PKpwvRNVm2u9mUqvayrAfUOnN+YqORxzVTrch31DRdVoVPg4NFJMcaq7FLCY694IpkktHUHjocZy37a4/fV/i2lYB7ciFv3Mp1nNumke31F7GJSDrGyvNbyHfjehfTLy6vwPlJPaT7I3vh6rEV3bE1jTG0hNmDIq/FxIZo94RdEvMnN5lba9ke7bHHU8PArxIuVA7eqJgmBVOJ71sZtUIP33mPk9TINWtkGJ7OQfq0JKSR9tIia6zYveFO1z6osRz+IYJWzO0am9InFAWyYHuHXl9hQapkTUUJfRibLxWj7Z/ekoJu7DkmcRctoIsx3/L4DXqpWI5nGMqSWJjZbdhRV8OLBKK3tKmSaYmvCzDiaLwI/tdlwOI0SVLQZHpXarIpennCWiTfkQaL6vGE2eEj5A6/VoTrKKrAvPrViCmtGBS1PVM4oYx1uXxOEmUL+R05vZMT+5y03Y4nKmzhTbI+UbFZurMO7ETBbDlxNZ5832mwq5KOqyWqsY1qLkSSPyMJkPXmUzJiKTEYfiwF6CJTaUUt9+gwpUoCWmQap0IxB4EZZZzhYi4MNFIOdl8dHuc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(10070799003)(56012099003)(18002099003)(22082099003)(921020)(4143699003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cDlBMWxXdTVTMTIxcUt0anpzbmpHRlhqb29La010MmZEbVlGZmc2Qm9VMExt?=
- =?utf-8?B?allCeEJaVW5TRXhwa0xxa3RxeFBiUnFzbHNWZGYwMkNudUNyQWtpY1MxSERs?=
- =?utf-8?B?eDBrdnJUS3ZqYlpQOW1LWjQyMWtBdkN1bXFCeWFPak9tMU56ZVRSVUp1YlVw?=
- =?utf-8?B?UjRPaGVxQlYrRlEyRmFZQThDaE9HYmFucW1SWkljL3RTT0tBQU14RTQ5NFA3?=
- =?utf-8?B?QW92MWZIeXJzcVh6c1IvK0ZDcUdTSVcxYXNaMnI5Yi81ZU9pQ3dadzY0WDgr?=
- =?utf-8?B?akpaUVIzQjlKQzIyb1FaT3YwcVo2K0xhblJGak0yZGprUUhxNFkyYTd4b1hW?=
- =?utf-8?B?WGprdDdJaTlXR2lRNXdXclZaVjBMOHIzY2c0Qm90eFZ3S094ZDRxTk9tRU9t?=
- =?utf-8?B?eHZFNTNNQk41bm1zb1VKRWtnVU95MDlobWdVRmlxM0ZjdWRGZ1gwM2pvb0xT?=
- =?utf-8?B?bGFQcTg5M1NNNTVDWDl4cGs4TmFFNndUWEQ3SU8rdU41VU9kSHAvWXI4MHo3?=
- =?utf-8?B?S3BqUmRMOVd4bXB2d0psd3FpTjc1NXhybU00YnliTmJWUkZVam9TRWJLbHJL?=
- =?utf-8?B?QkY2YjVLeG1pblk1bUU4WndqWFZnRTVSU3FWTXVtcnkzU1FwQ3JLcmllSW9k?=
- =?utf-8?B?UHh3UGMra0srVXU2S3ZUbnFwTDNvK3hseFl3NXhsTm9VUVBaM2hpbWFaRzdJ?=
- =?utf-8?B?WHFNUWEvQTRkbG1tUnRwUm9UK09lemdBcFNLbk9DWGlYVWhXM1h0MmRTK1Rj?=
- =?utf-8?B?VDJNNXVtczZBMHgzN0tpeWZUeEl6VnVxdDFjQ1AyQlphdWJxOGR3Z0FtOXNl?=
- =?utf-8?B?SzI3K2pCS0l0QkhKdm41Y2NTNWV6aFVCMU5DOHVGTkxLQW1TeGNrTEMrZHV2?=
- =?utf-8?B?OXRjUHh1N01aTHRNUnk4ZGFBcldBaHVnTUdXSlZnS2VPV1FvVTl3RThEN1pT?=
- =?utf-8?B?eXpyaTFFdHVsYU1BazdzM0g5REpGQ2xRVnFCUE1YYndZN25nQ1o0VEdLL2pJ?=
- =?utf-8?B?cmplaTZiTlpjNi9IVG5jWEtMdWVCRVRWbFZicnhaNVMwTW0wajBMNldaK0dH?=
- =?utf-8?B?LzFJa0RoSFpyekYreDJuYzJjU2t1TUtXOStOZTU5VXJGcHBIS1F4Sm9MZjFR?=
- =?utf-8?B?ZDNhRm8wU2tEWWkzYlBLWHR2TjdTdm14d0FLUFVBd2lQdjF3T1krVHlDSjUz?=
- =?utf-8?B?TWIyM2Z4RElMUkhPZm1tVjNnSmFsTSt6cGtlRkdyN0w3QXA3dDhtR2E5ZzFi?=
- =?utf-8?B?NUZLUzNtQWUvdnBiNHlsY2JUeHZCMWlwc0h4Uk0vYktoT3ZkcGpyVjQrYlpn?=
- =?utf-8?B?eE5hMk9xUFNpMTBzYXVvV0VWM1RDVUxiRmF0NjQ4US93MjFQSUxyVTlpSUpD?=
- =?utf-8?B?ZXpmN1FDd1lLTW1ZVCt0dHZkWGQxcmhCc0hWZVdqRW5xMTBXY28wMG42bzlJ?=
- =?utf-8?B?Qk54RVVCdTB2cUYwL0tHYmtHbTM2QTJlc0pLaktzMy9vUGU3SnVTNlBWRW5k?=
- =?utf-8?B?Mm9lcU0ra3dheVRBclQwbTA2UnA3YXJrVkoyTFg5MDJsKzZyQnp5d3UvWTVH?=
- =?utf-8?B?bkw2NnUvUVgxUERyZ2hsYy9MdmJrMzBycGpVZjZPV1RXUnJKMjhVSFllUndZ?=
- =?utf-8?B?RjEvbkhxNXVFNmZGYTNJKzJESnVzbTlPRnBiR3ByTzkvZ2xDVmNjMnp2dHNI?=
- =?utf-8?B?dGhuYXE4THA5RHRaVzRya0RwaXpFVUJiMHBVSHp6OFRlYThrWk43eU5LY1Az?=
- =?utf-8?B?SnRTSE1PN1gvNzFFalNZWFhyTUdJWWU4NWZuOU5CdE9Pbno4cys3aWpMd25r?=
- =?utf-8?B?NU5RNTlQZ0g5aG8zOHdtUm1RR01WaWduaFJsdi9YM05EcWd2eGpSMjFNQzJW?=
- =?utf-8?B?OEhKUTg0aEdYNHBSeHFkRG92cXBtbm1oZUlBUVk4V29pUXNXOUJiL3dnbGJz?=
- =?utf-8?B?T28vdDdXZ28xT0JnOXBqZWhNSmtFWk82NnBBd1dBb1lxTmxTcVRYUnNWTW52?=
- =?utf-8?B?T2hDczI0Uk04TEN2bWV1emxwQ1hLeEFtVVpQOUdLek1URTRyZlByY1RUNzlU?=
- =?utf-8?B?eWxLQ2V5RGUvQWIrUGFUNVhyc1RLVm1VWXVacHgvcFRlUzNSUTc1cUNnVFZu?=
- =?utf-8?B?UnhtaWdqbGc0Unl4bFVsclJYT1FwUFE3R3MveEswdDZxdTlJMVVhdHB1TWkr?=
- =?utf-8?B?cmVlUUc4VnVDSWFGYmR6cVVVbzFucS9VZEY3NDE4L2xDZy9FNFpENUg0YjJm?=
- =?utf-8?B?Q3ppRkZicHJROGNHTUNjSVNMdHU5SFlWY25zWXo0bTNVcWIwUkN0U3g2b0p1?=
- =?utf-8?B?WVR5UTlxUHBrcnRBb0FuVHdWTkpYbHErZU1SMTByeE90eVc0amVpQT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3ade7bcf-fd42-4386-8ab5-08deb5a4cd7c
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 12:47:36.0485
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 71c9eThv4YUR8YNs3YTNwfxBPw0h/bgryHy38Vwt5H5xYfWARNkJP4+M7QAI7W4AOb07DIXov0CKanhRD1TBHw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LOAP265MB8966
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260518224136.0000403e@linux.microsoft.com>
 
-On Sun May 17, 2026 at 1:00 AM BST, Danilo Krummrich wrote:
-> Move the post_unbind_rust callback before devres_release_all() in
-> device_unbind_cleanup().
->=20
-> With drvdata() removed, the driver's bus device private data is only
-> accessible by the owning driver itself. It is hence safe to drop the
-> driver's bus device private data before devres actions are released.
->=20
-> This reordering is the key enabler for Higher-Ranked Lifetime Types
-> (HRT) in Rust device drivers -- it allows driver structs to hold direct
-> references to devres-managed resources, because the bus device private
-> data (and with it all such references) is guaranteed to be dropped while
-> the underlying devres resources are still alive.
->=20
-> Without this change, devres resources would be freed first, leaving the
-> driver's bus device private data with dangling references during its
-> destructor.
->=20
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+On Mon, May 18, 2026 at 10:41:36PM -0700, Jacob Pan wrote:
 
-Reviewed-by: Gary Guo <gary@garyguo.net>
+> Just wondering what work is needed to support this "direct attach"? I
+> felt this issue is due to trying to cram two distinct domain types
+> (paging domain & direct attach) into the VFIO container model where
+> only unmanaged paging domain is supported.
 
-> ---
->  drivers/base/dd.c             | 2 +-
->  include/linux/device/driver.h | 4 ++--
->  rust/kernel/driver.rs         | 4 ++--
->  3 files changed, 5 insertions(+), 5 deletions(-)
+Xen has the same issue and you two need to come up with a uniform
+solution.
 
+VFIO container can't support it, that's out.
+
+You should be focusing on a iommufd flow that accepts some FD
+representing the VM (ie KVM FD) that can be converted by the driver
+into a HWPT representing that FD's S2 translation.
+
+> I am thinking if we were to switch to iommufd and let user(vmm) have
+> direct control of HWPT, vmm will be able to selectively use a
+> different domain type to handle direct attach. 
+
+Yes
+
+> IMHO, it is essentially the same as attaching nest parent domain
+> without nested domain immediately attached. The unprivileged guest
+> may attach nested domain directly with Hyper-V if nested translation
+> is needed.
+
+nest parent domain is really for supporting the viommu objects.. If
+you don't have that flow you don't need to worry about that nest
+parent stuff.
+
+> From this driver POV, it will allocate a 2nd stage only domain with
+> different domain ops (w/o map/unmap) for "direct attach" thus avoid this
+> hack.
+
+Yes, from a driver POV you need a unique iommu_domain allocator that
+returns an iommu_domain without an ops.
+
+It should probably work similarly to the viommu where the iommufd path
+can send in a driver-specific tagged struct that can describe these
+special domains.
+
+But be mindful of the lifetime rules, whatever ID is used to describe
+the VM at the hypercall boundary has to be bound into a linux FD and
+become immutable. The driver has to hold that FD as long as the domain
+exists.
+
+Jason
