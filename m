@@ -1,155 +1,186 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010005.outbound.protection.outlook.com [52.101.56.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ua1-f44.google.com (mail-ua1-f44.google.com [209.85.222.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 693923A5E90;
-	Tue, 19 May 2026 06:52:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.5
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779173539; cv=fail; b=pSwTrC007ggW8Nf175E+hqvJoCSh8LkX53qJCgzTBm56zDwSpoyoROAX1JCltjfXK+A64xiPd5GNEC7MoPiFK4rlHjFr0F9Ym0eoWhrmDDJhpsZvI1tek00Qs4LRaezMXAmYzz9Fb4E9HXMuWqpp1Uy7Uu1zOEERQ6+jEeSdF0A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779173539; c=relaxed/simple;
-	bh=lUJ+Msjzsz8Ni9suKFZtcx18Y4ZbNpU3uFBRIEw3zzg=;
-	h=Content-Type:Date:Message-Id:To:Cc:Subject:From:References:
-	 In-Reply-To:MIME-Version; b=tsgg5Hgc0fCckDxBhVMKc3V0ZUhh/a3qVrdZX/Q6F7GqwvJZpDjjwgbWwNFjyR9nmvkPn0D1YZ9oJGZR67rO3UHSd0ReCCTs3pl2xQlZPelkSoFQxIrrKgAUwV9ue6ygihsYbc977HN36cNRo6q7gnf0lYZXClBLGSnP/RxGPaI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=ZKCSc4kY; arc=fail smtp.client-ip=52.101.56.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="ZKCSc4kY"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=m5rggoL1iUAbyzs2c5qi3+gbFcdt+W9YOdePmCCIQNHLIGSMqBBv715Dp6Cnp4ZVZ6ryv7G5eJddK9PkZ3IiFb80Zg7KwTDvsBJAMjEUGUhpcpovv7oiogwvlfFsEXJKQJAiecA87l25ZfdizxAHUmbB9H4te93MXkvUDLtPtF8uTwSOym0jTLNAKorpRadSySKiBeQgaa98FdCJQPfigF9n7aG6X46eW98ik+RUBqlpWfA1yWqvioFD844SRvlS3pCHuDZaH1W/IljxiwGr/204jZpR31xJvJtL5rXfVtzSFU88ctpp/D6qWqFLx6Ds5AMQ17I7MXh9GUIDNuxGOw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lUJ+Msjzsz8Ni9suKFZtcx18Y4ZbNpU3uFBRIEw3zzg=;
- b=cLnVTNExthqdt03B7QsgDFp6OldImU7I0B6k5ixNnhcQfnzr5uJBDnWBcuA1eVY+OzVmSHYYWRmz5KGzEgRjCJQ9+PZvbKRya3NlcnrziQCIexH87obr1oWUPeZDKEYgNanZVwCzLMdT3ViisWt6dZ48WBuRRkAnSyGge4cDzIRiP+evU2tdd422HlKIdd/Bn3pMzNBk9/TYHBIKiaoXFFQncDal4+bTBDPu11GInjIZwWvEaAiIhFB/1QuSk0cz0er18XMyPOynEERmW5QfRCy2PMMAPOQKwKAhmPgg+EyH8k+oW+pJ4Wd4UQQKMfaGsI2l4uaCih7rjoyANpQqsg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lUJ+Msjzsz8Ni9suKFZtcx18Y4ZbNpU3uFBRIEw3zzg=;
- b=ZKCSc4kYD4/1AoNYV4xxXYzIAPirXnC2lZvvIrYlOHnTwxiGiBlcFZB9wYjGQEgvCuZdTCpk2YJBy1c6oE3/BzTr77wFvi7m4HcC7A1LUSLyhaDeIZLsLJTlfvFEiRe/KLFQRPvhvwUdZybKaJ1WUftNM9e+8vYaDsjD6LOe6yAf7y1dSwI3X0N6bfAEfHlEF6yYiUiK0K1hquOkAe5PwH8ElV81VyUGzxEm5CIN/RcNWyrJrbwQZ9qEhmVL8Hf3IiZDHmZeqLunh6hCJBcPjJ+3PNaO64/X33W+fT9RmQXP+PRT5Gtx1Pf08ZTHoNUQbJqPbro+sdyzIphHCoXvSA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com (2603:10b6:207:4c::31)
- by DS7PR12MB6262.namprd12.prod.outlook.com (2603:10b6:8:96::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.25.21; Tue, 19 May 2026 06:52:09 +0000
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0]) by BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
- 06:52:08 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 15:52:05 +0900
-Message-Id: <DIMGDLV6IHVG.3U6XI7I0DAG22@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
- <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
- <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
-Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-Subject: Re: [PATCH v3 18/27] samples: rust: rust_driver_auxiliary: showcase
- lifetime-bound registration data
-From: "Eliot Courtney" <ecourtney@nvidia.com>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-19-dakr@kernel.org>
-In-Reply-To: <20260517000149.3226762-19-dakr@kernel.org>
-X-ClientProxiedBy: TYCP286CA0308.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:38b::20) To BL0PR12MB2353.namprd12.prod.outlook.com
- (2603:10b6:207:4c::31)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00DA039BFFC
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 06:57:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779173876; cv=none; b=PUWGJ6Ab6zHULo9xAfWO9qGkuiWmctiyNyNpTUdyrW+IbCMGkdtZayew46eAY/ac1U+G0prXoC3i+rgARZX/2o17pWdqXg8sTTCcBHOty1WGkJw22ixzK5mWeGTyg8HxB+14PoLUv+Z9EcrfmctXr1EfXz7URgC7X/g6R3ltvt8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779173876; c=relaxed/simple;
+	bh=Ck5PYZUAGeP/arKc7+joOM35SGiEsWGbMXReP2dGyfk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Y0+mL1kC97R2Av4+fHt6Gu4+dxmWcF+clV1nRojnVzcDZ2XPLlgl5lsdEzHPhIuUd60xSPWPiqaz4y49UIlXTqelB05f8GjRJyJyoaddWoGdnulohPIV2pNCqb0j531DmeAkFYHLeZHqcYoVQhqtYRhDFb0gcxJstsn653AHyHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.222.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ua1-f44.google.com with SMTP id a1e0cc1a2514c-95f9d6a3a04so2202423241.0
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 23:57:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779173874; x=1779778674;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tvqi7WOJmULSzExbjI6JKbD+zff8xMlt2sOcKh3NdpM=;
+        b=DB9fIZLwLIPVkEMmFkL6gtYXUTvlQyzabvo5UIWXdO5uVqjA02gMcEe4/EEq61CQyC
+         NRlqcRs4Ep1XlmyDH/ONCv7zce/4i4bBdEUO6xfo1bPBZ/7HxgmeZsW1tyC4cTSwaB93
+         nwC/RrnRML+nw1dLbaW0jgBOILGAENeQZO0GotzKeMDZmKcdaCGmxXfCySgtqJLWPnls
+         v6pE0X6HPcBzd65o7/SkrNQLfZjt1Z0/cIbBKEhGHRsjZ9hv/Xi1ZnEf28qeCZbx/N+c
+         W1+lgt0ganKQLVKJPXs8k/sO/S6MrCIEaM+H7f1m6vp31ZWqbskLP6IDWmoZKNGE4xKw
+         NMbQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9dlIkFAwszXNMcPSZngAbNynGXI53fl+EEEBD0LnH0eRVdBn73XTXmGvsyp3Z33VCglAkFCmwNTtg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YygJXqePjDCx9K2nZtWtno+N4Bn/uvGIDEpFHnqMdj8DJ+erjqt
+	OUaJnk67sPWnW1QTm8qKYip8cph110p15FnhbLKmWS72OKDBha5rGdE0yNNyhFAk
+X-Gm-Gg: Acq92OGjmBXORpQSQyJ2yDEo+OPLeMiCostoD+jia/Deu9DugxhuWhNeXLrYXW+oUWK
+	QMP9rdWI0FdMc/GW8k1vUHvUvTTilI+DqmHaWgwKpT4f+RKeoF+q0GZza7o5BWrbJsFVcg5eRuB
+	pzWSmN3u5J++zWUqXv/uJpM1dxCyI8Za6ZlN7iSbw+vj9s9oglcjfb+SUg6Cno1FprLsgDnql2Y
+	VfXIToAVhKg7E2a0gJPQ8dEJK0yAJ3wJcXLljoTnJS1dy46x7j7UaVrvip4l6u/m86RGPAM+TCY
+	WLPwHNc1dSSLSH4ZRTj/XIe0d2CqYAb2ZVGGK5kSMr48nhBxnb19o/V9FdybDFir2CWxj6p7jqx
+	wt+hbpakPc9847sStPubNCp6htsKLcJ6uTG6tIv5oWPbO92KMpX9zGW/Ajr1MdZDyG0lceq3M2T
+	G2zyTPcmEAyNjaO8FFpvEZESTtE8wvzLoI1Nt+miV9ISp7qHy5yqfI2tWi4zYI
+X-Received: by 2002:a05:6102:1499:b0:631:44b7:b88c with SMTP id ada2fe7eead31-63a3f5864fcmr8143360137.20.1779173873905;
+        Mon, 18 May 2026 23:57:53 -0700 (PDT)
+Received: from mail-ua1-f46.google.com (mail-ua1-f46.google.com. [209.85.222.46])
+        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-95fc2fbfb54sm5945578241.12.2026.05.18.23.57.52
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 May 2026 23:57:53 -0700 (PDT)
+Received: by mail-ua1-f46.google.com with SMTP id a1e0cc1a2514c-95d0476492bso2138373241.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 23:57:52 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ/93Td+TskNQD7IlYMBksc5AMHd2EBR0B3vDd0kzEPQ2wjHFYFILqdQFdL2GXUdSYB6mrsKVU8R844=@vger.kernel.org
+X-Received: by 2002:a05:6102:4a8b:b0:631:26f6:7022 with SMTP id
+ ada2fe7eead31-63a3f697fcbmr9602990137.23.1779173872462; Mon, 18 May 2026
+ 23:57:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL0PR12MB2353:EE_|DS7PR12MB6262:EE_
-X-MS-Office365-Filtering-Correlation-Id: d5ead26d-6b8a-4713-329f-08deb5732558
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|376014|10070799003|7416014|921020|22082099003|56012099003|18002099003|11063799003|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	Ycd9DO+zOoiAVjkFbIR7OU6gW99pqMz89/6Shy5RCKMqtB9Gt+jT3pwWeKRQLg+OIz/yfoEnsWbGzUy64Pm7lw13SdjxWw+lZlc8+GGaRiqUvzENlA0t1kiZO/LvP6xpwK9sEjONMj5aawEThz/041cRLFp+oQe7grUAgpY5FHFxW2jwLd5vCy3rmsHTUWkUW0a0pP3DfnmSUswcoHEcxvicp0EVoFMxWZsov7SeoBxOMwNJ/qfWdiImomyRGgb4FTx5PV96dhNwnr5KAasnJwgFv9dfrpRQ1FjPbdm6cUUqxsuKSktQNZyNojM8NzUZavjQIXDs6nEWwzfC9kLfHdIzdouGm0zsqK7dLVebm4gDPei/LSAwY/xgl6MIMKBO2dFbnXNjMfniHc9kT3s1uYWan1PR/TkRfR4NT6/kKwYYYJ7EbUi/YLY5OaRPN+6tI28YfldMAnSDqtfFIujR0/WJpvFN635VsbEwhQFB6WUFxRaRpJBzwyZAoS3KxPO6DvtCJ+KRidT8Vr+L2QR5dc+N6YEJFU1O2bXNJhWNguShVsnQPDgrJKCtwv809mJzO86tHCW50fIqLKs9DWzpkZhYmmfZPpkh/YFu4JvbvkMJ6bw0SlewNS6BSetojUpaDvuJ1gt04NBhqypPOStt5ZHg0WejZv05jbdTL5uIeOTimhZrNHKn7RKEk2juz7zsnFwtae6D1V1CElxGA1CapsOReCjYkHSY2kWMG12nUEI=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2353.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(10070799003)(7416014)(921020)(22082099003)(56012099003)(18002099003)(11063799003)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?N3ovNkZyaUJJbmNlZ1h5Vi85OE5MZVJvSTNSMWVNVlNSZ3BGaGo4ZWMxVG5M?=
- =?utf-8?B?Q1BxNFB3SllnTVFzYVpEdlMzLzJOa0lEenVQODBzM28xdEFLSWlJbkFHT1JB?=
- =?utf-8?B?d2kxYTNKNDFHZGQzMk91OXJYTDJ5MEZReGE1R0J1WmxTT1Bna0NWQ0dUb2pV?=
- =?utf-8?B?clIzSlRxQVNiRkFTRjZzamlWNTJ3cUUxbmlrbkFER25QK0hHcENoRS9tdHpx?=
- =?utf-8?B?T2ZNTmZpUjN2V1JFRUJYMjhxVnRpTTRkRk92WVJycUJFSHpuRkN2TjFOYkJi?=
- =?utf-8?B?emRwT2FOaHVMSkpWc1FUQTlZY3VRckh6L2h3UnA1ZTRkVU5wYlNEUXYwcFZP?=
- =?utf-8?B?c1VNZVdSSVFtc2E0MjNBbUxOcm05aWNrem9hMzNmSGRvbzdjTWpVZ2tsZ0VJ?=
- =?utf-8?B?SjdPeFBzQzA4blJTM3ZyT3lrTVp6QVJkSVZQVFNsK0ZML3VNZEYvYVh2RFBa?=
- =?utf-8?B?c1RDN28rZlJsbno2cDg2dWVETU5Ya2JyaVdhWHdYaGV4Z3d2RytmWTR5clo5?=
- =?utf-8?B?UmxWVXprM2hpOFVDZ0VvRlZUcU5mS0Q3N3kybjdiNDZoVHI5T1VpQTdwUnBn?=
- =?utf-8?B?TnZ3U3BFeHY5cHBnT3B4QkJjRVRSSS9MM0FvbkpESnArdmNkcFN4TlpPVWNJ?=
- =?utf-8?B?REpYM293MjBwak5YYnhmUjBhU3FNcFJ3Y29GeU5ZMEp2SFpPRVp5b0ZjNWdS?=
- =?utf-8?B?TVA1bjE1aUlXYStOaGRKVHNIVEd3QlRqSXMxWXFyek5Kajk4TS8zQjRmbVBo?=
- =?utf-8?B?SHM4NDgrSnEwT05tSzFUOWc5ZENlaTFXS1U3NjZwL0ZOL1RBMkVpQlMwZXky?=
- =?utf-8?B?V3h5RUZlRExOOG10Yzdyb3Jwb2RyZDV4aXZmdWZBSnIvNTRoTDFHWmlGUHZh?=
- =?utf-8?B?UTVHWmxLZ1UrMUpJQ3lydkNMR0dJRTYvZzYvZFFwVDlma3lxQkx0Vmt2S1ZV?=
- =?utf-8?B?Wmx0d09zdW5WMGhtTzBNUjhYR2NFYStlOHIzYkxSRW9qT0IvaitsdUhPeVJZ?=
- =?utf-8?B?YzN0eHNqcE1lT3VEMXNRTGtFVm5TaW1vVW1sVTdJbWpLVzg1VWJPNmN1Ukc4?=
- =?utf-8?B?ajRvK29Lc1ViemF1VU8vR1ByM1MzemUxTnhudFpXUGdQNU5sNi9vdWN6TS9R?=
- =?utf-8?B?UCtsV2N6dGdXdFZHWjlUeXJtUkM2cjA0c2JvanVLQUd2VkZGSnhWU1I5ZXVK?=
- =?utf-8?B?bVk4L0xuT04vQzRVMFk5ZnEwSWdkY0FhVm12aVFKZ3VTN1dUUjZUK29OUjZo?=
- =?utf-8?B?bjArL054UFNMTVpiOVBSQ3ZTTlFORWlMZkpyWm9LUDYzTVI4TDBVbVJrelVr?=
- =?utf-8?B?MHkwdFl5a0hLN2pudzAxTTh1ZEQyRUhWZHQzR3p1d3hZWHdLVjVMUlF1eUdY?=
- =?utf-8?B?NXQ3USs4UWFOSEFOYVZCN25sdU9CSDU2cmhjZUJOVml0V0F0WDZjak9SazhD?=
- =?utf-8?B?UklZNGYrOHBCbzFsdjdGOXVqUzhWNzVSRUFxc2tiRzQyT1o0RWdnT1p5VW4z?=
- =?utf-8?B?cW5leXdqbUxESnJBWjBIZkV1SzFTSzVxK1ExbVJkUzlUemdqbXhGQ2I5NjF5?=
- =?utf-8?B?ODc0ZGhmeDN4bFJYOFJ3U0dKeEI3QVpDT2pRa1hPeTNOd2lYdzNQSGh5TVli?=
- =?utf-8?B?OVNXYjhGT3F4U205S1BDaWhaZDE4VUR4THZSL3NISzlmclZRN0duN3hOZFVp?=
- =?utf-8?B?VkJjeDhsV0YvazE4cVdkc0JNcFc5TjhyYUVtK2VGNmptYnVWTlhXQVFUWTFr?=
- =?utf-8?B?VDJCUDkrV21peXNWZHBGMnBDbnBZcUZuREU4N0hDS3BrZzFiTGlSZy9RTUNa?=
- =?utf-8?B?QnFOakgwU0dCYzhXWDVGSUJzSWtMUkVJbkpCUDdzQ045ZzdtT2hQSUo4VWFu?=
- =?utf-8?B?bVVkaW10UjlVZmdJa0RCTDRWcEZVVFhDQW9kNExiZmcwVFNHNXdvbVNoc0NY?=
- =?utf-8?B?THFxcm1RL0FiM1RLMWVTZnp0N25jWDBZZ0FRTmEwSUR5RmxzelhYeDFrN3ZB?=
- =?utf-8?B?ZU4rN0tlNDlVdDFsYXloTWZ1MlAwM2Z4OHhtQ0grMFd4RXhPYXBOeHc0a1Nk?=
- =?utf-8?B?V01YNlBWNWpqL2RpblRnbUdzaTR4cDMrNTVXeUk3L3JhQWltamNlNitoaUlS?=
- =?utf-8?B?T3pveXIwOG95WVRHa3VCK3A2RmY1WGFiYzVPclNEMHBUd3BDblJIbnUvK3FF?=
- =?utf-8?B?RXpDVnQ2bERZbkF6UFB6akk2ZlR1V2srcHkxSXVybnN5Ri9wTnVMMlRLa1RL?=
- =?utf-8?B?YjJzWXA4eEdJUEhJYlRrbmY3NUI2K3hpK0NvVVhYbmFVYnpHUHp1WlpMZDJy?=
- =?utf-8?B?NzM4REJvdzdvaHdPVDVVSzFoWlREaXR3ZVIyVEtNNzJjcnhXY2w4cEozSjdh?=
- =?utf-8?Q?v70ZjY9lmJ/pRywhL/0Ef5pfLNaO5IIjz4mmmsu+6CY2E?=
-X-MS-Exchange-AntiSpam-MessageData-1: jfYpFK90rOGOyw==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d5ead26d-6b8a-4713-329f-08deb5732558
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2353.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 06:52:08.7862
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uh6IZiZC0C7N5RYl3UwI+gM0Ai5ei2rD7wAAG14u6xSvnb1TuI0mPZiXtJNiCA92QbmTLVKOss1msAkax0g87g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6262
+References: <20260518155324.168948-1-prabhakar.mahadev-lad.rj@bp.renesas.com> <20260518155324.168948-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <20260518155324.168948-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 19 May 2026 08:57:40 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdW1m1bUJY+7AF+W7hZ_zpcBt=nbJivjr-nrmSLBiZv8qw@mail.gmail.com>
+X-Gm-Features: AVHnY4Jc61-evCo6difEXHaRZvepFdF2DA2aBeAZnXipFD8gNqintNb5uzSNM9A
+Message-ID: <CAMuHMdW1m1bUJY+7AF+W7hZ_zpcBt=nbJivjr-nrmSLBiZv8qw@mail.gmail.com>
+Subject: Re: [PATCH v2 1/4] dt-bindings: PCI: renesas,r9a08g045-pcie: Add
+ RZ/V2H(P) support
+To: Prabhakar <prabhakar.csengg@gmail.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, 
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Biju Das <biju.das.jz@bp.renesas.com>, 
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>, sashiko-bot@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Sun May 17, 2026 at 9:01 AM JST, Danilo Krummrich wrote:
-> Make the Data struct lifetime-parameterized, storing a reference to the
-> parent pci::Device<Bound>. This demonstrates that registration data can
-> hold device resources tied to the parent driver's lifetime.
->
-> In connect(), retrieve the parent PCI device from the registration data
-> rather than casting through adev.parent().
->
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
-> ---
+Hi Prabhakar,
 
-Reviewed-by: Eliot Courtney <ecourtney@nvidia.com>
+On Mon, 18 May 2026 at 17:53, Prabhakar <prabhakar.csengg@gmail.com> wrote:
+> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+>
+> Add support for the PCIe controller found on the Renesas RZ/V2H(P) SoC.
+>
+> The RZ/V2H(P) controller is similar to the RZ/G3E variant but includes
+> additional registers and configuration bits for PCIe lane control. It
+> supports multilink operation configured as either a single x4 link
+> or two independent x2 link controllers.
+>
+> Unlike earlier SoCs supported by this driver which only feature a single
+> PCIe controller, the RZ/V2H(P) SoC implements two controllers. Both
+> controllers rely on the system controller (`sysc`) for configuration,
+> but the required registers reside at different offsets for each instance.
+> To correctly identify the controller instance and map the corresponding
+> system controller registers, make the "linux,pci-domain" and "num-lanes"
+> properties mandatory for this SoC and restrict their values according to
+> the hardware capabilities.
+>
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+
+Thanks for your patch!
+
+> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+
+> @@ -235,6 +238,20 @@ allOf:
+>            maxItems: 1
+>          reset-names:
+>            maxItems: 1
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: renesas,r9a09g057-pcie
+> +    then:
+> +      properties:
+> +        linux,pci-domain:
+> +          enum: [0, 1]
+
+Sashiko has the following comments about this property[1]:
+
+| Is it appropriate to use linux,pci-domain to identify the hardware
+| controller instance?
+| Device Tree is designed to describe hardware rather than software policy
+| or configuration. The linux,pci-domain property is an OS-specific hint
+| used to assign logical PCI domain numbers.
+| Using it to identify hardware instances strictly couples the hardware
+| register mapping to an OS numbering scheme.
+
+and
+
+| Does limiting this to [0, 1] cause a regression for valid software
+| configurations?
+| For example, if a board with multiple PCIe controllers assigns domains 2
+| and 3 to these instances to avoid conflicts, the binding will fail
+| validation and the driver will fail to probe.
+| Could the hardware instances instead be identified via standard hardware
+| descriptive mechanisms, such as their physical base address (reg),
+| standard aliases, or by adding a phandle specifier argument to
+| renesas,sysc?
+
+dtschema/schemas/pci/pci-host-bridge.yaml states:
+
+| linux,pci-domain:
+|   description:
+|     If present this property assigns a fixed PCI domain number to a
+host bridge,
+|     otherwise an unstable (across boots) unique number will be assigned.
+|     It is required to either not set this property at all or set it for all
+|     host bridges in the system, otherwise potentially conflicting
+domain numbers
+|     may be assigned to root buses behind different host bridges.  The domain
+|     number for each host bridge in the system must be unique.
+
+In the RZ/V2H case, the number is local to the SYSC instance referenced
+by the renesas,sysc property, while linux,pci-domain is global to the
+full system by definition. Fixing the numbers to zero and one works,
+until some other controller in the system has conflicting requirements.
+
+I do see a future case where this may break: if Renesas would release a
+new SoC containing two RZ/V2H dies, there would be four PCIe controllers
+and two SYSC controllers.  This would require two PCIe controllers to
+have linux,pci-domain = <0>, and two having linux,pci-domain = <1>,
+which is not permitted.
+
+Hence adding a second cell to the renesas,sysc property, to specify
+the base offset of the PCIe-related registers inside SYSC seems like
+the best way to go?
+
+[1] https://sashiko.dev/#/patchset/20260518155324.168948-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=1
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
