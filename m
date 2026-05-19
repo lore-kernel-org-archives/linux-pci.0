@@ -1,186 +1,231 @@
-Received: from mail-ua1-f44.google.com (mail-ua1-f44.google.com [209.85.222.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00DA039BFFC
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 06:57:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 024933ACEE2;
+	Tue, 19 May 2026 07:21:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779173876; cv=none; b=PUWGJ6Ab6zHULo9xAfWO9qGkuiWmctiyNyNpTUdyrW+IbCMGkdtZayew46eAY/ac1U+G0prXoC3i+rgARZX/2o17pWdqXg8sTTCcBHOty1WGkJw22ixzK5mWeGTyg8HxB+14PoLUv+Z9EcrfmctXr1EfXz7URgC7X/g6R3ltvt8=
+	t=1779175318; cv=none; b=JhKoqqWi0QtcCTEX7TWmYosdTcBMYyNYtEpEEDiKuv1+7GpqkoDsa9tWWkHZzyk12exBVSg3SR/1HMzvFOAwbogwHCfMGTlwjy24HW+Yrv77JwhPrR9cYWrFHDZpQUX3ij+icRKsL+9ymOeZxM3aXYMF88m/8zT5DjoszNvlJdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779173876; c=relaxed/simple;
-	bh=Ck5PYZUAGeP/arKc7+joOM35SGiEsWGbMXReP2dGyfk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Y0+mL1kC97R2Av4+fHt6Gu4+dxmWcF+clV1nRojnVzcDZ2XPLlgl5lsdEzHPhIuUd60xSPWPiqaz4y49UIlXTqelB05f8GjRJyJyoaddWoGdnulohPIV2pNCqb0j531DmeAkFYHLeZHqcYoVQhqtYRhDFb0gcxJstsn653AHyHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.222.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ua1-f44.google.com with SMTP id a1e0cc1a2514c-95f9d6a3a04so2202423241.0
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 23:57:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779173874; x=1779778674;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tvqi7WOJmULSzExbjI6JKbD+zff8xMlt2sOcKh3NdpM=;
-        b=DB9fIZLwLIPVkEMmFkL6gtYXUTvlQyzabvo5UIWXdO5uVqjA02gMcEe4/EEq61CQyC
-         NRlqcRs4Ep1XlmyDH/ONCv7zce/4i4bBdEUO6xfo1bPBZ/7HxgmeZsW1tyC4cTSwaB93
-         nwC/RrnRML+nw1dLbaW0jgBOILGAENeQZO0GotzKeMDZmKcdaCGmxXfCySgtqJLWPnls
-         v6pE0X6HPcBzd65o7/SkrNQLfZjt1Z0/cIbBKEhGHRsjZ9hv/Xi1ZnEf28qeCZbx/N+c
-         W1+lgt0ganKQLVKJPXs8k/sO/S6MrCIEaM+H7f1m6vp31ZWqbskLP6IDWmoZKNGE4xKw
-         NMbQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9dlIkFAwszXNMcPSZngAbNynGXI53fl+EEEBD0LnH0eRVdBn73XTXmGvsyp3Z33VCglAkFCmwNTtg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YygJXqePjDCx9K2nZtWtno+N4Bn/uvGIDEpFHnqMdj8DJ+erjqt
-	OUaJnk67sPWnW1QTm8qKYip8cph110p15FnhbLKmWS72OKDBha5rGdE0yNNyhFAk
-X-Gm-Gg: Acq92OGjmBXORpQSQyJ2yDEo+OPLeMiCostoD+jia/Deu9DugxhuWhNeXLrYXW+oUWK
-	QMP9rdWI0FdMc/GW8k1vUHvUvTTilI+DqmHaWgwKpT4f+RKeoF+q0GZza7o5BWrbJsFVcg5eRuB
-	pzWSmN3u5J++zWUqXv/uJpM1dxCyI8Za6ZlN7iSbw+vj9s9oglcjfb+SUg6Cno1FprLsgDnql2Y
-	VfXIToAVhKg7E2a0gJPQ8dEJK0yAJ3wJcXLljoTnJS1dy46x7j7UaVrvip4l6u/m86RGPAM+TCY
-	WLPwHNc1dSSLSH4ZRTj/XIe0d2CqYAb2ZVGGK5kSMr48nhBxnb19o/V9FdybDFir2CWxj6p7jqx
-	wt+hbpakPc9847sStPubNCp6htsKLcJ6uTG6tIv5oWPbO92KMpX9zGW/Ajr1MdZDyG0lceq3M2T
-	G2zyTPcmEAyNjaO8FFpvEZESTtE8wvzLoI1Nt+miV9ISp7qHy5yqfI2tWi4zYI
-X-Received: by 2002:a05:6102:1499:b0:631:44b7:b88c with SMTP id ada2fe7eead31-63a3f5864fcmr8143360137.20.1779173873905;
-        Mon, 18 May 2026 23:57:53 -0700 (PDT)
-Received: from mail-ua1-f46.google.com (mail-ua1-f46.google.com. [209.85.222.46])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-95fc2fbfb54sm5945578241.12.2026.05.18.23.57.52
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 May 2026 23:57:53 -0700 (PDT)
-Received: by mail-ua1-f46.google.com with SMTP id a1e0cc1a2514c-95d0476492bso2138373241.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 May 2026 23:57:52 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ/93Td+TskNQD7IlYMBksc5AMHd2EBR0B3vDd0kzEPQ2wjHFYFILqdQFdL2GXUdSYB6mrsKVU8R844=@vger.kernel.org
-X-Received: by 2002:a05:6102:4a8b:b0:631:26f6:7022 with SMTP id
- ada2fe7eead31-63a3f697fcbmr9602990137.23.1779173872462; Mon, 18 May 2026
- 23:57:52 -0700 (PDT)
+	s=arc-20240116; t=1779175318; c=relaxed/simple;
+	bh=/sqDR+DAm77iAdHtKSPJrjJ/DUFVxpoRznwkUPqzbvg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SwTZWHAfM+s/r+r+hvmbbtYvfZCHGOtO/YKba2qKQsAY96obV3zzgjqchT/iL/S8/txxKdKEPPcLv3lC4SBI3JXSz3bQVRunyYX4QyOHZ22gfHufl24t1kjRXSMUiuNvLP01rCFUMSt2deEhFt4HbXvr+7QIm3PRZzahuatDEdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L89bXobs; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L89bXobs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A1EFC2BCC6;
+	Tue, 19 May 2026 07:21:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1779175317;
+	bh=/sqDR+DAm77iAdHtKSPJrjJ/DUFVxpoRznwkUPqzbvg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=L89bXobsAp2zYYvGxZx9Xi60sTPBm6auqQlqdg2AjCN43HBANRrT/DU8OPXp60EeV
+	 9Jpq/aKhILIqh4rgK9OqbAVpVTqjicHoUm/PCrFtzJpkjwhd1OJeFxJe/n5M577dsN
+	 ++CTfsUp9tFSRoD62GgzC/zl62RVAoe35aqCq+n/YbUKbMP4IlKSmeh63FGCZQkJFr
+	 vZq60ZuM+Ox9EVC/lszFEf/gIxxz6WYW9bjmj4NtoDoMK7TwDzrVn6NFdaPUEn5/Mw
+	 QeKaKxK1+Hld00KSlHVRS0ud12icsY27FiJdyxSegquqHjzrYaONobmwfh0zvXI5c3
+	 3wXiBEAYyKvgw==
+Date: Tue, 19 May 2026 12:51:49 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Chen-Yu Tsai <wenst@chromium.org>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Ryder Lee <ryder.lee@mediatek.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: PCI: mediatek-gen3: Allow memory-region for
+ restricted DMA buffer
+Message-ID: <rphuqwucr2r6gsgrkzkpzy7fn4qa7q4afzbwtzae53dtudmush@kxtzdoq426uz>
+References: <20260508063633.3894348-1-wenst@chromium.org>
+ <locoul5wdzuvvmm7mqpuntjqu4o75gmyd5npgfqrw3zuwsrse6@dhrjggs4cihh>
+ <CAGXv+5GAaMQbaoUVr5zcwtHaofyXwHz03TxBe-QyWj_sNoQZsg@mail.gmail.com>
+ <qnikqcqoiw7z2yh5wruqcli3rk56yomyymghzivlcmekp2blwc@dfhsfl3sqcla>
+ <CAGXv+5GBraoTrQatQdrM5b+dOteL_Y5K7_UQBUt-2L1x=c94KA@mail.gmail.com>
+ <2tq4zy3zhcrz25rl2qhdsxvoedcry4z3v2lmmropesxqgzhtlp@fn6htdl74ogu>
+ <CAGXv+5GRBv8+pLbb-AyFW0cAx=c45JhWd-odzJGDdWABKQLaqg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260518155324.168948-1-prabhakar.mahadev-lad.rj@bp.renesas.com> <20260518155324.168948-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <20260518155324.168948-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 19 May 2026 08:57:40 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdW1m1bUJY+7AF+W7hZ_zpcBt=nbJivjr-nrmSLBiZv8qw@mail.gmail.com>
-X-Gm-Features: AVHnY4Jc61-evCo6difEXHaRZvepFdF2DA2aBeAZnXipFD8gNqintNb5uzSNM9A
-Message-ID: <CAMuHMdW1m1bUJY+7AF+W7hZ_zpcBt=nbJivjr-nrmSLBiZv8qw@mail.gmail.com>
-Subject: Re: [PATCH v2 1/4] dt-bindings: PCI: renesas,r9a08g045-pcie: Add
- RZ/V2H(P) support
-To: Prabhakar <prabhakar.csengg@gmail.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, 
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Biju Das <biju.das.jz@bp.renesas.com>, 
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>, sashiko-bot@kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAGXv+5GRBv8+pLbb-AyFW0cAx=c45JhWd-odzJGDdWABKQLaqg@mail.gmail.com>
 
-Hi Prabhakar,
+On Mon, May 18, 2026 at 05:02:11PM +0800, Chen-Yu Tsai wrote:
+> On Fri, May 15, 2026 at 8:34 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Fri, May 15, 2026 at 05:16:19PM +0800, Chen-Yu Tsai wrote:
+> > > On Thu, May 14, 2026 at 7:48 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> > > >
+> > > > On Thu, May 14, 2026 at 03:54:29PM +0800, Chen-Yu Tsai wrote:
+> > > > > On Thu, May 14, 2026 at 1:23 PM Manivannan Sadhasivam <mani@kernel.org> wrote:
+> > > > > >
+> > > > > > On Fri, May 08, 2026 at 02:36:32PM +0800, Chen-Yu Tsai wrote:
+> > > > > > > On some SoCs without an IOMMU behind the PCIe controller, the PCIe
+> > > > > > > controller memory access could be limited to a small region by the
+> > > > > > > firmware configuring a memory protection unit. This memory region
+> > > > > > > must be assigned to the PCIe controller so that the OS knows to
+> > > > > > > use that region. Otherwise PCIe devices would not work properly.
+> > > > > > >
+> > > > > >
+> > > > > > So this means, the PCIe devices can only access a specific carveout memory
+> > > > > > configured by MPU for DMA? If so, you should use 'dma-ranges' as suggested by
+> > > > > > Rob.
+> > > > > >
+> > > > > > 'memory-region' also serves the purpose, but for PCI, we have the dedicated
+> > > > > > 'dma-ranges' property.
+> > > > >
+> > > > > I think I need some sort of guide on writing the 'dma-ranges' property,
+> > > > > because it is not working for me.
+> > > > >
+> > > > > I'm adding
+> > > > >
+> > > > >     dma-ranges = <0x42000000 0 0x00000000 0 0xc0000000 0 0x4000000>;
+> > > > >
+> > > >
+> > > > So the device DMA address start from 0x0? Isn't it a 1:1 mapping?
+> > >
+> > > I actually don't know. But
+> > >
+> > > >         dma-ranges = <0x42000000 0 0xc0000000 0 0xc0000000 0 0x4000000>;
+> > >
+> > > this didn't work either.
+> >
+> >
+> > Hmm. Can you print the DMA address programmed to the device? i.e., the address
+> > returned by dma_map_single() in the driver.
+> 
+> On a working system still using the restricted-dma-pool memory region,
+> it gives something like 0x00000000c0009000, so indeed it is 1:1 mapping?
 
-On Mon, 18 May 2026 at 17:53, Prabhakar <prabhakar.csengg@gmail.com> wrote:
-> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
->
-> Add support for the PCIe controller found on the Renesas RZ/V2H(P) SoC.
->
-> The RZ/V2H(P) controller is similar to the RZ/G3E variant but includes
-> additional registers and configuration bits for PCIe lane control. It
-> supports multilink operation configured as either a single x4 link
-> or two independent x2 link controllers.
->
-> Unlike earlier SoCs supported by this driver which only feature a single
-> PCIe controller, the RZ/V2H(P) SoC implements two controllers. Both
-> controllers rely on the system controller (`sysc`) for configuration,
-> but the required registers reside at different offsets for each instance.
-> To correctly identify the controller instance and map the corresponding
-> system controller registers, make the "linux,pci-domain" and "num-lanes"
-> properties mandatory for this SoC and restrict their values according to
-> the hardware capabilities.
->
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+It has to be 1:1 mapping.
 
-Thanks for your patch!
+> These are for the RX/TX descriptors [1][2].
+> 
+> When using dma-ranges, the failure is from dma_alloc_coherent() [3][4],
+> which is the descriptor ring. On a working system, this is something
+> like 0x00000000c0c9d000, so again 1:1.
+> 
+> [1] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L221
+> [2] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L829
+> [3] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L192
+> [4] https://elixir.bootlin.com/linux/v7.0.8/source/drivers/net/wireless/realtek/rtw88/pci.c#L265
+> 
+> > Also, using prefetchable flag is not correct for DMA memory. You should use:
+> >
+> >         dma-ranges = <0x02000000 0 0xc0000000 0 0xc0000000 0 0x4000000>;
+> 
+> This didn't work either. What exactly is supposed to handle dma-ranges?
+> I see some code parsing it in the PCI core, but it just saves it to a list.
+> 
 
-> --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+I think the failure is due to marking the memory as 'reserved' in DT. With
+'dma-ranges', the allocator will only ensure that the allocated memory stays
+within this limit. But the allocator itself will not use this property to
+allocate from the reserved region.
 
-> @@ -235,6 +238,20 @@ allOf:
->            maxItems: 1
->          reset-names:
->            maxItems: 1
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: renesas,r9a09g057-pcie
-> +    then:
-> +      properties:
-> +        linux,pci-domain:
-> +          enum: [0, 1]
+Now, I'm not sure if you can reliably get dma-ranges to work for this usecase
+of forcing the dma_alloc_coherent() to use the reserved memory.
 
-Sashiko has the following comments about this property[1]:
+So looks like 'memory-region' is your only option here.
 
-| Is it appropriate to use linux,pci-domain to identify the hardware
-| controller instance?
-| Device Tree is designed to describe hardware rather than software policy
-| or configuration. The linux,pci-domain property is an OS-specific hint
-| used to assign logical PCI domain numbers.
-| Using it to identify hardware instances strictly couples the hardware
-| register mapping to an OS numbering scheme.
+- Mani
 
-and
-
-| Does limiting this to [0, 1] cause a regression for valid software
-| configurations?
-| For example, if a board with multiple PCIe controllers assigns domains 2
-| and 3 to these instances to avoid conflicts, the binding will fail
-| validation and the driver will fail to probe.
-| Could the hardware instances instead be identified via standard hardware
-| descriptive mechanisms, such as their physical base address (reg),
-| standard aliases, or by adding a phandle specifier argument to
-| renesas,sysc?
-
-dtschema/schemas/pci/pci-host-bridge.yaml states:
-
-| linux,pci-domain:
-|   description:
-|     If present this property assigns a fixed PCI domain number to a
-host bridge,
-|     otherwise an unstable (across boots) unique number will be assigned.
-|     It is required to either not set this property at all or set it for all
-|     host bridges in the system, otherwise potentially conflicting
-domain numbers
-|     may be assigned to root buses behind different host bridges.  The domain
-|     number for each host bridge in the system must be unique.
-
-In the RZ/V2H case, the number is local to the SYSC instance referenced
-by the renesas,sysc property, while linux,pci-domain is global to the
-full system by definition. Fixing the numbers to zero and one works,
-until some other controller in the system has conflicting requirements.
-
-I do see a future case where this may break: if Renesas would release a
-new SoC containing two RZ/V2H dies, there would be four PCIe controllers
-and two SYSC controllers.  This would require two PCIe controllers to
-have linux,pci-domain = <0>, and two having linux,pci-domain = <1>,
-which is not permitted.
-
-Hence adding a second cell to the renesas,sysc property, to specify
-the base offset of the PCIe-related registers inside SYSC seems like
-the best way to go?
-
-[1] https://sashiko.dev/#/patchset/20260518155324.168948-1-prabhakar.mahadev-lad.rj@bp.renesas.com?part=1
-
-Gr{oetje,eeting}s,
-
-                        Geert
+> 
+> Here's a function graph trace for the dma_alloc_coherent() call:
+> 
+> funcgraph_entry:                   |  dma_alloc_attrs() {
+> funcgraph_entry:        6.538 us   |    dma_alloc_from_dev_coherent(); (ret=0x0)
+> funcgraph_entry:                   |    dma_direct_alloc() {
+> funcgraph_entry:                   |      __dma_direct_alloc_pages.isra.0() {
+> funcgraph_entry:        4.846 us   |        dma_alloc_contiguous(); (ret=0x0)
+> funcgraph_entry:                   |        __alloc_pages_noprof() {
+> funcgraph_entry:                   |          __alloc_frozen_pages_noprof() {
+> funcgraph_entry:        5.539 us   |            fs_reclaim_acquire();
+> (ret=0xffffff80c7dcd580)
+> funcgraph_entry:        5.077 us   |            fs_reclaim_release();
+> (ret=0xffffff80c7dcd580)
+> funcgraph_entry:                   |            __might_sleep() {
+> funcgraph_entry:        5.153 us   |              __might_resched(); (ret=0x0)
+> funcgraph_exit:       + 16.230 us  |            } (ret=0x0)
+> funcgraph_entry:        5.077 us   |
+> __next_zones_zonelist(); (ret=0xffffffd055d598e0)
+> funcgraph_entry:                   |            get_page_from_freelist() {
+> funcgraph_entry:                   |              _raw_spin_trylock() {
+> funcgraph_entry:        5.385 us   |
+> do_raw_spin_trylock(); (ret=0x1)
+> funcgraph_exit:       + 16.923 us  |              } (ret=0x1)
+> funcgraph_entry:                   |              _raw_spin_unlock() {
+> funcgraph_entry:        5.077 us   |
+> do_raw_spin_unlock(); (ret=0x1)
+> funcgraph_exit:       + 16.538 us  |              } (ret=0x100000001)
+> funcgraph_exit:       + 54.231 us  |            } (ret=0xfffffffec051c540)
+> funcgraph_exit:       ! 123.462 us |          } (ret=0xfffffffec051c540)
+> funcgraph_exit:       ! 134.692 us |        } (ret=0xfffffffec051c540)
+> funcgraph_entry:                   |        __free_pages() {
+> funcgraph_entry:                   |          ___free_pages() {
+> funcgraph_entry:                   |            __free_frozen_pages() {
+> funcgraph_entry:        5.538 us   |
+> __get_pfnblock_flags_mask.isra.0(); (ret=0x0)
+> funcgraph_entry:                   |              _raw_spin_trylock() {
+> funcgraph_entry:        5.077 us   |
+> do_raw_spin_trylock(); (ret=0x1)
+> funcgraph_exit:       + 16.538 us  |              } (ret=0x1)
+> funcgraph_entry:        5.385 us   |
+> free_frozen_page_commit(); (ret=0x1)
+> funcgraph_entry:                   |              _raw_spin_unlock() {
+> funcgraph_entry:        5.077 us   |
+> do_raw_spin_unlock(); (ret=0x1)
+> funcgraph_exit:       + 16.385 us  |              } (ret=0x100000001)
+> funcgraph_exit:       + 75.000 us  |            } (ret=0x0)
+> funcgraph_exit:       + 86.230 us  |          } (ret=0x0)
+> funcgraph_exit:       + 97.384 us  |        } (ret=0x0)
+> funcgraph_exit:       ! 262.846 us |      } (ret=0x0)
+> funcgraph_exit:       ! 274.538 us |    } (ret=0x0)
+> funcgraph_exit:       ! 309.077 us |  } (ret=0x0)
+> 
+> 
+> And here are kernel logs for all the system's memory regions:
+> 
+> Reserved memory: created DMA memory pool at 0x000000013ff00000, size 1 MiB
+> OF: reserved mem: initialized node audio-dma-pool, compatible id shared-dma-pool
+> OF: reserved mem: 0x000000013ff00000..0x000000013fffffff (1024 KiB)
+> nomap non-reusable audio-dma-pool
+> OF: reserved mem: 0x00000000ffe65000..0x00000000fff64fff (1024 KiB)
+> map non-reusable ramoops
+> Reserved memory: created DMA memory pool at 0x0000000050000000, size 41 MiB
+> OF: reserved mem: initialized node scp@50000000, compatible id shared-dma-pool
+> OF: reserved mem: 0x0000000050000000..0x00000000528fffff (41984 KiB)
+> nomap non-reusable scp@50000000
+> cma: Reserved 16 MiB at 0x00000000c3000000
+> 
+> Zone ranges:
+>   DMA      [mem 0x0000000040000000-0x00000000c3ffffff]
+>   DMA32    [mem 0x00000000c4000000-0x00000000ffffffff]
+>   Normal   [mem 0x0000000100000000-0x000000013fffffff]
+> 
+> Early memory node ranges
+>   node   0: [mem 0x0000000040000000-0x000000004fffffff]
+>   node   0: [mem 0x0000000050000000-0x00000000528fffff]
+>   node   0: [mem 0x0000000052900000-0x00000000545fffff]
+>   node   0: [mem 0x0000000054700000-0x00000000ffdfffff]
+>   node   0: [mem 0x0000000100000000-0x000000013fefffff]
+>   node   0: [mem 0x000000013ff00000-0x000000013fffffff]
+> 
+> software IO TLB: area num 8.
+> software IO TLB: mapped [mem 0x00000000bf000000-0x00000000c3000000] (64MB)
+> 
+> 
+> So I think it could be that the usable memory has all been given away to
+> other bits? But then dma_alloc_contiguous() returned NULL.
+> 
+> 
+> ChenYu
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+மணிவண்ணன் சதாசிவம்
