@@ -1,344 +1,365 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36A373AFCEF
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 15:06:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 740643EA952
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 15:18:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779203196; cv=none; b=YcC2m3KVZb+vCs4ILgDcduM/vY+3taqfwOSN5WozFigvyqKzMo7lA01789M7nnwvm+548pRfPgJXof5PdlNVbB6pmg9ZfSfzkmDOCTC/uyeNic4nziB4wQSZBHugMmo55qbu/42LwrU1r4Zh1+/uAplal8lOyB3cYKh7yWcROf4=
+	t=1779203940; cv=none; b=avjEEcc2pjjDiBShSsDE3QmsEIbQVcz1dx1KtSkLcV9vnUMYNfCF4tOEEaMRDJQ1e+TwfxaF3yPD9Wt3jjKZQkvqUMSHTP/bw+QCw4Blch69b9Xur5s+GrCoNBpnVuhN8rK/dmcWT9QKdzHFFJvfTnjYL0TQ1LFmI3XdFhQ3ZRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779203196; c=relaxed/simple;
-	bh=4iRGnq24gu2dObEwLFwLMxZ7GHsPekDAjYXglgexG4s=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=uOvOtS/K7jnvBYURoIYEDPQBthWlXKDw21OiNrbBFWOlVDONGVByxca3EmkMM4SMIxzQhibqbMEw00wRGi+UGQDzz0ehzo3OI3n+CKUIPsSI6mIqhYaQeSBYAyDcXAr779BhjEV1NFuyo0e2rC3kGdSyHT4KY5mttZg0n4GhD3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RdcY8nFT; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1779203940; c=relaxed/simple;
+	bh=7pFLF5lAH2RiF4umgaRXLKdvBvrD5RFzjd5Nvv5651I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rvEN3nZLlsp1XPD6nEGlsOQqh4F2OozGIWyhHwUjE46CzZmFnjAe8dXkzCzd/Dx9gaik+GDtfrIse54wxiHoY144E4KQQhop57RN6OR89Vw19oO2QAnGcIMk+vRNpJhsIDBq7FO1CA0evgyGBjYzI6Er5EhsizrLDDFsxxWaI28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LtIRBf0z; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RdcY8nFT"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LtIRBf0z"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779203194; x=1810739194;
-  h=date:from:to:cc:subject:message-id;
-  bh=4iRGnq24gu2dObEwLFwLMxZ7GHsPekDAjYXglgexG4s=;
-  b=RdcY8nFT3YXNuP166+qtplI+ihZ423yh19WLmpofvgumMMd9f4lR90ln
-   R8moFB8fC+/Kd2r9jGWfxS9wENNSUM0i3kjix+jE1acoy1b1iBu0d0gq+
-   2WoU/rfYGSuwgcj0HKCNm+B77KsNe2PxS4jCqSN9mErbRhdGdB3WeX9If
-   MuJz3A4RwZHyocssThSGVRSNlFGs5uzFDysIYdE7aD59isOVDIG0XG6Ts
-   nMrUvnLMl+p++DO2U4xhEXjGV3nJH7gxBGokGMqfs6BQ1QW5t6jaPhyOW
-   5ds2fqDfW2aEBkKA8/W49KkSsKL4YrJULRZRcr7rY9eL3a17dy/FzIW+V
-   w==;
-X-CSE-ConnectionGUID: ZVcZUZ4vS2eKl0dbyjusDQ==
-X-CSE-MsgGUID: CAZf0lIeSIexiYZ4EuFCGQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11791"; a="105543312"
+  t=1779203938; x=1810739938;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=7pFLF5lAH2RiF4umgaRXLKdvBvrD5RFzjd5Nvv5651I=;
+  b=LtIRBf0zeNL/yMCldprgpi8m/hyyLx3b0vX+SvO3O0KyqSR5zCjh0eBX
+   SVztw2frYiKmKwdEOua/eHye3+JXkAnCcrC3azMK0CBMMirpPS3bZmzm8
+   mCfdCUzKF1p/lfmowpD0wUfyB7Zb6H9f83/IRcp0WTLggZxB557XwYlAm
+   61h5jnTdg9QwfLtFnWYGw4iaZt/idpTx3K/vXAd7x3Xk6D9oX8+dDtYLr
+   ivzAmcz9yMfDCsE+e2KX7GsSthIC+5L+0V+HG9iUUoD10ykdC+U4PleWH
+   Kiu/sIRUhl0INoNNuBU8xK5sQ+wyYOq2X3fFBr1FmgrMskHIDz01zdwtr
+   g==;
+X-CSE-ConnectionGUID: ZTYgPLGITXilOCUOVYJAzg==
+X-CSE-MsgGUID: 4K5agc+ZSLip5XFeEIyDug==
+X-IronPort-AV: E=McAfee;i="6800,10657,11791"; a="79984969"
 X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="105543312"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 08:06:33 -0700
-X-CSE-ConnectionGUID: ECTeYB+kSvKkXU8g5tQVDQ==
-X-CSE-MsgGUID: +bw51c4rTEeJW1KaAjkk/g==
+   d="scan'208";a="79984969"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 08:18:57 -0700
+X-CSE-ConnectionGUID: A3cwTvutSemz7kMNGpXsNw==
+X-CSE-MsgGUID: ccSfMjybQZKYZ6Vhvsxr3A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="277905708"
-Received: from lkp-server02.sh.intel.com (HELO 30e86e9c1927) ([10.239.97.151])
-  by orviesa001.jf.intel.com with ESMTP; 19 May 2026 08:06:32 -0700
-Received: from kbuild by 30e86e9c1927 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wPM1d-000000001Eo-1bXv;
-	Tue, 19 May 2026 15:06:29 +0000
-Date: Tue, 19 May 2026 23:04:15 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc-imx6] BUILD SUCCESS
- 250eea5c06f5291603612cdf0c60326db4e19141
-Message-ID: <202605192306.rUKd1gho-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+   d="scan'208";a="244788872"
+Received: from zp3110c002s0704.zpn.intel.com ([10.219.117.38])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 08:18:56 -0700
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
+To: <linux-pci@vger.kernel.org>,
+	nirmal.patel@intel.com
+Cc: Nirmal Patel <nirmal.patel@linux.intel.com>
+Subject: [PATCH v2] PCI: vmd: Add feature to scan BIOS enumerated devices.
+Date: Tue, 19 May 2026 15:18:32 +0000
+Message-ID: <20260519151832.9005-1-nirmal.patel@linux.intel.com>
+X-Mailer: git-send-email 2.52.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-imx6
-branch HEAD: 250eea5c06f5291603612cdf0c60326db4e19141  PCI: imx6: Parse 'reset-gpios' in Root Port nodes
+Newer VMD  with device ID 0x28c1 has unique settings compared to its
+predecessor where BIOS enumerates the entire VMD device tree and
+assigns respective configurations.
 
-elapsed time: 943m
+VMD configuration BAR0 carries over from GNR legacy VMD as the mechanism
+to access the configuration space of the devices owned by VMD. The size
+of this window is fixed at 256 MB, where each function consumes 4 KB and
+every bus consumes 1 MB.
 
-configs tested: 267
-configs skipped: 4
+The shadow and scratchpad registers have been relocated from the VMD
+configuration space to the VMD MMIO space in VMD BAR4/BAR5, otherwise
+refers to as MEMBAR2 or MSI-X bar.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+VMD MSI-X remapping enable/disable is no longer supported.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-alpha                               defconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                              allmodconfig    gcc-15.2.0
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-15.2.0
-arc                                 defconfig    gcc-15.2.0
-arc                            randconfig-001    gcc-8.5.0
-arc                   randconfig-001-20260519    clang-23
-arc                   randconfig-001-20260519    gcc-8.5.0
-arc                   randconfig-001-20260519    gcc-9.5.0
-arc                            randconfig-002    gcc-8.5.0
-arc                   randconfig-002-20260519    clang-23
-arc                   randconfig-002-20260519    gcc-10.5.0
-arc                   randconfig-002-20260519    gcc-8.5.0
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                              allyesconfig    gcc-15.2.0
-arm                        clps711x_defconfig    clang-23
-arm                                 defconfig    gcc-15.2.0
-arm                       multi_v4t_defconfig    clang-16
-arm                            randconfig-001    gcc-8.5.0
-arm                   randconfig-001-20260519    clang-23
-arm                   randconfig-001-20260519    gcc-8.5.0
-arm                            randconfig-002    gcc-8.5.0
-arm                   randconfig-002-20260519    clang-23
-arm                   randconfig-002-20260519    gcc-8.5.0
-arm                            randconfig-003    gcc-8.5.0
-arm                   randconfig-003-20260519    clang-23
-arm                   randconfig-003-20260519    gcc-8.5.0
-arm                            randconfig-004    gcc-8.5.0
-arm                   randconfig-004-20260519    clang-23
-arm                   randconfig-004-20260519    gcc-8.5.0
-arm                       spear13xx_defconfig    gcc-15.2.0
-arm64                            allmodconfig    clang-19
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                               defconfig    gcc-15.2.0
-arm64                 randconfig-001-20260519    gcc-8.5.0
-arm64                 randconfig-002-20260519    gcc-8.5.0
-arm64                 randconfig-003-20260519    gcc-8.5.0
-arm64                 randconfig-004-20260519    gcc-8.5.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                                defconfig    gcc-15.2.0
-csky                  randconfig-001-20260519    gcc-8.5.0
-csky                  randconfig-002-20260519    gcc-8.5.0
-hexagon                          allmodconfig    clang-17
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon                             defconfig    gcc-15.2.0
-hexagon                        randconfig-001    gcc-11.5.0
-hexagon               randconfig-001-20260519    clang-23
-hexagon               randconfig-001-20260519    gcc-10.5.0
-hexagon                        randconfig-002    gcc-11.5.0
-hexagon               randconfig-002-20260519    clang-23
-hexagon               randconfig-002-20260519    gcc-10.5.0
-i386                             allmodconfig    clang-20
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260519    gcc-12
-i386        buildonly-randconfig-002-20260519    gcc-12
-i386        buildonly-randconfig-003-20260519    gcc-12
-i386        buildonly-randconfig-004-20260519    gcc-12
-i386        buildonly-randconfig-005-20260519    gcc-12
-i386        buildonly-randconfig-006-20260519    gcc-12
-i386                                defconfig    gcc-15.2.0
-i386                           randconfig-001    gcc-14
-i386                  randconfig-001-20260519    gcc-14
-i386                           randconfig-002    gcc-14
-i386                  randconfig-002-20260519    gcc-14
-i386                           randconfig-003    gcc-14
-i386                  randconfig-003-20260519    gcc-14
-i386                           randconfig-004    gcc-14
-i386                  randconfig-004-20260519    gcc-14
-i386                           randconfig-005    gcc-14
-i386                  randconfig-005-20260519    gcc-14
-i386                           randconfig-006    gcc-14
-i386                  randconfig-006-20260519    gcc-14
-i386                           randconfig-007    gcc-14
-i386                  randconfig-007-20260519    gcc-14
-i386                           randconfig-011    gcc-14
-i386                  randconfig-011-20260519    gcc-14
-i386                           randconfig-012    gcc-14
-i386                  randconfig-012-20260519    gcc-14
-i386                           randconfig-013    gcc-14
-i386                  randconfig-013-20260519    gcc-14
-i386                           randconfig-014    gcc-14
-i386                  randconfig-014-20260519    gcc-14
-i386                           randconfig-015    gcc-14
-i386                  randconfig-015-20260519    gcc-14
-i386                           randconfig-016    gcc-14
-i386                  randconfig-016-20260519    gcc-14
-i386                           randconfig-017    gcc-14
-i386                  randconfig-017-20260519    gcc-14
-loongarch                        allmodconfig    clang-19
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch                      randconfig-001    gcc-11.5.0
-loongarch             randconfig-001-20260519    clang-18
-loongarch             randconfig-001-20260519    gcc-10.5.0
-loongarch                      randconfig-002    gcc-11.5.0
-loongarch             randconfig-002-20260519    gcc-10.5.0
-loongarch             randconfig-002-20260519    gcc-15.2.0
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                             allyesconfig    gcc-15.2.0
-m68k                                defconfig    clang-19
-m68k                        m5407c3_defconfig    gcc-15.2.0
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                             allmodconfig    gcc-15.2.0
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-mips                     cu1000-neo_defconfig    gcc-15.2.0
-nios2                         10m50_defconfig    gcc-11.5.0
-nios2                            allmodconfig    clang-23
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-19
-nios2                          randconfig-001    gcc-11.5.0
-nios2                 randconfig-001-20260519    gcc-10.5.0
-nios2                 randconfig-001-20260519    gcc-11.5.0
-nios2                          randconfig-002    gcc-11.5.0
-nios2                 randconfig-002-20260519    gcc-10.5.0
-openrisc                         allmodconfig    clang-23
-openrisc                         allmodconfig    gcc-15.2.0
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-15.2.0
-openrisc                            defconfig    gcc-15.2.0
-parisc                           allmodconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-15.2.0
-parisc                           allyesconfig    clang-19
-parisc                           allyesconfig    gcc-15.2.0
-parisc                              defconfig    gcc-15.2.0
-parisc                         randconfig-001    gcc-8.5.0
-parisc                randconfig-001-20260519    gcc-8.5.0
-parisc                         randconfig-002    gcc-8.5.0
-parisc                randconfig-002-20260519    gcc-8.5.0
-parisc64                            defconfig    clang-19
-powerpc                          allmodconfig    gcc-15.2.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-15.2.0
-powerpc                        randconfig-001    gcc-8.5.0
-powerpc               randconfig-001-20260519    gcc-8.5.0
-powerpc                        randconfig-002    gcc-8.5.0
-powerpc               randconfig-002-20260519    gcc-8.5.0
-powerpc64                      randconfig-001    gcc-8.5.0
-powerpc64             randconfig-001-20260519    gcc-8.5.0
-powerpc64                      randconfig-002    gcc-8.5.0
-powerpc64             randconfig-002-20260519    gcc-8.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-15.2.0
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                          randconfig-001    gcc-13.4.0
-riscv                 randconfig-001-20260519    gcc-13.4.0
-riscv                          randconfig-002    gcc-13.4.0
-riscv                 randconfig-002-20260519    gcc-13.4.0
-s390                             allmodconfig    clang-18
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-15.2.0
-s390                                defconfig    gcc-15.2.0
-s390                           randconfig-001    gcc-13.4.0
-s390                  randconfig-001-20260519    gcc-13.4.0
-s390                           randconfig-002    gcc-13.4.0
-s390                  randconfig-002-20260519    gcc-13.4.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-15.2.0
-sh                               allyesconfig    clang-19
-sh                               allyesconfig    gcc-15.2.0
-sh                                  defconfig    gcc-14
-sh                          landisk_defconfig    gcc-15.2.0
-sh                             randconfig-001    gcc-13.4.0
-sh                    randconfig-001-20260519    gcc-13.4.0
-sh                             randconfig-002    gcc-13.4.0
-sh                    randconfig-002-20260519    gcc-13.4.0
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-15.2.0
-sparc                               defconfig    gcc-15.2.0
-sparc                          randconfig-001    gcc-14.3.0
-sparc                 randconfig-001-20260519    gcc-14.3.0
-sparc                          randconfig-002    gcc-14.3.0
-sparc                 randconfig-002-20260519    gcc-14.3.0
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64                        randconfig-001    gcc-14.3.0
-sparc64               randconfig-001-20260519    gcc-14.3.0
-sparc64                        randconfig-002    gcc-14.3.0
-sparc64               randconfig-002-20260519    gcc-14.3.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                             randconfig-001    gcc-14.3.0
-um                    randconfig-001-20260519    gcc-14.3.0
-um                             randconfig-002    gcc-14.3.0
-um                    randconfig-002-20260519    gcc-14.3.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260519    gcc-14
-x86_64      buildonly-randconfig-002-20260519    gcc-14
-x86_64      buildonly-randconfig-003-20260519    gcc-14
-x86_64      buildonly-randconfig-004-20260519    gcc-14
-x86_64      buildonly-randconfig-005-20260519    gcc-14
-x86_64      buildonly-randconfig-006-20260519    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260519    clang-20
-x86_64                randconfig-002-20260519    clang-20
-x86_64                randconfig-003-20260519    clang-20
-x86_64                randconfig-004-20260519    clang-20
-x86_64                randconfig-005-20260519    clang-20
-x86_64                randconfig-006-20260519    clang-20
-x86_64                         randconfig-011    clang-20
-x86_64                randconfig-011-20260519    clang-20
-x86_64                         randconfig-012    clang-20
-x86_64                randconfig-012-20260519    clang-20
-x86_64                         randconfig-013    clang-20
-x86_64                randconfig-013-20260519    clang-20
-x86_64                         randconfig-014    clang-20
-x86_64                randconfig-014-20260519    clang-20
-x86_64                         randconfig-015    clang-20
-x86_64                randconfig-015-20260519    clang-20
-x86_64                         randconfig-016    clang-20
-x86_64                randconfig-016-20260519    clang-20
-x86_64                randconfig-071-20260519    gcc-14
-x86_64                randconfig-072-20260519    gcc-14
-x86_64                randconfig-073-20260519    gcc-14
-x86_64                randconfig-074-20260519    gcc-14
-x86_64                randconfig-075-20260519    gcc-14
-x86_64                randconfig-076-20260519    gcc-14
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-15.2.0
-xtensa                           allyesconfig    clang-23
-xtensa                         randconfig-001    gcc-14.3.0
-xtensa                randconfig-001-20260519    gcc-14.3.0
-xtensa                         randconfig-002    gcc-14.3.0
-xtensa                randconfig-002-20260519    gcc-14.3.0
+All the VMD driver code needs to do is to obtain bus hide range along
+with shadow register values set by BIOS and perform a bus scan.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+The patch also involves small refactoring of vmd_enable_domain function.
+
+Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+---
+v2 : Using PCI features flag instead of devic ID and fixing corner cases
+     for vmd_remove_irq.
+---
+ drivers/pci/controller/vmd.c | 173 +++++++++++++++++++++++++++--------
+ include/linux/pci_ids.h      |   1 +
+ 2 files changed, 135 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index d4ae250d4bc6..ca8738285659 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -37,6 +37,11 @@
+ #define MB2_SHADOW_OFFSET	0x2000
+ #define MB2_SHADOW_SIZE		16
+ 
++/* DMR BAR4 register offsets */
++#define SHADOW_MEMBAR1_28C1		0x2818 /* MEMBAR1 physical address */
++#define SHADOW_MEMBAR2_28C1		0x2820 /* MEMBAR2 physical address */
++#define BASE_ID_REG_28C1		0x2840
++
+ enum vmd_features {
+ 	/*
+ 	 * Device may contain registers which hint the physical location of the
+@@ -77,6 +82,15 @@ enum vmd_features {
+ 	 * proper power management of the SoC.
+ 	 */
+ 	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
++
++	/*
++	 * Newer VMD  with device ID 0x28c1 has unique settings compared to its
++	 * predecessor where BIOS enumerates the entire VMD device tree and
++	 * stores respective configurations including bus start range and
++	 * shadow registers in VMD MMIO space in VMD BAR4/BAR5, otherwise refers
++	 * to as MEMBAR2 or MSI-X bar.
++	 */
++	VMD_FEAT_USE_BIOS_INFO		= (1 << 6),
+ };
+ 
+ #define VMD_BIOS_PM_QUIRK_LTR	0x1003	/* 3145728 ns */
+@@ -142,6 +156,7 @@ struct vmd_dev {
+ 	u8			first_vec;
+ 	char			*name;
+ 	int			instance;
++	unsigned long		features;
+ };
+ 
+ static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
+@@ -374,6 +389,8 @@ static void vmd_set_msi_remapping(struct vmd_dev *vmd, bool enable)
+ 
+ static void vmd_remove_irq_domain(struct vmd_dev *vmd)
+ {
++	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
++		return;
+ 	/*
+ 	 * Some production BIOS won't enable remapping between soft reboots.
+ 	 * Ensure remapping is restored before unloading the driver.
+@@ -393,7 +410,12 @@ static void __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
+ 				  unsigned int devfn, int reg, int len)
+ {
+ 	unsigned int busnr_ecam = bus->number - vmd->busn_start;
+-	u32 offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
++	u32 offset;
++
++	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
++		busnr_ecam = bus->number;
++
++	offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
+ 
+ 	if (offset + len >= resource_size(&vmd->dev->resource[VMD_CFGBAR]))
+ 		return NULL;
+@@ -661,6 +683,46 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
+ 	return 0;
+ }
+ 
++static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
++				       resource_size_t *offset1,
++				       resource_size_t *offset2)
++{
++	u64 phys1, phys2, bar4_2840;
++	void __iomem *bar4;
++	u32 base_id;
++	u8 base_bus;
++
++
++	bar4 = pci_ioremap_bar(vmd->dev, 4);
++	if (!bar4)
++		return -ENOMEM;
++
++	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical addresses. */
++	phys1 = readq(bar4 + SHADOW_MEMBAR1_28C1);
++	phys2 = readq(bar4 + SHADOW_MEMBAR2_28C1);
++
++	/*
++	 * Read and set bus start number from Base ID register.
++	 * 24-bit Base ID register is part of 64-bit shadowed reqid hide
++	 * range register and holds segment, bus, device and function.
++	 */
++	bar4_2840 = readq(bar4 + BASE_ID_REG_28C1);
++	base_id = bar4_2840 & 0xFFFFFF;
++	base_bus = base_id >> 8;
++	vmd->busn_start = base_bus;
++
++	/* Calculate offsets like vmd_get_phys_offsets() does. */
++	if (phys1)
++		*offset1 = vmd->dev->resource[VMD_MEMBAR1].start -
++			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
++	if (phys2)
++		*offset2 = vmd->dev->resource[VMD_MEMBAR2].start -
++			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
++
++	pci_iounmap(vmd->dev, bar4);
++	return 0;
++}
++
+ static irqreturn_t vmd_irq(int irq, void *data)
+ {
+ 	struct vmd_irq_list *irqs = data;
+@@ -711,6 +773,55 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+ 	return 0;
+ }
+ 
++static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
++					unsigned long features,
++					resource_size_t *membar2_offset,
++					resource_size_t *offset1,
++					resource_size_t *offset2)
++{
++	int ret;
++
++	/*
++	 * Shadow registers may exist in certain VMD device ids which allow
++	 * guests to correctly assign host physical addresses to the root ports
++	 * and child devices. These registers will either return the host value
++	 * or 0, depending on an enable bit in the VMD device.
++	 */
++	/*
++	 * For certain VMD devices (i.e. 0x28C1), BIOS places device info
++	 * in BAR4 shadow registers to determine the base bus number and memory
++	 * offsets.
++	 */
++	if (features & VMD_FEAT_USE_BIOS_INFO) {
++		if (resource_type(&vmd->dev->resource[4]) == IORESOURCE_MEM) {
++			*membar2_offset = SHADOW_MEMBAR1_28C1 + MB2_SHADOW_SIZE;
++			ret = vmd_get_bus_info_from_bar4(vmd, offset1, offset2);
++			if (ret)
++				return ret;
++		}
++	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
++		*membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
++		ret = vmd_get_phys_offsets(vmd, true, offset1, offset2);
++		if (ret)
++			return ret;
++	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
++		ret = vmd_get_phys_offsets(vmd, false, offset1, offset2);
++		if (ret)
++			return ret;
++	}
++
++	/*
++	 * Certain VMD devices may have a root port configuration option which
++	 * limits the bus range to between 0-127, 128-255, or 224-255.
++	 */
++	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
++		ret = vmd_get_bus_number_start(vmd);
++		if (ret)
++			return ret;
++	}
++	return 0;
++}
++
+ /*
+  * Since VMD is an aperture to regular PCIe root ports, only allow it to
+  * control features that the OS is allowed to control on the physical PCI bus.
+@@ -784,38 +895,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	struct pci_dev *dev;
+ 	int ret;
+ 
+-	/*
+-	 * Shadow registers may exist in certain VMD device ids which allow
+-	 * guests to correctly assign host physical addresses to the root ports
+-	 * and child devices. These registers will either return the host value
+-	 * or 0, depending on an enable bit in the VMD device.
+-	 */
+-	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
+-		membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
+-		ret = vmd_get_phys_offsets(vmd, true, &offset[0], &offset[1]);
+-		if (ret)
+-			return ret;
+-	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
+-		ret = vmd_get_phys_offsets(vmd, false, &offset[0], &offset[1]);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	/*
+-	 * Certain VMD devices may have a root port configuration option which
+-	 * limits the bus range to between 0-127, 128-255, or 224-255
+-	 */
+-	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
+-		ret = vmd_get_bus_number_start(vmd);
+-		if (ret)
+-			return ret;
+-	}
++	ret = vmd_prepare_offsets_and_bus(vmd, features, &membar2_offset,
++					  &offset[0], &offset[1]);
++	if (ret)
++		return ret;
+ 
+ 	res = &vmd->dev->resource[VMD_CFGBAR];
+ 	vmd->resources[0] = (struct resource) {
+ 		.name  = "VMD CFGBAR",
+ 		.start = vmd->busn_start,
+-		.end   = vmd->busn_start + (resource_size(res) >> 20) - 1,
++		.end   = (resource_size(res) >> 20) - 1,
+ 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+ 	};
+ 
+@@ -868,19 +957,21 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	 * acceptable because the guest is usually CPU-limited and MSI
+ 	 * remapping doesn't become a performance bottleneck.
+ 	 */
+-	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+-	    offset[0] || offset[1]) {
+-		ret = vmd_alloc_irqs(vmd);
+-		if (ret)
+-			return ret;
++	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
++		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
++		    offset[0] || offset[1]) {
++			ret = vmd_alloc_irqs(vmd);
++			if (ret)
++				return ret;
+ 
+-		vmd_set_msi_remapping(vmd, true);
++			vmd_set_msi_remapping(vmd, true);
+ 
+-		ret = vmd_create_irq_domain(vmd);
+-		if (ret)
+-			return ret;
+-	} else {
+-		vmd_set_msi_remapping(vmd, false);
++			ret = vmd_create_irq_domain(vmd);
++			if (ret)
++				return ret;
++		} else {
++			vmd_set_msi_remapping(vmd, false);
++		}
+ 	}
+ 
+ 	pci_add_resource(&resources, &vmd->resources[0]);
+@@ -998,6 +1089,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 	vmd->dev = dev;
+ 	vmd->sysdata.domain = PCI_DOMAIN_NR_NOT_SET;
++	vmd->features = features;
+ 	vmd->instance = ida_alloc(&vmd_instance_ida, GFP_KERNEL);
+ 	if (vmd->instance < 0)
+ 		return vmd->instance;
+@@ -1114,6 +1206,9 @@ static const struct pci_device_id vmd_ids[] = {
+ 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
+ 				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+ 				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
++	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_28C1),
++		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
++				VMD_FEAT_USE_BIOS_INFO,},
+ 	{PCI_VDEVICE(INTEL, 0x467f),
+ 		.driver_data = VMD_FEATS_CLIENT,},
+ 	{PCI_VDEVICE(INTEL, 0x4c3d),
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 24cb42f66e4b..2a8ebe7df92e 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2889,6 +2889,7 @@
+ #define PCI_DEVICE_ID_INTEL_HDA_ICH8	0x284b
+ #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850
+ #define PCI_DEVICE_ID_INTEL_VMD_28C0	0x28c0
++#define PCI_DEVICE_ID_INTEL_VMD_28C1    0x28c1
+ #define PCI_DEVICE_ID_INTEL_ICH9_0	0x2910
+ #define PCI_DEVICE_ID_INTEL_ICH9_2	0x2912
+ #define PCI_DEVICE_ID_INTEL_ICH9_3	0x2913
+-- 
+2.52.0
+
