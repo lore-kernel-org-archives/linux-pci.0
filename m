@@ -1,239 +1,157 @@
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612813ACA42;
-	Tue, 19 May 2026 19:52:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E711352C54
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 20:02:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779220363; cv=none; b=DDsUMcECS42F0ZOdV/FqMUu+viWbZ/VX9Xhknxt5lwGA3xWiJToObgqRqCHbhSHBDB/T9f7P7z6NXCcqopkk+u7exOk8C4Y+sIKXvhUPItm/Gk2yJxCGMCFWBEYd+yp7LPdkNLumJ20kj8mMOZHzmkPazh45/IcbhgWY2da0vio=
+	t=1779220922; cv=none; b=OjLOoCZfBAAoYu8xCCcukLIeg+H95iTwE268HOKq5NpaFPvn+ld0K7ghjrSHEVufL/tQZhKlb+DRh1UwH66qTeKxVBLT5BGSAtudZP3G7VcufTdKGeQ+h84Lnpe3SM6EI1ooVJBvtRkZfqgZPziQ5rrPnUJJyM1G5KO+95OWAOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779220363; c=relaxed/simple;
-	bh=SdXZVxKDS/E22tM60k2sCFv0iWcUBjCeDq8WfJ9NFwU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=a1PI63ocFT1+kdTI6XKFgCgw0TXVPIighqAFYGS1QI86TX23HjdE9cDiIrYM2xmPfuq5acWdjXh2UtRAJVO1A5xLjAsTxgjxHa3I7CltDv+kQEBdjQy4h8L2uwKO/AJ4xPBxGzkt1kG/JeKGDCc5jZ6XomG+TBU8PwXHDHQhWEA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=fvLphWla; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=eVPIpxu3; arc=none smtp.client-ip=80.241.56.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
+	s=arc-20240116; t=1779220922; c=relaxed/simple;
+	bh=jVbSLT4eZONXCbzPo5oDjs53UjPhjZF26rMvREPsuGs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rPoUBPti3Ba8BvjAB8nAyZv69ExkcgNHjESYInz8q5E0mq+I0tRPHPtic+0FsE3jXHFHu4Hm9rCu9CBzYaW8lDbVWzBfvHQ0L1q8usWYP2IJKJTP2s8ok5alYOwGG6AjXSdgWSn6jS8QVPgdZt546EHW+VngyCryENileYoTQWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=kCzUhcds; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="fvLphWla";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="eVPIpxu3"
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4gKlgz6NX9z9vZM;
-	Tue, 19 May 2026 21:52:31 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1779220351;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=6+gHbvvlhDemo3w9adfFUwk9pQ6tK8KAjIOj3e4wzKM=;
-	b=fvLphWlagDBdTtnoDJj5sKKo2BifUn7BFweLnIiyBTxOTaGwI5+qWtbdwfxE/104skmNVm
-	2DN60Y7/JmFf6WscglwJIE/ZgdgPvK7gfbwsHYOdRBr0tJwHz/PjBcKtZNAwdKuyHs2It6
-	ZbMsdEh/R+Sb+ru/u6TjORd70vO/eWRl48zEhGCZhuJiviA/qPfXKQCAs+BlmGEQUcZ7sH
-	5VOSeTzYk9hacOY0ZSW83F50q9iM/gmmwj7idoXwa45oMY8y2wJARfIytwbEy5hrhFh7ok
-	9zEXe4dl67NNS8IU+oF1mEGFcJ5KDfLiZYN/hCO7tx3t2wbQkFL5VGZsZSc90g==
-Authentication-Results: outgoing_mbo_mout;
-	dkim=pass header.d=mailbox.org header.s=mail20150812 header.b=eVPIpxu3;
-	spf=pass (outgoing_mbo_mout: domain of marek.vasut+renesas@mailbox.org designates 2001:67c:2050:b231:465::2 as permitted sender) smtp.mailfrom=marek.vasut+renesas@mailbox.org
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1779220349;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=6+gHbvvlhDemo3w9adfFUwk9pQ6tK8KAjIOj3e4wzKM=;
-	b=eVPIpxu3La2lPp//8dopxrDiUtv4WgrACZaJuLWaNLSMUPhfdsQhSuYUY4GJFp/aFENPM6
-	VsGmDO5d9ifKWWF4zo2NhKdPtjaz3x7Ey4mK920TaQ1kpyZtSEleBhmbureYBqgzau8ikm
-	ua8Zj2OlwV4ivoH+oaj3uC5SO6SV9j+tfyb3OMj0OeEHFKOa4MeiuD/smt6Wpy6K8YL9Oa
-	GdN5BFkn4w690+49UtxUyuu2CCEpmy2j1XTNEvlfQbF+SWNdhJav/YYQ1gSaXPNzzwDvay
-	84vYCMiZyH4Eed/bOV8M9aIbXbutelb95ZmCRvi9kWFpULVLX9HQP197i2MRoQ==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	stable@vger.kernel.org,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Koichiro Den <den@valinux.co.jp>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH v2] PCI: rcar-gen4: Limit Max_Read_Request_Size and Max_Payload_Size to 256 Bytes
-Date: Tue, 19 May 2026 21:51:13 +0200
-Message-ID: <20260519195219.189323-1-marek.vasut+renesas@mailbox.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="kCzUhcds"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2b2e8b95bdbso3725ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 13:02:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1779220921; x=1779825721; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=yXDj/DTIeAGhrO/gWWaG2rh6poiOMsEC8DlUT/nKHTY=;
+        b=kCzUhcds4Rv+z0P4wCDKDxNajCvMMuDpgHkZU/pjhiEAOHzHO0UXhkonggO1L982A1
+         2rvMbhDyWNW+3fYb+mXVSK0ep/2PIh+loRcQ8JUZxj+TPKZgCBFTyBatd9Ef2VTCkCWq
+         vYLbU558Ddzg4Vl/BTsPibmjEFESDMDAPX3kf3FfStIwXTME2JB5bUpsm8nSepNn6YMI
+         Mfm9PdRiedDz2AiEH6PT2N0FOEzzb6YkK/axgTietK5mGR87Wn2NI5t1b8RuJu54LFCC
+         iDbeWyZw1eza9kWshQP4zsV8L11e5dSy3aJe6z37+0Fa4ktiD0vz31mCTSefkgZHTNxg
+         LPtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779220921; x=1779825721;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=yXDj/DTIeAGhrO/gWWaG2rh6poiOMsEC8DlUT/nKHTY=;
+        b=tRjUGIj2+i7mGuJlBPQB6izNgfZs7kM7j8iMaqa3JNPfBMaZ5GOtcNc5/hGYkVUF76
+         Koo6ZcYs2Vq5+0bb15J1HEBESyf2tzn2gOnBI5Ne6z2qka4cjQeB+EBcLR4XRylcZalf
+         aONfk3S9JgV/P1pkPzyUxUctfKEUv4AcqTQ2KS44O8IkAvZXCC62D5PLWjWq8mmmt9B3
+         oovnE4bGqNCZoPlmPlE/QMXNNoWcD0uhLwtG8SeF9X6fZrlGLy4tBdR59gXYUPMbm3cR
+         glbzzlfTqAZ/O8ezlQeQkIRuqnAddsE5HktkSiUCzffi9ta8zMyPZiivJW6gEFh8WLDD
+         tq6w==
+X-Forwarded-Encrypted: i=1; AFNElJ+sxGUANu4PU50vA8K6h0sO+FaOs9tH7piSbky08aSYd4BF9Lsap/ZaajoNEujTU89GWpYV3KLoF7c=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNu1qA0lph0IwRPJxyEQQ69SfoRukXE89ibpgbmxmwjuxJEpu2
+	OgtMI506BYSS1KkcTQsNxNJxyE5V9QEr2zUJjZvYUeAm4SPduS4wdsEB1Izdpe7S1w==
+X-Gm-Gg: Acq92OHOV4oqns3QdoFdbCNB5BhSRkTjZpzzl0pC4aJo5iM54o/A/3NtyZpXBsjFJ1/
+	gABobR3jfcxN5N2951ViFlTURbmU0sK00z/LyLubs3aXakbhZkiu4wxhUSmWdeVTiCoLBv09njU
+	azd2jiCBrMd3QLYDHntpyEe43k2FKZ5KfS/bhy0ysEXDjSGKMmN4fMduvmrfswEVCFJlaBffZTS
+	/o/+d1PxXJMKRovUgPzQtKQbFBGtVkS8/a0ohYXXJ456AfS/jBjtc9CfDSqBBGT3hsTZryw+Dg2
+	fxLrf3i6X7tf+p6BjVoyiRns59ARsSFaCDdH4BN6+p8ZRbxW5JYTdJyjHuuZ8Gp0Qlr05Fcr65O
+	y38wXLjQ8I7rU2cs9UZPbRkiRc4CwjYPhqU18HpitjqSnVsx+ia0TCW+ylZ7bZJaQIsRwsOgQzI
+	DpHcWdlF5sRsOhuDyglVKh6NCmSnYqdyYcnDiVxcu3d0JX/CA5KZ4baQ3IJRBEDf9+lv13VQRFc
+	RNq8wI1
+X-Received: by 2002:a17:902:f64e:b0:2bd:5fc9:27b9 with SMTP id d9443c01a7336-2bdb303b125mr3099215ad.3.1779220919888;
+        Tue, 19 May 2026 13:01:59 -0700 (PDT)
+Received: from google.com (153.46.83.34.bc.googleusercontent.com. [34.83.46.153])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-369517a820fsm15139452a91.10.2026.05.19.13.01.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 May 2026 13:01:59 -0700 (PDT)
+Date: Tue, 19 May 2026 20:01:55 +0000
+From: Samiullah Khawaja <skhawaja@google.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Pranjal Shrivastava <praan@google.com>, iommu@lists.linux.dev, 
+	linux-pci@vger.kernel.org, Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>, 
+	Mostafa Saleh <smostafa@google.com>, Nicolin Chen <nicolinc@nvidia.com>, 
+	Daniel Mentz <danielmentz@google.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
+	David Matlack <dmatlack@google.com>
+Subject: Re: [PATCH v3 3/3] iommu/arm-smmu-v3: Fix ATS state tracking via
+ ats_prepared gate
+Message-ID: <agy2uGGC6wXhG91Z@google.com>
+References: <20260519135323.1558777-1-praan@google.com>
+ <20260519135323.1558777-4-praan@google.com>
+ <20260519144430.GI7702@ziepe.ca>
+ <agx5-jFkU2skyEos@google.com>
+ <20260519145947.GK7702@ziepe.ca>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: f04e75fb567f9f9b0a0
-X-MBO-RS-META: wus7jgw9quh84oma7m16itugiwa3uu39
-X-Rspamd-Queue-Id: 4gKlgz6NX9z9vZM
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20260519145947.GK7702@ziepe.ca>
 
-R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
-Max_Payload_Size (MPS). PCIe specification indicates that the MPS
-must not exceed minimum MPS of any element along the packet path.
-Force limit Max_Payload_Size to at most 256 Bytes for each device
-connected to this PCIe controller.
+On Tue, May 19, 2026 at 11:59:47AM -0300, Jason Gunthorpe wrote:
+>On Tue, May 19, 2026 at 02:55:54PM +0000, Pranjal Shrivastava wrote:
+>> On Tue, May 19, 2026 at 11:44:30AM -0300, Jason Gunthorpe wrote:
+>> > On Tue, May 19, 2026 at 01:53:22PM +0000, Pranjal Shrivastava wrote:
+>> > > @@ -4450,7 +4450,8 @@ static struct iommu_device *arm_smmu_probe_device(struct device *dev)
+>> > >  	if (dev_is_pci(dev)) {
+>> > >  		unsigned int stu = __ffs(smmu->pgsize_bitmap);
+>> > >
+>> > > -		pci_prepare_ats(to_pci_dev(dev), stu);
+>> > > +		if (!pci_prepare_ats(to_pci_dev(dev), stu))
+>> > > +			master->ats_prepared = true;
+>> > >  	}
+>> >
+>> > This should fail not keep going, it is a kernel bug if
+>> > pci_prepare_ats() fails.
 
-R-Car Gen4 Reference Manual, chapter 104.4.8 Usage notes for
-MRRS (Max Read Request Size) states:
-  Please set "Max Read Request Size" to 128 bytes or 256 bytes.
-  If "Max Read Request Size" is set to anything other than the
-  above, the transferred data will not match the expected value.
-This limitation also seems the apply to devices issuing MRd TLP.
-This limitation can be triggered by using non-HMB NVMe SSD with
-Max_Read_Request_Size 512 Bytes, for example Crucial P5 Plus.
-Any write into the SSD (MRd TLP issued by the SSD) longer than
-256 Bytes wraps around at 256 Byte boundary, and the same data
-are written into the SSD starting at offset 0 and at 256 Bytes.
-Force limit Max_Read_Request_Size to at most 256 Bytes for each
-device connected to this PCIe controller to avoid this behavior.
+I agree with this approach, as it captures the bug at right place and we
+can fix it. This maybe changes the simantics of prepare_ats(), but I
+agreed with this.
+>>
+>> Are you suggesting it's a kernel bug if the STU doesn't match?
+>> IIUC, it can fail because of the following cases (including the PF STU):
+>>
+>> 	if (!pci_ats_supported(dev))
+>> 		return -EINVAL;
+>
+>It should not be called if ats is not supported, iommu driver bug.
 
-An non-HMB (Host Memory Buffer) NVMe SSD can be identified using
-the following command. Affected SSD reports 'hmpre' field as 0:
-"
-$ nvme id-ctrl /dev/nvme0 | grep hmpre
-hmpre     : 0
-"
+So basically iommu drivers should call pci_ats_supported(dev) before
+calling prepare_ats() and probe fails if prepare_ats() fails.
+>
+>> 	if (WARN_ON(dev->ats_enabled))
+>> 		return -EBUSY;
+>
+>It should not be called if ats is already enabled, iommu driver bug.
+>
+>> 	if (ps < PCI_ATS_MIN_STU)
+>> 		return -EINVAL;
+>
+>PAGE_SIZE is illegal somehow, build bug.
+>
+>> 	if (dev->is_virtfn) {
+>> 		struct pci_dev *pdev = pci_physfn(dev);
+>>
+>> 		if (pdev->ats_stu != ps)
+>> 			return -EINVAL;
+>
+>The kernel failed to setup the PF, iommu driver bug.
+>
+>> If ats isn't supported or if there's a STU mismatch, shuoldn't we just
+>> ensure that we don't try enabling ATS for that device?
+>
+>No, the kernel is broken somehow.
+>
+>> Returning an error here would fail the device probe.. which seems like a
+>> big hammer for devices that can't reliably use ATS..
+>
+>It has nothing to do with devices, the kernel is broken if it fails.
+>
+>> We have a special case in SMMUv3 where we pre-allocate stuff in prepare
+>> but actually enable ATS in attach_commit, which IMO neeeds to be gated
+>> based on client device's ATS capabilities?
+>
+>Yes, all of this should be gated by pci_ats_supported()
+>
+>But also failing to enable should translate into a failed attach.
+>
+>Jason
 
-The symptom is a read from the SSD which wraps around at 256 Byte
-boundary. The test for this symptom can be implemented by writing
-512 Byte of random data into the SSD and reading the data back. If
-the read back data repeat after 256 Bytes, the device is affected.
-"
-$ dd if=/dev/urandom of=/tmp/data.bin bs=256 count=2 \
-  dd if=/tmp/data.bin of=/dev/nvme0n1 bs=256 count=2 \
-  dd if=/dev/nvme0n1 bs=256 count=2 of=/tmp/readback.bin
-"
-
-Expected data:
-"
-$ hexdump -vC /tmp/data.bin
-00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca
-00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b
-...
-00000100  7a ce 3c b2 e1 d5 d9 11  88 63 10 59 76 3c dc 32 <-- random
-00000110  72 32 2a 7d a3 e1 aa 13  7c da 58 a1 7b 21 11 50 <-- data
-"
-
-Faulty readback, collected without this change in place:
-"
-$ hexdump -vC /tmp/readback.bin
-00000000  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <---.
-00000010  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-. |
-...                                                          | |
-00000100  97 81 b7 3b 0e 38 2b 4d  a7 d3 e0 47 ff c2 4b ca <-:-+- repeated
-00000110  c1 85 98 f0 4a ac 03 a0  3b ab f3 19 44 dd 06 8b <-+--- data
-     ^^^
-      |
-      '--- Repeat starts at offset 0x100 = 256 Bytes
-"
-
-Fixes: 0d0c551011df ("PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode")
-Cc: stable@vger.kernel.org
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Koichiro Den <den@valinux.co.jp>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Magnus Damm <magnus.damm@gmail.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
-NOTE: - Possible EP mode limit of 128 Bytes is currently pending
-        documentation team input
-V2: - Dispose of the reprogramming of MPS/MRRS altogether
-    - Dispose of the entire fixup quirk
-    - Replace both with bridge enable_device hook
-    - Limit MPS/MRRS along the entire packet path to follow
-      MRRS limitation requirement
----
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 51 +++++++++++++++++++++
- 1 file changed, 51 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index 8b03c42f8c84c..9fe34ca7ce532 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -305,6 +305,54 @@ static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
- 	return rcar;
- }
- 
-+static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
-+					struct pci_dev *dev)
-+{
-+	/*
-+	 * R-Car Gen4 PCIe controller has a hardware limitation of 256 Bytes
-+	 * Max_Payload_Size (MPS). PCIe specification indicates that the MPS
-+	 * must not exceed minimum MPS of any element along the packet path.
-+	 * Force limit Max_Payload_Size to at most 256 Bytes for each device
-+	 * connected to this PCIe controller.
-+	 *
-+	 * For details, refer to chapter "104.1.1 Features" in either of:
-+	 * R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025 or
-+	 * R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025 or
-+	 * R-Car V4M R19UH0217EJ0100 Rev.1.00 Dec. 12, 2025.
-+	 */
-+	if (pcie_get_mps(dev) > 256) {
-+		pci_info(dev, "Limiting MPS to 256 bytes\n");
-+		pcie_set_mps(dev, 256);
-+	}
-+
-+	/*
-+	 * R-Car Gen4 Reference Manual, chapter 104.4.8 Usage notes for
-+	 * MRRS (Max Read Request Size) states:
-+	 *   Please set "Max Read Request Size" to 128 bytes or 256 bytes.
-+	 *   If "Max Read Request Size" is set to anything other than the
-+	 *   above, the transferred data will not match the expected value.
-+	 * This limitation also seems the apply to devices issuing MRd TLP.
-+	 * This limitation can be triggered by using non-HMB NVMe SSD with
-+	 * Max_Read_Request_Size 512 Bytes, for example Crucial P5 Plus.
-+	 * Any write into the SSD (MRd TLP issued by the SSD) longer than
-+	 * 256 Bytes wraps around at 256 Byte boundary, and the same data
-+	 * are written into the SSD starting at offset 0 and at 256 Bytes.
-+	 * Force limit Max_Read_Request_Size to at most 256 Bytes for each
-+	 * device connected to this PCIe controller to avoid this behavior.
-+	 *
-+	 * For details, refer to aforementioned chapter in either of:
-+	 * R-Car S4 R19UH0161EJ0130 Rev.1.30 Jun. 16, 2025 or
-+	 * R-Car V4H R19UH0186EJ0130 Rev.1.30 Apr. 21, 2025 or
-+	 * R-Car V4M R19UH0217EJ0100 Rev.1.00 Dec. 12, 2025,
-+	 */
-+	if (pcie_get_readrq(dev) > 256) {
-+		pci_info(dev, "Limiting MRRS to 256 bytes\n");
-+		pcie_set_readrq(dev, 256);
-+	}
-+
-+	return 0;
-+}
-+
- /* Host mode */
- static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
- {
-@@ -313,6 +361,9 @@ static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
- 	int ret;
- 	u32 val;
- 
-+	if (pp->bridge)
-+		pp->bridge->enable_device = rcar_gen4_pcie_enable_device;
-+
- 	gpiod_set_value_cansleep(dw->pe_rst, 1);
- 
- 	ret = rcar_gen4_pcie_common_init(rcar);
--- 
-2.53.0
-
+Sami
