@@ -1,165 +1,324 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010021.outbound.protection.outlook.com [52.101.56.21])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011006.outbound.protection.outlook.com [40.93.194.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E53F2D94AB;
-	Tue, 19 May 2026 04:52:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 558402475E3;
+	Tue, 19 May 2026 05:23:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.6
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779166364; cv=fail; b=WpAuoXvrHwq29xJ9kCSuRrra21baMxjGEfGK0mEGrkiZ0XMrPOBSy3924DjHn6gfXPnq1qYXVj/6PQPTTa71GZaj4xxAJ5eDF6tO3qEZwkoKwYaPbXjYzheDOdyEacLMuAH11eyrs0skLKYnzT9dSah6FFHmEfbr60U0WcbZwvQ=
+	t=1779168233; cv=fail; b=fXo4K145Rhu7jqTNyUk2LssjtWgUqYlmjpuzzn6ZSGgimUg/5lTwLyFxG5VMZH/Q+rNT+7va/zZtFy2JSK3TBs3o8clryD2JSt1b38cpwybjTOBblFYtuTiN4My0LYUhh6TZ+MSBkMV7rTOEVDoyG3IHiw3ujFSC2DEuyqohvJA=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779166364; c=relaxed/simple;
-	bh=G+VVLerT+G5Gy4z561KGf3VfM/y2mOERHPPN8/x5yZw=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=MCZzHlUbO2u5VhqDyg+bucp83nnHP3bs3wGuCfLGy1vzUSbOugD1jBkzFLvgtSjwavPAaicMXD1Wz8PVIUegJKPlbI3iWMNod36VIT0ZcQQD0HWGcjGxu1EW9TIisOetntTDIu3Odn1ot/G+YJQfWZFsZkQsL2pSTOVVmRb+8Yo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=XekseiGb; arc=fail smtp.client-ip=52.101.56.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1779168233; c=relaxed/simple;
+	bh=IJ4rEDH471x0BjNkX0qWJ0zz1av6GWxTIaeTQNK6JCc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Lgi+uvt+VwsXgmQH3mJa1PgVw8CPO/wv5CEpEap+CqrHcU2ZE3wuqAux9yZzWmoJt1verybMxbGnc+eWrZmiZlfeDyv56wThP2cNkTBC8MKL/dAwMcM449eCQoDBWl/sW7LaSSUxjcH6l8/kKQAjN6ziuW4+ApW2fjh8rVGQJfs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=Iaex5hli; arc=fail smtp.client-ip=40.93.194.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="XekseiGb"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Iaex5hli"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mBs08zXrRtw7+39zahp21Pg/C/oQoK5TOfmR2X1FEGhd6egVnp62a3trdQLF+aUX/Zjqi/QzP0I8Xx0KwqSvf/sm5F/rVramhmLv1cEuxTk5ggau0ulg0fsTbMEBgGCrip2K7zuwwfekQxiUw1A6t05j43MOwoMVJF0wBZi2jD/wN6/6cvE3goOTZWBNNjG6Z5k21x1JtVL0EwC7lRbZZBzW6lOGB5VkEgIw07J7qzgkY8wpBuQsi9l34/Ku0SJbwmdmc0qwE5JhZlLpZVDCfR318EkAFARkZjIXS3Hk7aJv04m+21Y9rRehkW+0JcnJRFkeifVF9jQsagiDciCiWg==
+ b=yYmfKldSXsS68MGvzF7dMDtcP9mV0Cq7xeumUfX00qfCuR/rIeAYWYQCwB43Cn8j2QeReO+pNVNuVA/qAPzHcBY65sxUtU5dRSR6hLC5GLsGLnU0WyrjeF0hgGqvpPXWAhtK5kKe1/TzysemRu2Sl/KTCIBRfzJgZJnR0a3J/S9mtO8M/jshLzR1R9TrNXRS+KugzqWS3yZ4IVGdxd/KHN6mK3wZ/h7RYOv2r6ySyEeakkNDkSvXB8LsW4cQgteIWZusrvLK4oAimQGKCBhHHGlHofk/18dLr8yFPcjioPd+1QF+dHUQyfmW4vKH3UKinmcfAFEkgKUbj+SRuDTTIA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=G+VVLerT+G5Gy4z561KGf3VfM/y2mOERHPPN8/x5yZw=;
- b=fg3jmVA+1HYhnapxDfJv0UzpTL69VM82DgMR7cp5E7Dtw+tVad7oh2OQc7808IfgozsN7g7k3lHLBOoYpn7464JNbGVqwKYEjStZXJcFjPrYO2VDbX/NvCUf03L5fZRG/M23LQXqBa8td5fjUvdVI1y/YG6udSQ0Fg5LG7NEdwAD40Hmtz42ZMa0RJGO9nBXscvh60fcVcMPpv0FsnGGfCSIQ5b03Vj+p3mB1hahHumNEVxg0tu7BODHgfYkZpMpcGUVgFh6Thy5Hh4r7z2+3BSHVoaODg+9EKWZJ1baY1hceZBIhQC56/0tkfYg9sDPAHc9Z5NM3rw1MKui8uux6Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=IEuzuypOSbzs9ULkbb8JAlVLCOHOMYwOORuaqMSb8GE=;
+ b=yd4Rdc0snEjD+jM8zlwwD3JkUDf8smjHjeLvPH7OOr2I370EPOCqY/34MBf3gX2uJZEF1fAfxIuKCSzrqL9O8QavTMR0kWowDKbQku57X8q/Rbj/sNGdRYrsr5lmHkw0YI9gsbgMkZuMuWNHFYIbnitgPhLp/t81b8t5zzM8ffAIMnXgDCFORhOBtgRaDxE87/jxHax/ahQPHOFgdH3CgS8FnWQwHE/UZJnoRMh3ijdprYoP+KMJ04VroBQkx8T9iPfl4TyRQ8QmuHQ4D8TlkzUu53qwXT7WKvwPnBpFuYudrQA+x2isMrtObI+XM1WVsoc9cGvNbRcLkBb8rWjWAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.21.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=G+VVLerT+G5Gy4z561KGf3VfM/y2mOERHPPN8/x5yZw=;
- b=XekseiGbT2Bt9KZiAcUk6TMUUNrc/WDt5k1U8rwHFUL85PGk+zrVgX5s8r0NSpkQzwZhtwVf/9EdrgzIAP0I0dpr3SIANFeqh9g/kx0SGbXwS/CRzH2rT/Dub4LvnKs5lHDDryh/8bOuYDNc6l17tJczI3ow+dM/BQh+hSUQ3jz1sqOX8HLqD2IfjJ4WR0oVFOc/K1FGGReu1rCorEMxVS5cPVUOAuhBcQd96gXag9/P9Ig9ILztICa2rvCnP9a2nGpODK+c/nYBFoWYM/TOvAUdAXqz1KCgwtCRB+kV+kCfUws9AFjnNilx2Ea0Os6+ssS/BeubccYmJ4F2Iyzi7Q==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com (2603:10b6:207:4c::31)
- by CH3PR12MB9344.namprd12.prod.outlook.com (2603:10b6:610:1c8::7) with
+ bh=IEuzuypOSbzs9ULkbb8JAlVLCOHOMYwOORuaqMSb8GE=;
+ b=Iaex5hli0do+mnFi58ityAEv7wT03v+9LCnEw6+ho5SZZ8nUyfjFxYsu5QPjwNBz38ZmrjxaG9hSnB4MvJjybMBtz9619BKwlMLV2nxtYJ+9NJipkiIkWA9O/H0qPLcnw/MId77+KSivoc/W3yPObLdxsF7h8prNWHzahfaw3V0=
+Received: from MN2PR08CA0025.namprd08.prod.outlook.com (2603:10b6:208:239::30)
+ by SA1PR10MB6391.namprd10.prod.outlook.com (2603:10b6:806:257::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.18; Tue, 19 May
- 2026 04:52:36 +0000
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0]) by BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
- 04:52:36 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 13:52:32 +0900
-Message-Id: <DIMDU2XL6PKO.RUXA0XPFT94R@nvidia.com>
-Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-Subject: Re: [PATCH v3 10/27] rust: pci: make Driver trait
- lifetime-parameterized
-From: "Eliot Courtney" <ecourtney@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
- <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
- <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-11-dakr@kernel.org>
-In-Reply-To: <20260517000149.3226762-11-dakr@kernel.org>
-X-ClientProxiedBy: TYCP286CA0095.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:2b4::18) To BL0PR12MB2353.namprd12.prod.outlook.com
- (2603:10b6:207:4c::31)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.23; Tue, 19 May
+ 2026 05:23:48 +0000
+Received: from BL6PEPF00020E5F.namprd04.prod.outlook.com
+ (2603:10b6:208:239:cafe::ea) by MN2PR08CA0025.outlook.office365.com
+ (2603:10b6:208:239::30) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.25.24 via Frontend Transport; Tue, 19
+ May 2026 05:23:48 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
+Received: from flwvzet201.ext.ti.com (198.47.21.195) by
+ BL6PEPF00020E5F.mail.protection.outlook.com (10.167.249.20) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.48.11 via Frontend Transport; Tue, 19 May 2026 05:23:47 +0000
+Received: from DFLE203.ent.ti.com (10.64.6.61) by flwvzet201.ext.ti.com
+ (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Tue, 19 May
+ 2026 00:23:45 -0500
+Received: from DFLE206.ent.ti.com (10.64.6.64) by DFLE203.ent.ti.com
+ (10.64.6.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Tue, 19 May
+ 2026 00:23:45 -0500
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE206.ent.ti.com
+ (10.64.6.64) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Tue, 19 May 2026 00:23:45 -0500
+Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64J5Ne5Y3358948;
+	Tue, 19 May 2026 00:23:41 -0500
+Message-ID: <56aac7f9-0b85-49e6-8d48-a1fc3aee8b68@ti.com>
+Date: Tue, 19 May 2026 10:53:40 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/4] PCI: endpoint: Add DOE mailbox support for
+ endpoint functions
+To: Manivannan Sadhasivam <mani@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<kwilczynski@kernel.org>, <bhelgaas@google.com>, <corbet@lwn.net>,
+	<kishon@kernel.org>, <skhan@linuxfoundation.org>, <lukas@wunner.de>,
+	<cassel@kernel.org>, <alistair@alistair23.me>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
+References: <20260427051725.223704-1-a-garg7@ti.com>
+ <20260427051725.223704-3-a-garg7@ti.com>
+ <hohf2lui4dyu6fzypl7kkwfvgf73ldmvinok7dfukhaornhkqp@n336bwjkvb6f>
+ <20dce1c6-d24d-4344-86a9-f434fe52038b@ti.com>
+ <ies3cbldthjv4vgraibgo642pfuvcr3lsixgxeisqa34ygkpbf@dd2qstv5fiig>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <ies3cbldthjv4vgraibgo642pfuvcr3lsixgxeisqa34ygkpbf@dd2qstv5fiig>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL0PR12MB2353:EE_|CH3PR12MB9344:EE_
-X-MS-Office365-Filtering-Correlation-Id: ac6b8dac-9f77-427a-7056-08deb5627272
+X-MS-TrafficTypeDiagnostic: BL6PEPF00020E5F:EE_|SA1PR10MB6391:EE_
+X-MS-Office365-Filtering-Correlation-Id: 27112f32-9045-41bc-e7c4-08deb566cd6f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|10070799003|11063799003|4143699003|56012099003|22082099003|18002099003|921020;
+	BCL:0;ARA:13230040|1800799024|82310400026|7416014|376014|36860700016|18002099003|22082099003|56012099003|3023799003|4143699003;
 X-Microsoft-Antispam-Message-Info:
-	VkNDKxjDMQXNYT5cCHtM7JEpdAlXJdA9gQTddaPx68r3xR01EWdxcMIuiCnsGjFui/xka7EFAaovdGD83UawLYDzgrBkZSz4Z0QC0qdHUNE9XBAS36FhDM6oEc31Um3Eu2qfFw6qtBfq4vgU0CNx9u9/RhONFXuOkfKTEiZ4fLFq8XRbghoGYaDp07N9hVdtzyVQbQNAhyqR+7/QJtOspxDsn1nJTC5rl9UWXgMtHzxC/lW2JyRiQdx5yT5pwmGEx2n1YNOAxuO/iMpqA99nxnFVeT7F8k6Q3rtZykIQR7g2AdOLUq7YX7VQtu+537Y7/yRJzQJEsBJoW/ixjuK285BLgCMOIQe2GLXbn8eNmQKibmQghDAugcq4X+z+4lpKImT3vHB6eoCL1vv+qh9MxjPr1Gb6ruB4qwKXB8OfSfKhxtVhZ3jPJH0hSCNW8C6o3cvCB/ZX0HwNz/9tjCePWTU8sA7ga2bUShNFXy1c1UNEG2ZAuvbY7wTHRhHWPfUxnzZj2EGI0GpRrLXd3kcA3GzsXmSbdlwCrfski/32LZx+hAGBsleBQdS0oAdKUy3dbouzforYYJLUsdyH3ks866ig0PJR4+Ru3KbPgod9KOTziGxDhpEwff7a1Tb1MsIxrFiRK4ZFzamZEPti+z3Zas/vmVC1G4tv0/ir8BDcWTQQZMTzfOBMcllFB2ndxkI+wmotHh15AiAAfUVaJ+trqU7O/RwtkETXwbEy/+QCrL4=
+	0CCmWohtAQ350zPCMYlPNztzbvpS25hibeVllOrrrBItGsqBqawJ1TXqh+iQIpTvR8zt8nJIRt5N4VzIG3XVhGV8KSOe/PmPE3tOHN3YDp3zxn1rjC4ws6u/GqaKh4JFUla8NLAqaN5uQxh6n9tM/zFW3MMm7BBONWiulb7a+3s0x6trQQhH/Si40moHJS4VgnM3t+PV5LquEHyH3gQoOHIUQPNQC10+mcIDDvOl/3Fh42mkvSxcDHHbDHD3+czLABf8heBTrMj5cuOx6vmvNGrSan2pQrx+jZzFY9vNU1e+/HlgjF39zGiqbfHeU70XQl8Uj8X4KROm8ZCRebqLip6Q6q1LtvD5k/+BIJWanfMFqdDkOR2/8cPDyMnL7awJTiINFIN1im6vX4Nlly71ON5e6sRIf6hAaaGle/g9Drh47IEYqoz8NeSzP+YaAfo8OzjDyUhWrSWuZuw6zkcraBv2WGt640+fBiYuBsD+NxXe4h/Qb9Vp0dD3ku/SbgSVAkv1OAEaE72lv2in96qTtsfW0MoF9weFs8ltCkRQD0cLU8AB8sbaLSKbe332NCwSlLfXAiHv2GG+3/C0DoV2Zyb4BlZ1AG1YSxWPX6iJpeTHwYYv2YEoWqac22/jamaDMbnIMrUR+pc6tTcTgSmAJi7l9byOvDhOw1tYocY0N842dQALgEOKPTiS1uaGg8qx1zgnf+okkHMrv/Z1ZahI4qlIiOtOHiWXVHLo8dJfQo8=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2353.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(10070799003)(11063799003)(4143699003)(56012099003)(22082099003)(18002099003)(921020);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(7416014)(376014)(36860700016)(18002099003)(22082099003)(56012099003)(3023799003)(4143699003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?NDN0dGxaTFdkb1NQVmlvK1R0aThHYTNhbVlxNnQxemdiNW5pS3h6OFZXWUNa?=
- =?utf-8?B?aFJKa2dMRFB4N1phc3RNMWdmbWlCVGtxL2RxVEl2Zkd3RW03LzM3QWxVMllM?=
- =?utf-8?B?SmtpR1ZqWXZIcWorM2JPRitZVE16Ry9HdnRrNG5GeDNIeFdYeUtXN0RlOGtU?=
- =?utf-8?B?L1FPSmszeTcyVndhc3FIWFQ1R1ZSL1ByUHVHaE5kV25hMWlLMWk2SmpEc1Mw?=
- =?utf-8?B?WWxzMi84dUY1eVZaakRwNGlVSVV5cjM5NitGd2VQTGpIS2tUYlNxNkVUbXNo?=
- =?utf-8?B?YVRlOXdYK2VqcDNXdUFVSUVZSmJFY3B3MUEwY3l1T1N4dUdCbnFQK0pLQVp2?=
- =?utf-8?B?NlFFU0p0RFNqT0h0T0d0WWI5YUc5Z3JDUVF0dVdzV04wODZZVnpNMW5aWEdz?=
- =?utf-8?B?ZjJYV0FLdXphbXVQQ0pleDhKZktlZjBRSDhZKzh4VVpKRHA5Rm5yS0tTS0lL?=
- =?utf-8?B?NWs3S2NIYzdHUitNSzN1YVFPT1g1a0lhWFhxeHJOaW41QjBOcGVhV1pqRlZL?=
- =?utf-8?B?V2M1WTFqMkVrQ1NyZC9lWHM2VHJwb3JpeSsxcTY4WE5UaW52MnNZbkMwTGho?=
- =?utf-8?B?OWxuQW5QV1pRWXBVb2xwRWhPbmZqZG1xOVRyd2hldTFvd2lHZFhTQkdzV2RR?=
- =?utf-8?B?b3VPRDlOWmZKVTY0YnlKcTlBVVhDNWpwUURHMnhsZUwyUXFNRkV2cDA2VlRS?=
- =?utf-8?B?Nk1tclBCcnRQelhKcGU2Y1I1RkpoUDVFenRhVXdPcXpkaW5wSVlYY2Q4Rjls?=
- =?utf-8?B?NnUyV0svU3NQcitnWXpLaG5ZeW9CQlRxNDczN2VlMmtBdDE3c21qVG0rK1dy?=
- =?utf-8?B?MUk4TUY3VFN4VW5QRXd6ZjdmNkZpSkxZYlRuVkFLMndrUGNMY1JucjRBWStV?=
- =?utf-8?B?bmRQdmRaUFRTbjEyY2p1VnBsR2hmWXJCUWpzUFA1NEtPak5aZ2VhZ1JFSzhP?=
- =?utf-8?B?WUdMVlQ5bU5hbXhhdk00YmVlSlc4U25uYWR4aHM1VktrM2hVUkp6YjRuMk9r?=
- =?utf-8?B?UmdQY2NPQTQzRVpibmwxU1ZmcGNrVU1kaHlIRnc3NE5pYkRXUENwYm02a0Jh?=
- =?utf-8?B?Ukd2Sk5aZ2NpZXVFdjdQak03NmFmSzdmdWxJYkFhUW5qSTh4NmRZTGd2akJN?=
- =?utf-8?B?TUJRT1o3RDUwLzNKT1FCYzBvYWFhSlIvRUI1ZXBta2o2NHhhV2tqc1lrcFBP?=
- =?utf-8?B?MGdnMkRKWFAxU0hpSitwTVRHcHVycjFaVFJ3VUNSWUJKNU5pb3piaTlacHJt?=
- =?utf-8?B?QjI4TFFXWXl1UFBxekJWNjRhQzNoUC96THJoVkZYKzg4RTBrT3dSR1BmRTJI?=
- =?utf-8?B?YUw1aGF4Ni9XOUxJTDZNVXJOL25UK3JnanUwQWo4TDJoY3daR2JQSzRBcnkx?=
- =?utf-8?B?UVhIVGdDeG41YU1VUlZLQzdJNHBXTVI2dEFlNUNXVERRYS9ldFFYNWtCQ0JK?=
- =?utf-8?B?cVRjWFowMWhyOUk2YW1URHVCb0ZhVjYwMU9zTUZLY09EY2RpUHdKVldTVnNV?=
- =?utf-8?B?RkFTc2NqL1ZWYkJrZnlPcnloWVI3cmxCcXNvaUNsb3hQb1llYUdUcXJYT3Az?=
- =?utf-8?B?TVBZZXZXUWRzaXB4N2FXOHZhSWpkTmhUVmp0c09qSzhtN25JRnNLZzZ4aTZU?=
- =?utf-8?B?L1FXREF4WnNTVTN2cUQ0aWc0c2creW9SQy85d01LaDlDR0RTbnA1eGF3MVQ0?=
- =?utf-8?B?am5EK3pHS2ZHRkV2QzlTb3FYcFkwZXYvakNDTk9RT05PVXJaOXdmM1hYTWty?=
- =?utf-8?B?bUZXa1Y2MHVNaTRBV0JpK05mSFpuMVM2ajlUWm03cW5OWUpOcjV0bzk3UUNp?=
- =?utf-8?B?cE0vOGFxZUxCUCtYS2xUSWFPQXRBcnNadUhkNDVVdXU2dnp5bXp0N2JDQjM0?=
- =?utf-8?B?ejR4QWVCbmRYMkV4ZTJyTllGcTY5enpJOGY3aTRsN09jK2tDcC83WVNPMW0x?=
- =?utf-8?B?aGtLdHdkRTBUSzFYUFVHbk15dDZnR3o3K2d6SzFCRm1Hc3V3bTd1alNFemFI?=
- =?utf-8?B?MGNPaVV4T1d5SGU4d1I5c2dWTjFyN3RlbXVkd1pEcmM3bENibXZaRm9oOUtP?=
- =?utf-8?B?MzVwOEJnZDhLbDl6dVM3dk5GVTRGVERNVVluQWZ1a3VaQmJlVjZEa0IxSDJn?=
- =?utf-8?B?d3I3bmMvZHpQalhTUi9aRnRyaEdOWE53S20vU3NmNWtRSk1RcjFBNHMranFn?=
- =?utf-8?B?N1lUN1VKcFdzNGhjNDYvQ1pHZ3d4aVRtRHRhb3ZZT3cwR3lFZGwraWNvVzdX?=
- =?utf-8?B?d3FaVEZlaCtPbFVCbEtHeHFCWitxV2NUamZGbEhQNHA1VmgzbnJ2Um9EYkpS?=
- =?utf-8?B?TzlvVStLTUx5RG5STktQaWZVeWlyMDIzbm1ONUJ3RjhrOXdNYy9lRDVya3Fr?=
- =?utf-8?Q?j2vCxj1Tz/J08YUmoIBO0LWELPyZqUdZCptwzgReUc/yJ?=
-X-MS-Exchange-AntiSpam-MessageData-1: +cEQDwiI+F6xyQ==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac6b8dac-9f77-427a-7056-08deb5627272
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2353.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 04:52:36.6722
+	fAnVpEF6fOcoul6JS/3Zey4wux3ItjWsSXUNvH5yv9DrWQzA51iifbTQRzYi4c+Im4uxdKxTqNqjdftE/7ghxk1oMh+u8POz/qjVSN2Frif3Rf/uIdL4OEh41QnkWzMq+YF6k04eGzmR/W0NEbaXxnb4RNKUBN7vsUixTh6f61gwypvWObH/azUhP95gxGAhdNuxW6cf/PuvzXsX/avzExbocwCmiunJIHngXWrDZthBQZA51Z76iYaaCjF/dyBN5H9m+KAWhc0xQZlelbwbD80gInUVt22Ya0hwwKWbUsgBQsKF3f1svtm8CCsK0icOm3d1pvvjpvBwB6iOdqZIaaCEP8YD2A0ea5YIPU3xxJOrefirsbQONZuhR6326wgsAxfWaXjN8mUVkD77XOqC8183tpEPMNrxsMCrI1vUJuNLBAdKfFmabJoNOT/BKylj
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 05:23:47.0006
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fhwAbl8FwbRGo/PnRF3WDI9aKM0SBw7VAlFz+zhTXIlmSHeOKCdUInkh+DpsNQhFrmakqThMMIJQmb+sX5xarA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9344
+X-MS-Exchange-CrossTenant-Network-Message-Id: 27112f32-9045-41bc-e7c4-08deb566cd6f
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL6PEPF00020E5F.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB6391
 
-On Sun May 17, 2026 at 9:00 AM JST, Danilo Krummrich wrote:
-> Add a 'bound lifetime to the associated Data, changing type Data to type
-> Data<'bound>.
->
-> This allows the driver's bus device private data to capture the device /
-> driver bound lifetime; device resources can be stored directly by
-> reference rather than requiring Devres.
->
-> The probe() and unbind() callbacks thus gain a 'bound lifetime parameter
-> on the methods themselves; avoiding a global lifetime on the trait impl.
->
-> Existing drivers set type Data<'bound> =3D Self, preserving the current
-> behavior.
->
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
-> ---
 
-Is this really sound without a covariance proof? For example, with this
-version you could stash a Cell<Option<&'bound pci::Device<Bound>> (even
-with Gary's suggested Core<'_> change) and then observe that reference
-on Drop of Data, which seems unsound to me.
+
+On 15/05/26 18:10, Manivannan Sadhasivam wrote:
+> On Fri, May 15, 2026 at 11:05:29AM +0530, Aksh Garg wrote:
+>>
+>>
+>> On 14/05/26 13:33, Manivannan Sadhasivam wrote:
+>>> On Mon, Apr 27, 2026 at 10:47:23AM +0530, Aksh Garg wrote:
+>>>> DOE (Data Object Exchange) is a standard PCIe extended capability
+>>>> feature introduced in the Data Object Exchange (DOE) ECN for
+>>>> PCIe r5.0. It provides a communication mechanism primarily used for
+>>>> implementing PCIe security features such as device authentication, and
+>>>> secure link establishment. Think of DOE as a sophisticated mailbox
+>>>> system built into PCIe. The root complex can send structured requests
+>>>> to the endpoint device through DOE mailboxes, and the endpoint device
+>>>> responds with appropriate data.
+>>>>
+>>>> Add the DOE support for PCIe endpoint devices, enabling endpoint
+>>>> functions to process the DOE requests from the host. The implementation
+>>>> provides framework APIs for EPC core driver and controller drivers to
+>>>> register mailboxes, and request processing with workqueues ensuring
+>>>> sequential handling per mailbox, and parallel handling across mailboxes.
+>>>> The Discovery protocol is handled internally by the DOE core.
+>>>>
+>>>> This implementation complements the existing DOE implementation for
+>>>> root complex in drivers/pci/doe.c.
+>>>>
+>>>> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+>>>> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+>>>> Signed-off-by: Aksh Garg <a-garg7@ti.com>
+>>>> ---
+>>>> +
+>>>> +/*
+>>>> + * Global registry of protocol handlers.
+>>>> + * When a new DOE protocol, library is added, add an entry to this array.
+>>>> + */
+>>>> +static const struct pci_doe_protocol pci_doe_protocols[] = {
+>>>> +	{
+>>>> +		.vid = PCI_VENDOR_ID_PCI_SIG,
+>>>> +		.type = PCI_DOE_FEATURE_DISCOVERY,
+>>>> +		.handler = pci_ep_doe_handle_discovery,
+>>>> +	},
+>>>> +};
+>>>> +
+>>>> +/*
+>>>> + * Combines function number and capability offset into a unique lookup key
+>>>> + * for storing/retrieving DOE mailboxes in an xarray.
+>>>> + */
+>>>> +#define PCI_DOE_MB_KEY(func, offset) \
+>>>> +	(((unsigned long)(func) << 16) | (offset))
+>>>> +#define PCI_DOE_PROTOCOL_COUNT        ARRAY_SIZE(pci_doe_protocols)
+>>>> +
+>>>> +/**
+>>>> + * pci_ep_doe_init() - Initialize the DOE framework for a controller in EP mode
+>>>> + * @epc: PCI endpoint controller
+>>>> + *
+>>>> + * Initialize the DOE framework data structures. This only initializes
+>>>> + * the xarray that will hold the mailboxes.
+>>>> + *
+>>>> + * RETURNS: 0 on success, -errno on failure
+>>>
+>>> kernel-doc format to describe return value is 'Return:' or 'Returns:".
+>>
+>> Thanks for pointing this out. I will update this.
+>>
+>>>
+>>>> + */
+>>>> +int pci_ep_doe_init(struct pci_epc *epc)
+>>>> +{
+>>>> +	if (!epc)
+>>>> +		return -EINVAL;
+>>>> +
+>>>> +	xa_init(&epc->doe_mbs);
+>>>> +	return 0;
+>>>> +}
+>>>> +EXPORT_SYMBOL_GPL(pci_ep_doe_init);
+>>>> +
+>>
+>> [...]
+>>
+>>>> +
+>>>> +/**
+>>>> + * pci_ep_doe_process_request() - Process DOE request on endpoint
+>>>> + * @epc: PCI endpoint controller
+>>>> + * @func_no: Physical function number
+>>>> + * @cap_offset: DOE capability offset
+>>>> + * @vendor: Vendor ID from request header
+>>>> + * @type: Protocol type from request header
+>>>> + * @request: Request payload in CPU-native format
+>>>> + * @request_sz: Size of request payload (bytes)
+>>>> + * @complete: Callback to invoke upon completion
+>>>> + *
+>>>> + * Asynchronously process a DOE request received on the endpoint. The request
+>>>> + * payload should not include the DOE header (vendor/type/length). The protocol
+>>>> + * handler will allocate the response buffer, which the caller (controller driver)
+>>>> + * must free after use.
+>>>> + *
+>>>> + * This function returns immediately after queuing the request. The completion
+>>>> + * callback will be invoked asynchronously from workqueue context once the
+>>>> + * request is processed. The callback receives the function number and capability
+>>>> + * offset to identify the mailbox, along with a status code (0 on success, -errno
+>>>> + * on failure), and other required arguments.
+>>>> + *
+>>>> + * As per DOE specification, a mailbox processes one request at a time.
+>>>> + * Therefore, this function will never be called concurrently for the same
+>>>> + * mailbox by different callers.
+>>>> + *
+>>>> + * The caller is responsible for the conversion of the received DOE request
+>>>> + * with le32_to_cpu() before calling this function.
+>>>> + * Similarly, it is responsible for converting the response payload with
+>>>> + * cpu_to_le32() before sending it back over the DOE mailbox.
+>>>> + *
+>>>> + * The caller is also responsible for ensuring that the request size
+>>>> + * is within the limits defined by PCI_DOE_MAX_LENGTH.
+>>>> + *
+>>>> + * RETURNS: 0 if the request was successfully queued, -errno on failure
+>>>> + */
+>>>> +int pci_ep_doe_process_request(struct pci_epc *epc, u8 func_no, u16 cap_offset,
+>>>> +			       u16 vendor, u8 type, const void *request, size_t request_sz,
+>>>> +			       pci_ep_doe_complete_t complete)
+>>>> +{
+>>>> +	struct pci_ep_doe_mb *doe_mb;
+>>>> +	struct pci_ep_doe_task *task;
+>>>> +	int rc;
+>>>> +
+>>>> +	doe_mb = pci_ep_doe_get_mailbox(epc, func_no, cap_offset);
+>>>> +	if (!doe_mb) {
+>>>> +		kfree(request);
+>>>> +		return -ENODEV;
+>>>> +	}
+>>>> +
+>>>> +	task = kzalloc_obj(*task, GFP_KERNEL);
+>>>> +	if (!task) {
+>>>> +		kfree(request);
+>>>> +		return -ENOMEM;
+>>>> +	}
+>>>> +
+>>>> +	task->feat.vid = vendor;
+>>>> +	task->feat.type = type;
+>>>> +	task->request_pl = request;
+>>>> +	task->request_pl_sz = request_sz;
+>>>> +	task->response_pl = NULL;
+>>>> +	task->response_pl_sz = 0;
+>>>> +	task->complete = complete;
+>>>> +
+>>>> +	rc = pci_ep_doe_submit_task(doe_mb, task);
+>>>> +	if (rc) {
+>>>> +		kfree(request);
+>>>> +		kfree(task);
+>>>> +		return rc;
+>>>> +	}
+>>>> +
+>>>> +	return 0;
+>>>> +}
+>>>> +EXPORT_SYMBOL_GPL(pci_ep_doe_process_request);
+>>>
+>>> So who is supposed to call this API? EPC driver that receives the DOE interrupt?
+>>
+>> Yes, the EPC drivers that receive the DOE interrupts are expected to
+>> call this API.
+>>
+>>> But I don't see the any callers of this and below exported APIs in this series.
+>>> Either you should add the callers or limit this series just to adding the DOE
+>>> skeleton implementation with a clear follow-up.
+>>
+>> I currently am working on the EPC driver implementation for a platform
+>> which has not been up-streamed yet. I plan to use these APIs to support
+>> the DOE feature for that driver. Currently, I am not aware of any
+>> platform whose EPC driver supports DOE feature and its interrupts, hence
+>> I see no real callers of these APIs to include in this patch series.
+>>
+>> Would it be appropriate to add a dummy [NOT-FOR-MERGING] demonstration
+>> patch over an existing EPC driver, showing how these DOE APIs would be
+>> integrated into an EPC driver?
+>>
+> 
+> Usually we don't add APIs without any callers. But if you have a realistic time
+> frame and guarantee that you are going to add EPC driver support soon, then we
+> can have these APIs merged first.
+> 
+
+Hi Mani,
+
+The expected timeline for adding the upstream support for the platform
+is by the end of Q3. Once it gets merged, we would post the patches to
+add its EPC as well as downstream driver support on top of it.
+
+> For demonstration purpose, you can just show the EPC integration as a snippet in
+> cover letter or point to the downstream driver for reference (if it is not a
+> secret sauce).
+
+Sure, I will add a dummy EPC integration code in the cover letter to 
+demonstrate the usage of those APIs.
+
+Thanks.
+
+> 
+> - Mani
+> 
+
