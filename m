@@ -1,83 +1,89 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91C75370AE3;
-	Tue, 19 May 2026 10:39:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFE9739DBC2
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 10:45:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779187184; cv=none; b=tZ3XvPmOOY2dAXgHsLPtF0xsZwGxJXoesJVnL/ujdjvcNEafGMXacGxcxzO1fvRZg9Jq1FRbJTdLAroIQJVKVHGHZJiZQsubOQK42rxuTh5+GflnurS5pQrNeF5KHXGRvY0XaGEuKK0C6jOnLNOAXBUeuPQ4m8b0gBmrjeX5W+I=
+	t=1779187553; cv=none; b=M4Jm9Jg+HW9KlrMhBKIvtYhDX8hKdWxx18wopM/Dc5n/n+M2v0MGJHaD7sdk3ofsWI2ZzW7AIVue8WRgyxWZuRCRWwC0YUDsZZtQiEd1m3O9+vcivkLxX44HAmFMsJl4mp/B6zHSw0qmySZxp88cYpoiRK2+T4CpsGquBZcUt7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779187184; c=relaxed/simple;
-	bh=8d9cpV7MYabXiaU/WPwazqmKL15k0EHx4/GtitV+QU4=;
-	h=Content-Type:Date:Message-Id:Subject:Cc:To:From:Mime-Version:
-	 References:In-Reply-To; b=C9teXddmzYem285CBx+MzwnegKFOztkT6ojQchUSd5u4NqOnx3RVkyA58pZGN85WllcZyR3z6sysqhDoe4I+SpH7zh+0q5wDV5X2rFwKQM1g91kHdyK3tUgakZK2IO3fE3fnBmLGBiNftpiWBgKtNBY5/5ag0YTgf9QaQAEXswY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H31fv2H7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779187553; c=relaxed/simple;
+	bh=Ks8gkN4AmkZWs9POQSMIPlj7vV1eMtlpqY48jX3w7CA=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=pCY/so2a5987/NnlRfMDJHks8L5x3UNff0OgplPJb8kqrBdk6LrbIHFsUv5Y7K5yKkyFCNY3eJ/GWhMp5rlo+pgziZJHZjHkYMY5WYjtKcX7f2DKp1x3rW73qq4R5/ondezajIdOf1c57CXrVbQKTrpE8uFGvPyKCHERm2orZGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n74Fg2m8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H31fv2H7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2CCBC2BCF6;
-	Tue, 19 May 2026 10:39:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n74Fg2m8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E9DDC2BCB3;
+	Tue, 19 May 2026 10:45:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779187184;
-	bh=8d9cpV7MYabXiaU/WPwazqmKL15k0EHx4/GtitV+QU4=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=H31fv2H7Ias22CXBpSvo+ewqfFwVMzz7gnADIyQKS0WjPxHcwn4Y9f9IWghXxGQ4T
-	 g6ZtDZP354KXG6/9XPA6DNIoE7MMlbcM3bJx/engJFqqD9O+UmIpCtsJB98sPRmG5N
-	 3IDAD+V+Br5uYM7gEN/epmZwIc8Hxlr2/8BFjiBcWZlPwo60Fp8Llby2uAhwfiFLhe
-	 HPhGYBNxwEie/cw527WdH4byKYHRyYRU3ecjDFFHjiy0EA41H/4DV08fYrhEKGzaep
-	 jXlsz/Fyufsk/Gi92Fd56mtpb+/KWaK3t4HuQByRxJ2Tu9oRZ9i+SwJxpbqQddZnq/
-	 lAojQ4HSxpc7g==
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 12:39:36 +0200
-Message-Id: <DIML7T3R6BXP.2WSFVG2VY63LP@kernel.org>
-Subject: Re: [PATCH v3 10/27] rust: pci: make Driver trait
- lifetime-parameterized
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <acourbot@nvidia.com>, <aliceryhl@google.com>, <david.m.ertman@intel.com>,
- <ira.weiny@intel.com>, <leon@kernel.org>, <viresh.kumar@linaro.org>,
- <m.wilczynski@samsung.com>, <ukleinek@kernel.org>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <abdiel.janulgue@gmail.com>,
- <robin.murphy@arm.com>, <markus.probst@posteo.de>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
- <lossin@kernel.org>, <a.hindborg@kernel.org>, <tmgross@umich.edu>,
- <igor.korotin@linux.dev>, <daniel.almeida@collabora.com>,
- <pcolberg@redhat.com>, <driver-core@lists.linux.dev>,
- <linux-kernel@vger.kernel.org>, <nova-gpu@lists.linux.dev>,
- <dri-devel@lists.freedesktop.org>, <linux-pm@vger.kernel.org>,
- <linux-pwm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>
-To: "Eliot Courtney" <ecourtney@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
+	s=k20201202; t=1779187553;
+	bh=Ks8gkN4AmkZWs9POQSMIPlj7vV1eMtlpqY48jX3w7CA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
+	b=n74Fg2m8srAjEL/rPk30U7Cj4MKGynHqQ3qt5LGeVwM01201NsJHGRKW8rkbKVD4H
+	 KyxSES0VRSYlk3lZiRt/HyurcF/aSrnmZwQrGjZUhwr9TWZ/9XIOtIUpwn5rjyy1+E
+	 VsNg0m1q6P1BRScZiU/B1j2f2w/PfZJfqGF73Y2rPaaGrelRDsqFI/RUOF3eFdVmok
+	 3Uzp7Xa+ajlFSPi8VEj0ZqU0yMhtllI6MUdSPZ8QKkwHfK+YDLMbqJKhLJz+Dc9nXf
+	 54zpDaAlH0Bv5dGqgX/2HgfUuptFedltUbwTrrksrlB8yNG3jIV3lstlvEqEgJnhjW
+	 oCM28aAfYQ3ig==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v3 6/9] power: sequencing: Add an API to return the
+ pwrseq device's 'dev' pointer
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260519-pwrseq-m2-bt-v3-6-b39dc2ae3966@oss.qualcomm.com>
+References: <20260519-pwrseq-m2-bt-v3-6-b39dc2ae3966@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 19 May 2026 10:45:52 +0000
+Message-Id: <20260519104553.5E9DDC2BCB3@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-11-dakr@kernel.org>
- <DIMDU2XL6PKO.RUXA0XPFT94R@nvidia.com>
-In-Reply-To: <DIMDU2XL6PKO.RUXA0XPFT94R@nvidia.com>
 
-On Tue May 19, 2026 at 6:52 AM CEST, Eliot Courtney wrote:
-> Is this really sound without a covariance proof? For example, with this
-> version you could stash a Cell<Option<&'bound pci::Device<Bound>> (even
-> with Gary's suggested Core<'_> change) and then observe that reference
-> on Drop of Data, which seems unsound to me.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] Missing kernel-doc comment explaining the lifetime of the device po=
+inter returned by pwrseq_to_device().
+--
 
-The Core<'_> change seems unrelated, Core is not Sync, so you can't store i=
-t in
-the first place.
+commit d29f3508bf71a5cf1f39e83cf08db650ff869721
+Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-Otherwise, I don't see how one can exploit this. The formal invariance of
-Cell<Option<&'bound pci::Device<Bound>> is not practically exploitable beca=
-use
-the framework controls what lifetimes are available and everything reachabl=
-e
-through 'bound outlives the data; something that is shorter lived than 'bou=
-nd
-can't be stored either.
+power: sequencing: Add an API to return the pwrseq device's 'dev' pointer
 
-Bringing back ForLt for this reason seems undesirable, as it has a real des=
-ign
-cost.
+This commit adds an API to return the pwrseq device's dev pointer to
+consumers, allowing them to query the provider's DT node.
+
+> diff --git a/drivers/power/sequencing/core.c b/drivers/power/sequencing/c=
+ore.c
+> index 4dff71be11b60..96ad557297f5b 100644
+> --- a/drivers/power/sequencing/core.c
+> +++ b/drivers/power/sequencing/core.c
+> @@ -965,6 +965,15 @@ int pwrseq_power_off(struct pwrseq_desc *desc)
+>  }
+>  EXPORT_SYMBOL_GPL(pwrseq_power_off);
+> =20
+> +struct device *pwrseq_to_device(struct pwrseq_desc *desc)
+
+This isn't a bug, but would it be useful to add a kernel-doc comment here
+explaining the lifetime of the returned device pointer?
+
+Since this function returns a non-refcounted pointer to the provider's stru=
+ct
+device, its lifetime is tied strictly to the pwrseq_desc object.
+
+> +{
+> +	if (!desc)
+> +		return NULL;
+> +
+> +	return &desc->pwrseq->dev;
+> +}
+> +EXPORT_SYMBOL_GPL(pwrseq_to_device);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260519-pwrseq-m2-=
+bt-v3-0-b39dc2ae3966@oss.qualcomm.com?part=3D6
