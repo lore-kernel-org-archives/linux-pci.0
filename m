@@ -1,121 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f50.google.com (mail-oa1-f50.google.com [209.85.160.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F72044DB62
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 09:40:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C182537E308
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 09:50:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779183651; cv=none; b=F+S90wa9OLaoE7cdv15C83sTExGTYoozWgRAzaph5/BXDbe9XdH6KlwNvFBJ9ht7L2ujh65cQct+A/HSu1K4+Gjh840RLq/5rlkS5dtsDgPWPlpzKCGLiUaq/V9f+PS3lUtmEmFsYOV+iT3sPsTXGZ0HOJxClxN3CNWDXcB39Qk=
+	t=1779184216; cv=none; b=Icb1uj3xGN14fDO7rF33gCWe+sVIm3hwEKGfKn8C2R/jYPuYP1OVL5kpF+1X6E7VmmVyegbYYHZC/ZrgV/X+5CystGjvmarrTTzcjbzep2wuN1VtoHI6DSmmVTqkH2WerOf9g1L+sJJbNLSywvhz4CSx4lVK+qKZatcutbS7H8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779183651; c=relaxed/simple;
-	bh=fCxxoo3RFt5BAP+/VRk7gcxEg2tTab0T5Dc0I4bdBYY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=E5cRegd4doFzXuJAkR80hFVCV8vcWciBjqsch2Ty3kIZ6MKF/DIh3qi7H0ZbidSJ7TWQUWDf5GpmDtTwu7N2L8yFs4BsysNnkSIPXDl1h/jbZA1yApODBC/iqGVV/PPmRFB+z9Rp/2BdojJxb3vYy/guAjV0bvXUSBUmQCTP0Og=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J+Cn2ff0; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J+Cn2ff0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85B79C2BCC9;
-	Tue, 19 May 2026 09:40:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779183649;
-	bh=fCxxoo3RFt5BAP+/VRk7gcxEg2tTab0T5Dc0I4bdBYY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=J+Cn2ff0oNrW/Gkhdv9WFYlFzCLPgTjJauR6P9bA8osfGCZQmOpfDdx19KSyv3Hoj
-	 C6kb1MVBUrW7qvlRI4Q34nUo5emenCEOT9/8naBBN8eMOkZ2Om8l/TDCO4amYZBIm0
-	 iLrlJZi/HkUMUkHapQ6LqDsQza6zW9JvSvZMbBbqbXd1yP46RXAnzjSE875eAHZgGI
-	 by0eHK/m6e+sFqAI4cOG5dLspeIqyd+iTveSaytv+TrYgGffPdH/4uCIRFl1dET9MP
-	 4u/uA7tqesnxodEvTW0sfgZ8Rs0tSg+bW9GzP4OhEUfgvv4eMSmsWQuYPYAYpl7yVf
-	 VGtFLX3oeuDOQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 2/9] power: sequencing: pcie-m2: Allow creating
- serdev for multiple PCI devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260519-pwrseq-m2-bt-v3-2-b39dc2ae3966@oss.qualcomm.com>
-References: <20260519-pwrseq-m2-bt-v3-2-b39dc2ae3966@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 19 May 2026 09:40:48 +0000
-Message-Id: <20260519094049.85B79C2BCC9@smtp.kernel.org>
+	s=arc-20240116; t=1779184216; c=relaxed/simple;
+	bh=VV0WQeCgbPqBTi7yab+uEYQeq6u9LFtTUX4clbsM2Vw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GeIfHg+ExCVgV7uLba6+uxTdFZH0cx/Mtg8aeeFKNdvFuPqKP8dz0IIebLnDoIpBQrXj/j8QIxRJNHBUugAVxvRSPGGg26FiifBl88xFHbKoMvYTEf1JiRZw4sA3eyhBtT97L8VLq2gjQ5EJvknFl+RpVS1Xfhcl/RiPruSG57Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.160.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-oa1-f50.google.com with SMTP id 586e51a60fabf-435153d9b68so2316344fac.3
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 02:50:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779184214; x=1779789014;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=T+2SZGl9spcuw3ZVraVsNeWL62/l5e6HnqNdDh6fCso=;
+        b=EWPsUxlrAZP96AHHiA0gWgAKJZRSbBM05Sb/3T3X2baWZjdb434WQu8SVKREdKeCe3
+         +7DDX2RjGInSSO7z51P975A/4JTaPWab3PTKF/jzmK8m2XdMKQ+Qcsg3unA8wPLlgbxm
+         vpwz3ZUk2wpOfHtEz4Xg1un0oWafkrrW5NV8He5KCsv7kuya+LB1mS+6AJZptE2MbAOr
+         KrOdB5Z9hVJD/gPuLrTrUn//+10DNbNDiDrtJFcKHLo9zjJRdzKwXxiWCWg+Lm5DpPFe
+         kgwDgsnIT9mEcsGsBrlM+TUY/+5YBQZ2zIUlNC7RHE5qvnBMDuGAwWg0cvEpPILpRMKi
+         Glug==
+X-Forwarded-Encrypted: i=1; AFNElJ83hTwWtyxQm5Jbepe1cuNMi0gHxJzautKYNtic4uTibG3Ni+uFyTEL9cniMKnOLxbkIfJVRYrln9I=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyybRBvv/zLGAAs4CsfUfx4U/7/g8sS4NwgrL45suPrvOmkYrQw
+	DL8H6uOcqpDnOFUYe8S8SvxWs8E2gBR/C+Y46LOyPHvX8qMf/+fxhqTJ5p+rPmfH
+X-Gm-Gg: Acq92OEQ9sCEgdF98eujvt3/VsJluAgOnT8UrdJvbJLFYP2kj/Xw4albn38mMHuwYcn
+	sDdySNQQw5y++MN7cjqmL93lNKVo11xBm2xZQ0XkowEzDgddqajHb4mY46QZUt4xceG4KsdF28/
+	oMSb5v94riG5Ouz9K9dFmuR+ITXNTnaIOf29FZO/TgM5PWKa4+Lani/18EhRYN2/2lhMBBdFRZv
+	pSVhPFxkofWTYvG19mo/p5OtqKSR7KExJuWZ0GBnGLwfgMePnKcQ6oKTXboPy0geb9PMR0RQOuG
+	cDoQS9SYEiIVbbO5tY6VuYhg5gKuoacescIYAI+F3j+6JaumGj77v4PsMFt8J9uwbIEdYo4PADr
+	zju6U55whWUeQ4uwBOcWhH7g90OuoM/3mxrEsa8kNRJjHrQNnWU8W8HnX9WZhxIoPGxbO50gI51
+	1RDUOMJlbjPaBiYemnaoVo416q7XtnKT8yA/CyvPlQfKEr0oHPXAJDjWfJsrbk
+X-Received: by 2002:a05:6871:b2c:b0:430:a:4f3d with SMTP id 586e51a60fabf-43a2d8f2badmr11258775fac.4.1779184213640;
+        Tue, 19 May 2026 02:50:13 -0700 (PDT)
+Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com. [209.85.160.52])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-43a95766535sm6772581fac.15.2026.05.19.02.50.12
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 May 2026 02:50:13 -0700 (PDT)
+Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-43a6faf8d1eso1228301fac.2
+        for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 02:50:12 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ/B5JLcOKClHl6BY7xwcVl+3ciKUPHn83Cmlrevj5UE3sKTTk5tdPsHohHVSCvFVf/fUeYdOkIJu6w=@vger.kernel.org
+X-Received: by 2002:a05:6102:511f:b0:634:d42d:15e2 with SMTP id
+ ada2fe7eead31-63a403ac9a2mr7077474137.26.1779183821499; Tue, 19 May 2026
+ 02:43:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260518042833.272221-1-enelsonmoore@gmail.com> <20260519094820.1f05ab8e@pumpkin>
+In-Reply-To: <20260519094820.1f05ab8e@pumpkin>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 19 May 2026 11:43:30 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdVw349EBZUuYZAns3FnTndx0A=PHbznxarYuAQr8nbqDQ@mail.gmail.com>
+X-Gm-Features: AVHnY4Lfn8Mcrjf-CZtgFTL8ilhwbGlXFwz-O3Z8xcIZpla9SRL4d3C994HiNs4
+Message-ID: <CAMuHMdVw349EBZUuYZAns3FnTndx0A=PHbznxarYuAQr8nbqDQ@mail.gmail.com>
+Subject: Re: [PATCH] nios2: remove the architecture
+To: David Laight <david.laight.linux@gmail.com>
+Cc: Ethan Nelson-Moore <enelsonmoore@gmail.com>, linux-doc@vger.kernel.org, 
+	devicetree@vger.kernel.org, workflows@vger.kernel.org, 
+	linux-arch@vger.kernel.org, dmaengine@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, linux-iio@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-pwm@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, linux-kbuild@vger.kernel.org, 
+	linux-csky@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Daniel Lezcano <daniel.lezcano@kernel.org>, Thomas Gleixner <tglx@kernel.org>, Alex Shi <alexs@kernel.org>, 
+	Yanteng Si <si.yanteng@linux.dev>, Dongliang Mu <dzm91@hust.edu.cn>, 
+	Hu Haowen <2023002089@link.tyut.edu.cn>, Dinh Nguyen <dinguyen@kernel.org>, 
+	Kees Cook <kees@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Will Deacon <will@kernel.org>, 
+	"Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Nick Piggin <npiggin@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Vinod Koul <vkoul@kernel.org>, 
+	Frank Li <Frank.Li@kernel.org>, Dave Penkler <dpenkler@gmail.com>, 
+	Andi Shyti <andi.shyti@kernel.org>, Jonathan Cameron <jic23@kernel.org>, 
+	David Lechner <dlechner@baylibre.com>, =?UTF-8?B?TnVubyBTw6E=?= <nuno.sa@analog.com>, 
+	Andy Shevchenko <andy@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Broken resource tracking and dead code due to early bailout
-- [High] TOCTOU race condition causing serdev controller corruption
-- [Medium] Guideline Violation: Mixing goto-based error handling and scope-=
-based cleanup
---
+Hi David,
 
-commit b104c6cb6784fb376741e248e91c6f3721818285
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Tue, 19 May 2026 at 10:55, David Laight <david.laight.linux@gmail.com> wrote:
+> The company I used to work for used 4 NIOS II inside an fpga.
+> The instruction timing for one is pretty critical, it has some code that
+> has to complete in 122 clocks (worst case).
+> Our solution was to spend a few man-weeks writing a compatible cpu!
+> I think it came out with fewer pipeline stalls (in particular it 'lost'
+> the one for a (predicted) taken branch).
+> The maximum clock frequency might be lower; but it is ok at 62.5MHz and the
+> higher 125MHz in just impossible for all sorts of reasons.
+>
+> OTOH I really wouldn't run Linux on it!
 
-power: sequencing: pcie-m2: Allow creating serdev for multiple PCI devices
+Sounds similar to what CoreSemi is doing with J2 (nommu, also for
+predictable latency), but their products do run Linux.
+See the video from the LPC session at
+https://lpc.events/event/19/contributions/2097/
 
-This commit introduces struct pwrseq_pci_dev and tracks them in a list
-within the M.2 power sequencing context. This is intended to scale the
-driver to allow creating a shared serdev for multiple PCI devices.
+Gr{oetje,eeting}s,
 
-> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/se=
-quencing/pwrseq-pcie-m2.c
-> index b2ed336fd5ad9..469e130330faa 100644
-> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+                        Geert
 
-[ ... ]
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-> -static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx)
-> +static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx,
-> +					struct pci_dev *pdev)
->  {
->  	struct serdev_controller *serdev_ctrl;
->  	struct device *dev =3D ctx->dev;
-> +	struct pwrseq_pci_dev *pci_dev;
->  	int ret;
-> =20
->  	struct device_node *serdev_parent __free(device_node) =3D
-
-Does this function mix goto-based error handling with scope-based cleanup
-helpers? The cleanup subsystem guidelines state that goto and __free() shou=
-ld
-not be mixed in the same function to avoid confusing ownership semantics.
-
-> @@ -248,17 +259,23 @@ static int pwrseq_pcie_m2_create_serdev(struct pwrs=
-eq_pcie_m2_ctx *ctx)
->  		return 0;
->  	}
-
-Does this early return prevent tracking of subsequent PCI devices?
-
-If the serdev is already attached, this returns 0 before allocating a new
-pwrseq_pci_dev and adding it to the pci_devices list. If the first probed
-device is later removed, it appears pwrseq_pcie_m2_remove_serdev() would
-destroy the shared serdev even though other devices on the same slot might
-still need it.
-
-Also, is this check safe from concurrent execution?
-
-During asynchronous PCI enumeration, if two functions trigger the
-BUS_NOTIFY_ADD_DEVICE notifier concurrently, could they both read
-serdev_ctrl->serdev as NULL and race to call serdev_device_add()? It looks
-like they might both overwrite ctrl->serdev, and when the second thread
-fails in device_add() due to a sysfs name collision, its error path could
-set ctrl->serdev to NULL, potentially dropping the valid pointer for the
-first thread's serdev.
-
-> -	ctx->serdev =3D serdev_device_alloc(serdev_ctrl);
-> -	if (!ctx->serdev) {
-> +	pci_dev =3D kzalloc(sizeof(*pci_dev), GFP_KERNEL);
-> +	if (!pci_dev) {
->  		ret =3D -ENOMEM;
->  		goto err_put_ctrl;
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260519-pwrseq-m2-=
-bt-v3-0-b39dc2ae3966@oss.qualcomm.com?part=3D2
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
