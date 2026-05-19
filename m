@@ -1,143 +1,159 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022093.outbound.protection.outlook.com [52.101.101.93])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BD84A341E
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 12:52:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779195129; cv=none; b=eFJEd7k3kvOMCKcTK2ndRZfRhUOjFuVOb/bLx9m6J8A6U+IXwlpZteJ/iplD2dYRSah7UXqr59Ge6lgGN5ildrUpGRR8ezFup7pfSxk4/PrRoGtw7MJveNds5FAcTYnt8z7Sd6fqlJuy6LJNJ+ymO6wcE2JJH4CMKnajoogm94o=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779195129; c=relaxed/simple;
-	bh=Cj+9AGLaj6N5gNCq9PN/+geG3jfXVteqrgLjuRvx6n8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OKJa3/IGpVaaRqL6MQa2SKlsyCIJ7jl0yxHV8t75/5CP8bTdZJVtEL+48pVbZOJZb4FA1TKL5RjZ8j+jz1wLNFheFQtXTFhk8+IULsN7QvL8LElA29Z05Lfa7bbToS39rCT8ZsLw4rRNjBeLFhgOF38MwERuUMAdQuIMXi/n/Uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=AZFapDe6; arc=none smtp.client-ip=209.85.222.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7044C042E;
+	Tue, 19 May 2026 13:01:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.93
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779195714; cv=fail; b=t/ei9ftOPlnbjGOpHDj2rzok57b6iXdmbsCqYujHZ+2PSAGL/fa4v4S9hcrJIOQYcaoIKqYddqcQRVTkhF0iyqYTy0EdWan+gBgwFEpIg/9MtDRyYKl1xID/VyR885dZ6fp0nUyC3juzod224Ltd0nryjK9EX1bw7ubTOfifo/Y=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779195714; c=relaxed/simple;
+	bh=80FhujbtpiB/iQRhdeZfUeL3YtHXniIIVIpue+uUqGA=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=hcn/1Mav57wXHkxpQN9grDJbJyJKlNaWLLyqwHRlB1R5YQlN1bxf0CleNX6ksNcuvGARjI3r2CdX2GlHrkC8ZwwDo76I8/Oej+RpyXbyR91QzwIE2/XVAOWDNVJd8T5F9M6GUH5IdWSDBgCpQ6le5ooQeidWQbKM3seCfP15QVY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=nmhl4RIf; arc=fail smtp.client-ip=52.101.101.93
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="AZFapDe6"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-90d13fa59e8so366006885a.2
-        for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 05:52:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1779195127; x=1779799927; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=DOCS522Pm9afH3DTI+hcdRgkcQjsqwF0dA1bA5ZkKZc=;
-        b=AZFapDe63IIqwh5Nq8h1Q8jil2q6xV2puAm2XBSaUlSkNNWR6bel4Kx+kamGhm8+sF
-         s38iylU78T4pqAaPvJzWOX+5u651wZaVODwSm30e1pTsPf+n/YKHJDSkz3+ni31FydH4
-         N5v9b0EHDdC7PXxCeFQ4Kr4nkl+gPYC1/e3CqWIyA8dm9nYzdR5mCOLFz5+ZpYykr3fN
-         /ApvtaDGVtMPigrD1TxE8J5rmOjkHcqkLh8XlpSRocsxAzYsityhmRjlo/A6RBPLgD+T
-         ob54Brye3ZmQskyoZ9wQsadzEI03a51+crhkkiBcv3ZbZ21X/lETo0TTshfGsChAJ8Sv
-         3VBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779195127; x=1779799927;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=DOCS522Pm9afH3DTI+hcdRgkcQjsqwF0dA1bA5ZkKZc=;
-        b=Q757u38H8lcRKUR8yUVnxbMS7Jwx2unNbYke/xI6e5Zzp0qh6cBGloZ8KvDRH1DAz7
-         2cn4oEUUoeigJyoeLasVpb1SlBDYhc0vrJB5OHVComUwvYWEmYgEoIi5hE4KBcWFJjPy
-         4rq+y0caGm6viuZiAe8XSStYa51FTVUyDFh2oFjhiF9UgukwYSzqoDN9U7aiZR3NOL+P
-         Wj7TqPyaOa2nnVLMZCkfx1g4JIrogPT/vyd52cqXh7cYZzo+gogQsXqoFdi6HmDZeWEm
-         143F3pSt6y0WiFdeoiOOqEzgwyHRlTLl/sHu6V0jRDOPw4tRqxGPOfp/WbS/MvOtBK7s
-         tggg==
-X-Forwarded-Encrypted: i=1; AFNElJ/fTI5s7jEMzDNnJ76HlReqOJDpW1W5tVHK8eQFjhA/r3Dyo03jsyJbF4NbYO5kIM5FIH53RcAGfnM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywr2iAPDe4IqMVeu/5sUWOHYs3wZv9bU6aXEwwng+ueG2chuVja
-	Te0yOil6WpkdjJHR6IJ2n7GjnWI6xa5dgOTJ/eVF3LtY2ImqUPcOY6X0eHS6hhlN/Ao=
-X-Gm-Gg: Acq92OFvDBxld6rnCa4DwonQx+CESXp2YOd19/7BmpcqNHm+JXUI9GOjij5i6mpeecm
-	BRkvNURxMnHM3ildVCAPN/lDK1+VNHhcTgiD4KyVc4ZW11EaAxFkbjfY5CjynPOlGOGYWjhb2kF
-	rvo76kQWIv5ArTUIRn3mS0BrFAoVTAcMGd6hdukvUYU5r8Q8VLn+5DORrbPJbS6sKHPITVXFmYO
-	Pz+p9tZCOg+IVX8gGF0INHrEdagPz02IcMyteKRyEtwlQX9IiZjqAxvzlLbS20ZI7sT7kt5byCM
-	0PS3pny/nHb/xwC08ClGvlS8/WDqbcWjCTHVX5U2xoQu8fGSFR583kjLl3kfGvjVLcAYLLz5aR/
-	c+QdRbWU/kW+i8sUXhpr9moNhjIn81la+tZrz+CBNcCvXPXFHMGKjzRmLSwQkOt8Fft8k/sxQYy
-	I3pxadspWOAz/Bg3mDnqMHsR8xg3xYCeUsXf4ua5aSvX1q+Svf32vNcYO12pauQz9Gnhu4eMmkx
-	tMeWA==
-X-Received: by 2002:a05:620a:170c:b0:910:5637:4bec with SMTP id af79cd13be357-911cd1752admr2935359485a.18.1779195127354;
-        Tue, 19 May 2026 05:52:07 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-910baf2236fsm1823801385a.20.2026.05.19.05.52.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2026 05:52:06 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wPJva-0000000Eg2n-14zp;
-	Tue, 19 May 2026 09:52:06 -0300
-Date: Tue, 19 May 2026 09:52:06 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Jacob Pan <jacob.pan@linux.microsoft.com>
-Cc: Mukesh R <mrathor@linux.microsoft.com>, hpa@zytor.com,
-	robin.murphy@arm.com, robh@kernel.org, wei.liu@kernel.org,
-	mhklinux@outlook.com, muislam@microsoft.com,
-	namjain@linux.microsoft.com, magnuskulke@linux.microsoft.com,
-	anbelski@linux.microsoft.com, linux-kernel@vger.kernel.org,
-	linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
-	longli@microsoft.com, tglx@kernel.org, mingo@redhat.com,
-	bp@alien8.de, dave.hansen@linux.intel.com, x86@kernel.org,
-	joro@8bytes.org, will@kernel.org, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, bhelgaas@google.com, arnd@arndb.de
-Subject: Re: [PATCH V3 09/11] x86/hyperv: Implement Hyper-V virtual IOMMU
-Message-ID: <20260519125206.GY7702@ziepe.ca>
-References: <20260512020259.1678627-1-mrathor@linux.microsoft.com>
- <20260512020259.1678627-10-mrathor@linux.microsoft.com>
- <20260515182322.GI7702@ziepe.ca>
- <20260518224136.0000403e@linux.microsoft.com>
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="nmhl4RIf"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=MQ9DqOSVwtZp91U8FPSYpqL3l9kSHmc84sMRjXbXKm9JCiJ0s0S0PnxMbR6qOP0CsCsmy8mdAor7pPFBjUryLsvEkj//TUmduHs7ZRj+mF3ckCgb7fdVmD9sA8TyCiSsKqI3C1hF57r5M+9j9Qr1qP0kxDFRJB40LYmbIjmXIqEktq4Fe6zQNlI4i6QGBYrXyOQkuFiZvYzKTlk5flLuJcMygskATb6L/F9hEXGAAQxPwiviuZCYiaXj9stNc4eLkP3JU9k1I8Sdtilz0irYxU7aLTM6XvoKKtD8qH2LY4IJCRRuOd23+5FYB+uO1c37RDvgmXmgR8w1Y9251JpNOQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=8+vcgrKLQye5xwnJq0ABNlJ+3GUWdjHxHSwbiipUnV0=;
+ b=VJr51oMsOvueAjvLD58nQmdMPkaN6OcLSULwnWoY4m/Ur/a3V/EJkta/V2UsKZaM2Y4WD+wiix2iemvkthk05kDmme7gc6497WM661ybqUT1mUhyyn1jP97vUGiScDbT9iWvM9HBOn90+M6zzOPBMcCc0IdUoq7+kplP2dTvuQJ9V+fM0+Y5ryGyK4bRxzpFnWTo9a2Cv+cvc9QcRkKeZ+4XYV841inlCUPAsyvffLrDAtz1Fyc8sCeUBUp5uTwVuxL2r1Ssak32Lx2/1uZPUeCBYgOgGv4eAka/g4NVF2oi+S2fC/krexd4gTl6Xi1iITv+4AJ71XssAXQT+mFkPQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=8+vcgrKLQye5xwnJq0ABNlJ+3GUWdjHxHSwbiipUnV0=;
+ b=nmhl4RIf6XgT2vZWHn6EZXGdOxIUp6ihwH+N+xASzy3q8bd6RlFfzmtQE/S4V485A4nz56EqHGacpGnT0aaoUR9OAQyiI7ooanfO/+5B2o1pLi4mLNj3/gMIB/V1Ky6jEavqMHhkemchxDQFcUzDKJ4ShKN961KMyNED93m9qMU=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by LO3P265MB1961.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:bc::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.24; Tue, 19 May
+ 2026 13:01:49 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0025.023; Tue, 19 May 2026
+ 13:01:49 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 19 May 2026 14:01:48 +0100
+Message-Id: <DIMO8OYXYPX9.29EJ9V0839G3K@garyguo.net>
+Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
+Subject: Re: [PATCH v3 05/27] rust: pci: implement Sync for Device<Bound>
+From: "Gary Guo" <gary@garyguo.net>
+To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
+ <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
+ <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
+ <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
+X-Mailer: aerc 0.21.0
+References: <20260517000149.3226762-1-dakr@kernel.org>
+ <20260517000149.3226762-6-dakr@kernel.org>
+In-Reply-To: <20260517000149.3226762-6-dakr@kernel.org>
+X-ClientProxiedBy: LO4P265CA0122.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:2c6::15) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260518224136.0000403e@linux.microsoft.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO3P265MB1961:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6118e75b-7070-461a-0205-08deb5a6ca39
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|10070799003|1800799024|366016|376014|7416014|22082099003|18002099003|56012099003|921020|4143699003;
+X-Microsoft-Antispam-Message-Info:
+	XIqsRtFlWBb3t+6esWIkuUKQmGlRSGqrirMEu3orx1B2PpjVKv9dSQGyUUanxj49bqQv+Tk0wuyHaXj4Kw0ozdMfJsHAcXqaXhlPi1tkn3AlNIo16k39iqnlMr2jemrCun4f4CIjomgNJAeffzVjtdbWQqO+Ts7zfWU2cOgthAGxaEI4BD6Ejj1t6is/de6sdM9iVFKxKEyoVj1NEdP9mrDCV1imin6YcjIG5SYm6JqJNuyNp/GQLrY61fWtQ49+HFVWDW0cm86dN2c/fsXC+jQlDga3tXP+esz8sMECs1uAHs1YfsHMjwNTgADYnyimHS2vX2uzaeYZyiIXHZYWsFHwl41/s56bCu1sjkil0+bQ+uaA+KwvdC5Av+9t6ZoUwJu5KgDwNs7JbDFAulg5I0r643uxDqwRX2n4i1EcsrWy/a0lh+Q07+VyhMk4SRfeU1xg6cZPQorXJ896ZTdBI80HAx7UMahTAMRaxwsfLxOn6uMZzBN0nkQ/6IybFOLWvukrP15Xs9Et3tEZozfIughlMrjLhJVg/d6w9cLenybhOYTZY78ouy7WqwFSURX5JhASJYRE9shKrmcM3uICbBz+/yzuM93lYsLdawGjASJFWnag1E+46eR7Y8rcJe1yxDWMPBmEuKUmEzyU4tVIPKD4HS1TA2WCbSMBD6Aw6AhGKjgm5Leq2KfWRMFowEg1G47l9OnZCcqRVK89oUp9V+fk1yhljaf8C1vnr7WFLgk=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(10070799003)(1800799024)(366016)(376014)(7416014)(22082099003)(18002099003)(56012099003)(921020)(4143699003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?K3hTZkh3NjZtZWs3aTNIU2taTGhkOERwUU1QZVFobWsxR1AwdGlZWFd4SkVt?=
+ =?utf-8?B?a2xkclFTVDhrTjBTRm5jc0xoR3QwTTQ4LzFNWGNtc2swcGVrWG5iU3F1MGM1?=
+ =?utf-8?B?OEl2cUZoeHZDcmM0MHZuU3lrakYzVVJCZXBKdWRnTkRwMnVYT0tBN00yUHNy?=
+ =?utf-8?B?ZUdDb09SeVhiV0VQSFRWWjJMc0ZFN0FjZit1UnpHS3FRa0xEaWU1ekdyNmtE?=
+ =?utf-8?B?OVRFUTFNY0VUQUJFQThNYkVUQ3V3SHNmN1p2eEtoQUVxdEVGeGVweUVNVUlM?=
+ =?utf-8?B?RXQzYVRuQ090dnlSMk1QblU2ZUcva2xib3JIM3A3N1VJZGU2YVFib3JwdEE2?=
+ =?utf-8?B?c1ZoTHRySVZxeHJmUFdpSzFVdkpJZ09xOTFrNFlaMWw0YlQ2QkVYVktEL1lu?=
+ =?utf-8?B?dVJ6UVdtVVFyY0NwVWJvc3ZyVmdmdU94ODdkR3E0WXNKTUJNL1dkaDRFWkNM?=
+ =?utf-8?B?Vk8zaGFoRWhRbnZxallDT0VTUXVjRWFVbkRDaVJLcXNkZWJjQ3N6a0FsYUE2?=
+ =?utf-8?B?T3UyYjMra25FbnJkb0hiYzVaK1I2VkE5SFdvYzQzVEUzOVdqYnRCOWFaWWpQ?=
+ =?utf-8?B?UG84cXV5bUxKd0lDTXNPd3pEeWtHcXF3bTliTEVFMVV6VVVYa3F5WUUvUDFK?=
+ =?utf-8?B?azFvWVozb0xqYmhpY2Rtb2x4aWpSOUZkUXUwQVc5U2pxSEJOMXA1UWwrU3li?=
+ =?utf-8?B?TTdYYktMeVIySTNLU0I2S2kzcFlqdGtmZU5vb2VhSkFNV1htZmZtUVFKS2pj?=
+ =?utf-8?B?ZzJ6eU0rVU5KcVNXYjAwRGl0SE90ajY1RG1QcitPZmFOL0hiSC9FZkVXNDNW?=
+ =?utf-8?B?Q000OHVaWUh2T0VjUHlnRldVVkQ1RmthQ3BqRFFpM3NzZS9FZmhqQXpMM0NW?=
+ =?utf-8?B?TmJCRkN2YWNCSkZTbzArOHJrU1ZQS3hJUXV4VERWUEhrSDRFTSs1YnV3aVU4?=
+ =?utf-8?B?bDdjWCt2aU9ad0lUcHdEUSs4ekhTUmd0SVZPNWJEek1NY2R6cEU0c1g3N212?=
+ =?utf-8?B?eXVNS3J6a0xoV0lTVk5rTndEankwM0pwT0F0K2pLalRHeFhMY0oxSEVmM2xP?=
+ =?utf-8?B?MXQ0VkdpVnRqeGoxSERmNHhmRlcxSnIrVU5sY1UrSU5JbmdDdGswNUxrTTRt?=
+ =?utf-8?B?cmxPSVJSYW1ISnR1M0o5dGFubkpOOG8vM0JDdHlaZzRlTVdRWEhPb1JWTGt3?=
+ =?utf-8?B?Z1l4YWltSFNpczg5TkRQZHlZSTBvTUR0bXA0UjhHNzNiSjRNLzhsQjYvZ3hV?=
+ =?utf-8?B?R090K1Mwa3JTVzEvV2Z5SkZwSXFSQW1GMG9oTnJaRzJ4WVd2V1h3U3NJaFBm?=
+ =?utf-8?B?OFI3OEJ5UlRHclI5YTNoc3JWd3J0MWVhK1JvbWZ6QUNKbm1KbmVnL1dSRExF?=
+ =?utf-8?B?Z3V6ZTdFRTlwc2k3RWdoNTQwbmhkekVjSjgrY0IrNjhLYXdJdTdQZHZxcllM?=
+ =?utf-8?B?NHl6aVZrRENhQVJiOXorN3YwNHhueUV4Zk9OSDlQMHJLNyt6MEh1alh3dCtI?=
+ =?utf-8?B?T2N0a3VzNzdyVSs5MFdyOE1TTHNZREdWZzBLVFBzeFVKTVFGbm1BYmtnWVQ2?=
+ =?utf-8?B?K1lkcUdyRGNYd2M3eVhiZE14TzdWTXRZUG9hRTM2NHNxZm14aTFsVWJzbnI4?=
+ =?utf-8?B?Q0JCVHZQNHBLWGNIblhCRmM0Vm1JTFl3T0ZkcVRGUFFCZko0OHhOVzRRSGNw?=
+ =?utf-8?B?QmlmRzJyMkZqMW8wbGFDNlRudFliNTBmRC9vd2FGaGFnNHlseVdlQVFGMy9D?=
+ =?utf-8?B?MFh2a1ZLdy8wSUFtTGpGRW1IaFNNZm9WQnJaT3BCcGxxRUllTVRzQy9hNUR0?=
+ =?utf-8?B?eWh0L1hEWFl4Nzc1UUdoZ3ZmTGVxVCt4eGdOSzc2UmIwaGpEZjZGVzc0VWhu?=
+ =?utf-8?B?MkVMVTZvd3RRVE1JTjJMY3hXY2twNVJuNWdmZXBBRnRVN1FzZndBMGxFVG5E?=
+ =?utf-8?B?dDhBUW1JY2tldzVNUUpDK3NYajRCTFZXTUJCdEJyWExqSk9iVkRxeVRiMlZY?=
+ =?utf-8?B?Qm9qbTBlQjBzWXRvaEtibENBZkVXbkZXSXQwaThwN2h0a2oxMnBtL1NhRjEy?=
+ =?utf-8?B?ZU1sa3ZqdEluQWZDNlo2RHZUVXVTbDBIaktmNTZuR3JDQlNITTEzVi9nRTQ3?=
+ =?utf-8?B?UldhOGhJQWNmT2NtbzhCeXZDcTM1dlB2Y05WYzhvdUlaZE1oZzhtdWdQYTE1?=
+ =?utf-8?B?UjFpajNDM2JkWUY0T0U0OThlQ3Z5Q2lLSFRhUnlueHVzbHlLU3hubXZSSk9j?=
+ =?utf-8?B?ZVM3ZVFHWE9lc3A5MVJhNDIxN212NjAzOHNidU5ITm55Q203eE1GT1o0WkxL?=
+ =?utf-8?B?MjZ0Mk9IZ25BYWRuaVZYWFhBNWJFeW13c3h5c1ZEdnhuT09OQTJxdz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6118e75b-7070-461a-0205-08deb5a6ca39
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 13:01:49.5954
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: +4A9J+dPTdRqCEFljsXOhjjsVrEWENXtFVpcdzcw5vOeVFZSBjITwxvJdr0luhuWQHLunG9RvNntm1iI7wRdag==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO3P265MB1961
 
-On Mon, May 18, 2026 at 10:41:36PM -0700, Jacob Pan wrote:
+On Sun May 17, 2026 at 1:00 AM BST, Danilo Krummrich wrote:
+> Implement Sync for Device<Bound> in addition to Device<Normal>.
+>=20
+> Device<Bound> uses the same underlying struct pci_dev as Device<Normal>;
+> Bound is a zero-sized type-state marker that does not affect thread
+> safety.
+>=20
+> This is needed for drivers to store &'bound pci::Device<Bound> in their
+> private data while remaining Send.
+>=20
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 
-> Just wondering what work is needed to support this "direct attach"? I
-> felt this issue is due to trying to cram two distinct domain types
-> (paging domain & direct attach) into the VFIO container model where
-> only unmanaged paging domain is supported.
+Reviewed-by: Gary Guo <gary@garyguo.net>
 
-Xen has the same issue and you two need to come up with a uniform
-solution.
+> ---
+>  rust/kernel/pci.rs | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-VFIO container can't support it, that's out.
-
-You should be focusing on a iommufd flow that accepts some FD
-representing the VM (ie KVM FD) that can be converted by the driver
-into a HWPT representing that FD's S2 translation.
-
-> I am thinking if we were to switch to iommufd and let user(vmm) have
-> direct control of HWPT, vmm will be able to selectively use a
-> different domain type to handle direct attach. 
-
-Yes
-
-> IMHO, it is essentially the same as attaching nest parent domain
-> without nested domain immediately attached. The unprivileged guest
-> may attach nested domain directly with Hyper-V if nested translation
-> is needed.
-
-nest parent domain is really for supporting the viommu objects.. If
-you don't have that flow you don't need to worry about that nest
-parent stuff.
-
-> From this driver POV, it will allocate a 2nd stage only domain with
-> different domain ops (w/o map/unmap) for "direct attach" thus avoid this
-> hack.
-
-Yes, from a driver POV you need a unique iommu_domain allocator that
-returns an iommu_domain without an ops.
-
-It should probably work similarly to the viommu where the iommufd path
-can send in a driver-specific tagged struct that can describe these
-special domains.
-
-But be mindful of the lifetime rules, whatever ID is used to describe
-the VM at the hypercall boundary has to be bound into a linux FD and
-become immutable. The driver has to hold that FD as long as the domain
-exists.
-
-Jason
