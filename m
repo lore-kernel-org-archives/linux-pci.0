@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E4863EFFD3;
-	Tue, 19 May 2026 08:56:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E5A03EFFDA;
+	Tue, 19 May 2026 08:56:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779180964; cv=none; b=J78cFvByfsSttl+BvUKj3bhjmcE+wDZMcAg69Zwy9HLOFfIABqQ/kuRolgsKhYOdoKaSmCT78Km9xPg+0rM5Mq3/4+rr11fKjBK/OBnG4M4vTCG4iCWjT824JrUWgJZOo5uPBFK3Ip/DRkJO57TLM1SslYz+TT0qpmrjPdzOyos=
+	t=1779180964; cv=none; b=IBquwZ7tmATgNChugn8LGgl8e8A9CyVJcJ1xZAzCA1gP/+ZJTvIAMNic4EOwVccl1hcD1QW9IOzBBQPFmfVxZpEgNgLAiupWk3x7V0p3zDbVcAErS3RjA9Na9yck7fgtYns3qQ6+8ZI/eWPNzIMS/yvbrJJ6LLtSWFPBIZk8RRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1779180964; c=relaxed/simple;
-	bh=OOuthL7iIdyXdtvidLIdTJVqEVl+9MBs0h4nZ62FHQ8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=tnEZqM8WRu2gjLM2E51bZj82AjxrL76i/Q9eTBAOvcYEGTpU8KPNP3O3iNMJIIoBdCHmTqTCofD7SvPipg2LDZ1VkTOx3Wu3gLt7sNoOH1gyGVeq5iGhYgoYiwSMDALt8shByP18oE5lJ9r7r+wIk4MmI9P2bPxTeverGLeLP0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=be4MOyGB; arc=none smtp.client-ip=10.30.226.201
+	bh=DbW7cWokzs9SPWLbVR6F11pAkkmVjuF4uDahlgdHrFI=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=hiy7oLXLRf1QVU8B7wODU3RsT1i0ThEw+fbWquSTePUq9vEMKb3BGIhwnuzj0DH4J2Fma3LS8ubJD6sAiu+y+VWByhDm2vi1432Oid1Zm08EDadTVRxJqHw4UGC0b+25FtGXeYx6+kcgT17RJXtb6UmU0zr/1/r74OX9523UO3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ogqY9Cp8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="be4MOyGB"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D199AC4AF0C;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ogqY9Cp8"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9DDEDC2BCB3;
 	Tue, 19 May 2026 08:56:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1779180963;
-	bh=OOuthL7iIdyXdtvidLIdTJVqEVl+9MBs0h4nZ62FHQ8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=be4MOyGBaFVXDKsnuxQ0m+wkpuLaHEcyj5jBC/qmTUCxGrGtjaAUZ+XEuJebDhXjF
-	 OpUXyQrzgKyQWEkPchea5LfBdWyKRAsSAMyl3In3WWkUTAbBbtj0Bf/ctIeew+ja3b
-	 IjJciOh4LsAMZzx2FAV6mAtsI7s2w0iSa9ZmXjBOqXIicm4UxC/hxT5EyEamcwKJb9
-	 K8ebWt4qh3g/YbIJQWe5QX2hnOyRDfU9HAsG65ToWyzFpo8bhw4IFs8d0sTohhf24d
-	 bMpdqffMHfRSc6TdoRCJsF5nOdW/ymh0fk2KuyRrBb28RQuboROgdqxh9j++PaZ2Be
-	 7y3IGNef/6FMQ==
+	bh=DbW7cWokzs9SPWLbVR6F11pAkkmVjuF4uDahlgdHrFI=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=ogqY9Cp8FYfJTMMLiLOmaeSRT5WL1CT84BKiFDxcdgena8dVrGag5z1RwBpo7BDSu
+	 yqyz6CHAyntxv/maGPRDtUqCV+Vv1Bn5WtHtDEZfy3UZws4hFxZR7U0mZq/J6B50Qs
+	 Zu4fbs7wHC5+AsSI8KoOOdvX0GjDt5T89x0bS8PqVc7pIMQ/JJd2x/wq6eMzzOzoew
+	 cjiSxmU0qCMjM0GgGW20gQgGiMsmbOlPcfcnFecbd6n94dl3EIurJ9/pJKKU8fS3S0
+	 BGM5Lore5oAqUfXExQ+V147GY865gkKIfSzDyIYsa1GyVzeiydBdSQhTr8BdmMGGzq
+	 7ZXiQtLGHr15A==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E6DCD4851;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8618ECD4F5B;
 	Tue, 19 May 2026 08:56:03 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Tue, 19 May 2026 14:25:58 +0530
-Subject: [PATCH v3 3/9] power: sequencing: pcie-m2: Improve PCI device ID
- check
+Subject: [PATCH v3 0/9] Fixes/improvements for the PCI M.2 power sequencing
+ driver
+Date: Tue, 19 May 2026 14:25:55 +0530
+Message-Id: <20260519-pwrseq-m2-bt-v3-0-b39dc2ae3966@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,9 +41,11 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260519-pwrseq-m2-bt-v3-3-b39dc2ae3966@oss.qualcomm.com>
-References: <20260519-pwrseq-m2-bt-v3-0-b39dc2ae3966@oss.qualcomm.com>
-In-Reply-To: <20260519-pwrseq-m2-bt-v3-0-b39dc2ae3966@oss.qualcomm.com>
+X-B4-Tracking: v=1; b=H4sIAJslDGoC/3WNwQ6CMBBEf4Xs2ZKyFoie/A/DoYVVaoRCF1BD+
+ u8WPHuZ5CUzb1Zg8pYYzskKnhbL1vURjocE6lb3dxK2iQwosZAKUQwvzzSKDoWZhDaN1mUmT4o
+ MxMng6Wbfu+5a/Zhn86B62hxbo7U8Of/Z/5Zs6/1RL5mQokTZSMxVrgt1cczpOOtn7boujQFVC
+ OEL1ssDmcEAAAA=
+X-Change-ID: 20260422-pwrseq-m2-bt-abdaa71094eb
 To: Manivannan Sadhasivam <mani@kernel.org>, 
  Bartosz Golaszewski <brgl@kernel.org>, 
  Marcel Holtmann <marcel@holtmann.org>, 
@@ -52,18 +54,20 @@ Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
  linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
  linux-bluetooth@vger.kernel.org, Wei Deng <wei.deng@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+ Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1830;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2779;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=125jnc1+c1UGaXHbABRqqlnBuVw3M8AG9KSxYWS1n7s=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqDCWekTONEFkCmz6SI699/G8UuScoYglNTOeF+
- aWlIBlJMJKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCagwlngAKCRBVnxHm/pHO
- 9YacB/4+qQ1INbofLwOsC/LruIQxm3l8cmm441FDQ3YemV6LstOcPnUSAo2trW13TThtTtQSirb
- 5kBJ9BlrBfuDo8uy+dVQYYhJS50KXCqoksBCW+SUbXtLHQBM6+CBh6EeQz3adu97zMcZNQU4qhR
- smVS7v1i18BpQD7ZMiD1ZK3D91yoRj5CJLE2jGd72kQClxz2Bsjm8KO+bvUh/knF4L7eZoH6t/5
- R8XRRyyJe/uhBJcPH729BGq1tE+2sP5bHlipG4tdTrfvsUXsLMzuEHekfij3TrVqMQEYeR4T51/
- 78cPR6Dw/DWb7pWBQ3fTIqjIohfzqNv0b2TlxewTlfYsx6Zh
+ bh=DbW7cWokzs9SPWLbVR6F11pAkkmVjuF4uDahlgdHrFI=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBqDCWd6uHVDNDSaoRPub149N10KV5kuzO24ifSD
+ MySZ45yJ7mJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCagwlnQAKCRBVnxHm/pHO
+ 9cIBB/9x3BxeHndl79hZqMzi6uMkzEEbeolEngfxNvIn2I6u7AbAxFP9ctfVhWHQ3cL+JRmwvsB
+ P3n1xHSJMXEVLWmnNNmyFijsP5xfPTk9WkXKvHXvm3mG8WpzE4n0Hb2OwD6sMKaixHua/JjZl+Q
+ H1wFeiX1DvMnEv/OT9U5X4FY8b5UZ98y6TS4IXkWeasMkA987IRbt54BYBqI65bDa+OY8PVjHjB
+ JQVTnUxg/bZ0kUnnVtWC9yMQIt7ARoMdXCqk3Y7+VaFhXMYv3OqrQabgKhBywjqNgXUGj9+vSlj
+ qM3G10Cz8Wbg7SELu9I/YGjAKFrPKdpV6HNc8FMBVNnUnFxq
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -71,57 +75,66 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Hi,
 
-Instead of hardcoding the PCI device check, use pci_match_id() to check for
-the known IDs using the pwrseq_m2_pci_ids[] array.
+This series has several key improvements and fixes to the M.2 power sequencing
+driver and also the BT HCI_QCA driver. Notably, this series allows the M.2 power
+sequencing driver to work with more M.2 cards, not just WCN7850. It also allows
+the BT HCI_QCA driver to detect whether it can control BT_EN (or W_DISABLE2#)
+signal on the connector and set the HCI_QUIRK_NON_PERSISTENT_SETUP quirk.
 
-This makes adding support for new devices easier.
+Testing
+=======
 
-Tested-by: Wei Deng <wei.deng@oss.qualcomm.com>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+This series was tested on Lenovo Thinkpad T14s together with the below DTS
+patches:
+https://github.com/Mani-Sadhasivam/linux/commit/29534d15307551b2355eb254601dec511169f0aa
+https://github.com/Mani-Sadhasivam/linux/commit/f4eaacfe647674be200847092b43cdef2194fc55
+
+Merge Strategy
+==============
+
+Since the BT HCI_QCA changes depend on the pwrseq changes, it would be good to
+merge the whole series through pwrseq tree or through an immutable branch.
+
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/power/sequencing/pwrseq-pcie-m2.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+Changes in v3:
+- Renamed __pwrseq_pcie_m2_create_serdev() to pwrseq_pcie_m2_create_serdev_one()
+- Moved the pwrseq patches together for creating the immutable pwrseq branch
+- Collected tags
 
-diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-index 469e130330fa..038271207a27 100644
---- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-+++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-@@ -343,6 +343,11 @@ static void pwrseq_pcie_m2_remove_serdev(struct pwrseq_pcie_m2_ctx *ctx,
- 	mutex_unlock(&ctx->list_lock);
- }
- 
-+static const struct pci_device_id pwrseq_m2_pci_ids[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107) },
-+	{ } /* Sentinel */
-+};
-+
- static int pwrseq_pcie_m2_notify(struct notifier_block *nb, unsigned long action,
- 			      void *data)
- {
-@@ -362,16 +367,14 @@ static int pwrseq_pcie_m2_notify(struct notifier_block *nb, unsigned long action
- 
- 	switch (action) {
- 	case BUS_NOTIFY_ADD_DEVICE:
--		/* Create serdev device for WCN7850 */
--		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107) {
-+		if (pci_match_id(pwrseq_m2_pci_ids, pdev)) {
- 			ret = pwrseq_pcie_m2_create_serdev(ctx, pdev);
- 			if (ret)
- 				return notifier_from_errno(ret);
- 		}
- 		break;
- 	case BUS_NOTIFY_REMOVED_DEVICE:
--		/* Destroy serdev device for WCN7850 */
--		if (pdev->vendor == PCI_VENDOR_ID_QCOM && pdev->device == 0x1107)
-+		if (pci_match_id(pwrseq_m2_pci_ids, pdev))
- 			pwrseq_pcie_m2_remove_serdev(ctx, pdev);
- 
- 		break;
+Changes in v2:
+- Dropped the pwrseq_is_fixed() change in favor or exporting pwrseq device's dev
+  pointer and using it to check for the presence of W_DISABLE2# property
+- Dropped the BT_EN fix for the Qcom WCN devices since it will be handled
+  separately
+- Collected tags
+- Link to v1: https://patch.msgid.link/20260422-pwrseq-m2-bt-v1-0-720d02545a64@oss.qualcomm.com
 
+---
+Manivannan Sadhasivam (9):
+      power: sequencing: pcie-m2: Fix inconsistent function prefixes
+      power: sequencing: pcie-m2: Allow creating serdev for multiple PCI devices
+      power: sequencing: pcie-m2: Improve PCI device ID check
+      power: sequencing: pcie-m2: Create serdev for PCI devices present before probe
+      power: sequencing: pcie-m2: Create BT node based on the pci_device_id[] table
+      power: sequencing: Add an API to return the pwrseq device's 'dev' pointer
+      Bluetooth: hci_qca: Add M.2 Bluetooth device support using pwrseq
+      Bluetooth: hci_qca: Rename 'power_ctrl_enabled' to 'bt_en_available'
+      Bluetooth: hci_qca: Set 'bt_en_available' based on W_DISABLE2# presence in M.2 connector
+
+ drivers/bluetooth/hci_qca.c               |  28 +++-
+ drivers/power/sequencing/core.c           |   9 ++
+ drivers/power/sequencing/pwrseq-pcie-m2.c | 232 ++++++++++++++++++++++--------
+ include/linux/pwrseq/consumer.h           |   7 +
+ 4 files changed, 215 insertions(+), 61 deletions(-)
+---
+base-commit: 254f49634ee16a731174d2ae34bc50bd5f45e731
+change-id: 20260422-pwrseq-m2-bt-abdaa71094eb
+
+Best regards,
 -- 
-2.48.1
+Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 
