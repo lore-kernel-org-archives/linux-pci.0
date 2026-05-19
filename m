@@ -1,101 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2E313403E3;
-	Tue, 19 May 2026 13:03:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC18340416;
+	Tue, 19 May 2026 13:07:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779195790; cv=none; b=Qi+OZ4eyzXwfhvWApI6SFQ/tjpBBrgHdPtqdc2nPXfC3USdAxzE/qerh8WqyanvM3rpDL/qG9TjXthSKoElZLoGnAZfKdIKdqz/Ss1Sy5hgsOIY9Y9AB0dfxKJUqxZsPj4GBV7p5Bz0STv2Rz8oGBvRmXse7GQq06KElAUVTluc=
+	t=1779196039; cv=none; b=kbjcHD1X0kjCwbq6M4HhtkDnGbEb+x+GtcKHpQmjTVFQkGJ1LB4Y6b2+rFaMUaAinV0IeiodiI7gLSZgDuz5azTMyb3NItu+gmgyAgBXcjEaOsx90L1+oaA0qULKtUDYZvZlOz2mlw0crqAtn4mzj+NkLqpS/qmsiwJ77W1GmdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779195790; c=relaxed/simple;
-	bh=+C2REwytvDpqdC7fpylSr1kFZZwJ6+smFl9XkzZoNGk=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:To:From:Subject:
-	 References:In-Reply-To; b=O8/oj216J53RCqiB1bq+XruXTQjmAbj4EF9jVe+guUW8MJXRHFdf1pU1yxTJqDrhMQAKLaPqlLxooJF0x6XhW3JCiO/YO8sLST6nOAYdNxgiz5ZPFMC58gfwP6mdxta1ZvN7sqRqSadRKSq4tlfl4optL5qDBVXoQqPHzXFnPJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZFAci2d8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779196039; c=relaxed/simple;
+	bh=OugdVeCobSnxk7atKWujQ4WieCK7dcTCbEIrkN3ZV8U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=C96Ke0sQkKoNxBXpRUNT3KytE1qbnNMK+SfeMI5AaZcovKUFcoFv6YenBymyxFzEn1UWgv5uTNvq70T1xs+ebfkrn4qZoR7NLkn58a5eQaWZYo39e1coSSwmIYhpa3w1O/52ayfoq75Dj7i7qVdpy2YNsFQXvbm+7ogngDkd8DI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EWBkg5eQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZFAci2d8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38FEEC2BCB3;
-	Tue, 19 May 2026 13:03:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EWBkg5eQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 072C8C2BCB3;
+	Tue, 19 May 2026 13:07:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779195790;
-	bh=+C2REwytvDpqdC7fpylSr1kFZZwJ6+smFl9XkzZoNGk=;
-	h=Date:Cc:To:From:Subject:References:In-Reply-To:From;
-	b=ZFAci2d8oxkEgzfKQypntDGC4/3sOl/EZD/Cif7IJcuE7YJmmxxvopoVOP513Ofvs
-	 YqZUHh6U76CV6qrXtkZmNjzwIC+TqPB/8rn1VBqRcmhDD6BuAREpNZhWHyaiV0ntSA
-	 EEa2w+3k32v9tDTHdL/35qponLjn3dwNCS+pWF/LekRMX/aktpdkLIlUYU8q3eWATc
-	 CTcujhS70SxHn6HZQ6zFOLTQ0QvyyhRJmPj3zyE2XiTzL7nCJ3J4ozxFuJnBCGei8O
-	 QUoBU8WAwJ347ud+tCTWDQab54U41ELMrzpY3F1iyjs7+E1rWk4Ni+0+jsd8zjgRj8
-	 EOFP+ednMG2HA==
+	s=k20201202; t=1779196039;
+	bh=OugdVeCobSnxk7atKWujQ4WieCK7dcTCbEIrkN3ZV8U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=EWBkg5eQe+ynpI1zcXySYzK91vsyED6f6TbzzpcCh726nCfEF9G/s0Or3E8rlkvnD
+	 aKMtgkG6lvrujLv1HaslX9JZbdSwOtIx1vEx4nOhmi2Xfvkb1Q7bFz+pgfX+2PC//n
+	 A4VMOeUlWBMej3VIVp2o3U7u20dXQtql2kubjigzSaqq6OfVG45RWM9DuLfJLWfndU
+	 B7v3TiseJBEC47lavYb946FWgF6EtWPDxD7ldeyHbFSHANaoThHliR8FdEcNS+wzv6
+	 SL3gkHNW/b/vUEenVESNaIrJPOjMc+7PJuwqcsE2mxKGG9jJwE/y+qRIn3vlxKe3ag
+	 o/kh1wSiSFupQ==
+Date: Tue, 19 May 2026 18:37:11 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Matthew Leung <matthew.leung@oss.qualcomm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: qcom: Add PCIe support for upcoming Hawi SoC
+Message-ID: <jtaqjariqueifpo4cbi5jogdrkfll7e4ddf5geupjebhj6mni3@hknbfb5z6uei>
+References: <20260508-hawi-pcie-v1-0-0c910906f7e5@oss.qualcomm.com>
+ <20260514172151.GA410819@bhelgaas>
+ <agYjMZX/cYijEBOm@hu-mattleun-lv.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 19 May 2026 15:03:02 +0200
-Message-Id: <DIMO9MW468B5.2KSIVYEMY31YF@kernel.org>
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <aliceryhl@google.com>, <david.m.ertman@intel.com>,
- <ira.weiny@intel.com>, <leon@kernel.org>, <viresh.kumar@linaro.org>,
- <m.wilczynski@samsung.com>, <ukleinek@kernel.org>, <bhelgaas@google.com>,
- <kwilczynski@kernel.org>, <abdiel.janulgue@gmail.com>,
- <robin.murphy@arm.com>, <markus.probst@posteo.de>, <ojeda@kernel.org>,
- <boqun@kernel.org>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-To: "Gary Guo" <gary@garyguo.net>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v3 16/27] rust: types: add `ForLt` trait for
- higher-ranked lifetime support
-References: <20260517000149.3226762-1-dakr@kernel.org>
- <20260517000149.3226762-17-dakr@kernel.org>
- <DIMLSVG1IO07.28UMFL4GTCQG4@nvidia.com>
- <DIMMHPLUV2LK.39WF9SGO8TLK5@garyguo.net>
-In-Reply-To: <DIMMHPLUV2LK.39WF9SGO8TLK5@garyguo.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <agYjMZX/cYijEBOm@hu-mattleun-lv.qualcomm.com>
 
-On Tue May 19, 2026 at 1:39 PM CEST, Gary Guo wrote:
-> Danilo, what do you think?
+On Thu, May 14, 2026 at 12:32:01PM -0700, Matthew Leung wrote:
+> On Thu, May 14, 2026 at 12:21:51PM -0500, Bjorn Helgaas wrote:
+> > On Fri, May 08, 2026 at 01:02:13AM +0000, Matthew Leung wrote:
+> > > This series adds PCIe support for the Qualcomm Hawi SoC. The Hawi
+> > > platform features two PCIe controllers: one capable of Gen3 x2 operation
+> > > and one capable of Gen4 x1 operation. The first patch adds the device
+> > > tree bindings documentation for the Hawi PCIe controller, and the second
+> > > patch adds driver support by enabling the Hawi compatible string in the
+> > > existing qcom PCIe driver.
+> > > 
+> > > This series depends on the following prerequisite series:
+> > > - [PATCH v3 0/7] clk: qcom: Add initial clock controllers for the
+> > >   upcoming Hawi SoC (Change-ID: 20260316-clk-hawi-1ad4cad36d6a:v3)
+> > > - [PATCH v4 0/2] interconnect: qcom: Add support for upcoming Hawi SoC
+> > >   (Change-ID: 20260311-icc-hawi-d6dc165f8935:v4)
+> > > 
+> > > These dependencies add necessary headers for running dt_binding_check
+> > > against the binding.
+> > 
+> > These apply cleanly to v7.1-rc1.  I suppose the dt_binding_check thing
+> > is the only real dependency?  Is there anything we need to do to
+> > enforce the dependency when these get merged upstream during the merge
+> > window?
+> > 
+> 
+> Yes, the dependencies are only needed for running dt_binding_check as
+> the example dts snippet would produce an error on the missing headers.
+> The patches should apply and build cleanly otherwise.
+> 
+> I thought this check could be a problem for merging so added the
+> dependencies for completeness. If the binding check isn't a concern, I
+> can drop the dependencies.
+> 
 
-Two thoughts about this:
+No, the dependencies are needed. It is also an indication that we cannot merge
+this PCIe binding change, until the dependent headers are merged to mainline.
 
-  (1) The blast radius is bigger than just auxiliary device registrations; =
-this
-      pattern is applicable to all kinds of registrations that provide the
-      guarantee to be scoped to the bus device being bound. I.e. it is true=
- for
-      any class device registration, IRQ registration, etc. They should all
-      support HRT eventually; there is a subsequent series where I started =
-to
-      implement this for DRM.
+dt_binding_check should not fail in linux-next or in mainline.
 
-  (2) I'm not concerned about the UnsafeForLtImpl approach, as I think for =
-a
-      human one would really need to be willing to abuse it by intention. I=
-.e.
-      it is not really different to just using unsafe {} while knowing not =
-to be
-      able to satisfy the safety requirement.
+- Mani
 
-      That said, I expect LLMs to be (heavily) used to write drivers, and L=
-LMs
-      are typically trained to be compliant. So, I could imagine that a pro=
-mpt
-      along the lines of "Can't we make this work without unsafe somehow?" =
-leads
-      to an LLM abusing this, while going unnoticed for the user.
+> > > Signed-off-by: Matthew Leung <matthew.leung@oss.qualcomm.com>
+> > > ---
+> > > Matthew Leung (2):
+> > >       dt-bindings: PCI: qcom: Document the Hawi PCIe Controller
+> > >       PCI: qcom: Add support for Hawi
+> > > 
+> > >  .../devicetree/bindings/pci/qcom,hawi-pcie.yaml    | 188 +++++++++++++++++++++
+> > >  drivers/pci/controller/dwc/pcie-qcom.c             |   1 +
+> > >  2 files changed, 189 insertions(+)
+> > > ---
+> > > base-commit: 4cd074ae20bbcc293bbbce9163abe99d68ae6ae0
+> > > change-id: 20260506-hawi-pcie-f61435ca420c
+> > > prerequisite-change-id: 20260316-clk-hawi-1ad4cad36d6a:v3
+> > > prerequisite-patch-id: c4fbb0620d748d7f1ee675ade5167775bd31c8ac
+> > > prerequisite-patch-id: ae5e212518cc333a1a93564cabfc6abd128df664
+> > > prerequisite-patch-id: 3c3816e0d595589fc02383f10e48c83a61fdc9d1
+> > > prerequisite-patch-id: cbc13fb819d1c1ee77957393f0958f05db8db864
+> > > prerequisite-patch-id: 17e2c0cfbbea826fefa1c67d0f5dc2094ab73d76
+> > > prerequisite-patch-id: 150dc74750377f4558deab6b179632872bcbb71c
+> > > prerequisite-patch-id: 38fe0da5b18610aeb32c7154f9e50187ccaec6a4
+> > > prerequisite-change-id: 20260311-icc-hawi-d6dc165f8935:v4
+> > > prerequisite-patch-id: a1ff655f0b21d6259b158ad9f99a95bde31257e6
+> > > prerequisite-patch-id: db21b6b20451be8475129faece7ef4191d41273c
+> > 
+> > I don't know where any of these change-ids or patch-ids come from.
+> 
+> These were generated by b4 after adding the change-id metadata for the
+> dependencies.
+> 
+> They should refer to the change-ids of the respective patch series:
+> - https://lore.kernel.org/all/20260506-clk-hawi-v3-0-530b538679f1@oss.qualcomm.com/
+> - https://lore.kernel.org/all/20260506-icc-hawi-v4-0-35447fdc482b@oss.qualcomm.com/
 
-That said, I think that requiring define_for_lt!() wouldn't be that big of =
-an
-issue; the number of registrations per driver is rather limited.
-
-Besides that, considering (2) it may actually address a practical concern.
-
-If you want to make the change I'm happy to integrate it in a v4, otherwise=
- a
-follow-up seems reasonable as well.
+-- 
+மணிவண்ணன் சதாசிவம்
