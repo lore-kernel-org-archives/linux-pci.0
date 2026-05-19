@@ -1,151 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mta-65-131.flowmailer.net (mta-65-131.flowmailer.net [185.136.65.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 113E0399352
-	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 10:04:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 485703164C5
+	for <linux-pci@vger.kernel.org>; Tue, 19 May 2026 10:30:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.65.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779185093; cv=none; b=Bk3BKx5TdLIKXlOK7th36fBdXXdqXOA7xb+6KuEhpI82uzd5hoqpjAT+k3p3zAwXBmGr3VFRNZeqeH1kIzrmN9Hw1KHNaEz8RCYJLnVrDytNnDIk1FUZITpSyF8TZ38n7XFxWIrjK5OplDaR1RIa5q0Y0MTioUU6keQTiWOA5BM=
+	t=1779186621; cv=none; b=e4SgosyxwbC70wJoRF/vrdqhjwDriXZZDt1DwozVa87tCi+BjqtWzKe4Nbhqoc3uZVL0Vb8VrknZ9BTBnbuBQcurZL7Da2yNgaxbYcg/1CNuT0EcIB3UHeltdhO5kPCJFkuHteLf4mcC/brYfPvlo/I92DAOwJ7K5y1q2Gim1F8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779185093; c=relaxed/simple;
-	bh=PV8TiI+ZqnhWDjeyekJKoYzpujlrMaypXERewLDxWE4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=OQNuG6uNnbuZwST9PM7XQka5zaMnRL6nLadDc++0WcR9AJXwZmnmCwgVnrjjeXBqih9+F/iDK3lyJOSLgg0Ls+DoRmSFdNwy2r1BVXWi/QInE34L2Kl5DEC6PJQ8IrXXDy3tAH/kD3rlIgFglEuvhBfvD4wEVD0brrMsfEXzyc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X4IeOdva; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1779186621; c=relaxed/simple;
+	bh=FMylFNF2LBIsDQTt92IHLCTEBM4Uc4LrYwy7HvJjx8M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CufRO6YCSVfYkYEulD4rR6mQcmMke5eoie9rjdJa+4lgNn1om/TIEjPJM06F2bKqjIjzkKJ2JUxcoWZNKsKoCOB2IYQ0VlXopeVCTer6+RbKnsK1+WpLtEkYXnhaeFWtFwqlqNA4Z9aSmk6BcAcarF6t56qfrArNDSChi6LWjLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens-energy.com; spf=pass smtp.mailfrom=errorhandling.siemens-energy.com; dkim=pass (1024-bit key) header.d=flowmailer.net header.i=@flowmailer.net header.b=EZaazZKd; dkim=pass (2048-bit key) header.d=siemens-energy.com header.i=schuster.simon@siemens-energy.com header.b=Te2jAfZD; arc=none smtp.client-ip=185.136.65.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens-energy.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=errorhandling.siemens-energy.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X4IeOdva"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96967C2BCC6;
-	Tue, 19 May 2026 10:04:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1779185092;
-	bh=PV8TiI+ZqnhWDjeyekJKoYzpujlrMaypXERewLDxWE4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date:From;
-	b=X4IeOdvaYiAj/s7fQBI5lLWuFFRGpG5v7m5u6oue24OHt75QENaVtUHLBYqJ3Nm4d
-	 QWrgqQUzOLm4oHIYbTp35/3CjqTEIy5O65oiZ+1+8HExJbs0gLvdpYle4t2dIGv3/O
-	 qFn1Qe/SCzdkiacqfndV/e7NJ0oThNIaLwYwWS5fp2t6oKCz1rBMck6PFjVi49wthb
-	 t651zbABhL5nLILvN45B/KPmoeAOv+M6MQ3PDjUPMlkHLj47qtPfXorJXGYKlBTEfa
-	 yPh4FN6zAeVDHARO51eGWEn3p0F9Dr9UWHC27Rk2dq1QnE/928AUB96Mm/495h9RKY
-	 B/XWABr6+sznw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 4/9] power: sequencing: pcie-m2: Create serdev for
- PCI devices present before probe
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Manivannan Sadhasivam via B4 Relay" <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260519-pwrseq-m2-bt-v3-4-b39dc2ae3966@oss.qualcomm.com>
-References: <20260519-pwrseq-m2-bt-v3-4-b39dc2ae3966@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 19 May 2026 10:04:52 +0000
-Message-Id: <20260519100452.96967C2BCC6@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=flowmailer.net header.i=@flowmailer.net header.b="EZaazZKd";
+	dkim=pass (2048-bit key) header.d=siemens-energy.com header.i=schuster.simon@siemens-energy.com header.b="Te2jAfZD"
+Received: by mta-65-131.flowmailer.net with ESMTPSA id 2026051910301535de9b9e580019fd51
+        for <linux-pci@vger.kernel.org>;
+        Tue, 19 May 2026 12:30:16 +0200
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; s=s1;
+ d=flowmailer.net;
+ h=from:from:sender:to:to:cc:cc:subject:subject:content-type:content-type:content-transfer-encoding:References:In-Reply-To:Date:Message-ID:MIME-Version;
+ bh=VQcumpK/VH7AMVe3D9QfBdm875bqYNSA1S/WhQcMd50=;
+ b=EZaazZKd3ZONXRq4GpMzuNQLKWTjDM3BCDcJN1Zro5Jf4shP6ldQEZRd/JpK1AZ4rlK0YF
+ /Aa7cioXIloqt5aLEMZp2zhOmX1/9l/6y1VhiFuSN27YZpJ0WrZoxkmuTSB8KOR9mJccLgIF
+ U5YZLq88tEC65edr76mfk0J41cOEg=;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; s=fm3;
+ d=siemens-energy.com; i=schuster.simon@siemens-energy.com;
+ h=from:from:sender:to:to:cc:cc:subject:subject:content-type:content-type:content-transfer-encoding:References:In-Reply-To:Date:Message-ID:MIME-Version;
+ bh=VQcumpK/VH7AMVe3D9QfBdm875bqYNSA1S/WhQcMd50=;
+ b=Te2jAfZD7hDN23NQ3+54hePl7vopCgSM3JMxLh/fm7xcDVL3oowG/1GukwfDalvkw/93pk
+ r1edcvtKHS8aMq6NRNiOadutVoT+ObgjmyLqPfqBF0IzKI4s/3l4Ljo3Ns0e8129/XbiB/f0
+ eILgqZumYF4wXN2RrKqjT6iJT48jJyha8qiB1Ms2c7YCYUsoOaUZYeqchP96MjjkD2jP9Tnp
+ Bup5ZCH2E2PIWkx0GqjYc7NY1+ofQc4JMbJbK42rmOgM8diRAjnGGhXNzlSI65tykwA8DWj2
+ tjMUFpTA0awNupV3gXQUmo6aF83iBjTdaCqUN4ZyrwUBouDMkjB7zheA==;
+Date: Tue, 19 May 2026 12:30:12 +0200
+From: Simon Schuster <schuster.simon@siemens-energy.com>
+To: Ethan Nelson-Moore <enelsonmoore@gmail.com>,
+	Wolfram Sang <wsa+renesas@sang-engineering.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Arnd Bergmann <arnd@arndb.de>,
+ Dinh Nguyen <dinguyen@kernel.org>, linux-doc@vger.kernel.org,
+ devicetree@vger.kernel.org, workflows@vger.kernel.org, Linux-Arch
+ <linux-arch@vger.kernel.org>, dmaengine@vger.kernel.org,
+ linux-i2c@vger.kernel.org, linux-iio@vger.kernel.org, Netdev
+ <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
+ linux-pwm@vger.kernel.org, linux-hardening@vger.kernel.org,
+ linux-kbuild@vger.kernel.org, "linux-csky@vger.kernel.org"
+ <linux-csky@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan
+ <skhan@linuxfoundation.org>, Rob Herring <robh@kernel.org>, Krzysztof
+ Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Daniel
+ Lezcano <daniel.lezcano@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+ Alex Shi <alexs@kernel.org>, Yanteng Si <si.yanteng@linux.dev>, Dongliang
+ Mu <dzm91@hust.edu.cn>, Hu Haowen <2023002089@link.tyut.edu.cn>, Kees Cook
+ <kees@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Will Deacon
+ <will@kernel.org>, "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>, Nicholas Piggin
+ <npiggin@gmail.com>, Vinod Koul <vkoul@kernel.org>, Frank Li
+ <Frank.Li@kernel.org>, Dave Penkler <dpenkler@gmail.com>, Andi Shyti
+ <andi.shyti@kernel.org>, Jonathan Cameron <jic23@kernel.org>, David Lechner
+ <dlechner@baylibre.com>, =?ISO-8859-1?Q?Nuno_S=E1?= <nuno.sa@analog.com>,
+ Andy Shevchenko <andy@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ "David S . Miller" <davem@davemloft.net>, Eric Dumazet
+ <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni
+ <pabeni@redhat.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof
+ WilczyDski <kwilczynski@kernel.org>, Andreas Oetken
+ <andreas.oetken@siemens-energy.com>
+Subject: Re: [PATCH] nios2: remove the architecture
+Message-ID: <20260519103012.blot4bssgiqfer6p@dev-vm-schuster>
+References: <20260518042833.272221-1-enelsonmoore@gmail.com>
+ <d40b1e80-37fc-4c88-9d7f-dae6458efe6c@app.fastmail.com>
+ <20260518105735.GW3126523@noisy.programming.kicks-ass.net>
+ <20260518172444.zyd47mcagrcwu7wt@dev-vm-schuster>
+ <CADkSEUjhq6HSdg4ignzbuJiN5uXATsTdxFbRJ3BMxs5=WUWLDg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CADkSEUjhq6HSdg4ignzbuJiN5uXATsTdxFbRJ3BMxs5=WUWLDg@mail.gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Leaked serdev_controller reference on early exit in pwrseq_pcie_m2=
-_create_serdev_one()
-- [High] Mixing goto-based error handling with scope-based cleanups (__free=
- and scoped_guard) in the same function
---
+Hi Ethan, hi Wolfram,
 
-commit f9e3f8cd7dae54d53f6be50d3fa50b1da0d87fe2
-Author: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Thank you for your thoughtful responses.
 
-power: sequencing: pcie-m2: Create serdev for PCI devices present before pr=
-obe
+On Mon, May 18, 2026 at 05:13:58PM -0700, Ethan Nelson-Moore wrote:
+> Your reasoning makes complete sense. However, there is an alternative
+> to maintaining the architecture in mainline.
+> 
+> The Civil Infrastructure Platform project maintains super-LTS kernels
+> (and a set of base Debian packages) for 10 years. They are intended to
+> be used for exactly these kinds of devices.
+> See here: https://wiki.linuxfoundation.org/civilinfrastructureplatform/start#kernel_maintainership
+> and here: https://cip-project.org/about/linux-kernel-core-packages
+> 
+> CIP will maintain kernel 6.12 until 2035. Is this long enough for your
+> lifecycle? What kernel are you currently using? If it's newer than
+> 6.12, we can easily wait until the next CIP SLTS release to remove
+> Nios II support to avoid a downgrade.
 
-This commit adds support for creating serdevs for PCI devices that are
-already present before the driver completes its probe phase. It complements
-the existing notifier-based hotplug support to handle existing devices.
+This depends. For released/maintained firmware revisions we already
+track CIP SLTS versions (candidates) to be prepared, the majority of which
+is currently still running 6.1.x with 6.12.x up-and-coming.
+But for the reasons outlined by you regarding architectural and feature
+support in CIP SLTS, we do not, however, use the extended support duration
+SLTS releases in production, and instead upgrade with the kernel.org LTS
+branch release schedule and track these internally alongside mainline
+to prevent major obstacles during version jumps.
+2035 is still a rather tight timeframe for our typical support/phase-out
+period (we would hope to get close to 2040 with the SLTS extensions),
+which is also the reason for our targeted 'lifetime extension' for the
+nios2 architecture for approximately 5 years, or more precisely ~2-3
+SLTS kernels assuming the usual cadence of 2 years between SLTS versions
+(+ some safety margin).
 
-> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/se=
-quencing/pwrseq-pcie-m2.c
-> index 038271207a27e..8164c44289775 100644
-> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-[ ... ]
-> @@ -259,6 +259,14 @@ static int pwrseq_pcie_m2_create_serdev(struct pwrse=
-q_pcie_m2_ctx *ctx,
->  		return 0;
->  	}
-> =20
-> +	/* Bail out if the serdev device was already created for the PCI dev */
-> +	scoped_guard(mutex, &ctx->list_lock) {
-> +		list_for_each_entry(pci_dev, &ctx->pci_devices, list) {
-> +			if (pci_dev->pdev =3D=3D pdev)
-> +				return 0;
-> +		}
-> +	}
-> +
+> Also, CIP focuses on architectures used by CIP members - currently I
+> think they are x86 (32 and 64-bit), ARM (32 and 64-bit) and RISC-V.
+> Since Siemens is already a CIP member, you can simply ask them to add
+> Nios II to the list, and you can assist them with testing and directly
+> submit patches to them once the standard 6.12 LTS period ends.
 
-Earlier in this function, of_find_serdev_controller_by_node() acquires a
-reference to the serdev controller. If the device is found in the list,
-the code returns 0 directly from within the scoped_guard block.
+We have already been in contact with the CIP team (even though the
+contact has unfortunately lapsed a bit, mostly our fault), but adding an
+additional architecture seemed to be a more substantial effort.
+N.B.: Due to past circumstances, we are a completely distinct business
+entity from Siemens AG that merely shares the trademark and a common
+history; but of course this should not hinder us from getting directly
+involved in CIP (quite the opposite!). But this also requires some setup
+time.
 
-Does this early return leak the serdev controller reference by bypassing
-the required serdev_controller_put() call at the end of the function?
+On Mon, May 18, 2026 at 10:46:55PM +0200, Wolfram Sang wrote:
+> > If desired, we also would be happy to intensify our support regarding
+> > reviews or testing to share the maintnance burden if it helps to keep
+> > nios2 in mainline a bit longer.
+> 
+> ... but given this, you might want to get added in MAINTAINERS as
+> reviewer (or even maintainer) for nios2? Besides that your efforts are
+> already worth it in my book, it would also ensure you get CCed on
+> patches like this. Then, you are not depending on people like Arnd
+> putting you in the loop manually.
 
-Additionally, include/linux/cleanup.h notes that mixing goto and cleanup
-helpers like guard() in the same function is not expected. This function
-still relies on multiple goto labels (e.g., err_put_ctrl, err_free_pci_dev)
-for error handling. Could this function be converted fully to scope-based
-cleanups to avoid potential LIFO ordering issues?
+Sure, I'd be glad to do so, but so far I refrained from it as I was a bit
+unsure about the netiquette (can I simply do so by self-proclamation? At
+least the git history seems to suggest so...).
 
-[ ... ]
-> @@ -408,18 +416,56 @@ static int pwrseq_pcie_m2_register_notifier(struct =
-pwrseq_pcie_m2_ctx *ctx, stru
-[ ... ]
-> +static int pwrseq_pcie_m2_create_serdev(struct pwrseq_pcie_m2_ctx *ctx)
-> +{
-> +	struct pci_dev *pdev =3D NULL;
-> +	int ret;
-> +
-> +	if (!pwrseq_pcie_m2_check_remote_node(ctx->dev, 3, 0, "serial") ||
-> +	    !pwrseq_pcie_m2_check_remote_node(ctx->dev, 0, 0, "pcie"))
-> +		return 0;
-> +
-> +	struct device_node *pci_parent __free(device_node) =3D
-> +				of_graph_get_remote_node(dev_of_node(ctx->dev), 0, 0);
-> +	if (!pci_parent)
-> +		return 0;
-> +
-> +	/* Create serdev for existing PCI devices if required */
-> +	for_each_pci_dev(pdev) {
-> +		if (!pdev->dev.parent || pci_parent !=3D pdev->dev.parent->of_node)
-> +			continue;
-> +
-> +		if (!pci_match_id(pwrseq_m2_pci_ids, pdev))
-> +			continue;
-> +
-> +		ret =3D pwrseq_pcie_m2_create_serdev_one(ctx, pdev);
-> +		if (ret) {
-> +			dev_err_probe(ctx->dev, ret,
-> +				      "Failed to create serdev for PCI device (%s)\n",
-> +				      pci_name(pdev));
-> +			pci_dev_put(pdev);
-> +			goto err_remove_serdev;
-> +		}
->  	}
-> =20
->  	return 0;
-> +
-> +err_remove_serdev:
-> +	pwrseq_pcie_m2_remove_serdev(ctx, NULL);
-> +
-> +	return ret;
->  }
-
-Similar to the concern above, this newly introduced function declares
-pci_parent using __free(device_node) but also uses goto-based error
-handling with the err_remove_serdev label.
-
-Does this mix of goto and __free() violate the subsystem guidelines
-recommending against combining both cleanup styles in the same function?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260519-pwrseq-m2-=
-bt-v3-0-b39dc2ae3966@oss.qualcomm.com?part=3D4
+Best regards,
+Simon
