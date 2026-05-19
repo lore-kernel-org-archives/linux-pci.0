@@ -1,162 +1,215 @@
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012055.outbound.protection.outlook.com [52.101.43.55])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B22D1365A0B;
-	Tue, 19 May 2026 22:31:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.55
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779229890; cv=fail; b=mJPl/Dt51lCi+Rg3G7TnMILGcEKELBwiTyZWdM0w+5lix5qDKDd6Ydl5NnamEZtEVL3k0GyL2gGexRIhICXBFfOEVeHwYGOMb/ctmAijq1pmtFIbMY8P5pmsryLld0tRPzaVVXGBlPNDbHby52ALYPFld7LQ9PRKaJ4uJZtoPU0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779229890; c=relaxed/simple;
-	bh=BZHt7c8ughzvqrYh55LuOw68i1/qqQenwFerjLTFB+8=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hQv1/HVeuMBkUK17yiJVB532qHFOBa8lnRHvkKoSkQlZJQC4RTnWnn/KXc487XvbytGokkX9ojud2Debt5A4eXWrmqKYnScwt9LQu+1TN4MNK9KTHge+HxhdeoF08GBNYa0WlfykiF7kZFbFFdtJyI2KRSc+Q4T4RpbHsDPbiSo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=kllsOHq2; arc=fail smtp.client-ip=52.101.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C14370D70;
+	Tue, 19 May 2026 22:39:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779230344; cv=none; b=J1a6gUCTRZehxKK25fAGFNva6a3jUgaDSzPoZ+bu5djNUI4glat7spJcU2mm4oKCwXLLtH/eJBBH65v/TxSOCalpCX2plgOUSpBefOKi8IpYarWv94Ik1dElAeuKqWYEW4TS3nLsepU4mz3avqCUq63olNCcfeKMdaNVJ6yWJw4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779230344; c=relaxed/simple;
+	bh=BwED/VE3bDiqK/oe+pE2/kpirJdTKU6ceKY+zXIkYPw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=u2iodMxBd4Ps144hZQ+9BPFmXq64C1Zj/DeoCd1U/znjiz+y0zwyKeu+6epPTutw1vH+t1ukcgIo4zzZo6nb/Dvgx6EQTqLTaXPG7PHEaVxcp3ojeDms2wP0f0719q0b0zl0B5E4Y5xSyXEjbtN+hpAodLrra2ya2xUqbDwN8Rk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=acjyTica; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="kllsOHq2"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=St/bLQWxmlK0bJ1swtUS+O97+qBnMQUSLxGIzwXuoGkgqrn8fJgbv/T6EqzpQsVXpaHV7j1YZUIc91xLESxS+D70zFnr2MdjuBgxBQrTew5eNO+FY4kQPz7oscNNFFMr/zu/fSbdtuD5AEykLcZ0dkLbI3aOKtmZSut0JvaecPxFQrP+kVyI7NGhKEaYlIZmNbEBmeF6V05/HafXff7JcA8KdI77WPdTkHyamO3Z/XP+RN524XntOEUe9MLkeSW72FSOPyLv2d6kvpe9renPmyJIZo7f/Uo3u9CBuYo6st6XHgquSSMRyVnew7skSaeq/sq/aFJeGan9WEDOANHyDQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nW4Szj4mnbVsl2PmOZmFHj1we67HfxwbNdZ3ENqEt1s=;
- b=afDRyUMSQ992FmfwQ4du/c4b34PgJvzOB9g+gEKmSi2sxkVqt+4sXJGmFduVAFAbv+/Wx6I6xMdHaQAVrnwFgqMfgq37xNPJkaDLwLB5grhPsC8xRccIeJelFpPghx/c2jzc8iwOKWjf5JKzavsb8vUo91LX2I3mXmLNwRl8sREDezZz1NvevYsql89Ij1IOvbPwBV7EHkV1NjkYRMNBqAr6XFfhi7S8M//CjuFwiGGkKEq/8dVzool9xyZWijFDJ+7CwVs0sXdMdu6J7XSsmmRJz7mxqBReFL+SW7lZwyZU7+C8BbkfL5Y8qesuN36/Adlse1lfevE5IeUpx9eZ4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.161) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nW4Szj4mnbVsl2PmOZmFHj1we67HfxwbNdZ3ENqEt1s=;
- b=kllsOHq2N/1S7lLAH4Lx0f9y6CknnG6FRBPAlsiwzy8AgXtvJXpxFyiVhZMPcVIwnuOQngha6gsG0KKDeRcIgABbVQG7cNrjQTu4xYrYGI0KG3EbewK1eGIqqw2MuQhb6b/kkGJgQOzS6DPxRVNc360//bVtDAkZDGzEw4FAspUT54ZhTHO+EA/x5gp9+IAHhhSSuRKjc8uZm4tkHYLKhqysnb9Ugj9OA9P+4xytqeKnVdkbNG6+M0wyIvaE3ljTmfQOn+a4Bs1TK0yRzwGZL50yzFMQIjAl9bot5Royv4L5964tNenUhJFW62Vt/RzVHlYXZ4dCV/6yQOLR/Lsa+Q==
-Received: from CH5P221CA0015.NAMP221.PROD.OUTLOOK.COM (2603:10b6:610:1f2::9)
- by PH8PR12MB6772.namprd12.prod.outlook.com (2603:10b6:510:1c7::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.14; Tue, 19 May
- 2026 22:31:21 +0000
-Received: from CH1PEPF0000AD7E.namprd04.prod.outlook.com
- (2603:10b6:610:1f2:cafe::39) by CH5P221CA0015.outlook.office365.com
- (2603:10b6:610:1f2::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.48.14 via Frontend Transport; Tue, 19
- May 2026 22:31:20 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.161) by
- CH1PEPF0000AD7E.mail.protection.outlook.com (10.167.244.87) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.48.11 via Frontend Transport; Tue, 19 May 2026 22:31:20 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 19 May
- 2026 15:30:48 -0700
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Tue, 19 May
- 2026 15:30:47 -0700
-Received: from Asurada-Nvidia (10.127.8.9) by mail.nvidia.com (10.129.68.10)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Tue, 19 May 2026 15:30:46 -0700
-Date: Tue, 19 May 2026 15:30:45 -0700
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-CC: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, "Joerg
- Roedel" <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J .
- Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, "Pranjal
- Shrivastava" <praan@google.com>, Mostafa Saleh <smostafa@google.com>, Lu
- Baolu <baolu.lu@linux.intel.com>, Kevin Tian <kevin.tian@intel.com>,
-	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>, Shuai Xue
-	<xueshuai@linux.alibaba.com>
-Subject: Re: [PATCH v4 11/24] iommu: Add iommu_report_device_broken() to
- quarantine a broken device
-Message-ID: <agzkldmlG1cuDkj4@Asurada-Nvidia>
-References: <cover.1779161849.git.nicolinc@nvidia.com>
- <745da1a819eb943f2519e660c8bcfde715885c6c.1779161849.git.nicolinc@nvidia.com>
- <20260519120737.GQ787748@nvidia.com>
- <agysAyreCY4huf0I@Asurada-Nvidia>
- <20260519191626.GJ3602937@nvidia.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="acjyTica"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5BCC01F000E9;
+	Tue, 19 May 2026 22:39:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779230342;
+	bh=uhGMUkYK7lJN21Y0KILAaLJAxufhyTf8mTQiKOdsg6M=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=acjyTicaIjtkUEZL6fJWCBm/HWBLjz/+5c58S36X8fn7b9V2iaJDRcH/VWXAa4o2p
+	 8ZTg5jzqMHREg4YJRclKWkeX4leIONH8badx1nbph3Y+XhUnr8dR+DRl3QQhfFCjvH
+	 Bv8mVmjDhfnDV/+TBS6dgBSclWGF9ft8dhu1/hnoQNmUxNhiaZOirESnQ6vl+Tf5zv
+	 3gpemJ9qYTHhC66Cb92r/tqqqyV4YMFElRT7YWxmsebbOzsb5HeNbOddjId5hsv71/
+	 5AnjBPliF3pt/lpE/NifwxsIZoBGfMSVlJdVY1aa1Xns6CSy88KLPsZPQa/o/0XLxc
+	 bmwIHWhYeC48Q==
+Date: Tue, 19 May 2026 17:39:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com,
+	bjorn.andersson@oss.qualcomm.com
+Subject: Re: [PATCH v5 1/5] PCI: host-common: Add helper to determine host
+ bridge D3cold eligibility
+Message-ID: <20260519223901.GA20376@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260519191626.GJ3602937@nvidia.com>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH1PEPF0000AD7E:EE_|PH8PR12MB6772:EE_
-X-MS-Office365-Filtering-Correlation-Id: 94734e0e-7581-442b-1c16-08deb5f659bc
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|36860700016|7416014|376014|4143699003|22082099003|18002099003|56012099003|3023799007|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	/AJe6KzXprmcQyA6o9GtbCeayRznLaKrkzioenGpbfLFpyOn2ezjXONK9mdVVB4rZr1W055Ki23z3XMJqLAZUfljS6b6cLGq4A3ESzuGOPFvjLUhgKDshyXp0rxVQEQsgZ+HOY+JEMnaEuM+HHlC8pwKhKsppfphqzNjAde1P0hNPVJZnBNen5bCf2Nk1J4+721a5/4H/n2Bl8tllOO9HDEQZGh7W3Mrki0AENrJ7lBo8KzZFq54txOmBX6dt07y29SW9JLOHqiwtwulFWO09AQ920xfUygwf/6nJUKbITZ2KFjUY9z8u0DDaMHe0k9GRx72JYhpBxOn+CxL9UudgI55+hAhGhenKRIieISHMrF9/TgVpv9eaSlT3MGBdJO60shvz83V+au36knGQANNDSkSXXI1F1EFbTy+587BSf33Q1A/vxyw++o7h9rn2Mu/fxHZEZtTIUJeEx2ODA6LLA+soonzr8ngH+y7ec+jFM/nodQkqswjd4cIqq7aAb3LR2AgLd/mk1LmpSwlcsGasp7r1Q7C2xonuZ8yJ+hb6jr4r45VkbLyv9K3axGmi+yx7XW1nZKFdn5lbPgcMNjaJ2o3V8eCCxgqcNLNwsCleb8AHr3Ps1DSUxpuUBw7sujO+4s6pwwdUv3KAJgENq2YIo5wOga4hzcFE+Hnf4mhUtDiKxr4YbzRNq6QhtUwuAzNBVb743kjhb/KP/zLgkEPRn/4JW3LQFi+yI5XI3litH0=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(36860700016)(7416014)(376014)(4143699003)(22082099003)(18002099003)(56012099003)(3023799007)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	4VTI7+PZWP56DCQqDlppE+K8r1oJHib2bZt54GHJ+xX5TfkJcWnMrIBMq1+x5KDJWQBx6lv22cny7JDxw/1TLoh9vyCmpBvhOkPHcd3Ljf5Eee3E1e5ijs21Xv0NH1bGq4em9SujwKWrBnN7iAVeR/GHwA7LK1fSxM5oZcs/dgYF2EQD+pvdLYd4DygocH8dYLA83bi/aFwifzeA12jraW3w9JLvLFeGl9+7GGaX/Qnh/aVR9Nvwzjz9EqXXgmoJcaPg8qKH2jhRunWo7YyAPGYowGezsUkSmK8oRYa8IVO2tgmbvJ/IMb8nGEzaQR69L5o+KTkQhFAnJc2i3+7o+dIlz5sdage1g2Vp5bX4OXFcBfUuSV075sZrCjAKbQDXiw/BqGiClA5iUMmyuF9d0QbvfjS+dty4EdLGTpgEvx7ul+12qG6cQllhzp6CB+aO
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2026 22:31:20.3634
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 94734e0e-7581-442b-1c16-08deb5f659bc
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH1PEPF0000AD7E.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6772
+In-Reply-To: <20260429-d3cold-v5-1-89e9735b9df6@oss.qualcomm.com>
 
-On Tue, May 19, 2026 at 04:16:26PM -0300, Jason Gunthorpe wrote:
-> On Tue, May 19, 2026 at 11:29:23AM -0700, Nicolin Chen wrote:
-> > On Tue, May 19, 2026 at 09:07:37AM -0300, Jason Gunthorpe wrote:
-> > > On Mon, May 18, 2026 at 08:38:54PM -0700, Nicolin Chen wrote:
-> > Then, the core needs to block the device using the similar routine
-> > to the reset prepare(). And that needs to hold group->mutex, so it
-> > needs an async worker.
-> > 
-> > Do you see a much simpler way?
+On Wed, Apr 29, 2026 at 12:12:23PM +0530, Krishna Chaitanya Chundru wrote:
+> Add a common helper, pci_host_common_d3cold_possible(), to determine
+> whether PCIe devices under host bridge can safely transition to D3cold.
 > 
-> Put the work on the dev_iommu and forget about rcu.
+> This helper is intended to be used by PCI host controller drivers to
+> decide whether they may safely put the host bridge into D3cold based on
+> the power state and wakeup capabilities of downstream endpoints.
 > 
-> But this is all probably better as some later series if at all. The
-> driver can block the ATS and the expectation is something will FLR the
-> device. The FLR will set the blocking and then restore the
-> domain. None of this async work seems functionally necessary, though
-> it would be a nice to have. Lets focus on the bare minimum here it, it
-> is already a difficult enough problem without tacking on these
-> extras..
+> The helper walks all devices on the all bridge buses and only allows
+> the devices to enter D3cold if all PCIe endpoints are already in
+> PCI_D3hot. This ensures that we do not power off the host bridge while
+> any active endpoint still requires the link to remain powered.
+> 
+> For devices that may wake the system, the helper additionally requires
+> that the device supports PME wake from D3cold (via WAKE#). Devices that
+> do not have wakeup enabled are not restricted by this check and do not
+> block the devices under host bridge from entering D3cold.
+> 
+> Devices without a bound driver and with PCI not enabled via sysfs are
+> treated as inactive and therefore do not prevent the devices under host
+> bridge from entering D3cold. This allows controllers to power down more
+> aggressively when there are no actively managed endpoints.
+> 
+> Some devices (e.g. M.2 without auxiliary power) lose PME detection when
+> main power is removed. Even if such devices advertise PME-from-D3cold
+> capability, entering D3cold may break wakeup. So, return PME-from-D3cold
+> capability via an output parameter so PCIe controller drivers can apply
+> platform-specific handling to preserve wakeup functionality.
+> 
+> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> ---
+>  drivers/pci/controller/pci-host-common.c | 71 ++++++++++++++++++++++++++++++++
+>  drivers/pci/controller/pci-host-common.h |  2 +
+>  2 files changed, 73 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+> index d6258c1cffe5..09432d69175c 100644
+> --- a/drivers/pci/controller/pci-host-common.c
+> +++ b/drivers/pci/controller/pci-host-common.c
+> @@ -17,6 +17,9 @@
+>  
+>  #include "pci-host-common.h"
+>  
+> +#define PCI_HOST_D3COLD_ALLOWED        BIT(0)
+> +#define PCI_HOST_PME_D3COLD_CAPABLE    BIT(1)
+> +
+>  static void gen_pci_unmap_cfg(void *ptr)
+>  {
+>  	pci_ecam_free((struct pci_config_window *)ptr);
+> @@ -106,5 +109,73 @@ void pci_host_common_remove(struct platform_device *pdev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_host_common_remove);
+>  
+> +static int __pci_host_common_d3cold_possible(struct pci_dev *pdev, void *userdata)
+> +{
+> +	u32 *flags = userdata;
+> +	int type;
+> +
+> +	/* Ignore conventional PCI devices */
+> +	if (!pci_is_pcie(pdev))
+> +		return 0;
+> +
+> +	type = pci_pcie_type(pdev);
+> +	if (type != PCI_EXP_TYPE_ENDPOINT &&
+> +	    type != PCI_EXP_TYPE_LEG_END &&
+> +	    type != PCI_EXP_TYPE_RC_END)
+> +		return 0;
 
-OK. So you are suggesting a quarantine at the driver-level only:
+From https://sashiko.dev/#/patchset/20260429-d3cold-v5-0-89e9735b9df6%40oss.qualcomm.com:
 
-1. Driver detects ATC_INV timeout during an invalidation.
-2. Driver retries the commands to identify the master.
-3. Driver calls pci_disable_ats() and clears STE.EATS.
-4. Driver marks domain->invs ATS entries as BROKEN.
-   (optional since pci_disable_ats() is done?)
-5. Driver sets master->ats_broken to fence concurrent attach:
-   arm_smmu_write_ste() and arm_smmu_ats_supported().
-6. Something external triggers an FLR (sysfs or AER).
-7. FLR goes through pci_dev_reset_iommu_prepare()/done(). done()
-   reverts 3+4 and calls the reset_device_done callback clearing
-   master->ats_broken (5).
+  If the topology contains an active conventional PCI device or an
+  intermediate PCIe switch in PCI_D0, returning 0 here allows
+  pci_walk_bus() to continue without clearing the
+  PCI_HOST_D3COLD_ALLOWED flag.
 
-Right?
+  Does this create a situation where the host bridge might
+  aggressively power off the link, dropping power to these active
+  components?
 
-Then, we'll have very limited work in the core for this series.
+I guess this is intentional, since you have comment about ignoring
+conventional PCI devices.  But this does seem like a potential
+problem.  Why should we ignore switches here?  And I think it's still
+fairly common to have a PCIe-to-PCI bridge leading to a conventional
+PCI device, and I don't know why we should ignore them.
 
-Nicolin
+The commit log consistently refers to "PCIe" devices and endpoints, so
+maybe there's some reason that I'm missing.
+
+There are other sashiko comments on this series that I think should
+also be looked at.
+
+> +
+> +	if (!pdev->dev.driver && !pci_is_enabled(pdev))
+> +		return 0;
+> +
+> +	if (pdev->current_state != PCI_D3hot)
+> +		goto exit;
+> +
+> +	if (device_may_wakeup(&pdev->dev)) {
+> +		if (!pci_pme_capable(pdev, PCI_D3cold))
+> +			goto exit;
+> +		else
+> +			*flags |= PCI_HOST_PME_D3COLD_CAPABLE;
+> +	}
+> +
+> +	return 0;
+> +
+> +exit:
+> +	*flags &= ~PCI_HOST_D3COLD_ALLOWED;
+> +
+> +	return -EOPNOTSUPP;
+> +}
+> +
+> +/**
+> + * pci_host_common_d3cold_possible - Determine whether the host bridge can transition the
+> + *				     devices into D3Cold.
+> + *
+> + * @bridge: PCI host bridge to check
+> + * @pme_capable: Pointer to update if there is any device which is capable of generating
+> + *		 PME from D3cold.
+> + *
+> + * Walk downstream PCIe endpoint devices and determine whether the host bridge
+> + * is permitted to transition the devices into D3cold.
+> + *
+> + * Devices under host bridge can enter D3cold only if all active PCIe endpoints are in
+> + * PCI_D3hot and any wakeup-enabled endpoint is capable of generating PME from D3cold.
+> + * Inactive endpoints are ignored.
+> + *
+> + * The @pme_capable output allows PCIe controller drivers to apply
+> + * platform-specific handling to preserve wakeup functionality.
+> + *
+> + * Return: %true if the host bridge may enter D3cold, otherwise %false.
+> + */
+> +bool pci_host_common_d3cold_possible(struct pci_host_bridge *bridge, bool *pme_capable)
+> +{
+> +	u32 flags = PCI_HOST_D3COLD_ALLOWED;
+> +
+> +	pci_walk_bus(bridge->bus, __pci_host_common_d3cold_possible, &flags);
+> +
+> +	*pme_capable = !!(flags & PCI_HOST_PME_D3COLD_CAPABLE);
+> +
+> +	return !!(flags & PCI_HOST_D3COLD_ALLOWED);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_host_common_d3cold_possible);
+> +
+>  MODULE_DESCRIPTION("Common library for PCI host controller drivers");
+>  MODULE_LICENSE("GPL v2");
+> diff --git a/drivers/pci/controller/pci-host-common.h b/drivers/pci/controller/pci-host-common.h
+> index b5075d4bd7eb..7eb5599b9ce4 100644
+> --- a/drivers/pci/controller/pci-host-common.h
+> +++ b/drivers/pci/controller/pci-host-common.h
+> @@ -20,4 +20,6 @@ void pci_host_common_remove(struct platform_device *pdev);
+>  
+>  struct pci_config_window *pci_host_common_ecam_create(struct device *dev,
+>  	struct pci_host_bridge *bridge, const struct pci_ecam_ops *ops);
+> +
+> +bool pci_host_common_d3cold_possible(struct pci_host_bridge *bridge, bool *pme_capable);
+>  #endif
+> 
+> -- 
+> 2.34.1
+> 
