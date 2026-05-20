@@ -1,120 +1,143 @@
-Received: from mail-qv1-f53.google.com (mail-qv1-f53.google.com [209.85.219.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 513EF3C13E9
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 09:27:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FD8C3C1974;
+	Wed, 20 May 2026 09:29:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779269270; cv=none; b=cjoJEcbJqJh7L4v8A0rL/ZSFFLqA55Aj/mgwWiXw/LGr0fch0rKt1Sr5mfRUONcY/6EUBSaVElB3Gz5B9gKgstMTcjBwMHH1jL/3tlVTrnH8euzYNYN75mlqQRb4ssfPuQmItqCy5O5Ypi9FRsqzUFqoR8AeqfrBBCkhe2gjR34=
+	t=1779269366; cv=none; b=AC2GzK3vN4xSpYi3iliL5mbZg5qvA5CQvW66qmfOVW1x7Gf/GFBEkIoi16WvFTFeXJ1OLLelQxbYjp0CGw/wVQtrxa50eARkC/HW9tIs161nuDEAgKfmmTHXusVV9EICH4LAivXNIM/O3sfsvlCXLZFGb4Cv5dgu5BH6Xv3CUME=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779269270; c=relaxed/simple;
-	bh=cqcKGoxGxtGWXpqUGB19b7cxo39gytYLyy/dKTEdc5U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=WU1LvDGhEBPRdtYY2QLVYgY01HVNs8Miy4C9YnTj8sHia2SOkhzmj+nNn0+GI1krVLeRUHsKhiTA1xsWOAalulOK9XMH5TwrhyTwSW6z2ofNo0GLXv8BAowK5OAy6GHqOjbikh0mK5tFQ9WFqfHANxFLh4sWFtuokKx4cBBTeuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-qv1-f53.google.com with SMTP id 6a1803df08f44-8acb09ddbf6so87054946d6.2
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 02:27:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779269262; x=1779874062;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bSg8CcmcyzhUpjDW73nfoHFxPOMVgUx5GEZqNXk4ccg=;
-        b=HVSDYAkB8A+BgIw3Z2pQIDkj187mVD5zogSQz1ru7vUB0AT0wDu+MAy0g3ZZeXPxIM
-         mzJ+tz99C0UJNsSgRBwhUL+cSyNlKsWEjDFJeNv+nFjE/BogkNV7kRUG0N2baTRTXdxj
-         +JlJj+7+fUbgiHne/K4pHv6kbxnoXz4jAgnfiS2vzsPlXfl6OyOEgJTb6nw8wCjimXuB
-         kzig0W1IKIaVdJjT8LpU8LStTxWgLZTnG3CxKf/pR0wddxlkhNQhzdNJT6+XdRo3jVyo
-         /fIWYHY0BWoh0JkOO2oiDLyTuNsmGphimOhiZ9tv4EmK653empu7axfJT/JswCaX8pFW
-         5QEQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/cYbxQAgefQ472SM76UMTfwaozN1xs77GmdV+lvYC0SxUCyuPRlN9Z0OmWgZJo7X4a6Uc1TusjaiQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy8RgMrwuQF4UkhMdnowemrGyr38UmlLQSwiUBl5YKrYTZsNuG1
-	GjVnVSlo6XxA4mXwAdUp2IeSQj23HWdvVuPvlNZZkIPlwVlbl1lSqGpOlXtaGCDiuhw=
-X-Gm-Gg: Acq92OH5aasTnnNUMjxE0KzCfRrzXk/dgdiq85PHhKTiE4sPST2pZoy6iQIaz9G75Dn
-	zYFS/ZC0VfNGpLuPQfH19FqoNkd2UXssiU55EQoUVicGp+VBYzatkvGCyalipq1fSBNiTj35mIN
-	X6hPWSPGqt1YwqFr3mZpfTEsB/5+KfZxCWhpSTJyZpioFSkwxJ8z8OYC2JmIUJtu+NQo/0SVEyN
-	bhRCnZMdUrA6bu5vuDQsHxIBfo5y+W4SwvEPJV2qfFIaJSdrFD3OxDUGycAYpu0RIM8FlEJAkHt
-	ZkCcjjsO5+0xWsVU7hKsp5GrJA8shcbW1krdkZrY5YR/vvPmcH5TfoztNeObTSPSGvh074AnBoS
-	23DVuyyvqr7Lx84uLEYyqcQFaJfiITNwXluu/xZAc3eelwTS3YTb5gU2Bj4UuCXtaMBqecfBafj
-	8du2/yl6pn6mwv431pcjBxLn0PBLEjZViz9q68jyjpR/LdXB1Q7CwKD145UcKv
-X-Received: by 2002:a0c:f010:0:b0:899:efbf:9292 with SMTP id 6a1803df08f44-8ca0f6ddb66mr333428186d6.43.1779269262303;
-        Wed, 20 May 2026 02:27:42 -0700 (PDT)
-Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com. [209.85.219.48])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ca3619a384sm117601456d6.35.2026.05.20.02.27.41
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 May 2026 02:27:41 -0700 (PDT)
-Received: by mail-qv1-f48.google.com with SMTP id 6a1803df08f44-8b3d6b215cfso81367046d6.3
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 02:27:41 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ8v9p43VhvIf5weGMmCU1Vk1dDL8IUY7zeK04YBdN2mJdJNwNI7GiYv9GoVs9pAKGmScenhb/h04TQ=@vger.kernel.org
-X-Received: by 2002:a05:6102:3e1a:b0:631:28c1:154e with SMTP id
- ada2fe7eead31-63a3ea83841mr14744535137.16.1779268834569; Wed, 20 May 2026
- 02:20:34 -0700 (PDT)
+	s=arc-20240116; t=1779269366; c=relaxed/simple;
+	bh=xzcZeoD0niZUNOJsg+qcrFRZ/GvRmasUv2WFxCUDc0I=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=QHOi8YMDlrYXpyynr/GjVcUX+LiUtRuZhPyC2nxJsuWA8ahAB0zac6Kvw6qUlGUGPoOh7vr72Rm1yKNKcrKEZvIhtHzBU8/umdb/odWn6wy4lPWT0hdITm3CBBUTBNrLvmHELEN0Ht6yETuFY7Ar77zkUY8B5EVRc5WNANe+Ceo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PLvK/R+C; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PLvK/R+C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EDD11F000E9;
+	Wed, 20 May 2026 09:29:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779269363;
+	bh=d3dUitqVHclDZ24VyLLVj/3e6tehsujLNP+nBiRE0GY=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PLvK/R+ClRXHd4EPCx2dhi7VWBiJJEPsc3IDdBio0cGfbZ9XpFUnsQoltgtWXtl8t
+	 VQn0OhW4K/cGgfCl2xKfGRrQuE1X0L9PDgbzcxzDpVGGml7y6Jxu+jxX2BSApJhDs2
+	 5Rh5b5bhqIkV0ROcrM5wdRYZbDG+KxE985/Z+InaF/ohNqWdWR9OaWZabCky0+4O4P
+	 sE2LowjIST//KMEnf8JpI3bVHhKnWc+uAzRF6MTk5X9INkvzoXvmr+3Q2g9MCLsPoF
+	 vuENPIbzu2HCpzihstXFACU83okE5tOTyZHB+0ae1Ug88SME2GSjLgv1F1ugDwZPYT
+	 bMj4meWWknb0g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v15 3/3] of: Respect #{iommu,msi}-cells in maps
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Vijayanand Jitta" <vijayanand.jitta@oss.qualcomm.com>
+Cc: imx@lists.linux.dev, conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260520-parse_iommu_cells-v15-3-b5f99ad4e7e8@oss.qualcomm.com>
+References: <20260520-parse_iommu_cells-v15-3-b5f99ad4e7e8@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 20 May 2026 09:29:22 +0000
+Message-Id: <20260520092923.0EDD11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260520091111.67666-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <20260520091111.67666-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 20 May 2026 11:20:21 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUpa_R0C70eJjS6urpSx3jtcVnbjZ8K0OvhO25Bx1-u4g@mail.gmail.com>
-X-Gm-Features: AVHnY4KsTghlnywZI5vA1H9Z8FXzfT5cshnAIjblbGSvrCdV0vTaYH8EOrOdrQA
-Message-ID: <CAMuHMdUpa_R0C70eJjS6urpSx3jtcVnbjZ8K0OvhO25Bx1-u4g@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar-host: Remove unused LIST_HEAD(res)
-To: Prabhakar <prabhakar.csengg@gmail.com>
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>, 
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset="UTF-8"
 
-Hi Prabhakar,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Strict requirement for `#iommu-cells` or `#msi-cells` breaks MSI a=
+llocations on standard-compliant controllers.
+- [High] Array desynchronization when parsing legacy 0-cell maps padded to =
+4 words per entry.
+--
 
-On Wed, 20 May 2026 at 11:11, Prabhakar <prabhakar.csengg@gmail.com> wrote:
-> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
->
-> Remove the unused LIST_HEAD(res) declaration from
-> rcar_pcie_hw_enable().
->
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+commit 23cece64ecb1dcea6290dbab34facbdac53ff293
+Author: Robin Murphy <robin.murphy@arm.com>
+Date:   Wed May 20 08:02:42 2026 +0000
 
-Thanks for your patch!
+of: Respect #{iommu,msi}-cells in maps
 
-> --- a/drivers/pci/controller/pcie-rcar-host.c
-> +++ b/drivers/pci/controller/pcie-rcar-host.c
-> @@ -346,7 +346,6 @@ static void rcar_pcie_hw_enable(struct rcar_pcie_host *host)
->         struct rcar_pcie *pcie = &host->pcie;
->         struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
->         struct resource_entry *win;
-> -       LIST_HEAD(res);
->         int i = 0;
->
->         /* Try setting 5 GT/s link speed */
+This commit adds support for parsing target nodes' #cells values for
+iommu-map and msi-map properties, instead of assuming output specifiers
+always have exactly 1 cell. It updates of_map_id() to parse multi-cell and
+0-cell output specifiers and reflect the actual number of output specifier
+cells.
 
-Indeed, this was never used since its introduction in commit
-ce351636c67f75a9 ("PCI: rcar: Add suspend/resume").
+> diff --git a/drivers/of/base.c b/drivers/of/base.c
+> index d658c26201353..f436e26763818 100644
+> --- a/drivers/of/base.c
+> +++ b/drivers/of/base.c
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[ ... ]
 
-Since this does not seem to cause a warning, even with W=2 (TBH,
-I had expected some shadowing warning), no Fixes-tag is needed?
+> @@ -2176,39 +2206,93 @@ int of_map_id(const struct device_node *np, u32 i=
+d,
 
-Gr{oetje,eeting}s,
+[ ... ]
 
-                        Geert
+> +		phandle =3D be32_to_cpup(map + offset + 1);
+>  		phandle_node =3D of_find_node_by_phandle(phandle);
+>  		if (!phandle_node)
+>  			return -ENODEV;
+> =20
+> +		if (bad_map) {
+> +			cells =3D 1;
+> +		} else if (of_property_read_u32(phandle_node, cells_name, &cells)) {
+> +			pr_err("%pOF: missing %s property\n", phandle_node, cells_name);
+> +			of_node_put(phandle_node);
+> +			return -EINVAL;
+> +		}
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+[Severity: High]
+Does this strict requirement for #iommu-cells or #msi-cells break MSI
+allocations on standard-compliant controllers?
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Several MSI controllers validly lack a #msi-cells property. For instance,
+arm,gic-v2m-frame nodes do not require it. In
+arch/arm64/boot/dts/qcom/ipq5018.dtsi, the pcie0 node defines:
+
+msi-map =3D <0x0 &v2m0 0x0 0xff8>;
+
+but v2m0 does not have #msi-cells.
+
+Prior to this patch, of_map_id() implicitly consumed 4 words per entry and
+succeeded. Will it now fail to find #msi-cells, print an error, and
+return -EINVAL, propagating the error through of_msi_xlate() and breaking
+MSI initialization on affected platforms?
+
+> +
+> +		if (cells > MAX_PHANDLE_ARGS) {
+
+[ ... ]
+
+> +		if (map_len - offset < 3 + cells) {
+> +			of_node_put(phandle_node);
+> +			goto err_map_len;
+> +		}
+> +
+> +		out_base =3D map + offset + 2;
+> +		offset +=3D 3 + cells;
+
+[Severity: High]
+Could this cause array desynchronization when parsing legacy 0-cell maps
+that were padded to 4 words per entry?
+
+Prior to this patch, of_map_id() mandated that the map property length must
+be a multiple of 16 bytes:
+
+if (!map_len || map_len % (4 * sizeof(*map)))
+    return -EINVAL;
+
+Consequently, if a legacy device tree targeted an MSI controller that
+explicitly defined #msi-cells =3D <0> (such as RISC-V IMSIC nodes), it was
+structurally forced to pad the 3-word map entry with a dummy 4th word to
+satisfy the kernel's length check.
+
+Since the new logic computes the entry stride dynamically as 3 + cells,
+when parsing a legacy padded map with cells=3D0, does the code advance by 3
+and incorrectly interpret the 4th dummy word of the first entry as the
+id_base of the second entry?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520-parse_iomm=
+u_cells-v15-0-b5f99ad4e7e8@oss.qualcomm.com?part=3D3
