@@ -1,188 +1,181 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012055.outbound.protection.outlook.com [40.93.195.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5542033CE80;
-	Wed, 20 May 2026 19:42:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779306170; cv=none; b=O4TNoB7TPlr0Q6xOvO4jDzWkOxNHAgZoagseUEBGZ4jk8Hc6mLueUJh8AnuBqARiNndIW94IsiM1tvq6umA+oWseThr0tKxNyHrSZeGzephKHPKka9NigXmBaLa/coyFEnQExB1xindhLeqg325OQnTAPBz/7UvmjV9saTZ3GKA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779306170; c=relaxed/simple;
-	bh=ANDea3b9QblFJLWn5f7fmoltwpEcPOoW+aWNkdE0hVc=;
-	h=Message-ID:Subject:From:To:Cc:In-Reply-To:References:Content-Type:
-	 Date:MIME-Version; b=ijKFnAU6HWjAag0kNw7q8Q5wEmdRHYod8XqgAgT8N83B+aZT89DEtVwhT9HQWYIsQ+PaHz2zaQMFuXXW9BK6qqXfUN0Qd2o7igdsUOFe5QMWubLhBdVajsjHdsnIR3/PvYhQfpaMVkRsBDxwUy3U8YMq3n8fdroOyzD1FA8ZXns=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=HiAtK3P0; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65E663491C4;
+	Wed, 20 May 2026 19:46:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.55
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779306413; cv=fail; b=MO3na4tBCyr453P/6xLDyeBJz42ZfECCUQtiEdht5rL370woRjZoc8ey8U0YYhHhwKA2p1ebUkNmkw2AOYU0bGcacF4t9xG1KmBQ4Zfql0/3u5edc488gcLzQ8kvAOIHPLdZp+YEHCBdjJO9723fKlUKzmQ31vzRr/EOX1ppXs0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779306413; c=relaxed/simple;
+	bh=0/PMEQWN0eLBGu61a6ZW/7XDzurB+CxrM9qEiMUwScQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=CuN4qaT7nGrBpRP8ZRArm/9QFx8wxMEqjJSTz6PwIimKx1LSkV8Fn3h5OeuWKOfwXyYMhWnaEmeXLGhLMZOfo+8o07PAkaJlQeNBL4lwDlSDcN6vVyoUgy90Qf8zdKSJRqqyivupZYlZnXcM7HdhPEA8XpgwIs8v0tZ6EjZusiI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=p+EYhrWe; arc=fail smtp.client-ip=40.93.195.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="HiAtK3P0"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64KD9Bac3229693;
-	Wed, 20 May 2026 19:42:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=JKT2hn
-	g4bSrkikqQ8IuwgRIaAuNovsGvx+rV+iO9Hbw=; b=HiAtK3P0jURer9JQJ/qGTz
-	IdmLjb7ke0evsRz/8P1r0YAowVgrgm5TmpbVH5QGI4odAg/K62xHtA60liT6ie0R
-	aURYEQn7BN7rFSDw8Ak1fGdx+4xuPDuy851EFv1DwMUjp+QybPxf5FR30IK9/D/T
-	yHbHlR7xUJD3Uyp43/Hea7gq5oSFq/OjLtJBfdJiWD5mHsrpLkYnmX99S4fG7l4h
-	JFcafQwLgDZwzjGQFoHxq78EEAHVIn5pPuiL6evkQpChE84jpMMpjXNQDHTMI2JI
-	S8p8ZGypFoDUfm3X2w1fJf603iq0yu9fexUSCzTB1ZEaS/l195XRKamJ48W+UApg
-	==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h753p0p-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 20 May 2026 19:42:38 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64KJdEau010338;
-	Wed, 20 May 2026 19:42:37 GMT
-Received: from smtprelay07.dal12v.mail.ibm.com ([172.16.1.9])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4e74dhrsg2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 20 May 2026 19:42:37 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
-	by smtprelay07.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64KJgaYV27853486
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 20 May 2026 19:42:36 GMT
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7645F58056;
-	Wed, 20 May 2026 19:42:36 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 378D458052;
-	Wed, 20 May 2026 19:42:35 +0000 (GMT)
-Received: from [9.111.43.251] (unknown [9.111.43.251])
-	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 20 May 2026 19:42:35 +0000 (GMT)
-Message-ID: <65dcffc86f7cc33ebde7bb7c937d094d8457b3a7.camel@linux.ibm.com>
-Subject: Re: [PATCH v17 4/7] s390/pci: Store PCI error information for
- passthrough devices
-From: Niklas Schnelle <schnelle@linux.ibm.com>
-To: Farhan Ali <alifm@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: helgaas@kernel.org, alex@shazbot.org, mjrosato@linux.ibm.com
-In-Reply-To: <20260520171113.1111-5-alifm@linux.ibm.com>
-References: <20260520171113.1111-1-alifm@linux.ibm.com>
-	 <20260520171113.1111-5-alifm@linux.ibm.com>
-Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 20 May 2026 21:41:34 +0200
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="p+EYhrWe"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=MpHqFu5zMEdg8RY7q8l+NrYJQZG+qw7Vt/knmEZyo10bLgkYza5RAAkcgrJMrJJmbhKTXJCZ+jBbz1YeZgunuhxbNtMjfc1zrEdYJgqw3oQfPENv4/tq1YmzNWyNdY5uzR8pf7ycvdn7wK5QcBBFSuXqAb8/Tdh4nzyDnlgXb+uEps5QLALXWYa8FfcSaGI1v9yc/JUKFgnnYsqK7IsZwJQA3bLyTOUzlQszw2bRhx8Yd9v31m3YHnCqfQTDAFYQM30ACR4kuJSWJ7TdjpUcRdbaZzifKBujGZxG8UPayOaieq/06iQpvkbJMJ5AqucCw/msj9FFpe1qg/j/ahCbkw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LU8roB9Btx1oipMfmJ5YL6GLogOdWFl9u4w/7Bbrpvk=;
+ b=InzAMtlTj73GIgyM6SDIYA8+Wr3Rb5zYM4u0g78VabAqkHQeKMaJDjwdwWHxefyeyM0DUySJBI/BYYXlEbH4ZHhtkIsI1bz1/nGrNHPWYH02jByOMnTynZ/ilt7VhXJLXXA2U6dLLT/xIv6xHUZmLjvodnygr1WY45eL3+OJYcAQzIJGOqHMO1/DUP1nLcHMMgziqGdIWiKxnkVPWdp0dPAEWnFcvfio7GJpx/plkPXcKDU5ekNsfASE//EaQ03ZM5yyawNOJBrX4z6+nrXcKqc+tVBjBoeaEjD0JWYRTYOKRJUxsD66G9ei5iHt018ayjZRZ+L5k/KHxpNKJr2SVg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=huawei.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LU8roB9Btx1oipMfmJ5YL6GLogOdWFl9u4w/7Bbrpvk=;
+ b=p+EYhrWelcfSf2rt533z/5gs6mICA+3z7k+SWom0ajqlRLVzZaxcZX2XmRbc619C9XL0OoJK9lW3iV3Z50IokR2j2HutD1cgngmNykw1hYTzG1E+KphHqgE3cEZow8UuuG5vD3D/VOIIF7Co5zG+bZbvWelujQlTJBfbHBcKXu2Ont2EPvhRkEr2vYl6DIUtw+EppaeKbCxxAWpEg3CB5xMukt4M/YvNUM/soKUhD0Qj14Tulc0epq3gYcqX/F28e4Eflz4S1LhdxC0QT1I4HrJOds0vQQUPZABWycOtWCcjYFP2C/a2IG5yQCl71ZUUh6vQU0MP2r1i9MWcMhDhMQ==
+Received: from SJ0PR03CA0035.namprd03.prod.outlook.com (2603:10b6:a03:33e::10)
+ by PH7PR12MB7455.namprd12.prod.outlook.com (2603:10b6:510:20e::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.14; Wed, 20 May
+ 2026 19:46:42 +0000
+Received: from MWH0EPF000A6730.namprd04.prod.outlook.com
+ (2603:10b6:a03:33e:cafe::94) by SJ0PR03CA0035.outlook.office365.com
+ (2603:10b6:a03:33e::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.48.16 via Frontend Transport; Wed, 20
+ May 2026 19:46:42 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ MWH0EPF000A6730.mail.protection.outlook.com (10.167.249.22) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.48.11 via Frontend Transport; Wed, 20 May 2026 19:46:41 +0000
+Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Wed, 20 May
+ 2026 12:46:23 -0700
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Wed, 20 May 2026 12:46:23 -0700
+Received: from Asurada-Nvidia.nvidia.com (10.127.8.9) by mail.nvidia.com
+ (10.126.190.181) with Microsoft SMTP Server id 15.2.2562.20 via Frontend
+ Transport; Wed, 20 May 2026 12:46:22 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: <jgg@nvidia.com>, <will@kernel.org>, <joro@8bytes.org>,
+	<bhelgaas@google.com>
+CC: <robin.murphy@arm.com>, <praan@google.com>, <baolu.lu@linux.intel.com>,
+	<kevin.tian@intel.com>, <miko.lenczewski@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<dan.j.williams@intel.com>, <jonathan.cameron@huawei.com>,
+	<vsethi@nvidia.com>, <linux-cxl@vger.kernel.org>, <nirmoyd@nvidia.com>
+Subject: [PATCH v5 0/3] Allow ATS to be always on for certain ATS-capable devices
+Date: Wed, 20 May 2026 12:46:07 -0700
+Message-ID: <cover.1779304390.git.nicolinc@nvidia.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Evolution 3.58.3 (3.58.3-1.fc43) 
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=ffCdDUQF c=1 sm=1 tr=0 ts=6a0e0eae cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=U7nrCbtTmkRpXpFmAIza:22 a=VnNF1IyMAAAA:8
- a=44QhMs_dmAmquC8nOFQA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: 5rL9WE69ec-wGn0VTizgxjOrjXPvJujv
-X-Proofpoint-GUID: 5rL9WE69ec-wGn0VTizgxjOrjXPvJujv
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIwMDE5MiBTYWx0ZWRfX8daGPRjmyHsp
- A8OOFT9a0YhzqNHmQFkERVQoKLs+niHeJ2UXpu0kurQUBrjKCrkDq6Pchi5JpqgyTWvyZN/ZeGC
- V2v2wsPsaLqIpXUlBOLn2dmfDyL/dSBYsRlrLn7r1s1xHp8+XoQYqbjNtzdz1V485OI7+//TfdF
- EUrcVanh65WkR2d8qzpGaGtrokC+Q6A6H+ezm3x97PtVPIC+7ZMuPwSGsPEbdWBju3oueVbNZDy
- C9rb+Rx6tlhgaj78o7nGEAdkpWSgjUs4G3PbrAzKLFg8y9PKgqp325aLHWHI4LmNncO5gOcVFHD
- QU7qzT2m3LOlPuusHVREChq/YZyqAPxdf0fK1hhl16rQtJW7PIC836ZpkvlMbhK0Y1CXwDVC3VG
- Xk+YfMhz26G67Xiwvc07Oyh1HD2qxKpNVrxiIuFKRqWPOPb5u4Z8NmdNtjkIMkVVGk/bbRIFlYV
- /+v+CL7FqydsYqdrupw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-20_03,2026-05-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 spamscore=0 phishscore=0 suspectscore=0 adultscore=0
- clxscore=1015 impostorscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605200192
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWH0EPF000A6730:EE_|PH7PR12MB7455:EE_
+X-MS-Office365-Filtering-Correlation-Id: a8159fcd-d566-4c2d-76cf-08deb6a883b8
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|36860700016|82310400026|1800799024|6133799003|13003099007|56012099003|18002099003|11063799006|5023799004;
+X-Microsoft-Antispam-Message-Info:
+	Tdo6jbkL4+Zts4ORpV/bF/iQ0Fve1c89MdDCich6IrJ8HYFC+u3ePxWkNYy6EWYO1946mKtZ4sxjAqbv9feoEtksxPNsvaD0EshgVQJjUKfpcYouuheIhRZkWZ5i3mZbZ4+J5IXm6HiVNTeL40rORbKi+mOvqZSRXFMq1/t8oFAiSmp2yOlpqiBfAJ5eAkB+1RnvL4qxfHq/TXpubxcsZ8NAFf9WqkbwocrNKjeXMD9yKPFR5cTiExUKYffZjjQorKIm4UW/0AW7di0PpEOvu6zPyU256h7KIqRk91hgx82mhR7uLkB8nbhluHedkNLDoCTckgKYBY7uU11vJsNgpZ3/P135MbU2jeKFcMZOjOfEIstEYIK0/ZxtaikrKVZy5byXgW2S0pd6yNE/WNQ2mw3YXkfCzNi2AkfhlVCAlYaLD/TBFq86fC3+mQVPBl8XvOb+cfjBNbcIjumsvOoc5zrUOxRbzRuYDjhSjdDOhrLSVEodlSKS47uS2uANbDvDMAcmwytrhmnNr3s44qnkFAz9Oft6XXlgFKo1COJulmccv+MuMONbL+5ol8QUfjNIvXLHpEG07JTow9DmZhGpQWsmXm7kYLgPovpRGRayFwdiLY4rgboueKgYX74IQNGKxn9fzSxhU1L1khPOaNbsgr8jEWV4rgXn773ZNKc/9j6ShelAg73WDAIiwXAngLjvmPgYGgTUGwVjRFi4z5e3rxDdq+ZZf3RAntehOUzjS3M=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(376014)(36860700016)(82310400026)(1800799024)(6133799003)(13003099007)(56012099003)(18002099003)(11063799006)(5023799004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	lD042QoshrDXVfdwo+fJz2cXTfpZK2ZqQIwojXff9Fd+4gv055p4OJ3P2OnXw86LUk6xIylXnO1bfl78C5XqbkA3Nqo2UuLh/vz5KwDwLbU4Vhjve8rJ536e9fde1UuUPwAl7wbttyRp50kWSI/i8YjnMEOggKPuc3vrBjXMlKEpGn8OQBzXHfXi930oUMe/ONa77VfvdZNhEHpTir7YVRdlh+9pZaFv5ak6O6PdzMBJ4xj/zI388HhI2M0onzUsS23LE1EC9J6Qk44gyiyFUpBlVaCuFgSiQWSnkJCJe3Ks5CSi/GHmEqVK/apQM4aAQ45HY6nLhwhSiZYLnR5wUDAyP56LlzyecR/RiEqlK2TXBcNKsnAXo45dICUk2vvWjCUKbo2YTLlABC9+t91BTTcEFucA8yR+6zhrR3k8D/B/iRqDOVHqeKSVvLXV+Auh
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2026 19:46:41.1955
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: a8159fcd-d566-4c2d-76cf-08deb6a883b8
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MWH0EPF000A6730.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB7455
 
-On Wed, 2026-05-20 at 10:11 -0700, Farhan Ali wrote:
-> For a passthrough device we need co-operation from user space to recover
-> the device. This would require to bubble up any error information to user
-> space.  Let's store this error information for passthrough devices, so it
-> can be retrieved later.
->=20
-> We can now have userspace drivers (vfio-pci based) on s390x. The userspac=
-e
-> drivers will not have any KVM fd and so no kzdev associated with them. So
-> we need to update the logic for detecting passthrough devices to not depe=
-nd
-> on struct kvm_zdev.
->=20
-> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
-> ---
->  arch/s390/include/asm/pci.h      |  30 ++++++++
->  arch/s390/pci/pci.c              |   1 +
->  arch/s390/pci/pci_event.c        | 116 +++++++++++++++++--------------
->  drivers/vfio/pci/vfio_pci_zdev.c |  18 ++++-
->  4 files changed, 111 insertions(+), 54 deletions(-)
->=20
+PCI ATS function is controlled by the IOMMU driver calling pci_enable_ats()
+and pci_disable_ats() helpers. In general, IOMMU driver only enables ATS
+when a translation channel is enabled on a PASID, typically for an SVA use
+case. When a device's RID is IOMMU bypassed and its PASIDs are not running
+SVA use case, ATS is always disabled.
 
-Looks good to me now and I do think the zpci_store_pci_error() makes
-the code easier to read and gives a clear destinction for mediated
-recovery mode. Oh and Sashiko just came back with no issues found too.
+However, certain PCIe devices require non-PASID ATS on the RID, even if the
+RID is IOMMU bypassed. E.g. CXL.cache capability requires ATS to access the
+physical memory; some pre-CXL NVIDIA GPUs also require the ATS to be always
+on even when their RIDs are IOMMU bypassed.
 
-Feel free to add my:
+Provide a helper function to detect CXL.cache capability and scan through a
+pre-CXL device ID list.
 
-Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+As the initial use case, call the helper in ARM SMMUv3 driver and adapt the
+driver accordingly with a per-device ats_always_on flag.
 
-Thanks,
-Niklas
+This is on Github:
+https://github.com/nicolinc/iommufd/commits/pci_ats_always_on-v5
+
+Changelog
+v5
+ * Add Reviewed-by from Dave
+ * Update comments in pci helpers
+ * s/pci_ats_always_on/pci_ats_required
+ * s/pci_cxl_ats_always_on/pci_cxl_ats_required
+ * s/pci_dev_specific_ats_always_on/pci_dev_specific_ats_required
+v4
+ https://lore.kernel.org/all/cover.1777269009.git.nicolinc@nvidia.com/
+ * Rebase on v7.1-rc1
+ * Added Reviewed/Tested/Acked-by lines
+ * Update commit messages and inline comments
+ * [pci-quirks] Add range-based scan for NVIDIA GPUs
+ * [smmu] Add missing arm_smmu_remove_master() in error path
+ * [pci-ats] Don't init "cap=0"; check pci_read_config_word error
+v3
+ https://lore.kernel.org/all/cover.1772833963.git.nicolinc@nvidia.com/
+ * Add Reviewed-by from Jonathan
+ * Update function kdocs of PCI APIs
+ * Simplify boolean return/variable computations
+v2
+ https://lore.kernel.org/all/cover.1771886695.git.nicolinc@nvidia.com/
+ * s/non-CXL/pre-CXL
+ * Rebase on v7.0-rc1
+ * Update inline comments and commit message
+ * Add WARN_ON back at !ptr in arm_smmu_clear_cd()
+ * Add NVIDIA CX10 Family NVlink-C2C to the pre-CXL list
+ * Do not add boolean parameter to arm_smmu_attach_dev_ste()
+v1
+ https://lore.kernel.org/all/cover.1768624180.git.nicolinc@nvidia.com/
+
+Nicolin Chen (3):
+  PCI: Add pci_ats_required() for CXL.cache capable devices
+  PCI: Allow ATS to be always on for pre-CXL devices
+  iommu/arm-smmu-v3: Allow ATS to be always on
+
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.h |  1 +
+ drivers/pci/pci.h                           |  9 +++
+ include/linux/pci-ats.h                     |  3 +
+ include/uapi/linux/pci_regs.h               |  1 +
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 75 ++++++++++++++++++---
+ drivers/pci/ats.c                           | 47 +++++++++++++
+ drivers/pci/quirks.c                        | 42 ++++++++++++
+ 7 files changed, 170 insertions(+), 8 deletions(-)
+
+-- 
+2.43.0
+
