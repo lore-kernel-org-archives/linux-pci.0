@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF4C038331F
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 21:33:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3352C11CF
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 21:45:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779312828; cv=none; b=klV+aJTu/YwcffpVRXCG3ax2XOUXtTOqOEkDlCMmhoKf5sr3qnaa/4DXpCJxbUQ+LriQAzVsLfqTNvI+o87rYIUjg8CMe0z84MaHJQO363Vo9wbR7FI2/1ZuS0S9yzL996CYGxjgpW4FPwVxlhiwxyLMm6LjioiM54jmfWaqbk4=
+	t=1779313533; cv=none; b=R0NaZd040Mp64v2TJ9/Ccwj9L7nYyuIlh5yxV9JO2Ru23NsqZSvak0E8P2Jt9IhrLj8q2vmkTXaOGwFxaFcElKkqW0UC7u8lsYY2+RYEBX0RTJbYLNuendkNHrkMZA854lmGKKVPbTWk6+GWK2z0CNlHmMS+zboMBZS+jDOxZxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779312828; c=relaxed/simple;
-	bh=DyAuU4ZUYtOgIFriFcMLyGROrWto0g3nZ9dc+RBaZMI=;
+	s=arc-20240116; t=1779313533; c=relaxed/simple;
+	bh=Aa3fqoKZm3j64VZe4oIttfwO4JjnS9EFHMB8RESJC7U=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=nHq73A9nJWJI4mivedEq/CmNAHhUfTidxnE73zjVinuzHYznAw6DxET0z+xwfE79tRrUtoJZPme71UQ8YrpLjbWorM08g6d3HMh1roEbxV4sBJyim4CGUncfJgd2DXzzsH70Pc4HVMDiqVrll+i2Prs/gzlufREu4du7b+0aoJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FdB4bVCk; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PQpR8Rw9fwpRq/JV10p70GZEqPvjyv4BH/DOqhTyNPeV8OlQYiwbP2LLU7L47eULpxeQwGIHd+Z/sBmigTDaMxFcn2lVYcLRES4deRGX8SsQkdLCYdCEbeeIWNyBHewhk0+Jfg9Lg+SN2ZKaiuDMLyaS7ushjtyXhSg63spd51k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZh/FKLm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FdB4bVCk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A91161F00A39;
-	Wed, 20 May 2026 21:33:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZh/FKLm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E74B1F000E9;
+	Wed, 20 May 2026 21:45:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779312826;
-	bh=/DZDxQ5tcWN+JwEcfXo8wv5YOKToOd90nJUBldSvg2I=;
+	s=k20260515; t=1779313532;
+	bh=JDo+o7R4vlDoYJj3JNYPDC5dAAgJB4yuyOyeeAUKP1s=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=FdB4bVCkE3T2dDRCp49GPlk4ao/MvIX/tMJ4Xmd42q5ObBPvEe0AFYBDUsW9A7EzL
-	 2kHyiBHlmlQl3sTqV2QB/xY5cBp2NY+wcFgNTFvzFm9WyDRV6OgugnmQUzNLySgVP7
-	 SHskb15OkDG7+Yld0MgdhHDOc2r0mHb90KX6936U63aZJUneYyFrXu+EhNIsjqR9Mx
-	 D4zCVKPTyjMnYgS7pV7kuaM9Vb7sz1s9F92E44Eb0s9kRogzArHDhARX6DDMUNPoNJ
-	 nae5PFGZWJBeM+Jz1QEqPZzVw9/j4QHrLl2wimB7wU7qf3nO4SpZO+lcSQW3ynNped
-	 e2hFTe0MKw5mw==
+	b=OZh/FKLmU13c9NJTG0IXwNrza/HuAYxyAQwJb+fcy32DXCG5z0Lk5e8FPE1Dj/RpB
+	 +E8SCDK9rxF7vHipPvSOH0j4Wznqo94+ATD54kS0h/dxdIUqDAunghJF0hQlpO1dvo
+	 kpwZQpVisS74eVY//7MZlXG2nX6Af9vS3V+U/wISTO+q2gaJsWLzsogrd+5a5xWFv/
+	 z2VsbLPbd7+JDcqWd9+O4Trq62KiUQSp2aw/L/ZvpYK8IqCapc4ePivSa2LNYN/h+C
+	 BZO65AA6VDYQt76jNl6Xj1gSeq93p/pKwYwkI9aY/P/DFDjKBkYlAtDxtRbJBV6W4W
+	 8Pq5M1UXwSmeA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
+Subject: Re: [PATCH] PCI/sysfs: NULL res_attr slot after kfree as defence
+ against double-remove
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nicolin Chen" <nicolinc@nvidia.com>
+To: "Gianfranco Dutka" <gianfranco.dutka@arista.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <b6d2f24356621c504e47633d9e96a7274c2859f3.1779304390.git.nicolinc@nvidia.com>
-References: <b6d2f24356621c504e47633d9e96a7274c2859f3.1779304390.git.nicolinc@nvidia.com>
+In-Reply-To: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
+References: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 20 May 2026 21:33:46 +0000
-Message-Id: <20260520213346.A91161F00A39@smtp.kernel.org>
+Date: Wed, 20 May 2026 21:45:31 +0000
+Message-Id: <20260520214532.1E74B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,95 +46,89 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Silent failure to enforce ATS requirement leads to device malfunct=
-ion.
-- [High] Inconsistent STE configuration (Mode 1 vs Mode 2) for BLOCKED doma=
-ins when ats_always_on is true.
+
+Pre-existing issues:
+- [Critical] Invalid kfree() causing slab corruption in arch/alpha/kernel/p=
+ci-sysfs.c
+- [High] Concurrent execution of pci_remove_resource_files() allows a data =
+race resulting in a Double-Free/UAF
 --
 
-commit 592bdfd18801a5a10cbb239b47e71f0772eea39e
-Author: Nicolin Chen <nicolinc@nvidia.com>
+commit e4e0ea2861eb8f50c9e5303035a956c3614b2023
+Author: Gianfranco Dutka <gianfranco.dutka@arista.com>
 
-iommu/arm-smmu-v3: Allow ATS to be always on
+PCI/sysfs: NULL res_attr slot after kfree as defence against double-remove
 
-This patch modifies the ARM SMMUv3 driver to allow ATS to remain active even
-when a device's default substream is attached to an identity domain. It does
-this by retaining a CD table and ensuring the STE stays in Mode 1 for devic=
-es
-that require ATS to be always on. It also ensures the STE is not downgraded
-to Mode 2 when the last active substream becomes inactive.
+This patch clears the pdev->res_attr[i] and pdev->res_attr_wc[i] slots after
+calling kfree() in pci_remove_resource_files(). This is intended as
+defense-in-depth against double-remove scenarios, such as out-of-tree hotpl=
+ug
+drivers re-entering the teardown path.
 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
-arm/arm-smmu-v3/arm-smmu-v3.c
-> index e8d7dbe495f03..5c9d4bb542249 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-[ ... ]
-> @@ -3875,6 +3895,8 @@ static void arm_smmu_attach_dev_ste(struct iommu_do=
-main *domain,
->  		.old_domain =3D old_domain,
->  		.ssid =3D IOMMU_NO_PASID,
->  	};
-> +	bool ats_always_on =3D master->ats_always_on &&
-> +			     s1dss !=3D STRTAB_STE_1_S1DSS_TERMINATE;
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index d37860841260c..11961bb31301e 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1195,12 +1195,14 @@ static void pci_remove_resource_files(struct pci_=
+dev *pdev)
+>  		if (res_attr) {
+>  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+>  			kfree(res_attr);
 
 [Severity: High]
-Does this explicitly force ats_always_on to false for BLOCKED domains?
+This isn't a bug introduced by this patch, but does NULLing the pointer
+prevent a double free if this function is executed concurrently?
 
-If s1dss is STRTAB_STE_1_S1DSS_TERMINATE, the device will initially use
-Mode 2 (CFG=3DABORT), which disables EATS and appears to contradict the goal
-of always keeping ATS on for these devices.
+If a user writes to resourceN_resize via sysfs, __resource_resize_store()
+executes and acquires device_lock(). If no driver is bound
+(dev->driver =3D=3D NULL), it proceeds and calls pci_remove_resource_files(=
+).
 
-Additionally, if a PASID is attached (upgrading the STE to Mode 1) and then
-subsequently removed:
+Concurrently, a hotplug remove event triggers pci_stop_dev(), which calls
+device_release_driver(). With no driver, this briefly acquires and releases
+device_lock(), then proceeds without the lock to pci_remove_sysfs_dev_files=
+(),
+which also calls pci_remove_resource_files().
 
-arm_smmu_blocking_set_dev_pasid() {
+Both threads can enter pci_remove_resource_files() concurrently, read the
+same non-NULL res_attr pointer before either sets it to NULL, and call
+kfree(res_attr), resulting in a data race and double free.
+
+> +			pdev->res_attr[i] =3D NULL;
+>  		}
+> =20
+>  		res_attr =3D pdev->res_attr_wc[i];
+>  		if (res_attr) {
+>  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+>  			kfree(res_attr);
+
+[Severity: Critical]
+This isn't a bug introduced by this patch, but could this kfree() corrupt
+the slab allocator on the alpha architecture?
+
+In arch/alpha/kernel/pci-sysfs.c:pci_create_attr(), when creating both
+sparse and dense files, a single memory block is allocated for two
+bin_attribute structures:
+
+    attr =3D kzalloc(sizeof(*attr) * res_count, GFP_ATOMIC);
     ...
-    if (!master->ats_always_on &&
-        !arm_smmu_ssids_in_use(&master->cd_table)) {
-            ...
-    }
-}
+    pdev->res_attr[num] =3D attr;
+    ...
+    attr++;
+    pdev->res_attr_wc[num] =3D attr;
 
-The revert operation is skipped here because master->ats_always_on
-evaluates to true, leaving the STE permanently in Mode 1.
+When pci_remove_resource_files() executes, it will first kfree() the base
+pointer at pdev->res_attr[i]. Then, it calls kfree() on pdev->res_attr_wc[i=
+],
+which points to the middle of the same slab allocation.  Passing a mid-slab
+pointer to kfree(), as well as freeing the same block twice, will cause
+memory corruption.
 
-Can this create an inconsistent state machine where the initial Mode 2 state
-could trigger fatal URs for ATS requests, but detaching a PASID silently
-leaves the device in Mode 1?
-
-[ ... ]
-> @@ -4215,6 +4237,42 @@ static void arm_smmu_remove_master(struct arm_smmu=
-_master *master)
-[ ... ]
-> +static int arm_smmu_master_prepare_ats(struct arm_smmu_master *master)
-> +{
-[ ... ]
-> +	if (!pci_ats_required(pdev))
-> +		goto out_prepare;
-> +
-> +	/*
-> +	 * S1DSS is required for ATS to be always on for identity domain cases.
-> +	 * However, the S1DSS field is ignored if !IDR0_S1P or !IDR1_SSIDSIZE.
-> +	 */
-> +	if (!s1p || !master->smmu->ssid_bits) {
-> +		dev_info_once(master->dev,
-> +			      "SMMU doesn't support ATS to be always on\n");
-> +		goto out_prepare;
-
-[Severity: High]
-If the SMMU lacks the necessary features to support ats_always_on when it is
-strictly required by the device, should this code return an error like
--EOPNOTSUPP instead of returning success?
-
-Returning success here allows the IOMMU probe to succeed without configuring
-ats_always_on. When the device is later attached to an IDENTITY or BLOCKED
-domain, it will be configured in a mode where EATS is ignored.
-
-Could this result in the SMMU aborting ATS Translation Requests as
-Unsupported Requests (UR) on the PCIe bus and triggering AER errors, rather
-than cleanly failing the probe when the hardware requirement cannot be met?
+> +			pdev->res_attr_wc[i] =3D NULL;
+>  		}
+>  	}
+>  }
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1779304390.gi=
-t.nicolinc@nvidia.com?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520211306.3301=
+893-1-gianfranco.dutka@arista.com?part=3D1
