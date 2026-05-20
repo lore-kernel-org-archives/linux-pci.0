@@ -1,141 +1,128 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BC0B22D738F;
-	Wed, 20 May 2026 15:50:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from fhigh-b6-smtp.messagingengine.com (fhigh-b6-smtp.messagingengine.com [202.12.124.157])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458CA3403F4;
+	Wed, 20 May 2026 16:13:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779292256; cv=none; b=f/jsfuI0oOYSubNs12+og/CvBc+qIo4eYtXMMLZ3+Ca03QvFI+SbHWxAUHOqW5da4DpyhO82fsYgiNAv8GxxUMnQLmRFWGcw+9+mQ2dYjhKQ9LXOCM1sZit35ZA4RQEOwfd76K6eUraIenwHkEMF5KlBNFIUSwmXkZANZ+l0CkY=
+	t=1779293624; cv=none; b=G7yJnE+hgeVqF4ghb6XjrZ5/W0UPO876IFiH28ZEUlvrf4rJngnxHdf4X7H34kMoppkRGELiLP7sJrteFfr/qhHA9N1lKY6Th1vz85pNB4ONXO9VhzCXZV/VXo0sKcNy/3HpLpbOTu+bcTyAEBRPeQOObH552jiRKlux+OoFTYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779292256; c=relaxed/simple;
-	bh=RpaoUo25ECjWtwHsRvzBvqMTEK8AB1cJGeouPwGSCwM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nQO99YW9fWU1QacLxI18f49gPdsjLf6NILAcXZC1FThB093r2smyOkshVHAstiSF0bWQI/vfZA9zbPb/YwZ5hKFsehfy0h+LWicojahuTN8f6vu4EzpKWulPNqxoFpRci1UPBklbW41Ac4blljY1XfXgr7SHImLijgRiHWaPq6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=OGojhXHV; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1779293624; c=relaxed/simple;
+	bh=/iz4c6O6193vrn9tVark4e/AlBuHcQ626mDLH0DPrew=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HjzKSO4bVuNNF5kMlBoktsR/wXdzA7QipzxcdxikoMAy97NLdsOk+PcqiYhOhYZRz5DJBbNLsR39QVdfyhctRCZShCY5F2l1O9bUhQYHes3/Goeu8lhAzuk6Md8Q+kJZF7Zvx8tXHFOU3eTy8ywwb+fC4B7b7o4K24i9zGShYjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=WHQYw8KD; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=BQwdY+8n; arc=none smtp.client-ip=202.12.124.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="OGojhXHV"
-Received: from localhost (unknown [167.220.233.27])
-	by linux.microsoft.com (Postfix) with ESMTPSA id DA57220B7168;
-	Wed, 20 May 2026 08:50:45 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com DA57220B7168
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1779292246;
-	bh=l1D/wHEJEIsOiA8Sd48g6TEyzc1+Z3D0jNjjvbWptc8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OGojhXHVLWqkRhIFoYuzDbMc85gCV3hkBREx+q4jcJ8gIwe1tRrC4HFbA8ZUQ7jXm
-	 oYOH6TxjGbswbYwCca/6dzs6hIkUarwEZjrt/yLTvM/DWT4QyUpapwfMLyOV3nxx/T
-	 sZ7WDa0AhSMNvoLUeIaf6gjVUfOe9FeVBJiFbzwM=
-Date: Wed, 20 May 2026 23:50:50 +0800
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, "iommu@lists.linux.dev" <iommu@lists.linux.dev>, 
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, 
-	"wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com" <kys@microsoft.com>, 
-	"haiyangz@microsoft.com" <haiyangz@microsoft.com>, "decui@microsoft.com" <decui@microsoft.com>, 
-	"longli@microsoft.com" <longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>, 
-	"will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com" <robin.murphy@arm.com>, 
-	"bhelgaas@google.com" <bhelgaas@google.com>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>, 
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "jgg@ziepe.ca" <jgg@ziepe.ca>, 
-	"jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>, "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>, 
-	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>, Mukesh R <mrathor@linux.microsoft.com>
-Subject: Re: [PATCH v1 3/4] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Message-ID: <cecgndun5p7k53krzh2ffc7h3dl4o3br2s5dafc5qe7n7e7dbm@s5ovlevvle7s>
-References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
- <20260511162408.1180069-4-zhangyu1@linux.microsoft.com>
- <SN6PR02MB4157FB81CC9B6347DCCC8C56D4072@SN6PR02MB4157.namprd02.prod.outlook.com>
- <qeyycsdnejwrqle4zwrvkjvkvrpjifeanwxjaa7i7y2ab7rnt2@b6gvugqayarg>
- <SN6PR02MB415734108A86BDFB66AEE4CED4042@SN6PR02MB4157.namprd02.prod.outlook.com>
- <fw2pruvjgo7yigtcxssf3xv27soibsj6hmw2ls5wj4rylfhdha@e63f32cwu2x5>
- <SN6PR02MB4157A1B2D9B56062A0917BC5D4042@SN6PR02MB4157.namprd02.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="WHQYw8KD";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="BQwdY+8n"
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 62C6C7A00AD;
+	Wed, 20 May 2026 12:13:40 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-03.internal (MEProxy); Wed, 20 May 2026 12:13:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1779293620;
+	 x=1779380020; bh=V+CKQCPtB2JT0ym5TTL4BeSXjy94i97nlV6FT7Mz3vE=; b=
+	WHQYw8KDA7cz9V2SDRMiilMa2IdY9SkaslM/Csuk7uQS0pNc/0zlH1abZRmeS1R2
+	g8GuXcWw4+TqU1b2r0ucl9TRFuZWe1i0w0OXhdLRCWtR+aG8l/Hh+bExSBXNDyQA
+	GqaXJrwduQRDuvHFHY57lOc7PBxIZbR+a2SkH+2iW7ZzbsjGg65ZkXCVxKIPUW7v
+	9ksRpZGCMyP1IAdH3kPwZe6twVrKHtgJdpvCPcw60qRnd7W/X30PrWGtC4YppTiZ
+	RZ+RmI513wphAdXoeXhuWzRZ0iSxDEEXUceVzwv/Yx7O/nyZDyai0zRwBRpgKk2Y
+	1qR3eXILpYEL6Rvrt7dDbA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779293620; x=
+	1779380020; bh=V+CKQCPtB2JT0ym5TTL4BeSXjy94i97nlV6FT7Mz3vE=; b=B
+	QwdY+8nUYGZeCHhS51zjkGGWRyEIgTI3bA8T5yQ91umOuZHTdyoo13J9oqwNOAWc
+	lGfhIBfg5QaQMyEzUznsfLRFlwUTfX928ehlF2gSFhDX9x6leU0jkVUiTLq34FbI
+	MoKdXNvHfzkVT9xzol1A9DKE4LXJqEqhw33dRZTaSK3kf6L6XH3AdLQP4YeszKNA
+	zAok+9IZe0y7D7DqNyexJHI7qgmH5HnLQ3pv9QT8DoKNvY752ByDzfmqsqMw6dHA
+	BCBb98psV4Vv0vawJct45wx/oZvE11HLjFg2Lpfeyp5+KVMpNvBvMkFSUhrQFAJV
+	tpAwLo4C6SWwDSV5vECdA==
+X-ME-Sender: <xms:s90NaqIkmByPiXZhl44vi_Fryec-r4iEkInE1HGlmVA7L1lPnAl0ew>
+    <xme:s90NajpPqqQVXVdBcCTrGy1lzGNv1qgkjIXng66rDBPPnsTujRywVLE4oDBnj8VxA
+    k0TZq5TPqvi7kq_7kHuVVzHJzhKSdYnlu69bqxtgCn8pBI2dnhO9Q>
+X-ME-Received: <xmr:s90NaqyUP6rYBXLLL9heU8xBDIzKdI1QDcsuLANCxK-e7dAA3_ptxABPUxo>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddugeehtdekucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
+    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
+    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepvdekfeejkedvudfhudfhteekud
+    fgudeiteetvdeukedvheetvdekgfdugeevueeunecuvehluhhsthgvrhfuihiivgeptden
+    ucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhgpdhnsg
+    gprhgtphhtthhopeehpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehjthhorhhn
+    ohhsmhesrhgvughhrghtrdgtohhmpdhrtghpthhtohepsghhvghlghgrrghssehgohhogh
+    hlvgdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghr
+    nhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvg
+    hlrdhorhhgpdhrtghpthhtoheprghlvgigsehshhgriigsohhtrdhorhhg
+X-ME-Proxy: <xmx:s90NavMuMdeRpZpWZSCCpHtzsuY7llyV3JsSiRlxlrfEbZN7ysqH4Q>
+    <xmx:s90Nan6XXCidziJjHTVxfitmfxA8n_0pfvymD-QLtGxDpXQ5Dvaicw>
+    <xmx:s90Nagn2IEMXgixGznQuq9EkFp_ns63OP2TahGUdf-MLA8aPYzjhXQ>
+    <xmx:s90NaoQyJBlNue-28Jv99MCVOTnfpEGzBAKeEyZvCzuNTMPgZPtNug>
+    <xmx:tN0NavhykKnB70TgIzzkxu4AjV4H9GTykCNq2_Aev7WjbTkFQKvTASzl>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 20 May 2026 12:13:39 -0400 (EDT)
+Date: Wed, 20 May 2026 10:13:38 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH v4 2/3] PCI: Add soft reset method as last resort
+Message-ID: <20260520101338.21fe1e13@shazbot.org>
+In-Reply-To: <20260519053551.7140-1-jtornosm@redhat.com>
+References: <20260518111555.6b1ce60d@shazbot.org>
+	<20260519053551.7140-1-jtornosm@redhat.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <SN6PR02MB4157A1B2D9B56062A0917BC5D4042@SN6PR02MB4157.namprd02.prod.outlook.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, May 15, 2026 at 05:36:40PM +0000, Michael Kelley wrote:
-> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Friday, May 15, 2026 9:54 AM
-> > 
-> > On Fri, May 15, 2026 at 02:51:38PM +0000, Michael Kelley wrote:
-> > > From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Friday, May 15, 2026 7:00 AM
-> > > >
-> > > > On Thu, May 14, 2026 at 06:13:24PM +0000, Michael Kelley wrote:
-> > > > > From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Monday, May 11, 2026 9:24 AM
+On Tue, 19 May 2026 07:35:50 +0200
+Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
+
+> Hello Alex,
 > 
-> [....]
+> Thank you for the feedback. I understand the concern about reporting reset
+> capabilities for all devices.
 > 
-> > > > >
-> > > > > Previous versions of this function did hv_iommu_detach_dev(). With that call
-> > > > > removed from here, hv_iommu_detach_dev() is only called when attaching a
-> > > > > domain to a device that already has a domain attached. Is it the case that
-> > > > > Hyper-V doesn't require the detach as a cleanup step?
-> > > > >
-> > > >
-> > > > The IOMMU core attaches the device to release_domain (our blocking domain)
-> > > > before calling release_device(), so I believe the explicit detach in the RFC
-> > > > was redundant. I simply didn't realize that at the time.
-> > > >
-> > >
-> > > Got it. But after the IOMMU core attaches the device to the blocking
-> > > domain, there's the possibility that the vPCI device is rescinded by
-> > > Hyper-V and it goes away entirely. Or the device might be subjected
-> > > to an "unbind/bind" cycle in Linux. Does the detach need to be done
-> > > on the blocking domain in such cases? In this version of the patches, the
-> > > Hyper-V "attach" and "detach" hypercalls still end up unbalanced. That
-> > > seems a bit untidy at best, and I wonder if there are scenarios where
-> > > Hyper-V will complain about the lack of balance.
-> > >
-> > 
-> > Thank you, Michael. May I ask what "the vPCI device is rescinded by
-> > Hyper-V and it goes away entirely" mean?
-> > 
+> Regarding the sysfs power state approach: I tested this, but the challenge
+> is that VFIO needs automatic reset during VM crash/reassignment. When a VM
+> terminates uncleanly, VFIO calls the device reset path automatically before
+> reassignment - there's no opportunity for userspace to manipulate sysfs power
+> state in that flow.
 > 
-> See the documentation at Documentation/virt/hyperv/vpci.rst in a
-> kernel source code tree, and particularly the section entitled "PCI Device
-> Removal". Such removals can and do happen in running Azure guest
-> VMs. Start with that info and then I'll do my best to answer follow-up
-> questions you may have.
+> For the device-specific approach you mentioned, what if I modify the "soft"
+> method to require an explicit quirk flag? Something like:
 > 
-> The unbind/bind case is separate, but has some of the same effects in
-> that Linux should be removing all setup of the PCI device. There's actually
-> two unbind steps -- one to unbind the device-specific driver (e.g., the
-> Mellanox MLX5 driver or the NMVe driver) driver from the device, and
-> potentially a second to unbind the VMBus vPCI driver from the device.
-> These unbind/bind sequences can be done in the Linux guest without
-> the Hyper-V host rescinding the device.
-
-Thanks for pointing me to the vpci.rst doc, Michael!
-
-IIUC, for the vPCI rescind case and the VMBus vPCI driver unbind
-case, both will trigger iommu_deinit_device(), in which IOMMU core
-attaches the device to our blocking domain. And hypervisor will
-handle such attaching to the blocking domain by essentially disable
-the DMA translation and IOPF for the device. Since the device is
-already in a safe state after that, I don't think an additional
-detach is necessary.
-
-For the device-specific driver unbind (e.g., unbind nvme then
-bind back, or bind to vfio-pci), that is transparent to the IOMMU
-layer.
-
-Also, while looking at Jason's comments on the detach/attach
-semantics, I'm now thinking that making the attach hypercall
-atomic (having the hypervisor handle the domain switch
-internally) might be a cleaner approach. That also eliminates
-the attach/detach imbalance issue entirely. I need to do some
-verification on the hypervisor side first, but will keep you
-posted. Thanks!
-
-B.R.
-Yu
-
+>   static int pci_soft_reset(struct pci_dev *dev, bool probe)
+>   {
+>       /* Only available if device explicitly quirked for soft reset */
+>       if (!(dev->dev_flags & PCI_DEV_FLAGS_ALLOW_SOFT_RESET))
+>           return -ENOTTY;
 > 
-> Michael
+...
 > 
+> Would this approach be acceptable?
+
+Device specific resets are made for this scenario.  Look at
+pci_dev_specific_reset() and pci_dev_reset_methods[].  The supporting
+evidence that this performs a worthwhile reset is still a bit weak, but
+heuristically it seems better than nothing, which is what we're left
+with otherwise.  Reset via D3hot for a device that does not expose
+NoSoftRst- is not something we should enable or endorse for any common
+use case.  Thanks,
+
+Alex
