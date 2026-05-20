@@ -1,86 +1,83 @@
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
+Received: from mail-dy1-f169.google.com (mail-dy1-f169.google.com [74.125.82.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E36C72D94B5
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 13:38:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A44C53E7BC6
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 14:18:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779284291; cv=none; b=FZBWQeV8jhTDrK9IYK2fmo/Hg+wvdhf7XB+CawD6pr7pNHEznl773HJNcIJ2i2F5e5xIKnozX0Ef095MqL+WTFl35ZKaK/Ntm9vi2CmMBbVJtlcORagwpw6UlYH+7e/nvvo6G+rN778a6grnpxEhP3njDzmtqfkhJLOEL/ioiTw=
+	t=1779286741; cv=none; b=EoyS0fIyS8mnnSqrX5ZyegZb6EZqCdNIsYmyJxb54f6CHihjh15bwwNn5J/cacpwNLT9EnPmFTEmVWFCmnVNx2K7/ymu9rLE5e4rKjNzyDZqSX+O/dL9Zf+/h3IPDFS6Ph8SMi3cAr/cKOgBsaX1OgS/8HNe775gYFqlg2hiVE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779284291; c=relaxed/simple;
-	bh=FcTKYryF3HlZcFivdjcw94sl1hUA9PtC2/zgtt2ZZvU=;
+	s=arc-20240116; t=1779286741; c=relaxed/simple;
+	bh=SVbGfRf42/YpRtOvkubvp4anUHrMvLtMBHhgTtWQnfQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gY6CKOuDe5vaMBdJV3VAI71X51J5fLWzfwBUI+qNKMUVS8iglzHMsVVVESm83ES6PbM0BVwIZXVuDArGZMCQ7o0D+nT5wTcLyjxU5dgIGkVbbWmcGHDNI6Dg8akrJ6i+r8xxV/adBJFWHgSSe8BbmuX3k3sWvyQLqHazAdfdDG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=cBzOeB90; arc=none smtp.client-ip=209.85.222.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	 Content-Type:Content-Disposition:In-Reply-To; b=m3SNrXYd0HrAOFsI2tAtrBc+vcA33KyRcGE+uLm/5ThByRFcFZRO01JbffhNSvCB0ntYNdj52Hwf7JsM1UISHh5NTx+rtOCL8RNXYjQna96Cgh6hBC3eYV6zQI1Lmnfu8c4uM0UdxqWIwEZ6rZlwnGW98t1LkAirnNjM7PKJHug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DSkLvI7b; arc=none smtp.client-ip=74.125.82.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="cBzOeB90"
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-910f734b477so542117285a.0
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 06:38:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DSkLvI7b"
+Received: by mail-dy1-f169.google.com with SMTP id 5a478bee46e88-2f0ad52830cso6247850eec.1
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 07:18:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1779284289; x=1779889089; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1779286731; x=1779891531; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ta3JnaFAadHaT886JLq7+5Wp7lPw1ufIXyuy/64QRsk=;
-        b=cBzOeB90De6JH9YZRFW4WdvPomMlPt+GLQnVKxGLpjoAW9+MZqNKeid4oFTWgQ11k5
-         9vt4MvanJfFqfc0J7YsM82g3CPSDDBbEnEX/6L4fV2XTMUc/puxSVOI3bzTcEtcMcmqH
-         v1/iG/yQlqyVlfl1XeHsKgPDYOHSvnqy+xHQQoMXiwf5ZX+i2IIcD65QmN+GCDdUKQV3
-         fjhyMGr6UFZTz/iqinGH2Jn/MnFb3n6FkD6lL7MOfEwck6DTMJs8OY/kL4L8PQmd4spr
-         Vs22mr5Ruv2OSsSaw5v+x+zjF/dQdPNixEh1rHLzVwhHyHwWg9uaI+epPBP23XLfwJiE
-         z2kg==
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Vyw5z+cwPwEeTdxGP1e0+U+3uquisZZyqDCM4ankidw=;
+        b=DSkLvI7b6i2vq92PSx5mKBVTl8Bw01nseMkFEzZBH0bQG3nBoP/mJ+FmhlUJGQcuGc
+         LsjTwrT7XJfof/GCQQ5inuAJ5/XkEvS0aqmr5mf7Cyzy6NV/8BpR5cb5/xvHlIedMG6G
+         GkzRPFh93zmlpW/w5bML8E9OPpgU17+HBN0a4otD9x8LMIe/WBJgRLhyCTt65p+YYTsb
+         uCQ2bz6bEepWi6iUcdakskDhjCj0OVFtZhOfODcp9I1QObK7GvXN0Vl+czerxIPQoE6w
+         xJPqUSX7Su2kFY2/O/Fdqqh32uISEAe9J+fnoJkoxKg7ZvlwemkZJuQ13JmR8d/vjoqC
+         7GGQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779284289; x=1779889089;
+        d=1e100.net; s=20251104; t=1779286731; x=1779891531;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ta3JnaFAadHaT886JLq7+5Wp7lPw1ufIXyuy/64QRsk=;
-        b=M3m7twSWEYIhxux+V/C11e1CIbthN0Kddhl5q5ir4MBHYoe1r7QVRC9dXJ8Pebp353
-         +dUhFNEG949OsIFg6g9JxxuUhzQlgpDN9LffO2MLtL3QHUuV2sEP8sFybMqVm+a3WOUe
-         UObhkgvHUiADyqBtXnDbfC65LXtCS7Bdrv6JcYq75Nkd171HmBv7F6lkbeohQ/VmLnFl
-         PzL/1HEJMvjETlkOEOGnV6tYQUsBa0fqv+tiXt7JI8t0lDC0tyit9qwtRAR8v+FuCwXd
-         WTEd2NEthYgH4yHZTfKqFpiAQj9eMbdWJphudXA4oAcy8EXMPCC9xNfiO72FKQJP0U49
-         CdTw==
-X-Forwarded-Encrypted: i=1; AFNElJ9qXaPUkuWpc+sclOdigF6svs9m7ZBzCl2unAbRAIx8pCXJgJuUYo8tTtfwThT43KQiTjqKGOfh2Dw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyuLlRNbclVMgVwib8hVLlQqJUpEUnPj+BTqaz2uZIASncoZiKV
-	sQKv5kB4ovvJW382wW9geq7isg9SPbp7mbaSx5nlpcPafPYnOn4CL/Bh+6QAaHdEQms=
-X-Gm-Gg: Acq92OHGpbTtUa8uiajlG2AHc1a79LV7o8Qj9iqduOIE3t6olKr5O8CxeZQOJoF0076
-	kBXGl1KBaJb+0VM2R8ByJpNyDCTWw+j5gQmAd+XNPLAb6e3fovmv/Y0xc2xYtsRbPnmlRCkcz6W
-	9Wxeb129FQerXLx4HHkFZAyZtr2yn8ywk5vrTcNASs3SHDKUxCCcWvmpFbwPuNZJJIY8kyBf4KE
-	/Ih1+GCdQ5iSudJUh/LOc7Zk3ooYYxlPc4e+CXfu0VkedJ1mT+0lOJCNkjkj1Gx1RMHvJP0uaDo
-	ntjsph4p4URKpSgrzaXMGqp0dhfq8ji9vsBHebCDgljKIfttNqnn3iqUCiEf/rlcY8fvn9O4ynf
-	Fs4T6UH6n7yq/80YCBkqNlUIk9Ve50KVQP2Gr+AHvXM7zyCi9qUjLTYApmR8YcUrHJkdL+YjI/R
-	vLO59Qr+RwMVfNj+XtG80e/mNmNHoAeZlleS3MOzGE7Zig+qzAH5koqYCo9p3uz/QxkQHPhd0je
-	O936VuG61i0S8lp
-X-Received: by 2002:a05:620a:2950:b0:8ef:f1c0:ab7f with SMTP id af79cd13be357-911ce524059mr3564626085a.24.1779284288689;
-        Wed, 20 May 2026 06:38:08 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-910bc83ff00sm2144919485a.26.2026.05.20.06.38.07
+         :subject:cc:to:from:date:sender:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Vyw5z+cwPwEeTdxGP1e0+U+3uquisZZyqDCM4ankidw=;
+        b=L0d3B69YOEEZtpqE1LsKa/k3ZUk2XNs5sqFPPHDBcakEW53gjfKS5v0jYz1SfbSvUF
+         N43SwQbKfi6Y9dT8SR/0I8nSLr0UE7ZNgYRyfvds9vkIomDzsW9b2QIojHfc2I9UZv84
+         cw1YWSSCFpK1IBOOMNh0Z/WOXvENHsurBEsc9ZDilxgI5KoZ8ilgSPnao+k5Ao88Munc
+         OhgcJXUztTRK+R09VyrMbjlKf8EIoFmUS+qlPXGh3+y33r1ldC1hDetiB4JlaqakUNLS
+         J4PD4IrVLgmy7ZBYVg0c87sVP053nceahjUHvuAMhUk3PoLrHVMBguJhRhJL760nj6bO
+         3kag==
+X-Forwarded-Encrypted: i=1; AFNElJ+IDUlPC5TukhaZB2CJ/YAJaKPKPeGIe2oh1pvUdBJZFxDfhqCSTUfixwOdphGB/2yakQwYPeHr3TE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4zTFgHynQY1m+XuGpcf/2XkFa1hcO6+t8AuMRWQKBmaXzL7E+
+	dR25j9cMfPtu39POynxqAKurJsyenr4UZnR45iQPk4Vcoxhhw7gcTcQC
+X-Gm-Gg: Acq92OE+OZrxnkthiK/RyOqjYSPAd9Vu3YnK43Wq2S29Q1tLoDUc1GqvAYU2kx1xVje
+	Q3/Wm9p+e2OcmhplTfFGJXEYPjsyOaxpFqf/nnnh6c83ubnD94NR479iAEv/0V07moOKMLSvAf9
+	XUOBLf9Jfn6GQfK8E69K/KjEzKxvpYPguUA0HAPvCFTInj7PrdE4fISukhWkhFHRkthm1+Tl59Q
+	2pNXkc0wHa6rPOy/7GJR70Ymvm6thGJPh569UxTX+sjeNUSIg0pwoJzmSiHpE82umurJItm2Pxv
+	TxNG8SVMoiipwUi0sr5uYdfGsKxlGaUbvJOIPfty2qdGFGMNBlhFjpw4peW6WFRAUUGzeVovFSi
+	IEZ360joJI3PgfBi39FyoLbVdZuDqpPgxlgOX6qrnyKQJkFjxjpgkXefRV8jIHydEA3hQB6131O
+	HshgipwkaU13h2emLxbZaaZKUIOVrXNFQvzo1f
+X-Received: by 2002:a05:7300:a94b:b0:2ed:a64:a457 with SMTP id 5a478bee46e88-303986552f6mr11202553eec.20.1779286731120;
+        Wed, 20 May 2026 07:18:51 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-30296dcb6adsm21432427eec.15.2026.05.20.07.18.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 06:38:07 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wPh7f-0000000HAxk-0y0i;
-	Wed, 20 May 2026 10:38:07 -0300
-Date: Wed, 20 May 2026 10:38:07 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, wei.liu@kernel.org, kys@microsoft.com,
-	haiyangz@microsoft.com, decui@microsoft.com, longli@microsoft.com,
-	joro@8bytes.org, will@kernel.org, robin.murphy@arm.com,
-	bhelgaas@google.com, kwilczynski@kernel.org, lpieralisi@kernel.org,
-	mani@kernel.org, robh@kernel.org, arnd@arndb.de,
-	mhklinux@outlook.com, jacob.pan@linux.microsoft.com,
-	tgopinath@linux.microsoft.com, easwar.hariharan@linux.microsoft.com
-Subject: Re: [PATCH v1 1/4] iommu: Move Hyper-V IOMMU driver to its own
- subdirectory
-Message-ID: <20260520133807.GS7702@ziepe.ca>
-References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
- <20260511162408.1180069-2-zhangyu1@linux.microsoft.com>
- <20260515221918.GJ7702@ziepe.ca>
- <elo7enhxk5m7x4rc4quiqnkgbwsqa3ex7di2ksv7szu75xqe6x@zum5nwmkl6kn>
+        Wed, 20 May 2026 07:18:50 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date: Wed, 20 May 2026 07:18:49 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Jihong Min <hurryman2212@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Basavaraj Natikar <Basavaraj.Natikar@amd.com>,
+	Michal Pecio <michal.pecio@gmail.com>,
+	Mario Limonciello <superm1@kernel.org>,
+	Yaroslav Isakov <yaroslav.isakov@gmail.com>,
+	linux-usb@vger.kernel.org, linux-hwmon@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 1/2] usb: xhci-pci: add AMD Promontory 21 PCI glue
+Message-ID: <06236462-6c4f-413d-8324-537fb8f743d9@roeck-us.net>
+References: <20260519000732.2334711-1-hurryman2212@gmail.com>
+ <20260519000732.2334711-2-hurryman2212@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -89,36 +86,38 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <elo7enhxk5m7x4rc4quiqnkgbwsqa3ex7di2ksv7szu75xqe6x@zum5nwmkl6kn>
+In-Reply-To: <20260519000732.2334711-2-hurryman2212@gmail.com>
 
-On Wed, May 20, 2026 at 02:37:03PM +0800, Yu Zhang wrote:
-> On Fri, May 15, 2026 at 07:19:18PM -0300, Jason Gunthorpe wrote:
-> > On Tue, May 12, 2026 at 12:24:05AM +0800, Yu Zhang wrote:
-> > > From: Easwar Hariharan <eahariha@linux.microsoft.com>
-> > > 
-> > > The Hyper-V IOMMU driver currently only supports IRQ remapping.
-> > > As it will be adding DMA remapping support, prepare a directory
-> > > to contain all the different feature files.
-> > 
-> > Any possibility we could put the irq remapping thing under the irq
-> > directory?
-> > 
-> > The other drivers have it here because they are co-mingled with their
-> > iommu HW, will hyperv have the same issue?
-> > 
+On Tue, May 19, 2026 at 09:07:31AM +0900, Jihong Min wrote:
+> AMD Promontory 21 (PROM21) xHCI PCI functions use the common xhci-pci
+> core for USB operation, but also expose controller-specific sensor data.
+> Add a small PROM21 PCI glue driver for AMD 1022:43fc and 1022:43fd
+> controllers.
 > 
-> Good question. I don't think Hyper-V have the same co-mingling issue.
+> The glue delegates USB host operation to the common xhci-pci core and
+> publishes a "hwmon" auxiliary device with parent-provided MMIO data.
+> Auxiliary device creation failure is logged but does not fail the xHCI
+> probe.
 > 
-> But from a code organization perspective, I think drivers/iommu/hyperv/
-> is still the most natural place:
+> Make the PROM21 glue a hidden Kconfig tristate driven by the user-visible
+> SENSORS_PROM21_XHCI option. If sensor support is disabled, generic
+> xhci-pci binds PROM21 controllers normally. If sensor support is enabled,
+> the glue follows USB_XHCI_PCI.
 > 
-> - The IRQ remapping framework itself (drivers/iommu/irq_remapping.c
->   and its internal header irq_remapping.h) lives under drivers/iommu/,
->   and all three backends (intel/, amd/, hyperv/) sit there today.
->   hyperv/irq_remapping.c includes that internal header directly.
+> This keeps the auxiliary device available for a modular sensor driver while
+> avoiding a built-in xhci-pci core handing PROM21 controllers to a glue
+> driver that is only available as a module during initramfs.
+> 
+> Assisted-by: Codex:gpt-5.5
+> Signed-off-by: Jihong Min <hurryman2212@gmail.com>
+> Reviewed-by: Mario Limonciello (AMD) <superm1@kernel.org>
+> Tested-by: Yaroslav Isakov <yaroslav.isakov@gmail.com>
 
-IMHO it is a fair question if that even belongs under iommu.
+Acked-by: Guenter Roeck <linux@roeck-us.net>
 
-I think it was dumped into here because of the co-mingled drivers..
+The two patches should be applied together. For now I will assume that
+they will both be applied through a usb tree since this patch touches
+common usb code.
 
-Jason
+Thanks,
+Guenter
