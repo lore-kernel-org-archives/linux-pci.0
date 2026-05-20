@@ -1,199 +1,189 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011037.outbound.protection.outlook.com [40.93.194.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62FC13D51E;
-	Wed, 20 May 2026 00:01:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779235315; cv=none; b=Ddg7ueEmBcJandthmv5vqRgpZokyGysJH0M6HptN0B7bxpIOb/Qs950wVZHsIXwVnMIo84mxlKk+gmnk5tK+9poQYlsEsNfJDZMb8jFXDi4vuo810o2/z7wod3d6Js9U4/Hut87/EU0eL+jIfZ9a4ZYnxx7CIszdBHyimKydU1s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779235315; c=relaxed/simple;
-	bh=fR7m8/Ewk+coHnCQI+/psxuWf29L80kouvEcqYOW37M=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=UnVtQkYFHGdpasLQb+4RjyhPkRTVWFKRmP7kubk/oSXkyvKUxfWghgAHRjkT8U+M6QuANBP2zU9wmp1t+K8f2B/BAQUQvb7AEn6doxFA+dYDk+HtkXQoWCK/25Y/0vHkvI9cbFLeymhl6t41HY4s2kdLg2nGUzfIuLWXC5wRwZ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G53BZT2o; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 981E54A32;
+	Wed, 20 May 2026 00:05:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.37
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779235511; cv=fail; b=FEDi717Navnq3WXwOqZIDnxPGHWQ0GkP3jknMwATThhiO6QcOmbJqLxIJYOCa3K01lJGEI+OH7mXrM5Gscg5lB3THGAlj4oJjwdrLjV46IhXWtEChSiJgRdMB8vnpCmdL7H4i7+4T6/ebxHXomNdEVM/N1pl3tRQtlo2JjXFwk4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779235511; c=relaxed/simple;
+	bh=dO0dRJlmWlX5vDIMSW4ivVDyghkYwbnZ0HbqOi2GtcI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=nduoeHPQWES47B9C403ejX8vsmfyYhJRcd8RvwO4JNhR+gq9zNwAftKi0YoU4yD9XUM9XbmaWo1xcehAdXcs9Wv5OckzvS35lbtCtF2QbYcccFZ2p+O4TCOrTGtJNpQKkebVv1BESecaFePGfGuSt/f6VKyyK2xb2JGV1Tpi6Ck=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=lwKLXipt; arc=fail smtp.client-ip=40.93.194.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G53BZT2o"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5AA991F000E9;
-	Wed, 20 May 2026 00:01:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779235314;
-	bh=z5+d8X1xsrZ2nYFL0/wXdETl3fdxdqG4T8Y5iYJSXk8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=G53BZT2ogWRbd4EK6NCrK36i40EUGvN8gVZ9AQzXfJbz+k/c6muGGqY2K2uRxQI2Z
-	 oHtRBPyvZ4yiJNwH6s3ZR9oFskiQ2jpNCSaptOBDmC5dRVvexsYBR8muO6j90axEI2
-	 JTzQ4UNWatAohlQlWe7mOqe5to1IAMedjkpmVUHQ9tITlgxYnelNsNSaCPsz1OEh5D
-	 PJSJGiJ5Zxp+fDurVTzVRbx5NjPkVfiIZb7TzySDJZDl5+IvUYN3m3JeaxPFoR4saK
-	 guoMPuoJHhMDi9wPTdk4dXrFJf7I5d0/ttdW6j++W0OBwtb9MmKypiheK2+bUq+wJS
-	 EgBVdOE16wt2A==
-Date: Tue, 19 May 2026 19:01:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com,
-	bjorn.andersson@oss.qualcomm.com, Frank Li <Frank.Li@nxp.com>,
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH v5 4/5] PCI: dwc: Use common D3cold eligibility helper in
- suspend path
-Message-ID: <20260520000153.GA14400@bhelgaas>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="lwKLXipt"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=b5rKJLYC2PaZPdowtFjoF3qRNR4H/J3WYBgkmvJ4xl/DM9+m0uvWAfDtgp5Wl81I9R/3iUUwOdD1wb4Nw8zKBIQcNFeGsQAtnGJ4aSbU5OFkvhVN7nrz5bEmx0tKETiiXQY4hz77dpT6XqMaCdWCfd9UgJsghrAAR2UPFaapOyMFUiPp7VAiRn1Qgi9orZP0nwd8vm3xCrRaGLzbr2uHBPOeb+O5KOhOjLFQ7rG9R3vSZNVmHf/3wIwOX4etR6X0xvzqx6IJEOJ8AENjGxM+QVtPEQMnGivADGqJu5e744rdAETFsdpzG6c3BLN+V10Gm/p4LE5WpXvfiPkSlULTeg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OFUwlIjwayIxqo3eLAki9eLwlQ2Jo83n/CqnQNZk4SE=;
+ b=L+f/K6AvASsSQcjxaa981MiKDJHry/h3jWxhdQaKI7KYqLKhN5yf8ajf7WV5I/Fr59RkPxJY84p5cNSBpGa1ky9tmPtaIjnykO9rvhEQmIAwWciZkqQP4KCGFPJFwTt0DCWLVTbbxBrIh1IQ8OlqZUrgws9oUU2nD9w0l6PpuKCw22IehR4z/FwsCwy5mm4xp62RBXobLPKadbOkzQ91cEt4I+mxF1MWYwbH37MXObGx1Jui0hrBs7ngLADMnCPlKaFWLyeJRxZw+fjci6JeqWqekFnIhiYXzTpFHl+KQHHQnvR+gRQT1iG9VeKpkKtsWbH2xIdifMB1xCT7whrN7w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OFUwlIjwayIxqo3eLAki9eLwlQ2Jo83n/CqnQNZk4SE=;
+ b=lwKLXipt/Bw+l1sQtxGHE88sGkwOYKYqexkHLV3VkWjYb+1pum2si4R004Z2LY/iSfXl1ck7Rdl2ILpKk/q4Kzmaeuo9VrVH/vVNUu6NPONzP6Kn+g9DG5jdQZa/2E+FS1FrxSEgfyqo4ONVUBMbhdzvtU65g/K4CGXU6p5cJExx5TjPEilT7iJL0iLQVJPaqNgOieaxFocaU4OJzh6WPJ2YzDmNI9U/23bhJL3dhJHQ7qjcRUUj0xHKSZq5yd346IgiMW7PiPyRi5Yp2DBrvCUG0G+XCblhxYvggw1krGXSkY4tTUKhdNae8uswjJCk/TsYmdDHv6UNgdTDtl3ESA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
+ by MW6PR12MB8951.namprd12.prod.outlook.com (2603:10b6:303:244::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.25.24; Wed, 20 May
+ 2026 00:05:05 +0000
+Received: from LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
+ ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.21.0048.013; Wed, 20 May 2026
+ 00:05:05 +0000
+Date: Tue, 19 May 2026 21:05:04 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Nicolin Chen <nicolinc@nvidia.com>, will@kernel.org,
+	robin.murphy@arm.com, bhelgaas@google.com, joro@8bytes.org,
+	praan@google.com, baolu.lu@linux.intel.com, kevin.tian@intel.com,
+	miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, dan.j.williams@intel.com,
+	jonathan.cameron@huawei.com, vsethi@nvidia.com,
+	linux-cxl@vger.kernel.org, nirmoyd@nvidia.com
+Subject: Re: [PATCH v4 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
+Message-ID: <20260520000504.GQ3602937@nvidia.com>
+References: <20260519222335.GK3602937@nvidia.com>
+ <20260519234801.GA21369@bhelgaas>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260519234801.GA21369@bhelgaas>
+X-ClientProxiedBy: MN2PR01CA0054.prod.exchangelabs.com (2603:10b6:208:23f::23)
+ To LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260429-d3cold-v5-4-89e9735b9df6@oss.qualcomm.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|MW6PR12MB8951:EE_
+X-MS-Office365-Filtering-Correlation-Id: 02c5494c-017f-4d5b-f4c6-08deb6037285
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|7416014|18002099003|22082099003|56012099003|11063799006|4143699003|5023799004;
+X-Microsoft-Antispam-Message-Info:
+	bU3/KAzCKNHeK0mK+5TngzPkVst4rEn69/+Tnjm44bAq516U6YQdItQaIq/PUWxLIzrXfTxgjV0Expt4WR9W1AKo1yPfktmRiigVHFZ+N7epBAXoz349HdO8In5BeOO3Dx64b2QqtZzIlYBDro3Nt6RokJkLdmMf0BHZh13a393KF6wYO0Omh3BtEXshzz1UzNdBn87t+r72iHUVvhBeBaDuzj4dk/mxKc0ORzfE80qlL7bfKmsmV7f++Mz2Y7TPhk6aFNmpiiwRAKdRyuZ+6UHkylqoudiG4+qtG+t/PiIrivBjxmD0fMSjfWu5/23OTFvHHDZwVd+kDHnXgL4w1oW72d23tKweqj6V39FJ0hvOJ6Ad5sOaHaaN4p5Oyi47mVexULeSSAKG1T3cBocUa+fe9Zv9ZYuaYKhzcPtNir9cUV2mMVTewmUBgDx1AT431OUhmDIccagNfSjW/CmTNJyGBMvWedYq4mUryGn0rLoDSwcAYqGL49vLjjmodTXJqyyzcMHAVRfivHVClD7O8V+c/Qw1SU6CYNzLz01TncWWfq2zxyPsfiVuJL4+ehgkU/W9q8ui8UL7C3oS1Yc8dWeBxDz28QAeSXcPjc3RCfUfp+ArkdVY+JzRBTe+nQtK/yQbkmN9ODv4ErUMOeTsHl6LXRXf5I2jH4p2nKk7HTUX0vb3ieOhF4yeClTTCoe0
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(18002099003)(22082099003)(56012099003)(11063799006)(4143699003)(5023799004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?hYCtZAKBTPwH2KPRG/tWpdmwcxow69cqH053YJ5jyVqY8Z1GPAI/wXOTVKaj?=
+ =?us-ascii?Q?Yxp6ENfg5Eb1DfOdWWyO+AsX2jWE8QYZXDh53hWriUAL8SglC5NNMIqCRxg8?=
+ =?us-ascii?Q?qJV3TaLVBAHMzW3tNUCQg6KnJXPDp27CAmPjNYNTdaIpUpoLDGsLAhfIuZhY?=
+ =?us-ascii?Q?yyPsuR9d1lwL9mW/xBj7BqB4oYnuQB28tFZ2JaBc+w+YsnVxWfABflzd9sB2?=
+ =?us-ascii?Q?ih1Dvr0aDwHTvYDiWXve8q+KRLTJpSUIyaQOM9J753Y3zS8EkwWqrZDzJ+9Q?=
+ =?us-ascii?Q?xYPSJM4/XX9RfVWQzCHR9qw/o//9U3Y8XmtspqiI95vugTzUyfIps1KY8zN5?=
+ =?us-ascii?Q?4h4V6W/udiGuvUSm/cQYm1KBise5+AWRx0sKQ+TiEBn71ukIINqxdm1SsgjZ?=
+ =?us-ascii?Q?wwl/LLtoMz+e0O+ordm/CKc0agz3+uEH6qt8FkYyc8O6J7HrT3vPd5tTJl8Y?=
+ =?us-ascii?Q?Xy1wiInUOVS9BDRo90KMLHq6CePI9AZAFk/ET9cIasFotLMhmdKrZ2TcewLI?=
+ =?us-ascii?Q?J+CobZsUGxkj8rS6QOnvA/2HHpmB9WmyOv9uspk1yWVv4emCccE91z0N+eeK?=
+ =?us-ascii?Q?n9hnhFlZ2SHJIMK2DDecpC/aOF8/Xy6pxa7t7elSTGRf9JPMQuyoZKfPR+79?=
+ =?us-ascii?Q?FT9StAZr/9QWVm0Kij9Yc5N4z0gfnoq04svenSCtNMt39+5yn5OtVlCWVtlz?=
+ =?us-ascii?Q?XDDEqM+cDGFbs2Bi6TLJS0Ws4255zgACGsQGUMwMhc+ILvDUbM54HwE1FdV7?=
+ =?us-ascii?Q?5/URFUur3n3zAkb9olbvba+EWf1B1FH8S8jZS6SYGyfNTkmihL9avO7n/wm0?=
+ =?us-ascii?Q?CqMB8nQkejScRBdpjyoCQE9ShiFrkiDfE+FFicTjPErQOreGZKRuO5h8gxyY?=
+ =?us-ascii?Q?1HJN64+wO6RkO66wirxkk01w6AXJ4E/CjESXhSbClp4QhV1A+nBytJFXfxtV?=
+ =?us-ascii?Q?pYr+Buhu4QU7nydFhgeqyjmUF6ubFa4+Coj3Txjs8QxwX/E1JOXhZqOpHAC6?=
+ =?us-ascii?Q?V6clGhAfhao6W4lDjv+k1Uyi7KlK8/WFtAcwRwjHoy9JQ8wFAVMtxow6rnSF?=
+ =?us-ascii?Q?wCpPkK2rC1FPUMx520cddQoxz0Vqjv5mqkdCNtbVAGYLKxGmzgj1uTgvWvrW?=
+ =?us-ascii?Q?VdT+WMAy9i+5ZCS3L9Bbkbe7616uP1Fc94hhMJYTJw4B4m6TM32kpSZvhBKG?=
+ =?us-ascii?Q?uXvwmXYAPPKnJdVC/l0k6jeah88Ak1me81+SDmLePIGA+BFlPOXvW07IwYjX?=
+ =?us-ascii?Q?PZOhNxz7wnPg/TENw/BHv/9XbikK3Dh/ZR6tQwu3agWZx1pDQ8JTrgRn1GKA?=
+ =?us-ascii?Q?6kC1WPJyjlzO7uGHc0N3KEcj/wtwhvnc1XcNIcrP0plWMoDuNro1M3wdYgLx?=
+ =?us-ascii?Q?gjdtZeRhy0oY1pab8E9wC16v95Qlce1/PakpiB+O3XXN0Jg2ZqGqWk9uWXjm?=
+ =?us-ascii?Q?Ob5waRLJi3uG1gVkffkWXBpXCJMkYW8KYo5xX4kqgSWPOzmoIE+EJbYmcFrh?=
+ =?us-ascii?Q?jeh+tzKVo87aRey4GWP3Lvsjh4GAK/LL62ZyTMuTbhAO9f3PQJuQKsDbuloy?=
+ =?us-ascii?Q?f9Zs+vZKk8yQBQhtqL66vsFD966pYuldPFTN22CNVeHknyNYN44TxUxn9IYT?=
+ =?us-ascii?Q?b4PY4ZktJku+U284PoVEKck0NA44u4s4056GMrRDn6n3x/6ff5io++xQ3zIk?=
+ =?us-ascii?Q?FwfJdNHND6LEZ76lSvoY7aUx85n8Fy79E2pPXebkXm1EPOet?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 02c5494c-017f-4d5b-f4c6-08deb6037285
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2026 00:05:05.7006
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: X3Bs7IsQZPKsI6S1xXW6Lqbaa180mnqVJejhRErTPTPYAYkiEZ4v+z2cGz6/EG3/
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR12MB8951
 
-[+cc Frank, linux-pm]
-
-On Wed, Apr 29, 2026 at 12:12:26PM +0530, Krishna Chaitanya Chundru wrote:
-> Previously, the driver skipped putting the link into L2/device state in
-> D3cold whenever L1 ASPM was enabled, since some devices (e.g. NVMe) expect
-> low resume latency and may not tolerate deeper power states.
-
-I think "some devices expect low resume latency and may not tolerate
-deeper power states" conveys the wrong message.  It's not that NVMe
-has a mysterious acceptable resume latency number that we have to meet
-or that NVMe has some inherent aversion to D3cold or L1SS or whatever
-"deeper power states" refers to.
-
-It could be that ASPM L1 was configured incorrectly (e.g., an L1->L0
-transition didn't happen within the advertised exit latency, leading
-to some device access failure) or a device lost internal context when
-the driver didn't expect it (e.g., the Qcom problem where L1SS exit
-takes too long and results in a link-down and device reset [1]).
-
-It sounds to me like the ASPM L1 check was a way to avoid problems
-like that, but I don't think we ever really had a root cause.
-
-[1] https://lore.kernel.org/linux-pci/20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com/
-
-> However, such devices typically remain in D0 and are already covered
-> by the new helper's requirement that all endpoints be in D3hot
-> before the devices under host bridge may enter D3cold.
-
-If we put the host bridge in D3cold, I assume the hierarchy below is
-either put in D3cold as well, or at least every device in the
-hierarchy will be reset as a consequence of the Root Port link going
-down.
-
-If the driver doesn't manage the device power state itself, I assume
-we have the freedom to put the hierarchy in D3cold or reset it.
-
-Do we have the same freedom if the driver *does* manage the power
-state itself?  What if the driver put the device in D3hot, expecting
-it to *stay* in D3hot?
-
-I think pci_host_common_d3cold_possible() will see the device in D3hot
-and decide that D3cold is possible.
-
-(I'm looking at https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/power/pci.rst?id=v7.0#n746)
-
-> So, replace the local L1/L1SS-based check in dw_pcie_suspend_noirq() with
-> the shared pci_host_common_d3cold_possible() helper to decide whether the
-> devices under host bridge can safely transition to D3cold.
+On Tue, May 19, 2026 at 06:48:01PM -0500, Bjorn Helgaas wrote:
+> On Tue, May 19, 2026 at 07:23:35PM -0300, Jason Gunthorpe wrote:
+> > On Tue, May 19, 2026 at 02:36:49PM -0500, Bjorn Helgaas wrote:
+> > > One motivation for putting this in the PCI core was to use the quirk
+> > > infrastructure, but this series doesn't use any of that.  It doesn't
+> > > declare any fixups, e.g., DECLARE_PCI_FIXUP_FINAL, and it doesn't
+> > > update any state cached by the PCI core.
+> > 
+> > It works like the acs quirks that are in the quirks file, which are
+> > also arguably only used by iommu too :)
 > 
-> In addition, propagate PME-from-D3cold capability information from the
-> helper and record it in skip_pwrctrl_off. Some devices (e.g. M.2 cards
-> without auxiliary power) may lose PME detection when main power is
-> removed, even if they advertise PME-from-D3cold support. This allows
-> controller power-off to be skipped when required to preserve wakeup
-> functionality.
+> True, although ACS has a lot more PCI-specific grunge in it, including
+> all the "pci=config_acs" and "pci=disable_acs_redir" stuff.
 > 
-> Update the suspended flag in dw_pcie_resume_noirq() only after the PCIe
-> link resumes successfully, to avoid marking the controller active when
-> link resume fails.
+> > I'm not keen on spreading lists of device ids for PCI quirks to iommu
+> > files, but it would be OK to move pci_ats_always_on() to
+> > iommu_ats_always_on() that calls the PCI quirk function.
 > 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 15 +++++++--------
->  drivers/pci/controller/dwc/pcie-designware.h      |  1 +
->  2 files changed, 8 insertions(+), 8 deletions(-)
+> Yeah, I guess it's fair to collect the device IDs in PCI since this is
+> about characteristics of the device.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index c9517a348836..9e409a1909e6 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -16,9 +16,11 @@
->  #include <linux/msi.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> +#include <linux/pci.h>
->  #include <linux/pci_regs.h>
->  #include <linux/platform_device.h>
->  
-> +#include "../pci-host-common.h"
->  #include "../../pci.h"
->  #include "pcie-designware.h"
->  
-> @@ -1218,18 +1220,14 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
->  
->  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  {
-> -	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	bool pme_capable = false;
->  	int ret = 0;
->  	u32 val;
->  
->  	if (!dw_pcie_link_up(pci))
->  		goto stop_link;
->  
-> -	/*
-> -	 * If L1SS is supported, then do not put the link into L2 as some
-> -	 * devices such as NVMe expect low resume latency.
-> -	 */
-> -	if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
-> +	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
->  		return 0;
->  
->  	if (pci->pp.ops->pme_turn_off) {
-> @@ -1273,6 +1271,7 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
->  	udelay(1);
->  
->  stop_link:
-> +	pci->pp.skip_pwrctrl_off = pme_capable;
->  	dw_pcie_stop_link(pci);
->  	if (pci->pp.ops->deinit)
->  		pci->pp.ops->deinit(&pci->pp);
-> @@ -1290,8 +1289,6 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
->  	if (!pci->suspended)
->  		return 0;
->  
-> -	pci->suspended = false;
-> -
->  	if (pci->pp.ops->init) {
->  		ret = pci->pp.ops->init(&pci->pp);
->  		if (ret) {
-> @@ -1313,6 +1310,8 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
->  	if (pci->pp.ops->post_init)
->  		pci->pp.ops->post_init(&pci->pp);
->  
-> +	pci->suspended = false;
-> +
->  	return 0;
->  
->  err_stop_link:
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 3e69ef60165b..e759c5c7257e 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -450,6 +450,7 @@ struct dw_pcie_rp {
->  	bool			ecam_enabled;
->  	bool			native_ecam;
->  	bool                    skip_l23_ready;
-> +	bool			skip_pwrctrl_off;
->  };
->  
->  struct dw_pcie_ep_ops {
+> If we leave stuff in drivers/pci/, I would prefer that part of it be
+> named to be purely informational, i.e., "CXL.cache_enabled" or
+> something similar that would also cover the NVIDIA devices.
+
+Yeah, that's fair, so let's rename it to 
+
+pci_translated_required()
+
+ie the device requires translated requests to function. This is what
+CXL.cache implies (IIRC I was told the spec specifically says this)
+
+Requiring translated requests implies you have to enable ATS in the
+system.
+
+> function doesn't actually turn ATS on, and it looks like the question
+> of enabling ATS depends on how the device is actually *used*.  E.g.,
+> if Cache_Enable is not set, is ATS required?
+
+We have no way to know..
+ 
+> That raises the question of whether this is the right test:
 > 
-> -- 
-> 2.34.1
-> 
+>   +   if (pci_read_config_word(pdev, offset + PCI_DVSEC_CXL_CAP, &cap))
+>   +           return false;
+>   +
+>   +   return cap & PCI_DVSEC_CXL_CACHE_CAPABLE;
+>
+> That just says the device is *capable* of CXL.cache; should it check
+> whether CXL.cache is *enabled* instead?
+
+No, we talked about this with Dan in one of the versions... it is
+better to over-enable ATS than under-enable. over-enable at best is a
+NOP, or maybe a tiny performance loss, under-enable is a functional
+failure.
+
+If the CXL.cache is not enabled right now it could become enabled
+later, after the iommu has already called this and made its
+choice..
+
+Thus lets not try to be too narrow here..
+
+Thanks,
+Jason
