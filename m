@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A7B13F20FA;
-	Wed, 20 May 2026 17:48:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCB7D3D5647;
+	Wed, 20 May 2026 17:50:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779299281; cv=none; b=VlqmAKzZZ4sT5QWuCz1aPda+InCejuqCqi+J/K2iKyam9JtyPx80bEI5DNwOft9LjGiCpH58ivRrAkH+vH4uBaRr3P1+cDdO/60nHERKBGXMFwrCybnT6u8Gpy8aUPDS5Xbo51vv5ZLJA419yoWddoUAMksJ3itn4ANl+4Tf788=
+	t=1779299430; cv=none; b=pKFUuiK2QZeSP5vB31k2JCQOyghg7xbak12V3z8a+d9JfZJsSPS52rNXQeMQw1BQhNMDMHDc5q9iIuq2rs1V7qDElp+OGxbdq/1EBg7RJWpw2OpjoSO1WYFu68nUHWRAJXwhuc+YcYJ+H8fI1PIyDAkl8q0kZaCxz/5Exxc+sD0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779299281; c=relaxed/simple;
-	bh=Ou04mB7JYTog298zI/Z60+tMDz89U5qS5BPKX5kr/+k=;
+	s=arc-20240116; t=1779299430; c=relaxed/simple;
+	bh=1o5gb79KOTG7JlPeBytflBdEb0YgHSTMbdt10n3C7IM=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=EiQsVBSTWZQU3d9CHWiAc0AcPhigzjQDmcJKWtibqsFAZmTH8vCO2zVj6DtFi7Gv5MK51Oqo9e53+CVnL2Z27mnxXkoQWxHuCpYOiZuOdq0fvnFGLO3hIE+q51GhRBa7LJ6KEbul1elJmTG7FXZMiapMXhhfnh8sn5x/qIJo8Kk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X59zp2JT; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=Eddtxpostvgi3SSgIr3CRP4zLGbR7xkFOJSpq9rEdLNNfK0rp5q6wCnXNmIRnWiBZNRcBZLSnM+vYvgeYl8OOwV02ewn0Ys5o9JPf3f0KVGEg6OAc+ygHjIcsyIGZdpX1jKy1497bh0z8iQ9pMBuz9GrM6PLYpubxBj0ExXTXp0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o04FxFSe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X59zp2JT"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E55DC1F000E9;
-	Wed, 20 May 2026 17:47:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o04FxFSe"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 67E7F1F00894;
+	Wed, 20 May 2026 17:50:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779299280;
-	bh=QokDhHnAKqLWHjogTXLoR4DHLEoCdHeJVwDfmUpDWFI=;
+	s=k20260515; t=1779299429;
+	bh=R0zqzL14QP54GH3jHTaO1SQNTYgp8+cLjLzjCAobAGk=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=X59zp2JT2ThlWcF8Vwx5hipnuU3pVcb+NfDjk2Z2sHtYDjkv+g3dJ0zZr2SGgl213
-	 1C0hCo1gnbyqdhUCR+J6gzpc8QSsRa50+ECq21EUTPKSlop5c2ppovIB2kN3lPYiDQ
-	 GR1Ypw4utLINVSrZVNL5Ysm4lJlrsSdcXXrYlEYy81+++le0P7+ckaH3kTfZIPhd/h
-	 G5L5/+OpcbEO3IC+73xXcXcYHpivSRqU3jGXcMYQKbRNtlDpVoDXwc8ETE1DGBGa/B
-	 FzvalrcDibzcUjSlRfzL+b/TJhLoq8ZU6IGme8BJScJjxXYhD+VHvlU8uda6mLonKz
-	 zFY9Io0VLlY6A==
-Date: Wed, 20 May 2026 12:47:58 -0500
+	b=o04FxFSeEu2JsqhZx5OZM3BDhGPv6QRlZ3tyjx7QyJCNH4PgvpbY6crWRP0ySi/Bk
+	 eoFlnOUTyjrv3TfWKUA17ZP154W66QqbDBz8+f8TimC+9g0o1DU/zBKtezMnpUJyiw
+	 2D9ME/z+rrqUOp5eXspuvuC+1uS6d6LTPE2Pav4/DhwzGb+1h9RI5VlNl5KgvJ4D1O
+	 bN++qKkiaa1yIh5e5QK1md2NiLHH4tSBGFwkXF2S7ihdKUJSh5EbNPF+E0vNfMR8JL
+	 HG2/UCVDv7Cfwlg6DbemkAm9EBFvu6ow8EhGcaBk9grywLGOf6AW4ZlfQVkqHH/rEg
+	 rl9W0y+gl3nAg==
+Date: Wed, 20 May 2026 12:50:26 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, will@kernel.org, robin.murphy@arm.com,
+Cc: jgg@nvidia.com, will@kernel.org, robin.murphy@arm.com,
 	bhelgaas@google.com, joro@8bytes.org, praan@google.com,
 	baolu.lu@linux.intel.com, kevin.tian@intel.com,
 	miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
@@ -37,9 +37,8 @@ Cc: Jason Gunthorpe <jgg@nvidia.com>, will@kernel.org, robin.murphy@arm.com,
 	linux-pci@vger.kernel.org, dan.j.williams@intel.com,
 	jonathan.cameron@huawei.com, vsethi@nvidia.com,
 	linux-cxl@vger.kernel.org, nirmoyd@nvidia.com
-Subject: Re: [PATCH v4 1/3] PCI: Allow ATS to be always on for CXL.cache
- capable devices
-Message-ID: <20260520174758.GA66039@bhelgaas>
+Subject: Re: [PATCH v4 2/3] PCI: Allow ATS to be always on for pre-CXL devices
+Message-ID: <20260520175026.GA67027@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,45 +47,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ag3vb4SWIfuw++vp@Asurada-Nvidia>
+In-Reply-To: <1a8cf5e88051ab5c10417edb94df598ecbc810cf.1777269009.git.nicolinc@nvidia.com>
 
-On Wed, May 20, 2026 at 10:29:19AM -0700, Nicolin Chen wrote:
-> On Wed, May 20, 2026 at 11:20:43AM -0300, Jason Gunthorpe wrote:
-> > On Tue, May 19, 2026 at 06:04:18PM -0700, Nicolin Chen wrote:
-> > 
-> > > > Yeah, that's fair, so let's rename it to 
-> > > > 
-> > > > pci_translated_required()
-> > > > 
-> > > > ie the device requires translated requests to function. This is what
-> > > > CXL.cache implies (IIRC I was told the spec specifically says this)
-> > > > 
-> > > > Requiring translated requests implies you have to enable ATS in the
-> > > > system.
-> > > 
-> > > Perhaps we could let IOMMU drivers check:
-> > >   pci_cxl_is_cache_capable() || pci_dev_specific_is_pre_cxl()
-> > > directly?
-> > 
-> > I'd rather have a single function.
+On Sun, Apr 26, 2026 at 10:54:01PM -0700, Nicolin Chen wrote:
+> Some NVIDIA GPU/NIC devices, though they don't implement CXL config space,
+> have many CXL-like properties. Call this kind "pre-CXL".
 > 
-> OK. Can we use pci_ats_required()?
+> Similar to CXL.cache capability, these pre-CXL devices also require the ATS
+> function even when their RIDs are IOMMU bypassed, i.e. keep ATS "always on"
+> v.s. "on demand" when a non-zero PASID line gets enabled in SVA use cases.
+> ...
+
+> +/* Some pre-CXL devices require ATS when it is IOMMU-bypassed */
+
+I guess these devices are purely PCIe, with no actual CXL
+transactions, so a hint here about what leads to the ATS requirement
+would be useful.  It sounds like an actual functional requirement, not
+just a performance optimization.
+
+> +bool pci_dev_specific_ats_always_on(struct pci_dev *pdev)
+> +{
+> +	const struct pci_dev_ats_always_on *i;
+> +
+> +	for (i = pci_dev_ats_always_on; i->vendor; i++) {
+> +		if (i->vendor != pdev->vendor)
+> +			continue;
+> +		if (i->ats_always_on && i->ats_always_on(pdev))
+> +			return true;
+> +		if (!i->ats_always_on && i->device == pdev->device)
+> +			return true;
+> +	}
+> +
+> +	return false;
+> +}
+>  #endif /* CONFIG_PCI_ATS */
+>  
+>  /* Freescale PCIe doesn't support MSI in RC mode */
+> -- 
+> 2.43.0
 > 
-> CXL spec explicitly used "ATS" when stating the requirement of
-> CXL.cache). And it'd fit into the existing pci_ats_ functions.
-
-OK by me.
-
-You already have a comment in the code about the CXL.cache
-requirement; thanks for that.
-
-I don't know enough about CXL to know what's behind the ATS
-requirement.  It sounds like it's more than a simple performance
-optimization.  If you happen to know the reason, it might be worth
-a short comment about that too.
-
-Please add a one-line comment in the code about why we check
-Cache_Capable instead of Cache_Enable, i.e., even if CXL.cache is not
-enabled now, it may be enabled later.
-
-Bjorn
