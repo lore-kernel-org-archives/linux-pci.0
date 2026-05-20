@@ -1,281 +1,219 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4139F373BEB;
-	Wed, 20 May 2026 17:01:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B310E28DC4;
+	Wed, 20 May 2026 17:11:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779296514; cv=none; b=iCZKZsQyXuhlBVPTF5xsoCSDDzoRxuLPGKRashhLjz34sTHA+Q+Kuxyp+5jRZxTi3MsxHSgCKuYgi6htoo9CTWzT5EACIJGsBmFG3+ezWSfEcrV+tUApxouCcxu/DpoG7+35T9V/uWng0z0DvPE7Qll8iIpS+NkldbnDStDqfxg=
+	t=1779297083; cv=none; b=EeRv+gMwyjOV6T2tPUkiF4w+jwvqQzVxwCwO532D9S4eI29ncAkytHgo/hU914KfLQ4t1txfyIzRxIOEWDS0s7wPvqtgny/ByYxHX3d83n99akkuyJQ1vG4tQrJIDpCKV/o4o21etGew7Z9Uvx01L/vcZmAZazSfYylOVY017iY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779296514; c=relaxed/simple;
-	bh=NcA5iylp2Wk1Y0XB33LW7W9WbA9hrzWgufyvObGgTnw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p0bvkbgb4U7F8tff+4PlL41WlMTNJ6gaf5n/j4ykvS6zFKzsHqr4LuyVsZvCUjHSR3Oq7ZH7747V5UWELOktzpIKEz2OohANc52ixKKHm/JHMVLp2WDNo7kXUSDDBXsWL6k/6vPSQKhsoy9OxkGvpbRWKIyKNhdmP0AQe9aRNsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZPKbMVGz; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779297083; c=relaxed/simple;
+	bh=+ANx1Fg2CXSc4kvWW7/srV3haQCn9ZU6yeMizd6WObY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sxOsKTpRMApVxuSvdicZHeY4e4vdQaSvAF6Sq3FEj07Z1poqpKe0EhwjsFzXkY/c4KJsIIAKlDaOqQvy1VfnfYrEHigES0KHa9fi8tFvl1CGrviJmY/KB4VnY9z1JUDFOyNshtSbR3NQ+fUs9Dsp0mqWjwkWvyo/U6E6Eh6WgvQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=N59oJtCL; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZPKbMVGz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FDA81F000E9;
-	Wed, 20 May 2026 17:01:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779296513;
-	bh=CyqlaRibvO4e/yWQywkk+BQnCzTvOxdVy9RJIaujXg0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=ZPKbMVGzd7QF78ONhx13PW+aVlKdS2JLjf5K4sldP55wG1RzPygan3gUYd/Z/A52w
-	 yYdkDRS2c1KA8jGtj64C9uD+5BFGFLbwwIoy31zlerxU1w43JXzvmiPxXUEkLkLU3S
-	 b89NCL7+7ReT0MHND/OFxmtA43iNhxLCj85WgSk6Oq+Asfk/HDCkbJlfWT9AK7hanx
-	 W3m/rRxn0wuq/VdzcHq0mX5o4WjMMaX/rRkjc26k3sZv/TlRI39Ks7C3Vaw2HBoaQF
-	 yXHFBUXokbbUgBETfWOmp7flCZcB4MTT9EefV9te6J6TmsqbZIlptJXHlL2nzBS1Nf
-	 MmtWHytGwil4A==
-Date: Wed, 20 May 2026 22:31:36 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: sashiko-reviews@lists.linux.dev, Bjorn Helgaas <helgaas@kernel.org>, 
-	robh@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org
-Subject: Re: [PATCH v7 2/2] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Message-ID: <fvpmuxlo5bnawafp2xuikct25v6ik6gnzyaskwe2r25g5cuovf@qxmmu6pabxq7>
-References: <20260514151318.3444959-3-cjd@cjdns.fr>
- <20260514210141.2DEF2C2BCB3@smtp.kernel.org>
- <22d7274b-640a-470e-86b0-997a4b6e102d@cjdns.fr>
- <ihqxutsgrcrbusbtblxmaq3swcp3xtiq6ycnpi7nl45fup36ym@6kvdzwu4zivy>
- <1552f47b-7542-414e-ab6a-a07efc8e81e5@cjdns.fr>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="N59oJtCL"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64KCGqnV223129;
+	Wed, 20 May 2026 17:11:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=kmcB/qs4A3VRgHLFn/GGJi/agcECc5rJf3+ETSPpx
+	Mc=; b=N59oJtCLjprf/c6zMEg2FdZz6GZvrunrXCAosVRYaDM5waVo6GB0LCv+A
+	njKAp6ICBAOtot9mlvb4l4BUP2rxrB5a2VztKVP4td0CElQDRxDGxi1zdzrOxkbZ
+	sM2dFN+1RLhAW2pEDm0Uf0gN93zeADPoUeoJcQyi/5MRWSWUs6Heu0YuB0B5GyPu
+	6oVwyvubPRYI9RyskgKBSxcSz3sI0pQiOqxk0T9zIOajWffbjRnvqJ4QU+AIb0fq
+	7v5eLDKbDmWBJsMRQkoG/zKPyV1VZq0wY4dB4PWl3FQG0wBWM3Jr9E/+GTX1R326
+	BnJecsZ9bazHMs70NgJFcjWto80Pw==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h88j51b-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 20 May 2026 17:11:17 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64KH9ApM014280;
+	Wed, 20 May 2026 17:11:16 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e754gg308-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 20 May 2026 17:11:16 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64KHBF3V21234388
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 20 May 2026 17:11:15 GMT
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 37DA458059;
+	Wed, 20 May 2026 17:11:15 +0000 (GMT)
+Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4ABA858055;
+	Wed, 20 May 2026 17:11:14 +0000 (GMT)
+Received: from IBM-D32RQW3.ibm.com (unknown [9.61.255.46])
+	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 20 May 2026 17:11:14 +0000 (GMT)
+From: Farhan Ali <alifm@linux.ibm.com>
+To: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc: helgaas@kernel.org, alex@shazbot.org, alifm@linux.ibm.com,
+        schnelle@linux.ibm.com, mjrosato@linux.ibm.com
+Subject: [PATCH v17 0/7] Error recovery for vfio-pci devices on s390x
+Date: Wed, 20 May 2026 10:11:06 -0700
+Message-ID: <20260520171113.1111-1-alifm@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="lexhwneazodixted"
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1552f47b-7542-414e-ab6a-a07efc8e81e5@cjdns.fr>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: oGYD8o1q0JdiEU-adNN7Krk8GdqEvHek
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIwMDE2NiBTYWx0ZWRfXxkXaLoE+IUPS
+ g/TNXeIW+LQj/5irCTkugghme3C31xyhxyVwxoeXNy3ScpNHUVyp+KuDHszl5x7nuhKEtlb6HH/
+ 5aOVQ+aZ9Xu1va6G7plY4sxLY+s+heeHjr7oZHAoH7UYBBpd4tZcWjOPbjswOC5max5gWIuOO9a
+ t2wYbAVDXFoLBthyHviG4aeQO8vCe9WuViCfmiu8ddcgfvfmSEJJXhiUSgQvBFqc4yjeOaECZTC
+ y4lzPFF9DY5JTPgAyUszu7vtQnssE/UD7BwavCUiPBTks8NknKrFXN1sij2qsjXJd3EZPCgqO+p
+ 7Q7PdSOgbla1NFFMnVEa71Dupk8d6RbSmROtJq/xHKtPWI5ioujJm7NryEJ+fJEeEzZNyAis/6u
+ K3zQAl4dDhqWLJHviifhsEwRbBQwX9g+FZOw+6n7FoAuYQaMTfmzLPq3iKTeP39UxGrLn/oJlMx
+ 4g5GaiyxFA22tMls0ZQ==
+X-Proofpoint-GUID: oGYD8o1q0JdiEU-adNN7Krk8GdqEvHek
+X-Authority-Analysis: v=2.4 cv=apyCzyZV c=1 sm=1 tr=0 ts=6a0deb35 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
+ a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=4zu8aI-QVnT60ftJUTQA:9 a=O8hF6Hzn-FEA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-20_03,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 priorityscore=1501 impostorscore=0
+ bulkscore=0 suspectscore=0 adultscore=0 spamscore=0 phishscore=0
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
+ definitions=main-2605200166
+
+Hi,
+
+This Linux kernel patch series introduces support for error recovery for
+passthrough PCI devices on System Z (s390x).
+
+Background
+----------
+For PCI devices on s390x an operating system receives platform specific
+error events from firmware rather than through AER.Today for
+passthrough/userspace devices, we don't attempt any error recovery and
+ignore any error events for the devices. The passthrough/userspace devices
+are managed by the vfio-pci driver. The driver does register error handling
+callbacks (error_detected), and on an error trigger an eventfd to
+userspace.  But we need a mechanism to notify userspace
+(QEMU/guest/userspace drivers) about the error event.
+
+Proposal
+--------
+We can expose this error information (currently only the PCI Error Code)
+via a device feature. Userspace can then obtain the error information
+via VFIO_DEVICE_FEATURE ioctl and take appropriate actions such as driving
+a device reset.
+
+This is how a typical flow for passthrough devices to a VM would work:
+For passthrough devices to a VM, the driver bound to the device on the host
+is vfio-pci. vfio-pci driver does support the error_detected() callback
+(vfio_pci_core_aer_err_detected()), and on an PCI error s390x recovery
+code on the host will call the vfio-pci error_detected() callback. The
+vfio-pci error_detected() callback will notify userspace/QEMU via an
+eventfd, and return PCI_ERS_RESULT_CAN_RECOVER. At this point the s390x
+error recovery on the host will skip any further action(see patch 4) and
+let userspace drive the error recovery.
+
+Once userspace/QEMU is notified, it then injects this error into the VM
+so device drivers in the VM can take recovery actions. For example for a
+passthrough NVMe device, the VM's OS NVMe driver will access the device.
+At this point the VM's NVMe driver's error_detected() will drive the
+recovery by returning PCI_ERS_RESULT_NEED_RESET, and the s390x error
+recovery in the VM's OS will try to do a reset. Resets are privileged
+operations and so the VM will need intervention from QEMU to perform the
+reset. QEMU will invoke the VFIO_DEVICE_RESET ioctl to now notify the
+host that the VM is requesting a reset of the device. The vfio-pci driver
+on the host will then perform the reset on the device to recover it.
 
 
---lexhwneazodixted
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Thanks
+Farhan
 
-On Wed, May 20, 2026 at 03:14:52PM +0200, Caleb James DeLisle wrote:
-> Thanks for weighing in
-> 
-> 
-> On 20/05/2026 10:34, Manivannan Sadhasivam wrote:
-> > On Fri, May 15, 2026 at 03:34:53PM +0200, Caleb James DeLisle wrote:
-> > > Regarding this, I could use some advice. Bjorn I tagged you in because
-> > > you're probably best to have an opinion here.
-> > > 
-> > > 
-> > > On 14/05/2026 23:01, sashiko-bot@kernel.org wrote:
-> > > > Thank you for your contribution! Sashiko AI review found 5 potential issue(s) to consider:
-> > > > - [High] mtk_pcie_retrain() iterates the PCI bus without locks and holds an unreferenced device pointer, leading to a Use-After-Free.
-> > > > - [High] mtk_pcie_retrain() only retrains the first root port, silently ignoring any other ports on the same host.
-> > > > - [High] Link retraining occurs after downstream endpoint drivers are probed, causing a race condition that can lead to system crashes.
-> > > > - [High] Calling virt_to_phys() on an __iomem pointer causes undefined behavior and potential memory corruption.
-> > > > - [Medium] The IS_BUILTIN() workaround silently degrades hardware capabilities when the driver is compiled as a module.
-> > > > --
-> > > > 
-> > > > commit 08338fe344200ef55148194108ab3b65616af7c7
-> > > > Author: Caleb James DeLisle <cjd@cjdns.fr>
-> > > > Subject: PCI: mediatek: Add support for EcoNet EN7528 SoC
-> > > > 
-> > > > This commit adds support for the PCIe controller found on EcoNet EN7528 SoCs.
-> > > > It introduces a hardware quirk to retrain the link after startup, as some
-> > > > ports capable of Gen2 operation will initially start at Gen1 speeds.
-> > > > 
-> > > > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > > > > --- a/drivers/pci/controller/pcie-mediatek.c
-> > > > > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > > > [ ... ]
-> > > > > @@ -753,6 +764,135 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> > > > [ ... ]
-> > > > > +	/* Activate INTx interrupts */
-> > > > > +	val = readl(port->base + PCIE_INT_MASK);
-> > > > > +	val &= ~INTX_MASK;
-> > > > > +	writel(val, port->base + PCIE_INT_MASK);
-> > > > > +
-> > > > > +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> > > > > +		mtk_pcie_enable_msi(port);
-> > > > Is it safe to call mtk_pcie_enable_msi() here? Looking at
-> > > > mtk_pcie_enable_msi(), it calculates the message address using:
-> > > > 
-> > > >       virt_to_phys(port->base + PCIE_MSI_VECTOR)
-> > > > 
-> > > > Since port->base is an ioremapped __iomem pointer, passing it to
-> > > > virt_to_phys() produces undefined behavior and could return a garbage
-> > > > physical address. If this address overlaps with valid physical RAM mapped
-> > > > for DMA, could memory writes from the PCIe endpoint corrupt random system
-> > > > memory?
-> > > Learned a few things from that note. Seems ioremap is just giving us a KSEG1
-> > > address and virt_to_phys() is getting the real address back. In any case I'm
-> > > just doing what the driver already does.
-> > This looks definitely wrong because virt_to_phys() is supposed to be used for
-> > virtual address, not the ioremapped address. virt_to_phys() will calculate the
-> > physical address using the page offset, which doesn't apply to ioremapped
-> > address.
-> > 
-> > Correct way would be to store the physical address while doing the ioremap:
-> > 
-> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > index 75722524fe74..c503fbd774d0 100644
-> > --- a/drivers/pci/controller/pcie-mediatek.c
-> > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > @@ -175,6 +175,7 @@ struct mtk_pcie_soc {
-> >   /**
-> >    * struct mtk_pcie_port - PCIe port information
-> >    * @base: IO mapped register base
-> > + * @phys_base: Physical address of the I/O register base region
-> >    * @list: port list
-> >    * @pcie: pointer to PCIe host info
-> >    * @reset: pointer to port reset control
-> > @@ -196,6 +197,7 @@ struct mtk_pcie_soc {
-> >    */
-> >   struct mtk_pcie_port {
-> >          void __iomem *base;
-> > +       phys_addr_t phys_base;
-> >          struct list_head list;
-> >          struct mtk_pcie *pcie;
-> >          struct reset_control *reset;
-> > @@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> >          phys_addr_t addr;
-> >          /* MT2712/MT7622 only support 32-bit MSI addresses */
-> > -       addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > +       addr = port->phys_base + PCIE_MSI_VECTOR;
-> >          msg->address_hi = 0;
-> >          msg->address_lo = lower_32_bits(addr);
-> > @@ -520,7 +522,7 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
-> >          u32 val;
-> >          phys_addr_t msg_addr;
-> > -       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > +       msg_addr = port->phys_base + PCIE_MSI_VECTOR;
-> >          val = lower_32_bits(msg_addr);
-> >          writel(val, port->base + PCIE_IMSI_ADDR);
-> > @@ -953,6 +955,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
-> >          struct mtk_pcie_port *port;
-> >          struct device *dev = pcie->dev;
-> >          struct platform_device *pdev = to_platform_device(dev);
-> > +       struct resource *res;
-> >          char name[20];
-> >          int err;
-> > @@ -961,7 +964,14 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
-> >                  return -ENOMEM;
-> >          snprintf(name, sizeof(name), "port%d", slot);
-> > -       port->base = devm_platform_ioremap_resource_byname(pdev, name);
-> > +       res = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
-> > +       if (!res) {
-> > +               dev_err(dev, "failed to get port%d base\n", slot);
-> > +               return -EINVAL;
-> > +       }
-> > +
-> > +       port->phys_base = res->start;
-> > +       port->base = devm_ioremap_resource(&pdev->dev, res);
-> >          if (IS_ERR(port->base)) {
-> >                  dev_err(dev, "failed to map port%d base\n", slot);
-> >                  return PTR_ERR(port->base);
-> > 
-> > I see a couple of other drivers also doing something similar. So I'll try to
-> > send fixes for all of them separately.
-> If you want me to integrate this fix in my patchset to avoid merge
-> conflicts, just let me know.
+ChangeLog
+---------
+This only includes change log from last 5 revision. Older change log is
+available in previous version cover letter.
 
-Attached the patch. You can add it to the series. Make sure it is the first
-patch of the series.
+v16 https://lore.kernel.org/all/20260514180059.1553-1-alifm@linux.ibm.com/
+v16 -> v17
+   - Handle ENOMEM case and remove unnecessary mutex_unlock (patch 4).
+   - Rebase on 7.1-rc4
 
-- Mani
+v15 https://lore.kernel.org/all/20260505200510.2954-1-alifm@linux.ibm.com/
+v15 -> v16
+   - Implement error recovery to be handled in user space mode or host mode
+   based on checking mediated_recovery only once (suggested by Niklas).
+
+   - Rebase on 7.1-rc3
+
+
+v14 https://lore.kernel.org/all/20260421163031.704-1-alifm@linux.ibm.com/
+v14 -> v15
+   - Fix issues identified by Sashiko (patch 4).
+
+   - Address Niklas feedback (patch 4 and patch 5).
+
+   - Rebase on 7.1-rc2.
+
+
+v13 series https://lore.kernel.org/all/20260413210608.2912-1-alifm@linux.ibm.com/
+v13 -> v14
+   - Remove version from vfio uAPI struct. Instead reserve additional space
+   and add a flags field. The flags will be used to indicate any usage of
+   the reserved space (patch 5).
+
+   - Remove pending_errors from vfio uAPI struct and instead return an
+   error to indicate no more pending error for userspace to handle (patch 5).
+
+   - Rebase on recent linux master
+
+v12 series https://lore.kernel.org/all/20260330174011.1161-1-alifm@linux.ibm.com/
+v12 -> v13
+   - Add the mediated_recovery flag as part of struct zpci_ccdf_pending
+   and protect the struct with pending_errs_lock (patch 4).
+
+   - Move dequeing pending error logic to a helper function (patch 5).
+
+   - Update device feature number for VFIO_DEVICE_FEATURE_ZPCI_ERROR (patch 5).
+
+   - Rebase on linux-next with tag next-20260410
+
+
+Farhan Ali (7):
+  PCI: Allow per function PCI slots to fix slot reset on s390
+  PCI: Avoid saving config space state if inaccessible
+  PCI: Fail FLR when config space is inaccessible
+  s390/pci: Store PCI error information for passthrough devices
+  vfio-pci/zdev: Add a device feature for error information
+  vfio/pci: Add a reset_done callback for vfio-pci driver
+  vfio/pci: Remove the pcie check for VFIO_PCI_ERR_IRQ_INDEX
+
+ arch/s390/include/asm/pci.h       |  32 +++++++
+ arch/s390/pci/pci.c               |   1 +
+ arch/s390/pci/pci_event.c         | 135 +++++++++++++++++++-----------
+ drivers/pci/hotplug/rpaphp_slot.c |   2 +-
+ drivers/pci/pci.c                 |  32 ++++++-
+ drivers/pci/slot.c                |  33 ++++++--
+ drivers/vfio/pci/vfio_pci_core.c  |  22 +++--
+ drivers/vfio/pci/vfio_pci_intrs.c |   3 +-
+ drivers/vfio/pci/vfio_pci_priv.h  |   9 ++
+ drivers/vfio/pci/vfio_pci_zdev.c  |  57 ++++++++++++-
+ include/linux/pci.h               |   8 +-
+ include/uapi/linux/vfio.h         |  30 +++++++
+ 12 files changed, 289 insertions(+), 75 deletions(-)
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.43.0
 
---lexhwneazodixted
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment;
-	filename="0001-PCI-mediatek-Use-actual-physical-address-instead-of-.patch"
-
-From 3d710606079d285f2431ddc155824b282218fba2 Mon Sep 17 00:00:00 2001
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Date: Wed, 20 May 2026 22:11:45 +0530
-Subject: [PATCH] PCI: mediatek: Use actual physical address instead of
- virt_to_phys()
-
-The driver previously used virt_to_phys() on the ioremapped register base
-(port->base) to compute the MSI message address. Using virt_to_phys() on an
-IO mapped address is incorrect because it expects a kernel virtual address.
-
-To fix it, store the physical start of the I/O register region in
-mtk_pcie_port->phys_base and use it to build the MSI address. This replaces
-the incorrect virt_to_phys() usage and ensures MSI addresses are generated
-correctly.
-
-Fixes: 43e6409db64d ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
----
- drivers/pci/controller/pcie-mediatek.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 75722524fe74..c503fbd774d0 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -175,6 +175,7 @@ struct mtk_pcie_soc {
- /**
-  * struct mtk_pcie_port - PCIe port information
-  * @base: IO mapped register base
-+ * @phys_base: Physical address of the I/O register base region
-  * @list: port list
-  * @pcie: pointer to PCIe host info
-  * @reset: pointer to port reset control
-@@ -196,6 +197,7 @@ struct mtk_pcie_soc {
-  */
- struct mtk_pcie_port {
- 	void __iomem *base;
-+	phys_addr_t phys_base;
- 	struct list_head list;
- 	struct mtk_pcie *pcie;
- 	struct reset_control *reset;
-@@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 	phys_addr_t addr;
- 
- 	/* MT2712/MT7622 only support 32-bit MSI addresses */
--	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-+	addr = port->phys_base + PCIE_MSI_VECTOR;
- 	msg->address_hi = 0;
- 	msg->address_lo = lower_32_bits(addr);
- 
-@@ -520,7 +522,7 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
- 	u32 val;
- 	phys_addr_t msg_addr;
- 
--	msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-+	msg_addr = port->phys_base + PCIE_MSI_VECTOR;
- 	val = lower_32_bits(msg_addr);
- 	writel(val, port->base + PCIE_IMSI_ADDR);
- 
-@@ -953,6 +955,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
- 	struct mtk_pcie_port *port;
- 	struct device *dev = pcie->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
-+	struct resource *res;
- 	char name[20];
- 	int err;
- 
-@@ -961,7 +964,14 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
- 		return -ENOMEM;
- 
- 	snprintf(name, sizeof(name), "port%d", slot);
--	port->base = devm_platform_ioremap_resource_byname(pdev, name);
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
-+	if (!res) {
-+		dev_err(dev, "failed to get port%d base\n", slot);
-+		return -EINVAL;
-+	}
-+
-+	port->phys_base = res->start;
-+	port->base = devm_ioremap_resource(&pdev->dev, res);
- 	if (IS_ERR(port->base)) {
- 		dev_err(dev, "failed to map port%d base\n", slot);
- 		return PTR_ERR(port->base);
--- 
-2.51.0
-
-
---lexhwneazodixted--
