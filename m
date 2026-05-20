@@ -1,133 +1,139 @@
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9AF3C3458
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 16:31:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD96137A4BA
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 16:49:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779294681; cv=none; b=MHu01C99irCFnm0dNiZs7qAWSsHp5U4w5zCHh2kKQN8RYNjrUqmW0CQg/136Gb56WTRlgKEoUsPenG/k0R7OAKiee6441GmbP3I1qypnneo9Yw8jxN/0DHhDvE1OQsgvHBE0wcVstGK5sQV0sIZ/hsFPvWpsEKX+uCOZubaV2TY=
+	t=1779295755; cv=none; b=np5S/Q8ls5am3ulqjuHGJl5rD6pp/J2miWiMaFxmgEjQw6AJ0zzlsvsgnMHQrPQ6kcK52+A43z6rOCIgg/BEQNbvM34C/BMoGumrfw3upgZiPsc5harc5VYUkCrUdCUTbUytDyR1VaAWIBM/JxGAYQCBAquECpFBQ4A/k2MLFvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779294681; c=relaxed/simple;
-	bh=ERs3ykJh2yqgI0ypYiTADNj2Y0fUbo21st20i8W7eS4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oDQ8p5WBzcr0YYOMndsuhW1zosoQpnmeNumOL9MdggvFRSDkLbCBSoHQQfeVgXER7P2J5Hi1s5H8IoPnBPWA7Mc7/zjsHTpr2oZ7k1JVq6vXWbQm6ysvHLFU+WCy9NlLm6Crpi5bGSoR6Mxb3ly5OHLw2mxuOO7jH8AIBuAOWno=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=WOHi6zV6; arc=none smtp.client-ip=209.85.167.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1779295755; c=relaxed/simple;
+	bh=1wdbQGuw6HvmZIeFn+pMLa4ccPKyAcHlFLo3mDEmmuU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=exvA0Ij+FkjlMCFo6DcjvcE9WIRwrJhhYvc7HEwB1wKT5CCW1UhoffMiU4C3+4NJw8lBp0W67M6C+wOBoROLIugBbAihrDO4L+T4pXQl0b4i3WJRcDT6E5eEHmBesHY0VDb8ytpFri3kq9EZMwrg7K7qy+7cZgn04uoEcqKmE7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DfKLfiyX; arc=none smtp.client-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="WOHi6zV6"
-Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-479f7e75a6bso1844486b6e.2
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 09:31:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DfKLfiyX"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-48fe26a177cso38685855e9.1
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 09:49:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1779294678; x=1779899478; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qBBVTBL2F5IGqRG4xFMB1HH7pJSfipEr3J4L0dTDX8A=;
-        b=WOHi6zV68UB7EiTXLMw2CLDPpKHH4+cUqVbIGcEavuMkC7zraV15qNI539tOqTuvTn
-         e7neIRF6QxZKe1Mm6XC4ZEua4mfPYxnKPb4zGjXDYOArGFVFkIkXdOENRbHtzOwm9p43
-         S+sGr01MIkQ3biP6TfzjJse2/AyDaJX+iE9XOpnk2VH3PWtpKuI5+PB4KZ56FQHDx4ZE
-         phHZS6KGL6PSoemc061jaofWBDeU2lcg4D/6K2LNYJstiLoxzAcCWcjdt2Va8ZrXPi9c
-         R5C0971jrHb9vE1VRDxYbid2/avsL9zKBY6j+2NcDcD4WlFnHBlo0jtkf73SX4QZltvM
-         cGQw==
+        d=gmail.com; s=20251104; t=1779295751; x=1779900551; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=I9V3EBCqEjOEBqzqMBD7+ufR2GQPQMJRKrFaD0tdiJU=;
+        b=DfKLfiyXIgG1aD37LJUqaHfLFOJZ4FGIixMlYb3lhoElmalo7j92dDiIPq6z1mCox4
+         8zsZ6j1vRBaYTp0BELd6E4COLwbIilwmjuXzQdYiwkI1Y1UmP/QuIvjMESlNuLFSIOuO
+         UL5LCuPIrhJJP9ybzR3WjOMikMt1SP6/RVsP7wEyDtvBO3bgBOEEDr3U26xTXuNO8WN5
+         SVX4sYKWHcKoR2PzGxx9XiCGEiFqDJjkhwYSGIMufoifkU9ZDCr1zl2CaRTcpRT0PHpG
+         g+1HDIfjNT6r9KaXuZCk8Vn21v/GOAGfnYG7w+OPmG3hYJMEczEJCklQnLcPzfMNLKOC
+         JrqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779294678; x=1779899478;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=qBBVTBL2F5IGqRG4xFMB1HH7pJSfipEr3J4L0dTDX8A=;
-        b=KT8NmycahmxffyPWyuIebZWfPCVdA9IdO3A+W9BZpCGIHPP91oymvDeGjYJalV4cJ9
-         xPQrJjNb/rGxSvY9x3xnA84I+t/rA5xzxSFrGjGFjHnlIWzYG5FuBoqcDTY4WyyNu9IV
-         QSXZYFNmEsxZ7iB+GYxDc71ROLzhFdpjrQF7RBV1ka5ZquGI7togvG8R7pSJpJLtm+sS
-         SF5T25xNQ/S+t63Aq5v/gBAsT+zG/B3/pQxnhz4LU0GFPMLwCQbid4sx4XI9395iuBUw
-         HaHnj0/RLGvTVbBH8ZuaPzyYwo48mhRbosv44k3JWkjW752sZQa0tSpn1gFlGiroQ4Qs
-         oHlA==
-X-Forwarded-Encrypted: i=1; AFNElJ9WSp4e0+OdSsrQ6AaNlt9oTXwTslgKzmUKqWXo2LcNKkN9WnaiG8SecIO6+g5nY7iF4jzRsg5CmXk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwRnk7VhBUrV0kJxNk/KFy82ECkld+4v2VNU/rOHaJcU9PdS6aT
-	sq20msziido6XDVuRUK2IjKOMPc20FhwkqBjbeHp5GN5YKi3H6pVydLiwW9+ghH6D/A=
-X-Gm-Gg: Acq92OHN8S8Q990ve9IUlHsI9hrLjN3PeRbE3Q/CxeIubRduxqEdaFzkQd3l/GTbOTH
-	jE7XhZjEElmRBA5QNTTayPlXDf2VeZeXiKSiQvhSpzwomWxsW4T+OsOvrSE5o43U4zLwxm6+ngc
-	9TARD5o3ozum3HltqaWQPPSvfPPztgbYBtjjRbq+6iypQXI2KluY6zqn9X3T8ZXx4PUAU3fpo2j
-	w4xdabDg6blUuxPmw/3H8IqSTJwgUj9G9nJc/I7EBukFqwnkekuiwoOwFgaf2xJzF+AbL2JuMrc
-	42r7FjrYTLnmyYR3yO4m1nzHpRtDPsx2ccK3PclJWfLT2XYjP9i98ksg7MMbQ3T7Sv1Dm5KlfTt
-	7zngtn/87HmfCCTbzO1rXSt9kai8AQBrpSl8CjAFsJbVHOYUY0Akr5xK4b4tMGsuMVcPn2bXxFb
-	qfpJVY+gwJOsLR696cGY3PdF1bIicz5oVDoa+s8XAlkMuwRqotUST7utIDeSWEX+s2CiIWU7Wtz
-	Bzb3g==
-X-Received: by 2002:a05:6808:6d86:b0:484:d3bc:f03b with SMTP id 5614622812f47-484d3bd1771mr8767364b6e.43.1779294678487;
-        Wed, 20 May 2026 09:31:18 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51645688c13sm195287021cf.1.2026.05.20.09.31.17
+        d=1e100.net; s=20251104; t=1779295751; x=1779900551;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=I9V3EBCqEjOEBqzqMBD7+ufR2GQPQMJRKrFaD0tdiJU=;
+        b=AS/tstBGfHPgDhxZpZ4ucKMI0qiprnRUWywIOUrils9ff1g6KWC5xBW8l6VPZVEmdw
+         Ok3PgnUD+U1P/+p1pZ9G3nygG/LHwBNk81nOz1A/+ebzFRSp6drtXn7n3n0tBX6GYb5V
+         nKTalqEMUso6QhUreZAp1I9aARo+MLGgXBUpLLDyKUFmaC0D+VCgUoSX0NEdr9M2+PK2
+         iNubQoHxojj6c0PHK10FwpHLZIxgBWdzXUE19Alp04Ir85EUNkAiapFRqt3xEYLxFdZD
+         TggOLDl9apaQLdS8BAOYinUZ4AY4+nT/dzUUoBfY6E4lD9mMfFeX7I3y7XFUKVqZQlSm
+         M6pg==
+X-Gm-Message-State: AOJu0Yx1AkznAgZAexzM2roo0+HrV+4M3/Smy2luDe4NwqmsHdV5vXeB
+	4oDc5MVAuZ7BzVXs/c0o+Du0i0TL1EMePRVmiR2LfQpZOAgxYWr9m6GX
+X-Gm-Gg: Acq92OEaLO3cKexxSHSiT+sixjau+RkkNDErddhAai+ffMz9dECbixkpP7s3EuXGWwx
+	nF7wU8X12aiejjgiq6En0N632JL/jaNQJSzEwkdRGO8P/VLeqnXwoNvjm6C98j9yE3MObuOU8Su
+	ZrwWz/EN05Q/0xkjCfB4JZjK5Jbeb1FKKbQaAXgUlb0YAfVY6BwFXQbRyUh7abevpVCIwIZaoQH
+	gdel+LfgBJjvZs2LfPBhueiji9NK8eZD4OgtnTD+JpXzCvw3a+TZdERnR8sOsPcPopH9xIgAtNT
+	Wdt5S0RP+qYFASrmcLux4rjZvttt5nQs9NX2muXBWZZ+G201Jq5PQBEnwzrn1jjxiK8QOc8teU1
+	Sb6E8MXE/mlOM1RPeiL5qGSH8Covj+K3HwRquQL4UaeDgz4pWjS//gABPeetUsCL8BYS5CKKw9U
+	9+3dZD7wHpt8HK4cYQLSwRct+DS+GVMgrPnMxD3gojwZV6teU83xdBjZ3v1fmF2hRts1WBM034j
+	En7kNHVtlpksLD9BD2f0B0ssO3ghXuZaV/XQo+HAN6K6aY=
+X-Received: by 2002:a05:600d:8:b0:488:904b:f31 with SMTP id 5b1f17b1804b1-48fe6325213mr316461235e9.22.1779295750801;
+        Wed, 20 May 2026 09:49:10 -0700 (PDT)
+Received: from iku.example.org ([2a06:5906:61b:2d00:dcb8:81c1:dc9e:cd68])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49033d8e71dsm3110285e9.9.2026.05.20.09.49.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 09:31:17 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wPjpF-0000000HRrF-1siT;
-	Wed, 20 May 2026 13:31:17 -0300
-Date: Wed, 20 May 2026 13:31:17 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Pranjal Shrivastava <praan@google.com>
-Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+        Wed, 20 May 2026 09:49:10 -0700 (PDT)
+From: Prabhakar <prabhakar.csengg@gmail.com>
+X-Google-Original-From: Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To: Manivannan Sadhasivam <mani@kernel.org>,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Mostafa Saleh <smostafa@google.com>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Daniel Mentz <danielmentz@google.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	David Matlack <dmatlack@google.com>
-Subject: Re: [PATCH v3 3/3] iommu/arm-smmu-v3: Fix ATS state tracking via
- ats_prepared gate
-Message-ID: <20260520163117.GX7702@ziepe.ca>
-References: <20260519135323.1558777-1-praan@google.com>
- <20260519135323.1558777-4-praan@google.com>
- <20260519144430.GI7702@ziepe.ca>
- <agx5-jFkU2skyEos@google.com>
- <20260519145947.GK7702@ziepe.ca>
- <ag3EL10WAIImL9XR@google.com>
- <20260520145142.GU7702@ziepe.ca>
- <ag3gJLtY1jnT17Zv@google.com>
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Prabhakar <prabhakar.csengg@gmail.com>,
+	Biju Das <biju.das.jz@bp.renesas.com>,
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH v3 0/4] Add PCIe support for RZ/V2H(P) SoC
+Date: Wed, 20 May 2026 17:48:19 +0100
+Message-ID: <20260520164823.436992-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ag3gJLtY1jnT17Zv@google.com>
+Content-Transfer-Encoding: 8bit
 
-On Wed, May 20, 2026 at 04:24:04PM +0000, Pranjal Shrivastava wrote:
-> On Wed, May 20, 2026 at 11:51:42AM -0300, Jason Gunthorpe wrote:
-> > On Wed, May 20, 2026 at 02:24:47PM +0000, Pranjal Shrivastava wrote:
-> > 
-> > > However, I'm thinking what's the right thing to do if pci_enable_ats() 
-> > > fails in attach_commit():
-> > > 
-> > > 1. Fail to attach but unmerging the invs_array entry is complicated.
-> > 
-> > Is it? We should be able to keep the the original invs and not free
-> > it, just put the pointer back?
-> 
-> Reverting the invs pointer itself is straightforward, but IIUC the 
-> current implementation of arm_smmu_install_new_domain_invs() is a
-> destructive update as it calls kfree_rcu() on the old list immediately
-> after the swap.
-> 
-> Although, I guess we could refactor the RCU lifecycle to defer the 
-> kfree_rcu until after pci_enable_ats() succeeds in the commit phase?
+From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
-Yeah..
+Hi all,
 
-Though really pci_enable_ats is not working the way we want, writing
-the enable register can't actually fail - it is all the sanity
-checking for kernel bugs that is the problem here.
+This series adds support for the PCIe host controllers found on the
+Renesas RZ/V2H(P) SoCs. The RZ/V2H(P) controller includes additional
+features for PCIe lane control and supports multilink operation with
+two independent controllers.
 
-How about call pci_ats_supported() early in attach and fail, then if
-pci_enable_ats() fails just WARN_ON and keep going, kernel bug.
+v2->v3:
+- Dropped using linux,pci-domain property.
+- Switched property to phandle-array for renesas,sysc
+  to support multiple controllers with different SYSC register sets.
+- Parsed controller-id from the "renesas,sysc" property instead of
+  using linux,pci-domain.
+- Updated commit message for clarity in patch #1
 
-Re-organize pci_enable_ats() so it relies on pci_ats_supported() for
-all the sanity checks and cannot fail if supported is true.
+v1->v2:
+- Dropped RZ/V2N DT binding patch as it has been merged in the
+  pci/dt-binding branch.
+- Dropped un-necessary new line in schema.
+- Renamed RZG3S_PCIE_CHANNEL_ID* to RZG3S_PCIE_CONTROLLER_ID* for clarity.
+- Added locks to protect shared lane configuration state and
+  prevent concurrent access issues during probe.
+- Added cleanup action to release lanes on driver removal.
+- Reconfigured RZG3S_SYSC_FUNC_ID_LINK_MASTER in resume path.
+- Renamed num_channels to num_pcie_controllers for clarity.
+- Updated commit messages for clarity in patches 1-4.
 
-??
+note, the patches have been rebased on top of next-20260520.
 
-Jason
+Cheers,
+Prabhakar
+
+Lad Prabhakar (4):
+  dt-bindings: PCI: renesas,r9a08g045-pcie: Add RZ/V2H(P) support
+  PCI: rzg3s-host: Use shared reset controls for power domain resets
+  PCI: rzg3s-host: Prepare System Controller handling for multiple
+    controllers
+  PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
+
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  |  34 ++-
+ drivers/pci/controller/pcie-rzg3s-host.c      | 232 ++++++++++++++++--
+ 2 files changed, 246 insertions(+), 20 deletions(-)
+
+-- 
+2.54.0
+
