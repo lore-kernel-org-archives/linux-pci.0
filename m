@@ -1,271 +1,241 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013023.outbound.protection.outlook.com [40.107.159.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54D1E381B04
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 21:55:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779314103; cv=none; b=MurjObaMis4wnLnMwj4ukKx4eWHuDZgd1s1iBoFHV6zf53LYCapiKdJvEiqRfTK5g7EEDUihrJRh5d8bMx177RTmalySpDTljpYJ/jCjt4xTJsG8zj7A0675z/BbH0MsKjGzenK0ICFzBeGQzLQNaEFJ0MU5P+u2NuyUPzXPNYE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779314103; c=relaxed/simple;
-	bh=+CXFZOD+Y2b+42FoTEHtxtoiXw+q957/TpCFaUNzM+g=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QTUhz/nIPOnH+I5AEuen1oL6j6mEKZg/W0GvpFPFyS0b7GZR2igQrpzLxOO19+iyc/8OJiniNB+9Z4aedHLjGxLicfSca7Rt49oDWITpp6P+xTr+OYpqTCrTpBMkOFw63bsoUNxOA4EYkl7UWWL1ah16/ApV2OPIAqaQngHg6+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=e5DT8ssw; arc=none smtp.client-ip=192.198.163.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1823B27EE;
+	Wed, 20 May 2026 22:00:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.23
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779314460; cv=fail; b=N7VZZoFxd1pF/QgYjPTWX1HyFgEt8Hks4pOz3B0w8RzAi8mYN+OkMyXiKS0H7fbjZUDcsgjcrtH/C4DRNXiSvDuJZbXxhoeGBwyEcmSsB9ootDGNQKvnp3traPeQ5y7FyPXVRGLppCARxij1au29u2MXDJV5lcBe1Lx1lo6aieo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779314460; c=relaxed/simple;
+	bh=DHlc3SwvYtrTHGbNIGQpmy4twRjsxIzZQnHXq/+JiK8=;
+	h=From:Subject:Date:Message-Id:Content-Type:To:Cc:MIME-Version; b=bTFCTfLl94jms21Bi994e9jVxBbaMXri+4dX2btIIJxLZyxIYiu45Gs8PBDUv2W8+O6qZ1szPslUzkZfUjOlr9wybylj4+Ruz+M2AP20U4eXzSGYCCWXe9A3tmuo6YKQOgRUUNEKJwbNPpXTOVw6JHa5DDehLj073GToDChAQXQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=Z4ZCRWH4; arc=fail smtp.client-ip=40.107.159.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="e5DT8ssw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779314101; x=1810850101;
-  h=date:from:to:cc:subject:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=+CXFZOD+Y2b+42FoTEHtxtoiXw+q957/TpCFaUNzM+g=;
-  b=e5DT8sswrOcE0YVUkBIx3ud6LYOhg1kmwNIGxiJQkFaFSa6fLKo6ACTl
-   oOsXg7pYQznsw/VWJzXeFIaRn5eDIIOijf5x1it8bB/6naJ0PlNtmnMeo
-   HoeyQrjCQBAGZAvbELDY2qvcGdT5/jUxFvCYkQK7kgJI6AiDxMPXf6ljy
-   9lTXdEZ6s2MYqimF2+z8M7+xv7VTP/OzuCCNesLlCMmAD5XCl6dQA2tZV
-   v2F0byKNBYHD9Qv2pC/tGGE9DDNb7ftJzxOk8B2kOmRnFP+0vYWhjmItg
-   Ur8KAfOhoLzHfiKwqIyymphHvJ3DiKRPV3dfoR9hoA5jP6Jl1JzGI84yQ
-   w==;
-X-CSE-ConnectionGUID: b+IdC2jxSFCVr3ICRKkJwg==
-X-CSE-MsgGUID: Arrnj6e9S9ynPsj+f1tquA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11792"; a="84083787"
-X-IronPort-AV: E=Sophos;i="6.23,245,1770624000"; 
-   d="scan'208";a="84083787"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2026 14:55:00 -0700
-X-CSE-ConnectionGUID: RcbajyMHTneVP/oXLqfwUQ==
-X-CSE-MsgGUID: pf9+jegwTkayTED+WuejjA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,245,1770624000"; 
-   d="scan'208";a="278446858"
-Received: from patelni-desk.amr.corp.intel.com (HELO localhost) ([10.2.248.44])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2026 14:54:59 -0700
-Date: Wed, 20 May 2026 14:54:57 -0700
-From: Nirmal Patel <nirmal.patel@linux.intel.com>
-To: sashiko-bot@kernel.org
-Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: vmd: Add feature to scan BIOS enumerated
- devices.
-Message-ID: <20260520145457.00001f52@linux.intel.com>
-In-Reply-To: <20260519160505.704F2C2BCB3@smtp.kernel.org>
-References: <20260519151832.9005-1-nirmal.patel@linux.intel.com>
-	<20260519160505.704F2C2BCB3@smtp.kernel.org>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="Z4ZCRWH4"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eHra0d7PVlIei2t2gZqB3yfPH4hV7BHi9Ft1tPt/v2NeUneYJ9WqrW/MYcSOWrfNujvUDGxEsSHipwpMVhcQfxTooVpLfPunn6ItWOjWESqvKT04v0aVEV/fzXpzFFZmVAzC8Q1T2lBy4bIztYIgggADDIrRA5oGS1sfGqT6oRn8SrydE7DcAf+GquZsO03G1ehVXeGk6etV5r5UJA9OOPE+X1raMFUfdtbh8u0O1m/Dy4y83Fn7K0C4NTc46rAWSgG8k/6K3axEoDX37PsEzO+zpqdgQk9N8jhrPh5bnlGSbd7vNylPorJNKPd/oLQSxlCPBN1CrAsdVI5Rb4SQzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=R4aBUiKBnMFwsK6Afxi7ulK2qXsNXTYy3GBtvltTeJI=;
+ b=d0/YwdALiB9seFuLSjC/5BbH8Q/9jxx/h1OeeSCQO9pTYm77tE+GqtQQNqcbQrx9jLKUA+iwKq6L4ZsC5bYcoInHwZySTkXgn81YbtKYmJoKKHl/TjpZKW4o6YpgmAdEbGSi5BZjZRfhFoZOpfnUkVkT2JMf/d7Jcv046tNsKOa5lnJ59lWQbbmohw6Oubzgss4UAJSeVteb1KrOomzae6z2eYyDa/bV26zi+B8hm4RHk0z5QBP8x+cmBSBQpFE/uQzZpNxLMwLT/qePJp+Si9uDLPfdzAAvfaLEDrhWu7F59ICA4A3U773sXwD9Rd0SXpjtG39+D0moXEWSZYkGww==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
+ dkim=pass header.d=oss.nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
+ s=selector1-NXP1-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=R4aBUiKBnMFwsK6Afxi7ulK2qXsNXTYy3GBtvltTeJI=;
+ b=Z4ZCRWH4fSrLxe3/rMkxovucCQJQEP+2MZoudN7OUw13hZRbOhdqZ9JZCDLA1rDCLM1BqmgONk6b7ObsngXAxQr5NVD1YN2Kuokh4AdtMM/BDZfoeJPojRZaZnEnhdwTbXjO/eT4TppJY9XGOu0S4NLh4hkwJtFoo++1vb67nHR+eXZu6IlZBJvfLSu8/Xzu9ZHCgCk6Nqtpk16gwyUPKTlIbLXvxlFuPKbHM0o+nw+HMKktYLf87/DRqaqAjcsIsvpTIIvFnwgY1ObLrLx8TjL3g7WOfv2cxu5Lor2adkJ4FiXflNBJOQCdtLsvBMA5M8g9z4uvM4feZFArlrix9A==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=oss.nxp.com;
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
+ by PA4PR04MB8029.eurprd04.prod.outlook.com (2603:10a6:102:c9::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.14; Wed, 20 May
+ 2026 22:00:51 +0000
+Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
+ ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0048.013; Wed, 20 May 2026
+ 22:00:51 +0000
+From: Frank.Li@oss.nxp.com
+Subject: [PATCH v6 0/9] dmaengine: Add new API to combine configuration and
+ descriptor preparation
+Date: Wed, 20 May 2026 18:00:41 -0400
+Message-Id: <20260520-dma_prep_config-v6-0-06e49b7acb38@nxp.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAkvDmoC/23N3YrCMBCG4VuRHJtlZpJJU4+8j0UkzY/mwLa0S
+ 1Gk975REC318JvwvLmLMQ45jmK3uYshTnnMXVuG2W6EP7v2FGUOZQsCYiTQMlzcsR9if/Rdm/J
+ JGtZYQSDNjkRR5S3l67P4eyj7nMe/brg9P5jwcX217Ko1oQTJStfgOWIkt2+v/Y/vLuJRmuhD4
+ xdNRXuooKqtMkh2qdVLG0DgtVZFO6stKEMpaFpq/dYMZq110ZYbFYga16S01PyhkdaaiyZjDTe
+ pCrXit57n+R+O8h9npAEAAA==
+X-Change-ID: 20251204-dma_prep_config-654170d245a2
+To: Vinod Koul <vkoul@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
+ Herbert Xu <herbert@gondor.apana.org.au>, 
+ "David S. Miller" <davem@davemloft.net>, 
+ Nicolas Ferre <nicolas.ferre@microchip.com>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Claudiu Beznea <claudiu.beznea@tuxon.dev>, Koichiro Den <den@valinux.co.jp>, 
+ Niklas Cassel <cassel@kernel.org>
+Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ imx@lists.linux.dev, Frank Li <Frank.Li@nxp.com>, 
+ Damien Le Moal <dlemoal@kernel.org>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1779314446; l=3498;
+ i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
+ bh=DHlc3SwvYtrTHGbNIGQpmy4twRjsxIzZQnHXq/+JiK8=;
+ b=/ndXBG1/LbmGaS038ufLQyN7lgJhbM09Id/ZwdxgL/6YFAs0G7MNDAgfDlZiOTQRhkzzciW9E
+ 4ozCKzt5+ZxD4Q1upFzQBNswCtdoLgvzU5PsCYkJHM0avlKJwBLw6Jc
+X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
+ pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
+X-ClientProxiedBy: SA1P222CA0038.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:806:2d0::19) To GV2PR04MB11799.eurprd04.prod.outlook.com
+ (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|PA4PR04MB8029:EE_
+X-MS-Office365-Filtering-Correlation-Id: d4798de9-0e71-4646-8954-08deb6bb4182
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|366016|7416014|19092799006|921020|56012099003|18002099003|11063799006|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	xDT+gFSdCWCqXzPXEWwkx8OfO2smgZderOZO5FHYP7i++cjQUw/2ik3M43CI1Qmfxwlr6xOjXu7yS5uG1M7aMrjDef8WMFuvsJ9P6iMdpLWRioCInxg4vtnHT6MDX3O8FLVR+IMPTKq55EO6hD1Cb39FNqELbHekzGV7jH3eDPwC9kGkUAUTQmW3ZDDBuXhCz4h/X4+yyHrqulEavlVuWx5GHj+h/icBINmBpNLht9gY5/wZPKj5K7Na5pLeorNBxK8k5cyOp5ZfLGBbfHZ61kQxzAR/UD/6kXZ1SXwtRN8aarw40k1k008pshXBr9iWEx3pRlY2eUojF682KnVzSN0dhLarUSh7Ezr/CuoByNSDQ0b2iftpWcR3eI5TsIudKeGyNk0uACG4NOtjhZQNi3T0EXHHPIQkoOL3mQQ+sIEbf2W6M70O0iJH5WIwIG3lgcO/Nz8+7icHqK/eBUx4J8gz3wm7gbLb8HdmMwENmA7xMQxTRIbeKSlYeSsQgY7fVGTLMwfx+80zfLAYkqeK6gfQ2dSv+fcwMXI3zccGvZTL0DeZnaoZKmogSXXnL12KIDUiH/Gfwni97i3PsGaph27Z6AE6Hnt0iQRofmvjOJ4kKiQenmYGfRbrTmxvHR1eG39eBgO9DLq+fq9CXknOYvzmVhjJONL/GbLRBTyCtvRICzuCteibuoz/yLjfBtHrpbcZv76gzGEq+FDXhJBA7uqVSThirOiMLFYs1EulE2f41IIhZJqfzlzELbm7Grqs
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7416014)(19092799006)(921020)(56012099003)(18002099003)(11063799006)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?N3VacWxaVzJlWWR6ODBEb2tuQlVWdjhSVHhiQUhCam4zSGhSSmpmZVJpRjJo?=
+ =?utf-8?B?aGtPS0Jhald4dVJSaFlFd2RVMlk4Q2IxSkRsbW5XeitCTmZFeU9HTjU4blNy?=
+ =?utf-8?B?Ukh5Y3JtWVBUYTZZUXBBOFczNTM2RWhvZWxqekptK3Z3OWVCMW5oK0hnaTA3?=
+ =?utf-8?B?S29yVFlwYjhMNmczU0l5TGVnREZOVkMyMXRoZm91U0VaZzlQaG9WcHUvcUNi?=
+ =?utf-8?B?Zi9QaW4yUkxYZEh3VklCNHFUcStteHhIZm5ZU095TEtzbGhMRkJQODcrSUdJ?=
+ =?utf-8?B?MUcyS1RQVUxZbmlneWFFbTRyTndHMG1mRXBCWGZkbFdKOHRaTERpeG1ycDk1?=
+ =?utf-8?B?aGhtVncxRUJhSWhkRml4VWRjM3pBcnRtdHZFaWs2SlRiWjZlKzJQK3kwV01T?=
+ =?utf-8?B?Q3dTUDc4Y2dmRkk0a3kyMFAzZlg2dmRsV0xWSEJEaUlQQ29tdFVzUmxwdVpZ?=
+ =?utf-8?B?VlhmY3cxcUl1ZU9wOGIwdVNUYVZmMm1Nd2lDWVdPajE2QnczUHhwaDBoVUg3?=
+ =?utf-8?B?YVR1RUFtSXI5emczc3ptWWg1bUprcU1VRGwyS0xMZG1kUld1eVZlYnFBYlRS?=
+ =?utf-8?B?Y0NPZjVlVDhIdi9LVXJkMnpXbis1cXFlbTBFT2Y3V0FJQ2x1VUpjZFJOeWxY?=
+ =?utf-8?B?ZUF4Tm50bkJNblZRdXZadmZkVjMvcWlWbXl3cER2OXBSSG0xVjdYTzF0azRE?=
+ =?utf-8?B?ald5NHM5NGt4Y09xV3NMSndVSDBCNFBRWmNDUXY5b0l1R3lNcjdZOXY3eWtT?=
+ =?utf-8?B?TitETXJqVDZCMjcwOWRhVDVTY2lNakxEcitUQTZjTHIrSXJNZll1Ty9ySGV3?=
+ =?utf-8?B?dFhhRnh0OXdSV3MvUk10ZXNFWWtsOGdPbE9OaUNTWEt5b1V2cVJhNTBJb0N1?=
+ =?utf-8?B?WEwvMVBQRW83ZFZtTkFxeGw0MThjMGttU1M2dVRtZUxkcG5rcEthYTExMUxa?=
+ =?utf-8?B?VUhISTJVZ1ByK3R5d0V2QUtETVZlY2hra2RUYVV3SWVIS2JSbkxIVTduMkJT?=
+ =?utf-8?B?S3dCMlZmVHdtY2NQV003RlN6bVhkZlRzZmdIT0h4QmM2SDdFdlRjVjd1MDBi?=
+ =?utf-8?B?NGFrRVNzeDh5ZkpTRjNXM1dRUmluMzFnLzlrYk03UzZ2Y0xlY1BTYnRPT3hn?=
+ =?utf-8?B?S3ZYdUlqcUVVVzc4OTB0SnFQV3dQZ2daam44c045UVBRYzFtRldtczNOcFRD?=
+ =?utf-8?B?VGlkcllaZDF1bSsvVEJTYWtnd0JFOEI3eUVVS1YxNTgvcFhGUzhZQ1p2VVFS?=
+ =?utf-8?B?L0lYL2lTbW9CVnYwU0JvUHl1d1pUTzlyT2FDcVp1QmlXSURScDNvTEUxSnVB?=
+ =?utf-8?B?ZER4L3RHOVJWNnR1NFRTeUEvcWpYSUc3Tm0rTnZ2OSs1S21ySlJNQy80SWMx?=
+ =?utf-8?B?VTd2YlVJYVZnMUx4L0lMRitwZ2hLR2x2ajFzT0dudUYxWStVTlZsZTNGRjJw?=
+ =?utf-8?B?RXNrL3hucmNlVFhJTWxFcXNDWE5IRzVRYXEzS0tCT0p1aFF4RGJySHVFVU5p?=
+ =?utf-8?B?eVdMeGU2M3BhT1E1OUhidU9KZitzTjRaQUsycGZDbzVnNlpSdDZrUUh2VjdI?=
+ =?utf-8?B?TlZ3dzRucEh0T3BITGp3MFY2MldtQnJPV3Q3SXdKWkxjc2EraW1KVm54eHRs?=
+ =?utf-8?B?SjNwc1M1NE1SSE9lZ2ljdmxHL3c2QkhReVpleXA2ZklIWmNoTjdFRFYyN3hm?=
+ =?utf-8?B?S2pnSys3R09WNXhNbWhDR3NnU2xSRjZVWU1NM3VmNDM3Y2oxcXNLeFdkVXBx?=
+ =?utf-8?B?aFhDQkR1STdGUnJ1SWRLSXJzLzhxbmFjeGRMWjdwMzc5ZTYvZmoyem9FNHZU?=
+ =?utf-8?B?L0NWaEUzMHNWcXBhRTg4SGZLM3pOakZ4RlpZbzl4TjdpZEtXbVAvMmVmbXBG?=
+ =?utf-8?B?SGRWb1d0Zk40cDdGZ0wrRHdSQms4S2tSRVp4NnZJUXV3alJCRzgyYTBlcnBO?=
+ =?utf-8?B?RURITzNVc0I3MkxFa0NoOUtod1JWSDkvSGtFZ0NaZk1SVk04UGFEVWN2Y0ZE?=
+ =?utf-8?B?MG9kL040UiszOUpwa1ozbE5vYmJvTkc4Rk5ZYzVIa20xSjNaMEZSdWkwQk1w?=
+ =?utf-8?B?VEc4MkdYWmI5T1lUbzJnL1JVYThleVhsT1BzTEphVm5jNG9PMjhwRCtJWjh6?=
+ =?utf-8?B?WklkOWt1QUtianVwWmdkTjdlRG5pWVBSLzdoZDVpZVRwdmQvR1FhY0JFR2lN?=
+ =?utf-8?B?RmllSFhhQlhkOUN5Nis0VHhPdllsNVVGU25Uc3E2TllLVnNWZklNTGRhM1RP?=
+ =?utf-8?B?Y2VyTWk3VWRVSExrcEZuelUyK3VZM3QwUHJ1S2VHbWlvWHhuUzl3RWVOM0Zw?=
+ =?utf-8?B?cE5tYmlNT2tGcDJkbVFYMjlhMHFuRGdydXMxRkozblpSZkkrMzBuSUNqYlRT?=
+ =?utf-8?Q?8jwY6iPOjVxpL2jQ=3D?=
+X-OriginatorOrg: oss.nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d4798de9-0e71-4646-8954-08deb6bb4182
+X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2026 22:00:51.1579
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: eweOjq6eCDWvNZmNmFvLjbN8qwm00XGoPrv3XNkoYrkQXe0D1yB7lLTr3qCxTo6Fp/7R3pOGK3IWwQ7dtbmNUy8EsTrmObbfXxiBE0Q4mRP0n9VFhbBJL2mB0hQLhSo8
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB8029
 
-On Tue, 19 May 2026 16:05:04 +0000
-sashiko-bot@kernel.org wrote:
+Previously, configuration and preparation required two separate calls. This
+works well when configuration is done only once during initialization.
 
-> Thank you for your contribution! Sashiko AI review found 4 potential
-> issue(s) to consider:
-> 
-> New issues:
-> - [High] Invalid VMD CFGBAR resource range calculated for older
-> hardware with restricted bus ranges.
-> - [High] VMD shadow register exposed to the child device resource
-> pool, risking memory corruption.
-> - [Medium] Silent failure and continued execution with uninitialized
-> variables if BAR4 is not an IORESOURCE_MEM.
-> 
-> Pre-existing issues:
-> - [High] Missing pci_free_irq_vectors() calls on error paths leaks
-> IRQ resources. --
-> 
-> commit fb1f4c20650569f7ba38772b55e3d4757083bcf4
-> Author: Nirmal Patel <nirmal.patel@linux.intel.com>
-> 
-> PCI: vmd: Add feature to scan BIOS enumerated devices.
-> 
-> Newer VMD with device ID 0x28c1 has unique settings compared to its
-> predecessor where BIOS enumerates the entire VMD device tree and
-> assigns respective configurations. This patch adds support to obtain
-> the bus hide range and shadow registers set by BIOS.
-> 
-> > diff --git a/drivers/pci/controller/vmd.c
-> > b/drivers/pci/controller/vmd.c index d4ae250d4bc6d..ca8738285659a
-> > 100644 --- a/drivers/pci/controller/vmd.c
-> > +++ b/drivers/pci/controller/vmd.c  
-> [ ... ]
-> > @@ -711,6 +773,55 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
-> >  	return 0;
-> >  }
-> >  
-> > +static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
-> > +					unsigned long features,
-> > +					resource_size_t
-> > *membar2_offset,
-> > +					resource_size_t *offset1,
-> > +					resource_size_t *offset2)
-> > +{
-> > +	int ret;  
-> [ ... ]
-> > +	if (features & VMD_FEAT_USE_BIOS_INFO) {
-> > +		if (resource_type(&vmd->dev->resource[4]) ==
-> > IORESOURCE_MEM) {
-> > +			*membar2_offset = SHADOW_MEMBAR1_28C1 +
-> > MB2_SHADOW_SIZE;  
-> 
-> [Severity: High]
-> Does this offset calculation expose VMD configuration registers to
-> child devices?
-No. This is for vmd driver to read and assign bus start range and
-location of shadow registers.
-> 
-> The calculation SHADOW_MEMBAR1_28C1 + MB2_SHADOW_SIZE resolves to
-> 0x2828. However, the BASE_ID_REG_28C1 register is at offset 0x2840,
-> which falls after 0x2828.
-> 
+However, in cases where the burst length or source/destination address must
+be adjusted for each transfer, calling two functions is verbose.
 
-These two hardware registers don't have dependency. BASE_ID_REG_28C1
-holds bus start value. Since the hardware register is named as Base ID,
-I kept the name as it is.
+	if (dmaengine_slave_config(chan, &sconf)) {
+		dev_err(dev, "DMA slave config fail\n");
+		return -EIO;
+	}
 
-> If a child device maps a BAR over this region, could it overwrite the
-> VMD shadow register at 0x2840 and cause hardware misbehavior?
-> 
-> Should the offset be set large enough to protect all internal VMD
-> registers, such as >= 0x2848?
-There is no overlap. All of the these registers are separate.
-64-bit SHADOW_MEMBAR1_28C1 and SHADOW_MEMBAR2_28C1 are located at
-0x2818 and 0x2820. So the 16 byte size MB2_SHADOW_SIZE includes both of
-these registers.
-The BASE_ID_REG_28C1 is located at 0x2840, much farther from shadow
-registers.
-> 
-> > +			ret = vmd_get_bus_info_from_bar4(vmd,
-> > offset1, offset2);
-> > +			if (ret)
-> > +				return ret;
-> > +		}  
-> 
-> [Severity: Medium]
-> What happens if VMD_FEAT_USE_BIOS_INFO is set, but resource 4 is not
-> of type IORESOURCE_MEM?
-> 
-> Because the subsequent fallback checks use else if, they are bypassed
-> entirely. The function will silently return 0 without retrieving valid
-> offsets.
-> 
-> Will this cause the driver to probe with uninitialized offset values,
-> failing to handle broken hardware or firmware configurations?
+	tx = dmaengine_prep_slave_single(chan, dma_local, len, dir, flags);
 
-resource 4 is needed to obtain required information for bus scan. So
-unassigned resource 4 should return an error and stop the enumeration/
-probe. I can return an error in else part.
+After new API added
 
-> 
-> > +	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
-> > +		*membar2_offset = MB2_SHADOW_OFFSET +
-> > MB2_SHADOW_SIZE;
-> > +		ret = vmd_get_phys_offsets(vmd, true, offset1,
-> > offset2);  
-> [ ... ]
-> > @@ -784,38 +895,16 @@ static int vmd_enable_domain(struct vmd_dev
-> > *vmd, unsigned long features) struct pci_dev *dev;
-> >  	int ret;  
-> [ ... ]
-> > -	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
-> > -		ret = vmd_get_bus_number_start(vmd);
-> > -		if (ret)
-> > -			return ret;
-> > -	}
-> > +	ret = vmd_prepare_offsets_and_bus(vmd, features,
-> > &membar2_offset,
-> > +					  &offset[0], &offset[1]);
-> > +	if (ret)
-> > +		return ret;
-> >  
-> >  	res = &vmd->dev->resource[VMD_CFGBAR];
-> >  	vmd->resources[0] = (struct resource) {
-> >  		.name  = "VMD CFGBAR",
-> >  		.start = vmd->busn_start,
-> > -		.end   = vmd->busn_start + (resource_size(res) >>
-> > 20) - 1,
-> > +		.end   = (resource_size(res) >> 20) - 1,  
-> 
-> [Severity: High]
-> Does this change break bus enumeration for older hardware with
-> restricted bus ranges?
-> 
-> By unconditionally dropping vmd->busn_start from the .end calculation,
-> it works for the new 28C1 device with a busn_start of 0.
-> 
-> However, for an older device with busn_start = 128 and a 32 MB CFGBAR
-> size, .start would be 128, but .end would calculate to 31.
-> 
-> Could this create a malformed resource where .start > .end?
+	tx = dmaengine_prep_config_single(chan, dma_local, len, dir, flags, &sconf);
 
-This is a good point. But in my v1 patch, I kept vmd->busn_start +
-(resource_size(res) >> 20) - 1. it was flagged as an issue.
-If the busn_start is 128 and ConfigBar is 256 MB, then .end will be set
-to out of bound value. I can set hard coded value of 0xff same as
-pci/probe.c
+Additional, prevous two calls requires additional locking to ensure both
+steps complete atomically.
 
-> 
-> >  		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
-> >  	};  
-> [ ... ]
-> > @@ -868,19 +957,21 @@ static int vmd_enable_domain(struct vmd_dev
-> > *vmd, unsigned long features)
-> >  	 * acceptable because the guest is usually CPU-limited and
-> > MSI
-> >  	 * remapping doesn't become a performance bottleneck.
-> >  	 */
-> > -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> > -	    offset[0] || offset[1]) {
-> > -		ret = vmd_alloc_irqs(vmd);
-> > -		if (ret)
-> > -			return ret;
-> > +	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
-> > +		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> > +		    offset[0] || offset[1]) {
-> > +			ret = vmd_alloc_irqs(vmd);
-> > +			if (ret)
-> > +				return ret;  
-> 
-> [Severity: High]
-> This is a pre-existing issue, but does this error path leak IRQ
-> resources?
-> 
-> According to PCI subsystem guidelines, every error path after a
-> successful pci_alloc_irq_vectors() must call pci_free_irq_vectors()
-> before returning.
-> 
-> If vmd_enable_domain() fails after allocating IRQs, or if
-> vmd_alloc_irqs() fails internally (e.g., during devm_kcalloc(),
-> init_srcu_struct(), or devm_request_irq()), it appears to return
-> directly without freeing the allocated MSI-X vectors.
-> 
-> Could this eventually exhaust system IRQ capacity?
+    mutex_lock()
+    dmaengine_slave_config()
+    dmaengine_prep_slave_single()
+    mutex_unlock()
 
-I can address this issue in another patch series as a bug fix or
-improvement. 
+after new API added, mutex lock can be moved. See patch
+     nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
 
-> 
-> > +			vmd_set_msi_remapping(vmd, true);
-> >  
-> > -		ret = vmd_create_irq_domain(vmd);
-> > -		if (ret)
-> > -			return ret;
-> > -	} else {
-> > -		vmd_set_msi_remapping(vmd, false);
-> > +			ret = vmd_create_irq_domain(vmd);
-> > +			if (ret)
-> > +				return ret;
-> > +		} else {
-> > +			vmd_set_msi_remapping(vmd, false);
-> > +		}
-> >  	}
-> >  
-> 
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+---
+Changes in v6:
+- Fix sashaki AI report problem, detail see each patch's change log
+- Link to v5: https://lore.kernel.org/r/20260512-dma_prep_config-v5-0-26865bf7d935@nxp.com
+
+Changes in v5:
+- collect Mani's reviewed-by tags
+- use kernel doc for new APIs.
+- Link to v4: https://lore.kernel.org/r/20260506-dma_prep_config-v4-0-85b3d22babff@nxp.com
+
+Changes in v4:
+- remove void* context in config_prep() callback
+- use spin lock to protect config() and prep().
+- Link to v3: https://lore.kernel.org/r/20260105-dma_prep_config-v3-0-a8480362fd42@nxp.com
+
+Changes in v3:
+- collect review tags
+- create safe version in framework
+- Link to v2: https://lore.kernel.org/r/20251218-dma_prep_config-v2-0-c07079836128@nxp.com
+
+Changes in v2:
+- Use name dmaengine_prep_config_single() and dmaengine_prep_config_sg()
+- Add _safe version to avoid confuse, which needn't additional mutex.
+- Update document/
+- Update commit message. add () for function name. Use upcase for subject.
+- Add more explain for remove lock.
+- Link to v1: https://lore.kernel.org/r/20251208-dma_prep_config-v1-0-53490c5e1e2a@nxp.com
+
+---
+Frank Li (9):
+      dmaengine: Add API to combine configuration and preparation (sg and single)
+      dmaengine: Add safe API to combine configuration and preparation
+      PCI: endpoint: pci-epf-test: Use dmaenigne_prep_config_single() to simplify code
+      dmaengine: dw-edma: Use new .device_prep_config_sg() callback
+      dmaengine: dw-edma: Pass dma_slave_config to dw_edma_device_transfer()
+      nvmet: pci-epf: Remove unnecessary dmaengine_terminate_sync() on each DMA transfer
+      nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
+      PCI: epf-mhi: Use dmaengine_prep_config_single() to simplify code
+      crypto: atmel: Use dmaengine_prep_config_sg() API
+
+ Documentation/driver-api/dmaengine/client.rst |   9 ++
+ drivers/crypto/atmel-aes.c                    |  10 +-
+ drivers/dma/dmaengine.c                       |   2 +
+ drivers/dma/dw-edma/dw-edma-core.c            |  41 +++++--
+ drivers/nvme/target/pci-epf.c                 |  24 +----
+ drivers/pci/endpoint/functions/pci-epf-mhi.c  |  52 +++------
+ drivers/pci/endpoint/functions/pci-epf-test.c |   8 +-
+ include/linux/dmaengine.h                     | 149 ++++++++++++++++++++++++--
+ 8 files changed, 208 insertions(+), 87 deletions(-)
+---
+base-commit: 254f49634ee16a731174d2ae34bc50bd5f45e731
+change-id: 20251204-dma_prep_config-654170d245a2
+
+Best regards,
+--  
+Frank Li <Frank.Li@nxp.com>
 
