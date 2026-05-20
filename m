@@ -1,215 +1,188 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0C83546C6;
-	Wed, 20 May 2026 19:58:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD696361670;
+	Wed, 20 May 2026 19:59:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779307088; cv=none; b=UjptcC49YPWRKzTK8Kc1ZNOixJCTnMBrYT5crKnUA2yWs9M3E4H2l7ahk8FOXAsrycVtBO7+yX6KLfA9Th6eCiUJOeG6gVc8EBH/4t8ZQ37csdrm/l5KjE3kkJfvmqO4aN7gu0sIGDEUAEF+j6p7/DHkvTUFPJOZzpRBTdR5bWU=
+	t=1779307143; cv=none; b=lHfX/KNtrJ+7tg3S3v65m47DW8BTO8GRe8DL2RtCvII+44iivQXsoMMigoYw4AeF9ADPhEkcg2uE+r/C+GnHGJAbOQVTY01PVF7qN8uthw5mPDXA1edNFpr+IVifI5a+cdfHQHBDG+WtUMm95jdFatRK47LNJmGfYEswRfFlCuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779307088; c=relaxed/simple;
-	bh=LnCgVsSog/RePlvNEz5hW6AflVhww4QcAKkTWCDiTCo=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bcX+Mz3elvIh6MMjqCKnC93prA2hL7fUUjgGLKfDrRtG18mH68l9s/TmcDboPLw/2lsYGvTD9LWzDqmkt9SFbfg3I2XTu3zWuyANDHmzGyNB2ZYNuCoMfD8NRKowu84bG6hEUFhlIcT5AG8bgK5eqofK6gG7Vf90+r1FK7MbYqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EA5aIBsC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779307143; c=relaxed/simple;
+	bh=Bz05hZqUiRaxeMa30drXVtsWG8NAqGrcAzLb8JM+ddA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=PXVsusHd8b0D1nGl2FPhFp8FpNf3T26vvdL48y6h/IYBVL6pAXoTIGZKxnQrUYJj6k9utOiFD9pqZWv6SyCZAsClqa6xTuwMB4D7SZnoeVqRTo34emRsCymgZdogl0SP0NpDlXwkwXLP9SIpPn+r6F68MbZeU101GVl3yVYLc4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KkG0h3HZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EA5aIBsC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4726A1F000E9;
-	Wed, 20 May 2026 19:58:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KkG0h3HZ"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 47DCB1F00893;
+	Wed, 20 May 2026 19:59:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779307086;
-	bh=u/G55Pcu45bwHkBEVJ1hiBQqzf/8UxRbPrFh0DZqerk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EA5aIBsC5w3jlFdpegQAwn+LUrVvCX0WsRvg+GUaRsqc2DSLX9JiRmO9vCopliQo6
-	 lenjN/7dIfxkgoPvCIc1WKc1GFqKtYHj6aTH90QSrPKTCxnYTuIGaJP696AfD8jQr8
-	 BWPSaAYpnrQ3gqtH4WFCuMeR3umfFYfvgM3XQrsvOUVJ54KVDS0hv73y/FT2tTMelJ
-	 GBoiyy7WjRGptfHnFEB2WyOuHrvldiM8kmuhMPzss6a9wxaopInUekhmv6jYXaaM+d
-	 uY/KHixnrb87+Iulyoj2r9puTAAKEenqSPh0yhn7O4iU6mbYF416tvtbnFuVXUkefB
-	 czF7OKzgSYbeA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 3/3] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Caleb James DeLisle" <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260520183827.908243-4-cjd@cjdns.fr>
-References: <20260520183827.908243-4-cjd@cjdns.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 20 May 2026 19:58:05 +0000
-Message-Id: <20260520195806.4726A1F000E9@smtp.kernel.org>
+	s=k20260515; t=1779307141;
+	bh=cBYu2GQc6MoTLCxtxKTqbYy4E2npoA7fcMHsRIGQpuM=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=KkG0h3HZCk2u4rbRBRv1CRod6SfsAyCcBeaNM8cXJDiOoqTVrKR15PLdmEaPWSnNl
+	 pxPerPBzkwH1UCir9Njn+6W9nb5LQP/AZ7ySB5sXMV/LDLVfjYjyTUZy2ilvSocas8
+	 IQjfxSBYl31SiQ4AKTPF/MweXa5NRZpbOQhaF0knIXM2IXpJ7nFVh9qMppxMCP25mP
+	 xWzwu8YiYpH39K8q5reCKndbBuvClS30jWNCOKawY0diQkct9rl3NlbRtwfzmreS9V
+	 nrKAcd0S1yjwPdZolN+5R7KHUrhT73680UQIEiOfBBcDozpi7OE+vxVN625y0knHD1
+	 BzVOFOEIe1Y/g==
+Date: Wed, 20 May 2026 14:59:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Caleb James DeLisle <cjd@cjdns.fr>
+Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
+	naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH v8 1/3] PCI: mediatek: Use actual physical address
+ instead of virt_to_phys()
+Message-ID: <20260520195900.GA86018@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <afd47d4b-8309-4025-a40b-29606fed3c50@cjdns.fr>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+On Wed, May 20, 2026 at 09:17:35PM +0200, Caleb James DeLisle wrote:
+> 
+> On 20/05/2026 20:55, Bjorn Helgaas wrote:
+> > On Wed, May 20, 2026 at 06:38:25PM +0000, Caleb James DeLisle wrote:
+> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > 
+> > > The driver previously used virt_to_phys() on the ioremapped register base
+> > > (port->base) to compute the MSI message address. Using virt_to_phys() on an
+> > > IO mapped address is incorrect because it expects a kernel virtual address.
+> > > 
+> > > To fix it, store the physical start of the I/O register region in
+> > > mtk_pcie_port->phys_base and use it to build the MSI address. This replaces
+> > > the incorrect virt_to_phys() usage and ensures MSI addresses are generated
+> > > correctly.
+> > > 
+> > > Fixes: 43e6409db64d ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
+> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > Tested-by: Caleb James DeLisle <cjd@cjdns.fr>
+> > > ---
+> > >   drivers/pci/controller/pcie-mediatek.c | 16 +++++++++++++---
+> > >   1 file changed, 13 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > > index 75722524fe74..c503fbd774d0 100644
+> > > --- a/drivers/pci/controller/pcie-mediatek.c
+> > > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > > @@ -175,6 +175,7 @@ struct mtk_pcie_soc {
+> > >   /**
+> > >    * struct mtk_pcie_port - PCIe port information
+> > >    * @base: IO mapped register base
+> > > + * @phys_base: Physical address of the I/O register base region
+> > >    * @list: port list
+> > >    * @pcie: pointer to PCIe host info
+> > >    * @reset: pointer to port reset control
+> > > @@ -196,6 +197,7 @@ struct mtk_pcie_soc {
+> > >    */
+> > >   struct mtk_pcie_port {
+> > >   	void __iomem *base;
+> > > +	phys_addr_t phys_base;
+> > >   	struct list_head list;
+> > >   	struct mtk_pcie *pcie;
+> > >   	struct reset_control *reset;
+> > > @@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> > >   	phys_addr_t addr;
+> > >   	/* MT2712/MT7622 only support 32-bit MSI addresses */
+> > > -	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+> > > +	addr = port->phys_base + PCIE_MSI_VECTOR;
+> >
+> > This doesn't look right because the MSI address is a PCI bus address,
+> > and port->phys_base is a CPU physical address.  Often a PCI bus
+> > address is the same as the CPU physical address, but not always.
+> > I think the DT 'ranges' property tells you the translation.
 
-New issues:
-- [High] Link retraining is performed after device enumeration and driver b=
-inding, causing a severe race condition.
-- [High] Iterating the PCI bus devices list without holding the pci_bus_sem=
- read lock.
-- [Medium] Early return in mtk_pcie_retrain() aborts retraining of all rema=
-ining root ports if a single port fails.
+Oops, sorry, I muddied the waters here.
 
-Pre-existing issues:
-- [High] Freeing port in error paths causes a Use-After-Free because the ac=
-tive IRQ domain's host_data still points to it.
---
+'ranges' tells you the translation applied by a bridge, e.g., when a
+CPU does a load/store, the PCI host bridge turns it into a PCI
+read/write transaction.  The bridge might add an offset to the CPU
+load/store physical address to get the PCI read/write bus address.
 
-commit c1c3bb9bcba6bb8a070037578912a2f02c381591
-Author: Caleb James DeLisle <cjd@cjdns.fr>
-Subject: PCI: mediatek: Add support for EcoNet EN7528 SoC
+But that's not the issue here.  The MSI is basically a DMA write
+performed by the PCI device, not a store done by a CPU, so I don't
+think 'ranges' is the right thing to look at.
 
-This commit adds support for the PCIe controller present on the EcoNet
-EN7528 (and EN751221) SoCs. These SoCs feature a mix of Gen1 and Gen2 ports,
-and require a manual link retraining after startup for Gen2 ports to functi=
-on.
+Based on this:
+https://elinux.org/Device_Tree_Usage#PCI_DMA_Address_Translation
+I think 'dma-ranges' is the relevant property.  I don't think your DT
+includes a 'dma-ranges' property, and in that case the default is that 
+the system bus (CPU) address is the same as the PCI address.
 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/control=
-ler/pcie-mediatek.c
-> index c503fbd774d09..4e4d4b1559f71 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
+So I think this patch works because it assumes DMA addresses like the
+MSI address are mapped to identical system bus addresses.
 
-[ ... ]
+It still seems to me that drivers should be prepared for the presence
+of dma-ranges and use it when computing the MSI target address.  But I
+don't think any drivers really do that, so for now I think you should
+pretend that I never responded about this patch.
 
-> @@ -755,6 +766,132 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie=
-_port *port)
->  	return 0;
->  }
-> =20
-> +static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
-> +{
+> This is all still a little over my head here, but my understanding was that
+> this is in the middle of the device's register map because the DT has the
+> following:
+> 
+> reg = <0x1fb83000 0x1000>;
+> reg-names = "port1";
+> 
+> Per the manual, that offset (base + 0xc0) is in undocumented area but it's
+> in the registers.
+> 
+> The PCI memory is 0x20000000 - 0x2fffffff and we split it between the two
+> devices. Here's the one using the upper half:
+> 
+>         ranges = <0x81000000 0 0x00000000 0x1f608000 0 0x00008000>,  (IO)
+> 
+>              <0x82000000 0 0x28000000 0x28000000 0 0x08000000>;      (MEM)
+> 
+> Hope I'm adding something useful here... Let me know if you want me to get
+> or test anything else.
 
-[ ... ]
+Obviously it's over my head too, so I'm sorry I confused the
+situation.
 
-> +	/* 100ms timeout value should be enough for Gen1/2 training */
-> +	err =3D regmap_read_poll_timeout(pcie->cfg, EN7528_LINKUP_REG, val,
-> +				       !!(val & link_mask), 20,
-> +				       PCI_PM_D3COLD_WAIT * USEC_PER_MSEC);
-> +	if (err) {
-> +		dev_err(pcie->dev, "EN7528: port%d link timeout\n", port->slot);
-> +		return -ETIMEDOUT;
-> +	}
-
-[Severity: High]
-This is a pre-existing issue, but returning an error here can cause a
-use-after-free crash.
-
-When a port fails to start up (for example, if the slot is empty and link
-training times out), the caller frees the port structure by calling
-mtk_pcie_port_free(). However, mtk_pcie_port_free() does not call
-irq_domain_remove().
-
-Since mtk_pcie_init_irq_domain() sets the newly allocated port structure
-as the IRQ domain's host_data, the domain remains registered with a
-dangling pointer.
-
-Could we make sure the IRQ domain is properly cleaned up in error paths?
-
-[ ... ]
-
-> +static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *=
-host)
-> +{
-> +	struct pci_dev *rp;
-> +	int ret =3D -ENOENT;
-> +	u16 lnksta =3D 0;
-> +	u32 speed;
-> +
-> +	/* Should already have been warned about during startup_port */
-> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))
-> +		return 0;
-> +
-> +	for_each_pci_bridge(rp, host->bus) {
-
-[Severity: High]
-Does iterating the PCI bus devices list here require holding the pci_bus_sem
-read lock?
-
-Since mtk_pcie_retrain() is called after pci_host_probe() completes, the PCI
-bus is live and devices are exposed to the system. Concurrent operations li=
-ke
-sysfs hotplug events could modify the host->bus->devices list during traver=
-sal.
-
-Should we hold down_read(&pci_bus_sem) or use pci_walk_bus() to avoid a race
-condition?
-
-> +		if (pci_pcie_type(rp) !=3D PCI_EXP_TYPE_ROOT_PORT)
-> +			continue;
-> +
-> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
-> +		ret =3D pcie_retrain_link(rp, true);
-> +#endif
-> +
-> +		if (ret)
-> +			return dev_err_probe(&rp->dev, ret,
-> +					     "failed to retrain port\n");
-
-[Severity: Medium]
-Will this early return abort the retraining process for all remaining root
-ports?
-
-If pcie_retrain_link() fails on the first port, we immediately break out of
-the loop.
-
-Should this log the error and use continue instead, so that a failure on one
-independent slot does not prevent the others from retraining successfully?
-
-> +
-> +		pcie_capability_read_word(rp, PCI_EXP_LNKSTA, &lnksta);
-> +		speed =3D lnksta & PCI_EXP_LNKSTA_CLS;
-> +
-> +		pci_info(rp, "link retrained, speed %s\n",
-> +			 pci_speed_string(pcie_link_speed[speed]));
-> +
-> +	}
-> +
-> +	return 0;
-> +}
-
-[ ... ]
-
-> @@ -1159,6 +1296,13 @@ static int mtk_pcie_probe(struct platform_device *=
-pdev)
->  	if (err)
->  		goto put_resources;
-> =20
-> +	/*
-> +	 * Ignore error because pci_host_probe() was already called, and in any
-> +	 * case it is possible that the port will still work as Gen1.
-> +	 */
-> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN)
-> +		mtk_pcie_retrain(dev, host);
-> +
-
-[Severity: High]
-Can retraining the link at this stage cause issues with actively bound endp=
-oint
-drivers?
-
-By the time pci_host_probe() returns, devices have already been discovered,
-exposed to the system, and their drivers bound. Retraining the PCIe link fo=
-rces
-it into recovery, which could stall transactions or temporarily drop the li=
-nk.
-
-If an endpoint driver (like NVMe or Wi-Fi) is actively performing MMIO or D=
-MA,
-could this cause unhandled exceptions, AER errors, or initialization failur=
-es?
-
-Would it be safer to retrain before devices are added to the system (e.g.,
-before pci_bus_add_devices())?
-
->  	return 0;
-> =20
->  put_resources:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520183827.9082=
-43-1-cjd@cjdns.fr?part=3D3
+> > >   	msg->address_hi = 0;
+> > >   	msg->address_lo = lower_32_bits(addr);
+> > > @@ -520,7 +522,7 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+> > >   	u32 val;
+> > >   	phys_addr_t msg_addr;
+> > > -	msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+> > > +	msg_addr = port->phys_base + PCIE_MSI_VECTOR;
+> > >   	val = lower_32_bits(msg_addr);
+> > >   	writel(val, port->base + PCIE_IMSI_ADDR);
+> > > @@ -953,6 +955,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+> > >   	struct mtk_pcie_port *port;
+> > >   	struct device *dev = pcie->dev;
+> > >   	struct platform_device *pdev = to_platform_device(dev);
+> > > +	struct resource *res;
+> > >   	char name[20];
+> > >   	int err;
+> > > @@ -961,7 +964,14 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+> > >   		return -ENOMEM;
+> > >   	snprintf(name, sizeof(name), "port%d", slot);
+> > > -	port->base = devm_platform_ioremap_resource_byname(pdev, name);
+> > > +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
+> > > +	if (!res) {
+> > > +		dev_err(dev, "failed to get port%d base\n", slot);
+> > > +		return -EINVAL;
+> > > +	}
+> > > +
+> > > +	port->phys_base = res->start;
+> > > +	port->base = devm_ioremap_resource(&pdev->dev, res);
+> > >   	if (IS_ERR(port->base)) {
+> > >   		dev_err(dev, "failed to map port%d base\n", slot);
+> > >   		return PTR_ERR(port->base);
+> > > -- 
+> > > 2.39.5
+> > > 
