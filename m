@@ -1,116 +1,197 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC353F1AB6
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 14:51:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C6E3EF0DC;
+	Wed, 20 May 2026 14:55:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779288706; cv=none; b=ARfHaDjmMnvq66reA70Ro66FMnP3PoRocC07dNPAZcH9uMnCnw4s1rN3+9dRBYHQL97a4Kghl/iClZ4brwJEdACsO5eiY337z/GcHI9fCDPR0+TUisM0FviSI3GgJK5TCmGlYT4X51SRJfkQLjFlzOMzz06SzIlxx2LNRn+30Qo=
+	t=1779288919; cv=none; b=fwoST5BZHznKx3xoIGyRa3tGn6kEiyHt8qrEtOebJllTqNoLB0XklTyTgQ0CEJzrrxNTooD7vi7Mjmio8k3DI0R9S26tK/oRoEdz04sryHqHYPw7qlHCWWdNypteQSt+6cUWV88fpij720sxyuOnXXOVwf6u1OneHFzXSGyZloY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779288706; c=relaxed/simple;
-	bh=FA4gZ0vHmdeVsJwZEdfiluV2UoJo+V0cIxjlbvjgR48=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Tx3LRJeIuUtF16jhNQ95ZV39uCZLZJC4OZGSMNzEIWirCD3VNfzDWibq0OwlSCAt1JwnbJsZHARzPOXBXl+xlGlU/lMiHq+eEEyqCfYrL78lb03dBknIbtkYsGjDakCdpCg91j6n7FK/oMu4xJKwtRCle5YDAkwI7rqJpf5vt5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=fLI2FEb/; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1779288919; c=relaxed/simple;
+	bh=mPhlcHFvCpO2AzTCdnxpHt5Nq5zeL9SwOfrxApzRgnY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VFbPlx9GS4iLCvMaGAQlPhKKmOZ7kWEzZmeYJvCysjV0QUlDvhvKBsGeHXSzEPscQ6oUF610ZjXle5gNDgieb4rJASE6boYnXo2dB6G0GH4NKdxcAQEqyGOWjgbkEw3//95mabmwgvaACQ/KfeTsuP8q+0f3Qn8LAMaIrt3ulhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=U+EHOHiR; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="fLI2FEb/"
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-516389a9b70so54889651cf.3
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 07:51:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1779288704; x=1779893504; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Pz1t1QkWZCmUP77wepzR0Q4pYzk5BCD7dYEJvWGE+AY=;
-        b=fLI2FEb/TmV7dYjGyMt/DSeaPpCgc2CGOWSSqUGTtinWFgNDar7hERryuw5oZGizfW
-         tlFn9Sz2h6cHKy9xegurTkgCruJZmFy0EevrQTUuo5CX8rmL5dhe1WMFqikd0UCfdsGd
-         //dVMeCEiSfVK4FXaX/ViO8AcS457qylpYOobiHs4Y3IefQb2Vpj7ZQNBIenEpMiEfxO
-         p2FMtsuqunGrbWDhb7Oy/NMxHsn1SLNf7rB+kjx1rkVatd7i6QigZHL9vuLildS+Qgsu
-         oXzLMaJSWpGtgwnVoRZgSIqP2rMs+EnC2D8bhczkDD+5RH9H/m2xEk9cR2KakQ6eEal0
-         ozAw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779288704; x=1779893504;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Pz1t1QkWZCmUP77wepzR0Q4pYzk5BCD7dYEJvWGE+AY=;
-        b=qBNZuIwA/Y37LYe++VBPx2jMEIMU36uXccvM8e0l8ORijmsmAWQZqZn6Cq0grdbz9l
-         jTo3MVTqidytaXRcJ5wPvD8KiN7xuD6F9zsi/1azcT0gpptO3X6/GGC6BcdU+YT1teDs
-         XGQTYLxGqrey6Lb4qc9y+dsl96mcbxY6WaSxPrwG8i0uro/0uGI5GIPG4k5B7KMyC/Ay
-         /enB6OnM3FdukthWqwFEdPg2kPSYh2tTRaK5QK0GGHoz5f6Oxvbc9WvKDQrz4FEdNZX4
-         WltBjoDNu2fZcxojegrayhk0cqvFPGYrkkqaMshtZhUI5NUciqgf6U/c6ju9YuPxA9iQ
-         gkwA==
-X-Forwarded-Encrypted: i=1; AFNElJ/XPllc8RzuhKwCosIzfJ5Pk+DKx5wHrAgnrwx5tPLZs+Y1HRrMRmp9o07/yQ80U0NKGXY00X9z478=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy0EtSaw8cKsguTCC000w5xPiDahsUspzb4ZGdsfKUAliMpC5AN
-	ALO9/JBawolEyM05GI9pH1xTrmt0kIF2MD49rkKr1K3tpOBhJXfN4Qb8oHckvqZJcykqKEcIoVm
-	XVBWO
-X-Gm-Gg: Acq92OHWwEW901mo16ff5ZzAs1dcMxCz/XZteTiJz6nfLUIQe7CqLQE68gDA6r5NMSN
-	D7302kdCunJ2R7bfbHKK1ZDMUglJtJ/UA5Uz7AVSHz8JPFxM22p5qxA5yijprfumMzggsbdG+3z
-	oZ0hkJTpgNBiVRE6Avq08SFEPkyjiQmepdtitFXT/VuKWUo/2ydj5JzLQeelzPhpOtWUvihrPrp
-	ENUQg0W/yp+tHYnnus4RTvM1anIuYua197yiC8rhoTklHOHhfiCN6lKGOg6Ajj1Tb2AAXlNTiQK
-	faaHA2+dTg4Z6EHMwi3NWnS/j0t+SyagFiALPGdYqrhSSHv78E0Op0ngUooN8xyS7QNZk9QXVCC
-	0qJ6XwO3j1Z25DtXKOBUbGws1goy+CLNPleuEJtwEFSgJk1qGdKUtPRe9R2w4LWZhrjAn6WmYYU
-	sTbEUxMF/XvYhOYcYylq2D2aVZFIS/XIuolgvlmfHt2Nwc1c1weYRvHKrDSgWyi2o+EB66kufhV
-	mEnrA==
-X-Received: by 2002:a05:622a:4c85:b0:50d:66b6:1564 with SMTP id d75a77b69052e-51659fe9204mr326177381cf.14.1779288703679;
-        Wed, 20 May 2026 07:51:43 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-516456b6856sm194612161cf.7.2026.05.20.07.51.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 07:51:42 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wPiGs-0000000HIHG-0eTP;
-	Wed, 20 May 2026 11:51:42 -0300
-Date: Wed, 20 May 2026 11:51:42 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Pranjal Shrivastava <praan@google.com>
-Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
-	Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Mostafa Saleh <smostafa@google.com>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Daniel Mentz <danielmentz@google.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	David Matlack <dmatlack@google.com>
-Subject: Re: [PATCH v3 3/3] iommu/arm-smmu-v3: Fix ATS state tracking via
- ats_prepared gate
-Message-ID: <20260520145142.GU7702@ziepe.ca>
-References: <20260519135323.1558777-1-praan@google.com>
- <20260519135323.1558777-4-praan@google.com>
- <20260519144430.GI7702@ziepe.ca>
- <agx5-jFkU2skyEos@google.com>
- <20260519145947.GK7702@ziepe.ca>
- <ag3EL10WAIImL9XR@google.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="U+EHOHiR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=Ta7ysL3hvmydWrMVmPTW46rDbrX7lZIBRkcPb5zNuao=;
+	b=U+EHOHiRhpU6zwBNeo1EtPdCQqMYW8F9RerrKKInWUSUgZ3mku+aNs3FlIJ8y6
+	sY7J8Ran5wjdZuCAjpLd3uJSmqHj4WID8qdUkSb8tp4Aq5uCk5t0mtrBFhtxCDnk
+	ebFGk8otf/BZt8Ogiqxxjpw23l6DXrKxpO/vlne1x1rHQ=
+Received: from [IPV6:240e:b8f:91b3:d000:e944:1037:cb1d:708] (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wCXDGAWyw1qlEHkCQ--.3498S2;
+	Wed, 20 May 2026 22:54:14 +0800 (CST)
+Message-ID: <5a771c43-bbba-49ce-9df8-fdd618289334@163.com>
+Date: Wed, 20 May 2026 22:54:14 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ag3EL10WAIImL9XR@google.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 2/3] PCI: cadence: Add HPA IP debugfs for LTSSM status
+To: Aksh Garg <a-garg7@ti.com>, bhelgaas@google.com, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org
+Cc: robh@kernel.org, mpillai@cadence.com, s-vadapalli@ti.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260519123609.1595280-1-18255117159@163.com>
+ <20260519123609.1595280-3-18255117159@163.com>
+ <d9d4aa30-8d30-4025-abde-0325e102fd8d@ti.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <d9d4aa30-8d30-4025-abde-0325e102fd8d@ti.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wCXDGAWyw1qlEHkCQ--.3498S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxtF15urWDtw45KryxCr43trb_yoW7XrWDpa
+	yDGF4fCa1xXay3Za93A3WUXF13tFn3Aa4UG3929347XFnxur1DJFnrKFW5KFZxGr4vgryx
+	Zas8tasrGr4ayrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR58nrUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xbVeWoNyxY7QgAA3S
 
-On Wed, May 20, 2026 at 02:24:47PM +0000, Pranjal Shrivastava wrote:
 
-> However, I'm thinking what's the right thing to do if pci_enable_ats() 
-> fails in attach_commit():
+
+On 5/20/26 15:26, Aksh Garg wrote:
 > 
-> 1. Fail to attach but unmerging the invs_array entry is complicated.
+> 
+> On 19/05/26 18:06, Hans Zhang wrote:
+>> Add debugfs support for HPA-based Cadence PCIe controllers. A new file
+>> 'ltssm_status' is created under debugfs, allowing users to read the
+>> current LTSSM state as a string and raw value.
+>>
+>> Signed-off-by: Hans Zhang <18255117159@163.com>
+>> ---
+>>   Documentation/ABI/testing/debugfs-cdns-pcie   |   5 +
+>>   drivers/pci/controller/cadence/Kconfig        |   9 +
+>>   drivers/pci/controller/cadence/Makefile       |   1 +
+>>   drivers/pci/controller/cadence/pci-sky1.c     |   4 +
+>>   .../controller/cadence/pcie-cadence-debugfs.c | 208 ++++++++++++++++++
+>>   .../cadence/pcie-cadence-host-hpa.c           |  19 +-
+>>   drivers/pci/controller/cadence/pcie-cadence.h | 153 +++++++++++++
+>>   7 files changed, 398 insertions(+), 1 deletion(-)
+>>   create mode 100644 Documentation/ABI/testing/debugfs-cdns-pcie
+>>   create mode 100644 drivers/pci/controller/cadence/pcie-cadence- 
+>> debugfs.c
+>>
+>> diff --git a/Documentation/ABI/testing/debugfs-cdns-pcie b/ 
+>> Documentation/ABI/testing/debugfs-cdns-pcie
+>> new file mode 100644
+>> index 000000000000..c1104e28e4ee
+>> --- /dev/null
+>> +++ b/Documentation/ABI/testing/debugfs-cdns-pcie
+>> @@ -0,0 +1,5 @@
+>> +What:        /sys/kernel/debug/cdns_pcie_<dev>/ltssm_status
+>> +Date:        March 2026
+>> +Contact:    Hans Zhang <18255117159@163.com>
+>> +Description:    (RO) Read will return the current PCIe LTSSM state in 
+>> both
+>> +        string and raw value.
+>> \ No newline at end of file
+>> diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/ 
+>> controller/cadence/Kconfig
+>> index 9e651d545973..cb010bc97aad 100644
+>> --- a/drivers/pci/controller/cadence/Kconfig
+>> +++ b/drivers/pci/controller/cadence/Kconfig
+>> @@ -6,6 +6,15 @@ menu "Cadence-based PCIe controllers"
+>>   config PCIE_CADENCE
+>>       tristate
+>> +config PCIE_CADENCE_DEBUGFS
+>> +    tristate "Cadence PCIe debugfs entries"
+>> +    depends on DEBUG_FS
+>> +    depends on PCIE_CADENCE_HOST || PCIE_CADENCE_EP
+>> +    help
+>> +      Say Y here to enable debugfs entries for the PCIe controller. 
+>> These
+>> +      entries provide various debug features related to the 
+>> controller and
+>> +      the LTSSM status of link can be displayed.
+>> +
+>>   config PCIE_CADENCE_HOST
+>>       tristate
+>>       depends on OF
+> 
+> Sashiko pointed the compilation issues when this is build as a module.
+> The linkage issue needs to be resolved if we want this as a module.
+> Also, if we build it as m, it would requires MODULE_LICENSE() and 
+> MODULE_DESCRIPTION().
 
-Is it? We should be able to keep the the original invs and not free
-it, just put the pointer back?
+Hi Aksh,
 
-> 2. Move the pci_enable_ats() to attach_prepare()
+Will add.
 
-IIRC ATS cannot be enabled until the invs are loaded with ATS
-invalidations, hence the issue.
 
-So you'd put the new invs list, turn on ATS, if it fails restore the
-invs list back to what it was and RCU free the new one(s).
+> 
+>> diff --git a/drivers/pci/controller/cadence/Makefile b/drivers/pci/ 
+>> controller/cadence/Makefile
+>> index b8ec1cecfaa8..2cdc4617e0c2 100644
+>> --- a/drivers/pci/controller/cadence/Makefile
+>> +++ b/drivers/pci/controller/cadence/Makefile
+>> @@ -4,6 +4,7 @@ pcie-cadence-host-mod-y := pcie-cadence-host-common.o 
+>> pcie-cadence-host.o pcie-c
+>>   pcie-cadence-ep-mod-y := pcie-cadence-ep.o
+>>   obj-$(CONFIG_PCIE_CADENCE) = pcie-cadence-mod.o
+>> +obj-$(CONFIG_PCIE_CADENCE_DEBUGFS) += pcie-cadence-debugfs.o
+>>   obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host-mod.o
+>>   obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep-mod.o
+>>   obj-$(CONFIG_PCIE_CADENCE_PLAT) += pcie-cadence-plat.o
+>> diff --git a/drivers/pci/controller/cadence/pci-sky1.c b/drivers/pci/ 
+>> controller/cadence/pci-sky1.c
+>> index e1f4a98e2ab6..b8632f1d3156 100644
+>> --- a/drivers/pci/controller/cadence/pci-sky1.c
+>> +++ b/drivers/pci/controller/cadence/pci-sky1.c
+>> @@ -221,6 +221,10 @@ MODULE_DEVICE_TABLE(of, of_sky1_pcie_match);
+> 
+> [ ... ]
+> 
+>>   /**
+>> @@ -447,6 +583,7 @@ void cdns_pcie_host_disable(struct cdns_pcie_rc *rc);
+>>   void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
+>>                      int where);
+>>   int cdns_pcie_hpa_host_setup(struct cdns_pcie_rc *rc);
+>> +void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc);
+>>   #else
+>>   static inline int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
+>>   {
+>> @@ -472,6 +609,10 @@ static inline void cdns_pcie_host_disable(struct 
+>> cdns_pcie_rc *rc)
+>>   {
+>>   }
+>> +static inline void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc)
+>> +{
+>> +}
+>> +
+>>   static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus, 
+>> unsigned int devfn,
+>>                            int where)
+>>   {
+>> @@ -535,4 +676,16 @@ bool cdns_pcie_hpa_link_up(struct cdns_pcie *pcie);
+>>   extern const struct dev_pm_ops cdns_pcie_pm_ops;
+>> +#ifdef CONFIG_PCIE_CADENCE_DEBUGFS
+> 
+> Use "#if IS_ENABLED(CONFIG_PCIE_CADENCE_DEBUGFS)" to resolve the 
+> compilation error when building as a module.
+> 
 
-Jason
+Will change.
+
+Best regards,
+Hans
+
+>> +void cdns_pcie_debugfs_deinit(struct cdns_pcie *pci);
+>> +void cdns_pcie_debugfs_init(struct cdns_pcie *pci);
+>> +#else
+>> +static inline void cdns_pcie_debugfs_deinit(struct cdns_pcie *pci)
+>> +{
+>> +}
+>> +static inline void cdns_pcie_debugfs_init(struct cdns_pcie *pci)
+>> +{
+>> +}
+>> +#endif
+>> +
+>>   #endif /* _PCIE_CADENCE_H */
+
