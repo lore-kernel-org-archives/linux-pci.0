@@ -1,188 +1,152 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD696361670;
-	Wed, 20 May 2026 19:59:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4813E35AC2F
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 19:59:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779307143; cv=none; b=lHfX/KNtrJ+7tg3S3v65m47DW8BTO8GRe8DL2RtCvII+44iivQXsoMMigoYw4AeF9ADPhEkcg2uE+r/C+GnHGJAbOQVTY01PVF7qN8uthw5mPDXA1edNFpr+IVifI5a+cdfHQHBDG+WtUMm95jdFatRK47LNJmGfYEswRfFlCuw=
+	t=1779307189; cv=none; b=o/b0vyu3Qa3xgqNYioETFmvGwLTvyEJ5AFvuuIi2HCFvM/Fica68wfg+EUzVn46ybVPKt8iPvYsrTENLZAbBlkr+/PXNpWVx5xAhpstZHqX0PP14AXIqN4eo0yTto+KJO3tbaJg7l1VfElBeh81cMw/4fE15pXZU1W9xyD/Deyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779307143; c=relaxed/simple;
-	bh=Bz05hZqUiRaxeMa30drXVtsWG8NAqGrcAzLb8JM+ddA=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PXVsusHd8b0D1nGl2FPhFp8FpNf3T26vvdL48y6h/IYBVL6pAXoTIGZKxnQrUYJj6k9utOiFD9pqZWv6SyCZAsClqa6xTuwMB4D7SZnoeVqRTo34emRsCymgZdogl0SP0NpDlXwkwXLP9SIpPn+r6F68MbZeU101GVl3yVYLc4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KkG0h3HZ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779307189; c=relaxed/simple;
+	bh=D48MLhdimnHd1LVpIKs+Fne8Wf29heFga7F29oK53F8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=EmcGKBOlUxGgbQINcNBo3nXuHOFGaojtcj1YMWIchY8Tt1lYfoq27gWjJEKcaT0rmcHrzq7Lo/w7YJVTtnzgmS+MEoacONvw2xbXhmaYHpuv9DiSFm1rEumUCM1JkWUjzv5eMcpqnQ0iCd2jPNeARpQIpnHR/7pT/SpnHd81/cM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cfp9cpm0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KkG0h3HZ"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 47DCB1F00893;
-	Wed, 20 May 2026 19:59:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cfp9cpm0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0D1B1F000E9;
+	Wed, 20 May 2026 19:59:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779307141;
-	bh=cBYu2GQc6MoTLCxtxKTqbYy4E2npoA7fcMHsRIGQpuM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=KkG0h3HZCk2u4rbRBRv1CRod6SfsAyCcBeaNM8cXJDiOoqTVrKR15PLdmEaPWSnNl
-	 pxPerPBzkwH1UCir9Njn+6W9nb5LQP/AZ7ySB5sXMV/LDLVfjYjyTUZy2ilvSocas8
-	 IQjfxSBYl31SiQ4AKTPF/MweXa5NRZpbOQhaF0knIXM2IXpJ7nFVh9qMppxMCP25mP
-	 xWzwu8YiYpH39K8q5reCKndbBuvClS30jWNCOKawY0diQkct9rl3NlbRtwfzmreS9V
-	 nrKAcd0S1yjwPdZolN+5R7KHUrhT73680UQIEiOfBBcDozpi7OE+vxVN625y0knHD1
-	 BzVOFOEIe1Y/g==
-Date: Wed, 20 May 2026 14:59:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Caleb James DeLisle <cjd@cjdns.fr>
-Cc: linux-pci@vger.kernel.org, linux-mips@vger.kernel.org,
-	naseefkm@gmail.com, ryder.lee@mediatek.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, mani@kernel.org, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v8 1/3] PCI: mediatek: Use actual physical address
- instead of virt_to_phys()
-Message-ID: <20260520195900.GA86018@bhelgaas>
+	s=k20260515; t=1779307188;
+	bh=q/ncXbTpWV+EptIQAiv+ARpSAY2xagdJSvopEx2yYm4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Cfp9cpm0JsCk/h0XbcyN2A7/fHnM3E4eUhinEqJAmA04M+V3fqDMOi64sZIR8v5qU
+	 /gPJBUncavFyuRjUTi+g+iPaATFK0Q3+/7rS3pRt0r8eKFlKmBFg/xYxAJVXQ+XpcM
+	 pFhaUCWR8IZmANb1LhlUDliRp92sKAGFWN5x5COziyDWXD/xTYfueT1YiS3RfcTlEv
+	 UTTliM/YFXeQTWEaBstA0JWgCfqoTI7bYpFyam4PMO2omR4W7Zapw/zclh7an1UDfm
+	 Moc0ZFKOAm77xUklvd/45Z6gXpIKts2Xf6bzKHSw7SbSCXWDRTsaCZWRGpk/ALUfiK
+	 udELeNRun0GIg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v17 5/7] vfio-pci/zdev: Add a device feature for error
+ information
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Farhan Ali" <alifm@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260520171113.1111-6-alifm@linux.ibm.com>
+References: <20260520171113.1111-6-alifm@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 20 May 2026 19:59:47 +0000
+Message-Id: <20260520195947.A0D1B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <afd47d4b-8309-4025-a40b-29606fed3c50@cjdns.fr>
 
-On Wed, May 20, 2026 at 09:17:35PM +0200, Caleb James DeLisle wrote:
-> 
-> On 20/05/2026 20:55, Bjorn Helgaas wrote:
-> > On Wed, May 20, 2026 at 06:38:25PM +0000, Caleb James DeLisle wrote:
-> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > 
-> > > The driver previously used virt_to_phys() on the ioremapped register base
-> > > (port->base) to compute the MSI message address. Using virt_to_phys() on an
-> > > IO mapped address is incorrect because it expects a kernel virtual address.
-> > > 
-> > > To fix it, store the physical start of the I/O register region in
-> > > mtk_pcie_port->phys_base and use it to build the MSI address. This replaces
-> > > the incorrect virt_to_phys() usage and ensures MSI addresses are generated
-> > > correctly.
-> > > 
-> > > Fixes: 43e6409db64d ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
-> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > Tested-by: Caleb James DeLisle <cjd@cjdns.fr>
-> > > ---
-> > >   drivers/pci/controller/pcie-mediatek.c | 16 +++++++++++++---
-> > >   1 file changed, 13 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > > index 75722524fe74..c503fbd774d0 100644
-> > > --- a/drivers/pci/controller/pcie-mediatek.c
-> > > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > > @@ -175,6 +175,7 @@ struct mtk_pcie_soc {
-> > >   /**
-> > >    * struct mtk_pcie_port - PCIe port information
-> > >    * @base: IO mapped register base
-> > > + * @phys_base: Physical address of the I/O register base region
-> > >    * @list: port list
-> > >    * @pcie: pointer to PCIe host info
-> > >    * @reset: pointer to port reset control
-> > > @@ -196,6 +197,7 @@ struct mtk_pcie_soc {
-> > >    */
-> > >   struct mtk_pcie_port {
-> > >   	void __iomem *base;
-> > > +	phys_addr_t phys_base;
-> > >   	struct list_head list;
-> > >   	struct mtk_pcie *pcie;
-> > >   	struct reset_control *reset;
-> > > @@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> > >   	phys_addr_t addr;
-> > >   	/* MT2712/MT7622 only support 32-bit MSI addresses */
-> > > -	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > > +	addr = port->phys_base + PCIE_MSI_VECTOR;
-> >
-> > This doesn't look right because the MSI address is a PCI bus address,
-> > and port->phys_base is a CPU physical address.  Often a PCI bus
-> > address is the same as the CPU physical address, but not always.
-> > I think the DT 'ranges' property tells you the translation.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] The newly introduced UAPI structure `struct vfio_device_feature_=
+zpci_err` uses C bitfields and contains implicit compiler padding, violatin=
+g standard Linux UAPI design principles.
+- [Medium] Pending PCI error events are permanently lost if `copy_to_user` =
+fails, because the event is destructively dequeued from the kernel ring buf=
+fer prior to the copy.
+--
 
-Oops, sorry, I muddied the waters here.
+commit a4660375ffb0dd291a17be2bdc78cd55dbb931ab
+Author: Farhan Ali <alifm@linux.ibm.com>
 
-'ranges' tells you the translation applied by a bridge, e.g., when a
-CPU does a load/store, the PCI host bridge turns it into a PCI
-read/write transaction.  The bridge might add an offset to the CPU
-load/store physical address to get the PCI read/write bus address.
+vfio-pci/zdev: Add a device feature for error information
 
-But that's not the issue here.  The MSI is basically a DMA write
-performed by the PCI device, not a store done by a CPU, so I don't
-think 'ranges' is the right thing to look at.
+This commit adds a new device feature to expose platform-specific zPCI
+error information to userspace. This allows userspace to handle errors
+and perform recovery for these devices.
 
-Based on this:
-https://elinux.org/Device_Tree_Usage#PCI_DMA_Address_Translation
-I think 'dma-ranges' is the relevant property.  I don't think your DT
-includes a 'dma-ranges' property, and in that case the default is that 
-the system bus (CPU) address is the same as the PCI address.
+> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci=
+_zdev.c
+> index 78a28db00c6d6..cc148123a97b8 100644
+> --- a/drivers/vfio/pci/vfio_pci_zdev.c
+> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
+[ ... ]
+> @@ -141,6 +141,45 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core=
+_device *vdev,
+>  	return ret;
+>  }
+> =20
+> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+> +			      void __user *arg, size_t argsz)
+> +{
+[ ... ]
+> +	ret =3D zpci_get_pending_error(zdev, &ccdf);
+> +	if (ret)
+> +		return ret;
+> +
+> +	err.fh =3D ccdf.fh;
+> +	err.fid =3D ccdf.fid;
+> +	err.ett =3D ccdf.ett;
+> +	err.mvn =3D ccdf.mvn;
+> +	err.dmaas =3D ccdf.dmaas;
+> +	err.q =3D ccdf.q;
+> +	err.rw =3D ccdf.rw;
+> +	err.faddr =3D ccdf.faddr;
+> +	err.pec =3D ccdf.pec;
+> +
+> +	if (copy_to_user(arg, &err, sizeof(err)))
+> +		return -EFAULT;
 
-So I think this patch works because it assumes DMA addresses like the
-MSI address are mapped to identical system bus addresses.
+[Severity: Medium]
+If copy_to_user() fails here, is the pending PCI error permanently lost?
 
-It still seems to me that drivers should be prepared for the presence
-of dma-ranges and use it when computing the MSI target address.  But I
-don't think any drivers really do that, so for now I think you should
-pretend that I never responded about this patch.
+Looking at zpci_get_pending_error() introduced earlier in this patch, it
+destructively dequeues the event by advancing the head pointer and
+decrementing the count:
 
-> This is all still a little over my head here, but my understanding was that
-> this is in the middle of the device's register map because the DT has the
-> following:
-> 
-> reg = <0x1fb83000 0x1000>;
-> reg-names = "port1";
-> 
-> Per the manual, that offset (base + 0xc0) is in undocumented area but it's
-> in the registers.
-> 
-> The PCI memory is 0x20000000 - 0x2fffffff and we split it between the two
-> devices. Here's the one using the upper half:
-> 
->         ranges = <0x81000000 0 0x00000000 0x1f608000 0 0x00008000>,  (IO)
-> 
->              <0x82000000 0 0x28000000 0x28000000 0 0x08000000>;      (MEM)
-> 
-> Hope I'm adding something useful here... Let me know if you want me to get
-> or test anything else.
+arch/s390/pci/pci_event.c:zpci_get_pending_error() {
+        ...
+        zdev->pending_errs.head++;
+        zdev->pending_errs.count--;
+        return 0;
+}
 
-Obviously it's over my head too, so I'm sorry I confused the
-situation.
+Returning -EFAULT after this point leaves the event discarded completely.
+Would it be better to only dequeue the event from the ring buffer after
+verifying the transfer to userspace succeeds?
 
-> > >   	msg->address_hi = 0;
-> > >   	msg->address_lo = lower_32_bits(addr);
-> > > @@ -520,7 +522,7 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
-> > >   	u32 val;
-> > >   	phys_addr_t msg_addr;
-> > > -	msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > > +	msg_addr = port->phys_base + PCIE_MSI_VECTOR;
-> > >   	val = lower_32_bits(msg_addr);
-> > >   	writel(val, port->base + PCIE_IMSI_ADDR);
-> > > @@ -953,6 +955,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
-> > >   	struct mtk_pcie_port *port;
-> > >   	struct device *dev = pcie->dev;
-> > >   	struct platform_device *pdev = to_platform_device(dev);
-> > > +	struct resource *res;
-> > >   	char name[20];
-> > >   	int err;
-> > > @@ -961,7 +964,14 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
-> > >   		return -ENOMEM;
-> > >   	snprintf(name, sizeof(name), "port%d", slot);
-> > > -	port->base = devm_platform_ioremap_resource_byname(pdev, name);
-> > > +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
-> > > +	if (!res) {
-> > > +		dev_err(dev, "failed to get port%d base\n", slot);
-> > > +		return -EINVAL;
-> > > +	}
-> > > +
-> > > +	port->phys_base = res->start;
-> > > +	port->base = devm_ioremap_resource(&pdev->dev, res);
-> > >   	if (IS_ERR(port->base)) {
-> > >   		dev_err(dev, "failed to map port%d base\n", slot);
-> > >   		return PTR_ERR(port->base);
-> > > -- 
-> > > 2.39.5
-> > > 
+[ ... ]
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 5de618a3a5eee..3eead86a00ab2 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+[ ... ]
+> +struct vfio_device_feature_zpci_err {
+> +	__u32 feature_flags;		/* Indicate future features */
+> +	__u32 reserved1;
+> +	__u32 fh;			/* function handle */
+> +	__u32 fid;			/* function id */
+> +	__u32 ett		:  4;	/* expected table type */
+> +	__u32 mvn		: 12;	/* MSI vector number */
+> +	__u32 dmaas		:  8;	/* DMA address space */
+> +	__u32 reserved2		:  6;
+> +	__u32 q			:  1;	/* event qualifier */
+> +	__u32 rw		:  1;	/* read/write */
+> +	__u64 faddr;			/* failing address */
+> +	__u32 reserved3;
+> +	__u16 reserved4;
+> +	__u16 pec;			/* PCI event code */
+> +	__u8 reserved5[28];		/* Allow for future expansion */
+> +};
+
+[Severity: Medium]
+Does this UAPI structure rely on compiler-dependent C bitfields?
+
+Since bit-ordering and layout for bitfields are not strictly guaranteed
+across toolchains, would it be safer to use explicit integer types
+combined with bitmask macros for this UAPI design?
+
+Additionally, does this layout introduce implicit compiler padding gaps
+before the 8-byte aligned faddr field, and at the end of the struct?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520171113.1111=
+-1-alifm@linux.ibm.com?part=3D5
