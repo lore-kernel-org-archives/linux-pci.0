@@ -1,83 +1,133 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 27F863F660B;
-	Wed, 20 May 2026 18:27:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EECF7409620;
+	Wed, 20 May 2026 18:38:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779301632; cv=none; b=MJ8IKYEw8kh4NEU2TPb37nG1XzEEZCu0lcwGf/Oqjf7cjq1gLJpMBGODjoZYFIiQ5IrD04x682j0DlalllwfzkbLkoQ8Gv5C9/IOPJXUgfqEkAYIceZES2zH7jaiA1suomGwE5ewObvj7OUgPg35CVW1p7SwFhxXZ+8ZRzjGMzE=
+	t=1779302333; cv=none; b=V0tE7mk0CBl0XKFt4cGUbF4zc8I2IfgAdco5ZPqAbkfJ6/yVDPVC5TPQWUcOObTCvhbrhaj2+pN7pdylt4JhO3X98c6EirMwrWr4ucv2YzYHl7KHvZzy1TTlbql3Pj+2TfzqF5X++4MQhizHILnmTC+rN9NKhUvH3eG5Qfx6INQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779301632; c=relaxed/simple;
-	bh=fTdmivmwVagTXRKs9Rs6wXSEQpi13QJ4Juq0z4rNBx4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=TF+qmdTwYM5kReIOWXWgPgO9BribQ7Rtt/KHpN2urJCzvCeWeNn5AM9kiyd5O+Fg+WrP1VbgtjV8rOKhw5mIz9ukFfy+JHe4AYEG8zHMTTDlM9oP4AD9YBxT/gchQ18gaQ5B0swct1UyzAN9Du0FnhsTE6hVgQjOt7UeYI7IfrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=GMSX5ZVz; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1779302333; c=relaxed/simple;
+	bh=gO0vX8otu5jcy21NlFdIZVJ2xqHdtM+c6OAbFEFkZs0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TgqVI+PlabMAleDtoFYMWQO46C0Za1a3UOG1oMGQcocIyrKK13O7lYBYMyOnNebbYtt67se5GUulxPjHV2x+iIWZC8z5+Ypjxtj7XXTR+GRcH9XCcqvw6sBqPy1bmFqO49wBJUnvLXUxgOloI/lgVpQBAjIQt1foui6zr+WYy9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=cCoYpIfF; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="GMSX5ZVz"
-Received: from localhost (unknown [40.65.108.177])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 301DE20B7167;
-	Wed, 20 May 2026 11:27:03 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 301DE20B7167
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1779301623;
-	bh=uYPToCkYVV4AyipGNqeIKkJ9ehryN1iaVuRL+SUlIkU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=GMSX5ZVzpdCJ7txbFSiQ+RgeIwjW5AC2umvJEC0SXJ4sxH+qfUNon5JMe8Ov7Big0
-	 ns9NCzb3OoloVQ3onUvHqIbOtkfkeXz9hsZnpwaPGgoSZWYASKIUjkPhXSrLpxcxzD
-	 V5idt0yY21CoiGef7e5fCp8Ewm+XmcWc6ZZENgXw=
-Date: Wed, 20 May 2026 11:27:08 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Yu Zhang <zhangyu1@linux.microsoft.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, linux-kernel@vger.kernel.org,
- linux-hyperv@vger.kernel.org, iommu@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org, wei.liu@kernel.org,
- kys@microsoft.com, haiyangz@microsoft.com, decui@microsoft.com,
- longli@microsoft.com, joro@8bytes.org, will@kernel.org,
- robin.murphy@arm.com, bhelgaas@google.com, kwilczynski@kernel.org,
- lpieralisi@kernel.org, mani@kernel.org, robh@kernel.org, arnd@arndb.de,
- mhklinux@outlook.com, tgopinath@linux.microsoft.com,
- easwar.hariharan@linux.microsoft.com, jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH v1 3/4] iommu/hyperv: Add para-virtualized IOMMU support
- for Hyper-V guest
-Message-ID: <20260520112708.00003640@linux.microsoft.com>
-In-Reply-To: <yqhb6vxoovscvfafgv6i6zn7uydpfxeff7hqmvbn6z7c2tjqp6@jn2vvtxqgfef>
-References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
-	<20260511162408.1180069-4-zhangyu1@linux.microsoft.com>
-	<20260515223139.GK7702@ziepe.ca>
-	<yqhb6vxoovscvfafgv6i6zn7uydpfxeff7hqmvbn6z7c2tjqp6@jn2vvtxqgfef>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="cCoYpIfF"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B8F4943F049;
+	Wed, 20 May 2026 20:38:42 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1779302328; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding; bh=1Q+DUj6quLCu7/0XzKw/Ld31FKjchs0VypEWPUC2DOA=;
+	b=cCoYpIfFH0wHK2F1txC52XB+pdQzqrcZvWWbu8X+sUNkqyMtq2PpFVl7hFwejDHTNNIPlF
+	S2KPub8WAC8A6LSmLC8WQoXgG804/h8T+Nd1A0PGLzDvVpJNPOQrCtSnh7ojC2Y+3WsPet
+	QChCi/HQ3f6rUsGoJisSIVXFRuSIo2AfMzviPGrNhbebR1T/7nTtVjFrW9gZEDuaJFV0O8
+	6x/7mJVfOoSG2xT4E730KyHNwezhPhrbcxHmCdA9yc4WLrri40UQepadZYC7L/eSFE+XIu
+	Lm91eVHA22npBqo1+UffuxsnqyoZ51sVWi1Nv5kzmDi2Sw9heHMdN6GF4DFV9A==
+From: Caleb James DeLisle <cjd@cjdns.fr>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@vger.kernel.org,
+	naseefkm@gmail.com,
+	ryder.lee@mediatek.com,
+	helgaas@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Caleb James DeLisle <cjd@cjdns.fr>
+Subject: [PATCH v8 0/3] Add EcoNet EN7528 (and EN751221) PCIe support.
+Date: Wed, 20 May 2026 18:38:24 +0000
+Message-Id: <20260520183827.908243-1-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-Hi Yu,
+Tested on SmartFiber XP8421-B (EN751221)
 
-On Wed, 20 May 2026 23:25:43 +0800
-Yu Zhang <zhangyu1@linux.microsoft.com> wrote:
+Changes from v7:
+* mtk_pcie_retrain retrain all root ports not just first
+* Include fix from Manivannan Sadhasivam, wrong usage of virt_to_phys()
 
-> > > +static const struct iommu_domain_ops
-> > > hv_iommu_identity_domain_ops = {
-> > > +	.attach_dev	= hv_iommu_attach_dev,
-> > > +};
-> > > +
-> > > +static const struct iommu_domain_ops
-> > > hv_iommu_blocking_domain_ops = {
-> > > +	.attach_dev	= hv_iommu_attach_dev,
-> > > +};  
-> > 
-> > Usually I would expect these to have their own attach
-> > functions. blocking in particular must have an attach op that cannot
-> > fail. It is used to recover the device back to a known translation
-> > in case of cascading other errors.
-> >   
-> 
-> For blocking domain, the hypercall handler of such attach essentially
-> disable the translation and IOPF for the device.
-I think this should disable all faults, including unrecoverable fault
-reporting. right?
+Changes from v6:
+* s/reset/resets/ in .yaml
+* s/re-train/retrain/g
+* s/Root bridge/Root port/
+* If module not builtin, log at mtk_pcie_startup_port_en7528()
+* Do not fail if error in mtk_pcie_retrain()
+* v6: https://lore.kernel.org/linux-mips/20260513191652.3200607-1-cjd@cjdns.fr
+
+Changes from v5:
+* s/errno-base.h/errno.h/
+* Breakout mtk_pcie_retrain() into a function
+* Use for_each_pci_bridge() to find root bridge
+* v5: https://lore.kernel.org/linux-mips/20260413140339.16238-1-cjd@cjdns.fr/
+
+Changes from v4:
+* Fixed missing Acked-by
+* Rebased to commit 66672af7a095 ("Add linux-next specific files for 20260410")
+* v4: https://lore.kernel.org/linux-mips/20260404182854.2183651-1-cjd@cjdns.fr/
+
+Changes from v3:
+* s/initiallized/initialized/
+* Use PCIE_T_PVPERL_MS for sleep time
+* Use PCI_PM_D3COLD_WAIT for startup wait time
+* Clarify comment "Activate INTx interrupts"
+* Add MTK_PCIE_RETRAIN quirk for devices which require link re-train
+* Do not retrain *all* bridges, only root bridge
+* Better comments and logging in retraining logic
+* v3: https://lore.kernel.org/linux-mips/20260320094212.696671-1-cjd@cjdns.fr/
+
+Changes from v2:
+* mediatek-pcie.yaml -> s/power-domain/power-domains/ and drop example
+* Patch 3 dropped as it has been applied (Thanks!)
+* v2: https://lore.kernel.org/linux-mips/20260316155157.679533-1-cjd@cjdns.fr/
+
+Changes from v1:
+* mediatek-pcie.yaml slot0 needs device-type = "pci", fix dt_binding_check
+Link: https://lore.kernel.org/linux-mips/177334026016.3889069.9474337544951486443.robh@kernel.org
+* v1: https://lore.kernel.org/linux-mips/20260312165332.569772-1-cjd@cjdns.fr/
+
+This was split from a larger PCIe patchset which crossed multiple
+subsystems. I'm not labeling this a v3 because it's a new patchset, but
+I'm keeping the historical record anyway.
+
+Changes from econet-pcie v2:
+* mediatek-pcie.yaml add missing constraints to PCI node properties
+* econet-pcie v2: https://lore.kernel.org/linux-mips/20260309131818.74467-1-cjd@cjdns.fr
+
+Changes from econet-pcie v1:
+* pcie-mediatek.c Exclude pcie_retrain_link() when building as a module
+* econet-pcie v1: https://lore.kernel.org/linux-mips/20260303190948.694783-1-cjd@cjdns.fr/
+
+
+Caleb James DeLisle (2):
+  dt-bindings: PCI: mediatek: Add support for EcoNet EN7528
+  PCI: mediatek: Add support for EcoNet EN7528 SoC
+
+Manivannan Sadhasivam (1):
+  PCI: mediatek: Use actual physical address instead of virt_to_phys()
+
+ .../bindings/pci/mediatek-pcie.yaml           |  26 +++
+ drivers/pci/controller/Kconfig                |   2 +-
+ drivers/pci/controller/pcie-mediatek.c        | 168 +++++++++++++++++-
+ 3 files changed, 192 insertions(+), 4 deletions(-)
+
+
+base-commit: 687da68900cd1a46549f7d9430c7d40346cb86a0
+-- 
+2.39.5
+
