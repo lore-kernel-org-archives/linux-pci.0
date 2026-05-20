@@ -1,134 +1,271 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3352C11CF
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 21:45:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54D1E381B04
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 21:55:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779313533; cv=none; b=R0NaZd040Mp64v2TJ9/Ccwj9L7nYyuIlh5yxV9JO2Ru23NsqZSvak0E8P2Jt9IhrLj8q2vmkTXaOGwFxaFcElKkqW0UC7u8lsYY2+RYEBX0RTJbYLNuendkNHrkMZA854lmGKKVPbTWk6+GWK2z0CNlHmMS+zboMBZS+jDOxZxo=
+	t=1779314103; cv=none; b=MurjObaMis4wnLnMwj4ukKx4eWHuDZgd1s1iBoFHV6zf53LYCapiKdJvEiqRfTK5g7EEDUihrJRh5d8bMx177RTmalySpDTljpYJ/jCjt4xTJsG8zj7A0675z/BbH0MsKjGzenK0ICFzBeGQzLQNaEFJ0MU5P+u2NuyUPzXPNYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779313533; c=relaxed/simple;
-	bh=Aa3fqoKZm3j64VZe4oIttfwO4JjnS9EFHMB8RESJC7U=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PQpR8Rw9fwpRq/JV10p70GZEqPvjyv4BH/DOqhTyNPeV8OlQYiwbP2LLU7L47eULpxeQwGIHd+Z/sBmigTDaMxFcn2lVYcLRES4deRGX8SsQkdLCYdCEbeeIWNyBHewhk0+Jfg9Lg+SN2ZKaiuDMLyaS7ushjtyXhSg63spd51k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZh/FKLm; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779314103; c=relaxed/simple;
+	bh=+CXFZOD+Y2b+42FoTEHtxtoiXw+q957/TpCFaUNzM+g=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QTUhz/nIPOnH+I5AEuen1oL6j6mEKZg/W0GvpFPFyS0b7GZR2igQrpzLxOO19+iyc/8OJiniNB+9Z4aedHLjGxLicfSca7Rt49oDWITpp6P+xTr+OYpqTCrTpBMkOFw63bsoUNxOA4EYkl7UWWL1ah16/ApV2OPIAqaQngHg6+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=e5DT8ssw; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZh/FKLm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E74B1F000E9;
-	Wed, 20 May 2026 21:45:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779313532;
-	bh=JDo+o7R4vlDoYJj3JNYPDC5dAAgJB4yuyOyeeAUKP1s=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OZh/FKLmU13c9NJTG0IXwNrza/HuAYxyAQwJb+fcy32DXCG5z0Lk5e8FPE1Dj/RpB
-	 +E8SCDK9rxF7vHipPvSOH0j4Wznqo94+ATD54kS0h/dxdIUqDAunghJF0hQlpO1dvo
-	 kpwZQpVisS74eVY//7MZlXG2nX6Af9vS3V+U/wISTO+q2gaJsWLzsogrd+5a5xWFv/
-	 z2VsbLPbd7+JDcqWd9+O4Trq62KiUQSp2aw/L/ZvpYK8IqCapc4ePivSa2LNYN/h+C
-	 BZO65AA6VDYQt76jNl6Xj1gSeq93p/pKwYwkI9aY/P/DFDjKBkYlAtDxtRbJBV6W4W
-	 8Pq5M1UXwSmeA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI/sysfs: NULL res_attr slot after kfree as defence
- against double-remove
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gianfranco Dutka" <gianfranco.dutka@arista.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
-References: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 20 May 2026 21:45:31 +0000
-Message-Id: <20260520214532.1E74B1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="e5DT8ssw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779314101; x=1810850101;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=+CXFZOD+Y2b+42FoTEHtxtoiXw+q957/TpCFaUNzM+g=;
+  b=e5DT8sswrOcE0YVUkBIx3ud6LYOhg1kmwNIGxiJQkFaFSa6fLKo6ACTl
+   oOsXg7pYQznsw/VWJzXeFIaRn5eDIIOijf5x1it8bB/6naJ0PlNtmnMeo
+   HoeyQrjCQBAGZAvbELDY2qvcGdT5/jUxFvCYkQK7kgJI6AiDxMPXf6ljy
+   9lTXdEZ6s2MYqimF2+z8M7+xv7VTP/OzuCCNesLlCMmAD5XCl6dQA2tZV
+   v2F0byKNBYHD9Qv2pC/tGGE9DDNb7ftJzxOk8B2kOmRnFP+0vYWhjmItg
+   Ur8KAfOhoLzHfiKwqIyymphHvJ3DiKRPV3dfoR9hoA5jP6Jl1JzGI84yQ
+   w==;
+X-CSE-ConnectionGUID: b+IdC2jxSFCVr3ICRKkJwg==
+X-CSE-MsgGUID: Arrnj6e9S9ynPsj+f1tquA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11792"; a="84083787"
+X-IronPort-AV: E=Sophos;i="6.23,245,1770624000"; 
+   d="scan'208";a="84083787"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2026 14:55:00 -0700
+X-CSE-ConnectionGUID: RcbajyMHTneVP/oXLqfwUQ==
+X-CSE-MsgGUID: pf9+jegwTkayTED+WuejjA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,245,1770624000"; 
+   d="scan'208";a="278446858"
+Received: from patelni-desk.amr.corp.intel.com (HELO localhost) ([10.2.248.44])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2026 14:54:59 -0700
+Date: Wed, 20 May 2026 14:54:57 -0700
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: vmd: Add feature to scan BIOS enumerated
+ devices.
+Message-ID: <20260520145457.00001f52@linux.intel.com>
+In-Reply-To: <20260519160505.704F2C2BCB3@smtp.kernel.org>
+References: <20260519151832.9005-1-nirmal.patel@linux.intel.com>
+	<20260519160505.704F2C2BCB3@smtp.kernel.org>
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Tue, 19 May 2026 16:05:04 +0000
+sashiko-bot@kernel.org wrote:
 
-Pre-existing issues:
-- [Critical] Invalid kfree() causing slab corruption in arch/alpha/kernel/p=
-ci-sysfs.c
-- [High] Concurrent execution of pci_remove_resource_files() allows a data =
-race resulting in a Double-Free/UAF
---
+> Thank you for your contribution! Sashiko AI review found 4 potential
+> issue(s) to consider:
+> 
+> New issues:
+> - [High] Invalid VMD CFGBAR resource range calculated for older
+> hardware with restricted bus ranges.
+> - [High] VMD shadow register exposed to the child device resource
+> pool, risking memory corruption.
+> - [Medium] Silent failure and continued execution with uninitialized
+> variables if BAR4 is not an IORESOURCE_MEM.
+> 
+> Pre-existing issues:
+> - [High] Missing pci_free_irq_vectors() calls on error paths leaks
+> IRQ resources. --
+> 
+> commit fb1f4c20650569f7ba38772b55e3d4757083bcf4
+> Author: Nirmal Patel <nirmal.patel@linux.intel.com>
+> 
+> PCI: vmd: Add feature to scan BIOS enumerated devices.
+> 
+> Newer VMD with device ID 0x28c1 has unique settings compared to its
+> predecessor where BIOS enumerates the entire VMD device tree and
+> assigns respective configurations. This patch adds support to obtain
+> the bus hide range and shadow registers set by BIOS.
+> 
+> > diff --git a/drivers/pci/controller/vmd.c
+> > b/drivers/pci/controller/vmd.c index d4ae250d4bc6d..ca8738285659a
+> > 100644 --- a/drivers/pci/controller/vmd.c
+> > +++ b/drivers/pci/controller/vmd.c  
+> [ ... ]
+> > @@ -711,6 +773,55 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+> >  	return 0;
+> >  }
+> >  
+> > +static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
+> > +					unsigned long features,
+> > +					resource_size_t
+> > *membar2_offset,
+> > +					resource_size_t *offset1,
+> > +					resource_size_t *offset2)
+> > +{
+> > +	int ret;  
+> [ ... ]
+> > +	if (features & VMD_FEAT_USE_BIOS_INFO) {
+> > +		if (resource_type(&vmd->dev->resource[4]) ==
+> > IORESOURCE_MEM) {
+> > +			*membar2_offset = SHADOW_MEMBAR1_28C1 +
+> > MB2_SHADOW_SIZE;  
+> 
+> [Severity: High]
+> Does this offset calculation expose VMD configuration registers to
+> child devices?
+No. This is for vmd driver to read and assign bus start range and
+location of shadow registers.
+> 
+> The calculation SHADOW_MEMBAR1_28C1 + MB2_SHADOW_SIZE resolves to
+> 0x2828. However, the BASE_ID_REG_28C1 register is at offset 0x2840,
+> which falls after 0x2828.
+> 
 
-commit e4e0ea2861eb8f50c9e5303035a956c3614b2023
-Author: Gianfranco Dutka <gianfranco.dutka@arista.com>
+These two hardware registers don't have dependency. BASE_ID_REG_28C1
+holds bus start value. Since the hardware register is named as Base ID,
+I kept the name as it is.
 
-PCI/sysfs: NULL res_attr slot after kfree as defence against double-remove
+> If a child device maps a BAR over this region, could it overwrite the
+> VMD shadow register at 0x2840 and cause hardware misbehavior?
+> 
+> Should the offset be set large enough to protect all internal VMD
+> registers, such as >= 0x2848?
+There is no overlap. All of the these registers are separate.
+64-bit SHADOW_MEMBAR1_28C1 and SHADOW_MEMBAR2_28C1 are located at
+0x2818 and 0x2820. So the 16 byte size MB2_SHADOW_SIZE includes both of
+these registers.
+The BASE_ID_REG_28C1 is located at 0x2840, much farther from shadow
+registers.
+> 
+> > +			ret = vmd_get_bus_info_from_bar4(vmd,
+> > offset1, offset2);
+> > +			if (ret)
+> > +				return ret;
+> > +		}  
+> 
+> [Severity: Medium]
+> What happens if VMD_FEAT_USE_BIOS_INFO is set, but resource 4 is not
+> of type IORESOURCE_MEM?
+> 
+> Because the subsequent fallback checks use else if, they are bypassed
+> entirely. The function will silently return 0 without retrieving valid
+> offsets.
+> 
+> Will this cause the driver to probe with uninitialized offset values,
+> failing to handle broken hardware or firmware configurations?
 
-This patch clears the pdev->res_attr[i] and pdev->res_attr_wc[i] slots after
-calling kfree() in pci_remove_resource_files(). This is intended as
-defense-in-depth against double-remove scenarios, such as out-of-tree hotpl=
-ug
-drivers re-entering the teardown path.
+resource 4 is needed to obtain required information for bus scan. So
+unassigned resource 4 should return an error and stop the enumeration/
+probe. I can return an error in else part.
 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index d37860841260c..11961bb31301e 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1195,12 +1195,14 @@ static void pci_remove_resource_files(struct pci_=
-dev *pdev)
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
+> 
+> > +	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
+> > +		*membar2_offset = MB2_SHADOW_OFFSET +
+> > MB2_SHADOW_SIZE;
+> > +		ret = vmd_get_phys_offsets(vmd, true, offset1,
+> > offset2);  
+> [ ... ]
+> > @@ -784,38 +895,16 @@ static int vmd_enable_domain(struct vmd_dev
+> > *vmd, unsigned long features) struct pci_dev *dev;
+> >  	int ret;  
+> [ ... ]
+> > -	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
+> > -		ret = vmd_get_bus_number_start(vmd);
+> > -		if (ret)
+> > -			return ret;
+> > -	}
+> > +	ret = vmd_prepare_offsets_and_bus(vmd, features,
+> > &membar2_offset,
+> > +					  &offset[0], &offset[1]);
+> > +	if (ret)
+> > +		return ret;
+> >  
+> >  	res = &vmd->dev->resource[VMD_CFGBAR];
+> >  	vmd->resources[0] = (struct resource) {
+> >  		.name  = "VMD CFGBAR",
+> >  		.start = vmd->busn_start,
+> > -		.end   = vmd->busn_start + (resource_size(res) >>
+> > 20) - 1,
+> > +		.end   = (resource_size(res) >> 20) - 1,  
+> 
+> [Severity: High]
+> Does this change break bus enumeration for older hardware with
+> restricted bus ranges?
+> 
+> By unconditionally dropping vmd->busn_start from the .end calculation,
+> it works for the new 28C1 device with a busn_start of 0.
+> 
+> However, for an older device with busn_start = 128 and a 32 MB CFGBAR
+> size, .start would be 128, but .end would calculate to 31.
+> 
+> Could this create a malformed resource where .start > .end?
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does NULLing the pointer
-prevent a double free if this function is executed concurrently?
+This is a good point. But in my v1 patch, I kept vmd->busn_start +
+(resource_size(res) >> 20) - 1. it was flagged as an issue.
+If the busn_start is 128 and ConfigBar is 256 MB, then .end will be set
+to out of bound value. I can set hard coded value of 0xff same as
+pci/probe.c
 
-If a user writes to resourceN_resize via sysfs, __resource_resize_store()
-executes and acquires device_lock(). If no driver is bound
-(dev->driver =3D=3D NULL), it proceeds and calls pci_remove_resource_files(=
-).
+> 
+> >  		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+> >  	};  
+> [ ... ]
+> > @@ -868,19 +957,21 @@ static int vmd_enable_domain(struct vmd_dev
+> > *vmd, unsigned long features)
+> >  	 * acceptable because the guest is usually CPU-limited and
+> > MSI
+> >  	 * remapping doesn't become a performance bottleneck.
+> >  	 */
+> > -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+> > -	    offset[0] || offset[1]) {
+> > -		ret = vmd_alloc_irqs(vmd);
+> > -		if (ret)
+> > -			return ret;
+> > +	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
+> > +		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+> > +		    offset[0] || offset[1]) {
+> > +			ret = vmd_alloc_irqs(vmd);
+> > +			if (ret)
+> > +				return ret;  
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does this error path leak IRQ
+> resources?
+> 
+> According to PCI subsystem guidelines, every error path after a
+> successful pci_alloc_irq_vectors() must call pci_free_irq_vectors()
+> before returning.
+> 
+> If vmd_enable_domain() fails after allocating IRQs, or if
+> vmd_alloc_irqs() fails internally (e.g., during devm_kcalloc(),
+> init_srcu_struct(), or devm_request_irq()), it appears to return
+> directly without freeing the allocated MSI-X vectors.
+> 
+> Could this eventually exhaust system IRQ capacity?
 
-Concurrently, a hotplug remove event triggers pci_stop_dev(), which calls
-device_release_driver(). With no driver, this briefly acquires and releases
-device_lock(), then proceeds without the lock to pci_remove_sysfs_dev_files=
-(),
-which also calls pci_remove_resource_files().
+I can address this issue in another patch series as a bug fix or
+improvement. 
 
-Both threads can enter pci_remove_resource_files() concurrently, read the
-same non-NULL res_attr pointer before either sets it to NULL, and call
-kfree(res_attr), resulting in a data race and double free.
+> 
+> > +			vmd_set_msi_remapping(vmd, true);
+> >  
+> > -		ret = vmd_create_irq_domain(vmd);
+> > -		if (ret)
+> > -			return ret;
+> > -	} else {
+> > -		vmd_set_msi_remapping(vmd, false);
+> > +			ret = vmd_create_irq_domain(vmd);
+> > +			if (ret)
+> > +				return ret;
+> > +		} else {
+> > +			vmd_set_msi_remapping(vmd, false);
+> > +		}
+> >  	}
+> >  
+> 
 
-> +			pdev->res_attr[i] =3D NULL;
->  		}
-> =20
->  		res_attr =3D pdev->res_attr_wc[i];
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
-
-[Severity: Critical]
-This isn't a bug introduced by this patch, but could this kfree() corrupt
-the slab allocator on the alpha architecture?
-
-In arch/alpha/kernel/pci-sysfs.c:pci_create_attr(), when creating both
-sparse and dense files, a single memory block is allocated for two
-bin_attribute structures:
-
-    attr =3D kzalloc(sizeof(*attr) * res_count, GFP_ATOMIC);
-    ...
-    pdev->res_attr[num] =3D attr;
-    ...
-    attr++;
-    pdev->res_attr_wc[num] =3D attr;
-
-When pci_remove_resource_files() executes, it will first kfree() the base
-pointer at pdev->res_attr[i]. Then, it calls kfree() on pdev->res_attr_wc[i=
-],
-which points to the middle of the same slab allocation.  Passing a mid-slab
-pointer to kfree(), as well as freeing the same block twice, will cause
-memory corruption.
-
-> +			pdev->res_attr_wc[i] =3D NULL;
->  		}
->  	}
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520211306.3301=
-893-1-gianfranco.dutka@arista.com?part=3D1
