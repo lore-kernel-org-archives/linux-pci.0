@@ -1,143 +1,392 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022131.outbound.protection.outlook.com [52.101.96.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FD8C3C1974;
-	Wed, 20 May 2026 09:29:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779269366; cv=none; b=AC2GzK3vN4xSpYi3iliL5mbZg5qvA5CQvW66qmfOVW1x7Gf/GFBEkIoi16WvFTFeXJ1OLLelQxbYjp0CGw/wVQtrxa50eARkC/HW9tIs161nuDEAgKfmmTHXusVV9EICH4LAivXNIM/O3sfsvlCXLZFGb4Cv5dgu5BH6Xv3CUME=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779269366; c=relaxed/simple;
-	bh=xzcZeoD0niZUNOJsg+qcrFRZ/GvRmasUv2WFxCUDc0I=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=QHOi8YMDlrYXpyynr/GjVcUX+LiUtRuZhPyC2nxJsuWA8ahAB0zac6Kvw6qUlGUGPoOh7vr72Rm1yKNKcrKEZvIhtHzBU8/umdb/odWn6wy4lPWT0hdITm3CBBUTBNrLvmHELEN0Ht6yETuFY7Ar77zkUY8B5EVRc5WNANe+Ceo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PLvK/R+C; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC45C3A4F51;
+	Wed, 20 May 2026 09:34:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.96.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779269652; cv=fail; b=bZMaryHcTKfFD1oUBNb6/PuDeEpOetyzLCSnS1qrlyGbPKwTa/nZpfnaYdwif82Oq6qKYFWYrDxhnoUuogDJakm54ARcezK6p6tVETSLQJlKhB/7fwy9JXMx2euGAwFhTgZIgoLnwTqUlEUaWKKvSeQOxZJrcbgleWduxU11G/E=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779269652; c=relaxed/simple;
+	bh=1SZc4MsHZUB2+8hgr9+2XRvygdt9G/Vd1ZsbsE7Cqt8=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=Qd2HL8Kr72BQT2oYyy7HenmNo/fxXaRmDSKTpQXGq3U0xv6P4ttN1WqAydUz18eq47nPw0469RlHIh9iJUsnLMSw5sTAECGQNUshVMa6AYgPMVFDc4jXUZygxNSeKVEbYIlLdIwYZviaHP1EBEcXQmZBl9UbsSSkas6/1lFXHS4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=SxcSqpdP; arc=fail smtp.client-ip=52.101.96.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PLvK/R+C"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0EDD11F000E9;
-	Wed, 20 May 2026 09:29:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779269363;
-	bh=d3dUitqVHclDZ24VyLLVj/3e6tehsujLNP+nBiRE0GY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PLvK/R+ClRXHd4EPCx2dhi7VWBiJJEPsc3IDdBio0cGfbZ9XpFUnsQoltgtWXtl8t
-	 VQn0OhW4K/cGgfCl2xKfGRrQuE1X0L9PDgbzcxzDpVGGml7y6Jxu+jxX2BSApJhDs2
-	 5Rh5b5bhqIkV0ROcrM5wdRYZbDG+KxE985/Z+InaF/ohNqWdWR9OaWZabCky0+4O4P
-	 sE2LowjIST//KMEnf8JpI3bVHhKnWc+uAzRF6MTk5X9INkvzoXvmr+3Q2g9MCLsPoF
-	 vuENPIbzu2HCpzihstXFACU83okE5tOTyZHB+0ae1Ug88SME2GSjLgv1F1ugDwZPYT
-	 bMj4meWWknb0g==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v15 3/3] of: Respect #{iommu,msi}-cells in maps
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Vijayanand Jitta" <vijayanand.jitta@oss.qualcomm.com>
-Cc: imx@lists.linux.dev, conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
-In-Reply-To: <20260520-parse_iommu_cells-v15-3-b5f99ad4e7e8@oss.qualcomm.com>
-References: <20260520-parse_iommu_cells-v15-3-b5f99ad4e7e8@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="SxcSqpdP"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jpADTVA74BEL3eu9bacwgSrJjIy6OEguFEyzL6EJQ9eTlJJvMX0PXj+3RSHPiwB+EoZ4sLdKvJ/IUbeNouOrWGFskKKHNTKv+Se7JqaKqTSZBx0Cf97W68/C96U8pMD4PT5VT8ky2xb0kSz8meax7oRkNjzi0u5/Avi01gg5L3kpbzZPP0iuSNaFwtpc5JeTRvUQxO5Hl6go8m2H31kdtf83lyaOxTVUtFfAwuQS0X9ShryooApzI34dEzcd0PFkndKYjEeZFUNt9W3vK5RbkoFQ1iQ8snm3V3RWL+xTKmQk/EMzc+oIgEZZsZjbH6jpHWlet78vZRz74ArBgmQpaw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=jLGcgB8nBpYfFOUPbPBvDqqhdb2KEo5KI2QMkoeuniA=;
+ b=zHWduLrPepC4u0vtFLcX+ZR2bfbO9/TqGTin8HM4sBsf3oU39iGz7yIT3pfy68i/Cf4LlrKP8iO2aoPVpv+1ywEpC740Lj07kQsvpJvDNjgMxjzCgldsVzJNV9cQOg1NoiR5tvUcrgTRXp0qWVS12+4x9Wl6x3LidluNv6gaT2NSu8JCTiT2/YSfPzBXqB5XGU/3N2COoRLLrwHrPB+bbYuxee0LsHIDA/LQO92jm5q6AT8etefKacft+s0SP95gDpRWhw1FGEMlJljd0XFuSF83nRqvpdTY/sQ8Ni3It1eRAJZAKzU5P6JmpX48vsxIPvzzzcD+Zh3Fjx1/yHiYCw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jLGcgB8nBpYfFOUPbPBvDqqhdb2KEo5KI2QMkoeuniA=;
+ b=SxcSqpdP/WzEBBSBwVMTI/YQYfQPlXF5mC9H1BELmHfrTAwcY3oMGPryrr5v5aex5mMqCd7O7LVLL+iRhvoePXIn6KaRX3I20M1CVxH9Zlio9BM19d1Zla1S+AZTIH5ZRkdQwUzNLUPloL6V1p1kKO3CI4i/usctaubVtrlkFXU=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:27c::13)
+ by LO0P265MB6962.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2eb::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.14; Wed, 20 May
+ 2026 09:34:06 +0000
+Received: from CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::6c9e:93c8:10db:e995]) by CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::6c9e:93c8:10db:e995%6]) with mapi id 15.21.0048.016; Wed, 20 May 2026
+ 09:34:06 +0000
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 20 May 2026 09:29:22 +0000
-Message-Id: <20260520092923.0EDD11F000E9@smtp.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 20 May 2026 10:34:05 +0100
+Message-Id: <DINEG6ZL6D2Y.239EMAC9FOLWU@garyguo.net>
+Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
+ <acourbot@nvidia.com>, <aliceryhl@google.com>, <david.m.ertman@intel.com>,
+ <ira.weiny@intel.com>, <leon@kernel.org>, <viresh.kumar@linaro.org>,
+ <m.wilczynski@samsung.com>, <ukleinek@kernel.org>, <bhelgaas@google.com>,
+ <kwilczynski@kernel.org>, <abdiel.janulgue@gmail.com>,
+ <robin.murphy@arm.com>, <markus.probst@posteo.de>, <ojeda@kernel.org>,
+ <boqun@kernel.org>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
+ <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
+Subject: Re: [PATCH v3 17/27] rust: auxiliary: generalize Registration over
+ ForLt
+From: "Gary Guo" <gary@garyguo.net>
+To: "Danilo Krummrich" <dakr@kernel.org>, "Gary Guo" <gary@garyguo.net>
+X-Mailer: aerc 0.21.0
+References: <20260517000149.3226762-1-dakr@kernel.org>
+ <20260517000149.3226762-18-dakr@kernel.org>
+ <DIMSZMCNTRA0.29WGE6IL25A6Q@garyguo.net>
+ <DIN2Y5PNWGVO.EOA9SQPOFYX2@kernel.org>
+In-Reply-To: <DIN2Y5PNWGVO.EOA9SQPOFYX2@kernel.org>
+X-ClientProxiedBy: LO2P265CA0456.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:e::36) To CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:400:27c::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CW1P265MB8877:EE_|LO0P265MB6962:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8a7847a1-b809-4f45-271c-08deb652f000
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|10070799003|4143699003|18002099003|56012099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	bA9WX60J4RtWPChaIAPWiEoJtiLWeO/xM4WLMppPnBBUA4Fn88P3ZYIO67S72rXlCRp2YO7eNDMDemM0Vtj7zbjehsbNF6PylzfbOrNOItfvH2RjNeJrxB4Q4X2qyjBcZEueur0zlFkvhKgzQ8VxbXdllqJ8gVyDYjwLkXc0ntllX/PKxPCY/rfdPWu1oZw+m0Vf1vpruFD3nrhE/+H1OQDJ9bH9hKN96u4sr9qHpm2Vudvy8e6uodM0DhAhLSZC6C4FB0yTGPhZ97LMYHwYPnQtddD7fodD72xvK27+fhtyOKF4k0UwMR6v/ejOpxbOJLeRiOmPfMEi86w9VPjOTacd5JyjEWUGjHl+LAfrXgQmWfGlQiqURaV2KUctbT/Q3UD3vbkP5/por/OWc3r/+p+/cIyyGW0PznE/A0Tps3+QG0ldLt4jev3XhPFtioRuTirPCyBsYGbEEniIZWgCgdXDLEFPFBtt/+FS5r9ws/SDRM2Vi2arn2x4nJZg/IfLRvfxMn/Fm5zn/+6vZhp0gdKWKWVb6/g0667ZARbU+RTOYhQ213/stU4EEqoGnid48yT7vZGeu1bIBtMDqb5V5hn7o7h9UeuchLJOu+WC/7ARf/9JVSxqUnICxDDNORS6w1vZkSgZCPpubFH23nuKwRTIv3oxhVqcuB8VAjRMxAu59k3zn8u79vXTs0c1QLpq
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(10070799003)(4143699003)(18002099003)(56012099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?V1lLam4zcGFYZUlyRTdPaUdEUFZWcFRtVzZrZDRUdHJUZVJvZlFDcjlqQVh5?=
+ =?utf-8?B?QVkzRnNoc21qNTNtYjRkVTFVVHpIQzlvM2Eyd096UXE4WDJZb3dScElLRXlG?=
+ =?utf-8?B?ak92VGRhait3VFcxOTVuT01jWnBqT0o2Q3hESEFIcmw5M0R0M2xpL1VGK1dv?=
+ =?utf-8?B?UHVaZGFXVkVFbkpERDJzODhrN1ZlNXZjd0w1Y0pjWU5GZEE3TnRhaDM0SEVo?=
+ =?utf-8?B?NmNWZm4rTVNCTno2L0ZXU3ZTcnBsMHQ0MkRTdHZKNkJWcmZ4Njhxd1grUjBE?=
+ =?utf-8?B?eFpQR2tQc2ZCWTFPRDQweXBvZlFsbHRGdExKYkpSWUoxSmd0UVFubTZ6cmho?=
+ =?utf-8?B?TzZpSVkxcnYxSkFpNzdCUVk5ZGxOUVIrZFJiSVl4dm1scCtwSStwZXcxdW9D?=
+ =?utf-8?B?a0pza0tQYy80RUJXTW9BelRnaFNWYnE3M1VDK1RYVUt1bW5TQjNvVWlwMGFX?=
+ =?utf-8?B?QVc1OGNxQ1pLMXVuV3JaT3VOL3JtV2gzdnJDc0pUb0lzdkdNUEhwQUpCWmlU?=
+ =?utf-8?B?cFBrcExkdTVpQm11cWtnZ0FtVHhWNGlJUGtuNDBKOVAyc2ViQ1lTOTFuTThK?=
+ =?utf-8?B?Nnd5cTJxSzl3ci9FeXpYb2w5aTBYV21mRlArUU5nYlpGcmlhVm1ZZWdSZWxw?=
+ =?utf-8?B?THJIQk1IOTVibngvSlppMFNYV0k5TVYxWWtwV0NjOCt0b3ZwaUV3UE1FT0Zs?=
+ =?utf-8?B?cTNMRTBmTzNFeStiOHRNQ1FtUEloK3pBUTRMRWtINmFnM2FCeUFyUmNGbklL?=
+ =?utf-8?B?aUV3R01sZmY1U3d1TWNOUmgzNG9lYlk4dlRDYjBGQmdqcHpRMFdZYTFpWmg1?=
+ =?utf-8?B?SWlJK1RGQVU0WnVDZDNEN0FFbVU1UDdBbzdJU1lRYlRCSGJjY3pHcTl1ZEU2?=
+ =?utf-8?B?c0Z1NzBpN1ZrcmZibW9UeTZUSFc5ZW1hUGh3am9iODRJSnFrdkI1MFozeE15?=
+ =?utf-8?B?Ync4RXRyMWozZ2srS3c3Mk8wdVJTOEd3NTg2a3Iwdzlzci85Z3diV0FjcG9X?=
+ =?utf-8?B?RzdaSzYwdmVldVlVMDJMYnBORk1GNjFkV1FBTGx2ZGhCTmhmQkJ3L3g4eEZX?=
+ =?utf-8?B?LzBZaS9MekRBbkJIQVZoTzRqWmFZZTd4NkpzQUlYNnY5YkVmaklVUmFlWVRa?=
+ =?utf-8?B?d25oWjIwSGVmTnV6VERUQW44T0RXa1gwY0wzV2tONFM0SWVFakx5Y0l4bUtx?=
+ =?utf-8?B?ZGRyWDRybEUrNThRQysvRUpMbUlXOEl0c0hpOVFlelZTa1RPcTgxcTR1cVVG?=
+ =?utf-8?B?RE8wem1CSTl4ejFEWGtHejhuVjIzQk1Uc0duUFdKZlNZeFVhSFpUNVJ2UDBo?=
+ =?utf-8?B?aXROQXpXcFc4ZVBIcjhXd2Y3WVlHellJbzBhb0RlZzl5ak1Bd0xLR0MyQ0xU?=
+ =?utf-8?B?M05nWENjSmt3eEdndEpINE5rMUNCbFd2ODRtckUrRDZrM0pUQjNqNmswQUhz?=
+ =?utf-8?B?U3dFT0JFamV1ajdNZ0tDVGdJMHFlK0dONDYvMjZLL0x2RzM1ZDcvOUhLM0Ex?=
+ =?utf-8?B?Z2U0a0lRQ3lHTmpIZUVoYU1TUVp2SVJlMEdaMWZEMVp0SVJrd04wenlpb1lp?=
+ =?utf-8?B?N2RqNjFZbjhrazhsWnJsUmxQMC9tcDlqaGEzY2pBRGREL0JFVjNWSFZkcEpr?=
+ =?utf-8?B?ZXY4aW9FMVJtbm9xV2VoaU1uaWZ3ZTMvSVpMaE9jVjdReVF2TEZrUkkySzFR?=
+ =?utf-8?B?NENONWxrQnkybXVSSy9qQzhvMnNyU24wbDZQaU1FWWN6VWhWRjhxVnNtSnBu?=
+ =?utf-8?B?WWZKRVhMZi82TXlJbmdpemlvNFZmNUZOTk52Y0wzSXB2UDhQRUw1Z0krZUMv?=
+ =?utf-8?B?TDQ0VVd2R1FwQTQxdDRLTENKU3JoVGhIdnBBTW9pN09xaXBBbGRsWmJFN3pX?=
+ =?utf-8?B?U2syb3lpVGNVcmVRV3JQZjFhS2xGL0VZc0FNV28xTnBiR0N1SXdWQis4NGd1?=
+ =?utf-8?B?eEVORUVtZ1dyTmlqUS9Ib1c3SjlsTVlzUHFnays0K2FKam9zK1Q5Q3JDRC9O?=
+ =?utf-8?B?ZzY2eHREQmZWaVVIdjBTaHQrTk9SYmE0YitNQittWnFWTHU1Q0JkR3FGQUdk?=
+ =?utf-8?B?cXl1NDUyYzlkUitaZ2J2WDdCZGtTYW1WS2F2MnpNbEE4TEQwbCtzaHFxVFY2?=
+ =?utf-8?B?aTNlZzF1VEo3amJkY2dXTEN3UFlERXpXQTRzRlEvQW5yYWtoU2F6dnAyM3U5?=
+ =?utf-8?B?NGRDR3hKd1NIaHRiMlc0OUdRM1M1d1FWNzZESGJYb09ZMDZwUnBQd2k3VHNn?=
+ =?utf-8?B?RzVvZWhWQzNHUlJISzNNSzFBQzlSNStFVTdUNVlaUTlXT2tNa0lrRjBoYWQw?=
+ =?utf-8?B?SkV2eWJORGVKU0p5OTZVWElDWmJ6b0VxUFNVd2pvWWVQdU5sajEvdz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8a7847a1-b809-4f45-271c-08deb652f000
+X-MS-Exchange-CrossTenant-AuthSource: CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2026 09:34:06.4913
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4IGzCMP1aXvzAn5V+384ZJAeVTBOp5/IUXG4zApM9J7oB29oP2nHuZ80hImyqSoTSmuexerbBtalBH5Ady9TZw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P265MB6962
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [High] Strict requirement for `#iommu-cells` or `#msi-cells` breaks MSI a=
-llocations on standard-compliant controllers.
-- [High] Array desynchronization when parsing legacy 0-cell maps padded to =
-4 words per entry.
---
+On Wed May 20, 2026 at 1:33 AM BST, Danilo Krummrich wrote:
+> On Tue May 19, 2026 at 6:45 PM CEST, Gary Guo wrote:
+>> On Sun May 17, 2026 at 1:01 AM BST, Danilo Krummrich wrote:
+>>> +    pub fn new<'bound, E>(
+>>> +        parent: &'bound device::Device<device::Bound>,
+>>>          name: &CStr,
+>>>          id: u32,
+>>>          modname: &CStr,
+>>> -        data: impl PinInit<T, E>,
+>>> +        data: impl PinInit<F::Of<'bound>, E>,
+>>>      ) -> Result<Devres<Self>>
+>>
+>> I think this is unsound for the reason that I gave in another email
+>> https://lore.kernel.org/rust-for-linux/DIMSJVKTYX6D.AEN6OPPC2898@garyguo=
+.net/.
+>
+> Indeed, this has to be fixed. I looked into the options brought up in the=
+ linked
+> reply, i.e. the "new type" approach and the "closure" approach. And after
+> playing around with both of them, I'm not really satisfied with either of=
+ those.
+>
+> The "new type" one is simple and works, but has the disadvantage that, we=
+ll, we
+> need a new type and update all callsites where we would ever want to crea=
+te
+> registrations (mainly probe though).
+>
+> The "closure" one on the other hand creates a little bit of an odd API an=
+d by
+> its nature does not allow to move pre-existing resources into the closure=
+, which
+> is a major limitation (maybe there is some way, but if so I didn't find i=
+t).
+>
+> I instead went with something else: Currently we return a
+> Devres<auxiliary::Registration<_>>. However, since we're moving to lifeti=
+mes
+> anyway, we can just return an auxiliary::Registration<'bound, _> instead,=
+ which
+> makes the return type invariant over 'bound, which makes the problem go a=
+way
+> naturally.
+>
+> Please find the diff below for reference.
+>
+> diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
+> index 5acece8e369a..c784426b8092 100644
+> --- a/rust/kernel/auxiliary.rs
+> +++ b/rust/kernel/auxiliary.rs
+> @@ -12,7 +12,7 @@
+>          RawDeviceId,
+>          RawDeviceIdIndex, //
+>      },
+> -    devres::Devres,
+> +
+>      driver,
+>      error::{
+>          from_result,
+> @@ -408,12 +408,12 @@ struct RegistrationData<T> {
+>  /// `self.adev` always holds a valid pointer to an initialized and regis=
+tered
+>  /// [`struct auxiliary_device`] whose `registration_data_rust` field poi=
+nts to a
+>  /// valid `Pin<KBox<RegistrationData<F::Of<'static>>>>`.
+> -pub struct Registration<F: ForLt + 'static> {
+> +pub struct Registration<'bound, F: ForLt + 'static> {
+>      adev: NonNull<bindings::auxiliary_device>,
+> -    _data: PhantomData<F>,
+> +    _phantom: PhantomData<(fn(&'bound ()) -> &'bound (), F)>,
 
-commit 23cece64ecb1dcea6290dbab34facbdac53ff293
-Author: Robin Murphy <robin.murphy@arm.com>
-Date:   Wed May 20 08:02:42 2026 +0000
+The type itself may be invariant over the lifetime, but it would still acce=
+pt a
+shorter lifetime (which again, is a case where I think having 'bound become=
+s a
+factor for confusion).
 
-of: Respect #{iommu,msi}-cells in maps
+You can still pass in a shortened lifetime to `Registration::new` and then =
+leak
+a registration (yes, Leakpocalypse strikes again), so the invariance here i=
+sn't
+actually serving purpose.
 
-This commit adds support for parsing target nodes' #cells values for
-iommu-map and msi-map properties, instead of assuming output specifiers
-always have exactly 1 cell. It updates of_map_id() to parse multi-cell and
-0-cell output specifiers and reflect the actual number of output specifier
-cells.
+    fn bad_fn(dev: &device::Device<device::Bound>, buf: &[u8]) {
+        forget(Box::pin_init(Registration::new(dev, c"foo", 0, c"bar", buf)=
+))
+    }
 
-> diff --git a/drivers/of/base.c b/drivers/of/base.c
-> index d658c26201353..f436e26763818 100644
-> --- a/drivers/of/base.c
-> +++ b/drivers/of/base.c
+Best,
+Gary
 
-[ ... ]
-
-> @@ -2176,39 +2206,93 @@ int of_map_id(const struct device_node *np, u32 i=
-d,
-
-[ ... ]
-
-> +		phandle =3D be32_to_cpup(map + offset + 1);
->  		phandle_node =3D of_find_node_by_phandle(phandle);
->  		if (!phandle_node)
->  			return -ENODEV;
+>  }
 > =20
-> +		if (bad_map) {
-> +			cells =3D 1;
-> +		} else if (of_property_read_u32(phandle_node, cells_name, &cells)) {
-> +			pr_err("%pOF: missing %s property\n", phandle_node, cells_name);
-> +			of_node_put(phandle_node);
-> +			return -EINVAL;
-> +		}
+> -impl<F: ForLt> Registration<F>
+> +impl<'bound, F: ForLt> Registration<'bound, F>
+>  where
+>      for<'a> F::Of<'a>: Send + Sync,
+>  {
+> @@ -421,13 +421,13 @@ impl<F: ForLt> Registration<F>
+>      ///
+>      /// The `data` is owned by the registration and can be accessed thro=
+ugh the auxiliary device
+>      /// via [`Device::registration_data()`].
+> -    pub fn new<'bound, E>(
+> +    pub fn new<E>(
+>          parent: &'bound device::Device<device::Bound>,
+>          name: &CStr,
+>          id: u32,
+>          modname: &CStr,
+>          data: impl PinInit<F::Of<'bound>, E>,
+> -    ) -> Result<Devres<Self>>
+> +    ) -> Result<Self>
+>      where
+>          Error: From<E>,
+>      {
+> @@ -439,8 +439,10 @@ pub fn new<'bound, E>(
+>              GFP_KERNEL,
+>          )?;
+> =20
+> -        // SAFETY: Lifetimes are erased and do not affect layout, so Reg=
+istrationData<F::Of<'bound>>
+> -        // and RegistrationData<F::Of<'static>> have identical represent=
+ation.
+> +        // SAFETY: `'bound` is invariant (via `Registration`'s `PhantomD=
+ata`), guaranteeing it
+> +        // represents the full binding scope. Lifetimes do not affect la=
+yout, so
+> +        // RegistrationData<F::Of<'bound>> and RegistrationData<F::Of<'s=
+tatic>> have identical
+> +        // representation.
+>          let data: Pin<KBox<RegistrationData<F::Of<'static>>>> =3D
+>              unsafe { core::mem::transmute(data) };
+> =20
+> @@ -487,18 +489,16 @@ pub fn new<'bound, E>(
+> =20
+>          // INVARIANT: The device will remain registered until `auxiliary=
+_device_delete()` is
+>          // called, which happens in `Self::drop()`.
+> -        let reg =3D Self {
+> +        Ok(Self {
+>              // SAFETY: `adev` is guaranteed to be non-null, since the `K=
+Box` was allocated
+>              // successfully.
+>              adev: unsafe { NonNull::new_unchecked(adev) },
+> -            _data: PhantomData,
+> -        };
+> -
+> -        Devres::new::<core::convert::Infallible>(parent, reg)
+> +            _phantom: PhantomData,
+> +        })
+>      }
+>  }
+> =20
+> -impl<F: ForLt> Drop for Registration<F> {
+> +impl<F: ForLt> Drop for Registration<'_, F> {
+>      fn drop(&mut self) {
+>          // SAFETY: By the type invariant of `Self`, `self.adev.as_ptr()`=
+ is a valid registered
+>          // `struct auxiliary_device`.
+> @@ -520,7 +520,7 @@ fn drop(&mut self) {
+>  }
+> =20
+>  // SAFETY: A `Registration` of a `struct auxiliary_device` can be releas=
+ed from any thread.
+> -unsafe impl<F: ForLt> Send for Registration<F> where for<'a> F::Of<'a>: =
+Send {}
+> +unsafe impl<F: ForLt> Send for Registration<'_, F> where for<'a> F::Of<'=
+a>: Send {}
+> =20
+>  // SAFETY: `Registration` does not expose any methods or fields that nee=
+d synchronization.
+> -unsafe impl<F: ForLt> Sync for Registration<F> where for<'a> F::Of<'a>: =
+Send {}
+> +unsafe impl<F: ForLt> Sync for Registration<'_, F> where for<'a> F::Of<'=
+a>: Send {}
+> diff --git a/samples/rust/rust_driver_auxiliary.rs b/samples/rust/rust_dr=
+iver_auxiliary.rs
+> index 84d18bbfafc5..efb4d97b416b 100644
+> --- a/samples/rust/rust_driver_auxiliary.rs
+> +++ b/samples/rust/rust_driver_auxiliary.rs
+> @@ -10,7 +10,6 @@
+>          Bound,
+>          Core, //
+>      },
+> -    devres::Devres,
+>      driver,
+>      pci,
+>      prelude::*,
+> @@ -58,29 +57,29 @@ struct Data<'bound> {
+>  }
+> =20
+>  #[allow(clippy::type_complexity)]
+> -struct ParentDriver {
+> -    _reg0: Devres<auxiliary::Registration<ForLt!(Data<'_>)>>,
+> -    _reg1: Devres<auxiliary::Registration<ForLt!(Data<'_>)>>,
+> +struct ParentDriver<'bound> {
+> +    _reg0: auxiliary::Registration<'bound, ForLt!(Data<'_>)>,
+> +    _reg1: auxiliary::Registration<'bound, ForLt!(Data<'_>)>,
+>  }
+> =20
+>  kernel::pci_device_table!(
+>      PCI_TABLE,
+>      MODULE_PCI_TABLE,
+> -    <ParentDriver as pci::Driver>::IdInfo,
+> +    <ParentDriver<'_> as pci::Driver>::IdInfo,
+>      [(pci::DeviceId::from_id(pci::Vendor::REDHAT, 0x5), ())]
+>  );
+> =20
+> -impl pci::Driver for ParentDriver {
+> +impl pci::Driver for ParentDriver<'_> {
+>      type IdInfo =3D ();
+> -    type Data<'bound> =3D Self;
+> +    type Data<'bound> =3D ParentDriver<'bound>;
+> =20
+>      const ID_TABLE: pci::IdTable<Self::IdInfo> =3D &PCI_TABLE;
+> =20
+>      fn probe<'bound>(
+>          pdev: &'bound pci::Device<Core>,
+>          _info: &'bound Self::IdInfo,
+> -    ) -> impl PinInit<Self, Error> + 'bound {
+> -        Ok(Self {
+> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
+> +        Ok(ParentDriver {
+>              _reg0: auxiliary::Registration::new(
+>                  pdev.as_ref(),
+>                  AUXILIARY_NAME,
+> @@ -105,7 +104,7 @@ fn probe<'bound>(
+>      }
+>  }
+> =20
+> -impl ParentDriver {
+> +impl ParentDriver<'_> {
+>      fn connect(adev: &auxiliary::Device<Bound>) -> Result {
+>          let data =3D adev.registration_data::<ForLt!(Data<'_>)>()?;
+>          let pdev =3D data.parent;
+> @@ -131,7 +130,7 @@ fn connect(adev: &auxiliary::Device<Bound>) -> Result=
+ {
+>  #[pin_data]
+>  struct SampleModule {
+>      #[pin]
+> -    _pci_driver: driver::Registration<pci::Adapter<ParentDriver>>,
+> +    _pci_driver: driver::Registration<pci::Adapter<ParentDriver<'static>=
+>>,
+>      #[pin]
+>      _aux_driver: driver::Registration<auxiliary::Adapter<AuxiliaryDriver=
+>>,
+>  }
 
-[Severity: High]
-Does this strict requirement for #iommu-cells or #msi-cells break MSI
-allocations on standard-compliant controllers?
-
-Several MSI controllers validly lack a #msi-cells property. For instance,
-arm,gic-v2m-frame nodes do not require it. In
-arch/arm64/boot/dts/qcom/ipq5018.dtsi, the pcie0 node defines:
-
-msi-map =3D <0x0 &v2m0 0x0 0xff8>;
-
-but v2m0 does not have #msi-cells.
-
-Prior to this patch, of_map_id() implicitly consumed 4 words per entry and
-succeeded. Will it now fail to find #msi-cells, print an error, and
-return -EINVAL, propagating the error through of_msi_xlate() and breaking
-MSI initialization on affected platforms?
-
-> +
-> +		if (cells > MAX_PHANDLE_ARGS) {
-
-[ ... ]
-
-> +		if (map_len - offset < 3 + cells) {
-> +			of_node_put(phandle_node);
-> +			goto err_map_len;
-> +		}
-> +
-> +		out_base =3D map + offset + 2;
-> +		offset +=3D 3 + cells;
-
-[Severity: High]
-Could this cause array desynchronization when parsing legacy 0-cell maps
-that were padded to 4 words per entry?
-
-Prior to this patch, of_map_id() mandated that the map property length must
-be a multiple of 16 bytes:
-
-if (!map_len || map_len % (4 * sizeof(*map)))
-    return -EINVAL;
-
-Consequently, if a legacy device tree targeted an MSI controller that
-explicitly defined #msi-cells =3D <0> (such as RISC-V IMSIC nodes), it was
-structurally forced to pad the 3-word map entry with a dummy 4th word to
-satisfy the kernel's length check.
-
-Since the new logic computes the entry stride dynamically as 3 + cells,
-when parsing a legacy padded map with cells=3D0, does the code advance by 3
-and incorrectly interpret the 4th dummy word of the first entry as the
-id_base of the second entry?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520-parse_iomm=
-u_cells-v15-0-b5f99ad4e7e8@oss.qualcomm.com?part=3D3
