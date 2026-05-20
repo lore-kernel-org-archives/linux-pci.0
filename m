@@ -1,166 +1,116 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFFE83ED3A4
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 14:45:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC353F1AB6
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 14:51:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779288314; cv=none; b=dG5nuIB7ZXUC8bmsLPC7qwFV+/b6liAumTAi+SiSxjkS4ZiFzZ4c9RET/Spvk3qqq2s9yC+Uzi2Kam59ol0kpZq5t/2C152tGCDhRG2M1KyzEuij1cEJjpakexNBkSS49hJPDrSVPf6B1bBo0GCs4z9I7A+1ztUEMU8ldnDYG4o=
+	t=1779288706; cv=none; b=ARfHaDjmMnvq66reA70Ro66FMnP3PoRocC07dNPAZcH9uMnCnw4s1rN3+9dRBYHQL97a4Kghl/iClZ4brwJEdACsO5eiY337z/GcHI9fCDPR0+TUisM0FviSI3GgJK5TCmGlYT4X51SRJfkQLjFlzOMzz06SzIlxx2LNRn+30Qo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779288314; c=relaxed/simple;
-	bh=LQbm15rAKPz7MFzVtKlTkrfu5UxXb3siz4fc6NJeMKw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=qx8jOt6fk09SoMEDnvWVglL0PfOfNnhrKb/OWddruNINvLcIHV8JfIIviFIZxpU8qISL40nuQM3PItsWxfHxtLYsD8ZUQAihr1Q3ibeDiLpaPsfW7OVNK4Tko29jbDiDjy/e8ok/orfMLvo0+uaMMooDiqOfj5nEN8hJqwqK6lA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K9Z48owy; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779288706; c=relaxed/simple;
+	bh=FA4gZ0vHmdeVsJwZEdfiluV2UoJo+V0cIxjlbvjgR48=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tx3LRJeIuUtF16jhNQ95ZV39uCZLZJC4OZGSMNzEIWirCD3VNfzDWibq0OwlSCAt1JwnbJsZHARzPOXBXl+xlGlU/lMiHq+eEEyqCfYrL78lb03dBknIbtkYsGjDakCdpCg91j6n7FK/oMu4xJKwtRCle5YDAkwI7rqJpf5vt5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=fLI2FEb/; arc=none smtp.client-ip=209.85.160.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K9Z48owy"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-c6dd5b01e14so2287795a12.0
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 07:45:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="fLI2FEb/"
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-516389a9b70so54889651cf.3
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 07:51:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779288312; x=1779893112; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=4ks/pYuySM/VySSLZBKDsm+9ZYqarxYGQ3/xDReTI44=;
-        b=K9Z48owyfYODDYJmis4V9B2k8DR8qJA5WhyuTWzltjseDojOeZImaKAJsyYO5tSqge
-         QuolCTB8+IBzkYrGufLZRK6zRV/aWvSv7AKTsoYe4fmzsOYvIZJfqcUHLTJ/9v8Kqevb
-         rAd/8hscf8IhS5z5WhoNc0yOhu3ZiUsSxcaJERPLnrE8BEcjhZ8bHw+dT8PxhcTim3gh
-         k8LnLwkVwn6jDPTvxpbr0h6j+hNQQ42RLGoCDR0mBONVVV/H0UEHGvcJ3yzYRRwu2WFO
-         XXb47fuGZun534OKGMEpgxLfujnIwbYSJPCcb7zu4jjkE1dLYfvyGKEYJs9AidigaGJT
-         14wQ==
+        d=ziepe.ca; s=google; t=1779288704; x=1779893504; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Pz1t1QkWZCmUP77wepzR0Q4pYzk5BCD7dYEJvWGE+AY=;
+        b=fLI2FEb/TmV7dYjGyMt/DSeaPpCgc2CGOWSSqUGTtinWFgNDar7hERryuw5oZGizfW
+         tlFn9Sz2h6cHKy9xegurTkgCruJZmFy0EevrQTUuo5CX8rmL5dhe1WMFqikd0UCfdsGd
+         //dVMeCEiSfVK4FXaX/ViO8AcS457qylpYOobiHs4Y3IefQb2Vpj7ZQNBIenEpMiEfxO
+         p2FMtsuqunGrbWDhb7Oy/NMxHsn1SLNf7rB+kjx1rkVatd7i6QigZHL9vuLildS+Qgsu
+         oXzLMaJSWpGtgwnVoRZgSIqP2rMs+EnC2D8bhczkDD+5RH9H/m2xEk9cR2KakQ6eEal0
+         ozAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779288312; x=1779893112;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4ks/pYuySM/VySSLZBKDsm+9ZYqarxYGQ3/xDReTI44=;
-        b=krMz6QIQv/I3ZnSVwBOamb4g3vHAXk51tvPuTw5/xCzQShqktmk2Cc2f5MbapRrol7
-         KLAROZ5BOuMwu7tLrqBpDq6NvfFmPpnmANWYyI/scuDu56pI+5XpdewtzqsgKOLh4+rZ
-         /0tg3g0ZNr5LIMxuel+Io2iO0cVfkdsnvlfCnj7MWoPEK2ouma4ZJYpP3a5ltezLSiID
-         Wdt3PVqNH+0N9vrv5aLb07tkZ3drj7hcnsvvJFCZvhqt8thMaqknFRTwHlHv9iFMGC/b
-         QkEVlRpn/aOlGhQ6umuwky0o8Mshg2YCfbaAh44UJGr1Ze5FAdNdP6smWhf7iZ9Iq0YB
-         tVig==
-X-Gm-Message-State: AOJu0Ywa27vjEUMjYgGpirjBXXOyGSTIny5ch9WJjNvP1Te8dPMAKKJx
-	ORh7+G7BD/44ssr0KzoPfU6Q0oumkbZmsUkW4gkBi9ABlabdI/wS2d69
-X-Gm-Gg: Acq92OHL1uic2ldS1XvmwH3qxNWOITtN03PiGqzP4c5mrjAS8+X9h/69HfBl2FoV9Qd
-	j+bLBhOYCugZOKEcrX5coLNqx/kJqJE0BTDXy64Ts7tTaZd4TIlgIHJozgVxUeliXWMwfN5+ozI
-	u9FtCiSXCFVMQVjflu2Uthd4qsTpmGRQF9Jy9FQ1uPYxpkTH1us9/TX2Yu8vt9EPItk4ksWlNeO
-	Z77LK+J9pzAiEqdOfBAPceqmzOMadEEI85YjKvu4fcwQy/2eO7gs3DN5c2kJKbxT0esSBWfcQjK
-	Z5/ZScBF9jVBY+pqj3dR7CQnEDQyXjWuguV3AQ6z4U4XKzl+9h0JtRd5a1Q0Qn4KklpAGsk1657
-	YkeIw8DQmwNh52OCEu3eQE226n9EZCMleSVj7avFk3JcY2O7aefTsgflmupCuRAvrmhhpxC++Gk
-	oLsUvq07km5OClpOcdUbaIY4T2jERlt0MFtkLBM9X/wxCA9IFgYe9P9KuXS1H71AobykEYZhBCi
-	R25WzMXewJGX6uu24NVeAosFUUh
-X-Received: by 2002:a05:6a20:7d9d:b0:3aa:f9cb:d438 with SMTP id adf61e73a8af0-3b22e73d2dfmr26321921637.21.1779288311345;
-        Wed, 20 May 2026 07:45:11 -0700 (PDT)
-Received: from junjungu-PC.localdomain ([223.166.246.30])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c82bb114a70sm25363425a12.22.2026.05.20.07.45.06
+        d=1e100.net; s=20251104; t=1779288704; x=1779893504;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Pz1t1QkWZCmUP77wepzR0Q4pYzk5BCD7dYEJvWGE+AY=;
+        b=qBNZuIwA/Y37LYe++VBPx2jMEIMU36uXccvM8e0l8ORijmsmAWQZqZn6Cq0grdbz9l
+         jTo3MVTqidytaXRcJ5wPvD8KiN7xuD6F9zsi/1azcT0gpptO3X6/GGC6BcdU+YT1teDs
+         XGQTYLxGqrey6Lb4qc9y+dsl96mcbxY6WaSxPrwG8i0uro/0uGI5GIPG4k5B7KMyC/Ay
+         /enB6OnM3FdukthWqwFEdPg2kPSYh2tTRaK5QK0GGHoz5f6Oxvbc9WvKDQrz4FEdNZX4
+         WltBjoDNu2fZcxojegrayhk0cqvFPGYrkkqaMshtZhUI5NUciqgf6U/c6ju9YuPxA9iQ
+         gkwA==
+X-Forwarded-Encrypted: i=1; AFNElJ/XPllc8RzuhKwCosIzfJ5Pk+DKx5wHrAgnrwx5tPLZs+Y1HRrMRmp9o07/yQ80U0NKGXY00X9z478=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy0EtSaw8cKsguTCC000w5xPiDahsUspzb4ZGdsfKUAliMpC5AN
+	ALO9/JBawolEyM05GI9pH1xTrmt0kIF2MD49rkKr1K3tpOBhJXfN4Qb8oHckvqZJcykqKEcIoVm
+	XVBWO
+X-Gm-Gg: Acq92OHWwEW901mo16ff5ZzAs1dcMxCz/XZteTiJz6nfLUIQe7CqLQE68gDA6r5NMSN
+	D7302kdCunJ2R7bfbHKK1ZDMUglJtJ/UA5Uz7AVSHz8JPFxM22p5qxA5yijprfumMzggsbdG+3z
+	oZ0hkJTpgNBiVRE6Avq08SFEPkyjiQmepdtitFXT/VuKWUo/2ydj5JzLQeelzPhpOtWUvihrPrp
+	ENUQg0W/yp+tHYnnus4RTvM1anIuYua197yiC8rhoTklHOHhfiCN6lKGOg6Ajj1Tb2AAXlNTiQK
+	faaHA2+dTg4Z6EHMwi3NWnS/j0t+SyagFiALPGdYqrhSSHv78E0Op0ngUooN8xyS7QNZk9QXVCC
+	0qJ6XwO3j1Z25DtXKOBUbGws1goy+CLNPleuEJtwEFSgJk1qGdKUtPRe9R2w4LWZhrjAn6WmYYU
+	sTbEUxMF/XvYhOYcYylq2D2aVZFIS/XIuolgvlmfHt2Nwc1c1weYRvHKrDSgWyi2o+EB66kufhV
+	mEnrA==
+X-Received: by 2002:a05:622a:4c85:b0:50d:66b6:1564 with SMTP id d75a77b69052e-51659fe9204mr326177381cf.14.1779288703679;
+        Wed, 20 May 2026 07:51:43 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-516456b6856sm194612161cf.7.2026.05.20.07.51.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 07:45:11 -0700 (PDT)
-From: Felix Gu <ustc.gu@gmail.com>
-Date: Wed, 20 May 2026 22:45:04 +0800
-Subject: [PATCH v2] PCI: eswin: Fix resource leak on dw_pcie_host_init()
- failure
+        Wed, 20 May 2026 07:51:42 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wPiGs-0000000HIHG-0eTP;
+	Wed, 20 May 2026 11:51:42 -0300
+Date: Wed, 20 May 2026 11:51:42 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Pranjal Shrivastava <praan@google.com>
+Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	Will Deacon <will@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Mostafa Saleh <smostafa@google.com>,
+	Nicolin Chen <nicolinc@nvidia.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	David Matlack <dmatlack@google.com>
+Subject: Re: [PATCH v3 3/3] iommu/arm-smmu-v3: Fix ATS state tracking via
+ ats_prepared gate
+Message-ID: <20260520145142.GU7702@ziepe.ca>
+References: <20260519135323.1558777-1-praan@google.com>
+ <20260519135323.1558777-4-praan@google.com>
+ <20260519144430.GI7702@ziepe.ca>
+ <agx5-jFkU2skyEos@google.com>
+ <20260519145947.GK7702@ziepe.ca>
+ <ag3EL10WAIImL9XR@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260520-eswin-v2-1-a221438a6317@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAO/IDWoC/0WMQQ6CMBAAv0L2bA3btGA9+Q/jYakLrBFKWkQTw
- t8FNfE4yczMkDgKJzhmM0SeJEnoV9C7DHxLfcNKriuDznWRW3SK01N65VxJh5ow18bC6g6Ra3l
- 9PufLl9OjurEft3gz6hg6NbaR6f8zWPx+EypUZJzDUtvKejo1Hcl970MHy/IGyVVDB6YAAAA=
-X-Change-ID: 20260519-eswin-997a8fa10245
-To: Senchuan Zhang <zhangsenchuan@eswincomputing.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Philipp Zabel <p.zabel@pengutronix.de>, 
- Yu Ning <ningyu@eswincomputing.com>, 
- Yanghui Ou <ouyanghui@eswincomputing.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Felix Gu <ustc.gu@gmail.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1779288307; l=2320;
- i=ustc.gu@gmail.com; h=from:subject:message-id;
- bh=LQbm15rAKPz7MFzVtKlTkrfu5UxXb3siz4fc6NJeMKw=;
- b=G+RkdFqcfTqcBFzkTQhVlviALLkW5j91oDSyOVkEcniSwp5sA7l+GmlLKRPddRKQFNitxEE2F
- Q2eTVm6CNt1CBBo3us49NdOYq4zE8A6T6HvmrXjpt/axkSqJxOLPjXE
-X-Developer-Key: i=ustc.gu@gmail.com; a=ed25519;
- pk=fjUXwmjchVN7Ja6KGP55IXOzFeCl9edaHoQIEUA+/hw=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ag3EL10WAIImL9XR@google.com>
 
-When dw_pcie_host_init() fails, the code jumps to err_init which
-only calls pm_runtime_put() but skips the cleanup of port resources
-allocated by eswin_pcie_parse_ports().
+On Wed, May 20, 2026 at 02:24:47PM +0000, Pranjal Shrivastava wrote:
 
-Additionally, the incorrect port cleanup code in
-eswin_pcie_host_init() error path is removed since port resources
-should be released in probe's error handler, not in host_init.
+> However, I'm thinking what's the right thing to do if pci_enable_ats() 
+> fails in attach_commit():
+> 
+> 1. Fail to attach but unmerging the invs_array entry is complicated.
 
-Fixes: b593c26d081a ("PCI: eswin: Add ESWIN PCIe Root Complex driver")
-Signed-off-by: Felix Gu <ustc.gu@gmail.com>
----
-   Changes in v2:
-   - Fix Mani's comment.
-   - Remove incorrect port cleanup code in eswin_pcie_host_init() error path.
-   - Link to v1: https://lore.kernel.org/lkml/20260416-eswin-v1-1-a4991725b5ca@gmail.com/
----
- drivers/pci/controller/dwc/pcie-eswin.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+Is it? We should be able to keep the the original invs and not free
+it, just put the pointer back?
 
-diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
-index ce8d64f8a395..7a02ab91a190 100644
---- a/drivers/pci/controller/dwc/pcie-eswin.c
-+++ b/drivers/pci/controller/dwc/pcie-eswin.c
-@@ -182,7 +182,7 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct eswin_pcie *pcie = to_eswin_pcie(pci);
--	struct eswin_pcie_port *port, *tmp;
-+	struct eswin_pcie_port *port;
- 	u32 val;
- 	int ret;
- 
-@@ -252,10 +252,6 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
- 	reset_control_bulk_assert(ESWIN_NUM_RSTS, pcie->resets);
- err_deassert:
- 	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
--	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
--		reset_control_put(port->perst);
--		list_del(&port->list);
--	}
- 
- 	return ret;
- }
-@@ -347,18 +343,17 @@ static int eswin_pcie_probe(struct platform_device *pdev)
- 	ret = dw_pcie_host_init(&pci->pp);
- 	if (ret) {
- 		dev_err(dev, "Failed to init host\n");
--		goto err_init;
-+		goto err_pm_runtime_put;
- 	}
- 
- 	return 0;
- 
- err_pm_runtime_put:
-+	pm_runtime_put(dev);
- 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
- 		reset_control_put(port->perst);
- 		list_del(&port->list);
- 	}
--err_init:
--	pm_runtime_put(dev);
- 
- 	return ret;
- }
+> 2. Move the pci_enable_ats() to attach_prepare()
 
----
-base-commit: e98d21c170b01ddef366f023bbfcf6b31509fa83
-change-id: 20260519-eswin-997a8fa10245
+IIRC ATS cannot be enabled until the invs are loaded with ATS
+invalidations, hence the issue.
 
-Best regards,
---  
-Felix Gu <ustc.gu@gmail.com>
+So you'd put the new invs list, turn on ATS, if it fails restore the
+invs list back to what it was and RCU free the new one(s).
 
+Jason
