@@ -1,204 +1,202 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013023.outbound.protection.outlook.com [40.107.159.23])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F4B73BF684;
-	Wed, 20 May 2026 22:01:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.23
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779314499; cv=fail; b=LydwnifjiqN47CqMvZYKgXUChnCWYjl+l8Fc9E7mUIYaRjQmYP6DiyTA0DzxXGcw8Y4ZxJWUkVFwRHdtOhgNS685P5mcqA5jdb1itOB0VKhsHb0hl8uHgjmK5XOWBcAaCvlU9tKs6kxBHOHyxXhVsa4BFpV2hpwU5NrtpWASSE4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779314499; c=relaxed/simple;
-	bh=Xxxb3WvNGrZnopGky0RMx4nHthEr92Nj/Z1vHabT314=;
-	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=D0HjkHvXULtROh0FTyeTCVQoXqp4awMCqu7krNLjmG0qr4f7pAhpZnGgNDMszCuUsvGGtAGnxR6OVKxf9idnNdncjkdYKnLbQrXm7B6Q+tc7MVq0DY5BijC7c7Q7UVkZiYgJVimxVfURN/cdBqAgYhmevXUUJGwSXZjlqSURgKM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=pVj8z0i8; arc=fail smtp.client-ip=40.107.159.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A67BB3BC680;
+	Wed, 20 May 2026 22:13:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779315224; cv=none; b=kBXOLSyEDBdnLLZE6UByeCEtxUWOebmU3JJG06s1xIObcVlBl10NGtM+eM1BZKH6xvqll/HwwlwofH+wAvq8fAQmY9oE7n6+3LmgPgl/G+XNwyEjs+H6zrW7ZSQalcYf/y7tyd7I2RI0yvge5Uj8GoDS3Zg355YmHQrnf/DcUco=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779315224; c=relaxed/simple;
+	bh=cxFKF1uQ8sXtBuLecwnfAqbeXGEn+xLM2QbVkFG0hNU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MPNAF7pgk93Whzb8JoSQvyxIBksHHcF01CocC6vuYJaVlUozDej5o+/Vu2W/OZl/kxCqB5C7BM9NPbeOpGDkMhjcegySybSo+sIIVjRy1NTVBFbVBFq5CpY6QvZHA6yPYLlpF7TYV+ITctl5Wx7+6HvlCyVK8QBIoynhQfOMSkU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=UG/JnJ7E; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="pVj8z0i8"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=a+JC3JPI//wbgrkfwxIqMCyERt86+Rw75D8IEgyt6smb/kVor6PxoIf0dur9Fb34u8H6vcmIYfcP81hWn/9Twi/eYaj/f3UvVnHTHOHhQSNkOtClqrbXplMPNUQzn3V6pQBFkleilm4cmkWbdjU+eaCc6kr0SRthTfNz01tuodwMtVKZw9nwETSPkPAAYgS4aVjGDmbYa6uK3psZw0QXuetohdpPAoN62/fu/6d5gdVEZa13FuV/jhp0LSSQ6w4MZlPV7wGo2D784CIsv7s2hu9n5W8IvGpcC/ZVgK6oWvVdUTivQERO/Pcnd2HTFMRUFGMgno7syp+nZ2typ0IFkg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=i/ReP1rgqWrU4/sMzuwdfH3iluXexvaN58iUOEqpsAA=;
- b=RdAOGwYOVB5yVQlrIzcLp7Syr+57uo1wFiwHoU8bFOZTb/hxuFzNOg4m4PuTOLlC3XQoUdZdZtkUT7lZPGO6coHSwbd0jqqZIrhAud6H4BY9PP6AJQidSKlmrSNBr4mOCK9goczGkUt2YbUOIwkpFsQDD/iXjbhXkEY/XFnXEJurap/DoFbJNyLxRRspzoLRiPQMYm0GdEtb0U3SZVdHX9DfsUMbHcjGPwz7a9o1yDxvzBf3+VediHJYHVQj/UyypmAZGoolcdH0D+DWnviI8AbMEyHQf6RqWCXsh1Zxz5b7AIB1BjfxTexO8oGgHCxdse3IRVG/PYXO3cO5Xs8dtg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
- dkim=pass header.d=oss.nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
- s=selector1-NXP1-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=i/ReP1rgqWrU4/sMzuwdfH3iluXexvaN58iUOEqpsAA=;
- b=pVj8z0i8Jb6Q9JWZDF5bMAvYBcqlEV+w5rXsGUOXslYoNnyJybQlFARoXfwkGrOZaFMkPyIMljjslCL5Uxw/SRZLns1Ry+i9lWp3IPuM54CrC2Zl93y7XxmuDxKJcnzKcea8cSTHigpgSoi2t3MArBcS6HzO/Dx0eakyUGux6i4VbBeuSMnGHsDTvKtjRzg/DIHc4ywBzT4BzHUg/7UGogMhZFBxU1PAH8VDyK1o3XO9ZzSfjD9A0UCOnzon9aGWK1rFvbAG/gcaL/uvPtxcCdj76fokP2YJA/dcA08ygQucQWKLoU5v42sth02bn/aqH2+b9m8DtWvjPEL56WMG6w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=oss.nxp.com;
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by PA4PR04MB8029.eurprd04.prod.outlook.com (2603:10a6:102:c9::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.14; Wed, 20 May
- 2026 22:01:30 +0000
-Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
- ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0048.013; Wed, 20 May 2026
- 22:01:30 +0000
-From: Frank.Li@oss.nxp.com
-Date: Wed, 20 May 2026 18:00:50 -0400
-Subject: [PATCH v6 9/9] crypto: atmel: Use dmaengine_prep_config_sg() API
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260520-dma_prep_config-v6-9-06e49b7acb38@nxp.com>
-References: <20260520-dma_prep_config-v6-0-06e49b7acb38@nxp.com>
-In-Reply-To: <20260520-dma_prep_config-v6-0-06e49b7acb38@nxp.com>
-To: Vinod Koul <vkoul@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Kishon Vijay Abraham I <kishon@kernel.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>, 
- Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
- Herbert Xu <herbert@gondor.apana.org.au>, 
- "David S. Miller" <davem@davemloft.net>, 
- Nicolas Ferre <nicolas.ferre@microchip.com>, 
- Alexandre Belloni <alexandre.belloni@bootlin.com>, 
- Claudiu Beznea <claudiu.beznea@tuxon.dev>, Koichiro Den <den@valinux.co.jp>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, 
- mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org, 
- linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- imx@lists.linux.dev, Frank Li <Frank.Li@nxp.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1779314446; l=1773;
- i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
- bh=erGKLaAZMNXPQALsbiq4uU1FrELcrAtTPXSGZhnyQ3o=;
- b=/Xyzy8RzK6dkLmE/eKI0VzHHc7C1CD2oir42Z7tjFQUJypShx9pOrLKm1h+fKtnpElmhuvfkS
- lIjR+9AroGyAZVQpayYbkHFyoPrRJ8UhgrEft5zXtUNpBXeuQXviM3p
-X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
- pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
-X-ClientProxiedBy: PH8P221CA0056.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:510:349::11) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="UG/JnJ7E"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64KCF7Oe130203;
+	Wed, 20 May 2026 22:13:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=pp1; bh=U6Usfd8i3/homWF3gnhKhYGoqHmZe/mo7+UAjaY/t
+	Ss=; b=UG/JnJ7Emc8+Bo0bYnaMqDlXKw5sh3mwvZr+SImvtMRm7qm1BVAoLKoZw
+	03nHmaFkuYuZwKXFxdYSzLvIRxa76b75UBCscmNvrPIpcWoBZ4VYN1EfaedXbP2Y
+	0Oq5eWlsJ/Yaql9MHrt4oHKykdmWStx+5o+nF0KD2Yw3OgjmIJMn5kH79cysGzPi
+	g7zvBB3gUzcNvL4YV50EXlMXOzX7LXnr+2uXivCl4ctPZ8zxvS7UXfBG9kVwr47E
+	wiPJQcJjAt3Y8DIlzU0X47IhvVcirTrODTnUxav1PkyspDfpm/drRlvl8HdbDj7t
+	4DZ9fVcsXDb4pYfEnOqWBWh8Pz14Q==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h88k4xu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 20 May 2026 22:13:37 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64KM9EJR026940;
+	Wed, 20 May 2026 22:13:36 GMT
+Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4e73wk9d1b-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 20 May 2026 22:13:36 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
+	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64KMDZaA6882094
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 20 May 2026 22:13:35 GMT
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4197158059;
+	Wed, 20 May 2026 22:13:35 +0000 (GMT)
+Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id B7D6058043;
+	Wed, 20 May 2026 22:13:34 +0000 (GMT)
+Received: from IBM-GVXK264.ibm.com (unknown [9.61.240.144])
+	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 20 May 2026 22:13:34 +0000 (GMT)
+From: Ramesh Errabolu <ramesh@linux.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Gerd Bayer <gbayer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Farhan Ali <alifm@linux.ibm.com>,
+        Ramesh Errabolu <ramesh@linux.ibm.com>
+Subject: [PATCH v4] PCI: hotplug: Add 'uevent' sysfs attribute to trigger slot events
+Date: Wed, 20 May 2026 17:13:20 -0500
+Message-ID: <20260520221320.99788-1-ramesh@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|PA4PR04MB8029:EE_
-X-MS-Office365-Filtering-Correlation-Id: a57588e0-419f-41f2-b018-08deb6bb58f7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|366016|7416014|19092799006|921020|56012099003|18002099003|22082099003|11063799006|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	QwNEh13UvSusglFN+StZkU308E+KM8Yd/vRORw1T3mH5yu4Rp2sMxfcTvbwCWrroVROSCU/qgxVRr+lzfT2GE/GHhW8DGALYOg+D5tCWwxbFl6bTGhlYzp1GIlwN0/y/WrrQxx6QuqL2JVIbSLj+I/mir9+uEp6UTfc13pn+7Q5wDmAgFk0lLeorvQI8xtH8jliSmVg2bU6t6MAT60NvgUBc2XQnZ2jQExCn20PVmywa+f23bb3J50OfgvEPvsFK1qqYbMNCoNZjv7M+SS54coaa5Y4QRDvPazyaOY+YrXat9l/U5NQ4XrMj26/KIjmxj9l14RdXMKtfu3Z3Zlnjw+M9fVC0pzLHduB5swm+WRCU7/sqfXcZXPhFHTLLIQWqJsVsLxeTko3YodiK2sGs7OWX0jPNhqGP8oowvlIk8gblZlF0qEIGLZ3029/9oNaCZpVUPLmoIdIAi9aQX3Z/DGYUOqDIT3sB4AzJS0QpyQV0O87r3TfHYqn5keM+PiQi5moHHzdW36qgSPriy8/XDg1EXFU+hZHs6m7eNNxPHfwNhm7bhhr+hw3tRl3xmYh/ZvN8dFTR/hdM9sNbSozl8qlv9e1uQEyYJoWY6h2EZfapNY4P9KyoMCF07DbLGdN3k54tVepUHU/xFIB9zRXj5SJoh0J7A93iGgU3Mc5sAFKeckxMwuVBD553SzpjmwwqYIENq4sY7Bxx3Qkbg3DxYrvaeunJ2bNvqACJZUj7t1M=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7416014)(19092799006)(921020)(56012099003)(18002099003)(22082099003)(11063799006)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dW00SEM4QnBuSFFXWG81cklTS3h2WEY2T2QreWQ3Z1hkd1JhM0t1N3o3WmdF?=
- =?utf-8?B?SDhlcVkvNXNmVTRjVDVhNEdRNXpicDNMNzVRVDMwa1RpaVJNSkhTYm40Z3Vo?=
- =?utf-8?B?aWV4M3VLV0FhUWpTNWVmeStIcTdvTjJOQVo4TmJJQmdGK3U5QlBpaVBkTkRl?=
- =?utf-8?B?bUI2enJYdzhwc0ZBY24xZDMzaFhGK213WDRNUjkwOXozTzVxUkdPeWFGdC9R?=
- =?utf-8?B?U0NZbDhvM2hsd1RieXFlTTl0KzNmbTFXdmVqS2c0RWQyb1oxZXhPdGpuN1Fo?=
- =?utf-8?B?WlhMTGNQc2crcVFHYjRCd0VXSk5uRElEcFhYZFR1L1JqeUVrb0N1dk9HYVNT?=
- =?utf-8?B?bG9odE9VZkpqWWhzYjg0cGwvTVNxUi9CbERwdVVlMXRoQ0JaeGc2NWpRSkM3?=
- =?utf-8?B?bWJ5cUtBWG9CQmV0ZHQveFhvUWZDZDU4WUFSR3drOG05UXJDdE1WZFRRR2lV?=
- =?utf-8?B?K1ZWUTdWaE9IbU1wNk1la1RVUmpCeWNrYkd4U2hRbjRpVm5xVGd2bEwrOWc4?=
- =?utf-8?B?ZDQrQmNWWGVqTU8yOElnU0ZOZDc3MXYwQ3RiWVVPQU8rUmlERzQvQlVwZ2tW?=
- =?utf-8?B?bXZoNEZEYkZPV0pUVGZCYVFpd1pvbXhTRVZ4dVZZRTNrWERXRlRCQkRPdytW?=
- =?utf-8?B?SjJzc0VKSkFmYThsZ0lFRjVkZi95am1oSzFSV2NoZ3pjSUdQcUVpc0lPUUlr?=
- =?utf-8?B?dHI5L3psN1R6TnYzNlpzdWFISjJncnBBS0xDOWhINlBINVN4dU50N2poWldm?=
- =?utf-8?B?cWlrSXFzUndNZFNZcyt3Z2VMR2s5K3hrZGQrOEhqTmNzVStkMFF4ZDJ1ZG1O?=
- =?utf-8?B?UklUbXliL0ZEdXFKR3JEVnRHS055ZmpQemtXdWtZclRTZVdnTnVleVMyUVBv?=
- =?utf-8?B?TWdlY3ZFNlBkcmY5RWQ0UmpzRVZzM1JWNXJSZnh2czNZbDNsWjIxMmhZOUFP?=
- =?utf-8?B?MHcyajVHNjJzRWJjNWJPZ1dyZFp0cko1c1A0RW8wdnVnOGEzWG9vTTdsQmtJ?=
- =?utf-8?B?MzJ3WVEwN1RBUzZZNlZ4dytEaFFNWXFLTWF3Z1M5Z21iRmFyOHNWOEZMb3d4?=
- =?utf-8?B?cmRLRkowc3RVMHY0b3VyWDVHNGZJNWpJSkN0eDMraVRTQUJ1TSs3QlJvQ0tN?=
- =?utf-8?B?RkIvd241TjVrNGdZdlFaM1I4bEkzSGhRN2dzOGdvZy9KSjlzbitIM1BKTUJw?=
- =?utf-8?B?QW5FOVYzM2RxVnJMZGtodUxlRWxxNXBFMGVib1JIWmNucFRWWHF3K0I0dmRx?=
- =?utf-8?B?Z25qWmN4ek9JSXliZzhQNTF5YVc0S2RFZHNoSUtSQytkR3QycjlZTS96SllD?=
- =?utf-8?B?dGdWZjFrYTVwNUc4bVZ2SjBYKzdIVDhZaUZFM2orL0xBYi9BOGMwMDNuUjhj?=
- =?utf-8?B?YVpXTzdnbGEyTGN1c2NEYzNnbWNIZExCYjcrcjhzWUlSMlNkUDZVeDhLNEUy?=
- =?utf-8?B?S2o4bDBHdEY2WTV5TUVsWlZpd09YNjlTU3V5d2U5YlV3Z0NMamZCYm5OVjFY?=
- =?utf-8?B?aUw1SVhGcXpNbVpvRmNpVlJ5a0dXU0xaNnpvRnEzaGFuaWdubFB2RjZjb1ZU?=
- =?utf-8?B?dzAzblFVOXRsMi8rTWM1ODlLTjdNWS9DckVBdnBTUmZ5OC9NQ3NiUy9mQytz?=
- =?utf-8?B?YmNlVXcxODIrLzNWNlJHd3lKWlBONCtUdDRaR005M0sxL3lacGIzWWhsaHZk?=
- =?utf-8?B?enNBVzZqM1V5RXUxa0VVcDJmZGRZK0c0S1JLTXBCWlpKd2FXWDE5K05lSVRW?=
- =?utf-8?B?ZC8wbHZxL2xST3BXanhUSkhEMWVLZ1V6VTlkWlBQa0ZQM0ZZQ25aZ1gxcnFR?=
- =?utf-8?B?Rk5ZaEFtL1BOVmYvbzRCVEVIcEduUmZWUnBSamZIbE5WbWtwYlkyUWRYSCtv?=
- =?utf-8?B?bEdPSjEyZGwvazBVY2hHVXhQTCtUUUwvK0V2ZVQybDN3QlN1T2JoeE0yYmF6?=
- =?utf-8?B?aGNXTUVaa245QWJLWjJkK1JCZmxhQWlEU3lVbDJ0NDhGVHVjdndCa3FzUlJJ?=
- =?utf-8?B?UStVNGxNYVBLUUtET3BEbXptY1lTWlBuMVF6ZUsrTml1NklRTG9xdUJ1RExa?=
- =?utf-8?B?REE0dk9aZDFwRWJ4N2JuR3B2MFRZdjdob0YxaDlMYVp1cEkra0hpSHBkaFlZ?=
- =?utf-8?B?WTJWK3JGbzNQU0ZKMFhMbHY0aUplQ21YOWk3M0ExbGNVek9aN3VSUUYwR3lK?=
- =?utf-8?B?dWdTY0JxdEhhR1ZPUmJ1cFpaT1NoOUZEbEpBTnJWYTVPcEpMaEQ5bFZxUFRC?=
- =?utf-8?B?aHFUVkNZNUtrOGV3OVA0NzI2M3B3OGNFRzJZNWx5RHluWlRqd2w2eXVkZENP?=
- =?utf-8?B?ZGhWTnhvNGV3NU8rSTR2bXdFSEgzdUxkRmdNenAwWExGanBxMS83bjdPbEUw?=
- =?utf-8?Q?FFx/TtkqEldRjCfo=3D?=
-X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a57588e0-419f-41f2-b018-08deb6bb58f7
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2026 22:01:30.2940
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ct7NZG1BSRnaeO/xjkO86vp1QujXuZ/9agZ1ujghbdJOla0JvMvz0RshljmrO3usyaYOMAitq3XtLjsE6KMkzyss2zcZu3Kv4i373Oscjq+z4PivvGkyNokjTiMe7W+x
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB8029
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-ORIG-GUID: VqPSy3HQuENZTb1XgzfHW685e_cUUF6R
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIwMDIxNyBTYWx0ZWRfXy99Nr7JhQOP/
+ qZXskUDHRaxXWn5L4C/6YNM7oXTtrCv+HMADqjl4V3tWPUi1oy7QREXNy0xcFTGGoPAwai6i7Mo
+ DsRZegmg2r3P3CIKcNGn/Mp7BoeedeBthakqvN8XL9DgcmczFSUMiAukOsC3wc9hv1jbC+Ioj+M
+ txCgvWFL/qO76IsVM40OYOl+WO+yCKEoPR9WlmI0Dvijo7x8+eeU6Wtp7dgoV0xZE/aK7oHIibG
+ 2VBALVQ/Rs7PXuV/mEJKVtoaiI3/WqRDUu/yh0Ago1ZOP6gctELMf1sl/aHQ9wT+8mSzFdR5ZSl
+ 7tTJJS+QoPCjN4ywujoVR8V1JjvMT58i1/ercWF7ojTFVTXeb2W6XJapTJF2r2Eb52cP9EQpRO2
+ TibGwmf124SAJPSmyQ00LIeTph8ztdZ/N9BueMDmZFGbEmMsHru/waAChDlkd1p5ZqG05nFjo1h
+ lMAV0Y+gWbzIiKQfVfA==
+X-Proofpoint-GUID: WgUQnLKx_cs1VXxb4oHrTe2kyXUEf9-y
+X-Authority-Analysis: v=2.4 cv=apyCzyZV c=1 sm=1 tr=0 ts=6a0e3211 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=RLFbKyCAV2Q4rzo76dmsHbHSXqs=:19 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VnNF1IyMAAAA:8
+ a=EZCWm4vck40sK4hgDfAA:9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-20_03,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 lowpriorityscore=0 priorityscore=1501 impostorscore=0
+ bulkscore=0 suspectscore=0 adultscore=0 spamscore=0 phishscore=0
+ clxscore=1015 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
+ definitions=main-2605200217
 
-From: Frank Li <Frank.Li@nxp.com>
+Add a write-only 'uevent' sysfs attribute for synthesizing
+uevents for a PCI slot. This extends the existing uevent
+support which emits a KOBJ_ADD uevent in pci_hp_add() with
+the ability to replay such uevents for cold plugged devices.
+As such events are only emitted by hotplug capable PCI slots
+so is the support for synthesizing them.
 
-Using new API dmaengine_prep_config_sg() to simple code.
+The change was validated by manually triggering 'add' uevent
+for a specific hotplug PCI slot:
 
-dmaengine_prep_config_sg() does not distinguish between configuration
-failures and descriptor preparation failures, as both are reported through
-a NULL return value. Converting both cases to -ENOMEM is therefore
-acceptable and consistent with the helper's abstraction.
+    $ echo "add $(uuidgen)" | sudo tee   \
+                /sys/bus/pci/slots/<slot-id>/uevent
 
-In practice, most users only care whether the operation succeeds or fails,
-and do not depend on the exact errno value returned from this path.
-
-Tested-by: Niklas Cassel <cassel@kernel.org>
-Acked-by: Nicolas Ferre <nicolas.ferre@microchip.com>
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
+Signed-off-by: Ramesh Errabolu <ramesh@linux.ibm.com>
+Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Tested-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
-change in v6
-- add commit message about error propagation (sashaki AI)
----
- drivers/crypto/atmel-aes.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/pci/hotplug/pci_hotplug_core.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-diff --git a/drivers/crypto/atmel-aes.c b/drivers/crypto/atmel-aes.c
-index b393689400b4c..d890b5a277b9c 100644
---- a/drivers/crypto/atmel-aes.c
-+++ b/drivers/crypto/atmel-aes.c
-@@ -795,7 +795,6 @@ static int atmel_aes_dma_transfer_start(struct atmel_aes_dev *dd,
- 	struct dma_slave_config config;
- 	dma_async_tx_callback callback;
- 	struct atmel_aes_dma *dma;
--	int err;
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index fadcf98a8a66..c3634b1cc7a8 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -173,12 +173,27 @@ static ssize_t presence_read_file(struct pci_slot *pci_slot, char *buf)
  
- 	memset(&config, 0, sizeof(config));
- 	config.src_addr_width = addr_width;
-@@ -820,12 +819,9 @@ static int atmel_aes_dma_transfer_start(struct atmel_aes_dev *dd,
- 		return -EINVAL;
+ static struct pci_slot_attribute hotplug_slot_attr_presence = {
+ 	.attr = {.name = "adapter", .mode = S_IFREG | S_IRUGO},
+ 	.show = presence_read_file,
+ };
+ 
++static ssize_t uevent_write_file(struct pci_slot *slot,
++				 const char *buf, size_t len)
++{
++	int rc;
++
++	rc = kobject_synth_uevent(&slot->kobj, buf, len);
++	return rc ? rc : len;
++}
++
++static struct pci_slot_attribute hotplug_slot_attr_uevent = {
++	.attr = {.name = "uevent", .mode = S_IFREG | 0200},
++	.show = NULL,
++	.store = uevent_write_file
++};
++
+ static ssize_t test_write_file(struct pci_slot *pci_slot, const char *buf,
+ 			       size_t count)
+ {
+ 	struct hotplug_slot *slot = pci_slot->hotplug;
+ 	unsigned long ltest;
+ 	u32 test;
+@@ -251,12 +266,17 @@ static int fs_add_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
+ 		if (retval)
+ 			dev_err(&pci_slot->bus->dev,
+ 				"Error creating sysfs link (%d)\n", retval);
+ 		kobject_put(kobj);
  	}
  
--	err = dmaengine_slave_config(dma->chan, &config);
--	if (err)
--		return err;
--
--	desc = dmaengine_prep_slave_sg(dma->chan, dma->sg, dma->sg_len, dir,
--				       DMA_PREP_INTERRUPT | DMA_CTRL_ACK);
-+	desc = dmaengine_prep_config_sg(dma->chan, dma->sg, dma->sg_len, dir,
-+					DMA_PREP_INTERRUPT | DMA_CTRL_ACK,
-+					&config);
- 	if (!desc)
- 		return -ENOMEM;
++	retval = sysfs_create_file(&pci_slot->kobj,
++				   &hotplug_slot_attr_uevent.attr);
++	if (retval)
++		goto exit_uevent;
++
+ 	if (has_power_file(slot)) {
+ 		retval = sysfs_create_file(&pci_slot->kobj,
+ 					   &hotplug_slot_attr_power.attr);
+ 		if (retval)
+ 			goto exit_power;
+ 	}
+@@ -303,19 +323,24 @@ static int fs_add_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
+ 		sysfs_remove_file(&pci_slot->kobj,
+ 				  &hotplug_slot_attr_attention.attr);
+ exit_attention:
+ 	if (has_power_file(slot))
+ 		sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_power.attr);
+ exit_power:
++	sysfs_remove_file(&pci_slot->kobj,
++			  &hotplug_slot_attr_uevent.attr);
++exit_uevent:
+ 	sysfs_remove_link(&pci_slot->kobj, "module");
+ exit:
+ 	return retval;
+ }
  
-
+ static void fs_remove_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
+ {
++	sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_uevent.attr);
++
+ 	if (has_power_file(slot))
+ 		sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_power.attr);
+ 
+ 	if (has_attention_file(slot))
+ 		sysfs_remove_file(&pci_slot->kobj,
+ 				  &hotplug_slot_attr_attention.attr);
 -- 
 2.43.0
 
