@@ -1,104 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A4632F0C62
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 17:44:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A7B13F20FA;
+	Wed, 20 May 2026 17:48:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779299090; cv=none; b=qqJyRzMMUWyrmnx5Gp1oLfUnxlPLMOM7XJMd4Fb6uGWP8etmfemxW4whcc4tLRd2V+AomQIdxqXCBx8tWVGHJaijREkylzYJU0XpiOV9PL/t4F153PUIIRpmKVU+euS5YrerBDGGkODB2yjGIkMxAY4LwILYdK44nljkk0Sj72I=
+	t=1779299281; cv=none; b=VlqmAKzZZ4sT5QWuCz1aPda+InCejuqCqi+J/K2iKyam9JtyPx80bEI5DNwOft9LjGiCpH58ivRrAkH+vH4uBaRr3P1+cDdO/60nHERKBGXMFwrCybnT6u8Gpy8aUPDS5Xbo51vv5ZLJA419yoWddoUAMksJ3itn4ANl+4Tf788=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779299090; c=relaxed/simple;
-	bh=yFKiKTNTNmcVwHRmxKW0FYWrHxbYZ9DSBLD9NwDFyEA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=hUsD+RXfwMqZblQVvgWg/KZHAq0koi8Tzr29oal1wZAIh0jTd+dIsFCMr0TL51muwsz45SYpb4qNoU6KNSlkXnSacT2NijxBfpXZ78kKMA8H5yx8pa6Uf5Z2Q1sL2V21fwLRvYZaVc6PqiWB5/frvwL+89wjLcuRGu+09Cpwxlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=En2XSkFA; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779299281; c=relaxed/simple;
+	bh=Ou04mB7JYTog298zI/Z60+tMDz89U5qS5BPKX5kr/+k=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=EiQsVBSTWZQU3d9CHWiAc0AcPhigzjQDmcJKWtibqsFAZmTH8vCO2zVj6DtFi7Gv5MK51Oqo9e53+CVnL2Z27mnxXkoQWxHuCpYOiZuOdq0fvnFGLO3hIE+q51GhRBa7LJ6KEbul1elJmTG7FXZMiapMXhhfnh8sn5x/qIJo8Kk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X59zp2JT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="En2XSkFA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C20FD1F00893;
-	Wed, 20 May 2026 17:44:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X59zp2JT"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E55DC1F000E9;
+	Wed, 20 May 2026 17:47:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779299088;
-	bh=Q2SrpfNXg7u8lSrajggFsheR7SnJJ8MYJbWcSIqJNLc=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=En2XSkFAU73s57J3KLh1cbMDEZLVzM+X8aCp3CAMFnRiV7hc6zOOPwvFYUWerwvvP
-	 8km/pEkhiGyJGSMyt2ajdfJ6bOJjGWh06rtdNA8m+alhaHfgS2RPtr/P4cR4PTiwHy
-	 BC4wgSfhkaLDljE4YDSIGSZDiFqKMi4i1aWglQTVS6JOkU/40uAbH270XQktVUquMP
-	 tfOcOth0ZqdJ+Gy8vFyTjtbVFjgFwvd0vEFxyKtEZc6W0hSCQJerkY3nfMxuItELMI
-	 gjj4SrMwqEDyKwKwWQSIpjNy3C74N8hShVvSpc1pNjuPEQ6gExgEDUlNd/EjWUwIDk
-	 ZeqVsTSB3mqEQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 1/7] PCI: Allow per function PCI slots to fix slot
- reset on s390
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Farhan Ali" <alifm@linux.ibm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260520171113.1111-2-alifm@linux.ibm.com>
-References: <20260520171113.1111-2-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 20 May 2026 17:44:48 +0000
-Message-Id: <20260520174448.C20FD1F00893@smtp.kernel.org>
+	s=k20260515; t=1779299280;
+	bh=QokDhHnAKqLWHjogTXLoR4DHLEoCdHeJVwDfmUpDWFI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=X59zp2JT2ThlWcF8Vwx5hipnuU3pVcb+NfDjk2Z2sHtYDjkv+g3dJ0zZr2SGgl213
+	 1C0hCo1gnbyqdhUCR+J6gzpc8QSsRa50+ECq21EUTPKSlop5c2ppovIB2kN3lPYiDQ
+	 GR1Ypw4utLINVSrZVNL5Ysm4lJlrsSdcXXrYlEYy81+++le0P7+ckaH3kTfZIPhd/h
+	 G5L5/+OpcbEO3IC+73xXcXcYHpivSRqU3jGXcMYQKbRNtlDpVoDXwc8ETE1DGBGa/B
+	 FzvalrcDibzcUjSlRfzL+b/TJhLoq8ZU6IGme8BJScJjxXYhD+VHvlU8uda6mLonKz
+	 zFY9Io0VLlY6A==
+Date: Wed, 20 May 2026 12:47:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: Jason Gunthorpe <jgg@nvidia.com>, will@kernel.org, robin.murphy@arm.com,
+	bhelgaas@google.com, joro@8bytes.org, praan@google.com,
+	baolu.lu@linux.intel.com, kevin.tian@intel.com,
+	miko.lenczewski@arm.com, linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, dan.j.williams@intel.com,
+	jonathan.cameron@huawei.com, vsethi@nvidia.com,
+	linux-cxl@vger.kernel.org, nirmoyd@nvidia.com
+Subject: Re: [PATCH v4 1/3] PCI: Allow ATS to be always on for CXL.cache
+ capable devices
+Message-ID: <20260520174758.GA66039@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ag3vb4SWIfuw++vp@Asurada-Nvidia>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Wed, May 20, 2026 at 10:29:19AM -0700, Nicolin Chen wrote:
+> On Wed, May 20, 2026 at 11:20:43AM -0300, Jason Gunthorpe wrote:
+> > On Tue, May 19, 2026 at 06:04:18PM -0700, Nicolin Chen wrote:
+> > 
+> > > > Yeah, that's fair, so let's rename it to 
+> > > > 
+> > > > pci_translated_required()
+> > > > 
+> > > > ie the device requires translated requests to function. This is what
+> > > > CXL.cache implies (IIRC I was told the spec specifically says this)
+> > > > 
+> > > > Requiring translated requests implies you have to enable ATS in the
+> > > > system.
+> > > 
+> > > Perhaps we could let IOMMU drivers check:
+> > >   pci_cxl_is_cache_capable() || pci_dev_specific_is_pre_cxl()
+> > > directly?
+> > 
+> > I'd rather have a single function.
+> 
+> OK. Can we use pci_ats_required()?
+> 
+> CXL spec explicitly used "ATS" when stating the requirement of
+> CXL.cache). And it'd fit into the existing pci_ats_ functions.
 
-Pre-existing issues:
-- [High] Lockless access and double-dereference of `dev->slot` in `pci_dev_=
-reset_slot_function()` can lead to a TOCTOU race resulting in a Use-After-F=
-ree or NULL pointer dereference.
---
+OK by me.
 
-commit 3e69d6bfb3fdb198ceb79bc29354354788895096
-Author: Farhan Ali <alifm@linux.ibm.com>
+You already have a comment in the code about the CXL.cache
+requirement; thanks for that.
 
-PCI: Allow per function PCI slots to fix slot reset on s390
+I don't know enough about CXL to know what's behind the ATS
+requirement.  It sounds like it's more than a simple performance
+optimization.  If you happen to know the reason, it might be worth
+a short comment about that too.
 
-This commit introduces a per_func_slot flag to struct pci_slot to allow
-per-function PCI slots for functions managed through a hypervisor, such as =
-on
-s390. It modifies slot matching logic and pci_dev_reset_slot_function() to
-account for this new behavior.
+Please add a one-line comment in the code about why we check
+Cache_Capable instead of Cache_Enable, i.e., even if CXL.cache is not
+enabled now, it may be enabled later.
 
-[ ... ]
-
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f7cfcc000901..d0c9f0166af5c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4865,8 +4865,9 @@ static int pci_reset_hotplug_slot(struct hotplug_sl=
-ot *hotplug, bool probe)
-> =20
->  static int pci_dev_reset_slot_function(struct pci_dev *dev, bool probe)
->  {
-> -	if (dev->multifunction || dev->subordinate || !dev->slot ||
-> -	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
-> +	if (dev->subordinate || !dev->slot ||
-> +	    dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
-> +	    (dev->multifunction && !dev->slot->per_func_slot))
-
-[Severity: High]
-This is a pre-existing issue, but does this lockless access to dev->slot
-introduce a time-of-check to time-of-use race condition?
-
-Because dev->slot is read without holding pci_slot_mutex or device_lock(),
-a concurrent hotplug removal could clear dev->slot and free the slot
-structure in pci_slot_release() while this code is running.
-
-If the compiler reloads the pointer after the !dev->slot check, or if the
-pointer is kept in a register while the memory is freed, could accessing
-dev->slot->per_func_slot or dev->slot->hotplug below result in a null point=
-er
-dereference or use-after-free?
-
->  		return -ENOTTY;
-> =20
->  	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520171113.1111=
--1-alifm@linux.ibm.com?part=3D1
+Bjorn
