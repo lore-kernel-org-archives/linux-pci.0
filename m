@@ -1,192 +1,140 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 322553644C6;
-	Wed, 20 May 2026 20:40:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4492B35AC0C
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 20:40:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779309631; cv=none; b=rRGf3PXmY6zQlRxGbcHh3JOr7ctcBAX5m22p/cx7OX4iWF0qkuFa/bhnhqruH0f8dsPtxjowRBvimnyHAAZB/uzLTadL6olKZlcnUhxh4TZlp51tbYgaUmMBh710HO8LOPm1O8XqAuhV3RrrYJJz737eyWMWzAOUT6O4FdK4zbQ=
+	t=1779309653; cv=none; b=SdI5ljqjGEFFdLlmiOrXAJHSDxFAIKlt6VgdBCipaT3pjNy8OrZAc+0JPMH4kl8LZdtk+HjJP/ZpPDnFSb3Rp01hwslmm9x4XrwXFmR+bb4aiHcz1M2QsmADTY1TDgBkiYdt4xIDRS+Xgq3Rufl7Imsz4MAa9p/Kj7rW8FcaTEA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779309631; c=relaxed/simple;
-	bh=k1MhuIqMKRFoGyuIgP7PjOWaRJFBAZTibl9OKQnlf78=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cxoNfvYiBiiGtWI0nRww1bpcdxSp7h3CgbQQCsqCkMfFSmRnDD3X4DUzD1Rn0jyty2OSjXy/wOR84/z242a3SMyXJaghNYwYdV6DpVCZ+k4LSgrkxUuBMNfRyVcJkp30pCUCqpLoAFnk8WMFZml8EBGSAKIMJ+TkOZmdLhGplIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=LgB2g2xU; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1779309653; c=relaxed/simple;
+	bh=GQ9lD4Z8COIVohiZyqddpFVD8t2ZI7KUX7W5ypxCo6M=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=QdD1pbk5uygJDL1h1pnXC3ZoqMugEQ0W2pOOr9JsQsJJr2N4yxUmGRbO2yzGLpRVNbyqSJ9+Y63e+XSFuDFI5ZIJb4PSmsm6QWRedD59kRXGDhQ7RRo0383ZSQg2tW2XD8gSzYmvBrTZk/pF68ozzX1Bx3O5hILU+YGxm0MUO3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SCqObgbm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="LgB2g2xU"
-Received: from localhost (unknown [20.191.74.188])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 0CD8720B7167;
-	Wed, 20 May 2026 13:40:22 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0CD8720B7167
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1779309622;
-	bh=ZTcvWeiCLY8IQJ6ozqWjHg1nBJ4h24wKde+9AGbNAWw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=LgB2g2xUxWwPRCYo0dfn50NfBs9rQcctYdX2NKlwi8S708qQXh//Kl7Qma58jdfwL
-	 s4GYYl9C9ic55fsaTn4zXGpt7NDFotd8qit6wWEQBHkKHxEfG8kGXKPjPDlngl3yZm
-	 q++zSPLg4aIxJcOM1/FEBIGQH0EyJVoipRgnSYf8=
-Date: Wed, 20 May 2026 13:40:27 -0700
-From: Jacob Pan <jacob.pan@linux.microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: Yu Zhang <zhangyu1@linux.microsoft.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
- "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
- "wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com"
- <kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
- "decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com"
- <longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>,
- "will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
- <robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org"
- <lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
- "robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
- "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>,
- "easwar.hariharan@linux.microsoft.com"
- <easwar.hariharan@linux.microsoft.com>, jacob.pan@linux.microsoft.com
-Subject: Re: [PATCH v1 4/4] iommu/hyperv: Add page-selective IOTLB flush
- support
-Message-ID: <20260520134027.00005e91@linux.microsoft.com>
-In-Reply-To: <SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
-	<20260511162408.1180069-5-zhangyu1@linux.microsoft.com>
-	<20260515223545.GL7702@ziepe.ca>
-	<lxmfd2ml5dafkxquuf5i45uqgh6wxl44hlqphu77kvximqrnmi@b3htoyjc6d5z>
-	<SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
-Organization: LSG
-X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SCqObgbm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAB9E1F000E9;
+	Wed, 20 May 2026 20:40:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779309651;
+	bh=jtvN79ozd4DMfw5Ov9rGq4dcPQpE+Kvf4WS+WgmtCSo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=SCqObgbmcV64uVChFONEh2sWCXFhoJBVIth29kuoA6zUg0vS1vSXzjHA2s8wkElFC
+	 gcVOOu0kB8TKjUfn/1MdHidjO//LntMxZGb+0mtwsK/yr6g5k8bqELP5ehkBGJVChd
+	 SZF3wa2BpZRSNmuo0EREQjcL591dsYJtBBGHWUrHBnlEumnpPGaV3EHK5J3xlMoUJt
+	 VcobJAmHFnlfpXkCuTZcoEvz/jLCas/w782siVH8MCRJDb0LsVgtZ1Lv6ZOY2li8nP
+	 knVKuQRveTLfgAxErU4WJkDKl7Cwq7/GhHjYdgzgITC0H/wE5icHlZb4nEZAfK1u0u
+	 HeL5fYj0zT2wQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v17 6/7] vfio/pci: Add a reset_done callback for
+ vfio-pci driver
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Farhan Ali" <alifm@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260520171113.1111-7-alifm@linux.ibm.com>
+References: <20260520171113.1111-7-alifm@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 20 May 2026 20:40:51 +0000
+Message-Id: <20260520204051.BAB9E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
 
-Hi Michael,
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [Critical] Use-After-Free (UAF) due to lockless Time-of-Check to Time-of-=
+Use (TOCTOU) race on vdev->pci_saved_state
+- [High] Hardware state modification via pci_restore_state() without acquir=
+ing vdev->memory_lock
+- [Medium] Missing error check on pci_load_saved_state() leads to potential=
+ data corruption
+--
 
-On Wed, 20 May 2026 19:26:24 +0000
-Michael Kelley <mhklinux@outlook.com> wrote:
+commit 23e4483480775e0803e490cec805fe1688f9a753
+Author: Farhan Ali <alifm@linux.ibm.com>
 
-> From: Michael Kelley <mhklinux@outlook.com>
-> To: Yu Zhang <zhangyu1@linux.microsoft.com>, Jason Gunthorpe
-> <jgg@ziepe.ca> CC: "linux-kernel@vger.kernel.org"
-> <linux-kernel@vger.kernel.org>,  "linux-hyperv@vger.kernel.org"
-> <linux-hyperv@vger.kernel.org>,  "iommu@lists.linux.dev"
-> <iommu@lists.linux.dev>, "linux-pci@vger.kernel.org"
-> <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org"
-> <linux-arch@vger.kernel.org>, "wei.liu@kernel.org"
-> <wei.liu@kernel.org>,  "kys@microsoft.com" <kys@microsoft.com>,
-> "haiyangz@microsoft.com"  <haiyangz@microsoft.com>,
-> "decui@microsoft.com" <decui@microsoft.com>,  "longli@microsoft.com"
-> <longli@microsoft.com>, "joro@8bytes.org"  <joro@8bytes.org>,
-> "will@kernel.org" <will@kernel.org>,  "robin.murphy@arm.com"
-> <robin.murphy@arm.com>, "bhelgaas@google.com"  <bhelgaas@google.com>,
-> "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-> "lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org"
-> <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
-> "arnd@arndb.de"  <arnd@arndb.de>, "jacob.pan@linux.microsoft.com"
-> <jacob.pan@linux.microsoft.com>, "tgopinath@linux.microsoft.com"
-> <tgopinath@linux.microsoft.com>,
-> "easwar.hariharan@linux.microsoft.com"
-> <easwar.hariharan@linux.microsoft.com> Subject: RE: [PATCH v1 4/4]
-> iommu/hyperv: Add page-selective IOTLB flush  support Date: Wed, 20
-> May 2026 19:26:24 +0000
->=20
-> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Wednesday, May
-> 20, 2026 10:15 AM
-> >=20
-> > On Fri, May 15, 2026 at 07:35:45PM -0300, Jason Gunthorpe wrote: =20
-> > > On Tue, May 12, 2026 at 12:24:08AM +0800, Yu Zhang wrote: =20
-> > > > +static inline u16 hv_iommu_fill_iova_list(union
-> > > > hv_iommu_flush_va *iova_list,
-> > > > +					  unsigned long start,
-> > > > +					  unsigned long end)
-> > > > +{
-> > > > +	unsigned long start_pfn =3D start >> PAGE_SHIFT;
-> > > > +	unsigned long end_pfn =3D PAGE_ALIGN(end) >> PAGE_SHIFT;
-> > > > +	unsigned long nr_pages =3D end_pfn - start_pfn;
-> > > > +	u16 count =3D 0;
-> > > > +
-> > > > +	while (nr_pages > 0) {
-> > > > +		unsigned long flush_pages;
-> > > > +		int order;
-> > > > +		unsigned long pfn_align;
-> > > > +		unsigned long size_align;
-> > > > +
-> > > > +		if (count >=3D HV_IOMMU_MAX_FLUSH_VA_COUNT) {
-> > > > +			count =3D HV_IOMMU_FLUSH_VA_OVERFLOW;
-> > > > +			break;
-> > > > +		}
-> > > > +
-> > > > +		if (start_pfn)
-> > > > +			pfn_align =3D __ffs(start_pfn);
-> > > > +		else
-> > > > +			pfn_align =3D BITS_PER_LONG - 1;
-> > > > +
-> > > > +		size_align =3D __fls(nr_pages);
-> > > > +		order =3D min(pfn_align, size_align);
-> > > > +		iova_list[count].page_mask_shift =3D order;
-> > > > +		iova_list[count].page_number =3D start_pfn;
-> > > > +
-> > > > +		flush_pages =3D 1UL << order;
-> > > > +		start_pfn +=3D flush_pages;
-> > > > +		nr_pages -=3D flush_pages;
-> > > > +		count++;
-> > > > +	} =20
-> > >
-> > > This seems like a really silly hypervisor interface. Why doesn't
-> > > it just accept a normal range? Splitting it into power of two
-> > > aligned ranges is very inefficient. =20
-> >=20
-> > Fair point. I'm not sure how much flexibility we have to change
-> > this hypercall interface at the moment - it predates the pvIOMMU
-> > work and may have other consumers beyond Linux guest. On the other
-> > hand, having the guest specify 2^N-aligned blocks does save the
-> > hypervisor from having to decompose ranges itself before issuing
-> > hardware invalidation commands - the guest-provided entries can be
-> > fed to the HW more or less directly.
-> >=20
-> > That said, the way I'm currently using this interface may be
-> > more precise than necessary. Maybe we have 2 options:
-> >=20
-> > 1) Current approach: decompose the range into multiple exact
-> >    2^N-aligned blocks with no over-flush, but at the cost of
-> >    more complex calculations and more entries.
-> >=20
-> > 2) Follow what Intel/AMD drivers do: find a single minimal
-> >    2^N-aligned block that covers the entire range, but may
-> >    over-flush.
-> >=20
-> > Any preference?
-> >=20
-> > @Michael, since you've also been reviewing this patch, I'd
-> > appreciate your thoughts on the above as well. :)
-> >  =20
->=20
-> I'm just guessing, but perhaps flushing an aligned power-of-2
-> range can be processed by the hypervisor at a relatively fixed
-> cost, regardless of the size. Having the guest do the decomposing
-> of an arbitrary range allows the hypervisor to make use of the
-> existing "rep" hypercall mechanism if the hypercall is taking
-> "too long". The hypervisor can pause its processing, return to
-> the guest temporarily, and then continue the hypercall. If the
-> arbitrary range were passed into the hypercall for the hypervisor
-> to do the decomposing, that pause-and-restart mechanism
-> wouldn't be available.
->=20
-> Of course, Linux doesn't really take advantage of the pause to
-> reduce guest interrupt latency because the Hyper-V code in
-> Linux typically disable interrupts around a hypercall due to the
-> way the hypercall input page is allocated. But other guest
-> operating systems might benefit from such a pause. And we could
-> probably fix the Hyper-V code in Linux to allow interrupts during a
-> hypercall pause/restart if long-running hypercalls turn out to be
-> a problem.
-I am not sure if this pause feature is suitable for IOTLB flush at all
-since it is inherently synchronous =E2=80=94 the caller must block until all
-invalidations complete. Pausing mid-flush to return to the guest
-doesn't help if the guest can't make forward progress anyway.
+vfio/pci: Add a reset_done callback for vfio-pci driver
+
+This commit adds a reset_done callback to the vfio-pci driver's error
+handlers to restore the PCI device state to its initial saved state upon
+error recovery.
+
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index f47a49ca67fae..6358b59fab2b1 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+[ ... ]
+> @@ -2255,6 +2255,17 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
+ruct pci_dev *pdev,
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
+> =20
+> +static void vfio_pci_core_aer_reset_done(struct pci_dev *pdev)
+> +{
+> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
+> +
+> +	if (!vdev->pci_saved_state)
+
+[Severity: Critical]
+Is there a race condition here if userspace closes the VFIO device file
+descriptor concurrently?
+
+This callback checks vdev->pci_saved_state without holding any VFIO-specific
+locks. If vfio_pci_core_disable() is called concurrently, it can free the
+state using pci_load_and_free_saved_state(&vdev->pci_saved_state).
+
+If the memory is freed right after this check passes, will
+pci_load_saved_state() dereference a freed pointer?
+
+> +		return;
+> +
+> +	pci_load_saved_state(pdev, vdev->pci_saved_state);
+
+[Severity: Medium]
+Should we check the return value of pci_load_saved_state() here?
+
+If the saved PCI capabilities do not match the current hardware capabilitie=
+s,
+pci_load_saved_state() can fail and return a negative error code like
+-EINVAL.
+
+When this fails, it sets pdev->state_saved =3D false and leaves
+pdev->saved_config_space and pdev->saved_cap_space in an incomplete or
+partially updated state. Since this code unconditionally calls
+pci_restore_state() next, could it restore a corrupted or incomplete
+configuration state to the physical hardware device?
+
+> +	pci_restore_state(pdev);
+
+[Severity: High]
+Does this hardware state modification require vdev->memory_lock?
+
+pci_restore_state() modifies fundamental hardware state like the PCI COMMAND
+register and BARs. In the vfio-pci driver, operations that modify or reset
+the device's memory decode bits typically require the vdev->memory_lock
+read-write semaphore to protect against concurrent userspace memory-mapped =
+I/O
+faults and configuration accesses.
+
+Because this lock is not held, can concurrent userspace accesses interleave
+with the hardware state restoration, potentially leading to memory corrupti=
+on
+or unisolated memory access?
+
+However, simply adding down_write(&vdev->memory_lock) here might cause a
+recursive deadlock during VFIO_DEVICE_RESET, which already holds memory_lock
+before triggering the reset sequence that calls this callback. Is there a w=
+ay
+to safely serialize this hardware state modification?
+
+> +}
+> +
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520171113.1111=
+-1-alifm@linux.ibm.com?part=3D6
