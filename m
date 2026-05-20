@@ -1,102 +1,192 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31CF036C9EE;
-	Wed, 20 May 2026 20:27:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 322553644C6;
+	Wed, 20 May 2026 20:40:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779308878; cv=none; b=J6MMDtCq0EV8c/Bgp9Cac6tOjLXEZX30joXDzC5v0iRmaS4tLBXXMQ3hkZ+4w6fsyqf1XHFEOWSL0dRtXcqub01a993CYqu7Iz+GEChq0QXmouFQKIUHrwunXr15mH3fGSG8vlA7cXp1GpF+MiT1tD+7C7y7hFpNOwo7xPXwEvQ=
+	t=1779309631; cv=none; b=rRGf3PXmY6zQlRxGbcHh3JOr7ctcBAX5m22p/cx7OX4iWF0qkuFa/bhnhqruH0f8dsPtxjowRBvimnyHAAZB/uzLTadL6olKZlcnUhxh4TZlp51tbYgaUmMBh710HO8LOPm1O8XqAuhV3RrrYJJz737eyWMWzAOUT6O4FdK4zbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779308878; c=relaxed/simple;
-	bh=O4mp0TCZLIIQoOZJrrRwFBYSguOzPbONHyPBbBQMzOc=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=hqyY/OTfmzuPctfxZgOqUsAfydzMRX+TVsxPMdzteHSeSLjTfhqT70vGjlkrSLvNpxa6gPXvTqg/C3Pn/vU5a09MvPijiVURq+DuTSlZQRsWK7XKBlVrXSQeRwRVXdNof8iEPO80zPShI66mZtPD4nqTIax6zd7BcJ9kF1Y4V08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tzb1Ret7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779309631; c=relaxed/simple;
+	bh=k1MhuIqMKRFoGyuIgP7PjOWaRJFBAZTibl9OKQnlf78=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=cxoNfvYiBiiGtWI0nRww1bpcdxSp7h3CgbQQCsqCkMfFSmRnDD3X4DUzD1Rn0jyty2OSjXy/wOR84/z242a3SMyXJaghNYwYdV6DpVCZ+k4LSgrkxUuBMNfRyVcJkp30pCUCqpLoAFnk8WMFZml8EBGSAKIMJ+TkOZmdLhGplIs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=LgB2g2xU; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tzb1Ret7"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9C32C1F000E9;
-	Wed, 20 May 2026 20:27:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779308876;
-	bh=Sf1SMQC28bDRL9mfOLMubwubEk1ClyBVQ/X/6xOLHzc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Tzb1Ret77ExKLvkEHhl993AAxmn1PQZDUTwx1VawQJyrOOaiXEOcOhOUXf4DIQxVg
-	 xBtX0U8pNf9//BzKJH6MzU6mvOMjZiqc6gcibTTnVMyFFttt/mGxPG23JhfredhdtC
-	 gHofPsuO6hd3CxCZE+fqiEawS+IeZgoZ5XyhksIeYLSi17kBZmGYcR9c/k0ThnMxef
-	 hA/in1OvY9BzhpP3Tf8n4DHdPKNnG+OF1WCv0K3JBl91IrM53Ojf81RZ298bR6C4eR
-	 bHD9eFR/fXqfcBw2VYfh/e6mMt/pS8p1NKwgTopsZyOMq/04ZW2BgRVHwv2ru2o26W
-	 4LS/8EHAyDBNg==
-Date: Wed, 20 May 2026 15:27:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com,
-	bjorn.andersson@oss.qualcomm.com
-Subject: Re: [PATCH v5 1/5] PCI: host-common: Add helper to determine host
- bridge D3cold eligibility
-Message-ID: <20260520202755.GA120626@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="LgB2g2xU"
+Received: from localhost (unknown [20.191.74.188])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 0CD8720B7167;
+	Wed, 20 May 2026 13:40:22 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 0CD8720B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1779309622;
+	bh=ZTcvWeiCLY8IQJ6ozqWjHg1nBJ4h24wKde+9AGbNAWw=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=LgB2g2xUxWwPRCYo0dfn50NfBs9rQcctYdX2NKlwi8S708qQXh//Kl7Qma58jdfwL
+	 s4GYYl9C9ic55fsaTn4zXGpt7NDFotd8qit6wWEQBHkKHxEfG8kGXKPjPDlngl3yZm
+	 q++zSPLg4aIxJcOM1/FEBIGQH0EyJVoipRgnSYf8=
+Date: Wed, 20 May 2026 13:40:27 -0700
+From: Jacob Pan <jacob.pan@linux.microsoft.com>
+To: Michael Kelley <mhklinux@outlook.com>
+Cc: Yu Zhang <zhangyu1@linux.microsoft.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+ "wei.liu@kernel.org" <wei.liu@kernel.org>, "kys@microsoft.com"
+ <kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
+ "decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com"
+ <longli@microsoft.com>, "joro@8bytes.org" <joro@8bytes.org>,
+ "will@kernel.org" <will@kernel.org>, "robin.murphy@arm.com"
+ <robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org"
+ <lpieralisi@kernel.org>, "mani@kernel.org" <mani@kernel.org>,
+ "robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+ "tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>,
+ "easwar.hariharan@linux.microsoft.com"
+ <easwar.hariharan@linux.microsoft.com>, jacob.pan@linux.microsoft.com
+Subject: Re: [PATCH v1 4/4] iommu/hyperv: Add page-selective IOTLB flush
+ support
+Message-ID: <20260520134027.00005e91@linux.microsoft.com>
+In-Reply-To: <SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
+	<20260511162408.1180069-5-zhangyu1@linux.microsoft.com>
+	<20260515223545.GL7702@ziepe.ca>
+	<lxmfd2ml5dafkxquuf5i45uqgh6wxl44hlqphu77kvximqrnmi@b3htoyjc6d5z>
+	<SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
+Organization: LSG
+X-Mailer: Claws Mail 3.21.0 (GTK+ 2.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260519223901.GA20376@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 19, 2026 at 05:39:01PM -0500, Bjorn Helgaas wrote:
-> On Wed, Apr 29, 2026 at 12:12:23PM +0530, Krishna Chaitanya Chundru wrote:
-> > Add a common helper, pci_host_common_d3cold_possible(), to determine
-> > whether PCIe devices under host bridge can safely transition to D3cold.
-> ...
+Hi Michael,
 
-> > +static int __pci_host_common_d3cold_possible(struct pci_dev *pdev, void *userdata)
-> > +{
-> > +	u32 *flags = userdata;
-> > +	int type;
-> > +
-> > +	/* Ignore conventional PCI devices */
-> > +	if (!pci_is_pcie(pdev))
-> > +		return 0;
-> > +
-> > +	type = pci_pcie_type(pdev);
-> > +	if (type != PCI_EXP_TYPE_ENDPOINT &&
-> > +	    type != PCI_EXP_TYPE_LEG_END &&
-> > +	    type != PCI_EXP_TYPE_RC_END)
-> > +		return 0;
-> 
-> From https://sashiko.dev/#/patchset/20260429-d3cold-v5-0-89e9735b9df6%40oss.qualcomm.com:
-> 
->   If the topology contains an active conventional PCI device or an
->   intermediate PCIe switch in PCI_D0, returning 0 here allows
->   pci_walk_bus() to continue without clearing the
->   PCI_HOST_D3COLD_ALLOWED flag.
-> 
->   Does this create a situation where the host bridge might
->   aggressively power off the link, dropping power to these active
->   components?
-> 
-> I guess this is intentional, since you have comment about ignoring
-> conventional PCI devices.  But this does seem like a potential
-> problem.  Why should we ignore switches here?  And I think it's still
-> fairly common to have a PCIe-to-PCI bridge leading to a conventional
-> PCI device, and I don't know why we should ignore them.
-> 
-> The commit log consistently refers to "PCIe" devices and endpoints, so
-> maybe there's some reason that I'm missing.
-> 
-> There are other sashiko comments on this series that I think should
-> also be looked at.
+On Wed, 20 May 2026 19:26:24 +0000
+Michael Kelley <mhklinux@outlook.com> wrote:
 
-This series is all in pci/next, so you and Mani can decide on whether
-any sashiko comments need to be addressed.
-
-Even if there's no code change, I think it'd be nice to have a brief
-comment here about why conventional PCI and switches are ignored.
+> From: Michael Kelley <mhklinux@outlook.com>
+> To: Yu Zhang <zhangyu1@linux.microsoft.com>, Jason Gunthorpe
+> <jgg@ziepe.ca> CC: "linux-kernel@vger.kernel.org"
+> <linux-kernel@vger.kernel.org>,  "linux-hyperv@vger.kernel.org"
+> <linux-hyperv@vger.kernel.org>,  "iommu@lists.linux.dev"
+> <iommu@lists.linux.dev>, "linux-pci@vger.kernel.org"
+> <linux-pci@vger.kernel.org>, "linux-arch@vger.kernel.org"
+> <linux-arch@vger.kernel.org>, "wei.liu@kernel.org"
+> <wei.liu@kernel.org>,  "kys@microsoft.com" <kys@microsoft.com>,
+> "haiyangz@microsoft.com"  <haiyangz@microsoft.com>,
+> "decui@microsoft.com" <decui@microsoft.com>,  "longli@microsoft.com"
+> <longli@microsoft.com>, "joro@8bytes.org"  <joro@8bytes.org>,
+> "will@kernel.org" <will@kernel.org>,  "robin.murphy@arm.com"
+> <robin.murphy@arm.com>, "bhelgaas@google.com"  <bhelgaas@google.com>,
+> "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+> "lpieralisi@kernel.org" <lpieralisi@kernel.org>, "mani@kernel.org"
+> <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
+> "arnd@arndb.de"  <arnd@arndb.de>, "jacob.pan@linux.microsoft.com"
+> <jacob.pan@linux.microsoft.com>, "tgopinath@linux.microsoft.com"
+> <tgopinath@linux.microsoft.com>,
+> "easwar.hariharan@linux.microsoft.com"
+> <easwar.hariharan@linux.microsoft.com> Subject: RE: [PATCH v1 4/4]
+> iommu/hyperv: Add page-selective IOTLB flush  support Date: Wed, 20
+> May 2026 19:26:24 +0000
+>=20
+> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Wednesday, May
+> 20, 2026 10:15 AM
+> >=20
+> > On Fri, May 15, 2026 at 07:35:45PM -0300, Jason Gunthorpe wrote: =20
+> > > On Tue, May 12, 2026 at 12:24:08AM +0800, Yu Zhang wrote: =20
+> > > > +static inline u16 hv_iommu_fill_iova_list(union
+> > > > hv_iommu_flush_va *iova_list,
+> > > > +					  unsigned long start,
+> > > > +					  unsigned long end)
+> > > > +{
+> > > > +	unsigned long start_pfn =3D start >> PAGE_SHIFT;
+> > > > +	unsigned long end_pfn =3D PAGE_ALIGN(end) >> PAGE_SHIFT;
+> > > > +	unsigned long nr_pages =3D end_pfn - start_pfn;
+> > > > +	u16 count =3D 0;
+> > > > +
+> > > > +	while (nr_pages > 0) {
+> > > > +		unsigned long flush_pages;
+> > > > +		int order;
+> > > > +		unsigned long pfn_align;
+> > > > +		unsigned long size_align;
+> > > > +
+> > > > +		if (count >=3D HV_IOMMU_MAX_FLUSH_VA_COUNT) {
+> > > > +			count =3D HV_IOMMU_FLUSH_VA_OVERFLOW;
+> > > > +			break;
+> > > > +		}
+> > > > +
+> > > > +		if (start_pfn)
+> > > > +			pfn_align =3D __ffs(start_pfn);
+> > > > +		else
+> > > > +			pfn_align =3D BITS_PER_LONG - 1;
+> > > > +
+> > > > +		size_align =3D __fls(nr_pages);
+> > > > +		order =3D min(pfn_align, size_align);
+> > > > +		iova_list[count].page_mask_shift =3D order;
+> > > > +		iova_list[count].page_number =3D start_pfn;
+> > > > +
+> > > > +		flush_pages =3D 1UL << order;
+> > > > +		start_pfn +=3D flush_pages;
+> > > > +		nr_pages -=3D flush_pages;
+> > > > +		count++;
+> > > > +	} =20
+> > >
+> > > This seems like a really silly hypervisor interface. Why doesn't
+> > > it just accept a normal range? Splitting it into power of two
+> > > aligned ranges is very inefficient. =20
+> >=20
+> > Fair point. I'm not sure how much flexibility we have to change
+> > this hypercall interface at the moment - it predates the pvIOMMU
+> > work and may have other consumers beyond Linux guest. On the other
+> > hand, having the guest specify 2^N-aligned blocks does save the
+> > hypervisor from having to decompose ranges itself before issuing
+> > hardware invalidation commands - the guest-provided entries can be
+> > fed to the HW more or less directly.
+> >=20
+> > That said, the way I'm currently using this interface may be
+> > more precise than necessary. Maybe we have 2 options:
+> >=20
+> > 1) Current approach: decompose the range into multiple exact
+> >    2^N-aligned blocks with no over-flush, but at the cost of
+> >    more complex calculations and more entries.
+> >=20
+> > 2) Follow what Intel/AMD drivers do: find a single minimal
+> >    2^N-aligned block that covers the entire range, but may
+> >    over-flush.
+> >=20
+> > Any preference?
+> >=20
+> > @Michael, since you've also been reviewing this patch, I'd
+> > appreciate your thoughts on the above as well. :)
+> >  =20
+>=20
+> I'm just guessing, but perhaps flushing an aligned power-of-2
+> range can be processed by the hypervisor at a relatively fixed
+> cost, regardless of the size. Having the guest do the decomposing
+> of an arbitrary range allows the hypervisor to make use of the
+> existing "rep" hypercall mechanism if the hypercall is taking
+> "too long". The hypervisor can pause its processing, return to
+> the guest temporarily, and then continue the hypercall. If the
+> arbitrary range were passed into the hypercall for the hypervisor
+> to do the decomposing, that pause-and-restart mechanism
+> wouldn't be available.
+>=20
+> Of course, Linux doesn't really take advantage of the pause to
+> reduce guest interrupt latency because the Hyper-V code in
+> Linux typically disable interrupts around a hypercall due to the
+> way the hypercall input page is allocated. But other guest
+> operating systems might benefit from such a pause. And we could
+> probably fix the Hyper-V code in Linux to allow interrupts during a
+> hypercall pause/restart if long-running hypercalls turn out to be
+> a problem.
+I am not sure if this pause feature is suitable for IOTLB flush at all
+since it is inherently synchronous =E2=80=94 the caller must block until all
+invalidations complete. Pausing mid-flush to return to the guest
+doesn't help if the guest can't make forward progress anyway.
