@@ -1,197 +1,224 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C6E3EF0DC;
-	Wed, 20 May 2026 14:55:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779288919; cv=none; b=fwoST5BZHznKx3xoIGyRa3tGn6kEiyHt8qrEtOebJllTqNoLB0XklTyTgQ0CEJzrrxNTooD7vi7Mjmio8k3DI0R9S26tK/oRoEdz04sryHqHYPw7qlHCWWdNypteQSt+6cUWV88fpij720sxyuOnXXOVwf6u1OneHFzXSGyZloY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779288919; c=relaxed/simple;
-	bh=mPhlcHFvCpO2AzTCdnxpHt5Nq5zeL9SwOfrxApzRgnY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VFbPlx9GS4iLCvMaGAQlPhKKmOZ7kWEzZmeYJvCysjV0QUlDvhvKBsGeHXSzEPscQ6oUF610ZjXle5gNDgieb4rJASE6boYnXo2dB6G0GH4NKdxcAQEqyGOWjgbkEw3//95mabmwgvaACQ/KfeTsuP8q+0f3Qn8LAMaIrt3ulhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=U+EHOHiR; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C922F3F2118
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 15:18:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.51
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779290292; cv=pass; b=dyjZ0/TQcNQ5v9TsqlvLsDz/jvtu8DZKh7rCaiYhu+Iy78eF9ha7u9gbaGfbyS4dYmWtI/si3m4b0dK8F2Qhvf8dZkkFYjBHsjKtJsXBfp9GgI7Ya1HNnDkPQxaUCnRtS83cBd3KcyBwgXG8IIupvJjQzxjKnbhYBLoWb0xrkTM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779290292; c=relaxed/simple;
+	bh=eiOOIR+BuCgNoFXzdn/1KJetRl3m/Y+Ifs/Wqtp9Tg4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=S3FlNHHjzHXSJ9L4j5QEPY175IhIbMA3fgfi+LHbIq8796+HVKY6ar55YXaK7FynOvXn7WJkUYs4k1Q03f9wlQCgUuATXAHzvbi0ExKE0yicxyweBw862mpxHoggML2LoroxpvBEzq4Qv6h3gl+WCnjxljSkBvnabr1MTB/DT78=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=h8sogdFH; arc=pass smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="U+EHOHiR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=Ta7ysL3hvmydWrMVmPTW46rDbrX7lZIBRkcPb5zNuao=;
-	b=U+EHOHiRhpU6zwBNeo1EtPdCQqMYW8F9RerrKKInWUSUgZ3mku+aNs3FlIJ8y6
-	sY7J8Ran5wjdZuCAjpLd3uJSmqHj4WID8qdUkSb8tp4Aq5uCk5t0mtrBFhtxCDnk
-	ebFGk8otf/BZt8Ogiqxxjpw23l6DXrKxpO/vlne1x1rHQ=
-Received: from [IPV6:240e:b8f:91b3:d000:e944:1037:cb1d:708] (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wCXDGAWyw1qlEHkCQ--.3498S2;
-	Wed, 20 May 2026 22:54:14 +0800 (CST)
-Message-ID: <5a771c43-bbba-49ce-9df8-fdd618289334@163.com>
-Date: Wed, 20 May 2026 22:54:14 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h8sogdFH"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-67179ed133dso6038077a12.2
+        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 08:18:10 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1779290289; cv=none;
+        d=google.com; s=arc-20240605;
+        b=jtQ+4RUbOEBI107frCyrJALs+rNlKzH6F8fY3X+JYOUsFiDJwWM0ynXfkPGxxN0nwI
+         /syPz+CtkSFQraLkfCZ+xfVnu0OkpDgQLouvEys7Aut+TR3U0zh/FjVq+b987Cti+HzU
+         pqR+BSQmuK0vCi+I5CEFs+wvu32cr391ld+8u7TkKON6G3ZBzkqEJK88wxlEIA2r0nxJ
+         VLQz7ELgF4++nrY1vWt+ToIUKuLQoNY6SF9UmBUVcDNDNR5tRcqEeflnwbGUUCmVh2AD
+         kAN+TEWJps4UH+RjuAExFpjq4w2k3dPCaUzCXTklPK2meYx4lRx5+KbKhrYVQKa3OunK
+         gUiA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=m9qLByd2PzQi0vKZgnHfAth5+WLU5IX+PErom9/qoQk=;
+        fh=fWrL3cp8pkMJbBt05Xoln8qRb3t2wNb9IWtQZEbrV/o=;
+        b=IbXDzX/NKz/3wMk84JRW+RJkBluYfkQkcGMCVGekJU3rpPR2A40fm/vUsYmYZYv4RH
+         /FKUZXsOe6ggzvttRyUMUpcGU9/hlgFQ6HT3JCn9OhUmYdHgWDOhP/35NPqA1BHrHo/h
+         ilSXr6jxpyWhoN/JdA/rbMFVC7lZCYa0gCldrHqomRgIJl+AaYboAEv1X/9vLUpjd9+7
+         hPHUldhKx+Bm8WhhcWBtfQLbAljpHnnlXa76j3nLhVs+RmYu/A/KgEvSFJWBTBlsob73
+         ziroWZ5s3Yg8TUQwx+z58jXwtRICsHA2XgDmgY1wUrgLP2ywM30aNqovEn31/1eyXVYH
+         gO8Q==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779290289; x=1779895089; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=m9qLByd2PzQi0vKZgnHfAth5+WLU5IX+PErom9/qoQk=;
+        b=h8sogdFH2cYt4F/ShN5FoLrwrLKsUN5lhQEpBx3CYNijo/kidvmkwn+AVnCC6cryw4
+         jOGh49qn2vQRvIzlx50T46iavk7ghjO8Amvr4MRtsi8bbB01HTEzAbw75Qxb33OjTxNc
+         5pbij6JSFLFhUqIXzYTmr7rEVu1RpyWwUwWs6PYsivM/Q6hxKyClHE9Uf9q2ls5vqmXy
+         r1qb6HQiAi6rA1cWUefkA7Wfqlax+Fqrt/m2cqmIMiHv4gQbBAFdIPah7aX6J2MSDhYq
+         X1a0tRAG6t5oL+ZHzOiRvI9cpF2XCM8EkgB4cClok31AbVYQcp1jWxTaVfY9xNCaPVHx
+         nFeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779290289; x=1779895089;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=m9qLByd2PzQi0vKZgnHfAth5+WLU5IX+PErom9/qoQk=;
+        b=Arbq3ldQr7Xj3dahMVQZ+YEKUPBT6BfpqiHwMkSWDYHI6UOex+tVzQep0CZtyX0rSq
+         DsjPer/fXPRg+SAoDb67WT4Eq7nVRddmGv54zk/TiJ4uMu/hP85WJP9wF6HwE/u67D1t
+         49debEzw5Asy/pprYlQgyTqmSAF8e14iCroqJN8RogAMx66/IQvB9eV7mO86rHHetPmO
+         C3pSzCoF9yNZTh50faVIfis1w34MZ62sLUp2wRHnsZEcYca3bLGrTBQwfEtUyOWcplDc
+         SPHupdazWdnrSelC94o6nGvKyshewSCQnPgZ8e+IxSbHmmmUtn1Zihlr95Vum368N4+c
+         2Ilg==
+X-Forwarded-Encrypted: i=1; AFNElJ8gtAzd2FRDYkXy+XnLubv1GorTPsTrEZk3eVLjLokOFenoDf3Z/Bzr5UagPoaTVk3zECO0Nn/8pHc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyMVhuzCEiMa1ciXjC947OKB2IhYncKT0tAneyCv4ylH0/tnQNq
+	Z28JaQYGoW1IPIWwKba4wHRA1ipk9EiI7pVAt/5SKE2wyWWouFQEdhTvF3VBCTOrq7jN/1YXb8V
+	s9fn3U+ZWwLnFGINsQC405+CmrYko2UY=
+X-Gm-Gg: Acq92OGpAG7AsKjllTRibZ6r6T468QmZgpCZAYlxu1ePEp3HG5mXUl8otAspPGRyJmv
+	bjIfvrY+aigEE4HfbTa1rStjml0mO16oYbJ1ZnMlOMNc28HdxGVzmZM/Ue3cBBW3bnra7mOlJNY
+	FozAQpa8l2tjoxwqMi3OJCzY0f+BmAY1nJt/mvlIgHi78hCKqzm7c/TWeI/T8okimdm8gBWGtES
+	q1QqieluabUsqFqmJZpMDhd/SJ1pxlcGb1/Jy+z0Pi2J6fqFvU4U6GuzyOwZUwv3VudrOKS29vX
+	m+mkLz4s+8ar1DRnLML9vKB4eL/7XFV4DYBNWRugGM4kcbupqD+wMBFPQvRI0dLF
+X-Received: by 2002:a17:907:998d:b0:bd5:5834:1d3f with SMTP id
+ a640c23a62f3a-bd558341ef5mr1219917066b.22.1779290288833; Wed, 20 May 2026
+ 08:18:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 2/3] PCI: cadence: Add HPA IP debugfs for LTSSM status
-To: Aksh Garg <a-garg7@ti.com>, bhelgaas@google.com, lpieralisi@kernel.org,
- kwilczynski@kernel.org, mani@kernel.org
-Cc: robh@kernel.org, mpillai@cadence.com, s-vadapalli@ti.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260519123609.1595280-1-18255117159@163.com>
- <20260519123609.1595280-3-18255117159@163.com>
- <d9d4aa30-8d30-4025-abde-0325e102fd8d@ti.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <d9d4aa30-8d30-4025-abde-0325e102fd8d@ti.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCXDGAWyw1qlEHkCQ--.3498S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxtF15urWDtw45KryxCr43trb_yoW7XrWDpa
-	yDGF4fCa1xXay3Za93A3WUXF13tFn3Aa4UG3929347XFnxur1DJFnrKFW5KFZxGr4vgryx
-	Zas8tasrGr4ayrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR58nrUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xbVeWoNyxY7QgAA3S
+References: <20260518155324.168948-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260518155324.168948-2-prabhakar.mahadev-lad.rj@bp.renesas.com> <CAMuHMdW1m1bUJY+7AF+W7hZ_zpcBt=nbJivjr-nrmSLBiZv8qw@mail.gmail.com>
+In-Reply-To: <CAMuHMdW1m1bUJY+7AF+W7hZ_zpcBt=nbJivjr-nrmSLBiZv8qw@mail.gmail.com>
+From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date: Wed, 20 May 2026 16:17:42 +0100
+X-Gm-Features: AVHnY4JybpRBzBUvxwIH8V6FnXAx2_urpMr8NNxvoYafQOv4Ri8o8_Tz826UNqQ
+Message-ID: <CA+V-a8uY0Bit=3g-3ZMB+nDyMXoCqHuqQiusi-c29DWMfWHJ_w@mail.gmail.com>
+Subject: Re: [PATCH v2 1/4] dt-bindings: PCI: renesas,r9a08g045-pcie: Add
+ RZ/V2H(P) support
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, 
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Biju Das <biju.das.jz@bp.renesas.com>, 
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>, sashiko-bot@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi Geert,
 
+Thank you for the review.
 
-On 5/20/26 15:26, Aksh Garg wrote:
-> 
-> 
-> On 19/05/26 18:06, Hans Zhang wrote:
->> Add debugfs support for HPA-based Cadence PCIe controllers. A new file
->> 'ltssm_status' is created under debugfs, allowing users to read the
->> current LTSSM state as a string and raw value.
->>
->> Signed-off-by: Hans Zhang <18255117159@163.com>
->> ---
->>   Documentation/ABI/testing/debugfs-cdns-pcie   |   5 +
->>   drivers/pci/controller/cadence/Kconfig        |   9 +
->>   drivers/pci/controller/cadence/Makefile       |   1 +
->>   drivers/pci/controller/cadence/pci-sky1.c     |   4 +
->>   .../controller/cadence/pcie-cadence-debugfs.c | 208 ++++++++++++++++++
->>   .../cadence/pcie-cadence-host-hpa.c           |  19 +-
->>   drivers/pci/controller/cadence/pcie-cadence.h | 153 +++++++++++++
->>   7 files changed, 398 insertions(+), 1 deletion(-)
->>   create mode 100644 Documentation/ABI/testing/debugfs-cdns-pcie
->>   create mode 100644 drivers/pci/controller/cadence/pcie-cadence- 
->> debugfs.c
->>
->> diff --git a/Documentation/ABI/testing/debugfs-cdns-pcie b/ 
->> Documentation/ABI/testing/debugfs-cdns-pcie
->> new file mode 100644
->> index 000000000000..c1104e28e4ee
->> --- /dev/null
->> +++ b/Documentation/ABI/testing/debugfs-cdns-pcie
->> @@ -0,0 +1,5 @@
->> +What:        /sys/kernel/debug/cdns_pcie_<dev>/ltssm_status
->> +Date:        March 2026
->> +Contact:    Hans Zhang <18255117159@163.com>
->> +Description:    (RO) Read will return the current PCIe LTSSM state in 
->> both
->> +        string and raw value.
->> \ No newline at end of file
->> diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/ 
->> controller/cadence/Kconfig
->> index 9e651d545973..cb010bc97aad 100644
->> --- a/drivers/pci/controller/cadence/Kconfig
->> +++ b/drivers/pci/controller/cadence/Kconfig
->> @@ -6,6 +6,15 @@ menu "Cadence-based PCIe controllers"
->>   config PCIE_CADENCE
->>       tristate
->> +config PCIE_CADENCE_DEBUGFS
->> +    tristate "Cadence PCIe debugfs entries"
->> +    depends on DEBUG_FS
->> +    depends on PCIE_CADENCE_HOST || PCIE_CADENCE_EP
->> +    help
->> +      Say Y here to enable debugfs entries for the PCIe controller. 
->> These
->> +      entries provide various debug features related to the 
->> controller and
->> +      the LTSSM status of link can be displayed.
->> +
->>   config PCIE_CADENCE_HOST
->>       tristate
->>       depends on OF
-> 
-> Sashiko pointed the compilation issues when this is build as a module.
-> The linkage issue needs to be resolved if we want this as a module.
-> Also, if we build it as m, it would requires MODULE_LICENSE() and 
-> MODULE_DESCRIPTION().
+On Tue, May 19, 2026 at 7:57=E2=80=AFAM Geert Uytterhoeven <geert@linux-m68=
+k.org> wrote:
+>
+> Hi Prabhakar,
+>
+> On Mon, 18 May 2026 at 17:53, Prabhakar <prabhakar.csengg@gmail.com> wrot=
+e:
+> > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> >
+> > Add support for the PCIe controller found on the Renesas RZ/V2H(P) SoC.
+> >
+> > The RZ/V2H(P) controller is similar to the RZ/G3E variant but includes
+> > additional registers and configuration bits for PCIe lane control. It
+> > supports multilink operation configured as either a single x4 link
+> > or two independent x2 link controllers.
+> >
+> > Unlike earlier SoCs supported by this driver which only feature a singl=
+e
+> > PCIe controller, the RZ/V2H(P) SoC implements two controllers. Both
+> > controllers rely on the system controller (`sysc`) for configuration,
+> > but the required registers reside at different offsets for each instanc=
+e.
+> > To correctly identify the controller instance and map the corresponding
+> > system controller registers, make the "linux,pci-domain" and "num-lanes=
+"
+> > properties mandatory for this SoC and restrict their values according t=
+o
+> > the hardware capabilities.
+> >
+> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+>
+> Thanks for your patch!
+>
+> > --- a/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+> > +++ b/Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+>
+> > @@ -235,6 +238,20 @@ allOf:
+> >            maxItems: 1
+> >          reset-names:
+> >            maxItems: 1
+> > +  - if:
+> > +      properties:
+> > +        compatible:
+> > +          contains:
+> > +            const: renesas,r9a09g057-pcie
+> > +    then:
+> > +      properties:
+> > +        linux,pci-domain:
+> > +          enum: [0, 1]
+>
+> Sashiko has the following comments about this property[1]:
+>
+> | Is it appropriate to use linux,pci-domain to identify the hardware
+> | controller instance?
+> | Device Tree is designed to describe hardware rather than software polic=
+y
+> | or configuration. The linux,pci-domain property is an OS-specific hint
+> | used to assign logical PCI domain numbers.
+> | Using it to identify hardware instances strictly couples the hardware
+> | register mapping to an OS numbering scheme.
+>
+> and
+>
+> | Does limiting this to [0, 1] cause a regression for valid software
+> | configurations?
+> | For example, if a board with multiple PCIe controllers assigns domains =
+2
+> | and 3 to these instances to avoid conflicts, the binding will fail
+> | validation and the driver will fail to probe.
+> | Could the hardware instances instead be identified via standard hardwar=
+e
+> | descriptive mechanisms, such as their physical base address (reg),
+> | standard aliases, or by adding a phandle specifier argument to
+> | renesas,sysc?
+>
+> dtschema/schemas/pci/pci-host-bridge.yaml states:
+>
+> | linux,pci-domain:
+> |   description:
+> |     If present this property assigns a fixed PCI domain number to a
+> host bridge,
+> |     otherwise an unstable (across boots) unique number will be assigned=
+.
+> |     It is required to either not set this property at all or set it for=
+ all
+> |     host bridges in the system, otherwise potentially conflicting
+> domain numbers
+> |     may be assigned to root buses behind different host bridges.  The d=
+omain
+> |     number for each host bridge in the system must be unique.
+>
+> In the RZ/V2H case, the number is local to the SYSC instance referenced
+> by the renesas,sysc property, while linux,pci-domain is global to the
+> full system by definition. Fixing the numbers to zero and one works,
+> until some other controller in the system has conflicting requirements.
+>
+> I do see a future case where this may break: if Renesas would release a
+> new SoC containing two RZ/V2H dies, there would be four PCIe controllers
+> and two SYSC controllers.  This would require two PCIe controllers to
+> have linux,pci-domain =3D <0>, and two having linux,pci-domain =3D <1>,
+> which is not permitted.
+>
+Agreed.
 
-Hi Aksh,
+> Hence adding a second cell to the renesas,sysc property, to specify
+> the base offset of the PCIe-related registers inside SYSC seems like
+> the best way to go?
+>
+Ok, I will change renesas,sysc to use phandle-array so that we can
+pass the controller index.
 
-Will add.
-
-
-> 
->> diff --git a/drivers/pci/controller/cadence/Makefile b/drivers/pci/ 
->> controller/cadence/Makefile
->> index b8ec1cecfaa8..2cdc4617e0c2 100644
->> --- a/drivers/pci/controller/cadence/Makefile
->> +++ b/drivers/pci/controller/cadence/Makefile
->> @@ -4,6 +4,7 @@ pcie-cadence-host-mod-y := pcie-cadence-host-common.o 
->> pcie-cadence-host.o pcie-c
->>   pcie-cadence-ep-mod-y := pcie-cadence-ep.o
->>   obj-$(CONFIG_PCIE_CADENCE) = pcie-cadence-mod.o
->> +obj-$(CONFIG_PCIE_CADENCE_DEBUGFS) += pcie-cadence-debugfs.o
->>   obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host-mod.o
->>   obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep-mod.o
->>   obj-$(CONFIG_PCIE_CADENCE_PLAT) += pcie-cadence-plat.o
->> diff --git a/drivers/pci/controller/cadence/pci-sky1.c b/drivers/pci/ 
->> controller/cadence/pci-sky1.c
->> index e1f4a98e2ab6..b8632f1d3156 100644
->> --- a/drivers/pci/controller/cadence/pci-sky1.c
->> +++ b/drivers/pci/controller/cadence/pci-sky1.c
->> @@ -221,6 +221,10 @@ MODULE_DEVICE_TABLE(of, of_sky1_pcie_match);
-> 
-> [ ... ]
-> 
->>   /**
->> @@ -447,6 +583,7 @@ void cdns_pcie_host_disable(struct cdns_pcie_rc *rc);
->>   void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
->>                      int where);
->>   int cdns_pcie_hpa_host_setup(struct cdns_pcie_rc *rc);
->> +void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc);
->>   #else
->>   static inline int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
->>   {
->> @@ -472,6 +609,10 @@ static inline void cdns_pcie_host_disable(struct 
->> cdns_pcie_rc *rc)
->>   {
->>   }
->> +static inline void cdns_pcie_hpa_host_disable(struct cdns_pcie_rc *rc)
->> +{
->> +}
->> +
->>   static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus, 
->> unsigned int devfn,
->>                            int where)
->>   {
->> @@ -535,4 +676,16 @@ bool cdns_pcie_hpa_link_up(struct cdns_pcie *pcie);
->>   extern const struct dev_pm_ops cdns_pcie_pm_ops;
->> +#ifdef CONFIG_PCIE_CADENCE_DEBUGFS
-> 
-> Use "#if IS_ENABLED(CONFIG_PCIE_CADENCE_DEBUGFS)" to resolve the 
-> compilation error when building as a module.
-> 
-
-Will change.
-
-Best regards,
-Hans
-
->> +void cdns_pcie_debugfs_deinit(struct cdns_pcie *pci);
->> +void cdns_pcie_debugfs_init(struct cdns_pcie *pci);
->> +#else
->> +static inline void cdns_pcie_debugfs_deinit(struct cdns_pcie *pci)
->> +{
->> +}
->> +static inline void cdns_pcie_debugfs_init(struct cdns_pcie *pci)
->> +{
->> +}
->> +#endif
->> +
->>   #endif /* _PCIE_CADENCE_H */
-
+Cheers,
+Prabhakar
