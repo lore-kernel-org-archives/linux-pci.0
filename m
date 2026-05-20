@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 042902FC037
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 05:33:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0CCF1DA0E1
+	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 05:37:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779255232; cv=none; b=Z4P6M3+8eChSi2XmknpSVbv3baCFuaosj+0a/x/oNXiJMHbr++J4sFxlZ9Imc0/qWoQWS90DQWpwLpULvOSGQFFuh38NAABzZ36JzuRIEkin1peLcbon27DUvX2TKu0kZmlSMMuwyPJkX5to0fsozJqYZGcjDy9tcf28oO6d+6w=
+	t=1779255434; cv=none; b=n5pCXIyJ784NPhRHNLtULusfzXDEF/QNAt6leNWjGbmLhZWHYwWhUp3X/qF3aqNDqVGm1Ife1D8HSuvwhtW9VC9oqRGGsLYUc+1fMgPWRGUMeVv1rRmrt6AR2WsGlzDj7x+/38Chc9GAgq/l/ZQF+sTpFSsWHAvRy9bazbgGVFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779255232; c=relaxed/simple;
-	bh=1P3z684wjmkDa8eULn5fQt49zXwlKcTaPK6juqzLbWQ=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=qiXoqJW63edESHzIyQuiloxbBqUgx1df3D9mN9PbhrS/BxM62DEYv4u2eI/hq48dfxPlmCZOpYilRWY4BL8f/1Imvi5HHSkZrwiMjrga66DSZ01/sEZ0Cn9TvX6LEMJfPT/ISc3SN3UxXvQp8pQQG7KGYCMHWIoIP+EFPFF+y1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LQPQwIef; arc=none smtp.client-ip=198.175.65.12
+	s=arc-20240116; t=1779255434; c=relaxed/simple;
+	bh=zeQpZO+YGjGKCSQmEaiB/yazXd7TUkR9TDnuxqkQrh8=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=fcMRXHhPdooHCWoBQ8sFIR0n5aKQYAGCn8EK9kxYD1Fh/HPUOo5pfdCvreX79NOc1roolMI8LrROQ/qlrXEF6j609tUOk28k2D5WvRvBPI20Y30Yoyz6WFxFdQ/hcdvKjyKgCZXXZ0AvgOnWX8rdkk5WavxLW+y1ADdBN1tmJok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gyUGVgUq; arc=none smtp.client-ip=198.175.65.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LQPQwIef"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gyUGVgUq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779255231; x=1810791231;
+  t=1779255433; x=1810791433;
   h=date:from:to:cc:subject:message-id;
-  bh=1P3z684wjmkDa8eULn5fQt49zXwlKcTaPK6juqzLbWQ=;
-  b=LQPQwIef+KMmsMNxc2SoiNBUwPhJg70CZ4zaBmu3ON2h/KIMCXYmp5/6
-   5lKdhcPHuHKBbP47Of4UkhhtHc4hZwMJg+kdzKPo2x3IJ0ORzr94Qkxt+
-   PYRCk4OGTqrzGyETsKfTzb2CXDbgwjiEE/bzCc1qFMybkk9u0Cc66OUEO
-   mfHdxXyzJC7oa7svIUBSibEIZInqs7Hssc2NBoIgiWvsKdDNrlW/FgOV2
-   E4TMG7kCgBXMh2a4sYvcJNa1rI7L7ZSicxQVUUzDEsWfjEPm8/q+TVIRM
-   Md6M/SIAWrhcq0kPEs9QF1uxcHOJHEfe4XTz/CbyuB9FQUxkd3CxGjd2F
-   g==;
-X-CSE-ConnectionGUID: BMTDonPMSuWtQx/1sBVQPg==
-X-CSE-MsgGUID: EUNEEKL/ROeuE6Ds/J7vUA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11791"; a="91611324"
+  bh=zeQpZO+YGjGKCSQmEaiB/yazXd7TUkR9TDnuxqkQrh8=;
+  b=gyUGVgUqm5bHutuoOjEN1TZ5v2DMOmescYukUUNZoCefDsPwkmT5WGGS
+   dROKAUjq4YQTneOlL6yx0aa5PuqIVtRxo831MRwsteXAYGyVOt9BqATCy
+   3nVQHPwm2spo9WEzHQhw51NJKVBH3OFOA7fC+NlKdhAZdgwiH1tGl/+BB
+   zjZ1ModPsSVSv3TeIKblpSr4cfi/X7m3n+AO039LuHHT6ROUK7xn5OlJt
+   slrFSALyZqwZe4YALIv3EzrbxbkZOM/4Vg7+UBm9OFrysQnbE5pKqteSw
+   25B+CPbi3MhlTHrpkOpiWkd8yvl+SNg+38Jpw7pHxJmX7CzTcag1u1RUx
+   A==;
+X-CSE-ConnectionGUID: 5ZX25Gm4QmGYGgLpAK20fQ==
+X-CSE-MsgGUID: JB5D8LLqQV2JNVcVDdT0TQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11791"; a="91611751"
 X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="91611324"
+   d="scan'208";a="91611751"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 22:33:49 -0700
-X-CSE-ConnectionGUID: W1SAbZ0qTaCU1E1Kl6HY0Q==
-X-CSE-MsgGUID: LBb+5NRTTym7vP47N7ES3g==
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2026 22:37:12 -0700
+X-CSE-ConnectionGUID: 7it8Q+ltT6maULZiC9YXKQ==
+X-CSE-MsgGUID: NEydbN+LStq0EwcOZYBKBA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,243,1770624000"; 
-   d="scan'208";a="263809437"
+   d="scan'208";a="263810144"
 Received: from lkp-server02.sh.intel.com (HELO 30e86e9c1927) ([10.239.97.151])
-  by fmviesa001.fm.intel.com with ESMTP; 19 May 2026 22:33:47 -0700
+  by fmviesa001.fm.intel.com with ESMTP; 19 May 2026 22:37:11 -0700
 Received: from kbuild by 30e86e9c1927 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wPZYu-000000002X3-47kj;
-	Wed, 20 May 2026 05:33:44 +0000
-Date: Wed, 20 May 2026 13:33:03 +0800
+	id 1wPZc9-000000002Xz-1fY4;
+	Wed, 20 May 2026 05:37:06 +0000
+Date: Wed, 20 May 2026 13:36:24 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <mani@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc-tegra194] BUILD SUCCESS
- 87f493041e20759ffc27262cc0490c41628a5ee2
-Message-ID: <202605201355.jC9kFgxh-lkp@intel.com>
+Subject: [pci:controller/mediatek-gen3] BUILD SUCCESS
+ 8ba433753d9b131c2e43b1ff7ba8c5730cef8231
+Message-ID: <202605201315.8z2Ao3WY-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-tegra194
-branch HEAD: 87f493041e20759ffc27262cc0490c41628a5ee2  PCI: tegra194: Use aspm-l1-entry-delay-ns DT property for L1 entrance latency
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek-gen3
+branch HEAD: 8ba433753d9b131c2e43b1ff7ba8c5730cef8231  PCI: mediatek-gen3: Fix incorrectly skipped pwrctrl error message
 
-elapsed time: 737m
+elapsed time: 740m
 
-configs tested: 182
+configs tested: 192
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -77,10 +77,10 @@ alpha                               defconfig    gcc-15.2.0
 arc                              allmodconfig    clang-16
 arc                               allnoconfig    gcc-15.2.0
 arc                              allyesconfig    clang-23
-arc                              allyesconfig    gcc-15.2.0
 arc                                 defconfig    gcc-15.2.0
 arc                   randconfig-001-20260520    gcc-8.5.0
 arc                   randconfig-002-20260520    gcc-8.5.0
+arm                               allnoconfig    clang-23
 arm                               allnoconfig    gcc-15.2.0
 arm                              allyesconfig    clang-16
 arm                                 defconfig    gcc-15.2.0
@@ -91,7 +91,6 @@ arm                   randconfig-002-20260520    gcc-8.5.0
 arm                   randconfig-003-20260520    gcc-8.5.0
 arm                   randconfig-004-20260520    gcc-8.5.0
 arm                          sp7021_defconfig    gcc-15.2.0
-arm64                            allmodconfig    clang-19
 arm64                            allmodconfig    clang-23
 arm64                             allnoconfig    gcc-15.2.0
 arm64                               defconfig    gcc-15.2.0
@@ -105,11 +104,13 @@ csky                                defconfig    gcc-15.2.0
 csky                  randconfig-001-20260520    gcc-10.5.0
 csky                  randconfig-002-20260520    gcc-10.5.0
 hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    clang-23
 hexagon                           allnoconfig    gcc-15.2.0
 hexagon                             defconfig    gcc-15.2.0
 hexagon               randconfig-001-20260520    gcc-11.5.0
 hexagon               randconfig-002-20260520    gcc-11.5.0
 i386                             allmodconfig    clang-20
+i386                              allnoconfig    gcc-14
 i386                              allnoconfig    gcc-15.2.0
 i386                             allyesconfig    clang-20
 i386        buildonly-randconfig-001-20260520    clang-20
@@ -140,8 +141,8 @@ i386                           randconfig-016    gcc-14
 i386                  randconfig-016-20260520    gcc-14
 i386                           randconfig-017    gcc-14
 i386                  randconfig-017-20260520    gcc-14
-loongarch                        allmodconfig    clang-19
 loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    clang-23
 loongarch                         allnoconfig    gcc-15.2.0
 loongarch                           defconfig    clang-19
 loongarch             randconfig-001-20260520    gcc-11.5.0
@@ -159,14 +160,17 @@ mips                             allyesconfig    gcc-15.2.0
 mips                         rt305x_defconfig    clang-23
 nios2                            allmodconfig    clang-23
 nios2                             allnoconfig    clang-23
+nios2                             allnoconfig    gcc-11.5.0
 nios2                               defconfig    clang-19
 nios2                 randconfig-001-20260520    gcc-11.5.0
 nios2                 randconfig-002-20260520    gcc-11.5.0
 openrisc                         allmodconfig    clang-23
 openrisc                          allnoconfig    clang-23
+openrisc                          allnoconfig    gcc-15.2.0
 openrisc                            defconfig    gcc-15.2.0
 parisc                           allmodconfig    gcc-15.2.0
 parisc                            allnoconfig    clang-23
+parisc                            allnoconfig    gcc-15.2.0
 parisc                           allyesconfig    clang-19
 parisc                              defconfig    gcc-15.2.0
 parisc                randconfig-001-20260520    clang-23
@@ -174,12 +178,14 @@ parisc                randconfig-002-20260520    clang-23
 parisc64                            defconfig    clang-19
 powerpc                          allmodconfig    gcc-15.2.0
 powerpc                           allnoconfig    clang-23
+powerpc                           allnoconfig    gcc-15.2.0
 powerpc               randconfig-001-20260520    clang-23
 powerpc               randconfig-002-20260520    clang-23
 powerpc64             randconfig-001-20260520    clang-23
 powerpc64             randconfig-002-20260520    clang-23
 riscv                            allmodconfig    clang-23
 riscv                             allnoconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
 riscv                            allyesconfig    clang-16
 riscv                               defconfig    gcc-15.2.0
 riscv             nommu_k210_sdcard_defconfig    gcc-15.2.0
@@ -189,9 +195,11 @@ s390                             allyesconfig    gcc-15.2.0
 s390                                defconfig    gcc-15.2.0
 sh                               allmodconfig    gcc-15.2.0
 sh                                allnoconfig    clang-23
+sh                                allnoconfig    gcc-15.2.0
 sh                               allyesconfig    clang-19
 sh                                  defconfig    gcc-14
 sparc                             allnoconfig    clang-23
+sparc                             allnoconfig    gcc-15.2.0
 sparc                               defconfig    gcc-15.2.0
 sparc                 randconfig-001-20260520    gcc-8.5.0
 sparc                 randconfig-002-20260520    gcc-8.5.0
@@ -208,6 +216,7 @@ um                    randconfig-001-20260520    gcc-8.5.0
 um                    randconfig-002-20260520    gcc-8.5.0
 um                           x86_64_defconfig    gcc-14
 x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
 x86_64                            allnoconfig    clang-23
 x86_64                           allyesconfig    clang-20
 x86_64               buildonly-randconfig-001    gcc-14
@@ -250,6 +259,7 @@ x86_64                         rhel-9.4-kunit    gcc-14
 x86_64                           rhel-9.4-ltp    gcc-14
 x86_64                          rhel-9.4-rust    clang-20
 xtensa                            allnoconfig    clang-23
+xtensa                            allnoconfig    gcc-15.2.0
 xtensa                           allyesconfig    clang-23
 xtensa                randconfig-001-20260520    gcc-8.5.0
 xtensa                randconfig-002-20260520    gcc-8.5.0
