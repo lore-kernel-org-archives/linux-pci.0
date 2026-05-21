@@ -1,157 +1,103 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770CE3806A3;
-	Thu, 21 May 2026 10:22:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20D7337B01A;
+	Thu, 21 May 2026 10:27:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779358954; cv=none; b=Xa1ibnM+2IqalpCggDT74DZ9I7JHU1pJQMeiA1HQRlw9CBR0JVZOlLqc38AWbyQdKLUZDDLyzaMSFaveqir0UPcxjmD0mrMIz5SPzdwAxDR946A/1W1H7lacGwCg8qaHYrcdJkPp2B4aJxrrm04teDKEpn1mecmscbWyY3ehzSc=
+	t=1779359265; cv=none; b=TSpdp7B7qbvqgjxcGoiR3SxXid1zhmq4YlGEHwkma09WbDEOBYo9uqIAJQiJEvVW2b19A51GnjvHH8/jXEXBwBLEEm0aLlyuKLj/PQYBu9RA0NIRdlB0XQu+X2Ir2rOPeb/7PW8HaPVbtw9EA76nDNFtZm37SLuFYwV4eH6pjdc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779358954; c=relaxed/simple;
-	bh=+HW0dOk5wH9pqNi3mzEx4jIB8et3CH9L54AR6abHdV0=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=l+dLB0TwskwOFV2YzJPBWeFfyK77xq3hAiLedENNk6rl+NgFhQGNbGFfRppvWUnp0LcpkzyGiGFUDygYkG+FFWDlEGT4OoaDYSwuhQ39D4mFgolYCn7SWvjlFrqIkWuuCE2tfYri+k/c8CwerAgnbhOJjP1aHo3ahsQC9bwtcWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bsKcNw5i; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1779359265; c=relaxed/simple;
+	bh=QY4O08p8UeC3Kl35zmcup7N0ufYR7vG7/tcw5xu3lHw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hBmvk9bnphapkx2UIwOCtPfCqW/Qj+kxtNQSNgratLlI641wj1JEypBJdM5GH1RL8GTPbVxN9GlAOlZ9toEM9dCx5YNDZSahSmyUu/fqW6QdLr/I8VDQqsgRanTDHqqcvy24aGTBINWKjAMF56nOFeDI5sJDmTY//oNVbSA/nI4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fhK5++h8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bsKcNw5i"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779358952; x=1810894952;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=+HW0dOk5wH9pqNi3mzEx4jIB8et3CH9L54AR6abHdV0=;
-  b=bsKcNw5ik0zSYeU8vKlnQQ1/V9mjF93WTYugGXc415/hkP1Sd/rGuXAI
-   a5uJfROl7ljZsbhdJr6EtpgKu6ZiuJX8hYW+v0ja8gOHE3l/RHF+5GDKW
-   b395Tz/aa0/4GCSfHwpSd8+vuNnS+HV6Y+MncQp0Y1lVe0aBd2Gd6dem5
-   7EWFauw8ZirswRToivO+QD2CB1t71TjMAFE4XBzRPxQrsg3pBja+u99NZ
-   1ebVizCqzdQU6KrCNltStJmlDhL23ws00uBnYCiJa9iPwaSdsZppo/FdJ
-   arKF3HS4UQvgjGJfpoCUD9yu5K8uWVvWFHtba+FfPYMLgzvMtmTE8ieVl
-   w==;
-X-CSE-ConnectionGUID: aJ0xSPkjSRCBoWKl40qy2Q==
-X-CSE-MsgGUID: caVzMgQ2QFG+TmpY1w0Cmg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11792"; a="80329234"
-X-IronPort-AV: E=Sophos;i="6.23,246,1770624000"; 
-   d="scan'208";a="80329234"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 03:22:32 -0700
-X-CSE-ConnectionGUID: 5bRRu3c6SxmrfLy2tNIOTg==
-X-CSE-MsgGUID: 3CFzgJUxQ6CUSyitSYc8bw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,246,1770624000"; 
-   d="scan'208";a="236070105"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.98])
-  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 03:22:29 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Thu, 21 May 2026 13:22:27 +0300 (EEST)
-To: Gianfranco Dutka <gianfranco.dutka@arista.com>
-cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI/sysfs: NULL res_attr slot after kfree as defence
- against double-remove
-In-Reply-To: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
-Message-ID: <376c679c-8637-d19a-48d1-165d8f2fc2f0@linux.intel.com>
-References: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fhK5++h8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D0981F000E9;
+	Thu, 21 May 2026 10:27:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779359263;
+	bh=ti2ZJxV50WoEVbvDumX+anVxC8PQ556LK3yAqXg+5bA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=fhK5++h8Hl/bE2ZV7bIB+nCbGP1gvHxdgyi6R0dequCqp3HSSggM1w6/j1EFNj6AB
+	 qI2MGNUYlaryZFggwMlBlw619kxRLs7oKd5GpfR71FEQ/eeJ5/mED5tjfC/hlz9KfC
+	 KFLeaKKBAa9EZHwETarLf51KGOahzTlpRtU3l1kn2cijYX2xJmgU/OQNjtBd+q4nPq
+	 kLDnqcTZPF2BKYEQ8ZqPYUMlCxt3eRp9QJGwNXtlaU+CCzvBx/lCgsK0ONH/+SsFKn
+	 Hax3kT0RKRCov/L+v59eKBH0Y8J/JMOl3fPgLTCayVGQWN8nc9WyK1FT5LQvAx13dv
+	 ragY7LD3FpDWg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v5 2/3] arm64: dts: imx95: Add dma, intr, aer and pme
+ interrupts for PCIe
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Richard Zhu" <hongxing.zhu@nxp.com>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, imx@lists.linux.dev, conor+dt@kernel.org, robh@kernel.org, Frank.Li@kernel.org
+In-Reply-To: <20260521093255.61585-3-hongxing.zhu@nxp.com>
+References: <20260521093255.61585-3-hongxing.zhu@nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 21 May 2026 10:27:42 +0000
+Message-Id: <20260521102743.3D0981F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 
-On Wed, 20 May 2026, Gianfranco Dutka wrote:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-> pci_remove_resource_files() frees the bin_attribute pointed at by
-> pdev->res_attr[i] / pdev->res_attr_wc[i] but does not clear the slot
-> after kfree().  If pci_remove_sysfs_dev_files() is ever invoked twice
-> against the same pdev, the second pass dereferences a freed
-> bin_attribute and faults inside strlen() called from
-> kernfs_remove_by_name_ns().
-> 
-> To the best of my knowledge no in-tree caller hits this today -- the
-> primary path (pci_stop_dev() -> pci_remove_sysfs_dev_files()) is
-> expected to fire once per device -- so this is being submitted as
-> defence-in-depth rather than as a fix for a reproducer in the upstream
-> tree.  The motivation is that a freed-but-not-cleared pointer in a
-> device-lifetime table is a sharp edge: any future caller (in-tree or
-> out-of-tree) that re-enters the teardown path turns it into a UAF
-> with no warning.  Other allocator-managed pointer tables in the
-> kernel NULL the slot after kfree() for exactly this reason, and the
-> two-line change makes pci_remove_resource_files() idempotent at
-> essentially zero cost.
-> 
-> For full disclosure: the way I encountered this was via an
-> out-of-tree PCIe hotplug driver on an AMD Ryzen Embedded V3000
-> platform.  The driver re-enters pci_stop_and_remove_bus_device()
-> against a pdev that the standard pci_destroy_dev() path has already
-> torn down, and with slub_debug=FZPU the second entry faults with the
-> classic POISON_FREE signature:
-> 
->   BUG: unable to handle page fault for address: 6b6b6b6b6b6b6b6b
->   RIP: strlen+0x4
->   Call Trace:
->     kernfs_find_ns
->     kernfs_remove_by_name_ns
->     sysfs_remove_bin_file
->     pci_remove_resource_files
->     pci_remove_sysfs_dev_files
->     pci_stop_bus_device
->     pci_stop_and_remove_bus_device
->     <out-of-tree hotplug driver remove path>
-> 
-> I am aware that "out-of-tree driver re-enters teardown" is not by
-> itself a reason to take a change upstream, and I would understand a
-> NACK on that basis.  The reason I am still sending it is that the
-> fix is local, mechanical, matches an idiom already used elsewhere in
-> the kernel, and removes a class of bug rather than papering over the
-> specific caller that surfaced it.
+Pre-existing issues:
+- [High] The pcie0 node is missing the msi-map-mask property, which can cau=
+se MSI mapping failures for downstream devices on higher bus numbers.
+--
 
-Hi,
+commit 0e2b46336a5b22c94438abb01ead59266994b86b
+Author: Richard Zhu <hongxing.zhu@nxp.com>
 
-To me it looks more like pci_remove_resource_files() is expected to be 
-entered only once.
+arm64: dts: imx95: Add dma, intr, aer and pme interrupts for PCIe
 
-If this change is accepted, the 2nd entry is "silently" allowed whereas 
-better course of action would feel to catch that in 
-pci_remove_resource_files() with:
+This commit updates the device tree configurations for pcie0 and pcie1
+on imx95 to include additional interrupts for dma, intr, aer, and pme.
+These new interrupt definitions enable advanced PCIe functionality beyond
+basic MSI support.
 
-	if (WARN_ON_ONCE(something))
-		return;
+> diff --git a/arch/arm64/boot/dts/freescale/imx95.dtsi b/arch/arm64/boot/d=
+ts/freescale/imx95.dtsi
+> index 71394871d8dd0..6896d9c15bf53 100644
+> --- a/arch/arm64/boot/dts/freescale/imx95.dtsi
+> +++ b/arch/arm64/boot/dts/freescale/imx95.dtsi
+> @@ -1861,8 +1861,12 @@ pcie0: pcie@4c300000 {
+>  			bus-range =3D <0x00 0xff>;
+>  			num-lanes =3D <1>;
+>  			num-viewport =3D <8>;
+> -			interrupts =3D <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>;
+> -			interrupt-names =3D "msi";
+> +			interrupts =3D <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 311 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>,
+> +				     <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-names =3D "msi", "dma", "intr", "aer", "pme";
 
-That way, developers may become aware the code has some lifetime issue.
+[Severity: High]
+This is a pre-existing issue, but I noticed the pcie0 node is missing an
+msi-map-mask property. The node defines an iommu-map-mask but lacks a
+corresponding msi-map-mask.
 
-(I'm not strictly against your change but I think it would be much better 
-to have sane lifetimes and catch offenders.)
+Without msi-map-mask, of_map_id() applies a default mask of 0xffffffff to
+the PCI requestor ID during MSI allocation. If a PCIe switch is connected
+and downstream devices are enumerated on a bus number >=3D 2, their request=
+or
+IDs (e.g., 0x200, 0x300) might fail to match the defined msi-map entries
+which only cover 0x0 and 0x100 ranges.
 
-> Signed-off-by: Gianfranco Dutka <gianfranco.dutka@arista.com>
-> ---
->  drivers/pci/pci-sysfs.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1228,11 +1228,13 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
-> +			pdev->res_attr[i] = NULL;
->  		}
-> 
->  		res_attr = pdev->res_attr_wc[i];
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
-> +			pdev->res_attr_wc[i] = NULL;
->  		}
->  	}
->  }
-> --
-> 2.43.0
-> 
+Could this cause of_map_id to bypass translation, leaving the msi domain
+unassigned and breaking MSI functionality for downstream topologies beyond
+the first bus?
 
--- 
- i.
+[ ... ]
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521093255.6158=
+5-1-hongxing.zhu@nxp.com?part=3D2
