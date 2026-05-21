@@ -1,203 +1,148 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azon11011019.outbound.protection.outlook.com [40.107.208.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A7423E316F;
-	Thu, 21 May 2026 17:45:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779385511; cv=none; b=GNtIVJx6BEryH7o0QxHw2xDcIdEmI2ln/G6C69DJQi97hjAlPZswGcYbGJtl5EcGMrNryzMlN6F7Rj+mjNXHYIE9o896G2KILf415BP86HO40TFvMVq5vnXymYB7o+nkfI9uGwsd80tIwY8xM8N8WvWLUVTtaAobtcL2X4Zd0yU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779385511; c=relaxed/simple;
-	bh=sU3q4ei5VqXFeemg2pdBcbpXy8Z2qTRY4hHBwMHyr+A=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=I5VemjC8tNPsOFG/yt8vxNVmvKftc53qZd2Mr9eCU/OJUeqHL7x0cOR3FXdtpNul2f2z4WGi3cvLXFTY3X2ILV/dU4AaKtxgstfXrS7EVosx5UKQNO2oi6ZV3MIl2DOcN4RYGpep8j2DEXNK3qHHzF9mRkQMSWi3hiqWeJ4acys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eBU4r6q/; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 034AA363097;
+	Thu, 21 May 2026 17:45:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.208.19
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779385532; cv=fail; b=CF70CBi9xOyqGID0k/TbpcBcIqLG6dKiSUTSoO3nyXjIgbHkLMKknPgHsPcF64Ylegiuwa2LsZc4qrPLCeTu2uBrjW2GRW7pcN5+xTFwNjEKSsLqPsgy43jPrWdz3YdkCkgp1/mDjmEEh9iZ7J9ssXnRc+I2DcYw5cAa/IXSUKE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779385532; c=relaxed/simple;
+	bh=FhVb14gDBFzkywu6gU/TUykG3/P6SOj1uHzMvcuEw8M=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JAl70p6JnxhWTTg8a/rn6Ajqv+H1l2adVK+IPo0m9cZCv2kh8pnfUrQy05xibU336c+DR3PpOSqLB1/PZ/OdxmILXDVHOWxXzrPkl4F9Isnza+WAqtZVGWLRkT5f9r6CRDGC94IMjEe1HB2pqSfzjwXOAg7hZWi14WPxJcJ/P24=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=FOYB4XGu; arc=fail smtp.client-ip=40.107.208.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eBU4r6q/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779385510; x=1810921510;
-  h=from:to:cc:subject:in-reply-to:references:date:
-   message-id:mime-version;
-  bh=sU3q4ei5VqXFeemg2pdBcbpXy8Z2qTRY4hHBwMHyr+A=;
-  b=eBU4r6q/Pfly7X1yJqCLEHmyhpQJlV2crbXifUpUKCUV7dlTkEqmae1a
-   AKceYkxuO1zsrSOCHkjdDFGmvavXdwKnO5at9Ha77MIU+4AQNzCNl91t3
-   gn/G98vXvWp3nOTNJa5kS7jQCy7kdG5BgwPqzrtr5jAam2wVSnH/ecHI4
-   GxTC6OsY/Gte2p/rlOIc+UMKrRW/k2kpLoDax7m+oSw1fpBccCyzualiP
-   Sn6OUbc5OrTCm6t/8e2kHMIcl3aWYHH6VE2JhwXCsGbyIMLanNaefDSrT
-   3Fx6S9FQEF/3FNAkW3k8tLsaFhlaDR13eozETdv3PTBgoc/MLi7Gw7BPq
-   g==;
-X-CSE-ConnectionGUID: 9yrXBPapSeugoewNSa8U/g==
-X-CSE-MsgGUID: Jeaco58dQ0KT6LTcn38xnw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11793"; a="105773552"
-X-IronPort-AV: E=Sophos;i="6.24,160,1774335600"; 
-   d="scan'208";a="105773552"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 10:45:08 -0700
-X-CSE-ConnectionGUID: sVvxl8W3QX2Yx8AK13BLJw==
-X-CSE-MsgGUID: XZM0S5M8QcaTj4wM3UKoHA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,160,1774335600"; 
-   d="scan'208";a="236347421"
-Received: from hrotuna-mobl2.ger.corp.intel.com (HELO localhost) ([10.245.244.167])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 10:44:41 -0700
-From: Jani Nikula <jani.nikula@linux.intel.com>
-To: Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>
-Cc: Kees Cook <kees@kernel.org>, Pengpeng Hou <pengpeng@iscas.ac.cn>, Petr
- Pavlu <petr.pavlu@suse.com>, Richard Weinberger <richard@nod.at>, Anton
- Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg
- <johannes@sipsolutions.net>, "Rafael J. Wysocki" <rafael@kernel.org>, Len
- Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>, Gabriel Somlo
- <somlo@cmu.edu>, "Michael S. Tsirkin" <mst@redhat.com>, Joonas Lahtinen
- <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>,
- Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>,
- Simona Vetter <simona@ffwll.ch>, Bart Van Assche <bvanassche@acm.org>,
- Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Laurent
- Pinchart <laurent.pinchart@ideasonboard.com>, Hans de Goede
- <hansg@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Bjorn
- Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Daniel Lezcano <daniel.lezcano@kernel.org>,
- Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
- <jirislaby@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jason Wang
- <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Eugenio
- =?utf-8?Q?P=C3=A9rez?= <eperezma@redhat.com>, Jason Baron
- <jbaron@akamai.com>, Jim Cromie
- <jim.cromie@gmail.com>, Tiwei Bie <tiwei.btw@antgroup.com>, Benjamin Berg
- <benjamin.berg@intel.com>, Ilpo =?utf-8?Q?J=C3=A4rvinen?=
- <ilpo.jarvinen@linux.intel.com>,
- "David E. Box" <david.e.box@linux.intel.com>, "Maciej W. Rozycki"
- <macro@orcam.me.uk>, Srinivas Pandruvada
- <srinivas.pandruvada@linux.intel.com>, Peter Zijlstra
- <peterz@infradead.org>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik
- <gor@linux.ibm.com>, Sean Christopherson <seanjc@google.com>, Paolo
- Bonzini <pbonzini@redhat.com>, Thomas Gleixner <tglx@kernel.org>, Ingo
- Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
- <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
- <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>, Frank Li
- <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen
- <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, Alexander
- Potapenko <glider@google.com>, Marco Elver <elver@google.com>, Dmitry
- Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- John Johansen <john.johansen@canonical.com>, Paul Moore
- <paul@paul-moore.com>, James Morris <jmorris@namei.org>, "Serge E. Hallyn"
- <serge@hallyn.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
- dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
- kasan-dev@googlegroups.com, linux-mm@kvack.org, apparmor@lists.ubuntu.com,
- linux-security-module@vger.kernel.org, linux-um@lists.infradead.org,
- linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
- qemu-devel@nongnu.org, intel-gfx@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
- linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-serial@vger.kernel.org,
- linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
- virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
- linux-arch@vger.kernel.org, netdev@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 10/11] treewide: Manually convert custom
- kernel_param_ops .get callbacks
-In-Reply-To: <20260521133326.2465264-10-kees@kernel.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park,
- 6 krs Bertel Jungin Aukio 5, 02600 Espoo, Finland
-References: <20260521133315.work.845-kees@kernel.org>
- <20260521133326.2465264-10-kees@kernel.org>
-Date: Thu, 21 May 2026 20:44:37 +0300
-Message-ID: <5cd0c8dde3687d0aea765f2f21f5e1cd8ba83028@intel.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="FOYB4XGu"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=LETUtezBm0wzqMjV+xVvh1zSYr4fT/TXQxJ9aIJrJy5XNh0+AUqR03WEHZNU0xRnlDv1h7BH539XKMvK1WNcEgSlU1Xtn+OkZ3viYOH/JGx5bLwsASfT/fo8Ed/S2f8d6Quep5wxEKn+dxXEDcWFa7iWfW+LmZHqAjPrxI4mmrf5sf2w/dEiSTUfJH2PlZ2Ctf1sGOK5Yv0TcQoizVq7n1qwYW0erYldlUK5vrLTgwxUccv6vPIcLzaUGsKtcaeoMWth7Vlhy70bP5Fbz1auHDWl9puptPSVgZbLw6CP35VPbU3SUYjLqVfpZgryk2Rm/K7dmXWmRS/xonn4H+OccA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cS6fnA3lU2D/+Z8LnfqqCPtAqVL4T2HGREkrLBAbKIc=;
+ b=fgWOFM1MIvU77GWlf3o80++W7r4uE6rBFPsX6Qf+Woir3I4lPKjxilXDXJ7ENVBbAx9mE1hd5d1uPVWZZIHRGol501P+9NtS6bDvOuT3qdqluF/R7c5x7tCR2caxgEXmDH8vC/txbbJkkbyqRTWLdalX/yV081+BAcPChwhwMF5RNpZuV8nS3VfLq/uBtwtXa49yMJCSFWCZKx+qRMvjKAiZWLPQlVKuruc+x1owRA8VVdJLHyXTjpZJX5DHQEk28TYFI8Q5L5MVYbKHBjJqG0yawvArCeu78DJp5mkQq49jLD6lR4LGHV2OcQ67bvPZxBX+0Zl17UwArswOE1CmHA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=huawei.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cS6fnA3lU2D/+Z8LnfqqCPtAqVL4T2HGREkrLBAbKIc=;
+ b=FOYB4XGuGq/41vvh3eL+vEJp2viDczaQYvtVC09HvFUTQ5qcdEpfG+gB5KhmIqO59O40Mo+LhaV3+4IIRfGScL5g+F8GpXGUiOtV+YvG5FiDYXy9sPYbbiI00pJ8bUvOKpocFaBNqFe5bik6xmoTM+Us+P1FUkT5a5oZbKlSQx0uzJJRJwldl/f56+ML508/E2ipka9cfwStgduXdlz9XhanwsMsCH1KYzuGkshVXhqMKIyRZoa4Ub394b1vTQRnBGli5uzdVxrvq+RF8vUbBFJo4ytYW1f/ZLqLsEGoseCoONh0fhxL2J1C6rwS21zyBC9/wyHxZhtJQC+GiVuYQw==
+Received: from MN0PR02CA0001.namprd02.prod.outlook.com (2603:10b6:208:530::21)
+ by SJ0PR12MB6966.namprd12.prod.outlook.com (2603:10b6:a03:449::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Thu, 21 May
+ 2026 17:45:23 +0000
+Received: from BL02EPF00021F6E.namprd02.prod.outlook.com
+ (2603:10b6:208:530:cafe::37) by MN0PR02CA0001.outlook.office365.com
+ (2603:10b6:208:530::21) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.48.17 via Frontend Transport; Thu, 21
+ May 2026 17:45:23 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ BL02EPF00021F6E.mail.protection.outlook.com (10.167.249.10) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.71.7 via Frontend Transport; Thu, 21 May 2026 17:45:22 +0000
+Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 21 May
+ 2026 10:45:03 -0700
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Thu, 21 May 2026 10:45:02 -0700
+Received: from Asurada-Nvidia (10.127.8.9) by mail.nvidia.com (10.126.190.181)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Thu, 21 May 2026 10:45:01 -0700
+Date: Thu, 21 May 2026 10:44:55 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+CC: <will@kernel.org>, <joro@8bytes.org>, <bhelgaas@google.com>,
+	<robin.murphy@arm.com>, <praan@google.com>, <baolu.lu@linux.intel.com>,
+	<kevin.tian@intel.com>, <miko.lenczewski@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<dan.j.williams@intel.com>, <jonathan.cameron@huawei.com>,
+	<vsethi@nvidia.com>, <linux-cxl@vger.kernel.org>, <nirmoyd@nvidia.com>
+Subject: Re: [PATCH v5 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
+Message-ID: <ag9El9N4CiBu4gPx@Asurada-Nvidia>
+References: <cover.1779304390.git.nicolinc@nvidia.com>
+ <b6d2f24356621c504e47633d9e96a7274c2859f3.1779304390.git.nicolinc@nvidia.com>
+ <ag43NP4UiS7Z9T6q@Asurada-Nvidia>
+ <20260521134409.GG3602937@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20260521134409.GG3602937@nvidia.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL02EPF00021F6E:EE_|SJ0PR12MB6966:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2fc38333-d4de-4a95-6d4d-08deb760bb71
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|7416014|376014|1800799024|82310400026|11063799006|56012099003|18002099003|22082099003|4143699003;
+X-Microsoft-Antispam-Message-Info:
+	jVaCFrMgb8PVU44UR+FzIujRbMc/DWQ3InH8UF8wRt8lAwT5yfpjJ6Pa20LTBwivthoNvQe+gXy82ck6MTF10oc6V+fmuToD0HoM+ZkJ+ooDUbQ5oDwosaoW9VflDdS+VLOdt7DLpu0n1Z2ikz7LFUJxIY4hJpREeGRmlCC9XXeL9TpJiRG/xZXd+8LNZsfg/wlZSbNuL9lGFzuNZE/tL8zctgVRiV1+aR0JZQbu1g2vq2rnezjFf9zcRgfgEZYflZJp5pB8qUg2D3CWC9fv11GzLlJS8rpErQEUlgZoEzvRFs2WKdKerZQ6QyfoQ/31AkTcv8wrLk2vQva0EbufFyNDrXFC+cHC5xWjs5n/TLnIhFofWEje24poCKv/xLjlZRpTjO2630Klj5hR97s2XRcopzC46JLxRrTqawVfEFb0lZ3jLigmQKyY2OQgch3OZyw7myu42lIbYzXZ3FV6bYhcl8+oig5k3IPW/MrOWvmaVcrw9eD6R1SQdC2DAmhgEkO6FM+qitUtGW+ZctYKKNTPPdcPSvfVZ93v941VjWavgzl7gN3d1sPKc76rHfPpnuljxGhNxd4vw4PZBpkVpGT+51O22Z4+J3Wae7s9WOFIVC7rss7yurfISode8fHajMlgzXgCbw3diBcws/85c0tsDXwa3ec404862zeWxi1h8ZdwvdXJUdQYwKdms2a/CUUt1gIaItOrif6SPTqqcZNFKQzb0/Q6NC/AQaoP97Y=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700016)(7416014)(376014)(1800799024)(82310400026)(11063799006)(56012099003)(18002099003)(22082099003)(4143699003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	5LSmE+lN7OMQsDlTrdNnXK3aw178rYJ/P4fIxzhQVNc5Sl/W2pG8YLbAfBejUgQleYtq7pyUzw3/64Hsts2KuS2pxDbLxDfq2qvKhkB8r6HH0t/h/hFRc3jHGO9sLvNeV6hRi+sa78gxrd0aBXv+Hdab7cij8JFl9a5qu3MuuSRSja/MmQi/rBBcRxaNaq+Awrc0PX+HlcMOST0QspixrlutykMROYEZViA6E5iCCCaGeNtYWb36cLk59l4GiUUcX1xsWA8sZBMGFQKqFYwwg/RG1qimeereUX9WwOfg+IGXh9ZUvRkvzA9EXiBX4hXZq5YoBrvmZZ5Z7uLlSiUI6YDXkaFHZYy23HIY33DXcOtMkvzUfHo/Y3U3PiLOsLQpBQ4ya8UfOaRkT4ynp9W0Gs3R30XWjFp+JZYtLxx4qqWYGleGYVeMFDAjm5nl5Rf5
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 May 2026 17:45:22.0719
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2fc38333-d4de-4a95-6d4d-08deb760bb71
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL02EPF00021F6E.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6966
 
-On Thu, 21 May 2026, Kees Cook <kees@kernel.org> wrote:
-> diff --git a/drivers/gpu/drm/i915/i915_mitigations.c b/drivers/gpu/drm/i915/i915_mitigations.c
-> index 6061eae84e9c..99cb38f355b6 100644
-> --- a/drivers/gpu/drm/i915/i915_mitigations.c
-> +++ b/drivers/gpu/drm/i915/i915_mitigations.c
-> @@ -95,33 +95,37 @@ static int mitigations_set(const char *val, const struct kernel_param *kp)
->  	return 0;
->  }
->  
-> -static int mitigations_get(char *buffer, const struct kernel_param *kp)
-> +static int mitigations_get(struct seq_buf *buffer,
-> +			   const struct kernel_param *kp)
->  {
->  	unsigned long local = READ_ONCE(mitigations);
-> -	int count, i;
->  	bool enable;
-> +	int i;
+On Thu, May 21, 2026 at 10:44:09AM -0300, Jason Gunthorpe wrote:
+> On Wed, May 20, 2026 at 03:35:32PM -0700, Nicolin Chen wrote:
+> > @ -3870,13 +3870,15 @@ static int arm_smmu_blocking_set_dev_pasid(struct iommu_domain *new_domain,
+> >          * When the last user of the CD table goes away downgrade the STE back
+> >          * to a non-cd_table one, by re-attaching its sid_domain.
+> >          */
+> > -       if (!master->ats_always_on &&
+> > -           !arm_smmu_ssids_in_use(&master->cd_table)) {
+> > +       if (!arm_smmu_ssids_in_use(&master->cd_table)) {
+> >                 struct iommu_domain *sid_domain =
+> >                         iommu_driver_get_domain_for_dev(master->dev);
+> > +               bool ats_always_on = master->ats_always_on &&
+> > +                                    sid_domain->type != IOMMU_DOMAIN_BLOCKED;
+> > +               bool downgrade = sid_domain->type == IOMMU_DOMAIN_IDENTITY ||
+> > +                                sid_domain->type == IOMMU_DOMAIN_BLOCKED;
+> > 
+> > -               if (sid_domain->type == IOMMU_DOMAIN_IDENTITY ||
+> > -                   sid_domain->type == IOMMU_DOMAIN_BLOCKED)
+> > +               if (!ats_always_on && downgrade)
+> >                         sid_domain->ops->attach_dev(sid_domain, dev,
+> >                                                     sid_domain);
+> 
+> Only identity should remain with the CD S1DSS STE, BLOCKED should
+> attach the normal blocking domain still
 
-I'm fine with what you have, and I can do these as a follow-up later if
-it's too much trouble, but I suggest something like this:
+Yea. I have !ats_always_on guarding here.
 
-	const char *sep = "";
-
->  
-> -	if (!local)
-> -		return scnprintf(buffer, PAGE_SIZE, "%s\n", "off");
-> +	if (!local) {
-> +		seq_buf_printf(buffer, "%s\n", "off");
-> +		return 0;
-> +	}
->  
->  	if (local & BIT(BITS_PER_LONG - 1)) {
-> -		count = scnprintf(buffer, PAGE_SIZE, "%s,", "auto");
-> +		seq_buf_printf(buffer, "%s,", "auto");
-
-		seq_buf_printf(buffer, "%s%s", sep, "auto");
-		sep = ",";
-
-(In the printf the sep is just for future expansion, though I don't
-expect one.)
-
->  		enable = false;
->  	} else {
->  		enable = true;
-> -		count = 0;
->  	}
->  
->  	for (i = 0; i < ARRAY_SIZE(names); i++) {
->  		if ((local & BIT(i)) != enable)
->  			continue;
-> -
-> -		count += scnprintf(buffer + count, PAGE_SIZE - count,
-> -				   "%s%s,", enable ? "" : "!", names[i]);
-> +		seq_buf_printf(buffer, "%s%s,", enable ? "" : "!", names[i]);
-
-		seq_buf_printf(buffer, "%s%s%s", sep, enable ? "" : "!", names[i]);
-		sep = ",";
-
->  	}
-
-	seq_buf_puts(buffer, "\n");
-
->  
-> -	buffer[count - 1] = '\n';
-> -	return count;
-> +	/* Replace the trailing comma with a newline. */
-> +	if (!seq_buf_has_overflowed(buffer) && buffer->len > 0 &&
-> +	    buffer->buffer[buffer->len - 1] == ',')
-> +		buffer->buffer[buffer->len - 1] = '\n';
-
-Drop the above.
-
-I.e. keep track of sep while printing to avoid removing it later.
-
-BR,
-Jani.
-
-> +
-> +	return 0;
->  }
->  
->  static DEFINE_KERNEL_PARAM_OPS(ops, mitigations_set, mitigations_get);
-
--- 
-Jani Nikula, Intel
+Thanks
+Nicolin
