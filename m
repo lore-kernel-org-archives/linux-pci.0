@@ -1,164 +1,94 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 364AB31E83D;
-	Thu, 21 May 2026 14:19:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF8342F9984;
+	Thu, 21 May 2026 14:21:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779373186; cv=none; b=VTQYIkK/4x6SaILL7o5pCEv+8Jf9SCRsMkxm2iMYSfnFmISnYksZ6MjVqRlbNLy35VKoV/D3hyrliXEzP2p361hLCqfqzKmVky1QeONnaXzM5OFpoSq6dFpIXvlMTcGk9H7QGAcdv9es6Th815WfSvyKfcT0JeKpxRNAuHVmPh8=
+	t=1779373299; cv=none; b=p8/FrwmSg+Xc9+bhTCVwktdrhUn8J5fIfQg9fk6heIusz1Y8Fcc7UwvNET/2zZA2dtbILxf0lEDWHWyirQW7drjifMXl4gz2HdzkZO/EtS8DpOynxMeNklOQZzHutw7E5t09u05duJqZBtUKTjV1Wgn9eXn7t0mrCU5+qO/vdc4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779373186; c=relaxed/simple;
-	bh=bzgDHbbJSnGY/qtVpQ/JRbmEnyRseYEXhj6VsHLrwTE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XicYI+wQbZittGZ1P+AsUfbqofi/H1MRns7DFyhEjrmys1wQ0tARs+vFI88iO33dc0m3j4TpUT+PaY7edQ2Ojfhffmu8botMkLrNzN4BdJs3dkvYkEKFTLLXBs15LG33zybeRGUOn20gCwY7qmcHp7J3THo8nSjxc3fRpkb9mIE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ZGcdv02E; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1779373299; c=relaxed/simple;
+	bh=8/zOJGVqbG8WkMSpL0rE5OU1P/oB8KWOP88zXYNdpIY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=IHxOHxMO2aBxiZTkENUXfDh0Jj6jVEmD+sElN3njsffHXYG5uuNQ483HeR38DT6KbKeRjQQAQorwqnYGa+wIxj/o6U8CRE9o+BlHtTW3JNcnzYxsfTWVp+t+atbQdDj/3pZ20AtWqgT2EdGyiL9RF4+NH49VeWpgRhIRyGbXC9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EqTD+sH7; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ZGcdv02E"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64L0PXGm843724;
-	Thu, 21 May 2026 14:19:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=aq2ziAevdOR20ZlrVFB+myc4dHn3YIrNxhMNT4jPeQg=; b=ZGcdv02EcfxQ
-	KAKbShpbWj7AgFnSwWmSfI3FTea+CgsaKOQoyarTcGR0XaRKS4BNs3hfQS6ac72Y
-	5wqBMc/5mK2ccA/3cvKQUEGN60MisYPWy6QGnjYuIdvrvcEwM0YPGONtxlDOfI7L
-	wo1+/ILCLJ25zbLhoFOEM+dE77tR5+JnDhOTIOIHxkHAcxnkgrzeuF2f1CX5m3pd
-	bHvIsqYGP09cdYGN1Pk0p+3RqP1arLhBye+v7YjaACmhLGog4CMrmzdcC7zgagUl
-	gCiLHQ3x7jiAWbNHoGBZiLXnj3c5BTMg6g2XBuYkQhePrbp+g4NR7fA60o9d+mi3
-	0WrCTEdDpQ==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h9y7fm6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 May 2026 14:19:07 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64LE9JqD017826;
-	Thu, 21 May 2026 14:19:06 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e754gmanj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 May 2026 14:19:06 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64LEJ3nm49545696
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 21 May 2026 14:19:03 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2C69B20043;
-	Thu, 21 May 2026 14:19:03 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1954E20040;
-	Thu, 21 May 2026 14:19:03 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Thu, 21 May 2026 14:19:03 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.2)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1wQ4Eo-0000000Dcd9-2nEy;
-	Thu, 21 May 2026 16:19:02 +0200
-Date: Thu, 21 May 2026 16:19:02 +0200
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-        "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
-        helgaas@kernel.org, schnelle@linux.ibm.com, linux@roeck-us.net,
-        lukas@wunner.de, stable@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-xe@lists.freedesktop.org, matthew.brost@intel.com,
-        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
-        dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
-        lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
-        ionut_n2001@yahoo.com, sunlightlinux@gmail.com
-Subject: Re: [PATCH v14 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA
- deadlock
-Message-ID: <20260521141902.GD206464@p1gen4-pw042f0m>
-References: <cover.1776839248.git.ionut.nechita@windriver.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EqTD+sH7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B57351F000E9;
+	Thu, 21 May 2026 14:21:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779373298;
+	bh=fXNXvZeGZU6zo0w0DvYrpbPu84Phh7+Vv2XwyeB5E+k=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=EqTD+sH7PieVWqil4NR9j2NqFo84bYhpNfZEZ+sGln1yZGeXt7AW0YDlbPXRPhnW7
+	 6dkt2WQOLdA0so8pkIChMaF4R9SBPm1qWj4WyAVGck2dKw06b5OeLLeffrWRxGL+Bb
+	 WSL9xwJESX4Lw9nj8dQ186HiyRjJmiJbcjqB+yeMOq5A/zO7DKbvTIw0xWQkaUfFnA
+	 Mq7TofFi/wfkYNO64sUkdTz46lC59hmqSp3brDTtpDBN37ue3KBpxzzlyxCxJEVpFT
+	 rD7lkcVgI0Im74IQV3UG9uUp4vCCuv/PydPiz0qcl+p1GTKX83r26eCmD3mcuIRx3Y
+	 u0U/QOt8mdfcA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/4] dt-bindings: phy: sc8280xp-qmp-pcie: Document Eliza
+ PCIe phy
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, conor+dt@kernel.org, linux-phy@lists.infradead.org, olteanv@gmail.com, neil.armstrong@linaro.org, robh@kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260521-eliza-v1-1-97cdbe88389d@oss.qualcomm.com>
+References: <20260521-eliza-v1-1-97cdbe88389d@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 21 May 2026 14:21:37 +0000
+Message-Id: <20260521142137.B57351F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cover.1776839248.git.ionut.nechita@windriver.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIxMDE0MiBTYWx0ZWRfX8WW7ICgrgEay
- KWozYAaeNpnS6PreqGOEu9gXfNXYnuuIflenLcdGAD98uC2+q3eV3XSRFBTBT+O8100XOiy+Vkc
- 7dRSiu33DTAJFcACrmX6NCnXYGd7LvpEqZPdOSWIBjhb8I5x1Yge/OffSeOc7zEYnQx6wGPHj6B
- /T7YlBkQFTncQ6/eJFu5c6eTEj7qqal9zdCVCypx0SIYIlpVLmCwVcTZI6/vq7REpSB8S5275Nw
- 8iBFDjIWf1ss5qGGdhsSW3jL+ZnZyUp+9LFkxlmkNrijY0+SwkUfcqDMSlkXLpEgBYhx6zP8ZnP
- HZv5QjealdfK7/vzN6NkJ9xRjG6V19RszVzAV/PJvsCv6Cn/1EVC+6M5TXZV5Y/GA+vUR7BCuvq
- pu/UyQMchEzLiHP+7Mm4DuKgM1h9IyM7Thvo8+TWP/L2muZBsni3DrpxwbPhMJFCR1utpW5+Ms8
- nK1Tel31xbEiJ5N7aKQ==
-X-Authority-Analysis: v=2.4 cv=BNuDalQG c=1 sm=1 tr=0 ts=6a0f145b cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=8nJEP1OIZ-IA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8
- a=VnNF1IyMAAAA:8 a=t7CeM3EgAAAA:8 a=J6SQpo7RyPDJe7EV0JwA:9 a=3ZKOabzyN94A:10
- a=wPNLvfGTeEIA:10 a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-ORIG-GUID: KHf9ZanH9jMYZW6Db_6NeGxoWj_KLa6I
-X-Proofpoint-GUID: QN3mdofEJ83IA20oSJrx_2TLWc2wNWLf
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-21_02,2026-05-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 priorityscore=1501 malwarescore=0 impostorscore=0 suspectscore=0
- lowpriorityscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605210142
 
-Hey Bjorn,
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The new Eliza PCIe PHY compatibles are placed in the wrong conditi=
+onal blocks, incorrectly constraining them to require 6 clocks and 2 resets.
+--
 
-On Wed, Apr 22, 2026 at 09:32:40AM +0300, Ionut Nechita (Wind River) wrote:
-> From: Ionut Nechita <ionut.nechita@windriver.com>
-> 
-> This is v14 of the fix for the SR-IOV race between driver .remove()
-> and concurrent hotplug events.
-> 
---8<--
-> 
-> This race has been independently observed by multiple organizations:
->   - IBM (s390 platform-generated hot-unplug events racing with
->     sriov_del_vfs during PF driver unload)
->   - NVIDIA (tested by Dragos Tatulea in earlier versions)
->   - Intel (xe driver hitting lockdep warnings and deadlocks when
->     calling pci_disable_sriov from .remove)
->   - Wind River (original reporter and patch author)
-> 
-> Test environment:
->   - Tested on s390 by Benjamin Block and Niklas Schnelle (IBM)
->   - Tested on x86_64 with Intel and NVIDIA SR-IOV devices (earlier
->     versions)
-> 
-> Based on linux-next (next-20260420).
-> 
---8<--
-> 
-> Ionut Nechita (Wind River) (2):
->   PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect
->     sriov_add_vfs/sriov_del_vfs
->   PCI: Fix AB-BA deadlock between device_lock and pci_rescan_remove_lock
->     in remove_store
-> 
->  drivers/pci/iov.c       |  9 +++++----
->  drivers/pci/pci-sysfs.c | 30 +++++++++++++++++++++++++++++-
->  drivers/pci/probe.c     | 18 ++++++++++++++++--
->  3 files changed, 50 insertions(+), 7 deletions(-)
+commit 8532696e8f5cf63303348c425688fe2c2383eed6
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-do you think this patchset is ready integration? Or what do you think we'd
-still need to do to get there?
+dt-bindings: phy: sc8280xp-qmp-pcie: Document Eliza PCIe phy
 
-This race, and especially those I fix in the follow-on patchset
-https://lore.kernel.org/linux-pci/cover.1776868550.git.bblock%40linux.ibm.com/
-are pretty painful on s390 with PCI hotplug. It forces us to reboot the
-system, since there is no other way to get out of the deadlock.
+Add compatibles for the Eliza PCIe QMP PHY's, which supports Gen3x1 and
+Gen3x2 configurations.
 
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
+> diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie=
+-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-ph=
+y.yaml
+> index 3a35120a77ec0..be4bbc327982f 100644
+> --- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.ya=
+ml
+> +++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.ya=
+ml
+
+[ ... ]
+
+> @@ -181,6 +183,8 @@ allOf:
+>          compatible:
+>            contains:
+>              enum:
+> +              - qcom,eliza-qmp-gen3x1-pcie-phy
+> +              - qcom,eliza-qmp-gen3x2-pcie-phy
+>                - qcom,glymur-qmp-gen4x2-pcie-phy
+>                - qcom,glymur-qmp-gen5x4-pcie-phy
+>                - qcom,qcs8300-qmp-gen4x2-pcie-phy
+
+[Severity: High]
+Are these compatibles placed in the correct conditional block?
+
+By placing the Eliza compatibles in this group, the schema enforces a
+minimum of 6 clocks and 2 resets. However, the driver implementation
+introduced in the series expects only 1 reset.=20
+
+This mismatch will prevent structurally correct device tree nodes from
+passing schema validation.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521-eliza-v1-0=
+-97cdbe88389d@oss.qualcomm.com?part=3D1
