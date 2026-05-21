@@ -1,60 +1,61 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36D643C343D
-	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 11:59:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 244E53CC7F1
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 12:01:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779364746; cv=none; b=jC41X/6VGH79NRV4LXj/jnGqL6G6uxxYFnRN0rSuWqUNz88gHcbuVZGm/zDxeFvbXNRDucoUfRSVq9TiVfRUnvBNw9A3ObUpri0S1+x3YV2qXQtswjlLjwHyJo+mjeEpgBK+a0EHjB6hLFiZgvwRGDEvUYA3NsGojs2q9p1aCSU=
+	t=1779364886; cv=none; b=KsqkKnfRbmRxFY9i+5IEbe01+xb54aMxKJhCeVp1WWilepZBFB0+w2t20+Ka2mWhHduAzid/UCuDfpFxT0gnDNB5tI0HDRVJ3ccOhjpKT5xC9nhfiucOS+joyJWCcOEAl0s3ErJLgdgxv5JCNXqG33ltGjDHfemNSk3EA5Aix7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779364746; c=relaxed/simple;
-	bh=9QNDz0SiTVVe4NXAzmtAyUk/+gd+KBofCbP69W8PMH4=;
+	s=arc-20240116; t=1779364886; c=relaxed/simple;
+	bh=KXs6qNQwH4DBHRpS7hD+hEdenmQVc94yFGCAPMNNEdQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u6LUdlBYzBe3uu63n40KCwrN0M6Pw0ZQV2APXvSc1gvjawzd5wTftEVLKOfZi4akurvdYNG3BkhufVVpQqO5JZAoV2Obbj4TWrZhlZSJzQ2CNfvcK8n04EjwN9u9ojvR6tQT8i3UMJMZAYG2RCH4LDvXLtBZ3MjuPYQY/x2Nu8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.52
+	 Content-Type:Content-Disposition:In-Reply-To; b=gu2e04VA8C340aqT4avFM/gMb8vosoB4+qxDnybUhcTXN1RXfaft8CKdNGwfDgeuIZsgEvml9/FQ3VUKdtqqo5RL+Uy62IvrnmG/FfSb0ZnewHpJHtd3GirTyI1ES1lD2KxwQyASdllMHhIU04ci6PfCOfw6yG9vBsBFDI1sZD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-36a15ed5119so2399866a91.3
-        for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 04:59:04 -0700 (PDT)
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2b4583f0a1aso39184415ad.3
+        for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 05:01:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779364744; x=1779969544;
+        d=1e100.net; s=20251104; t=1779364884; x=1779969684;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=h0n/yoOj7r3WTChH1iCOeo3b0bKG1oOEOnSnWhVWyhQ=;
-        b=PaQr2+blxjdvsa+8DvXZ6lhRiAE6sXCi9KI69EU0+349Qlaiki4YBHETp61PNt/KAq
-         zWZCzMa5/6Ag4spFFgzEZftEL0uO/zbGM8bOwKh6d1XtWQNoR6nyVTVHZh147B6tG8fn
-         hOnxbir/guVhLfPS7poC/6jNgCGaW70TngiAl2RKJ5opNsO1pEl0Hj/jsEgtvuOl499l
-         2CvEJ2ATzZNDtFe2wIgpvnuCCCr6WzkbRBQZhBXGd5paeLxXRXltD+cH5UAwcyDmWuc2
-         5PtYty+WuzwyiRTcofO4+IT8oZNbhv2aEoRxPQvYf/C81ZhW1blgybCa9SlafZHD/y2Q
-         1+Lw==
-X-Forwarded-Encrypted: i=1; AFNElJ8ciCAu8BwMjRvK5P00LmL9H5zUhN7onZnM3ORaxgBEXuOVGuFqdKcRDUOymch3kbt5TIPP8V8EoX0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxW+4ig5I7ATXlDv6QhQx/KORRUS6+L4zdkNOsob75swcTzxevD
-	ILHeTlwlr2UY7iBXATihOfYxj4ZcI62OEM2P25rqT47ZrnvlJtvs0TZQ7AZUjA==
-X-Gm-Gg: Acq92OGlC6szdEv1+2XBG2aQXk5DRWr50vmNciauwAsFNO7rVUrVubevCyfBDn539wa
-	UJ0OyiJb3JeG6NRslH2R+LF2gkFJ3o9h6oaEyPAHJ1PVp5uCb7mPehw550CDa3N0awkMUmokIqX
-	haj8/zTAlsNHs6abiEVwYi1Yu59W3gmdCw+puEP+Al3eX6TZrODtARoUPiyXr333rRfaOrL2ZG0
-	Drywnb/wlL1pQ3n56V4NQJRpaG4sx7h1vj2cyhCwycvwhmi4993YoGbqny3cKVjhRg8aitzTx4u
-	7hhtuA4mJKGHZXuB/mBeDY7LiG38qA6MeBBIcIRpG85lsEbY1tby8bV9dfJBqdNOAOkr7f+kOgQ
-	6kpqiAxdED72KZ7miXLulxxDjEUJX7ZmSdaTFKm8wMhjVGTl0hcjqMIbzpVf8L3SvUn8FcIZoLb
-	2CYstl5KAIngL03msaroRBCR8pQW/D3Tc/BZd2hrCzUwSsarLHW+3hiVyLaQt3RrBWTDWCkqE+j
-	JMAO8uEgow8OM9v4FFOenpUsD6bgD9yjHUcL6gtSIO5UDtOrCjJHjgvey89uiMfENtNn+EPZI2i
-	a6xXNHerZOJMRBU7twiCP12f9Xgn3VUP6xr3U8m4lw==
-X-Received: by 2002:a17:90b:2d43:b0:369:a74b:28cc with SMTP id 98e67ed59e1d1-36a45c7ef23mr2530942a91.18.1779364744399;
-        Thu, 21 May 2026 04:59:04 -0700 (PDT)
+        bh=vmzekUUgXNW9PtEwvumFbVkEmkfnVIVC+bSfznNWm+c=;
+        b=gsuX5h9aSLVTWCfCsIf2K1PDYon6Adib2IEMmQVfMFH6ZUaKoRAL5OtFgUK/qBq5Sl
+         7iC3gjR1b9c+K+l+XjweZ7lXmyB1NbeLeWy4qg+hTEU+zS7B0BQrgBlZcg8oNoJGjSLX
+         n5fyE/js8cy/AtgZA2XP+j2uJqbzkbEylsBKKtbIQWQzY3YAgZ9S4SyJ5lMep5OKC7r6
+         R3c+sdyEFsjrNYhNEhEc3/kpQ/FjQPVLL4q7skibGJMxREznaiX6YcE2bYkXZM+IpAXu
+         JDz4tKf2wyaD4U+wGK/qba6xTos03tTVgTuCv99BJb24GzSjvzqdjeUfA9uU7AE6fX/J
+         fqjA==
+X-Forwarded-Encrypted: i=1; AFNElJ+SG0hnrbLjI4KFgPAgqacuxamMdbZXiBSrrKnuIaQECVRivuEqKp9eF0oybdRLJ5g+S6xXPSl6HHg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwSm+rnrPHFu3O4y/GuGvha/+9ZNkuKxhTZam7eIwzYjyYth4Nx
+	gohTLzqw9X6eJRUlIUCJjSfav7Y7EgxaqDZCYtORxlBHB3mS7tAFVTOn
+X-Gm-Gg: Acq92OG4/2MXnxkWDLgZZ00+H0A+SiHZwekxkMZuvDUkJHoMPCdTDrdXhCi57Ddf+Me
+	4qXm0sp4S35ojDlSu20vi0NqHmjlxfyGepf0ASOQN3/wUJ9fDfTULyNxT+563ITz6ylR0izJmeO
+	jF6lof36bCYDQ5RmeTfAgVaMtGa6GNZEqqDDkoL8biRxBRFdYO7zelWEGJV409AHw8DvMCI94vQ
+	ZORxAFz2H3BwKmv/3oke6DX8Ojjfrvm1h1MUAsYI8GfLXTbN6kddNEGItIDIUTprEznhF/AXhjL
+	ujS8xCZPihciaKQIG4AdjXGRmTYPb9Dj1UF5PcwmKJSBxKo6gRaGSLIKfW7KNY1TpGMBRC9w823
+	Etrxy4+NfDjn9NXydyHfg7jEd0b4OQlOdXdzDMB2OUxquY/OyaVZxTXZvpKWD157SBI5RDs0g+f
+	hi9I7kC7K6naUXJ+DhDa/OdgsuV0eErhVtmbK4ip6gwddflzms6JdyyIGq9rMUyudHnYMSap1Kb
+	4ApKQMmWuyFcqHXxQJ/Dd2cQNdI4E5UQKel+p7eA7daSD/e/F0+hm4DyYYLxNKAyh6+QdZHZw0v
+	WzXc5OBzbHnvgyQsQGuacGgwgBJEqJw=
+X-Received: by 2002:a17:902:e5cb:b0:2bd:6cab:85d with SMTP id d9443c01a7336-2bea3091c1dmr27529935ad.3.1779364884180;
+        Thu, 21 May 2026 05:01:24 -0700 (PDT)
 Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36a440491a9sm751306a91.0.2026.05.21.04.59.03
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bea9495041sm9418365ad.35.2026.05.21.05.01.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 May 2026 04:59:03 -0700 (PDT)
-Date: Thu, 21 May 2026 20:59:02 +0900
+        Thu, 21 May 2026 05:01:22 -0700 (PDT)
+Date: Thu, 21 May 2026 21:01:21 +0900
 From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To: Gianfranco Dutka <gianfranco.dutka@arista.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Gianfranco Dutka <gianfranco.dutka@arista.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 Subject: Re: [PATCH] PCI/sysfs: NULL res_attr slot after kfree as defence
  against double-remove
-Message-ID: <20260521115433.GB647881@rocinante>
+Message-ID: <20260521115906.GC647881@rocinante>
 References: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
+ <376c679c-8637-d19a-48d1-165d8f2fc2f0@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,35 +64,26 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
+In-Reply-To: <376c679c-8637-d19a-48d1-165d8f2fc2f0@linux.intel.com>
 
-Hello,
-
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1228,11 +1228,13 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
-> +			pdev->res_attr[i] = NULL;
->  		}
+> To me it looks more like pci_remove_resource_files() is expected to be 
+> entered only once.
 > 
->  		res_attr = pdev->res_attr_wc[i];
->  		if (res_attr) {
->  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
->  			kfree(res_attr);
-> +			pdev->res_attr_wc[i] = NULL;
->  		}
->  	}
->  }
+> If this change is accepted, the 2nd entry is "silently" allowed whereas 
+> better course of action would feel to catch that in 
+> pci_remove_resource_files() with:
+> 
+> 	if (WARN_ON_ONCE(something))
+> 		return;
+> 
+> That way, developers may become aware the code has some lifetime issue.
+> 
+> (I'm not strictly against your change but I think it would be much better 
+> to have sane lifetimes and catch offenders.)
 
-Similar such patches (for reference):
-
-  - https://lore.kernel.org/linux-pci/20251010093023.2569-1-guojinhui.liam@bytedance.com/
-  - https://lore.kernel.org/linux-pci/20250629030547.1073425-1-zhangjian496@huawei.com/
-  - https://lore.kernel.org/linux-pci/20210507102706.7658-1-danijel.slivka@amd.com/
-  - https://lore.kernel.org/linux-pci/20191024172157.878735-2-s.miroshnichenko@yadro.com/
+The upcoming sysfs changes would remove pci_remove_resource_files()
+completely, so there would not be anything needed to be done here,
+hopefully.
 
 Thank you!
 
