@@ -1,153 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38B0F360EFD;
-	Thu, 21 May 2026 05:15:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 251FB370D43
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 06:12:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779340518; cv=none; b=K5XSEOFJc5nOtkKgJD26qj9Ls8Hd8+0kPeQprU67Xlne40wIjXKlNcLMomeiAfC+0vKALzflny6QJAKoxNCllE3gDSKpEdFVNvMQz+1KoTcLHcb+Ho9F/wcM8XB1uMD3FqoJWHzvee32fjCfS9Ir5bLojcwmTrde6FUAXdXWrhM=
+	t=1779343942; cv=none; b=t46wHdFlQtMYhfbMlST87hiKSjGWFerJ4DEPwc+ZSRURZFLtKmp29AaoTWBDUiBe9GZ2stQF4pOQ8xEesjghClRe7fchlxbWeZN+bOQiVdzldJqL6H6j9+CFXHJQhhf41N8nEKORRCZdwmds45h7eUvc99VT9UaWd7DhZyRnTg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779340518; c=relaxed/simple;
-	bh=x4gHjh2Rrqz3/Xt2WX8QhIAyVlA62HeFdhWSubChrRU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=d1dbtrutDSU6fkTzTRWlvndIy/1NL5ugMvEjThR74yX/fGbGHsKYaBEIda03szYn78MJcHiygpH/IL3LIXGEgtOW/8rxL8GLTELBbQgWkGqwCfj1G4Jo0d2R2IJyw5KfFm+uQ8pKxQnx5g8kU588v82HAA+GUKbMNdvLFIv82sg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnIlBWIj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779343942; c=relaxed/simple;
+	bh=k+fh7HBozKaLy+IwtXw65yFUdB1JormeXVzChOQGoWE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZBjEs3Rl9cb3ro+TWKHQ9xL+7ucV2ob4zI7gEbVjijj4CgMs6C/e0rVKDIYd0KpBFGA3uv5FbKMbK0z/NBzgY/t/tKshhaoXiz6hlzT0He3zFQs/1X0QMoCu0hdr5OgII8fHIInazMGxdaiwdO7ex7F+mZjTd0L7QOHYJpy1HX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dYirTL3s; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnIlBWIj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 797A91F000E9;
-	Thu, 21 May 2026 05:15:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779340516;
-	bh=z4KfFRjOYPoi5yAlTLcAC9uTr5/8FAckLXTA3F0vtgA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=fnIlBWIjjxk06AKwz13Ck1J7TKAPYJ+7/IibDB12moICXO+WTs37IRziBx9yI/xvk
-	 hpbeggw0H+8m5OjOjqr9kak5WWOW5x/0nyZAcsvpwnlvhyDo+8IHy5vmv6RNNPr3TH
-	 Kv29+KI4ZhFCpTtgLgXVSjtoF9Jvd5UPJTINWBMhv/Upmtrcd0bJeYFGKjr5szc0J6
-	 POf1msKsTZ7Tz9y8bKvQnf6Bpez4m9zTUMzENBW3XS4DvLhIqvzIGtG9KGCnfQ0Fu6
-	 JBudbJM4A3Q7/F9MtUQnEwEuDXU65zhNDorqJNBG63zwhlGNBQrF88jNpGniePcUY0
-	 0cXSUtnw6eMcA==
-Date: Thu, 21 May 2026 10:44:51 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Caleb James DeLisle <cjd@cjdns.fr>, linux-pci@vger.kernel.org, 
-	linux-mips@vger.kernel.org, naseefkm@gmail.com, ryder.lee@mediatek.com, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
-	ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v8 1/3] PCI: mediatek: Use actual physical address
- instead of virt_to_phys()
-Message-ID: <7xfp5nbtd4qtonoqurfwoedsix7vondrnfeip53uwjintuvc6a@cg3ez6z3pii5>
-References: <afd47d4b-8309-4025-a40b-29606fed3c50@cjdns.fr>
- <20260520195900.GA86018@bhelgaas>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dYirTL3s"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779343940;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=YYlzrjgrXqgXprjxQSH48QuvqMlaIMvGEKvu1s8m/Iw=;
+	b=dYirTL3szSS07SfbxRTzExwLDNkxLdBM24KT5U/lnr/jVnXswnufO8tCoS3F9Dl/0BlbnF
+	+XwBzOHq2lJtWcCUMGvoNuxsFPU1EwrLqayM6SX8CAOHtNOB4G7BAHa7TZQ9VuY9NHve1w
+	Ccgcs++cdFxw+KPhe8DaOUHc1uJg9iU=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-298-yPR-C3jzOVGi9TGQdH4ryg-1; Thu,
+ 21 May 2026 02:12:16 -0400
+X-MC-Unique: yPR-C3jzOVGi9TGQdH4ryg-1
+X-Mimecast-MFC-AGG-ID: yPR-C3jzOVGi9TGQdH4ryg_1779343935
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9AE21195609D;
+	Thu, 21 May 2026 06:12:14 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.82])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id ECD2130001A2;
+	Thu, 21 May 2026 06:12:10 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org
+Cc: nbd@nbd.name,
+	lorenzo@kernel.org,
+	shayne.chen@mediatek.com,
+	sean.wang@mediatek.com,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v3] PCI: Disable broken FLR on MediaTek MT7925
+Date: Thu, 21 May 2026 08:12:05 +0200
+Message-ID: <20260521061205.12727-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260520195900.GA86018@bhelgaas>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Wed, May 20, 2026 at 02:59:00PM -0500, Bjorn Helgaas wrote:
-> On Wed, May 20, 2026 at 09:17:35PM +0200, Caleb James DeLisle wrote:
-> > 
-> > On 20/05/2026 20:55, Bjorn Helgaas wrote:
-> > > On Wed, May 20, 2026 at 06:38:25PM +0000, Caleb James DeLisle wrote:
-> > > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > > 
-> > > > The driver previously used virt_to_phys() on the ioremapped register base
-> > > > (port->base) to compute the MSI message address. Using virt_to_phys() on an
-> > > > IO mapped address is incorrect because it expects a kernel virtual address.
-> > > > 
-> > > > To fix it, store the physical start of the I/O register region in
-> > > > mtk_pcie_port->phys_base and use it to build the MSI address. This replaces
-> > > > the incorrect virt_to_phys() usage and ensures MSI addresses are generated
-> > > > correctly.
-> > > > 
-> > > > Fixes: 43e6409db64d ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
-> > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > > Tested-by: Caleb James DeLisle <cjd@cjdns.fr>
-> > > > ---
-> > > >   drivers/pci/controller/pcie-mediatek.c | 16 +++++++++++++---
-> > > >   1 file changed, 13 insertions(+), 3 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > > > index 75722524fe74..c503fbd774d0 100644
-> > > > --- a/drivers/pci/controller/pcie-mediatek.c
-> > > > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > > > @@ -175,6 +175,7 @@ struct mtk_pcie_soc {
-> > > >   /**
-> > > >    * struct mtk_pcie_port - PCIe port information
-> > > >    * @base: IO mapped register base
-> > > > + * @phys_base: Physical address of the I/O register base region
-> > > >    * @list: port list
-> > > >    * @pcie: pointer to PCIe host info
-> > > >    * @reset: pointer to port reset control
-> > > > @@ -196,6 +197,7 @@ struct mtk_pcie_soc {
-> > > >    */
-> > > >   struct mtk_pcie_port {
-> > > >   	void __iomem *base;
-> > > > +	phys_addr_t phys_base;
-> > > >   	struct list_head list;
-> > > >   	struct mtk_pcie *pcie;
-> > > >   	struct reset_control *reset;
-> > > > @@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> > > >   	phys_addr_t addr;
-> > > >   	/* MT2712/MT7622 only support 32-bit MSI addresses */
-> > > > -	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > > > +	addr = port->phys_base + PCIE_MSI_VECTOR;
-> > >
-> > > This doesn't look right because the MSI address is a PCI bus address,
-> > > and port->phys_base is a CPU physical address.  Often a PCI bus
-> > > address is the same as the CPU physical address, but not always.
-> > > I think the DT 'ranges' property tells you the translation.
-> 
-> Oops, sorry, I muddied the waters here.
-> 
-> 'ranges' tells you the translation applied by a bridge, e.g., when a
-> CPU does a load/store, the PCI host bridge turns it into a PCI
-> read/write transaction.  The bridge might add an offset to the CPU
-> load/store physical address to get the PCI read/write bus address.
-> 
-> But that's not the issue here.  The MSI is basically a DMA write
-> performed by the PCI device, not a store done by a CPU, so I don't
-> think 'ranges' is the right thing to look at.
-> 
+The MediaTek MT7925 WiFi device (14c3:7925) advertises FLR capability
+but the implementation is broken - reset always fails, leaving the device
+in an undefined state.
 
-Yeah, it is so easy to confuse both. To summarise, 'ranges' describes the
-outbound translation and 'dma-ranges' describes the inbound translation from
-host perspective.
+This manifests in VFIO passthrough scenarios: Normal VM operation works
+fine, including clean shutdown/reboot. However, when the VM terminates
+uncleanly (crash, force-off), VFIO attempts to reset the device before
+it can be assigned to another VM. Because FLR is broken, the reset fails
+and the device remains in an undefined state, preventing reuse.
 
-> Based on this:
-> https://elinux.org/Device_Tree_Usage#PCI_DMA_Address_Translation
-> I think 'dma-ranges' is the relevant property.  I don't think your DT
-> includes a 'dma-ranges' property, and in that case the default is that 
-> the system bus (CPU) address is the same as the PCI address.
-> 
-> So I think this patch works because it assumes DMA addresses like the
-> MSI address are mapped to identical system bus addresses.
-> 
-> It still seems to me that drivers should be prepared for the presence
-> of dma-ranges and use it when computing the MSI target address.  But I
-> don't think any drivers really do that, so for now I think you should
-> pretend that I never responded about this patch.
-> 
+Disable FLR for this device so the PCI core falls back to working reset
+methods (PM reset or bus reset).
 
-Your observations are correct. This driver assumes that the identical mapping
-exists between CPU and PCI bus addresses. Usually, the drivers make use of
-phys_to_dma() to handle the translations. This API internally makes use of the
-'dma_range_map' which gets populated by the OF core based on the 'dma-ranges'
-property (if present in DT).
+This follows the existing pattern used for the MediaTek MT7922 WiFi
+(14c3:0616), which is the predecessor device and already uses this quirk.
 
-But it makes sense to use it irrespective of whether the platform supports
-non-identical DMA/inbound translation or not. Since this API behaves like a
-no-op and returns the CPU physical address if there is an identical mapping,
-there is literally zero overhead in using it.
+Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+---
+v3: Resend with MediaTek wireless maintainers CC'd
+v2: https://lore.kernel.org/all/20260508145153.717641-1-jtornosm@redhat.com/
 
-- Mani
+ drivers/pci/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
--- 
-மணிவண்ணன் சதாசிவம்
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 000000000000..111111111111 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5607,6 +5607,7 @@
+  * Intel 82579LM Gigabit Ethernet Controller 0x1502
+  * Intel 82579V Gigabit Ethernet Controller 0x1503
+  * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
++ * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
+  */
+ static void quirk_no_flr(struct pci_dev *dev)
+ {
+@@ -5617,6 +5618,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
+
+ /* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
+ static void quirk_no_flr_snet(struct pci_dev *dev)
+--
+2.53.0
+
