@@ -1,184 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0BA73A6409
-	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 23:53:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912CD3B5319
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 23:56:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779407588; cv=none; b=RZx0nfmUsj5cTjZtAt6yNZ9cvxu8Q0CRCKhMuOWnrE/OhLc/3uQZSvzj+PIelmA+swSufCYnDVZ00iobSivzAaOnGh1M4FzXP0pl1TJ/R9I7UHaF19S+8DEeK/MLWWaZ1tjoriCxZoLYhPPeZC6t5AdS0+rxIR9Q7rmcyw5YVgA=
+	t=1779407814; cv=none; b=uTA7Ae78C9+indLbmV2S2r8vE08E7CzyctGrYZBxYdrSg0NZVSVpKzeH8xWTWiqEA29387aP0ACriQ/g+3e0MKZydh+6X+S5ufm8lTiQMKworDfsAEAlnlZi2jOaUJF2M8l+9jHC4Esya/DxGhc6cfNs+RhqVrs2Ts2n1U8VfYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779407588; c=relaxed/simple;
-	bh=4lat0SXpEucg6Ce7Jl0DkIca3NL5lPwswaSpLHReHGc=;
+	s=arc-20240116; t=1779407814; c=relaxed/simple;
+	bh=uVzdAy4yKBBV4KMeyelFi5T0sVRYbl/o2Omqg74TZnw=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bB0zLUdjq3LdfAWJGCjNEDtutLju0G5tRIYdCF4N4qMTezw8bP3YoTrVKLsY+xMTQxmyFhYbU7N/7C9j5UCS22Y0Pd2v1fi5RzHSgr1iczbEzV5D30EAUl+DtLB3l9N2VU6vtZtVbTchaZvJK/ka5XQ68+4WNp/nzmLQCmrJJSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dWSR7xdX; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Vo0ba7qeVdkUPemBNa/rwSXGZpwR/okeUPInOS743YEqudkobhTFWx3FzDMElOuCNJS1g57pqd+712q7LOin7Cba6/6C2h5uKL2eBB1dBGsw5iPCFdey8NWGUlNTDbmwFn7jgsCRnKuBtSlBXJCbZyN/Dm6VjRi6w+I0WFhrQ/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V10/eLkn; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dWSR7xdX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3745B1F000E9;
-	Thu, 21 May 2026 23:52:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V10/eLkn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E97E41F000E9;
+	Thu, 21 May 2026 23:56:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779407577;
-	bh=YSiapPP/yA3FDBA1TLRbUznk2ZXCAOR9gsGfoWUWnO4=;
+	s=k20260515; t=1779407806;
+	bh=uVzdAy4yKBBV4KMeyelFi5T0sVRYbl/o2Omqg74TZnw=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dWSR7xdXbkYeZmpXQv3STjnlcurcrbtB9210xOlZUGdgqXckOYIOpS5HaC0rtIruH
-	 ZxpD3yONmSHOTq4dZsj8JysYYrrDAD0xxebBg2RD+SbCWqgGs2e2GU+LPG+2M0xhn+
-	 upmxuLjJA5nhN7wXwkVZRw1MKiGgYxC2VK/SwDvwGRlJKIG1j0uBdvQahkUw2htTil
-	 5UCQQzNWPJBJmktTXlRa1i7cIr2sNO1Tbt7I0MpKHTTwVsSIFwLqJ1VZIrpWXdpf2E
-	 wCTe16/QfAEz2hAWVb94XMJnzbnsgKgbHqgYoyUb+WAga1h/EivN5QI2xl3EVSRMgP
-	 DxhdzdraUuHHg==
+	b=V10/eLknlSh8cIJFDBS4bYOY2MXQNj4Hsb2L8/2fkcB/jF//iA3BZXCB8EkzCIqp+
+	 o2fJRvje681Ag54rEPhsAGPxExStCCs3yIx9YKFNuKxQKcCAgZmSZcj23YWfySpNVZ
+	 64g7AX+FqYVuezRRlu19UMsHSIYDIIN43IEVgf6/yuh+Gpe10qz+oP+tlt04KREs4w
+	 G7arg47Ik/IcEFzMSeDXBTsxR/ao39dK42kAGvcU1tNB/xlzWIipDwVKNOv/d2cOiH
+	 jdYhq1VhRJBfsIIrqoKxp82XAu5SfSHo7J0dgkGfx4qfWF3H8oqRWGvJamIrRjeVzd
+	 SQTEl/0rBj2sw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3] PCI: vmd: Add feature to scan BIOS enumerated
- devices.
+Subject: Re: [PATCH v4 03/27] rust: driver: decouple driver private data
+ from driver type
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nirmal Patel" <nirmal.patel@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260521232019.2562-1-nirmal.patel@linux.intel.com>
-References: <20260521232019.2562-1-nirmal.patel@linux.intel.com>
+To: "Danilo Krummrich" <dakr@kernel.org>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
+In-Reply-To: <20260521233501.1191842-4-dakr@kernel.org>
+References: <20260521233501.1191842-4-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 23:52:56 +0000
-Message-Id: <20260521235257.3745B1F000E9@smtp.kernel.org>
+Date: Thu, 21 May 2026 23:56:45 +0000
+Message-Id: <20260521235645.E97E41F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] vmd_resume() unconditionally modifies legacy MSI remapping configu=
-ration on unsupported hardware.
-
-Pre-existing issues:
-- [High] SRCU structures are permanently leaked on probe error paths.
-- [High] SRCU structs are destroyed while the managed IRQ handler is still =
-registered, leading to a Use-After-Free.
-- [High] Truncation of 64-bit physical addresses on 32-bit systems due to i=
-ncorrect use of PCI_BASE_ADDRESS_MEM_MASK.
+- [Medium] The commit message explicitly states that the patch adds a `Data=
+<'bound>` associated type, but the implementation only adds a standard asso=
+ciated type `type Data: Send;`.
 --
 
-commit f05a884975712ad2dc4d55677318e1620e041df9
-Author: Nirmal Patel <nirmal.patel@linux.intel.com>
+commit 36c9216be2c21a3bf349085eb24629f94228e6bd
+Author: Danilo Krummrich <dakr@kernel.org>
 
-PCI: vmd: Add feature to scan BIOS enumerated devices.
+rust: driver: decouple driver private data from driver type
 
-Newer VMD with device ID 0x28c1 has unique settings compared to its
-predecessor where BIOS enumerates the entire VMD device tree and
-assigns respective configurations.
+This commit adds a Data associated type to bus driver traits, decoupling
+the driver's device private data type from the driver struct itself. It
+updates existing drivers to use type Data =3D Self to preserve current beha=
+vior.
 
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index d4ae250d4bc6d..15a3f6a357889 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-[ ... ]
-> @@ -661,6 +684,46 @@ static int vmd_get_bus_number_start(struct vmd_dev *=
-vmd)
->  	return 0;
->  }
-> =20
-> +static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
-> +				       resource_size_t *offset1,
-> +				       resource_size_t *offset2)
-> +{
-[ ... ]
-> +	/* Calculate offsets like vmd_get_phys_offsets() does. */
-> +	if (phys1)
-> +		*offset1 =3D vmd->dev->resource[VMD_MEMBAR1].start -
-> +			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
-> +	if (phys2)
-> +		*offset2 =3D vmd->dev->resource[VMD_MEMBAR2].start -
-> +			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
+> rust: driver: decouple driver private data from driver type
+>
+> Add a type Data<'bound> associated type to all bus driver traits,
+> decoupling the driver's bus device private data type from the driver
+> struct itself.
+>
+> In the context of adding a 'bound lifetime, making this an associated
+> type has the advantage that it allows us to avoid a driver trait global
+> lifetime and it avoids the need for ForLt for bus device private data;
+> both of which make the subsequent implementation by buses much simpler.
 
-[Severity: High]
-Will this truncate the 64-bit physical addresses on 32-bit systems?
+[Severity: Medium]
+Is the commit message accurate for this patch?
 
-Since PCI_BASE_ADDRESS_MEM_MASK is ~0x0fUL, on 32-bit systems it evaluates =
-to
-a 32-bit 0xFFFFFFF0. When bitwise ANDed with a 64-bit u64 like phys1 or phy=
-s2,
-the mask is zero-extended to 0x00000000FFFFFFF0ULL, clearing the upper 32
-bits of the address.
+The commit message explicitly states that the patch adds a Data<'bound>
+associated type and details the advantages of the 'bound lifetime parameter.
+However, the implementation in this patch only adds a standard associated
+type (type Data: Send;) without the 'bound lifetime parameter.
 
-Could this result in entirely incorrect memory mapping offsets for VMD devi=
-ces
-mapped above 4GB?
-
-This is a pre-existing issue in vmd_get_phys_offsets() as well, but it seems
-to be repeated here.
-
-> +
-> +	pci_iounmap(vmd->dev, bar4);
-> +	return 0;
-> +}
-> +
->  static irqreturn_t vmd_irq(int irq, void *data)
->  {
->  	struct vmd_irq_list *irqs =3D data;
-> @@ -711,6 +774,53 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
->  	return 0;
->  }
-
-[Severity: High]
-This isn't a bug introduced by this patch, but does the driver leak srcu_st=
-ruct
-structures on the probe error paths?
-
-Looking at vmd_alloc_irqs(), it initializes srcu_struct structures in a loo=
-p.
-If a subsequent step fails (such as init_srcu_struct or vmd_create_irq_doma=
-in
-later in probe), vmd_probe() jumps to out_release_instance and returns an
-error without calling cleanup_srcu_struct() for the already initialized
-structures.
-
-While IRQ vectors are automatically freed via devres, the srcu_struct
-allocations inside the per-CPU memory appear to be permanently leaked.
-
-[Severity: High]
-This is also a pre-existing issue, but does vmd_remove() introduce a
-use-after-free by manually destroying srcu_struct structures while the mana=
-ged
-IRQ handler is still registered?
-
-The driver registers its interrupt handlers using devm_request_irq().
-Because devres handlers run only after vmd_remove() returns, the IRQ remains
-active and can fire during or after the srcu_struct structures are manually
-destroyed.
-
-If vmd_irq() fires during this window, it calls srcu_read_lock() on a
-destroyed srcu_struct. Can this sequence trigger a use-after-free?
-
-[ ... ]
-> @@ -868,19 +956,21 @@ static int vmd_enable_domain(struct vmd_dev *vmd, u=
-nsigned long features)
->  	 * acceptable because the guest is usually CPU-limited and MSI
->  	 * remapping doesn't become a performance bottleneck.
->  	 */
-> -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> -	    offset[0] || offset[1]) {
-> -		ret =3D vmd_alloc_irqs(vmd);
-> -		if (ret)
-> -			return ret;
-> +	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
-> +		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> +		    offset[0] || offset[1]) {
-> +			ret =3D vmd_alloc_irqs(vmd);
-> +			if (ret)
-> +				return ret;
-> =20
-> -		vmd_set_msi_remapping(vmd, true);
-> +			vmd_set_msi_remapping(vmd, true);
-
-[Severity: High]
-This patch bypasses MSI remapping initialization for VMD_FEAT_USE_BIOS_INFO
-in vmd_enable_domain(), but is it also necessary to update vmd_resume()?
-
-vmd_resume() unconditionally calls vmd_set_msi_remapping(), which will read
-and write the legacy PCI_REG_VMCONFIG register during system resume. Could
-this cause undefined behavior or PCI aborts on the new hardware?
+Could this part of the commit message have been intended for a later patch
+in the series where the lifetime parameter is actually introduced?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521232019.2562=
--1-nirmal.patel@linux.intel.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521233501.1191=
+842-1-dakr@kernel.org?part=3D3
