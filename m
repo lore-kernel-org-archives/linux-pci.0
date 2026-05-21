@@ -1,128 +1,99 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF47B2EBBA1
-	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 09:13:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60BFB371D15
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 09:18:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779354784; cv=none; b=PmzFEeXTTa7w/a4nG+9n3jydP6iN1ZDBEOowen/UcvffKBVKRQozY2jirXch4TCuZDHMJOVH/WpmT5noQZEbDe7eO3b3y3w7FaipTnuT0V7yzxe76CyP4I08aA0bVsIa7rWtiXukbzUXpgH7fZ2sPOPRk8805z63r2jvDAEJG2w=
+	t=1779355121; cv=none; b=JJ7vnxp/Ocffr3C7IKbDEgQ+NTLQk3aun/R7FLrx7wRZM2IrH6FNPhdxgqxUtYAHG8XnWPrZj/brGfpxH155qRzuxMwCQMZ/v4weJMX8yAn0KpybXvaKz080My05i7nk+19dilKKPx7lGcRhLBNJ61jZyqV3Pw5es3RV5KOx2Lg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779354784; c=relaxed/simple;
-	bh=nw+AbDWSkF/0mQVIA+TV4A4Ed65ipc2EyE1oFsQt/LU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JcoyWbdKyGrZH4OqK+5PVxlEOgcjNsAriQtZglTtcfrZ1eSZwjOb9tmLzODfDn3EY3TsoxWpuxWldABDoKskPm87kq5KmAmZGqx6gJ8Z0kyeP/DqiRip5gJfu/p3t0oQ4Iogo4Ma6L9yVuN74azvYbRTa0tuSWewWJasHhV4IsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=koyJbRb2; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779355121; c=relaxed/simple;
+	bh=azw12yvo1KzS4bOAY2lRlKmNg9Zna4MNvidgXEzteRo=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gNcBVEO54xKCHmej8a05PXNcg30Ue5PXtgfZ9oQYAuOHFjScgZoO4uE2H7UJDZwMqM8n8P8cETmsKC0/x2yLsXziz7CGTfKjQmq0UL+jvHxSYHVX8JA4qvT9EOckP0MXx0rBuLwXuYK3RbCQ78nq9R50igu2NKCeAk2uuW0ktcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OZjKXkQZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="koyJbRb2"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-44dd5cb0f81so4698124f8f.0
-        for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 02:13:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779354780; x=1779959580; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=eKdwRFTM7NQFW2q3Gwv2bxtOXYeZ9TnQRhzY2TP3tE8=;
-        b=koyJbRb29+xoYIYqccjyNlgNSr8neQz9QFTmHO6qhhUwR4FKMfMbyGngLjTuwabuwS
-         iFTqTESa6hSVPcP3jRrc6bia7NtgUq4yJwJ9z17ZNUH19MlE+f324KQWymSrRJ/NJK1J
-         SMOXE4SmsCr2lV0gX/7oJrSKxVGDKei29bn7IMqcKFSMoJDKYj6vVNuOQ47K/xBXDIAB
-         b23P48sS2AkwfnoPx9XFfe0sVE0A7r2wkkvIE2dg0WfjYS7fg7lVFoXudxb3HjCa5Sj+
-         HjmuhIC4OATXXbnp/p/3lwcyBoVUWkHZ/x5qG/C/BjUx1S8q585IccOdr3FgTtimquSY
-         vMyw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779354780; x=1779959580;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eKdwRFTM7NQFW2q3Gwv2bxtOXYeZ9TnQRhzY2TP3tE8=;
-        b=ETjgD6rcSJROP8JLJj0Iblt8PhB3/2f71EoIUDDbxbOG/sSeMiPM8jBrcu037RQsA4
-         YTvk94FZwVYOoOXviOLj6nGeJ74a5rrr/TNJjC8SANuzQdXstlM5ePhKCXsG7cdxQ4EI
-         5d0uIRN9tzfEfM5ZmSwuJ0utorqxozTawgfN/S+JCiS+rgSQHEaRZB1JElANwppQrvUz
-         xcjt9xKBZ5xNvPuU+nUHtcSWy2uJ5H+NWA/2Fb+O8OG70j/g0dZVO+wesTgXLJVhOKqN
-         EAkapZd5wlC3rCFmlNFFyUouVQ0Ew62jb2kxEC8/ycIO91P79sQ2qdYAcoFfALPoypPg
-         tLCw==
-X-Gm-Message-State: AOJu0YxlZwsnqgRhMJJiHTE0wTwgIHE/lPwFK3qkHtnnLkpnjv7gw12w
-	L+uJ4k08rKLo9+XYvD+Ao4JHjMf0dxoxnM8tMM9yf83+DlDdrRWxBGBm
-X-Gm-Gg: Acq92OGgBOCChBM578SteeiHvncC+P2rJ1YPWpMbDV8iy5VKSZxrBqsiSBFQTDO62ab
-	0lyTqCMKvO757+umq+1X/xEXI/q2WFEwAV+JvELLUo/qP7xFh/cok/5blmhDKMi7RdPnGj/YvlC
-	BlMDxMcdPzjkj8g6c00+c7lhq0DR8X8aP9oShMOa8T/Lv5f56kqE4RzhVzJ+9rbP/88zx4rmRjh
-	dS3OYDaQ9tJsdqRGWhtufyPPa6nYU4sM5F4mmIYF18JxWbK/iLxPXTnV0CMjXrtEqzvAdWxiU/G
-	XDW4iogy2P0ppsdyq3DjuIOoX50XxNWX60sdWq+RLEpZBLaXzL5D2CaEGGY/wyKGnKjfDYWUCTZ
-	JZkKDQLnhOH2GBSmr3pscJu2s3YeuiIHQZVr/sl4nNwTYQD7z0GBMiR05NMyGIb1ODUaL94/o4U
-	ftc48Fc8cirFSlJMbYah043C3ivMdX2zucfxmuQC4jk1EJz3F7N0fGE1QRtsIQxd42H738qOzue
-	GjJTyY4CEB5SjQ7z5b6rXIrR1XkpymSiDLhNWw7w8sxGjn3
-X-Received: by 2002:a05:6000:2388:b0:45b:d872:592d with SMTP id ffacd0b85a97d-45ea349a320mr2805009f8f.10.1779354779965;
-        Thu, 21 May 2026 02:12:59 -0700 (PDT)
-Received: from iku.Home ([2a06:5906:61b:2d00:e184:549b:e5bf:ab7f])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45eaa7cf58fsm1955940f8f.3.2026.05.21.02.12.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 May 2026 02:12:59 -0700 (PDT)
-From: Prabhakar <prabhakar.csengg@gmail.com>
-X-Google-Original-From: Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Prabhakar <prabhakar.csengg@gmail.com>,
-	Biju Das <biju.das.jz@bp.renesas.com>,
-	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH v2] PCI: rcar-host: Remove unused LIST_HEAD(res)
-Date: Thu, 21 May 2026 10:12:56 +0100
-Message-ID: <20260521091256.15737-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OZjKXkQZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A3D11F00A3C
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 09:18:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779355120;
+	bh=azw12yvo1KzS4bOAY2lRlKmNg9Zna4MNvidgXEzteRo=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=OZjKXkQZv5hnNqa14eYjTh92IdTWlvwfWTIj7QQ6zZkUx4SgYVrNqah27+wXDgjGC
+	 gWwVAF16Zx+3ZNyDxS6R+5KspgS41D1YJfszZPUbt2Md0a0LqzG7ynooFeMF2V31I8
+	 76cf66sJHbi5RPQcIc7DKra4Ji2OrLpqBOSTcDvYsrXUd2yw0e3ApjSrnJNYq6TT73
+	 58761eq7Ho0Sqkpuy5VllINNeKqtQSUBUGMhZN3puywZnymXRkvzVdipe1CKKmvPww
+	 ynhSv0XuKxAeDdeMgEcZavvEKxm7PRzgtkeJq5LP6jnjJG3BcpNij4gUdTpNghCnTH
+	 usyNtekRbqhxw==
+Received: by mail-dl1-f54.google.com with SMTP id a92af1059eb24-1357c851a48so6614709c88.1
+        for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 02:18:40 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9fpdCcnb0EGtsLQd8xVaF5ZS17QwIECjWLNQTM5Vls3DOHJVOCYuLq0r4FRlisjAjOnRoKMFyqtrI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywa1pq7CXotICw0UdNqDlmdW8zmzRXXWLbu49u8qi39YkyDc6ej
+	OslNvza9TqEZK1mvoiDBbJsxFgkcAwkGzNkdXFgEUBQDOnsz7W80Wi+oNcudBprd12y3KoY4lq4
+	nW5Opthsql7ihJ+Ai8RhNZabkhp8CJLGdPDVpY2YFNw==
+X-Received: by 2002:a05:7023:b82:b0:135:a75e:7d93 with SMTP id
+ a92af1059eb24-13632c2e98dmr919788c88.32.1779355119421; Thu, 21 May 2026
+ 02:18:39 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 21 May 2026 02:18:35 -0700
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Thu, 21 May 2026 02:18:35 -0700
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260519-pwrseq-m2-bt-v3-0-b39dc2ae3966@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20260519-pwrseq-m2-bt-v3-0-b39dc2ae3966@oss.qualcomm.com>
+Date: Thu, 21 May 2026 02:18:35 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MdddNGkost=5XD9nvxwcCE4mRHQhAow9gS+Hap_b32mpA@mail.gmail.com>
+X-Gm-Features: AVHnY4IBgnLNrnXiblCXaybZXjL6TZAv5y3zJhw560hCdBFpu5oS9qCU09vJltQ
+Message-ID: <CAMRc=MdddNGkost=5XD9nvxwcCE4mRHQhAow9gS+Hap_b32mpA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/9] Fixes/improvements for the PCI M.2 power
+ sequencing driver
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-bluetooth@vger.kernel.org, Wei Deng <wei.deng@oss.qualcomm.com>, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 
-From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+On Tue, 19 May 2026 10:55:55 +0200, Manivannan Sadhasivam via B4 Relay
+<devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org> said:
+> Hi,
+>
+> This series has several key improvements and fixes to the M.2 power sequencing
+> driver and also the BT HCI_QCA driver. Notably, this series allows the M.2 power
+> sequencing driver to work with more M.2 cards, not just WCN7850. It also allows
+> the BT HCI_QCA driver to detect whether it can control BT_EN (or W_DISABLE2#)
+> signal on the connector and set the HCI_QUIRK_NON_PERSISTENT_SETUP quirk.
+>
+> Testing
+> =======
+>
+> This series was tested on Lenovo Thinkpad T14s together with the below DTS
+> patches:
+> https://github.com/Mani-Sadhasivam/linux/commit/29534d15307551b2355eb254601dec511169f0aa
+> https://github.com/Mani-Sadhasivam/linux/commit/f4eaacfe647674be200847092b43cdef2194fc55
+>
+> Merge Strategy
+> ==============
+>
+> Since the BT HCI_QCA changes depend on the pwrseq changes, it would be good to
+> merge the whole series through pwrseq tree or through an immutable branch.
+>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
 
-Remove the unused LIST_HEAD(res) declaration from rcar_pcie_hw_enable().
+Luiz, Augusto: this series looks good to me. Do you want me to queue the pwrseq
+patches on an immutable branch or should I just take the entire thing?
 
-The macro instantiation defines an unused 'struct list_head res' variable,
-which conflicts with a valid resource loop-local 'struct resource *res'
-declaration further down in the function, triggering a compiler variable
-shadowing warning:
-
-drivers/pci/controller/pcie-rcar-host.c:357:34: warning: declaration of 'res' shadows a previous local [-Wshadow]
-357 |                  struct resource *res = win->res;
-
-Fixes: ce351636c67f75a9 ("PCI: rcar: Add suspend/resume")
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-v1->v2:
-- Updated the commit message to include the warning.
-- Added the Fixes tag.
-- Added Reviewed-by tags for Geert and Marek.
----
- drivers/pci/controller/pcie-rcar-host.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-index 213028052aa5..cd9171eebc28 100644
---- a/drivers/pci/controller/pcie-rcar-host.c
-+++ b/drivers/pci/controller/pcie-rcar-host.c
-@@ -346,7 +346,6 @@ static void rcar_pcie_hw_enable(struct rcar_pcie_host *host)
- 	struct rcar_pcie *pcie = &host->pcie;
- 	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(host);
- 	struct resource_entry *win;
--	LIST_HEAD(res);
- 	int i = 0;
- 
- 	/* Try setting 5 GT/s link speed */
--- 
-2.54.0
-
+Bart
