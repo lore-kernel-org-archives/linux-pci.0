@@ -1,211 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 820B135504D
-	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 14:15:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 364AB31E83D;
+	Thu, 21 May 2026 14:19:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779372905; cv=none; b=PI6ot7nO3mkk0pvi1aWLwrdwyPpa3gWE3ZsvPdj+mQwJbHWEcsQkG03Ptx5hysjdEBzDEWRq3GY9tHMdM8Ft48CfPJsrc0MwEDFig858p4EqwA9RAKg6NQuFWLAtV7r9HvvTpzN1aEC46hY2hMifFhu0xSfVFg2YcCaLbjEzxlk=
+	t=1779373186; cv=none; b=VTQYIkK/4x6SaILL7o5pCEv+8Jf9SCRsMkxm2iMYSfnFmISnYksZ6MjVqRlbNLy35VKoV/D3hyrliXEzP2p361hLCqfqzKmVky1QeONnaXzM5OFpoSq6dFpIXvlMTcGk9H7QGAcdv9es6Th815WfSvyKfcT0JeKpxRNAuHVmPh8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779372905; c=relaxed/simple;
-	bh=7vA5g6BlQqufnex/kCV+60AYvUBEzqUD8++odnBKtiQ=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=W4j1M6VtLFYJmIPPdaidiEP/Zn/D2QZRWXGxib38ze3b55Dvm1JIAI33rL1xRescpPUbT4udZ6wWisWzF053HWHepm4Y2RhufdSKc7xQK3UeYe4cT//V4/zm8bEtYSHJNXzKFLBQoapeMOLRZfbPsYXpZX1eENd1GINF9kd/hfM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvDKhTW+; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779373186; c=relaxed/simple;
+	bh=bzgDHbbJSnGY/qtVpQ/JRbmEnyRseYEXhj6VsHLrwTE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XicYI+wQbZittGZ1P+AsUfbqofi/H1MRns7DFyhEjrmys1wQ0tARs+vFI88iO33dc0m3j4TpUT+PaY7edQ2Ojfhffmu8botMkLrNzN4BdJs3dkvYkEKFTLLXBs15LG33zybeRGUOn20gCwY7qmcHp7J3THo8nSjxc3fRpkb9mIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ZGcdv02E; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvDKhTW+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF7461F000E9;
-	Thu, 21 May 2026 14:15:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779372904;
-	bh=d9OLDgAjE81Gf5UnBAayq6SLmtpglCrBffoDOsIOEck=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LvDKhTW+9mRIwxcVChEF81dgpNHVzU5HwoVZ+2jPdUyG/atCjx//uhl8FNJ+hQw10
-	 i/ZhIRstPqTORuL8eWGz9vWfZeBeQw3McJeCFvcMO8esZkGRywdyPC/wJqXUerG5J5
-	 hZiUhC47WV/iDpEO07uFk5gOPeIuRlz74SP6UWuRWCB7Bhv8aPFV7gdvIzUA2kkw+N
-	 cCmaW1D/4EIgMm9GdWn8eW8ZziMUeMBPPqBCYc6sa+YSH0oTRBtw16MjxvjWP6N2um
-	 a0ErM1Y6zzzAgnt2o72eteTUCAG1+nkc94rjaFLDaNXXTKZX6GCTEFjohMfJWH56PO
-	 u8E1XTvlUiaRA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 3/4] PCI: qcom: Add link retention support
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: vkoul@kernel.org, neil.armstrong@linaro.org, olteanv@gmail.com, linux-phy@lists.infradead.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260521-link_retain-v2-3-08ed448b081c@oss.qualcomm.com>
-References: <20260521-link_retain-v2-3-08ed448b081c@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 14:15:03 +0000
-Message-Id: <20260521141503.DF7461F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ZGcdv02E"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64L0PXGm843724;
+	Thu, 21 May 2026 14:19:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:sender:subject:to; s=pp1;
+	 bh=aq2ziAevdOR20ZlrVFB+myc4dHn3YIrNxhMNT4jPeQg=; b=ZGcdv02EcfxQ
+	KAKbShpbWj7AgFnSwWmSfI3FTea+CgsaKOQoyarTcGR0XaRKS4BNs3hfQS6ac72Y
+	5wqBMc/5mK2ccA/3cvKQUEGN60MisYPWy6QGnjYuIdvrvcEwM0YPGONtxlDOfI7L
+	wo1+/ILCLJ25zbLhoFOEM+dE77tR5+JnDhOTIOIHxkHAcxnkgrzeuF2f1CX5m3pd
+	bHvIsqYGP09cdYGN1Pk0p+3RqP1arLhBye+v7YjaACmhLGog4CMrmzdcC7zgagUl
+	gCiLHQ3x7jiAWbNHoGBZiLXnj3c5BTMg6g2XBuYkQhePrbp+g4NR7fA60o9d+mi3
+	0WrCTEdDpQ==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h9y7fm6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 21 May 2026 14:19:07 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64LE9JqD017826;
+	Thu, 21 May 2026 14:19:06 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4e754gmanj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 21 May 2026 14:19:06 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64LEJ3nm49545696
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 21 May 2026 14:19:03 GMT
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2C69B20043;
+	Thu, 21 May 2026 14:19:03 +0000 (GMT)
+Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1954E20040;
+	Thu, 21 May 2026 14:19:03 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
+	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Thu, 21 May 2026 14:19:03 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.2)
+	(envelope-from <bblock@linux.ibm.com>)
+	id 1wQ4Eo-0000000Dcd9-2nEy;
+	Thu, 21 May 2026 16:19:02 +0200
+Date: Thu, 21 May 2026 16:19:02 +0200
+From: Benjamin Block <bblock@linux.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+        "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
+        helgaas@kernel.org, schnelle@linux.ibm.com, linux@roeck-us.net,
+        lukas@wunner.de, stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        intel-xe@lists.freedesktop.org, matthew.brost@intel.com,
+        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
+        dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
+        lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
+        ionut_n2001@yahoo.com, sunlightlinux@gmail.com
+Subject: Re: [PATCH v14 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA
+ deadlock
+Message-ID: <20260521141902.GD206464@p1gen4-pw042f0m>
+References: <cover.1776839248.git.ionut.nechita@windriver.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <cover.1776839248.git.ionut.nechita@windriver.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Reinject: loops=2 maxloops=12
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIxMDE0MiBTYWx0ZWRfX8WW7ICgrgEay
+ KWozYAaeNpnS6PreqGOEu9gXfNXYnuuIflenLcdGAD98uC2+q3eV3XSRFBTBT+O8100XOiy+Vkc
+ 7dRSiu33DTAJFcACrmX6NCnXYGd7LvpEqZPdOSWIBjhb8I5x1Yge/OffSeOc7zEYnQx6wGPHj6B
+ /T7YlBkQFTncQ6/eJFu5c6eTEj7qqal9zdCVCypx0SIYIlpVLmCwVcTZI6/vq7REpSB8S5275Nw
+ 8iBFDjIWf1ss5qGGdhsSW3jL+ZnZyUp+9LFkxlmkNrijY0+SwkUfcqDMSlkXLpEgBYhx6zP8ZnP
+ HZv5QjealdfK7/vzN6NkJ9xRjG6V19RszVzAV/PJvsCv6Cn/1EVC+6M5TXZV5Y/GA+vUR7BCuvq
+ pu/UyQMchEzLiHP+7Mm4DuKgM1h9IyM7Thvo8+TWP/L2muZBsni3DrpxwbPhMJFCR1utpW5+Ms8
+ nK1Tel31xbEiJ5N7aKQ==
+X-Authority-Analysis: v=2.4 cv=BNuDalQG c=1 sm=1 tr=0 ts=6a0f145b cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=8nJEP1OIZ-IA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=t7CeM3EgAAAA:8 a=J6SQpo7RyPDJe7EV0JwA:9 a=3ZKOabzyN94A:10
+ a=wPNLvfGTeEIA:10 a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-ORIG-GUID: KHf9ZanH9jMYZW6Db_6NeGxoWj_KLa6I
+X-Proofpoint-GUID: QN3mdofEJ83IA20oSJrx_2TLWc2wNWLf
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-21_02,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 priorityscore=1501 malwarescore=0 impostorscore=0 suspectscore=0
+ lowpriorityscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605210142
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Checking hardware link capabilities instead of negotiated link sta=
-tus to determine current link speed and width.
-- [High] Returning 0 instead of -EPROBE_DEFER defeats the probe deferral me=
-chanism and leaves the controller partially initialized.
-- [High] Early returns during link retention bypass critical controller sof=
-tware state initialization and hardware capabilities.
---
+Hey Bjorn,
 
-commit 6dd7e9bfe9f104689a018777f9dcaa31b6e736f8
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-PCI: qcom: Add link retention support
+On Wed, Apr 22, 2026 at 09:32:40AM +0300, Ionut Nechita (Wind River) wrote:
+> From: Ionut Nechita <ionut.nechita@windriver.com>
+> 
+> This is v14 of the fix for the SR-IOV race between driver .remove()
+> and concurrent hotplug events.
+> 
+--8<--
+> 
+> This race has been independently observed by multiple organizations:
+>   - IBM (s390 platform-generated hot-unplug events racing with
+>     sriov_del_vfs during PF driver unload)
+>   - NVIDIA (tested by Dragos Tatulea in earlier versions)
+>   - Intel (xe driver hitting lockdep warnings and deadlocks when
+>     calling pci_disable_sriov from .remove)
+>   - Wind River (original reporter and patch author)
+> 
+> Test environment:
+>   - Tested on s390 by Benjamin Block and Niklas Schnelle (IBM)
+>   - Tested on x86_64 with Intel and NVIDIA SR-IOV devices (earlier
+>     versions)
+> 
+> Based on linux-next (next-20260420).
+> 
+--8<--
+> 
+> Ionut Nechita (Wind River) (2):
+>   PCI/IOV: Make pci_lock_rescan_remove() reentrant and protect
+>     sriov_add_vfs/sriov_del_vfs
+>   PCI: Fix AB-BA deadlock between device_lock and pci_rescan_remove_lock
+>     in remove_store
+> 
+>  drivers/pci/iov.c       |  9 +++++----
+>  drivers/pci/pci-sysfs.c | 30 +++++++++++++++++++++++++++++-
+>  drivers/pci/probe.c     | 18 ++++++++++++++++--
+>  3 files changed, 50 insertions(+), 7 deletions(-)
 
-This patch introduces link retention support for Qualcomm PCIe controllers,
-skipping reinitialization and PERST# toggling if the bootloader left the
-link active in L0 or L1 idle. It falls back to normal initialization and
-link retraining if the current link does not meet device tree constraints.
+do you think this patchset is ready integration? Or what do you think we'd
+still need to do to get there?
 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index bfe873cbf44f6..b061eaa227b39 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+This race, and especially those I fix in the follow-on patchset
+https://lore.kernel.org/linux-pci/cover.1776868550.git.bblock%40linux.ibm.com/
+are pretty painful on s390 with PCI hotplug. It forces us to reboot the
+system, since there is no other way to get out of the deadlock.
 
-[ ... ]
-
-> @@ -960,6 +962,42 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom=
-_pcie *pcie)
->  	return 0;
->  }
-> =20
-> +/*
-> + * Determine whether the link established by the bootloader can be reuse=
-d.
-> + *
-> + * Reuse the existing link only if its current speed and lane count match
-> + * the max-link-speed and num-lanes specified in Device Tree; otherwise,
-> + * retrain the link.
-> + */
-> +static bool qcom_pcie_check_link_retain(struct qcom_pcie *pcie)
-> +{
-> +	u32 cap, speed, val, ltssm, width;
-> +	struct dw_pcie *pci =3D pcie->pci;
-> +	u8 offset;
-> +
-> +	val =3D readl(pcie->parf + PARF_LTSSM);
-> +	ltssm =3D val & 0x1f;
-> +	if ((val & LTSSM_EN) &&
-> +	    (ltssm =3D=3D DW_PCIE_LTSSM_L0 || ltssm =3D=3D DW_PCIE_LTSSM_L1_IDL=
-E)) {
-> +		qcom_pcie_configure_dbi_atu_base(pcie);
-> +
-> +		offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +		cap =3D dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
-> +		speed =3D FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
-> +		width =3D dw_pcie_link_get_max_link_width(pci);
-
-[Severity: High]
-Does this check the maximum hardware capabilities instead of the currently
-negotiated link status?
-
-Reading PCI_EXP_LNKCAP (and using dw_pcie_link_get_max_link_width) retrieves
-the hardware capabilities rather than the current link speed and width from
-PCI_EXP_LNKSTA.
-
-If the bootloader brought up the link at a degraded speed (e.g., Gen1x1 on a
-port capable of Gen3x2), could this incorrectly pass the constraint checks
-and leave the system with severely degraded PCIe performance?
-
-> +
-> +		if (pci->max_link_speed > 0 && speed > pci->max_link_speed)
-> +			return false;
-> +
-> +		if (pci->num_lanes > 0 && width > pci->num_lanes)
-> +			return false;
-> +
-> +		return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
->  static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
->  {
->  	struct qcom_pcie_resources_2_7_0 *res =3D &pcie->res.v2_7_0;
-> @@ -978,6 +1016,14 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *p=
-cie)
->  	if (ret < 0)
->  		goto err_disable_regulators;
-> =20
-> +	if (pcie->cfg->link_retain) {
-> +		pci->pp.link_retain =3D qcom_pcie_check_link_retain(pcie);
-> +		if (pci->pp.link_retain) {
-> +			dev_info(dev, "Retaining PCIe link\n");
-> +			return 0;
-> +		}
-> +	}
-
-[Severity: High]
-Does this early return bypass critical software state initialization?
-
-Returning early here skips the assignment of pci->l1ss_support =3D true lat=
-er
-in this function. Because struct dw_pcie is zero-initialized, the downstream
-DesignWare core might falsely assume ASPM L1 Substates are unsupported and
-fail to configure them correctly.
-
-> +
->  	ret =3D reset_control_assert(res->rst);
->  	if (ret) {
->  		dev_err(dev, "reset assert failed (%d)\n", ret);
-> @@ -1038,6 +1084,9 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pc=
-ie *pcie)
->  {
->  	const struct qcom_pcie_cfg *pcie_cfg =3D pcie->cfg;
-> =20
-> +	if (pcie->pci->pp.link_retain)
-> +		return 0;
-> +
-
-[Severity: High]
-Could this early return skip necessary hot-plug configurations?
-
-By returning early, this skips the call to qcom_pcie_set_slot_nccs() located
-further down. Missing the No Command Completed Support (NCCS) configuration
-could break PCIe hot-plug command completions and lead to timeouts during
-hot-plug operations.
-
->  	if (pcie_cfg->override_no_snoop)
->  		writel(WR_NO_SNOOP_OVERRIDE_EN | RD_NO_SNOOP_OVERRIDE_EN,
->  				pcie->parf + PARF_NO_SNOOP_OVERRIDE);
-
-[ ... ]
-
-> @@ -1337,8 +1388,9 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *p=
-p)
->  err_pwrctrl_power_off:
->  	pci_pwrctrl_power_off_devices(pci->dev);
->  err_pwrctrl_destroy:
-> -	if (ret !=3D -EPROBE_DEFER)
-> -		pci_pwrctrl_destroy_devices(pci->dev);
-> +	if (pp->link_retain && ret =3D=3D -EPROBE_DEFER)
-> +		return 0;
-
-[Severity: High]
-Does returning 0 here defeat the probe deferral mechanism?
-
-If pci_pwrctrl_power_on_devices() earlier in this function returns
--EPROBE_DEFER, returning 0 instead of propagating the error code causes
-the driver core to treat the probe as successful. This means the driver
-will not be re-probed when resources become available.
-
-Additionally, returning early from this error cleanup path leaves the rest
-of the host initialization incomplete (such as SMMU setup and removing
-MSIX/DPC capabilities), potentially leaving the controller in an unusable
-state while the kernel believes the probe succeeded.
-
-> +	pci_pwrctrl_destroy_devices(pci->dev);
->  err_disable_phy:
->  	qcom_pcie_phy_power_off(pcie);
->  err_deinit:
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521-link_retai=
-n-v2-0-08ed448b081c@oss.qualcomm.com?part=3D3
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
+Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
