@@ -1,228 +1,282 @@
-Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CD82364049;
-	Thu, 21 May 2026 08:52:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BC2B3314B9
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 09:00:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779353559; cv=none; b=iP71K4p/2aXJLjvioaVRmW6s7TRwlAa0BG46X0hM1vobgpjtv81TmgAlvtA9sNWQZS6xWXSvktEHZ2UMUN1Mq5/g8THXSYb2J1Yd0aJZpw6Pqrn/Z/tI6HbYwSvofM6lU55r6MnR5M1IOEMGhwQVpj182ioflPpmZdCUetv7R/w=
+	t=1779354032; cv=none; b=ipS12LvQBSkD0E6VxqgcGOzC7cL7jAxOK/UbfcqWMytNTkgvIbvA0iI/KqMSVTLwevvPXmfF8qtCg9Q+HlmPNvkAsZ37HCy6DLi0V8nfU4x54fdiaQKTo8nsJng088sVlsU9SSuTaAZILwPepnoGXSiVfjFNaY6RAhR1dq/eZS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779353559; c=relaxed/simple;
-	bh=Z0l6n+8KPWLfEXEGyF2doqbUOXPnz/AqIuOLLkx1gMA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mEPCg4GAm6NaJzjtr+3es2wBidoTjem/BuvbcpSHsRQ8r0XX7c73Afytnggfk66rWI6engeXtTPQC/qjgsR/bYvRAQBlwdarX/7nVTGWyUfrlvBvltT9cUlotLCwWuo14JFEd6Gt1ktXgRYkGggapM04pm04BCwIwkyXbTU36dA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=a5ZGiPtb; arc=none smtp.client-ip=5.135.140.105
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
+	s=arc-20240116; t=1779354032; c=relaxed/simple;
+	bh=JDu6/sRgUHBijqZsqhktp6sfhdjiVAfsiCLV0dJZ4Fw=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=OI2+Kn2mdADTNhYe8o8gN98GwbvKb+sYmoHMWON38/YXiPj1jo9CE5RiQ4SduzoH4+h70AgpA6N3iRDYOPu65ykrNrJpoHNd7Ug/P9BJxK+nhZj/bT9v0qfpKvta51J0Wi65jnDxxRefvPvM9w6C86or1sng7xWxr6l1sVkznJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eHIITEBR; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="a5ZGiPtb"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id DA9EC447707;
-	Thu, 21 May 2026 10:52:33 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
-	t=1779353554; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding:content-language:in-reply-to:references;
-	bh=CcYqCiCTpSF2c1/Tx3uk0iXJngFvjxCHybS5Uhc3c/4=;
-	b=a5ZGiPtbPgU8pPdwVoufxmAErYMUVdxuBNs3rB9CwpeCVzqrs3NhjnOpYP6XBOBt6EdHH8
-	bQqthAyafa3D6Tw0dzhAKdD1pow1T/JhVwsUCbPKUfC0iuzJZqoNv8bPeturebtYhsR4ml
-	tuGL7mKlK9G24quzCdMjR3NmbPovw7a82H2/DC1I/JM/PX8y0+PuoF2hT53iY6lnUfPTjX
-	u8C62wyY7IxNFszJvlNvQflaaMxZgMhbzsTqdoNu5Ht3u6bjtLU0M1fUlS8ahSbtAeUUX5
-	Tkm+E1D+hBXkEq0+UO+kRBKU/Tv2aGKR7dz3hz+VNRPBfR9NzGXV/a5G84WWQw==
-Message-ID: <6ee00f5a-627e-4d1f-b73a-276cc3252042@cjdns.fr>
-Date: Thu, 21 May 2026 10:52:33 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eHIITEBR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779354031; x=1810890031;
+  h=date:from:to:cc:subject:message-id;
+  bh=JDu6/sRgUHBijqZsqhktp6sfhdjiVAfsiCLV0dJZ4Fw=;
+  b=eHIITEBRviFpPdO86mSRa9+5PoiZyNzPQFsND7NGfChx4pML1cavlzCv
+   ffU7HMAmTIKFvbd2/zLjfEug+T/q0aph0KV4QOAfTMC40o7pjZ7pTGxMe
+   44VUe+2uyHgpjEkWmAbDSW5LR8+tlymB1kBS2MRDDDQPioqQM1FhEuku5
+   wPjnjkbsLmNDtPzvX72Kjq1cT1O0TQ5kcfewB6D9Lo7NVK83e7ONZ/3xV
+   9DgIxC3w2i07iQgsfCw07KyU76wDu70QcPoiiu4T/BP1VjOpzgpD4HCgm
+   /6oNLVhYDk386wRcv6tHQwznxv3ZolCiOTdyZ9pTFJ/bIEzro28bRI2+l
+   g==;
+X-CSE-ConnectionGUID: 6bvJszzMQB6FqQP+Mhx85g==
+X-CSE-MsgGUID: clrGpjBIREmHbk8Q6XAh+Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11792"; a="80302268"
+X-IronPort-AV: E=Sophos;i="6.23,246,1770624000"; 
+   d="scan'208";a="80302268"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 02:00:27 -0700
+X-CSE-ConnectionGUID: zzEginE0TnmJhLMQrzl+nw==
+X-CSE-MsgGUID: QGff0LUKQcynyhP6Na4DUw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,246,1770624000"; 
+   d="scan'208";a="270823534"
+Received: from lkp-server02.sh.intel.com (HELO 30e86e9c1927) ([10.239.97.151])
+  by orviesa002.jf.intel.com with ESMTP; 21 May 2026 02:00:24 -0700
+Received: from kbuild by 30e86e9c1927 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wPzGP-000000004i0-2URM;
+	Thu, 21 May 2026 09:00:21 +0000
+Date: Thu, 21 May 2026 16:54:15 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/dwc-qcom] BUILD SUCCESS
+ c697b92348979e4228dba7eaece1635ddfec31e4
+Message-ID: <202605211609.BVncj9SD-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [PATCH v8 3/3] PCI: mediatek: Add support for EcoNet EN7528 SoC
-To: Manivannan Sadhasivam <mani@kernel.org>, sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, robh@kernel.org,
- conor+dt@kernel.org
-References: <20260520183827.908243-4-cjd@cjdns.fr>
- <20260520195806.4726A1F000E9@smtp.kernel.org>
- <r2l6c665a3feivxabhlkqx5hghvg4s6spxz7xmqvlxawqijkub@qz3gcdxuavf7>
-Content-Language: en-US
-From: Caleb James DeLisle <cjd@cjdns.fr>
-In-Reply-To: <r2l6c665a3feivxabhlkqx5hghvg4s6spxz7xmqvlxawqijkub@qz3gcdxuavf7>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Last-TLS-Session-Version: TLSv1.3
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-qcom
+branch HEAD: c697b92348979e4228dba7eaece1635ddfec31e4  PCI: qcom: Program T_POWER_ON
 
-On 21/05/2026 09:33, Manivannan Sadhasivam wrote:
-> On Wed, May 20, 2026 at 07:58:05PM +0000, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 4 potential issue(s) to consider:
->>
->> New issues:
->> - [High] Link retraining is performed after device enumeration and driver binding, causing a severe race condition.
->> - [High] Iterating the PCI bus devices list without holding the pci_bus_sem read lock.
->> - [Medium] Early return in mtk_pcie_retrain() aborts retraining of all remaining root ports if a single port fails.
->>
->> Pre-existing issues:
->> - [High] Freeing port in error paths causes a Use-After-Free because the active IRQ domain's host_data still points to it.
->> --
->>
->> commit c1c3bb9bcba6bb8a070037578912a2f02c381591
->> Author: Caleb James DeLisle <cjd@cjdns.fr>
->> Subject: PCI: mediatek: Add support for EcoNet EN7528 SoC
->>
->> This commit adds support for the PCIe controller present on the EcoNet
->> EN7528 (and EN751221) SoCs. These SoCs feature a mix of Gen1 and Gen2 ports,
->> and require a manual link retraining after startup for Gen2 ports to function.
->>
->>> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
->>> index c503fbd774d09..4e4d4b1559f71 100644
->>> --- a/drivers/pci/controller/pcie-mediatek.c
->>> +++ b/drivers/pci/controller/pcie-mediatek.c
->> [ ... ]
->>
->>> @@ -755,6 +766,132 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
->>>   	return 0;
->>>   }
->>>   
->>> +static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
->>> +{
->> [ ... ]
->>
->>> +	/* 100ms timeout value should be enough for Gen1/2 training */
->>> +	err = regmap_read_poll_timeout(pcie->cfg, EN7528_LINKUP_REG, val,
->>> +				       !!(val & link_mask), 20,
->>> +				       PCI_PM_D3COLD_WAIT * USEC_PER_MSEC);
->>> +	if (err) {
->>> +		dev_err(pcie->dev, "EN7528: port%d link timeout\n", port->slot);
->>> +		return -ETIMEDOUT;
->>> +	}
->> [Severity: High]
->> This is a pre-existing issue, but returning an error here can cause a
->> use-after-free crash.
->>
->> When a port fails to start up (for example, if the slot is empty and link
->> training times out), the caller frees the port structure by calling
->> mtk_pcie_port_free(). However, mtk_pcie_port_free() does not call
->> irq_domain_remove().
->>
->> Since mtk_pcie_init_irq_domain() sets the newly allocated port structure
->> as the IRQ domain's host_data, the domain remains registered with a
->> dangling pointer.
->>
->> Could we make sure the IRQ domain is properly cleaned up in error paths?
->>
->> [ ... ]
->>
-> This is a valid concern. I've sent the fix for it:
-> https://lore.kernel.org/linux-pci/20260521071907.13614-1-manivannan.sadhasivam@oss.qualcomm.com/
-Would you like me to integrate that in my patchset or is it sufficiently 
-decoupled that it should be handled separately ?
->>> +static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *host)
->>> +{
->>> +	struct pci_dev *rp;
->>> +	int ret = -ENOENT;
->>> +	u16 lnksta = 0;
->>> +	u32 speed;
->>> +
->>> +	/* Should already have been warned about during startup_port */
->>> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))
->>> +		return 0;
->>> +
->>> +	for_each_pci_bridge(rp, host->bus) {
->> [Severity: High]
->> Does iterating the PCI bus devices list here require holding the pci_bus_sem
->> read lock?
->>
->> Since mtk_pcie_retrain() is called after pci_host_probe() completes, the PCI
->> bus is live and devices are exposed to the system. Concurrent operations like
->> sysfs hotplug events could modify the host->bus->devices list during traversal.
->>
->> Should we hold down_read(&pci_bus_sem) or use pci_walk_bus() to avoid a race
->> condition?
->>
-> This is also a valid concern. You should wrap the loop with 'pci_bus_sem'. I see
-> a few other drivers are also doing the same, but I'll fix them separately.
-OK
->>> +		if (pci_pcie_type(rp) != PCI_EXP_TYPE_ROOT_PORT)
->>> +			continue;
->>> +
->>> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
->>> +		ret = pcie_retrain_link(rp, true);
->>> +#endif
->>> +
->>> +		if (ret)
->>> +			return dev_err_probe(&rp->dev, ret,
->>> +					     "failed to retrain port\n");
->> [Severity: Medium]
->> Will this early return abort the retraining process for all remaining root
->> ports?
->>
->> If pcie_retrain_link() fails on the first port, we immediately break out of
->> the loop.
->>
->> Should this log the error and use continue instead, so that a failure on one
->> independent slot does not prevent the others from retraining successfully?
->>
-> This you can ignore as we should treat retrain failure for a single Root Port as
-> a hard failure.
-Agreed
->>> +
->>> +		pcie_capability_read_word(rp, PCI_EXP_LNKSTA, &lnksta);
->>> +		speed = lnksta & PCI_EXP_LNKSTA_CLS;
->>> +
->>> +		pci_info(rp, "link retrained, speed %s\n",
->>> +			 pci_speed_string(pcie_link_speed[speed]));
->>> +
->>> +	}
->>> +
->>> +	return 0;
->>> +}
->> [ ... ]
->>
->>> @@ -1159,6 +1296,13 @@ static int mtk_pcie_probe(struct platform_device *pdev)
->>>   	if (err)
->>>   		goto put_resources;
->>>   
->>> +	/*
->>> +	 * Ignore error because pci_host_probe() was already called, and in any
->>> +	 * case it is possible that the port will still work as Gen1.
->>> +	 */
->>> +	if (pcie->soc->quirks & MTK_PCIE_RETRAIN)
->>> +		mtk_pcie_retrain(dev, host);
->>> +
->> [Severity: High]
->> Can retraining the link at this stage cause issues with actively bound endpoint
->> drivers?
->>
->> By the time pci_host_probe() returns, devices have already been discovered,
->> exposed to the system, and their drivers bound. Retraining the PCIe link forces
->> it into recovery, which could stall transactions or temporarily drop the link.
->>
->> If an endpoint driver (like NVMe or Wi-Fi) is actively performing MMIO or DMA,
->> could this cause unhandled exceptions, AER errors, or initialization failures?
->>
->> Would it be safer to retrain before devices are added to the system (e.g.,
->> before pci_bus_add_devices())?
->>
-> This can also be ignored as you don't have much choice here. Once the driver is
-> bound to the device, doing any link level activity without quiescing the device
-> warrants trouble. But since it happens right after the pci_host_probe(), most
-> likely the client drivers wouldn't have started functioning i.e., initiating DMA
-> transfers etc... So the chances of failure are very less.
+elapsed time: 811m
 
+configs tested: 205
+configs skipped: 3
 
-I was just looking though the initialization process, and I notice that 
-pcie_failed_link_retrain() is called unconditionally and it LOOKS like 
-it ought to be solving our problem. So I'm going to throw a bunch of 
-logs in there and see what's going on, and whether it seems like we can 
-safely piggyback on that for EcoNet, and I'll come back with a v9 which 
-either switches to that, or else adds the pci_bus_sem and continues with 
-the mtk_pcie_retrain solution.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                             allnoconfig    gcc-15.2.0
+alpha                            allyesconfig    gcc-15.2.0
+alpha                               defconfig    gcc-15.2.0
+arc                              allmodconfig    clang-16
+arc                              allmodconfig    gcc-15.2.0
+arc                               allnoconfig    gcc-15.2.0
+arc                              allyesconfig    clang-23
+arc                              allyesconfig    gcc-15.2.0
+arc                                 defconfig    gcc-15.2.0
+arc                   randconfig-001-20260521    gcc-8.5.0
+arc                   randconfig-002-20260521    gcc-8.5.0
+arm                               allnoconfig    clang-23
+arm                               allnoconfig    gcc-15.2.0
+arm                              allyesconfig    clang-16
+arm                              allyesconfig    gcc-15.2.0
+arm                                 defconfig    gcc-15.2.0
+arm                   randconfig-001-20260521    gcc-8.5.0
+arm                   randconfig-002-20260521    gcc-8.5.0
+arm                   randconfig-003-20260521    gcc-8.5.0
+arm                   randconfig-004-20260521    gcc-8.5.0
+arm64                            allmodconfig    clang-19
+arm64                            allmodconfig    clang-23
+arm64                             allnoconfig    gcc-15.2.0
+arm64                               defconfig    gcc-15.2.0
+arm64                 randconfig-001-20260521    gcc-8.5.0
+arm64                 randconfig-002-20260521    gcc-8.5.0
+arm64                 randconfig-003-20260521    gcc-8.5.0
+arm64                 randconfig-004-20260521    gcc-8.5.0
+csky                             allmodconfig    gcc-15.2.0
+csky                              allnoconfig    gcc-15.2.0
+csky                                defconfig    gcc-15.2.0
+csky                  randconfig-001-20260521    gcc-8.5.0
+csky                  randconfig-002-20260521    gcc-8.5.0
+hexagon                          allmodconfig    clang-17
+hexagon                          allmodconfig    gcc-15.2.0
+hexagon                           allnoconfig    clang-23
+hexagon                           allnoconfig    gcc-15.2.0
+hexagon                             defconfig    gcc-15.2.0
+hexagon               randconfig-001-20260521    gcc-11.5.0
+hexagon               randconfig-002-20260521    gcc-11.5.0
+i386                             allmodconfig    clang-20
+i386                             allmodconfig    gcc-14
+i386                              allnoconfig    gcc-14
+i386                              allnoconfig    gcc-15.2.0
+i386                             allyesconfig    clang-20
+i386                             allyesconfig    gcc-14
+i386        buildonly-randconfig-001-20260521    clang-20
+i386        buildonly-randconfig-002-20260521    clang-20
+i386        buildonly-randconfig-003-20260521    clang-20
+i386        buildonly-randconfig-004-20260521    clang-20
+i386        buildonly-randconfig-005-20260521    clang-20
+i386        buildonly-randconfig-006-20260521    clang-20
+i386                                defconfig    gcc-15.2.0
+i386                  randconfig-001-20260521    clang-20
+i386                  randconfig-002-20260521    clang-20
+i386                  randconfig-003-20260521    clang-20
+i386                  randconfig-004-20260521    clang-20
+i386                  randconfig-005-20260521    clang-20
+i386                  randconfig-006-20260521    clang-20
+i386                  randconfig-007-20260521    clang-20
+i386                  randconfig-011-20260521    gcc-14
+i386                  randconfig-012-20260521    gcc-14
+i386                  randconfig-013-20260521    gcc-14
+i386                  randconfig-014-20260521    gcc-14
+i386                  randconfig-015-20260521    gcc-14
+i386                  randconfig-016-20260521    gcc-14
+i386                  randconfig-017-20260521    gcc-14
+loongarch                        allmodconfig    clang-19
+loongarch                        allmodconfig    clang-23
+loongarch                         allnoconfig    clang-23
+loongarch                         allnoconfig    gcc-15.2.0
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20260521    gcc-11.5.0
+loongarch             randconfig-002-20260521    gcc-11.5.0
+m68k                             allmodconfig    gcc-15.2.0
+m68k                              allnoconfig    gcc-15.2.0
+m68k                             allyesconfig    clang-16
+m68k                             allyesconfig    gcc-15.2.0
+m68k                                defconfig    clang-19
+microblaze                        allnoconfig    gcc-15.2.0
+microblaze                       allyesconfig    gcc-15.2.0
+microblaze                          defconfig    clang-19
+mips                             allmodconfig    gcc-15.2.0
+mips                              allnoconfig    gcc-15.2.0
+mips                             allyesconfig    gcc-15.2.0
+mips                  cavium_octeon_defconfig    gcc-15.2.0
+mips                         rt305x_defconfig    clang-23
+nios2                         10m50_defconfig    gcc-11.5.0
+nios2                            allmodconfig    clang-23
+nios2                            allmodconfig    gcc-11.5.0
+nios2                             allnoconfig    clang-23
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    clang-19
+nios2                 randconfig-001-20260521    gcc-11.5.0
+nios2                 randconfig-002-20260521    gcc-11.5.0
+openrisc                         allmodconfig    clang-23
+openrisc                         allmodconfig    gcc-15.2.0
+openrisc                          allnoconfig    clang-23
+openrisc                          allnoconfig    gcc-15.2.0
+openrisc                            defconfig    gcc-15.2.0
+parisc                           allmodconfig    gcc-15.2.0
+parisc                            allnoconfig    clang-23
+parisc                            allnoconfig    gcc-15.2.0
+parisc                           allyesconfig    clang-19
+parisc                           allyesconfig    gcc-15.2.0
+parisc                              defconfig    gcc-15.2.0
+parisc                randconfig-001-20260521    gcc-12.5.0
+parisc                randconfig-002-20260521    gcc-12.5.0
+parisc64                            defconfig    clang-19
+powerpc                          allmodconfig    gcc-15.2.0
+powerpc                           allnoconfig    clang-23
+powerpc                           allnoconfig    gcc-15.2.0
+powerpc               randconfig-001-20260521    gcc-12.5.0
+powerpc               randconfig-002-20260521    gcc-12.5.0
+powerpc                    sam440ep_defconfig    gcc-15.2.0
+powerpc64             randconfig-001-20260521    gcc-12.5.0
+powerpc64             randconfig-002-20260521    gcc-12.5.0
+riscv                            allmodconfig    clang-23
+riscv                             allnoconfig    clang-23
+riscv                             allnoconfig    gcc-15.2.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-15.2.0
+riscv                 randconfig-001-20260521    gcc-15.2.0
+riscv                 randconfig-002-20260521    gcc-15.2.0
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-23
+s390                             allyesconfig    gcc-15.2.0
+s390                                defconfig    gcc-15.2.0
+s390                  randconfig-001-20260521    gcc-15.2.0
+s390                  randconfig-002-20260521    gcc-15.2.0
+sh                               allmodconfig    gcc-15.2.0
+sh                                allnoconfig    clang-23
+sh                                allnoconfig    gcc-15.2.0
+sh                               allyesconfig    clang-19
+sh                               allyesconfig    gcc-15.2.0
+sh                                  defconfig    gcc-14
+sh                    randconfig-001-20260521    gcc-15.2.0
+sh                    randconfig-002-20260521    gcc-15.2.0
+sparc                             allnoconfig    clang-23
+sparc                             allnoconfig    gcc-15.2.0
+sparc                               defconfig    gcc-15.2.0
+sparc                 randconfig-001-20260521    gcc-8.5.0
+sparc                 randconfig-002-20260521    gcc-8.5.0
+sparc64                          allmodconfig    clang-23
+sparc64                             defconfig    gcc-14
+sparc64               randconfig-001-20260521    gcc-8.5.0
+sparc64               randconfig-002-20260521    gcc-8.5.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-23
+um                               allyesconfig    gcc-14
+um                               allyesconfig    gcc-15.2.0
+um                                  defconfig    gcc-14
+um                             i386_defconfig    gcc-14
+um                    randconfig-001-20260521    gcc-8.5.0
+um                    randconfig-002-20260521    gcc-8.5.0
+um                           x86_64_defconfig    gcc-14
+x86_64                           allmodconfig    clang-20
+x86_64                            allnoconfig    clang-20
+x86_64                            allnoconfig    clang-23
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20260521    clang-20
+x86_64      buildonly-randconfig-002-20260521    clang-20
+x86_64      buildonly-randconfig-003-20260521    clang-20
+x86_64      buildonly-randconfig-004-20260521    clang-20
+x86_64      buildonly-randconfig-005-20260521    clang-20
+x86_64      buildonly-randconfig-006-20260521    clang-20
+x86_64                              defconfig    gcc-14
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20260521    clang-20
+x86_64                randconfig-002-20260521    clang-20
+x86_64                randconfig-003-20260521    clang-20
+x86_64                randconfig-004-20260521    clang-20
+x86_64                randconfig-005-20260521    clang-20
+x86_64                randconfig-006-20260521    clang-20
+x86_64                         randconfig-011    gcc-14
+x86_64                randconfig-011-20260521    gcc-14
+x86_64                         randconfig-012    gcc-14
+x86_64                randconfig-012-20260521    gcc-14
+x86_64                         randconfig-013    gcc-14
+x86_64                randconfig-013-20260521    gcc-14
+x86_64                         randconfig-014    gcc-14
+x86_64                randconfig-014-20260521    gcc-14
+x86_64                         randconfig-015    gcc-14
+x86_64                randconfig-015-20260521    gcc-14
+x86_64                         randconfig-016    gcc-14
+x86_64                randconfig-016-20260521    gcc-14
+x86_64                randconfig-071-20260521    clang-20
+x86_64                randconfig-072-20260521    clang-20
+x86_64                randconfig-073-20260521    clang-20
+x86_64                randconfig-074-20260521    clang-20
+x86_64                randconfig-075-20260521    clang-20
+x86_64                randconfig-076-20260521    clang-20
+x86_64                               rhel-9.4    clang-20
+x86_64                           rhel-9.4-bpf    gcc-14
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                         rhel-9.4-kunit    gcc-14
+x86_64                           rhel-9.4-ltp    gcc-14
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    clang-23
+xtensa                            allnoconfig    gcc-15.2.0
+xtensa                           allyesconfig    clang-23
+xtensa                randconfig-001-20260521    gcc-8.5.0
+xtensa                randconfig-002-20260521    gcc-8.5.0
 
-Thanks,
-
-Caleb
-
-
->
-> - Mani
->
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
