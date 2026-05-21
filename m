@@ -1,257 +1,236 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012059.outbound.protection.outlook.com [40.93.195.59])
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11011051.outbound.protection.outlook.com [52.101.65.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCFE7346773;
-	Thu, 21 May 2026 04:24:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.59
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94372A95E;
+	Thu, 21 May 2026 04:40:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.65.51
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779337486; cv=fail; b=VmfeTQjw0fndrTc+mcCKZ4sBXKoKV2NPI8UTg3Dyz5Y5vAYRlCfBB8NpNhaq+o/trpZDhJptL0px6W4Lunfdo7Swn8weNoVBrf0Gqwv32z4/4nXig59VJLZAUdaJS2rM9yOTOdbeA2UlMBcqWCfyRbAQFEhLOCFhiEd9S+iHRWo=
+	t=1779338441; cv=fail; b=Dd61LGTmjsZQfAXH+CefQ6XXtfhuK666v+GObJjms8Gxp+wQqWBFw2q6Alzm1cZoSBeIpcKyO2D1Lf5jGhadndxbP7pCTu9H/eGql/UYvYiqbHmBDZ+7ebPx2xCGQSwzHFSmECFhn3Xu922QZ/p/rALWHO2c2WqaRH9xbc5/nNE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779337486; c=relaxed/simple;
-	bh=lfXNprFA7LyVYbBYXVos6WPj6fV/TYmnRoZp0W6My50=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=jR4v61o4jNY/ay3C+2n95b67Ncz6rfJHosuKXtHshtzvaPg7I8qnnSMeNWX7+QoUUtgnyVY1xwQry++vE1PuHEhX9gLo5JNgJ9I1RD8D5nd1sp04n0k3KxOtjkMCO+bco2cMO7rkWsJIrlE1CDicfvvJMnLaPdGh/op7/ociwmw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=tjh1r+SA; arc=fail smtp.client-ip=40.93.195.59
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1779338441; c=relaxed/simple;
+	bh=BpUqxZJNtavLrdNp7mRrJPW00uRmJhbdqeaMadu0jww=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=jmHJzauSoebg6ljsLF+N7aDspxRPiqYJntl6N4CJq0IY6fjiZAcBp9Ot9nmFMWSnyYJqaWww0WE0qWtLtItKE6VvdqYFhgRBGSuYy4VPTVv2MNW7scWh+MjCqevn66R0lhSuSryIJOBVmmEjnpHRuDiayUji0KJF1zFzkPqdH7c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=LmYxvWQ5; arc=fail smtp.client-ip=52.101.65.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="tjh1r+SA"
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="LmYxvWQ5"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=QnQEPRvnIZS9dkW83iD7S59Hyvpc3KwL0HwnsjmpK7foKucsDfPopBevafV7Szubytyjww7ivyALOJxhWCg+6vByAcTBwgeq2FQdnDwBH3yIlKeBJvDxcbPhrGywVqPi0Mx4bweluqSf21rYDlRtihfp9Ai1Hy2aqIXnWUBmRbKPFXrWGx5ALSnX9TPQ3xrCQ8VE/vAHstAhfv6R0oB96UZrbp6nKDvO1ZGsiyLGCCZm3VOk5kAFKMT7aO/SOH/ZZBHp9wA7n0YrDNxcD/d7CgfR6lJX+T5m2KuSkFkm5MUZpWWd/NbwlWLhfhpL96iwnU8VzzAsGgOpqDZ824gQww==
+ b=gS3ILBW9ZCk6VMzdjoLREeJOaHXzAKnZfO4UtDcFGdm/4os+/VATyxiwg9AQgrehsRSN+1tUsNjn6Kdlg09gCRBAwNqPzKYYlvwmOv0+LnlkCAn5egn1oVW+v3mCYMe1RaYmF+RJcYQhTK+8Jyp8gVbpACdMS4yqtnqjEpGNsb5fEK2O9/rJzg6s/3SuWCYpcpn1LC754XfAPvX9hPaxmS5JqFVRCf6/rVDkcyiVcioVtbOunAE/zqOdnWHYpotl1IOJ73TefX9vYVsqY2n3gp9vQ/ggOTEeT1+MYUwrFrmDai+TXZlWCbwMJ8+z0paCRKmec+zv06sD0A1bYb3RAA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+8zx0EtOh7cCME2/sNLIzWepGbBn5lNzIDMEOWpgcfU=;
- b=DBU8p7Oj5dLgQzJfIzWGyxf7666yWEIBwu1hL97Wk/TGhWOPsRT1VmiRl2h4MFiOB4TTU2ypkYCAg1GP3iljtWrCWIYCNuu9plz3kww720Fxdjwz3LgKwBSn8ekb5Kws4eAhKzEcPeImX4hXcgnJz/7mxxGFQfWQz4rUD38XpN3gv1X1y90TJDyybxm8YsSvUXVwlnHI5NBztkl11hfT4HJzG3HfA/HU411+SEohdd5vkPtqERqqsuyDdJTVRqE3xp78ZF6mOGPai3q1Z1CDGjqWftwjyXfSusNTSwWAMOGiX4Sg/H+piXrvkgUaj5ScDday5mDL6rmgEVJm4wWnPg==
+ bh=lOozYLDWswYe1wY/gF4cOgu2D284yEH2sP0drm8bq8k=;
+ b=jj+zw1T6y4hrmuJw1DkiRxSvt193o28Tf6MD3Ay5e/+7tDGMbhAN2JO5J1wIS6D1r3LG1CEHsm36adVFV/+FE4Ur0QjrlIUMF3yLL30I/BvCa6R9db+X9bB2EHbdwZGrpY/wT4pSVesZ3R826nmvaquRfYIA3U+mfaZkY8y9kehiTc3KeXRPgKwVBAA/f3nJwsd8upSxqCk9ZFyl2hi+iyrecYfq6AM3qQtB2MLOq2Iyit08qqDKll+u3hLDcVru/RExQdAFX6Ljf3hA7L++uyyFRA21MPcphq6mFu678MI7dAZyub6NjaW5IkF3Aea/th30Q3rZGx/zte6CRXcu5w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+8zx0EtOh7cCME2/sNLIzWepGbBn5lNzIDMEOWpgcfU=;
- b=tjh1r+SA/cCc3dk5mI2p8roixKE8yvdeLab9a5Je5uRMpeeOKTHyruOg8RcB9Eyjgg/XvTrQ5OgPHPSTU1vCIULnsXknHM1uJe+9/EzNm6Acm+zwA3JBhlcJKRgoxHshmfc5vXo060w4EbX8y7IEqJ+j9WkoLECa1yXw3XC2zWBNlTafW3vdss0ubdl7YX6qM+DH3TS2QGh3lku+tKyklPg42zMmbGdCt3TqLJ1wGFy08nYEX6sqqLxF8OgQQ5GdD8CXMQ16Z+kxtoSd1k4Bv8Myhlf2XNIwSoQ2HIM5umVcAV2OisgeNFkksj6qjrsj3TDcOqkfXBJae6ko0m5OAw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from DS0PR12MB8245.namprd12.prod.outlook.com (2603:10b6:8:f2::16) by
- SA1PR12MB8644.namprd12.prod.outlook.com (2603:10b6:806:384::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.14; Thu, 21 May
- 2026 04:24:20 +0000
-Received: from DS0PR12MB8245.namprd12.prod.outlook.com
- ([fe80::e7c5:cfca:a597:7fa4]) by DS0PR12MB8245.namprd12.prod.outlook.com
- ([fe80::e7c5:cfca:a597:7fa4%4]) with mapi id 15.21.0048.013; Thu, 21 May 2026
- 04:24:20 +0000
-Message-ID: <882ec9f1-2a6c-49c4-8f36-9682c551f8b6@nvidia.com>
-Date: Thu, 21 May 2026 09:54:09 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/2] PCI: tegra194: Use aspm-l1-entry-delay-ns DT
- property for L1 entrance latency
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
- mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- thierry.reding@gmail.com, jonathanh@nvidia.com, kishon@kernel.org,
- arnd@arndb.de, gregkh@linuxfoundation.org, Frank.Li@nxp.com,
- den@valinux.co.jp, hongxing.zhu@nxp.com, jingoohan1@gmail.com,
- vidyas@nvidia.com, cassel@kernel.org, 18255117159@163.com,
- linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260520193024.GA84903@bhelgaas>
+ bh=lOozYLDWswYe1wY/gF4cOgu2D284yEH2sP0drm8bq8k=;
+ b=LmYxvWQ52HrRsXwMADE+e04PH1S/EeVGG45PP3Y4Rz1HCAaaB8cpBqVgP9/9u2ro7inQ47xRJjo3kkSOIR2PKTY7S6qwfAKLAUNljJbDglqaG35dUKf450CdxeIYoZePN80HvvwwrOqcI/R5Q4xB4EeFYlWikrUnWhu2Xbut+F8YdQ63ahtoQRiX4gNfLmh0pBC94YF505ZoQRxHOu885WXCmquyaCJgiLbWAgCLw5rF1/9050yBB+n84/yINmtB5JMy1+wcfMjQoBUxKAwGaCbSNY+py1LWEvBgdbR651ScdOFQAYkWlgqwMmUbZifr0+Vr3yNh/f5jh7IXBO12Yw==
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ (2603:10a6:800:315::13) by AM7PR04MB7032.eurprd04.prod.outlook.com
+ (2603:10a6:20b:112::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Thu, 21 May
+ 2026 04:40:36 +0000
+Received: from VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994]) by VI0PR04MB12114.eurprd04.prod.outlook.com
+ ([fe80::feda:fd0e:147f:f994%6]) with mapi id 15.21.0048.016; Thu, 21 May 2026
+ 04:40:35 +0000
+From: Sherry Sun <sherry.sun@nxp.com>
+To: "Hongxing Zhu (OSS)" <hongxing.zhu@oss.nxp.com>, "Sherry Sun (OSS)"
+	<sherry.sun@oss.nxp.com>, "robh@kernel.org" <robh@kernel.org>,
+	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "conor+dt@kernel.org"
+	<conor+dt@kernel.org>, Frank Li <frank.li@nxp.com>, "s.hauer@pengutronix.de"
+	<s.hauer@pengutronix.de>, "kernel@pengutronix.de" <kernel@pengutronix.de>,
+	"festevam@gmail.com" <festevam@gmail.com>, "lpieralisi@kernel.org"
+	<lpieralisi@kernel.org>, "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
+	"mani@kernel.org" <mani@kernel.org>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+CC: "imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH V3 0/8] PCI: imx6: Integrate pwrctrl API and update device
+ trees
+Thread-Topic: [PATCH V3 0/8] PCI: imx6: Integrate pwrctrl API and update
+ device trees
+Thread-Index: AQHc6DU2YdAUpw9yUEWcsc6vIequoLYX1cYAgAAPP2A=
+Date: Thu, 21 May 2026 04:40:35 +0000
+Message-ID:
+ <VI0PR04MB12114B321EB4DFD68B7030F76920E2@VI0PR04MB12114.eurprd04.prod.outlook.com>
+References: <20260520084904.2424253-1-sherry.sun@oss.nxp.com>
+ <GV2PR04MB120194C8BDA9B49C79DCE72168C0E2@GV2PR04MB12019.eurprd04.prod.outlook.com>
+In-Reply-To:
+ <GV2PR04MB120194C8BDA9B49C79DCE72168C0E2@GV2PR04MB12019.eurprd04.prod.outlook.com>
+Accept-Language: zh-CN, en-US
 Content-Language: en-US
-X-Nvconfidentiality: public
-From: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-In-Reply-To: <20260520193024.GA84903@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: MA5P287CA0215.INDP287.PROD.OUTLOOK.COM
- (2603:1096:a01:1ab::8) To DS0PR12MB8245.namprd12.prod.outlook.com
- (2603:10b6:8:f2::16)
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: VI0PR04MB12114:EE_|AM7PR04MB7032:EE_
+x-ms-office365-filtering-correlation-id: 3c6552f1-72e9-41a9-a3d4-08deb6f319bf
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|1800799024|366016|19092799006|376014|7416014|22082099003|56012099003|18002099003|38070700021|921020|4143699003|11063799006;
+x-microsoft-antispam-message-info:
+ jEUiuyzgh6dOnBJJyW30rw9OeuA7YChR511IMd6zvgDEB6nVX9Mp2Cw9VHc9azPoczKp5yQv0y0f3iovlPVD8jIMjAwxGt+KNMlF3utZDvdVTri8TXf0oJLQMHdzHjtPdcMv6jFrMVRggjXyRJRIpy0sPA+xvPzy0rZeTsY9EFMPo0NLgX6cE+UpiUkTiGm1jKRjQ9Q6qIXelLMVXm1weMdhJl3HyQU0zH0xpP33xc0J7wYcFR90wBwjade0LwDnyyPcqi7vcHjg6AUIKv4fhr6iCe+L/lpoj/LoLHkxAPwuPVa7WJSfdcVSPF7GX7wSNleUedcILkae7stqGZdqSuY58eXTG9Bzba073qppZPsF52+r987xX3CA7tS0mNZ8Vah0k6Z2/U6whDOC0mUVQ7y3ZK6zGlqfkDsrjhBHepeX6jwwAfPyIcj26f/TLD9XXGJhc0+tooU07w0T2Q8irnHZhKIwV2UeBkHdGrdKzUsuoa5+5OqrYWYCFhDW1to09BLc9twW+EyaEdCObK+j9RGTtTaM2f4wz8SsXRmWyXi0XgnDfwfzFUsiyvOJeU0Q5to9JLlCI/ydqZCsZpfGQbyTX7Ko9Mu6E9yS2xiiYE/MbjmfoBHEu1NAHKu6dFNzAocGtOH4RHHpROhByIUbYl3ppgx1dHpz+LDESlnHbSNPgYfEVaz8TqsbImoUrtmKKF3HJ7IcGJ7XK783zgtHXURNUQUV/IiJbKjp69DAwtlv8S+2YL9bGwfeYJ1L8/4XohnWGK2DeZKmyZvgUJQj+w==
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI0PR04MB12114.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(376014)(7416014)(22082099003)(56012099003)(18002099003)(38070700021)(921020)(4143699003)(11063799006);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?tkcJq9o//pxuMxK/xMRPHT2YmX+PIyD70hTBISay31FIQkaaINHOfT/vRA7L?=
+ =?us-ascii?Q?t5p03XQRvxi1FV96ZTmAQb3667hADp9OhIuRY0PNQDZ/u3pd2mnMEfkELCMD?=
+ =?us-ascii?Q?oMRqce4Dye+9zmqDyTMtPqK5iZVrT7cO1vCdLs2vkTrgJrxaGVH1JQgZh41N?=
+ =?us-ascii?Q?odz6Mfd0tDj7g6Utoew1vjgX1fm1YhuctVNpc1rXYc/1fMlkvD1l7LChhCIH?=
+ =?us-ascii?Q?I/o38YgCVRI5voEZ9XDAFhFVfjl4zn9DkoRj80AFz14D/GghGcx6crMQ/MUG?=
+ =?us-ascii?Q?BpppaBfmtW+FDQH3338wjcUvm4WqrdboN2ma8ChJP4fRwT9spHvJ27hkNSMf?=
+ =?us-ascii?Q?1k9la6PXuRrsq1Kd/9eyk+qewNnmInNA8v1ZJwjcZVcC93bCME2fkOqK9htD?=
+ =?us-ascii?Q?d+5zfhiFyuB0UGI+TuS5VzeQCmxS50O5tTZVYtfdo4+2SbfknR8TTl9HP8id?=
+ =?us-ascii?Q?Qc5jDyuGeUowOpJ9w2mmNiFKXMipGoBOsZ1G0W6lLcZzUruvyQmS+xnugFhL?=
+ =?us-ascii?Q?Maf0JPQuz5ebjb5y/cIKUxWGvXT47g0+L8/d1Psed1QHYbXLFlH74W3SWXwW?=
+ =?us-ascii?Q?J7WSfL4z/UMd+uDlphe3EE/35JLa0AvgfLjb898yTwUcPgwxyIe9lWCOzbc1?=
+ =?us-ascii?Q?WLiwls+Av3BcH6zv0jtZhaMeyTzltwCDhYJ/Ny2EJ36I9leRWDda3g80tEVc?=
+ =?us-ascii?Q?bQFh9FOLmcAUYoTSlEsGvdWDhdtZ4p3bL//28dRZEvxnze/0t42/0nLqyaBo?=
+ =?us-ascii?Q?rAvWq15i/wvME6WD4uYb3pKG0Y9ErpeED8LhfYuOxYZQfIsSzeGZAL/xxVUr?=
+ =?us-ascii?Q?iRstVwH+vdS7iao3+iQ4fmE5vwuzJKFViDR/2ESSzvQmX7j4pZUM3M/Zc8Ur?=
+ =?us-ascii?Q?gx4zTaYhuQrbtb9LeO/GXf5JNkLPQ45FPHkk7ONDRK6cY7Fz+VGg7DZJqQN8?=
+ =?us-ascii?Q?DTqvkiDdAGNO++87m0tDz41QuHim/W7z7lSQyN9WoDvKJjwIMi2nEPTLnuha?=
+ =?us-ascii?Q?5+BeKVqeUrQ9EZA/P8hGUNSb4CKzG+TSv/aJbtbWKyCUcGfJ+ubjoyBQ4Q3R?=
+ =?us-ascii?Q?PWWYce5DvAe3UrRiU8zGLuN51H6RsdNP/l6O2erTLshostm4VcL8/cR4PfIw?=
+ =?us-ascii?Q?a9N9tmnYmJJKkFUeh7BRO1RW9TXevxLeNPZdO7sI7wZPMLvX61zmLsykO0TH?=
+ =?us-ascii?Q?fhwjaFc5bdqpZzQ32F/7OtA0z9s75aiIMpr5iy+ulXBZS8gP/QSmUP3ytAey?=
+ =?us-ascii?Q?D3RuEJFKMiAQ+fouAJIwmkKeLQJT1mzzvae/uaSFmsiaskwvRLkBhOU0vRXy?=
+ =?us-ascii?Q?OAZk1Hw8pHeQ/HPOiEwaUbdHv2Fpvw4+krQfjbyDZLjCGge/dsc/4nxNwo+B?=
+ =?us-ascii?Q?De3fYgHB6wKlLN+x2nE/Jdmno0k5mhMbi3BbBVBcm7wGpI7ZwvHQIjW7IhOb?=
+ =?us-ascii?Q?x6Af8OvZzsBDHwNPtOPdBzs298LQyni5cNZcoZ13v6oPQ5jUBjxfnrPWboCK?=
+ =?us-ascii?Q?OjCp10IBagKPsjrXnDkVb7NQQ8NDE8WRMxLjbiJ08jEh4oFjt3hyz//6q3ww?=
+ =?us-ascii?Q?2Iwr1mMOU4LqDfWrXor3AW7Qu3zrvfEPnzbvVGEFyBb5kcvf5OMRgpG96xvd?=
+ =?us-ascii?Q?ftSb8Ukz3qgdMZt6NdqpRMSzo8ItIpb0M1dbt398/LMWtIuX9prylPhC2EPY?=
+ =?us-ascii?Q?2aAtBLOwh4zrgYIa933z5lonqmjqleOWvxCJEZEhV+Kvzesh?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR12MB8245:EE_|SA1PR12MB8644:EE_
-X-MS-Office365-Filtering-Correlation-Id: e12b3c77-07c9-4fab-24ea-08deb6f0d3f3
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|18002099003|56012099003|22082099003|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	NKcMtRS/8y6lmrlcU/ZTjbEPnRkYQjNlb1P73vdFr8xVfihH/FPJiKfHfh5BfKgcx6EVb4J1FtV0NL3vm/4gd0mXYrreqxoJoQ1SSY3AWHm8FWDaYGhAS8v4LaeeY5j554wcTUoNKWX+4GAGFzJd8Vuqe8QtybHrf3B4Dd79MbfE1iIw/7C1os6r3bSkwzMpFKeDXrRESDdvlGlxG/V5NtFz0ow9EVAmY1VJctlcbAaR8wz8ZwedtSIijwQsgJKfnY8Hs1TkOgHZpUGHwJ9VpTnkszeOwuKvF/RQCUhQXUvUixvi9wvcaZYf+2m7xCcbqBTLzqPh2dLzagiAqAxkjLMxBHeR1zcPY6SM76O4UXhNJPoRVvgDCb8HwxUWc8TugImEhqkrtzUVquIDx8Uf909ZO1piQoMw8dBZ147Pnuj/SB1VhTOUqNrvBe0At7AlSGAfADVDWGvEYQi+hYHyo189/nFfl7f4qsU/5XfzC/rcFZ8kJNYyMBJYg/VqSo2Ct3LnvKkYPpSzNSbGfRrqADNnfs+zXCM0xD0mbn3hmhq3XZnNthSPZYjj93ft+ZYETJxmoGqd37IYqCAOdUrssrxp0elu75Rz+1JONcUcF0e32e7Ngk/wqDBa+WwCS/ZSmkQidpF9ekAdjmCY9i0bXAajzCBgRGqxoeduFA6x+Ce4ArHd/PLWldzTDZCMrp6y
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR12MB8245.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(18002099003)(56012099003)(22082099003)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?OFhYaEJNU2pLSUxoRTVsTWo0N0tKNTJ1cHNoaHIvNm5FTzlkdEE0TEoyZkVV?=
- =?utf-8?B?M0d0M2swTFdTcEJxS0pBZnd2MjB1OXVYV2pzWjh0NWV4SlNyZTBxWmVXV1l4?=
- =?utf-8?B?bS9PdlI1U0pSR1NNekJUcWpPaHM4VEpCZmo1UzhKZXBlbWlOTk5DejlwUURU?=
- =?utf-8?B?K0toQURaNi95c0xNNmFYd2h0K0JERmxRaHBLbjBHeE1jSXVEYTZMbzMzSzB2?=
- =?utf-8?B?a29ZOVZONTRrMTJ5STJsWVRLL0QyaldUM2JtZkpJRVRLdllsTXlYSWVDQStZ?=
- =?utf-8?B?bTVtRWJ1U2JRZWttYnNMTGlWNWhrOU85ZmNTaXYwa2hOY0czSEtqeGFDa3dr?=
- =?utf-8?B?K0xLM2d4QWsydGJrNE1oNDFsaFZnNjFGWkl0UmV5SE03aGtDUGp6U0phRkEw?=
- =?utf-8?B?aFdsVjRWdm0vQVhpYytHREhkVjlrZnFkTkNrKzF6MTU0R2lFdXlPRk5uWE02?=
- =?utf-8?B?d09LczBUbjR4QzN1NUR0bS9WV3E4RjVTT1Vucytma0hmcnhhME9ENXVpdXNr?=
- =?utf-8?B?WHk1MWtBOHcyZUkyTUowbXR2MFc3QU5rU2F6c21ZVXRTSVEydHNvM3lTemhO?=
- =?utf-8?B?QUhHVU9iL2owbUlEWFZNQUFJa2laeUVQZVk1bll0YTlDR1pLZmNmTGhvL2t0?=
- =?utf-8?B?RHkybFFGazZyVTQydk54M1BDd1M1cGdYL3RoRHZoRS9DWG9tWk1WRWVPUXhx?=
- =?utf-8?B?a2VTM0RsT01jZmhoOTJTZG1pQUMvYUxydDlkUnpxM3BTc2M4YUl1T0RqVFpV?=
- =?utf-8?B?VEhRWUZvejZMN2ZtdGk1Z2djZzFlR29VZDM1U29tNlBZblBIaGpJODBFYlF3?=
- =?utf-8?B?TjBST0l0cktxUGZHai9rY3NmczA5U1FXWnZZQkVQZUdUMHpFWS8wSWtBOEdL?=
- =?utf-8?B?OWJpSHVGQnNTNXlsTDRKdHN6RnlUVG1SVit5YllEU1hFaXVodERiWEtpU3ZK?=
- =?utf-8?B?Y2ZZM0ViR2Nocko1bGd0Mk96c01lYURNVjBPSTYxVFFWWGhhQ212a1ZlTDVa?=
- =?utf-8?B?ckZGSXh4c0dET2JVVHlPa2pVS0FxTmgzV2NIdTltYks2U2VWclpvZ2Zkd0pC?=
- =?utf-8?B?bWhFaVFQREdabmo0YzJtdU03cC9pdzlaeEloTHhFeTcybEdOQ3VrYmpoVk5X?=
- =?utf-8?B?WVFSdElzWUdkZnF0dFhJRFZTTml4UWE2U0QxR0xRSEZNZThDZW81ejBlc0dC?=
- =?utf-8?B?a3BvRW5qVTNDOWwrN1JnL2ZqbnhWTUEyd0p6QTUvdFN0MWdicDdpV0ZOdllG?=
- =?utf-8?B?ZEE3a2o2bCtYNnZ1ZktldklJYlF5MVNyUWVtdVRUYlEwTXdzYjEwRmdaSVM2?=
- =?utf-8?B?Q2d5TFk2QWtKU3Y4VnU3SzZabTF3RUVPczR6R3N5ZlI3OWdIOEpkTG52Ym11?=
- =?utf-8?B?TG9TQ3VBaWJNdGtkdlB4SWhNZDdJMHl5MU5QWWtLeFVEL3FHUk1EaGs4cmNv?=
- =?utf-8?B?ZzV5STZnYnN3UDFvUi9kR1J4bnR4L1FCQ3M4SGVyQnozVlZrRE1lbjhYS1Zm?=
- =?utf-8?B?clp1VndnaTFPR0M1UHpYK0VhSGhQRDFEeUFKOEtQNWc0a3lQZjRqNm9SK3Ew?=
- =?utf-8?B?T2J1ODdEUkhaZk1ORG9GRG1PTzlFT0RXZDNweGJRVmx0YnF0bGFMelRuckRt?=
- =?utf-8?B?VFdlRWQ3ODZPa0hwTDJqNkczMVIwZlAvLzRxbEVFSU1mQXhsb3RLLytIc0FL?=
- =?utf-8?B?VG9GQlh3Wmk4ZCtrZUJSMklyZHZXbWtwRDMvZlRYUGJqc2FVb1Mvcy9VQjNG?=
- =?utf-8?B?M0FrMURLY1lmNjdNZlVGN1pBODBqYThkaUxUYnozemtKWS8wV3luZE5aelhm?=
- =?utf-8?B?Q0dXcjdEMlhLbVE0SUp3NTcvanBrdWt1VmFBcC9GYUpZejZXalhWNG95UFVi?=
- =?utf-8?B?alYyaFIxSVMxd2FwYStBTC9wd21zWlVQMnNhUkpOQ0xqYVlocVpvckFUbjJR?=
- =?utf-8?B?U2J5OEcvbTRGWmR5S2FLNVFUVzM1bnhPbzFmVnZuOS96OTIxVjhObVhKKzRi?=
- =?utf-8?B?K0NaK1dabFdxZFArUmxlT1ZQbWhDRzN5RGdYeTdvQ2NSZFZ4Vm1PKzZNQ1d1?=
- =?utf-8?B?Szh3cSt4QzkzM2hPU0c3d2VIeHBVWWdEN0dYS2ZQaEtodElRaGtLNmh1UWNB?=
- =?utf-8?B?OThxSVRPdlloSTR5Zzh0WDMwRzR3OWtiaGFVaWZvZW91NDJsTmo0TGxIKzlP?=
- =?utf-8?B?RS9mc0UzY3FKRGIxRVNKcHpmMk81N1ZndmRabEF6U0QrYnBhTWd5ZUxCQW5C?=
- =?utf-8?B?VFQwT1U5OThFajJMN0pmSitMMjB6M1lzalQwOW5PU1Bvdy9FTVo4TXVIbXBp?=
- =?utf-8?B?UmkwcG0vNHdLaEg4aS8vVkgzcFF2bEJaKzBlZ3lFcmhwVEs3SGlYQT09?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e12b3c77-07c9-4fab-24ea-08deb6f0d3f3
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR12MB8245.namprd12.prod.outlook.com
+X-OriginatorOrg: nxp.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 May 2026 04:24:20.1969
+X-MS-Exchange-CrossTenant-AuthSource: VI0PR04MB12114.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3c6552f1-72e9-41a9-a3d4-08deb6f319bf
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 May 2026 04:40:35.8452
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GW3wa+QI/hiTGbFBtV+Zm7ZVds2H5QgEI3xI7w67CobnBNIwe/CVbeImV7QXn20aE6Srv9Eci/lSx3FRRXVWuQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB8644
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CdefoeJ2/WtUGl/ekAfo11JZcrextdfNY/yKKfvC4IfmgDQ4bqoGnLed3qAA29uoeGHvYnJFIlgd++KZ9SJgGQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PR04MB7032
 
 
+> > -----Original Message-----
+> > From: Sherry Sun (OSS) <sherry.sun@oss.nxp.com>
+> > Sent: Wednesday, May 20, 2026 4:49 PM
+> > To: robh@kernel.org; krzk+dt@kernel.org; conor+dt@kernel.org; Frank Li
+> > <frank.li@nxp.com>; s.hauer@pengutronix.de; kernel@pengutronix.de;
+> > festevam@gmail.com; lpieralisi@kernel.org; kwilczynski@kernel.org;
+> > mani@kernel.org; bhelgaas@google.com; Hongxing Zhu
+> > <hongxing.zhu@nxp.com>; l.stach@pengutronix.de
+> > Cc: imx@lists.linux.dev; linux-pci@vger.kernel.org; linux-arm-
+> > kernel@lists.infradead.org; devicetree@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; Sherry Sun <sherry.sun@nxp.com>
+> > Subject: [PATCH V3 0/8] PCI: imx6: Integrate pwrctrl API and update
+> > device trees
+> >
+> > From: Sherry Sun <sherry.sun@nxp.com>
+> >
+> > This series integrates the PCI pwrctrl framework into the pci-imx6
+> > driver and updates i.MX EVK board device trees to support it.
+> >
+> > Patches 2-8 update device trees for i.MX EVK boards which maintained
+> > by NXP to move power supply properties from the PCIe controller node
+> > to the Root Port child node, which is required for pwrctrl framework.
+> > Affected boards:
+> > - i.MX6Q/DL SABRESD
+> > - i.MX6SX SDB
+> > - i.MX8MM EVK
+> > - i.MX8MP EVK
+> > - i.MX8MQ EVK
+> > - i.MX8DXL/QM/QXP EVK
+> > - i.MX95 15x15/19x19 EVK
+> >
+> > The driver maintains legacy regulator handling for device trees that
+> > haven't been updated yet. Both old and new device tree structures are
+> supported.
+> >
+> > Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
+> Hi Sherry:
+> Since the vpcie3v3aux is used to power up the WAKE#, it is always on in t=
+his
+> pwrctrl framework whatever the system is in suspend or not, right?
+>=20
 
-On 21/05/26 1:00 am, Bjorn Helgaas wrote:
-> On Fri, May 15, 2026 at 12:37:52PM +0530, Manikanta Maddireddy wrote:
->> Program the Synopsys DesignWare PORT_AFR L1 entrance latency field from the
->> optional aspm-l1-entry-delay-ns device tree property (nanoseconds).
->>
->> Convert delay to whole microseconds with ceiling division (DIV_ROUND_UP),
->> then derive the 3-bit hw encoding as the minimum of order_base_2(us) and 7.
->> If the property is not present or cannot be read, default to 7.
->>
->> Hardware encoding (PORT_AFR L1 entrance latency, bits 27:29):
->>
->>    +--------------------------+----------+
->>    | Advertised maximum       | Code     |
->>    +--------------------------+----------+
->>    | Maximum of 1 us          | 000b     |
->>    +--------------------------+----------+
->>    | Maximum of 2 us          | 001b     |
->>    +--------------------------+----------+
->>    | Maximum of 4 us          | 010b     |
->>    +--------------------------+----------+
->>    | Maximum of 8 us          | 011b     |
->>    +--------------------------+----------+
->>    | Maximum of 16 us         | 100b     |
->>    +--------------------------+----------+
->>    | Maximum of 32 us         | 101b     |
->>    +--------------------------+----------+
->>    | Maximum of 64 us         | 110b     |
->>    +--------------------------+----------+
->>    | Rest                     | 111b     |
->>    +--------------------------+----------+
->>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->> V2: Fixed commit message as per review comments.
->> V3: Fixed encoding to handle all cases per above table.
->>
->>   drivers/pci/controller/dwc/pcie-tegra194.c | 13 +++++++++++++
->>   1 file changed, 13 insertions(+)
->>
->> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
->> index 9dcfa194050e..5309a2f1356d 100644
->> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
->> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
->> @@ -272,6 +272,7 @@ struct tegra_pcie_dw {
->>   	u32 aspm_cmrt;
->>   	u32 aspm_pwr_on_t;
->>   	u32 aspm_l0s_enter_lat;
->> +	u32 aspm_l1_enter_lat;
->>   
->>   	struct regulator *pex_ctl_supply;
->>   	struct regulator *slot_ctl_3v3;
->> @@ -715,6 +716,8 @@ static void init_host_aspm(struct tegra_pcie_dw *pcie)
->>   	val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
->>   	val &= ~PORT_AFR_L0S_ENTRANCE_LAT_MASK;
->>   	val |= (pcie->aspm_l0s_enter_lat << PORT_AFR_L0S_ENTRANCE_LAT_SHIFT);
->> +	val &= ~PORT_AFR_L1_ENTRANCE_LAT_MASK;
->> +	val |= (pcie->aspm_l1_enter_lat << PORT_AFR_L1_ENTRANCE_LAT_SHIFT);
-> 
-> Thanks for your patch!
-> 
-> I think follow-on patches could use FIELD_MODIFY() for
-> PORT_AFR_L1_ENTRANCE_LAT_MASK and PORT_AFR_L0S_ENTRANCE_LAT_MASK.
-> 
-> It would be good to remove all these _SHIFT #defines in a future patch,
-> if possible:
-> 
->    PORT_AFR_L0S_ENTRANCE_LAT_SHIFT
->    PORT_AFR_L1_ENTRANCE_LAT_SHIFT
->    GEN3_RELATED_OFF_RATE_SHADOW_SEL_SHIFT
->    PCIE_MSIX_DOORBELL_PF_SHIFT
->    EVENT_COUNTER_ENABLE_SHIFT
->    EVENT_COUNTER_EVENT_SEL_SHIFT
->    EVENT_COUNTER_GROUP_SEL_SHIFT
-> 
-> The uses can probably be replaced with FIELD_MODIFY() and
-> FIELD_PREP(), possibly with the addition of a _MASK #define or two.
-> 
+Hi Richard,
+Currently the new pwrctrl framework doesn't support vpcie3v3aux, it handles=
+ all
+regulators with of_regulator_bulk_get_all() and regulator_bulk_enable/disab=
+le().
+The vpcie3v3aux now only works with pci-imx6 driver.
 
+Best Regards
+Sherry
 
-Noted, I will send a patch to remove all _SHIFT #defines.
-
-Thanks,
-Manikanta
->>   	val |= PORT_AFR_ENTER_ASPM;
->>   	dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
->>   }
->> @@ -1115,6 +1118,7 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
->>   {
->>   	struct platform_device *pdev = to_platform_device(pcie->dev);
->>   	struct device_node *np = pcie->dev->of_node;
->> +	u32 val;
->>   	int ret;
->>   
->>   	pcie->dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
->> @@ -1141,6 +1145,15 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
->>   		dev_info(pcie->dev,
->>   			 "Failed to read ASPM L0s Entrance latency: %d\n", ret);
->>   
->> +	/* Default to max latency of 7. */
->> +	pcie->aspm_l1_enter_lat = 7;
->> +	ret = of_property_read_u32(np, "aspm-l1-entry-delay-ns", &val);
->> +	if (!ret) {
->> +		u32 us = DIV_ROUND_UP(val, 1000);
->> +
->> +		pcie->aspm_l1_enter_lat = min_t(u32, order_base_2(us), 7);
->> +	}
->> +
->>   	ret = of_property_read_u32(np, "num-lanes", &pcie->num_lanes);
->>   	if (ret < 0) {
->>   		dev_err(pcie->dev, "Failed to read num-lanes: %d\n", ret);
->> -- 
->> 2.34.1
->>
-
--- 
-nvpublic
+> Best Regards
+> Richard Zhu
+> > ---
+> > Changes in V3:
+> > 1. Rebased on top of latest 7.1.0-rc4
+> >
+> > Changes in V2:
+> > 1. After commit 2d8c5098b847 ("PCI/pwrctrl: Do not power off on pwrctrl
+> >    device removal"), the pwrctrl drivers no longer power off devices
+> >    during removal. Update pci-imx6 driver's shutdown callback in patch#=
+1
+> >    to explicitly call pci_pwrctrl_power_off_devices() before
+> >    pci_pwrctrl_destroy_devices() to ensure devices are properly powered
+> >    off.
+> > ---
+> >
+> > Sherry Sun (8):
+> >   PCI: imx6: Integrate new pwrctrl API for pci-imx6
+> >   arm: dts: imx6qdl-sabresd: Move power supply property to Root Port
+> >     node
+> >   arm: dts: imx6sx-sdb: Move power supply property to Root Port node
+> >   arm64: dts: imx8mm-evk: Move power supply property to Root Port node
+> >   arm64: dts: imx8mp-evk: Move power supply properties to Root Port nod=
+e
+> >   arm64: dts: imx8mq-evk: Move power supply properties to Root Port nod=
+e
+> >   arm64: dts: imx8dxl/qm/qxp: Move power supply properties to Root Port
+> >     node
+> >   arm64: dts: imx95: Move power supply properties to Root Port node
+> >
+> >  .../arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  2 +-
+> >  arch/arm/boot/dts/nxp/imx/imx6sx-sdb.dtsi     |  2 +-
+> >  arch/arm64/boot/dts/freescale/imx8dxl-evk.dts |  4 ++--
+> > arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi |  2 +-
+> > arch/arm64/boot/dts/freescale/imx8mp-evk.dts  |  4 ++--
+> > arch/arm64/boot/dts/freescale/imx8mq-evk.dts  |  4 ++--
+> > arch/arm64/boot/dts/freescale/imx8qm-mek.dts  |  4 ++--
+> > arch/arm64/boot/dts/freescale/imx8qxp-mek.dts |  4 ++--
+> >  .../boot/dts/freescale/imx95-15x15-evk.dts    |  4 ++--
+> >  .../boot/dts/freescale/imx95-19x19-evk.dts    |  8 +++----
+> >  drivers/pci/controller/dwc/Kconfig            |  1 +
+> >  drivers/pci/controller/dwc/pci-imx6.c         | 24 ++++++++++++++++++-
+> >  12 files changed, 43 insertions(+), 20 deletions(-)
+> >
+> > --
+> > 2.37.1
 
