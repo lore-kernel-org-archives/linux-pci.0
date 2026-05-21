@@ -1,367 +1,283 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DF58344D9B
-	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 23:20:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24EB131F98E;
+	Thu, 21 May 2026 23:39:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779405608; cv=none; b=Q3JHGa7BQvBskv0pVZJZ777pqR+rJIFGpI5rbw1UTiai/T7ArfbZLM31b4x96hFo1I0Z2W+P1zmXLajVSvBVBlu7s6ZO6Q30yAeSnR2dw/JgUlC5pvwRRP0DT/gJ3oW4KL2ROKQMGcZPxbEaWw42THVtjXHOhJ7ajR0pBK0UTZU=
+	t=1779406762; cv=none; b=aWH010HlL+pdMDLPvRMlbBuKAiq+3KNi3jmViWQwxA7TwMreGEN81+qsaowq5UphTGA7zShStnkgFPEBt1FaHOindiJepAoITpjc1ipweNUhoeqsdxuJ8WSx8ZCQwl6gyh+QXZ82Z6h2AXUQ4aIU8CdSuvaneJHJeSsRnP0ghnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779405608; c=relaxed/simple;
-	bh=1hYTQ2flrSbxZ9WoLxZc6UV/i4WyuOM1ZtDrb/z4f6o=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FWcSk4XXWjzKQ3auY2qN2fxbEWODguX2pL810c+CKCcd44ShyP3mID4ScevDh6NdKgVf0kSrvIEJQj9WPiQvqvCVVGLg1pUmkAtLnDnUd6iRV/RgMSGApElMYw/VEQDzUK3rCInQ+o765lkTZQ/QT3b1q4UrfpkdZBGffi32qpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NFSBnwdr; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1779406762; c=relaxed/simple;
+	bh=UtyavNy3t/fsQvpHev51O6aS6F/3Gu9YO4jx88jb1Pc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cGywBq0enO++VeUp3247U2yCeHY3wtmSNGSkqBG8FZnzxc+Z9vP1Wwue0nfruhQmXOEls1Vga7q8auvu9B7V9bRSEKIGf+MBhYgbnLRg9+pi7Gm5io/vFUlPoq6k0H37iFXKPMH3/BMpu2jIy1aKaF3m32+z0uaiBlXlJKUYgfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uoe2A26T; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NFSBnwdr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779405606; x=1810941606;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=1hYTQ2flrSbxZ9WoLxZc6UV/i4WyuOM1ZtDrb/z4f6o=;
-  b=NFSBnwdrHSwuFlRqpBnzNgZ4ceh8BU9M4ZvE2M3HLKYIsFjmGpZGQLXh
-   1zfHzkZCD04tl8kiP91EavYp9Agayeb0WVQtp+aBlTtfS0AlTo1QKoKgb
-   he3NFOaPHav2VJFytrakVNjsvYL2/HzVCJBNImxxllTs1UBS/39hhjibN
-   HfnzPvOG8Od6W4dE/yZ/7FPcnW7PfpfRKUxpeFk0MTA/Kf64cnVC0ezB1
-   oKVrHkDOfLTF09CPwy5JzJPlgIEPNxC5/Ky74czEwzxG7NJvD8FAhj8RW
-   wf35oH3UFe9+YPBpGxWJe4b8FjUUt1pQKB8F1SfMYITQ0Dxf+Dd6VgaqT
-   g==;
-X-CSE-ConnectionGUID: jkboAa+vTOOdbFcJfCLYCw==
-X-CSE-MsgGUID: DH1+TSr4SWqD9iKItPDSCw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11793"; a="90911291"
-X-IronPort-AV: E=Sophos;i="6.24,161,1774335600"; 
-   d="scan'208";a="90911291"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 16:20:06 -0700
-X-CSE-ConnectionGUID: A0VlOdkTRhCei9Bdi9Gkvg==
-X-CSE-MsgGUID: 843GrabLS1WkKrLUhGzYxw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,161,1774335600"; 
-   d="scan'208";a="240925958"
-Received: from zp3110c002s0704.zpn.intel.com ([10.219.117.38])
-  by orviesa007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 16:20:06 -0700
-From: Nirmal Patel <nirmal.patel@linux.intel.com>
-To: <linux-pci@vger.kernel.org>,
-	nirmal.patel@intel.com
-Cc: Nirmal Patel <nirmal.patel@linux.intel.com>
-Subject: [PATCH v3] PCI: vmd: Add feature to scan BIOS enumerated devices.
-Date: Thu, 21 May 2026 23:20:19 +0000
-Message-ID: <20260521232019.2562-1-nirmal.patel@linux.intel.com>
-X-Mailer: git-send-email 2.52.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uoe2A26T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5080D1F000E9;
+	Thu, 21 May 2026 23:39:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779406759;
+	bh=oh6ATn0JwY4+EDxHSfHhWKPTI9yODfpqPfUosl9OAY8=;
+	h=From:To:Cc:Subject:Date;
+	b=Uoe2A26TNx5SV2ZJaH7ZPogYuwJjOK4C5jLrJPlxJ1nirNVBU+2ELtiPUa2FU+ssm
+	 4DcToCl9EApK3h4eyklEy3lOm8M+p0bIhepRDTHV+K/x+ncrzbdlGnlhEYYptJbr2a
+	 bYwEe4aNSknanDN/ZGdZqpf1tjbAIIBUzPhf/AAg8QQfQoymApX2NWmS3sJzqtU79b
+	 FxRAVpjuXJvC047Xk4+nDj9w+BFE1YQITCYTQ3lqMMB8eHVVQOcUzx6/X/JUSGe+An
+	 AlOC9DV6ND2yfBPmeFruSUJzsP7I5oD+wKujuQ4CqnI+F+WQxgVov1kz2bbItetxLM
+	 Q4NDCHWjoB1ew==
+From: Danilo Krummrich <dakr@kernel.org>
+To: gregkh@linuxfoundation.org,
+	rafael@kernel.org,
+	acourbot@nvidia.com,
+	aliceryhl@google.com,
+	david.m.ertman@intel.com,
+	ira.weiny@intel.com,
+	leon@kernel.org,
+	viresh.kumar@linaro.org,
+	m.wilczynski@samsung.com,
+	ukleinek@kernel.org,
+	bhelgaas@google.com,
+	kwilczynski@kernel.org,
+	abdiel.janulgue@gmail.com,
+	robin.murphy@arm.com,
+	markus.probst@posteo.de,
+	ojeda@kernel.org,
+	boqun@kernel.org,
+	gary@garyguo.net,
+	bjorn3_gh@protonmail.com,
+	lossin@kernel.org,
+	a.hindborg@kernel.org,
+	tmgross@umich.edu,
+	igor.korotin@linux.dev,
+	daniel.almeida@collabora.com,
+	pcolberg@redhat.com
+Cc: driver-core@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	nova-gpu@lists.linux.dev,
+	dri-devel@lists.freedesktop.org,
+	linux-pm@vger.kernel.org,
+	linux-pwm@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	rust-for-linux@vger.kernel.org,
+	Danilo Krummrich <dakr@kernel.org>
+Subject: [PATCH v4 00/27] rust: device: Higher-Ranked Lifetime Types for device drivers
+Date: Fri, 22 May 2026 01:34:26 +0200
+Message-ID: <20260521233501.1191842-1-dakr@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Newer VMD  with device ID 0x28c1 has unique settings compared to its
-predecessor where BIOS enumerates the entire VMD device tree and
-assigns respective configurations.
+Currently, Rust device drivers access device resources such as PCI BAR mappings
+and I/O memory regions through Devres<T>.
 
-VMD configuration BAR0 carries over from GNR legacy VMD as the mechanism
-to access the configuration space of the devices owned by VMD. The size
-of this window is fixed at 256 MB, where each function consumes 4 KB and
-every bus consumes 1 MB.
+Devres::access() provides zero-overhead access by taking a &Device<Bound>
+reference as proof that the device is still bound. Since a &Device<Bound> is
+available in almost all contexts by design, Devres is mostly a type-system level
+proof that the resource is valid, but it can also be used from scopes without
+this guarantee through its try_access() accessor.
 
-The shadow and scratchpad registers have been relocated from the VMD
-configuration space to the VMD MMIO space in VMD BAR4/BAR5, otherwise
-refers to as MEMBAR2 or MSI-X bar.
+This works well in general, but has a few limitations:
 
-VMD MSI-X remapping enable/disable is no longer supported.
+  - Every access to a device resource goes through Devres::access(), which
+    despite zero cost, adds boilerplate to every access site.
 
-All the VMD driver code needs to do is to obtain bus hide range along
-with shadow register values set by BIOS and perform a bus scan.
+  - Destructors do not receive a &Device<Bound>, so they must use try_access(),
+    which can fail. In practice the access succeeds if teardown ordering is
+    correct, but the type system can't express this, forcing drivers to handle a
+    failure path that should never be taken.
 
-The patch also involves small refactoring of vmd_enable_domain function.
+  - Sharing a resource across components (e.g. passing a BAR to a sub-component)
+    requires Arc<Devres<T>>.
 
-Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
----
-v3 : Hard code configbar .end to 0xff same as probe.c; Adjust membar2
-     offset to accommodate more registers in 28C1. Remove redundant
-     IORESOURCE_MEM check in vmd_prepare_offsets_and_bus.
-v2 : Using PCI features flag instead of devic ID and fixing corner cases
-     for vmd_remove_irq.
----
- drivers/pci/controller/vmd.c | 172 +++++++++++++++++++++++++++--------
- include/linux/pci_ids.h      |   1 +
- 2 files changed, 134 insertions(+), 39 deletions(-)
+  - Device references must be stored as ARef<Device> rather than plain &Device
+    borrows.
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index d4ae250d4bc6..15a3f6a35788 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -37,6 +37,12 @@
- #define MB2_SHADOW_OFFSET	0x2000
- #define MB2_SHADOW_SIZE		16
- 
-+/* DMR BAR4 register offsets */
-+#define SHADOW_MEMBAR1_28C1		0x2818 /* MEMBAR1 physical address */
-+#define SHADOW_MEMBAR2_28C1		0x2820 /* MEMBAR2 physical address */
-+#define BASE_ID_REG_28C1		0x2840
-+#define MEMBAR2_OFFSET_28C1		0x30d0
-+
- enum vmd_features {
- 	/*
- 	 * Device may contain registers which hint the physical location of the
-@@ -77,6 +83,15 @@ enum vmd_features {
- 	 * proper power management of the SoC.
- 	 */
- 	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
-+
-+	/*
-+	 * Newer VMD  with device ID 0x28c1 has unique settings compared to its
-+	 * predecessor where BIOS enumerates the entire VMD device tree and
-+	 * stores respective configurations including bus start range and
-+	 * shadow registers in VMD MMIO space in VMD BAR4/BAR5, otherwise refers
-+	 * to as MEMBAR2 or MSI-X bar.
-+	 */
-+	VMD_FEAT_USE_BIOS_INFO		= (1 << 6),
- };
- 
- #define VMD_BIOS_PM_QUIRK_LTR	0x1003	/* 3145728 ns */
-@@ -142,6 +157,7 @@ struct vmd_dev {
- 	u8			first_vec;
- 	char			*name;
- 	int			instance;
-+	unsigned long		features;
- };
- 
- static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
-@@ -374,6 +390,8 @@ static void vmd_set_msi_remapping(struct vmd_dev *vmd, bool enable)
- 
- static void vmd_remove_irq_domain(struct vmd_dev *vmd)
- {
-+	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
-+		return;
- 	/*
- 	 * Some production BIOS won't enable remapping between soft reboots.
- 	 * Ensure remapping is restored before unloading the driver.
-@@ -393,7 +411,12 @@ static void __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
- 				  unsigned int devfn, int reg, int len)
- {
- 	unsigned int busnr_ecam = bus->number - vmd->busn_start;
--	u32 offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
-+	u32 offset;
-+
-+	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
-+		busnr_ecam = bus->number;
-+
-+	offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
- 
- 	if (offset + len >= resource_size(&vmd->dev->resource[VMD_CFGBAR]))
- 		return NULL;
-@@ -661,6 +684,46 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
- 	return 0;
- }
- 
-+static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
-+				       resource_size_t *offset1,
-+				       resource_size_t *offset2)
-+{
-+	u64 phys1, phys2, bar4_2840;
-+	void __iomem *bar4;
-+	u32 base_id;
-+	u8 base_bus;
-+
-+
-+	bar4 = pci_ioremap_bar(vmd->dev, 4);
-+	if (!bar4)
-+		return -ENOMEM;
-+
-+	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical addresses. */
-+	phys1 = readq(bar4 + SHADOW_MEMBAR1_28C1);
-+	phys2 = readq(bar4 + SHADOW_MEMBAR2_28C1);
-+
-+	/*
-+	 * Read and set bus start number from Base ID register.
-+	 * 24-bit Base ID register is part of 64-bit shadowed reqid hide
-+	 * range register and holds segment, bus, device and function.
-+	 */
-+	bar4_2840 = readq(bar4 + BASE_ID_REG_28C1);
-+	base_id = bar4_2840 & 0xFFFFFF;
-+	base_bus = base_id >> 8;
-+	vmd->busn_start = base_bus;
-+
-+	/* Calculate offsets like vmd_get_phys_offsets() does. */
-+	if (phys1)
-+		*offset1 = vmd->dev->resource[VMD_MEMBAR1].start -
-+			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
-+	if (phys2)
-+		*offset2 = vmd->dev->resource[VMD_MEMBAR2].start -
-+			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
-+
-+	pci_iounmap(vmd->dev, bar4);
-+	return 0;
-+}
-+
- static irqreturn_t vmd_irq(int irq, void *data)
- {
- 	struct vmd_irq_list *irqs = data;
-@@ -711,6 +774,53 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
- 	return 0;
- }
- 
-+static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
-+					unsigned long features,
-+					resource_size_t *membar2_offset,
-+					resource_size_t *offset1,
-+					resource_size_t *offset2)
-+{
-+	int ret;
-+
-+	/*
-+	 * Shadow registers may exist in certain VMD device ids which allow
-+	 * guests to correctly assign host physical addresses to the root ports
-+	 * and child devices. These registers will either return the host value
-+	 * or 0, depending on an enable bit in the VMD device.
-+	 */
-+	/*
-+	 * For certain VMD devices (i.e. 0x28C1), BIOS places device info
-+	 * in BAR4 shadow registers to determine the base bus number and memory
-+	 * offsets.
-+	 */
-+	if (features & VMD_FEAT_USE_BIOS_INFO) {
-+		*membar2_offset = MEMBAR2_OFFSET_28C1;
-+		ret = vmd_get_bus_info_from_bar4(vmd, offset1, offset2);
-+		if (ret)
-+			return ret;
-+	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
-+		*membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
-+		ret = vmd_get_phys_offsets(vmd, true, offset1, offset2);
-+		if (ret)
-+			return ret;
-+	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
-+		ret = vmd_get_phys_offsets(vmd, false, offset1, offset2);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/*
-+	 * Certain VMD devices may have a root port configuration option which
-+	 * limits the bus range to between 0-127, 128-255, or 224-255.
-+	 */
-+	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
-+		ret = vmd_get_bus_number_start(vmd);
-+		if (ret)
-+			return ret;
-+	}
-+	return 0;
-+}
-+
- /*
-  * Since VMD is an aperture to regular PCIe root ports, only allow it to
-  * control features that the OS is allowed to control on the physical PCI bus.
-@@ -784,38 +894,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	struct pci_dev *dev;
- 	int ret;
- 
--	/*
--	 * Shadow registers may exist in certain VMD device ids which allow
--	 * guests to correctly assign host physical addresses to the root ports
--	 * and child devices. These registers will either return the host value
--	 * or 0, depending on an enable bit in the VMD device.
--	 */
--	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
--		membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
--		ret = vmd_get_phys_offsets(vmd, true, &offset[0], &offset[1]);
--		if (ret)
--			return ret;
--	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
--		ret = vmd_get_phys_offsets(vmd, false, &offset[0], &offset[1]);
--		if (ret)
--			return ret;
--	}
--
--	/*
--	 * Certain VMD devices may have a root port configuration option which
--	 * limits the bus range to between 0-127, 128-255, or 224-255
--	 */
--	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
--		ret = vmd_get_bus_number_start(vmd);
--		if (ret)
--			return ret;
--	}
-+	ret = vmd_prepare_offsets_and_bus(vmd, features, &membar2_offset,
-+					  &offset[0], &offset[1]);
-+	if (ret)
-+		return ret;
- 
- 	res = &vmd->dev->resource[VMD_CFGBAR];
- 	vmd->resources[0] = (struct resource) {
- 		.name  = "VMD CFGBAR",
- 		.start = vmd->busn_start,
--		.end   = vmd->busn_start + (resource_size(res) >> 20) - 1,
-+		.end   = 0xff,
- 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
- 	};
- 
-@@ -868,19 +956,21 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	 * acceptable because the guest is usually CPU-limited and MSI
- 	 * remapping doesn't become a performance bottleneck.
- 	 */
--	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
--	    offset[0] || offset[1]) {
--		ret = vmd_alloc_irqs(vmd);
--		if (ret)
--			return ret;
-+	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
-+		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-+		    offset[0] || offset[1]) {
-+			ret = vmd_alloc_irqs(vmd);
-+			if (ret)
-+				return ret;
- 
--		vmd_set_msi_remapping(vmd, true);
-+			vmd_set_msi_remapping(vmd, true);
- 
--		ret = vmd_create_irq_domain(vmd);
--		if (ret)
--			return ret;
--	} else {
--		vmd_set_msi_remapping(vmd, false);
-+			ret = vmd_create_irq_domain(vmd);
-+			if (ret)
-+				return ret;
-+		} else {
-+			vmd_set_msi_remapping(vmd, false);
-+		}
- 	}
- 
- 	pci_add_resource(&resources, &vmd->resources[0]);
-@@ -998,6 +1088,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	vmd->dev = dev;
- 	vmd->sysdata.domain = PCI_DOMAIN_NR_NOT_SET;
-+	vmd->features = features;
- 	vmd->instance = ida_alloc(&vmd_instance_ida, GFP_KERNEL);
- 	if (vmd->instance < 0)
- 		return vmd->instance;
-@@ -1114,6 +1205,9 @@ static const struct pci_device_id vmd_ids[] = {
- 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
- 				VMD_FEAT_HAS_BUS_RESTRICTIONS |
- 				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
-+	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_28C1),
-+		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
-+				VMD_FEAT_USE_BIOS_INFO,},
- 	{PCI_VDEVICE(INTEL, 0x467f),
- 		.driver_data = VMD_FEATS_CLIENT,},
- 	{PCI_VDEVICE(INTEL, 0x4c3d),
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 24cb42f66e4b..2a8ebe7df92e 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2889,6 +2889,7 @@
- #define PCI_DEVICE_ID_INTEL_HDA_ICH8	0x284b
- #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850
- #define PCI_DEVICE_ID_INTEL_VMD_28C0	0x28c0
-+#define PCI_DEVICE_ID_INTEL_VMD_28C1    0x28c1
- #define PCI_DEVICE_ID_INTEL_ICH9_0	0x2910
- #define PCI_DEVICE_ID_INTEL_ICH9_2	0x2912
- #define PCI_DEVICE_ID_INTEL_ICH9_3	0x2913
+These limitations stem from the driver's bus device private data being 'static
+-- the driver struct cannot borrow from the device reference it receives in
+probe(), even though it structurally cannot outlive the device binding.
+
+This series introduces Higher-Ranked Lifetime Types (HRT) for Rust device
+drivers. An HRT is a type that is generic over a lifetime -- it does not have a
+fixed lifetime, but can be instantiated with any lifetime chosen by the caller.
+
+Bus driver traits use a Generic Associated Type (GAT) type Data<'bound> to
+introduce the lifetime on the private data, rather than parameterizing the
+Driver trait itself. This avoids a driver trait global lifetime and avoids the
+need for ForLt for bus device private data, making the bus implementations much
+simpler. ForLt is only needed for auxiliary registration data, where the
+lifetime is not introduced by a trait callback but must be threaded through
+Registration.
+
+With HRT, driver structs carry a lifetime parameter tied to the device binding
+scope -- the interval of a bus device being bound to a driver. Device resources
+like pci::Bar<'bound> and IoMem<'bound> are handed out with this lifetime, so
+the compiler enforces at build time that they do not escape the binding scope.
+
+Before:
+
+	struct MyDriver {
+	    pdev: ARef<pci::Device>,
+	    bar: Devres<pci::Bar<BAR_SIZE>>,
+	}
+
+	let io = self.bar.access(dev)?;
+	io.read32(OFFSET);
+
+After:
+
+	struct MyDriver<'bound> {
+	    pdev: &'bound pci::Device,
+	    bar: pci::Bar<'bound, BAR_SIZE>,
+	}
+
+	self.bar.read32(OFFSET);
+
+Lifetime-parameterized device resources can be put into a Devres at any point
+via Bar::into_devres() / IoMem::into_devres(), providing the exact same
+semantics as before. This is useful for resources shared across subsystem
+boundaries where revocation is needed.
+
+This also synergizes with the upcoming self-referential initialization support
+in pin-init, which allows one field of the driver struct to borrow another
+during initialization without unsafe code.
+
+The same pattern is applied to auxiliary device registration data as a first
+example beyond bus device private data. Registration<F: ForLt> can hold
+lifetime-parameterized data tied to the parent driver's binding scope. Since the
+auxiliary bus guarantees that the parent remains bound while the auxiliary
+device is registered, the registration data can safely borrow the parent's
+device resources.
+
+More generally, binding resource lifetimes to a registration scope applies to
+every registration that is scoped to a driver binding -- auxiliary devices,
+class devices, IRQ handlers, workqueues.
+
+A follow-up series extends this to class device registrations, starting with
+DRM, so that class device callbacks (IOCTLs, etc.) can safely access device
+resources through the separate registration data bound to the registration's
+lifetime without Devres indirection.
+
+The series contains a few driver patches for reference, indicated by the REF
+suffix.
+
+Thanks to Gary for coming up with the ForLt implementation; thanks to Alice for
+the early discussions around lifetime-parameterized private data that helped
+shape the direction of this work.
+
+Changes in v4:
+  - Use 'bound only for lifetimes that represent the full duration of a device
+    being bound to a driver
+  - Make Core and CoreInternal lifetime-parameterized
+  - Split auxiliary::Registration constructor into unsafe fn new_with_lt
+    (borrowed data) and safe fn new ('static data) to close mem::forget()
+    soundness hole
+  - Use TypeId::of::<F>() instead of TypeId::of::<F::Of<'static>>() in auxiliary
+    registration_data()
+  - Handle Type::Macro in ForLt! covariance and WF checks; proc macros cannot
+    expand macro_rules invocations, so use WithLt trait projection for lifetime
+    substitution
+  - Fix missing Send bound in type Data: Send
+
+Changes in v3:
+  - Rework all bus "make Driver trait lifetime-parameterized" patches to use a
+    GAT (type Data<'bound>); in the context of adding a 'bound lifetime, this
+    avoids a driver trait global lifetime and avoids ForLt for bus device
+    private data making the bus implementations much simpler
+
+Changes in v2:
+  - Add 'a bound to ForLt::Of<'a> and WithLt::Of, making the lifetime bound
+    inherent to the trait; remove all F::Of<'static>: 'static where clauses
+  - Drop "rust: devres: add ForLt support to Devres"; Devres itself stays
+    unchanged -- ForLt-aware access is introduced later through DevresLt in a
+    separate series
+  - Use 'bound instead of 'a; add patches to consistently use 'bound for
+    pre-existing 'a
+
+Danilo Krummrich (24):
+  rust: driver: decouple driver private data from driver type
+  rust: driver core: drop drvdata before devres release
+  rust: pci: implement Sync for Device<Bound>
+  rust: platform: implement Sync for Device<Bound>
+  rust: auxiliary: implement Sync for Device<Bound>
+  rust: usb: implement Sync for Device<Bound>
+  rust: device: implement Sync for Device<Bound>
+  rust: device: make Core and CoreInternal lifetime-parameterized
+  rust: pci: make Driver trait lifetime-parameterized
+  rust: platform: make Driver trait lifetime-parameterized
+  rust: auxiliary: make Driver trait lifetime-parameterized
+  rust: usb: make Driver trait lifetime-parameterized
+  rust: i2c: make Driver trait lifetime-parameterized
+  rust: driver: update module documentation for GAT-based Data type
+  rust: pci: make Bar lifetime-parameterized
+  rust: io: make IoMem and ExclusiveIoMem lifetime-parameterized
+  samples: rust: rust_driver_pci: use HRT lifetime for Bar
+  gpu: nova-core: separate driver type from driver data
+  rust: auxiliary: generalize Registration over ForLt
+  samples: rust: rust_driver_auxiliary: showcase lifetime-bound
+    registration data
+  gpu: nova-core: use lifetime for Bar
+  gpu: nova-core: unregister sysmem flush page from Drop
+  gpu: nova-core: replace ARef<Device> with &'bound Device in
+    SysmemFlush
+  gpu: drm: tyr: use lifetime for IoMem
+
+Gary Guo (3):
+  rust: alloc: remove `'static` bound on `ForeignOwnable`
+  rust: driver: move 'static bounds to constructor
+  rust: types: add `ForLt` trait for higher-ranked lifetime support
+
+ drivers/base/dd.c                     |   2 +-
+ drivers/cpufreq/rcpufreq_dt.rs        |   9 +-
+ drivers/gpu/drm/nova/driver.rs        |   6 +-
+ drivers/gpu/drm/tyr/driver.rs         |  23 ++-
+ drivers/gpu/drm/tyr/gpu.rs            |  62 +++---
+ drivers/gpu/drm/tyr/regs.rs           |  21 +-
+ drivers/gpu/nova-core/driver.rs       |  52 ++---
+ drivers/gpu/nova-core/fb.rs           |  31 ++-
+ drivers/gpu/nova-core/gpu.rs          |  38 ++--
+ drivers/gpu/nova-core/nova_core.rs    |   2 +-
+ drivers/pwm/pwm_th1520.rs             |  13 +-
+ include/linux/device/driver.h         |   4 +-
+ rust/Makefile                         |   1 +
+ rust/kernel/alloc/kbox.rs             |  24 ++-
+ rust/kernel/auxiliary.rs              | 142 +++++++++----
+ rust/kernel/cpufreq.rs                |   9 +-
+ rust/kernel/device.rs                 |  61 ++++--
+ rust/kernel/devres.rs                 |   2 +-
+ rust/kernel/dma.rs                    |   2 +-
+ rust/kernel/driver.rs                 |  41 ++--
+ rust/kernel/i2c.rs                    |  61 +++---
+ rust/kernel/io/mem.rs                 | 121 ++++++------
+ rust/kernel/pci.rs                    |  51 +++--
+ rust/kernel/pci/id.rs                 |   2 +-
+ rust/kernel/pci/io.rs                 |  50 ++---
+ rust/kernel/platform.rs               |  52 ++---
+ rust/kernel/types.rs                  |  12 +-
+ rust/kernel/types/for_lt.rs           | 117 +++++++++++
+ rust/kernel/usb.rs                    |  61 +++---
+ rust/macros/for_lt.rs                 | 274 ++++++++++++++++++++++++++
+ rust/macros/lib.rs                    |  12 ++
+ samples/rust/rust_debugfs.rs          |  11 +-
+ samples/rust/rust_dma.rs              |   6 +-
+ samples/rust/rust_driver_auxiliary.rs |  79 +++++---
+ samples/rust/rust_driver_i2c.rs       |  13 +-
+ samples/rust/rust_driver_pci.rs       |  90 ++++-----
+ samples/rust/rust_driver_platform.rs  |   9 +-
+ samples/rust/rust_driver_usb.rs       |  17 +-
+ samples/rust/rust_i2c_client.rs       |  14 +-
+ samples/rust/rust_soc.rs              |   9 +-
+ 40 files changed, 1095 insertions(+), 511 deletions(-)
+ create mode 100644 rust/kernel/types/for_lt.rs
+ create mode 100644 rust/macros/for_lt.rs
+
+
+base-commit: 454257f6d124a92342dcbb7710c03dd6ef96c731
 -- 
-2.52.0
+2.54.0
 
