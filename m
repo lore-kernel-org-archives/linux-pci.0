@@ -1,50 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D9081FC7;
-	Thu, 21 May 2026 21:20:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A9D733987F;
+	Thu, 21 May 2026 21:31:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779398441; cv=none; b=eFE1N2GyylRIpe25b0EbKJ0UD6J6Rf56D4saN05W6Se0bo9S60+eCCdIehtxTNZeU3cvoxRCJLquC9hD2mQEUPlKhAKiVJbx6y5U/ba7CffMjTH1lP8WsYWzQ2yA0z793OklZchlKDRTL3idjIqJfx1cI8dJKBOL8rqLSCgSaA4=
+	t=1779399086; cv=none; b=SaFHzkmT8CezgVRUzsjt2TMCX+SKovlgiJVT3PLCY2HD8BYIc2TIJtwO3fB4rRk/HsuQTOZ6Glqw/kXeBZVvlbkE9J6LdNUJh74kSMbfmqpacy1HJX+COp5wD58G0tQut26ill8zsYVJ6XFxuqWVDtaxraIeoqaScUegI/ruNAI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779398441; c=relaxed/simple;
-	bh=UANmvG2FRmiFNQnGr78SzzAxpZRHuBjFTXMX+ZZKu0w=;
+	s=arc-20240116; t=1779399086; c=relaxed/simple;
+	bh=h8ikakxvqpw5WyOUVceHpvM64IyokaOStkttaCVRUFg=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=divZqz7te7eBW1/50WrgAsw87XegFwNuCELPDSllVqKHx/PM03GfLGmxmJFlY+FNigIB5eIiv+ui/vIQZrn2gF+hMI7PfrRUy7bg4f2Zxy7YJzy9s7CwfHX8o2vovyXzrnMXXsZTMOB3ktgpdLA8DINoqulWNzifTk41fct/y30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ARpPjW+g; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=f1Mcd0JyXuEjlIZgJUtZRst8OUIakyxZyJ+cjOReNACaolnr5PWgl41rNPeNa2K32DHEMM7DT/1xOS9clSMOeVG6RLEqV3wWpksm9ak4Ir+Sdcf0kiYbjDoDf/U7/VFoQ5gv+ENijlbrXnfIF0DQRnLvFdBn6QoFTqucaubWcdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tv8O9OLX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ARpPjW+g"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id E21941F000E9;
-	Thu, 21 May 2026 21:20:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tv8O9OLX"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id F39AD1F000E9;
+	Thu, 21 May 2026 21:31:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779398440;
-	bh=E8es7eKdBSk+6as20dmN2CeIVO8nOP/PPbib2fb2n+A=;
-	h=Date:From:To:Cc:Subject;
-	b=ARpPjW+gP10f402uEoQB9q/bVwwaUbwSOyMWb9kL/tb6/nN/2GhueTzWAu8v40CV0
-	 MvWx+kkevAe/HzlheOo1f61BWThogWlwH8+hiiXSy5QkI1sErglPyJAwjFw4ZgaO8+
-	 +vytwPesYi1zoMUSpBLZcsdCSuIEotYm5gddGB6fJiIhdTj4BfewSMiGhmhGSaBcpU
-	 UG1JGDNCmVvMKiMyq2I4cJa7wUJtEJrb6eKR61W9HhaacoOxwIEsCnq7mTnu1bKMED
-	 VZABY0jq1nEG3J4qn2l130K8uHL5pQFsMz1qXc+fgBLWA7HgPx6Y2SnAgNSedxyNgV
-	 mjFR3f0oduX9Q==
-Date: Thu, 21 May 2026 16:20:38 -0500
+	s=k20260515; t=1779399085;
+	bh=tq+kuMc+QiIEzKRijb2ZvXgAy//G+v1mhZJfU/LS4n0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=Tv8O9OLXEPBkfCCuuxsSqZS+6Bsb+7fPrUiD2mA4bm6j9P1ujSYv9AU93zw5qh9Yv
+	 1T3V+gyCtSG/9uFWAY5zyg1bUu7FsDjM3owiTX5V3qoE9jPHrUIHCb0ZImi6hTBjwt
+	 nviCpsUO40DOCMDmk+GREpA2xkVp71W+3ghkN4g2hTJBPH53VBjqsrxuAlB2BcC/ys
+	 wS6hZFXvXeQN4W5CAzz+r6AqBAKCVdDRbarASPAJIzrAFJ5b6BNHjpfkUW4hZRDGf9
+	 Oaov6wCYIhtV+2Z/Ek/gmOiB/Bw+pm7clsGqUhwILoOKHSUtj9nZv90dG5qeUHXVHL
+	 trRrOwr0MSfhw==
+Date: Thu, 21 May 2026 16:31:23 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Florian Eckert <fe@dev.tdt.de>,
-	Chuanhua Lei <lchuanhua@maxlinear.com>,
-	Hans Zhang <18255117159@163.com>,
-	Jianjun Wang <jianjun.wang@mediatek.com>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Dom Cobley <popcornmix@gmail.com>,
-	Phil Elwell <phil@raspberrypi.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-rpi-kernel@lists.infradead.org
-Subject: [GIT PULL] PCI fixes for v7.1
-Message-ID: <20260521212038.GA186023@bhelgaas>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: jgg@nvidia.com, will@kernel.org, robin.murphy@arm.com, joro@8bytes.org,
+	bhelgaas@google.com, praan@google.com, baolu.lu@linux.intel.com,
+	kevin.tian@intel.com, miko.lenczewski@arm.com,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	dan.j.williams@intel.com, jonathan.cameron@huawei.com,
+	vsethi@nvidia.com, linux-cxl@vger.kernel.org, nirmoyd@nvidia.com
+Subject: Re: [PATCH v6 1/3] PCI: Add pci_ats_required() for CXL.cache capable
+ devices
+Message-ID: <20260521213123.GA186424@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,36 +47,37 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <ag90FlOaljwa0qqU@Asurada-Nvidia>
 
-The following changes since commit 254f49634ee16a731174d2ae34bc50bd5f45e731:
+On Thu, May 21, 2026 at 02:07:34PM -0700, Nicolin Chen wrote:
+> On Thu, May 21, 2026 at 03:57:23PM -0500, Bjorn Helgaas wrote:
+> > On Thu, May 21, 2026 at 01:34:20PM -0700, Nicolin Chen wrote:
+> > > +bool pci_ats_required(struct pci_dev *pdev)
+> > > +{
+> > > +	if (!pci_ats_supported(pdev))
+> > > +		return false;
+> > > +
+> > > +	/* A VF inherits its PF's requirement for ATS function */
+> > > +	if (pdev->is_virtfn)
+> > > +		pdev = pci_physfn(pdev);
+> > > +
+> > > +	return pci_cxl_ats_required(pdev);
+> > 
+> > I acked this before I saw this sashiko feedback, which looks like a
+> > legit issue to me:
+> > 
+> >   Will this VF inheritance logic ever be reached?
+> > 
+> >   According to the PCIe SR-IOV specification (section 9.3.3.1), VFs do
+> >   not implement the ATS Extended Capability, which means pdev->ats_cap
+> >   is always 0 for VFs.
 
-  Linux 7.1-rc1 (2026-04-26 14:19:00 -0700)
+Huh.  I wish sashiko would include the spec revision because that sure
+looks wrong.  In PCIe r7.0, there is no sec 9.3.3.1.  In PCIe r6.0,
+sec 9.3.3.1 is the SR-IOV Extended Capability, which doesn't mention
+ATS.  In both, sec 10.5.1 is the ATS Extended Capability and says both
+PFs and VFs can implement it.
 
-are available in the Git repository at:
+So I think this is OK as-is:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v7.1-fixes-2
-
-for you to fetch changes up to ed831e7ea1a860bdbab3eadeb95f7f73e9d212df:
-
-  PCI: brcmstb: Assign pcie->gen from of_pci_get_max_link_speed() (2026-05-15 13:09:52 -0500)
-
-----------------------------------------------------------------
-
-- Remove obsolete PCIe maintainer addresses (Florian Eckert, Hans Zhang)
-
-- Restore a brcmstb link speed assignment that was inadvertently removed,
-  reducing bcm2712 performance (Florian Fainelli)
-
-----------------------------------------------------------------
-Florian Eckert (1):
-      MAINTAINERS: Remove Chuanhua Lei as PCIe intel-gw maintainer
-
-Florian Fainelli (1):
-      PCI: brcmstb: Assign pcie->gen from of_pci_get_max_link_speed()
-
-Hans Zhang (1):
-      MAINTAINERS: Remove Jianjun Wang as PCIe mediatek maintainer
-
- MAINTAINERS                           | 4 +---
- drivers/pci/controller/pcie-brcmstb.c | 4 +++-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
