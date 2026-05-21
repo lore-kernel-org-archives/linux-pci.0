@@ -1,193 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mail.cjdns.fr (mail.cjdns.fr [5.135.140.105])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9110B3D4117;
-	Thu, 21 May 2026 17:10:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 323FA37475B;
+	Thu, 21 May 2026 17:20:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.135.140.105
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779383438; cv=none; b=gS1iHqrmMnU7SqiBpgNKatnVH6Bwk31Na2TasPiAb1/68EWlzw9lGeLOEPOv3GXL/QxzOF+rydvXg5Z/H/11zxDa35bQNRGlFYNb3NRUShMWlp3XLQXN25uD5+D/kmEQIE0BDKuN0aov0aFlWdhJCDfbmVTSrzD7iftx3YrhLxU=
+	t=1779384011; cv=none; b=bTjqIWWshfWGiZxEnoPjJr0A5pGXEKmQOGs1BLbLawJI+OA/dQXNnsyFo7/K66WL0ckz8+eyicHJkGmphmyfaav60gNGd6AtNJTZCQuIPZFnm31g3IM2jT4/mwe4W9AsMTtNrzqIaN0j+k/ykfjlBOHq3bsfQuWH/0jSIdjROvY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779383438; c=relaxed/simple;
-	bh=/1isw1mdHz0vRKCjclQDSOCqBuwwwsdEYrhFx6Vreto=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=pqUVsy0mI7kjQ4NB059h0WLiATDuha5NP5pjt5uITR8L2wtSHXvWcIjTSmp/LSfXNTsNy45u7S3WTO+Cjz2wecq/0qRGYjBVnAG09fiG+roK/LbIY6q+QsdouNGTzX5V5y3BtWCzDG28U2Bdnkfnk7z7/cJxhCleppqCqZ1mTeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QafJvOeo; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779384011; c=relaxed/simple;
+	bh=+a3wGo8sRThJd6g5H5ApthN34xOnIrvwiId/Vy4N/UU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=uCOO0VUlUJdD0QCHvOUC1TalBZvYLT/vbe6rGGYulUNRARHC0THkigrHlBnvvxqeE8dmV6cIH2NSqq/2jvTN0Tgwi1ZYVFdaYiMf7HFtfacZj+oKadTi7ed8b2QEWECe+gFj2KvJgV6PX4N1HRQzj9xG4fOKSlCeqCHLVQot4ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr; spf=none smtp.mailfrom=cjdns.fr; dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b=htPWj3P4; arc=none smtp.client-ip=5.135.140.105
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cjdns.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=cjdns.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QafJvOeo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A82EA1F000E9;
-	Thu, 21 May 2026 17:10:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779383435;
-	bh=jU/mcdx/nesOs1zaSjw0doWiuiW9lsPo6zsHtxkxd0g=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=QafJvOeoKQjm/UtKCIu1vCxryRKtlSs1U3xlV5OH8ltO7j6q07Dudb/HGjFj6BSBq
-	 fo8WWnYw4T91SH1BCVkCqLAV4qprEWSkb6AqJmqEeFl4KAD0IKs+lx0qmC1wzRtfbe
-	 vl84OZgGKZ9pe5Qy5Rh0gNkc5eWY5CKP9AyTLXG9BU2+jBjUzRTke2LHoLJAjrbfIg
-	 jismNZuRQMrbts0ymELIu9yiXlPBtisjnR452dMDMq3dcotIGzv2soH6lBKTuIlgJU
-	 5MukWBoJ9cDWxatU61OKVeHzRHs2yUhiJU7ZbY0XhYjPBklP5B6eSm8G6We9cB4RLa
-	 C7BGPorroxUMw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 2/9] dmaengine: Add safe API to combine configuration
- and preparation
-Reply-To: sashiko-reviews@lists.linux.dev
-To: Frank.Li@oss.nxp.com
-Cc: vkoul@kernel.org, imx@lists.linux.dev, Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260521-dma_prep_config-v7-2-1f73f4899883@nxp.com>
-References: <20260521-dma_prep_config-v7-2-1f73f4899883@nxp.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 17:10:35 +0000
-Message-Id: <20260521171035.A82EA1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=cjdns.fr header.i=@cjdns.fr header.b="htPWj3P4"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 19C7045B38D;
+	Thu, 21 May 2026 19:20:01 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cjdns.fr; s=dkim;
+	t=1779384007; h=from:subject:date:message-id:to:cc:mime-version:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=JUupb00qUDRStdXnj1nJ2QrJYhHtRgXvfohXbm+8Fh4=;
+	b=htPWj3P4SepeKOd039P+AHbaIDwd4z7JhJf8csN7+QH/LcQJBt3sq+T6nRfv9/bXwbrgYv
+	De+6nS2LwB748PzZH0Kd5MC6mivwOaykykP5bygfUNYDDDuaicrEJyyfUupE53tKLJA+tb
+	p1QqWYn3NLMkVQhOAGLXKUPB+zaS5yZDX48M9TulOadQKsl7kh+e9tSQV/lc2jxGaRqAcN
+	NL9abXTJ/RZJL2rjiHEFC9J2+MNRc81PAvqnsjSpYr8HH9vEXDCIEwA/SevsJPzu5gO4la
+	Ti+3g+QvfCSmWEA1GcNxSXMr1ZcNrETVdG4tCwkt3OvmRsfGjJVozGZoyXX38w==
+From: Caleb James DeLisle <cjd@cjdns.fr>
+To: linux-pci@vger.kernel.org
+Cc: linux-mips@vger.kernel.org,
+	naseefkm@gmail.com,
+	ryder.lee@mediatek.com,
+	helgaas@kernel.org,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	ansuelsmth@gmail.com,
+	linux-mediatek@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Caleb James DeLisle <cjd@cjdns.fr>
+Subject: [PATCH v9 1/3] PCI: mediatek: Use actual physical address instead of virt_to_phys()
+Date: Thu, 21 May 2026 17:19:49 +0000
+Message-Id: <20260521171951.1495781-2-cjd@cjdns.fr>
+In-Reply-To: <20260521171951.1495781-1-cjd@cjdns.fr>
+References: <20260521171951.1495781-1-cjd@cjdns.fr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Last-TLS-Session-Version: TLSv1.3
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-New issues:
-- [High] Calling `device_config` or `device_prep_slave_sg` while holding a =
-spinlock with interrupts disabled (`spin_lock_irqsave`) will cause lockups =
-and `WARN_ON_ONCE` in drivers that use bottom-half locks.
-- [Medium] `spinlock_flags` may be used uninitialized and the lock may beco=
-me unbalanced due to re-evaluation of `chan->device->device_prep_config_sg`=
- across an opaque function call.
+The driver previously used virt_to_phys() on the ioremapped register base
+(port->base) to compute the MSI message address. Using virt_to_phys() on an
+IO mapped address is incorrect because it expects a kernel virtual address.
 
-Pre-existing issues:
-- [Critical] The function `dmaengine_prep_config_single_safe` passes a stac=
-k-allocated `scatterlist` to the DMA engine driver, which causes a stack us=
-e-after-free if the driver defers processing the scatterlist.
---
+To fix it, store the physical start of the I/O register region in
+mtk_pcie_port->phys_base and use it to build the MSI address. This replaces
+the incorrect virt_to_phys() usage and ensures MSI addresses are generated
+correctly.
 
-commit d2363736f5c7b002b0f30c81cef1791d2f12abd2
-Author: Frank Li <Frank.Li@nxp.com>
-Subject: dmaengine: Add safe API to combine configuration and preparation
+Fixes: 43e6409db64d ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Tested-by: Caleb James DeLisle <cjd@cjdns.fr>
+---
+ drivers/pci/controller/pcie-mediatek.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-Introduce new safe APIs to atomically combine slave configuration and trans=
-fer
-preparation. The new functions fall back to calling slave_config and
-prep_slave_sg under a channel spinlock if the device doesn't support the
-atomic callback.
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 75722524fe74..c503fbd774d0 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -175,6 +175,7 @@ struct mtk_pcie_soc {
+ /**
+  * struct mtk_pcie_port - PCIe port information
+  * @base: IO mapped register base
++ * @phys_base: Physical address of the I/O register base region
+  * @list: port list
+  * @pcie: pointer to PCIe host info
+  * @reset: pointer to port reset control
+@@ -196,6 +197,7 @@ struct mtk_pcie_soc {
+  */
+ struct mtk_pcie_port {
+ 	void __iomem *base;
++	phys_addr_t phys_base;
+ 	struct list_head list;
+ 	struct mtk_pcie *pcie;
+ 	struct reset_control *reset;
+@@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 	phys_addr_t addr;
+ 
+ 	/* MT2712/MT7622 only support 32-bit MSI addresses */
+-	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
++	addr = port->phys_base + PCIE_MSI_VECTOR;
+ 	msg->address_hi = 0;
+ 	msg->address_lo = lower_32_bits(addr);
+ 
+@@ -520,7 +522,7 @@ static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ 	u32 val;
+ 	phys_addr_t msg_addr;
+ 
+-	msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
++	msg_addr = port->phys_base + PCIE_MSI_VECTOR;
+ 	val = lower_32_bits(msg_addr);
+ 	writel(val, port->base + PCIE_IMSI_ADDR);
+ 
+@@ -953,6 +955,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+ 	struct mtk_pcie_port *port;
+ 	struct device *dev = pcie->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
++	struct resource *res;
+ 	char name[20];
+ 	int err;
+ 
+@@ -961,7 +964,14 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+ 		return -ENOMEM;
+ 
+ 	snprintf(name, sizeof(name), "port%d", slot);
+-	port->base = devm_platform_ioremap_resource_byname(pdev, name);
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
++	if (!res) {
++		dev_err(dev, "failed to get port%d base\n", slot);
++		return -EINVAL;
++	}
++
++	port->phys_base = res->start;
++	port->base = devm_ioremap_resource(&pdev->dev, res);
+ 	if (IS_ERR(port->base)) {
+ 		dev_err(dev, "failed to map port%d base\n", slot);
+ 		return PTR_ERR(port->base);
+-- 
+2.39.5
 
-> diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-> index defa377d2ef54..6fe46c0c94527 100644
-> --- a/include/linux/dmaengine.h
-> +++ b/include/linux/dmaengine.h
-
-[ ... ]
-
-> +static inline struct dma_async_tx_descriptor *
-> +dmaengine_prep_config_sg_safe(struct dma_chan *chan, struct scatterlist =
-*sgl,
-> +			      unsigned int sg_len,
-> +			      enum dma_transfer_direction dir,
-> +			      unsigned long flags,
-> +			      struct dma_slave_config *config)
-> +{
-> +	struct dma_async_tx_descriptor *tx;
-> +	unsigned long spinlock_flags;
-> +
-> +	if (!chan || !chan->device)
-> +		return NULL;
-> +
-> +	if (!chan->device->device_prep_config_sg)
-> +		spin_lock_irqsave(&chan->lock, spinlock_flags);
-> +
-> +	tx =3D dmaengine_prep_config_sg(chan, sgl, sg_len, dir, flags, config);
-
-[Severity: High]
-Will this cause lockups or warnings in drivers that use bottom-half locks?
-
-Since spin_lock_irqsave() disables hard interrupts, calling into
-dmaengine_prep_config_sg() invokes the underlying DMA driver's
-device_prep_slave_sg() or device_config() callbacks. Some drivers use
-bottom-half locks in these implementations:
-
-dmaengine_prep_config_sg_safe()
-  spin_lock_irqsave()
-    dmaengine_prep_config_sg()
-      chan->device->device_prep_slave_sg()
-        td_prep_slave_sg()
-          td_desc_get()
-            spin_lock_bh()
-
-When the driver eventually calls spin_unlock_bh(), it invokes
-local_bh_enable(), which triggers a WARN_ON_ONCE(irqs_disabled()) because
-hard interrupts were disabled by the outer spin_lock_irqsave().
-
-> +
-> +	if (!chan->device->device_prep_config_sg)
-> +		spin_unlock_irqrestore(&chan->lock, spinlock_flags);
-
-[Severity: Medium]
-Could this lead to an uninitialized variable usage or an unbalanced lock?
-
-The condition checking chan->device->device_prep_config_sg is evaluated
-twice, before and after calling dmaengine_prep_config_sg(). Because that
-function invokes opaque function pointers passing chan, the compiler must
-assume memory reachable through chan might be modified.
-
-This forces the compiler to consider a control flow path where the condition
-is initially false (skipping spin_lock_irqsave and leaving spinlock_flags
-uninitialized) but evaluates to true after the opaque call, leading to
-spin_unlock_irqrestore() with uninitialized flags and an unbalanced lock.
-
-Even if this doesn't happen dynamically, it can emit a -Wmaybe-uninitialized
-warning that breaks builds with -Werror. Caching the condition in a local
-boolean variable would prevent this.
-
-> +
-> +	return tx;
-> +}
-> +
-> +/**
-> + * dmaengine_prep_config_single_safe - prepare a single-buffer DMA trans=
-fer
-> + *                                     with atomic slave configuration u=
-pdate
-
-[ ... ]
-
-> +static inline struct dma_async_tx_descriptor *
-> +dmaengine_prep_config_single_safe(struct dma_chan *chan, dma_addr_t buf,
-> +				  size_t len, enum dma_transfer_direction dir,
-> +				  unsigned long flags,
-> +				  struct dma_slave_config *config)
-> +{
-> +	struct scatterlist sg;
-> +
-> +	sg_init_table(&sg, 1);
-> +	sg_dma_address(&sg) =3D buf;
-> +	sg_dma_len(&sg) =3D len;
-> +
-> +	return dmaengine_prep_config_sg_safe(chan, &sg, 1, dir, flags, config);
-
-[Severity: Critical]
-This is a pre-existing issue, but does passing a stack-allocated scatterlist
-to the driver cause a stack use-after-free if the driver defers processing?
-
-The scatterlist sg is allocated on the stack and passed down to the
-underlying DMA engine's device_prep_slave_sg() callback. While some drivers
-consume the scatterlist synchronously, others save the pointer to process
-it asynchronously later:
-
-uniphier_mdmac_prep_slave_sg()
-  md->sgl =3D sgl;
-
-uniphier_mdmac_handle()
-  dereferences md->sgl
-
-Because dmaengine_prep_config_single_safe() returns immediately, the stack
-frame is destroyed. When the DMA driver later accesses the saved pointer
-from an IRQ context, it accesses freed stack memory.
-
-This pattern already exists in dmaengine_prep_slave_single(), but
-replicating it here propagates the regression to the new API.
-
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521-dma_prep_c=
-onfig-v7-0-1f73f4899883@nxp.com?part=3D2
