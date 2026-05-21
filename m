@@ -1,126 +1,212 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59F8F37DEB7;
-	Thu, 21 May 2026 16:39:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE787383993
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 16:46:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779381578; cv=none; b=WdN/f0yifjHbAurW9R0BCFljH9ccoCxtHp8yQvfFdJAaaektVceHtVcICr9Mfqi8nJVUullIPCgM71fRcL2EFgC7P++4aobeNpDtTHWp/qzKb4KkY/DQNTbMyWtkR5vROfp+BgBcqCOAJrLwsTDdlNjDNOuaOQLRJVOQLGZ+rx8=
+	t=1779381999; cv=none; b=AQY1yvSHtpKOA4AXsvLg0LucMRfdHWfeLuclVi+qCqCLe+DAGPR20a9JenbGjdXIYLKWog9JjSVE6HUVcF+qyjOCiw77qPSg7mf3afbft+sJLhiIV27SMKmI2b4fSJmh+zkDFBjmBX5peRwfZ48HbFMVDFqd3zuD9wJM27Wsoys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779381578; c=relaxed/simple;
-	bh=n3MuwHapM/hrBODI2X5tV07YNVPlsrN5A5CvPe5jga4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=C8E0dPFNXcvpA03MR20MtyKA9XSfc4OnhH15Y/EnOUiDgJCZU7+1wDo6+3VS6fK/BY/lcfmSoRoeZoNpMUhjAyZfvCKj51X1gU8RcNBzoDdXBWVE2u6NcIVmGLOAVybCEw8y23MsUw3pKZMRoas5ReBmRgKPCjLsudmIfAbW92M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=clIereZg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779381999; c=relaxed/simple;
+	bh=55HpdrZ1XWqM3uwC+a47+vakAvshOA/Toys7NpGVJzc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Num88/U3hTEavpzEraO4amto78Q9+7OgCwDNon4YQS3dP0dAYGbwYmHapJlq6YxUdkUhrFZEczzgLT00TOiR67zaLApKFFnPDaIdRZNZW19q2IIQPnjvRjnvci2I7FUKtH74P+QBOxJHpKp1DYoHHdBd1w8LhVyxrgJTwGcjIVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hAiFXflX; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="clIereZg"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id D18C71F000E9;
-	Thu, 21 May 2026 16:39:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779381577;
-	bh=2a6wwPpW1ojECBUISg/hzE0ca4S14xjGEKu518bKBiM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=clIereZgjuHtoej9f7GxvzvbO0q0gsqdB7mQspBJcHD2sxkNEY1ulMsi/zCb9rEPg
-	 VM/0t0q8028Z/Gt3Gx9Q/hukjwLkX2Co7L2UeOLjZR9qImv+AqLvU2MHH6l/1tP2Kg
-	 HwqPaVLykrNrAsQ3IFpPrCB0OJmYe3xO52vwaf0iSYQGrXnNtFsp37lI2ePk9WZogO
-	 XCXC8o8cJSnkJwttpa5JsCCk/83yrktLY5fX3LDpq/ey9K2hNX/1D/I/5gL3drsxbM
-	 mifICOQlzA8YCDzf13/7U5wmIAJXX+TZw5/c/QIzzakvB7G4K+flOgQoZO0iEud0Wo
-	 WjVn3ukIrnRDw==
-Date: Thu, 21 May 2026 11:39:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Qiang Ma <maqianga@uniontech.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/VPD: Disable VPD for Lenovo Realtek RTL8111xP devices
-Message-ID: <20260521163935.GA169388@bhelgaas>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hAiFXflX"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-490388fd0dbso8750465e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 09:46:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779381995; x=1779986795; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NA/nM16UoxaTsk3A7SWQL7q3HkgK647mNtY2rDcRyyc=;
+        b=hAiFXflXTEbRl6U5Air/vBGryJ1P7DUwv5y5hFcBfrvyOOjvwLAPWk6boHEMfrP+03
+         djrSF/MmhRRc4oKAARffcHojm9lrMfH/yxDwEmaCsT4BFCL3flmfjoZXGq6TFSC3TeHl
+         JsiTufiR6et1mz+pI8XV2U+9x+ymMfxMCAW0bX+y+95+67AVxLZvt8B0iLXkU9d/aiqe
+         9TLZTYgekPiyf54s88p+J1C3j1Lc4MyofWrYIv5jQC1MQsWTxKDTJulTH9sW3bkKM6Er
+         8ENfEnS8Rye+RBlr7U5dk7H7qISkWK2Sz6IRcVfJFcdljcS2gaAHhL/dDTECxI2slWnI
+         yang==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779381995; x=1779986795;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=NA/nM16UoxaTsk3A7SWQL7q3HkgK647mNtY2rDcRyyc=;
+        b=U3AmzqzL6QHyrGzuBT7w2rwPtUH2SPngcRdo4IN/cHVll3MYT5DfP6Q4X+LR7LcsVj
+         gyTwtnKEx+D38ud3A7i0/HMMxtUhwJI5tWLmqB0OTCTJE4Gn8MnUnM+TVmiOONJxsFw+
+         9GnOajZusIRL8EbLlxcpmsgaHGXgYha8EmafHK8CxdOvgM6ntMNvQ2eHzqVf1ASGEpY6
+         +DQepAiA2H2Iy0LMK0V35GdEFQqyw28K9RBm31J8YjRPcFahw9EZzS5XgL6Ht6gNxciN
+         ef9TV/417h5BgLDJ2Q+4Utl/dAIF9Kdw1+gEIQWyoNt8gjAgq+WTkWA3Qcsk3Y5FX+xU
+         4xfA==
+X-Forwarded-Encrypted: i=1; AFNElJ956J9IckZ5Tgf1H9sXKN2slILYSy+ITwtkhFIAv+MxK5s4Ns5S6tTVuBRXgZFEV1xL+0zQbdMeKW4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxUcpGcPPT0budUlcxTyytdqEFucojmNComJfZkTqbEvBlsu3kC
+	fVbd/93h5vPw84qHiTwIDEaT52AgcDMo/abr13K5cUNGZGMP306bphR5
+X-Gm-Gg: Acq92OGfLOtqGkQbZOu6T/fc5gbqIZq8ZYlnh/v6d3GwanKwi1n85348S2vtUoHylat
+	GHoKvK16LxjEJe/OHTL+OsNAShvfMt8gjEsPhGhg9767ziDX4Ko53Amk3uSV3L09Tp99tAX1Vh5
+	znCIfLjRAQh6SSOW8c1uogjVUeYFZfLPsJvO9QqqgvVs614lgWUFejSG6tbhRb9kUfcD74yteSd
+	1H8j2hWGtDdsd6Ud8SHOChlGm8MK+l6+HPt5Gh4/IfIf1AzAFv2NjFm5XEcCfocmMDAvryLgFy2
+	epBxtDagXyZsdBFjLSGnccpVdnJTQWiXn/D+T33T50vwZhE4183aTccaXCymRxPP/FFVvWioa+e
+	7Kl9oKOfK/1gqmFBTzv8kHPvJmKQYiLtyPOpDhBMK+iIZStEA188FmKSRekf2nvil8XnFvle5CK
+	vPD/zjAGNpkKx55br0Fjk1U7fLdLliyeZGoL7twBwaf5SK3sQ5PrlJn9g2Ocz73qci
+X-Received: by 2002:a05:600c:45c6:b0:488:ac01:72de with SMTP id 5b1f17b1804b1-49036033502mr53623425e9.5.1779381994891;
+        Thu, 21 May 2026 09:46:34 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-49035ecac15sm31613075e9.6.2026.05.21.09.46.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 May 2026 09:46:34 -0700 (PDT)
+Date: Thu, 21 May 2026 17:46:31 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Kees Cook <kees@kernel.org>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, Pengpeng Hou
+ <pengpeng@iscas.ac.cn>, stable@vger.kernel.org, Petr Pavlu
+ <petr.pavlu@suse.com>, Richard Weinberger <richard@nod.at>, Anton Ivanov
+ <anton.ivanov@cambridgegreys.com>, Johannes Berg
+ <johannes@sipsolutions.net>, "Rafael J. Wysocki" <rafael@kernel.org>, Len
+ Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>, Gabriel Somlo
+ <somlo@cmu.edu>, "Michael S. Tsirkin" <mst@redhat.com>, Jani Nikula
+ <jani.nikula@linux.intel.com>, Joonas Lahtinen
+ <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>, Bart Van Assche <bvanassche@acm.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Laurent
+ Pinchart <laurent.pinchart@ideasonboard.com>, Hans de Goede
+ <hansg@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Bjorn
+ Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Daniel Lezcano <daniel.lezcano@kernel.org>,
+ Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby
+ <jirislaby@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jason Wang
+ <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Eugenio
+ =?UTF-8?B?UMOpcmV6?= <eperezma@redhat.com>, Jason Baron
+ <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>, Tiwei Bie
+ <tiwei.btw@antgroup.com>, Benjamin Berg <benjamin.berg@intel.com>, Ilpo
+ =?UTF-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, "David E. Box"
+ <david.e.box@linux.intel.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>,
+ Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Peter Zijlstra
+ <peterz@infradead.org>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik
+ <gor@linux.ibm.com>, Sean Christopherson <seanjc@google.com>, Paolo Bonzini
+ <pbonzini@redhat.com>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar
+ <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen
+ <dave.hansen@linux.intel.com>, x86@kernel.org, "H. Peter Anvin"
+ <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>, Frank Li
+ <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen
+ <samitolvanen@google.com>, Aaron Tomlin <atomlin@atomlin.com>, Alexander
+ Potapenko <glider@google.com>, Marco Elver <elver@google.com>, Dmitry
+ Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>,
+ John Johansen <john.johansen@canonical.com>, Paul Moore
+ <paul@paul-moore.com>, James Morris <jmorris@namei.org>, "Serge E. Hallyn"
+ <serge@hallyn.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
+ dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
+ kasan-dev@googlegroups.com, linux-mm@kvack.org, apparmor@lists.ubuntu.com,
+ linux-security-module@vger.kernel.org, linux-um@lists.infradead.org,
+ linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
+ qemu-devel@nongnu.org, intel-gfx@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
+ linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-serial@vger.kernel.org,
+ linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+ virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
+ linux-arch@vger.kernel.org, netdev@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 01/11] params: bound array element output to the
+ caller's page buffer
+Message-ID: <20260521174631.71a06440@pumpkin>
+In-Reply-To: <20260521133326.2465264-1-kees@kernel.org>
+References: <20260521133315.work.845-kees@kernel.org>
+	<20260521133326.2465264-1-kees@kernel.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260521094138.1634411-1-maqianga@uniontech.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Thu, May 21, 2026 at 05:41:38PM +0800, Qiang Ma wrote:
-> The Lenovo 17aa:507e RTL8111xP multi-function device exposes a VPD
-> capability on all functions, but the VPD storage is not usable.
-> Function 0 returns an invalid first tag and functions 1-4 never complete
-> VPD transactions.
+On Thu, 21 May 2026 06:33:14 -0700
+Kees Cook <kees@kernel.org> wrote:
 
-"Lenovo 17aa:507e" suggests that this affects Vendor ID Lenovo and
-Device ID 0x507e, but those are actually the *Subsystem* IDs.
-
-It seems likely that the problem is with the way the device is
-integrated into Lenovo systems, but the primary hook here is the
-PCI_VENDOR_ID_REALTEK and 0x8168 etc., so I think we should say
-something like:
-
-  When integrated into some Lenovo systems, the Realtek RTL8111xP
-  multi-function device advertises invalid VPD Capabilities.
-
-> This produces noisy dmesg output when userspace reads the VPD sysfs
-> attribute, including:
+> From: Pengpeng Hou <pengpeng@iscas.ac.cn>
 > 
-> [   16.654155] r8169 0000:02:00.0: invalid VPD tag 0x00 (size 0) at offset 0; assume missing optional EEPROM
-> [   16.790913] serial 0000:02:00.1: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
-> [   16.931963] serial 0000:02:00.2: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
-> [   17.071445] pci 0000:02:00.3: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
-> [   17.210910] ehci-pci 0000:02:00.4: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
-
-Timestamps are pointless distraction here.  Drop them and indent the
-quoted material two spaces.  Two lines is probably enough.
-
-> VPD is optional. Disable VPD for this exact subsystem and revision so the
-> PCI core does not expose a broken VPD sysfs file that cannot be read.
+> param_array_get() appends each element's string representation into the
+> shared sysfs page buffer by passing buffer + off to the element getter.
 > 
-> Signed-off-by: Qiang Ma <maqianga@uniontech.com>
+> That works for getters that only write a small bounded string, but
+> param_get_charp() and similar helpers format against PAGE_SIZE from the
+> pointer they receive. Once off is non-zero, an element getter can
+> therefore write past the end of the original sysfs page buffer.
+> 
+> Collect each element into a temporary PAGE_SIZE buffer first and then
+> copy only the remaining space into the caller's page buffer.
+
+Should this be using a 4k buffer on all architectures?
+Initially perhaps just using a different name for the constant until
+all the associated PAGE_SIZE limits have been removed.
+
+-- David
+
+> 
+> Cc: stable@vger.kernel.org
+> Reviewed-by: Petr Pavlu <petr.pavlu@suse.com>
+> Signed-off-by: Pengpeng Hou <pengpeng@iscas.ac.cn>
+> Signed-off-by: Kees Cook <kees@kernel.org>
 > ---
->  drivers/pci/vpd.c | 26 ++++++++++++++++++++++++++
->  1 file changed, 26 insertions(+)
+>  kernel/params.c | 26 ++++++++++++++++++++------
+>  1 file changed, 20 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-> index 153394a652d3..492e0d669ea8 100644
-> --- a/drivers/pci/vpd.c
-> +++ b/drivers/pci/vpd.c
-> @@ -597,6 +597,32 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_blacklist_vpd
->  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS, 0x0031,
->  			       PCI_CLASS_BRIDGE_PCI, 8, quirk_blacklist_vpd);
->  
-> +/*
-> + * The Lenovo 17aa:507e RTL8111xP multi-function device advertises VPD
-> + * on all functions, but the VPD data is not usable.  Function 0 returns
-> + * an invalid first tag and functions 1-4 never complete VPD accesses.
-
-Same here.  It's a Realtek device that happens to be integrated into
-some Lenovo platforms.
-
-> + */
-> +static void quirk_lenovo_realtek_rtl8111xp_no_vpd(struct pci_dev *dev)
-> +{
-> +	if (dev->revision != 0x0e ||
-> +	    dev->subsystem_vendor != PCI_VENDOR_ID_LENOVO ||
-> +	    dev->subsystem_device != 0x507e)
-> +		return;
-> +
-> +	dev->vpd.len = PCI_VPD_SZ_INVALID;
-> +	pci_warn(dev, FW_BUG "disabling VPD access (can't determine size of non-standard VPD format)\n");
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8168,
-> +			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816a,
-> +			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816b,
-> +			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816c,
-> +			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816d,
-> +			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
-> +
->  static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+> diff --git a/kernel/params.c b/kernel/params.c
+> index 74d620bc2521..752721922a15 100644
+> --- a/kernel/params.c
+> +++ b/kernel/params.c
+> @@ -475,22 +475,36 @@ static int param_array_set(const char *val, const struct kernel_param *kp)
+>  static int param_array_get(char *buffer, const struct kernel_param *kp)
 >  {
->  	int chip = (dev->device & 0xf000) >> 12;
-> -- 
-> 2.20.1
-> 
+>  	int i, off, ret;
+> +	char *elem_buf;
+>  	const struct kparam_array *arr = kp->arr;
+>  	struct kernel_param p = *kp;
+>  
+> +	elem_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+> +	if (!elem_buf)
+> +		return -ENOMEM;
+> +
+>  	for (i = off = 0; i < (arr->num ? *arr->num : arr->max); i++) {
+> -		/* Replace \n with comma */
+> -		if (i)
+> -			buffer[off - 1] = ',';
+>  		p.arg = arr->elem + arr->elemsize * i;
+>  		check_kparam_locked(p.mod);
+> -		ret = arr->ops->get(buffer + off, &p);
+> +		ret = arr->ops->get(elem_buf, &p);
+>  		if (ret < 0)
+> -			return ret;
+> +			goto out;
+> +		ret = min(ret, (int)(PAGE_SIZE - 1 - off));
+> +		if (!ret)
+> +			break;
+> +		/* Replace the previous element's trailing newline with a comma. */
+> +		if (i)
+> +			buffer[off - 1] = ',';
+> +		memcpy(buffer + off, elem_buf, ret);
+>  		off += ret;
+> +		if (off == PAGE_SIZE - 1)
+> +			break;
+>  	}
+>  	buffer[off] = '\0';
+> -	return off;
+> +	ret = off;
+> +out:
+> +	kfree(elem_buf);
+> +	return ret;
+>  }
+>  
+>  static void param_array_free(void *arg)
+
