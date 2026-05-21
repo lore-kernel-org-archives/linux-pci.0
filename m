@@ -1,111 +1,99 @@
-Received: from mail-qt1-f228.google.com (mail-qt1-f228.google.com [209.85.160.228])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D99433A9FE
-	for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 22:45:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2BE738D;
+	Thu, 21 May 2026 00:01:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779317152; cv=none; b=AGXlzO1UKiYrEI8EYIXokhvx1d55l+mwCbpjV+7Viq4AqPiQlc8TDL/W95Nyr0Xv0eCDuCLrTN9DF6Tuey8AXCXNaz0aE3vw5ogQrddu73J1kR5TN6Au0hnIvNRzOI+6NZecUGqfQWQxhWV+XoHiXdNXi8lOGBNj8gU3/Jwijs4=
+	t=1779321666; cv=none; b=kuWY2xCToifQ9Vp/d2WjA3Rcne+cFPNWyjpydYEdQLzFDLfR17nrK8c7c2SObi0DZnyVCQUN0eonn4ZRY55zJThFhO9K5K8LpNhsePqZKv86Q1O9SnwCSxc8x7oaNQ0Y8g5ucFc2m0G4fMlGIXaRjth0yu/MCfB8sU/XwqJDsO8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779317152; c=relaxed/simple;
-	bh=NL1DLuFEKLwlX611De6uZFVhrhG8WqHFPsk3nbBe+3g=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References; b=hP/DZCseVvWHd6co1FDiJX+KNK+AduAeO2GEZcv4rsb8BaNcTYsbN1l0j7EEMGR1/sADIiJkPDw+2ZfKI3fqHjWgCcWzZywY62nD81o/tEWwMM6na4FatClkdM3AXnWrrrEywZCWWYp8BquMBfI4g6tObV6LxQXVgLmycGxNR6M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=YRWbe3Pq; arc=none smtp.client-ip=209.85.160.228
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arista.com
+	s=arc-20240116; t=1779321666; c=relaxed/simple;
+	bh=pwSJSYU9cznATXMgM3xhGDH1nDlH7PgqH8npGdJLWoQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VrwfHIs7Zj70/cr6iCKXdi1S7kUuxfSXjXfAIHih8DEqyy3uw4JVe7o66WGWhWxt7Wwp3Re3sc/ljs8nD29SKN2UBLf9H8Ks7CfM0/cJnMvATvbY8UB5pAm/Vur4XXHXucB9b8IyRWseJoUGQ99ZEnlfc/hjAO3DYCq2ZiCvi9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IIuWImD+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="YRWbe3Pq"
-Received: by mail-qt1-f228.google.com with SMTP id d75a77b69052e-50faeb8317bso49612801cf.2
-        for <linux-pci@vger.kernel.org>; Wed, 20 May 2026 15:45:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779317150; x=1779921950;
-        h=content-transfer-encoding:references:in-reply-to:message-id:date
-         :subject:cc:to:from:dkim-signature:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=0ikrSU9XktaZzVYO+3LJLhuj5lBGwDhqjYZ9LS64/4I=;
-        b=I+cfOSL8WZyV5JHKIzMFgNwUS3gMXWy+JKSanmNfQYrguQqY/60ng48kQeplVpXCPS
-         0162rJ8OXltkzZTIknXZs+mKt5N5oEfOde/LnG836sxxH6KIEXeQLZ4LuO+IBjEP7B3C
-         IZr4/CNPDP/OtTZU6QLGNvyeRTqcxx50/phrqUPawjXxrLlRNFQrXY9JNf7K/m3EEg24
-         89FHEAhEYtClRL2gQY70j4Y+v+qVBW7SvXd90vpem7LMqNSFbzr/jmvZ33zRu0l3jiod
-         DUUzaaKd2PwV5hOR2BR7Vd+eA6bB1dBiK4L5+KmdnpCpb8dP+lCgC26gglrQxcT7lPE5
-         NbQA==
-X-Forwarded-Encrypted: i=1; AFNElJ82ElFiiZTHnzX3vaL4geT9ggjPFRiOI5wMGTQvXwGYWNge+EICKQ7hDDOcxCGhcj4XD4MWSfniSY8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxi4d6EpB/WsD8tkpEk5dQRMmvp7dgK62rVeAoHAuGeBYkcpPOH
-	WierUYGM675P0MUtwyOJDhnQlvLataVhQftDsPvg+yb6L3nybHd+seA4vq0HzCcLeaqbejpbiW1
-	g4PKK/x5Jnfp6kcowyXFi/TWIbI7FYajr1Q==
-X-Gm-Gg: Acq92OE1ArGn7isq9CXBddNnNIdFOyHTl+7a5cprJwO6IHDtd2QBbiP/5/9F0Ue7L7N
-	Eh4bLvs/dQheIqbvwYawlTNcfk3qcIQ5XtZBUAeMfS62LbbQ7yxa/TLcKP7ucpiFX3E7kT0zrk/
-	GYIllz7SSYNOnxkQRB0GK/120USuycpmcMJnz1d/B9S3YzvEqiO5YYImtyvX2DZGLES7xs/Pr1+
-	DHnroiowfafVe4BMf99RSp3g5tK+nLxqIsk69XVE7MJ3zl4KQVOyKCeMzOHhlg+gk7vY4joXJnF
-	923DHOLUvmS93tkrDF0vNeuQ1YjRYy4r0L7LHJBaKSLQDoRMACZxn2Gh0q4AsA4XGpBk6KR0mmW
-	v9EdlX9ze5wgZGwq7FMKr+S7d9T2lWYMPk3aqrWa4LUYI
-X-Received: by 2002:a05:622a:512:b0:510:141d:9d03 with SMTP id d75a77b69052e-516c544a603mr6986401cf.7.1779317150070;
-        Wed, 20 May 2026 15:45:50 -0700 (PDT)
-Received: from smtp.aristanetworks.com ([74.123.28.25])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-8ca361896bdsm10753296d6.21.2026.05.20.15.45.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 May 2026 15:45:50 -0700 (PDT)
-X-Relaying-Domain: arista.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arista.com;
-	s=Arista-A; t=1779317149;
-	bh=0ikrSU9XktaZzVYO+3LJLhuj5lBGwDhqjYZ9LS64/4I=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YRWbe3PqxTnFYmIgjr++Pr9fc9OzNzYSt6BUETEzVT3CurIFVtVJsAJhzOP+t8/KL
-	 yhPbtbjDf6W7PsR9ijEOS8hFwpzveqO/zR3fJKzN4vMU44hmsrNunbtMc6KlmwW8NS
-	 endWgVqpNgfns5S08cyk0EBpR8yrRPaRpvOUPxxEDKzmIWN5GzhmZrDgywsmJpaUAG
-	 cQZnLjxu3v4Q0oZKVrWC4amr2hx0austHmwbbOlHUpftZh6VxjUcPDFIr5G08fBhix
-	 UwLCdstd0xLOIl/yNrGumqLIu+vu3bUmBN/LnYSIa4tpeYCyGiJrke2MatjMySxbC5
-	 eeNBOOIOF+jwg==
-Received: from gianfranco-dutka-usb-uas.sjc.aristanetworks.com (dhcp-224-35-225.sjc.aristanetworks.com [10.224.35.225])
-	by smtp.aristanetworks.com (Postfix) with ESMTP id 33AC5100607;
-	Wed, 20 May 2026 22:45:49 +0000 (UTC)
-X-SMTP-Authentication: Allow-List-permitted
-X-SMTP-Authentication: Allow-List-permitted
-From: Gianfranco Dutka <gianfranco.dutka@arista.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gianfranco Dutka <gianfranco.dutka@arista.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/sysfs: NULL res_attr slot after kfree as defence against double-remove
-Date: Wed, 20 May 2026 15:45:49 -0700
-Message-ID: <20260520224549.3304374-1-gianfranco.dutka@arista.com>
-In-Reply-To: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
-References: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
-Content-Transfer-Encoding: 8bit
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IIuWImD+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC1891F000E9;
+	Thu, 21 May 2026 00:01:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779321665;
+	bh=0mTsg7wDVrJ601hu11hXIoijakWFRj85pr7MRpWzKtQ=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IIuWImD+8zJPbkHaoBy7+tj+aukhpvm4G2ixzNIFQY3yJGH63evu97vo8mRz5Ur18
+	 fDvKFUPxr8rYLaGIdRRsO4u6kg2Ka41Ee/zVC7pnNLoONopnUBMoGv6UJzHRUenqGH
+	 vVHcs0DSlz7drbzahWnU5l0phkxjwnvsFXI6NtfpdmK+rqXGlTXwRUVb0q8RJpAJ2K
+	 Xxo7YVZV/SYpx9lXoYyPT9eEsF8utFJFP27C6XvVHPwnDWiUTeWbNseHfNswBWvtmZ
+	 ZDKYptRgbgkOjW2ZdMHihIhi7qM1gAx5+feYLg8YfneXp3cy0Ll71QxW6d06dXvzjx
+	 A+C6BxPxeWTIQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 2/9] dmaengine: Add safe API to combine configuration
+ and preparation
+Reply-To: sashiko-reviews@lists.linux.dev
+To: Frank.Li@oss.nxp.com
+Cc: dmaengine@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, vkoul@kernel.org, imx@lists.linux.dev
+In-Reply-To: <20260520-dma_prep_config-v6-2-06e49b7acb38@nxp.com>
+References: <20260520-dma_prep_config-v6-2-06e49b7acb38@nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 21 May 2026 00:01:04 +0000
+Message-Id: <20260521000104.CC1891F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thanks for the review.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Critical] Stack-allocated scatterlist in dmaengine_prep_config_single_sa=
+fe() leads to use-after-free when consumed asynchronously by DMA drivers.
+--
 
-Both findings concern code paths I have not independently
-debugged or reproduced, so I do not want to confirm or refute
-them as bugs from the sender side of this patch -- that is for
-the PCI maintainers and, in the alpha case, the alpha
-maintainers to judge.
+commit 7f280444e5ae16961e6f77cb674cd3ac061779a0
+Author: Frank Li <Frank.Li@nxp.com>
 
-What I can say about this patch: it is intentionally
-defence-in-depth, not a fix for the concurrency window or for
-the alpha allocation pattern.  The read-then-NULL it adds is
-not atomic, so if pci_remove_resource_files() is genuinely
-reachable from two threads concurrently then this patch does
-not close that window.  And the patch makes no change to how
-the two pointers are freed, so if those pointers do alias the
-same allocation on alpha then this patch does not change the
-underlying free behaviour either.
+dmaengine: Add safe API to combine configuration and preparation
 
-For this patch itself I am happy with any of:
+This commit introduces two helpers to combine DMA slave configuration and
+transfer preparation atomically. Drivers can either provide a new callback
+or the helpers will serialize the operations using a per-channel spinlock.
 
-  - merge as-is for defence-in-depth, and let the issues raised
-    in review be addressed (or not) in separate work,
-  - hold it pending a proper fix for whichever of those issues
-    you consider blocking,
-  - NACK if you would rather not carry a NULL-after-free that
-    does not address the underlying concerns.
+> diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+> index defa377d2ef54..6fe46c0c94527 100644
+> --- a/include/linux/dmaengine.h
+> +++ b/include/linux/dmaengine.h
+[ ... ]
+> +static inline struct dma_async_tx_descriptor *
+> +dmaengine_prep_config_single_safe(struct dma_chan *chan, dma_addr_t buf,
+> +				  size_t len, enum dma_transfer_direction dir,
+> +				  unsigned long flags,
+> +				  struct dma_slave_config *config)
+> +{
+> +	struct scatterlist sg;
+> +
+> +	sg_init_table(&sg, 1);
+> +	sg_dma_address(&sg) =3D buf;
+> +	sg_dma_len(&sg) =3D len;
+> +
+> +	return dmaengine_prep_config_sg_safe(chan, &sg, 1, dir, flags, config);
 
-Whichever you prefer.
+[Severity: Critical]
+Can this lead to a use-after-free if the DMA driver consumes the scatterlist
+asynchronously?
 
-Thanks,
-Gianfranco
+The scatterlist sg is allocated on the stack here. While some drivers might
+process the scatterlist synchronously during the device_prep_slave_sg or
+device_prep_config_sg callbacks, others (such as qdma) may save the sgl
+pointer internally to process later during tx_submit or hardware enqueue.
+
+By the time the driver accesses the saved sgl pointer, this function will
+have returned and the stack frame will be destroyed.
+
+> +}
+> +
+>  #ifdef CONFIG_RAPIDIO_DMA_ENGINE
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260520-dma_prep_c=
+onfig-v6-0-06e49b7acb38@nxp.com?part=3D2
