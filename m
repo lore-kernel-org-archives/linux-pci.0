@@ -1,120 +1,173 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6139F3E2AAD
-	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 14:35:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74C2D277CA5
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 14:46:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779374113; cv=none; b=o97KbOfFVr/0Cx7SF1pSvYbXkLM6USJ1HoRwLKoiZO+/zNG9t5pvqSBFPpApNBqSKqhRVTNqXHcCw6HR+eowEKa7VsbX+ng2qncmJsY3qc1vAL42CbKtCl/H3HnKWtsOMPcMXuV0i7TbznuV1qYZjTbd9W8zmb38dpZ8nD3CEag=
+	t=1779374777; cv=none; b=C+xW1CZaJJHWEX58mQiMiJvdwvJ1UXUwVUDz05nbxRSkgE3XFWhf0S0NQOPeSbU3NXBpoD/dahfntUQOHGz8Xysa90cUmfkcjL5G5o/hbSQelubz3iyAU2ZU2qQsqpbMYQ/H7+wn3IpIkFcKw02laJbz361u6l82M5CjwRhAWFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779374113; c=relaxed/simple;
-	bh=unWHAa3Qt8mz8vG5wnlDVzOC4a61HmdWhTxljmOmzpo=;
+	s=arc-20240116; t=1779374777; c=relaxed/simple;
+	bh=vRhheiRPZq3YCS5X+8qYKfYm5Q6dQZCZdshCwyMyi1I=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=gbAvFkiHoU8KhVenlU4hCMQSWC+2gd56upw9fcXQK0j6MN9Zv66mBn946CYWXrX3DNVHL9duo7b7yqVW8CEAcqMp96f81ge6erbyFsLGuXvyNQJewfHImcZx4pZgVK8FnM0KuPHj6BS+cEwH0pQFUbF1MEaxTVZxDJHYRuQBOmA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kyx1WarA; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=htblS1nPFn/3e6yelXlNWH/ofYAgWs2Ol6edHHI9NxKtNoAW/zedQa6ZYjSrJYqriWS6csZSFvWkeQSy8ztgT+Ml0TKpy6MkThtUBwQsdY/7b8IlX7diIJH9koROazJ3jL+i4WOFHtbiPBlj8eqiR7RC4tn0gFR8wrqyumOpxME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Eoayf9zk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kyx1WarA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45CB1F000E9;
-	Thu, 21 May 2026 14:35:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Eoayf9zk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F01CF1F00A3B;
+	Thu, 21 May 2026 14:46:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779374112;
-	bh=+pRX2z37xulb7NieSD0vJ+8VwcZxBKzaRDQaiGSdB8M=;
+	s=k20260515; t=1779374776;
+	bh=/nH/EPcQU5NBd+G7t9UdiLHeSgqbzGEx8/q93/Hy0xU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kyx1WarAzlAAgOOKJhez+BYMCIB7eISExQItpmBblVDKp3BDSN1ddoHuWh9vWL2LV
-	 ywGNow3YiLM0ezRo6Vnpk13gLB3SfQFlo2BERu4WjwkVF1g0tGrA780r4elmuvGap6
-	 REFDxCRq8i2YlF/GSgPDisvrwQ9p2hR2cBkl3wRLnKZrJli9mqHcPn3/A8HmcaEOrP
-	 /epaqSgr+fBmBXXb4E1+mE6TT/ITboxFJ+mVa/HRrlZb+xxnS2FmRcnm5rlBuwDsB1
-	 DAwe/LV6vHhIzt3I/fS7F4JswghNZOyiQpKlq+e1ZVyra+2w7CWW8at8Juf2Jjl5FM
-	 zNib4fMivYAHg==
+	b=Eoayf9zkbGdUa2zvFLjp3JxvhhShoGafdvsvpvgWsmfwIg0ntxfZT9/kMnzaJNk/G
+	 H3zTah+NNCAwBf1/pLtWoYHpgU8zsXmut3rE1msrLwfjtjwLSkgZfSg1cdq7rt01Fx
+	 Mn+z/N3WvUYabumi3wCb+wx/qxFOWT4kpAKU06BiO35TnSPnLj37rgVUVdLMcVhvjz
+	 BjVqikLFvhxcq0NJpILBnyum65zYkyqqC5SVA62UmCGRHyJZKpJFrAQCzqqW+KQoLG
+	 XsWjNo0L1MlVONbSCdlEvCI/vHl6KE+ecNdNTeyFdjFjKEZwdU+4gEZTlUx8FvtgAu
+	 MW4QNfYr32g8Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 4/4] PCI: qcom: enable Link retain logic for Hamoa
+Subject: Re: [PATCH v5 2/3] PCI: Add device-specific reset for Qualcomm
+ devices
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: olteanv@gmail.com, linux-phy@lists.infradead.org, neil.armstrong@linaro.org, vkoul@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260521-link_retain-v2-4-08ed448b081c@oss.qualcomm.com>
-References: <20260521-link_retain-v2-4-08ed448b081c@oss.qualcomm.com>
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260521130512.515125-3-jtornosm@redhat.com>
+References: <20260521130512.515125-3-jtornosm@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 14:35:11 +0000
-Message-Id: <20260521143511.D45CB1F000E9@smtp.kernel.org>
+Date: Thu, 21 May 2026 14:46:15 +0000
+Message-Id: <20260521144615.F01CF1F00A3B@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
 
+New issues:
+- [Critical] Incomplete Device Reset / Cross-VM State Leak due to ineffecti=
+ve D3hot fallback
+- [High] Logic Error / Resource Re-entry via double invocation of pci_dev_r=
+eset_iommu_prepare()
+
 Pre-existing issues:
-- [High] Setting `link_retain =3D true` in `cfg_x1e80100` exposes a flawed =
-error handling path in `qcom_pcie_host_init()` that silently ignores `-EPRO=
-BE_DEFER` and bypasses critical host configuration.
+- [High] Missing Device Readiness Wait after D3cold->D0 transition
+- [High] Lock Ordering Deadlock between device_lock and pci_bus_sem
 --
 
-commit 868652002bbdb8222b28dbec2b0655af97d3ceb8
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+commit 3c339ed7150450f08a8ac36c7607f84ee659f04d
+Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-    PCI: qcom: enable Link retain logic for Hamoa
+PCI: Add device-specific reset for Qualcomm devices
 
-    The Hamoa platform supports keeping the PCIe link active across
-    bootloader and kernel handoff. To take advantage of this, introduce a
-    specific configuration (cfg_x1e80100) with link_retain =3D true and
-    update the device match table to use it.
+This commit adds device-specific reset entries for several Qualcomm devices
+that lack working reset methods for VFIO passthrough scenarios. It extracts
+a shared helper function to perform a D3cold power cycle with an automatic
+fallback to D3hot.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index b061eaa227b39..8496eb87debbc 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1557,6 +1557,12 @@ static const struct qcom_pcie_cfg cfg_sc8280xp =3D=
- {
->  	.no_l0s =3D true,
->  };
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 096868f80cd4c..f6be5c58cc91d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+
+[ ... ]
+
+> @@ -4491,6 +4491,40 @@ static int pci_pm_reset(struct pci_dev *dev, bool =
+probe)
+>  	return ret;
+>  }
 > =20
-> +static const struct qcom_pcie_cfg cfg_x1e80100 =3D {
-> +	.ops =3D &ops_1_21_0,
-> +	.no_l0s =3D true,
-> +	.link_retain =3D true,
-> +};
+> +/**
+> + * pci_dev_d3cold_d0_cycle - Perform D3cold->D0 power cycle
+> + * @dev: Device to power cycle
+> + *
+> + * Common helper to perform D3cold->D0 power cycle for reset methods.
+> + * Attempts D3cold transition with automatic fallback to D3hot on platfo=
+rms
+> + * without ACPI _PR3 power resources. Handles IOMMU preparation and clea=
+nup.
+> + *
+> + * Returns 0 on success, negative error code on failure.
+> + */
+> +int pci_dev_d3cold_d0_cycle(struct pci_dev *dev)
+> +{
+> +	int ret;
 > +
+> +	if (dev->current_state !=3D PCI_D0)
+> +		return -EINVAL;
+> +
+> +	ret =3D pci_dev_reset_iommu_prepare(dev);
 
 [Severity: High]
-This isn't a bug introduced by this patch, but setting link_retain to true
-here exposes a pre-existing flawed error handling path in qcom_pcie_host_in=
-it()
-that silently ignores -EPROBE_DEFER.
+Does this result in a double invocation of the IOMMU preparation routine?
 
-If pci_pwrctrl_power_on_devices() returns -EPROBE_DEFER when the power cont=
-rol
-driver hasn't bound yet, the error handler intercepts the deferral:
+The PCI core invokes device-specific reset quirks through
+__pci_dev_specific_reset(), which explicitly calls
+pci_dev_reset_iommu_prepare() before invoking the device's reset callback.
 
-qcom_pcie_host_init() {
-    ...
-	ret =3D pci_pwrctrl_power_on_devices(pci->dev);
-	if (ret)
-		goto err_pwrctrl_destroy;
-    ...
-err_pwrctrl_destroy:
-	if (pp->link_retain && ret =3D=3D -EPROBE_DEFER)
-		return 0;
-    ...
-}
+If the IOMMU subsystem's implementation checks the domain state and is not
+re-entrant, will this unconditional second call in the helper cause the res=
+et
+to unconditionally fail with -EBUSY for devices attached to an IOMMU?
 
-Will returning 0 here trick the DWC core (dw_pcie_host_init()) into assuming
-host initialization completed successfully?
+> +	if (ret) {
+> +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	ret =3D pci_set_power_state(dev, PCI_D3cold);
+> +	if (ret)
+> +		goto done;
+> +
+> +	ret =3D pci_set_power_state(dev, PCI_D0);
 
-Since the probe completes without retrying, could this leave the PCIe slot
-regulators unmanaged by the kernel, causing them to be disabled later when
-regulator_init_complete() runs at late initcall?
+[Severity: Critical]
+The commit message notes these devices advertise NoSoftRst+, meaning PM soft
+resets are blocked. If the platform lacks ACPI _PR3 power resources and
+pci_set_power_state() falls back to PCI_D3hot, does this transition sequence
+actually reset the device?
 
-Additionally, does returning early skip mandatory initialization steps like
-qcom_pcie_clear_aspm_l0s() (which is required by cfg_x1e80100.no_l0s =3D tr=
-ue),
-hiding MSI-X/DPC capabilities, and performing SID configuration? Skipping t=
-hese
-could result in link instability, AER errors, and hardware malfunction.
+Because the D3hot fallback completes without error, it appears to return 0
+(success) while falsely signaling to callers like VFIO that the device has
+been successfully reset. Can this result in assigning an un-reset, stateful
+device to a new VM?
+
+[Severity: High]
+This is a pre-existing issue, but should there be a polling delay after the
+D3cold to D0 transition to handle Configuration Request Retry Status?
+
+A transition from D3cold to D0 acts as a Fundamental Reset. The helper calls
+pci_set_power_state() for PCI_D0 which applies PM delays, but does not poll
+for readiness. Can subsequent configuration accesses be sent to an unready
+device, causing Unsupported Requests or host Master Aborts?
+
+[Severity: High]
+This is a pre-existing issue, but does this sequence risk an AB-BA deadlock
+between device_lock and pci_bus_sem?
+
+When a device reset is triggered via sysfs or VFIO, the lock order is:
+pci_reset_function() [acquires device_lock]
+  -> pci_dev_d3cold_d0_cycle()
+    -> pci_set_power_state()
+      -> __pci_set_power_state()
+        -> pcie_aspm_pm_state_change() [acquires pci_bus_sem]
+
+Conversely, the AER recovery path lock order is:
+pci_walk_bus() [acquires pci_bus_sem]
+  -> report_error_detected() [acquires device_lock]
+
+Could an AER event occurring concurrently with a device reset trigger a
+deadlock here?
+
+> +
+> +done:
+> +	pci_dev_reset_iommu_done(dev);
+> +	return ret;
+> +}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521-link_retai=
-n-v2-0-08ed448b081c@oss.qualcomm.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521130512.5151=
+25-1-jtornosm@redhat.com?part=3D2
