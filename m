@@ -1,150 +1,162 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010000.outbound.protection.outlook.com [52.101.201.0])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f201.google.com (mail-pg1-f201.google.com [209.85.215.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 299743D810C;
-	Thu, 21 May 2026 13:44:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.0
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779371061; cv=fail; b=IqoA98GbAaMcM637t0sKyYC/gMNuxuL4IMLfFrKP23lQeOQzOghx0auPNtDB7VnulKrh34RzSeIPqcckR4lX/Z/JGx8mbcnu53KAtP7t3kZoqRZRls5AveEvI+mJqZunlBIJdz9HV5WC9BqDYe8S9hpgAaRHKbK+96WLhqwt0N4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779371061; c=relaxed/simple;
-	bh=R8GyqL6jI2/9YSgmmKIK3V+IfXOKNny8Pd3AkQFmDfA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=iOwEDcwkCTTK7mICHjjKVKrnaQ3/I9WzxgFkweZ2VRe6vnCu46cB+pZKnBuw+BTWG+/hOCc0CdmP+fzVbLpqEOv3q4aNOMNW0fzSR32PJKOhjpPyliBTLPaxyhRT6l+SGSUPmhIIPUjZ7bQvPAvHjb9/Fukv9GitKUYvJgfjx3E=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=uOTiGsd9; arc=fail smtp.client-ip=52.101.201.0
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58CE130674D
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 13:45:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779371108; cv=none; b=ciJKP4bbbH2IBpPX5CJ/4p5NiL25U9Ul5cKOU/VQmaOV/orbeeGKmbca4wleh02IFkBYf548YtzJk2ATtCHddErsvG7QA7tlfyo47QVsjcw+2u12QdIwlLgsHxumiMofHnOu7JNTUB8AY5oXaXCC9HmbwWkSbari3Qogu6s/dDY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779371108; c=relaxed/simple;
+	bh=JmKBkku/kD8/n/a4gtEJvwwFH5TVoQOZ+eRQ7DUmO1k=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=kjkxgyVJUAjdrE0A1GNfqZm3qJak4kUH5/m2EN/mlmKEvBO49Xrf/DBWLOd5krT/uY1XMZ1x12OrL6rkFE9kZcH4hPneSk9/U8ytxqSp3+gE8wNXVRmCQTwW4YFTLrSl1U+O6TZIUSPcTEVazGKd+O8efhBKg145UZ1y0QIBql0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=apmH1Wyg; arc=none smtp.client-ip=209.85.215.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="uOTiGsd9"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XHYmRJPaZIk62Iwc+9stwrrU1ZhYABC+zHqjr8kS1LQwaPgcddH334HQGEDDHFZ51qqHmFlhjGoVCx2zCzZP5EkP60gU8vfCLcH/AAJzJIMlE9q7Vc4o2BsaVvsLov5I45TWNUCP6l/kG6KEEN3Ill0mo3cZCR2p2hq9DDkYiKLC2zR1jwxHhkUpl1+iJHYU1fspg3146qUfhsQ0tvWzPriNl52xZw1kxnLIuUK42FyIsKwGgIC5w4WBsbVcvzPqecAI9AYzVddcbpO9d7KlypPfxFrihIJH3aDgm9v3xB6KyDnfrR2jHlj5QL41UAMbsrhqFXmB0gAx+IBjNGykAw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=j8Fa5f40kITuSEbGVJ1r+/ITpMWCupP24sZx+4tXY10=;
- b=QWKed5xFGOl2Y0o99/1sVN0mDYmTow6prI6EGMHwycwoamW/0a/o9yZrd4fdZw8a4XDe5E10Ev3E4N+FrN4iFzZATvQJQ5nTbnVsxNYJBywAHy28AVsEjqPyCsvErIsBNtt7Gqoh64WxeXGSpVgNSADAakDlz8Ifj1kCEx0RyXqXSUdax/48QNwlnHT4pwFsfl+HwTBs1mn5GSYZ277D1awkUfj4dtm8ei4IMPU/o3kiNor0vZutvjtEaN8dVF4NSwORu3VeJDxshxro3lLRA3VaOIKuAnrXPDITuCUzo+4MUNqVyjr4f8KS8a/aojyhGY5Bs+49G2iW8V+7k/wI3w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=j8Fa5f40kITuSEbGVJ1r+/ITpMWCupP24sZx+4tXY10=;
- b=uOTiGsd9bOGY2l9vJtjqHZpME/bsSFF7zZZCdBaH26NZbbNwVzprnYJC0Dcr1GEeCYq9CB1fny4xao+7XOIttmjX0S4XwD3XGjxnoJwgHpXZg6KVW4q2ngGjlsUwmdaP+5xyx9H+3b30uQ6zkZSZmo/sJ2wDS0jbePtglpZGncNwstWN2VdfA7WwmZ90+0SyvYPMZ8TqDxl2YNVgg53Mr+p0ENobgJA18Zo1meQ+2JoeNwbaeZlpuxXpkRQWbK9Swd4HvG88v55sxvn7IWhrUQsmhkXCkp/cIJDckXJtiQghUnUAaW+VC/j5EL4knaT+BxCeFdnJ6pRhyGn9izLEBg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by DM6PR12MB4354.namprd12.prod.outlook.com (2603:10b6:5:28f::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Thu, 21 May
- 2026 13:44:11 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528%5]) with mapi id 15.21.0048.013; Thu, 21 May 2026
- 13:44:11 +0000
-Date: Thu, 21 May 2026 10:44:09 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: will@kernel.org, joro@8bytes.org, bhelgaas@google.com,
-	robin.murphy@arm.com, praan@google.com, baolu.lu@linux.intel.com,
-	kevin.tian@intel.com, miko.lenczewski@arm.com,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	dan.j.williams@intel.com, jonathan.cameron@huawei.com,
-	vsethi@nvidia.com, linux-cxl@vger.kernel.org, nirmoyd@nvidia.com
-Subject: Re: [PATCH v5 3/3] iommu/arm-smmu-v3: Allow ATS to be always on
-Message-ID: <20260521134409.GG3602937@nvidia.com>
-References: <cover.1779304390.git.nicolinc@nvidia.com>
- <b6d2f24356621c504e47633d9e96a7274c2859f3.1779304390.git.nicolinc@nvidia.com>
- <ag43NP4UiS7Z9T6q@Asurada-Nvidia>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ag43NP4UiS7Z9T6q@Asurada-Nvidia>
-X-ClientProxiedBy: BN9PR03CA0775.namprd03.prod.outlook.com
- (2603:10b6:408:13a::30) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="apmH1Wyg"
+Received: by mail-pg1-f201.google.com with SMTP id 41be03b00d2f7-c8294d8c48eso3785769a12.0
+        for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 06:45:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1779371106; x=1779975906; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Dnh9Qdh/Ek2SFmUD3YQQhAJ1lm8lFb5yTi3rkZyIV7s=;
+        b=apmH1WyggEos+GYDtmCU6UwvksL1feePBYzSOJ5L95TUjl2IgzIkjsOrlBLhWHn0iK
+         0z2UmkKdCTPjIUcJve/SIkIWmc7pd+VdH0jdGlEuQDhSfgRzBXMZl5NMdSsh1g9HmTxu
+         nFvuyqPWF9Ya78KJOvIt2VrnPlMzsG2nOuDKsE21diyTstnyCAiW+s5tm7w9z/oIw5DU
+         VCZclbGcsvk/fXeq5y9QTq6c+JWo5LZk3+btZNdmusOZU9KeC1tu04gbqiYdj54MBYG+
+         ONoLJtIbthd7xCi1A05VbpcJvT4SAp3a2C4Vrib6lmo3pyVIldCWzX9paUqSZahU68s+
+         Mnbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779371106; x=1779975906;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Dnh9Qdh/Ek2SFmUD3YQQhAJ1lm8lFb5yTi3rkZyIV7s=;
+        b=LAadYCKn/9REx1bWDoDXmhBgoP/4TwmZekjnVY38FiMf8cOXOA9l3WGXXG8i/OGuSn
+         mIaE2j0TCmNfrq3bgYaw+/L+3RTrqGktm/M7T6bh4Xs70onMkcV5s0pRbg+7R4OX68/Z
+         USOxIUrIm1Foapd41DGQZpaFBoT+46kPQd37e6wA54ddIwG6hKYXAnL23d7gbYZ6J4gy
+         Rgx7wHHRHsjjtl17C0BJGt2hesMhlxPEsvn9hPvZQcM6IZF9iVnvL3XKtdqULMZUws2F
+         LGrqhdb+45MU8yVIhvFuvG8q/K/jqu0R+EW+vms7yg/zFqcHXjp8mFuQ2CZ8rg1/GbGF
+         c45w==
+X-Forwarded-Encrypted: i=1; AFNElJ+qVsbvIfdC9KmQvqd8bt7bhjw4aJnTE/yqapzzuuXiSquqZIIEoMEdXwlRjc16NFQl/lQ1zaBAJk0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyUshVaTIF0hO1CmT/BO8n+ia9kXGY5pSTe49s/YIksMDNqDCRV
+	pzw6dWJsv9FY/wlWFZfIFAdf5xG9dSQIPuP7J4p/A9kRW/oOuTBexqCOmNfdVrs8fvlPMRCM7uB
+	AeBJREw==
+X-Received: from pgvm13.prod.google.com ([2002:a65:62cd:0:b0:c85:1159:ffbd])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:7491:b0:3a0:bc61:62e5
+ with SMTP id adf61e73a8af0-3b30883a17bmr3700528637.44.1779371104725; Thu, 21
+ May 2026 06:45:04 -0700 (PDT)
+Date: Thu, 21 May 2026 06:45:04 -0700
+In-Reply-To: <20260521133326.2465264-9-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|DM6PR12MB4354:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2d13a84e-a6b6-4e00-e06c-08deb73f09cc
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|18002099003|22082099003|56012099003|4143699003|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	FjkQ1yw3nllFgl2xKtKJM4LCq9w8L4rz9tbtTuLhePoABF1hIImBMsGZUORuxwcDo+UQgMVBdb8GJgu+x0qMYYorSEGffC6JZ5qal/lKWU6V9uQyRSwkrD9xffaBqHCKhKPmbFsLjKicSsttv/6J+s5KrVoLK3IfjMebxgBL9P3K+xmb+a6/Qia3XAzTMuFNMHtjBkTTUMYAakqgxaPXf+hpruMEGa+srA1Uk7qYETmrBzvBzz+fjfWGJbCIJrd+ihzfZ/l1yiZA2rSk56YB8wVy0XVQIOKNo6imv3GccGVdP0qC2g3AgLk5yXSsnXn44APs7rur3tT50IR5h6VRyzuHtMvFE8OzO9EWpgYe9ryA+3v0QGdq1Hcb2ETjOXMfAY/YT0xsL0nhKYt+UOvfJOHCnKZ+ME1DJ1ZJ+eLkEUOoqzEvFgyQaVkhWf+gV0FqHpinoIdvSBh5/2oGc8YAsFpWeyiLkxES5ZTN3FKRGQrIvcbJr3+5zS2r3ZMyCNKy3EwUmD4YP9gFdEJiCHGWsZmhC1C9Yd9+mfhHkTukqYrrrb/5fzV9wK6NvAW/3ufHyuCgsQRaXLJr/lFKWidR4MZqeIQstgyMCoHUJaCb0aLX4AA5C4INFC/77K8PLADHguUbIRRDz6l77gA+JdDwgVZnePugQpniKLjrVQ+tqbUkYNVphY7gvDJx6p5Uunr6
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(18002099003)(22082099003)(56012099003)(4143699003)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?/TKIQihKz8r23lQP2WSz4pmks4g/sWBhWej55/BmwLkeoLTVAdorzdPBAUnc?=
- =?us-ascii?Q?LVkBJuNH/1mDamYIAMNRQsM6qzBHPiUBbcg5eObqBPZ+BEGR9fFyjt9aZE7x?=
- =?us-ascii?Q?oTULmet7PEJRhZbZJJx+CD51ePPvROuPPWNHl/dSitufDL6AyU8PNuhRoSUw?=
- =?us-ascii?Q?U/XDxx/Ml00Esfd/8B1QWGKzi1TJpC98pOtldt3+16qGk5gQc04PrUWmgp13?=
- =?us-ascii?Q?nXR8YTAGn79pGhor8capfDKlLXXzmmo+QOJMmVfwP2pB5HuorGVROenc46qS?=
- =?us-ascii?Q?VflcEi6MNqo69Lk0vlfOswI87l7VEbli26DwgmETddw0ShR+z87ZGC1rwrg9?=
- =?us-ascii?Q?nPDfWU9Yr2GrysldtCGK8+GcVOdNYWLUpA0na2y1qZwQS0mkozOCiScZHFP8?=
- =?us-ascii?Q?U474ttaWn/Vrp0J9HrVEj1vqVS4k32lQtO7BkjlHZac9aoSE3mgewnlc1Wpw?=
- =?us-ascii?Q?mag8v5jqN5ADTr0JIy8ls99UMXCUP4AXRNsTQYqxMa8hax7dpYU71WCz0jId?=
- =?us-ascii?Q?U+OqMIQEaCtveg1KZpJIwfMKPow1kXOQMkFfdMGSusK6um1F3mWpDwxKEZ1M?=
- =?us-ascii?Q?plAXeC07+HWO3nC8zFTVrBhOXf8nzObwU1uY1zpavnxkC3ZGrWnjGefVGFaK?=
- =?us-ascii?Q?fvO8vZLTKmkGdg4/5aCqQonia5LprOucIW8VCy644nG/I8M2LpkyRRN25x+J?=
- =?us-ascii?Q?wneUDh5dp6uEygAOxj2VCZcQJ0aLnrgFfDL2E2r+ZazBu4f/R0bDVnjiZagU?=
- =?us-ascii?Q?YttBKryUh2xdKH6cjN2t0LxXwDPlBprcAD/sjmpWH2z9fFbUKdn9Bqv07Y38?=
- =?us-ascii?Q?+cT08OyoSjY2QKsloG/Zxie3ERDA/QUobdVxvUPMfRIWSqI9OUdRFLKw2XJJ?=
- =?us-ascii?Q?YbT4Bkx6qMrcO4QFKnO/CTOWDBMKe+AStYfO9x7NaOngAv0vTKyPizmYoL9h?=
- =?us-ascii?Q?emRxWYblqxVjavCsE0qD1J5Abnm6DxP4TvOVzOkzZtsXJmD/kROkxAl/b1eb?=
- =?us-ascii?Q?cPin55f/+bpKpYbGYpKeCWJU0+rgZcZwEbg4H+1Kdj8a8P/cr1JhuM6JpvTC?=
- =?us-ascii?Q?g2ex05fjKcHvCLBs2f55zFWx95xXYllwl4acBpQLYznMm0sQbdOtsJQH1yJX?=
- =?us-ascii?Q?irPTUnQYVOZ7tOEhMkEASPtb8+XPHoKTOmXZ9lKTSbWO9a6dnrdhii2zf+6L?=
- =?us-ascii?Q?5brPRYn90PMn2b4Oat/a78lUCai4C2xSRExoEKVHt+Pxe5zj+GyuvgLjWbpk?=
- =?us-ascii?Q?2ZZuacTuqz9/hoJhVq3wDnnwuugVfM56gWKACK4H1A7EzaujWLcVeSGobHVn?=
- =?us-ascii?Q?l75ZXG9n70xq7O7R//Ahr8ydp+XZxRGQuE6/1KmocGKF7EUpiQuyVF14HciR?=
- =?us-ascii?Q?lqirkiLR8PxyqZTfZqFnms3XH4WKdVa9MITsgnV6TKkcEfcKVqv8+LOdV1J9?=
- =?us-ascii?Q?tXA4TkaEsSkmRclQY5taCOa6OAqkqLmfBCCI1SBkvilHoKmULcnzRRgngwKb?=
- =?us-ascii?Q?co10vqF21lyPHadAkuSt1ti8KXyaBKRcgMdfeByeqkLlkiOeayC009KpN1Tb?=
- =?us-ascii?Q?9fPakepCQ/3ghrF9UhmCEgi9SR58dLRxvpCjo2WM1s8njMVzBaZb8fA63IlS?=
- =?us-ascii?Q?sq5C5D/b8rwW4JvOxxExs71vk9CjvyQiHTFmyF5SlKybF3UVwe0Q6Hfa3Kls?=
- =?us-ascii?Q?JNcMIY7bLZ1uhxyTR1nzkSyNtVfLJZay0gEspID5qpTTa8IZ?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2d13a84e-a6b6-4e00-e06c-08deb73f09cc
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 May 2026 13:44:11.0598
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: WN2cuEpLCbji/p3aHkkH8HriZHGSPCuc7m3p8msJPsbFJuGCta+fSfte6S8Uw+E6
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4354
+Mime-Version: 1.0
+References: <20260521133315.work.845-kees@kernel.org> <20260521133326.2465264-9-kees@kernel.org>
+Message-ID: <ag8MYC6pOZvvYHMp@google.com>
+Subject: Re: [PATCH 09/11] treewide: Convert custom kernel_param_ops .get
+ callbacks to seq_buf via cocci
+From: Sean Christopherson <seanjc@google.com>
+To: Kees Cook <kees@kernel.org>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, Pengpeng Hou <pengpeng@iscas.ac.cn>, 
+	Petr Pavlu <petr.pavlu@suse.com>, Richard Weinberger <richard@nod.at>, 
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg <johannes@sipsolutions.net>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>, 
+	Gabriel Somlo <somlo@cmu.edu>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jani Nikula <jani.nikula@linux.intel.com>, 
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
+	Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Bart Van Assche <bvanassche@acm.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
+	Leon Romanovsky <leon@kernel.org>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, 
+	Hans de Goede <hansg@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Daniel Lezcano <daniel.lezcano@kernel.org>, 
+	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Alan Stern <stern@rowland.harvard.edu>, Jason Wang <jasowang@redhat.com>, 
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	"Eugenio =?utf-8?B?UMOpcmV6?=" <eperezma@redhat.com>, Jason Baron <jbaron@akamai.com>, 
+	Jim Cromie <jim.cromie@gmail.com>, Tiwei Bie <tiwei.btw@antgroup.com>, 
+	Benjamin Berg <benjamin.berg@intel.com>, 
+	"Ilpo =?utf-8?B?SsOkcnZpbmVu?=" <ilpo.jarvinen@linux.intel.com>, 
+	"David E. Box" <david.e.box@linux.intel.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>, 
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Peter Zijlstra <peterz@infradead.org>, 
+	Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+	Paolo Bonzini <pbonzini@redhat.com>, Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, 
+	Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
+	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
+	Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
+	Aaron Tomlin <atomlin@atomlin.com>, Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>, 
+	Dmitry Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	John Johansen <john.johansen@canonical.com>, Paul Moore <paul@paul-moore.com>, 
+	James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
+	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org, 
+	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org, 
+	kasan-dev@googlegroups.com, linux-mm@kvack.org, apparmor@lists.ubuntu.com, 
+	linux-security-module@vger.kernel.org, linux-um@lists.infradead.org, 
+	linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net, 
+	qemu-devel@nongnu.org, intel-gfx@lists.freedesktop.org, 
+	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, 
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linuxppc-dev@lists.ozlabs.org, linux-serial@vger.kernel.org, 
+	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, 
+	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-arch@vger.kernel.org, netdev@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 
-On Wed, May 20, 2026 at 03:35:32PM -0700, Nicolin Chen wrote:
-> @ -3870,13 +3870,15 @@ static int arm_smmu_blocking_set_dev_pasid(struct iommu_domain *new_domain,
->          * When the last user of the CD table goes away downgrade the STE back
->          * to a non-cd_table one, by re-attaching its sid_domain.
->          */
-> -       if (!master->ats_always_on &&
-> -           !arm_smmu_ssids_in_use(&master->cd_table)) {
-> +       if (!arm_smmu_ssids_in_use(&master->cd_table)) {
->                 struct iommu_domain *sid_domain =
->                         iommu_driver_get_domain_for_dev(master->dev);
-> +               bool ats_always_on = master->ats_always_on &&
-> +                                    sid_domain->type != IOMMU_DOMAIN_BLOCKED;
-> +               bool downgrade = sid_domain->type == IOMMU_DOMAIN_IDENTITY ||
-> +                                sid_domain->type == IOMMU_DOMAIN_BLOCKED;
-> 
-> -               if (sid_domain->type == IOMMU_DOMAIN_IDENTITY ||
-> -                   sid_domain->type == IOMMU_DOMAIN_BLOCKED)
-> +               if (!ats_always_on && downgrade)
->                         sid_domain->ops->attach_dev(sid_domain, dev,
->                                                     sid_domain);
+On Thu, May 21, 2026, Kees Cook wrote:
+> diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+> index 07f4c7209ac0..00317774a90b 100644
+> --- a/arch/x86/kvm/vmx/vmx.c
+> +++ b/arch/x86/kvm/vmx/vmx.c
+> @@ -368,12 +368,16 @@ static int vmentry_l1d_flush_set(const char *s, const struct kernel_param *kp)
+>  	return ret;
+>  }
+>  
+> -static int vmentry_l1d_flush_get(char *s, const struct kernel_param *kp)
+> +static int vmentry_l1d_flush_get(struct seq_buf *s,
+> +				 const struct kernel_param *kp)
+>  {
+> -	if (WARN_ON_ONCE(l1tf_vmx_mitigation >= ARRAY_SIZE(vmentry_l1d_param)))
+> -		return sysfs_emit(s, "???\n");
+> +	if (WARN_ON_ONCE(l1tf_vmx_mitigation >= ARRAY_SIZE(vmentry_l1d_param))) {
+> +		seq_buf_printf(s, "???\n");
+> +		return 0;
+> +	}
+>  
+> -	return sysfs_emit(s, "%s\n", vmentry_l1d_param[l1tf_vmx_mitigation].option);
+> +	seq_buf_printf(s, "%s\n", vmentry_l1d_param[l1tf_vmx_mitigation].option);
+> +	return 0;
 
-Only identity should remain with the CD S1DSS STE, BLOCKED should
-attach the normal blocking domain still
+For this one, can you manually change it to this?
 
-Jason
+	if (WARN_ON_ONCE(l1tf_vmx_mitigation >= ARRAY_SIZE(vmentry_l1d_param)))
+		seq_buf_printf(s, "???\n");
+	else
+		seq_buf_printf(s, "%s\n", vmentry_l1d_param[l1tf_vmx_mitigation].option);
+	return 0;
+
+>  }
+>  
+>  /*
+> @@ -459,9 +463,11 @@ static int vmentry_l1d_flush_set(const char *s, const struct kernel_param *kp)
+>  	pr_warn_once("Kernel compiled without mitigations, ignoring vmentry_l1d_flush\n");
+>  	return 0;
+>  }
+> -static int vmentry_l1d_flush_get(char *s, const struct kernel_param *kp)
+> +static int vmentry_l1d_flush_get(struct seq_buf *s,
+> +				 const struct kernel_param *kp)
+>  {
+> -	return sysfs_emit(s, "never\n");
+> +	seq_buf_printf(s, "never\n");
+> +	return 0;
+>  }
+>  #endif
