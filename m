@@ -1,94 +1,183 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF8342F9984;
-	Thu, 21 May 2026 14:21:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 54B8E3D3D0B;
+	Thu, 21 May 2026 14:34:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779373299; cv=none; b=p8/FrwmSg+Xc9+bhTCVwktdrhUn8J5fIfQg9fk6heIusz1Y8Fcc7UwvNET/2zZA2dtbILxf0lEDWHWyirQW7drjifMXl4gz2HdzkZO/EtS8DpOynxMeNklOQZzHutw7E5t09u05duJqZBtUKTjV1Wgn9eXn7t0mrCU5+qO/vdc4=
+	t=1779374066; cv=none; b=ThcEA0+25whmcR3ZLqk4xl2rFyxKPdR00GYI+Lfu2HesD/XD99MjgkyuZFhsxHuwPruKCSy3sY1Xa4V6kMP6EM1lcJZqbYwUKmTuiTiFA9r0YmAMsQTX154I0XfcrEHkQV1Fn35X79qOzg4wY4BV1XiQpMXt4HPaKrevbKeJpbU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779373299; c=relaxed/simple;
-	bh=8/zOJGVqbG8WkMSpL0rE5OU1P/oB8KWOP88zXYNdpIY=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IHxOHxMO2aBxiZTkENUXfDh0Jj6jVEmD+sElN3njsffHXYG5uuNQ483HeR38DT6KbKeRjQQAQorwqnYGa+wIxj/o6U8CRE9o+BlHtTW3JNcnzYxsfTWVp+t+atbQdDj/3pZ20AtWqgT2EdGyiL9RF4+NH49VeWpgRhIRyGbXC9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EqTD+sH7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779374066; c=relaxed/simple;
+	bh=oVRExsDbqI3W1ESzcran04U9sA2pzYajuKWQjY1qFwc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TiuIwOvOivZELnpaAYzKsehLh/hjh0+SNQWAJTQlHmrnnbWblraUqSVn/oeCbCBE2pjPP51c8jNU1hrgPwZRO2e0CXVsYZEauckIsCh3oAa5m/71WqaEWq76frf2f2s3uPCKuxwzRPzGNxsoFt4db5ksb2vBY5WNul1JrBh0Fuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=a9y/bJGK; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EqTD+sH7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B57351F000E9;
-	Thu, 21 May 2026 14:21:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779373298;
-	bh=fXNXvZeGZU6zo0w0DvYrpbPu84Phh7+Vv2XwyeB5E+k=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EqTD+sH7PieVWqil4NR9j2NqFo84bYhpNfZEZ+sGln1yZGeXt7AW0YDlbPXRPhnW7
-	 6dkt2WQOLdA0so8pkIChMaF4R9SBPm1qWj4WyAVGck2dKw06b5OeLLeffrWRxGL+Bb
-	 WSL9xwJESX4Lw9nj8dQ186HiyRjJmiJbcjqB+yeMOq5A/zO7DKbvTIw0xWQkaUfFnA
-	 Mq7TofFi/wfkYNO64sUkdTz46lC59hmqSp3brDTtpDBN37ue3KBpxzzlyxCxJEVpFT
-	 rD7lkcVgI0Im74IQV3UG9uUp4vCCuv/PydPiz0qcl+p1GTKX83r26eCmD3mcuIRx3Y
-	 u0U/QOt8mdfcA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/4] dt-bindings: phy: sc8280xp-qmp-pcie: Document Eliza
- PCIe phy
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org, vkoul@kernel.org, conor+dt@kernel.org, linux-phy@lists.infradead.org, olteanv@gmail.com, neil.armstrong@linaro.org, robh@kernel.org, devicetree@vger.kernel.org
-In-Reply-To: <20260521-eliza-v1-1-97cdbe88389d@oss.qualcomm.com>
-References: <20260521-eliza-v1-1-97cdbe88389d@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 14:21:37 +0000
-Message-Id: <20260521142137.B57351F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="a9y/bJGK"
+Received: from localhost (unknown [167.220.233.27])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 178A520B7167;
+	Thu, 21 May 2026 07:34:17 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 178A520B7167
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1779374057;
+	bh=yuY7/VKIfWBH4Ab+m5RYvn2+pEgbBdbEqQP/VdZLuxk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=a9y/bJGKwY3aQlb5YklgTtrtaqVP6gnQpATZWuAOiOMgeei+p4MnBPg3n2m7DZbhn
+	 3QOibAa0hCmftbsO/SAfMxtJr0nEyCVuWXUOHEF5R5H3i5EX3l95MTrQTzgZJaPX4k
+	 2nLCXrel9IW7Q7CBWTlnasMUO1FFcg2JFZiUTbg0=
+Date: Thu, 21 May 2026 22:34:22 +0800
+From: Yu Zhang <zhangyu1@linux.microsoft.com>
+To: Michael Kelley <mhklinux@outlook.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, 
+	"iommu@lists.linux.dev" <iommu@lists.linux.dev>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, "wei.liu@kernel.org" <wei.liu@kernel.org>, 
+	"kys@microsoft.com" <kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>, 
+	"decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com" <longli@microsoft.com>, 
+	"joro@8bytes.org" <joro@8bytes.org>, "will@kernel.org" <will@kernel.org>, 
+	"robin.murphy@arm.com" <robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>, 
+	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
+	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
+	"arnd@arndb.de" <arnd@arndb.de>, "jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>, 
+	"tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>, 
+	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>
+Subject: Re: [PATCH v1 4/4] iommu/hyperv: Add page-selective IOTLB flush
+ support
+Message-ID: <pxod76qh3jtpvnxdlflvntc5svqgibaeu6tywn2ejrlnea65w3@djehcr3vidnk>
+References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
+ <20260511162408.1180069-5-zhangyu1@linux.microsoft.com>
+ <20260515223545.GL7702@ziepe.ca>
+ <lxmfd2ml5dafkxquuf5i45uqgh6wxl44hlqphu77kvximqrnmi@b3htoyjc6d5z>
+ <SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] The new Eliza PCIe PHY compatibles are placed in the wrong conditi=
-onal blocks, incorrectly constraining them to require 6 clocks and 2 resets.
---
+On Wed, May 20, 2026 at 07:26:24PM +0000, Michael Kelley wrote:
+> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Wednesday, May 20, 2026 10:15 AM
+> > 
+> > On Fri, May 15, 2026 at 07:35:45PM -0300, Jason Gunthorpe wrote:
+> > > On Tue, May 12, 2026 at 12:24:08AM +0800, Yu Zhang wrote:
+> > > > +static inline u16 hv_iommu_fill_iova_list(union hv_iommu_flush_va *iova_list,
+> > > > +					  unsigned long start,
+> > > > +					  unsigned long end)
+> > > > +{
+> > > > +	unsigned long start_pfn = start >> PAGE_SHIFT;
+> > > > +	unsigned long end_pfn = PAGE_ALIGN(end) >> PAGE_SHIFT;
+> > > > +	unsigned long nr_pages = end_pfn - start_pfn;
+> > > > +	u16 count = 0;
+> > > > +
+> > > > +	while (nr_pages > 0) {
+> > > > +		unsigned long flush_pages;
+> > > > +		int order;
+> > > > +		unsigned long pfn_align;
+> > > > +		unsigned long size_align;
+> > > > +
+> > > > +		if (count >= HV_IOMMU_MAX_FLUSH_VA_COUNT) {
+> > > > +			count = HV_IOMMU_FLUSH_VA_OVERFLOW;
+> > > > +			break;
+> > > > +		}
+> > > > +
+> > > > +		if (start_pfn)
+> > > > +			pfn_align = __ffs(start_pfn);
+> > > > +		else
+> > > > +			pfn_align = BITS_PER_LONG - 1;
+> > > > +
+> > > > +		size_align = __fls(nr_pages);
+> > > > +		order = min(pfn_align, size_align);
+> > > > +		iova_list[count].page_mask_shift = order;
+> > > > +		iova_list[count].page_number = start_pfn;
+> > > > +
+> > > > +		flush_pages = 1UL << order;
+> > > > +		start_pfn += flush_pages;
+> > > > +		nr_pages -= flush_pages;
+> > > > +		count++;
+> > > > +	}
+> > >
+> > > This seems like a really silly hypervisor interface. Why doesn't it
+> > > just accept a normal range? Splitting it into power of two aligned
+> > > ranges is very inefficient.
+> > 
+> > Fair point. I'm not sure how much flexibility we have to change
+> > this hypercall interface at the moment - it predates the pvIOMMU
+> > work and may have other consumers beyond Linux guest. On the other
+> > hand, having the guest specify 2^N-aligned blocks does save the
+> > hypervisor from having to decompose ranges itself before issuing
+> > hardware invalidation commands - the guest-provided entries can be
+> > fed to the HW more or less directly.
+> > 
+> > That said, the way I'm currently using this interface may be
+> > more precise than necessary. Maybe we have 2 options:
+> > 
+> > 1) Current approach: decompose the range into multiple exact
+> >    2^N-aligned blocks with no over-flush, but at the cost of
+> >    more complex calculations and more entries.
+> > 
+> > 2) Follow what Intel/AMD drivers do: find a single minimal
+> >    2^N-aligned block that covers the entire range, but may
+> >    over-flush.
+> > 
+> > Any preference?
+> > 
+> > @Michael, since you've also been reviewing this patch, I'd
+> > appreciate your thoughts on the above as well. :)
+> > 
+> 
+> I'm just guessing, but perhaps flushing an aligned power-of-2
+> range can be processed by the hypervisor at a relatively fixed
+> cost, regardless of the size. Having the guest do the decomposing
+> of an arbitrary range allows the hypervisor to make use of the
+> existing "rep" hypercall mechanism if the hypercall is taking
+> "too long". The hypervisor can pause its processing, return to
+> the guest temporarily, and then continue the hypercall. If the
+> arbitrary range were passed into the hypercall for the hypervisor
+> to do the decomposing, that pause-and-restart mechanism
+> wouldn't be available.
+> 
+> Of course, Linux doesn't really take advantage of the pause to
+> reduce guest interrupt latency because the Hyper-V code in
+> Linux typically disable interrupts around a hypercall due to the
+> way the hypercall input page is allocated. But other guest
+> operating systems might benefit from such a pause. And we could
+> probably fix the Hyper-V code in Linux to allow interrupts during a
+> hypercall pause/restart if long-running hypercalls turn out to be
+> a problem.
+> 
+> Regarding proposal (1) vs. (2), perhaps you could confirm with
+> the Hyper-V team that flushing an aligned power-of-2 range
+> has relatively fixed cost, regardless of the size. And what do the
+> flush requests coming from the generic IOMMU subsystem look
+> like? Do they match dma_unmap() ranges, which are probably
+> dominated by relatively small ranges of a few pages at most,
+> with a few outliers for disk I/O requests of 1 MiB or some such?
+> If the dominant flush request is for a few pages at most, then
+> doing (2) seems reasonable.
 
-commit 8532696e8f5cf63303348c425688fe2c2383eed6
-Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Thanks for the thoughtful suggestions, Michael!
 
-dt-bindings: phy: sc8280xp-qmp-pcie: Document Eliza PCIe phy
+I believe the time might be dominated by the number of descriptors,
+instead of the size of each range, especially when device TLB
+invalidations are involved.
 
-Add compatibles for the Eliza PCIe QMP PHY's, which supports Gen3x1 and
-Gen3x2 configurations.
+Here's my understanding of what hypervisor does in its handler:
 
-> diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie=
--phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-ph=
-y.yaml
-> index 3a35120a77ec0..be4bbc327982f 100644
-> --- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.ya=
-ml
-> +++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.ya=
-ml
+Hyper-V constructs one IOTLB invalidation descriptor (and possibly
+a Device TLB invalidation descriptor as well) per iova_list entry
+and submits them to the HW invalidation queue, then synchronously
+waits for completion. So multiple 2^N-aligned entries should be less
+efficient than a single larger 2^N aligned one.
 
-[ ... ]
+Since both options submit 2^N-aligned entries to the hypervisor,
+either one single coarser-grained entry or a precise decomposition,
+I'm now also leaning towards option 2, which is also what Intel/AMD
+drivers do for page-selective IOTLB flush. Simpler guest code, faster
+flush, and the hypervisor can feed the single entry almost directly
+to HW.
 
-> @@ -181,6 +183,8 @@ allOf:
->          compatible:
->            contains:
->              enum:
-> +              - qcom,eliza-qmp-gen3x1-pcie-phy
-> +              - qcom,eliza-qmp-gen3x2-pcie-phy
->                - qcom,glymur-qmp-gen4x2-pcie-phy
->                - qcom,glymur-qmp-gen5x4-pcie-phy
->                - qcom,qcs8300-qmp-gen4x2-pcie-phy
-
-[Severity: High]
-Are these compatibles placed in the correct conditional block?
-
-By placing the Eliza compatibles in this group, the schema enforces a
-minimum of 6 clocks and 2 resets. However, the driver implementation
-introduced in the series expects only 1 reset.=20
-
-This mismatch will prevent structurally correct device tree nodes from
-passing schema validation.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521-eliza-v1-0=
--97cdbe88389d@oss.qualcomm.com?part=3D1
+Yu
