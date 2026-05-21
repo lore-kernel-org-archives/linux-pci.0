@@ -1,173 +1,132 @@
-Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
+Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC35376A10;
-	Thu, 21 May 2026 09:38:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AD28377555;
+	Thu, 21 May 2026 09:42:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.19.206
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779356329; cv=none; b=MfZj7393sxePZLF46o74pxuI+etB9G+ZLIlImEnprP51KLfYraJPD6WO5Oo1b7sC7FhHoZUqPfx/gJY/kHJm1J4Epe8ci6dkmtr9Q/tDB7Dr2QBmVJc0fmzLfPJcyAvO+8oADzKJQ3VSkVsEhBxj6PEvgljPH2dmUWCX5kGTlaE=
+	t=1779356580; cv=none; b=cBga1j1ZQLU5CusnzyJcQiWU723SkpNNfe7g2ZbbNQSdBrw51cyGxBB8TKD+MnDCRbr2t0/Ow/LEaawl52CnhOqBRX3dCHEBRnSBG0x8kwHif8wCi9GpCufTkEYqHZkl3jTwMpaTve0+X5fq/XvtfXf7q1TEMRSpiIhKhtEBQAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779356329; c=relaxed/simple;
-	bh=KfGfTyFVL31vdUdOn+76p0c9asI51Kz6rpZ61Tm62g8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cEw3imQRhQn+KYwmqNMyGexNEwoS8UClVayeQ8FU6aYTc7vLw9cT0dHrvKadL0dWY25OaH6PiqmNjUujhbbyKHKqXHs1P/3GlDl/SRcOlfRY07DLXei3h5gEVSetrHh29J6PMt5hF86TC/vlW30M+D2Y0rnR84Z8UH+hZf9cdL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=0I4tMOaq; arc=none smtp.client-ip=185.11.138.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntech.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
+	s=arc-20240116; t=1779356580; c=relaxed/simple;
+	bh=8pq6/n+Cp3VeNu2nAtA/xDVlF7EuqsdRr0HjZI1pXfA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=HBV2+4ICbL1tIKUudj76UNulz6Q3VWplj2dSu2GeNy559h8MqMYfIeZ3r380ERQcHxqkfxSCXl2E7UVXsGW35rl3dM5aTG0DKUUjsJkPgolHVWiUF6l+44b7pHrT2GYbduK+li7+k58JeQ6TmvyuK+axZfJAzY9MDCBD+80Pp5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b=HefKsc8n; arc=none smtp.client-ip=54.207.19.206
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="0I4tMOaq"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
-	s=gloria202408; h=Content-Transfer-Encoding:Content-Type:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To;
-	bh=82qSLImWzSWwJwDL4P56RDhSxB/3/+bLg3x1B6/8Vyo=; b=0I4tMOaqwxFvPcLAyXC1tGPrfE
-	HXHaVV7+wYwVP4UGjSNoFDd1VfRVRwKpSUpdi+/cM0lBIFBOtW57RPkKHZJ6gSZa57lZaOJNQszdB
-	j5MhP9nNF2ZBC5XTLEZLefqvWnNibulepEtkV4okP/kU2AAENM/x1cT5yntunk8HjnN93yJVk0KhD
-	4BGKyKzwZYIhS+icC3RQoCP/xlaXk2zQuPvKHmUwXbld7xPg620UPcbli2n9Nu98+Jo3ggiseSwXX
-	f5u71NtNcCGIkISy1Bu3AzX1ANpj9jp2f9+W1J8qexkOfVBSIDSPhC21GfXXPezuckw1Oq9h13vk1
-	Ke/2S4sA==;
-From: Heiko Stuebner <heiko@sntech.de>
-To: linux-phy@lists.infradead.org,
-	Vladimir Oltean <vladimir.oltean@nxp.com>
-Cc: Heiko Stuebner <heiko@sntech.de>,
-	Vinod Koul <vkoul@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	dri-devel@lists.freedesktop.org,
-	freedreno@lists.freedesktop.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-can@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	linux-ide@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=uniontech.com header.i=@uniontech.com header.b="HefKsc8n"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uniontech.com;
+	s=onoh2408; t=1779356550;
+	bh=N/LxuoK0gZOoQSTeBelDkwqChS+iq4NxmGzBGRItcUs=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version;
+	b=HefKsc8nR17Ye7QmJ2HR9vzMylbzc23UyNV3xCisyZY1uM/g7pB4ijCaVMF4uZp+O
+	 8ASJ6I32u8nedLhJ1olsPyq2xKjpEs+xhuQsNPEi9zEvxnQjLNeZX6u6LLsl2mtOIw
+	 mEMtlAhijvqACmxWEbMYp/0dvcZmoq/bflj23kp0=
+X-QQ-mid: zesmtpsz4t1779356534ted91138b
+X-QQ-Originating-IP: fhBZRl85vHN0x1pUy3lGD5FyNzXu9hh4D94/NGcVGfg=
+Received: from localhost.localdomain ( [123.114.60.34])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 21 May 2026 17:42:11 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 192467534549927609
+EX-QQ-RecipientCnt: 4
+From: Qiang Ma <maqianga@uniontech.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org,
-	spacemit@lists.linux.dev,
-	UNGLinuxDriver@microchip.com,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	Andrzej Hajda <andrzej.hajda@intel.com>,
-	Andy Yan <andy.yan@rock-chips.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Chanho Park <chanho61.park@samsung.com>,
-	Chen-Yu Tsai <wens@kernel.org>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	David Airlie <airlied@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Eric Dumazet <edumazet@google.com>,
-	Fabio Estevam <festevam@gmail.com>,
-	Frank Li <Frank.Li@nxp.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Inki Dae <inki.dae@samsung.com>,
-	Jagan Teki <jagan@amarulasolutions.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	JC Kuo <jckuo@nvidia.com>,
-	Jernej Skrabec <jernej.skrabec@gmail.com>,
-	Jessica Zhang <jesszhan0024@gmail.com>,
-	Joe Perches <joe@perches.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Jonas Karlman <jonas@kwiboo.se>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Laurent Pinchart <Laurent.pinchart@ideasonboard.com>,
-	Linus Walleij <linusw@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marc Kleine-Budde <mkl@pengutronix.de>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	Markus Schneider-Pargmann <msp@baylibre.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Maxime Ripard <mripard@kernel.org>,
-	Michael Dege <michael.dege@renesas.com>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Peter Chen <peter.chen@kernel.org>,
-	Peter Griffin <peter.griffin@linaro.org>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Robert Foss <rfoss@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	"Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
-	Samuel Holland <samuel@sholland.org>,
-	Sandy Huang <hjc@rock-chips.com>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Sean Paul <sean@poorly.run>,
-	Sebastian Reichel <sre@kernel.org>,
-	Shawn Guo <shawn.guo@linaro.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Steen Hegelund <Steen.Hegelund@microchip.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thinh Nguyen <Thinh.Nguyen@synopsys.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Tudor Ambarus <tudor.ambarus@linaro.org>,
-	Vincent Mailhol <mailhol@kernel.org>,
-	Xu Yang <xu.yang_2@nxp.com>,
-	Yixun Lan <dlan@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: Re: (subset) [PATCH v8 phy-next 00/31] Split Generic PHY consumer and provider API
-Date: Thu, 21 May 2026 11:38:18 +0200
-Message-ID: <177935628872.1653123.15514691751947313571.b4-ty@sntech.de>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
-References: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
+	Qiang Ma <maqianga@uniontech.com>
+Subject: [PATCH] PCI/VPD: Disable VPD for Lenovo Realtek RTL8111xP devices
+Date: Thu, 21 May 2026 17:41:38 +0800
+Message-Id: <20260521094138.1634411-1-maqianga@uniontech.com>
+X-Mailer: git-send-email 2.20.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: zesmtpsz:uniontech.com:qybglogicsvrsz:qybglogicsvrsz3b-0
+X-QQ-XMAILINFO: Mom5ezI3X1cDh68psrThXmwg+n7pF/oPktkS4EIyJ5p0cOvWkodTFLHf
+	EFJwJ24kVQIfbOXtIr798iPXQfWktvXnNaV1z2TZnFv9sQs3HHRr412mOrxGA5oFlV6JUCk
+	zX43ENF1V6P/PUqeakoBqCX4BfU+cds6h76iyOgGAtUxtA46eL2gqn7ZtRrprmAREtQQcRN
+	7ulVZt6FLHDxFUYCAEG4gaJtJbhRcbiiJJ9qHlH3RxjjkCigqfqPw01x8/3JyuxzkoORAOE
+	89IPnNc0fOEzqT2eIY5l7btkM0Bye2FtSVDxi1tHSCdRB9UbqmUC0Lsg3W7LvlOsW0oS9gl
+	NJSOWf+MCcxxwi1uLkCse2R5yyUURGC2n27L+7h92xNVtrw+Q7fMTQs70GHMrQUhyt0lGW/
+	iTP/QdMp3S9fKpjRrro6fwzPbF00qzJWHCX1BkXr9b3yJ7ot91BhLMbqHBxsmACCVdK/9Vy
+	+JWhGSBR8UPLyTQUavIz00dfyWhzN2/rk5awlKme1u3AtsnDuhsDeibbABr6bRCH3TNYriS
+	Mg9K7jBPbi/upx+RpqhE69DL7rNsRPezNT+1yeAdy54Mcx6O86HuEEvnO2WViqDc+iaCBvR
+	FfKdjWEXfm/v1za3u7s3t0tpdEwJEwvnyoY8L0KtPGh5WLUtENDY0riCEo33RRXCSjPtdkR
+	Wy3n4zxnNVP+1RlA7VLxhSrLV2afme/sbSfXRqkOMrXaESiTPo5sHJRPwvKavAteweEap46
+	yXHjYtFAnYtojvfPrQu5Imjd9V3JuohD3la4kNaA3uCUSufHiaymMoKZyD4jCqoBKA/Ip7Q
+	3defiyzmzRMcmrXPKAbL3tCoDT8EcoSvCO/zJjxleNGBv68YJlOIBR5eysilnd8jSFedyr3
+	/KrtCUC0sinwGWpdbIt2MMa59nGNNvg5DOu/6TzBpmmhS/hU1bVOMsO9KoG5k6jGaVax3/r
+	XGJdH072HXyesAr5j5p4kcpki9FeikD8yqArjJAlOtLhYysnEhO8QfX7HhlACPa16aGXTTM
+	PXG2ycisLT1mTMUizDc5r8SgSY4+LRdjfPIc2JNA==
+X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
+X-QQ-RECHKSPAM: 0
 
+The Lenovo 17aa:507e RTL8111xP multi-function device exposes a VPD
+capability on all functions, but the VPD storage is not usable.
+Function 0 returns an invalid first tag and functions 1-4 never complete
+VPD transactions.
 
-On Tue, 05 May 2026 13:04:52 +0300, Vladimir Oltean wrote:
-> The biggest problem requiring this split is the fact that consumer
-> drivers poke around in struct phy, accessing fields which shouldn't be
-> visible to them. Follow the example of mux, gpio, iio, spi offload,
-> pwrsec, pinctrl and regulator, which each expose separate headers for
-> consumers and providers.
-> 
-> Some off-list discussions were had with Vinod Koul regarding the 3 PHY
-> providers outside the drivers/phy/ subsystem. It was agreed that it is
-> desirable to relocate them to drivers/phy/, rather than to publish
-> phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
-> (new) phy-props.h - consumer-facing headers - stay there.
-> 
-> [...]
+This produces noisy dmesg output when userspace reads the VPD sysfs
+attribute, including:
 
-Applied, thanks!
+[   16.654155] r8169 0000:02:00.0: invalid VPD tag 0x00 (size 0) at offset 0; assume missing optional EEPROM
+[   16.790913] serial 0000:02:00.1: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
+[   16.931963] serial 0000:02:00.2: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
+[   17.071445] pci 0000:02:00.3: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
+[   17.210910] ehci-pci 0000:02:00.4: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
 
-[15/31] drm/rockchip: dw_hdmi: avoid direct dereference of phy->dev.of_node
-        commit: 9392e7340bffb406a705de755adfb44eab547d40
+VPD is optional. Disable VPD for this exact subsystem and revision so the
+PCI core does not expose a broken VPD sysfs file that cannot be read.
 
-Best regards,
+Signed-off-by: Qiang Ma <maqianga@uniontech.com>
+---
+ drivers/pci/vpd.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+index 153394a652d3..492e0d669ea8 100644
+--- a/drivers/pci/vpd.c
++++ b/drivers/pci/vpd.c
+@@ -597,6 +597,32 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_blacklist_vpd
+ DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS, 0x0031,
+ 			       PCI_CLASS_BRIDGE_PCI, 8, quirk_blacklist_vpd);
+ 
++/*
++ * The Lenovo 17aa:507e RTL8111xP multi-function device advertises VPD
++ * on all functions, but the VPD data is not usable.  Function 0 returns
++ * an invalid first tag and functions 1-4 never complete VPD accesses.
++ */
++static void quirk_lenovo_realtek_rtl8111xp_no_vpd(struct pci_dev *dev)
++{
++	if (dev->revision != 0x0e ||
++	    dev->subsystem_vendor != PCI_VENDOR_ID_LENOVO ||
++	    dev->subsystem_device != 0x507e)
++		return;
++
++	dev->vpd.len = PCI_VPD_SZ_INVALID;
++	pci_warn(dev, FW_BUG "disabling VPD access (can't determine size of non-standard VPD format)\n");
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8168,
++			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816a,
++			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816b,
++			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816c,
++			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x816d,
++			 quirk_lenovo_realtek_rtl8111xp_no_vpd);
++
+ static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+ {
+ 	int chip = (dev->device & 0xf000) >> 12;
 -- 
-Heiko Stuebner <heiko@sntech.de>
+2.20.1
+
