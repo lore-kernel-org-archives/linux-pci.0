@@ -1,151 +1,157 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012002.outbound.protection.outlook.com [40.93.195.2])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE8FB2798F8;
-	Thu, 21 May 2026 10:06:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.2
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779358012; cv=fail; b=iDr/LXPOAa/An/Dc0ZBfVxWzRHBABFUxDqkWmtkxGfTzkbd5bhL8+YJIsWwm7zhFZV5BOv3cheuwEQcrLMO8RlqkwY/yQB2lsnUWU2AdoArtIUBZoYhZkBP1lbofoIKuXDDk6OmDF85+SW8cREzTrMY8mrlLRw2Mf2KMm6Z/8zY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779358012; c=relaxed/simple;
-	bh=7c4mwHcJwSG0MHKTxxjhnPCutF98tW8D8P7TM0lrJaU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gKo7X/+vYn4pB+aG8b+6NIfv0N3+JiN4ifvKg95aWc5I8/jnNEv3XWajd5EHjme+PEOyvRsKqqHEvVuxJVRKXCGIFNEXVDhF41RztLCsIVupqwfUHj4RuvwDx46ZjcugffIjh4mNfJ2oXeU7yiKT2YgK1ZXezhA6YfDGjv5GMXE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=nC1ivF6G; arc=fail smtp.client-ip=40.93.195.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770CE3806A3;
+	Thu, 21 May 2026 10:22:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779358954; cv=none; b=Xa1ibnM+2IqalpCggDT74DZ9I7JHU1pJQMeiA1HQRlw9CBR0JVZOlLqc38AWbyQdKLUZDDLyzaMSFaveqir0UPcxjmD0mrMIz5SPzdwAxDR946A/1W1H7lacGwCg8qaHYrcdJkPp2B4aJxrrm04teDKEpn1mecmscbWyY3ehzSc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779358954; c=relaxed/simple;
+	bh=+HW0dOk5wH9pqNi3mzEx4jIB8et3CH9L54AR6abHdV0=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=l+dLB0TwskwOFV2YzJPBWeFfyK77xq3hAiLedENNk6rl+NgFhQGNbGFfRppvWUnp0LcpkzyGiGFUDygYkG+FFWDlEGT4OoaDYSwuhQ39D4mFgolYCn7SWvjlFrqIkWuuCE2tfYri+k/c8CwerAgnbhOJjP1aHo3ahsQC9bwtcWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bsKcNw5i; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="nC1ivF6G"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=atEx4PXUGXEjzvm26q050UYYN1AQ532TM8D4rtqS8zVJRwRLl7sI56uB0Lrb4XIwxFjDfAbq7bxxZ70qOJem/ZAXO5Z87vWmbYdirhO8DQBwv2ssWNc8QwfFPwEoYD1pdazNZHVg1fJx2Fx/fi20pyczf8siG9CSxeejjPOHF6i6uMblMEtOOrKExgIKJM12O6RGiqX0PTFeYA6vkn0h8EpnIHKuCknA+rqDd7jaU1EkBAahJTrhvXFzBOMuk1sI2pspZHLnw6LBSw2OtxrKDnP403BEdwc25+wwrNy2aPWOhYQi6VA/CGu3jvsiYk7eMo/JaI6sljX/EdMXXeCDMg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=d9KPsRDtH5Roqcjh5rgGHD/ytNfzMFbwSvXLyFzUsiQ=;
- b=QPewtyvLJuleodVgxYifI86Wu7LtlUTOAejexnDRpC/npN2nHs1JQ6epYr+ZlCreehj1hfvnOHKsEV2o5xfYlN3/vDpaIIdqlQD0cVTfxtEe0BMg77kpFh0l7295prr4XaMEni5Z/iCLxJXAQ73Sw69fG14xmiNByDQn5Vne4TDI3zwYL5jBbo1jQs573FpyVCdnDfl+2ZWWgmubNsdE90lOX9S4oZwGm2Y6kauSRpeKHsbOO73/e7kFV367bzzqrZmA1Fz5ixOMORRpER2vFGDH4b68beQYyH9eG0MTCVh7eIQcpNmgF2H5PVvsxSqoZWRMaShgx2WBwKY5VGpreg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=d9KPsRDtH5Roqcjh5rgGHD/ytNfzMFbwSvXLyFzUsiQ=;
- b=nC1ivF6Gq/biT/jkYwrH3YfCluZtNPegqaUBUmIVpYYyqmn+fo2m7xXlmtmaM/WjDRS91A4fUq6ruQIKievcgQAtIaS2764amzB6zeLt9AAnrPwtRtepYgH8M60pbXueQ7yG+WEUtr35wFSE3sxyVT/6H2CbSBuH9xQjQy2XegE=
-Received: from BYAPR21CA0030.namprd21.prod.outlook.com (2603:10b6:a03:114::40)
- by SA1PR12MB7296.namprd12.prod.outlook.com (2603:10b6:806:2ba::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Thu, 21 May
- 2026 10:06:44 +0000
-Received: from SJ5PEPF00000205.namprd05.prod.outlook.com
- (2603:10b6:a03:114:cafe::15) by BYAPR21CA0030.outlook.office365.com
- (2603:10b6:a03:114::40) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.71.6 via Frontend Transport; Thu, 21
- May 2026 10:06:44 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
-Received: from satlexmb08.amd.com (165.204.84.17) by
- SJ5PEPF00000205.mail.protection.outlook.com (10.167.244.38) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.71.7 via Frontend Transport; Thu, 21 May 2026 10:06:44 +0000
-Received: from satlexmb10.amd.com (10.181.42.219) by satlexmb08.amd.com
- (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Thu, 21 May
- 2026 05:06:43 -0500
-Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb10.amd.com
- (10.181.42.219) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Thu, 21 May
- 2026 05:06:43 -0500
-Received: from xhddevverma40x.xilinx.com (10.180.168.240) by
- satlexmb08.amd.com (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.41
- via Frontend Transport; Thu, 21 May 2026 05:06:41 -0500
-From: Devendra K Verma <devendra.verma@amd.com>
-To: <bhelgaas@google.com>, <mani@kernel.org>, <vkoul@kernel.org>
-CC: <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>
-Subject: [PATCH v1] dmaengine: dw-edma: Remove dw_edma_add_irq_mask()
-Date: Thu, 21 May 2026 15:36:40 +0530
-Message-ID: <20260521100640.3333076-1-devendra.verma@amd.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bsKcNw5i"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779358952; x=1810894952;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=+HW0dOk5wH9pqNi3mzEx4jIB8et3CH9L54AR6abHdV0=;
+  b=bsKcNw5ik0zSYeU8vKlnQQ1/V9mjF93WTYugGXc415/hkP1Sd/rGuXAI
+   a5uJfROl7ljZsbhdJr6EtpgKu6ZiuJX8hYW+v0ja8gOHE3l/RHF+5GDKW
+   b395Tz/aa0/4GCSfHwpSd8+vuNnS+HV6Y+MncQp0Y1lVe0aBd2Gd6dem5
+   7EWFauw8ZirswRToivO+QD2CB1t71TjMAFE4XBzRPxQrsg3pBja+u99NZ
+   1ebVizCqzdQU6KrCNltStJmlDhL23ws00uBnYCiJa9iPwaSdsZppo/FdJ
+   arKF3HS4UQvgjGJfpoCUD9yu5K8uWVvWFHtba+FfPYMLgzvMtmTE8ieVl
+   w==;
+X-CSE-ConnectionGUID: aJ0xSPkjSRCBoWKl40qy2Q==
+X-CSE-MsgGUID: caVzMgQ2QFG+TmpY1w0Cmg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11792"; a="80329234"
+X-IronPort-AV: E=Sophos;i="6.23,246,1770624000"; 
+   d="scan'208";a="80329234"
+Received: from fmviesa006.fm.intel.com ([10.60.135.146])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 03:22:32 -0700
+X-CSE-ConnectionGUID: 5bRRu3c6SxmrfLy2tNIOTg==
+X-CSE-MsgGUID: 3CFzgJUxQ6CUSyitSYc8bw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.23,246,1770624000"; 
+   d="scan'208";a="236070105"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.98])
+  by fmviesa006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2026 03:22:29 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 21 May 2026 13:22:27 +0300 (EEST)
+To: Gianfranco Dutka <gianfranco.dutka@arista.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI/sysfs: NULL res_attr slot after kfree as defence
+ against double-remove
+In-Reply-To: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
+Message-ID: <376c679c-8637-d19a-48d1-165d8f2fc2f0@linux.intel.com>
+References: <20260520211306.3301893-1-gianfranco.dutka@arista.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ5PEPF00000205:EE_|SA1PR12MB7296:EE_
-X-MS-Office365-Filtering-Correlation-Id: f578d7ce-b8ac-4edd-5a79-08deb720a98f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|36860700016|376014|1800799024|18002099003|56012099003|11063799006|3023799007;
-X-Microsoft-Antispam-Message-Info:
-	AciCeHwlpizjXcdAAiIuYt7IXKXkZ6nzoHRkR7qVzPOCWgWd9FTY2OHE6jptT6Fz+5hyfKIotodKO8FID0INYfCLDj8Ni7DmP3cYC1H+Jfy/jbb738nydpN0LrUeVF0B4xcOj8zSuTv68URHUmksLFLP/on2yb7xNk+gKs/7GIhoc3uam21QeScer/qdfTf/4EG7YupLqomg/XTbiBLLqqGWKX1u2YcVPdGKtaJm/XYxumzEi5EWnNgdm3k6zLehIdzKMGq4NuF/8ko/qnsoL7cs+aZI/NDp/CvZ1m1ywHml6FM5/L/iXvTKJsMoTSBLbV3Xcc6f81gCq+OC5EXBmk/pgenTnKxlV0fuwwQkPiyZRd4VpI4B4EFGpkGIjcBaZ3dd96A5gQ9TzEicbj3lzc3XEPaU/cPisNXhZ78nHi25zhVxVc9Ko9msp+qk4OPo7DByA7pSRgUG8Pc7S/Wlo4q2lgoQUVjQJQWxhuPHOcnHPuKLptc2uemwRdBXbDKsU9JQVZcxvlG/8dCy4zLzkqjPtNR2JGcGQeZPA4qqU98p7VMNlnXMIGqHC1iQIXEq40bbThodS/6ZVf1cSyuQ1cVxgoInO8+kCAwey0XH7YbWIx5ZWSwlvzTlgvYryRgKw+mBgE1YpCWO2anzpzPUuHJkVoaPRDXvYKepYElcWewhyo82xT3kreFmjqlshFN0EF3r49JFg0w4oX7JXdpY86qD5/hcuGCvdRMkN2k/1rI=
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(376014)(1800799024)(18002099003)(56012099003)(11063799006)(3023799007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	1wfHiGGaQEca+AWVpj/KtaAmUOxGQYxhU8ifhCQ+A8olui07i077P0Zia8mdF/ZuD4eWaTLq2X7y3oThYPb/R6YObqf/VX/ssMHn7aLO8tNbrm1my7DeDP0CwvQsgdXZMuOWBq4XtReomnFzr2VRL8IfUJs7tB6G7gYtdGVw2+StDOkFrNpJl8m8Jy9JUn3FuRE7JEau9X11xX2LhotyrRkxBCTN+Y54fknPfgYF4fcMlb0XEOQSEvrRBCO0+tuisSqSeVxnxgtSPYDp14tUZeyh4kAqeximDtFHTOOE6S7D+3d+sHMWw+u2lVPNm64N+sKo54RVdhVjoqnwVhl6gplg4/XD4qhqAwRMAqwYYlM+/UzmSsexcXwj5Vr0Uz7MEmYzf2eFWc3EI36EH7VDVx3hsVB1Rc0+jcHhi5hCKFh8eQn+9HjkFMmYOARzAIRU
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 May 2026 10:06:44.3432
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f578d7ce-b8ac-4edd-5a79-08deb720a98f
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ5PEPF00000205.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7296
+Content-Type: text/plain; charset=US-ASCII
 
-Function dw_edma_add_irq_mask() is not used anywhere. The
-output of the function is not used hence it is redundant and
-can be removed safely.
----
- drivers/dma/dw-edma/dw-edma-core.c | 11 -----------
- 1 file changed, 11 deletions(-)
+On Wed, 20 May 2026, Gianfranco Dutka wrote:
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index c2feb3adc79f..89a4c498a17b 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -988,20 +988,12 @@ static inline void dw_edma_dec_irq_alloc(int *nr_irqs, u32 *alloc, u16 cnt)
- 	}
- }
- 
--static inline void dw_edma_add_irq_mask(u32 *mask, u32 alloc, u16 cnt)
--{
--	while (*mask * alloc < cnt)
--		(*mask)++;
--}
--
- static int dw_edma_irq_request(struct dw_edma *dw,
- 			       u32 *wr_alloc, u32 *rd_alloc)
- {
- 	struct dw_edma_chip *chip = dw->chip;
- 	struct device *dev = dw->chip->dev;
- 	struct msi_desc *msi_desc;
--	u32 wr_mask = 1;
--	u32 rd_mask = 1;
- 	int i, err = 0;
- 	u32 ch_cnt;
- 	int irq;
-@@ -1038,9 +1030,6 @@ static int dw_edma_irq_request(struct dw_edma *dw,
- 			dw_edma_dec_irq_alloc(&tmp, rd_alloc, dw->rd_ch_cnt);
- 		}
- 
--		dw_edma_add_irq_mask(&wr_mask, *wr_alloc, dw->wr_ch_cnt);
--		dw_edma_add_irq_mask(&rd_mask, *rd_alloc, dw->rd_ch_cnt);
--
- 		for (i = 0; i < (*wr_alloc + *rd_alloc); i++) {
- 			irq = chip->ops->irq_vector(dev, i);
- 			err = request_irq(irq,
+> pci_remove_resource_files() frees the bin_attribute pointed at by
+> pdev->res_attr[i] / pdev->res_attr_wc[i] but does not clear the slot
+> after kfree().  If pci_remove_sysfs_dev_files() is ever invoked twice
+> against the same pdev, the second pass dereferences a freed
+> bin_attribute and faults inside strlen() called from
+> kernfs_remove_by_name_ns().
+> 
+> To the best of my knowledge no in-tree caller hits this today -- the
+> primary path (pci_stop_dev() -> pci_remove_sysfs_dev_files()) is
+> expected to fire once per device -- so this is being submitted as
+> defence-in-depth rather than as a fix for a reproducer in the upstream
+> tree.  The motivation is that a freed-but-not-cleared pointer in a
+> device-lifetime table is a sharp edge: any future caller (in-tree or
+> out-of-tree) that re-enters the teardown path turns it into a UAF
+> with no warning.  Other allocator-managed pointer tables in the
+> kernel NULL the slot after kfree() for exactly this reason, and the
+> two-line change makes pci_remove_resource_files() idempotent at
+> essentially zero cost.
+> 
+> For full disclosure: the way I encountered this was via an
+> out-of-tree PCIe hotplug driver on an AMD Ryzen Embedded V3000
+> platform.  The driver re-enters pci_stop_and_remove_bus_device()
+> against a pdev that the standard pci_destroy_dev() path has already
+> torn down, and with slub_debug=FZPU the second entry faults with the
+> classic POISON_FREE signature:
+> 
+>   BUG: unable to handle page fault for address: 6b6b6b6b6b6b6b6b
+>   RIP: strlen+0x4
+>   Call Trace:
+>     kernfs_find_ns
+>     kernfs_remove_by_name_ns
+>     sysfs_remove_bin_file
+>     pci_remove_resource_files
+>     pci_remove_sysfs_dev_files
+>     pci_stop_bus_device
+>     pci_stop_and_remove_bus_device
+>     <out-of-tree hotplug driver remove path>
+> 
+> I am aware that "out-of-tree driver re-enters teardown" is not by
+> itself a reason to take a change upstream, and I would understand a
+> NACK on that basis.  The reason I am still sending it is that the
+> fix is local, mechanical, matches an idiom already used elsewhere in
+> the kernel, and removes a class of bug rather than papering over the
+> specific caller that surfaced it.
+
+Hi,
+
+To me it looks more like pci_remove_resource_files() is expected to be 
+entered only once.
+
+If this change is accepted, the 2nd entry is "silently" allowed whereas 
+better course of action would feel to catch that in 
+pci_remove_resource_files() with:
+
+	if (WARN_ON_ONCE(something))
+		return;
+
+That way, developers may become aware the code has some lifetime issue.
+
+(I'm not strictly against your change but I think it would be much better 
+to have sane lifetimes and catch offenders.)
+
+> Signed-off-by: Gianfranco Dutka <gianfranco.dutka@arista.com>
+> ---
+>  drivers/pci/pci-sysfs.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1228,11 +1228,13 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
+>  		if (res_attr) {
+>  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+>  			kfree(res_attr);
+> +			pdev->res_attr[i] = NULL;
+>  		}
+> 
+>  		res_attr = pdev->res_attr_wc[i];
+>  		if (res_attr) {
+>  			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+>  			kfree(res_attr);
+> +			pdev->res_attr_wc[i] = NULL;
+>  		}
+>  	}
+>  }
+> --
+> 2.43.0
+> 
+
 -- 
-2.43.0
+ i.
 
