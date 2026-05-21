@@ -1,183 +1,120 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 54B8E3D3D0B;
-	Thu, 21 May 2026 14:34:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6139F3E2AAD
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 14:35:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779374066; cv=none; b=ThcEA0+25whmcR3ZLqk4xl2rFyxKPdR00GYI+Lfu2HesD/XD99MjgkyuZFhsxHuwPruKCSy3sY1Xa4V6kMP6EM1lcJZqbYwUKmTuiTiFA9r0YmAMsQTX154I0XfcrEHkQV1Fn35X79qOzg4wY4BV1XiQpMXt4HPaKrevbKeJpbU=
+	t=1779374113; cv=none; b=o97KbOfFVr/0Cx7SF1pSvYbXkLM6USJ1HoRwLKoiZO+/zNG9t5pvqSBFPpApNBqSKqhRVTNqXHcCw6HR+eowEKa7VsbX+ng2qncmJsY3qc1vAL42CbKtCl/H3HnKWtsOMPcMXuV0i7TbznuV1qYZjTbd9W8zmb38dpZ8nD3CEag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779374066; c=relaxed/simple;
-	bh=oVRExsDbqI3W1ESzcran04U9sA2pzYajuKWQjY1qFwc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TiuIwOvOivZELnpaAYzKsehLh/hjh0+SNQWAJTQlHmrnnbWblraUqSVn/oeCbCBE2pjPP51c8jNU1hrgPwZRO2e0CXVsYZEauckIsCh3oAa5m/71WqaEWq76frf2f2s3uPCKuxwzRPzGNxsoFt4db5ksb2vBY5WNul1JrBh0Fuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=a9y/bJGK; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1779374113; c=relaxed/simple;
+	bh=unWHAa3Qt8mz8vG5wnlDVzOC4a61HmdWhTxljmOmzpo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=gbAvFkiHoU8KhVenlU4hCMQSWC+2gd56upw9fcXQK0j6MN9Zv66mBn946CYWXrX3DNVHL9duo7b7yqVW8CEAcqMp96f81ge6erbyFsLGuXvyNQJewfHImcZx4pZgVK8FnM0KuPHj6BS+cEwH0pQFUbF1MEaxTVZxDJHYRuQBOmA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kyx1WarA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="a9y/bJGK"
-Received: from localhost (unknown [167.220.233.27])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 178A520B7167;
-	Thu, 21 May 2026 07:34:17 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 178A520B7167
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1779374057;
-	bh=yuY7/VKIfWBH4Ab+m5RYvn2+pEgbBdbEqQP/VdZLuxk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=a9y/bJGKwY3aQlb5YklgTtrtaqVP6gnQpATZWuAOiOMgeei+p4MnBPg3n2m7DZbhn
-	 3QOibAa0hCmftbsO/SAfMxtJr0nEyCVuWXUOHEF5R5H3i5EX3l95MTrQTzgZJaPX4k
-	 2nLCXrel9IW7Q7CBWTlnasMUO1FFcg2JFZiUTbg0=
-Date: Thu, 21 May 2026 22:34:22 +0800
-From: Yu Zhang <zhangyu1@linux.microsoft.com>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>, 
-	"iommu@lists.linux.dev" <iommu@lists.linux.dev>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>, "wei.liu@kernel.org" <wei.liu@kernel.org>, 
-	"kys@microsoft.com" <kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>, 
-	"decui@microsoft.com" <decui@microsoft.com>, "longli@microsoft.com" <longli@microsoft.com>, 
-	"joro@8bytes.org" <joro@8bytes.org>, "will@kernel.org" <will@kernel.org>, 
-	"robin.murphy@arm.com" <robin.murphy@arm.com>, "bhelgaas@google.com" <bhelgaas@google.com>, 
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>, 
-	"mani@kernel.org" <mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>, 
-	"arnd@arndb.de" <arnd@arndb.de>, "jacob.pan@linux.microsoft.com" <jacob.pan@linux.microsoft.com>, 
-	"tgopinath@linux.microsoft.com" <tgopinath@linux.microsoft.com>, 
-	"easwar.hariharan@linux.microsoft.com" <easwar.hariharan@linux.microsoft.com>
-Subject: Re: [PATCH v1 4/4] iommu/hyperv: Add page-selective IOTLB flush
- support
-Message-ID: <pxod76qh3jtpvnxdlflvntc5svqgibaeu6tywn2ejrlnea65w3@djehcr3vidnk>
-References: <20260511162408.1180069-1-zhangyu1@linux.microsoft.com>
- <20260511162408.1180069-5-zhangyu1@linux.microsoft.com>
- <20260515223545.GL7702@ziepe.ca>
- <lxmfd2ml5dafkxquuf5i45uqgh6wxl44hlqphu77kvximqrnmi@b3htoyjc6d5z>
- <SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kyx1WarA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45CB1F000E9;
+	Thu, 21 May 2026 14:35:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779374112;
+	bh=+pRX2z37xulb7NieSD0vJ+8VwcZxBKzaRDQaiGSdB8M=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kyx1WarAzlAAgOOKJhez+BYMCIB7eISExQItpmBblVDKp3BDSN1ddoHuWh9vWL2LV
+	 ywGNow3YiLM0ezRo6Vnpk13gLB3SfQFlo2BERu4WjwkVF1g0tGrA780r4elmuvGap6
+	 REFDxCRq8i2YlF/GSgPDisvrwQ9p2hR2cBkl3wRLnKZrJli9mqHcPn3/A8HmcaEOrP
+	 /epaqSgr+fBmBXXb4E1+mE6TT/ITboxFJ+mVa/HRrlZb+xxnS2FmRcnm5rlBuwDsB1
+	 DAwe/LV6vHhIzt3I/fS7F4JswghNZOyiQpKlq+e1ZVyra+2w7CWW8at8Juf2Jjl5FM
+	 zNib4fMivYAHg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 4/4] PCI: qcom: enable Link retain logic for Hamoa
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Krishna Chaitanya Chundru" <krishna.chundru@oss.qualcomm.com>
+Cc: olteanv@gmail.com, linux-phy@lists.infradead.org, neil.armstrong@linaro.org, vkoul@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260521-link_retain-v2-4-08ed448b081c@oss.qualcomm.com>
+References: <20260521-link_retain-v2-4-08ed448b081c@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 21 May 2026 14:35:11 +0000
+Message-Id: <20260521143511.D45CB1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <SN6PR02MB4157C1EC7F5F69C5ABDA9C7FD4012@SN6PR02MB4157.namprd02.prod.outlook.com>
 
-On Wed, May 20, 2026 at 07:26:24PM +0000, Michael Kelley wrote:
-> From: Yu Zhang <zhangyu1@linux.microsoft.com> Sent: Wednesday, May 20, 2026 10:15 AM
-> > 
-> > On Fri, May 15, 2026 at 07:35:45PM -0300, Jason Gunthorpe wrote:
-> > > On Tue, May 12, 2026 at 12:24:08AM +0800, Yu Zhang wrote:
-> > > > +static inline u16 hv_iommu_fill_iova_list(union hv_iommu_flush_va *iova_list,
-> > > > +					  unsigned long start,
-> > > > +					  unsigned long end)
-> > > > +{
-> > > > +	unsigned long start_pfn = start >> PAGE_SHIFT;
-> > > > +	unsigned long end_pfn = PAGE_ALIGN(end) >> PAGE_SHIFT;
-> > > > +	unsigned long nr_pages = end_pfn - start_pfn;
-> > > > +	u16 count = 0;
-> > > > +
-> > > > +	while (nr_pages > 0) {
-> > > > +		unsigned long flush_pages;
-> > > > +		int order;
-> > > > +		unsigned long pfn_align;
-> > > > +		unsigned long size_align;
-> > > > +
-> > > > +		if (count >= HV_IOMMU_MAX_FLUSH_VA_COUNT) {
-> > > > +			count = HV_IOMMU_FLUSH_VA_OVERFLOW;
-> > > > +			break;
-> > > > +		}
-> > > > +
-> > > > +		if (start_pfn)
-> > > > +			pfn_align = __ffs(start_pfn);
-> > > > +		else
-> > > > +			pfn_align = BITS_PER_LONG - 1;
-> > > > +
-> > > > +		size_align = __fls(nr_pages);
-> > > > +		order = min(pfn_align, size_align);
-> > > > +		iova_list[count].page_mask_shift = order;
-> > > > +		iova_list[count].page_number = start_pfn;
-> > > > +
-> > > > +		flush_pages = 1UL << order;
-> > > > +		start_pfn += flush_pages;
-> > > > +		nr_pages -= flush_pages;
-> > > > +		count++;
-> > > > +	}
-> > >
-> > > This seems like a really silly hypervisor interface. Why doesn't it
-> > > just accept a normal range? Splitting it into power of two aligned
-> > > ranges is very inefficient.
-> > 
-> > Fair point. I'm not sure how much flexibility we have to change
-> > this hypercall interface at the moment - it predates the pvIOMMU
-> > work and may have other consumers beyond Linux guest. On the other
-> > hand, having the guest specify 2^N-aligned blocks does save the
-> > hypervisor from having to decompose ranges itself before issuing
-> > hardware invalidation commands - the guest-provided entries can be
-> > fed to the HW more or less directly.
-> > 
-> > That said, the way I'm currently using this interface may be
-> > more precise than necessary. Maybe we have 2 options:
-> > 
-> > 1) Current approach: decompose the range into multiple exact
-> >    2^N-aligned blocks with no over-flush, but at the cost of
-> >    more complex calculations and more entries.
-> > 
-> > 2) Follow what Intel/AMD drivers do: find a single minimal
-> >    2^N-aligned block that covers the entire range, but may
-> >    over-flush.
-> > 
-> > Any preference?
-> > 
-> > @Michael, since you've also been reviewing this patch, I'd
-> > appreciate your thoughts on the above as well. :)
-> > 
-> 
-> I'm just guessing, but perhaps flushing an aligned power-of-2
-> range can be processed by the hypervisor at a relatively fixed
-> cost, regardless of the size. Having the guest do the decomposing
-> of an arbitrary range allows the hypervisor to make use of the
-> existing "rep" hypercall mechanism if the hypercall is taking
-> "too long". The hypervisor can pause its processing, return to
-> the guest temporarily, and then continue the hypercall. If the
-> arbitrary range were passed into the hypercall for the hypervisor
-> to do the decomposing, that pause-and-restart mechanism
-> wouldn't be available.
-> 
-> Of course, Linux doesn't really take advantage of the pause to
-> reduce guest interrupt latency because the Hyper-V code in
-> Linux typically disable interrupts around a hypercall due to the
-> way the hypercall input page is allocated. But other guest
-> operating systems might benefit from such a pause. And we could
-> probably fix the Hyper-V code in Linux to allow interrupts during a
-> hypercall pause/restart if long-running hypercalls turn out to be
-> a problem.
-> 
-> Regarding proposal (1) vs. (2), perhaps you could confirm with
-> the Hyper-V team that flushing an aligned power-of-2 range
-> has relatively fixed cost, regardless of the size. And what do the
-> flush requests coming from the generic IOMMU subsystem look
-> like? Do they match dma_unmap() ranges, which are probably
-> dominated by relatively small ranges of a few pages at most,
-> with a few outliers for disk I/O requests of 1 MiB or some such?
-> If the dominant flush request is for a few pages at most, then
-> doing (2) seems reasonable.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Thanks for the thoughtful suggestions, Michael!
+Pre-existing issues:
+- [High] Setting `link_retain =3D true` in `cfg_x1e80100` exposes a flawed =
+error handling path in `qcom_pcie_host_init()` that silently ignores `-EPRO=
+BE_DEFER` and bypasses critical host configuration.
+--
 
-I believe the time might be dominated by the number of descriptors,
-instead of the size of each range, especially when device TLB
-invalidations are involved.
+commit 868652002bbdb8222b28dbec2b0655af97d3ceb8
+Author: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
 
-Here's my understanding of what hypervisor does in its handler:
+    PCI: qcom: enable Link retain logic for Hamoa
 
-Hyper-V constructs one IOTLB invalidation descriptor (and possibly
-a Device TLB invalidation descriptor as well) per iova_list entry
-and submits them to the HW invalidation queue, then synchronously
-waits for completion. So multiple 2^N-aligned entries should be less
-efficient than a single larger 2^N aligned one.
+    The Hamoa platform supports keeping the PCIe link active across
+    bootloader and kernel handoff. To take advantage of this, introduce a
+    specific configuration (cfg_x1e80100) with link_retain =3D true and
+    update the device match table to use it.
 
-Since both options submit 2^N-aligned entries to the hypervisor,
-either one single coarser-grained entry or a precise decomposition,
-I'm now also leaning towards option 2, which is also what Intel/AMD
-drivers do for page-selective IOTLB flush. Simpler guest code, faster
-flush, and the hypervisor can feed the single entry almost directly
-to HW.
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
+ler/dwc/pcie-qcom.c
+> index b061eaa227b39..8496eb87debbc 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -1557,6 +1557,12 @@ static const struct qcom_pcie_cfg cfg_sc8280xp =3D=
+ {
+>  	.no_l0s =3D true,
+>  };
+> =20
+> +static const struct qcom_pcie_cfg cfg_x1e80100 =3D {
+> +	.ops =3D &ops_1_21_0,
+> +	.no_l0s =3D true,
+> +	.link_retain =3D true,
+> +};
+> +
 
-Yu
+[Severity: High]
+This isn't a bug introduced by this patch, but setting link_retain to true
+here exposes a pre-existing flawed error handling path in qcom_pcie_host_in=
+it()
+that silently ignores -EPROBE_DEFER.
+
+If pci_pwrctrl_power_on_devices() returns -EPROBE_DEFER when the power cont=
+rol
+driver hasn't bound yet, the error handler intercepts the deferral:
+
+qcom_pcie_host_init() {
+    ...
+	ret =3D pci_pwrctrl_power_on_devices(pci->dev);
+	if (ret)
+		goto err_pwrctrl_destroy;
+    ...
+err_pwrctrl_destroy:
+	if (pp->link_retain && ret =3D=3D -EPROBE_DEFER)
+		return 0;
+    ...
+}
+
+Will returning 0 here trick the DWC core (dw_pcie_host_init()) into assuming
+host initialization completed successfully?
+
+Since the probe completes without retrying, could this leave the PCIe slot
+regulators unmanaged by the kernel, causing them to be disabled later when
+regulator_init_complete() runs at late initcall?
+
+Additionally, does returning early skip mandatory initialization steps like
+qcom_pcie_clear_aspm_l0s() (which is required by cfg_x1e80100.no_l0s =3D tr=
+ue),
+hiding MSI-X/DPC capabilities, and performing SID configuration? Skipping t=
+hese
+could result in link instability, AER errors, and hardware malfunction.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521-link_retai=
+n-v2-0-08ed448b081c@oss.qualcomm.com?part=3D4
