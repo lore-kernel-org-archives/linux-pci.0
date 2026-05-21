@@ -1,142 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C44E3FADE9;
-	Thu, 21 May 2026 19:05:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 581E3393DF1
+	for <linux-pci@vger.kernel.org>; Thu, 21 May 2026 19:19:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779390310; cv=none; b=Pv/7DhMh64f2xeH389b7yHdLV6nZsB4f6hBY6pIT3lha9IuLyIwVDRdq7lOjqTcxYc36dD6ZDO6oXENHpB48Mc5ZUcoQs5JDg2uov5iGygOTerZPtm6nDPE6uSzZADFm4xGv8RPyiv644dz9FCAls0JfKMFeVRA+G28PRJ469I8=
+	t=1779391203; cv=none; b=CRx/B1wv+IavYwsO345pr+0LK9vn5ZkIZjfavDnyORXxKKfVsK/uT4y7KhTKUPc4fEvutw4XhJrxAKimYVbqbpV8JM51nEQeb1mx3obFXwcYFaDWV866v0k/cemJGc2j2MWuUU+RURJ3I5CsGdipVvu83Q7/wksonBOUSjJSC88=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779390310; c=relaxed/simple;
-	bh=nS1YohvRA6+QYc47+oKdHKG14mzoayhGT0SLjurt5Us=;
+	s=arc-20240116; t=1779391203; c=relaxed/simple;
+	bh=ep0604l6QLgoVbZXkwSctUWVgiFvmPHDcG7F6nZyEDo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=L1K6pL3seMLpGrlObOnG0SMo4qo/Cm/kSrJiFux8F/v6J7Pr50oYFYtLeieMo0Isl+eRPBxDD3yA2lMjjI7/7Bg+FchQWiSkkrYR+spC6wSd1q0Aztl7tZrN9nuXSdNRJg3flXAPg715srX/DKq3FXwxORdBLFAi5uIvxPiqc9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SA2ts/Fj; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=TP6eP3IfA7UAENPrwGWOx5Z8hU24cMspIIXD6ymnn9fdWTCDjo5N8n1y2XbX8v3lQwZJINVBpnkoaz89YFr4HzD/SMhpMHdoHMbK2wjRhST94b6FJO+j5adSX2v3CBQyym7AOMjUngsaHuJIPg7conDLNxxdi78r3xtvNpgi/xE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I2A+8qpN; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SA2ts/Fj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABF321F000E9;
-	Thu, 21 May 2026 19:05:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I2A+8qpN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5CFC1F000E9;
+	Thu, 21 May 2026 19:19:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779390304;
-	bh=rrnpxsFPI13KfFrjgq5YPmQff2T/DywbBASDJrqj44I=;
+	s=k20260515; t=1779391195;
+	bh=znKZkIJmrgjGTbjSinT9WAKKaNk47tmyTgwd+TwuRqY=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SA2ts/Fj5CsxA2m12xrSqnz0sde4BmS4OWIxBDOj7sXTbJY5n7NJWkjmUQDW2mwOl
-	 D6w6n29ROmzufvdl+6GJO+5UcVwJKSxa93tXuQlc25dYITe+P4wDVrc472YDw/kQx3
-	 2SfTd7w8H4T27vKb7D8ahrIKeukSOrXXv/0gp4glouVc4bxpOmSapRGKIs/esE+3PZ
-	 LtCX0H0tF5NNIM0iYMRyr31lrQFfMwaJQZYnJr1mA/6Df0mCTprd784fejalChw+SG
-	 Pa6CbOxl/BZvr3Zjfn840+hHSyBckSAR9m5j7I/g24JWIRYHjG1XDheAk3bu3AGaVp
-	 GQQQ5vb75xTyQ==
+	b=I2A+8qpNuw3zjnhS0CcQC/aUFxAWlbe5iDYJLSQsswf4exCAiFUiS6kXuInXu1GTp
+	 jFSGXgqqUEdp1Ukhrhtv0qSeTG+yJQBQbozqs6XCNgqlyrQ5MZWnIKSUVls6Npdzkm
+	 cJv5RLxLhimYL8mwLJXLr6SGRsWW7nu0hxK+hN1t8VbRKaJLdS0mA8Tt+fJhZ1kXQJ
+	 rnXh0EX7uO8vzRnNUv4pxrJqmvYHLzz1oBMUMWZtr+PRUN8F7qg0SIxXSfVAapD7/Y
+	 8jvRfSIsw4BCqp3AiufpDIdxgTIN5dQGP93CoKaR3272yCOydIk91iiQo4K6mH7ggC
+	 QUbV9TDijOrWw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 7/9] nvmet: pci-epf: Use
- dmaengine_prep_config_single_safe() API
+Subject: Re: [PATCH 4/9] PCI: brcmstb: Protect root bus removal with rescan
+ lock
 Reply-To: sashiko-reviews@lists.linux.dev
-To: Frank.Li@oss.nxp.com
-Cc: imx@lists.linux.dev, linux-pci@vger.kernel.org, vkoul@kernel.org, Frank.Li@kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260521-dma_prep_config-v7-7-1f73f4899883@nxp.com>
-References: <20260521-dma_prep_config-v7-7-1f73f4899883@nxp.com>
+To: "Hans Zhang" <18255117159@163.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260521161822.132996-5-18255117159@163.com>
+References: <20260521161822.132996-5-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 21 May 2026 19:05:03 +0000
-Message-Id: <20260521190503.ABF321F000E9@smtp.kernel.org>
+Date: Thu, 21 May 2026 19:19:55 +0000
+Message-Id: <20260521191955.C5CFC1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Removing the DMA channel mutexes allows concurrent synchronous tra=
-nsfers on a shared DMA channel, leading to destructive error handling (casc=
-ading aborts), severe CPU starvation, spurious timeouts, and descriptor poo=
-l exhaustion.
+
+Pre-existing issues:
+- [Critical] Calling `brcm_pcie_remove()` on the `pci_host_probe()` error p=
+ath triggers a Use-After-Free (UAF) or NULL pointer dereference.
+- [High] The `pcie->bridge_lock` is used before it is initialized during de=
+vice probe.
 --
 
-commit 57a71fe2904773875ab4a20b8b7b4de2296d0683
-Author: Frank Li <Frank.Li@nxp.com>
+commit baacf34014bfc48de11be2860d0ae507bf20e383
+Author: Hans Zhang <18255117159@163.com>
 
-nvmet: pci-epf: Use dmaengine_prep_config_single_safe() API
+PCI: brcmstb: Protect root bus removal with rescan lock
 
-This commit replaces the separate DMA channel configuration and descriptor
-preparation steps with the new dmaengine_prep_config_single_safe() API.
-It also removes the dma_tx_lock and dma_rx_lock mutexes, assuming they are
-no longer needed because the new API call is atomic.
+Add missing PCI rescan lock protection in brcm_pcie_remove() before
+removing the root bus.
 
-> diff --git a/drivers/nvme/target/pci-epf.c b/drivers/nvme/target/pci-epf.c
-> index 2afe8f4d0e461..b1ba2d0bea6d9 100644
-> --- a/drivers/nvme/target/pci-epf.c
-> +++ b/drivers/nvme/target/pci-epf.c
-[ ... ]
-> @@ -388,22 +376,15 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_=
-pci_epf *nvme_epf,
->  		return -EINVAL;
->  	}
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controll=
+er/pcie-brcmstb.c
+> index 714bcab97b603..7ca27f0756c9b 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -1894,8 +1894,10 @@ static void brcm_pcie_remove(struct platform_devic=
+e *pdev)
+>  	struct brcm_pcie *pcie =3D platform_get_drvdata(pdev);
+>  	struct pci_host_bridge *bridge =3D pci_host_bridge_from_priv(pcie);
 > =20
-> -	mutex_lock(lock);
-> -
+> +	pci_lock_rescan_remove();
+>  	pci_stop_root_bus(bridge->bus);
+
+[Severity: Critical]
+This is a pre-existing issue, but can calling brcm_pcie_remove() on the
+pci_host_probe() error path trigger a use-after-free or null pointer
+dereference here?
+
+In brcm_pcie_probe(), if pci_host_probe() fails, the error path directly
+calls brcm_pcie_remove(). If pci_host_probe() failed early because
+pci_alloc_bus() returned null, bridge->bus remains null. If it failed later
+during pci_register_host_bridge(), the allocated bus is freed via kfree(),
+but bridge->bus is never cleared, leaving it as a dangling pointer.
+
+When brcm_pcie_remove() is invoked, it unconditionally calls
+pci_stop_root_bus(bridge->bus). Passing a null or dangling pointer here
+causes a kernel crash on the probe error path.
+
+>  	pci_remove_root_bus(bridge->bus);
+> +	pci_unlock_rescan_remove();
+>  	if (pcie->cfg->has_err_report)
+>  		brcm_unregister_die_notifiers(pcie);
 
 [Severity: High]
-Does removing this mutex expose the entire synchronous transfer lifecycle to
-concurrent access?
+This is a pre-existing issue, but is pcie->bridge_lock used before it is
+initialized during device probe?
 
-While dmaengine_prep_config_single_safe() is atomic, the removed mutex
-also protected the subsequent dmaengine_submit() and dma_sync_wait() calls
-in this function. Since NVMe commands are processed concurrently by unbound
-workqueues, multiple worker threads might now share the same global DMA
-channel without synchronization.
+During brcm_pcie_probe(), the function brcm_pcie_bridge_sw_init_set() is
+called early in the initialization sequence. For devices where
+pcie->cfg->has_err_report is true, this function acquires pcie->bridge_lock
+via spin_lock_irqsave().
 
-If multiple threads concurrently spin in dma_sync_wait() on the same channe=
-l,
-could this cause severe CPU starvation due to its tight busy-wait loop?
+However, spin_lock_init(&pcie->bridge_lock) is not called until much later
+in the probe sequence, after pci_host_probe() finishes. While the memory is
+zero-initialized, unconditionally attempting to acquire an uninitialized
+spinlock is structurally unsafe and can trigger lockdep warnings or crashes.
 
-Additionally, dma_sync_wait() has a fixed 5-second timeout from the moment
-it is called. With concurrent queuing, a newly submitted transfer's wait ti=
-me
-would include the execution of all preceding queued transfers on the channe=
-l.
-Under high load, might this exceed 5 seconds and cause spurious timeouts?
-
-If a timeout does occur, the error path calls dmaengine_terminate_sync(chan=
-).
-Will this forcefully abort all pending and active transfers on the channel,
-destroying the in-flight DMA operations of all other concurrent NVMe comman=
-ds?
-
-Finally, unbounded concurrent submissions could potentially exhaust the DMA
-engine's hardware descriptor pool under high I/O load, causing
-dmaengine_prep_config_single_safe() to return NULL and fail valid commands.
-
->  	dma_dev =3D dmaengine_get_dma_device(chan);
->  	dma_addr =3D dma_map_single(dma_dev, seg->buf, seg->length, dir);
->  	ret =3D dma_mapping_error(dma_dev, dma_addr);
->  	if (ret)
-> -		goto unlock;
-> -
-> -	ret =3D dmaengine_slave_config(chan, &sconf);
-> -	if (ret) {
-> -		dev_err(dev, "Failed to configure DMA channel\n");
-> -		goto unmap;
-> -	}
-> +		return ret;
-> =20
-> -	desc =3D dmaengine_prep_slave_single(chan, dma_addr, seg->length,
-> -					   sconf.direction, DMA_CTRL_ACK);
-> +	desc =3D dmaengine_prep_config_single_safe(chan, dma_addr, seg->length,
-> +						 sconf.direction,
-> +						 DMA_CTRL_ACK, &sconf);
-[ ... ]
-> @@ -426,9 +407,6 @@ static int nvmet_pci_epf_dma_transfer(struct nvmet_pc=
-i_epf *nvme_epf,
->  unmap:
->  	dma_unmap_single(dma_dev, dma_addr, seg->length, dir);
-> =20
-> -unlock:
-> -	mutex_unlock(lock);
-> -
->  	return ret;
->  }
 >
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521-dma_prep_c=
-onfig-v7-0-1f73f4899883@nxp.com?part=3D7
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521161822.1329=
+96-1-18255117159@163.com?part=3D4
