@@ -1,261 +1,261 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF553911CE;
-	Fri, 22 May 2026 16:06:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779465973; cv=none; b=bFfTxPAQ3u+xhEPEAm9L/I0gehAs4jXHL7RU92IPZ/KXj4ntyPf3I7phksGhObtgYF4J5SgpaETmg245vAOXQd0mLtYxbniKP9aB6lZZwCdZgtFDpCB30AcmhzfJqo8n8nI6rl6mZAxzCY7lqJHGha7Rbn2NX9Zh/CelI0UwfLU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779465973; c=relaxed/simple;
-	bh=VEseHeESDTqPqpZ+vXnSAU2mOHaLLoZ8cNZRCc/rvjA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fjiGwnl9edv4kWTrNi7E4/kY8Lo9mmT2a5n36ihqXEwrIurIjA5fg5ccLioSiro7WQFN2+RK7l95/R/HrFhxBlZ3abfyIC++htn9WW22JrX7kPvlPP5o5zK3pf62wxPP6jOKQglXDk0yLPLbdNnyLXpOcZSv1GbwuXO4sLnJTAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=rO2z7vgM; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A9842189D
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 16:11:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=205.220.168.131
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779466285; cv=pass; b=KJlylHpc8Dh6lqtyqZkrYYNzkFFTToPw+pRygEOWo/V1yO8Bc3mg60+P6qNm29EYEfXqszbDUsudalaNDRJDQOJHuBEFtlytjkBXq4kbp5bz9WbpTc3gCVh6ljaR4mohye9UFUy82Uappr+yFtSIcuWjTZZ98MreERHd6uXFOGY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779466285; c=relaxed/simple;
+	bh=bLtI2OBA5rafdql0eae6MY8/XGVx80bBush8lA9uIPE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=L3CmK8x4gfCYLuOF+iaz71F7hHCTtp360rLDH3JWfDcKrbNzhNWhP3uJ8Pffia1/usJGvqEhNTj61x19C5BseUes4m+3H2vXu0X1lxBhjnr5ylgXObOPm7tvwy0iYl9O9n/nwdrTf/DFqQDGW91OBdrHb5Sz22OVGI6+5RB7oaY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=C8UL5tlt; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ab7yDX+7; arc=pass smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="rO2z7vgM"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64MFW1Qd980011;
-	Fri, 22 May 2026 16:05:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=f2n9myvSSTBDKKfIeShW1Ra3D3ow85NLWqGBUox//uI=; b=rO2z7vgMIYla
-	KApWOWzlu+MxuZkut7WzoB2w5b/O7w11R1n/28p7JLAwbcGq0WT7T4M7o+2VZ1jR
-	hj8lt18Uq3UmaEBV3orm7XGSI0s6XVOny2ZcsM/uauATLSG2FVcwOEHSrf3y6gh7
-	/YacnCHyPiR9IAuigFzgUrX1wdkLiidwZBLhWzTl+uxGhFsbVfc3ypvg+XP4wTji
-	Lql35rehYqGGggp4kSZCxROI6UetYlxOnnOvYxwV5XL0oUz6r0ytxWl9J+W1xQuK
-	bcfmDSnI+xgoP2Wp8OD8Bjk3IYyV+ALDiLI0UNvQaWFQ8cMKTNrEoiflMzWS5aJC
-	VSN9TPYfzA==
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4e6h8n4rh8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 22 May 2026 16:05:50 +0000 (GMT)
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64MFs5Tf013158;
-	Fri, 22 May 2026 16:05:49 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4e74dj1hgb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 22 May 2026 16:05:49 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64MG5hXw29885022
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 22 May 2026 16:05:43 GMT
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9D5042004B;
-	Fri, 22 May 2026 16:05:43 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 86A5820040;
-	Fri, 22 May 2026 16:05:43 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.52.223.163])
-	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri, 22 May 2026 16:05:43 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.99.2)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1wQSNb-0000000HS0j-1204;
-	Fri, 22 May 2026 18:05:43 +0200
-Date: Fri, 22 May 2026 18:05:43 +0200
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Ionut Nechita (Wind River)" <ionut.nechita@windriver.com>,
-        linux-pci@vger.kernel.org, bhelgaas@google.com, sebott@linux.ibm.com,
-        schnelle@linux.ibm.com, linux@roeck-us.net, lukas@wunner.de,
-        stable@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-xe@lists.freedesktop.org, matthew.brost@intel.com,
-        michal.wajdeczko@intel.com, piotr.piorkowski@intel.com,
-        dtatulea@nvidia.com, mani@kernel.org, kbusch@kernel.org,
-        lkml@mageta.org, alifm@linux.ibm.com, julianr@linux.ibm.com,
-        ionut_n2001@yahoo.com, sunlightlinux@gmail.com
-Subject: Re: [PATCH v14 0/2] PCI/IOV: Fix SR-IOV locking races and AB-BA
- deadlock
-Message-ID: <20260522160543.GE206464@p1gen4-pw042f0m>
-References: <cover.1776839248.git.ionut.nechita@windriver.com>
- <20260521201312.GA182641@bhelgaas>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="C8UL5tlt";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ab7yDX+7"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64MAIjIc1800770
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 16:11:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	0lu1niHMrECx4L7qZONZo2E7wZ8eqqnrUPVegshXdyA=; b=C8UL5tltXnXU+6nX
+	jHhbbZeMbZja0B7v1zrospoXn2ug1pL3ImgZciQ7OI7Py4ei7tviaRBOQVb6TZ1r
+	7I6Sb5E4UsdKg2h7pRgaEEj5/YV1kwv/Wjp+ceh6enYt2BxwvxAwubUsJLS51Ohc
+	d5cBl0XI2mFp9IWXX0Kfda9Zl5qiwh42eMTwIE5X1jsDKzWDHLF8Zb5SGuy7KHhE
+	yiAXYXtAXMz/bAsnEaIqUKCqh12KIGXxeMogYcgjahBO5eTLbxD6Ss+r2P1FRlzy
+	8oLVz+bFkGxYTiKaz1mHJxjjo40BRWgU2Am9jF3DdDh2Uc8jvHTiiiE5YVNpqxGQ
+	SlI3zQ==
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ean9g1dj5-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 16:11:21 +0000 (GMT)
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-914b9dee344so137587885a.1
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 09:11:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1779466281; cv=none;
+        d=google.com; s=arc-20240605;
+        b=bAx1EY0ts3XhECubtCGaAE4XRWQjOJc//IjCdREBntK6zXQT7XPb1+eEXwJrG9QOSn
+         0lK8S8Ur/PVcFWSUom4xQ5ICr4Gcy0rPY3EvCckMO2HohORf101sIWMVEWPYUqMHZdzy
+         FjD/GQM4ZoR/IWJoxvB5j6MjhXktjrr/3WLxyObiV1VcsZx6eoAm3xjsgxpc94PNBMJC
+         Jm103l1FolhcdGGWm1qFA37Ce3va1bJlnTgCrYoUqYJy0Ajqha5GxBekPVRe8g7XBdlU
+         dRsGwXQnYZ4N5s2RiuRUcKlS2/VTS0RTt3UUIKODLeevWNS78B+a5bhVE4iIpfwhqXYw
+         XNZg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=0lu1niHMrECx4L7qZONZo2E7wZ8eqqnrUPVegshXdyA=;
+        fh=UTPFcMhc7XCfOxn1mBj7T8SRZrzCpOMULY6FFh9nlv8=;
+        b=NzKVs3EOR29mCap9czjsQYIOP5xp5kaT+Paww9y6F13O/3ApAgpI5Z22KDFTayDDlF
+         vjbO4gswpXMW/1Q6yXIYtPuqfkxasDuqA5AH/To6TxkVNXkewd1KqgBpWIOPPCdH1fjI
+         qGcgSWN7ktQjDmoOPj12Md5Dp0AqyatIl0vLSPVNXXYmy4MuwaG9XqaMVLNZiaXWGKJ6
+         C50DkraHbppSq+NsT8kBuSonX1mgPH83RaiBB5GclM+UMkSYzaauGdjyruXqPtCEJ9QJ
+         YNziD/ZK7T+C5MKPsug5EjeEm+V3OMN/BEFYKDZB+YubpE+VIQ+wLA9BkSoJ/1fI+Uw/
+         inrQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1779466281; x=1780071081; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0lu1niHMrECx4L7qZONZo2E7wZ8eqqnrUPVegshXdyA=;
+        b=ab7yDX+7wHyPQLuGi1en5pfbfQfl59c9deiCGFVI1FJDD/Nv/TMXhY+nMl2GjWOEBS
+         tvLp+pUuuQa3E/W/Sym0mij+VVP9qVZL2bCsTA5iCizlh6cuiRqlpYgvPgIYvJiB1nkk
+         lhyIeAOpdXHMxlbPFInMFsXW9mzOQgptTHJJDyJaCXk4F+4UUjX3oGCGtdMqUeTZNnSQ
+         zjsAWoyZeTh9dboFkNypurPhcyML/Be8CWgYZVmUTyPOSSVx0MvRrcgrV9sIczJzkGGw
+         ClFYASUKNyqw8A1NYTCI3HJZMTK/l3oTsSSqFWlDqMuOaVbUfmqcRdidoZMrN24lige9
+         TYbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779466281; x=1780071081;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=0lu1niHMrECx4L7qZONZo2E7wZ8eqqnrUPVegshXdyA=;
+        b=C9RiMz7ymdDYz4g3LWPoIsI4NPe7p9WOtbV6ZqIlmlIXIaIFbpkvP9+DlpymRuIuen
+         aS7cYGiTQLyoYUFr1jc3zd2op+eTG66C4d1hRODw35ytFuKxOVWMORWQAUhsS9PRt+JU
+         SZJKjI5krsfwL2Mc+n8+kbJLrYy4c46CvI7AeET72zkwkhWkerBZ3miORAYUdnPJ/TY7
+         zeP99noffmpEBVd506e6hPYYiLvUbUvzdM8jdA666UQX7fUliQBrfugcaF3jjbAL0Ijm
+         PH18jspVanM24MXukL3D0BYjuiOpcEBVVMZ2VyM0E8080HtU0y32N54VNqVvM7cjHxDG
+         B4DQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+VBrDvtKrTsx8vVO/xKwxkHtDqJUub136lI/DNjWaXOZe+gh2wg7iRpz+yI9vpjo0IqYl8HOS6cYQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YznjClj8nvj2BbzTAtK7Npz6+FPWG6nHun7stJSc+nWgi0KERaU
+	0xqkCfdBQzqLlWXUZpJ9VrrUJwd8hQMZnuqFpi9Bn4R/zBtxxaMf0IZbQhePGrVd84BVgRhbhw1
+	VNXZ1N9q6t9+XsWAX/cfUgQpCzU2fD5UZY0NbslVy1ZIOSN2ZYjkcAWmRpssXOD6zXhZFiNykEf
+	Xgr8l3O6UpOshJOH2MWKN/Do7q2O+JwWoF440MJQ==
+X-Gm-Gg: Acq92OG8QnQiqJuLLLH5XCPw1o/OFLSiBKj9zURFO7CvLVGfSrVhLLhH+BIGvsSfmHB
+	O+1lRRJrw0d+C+ygWGH34Yi3EQRD0rygrY5FZEtyUbSTUq8phk9lkY8LbvlfuEGQizS80qqa1Ig
+	L1Uj+MMMe3JlevUMZyzVOM03G+ym9wmqzmU7/EMmngRCb3bxqe8DZ+5XGtpQPQtkQobRG4uvzAN
+	hOA0gq91v7EiRoHPQmvveFB3tzjzn7eHHzwMvs=
+X-Received: by 2002:a05:620a:1d0b:b0:90f:9cde:9788 with SMTP id af79cd13be357-914b48d6853mr675638085a.5.1779466280693;
+        Fri, 22 May 2026 09:11:20 -0700 (PDT)
+X-Received: by 2002:a05:620a:1d0b:b0:90f:9cde:9788 with SMTP id
+ af79cd13be357-914b48d6853mr675629485a.5.1779466280032; Fri, 22 May 2026
+ 09:11:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260521201312.GA182641@bhelgaas>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Proofpoint-GUID: PxM4KYMojAWJnU1ACjWRWUqvvF1rO36m
-X-Authority-Analysis: v=2.4 cv=GYMnWwXL c=1 sm=1 tr=0 ts=6a107ede cx=c_pps
- a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
- a=8nJEP1OIZ-IA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=c92rfblmAAAA:8
- a=t7CeM3EgAAAA:8 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=-mVaU32sIrbP48RIxBgA:9
- a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10 a=GvGzcOZaWPEFPQC_NcjD:22
- a=FdTzh2GWekK77mhwV6Dw:22
-X-Proofpoint-ORIG-GUID: 3g2Gaj7-UuMoG97Us30-BrpRfDObhRmJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIyMDE1NiBTYWx0ZWRfXxLYniXntxEcN
- wYbhNTtYegC/P1dThxhXenSki4TtwccLiv65FDYF97i5w6a7hVifQ0tUb49WkUTESC5boEUL3fU
- 9I6R4aLdP0RN8p1obeX2fOW25NA/HzCiAaSDxMTYOnkMMC1SA7xlRZzSwL/3/WJVYLq7HB7JHiW
- mtQNwqRJG6NE9yakaSvT+TLrRR336Uf69dQukT4S/ChVEWMVUa0HKWZU7xkq4iWbx033zIdIhsM
- AsWeIlIA4IOD3VHVakvfwv8mkSuayBWNK5D0oKn37qmOjwbqnRkkiTZrzmyV8jlbcWSVLkQTtBH
- 65D0e6Bdfj9VNWPLDOPwbS+M2D5XRThIRd4Us6TcDUOdS2yDBtoiZj6Zx+CEcuMDECWO4lwEUHw
- Zx9glGU9mLbTC8l3D9CeAqXm10fdZDZsze/eaIHM1NQ6c0H5jWXBvlvei0gBpAeoTDDYCoeB7IT
- 8vO+mgjy7E4WkM2/vTw==
+References: <20260520-monza-wireless-v1-0-9f6942310653@oss.qualcomm.com>
+ <20260520-monza-wireless-v1-2-9f6942310653@oss.qualcomm.com> <cx3pbr47tsy5mnag73oopkodnx4jgoiipz5pzrp4uze7mk4fgg@zogzww23ueni>
+In-Reply-To: <cx3pbr47tsy5mnag73oopkodnx4jgoiipz5pzrp4uze7mk4fgg@zogzww23ueni>
+From: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Date: Fri, 22 May 2026 18:11:08 +0200
+X-Gm-Features: AVHnY4KZcbVzn920hjyxYOpqLudIDkA1KQq_MhbagXA8SoEUbTo3JjxoNdQTHfM
+Message-ID: <CAFEp6-3_NuWwF=gthfJyqeHMivGnfF0xpsTXT-xGW7pgFs+j3Q@mail.gmail.com>
+Subject: Re: [PATCH 2/3] Bluetooth: hci_qca: Support QCA2066 on M.2 connector
+ via pwrseq
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+        Bartosz Golaszewski <brgl@kernel.org>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        devicetree@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-GUID: nY8TW0gW-HqRz4OQImLv0aFmBeaE3NVk
+X-Authority-Analysis: v=2.4 cv=B/qJFutM c=1 sm=1 tr=0 ts=6a108029 cx=c_pps
+ a=qKBjSQ1v91RyAK45QCPf5w==:117 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
+ a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22
+ a=yOCtJkima9RkubShWh1s:22 a=EUspDBNiAAAA:8 a=O2y7hZ9sxHz_cEH75X4A:9
+ a=QEXdDO2ut3YA:10 a=NFOGd7dJGGMPyQGDc5-O:22
+X-Proofpoint-ORIG-GUID: nY8TW0gW-HqRz4OQImLv0aFmBeaE3NVk
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIyMDE2MSBTYWx0ZWRfX09HnJ5uhCS+/
+ rFlxvvGxRryTzEiDKXSxyrCxWPT0WI8NLlk7hU73ED6WwKlXk2AH7D1+aJnIG4IV0Adw9AuHzME
+ NcMg/7xZBDSHWsDsCyBKVuzcxlKb2XFIDVkMhuSt1OWIRB236LfQFa/d2K/FEcG7zY+YP69VlWU
+ fapj+ID5Ib0mzxZrJuhzyzu9SDR0ymRPy75SoE8F5bdCZoST89e338w0+F/ICmi4C3m/ToiaZcn
+ pQTeV9MlT08ZkKAAMmUZ+JEEd4i0LlcCJnx06AM8C5zKKZYco5aDoruI1YKE9DInMz/VJWSkkSh
+ 4F1+H8SeXpa8xsJJYJgau2LjZ/aOt9qlse7wNqN1QpJUaAxMUtpSDA/6qOqyU08oOB2dGfmfUut
+ 8/jjWgH6EAVTC3UZ8/GukXNBzVjigAHNFSOwoYDH+sRpq0rNUbbcJ7umRHHVxDcN2OtbWjtrj+h
+ Aokv1s3L3IHtiFnzXdw==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-05-22_04,2026-05-18_01,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 malwarescore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0
- adultscore=0 suspectscore=0 spamscore=0 clxscore=1015 impostorscore=0
+ spamscore=0 impostorscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
+ suspectscore=0 adultscore=0 priorityscore=1501 bulkscore=0 phishscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605220156
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605220161
 
-On Thu, May 21, 2026 at 03:13:12PM -0500, Bjorn Helgaas wrote:
-> On Wed, Apr 22, 2026 at 09:32:40AM +0300, Ionut Nechita (Wind River) wrote:
-> > This is v14 of the fix for the SR-IOV race between driver .remove()
-> > and concurrent hotplug events.
-> 
-> Can you take a look at the sashiko feedback and see whether there's
-> any merit to it?
-> 
-> https://sashiko.dev/#/patchset/cover.1776839248.git.ionut.nechita%40windriver.com
-
-IIRC Ionut already responded to several of the findings a few patch versions
-back:
-https://lore.kernel.org/linux-pci/20260319202755.16081-1-ionut.nechita%40windriver.com/
-
-Patch 01:
-
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> [ ... ]
-> > @@ -633,15 +629,18 @@ static int sriov_add_vfs(struct pci_dev *dev, u16 num_vfs)
-> >  	if (dev->no_vf_scan)
-> >  		return 0;
-> >  
-> > +	pci_lock_rescan_remove();
-> Does moving this lock acquisition here create an ABBA deadlock? 
-> Looking at sriov_numvfs_store(), the kernel acquires device_lock(&pdev->dev)
-> before invoking the driver's sriov_configure() callback, which eventually
-> reaches this point and calls pci_lock_rescan_remove(). This establishes a
-> dependency of device_lock followed by pci_rescan_remove_lock.
-> During a PCI hotplug event or sysfs remove_store, the subsystem first acquires
-> pci_rescan_remove_lock, then calls pci_stop_and_remove_bus_device() which
-> invokes device_release_driver() and takes device_lock(&pdev->dev). This
-> creates the reverse dependency.
-> Will an SR-IOV sysfs configuration racing with a hot-unplug event result in a
-> deadlock? I understand this regression is fixed later in the patch series by
-> commit 'PCI: Fix AB-BA deadlock between device_lock and pci_rescan_remove_lock
-> in remove_store', but wanted to point out the interaction here.
-
-This is already addressed in Patch 02.
-
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index b63cd0c310bc0..91f1dae6943b6 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> [ ... ]
-> > @@ -3513,16 +3513,30 @@ EXPORT_SYMBOL_GPL(pci_rescan_bus);
-> >   * routines should always be executed under this mutex.
-> >   */
-> >  DEFINE_MUTEX(pci_rescan_remove_lock);
-> > +static const struct task_struct *pci_rescan_remove_owner;
-> > +static unsigned int pci_rescan_remove_depth;
-> >  
-> >  void pci_lock_rescan_remove(void)
-> >  {
-> > -	mutex_lock(&pci_rescan_remove_lock);
-> > +	if (pci_rescan_remove_owner == current) {
+On Wed, May 20, 2026 at 2:33=E2=80=AFPM Dmitry Baryshkov
+<dmitry.baryshkov@oss.qualcomm.com> wrote:
 >
-> Can this read cause a data race?
-> This reads pci_rescan_remove_owner outside of the mutex critical section.
-> Concurrently, another thread executing this same function can acquire the
-> mutex and write to this shared variable.
+> On Wed, May 20, 2026 at 01:01:43PM +0200, Loic Poulain wrote:
+> > For QCA2066 (and other QCA chips) on M.2 connectors, the UART enable
+> > is controlled by the W_DISABLE2# signal managed by the pcie-m2 power
+> > sequencer rather than a dedicated BT enable GPIO.
+> >
+> > When the serdev controller has an OF graph (indicating it is connected
+> > to an M.2 connector), acquire the 'uart' pwrseq target from the
+> > connector's power sequencer and use it to control BT power instead of
+> > the bt-enable GPIO.
+> >
+> > Also allocate bt_power unconditionally for all SOC types since the
+> > pwrseq path is independent of the SOC type switch.
+> >
+> > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> > ---
+> >  drivers/bluetooth/hci_qca.c | 33 +++++++++++++--------------------
+> >  1 file changed, 13 insertions(+), 20 deletions(-)
+> >
+> > diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+> > index b5439b9956cfb0497e6ba6ccd9ed61224d23a9dd..de5cba7b7f44e280a48dad5=
+d670fa2758d3268d0 100644
+> > --- a/drivers/bluetooth/hci_qca.c
+> > +++ b/drivers/bluetooth/hci_qca.c
+> > @@ -1873,6 +1873,9 @@ static int qca_power_on(struct hci_dev *hdev)
+> >                       /* Controller needs time to bootup. */
+> >                       msleep(150);
+> >               }
+> > +
+> > +             if (qcadev->bt_power && qcadev->bt_power->pwrseq)
+> > +                     pwrseq_power_on(qcadev->bt_power->pwrseq);
+> >       }
+> >
+> >       clear_bit(QCA_BT_OFF, &qca->flags);
+> > @@ -2415,25 +2418,9 @@ static int qca_serdev_probe(struct serdev_device=
+ *serdev)
+> >       else
+> >               qcadev->btsoc_type =3D QCA_ROME;
+> >
+> > -     switch (qcadev->btsoc_type) {
+> > -     case QCA_QCA6390:
+> > -     case QCA_WCN3950:
+> > -     case QCA_WCN3988:
+> > -     case QCA_WCN3990:
+> > -     case QCA_WCN3991:
+> > -     case QCA_WCN3998:
+> > -     case QCA_WCN6750:
+> > -     case QCA_WCN6855:
+> > -     case QCA_WCN7850:
+> > -             qcadev->bt_power =3D devm_kzalloc(&serdev->dev,
+> > -                                             sizeof(struct qca_power),
+> > -                                             GFP_KERNEL);
+> > -             if (!qcadev->bt_power)
+> > -                     return -ENOMEM;
+> > -             break;
+> > -     default:
+> > -             break;
+> > -     }
+> > +     qcadev->bt_power =3D devm_kzalloc(&serdev->dev, sizeof(struct qca=
+_power), GFP_KERNEL);
+> > +     if (!qcadev->bt_power)
+> > +             return -ENOMEM;
 >
-> > +		pci_rescan_remove_depth++;
-> > +	} else {
-> > +		mutex_lock(&pci_rescan_remove_lock);
-> > +		pci_rescan_remove_owner = current;
->
-> Could the compiler optimize or tear these unprotected accesses? Should these
-> reads and writes use READ_ONCE() and WRITE_ONCE() to safely perform the
-> lockless accesses and avoid triggering warnings in tools like KCSAN?
->
-> > +		pci_rescan_remove_depth = 1;
-> > +	}
-> >  }
+> This builds bt_power for all devices even though it wasn't the case
+> beforehand. As such, you can drop all further `if (qcadev->bt_power)`
+> checks in the driver. But, you also need to check that this won't break
+> support for other (older) chips.
 
-Those two are wrong. `pci_rescan_remove_depth` is only modified when we
-already own the mutex `pci_rescan_remove_owner == current`, so the writes are
-safe. The reads are safe because, again, the relevant case is when the current
-thread already owns the mutex, and then we already have the lock; when we
-don't already have the lock we gonna try to take it, but this is also safe
-because nobody gonna change the owner to us other than we ourself, and only
-once we have taken the lock.
+Ok, I will do, and double check.
 
-Patch 02:
+>
+> >
+> >       switch (qcadev->btsoc_type) {
+> >       case QCA_WCN3950:
+> > @@ -2543,7 +2530,13 @@ static int qca_serdev_probe(struct serdev_device=
+ *serdev)
+> >                       return PTR_ERR(qcadev->bt_en);
+> >               }
+> >
+> > -             if (!qcadev->bt_en)
+> > +             if (of_graph_is_present(dev_of_node(&serdev->ctrl->dev)))=
+ {
+>
+> And this breaks support for pwrseq for non-M.2 BT devices. There is no
+> OF graph in such a case.
 
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -521,8 +521,36 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
-> [ ... ]
-> > +		 * By unbinding first, the driver's .remove() callback
-> > +		 * (including any SR-IOV VF cleanup) completes before
-> > +		 * pci_rescan_remove_lock is acquired, ensuring both
-> > +		 * paths take locks in the same order.
-> > +		 */
-> > +		device_release_driver(dev);
->
-> Does calling device_release_driver() here violate the bottom-up teardown
-> guarantee if this device is a bridge?
->
-> If the device is a PCIe bridge, unbinding the pcieport driver will call
-> pci_disable_device(). Because child devices do not increment the parent
-> bridge's enable_cnt during probe, the bridge's enable_cnt will drop to zero
-> and clear the PCI_COMMAND_MASTER bit.
->
-> This disables bus-mastering for the bridge while its child devices are still
-> fully active. When they are later unbound during removal, their drivers might
-> fail to communicate with the hardware, leading to master aborts, PCIe AER
-> errors, and timeouts on DMA flushes.
+Not sure why, here we handle OF graph as an optional pwrseq provider,
+but still support legacy enablement.
 
-Ionut previously addressed this in the post I linked above; identifying it as
-false-positive.
-
-> > 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
 >
-> Does this leave child devices vulnerable to the exact same AB-BA deadlock?
+> > +                     qcadev->bt_power->pwrseq =3D devm_pwrseq_get(&ser=
+dev->ctrl->dev, "uart");
+> > +                     if (IS_ERR(qcadev->bt_power->pwrseq))
+> > +                             return PTR_ERR(qcadev->bt_power->pwrseq);
+> > +             }
+> > +
+> > +             if (!qcadev->bt_en && !qcadev->bt_power->pwrseq)
+> >                       bt_en_available =3D false;
+> >
+> >               qcadev->susclk =3D devm_clk_get_optional_enabled_with_rat=
+e(
+> >
+> > --
+> > 2.34.1
+> >
 >
-> When pci_stop_and_remove_bus_device_locked() executes, it acquires the
-> pci_rescan_remove_lock and unbinds child devices recursively:
->
-> pci_stop_and_remove_bus_device_locked()
->   pci_stop_bus_device()
->     pci_stop_dev(child)
->       device_release_driver(&child->dev)
->
-> This attempts to acquire device_lock(&child->dev) while already holding
-> pci_rescan_remove_lock.
->
-> If a concurrent unbind_store() happens on the child device, it will acquire
-> device_lock(&child->dev) first and then wait for pci_rescan_remove_lock,
-> reproducing the original circular dependency.ecause then we can't concurrently change the state to `current`.
-
-This is a false positive; we marked the device as "killed" and unbound the
-device driver. So, when the concurrent unbind_store() is called `dev->driver`
-is NULL and so it never gonna call device_driver_detach() and take the lock.
-Or rather, it wouldn't even be called, because unbind_store() is supposedly
-only called when some driver binds the device, which would not be the case
-here.
-
-At least thats my take on those latest findings.
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Ehningen     /     Registergericht: AmtsG Stuttgart, HRB 243294
+> --
+> With best wishes
+> Dmitry
