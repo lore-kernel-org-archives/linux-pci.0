@@ -1,115 +1,65 @@
-Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.123])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EBB2E351C27
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 07:55:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.123
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C8E721ABAA
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 08:02:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779436509; cv=none; b=I+MOYDUfqzq+opS/ODDmGvUrtIgpo0w3jMmRHCSJfYpA9JNTbxvWOUMBZ5Iwhdr6/Zu2pdXdkmZ8IJgaHX6TLVCDI9DQaIeyH21PuE9Kwn2Fc+Gbm1d9G/K9je872YXyYdJ88uZIoHwcrj/sYBcmJ6raV6CqWgj4p2wuKwdtwlY=
+	t=1779436971; cv=none; b=KrW7BOJFENZTvKeq0qPHeGIWNp3TJ0g5JSG5NROI9oVmtLhY3pCAjSwXUndJGgu+Fz1ij6Ob7oIRtDXCoP9/dME6kd/UB7Im4xF01l6kv2pZalVcBO5pWFdLpfHD5Z+uHtWySWrjrDG1LRn6N6zJJsmruWtjww/kmDIlKzHs9Vo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779436509; c=relaxed/simple;
-	bh=qmOmnRV39F4d9XYQmcrIDHQlBv/mrMZ6RdxPzWKSRcw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ArMDHgAR66WY0bbXnA+rimXW9vK7KmbEW+nAVXMNkIGSB11Y9rP5DVyU2rCnd/exlEEGAT32jbhJ9KVBH2hTEc0vTmGvWvBoVmrWSm8dsVnSf+ZGcQnOIikpKWT/BAdSNLzUSt2LS2lKjCd03uMjfOhVqaouDCpAfsHPksHwfZQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
-X-CSE-ConnectionGUID: jpwovy6vSkmgFuL8T7oodg==
-X-CSE-MsgGUID: sX0bFsCrQgWXIDUftENFww==
-X-IronPort-AV: E=Sophos;i="6.24,161,1774281600"; 
-   d="scan'208";a="176591016"
-From: weipengliang <weipengliang@xiaomi.com>
-To: Lukas Wunner <lukas@wunner.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	"Frederic Weisbecker" <frederic@kernel.org>, Niklas Schnelle
-	<schnelle@linux.ibm.com>, Danilo Krummrich <dakr@kernel.org>, Uwe
- Kleine-Konig <u.kleine-koenig@baylibre.com>, Samiullah Khawaja
-	<skhawaja@google.com>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@oss.qualcomm.com>, <weipengliang@xiaomi.com>
-Subject: [PATCH v2] PCI: Avoid unnecessary cpu_hotplug_disable() for non-NUMA devices
-Date: Fri, 22 May 2026 15:54:52 +0800
-Message-ID: <20260522075453.473-1-weipengliang@xiaomi.com>
-X-Mailer: git-send-email 2.47.1.windows.1
-In-Reply-To: <ahAB2BFymPVFGKaG@wunner.de>
+	s=arc-20240116; t=1779436971; c=relaxed/simple;
+	bh=qhddZx8oRASYTYGI0RlhU+w2W4UOtRk3bcm0fBTTjQQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P+6t5rN+s905Lhlp2dtwuaPaxOSG3UfVdLjFgHqZtvOW0I2R99CSJkb2eUuQQYRWZVa+8kIfV7QT1oUndFzadz1Yq7R8lY6GxNg2jR+lkZw/eR0ubB/ICzeHBRPdC2H9ZRWxG89xrmp2zPFEbiYIVPeyD/d0nMHUFIkeLgXvaJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id 6CC2B1062A;
+	Fri, 22 May 2026 10:02:41 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 4D3C360A1463; Fri, 22 May 2026 10:02:41 +0200 (CEST)
+Date: Fri, 22 May 2026 10:02:41 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: weipengliang <weipengliang@xiaomi.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Uwe Kleine-Konig <u.kleine-koenig@baylibre.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH v2] PCI: Avoid unnecessary cpu_hotplug_disable() for
+ non-NUMA devices
+Message-ID: <ahANoSZXPFUX3HaR@wunner.de>
 References: <ahAB2BFymPVFGKaG@wunner.de>
+ <20260522075453.473-1-weipengliang@xiaomi.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BJ-MBX13.mioffice.cn (10.237.8.133) To YZ-MBX11.mioffice.cn
- (10.237.88.131)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260522075453.473-1-weipengliang@xiaomi.com>
 
-When a PCI device is on an invalid/offline NUMA node or is a VF being
-probed from PF context, the code path calls local_pci_probe() directly
-without needing work_on_cpu(). In these cases, the cpu_hotplug_disable()
-/ cpu_hotplug_enable() round-trip is unnecessary overhead.
+On Fri, May 22, 2026 at 03:54:52PM +0800, weipengliang wrote:
+> @@ -392,10 +391,13 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>  	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
+>  	    pci_physfn_is_probed(dev)) {
+>  		error = local_pci_probe(&ddi);
+> +		dev->is_probed = 0;
+> +		return error;
+>  	} else {
 
-Move cpu_hotplug_disable() into the NUMA-valid else branch so non-NUMA
-devices skip it entirely, returning early after local_pci_probe(). Also
-move cpu_hotplug_enable() directly below each rcu_read_unlock() call to
-keep the disable/enable symmetrical and improve readability.
+Hm, looks like these two newly added lines are unnecessary.
+Am I missing something?
 
-Changes since v1:
-- Moved cpu_hotplug_enable() directly below each rcu_read_unlock()
-  (Lukas Wunner)
-- Moved cpu_hotplug_disable() below INIT_WORK_ONSTACK() to minimize
-  critical section and keep declaration + initialization together
-  (Lukas Wunner)
+Thanks,
 
-Signed-off-by: weipengliang <weipengliang@xiaomi.com>
----
- drivers/pci/pci-driver.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index e3f59001785a..ea213555fb6c 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -384,7 +384,6 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 	node = dev_to_node(&dev->dev);
- 	dev->is_probed = 1;
- 
--	cpu_hotplug_disable();
- 	/*
- 	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
- 	 * device is probed from work_on_cpu() of the Physical device.
-@@ -392,10 +391,13 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
- 	    pci_physfn_is_probed(dev)) {
- 		error = local_pci_probe(&ddi);
-+		dev->is_probed = 0;
-+		return error;
- 	} else {
- 		struct pci_probe_arg arg = { .ddi = &ddi };
- 
- 		INIT_WORK_ONSTACK(&arg.work, local_pci_probe_callback);
-+		cpu_hotplug_disable();
- 		/*
- 		 * The target election and the enqueue of the work must be within
- 		 * the same RCU read side section so that when the workqueue pool
-@@ -414,10 +416,12 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 				wq = system_percpu_wq;
- 			queue_work_on(cpu, wq, &arg.work);
- 			rcu_read_unlock();
-+			cpu_hotplug_enable();
- 			flush_work(&arg.work);
- 			error = arg.ret;
- 		} else {
- 			rcu_read_unlock();
-+			cpu_hotplug_enable();
- 			error = local_pci_probe(&ddi);
- 		}
- 
-@@ -425,7 +429,6 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 	}
- 
- 	dev->is_probed = 0;
--	cpu_hotplug_enable();
- 	return error;
- }
- 
--- 
-2.47.1.windows.1
-
+Lukas
