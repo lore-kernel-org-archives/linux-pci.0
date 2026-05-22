@@ -1,137 +1,172 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B38C25B0A4
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 00:46:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F67117A2E8
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 00:47:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779410814; cv=none; b=Mteqelho4DMqhkoWpJCuj+97NoHbfoPu8ZsdR8XKZIy2wg05otsedl4KrqCJeaZyS2B1NigHvDpuu10Aqdf7NL7yqVnryqhkeWiKqFRj2VpDzyInLI6i+AQhdib7NJhokt80TVhU+kfKDUwXLWf6Fi5DhzAvp8PZv18Y9QAcaIM=
+	t=1779410836; cv=none; b=ABuJpuFgAPfmVS5+rJpLwoCDj/aeQIeK1Aj/QEvT2/CognfRyZDnB/JzrBdspc+IzXiMjrM6B2ECgYFlw/hPWlLxnmQHfKtjaCYxFXkUsK6v/G8L2XvtWdwYH3NtJgZ2KCVDtVhUPFcivG+fpHKxeHpQSWWD63k2nzoM18pdKBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779410814; c=relaxed/simple;
-	bh=2ay5z/jFgkaeJjTeim7ghaLlzlh37RXlzuU4PYH7xWU=;
+	s=arc-20240116; t=1779410836; c=relaxed/simple;
+	bh=LTvaxJ+9MsjUgWRqcFTDPn5DBWGHYdDL59FJEBaknEo=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=s+R9RkALkOcb+fH/n+K7puyNt6sJUFZ7ml98gX0xrYa2XcARHzhWTwPxWKOdQ3QX15XxiWfAdStlwXkryu+LB2B1hWme4WF512cl+lehRE18RGEbR9Cf7y7qLTGu+q7A0OPp7+uZpcFHCdUrLadPugoX0MLUGKJh+ltBxY+l5js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=flmeQ5S2; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=eMYpKxeyDofuc0HnLNDwRwozlL5Eu09bNDpY4TsGsroBs6nuQumT2b57uXV4GYwzpCQaUomndt+cODRRmuVOQxe7l/JUa5vme71AS7eF9wliW8fiG3nSknpxxRFTgAUuWfj2aMioKHoZIVfUCD8ie3K8TVpz4D6YzlrSmX+oNao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nST7L4rt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="flmeQ5S2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74CF11F000E9;
-	Fri, 22 May 2026 00:46:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nST7L4rt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9ECD61F000E9;
+	Fri, 22 May 2026 00:47:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779410812;
-	bh=0KaB80XmYhrUuW42sHMYQHMJmgZHGlHsU/RxRBV5WUo=;
+	s=k20260515; t=1779410833;
+	bh=AkfZW9hxw1hk8mAJlAkQ3eCWhqszhJMPyZ7oxgskBI4=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=flmeQ5S2++BF4KHvrkpva46hKTUGZ1gQ1SZszFL2RlGcj3jaddK+yYN00lPWNHtNJ
-	 F9pfQWklD0oy3An9wxS6ap3jELv6gPeCkt8Oy1R1+ksfpUu5M3sfc5LPtZTbVw8pmq
-	 rf6xzAcTH+EXXJ0jRbOfgAkACBnijCfZE87oDj2aV2LLLU6PU0GyQ9eCxr1bNVYBbR
-	 MG+TNMUxMGg9TvmYCVX/uw3M098bo3B/rGym7OMDzYtPryH/T+wntt1EFT8gEmSf+z
-	 RVc4vhzc5C+bFY1s2R82kRcXMDW/2duIYOjaDLvN+Iper2Dbu+Mrb9QoD5J08b81o5
-	 yiVzJjK4z3YNQ==
+	b=nST7L4rto0w7ak1hpYx+EwDDwceFXba2RKHkmJ+oKDSsIjVLzEKQTRYIsJclnoruk
+	 Xbx8xEWmUwFZOS9CQAmBkihZVTZsUh+BGaE58ESJRpehAYHc9njafXK4xFwmT0kF9d
+	 OYDYrQwMJMWu/SUDoNBc31hw4O9w2dYzjpVGftmVwrATvLtNQO4/u11n7JtebhER+j
+	 00JpNBL+5W1QHKzv+VDKFItxVeBqgxSrZHqFTBGsJKovPKQDJv5gzvvUuacLScUkv8
+	 /lpUADDwZopOOTagaTcQpuy6QkTrclQORyEB6UrxpHO3xj4kTcsv/jWJCiwXeafO95
+	 0CP2loTR9/gLg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH REF v4 26/27] gpu: nova-core: replace ARef<Device> with
- &'bound Device in SysmemFlush
+Subject: Re: [PATCH REF v4 25/27] gpu: nova-core: unregister sysmem flush
+ page from Drop
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
 Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260521233501.1191842-27-dakr@kernel.org>
-References: <20260521233501.1191842-27-dakr@kernel.org>
+In-Reply-To: <20260521233501.1191842-26-dakr@kernel.org>
+References: <20260521233501.1191842-26-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 22 May 2026 00:46:52 +0000
-Message-Id: <20260522004652.74CF11F000E9@smtp.kernel.org>
+Date: Fri, 22 May 2026 00:47:13 +0000
+Message-Id: <20260522004713.9ECD61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [Critical] The PCIe write to unregister the sysmem flush page is a posted=
- write. Without a subsequent dummy read to flush the PCIe bus buffer, the D=
-MA memory may be freed before the hardware processes the unregistration, ri=
-sking a use-after-free by the GPU.
-- [High] The sysmem flush page DMA address is restricted to 40 bits by the =
-hardware register on some architectures, but the driver configures a 47-bit=
- DMA mask, leading to potential driver probe failures on systems with >1TB =
-of RAM.
+- [High] Missing MMIO readback after unregistering the sysmem flush page al=
+lows DMA to freed memory.
+- [High] Incorrect teardown order causes child DRM drivers to be unregister=
+ed after GPU resources are freed.
+- [High] GPU hardware is not halted before its DMA memory is freed during t=
+eardown.
 --
 
-commit 4632ef4cc9c31d8529ab1675ddf82d3a2b423cef
+commit 4d00660f7b8829d00187ed0c9645cb7d2b811fe2
 Author: Danilo Krummrich <dakr@kernel.org>
 
-gpu: nova-core: replace ARef<Device> with &'bound Device in SysmemFlush
+gpu: nova-core: unregister sysmem flush page from Drop
 
-This commit updates SysmemFlush to use a lifetime-parameterized reference
-to the device instead of an ARef. This removes the unnecessary reference
-counting overhead since the lifetime is statically bound.
+Now that SysmemFlush can borrow the Bar via HRT lifetime, store a
+&'bound Bar0 reference and implement Drop to automatically unregister
+the sysmem flush page. This removes the need for manual unregister()
+calls and the Gpu::unbind() method.
 
-> diff --git a/drivers/gpu/nova-core/fb.rs b/drivers/gpu/nova-core/fb.rs
-> index 64fe5f27f41ee..a1c5ccd0a5345 100644
-> --- a/drivers/gpu/nova-core/fb.rs
-> +++ b/drivers/gpu/nova-core/fb.rs
-[ ... ]
-> @@ -49,7 +48,7 @@
->  pub(crate) struct SysmemFlush<'sys> {
->      /// Chipset we are operating on.
->      chipset: Chipset,
-> -    device: ARef<device::Device>,
-> +    device: &'sys device::Device,
->      bar: &'sys Bar0,
->      /// Keep the page alive as long as we need it.
->      page: CoherentHandle,
+Link: https://lore.kernel.org/all/20260409-fix-systemflush-v1-1-a1d6c968f17=
+c@nvidia.com/
 
-[Severity: Critical]
-This is a pre-existing issue, but does the Drop implementation for SysmemFl=
-ush
-need a dummy read to flush the PCIe bus buffer?
-
-When unregistering the sysmem flush page, the MMIO write is asynchronous and
-posted to the PCIe bus. Without a subsequent dummy read to flush the bus,
-could the Drop implementation return and free the CoherentHandle page before
-the unregistration reaches the hardware?
-
-If the GPU executes a sysmem flush before the hardware processes the write,
-it might write to the freed DMA page, which could corrupt system memory or
-trigger an IOMMU fault.
-
->  }
-> =20
->  impl<'sys> SysmemFlush<'sys> {
->      /// Allocate a memory page and register it as the sysmem flush page.
->      pub(crate) fn register(
-> -        dev: &device::Device<device::Bound>,
-> +        dev: &'sys device::Device<device::Bound>,
->          bar: &'sys Bar0,
->          chipset: Chipset,
->      ) -> Result<Self> {
+> diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driv=
+er.rs
+> index d4cf4379ee87c..cff5034c2dcd2 100644
+> --- a/drivers/gpu/nova-core/driver.rs
+> +++ b/drivers/gpu/nova-core/driver.rs
+> @@ -113,8 +113,4 @@ fn probe<'bound>(
+>              }))
+>          })
+>      }
+> -
+> -    fn unbind<'bound>(_pdev: &'bound pci::Device<Core<'_>>, this: Pin<&S=
+elf::Data<'bound>>) {
+> -        this.gpu.unbind();
+> -    }
 
 [Severity: High]
-This isn't a bug introduced by this patch, but is the DMA mask configured
-correctly for this allocation?
+This isn't a bug introduced by this patch, but by relying on Drop for
+teardown, does the struct field declaration order cause child DRM drivers
+to be unregistered after GPU resources are freed?
 
-The driver configures a 47-bit coherent DMA mask, which allows the page
-physical or IOVA address to exceed 40 bits. However, the hardware register
-only accommodates 40 bits on some architectures.
+In Rust, struct fields are dropped in declaration order. If gpu and bar
+are declared before _reg (the auxiliary device registration) in NovaCore,
+dropping NovaCore will drop gpu first (freeing GSP DMA buffers and
+unmapping the sysmem flush page).
 
-When write_sysmem_flush_page_gm107() shifts the address by 8 and attempts
-to fit it into a u32 for the NV_PFB_NISO_FLUSH_SYSMEM_ADDR register, will
-this conversion fail if the allocated address is 1TB or higher?
+Later, _reg is dropped, which invokes auxiliary_device_delete and
+triggers the child DRM driver's remove callback. This means the child
+driver is unbound and executes its teardown after the GPU hardware state
+has been torn down and its backing DMA memory freed.
 
-If so, this might cause driver probe failures on systems with large amounts
-of RAM or IOMMUs issuing high IOVAs.
+Could this lead to crashes or use-after-free?
 
-> @@ -68,7 +67,7 @@ pub(crate) fn register(
-> =20
+[Severity: High]
+This is a pre-existing issue, but is the GPU hardware halted before its
+DMA memory is freed during teardown?
+
+When the Gpu struct is dropped, the DMA memory for the sysmem flush page
+and GSP is freed via their respective Drop implementations. However,
+neither Gpu, Gsp, nor Falcon appear to implement a Drop routine that
+actually halts the GSP firmware or resets the falcons.
+
+Because the hardware is left running while its DMA backing memory is
+returned to the system allocator, could the GPU continue to execute and
+access the freed memory?
+
+>  }
+> diff --git a/drivers/gpu/nova-core/fb.rs b/drivers/gpu/nova-core/fb.rs
+> index bdd5eed760e17..64fe5f27f41ee 100644
+> --- a/drivers/gpu/nova-core/fb.rs
+> +++ b/drivers/gpu/nova-core/fb.rs
+
+[ ... ]
+
+> @@ -70,19 +69,18 @@ pub(crate) fn register(
 >          Ok(Self {
 >              chipset,
-> -            device: dev.into(),
-> +            device: dev,
->              bar,
+>              device: dev.into(),
+> +            bar,
 >              page,
 >          })
+>      }
+> +}
+> =20
+> -    /// Unregister the managed sysmem flush page.
+> -    ///
+> -    /// In order to gracefully tear down the GPU, users must make sure t=
+o call this method before
+> -    /// dropping the object.
+> -    pub(crate) fn unregister(&self, bar: &Bar0) {
+> +impl Drop for SysmemFlush<'_> {
+> +    fn drop(&mut self) {
+>          let hal =3D hal::fb_hal(self.chipset);
+> =20
+> -        if hal.read_sysmem_flush_page(bar) =3D=3D self.page.dma_handle()=
+ {
+> -            let _ =3D hal.write_sysmem_flush_page(bar, 0).inspect_err(|e=
+| {
+> +        if hal.read_sysmem_flush_page(self.bar) =3D=3D self.page.dma_han=
+dle() {
+> +            let _ =3D hal.write_sysmem_flush_page(self.bar, 0).inspect_e=
+rr(|e| {
+
+[Severity: High]
+This is a pre-existing issue, but does this MMIO write need a readback?
+
+When SysmemFlush::drop unregisters the flush page, it issues a PCIe MMIO
+write. PCIe writes are posted and can be buffered. Because there is no
+subsequent MMIO read to flush the posted write, the CPU can immediately
+proceed to drop self.page and free the DMA memory while the hardware's
+register update is still in flight.
+
+If the GPU executes a sysmem flush before the register actually updates,
+could it write to freed memory?
+
+>                  dev_warn!(
+>                      &self.device,
+>                      "failed to unregister sysmem flush page: {:?}\n",
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521233501.1191=
-842-1-dakr@kernel.org?part=3D26
+842-1-dakr@kernel.org?part=3D25
