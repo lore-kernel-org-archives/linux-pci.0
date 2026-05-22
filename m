@@ -1,334 +1,300 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013028.outbound.protection.outlook.com [40.93.196.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FDFC2E889C;
-	Fri, 22 May 2026 04:10:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779423050; cv=none; b=BRh2puMii99/6WhWBT4XWHRzyyQEO8eWXJwi8Ojyh7cqIZZxYOkq0IaQFxHQMjcLPr45KWlt97RNf5vhZ7gT5O5rv37vWImn0lf0bpNWCY24P+0H4YJyKDG22Tkbq+L1Bs1AjxkH/ikxK11jCknjbn1fHjT2qC6lo0/AzYedUFg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779423050; c=relaxed/simple;
-	bh=nGp8cfDlKp7quoA7yLGxVFHAs6cU3j3WHC9u6x7eUGc=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bPx+QQ+TlEA5EnRYZcMbbZj7aVhiXIXnMwMmE/b6tRJooa3gLD4Lps+jx+5wynNEEYjCaH9uCHkh+Zr3JUyF8p+IhlBLWWx6AtVVftCZBjlIpdpPoizpUnba0/J/sDwsihZHNSf8UxB6irSrWzb7aB8DjdKFTIZ/Y4ACqZz8GPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=foyBucyl; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=AHl10YZk; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B526C3115A5;
+	Fri, 22 May 2026 05:24:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.196.28
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779427488; cv=fail; b=qbz22SIXAjAgqDqetR+dZNfJsKk9jpOzYr56BFIMoBTN8nxNl5spWO3f0IrAba+dMR30dqB5zT1vKO2URAjrYPx3LgjhI5v8sp18JYaxliQLEmdy//s753D6V9WEHiN8MtbybGpFIgm3E9a1sLEg6ew5ZFto9bj9lmCwggYLAtM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779427488; c=relaxed/simple;
+	bh=xoqbA/iZAaeVTiwosyaBiJvf+fXownsmX1ExOiw3hqU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jSXZbie8ahHMfhvCCZzb3KaBC1ZuWCMkiMDYpSc71WiNbixK1votjO0SkKAWKLLBPCgNGVDE2CjomcKMyVaZek71/xxQs2Uwd6zwlLzC+F3L27ZXvgSVf3iMo5Ns5fPlMdDWr8X9eiyw94VEvKn/L5yzprAzI80qp1gA3SWHLpE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=FM+idV8U; arc=fail smtp.client-ip=40.93.196.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="foyBucyl";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="AHl10YZk"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.phl.internal (Postfix) with ESMTP id AC35FEC00F2;
-	Fri, 22 May 2026 00:10:47 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Fri, 22 May 2026 00:10:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1779423047;
-	 x=1779509447; bh=40mpPYP9F3lB1sh3je3/ae1J8NBD0BA25slDaB8kCrA=; b=
-	foyBucylQSnlkrEomi/M4rF9y9ULY/6gae+7co1RzgCpSJv9iUAMRapxzgWgfIou
-	XqEOXcZpqUD+Kr9Hps18NpRS2x3ridOeNDT9ov3whqEfVrgfHOU3+x8fA/mX26nZ
-	ierbSyiCQulPfrrXc2CJ07nNKjER1LuemVzGoSF3vsu3/EE8vzIs7bXZhtvKwnh2
-	F2eh7+M3AzzGecxK8NRqGoNeLcvigGOcnC6bO1lnDgmP7goqgqGwStSJicgE/AIT
-	7XllFjnOm2E3bF7lBzMcnDqKjyi/cIYwyZlhY++Pb0u9mKGpRBuzny+qTCODQLVp
-	/8Vysz3QlxGcXdiQipSKdw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779423047; x=
-	1779509447; bh=40mpPYP9F3lB1sh3je3/ae1J8NBD0BA25slDaB8kCrA=; b=A
-	Hl10YZkjGBB/kK2P80acvgOwCSdqErHV/vo80L40FAXFsSdaLBDCa6nWeM043iA5
-	1pRaslcXipnoPRq1bwerTYjQh1HNCY8UdNv8iB0jljNJWi0FN9VyG1n41I/SEU9K
-	fXo3uB5UaqyymSXvY2L4hJO4J/glE76r2jYz3/kdmjoYhWCSCfoVfVyiAJGSoNEM
-	Q1/VA9PBVbHj62mGKU7zZ/DsOVePhoi5p+9fP74IpmdURUyiHwxm7sxVgc6yaOmb
-	PM32bqjAu5wJHLRPBUkwriAXed/bKuwIp0RqxzUbp362hMmJtvZWnNj5rHagx/CI
-	24ct2E6czNUFgFOa9gJXw==
-X-ME-Sender: <xms:R9cPauoWnTs8QakfVuBHbifz7iDs1tcxh7B4eDs4QmIPjiWQHQ4G9w>
-    <xme:R9cPaq6DqfIcTQB9ercGdLi5v8mChH6zpI6A7FqC9-tAIh2XKkU4ETSYNWvvo-mAJ
-    wDnkwOuJXf2YH73I3CQFoB1ZI3ZsqneV2rbVtLQrx2Jxg40UCxfIvc>
-X-ME-Received: <xmr:R9cPasioMd4hd2kjDlaVpNRPeB9MeE4kHXj5Ds5NMuwTWmorj2wYQPH43YI>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgddugeelfeekucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujf
-    gurhepfffhvfevuffkjghfofggtgfgsehtjeertdertddvnecuhfhrohhmpeetlhgvgicu
-    hghilhhlihgrmhhsohhnuceorghlvgigsehshhgriigsohhtrdhorhhgqeenucggtffrrg
-    htthgvrhhnpedvkeefjeekvdduhfduhfetkedugfduieettedvueekvdehtedvkefgudeg
-    veeuueenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grlhgvgiesshhhrgiisghothdrohhrghdpnhgspghrtghpthhtohepuddupdhmohguvgep
-    shhmthhpohhuthdprhgtphhtthhopehfvghnghgthhgvnhhgfigvnheshhhurgifvghird
-    gtohhmpdhrtghpthhtohepjhhgghesiihivghpvgdrtggrpdhrtghpthhtohepfigrthhh
-    shgrlhgrrdhvihhthhgrnhgrghgvsegrrhhmrdgtohhmpdhrtghpthhtohephhgvlhhgrg
-    grsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepfigvihdrhhhurghnghdvsegrmhgu
-    rdgtohhmpdhrtghpthhtohepfigrnhhgiihhohhuudeshhhishhilhhitghonhdrtghomh
-    dprhgtphhtthhopeifrghnghihuhhshhgrnhduvdeshhhurgifvghirdgtohhmpdhrtghp
-    thhtoheplhhiuhihohhnghhlohhngheshhhurgifvghirdgtohhmpdhrtghpthhtohepkh
-    hvmhesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:R9cPag5gDTgjmjqBFN4pMVkWg3tdJQmdPBkdQBhkN2VeL3I8tXRphw>
-    <xmx:R9cPahGVsWJtcApKtCNKpomZ3mgUJSqj70pf_w27Qhz69fKATfwHng>
-    <xmx:R9cPaiIpZ3igKworYa7W6FBWB31_ouC0MFiLJei-b1kWs1uirEmtKQ>
-    <xmx:R9cPauhIiiIa548l0dYVolAHDerROgaiqpx5H8R494DL36EnZWvkyA>
-    <xmx:R9cPaiX_pIqLyTfDVXTABGBMXJY8a2T_OB-B7CkRR-8TOLmqRcuUAe5h>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 22 May 2026 00:10:46 -0400 (EDT)
-Date: Thu, 21 May 2026 22:10:15 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Chengwen Feng <fengchengwen@huawei.com>
-Cc: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
- <wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
- <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v11 4/5] vfio/pci: Add PCIe TPH configuration space
- virtualization
-Message-ID: <20260521221015.73a17820@shazbot.org>
-In-Reply-To: <20260518071701.25177-5-fengchengwen@huawei.com>
-References: <20260518071701.25177-1-fengchengwen@huawei.com>
-	<20260518071701.25177-5-fengchengwen@huawei.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="FM+idV8U"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=TGut/lc8d53oF7IHgXt/BVyLFx/lGGmfHzw8Lljhwb4Vtfte6nrlkI9r93hmmivrwhRtcVKGtQmRC5T3ASFTHTVvhEkr+sH2yI5FdFzo6Gmi+IOak7GENBm5tEjcJHclVhtYLC77iW3m1zB33aZTaafO7XYhubUWQWoHCtRFbOOSO0BgmU67F41bXrp2aGOhilD37wgwgLzhs4r+3tKx5Yuz9PlpjQaW3D2eJDKYqja1IJAPs25NY+EkPYTk5L1p2Pw8ud5boP24n6ULZoh9Z5EhUaqpVTGVzclEnxx4pQNf0PQt7gYmErBVJhk1W6vhaUCXpvhQSeDM2eTTTPxYIg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=UyegXvSY4GdAXMkYzbm/vCYF3nn4dAH9nr2mE60uoZE=;
+ b=IrmRvNNhW327u/7i8jhMEeYNNkUE+GTwyTOnrbgV+Hfup0Hb8wLTkc1fljikvjLDRHVdbFCg7WfOrWzxs4xORlqobA+5VWmguBsVfRf6vjJU/LMmqLMWdGHNBlWSx6lskrKUrgYbVIACPAp8qCDHKv1cZ66LKN5JCbCJrT9BXu86F4XT9tISmCJcdjXZE/tmFeCFyiyNvFCfS+LJmwqV9oHup359YpLWK/0ieiBxG9l7u8S4IOi0nM2H3IoTIjgyfdTqHt0usbR6EbKSN4JWFz0siUvaNyvKvwsgPjj88yYMtcWLMIPL9V6xpX85Sd7H1OvsSr9jh79C8ZVATw0rng==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.21.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=UyegXvSY4GdAXMkYzbm/vCYF3nn4dAH9nr2mE60uoZE=;
+ b=FM+idV8UJPSIv+RZT2Zr+ahnNj9yYuJjnkvUOQaXY6RwHGXKfJTwDeJ52o+bYYGzE8bNPx8rad+ggmiS63Go3VDHKLcYB0aA9jXSDM7N8rJViKjMc++jroGt/XACZe8m4WbGcc9rMxkcUzLgBMySjQoPoJKMEO6Mq0ybK2PTq48=
+Received: from BY5PR13CA0022.namprd13.prod.outlook.com (2603:10b6:a03:180::35)
+ by DS4PPF0FF25AAD9.namprd10.prod.outlook.com (2603:10b6:f:fc00::d09) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Fri, 22 May
+ 2026 05:24:43 +0000
+Received: from MWH0EPF000A6735.namprd04.prod.outlook.com
+ (2603:10b6:a03:180:cafe::d) by BY5PR13CA0022.outlook.office365.com
+ (2603:10b6:a03:180::35) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.71.7 via Frontend Transport; Fri, 22
+ May 2026 05:24:42 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.21.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.21.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.21.195; helo=flwvzet201.ext.ti.com; pr=C
+Received: from flwvzet201.ext.ti.com (198.47.21.195) by
+ MWH0EPF000A6735.mail.protection.outlook.com (10.167.249.27) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.71.7 via Frontend Transport; Fri, 22 May 2026 05:24:41 +0000
+Received: from DFLE201.ent.ti.com (10.64.6.59) by flwvzet201.ext.ti.com
+ (10.248.192.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 22 May
+ 2026 00:24:40 -0500
+Received: from DFLE207.ent.ti.com (10.64.6.65) by DFLE201.ent.ti.com
+ (10.64.6.59) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 22 May
+ 2026 00:24:40 -0500
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE207.ent.ti.com
+ (10.64.6.65) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
+ Transport; Fri, 22 May 2026 00:24:40 -0500
+Received: from a0507033-hp.dhcp.ti.com (a0507033-hp.dhcp.ti.com [10.24.68.129])
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 64M5OZpV1350956;
+	Fri, 22 May 2026 00:24:36 -0500
+From: Aksh Garg <a-garg7@ti.com>
+To: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<mani@kernel.org>, <kwilczynski@kernel.org>, <bhelgaas@google.com>,
+	<corbet@lwn.net>, <kishon@kernel.org>, <skhan@linuxfoundation.org>,
+	<lukas@wunner.de>, <cassel@kernel.org>, <alistair@alistair23.me>
+CC: <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>, <a-garg7@ti.com>
+Subject: [PATCH v4 0/4] PCI: Add DOE support for endpoint
+Date: Fri, 22 May 2026 10:54:30 +0530
+Message-ID: <20260522052434.802034-1-a-garg7@ti.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MWH0EPF000A6735:EE_|DS4PPF0FF25AAD9:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6aae50e3-567c-4815-2088-08deb7c26d15
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|36860700016|7416014|376014|1800799024|82310400026|18002099003|56012099003|921020|6133799003|5023799004;
+X-Microsoft-Antispam-Message-Info:
+	VnXYTPtPM5uRgbBrsGz0DU/lZQ+9duQoVGu1kYxli+vK5JYaXzRhCvIetSHVOPe3KtHPP2nR9FkT9QjASgeoTlFd1wvJXD8TyGoNw1vmlKzXNxi2HTzYxZhkqokMLzK0Zo8jielRNB4YEbnB2CSGGGE1FC8bXqfqq5Xlc+xZ0UTnu9XN+7JuW5QkGuJiC36pyh+XuUDBiKIgsJPNyOdRO9sAKiNFEWGVpXy8wq2k5bccX3IdyGAvsAqgE/BjYlpjS7VxEM3sP4Rf29xGO7WfMr288hyYJCtgV2IuRDNFprmeLbuUDkC2JUSwwrG9m2AHYUvLnlmhrepzgteaRFh4LzwliSOaleKMeK7DiJMA4UKeC52bbqwFSHL/slSV516LVJ1sWSvrbifDobhOQEiJFt3ZqQBy7sH9u0BaeLxEiQa9b5m7vvdF3skfTlHXL/fDeyKZ4uO2sOWSj1nqO61jtCXi+u5GfeJUrNLBXudWLWwVtvP8oQ3beoIdG91zdxV4JAIIxbtNkuAYuopshLrnyCcprmbsXR1oBwfrn97qkyIvJg9Rkdsoqc1EXKoJHH8qbGdZPXLsL1/Iwygy5BEvmQosVMcGr16yESYkLjUmJRilmrokTDk+13nKLPLCcjjMeQXzmnl6PSubeA/pkrj5TfiPs4Nqn2RxDCrSrzDDFAZU8k6uyKbD5cYnPIgm6fzknfgbRExoipjJAwAJ4gEZA/qOTKQEWI1qesVY/bA5J68uNguRyCnF33WUB/Ol1dXx9X4uiTS99XiqXRsHKIAMZWIH/Lv+TGrR8BFJgD/fXsU=
+X-Forefront-Antispam-Report:
+	CIP:198.47.21.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:flwvzet201.ext.ti.com;PTR:ErrorRetry;CAT:NONE;SFS:(13230040)(36860700016)(7416014)(376014)(1800799024)(82310400026)(18002099003)(56012099003)(921020)(6133799003)(5023799004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	VOjZ1mMDQQngXt2vgloQ8B2Vk/WGpP2DqqEvvSDx04Btjz9fDvrnITtbJ7wozTFABYQX+I2C/a/fDmowtI1Vei16r3fYur5+6abvc3nXFZuUPj9TquuI+OlUSqn1gCWYSeFprASvph+/KVCT9GEGGveY9wG9f7I1C5iNqqn96Xo9HGg0KCOUqP0jWhsNANzNmDMULXERWfpzs5zGGS0edVQWVjUSJNiBhILoqHrPp+RgBV6lU4j2sDIkD3hHF16K0aaCAAZIhYUBVXUXhrszh+BPaKayjQKUploLqSYDIKtfEMtXXn1QFZ25CvqSCYGdEj3GZP9v0r8G+wCyH712dAupEMeem/N3F5x1fdDgxDR9Bjwncut42elDCC8TStVb20ow+5QGXsxudwkLJhMTVhZSnggY8l1pR+h06CQ53Y8v2GUaZaOUKjxchw4wkfTx
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 May 2026 05:24:41.3541
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6aae50e3-567c-4815-2088-08deb7c26d15
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.21.195];Helo=[flwvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MWH0EPF000A6735.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS4PPF0FF25AAD9
 
-On Mon, 18 May 2026 15:17:00 +0800
-Chengwen Feng <fengchengwen@huawei.com> wrote:
+This patch series introduces the framework for supporting the Data
+Object Exchange (DOE) feature for PCIe endpoint devices. Please refer
+to the documentation added in patch 4 for details on the feature and
+implementation architecture.
 
-> Add support for virtualizing the PCIe TPH (Transaction Processing Hints)
-> control register. TPH may break platform isolation, so add a module
-> parameter "enable_unsafe_tph" to allow administrators to globally control
-> this feature.
-> 
-> TPH control register writes are mediated to only allow valid mode settings,
-> and TPH is automatically disabled when VFIO takes ownership of the device
-> or when userspace closes the device file descriptor.
-> 
-> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> ---
->  drivers/vfio/pci/vfio_pci.c        | 13 ++++++++++++-
->  drivers/vfio/pci/vfio_pci_config.c | 28 ++++++++++++++++++++++++++++
->  drivers/vfio/pci/vfio_pci_core.c   | 16 +++++++++++++++-
->  include/linux/vfio_pci_core.h      |  4 +++-
->  4 files changed, 58 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 0c771064c0b8..6d73668459cf 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -60,6 +60,12 @@ static bool disable_denylist;
->  module_param(disable_denylist, bool, 0444);
->  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
->  
-> +#ifdef CONFIG_PCIE_TPH
-> +static bool enable_unsafe_tph;
-> +module_param(enable_unsafe_tph, bool, 0444);
-> +MODULE_PARM_DESC(enable_unsafe_tph, "Enable PCIe TPH (Transaction Processing Hints) support. It may break platform isolation. If you do not know what this is for, step away. (default: false)");
-> +#endif
-> +
->  static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
->  {
->  	switch (pdev->vendor) {
-> @@ -257,12 +263,17 @@ static int __init vfio_pci_init(void)
->  {
->  	int ret;
->  	bool is_disable_vga = true;
-> +	bool is_enable_unsafe_tph = false;
->  
->  #ifdef CONFIG_VFIO_PCI_VGA
->  	is_disable_vga = disable_vga;
->  #endif
-> +#ifdef CONFIG_PCIE_TPH
-> +	is_enable_unsafe_tph = enable_unsafe_tph;
-> +#endif
->  
-> -	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3);
-> +	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3,
-> +				 is_enable_unsafe_tph);
->  
->  	/* Register and scan for devices */
->  	ret = pci_register_driver(&vfio_pci_driver);
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index a10ed733f0e3..6da35c2313b9 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -22,6 +22,7 @@
->  
->  #include <linux/fs.h>
->  #include <linux/pci.h>
-> +#include <linux/pci-tph.h>
->  #include <linux/uaccess.h>
->  #include <linux/vfio.h>
->  #include <linux/slab.h>
-> @@ -35,6 +36,8 @@
->  	((offset >= PCI_BASE_ADDRESS_0 && offset < PCI_BASE_ADDRESS_5 + 4) || \
->  	 (offset >= PCI_ROM_ADDRESS && offset < PCI_ROM_ADDRESS + 4))
->  
-> +extern bool enable_unsafe_tph;
-> +
->  /*
->   * Lengths of PCI Config Capabilities
->   *   0: Removed from the user visible capability list
-> @@ -313,6 +316,30 @@ static int vfio_virt_config_read(struct vfio_pci_core_device *vdev, int pos,
->  	return count;
->  }
->  
-> +static int vfio_pci_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
-> +				     int count, struct perm_bits *perm,
-> +				     int offset, __le32 val)
-> +{
-> +	u32 data = le32_to_cpu(val);
-> +
-> +	guard(mutex)(&vdev->tph_lock);
-> +
-> +	if (!enable_unsafe_tph)
-> +		return count;
-> +
-> +	if (offset != PCI_TPH_CTRL)
-> +		return count;
-> +
-> +	/* Only permit write TPH mode. */
-> +	data &= PCI_TPH_CTRL_MODE_SEL_MASK;
-> +	if (data == PCI_TPH_ST_IV_MODE || data == PCI_TPH_ST_DS_MODE)
-> +		pcie_enable_tph(vdev->pdev, data);
-> +	else if (data == PCI_TPH_ST_NS_MODE)
-> +		pcie_disable_tph(vdev->pdev);
-> +
-> +	return count;
-> +}
+The implementation provides a common framework for all PCIe endpoint
+controllers, not specific to any particular SoC vendor.
 
-I don't understand the virtualization here, the Requester Enable bits
-control what's actually enabled, not the Mode Selection bits.  All
-three of these are valid modes that can be enabled, why aren't they
-toggled by the value written to PCI_TPH_CTRL_REQ_EN_MASK?
+The changes since v1 are documented in the respective patch descriptions.
 
-Isn't this patch ordering wrong, why are we allowing tph to be enabled
-and disabled before we've provided a mechanism to set/get steering tags?
+v3: https://lore.kernel.org/all/20260427051725.223704-1-a-garg7@ti.com/
+v2: https://lore.kernel.org/all/20260401073022.215805-1-a-garg7@ti.com/
+v1 (RFC): https://lore.kernel.org/all/20260213123603.420941-1-a-garg7@ti.com/
 
-> +
->  static struct perm_bits direct_ro_perms = {
->  	.readfn = vfio_direct_config_read,
->  };
-> @@ -1121,6 +1148,7 @@ int __init vfio_pci_init_perm_bits(void)
->  	ret |= init_pci_ext_cap_err_perm(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
->  	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
->  	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
-> +	ecap_perms[PCI_EXT_CAP_ID_TPH].writefn = vfio_pci_tph_config_write;
->  	ecap_perms[PCI_EXT_CAP_ID_DVSEC].writefn = vfio_raw_config_write;
->  
->  	if (ret)
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 050e7542952e..0d0140202280 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -29,6 +29,7 @@
->  #include <linux/sched/mm.h>
->  #include <linux/iommufd.h>
->  #include <linux/pci-p2pdma.h>
-> +#include <linux/pci-tph.h>
->  #if IS_ENABLED(CONFIG_EEH)
->  #include <asm/eeh.h>
->  #endif
-> @@ -41,6 +42,7 @@
->  static bool nointxmask;
->  static bool disable_vga;
->  static bool disable_idle_d3;
-> +bool enable_unsafe_tph;
->  
->  static void vfio_pci_eventfd_rcu_free(struct rcu_head *rcu)
->  {
-> @@ -771,6 +773,11 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
->  #endif
->  	vfio_pci_dma_buf_cleanup(vdev);
->  
-> +	/* Disable TPH when userspace closes the device FD */
-> +	mutex_lock(&vdev->tph_lock);
-> +	pcie_disable_tph(vdev->pdev);
-> +	mutex_unlock(&vdev->tph_lock);
-> +
+Below is a code demonstration showing the integration of DOE-EP APIs with
+EPC drivers.
 
-We generally don't need to lock on device close, there's nothing it can
-race with.  Also this should happen in the below function after the
-device is known to be back in D0.
+Note: The provided code is just to show how an EPC driver is expected to
+      utilize the pci_ep_doe_process_request() and pci_ep_doe_abort() APIs,
+      and might not cover all the corner cases. The below implementation
+      also expects the EPC hardware to have some memory buffer to store the
+      data from(for) write_mailbox(read_mailbox) DOE capability registers.
 
-In general the tph_lock seems more like it's protecting PCI-core since
-tph enable/disable doesn't serialize itself.
+============================================================================
 
->  	vfio_pci_core_disable(vdev);
->  
->  	mutex_lock(&vdev->igate);
-> @@ -2132,6 +2139,7 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
->  	mutex_init(&vdev->igate);
->  	spin_lock_init(&vdev->irqlock);
->  	mutex_init(&vdev->ioeventfds_lock);
-> +	mutex_init(&vdev->tph_lock);
->  	INIT_LIST_HEAD(&vdev->dummy_resources_list);
->  	INIT_LIST_HEAD(&vdev->ioeventfds_list);
->  	INIT_LIST_HEAD(&vdev->sriov_pfs_item);
-> @@ -2151,6 +2159,7 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev)
->  	struct vfio_pci_core_device *vdev =
->  		container_of(core_vdev, struct vfio_pci_core_device, vdev);
->  
-> +	mutex_destroy(&vdev->tph_lock);
->  	mutex_destroy(&vdev->igate);
->  	mutex_destroy(&vdev->ioeventfds_lock);
->  	kfree(vdev->region);
-> @@ -2240,6 +2249,9 @@ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
->  	if (!disable_idle_d3)
->  		pm_runtime_put(dev);
->  
-> +	/* Disable TPH when taking over ownership of the device */
-> +	pcie_disable_tph(pdev);
-> +
+/* ========== DOE Completion Callback (invoked by DOE-EP core) ========== */
 
-Seems like a vfio_pci_core_enable() operation, why do we care if it's
-enabled here?  Thanks,
+static void doe_completion_cb(struct pci_epc *epc, u8 func_no, u16 cap_offset,
+			       int status, u16 vendor, u8 type,
+			       void *response_pl, size_t response_pl_sz)
+{
+	struct epc_driver *drv = epc_get_drvdata(epc);
+	u32 *response = (u32 *)response_pl;
+	u32 header1, header2;
+	int payload_dw, i;
 
-Alex
+	if (status < 0) {
+		/* Error: set ERROR bit in DOE Status register */
+		writel(1 << DOE_STATUS_ERROR,
+		       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+		goto free;
+	}
 
->  	ret = vfio_register_group_dev(&vdev->vdev);
->  	if (ret)
->  		goto out_power;
-> @@ -2605,11 +2617,13 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
->  }
->  
->  void vfio_pci_core_set_params(bool is_nointxmask, bool is_disable_vga,
-> -			      bool is_disable_idle_d3)
-> +			      bool is_disable_idle_d3,
-> +			      bool is_enable_unsafe_tph)
->  {
->  	nointxmask = is_nointxmask;
->  	disable_vga = is_disable_vga;
->  	disable_idle_d3 = is_disable_idle_d3;
-> +	enable_unsafe_tph = is_enable_unsafe_tph;
->  }
->  EXPORT_SYMBOL_GPL(vfio_pci_core_set_params);
->  
-> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index 89165b769e5c..741d5bcc7ba3 100644
-> --- a/include/linux/vfio_pci_core.h
-> +++ b/include/linux/vfio_pci_core.h
-> @@ -142,6 +142,7 @@ struct vfio_pci_core_device {
->  	struct notifier_block	nb;
->  	struct rw_semaphore	memory_lock;
->  	struct list_head	dmabufs;
-> +	struct mutex		tph_lock;
->  };
->  
->  enum vfio_pci_io_width {
-> @@ -157,7 +158,8 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
->  				      const struct vfio_pci_regops *ops,
->  				      size_t size, u32 flags, void *data);
->  void vfio_pci_core_set_params(bool nointxmask, bool is_disable_vga,
-> -			      bool is_disable_idle_d3);
-> +			      bool is_disable_idle_d3,
-> +			      bool is_enable_unsafe_tph);
->  void vfio_pci_core_close_device(struct vfio_device *core_vdev);
->  int vfio_pci_core_init_dev(struct vfio_device *core_vdev);
->  void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
+	if (readl(drv->base + PF_DOE_CTRL_REG(func_no, cap_offset)) & DOE_CTRL_ABORT) {
+		/* Aborted: do not send response */
+		goto free;
+	}
+
+	/* Success: write DOE headers first, then response to the read memory */
+
+	/* Header 1: Vendor ID (bits 15:0) | Type (bits 23:16) */
+	header1 = (type << 16) | vendor;
+	writel(header1, drv->base + PF_DOE_RD_MEMORY_WR_REG(func_no, cap_offset));
+
+	/* Header 2: Length in DW (including 2 DW of headers + payload) */
+	payload_dw = DIV_ROUND_UP(response_pl_sz, sizeof(u32));
+	header2 = 2 + payload_dw;  /* 2 header DWs + payload */
+	writel(header2, drv->base + PF_DOE_RD_MEMORY_WR_REG(func_no, cap_offset));
+	
+	/* Set READY bit to signal response ready */
+	writel(1 << DOE_STATUS_READY,
+	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+
+	/* Write response payload DWORDs to Read memory */
+	for (i = 0; i < payload_dw; i++)
+		writel(response[i],
+		       drv->base + PF_DOE_RD_MEMORY_WR_REG(func_no, cap_offset));
+
+	/* Wait for the memory to empty before clearing the READY bit */
+	while (!RD_MEMORY_EMPTY()) {/* wait */}
+
+	writel(0 << DOE_STATUS_READY,
+	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+	
+	/* unset BUSY bit */
+	writel(0 << DOE_STATUS_BUSY,
+	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+free:
+	kfree(response_pl);
+}
+
+/* ========== DOE Interrupt Handler (triggered on GO bit from root complex) ========== */
+
+static irqreturn_t doe_interrupt_handler(int irq, void *priv)
+{
+	struct epc_driver *drv = priv;
+	u16 cap_offset = extract_cap_offset_from_irq(irq);
+	u8 func_no = extract_func_from_irq(irq);
+	u32 header1, header2, length_dw, *request;
+	u16 vendor;
+	u8 type;
+	int i, ret;
+
+	/* Read first header DWORD: Vendor ID (bits 15:0) | Type (bits 23:16) */
+	header1 = readl(drv->base + PF_DOE_WR_MEMORY_RD_REG(func_no, cap_offset));
+	vendor = header1 & 0xFFFF;
+	type = (header1 >> 16) & 0xFF;
+
+	/* Read second header DWORD: Length in DW (includes 2 DW of headers) */
+	header2 = readl(drv->base + PF_DOE_WR_MEMORY_RD_REG(func_no, cap_offset));
+	length_dw = header2 & 0x3FFFF;  /* Bits 17:0 */
+
+	if (!length_dw)
+		length_dw = PCI_DOE_MAX_LENGTH;
+
+	length_dw -= 2;  /* Subtract 2 DW of headers to get payload length */
+	/* Allocate buffer for complete request (headers + payload) */
+	request = kzalloc(length_dw * sizeof(u32), GFP_ATOMIC);
+	if (!request) {
+		writel(1 << DOE_STATUS_ERROR,
+		       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+		return IRQ_HANDLED;
+	}
+
+	/* Read remaining payload DWORDs from Write memory */
+	for (i = 0; i < length_dw; i++) {
+		while (WR_MEMORY_EMPTY()) { /* wait */ }
+		request[i] = readl(drv->base + PF_DOE_WR_MEMORY_RD_REG(func_no, cap_offset));
+	}
+	/* Set BUSY bit */
+	writel(1 << DOE_STATUS_BUSY,
+	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+
+	/* Hand off to DOE-EP core for asynchronous processing */
+	ret = pci_ep_doe_process_request(drv->epc, func_no, cap_offset,
+					 vendor, type, (void *)request,
+					 length_dw * sizeof(u32),
+					 doe_completion_cb);
+	if (ret) {
+		writel(1 << DOE_STATUS_ERROR,
+		       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+		kfree(request);
+	}
+
+	return IRQ_HANDLED;
+}
+
+/* ========== Abort Handler (triggered on ABORT bit from root complex) ========== */
+
+static irqreturn_t doe_abort_handler(int irq, void *priv)
+{
+	struct epc_driver *drv = priv;
+	u16 cap_offset = extract_cap_offset_from_irq(irq);
+	u8 func_no = extract_func_from_irq(irq);
+
+	/* Abort pending/in-flight operations in DOE-EP core */
+	pci_ep_doe_abort(drv->epc, func_no, cap_offset);
+
+	/* Discard Write memory contents */
+	writel(DOE_WR_MEMORY_CTRL_DISCARD,
+	       drv->base + PF_DOE_WR_MEMORY_CTRL_REG(func_no, cap_offset));
+
+	/* Clear status bits */
+	writel((0 << DOE_STATUS_ERROR) | (0 << DOE_STATUS_BUSY) |
+	       (0 << DOE_STATUS_READY),
+	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
+
+	return IRQ_HANDLED;
+}
+
+====================================================================================
+
+Aksh Garg (4):
+  PCI/DOE: Move common definitions to the header file
+  PCI: endpoint: Add DOE mailbox support for endpoint functions
+  PCI: endpoint: Add support for DOE initialization and setup in EPC
+    core
+  Documentation: PCI: Add documentation for DOE endpoint support
+
+ Documentation/PCI/endpoint/index.rst          |   1 +
+ .../PCI/endpoint/pci-endpoint-doe.rst         | 329 +++++++++++
+ drivers/pci/doe.c                             |  11 -
+ drivers/pci/endpoint/Kconfig                  |  14 +
+ drivers/pci/endpoint/Makefile                 |   1 +
+ drivers/pci/endpoint/pci-ep-doe.c             | 553 ++++++++++++++++++
+ drivers/pci/endpoint/pci-epc-core.c           |  92 +++
+ drivers/pci/pci.h                             |  48 ++
+ include/linux/pci-doe.h                       |   8 +
+ include/linux/pci-epc.h                       |   9 +
+ 10 files changed, 1055 insertions(+), 11 deletions(-)
+ create mode 100644 Documentation/PCI/endpoint/pci-endpoint-doe.rst
+ create mode 100644 drivers/pci/endpoint/pci-ep-doe.c
+
+-- 
+2.34.1
 
