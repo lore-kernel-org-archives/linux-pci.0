@@ -1,56 +1,56 @@
-Received: from fout-a7-smtp.messagingengine.com (fout-a7-smtp.messagingengine.com [103.168.172.150])
+Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 482A54028D8;
-	Fri, 22 May 2026 14:09:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.150
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F1CE36AB77;
+	Fri, 22 May 2026 14:27:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779459004; cv=none; b=qI61uGHFpbkH1uxm5N3xOImJQmTgsO9bnvWU9u8jHOtkAYNcrdBxdg8De0JZmkSusKtqQtbByFU4wDa5MT6YDCzJbdeQNq5xmUNgOYvjP9nItC1Ir+/Vlev/wSZgWclhZ/4k+Foq9nEukGVz+rapvE0ukChRqP8SZu6Q2Z1DdU0=
+	t=1779460058; cv=none; b=MWq42k9IUR14MDsCzv1BRBsE14//6XGXCe0AOhqKEQ5x8xelUsLZ8w7qAPVnamDgBd5XuZnNiPTnX6jKTHZUZQ9MoLQ/IkmCed8/AdnGg8pnyHuoasZja3j4Wq6yk34cSYcYh1mWHi8b/mN8eTQJU1wZKX3rMQQdEoMwCl4+Lgs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779459004; c=relaxed/simple;
-	bh=GZ/PiKv+EB4iuUEP1ftEYn4iTyedAWdYcFyHmFvZv6E=;
+	s=arc-20240116; t=1779460058; c=relaxed/simple;
+	bh=plxPpLMP6WEHRwBxbMEElRJxgmc2K9gbji6TFwFsVVc=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AWLkaN9mmHa+wTM5yUjcc4ubS6WtfEOthyxiBogsH8ijLtPM4vP63F/X8ieBvCnt7NaU12o5iOTqOy7Mj750XzuTiVYioK7NbpAKg0FiWmTiL30zqtyD0xZUQnH1Z+3yH+nbq3wSIS6eAP+YUBaE+dLXlToRWiwYPqUGPHWhL7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=srz0Pnry; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=FYO/zI6f; arc=none smtp.client-ip=103.168.172.150
+	 MIME-Version:Content-Type; b=E3ujqDZHn1B9FbFooYqETOXwlzTAm1QTNCVBzMOwmTVRxch43WklCPifq41HmMYwlxKpwprWZSF5+c9nLDnODgy0bf/p+4dkANnA/gtXgoNgMQ+Cy3mXCzphafZDE4zRX+BpjSTUshQyscsa4isxDRryRBf1K2/dtPOUsFpEMRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=HqUoE5vL; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=GUD6zca8; arc=none smtp.client-ip=103.168.172.157
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="srz0Pnry";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="FYO/zI6f"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfout.phl.internal (Postfix) with ESMTP id 6F71FEC01E1;
-	Fri, 22 May 2026 10:09:55 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-06.internal (MEProxy); Fri, 22 May 2026 10:09:55 -0400
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="HqUoE5vL";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="GUD6zca8"
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 74E5714000F5;
+	Fri, 22 May 2026 10:27:35 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-03.internal (MEProxy); Fri, 22 May 2026 10:27:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
 	cc:cc:content-transfer-encoding:content-type:content-type:date
 	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1779458995;
-	 x=1779545395; bh=uaPYxTRX3ADB9uuG8H0VGKPu10SMf94usZxtBguPvyc=; b=
-	srz0PnryN6vqhvgLMeJG+R6eHGrDS44XZlSgLd60NEm4CFaTNlOteH4EJwdVYL8p
-	MFC0m7o8hpHMIlm6zkStE3cc3Ty5yVRLnYb8vT6JfPrBvEUXLfSyxQXWVoZX2UcK
-	NCn6c/NyWE+uePscS8Ifo4D+PB/d+RKN8pHUvQ/XUjYWxk/GT1AvTzq8oqUExwm6
-	w3OSV/2k43vi4CRMGYPbYcV7YYP2KsBSLCw6up2/1pZ0IaBRHyL4k540ouCYgucb
-	EXuwOuJRsjFaO/vb+kKKBZ+hS98oaZ4noekVswx1DQ8F8eOVwoldwN2CzgeJ93Kn
-	pw1DXDt9XmAPxU3ihsK1Gw==
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1779460055;
+	 x=1779546455; bh=sBTGTRf71E2MpJmi83lGE/zP6dtUsvkn63wA+R8D/PM=; b=
+	HqUoE5vLzkhGwxki2xb4ey7u0Sq+PD0YJcF2Ec+FYA28RSgyiHUF9fyaDGE8ibfs
+	eoLgZ/Sk7KWnQZCrI83Zx6pjMnrzrqip1zM5dR/B4lGu2vAjLvzhLZf+VNL/iPOm
+	Vr1AleuSZ2PiKVPRxTbFVDDP14Kukp7LqV6LbvRXNt8G3BZOoQkgnrdInFbCn+xe
+	H7gwc4ojoJ6Z8r3oj/HOJbKNtzXqejIsgfynCFTMQwDdZ38X1vXkdMzdduKhpdVI
+	J3J5cXU8JO4qaneYVQ0/hkPtCpoWsREy+i550w4auLVAG51SUAvNQ8zzHcXNGKut
+	6Poq+HwrdXlrUqEwRB3pgA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-transfer-encoding
 	:content-type:content-type:date:date:feedback-id:feedback-id
 	:from:from:in-reply-to:in-reply-to:message-id:mime-version
 	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779458995; x=
-	1779545395; bh=uaPYxTRX3ADB9uuG8H0VGKPu10SMf94usZxtBguPvyc=; b=F
-	YO/zI6fF1HXfE+bKYD9ka1v4clAJxTQHvWweG05/N/8Y4jcS1705eWboT0DMFiT2
-	9ryNqSH7PpIQovn9utoD3/lp0qDQcnkigSBXiAEFGkn4adKhao/kdoxLSDwP5ZgL
-	9pPQLbs+JeX+K6uii7bjmZDNTWV/Fqb5fl/1BCot773o0SpWfB+2dfTWPZ3vk/4R
-	aCMQ7WDK9gyK7YS+eIgzPI52i/piKo2yCBpPtqlKmtCPEhC9Eao+FG1KEOW4JSsm
-	4oOb08MHPGjkDrWCCBbJlA73dd7Ets1itRwxsq2I1UZ9pZbOm5bpCpHm27IseYk4
-	FGYIpGQTrTJdQmWtUm+gw==
-X-ME-Sender: <xms:smMQasfLRwDtrEP704yAiOym1jIBvGLdpYZGwJDL4N3wGXQYx21ptw>
-    <xme:smMQascTk28DNU09sSuAGWKOExBetboETDMF_EkJCK7fnjlHAB0onlqmCjS6JVfXu
-    bRGyNdRMKegUTdpDfd8SUlLrwsqVV2nmxZsS6SgfsdMB2BkXG3Y>
-X-ME-Received: <xmr:smMQam15Jmqbm1hzthffy2Basf9Pc6LXAFwKeLIUqk5lULRJWr6ZJDiojs0>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduhedtfeejucetufdoteggodetrf
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779460055; x=
+	1779546455; bh=sBTGTRf71E2MpJmi83lGE/zP6dtUsvkn63wA+R8D/PM=; b=G
+	UD6zca8iTrICctOD0/AF+pVf+rMuC393/kbfJQM05QvIt5WrDKm7XLd7Uw3w3LPy
+	xE0wGwHacW4IR+32gWadVTtfsJNeqURxaphxvT/NjIKp0P8hW0m9wpZDLYoUsr28
+	XuScUlqxRTDK6ts13RAUTPuNXmYGnEunSighqaxlYdyzyRFBMtZZOsRSZWtl+Cac
+	A7HeO+WmQ1apqvZyn39Nl1bwemaDETUGd2ifGJj+2hcvWTum0LjcxaXAEsmXVd7Z
+	BxJP4jTM6esZSICog4F3knWJ76KlIKfrt96+3Ir3LlHOsi9U3THN4V4tD14/Kr89
+	TqG7HBqdPaw+KhGGwFDhw==
+X-ME-Sender: <xms:1mcQavR81An6Uo3LF6Ecf6cU7ZFVK1IOaf1SS7GS_ZksikygY1XKuQ>
+    <xme:1mcQavDxJEORNIc66eHumh0fgOQwSiJeJv6uMz2mhzPJ8S_w7Ait7JTd7JkCF_U3Z
+    xGoE1NR7780A-jU-ov_y9O1T6KfYUcOdYPNweYsHJ4Emq7dYOHL>
+X-ME-Received: <xmr:1mcQauLmpuisbCfSDVmuqrjeP5UMamTSvsRiMDtgPJ2puEal6WA7oJNV-3U>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduhedtgeduucetufdoteggodetrf
     dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
     rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
     dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
@@ -65,29 +65,29 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduhedtfeejucetufdote
     uhdusehhihhsihhlihgtohhnrdgtohhmpdhrtghpthhtohepfigrnhhghihushhhrghnud
     dvsehhuhgrfigvihdrtghomhdprhgtphhtthhopehlihhuhihonhhglhhonhhgsehhuhgr
     figvihdrtghomhdprhgtphhtthhopehkvhhmsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:smMQak902jAn0KnurDjbG4Vw1GeXUoGVha3jrtLhK5nJbMz_oRP0fQ>
-    <xmx:smMQar6aIZwvJV3-nSOp0HFM5wSbW1Upyz3lv2isxxXw50sY42e3ww>
-    <xmx:smMQassBr9Oabs-zJelZLdfuTADuVCZkVJCtyp6pNhwHfMT2CFIjuA>
-    <xmx:smMQat1eldY6sG9sBaxzIJ210VcE0vjCq6YP6GKj4KeXyDeUsWjjtw>
-    <xmx:s2MQapIuq_yILYdbLks-BmnZ0_HNfcTZo42-Jl_WOKcwZ_44dp4lQ4n2>
+X-ME-Proxy: <xmx:1mcQaiAtvM2_sK57nwC0BHqlaRxHJt1jG4gQTvwYWM2hEjKBO78xxg>
+    <xmx:1mcQarsR9dLQ7EM7CHguDYp07UB75_pV1CR16PB3hK8tMQqkGIyQmg>
+    <xmx:1mcQaoT52z8z5kW99EiZbTj4vFPGYoIRfuWQcwT8YT10sgoH7UVbqw>
+    <xmx:1mcQaqIO1xgnVjSYUPdsaRCZHl8nHoYODPU0Jujbob9CxI_TXBS1KA>
+    <xmx:12cQak9LvKo2Gj-gT5kLMEOjmpNfS8SsyDlNKo9NwB3YgFlKvlCC2DyZ>
 Feedback-ID: i03f14258:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 22 May 2026 10:09:53 -0400 (EDT)
-Date: Fri, 22 May 2026 08:09:51 -0600
+ 22 May 2026 10:27:33 -0400 (EDT)
+Date: Fri, 22 May 2026 08:27:30 -0600
 From: Alex Williamson <alex@shazbot.org>
 To: fengchengwen <fengchengwen@huawei.com>
 Cc: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
  <wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
  <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
  <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v11 4/5] vfio/pci: Add PCIe TPH configuration space
- virtualization
-Message-ID: <20260522080951.455eb8ef@shazbot.org>
-In-Reply-To: <60e77af2-557c-4a6c-8235-ab7142da77f5@huawei.com>
+Subject: Re: [PATCH v11 5/5] vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST for
+ TPH ST entry management
+Message-ID: <20260522082730.3d843a7f@shazbot.org>
+In-Reply-To: <512bce27-13a2-44a1-aa5b-b5ea77c174ba@huawei.com>
 References: <20260518071701.25177-1-fengchengwen@huawei.com>
-	<20260518071701.25177-5-fengchengwen@huawei.com>
-	<20260521221015.73a17820@shazbot.org>
-	<60e77af2-557c-4a6c-8235-ab7142da77f5@huawei.com>
+	<20260518071701.25177-6-fengchengwen@huawei.com>
+	<20260521221008.59ddf977@shazbot.org>
+	<512bce27-13a2-44a1-aa5b-b5ea77c174ba@huawei.com>
 X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -98,239 +98,221 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Fri, 22 May 2026 17:39:09 +0800
+On Fri, 22 May 2026 18:04:13 +0800
 fengchengwen <fengchengwen@huawei.com> wrote:
 
 > On 5/22/2026 12:10 PM, Alex Williamson wrote:
-> > On Mon, 18 May 2026 15:17:00 +0800
+> > On Mon, 18 May 2026 15:17:01 +0800
 > > Chengwen Feng <fengchengwen@huawei.com> wrote:
+> >   
+> >> Add VFIO_DEVICE_FEATURE_TPH_ST to allow userspace to manage PCIe TPH
+> >> Steering Tag entries.
+> >>
+> >> SET: Program contiguous ST entries when ST table resides in TPH Capability
+> >>      or MSI-X table. U32_MAX CPU ID clears the corresponding ST entry.
+> >> GET: Retrieve ST values per CPU ID, only available in DS mode.
+> >>
+> >> Both operations are only valid when TPH is enabled on the device.  
 > > 
-> >> Add support for virtualizing the PCIe TPH (Transaction Processing Hints)
-> >> control register. TPH may break platform isolation, so add a module
-> >> parameter "enable_unsafe_tph" to allow administrators to globally control
-> >> this feature.
-> >>
-> >> TPH control register writes are mediated to only allow valid mode settings,
-> >> and TPH is automatically disabled when VFIO takes ownership of the device
-> >> or when userspace closes the device file descriptor.
-> >>
+> > What?  That doesn't align with the hardware programming model.  The
+> > specification even suggests that the device should be quiesced or TPH
+> > disabled during programming of the steering tags for deterministic
+> > behavior.  
+> 
+> As mentioned in the 4/5 commit, obtaining ST must first enable TPH.
+> Of course, I think it might be necessary to calculate pdev->tph_req_type
+> during the capability detection phase, so that we can modify ST before
+> enabling TPH. Do you think such a modification is needed?
+
+I think a uAPI that doesn't align with the recommended programming
+order of the specification, potentially resulting in non-deterministic
+behavior is bogus.
+
 > >> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
 > >> ---
-> >>  drivers/vfio/pci/vfio_pci.c        | 13 ++++++++++++-
-> >>  drivers/vfio/pci/vfio_pci_config.c | 28 ++++++++++++++++++++++++++++
-> >>  drivers/vfio/pci/vfio_pci_core.c   | 16 +++++++++++++++-
-> >>  include/linux/vfio_pci_core.h      |  4 +++-
-> >>  4 files changed, 58 insertions(+), 3 deletions(-)
+> >>  drivers/vfio/pci/vfio_pci_core.c | 91 ++++++++++++++++++++++++++++++++
+> >>  include/uapi/linux/vfio.h        | 41 ++++++++++++++
+> >>  2 files changed, 132 insertions(+)
 > >>
-> >> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> >> index 0c771064c0b8..6d73668459cf 100644
-> >> --- a/drivers/vfio/pci/vfio_pci.c
-> >> +++ b/drivers/vfio/pci/vfio_pci.c
-> >> @@ -60,6 +60,12 @@ static bool disable_denylist;
-> >>  module_param(disable_denylist, bool, 0444);
-> >>  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
-> >>  
-> >> +#ifdef CONFIG_PCIE_TPH
-> >> +static bool enable_unsafe_tph;
-> >> +module_param(enable_unsafe_tph, bool, 0444);
-> >> +MODULE_PARM_DESC(enable_unsafe_tph, "Enable PCIe TPH (Transaction Processing Hints) support. It may break platform isolation. If you do not know what this is for, step away. (default: false)");
-> >> +#endif
-> >> +
-> >>  static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
-> >>  {
-> >>  	switch (pdev->vendor) {
-> >> @@ -257,12 +263,17 @@ static int __init vfio_pci_init(void)
-> >>  {
-> >>  	int ret;
-> >>  	bool is_disable_vga = true;
-> >> +	bool is_enable_unsafe_tph = false;
-> >>  
-> >>  #ifdef CONFIG_VFIO_PCI_VGA
-> >>  	is_disable_vga = disable_vga;
-> >>  #endif
-> >> +#ifdef CONFIG_PCIE_TPH
-> >> +	is_enable_unsafe_tph = enable_unsafe_tph;
-> >> +#endif
-> >>  
-> >> -	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3);
-> >> +	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3,
-> >> +				 is_enable_unsafe_tph);
-> >>  
-> >>  	/* Register and scan for devices */
-> >>  	ret = pci_register_driver(&vfio_pci_driver);
-> >> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> >> index a10ed733f0e3..6da35c2313b9 100644
-> >> --- a/drivers/vfio/pci/vfio_pci_config.c
-> >> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> >> @@ -22,6 +22,7 @@
-> >>  
-> >>  #include <linux/fs.h>
-> >>  #include <linux/pci.h>
-> >> +#include <linux/pci-tph.h>
-> >>  #include <linux/uaccess.h>
-> >>  #include <linux/vfio.h>
-> >>  #include <linux/slab.h>
-> >> @@ -35,6 +36,8 @@
-> >>  	((offset >= PCI_BASE_ADDRESS_0 && offset < PCI_BASE_ADDRESS_5 + 4) || \
-> >>  	 (offset >= PCI_ROM_ADDRESS && offset < PCI_ROM_ADDRESS + 4))
-> >>  
-> >> +extern bool enable_unsafe_tph;
-> >> +
-> >>  /*
-> >>   * Lengths of PCI Config Capabilities
-> >>   *   0: Removed from the user visible capability list
-> >> @@ -313,6 +316,30 @@ static int vfio_virt_config_read(struct vfio_pci_core_device *vdev, int pos,
-> >>  	return count;
-> >>  }
-> >>  
-> >> +static int vfio_pci_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
-> >> +				     int count, struct perm_bits *perm,
-> >> +				     int offset, __le32 val)
-> >> +{
-> >> +	u32 data = le32_to_cpu(val);
-> >> +
-> >> +	guard(mutex)(&vdev->tph_lock);
-> >> +
-> >> +	if (!enable_unsafe_tph)
-> >> +		return count;
-> >> +
-> >> +	if (offset != PCI_TPH_CTRL)
-> >> +		return count;
-> >> +
-> >> +	/* Only permit write TPH mode. */
-> >> +	data &= PCI_TPH_CTRL_MODE_SEL_MASK;
-> >> +	if (data == PCI_TPH_ST_IV_MODE || data == PCI_TPH_ST_DS_MODE)
-> >> +		pcie_enable_tph(vdev->pdev, data);
-> >> +	else if (data == PCI_TPH_ST_NS_MODE)
-> >> +		pcie_disable_tph(vdev->pdev);
-> >> +
-> >> +	return count;
-> >> +}
-> > 
-> > I don't understand the virtualization here, the Requester Enable bits
-> > control what's actually enabled, not the Mode Selection bits.  All
-> > three of these are valid modes that can be enabled, why aren't they
-> > toggled by the value written to PCI_TPH_CTRL_REQ_EN_MASK?
-> 
-> OK, will fix in next version
-> {
-> 	...
-> 	mode = data & PCI_TPH_CTRL_MODE_SEL_MASK;
-> 	req_en = data & PCI_TPH_CTRL_REQ_EN_MASK;
-> 	if (req_en && (mode == PCI_TPH_ST_IV_MODE || mode == PCI_TPH_ST_DS_MODE))
-> 		pcie_enable_tph(vdev->pdev, data);
-> 	else if (!req_en)
-> 		pcie_disable_tph(vdev->pdev);
-> 	...
-> }
-
-Again, NS_MODE is a valid enabled mode of TPH.
-
-
-> > Isn't this patch ordering wrong, why are we allowing tph to be enabled
-> > and disabled before we've provided a mechanism to set/get steering tags?
-> 
-> Regarding patch order: TPH must be enabled first before accessing steering tag entries.
-> The tag query interfaces rely on runtime TPH state and request type info stored in device struct,
-> which is only initialized after successful TPH enabling. So current order is functional necessary.
-
-As discussed in the next patch, I disagree with the direction of the
-uAPI proposed here.
-
-> >> +
-> >>  static struct perm_bits direct_ro_perms = {
-> >>  	.readfn = vfio_direct_config_read,
-> >>  };
-> >> @@ -1121,6 +1148,7 @@ int __init vfio_pci_init_perm_bits(void)
-> >>  	ret |= init_pci_ext_cap_err_perm(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
-> >>  	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
-> >>  	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
-> >> +	ecap_perms[PCI_EXT_CAP_ID_TPH].writefn = vfio_pci_tph_config_write;
-> >>  	ecap_perms[PCI_EXT_CAP_ID_DVSEC].writefn = vfio_raw_config_write;
-> >>  
-> >>  	if (ret)
 > >> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> >> index 050e7542952e..0d0140202280 100644
+> >> index 0d0140202280..13a22c1d6ea6 100644
 > >> --- a/drivers/vfio/pci/vfio_pci_core.c
 > >> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> >> @@ -29,6 +29,7 @@
-> >>  #include <linux/sched/mm.h>
-> >>  #include <linux/iommufd.h>
-> >>  #include <linux/pci-p2pdma.h>
-> >> +#include <linux/pci-tph.h>
-> >>  #if IS_ENABLED(CONFIG_EEH)
-> >>  #include <asm/eeh.h>
-> >>  #endif
-> >> @@ -41,6 +42,7 @@
-> >>  static bool nointxmask;
-> >>  static bool disable_vga;
-> >>  static bool disable_idle_d3;
-> >> +bool enable_unsafe_tph;
+> >> @@ -1558,6 +1558,95 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
+> >>  	return 0;
+> >>  }
 > >>  
-> >>  static void vfio_pci_eventfd_rcu_free(struct rcu_head *rcu)
-> >>  {
-> >> @@ -771,6 +773,11 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
-> >>  #endif
-> >>  	vfio_pci_dma_buf_cleanup(vdev);
-> >>  
-> >> +	/* Disable TPH when userspace closes the device FD */
-> >> +	mutex_lock(&vdev->tph_lock);
-> >> +	pcie_disable_tph(vdev->pdev);
-> >> +	mutex_unlock(&vdev->tph_lock);
+> >> +static int vfio_pci_core_feature_tph_st(struct vfio_pci_core_device *vdev,
+> >> +					u32 flags,
+> >> +					struct vfio_device_feature_tph_st __user *arg,
+> >> +					size_t argsz)
+> >> +{
+> >> +	bool is_set = !!(flags & VFIO_DEVICE_FEATURE_SET);
+> >> +	struct vfio_device_feature_tph_st tph_st;
+> >> +	struct pci_dev *pdev = vdev->pdev;
+> >> +	enum tph_mem_type mtype;
+> >> +	int i, j, ret;
+> >> +	u32 *cpus;
+> >> +	u16 st;
 > >> +
+> >> +	guard(mutex)(&vdev->tph_lock);  
 > > 
-> > We generally don't need to lock on device close, there's nothing it can
-> > race with.  Also this should happen in the below function after the
-> > device is known to be back in D0.
+> > Wrong place for this lock.  Why do we even need it?  If a user races
+> > SET/GET with enable/disable, that's their problem.  
 > 
-> I'll remove unnecessary mutex lock in device close path as there is no concurrent race risk.
-> Also adjust TPH disable invocation to after device returns to D0 state.
+> OK, will fix in next version
 > 
-> > 
-> > In general the tph_lock seems more like it's protecting PCI-core since
-> > tph enable/disable doesn't serialize itself.
-> 
-> The tph_lock is designed to serialize all userspace triggered TPH operations on the same device.
-
-I'm not sure it's our job to serialize everything.  Serializing to
-protect PCI-core from entering an inconsistent state is perhaps valid.
-
-> >>  	vfio_pci_core_disable(vdev);
-> >>  
-> >>  	mutex_lock(&vdev->igate);
-> >> @@ -2132,6 +2139,7 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
-> >>  	mutex_init(&vdev->igate);
-> >>  	spin_lock_init(&vdev->irqlock);
-> >>  	mutex_init(&vdev->ioeventfds_lock);
-> >> +	mutex_init(&vdev->tph_lock);
-> >>  	INIT_LIST_HEAD(&vdev->dummy_resources_list);
-> >>  	INIT_LIST_HEAD(&vdev->ioeventfds_list);
-> >>  	INIT_LIST_HEAD(&vdev->sriov_pfs_item);
-> >> @@ -2151,6 +2159,7 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev)
-> >>  	struct vfio_pci_core_device *vdev =
-> >>  		container_of(core_vdev, struct vfio_pci_core_device, vdev);
-> >>  
-> >> +	mutex_destroy(&vdev->tph_lock);
-> >>  	mutex_destroy(&vdev->igate);
-> >>  	mutex_destroy(&vdev->ioeventfds_lock);
-> >>  	kfree(vdev->region);
-> >> @@ -2240,6 +2249,9 @@ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
-> >>  	if (!disable_idle_d3)
-> >>  		pm_runtime_put(dev);
-> >>  
-> >> +	/* Disable TPH when taking over ownership of the device */
-> >> +	pcie_disable_tph(pdev);
+> >   
 > >> +
+> >> +	ret = vfio_check_feature(flags, argsz,
+> >> +				 VFIO_DEVICE_FEATURE_GET |
+> >> +				 VFIO_DEVICE_FEATURE_SET,
+> >> +				 sizeof(tph_st));
+> >> +	if (ret <= 0)
+> >> +		return ret;
+> >> +
+> >> +	if (!enable_unsafe_tph ||  
 > > 
-> > Seems like a vfio_pci_core_enable() operation, why do we care if it's
-> > enabled here?  Thanks,
+> > Why did we allow the feature to be probe if it can't be used?  
 > 
-> For TPH disable during device takeover: VFIO ownership transfer triggers device reset,
-> which clears hardware TPH registers and ST tables. We call pcie_disable_tph to synchronize
-> software state with hardware reset status.
+> OK, will fix in next version
+> 
+> >   
+> >> +		pcie_tph_enabled_mode(pdev) == PCI_TPH_ST_NS_MODE)  
+> > 
+> > Here's that ambiguity of reporting NS_MODE for disabled, but as above
+> > it's a bogus requirement.  
+> 
+> OK, will fix in next version
+> 
+> >   
+> >> +		return -EOPNOTSUPP;
+> >> +	if (!is_set && pcie_tph_enabled_mode(pdev) != PCI_TPH_ST_DS_MODE)  
+> > 
+> > Why?  Let the interface be symmetric that GET works regardless of mode.  
+> 
+> OK, will remove the restrict
+> 
+> >   
+> >> +		return -EOPNOTSUPP;
+> >> +	if (is_set && pcie_tph_get_st_table_loc(pdev) == PCI_TPH_LOC_NONE)
+> >> +		return -EOPNOTSUPP;
+> >> +
+> >> +	if (copy_from_user(&tph_st, arg, sizeof(tph_st)))
+> >> +		return -EFAULT;
+> >> +
+> >> +	if (tph_st.count == 0 || tph_st.count > VFIO_TPH_ST_MAX_COUNT ||
+> >> +		tph_st.flags > VFIO_TPH_ST_MEM_TYPE_PM)  
+> > 
+> > Wrong operation for a flags field.  
+> 
+> Because currently flags only use bit0 (0-VM, 1-PM), this judge make sure
+> it will return error if userspace passing non-zero in remain bits.
 
-So why wouldn't we do that prior to giving the device to userspace
-rather than upon registering the device?  We try not to modify the
-device state more than necessary on probe.  Thanks,
+This should be a mask to test undefined bits are not set, not a value
+comparison.
+
+> >> +		return -EINVAL;
+> >> +	if (!is_set && tph_st.index != 0)  
+> > 
+> > We can only GET index 0?  Why?  
+> 
+> Because GET operation don't need index, this judgment make sure
+> it will return error if userspace passing non-zero index.
+
+The interface is not symmetric.
+ 
+> >> +		return -EINVAL;
+> >> +	if (is_set && (tph_st.index >= VFIO_TPH_ST_MAX_COUNT ||
+> >> +		       tph_st.index + tph_st.count > VFIO_TPH_ST_MAX_COUNT))  
+> > 
+> > DS can have more that 2048 steering tags.  
+> 
+> I check the PCIE protocol, DS mode with ST in pcie-config or msi-x must not
+> hold > 2048 steering tags.
+
+The MSI-X storage location is limited to 2048, but DS mode doesn't
+necessarily use either of these storage locations.
+
+> >> +		return -EINVAL;
+> >> +
+> >> +	cpus = memdup_array_user(&arg->data, tph_st.count, sizeof(*cpus));  
+> > 
+> > Use an __aligned_u64 data_uptr like iommufd does and avoid copying this
+> > into the kernel.  Isn't this steering tags, why's it named cpus?  
+> 
+> we reuse the field which according your previous suggestion:
+> in GET, user pass in cpus, and vfio will feedback steering tags in cpus.
+
+Perhaps this was over stated, but aligning to the generic uAPI name
+since it's dual-purpose would seem to make sense.
+ 
+> >> +	if (IS_ERR(cpus))
+> >> +		return PTR_ERR(cpus);
+> >> +
+> >> +	mtype = tph_st.flags & VFIO_TPH_ST_MEM_TYPE_PM ? TPH_MEM_TYPE_PM :
+> >> +							 TPH_MEM_TYPE_VM;  
+> > 
+> > Then why did we use two flag bits for this?  
+> 
+> VFIO_TPH_ST_MEM_TYPE_PM is just one bit, could you explain the two flag bits?
+
+My bad, I overlooked that they're both shifted by 0.  Typically we
+wouldn't define both the 0 and 1 value, only the latter.
+ 
+> >> +	if (!is_set) {
+> >> +		for (i = 0; i < tph_st.count; i++) {
+> >> +			ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);  
+> > 
+> > My understanding was that GET would return the translated values from a
+> > previous SET, not translate on the fly.  I think in order to support
+> > writing STs before enabling TPH, we're going to need to store them
+> > somewhere anyway so that we can push them to the correct location when
+> > TPH is enabled.  That means there a buffer for SET/GET regardless of
+> > the mode that's enabled.  
+> 
+> OK, will try to fix
+> 
+> >   
+> >> +			if (ret)
+> >> +				goto out;
+> >> +			cpus[i] = st;
+> >> +		}
+> >> +		goto out;
+> >> +	}
+> >> +
+> >> +	for (i = 0; i < tph_st.count; i++) {
+> >> +		if (cpus[i] == U32_MAX) {
+> >> +			ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, 0);  
+> > 
+> > Why do we need a magic value to set it to zero?  Hardware doesn't have
+> > a "clear ST register value".  
+> 
+> So you mean for SET, usespace direct passing steering-tag not cpus in this patch?
+
+How does this work with Zhiping's series where there might be TPH values
+exposed through the dma-buf to support p2p DMA?  Where would that level
+of TPH programming occur?
+ 
+> >> +			if (ret)
+> >> +				goto out;
+> >> +			continue;
+> >> +		}
+> >> +
+> >> +		ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);
+> >> +		if (ret)
+> >> +			goto out;
+> >> +		ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, st);
+> >> +		if (ret)
+> >> +			goto out;  
+> > 
+> > Clearly broken for DS mode.  
+> 
+> For DS mode:
+> 1\ if ST table in CONFIG or MSI-X, then it could done by this way
+> 2\ if ST table not in CONFIG or MSI-X, then it only need invoke GET, and set by device-specific way.
+
+The SET only after enable model is broken, DS mode needs to support
+SET, where GET returns the host translations.  Thanks,
 
 Alex
