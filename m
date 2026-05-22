@@ -1,46 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F2BC3921D0;
-	Fri, 22 May 2026 22:43:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA1E634EF05;
+	Fri, 22 May 2026 22:48:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779489809; cv=none; b=XBy04xENJYN33vS1JEcTQK04pjajdYLOZtcvcwWWXikNRdlHtn66X9tMWxzsfmVZyvYlp6dO4t0Yh4Oeh7q+FCXdJRrgOwh8rursfYfVDmIAE81qELiM7vMaDNN0V+CC8uJ717iRCHmOdD3WEm3pye3k+tpAnVpiOqU5BtCHPQM=
+	t=1779490115; cv=none; b=JNJyuIUjA3yQx/ZXAgV2jW/4Ir6W221W35am4DPbDcFzwfKxZStT6jEoEMjFhBYWuwSHtFdUxQP9sPGeOs4wv7wmPy3iHCJ2nT9bSYLTuTbOQSmslXq35wjNFVVoB7JKMuIKasRniV/NIS6sktBAKevVPJ2gf5k/Be2l9sjJx4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779489809; c=relaxed/simple;
-	bh=mRtntZrAV+2jfR3TVChbt2cU6VWoavVtH+9JrPpWUrY=;
+	s=arc-20240116; t=1779490115; c=relaxed/simple;
+	bh=S4vcfrtwy9fIjOV0Im+sZ7KctQj8lUc/qAGhDNWt4vw=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=OkC/0idCcnK7vgoqTK8Eu7Dk9TPrcMWTr153wyB6oPxq+0uPJWPQ1SWWJqq5bbc1cbUhp1LC84aUeNqXSijIFhQ7AjodugZWuD9i0+TDUrqCV4gA7a7/+a7yoIGhPz+NrPFcc1/vtshR/Q12ywT+GdW1hAlIPl1NlQxNrdo+FhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IdDfrQIg; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=bL/ez/pdKMW+u5VBJBpLdy4nouJthZfFfDAKpHopbhTXdsBrYVuf3dI6RXKv/FZAZD4QzUMslNUu6W1lDVBP/yWg4mt1IEoAkJ3MGR0BWiZ7H8PY9KrBa91/uLITFkBgfJgjAhzzOojiLwfxd5IyjXdObTO1imq9aI+r/iYi4Ss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mFliS7Ix; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IdDfrQIg"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 4C9E71F000E9;
-	Fri, 22 May 2026 22:43:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mFliS7Ix"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 6A79C1F000E9;
+	Fri, 22 May 2026 22:48:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779489806;
-	bh=5PJOo0ni1XYQzQF6Rj7ozcEQoTTxGYPgOEd77Drbvg8=;
+	s=k20260515; t=1779490113;
+	bh=auzU48UECky/VhRsM1MIzHXMTSQQH38DGJK40Vy8La0=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=IdDfrQIg+fZetrCkoTY0IauSrN4pHDMvMCxGY6SoKkgD5tgrspCUzYZQpQzHAOqbT
-	 QXQVrtWcPrQRkxosIwSpEtDfOS6rSrlACxGKW/PBv03KOsoX65Mdy9MA/+f6JUR9eR
-	 ueexrCTVtPqe8ESjPDSBLkhBS9ILa5ej8UiYVIqanlW8ZSkA3LbEZgblgPNt+R9Bnu
-	 7Gf+STLjWCmo6hB1EnAMIetldKDp0DZm4HMq7+j375HUETEZmukv7vdE2CZHXuoARU
-	 PTcWt87VHL7K0liTAXhPMgXbUTxGR3EgigqlVeGe450cRjU4RGrzQmVqyAoFRi58vb
-	 BFnpd67/wiXWw==
-Date: Fri, 22 May 2026 17:43:25 -0500
+	b=mFliS7Ix7rqBthGHQaF5M6htxgc+ybi5mKkI/jhjzhUv2DB/LWOcg2o99/pXiq2JP
+	 522K3vZgppPOjIvvVDd7X2qj92uktNh04gvil8HJShJhNXcYTTsjX41nHrC3MrsD4N
+	 JTbVZNiNPrcpriJPnNj3yAnsWub1NN7yrjo4bdscyuml/hq44OHbEGVgW0mIVZp7+e
+	 tGdjWpvbioHmtbi5bRBANmyCwDDKfG5SWtic2myOgYBWY9aFEwwh2eom1ZWNcd2QEp
+	 wtlQkO7ok5K8k3vX6Ha/0yookF/2FebClHYQjXvKPXEd7IATRMXQz/upkUL/luodgb
+	 oUfjgYeuTLg0Q==
+Date: Fri, 22 May 2026 17:48:32 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Caleb James DeLisle <cjd@cjdns.fr>, linux-pci@vger.kernel.org,
-	linux-mips@vger.kernel.org, naseefkm@gmail.com,
-	ryder.lee@mediatek.com, lpieralisi@kernel.org,
-	kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, ansuelsmth@gmail.com,
-	linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v8 1/3] PCI: mediatek: Use actual physical address
- instead of virt_to_phys()
-Message-ID: <20260522224325.GA195169@bhelgaas>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, jonathanh@nvidia.com,
+	bjorn.andersson@oss.qualcomm.com, Frank Li <Frank.Li@nxp.com>,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 4/5] PCI: dwc: Use common D3cold eligibility helper in
+ suspend path
+Message-ID: <20260522224832.GA120697@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,121 +50,164 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <7xfp5nbtd4qtonoqurfwoedsix7vondrnfeip53uwjintuvc6a@cg3ez6z3pii5>
+In-Reply-To: <20260520000153.GA14400@bhelgaas>
 
-On Thu, May 21, 2026 at 10:44:51AM +0530, Manivannan Sadhasivam wrote:
-> On Wed, May 20, 2026 at 02:59:00PM -0500, Bjorn Helgaas wrote:
-> > On Wed, May 20, 2026 at 09:17:35PM +0200, Caleb James DeLisle wrote:
-> > > 
-> > > On 20/05/2026 20:55, Bjorn Helgaas wrote:
-> > > > On Wed, May 20, 2026 at 06:38:25PM +0000, Caleb James DeLisle wrote:
-> > > > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > > > 
-> > > > > The driver previously used virt_to_phys() on the ioremapped register base
-> > > > > (port->base) to compute the MSI message address. Using virt_to_phys() on an
-> > > > > IO mapped address is incorrect because it expects a kernel virtual address.
-> > > > > 
-> > > > > To fix it, store the physical start of the I/O register region in
-> > > > > mtk_pcie_port->phys_base and use it to build the MSI address. This replaces
-> > > > > the incorrect virt_to_phys() usage and ensures MSI addresses are generated
-> > > > > correctly.
-> > > > > 
-> > > > > Fixes: 43e6409db64d ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
-> > > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > > > Tested-by: Caleb James DeLisle <cjd@cjdns.fr>
-> > > > > ---
-> > > > >   drivers/pci/controller/pcie-mediatek.c | 16 +++++++++++++---
-> > > > >   1 file changed, 13 insertions(+), 3 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > > > > index 75722524fe74..c503fbd774d0 100644
-> > > > > --- a/drivers/pci/controller/pcie-mediatek.c
-> > > > > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > > > > @@ -175,6 +175,7 @@ struct mtk_pcie_soc {
-> > > > >   /**
-> > > > >    * struct mtk_pcie_port - PCIe port information
-> > > > >    * @base: IO mapped register base
-> > > > > + * @phys_base: Physical address of the I/O register base region
-> > > > >    * @list: port list
-> > > > >    * @pcie: pointer to PCIe host info
-> > > > >    * @reset: pointer to port reset control
-> > > > > @@ -196,6 +197,7 @@ struct mtk_pcie_soc {
-> > > > >    */
-> > > > >   struct mtk_pcie_port {
-> > > > >   	void __iomem *base;
-> > > > > +	phys_addr_t phys_base;
-> > > > >   	struct list_head list;
-> > > > >   	struct mtk_pcie *pcie;
-> > > > >   	struct reset_control *reset;
-> > > > > @@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> > > > >   	phys_addr_t addr;
-> > > > >   	/* MT2712/MT7622 only support 32-bit MSI addresses */
-> > > > > -	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > > > > +	addr = port->phys_base + PCIE_MSI_VECTOR;
-> > > >
-> > > > This doesn't look right because the MSI address is a PCI bus address,
-> > > > and port->phys_base is a CPU physical address.  Often a PCI bus
-> > > > address is the same as the CPU physical address, but not always.
-> > > > I think the DT 'ranges' property tells you the translation.
-> > 
-> > Oops, sorry, I muddied the waters here.
-> > 
-> > 'ranges' tells you the translation applied by a bridge, e.g., when
-> > a CPU does a load/store, the PCI host bridge turns it into a PCI
-> > read/write transaction.  The bridge might add an offset to the CPU
-> > load/store physical address to get the PCI read/write bus address.
-> > 
-> > But that's not the issue here.  The MSI is basically a DMA write
-> > performed by the PCI device, not a store done by a CPU, so I don't
-> > think 'ranges' is the right thing to look at.
+On Tue, May 19, 2026 at 07:01:53PM -0500, Bjorn Helgaas wrote:
+> [+cc Frank, linux-pm]
 > 
-> Yeah, it is so easy to confuse both. To summarise, 'ranges'
-> describes the outbound translation and 'dma-ranges' describes the
-> inbound translation from host perspective.
+> On Wed, Apr 29, 2026 at 12:12:26PM +0530, Krishna Chaitanya Chundru wrote:
+> > Previously, the driver skipped putting the link into L2/device state in
+> > D3cold whenever L1 ASPM was enabled, since some devices (e.g. NVMe) expect
+> > low resume latency and may not tolerate deeper power states.
 > 
-> > Based on this:
-> > https://elinux.org/Device_Tree_Usage#PCI_DMA_Address_Translation I
-> > think 'dma-ranges' is the relevant property.  I don't think your
-> > DT includes a 'dma-ranges' property, and in that case the default
-> > is that the system bus (CPU) address is the same as the PCI
-> > address.
+> I think "some devices expect low resume latency and may not tolerate
+> deeper power states" conveys the wrong message.  It's not that NVMe
+> has a mysterious acceptable resume latency number that we have to meet
+> or that NVMe has some inherent aversion to D3cold or L1SS or whatever
+> "deeper power states" refers to.
+> 
+> It could be that ASPM L1 was configured incorrectly (e.g., an L1->L0
+> transition didn't happen within the advertised exit latency, leading
+> to some device access failure) or a device lost internal context when
+> the driver didn't expect it (e.g., the Qcom problem where L1SS exit
+> takes too long and results in a link-down and device reset [1]).
+> 
+> It sounds to me like the ASPM L1 check was a way to avoid problems
+> like that, but I don't think we ever really had a root cause.
+
+Possible updated commit log text:
+
+  Previously, the driver skipped putting the link into L2 and device
+  state in D3cold when L1 ASPM was enabled since some devices (e.g.
+  NVMe) failed to resume correctly if they were suspended with L1
+  enabled. The root cause of the failure is unknown.
+
+> [1] https://lore.kernel.org/linux-pci/20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com/
+> 
+> > However, such devices typically remain in D0 and are already covered
+> > by the new helper's requirement that all endpoints be in D3hot
+> > before the devices under host bridge may enter D3cold.
+
+It makes me nervous when we assume "typical" things, but I don't have
+any ideas about wording this.
+
+This is all merged and in pci/next, so we can leave it as-is or amend
+the commit log if anybody has better ideas.
+
+> If we put the host bridge in D3cold, I assume the hierarchy below is
+> either put in D3cold as well, or at least every device in the
+> hierarchy will be reset as a consequence of the Root Port link going
+> down.
+> 
+> If the driver doesn't manage the device power state itself, I assume
+> we have the freedom to put the hierarchy in D3cold or reset it.
+> 
+> Do we have the same freedom if the driver *does* manage the power
+> state itself?  What if the driver put the device in D3hot, expecting
+> it to *stay* in D3hot?
+> 
+> I think pci_host_common_d3cold_possible() will see the device in D3hot
+> and decide that D3cold is possible.
+> 
+> (I'm looking at https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/power/pci.rst?id=v7.0#n746)
+> 
+> > So, replace the local L1/L1SS-based check in dw_pcie_suspend_noirq() with
+> > the shared pci_host_common_d3cold_possible() helper to decide whether the
+> > devices under host bridge can safely transition to D3cold.
 > > 
-> > So I think this patch works because it assumes DMA addresses like
-> > the MSI address are mapped to identical system bus addresses.
+> > In addition, propagate PME-from-D3cold capability information from the
+> > helper and record it in skip_pwrctrl_off. Some devices (e.g. M.2 cards
+> > without auxiliary power) may lose PME detection when main power is
+> > removed, even if they advertise PME-from-D3cold support. This allows
+> > controller power-off to be skipped when required to preserve wakeup
+> > functionality.
 > > 
-> > It still seems to me that drivers should be prepared for the
-> > presence of dma-ranges and use it when computing the MSI target
-> > address.  But I don't think any drivers really do that, so for now
-> > I think you should pretend that I never responded about this
-> > patch.
-> 
-> Your observations are correct. This driver assumes that the
-> identical mapping exists between CPU and PCI bus addresses. Usually,
-> the drivers make use of phys_to_dma() to handle the translations.
-
-What does this look like in the native host bridge drivers?  I don't
-see any direct calls of phys_to_dma(), but there are some higher-level
-interfaces that use it.
-
-I don't really see a consistent style of constructing MSI addresses,
-e.g., in *_compose_msi_msg() implementations.
-
-> This API internally makes use of the 'dma_range_map' which gets
-> populated by the OF core based on the 'dma-ranges' property (if
-> present in DT).
-> 
-> But it makes sense to use it irrespective of whether the platform
-> supports non-identical DMA/inbound translation or not. Since this
-> API behaves like a no-op and returns the CPU physical address if
-> there is an identical mapping, there is literally zero overhead in
-> using it.
-
-Thanks for rescuing me.
-
-I wonder if there should be something in
-Documentation/core-api/dma-api* about this.  I guess that is mostly
-oriented toward things like PCI device drivers, not so much PCI host
-bridge drivers.  But it would be nice to have a little intro to
-dma-ranges and maybe even the restricted DMA usage.
-
-Bjorn
+> > Update the suspended flag in dw_pcie_resume_noirq() only after the PCIe
+> > link resumes successfully, to avoid marking the controller active when
+> > link resume fails.
+> > 
+> > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-designware-host.c | 15 +++++++--------
+> >  drivers/pci/controller/dwc/pcie-designware.h      |  1 +
+> >  2 files changed, 8 insertions(+), 8 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > index c9517a348836..9e409a1909e6 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > @@ -16,9 +16,11 @@
+> >  #include <linux/msi.h>
+> >  #include <linux/of_address.h>
+> >  #include <linux/of_pci.h>
+> > +#include <linux/pci.h>
+> >  #include <linux/pci_regs.h>
+> >  #include <linux/platform_device.h>
+> >  
+> > +#include "../pci-host-common.h"
+> >  #include "../../pci.h"
+> >  #include "pcie-designware.h"
+> >  
+> > @@ -1218,18 +1220,14 @@ static int dw_pcie_pme_turn_off(struct dw_pcie *pci)
+> >  
+> >  int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+> >  {
+> > -	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> > +	bool pme_capable = false;
+> >  	int ret = 0;
+> >  	u32 val;
+> >  
+> >  	if (!dw_pcie_link_up(pci))
+> >  		goto stop_link;
+> >  
+> > -	/*
+> > -	 * If L1SS is supported, then do not put the link into L2 as some
+> > -	 * devices such as NVMe expect low resume latency.
+> > -	 */
+> > -	if (dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM_L1)
+> > +	if (!pci_host_common_d3cold_possible(pci->pp.bridge, &pme_capable))
+> >  		return 0;
+> >  
+> >  	if (pci->pp.ops->pme_turn_off) {
+> > @@ -1273,6 +1271,7 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+> >  	udelay(1);
+> >  
+> >  stop_link:
+> > +	pci->pp.skip_pwrctrl_off = pme_capable;
+> >  	dw_pcie_stop_link(pci);
+> >  	if (pci->pp.ops->deinit)
+> >  		pci->pp.ops->deinit(&pci->pp);
+> > @@ -1290,8 +1289,6 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
+> >  	if (!pci->suspended)
+> >  		return 0;
+> >  
+> > -	pci->suspended = false;
+> > -
+> >  	if (pci->pp.ops->init) {
+> >  		ret = pci->pp.ops->init(&pci->pp);
+> >  		if (ret) {
+> > @@ -1313,6 +1310,8 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
+> >  	if (pci->pp.ops->post_init)
+> >  		pci->pp.ops->post_init(&pci->pp);
+> >  
+> > +	pci->suspended = false;
+> > +
+> >  	return 0;
+> >  
+> >  err_stop_link:
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> > index 3e69ef60165b..e759c5c7257e 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware.h
+> > +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> > @@ -450,6 +450,7 @@ struct dw_pcie_rp {
+> >  	bool			ecam_enabled;
+> >  	bool			native_ecam;
+> >  	bool                    skip_l23_ready;
+> > +	bool			skip_pwrctrl_off;
+> >  };
+> >  
+> >  struct dw_pcie_ep_ops {
+> > 
+> > -- 
+> > 2.34.1
+> > 
