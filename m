@@ -1,163 +1,186 @@
-Received: from mail-pg1-f201.google.com (mail-pg1-f201.google.com [209.85.215.201])
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5EED389111
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 20:24:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D78438330E
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 20:27:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779481466; cv=none; b=pNZCGQeREl0gRZ5E6NWVZ7km3+VENxykmijWW/3B/L5K6OVS46gAWsoiCih7IQBCv+5SDJPAigeiMgK03/qcX86+Lc6Wy1jzWyj/4MSJYO4Q0MoQvGj2eBsJ31r+KRD7q8EmfGq86z8uC79LRDoal06U1R+i2k+L4UNsgPZy9KU=
+	t=1779481671; cv=none; b=F7PQWrZHRbGgwLFZYNP3eyEGDx/wHn8urifPQjtGek52KZwu7QQV8dOhpFgOBE0sbmlg1kUpLGYcDlNRT5ouERiE+gRWLaCLowq8XwquZ2MUcctPWD3BueLyXUa5QCmmkf1pIcFS5sKPbLYHhYu6/lT06SVk3i79N8IdC2uLD78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779481466; c=relaxed/simple;
-	bh=6ZVk6YJvJGNI1hdkC2SsSYmezEigbBslp8F9CBARniw=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=rOqv84CvXFlmngXZ3RA34kh2UrBcyFDCYoPLeQg5Yb5o+5UYkJpzOVbn98/bnNRC96EjCKAewW/dW2Hm/wqGfdxhiHhvOURGt+YorlfMV3q22hTiCAjTiY3r1bY3yzSDiEOp5Ze5C8DdkCo+1GuM8bcTOTjIWIvk33FHmj81b48=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=apcKP8Zb; arc=none smtp.client-ip=209.85.215.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
+	s=arc-20240116; t=1779481671; c=relaxed/simple;
+	bh=vD0NGKmZJH6OjEeLX1hplt52pSbhQCv+7Fu0Y92tE+c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=B+fo/GSdXWSrw9pZX1VzYWMCQ9D3U6jsRZlPqhK5ONj6aIs3nIzqZIDWUMIWTp+V+vamhZ8V2A48FuYOdKyQAU+XZi39j/LYiWjqlmldZk4kzuk6BhH6Vq6tt2d/qhT9j+kNAJKR92AUFsRzHIR2mg3BHnZCc3mgn1IFVruIW2g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=S/8+awcl; arc=none smtp.client-ip=74.125.82.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="apcKP8Zb"
-Received: by mail-pg1-f201.google.com with SMTP id 41be03b00d2f7-c82c84be9c3so3625200a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 13:24:23 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="S/8+awcl"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-3045c195251so585828eec.1
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 13:27:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1779481463; x=1780086263; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jD8Dp8WjVDfBtyvW+7yZYOtj2UMzN2TZIRigqz140zs=;
-        b=apcKP8ZbFfxk9mW1Z5BZ2RJ8HInvFGwLKvWm7oStZiScZvCS+yRmuAqKefsLHXODpt
-         kfQzQYFv3G78oXA6ieimPMuTBOf3fquOUeTAonleDpfSopLeOLYI9Ai04tfBRV7Q5m1V
-         xx8kMNFxrUtlCjlWgZzHHSusyZThTJq7mEQxec/yOCizDms/jQvSH1SxsiBXixNr3jGd
-         OosnbBOcW+kDyWUbG5DVuN0Wh4e82+QM8JRHy0nFZGN84oI/Dq1/PkodTQovc9F68JDr
-         sUvSdcDGdRZx53ddkiokKOY6y0WikVZ9qyEYaIjwtzpC1fXuKodsJnfWAFTYa9fowxBi
-         yGyA==
+        d=chromium.org; s=google; t=1779481668; x=1780086468; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=MmVms1Ce7TXzV6PTImEMq1eJYsKLuKG4ibEOvZoeRdo=;
+        b=S/8+awclM6Yc7YJLG8OqaAmZmiHqQgLgg5V+8E5Dr+slHlxSj5xcxjxJq3g2aVp0oN
+         CX2Fo5t8mUQDHtwxFMmeQxHuK8mE38AQdV1M2SfTVLLAzvGeO2Gosn52xfVwFmBQpZtq
+         KT/yXLYXf6YkXmEMDXDrb9NgAnwHkotCyO+ms=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779481463; x=1780086263;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jD8Dp8WjVDfBtyvW+7yZYOtj2UMzN2TZIRigqz140zs=;
-        b=YlbdFF+WDaHaHTOWHkdkqkaJpDg8CbSjWk1lNvN+5v39EfEUhwQH4JjG7VkR+p2YBV
-         6uP6kmpSq1y0S/18XMxrBxUN2S6/N2Zc+BtMRb3HzGXxeSo8TX8jA884gKWNy3XMzvPB
-         UL/QwFshvGYWfcmTbt1h5WNCfPa42hV/P6ZtDr/D9JBWpTclpzL+/oKWFdywxF3vBB8B
-         SgcB3tzEoGCzKiqf76fGhRLpttoZOeqOF1k/Xw6IBMbd1bXHWkdCnlzMDSXK4FHsbOgp
-         s2w1uotlitcJOOAXXpox7OT79OGNyUuUCBd2gkwy5xUexpCb90otF5ufFmEriavdyaz9
-         1QtQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9suN+Kq8YpJo1DWCnYQ1bfAO1QmQwB1PxxTcTem+2DuUw8hbXtwGParnnN25i+ikWWWObQNMg70XI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy3SYhOpNEZ9Nme8S9qvI/FN+pgrPPd3Nhla8/vpzTT2vca8KP+
-	3CwBbVGFIhvB+TF0CNUB8UnNFNGJKnf0Ohf4BoeQpSYaTV4tikHXTgny5zdrsXxlxZiTGn6Nw79
-	zWUybqmR3p6eIug==
-X-Received: from pfcs23.prod.google.com ([2002:a05:6a00:6fd7:b0:82f:6a57:a9aa])
- (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a00:1c8b:b0:82c:7f08:8826 with SMTP id d2e1a72fcca58-8415f15b50emr4877330b3a.17.1779481462682;
- Fri, 22 May 2026 13:24:22 -0700 (PDT)
-Date: Fri, 22 May 2026 20:24:10 +0000
-In-Reply-To: <20260522202410.3104264-1-dmatlack@google.com>
+        d=1e100.net; s=20251104; t=1779481668; x=1780086468;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MmVms1Ce7TXzV6PTImEMq1eJYsKLuKG4ibEOvZoeRdo=;
+        b=NR0b1bpS8V4P65hgVHR8tro0ti53+vn88VSJky5yqrIv2QANkAF0dIYAde30j84mU+
+         TSxGLSaq1XuZA/bBi0M+jf6sX093E90ff6YoVdXMqmeiWFtl3eZPWhIcB5cHyVTl/BnW
+         yMdTLh4E71NwhYuSsUynNytWYE3Mg32mQEHh4zaDcbkFgScb7gh98eke4TUSaetOfYy+
+         GwHk9HYtRTGgnkDAG6xG2ozrPg9o8QJmgJrcCw/3Oa12NH8GhsljPi+qsYeBWAPvDtLH
+         dCuODyRkcyjbVfX25xclIGpC6eh27L/cF7UI/ZtQZfAT2MFTos3yraUk/D4dy1jI5sOK
+         GkEA==
+X-Forwarded-Encrypted: i=1; AFNElJ8IcFJC26a7Cuwd/4KpviEon1WL49W9u/G2km6Tk2kkRLVRR5zYXTbhxrU7sjrpiWTRsxHR82H4Y9Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNCXHb7497SEZLsAuZUSp7tWr19cICI+43u656fOGz0AZwtIjO
+	0KdJjCgpl4+wTNjXHYgJKhBTCbAf6G02paWArsPomGXUY8SfQz/6Lnw1Yv28CFH5Rg==
+X-Gm-Gg: Acq92OFs0fPXlVLxoIrxK8UNshpIqSmPAA1cGRfMAvuoPvGB3JQKFvYc+wWT8sRINjI
+	+Absf/bW9k4rEBkaWqVo950NFU9BUeUSd0xGcSHPucp4abifnxmN9q63pqnFO6v/adUBq8YPp6o
+	voWGaVH2aLRFITT9xK+zBJUsucXw+T1HYW3RN716CM86HfyCjvlS1wNmw68pm1Gj8YcQ3M5+7Xl
+	Tb5YdVzVr3jFYWDPegggCQq0oD0DQeWRQJawuESjMnYDNxxdCKqw5e+JlHh/W7rlM98rrPNXy/M
+	yqKzSHJTVtnppyBD/pPoX9slmt4FK1UCXTmTlYctM0MQreiaZWBBZ58ughX6IWmV+09TmWD5GBD
+	xiTSo8E87/Reo1xwjUkwt1D+nWU/ZgcjCOg8u0AZZlFJqqjSk0yRwzj/xnWs0toFrpebjwHCwsp
+	bEehWRack19Uh0Tkv2AUN4b5fc+uBL7OeuQda0z26S/cI3tCSyYf55h5lXVmZ8vw==
+X-Received: by 2002:a05:7300:b104:b0:2dd:6937:79d5 with SMTP id 5a478bee46e88-30448ffc85fmr2757627eec.8.1779481667664;
+        Fri, 22 May 2026 13:27:47 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:c51f:b7da:e920:bf64])
+        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-304522314a4sm1757579eec.18.2026.05.22.13.27.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 May 2026 13:27:46 -0700 (PDT)
+Date: Fri, 22 May 2026 13:27:43 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Radu Rendec <rrendec@redhat.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Daniel Tsai <danielsftsai@google.com>,
+	Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
+	Krishna Chaitanya Chundru <quic_krichai@quicinc.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Brian Masney <bmasney@redhat.com>,
+	Eric Chanudet <echanude@redhat.com>,
+	Alessandro Carminati <acarmina@redhat.com>,
+	Jared Kangas <jkangas@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] PCI: dwc: Enable MSI affinity support
+Message-ID: <ahC8Pyuatu_AvnZp@google.com>
+References: <20251128212055.1409093-1-rrendec@redhat.com>
+ <20251128212055.1409093-4-rrendec@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260522202410.3104264-1-dmatlack@google.com>
-X-Mailer: git-send-email 2.54.0.746.g67dd491aae-goog
-Message-ID: <20260522202410.3104264-13-dmatlack@google.com>
-Subject: [PATCH v6 12/12] Documentation: PCI: Add documentation for Live Update
-From: David Matlack <dmatlack@google.com>
-To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org
-Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Matlack <dmatlack@google.com>, David Rientjes <rientjes@google.com>, 
-	Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, Leon Romanovsky <leonro@nvidia.com>, 
-	Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
-	Pasha Tatashin <pasha.tatashin@soleen.com>, Pranjal Shrivastava <praan@google.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251128212055.1409093-4-rrendec@redhat.com>
 
-Add documentation files for the PCI subsystem's participation in Live
-Update.
+Hi Radu,
 
-These documentation files are generated from the kernel-doc comments
-in the PCI Live Update source code. They describe the File-Lifecycle
-Bound (FLB) API, the device tracking API, and the specific policies
-applied to preserved devices (such as bus number inheritance and bus
-mastering preservation).
+On Fri, Nov 28, 2025 at 04:20:55PM -0500, Radu Rendec wrote:
+> Leverage the interrupt redirection infrastructure to enable CPU affinity
+> support for MSI interrupts. Since the parent interrupt affinity cannot
+> be changed, affinity control for the child interrupt (MSI) is achieved
+> by redirecting the handler to run in IRQ work context on the target CPU.
+> 
+> This patch was originally prepared by Thomas Gleixner (see Link tag
+> below) in a patch series that was never submitted as is, and only
+> parts of that series have made it upstream so far.
+> 
+> Originally-by: Thomas Gleixner <tglx@linutronix.de>
+> Link: https://lore.kernel.org/linux-pci/878qpg4o4t.ffs@tglx/
+> Signed-off-by: Radu Rendec <rrendec@redhat.com>
 
-Signed-off-by: David Matlack <dmatlack@google.com>
----
- Documentation/PCI/index.rst           |  1 +
- Documentation/PCI/liveupdate.rst      | 29 +++++++++++++++++++++++++++
- Documentation/core-api/liveupdate.rst |  1 +
- MAINTAINERS                           |  1 +
- 4 files changed, 32 insertions(+)
- create mode 100644 Documentation/PCI/liveupdate.rst
+I've been trying to bisect a suspend/resume regression on a Qualcomm
+SC7280 laptop (using arch/arm64/boot/dts/qcom/sc7280-herobrine-crd.dts),
+and unfortunately, it bisects to this:
 
-diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index 5d720d2a415e..23fb737ac969 100644
---- a/Documentation/PCI/index.rst
-+++ b/Documentation/PCI/index.rst
-@@ -20,3 +20,4 @@ PCI Bus Subsystem
-    controller/index
-    boot-interrupts
-    tph
-+   liveupdate
-diff --git a/Documentation/PCI/liveupdate.rst b/Documentation/PCI/liveupdate.rst
-new file mode 100644
-index 000000000000..eba55f8a92ae
---- /dev/null
-+++ b/Documentation/PCI/liveupdate.rst
-@@ -0,0 +1,29 @@
-+.. SPDX-License-Identifier: GPL-2.0-or-later
-+
-+===========================
-+PCI Support for Live Update
-+===========================
-+
-+.. kernel-doc:: drivers/pci/liveupdate.c
-+   :doc: PCI Live Update
-+
-+Driver API
-+==========
-+
-+.. kernel-doc:: drivers/pci/liveupdate.c
-+   :export:
-+
-+Live Update ABI
-+===============
-+
-+.. kernel-doc:: include/linux/kho/abi/pci.h
-+   :doc: PCI File-Lifecycle Bound (FLB) Live Update ABI
-+
-+.. kernel-doc:: include/linux/kho/abi/pci.h
-+   :internal:
-+
-+See Also
-+========
-+
-+ * :doc:`/core-api/liveupdate`
-+ * :doc:`/core-api/kho/index`
-diff --git a/Documentation/core-api/liveupdate.rst b/Documentation/core-api/liveupdate.rst
-index 5a292d0f3706..d56a7760978a 100644
---- a/Documentation/core-api/liveupdate.rst
-+++ b/Documentation/core-api/liveupdate.rst
-@@ -70,3 +70,4 @@ See Also
- 
- - :doc:`Live Update uAPI </userspace-api/liveupdate>`
- - :doc:`/core-api/kho/index`
-+- :doc:`PCI </PCI/liveupdate>`
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 0e262c0ceb43..6f0b0ebf67cd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -20536,6 +20536,7 @@ L:	kexec@lists.infradead.org
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/liveupdate/linux.git
-+F:	Documentation/PCI/liveupdate.rst
- F:	drivers/pci/liveupdate.c
- F:	drivers/pci/liveupdate.h
- F:	include/linux/kho/abi/pci.h
--- 
-2.54.0.746.g67dd491aae-goog
+eaf290c404f7c39f23292e9ce83b8b5b51ab598a is the first bad commit
+commit eaf290c404f7c39f23292e9ce83b8b5b51ab598a
+Author: Radu Rendec <rrendec@redhat.com>
+Date:   Fri Nov 28 16:20:55 2025 -0500
 
+    PCI: dwc: Enable MSI affinity support
+
+See the failure below [1]. Unfortunately, the logs don't give me an
+immediate lead.
+
+It fails similarly on v7.1-r1 and v7.1-rc4, so even though I know there
+were a few bugfixes to the IRQ-redirect stuff already, I don't think
+they help my case.
+
+I'll see if I can learn anything more here on my own, but I figured I'd
+report it in case you have any thoughts or leads I should investigate.
+
+Regards,
+Brian
+
+[1]
+
+[   58.229764] Enabling non-boot CPUs ...
+[   58.234065] Detected VIPT I-cache on CPU1
+[   58.234121] GICv3: CPU1: found redistributor 100 region 0:0x0000000017a80000
+[   58.234171] CPU1: Booted secondary processor 0x0000000100 [0x412fd050]
+[   58.235038] CPU1 is up
+[   58.255764] Detected VIPT I-cache on CPU2
+[   58.255801] GICv3: CPU2: found redistributor 200 region 0:0x0000000017aa0000
+[   58.255837] CPU2: Booted secondary processor 0x0000000200 [0x412fd050]
+[   58.256394] CPU2 is up
+[   58.277119] Detected VIPT I-cache on CPU3
+[   58.277155] GICv3: CPU3: found redistributor 300 region 0:0x0000000017ac0000
+[   58.277191] CPU3: Booted secondary processor 0x0000000300 [0x412fd050]
+[   58.277824] CPU3 is up
+[   58.299086] Detected PIPT I-cache on CPU4
+[   58.299104] GICv3: CPU4: found redistributor 400 region 0:0x0000000017ae0000
+[   58.299124] CPU4: Booted secondary processor 0x0000000400 [0x411fd411]
+[   58.299437] CPU4 is up
+[   58.320186] Detected PIPT I-cache on CPU5
+[   58.320205] GICv3: CPU5: found redistributor 500 region 0:0x0000000017b00000
+[   58.320224] CPU5: Booted secondary processor 0x0000000500 [0x411fd411]
+[   58.320513] CPU5 is up
+[   58.341154] Detected PIPT I-cache on CPU6
+[   58.341173] GICv3: CPU6: found redistributor 600 region 0:0x0000000017b20000
+[   58.341193] CPU6: Booted secondary processor 0x0000000600 [0x411fd411]
+[   58.341481] CPU6 is up
+[   58.362167] Detected PIPT I-cache on CPU7
+[   58.362186] GICv3: CPU7: found redistributor 700 region 0:0x0000000017b40000
+[   58.362206] CPU7: Booted secondary processor 0x0000000700 [0x411fd411]
+[   58.362532] CPU7 is up
+[   58.384442] nvme 0001:01:00.0: Unable to change power state from unknown to D0, device inaccessible
+[   59.243847] onboard-usb-dev 4-1: reset high-speed USB device number 2 using xhci-hcd
+[   59.492243] onboard-usb-dev 5-1: reset SuperSpeed USB device number 2 using xhci-hcd
+[   68.875606] nvme 0001:01:00.0: PM: **** DPM device timeout ****
+[   68.881728] Call trace:
+[   68.884266]  __switch_to+0x16c/0x188 (T)
+[   68.888331]  __schedule+0x7c4/0x98c
+[   68.891939]  schedule+0x38/0x60
+[   68.895196]  schedule_timeout+0xf8/0x120
+[   68.899254]  io_schedule_timeout+0x2c/0x4c
+[   68.903481]  __wait_for_common+0xd4/0x168
+[   68.907621]  wait_for_completion_io_timeout+0x28/0x34
+[   68.912832]  blk_execute_rq+0x138/0x164
+[   68.916792]  nvme_execute_rq+0x20/0x54
+[   68.920665]  __nvme_submit_sync_cmd+0xe0/0x128
+[   68.925258]  nvme_features.isra.0+0x88/0xd4
+[   68.929580]  nvme_set_features+0x34/0x40
+[   68.933638]  nvme_resume+0x68/0x88
+[   68.937158]  pci_pm_resume+0x88/0xfc
+[   68.940849]  dpm_run_callback+0x6c/0xec
+[   68.944811]  device_resume+0x194/0x270
+[   68.948683]  async_resume+0x28/0x3c
+[   68.952289]  async_run_entry_fn+0x40/0x104
+[   68.956515]  process_scheduled_works+0x210/0x320
+[   68.961277]  worker_thread+0x14c/0x1ec
+[   68.965147]  kthread+0x154/0x1b8
+[   68.968486]  ret_from_fork+0x10/0x20
+[   68.972192] Kernel panic - not syncing: nvme 0001:01:00.0: unrecoverable failure
