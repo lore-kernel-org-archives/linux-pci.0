@@ -1,199 +1,160 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7F83233924
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 00:49:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF87258CE5
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 00:49:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779410980; cv=none; b=lncE0ukgUwmFy9kpueFraSBxcE6IPqQ+XSts5Q8r/ElL3o8qUu8f0KjbGMUzK9OkJXtr2SYoxu0jgQZ9s59ummsUNGy1KBMKK2Q4XBQuqYhP7hHBuNpHmaV6NVY8hJ2Ucy6tK+JZmTCHpU1Qnc5m8eOYR5ciM/9rsamdy50RaAg=
+	t=1779410985; cv=none; b=PV9z0ZnKhR2qYEzTFJEhaGfAJFdyVeUg1ywWAqwnXvR8Z1Edc0QxfcY5ovamoyC+0+NFmnU/ToUXjHj+JUjKiBl/ZPEGYLszsy1tzWiEBSTRjm+cFDL77Ui3Go0yKqtFia0xrnYmSuBKsw4AXmNRgjuclQgFIIcxkAMZ7h1dRno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779410980; c=relaxed/simple;
-	bh=hqZbjv//tuS7cEX55tStZkkgDhXIzrep6/D7oZoLh9U=;
+	s=arc-20240116; t=1779410985; c=relaxed/simple;
+	bh=1e1u19wQgWHidehMomamTPgjucFMnC+tFyoI99EF+To=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RWe+TWP53wiNsOWAaXHGeEvkD+0UgNaTinT6RG84omh4SZDwgefuhYi+VYghF0uXczqiZcuYarO8y8KOM3BQyoC7T8M6isF2RDsG6XPERDqNPSt2A5xQTxKZpRs9jg9SKv+7GYpW0ls69Kn6A3/CQQzCxQtJGATVzr7+BsZVTPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=O/H6WXBr; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=a3GfU5t77gI1IJa05d1dZY4F713+DkvltsZ0APbx0zxrwp+URA81opMEYhivqja8oaiEgqiIp5d0R/92GtbZZYS/uiMxQYJUKgbi+YiQxtj6++PacQorm5uceZXuJbQhONLaVa3vRj8ylagyfPz03VoHcfyqvAo5aT50PY8z+Kk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j8Qe06RZ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O/H6WXBr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CA2D1F000E9;
-	Fri, 22 May 2026 00:49:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j8Qe06RZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDA7C1F000E9;
+	Fri, 22 May 2026 00:49:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779410978;
-	bh=6QH/ng1Stm+Oogqt5Lrjx+lzba80r0HHQad2gdVq8x0=;
+	s=k20260515; t=1779410984;
+	bh=1A1W+HM4sONDwrGrW0YtoyqtVY7KH9fNPrYSgM5YOvQ=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=O/H6WXBrCtaORpYtB6yQAxo5LgOPPI8/PpeagNaIgtbJfg+cxIZLLGBxT2KTFmRd5
-	 h5OW+SqXFh06WwQw/XNjflqonS48HFUodd4F05PuIUQ0BAXZkAqNAK9BHOU9G+W0TL
-	 Um8OVWTLCSPf0tdZYqjtNhKYOSCcazStozq7zORO2IQKyzeJTRSqvjsP5tT7+6PcIh
-	 97EeKWWAOUlF5sR7Ex41pxp/RLlAi0rpauJKVcnk/1nH0o76bmb0oTm/fdURXjBUVR
-	 I/N7DDR7A27mnvAd64G57MRBh6wne5LIbIe4iIqdd972onyGoY1NsVY8suYvhPaDHP
-	 FacQBnwJmpOig==
+	b=j8Qe06RZ/PlRJd3UzWozCxpfmlB9M5lMtfQ5k9G6meutSqfwIK/BSpzWR23XJZJP+
+	 OXpq4Wy3S4L8fyogCtPUpo7Zb5n81ElajSj1huwqaYdrI7w892kfPb0kvDpeUN2FBR
+	 +x9CyYUfG5XQhrFBvEjgZ3tSWvweGl0Q0j8rZTEAkAIOTGUM5M7FtxxbBu9hKcmYtX
+	 EsNOAAhG493Oji2dHWW9moT27M88So4hKpWBcMZv0bXcb6dL+S4l59AjZqn9pU7hZd
+	 m86fWHR4yO+z+g0vI6FBQZ8yCSgPkUFkViH4IUGWQJQhQpVkJ/HSFPOAOPx4tdatWy
+	 PGR3c8R9Hf2nQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 22/27] rust: auxiliary: generalize Registration over
- ForLt
+Subject: Re: [PATCH v4 17/27] rust: pci: make Bar lifetime-parameterized
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
 Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260521233501.1191842-23-dakr@kernel.org>
-References: <20260521233501.1191842-23-dakr@kernel.org>
+In-Reply-To: <20260521233501.1191842-18-dakr@kernel.org>
+References: <20260521233501.1191842-18-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 22 May 2026 00:49:37 +0000
-Message-Id: <20260522004938.3CA2D1F000E9@smtp.kernel.org>
+Date: Fri, 22 May 2026 00:49:43 +0000
+Message-Id: <20260522004943.CDA7C1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-New issues:
-- [Low] The `Sync` trait implementation for `Registration` incorrectly boun=
-ds `F::Of<'a>` with `Send` instead of `Sync`.
-
-Pre-existing issues:
-- [Critical] `registration_data()` unsoundly ties the returned reference's =
-lifetime to `&self` (the `auxiliary::Device`), allowing safe Rust code to t=
-rigger a Use-After-Free.
-- [High] Dangling pointer in `auxiliary::Device` after `Registration` is dr=
-opped allows Use-After-Free via `registration_data()`.
-- [High] The `NovaCore` driver tears down the parent GPU state before unreg=
-istering the child auxiliary device, leading to potential Use-After-Free.
+- [Critical] `Bar::into_devres` uses `unsafe { core::mem::transmute(self) }=
+` to artificially erase the local `'a` borrow of the `Device`, which is uns=
+ound and causes a Use-After-Free during `Devres` destruction.
+- [High] The `name` parameter in `iomap_region` and `iomap_region_sized` la=
+cks a `'static` or device-bound lifetime constraint, allowing temporary str=
+ings to be passed and leading to a dangling pointer in the kernel's resourc=
+e tree.
 --
 
-commit a5589ea6d6792c6af381c80c56bba4c3373a3001
+commit 00fb543eb5262d30a44ce3dd81c925a773732bd2
 Author: Danilo Krummrich <dakr@kernel.org>
-rust: auxiliary: generalize Registration over ForLt
 
-This commit generalizes Registration over ForLt to allow parameterized
-lifetimes. It shortens the stored static lifetime to the borrow lifetime of
-the device reference.
+rust: pci: make Bar lifetime-parameterized
 
-> diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driv=
-er.rs
-> index fa898fe5c893b..d3f2245ba2e0c 100644
-> --- a/drivers/gpu/nova-core/driver.rs
-> +++ b/drivers/gpu/nova-core/driver.rs
+This patch parameterizes the lifetime of pci::Bar, tying its mapping
+lifetime directly to the device. It changes iomap_region_sized to return
+a Bar instead of a Devres, and adds an into_devres method to optionally
+register it as a device-managed resource with a static lifetime.
+
+> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
 [ ... ]
-> @@ -115,7 +116,7 @@ fn probe<'bound>(
->          })
->      }
+> @@ -219,11 +214,24 @@ unsafe fn do_release(pdev: &Device, ioptr: usize, n=
+um: i32) {
 > =20
-> -    fn unbind<'bound>(pdev: &'bound pci::Device<Core<'_>>, this: Pin<&No=
-vaCore>) {
-> +    fn unbind<'bound>(pdev: &'bound pci::Device<Core<'_>>, this: Pin<&Se=
-lf::Data<'bound>>) {
->          this.gpu.unbind(pdev.as_ref());
->      }
->  }
-
-[Severity: High]
-This is a pre-existing issue, but does tearing down the parent GPU state he=
-re
-before unregistering the child auxiliary device lead to a potential
-use-after-free?
-
-The child device represented by _reg is only deleted when NovaCore is
-subsequently dropped. This means the child device's remove callback is
-invoked after the parent's gpu is dismantled. If the child driver accesses
-the parent's GPU state during its removal, it might interact with a destroy=
-ed
-object.
-
-> diff --git a/rust/kernel/auxiliary.rs b/rust/kernel/auxiliary.rs
-> index 5591f97f12f7b..edc4b50f54d8e 100644
-> --- a/rust/kernel/auxiliary.rs
-> +++ b/rust/kernel/auxiliary.rs
-[ ... ]
-> @@ -271,12 +272,16 @@ pub fn parent(&self) -> &device::Device<device::Bou=
-nd> {
-> =20
->      /// Returns a pinned reference to the registration data set by the r=
-egistering (parent) driver.
->      ///
-> -    /// Returns [`EINVAL`] if `T` does not match the type used by the pa=
-rent driver when calling
-> +    /// `F` is the [`ForLt`](trait@ForLt) encoding of the data type. The=
- returned
-> +    /// reference has its lifetime shortened from `'static` to `&self`'s=
- borrow lifetime via
-> +    /// [`ForLt::cast_ref`].
+>      fn release(&self) {
+>          // SAFETY: The safety requirements are guaranteed by the type in=
+variant of `self.pdev`.
+> -        unsafe { Self::do_release(&self.pdev, self.io.addr(), self.num) =
+};
+> +        unsafe { Self::do_release(self.pdev, self.io.addr(), self.num) };
+> +    }
+> +
+> +    /// Consume the `Bar` and register it as a device-managed resource.
 > +    ///
-> +    /// Returns [`EINVAL`] if `F` does not match the type used by the pa=
-rent driver when calling
->      /// [`Registration::new()`].
->      ///
->      /// Returns [`ENOENT`] if no registration data has been set, e.g. wh=
-en the device was
->      /// registered by a C driver.
-> -    pub fn registration_data<T: 'static>(&self) -> Result<Pin<&T>> {
-> +    pub fn registration_data<F: ForLt + 'static>(&self) -> Result<Pin<&F=
-::Of<'_>>> {
+> +    /// The returned `Devres<Bar<'static, SIZE>>` can outlive the origin=
+al lifetime `'a`. Access
+> +    /// to the BAR is revoked when the device is unbound.
+> +    pub fn into_devres(self) -> Result<Devres<Bar<'static, SIZE>>> {
+> +        // SAFETY: Casting to `'static` is sound because `Devres` guaran=
+tees the `Bar` does not
+> +        // actually outlive the device -- access is revoked and the reso=
+urce is released when the
+> +        // device is unbound.
+> +        let bar: Bar<'static, SIZE> =3D unsafe { core::mem::transmute(se=
+lf) };
 
 [Severity: Critical]
-This is a pre-existing issue, but does tying the returned reference's
-lifetime to &self (the auxiliary::Device) allow safe Rust code to trigger a
-use-after-free?
+Is it safe to transmute this lifetime to 'static here?
 
-Because auxiliary::Device is reference-counted, safe Rust code can obtain an
-ARef<Device> that outlives the Registration of the parent driver. A user
-could call registration_data(), keep the ARef<Device> alive to keep the
-compiler happy about the reference's lifetime, wait for the parent driver to
-unload (which frees the memory), and then safely access the dangling
-reference.
+Since Rust drops struct fields in declaration order, and Devres declares its
+dev: ARef<Device> field before its inner: Arc<Inner<T>> data wrapper, dropp=
+ing
+a Devres<Bar<'static>> will decrement the Device refcount first.
 
+If this was the last reference, the underlying C struct pci_dev could be
+freed. When inner then drops, it triggers Bar::drop, which will access the =
+now
+dangling pdev pointer to call pci_release_region().
+
+Could this lead to memory corruption during error paths or unbinding?
+
+> +        let pdev =3D bar.pdev;
+> +        Devres::new(pdev.as_ref(), bar)
+>      }
+>  }
 [ ... ]
-> -impl<T: 'static> Drop for Registration<T> {
-> +impl<F: ForLt> Drop for Registration<'_, F> {
->      fn drop(&mut self) {
->          // SAFETY: By the type invariant of `Self`, `self.adev.as_ptr()`=
- is a valid registered
->          // `struct auxiliary_device`.
-> @@ -486,7 +534,7 @@ fn drop(&mut self) {
-> =20
->          // SAFETY: `registration_data` was set in `new()` via `into_fore=
-ign()`.
->          drop(unsafe {
-> -            Pin::<KBox<RegistrationData<T>>>::from_foreign(
-> +            Pin::<KBox<RegistrationData<F::Of<'static>>>>::from_foreign(
->                  (*self.adev.as_ptr()).registration_data_rust,
->              )
->          });
+> @@ -252,17 +260,13 @@ impl Device<device::Bound> {
+>      pub fn iomap_region_sized<'a, const SIZE: usize>(
+>          &'a self,
+>          bar: u32,
+> -        name: &'a CStr,
+> -    ) -> impl PinInit<Devres<Bar<SIZE>>, Error> + 'a {
+> -        Devres::new(self.as_ref(), Bar::<SIZE>::new(self, bar, name))
+> +        name: &CStr,
 
 [Severity: High]
-This is a pre-existing issue, but does leaving registration_data_rust
-pointing to freed memory here allow a use-after-free via
-registration_data()?
+Does removing the 'a lifetime bound from the name parameter allow temporary
+strings to be passed?
 
-Because auxiliary::Device can outlive the Registration instance if a user
-holds an ARef<Device>, if Device::registration_data() is called on such a
-surviving reference, it bypasses the NULL check, reads the TypeId from the
-freed memory, and returns a reference to the freed data. Should this set
-(*self.adev.as_ptr()).registration_data_rust to null after the drop?
+The underlying C function pci_request_region stores the provided string
+pointer directly into the name field of the allocated struct resource
+without making a copy.
 
-> @@ -500,7 +548,7 @@ fn drop(&mut self) {
->  }
+If a caller passes a dynamically allocated temporary CString that drops aft=
+er
+this function returns, could accessing the kernel's resource tree (for exam=
+ple,
+by reading /proc/iomem) dereference a freed string pointer?
+
+> +    ) -> Result<Bar<'a, SIZE>> {
+> +        Bar::new(self, bar, name)
+>      }
 > =20
->  // SAFETY: A `Registration` of a `struct auxiliary_device` can be releas=
-ed from any thread.
-> -unsafe impl<T: Send + Sync> Send for Registration<T> {}
-> +unsafe impl<F: ForLt> Send for Registration<'_, F> where for<'a> F::Of<'=
-a>: Send {}
-> =20
->  // SAFETY: `Registration` does not expose any methods or fields that nee=
-d synchronization.
-> -unsafe impl<T: Send + Sync> Sync for Registration<T> {}
-> +unsafe impl<F: ForLt> Sync for Registration<'_, F> where for<'a> F::Of<'=
-a>: Send {}
+>      /// Maps an entire PCI BAR after performing a region-request on it.
+> -    pub fn iomap_region<'a>(
+> -        &'a self,
+> -        bar: u32,
+> -        name: &'a CStr,
+> -    ) -> impl PinInit<Devres<Bar>, Error> + 'a {
+> +    pub fn iomap_region<'a>(&'a self, bar: u32, name: &CStr) -> Result<B=
+ar<'a>> {
 
-[Severity: Low]
-Is this a copy-paste error where F::Of<'a> is bounded by Send instead of Sy=
-nc?
+[Severity: High]
+This seems to have the same lifetime issue with the name parameter as
+iomap_region_sized above.
 
-Standard Rust semantics expect types that conceptually own data to require =
-Sync
-on the inner type to implement Sync.
+>          self.iomap_region_sized::<0>(bar, name)
+>      }
+>
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521233501.1191=
-842-1-dakr@kernel.org?part=3D22
+842-1-dakr@kernel.org?part=3D17
