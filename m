@@ -1,40 +1,85 @@
-Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 158673546EF;
-	Fri, 22 May 2026 09:39:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94E103A7F78
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 09:47:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779442757; cv=none; b=G5vA3kEn0vugILctNKj4UBqX31QvnPwSh7befXu0nyiuvAFmLT2CADJTE07lFlK1ilohNkqY72wa5/AOT4kUMJOQU1pDizWJp44J2+GkfpSM5Ylkq6Ym/C621t3rcABGiLGCsi+45orkHLuxpAoDvGsrLHFfB5lCtHwWRIvqH7s=
+	t=1779443237; cv=none; b=ch/X5XgdT08NSO1XevPz4cuyw/PIv/1M9gqPzfCtuhN991nKzRUivti1cKI3Xe4ig8VksAs90hpET+z5i5SMCoAtn2OiVBCtPBKT+Etbwc1O8Ad3TQ7RIkAHp/YhsSyBcrsQcysPvpGGvlbQvXFHAn7cz4WpgVW0RajMh66/ibE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779442757; c=relaxed/simple;
-	bh=gzvPsvTMo0uNOB3nKRAAOE8N06fF1Fym2tL/apRExkY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=XMKM0RcfOibx69sayfLwsHcrtbNpYZFVdYUpJngZc3imK04xQerc5tekzw3kfeQC0H5Z0iGx+bBwDI+zp/dndk1SlIiULYdxXwYOwtShHQrxjn5JoG4lCMRrsFXEgIHc8GOADnY+x1sW6amTdjNgqAVJyLlcj15jmdJfnjUsuQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=NbYB1hOm; arc=none smtp.client-ip=113.46.200.223
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1779443237; c=relaxed/simple;
+	bh=o9GC/6ank0uxJw5NfpsZY/9YO+co0ljwtXYLI4sQCGs=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=b9/srXdRNawJIc6eVCLdfXacQyguCyWfI9BiAmeEPLWLm2qXW8xD2E4FYTgTToj9MzaiY/oDsoGPcG4rRcWohzXWHmxudcLiAirIQCcgm9SM8e/ZYFaPqHvJDORkr4ddiDOQqtwPLl0og283HzcrRa0jXa6SwT1olr0Q9wf9tAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=KdimGnyP; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=SraMj8XH; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="NbYB1hOm"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=18IpQFK6dTM2RZyRkp5IVjRuUDySq0z04o+aIeuNoFI=;
-	b=NbYB1hOmuews3BbtG6xcgYMrJ08x0U4MuYYHf058N1h3k/QSldFoIkSoBMuuntO3yt7hgYDK1
-	nMX11vQnyhbQ7KA2PgzEa0A8hTOSYYAuGNfyEJsqcFhWU464byOFCaSt4fV9B+CPCE8lQRrNbU2
-	ESrhALoN9mW8lRaKYNPJvvU=
-Received: from mail.maildlp.com (unknown [172.19.163.15])
-	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4gMKly5cq9zmVXS;
-	Fri, 22 May 2026 17:31:26 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 950A540571;
-	Fri, 22 May 2026 17:39:10 +0800 (CST)
-Received: from [10.67.121.161] (10.67.121.161) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Fri, 22 May 2026 17:39:09 +0800
-Message-ID: <60e77af2-557c-4a6c-8235-ab7142da77f5@huawei.com>
-Date: Fri, 22 May 2026 17:39:09 +0800
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="KdimGnyP";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="SraMj8XH"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64M6VGEo1298128
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 09:47:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	BiA+pl3Inn69b7wyI+hzfTnftF/NDzuqEqEnr7gbUrI=; b=KdimGnyPsjDMWGCo
+	YburTCoVlqDHirZ4cQXWfpFh5+HDeSBFwcw8lNsv6Q4JbquDJ72kX4UQ02gjTpsR
+	ErpJY/9t0thu8/ebKBIYsDDa4skf68W2Tq3aeZqnsy7AyvRLdFuezCYVBda5ms3j
+	/nqrmasBjBkirux/efqcO93rn0xEhTKsubIrQdtqjVQrAuteMoNj+L8kS8tGLcNS
+	GrQft/68IQfmbDgx+zqFGxOC/MTRtsgjxTzNhT9DOU04OMV9TqIRM8em3PShTdHU
+	2tir4aCIzrp8QVbv/Ip1o+oz61zIfJT8+c1aALlV9SdCQIpUvSx97Z2hZnSuGesU
+	k+Q1Gg==
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eaah0abvv-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 09:47:14 +0000 (GMT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-366ded3bed0so4975470a91.0
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 02:47:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1779443234; x=1780048034; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=BiA+pl3Inn69b7wyI+hzfTnftF/NDzuqEqEnr7gbUrI=;
+        b=SraMj8XHUgDnI5Jo6mkUIm0uipaqn60/Mt45v+9NBN3tY3U3je17BcsKponZGyDidA
+         TgSfE58ysSwxG6PTprrGv9AF5CYLXLVKGGGVIF+IFavvn8+GgDEy59Ryvn+rWoS/ajqh
+         wBqWxgmyTbCJ8aMLPP19CplAGarXFmKeEfkzrIHzdKk/oYIg5h5E3WFyt5fOnMM+ZgU0
+         Dj6XtzbZFslEiBuzC6XX8YKejydw+K4e7vtlKMKReJDPRy/SLR8AZ9oDA+/Okcgi/Ktz
+         AK5tTotwlmbxJn36DJex194IS2FLJiqBI4a/2cLnDJBn6FEBpnKh3mGYeglho3NqKsKH
+         ofOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779443234; x=1780048034;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=BiA+pl3Inn69b7wyI+hzfTnftF/NDzuqEqEnr7gbUrI=;
+        b=k2wV3TrbRConIHIlPNQQCrkx9R/sP+wyZzRLTF5rQw0566zvLUznQFPWi9n6SkZh+0
+         U2I4JghdnrgmuQ4ah8pEdVmtKzkeeXBx9w/+D3gvNX9Vb7zvLRCIDyP+nKtQ+yjOaoYF
+         auFPA1J6crXhFPqW4lhQwa+l5em5QkET6BijlajQdnEwiBUhmChZQlmViTJap/thib7u
+         It3CdFoGxVF+1uDMROrwcOSdVnYHlQCNvl6xMOIH4C35NEjWccHtWYKODunLmBXeIL4g
+         XRC/87sIe8nzimbIL0QZUGMxuHaDPeE458o5odJsJijhsvqZ0bwtUMUYbf2ddRAMCmfS
+         B8tg==
+X-Forwarded-Encrypted: i=1; AFNElJ/9krv00UuvbtLJ7GIAdIOrQ5gt0CZxQuBDVMjU6YLZW4BGmXBzaeCZfeNadSQd/j5+zbWv7XqYXbA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPZac7mHHIC2Nwoer4gxXKbYuPJx/U92EfLP3weBtwiNByhyE9
+	E51syBvXN1c6WHK70yevBdCLZ4TF7XWPTQLZ8OAMzt/ZQERyHC/gveYD7rLI2j6SGV0tRNDbSpq
+	ch5GhnDMNk5pJOke0243MHXakR1mtT2MAzJ2gOgc4OrNnsYU7tjFl3OGNo6yCuVw=
+X-Gm-Gg: Acq92OHyzrJDHPIRGnZcSILhVmcyhufVMf4Zw/bElWI+ewFbJ4Sov4y3ZEaL4b9vwEm
+	C1n7ygvYhwJbmn1Nk1UYyPY4HBjYDYWExhoqMYwnqsNruvPvf3t5ueJcZqAmmCH8WxQ68nc+ggO
+	SZNQp6yTKwZtBNsxFPRGBpXYPt+Du7sACIh9EMGF6j2HlkgOT2gO6XMHHNHDJP/l7uBlI296T93
+	qjV3RfbPLO1wSzCERHQRZEWeKvDKKhyXnSUEOp34symt/07d9JZFBHwKXwDbN20NXUfFaa9TvLc
+	59gZj8GnB+gErJBeiJkugljTwqw9/SX+y5khU6kLiWJvt/224vxIgET888U+1BjK1oBJRmJF2Dr
+	f8+zLq0gp+wumVCxA/Atk6M/9715dey8hqVyt/rNHsLfE5EMIfryiMLHt
+X-Received: by 2002:a17:90b:2d44:b0:369:b2c9:a0a with SMTP id 98e67ed59e1d1-36a47ab457fmr5100568a91.13.1779443234180;
+        Fri, 22 May 2026 02:47:14 -0700 (PDT)
+X-Received: by 2002:a17:90b:2d44:b0:369:b2c9:a0a with SMTP id 98e67ed59e1d1-36a47ab457fmr5100525a91.13.1779443233648;
+        Fri, 22 May 2026 02:47:13 -0700 (PDT)
+Received: from [10.219.57.109] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c852028fecbsm1062574a12.1.2026.05.22.02.47.10
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 May 2026 02:47:13 -0700 (PDT)
+Message-ID: <a3c4a161-8222-4b57-8328-b1106b1b854f@oss.qualcomm.com>
+Date: Fri, 22 May 2026 15:17:09 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,289 +87,163 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 4/5] vfio/pci: Add PCIe TPH configuration space
- virtualization
-To: Alex Williamson <alex@shazbot.org>
-CC: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
-	<wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <20260518071701.25177-1-fengchengwen@huawei.com>
- <20260518071701.25177-5-fengchengwen@huawei.com>
- <20260521221015.73a17820@shazbot.org>
+Subject: Re: [PATCH v15 3/3] of: Respect #{iommu,msi}-cells in maps
+From: Vijayanand Jitta <vijayanand.jitta@oss.qualcomm.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: imx@lists.linux.dev, conor+dt@kernel.org, devicetree@vger.kernel.org,
+        robh@kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org
+References: <20260520-parse_iommu_cells-v15-3-b5f99ad4e7e8@oss.qualcomm.com>
+ <20260520092923.0EDD11F000E9@smtp.kernel.org>
+ <4eab296c-1b5f-4767-9e66-22af3474bf67@oss.qualcomm.com>
 Content-Language: en-US
-From: fengchengwen <fengchengwen@huawei.com>
-In-Reply-To: <20260521221015.73a17820@shazbot.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <4eab296c-1b5f-4767-9e66-22af3474bf67@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemk500009.china.huawei.com (7.202.194.94)
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIyMDA5NyBTYWx0ZWRfX0cWAWvXZWHzE
+ zn7B/6cwlO45K999g2iusO20J8ruC3+oiDwjCY/7HBZVQI9wCubwmZzOTDI7fzjJfvGmi9hBjTT
+ sENbXzcYFuMOv/+DZUwLK4ApGuBbRRRtFllgpzbi1VF2kVEWMAgi+YtT5J0zaNAwe0HcEYUvAY8
+ QreoJo9q6dbISl0gpRLtxhyNq8JPsaq49esX1D7OzIAg9oxPsCsG6v3Ur36BVoEHl+ZFCN+2QVw
+ QO1x/lMwoobZqlF6TZrWGMGkCsOcDF23a0SYGyoiSral+mPJXeRvshrCeyXONgMoCq/7k8Vh8uh
+ NVIC+Xvc4ygegMmcf9+SjOrxItcGKRLDli1PpENABN2CaiI/PWSpLxiLeF7VMZZdQwOemCy7SeH
+ gDy56NsYBstm7PnmlUpVIm9+frbHBXbTMv4znnBLnzmbCkUp+nmviFepHQoedYLj2a0BYVklYuU
+ Z5iVFf159vvhf3wu8CQ==
+X-Proofpoint-GUID: 4f0ybvTaB2hJx_V8rvazXXhTd0gvGtTZ
+X-Authority-Analysis: v=2.4 cv=LNdWhpW9 c=1 sm=1 tr=0 ts=6a102622 cx=c_pps
+ a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=VwQbUJbxAAAA:8 a=7CQSdrXTAAAA:8 a=7_kb8tBQChwwwGt_9_wA:9 a=QEXdDO2ut3YA:10
+ a=uKXjsCUrEbL0IQVhDsJ9:22 a=a-qgeE7W1pNrGK8U0ZQC:22
+X-Proofpoint-ORIG-GUID: 4f0ybvTaB2hJx_V8rvazXXhTd0gvGtTZ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-22_02,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 phishscore=0 spamscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
+ definitions=main-2605220097
 
-On 5/22/2026 12:10 PM, Alex Williamson wrote:
-> On Mon, 18 May 2026 15:17:00 +0800
-> Chengwen Feng <fengchengwen@huawei.com> wrote:
+
+
+On 5/21/2026 6:47 PM, Vijayanand Jitta wrote:
 > 
->> Add support for virtualizing the PCIe TPH (Transaction Processing Hints)
->> control register. TPH may break platform isolation, so add a module
->> parameter "enable_unsafe_tph" to allow administrators to globally control
->> this feature.
+> 
+> On 5/20/2026 2:59 PM, sashiko-bot@kernel.org wrote:
+>> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+>> - [High] Strict requirement for `#iommu-cells` or `#msi-cells` breaks MSI allocations on standard-compliant controllers.
+>> - [High] Array desynchronization when parsing legacy 0-cell maps padded to 4 words per entry.
+>> --
 >>
->> TPH control register writes are mediated to only allow valid mode settings,
->> and TPH is automatically disabled when VFIO takes ownership of the device
->> or when userspace closes the device file descriptor.
+>> commit 23cece64ecb1dcea6290dbab34facbdac53ff293
+>> Author: Robin Murphy <robin.murphy@arm.com>
+>> Date:   Wed May 20 08:02:42 2026 +0000
 >>
->> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
->> ---
->>  drivers/vfio/pci/vfio_pci.c        | 13 ++++++++++++-
->>  drivers/vfio/pci/vfio_pci_config.c | 28 ++++++++++++++++++++++++++++
->>  drivers/vfio/pci/vfio_pci_core.c   | 16 +++++++++++++++-
->>  include/linux/vfio_pci_core.h      |  4 +++-
->>  4 files changed, 58 insertions(+), 3 deletions(-)
+>> of: Respect #{iommu,msi}-cells in maps
 >>
->> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->> index 0c771064c0b8..6d73668459cf 100644
->> --- a/drivers/vfio/pci/vfio_pci.c
->> +++ b/drivers/vfio/pci/vfio_pci.c
->> @@ -60,6 +60,12 @@ static bool disable_denylist;
->>  module_param(disable_denylist, bool, 0444);
->>  MODULE_PARM_DESC(disable_denylist, "Disable use of device denylist. Disabling the denylist allows binding to devices with known errata that may lead to exploitable stability or security issues when accessed by untrusted users.");
->>  
->> +#ifdef CONFIG_PCIE_TPH
->> +static bool enable_unsafe_tph;
->> +module_param(enable_unsafe_tph, bool, 0444);
->> +MODULE_PARM_DESC(enable_unsafe_tph, "Enable PCIe TPH (Transaction Processing Hints) support. It may break platform isolation. If you do not know what this is for, step away. (default: false)");
->> +#endif
->> +
->>  static bool vfio_pci_dev_in_denylist(struct pci_dev *pdev)
->>  {
->>  	switch (pdev->vendor) {
->> @@ -257,12 +263,17 @@ static int __init vfio_pci_init(void)
->>  {
->>  	int ret;
->>  	bool is_disable_vga = true;
->> +	bool is_enable_unsafe_tph = false;
->>  
->>  #ifdef CONFIG_VFIO_PCI_VGA
->>  	is_disable_vga = disable_vga;
->>  #endif
->> +#ifdef CONFIG_PCIE_TPH
->> +	is_enable_unsafe_tph = enable_unsafe_tph;
->> +#endif
->>  
->> -	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3);
->> +	vfio_pci_core_set_params(nointxmask, is_disable_vga, disable_idle_d3,
->> +				 is_enable_unsafe_tph);
->>  
->>  	/* Register and scan for devices */
->>  	ret = pci_register_driver(&vfio_pci_driver);
->> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
->> index a10ed733f0e3..6da35c2313b9 100644
->> --- a/drivers/vfio/pci/vfio_pci_config.c
->> +++ b/drivers/vfio/pci/vfio_pci_config.c
->> @@ -22,6 +22,7 @@
->>  
->>  #include <linux/fs.h>
->>  #include <linux/pci.h>
->> +#include <linux/pci-tph.h>
->>  #include <linux/uaccess.h>
->>  #include <linux/vfio.h>
->>  #include <linux/slab.h>
->> @@ -35,6 +36,8 @@
->>  	((offset >= PCI_BASE_ADDRESS_0 && offset < PCI_BASE_ADDRESS_5 + 4) || \
->>  	 (offset >= PCI_ROM_ADDRESS && offset < PCI_ROM_ADDRESS + 4))
->>  
->> +extern bool enable_unsafe_tph;
->> +
->>  /*
->>   * Lengths of PCI Config Capabilities
->>   *   0: Removed from the user visible capability list
->> @@ -313,6 +316,30 @@ static int vfio_virt_config_read(struct vfio_pci_core_device *vdev, int pos,
->>  	return count;
->>  }
->>  
->> +static int vfio_pci_tph_config_write(struct vfio_pci_core_device *vdev, int pos,
->> +				     int count, struct perm_bits *perm,
->> +				     int offset, __le32 val)
->> +{
->> +	u32 data = le32_to_cpu(val);
->> +
->> +	guard(mutex)(&vdev->tph_lock);
->> +
->> +	if (!enable_unsafe_tph)
->> +		return count;
->> +
->> +	if (offset != PCI_TPH_CTRL)
->> +		return count;
->> +
->> +	/* Only permit write TPH mode. */
->> +	data &= PCI_TPH_CTRL_MODE_SEL_MASK;
->> +	if (data == PCI_TPH_ST_IV_MODE || data == PCI_TPH_ST_DS_MODE)
->> +		pcie_enable_tph(vdev->pdev, data);
->> +	else if (data == PCI_TPH_ST_NS_MODE)
->> +		pcie_disable_tph(vdev->pdev);
->> +
->> +	return count;
->> +}
+>> This commit adds support for parsing target nodes' #cells values for
+>> iommu-map and msi-map properties, instead of assuming output specifiers
+>> always have exactly 1 cell. It updates of_map_id() to parse multi-cell and
+>> 0-cell output specifiers and reflect the actual number of output specifier
+>> cells.
+>>
+>>> diff --git a/drivers/of/base.c b/drivers/of/base.c
+>>> index d658c26201353..f436e26763818 100644
+>>> --- a/drivers/of/base.c
+>>> +++ b/drivers/of/base.c
+>>
+>> [ ... ]
+>>
+>>> @@ -2176,39 +2206,93 @@ int of_map_id(const struct device_node *np, u32 id,
+>>
+>> [ ... ]
+>>
+>>> +		phandle = be32_to_cpup(map + offset + 1);
+>>>  		phandle_node = of_find_node_by_phandle(phandle);
+>>>  		if (!phandle_node)
+>>>  			return -ENODEV;
+>>>  
+>>> +		if (bad_map) {
+>>> +			cells = 1;
+>>> +		} else if (of_property_read_u32(phandle_node, cells_name, &cells)) {
+>>> +			pr_err("%pOF: missing %s property\n", phandle_node, cells_name);
+>>> +			of_node_put(phandle_node);
+>>> +			return -EINVAL;
+>>> +		}
+>>
+>> [Severity: High]
+>> Does this strict requirement for #iommu-cells or #msi-cells break MSI
+>> allocations on standard-compliant controllers?
+>>
+>> Several MSI controllers validly lack a #msi-cells property. For instance,
+>> arm,gic-v2m-frame nodes do not require it. In
+>> arch/arm64/boot/dts/qcom/ipq5018.dtsi, the pcie0 node defines:
+>>
+>> msi-map = <0x0 &v2m0 0x0 0xff8>;
+>>
+>> but v2m0 does not have #msi-cells.
+>>
+>> Prior to this patch, of_map_id() implicitly consumed 4 words per entry and
+>> succeeded. Will it now fail to find #msi-cells, print an error, and
+>> return -EINVAL, propagating the error through of_msi_xlate() and breaking
+>> MSI initialization on affected platforms?
+>>
 > 
-> I don't understand the virtualization here, the Requester Enable bits
-> control what's actually enabled, not the Mode Selection bits.  All
-> three of these are valid modes that can be enabled, why aren't they
-> toggled by the value written to PCI_TPH_CTRL_REQ_EN_MASK?
-
-OK, will fix in next version
-{
-	...
-	mode = data & PCI_TPH_CTRL_MODE_SEL_MASK;
-	req_en = data & PCI_TPH_CTRL_REQ_EN_MASK;
-	if (req_en && (mode == PCI_TPH_ST_IV_MODE || mode == PCI_TPH_ST_DS_MODE))
-		pcie_enable_tph(vdev->pdev, data);
-	else if (!req_en)
-		pcie_disable_tph(vdev->pdev);
-	...
-}
-
+> I see both arch/arm64/boot/dts/qcom/ipq5018.dtsi and ipq5332.dtsi both have
+> msi-map pointing to arm,gic-v2m-frame nodes without #msi-cells.
 > 
-> Isn't this patch ordering wrong, why are we allowing tph to be enabled
-> and disabled before we've provided a mechanism to set/get steering tags?
-
-Regarding patch order: TPH must be enabled first before accessing steering tag entries.
-The tag query interfaces rely on runtime TPH state and request type info stored in device struct,
-which is only initialized after successful TPH enabling. So current order is functional necessary.
-
+> The new strict pr_err + -EINVAL breaks MSI on these platforms. I'll fix this
+> in v16 by defaulting  cells to '1' when #msi-cells is absent.
 > 
->> +
->>  static struct perm_bits direct_ro_perms = {
->>  	.readfn = vfio_direct_config_read,
->>  };
->> @@ -1121,6 +1148,7 @@ int __init vfio_pci_init_perm_bits(void)
->>  	ret |= init_pci_ext_cap_err_perm(&ecap_perms[PCI_EXT_CAP_ID_ERR]);
->>  	ret |= init_pci_ext_cap_pwr_perm(&ecap_perms[PCI_EXT_CAP_ID_PWR]);
->>  	ecap_perms[PCI_EXT_CAP_ID_VNDR].writefn = vfio_raw_config_write;
->> +	ecap_perms[PCI_EXT_CAP_ID_TPH].writefn = vfio_pci_tph_config_write;
->>  	ecap_perms[PCI_EXT_CAP_ID_DVSEC].writefn = vfio_raw_config_write;
->>  
->>  	if (ret)
->> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
->> index 050e7542952e..0d0140202280 100644
->> --- a/drivers/vfio/pci/vfio_pci_core.c
->> +++ b/drivers/vfio/pci/vfio_pci_core.c
->> @@ -29,6 +29,7 @@
->>  #include <linux/sched/mm.h>
->>  #include <linux/iommufd.h>
->>  #include <linux/pci-p2pdma.h>
->> +#include <linux/pci-tph.h>
->>  #if IS_ENABLED(CONFIG_EEH)
->>  #include <asm/eeh.h>
->>  #endif
->> @@ -41,6 +42,7 @@
->>  static bool nointxmask;
->>  static bool disable_vga;
->>  static bool disable_idle_d3;
->> +bool enable_unsafe_tph;
->>  
->>  static void vfio_pci_eventfd_rcu_free(struct rcu_head *rcu)
->>  {
->> @@ -771,6 +773,11 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
->>  #endif
->>  	vfio_pci_dma_buf_cleanup(vdev);
->>  
->> +	/* Disable TPH when userspace closes the device FD */
->> +	mutex_lock(&vdev->tph_lock);
->> +	pcie_disable_tph(vdev->pdev);
->> +	mutex_unlock(&vdev->tph_lock);
->> +
 > 
-> We generally don't need to lock on device close, there's nothing it can
-> race with.  Also this should happen in the below function after the
-> device is known to be back in D0.
-
-I'll remove unnecessary mutex lock in device close path as there is no concurrent race risk.
-Also adjust TPH disable invocation to after device returns to D0 state.
-
+>>> +
+>>> +		if (cells > MAX_PHANDLE_ARGS) {
+>>
+>> [ ... ]
+>>
+>>> +		if (map_len - offset < 3 + cells) {
+>>> +			of_node_put(phandle_node);
+>>> +			goto err_map_len;
+>>> +		}
+>>> +
+>>> +		out_base = map + offset + 2;
+>>> +		offset += 3 + cells;
+>>
+>> [Severity: High]
+>> Could this cause array desynchronization when parsing legacy 0-cell maps
+>> that were padded to 4 words per entry?
+>>
+>> Prior to this patch, of_map_id() mandated that the map property length must
+>> be a multiple of 16 bytes:
+>>
+>> if (!map_len || map_len % (4 * sizeof(*map)))
+>>     return -EINVAL;
+>>
+>> Consequently, if a legacy device tree targeted an MSI controller that
+>> explicitly defined #msi-cells = <0> (such as RISC-V IMSIC nodes), it was
+>> structurally forced to pad the 3-word map entry with a dummy 4th word to
+>> satisfy the kernel's length check.
+>>
+>> Since the new logic computes the entry stride dynamically as 3 + cells,
+>> when parsing a legacy padded map with cells=0, does the code advance by 3
+>> and incorrectly interpret the 4th dummy word of the first entry as the
+>> id_base of the second entry?
+>>
 > 
-> In general the tph_lock seems more like it's protecting PCI-core since
-> tph enable/disable doesn't serialize itself.
-
-The tph_lock is designed to serialize all userspace triggered TPH operations on the same device.
-
+> I see there is no real in-tree DT combines #msi-cells = <0> or #iommu-cells = <0>
+> with msi-map/iommu-map. All in-tree #msi-cells = <0> nodes (RISC-V IMSIC) use msi-parent.
+> If such DTs appear in the future, they would need to use the new 3-word entry format
+> (without the old padding), which is correct per the binding spec.
 > 
->>  	vfio_pci_core_disable(vdev);
->>  
->>  	mutex_lock(&vdev->igate);
->> @@ -2132,6 +2139,7 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
->>  	mutex_init(&vdev->igate);
->>  	spin_lock_init(&vdev->irqlock);
->>  	mutex_init(&vdev->ioeventfds_lock);
->> +	mutex_init(&vdev->tph_lock);
->>  	INIT_LIST_HEAD(&vdev->dummy_resources_list);
->>  	INIT_LIST_HEAD(&vdev->ioeventfds_list);
->>  	INIT_LIST_HEAD(&vdev->sriov_pfs_item);
->> @@ -2151,6 +2159,7 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev)
->>  	struct vfio_pci_core_device *vdev =
->>  		container_of(core_vdev, struct vfio_pci_core_device, vdev);
->>  
->> +	mutex_destroy(&vdev->tph_lock);
->>  	mutex_destroy(&vdev->igate);
->>  	mutex_destroy(&vdev->ioeventfds_lock);
->>  	kfree(vdev->region);
->> @@ -2240,6 +2249,9 @@ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
->>  	if (!disable_idle_d3)
->>  		pm_runtime_put(dev);
->>  
->> +	/* Disable TPH when taking over ownership of the device */
->> +	pcie_disable_tph(pdev);
->> +
+> So, No changes are needed here.
 > 
-> Seems like a vfio_pci_core_enable() operation, why do we care if it's
-> enabled here?  Thanks,
-
-For TPH disable during device takeover: VFIO ownership transfer triggers device reset,
-which clears hardware TPH registers and ST tables. We call pcie_disable_tph to synchronize
-software state with hardware reset status.
-
-Thanks
-
-> 
-> Alex
-> 
->>  	ret = vfio_register_group_dev(&vdev->vdev);
->>  	if (ret)
->>  		goto out_power;
->> @@ -2605,11 +2617,13 @@ static void vfio_pci_dev_set_try_reset(struct vfio_device_set *dev_set)
->>  }
->>  
->>  void vfio_pci_core_set_params(bool is_nointxmask, bool is_disable_vga,
->> -			      bool is_disable_idle_d3)
->> +			      bool is_disable_idle_d3,
->> +			      bool is_enable_unsafe_tph)
->>  {
->>  	nointxmask = is_nointxmask;
->>  	disable_vga = is_disable_vga;
->>  	disable_idle_d3 = is_disable_idle_d3;
->> +	enable_unsafe_tph = is_enable_unsafe_tph;
->>  }
->>  EXPORT_SYMBOL_GPL(vfio_pci_core_set_params);
->>  
->> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
->> index 89165b769e5c..741d5bcc7ba3 100644
->> --- a/include/linux/vfio_pci_core.h
->> +++ b/include/linux/vfio_pci_core.h
->> @@ -142,6 +142,7 @@ struct vfio_pci_core_device {
->>  	struct notifier_block	nb;
->>  	struct rw_semaphore	memory_lock;
->>  	struct list_head	dmabufs;
->> +	struct mutex		tph_lock;
->>  };
->>  
->>  enum vfio_pci_io_width {
->> @@ -157,7 +158,8 @@ int vfio_pci_core_register_dev_region(struct vfio_pci_core_device *vdev,
->>  				      const struct vfio_pci_regops *ops,
->>  				      size_t size, u32 flags, void *data);
->>  void vfio_pci_core_set_params(bool nointxmask, bool is_disable_vga,
->> -			      bool is_disable_idle_d3);
->> +			      bool is_disable_idle_d3,
->> +			      bool is_enable_unsafe_tph);
->>  void vfio_pci_core_close_device(struct vfio_device *core_vdev);
->>  int vfio_pci_core_init_dev(struct vfio_device *core_vdev);
->>  void vfio_pci_core_release_dev(struct vfio_device *core_vdev);
+> Thanks,
+> Vijay
 > 
 
+Please do let me know if there are any further comments. I'll address those
+as well as part of v16.
+
+Thanks,
+Vijay
