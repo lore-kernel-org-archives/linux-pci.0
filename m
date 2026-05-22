@@ -1,54 +1,54 @@
-Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
+Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FB15384CCD
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 20:24:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB11382F35
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 20:24:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779481459; cv=none; b=o12Jwrjsy7mL8up2mw0WPGwxxHsQLLSP7lcrzOUNDdXifYHfuZBdANmqgDJyjhZJrn5paafJIYsDCMcS9udV22RyhWDvMSUHGyTkBZz3UCBfzKoU9MQjBs1cM4z+aAj4craBqS2i8KUGX3PUCBNwTJqKGWPVE0BQZclxgUac0ac=
+	t=1779481460; cv=none; b=CeyozOYK2ciafVvLNvtjbLBc8vXgweiMxXa8tVoCCo76Q3PAcZK3VTF4UJ+q3uEYvataxAmfFGDh1LLO4ahtjip7670wwXv1WFIabXPcym8xOnaxcE/JOdx6LcYKG6n53Vl7tiyCwinE9MJZFZHCqxGz9CTVpE3VS+UFjemDhYo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779481459; c=relaxed/simple;
-	bh=GDbQ9PBK+SH7NBlxXyWCko/j1KI2JfV15RzVb+Cl0x0=;
+	s=arc-20240116; t=1779481460; c=relaxed/simple;
+	bh=LLtHwG/AB1l6x9gZfQ/XR9thSnzbkmf56r9Jcx8CKGc=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=hLQMeIGXsfafPWGbQ/rtq+MLZfes9Rsljiyx4AxN6+WsEQgc1/op8ArcyO8CTkeRNoz4TcjtcHxQpcvLzNJhKodM6eCQXt6z0xYl5w2RfTvcDF/9PWO40AADuJgxiw/ZRPTjUgGye0CFq0B+GEBYTLUW3+f223CeEaY3mEdE1pE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ubUJSnyD; arc=none smtp.client-ip=209.85.216.74
+	 To:Cc:Content-Type; b=QEzCeEuX3OTwHkV8+znv/Ji9vOSQtTuHlBqi2ey8g/HarmF+iHmeo5HaxLr6gSa5CatIufpvFm0kyM/Ja0Nm21YefL2vpetEuZL1nce6T1E+cMCYn8caueH+ZVpHS7AL0HGDd+bqUmKBWOveq3OjPplRLrQXaVZAqDQ0HcdE92E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YmuRoNze; arc=none smtp.client-ip=209.85.214.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--dmatlack.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ubUJSnyD"
-Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-366344513a3so16024290a91.3
-        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 13:24:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YmuRoNze"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2bc6899bfb1so77857805ad.2
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 13:24:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20251104; t=1779481457; x=1780086257; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=35prD7a6muthxJ5uOKWSGr8dWxpX6CiZ2+eQPVuLFrU=;
-        b=ubUJSnyDiqugVjytsBa7NzAfMOCVFqRLBRgl0LIxwBnVBEQo0L6sSP72cdvCwjebx0
-         vvUaBdzMVv+GE7SMnXrrKx8BqvV5nKsJJgY/LfUmbWl4DF8dcIft/NKkUfb5Z2ca62b8
-         yBkVtq9bUECYcgr9UaHVVltqlBd4wSoersu+pjHViX7wglv8vEjnARXLHV4Vfqv+SFny
-         EUzrEUx4gJieqQEaWv2393BhB1cpgdRCCGXhzN27ldllxk58HFMEOCBQaDVqnKv5glt/
-         95CVQ7y3hbI36t3qP5qVFYk/jbKgp+chLdjPlQrzryAy7iDJFRz4AQS5r1DGSn3Df9cT
-         dwWA==
+        bh=Aa/nUEfOKJ1QR8NF3ghsapnMDPgIBL9du7ZKGarbXoM=;
+        b=YmuRoNzef2LpSkNd/LFW2o3JlYEsCaJj92Y2E4lBnHFpg2LzzT6ojU+3/nmx+tPhPv
+         Pd05W+cLxKWKi/4k7wySEhZYb4Ynx8xsDhVTwkxLorbQ+FKOoiq/d/y4WhbKQp0urONq
+         Eo4d81KM63FV9x7TaJ2Iyt8KJfrEU90qgT0JTj45mi8VFHUmGjIDp3FHnnBbbZKxYHfl
+         uTUUmrKfxp7xa/rckKmhBTIoQwv4Df5LnnWLvU+1NKa5qD0dAsGUuJ+ciuvHf1z2mr/p
+         6fV/LXnsCw7HO/7jbJBFifiN0I8wXFKuKSyhHrFAdv2AbMs3wApvF4kpWLBZ8MTvCGPO
+         R8KQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20251104; t=1779481457; x=1780086257;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=35prD7a6muthxJ5uOKWSGr8dWxpX6CiZ2+eQPVuLFrU=;
-        b=dC2CDLfxJJ6ZnspnLMVhOh3gU61LK0Oo6/6MG4TBY+dNwmmm7bdnWodWm4bPOCWS4Z
-         HVzopTCXw/N6qkCIgrn1eBOjxf2s9V7CMoij35tkxx/phGxNvvbpFPs+O4MHmCscGTFq
-         t22BOoi+e/gt4/CRiL9G1im3mdd1Fi8z8tRF6y2ffL4ls3kFc2m7jc2bO7vLvbzpCKcZ
-         9R90YUbeEpI4uujH2nNPWuopSwOfB8x90Zjb59+7iewtOiiry8BLYOThxISj5RkaGbVI
-         7Gk2r2O5BdBgvwdCI75jWU+d9diifHjRl/40v9c0+YVBF5/6ULUHIUAVyWylvUwKTccm
-         o8Hg==
-X-Forwarded-Encrypted: i=1; AFNElJ/+2h0EmxfqAKtI/M5J332cgC1hhLvNveb1FxPl9Ri1LXmSDFRSr0erHvIcZPyjk/daLSqDKrohSD8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz8iSvYggRsqSTm/rODOI89rYmSNKB4414OrCeWpU1VxvluWc7u
-	OV+W2kpk13X9bfpIhpVNCRuEvSdPcYMO2+u8m7z0pw2mkh3vaC7bMFVSyjgGpSFnUI4ghv6dk8n
-	uyf3BUwJzzSv6tw==
-X-Received: from pgbcb21.prod.google.com ([2002:a05:6a02:715:b0:c81:2646:5294])
+        bh=Aa/nUEfOKJ1QR8NF3ghsapnMDPgIBL9du7ZKGarbXoM=;
+        b=iuxDcL79sNJ9djgzApGvJZDE25FgN3PqzxVx8CfwCBiFqXeTY0vEWN0+eOLlPWZt6j
+         8AXah3WpJBto6qEBvFmFAPCcOwirFFXrH8VRa3kDo3+as5LMvKSgjtSLW62d1HTqdAIe
+         wBwa1/vr859g7Y8yP0vnIg7WsyaGToMQUA5QAXztM3yyYZhwiQHHmwIOqRenRWb6OSsA
+         EBhjwWU3hlmj7C9OfRZWHTlTCriAEJ+2YSrs+VgW8CKv7TVrog9MenSCIycyakHMUAKQ
+         SSyySlr2PROj2DMoZ4KQLC2k1rXyFotAAhGz3zQeaECzJcfLq0Yqd8exlckCRgYqZLwz
+         0IXQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9LWM4X9Bt2PkcQ7q/JVIM2o/5I/Dj5ZIwKEsWHuhxu0iA6Mj7hoIflfKrtWBxhv25KNbhZkyoGCrc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGM6F8VkuqcggEkcy6RTljnHrr9C+cbWJQ7QEbkNj3gxsaB4GL
+	7P5BMiU39wkX4ZpvQUnASRhy1KIxHbwGCyPmNfAqq9xg0xJQzC2wVnR7IRHqNEFixodnrLjWGiP
+	9wDMhkHKkH1dXtw==
+X-Received: from plfh15.prod.google.com ([2002:a17:902:f54f:b0:2b0:ba5a:1fe])
  (user=dmatlack job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:5746:b0:364:78a5:8d40 with SMTP id 98e67ed59e1d1-36a67639d6dmr5223710a91.20.1779481456386;
- Fri, 22 May 2026 13:24:16 -0700 (PDT)
-Date: Fri, 22 May 2026 20:24:03 +0000
+ 2002:a17:903:2381:b0:2bc:7486:21cf with SMTP id d9443c01a7336-2beb06423d4mr52826275ad.36.1779481457319;
+ Fri, 22 May 2026 13:24:17 -0700 (PDT)
+Date: Fri, 22 May 2026 20:24:04 +0000
 In-Reply-To: <20260522202410.3104264-1-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -58,9 +58,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260522202410.3104264-1-dmatlack@google.com>
 X-Mailer: git-send-email 2.54.0.746.g67dd491aae-goog
-Message-ID: <20260522202410.3104264-6-dmatlack@google.com>
-Subject: [PATCH v6 05/12] PCI: liveupdate: Keep bus numbers constant during
- Live Update
+Message-ID: <20260522202410.3104264-7-dmatlack@google.com>
+Subject: [PATCH v6 06/12] PCI: liveupdate: Auto-preserve upstream bridges
+ across Live Update
 From: David Matlack <dmatlack@google.com>
 To: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org
@@ -76,290 +76,291 @@ Cc: Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 
-During a Live Update, preserved devices must be allowed to continue
-performing memory transactions so the kernel cannot change the fabric
-topology, including bus numbers, since that would require disabling
-and flushing any memory transactions first.
+When a PCI device is preserved across a Live Update, all of its upstream
+bridges up to the root port must also be preserved. This enables the PCI
+core and any drivers bound to the bridges to manage bridges correctly
+across a Live Update.
 
-To keep bus numbers constant, always inherit the secondary and
-subordinate bus numbers assigned to bridges during scanning, instead of
-assigning new ones, if any PCI devices are being preserved. Note that
-the kernel inherits bus numbers even on bridges without any downstream
-endpoints that were preserved. This avoids accidentally assigning a
-bridge a new window that overlaps with a preserved device that is
-downstream of a different bridge.
+Notably, this will be used in subsequent commits to ensure that
+preserved devices can continue performing memory transactions without a
+disruption or change in routing.
 
-If a bridge is scanned with a broken topology or has no bus numbers
-set during a Live Update, refuse to assign it new bus numbers and refuse
-to enumerate devices below it until the Live Update is finished. This is
-a safety measure to prevent topology conflicts.
-
-Require that CONFIG_CARDBUS is not enabled to enable
-CONFIG_PCI_LIVEUPDATE since inheriting bus numbers on PCI-to-CardBus
-bridges requires additional work but is not a priority at the moment.
+To preserve bridges, the PCI core tracks the number of downstream
+devices preserved under each bridge using a reference count in struct
+pci_dev_ser. This allows a bridge to remain preserved until all its
+downstream preserved devices are unpreserved or finish their
+participation in the Live Update.
 
 Signed-off-by: David Matlack <dmatlack@google.com>
 ---
- .../admin-guide/kernel-parameters.txt         |  6 +-
- drivers/pci/Kconfig                           |  2 +-
- drivers/pci/liveupdate.c                      | 83 ++++++++++++++++++-
- drivers/pci/liveupdate.h                      | 14 ++++
- drivers/pci/probe.c                           | 17 +++-
- include/linux/pci_liveupdate.h                |  4 +
- 6 files changed, 119 insertions(+), 7 deletions(-)
+ drivers/pci/liveupdate.c    | 136 +++++++++++++++++++++++++++++++-----
+ include/linux/kho/abi/pci.h |   5 +-
+ 2 files changed, 122 insertions(+), 19 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 4d0f545fb3ec..a64af71c2705 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -5138,7 +5138,11 @@ Kernel parameters
- 				explicitly which ones they are.
- 		assign-busses	[X86] Always assign all PCI bus
- 				numbers ourselves, overriding
--				whatever the firmware may have done.
-+				whatever the firmware may have done. Ignored
-+				during a Live Update, where the kernel must
-+				inherit the PCI topology (including bus numbers)
-+				to avoid interrupting ongoing memory
-+				transactions of preserved devices.
- 		usepirqmask	[X86] Honor the possible IRQ mask stored
- 				in the BIOS $PIR table. This is needed on
- 				some systems with broken BIOSes, notably
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index e68ae5c172d4..a597fede1b3b 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -330,7 +330,7 @@ config VGA_ARB_MAX_GPUS
- 
- config PCI_LIVEUPDATE
- 	bool "PCI Live Update Support"
--	depends on PCI && LIVEUPDATE && 64BIT
-+	depends on PCI && LIVEUPDATE && 64BIT && !CARDBUS
- 	help
- 	  Enable PCI core support for preserving PCI devices across Live
- 	  Update. This, in combination with support in a device's driver,
 diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-index 4f2ec6ffdd16..2421bc218916 100644
+index 2421bc218916..4c79e19b7f98 100644
 --- a/drivers/pci/liveupdate.c
 +++ b/drivers/pci/liveupdate.c
-@@ -86,6 +86,21 @@
-  * bound to the correct driver. i.e. The PCI core does not protect against a
-  * device getting preserved by driver A in the outgoing kernel and then getting
-  * bound to driver B in the incoming kernel.
+@@ -101,6 +101,18 @@
+  * If a misconfigured or unconfigured bridge is encountered during enumeration
+  * while there are preserved devices, its secondary and subordinate bus numbers
+  * will be cleared and devices below it will not be enumerated.
 + *
-+ * BDF Stability
-+ * =============
++ * PCI-to-PCI Bridges
++ * ==================
 + *
-+ * The PCI core guarantees that preserved devices can be identified by the same
-+ * bus, device, and function numbers for as long as they are preserved
-+ * (including across kexec). To accomplish this, the PCI core always inherits
-+ * the secondary and subordinate bus numbers assigned to bridges during scanning
-+ * if any device is preserved. This is true even on architectures that always
-+ * assign new bus numbers during scanning. The kernel assumes the previous
-+ * kernel established a sane bus topology across kexec.
++ * Any PCI-to-PCI bridges upstream of a preserved device are automatically
++ * preserved when the device is preserved. The PCI core keeps track of the
++ * number of downstream devices that are preserved under a bridge so that the
++ * bridge is only unpreserved once all downstream devices are unpreserved.
 + *
-+ * If a misconfigured or unconfigured bridge is encountered during enumeration
-+ * while there are preserved devices, its secondary and subordinate bus numbers
-+ * will be cleared and devices below it will not be enumerated.
++ * This enables the PCI core and any drivers bound to the bridge to participate
++ * in the Live Update so that preserved endpoints can continue issuing memory
++ * transactions during the Live Update.
   */
  
  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
-@@ -103,7 +118,7 @@
- /**
-  * struct pci_liveupdate_global - Global state for PCI Live Update support
-  * @rwsem: Reader/writer semaphore used to protect the incoming and outgoing
-- *         FLBs, and the references to them in struct pci_dev.
-+ *         FLBs and references to them in struct pci_dev.
-  */
- struct pci_liveupdate_global {
- 	struct rw_semaphore rwsem;
-@@ -396,6 +411,72 @@ static void pci_liveupdate_flb_put_incoming(void)
- 	liveupdate_flb_put_incoming(&pci_liveupdate_flb);
+@@ -261,28 +273,52 @@ static struct pci_ser *pci_liveupdate_flb_get_outgoing(void)
+ 	return ser;
  }
  
-+bool pci_liveupdate_scan_bridge_begin(struct pci_bus *bus, struct pci_dev *dev,
-+				      int pass)
-+{
-+	struct pci_dev *parent = bus->self;
-+
-+	/*
-+	 * On the second pass, reuse the value that was set on the first pass
-+	 * so that the passes are consistent with one another.
-+	 */
-+	if (pass)
-+		return dev->liveupdate.inherit_buses;
-+
-+	/*
-+	 * If the parent bridge is being forced to inherit its bus numbers
-+	 * during this scan then this bridge must as well, otherwise the PCI
-+	 * core could expand this bridge's reservation beyond its parent (which
-+	 * cannot expand).
-+	 */
-+	if (parent && parent->liveupdate.inherit_buses) {
-+		dev->liveupdate.inherit_buses = true;
-+		goto out;
+-static void pci_liveupdate_unpreserve_device(struct pci_ser *ser, struct pci_dev *dev)
++static int pci_liveupdate_unpreserve_device(struct pci_ser *ser, struct pci_dev *dev)
+ {
+ 	struct pci_dev_ser *dev_ser = dev->liveupdate.outgoing;
+ 
+ 	if (!dev_ser) {
+ 		pci_warn(dev, "Cannot unpreserve device that is not preserved\n");
+-		return;
++		return -EINVAL;
 +	}
 +
-+	/*
-+	 * Otherwise, if there are any incoming preserved devices, force the
-+	 * bus numbers to be inherited to avoid changing the bus numbers
-+	 * assigned to those devices during enumeration.
-+	 *
-+	 * To keep things simple, inherit bus numbers on all bridges if any PCI
-+	 * devices are incoming, to ensure that no bridge's reservation is
-+	 * expanded to overlap with a preserved device downstream of a different
-+	 * bridge.
-+	 */
-+	scoped_guard(rwsem_read, &pci_liveupdate.rwsem) {
-+		struct pci_flb_incoming *incoming;
-+
-+		incoming = pci_liveupdate_flb_get_incoming();
-+		if (!incoming) {
-+			dev->liveupdate.inherit_buses = false;
-+			goto out;
-+		}
-+
-+		/*
-+		 * It is safe to sample incoming->ser->nr_devices and then
-+		 * drop the rwsem since nr_devices will only decrease. Thus the
-+		 * only "race" is that the current scan will be overly
-+		 * conservative and force bus inheritance.
-+		 */
-+		dev->liveupdate.inherit_buses = incoming->ser->nr_devices;
-+		pci_liveupdate_flb_put_incoming();
-+	}
-+
-+out:
-+	return dev->liveupdate.inherit_buses;
-+}
-+
-+void pci_liveupdate_scan_bridge_end(struct pci_dev *dev, int pass)
-+{
-+	/*
-+	 * Clear inherit_buses after the second pass so it can be re-evaluated
-+	 * on future scans.
-+	 */
-+	if (pass)
-+		dev->liveupdate.inherit_buses = false;
-+}
-+
- void pci_liveupdate_setup_device(struct pci_dev *dev)
- {
- 	struct pci_flb_incoming *incoming;
-diff --git a/drivers/pci/liveupdate.h b/drivers/pci/liveupdate.h
-index eaaa3559fd77..c763255a8de4 100644
---- a/drivers/pci/liveupdate.h
-+++ b/drivers/pci/liveupdate.h
-@@ -13,6 +13,9 @@
- #ifdef CONFIG_PCI_LIVEUPDATE
- void pci_liveupdate_setup_device(struct pci_dev *dev);
- void pci_liveupdate_cleanup_device(struct pci_dev *dev);
-+bool pci_liveupdate_scan_bridge_begin(struct pci_bus *bus, struct pci_dev *dev,
-+				      int pass);
-+void pci_liveupdate_scan_bridge_end(struct pci_dev *dev, int pass);
- #else
- static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
- {
-@@ -21,6 +24,17 @@ static inline void pci_liveupdate_setup_device(struct pci_dev *dev)
- static inline void pci_liveupdate_cleanup_device(struct pci_dev *dev)
- {
- }
-+
-+static inline bool pci_liveupdate_scan_bridge_begin(struct pci_bus *bus,
-+						    struct pci_dev *dev,
-+						    int pass)
-+{
-+	return false;
-+}
-+
-+static inline void pci_liveupdate_scan_bridge_end(struct pci_dev *dev, int pass)
-+{
-+}
- #endif
- 
- #endif /* DRIVERS_PCI_LIVEUPDATE_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2e2be8af6976..19965bfd347d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1402,6 +1402,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 				  int max, unsigned int available_buses,
- 				  int pass)
- {
-+	bool liveupdate, assign_new_buses = pcibios_assign_all_busses();
- 	struct pci_bus *child;
- 	u32 buses;
- 	u16 bctl;
-@@ -1411,6 +1412,10 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 	u8 fixed_sec, fixed_sub;
- 	int next_busnr;
- 
-+	liveupdate = pci_liveupdate_scan_bridge_begin(bus, dev, pass);
-+	if (liveupdate)
-+		assign_new_buses = false;
-+
- 	/*
- 	 * Make sure the bridge is powered on to be able to access config
- 	 * space of devices below it.
-@@ -1454,8 +1459,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 		goto out;
++	if (!dev_ser->refcount) {
++		pci_WARN(dev, 1, "Preserved device has a 0 refcount!\n");
++		return -EINVAL;
  	}
  
--	if ((secondary || subordinate) &&
--	    !pcibios_assign_all_busses() && !broken) {
-+	if ((secondary || subordinate) && !assign_new_buses && !broken) {
- 		unsigned int cmax, buses;
- 
- 		/*
-@@ -1497,8 +1501,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 		 * do in the second pass.
- 		 */
- 		if (!pass) {
--			if (pcibios_assign_all_busses() || broken)
--
-+			if (assign_new_buses || broken)
- 				/*
- 				 * Temporarily disable forwarding of the
- 				 * configuration cycles on all bridges in
-@@ -1512,6 +1515,11 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 			goto out;
- 		}
- 
-+		if (liveupdate) {
-+			pci_err(dev, "Cannot reconfigure bridge during Live Update, skipping\n");
-+			goto out;
-+		}
++	if (--dev_ser->refcount)
++		return 0;
 +
- 		/* Clear errors */
- 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
- 
-@@ -1572,6 +1580,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, bctl);
- 
- 	pm_runtime_put(&dev->dev);
-+	pci_liveupdate_scan_bridge_end(dev, pass);
- 
- 	return max;
+ 	pci_info(dev, "Device will no longer be preserved across next Live Update\n");
+ 	ser->nr_devices--;
+ 	memset(dev_ser, 0, sizeof(*dev_ser));
+ 	dev->liveupdate.outgoing = NULL;
++	return 0;
  }
-diff --git a/include/linux/pci_liveupdate.h b/include/linux/pci_liveupdate.h
-index cfdc3d62ec02..2be98819e313 100644
---- a/include/linux/pci_liveupdate.h
-+++ b/include/linux/pci_liveupdate.h
-@@ -17,10 +17,14 @@
-  * struct pci_liveupdate - PCI Live Update state for a struct pci_dev
-  * @outgoing: State preserved for the next kernel.
-  * @incoming: State preserved by the previous kernel.
-+ * @inherit_buses: True if the PCI core should inherit the secondary and
-+ *                 subordinate bus numbers assigned to this device due to
-+ *                 an ongoing Live Update.
-  */
- struct pci_liveupdate {
- 	struct pci_dev_ser *outgoing;
- 	struct pci_dev_ser *incoming;
-+	bool inherit_buses;
- };
  
- struct pci_dev;
+-static int pci_liveupdate_preserve_device(struct pci_ser *ser, struct pci_dev *dev)
++static int pci_liveupdate_preserve_device_again(struct pci_dev *dev)
+ {
+-	int i;
++	if (!dev->liveupdate.outgoing->refcount) {
++		pci_WARN(dev, 1, "Preserved device with 0 refcount!\n");
++		return -EINVAL;
++	}
+ 
+-	if (dev->liveupdate.outgoing)
++	/*
++	 * Endpoint devices should not be preserved more than once. Bridges are
++	 * preserved once for every downstream device that is preserved.
++	 */
++	if (!dev->subordinate)
+ 		return -EBUSY;
+ 
++	dev->liveupdate.outgoing->refcount++;
++	return 0;
++}
++
++static int __pci_liveupdate_preserve_device(struct pci_ser *ser, struct pci_dev *dev)
++{
++	int i;
++
+ 	if (ser->nr_devices == ser->max_nr_devices)
+ 		return -ENOSPC;
+ 
+@@ -312,6 +348,52 @@ static int pci_liveupdate_preserve_device(struct pci_ser *ser, struct pci_dev *d
+ 	return -ENOSPC;
+ }
+ 
++static int pci_liveupdate_preserve_device(struct pci_ser *ser, struct pci_dev *dev)
++{
++	if (dev->liveupdate.outgoing)
++		return pci_liveupdate_preserve_device_again(dev);
++
++	return __pci_liveupdate_preserve_device(ser, dev);
++}
++
++#define for_each_pci_dev_in_path(_d, _start, _end) \
++	for ((_d) = (_start); (_d) != (_end); (_d) = (_d)->bus->self)
++
++static void __pci_liveupdate_unpreserve_path(struct pci_ser *ser,
++					     struct pci_dev *start,
++					     struct pci_dev *end)
++{
++	struct pci_dev *dev;
++
++	for_each_pci_dev_in_path(dev, start, end) {
++		if (pci_liveupdate_unpreserve_device(ser, dev))
++			return;
++	}
++}
++
++static void pci_liveupdate_unpreserve_path(struct pci_ser *ser,
++					   struct pci_dev *start)
++{
++	__pci_liveupdate_unpreserve_path(ser, start, /*end=*/NULL);
++}
++
++static int pci_liveupdate_preserve_path(struct pci_ser *ser,
++					struct pci_dev *start)
++{
++	struct pci_dev *dev;
++	int ret;
++
++	for_each_pci_dev_in_path(dev, start, NULL) {
++		ret = pci_liveupdate_preserve_device(ser, dev);
++		if (ret) {
++			__pci_liveupdate_unpreserve_path(ser, start, dev);
++			return ret;
++		}
++	}
++
++	return 0;
++}
++
+ /**
+  * pci_liveupdate_preserve() - Preserve a PCI device across Live Update
+  * @dev: The PCI device to preserve.
+@@ -321,6 +403,9 @@ static int pci_liveupdate_preserve_device(struct pci_ser *ser, struct pci_dev *d
+  * pci_liveupdate_preserve() from their struct liveupdate_file_handler
+  * preserve() callback to ensure the outgoing struct pci_ser is already set up.
+  *
++ * pci_liveupdate_preserve() automatically preserves all bridges upstream of
++ * @dev.
++ *
+  * Returns: 0 on success, <0 on failure.
+  */
+ int pci_liveupdate_preserve(struct pci_dev *dev)
+@@ -336,7 +421,7 @@ int pci_liveupdate_preserve(struct pci_dev *dev)
+ 	if (IS_ERR(ser))
+ 		return PTR_ERR(ser);
+ 
+-	return pci_liveupdate_preserve_device(ser, dev);
++	return pci_liveupdate_preserve_path(ser, dev);
+ }
+ EXPORT_SYMBOL_GPL(pci_liveupdate_preserve);
+ 
+@@ -349,6 +434,9 @@ EXPORT_SYMBOL_GPL(pci_liveupdate_preserve);
+  * pci_liveupdate_unpreserve() from their struct liveupdate_file_handler
+  * unpreserve() callback to ensure the outgoing struct pci_ser is already set
+  * up.
++ *
++ * pci_liveupdate_unpreserve() automatically unpreserves all bridges upstream of
++ * @dev.
+  */
+ void pci_liveupdate_unpreserve(struct pci_dev *dev)
+ {
+@@ -362,7 +450,7 @@ void pci_liveupdate_unpreserve(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
+-	pci_liveupdate_unpreserve_device(ser, dev);
++	pci_liveupdate_unpreserve_path(ser, dev);
+ }
+ EXPORT_SYMBOL_GPL(pci_liveupdate_unpreserve);
+ 
+@@ -534,29 +622,41 @@ void pci_liveupdate_cleanup_device(struct pci_dev *dev)
+ 	}
+ }
+ 
+-static void pci_liveupdate_finish_device(struct pci_ser *ser, struct pci_dev *dev)
++static int pci_liveupdate_finish_device(struct pci_ser *ser, struct pci_dev *dev)
+ {
+ 	if (!dev->liveupdate.incoming) {
+ 		pci_warn(dev, "Cannot finish preserving an unpreserved device\n");
+-		return;
++		return -EINVAL;
+ 	}
+ 
+-	if (dev->liveupdate.incoming->refcount != 1) {
+-		pci_WARN(dev, 1, "Preserved device has a corrupted refcount!\n");
+-		return;
++	if (!dev->liveupdate.incoming->refcount) {
++		pci_WARN(dev, 1, "Preserved device has a 0 refcount!\n");
++		return -EINVAL;
+ 	}
+ 
+ 	/*
+-	 * Drop the refcount so this device does not get treated as an incoming
+-	 * device again, e.g. in case pci_liveupdate_setup_device() gets called
+-	 * again because the device is hot-plugged.
++	 * Decrement the refcount so this device does not get treated as an
++	 * incoming device again, e.g. in case pci_liveupdate_setup_device()
++	 * gets called again because the device is hot-plugged.
+ 	 */
+-	dev->liveupdate.incoming->refcount = 0;
++	if (--dev->liveupdate.incoming->refcount)
++		return 0;
+ 
+ 	pci_info(dev, "Device is finished participating in Live Update\n");
+ 	dev->liveupdate.incoming = NULL;
+ 	ser->nr_devices--;
+ 	pci_liveupdate_flb_put_incoming();
++	return 0;
++}
++
++static void pci_liveupdate_finish_path(struct pci_ser *ser, struct pci_dev *start)
++{
++	struct pci_dev *dev;
++
++	for_each_pci_dev_in_path(dev, start, NULL) {
++		if (pci_liveupdate_finish_device(ser, dev))
++			return;
++	}
+ }
+ 
+ /**
+@@ -568,6 +668,8 @@ static void pci_liveupdate_finish_device(struct pci_ser *ser, struct pci_dev *de
+  * Update. Drivers must call pci_liveupdate_finish() from their struct
+  * liveupdate_file_handler finish() callback to ensure the incoming struct
+  * pci_ser is allocated.
++ *
++ * pci_liveupdate_finish() automatically finishes all bridges upstream of @dev.
+  */
+ void pci_liveupdate_finish(struct pci_dev *dev)
+ {
+@@ -581,7 +683,7 @@ void pci_liveupdate_finish(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
+-	pci_liveupdate_finish_device(incoming->ser, dev);
++	pci_liveupdate_finish_path(incoming->ser, dev);
+ 	pci_liveupdate_flb_put_incoming();
+ }
+ EXPORT_SYMBOL_GPL(pci_liveupdate_finish);
+diff --git a/include/linux/kho/abi/pci.h b/include/linux/kho/abi/pci.h
+index 85def616703d..c86518be4ce7 100644
+--- a/include/linux/kho/abi/pci.h
++++ b/include/linux/kho/abi/pci.h
+@@ -23,7 +23,7 @@
+  * incrementing the version number in the PCI_LUO_FLB_COMPATIBLE string.
+  */
+ 
+-#define PCI_LUO_FLB_COMPATIBLE "pci-v2"
++#define PCI_LUO_FLB_COMPATIBLE "pci-v3"
+ 
+ /**
+  * struct pci_dev_ser - Serialized state about a single PCI device.
+@@ -32,7 +32,8 @@
+  * @bdf: The device's PCI bus, device, and function number.
+  * @refcount: Reference count used by the PCI core to keep track of whether it
+  *            is done using a device's struct pci_dev_ser. The value of the
+- *            refcount is equal to 1 when the struct pci_dev_ser is in use, and
++ *            refcount is equal to the number of preserved devices at or below
++ *            it in the PCI hierarchy when the struct pci_dev_ser is in use, and
+  *            0 otherwise.
+  */
+ struct pci_dev_ser {
 -- 
 2.54.0.746.g67dd491aae-goog
 
