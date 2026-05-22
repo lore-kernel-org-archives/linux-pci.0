@@ -1,180 +1,153 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f45.google.com (mail-dl1-f45.google.com [74.125.82.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC373624D7
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 21:13:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779484415; cv=none; b=HzifUp+GhDVUNzhm3rVujJoVAod1bBWZeNpqxLZ0wKx/YgONGdK9pLJIzYeU7olja8iGFEHwvqvMNVhfjna9DfgP6gkoDoSpSCRp9XffP/GEyHGI/NGd6rYe/w/7885Z0ILHBUuEhD2P7MYR4y9tb7lVmm3CIEN/7revwNxVpvM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779484415; c=relaxed/simple;
-	bh=D9rB5wBO5F/15BfNAH6dSUzTUgASExNceTSrH6tjFaM=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Fh7q+70ui4RLJG1pX0HT99NuhMnzuA/Esa6SxdjVF3hJeQFgOh4aIkt4RDVoWAWp+M4m+N1ZHASe9SIzShIdbJoJsDs0xs8gpgoK0DHPPDubaktSfSfk6wvk9H2tfLXuxDSAKfV6yAtPpqmwGza8oxsfTRWcD24RcsE7yYlKMt4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g6N2i9Yu; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02A9730EF90
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 21:29:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779485354; cv=pass; b=j/QJPFwn9p8PTOtcJCt2+bkWCeg3dYvzEmmpwS/aHYHgY4bLdQF9tQOgG4G4mKKJqJH2y7hAyNWDdieFPxtj0p5DrbRdZPBoCUUgQ1rQGGrIxXPvIXt/6hUZcH4aPWFaX5mM37W9399HxUHJ7iq6jYQLnwFmqvcdCBT0N28juUo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779485354; c=relaxed/simple;
+	bh=GI3ksNffcgu0gYhPpqaOoDcdU1m2F3Yiyb09sVMjOvU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=H0nMDYq8YbzPzXAkfXtfdn+aImnuJa0nZGKFIbEfiwgVxamSWWpHGyTTGpX1hF50gyT4z5AB8PIePQ4wfgDHNB1qBIAmyIqJm6VdPqfLLwqNcvZgrOJUgCmLP7U8vaUB3rRqSczhhYSnvcLbbp2epbgoNkvSE9VhVO5O0WJBwD0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pV11dzqx; arc=pass smtp.client-ip=74.125.82.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g6N2i9Yu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D56A21F000E9;
-	Fri, 22 May 2026 21:13:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779484414;
-	bh=xJe2n+VsGYd7lbAaCBnui4drGRhkK/9bDRhR7fEnvcY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=g6N2i9YuigIds//vmuLWdAaSb5TU+DY1AM3p2SH376fCEHC7uxDaZ58VOsfGqTufQ
-	 tupn2yCYgBDcX4/gWbANBJIsPDBjPLIdFN2pEf7cFmpnYbAUHTNXJxEV5miiY70Yi9
-	 YXvyaGL/+9dp6F0oIJCKcBNworKAOUYYYB0WeyST9+VedBKTpmAVn516TjpG1R6oWZ
-	 C4laFwShhAtajoYm/8Maor30LIyul7B/7kfdJkj9x0/afIu70OOPlQmTKECjgUsveL
-	 B5hn3Lw1VmI3+IdpXC0fF7Qf0YX/2wqnoxAmvO+12Xw6WbsHkL172f+LktMTITBc3U
-	 Xl+K6O5XBQDmw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 03/12] PCI: liveupdate: Track incoming preserved PCI
- devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "David Matlack" <dmatlack@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260522202410.3104264-4-dmatlack@google.com>
-References: <20260522202410.3104264-4-dmatlack@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 22 May 2026 21:13:33 +0000
-Message-Id: <20260522211333.D56A21F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pV11dzqx"
+Received: by mail-dl1-f45.google.com with SMTP id a92af1059eb24-1357c851a48so9930145c88.1
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 14:29:12 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1779485352; cv=none;
+        d=google.com; s=arc-20240605;
+        b=XK3luXaPvIBklqm2dth0IewDLW1ksbWLb6+QqlJ0QoLCQpq24rmmKfL2bm1pq+KoL6
+         jsSucYn5+amikjZMugfPiLk3IhZjl6xefqiGiPHcfneAUxsPfujoQ1Gty7vDyb+tvVi2
+         WVlPUxM1ejFMD1rAIDIpNrfbxXsaxgS9eKUv5pyCurXWhqU3c1lnIXWWFNr1uV78gcaV
+         TyAjaEqIFv94z3gkZH+3ptHZsMsUQ0jXWdE2Gu2saVLhNwsT3rkItiraNo4COKvuVoNH
+         nOIfaaKihjcub33XX2vHUkbky+k/NbW02VTSn2WFJmRIebZdrQ+uHZFBFePbqnWdLy9c
+         KAxA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=6K2ANhvmgyd4o7NGx/ivPgd7PtVVhTtattoThaE0WQc=;
+        fh=2E8G5L5HRIhYv0SLHRh0bmuG4bK/RxhrEd6+zC1U6gY=;
+        b=IEbVtH+/rS1mN7LTG/fYilyKNYvu3YUlka4udhAtZ3ZZ5PhFIJ33BP2rkcO3LkEiPT
+         70LnHKdrh7aykZFdPhm8aXWnk6NANkEZJxxd5Nu++yuTGiswlf/EekbiFJtL2UJu2QpE
+         GcJm6TXf02oazKYDFAnH+I0BVW+r1luLzdwixI8fQdO8r7/LfEV8+8UvMAIL/mmFviTi
+         FBCXXVsmcas7h5Ma0M/HMX990VmT/e0CHWe+mD+7oU5UnSSI00rORlJdj65OY3BV9HNY
+         /jipR2M7q3s2ZJFGrtkWWkmtujto5Qud/MefvmKx6BwaO1soAR9kumLPkXVTo6Vpl5hy
+         DDCw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1779485352; x=1780090152; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6K2ANhvmgyd4o7NGx/ivPgd7PtVVhTtattoThaE0WQc=;
+        b=pV11dzqxotpQYnIXFL5xD14B7+tGv9izYT2Pya1M30HF9tjMzIPu4szhIIqNUjgRtt
+         zq6on0QLXZIPVokD99xUS9FrK/9XgXnNKxGkCRelB7b4Lq7IMRs03Ol1j4NmA1QYNPdl
+         REOUt5l/2umqbbf7ePXjaeeNNvi/7xNwDgogvZB/WrlP92wqcb7LyW1JHyL1h13Skla4
+         mhJ2x2wmvQxt/iCE8scgzrfT4dIPb3Xg0x7xXh39HyzfxJtsPlF7PfDAaFBlQCI15BHh
+         rPTenL2Z6ULmrJf5eIp5fzslbHcoFYxC/vCt+XASr8DIMGCC4XlZALUCS/PuxfmfTU1k
+         XWTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779485352; x=1780090152;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=6K2ANhvmgyd4o7NGx/ivPgd7PtVVhTtattoThaE0WQc=;
+        b=fNeTbGev/PCUpDeDw1vuT2eypdXyjBrOovJriwBnzUC7Nx4Vk8g06xH3SMkodoXwCI
+         6hnTLsjCsCoXv1KHokBwOqsoDsTwJivXpVmmp9fwNKkvVE9EtmzgypvfhGMNHQrV/vR/
+         efRKKdx2MSouDARVrC2il7OKulsFW9LnzrVYSQ9k/jfv8ATgZcBQOQfbb1UGvJin/zD2
+         buYNWnkJqXjsUSb4euybgWO+lYH4VJsMjkaKu0DcfOjHtbeHjRsdHHrWjPrUx9Q0QiZ8
+         M0IpVMFndsa/HgU+jhdJ1rcRTYOyHTccsP9sZv33lxtRxH52hjLgxEccAqzDaDH4gTEw
+         WXsA==
+X-Gm-Message-State: AOJu0YxwovQdXBSePr8QnG9Mymp36gmA2QxCysMvYQqtDGW+o3fH8Q5Z
+	TfREfsQs7dLG4907YaojK6a2WHZw7l206AGOKTDz/oGiPLuV3B5zInTeImRZVuUWnuUmoM/+IP/
+	rRP0dpjTR+h15tLosfmtxOr4qmXUJSECmSf8G7box
+X-Gm-Gg: Acq92OHVT8Gl0T7sgBG9Cs595rkjm+7pWl5j6K7KZOEkCMQyTSWfYkcP8hX6cVthdRh
+	yBJq7Cq0A25wuwFXCctqW5DNEgvO1TuUXK+b6pJz79KPlFYwhj05pYkaWJWmK9ae/ic5pGcHlHh
+	Rjn1IfScxMKOid0ZvJY3TywmtrewtVoW4tvKW6/0jn/+MllhmL3OZhIjN2WBRFBMae3JdU3XRDk
+	JjLIqNc/jH3Vo50BeWPwZ4ZWyz7NKTqh/Xpf6M/0ooFK0PKcGdK5NXpIsmvOo5qrvr0Rc8z0uwG
+	QyFqN9iN7+hHqiyZEw==
+X-Received: by 2002:a05:701b:2905:b0:12d:ce60:cb52 with SMTP id
+ a92af1059eb24-1365f81b447mr1254036c88.18.1779485351351; Fri, 22 May 2026
+ 14:29:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20260522202410.3104264-3-dmatlack@google.com> <20260522205453.F34021F000E9@smtp.kernel.org>
+In-Reply-To: <20260522205453.F34021F000E9@smtp.kernel.org>
+From: David Matlack <dmatlack@google.com>
+Date: Fri, 22 May 2026 14:28:44 -0700
+X-Gm-Features: AVHnY4KamDj--aV3AykLsYOKZZoEGo-UbptTXXYbt8naapMG4RPx0patVsAYs7U
+Message-ID: <CALzav=fgi_ezr7JV3to=RM-RC7sF_XsEcash_+vp65J-jXnkWQ@mail.gmail.com>
+Subject: Re: [PATCH v6 02/12] PCI: liveupdate: Track outgoing preserved PCI devices
+To: sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
-- [Critical] pci_flb_retrieve() frees the incoming preserved memory (ser) o=
-n failure, causing a Use-After-Free when the core retries.
-- [Medium] Leaked reference to the incoming FLB when a device's preserved r=
-efcount is corrupted.
---
+On Fri, May 22, 2026 at 1:54=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
+>
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+> - [High] Acquiring a sleepable rw_semaphore (rwsem_write) during PCI devi=
+ce release, which can occur in atomic contexts.
+> --
 
-commit 5af02c95c00f317cc5c4fa203b8b79373f2759a5
-Author: David Matlack <dmatlack@google.com>
+> > +void pci_liveupdate_cleanup_device(struct pci_dev *dev)
+> > +{
+> > +     /*
+> > +      * It should be safe to READ_ONCE() outside of the rwsem during c=
+leanup
+> > +      * since there should no longer be any references to @dev on the =
+system.
+> > +      */
+> > +     if (READ_ONCE(dev->liveupdate.outgoing)) {
+> > +             pci_WARN(dev, 1, "Destroying outgoing-preserved device!\n=
+");
+> > +             pci_liveupdate_unpreserve(dev);
+>
+> [Severity: High]
+> Can calling pci_liveupdate_unpreserve() here cause a sleep-in-atomic bug?
+>
+> pci_liveupdate_unpreserve() unconditionally acquires a sleepable rw_semap=
+hore:
+> guard(rwsem_write)(&pci_liveupdate.rwsem).
+>
+> Since pci_liveupdate_cleanup_device() is called from pci_release_dev(), t=
+his
+> runs when the last reference to a struct pci_dev is dropped via pci_dev_p=
+ut().
+>
+> Because pci_dev_put() can be called from atomic contexts (such as hardwar=
+e
+> interrupt handlers or while holding spinlocks) to drop references acquire=
+d
+> during lookups, acquiring a sleepable lock here could trigger a
+> scheduling-while-atomic BUG or deadlock.
 
-PCI: liveupdate: Track incoming preserved PCI devices
+> > @@ -2490,6 +2491,7 @@ static void pci_release_dev(struct device *dev)
+> >
+> >       pci_dev =3D to_pci_dev(dev);
+> >       pci_release_capabilities(pci_dev);
+> > +     pci_liveupdate_cleanup_device(pci_dev);
+> >       pci_release_of_node(pci_dev);
+> >       pcibios_release_device(pci_dev);
+> >       pci_bus_put(pci_dev->bus);
 
-During PCI enumeration, the PCI core fetches serialized state from the
-Live Update Orchestrator to identify incoming preserved devices. This
-patch adds tracking and lifecycle management APIs for these devices.
+Gemini found 3 files where pci_dev_put() is called under a spinlock:
 
-> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> index 065d5af822f74..96c43b84532cc 100644
-> --- a/drivers/pci/liveupdate.c
-> +++ b/drivers/pci/liveupdate.c
-[ ... ]
-> @@ -128,13 +157,49 @@ static void pci_flb_unpreserve(struct liveupdate_fl=
-b_op_args *args)
-> =20
->  static int pci_flb_retrieve(struct liveupdate_flb_op_args *args)
->  {
-> -	args->obj =3D phys_to_virt(args->data);
-> +	struct pci_ser *ser =3D phys_to_virt(args->data);
-> +	struct pci_flb_incoming *incoming;
-> +	int ret =3D -ENOMEM;
-> +	u32 i;
-> +
-> +	incoming =3D kmalloc_obj(*incoming);
-> +	if (!incoming)
-> +		goto err_restore_free;
-> +
-> +	incoming->ser =3D ser;
-> +	xa_init(&incoming->xa);
-> +
-> +	for (i =3D 0; i < incoming->ser->max_nr_devices; i++) {
-> +		struct pci_dev_ser *dev_ser =3D &incoming->ser->devices[i];
-> +		unsigned long key;
-> +
-> +		if (!dev_ser->refcount)
-> +			continue;
-> +
-> +		key =3D pci_ser_xa_key(dev_ser->domain, dev_ser->bdf);
-> +		ret =3D xa_insert(&incoming->xa, key, dev_ser, GFP_KERNEL);
-> +		if (ret)
-> +			goto err_xa_destroy;
-> +	}
-> +
-> +	args->obj =3D incoming;
->  	return 0;
-> +
-> +err_xa_destroy:
-> +	xa_destroy(&incoming->xa);
-> +	kfree(incoming);
-> +err_restore_free:
-> +	kho_restore_free(ser);
+ - drivers/net/ethernet/microsoft/mana/gdma_main.c (mana_driver_exit())
+ - arch/x86/pci/i386.c (pcibios_fw_addr_list_del())
+ - arch/powerpc/platforms/pasemi/dma_lib.c (pasemi_dma_init())
 
-[Severity: Critical]
-Does this error path create a use-after-free if the retrieval is retried?
-
-If pci_flb_retrieve() fails here (e.g. from -ENOMEM), kho_restore_free()
-frees the preserved physical memory for the incoming state. However, the
-Live Update Orchestrator propagates this error without marking the FLB
-as retrieved or finished.
-
-When the next PCI device is enumerated, pci_liveupdate_setup_device()
-calls pci_liveupdate_flb_get_incoming() again, which invokes
-pci_flb_retrieve() a second time with the exact same data address. The
-function will then attempt to read incoming->ser->max_nr_devices from
-memory that was already freed.
-
-> +	return ret;
->  }
-[ ... ]
-> @@ -280,7 +430,83 @@ void pci_liveupdate_cleanup_device(struct pci_dev *d=
-ev)
->  		pci_WARN(dev, 1, "Destroying outgoing-preserved device!\n");
->  		pci_liveupdate_unpreserve(dev);
->  	}
-> +
-> +	if (READ_ONCE(dev->liveupdate.incoming)) {
-> +		pci_WARN(dev, 1, "Destroying incoming-preserved device!\n");
-> +		pci_liveupdate_finish(dev);
-> +	}
-> +}
-> +
-> +static void pci_liveupdate_finish_device(struct pci_ser *ser, struct pci=
-_dev *dev)
-> +{
-> +	if (!dev->liveupdate.incoming) {
-> +		pci_warn(dev, "Cannot finish preserving an unpreserved device\n");
-> +		return;
-> +	}
-> +
-> +	if (dev->liveupdate.incoming->refcount !=3D 1) {
-> +		pci_WARN(dev, 1, "Preserved device has a corrupted refcount!\n");
-> +		return;
-
-[Severity: Medium]
-Can this early return leak a reference to the incoming FLB?
-
-In pci_liveupdate_setup_device(), a reference is held to protect
-dev->liveupdate.incoming. This reference is expected to be released via
-pci_liveupdate_flb_put_incoming() at the end of this function.
-
-By returning early here when the refcount is corrupted, we skip the put
-call, leaking the reference. Furthermore, dev->liveupdate.incoming is left
-non-NULL, which means pci_liveupdate_cleanup_device() might later try to
-finish it again and hit this same leak. Should this error path drop the
-reference and clear the incoming pointer?
-
-> +	}
-> +
-> +	/*
-> +	 * Drop the refcount so this device does not get treated as an incoming
-> +	 * device again, e.g. in case pci_liveupdate_setup_device() gets called
-> +	 * again because the device is hot-plugged.
-> +	 */
-> +	dev->liveupdate.incoming->refcount =3D 0;
-> +
-> +	pci_info(dev, "Device is finished participating in Live Update\n");
-> +	dev->liveupdate.incoming =3D NULL;
-> +	ser->nr_devices--;
-> +	pci_liveupdate_flb_put_incoming();
-> +}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260522202410.3104=
-264-1-dmatlack@google.com?part=3D3
+OTOH, pci_release_dev() does not seem atomic-safe. On s390, it can
+take the zpci_add_remove_lock mutex via pcibios_release_device(). And
+on all architectures it can call kernfs_remove() via pci_bus_put(),
+which takes multiple semaphores.
