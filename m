@@ -1,94 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17E58195811
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 01:27:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57F781E5207
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 01:28:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779413249; cv=none; b=Zb7psNAqCU/0VBhHDyamcAVaVyioegTznZTf1zZZAA+w549+rl3+ysK/xHB/3avALK3AhxYoeBKi31Kw2Iq8WlrSgfb+plrsBTEQY5Y8Ql/31AG3DU1l6/AECfbyoH0WZA8a4pdkZW7HgRfSFYVxvvg2sGzYsp99K9JDWZeu7fQ=
+	t=1779413322; cv=none; b=ikijj8B5Vd/GC4V7XITOYSqnhGGiaIcp4s7O01d8ac7J1YYTZje7w9vS7sV3/zSR90KuzN0ShUEnp6LXdRNX4Mm9Fl8cis/WlUogaoo86HSMLVSCsV7TUjj4WXOFE5LGK/xqGddvJAl3CjCKhOM/fgYZ2DRfl2ZkXK+dmC/kdGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779413249; c=relaxed/simple;
-	bh=jpaxq2ivz3z/RB55AKGAsV5juqEyW7N/MbXg2L4dUzU=;
+	s=arc-20240116; t=1779413322; c=relaxed/simple;
+	bh=GKJYaLaf6vucaek7oagj4wWjCfg3x45hZBgFjhIkS+M=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=u/h0PFdFL49gcy1I58zsk5Dh1qIxlZGRVu7+0h5x3PDHc3sxfdwhBej+cDmk9xalg8ZlSDxIr17PSFYA1/z7AmNVgFNOaXeqODCbj5LysWBc3h0+0JrBg61K0f5yFN+Zc6r0yjs6MlLCpCz86FsbgNUjzsV5j6uEWr42n+WNv6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKVsRev3; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=jXv0ykhTD3EP3gXc/g/t/JTnNBCj+F262di1x4/MW9JgeGl3VmeWEO+XgpWCID/updxtXk/QuxSXF41YXykKN1GYbAUNwI2sYH7nUnsEpUSdhvxRFo+jYOlsxUVdczCzD78T598YygTtRcBgacpNiz5CU4D4+I43dmd9YiwSiYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aBVl2BOU; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKVsRev3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1785D1F000E9;
-	Fri, 22 May 2026 01:27:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aBVl2BOU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD1C11F000E9;
+	Fri, 22 May 2026 01:28:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779413247;
-	bh=aA8+r7TCIxE35nkOfwCTjWkgI/z4/lWrRJrjVNIDvig=;
+	s=k20260515; t=1779413321;
+	bh=r35UiTHFK7NzaGdSerxnpCCZ5I7KDDVM8rtDPyTL9ag=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cKVsRev3s7roqMCg7gCS28kGusmQRhSFjKBUYkKd5OSSd2NxzzjqNLPmJg4mBUN2u
-	 w/EDSZYM3lD2PzovI6qmyLNf0bI687SLx2yORYAD9ZPEdPx1Y4klplJsBD96eGAdP+
-	 O5bdPHvZt/rHynTtiD3ad4vM+c9wNJYTK2BUPNc6Un1o4TSK58Pm40E+uA98N0ehOy
-	 uM9azbfAeFfzAEAZBRn1Wgd/rVnJUE656pXo6RaMJ8jqBMloHRDOXEw46tKgWgzv1g
-	 CN5oKNJ+SXv2ET1cITQwvC+ixGHWrJ9OmZarV/DJOjb0fGPft9JWJSKJggVSuU/8AD
-	 xLDMZX+CiatuQ==
+	b=aBVl2BOU+XFKaBmfQ/M98j8Jkqz9TlS9lfcn1Mwfv+fDK/IFxwyhJbm3nsckB6C8t
+	 JUh3nwgt7PKgPonTdt2rNi9oajLvG2eKzLoIZoXlYVRkhq6CPSO89FRHALnY+z5uXB
+	 OSUuCOuYTvWAbCBR3EYKT4vI7UqeI5Tpo0aKsx1ByGQVyxVMShbsqJm5EDGrKEgIT2
+	 bpaumO/D8bzM66NF14yW7HyPEW4d+R6wUhUIw814F0QcwCfh8yAmU+GrYT5PzuW+Km
+	 TRdHarDJjR+QIscZirSpdTE1B1IwWWpJpwR/LAy+e69C2cc8evZ21CA4HutCx6r/Nm
+	 LeRxUWwBMjauw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 19/27] samples: rust: rust_driver_pci: use HRT
- lifetime for Bar
+Subject: Re: [PATCH REF v4 24/27] gpu: nova-core: use lifetime for Bar
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260521233501.1191842-20-dakr@kernel.org>
-References: <20260521233501.1191842-20-dakr@kernel.org>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260521233501.1191842-25-dakr@kernel.org>
+References: <20260521233501.1191842-25-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 22 May 2026 01:27:26 +0000
-Message-Id: <20260522012727.1785D1F000E9@smtp.kernel.org>
+Date: Fri, 22 May 2026 01:28:40 +0000
+Message-Id: <20260522012840.CD1C11F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] The `unbind` method signature in `SampleDriver` is incompatible wi=
-th the `pci::Driver` trait, resulting in an E0053 compiler error.
+- [High] The raw pointer cast artificially extends a short-lived local refe=
+rence to the `'bound` lifetime, bypassing the borrow checker and causing un=
+defined behavior.
+- [High] Creating a self-reference to a standard, non-Opaque field violates=
+ Rust's aliasing rules and causes Undefined Behavior.
 --
 
-commit 831cba69e4ec48baa461ce6291b9b8ed80543fae
+commit 324bc88b7f0822485a9eb9d34c17aabba9845b74
 Author: Danilo Krummrich <dakr@kernel.org>
+Subject: gpu: nova-core: use lifetime for Bar
 
-samples: rust: rust_driver_pci: use HRT lifetime for Bar
+This commit removes the Arc<Devres<Bar0>> indirection and replaces it with
+a lifetime-parameterized pci::Bar<'bound> in NovaCore. It passes a borrowed
+reference to Gpu<'bound> by attempting to use a self-reference during pin
+initialization.
 
-This commit converts the sample driver to SampleDriver<'bound>, taking
-advantage of the lifetime-parameterized Driver trait. It holds &'bound
-pci::Device and pci::Bar<'bound> directly, removing PinnedDrop and runtime
-revocation checks.
+> diff --git a/drivers/gpu/nova-core/driver.rs b/drivers/gpu/nova-core/driv=
+er.rs
+> index d3f2245ba2e0c..d4cf4379ee87c 100644
+> --- a/drivers/gpu/nova-core/driver.rs
+> +++ b/drivers/gpu/nova-core/driver.rs
 
-> diff --git a/samples/rust/rust_driver_pci.rs b/samples/rust/rust_driver_p=
-ci.rs
-> index 0353481b0690d..0ae2373d74fde 100644
-> --- a/samples/rust/rust_driver_pci.rs
-> +++ b/samples/rust/rust_driver_pci.rs
 [ ... ]
-> @@ -140,56 +138,49 @@ fn config_space(pdev: &pci::Device<Bound>) {
-[ ... ]
-> -    fn unbind(pdev: &pci::Device<Core<'_>>, this: Pin<&Self>) {
-> -        if let Ok(bar) =3D this.bar.access(pdev.as_ref()) {
-> -            // Reset pci-testdev by writing a new test index.
-> -            bar.write_reg(regs::TEST::zeroed().with_index(this.index));
-> -        }
-> +    fn unbind<'bound>(_pdev: &'bound pci::Device<Core<'_>>, this: Pin<&'=
-bound Self::Data<'bound>>) {
+
+> @@ -95,14 +93,14 @@ fn probe<'bound>(
+>              // other threads of execution.
+>              unsafe { pdev.dma_set_mask_and_coherent(DmaMask::new::<GPU_D=
+MA_BITS>())? };
+> =20
+> -            let bar =3D Arc::new(
+> -                pdev.iomap_region_sized::<BAR0_SIZE>(0, c"nova-core/bar0=
+")?
+> -                    .into_devres()?,
+> -                GFP_KERNEL,
+> -            )?;
+> -
+>              Ok(try_pin_init!(NovaCore {
+> -                gpu <- Gpu::new(pdev, bar.clone(), bar.access(pdev.as_re=
+f())?),
+> +                bar: pdev.iomap_region_sized::<BAR0_SIZE>(0, c"nova-core=
+/bar0")?,
+> +                // TODO: Use &bar self-referential pin-init syntax once =
+available.
+> +                //
+> +                // SAFETY: bar is initialized before this expression is =
+evaluated
+> +                // (try_pin_init!() initializes fields in declaration or=
+der), lives at a pinned
+> +                // stable address, and is dropped after gpu (struct fiel=
+d drop order).
+> +                gpu <- Gpu::new(pdev, unsafe { &*core::ptr::from_ref(bar=
+) }),
 
 [Severity: High]
-Does this method signature match the pci::Driver trait? The trait
-implementation here uses this: Pin<&'bound Self::Data<'bound>> which imposes
-a stricter lifetime constraint than the trait allows (an elided lifetime).
+Does coercing this local reference through a raw pointer artificially extend
+its lifetime to 'bound?
 
-Will this cause an E0053 compiler error? Could we remove the explicit 'bound
-lifetime on the reference inside Pin?
+Since Gpu<'bound> requires its bar reference to live for the 'bound lifetime
+(which is tied to the PCI device), and the NovaCore allocation has a strict=
+ly
+shorter lifespan than the device itself, could this forged lifetime bypass
+the borrow checker and cause undefined behavior?
 
-> +        this.bar
-> +            .write_reg(regs::TEST::zeroed().with_index(this.index));
->      }
->  }
+[Severity: High]
+Could creating a self-reference to a standard, non-Opaque field here violate
+Rust's aliasing rules?
+
+Because bar is not wrapped in kernel::types::Opaque, any subsequent mutable
+borrow of the NovaCore struct (such as when the allocation is finalized into
+a Pin<Box<NovaCore>>) asserts exclusive mutable access over all its fields.
+
+Wouldn't this recursively invalidate the shared reference to Bar0 stored
+inside gpu, leading to undefined behavior upon later access?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521233501.1191=
-842-1-dakr@kernel.org?part=3D19
+842-1-dakr@kernel.org?part=3D24
