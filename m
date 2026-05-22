@@ -1,67 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7F9C1F419A;
-	Fri, 22 May 2026 06:46:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BF0E23AB9D
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 06:49:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779432406; cv=none; b=bThL+DPWLUaICsnz8/WAp+/GnOiMdk6g+fUpQHCkvWg+tkTjYNFRPkvYlrMhJnP1ECcHkDxvGuOPrB4nV4pwwC0JP7PfhnX9I3RDjNOyJf59TgoaeYYAQUS0DPlU1r+5avjT/7tFh74mgEh+WPEb6As0j+YakPCfwlxi210KxNc=
+	t=1779432548; cv=none; b=T54ayunyif3BV0eDe8HZgDtQLWmrX9PMpZNMcWEaPijMFAY7al63x2A0+7jhta9Zrxsm3CTsHcbbIqRAbQrl+rTkQSel/EfnPwTIN50MzIdyxI/yd/mgSrRgb+o9bgzdzhfzASRWmrfLSPS29/OSEiCYM49uksIxQgkBtmGJfyI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779432406; c=relaxed/simple;
-	bh=ibuSP5C1ZI92JDAiLeOcK5FOkcS9E9F4c+URiJApFCc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M103PzXAnRvL6G1+ZT6wvtcm5aLslfrsy+/Dk/IUGfE/3iaWvATfp3gRt8QV5pYQr1OdntEeoqHZXdprVaceGQcExKr8rkm23CEU3MvlNB8GnXS2La3xMt2FHfJvhx2FkJonORVOacx+AkIvyb/E0F/ZfVfSHEBwIsv8/cZMT78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cLHTKI9c; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779432548; c=relaxed/simple;
+	bh=BCaBxs0ytwR14idu/LE2WlR87+13hVDE/LzvxugRAhc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=LPlqlUoPo4VusEYrw75TBQvYHYugm/FmKj7OQvD7SE3B1fKKtv6kYnF0KkgZHwID+ODnLg4YmG5LgLBH4QweGqmpojzoPVZO6hVg1EALuo1BAOoCBW4ekefgq4bLi4iMXPlbOEMUkKEXANVwblwub+baPJtK9qEQDzC9FA7vOHk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=YqaLTmFH; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cLHTKI9c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD18B1F000E9;
-	Fri, 22 May 2026 06:46:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779432405;
-	bh=Lmc4GHivIsEB0A3/jAF6LGKkujzqqym8ZZvS1oCGxs8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cLHTKI9c3wsL8WarmEDtNBHT352Xv0juZjhw4Dpr3nDirPdj94nuILqg5/tHWMsqF
-	 2BxRXG36V01kZhI4WmAiUAzWRa7i+ERLO/y5pqrtNMb/1xI2z5DSqAIfyFawTx9iUo
-	 vfc6+Blg0oejnEt++1tSXf4GByGeQPjDBeeG31XhF4V0BNa8EAImeYVsYzdEuQzIDW
-	 ahaubWQr+RcXmD+9heeGOYDSdC1l3t44rciCgE7ZgBzMxnjkUxbXWsoRpbzMAN3U6K
-	 p0lNPp+kWcXcq0iCWCeaaZdkziO9xc/xHgtqRY4BHlMIieO1U8j2HXP+vifo+YoE7D
-	 DB06XhgqhqICQ==
-Date: Fri, 22 May 2026 08:46:43 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Vinod Koul <vkoul@kernel.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/4] dt-bindings: phy: sc8280xp-qmp-pcie: Document Eliza
- PCIe phy
-Message-ID: <20260522-crimson-salamander-of-maturity-ef05e5@quoll>
-References: <20260521-eliza-v1-0-97cdbe88389d@oss.qualcomm.com>
- <20260521-eliza-v1-1-97cdbe88389d@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YqaLTmFH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779432546;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=08GD5FnVc7SUxNkQ3OeIOdIy8gx67eouJZS3Q8GyD8c=;
+	b=YqaLTmFHLHJ89QN7KfDVklyUQU2XvE8FAIbjn9Lqi6PTKBVx/NMLPGbcm7csMxtKowrrJ7
+	/8TUdLfwbiTUfALOIEZiiIGe+fm9T3s8zMzuw6y4Fu/OpvAPRe4y+LMr6ki9cMrfQWSYlm
+	zBQhB8ne9Hh5rs7nOQgouJ29zP9f4MY=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-97-AanC6XFBOoWUpB6lctE_Xg-1; Fri,
+ 22 May 2026 02:49:03 -0400
+X-MC-Unique: AanC6XFBOoWUpB6lctE_Xg-1
+X-Mimecast-MFC-AGG-ID: AanC6XFBOoWUpB6lctE_Xg_1779432541
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9F2C61956094;
+	Fri, 22 May 2026 06:49:00 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.32.37])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 055C21800352;
+	Fri, 22 May 2026 06:48:55 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: helgaas@kernel.org
+Cc: Ryder.Lee@mediatek.com,
+	alex@shazbot.org,
+	bhelgaas@google.com,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	lorenzo@kernel.org,
+	nbd@nbd.name,
+	sean.wang@mediatek.com,
+	shayne.chen@mediatek.com
+Subject: Re: [PATCH v3] PCI: Disable broken FLR on MediaTek MT7925
+Date: Fri, 22 May 2026 08:48:53 +0200
+Message-ID: <20260522064854.201976-1-jtornosm@redhat.com>
+In-Reply-To: <20260521161932.GA167656@bhelgaas>
+References: <20260521161932.GA167656@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260521-eliza-v1-1-97cdbe88389d@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Thu, May 21, 2026 at 07:35:29PM +0530, Krishna Chaitanya Chundru wrote:
-> Add compatibles for the Eliza PCIe QMP PHY's, which supports Gen3x1 and
-> Gen3x2 configurations.
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  .../devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml         | 6 ++++++
->  1 file changed, 6 insertions(+)
+Hello Bjorn,
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Thank you for the feedback.
 
-Best regards,
-Krzysztof
+> How do we know the device is an "undefined state"?  Does it just not
+> respond to config accesses?  Is there something in dmesg that shows
+> the problem?
+> I suppose it's similar to 81f64e925c29 ("PCI: Avoid FLR for Mediatek
+> MT7922 WiFi")?
+> I guess I'm just looking for some text more specific than "undefined
+> state".
+You're right, "undefined state" is too vague.
+I can prepare v4 with what I've seen is happening . The
+symptoms are similar to MT7922 but not identical:
+  **First VM start (works fine):**
+    mt7925e 0000:08:00.0: ASIC revision: 79250000
+    mt7925e 0000:08:00.0: WM Firmware Version: ____000000, Build Time: 20260106153120
+  **After force reset/VM crash (FLR attempted, firmware communication broken):**
+    mt7925e 0000:08:00.0: ASIC revision: 79250000
+    mt7925e 0000:08:00.0: Message 00000010 (seq 1) timeout
+    mt7925e 0000:08:00.0: Failed to get patch semaphore
+    (Repeats 10 times with increasing seq numbers)
+    mt7925e 0000:08:00.0: hardware init failed
+Unlike MT7922 which shows config read failures, MT7925e config reads work
+correctly after FLR (lspci shows all capabilities). However, firmware
+communication is broken - the driver cannot acquire the patch semaphore
+needed for firmware initialization. The device remains broken until
+physical power cycle.
+Secondary Bus Reset (fallback after quirk_no_flr) successfully resets the
+device and allows reinitialization.
+
+> Can we get any of the MediaTek folks to comment on this:
+> https://sashiko.dev/#/patchset/20260508145153.717641-1-jtornosm@redhat.com?part=1
+>
+> Sashiko suggested that Device ID 0x0717 might have the same FLR
+> problem.
+I don't have that device to confirm the same behavior. I'll wait for
+MediaTek maintainers (now CC'd) to confirm whether 0x0717 exhibits the
+same FLR issue. If confirmed, I can add it in a follow-up patch or the
+next version.
+
+Thanks
+
+Best regards
+José Ignacio
 
