@@ -1,32 +1,86 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AED53E9C38;
-	Fri, 22 May 2026 11:43:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D1737FF45
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 12:24:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779450208; cv=none; b=geQc1yuiRI+hRs7OcvNNRXHvzr9vhYDfGnl+Npqx5eoToMHKDZk+TUsxFFcdESVsVCRmWw19UQfwjAP9KkKHFqbX5ImsByp4k0pZXlqMsrcGWihYdEUOWtZdbulf+gBiGwXENQMmP1rZLtqoXjDRgDG4WEI1isFAVzAi1a2x1e8=
+	t=1779452693; cv=none; b=U9ZT94P7+adKnZjotxnp+VPX1Rda+ViNFdPAQFuo/0z2pfE5UOC/MXMIY1tVXuMyLdyQ78CX7J0OldiLqZyEOPEZMiemHFAjXWsDHBklnmZLN4g1nDfObrUHEwQP1MOp8LuIJdd7tuQS9WIi9DvbGrXwZG519mjRbyfQtpKqEpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779450208; c=relaxed/simple;
-	bh=8WpTRcQO/IgPOpBDqRtRGj7UBjUYFhF2L3Whv938fjM=;
+	s=arc-20240116; t=1779452693; c=relaxed/simple;
+	bh=3yg9pAXmNWpk1/sWJAZJgW4Bq/i5kc2HEUpAaOv3rfI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kpryNZsYPF3RZfCESou4xkN9T9T2CG0tUOSCJgPJ0BYfGiGlM2t/x705AUMrvdJ9GjwGQwz6SqHgJzT+5bPDYR6QQD0pSL0VS/KfZ5iwsIg0xyYEwLWpOJ/51gE3th08oET9/cCOejfXnKD5G3PdsDMXXkgDM5K1wbX+da+vdJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jAfcrYRP; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	 In-Reply-To:Content-Type; b=oAQVNttpVqaHhixhzPQcD3IBb20K6UbXuEI+LztNCLRgtOd0N1dQbjRHO/9iHWHgNHPaF804cUY+yD8zrxY3fKgblzilvRvWD1iBcTkzMlDZhnxZWj2puFJfrJzI7rArc9QcQJwoy0NwdjC4dd9y9lDedUUo10oimbNfKi4ZlTs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FwrcXFDP; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=GSxn7Ypc; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jAfcrYRP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=aZUEdcyM5Q3+qMbv3hetw4h0VjYXtXLqYRvej9znfhA=;
-	b=jAfcrYRPcLLhccYSxJIcBY9q8tkK9e2nsaEwd35F24gEFh6/eUgeM2kbE66z3Z
-	aWMOg+q9cXZAYTVYzt9pk9NZOJwzyWWOoBltIWwSej82p5Sz6YGld3kDPozKS64h
-	9ZhVjPiuwUf8DbqTmpi5qy6OihnMwjG+VyiD0PtitAx9o=
-Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wC3jMtFQRBqb5PoCg--.19080S2;
-	Fri, 22 May 2026 19:43:01 +0800 (CST)
-Message-ID: <5057dfda-0604-45ce-8fb1-fbf99c51bf75@163.com>
-Date: Fri, 22 May 2026 19:43:01 +0800
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FwrcXFDP";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="GSxn7Ypc"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64MC10141298254
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 12:24:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	td83Aavjt+y4+Fubt3kuLIXT1BRRXdtEK4u9R2BjUAY=; b=FwrcXFDPASzAt7HU
+	KCwfo56sW0SJeo6kDa4NaSWt+N2vhpi7KGivMT/i6Qubt+dC3VPDDgQ1sBMVjbn0
+	8B8VO/pK4EwDX0VzKzWs24phvcl0HSe9rc1ys8Ebnvbo6/Xb7qQZPFAcBismYbK0
+	FHIkuGI0koaFfLDF5B8/wrSevSc6a25kKtH/OZfqm2lkDLM2JHLIAHk567A+F2B8
+	nbWm861L23NkZ6BLIUkV9aKCCRZ+8KazYbwPW9Z4gP/khkyfs5xkqNnnOQxPWdzh
+	J/qlySKcmdwWrzx/pfujAXQ795kPGmnc+oaIetljCIWuPWQZmBD4+yDDgctpF80B
+	znlz+A==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eaah0awbt-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 12:24:51 +0000 (GMT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-50e5d7f4b63so17355531cf.0
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 05:24:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1779452691; x=1780057491; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=td83Aavjt+y4+Fubt3kuLIXT1BRRXdtEK4u9R2BjUAY=;
+        b=GSxn7Ypc+aR2b3Il15FBUWyR/s8By13x2PK3IPS2cMSH+Pkolx1GpbeLhC64pXteF/
+         1AUNLYK4g5xYdq8Rtp7olzESLIKw3kZLOHYt5/1dh4wvHJRUe24lDWLxtucWXbz+VM97
+         C3Go2ZksujdNQg5v8YNwAA+f20Wvphhd8uAUPmyls7J4zrPa/w+oL5J8a8YA6y/KX9Jb
+         j0/w9mX//C9inyfrLh/A01wlEiJsEouepn5Dwu/bjZt/wzygnIi2ZRjsIaUHO6CU0q3c
+         DwxcP5Og3b5X/atrgiUVcsoef4v4GZpmkBc0fJ/bWFh2+SuFbrzL90XjglSky1DufI0T
+         X1rA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779452691; x=1780057491;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=td83Aavjt+y4+Fubt3kuLIXT1BRRXdtEK4u9R2BjUAY=;
+        b=pinQaukYqkFQ99YFl+N5beK2GcjYsj6CXBYCV1QW1M+zJzBC5g8J+YK6cLIYzN0mzr
+         8WCgHG2u3nwhUnH96PuOMhFPC54qB6F9XVQtzfZAWGjU890B8mWkLOK/m64U1mBoj8Bb
+         +5NY5G/VrvJvAojbFASsb0nupTH5GD7ATarX4Xomiua1pnBRLgzpxeF/29gez9BvGhpP
+         knyQuWSoRzb0ZfqglZBecROnK1hZbhECwnZhk+RLhehNFNQ6dj/Gl/LPP+uPuZGk+AWv
+         /zhF8gJ5TbIiMUfT5XppjyNvB1oeM63ZFPjrx2kJMNaUs6T7RlJLQVtftclX5EaX92Eo
+         eelA==
+X-Forwarded-Encrypted: i=1; AFNElJ9dc0aeFusaJW0KOREItekQyTt6Ztf6MmjDpHKV0hsu0Id4KvbClU6NAGWWXFPM2DtyR8m/PgEdMzo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyH7hp3vbmmF6rDB2rGfr5Bxjz3r1MRgGzwWUsPKA/RAJQzzM6Z
+	32Qi8Tx6NlGdijaFCOF1LHcVF8JbHHrqkgPKp4urOl6D17iqEBaOCXlrp6LPjttkm9MUSn+wlQf
+	VZn3+Zzh6m+P3ccPnd4e3cCMKPeOmn/s86qBI7VyXh+DrOSUNiif7hNNl1OkKK/w=
+X-Gm-Gg: Acq92OFuZoHjAwb0jM74aT5AmK5BuvRtGkMCbBsrph7VtHU8u3Zcdtkd8dOgbuzvcS9
+	Z8H5Ucdn8diijpM1sey7XYNyXeVo1UGRMSUEjLrngyhsnCBWOOQHBBRsDJnowHL39f+9nPt+M9z
+	JCOAAyA+HTfCWj8xxz1qyf+cfJlkE81/zTt83tof7t71RtFmQcSxIh9Ii+JHB7OnTnL4wA/RS64
+	7MLnVmmkwLTRugmjPSRdcsZ6PJK5M1yvJGlL29Fl++akwEJK/oaIwgJra8nvVUK4LNTdveUXjLR
+	GUIbqJLNIFTCbea3+jQsRKR+DecCWGQF8JahJLe4g9OI5+rSsYrGwBCdIPcki7n/ZqAQeDlrKce
+	N1mrknRZnHwMxId8siKbrEDE4OJ+45NWiF1Ydh9jqNasp3g==
+X-Received: by 2002:a05:622a:8588:b0:50d:a92e:fead with SMTP id d75a77b69052e-516d436cb6cmr26199701cf.3.1779452690601;
+        Fri, 22 May 2026 05:24:50 -0700 (PDT)
+X-Received: by 2002:a05:622a:8588:b0:50d:a92e:fead with SMTP id d75a77b69052e-516d436cb6cmr26199521cf.3.1779452690128;
+        Fri, 22 May 2026 05:24:50 -0700 (PDT)
+Received: from [192.168.119.254] ([178.235.128.140])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-688b9f603desm612961a12.12.2026.05.22.05.24.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 May 2026 05:24:49 -0700 (PDT)
+Message-ID: <dc7cb371-e94e-4f42-87d6-70f0f94d0d49@oss.qualcomm.com>
+Date: Fri, 22 May 2026 14:24:45 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -34,331 +88,143 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/VPD: Add Realtek 8126 to VPD blacklist
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260522114135.2104890-1-18255117159@163.com>
+Subject: Re: [PATCH 2/2] arm64: dts: qcom: ipq5210: Enable PCIe support
+To: Varadarajan Narayanan <varadarajan.narayanan@oss.qualcomm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260514-pci-ipq5210-v1-0-a09436200b35@oss.qualcomm.com>
+ <20260514-pci-ipq5210-v1-2-a09436200b35@oss.qualcomm.com>
 Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20260522114135.2104890-1-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20260514-pci-ipq5210-v1-2-a09436200b35@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wC3jMtFQRBqb5PoCg--.19080S2
-X-Coremail-Antispam: 1Uf129KBjvAXoW3ZF4UZFyUGw1kAw1Utr48Crg_yoW8JF45Xo
-	W7twn7tan3Gr1UC3yIkw4xAan7AryxKan3Aw45Krs8tw17Cr4Yqw4qva1Sg39rAFW8X3y7
-	X34Igrn5G3yqqrn7n29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjTiU3yNUUUUU
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6wUAo2oQQUVjLQAA39
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIyMDEyMyBTYWx0ZWRfXwfKSNyV5Kie5
+ 9vQz6t1m4DQWgcVQfxbycebkAqCpwh00povWk5z9OFJjjyxOcEYT4YlDfKIo3tgH9D4cAG/Mwlr
+ j0ct4lE3FVq5+JCImjDz5ua0MZ+8WAYsruDcNin4AyDBkm5cvaTyVuLtNygiYmowRTf878hE7YA
+ ZKiDiQN1O6v/rB2WpPHOiD4fL4ZuTt6Le44kRLOKWKw1Ku3MixxTgv4BCirWU0I1hQLDVPm4CFo
+ k524o6njRU+VeNMhhzrp/hdW0iCpA5p/wSD0Pdy4Wb2cKJ+nlYJ3KLBbVbG8HxZJsoo4wGyUy0m
+ Kq3cdfNFrlIaFQzVChy2NqU6rwD188MwWnJBzJvNEUOJn7oqx+eFbVQyR/QjfN92Xdj0sI9wh9q
+ VCiZ0fJCHwXKU5FIlBNkXZPd66zXFfCsOf9Z63qBqOhFPNGgd4tE2ufHJkMGcypMF2Bq9bOHDg9
+ e0FcIPUeL+nOnz74cAA==
+X-Proofpoint-GUID: sCe34GoTifQBkRebL30Fa1kZkZ-k1_TQ
+X-Authority-Analysis: v=2.4 cv=LNdWhpW9 c=1 sm=1 tr=0 ts=6a104b13 cx=c_pps
+ a=JbAStetqSzwMeJznSMzCyw==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
+ a=EUspDBNiAAAA:8 a=w2YRJOle7L1X8GQccsAA:9 a=QEXdDO2ut3YA:10
+ a=uxP6HrT_eTzRwkO_Te1X:22
+X-Proofpoint-ORIG-GUID: sCe34GoTifQBkRebL30Fa1kZkZ-k1_TQ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-22_03,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 phishscore=0 spamscore=0
+ suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
+ definitions=main-2605220123
 
-Hi Bjorn,
-
-
-Add log:
-
-hans@orangepi6plus:~$ lspci
-0000:60:00.0 PCI bridge: Device 1f6c:0001
-0000:61:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 
-8126 (rev 01)
-0001:30:00.0 PCI bridge: Device 1f6c:0001
-0001:31:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 
-8126 (rev 01)
-0002:c0:00.0 PCI bridge: Device 1f6c:0001
-0002:c1:00.0 Non-Volatile memory controller: Kingston Technology 
-Company, Inc. NV2 NVMe SSD TC2200 (DRAM-less)
-hans@orangepi6plus:~$
-hans@orangepi6plus:~$ sudo dmesg -C
-[sudo] password for hans:
-hans@orangepi6plus:~$ sudo lspci -s 31:00.0 -vvv
-0001:31:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 
-8126 (rev 01)
-         Subsystem: Realtek Semiconductor Co., Ltd. Device 0123
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-         Latency: 0, Cache Line Size: 64 bytes
-         Interrupt: pin A routed to IRQ 25
-         Region 0: I/O ports at 100000 [size=256]
-         Region 2: Memory at 38200000 (64-bit, non-prefetchable) [size=64K]
-         Region 4: Memory at 38210000 (64-bit, non-prefetchable) [size=16K]
-         Capabilities: [40] Power Management version 3
-                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA 
-PME(D0+,D1+,D2+,D3hot+,D3cold+)
-                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-         Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-                 Address: 0000000000000000  Data: 0000
-                 Masking: 00000000  Pending: 00000000
-         Capabilities: [70] Express (v2) Endpoint, MSI 01
-                 DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s 
-<512ns, L1 <64us
-                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- 
-SlotPowerLimit 0W
-                 DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                         MaxPayload 512 bytes, MaxReadReq 4096 bytes
-                 DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- 
-AuxPwr+ TransPend-
-                 LnkCap: Port #0, Speed 8GT/s, Width x1, ASPM L0s L1, 
-Exit Latency L0s unlimited, L1 <64us
-                         ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
-                 LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk-
-                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                 LnkSta: Speed 8GT/s, Width x1
-                         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ 
-NROPrPrP- LTR+
-                          10BitTagComp- 10BitTagReq- OBFF Via 
-message/WAKE#, ExtFmt- EETLPPrefix-
-                          EmergencyPowerReduction Not Supported, 
-EmergencyPowerReductionInit-
-                          FRS- TPHComp+ ExtTPHComp-
-                          AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- 
-LTR+ 10BitTagReq- OBFF Disabled,
-                          AtomicOpsCtl: ReqEn-
-                 LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- 
-Retimer- 2Retimers- DRS-
-                 LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- 
-SpeedDis-
-                          Transmit Margin: Normal Operating Range, 
-EnterModifiedCompliance- ComplianceSOS-
-                          Compliance Preset/De-emphasis: -6dB 
-de-emphasis, 0dB preshoot
-                 LnkSta2: Current De-emphasis Level: -6dB, 
-EqualizationComplete+ EqualizationPhase1+
-                          EqualizationPhase2+ EqualizationPhase3+ 
-LinkEqualizationRequest-
-                          Retimer- 2Retimers- CrosslinkRes: unsupported
-         Capabilities: [b0] MSI-X: Enable+ Count=32 Masked-
-                 Vector table: BAR=4 offset=00000000
-                 PBA: BAR=4 offset=00000800
-         Capabilities: [d0] Vital Product Data
-pcilib: sysfs_read_vpd: read failed: No such device
-                 Not readable
-         Capabilities: [100 v2] Advanced Error Reporting
-                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- 
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-AdvNonFatalErr-
-                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-AdvNonFatalErr+
-                 AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- 
-ECRCChkCap+ ECRCChkEn-
-                         MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                 HeaderLog: 00000000 00000000 00000000 00000000
-         Capabilities: [148 v1] Virtual Channel
-                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                 Arb:    Fixed- WRR32- WRR64- WRR128-
-                 Ctrl:   ArbSelect=Fixed
-                 Status: InProgress-
-                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- 
-WRR256-
-                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                         Status: NegoPending- InProgress-
-         Capabilities: [170 v1] Device Serial Number 01-00-00-00-68-4c-e0-00
-         Capabilities: [180 v1] Secondary PCI Express
-                 LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                 LaneErrStat: 0
-         Capabilities: [190 v1] Transaction Processing Hints
-                 No steering table available
-         Capabilities: [21c v1] Latency Tolerance Reporting
-                 Max snoop latency: 0ns
-                 Max no snoop latency: 0ns
-         Capabilities: [224 v1] L1 PM Substates
-                 L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ 
-ASPM_L1.1+ L1_PM_Substates+
-                           PortCommonModeRestoreTime=150us 
-PortTPowerOnTime=150us
-                 L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2- ASPM_L1.1-
-                            T_CommonMode=0us LTR1.2_Threshold=0ns
-                 L1SubCtl2: T_PwrOn=10us
-         Capabilities: [234 v1] Vendor Specific Information: ID=0002 
-Rev=4 Len=100 <?>
-         Kernel driver in use: r8169
-
-hans@orangepi6plus:~$
-hans@orangepi6plus:~$ sudo lspci -s 61:00.0 -vvv 
-
-0000:61:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 
-8126 (rev 01)
-         Subsystem: Realtek Semiconductor Co., Ltd. Device 0123
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-         Latency: 0, Cache Line Size: 64 bytes
-         Interrupt: pin A routed to IRQ 21
-         Region 0: I/O ports at 1000 [size=256]
-         Region 2: Memory at 40200000 (64-bit, non-prefetchable) [size=64K]
-         Region 4: Memory at 40210000 (64-bit, non-prefetchable) [size=16K]
-         Capabilities: [40] Power Management version 3
-                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA 
-PME(D0+,D1+,D2+,D3hot+,D3cold+)
-                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-         Capabilities: [50] MSI: Enable- Count=1/1 Maskable+ 64bit+
-                 Address: 0000000000000000  Data: 0000
-                 Masking: 00000000  Pending: 00000000
-         Capabilities: [70] Express (v2) Endpoint, MSI 01
-                 DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s 
-<512ns, L1 <64us
-                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- 
-SlotPowerLimit 0W
-                 DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
-                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                         MaxPayload 512 bytes, MaxReadReq 4096 bytes
-                 DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- 
-AuxPwr+ TransPend-
-                 LnkCap: Port #0, Speed 8GT/s, Width x1, ASPM L0s L1, 
-Exit Latency L0s unlimited, L1 <64us
-                         ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
-                 LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk-
-                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                 LnkSta: Speed 8GT/s, Width x1
-                         TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ 
-NROPrPrP- LTR+
-                          10BitTagComp- 10BitTagReq- OBFF Via 
-message/WAKE#, ExtFmt- EETLPPrefix-
-                          EmergencyPowerReduction Not Supported, 
-EmergencyPowerReductionInit-
-                          FRS- TPHComp+ ExtTPHComp-
-                          AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- 
-LTR+ 10BitTagReq- OBFF Disabled,
-                          AtomicOpsCtl: ReqEn-
-                 LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- 
-Retimer- 2Retimers- DRS-
-                 LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- 
-SpeedDis-
-                          Transmit Margin: Normal Operating Range, 
-EnterModifiedCompliance- ComplianceSOS-
-                          Compliance Preset/De-emphasis: -6dB 
-de-emphasis, 0dB preshoot
-                 LnkSta2: Current De-emphasis Level: -6dB, 
-EqualizationComplete+ EqualizationPhase1+
-                          EqualizationPhase2+ EqualizationPhase3+ 
-LinkEqualizationRequest-
-                          Retimer- 2Retimers- CrosslinkRes: unsupported
-         Capabilities: [b0] MSI-X: Enable+ Count=32 Masked-
-                 Vector table: BAR=4 offset=00000000
-                 PBA: BAR=4 offset=00000800
-         Capabilities: [d0] Vital Product Data
-pcilib: sysfs_read_vpd: read failed: No such device
-                 Not readable
-         Capabilities: [100 v2] Advanced Error Reporting
-                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- 
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- 
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-AdvNonFatalErr-
-                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-AdvNonFatalErr+
-                 AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- 
-ECRCChkCap+ ECRCChkEn-
-                         MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-                 HeaderLog: 00000000 00000000 00000000 00000000
-         Capabilities: [148 v1] Virtual Channel
-                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                 Arb:    Fixed- WRR32- WRR64- WRR128-
-                 Ctrl:   ArbSelect=Fixed
-                 Status: InProgress-
-                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- 
-WRR256-
-                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                         Status: NegoPending- InProgress-
-         Capabilities: [170 v1] Device Serial Number 01-00-00-00-68-4c-e0-00
-         Capabilities: [180 v1] Secondary PCI Express
-                 LnkCtl3: LnkEquIntrruptEn- PerformEqu-
-                 LaneErrStat: 0
-         Capabilities: [190 v1] Transaction Processing Hints
-                 No steering table available
-         Capabilities: [21c v1] Latency Tolerance Reporting
-                 Max snoop latency: 0ns
-                 Max no snoop latency: 0ns
-         Capabilities: [224 v1] L1 PM Substates
-                 L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ 
-ASPM_L1.1+ L1_PM_Substates+
-                           PortCommonModeRestoreTime=150us 
-PortTPowerOnTime=150us
-                 L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2- ASPM_L1.1-
-                            T_CommonMode=0us LTR1.2_Threshold=0ns
-                 L1SubCtl2: T_PwrOn=10us
-         Capabilities: [234 v1] Vendor Specific Information: ID=0002 
-Rev=4 Len=100 <?>
-         Kernel driver in use: r8169
-
-hans@orangepi6plus:~$
-hans@orangepi6plus:~$ lspci -t
--[0000:60]---00.0-[61]----00.0
--[0001:30]---00.0-[31]----00.0
--[0002:c0]---00.0-[c1]----00.0
-hans@orangepi6plus:~$
-hans@orangepi6plus:~$ lspci
-0000:60:00.0 PCI bridge: Device 1f6c:0001
-0000:61:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 
-8126 (rev 01)
-0001:30:00.0 PCI bridge: Device 1f6c:0001
-0001:31:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 
-8126 (rev 01)
-0002:c0:00.0 PCI bridge: Device 1f6c:0001
-0002:c1:00.0 Non-Volatile memory controller: Kingston Technology 
-Company, Inc. NV2 NVMe SSD TC2200 (DRAM-less)
-hans@orangepi6plus:~$
-hans@orangepi6plus:~$ lspci -n
-0000:60:00.0 0604: 1f6c:0001
-0000:61:00.0 0200: 10ec:8126 (rev 01)
-0001:30:00.0 0604: 1f6c:0001
-0001:31:00.0 0200: 10ec:8126 (rev 01)
-0002:c0:00.0 0604: 1f6c:0001
-0002:c1:00.0 0108: 2646:501d
-hans@orangepi6plus:~$ sudo dmesg
-[   75.455657] r8169 0001:31:00.0: invalid VPD tag 0x00 (size 0) at 
-offset 0; assume missing optional EEPROM
-[   81.458811] r8169 0000:61:00.0: invalid VPD tag 0x00 (size 0) at 
-offset 0; assume missing optional EEPROM
-
-
-
-Best regards,
-Hans
-
-
-On 5/22/26 19:41, Hans Zhang wrote:
-> The Realtek 8126 Ethernet controller advertises VPD capability but
-> returns invalid data when VPD is read, leading to kernel messages
-> like:
+On 5/14/26 6:13 AM, Varadarajan Narayanan wrote:
+> Add DT entries to enable the PCIe controllers found in ipq5210.
 > 
->    r8169 ... invalid VPD tag 0x00 (size 0) at offset 0; assume
->    missing optional EEPROM
-> 
-> and pcilib reporting "sysfs_read_vpd: read failed: No such device".
-> 
-> Add the device to the VPD blacklist to suppress these errors.
-> 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
+> Signed-off-by: Varadarajan Narayanan <varadarajan.narayanan@oss.qualcomm.com>
 > ---
->   drivers/pci/vpd.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
-> index 153394a652d3..fbc34cd842ac 100644
-> --- a/drivers/pci/vpd.c
-> +++ b/drivers/pci/vpd.c
-> @@ -590,6 +590,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x002f, quirk_blacklist_vpd);
->   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005d, quirk_blacklist_vpd);
->   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
->   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_blacklist_vpd);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8126, quirk_blacklist_vpd);
->   /*
->    * The Amazon Annapurna Labs 0x0031 device id is reused for other non Root Port
->    * device types, so the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
 
+[...]
+
+>  &tlmm {
+> +	pcie0_default_state: pcie0-default-state {
+> +		pins = "gpio32";
+> +		function = "gpio";
+> +		drive-strength = <6>;
+> +		bias-pull-down;
+> +		output-low;
+> +	};
+> +
+> +	pcie1_default_state: pcie1-default-state {
+> +		pins = "gpio29";
+> +		function = "gpio";
+> +		drive-strength = <6>;
+> +		bias-pull-down;
+> +		output-low;
+
+You shouldn't need output-low in either of these definitions (+ sorting
+by GPIO idx would be extra neat)
+
+[...]
+
+>  	clocks {
+> +		pcie30_phy0_pipe_clk: pcie30_phy0_pipe_clk {
+> +			compatible = "fixed-clock";
+> +			clock-frequency = <250000000>;
+> +			#clock-cells = <0>;
+> +		};
+> +
+> +		pcie30_phy1_pipe_clk: pcie30_phy1_pipe_clk {
+> +			compatible = "fixed-clock";
+> +			clock-frequency = <250000000>;
+> +			#clock-cells = <0>;
+> +		};
+
+Why do these exist? Just pass the QMPPHY reference straight to GCC
+
+[...]
+
+> +		pcie0_phy: phy@84000 {
+> +			compatible = "qcom,ipq5210-qmp-gen3x1-pcie-phy",
+> +				     "qcom,ipq9574-qmp-gen3x1-pcie-phy";
+> +			reg = <0x0 0x00084000 0x0 0x1000>;
+> +
+> +			clocks = <&gcc GCC_PCIE0_AUX_CLK>,
+> +				 <&gcc GCC_PCIE0_AHB_CLK>,
+> +				 <&gcc GCC_PCIE0_PIPE_CLK>;
+> +			clock-names = "aux", "cfg_ahb", "pipe";
+> +
+> +			assigned-clocks = <&gcc GCC_PCIE0_AUX_CLK>;
+> +			assigned-clock-rates = <20000000>;
+
+Is this clock supposed to be fixed at that rate, regardless of the link
+speed? And is the default rate incorrect?
+
+> +
+> +			resets = <&gcc GCC_PCIE0_PHY_BCR>,
+> +				 <&gcc GCC_PCIE0PHY_PHY_BCR>;
+> +			reset-names = "phy", "common";
+> +
+> +			#clock-cells = <0>;
+> +			clock-output-names = "gcc_pcie0_pipe_clk_src";
+
+Having a gcc_ prefix here smells fishy.. 
+
+[...]
+
+> +			clocks = <&gcc GCC_PCIE1_AXI_M_CLK>,
+> +				 <&gcc GCC_PCIE1_AXI_S_CLK>,
+> +				 <&gcc GCC_PCIE1_AXI_S_BRIDGE_CLK>,
+> +				 <&gcc GCC_PCIE1_RCHNG_CLK>,
+> +				 <&gcc GCC_PCIE1_AHB_CLK>,
+> +				 <&gcc GCC_PCIE1_AUX_CLK>;
+> +
+> +			clock-names = "axi_m",
+
+stray \n above, also in resets
+
+[...]
+
+> +			pcie1_rp: pcie@0 {
+
+pcie1_port0 for consistency with other DTs, please
+
+Same comments for the other port
+
+Konrad
