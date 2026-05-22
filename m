@@ -1,94 +1,57 @@
-Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F1CE36AB77;
-	Fri, 22 May 2026 14:27:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7CFD1624C5
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 15:01:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779460058; cv=none; b=MWq42k9IUR14MDsCzv1BRBsE14//6XGXCe0AOhqKEQ5x8xelUsLZ8w7qAPVnamDgBd5XuZnNiPTnX6jKTHZUZQ9MoLQ/IkmCed8/AdnGg8pnyHuoasZja3j4Wq6yk34cSYcYh1mWHi8b/mN8eTQJU1wZKX3rMQQdEoMwCl4+Lgs=
+	t=1779462096; cv=none; b=d8pg++IOTEzA2y+XRhvzeX4tMlBYr4h2XEUVxpXRNu2vNscVOGO8/7JxhPEy9SN52lqODgHP9dkUUchCsE1URMqGgRBxEZP3CcdXABRE6+NThUGxgxu5d8bk6nKym5aGL9pNWimFPJ+xC088fWBC20CaAUTSYtWX5+6E2w5goqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779460058; c=relaxed/simple;
-	bh=plxPpLMP6WEHRwBxbMEElRJxgmc2K9gbji6TFwFsVVc=;
+	s=arc-20240116; t=1779462096; c=relaxed/simple;
+	bh=rvhovx0txOwzkh6+B1PDB5ZwinKv64O5O09u7YKfj/4=;
 	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=E3ujqDZHn1B9FbFooYqETOXwlzTAm1QTNCVBzMOwmTVRxch43WklCPifq41HmMYwlxKpwprWZSF5+c9nLDnODgy0bf/p+4dkANnA/gtXgoNgMQ+Cy3mXCzphafZDE4zRX+BpjSTUshQyscsa4isxDRryRBf1K2/dtPOUsFpEMRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=HqUoE5vL; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=GUD6zca8; arc=none smtp.client-ip=103.168.172.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	 MIME-Version:Content-Type; b=oeqasyp4UqGaSM/98PiuAWdHoVaJfIRgrsWIZnpBfAFq4V+TcteMsPhkbUXmokAU/l050Cn9FYTL/DxFRXWzTGID/WNv16FkzyG8TrTih1ovUVyfFPR/FEz66Pr3XJIwzMr/3MGxzGATJBoDZ4pqmnVEGnYlPemcSLFGM8EDwuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nbv/M0ds; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="HqUoE5vL";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="GUD6zca8"
-Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 74E5714000F5;
-	Fri, 22 May 2026 10:27:35 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-03.internal (MEProxy); Fri, 22 May 2026 10:27:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1779460055;
-	 x=1779546455; bh=sBTGTRf71E2MpJmi83lGE/zP6dtUsvkn63wA+R8D/PM=; b=
-	HqUoE5vLzkhGwxki2xb4ey7u0Sq+PD0YJcF2Ec+FYA28RSgyiHUF9fyaDGE8ibfs
-	eoLgZ/Sk7KWnQZCrI83Zx6pjMnrzrqip1zM5dR/B4lGu2vAjLvzhLZf+VNL/iPOm
-	Vr1AleuSZ2PiKVPRxTbFVDDP14Kukp7LqV6LbvRXNt8G3BZOoQkgnrdInFbCn+xe
-	H7gwc4ojoJ6Z8r3oj/HOJbKNtzXqejIsgfynCFTMQwDdZ38X1vXkdMzdduKhpdVI
-	J3J5cXU8JO4qaneYVQ0/hkPtCpoWsREy+i550w4auLVAG51SUAvNQ8zzHcXNGKut
-	6Poq+HwrdXlrUqEwRB3pgA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779460055; x=
-	1779546455; bh=sBTGTRf71E2MpJmi83lGE/zP6dtUsvkn63wA+R8D/PM=; b=G
-	UD6zca8iTrICctOD0/AF+pVf+rMuC393/kbfJQM05QvIt5WrDKm7XLd7Uw3w3LPy
-	xE0wGwHacW4IR+32gWadVTtfsJNeqURxaphxvT/NjIKp0P8hW0m9wpZDLYoUsr28
-	XuScUlqxRTDK6ts13RAUTPuNXmYGnEunSighqaxlYdyzyRFBMtZZOsRSZWtl+Cac
-	A7HeO+WmQ1apqvZyn39Nl1bwemaDETUGd2ifGJj+2hcvWTum0LjcxaXAEsmXVd7Z
-	BxJP4jTM6esZSICog4F3knWJ76KlIKfrt96+3Ir3LlHOsi9U3THN4V4tD14/Kr89
-	TqG7HBqdPaw+KhGGwFDhw==
-X-ME-Sender: <xms:1mcQavR81An6Uo3LF6Ecf6cU7ZFVK1IOaf1SS7GS_ZksikygY1XKuQ>
-    <xme:1mcQavDxJEORNIc66eHumh0fgOQwSiJeJv6uMz2mhzPJ8S_w7Ait7JTd7JkCF_U3Z
-    xGoE1NR7780A-jU-ov_y9O1T6KfYUcOdYPNweYsHJ4Emq7dYOHL>
-X-ME-Received: <xmr:1mcQauLmpuisbCfSDVmuqrjeP5UMamTSvsRiMDtgPJ2puEal6WA7oJNV-3U>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduhedtgeduucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
-    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
-    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
-    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepvdekfeejkedvudfhudfhteekud
-    fgudeiteetvdeukedvheetvdekgfdugeevueeunecuvehluhhsthgvrhfuihiivgeptden
-    ucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhgpdhnsg
-    gprhgtphhtthhopeduuddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepfhgvnhhg
-    tghhvghnghifvghnsehhuhgrfigvihdrtghomhdprhgtphhtthhopehjghhgseiiihgvph
-    gvrdgtrgdprhgtphhtthhopeifrghthhhsrghlrgdrvhhithhhrghnrghgvgesrghrmhdr
-    tghomhdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtth
-    hopeifvghirdhhuhgrnhhgvdesrghmugdrtghomhdprhgtphhtthhopeifrghnghiihhho
-    uhdusehhihhsihhlihgtohhnrdgtohhmpdhrtghpthhtohepfigrnhhghihushhhrghnud
-    dvsehhuhgrfigvihdrtghomhdprhgtphhtthhopehlihhuhihonhhglhhonhhgsehhuhgr
-    figvihdrtghomhdprhgtphhtthhopehkvhhmsehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:1mcQaiAtvM2_sK57nwC0BHqlaRxHJt1jG4gQTvwYWM2hEjKBO78xxg>
-    <xmx:1mcQarsR9dLQ7EM7CHguDYp07UB75_pV1CR16PB3hK8tMQqkGIyQmg>
-    <xmx:1mcQaoT52z8z5kW99EiZbTj4vFPGYoIRfuWQcwT8YT10sgoH7UVbqw>
-    <xmx:1mcQaqIO1xgnVjSYUPdsaRCZHl8nHoYODPU0Jujbob9CxI_TXBS1KA>
-    <xmx:12cQak9LvKo2Gj-gT5kLMEOjmpNfS8SsyDlNKo9NwB3YgFlKvlCC2DyZ>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 22 May 2026 10:27:33 -0400 (EDT)
-Date: Fri, 22 May 2026 08:27:30 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
- <wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
- <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v11 5/5] vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST for
- TPH ST entry management
-Message-ID: <20260522082730.3d843a7f@shazbot.org>
-In-Reply-To: <512bce27-13a2-44a1-aa5b-b5ea77c174ba@huawei.com>
-References: <20260518071701.25177-1-fengchengwen@huawei.com>
-	<20260518071701.25177-6-fengchengwen@huawei.com>
-	<20260521221008.59ddf977@shazbot.org>
-	<512bce27-13a2-44a1-aa5b-b5ea77c174ba@huawei.com>
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nbv/M0ds"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779462095; x=1810998095;
+  h=date:from:to:cc:subject:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=rvhovx0txOwzkh6+B1PDB5ZwinKv64O5O09u7YKfj/4=;
+  b=nbv/M0dsmKjhtyHFPmL29do0eNyO1/01NjTNSJdgYCdtLUVJzt3O5QEU
+   g8kkbmOunAkqPWMCXq5Tpari12Ly3Z7rl9N00yqZ+lSspK1vcWWKueKvR
+   WdvfcU6DZBBePUV6dFZOMy0MN5nx3z9FuMgyuGRkadb/1kKu65wPmDKuX
+   E+PP8bjbVwxo4ls8zbTNRu/RhIKwJRzZ8QpdUaEbYcQkba9TGyYnFB56c
+   9jB3QmLEuw+XQjfEflXXiYTe1HV1INHCsyN+iNv0kWdeY6KH/sWQkUZRz
+   f2LfLgau9NPtAwJUdX6u/h9djjlxK5n60ZdNdelyGP9m+69hewLTtIIdv
+   g==;
+X-CSE-ConnectionGUID: 4sZseDQRTTSepYNkGNNurw==
+X-CSE-MsgGUID: V4KBQFbJRI2YIVAF4o2ATg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11794"; a="90966708"
+X-IronPort-AV: E=Sophos;i="6.24,162,1774335600"; 
+   d="scan'208";a="90966708"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2026 08:01:26 -0700
+X-CSE-ConnectionGUID: vHwd5iudRSeKXiXvqXwtYw==
+X-CSE-MsgGUID: ucbJCYWdSAuggtHKQIc0Kw==
+X-ExtLoop1: 1
+Received: from patelni-desk.amr.corp.intel.com (HELO localhost) ([10.2.248.44])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2026 08:01:25 -0700
+Date: Fri, 22 May 2026 08:01:24 -0700
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
+To: sashiko-bot@kernel.org
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: vmd: Add feature to scan BIOS enumerated
+ devices.
+Message-ID: <20260522080124.00005752@linux.intel.com>
+In-Reply-To: <20260521235257.3745B1F000E9@smtp.kernel.org>
+References: <20260521232019.2562-1-nirmal.patel@linux.intel.com>
+	<20260521235257.3745B1F000E9@smtp.kernel.org>
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -98,221 +61,143 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Fri, 22 May 2026 18:04:13 +0800
-fengchengwen <fengchengwen@huawei.com> wrote:
+On Thu, 21 May 2026 23:52:56 +0000
+sashiko-bot@kernel.org wrote:
 
-> On 5/22/2026 12:10 PM, Alex Williamson wrote:
-> > On Mon, 18 May 2026 15:17:01 +0800
-> > Chengwen Feng <fengchengwen@huawei.com> wrote:
-> >   
-> >> Add VFIO_DEVICE_FEATURE_TPH_ST to allow userspace to manage PCIe TPH
-> >> Steering Tag entries.
-> >>
-> >> SET: Program contiguous ST entries when ST table resides in TPH Capability
-> >>      or MSI-X table. U32_MAX CPU ID clears the corresponding ST entry.
-> >> GET: Retrieve ST values per CPU ID, only available in DS mode.
-> >>
-> >> Both operations are only valid when TPH is enabled on the device.  
-> > 
-> > What?  That doesn't align with the hardware programming model.  The
-> > specification even suggests that the device should be quiesced or TPH
-> > disabled during programming of the steering tags for deterministic
-> > behavior.  
+> Thank you for your contribution! Sashiko AI review found 4 potential
+> issue(s) to consider:
 > 
-> As mentioned in the 4/5 commit, obtaining ST must first enable TPH.
-> Of course, I think it might be necessary to calculate pdev->tph_req_type
-> during the capability detection phase, so that we can modify ST before
-> enabling TPH. Do you think such a modification is needed?
+> New issues:
+> - [High] vmd_resume() unconditionally modifies legacy MSI remapping
+> configuration on unsupported hardware.
+Ack.
+> 
+> Pre-existing issues:
+> - [High] SRCU structures are permanently leaked on probe error paths.
+> - [High] SRCU structs are destroyed while the managed IRQ handler is
+> still registered, leading to a Use-After-Free.
+> - [High] Truncation of 64-bit physical addresses on 32-bit systems
+> due to incorrect use of PCI_BASE_ADDRESS_MEM_MASK. --
 
-I think a uAPI that doesn't align with the recommended programming
-order of the specification, potentially resulting in non-deterministic
-behavior is bogus.
+Proposing to fix these issues in separate patches to keep the patch
+size more manageable.
+> 
+> commit f05a884975712ad2dc4d55677318e1620e041df9
+> Author: Nirmal Patel <nirmal.patel@linux.intel.com>
+> 
+> PCI: vmd: Add feature to scan BIOS enumerated devices.
+> 
+> Newer VMD with device ID 0x28c1 has unique settings compared to its
+> predecessor where BIOS enumerates the entire VMD device tree and
+> assigns respective configurations.
+> 
+> > diff --git a/drivers/pci/controller/vmd.c
+> > b/drivers/pci/controller/vmd.c index d4ae250d4bc6d..15a3f6a357889
+> > 100644 --- a/drivers/pci/controller/vmd.c
+> > +++ b/drivers/pci/controller/vmd.c  
+> [ ... ]
+> > @@ -661,6 +684,46 @@ static int vmd_get_bus_number_start(struct
+> > vmd_dev *vmd) return 0;
+> >  }
+> >  
+> > +static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
+> > +				       resource_size_t *offset1,
+> > +				       resource_size_t *offset2)
+> > +{  
+> [ ... ]
+> > +	/* Calculate offsets like vmd_get_phys_offsets() does. */
+> > +	if (phys1)
+> > +		*offset1 = vmd->dev->resource[VMD_MEMBAR1].start -
+> > +			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
+> > +	if (phys2)
+> > +		*offset2 = vmd->dev->resource[VMD_MEMBAR2].start -
+> > +			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);  
+> 
+> [Severity: High]
+> Will this truncate the 64-bit physical addresses on 32-bit systems?
+> 
+> Since PCI_BASE_ADDRESS_MEM_MASK is ~0x0fUL, on 32-bit systems it
+> evaluates to a 32-bit 0xFFFFFFF0. When bitwise ANDed with a 64-bit
+> u64 like phys1 or phys2, the mask is zero-extended to
+> 0x00000000FFFFFFF0ULL, clearing the upper 32 bits of the address.
+> 
+> Could this result in entirely incorrect memory mapping offsets for
+> VMD devices mapped above 4GB?
+> 
+> This is a pre-existing issue in vmd_get_phys_offsets() as well, but
+> it seems to be repeated here.
+> 
+> > +
+> > +	pci_iounmap(vmd->dev, bar4);
+> > +	return 0;
+> > +}
+> > +
+> >  static irqreturn_t vmd_irq(int irq, void *data)
+> >  {
+> >  	struct vmd_irq_list *irqs = data;
+> > @@ -711,6 +774,53 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+> >  	return 0;
+> >  }  
+> 
+> [Severity: High]
+> This isn't a bug introduced by this patch, but does the driver leak
+> srcu_struct structures on the probe error paths?
+> 
+> Looking at vmd_alloc_irqs(), it initializes srcu_struct structures in
+> a loop. If a subsequent step fails (such as init_srcu_struct or
+> vmd_create_irq_domain later in probe), vmd_probe() jumps to
+> out_release_instance and returns an error without calling
+> cleanup_srcu_struct() for the already initialized structures.
+> 
+> While IRQ vectors are automatically freed via devres, the srcu_struct
+> allocations inside the per-CPU memory appear to be permanently leaked.
+> 
+> [Severity: High]
+> This is also a pre-existing issue, but does vmd_remove() introduce a
+> use-after-free by manually destroying srcu_struct structures while
+> the managed IRQ handler is still registered?
+> 
+> The driver registers its interrupt handlers using devm_request_irq().
+> Because devres handlers run only after vmd_remove() returns, the IRQ
+> remains active and can fire during or after the srcu_struct
+> structures are manually destroyed.
+> 
+> If vmd_irq() fires during this window, it calls srcu_read_lock() on a
+> destroyed srcu_struct. Can this sequence trigger a use-after-free?
+> 
+> [ ... ]
+> > @@ -868,19 +956,21 @@ static int vmd_enable_domain(struct vmd_dev
+> > *vmd, unsigned long features)
+> >  	 * acceptable because the guest is usually CPU-limited and
+> > MSI
+> >  	 * remapping doesn't become a performance bottleneck.
+> >  	 */
+> > -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+> > -	    offset[0] || offset[1]) {
+> > -		ret = vmd_alloc_irqs(vmd);
+> > -		if (ret)
+> > -			return ret;
+> > +	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
+> > +		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+> > +		    offset[0] || offset[1]) {
+> > +			ret = vmd_alloc_irqs(vmd);
+> > +			if (ret)
+> > +				return ret;
+> >  
+> > -		vmd_set_msi_remapping(vmd, true);
+> > +			vmd_set_msi_remapping(vmd, true);  
+> 
+> [Severity: High]
+> This patch bypasses MSI remapping initialization for
+> VMD_FEAT_USE_BIOS_INFO in vmd_enable_domain(), but is it also
+> necessary to update vmd_resume()?
+> 
+> vmd_resume() unconditionally calls vmd_set_msi_remapping(), which
+> will read and write the legacy PCI_REG_VMCONFIG register during
+> system resume. Could this cause undefined behavior or PCI aborts on
+> the new hardware?
+> 
 
-> >> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
-> >> ---
-> >>  drivers/vfio/pci/vfio_pci_core.c | 91 ++++++++++++++++++++++++++++++++
-> >>  include/uapi/linux/vfio.h        | 41 ++++++++++++++
-> >>  2 files changed, 132 insertions(+)
-> >>
-> >> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> >> index 0d0140202280..13a22c1d6ea6 100644
-> >> --- a/drivers/vfio/pci/vfio_pci_core.c
-> >> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> >> @@ -1558,6 +1558,95 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
-> >>  	return 0;
-> >>  }
-> >>  
-> >> +static int vfio_pci_core_feature_tph_st(struct vfio_pci_core_device *vdev,
-> >> +					u32 flags,
-> >> +					struct vfio_device_feature_tph_st __user *arg,
-> >> +					size_t argsz)
-> >> +{
-> >> +	bool is_set = !!(flags & VFIO_DEVICE_FEATURE_SET);
-> >> +	struct vfio_device_feature_tph_st tph_st;
-> >> +	struct pci_dev *pdev = vdev->pdev;
-> >> +	enum tph_mem_type mtype;
-> >> +	int i, j, ret;
-> >> +	u32 *cpus;
-> >> +	u16 st;
-> >> +
-> >> +	guard(mutex)(&vdev->tph_lock);  
-> > 
-> > Wrong place for this lock.  Why do we even need it?  If a user races
-> > SET/GET with enable/disable, that's their problem.  
-> 
-> OK, will fix in next version
-> 
-> >   
-> >> +
-> >> +	ret = vfio_check_feature(flags, argsz,
-> >> +				 VFIO_DEVICE_FEATURE_GET |
-> >> +				 VFIO_DEVICE_FEATURE_SET,
-> >> +				 sizeof(tph_st));
-> >> +	if (ret <= 0)
-> >> +		return ret;
-> >> +
-> >> +	if (!enable_unsafe_tph ||  
-> > 
-> > Why did we allow the feature to be probe if it can't be used?  
-> 
-> OK, will fix in next version
-> 
-> >   
-> >> +		pcie_tph_enabled_mode(pdev) == PCI_TPH_ST_NS_MODE)  
-> > 
-> > Here's that ambiguity of reporting NS_MODE for disabled, but as above
-> > it's a bogus requirement.  
-> 
-> OK, will fix in next version
-> 
-> >   
-> >> +		return -EOPNOTSUPP;
-> >> +	if (!is_set && pcie_tph_enabled_mode(pdev) != PCI_TPH_ST_DS_MODE)  
-> > 
-> > Why?  Let the interface be symmetric that GET works regardless of mode.  
-> 
-> OK, will remove the restrict
-> 
-> >   
-> >> +		return -EOPNOTSUPP;
-> >> +	if (is_set && pcie_tph_get_st_table_loc(pdev) == PCI_TPH_LOC_NONE)
-> >> +		return -EOPNOTSUPP;
-> >> +
-> >> +	if (copy_from_user(&tph_st, arg, sizeof(tph_st)))
-> >> +		return -EFAULT;
-> >> +
-> >> +	if (tph_st.count == 0 || tph_st.count > VFIO_TPH_ST_MAX_COUNT ||
-> >> +		tph_st.flags > VFIO_TPH_ST_MEM_TYPE_PM)  
-> > 
-> > Wrong operation for a flags field.  
-> 
-> Because currently flags only use bit0 (0-VM, 1-PM), this judge make sure
-> it will return error if userspace passing non-zero in remain bits.
+ I will address this issue. We dont want vmd_resume to ser msi for
+ unsupported devices.
 
-This should be a mask to test undefined bits are not set, not a value
-comparison.
-
-> >> +		return -EINVAL;
-> >> +	if (!is_set && tph_st.index != 0)  
-> > 
-> > We can only GET index 0?  Why?  
-> 
-> Because GET operation don't need index, this judgment make sure
-> it will return error if userspace passing non-zero index.
-
-The interface is not symmetric.
- 
-> >> +		return -EINVAL;
-> >> +	if (is_set && (tph_st.index >= VFIO_TPH_ST_MAX_COUNT ||
-> >> +		       tph_st.index + tph_st.count > VFIO_TPH_ST_MAX_COUNT))  
-> > 
-> > DS can have more that 2048 steering tags.  
-> 
-> I check the PCIE protocol, DS mode with ST in pcie-config or msi-x must not
-> hold > 2048 steering tags.
-
-The MSI-X storage location is limited to 2048, but DS mode doesn't
-necessarily use either of these storage locations.
-
-> >> +		return -EINVAL;
-> >> +
-> >> +	cpus = memdup_array_user(&arg->data, tph_st.count, sizeof(*cpus));  
-> > 
-> > Use an __aligned_u64 data_uptr like iommufd does and avoid copying this
-> > into the kernel.  Isn't this steering tags, why's it named cpus?  
-> 
-> we reuse the field which according your previous suggestion:
-> in GET, user pass in cpus, and vfio will feedback steering tags in cpus.
-
-Perhaps this was over stated, but aligning to the generic uAPI name
-since it's dual-purpose would seem to make sense.
- 
-> >> +	if (IS_ERR(cpus))
-> >> +		return PTR_ERR(cpus);
-> >> +
-> >> +	mtype = tph_st.flags & VFIO_TPH_ST_MEM_TYPE_PM ? TPH_MEM_TYPE_PM :
-> >> +							 TPH_MEM_TYPE_VM;  
-> > 
-> > Then why did we use two flag bits for this?  
-> 
-> VFIO_TPH_ST_MEM_TYPE_PM is just one bit, could you explain the two flag bits?
-
-My bad, I overlooked that they're both shifted by 0.  Typically we
-wouldn't define both the 0 and 1 value, only the latter.
- 
-> >> +	if (!is_set) {
-> >> +		for (i = 0; i < tph_st.count; i++) {
-> >> +			ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);  
-> > 
-> > My understanding was that GET would return the translated values from a
-> > previous SET, not translate on the fly.  I think in order to support
-> > writing STs before enabling TPH, we're going to need to store them
-> > somewhere anyway so that we can push them to the correct location when
-> > TPH is enabled.  That means there a buffer for SET/GET regardless of
-> > the mode that's enabled.  
-> 
-> OK, will try to fix
-> 
-> >   
-> >> +			if (ret)
-> >> +				goto out;
-> >> +			cpus[i] = st;
-> >> +		}
-> >> +		goto out;
-> >> +	}
-> >> +
-> >> +	for (i = 0; i < tph_st.count; i++) {
-> >> +		if (cpus[i] == U32_MAX) {
-> >> +			ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, 0);  
-> > 
-> > Why do we need a magic value to set it to zero?  Hardware doesn't have
-> > a "clear ST register value".  
-> 
-> So you mean for SET, usespace direct passing steering-tag not cpus in this patch?
-
-How does this work with Zhiping's series where there might be TPH values
-exposed through the dma-buf to support p2p DMA?  Where would that level
-of TPH programming occur?
- 
-> >> +			if (ret)
-> >> +				goto out;
-> >> +			continue;
-> >> +		}
-> >> +
-> >> +		ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);
-> >> +		if (ret)
-> >> +			goto out;
-> >> +		ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, st);
-> >> +		if (ret)
-> >> +			goto out;  
-> > 
-> > Clearly broken for DS mode.  
-> 
-> For DS mode:
-> 1\ if ST table in CONFIG or MSI-X, then it could done by this way
-> 2\ if ST table not in CONFIG or MSI-X, then it only need invoke GET, and set by device-specific way.
-
-The SET only after enable model is broken, DS mode needs to support
-SET, where GET returns the host translations.  Thanks,
-
-Alex
