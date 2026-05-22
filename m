@@ -1,230 +1,148 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from fhigh-a6-smtp.messagingengine.com (fhigh-a6-smtp.messagingengine.com [103.168.172.157])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D1737FF45
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 12:24:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CF193BCD38;
+	Fri, 22 May 2026 14:00:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779452693; cv=none; b=U9ZT94P7+adKnZjotxnp+VPX1Rda+ViNFdPAQFuo/0z2pfE5UOC/MXMIY1tVXuMyLdyQ78CX7J0OldiLqZyEOPEZMiemHFAjXWsDHBklnmZLN4g1nDfObrUHEwQP1MOp8LuIJdd7tuQS9WIi9DvbGrXwZG519mjRbyfQtpKqEpA=
+	t=1779458431; cv=none; b=cX1sGzTO3SSKEE67lZRjPYeywXfCyIcjakDu1pC6aCHX1Vfldc8lYKhtBEAcZ4De7f2wM9C7C+n86FO9ALpdIj+rtZWzIFR8EW3YSDSdAwjqrSntDOthtKnMHtTSCKqsvoGVKbQKhj6Unxfp3ZbsQYCPaT/zQ1BMnJcWvPVZyb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779452693; c=relaxed/simple;
-	bh=3yg9pAXmNWpk1/sWJAZJgW4Bq/i5kc2HEUpAaOv3rfI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oAQVNttpVqaHhixhzPQcD3IBb20K6UbXuEI+LztNCLRgtOd0N1dQbjRHO/9iHWHgNHPaF804cUY+yD8zrxY3fKgblzilvRvWD1iBcTkzMlDZhnxZWj2puFJfrJzI7rArc9QcQJwoy0NwdjC4dd9y9lDedUUo10oimbNfKi4ZlTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FwrcXFDP; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=GSxn7Ypc; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1779458431; c=relaxed/simple;
+	bh=7pNBbYkLnMY2b8HqI8mFIJHke2B5kktZeu8fjtNJHIc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=MzYp1L+gxRRE4ZwKbbgnTdbotEJLFqAajScFfGmljHTPRAGZBpd66eyjh0UiRLCebgVCwMGN4r5a7AVZVOV2spSnSghesVE3UDhY+h1Amxagc60tEvWKnWRS4sDH/Ecft39+dG0GbsSFl4q2HroCkjBEPfZtxl08LnPVGhR48AQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=KBxM9uk7; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=JjUOf/7u; arc=none smtp.client-ip=103.168.172.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FwrcXFDP";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="GSxn7Ypc"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64MC10141298254
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 12:24:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	td83Aavjt+y4+Fubt3kuLIXT1BRRXdtEK4u9R2BjUAY=; b=FwrcXFDPASzAt7HU
-	KCwfo56sW0SJeo6kDa4NaSWt+N2vhpi7KGivMT/i6Qubt+dC3VPDDgQ1sBMVjbn0
-	8B8VO/pK4EwDX0VzKzWs24phvcl0HSe9rc1ys8Ebnvbo6/Xb7qQZPFAcBismYbK0
-	FHIkuGI0koaFfLDF5B8/wrSevSc6a25kKtH/OZfqm2lkDLM2JHLIAHk567A+F2B8
-	nbWm861L23NkZ6BLIUkV9aKCCRZ+8KazYbwPW9Z4gP/khkyfs5xkqNnnOQxPWdzh
-	J/qlySKcmdwWrzx/pfujAXQ795kPGmnc+oaIetljCIWuPWQZmBD4+yDDgctpF80B
-	znlz+A==
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eaah0awbt-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 12:24:51 +0000 (GMT)
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-50e5d7f4b63so17355531cf.0
-        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 05:24:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1779452691; x=1780057491; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=td83Aavjt+y4+Fubt3kuLIXT1BRRXdtEK4u9R2BjUAY=;
-        b=GSxn7Ypc+aR2b3Il15FBUWyR/s8By13x2PK3IPS2cMSH+Pkolx1GpbeLhC64pXteF/
-         1AUNLYK4g5xYdq8Rtp7olzESLIKw3kZLOHYt5/1dh4wvHJRUe24lDWLxtucWXbz+VM97
-         C3Go2ZksujdNQg5v8YNwAA+f20Wvphhd8uAUPmyls7J4zrPa/w+oL5J8a8YA6y/KX9Jb
-         j0/w9mX//C9inyfrLh/A01wlEiJsEouepn5Dwu/bjZt/wzygnIi2ZRjsIaUHO6CU0q3c
-         DwxcP5Og3b5X/atrgiUVcsoef4v4GZpmkBc0fJ/bWFh2+SuFbrzL90XjglSky1DufI0T
-         X1rA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779452691; x=1780057491;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=td83Aavjt+y4+Fubt3kuLIXT1BRRXdtEK4u9R2BjUAY=;
-        b=pinQaukYqkFQ99YFl+N5beK2GcjYsj6CXBYCV1QW1M+zJzBC5g8J+YK6cLIYzN0mzr
-         8WCgHG2u3nwhUnH96PuOMhFPC54qB6F9XVQtzfZAWGjU890B8mWkLOK/m64U1mBoj8Bb
-         +5NY5G/VrvJvAojbFASsb0nupTH5GD7ATarX4Xomiua1pnBRLgzpxeF/29gez9BvGhpP
-         knyQuWSoRzb0ZfqglZBecROnK1hZbhECwnZhk+RLhehNFNQ6dj/Gl/LPP+uPuZGk+AWv
-         /zhF8gJ5TbIiMUfT5XppjyNvB1oeM63ZFPjrx2kJMNaUs6T7RlJLQVtftclX5EaX92Eo
-         eelA==
-X-Forwarded-Encrypted: i=1; AFNElJ9dc0aeFusaJW0KOREItekQyTt6Ztf6MmjDpHKV0hsu0Id4KvbClU6NAGWWXFPM2DtyR8m/PgEdMzo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyH7hp3vbmmF6rDB2rGfr5Bxjz3r1MRgGzwWUsPKA/RAJQzzM6Z
-	32Qi8Tx6NlGdijaFCOF1LHcVF8JbHHrqkgPKp4urOl6D17iqEBaOCXlrp6LPjttkm9MUSn+wlQf
-	VZn3+Zzh6m+P3ccPnd4e3cCMKPeOmn/s86qBI7VyXh+DrOSUNiif7hNNl1OkKK/w=
-X-Gm-Gg: Acq92OFuZoHjAwb0jM74aT5AmK5BuvRtGkMCbBsrph7VtHU8u3Zcdtkd8dOgbuzvcS9
-	Z8H5Ucdn8diijpM1sey7XYNyXeVo1UGRMSUEjLrngyhsnCBWOOQHBBRsDJnowHL39f+9nPt+M9z
-	JCOAAyA+HTfCWj8xxz1qyf+cfJlkE81/zTt83tof7t71RtFmQcSxIh9Ii+JHB7OnTnL4wA/RS64
-	7MLnVmmkwLTRugmjPSRdcsZ6PJK5M1yvJGlL29Fl++akwEJK/oaIwgJra8nvVUK4LNTdveUXjLR
-	GUIbqJLNIFTCbea3+jQsRKR+DecCWGQF8JahJLe4g9OI5+rSsYrGwBCdIPcki7n/ZqAQeDlrKce
-	N1mrknRZnHwMxId8siKbrEDE4OJ+45NWiF1Ydh9jqNasp3g==
-X-Received: by 2002:a05:622a:8588:b0:50d:a92e:fead with SMTP id d75a77b69052e-516d436cb6cmr26199701cf.3.1779452690601;
-        Fri, 22 May 2026 05:24:50 -0700 (PDT)
-X-Received: by 2002:a05:622a:8588:b0:50d:a92e:fead with SMTP id d75a77b69052e-516d436cb6cmr26199521cf.3.1779452690128;
-        Fri, 22 May 2026 05:24:50 -0700 (PDT)
-Received: from [192.168.119.254] ([178.235.128.140])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-688b9f603desm612961a12.12.2026.05.22.05.24.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 May 2026 05:24:49 -0700 (PDT)
-Message-ID: <dc7cb371-e94e-4f42-87d6-70f0f94d0d49@oss.qualcomm.com>
-Date: Fri, 22 May 2026 14:24:45 +0200
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="KBxM9uk7";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="JjUOf/7u"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 3854A1400100;
+	Fri, 22 May 2026 10:00:25 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-06.internal (MEProxy); Fri, 22 May 2026 10:00:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1779458425;
+	 x=1779544825; bh=f6qZu3mjuZB7aeVooNRq0zeE78N1e6ESYl7W/xgClb8=; b=
+	KBxM9uk7qg94yX0lgMGChDTXLRDDbL7PI0nECUI2ugvZ0ScTGU0dyIC7sHfuX3bu
+	FlQPBXcApwI9brkiwxG5pHmkoHN7B4IfeimxwOkMIfk0DI3dxvso8RAsdkdaY5jT
+	Tb2tj1o8IGKlivfPgP06HAXqS7C0pPrYZ6JxzTUIaWPnokEo6TbBYXmnvPt+O7Ly
+	PlouuYJfdC4iCkJxiWImJqrfOGdfi2dnz46e5A8HxVxq/RfZD30YAxGUB6N1QsrU
+	Xkhq2AU6vfklcPDdtL+NvxmDOKbOY3KSp5bME9j258vb05++jk3vo4xnPjN0ESWT
+	m+2bc36IF3a9kbL/ivGdmg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779458425; x=
+	1779544825; bh=f6qZu3mjuZB7aeVooNRq0zeE78N1e6ESYl7W/xgClb8=; b=J
+	jUOf/7uwsEA//+YGZDSYm04aJc/KBTL0vKpZkpzO4LymW3McVSNgUmSAlTc7Q92B
+	ekjBOCZUTS43VmXjPcHUgXo9T278DaDnQuzSk421VyAsVCQ6L0nf/X4jyEW4n9Ca
+	KIzxIFnR8YNSpBegjM4YWbHM42kDKB3fIooB0hWBrDRE+ETz6kDR52P7Iz+Vyh13
+	/uAfu/7OuA2UzISPrmYIg9Eit4ENgWlfCDlklyEHdRpV3Wn96UzoIwR6FUGpqFRm
+	eZYMosboQxSGwnXqwiFKMMnw62fH9lu8ChXJkMpfy+fFQfl3vhIDnFheiOOhQK66
+	66JibzN2yf6tDjFWyxcQg==
+X-ME-Sender: <xms:eGEQah_hko2aJ5D0W0brsbmg6AmwRce7WPuOuL3JdSGN3We8SknE2A>
+    <xme:eGEQaj862Ao4EX4DFKFb2UuiQqZoIDuTaQIDv_U2dRgGr5ADvE56iCNoTC2IQDkhk
+    gNu6ULFNAfPjkx6eIQi3QhUzqIpRms7VetvlQlHLndVSqQ9_Qh7NA>
+X-ME-Received: <xmr:eGEQaoWqxy19pTX3AHKeMmIoCUHtURKa5AvqRZTcP0pvr3c7QQFIjadLFds>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefhedrtddtgdduhedtfeehucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceu
+    rghilhhouhhtmecufedttdenucenucfjughrpeffhffvvefukfgjfhfogggtgfesthejre
+    dtredtvdenucfhrhhomheptehlvgigucghihhllhhirghmshhonhcuoegrlhgvgiesshhh
+    rgiisghothdrohhrgheqnecuggftrfgrthhtvghrnhepvdekfeejkedvudfhudfhteekud
+    fgudeiteetvdeukedvheetvdekgfdugeevueeunecuvehluhhsthgvrhfuihiivgeptden
+    ucfrrghrrghmpehmrghilhhfrhhomheprghlvgigsehshhgriigsohhtrdhorhhgpdhnsg
+    gprhgtphhtthhopeduuddpmhhouggvpehsmhhtphhouhhtpdhrtghpthhtohepfhgvnhhg
+    tghhvghnghifvghnsehhuhgrfigvihdrtghomhdprhgtphhtthhopehjghhgseiiihgvph
+    gvrdgtrgdprhgtphhtthhopeifrghthhhsrghlrgdrvhhithhhrghnrghgvgesrghrmhdr
+    tghomhdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtth
+    hopeifvghirdhhuhgrnhhgvdesrghmugdrtghomhdprhgtphhtthhopeifrghnghiihhho
+    uhdusehhihhsihhlihgtohhnrdgtohhmpdhrtghpthhtohepfigrnhhghihushhhrghnud
+    dvsehhuhgrfigvihdrtghomhdprhgtphhtthhopehlihhuhihonhhglhhonhhgsehhuhgr
+    figvihdrtghomhdprhgtphhtthhopehkvhhmsehvghgvrhdrkhgvrhhnvghlrdhorhhg
+X-ME-Proxy: <xmx:eGEQaofrt2A3b54FDNnlDrZ4jDVqOkk1kb-SFKkXPBwkxD5-mafIKQ>
+    <xmx:eGEQapatKW5UWo9nfU-mH7wapzw8mgq4M6oTYtf6F-v-Mp0XmgZYNw>
+    <xmx:eGEQasMXLTEiqmSDNxOqjuOdqYp0qM1Gc64bdEaOUpv46y5ABBBZAw>
+    <xmx:eGEQanWJoT1TOsro0O4wh0EGSqWn26UFx-hKwsITThgiaH8V8DOgEQ>
+    <xmx:eWEQamoj1HP5l3R9MswNGTgyPnm3CuwFvNSpg4d6b4u_qOBjwwLSY-KG>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 22 May 2026 10:00:23 -0400 (EDT)
+Date: Fri, 22 May 2026 08:00:20 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
+ <wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+ <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, alex@shazbot.org
+Subject: Re: [PATCH v11 3/5] PCI/TPH: Add pcie_tph_enabled_mode() helper
+Message-ID: <20260522080020.11f1d86b@shazbot.org>
+In-Reply-To: <15bffd1b-e0c7-4393-8cbc-ba54586884c9@huawei.com>
+References: <20260518071701.25177-1-fengchengwen@huawei.com>
+	<20260518071701.25177-4-fengchengwen@huawei.com>
+	<20260521221022.322c2af9@shazbot.org>
+	<15bffd1b-e0c7-4393-8cbc-ba54586884c9@huawei.com>
+X-Mailer: Claws Mail 4.3.1 (GTK 3.24.51; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] arm64: dts: qcom: ipq5210: Enable PCIe support
-To: Varadarajan Narayanan <varadarajan.narayanan@oss.qualcomm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20260514-pci-ipq5210-v1-0-a09436200b35@oss.qualcomm.com>
- <20260514-pci-ipq5210-v1-2-a09436200b35@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20260514-pci-ipq5210-v1-2-a09436200b35@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIyMDEyMyBTYWx0ZWRfXwfKSNyV5Kie5
- 9vQz6t1m4DQWgcVQfxbycebkAqCpwh00povWk5z9OFJjjyxOcEYT4YlDfKIo3tgH9D4cAG/Mwlr
- j0ct4lE3FVq5+JCImjDz5ua0MZ+8WAYsruDcNin4AyDBkm5cvaTyVuLtNygiYmowRTf878hE7YA
- ZKiDiQN1O6v/rB2WpPHOiD4fL4ZuTt6Le44kRLOKWKw1Ku3MixxTgv4BCirWU0I1hQLDVPm4CFo
- k524o6njRU+VeNMhhzrp/hdW0iCpA5p/wSD0Pdy4Wb2cKJ+nlYJ3KLBbVbG8HxZJsoo4wGyUy0m
- Kq3cdfNFrlIaFQzVChy2NqU6rwD188MwWnJBzJvNEUOJn7oqx+eFbVQyR/QjfN92Xdj0sI9wh9q
- VCiZ0fJCHwXKU5FIlBNkXZPd66zXFfCsOf9Z63qBqOhFPNGgd4tE2ufHJkMGcypMF2Bq9bOHDg9
- e0FcIPUeL+nOnz74cAA==
-X-Proofpoint-GUID: sCe34GoTifQBkRebL30Fa1kZkZ-k1_TQ
-X-Authority-Analysis: v=2.4 cv=LNdWhpW9 c=1 sm=1 tr=0 ts=6a104b13 cx=c_pps
- a=JbAStetqSzwMeJznSMzCyw==:117 a=PRfkaYvzSr8QmIIGAkY2Sg==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=DJpcGTmdVt4CTyJn9g5Z:22
- a=EUspDBNiAAAA:8 a=w2YRJOle7L1X8GQccsAA:9 a=QEXdDO2ut3YA:10
- a=uxP6HrT_eTzRwkO_Te1X:22
-X-Proofpoint-ORIG-GUID: sCe34GoTifQBkRebL30Fa1kZkZ-k1_TQ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-22_03,2026-05-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 impostorscore=0 phishscore=0 spamscore=0
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
- definitions=main-2605220123
 
-On 5/14/26 6:13 AM, Varadarajan Narayanan wrote:
-> Add DT entries to enable the PCIe controllers found in ipq5210.
+On Fri, 22 May 2026 17:18:39 +0800
+fengchengwen <fengchengwen@huawei.com> wrote:
+
+> On 5/22/2026 12:10 PM, Alex Williamson wrote:
+> > On Mon, 18 May 2026 15:16:59 +0800
+> > Chengwen Feng <fengchengwen@huawei.com> wrote:
+> >   
+> >> Add a helper to query enabled TPH mode on a PCI device. This is useful for
+> >> drivers like VFIO-PCI that need to validate TPH state before allowing
+> >> access to steering tag tables.
+> >>
+> >> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+> >> ---
+> >>  drivers/pci/tph.c       | 12 ++++++++++++
+> >>  include/linux/pci-tph.h |  3 +++
+> >>  2 files changed, 15 insertions(+)
+> >>
+> >> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> >> index ba31b010f67a..91c1e83410a3 100644
+> >> --- a/drivers/pci/tph.c
+> >> +++ b/drivers/pci/tph.c
+> >> @@ -451,6 +451,18 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
+> >>  }
+> >>  EXPORT_SYMBOL(pcie_enable_tph);
+> >>  
+> >> +/**
+> >> + * pcie_tph_enabled_mode - Get current enabled TPH mode
+> >> + * @pdev: PCI device
+> >> + *
+> >> + * Return the enabled TPH mode (IV/DS) or 0 if disabled.
+> >> + */
+> >> +int pcie_tph_enabled_mode(struct pci_dev *pdev)
+> >> +{
+> >> +	return pdev->tph_enabled ? pdev->tph_mode : 0;
+> >> +}
+> >> +EXPORT_SYMBOL(pcie_tph_enabled_mode);  
+> > 
+> > Doesn't this create ambiguity with PCI_TPH_ST_NS_MODE?  Maybe return an
+> > -errno if not enabled.  Duplicate same for stub below.  Thanks,  
 > 
-> Signed-off-by: Varadarajan Narayanan <varadarajan.narayanan@oss.qualcomm.com>
-> ---
+> Because pcie_enable_tph(PCI_TPH_ST_NS_MODE) could also enable TPH,
+> but PCI_TPH_ST_NS_MODE mean "The function must use a value of all
+> zeros for all Steering Tags" So I think pcie_enable_tph() should
+> treat PCI_TPH_ST_NS_MODE as a invalid input.
 
-[...]
+This doesn't make any sense to me, PCI_TPH_ST_NS_MODE is a valid enable
+mode for the TPH capability.  Thanks,
 
->  &tlmm {
-> +	pcie0_default_state: pcie0-default-state {
-> +		pins = "gpio32";
-> +		function = "gpio";
-> +		drive-strength = <6>;
-> +		bias-pull-down;
-> +		output-low;
-> +	};
-> +
-> +	pcie1_default_state: pcie1-default-state {
-> +		pins = "gpio29";
-> +		function = "gpio";
-> +		drive-strength = <6>;
-> +		bias-pull-down;
-> +		output-low;
-
-You shouldn't need output-low in either of these definitions (+ sorting
-by GPIO idx would be extra neat)
-
-[...]
-
->  	clocks {
-> +		pcie30_phy0_pipe_clk: pcie30_phy0_pipe_clk {
-> +			compatible = "fixed-clock";
-> +			clock-frequency = <250000000>;
-> +			#clock-cells = <0>;
-> +		};
-> +
-> +		pcie30_phy1_pipe_clk: pcie30_phy1_pipe_clk {
-> +			compatible = "fixed-clock";
-> +			clock-frequency = <250000000>;
-> +			#clock-cells = <0>;
-> +		};
-
-Why do these exist? Just pass the QMPPHY reference straight to GCC
-
-[...]
-
-> +		pcie0_phy: phy@84000 {
-> +			compatible = "qcom,ipq5210-qmp-gen3x1-pcie-phy",
-> +				     "qcom,ipq9574-qmp-gen3x1-pcie-phy";
-> +			reg = <0x0 0x00084000 0x0 0x1000>;
-> +
-> +			clocks = <&gcc GCC_PCIE0_AUX_CLK>,
-> +				 <&gcc GCC_PCIE0_AHB_CLK>,
-> +				 <&gcc GCC_PCIE0_PIPE_CLK>;
-> +			clock-names = "aux", "cfg_ahb", "pipe";
-> +
-> +			assigned-clocks = <&gcc GCC_PCIE0_AUX_CLK>;
-> +			assigned-clock-rates = <20000000>;
-
-Is this clock supposed to be fixed at that rate, regardless of the link
-speed? And is the default rate incorrect?
-
-> +
-> +			resets = <&gcc GCC_PCIE0_PHY_BCR>,
-> +				 <&gcc GCC_PCIE0PHY_PHY_BCR>;
-> +			reset-names = "phy", "common";
-> +
-> +			#clock-cells = <0>;
-> +			clock-output-names = "gcc_pcie0_pipe_clk_src";
-
-Having a gcc_ prefix here smells fishy.. 
-
-[...]
-
-> +			clocks = <&gcc GCC_PCIE1_AXI_M_CLK>,
-> +				 <&gcc GCC_PCIE1_AXI_S_CLK>,
-> +				 <&gcc GCC_PCIE1_AXI_S_BRIDGE_CLK>,
-> +				 <&gcc GCC_PCIE1_RCHNG_CLK>,
-> +				 <&gcc GCC_PCIE1_AHB_CLK>,
-> +				 <&gcc GCC_PCIE1_AUX_CLK>;
-> +
-> +			clock-names = "axi_m",
-
-stray \n above, also in resets
-
-[...]
-
-> +			pcie1_rp: pcie@0 {
-
-pcie1_port0 for consistency with other DTs, please
-
-Same comments for the other port
-
-Konrad
+Alex
