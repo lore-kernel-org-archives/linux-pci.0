@@ -1,306 +1,311 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC65E3BB106;
-	Fri, 22 May 2026 09:11:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.20
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779441099; cv=fail; b=sYWXFtmPg6ahlWWwLxfckvih+hgAIdq4qVOWlbiLNFAx/O7FQItjndYfU2GcPU1uGYdKqjmd++/v5Yi1bkh3hgsQxkcizZabxDTa9W80emvPIKzyWTDJOLL8l917XYWl+52/lnDoqP72ft84NSOZIQGocyrcApd0MwZhrpYnHcY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779441099; c=relaxed/simple;
-	bh=cu7pjL0X60PyxkH6BXs+Db2VXgbN3x5Bp7gH/9ZKZ8M=;
-	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=ZYNXVGoVpq5Not80Yz1D3HOkQz+jS0BUPdGOaiU1xtah6wWVmBm5LP0ktFGTGdhNrNx/dH2K00/0eoTUhMpcEeN7FunEFv/0l2B+JJzpqUFZQcXezsuf2UIBtHObgopusnVlHRqgas5nmLZgvhETQ5TSA+JRzqx9QzcjajWtHcc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ecTgR1jQ; arc=fail smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B249285CBA
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 09:17:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779441464; cv=none; b=oXTJ+cRxnFN3OB6FLnMIHmH5Cj9C42ZhfGi+SF/yiZpqcTj5S4xaEC+k0GCZFhOBMqANW4L3kWCvWm3oWnEf89GSSF2E2TyKNEmhtRnUqWqahhykI+SYBYo/Yr/2Jgc+kdzQGw4h22K2/iTR4R606Q3uqkXyR5HSw7VVfQX9Aw4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779441464; c=relaxed/simple;
+	bh=x3RGqmi02L+B1ceM7ajx1UAM/CpjTvdaSV2SXh5VD9E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=P/HAC5xEqhTlTZZndRuc+32sqIgcZaJAa03OZRWXYlWkHg6K1wCLCg4yUqbQLqwCh/Q2ar0gVdIgYK2eLka7iNInTTCIVLUBsZ553xsYX1vVT8LFq8PT0D10WuxaRB/aqUJwUpLv5aRRZZKOsTBsjqCktjhJsp86P8vNDmYKOu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ea7evTwv; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=dhLLag7q; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ecTgR1jQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779441094; x=1810977094;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=cu7pjL0X60PyxkH6BXs+Db2VXgbN3x5Bp7gH/9ZKZ8M=;
-  b=ecTgR1jQLaCe5kr8YAAOWqATM91hsTpnFj68lw3rW1HAsZ61V/xzrUKo
-   23gaFeMt2Es5tinSBTPWBS8KwKEBd7mEatnPhy18+fHijgLbDNrETZL12
-   iSRzqQlmMghX/m4rZdVddQ0zk4ezlnviqRg0bf9NeuRDqo3J0otb2gjpl
-   HuHnBSWfpqMJROQcjtrtjXlMBq9ZEGrkSx/5ZyL3FdOeSAIaDWBbZ42kg
-   vHNtlBHRUbUENBfnQzokKhBWlS6yGiM8IfBmW5SzUBh36I3ndY5VJiMas
-   CU5lA26z+HbmGjlVYD2P9xUWpGTTvxdaDv6cxLfW7+zhZAXMzMV2iV+Wd
-   Q==;
-X-CSE-ConnectionGUID: AUQv/WmEQ4y3xUhn5ALbqg==
-X-CSE-MsgGUID: gOQqZqT7QDaKzcHXYtX71w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11793"; a="80099297"
-X-IronPort-AV: E=Sophos;i="6.24,162,1774335600"; 
-   d="scan'208";a="80099297"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2026 02:11:30 -0700
-X-CSE-ConnectionGUID: ToB5b6/EQzWl43vztXoUdg==
-X-CSE-MsgGUID: VvJPSoGSQ3O2zjKPCJ2Dcw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,162,1774335600"; 
-   d="scan'208";a="244906187"
-Received: from fmsmsx901.amr.corp.intel.com ([10.18.126.90])
-  by orviesa003.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2026 02:11:30 -0700
-Received: from FMSMSX901.amr.corp.intel.com (10.18.126.90) by
- fmsmsx901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Fri, 22 May 2026 02:11:29 -0700
-Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
- FMSMSX901.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Fri, 22 May 2026 02:11:29 -0700
-Received: from DM1PR04CU001.outbound.protection.outlook.com (52.101.61.61) by
- edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Fri, 22 May 2026 02:11:28 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=F+t5XhS9FOY1E6XGch7/i/5NQbXjhMmIzsIY9xF8K3+VwGeGlCTSaodcdELXLIgMekApc//xGQV8tXbDsh0YXLoe2kWnd+arrBZJeRwB6tISsIvQR7K6PVHTb3Nl5euoDU0vu/z9OlMqGR5MP8gQOCiMSzdAjjfkSWRSkvdrcQjVw5M4A9uNmMP6bBTLVWWZaPYXAyXtHpTJVQ8+BSZJu3xWiXDo0Oedgta0u/ZLLu6vVOF+Q63r7QunMzET4L94V/lm75baa3w5vBdk4YB2SVTMJUgqQqjKhwW6m02RlieDxJayhLB4+t374/+/eIJ4jrjOeIQyLwmFJaZ3aF12Jw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=eeC0OBo/7oqWCjGrA7oYlKCTQtjNcO9qTtrWF12ZWvI=;
- b=DvDcF+Cz/egy36ErkN6T8IBdmspZ8E5svpKKHDLwC56gy5Z+85Te4fc1iBtYOzHZ89FGShELg3hB+N3ButBfea2CZvrSq0ZJB/ZOnNeuaO56khzm1gbx8/wTOZi+XXCWW7S6iQQu9gKgds3ety8LHn0uSd2hb3qvWF7mRQUZ9zh6n6BC1DT+iv4E6j3PMMqLivfF6pn9h9sHHTgKEu+OEFEkMVizPA+K9s7e/VsrlAlE2Cq+K/QaBb/yenhgqVxgvNo3nnPdLqjqvNFJ5XFgFSVsfuahj7YLthSVPz25T8Z7gZR+EKSxyBCCFUz16EHlLqvvlOTfBWtI9GFbAVv6rA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from LV8PR11MB8509.namprd11.prod.outlook.com (2603:10b6:408:1e6::15)
- by DS0PR11MB7767.namprd11.prod.outlook.com (2603:10b6:8:138::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Fri, 22 May
- 2026 09:11:26 +0000
-Received: from LV8PR11MB8509.namprd11.prod.outlook.com
- ([fe80::f5bd:4dde:4f2f:20b7]) by LV8PR11MB8509.namprd11.prod.outlook.com
- ([fe80::f5bd:4dde:4f2f:20b7%5]) with mapi id 15.21.0048.013; Fri, 22 May 2026
- 09:11:26 +0000
-Message-ID: <34b17d7b-04f2-494b-b44d-994c326e92d1@intel.com>
-Date: Fri, 22 May 2026 17:19:33 +0800
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/3] PCI: Add pci_ats_required() for CXL.cache capable
- devices
-To: Nicolin Chen <nicolinc@nvidia.com>, <jgg@nvidia.com>, <will@kernel.org>
-CC: <robin.murphy@arm.com>, <joro@8bytes.org>, <bhelgaas@google.com>,
-	<praan@google.com>, <baolu.lu@linux.intel.com>, <kevin.tian@intel.com>,
-	<miko.lenczewski@arm.com>, <linux-arm-kernel@lists.infradead.org>,
-	<iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <dan.j.williams@intel.com>,
-	<jonathan.cameron@huawei.com>, <vsethi@nvidia.com>,
-	<linux-cxl@vger.kernel.org>, <nirmoyd@nvidia.com>
-References: <cover.1779392420.git.nicolinc@nvidia.com>
- <05044d2113e20d81f96677ba53605311662b6b10.1779392420.git.nicolinc@nvidia.com>
-Content-Language: en-US
-From: Yi Liu <yi.l.liu@intel.com>
-In-Reply-To: <05044d2113e20d81f96677ba53605311662b6b10.1779392420.git.nicolinc@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: TP0P295CA0052.TWNP295.PROD.OUTLOOK.COM
- (2603:1096:910:3::14) To LV8PR11MB8509.namprd11.prod.outlook.com
- (2603:10b6:408:1e6::15)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ea7evTwv";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="dhLLag7q"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64M8ZNOE3532657
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 09:17:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	AzvTTIr3cJGUQwmNxyvJg4Lnn3zUHh4faG+9J1SDeU0=; b=Ea7evTwvhGg3h4GB
+	byPpTgL7JAzMdGkJwWSTbOsT8P8VAa8n4DxEFfmKHHD9/eTWrCg2Y7jNTtZmgRWw
+	jzqHX0KdeSkKgZmgZkujA4mazWYR4ao5khAgwrb0bs9t0LjUfYJihtasCK78bbO9
+	q9p8/ORoU0LCw6fZJDo1JZf+AU1xoYsvX2qOGRESonCyR/lf+ShrhKNit/N9cUaI
+	PE3+NI8MfKHOUyFGiiZ+KiwNnbYeCrtIp3LjPo+EoFjXJw2B10Mv8CKi7P0p5RCn
+	Tyfna8yy0FQ5JkgP6wQ5lwfEuWgOqqA2WyFGWppOzqRZVtydGy1iILboXfE8pn2s
+	ni3bJQ==
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ea39gvbbq-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 09:17:42 +0000 (GMT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-2b9a3c3c4eeso70508025ad.3
+        for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 02:17:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1779441462; x=1780046262; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=AzvTTIr3cJGUQwmNxyvJg4Lnn3zUHh4faG+9J1SDeU0=;
+        b=dhLLag7qso9k7z5667xb44CPdYArIWqyFY4Jz2Oz65XPyWOU68MLe2czhQhmI8bsdJ
+         1WW5HcpqpR6tow1LF80xQ7PIzpuGaaKFpcfDjNXF3gQaHZxvo2nyVRtFs2IEKTdsJ1vU
+         gslwe1LvMarZF7LA0M7YWUN46ag01D7CgcpiKP3znO25bHY77EbKfTzKmqoy5xSI+XOQ
+         FtD4MN9kJ7vwUOw3g++mygKcY6sh74C72eHWShtVf9e83ZkW5kTRxRiAnnP7+H5MpQpd
+         d6IzLsTWbN3r4fupORxoCqNrGffS6mYcIU8dVq5acbhfA6Y/rqBphWlk7p5wsEmbQjMM
+         NvKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779441462; x=1780046262;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AzvTTIr3cJGUQwmNxyvJg4Lnn3zUHh4faG+9J1SDeU0=;
+        b=U79q4/ieMTRrm/JkhqDCBvnP2d+AMQKaEgHr0XGlSlJXV/aqX6Wpt3MaRc+ivCsb4o
+         FZIc4L3hA1FlQmv+h4bvDIHf6fwx3FNbuSGNIvrgmw3Ahed6gCjql26AXUmARd4z+Rdk
+         sDr6lVAnUmiU1pB27vm6cck5dlwFZPpgxHnyG9pQwUu7F5I8K67pUopetQJ9nnh+XQft
+         Pjc7z705CwwLGn72mOgdNp04v1tWyptWFmmvkRbWSo5caV7xJDHUJ6xlVa4/CpuoHFA1
+         41D8RnWBrUv2zfoFleZNlQscsTdIyiE3zejBisZWBEl24/T0opXeTdfZ9W981NDJB2U3
+         bSRw==
+X-Forwarded-Encrypted: i=1; AFNElJ8JGKp8AKxw9R6dkk08n2FdZADjSWx6K7iOSexT00fOeLXvuBSVHcY+Rh2yItBqgGcmuvNZq21iSms=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwrSC3D+iNU5wb6M502LQtdrRTX29XUflMYC9/qYrh3VyIXgOZz
+	IEkIqQItPREa6l2+exHr0UkEiMu1XtT8lXyU3mKPeO1tuxFVw5XKnZUueVPTiP1ObEiutgeyWqw
+	t3j7t66SWdpkLGi4PiQFwv4P8cKCEycvIrcSOTF82IXWijvmTKTX7wW+ELe7F4N58YaoU3m4=
+X-Gm-Gg: Acq92OGjPabRkPtCUJkon5Bth+03e0ZR5jjFC+ytoajexLEtCpq17Pd+gzI0h56TYoD
+	aiwHYPn26crKIjTmrNKaLd9VtXYFYHAhdPZtAqRCNv5TxKuEYiVkzfPAR2BASO7UiOc4ghFRrt8
+	CJmlZa8NzjpgWssqGtyyjEFL/kcQbt27NQ9Da0dOwsg5IKL2dqTaoQ/STm6L7QXKzHOyLOTxVnB
+	ewvkAkfE5O/X+IJ9beC68mteem8OFLR2+4h5BMwleF5wp8jJT0QNb15eY8E7t1zeGVw15BLG1rS
+	Udyntu/qFJdz48J+7prnnfGw/xQlV2MDORcXc/8UMQKlY+DyAdNXaMu/yWnyqtK0d7DUGeberZv
+	WTgR3JS2VfufYCRqOlYT6WGx1eVaSBjU9X+TTilZ4xgCU9rTxlXPCgA==
+X-Received: by 2002:a05:6300:6d8d:10b0:3b2:8675:47ef with SMTP id adf61e73a8af0-3b328ed49damr1680131637.45.1779441461901;
+        Fri, 22 May 2026 02:17:41 -0700 (PDT)
+X-Received: by 2002:a05:6300:6d8d:10b0:3b2:8675:47ef with SMTP id adf61e73a8af0-3b328ed49damr1680096637.45.1779441461364;
+        Fri, 22 May 2026 02:17:41 -0700 (PDT)
+Received: from [10.92.193.94] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84165003369sm1548246b3a.57.2026.05.22.02.17.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 May 2026 02:17:41 -0700 (PDT)
+Message-ID: <1cf87303-2394-454b-9541-4a3ea4f3ff4a@oss.qualcomm.com>
+Date: Fri, 22 May 2026 14:47:35 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR11MB8509:EE_|DS0PR11MB7767:EE_
-X-MS-Office365-Filtering-Correlation-Id: d9a83501-8503-43a1-4b46-08deb7e21a08
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|42112799006|1800799024|7416014|376014|366016|56012099003|11063799006|22082099003|18002099003|4143699003|5023799004;
-X-Microsoft-Antispam-Message-Info: 6ZCl7F5Mw72hrETqVFNUpiIzo6Xwtgwg4vkF1q6iKaCOJpj0gsPj5VmCdYg0ChPH3FzaCltMIvsGEgepKOPPM1t4oXubAq8PgSYpNUkVT8cxMRW1WdWHqPo1XcdPR13rVmrV0Offyvc4aelbieoBcUIysbHyhcnc093NetDWvjJx1ZyqJr5WAJPDtFMaMxssCzXBUEKTgxjwm0+G7KhnYlUMr+0S9aZ+IwiW6kBMIUswKBk65xMiv/sIS8iHNS6QfZg4FtFfbsAN4KetWW9L2ybI/5d0CNIWKYvTy90Js+806Jgh0p44CZEwv92+WkHAvmEznB0kyp8f/nTxuqucucLIl8OIjrOjwVfopS408BvY7j/6OqPrjc1FZC7VGO5hlIlzxCzVZBw5Apy2C+bOROhYVYELIaZXaTDa/aSqgCfnq+TxX3a3OyWZ3Ob2kfxV77beyNJa6GY1zZOPsy65wmXoJJ8URpDKh4Tj68jzFGA3tTc+sdovzKnVCNZ5TZN7e7SmtEwVSF1u0rGgzoERt8tfD703mLJRUCIr40N3c/TeMCSUDxCLIx7tX3B5fh6QaVMhsZXATQimcNqDcncC2VPx0x1rl+XMeiibBFs5kg/yovy5JuQaWLoEjOUOhZKxgpHpxDfZ7taA5w2T/zElzzpSACVP8xYC6rrLxnmF6LL7NdEu15KhuQbcrdiIqMUF
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR11MB8509.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(42112799006)(1800799024)(7416014)(376014)(366016)(56012099003)(11063799006)(22082099003)(18002099003)(4143699003)(5023799004);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?WGZTMXl5d2JIbk00UlcwOXNUSWJwcFdlWUFBejFJR3FVYzJKNFRpbSttck5R?=
- =?utf-8?B?bERTS3pQekJFQnJjaXpxTEdZOVdLbDJBSTJkZEcxc1d3ZGdwdENYSlAycDd4?=
- =?utf-8?B?NUF6RE9qWXFubURjc1ZnUUtWRjkvaUYwWlMrenY3aHR4QlQ1azJYNGc2NnJZ?=
- =?utf-8?B?UXM0d1kwQi9rNEN2TVg2VUxoTFFzVEpDeEU4andzVFhhTXN3L1BnSUlxRHNt?=
- =?utf-8?B?NVFpYUcvWjZTYzd5dnRMbkxlUUtlLy9uMXFnSE1BVmF2dFpDY3hQdVN0Rll2?=
- =?utf-8?B?NkZDOUhiU0dVNDJjL0NuRnAzN0JwSUxwalNxVTFod3d6b1RvRklpMVRuU2ls?=
- =?utf-8?B?dldUeTdqbEhzRllLVWt5bUpXT2VYUG5vRStmS1VKOFBNN0lnQkY4RkpZc0gv?=
- =?utf-8?B?Q2dXMzQwNk92aU4wb01KYlAwRk54OWlLMXFuWW9WVGcza0xXcFY5RHhub3NL?=
- =?utf-8?B?aGE4cktMVUY4b014NWVFOWFNWC9VODZ2SkhVMkJ4cTFPWWVMOTVWdG1zUVpK?=
- =?utf-8?B?V0FDdU9zUmxtU2EzcGVObWlueHRFZ0xpcE5CYkQrcEh1VzBIREowRXRlT3NT?=
- =?utf-8?B?aS9Wc0tVbitQU2tLTmNXcGhJZlcvbndXVUVUNW90V2NxaloyMlFreUFKMXpB?=
- =?utf-8?B?RkUwUjI0THlYa3dvbDVjSVVaZGZpb2lZK29rbWtEU3R0Wmg1YTN4REt2Z2xD?=
- =?utf-8?B?TE5xa2ZhU3RBbk1UajhUNzB2KytoQlc1dlBBVytJQktIcVkraG5UaDJCZUFx?=
- =?utf-8?B?MHYvTkRhbkNUbmpzSGxSTno2ZWZ1c1Zlem0vQzRnL3djTXVTMTNXMFk4NmNr?=
- =?utf-8?B?cHhzKzh5OHBTRHR2c0ptK040OWFQQXpvNVM5Zy80eGFzYWdvbjNnanh5ck1j?=
- =?utf-8?B?eGd3Y2lTSDJWKzFBejl4aGRJanZLMFhGTks4S1llTjJJa0dnY05SUlJnL085?=
- =?utf-8?B?SzF2ME1keXJjSHBhSUlVK1NyemJweTJYano1UXE2VGsvWWg1VW9aTVlwcG5Q?=
- =?utf-8?B?Z0xiN0c0RVBQUGUrcFRYb3JsVytEaW1YNjhiQkRHVTltdkI3VHF3REtnMWJq?=
- =?utf-8?B?My91TFJmbHpvMTREQzRleXp6aldKeDVVL2l6c28xNERXcVBOVkhtMUhVcHFZ?=
- =?utf-8?B?cUd4dVMvWlp6WU9BVXp6OU9PQmMzMUhrUExuaS9YVWJKNy9NN0NhZTl2Nk5i?=
- =?utf-8?B?TDNTaWVIaE81ZEJKWGJWcW9CUFNhaFRSL242SktRWk1QWlV6TGxBZzAzTW9o?=
- =?utf-8?B?TDZWcHFFeUFhUnBxN0pTb20ram4yd0pZOVI3cjBRTkdyQ0pGWisxdUVScDdi?=
- =?utf-8?B?L29VS2dhc3BEOXlVbHdzSDZlZWx2OUtCNk05VUh3UTBrb0N4SUZWb2JYcnJt?=
- =?utf-8?B?MTZrWHVBTW83MW94amVXanNYTldHdmNNSG1nNmJFTkVreHlZZE5QVTNaQytN?=
- =?utf-8?B?S2VGR3AxczVpaXB2QlUrMVd2dFV3aldaMlltV0lObUZ4Qi9WK0FxSWdUdjgv?=
- =?utf-8?B?UU5Jb0kvN01wS2pCWWZkV0ZNN3NRVmRYS2ZNNEJteXVIUEFvSy9zRmxXbXhy?=
- =?utf-8?B?WmRxNlByNWJpVlorWnNsZ0ZLNXNPTWo0NkJodWFmS0lzWlJjWG1uYy9BZEw3?=
- =?utf-8?B?RmdHaG95VGtiamNIdC9VcXFsd3RYL3RBUENQMG1uTE5nMEpjUTBDQ1A2NW1Z?=
- =?utf-8?B?YytvM3Z3Q3JzQi96bE5aeWhMZEpPendZcUNQRU9FUEdhcVdJbUhPZmt2RW1i?=
- =?utf-8?B?SGdTMWZTdmZXUzBMcjVnRkRXay8xY3lkQ1Zoa1ZSRHNBWGt0VFd2M2FSeFhn?=
- =?utf-8?B?UlJSZEtzZ3htUE1Ea0FKdkRjOU9PRjJzcU90T1poLzFIK1RUeXUyK2VLTzdM?=
- =?utf-8?B?T3VHUGRuU1pwUDdYVW9aSWI1ZkJrVjIxSTl5RUpFM0NzTHpSd09kZDhqZkla?=
- =?utf-8?B?anpjcU1rZDhkSVN6ckU0c2dmTGNEZ2RGUG44b0Y2WmQrYlFOTTFFdlVSMGZz?=
- =?utf-8?B?bEZWNVBTbmVuYUdiV1RTN1YvaTNaMU0wY2FnNmpmWHR6bFJEYk1ETDNWNXpK?=
- =?utf-8?B?UnZnSS84MFgyN013bXZCYlZPTTlKT29xbW1pck9NWWFkYmJZV3RVemswSW4z?=
- =?utf-8?B?UVZSWUxLRnA1ZHV6UGFwUlJjdEl0S1UvUDU2R0ZJN0pGVWZ5bm5sR2dqa2U0?=
- =?utf-8?B?MWZEeGNMc2hVTVo1SXNVMW5SUHFuWUlBZVR4T1BibC9wUzJSWjBrcUZzWURJ?=
- =?utf-8?B?MGFUT0o5ZEpSVmJ3TDZGZjZneVNUSWJ0NFgwaGxJU2h2RzBWVXduMy80MUJv?=
- =?utf-8?B?c0psSHNCQ1U5VVlmZnhUMFhIbk9oc2lwL1FVeEQvbWRZSEVyVGFFUT09?=
-X-Exchange-RoutingPolicyChecked: GJlSZCegd9D0Ul3tEVF78RJYQjHWetj+ZNgSuQkchtiShfcvcTMCSbbkdC+CVtEvogfsayDUKYH+IXBEAUTdr1XaitAxh1cT6rRD6MO7vo3wxpFrU+ro+mxlUdWKoibj4N9Mspd633L63MxLy8idLjOUy4p6p1bVOOn66lfJA5lD+8aatqZehwJN1bkcOXCQciVD4xod/DTlwM9os5yu5v9knBuSepBr1voKeKVJprAK0RtesGsNeIOTdxWTwc7mRI/xbx3NnWZulKoKeFH9X1HhV+OrL85uWYG5mJuTs7gAVkcwMGl8mwulK7EXJJ6Q4zHfl14Q/vEW2g2Eyx5AfQ==
-X-MS-Exchange-CrossTenant-Network-Message-Id: d9a83501-8503-43a1-4b46-08deb7e21a08
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR11MB8509.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 May 2026 09:11:26.3253
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 1JnhBpEOW+Wpr7lp4CgVRClHvkQgyretNNE9Y669o4YFFn/ShVfklJ/kc11M5n1DqaWDYcEgbrt6lbh/cIHtYg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB7767
-X-OriginatorOrg: intel.com
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/4] dt-bindings: PCI: qcom: Document the Eliza PCIe
+ Controller
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Vinod Koul <vkoul@kernel.org>, Neil Armstrong
+ <neil.armstrong@linaro.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Helgaas
+ <bhelgaas@google.com>,
+        Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260521-eliza-v1-0-97cdbe88389d@oss.qualcomm.com>
+ <20260521-eliza-v1-2-97cdbe88389d@oss.qualcomm.com>
+ <20260522-calm-bug-of-kindness-2dfae2@quoll>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <20260522-calm-bug-of-kindness-2dfae2@quoll>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=Yr8/gYYX c=1 sm=1 tr=0 ts=6a101f36 cx=c_pps
+ a=JL+w9abYAAE89/QcEU+0QA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22
+ a=2kbbHuhoKpOpG5pfR5YA:9 a=YgbPQC_rjE-wQlsd:21 a=QEXdDO2ut3YA:10
+ a=324X-CrmTo6CU4MGRt3R:22
+X-Proofpoint-ORIG-GUID: _MbE96KLjEQXHrwtP1VS4NP7PSyUEzeb
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTIyMDA5MiBTYWx0ZWRfXxz8SVx8ub/mk
+ FYMQegiqcl0X5/VVh8I5dXsDhZuVG1bUkRKgeSP+r/pj+Jk6mi8fxIU48Z9dXiBabl+HgcywXHb
+ 57zNK4bmMWPLMsPVpmBhEc2d4jG8QBbum41slzDjNRGGXWfMpdWcNA6oTqYJe6RY82Wtzaty1l3
+ IVx5nYIUUit+0BYqu6uBlNZXOuPLSAIQcI2YkikL/UfP48BxNviQQK25AJ+TA5+IlyaULFny+4X
+ 0KBYYrsaUGgN4YgxfHd4si2poZFuDh3Z/P5om+5JFWzkPHsAc/VktIifWAFeJFJc3DLJZmXTfCd
+ qcK8g4Hs/SvXMVoHkA8qwsTM1k6SyMD9egsioaeknjs37m65XXirxYdPafB0Lgopby9VlEScIvO
+ dSuXcUl5XADeipA2AMXhLCaK+4K3rYspSS4Wuy3n5T9GjRF3vsF4RLla/iQ57q8VUT3hQM0MELe
+ H8ReBwgIGEo9hNk4IkA==
+X-Proofpoint-GUID: _MbE96KLjEQXHrwtP1VS4NP7PSyUEzeb
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
+ definitions=2026-05-22_02,2026-05-18_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 priorityscore=1501 lowpriorityscore=0 clxscore=1015
+ suspectscore=0 bulkscore=0 impostorscore=0 phishscore=0 spamscore=0
+ malwarescore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2605130000
+ definitions=main-2605220092
 
-On 5/22/26 04:34, Nicolin Chen wrote:
-> Controlled by IOMMU drivers, ATS can be enabled "on demand", when a given
-> PASID on a device is attached to an I/O page table. This is working, even
-> when a device has no translation on its RID (i.e., RID is IOMMU bypassed).
-> 
-> However, certain PCIe devices require non-PASID ATS on their RID even when
-> the RID is IOMMU bypassed. Call this "ATS always on" in IOMMU term.
-> 
-> For example, CXL spec r4.0 notes in sec 3.2.5.13 Memory Type on CXL.cache:
->   "To source requests on CXL.cache, devices need to get the Host Physical
->    Address (HPA) from the Host by means of an ATS request on CXL.io."
-> 
-> In other words, the CXL.cache capability requires ATS; otherwise, it can't
-> access host physical memory.
-> 
-> Introduce a new pci_ats_required() helper for the IOMMU driver to scan a
-> PCI device and shift ATS policies between "on demand" and "always on".
-> 
-> Add the support for CXL.cache devices first. Pre-CXL devices will be added
-> in quirks.c file.
-> 
-> Note that pci_ats_required() validates against pci_ats_supported(), so we
-> ensure that untrusted devices (e.g. external ports) will not be always on.
-> This maintains the existing ATS security policy regarding potential side-
-> channel attacks via ATS.
-> 
-> Cc: linux-cxl@vger.kernel.org
-> Suggested-by: Vikram Sethi <vsethi@nvidia.com>
-> Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
-> Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-> Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-> Reviewed-by: Kevin Tian <kevin.tian@intel.com>
-> Tested-by: Nirmoy Das <nirmoyd@nvidia.com>
-> Acked-by: Nirmoy Das <nirmoyd@nvidia.com>
-> Reviewed-by: Dave Jiang <dave.jiang@intel.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
-> ---
 
-Reviewed-by: Yi Liu <yi.l.liu@intel.com>
 
->   include/linux/pci-ats.h       |  3 +++
->   include/uapi/linux/pci_regs.h |  1 +
->   drivers/pci/ats.c             | 46 +++++++++++++++++++++++++++++++++++
->   3 files changed, 50 insertions(+)
-> 
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index 75c6c86cf09dc..f3723b6861294 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -12,6 +12,7 @@ int pci_prepare_ats(struct pci_dev *dev, int ps);
->   void pci_disable_ats(struct pci_dev *dev);
->   int pci_ats_queue_depth(struct pci_dev *dev);
->   int pci_ats_page_aligned(struct pci_dev *dev);
-> +bool pci_ats_required(struct pci_dev *dev);
->   #else /* CONFIG_PCI_ATS */
->   static inline bool pci_ats_supported(struct pci_dev *d)
->   { return false; }
-> @@ -24,6 +25,8 @@ static inline int pci_ats_queue_depth(struct pci_dev *d)
->   { return -ENODEV; }
->   static inline int pci_ats_page_aligned(struct pci_dev *dev)
->   { return 0; }
-> +static inline bool pci_ats_required(struct pci_dev *dev)
-> +{ return false; }
->   #endif /* CONFIG_PCI_ATS */
->   
->   #ifdef CONFIG_PCI_PRI
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 14f634ab9350d..6ac45be1008b8 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -1349,6 +1349,7 @@
->   /* CXL r4.0, 8.1.3: PCIe DVSEC for CXL Device */
->   #define PCI_DVSEC_CXL_DEVICE				0
->   #define  PCI_DVSEC_CXL_CAP				0xA
-> +#define   PCI_DVSEC_CXL_CACHE_CAPABLE			_BITUL(0)
->   #define   PCI_DVSEC_CXL_MEM_CAPABLE			_BITUL(2)
->   #define   PCI_DVSEC_CXL_HDM_COUNT			__GENMASK(5, 4)
->   #define  PCI_DVSEC_CXL_CTRL				0xC
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index ec6c8dbdc5e9c..84cd06d74fc9c 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -205,6 +205,52 @@ int pci_ats_page_aligned(struct pci_dev *pdev)
->   	return 0;
->   }
->   
-> +/*
-> + * CXL r4.0, sec 3.2.5.13 Memory Type on CXL.cache notes: to source requests on
-> + * CXL.cache, devices need to get the Host Physical Address (HPA) from the Host
-> + * by means of an ATS request on CXL.io.
-> + *
-> + * In other words, CXL.cache devices cannot access host physical memory without
-> + * ATS.
-> + *
-> + * Check Cache_Capable instead of Cache_Enable because CXL.cache may be enabled
-> + * after the caller uses this to make its ATS decision.
-> + */
-> +static bool pci_cxl_ats_required(struct pci_dev *pdev)
-> +{
-> +	int offset;
-> +	u16 cap;
-> +
-> +	offset = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					   PCI_DVSEC_CXL_DEVICE);
-> +	if (!offset)
-> +		return false;
-> +
-> +	if (pci_read_config_word(pdev, offset + PCI_DVSEC_CXL_CAP, &cap))
-> +		return false;
-> +
-> +	return cap & PCI_DVSEC_CXL_CACHE_CAPABLE;
-> +}
-> +
-> +/**
-> + * pci_ats_required - Whether the PCI device requires ATS
-> + * @pdev: the PCI device
-> + *
-> + * Returns true, if the PCI device requires ATS for basic functional operation.
-> + */
-> +bool pci_ats_required(struct pci_dev *pdev)
-> +{
-> +	if (!pci_ats_supported(pdev))
-> +		return false;
-> +
-> +	/* A VF inherits its PF's requirement for ATS function */
-> +	if (pdev->is_virtfn)
-> +		pdev = pci_physfn(pdev);
-> +
-> +	return pci_cxl_ats_required(pdev);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ats_required);
-> +
->   #ifdef CONFIG_PCI_PRI
->   void pci_pri_init(struct pci_dev *pdev)
->   {
+On 5/22/2026 12:20 PM, Krzysztof Kozlowski wrote:
+> On Thu, May 21, 2026 at 07:35:30PM +0530, Krishna Chaitanya Chundru wrote:
+>> +description:
+>> +  Qualcomm ELIZA SoC (and compatible) PCIe root complex controller is based on
+>> +  the Synopsis DesignWare PCIe IP.
+>> +
+>> +properties:
+>> +  compatible:
+>> +    const: qcom,pcie-eliza
+> All new pcie compatibles moved to correct format.
+Ack, I will change it to qcom,elize-pcie
+>> +
+>> +  reg:
+>> +    minItems: 5
+>> +    maxItems: 6
+>> +
+>> +  reg-names:
+>> +    minItems: 5
+>> +    items:
+>> +      - const: parf # Qualcomm specific registers
+>> +      - const: dbi # DesignWare PCIe registers
+>> +      - const: elbi # External local bus interface registers
+>> +      - const: atu # ATU address space
+>> +      - const: config # PCIe configuration space
+>> +      - const: mhi # MHI registers
+>> +
+>> +  clocks:
+>> +    maxItems: 7
+>> +
+>> +  clock-names:
+>> +    items:
+>> +      - const: aux # Auxiliary clock
+>> +      - const: cfg # Configuration clock
+>> +      - const: bus_master # Master AXI clock
+>> +      - const: bus_slave # Slave AXI clock
+>> +      - const: slave_q2a # Slave Q2A clock
+>> +      - const: ddrss_sf_tbu # PCIe SF TBU clock
+>> +      - const: cnoc_sf_axi # Config NoC PCIe1 AXI clock
+>> +
+>> +  interrupts:
+>> +    minItems: 8
+> This should not be flexible. Neither 'reg'.
+ack I will remove minItems
+>> +    maxItems: 9
+>> +
+>> +  interrupt-names:
+>> +    minItems: 8
+>> +    items:
+>> +      - const: msi0
+>> +      - const: msi1
+>> +      - const: msi2
+>> +      - const: msi3
+>> +      - const: msi4
+>> +      - const: msi5
+>> +      - const: msi6
+>> +      - const: msi7
+>> +      - const: global
+>> +
+>> +  resets:
+>> +    maxItems: 2
+>> +
+>> +  reset-names:
+>> +    items:
+>> +      - const: pci # PCIe core reset
+>> +      - const: link_down # PCIe link down reset
+>> +
+>> +required:
+>> +  - power-domains
+>> +  - resets
+>> +  - reset-names
+>> +
+>> +allOf:
+>> +  - $ref: qcom,pcie-common.yaml#
+>> +
+>> +unevaluatedProperties: false
+>> +
+>> +examples:
+>> +  - |
+>> +    #include <dt-bindings/clock/qcom,eliza-gcc.h>
+>> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+>> +    #include <dt-bindings/interconnect/qcom,eliza-rpmh.h>
+>> +
+>> +    soc {
+>> +        #address-cells = <2>;
+>> +        #size-cells = <2>;
+>> +
+>> +        pcie@1c00000 {
+>> +            compatible = "qcom,pcie-eliza";
+>> +            reg = <0 0x01c00000 0 0x3000>,
+>> +                  <0 0x40000000 0 0xf1d>,
+>> +                  <0 0x40000f20 0 0xa8>,
+>> +                  <0 0x40001000 0 0x1000>,
+>> +                  <0 0x40100000 0 0x100000>;
+>> +            reg-names = "parf", "dbi", "elbi", "atu", "config";
+>> +            ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
+>> +                     <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x3d00000>;
+>> +
+>> +            bus-range = <0x00 0xff>;
+>> +            device_type = "pci";
+>> +            linux,pci-domain = <0>;
+>> +            num-lanes = <1>;
+>> +
+>> +            #address-cells = <3>;
+>> +            #size-cells = <2>;
+>> +
+>> +            clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
+>> +                     <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+>> +                     <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
+>> +                     <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
+>> +                     <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
+>> +                     <&gcc GCC_DDRSS_PCIE_SF_QTB_CLK>,
+>> +                     <&gcc GCC_CNOC_PCIE_SF_AXI_CLK>;
+>> +            clock-names = "aux",
+>> +                          "cfg",
+>> +                          "bus_master",
+>> +                          "bus_slave",
+>> +                          "slave_q2a",
+>> +                          "ddrss_sf_tbu",
+>> +                          "cnoc_sf_axi";
+>> +
+>> +            dma-coherent;
+>> +
+>> +            interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 478 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 479 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 535 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 536 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 537 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 540 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 653 IRQ_TYPE_LEVEL_HIGH>,
+>> +                         <GIC_SPI 370 IRQ_TYPE_LEVEL_HIGH>;
+>> +            interrupt-names = "msi0", "msi1", "msi2", "msi3",
+>> +                              "msi4", "msi5", "msi6", "msi7", "global";
+>> +            #interrupt-cells = <1>;
+>> +            interrupt-map-mask = <0 0 0 0x7>;
+>> +            interrupt-map = <0 0 0 1 &intc 0 0 0 564 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
+>> +                            <0 0 0 2 &intc 0 0 0 565 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
+>> +                            <0 0 0 3 &intc 0 0 0 566 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
+>> +                            <0 0 0 4 &intc 0 0 0 567 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+>> +
+>> +            interconnects = <&pcie_noc MASTER_PCIE_0 0 &mc_virt SLAVE_EBI1 0>,
+>> +                            <&gem_noc MASTER_APPSS_PROC 0 &cnoc_main SLAVE_PCIE_0 0>;
+>> +            interconnect-names = "pcie-mem", "cpu-pcie";
+>> +
+>> +            iommu-map = <0x0 &apps_smmu 0x1480 0x1>,
+>> +                        <0x100 &apps_smmu 0x1481 0x1>;
+>> +
+>> +            pinctrl-0 = <&pcie0_default_state>;
+>> +            pinctrl-names = "default";
+>> +
+>> +            power-domains = <&gcc GCC_PCIE_0_GDSC>;
+>> +
+>> +            resets = <&gcc GCC_PCIE_0_BCR>,
+>> +                     <&gcc GCC_PCIE_0_LINK_DOWN_BCR>;
+>> +            reset-names = "pci",
+>> +                          "link_down";
+>> +
+> Drop stray blank line.
+ack.
+
+- Krishna Chaitanya.
+>> +        };
+>> +    };
+>>
+>> -- 
+>> 2.34.1
+>>
 
