@@ -1,283 +1,220 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E5A023AB9D
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 06:49:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B38343537FE;
+	Fri, 22 May 2026 06:50:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779432569; cv=none; b=pXbLK6mazlf3b1Qk/lagGFTxS+H4uU3tlUZElP8NbbZdi2oYZbbMDxCs0zaHx0owLg3lYYk5nIcyZrw5FPxq2O4cGln6hhy5LVtg3LKXIxQQRFHQo8BcUwioiDDfYWTronmIXwOkTvmO5Cj1ZKpdlR4K2dIpETkVQmKzrtA7fso=
+	t=1779432609; cv=none; b=ufU2PO89ljlPID5WHehi0VaP0RnFgikgoTlJyzjGyVuaNi2jTeQnv0SEfaPJEsYq/bqC9lOUWYwgcQy9WsuBeoQBp68XVKVS06Sh6PQsMoOAy44NEbxhHjgorHDieYn2+ApjixEqk5ZQkMVFY1TSsNC3hTRyIOM+W7WlL0AXNdg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779432569; c=relaxed/simple;
-	bh=aWAoHLoFkoSDKSa4p8g8TyY+x3Nf8boGC071QFYT6hg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ILkwHYK9YyaQzdMWIqApf9uLPY/PzwlGAywiekoJw2V9oF57HggWqR23wgu06wRfGlRWCynvlnlSdDdyr5DdNIl9MGdxpseDbEZdN8oKQ4AKDDcgXe5TxHMJF+Tu4kxVabqozR2JSjmO8VjgA+7h5jZf5dNjvslhgcwEzzcIjEs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=owliyhEO; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779432609; c=relaxed/simple;
+	bh=A/DtBXZwaGuynrQY6Kb+1lIpa6Veb5XYG0pT2NF2BDw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=S0/mcVAwPxkMd8IvMZT5I9eKf0Dg0VwhRloRrMS2DVFhc/RiBrb4RsCu22qtEoUQmPljwcIHSzA2DmSseWS/ADHZyf98b5pbgu/EF5fzFolj5JFZWnYvkQl63T08uyFT8XGH0MGztje0knUSZsMiX709l82ZcVg/NQAgoK6RpSU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nbwp13Za; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="owliyhEO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B674C1F000E9;
-	Fri, 22 May 2026 06:49:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nbwp13Za"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3F2B1F000E9;
+	Fri, 22 May 2026 06:50:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779432567;
-	bh=2OPC2619RpH8iag5tvjiiNRoi559TC1jMTOv2S+h85Y=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=owliyhEOiW3odI/U5zgePcmLqNLM1MTOb9/MMhm+eBJN+Tf/a4bfpTA9fULVYsx2l
-	 yU3CdpEfP7WCuhYlGamLh03jZgbDwec1LirQfr63EKt+d11tcwAttSdg22eV+Hloig
-	 GQlDr45Ofo9iAIEoPXERRHjrzgcEp52RuVg9VUupk9h2Rbk8JbNDtw0vuscWH7Gfiv
-	 R+WVIq0aakdpQvq9D6Ij2Z78j36jYJxJr1PEApisPzzMhgcvGJONvYLm9q5GG627mo
-	 aO9Z69OmWofzouoJ28l6qens8FzeWgXy1YkzzPyy8+sfrs7oqPa6TZeqaw4ApgxGnB
-	 V7vVRO3kS7RlA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 3/4] PCI: endpoint: Add support for DOE
- initialization and setup in EPC core
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Aksh Garg" <a-garg7@ti.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260522052434.802034-4-a-garg7@ti.com>
-References: <20260522052434.802034-4-a-garg7@ti.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 22 May 2026 06:49:27 +0000
-Message-Id: <20260522064927.B674C1F000E9@smtp.kernel.org>
+	s=k20260515; t=1779432604;
+	bh=YfScx9EoFO8nSle2v2AarnRZDMn7LIOkpHcFtOUg/jw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Nbwp13Za+JUrIo8e2IXiYsYERqJA6PyfS7u0AvSgnM+gulokorkyvtvs6IwfWgpgQ
+	 zFIfjwSonKt/K249h2ACceFdomeuFWbOfjxLz3hdFtOxN6iX+6g1tNBcYDZ40xERnS
+	 NLjlOBsu+88EWXkYG4nXpty6j4mB063fcijZC4aBhev3U5opnczsAWnaqVfLSAaqeb
+	 YTD0V1/yImHkHHWAXcdQvipG4vGkKY2AnH0u5ysDTEtQmW3Y6YiC5uFeghXJ1Dec4D
+	 SvPw/AuFeKkBGC1cQ69zn8kzAwFvY2uDrjLPSkB1XDXA8xYk+fcAthRry9m1lcKAeG
+	 +av6BcbjEQDvw==
+Date: Fri, 22 May 2026 08:50:02 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/4] dt-bindings: PCI: qcom: Document the Eliza PCIe
+ Controller
+Message-ID: <20260522-calm-bug-of-kindness-2dfae2@quoll>
+References: <20260521-eliza-v1-0-97cdbe88389d@oss.qualcomm.com>
+ <20260521-eliza-v1-2-97cdbe88389d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260521-eliza-v1-2-97cdbe88389d@oss.qualcomm.com>
 
-Thank you for your contribution! Sashiko AI review found 7 potential issue(=
-s) to consider:
-- [Critical] Calling `pci_epc_deinit_notify()` before `pci_epc_init_notify(=
-)` triggers a kernel panic when destroying an uninitialized xarray.
-- [High] Hardcoding Physical Function 0 (PF0) to check capabilities breaks =
-endpoints with asymmetric DOE support.
-- [High] The `find_ext_capability` controller operation is called without h=
-olding the required `epc->lock`.
-- [High] Destroying EPC capabilities before notifying EPF drivers creates a=
- Use-After-Free risk.
-- [Medium] Repeated invocations of `pci_epc_init_notify()` silently leak ex=
-isting DOE mailboxes and corrupt the xarray.
-- [Medium] DOE mailboxes on Virtual Functions (VFs) are ignored during disc=
-overy and setup.
-- [Medium] The `cap` parameter in the `find_ext_capability` op is an 8-bit =
-integer, truncating 16-bit PCIe Extended Capability IDs.
---
-
-commit 2d1f89c68bd01b16c5b22686d5e612b5c77a0616
-Author: Aksh Garg <a-garg7@ti.com>
-
-PCI: endpoint: Add support for DOE initialization and setup in EPC core
-
-This commit adds pci_epc_init_capabilities() and pci_epc_deinit_capabilitie=
-s()
-to the EPC core driver to initialize and tear down DOE capabilities. It
-discovers DOE mailboxes for physical functions and registers them within the
-controller.
-
-> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/p=
-ci-epc-core.c
-> index 6c3c58185fc5d..af7889b541c05 100644
-> --- a/drivers/pci/endpoint/pci-epc-core.c
-> +++ b/drivers/pci/endpoint/pci-epc-core.c
-[ ... ]
-> @@ -842,6 +844,71 @@ void pci_epc_linkdown(struct pci_epc *epc)
->  }
->  EXPORT_SYMBOL_GPL(pci_epc_linkdown);
-> =20
-> +/**
-> + * pci_epc_doe_setup() - Discover and setup DOE mailboxes for all functi=
-ons
-> + * @epc: the EPC device on which DOE mailboxes has to be setup
-> + *
-> + * Discover DOE (Data Object Exchange) capabilities for all physical fun=
-ctions
-> + * in the endpoint controller and register DOE mailboxes.
-> + *
-> + * Returns: 0 on success, -errno on failure
-> + */
-> +static int pci_epc_doe_setup(struct pci_epc *epc)
-> +{
-> +	u16 cap_offset =3D 0;
-> +	u8 func_no;
-> +	int ret;
+On Thu, May 21, 2026 at 07:35:30PM +0530, Krishna Chaitanya Chundru wrote:
+> +description:
+> +  Qualcomm ELIZA SoC (and compatible) PCIe root complex controller is based on
+> +  the Synopsis DesignWare PCIe IP.
 > +
-> +	if (!epc->ops || !epc->ops->find_ext_capability)
-> +		return -EINVAL;
-> +
-> +	/* Discover DOE capabilities for all functions */
-> +	for (func_no =3D 0; func_no < epc->max_functions; func_no++) {
-> +		while ((cap_offset =3D epc->ops->find_ext_capability(epc, func_no, 0,
+> +properties:
+> +  compatible:
+> +    const: qcom,pcie-eliza
 
-[Severity: Medium]
-Does this logic bypass Virtual Functions (VFs)? The loop iterates over
-physical functions but passes a hardcoded 0 for vfunc_no to
-find_ext_capability(). Since VFs can also possess extended capabilities,
-it seems they are excluded from DOE discovery.
+All new pcie compatibles moved to correct format.
 
-[Severity: High]
-Is it safe to invoke epc->ops->find_ext_capability() without holding the
-epc->lock? Other hardware operations in the PCI endpoint core appear to be
-strictly protected by this lock to prevent concurrent accesses to the shared
-controller registers.
+> +
+> +  reg:
+> +    minItems: 5
+> +    maxItems: 6
+> +
+> +  reg-names:
+> +    minItems: 5
+> +    items:
+> +      - const: parf # Qualcomm specific registers
+> +      - const: dbi # DesignWare PCIe registers
+> +      - const: elbi # External local bus interface registers
+> +      - const: atu # ATU address space
+> +      - const: config # PCIe configuration space
+> +      - const: mhi # MHI registers
+> +
+> +  clocks:
+> +    maxItems: 7
+> +
+> +  clock-names:
+> +    items:
+> +      - const: aux # Auxiliary clock
+> +      - const: cfg # Configuration clock
+> +      - const: bus_master # Master AXI clock
+> +      - const: bus_slave # Slave AXI clock
+> +      - const: slave_q2a # Slave Q2A clock
+> +      - const: ddrss_sf_tbu # PCIe SF TBU clock
+> +      - const: cnoc_sf_axi # Config NoC PCIe1 AXI clock
+> +
+> +  interrupts:
+> +    minItems: 8
 
-> +								   cap_offset,
-> +								   PCI_EXT_CAP_ID_DOE))) {
-> +			/* Register this DOE mailbox */
-> +			ret =3D pci_ep_doe_add_mailbox(epc, func_no, cap_offset);
-> +			if (ret) {
-> +				dev_warn(&epc->dev,
-> +					 "[pf%d:offset %x] failed to add DOE mailbox\n",
-> +					 func_no, cap_offset);
-> +			}
-> +		}
-> +	}
-> +
-> +	dev_dbg(&epc->dev, "DOE mailboxes setup complete\n");
-> +	return 0;
-> +}
-> +
-> +/**
-> + * pci_epc_init_capabilities() - Initialize EPC capabilities
-> + * @epc: the EPC device whose capabilities need to be initialized
-> + *
-> + * Invoke to initialize capabilities supported by the EPC device.
-> + */
-> +static void pci_epc_init_capabilities(struct pci_epc *epc)
-> +{
-> +	const struct pci_epc_features *epc_features;
-> +	int ret;
-> +
-> +	epc_features =3D pci_epc_get_features(epc, 0, 0);
+This should not be flexible. Neither 'reg'.
 
-[Severity: High]
-Could this hardcoded check of Physical Function 0 (PF0) break endpoints that
-have asymmetric DOE support? If PF0 is not doe_capable, the setup is entire=
-ly
-skipped, even if other physical functions like PF1 support DOE.
-
-> +	if (!epc_features)
-> +		return;
+> +    maxItems: 9
 > +
-> +	if (IS_ENABLED(CONFIG_PCI_ENDPOINT_DOE) && epc_features->doe_capable) {
-> +		ret =3D pci_ep_doe_init(epc);
-> +		if (ret) {
-> +			dev_warn(&epc->dev, "DOE initialization failed: %d\n", ret);
-> +			return;
-> +		}
+> +  interrupt-names:
+> +    minItems: 8
+> +    items:
+> +      - const: msi0
+> +      - const: msi1
+> +      - const: msi2
+> +      - const: msi3
+> +      - const: msi4
+> +      - const: msi5
+> +      - const: msi6
+> +      - const: msi7
+> +      - const: global
 > +
-> +		ret =3D pci_epc_doe_setup(epc);
-> +		if (ret)
-> +			dev_warn(&epc->dev, "DOE setup failed: %d\n", ret);
-> +	}
-> +}
+> +  resets:
+> +    maxItems: 2
 > +
->  /**
->   * pci_epc_init_notify() - Notify the EPF device that EPC device initial=
-ization
->   *                         is completed.
-> @@ -857,6 +924,8 @@ void pci_epc_init_notify(struct pci_epc *epc)
->  	if (IS_ERR_OR_NULL(epc))
->  		return;
-> =20
-> +	pci_epc_init_capabilities(epc);
+> +  reset-names:
+> +    items:
+> +      - const: pci # PCIe core reset
+> +      - const: link_down # PCIe link down reset
 > +
-
-[Severity: Medium]
-What happens if pci_epc_init_notify() is invoked multiple times? Without
-checking if the EPC is already initialized (e.g. epc->init_complete),
-xa_init(&epc->doe_mbs) is called unconditionally. This would overwrite the
-xarray head pointer and lock, silently orphaning previously allocated mailb=
-ox
-elements and their workqueues.
-
->  	mutex_lock(&epc->list_lock);
->  	list_for_each_entry(epf, &epc->pci_epf, list) {
-[ ... ]
-> @@ -890,6 +959,27 @@ void pci_epc_notify_pending_init(struct pci_epc *epc=
-, struct pci_epf *epf)
->  }
->  EXPORT_SYMBOL_GPL(pci_epc_notify_pending_init);
-> =20
-> +/**
-> + * pci_epc_deinit_capabilities() - Cleanup EPC capabilities
-> + * @epc: the EPC device whose capabilities need to be cleaned up
-> + *
-> + * Invoke to cleanup capabilities supported by the EPC device,
-> + * and free the associated resources.
-> + */
-> +static void pci_epc_deinit_capabilities(struct pci_epc *epc)
-> +{
-> +	const struct pci_epc_features *epc_features;
+> +required:
+> +  - power-domains
+> +  - resets
+> +  - reset-names
 > +
-> +	epc_features =3D pci_epc_get_features(epc, 0, 0);
-
-[Severity: High]
-Similar to the initialization side, is it intentional to hardcode the featu=
-re
-check to PF0 here?
-
-> +	if (!epc_features)
-> +		return;
+> +allOf:
+> +  - $ref: qcom,pcie-common.yaml#
 > +
-> +	if (IS_ENABLED(CONFIG_PCI_ENDPOINT_DOE) && epc_features->doe_capable) {
-> +		pci_ep_doe_destroy(epc);
-> +		dev_dbg(&epc->dev, "DOE mailboxes destroyed\n");
-> +	}
-> +}
+> +unevaluatedProperties: false
 > +
->  /**
->   * pci_epc_deinit_notify() - Notify the EPF device about EPC deinitializ=
-ation
->   * @epc: the EPC device whose deinitialization is completed
-> @@ -903,6 +993,8 @@ void pci_epc_deinit_notify(struct pci_epc *epc)
->  	if (IS_ERR_OR_NULL(epc))
->  		return;
-> =20
-> +	pci_epc_deinit_capabilities(epc);
+> +examples:
+> +  - |
+> +    #include <dt-bindings/clock/qcom,eliza-gcc.h>
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/interconnect/qcom,eliza-rpmh.h>
+> +
+> +    soc {
+> +        #address-cells = <2>;
+> +        #size-cells = <2>;
+> +
+> +        pcie@1c00000 {
+> +            compatible = "qcom,pcie-eliza";
+> +            reg = <0 0x01c00000 0 0x3000>,
+> +                  <0 0x40000000 0 0xf1d>,
+> +                  <0 0x40000f20 0 0xa8>,
+> +                  <0 0x40001000 0 0x1000>,
+> +                  <0 0x40100000 0 0x100000>;
+> +            reg-names = "parf", "dbi", "elbi", "atu", "config";
+> +            ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
+> +                     <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x3d00000>;
+> +
+> +            bus-range = <0x00 0xff>;
+> +            device_type = "pci";
+> +            linux,pci-domain = <0>;
+> +            num-lanes = <1>;
+> +
+> +            #address-cells = <3>;
+> +            #size-cells = <2>;
+> +
+> +            clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
+> +                     <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+> +                     <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
+> +                     <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
+> +                     <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
+> +                     <&gcc GCC_DDRSS_PCIE_SF_QTB_CLK>,
+> +                     <&gcc GCC_CNOC_PCIE_SF_AXI_CLK>;
+> +            clock-names = "aux",
+> +                          "cfg",
+> +                          "bus_master",
+> +                          "bus_slave",
+> +                          "slave_q2a",
+> +                          "ddrss_sf_tbu",
+> +                          "cnoc_sf_axi";
+> +
+> +            dma-coherent;
+> +
+> +            interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 478 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 479 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 535 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 536 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 537 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 540 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 653 IRQ_TYPE_LEVEL_HIGH>,
+> +                         <GIC_SPI 370 IRQ_TYPE_LEVEL_HIGH>;
+> +            interrupt-names = "msi0", "msi1", "msi2", "msi3",
+> +                              "msi4", "msi5", "msi6", "msi7", "global";
+> +            #interrupt-cells = <1>;
+> +            interrupt-map-mask = <0 0 0 0x7>;
+> +            interrupt-map = <0 0 0 1 &intc 0 0 0 564 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
+> +                            <0 0 0 2 &intc 0 0 0 565 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
+> +                            <0 0 0 3 &intc 0 0 0 566 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
+> +                            <0 0 0 4 &intc 0 0 0 567 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+> +
+> +            interconnects = <&pcie_noc MASTER_PCIE_0 0 &mc_virt SLAVE_EBI1 0>,
+> +                            <&gem_noc MASTER_APPSS_PROC 0 &cnoc_main SLAVE_PCIE_0 0>;
+> +            interconnect-names = "pcie-mem", "cpu-pcie";
+> +
+> +            iommu-map = <0x0 &apps_smmu 0x1480 0x1>,
+> +                        <0x100 &apps_smmu 0x1481 0x1>;
+> +
+> +            pinctrl-0 = <&pcie0_default_state>;
+> +            pinctrl-names = "default";
+> +
+> +            power-domains = <&gcc GCC_PCIE_0_GDSC>;
+> +
+> +            resets = <&gcc GCC_PCIE_0_BCR>,
+> +                     <&gcc GCC_PCIE_0_LINK_DOWN_BCR>;
+> +            reset-names = "pci",
+> +                          "link_down";
 > +
 
-[Severity: Critical]
-Can this cause a panic if pci_epc_deinit_notify() is called before
-pci_epc_init_notify()?
+Drop stray blank line.
 
-Some endpoint drivers (like pcie-qcom-ep) explicitly call the deinit notify
-on the first PERST deassertion before initialization. Because this
-unconditionally calls pci_epc_deinit_capabilities(), it will invoke
-xa_destroy() on an uninitialized xarray, potentially triggering a
-panic due to bad spinlock magic.
-
-Would it be safer to check epc->init_complete first?
-
-[Severity: High]
-Does destroying the EPC capabilities before notifying the EPF drivers creat=
-e a
-use-after-free risk? The underlying DOE mailboxes and workqueues are freed
-here, but the bound EPF drivers are still active and will only be notified
-to quiesce in the loop below.
-
->  	mutex_lock(&epc->list_lock);
->  	list_for_each_entry(epf, &epc->pci_epf, list) {
-[ ... ]
-> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-> index dd26294c8175a..11474e337db33 100644
-> --- a/include/linux/pci-epc.h
-> +++ b/include/linux/pci-epc.h
-[ ... ]
-> @@ -115,6 +117,8 @@ struct pci_epc_ops {
->  	void	(*stop)(struct pci_epc *epc);
->  	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
->  						       u8 func_no, u8 vfunc_no);
-> +	u16	(*find_ext_capability)(struct pci_epc *epc, u8 func_no,
-> +				       u8 vfunc_no, u16 start, u8 cap);
-
-[Severity: Medium]
-Will passing u8 for the cap parameter truncate 16-bit PCIe Extended
-Capability IDs? While PCI_EXT_CAP_ID_DOE fits in 8 bits, this API contract
-truncates any future standard or vendor-specific capability IDs > 255.
-Should the parameter be declared as u16 instead?
-
->  	struct module *owner;
->  };
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260522052434.8020=
-34-1-a-garg7@ti.com?part=3D3
+> +        };
+> +    };
+> 
+> -- 
+> 2.34.1
+> 
