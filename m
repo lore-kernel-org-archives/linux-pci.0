@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66882366042;
-	Fri, 22 May 2026 17:59:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17FA8273D77;
+	Fri, 22 May 2026 18:02:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779472747; cv=none; b=PjtOsh7mirvDLZjCq3n9XYkrvOKvO6YM0c2jqhUBHOIHgNJj08gpBV205KLLoECP/OX43RptPSTybqBaehjIhje5An2ui0ujWpzb9Dis4fscg7quqMxmScM9eNEMvXa+hSuNyU/aj857mfmEPu2lTZq1D3MjCqzFDICoa1ZFchs=
+	t=1779472922; cv=none; b=gUd/NqWvDdYyTQgdS7GjGu2YqSJywAP01VMx1dsBSQCrl2JBNuO6AeluloQWLxd0ZgSuK7hBEITFVA+eiDtDSGqTMWue2pD6ilFngGtf0Hu3RG4wdsjMWcAhMv5u7DI+vbKTk3LvDHsCRnOb2QvzyVJ7SR1/2Lc9/cWINoU8yiU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779472747; c=relaxed/simple;
-	bh=8e922+jS//8NGIWTqfOW6k7zG1zpaE4rZo0LrZTDT+8=;
+	s=arc-20240116; t=1779472922; c=relaxed/simple;
+	bh=8i9eOfbfVibPQwbyc18oYvOUSM5+myC1Cc+y1nUcrkY=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=YTuAcztSZw2kGyvqMv9cl170SP+E+6KUDIXnnDmdD4hmOZ+YlWvOW6WXKv2BNgR7fmQ0+See27pDKZXjTEoC4BxSPDioklwtPyn3CjJECvcRBy/sGhmvJOtIRUUxoqVTNfVfG2kCQQCxjG5N2FNwT695rQOfbLEkqZ8pKML+gio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R/lF87yY; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=r2HHk5Cmiomyci99TETEubj2e590/fYYlfJbTx5t6hrfdSiobS9pXWZuoP/81tN/qiNsy/VKHxKiZjvnipCuXTomAEbdPgwgghd8/zybrJkqpPF5VAC1yurr30FJJY/B9zQ/3dJqOG/Uux1XWHLNtonK24fpcFSpvzAMQ5uQ7gU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TXo6wUbv; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R/lF87yY"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 23DC41F000E9;
-	Fri, 22 May 2026 17:59:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TXo6wUbv"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 91D7A1F000E9;
+	Fri, 22 May 2026 18:02:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779472746;
-	bh=QvhytzGMgy3nE/I3M4lZRHo1Fz4WHKJA8K2mHNM+zQY=;
+	s=k20260515; t=1779472920;
+	bh=3pwqqJmK0UZHpTQbgMPdFytZpYtz+77BknUANKGAa1k=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=R/lF87yYK3T8ZgihOcJLjT1tJ2iqucYpoTXz+lE+iNM8GsdPFgTHohAXTIRWiXCaq
-	 Z3sLJcXDGLxdXpbjd5vXsU6R9vl67LHiffd1HrCgb9F7RXCuMOOfdz7pnSMbp79xKx
-	 bqeV2FB/iwmC+djHEZ5mqJS5Do9oSrdFTfzKqDljYArEUikYmdVLSGNtDVRe2CbZXe
-	 nSlHxZCLg/t15FV7B3ebQdjPPEJOXYtquDgAXX27hU8eVFNYP8lGHAlA4FwFKLJOmb
-	 9sPWoEQ7WIovdqVHFNJR3cl90/fD+OjTmJ5s3ncJReREDo+cltiTIVjISJ3mzjWVrW
-	 j+eMJNK+bTxAw==
-Date: Fri, 22 May 2026 12:59:05 -0500
+	b=TXo6wUbvp686W6gRZC9qm8zmd4BiXLPz+wTU2Jsq2lT4E9qOQM9JxVXC0FxlBZ5pg
+	 iVw25MMaBsEi28vn1ODnZDud0jzMfw9NP4SR4+uPXPdaQLdtGDAKm+TIOPQSuX7fjx
+	 yk/Z2M+PGaVjVwx1oP3yx6UayfL38rLK20qYZ+qf5KhiR4ygA7F/s3E+Fm1++h3vnl
+	 Z07mNXiFezn3JCqacgY51FX6uymKGoCnYQPub6wfFXnuNVTZZJIVNpB7KgHDxNkwSC
+	 unRmAtTZKUdsX9Fn3QNUMDYspPEoPO0/Xa2Weh/cf2OfnuHBRN2njlHAHVl6ZgSqzO
+	 gfcXyx/Vw6YbQ==
+Date: Fri, 22 May 2026 13:01:59 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -50,9 +50,9 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v5 05/11] PCI: liveupdate: Keep bus numbers constant
- during Live Update
-Message-ID: <20260522175905.GA232400@bhelgaas>
+Subject: Re: [PATCH v5 10/11] PCI: liveupdate: Do not disable bus mastering
+ on preserved devices during kexec
+Message-ID: <20260522180159.GA231364@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,29 +61,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260512184846.119396-6-dmatlack@google.com>
+In-Reply-To: <20260512184846.119396-11-dmatlack@google.com>
 
-On Tue, May 12, 2026 at 06:48:40PM +0000, David Matlack wrote:
-> ...
+On Tue, May 12, 2026 at 06:48:45PM +0000, David Matlack wrote:
+> Do not disable bus mastering on outgoing preserved devices during
+> pci_device_shutdown() for kexec.
+> 
+> Preserved devices must be allowed to perform memory transactions during
+> a Live Update to minimize downtime and ensure continuous operation.
+> Clearing the bus mastering bit would prevent these devices from issuing
+> any memory requests while the new kernel boots.
 
-> + * The PCI core guarantees that preserved devices can be identified by the same
-> + * bus, device, and function numbers for as long as they are preserved
-> + * (including across kexec). To accomplish this, the PCI core always inherits
-> + * the secondary and subordinate bus numbers assigned to bridges during scanning
-> + * if any device is preserved. This is true even on architectures that always
-> + * assign new bus numbers during scanning. The kernel assumes the previous
-> + * kernel established a sane bus topology across kexec.
-> + *
-> + * If a misconfigured or unconfigured bridge is encountered during enumeration
-> + * while there are preserved devices, itss secondary and subordinate bus numbers
-> + * will be cleared and devices below it will not be enumerated.
+s/minimize downtime and//
 
-s/itss/its/
+Ensuring continuous operation is the critical piece here.  Minimizing
+downtime is always good but IMO it's not actually a reason for this
+change.
 
-> + * To keep things simple, inherit the secondary and subordinate bus numbers on
-> + * _all_ bridges if _any_ PCI devices are preserved (i.e.  even bridges without
-> + * any downstream endpoints that were preserved).  This avoids accidentally
-> + * assigning a bridge a new window that overlaps with a preserved device that is
-> + * downstream of a different bridge.
+I guess what this is probably saying is that the continuous operation
+and Live Update are what minimizes downtime, and preserving bus
+mastering is a piece of that.
 
-s/i.e.  even/i.e. even/ (remove extra space)
+> Because bridges upstream of preserved endpoint devices are also
+> automatically preserved, this change also avoids clearing bus mastering
+> on them. This is critical because clearing bus mastering on an upstream
+> bridge prevents the bridge from forwarding memory requests upstream (i.e.
+> it would prevent the endpoint device from accessing system RAM and doing
+> peer-to-peer transactions with devices not downstream of the bridge).
