@@ -1,260 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 590CD370D6E
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 15:42:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D65232C031E;
+	Fri, 22 May 2026 16:05:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779464538; cv=none; b=GzdWK+CqeqlJE75D4C1SZkXylDRUObqOBBgdAdBqR1T8dGP+121In8lVzc4TM92Vv5V+cQ0MgRI5szGbyr8wBc4b3y2+/nREhVdQJVW1mR3/qKuoxSN+roiMgsdGJHYYFaV1Pjo7e9CgYRH3goYiN3H5jzHhugXxsvEiayffwf0=
+	t=1779465923; cv=none; b=q7Wx7CYjHJ+XjYYSkGW3m9V0sYLfUWZl2UiVblG4JGLptWjPW6nYyWqHU6XjHUsdcDK3ukLhQgNDHzqIh8W0yWNSFVhLa9vKUojxmaAi44/5b2y+FUVrQm5RzmM55uBVTo1lcL+iBO1/CCKe1Jq1uh8rRPgdIWP9NV1bxtvU2AA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779464538; c=relaxed/simple;
-	bh=9t8yDYVALDaHr/+UL3BokvoH9pXQxH6KAHWptUpsIIs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TtvOqxZvjg8GEi4NBb58XZnM5Jriup9Xg20Svwp2yPDyjmve0/06+iTE0ZzzsmBFA+acxRXFo/6MbhGNl3U0g8HL3xRkEd8a8/jkBigMLL2vZ62Eak2dkHQtaTdzgFypsVgORv36DpkPULRP37mLHDUVPiTX8F5dZMMbiJ/7r0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CeZsw7OM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779465923; c=relaxed/simple;
+	bh=eDwpnAyDGcw40KTsgu7nsZAQ9Qp628d2vr1Fs9hMH7s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MzinEID+gryOqF004avWAkUulzZA2EKMK+D0p/Rub9TmBCignEv67DKrDwHwKPPjs//41RtBqlEBJlxY9j5k8OgwwBJrtDRDZu7/TusKNv0UPYSk6YJLnf9Xn0dhJc44OdWMn4Cx7OeVUyhpeGD7x44N1PFjiYfJjmaqT1y61Fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=oinMPgCh; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CeZsw7OM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA0D61F000E9;
-	Fri, 22 May 2026 15:42:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779464536;
-	bh=0JWFp+k0ki+beY7/lyLgJ/DNU6Tuq6aJ+0Tfmc5WBUI=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=CeZsw7OM5mBvtE3CCUOmgiAMf1mwfDj65AfIL+txjtmZgjCWUMDdnSp8HCalp14Rs
-	 1ABFKt1GNEJPP/mqOQnw/4CBJZI1PEGllkRJiuhOpjGPHtok0qYfe4kLsGCWnn2zNR
-	 hvz35Tjfsr0USudLyOqchnX70XJ1gMQO7XyPsSr20r1mHDtMK3Je5+ZGxRFAxBqZzV
-	 JCUSIbZqmKPatPk5Ti6lz1eRXTKXObizhqAo8YBifiG4dz9Fp4kg1eUtTcfdIMqJXG
-	 4wQEdN/fmh4vbkKaWLFxfcYttI5JObP5gj5w4BOQvCAIaWK0cJJ0Ivn/TcOOjqStp1
-	 IRs4wIoyM0jSA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4] PCI: vmd: Add feature to scan BIOS enumerated
- devices.
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nirmal Patel" <nirmal.patel@linux.intel.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260522150829.5246-1-nirmal.patel@linux.intel.com>
-References: <20260522150829.5246-1-nirmal.patel@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 22 May 2026 15:42:16 +0000
-Message-Id: <20260522154216.AA0D61F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="oinMPgCh"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=ITf7KktGLbSDnXpQlgu6YR/GMDEIJ07ZRAIMb0e+JUs=;
+	b=oinMPgChun1Q8pHKMsUw7O6Ts6sSLkljCso/fGRETJlCrCWYKuUrh5jt6+QLet
+	wCrZZsaQw81O35ddeXhyAgPV5kLwhQokrIiLeEvdINCX7+mp255mfLQYW4BKUZVI
+	U+Par40HllVYF3BAn4GMFQYysZcIet5w1OF+/kS/aAIeU=
+Received: from [IPV6:240e:b8f:91b3:d000:1df1:2c6c:16c1:e8bf] (unknown [])
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wCXFlhyfhBqmV1DCw--.21621S2;
+	Sat, 23 May 2026 00:04:03 +0800 (CST)
+Message-ID: <09473fc7-e91c-4e80-9d64-0d14d585d89d@163.com>
+Date: Sat, 23 May 2026 00:04:02 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/4] PCI: Introduce pci_suspend_retains_context() API
+To: manivannan.sadhasivam@oss.qualcomm.com,
+ Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>,
+ Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, linux-nvme@lists.infradead.org
+References: <20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:_____wCXFlhyfhBqmV1DCw--.21621S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZry5AFy8Jw15AF18Kr1kuFg_yoWrJw4Dpa
+	y5KrWSyr1DJFWIyFnavw1jvry3uanYkrWUC3srGw15uay3uFnagr4jgr4Yqry7ur4fC3ZF
+	vr4jga4UuFn8AFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRV6w_UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xVb-moQfnU7hwAA3W
 
-Thank you for your contribution! Sashiko AI review found 6 potential issue(=
-s) to consider:
+Hi Mani,
 
-New issues:
-- [High] The driver unconditionally reads from fixed offsets in BAR4 withou=
-t verifying that the BAR size is sufficiently large.
-- [High] The PCI bus resource `.end` is unconditionally hardcoded to `0xff`=
-, breaking legacy devices with smaller configuration BARs.
+We previously discussed a patch. I wonder if you have any memory of it. 
+I'm not sure if it can solve my problem. As shown below:
 
-Pre-existing issues:
-- [High] Allocated IRQ vectors are leaked in multiple error paths and durin=
-g device teardown.
-- [High] Per-CPU memory allocated for SRCU structures is leaked on error pa=
-ths.
-- [High] SRCU lock structures are destroyed before the IRQ handlers are unr=
-egistered, allowing a use-after-free.
-- [High] Subtracting a fixed offset from the resource bounds of MEMBAR2 wit=
-hout verifying the actual BAR length causes an integer underflow.
---
+https://lore.kernel.org/linux-pci/z4bq25pr35cklwoodz34pnfaopfrtbjwhc6gvbhbsvnwblhxia@frmtb3t3m4nk/
 
-commit 0653c66e9c93e9c62213a329c19bf93e4499969f
-Author: Nirmal Patel <nirmal.patel@linux.intel.com>
-Subject: PCI: vmd: Add feature to scan BIOS enumerated devices.
+"""
+ > Hans: Before I added the printk for debugging, it hung here.
+ >
+ >
+ > I added the log output after debugging printk.
+ >
+ > Sky1 SOC Root Port driver's suspend function: sky1_pcie_suspend_noirq
+ > Our hardware is in STR(suspend to ram), and the controller and PHY 
+will lose
+ > power.
+ >
+ > So in sky1_pcie_suspend_noirq, the AXI,APB clock, etc. of the PCIe
+ > controller will be turned off. In sky1_pcie_resume_noirq, the PCIe
+ > controller and PHY will be reinitialized. If suspend does not close 
+the AXI
+ > and APB clock, and the AXI is reopened during the resume process, the APB
+ > clock will cause the reference count of the kernel API to accumulate
+ > continuously.
+ >
 
-This commit introduces the VMD_FEAT_USE_BIOS_INFO feature flag for device
-0x28c1. It parses configuration parameters, bus start ranges, and shadow
-registers directly from the BIOS-populated BAR4/BAR5 MMIO space rather
-than enumerating the tree dynamically.
+So this is the actual issue (controller loosing power during system 
+suspend) and
+everything else (ASPM, MSIX write) are all side effects of it.
 
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index d4ae250d4bc6d..7c90243b5ff0c 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-[ ... ]
-> @@ -661,6 +686,46 @@ static int vmd_get_bus_number_start(struct vmd_dev *=
-vmd)
->  	return 0;
->  }
-> =20
-> +static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
-> +				       resource_size_t *offset1,
-> +				       resource_size_t *offset2)
-> +{
-> +	u64 phys1, phys2, bar4_2840;
-> +	void __iomem *bar4;
-> +	u32 base_id;
-> +	u8 base_bus;
-> +
-> +
-> +	bar4 =3D pci_ioremap_bar(vmd->dev, 4);
-> +	if (!bar4)
-> +		return -ENOMEM;
-> +
-> +	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical addresses. */
-> +	phys1 =3D readq(bar4 + SHADOW_MEMBAR1_28C1);
+Yes, this issue is more common with several vendors and we need to come 
+up with
+a generic solution instead of hacking up the client drivers. I'm planning to
+work on it in the coming days. Will keep you in the loop.
 
-[Severity: High]
-Does this code read out-of-bounds if the hardware presents a smaller BAR4?
+- Mani
+"""
 
-pci_ioremap_bar() maps the available resource, but there doesn't appear to
-be a check verifying that the BAR length is at least large enough to cover
-the fixed offsets being read, such as 0x2840 (BASE_ID_REG_28C1).
 
-Could a misconfigured or malicious device trigger an out-of-bounds MMIO
-read here?
+Best regards,
+Hans
 
-> +	phys2 =3D readq(bar4 + SHADOW_MEMBAR2_28C1);
-[ ... ]
-> @@ -711,6 +776,53 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
->  	return 0;
->  }
-> =20
-> +static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
-> +					unsigned long features,
-> +					resource_size_t *membar2_offset,
-> +					resource_size_t *offset1,
-> +					resource_size_t *offset2)
-> +{
-> +	int ret;
-> +
-> +	/*
-> +	 * Shadow registers may exist in certain VMD device ids which allow
-> +	 * guests to correctly assign host physical addresses to the root ports
-> +	 * and child devices. These registers will either return the host value
-> +	 * or 0, depending on an enable bit in the VMD device.
-> +	 */
-> +	/*
-> +	 * For certain VMD devices (i.e. 0x28C1), BIOS places device info
-> +	 * in BAR4 shadow registers to determine the base bus number and memory
-> +	 * offsets.
-> +	 */
-> +	if (features & VMD_FEAT_USE_BIOS_INFO) {
-> +		*membar2_offset =3D MEMBAR2_OFFSET_28C1;
+On 5/19/26 16:11, Manivannan Sadhasivam via B4 Relay wrote:
+> Hi all,
+> 
+> This series introduces a new PCI API, pci_suspend_retains_context() to
+> let the client drivers know whether they can expect context retention across
+> suspend/resume or not and uses it in the NVMe PCI host driver.
+> 
+> This new API is targeted to abstract the PCI power management details away from
+> the client drivers. This is needed because client drivers like NVMe make use of
+> APIs such as pm_suspend_via_firmware() and decide to keep the device in low
+> power mode if this API returns 'false'. But some platforms may have other
+> limitations like in the case of Qcom, where if the RC driver removes the PCIe RC
+> resource vote to allow the SoC to enter low power mode, it cannot reliably exit
+> the L1ss state when the endpoint asserts CLKREQ#. So in this case also, the
+> client drivers cannot keep the device in low power state during suspend and
+> expect context retention.
+> 
+> And these limitations may just keep adding in the future. Without a unified
+> API, the client drivers have to implement their own logic which may cause code
+> duplication and may also lead to drivers missing some of the platform
+> limitations.
+> 
+> Once this series gets merged, we can extend this API usage to other client
+> drivers as well.
+> 
+> Testing
+> =======
+> 
+> This series is tested on Qualcomm Hamoa based Lenovo Thinkpad T14s latop with
+> NVMe drive.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+> Changes in v2:
+> - Renamed the API to pci_suspend_retains_context()
+> - Reworded the commit messages to include L10_REFCLK_ON + T_COMMONMODE as the
+>    L1ss exit latency
+> - Rebased on top of v7.1-rc1
+> 
+> ---
+> Manivannan Sadhasivam (4):
+>        PCI: Introduce an API to check if RC/platform can retain device context during suspend
+>        PCI: Indicate context lost if L1ss exit is broken during resume from system suspend
+>        PCI: qcom: Indicate broken L1ss exit during resume from system suspend
+>        nvme-pci: Use pci_suspend_retains_context() API during suspend
+> 
+>   drivers/nvme/host/pci.c                |  3 ++-
+>   drivers/pci/controller/dwc/pcie-qcom.c | 12 ++++++++++++
+>   drivers/pci/pci.c                      | 34 ++++++++++++++++++++++++++++++++++
+>   include/linux/pci.h                    |  9 +++++++++
+>   4 files changed, 57 insertions(+), 1 deletion(-)
+> ---
+> base-commit: 254f49634ee16a731174d2ae34bc50bd5f45e731
+> change-id: 20260414-l1ss-fix-6c9cf2451944
+> 
+> Best regards,
 
-[Severity: High]
-This is a pre-existing issue, but can setting this offset cause an integer
-underflow later?
-
-In vmd_enable_domain(), the resource start is calculated as:
-
-	vmd->resources[2] =3D (struct resource) {
-		.name  =3D "VMD MEMBAR2",
-		.start =3D res->start + membar2_offset,
-		.end   =3D res->end,
-		...
-	};
-
-If the physical MEMBAR2 length provided by the hardware is smaller than
-membar2_offset, start becomes greater than end, which could cause
-resource_size() to underflow and yield a massively inflated memory window.
-
-> +		ret =3D vmd_get_bus_info_from_bar4(vmd, offset1, offset2);
-> +		if (ret)
-> +			return ret;
-> +	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
-[ ... ]
-> @@ -784,38 +896,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd, u=
-nsigned long features)
->  	struct pci_dev *dev;
->  	int ret;
-> =20
-> -	/*
-> -	 * Shadow registers may exist in certain VMD device ids which allow
-[ ... ]
-> -	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
-> -		ret =3D vmd_get_bus_number_start(vmd);
-> -		if (ret)
-> -			return ret;
-> -	}
-> +	ret =3D vmd_prepare_offsets_and_bus(vmd, features, &membar2_offset,
-> +					  &offset[0], &offset[1]);
-> +	if (ret)
-> +		return ret;
-> =20
->  	res =3D &vmd->dev->resource[VMD_CFGBAR];
->  	vmd->resources[0] =3D (struct resource) {
->  		.name  =3D "VMD CFGBAR",
->  		.start =3D vmd->busn_start,
-> -		.end   =3D vmd->busn_start + (resource_size(res) >> 20) - 1,
-> +		.end   =3D 0xff,
-
-[Severity: High]
-Does unconditionally setting the end to 0xff cause a regression for legacy
-VMD devices with smaller configuration BARs?
-
-Older devices on client platforms might have smaller CFGBARs. Claiming buses
-up to 255 might cause the PCI subsystem to erroneously assign bus numbers
-that fall outside the hardware's actual ECAM capabilities.
-
->  		.flags =3D IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
->  	};
-> =20
-> @@ -868,19 +958,21 @@ static int vmd_enable_domain(struct vmd_dev *vmd, u=
-nsigned long features)
->  	 * acceptable because the guest is usually CPU-limited and MSI
->  	 * remapping doesn't become a performance bottleneck.
->  	 */
-> -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> -	    offset[0] || offset[1]) {
-> -		ret =3D vmd_alloc_irqs(vmd);
-> -		if (ret)
-> -			return ret;
-> +	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
-> +		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> +		    offset[0] || offset[1]) {
-> +			ret =3D vmd_alloc_irqs(vmd);
-> +			if (ret)
-> +				return ret;
-> =20
-> -		vmd_set_msi_remapping(vmd, true);
-> +			vmd_set_msi_remapping(vmd, true);
-> =20
-> -		ret =3D vmd_create_irq_domain(vmd);
-> -		if (ret)
-> -			return ret;
-> +			ret =3D vmd_create_irq_domain(vmd);
-> +			if (ret)
-> +				return ret;
-
-[Severity: High]
-This is a pre-existing issue, but are IRQ vectors leaked when errors occur
-here?
-
-The PCI subsystem guidelines mandate calling pci_free_irq_vectors() in error
-paths after a successful pci_alloc_irq_vectors(). If vmd_create_irq_domain()
-fails, we return directly without freeing the vectors allocated in
-vmd_alloc_irqs(). This same cleanup omission appears to exist in vmd_remove=
-()
-as well, potentially leading to system IRQ capacity exhaustion.
-
-Additionally, if vmd_alloc_irqs() fails midway through devm_request_irq(),
-does it return without cleaning up the successfully initialized SRCU
-structures from previous loop iterations? The per-CPU memory allocated by
-init_srcu_struct() might be leaked.
-
-[Severity: High]
-Also a pre-existing issue, but does using devm_request_irq() for the
-handlers cause a use-after-free during device teardown?
-
-In vmd_remove(), the driver calls vmd_cleanup_srcu() which destroys the SRCU
-structures. However, since the IRQs are managed by devres, they aren't
-deregistered until after vmd_remove() returns.
-
-If an interrupt fires in this window, vmd_irq() would call srcu_read_lock()
-on an already-destroyed SRCU structure.
-
-> +		} else {
-> +			vmd_set_msi_remapping(vmd, false);
-> +		}
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260522150829.5246=
--1-nirmal.patel@linux.intel.com?part=3D1
