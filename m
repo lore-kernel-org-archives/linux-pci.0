@@ -1,254 +1,292 @@
-Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013036.outbound.protection.outlook.com [52.101.83.36])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 721AA35E921;
-	Fri, 22 May 2026 06:05:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.36
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779429938; cv=fail; b=Dx6AiBOclQbIdcF90ThcFYzb6iInbcQnp62co1Ti4sH2gWXshtb5BpVAl3UfORDjZLNMyQf2Nrt9tZRgtuMbVKGAiZP3DX/HccblKFVmHphyC9M/11ut2oLfeDFNioLhMwz8oGV+TBJplZjzcyPtvSVk3rPp/wPdYBpYPq12TRY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779429938; c=relaxed/simple;
-	bh=IU7rSx3HN39Bv2O7T7b1YqRj6NErzqHIDyrxokGl3oc=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=aUjnzqwhW1PgXn1Og9vjlc3l8jczDUHmSJ8yUVPtu7GuSb0BMHFu+JSKWh55/GPcy3dnm82xNNQgZUwbMyui06M8U9MX8Ha0PukoGaXYkfTjFw6bgm6593CaWQgxTxdAjqFoJqEr4hWpolReOuAWrv6IIAu8RmpWQm9K/RiBSEs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=FYl5v0O2; arc=fail smtp.client-ip=52.101.83.36
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D6532BEC2E
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 06:11:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779430276; cv=none; b=ProWiyew1B5/JZBzpxxECoxp7+X+s9fpCLhnoPL+v+uznFlVx9F7VD6T6JOSQoJm+1GX802MoMSTamk7zYUTqluFmCKS/kcYXSuJRmEXGbGv0VaQUUqBXFsYvdw5e96dQR9zi2EvEH73J/oqKY03InBahwBTypf/7qhKmxTZyWQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779430276; c=relaxed/simple;
+	bh=pBi9itZ99FeBcGog20GStD0dDYcD43p6YB+y+oOEyBU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=qi1TtnmHJtASvfKp+m6aJ/hWp9EhDdVZfS9GKdzuRj1w4dR23Uw6VafzGA1liewtGs6++ICzDcvLrNccGuEgstoLsrrFGfX1v8e8GKSfWiEGrBwB7OAjSH/V+76M8wO7CSJFzRp5fyftIFb5iIHW16Oiv63r0VtjI6pIS/fKPGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WRxt5jdm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="FYl5v0O2"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=flDPTt+5utGvr3zJZ6Wchjr/dYn+QoDhz+qilCJXE2ANtqxczEw3pP8YBOAen7vwlYjtCsGzmZeWLXKi2BLOumEQ4EN3HcdHBkx0TNgCzGGDY8jGdH0RGI7KnrBzyw88LzRqD849MFWHEz2FkOltScZDOCiQBVxzcwNhUyi5Uelo9Pdf8e873js0kxKBuCl6+f/Rz9cx0+/zWNfgDWtY1V0GMEA8rJEaE5LHXs9IpHW7GxwN/VoO+NnfE9K/Jg1J3jVuNGKcMuvqr7/NpAHHgvOVq/p66qHk76oNkk+DOZh/DUGRkHumm0s+6j1zIoVryY/pYIuozNNSeQAmxHodJA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+juSAet/Zwlon3qomR9kDsNmMTQ2teZfhWRi9YSPSjQ=;
- b=bbQqH1fyEMyF0irm6wIEXFk9jrk98lTcUGFa5yUz5medkqOrf88560l73xjHrg4W7f0qS1j6pZ07IP78lpI+uoeTU5EhyQr18NZYThLDgZelIReSXFCFOlruAp0/abKxJ1Z4WrGNcBQkJ4BJqLqUFHIqRzSdA0KOTvsAPw3tQOGbUNJDyVfSPr4dti04r0UtETzIJK/9fXEm19Re6S/r/EIy5Doda5vxoWQQj79m1RPfuFkO5MFv1AnKq63YzhuQRI5P2vRS2IBSnPby7seX3CqvEziHRBpDYWtlN+5QEgaO0VdXP1U2vfJ+mAxmhx70tcuPqV4WpjFhqpyyn7XGRw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+juSAet/Zwlon3qomR9kDsNmMTQ2teZfhWRi9YSPSjQ=;
- b=FYl5v0O2NV60QjOgeJWuQlJFjsYAixH95RjgSvG0YnwSst4FIac3lgocmCBcutw5MCWoE6ww3c03jIgqFdBFbcsgllJsVXa8haT4wa9wHa3woSb2ZfWUARbJM7ARrag3Iyvc86sRBiH+fSpiLq/KwAqBif6EnbInsHJ901CUPJJeJM5GS4bfx0ITHAqtg/I2S0W4kayll7SJmrjmey1RYTCWDUBZjYdVOiIPUxjaR7Yaqcawo/d9pDCl463qPewyqlVPdeHq7mBlBQqL2gvcNd++xviQ62+cnPJBOoZImqfR/M+3TscIxCdVyZrqo5XNFV0zxgrpnkrjLLvFBXUu0g==
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- (2603:10a6:150:30c::14) by PA4PR04MB7869.eurprd04.prod.outlook.com
- (2603:10a6:102:c4::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Fri, 22 May
- 2026 06:05:34 +0000
-Received: from GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe]) by GV2PR04MB12019.eurprd04.prod.outlook.com
- ([fe80::ed75:bac1:2554:5cbe%4]) with mapi id 15.21.0048.016; Fri, 22 May 2026
- 06:05:34 +0000
-From: Hongxing Zhu <hongxing.zhu@nxp.com>
-To: "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>, "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>, Frank Li <frank.li@nxp.com>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	"kwilczynski@kernel.org" <kwilczynski@kernel.org>, "mani@kernel.org"
-	<mani@kernel.org>, "robh@kernel.org" <robh@kernel.org>,
-	"s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "kernel@pengutronix.de"
-	<kernel@pengutronix.de>, "festevam@gmail.com" <festevam@gmail.com>,
-	"will@kernel.org" <will@kernel.org>
-CC: "imx@lists.linux.dev" <imx@lists.linux.dev>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Sherry Sun <sherry.sun@nxp.com>
-Subject: RE: [PATCH 1/2] PCI: host-generic: Simplify return value handling in
- pci_host_common_parse_port(s)
-Thread-Topic: [PATCH 1/2] PCI: host-generic: Simplify return value handling in
- pci_host_common_parse_port(s)
-Thread-Index: AQHc6Zzix299uPe6xkG4ICph0s6Dx7YZio0g
-Date: Fri, 22 May 2026 06:05:33 +0000
-Message-ID:
- <GV2PR04MB12019D8D1854A947AA7DDE1208C0F2@GV2PR04MB12019.eurprd04.prod.outlook.com>
-References: <20260522034344.1147775-1-sherry.sun@oss.nxp.com>
- <20260522034344.1147775-2-sherry.sun@oss.nxp.com>
-In-Reply-To: <20260522034344.1147775-2-sherry.sun@oss.nxp.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: GV2PR04MB12019:EE_|PA4PR04MB7869:EE_
-x-ms-office365-filtering-correlation-id: d4991da1-fc7c-49d3-5474-08deb7c822e1
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|7416014|376014|366016|19092799006|1800799024|4143699003|11063799006|6133799003|18002099003|22082099003|56012099003|38070700021|921020;
-x-microsoft-antispam-message-info:
- HYMEElXVaiVePqK3AOlTZh7xl2ZBgdHAOx7ynGS2tzdyKlMOQg6ccpU2nkV7mb2TvZ08rk3zO2YO2icrzS0wkbIqu0fngrip+EXA8+3wBsK/DLuF24vzdh3yP16S+ilY+XSBNP3dIlZUHc+FqixSmuhuEdQ3Z32Pf9xNZKaNT6tuwvOxHOdjQlxh0t6ArKKyfYP+jmHlVdV0kKTBhmSVPrD4LOPmAMK31C5/YDgC/MjLm0jxXQ2fud+gM6Xq+uR2Ri7+She40CMihz31iIQulx5pW98JW6D14As5B7pJ3oXwtmlXay0UcqmlOsUUL9JFZgHZCM2w42xG2QH/z2j6g7EE94INIYYYKgByh9VO6H3VFz3imVo9mPcubYuqUIPeuY/aGacojh/gjt4LA5eQ751dOxBM8LAsjV3iF8jeq9/Ywm81OBQaN2K8OtdKxGpdv/PqJfVHL9plz2bUr3El6ToHuBHlYbbmVolGBaQFeRL6HWckrX3V6rcqNft2PGyGgODZoJ+q8krluS3TivouAOewevBXuRtgfBZmP4TVjGxXH7WI7BzRl60bxmNhV5hQI5C1ncVNPy3wRevEz+urF1ibg6xZlqv32ZgdmQazLeO9jp9ds0WIAo57gPB+Hv/+mWdhzHn2GBgqMrNtnQt6gQCcUHkA0qPE9hukqD01lie9FHDBKnDD+l3NuBKvFx8F9lubk0WVKsRV2XKXLGhArxSuyZqtNVBcRfbuJBnu7lT0MI+AhAl/gsKCyzqONzHUFK7W/GBmZ0R5KH5EQa2SWg==
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB12019.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(19092799006)(1800799024)(4143699003)(11063799006)(6133799003)(18002099003)(22082099003)(56012099003)(38070700021)(921020);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?OfzTN6V4sVB8wH2deZCYlL9E0/daNUrQ+FqO9F5B2yBlvWaVVH0L/c7iCuvZ?=
- =?us-ascii?Q?kqnR9KImOScQ6XWfYSyZhoFRdE257e3/WkzVtK5VJIenk7HfWYmD6iDN5yYR?=
- =?us-ascii?Q?NJqGIZZV/K1NOpHs8MyQ/csYLUcxETHOQGVlJMspSS1z7BIdlOoZTaW/tvyj?=
- =?us-ascii?Q?1yWhja0y1qV6pMh8dFDl5BLkRAgl1H6TZlOtqbkHjjANvOcJA1OI+J2NlBuX?=
- =?us-ascii?Q?sPWsi/CwnYM57eknv4THWw/EormG07eJ1iTiA2HzbwFW0/KY00BJn2aeVsrK?=
- =?us-ascii?Q?4BHpRrS6f+xxR906o1MVg00Jr4PX/mPgM8fyr2ArdLP8jWZyXTPKtWWw/J2p?=
- =?us-ascii?Q?uQeJRyC0MEYQRWZyW5B537tpR15vxXVhdcZx971uqxrb1qDPPQRzc0MIkb5K?=
- =?us-ascii?Q?SLxvT9AiBzFOx/oMkflj8fdyU8+glLhVwK0FutsMBkmXA2cwAbtwrrnFi6qJ?=
- =?us-ascii?Q?6/4kGoRQ/A4ej+skBeGS+ixpGCyHGpmAJ1ZxXn0ZVwKmfn7CQHMIPRYDDLu7?=
- =?us-ascii?Q?o20n0B+jmanqdsde5Fzk2oxojLskSrANVDfntOSMzMfwF3iV4R0jmdiwjgLV?=
- =?us-ascii?Q?a2Ipzf5hL7LKCpMhOQaTQcMuONBjDxRv6AU81TZafhWZcCNd7mJyCXbcp77j?=
- =?us-ascii?Q?b8RdqJ010lEdxM58osYuqqJD7hKWK2w2VTPtWxGJY32v/iCNT02raUShZusa?=
- =?us-ascii?Q?0AONccTYm8of4cnGjOqEjPhoiVsGxAacGYPWgvtdRLALbnHSiLJoHjXQM7gJ?=
- =?us-ascii?Q?dhvMVU1yCgE9jc8CIhGtD/ywrOiMgENnoADyqVg3CvS26s2dS/nlleQXsB0g?=
- =?us-ascii?Q?Z3EyQujZoJ1tIiXKj9n7U0oNJln108Gba3HUORXFz/hCX1bioPb40DE61za6?=
- =?us-ascii?Q?LtEVsKPhrjmZhBKyRhY7YXgPmPVy1Wz8prN1Olqyea/oh6PK0pmmnIoiGSns?=
- =?us-ascii?Q?ANgCOxewxU53LWQjnejTZbvSusyfYterVrtPTnkhjUHSPNVSDUK/HK7tAkSF?=
- =?us-ascii?Q?nRPRGAWpaIBL6BQYunWeP4gtlo6QGtWFtBkMIrfMLoykhxplCSX+QzsIb5TF?=
- =?us-ascii?Q?6/x+kHtJg/hVirHtdvxxADspyzZAKpSWjVaqO9O4tvjZzhkUSkr+6NUvYRYm?=
- =?us-ascii?Q?NYwotcwr/g02+jmtWlXik2JnYa8hSnwvC8Y5TEuUmFjvYseKQP37eF+u45Ht?=
- =?us-ascii?Q?LgcX7LeirTGdJg8y2W8a48i6cNVhqosygcPIdthIrH6EXeFmxI5XmVFFy1DB?=
- =?us-ascii?Q?QDU4gBeDe/ECUGItW2+8S5F9hZWKW3j/cUtxW/ePq7WsZWpblf8evAmY67Y+?=
- =?us-ascii?Q?A6ADS+VoH5UR78ku0rRV2yctFkMCu4t1Rx5mE114POyYSOb18HQtOc4kccPR?=
- =?us-ascii?Q?W2fXv3vYivQKiWQxU3qneNMlnRiFEof+xPyomIhcCzHE9IHoA424cRC1Amyb?=
- =?us-ascii?Q?JLi5Y2O9ZcUNxES1dWOgsE+4EvDHK2Lz5I82pfcXb3J4nA/8VKr8qdtdx/8R?=
- =?us-ascii?Q?r6G1Yq4TtcTI/Vqzs0WvgKi1Y4IcgVKIMZgNm9KZDkrpM5kqC8K1Cz2diiCa?=
- =?us-ascii?Q?CO7XCBzSxX1K882G5JTSpyL3EOMGQZiOfsNXB6+oEV4BH6nhQ9GqXT5wvPG2?=
- =?us-ascii?Q?OA6eIxCAEbB9b4ljCeZ3/yZKJmlw+7ahrOBEPw3xz7SznCsuIsbU7Os8LugT?=
- =?us-ascii?Q?0tmqfGizIihOlHFcSuca2AF0pDixfe8CMJzhnsRvuCtZ2Us+?=
-Content-Type: text/plain; charset="us-ascii"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WRxt5jdm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0ABA1F000E9;
+	Fri, 22 May 2026 06:11:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779430274;
+	bh=4d94Tl9+irqUBZuFfzpDFwxCd+7BdX/6yvEAvgRnRZ8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=WRxt5jdmswQqs2NUNmpP3BB/2WL0OTj7eXs0J0ItV6RdxhQ7YdrCyOGIWZk3MZj15
+	 ZNyo9ysyCLxpzE9IDbchO6cjAaCzmjw6QRC9E0xiSm5CYA0AgRxEH+9xDq+6mBm7U8
+	 /Fp14maX9aWnVr+d0rbFfEkHEB/EGWFV9ydHYbFnxNIavoBqx+Otq8QbiE/h/f0QVt
+	 KLOXuCMD7HPYLa9SVv4dWPafZrHKJju3BkNwrBxyV0UOTDU301rpNSaX+jo354RrLW
+	 RaNIGmsArfgikil0iQXptSPcI1J8PH8foMpevc2n7FGNMdZ3ZJFZwxsmzSQc3ZRBqN
+	 Y7QhIEEnzJSAA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v4 2/4] PCI: endpoint: Add DOE mailbox support for
+ endpoint functions
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aksh Garg" <a-garg7@ti.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260522052434.802034-3-a-garg7@ti.com>
+References: <20260522052434.802034-3-a-garg7@ti.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
+Date: Fri, 22 May 2026 06:11:14 +0000
+Message-Id: <20260522061114.D0ABA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB12019.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d4991da1-fc7c-49d3-5474-08deb7c822e1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 May 2026 06:05:33.9682
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: cF08DX1aLIf2xtYs1vGdRN52leRWmML7Zw3EzBC3bPoEUP0qm1WmbY+LoTzuqwGXJaSJ7Q1i6iUl3ypQRGLSCA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7869
 
-> -----Original Message-----
-> From: Sherry Sun (OSS) <sherry.sun@oss.nxp.com>
-> Sent: Friday, May 22, 2026 11:44 AM
-> To: Hongxing Zhu <hongxing.zhu@nxp.com>; l.stach@pengutronix.de; Frank Li
-> <frank.li@nxp.com>; bhelgaas@google.com; lpieralisi@kernel.org;
-> kwilczynski@kernel.org; mani@kernel.org; robh@kernel.org;
-> s.hauer@pengutronix.de; kernel@pengutronix.de; festevam@gmail.com;
-> will@kernel.org
-> Cc: imx@lists.linux.dev; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; linux-kernel@vger.kernel.org; Sherry Sun
-> <sherry.sun@nxp.com>
-> Subject: [PATCH 1/2] PCI: host-generic: Simplify return value handling in
-> pci_host_common_parse_port(s)
->=20
-> From: Sherry Sun <sherry.sun@nxp.com>
->=20
-> The pci_host_common_parse_port() shouldn't check the RC-level binding.
-> That's a policy decision that belongs to the caller, not this common help=
-er.
->=20
-> Simplify pci_host_common_parse_port() to only parses properties from the =
-Root
-"to only parses"/s/"to only parse"
+Thank you for your contribution! Sashiko AI review found 8 potential issue(=
+s) to consider:
+- [High] `pci_ep_doe_process_request()` uses `GFP_KERNEL` for memory alloca=
+tion, which can sleep and is unsafe to call from hard IRQ contexts.
+- [High] `pci_ep_doe_abort()` calls `flush_workqueue()`, which blocks and s=
+leeps, leading to kernel panics or deadlocks.
+- [High] Returning `-EINVAL` for an out-of-bounds index in the DOE Discover=
+y protocol violates the PCIe Base Specification.
+- [High] Missing `pci_ep_doe_remove_mailbox()` API leads to memory leaks, U=
+se-After-Free panics, and `-EBUSY` errors upon module unbind.
+- [High] Lack of lifetime protection for `doe_mb` and unsafe iteration in `=
+pci_ep_doe_destroy()` leads to Use-After-Free vulnerabilities.
+- [Medium] The protocol handler signature lacks context parameters, and sup=
+ported protocols are hardcoded in a global static array.
+- [Medium] `task->request_pl` is freed before the completion callback fires=
+, violating the documented API contract.
+- [Medium] Unratelimited logging in the DOE task worker allows a malicious =
+Root Complex to flood kernel logs.
+--
 
-> Port(and its children) without checking the RC node. Also change
-Missing space after "Port".
+commit 0c1884caaad038c32cdf6616156028f360cc90e8
+Author: Aksh Garg <a-garg7@ti.com>
 
-> pci_host_common_parse_ports() to return 0 when no ports are found, since =
-it is
-> not an error.
->=20
-> So now both functions won't return failure for "property not found" or "p=
-ort not
-> found", they purely returns 0 on success and a negative error code on rea=
-l
-returns/s/return
+PCI: endpoint: Add DOE mailbox support for endpoint functions
 
-Best Regards
-Richard Zhu
+This commit adds Data Object Exchange (DOE) support for PCIe endpoint
+devices. It introduces framework APIs to register mailboxes, handle
+requests using workqueues, and process the internal Discovery protocol.
 
-> failures.
->=20
-> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> ---
->  drivers/pci/controller/pci-host-common.c | 29 ++++--------------------
->  1 file changed, 5 insertions(+), 24 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/contr=
-oller/pci-
-> host-common.c
-> index 67455caaf9e6..7ce5a939e3d9 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
-> @@ -108,8 +108,7 @@ static int pci_host_common_parse_perst(struct device
-> *dev,
->   * dependencies and the driver may fail to operate if required resources
->   * are missing.
->   *
-> - * Return: 0 on success, -ENODEV if PERST# found in RC node (legacy bind=
-ing
-> - * should be used), Other negative error codes on failure.
-> + * Return: 0 on success, negative error codes on failure.
->   */
->  static int pci_host_common_parse_port(struct device *dev,
->  				      struct pci_host_bridge *bridge, @@ -128,22
-> +127,6 @@ static int pci_host_common_parse_port(struct device *dev,
->  	if (ret)
->  		return ret;
->=20
-> -	/*
-> -	 * 1. PERST# found in RP or its child nodes - list is not empty,
-> -	 *    continue
-> -	 *
-> -	 * 2. PERST# not found in RP/children, but found in RC node -
-> -	 *    return -ENODEV to fallback legacy binding
-> -	 *
-> -	 * 3. PERST# not found anywhere - list is empty, continue (optional
-> -	 *    PERST#)
-> -	 */
-> -	if (list_empty(&port->perst)) {
-> -		if (of_property_present(dev->of_node, "reset-gpios") ||
-> -		    of_property_present(dev->of_node, "reset-gpio"))
-> -			return -ENODEV;
-> -	}
-> -
->  	INIT_LIST_HEAD(&port->list);
->  	list_add_tail(&port->list, &bridge->ports);
->=20
-> @@ -158,13 +141,11 @@ static int pci_host_common_parse_port(struct device
-> *dev,
->   * Iterate through child nodes of the host bridge and parse Root Port
->   * properties (currently only reset GPIOs).
->   *
-> - * Return: 0 on success, -ENODEV if no ports found or PERST# found in RC
-> - * node (legacy binding should be used), Other negative error codes on
-> - * failure.
-> + * Return: 0 on success, negative error codes on failure.
->   */
->  int pci_host_common_parse_ports(struct device *dev, struct pci_host_brid=
-ge
-> *bridge)  {
-> -	int ret =3D -ENODEV;
-> +	int ret =3D 0;
->=20
->  	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
->  		if (!of_node_is_type(of_port, "pci")) @@ -174,8 +155,8 @@ int
-> pci_host_common_parse_ports(struct device *dev, struct pci_host_bridge *b=
-rid
->  			goto err_cleanup;
->  	}
->=20
-> -	if (ret)
-> -		return ret;
-> +	if (list_empty(&bridge->ports))
-> +		return 0;
->=20
->  	return devm_add_action_or_reset(dev, pci_host_common_delete_ports,
->  					&bridge->ports);
-> --
-> 2.37.1
+diff --git a/drivers/pci/endpoint/pci-ep-doe.c b/drivers/pci/endpoint/pci-e=
+p-doe.c
+new file mode 100644
+index 0000000000000..63a5c1b8753a0
+--- /dev/null
++++ b/drivers/pci/endpoint/pci-ep-doe.c
+@@ -0,0 +1,553 @@
+[ ... ]
+> +struct pci_doe_protocol {
+> +	u16 vid;
+> +	u8 type;
+> +	pci_doe_protocol_handler_t handler;
+> +};
+[ ... ]
+> +static const struct pci_doe_protocol pci_doe_protocols[] =3D {
+> +	{
+> +		.vid =3D PCI_VENDOR_ID_PCI_SIG,
+> +		.type =3D PCI_DOE_FEATURE_DISCOVERY,
+> +		.handler =3D pci_ep_doe_handle_discovery,
+> +	},
+> +};
 
+[Severity: Medium]
+Is a global static array sufficient for endpoint capabilities?
+
+Because the array is global, all endpoint functions will advertise the exact
+same DOE protocols. Does this prevent multi-function setups that require
+unique DOE capabilities per physical function?
+
+Additionally, without endpoint context (such as epc, func_no, or a private
+pointer) in the handler signature, how can handlers access device-specific
+state like cryptographic keys?
+
+[ ... ]
+> +int pci_ep_doe_add_mailbox(struct pci_epc *epc, u8 func_no, u16 cap_offs=
+et)
+> +{
+> +	struct pci_ep_doe_mb *doe_mb;
+
+[Severity: High]
+Is there a missing pci_ep_doe_remove_mailbox() API for symmetry?
+
+Endpoint function drivers are typically dynamic modules. If an endpoint
+function is unbound, the mailbox appears to leak in the doe_mbs xarray. A
+subsequent bind to the same function number will fail with -EBUSY on
+xa_insert().
+
+Also, if the driver is removed while a DOE request is pending, could the
+background worker execute the completion callback into unmapped module memo=
+ry
+and cause a panic?
+
+[ ... ]
+> +static int pci_ep_doe_handle_discovery(const void *request, size_t reque=
+st_sz,
+> +				       void **response, size_t *response_sz)
+> +{
+> +	struct pci_doe_protocol protocol;
+> +	u8 requested_index, next_index;
+> +	u32 *response_pl;
+> +	u32 request_pl;
+> +	u16 vendor;
+> +	u8 type;
+> +
+> +	if (request_sz !=3D sizeof(u32))
+> +		return -EINVAL;
+> +
+> +	request_pl =3D *(u32 *)request;
+> +	requested_index =3D FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_REQ_3_INDEX, req=
+uest_pl);
+> +
+> +	if (requested_index >=3D PCI_DOE_PROTOCOL_COUNT)
+> +		return -EINVAL;
+
+[Severity: High]
+Does returning -EINVAL here violate the PCIe Base Specification?
+
+The specification requires that when the Root Complex queries an index
+greater than or equal to the supported protocols, the endpoint should return
+a valid DOE Discovery Response with Vendor ID 0000h, Type 00h, and Next Ind=
+ex
+00h to signal the end of the protocol list. Failing the request might break
+the host discovery loop.
+
+[ ... ]
+> +static void signal_task_complete(struct pci_ep_doe_task *task, int statu=
+s)
+> +{
+> +	kfree(task->request_pl);
+> +	task->complete(task->doe_mb->epc, task->doe_mb->func_no,
+> +		       task->doe_mb->cap_offset, status,
+> +		       task->feat.vid, task->feat.type,
+> +		       task->response_pl, task->response_pl_sz);
+> +	kfree(task);
+> +}
+
+[Severity: Medium]
+Will this trigger a use-after-free if the controller driver inspects the
+request buffer in its completion callback?
+
+The kernel documentation for pci_ep_doe_process_request() states that the
+framework frees the buffer "after the completion callback fires." However,
+the payload is freed just prior to the invocation here.
+
+[ ... ]
+> +static void doe_ep_task_work(struct work_struct *work)
+> +{
+> +	struct pci_ep_doe_task *task =3D container_of(work, struct pci_ep_doe_t=
+ask,
+> +						    work);
+> +	struct pci_ep_doe_mb *doe_mb =3D task->doe_mb;
+> +	pci_doe_protocol_handler_t handler;
+> +	int rc;
+[ ... ]
+> +	/* Find protocol handler in the array */
+> +	handler =3D pci_ep_doe_find_protocol(task->feat.vid, task->feat.type);
+> +	if (!handler) {
+> +		dev_warn(doe_mb->epc->dev.parent,
+> +			 "[%d:%x] Unsupported protocol VID=3D%04x TYPE=3D%02x\n",
+> +			 doe_mb->func_no, doe_mb->cap_offset,
+> +			 task->feat.vid, task->feat.type);
+> +		signal_task_complete(task, -EOPNOTSUPP);
+> +		return;
+> +	}
+
+[Severity: Medium]
+Can a malicious or compromised Root Complex flood the kernel log here?
+
+If a stream of unsupported requests is sent, this warning could overwhelm I=
+/O
+and CPU resources on the endpoint. Would using dev_warn_ratelimited() preve=
+nt
+a potential denial of service?
+
+[ ... ]
+> +int pci_ep_doe_process_request(struct pci_epc *epc, u8 func_no, u16 cap_=
+offset,
+> +			       u16 vendor, u8 type, void *request, size_t request_sz,
+> +			       pci_ep_doe_complete_t complete)
+> +{
+> +	struct pci_ep_doe_mb *doe_mb;
+> +	struct pci_ep_doe_task *task;
+> +	int rc;
+> +
+> +	doe_mb =3D pci_ep_doe_get_mailbox(epc, func_no, cap_offset);
+> +	if (!doe_mb) {
+> +		kfree(request);
+> +		return -ENODEV;
+> +	}
+> +
+> +	task =3D kzalloc_obj(*task, GFP_KERNEL);
+
+[Severity: High]
+Is it safe to use GFP_KERNEL here?
+
+Because this function is intended to be called by endpoint controller drive=
+rs
+when receiving DOE requests, it is highly likely to be executing in an atom=
+ic
+context, such as a hardware interrupt handler.
+
+Using GFP_KERNEL might sleep, potentially causing deadlocks or scheduling
+while atomic bugs. Should this API accept a gfp_t argument instead to allow
+safe allocation?
+
+[ ... ]
+> +int pci_ep_doe_abort(struct pci_epc *epc, u8 func_no, u16 cap_offset)
+> +{
+> +	struct pci_ep_doe_mb *doe_mb;
+> +
+> +	if (!epc)
+> +		return -EINVAL;
+> +
+> +	doe_mb =3D pci_ep_doe_get_mailbox(epc, func_no, cap_offset);
+> +	if (!doe_mb)
+> +		return -ENODEV;
+> +
+> +	/* Set CANCEL flag - worker will abort queued requests */
+> +	set_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags);
+> +	flush_workqueue(doe_mb->work_queue);
+
+[Severity: High]
+Will flush_workqueue() cause a kernel panic or deadlock here?
+
+This function is called when the host triggers a DOE Abort, which typically
+generates an asynchronous interrupt to the endpoint controller. Because
+flush_workqueue() blocks until all queued works complete, calling it from an
+interrupt context will trigger a scheduling while atomic bug.
+
+[ ... ]
+> +void pci_ep_doe_destroy(struct pci_epc *epc)
+> +{
+> +	struct pci_ep_doe_mb *doe_mb;
+> +	unsigned long index;
+> +
+> +	if (!epc)
+> +		return;
+> +
+> +	xa_for_each(&epc->doe_mbs, index, doe_mb)
+> +		pci_ep_doe_destroy_mb(doe_mb);
+> +
+> +	xa_destroy(&epc->doe_mbs);
+> +}
+
+[Severity: High]
+Is there a missing lifetime protection on the doe_mb structure?
+
+pci_ep_doe_get_mailbox() retrieves doe_mb via xa_load() and returns an
+unrefcounted pointer outside of an RCU read lock. If pci_ep_doe_destroy()
+iterates over the xarray and frees the mailboxes, could a concurrent hardwa=
+re
+event call pci_ep_doe_process_request(), retrieve a freed mailbox, and
+trigger a use-after-free?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260522052434.8020=
+34-1-a-garg7@ti.com?part=3D2
