@@ -1,65 +1,55 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C8E721ABAA
-	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 08:02:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.123])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6EECC3A5453
+	for <linux-pci@vger.kernel.org>; Fri, 22 May 2026 08:11:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779436971; cv=none; b=KrW7BOJFENZTvKeq0qPHeGIWNp3TJ0g5JSG5NROI9oVmtLhY3pCAjSwXUndJGgu+Fz1ij6Ob7oIRtDXCoP9/dME6kd/UB7Im4xF01l6kv2pZalVcBO5pWFdLpfHD5Z+uHtWySWrjrDG1LRn6N6zJJsmruWtjww/kmDIlKzHs9Vo=
+	t=1779437493; cv=none; b=sHJc26CIsNR5fyazXTFMsgdAdSF8lAhLIEEfaktq8rs4SqI8KC4y5zK+q4gyTx17wg4xfQ/xk726HDm8gyO1BWPVXvK7TK+oHkaXz1fKnIgzVPAtscEDNxPFSqDWpREQNf5kEbeLQWcYkb59fGMctB3GkP4ecPZHk2kmkwj0EJY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779436971; c=relaxed/simple;
-	bh=qhddZx8oRASYTYGI0RlhU+w2W4UOtRk3bcm0fBTTjQQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=P+6t5rN+s905Lhlp2dtwuaPaxOSG3UfVdLjFgHqZtvOW0I2R99CSJkb2eUuQQYRWZVa+8kIfV7QT1oUndFzadz1Yq7R8lY6GxNg2jR+lkZw/eR0ubB/ICzeHBRPdC2H9ZRWxG89xrmp2zPFEbiYIVPeyD/d0nMHUFIkeLgXvaJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
-	 client-signature ECDSA (secp384r1) client-digest SHA384)
-	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with ESMTPS id 6CC2B1062A;
-	Fri, 22 May 2026 10:02:41 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 4D3C360A1463; Fri, 22 May 2026 10:02:41 +0200 (CEST)
-Date: Fri, 22 May 2026 10:02:41 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: weipengliang <weipengliang@xiaomi.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Uwe Kleine-Konig <u.kleine-koenig@baylibre.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v2] PCI: Avoid unnecessary cpu_hotplug_disable() for
- non-NUMA devices
-Message-ID: <ahANoSZXPFUX3HaR@wunner.de>
-References: <ahAB2BFymPVFGKaG@wunner.de>
- <20260522075453.473-1-weipengliang@xiaomi.com>
+	s=arc-20240116; t=1779437493; c=relaxed/simple;
+	bh=K4PhmCwDVMYkUe0PgM4zsL2IXz6MrWUsXUSJyPnwMNM=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=PUAtxdytRrTD7j3hCBvyXL6FFtizYKP+0w+e8XGvMmvXJ1drOz0VsOaV2IQ0NToUMpVYbJYzrLPmSeiYPs0EOpIXROf3yjyCB6djYBr/eeML5E1lekRWXR3BGSJ61qAzPbzik9djMXx5UAKdn6ejhy9GAi8p4JBfLyBJRQ3Bsgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
+X-CSE-ConnectionGUID: 9GuaWpKZTHWO+L+3rQDmRw==
+X-CSE-MsgGUID: N+/NL6s4TdS3nEyFIn9XKA==
+X-IronPort-AV: E=Sophos;i="6.24,162,1774281600"; 
+   d="scan'208";a="176593742"
+From: weipengliang <weipengliang@xiaomi.com>
+To: Lukas Wunner <lukas@wunner.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	"Frederic Weisbecker" <frederic@kernel.org>, Niklas Schnelle
+	<schnelle@linux.ibm.com>, Danilo Krummrich <dakr@kernel.org>, Uwe
+ Kleine-Konig <u.kleine-koenig@baylibre.com>, Samiullah Khawaja
+	<skhawaja@google.com>, Manivannan Sadhasivam
+	<manivannan.sadhasivam@oss.qualcomm.com>, <weipengliang@xiaomi.com>
+Subject: Re: [PATCH v2] PCI: Avoid unnecessary cpu_hotplug_disable() for non-NUMA devices
+Date: Fri, 22 May 2026 16:11:20 +0800
+Message-ID: <20260522081120.1794-1-weipengliang@xiaomi.com>
+X-Mailer: git-send-email 2.47.1.windows.1
+In-Reply-To: <ahANoSZXPFUX3HaR@wunner.de>
+References: <ahANoSZXPFUX3HaR@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260522075453.473-1-weipengliang@xiaomi.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BJ-MBX03.mioffice.cn (10.237.8.123) To YZ-MBX11.mioffice.cn
+ (10.237.88.131)
 
-On Fri, May 22, 2026 at 03:54:52PM +0800, weipengliang wrote:
-> @@ -392,10 +391,13 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->  	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
->  	    pci_physfn_is_probed(dev)) {
->  		error = local_pci_probe(&ddi);
-> +		dev->is_probed = 0;
-> +		return error;
->  	} else {
+On Fri, May 22, 2026 at 10:02:41AM +0200, Lukas Wunner wrote:
+> Hm, looks like these two newly added lines are unnecessary.
+> Am I missing something?
 
-Hm, looks like these two newly added lines are unnecessary.
-Am I missing something?
+You're right. Since cpu_hotplug_enable() has been moved into the
+branches, the early return is no longer needed -- both paths now
+fall through to the common cleanup at the end.
+
+I'll drop these two lines in v3.
 
 Thanks,
-
-Lukas
+weipengliang
