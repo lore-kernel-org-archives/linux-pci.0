@@ -1,192 +1,167 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011021.outbound.protection.outlook.com [40.107.130.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5466022068D;
-	Sat, 23 May 2026 14:43:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779547431; cv=none; b=hHpVWi00se/8TWJQPu7xfXu/orI7l3bCm7QdqaGrStPuD3/ULVrbN4ekzanFKsS4S2lmq1gVXD8e4ZuHJITllP9Q+CgLxqCujM6icD32gjyoV0yz+SjoLNwhUxAh2me2xN0UIZyxj+kzd10NdPPQsizCpmvaKDsObAKCQ7nPa+o=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779547431; c=relaxed/simple;
-	bh=ay8X459ZWn4HSMij7VdHFWHX2oY3jsk6XUtB7A2I450=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SzKbEgOZ4rUvCPYrMEcVy8EVtx2BDvr+/aVxXy4hs084WZ9INd9O4WvMgYLmA2BzElmOG5Ls+3QWV2MR+KilGIo5t8UYKibb9YHWN4KeKWihFjxOW2sBf/e2p3kqiWb+aiRUGE9YJw8wZW1XQ3NKy2+sZSUVnYgCMJPQRcS2O1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MPDBNyg5; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89D032F3C07;
+	Sat, 23 May 2026 15:19:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779549584; cv=fail; b=pLJvfwXudrTQbwy9ewKkPnjesbk/54HKqDlYTo4hGFiZvoIvqu9454zFJomHtSalImwu0XOPGwJzcJ43/NmGKfYv8j6QuuHQ20rjsnTIMbjymQ5ShudnMd7Pj1ndA9NQ4BFs2UNPQpMrAoA5D6Seof2iqjgR6hi+w6UZga7jV+g=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779549584; c=relaxed/simple;
+	bh=64JrRDNvY3yKf1rTUxd2m6qljmJ6jGMG/aOQgNMeCWU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=VjB3gUoFEugiyYhK6an9u82wPxYP9Bw3S1pT+olOW7rWyHFKripSGvPbhGZ9rUxvbPw+1PPcrMCxR3crCddCu79E1fX3Nsp61Sz7swD19biNW3shGyjBbS0wuxodMSqv15MJhCcbXPmNxiOC4vi1/QbnwwF+K4qDgLx4S+gTyp0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=fEIazeOH; arc=fail smtp.client-ip=40.107.130.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MPDBNyg5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6C6DF1F000E9;
-	Sat, 23 May 2026 14:43:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779547430;
-	bh=WAWPfcpt7Y2lKv7eVynXIDy6eoxltojXQ/vc2M7UO4k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=MPDBNyg5QDBg3Gx+lkOcvJCo875bEN4ddreeBrOakrXW+yRikczoQxVajr7XFfBVf
-	 ynpp+Ebxv/QUXLb/iVErxQYEar1jo88jL8CGudEvgWsoOg0XiqEYdCr+zE/cXTDTQq
-	 dglhDWoWu/ouxr820qpP0JUxenIkfLHBSrZlh3SFwzTelNoQ013/rQLO+ta5zLDRVC
-	 Sm09gLP74f8a9azO3brctV3TRTfK7PnDEOlwWwZr2b+XRQaUWsrOMlVQZARgRfZvH2
-	 mJN/BYU5WkZetp6PqqdfwsFNIeFqKCMet8M12QZZzEFWyED/echQUGKwOZPPRDJ4C4
-	 BHhwdHAiZSGbQ==
-Date: Sat, 23 May 2026 20:13:39 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Caleb James DeLisle <cjd@cjdns.fr>, linux-pci@vger.kernel.org, 
-	linux-mips@vger.kernel.org, naseefkm@gmail.com, ryder.lee@mediatek.com, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com, 
-	ansuelsmth@gmail.com, linux-mediatek@lists.infradead.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Subject: Re: [PATCH v8 1/3] PCI: mediatek: Use actual physical address
- instead of virt_to_phys()
-Message-ID: <ocrkyeicymlf6uuogp3uuz6zbgfthhxypwvhfivc7butxfiqps@y6lcvuvcvra4>
-References: <7xfp5nbtd4qtonoqurfwoedsix7vondrnfeip53uwjintuvc6a@cg3ez6z3pii5>
- <20260522224325.GA195169@bhelgaas>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="fEIazeOH"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=jjATFUAzPVqab6QMtPfhgTZmq2iyTUrEXAKdLOgTgT+URTkwvxEZ0F67n9Wi0Th4vZmda0ygyZxW0Z6GvM96qNTc5mgv7n4GZhjAzcHnrxh2OD6sAy3xSt6IFmxTvrbCs0xTt46t0VIUpCZdoWcUO3xJHDh8tfJ2i1ofjQQXP+olzE6mWvKsj2vwDg86Eji8AP+FwQQ1K5/FQt7mdBDFQmg70utJzTVWjS6AIuTdJkRn9b0PkGHOhGEB4oLr+18JI3VOu/dZtmo02eYrYdvakAty9T5Z5oyn2WkGILbnlJGWnFUTjEkud2/M4fED6RmnYXdaxVyIPESqiVJFyE2Y5A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PzNAeSwCF/KGd6hBJ1bel6nMFCmuynoIUJBDYRCJFjs=;
+ b=gVWdk+sfFfPCdJWtwxt/HxLfgnReo3tUyzSQxVYhajz+FcSFhQnM13tHofjh42lnLNHGrWYI/JLiPSX1UFhi+kPhgeT+MNaw6/LzMHNXhHoC27XQzK4jGR5VvY6bksE3DfacJ906fXzcntoXy4xkKzhjrH8zWZM9WJSM9MC3fqRFFONoFYi4Qe62prax3LbcmCBEFbYFkHZuaTLuKKyG7BJQmKiaHaIsvWxUFZmcRFFIuMo04WkgU9vfcrlWYwy27I6dWeknlDdxzbxhemBXQeGeqtPzG3UswOQwB+5qKYImxmEs5WFKFHKcnJiOm/44/wF1Hpz3P4ceDHBlVp3zFw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PzNAeSwCF/KGd6hBJ1bel6nMFCmuynoIUJBDYRCJFjs=;
+ b=fEIazeOHgK/zdBnZZ1OQhYI1/cAW4ak9Q2B5xi/R5vAubp5VVYwZAMp53kBNNcfy92/I5BJ8/t6gt+mfiiP0hZmptRvh+qUrY52NaRaJinPtLhsd8s0KxUsRBsO8s+d9GnWNwTDrI2TyjgHWV7Ydn/cLaIV622NVMgnTJkq5u9E7OeY359E8KbnpQLrOtVQBPQ4NVeQZdl/okgHdJD2GBOOrT6fQYDgCbQiCYSiW+SXO+EbPO6rWKhEM29v7egNjx7TcWTz7cKKvnmC1NXqKBhUCUmu6G3sTL4pvhC4As+3XS0SidWrBwwciwQELdNvp/XtkmX6s9GImduWEYqk2VQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
+ by AM0PR04MB6802.eurprd04.prod.outlook.com (2603:10a6:208:184::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.16; Sat, 23 May
+ 2026 15:19:40 +0000
+Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
+ ([fe80::75e4:8143:ddbc:6588%3]) with mapi id 15.21.0048.016; Sat, 23 May 2026
+ 15:19:40 +0000
+Date: Sat, 23 May 2026 11:19:34 -0400
+From: Frank Li <Frank.li@nxp.com>
+To: Devendra K Verma <devendra.verma@amd.com>
+Cc: bhelgaas@google.com, mani@kernel.org, vkoul@kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, michal.simek@amd.com
+Subject: Re: [PATCH v1] dmaengine: dw-edma: Remove dw_edma_add_irq_mask()
+Message-ID: <ahHFhl_joZsKc0qk@lizhi-Precision-Tower-5810>
+References: <20260521100640.3333076-1-devendra.verma@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260521100640.3333076-1-devendra.verma@amd.com>
+X-ClientProxiedBy: SA1P222CA0159.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:806:3c3::7) To DU0PR04MB9372.eurprd04.prod.outlook.com
+ (2603:10a6:10:35b::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260522224325.GA195169@bhelgaas>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|AM0PR04MB6802:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6e32ad49-a5dd-416e-1c2c-08deb8deb535
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|1800799024|366016|376014|52116014|38350700014|18002099003|22082099003|56012099003|11063799006|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	ZGXAu2d4w69ogSYhZFwbvCQLLY36cUmQ28tR9bNm3wKE4Stanux72TRgcZbOQS62FM2wonRjuOkBlfXrYGzAwacM4fsR5rbWNtJw5F/UtSny8LNus32P7/kEN1D0g1A1KfZp1QwHYhciSRx5r+BEsAN1BWJlpjDGm8+zKq05urzGNQ9QhvneuUhMfQIbWCFbHrxyPtF7YkrAX0y+D86dus0F3GOlVfaQV8fbXMv10OQru0Uri/yoi2qpCDGX+TxbveUW2mcCjzRLCRQ0rRkO8qHIn6DPjJr53WvAVE6ZNs6WAhyDaaDVZhQuC0uKMSV7+fxk7+q+xXGn/Z6hpqMWneX1WVOl3k8Z7LnXog+50pYfVE71+d+ElFs47dyH8o2onKUJc22h5xkJIgv0alfAt8SHZcBNkLGSW6Xm7K+FImInmoU7P4CuGkB6bFfb9SfLDn7jIbWWZr9mOooCnuCYRea8kZwd50PtypCbNKkSAUUR0jFN7fg5IaiDKYYt61BWaZxvEsyp9H2Oqk7NkdYYOBun5CuSxEHxZpCRNFev42F+/S97hBTFkurK6JzDlqXKk3ADc+hmJ6eKmhy7Kt/G7yuDjKvtTAzPo3bp4gqlPYE8uHqcXIintHtgvyXHesnvOHUAUGL+6xhL05rH8poN3/Lm+Z+xNv4WZ6JRHn+zQIYAaMM7/UYP8QdEsBhX9H0oRJU97/ynuVDWGhzh793VXvpgdksf+wBsOsnE5wXtyLWVfX23rm1zJUpmcLZZp5/U
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(366016)(376014)(52116014)(38350700014)(18002099003)(22082099003)(56012099003)(11063799006)(3023799007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?1CNc4p60JRmbc9IB0Y8KYRNrjT9ntmrjxxn29C/2rQT+H14z0JfPii0q4/Ok?=
+ =?us-ascii?Q?VjZ7n7hFrefzQ/4u1e7sd2JW5stChsHVVpW/ZEyZqwb87iOlB7GwghCObr9K?=
+ =?us-ascii?Q?6k0RTS7tgtl+rlU9Q88phWh8kWEae0rM2ZWlIWE/ZpRGSlvAoX+bo2v0AUWI?=
+ =?us-ascii?Q?OERhDXccU/LNS4qFrssI+Rl4sb8NOXnRcaVU61LTyMSXmJZfvNg+Tbt7FMi2?=
+ =?us-ascii?Q?lC83AeozBNbcd9eWD1GlAQAdd2YeWxBtEmhaRH/aX/nSt0s9BeS76B2wlwi0?=
+ =?us-ascii?Q?5LGB2YRT1GhvlUcMFfVP8i+r2nie166IW0OrV+MV292N2UTULVFgEyxuuawk?=
+ =?us-ascii?Q?RWkPjDNj1Ko4kCwUCTrzFxQ+JLBQfvxG8pomknC7J0of9R+hN4qNS/LXDCXY?=
+ =?us-ascii?Q?sCuevXq6KLbcb0SLlML0niu5E2r68DzCt11DbbrIr8T8IstSSbncdwMRkZle?=
+ =?us-ascii?Q?Assf0+l/VCWDNP1WgNZb3GkAjS0o+NNZk1EDH9xrdyqRqcgdwWFEAS/vk5L4?=
+ =?us-ascii?Q?xoA6WXek60uAY1GeH2z7JO34jwanp5zOkbf9gaFgu5cPmGoTvH5ZAPS3P2La?=
+ =?us-ascii?Q?YwfQ1clIAAt84dvA0kqaFwr9FuWlQiA5e3dAsZOTcbfnYWdk4kG9IatSGIp+?=
+ =?us-ascii?Q?67HGmk9+Agn9ffx5phz5vMsSwNDkZVahUFD6smiAkCIo7hKMjWjO28JC5pS/?=
+ =?us-ascii?Q?CG9bBwz02XeVashOn0NC/EBdFULrjHDwSQX1MTFEThnuLsgLsUCAzyYiMh9x?=
+ =?us-ascii?Q?9E8umpXr6JoZQb0ccKKbBndE45BBgBEOlQYdgg1YTj18Et9B+IOHOAw6bwwR?=
+ =?us-ascii?Q?BpjmnrwPgOzaBznI4uXVP4K9QYBUf9mGiyLZy/F2zL5Fsuwau+FAv46qIQxf?=
+ =?us-ascii?Q?N2U+mcjGs3V47ataXJ8xpN+GfPMNFfCLDNdg/BPR+xy3uWOag/usBkyuNyQ5?=
+ =?us-ascii?Q?jACrd/ylacD7Z0L03Aj3edCk/gQ37az6Aqii251ZxLGuxLOD4AE5E88C9mZS?=
+ =?us-ascii?Q?/NB84G24x6P0Y1uT+fzeTH87nKQARhCZ1XsENUJkedbna9nibjVMj8rZaKR+?=
+ =?us-ascii?Q?ZvBt6JuHMFsP442/qEI2AULPiLHIbyIIdVLRJsnKG9G+7AWwKqEWCITVmDjl?=
+ =?us-ascii?Q?tc28TDwQ2m9Yo7gU7z42lugl+kMRfccotceh5DFze2OdcjDpWRmHiJly0CJB?=
+ =?us-ascii?Q?XBSE0xaRNN0Yg5iHIQAH/eykKIpJmQQ5VG+Lq3Md0cOr4va7l0onhl7sIu1D?=
+ =?us-ascii?Q?1dD00vqIZt+sksoRHeRHx64uNvvryEQVqr309/q2+5QvgDaWnc9kMP5QFKWf?=
+ =?us-ascii?Q?BOV63r/YTOA/qRKkKd/6IWP2PQ97A90a6ebE9sCic3vfGRrz4eVyiUR0ORwb?=
+ =?us-ascii?Q?iihw3j2IIA916FWjK7VajXo+InjHB6uxoy2oqdHSKbeZM8sDJpDBj5qFq9Mq?=
+ =?us-ascii?Q?H+ZMDL/U6JANbLNiSe5c1sj2T8rDeoSM+ByHiOR+uDSPuddkN2sPwDDXAeRn?=
+ =?us-ascii?Q?C2E+Pnh6R/jpFLrQyu2A8Uwjt5YdmYtSil2sx6NEMBGHn/buXhBNrg2v+MLr?=
+ =?us-ascii?Q?96BkL3pjJ9xzZjoOiIIabAS7sbD8nXjyZ2L4vAzeT1fsdnz9CapithrRyzfj?=
+ =?us-ascii?Q?i8+hyJPsXJiUBDK6WyjOWcBbKfQtKJe5HW70OqPVd2YIpv7Pa3rydIbVl7I8?=
+ =?us-ascii?Q?IO6oPI62joDVTLm6DSzsRoazweI/zH8U2hxDRw52nhnhEJjE?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6e32ad49-a5dd-416e-1c2c-08deb8deb535
+X-MS-Exchange-CrossTenant-AuthSource: DU0PR04MB9372.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 May 2026 15:19:40.1176
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bFyuxKHbX+gORH2DVrdCxL2GqZeZMlieQYPatilkW5iIdRqAuOw2K/D8VDFXINaIXZ4haPSitoZ7CWgdKIKuyg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6802
 
-On Fri, May 22, 2026 at 05:43:25PM -0500, Bjorn Helgaas wrote:
-> On Thu, May 21, 2026 at 10:44:51AM +0530, Manivannan Sadhasivam wrote:
-> > On Wed, May 20, 2026 at 02:59:00PM -0500, Bjorn Helgaas wrote:
-> > > On Wed, May 20, 2026 at 09:17:35PM +0200, Caleb James DeLisle wrote:
-> > > > 
-> > > > On 20/05/2026 20:55, Bjorn Helgaas wrote:
-> > > > > On Wed, May 20, 2026 at 06:38:25PM +0000, Caleb James DeLisle wrote:
-> > > > > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > > > > 
-> > > > > > The driver previously used virt_to_phys() on the ioremapped register base
-> > > > > > (port->base) to compute the MSI message address. Using virt_to_phys() on an
-> > > > > > IO mapped address is incorrect because it expects a kernel virtual address.
-> > > > > > 
-> > > > > > To fix it, store the physical start of the I/O register region in
-> > > > > > mtk_pcie_port->phys_base and use it to build the MSI address. This replaces
-> > > > > > the incorrect virt_to_phys() usage and ensures MSI addresses are generated
-> > > > > > correctly.
-> > > > > > 
-> > > > > > Fixes: 43e6409db64d ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
-> > > > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > > > > Tested-by: Caleb James DeLisle <cjd@cjdns.fr>
-> > > > > > ---
-> > > > > >   drivers/pci/controller/pcie-mediatek.c | 16 +++++++++++++---
-> > > > > >   1 file changed, 13 insertions(+), 3 deletions(-)
-> > > > > > 
-> > > > > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > > > > > index 75722524fe74..c503fbd774d0 100644
-> > > > > > --- a/drivers/pci/controller/pcie-mediatek.c
-> > > > > > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > > > > > @@ -175,6 +175,7 @@ struct mtk_pcie_soc {
-> > > > > >   /**
-> > > > > >    * struct mtk_pcie_port - PCIe port information
-> > > > > >    * @base: IO mapped register base
-> > > > > > + * @phys_base: Physical address of the I/O register base region
-> > > > > >    * @list: port list
-> > > > > >    * @pcie: pointer to PCIe host info
-> > > > > >    * @reset: pointer to port reset control
-> > > > > > @@ -196,6 +197,7 @@ struct mtk_pcie_soc {
-> > > > > >    */
-> > > > > >   struct mtk_pcie_port {
-> > > > > >   	void __iomem *base;
-> > > > > > +	phys_addr_t phys_base;
-> > > > > >   	struct list_head list;
-> > > > > >   	struct mtk_pcie *pcie;
-> > > > > >   	struct reset_control *reset;
-> > > > > > @@ -405,7 +407,7 @@ static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> > > > > >   	phys_addr_t addr;
-> > > > > >   	/* MT2712/MT7622 only support 32-bit MSI addresses */
-> > > > > > -	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > > > > > +	addr = port->phys_base + PCIE_MSI_VECTOR;
-> > > > >
-> > > > > This doesn't look right because the MSI address is a PCI bus address,
-> > > > > and port->phys_base is a CPU physical address.  Often a PCI bus
-> > > > > address is the same as the CPU physical address, but not always.
-> > > > > I think the DT 'ranges' property tells you the translation.
-> > > 
-> > > Oops, sorry, I muddied the waters here.
-> > > 
-> > > 'ranges' tells you the translation applied by a bridge, e.g., when
-> > > a CPU does a load/store, the PCI host bridge turns it into a PCI
-> > > read/write transaction.  The bridge might add an offset to the CPU
-> > > load/store physical address to get the PCI read/write bus address.
-> > > 
-> > > But that's not the issue here.  The MSI is basically a DMA write
-> > > performed by the PCI device, not a store done by a CPU, so I don't
-> > > think 'ranges' is the right thing to look at.
-> > 
-> > Yeah, it is so easy to confuse both. To summarise, 'ranges'
-> > describes the outbound translation and 'dma-ranges' describes the
-> > inbound translation from host perspective.
-> > 
-> > > Based on this:
-> > > https://elinux.org/Device_Tree_Usage#PCI_DMA_Address_Translation I
-> > > think 'dma-ranges' is the relevant property.  I don't think your
-> > > DT includes a 'dma-ranges' property, and in that case the default
-> > > is that the system bus (CPU) address is the same as the PCI
-> > > address.
-> > > 
-> > > So I think this patch works because it assumes DMA addresses like
-> > > the MSI address are mapped to identical system bus addresses.
-> > > 
-> > > It still seems to me that drivers should be prepared for the
-> > > presence of dma-ranges and use it when computing the MSI target
-> > > address.  But I don't think any drivers really do that, so for now
-> > > I think you should pretend that I never responded about this
-> > > patch.
-> > 
-> > Your observations are correct. This driver assumes that the
-> > identical mapping exists between CPU and PCI bus addresses. Usually,
-> > the drivers make use of phys_to_dma() to handle the translations.
-> 
-> What does this look like in the native host bridge drivers?  I don't
-> see any direct calls of phys_to_dma(), but there are some higher-level
-> interfaces that use it.
-> 
-> I don't really see a consistent style of constructing MSI addresses,
-> e.g., in *_compose_msi_msg() implementations.
-> 
+On Thu, May 21, 2026 at 03:36:40PM +0530, Devendra K Verma wrote:
+> Function dw_edma_add_irq_mask() is not used anywhere. The
+> output of the function is not used hence it is redundant and
+> can be removed safely.
+> ---
 
-That's because, each driver may use different methods for constructing the MSI
-address. Two commonly used methods are:
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
 
-1. Using a pre-defined MSI address in the MMIO range (like the pcie-mediatek
-driver). The PCIe controller hardware decodes MWr TLPs targeting this address
-and raises an interrupt to the CPU via the platform interrupt controller (e.g.
-GIC).
-
-2. Allocating coherent memory using dma_alloc_coherent() and programming it
-into platform MMIO registers (like pcie-designware-host driver). The Root
-Complex inbound ATU matches writes to this address and raises an interrupt to
-the CPU.
-
-> > This API internally makes use of the 'dma_range_map' which gets
-> > populated by the OF core based on the 'dma-ranges' property (if
-> > present in DT).
-> > 
-> > But it makes sense to use it irrespective of whether the platform
-> > supports non-identical DMA/inbound translation or not. Since this
-> > API behaves like a no-op and returns the CPU physical address if
-> > there is an identical mapping, there is literally zero overhead in
-> > using it.
-> 
-> Thanks for rescuing me.
-> 
-> I wonder if there should be something in
-> Documentation/core-api/dma-api* about this.  I guess that is mostly
-> oriented toward things like PCI device drivers, not so much PCI host
-> bridge drivers.  But it would be nice to have a little intro to
-> dma-ranges and maybe even the restricted DMA usage.
-> 
-
-I think this information should belong to the PCI host controller documentation.
-I started writing it, but didn't get time to finish and post it. Maybe I'll
-atleast post an initial version and add more info on top.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+>  drivers/dma/dw-edma/dw-edma-core.c | 11 -----------
+>  1 file changed, 11 deletions(-)
+>
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index c2feb3adc79f..89a4c498a17b 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -988,20 +988,12 @@ static inline void dw_edma_dec_irq_alloc(int *nr_irqs, u32 *alloc, u16 cnt)
+>  	}
+>  }
+>
+> -static inline void dw_edma_add_irq_mask(u32 *mask, u32 alloc, u16 cnt)
+> -{
+> -	while (*mask * alloc < cnt)
+> -		(*mask)++;
+> -}
+> -
+>  static int dw_edma_irq_request(struct dw_edma *dw,
+>  			       u32 *wr_alloc, u32 *rd_alloc)
+>  {
+>  	struct dw_edma_chip *chip = dw->chip;
+>  	struct device *dev = dw->chip->dev;
+>  	struct msi_desc *msi_desc;
+> -	u32 wr_mask = 1;
+> -	u32 rd_mask = 1;
+>  	int i, err = 0;
+>  	u32 ch_cnt;
+>  	int irq;
+> @@ -1038,9 +1030,6 @@ static int dw_edma_irq_request(struct dw_edma *dw,
+>  			dw_edma_dec_irq_alloc(&tmp, rd_alloc, dw->rd_ch_cnt);
+>  		}
+>
+> -		dw_edma_add_irq_mask(&wr_mask, *wr_alloc, dw->wr_ch_cnt);
+> -		dw_edma_add_irq_mask(&rd_mask, *rd_alloc, dw->rd_ch_cnt);
+> -
+>  		for (i = 0; i < (*wr_alloc + *rd_alloc); i++) {
+>  			irq = chip->ops->irq_vector(dev, i);
+>  			err = request_irq(irq,
+> --
+> 2.43.0
+>
