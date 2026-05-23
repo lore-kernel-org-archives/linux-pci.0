@@ -1,121 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8066C347BB5;
-	Sat, 23 May 2026 11:17:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC0D35CB60;
+	Sat, 23 May 2026 11:35:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779535029; cv=none; b=ooHML9di0Gzo/nRaAhhk5ffBonmSqxfj2lS0t+JtCoRP4gVsUpVG93ZUDba5f6C6PQUf0GIrl3gOSGAAsaS1xFD1IvIcsh2/SjHcVsjeXh64Q15hkdSMDZRFwqj9KxHKam+eVqC4XzXFyRp3bvbhhCYtrLZ13qHJVjRmwRR4GWs=
+	t=1779536119; cv=none; b=URmO2sEh0vLZ8/SHZpO5koROhVgGbO87P7seQm/Uz6xDCw8JqdpAriznCcbQn2BK7/obFuo0ZT3v+xyjxjZFjMK791Gw1aRJKnVUV/RwEG8YTYmfacvRhcXn3P2ho0teGEM4MbzxLzFtx+ZDR/DiEeW6mJPza6GKcBxy4mFHIrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779535029; c=relaxed/simple;
-	bh=UsIZ3ROz4HgoqG/iZzrlr7mk4tV62y/kaUXEsQJPf2A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kErukX4NPQzbkg5g3wgRbZ+kJUDgJmKk2KDNQ7erVeq6fC1IrUrKu3ctybvdoEITtwi1ZRHogvohDwORJjzoMm6RV35iEpZnKrGSUZQ3cTLt6kNSt+QYmoiAuUqsY116nNgmkB9UF+LSKo7EGjWWI7dX33DuDsq2nSObE6MZsL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mgCyvFMQ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779536119; c=relaxed/simple;
+	bh=Ia5qu7JlVeB1yS0IcTI8hPbZjz+t5BWX0+6NYa+/BBw=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=HAo/53ePLD76MOJMYt5sFfIVmrKteSC6YUpk9btwDxDK8qqxAKRJgjrG/a/fjEmIfDzQGij5ZrXgLLVIyFIEfM8q93JTZ2p7OKs8Pu3kT4tC5ymN3x1W4Y873mUdkPmjCGqNBwQa04fb8mrdf2/m1nSIckjNDu2WtzxRAJHS6D0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MVb5q4AE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mgCyvFMQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17C7E1F000E9;
-	Sat, 23 May 2026 11:17:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MVb5q4AE"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id C14331F000E9;
+	Sat, 23 May 2026 11:35:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779535028;
-	bh=DFFkEUaecq9jgVgrZXM+gBJFGsiiQrkz7PbftdHt+vA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mgCyvFMQp4XOX/er5dLrmU9iZHrpVItvF2dDlyj0qu/KFPprv4F/rA8efyAiiRabU
-	 5ggR6w+MEhG2118BZhRgZV5kIIuBiNsWNtlhVOLVuUlCa8o1BYXOPyG4lt8nuHiB7j
-	 Eth9WPoSHKbKVs3ZQHMBziJR90bl1q9pTJXUXBpII0gb6a/YFOUmqpm/OCzhbsk6/H
-	 qauqxt4As07+qfNZGvi5jo1/7Va2hnXxpGCXQpsT1Kl/iXoqKSNHAq9Gjg/8TJysMC
-	 aPd33dUWR4ebeaX4lYNC9q6qGO50YWZbKAGJjq+d7soSM14j5D+HOcozvXHDOFHFEt
-	 cpEOKQ3aWnfyA==
-Date: Sat, 23 May 2026 14:17:02 +0300
-From: Mike Rapoport <rppt@kernel.org>
-To: David Matlack <dmatlack@google.com>
-Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org,
-	Pasha Tatashin <tatashin@google.com>,
-	Pratyush Yadav <prty@google.com>, Alexander Graf <graf@amazon.com>
-Subject: Re: [PATCH v6 01/12] PCI: liveupdate: Set up FLB handler for the PCI
- core
-Message-ID: <ahGMrrU0wCUdWgsN@kernel.org>
-References: <20260522202410.3104264-2-dmatlack@google.com>
- <20260522204400.4C7E51F000E9@smtp.kernel.org>
- <CALzav=cZsFx5dpbELx1cMHUa1+4+uv7cYEWAWAtZkXeB2d9mMw@mail.gmail.com>
+	s=k20260515; t=1779536118;
+	bh=o6BvjvS8rBGHZfEK/Y2a9oFckQ5H1gJo6XVFIye7120=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=MVb5q4AEA8UmYtvooBwsMHlyw5RBbHG0GAKY43VRV44Y00vqACu7wloCvRO4n4iQ6
+	 8rpEU0BcS3OBEMkMxux9nbuqdismvmSx5f0d9aoy8LXj47JSbi+iH0rx/tuJPMvTvB
+	 nJSQn+sssQMWaQoSGSWVzyCkYqeaYSpR7J4ZlhfZ5FqDTqYTP66LLTOyFdbU1Ltf8+
+	 8V1IAhmNejY5pFol/POpfEER8Jz5zMWOT4mz6nZiNlTcTJNKJ9a8dr3SoVOShwjZ3w
+	 Ncxm3Fp1WwOYhh4/RVDUIk73mZK0039qDLWmjsvAqhYB6gm3auukD8tdOKrYRBARRB
+	 NB0cq3pm6cdZw==
+Date: Sat, 23 May 2026 06:35:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v2 0/4] PCI: Introduce pci_suspend_retains_context() API
+Message-ID: <20260523113516.GA292297@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALzav=cZsFx5dpbELx1cMHUa1+4+uv7cYEWAWAtZkXeB2d9mMw@mail.gmail.com>
+In-Reply-To: <20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com>
 
-On Fri, May 22, 2026 at 02:37:28PM -0700, David Matlack wrote:
-> On Fri, May 22, 2026 at 1:44 PM <sashiko-bot@kernel.org> wrote:
-> >
-> > Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
-> > - [Medium] Missing `kho_is_enabled()` check before calling KHO preservation APIs in PCI Live Update FLB operations.
-> > --
-> >
-> > commit b0cb2fb154fba1aa85d63570fe0186e243353fb7
-> > Author: David Matlack <dmatlack@google.com>
-> >
-> > PCI: liveupdate: Set up FLB handler for the PCI core
-> >
-> > This commit sets up a File-Lifecycle-Bound (FLB) handler for the PCI core
-> > to participate in the preservation of PCI devices across Live Update. It
-> > allocates and preserves a pci_ser structure using KHO when the first PCI
-> > device file is preserved.
-> >
-> > > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > > new file mode 100644
-> > > --- /dev/null
-> > > +++ b/drivers/pci/liveupdate.c
-> >
-> > [ ... ]
-> >
-> > > +static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
-> > > +{
-> > > +     struct pci_dev *dev = NULL;
-> > > +     u32 max_nr_devices = 0;
-> > > +     struct pci_ser *ser;
-> > > +     unsigned long size;
-> > > +
-> > > +     /*
-> > > +      * Allocate enough space to preserve all devices that are currently
-> > > +      * present on the system. Extra padding can be added to this in the
-> > > +      * future to increase the chances that there is enough room to preserve
-> > > +      * devices that are not yet present on the system (e.g. VFs, hot-plugged
-> > > +      * devices).
-> > > +      */
-> > > +     for_each_pci_dev(dev)
-> > > +             max_nr_devices++;
-> > > +
-> > > +     size = struct_size_t(struct pci_ser, devices, max_nr_devices);
-> > > +
-> > > +     ser = kho_alloc_preserve(size);
-> >
-> > [Severity: Medium]
-> > Should this code verify kho_is_enabled() before calling kho_alloc_preserve()?
-> >
-> > The commit message states:
-> > "Note: There is no reason to check for kho_is_enabled() since it can be
-> > assumed to return true. If KHO was not enabled then Live Update would
-> > not be enabled and these routines would never run."
-> >
-> > Does this assumption conflict with the Kexec Handover subsystem guidelines?
-> >
-> > The guidelines mandate that all callers of serialization APIs must explicitly
-> > gate their usage with kho_is_enabled().
-> >
-> > Calling preservation APIs like kho_alloc_preserve() without the check can
-> > silently add tracking state that will never be used if the subsystem is
-> > unexpectedly inactive.
+On Tue, May 19, 2026 at 01:41:19PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> Hi all,
 > 
-> Sashiko keeps leaving this comment. It seems like a false positive to
-> me. KHO maintainers, perhaps the KHO documentation needs adjustment?
+> This series introduces a new PCI API, pci_suspend_retains_context() to
+> let the client drivers know whether they can expect context retention across
+> suspend/resume or not and uses it in the NVMe PCI host driver.
+> 
+> This new API is targeted to abstract the PCI power management details away from
+> the client drivers. This is needed because client drivers like NVMe make use of
+> APIs such as pm_suspend_via_firmware() and decide to keep the device in low
+> power mode if this API returns 'false'. But some platforms may have other
+> limitations like in the case of Qcom, where if the RC driver removes the PCIe RC
+> resource vote to allow the SoC to enter low power mode, it cannot reliably exit
+> the L1ss state when the endpoint asserts CLKREQ#. So in this case also, the
+> client drivers cannot keep the device in low power state during suspend and
+> expect context retention.
+> 
+> And these limitations may just keep adding in the future. Without a unified
+> API, the client drivers have to implement their own logic which may cause code
+> duplication and may also lead to drivers missing some of the platform
+> limitations.
+> 
+> Once this series gets merged, we can extend this API usage to other client
+> drivers as well.
+> 
+> Testing
+> =======
+> 
+> This series is tested on Qualcomm Hamoa based Lenovo Thinkpad T14s latop with
+> NVMe drive.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> ---
+> Changes in v2:
+> - Renamed the API to pci_suspend_retains_context()
+> - Reworded the commit messages to include L10_REFCLK_ON + T_COMMONMODE as the
+>   L1ss exit latency
+> - Rebased on top of v7.1-rc1
+> 
+> ---
+> Manivannan Sadhasivam (4):
+>       PCI: Introduce an API to check if RC/platform can retain device context during suspend
+>       PCI: Indicate context lost if L1ss exit is broken during resume from system suspend
+>       PCI: qcom: Indicate broken L1ss exit during resume from system suspend
+>       nvme-pci: Use pci_suspend_retains_context() API during suspend
+> 
+>  drivers/nvme/host/pci.c                |  3 ++-
+>  drivers/pci/controller/dwc/pcie-qcom.c | 12 ++++++++++++
+>  drivers/pci/pci.c                      | 34 ++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h                    |  9 +++++++++
+>  4 files changed, 57 insertions(+), 1 deletion(-)
 
-TBH, I don't remember such guidelines, but patches are welcome ;-)
-
--- 
-Sincerely yours,
-Mike.
+Applied to pci/pm for v7.2, thanks, Mani!
