@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBE572744F;
-	Sun, 24 May 2026 03:18:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1354C292B54;
+	Sun, 24 May 2026 03:28:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779592694; cv=none; b=Fv5Fm3OI7Sz3A1vKtASMdVxnKqYYqqte7IHLFYNtbL7FmImV1OuDo5etBR0bhTMu0+fLzBIyQ98Nt/6oUnkz47wqY/bU14SX/m5nS/fkGtb9M+z4B/YAhHYfpZJJ1dQ2X0DcxDITfLsGpeD5ylQ+jqMq5DANelMeGDIeAF7Erms=
+	t=1779593329; cv=none; b=PSQDOOVWFQRf9U6L7Qnw4Ohs0El/8DRmSkFHpOHIf1f5ju1y+eeEKXG1gu4gfcWskx/qo+IgkDRO63lnIKD1el7gqKR039cdJXp2BqOdqlFuz4R942G9ClwwBiogmUeQ7jfKRUNr9QwcQJ2tlkuOM884cxWkxc5s6MtsZf9V0O8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779592694; c=relaxed/simple;
-	bh=FTF04ASVcIjNCTSm6vabBRC9pFEBi23lkvHUCkWwLVw=;
+	s=arc-20240116; t=1779593329; c=relaxed/simple;
+	bh=RLsETKWw95WEHyyAEeBcA6Ru2Kex/bj6KhVWNBzQ4hY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cavQdjYogtOaLOIpM89PSTV09ahASelm9IUik+uNDgVCIazsPhRZXGPD2Mohgro3DUfvNIfwdUm15C5QUNvHX0QbKuw0QVkJC4NQcwdPEC88OTdka+59GJDr+dzWS17IrzSwfuIvLa8OJDLMcmh2DuXIvnC7s9/VJVtMDUJFBp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KLJnPZ4B; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=CGd8CgK4BF9ObUobo78M6yewnZqnjlrgOPGTHQ7b19AkAK1H663pbwgaGZKRPiWnsGTKSHJ3Goqk3Gw0yboXKjHLVOeEWDAZcJe4VqEaJUclVNfzuaiXlIb/2z6xWkKef80lrM6KvdE0x9MyxBS00TTOdmt7GPtSH4QD6JKb+rk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nt55thlk; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KLJnPZ4B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87A481F000E9;
-	Sun, 24 May 2026 03:18:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nt55thlk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F33BD1F00A3C;
+	Sun, 24 May 2026 03:28:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779592693;
-	bh=IAB1qhj2r/fkAJ6mKlvIOfPFOwzS7DkVvJXTCaX2+So=;
+	s=k20260515; t=1779593327;
+	bh=jUgjJhjCBK6OaQ0sI8P03LGKeOD/5c9/tWnLusPWxIg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=KLJnPZ4BfCy7vv3pHrBbdspN7ac1IdUfwlsoQ7feQ7V1TOtNyzHvnpcBFcgqslc/Q
-	 MDdEwhQdihORhN4P0dKsaHoyuhl5QHx2I8N5sJf03RTzY5pmkcuez6lKGhR6LxRR53
-	 nRzF3hzPeh/H57M1fiwIsr0aI74M77x9Ry0yM/NnJrTCjGYBpZiOgC0yGCdq+Pz3Is
-	 hlnMPrtXcAIKWahHnStosix3etbklacLcZyNH2pAP36Anp+xp6EjMDClHKzltAPZjf
-	 PgTU1QEE/7eWI7GcUa791J77CQHMbm2lPlfjT3RwBcVjqBGTLXdbGzJ0+SEyq6lXNn
-	 9iveyTCCCAvYQ==
-Date: Sun, 24 May 2026 08:48:04 +0530
+	b=Nt55thlkYA92ySsbMiDaAVIsQYyuer5sk1jTSWVb4phS5kisEfnNlgqUVdEbKi+vo
+	 s6wITb5MO1yB2eMjeRIC2nnwPHP4r1+Q/1T0t5PF2YY+dGDnMCbRLgRZ5/dGrzGXa0
+	 mq4OeJMVUB+Z0SakpLE5HxBHPmvEI2tikM97US5z/8tsVB4r6hQs3EP/YMRXQIkm9q
+	 iMilZljphw8K+xXtV9bU7ckbinRnY+/lMzgVDqNp9xA9sr0PZmIOD9FGOosklqjSof
+	 tm+AjTEMIRTEcyNDrULizmGg8tghEcXV3vdBhebuCWkuLHRrQLkTzMVbl3/9E1wd8V
+	 Nt6tnhmrYNRDg==
+Date: Sun, 24 May 2026 08:58:38 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Loic Poulain <loic.poulain@oss.qualcomm.com>
 Cc: Bartosz Golaszewski <brgl@kernel.org>, 
@@ -36,11 +36,11 @@ Cc: Bartosz Golaszewski <brgl@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
 	devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/3] power: sequencing: pcie-m2: Add QCA2066 (QCNFA765)
- BT serdev ID
-Message-ID: <7apajygktl7myslg7mclwgndj2rqhomxmtdii2vsigo32ztr2d@qdui3oxx5rik>
+Subject: Re: [PATCH 2/3] Bluetooth: hci_qca: Support QCA2066 on M.2 connector
+ via pwrseq
+Message-ID: <zgi4xxhxgqjg4uyjxibyuex6yxizlam6osxnur6i2myjhae6lr@4m77uwnjdhdo>
 References: <20260520-monza-wireless-v1-0-9f6942310653@oss.qualcomm.com>
- <20260520-monza-wireless-v1-1-9f6942310653@oss.qualcomm.com>
+ <20260520-monza-wireless-v1-2-9f6942310653@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,42 +50,91 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260520-monza-wireless-v1-1-9f6942310653@oss.qualcomm.com>
+In-Reply-To: <20260520-monza-wireless-v1-2-9f6942310653@oss.qualcomm.com>
 
-On Wed, May 20, 2026 at 01:01:42PM +0200, Loic Poulain wrote:
-> Add PCI device ID 17cb:1103 (Qualcomm QCA2066/QCNFA765) to the M.2
-> serdev ID table, mapping it to the qcom,qca2066-bt compatible string.
+On Wed, May 20, 2026 at 01:01:43PM +0200, Loic Poulain wrote:
+> For QCA2066 (and other QCA chips) on M.2 connectors, the UART enable
+> is controlled by the W_DISABLE2# signal managed by the pcie-m2 power
+> sequencer rather than a dedicated BT enable GPIO.
 > 
-> This allows the pwrseq-pcie-m2 driver to automatically create the
-> Bluetooth serdev device when a QCA2066-based M.2 card is enumerated.
+> When the serdev controller has an OF graph (indicating it is connected
+> to an M.2 connector), acquire the 'uart' pwrseq target from the
+> connector's power sequencer and use it to control BT power instead of
+> the bt-enable GPIO.
+> 
+> Also allocate bt_power unconditionally for all SOC types since the
+> pwrseq path is independent of the SOC type switch.
 > 
 > Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
+> ---
+>  drivers/bluetooth/hci_qca.c | 33 +++++++++++++--------------------
+>  1 file changed, 13 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+> index b5439b9956cfb0497e6ba6ccd9ed61224d23a9dd..de5cba7b7f44e280a48dad5d670fa2758d3268d0 100644
+> --- a/drivers/bluetooth/hci_qca.c
+> +++ b/drivers/bluetooth/hci_qca.c
+> @@ -1873,6 +1873,9 @@ static int qca_power_on(struct hci_dev *hdev)
+>  			/* Controller needs time to bootup. */
+>  			msleep(150);
+>  		}
+> +
+> +		if (qcadev->bt_power && qcadev->bt_power->pwrseq)
+> +			pwrseq_power_on(qcadev->bt_power->pwrseq);
+>  	}
+>  
+>  	clear_bit(QCA_BT_OFF, &qca->flags);
+> @@ -2415,25 +2418,9 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+>  	else
+>  		qcadev->btsoc_type = QCA_ROME;
+>  
+> -	switch (qcadev->btsoc_type) {
+> -	case QCA_QCA6390:
+> -	case QCA_WCN3950:
+> -	case QCA_WCN3988:
+> -	case QCA_WCN3990:
+> -	case QCA_WCN3991:
+> -	case QCA_WCN3998:
+> -	case QCA_WCN6750:
+> -	case QCA_WCN6855:
+> -	case QCA_WCN7850:
+> -		qcadev->bt_power = devm_kzalloc(&serdev->dev,
+> -						sizeof(struct qca_power),
+> -						GFP_KERNEL);
+> -		if (!qcadev->bt_power)
+> -			return -ENOMEM;
+> -		break;
+> -	default:
+> -		break;
+> -	}
+> +	qcadev->bt_power = devm_kzalloc(&serdev->dev, sizeof(struct qca_power), GFP_KERNEL);
+> +	if (!qcadev->bt_power)
+> +		return -ENOMEM;
+>  
+>  	switch (qcadev->btsoc_type) {
+>  	case QCA_WCN3950:
+> @@ -2543,7 +2530,13 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+>  			return PTR_ERR(qcadev->bt_en);
+>  		}
+>  
+> -		if (!qcadev->bt_en)
+> +		if (of_graph_is_present(dev_of_node(&serdev->ctrl->dev))) {
+> +			qcadev->bt_power->pwrseq = devm_pwrseq_get(&serdev->ctrl->dev, "uart");
+> +			if (IS_ERR(qcadev->bt_power->pwrseq))
+> +				return PTR_ERR(qcadev->bt_power->pwrseq);
+> +		}
+> +
+> +		if (!qcadev->bt_en && !qcadev->bt_power->pwrseq)
+>  			bt_en_available = false;
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+What about checking for W_DISABLE2# GPIO (BT_EN)? I think you can just create a
+helper and move the whole M.2 pwrseq logic added for QCA_WCN7850 to it and call
+it from places where required.
+
+I'd also try to go a bit further by calling the helper outside of the switch
+case, but that might be tricky.
 
 - Mani
-
-> ---
->  drivers/power/sequencing/pwrseq-pcie-m2.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> index efeb25ba9c79e20fc8bc8354def8ae423d0f2f2e..f90df88c663985c7702c19911f0c147e3b68984b 100644
-> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
-> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
-> @@ -188,6 +188,8 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
->  static const struct pci_device_id pwrseq_m2_pci_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
->  	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1103),
-> +	  .driver_data = (kernel_ulong_t)"qcom,qca2066-bt" },
->  	{ } /* Sentinel */
->  };
->  
-> 
-> -- 
-> 2.34.1
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
