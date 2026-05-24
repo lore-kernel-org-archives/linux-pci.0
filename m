@@ -1,40 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79E5D3597B;
-	Sun, 24 May 2026 03:15:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBE572744F;
+	Sun, 24 May 2026 03:18:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779592537; cv=none; b=RXUXDAuvi3B6yaCm2DvWZ5tGGEnJ+NcbbIBMyFsbF799Lu5i1W2tSogSf2QS4+aGQgOuXSP4aK9Ox7sbOCklvM3o/ME1MtZkK0g28A7uk3SGEEMaND/eHZx8rEw0GHJHyS3bzbubXGH5OeZ9aOmDgi4SfBASll7oJKSPpq6/mzk=
+	t=1779592694; cv=none; b=Fv5Fm3OI7Sz3A1vKtASMdVxnKqYYqqte7IHLFYNtbL7FmImV1OuDo5etBR0bhTMu0+fLzBIyQ98Nt/6oUnkz47wqY/bU14SX/m5nS/fkGtb9M+z4B/YAhHYfpZJJ1dQ2X0DcxDITfLsGpeD5ylQ+jqMq5DANelMeGDIeAF7Erms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779592537; c=relaxed/simple;
-	bh=tQRCUE74N9kr441zpfSCo29VuguijEAuqrA6Shp4D1w=;
+	s=arc-20240116; t=1779592694; c=relaxed/simple;
+	bh=FTF04ASVcIjNCTSm6vabBRC9pFEBi23lkvHUCkWwLVw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OoZ2zR9feXFO9byJFBwbuuEjWMg3DBy/O4Wcjk0CYR8EzEEHm88rxe5gVFzZZ15H7TIOLnIwRFysA88Q7xr6UYnsGa6vj/JYrnvPqj6hL2p2L4nd+jG3ZA9ZkCCac4vH5zFfWCcuDDyThEdjb3RDYn17+RUfSf5Zk2s83VCRpzU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cyiTVidF; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=cavQdjYogtOaLOIpM89PSTV09ahASelm9IUik+uNDgVCIazsPhRZXGPD2Mohgro3DUfvNIfwdUm15C5QUNvHX0QbKuw0QVkJC4NQcwdPEC88OTdka+59GJDr+dzWS17IrzSwfuIvLa8OJDLMcmh2DuXIvnC7s9/VJVtMDUJFBp4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KLJnPZ4B; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cyiTVidF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A38941F000E9;
-	Sun, 24 May 2026 03:15:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KLJnPZ4B"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87A481F000E9;
+	Sun, 24 May 2026 03:18:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779592536;
-	bh=pst0KhGvs6xW29Av8Jhi5H/6qnNY65bQbAF4WiBIsl8=;
+	s=k20260515; t=1779592693;
+	bh=IAB1qhj2r/fkAJ6mKlvIOfPFOwzS7DkVvJXTCaX2+So=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=cyiTVidF5bPSqKeDx1f4mqrPQPNWIT/mJDCrF5TA5xjrodQ1sIlFITf9b5CwbAJSY
-	 XezynYuzkRRw+xAhIJsl2m4rw+1ypY4CUfHxNf28jEAACP8VMzHJ9SDRKdm9GnMmqi
-	 vc9xl7Zrf3jrxQrKu3goPDiCIYs24z/p7pOAWjlHfwxWU3tYnWvGIgN/f9SckrNOIX
-	 HK9X+j22FUu6dLkI2wHNJfS9D0GPX7QLL93c2A7JvUv2LLh7nUJTr1nEA3L4cvykLf
-	 ZQ+zt360WbGbvhZLnjXzEAZojPSlqaJTCHR2KEamU8ULEH5uvUjF596S+wKHU4xTQT
-	 2VyGR12CfVLEw==
-Date: Sun, 24 May 2026 08:45:29 +0530
+	b=KLJnPZ4BfCy7vv3pHrBbdspN7ac1IdUfwlsoQ7feQ7V1TOtNyzHvnpcBFcgqslc/Q
+	 MDdEwhQdihORhN4P0dKsaHoyuhl5QHx2I8N5sJf03RTzY5pmkcuez6lKGhR6LxRR53
+	 nRzF3hzPeh/H57M1fiwIsr0aI74M77x9Ry0yM/NnJrTCjGYBpZiOgC0yGCdq+Pz3Is
+	 hlnMPrtXcAIKWahHnStosix3etbklacLcZyNH2pAP36Anp+xp6EjMDClHKzltAPZjf
+	 PgTU1QEE/7eWI7GcUa791J77CQHMbm2lPlfjT3RwBcVjqBGTLXdbGzJ0+SEyq6lXNn
+	 9iveyTCCCAvYQ==
+Date: Sun, 24 May 2026 08:48:04 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Devendra K Verma <devendra.verma@amd.com>
-Cc: bhelgaas@google.com, vkoul@kernel.org, dmaengine@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, michal.simek@amd.com
-Subject: Re: [PATCH v1] dmaengine: dw-edma: Remove dw_edma_add_irq_mask()
-Message-ID: <f6kwerrf2x7n7iy52mprq5zhqikzpdqbl5anzkrutvlyehix4w@ffks4f22nmme>
-References: <20260521100640.3333076-1-devendra.verma@amd.com>
- <3o7rek4lwnp7saci44acwxdxfhr2w2hd72feofcl3gipbofcjv@iazqkn57gqvl>
+To: Loic Poulain <loic.poulain@oss.qualcomm.com>
+Cc: Bartosz Golaszewski <brgl@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/3] power: sequencing: pcie-m2: Add QCA2066 (QCNFA765)
+ BT serdev ID
+Message-ID: <7apajygktl7myslg7mclwgndj2rqhomxmtdii2vsigo32ztr2d@qdui3oxx5rik>
+References: <20260520-monza-wireless-v1-0-9f6942310653@oss.qualcomm.com>
+ <20260520-monza-wireless-v1-1-9f6942310653@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,21 +50,42 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <3o7rek4lwnp7saci44acwxdxfhr2w2hd72feofcl3gipbofcjv@iazqkn57gqvl>
+In-Reply-To: <20260520-monza-wireless-v1-1-9f6942310653@oss.qualcomm.com>
 
-On Sun, May 24, 2026 at 08:44:00AM +0530, Manivannan Sadhasivam wrote:
-> On Thu, May 21, 2026 at 03:36:40PM +0530, Devendra K Verma wrote:
-> > Function dw_edma_add_irq_mask() is not used anywhere. The
-> > output of the function is not used hence it is redundant and
-> > can be removed safely.
+On Wed, May 20, 2026 at 01:01:42PM +0200, Loic Poulain wrote:
+> Add PCI device ID 17cb:1103 (Qualcomm QCA2066/QCNFA765) to the M.2
+> serdev ID table, mapping it to the qcom,qca2066-bt compatible string.
 > 
-> Where is your s-o-b tag?
+> This allows the pwrseq-pcie-m2 driver to automatically create the
+> Bluetooth serdev device when a QCA2066-based M.2 card is enumerated.
 > 
+> Signed-off-by: Loic Poulain <loic.poulain@oss.qualcomm.com>
 
-Also, if you had used scripts/get_maintainer.pl or b4, you would've added
-'dmaengine@vger.kernel.org ' list to CC.
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
 - Mani
+
+> ---
+>  drivers/power/sequencing/pwrseq-pcie-m2.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/power/sequencing/pwrseq-pcie-m2.c b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> index efeb25ba9c79e20fc8bc8354def8ae423d0f2f2e..f90df88c663985c7702c19911f0c147e3b68984b 100644
+> --- a/drivers/power/sequencing/pwrseq-pcie-m2.c
+> +++ b/drivers/power/sequencing/pwrseq-pcie-m2.c
+> @@ -188,6 +188,8 @@ static int pwrseq_pcie_m2_match(struct pwrseq_device *pwrseq,
+>  static const struct pci_device_id pwrseq_m2_pci_ids[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1107),
+>  	  .driver_data = (kernel_ulong_t)"qcom,wcn7850-bt" },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x1103),
+> +	  .driver_data = (kernel_ulong_t)"qcom,qca2066-bt" },
+>  	{ } /* Sentinel */
+>  };
+>  
+> 
+> -- 
+> 2.34.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
