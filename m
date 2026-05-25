@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E93B3BFE5A;
-	Mon, 25 May 2026 07:11:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD4393D0C1C
+	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 07:21:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779693069; cv=none; b=tYaCcyaxw3Yr84RFXYtanEsd7XxYpMuchrknGcmECJ7uSaeqZfn36OSAF8CZWWc9SZgBjftTGnA/6FiFGUILyDAhD09tJ7p9K73MGLqvF0k49nc55r5jEsuMeAp5DuaB26vQxeJB6Sm+uqGF4fsW9T/GEr49nn5Fr2mwH1a+jpA=
+	t=1779693662; cv=none; b=WV3huuKJQmPb7KM1VNGdjnIRuMSZm1Y8oWzl2J7dyds/FL6Myo8KemzdX9RbxykeCS8mIEhBiu1fqh39BXa8fk2tub9MbqIlkT6jgplqweySu3+iZrwFcZvGg3A53H3PTAMecG6VWPQv4fTZhwm48tH2jvQLIW2hASgL9xDwVpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779693069; c=relaxed/simple;
-	bh=dUWramHZV89lmlWuUu86XpRZrCSy0baHbbma7koyXKw=;
-	h=From:Subject:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rglOdw7YguzTkNefrjJhv5ismouNQZs4Xei/0MleVcfk0SPZjhGT+u8y2NWC42WiDEQcdDukqWLYhFwvhSJBPI7XGAmM6qdmWpA8Qc5iBe2PcpAgf4EYke67buDOgcrF4f576t/7xpS+rIU36grNL2PDdnBGUa5kFUbNMA9bkMo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vba0wNyk; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779693662; c=relaxed/simple;
+	bh=NY42teFn0Gm4EI9hPiXa85HZFayEANbf/aUDxiBfJPc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=daH0SIzTShBc6kxiv4AgbMcZSsB2A1s+Hafxq4eniE9BSynSRW8OJVG37Rollf/KpInMSo3sK6K1uUhqf11DEhZtHMOR6iRY4ti04zZa61k9o4Wi3esILWDfUTwxJkXTTu8z/YzY6Xnvx74trD5i12HPb9HLYLxnJ7XVoCreAz4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G021kx6Z; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vba0wNyk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A03071F000E9;
-	Mon, 25 May 2026 07:11:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G021kx6Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE6B1F000E9;
+	Mon, 25 May 2026 07:21:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779693067;
-	bh=Ymj6p4G1gd8jUYtvg5dmrv8SQVLwDNMBNQsG3tpyces=;
-	h=From:Subject:Reply-To:Cc:In-Reply-To:References:Date;
-	b=Vba0wNyk28CmbQFDirtFX7cz0DFdMcWpfFNG9JhO6kblRrBwv1Y6FDYVN2NnwZJpX
-	 ZcrtKpdvL58PbI0EwSMTo6OcuNmjs9NCdwPuwagYqB4Rl7E+FyY1GmRdfFYd4DmVcb
-	 m1LzNCceiCzSHmcqXm/FsKrjPWJcx42edcAc9ZIZQVdKb1CxzAi8uEnlRnj4ofZ/5N
-	 mX1Dl4mjuaUn9jrjDmL4fe9b9QvfiMCqAOFSQaEFClrgRb0u3nlfSnSKGutskR4V3G
-	 pJkHuGqLgymF3N7gcW9DMG/+civ9xlffpBXT/Ma3rfk7fuZQIKTd3A4x4lMSqgMkAV
-	 LXftWdmyOw/9g==
+	s=k20260515; t=1779693661;
+	bh=mU1ym/ThA40FzXscbvp5btpBdaJ23gk2buexBAnwRsM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=G021kx6ZuSVSvB3o5FlrZLpvSaezWgZAz1qApGYaz2QK5hU4B39meYch+49QPPEa3
+	 AvfnPYZIwCBMnKWyP1b0RthbmOwvnv1Yb/9xI/fpVorJapt3DOOMresIr7/j2All5I
+	 i+A3bu5xZEcZR1NuVONqB9R5K0aIVa4PpcP1I4zJ5DV3ZqfSjtqG8PHkJQ975o58Xu
+	 rMeK9px8g00EylY92vNEOWQwxqCoZAkOuqtyTlcBEKoTtlaausudaN+rxpMngDUP/C
+	 OXYRQOX3WlQwHdvNyBEWReq13OKL5sIDeI+3mZRAFrM1SuY2v+aHFtcNitSxNynngn
+	 11nVLn64maIBQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH V2 1/2] PCI: host-generic: Simplify return value
- handling in pci_host_common_parse_port(s)
+Subject: Re: [PATCH v2 3/3] PCI: dwc: Expose endpoint DMA resources
 Reply-To: sashiko-reviews@lists.linux.dev
-Cc: imx@lists.linux.dev, Frank.Li@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260525065443.2338629-2-sherry.sun@oss.nxp.com>
-References: <20260525065443.2338629-2-sherry.sun@oss.nxp.com>
+To: "Koichiro Den" <den@valinux.co.jp>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260525063129.3316894-4-den@valinux.co.jp>
+References: <20260525063129.3316894-4-den@valinux.co.jp>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 25 May 2026 07:11:07 +0000
-Message-Id: <20260525071107.A03071F000E9@smtp.kernel.org>
+Date: Mon, 25 May 2026 07:21:00 +0000
+Message-Id: <20260525072101.5BE6B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,85 +45,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] The patch changes the return value semantics of `pci_host_common_p=
-arse_ports()` from `-ENODEV` to `0`, silently breaking legacy device tree b=
-ackward compatibility for i.MX6 PCIe.
+- [Low] The patch introduces usage of an undefined structure `struct dw_edm=
+a_hw_chan_filter` and an undefined function `dw_edma_filter_hw_chan()`, res=
+ulting in a build failure.
 --
 
-commit dd3d8b79463f9da53267b3bb06dcedefaa9d7673
-Author: Sherry Sun <sherry.sun@nxp.com>
+commit 589f8b781fa00c9df917830bfed25275efe738de
+Author: Koichiro Den <den@valinux.co.jp>
 
-PCI: host-generic: Simplify return value handling in pci_host_common_parse_=
-port(s)
+PCI: dwc: Expose endpoint DMA resources
 
-This commit simplifies pci_host_common_parse_port and=20
-pci_host_common_parse_ports to return 0 when no ports are found instead
-of returning -ENODEV. It also removes the RC-level binding check,
-delegating that policy decision to the caller.
+This commit exposes the DesignWare endpoint-integrated eDMA register window
+and linked-list descriptor memories through the EPC auxiliary resource API.
+This lets endpoint functions decide which channels to publish to the host.
 
-> diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/contr=
-oller/pci-host-common.c
-> index 2ce6f4b661334..c93de5a107581 100644
-> --- a/drivers/pci/controller/pci-host-common.c
-> +++ b/drivers/pci/controller/pci-host-common.c
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pc=
+i/controller/dwc/pcie-designware-ep.c
+> index a396b58d67462..fab132b26cc42 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+
 [ ... ]
-> @@ -158,13 +141,11 @@ static int pci_host_common_parse_port(struct device=
- *dev,
->   * Iterate through child nodes of the host bridge and parse Root Port
->   * properties (currently only reset GPIOs).
->   *
-> - * Return: 0 on success, -ENODEV if no ports found or PERST# found in RC
-> - * node (legacy binding should be used), Other negative error codes on
-> - * failure.
-> + * Return: 0 on success, negative error codes on failure.
->   */
->  int pci_host_common_parse_ports(struct device *dev, struct pci_host_brid=
-ge *bridge)
->  {
-> -	int ret =3D -ENODEV;
-> +	int ret =3D 0;
+
+> +static bool dw_pcie_ep_dma_filter_fn(struct dma_chan *chan, void *param)
+> +{
+> +	const struct pci_epc_aux_resource *res =3D param;
+> +	struct dw_edma_hw_chan_filter filter =3D {
+> +		.dma_dev =3D res->u.dma_desc.dma_dev,
+> +		.write =3D res->u.dma_desc.dir =3D=3D PCI_EPC_AUX_DMA_EP_TO_RC,
+> +		.id =3D res->u.dma_desc.hw_ch,
+> +	};
 > =20
->  	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
->  		if (!of_node_is_type(of_port, "pci"))
-> @@ -174,8 +155,8 @@ int pci_host_common_parse_ports(struct device *dev, s=
-truct pci_host_bridge *brid
->  			goto err_cleanup;
->  	}
-> =20
-> -	if (ret)
-> -		return ret;
-> +	if (list_empty(&bridge->ports))
-> +		return 0;
+> -	return 1;
+> +	return dw_edma_filter_hw_chan(chan, &filter);
 
-[Severity: High]
-Does returning 0 instead of -ENODEV here break bisectability for legacy
-device trees on i.MX6?
+[Severity: Low]
+Does this code build successfully? Looking at the included headers, it appe=
+ars
+struct dw_edma_hw_chan_filter and the dw_edma_filter_hw_chan() function are
+not defined in include/linux/dma/edma.h or elsewhere in the tree, which mig=
+ht
+result in a build failure due to an incomplete type and implicit function
+declaration.
 
-Looking at the caller imx_pcie_host_init() in=20
-drivers/pci/controller/dwc/pci-imx6.c, it relies on this exact -ENODEV=20
-return value to detect the absence of Root Port nodes and fall back to=20
-parsing legacy bindings:
-
-imx_pcie_host_init()
-    ret =3D pci_host_common_parse_ports(dev, bridge);
-    if (ret =3D=3D -ENODEV)
-        ret =3D imx_pcie_parse_legacy_binding(imx_pcie);
-    if (ret)
-        return ret;
-
-Since this helper now returns 0 when no ports are found, the caller bypasses
-its error-handling and legacy fallback block entirely, leaving the
-bridge->ports list empty. Consequently, imx_pcie_assert_perst() will do
-nothing, and the PERST# GPIO will never be parsed or asserted.
-
-I see that this issue is fixed later in the series by commit=20
-0dd88230fe087b9c6a87eed08edc4d3be7f1fe1a (PCI: imx6: Add
-imx_pcie_perst_found() to inspect the parsed result), but updating the API
-without updating the caller in the same commit could break bisection.
-
->  	return devm_add_action_or_reset(dev, pci_host_common_delete_ports,
->  					&bridge->ports);
+>  }
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260525065443.2338=
-629-1-sherry.sun@oss.nxp.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260525063129.3316=
+894-1-den@valinux.co.jp?part=3D3
