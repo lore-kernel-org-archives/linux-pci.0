@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EDC83803C8
-	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 20:56:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0317B19D8A8
+	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 21:02:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779742590; cv=none; b=FqtmRHifmq7SDfUhWDbGieRe8T10au306/zaQup2pdX7JqAlDFPvszN0eqIxnhi4uhOKAtZQuuE9YQElSp2G+yoCWFOcHRWdXBMa0pesPL6OR7y5vosrSketZDPGtIpfiianIrfzSMge7i9hyYo/VEnSRR/0FHPuXuEOMOX6dqE=
+	t=1779742924; cv=none; b=aTDCPHTeqHmYuboAqZIFQU3L+VS84fXtxWuI1kf2KkPzBGLtKu4Lz4ooOMKcy8YNcq97fgQY2xUZOsFdSXK3ebJhKwKuvaszQ+Bd2r3kfvtyN9MCYPpjyH57JfZqFQQyAOIDRZhlvJ3E0HmJzLwSxK2yMT+ns0Z1Vw6ciOApyUo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779742590; c=relaxed/simple;
-	bh=1n6xqkkx8nM0M21Z8vUXe3F1d1LnfrvMAssq6iwg7U0=;
+	s=arc-20240116; t=1779742924; c=relaxed/simple;
+	bh=XK/sKlMqsfckbJpOonXa3zJFcoOoe6t5CbMfhPD7PC8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qkYCPmCDtp/1WAnXvpbbTTH1box7DwAMOKG3z5pznYesNT8YPYqtAL6h63kGM0t3EdTa2wrMRS79z5F4wWetasj61RnBbTuPbUwHggRdCnmfzuJN9Ie3vTiCbjTLeEAGzBnLcvR4OkaTYSTA7phz/rEeaKZB01r7qKBnBpSu1wU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fh1Lb7Gb; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=q3tiho/iB+GbmD7lFNl15CP504OZKwN+UTPSQPN1KZD+O0QDpFqNEvXOtmNlbGDjBtfdW5pQA9JLGEKGXAwnMV3et6n7P60c613FRPkVza2Ul0DxKZkYzDZJFIDBBASYFbjtCjqf6LM1A5Z/CCfSUftu0PUWb+2tvW8aoUBFSLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZzADL1/1; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fh1Lb7Gb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD4431F000E9;
-	Mon, 25 May 2026 20:56:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZzADL1/1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 875861F000E9;
+	Mon, 25 May 2026 21:02:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779742588;
-	bh=mj49iokE2zlvgMGSexMI3TXFrHxMBiVsTP9fmUxxIdQ=;
+	s=k20260515; t=1779742922;
+	bh=Oi7Lf0Qf1p9a7vgjSU9LO6Q20W6r9EWutjbFPRsxNhE=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=fh1Lb7Gb44ntZezWMVNiOCJlBjF/jYB+8Lmxyr61MCcxM7KgrGjrs3bLeJ/9BTcb9
-	 Mc62CINZKdxSXwkb2CsbMFzfHyMbIwz3B98EtmTsQSC3vzrLo3qZOEVGSqfJZ7kw6h
-	 bYj/+9FTe9Xa9PMAqJW8Y7Ooxws4yQKS2ncGfPC59C4wKFs4hyD70YaGB/lBZq17qq
-	 l9b61gQ5ClEgtZpNCok30BZ7DwEkRRDuYqZ+GSjL32rsspWo/ibtMeJOb6XK8TLJ+o
-	 6+h6qMzVBdERDYLdkrVN41A3PjAvB3/y60s6LNpF6PDhfiZKzIgFyBIGazlEZhil9J
-	 Kxzp22mXkm8vw==
+	b=ZzADL1/10jkf51bS+f2Uidb9YQ2WFV8PkltKHl+LhTnv6Pqp5PBa2QCNLk+8nN6tn
+	 9irKOq/iiNAPYyIdjJ7ONKS2crYV2gS7AxNPyEvq1GGxHEG1VapJaMUzajgc0G+qlJ
+	 /fZDJlI7Tq2vOepG7MdTwwsYupyHZfI6vjC4c6CtQlHJmjPSA9ytK11heMrRztKhao
+	 rvlTwh6oqaX9gLk3UvuFhi85WkF57OfoP0vUfGHKEGgOhboORo8Aq1+HbJyUth3+eX
+	 RJyfSc7eC6djfGUPdsZRRCOoKI/MB5O2/ysTgZG20zow2yA9IjJ9zVuOs76hpyUHBJ
+	 cw3sOYi1iEDhQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 4/5] iommu/vt-d: Fail probe on ATS configuration
- failure
+Subject: Re: [PATCH v5 01/24] rust: pci: use 'static lifetime for PCI BAR
+ resource names
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pranjal Shrivastava" <praan@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260525184347.4059549-5-praan@google.com>
-References: <20260525184347.4059549-5-praan@google.com>
+To: "Danilo Krummrich" <dakr@kernel.org>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260525202921.124698-2-dakr@kernel.org>
+References: <20260525202921.124698-2-dakr@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 25 May 2026 20:56:28 +0000
-Message-Id: <20260525205628.CD4431F000E9@smtp.kernel.org>
+Date: Mon, 25 May 2026 21:02:02 +0000
+Message-Id: <20260525210202.875861F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,60 +48,53 @@ Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] Unconditional RB-tree removal on error path causes tree corruption=
- for non-ATS devices.
+- [High] `Devres::new` lacks a `'static` bound on `T`, allowing safe Rust c=
+ode to register objects with non-static lifetimes to the C devres subsystem=
+ and leak the `Devres` wrapper, leading to UAF on device unbind.
 --
 
-commit b8810979b183c84268a61e16cca0cbf36d0ac97a
-Author: Pranjal Shrivastava <praan@google.com>
+commit 1ea8f39dcd612a476e90616d2d99987a3bfdbf27
+Author: Danilo Krummrich <dakr@kernel.org>
 
-iommu/vt-d: Fail probe on ATS configuration failure
+rust: pci: use 'static lifetime for PCI BAR resource names
 
-Updates the Intel vt-d driver to strictly handle ats configuration by faili=
-ng
-the device probe if pci_prepare_ats() returns an error. It also throws a
-warning if pci_enable_ats() fails during enablement, treating it as a bug.
+This commit updates the lifetime of the name parameter in Bar::new and
+iomap_region functions to a static CStr. This ensures the pointer remains
+valid even if the Bar is leaked, preventing potential use-after-free issues
+when pci_request_region stores the name pointer directly.
 
-> diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-> index 4d0e65bc131d7..22308e4911e1f 100644
-> --- a/drivers/iommu/intel/iommu.c
-> +++ b/drivers/iommu/intel/iommu.c
+Closes: https://lore.kernel.org/all/20260522004943.CDA7C1F000E9@smtp.kernel=
+.org/
+
+> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+> index ae78676c927ff..3ce21482b0797 100644
+> --- a/rust/kernel/pci/io.rs
+> +++ b/rust/kernel/pci/io.rs
 [ ... ]
-> @@ -3288,7 +3294,10 @@ static struct iommu_device *intel_iommu_probe_devi=
-ce(struct device *dev)
-> =20
->  	dev_iommu_priv_set(dev, info);
->  	if (pdev && pci_ats_supported(pdev)) {
-> -		pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
-> +		ret =3D pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
-> +		if (ret)
-> +			goto free;
-> +
->  		ret =3D device_rbtree_insert(iommu, info);
->  		if (ret)
->  			goto free;
+> @@ -249,10 +249,10 @@ impl Device<device::Bound> {
+>      pub fn iomap_region_sized<'a, const SIZE: usize>(
+>          &'a self,
+>          bar: u32,
+> -        name: &'a CStr,
+> +        name: &'static CStr,
+>      ) -> impl PinInit<Devres<Bar<SIZE>>, Error> + 'a {
+>          Devres::new(self.as_ref(), Bar::<SIZE>::new(self, bar, name))
 
 [Severity: High]
-This is a pre-existing issue, but does unconditional removal of the rb-node
-on the error path cause tree corruption for non-ats devices?
+This isn't a bug introduced by this patch, but does Devres::new lack a
+static bound on T?
 
-If a device does not support ats, the info structure skips the
-device_rbtree_insert() call here, leaving info->node zero-initialized.
+Since Devres::new registers a C callback via devres_node_add() and can
+intentionally leak a reference into the C devres subsystem (which is safe
+in Rust via core::mem::forget), a user could pass an object with a
+non-static lifetime.
 
-However, if a subsequent operation like intel_pasid_alloc_table() fails,
-the error path jumps to clear_rbtree:
+The C devres subsystem will eventually drop the object upon device unbind,
+which might happen long after any stack references have become invalid.
 
-intel_iommu_probe_device()
-    ...
-    clear_rbtree:
-            device_rbtree_remove(info);
-    free:
-            kfree(info);
-
-Calling device_rbtree_remove() on this zero-initialized node causes the
-rb-tree logic to treat it as a root node with no parent, ultimately
-overwriting the actual tree root with null and corrupting the device_rbtree.
+Should Devres or its constructor enforce a static bound on T to prevent
+this potential use-after-free?
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260525184347.4059=
-549-1-praan@google.com?part=3D4
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260525202921.1246=
+98-1-dakr@kernel.org?part=3D1
