@@ -1,189 +1,73 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC3122BF3D7
-	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 16:50:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.174
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779727821; cv=pass; b=ZRR8ilvu+LTFBpx62CnZqvudG3XjIM7LuWKMyM2gMlY/u9caPKyL0IFQzJP7L/A7/uZAHTqkApPeux3VAnOJDcAXAI4sJRVsAqegvdwLv1YJ+h4nFcLijQZig/0ijfrDIVttsNfALFlVr3L7HLjdv811+CsJGI8ARnWhTx4XuY4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779727821; c=relaxed/simple;
-	bh=gvYRD/fbHclDb6BMPlUm/yjtLzzgXzWVzit+Q7QQgkc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HI41MyO8gMi39iDqmCRXr3LmM4ivLR6f/M+kgc2ZoBeQXg3Z/SA7MqPNX9gbhpOs1x+SO5YsJvIELVnROtnX12fBl4W0LuFAeCW9RZYTwRmyoP+QAPGnHsDKHbmZ2Rrot4nEmSYKPzNTkQBALEX0NryM0Amrn6XEbMf//3FoWGw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=NY+ukRVS; arc=pass smtp.client-ip=209.85.160.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB1093F413B
+	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 16:55:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779728132; cv=none; b=o639l64MjYjhxxc1vm5GXKkZucc9f+zk2Pf0M5eUyoNTdpU2abnknAC5ZYxMhnlv8qQ4ajcTCeBh1WqaHOhYdZ4+V6G4eay7MjZevrgkFJT8oNeN1qwZKhIN9yKwMGs51AETRscWoCq4qsVLwe40+Zljbg+CT0pH+dH41Ao0/ww=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779728132; c=relaxed/simple;
+	bh=YkFbm+/wNq+5LWiO6mPuMdi/9JXfPp40CWUvJSE4Xns=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=qRgKo4zyAp++PsoPva7k7vD/qWJey5cpt8ggVhvk+rERTG0heTLEQFieV8F1kq6dZtd0qslavCzIWIDV+CLcCQTsDlqkzvA38iR9kmzhLJFBdB7rGipuwv+20P4UDxugNMGEMMHmmk5NxYk85eFdhgOx74t3b21OeIX2NV4G4Ys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=AyJJlsf6; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NY+ukRVS"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-516d78ba1adso11581cf.1
-        for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 09:50:19 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1779727818; cv=none;
-        d=google.com; s=arc-20240605;
-        b=EhIQ93I9/wKl5Z8cMiqZYlqCgBzmwezKJiufMZdAjutzYgaWWArA+C5V0OWYqi7R8F
-         pgEeqAiMfD4nvMz2LsrudN7kktLDK0Ek5DxHiqPR4jF0Um3Bz9cBpyXNEZMWeB2tH2cE
-         CJ+PaVfcPe/Z1o07XUq3lsZXXMwBIIEogWO3UforuRNuxoL4/QlQgv7vpCx9ADIbCcsW
-         h/fV8Ii1qa5aEgndj/xUzRTYXUm0+NZOEn/HJ54fr+N3tZ8ysbXxoInozcd22inMYn4h
-         ZXYqWVodSFtWcR7PnBRF2TLMJlf1lw6MHzLGq/CM0WEhXydf81Y72zr7qZ7szggdQM73
-         I1NQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=0JjUL2DNtzGEe4CPKkrL56TkQhquEmRXcDVg+YHzq9Q=;
-        fh=I475EKV5n+RkPXbGmb2HUSuQCrGonTHRrlDLIXRvcYo=;
-        b=hQaWlrfJWJCKfP1Cqvi9n8DqsO29FlhI8JQ5TWKl65ac2R0pfxEgM5ljcdN5QPphgB
-         XQLRBqvBiGbIbmF+QP3l0NQzwZaRchrqH3x122O4LUbKmGml0HTN+scQa8yHezhFTE39
-         FlVbzsEaMiV+nLTHz5FGuDd29EdmtAAwJMYiVcUKjv9diveXjk/Z0SDbLHGdVN5UBAPy
-         cYi2QJzfvy2jGJQVnT4kU/n/ldcKajd5KNRzqXC5v57vAr4O9seXfI3zuIaDg5qbncBU
-         pV/+3I0lANf7gNEyWi4AOlszw/zyIHeZwxFHOJLgpbql8I593AuYS9sZZ4RY96/90vwi
-         xWXA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1779727818; x=1780332618; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0JjUL2DNtzGEe4CPKkrL56TkQhquEmRXcDVg+YHzq9Q=;
-        b=NY+ukRVSYWIanc0nbdteQhMS8cCJcuxJ3xzjtWUkQ927cGk3sr/3HIQ1CQ8Bhis24I
-         HEOTh43bh7St4yesyXNy3ZB1mPi8CIrH7GxP+jhk3oWqnEHkO/SI4tH6g986fAlTM/lm
-         Ts2mMyWYRqeHvALjDWip4/R3LyDzgoXdvnBEMAfgaKpTuHV9IFbmDKvQOZDRKk87NElp
-         lujYUBSUetBE3oqjh/d+yaiqzE60SuAoY7xrwiOT4vzxjzltIAdwtd2MVgiIs08YK7Mp
-         ZOIQgOubxrhjejLpT07564+sKve+XjzkJbyfJOl44i7Yt8xVFvdh00ZbxlVA/Q+yzgDK
-         XXhw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779727818; x=1780332618;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=0JjUL2DNtzGEe4CPKkrL56TkQhquEmRXcDVg+YHzq9Q=;
-        b=Lz7rIEvOwtPUJkj6brGzj+PnPXCSwUbWxDdoY3gOsMyO7YogI7meNeAaZyfWDuLET0
-         5aZFW3lHjkQlW0M5ixChZkIgPpcGpJY8HauVg86969qdFd9/acTLyyXTQppClznM9tKY
-         ctikYgnx/6WYa3HDs51MMc5zajzcVqm1vPZyvX3K0vPlIbvIxUYrzbVUrvPMBQgNXkf8
-         zzQhKWQbrIUOsJyLXe8kglJi8rCvkes8Dpms3hztbUeQp8HRCxLteRbH72gaBxbhNvUh
-         +PjY+zhFkezCQT3HYU7j1yJjZvqYBrUc/4z9ezT9PrsIDUwNjAWaDnddBDGKbdONrBUw
-         Bq6A==
-X-Forwarded-Encrypted: i=1; AFNElJ+pMhjgiukzHiOIfE/gn5lwLwO+dr4GxU6Wj5RY4z1Jqbi2s14OZNGI2VLwuhYkxw06P0EmxAdhgEY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxOavj9nSqwzAyfTq2FWd3E4zkdDKRn+DTDPmQDs9sXx4tc+M7H
-	4eEcI6Sartn6nfjWOU9lo6VirAjQbht6cJcmUjDTVg7e5/3uV3tl+dIV31yfx7Hxo+TVSJ/g8X5
-	LkQzL+oW4cZH77tUb+ZZu8UgXV6gq5ANkbg/jJUfqom/qODIJTuLuryxd
-X-Gm-Gg: Acq92OGzUhN06DPhSkzpCrSx6WjQ8S6P+JDml+ID0nbxxbAgG6+y0PjAefj1tm34CW3
-	Km1n/w23AxWbu3j3M701j//Vy2/C5gnPnRtRRS4+vIn/H7pWzLX6f9bCMsP52kUEQR9g5NutHK1
-	t0TF6fQAwSz7nPk1kESKm+e2g/mL/4KlqL69ik7qpMpf2t4eP5NKFVVKXq/ligDFliQkFLcKRJp
-	AOXux7VRR1v0z58hRvHXw7+t3Y2G/nfBvohIt6iyW7dnII22WaXBP83JX2XiPy2bqUnrPHlShZi
-	UQE3ah7PZPcdtORsPy5RMrPcwiz/g4O7TghwWkG7JbrX8YD/
-X-Received: by 2002:a05:622a:5806:b0:514:b17e:86f3 with SMTP id
- d75a77b69052e-516e0dba205mr23195971cf.12.1779727818143; Mon, 25 May 2026
- 09:50:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="AyJJlsf6"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=YkFbm+/wNq+5LWiO6mPuMdi/9JXfPp40CWUvJSE4Xns=; b=AyJJlsf671Fe/R/pT6h+3nQqlV
+	/HcmNdzNFrl6uWN5sxqbec3gFGD25Rnu5Ukpy373Cv83+Zw7IIACHM3Ykicd4ZyBFqLUAFLe2b6vb
+	/i3YoEBL7UCDBvAzmUzlu2FkN6D6cvF1dFRqGR2jvUu3C9ROwu3mwfhYgoF6lfo1vmzQVBBAMRsFM
+	2K/sqtcDZJGSP28zol/MS/nFPA9IOFX+DQZnLWtnZJjuwrg/ohKaSRhJhZThPTkySl01TYEZ1bpYP
+	9W5M+U6dKHjhH3Yrqa74j9uoBeg7cyiQqJGmXDtKuRXJtxSbJtipMJvaJemzEqyG8xlyJkbxMXrVN
+	URgx7EzA==;
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <logang@deltatee.com>)
+	id 1wRXyN-00000004t9H-0FXB;
+	Mon, 25 May 2026 10:16:11 -0600
+Message-ID: <2fe0ca03-626e-44c3-a8e2-560d9b7b3999@deltatee.com>
+Date: Mon, 25 May 2026 10:16:09 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260522202410.3104264-2-dmatlack@google.com> <20260522204400.4C7E51F000E9@smtp.kernel.org>
- <CALzav=cZsFx5dpbELx1cMHUa1+4+uv7cYEWAWAtZkXeB2d9mMw@mail.gmail.com> <ahGMrrU0wCUdWgsN@kernel.org>
-In-Reply-To: <ahGMrrU0wCUdWgsN@kernel.org>
-From: Pratyush Yadav <prty@google.com>
-Date: Mon, 25 May 2026 18:50:06 +0200
-X-Gm-Features: AVHnY4Lb1xmQZl0kSTzbbqWnI26kjuiXlfW8kdi8Ev0RksUckJgTRut1sW7eqVc
-Message-ID: <CA+Yg5gQ_6jwFJpDupMoPz7Q2pMB7PNMHpLdv6ikFxfchz0zGCA@mail.gmail.com>
-Subject: Re: [PATCH v6 01/12] PCI: liveupdate: Set up FLB handler for the PCI core
-To: Mike Rapoport <rppt@kernel.org>
-Cc: David Matlack <dmatlack@google.com>, sashiko-reviews@lists.linux.dev, 
-	linux-pci@vger.kernel.org, Pasha Tatashin <tatashin@google.com>, 
-	Alexander Graf <graf@amazon.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+To: Pat A <lasoyster@gmail.com>, linux-pci@vger.kernel.org
+Cc: kelvin.cao@broadcom.com
+References: <CA+jUz5KSBDTgYJVB=wUccrerXdekJ3mV_np8iat4PKDteSGmNg@mail.gmail.com>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <CA+jUz5KSBDTgYJVB=wUccrerXdekJ3mV_np8iat4PKDteSGmNg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: lasoyster@gmail.com, linux-pci@vger.kernel.org, kelvin.cao@broadcom.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: =?UTF-8?Q?Re=3A_PEX88000_=281000=3Ac010/c012=29_management_endpoint?=
+ =?UTF-8?Q?_incompatible_with_switchtec_driver_=E2=80=94_die_temp_inaccessib?=
+ =?UTF-8?Q?le?=
+X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-On Sat, May 23, 2026 at 1:17=E2=80=AFPM Mike Rapoport <rppt@kernel.org> wro=
-te:
->
-> On Fri, May 22, 2026 at 02:37:28PM -0700, David Matlack wrote:
-> > On Fri, May 22, 2026 at 1:44=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
-> > >
-> > > Thank you for your contribution! Sashiko AI review found 1 potential =
-issue(s) to consider:
-> > > - [Medium] Missing `kho_is_enabled()` check before calling KHO preser=
-vation APIs in PCI Live Update FLB operations.
-> > > --
-> > >
-> > > commit b0cb2fb154fba1aa85d63570fe0186e243353fb7
-> > > Author: David Matlack <dmatlack@google.com>
-> > >
-> > > PCI: liveupdate: Set up FLB handler for the PCI core
-> > >
-> > > This commit sets up a File-Lifecycle-Bound (FLB) handler for the PCI =
-core
-> > > to participate in the preservation of PCI devices across Live Update.=
- It
-> > > allocates and preserves a pci_ser structure using KHO when the first =
-PCI
-> > > device file is preserved.
-> > >
-> > > > diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> > > > new file mode 100644
-> > > > --- /dev/null
-> > > > +++ b/drivers/pci/liveupdate.c
-> > >
-> > > [ ... ]
-> > >
-> > > > +static int pci_flb_preserve(struct liveupdate_flb_op_args *args)
-> > > > +{
-> > > > +     struct pci_dev *dev =3D NULL;
-> > > > +     u32 max_nr_devices =3D 0;
-> > > > +     struct pci_ser *ser;
-> > > > +     unsigned long size;
-> > > > +
-> > > > +     /*
-> > > > +      * Allocate enough space to preserve all devices that are cur=
-rently
-> > > > +      * present on the system. Extra padding can be added to this =
-in the
-> > > > +      * future to increase the chances that there is enough room t=
-o preserve
-> > > > +      * devices that are not yet present on the system (e.g. VFs, =
-hot-plugged
-> > > > +      * devices).
-> > > > +      */
-> > > > +     for_each_pci_dev(dev)
-> > > > +             max_nr_devices++;
-> > > > +
-> > > > +     size =3D struct_size_t(struct pci_ser, devices, max_nr_device=
-s);
-> > > > +
-> > > > +     ser =3D kho_alloc_preserve(size);
-> > >
-> > > [Severity: Medium]
-> > > Should this code verify kho_is_enabled() before calling kho_alloc_pre=
-serve()?
-> > >
-> > > The commit message states:
-> > > "Note: There is no reason to check for kho_is_enabled() since it can =
-be
-> > > assumed to return true. If KHO was not enabled then Live Update would
-> > > not be enabled and these routines would never run."
-> > >
-> > > Does this assumption conflict with the Kexec Handover subsystem guide=
-lines?
-> > >
-> > > The guidelines mandate that all callers of serialization APIs must ex=
-plicitly
-> > > gate their usage with kho_is_enabled().
-> > >
-> > > Calling preservation APIs like kho_alloc_preserve() without the check=
- can
-> > > silently add tracking state that will never be used if the subsystem =
-is
-> > > unexpectedly inactive.
-> >
-> > Sashiko keeps leaving this comment. It seems like a false positive to
-> > me. KHO maintainers, perhaps the KHO documentation needs adjustment?
->
-> TBH, I don't remember such guidelines, but patches are welcome ;-)
+Hi Pat,
 
-Yeah, on a quick scan of KHO documentation I see nothing of the sort.
-So possibly the bot is hallucinating?
+On 2026-05-24 03:12, Pat A wrote:
+> I'm running a system with both a PEX88096 (1000:c012, subsystem a096)
+> and PEX88048 (1000:c010, subsystem a048) on an ASUS x570 Board (AM4,
+> Ryzen 9 5900X). The switches handle 2 x GPUs and 8× NVMe drives.
+The Switchtec driver only supports PCI switches made by Microsemi. The
+Broadcom switches are an entirely different product line that has
+nothing to do with the Switchtec driver. I suggest you contact Broadcom
+for support.
 
-But perhaps it would help if we update the subsystem prompts for
-Sashiko about this?
+Logan
+
