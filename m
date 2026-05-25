@@ -1,73 +1,115 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from mail.mindbit.ro (xs1.mindbit.ro [80.86.107.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB1093F413B
-	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 16:55:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1AE32C11FA;
+	Mon, 25 May 2026 16:56:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.86.107.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779728132; cv=none; b=o639l64MjYjhxxc1vm5GXKkZucc9f+zk2Pf0M5eUyoNTdpU2abnknAC5ZYxMhnlv8qQ4ajcTCeBh1WqaHOhYdZ4+V6G4eay7MjZevrgkFJT8oNeN1qwZKhIN9yKwMGs51AETRscWoCq4qsVLwe40+Zljbg+CT0pH+dH41Ao0/ww=
+	t=1779728213; cv=none; b=FLe9h+y4Y76B+4vU+w7cXbF1JlFc4k+clo7q3bjyF89zJOrpkMUFvbk/VcmgEutezSOETbBCVCzozVrpvnFaOZnz46550Bj9XPMaY1CqTECPTX0KC3XIZWGZ9RLyDBkGQSCVZHm/uM3mEhx1nYQUONOSL9PHuDe5du9jOWOT4xA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779728132; c=relaxed/simple;
-	bh=YkFbm+/wNq+5LWiO6mPuMdi/9JXfPp40CWUvJSE4Xns=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=qRgKo4zyAp++PsoPva7k7vD/qWJey5cpt8ggVhvk+rERTG0heTLEQFieV8F1kq6dZtd0qslavCzIWIDV+CLcCQTsDlqkzvA38iR9kmzhLJFBdB7rGipuwv+20P4UDxugNMGEMMHmmk5NxYk85eFdhgOx74t3b21OeIX2NV4G4Ys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=AyJJlsf6; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1779728213; c=relaxed/simple;
+	bh=kF+DgLzJq/8tfSh9UBbLv3L4NBQMEM8NeQ9MGaPsLQ0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=eNAwQjs9Urgc9fVP5UFfokmLb/2/hK74flKQQIJc/4Z6cgKA4DGZzEsM/vK8r/CUWsz7qdoT8mEtJc3Q+SVnyMZaJxPxNaEw2cXj+1whDEPXpSxBwe58u6BHeXU2G2Nb9yBWpczmVM4yydpzunxSWPRRIjRClPvpmM6CJKW8Khg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rendec.net; spf=pass smtp.mailfrom=rendec.net; dkim=pass (2048-bit key) header.d=rendec.net header.i=@rendec.net header.b=mwSOybtg; arc=none smtp.client-ip=80.86.107.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=rendec.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rendec.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="AyJJlsf6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=YkFbm+/wNq+5LWiO6mPuMdi/9JXfPp40CWUvJSE4Xns=; b=AyJJlsf671Fe/R/pT6h+3nQqlV
-	/HcmNdzNFrl6uWN5sxqbec3gFGD25Rnu5Ukpy373Cv83+Zw7IIACHM3Ykicd4ZyBFqLUAFLe2b6vb
-	/i3YoEBL7UCDBvAzmUzlu2FkN6D6cvF1dFRqGR2jvUu3C9ROwu3mwfhYgoF6lfo1vmzQVBBAMRsFM
-	2K/sqtcDZJGSP28zol/MS/nFPA9IOFX+DQZnLWtnZJjuwrg/ohKaSRhJhZThPTkySl01TYEZ1bpYP
-	9W5M+U6dKHjhH3Yrqa74j9uoBeg7cyiQqJGmXDtKuRXJtxSbJtipMJvaJemzEqyG8xlyJkbxMXrVN
-	URgx7EzA==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.2)
-	(envelope-from <logang@deltatee.com>)
-	id 1wRXyN-00000004t9H-0FXB;
-	Mon, 25 May 2026 10:16:11 -0600
-Message-ID: <2fe0ca03-626e-44c3-a8e2-560d9b7b3999@deltatee.com>
-Date: Mon, 25 May 2026 10:16:09 -0600
+	dkim=pass (2048-bit key) header.d=rendec.net header.i=@rendec.net header.b="mwSOybtg"
+Received: from bat.kanata.rendec.net (unknown [24.114.102.244])
+	by mail.mindbit.ro (Postfix) with ESMTPSA id 911DAC2879;
+	Mon, 25 May 2026 19:48:14 +0300 (EEST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.mindbit.ro 911DAC2879
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rendec.net;
+	s=default; t=1779727702;
+	bh=kF+DgLzJq/8tfSh9UBbLv3L4NBQMEM8NeQ9MGaPsLQ0=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=mwSOybtgz+3VfvezLohBO0EFwznohj1Up17/JQuBZdVwJMLgzSkAl7iq7+0YvlvWF
+	 Zc40+fVl5aWL9pCXmpCaUKzjvPrkd6yvp5bolQwcsCc6sUJBzkTF/2cCb7p9JKU7xS
+	 +XObKI6M38MrvvYTk+tnMLuysgdC3xPN1886frtmCWg1zstWmFF7s/UjwBu5AfFnTu
+	 yDLV9ErcqntgsFS5Yf+Ew6xwaKgiPAwjc0iuA2CIjRypkik7moXU62pKdriqJDB7Im
+	 Up95l9rPc+VJlnFW948L8qAhvFVOO2DoGNEhmpuhfIVD42pH5/lZSheDyCF5ZKQz/D
+	 XpjzIlJglpv6Q==
+Message-ID: <73f04f467e65b13fd455a3650dc2bd106af1e5a6.camel@rendec.net>
+Subject: Re: [PATCH v3 3/3] PCI: dwc: Enable MSI affinity support
+From: Radu Rendec <radu@rendec.net>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Manivannan Sadhasivam	
+ <mani@kernel.org>, Daniel Tsai <danielsftsai@google.com>, Marek
+ =?ISO-8859-1?Q?Beh=FAn?=	 <kabel@kernel.org>, Krishna Chaitanya Chundru
+ <quic_krichai@quicinc.com>,  Bjorn Helgaas <bhelgaas@google.com>, Rob
+ Herring <robh@kernel.org>, Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?=	
+ <kwilczynski@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, Jingoo
+ Han	 <jingoohan1@gmail.com>, Brian Masney <bmasney@redhat.com>, Eric
+ Chanudet	 <echanude@redhat.com>, Jared Kangas <jkangas@redhat.com>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 25 May 2026 12:48:09 -0400
+In-Reply-To: <ahDvvGew5UK3KSpi@google.com>
+References: <20251128212055.1409093-1-rrendec@redhat.com>
+	 <20251128212055.1409093-4-rrendec@redhat.com> <ahC8Pyuatu_AvnZp@google.com>
+	 <ahDvvGew5UK3KSpi@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.2 (3.56.2-2.fc42) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Pat A <lasoyster@gmail.com>, linux-pci@vger.kernel.org
-Cc: kelvin.cao@broadcom.com
-References: <CA+jUz5KSBDTgYJVB=wUccrerXdekJ3mV_np8iat4PKDteSGmNg@mail.gmail.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <CA+jUz5KSBDTgYJVB=wUccrerXdekJ3mV_np8iat4PKDteSGmNg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: lasoyster@gmail.com, linux-pci@vger.kernel.org, kelvin.cao@broadcom.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: =?UTF-8?Q?Re=3A_PEX88000_=281000=3Ac010/c012=29_management_endpoint?=
- =?UTF-8?Q?_incompatible_with_switchtec_driver_=E2=80=94_die_temp_inaccessib?=
- =?UTF-8?Q?le?=
-X-SA-Exim-Version: 4.2.1 (built Sun, 23 Feb 2025 07:57:16 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
-Hi Pat,
+Hi Brian,
 
-On 2026-05-24 03:12, Pat A wrote:
-> I'm running a system with both a PEX88096 (1000:c012, subsystem a096)
-> and PEX88048 (1000:c010, subsystem a048) on an ASUS x570 Board (AM4,
-> Ryzen 9 5900X). The switches handle 2 x GPUs and 8× NVMe drives.
-The Switchtec driver only supports PCI switches made by Microsemi. The
-Broadcom switches are an entirely different product line that has
-nothing to do with the Switchtec driver. I suggest you contact Broadcom
-for support.
+On Fri, 2026-05-22 at 17:07 -0700, Brian Norris wrote:
+> (Updating Radu's email; dropping another bouncing email)
 
-Logan
+Thanks for doing that! Obviously, I no longer have access to the email
+address that was used to post the patch, and I was lazy in setting up
+scripts that follow the mailing lists to catch messages that are
+addressed to me directly but using old email addresses.
 
+> On Fri, May 22, 2026 at 01:27:43PM -0700, Brian Norris wrote:
+> > I'll see if I can learn anything more here on my own, but I figured I'd
+> > report it in case you have any thoughts or leads I should investigate.
+
+Thanks for reporting it! I do not have any thoughts or leads yet, but I
+do plan to look at it during the next few days and hopefully come up
+with something. I also apologize for the slowness in my replies.
+
+> In an hour or two of poking, all I've learned so far is that the problem
+> also seems to go away if I:
+>=20
+> (a) add a few dump_stack() and other noisy logs to a few key places (for
+> =C2=A0=C2=A0=C2=A0 now, __pci_write_msi_msg(), pci_power_up() failures, a=
+nd
+> =C2=A0=C2=A0=C2=A0 irq_chip_redirect_set_affinity() -- I think __pci_writ=
+e_msi_msg()
+> =C2=A0=C2=A0=C2=A0 was the most significant, possibly because it produced=
+ the most log
+> =C2=A0=C2=A0=C2=A0 text) and
+>=20
+> (b) leave a 115200 baud UART kernel console running.
+>=20
+> (This is on a sample size of 20+ suspend cycles, whereas previous
+> bisection would fail 100%.)
+>=20
+> It then reappers when I quiet the kernel logging a bit with `dmesg -n3`.
+>=20
+> I think that simply tells me that there's some timing issue or race
+> condition involved.
+
+That's very useful! Interrupts are migrated on suspend to the main CPU
+and then migrated back on resume, and the ordering and synchronization
+around that is tricky. The stack trace in your previous message tells
+me that the nvme driver is waiting for IO completion, which is normally
+signaled by an interrupt, except that interrupt never arrives.
+
+With my patch included, the demultiplexed interrupt (the nvme interrupt
+in this case) has an opportunity to be migrated during suspend/resume,
+whereas previously it did not. That's one more moving part, and I'll
+have to look closer at the code and think what could go wrong. I agree
+it's likely a race condition or a timing issue because it works with
+that extra logging, which adds small delays as a side effect.
+
+Regards,
+Radu
