@@ -1,168 +1,170 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C06F30C60D;
-	Mon, 25 May 2026 12:17:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE06B3812D2;
+	Mon, 25 May 2026 12:22:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779711436; cv=none; b=TUVP9ov+cn0rVcqdeu+AG8emXAWhy/VrRPAeKZEeQDoCHuPHx07/4yS+SMZeAiV80B1T9AGrKKNI1qFM43nz7oF5vWQm0ZXhPPlhNovkiKcnayRKZgQVYoxfFHOMtz64m55Xfe2QW2JKldC6kycVf9XRxOUCwyUTkoJJvJ81JfY=
+	t=1779711778; cv=none; b=ImF/2qR5sqTqLQkQuBTeYn81qA+pHqw4sR4RgqwWeQqJf0yEqFsacxW9DaW05sHhU7aGsa+7EQjcDJDYBiHTaPRHFi0ev6BMp6edmuHejv6014dpbDPJxoSRtbOXbQBOwaJMw2wtICG5Ps50pYrUB0QUDD0HNRmXQbUFOOU9OTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779711436; c=relaxed/simple;
-	bh=LRqS8dLqxx3er5S7LA1Vegh2QYBORecCeaLuSPru6OQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=INKlnICvJDhv9wtuCXwgruA0SPa7qmYM0iOCOeMb/7VveXczoc137epdSWZ8rwcO5Hk5+agWiiwp0KLULx6qjywcW1Qd44J0OJUq/u/8TtlNRZ0KjEx/OHnJjRzvYaKNwfzHf/IbGokPkYfesmw2jDATt48SHJygm8UNAGlxTT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Mp0HBVZj; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1779711778; c=relaxed/simple;
+	bh=7cta4UESMkPob+xTSBhcOLsucZ7b+POlZ3aTECK9ytA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=i5ieFvhTmRAKes49Lc96YUmKvgWkphCjmkhGPYBpZgHFizbne9uy1WS9qN5lANnx9mDweHnhBKBhHUlcsQ3ZU4HIPqbSxzX6aFIinNio/vCSbnUa2js4yeumCBnQ3CEmNZA62GQAeD2wniO6LjmTqKLHApn8HpSPFGJDjW3JvIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DjBAJDL8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Mp0HBVZj"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64OJo5e13032008;
-	Mon, 25 May 2026 12:16:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=pp1; bh=kcbhuYVnIyM0gO1Ey8OTwYSmRoXUoO+BdnB7Gvput
-	xg=; b=Mp0HBVZj1/HtF9sBIL6MPfsxSIyjH4SRA7eXNKIJlsdiaBrkwuREZxFFU
-	OqZ5OSZryje6H9/mOd2KZKYdrvrOei9rPLxoBgqgKERTdQHbeFXBo33xjDtZgk0l
-	cctvz1m0diw1QcK+F9+i75+VjVQZVJ2JNi6GfynoMuedFuIuI6FBjrZv5bEK+wr3
-	LVsxRIgyBn46p/X3eIo0+w2Cjt7YgpVzmAt+4PbkSbY0oiW9leDqFWKXpl8lDREr
-	mL7uyR3P9PG+BwyD4owiZU4LrMghOPpU/TROP8urvBVJWtwvwLbKH6vQA4bsS29H
-	bfLaCiOx2uV5oq4BuMNPgpV8+JH4w==
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eb4nbxwre-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 25 May 2026 12:16:48 +0000 (GMT)
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 64PC9AIC011263;
-	Mon, 25 May 2026 12:16:48 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4ebqjjn2x6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 25 May 2026 12:16:47 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 64PCGikO42860928
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 25 May 2026 12:16:44 GMT
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id F151C2004B;
-	Mon, 25 May 2026 12:16:43 +0000 (GMT)
-Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2275D20040;
-	Mon, 25 May 2026 12:16:40 +0000 (GMT)
-Received: from li-3c92a0cc-27cf-11b2-a85c-b804d9ca68fa.ibm.com (unknown [9.124.218.95])
-	by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Mon, 25 May 2026 12:16:39 +0000 (GMT)
-From: Aditya Gupta <adityag@linux.ibm.com>
-To: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        Madhavan Srinivasan <maddy@linux.ibm.com>,
-        Timothy Pearson <tpearson@raptorengineering.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Anastasio <sanastasio@raptorengineering.com>
-Cc: linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        "Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-        stable@vger.kernel.org
-Subject: [PATCH] ppc/pnv: Fix null pointer deref in pci hotplug
-Date: Mon, 25 May 2026 17:46:28 +0530
-Message-ID: <20260525121628.3906457-1-adityag@linux.ibm.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DjBAJDL8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DA3B1F000E9;
+	Mon, 25 May 2026 12:22:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779711776;
+	bh=UPgmERJ8/sRCOwwVj/MiRxzf5Ss7A55xUqwU6ZnpZww=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=DjBAJDL8t7olMZy/s+nmuNkNX0nrWNqGakwSqSzvm+njYJPJf2Eqz/TjLuVpe37wy
+	 kzujRhkMx0jgP+nDrVI8d3NOBzQcNDknuzSNFRpcjQaSV7WgLSpbkucAzP64GBd05t
+	 QKfNCCEWZxv06dCSi1FFRO0mH1WQ2Dwyn/BBlEUB8PpmsGTJGdXJ4h/LEJLX5pgNKg
+	 ktWBuI/Zb4/D86r+LN/tvI6OXQug7Aj3TREtxrV38MXJvem6DsXa+3SDgj19KT3GOo
+	 1i0mPMnN3OVhKHDqTDrqQyVDUn3ZJmRSoqB5d60f6jLEH6PcLHxXDKqBsurAVRwR8j
+	 aQSXCFES1DqPQ==
+Message-ID: <1fcfe6d0-f0c9-4041-8c29-d408f4cde195@kernel.org>
+Date: Mon, 25 May 2026 14:22:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Reinject: loops=2 maxloops=12
-X-Authority-Analysis: v=2.4 cv=VvYTxe2n c=1 sm=1 tr=0 ts=6a143db1 cx=c_pps
- a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
- a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22 a=RnoormkPH1_aCDwRdu11:22
- a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
- a=lml1KbhEJxe8kdhi6MYA:9
-X-Proofpoint-ORIG-GUID: B4AjfRteot1akFQ4FhifVoHIFDoqMvAJ
-X-Proofpoint-GUID: j1ytpDlrHCLjuc5MFTTqjFIu-2Pq4kAT
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI1MDEyNSBTYWx0ZWRfX8DynBRZ5R9JV
- A47tk1xLWQfh15pvCoJ/kWw821rXRAVTVUQkZEHsAYrz2muZdyg2ZKeoYU+AST9sWjxzJTFmb0R
- SXVl67H3QIR9WRRfGZUu6Gts/PdQtzg2qZQx7rIY5UqMr7b2iAd4lv5B29z2d0vPL7rpuWoHYgp
- bwgF7qB9EZMK2xmkCoUnc1pIssEW5G4/Bxs91WvvyyJOkhIgBzrb9B3FtAmpHFoQcsVFq99ITsb
- SlTyohakBR1o63i4e6O0yxfNJ/BtQUbkrzj9c9NN8R8iymLm/kprGIjTQ4nNL3ROHFQj8redOMY
- LLJGn/ElQIHT6xtTgXQv2wtdGakUXmokgvRtLNKLUvi1puWlJB6SfwVQjGRCQ4zEt9tmsYuE8Ys
- kapZad0DEMwU+218zFxJoFTUSlTfIeFgoBSXI4d9vwEggGnhaUGUqoKOGFzuxgehvWVGCG2MlQp
- p98HsvNkCnk55IHZ7vg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.51,FMLib:17.12.100.49
- definitions=2026-05-25_03,2026-05-18_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 priorityscore=1501 spamscore=0 adultscore=0
- lowpriorityscore=0 malwarescore=0 impostorscore=0 clxscore=1011 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605250125
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/4] PCI: qcom: Add Support for Eliza
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+ Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Lorenzo Pieralisi
+ <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org,
+ linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260521-eliza-v1-0-97cdbe88389d@oss.qualcomm.com>
+ <20260521-eliza-v1-3-97cdbe88389d@oss.qualcomm.com>
+ <20260522-discerning-sympathetic-moth-daa9e7@quoll>
+ <5593d136-569e-4ba9-9a2f-e635125899aa@oss.qualcomm.com>
+ <c751f5f9-f9c2-4575-a029-0be4148e1aee@kernel.org>
+ <t6wljnlnz77dvthbohlr7v4qlhsqzvykhcm6evmtnvkgtqk34w@o7sl6nq5lkbi>
+ <fecce3a2-5c45-4e30-ad1b-2173b697960d@kernel.org>
+ <k7sncylpd4qg2x3qhqjho6ml2d64vpvbo6nrpyqzwloeyckzvd@d6v3s6avedzt>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <k7sncylpd4qg2x3qhqjho6ml2d64vpvbo6nrpyqzwloeyckzvd@d6v3s6avedzt>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-With upstream kernel booted on a PowerNV system with OpenCAPI device,
-below crash is observed:
+On 25/05/2026 08:11, Manivannan Sadhasivam wrote:
+> On Fri, May 22, 2026 at 01:03:09PM +0200, Krzysztof Kozlowski wrote:
+>> On 22/05/2026 12:48, Manivannan Sadhasivam wrote:
+>>> On Fri, May 22, 2026 at 11:34:30AM +0200, Krzysztof Kozlowski wrote:
+>>>> On 22/05/2026 11:31, Krishna Chaitanya Chundru wrote:
+>>>>>
+>>>>>
+>>>>> On 5/22/2026 12:21 PM, Krzysztof Kozlowski wrote:
+>>>>>> On Thu, May 21, 2026 at 07:35:31PM +0530, Krishna Chaitanya Chundru wrote:
+>>>>>>> Add support for Eliza soc, which has two PCIe controllers capable
+>>>>>>> of 8GT/s X1 and 8GT/s X2, using the cfg_1_9_0 configuration.
+>>>>>>>
+>>>>>>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>>>>>>> ---
+>>>>>>>  drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+>>>>>>>  1 file changed, 1 insertion(+)
+>>>>>>>
+>>>>>>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+>>>>>>> index af6bf5cce65b..40f0a5f247eb 100644
+>>>>>>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>>>>>>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+>>>>>>> @@ -2123,6 +2123,7 @@ static int qcom_pcie_resume_noirq(struct device *dev)
+>>>>>>>  static const struct of_device_id qcom_pcie_match[] = {
+>>>>>>>  	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
+>>>>>>>  	{ .compatible = "qcom,pcie-apq8084", .data = &cfg_1_0_0 },
+>>>>>>> +	{ .compatible = "qcom,pcie-eliza", .data = &cfg_1_9_0 },
+>>>>>> So compatible with sm8550. Why isn't this explained in commit msg of
+>>>>>> the binding?
+>>>>> No, PCIe controller is not compatible with sm8550, we are just re using the boot
+>>>>> sequence used by the sm8550.
+>>>>
+>>>> Then with what it is compatible? You cannot use someone else's match
+>>>> data and claim they are not compatible. This is contradictory to itself.
+>>>>
+>>>
+>>> 'cfg_1_9_0' is the match data of base PCIe IP v1.9.0, not just SM8550. The 'ops'
+>>> callbacks for 'cfg_1_9_0' are compatible with PCIe IPs used in many SoCs such as
+>>> SM8550, SM8450, SM8350, SM8250, SM8150, SDX55, SC8180X, and SC7280. And Eliza is
+>>> also falling into the same category.
+>>>
+>> And if all implementations uses the same SW interface, why are you
+>> claiming these are not compatible?
+>>
+> 
+> I didn't 'claim' these SoCs are not compatible. In fact, I explicitly said that
+> Eliza is compatible with the base IP v1.9.0. But the resources such as clocks,
+> regulators might be different between them, though the SWI is compatible. So
+> Eliza deserves a new compatible.
 
-    [    1.568588] PowerPC PowerNV PCI Hotplug Driver version: 0.1
-    [    1.569722] BUG: Kernel NULL pointer dereference at 0x00000074
-    [    1.569811] Faulting instruction address: 0xc000000000b75fd0
-    [    1.569890] Oops: Kernel access of bad area, sig: 11 [#1]
-    [    1.569963] LE PAGE_SIZE=64K MMU=Hash  SMP NR_CPUS=2048 NUMA PowerNV
-    [    1.570037] Modules linked in:
-    [    1.570099] CPU: 250 UID: 0 PID: 1 Comm: swapper/248 Not tainted 7.1.0-rc4+ #1 PREEMPTLAZY
-    [    1.570207] Hardware name: 9105-22A Power11 (raw) 0x820200 opal:v7.1-142-gbbc276524497 PowerNV
-    [    1.570325] NIP:  c000000000b75fd0 LR: c000000000b75fbc CTR: 000000003008a65c
-    [    1.570411] REGS: c000c0000688f6f0 TRAP: 0380   Not tainted  (7.1.0-rc4+)
-    [    1.570494] MSR:  9000000000009033 <SF,HV,EE,ME,IR,DR,RI,LE>  CR: 28000284  XER: 20040000
-    [    1.570636] CFAR: c00000000019f9e8 IRQMASK: 0
-    ...
-    [    1.571492] NIP [c000000000b75fd0] pnv_php_get_adapter_state+0x60/0x154
-    [    1.571604] LR [c000000000b75fbc] pnv_php_get_adapter_state+0x4c/0x154
-    [    1.571690] Call Trace:
-    [    1.571725] [c000c0000688f990] [c000000000b75fbc] pnv_php_get_adapter_state+0x4c/0x154 (unreliable)
-    [    1.571783] [c000c0000688fa20] [c000000000b78bd0] pnv_php_enable+0x94/0x378
-    [    1.571951] [c000c0000688fac0] [c000000000b7912c] pnv_php_register_one.isra.0+0x11c/0x1e0
-    [    1.572077] [c000c0000688fb00] [c000000002091318] pnv_php_init+0x168/0x1b0
-    [    1.572111] [c000c0000688fb80] [c00000000001103c] do_one_initcall+0x5c/0x450
-    [    1.572162] [c000c0000688fc70] [c000000002006abc] do_initcalls+0x15c/0x29c
-    [    1.572283] [c000c0000688fd30] [c000000002006ec4] kernel_init_freeable+0x224/0x3e0
-    [    1.572484] [c000c0000688fde0] [c000000000011578] kernel_init+0x30/0x268
-    [    1.572562] [c000c0000688fe50] [c00000000000debc] ret_from_kernel_user_thread+0x14/0x1c
-    [    1.572667] ---- interrupt: 0 at 0x0
-    [    1.572720] Code: 38810065 e90d0c78 f9010068 39000000 99210065 e8630020 4b6299c9 60000000 2c030000 418000ac e87f0058 89410065 <a1230074> 55290636 2c090060 41820044
+Whether Eliza deserves a new compatible was NEVER a part of discussion
+here. Bindings are very clear here and do not leave any room for
+interpretation.
 
-This NULL pointer dereference happens due to the call to
-'pci_pcie_type(php_slot->pdev)' without checking if php_slot->pdev is
-NULL.
+We discuss ONLY this patch.
 
-This occurs for hotplug slots on root buses where bus->self == NULL,
-such as OpenCAPI PHB direct slots. An added debug print (not part of
-this patch) confirmed it was opencapi:
+> 
+> Also, the direct baseline of Eliza is not supported in upstream. So by
+> 'compatible', if you are referring to 'fallback' in DT, then using SM8750 would
+> be appropriate.
 
-    [    1.617227] pnv_php: slot 'OPENCAPI-0009' has NULL pdev (bus 0009:00, parent=NO (root bus))
-    [    1.617308] pnv_php: slot 'OPENCAPI-0009' dn->full_name='pciex@603a000000000', compatible='ibm,power10-pau-opencapi-pciex'
+You still won't get an entry for sm8750, so not sure where does that
+bring you...
 
-Add a NULL check for this.
-
-Cc: stable@vger.kernel.org
-Fixes: 80f9fc236279 ("PCI: pnv_php: Work around switches with broken presence detection")
-Signed-off-by: Aditya Gupta <adityag@linux.ibm.com>
----
- drivers/pci/hotplug/pnv_php.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-index ff92a5c301b8..21ce7ead9e19 100644
---- a/drivers/pci/hotplug/pnv_php.c
-+++ b/drivers/pci/hotplug/pnv_php.c
-@@ -414,7 +414,8 @@ static int pnv_php_get_adapter_state(struct hotplug_slot *slot, u8 *state)
- 	 */
- 	ret = pnv_pci_get_presence_state(php_slot->id, &presence);
- 	if (ret >= 0) {
--		if (pci_pcie_type(php_slot->pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
-+		if (php_slot->pdev &&
-+			pci_pcie_type(php_slot->pdev) == PCI_EXP_TYPE_DOWNSTREAM &&
- 			presence == OPAL_PCI_SLOT_EMPTY) {
- 			/*
- 			 * Similar to pciehp_hpc, check whether the Link Active
--- 
-2.54.0
-
+Best regards,
+Krzysztof
