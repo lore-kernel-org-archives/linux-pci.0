@@ -1,156 +1,185 @@
-Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012014.outbound.protection.outlook.com [52.101.53.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 833BB382F14;
-	Mon, 25 May 2026 14:49:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.14
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779720541; cv=fail; b=QndfTA86TCRXM824ZtBWI50kzTJZYyaVqGVbJKDvKC0ABqWOejVU6L6gn25D7T6evaN7RI2rVnFPuMnV+Gn7Gu3UfdOJLQeleumCssqjeSKlnfoqjWFkO5NRcH24E/DvxRlSFRX1hv8zcKV4NRdxfDDRAQ8f+3oBLsc59mfLsDg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779720541; c=relaxed/simple;
-	bh=NcaiTPuLca6mUwlM3j/eZKW13G2ttwV5lPdPzwOOHgk=;
-	h=Content-Type:Date:Message-Id:From:To:Cc:Subject:References:
-	 In-Reply-To:MIME-Version; b=TdjspUdxMQq5pvAmTd1i+kBbueVopeZXRxC34hIgDcx/3fyXTUq7a8YKNGdzVHXuXN1S2IX4BOS70y4K4J2pNIljJ64EqnxevisyODb5FBOSz3no00EeliISdAhxRqls+u07sLvyRO4/iCCohDlUDdD27+93P8unrI5MmkyDfas=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=ByUOr0TP; arc=fail smtp.client-ip=52.101.53.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D168729BD8C
+	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 15:30:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779723032; cv=none; b=S+moo5Vl+eyWcnRKRCGk9/uDIW+aRwiC+pL866ppIOKOKlv+xnVtOAd9O36q5vXCdH7Z9/H55S7DvU7O5dYYNY882Q+OAwjLniLA/k11DMQ66k0fIx3ewYlw0DOYWvZUiW+LHFf7h2LqFVq6BPzPqgf119Qd9q6sCpquO7O67R0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779723032; c=relaxed/simple;
+	bh=qUV9cWBgu2p8d2EiuASzRotnwf3pLxAjtgWiR/bDEYU=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=EYyjFhSp+5Ghl8ekhzEy5L9v+oXd/TUAz3MOlS7M21dJyA5xy8pl57H/11dzEb63mg94zbWNTkkkmcqhsIlZb0Z2NMc1F9ZUOa5dZ1n25lsIEN10L4t1D8MiHw7RHktgUjD/KS8C+CUY0pCPRqShH8hm5hs7PwZyZL4UmO4lLV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AqGBS6Ha; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="ByUOr0TP"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=B3dKrQhEwOHbQYiIgJ+LLbxcvnV58zXFU5BeT/5ZBlVqbCyu/EADNcYoOyxMmp0RGg6HfDpHobSpLXhOHXCapOusc5s1esgLUevMVtd5grLjOGpOFMA9UWwPIIM2Wf6/xMpYvmPGrImVl8+AKGJZaMLsCWUea5PEoSyieoBi1fUEh1NOEo6mqJvADUVB+okHGS51029Va++AWSOPBMUJ78M6nHUuN57zJn1NQCHSBd08JXlccjd4JGOgja5zKuxyAC6CTYTKLBWTFzvNKFGMYmI5rPpy5EbvJnHcqq1LZ3+MaMlP707Xt3ArwC0YyuN8WTm5WnTTgkgG9R2umfdXzQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NcaiTPuLca6mUwlM3j/eZKW13G2ttwV5lPdPzwOOHgk=;
- b=Qjkbd/f/Eh+CCoJwXYgckRTnXYfYY/rBA4wHNg+RzTxkw1say6koYo+ysjzjBwStHMUjRxJslWubY9oxZ/4+ZNr0IYqOIQbYFQ6CNbQjWvJXbZMwmSggSpu114xeXE/Ww5eOTEamqEMa73PmfVvYBQBMxELi8KE5e7hCxRH/M6zQueeBeLg7sLoKnTJNpbETpezb7osWyAtDpWnidYeC7pIp12DungykwhyPHXHRQsLyr4DkJ+uxae9nLC771ztC65YCHdkJ+eGQr2aOB/KztWPZ38GSEkn2EcmrFpPEFbN/lIRs9iv15VrHLq22mDM4c4F9AEzxFzFsyIjNDQDgiw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NcaiTPuLca6mUwlM3j/eZKW13G2ttwV5lPdPzwOOHgk=;
- b=ByUOr0TPrvQQ0zvnx3Z3BRSNgktoWdAZZdr/Lui47TEL1zelUPJ6Jd3AZnIlCwSVjZ0rOVn6941NUhuPdK1yl/N0hBujfBpmEDZxOV7vpUJ1R4Pc22VrCq1u7rkvXhrET5g0X87RHbASbY0WgXQTeT7m7zQhV5bmrxxON9rNReu3o6HG2IK/zFT3NZQ7absS5bEa+Rw0mnT9HZyfUPZbAc1ciit0mOMzW0qXdfXcVkA5e0tU50BUIRcsG+cV7s870Zn3kTtunoMKbYkeSxdLOXmxAJzB+08OiWISIp8UgBSaeyYk3u2F3edxyL6B5Zkgg209KPuOxqmMEKpjJdGz5w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com (2603:10b6:610:28::18)
- by DM4PR12MB6133.namprd12.prod.outlook.com (2603:10b6:8:ae::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.48.20; Mon, 25 May 2026 14:48:52 +0000
-Received: from CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989]) by CH2PR12MB3990.namprd12.prod.outlook.com
- ([fe80::7de1:4fe5:8ead:5989%4]) with mapi id 15.21.0048.016; Mon, 25 May 2026
- 14:48:52 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AqGBS6Ha"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E1C61F000E9;
+	Mon, 25 May 2026 15:30:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779723030;
+	bh=bu7XrqgioEK2BMNR4QLGWTeY5K2MhyeYupx4nprU6pg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=AqGBS6Ha4epALrF/egaJRvdcHFi+OQKL/Un129rqel9iu3YYXyHkIUSua4Jm0YbPY
+	 7ZW65mHrymLUjwQWNKqwOMlJ+k0X9+RBYD6LwRIvopSLMyJH9fnSEJToMug4mHD6Lh
+	 oLDCzzwYeu4EuVo4nnEcIYmjOz8hFYo/L6Msp2y1VqmM4ffUt53YowkcixcdiRXJme
+	 68q0JQIqX+h/vLTz9GCWYJwBA9sIVhqJRFxsphf3u1ogn3zdcxXuAs5jYhqVzj8XJU
+	 9W1s7bdSuwQ1vCiOqJjCdEy5AFceZ4JVGjUpWLkVajFHSv2PpVNPH+nbF4GLKjh/7x
+	 iQlr9Ref78v7g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v8 4/6] PCI: Refactor disable_acs_redir and config_acs
+ param handling
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Wei Wang" <wei.w.wang@hotmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <SI2PR01MB4393AF5B45E56E8D3B50C1EFDC0A2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+References: <SI2PR01MB4393AF5B45E56E8D3B50C1EFDC0A2@SI2PR01MB4393.apcprd01.prod.exchangelabs.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 25 May 2026 23:48:48 +0900
-Message-Id: <DIRU9VTRQ859.JVUU1JZ3TCP5@nvidia.com>
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <aliceryhl@google.com>, <david.m.ertman@intel.com>, <ira.weiny@intel.com>,
- <leon@kernel.org>, <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>, "Eliot
- Courtney" <ecourtney@nvidia.com>
-Subject: Re: [PATCH v4 23/27] samples: rust: rust_driver_auxiliary: showcase
- lifetime-bound registration data
-References: <20260521233501.1191842-1-dakr@kernel.org>
- <20260521233501.1191842-24-dakr@kernel.org>
-In-Reply-To: <20260521233501.1191842-24-dakr@kernel.org>
-X-ClientProxiedBy: TYCP286CA0211.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:3c5::14) To CH2PR12MB3990.namprd12.prod.outlook.com
- (2603:10b6:610:28::18)
+Date: Mon, 25 May 2026 15:30:30 +0000
+Message-Id: <20260525153030.5E1C61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PR12MB3990:EE_|DM4PR12MB6133:EE_
-X-MS-Office365-Filtering-Correlation-Id: f90172d8-f19c-4079-447a-08deba6cbca4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|366016|1800799024|10070799003|4143699003|11063799006|18002099003|22082099003|56012099003;
-X-Microsoft-Antispam-Message-Info:
-	0HCmdl/fHCz1FRXgntGjYEFl7uTBxcNvYQTgrb89OacqiMCor+uGPiylajUqI7DTULbPwWStR+ind1c99uinHxJ44uVeZg46PPI6U+jqsjn0IFOmUs13obYuYy9nC/VtLqGnrrysgeIaNF8ck0S5RpYmBLQRs1sl4LX6lxNGdHb7mTscveN1IMBmmPoNfVdTfD4X34uELX4yWtgTGnIhHuvXzwbz0alJxudjLQpZONs+C4NUiNijYmHqY0d11p+sfl57uiLKs/pVhWURFfrfvqqyNfBVA0YYX1XwY4Uf6IO/FaxvxFEFkBWJkIEKf4jT8Xg+0OTcf/aStzyv+L9uFxk6jT5H/mSAKNjdoVU/7Lb1qam5V8dO25ebk7Sr2060gMn4D7vcLTkMmxlKw0mQWhMVprO1XJ5KdAp7oJTFaHoDI7dC6ANRrhPW3K8UypdT1U7p5nmXCaddp3/lwVXKeVAP9+cCkT1iGIPkJCJkmCqHZuuzoP5luZ3aQ+h6mr8crE3GqHTJIp8vO+ctlopCuM8PBkYKEiXLuskyVwDH/9P/9BvRWl5Wr37ruOaEUvJy2aEH5UiT3Yf5Mv+tt4Ryk3ekZlAqyyOuATI2bw7SWFTGqFey9dxyZJUSDXKKLwcbUJtnwkonUN9l+vYyaE7JfdOr/AyEQkrSzJmWbrpW8b1b1IQZkvWOHTQcA5sJPWIE
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PR12MB3990.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(10070799003)(4143699003)(11063799006)(18002099003)(22082099003)(56012099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?NWFLdEFpaWJMUzFzTzdLN0NzblY3dWpWNHpYb2RKNTNhWWJCbFZNVXQ5MTBJ?=
- =?utf-8?B?T0dGdmhHeVB3RGQ5RlJzZ1ZrcHp5NkdySFhQaVFyT0l5N2NvWUc4YTl2QlU1?=
- =?utf-8?B?ZC9TMExJeHBPcUVkelhDd1hMYW43SEFqdWl0Qy9CUitlUTU5ZlhmWHdWMEZK?=
- =?utf-8?B?akQ2c05iOFd4bVhPKzVCZll3dGcyZHEvb1NXZmhKQWRhbUE1MGU5eVluYVdp?=
- =?utf-8?B?bkNHSk40ZURpSDJSUFJNT0JYWm1xSjhjZ3NRYlo1YmN2V3BiSThPcVNyYmsw?=
- =?utf-8?B?bTJFZzNTQzFzSXA2bnhRTTRkNnIydDAzUWlCOVBwOFlyS2JTY3dWblBSWnNF?=
- =?utf-8?B?bXcveTV4NkhKWmJCcE9CUnJyckFmME1Xd1dHRXRKeXNjTkxVYkhHb2Q0WGoy?=
- =?utf-8?B?aWovTllxb0pnRWlQZGttTnpYMWtjUTlJQUIyU1k1N1ZvcitidU9HaHBRRk9W?=
- =?utf-8?B?QkYzZFZaK1gwQmZ5bis4KzBGOXMzS1RCaW5NbkRkSG1DZittK3B1VVBIL1dU?=
- =?utf-8?B?WFI3UGVTRENrMmdVMFdQdi9kSXg1SFQ2c2xaVC9oSGlxV0tMalV6eVFzaThQ?=
- =?utf-8?B?bGNGL0t4eUxvOHJGOXR2ZmYxMktsZlp5T0ttbkFEa1NMUnNxbjNvT2xCNnJC?=
- =?utf-8?B?aEhsSFpZZVY2bGl1OGErdVBrVXdKNUxINEJObUsvL0o2UlN5Z2p6R0xhV2RC?=
- =?utf-8?B?eDlDWm52MkxxVXJ5NE44cll0aTl1YnZqVmZ6OUZka1orZ1hQb1RFQ29SUWR5?=
- =?utf-8?B?aER0aW0xZzFOay9zNmlzdFdzdG5ObGtmTytNY3FJQzBER0JGYUZRTHRpcEx3?=
- =?utf-8?B?ekRBc2J0TFlNWjIrZlhwcXA3UVlRNkJLdjJPTWRodHFWUVdQMnNIUytTUUgw?=
- =?utf-8?B?YmdBUy9HNHdRVjFCazZ4QzRURnZvSUhvOVVzcHlQT28yUjRFcG1uSDcrMW43?=
- =?utf-8?B?OW0xTVIvNC9jU2NwcG8zK0hJZVkyUWNMdjNWUE5kTUpJOVQ0VyttTGN3Y29k?=
- =?utf-8?B?bWc0ZVI2MmJlQld5Nms3MTdBOGpkNXJmTzZ0Q3g1d1pCcjFLRWFTN0N5ZlFq?=
- =?utf-8?B?dUIvMHVucnZQanZqa0pWNEpNdGhTS2tyeUduNWxaOWs4eTQycXdlWXgxSFY5?=
- =?utf-8?B?U3ZpSE9ZQURIb2hwdVVSdStpQTQrdjlyZzZWdjBXU0RwNnJ4a3FXRUExanBT?=
- =?utf-8?B?SGd5SklHeGEybzdzTERxN29ZZU1zZGNlcGJKcTcxNFdyTlBReWw3NjJ4T1Vi?=
- =?utf-8?B?bWlwTXpNb2hMWW50SGhDNGxUVllGaEhtZldabWhGMlorR2lQL0pEWXdhdTRq?=
- =?utf-8?B?Y3Q3akEwYTNwOXBQL21Mb0VnTzdGZHpxZDNBaDI3T3E0VnVEU2IrWkphd0tD?=
- =?utf-8?B?WDM1amFwT01WMldLck8vZnh4bUlJWnZIcFA0SDM0VDJFUFpLcmVndWFSR0pp?=
- =?utf-8?B?c2NwcE4vdUhWdlptS3JMQ1pSbG1yUzFmUExHdzEyZWdmV2M2YklJSDRZMXFL?=
- =?utf-8?B?OERzKzgzRjR4Qjg3QThOd21aS2kxeVh6V1BQVEZqaUFCOFJ1NkdNRXZBSTEx?=
- =?utf-8?B?ZUhMK0M3N05xR3Vmc2xFVkxxZFJRVUxuNTQ0a2wxakZ0T20rTmxJako1cUFS?=
- =?utf-8?B?Sk8wZmxFb202MVdrYjFiUDUvK1hLV3kwdERwdFZPZTNWUTlRSTN6cWhLWGt3?=
- =?utf-8?B?Z2wyTGVJZkowSXNuYktGeHNveE9Ib3A2WVpBazQrZnpRSUNtcmI4UE5JS3ZV?=
- =?utf-8?B?U2JLQk85SzZnVUNDZUMvRWdWWjN0RmdLSHRyOFdRd3d6STFxTjJVM3dmS01y?=
- =?utf-8?B?UXhLbVZYK2J6aUkrR1dmWTNuenFpVU5tM04vMEF0bjFnTmRoU3M3bFBWTHFF?=
- =?utf-8?B?TFJGS21OMEtSZHY3RmVoM0RkSmI4c2x5QU9xdGlrdExpcTVaWForVWpVMFpn?=
- =?utf-8?B?ZmhuM29YcUxyK2hrRXpTTHZFYmUvc1VIaVRnMHlzbStIeWN3c3ZRNkx4ODhs?=
- =?utf-8?B?dXhJaGtTT20wcDBHaCt2Q09JRzhmMFFYMVZSOFhXWDlST3NnVS94RW4wNzVY?=
- =?utf-8?B?S3lieExCZVpML2VwZDRBMzhzS2lnR2w2c3dPeXNZVjNXTy9oTlRUTzZ4N1Rr?=
- =?utf-8?B?MUdUU3o4NDdSRXYrZkpXOXFMUGJLdVhjbExtMjZSKy9iYXdHQzZ3a3dFYXIx?=
- =?utf-8?B?TEdteWxDREpySU84YzB0UmJ6bkVOQ3JZdXFxdWt2d1ZYc1BPV1hsRHdGRk9M?=
- =?utf-8?B?dDAxd2FyUWFjRDlYTnI4RmhkSEpZNFd5MVlUZ0dJZ2FyWGlyN0FIa2xSL1ZV?=
- =?utf-8?B?Zm9wKzF6OGVXRThDQXhUbjN1T1kvVHJMbytpOUNQRVYzQytRUmoyL3hBVk14?=
- =?utf-8?Q?9FDiGUA5jAZslpqk0HuacrqhRfaeq6iZNwYO1gH67AvoZ?=
-X-MS-Exchange-AntiSpam-MessageData-1: XsQ7uYkl5R2/sw==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f90172d8-f19c-4079-447a-08deba6cbca4
-X-MS-Exchange-CrossTenant-AuthSource: CH2PR12MB3990.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 May 2026 14:48:52.0159
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cg1PL4bbx/SVtDzA07+sWoDEr8fx3OT7lX9nHRut5FOGDK9ZmSjNzuN3eeYGKORP/Hay5lbYNBH7ufLddvQLeg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6133
 
-On Fri May 22, 2026 at 8:34 AM JST, Danilo Krummrich wrote:
-> Make the Data struct lifetime-parameterized, storing a reference to the
-> parent pci::Device<Bound>. This demonstrates that registration data can
-> hold device resources tied to the parent driver's lifetime.
->
-> In connect(), retrieve the parent PCI device from the registration data
-> rather than casting through adev.parent().
->
-> Reviewed-by: Eliot Courtney <ecourtney@nvidia.com>
-> Reviewed-by: Gary Guo <gary@garyguo.net>
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
 
-Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
+New issues:
+- [Critical] The refactored `config_acs` parsing logic silently rejects emp=
+ty flag strings and missing delimiters, breaking backward compatibility and=
+ dropping diagnostics.
+
+Pre-existing issues:
+- [High] Applying command-line ACS parameters clobbers kernel-enforced IOMM=
+U security features and causes sequential parameters to overwrite each othe=
+r.
+- [High] Successful execution of a specific quirk inadvertently skips clear=
+ing standard ACS redirection bits, which are then improperly re-enabled.
+--
+
+commit a4f9c35859d379acf636ff701d27c2c0461fd84d
+Author: Wei Wang <wei.w.wang@hotmail.com>
+
+PCI: Refactor disable_acs_redir and config_acs param handling
+
+This patch splits the disable_acs_redir and config_acs parameter processing
+into dedicated functions. It separates concerns, improves robustness, and
+makes the control flow explicit.
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index de6f483dab294..655ebe1a5400d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+[ ... ]
+> +static void pci_param_disable_acs_redir(struct pci_dev *dev,
+> +					struct pci_acs *caps)
+> +{
+> +	const u16 acs_redir_mask =3D PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_EC;
+> +
+> +	if (!disable_acs_redir_param ||
+> +	    !pci_dev_match_disable_acs_redir(dev, disable_acs_redir_param) ||
+> +	    !pci_dev_specific_disable_acs_redir(dev))
+> +		return;
+
+[Severity: High]
+This isn't a bug introduced by this patch, but if
+pci_dev_specific_disable_acs_redir(dev) executes successfully and returns 0,
+this function returns early.
+
+Could this early return skip clearing the standard redirection bits
+(PCI_ACS_RR and PCI_ACS_CR) in caps->ctrl?
+
+Because pci_std_enable_acs() previously enabled these bits, the subsequent
+pci_write_config_word() at the end of pci_enable_acs() will write those
+enabled bits directly to the standard ACS capability register, actively
+re-enabling redirection in hardware.
+
+> +
+> +	caps->ctrl =3D caps->fw_ctrl & ~acs_redir_mask;
+
+[Severity: High]
+This is a pre-existing issue, but pci_param_disable_acs_redir() overwrites
+caps->ctrl using caps->fw_ctrl as a base.
+
+Would this overwrite completely ignore the security mitigations (like Source
+Validation and Upstream Forwarding) that were enabled earlier by
+pci_std_enable_acs()?
+
+As a result, applying disable_acs_redir could unintentionally disable IOMMU
+isolation features.
+
+If both disable_acs_redir and config_acs are used, won't config_acs silently
+overwrite the changes made here since both independently assign to caps->ct=
+rl
+based on caps->fw_ctrl?
+
+> +}
+> +
+> +static const char *pci_dev_match_config_acs(struct pci_dev *dev, const c=
+har *p)
+> +{
+> +	const char *seg;
+> +	int ret;
+> +
+> +	/*
+> +	 * Example: 11101010x@0000:01:00.0;101x@0000:02:00.0;1@0000:03:00.0
+> +	 * Three segments delimited via ';'. @seg always points to the start
+> +	 * of a segment and p advances to the start of the device id (BDF)
+> +	 * after '@'. Upon match, return the start of the matching segment.
+> +	 */
+>  	while (*p) {
+[ ... ]
+> +		seg =3D p;
+> +		p =3D strchr(seg, '@');
+> +		/* If malformed string, stop parsing. */
+> +		if (!p || p =3D=3D seg)
+> +			break;
+
+[Severity: Critical]
+If p is NULL or p =3D=3D seg (such as an empty bitstring like @0000:01:00.0=
+),
+this break aborts parsing completely, ignoring any subsequent valid segments
+in the parameter string.
+
+In the original code, an empty flag string was a valid supported format to
+reset a device to its firmware defaults, and a missing @ delimiter triggered
+an explicit pci_err() for missing ACS flags.
+
+Does this change introduce a regression by silently rejecting previously
+valid command lines and depriving administrators of necessary diagnostic
+feedback for malformed parameters?
+
+> +
+> +		p++;
+> +		/* pci_dev_str_match() updates p to the next segment. */
+>  		ret =3D pci_dev_str_match(dev, p, &p);
+[ ... ]
+> +static void pci_param_config_acs(struct pci_dev *dev, struct pci_acs *ca=
+ps)
+> +{
+[ ... ]
+> +	pci_dbg(dev, "ACS enabled: %#06x, disabled: %#06x\n",
+> +		enabled_bits, disabled_bits);
+> =20
+> -	pci_info(dev, "Configured ACS to %#06x\n", caps->ctrl);
+> +	caps->ctrl =3D (caps->fw_ctrl | enabled_bits) & ~disabled_bits;
+
+[Severity: High]
+This is a pre-existing issue, but similar to pci_param_disable_acs_redir(),
+this overwrites caps->ctrl using caps->fw_ctrl as a base.
+
+Doesn't this overwrite the security mitigations enabled by
+pci_std_enable_acs() and silently discard the changes just made by
+pci_param_disable_acs_redir()?
+
+Could the modifications be applied via bitwise operations on top of
+caps->ctrl instead?
+
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1779442182.gi=
+t.wei.w.wang@hotmail.com?part=3D4
