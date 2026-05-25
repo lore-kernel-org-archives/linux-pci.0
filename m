@@ -1,170 +1,197 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012023.outbound.protection.outlook.com [40.107.209.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE06B3812D2;
-	Mon, 25 May 2026 12:22:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779711778; cv=none; b=ImF/2qR5sqTqLQkQuBTeYn81qA+pHqw4sR4RgqwWeQqJf0yEqFsacxW9DaW05sHhU7aGsa+7EQjcDJDYBiHTaPRHFi0ev6BMp6edmuHejv6014dpbDPJxoSRtbOXbQBOwaJMw2wtICG5Ps50pYrUB0QUDD0HNRmXQbUFOOU9OTQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779711778; c=relaxed/simple;
-	bh=7cta4UESMkPob+xTSBhcOLsucZ7b+POlZ3aTECK9ytA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=i5ieFvhTmRAKes49Lc96YUmKvgWkphCjmkhGPYBpZgHFizbne9uy1WS9qN5lANnx9mDweHnhBKBhHUlcsQ3ZU4HIPqbSxzX6aFIinNio/vCSbnUa2js4yeumCBnQ3CEmNZA62GQAeD2wniO6LjmTqKLHApn8HpSPFGJDjW3JvIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DjBAJDL8; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EC5A381AE6;
+	Mon, 25 May 2026 12:31:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.23
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779712321; cv=fail; b=O5OGIONArS5go4rjZSLaYlTgIoKVR3M2Coh3w6YE/gvLbKBGghjVGTnbRNLUeXZfBrru11xlfDTSniY9p94VnAtGxBsRLEnBz7RPai/C0w8Pa6wgmsWY6Q3a6m5CQvkA/94xYoSZLZDZtMch7r8z71RREhHdnPg9Lyc2SaDJuSI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779712321; c=relaxed/simple;
+	bh=6IWG2vvi4P/RboeWscBIgbE+nufcSOckFJYlogRw6Bs=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=IzE+H3ZC5lEePaB4yEH6o2qbcC2fMFOJZNXIm0l0jqYHeMvRFPwR8mj5lGh+TLh7OHRV4dzsMd2Rn9wTPrKKMw3xVwRFKByZ2W6le8hCjFcD9T6B9JGwr3fpMcbFkEpPntqbgMVyw6zmyjsDpl9FLrAUjs0hobRRprXyXmxK2bo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=mBhvq2H1; arc=fail smtp.client-ip=40.107.209.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DjBAJDL8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DA3B1F000E9;
-	Mon, 25 May 2026 12:22:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779711776;
-	bh=UPgmERJ8/sRCOwwVj/MiRxzf5Ss7A55xUqwU6ZnpZww=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=DjBAJDL8t7olMZy/s+nmuNkNX0nrWNqGakwSqSzvm+njYJPJf2Eqz/TjLuVpe37wy
-	 kzujRhkMx0jgP+nDrVI8d3NOBzQcNDknuzSNFRpcjQaSV7WgLSpbkucAzP64GBd05t
-	 QKfNCCEWZxv06dCSi1FFRO0mH1WQ2Dwyn/BBlEUB8PpmsGTJGdXJ4h/LEJLX5pgNKg
-	 ktWBuI/Zb4/D86r+LN/tvI6OXQug7Aj3TREtxrV38MXJvem6DsXa+3SDgj19KT3GOo
-	 1i0mPMnN3OVhKHDqTDrqQyVDUn3ZJmRSoqB5d60f6jLEH6PcLHxXDKqBsurAVRwR8j
-	 aQSXCFES1DqPQ==
-Message-ID: <1fcfe6d0-f0c9-4041-8c29-d408f4cde195@kernel.org>
-Date: Mon, 25 May 2026 14:22:50 +0200
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="mBhvq2H1"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Dn4BeU7KiQgKHEmISgaVkRMXWs+8jY+0ierYLNaj8ZlRKfI1fLAJvl9Et8ULxQ0epZDyVAPLH3rlnmObsZwbpFge4Pdi3JSiSMllJULn+yEhBkM3B0Q+tmDooX0gFxc+SxKbdNdBu4miLaP+wkLn+AIbaPz50LX7khy2IwywGV1i4/hOIGFuU4tz/Ycfbz7h49AgPRR7dEVoKoNACHTxgoVj0eE8XjOZDrlctgvswjEvmDHEWgjV7pAMpg92dxaQxmUqWIx+EhcHRX5Y2OZzuDH7lJ+US4ZsOeQRDqtNtzYrSdHKtpHSNBvwe+EIWmoLZmHo+1FvlP52zXpB5HCyxA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=L+6pJtLglxHJ1LvUkb6gF8o43/tNRawXxQ0RKYh+YAs=;
+ b=cZ0ykZ+X+D3duhhs8sLI0WkJ5QBBm4wIazfnC6ZVU0DyH7odH/dyMMe+mbp5VkNAvh5tjwV7RFnZif1UGGGKtdgEwl7vfX2YWQ1ISI89RyLjTgqCtpPo1/mItt43MKydiDZHuajnMgTJUASDko4Ct6Ykfxk5K/L6wsfIG2qc0+AvW95b+H1Hk1+8Gc4O9vRy9Uf2YUcQO/cL+xwiTraL21dsjQtIQHxgI/BIeqHtC+5IBufLf4HCNy6il/qDXQRaCjjpA7143sFYx6+Rg0cQujyZvKMOHO1NEYj5xazUHUACta3ZYFASgB0aufdib93JIKBfm3jNmX11vG2dKN2mGw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=L+6pJtLglxHJ1LvUkb6gF8o43/tNRawXxQ0RKYh+YAs=;
+ b=mBhvq2H1rpnsni8aphsRDLalLz5VuFyPWgMVbeXsLBuRUjmgOIqXSV++w6ioIhv0JmonBnYxoqRJ9Yr2ZQLzgK9HNI+l857q1Zh47TZJSRkH8bk0Kcn5z/yrDpvK65WvsqA88uJx9jrlI4KdJEcErzdNijEHirDMPClYU/HKEnuU6y5g+NJ9C+pVo3KnvxMraqO9qb89Rw+47zUuTlf/NE565Fp1cIOulsTSN2pZ9FSE8LDj+raztUDWqeZ+eJDF9CsrennCV7kHk/aA0NlL+mB4tbMkBgv0U7LR411wu4oFtl1MOGKuFUzgNl/KQ4/JRIC+24ye1usuHTgAJS60yg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BL0PR12MB2353.namprd12.prod.outlook.com (2603:10b6:207:4c::31)
+ by LV8PR12MB9407.namprd12.prod.outlook.com (2603:10b6:408:1f9::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.20; Mon, 25 May
+ 2026 12:31:54 +0000
+Received: from BL0PR12MB2353.namprd12.prod.outlook.com
+ ([fe80::99b:dcff:8d6d:78e0]) by BL0PR12MB2353.namprd12.prod.outlook.com
+ ([fe80::99b:dcff:8d6d:78e0%4]) with mapi id 15.21.0048.019; Mon, 25 May 2026
+ 12:31:54 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 25 May 2026 21:31:50 +0900
+Message-Id: <DIRRD0MA3NFR.1DFWYY2ZLLZHQ@nvidia.com>
+Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>, "dri-devel"
+ <dri-devel-bounces@lists.freedesktop.org>
+Subject: Re: [PATCH v4 21/27] rust: types: add `ForLt` trait for
+ higher-ranked lifetime support
+From: "Eliot Courtney" <ecourtney@nvidia.com>
+To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
+ <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
+ <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
+ <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
+X-Mailer: aerc 0.21.0-0-g5549850facc2
+References: <20260521233501.1191842-1-dakr@kernel.org>
+ <20260521233501.1191842-22-dakr@kernel.org>
+ <DIQ696JK4WV0.2HOQ57L342S77@kernel.org>
+In-Reply-To: <DIQ696JK4WV0.2HOQ57L342S77@kernel.org>
+X-ClientProxiedBy: DS1PR06CA0010.namprd06.prod.outlook.com
+ (2603:10b6:8:458::17) To BL0PR12MB2353.namprd12.prod.outlook.com
+ (2603:10b6:207:4c::31)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] PCI: qcom: Add Support for Eliza
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
- Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kwilczynski@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org,
- linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260521-eliza-v1-0-97cdbe88389d@oss.qualcomm.com>
- <20260521-eliza-v1-3-97cdbe88389d@oss.qualcomm.com>
- <20260522-discerning-sympathetic-moth-daa9e7@quoll>
- <5593d136-569e-4ba9-9a2f-e635125899aa@oss.qualcomm.com>
- <c751f5f9-f9c2-4575-a029-0be4148e1aee@kernel.org>
- <t6wljnlnz77dvthbohlr7v4qlhsqzvykhcm6evmtnvkgtqk34w@o7sl6nq5lkbi>
- <fecce3a2-5c45-4e30-ad1b-2173b697960d@kernel.org>
- <k7sncylpd4qg2x3qhqjho6ml2d64vpvbo6nrpyqzwloeyckzvd@d6v3s6avedzt>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <k7sncylpd4qg2x3qhqjho6ml2d64vpvbo6nrpyqzwloeyckzvd@d6v3s6avedzt>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL0PR12MB2353:EE_|LV8PR12MB9407:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8b03e3f3-e30a-4b47-513f-08deba599a62
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|10070799003|18002099003|56012099003|22082099003|921020|11063799006|5023799004|4143699003;
+X-Microsoft-Antispam-Message-Info:
+	9OhHGsmlbrVqpxYfbsxYzEahE1KANameJxJ2EyoqeB0Wje/Bo1kRFrwKERIaOL2A15M/5lRFUs6Q1W6pddvGJSKhKDUvnOigsJ2l10sS06/7Z6109oEx2Ynvx6UbYdvGjq5LGq3Hjp0a+JJTkQsGfvQIwcrCiCk5rsjR7sR+Gh8vHpnyB6mghLbf2cIGy8tyGhD9LcgMgqnZXJH/bbIYcAshHk9cuDDkBNLyJ/ZOFwBeidoY3KUrYU+XNHn40/w32nBgtY4fZwXDSAS/ANWqJ6oSOVM+KArIzROMAwLbORKjGuZlCngFWqsjJbxLOWh2llvIA4M2Y1G9NsiNeND1XJD94e+m4qux+hYFv1dyNn7O/E81n4GyNoy72cwA52d6gjk0ABZXRNou0kkzyrDuagW33VFM0pGyZG7qPjytBRSq80G0XKByrTOFEMmuXixOyb/VMIqakY1DXtQaYhBtBnWXSqLyd4iEBaihoc4FYJzb6oTGk6VYBv3OSdkOXH1hbfRWQ4FkhJtezWEbylBtNmNog1m8vck87jvQXlzrfR4NlgdfNFzM5w6niGeWNxP2mWyVDFYFTWpiLNXutI30R5O8gV4AgONt6Dc0CktO8YCunqyiG71sPi9zWcrUDk1cOPInyg4i2bX5+mdyxpzbtOTDsLANVEANWDmtw/EJ3QODIALhH4Y0hHksvzVMTW8g0IHAqDTmMENkxEV16ihpYno+pxKvUBmXd8TjpW6lh/8=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2353.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(10070799003)(18002099003)(56012099003)(22082099003)(921020)(11063799006)(5023799004)(4143699003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?Yk5yMXpaYTR1RHoveEVVQ2d5YklVV2tmZHk4MkM4WXR3SFR5VGxzbzJFbU1T?=
+ =?utf-8?B?SDJTSi94YXh1dUhlQkpROFdScFdjVTNOSDdDem9OZEVYUHRPRGdTWmtweVNm?=
+ =?utf-8?B?eTlDNE9ZcGFaUDJWVWRlS1NENC9RRmZPcDU4WUNPVmY2aVlUc2lGckYrNGR0?=
+ =?utf-8?B?b2lJajZQeDZjVTFML2xDT29SK1FLc2FpRlcyOG1wdExOeGJLNzNVZVJVdWZW?=
+ =?utf-8?B?dlFsUi8xUlNaQ3ZCWEZld2p0N3ZCSjZIUDlhOEhtRFVvUDd4cU9jNkZxOWVB?=
+ =?utf-8?B?ZWNDS3crY2xHcHFQendkWGN6b0dPU0VDOUlMdFpYMjV3aEZFYXdKVnlLVzl4?=
+ =?utf-8?B?UlQzb3phYW1hUGVUTW5aYVhPMTVkVnBQUVk5N0ZhMm5qY0VQRm5wRHdyUGJs?=
+ =?utf-8?B?c3Rzc0xEWk5RbUVOM3YzbW9xMU96SGNJaTdWWnIzbGhVd3Q5NkdPOFhUbEFl?=
+ =?utf-8?B?RWVxbUZrWG5nOVhFY1ArTWIyV1N0dmQ1YnRnbFhrMUMwb1l6MkhRd21pMUtM?=
+ =?utf-8?B?MmUyYnZiY2xWNGl4aWhRNnkyTDVrc1N1VzRNRTlJMGFpRlBVN1YyQjFKR28y?=
+ =?utf-8?B?ck5RVlNjVVN2UDZYUlhEcWxObHlVL05FSElDa29lV1U4SXZtRTVLOGtLR0pV?=
+ =?utf-8?B?RW9vbllCa1lEeHdZby9FQzg5MzJibTNLcmMxU0FkSlJwSkFrendqZTMwL0V4?=
+ =?utf-8?B?VUx3bDhVNVZrM05PMkxORzZ6dzRQdGVhYU1tWm1PYzNadVh0S2JhOTViSXhU?=
+ =?utf-8?B?b0swSHhsQ3BFYnNxSXZnQ3FLK0lYNFFHYUt2ZVRGcGFlMXo3VXYxck95VEl5?=
+ =?utf-8?B?cFVWditrVXNzK09JOFc1VENiMXEwQnBtdXJVOVZhL3BJajJXT3YvRmppa0RI?=
+ =?utf-8?B?Mk1xUVgvWk5jZk1Zd1JkbWVOU2owaVJCRGFWSDQ3TVlVOFV6NmRCVVh4VndF?=
+ =?utf-8?B?MFhMZU5zNEJ6UVU5NldSejNiWUhkeHJkNjg0Z3dOck9kL0YzVGZJbnd0dVRN?=
+ =?utf-8?B?MitiKy9DSTcrODNYdEc2VVpFMVh4RXFPREREUXlKdnFQdDZ4bVVFdlpoWEw1?=
+ =?utf-8?B?MVg5c1kyTlRpbDJsV3BqeGt0OUZ3cnNDekxkaHg2N2praTRuaU5yNyswdlF3?=
+ =?utf-8?B?UllsNCtHYlVTUXp2QWlPNmNxUS9WaXlGQnVqYnljMVd5MkVCZXg4eHVOalp1?=
+ =?utf-8?B?b3VaQmtsblhHS1FQNlJSbEtYTjNsQ2cyWlNFYW52K2VGNnpNTEJEcWdjWXpt?=
+ =?utf-8?B?emdRNFVqcytkZVFIcURpd0NleWFWRmhQbktublBJdWpDU3RTWE1POGtwOFYy?=
+ =?utf-8?B?eUdzc3gwOTFYQVE4WTI0a05ISnI0cEViUUNOdEVQbHM3RzNISVR6bUxrakVI?=
+ =?utf-8?B?cTF4bXFsNlE3N2E5ZzBTSlJGdFNkNUFPRW5VNk1uaWc4MkdabVZvclB3T1R4?=
+ =?utf-8?B?UnFQUnFOT0tXUmhibWJNM0s2ZkVOVThVT0pSRTVKT0hiU3JpcDNDRDNsNnc4?=
+ =?utf-8?B?T3U4L29LOFFMWklscnFjcWlCOEVvNzNrL3NLOGtVbksxZWRrZlEyakplUVU0?=
+ =?utf-8?B?cEtFMlRGMnlwZnBndm1iZ3JkeFdlQitGRlFJM3ByYzFwNjh2VDZjTnZTR3p2?=
+ =?utf-8?B?NmRUbnF3dXdPcERNZEE0aTROK3FBQ1lrcVNXYlJzWmxqclZEbHdkaE1VWkdq?=
+ =?utf-8?B?VUZQTUU1ZGpSNElSMnQ2VHNLWTBqWlRKYUpCU2tlb2IxZE5aYVBCSUNJZnMy?=
+ =?utf-8?B?ck55c3RhUUFBaW94K1FFWlEvNEVZM09QQlpsTzZKT0VWeXBDNTRZMlpzUkJK?=
+ =?utf-8?B?WDFXL01ZWmMwR1duVmN6eW5lMVlLRnBudThpeXNjWnh1QjI1c3M5T3dyYUpH?=
+ =?utf-8?B?MWdadDlyR3E4ZzhJaVR0TlB5cHd3OG1aLzExc3ZmQk9rR2RlZkpPbVR4L0RM?=
+ =?utf-8?B?NlhyNk0yb0M4QTZpcUxVS0hGbE16Zncrdm1iQ3pGeFphclN1QXMzSGc3WDdl?=
+ =?utf-8?B?WnJYT3ROdEVXQ01vdGpEbkRUMTZ3YUdQS1F2RHcrMU5tbjJURkFVWDlIcnZY?=
+ =?utf-8?B?cDg1M3kzOGdYSE9rTnJiM2kyS3ZqRG5NT3A5ZmpBYWZraU1kbGVHdk90aWdY?=
+ =?utf-8?B?cE9CKzJCb01nR2xBZFVVWHMrQWh6N2FjQ3BadTRvVm5Ubmc0YXh1NVVsU0pC?=
+ =?utf-8?B?YmhubFFERUlETmxpN2JCNytaSk1YMjZWTEoxV2xGYnFML3hlQ3pldGRnSm52?=
+ =?utf-8?B?R2hlSlo0RW1PWXZrWm56YnN0UVRiY3FxS2h6MWR2ZUZlYkhDbzBndVJJZFA1?=
+ =?utf-8?B?aS9taTlLUUMzc05CQVJnUG5QSHEzem8xMTBUYzJUWDlRT2IzWXk4aS9WamVx?=
+ =?utf-8?Q?g38q4Z3XnnJqsiYjsswokD6HKjqUdDRq91fML7LMVKefy?=
+X-MS-Exchange-AntiSpam-MessageData-1: Zdfk7wh1+yJYYQ==
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b03e3f3-e30a-4b47-513f-08deba599a62
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2353.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 May 2026 12:31:54.2006
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: iatyMe2Ku7Uz9JA/L/jLWhTW2UQrYMl2zzAWpGs9deZkz80LYhpmr/hltlqs1B/EdCDOV6uO8QxWy6Tto11/fg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR12MB9407
 
-On 25/05/2026 08:11, Manivannan Sadhasivam wrote:
-> On Fri, May 22, 2026 at 01:03:09PM +0200, Krzysztof Kozlowski wrote:
->> On 22/05/2026 12:48, Manivannan Sadhasivam wrote:
->>> On Fri, May 22, 2026 at 11:34:30AM +0200, Krzysztof Kozlowski wrote:
->>>> On 22/05/2026 11:31, Krishna Chaitanya Chundru wrote:
->>>>>
->>>>>
->>>>> On 5/22/2026 12:21 PM, Krzysztof Kozlowski wrote:
->>>>>> On Thu, May 21, 2026 at 07:35:31PM +0530, Krishna Chaitanya Chundru wrote:
->>>>>>> Add support for Eliza soc, which has two PCIe controllers capable
->>>>>>> of 8GT/s X1 and 8GT/s X2, using the cfg_1_9_0 configuration.
->>>>>>>
->>>>>>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->>>>>>> ---
->>>>>>>  drivers/pci/controller/dwc/pcie-qcom.c | 1 +
->>>>>>>  1 file changed, 1 insertion(+)
->>>>>>>
->>>>>>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
->>>>>>> index af6bf5cce65b..40f0a5f247eb 100644
->>>>>>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
->>>>>>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
->>>>>>> @@ -2123,6 +2123,7 @@ static int qcom_pcie_resume_noirq(struct device *dev)
->>>>>>>  static const struct of_device_id qcom_pcie_match[] = {
->>>>>>>  	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
->>>>>>>  	{ .compatible = "qcom,pcie-apq8084", .data = &cfg_1_0_0 },
->>>>>>> +	{ .compatible = "qcom,pcie-eliza", .data = &cfg_1_9_0 },
->>>>>> So compatible with sm8550. Why isn't this explained in commit msg of
->>>>>> the binding?
->>>>> No, PCIe controller is not compatible with sm8550, we are just re using the boot
->>>>> sequence used by the sm8550.
->>>>
->>>> Then with what it is compatible? You cannot use someone else's match
->>>> data and claim they are not compatible. This is contradictory to itself.
->>>>
->>>
->>> 'cfg_1_9_0' is the match data of base PCIe IP v1.9.0, not just SM8550. The 'ops'
->>> callbacks for 'cfg_1_9_0' are compatible with PCIe IPs used in many SoCs such as
->>> SM8550, SM8450, SM8350, SM8250, SM8150, SDX55, SC8180X, and SC7280. And Eliza is
->>> also falling into the same category.
->>>
->> And if all implementations uses the same SW interface, why are you
->> claiming these are not compatible?
+On Sun May 24, 2026 at 12:46 AM JST, Danilo Krummrich wrote:
+> On Fri May 22, 2026 at 1:34 AM CEST, Danilo Krummrich wrote:
+>> [ Handle macro_rules! invocations in the ForLt! proc macro's covariance
+>>   and WF checks.
 >>
-> 
-> I didn't 'claim' these SoCs are not compatible. In fact, I explicitly said that
-> Eliza is compatible with the base IP v1.9.0. But the resources such as clocks,
-> regulators might be different between them, though the SWI is compatible. So
-> Eliza deserves a new compatible.
+>>   Proc macros cannot expand macro_rules! invocations, so the
+>>   syn::Visit-based has_lifetime() and replace_lifetime() helpers cannot
+>>   inspect types hidden behind macro calls. This caused the covariance
+>>   proof to be silently skipped and lifetime substitution to fail for
+>>   such types.
+>>
+>>   Add an explicit Type::Macro arm to Prover::prove to conservatively
+>>   require a compiler-assisted covariance proof. Detect macro-containing
+>>   types with has_macro() and use a WithLt trait projection for lifetime
+>>   substitution instead of AST-level replacement. - Danilo ]
+>
+> I was made aware by Gary that WFness is not actually being checked, which=
+ is why
+> the static expansion was needed in the first place.
+>
+> Thus macros will remain unsupported (even covariant macros are rejected),=
+ yet we
+> can improve the error message by adding the following diff on top of the
+> previous v3 patch.
+>
+> diff --git a/rust/macros/for_lt.rs b/rust/macros/for_lt.rs
+> index df2027789713..75d0ce450bf0 100644
+> --- a/rust/macros/for_lt.rs
+> +++ b/rust/macros/for_lt.rs
+> @@ -107,6 +107,12 @@ fn visit_lifetime(&mut self, lifetime: &Lifetime) {
+>                      self.1 =3D true;
+>                  }
+>              }
+> +
+> +            // Macro invocations are opaque; conservatively assume they =
+may
+> +            // reference the lifetime.
+> +            fn visit_macro(&mut self, _: &syn::Macro) {
+> +                self.1 =3D true;
+> +            }
+>          }
+>
+>          let mut visitor =3D HasLifetime(lt, false);
 
-Whether Eliza deserves a new compatible was NEVER a part of discussion
-here. Bindings are very clear here and do not leave any room for
-interpretation.
+With this change,
 
-We discuss ONLY this patch.
+Reviewed-by: Eliot Courtney <ecourtney@nvidia.com>
 
-> 
-> Also, the direct baseline of Eliza is not supported in upstream. So by
-> 'compatible', if you are referring to 'fallback' in DT, then using SM8750 would
-> be appropriate.
-
-You still won't get an entry for sm8750, so not sure where does that
-bring you...
-
-Best regards,
-Krzysztof
+I think also this implementation considers &'a mut dyn Trait to be
+covariant in 'a which isn't the case in general IIUC, but I can't see
+any way it could cause an issue currently.
