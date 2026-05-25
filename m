@@ -1,46 +1,47 @@
-Received: from OSPPR02CU001.outbound.protection.outlook.com (mail-norwayeastazon11013058.outbound.protection.outlook.com [40.107.159.58])
+Received: from DB3PR0202CU003.outbound.protection.outlook.com (mail-northeuropeazon11010054.outbound.protection.outlook.com [52.101.84.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AD2E3A875B;
-	Mon, 25 May 2026 06:52:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.159.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FD623A784A;
+	Mon, 25 May 2026 06:52:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.84.54
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779691950; cv=fail; b=kstnCHk7KdorkZp0cZAQoraD5F1Xwqf8dvgeL/LQbgBQtmW2tKEM2b1VHIFz67wI254GVmZVTyaqrSxKahJhifcw8312+t8dA2xxQgUfWhv2HZ+cd/mHpZ3Yi6+8N54hPzP5Ew3EOMvUAzcvKr08fCTu1u9SvXRjl0FOYaWFv8s=
+	t=1779691956; cv=fail; b=Ps0XKE8cCRKu3xpA1wS88T/jlvju35whOaXun7d/w3DiSclihd94x5ZzpUWlcPDouCK35976alM5YfI3o3wOLyObVeIEd6P8CNarKAOk3aSlgkP2mOsLQu3QGEy6M77NA9DW2Ai+D4BnmOOh0E8Gj1FUfogVGpDJVKjJw+Kst9E=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779691950; c=relaxed/simple;
-	bh=5BffsxKjqdFvO2Ryw8ZTIFdWeZuJnjpvxwh7SjJX1zo=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=ArHNq2/EFqoAu816Z9YZlo/WISeHlUSkSfuHFQAV9YrE1sa8AziMMLf7p7XYes4LNPxx+RFzsNV2+64JM09QNGml/J9/tNaR2w71PxGiH1vi8aYqE1BRlsoiyELOVx9rHj+mmNR7W4Xee8VvtctIsSb94noEgyFarhcXcGNR6dU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=v5a4jRSz; arc=fail smtp.client-ip=40.107.159.58
+	s=arc-20240116; t=1779691956; c=relaxed/simple;
+	bh=bjY76JtG214nlILpfuM8busXu+BIc0124BTLMO1N3K8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=sqaz/TAskbMQuI/q6FTkextWEPJuzKpRvk2bwji1zt0YVp1y8IpAGx2voX2GZWq2X5BJmAekAw4LxFMT0lWAfqT22U8rORcEcxtCIZ0NZmAiwjyWl06iSn6KFsEgH4btuJXHi3eTykIeAAXBL/vllkY1QuYvLrrmyI21fCUSCic=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=SRb3nKMU; arc=fail smtp.client-ip=52.101.84.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="v5a4jRSz"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="SRb3nKMU"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=X5EhpWJ680fBT187PFALG7TmixM888BBosspLqSgXVdTlLYLKQ8NLhl6b16lwt7LyuCW5mmF2U2J4/ZHenogGFSN1dmUB7JKHz0PAsDt++qPKt6F4cl9XXO7jtPQYzaZJZO+b8Fq58Y3oFpB33nDprMIYDBVKoPmJ8dlZL/1nx80u+ksfar6umQStfO8v4DYT+ob+siqYoLH3UYz0lmad7nMKYmhOg5h8bGvhzk41MnZnkIH4+RnI+U1UzLcBnY++fVVIFGFvQ9SkDIKGVEA6gqcCUAl0SobBDSO4WpUUAvbJ944fNRdPu4RFoJPqrsfwKecsyQ9YmTd6Bs7sonLew==
+ b=R8FOIxWjz/VdC3KJhknAQSkkhAy5eV1IdciSY159x+0GITkKyPUJuCaAD9LG2qzQQntr1G6NFzYAgHXEobJaDXIcaQEWjjesgos5tDmsb/6Da1P+Sr3MjOtRh/tBaPxJkak+bp7kbohLPjAp1z0jgzJPbsm4nDyE4rl+PpYyW106S0dD5vbCSZoSe8cb4e6qXxG8NaAz+H6b16naWnHH94d0yRRO2K6MzPg70p7yZg0ohmI3edtLAL8j6PQpvqpYTu8etpgcPtTAwe0gj7sesjIhoSV4Ua/4EdhWXrz+mBse1IbyAZBXSmZBavOEQaOhuD6ywW5dVr0fK3l1jo4mdA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=M0Q2RfZPiBt2jPunRI4SNFZYdRLJbYJvtIoAP5jVzOU=;
- b=dWNhNhXkKpwqB6J7zrbMaHEppThLnBc5CJMNRZJhACoT/v/f7+lN7Ae0OMXbUDl+l36B2G/rKNVa5L7ABaZ1MTrzW4PflPMh7idSNJPks8wNhoAmix+QNSquPfKQsNnk1hDK1dqnq1hLQDgwiTaH+IFWX1v4N8n4+zRKjDFZftFw+/gpWoaErke8mAA38DZfTSvatMT+JBmPcMNRjY0w1ec3E1fjvI3SFjrNbGE/P/+o+XtncosA/zOq38r9EywG3R7V6EcEQFEMwlHjoJneW7tyLsHg5kzCz+5+emnH9iV9vhWEM3msryW3dq/+oVOsP9ZGw1Ul/fepNiW2YJ5Q5w==
+ bh=wPZUxeEiCgIidWzgUuYMF4ANeTPfB+JPIL/hgIi5jnw=;
+ b=bzr9p1cBfaXY1GtfjqfOow119tFvBFk/oSMRrtRBG1VLTz8QV3fEaU2ZRf/kzZYkHke3covfOj6gfouqZ+dp/gutwVUp9NXl1msKxSd3OJZ0MasFs1T9u54DuiM5CJAJlo/NZ3v3yUyGqe92aKjTekMmw1ZBEt+tapeBHytL+vtg6IeR2d4uQrhlZUOGf/TH6GRetqKgmwaX51PN5TaOXIl+a/a5mxB0qx6gRpNLSMx/IDVSL84kDKqwIzd3wmC/zFla0tLzT6slI1aMIMjY+hrUxfAWLxnFRAcIKOregwFBgaMchfHOlwG+fLFMNd6TxF/OosUcXR2NtfB2/Pggqg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M0Q2RfZPiBt2jPunRI4SNFZYdRLJbYJvtIoAP5jVzOU=;
- b=v5a4jRSzlVk3fGRAwsUysCaiR9kConRG8Tx9EynJqpCgNazoSIk6hV8Cu8R/6a9X0q8pWsitcJhfCysCSHBmfjQ4sEBPxnGIWD9nlMsFy7XcjUxiCiGfCd/xXxSec9wjptf4WHnWk8IA6DEWnPorA2zsdLd8h4cZLrqZ1doaD+tzr8H/3IT4uFEZrYilOtazf2x9zpKQOammvF3+/oxGRv2S4ba1C0jHRf6wglZh8kDyWzQh7fZ+7HPvQf3rlyFTFiYZT4uRwF0ODMoDrWRPUZz4fCd1qBVrqGunJkrcAOAWY/z7yIFJd1bueVQJ7l0oF5vFoPJraB7LiM8E4mlDiw==
+ bh=wPZUxeEiCgIidWzgUuYMF4ANeTPfB+JPIL/hgIi5jnw=;
+ b=SRb3nKMU0tMe1r2M7fVKKnI9JHsu9sY+wJ47TqVCJhTM3idRM8uUBVjukOAZSOcrQO1iVgkdqtIB6x/+cx/rax3sWMrvbC4QA1xgNdPSkgnPjlH6ZKRpIXG4uzgiIpL8hEzZ7kTJLsZe3N2F9M2Cgf7lfwu23XVlo4cnvlZzUS2fz/jMOi4HHgkazFM6EtYLqrqhLiRKPc9UnkGdIsgLF3Z3IwdufD+Nea1AmJCi7VW6QSKhi2elqZ5ywHII+lu9DvJhy7EYLZWMvAEcuGpwgT4OXPPixjaIgRpFL2LF51E4gfXUsIHBBEz0UEyZpXRf6cFaFq5DjsuAla43/SxmFw==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from VI2PR04MB11276.eurprd04.prod.outlook.com (2603:10a6:800:296::7)
  by DBAPR04MB7271.eurprd04.prod.outlook.com (2603:10a6:10:1a6::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.17; Mon, 25 May
- 2026 06:52:22 +0000
+ 2026 06:52:29 +0000
 Received: from VI2PR04MB11276.eurprd04.prod.outlook.com
  ([fe80::60d7:a8e5:eb88:9be]) by VI2PR04MB11276.eurprd04.prod.outlook.com
  ([fe80::60d7:a8e5:eb88:9be%2]) with mapi id 15.21.0048.019; Mon, 25 May 2026
- 06:52:22 +0000
+ 06:52:29 +0000
 From: "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>
 To: hongxing.zhu@nxp.com,
 	l.stach@pengutronix.de,
@@ -59,14 +60,16 @@ Cc: imx@lists.linux.dev,
 	linux-arm-kernel@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
 	sherry.sun@nxp.com
-Subject: [PATCH V2 0/2] PCI: imx6: Improve PERST# fallback logic
-Date: Mon, 25 May 2026 14:54:41 +0800
-Message-Id: <20260525065443.2338629-1-sherry.sun@oss.nxp.com>
+Subject: [PATCH V2 1/2] PCI: host-generic: Simplify return value handling in pci_host_common_parse_port(s)
+Date: Mon, 25 May 2026 14:54:42 +0800
+Message-Id: <20260525065443.2338629-2-sherry.sun@oss.nxp.com>
 X-Mailer: git-send-email 2.37.1
+In-Reply-To: <20260525065443.2338629-1-sherry.sun@oss.nxp.com>
+References: <20260525065443.2338629-1-sherry.sun@oss.nxp.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SI1PR02CA0050.apcprd02.prod.outlook.com
- (2603:1096:4:1f5::12) To VI2PR04MB11276.eurprd04.prod.outlook.com
+X-ClientProxiedBy: SI2PR04CA0004.apcprd04.prod.outlook.com
+ (2603:1096:4:197::22) To VI2PR04MB11276.eurprd04.prod.outlook.com
  (2603:10a6:800:296::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -76,85 +79,143 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: VI2PR04MB11276:EE_|DBAPR04MB7271:EE_
-X-MS-Office365-Filtering-Correlation-Id: ccb1685f-064c-4bcf-7448-08deba2a2b7c
+X-MS-Office365-Filtering-Correlation-Id: 141648a0-7bc3-4eca-acb0-08deba2a303e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|19092799006|366016|376014|7416014|921020|56012099003|18002099003|11063799006;
+	BCL:0;ARA:13230040|1800799024|19092799006|366016|376014|7416014|921020|56012099003|18002099003|22082099003|6133799003|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	zPJJcdTeMD8G55BJGWRG0Cpfk8FyS8N8jnIX9yig8COqqfonlKdSviu1H5KTg3RGByH1113kEgXxYwSbTLbvikb/k2PY461qd/rhz216i+ANWpurWDniu0cF2znGRAg0fA4C8tBALhovfm9Ws6tZRkx5eBSIMlIELmpeBW0VucQ2TKR/dWCxCNVsT9JFytYBQh2/da9do7FINNWK8rcoDHFcCXR4w1yxLn6P8xkt9P7xOdemRNEUr8dEdrc1H+su6gNODKOnQ45lHkOY8zVy9D5t8Ruh14D37d/vncrcqmLgAi/IBP+cVzXywfOU52Y5nMgwwLidxIjxx7K78eZ1KbtcubFLpT0nblwC5WXPIDGrZRHoEd5zfzwNLrBRYLN2R9KYaDyx4bKy9QtlhfdOUMht9i8JLM88M35POd9a0IxcanxidvELUiPgELTNx/644UCCEnwwTXoiPMm1IQnvj4qqraI3exVkOlkW8zhxf/BDN4LhW6mjdyrQc9D2z04/WpcD1f8mviInJjJQpRtR6Y44yMwEEYzZLwjyM/EQh+LnuxUzKXLXlbiJify6ZC6c8RpfPPPjP96Aai2IO5U2CA05hY14Li45bapywGIlrXVd33TdfT06oaL5F4nV2jGZiA3ndx0vruSq0wNJCw3/vc77wFtsD/2GZNSuA81o1UO3veK3ES9RP2GOKZTk0wzIiLPg1peb0v3Rv6bXZekC0GHo6wmHEHk+NV15U/WMSKg=
+	bxm6C+p7OvPi+fEBxoaykpDTSQywyMztN/NEsDe4HWHUfOQgzOKlt0eJSgGPijsXbHJfVSmt3fDi+1PpqSIv1db+CC45RNlTZ5uS7NLRbcWPQd8PmjNH1+IuVHocc+ICrlILhm0dHWgU63rOiIxKo21MkPlKesP08yvy+nwIFkLhE52Hg2EaIfZwaSzCVNM3YIVdzaynwfZ6l5Xg7yY4xKVHNnrBMPx8oMyu7UTWlbqgusccdgUmOirTBJNeBx6tL9MVOTGWR52fMhiutvPctasDXs1ID1TZTToy0ezeOz4Qv+ZJeGScxPA4EEPYkcJ0Aejs1B1yvAyCLdBEEVEpVvSJQqsT+xwb4qa2AY1fFHLzUQZlRkPgt+F/AAj0d8aEAUUgdmrC0N+MsAJM9SDczGIb1na9yMTZWVwtA8FSt2b3cpBs6SzEcuQ/LRtzSxEACHHTntAIuxPH3URreI6UHeZqcazu2Y59hQ1MOLMkrLXbJ6atwm5igerzyeJoXsOKTQvZqtPlfQybdLNZ7Nw2qNIaoISbIhycKXkO1oKr7grZ5h0O4H+tZscXCAhWBFJVbDEyzs3DpTLQEDxgQmK1TVxef6slX1soThCF/9y6sgmTK232H5q/Lzm9Tiw+tEjJu6fmqoO0us7hwFHOqh/uqvObGJDNCc5R7CC+wyWFX38JS30fE5bz7rPaVYPmGB7GGSjTV88L5KHn9kNPkVL1oyL0soWFGay04ISzg76kvZI=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI2PR04MB11276.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(366016)(376014)(7416014)(921020)(56012099003)(18002099003)(11063799006);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI2PR04MB11276.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(19092799006)(366016)(376014)(7416014)(921020)(56012099003)(18002099003)(22082099003)(6133799003)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?OpWBQVlEYyTRVYZTW6WU4fMKcXM0kBcRxjNveppC0Gl+79x1jBNSHiOa9blF?=
- =?us-ascii?Q?Hcbw30/YQkqbQKwUt2UpR6PHQox2f5BWRwsoL5fV0qpwvUFGlT9LYkoaZl93?=
- =?us-ascii?Q?VZFeeXFkx/1Yekbix2ny8YsOjNfDUDEkX8GiAjYDHuBiAUhI8MLOsO/y6bFP?=
- =?us-ascii?Q?y00OIP2kjpj2TGV2A4Glm+ovSgPxwg9V0/FkTQeWUizLcOkUodPHSRGrS0V4?=
- =?us-ascii?Q?ZpyJ87RdFxqDk3c51NM6hBS+iHbMxjCOfUQVir+OIywjI+cZrxwLOOYj7+xo?=
- =?us-ascii?Q?lIbh/bVbRcnf+Y+QuVfSfkcSoOg/6aKcAV27+AN5De35EE4XOAIyCRJVLXbU?=
- =?us-ascii?Q?O+wCCqDjW58Jv28m0Hb6bcgi/3TqkjGG6QbQOrFtnESOP2CHj02OOVhuWd5f?=
- =?us-ascii?Q?LBh9VXg+xU6Ze2ZPs/GjUSFe3tUs/oMnhhT35sb+dpU+TaBMqhayIZgkqCcP?=
- =?us-ascii?Q?fKjYjQ1oo9MxxLW1eyuzVOeqdLY3yoaIyeFIbMlb9CvyNjA/4oXuIF+7atf3?=
- =?us-ascii?Q?BuzY4UJorTfWs1YsoZvYPIJ/IUbhOZiAFQr9oWG3KpndAYK78k5HQipeW9Wy?=
- =?us-ascii?Q?Ja9IsRPxZ2xlt2UnJYLyFadBdUeXn6pF6sKjja10VUFj8yiGGGZkQB8xmkQG?=
- =?us-ascii?Q?gW6gIN8xe27g9XLsAERsHsqu/A9U+6EHA4wofzSflaqliEkCbdwGdLS4FUOD?=
- =?us-ascii?Q?SHvXzVc29PAmJu9ZNnWqeu2E8zJM0TBtDZR+Mu73UChiRw5HdPc+Xhu24ExV?=
- =?us-ascii?Q?FnQob2tpunLjVW4jVK6YIz6TC/aKYNslG/JmS2esgcPrVXQK6uLgtD2rv7ma?=
- =?us-ascii?Q?VyBrbWBV+87i3xO8SBj1HzTUwpcHDuCyQOX72yt3N5D7zzDeqb5HGHGNTt6F?=
- =?us-ascii?Q?PhFKDAjKfW56XW0NAV7PTWBZHIrP/KDh7riOhFDQ2XNXuq/ZxjXNR+pkx9Fg?=
- =?us-ascii?Q?4mxHGnoRWZMRntkLfip+T4938/bgoTu9wby4lM+JF7B8S2VmrJ0Mhy+g1SKE?=
- =?us-ascii?Q?hK9gLyx+QPx5jVKs7XvCAfSjEyR3dXqIozmytaqNmdyUgZMBnLEsFZF4liyn?=
- =?us-ascii?Q?V6mdojid5kLHoSgkGZTAnNc0S+5ywCfCFOJ7Fv6schAEnWSLb2OfJDXntoUI?=
- =?us-ascii?Q?E2CajXejqUfq4f2rPPAAOYIn6+OWZ3sQRRffM2DF1GncKAFC/+b5mJBo2NB7?=
- =?us-ascii?Q?IllTcuX7Iw/7YnkWGKgGXWKYKbbUooa47qIDjXaZHFg8GQfE8QzP3tWyvEkL?=
- =?us-ascii?Q?2LpeG1xxx5kV0yyBbOkMfQ6ya3zHOcctNleEbw/qCCJBq+ulQW1RKVQ4UA2X?=
- =?us-ascii?Q?IGajpm2dhDxfKFKwHlWtNP49W+FCKkXDm1H6EMKYSPVvMY/JMtvuRUpRQs0s?=
- =?us-ascii?Q?sp5C/b8/x1cHIrTHeCdwFbdaWUkCnrow0B/bTOEuHkR9SV9oHaNfOZ7Q2VuG?=
- =?us-ascii?Q?AxD9C4OQFWu5J3Pu87GYQZXc2cDivi/uSAAnVHOzxWHFh/Cb9apU3GOMfn4I?=
- =?us-ascii?Q?kSZYxqCVvdpf6a2KrTcAM2VYOphhYdcwxRGF7Kd/Jm6QtimUJeGZhgXUXBXN?=
- =?us-ascii?Q?xDkZv/vzHLGidnT/AyWK1xmkfrd3kcg/mAqVJVlSryKEjoItkng9Jqf3xtHf?=
- =?us-ascii?Q?Vr/gopsFpYcHJxiFvbng4DDJwU/YUYLk/FxO/XSo8jNbU+MnjWwgHQQPxTKV?=
- =?us-ascii?Q?OsNEfalFr03S9k6WY7oMII477cyZy6QcIom18smQ+U4SBXL2ar0j9cS7/30G?=
- =?us-ascii?Q?+BO7m4n+Mt+m/H69jlT1MVX5GTek4kRmZ/TImt1lbrP//0a+U755?=
+	=?us-ascii?Q?AsRGBfR52kZBP9KSW5HByiGkaKsGcGcJ2uLlPpg5deNUX0IikOlj1589nqLh?=
+ =?us-ascii?Q?gGZLlmqoOskw+BtGaiu5Mo6ONpop2xeCr55fuaO3uX2nSHq0JFqDCslGydjT?=
+ =?us-ascii?Q?TzSIz4dO3DQa1KUwfkFj/vmef6CtC3Eh24+eH8vgMq83skJHqAcybDiXEgXc?=
+ =?us-ascii?Q?DjuTyarUSt081HiRq0TMFpDnmQ1jr1IjpE2R0Pp7+46gcrZfjkllVCEW07T4?=
+ =?us-ascii?Q?ETCfNz8lQbfABnvHq4c81rEyC0VZ9UvF46MogQos82T6ocM0Cnpt6HgUnVKX?=
+ =?us-ascii?Q?TF+2B+cDtyAbBNlO5pAq7zY0zbW8YP8EqveLT5X8ePnYeCJk9vu70HKjYM0S?=
+ =?us-ascii?Q?58AI12fsl9Vzk3CrnXICGmpVurAZZQcAKf4zSUK/g/scunLXj7p7bEnUUHgF?=
+ =?us-ascii?Q?t9t7rLBhOESCeFPvAnbfKaTIQeP/tsCvTr55gW4Zq0h3Srf8chB7F0G6mEh1?=
+ =?us-ascii?Q?lhzqH/VERxZG3vlaHFdshmewDhjdSOi0aGBlID3sWKZsoCEkID3Rfbj62J16?=
+ =?us-ascii?Q?4wWlQ5wv8YJnIgeQqZgKJHuwNsYo5DteQ9l1zNOLQuUqLkfBToIeTHWe7ByK?=
+ =?us-ascii?Q?ioopXdq+XqkXpCWRb/EASSYCVWGIvNkmeE6E+KEsq53PPmUNJPOp5e4sylEM?=
+ =?us-ascii?Q?KDsZXWL/5aZBWadP7zpN8+OVX4OiwabCwi2e6kptAUbfsqfxHPSDYiVYogUB?=
+ =?us-ascii?Q?GIdmQ4gfNOjIMD61n1FCfbLgFPBJbCU4/w+nuZm+wmRbuu0sQqvFDtfDm1Aj?=
+ =?us-ascii?Q?fXKMlApPt7OUQ8xUMXJ/HBMOKfO1jdhLtoO96+q4JaHU6kD4IGWue361aeAC?=
+ =?us-ascii?Q?wf9VELW4IoKfqaMI1/cNWk3roV+xeDLD5bDKPkFKBYeDJ5WaqsRpvts73YBd?=
+ =?us-ascii?Q?dtq3QoNUKQTYkssyJP5wJ5k8vFnY0j23uhvjiBYrlRzFbc6a2LlpJ9baaIjX?=
+ =?us-ascii?Q?ja+NyqwWOGNjax95OknNu3KLBbCRmmRzTqbBD+AETHtQpwcErcRgeMORYgrN?=
+ =?us-ascii?Q?627aa15TT9LN5ETmhODL2JyDXwKfeogSTO/+7FDppFJAxuLC9hZVmFkuCTaP?=
+ =?us-ascii?Q?VItwWftQXluJ0GeJFlHm7LvvcD6l9NfvVwbezJBzeJXDRc08pDZau8P1EsJ8?=
+ =?us-ascii?Q?e78Si96DpGNQLaHRD29n+sPocGtqLZWE/YaiF5sHpPPJ9waL4DNuGCAuNWBn?=
+ =?us-ascii?Q?oKWc4WEZbNFymovVx96+kwuw7fQm64eFh2JtSn1Dzb6mAiT0bNie4eLGvWhm?=
+ =?us-ascii?Q?E57knj84uQOaPzB4t2Z8yaMbxNxdb2qQDej1Cn65rxODsoc5hKR03MCQ3RMs?=
+ =?us-ascii?Q?lTFHCasLpP8k4ZODbcbEJoN7Dkw3CMyn9pVO1glP62rVHy9AyMQXcIS2XRFL?=
+ =?us-ascii?Q?4MTr+BgURG/Uw7vBUfMr7duPtZauB3w8KdDKyCWPmJM19s3XmFCazy0YWaye?=
+ =?us-ascii?Q?BxEfEdCWPiBPgx8VIAUdLoL6D6beYVOJHvHRG9VltesR069YV9oXFVeaLqmh?=
+ =?us-ascii?Q?0DoRvZaITrRKYEGoCVm6oqEbVWijDmpuLtWZ8xGLQtb5NH6wC2B2yVHy63fR?=
+ =?us-ascii?Q?OabIpXWyTHL5E0Cpwy32TQ6ilZyVuSlzcg1pRI79C1H+UFg9nmx0L8OsszZd?=
+ =?us-ascii?Q?BUC1ne0aXtTDU/0nzGg+1BcAhu1WsxWOlkXNCKNHcXaJWH1QBkHIxcw4AJr7?=
+ =?us-ascii?Q?i/h01dK/g70ZCDq7i3j4mDnbQUCq+TZT1xRNHFZVCU5NUj3iORTicLE/FgCW?=
+ =?us-ascii?Q?/eYV2Kbb+Yr/nd4cr6yeJM3rTY1WPlSV0RU7ss2vVin+Si0v5MYt?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ccb1685f-064c-4bcf-7448-08deba2a2b7c
+X-MS-Exchange-CrossTenant-Network-Message-Id: 141648a0-7bc3-4eca-acb0-08deba2a303e
 X-MS-Exchange-CrossTenant-AuthSource: VI2PR04MB11276.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 May 2026 06:52:22.1216
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 May 2026 06:52:29.5704
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: P6dlgTDub2LZIHUBgt4Q12RHIreJWQa/5lhSWHz0KusEfsVlpJUUoUx5rrcJxIskvuvNiWMSwHiQ8Ecyi0AAq+6gCx5UkMxbgTNDZNN6KRzA5su2kpLlpUQXuH3nfdEi
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6khYZlyigaxtQvj84cX7goR8OUYggBrJwcR2ClAJUmYEl9YEu52FDMEe2rIGtAgjy7Kl13bxWEVkSX4zFlNbSPZu4ARNH31YySRMLEXJsST2AA8oFFdTBfhNx7TZSaad
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAPR04MB7271
 
 From: Sherry Sun <sherry.sun@nxp.com>
 
-The pci_host_common_parse_port() shouldn't decide whether to fall back
-to the legacy RC-level binding by checking for "reset-gpios/reset-gpio"
-properties on the RC node and returning -ENODEV. That's a policy
-decision belongs to the caller, not this common helper.
+The pci_host_common_parse_port() shouldn't check the RC-level binding.
+That's a policy decision that belongs to the caller, not this common
+helper.
 
-This patch set improves the PERST# (PCIe reset) GPIO fallback logic
-across the generic PCI host bridge helper and the i.MX6 PCIe driver.
+Simplify pci_host_common_parse_port() to only parse properties from the
+Root Port (and its children) without checking the RC node. Also change
+pci_host_common_parse_ports() to return 0 when no ports are found, since
+it is not an error.
 
+So now both functions won't return failure for "property not found" or
+"port not found", they purely return 0 on success and a negative error
+code on real failures.
+
+Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
 ---
-Changes in V2:
-1. Improved the commit messages as Richard suggested.
-2. Collected Reviewed-by tags.
----
-Sherry Sun (2):
-  PCI: host-generic: Simplify return value handling in
-    pci_host_common_parse_port(s)
-  PCI: imx6: Add imx_pcie_perst_found() to inspect the parsed result
-
- drivers/pci/controller/dwc/pci-imx6.c    | 25 +++++++++++++-------
  drivers/pci/controller/pci-host-common.c | 29 ++++--------------------
- 2 files changed, 22 insertions(+), 32 deletions(-)
+ 1 file changed, 5 insertions(+), 24 deletions(-)
 
-
-base-commit: c1ecb239fa3456529a32255359fc78b69eb9d847
+diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
+index 2ce6f4b66133..c93de5a10758 100644
+--- a/drivers/pci/controller/pci-host-common.c
++++ b/drivers/pci/controller/pci-host-common.c
+@@ -108,8 +108,7 @@ static int pci_host_common_parse_perst(struct device *dev,
+  * dependencies and the driver may fail to operate if required resources
+  * are missing.
+  *
+- * Return: 0 on success, -ENODEV if PERST# found in RC node (legacy binding
+- * should be used), Other negative error codes on failure.
++ * Return: 0 on success, negative error codes on failure.
+  */
+ static int pci_host_common_parse_port(struct device *dev,
+ 				      struct pci_host_bridge *bridge,
+@@ -128,22 +127,6 @@ static int pci_host_common_parse_port(struct device *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	/*
+-	 * 1. PERST# found in RP or its child nodes - list is not empty,
+-	 *    continue
+-	 *
+-	 * 2. PERST# not found in RP/children, but found in RC node -
+-	 *    return -ENODEV to fallback legacy binding
+-	 *
+-	 * 3. PERST# not found anywhere - list is empty, continue (optional
+-	 *    PERST#)
+-	 */
+-	if (list_empty(&port->perst)) {
+-		if (of_property_present(dev->of_node, "reset-gpios") ||
+-		    of_property_present(dev->of_node, "reset-gpio"))
+-			return -ENODEV;
+-	}
+-
+ 	INIT_LIST_HEAD(&port->list);
+ 	list_add_tail(&port->list, &bridge->ports);
+ 
+@@ -158,13 +141,11 @@ static int pci_host_common_parse_port(struct device *dev,
+  * Iterate through child nodes of the host bridge and parse Root Port
+  * properties (currently only reset GPIOs).
+  *
+- * Return: 0 on success, -ENODEV if no ports found or PERST# found in RC
+- * node (legacy binding should be used), Other negative error codes on
+- * failure.
++ * Return: 0 on success, negative error codes on failure.
+  */
+ int pci_host_common_parse_ports(struct device *dev, struct pci_host_bridge *bridge)
+ {
+-	int ret = -ENODEV;
++	int ret = 0;
+ 
+ 	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
+ 		if (!of_node_is_type(of_port, "pci"))
+@@ -174,8 +155,8 @@ int pci_host_common_parse_ports(struct device *dev, struct pci_host_bridge *brid
+ 			goto err_cleanup;
+ 	}
+ 
+-	if (ret)
+-		return ret;
++	if (list_empty(&bridge->ports))
++		return 0;
+ 
+ 	return devm_add_action_or_reset(dev, pci_host_common_delete_ports,
+ 					&bridge->ports);
 -- 
 2.37.1
 
