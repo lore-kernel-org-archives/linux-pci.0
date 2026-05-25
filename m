@@ -1,197 +1,114 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012023.outbound.protection.outlook.com [40.107.209.23])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EC5A381AE6;
-	Mon, 25 May 2026 12:31:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.23
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779712321; cv=fail; b=O5OGIONArS5go4rjZSLaYlTgIoKVR3M2Coh3w6YE/gvLbKBGghjVGTnbRNLUeXZfBrru11xlfDTSniY9p94VnAtGxBsRLEnBz7RPai/C0w8Pa6wgmsWY6Q3a6m5CQvkA/94xYoSZLZDZtMch7r8z71RREhHdnPg9Lyc2SaDJuSI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779712321; c=relaxed/simple;
-	bh=6IWG2vvi4P/RboeWscBIgbE+nufcSOckFJYlogRw6Bs=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=IzE+H3ZC5lEePaB4yEH6o2qbcC2fMFOJZNXIm0l0jqYHeMvRFPwR8mj5lGh+TLh7OHRV4dzsMd2Rn9wTPrKKMw3xVwRFKByZ2W6le8hCjFcD9T6B9JGwr3fpMcbFkEpPntqbgMVyw6zmyjsDpl9FLrAUjs0hobRRprXyXmxK2bo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=mBhvq2H1; arc=fail smtp.client-ip=40.107.209.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D6B6481B1
+	for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 12:42:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779712941; cv=none; b=RIyQGWD3nlj4G4J9bGIFOX3dmxT3kLWH5ew4MIPP56fRiRqPx9LX1P3KP6zPGnptGndpNKlmlQmxYNg8FhayTr6Mzyj8WMi2r5BW+3QZzyIFGyuK9aHraoHHCkA8xaOdQxSwLCwHrW1PpK2v58SsPfVSJo/um2dFCW+psFAxvG8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779712941; c=relaxed/simple;
+	bh=PerRx1HTBRvnusNHpUFdrmUgsmAUTW7eMRG6ER3bR44=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ErqtK6j9kahdkvwVCGi0PNRz8l1zy7eyrJ0dq+g+X0/tdfPBib7P2KI0w2o29rLi9yu+8oySS49VpnK9HUOT26hw+Mks1WyA9Mq6zFO4gKU7q/h+cyVL09Pjd9hA9nvUP+wilHKX+IhrrqkaIB7P3T6tHfUiDzbd+16W8VSFojo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PrK5U9Uq; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="mBhvq2H1"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Dn4BeU7KiQgKHEmISgaVkRMXWs+8jY+0ierYLNaj8ZlRKfI1fLAJvl9Et8ULxQ0epZDyVAPLH3rlnmObsZwbpFge4Pdi3JSiSMllJULn+yEhBkM3B0Q+tmDooX0gFxc+SxKbdNdBu4miLaP+wkLn+AIbaPz50LX7khy2IwywGV1i4/hOIGFuU4tz/Ycfbz7h49AgPRR7dEVoKoNACHTxgoVj0eE8XjOZDrlctgvswjEvmDHEWgjV7pAMpg92dxaQxmUqWIx+EhcHRX5Y2OZzuDH7lJ+US4ZsOeQRDqtNtzYrSdHKtpHSNBvwe+EIWmoLZmHo+1FvlP52zXpB5HCyxA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=L+6pJtLglxHJ1LvUkb6gF8o43/tNRawXxQ0RKYh+YAs=;
- b=cZ0ykZ+X+D3duhhs8sLI0WkJ5QBBm4wIazfnC6ZVU0DyH7odH/dyMMe+mbp5VkNAvh5tjwV7RFnZif1UGGGKtdgEwl7vfX2YWQ1ISI89RyLjTgqCtpPo1/mItt43MKydiDZHuajnMgTJUASDko4Ct6Ykfxk5K/L6wsfIG2qc0+AvW95b+H1Hk1+8Gc4O9vRy9Uf2YUcQO/cL+xwiTraL21dsjQtIQHxgI/BIeqHtC+5IBufLf4HCNy6il/qDXQRaCjjpA7143sFYx6+Rg0cQujyZvKMOHO1NEYj5xazUHUACta3ZYFASgB0aufdib93JIKBfm3jNmX11vG2dKN2mGw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=L+6pJtLglxHJ1LvUkb6gF8o43/tNRawXxQ0RKYh+YAs=;
- b=mBhvq2H1rpnsni8aphsRDLalLz5VuFyPWgMVbeXsLBuRUjmgOIqXSV++w6ioIhv0JmonBnYxoqRJ9Yr2ZQLzgK9HNI+l857q1Zh47TZJSRkH8bk0Kcn5z/yrDpvK65WvsqA88uJx9jrlI4KdJEcErzdNijEHirDMPClYU/HKEnuU6y5g+NJ9C+pVo3KnvxMraqO9qb89Rw+47zUuTlf/NE565Fp1cIOulsTSN2pZ9FSE8LDj+raztUDWqeZ+eJDF9CsrennCV7kHk/aA0NlL+mB4tbMkBgv0U7LR411wu4oFtl1MOGKuFUzgNl/KQ4/JRIC+24ye1usuHTgAJS60yg==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com (2603:10b6:207:4c::31)
- by LV8PR12MB9407.namprd12.prod.outlook.com (2603:10b6:408:1f9::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.20; Mon, 25 May
- 2026 12:31:54 +0000
-Received: from BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0]) by BL0PR12MB2353.namprd12.prod.outlook.com
- ([fe80::99b:dcff:8d6d:78e0%4]) with mapi id 15.21.0048.019; Mon, 25 May 2026
- 12:31:54 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PrK5U9Uq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C52F61F000E9;
+	Mon, 25 May 2026 12:42:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779712939;
+	bh=0jh6Pvnp2/zXhj4TQKhd2ZbNRFpN+JeFpxTtMxQ8fSo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=PrK5U9UquWNM70jr6iVo5kjotDCMQzN/YgDcJ6VvwR7WOgcnRYB7pJVLma9Vzv70J
+	 nFbHjQmKV0g3oPfU1YdEEYxeT6QX6BncnIX9NmVU/MOMD8/Ww/HedG6F9bQpJwO0CF
+	 /o57H/xfp5Dc3J0U6ncZEA0RMGaf6VAz8int823R6CGelr+Pmm7p0eSYs5nQKYg0DK
+	 PEIjDwVsaeuK3VZjTGpDCguTNadCWG/6xyZwq/Yi1KVPSSLw/WAJYvLELe6pYXfQi4
+	 Qj+ZeTlUfkOwHBWZFyyXklxUyMRkxVlrJbpFOSwMkQg734F7ur1OIhXmD2pZfNEcQ8
+	 Jge9864diYBJw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] ppc/pnv: Fix null pointer deref in pci hotplug
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aditya Gupta" <adityag@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260525121628.3906457-1-adityag@linux.ibm.com>
+References: <20260525121628.3906457-1-adityag@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 25 May 2026 21:31:50 +0900
-Message-Id: <DIRRD0MA3NFR.1DFWYY2ZLLZHQ@nvidia.com>
-Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>, "dri-devel"
- <dri-devel-bounces@lists.freedesktop.org>
-Subject: Re: [PATCH v4 21/27] rust: types: add `ForLt` trait for
- higher-ranked lifetime support
-From: "Eliot Courtney" <ecourtney@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
- <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
- <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
-X-Mailer: aerc 0.21.0-0-g5549850facc2
-References: <20260521233501.1191842-1-dakr@kernel.org>
- <20260521233501.1191842-22-dakr@kernel.org>
- <DIQ696JK4WV0.2HOQ57L342S77@kernel.org>
-In-Reply-To: <DIQ696JK4WV0.2HOQ57L342S77@kernel.org>
-X-ClientProxiedBy: DS1PR06CA0010.namprd06.prod.outlook.com
- (2603:10b6:8:458::17) To BL0PR12MB2353.namprd12.prod.outlook.com
- (2603:10b6:207:4c::31)
+Date: Mon, 25 May 2026 12:42:19 +0000
+Message-Id: <20260525124219.C52F61F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL0PR12MB2353:EE_|LV8PR12MB9407:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8b03e3f3-e30a-4b47-513f-08deba599a62
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|376014|7416014|1800799024|10070799003|18002099003|56012099003|22082099003|921020|11063799006|5023799004|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	9OhHGsmlbrVqpxYfbsxYzEahE1KANameJxJ2EyoqeB0Wje/Bo1kRFrwKERIaOL2A15M/5lRFUs6Q1W6pddvGJSKhKDUvnOigsJ2l10sS06/7Z6109oEx2Ynvx6UbYdvGjq5LGq3Hjp0a+JJTkQsGfvQIwcrCiCk5rsjR7sR+Gh8vHpnyB6mghLbf2cIGy8tyGhD9LcgMgqnZXJH/bbIYcAshHk9cuDDkBNLyJ/ZOFwBeidoY3KUrYU+XNHn40/w32nBgtY4fZwXDSAS/ANWqJ6oSOVM+KArIzROMAwLbORKjGuZlCngFWqsjJbxLOWh2llvIA4M2Y1G9NsiNeND1XJD94e+m4qux+hYFv1dyNn7O/E81n4GyNoy72cwA52d6gjk0ABZXRNou0kkzyrDuagW33VFM0pGyZG7qPjytBRSq80G0XKByrTOFEMmuXixOyb/VMIqakY1DXtQaYhBtBnWXSqLyd4iEBaihoc4FYJzb6oTGk6VYBv3OSdkOXH1hbfRWQ4FkhJtezWEbylBtNmNog1m8vck87jvQXlzrfR4NlgdfNFzM5w6niGeWNxP2mWyVDFYFTWpiLNXutI30R5O8gV4AgONt6Dc0CktO8YCunqyiG71sPi9zWcrUDk1cOPInyg4i2bX5+mdyxpzbtOTDsLANVEANWDmtw/EJ3QODIALhH4Y0hHksvzVMTW8g0IHAqDTmMENkxEV16ihpYno+pxKvUBmXd8TjpW6lh/8=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR12MB2353.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024)(10070799003)(18002099003)(56012099003)(22082099003)(921020)(11063799006)(5023799004)(4143699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?Yk5yMXpaYTR1RHoveEVVQ2d5YklVV2tmZHk4MkM4WXR3SFR5VGxzbzJFbU1T?=
- =?utf-8?B?SDJTSi94YXh1dUhlQkpROFdScFdjVTNOSDdDem9OZEVYUHRPRGdTWmtweVNm?=
- =?utf-8?B?eTlDNE9ZcGFaUDJWVWRlS1NENC9RRmZPcDU4WUNPVmY2aVlUc2lGckYrNGR0?=
- =?utf-8?B?b2lJajZQeDZjVTFML2xDT29SK1FLc2FpRlcyOG1wdExOeGJLNzNVZVJVdWZW?=
- =?utf-8?B?dlFsUi8xUlNaQ3ZCWEZld2p0N3ZCSjZIUDlhOEhtRFVvUDd4cU9jNkZxOWVB?=
- =?utf-8?B?ZWNDS3crY2xHcHFQendkWGN6b0dPU0VDOUlMdFpYMjV3aEZFYXdKVnlLVzl4?=
- =?utf-8?B?UlQzb3phYW1hUGVUTW5aYVhPMTVkVnBQUVk5N0ZhMm5qY0VQRm5wRHdyUGJs?=
- =?utf-8?B?c3Rzc0xEWk5RbUVOM3YzbW9xMU96SGNJaTdWWnIzbGhVd3Q5NkdPOFhUbEFl?=
- =?utf-8?B?RWVxbUZrWG5nOVhFY1ArTWIyV1N0dmQ1YnRnbFhrMUMwb1l6MkhRd21pMUtM?=
- =?utf-8?B?MmUyYnZiY2xWNGl4aWhRNnkyTDVrc1N1VzRNRTlJMGFpRlBVN1YyQjFKR28y?=
- =?utf-8?B?ck5RVlNjVVN2UDZYUlhEcWxObHlVL05FSElDa29lV1U4SXZtRTVLOGtLR0pV?=
- =?utf-8?B?RW9vbllCa1lEeHdZby9FQzg5MzJibTNLcmMxU0FkSlJwSkFrendqZTMwL0V4?=
- =?utf-8?B?VUx3bDhVNVZrM05PMkxORzZ6dzRQdGVhYU1tWm1PYzNadVh0S2JhOTViSXhU?=
- =?utf-8?B?b0swSHhsQ3BFYnNxSXZnQ3FLK0lYNFFHYUt2ZVRGcGFlMXo3VXYxck95VEl5?=
- =?utf-8?B?cFVWditrVXNzK09JOFc1VENiMXEwQnBtdXJVOVZhL3BJajJXT3YvRmppa0RI?=
- =?utf-8?B?Mk1xUVgvWk5jZk1Zd1JkbWVOU2owaVJCRGFWSDQ3TVlVOFV6NmRCVVh4VndF?=
- =?utf-8?B?MFhMZU5zNEJ6UVU5NldSejNiWUhkeHJkNjg0Z3dOck9kL0YzVGZJbnd0dVRN?=
- =?utf-8?B?MitiKy9DSTcrODNYdEc2VVpFMVh4RXFPREREUXlKdnFQdDZ4bVVFdlpoWEw1?=
- =?utf-8?B?MVg5c1kyTlRpbDJsV3BqeGt0OUZ3cnNDekxkaHg2N2praTRuaU5yNyswdlF3?=
- =?utf-8?B?UllsNCtHYlVTUXp2QWlPNmNxUS9WaXlGQnVqYnljMVd5MkVCZXg4eHVOalp1?=
- =?utf-8?B?b3VaQmtsblhHS1FQNlJSbEtYTjNsQ2cyWlNFYW52K2VGNnpNTEJEcWdjWXpt?=
- =?utf-8?B?emdRNFVqcytkZVFIcURpd0NleWFWRmhQbktublBJdWpDU3RTWE1POGtwOFYy?=
- =?utf-8?B?eUdzc3gwOTFYQVE4WTI0a05ISnI0cEViUUNOdEVQbHM3RzNISVR6bUxrakVI?=
- =?utf-8?B?cTF4bXFsNlE3N2E5ZzBTSlJGdFNkNUFPRW5VNk1uaWc4MkdabVZvclB3T1R4?=
- =?utf-8?B?UnFQUnFOT0tXUmhibWJNM0s2ZkVOVThVT0pSRTVKT0hiU3JpcDNDRDNsNnc4?=
- =?utf-8?B?T3U4L29LOFFMWklscnFjcWlCOEVvNzNrL3NLOGtVbksxZWRrZlEyakplUVU0?=
- =?utf-8?B?cEtFMlRGMnlwZnBndm1iZ3JkeFdlQitGRlFJM3ByYzFwNjh2VDZjTnZTR3p2?=
- =?utf-8?B?NmRUbnF3dXdPcERNZEE0aTROK3FBQ1lrcVNXYlJzWmxqclZEbHdkaE1VWkdq?=
- =?utf-8?B?VUZQTUU1ZGpSNElSMnQ2VHNLWTBqWlRKYUpCU2tlb2IxZE5aYVBCSUNJZnMy?=
- =?utf-8?B?ck55c3RhUUFBaW94K1FFWlEvNEVZM09QQlpsTzZKT0VWeXBDNTRZMlpzUkJK?=
- =?utf-8?B?WDFXL01ZWmMwR1duVmN6eW5lMVlLRnBudThpeXNjWnh1QjI1c3M5T3dyYUpH?=
- =?utf-8?B?MWdadDlyR3E4ZzhJaVR0TlB5cHd3OG1aLzExc3ZmQk9rR2RlZkpPbVR4L0RM?=
- =?utf-8?B?NlhyNk0yb0M4QTZpcUxVS0hGbE16Zncrdm1iQ3pGeFphclN1QXMzSGc3WDdl?=
- =?utf-8?B?WnJYT3ROdEVXQ01vdGpEbkRUMTZ3YUdQS1F2RHcrMU5tbjJURkFVWDlIcnZY?=
- =?utf-8?B?cDg1M3kzOGdYSE9rTnJiM2kyS3ZqRG5NT3A5ZmpBYWZraU1kbGVHdk90aWdY?=
- =?utf-8?B?cE9CKzJCb01nR2xBZFVVWHMrQWh6N2FjQ3BadTRvVm5Ubmc0YXh1NVVsU0pC?=
- =?utf-8?B?YmhubFFERUlETmxpN2JCNytaSk1YMjZWTEoxV2xGYnFML3hlQ3pldGRnSm52?=
- =?utf-8?B?R2hlSlo0RW1PWXZrWm56YnN0UVRiY3FxS2h6MWR2ZUZlYkhDbzBndVJJZFA1?=
- =?utf-8?B?aS9taTlLUUMzc05CQVJnUG5QSHEzem8xMTBUYzJUWDlRT2IzWXk4aS9WamVx?=
- =?utf-8?Q?g38q4Z3XnnJqsiYjsswokD6HKjqUdDRq91fML7LMVKefy?=
-X-MS-Exchange-AntiSpam-MessageData-1: Zdfk7wh1+yJYYQ==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8b03e3f3-e30a-4b47-513f-08deba599a62
-X-MS-Exchange-CrossTenant-AuthSource: BL0PR12MB2353.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 May 2026 12:31:54.2006
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iatyMe2Ku7Uz9JA/L/jLWhTW2UQrYMl2zzAWpGs9deZkz80LYhpmr/hltlqs1B/EdCDOV6uO8QxWy6Tto11/fg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR12MB9407
 
-On Sun May 24, 2026 at 12:46 AM JST, Danilo Krummrich wrote:
-> On Fri May 22, 2026 at 1:34 AM CEST, Danilo Krummrich wrote:
->> [ Handle macro_rules! invocations in the ForLt! proc macro's covariance
->>   and WF checks.
->>
->>   Proc macros cannot expand macro_rules! invocations, so the
->>   syn::Visit-based has_lifetime() and replace_lifetime() helpers cannot
->>   inspect types hidden behind macro calls. This caused the covariance
->>   proof to be silently skipped and lifetime substitution to fail for
->>   such types.
->>
->>   Add an explicit Type::Macro arm to Prover::prove to conservatively
->>   require a compiler-assisted covariance proof. Detect macro-containing
->>   types with has_macro() and use a WithLt trait projection for lifetime
->>   substitution instead of AST-level replacement. - Danilo ]
->
-> I was made aware by Gary that WFness is not actually being checked, which=
- is why
-> the static expansion was needed in the first place.
->
-> Thus macros will remain unsupported (even covariant macros are rejected),=
- yet we
-> can improve the error message by adding the following diff on top of the
-> previous v3 patch.
->
-> diff --git a/rust/macros/for_lt.rs b/rust/macros/for_lt.rs
-> index df2027789713..75d0ce450bf0 100644
-> --- a/rust/macros/for_lt.rs
-> +++ b/rust/macros/for_lt.rs
-> @@ -107,6 +107,12 @@ fn visit_lifetime(&mut self, lifetime: &Lifetime) {
->                      self.1 =3D true;
->                  }
->              }
-> +
-> +            // Macro invocations are opaque; conservatively assume they =
-may
-> +            // reference the lifetime.
-> +            fn visit_macro(&mut self, _: &syn::Macro) {
-> +                self.1 =3D true;
-> +            }
->          }
->
->          let mut visitor =3D HasLifetime(lt, false);
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-With this change,
+Pre-existing issues:
+- [Critical] Unmasked NULL pointer dereferences of `php_slot->pdev` across =
+the driver.
+--
 
-Reviewed-by: Eliot Courtney <ecourtney@nvidia.com>
+commit 1c56f7131028dfbaf43301e91e93ecbdba6f09eb
+Author: Aditya Gupta <adityag@linux.ibm.com>
 
-I think also this implementation considers &'a mut dyn Trait to be
-covariant in 'a which isn't the case in general IIUC, but I can't see
-any way it could cause an issue currently.
+ppc/pnv: Fix null pointer deref in pci hotplug
+
+This commit fixes a NULL pointer dereference in pnv_php_get_adapter_state()
+for hotplug slots on root buses (like OpenCAPI) where bus->self is NULL.
+It adds a check to ensure php_slot->pdev is not NULL before checking the
+PCIe type.
+
+> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+> index ff92a5c301b81..21ce7ead9e19b 100644
+> --- a/drivers/pci/hotplug/pnv_php.c
+> +++ b/drivers/pci/hotplug/pnv_php.c
+> @@ -414,7 +414,8 @@ static int pnv_php_get_adapter_state(struct hotplug_s=
+lot *slot, u8 *state)
+>  	 */
+>  	ret =3D pnv_pci_get_presence_state(php_slot->id, &presence);
+>  	if (ret >=3D 0) {
+> -		if (pci_pcie_type(php_slot->pdev) =3D=3D PCI_EXP_TYPE_DOWNSTREAM &&
+> +		if (php_slot->pdev &&
+> +			pci_pcie_type(php_slot->pdev) =3D=3D PCI_EXP_TYPE_DOWNSTREAM &&
+>  			presence =3D=3D OPAL_PCI_SLOT_EMPTY) {
+
+[Severity: Critical]
+This isn't a bug introduced by this patch, but by allowing initialization to
+proceed for root bus slots where php_slot->pdev is NULL, does this expose
+other unmasked NULL pointer dereferences across the driver?
+
+For example, reading the world-readable /sys/bus/pci/slots/*/attention sysfs
+file calls pnv_php_get_attention_state() and pnv_php_get_raw_indicator_stat=
+us()
+with a NULL pdev:
+
+pnv_php_get_attention_state()
+  pnv_php_get_raw_indicator_status()
+    pcie_capability_read_word()
+      pcie_capability_reg_implemented()
+        pci_is_pcie()
+          pci_pcie_cap()
+           =20
+This unconditionally dereferences the NULL pointer, potentially allowing an
+unprivileged local user to crash the kernel.
+
+Similarly, pnv_php_detect_clear_suprise_removal_freeze() passes the NULL
+pdev to pci_dev_to_eeh_dev(), which dereferences pdev->dev.archdata.edev
+and crashes on hot-unplug events.=20
+
+There also appear to be unprotected usages in pnv_php_enable_irq() which=20
+calls pci_dev_msi_enabled(pdev), and in pnv_php_activate_slot() which passes
+the NULL pdev to pci_set_pcie_reset_state().
+
+Are additional NULL checks needed for these other php_slot->pdev usages
+now that the initial boot crash is bypassed?
+
+>  			/*
+>  			 * Similar to pciehp_hpc, check whether the Link Active
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260525121628.3906=
+457-1-adityag@linux.ibm.com?part=3D1
