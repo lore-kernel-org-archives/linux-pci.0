@@ -1,145 +1,120 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4680D3FFACF;
-	Tue, 26 May 2026 14:54:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 228273D3D09;
+	Tue, 26 May 2026 15:01:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779807298; cv=none; b=ARe2OTmcsI77JtWV1yyh3mQ9MmekWn4TvPQJgh/ybuUCu7AvO7ILsjq1jSp8LD7HfvZR3yBFRDWgB8kNvsOomBnVo8l9O9QNrTbnauPJXeNc8N89ZHvt/7eSKfb5nz5ZV+YsZeGcO2p78Hjhb+ZzNMVReML2MIUbScKsUQlCwzo=
+	t=1779807675; cv=none; b=NA2vKZzDL1j4kqZCvt8zoAZ8mvdtSA9Nt7wj32MH04803TDRJLDZS1aImrS+ceVDzOkuDcm+j3KJ6RFIMI+xAuHSL3tIBIQeMQ1/qYVAIyDWWMPkZXuXvTcfiaTLKu9HLrmmhiv2soh/MAUkiVqNsc1VeBOF/FTKy/I3yPDf6Ns=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779807298; c=relaxed/simple;
-	bh=sEWmEoDeKV3e8XmvxvpVCz5qpEiEFRtT/L/nyenoHfM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ine1Mcf6Txf2lefcnZ1j0KDGyMnknPRlG6zvgldX5mPU6+1RzIiPVjpdRLKdagaBKgIzTEmrIXvYAgxuZC/d+w3JGSIBSfGQS45sVqWNIRGJG12o6drdLniMTI2pb1S19eo8yDaC0DWimgVMwN3IsXf7IrX/KdR4OYg7ek8ZOEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nka0MBj8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779807675; c=relaxed/simple;
+	bh=2bbe3fhv1+1tAyFtW2OCXIBsNiz7RMFwspwzHeTDrR4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Eru8458Wf/CvwKkl69ptye7bB7gJXt/hNeKPHWSXx8EACPfKKe5o2nDPjBkS6H0eYOGdQPunrRykwAWpnFKs+m/PLNOSXreH86JzhUp82aoUyq8s1Gkw5dekbpaOzoah1G6T6EF+U6b0IvyaJYBM+04jbFO08oTdS9iPNyt2FrY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FgkFboK4; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nka0MBj8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A29A71F00A3A;
-	Tue, 26 May 2026 14:54:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779807297;
-	bh=Gz1XDPEqMOede6w3QiL6LZiwFKjg/p5trACYiKw7+M8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=Nka0MBj8qZwX0efF+YTCpVSV5CRLDdNArlqWNJrbtk4cr3mfS9/8GQKE1CTmkbNIG
-	 SjyvOGgA+YTrF2aTyhr0G0peBARIOywlyARllBnVFmwT3s1V8PyGyzPUNZIyBdieuq
-	 +lxy/iEyFLx+zSwBZ6d2Wy5sKQnT2aDLbZLuVUtxc+1gllMfuUWkjQhKmpHbn9AGO+
-	 PCdi70c+4q3OZk7ENpFgqroxtHMjfqr0J4RQ1rYdsmEaRHo+Z426cJfblyM4E0kbqO
-	 3MGTgeF3OiTkXRMFR/0yBf2zYKnOD3L7dDKkGyPsHGJZQwn3q2rhHk74tO67LkxjMW
-	 XYJyM8hPPF0GA==
-Date: Tue, 26 May 2026 09:54:52 -0500
-From: Bjorn Andersson <andersson@kernel.org>
-To: Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, linux-pci@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: avoid duplicate PERST# GPIO acquisition in
- legacy path
-Message-ID: <ahW0HOEMnJIHviLi@baldur>
-References: <20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FgkFboK4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779807674; x=1811343674;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=2bbe3fhv1+1tAyFtW2OCXIBsNiz7RMFwspwzHeTDrR4=;
+  b=FgkFboK4eT5vPwmGNR4aFSLkJwj4NJk0IrXB0ufZEGHXrx2WPOpsjOBZ
+   FGqNfur2QHft2paJiaRZHm3WD2vnEMmtuL3xcwXmV9SweXoviOhm10CRu
+   HPkXY9WQiramtD6SqSQFgNVeJ12hW4kvNq3ng5xcQlP1ty04J6TVveRhq
+   360uPUNdB4N+j2x6SaphkLLFKBWGdL8+kIE3nGU7hMGqcnieHzr17RVyg
+   0KJkr/IQRp8xT7FcuQIdHEst5aDKMHba4vp6MTOCDYv8qObw8aWe8PHHr
+   7K3o+W9lfD7UZ8ZBf/jl+JTDgWnHgNzpAgy0qv97gi/98P23C64bBfeJR
+   A==;
+X-CSE-ConnectionGUID: GGseEGReSFCE3SsytNDyJA==
+X-CSE-MsgGUID: WPZLSbejSVumt71/YvS3Aw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11797"; a="80471331"
+X-IronPort-AV: E=Sophos;i="6.24,169,1774335600"; 
+   d="scan'208";a="80471331"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2026 08:01:14 -0700
+X-CSE-ConnectionGUID: Es7aSl05SO+fW5sldNnZCw==
+X-CSE-MsgGUID: 8XG4Vqd+Rg+obUY9Y3c/6Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,169,1774335600"; 
+   d="scan'208";a="247025753"
+Received: from aduenasd-mobl5.amr.corp.intel.com (HELO [10.125.110.201]) ([10.125.110.201])
+  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2026 08:01:12 -0700
+Message-ID: <1c79454e-6988-402f-9b8d-e628e8600ed8@intel.com>
+Date: Tue, 26 May 2026 08:01:11 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/2] ACPI/PCI/CXL: Enforce _DEP ordering between ACPI0016
+ and ACPI0017
+To: Chen Pei <cp0613@linux.alibaba.com>, alison.schofield@intel.com,
+ djbw@kernel.org, icheng@nvidia.com, bhelgaas@google.com, rafael@kernel.org,
+ lenb@kernel.org, guoren@kernel.org
+Cc: linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260526025118.38935-1-cp0613@linux.alibaba.com>
+Content-Language: en-US
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <20260526025118.38935-1-cp0613@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, May 26, 2026 at 05:02:30PM +0530, Kathiravan Thirumoorthy wrote:
-> Commit deed8aec62dc ("PCI: qcom: Handle mixed PERST#/PHY DT
-> configuration") handles the case where the PHY is moved to the Root
-> Port node while PERST# remains in the RC node by acquiring the PERST#
-> GPIO during Root Port parsing.
-> 
-> However, on platforms such as IPQ5424, both PERST# and PHY are
-> described under the RC node and are intended to be handled via the
-> legacy binding path.
 
-Please send patches to update IPQ5424 to the non-legacy binding.
 
-Thanks,
-Bjorn
+On 5/25/26 7:51 PM, Chen Pei wrote:
+> On platforms whose ACPI namespace exposes a CXL host bridge (ACPI0016)
+> with an ACPI0017 CXL root device declaring _DEP on the host bridge,
+> cxl_acpi can probe before acpi_pci_root has attached the PCI root.
+> acpi_pci_find_root() then returns NULL, decoder targets read as 0,
+> and no port/endpoint device shows up under /sys/bus/cxl/devices/.
+> 
+> The root cause is twofold:
+> 
+>   1. acpi_pci_root_add() never calls acpi_dev_clear_dependencies(),
+>      so _DEP suppliers downstream of a PCI root are never released.
+> 
+>   2. ACPI0016 is not on acpi_honor_dep_ids[], so even when ACPI0017
+>      declares _DEP on it, acpi_dev_ready_for_enumeration() bypasses
+>      the dep_unmet check and lets cxl_acpi probe early.
+> 
+> On x86 the bug is usually masked by link order (acpi_pci_root is
+> built in and probed before cxl_acpi). On architectures like RISC-V
+> that ordering is not guaranteed, so the standard ACPI _DEP mechanism
+> must actually work.
+> 
+> This series fixes both sides and the two patches must be applied
+> together; applying only patch 2 would prevent cxl_acpi from ever
+> probing on ACPI0016 systems, because the supplier would never clear
+> the dependency.
+> 
+>   Patch 1 makes acpi_pci_root_add() clear _DEP on the supplier once
+>           the PCI root bus has been added.
+>   Patch 2 adds ACPI0016 to acpi_honor_dep_ids[] so the dependency
+>           declared by ACPI0017 is enforced.
+> 
+> The approach in this series follows the discussion of an earlier
+> posting:
+> https://lore.kernel.org/linux-cxl/20260514023238.49984-1-cp0613@linux.alibaba.com/
+> 
+> Chen Pei (2):
+>   ACPI: PCI: clear _DEP dependencies after PCI root bridge attach
+>   ACPI: scan: honor _DEP for ACPI0016 PCI/CXL host bridge
+> 
+>  drivers/acpi/pci_root.c | 4 ++++
+>  drivers/acpi/scan.c     | 1 +
+>  2 files changed, 5 insertions(+)
+> 
 
-> Since PERST# is already acquired during Root Port
-> parsing, attempting to acquire it again in the legacy path fails,
-> resulting in probe failures as shown below:
-> 
-> [    1.571859] qcom-pcie 18000000.pcie: probe with driver qcom-pcie failed with error -16
-> [    1.571909] qcom-pcie 10000000.pcie: probe with driver qcom-pcie failed with error -16
-> [    1.571973] qcom-pcie 20000000.pcie: probe with driver qcom-pcie failed with error -16
-> 
-> Fix this by removing the redundant GPIO acquisition from
-> qcom_pcie_parse_legacy_binding() and reusing the PERST# descriptor
-> obtained in qcom_pcie_parse_ports().
-> 
-> While at it, move the warning message to qcom_pcie_parse_perst() to
-> avoid polluting dmesg when the legacy binding is used.
-> 
-> Fixes: deed8aec62dc ("PCI: qcom: Handle mixed PERST#/PHY DT configuration")
-> Signed-off-by: Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 10 ++--------
->  1 file changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 11fc60489892..77cbd204ac5c 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1824,6 +1824,7 @@ static int qcom_pcie_parse_perst(struct qcom_pcie *pcie,
->  	int ret;
->  
->  	if (pcie->reset) {
-> +		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be fixed!\n");
->  		reset = pcie->reset;
->  		goto skip_perst_parsing;
->  	}
-> @@ -1912,8 +1913,6 @@ static int qcom_pcie_parse_ports(struct qcom_pcie *pcie)
->  						      GPIOD_OUT_HIGH);
->  		if (IS_ERR(pcie->reset))
->  			return PTR_ERR(pcie->reset);
-> -
-> -		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be fixed!\n");
->  	}
->  
->  	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
-> @@ -1942,7 +1941,6 @@ static int qcom_pcie_parse_legacy_binding(struct qcom_pcie *pcie)
->  	struct device *dev = pcie->pci->dev;
->  	struct qcom_pcie_perst *perst;
->  	struct qcom_pcie_port *port;
-> -	struct gpio_desc *reset;
->  	struct phy *phy;
->  	int ret;
->  
-> @@ -1950,10 +1948,6 @@ static int qcom_pcie_parse_legacy_binding(struct qcom_pcie *pcie)
->  	if (IS_ERR(phy))
->  		return PTR_ERR(phy);
->  
-> -	reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
-> -	if (IS_ERR(reset))
-> -		return PTR_ERR(reset);
-> -
->  	ret = phy_init(phy);
->  	if (ret)
->  		return ret;
-> @@ -1970,7 +1964,7 @@ static int qcom_pcie_parse_legacy_binding(struct qcom_pcie *pcie)
->  	INIT_LIST_HEAD(&port->list);
->  	list_add_tail(&port->list, &pcie->ports);
->  
-> -	perst->desc = reset;
-> +	perst->desc = pcie->reset;
->  	INIT_LIST_HEAD(&port->perst);
->  	INIT_LIST_HEAD(&perst->list);
->  	list_add_tail(&perst->list, &port->perst);
-> 
-> ---
-> base-commit: d387b06f7c15b4639244ad66b4b0900c6a02b430
-> change-id: 20260525-fix_perst_gpio_handling-5a4fee9228fd
-> 
-> Best regards,
-> --  
-> Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
-> 
-> 
+For the series
+
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+
+Are Fixes tags needed?
+
