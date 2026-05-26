@@ -1,367 +1,187 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9070F3B52FB;
-	Tue, 26 May 2026 16:27:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87A04403155
+	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 18:06:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779812853; cv=none; b=kx5n2/2gohaDIR9R6s9ZZueWgO+g5lpRHjQZPfMrLtLYF5YWQxQznDo8ybnVPT20yUz010TxZtOFXXCV/V1Chwz3vz6NuzNtI9uC7xrgv4dkv+XgacIo7S2PCbiw8BsHuD8k5ctTPc1FV5JXgZesgGDc6VDM4GwOxRlVGm5KwAM=
+	t=1779818762; cv=none; b=uWeUvnfp52/iZPoVSqxnnjCCIWKpUzkqauZvK3tuWLuYINFCnoOD3aEQJQGkwqxy7OTw9siSkXNK0nQPWv+OGGE/HQlB7AZA2lw2JpIsh5oFGhYLXdQOOWAco/FqLQOh5ooi74HooewKaHY+ce1LG92p/eQVi9VxRhmlwLDdzig=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779812853; c=relaxed/simple;
-	bh=guVFMO+nmsmZIP1sfgAsfUsVD5oQ09M2iUNwIYkdkFQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YPtFtgt8WWLwqfg5/mWI29/oBuGBp6LEY1WwNYgMAmv22d/BGvTmhL88K7yM2T930E3vFqyobSjbdB9LMjMSYm3x+22xdOWuusAafnzh3kqAjKnuZdT2N0yInambBi5SB2PBlHlbCMOFHRQsvfz1oGQgHr58Z/mjv4S71yIykFk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DLkDkQAz; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1779818762; c=relaxed/simple;
+	bh=kIP2+evibNPf3LsLn2/w+GsVX1bv56Y0F/lDGcHB188=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qEgc0XiGkjtgfupOlb/0pX4ANHZzAx9Dov+KtzjbEdIz6qi4N4EMgpxQH5X4n+sqXJOAa93WJqcvDJrMHwpXoPAUNfJZre1TBlOx8r9WRcRuK8kWXraWmjOodxE4r1d1AfdJXTsq7jWYCRUsjSMbfZToyLe7BOn6sBR3HnfCZe0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Au/CkR+Z; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DLkDkQAz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779812851; x=1811348851;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=guVFMO+nmsmZIP1sfgAsfUsVD5oQ09M2iUNwIYkdkFQ=;
-  b=DLkDkQAzw0IVnOsndgOKYp030UXMhxKO8LLUWoKnI1cDzx+jHjCpFtpV
-   UwimY0Lf4p+3PPXzsanj2X4D59IhKMyDeSXYNshWJqYqHcN3DbHTSzv2z
-   IBqgupBPekttEJnVu92QNjOi0YTPSTCo+/fEYb8q9f2P4yfoy1PVQYkha
-   rFbVYJ4wX+8bwwIi7WILJXNUVtdCRC02lhAHmpQE3glxaWi24eWJ0dO7t
-   jWMR+cC8I/RhUG9q/ZDErCgLZjYcuIb73TGKVyIbMh+YFUFtGgT6HOsuZ
-   pK/LXoAezfsiVv319Qde5ovoFOe3wyORKwzwREB/EYNj+FEtfd8DNjzEW
-   w==;
-X-CSE-ConnectionGUID: pAK8yidLRbGvHN1lFYpVgA==
-X-CSE-MsgGUID: fQvrgqAEQFK+v8ksjswnRA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11798"; a="91203466"
-X-IronPort-AV: E=Sophos;i="6.24,170,1774335600"; 
-   d="scan'208";a="91203466"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2026 09:27:31 -0700
-X-CSE-ConnectionGUID: JM1AdhEOSYCcywQhoqW+7Q==
-X-CSE-MsgGUID: 1FJA+/i1Rqym/TW5iELLIw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,170,1774335600"; 
-   d="scan'208";a="235620658"
-Received: from aduenasd-mobl5.amr.corp.intel.com (HELO [10.125.110.201]) ([10.125.110.201])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 May 2026 09:27:30 -0700
-Message-ID: <63c7ea8d-8a23-4570-a476-76112ddf5db2@intel.com>
-Date: Tue, 26 May 2026 09:27:28 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Au/CkR+Z"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-82f8b60e54dso8724177b3a.2
+        for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 11:06:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779818760; x=1780423560; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MWi74t3bYV7mM8mv2QAR7wV+HKAWFpjIBovoKvmCAWo=;
+        b=Au/CkR+ZBlDNl2XNrwV/pVM1yyVL0y/D9yBa8E6eSYXR7T3IP35o+f+Ll7/DFLdzeD
+         y1++kD1z1Y6pln4EL3vh0zvFGrttePZhspn4pp/aGI6Xk7eei4G5PyO5+iaC9lq6theJ
+         4oAu70/2ziy+wMoZOV44qBGiEEMPBae4/W1hvQ//8mpsMDDzIYaHT5cjO7oMRT4QB0Pw
+         okDe0+yQunYdaop3Sozp9ha7JFMxLnUMn06I8lMqeSFEQbDSDxzgz8j7BVvLpfQ5VQua
+         a2wnqzCg3DjKEgMhG9vrs8ccdtfRYXo0Um633CIhHKDj5U7b6EwYSxcgqGOeY12Pa0nY
+         JqdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779818760; x=1780423560;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=MWi74t3bYV7mM8mv2QAR7wV+HKAWFpjIBovoKvmCAWo=;
+        b=EYjiaVq1IvINeqKIFVqvNTyID1WrD/Wy4no2Qs7nCVl79vxWOPPMSp4ATaZe/fcC/j
+         oC2A1zDSQrSS91oJ9haxcC3nsYYk90qTvCsfBCudTVu/c+oOLaSg7t47HL4BUzZRwqgI
+         g/h9chRfQ9jqWf/D6PIhc/kLtRebxzd4eCdrP/weoAVgvCaaX4IwoXKVWyO0aoOh7DyF
+         +CEyb9nXhfFE1Kf4FhwkCSbLN6HGbFonc0rpukTMJOwBh6R5gH54I6MHKnzVj3yFj3eD
+         zNKr2oCa2rG6I5RnxXA27vo68q9ZcnWRslR+kqgeq5HFV8GHbq05x37J0x75DsyD6csS
+         ggxQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9JGM+gUdIbuHdPMqUTGgtf7skJGXtQUw1O6LzKlCC/RuIQ1492dVYtMZSoFJPImLLbXjOQNh0K7pI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxIcfiot1dKqyqdwHaCw9f5CRYfRK7aje3/BEylGjyD7K4o2giw
+	/l13TvsXAuIC5EAg0XEcVzv2S/ZKXNc43jPh978w19A50Q8xPgJUsRXv
+X-Gm-Gg: Acq92OHBBZXj57tWpPz0E9P31xPM2Z8nLMqlxaoEXEQk3YzMT4ycAHNplM4u4t1pDcG
+	teBTspsHEPzCIk0A7QZVUWId3BgAN72veD1FMHe83wYogOx5/41Xg08E4b9cKcq9sNwl2cMq66w
+	CbhSnOtZffH5lMUia1djhHJK/+lApnJ7Fab1mSMoVol+3nFOUzVjdRp66LxbyyEVUvpzx3vzrhD
+	q5YAK6hknyyWEO5skCSpyJMi0Behmbl1woKLqh6NtRPThWq+MCflvEa60/fkr9vHW0GRziJwPx7
+	GUevxW/4tANB5PfQ944pnavsjr8kdLsgYfkpKpxjrsi8gMtcQ/SYtepvodrbNuUidt0Ej+sLn91
+	qz3vZapfzNQFR3Vsm3qP9CjkImzXrgZGjMeiWZMIIK0M9rnhS6sUGcdvvJZGOI4RxwlzjUNzqy/
+	0f2Z3naNtsItLOthLoggScMP+VQM7MNmazEs5isAHMYgrYG8Y4WyB32QVAOj8i6t6F6JoZonBpv
+	05wqPvmzntvlk7RcZCCvkDVob3WsDxEWBMZAiKHJXU1H+2MvWg=
+X-Received: by 2002:a05:6a00:1f11:b0:83b:905:c9fd with SMTP id d2e1a72fcca58-8415f32e8b0mr17791524b3a.24.1779818759878;
+        Tue, 26 May 2026 11:05:59 -0700 (PDT)
+Received: from leonardoc-nb (201-68-197-52.dsl.telesp.net.br. [201.68.197.52])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84164e9e7cdsm13841950b3a.34.2026.05.26.11.05.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 May 2026 11:05:59 -0700 (PDT)
+From: Leonardo Costa <leoreis.costa@gmail.com>
+To: ryanmatthews@fastmail.com,
+	hongxing.zhu@nxp.com,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	linux-imx@nxp.com
+Cc: francesco@dolcini.it,
+	achill@achill.org,
+	akpm@linux-foundation.org,
+	broonie@kernel.org,
+	conor@kernel.org,
+	f.fainelli@gmail.com,
+	gregkh@linuxfoundation.org,
+	hargar@microsoft.com,
+	jonathanh@nvidia.com,
+	linux-kernel@vger.kernel.org,
+	linux@roeck-us.net,
+	lkft-triage@lists.linaro.org,
+	patches@kernelci.org,
+	patches@lists.linux.dev,
+	pavel@nabladev.com,
+	rwarsow@gmx.de,
+	shuah@kernel.org,
+	sr@sladewatkins.com,
+	stable@vger.kernel.org,
+	sudipm.mukherjee@gmail.com,
+	torvalds@linux-foundation.org
+Subject: Re: [PATCH 6.6 000/508] 6.6.141-rc1 review
+Date: Tue, 26 May 2026 15:05:37 -0300
+Message-ID: <20260526180537.21223-1-leoreis.costa@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260521052241.GA8766@francesco-nb>
+References: <20260521052241.GA8766@francesco-nb>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 00/12] PCI: endpoint: pci-epf-vntb / NTB: epf: Enable
- per-doorbell bit handling
-To: Koichiro Den <den@valinux.co.jp>
-Cc: Jon Mason <jdmason@kudzu.us>, Allen Hubbe <allenbh@gmail.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
- Jerome Brunet <jbrunet@baylibre.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Niklas Cassel
- <cassel@kernel.org>, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, ntb@lists.linux.dev
-References: <20260513024923.451765-1-den@valinux.co.jp>
- <923e522c-c288-4ab1-8206-9b7654ec9919@intel.com>
- <zgleppcjdym7hhoifhk3icze2ptualqwaalcyd45iwazmnwy4q@56dqc5uphi4w>
- <00a0beca-3213-4286-8e6d-72a310664792@intel.com>
- <hl4pg76tbwashcacn2c7gbhvvqdfz4jr4z5vqldvt2iy53uc4n@6s3nspwjtuto>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <hl4pg76tbwashcacn2c7gbhvvqdfz4jr4z5vqldvt2iy53uc4n@6s3nspwjtuto>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+Hello all,
 
+> kern  :info  : [    0.593597] pci 0000:01:00.0: BAR 4 [io  0x1000-0x101f]: assigned
+> kern  :info  : [    0.593629] pci 0000:01:00.0: BAR 0 [io  0x1020-0x1027]: assigned
+> kern  :info  : [    0.593660] pci 0000:01:00.0: BAR 2 [io  0x1028-0x102f]: assigned
+> kern  :info  : [    0.593692] pci 0000:01:00.0: BAR 1 [io  0x1030-0x1033]: assigned
+> kern  :info  : [    0.593722] pci 0000:01:00.0: BAR 3 [io  0x1034-0x1037]: assigned
+> kern  :info  : [    0.593753] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+> kern  :info  : [    0.593767] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+> kern  :info  : [    0.593781] pci 0000:00:00.0:   bridge window [mem 0x01100000-0x011fffff]
+> kern  :info  : [    0.593795] pci 0000:00:00.0:   bridge window [mem 0x01200000-0x012fffff pref]
+> kern  :warn  : [    0.593856] sysfs: cannot create duplicate filename '/devices/platform/soc/1ffc000.pcie/pci0000:00/0000:00:00.0/resource0'
+> kern  :warn  : [    0.593875] CPU: 1 PID: 28 Comm: kworker/u5:1 Not tainted 6.6.141-rc1-7.7.0-devel #1
+> kern  :warn  : [    0.593891] Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+> kern  :warn  : [    0.593904] Workqueue: events_unbound async_run_entry_fn
+> kern  :warn  : [    0.593959]  unwind_backtrace from show_stack+0x10/0x14
+> kern  :warn  : [    0.594004]  show_stack from dump_stack_lvl+0x40/0x4c
+> kern  :warn  : [    0.594040]  dump_stack_lvl from sysfs_warn_dup+0x58/0x64
+> kern  :warn  : [    0.594080]  sysfs_warn_dup from sysfs_add_bin_file_mode_ns+0xbc/0xcc
+> kern  :warn  : [    0.594112]  sysfs_add_bin_file_mode_ns from sysfs_create_bin_file+0xac/0xb4
+> kern  :warn  : [    0.594144]  sysfs_create_bin_file from pci_create_resource_files+0x84/0x13c
+> kern  :warn  : [    0.594181]  pci_create_resource_files from pci_bus_add_device+0x24/0x94
+> kern  :warn  : [    0.594220]  pci_bus_add_device from pci_bus_add_devices+0x2c/0x70
+> kern  :warn  : [    0.594250]  pci_bus_add_devices from pci_host_probe+0x40/0x90
+> kern  :warn  : [    0.594276]  pci_host_probe from dw_pcie_host_init+0x3e4/0x614
+> kern  :warn  : [    0.594309]  dw_pcie_host_init from imx6_pcie_probe+0x414/0x6ec
+> kern  :warn  : [    0.594340]  imx6_pcie_probe from platform_probe+0x5c/0xb0
+> kern  :warn  : [    0.594375]  platform_probe from really_probe+0xd0/0x3c8
+> kern  :warn  : [    0.594415]  really_probe from __driver_probe_device+0x98/0x20c
+> kern  :warn  : [    0.594448]  __driver_probe_device from driver_probe_device+0x30/0xc0
+> kern  :warn  : [    0.594482]  driver_probe_device from __driver_attach_async_helper+0x50/0xd8
+> kern  :warn  : [    0.594515]  __driver_attach_async_helper from async_run_entry_fn+0x30/0x144
+> kern  :warn  : [    0.594548]  async_run_entry_fn from process_one_work+0x144/0x2cc
+> kern  :warn  : [    0.594584]  process_one_work from worker_thread+0x18c/0x3b8
+> kern  :warn  : [    0.594611]  worker_thread from kthread+0x110/0x12c
+> kern  :warn  : [    0.594647]  kthread from ret_from_fork+0x14/0x28
+> kern  :warn  : [    0.594670] Exception stack(0xf08edfb0 to 0xf08edff8)
+> kern  :warn  : [    0.594683] dfa0:                                     00000000 00000000 00000000 00000000
+> kern  :warn  : [    0.594697] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> kern  :warn  : [    0.594709] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
+> kern  :info  : [    0.594873] mmc0: SDHCI controller on 2198000.mmc [2198000.mmc] using ADMA
+> kern  :info  : [    0.594997] mmc1: SDHCI controller on 2190000.mmc [2190000.mmc] using ADMA
+> kern  :info  : [    0.595838] pcieport 0000:00:00.0: PME: Signaling with IRQ 291
+> kern  :info  : [    0.596396] pcieport 0000:00:00.0: AER: enabled with IRQ 291
+> kern  :warn  : [    0.596583] sysfs: cannot create duplicate filename '/devices/platform/soc/1ffc000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/resource0'
+> kern  :warn  : [    0.596598] CPU: 1 PID: 28 Comm: kworker/u5:1 Not tainted 6.6.141-rc1-7.7.0-devel #1
+> kern  :warn  : [    0.596614] Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+> kern  :warn  : [    0.596626] Workqueue: events_unbound async_run_entry_fn
+> kern  :warn  : [    0.596659]  unwind_backtrace from show_stack+0x10/0x14
+> kern  :warn  : [    0.596702]  show_stack from dump_stack_lvl+0x40/0x4c
+> kern  :warn  : [    0.596738]  dump_stack_lvl from sysfs_warn_dup+0x58/0x64
+> kern  :warn  : [    0.596772]  sysfs_warn_dup from sysfs_add_bin_file_mode_ns+0xbc/0xcc
+> kern  :warn  : [    0.596804]  sysfs_add_bin_file_mode_ns from sysfs_create_bin_file+0xac/0xb4
+> kern  :warn  : [    0.596836]  sysfs_create_bin_file from pci_create_resource_files+0x84/0x13c
+> kern  :warn  : [    0.596872]  pci_create_resource_files from pci_bus_add_device+0x24/0x94
+> kern  :warn  : [    0.596907]  pci_bus_add_device from pci_bus_add_devices+0x2c/0x70
+> kern  :warn  : [    0.596938]  pci_bus_add_devices from pci_bus_add_devices+0x60/0x70
+> kern  :warn  : [    0.596968]  pci_bus_add_devices from pci_host_probe+0x40/0x90
+> kern  :warn  : [    0.596994]  pci_host_probe from dw_pcie_host_init+0x3e4/0x614
+> kern  :warn  : [    0.597022]  dw_pcie_host_init from imx6_pcie_probe+0x414/0x6ec
+> kern  :warn  : [    0.597048]  imx6_pcie_probe from platform_probe+0x5c/0xb0
+> kern  :warn  : [    0.597074]  platform_probe from really_probe+0xd0/0x3c8
+> kern  :warn  : [    0.597105]  really_probe from __driver_probe_device+0x98/0x20c
+> kern  :warn  : [    0.597138]  __driver_probe_device from driver_probe_device+0x30/0xc0
+> kern  :warn  : [    0.597170]  driver_probe_device from __driver_attach_async_helper+0x50/0xd8
+> kern  :warn  : [    0.597202]  __driver_attach_async_helper from async_run_entry_fn+0x30/0x144
+> kern  :warn  : [    0.597232]  async_run_entry_fn from process_one_work+0x144/0x2cc
+> kern  :warn  : [    0.597261]  process_one_work from worker_thread+0x18c/0x3b8
+> kern  :warn  : [    0.597288]  worker_thread from kthread+0x110/0x12c
+> kern  :warn  : [    0.597315]  kthread from ret_from_fork+0x14/0x28
+> kern  :warn  : [    0.597335] Exception stack(0xf08edfb0 to 0xf08edff8)
+> kern  :warn  : [    0.597350] dfa0:                                     00000000 00000000 00000000 00000000
+> kern  :warn  : [    0.597364] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> kern  :warn  : [    0.597376] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
+> kern  :info  : [    0.631336] mmc1: new high speed SDXC card at address 0001
+> kern  :info  : [    0.632908] mmcblk1: mmc1:0001 SD64G 58.2 GiB
+> kern  :info  : [    0.642235] fec 2188000.ethernet eth0: registered PHC device 0
+> kern  :info  : [    0.643162] imx_thermal 20c8000.anatop:tempmon: Industrial CPU temperature grade - max:105C critical:105C passive:95C
 
-On 5/26/26 8:56 AM, Koichiro Den wrote:
-> On Tue, May 26, 2026 at 07:45:11AM -0700, Dave Jiang wrote:
->>
->>
->> On 5/20/26 11:29 PM, Koichiro Den wrote:
->>> On Tue, May 19, 2026 at 02:29:51PM -0700, Dave Jiang wrote:
->>>>
->>>>
->>>> On 5/12/26 7:49 PM, Koichiro Den wrote:
->>>>> This series fixes doorbell bit/vector handling for the EPF-based NTB
->>>>> pair (ntb_hw_epf <-> pci-epf-*ntb). Its primary goal is to enable safe
->>>>> per-db-vector handling in the NTB core and clients (e.g. ntb_transport),
->>>>> without changing the on-the-wire doorbell mapping.
->>>>>
->>>>>
->>>>> Background / problem
->>>>> ====================
->>>>>
->>>>> ntb_hw_epf historically applies an extra offset when ringing peer
->>>>> doorbells: the link event uses the first interrupt slot, and doorbells
->>>>> start from the third slot (i.e. a second slot is effectively unused).
->>>>> pci-epf-vntb carries the matching offset on the EP side as well.
->>>>>
->>>>> As long as db_vector_count()/db_vector_mask() are not implemented, this
->>>>> mismatch is mostly masked. Doorbell events are effectively treated as
->>>>> "can hit any QP" and the off-by-one vector numbering does not surface
->>>>> clearly.
->>>>>
->>>>> However, once per-vector handling is enabled, the current state becomes
->>>>> problematic:
->>>>>
->>>>>   - db_valid_mask exposes bits that do not correspond to real doorbells
->>>>>     (link/unused slots leak into the mask).
->>>>>   - ntb_db_event() is fed with 1-based/shifted vectors, while NTB core
->>>>>     expects a 0-based db_vector for doorbells.
->>>>>   - On pci-epf-vntb, .peer_db_set() may be called in atomic context, but
->>>>>     it directly calls pci_epc_raise_irq(), which can sleep.
->>>>>
->>>>>
->>>>> Why NOT fix the root offset?
->>>>> ============================
->>>>>
->>>>> The natural "root" fix would be to remove the historical extra offset in
->>>>> the peer_db_set() doorbell paths for ntb_hw_epf and pci-epf-vntb.
->>>>> Unfortunately this would lead to interoperability issues when mixing old
->>>>> and new kernel versions (old/new peers). A new side would ring a
->>>>> different interrupt slot than what an old peer expects, leading to
->>>>> missed or misrouted doorbells, once db_vector_count()/db_vector_mask()
->>>>> are implemented.
->>>>>
->>>>> Therefore this series intentionally keeps the legacy offset, and instead
->>>>> fixes the surrounding pieces so the mapping is documented and handled
->>>>> consistently in masks, vector numbering, and per-vector reporting.
->>>>>
->>>>>
->>>>> Dependencies
->>>>> ============
->>>>>
->>>>> This v4 is prepared on top of the current pci/endpoint:
->>>>> commit f5aa97125491 ("misc: pci_endpoint_test: remove dead BAR read before
->>>>>                       doorbell trigger")
->>>>
->>>> I can't seem to apply the patch set via 'b4 shazam' on top of f5aa97125491. Trying to set it up for review.
->>>
->>> Hi Dave,
->>>
->>>>
->>>> DJ
->>>>
->>>>>
->>>>> plus these patches as contextual prerequisites:
->>>>>
->>>>>   - [PATCH 0/2] NTB: epf: Fix ntb_hw_epf ISR issues
->>>>>     https://lore.kernel.org/ntb/20260304083028.1391068-1-den@valinux.co.jp/
->>>>>
->>>>>   - [PATCH 0/2] PCI: endpoint: pci-epf-{v}ntb: A couple of fixes
->>>>>     https://lore.kernel.org/linux-pci/20260407124421.282766-1-mani@kernel.org/
->>>>>
->>>>> (These touch the same code part as this series and would otherwise conflict
->>>>> with it. They should land upstream first in my opinion.)
->>>
->>> This series depends on the two prerequisite series listed above.
->>
->> They don't apply cleanly either. Do you have a public repo somewhere that has everything applied? That may be the easiest way to do things if a series has complicated dependencies.
-> 
-> I rechecked this with a fresh worktree based off of f5aa97125491:
-> 
->   git worktree add /tmp/f5aa97125491 f5aa97125491
->   cd /tmp/f5aa97125491
-> 
->   # 1st dependency
->   b4 am 20260304083028.1391068-1-den@valinux.co.jp
->   git am ./20260304_den_ntb_epf_fix_ntb_hw_epf_isr_issues.mbx
-> 
->   # 2nd dependency
->   b4 am 20260407124421.282766-1-mani@kernel.org
->   git am ./20260407_manivannan_sadhasivam_pci_endpoint_pci_epf_v_ntb_a_couple_of_fixes.mbx
-> 
->   # this v4 series
->   b4 am 20260513024923.451765-1-den@valinux.co.jp
->   git am ./v4_20260513_den_pci_endpoint_pci_epf_vntb_ntb_epf_enable_per_doorbell_bit_handling.mbx
-> 
-> And this gives me the following commit log:
-> 
->   git log --reverse --oneline f5aa97125491..
->   # 1d1465542cc0 NTB: epf: Fix request_irq() unwind in ntb_epf_init_isr()
->   # 94bd43a9e435 NTB: epf: Avoid pci_irq_vector() from hardirq context
->   # 3cab4db0f647 PCI: endpoint: pci-epf-vntb: Add check to detect 'db_count' value of 0
->   # 5449f10512ae PCI: endpoint: pci-epf-ntb: Add check to detect 'db_count' value of 0
->   # e3dbdcceb2fd PCI: endpoint: pci-epf-vntb: Document legacy MSI doorbell offset
->   # e1c167a58888 PCI: endpoint: pci-epf-vntb: Defer pci_epc_raise_irq() out of atomic context
->   # 6c54fd0c9c9c PCI: endpoint: pci-epf-vntb: Report 0-based doorbell vector via ntb_db_event()
->   # 28a30b79ff03 PCI: endpoint: pci-epf-vntb: Reject unusable doorbell counts
->   # cb5fbd37bdc6 PCI: endpoint: pci-epf-vntb: Guard configfs writes after EPC attach
->   # 9ed0f4db85b4 PCI: endpoint: pci-epf-vntb: Exclude reserved slots from db_valid_mask
->   # 575bd3aa530b PCI: endpoint: pci-epf-vntb: Implement db_vector_count/mask for doorbells
->   # 41f26aa279af NTB: epf: Document legacy doorbell slot offset in ntb_epf_peer_db_set()
->   # 6b2e2f80a61a NTB: epf: Make db_valid_mask cover only real doorbell bits
->   # 44d1bb070521 NTB: epf: Report 0-based doorbell vector via ntb_db_event()
->   # 4e4d37b4c2a8 NTB: epf: Fix doorbell bitmask and IRQ vector handling
->   # 1e5829682361 (HEAD) NTB: epf: Implement db_vector_count/mask for doorbells
-> 
-> I don't have a public repo at the moment, sorry. Could you try the above? If it
-> still fails, please let me know.
+This warning happens on our tests for Apalis iMX6, and seems to come from the
+imx6_pcie_probe function in the pci-imx6.c driver. We found some instances of
+this happening on as early as 6.6.129. This went unnoticed until now, we're 
+not sure when this started to happen.
 
-I'm able to apply with the above steps. Thanks!
-
-> 
-> Best regards,
-> Koichiro
-> 
->>
->> DJ
->>
->>>
->>> Best regards,
->>> Koichiro
->>>
->>>>>
->>>>>
->>>>> Practical benefit
->>>>> =================
->>>>>
->>>>> This also enables ntb_netdev's multi-queue performance scale:
->>>>>
->>>>>   [PATCH v3 0/4] net: ntb_netdev: Add Multi-queue support
->>>>>   https://lore.kernel.org/netdev/20260305155639.1885517-1-den@valinux.co.jp/
->>>>>
->>>>> Each netdev queue maps to an ntb_transport queue pair. With correct
->>>>> db_vector_count() and db_vector_mask() callbacks, ntb_transport can wake
->>>>> only the queue pairs covered by the doorbell vector it received. Without
->>>>> those callbacks, the NTB core falls back to the full valid doorbell mask,
->>>>> so each doorbell interrupt can still wake all queue pairs. See "Testing /
->>>>> Results" section in the above link.
->>>>>
->>>>>
->>>>> What this series does
->>>>> =====================
->>>>>
->>>>> - pci-epf-vntb:
->>>>>
->>>>>   - Document the legacy offset.
->>>>>   - Defer MSI doorbell raises to process context to avoid sleeping in
->>>>>     atomic context. This becomes relevant once multiple doorbells are
->>>>>     raised concurrently at a high rate.
->>>>>   - Report doorbell vectors as 0-based to ntb_db_event().
->>>>>   - Reject unusable doorbell counts and guard configfs writes after EPC
->>>>>     attach with -EOPNOTSUPP.
->>>>>   - Fix db_valid_mask and implement db_vector_count()/db_vector_mask().
->>>>>
->>>>> - ntb_hw_epf:
->>>>>
->>>>>   - Document the legacy offset in ntb_epf_peer_db_set().
->>>>>   - Fix db_valid_mask to cover only real doorbell bits.
->>>>>   - Report 0-based db_vector to ntb_db_event() (accounting for the
->>>>>     unused slot).
->>>>>   - Pass per-vector context as request_irq() dev_id instead of deriving the
->>>>>     device vector from Linux IRQ numbers.
->>>>>   - Keep db_val as a bitmask and fix db_read/db_clear semantics
->>>>>     accordingly.
->>>>>   - Implement db_vector_count()/db_vector_mask().
->>>>>
->>>>>
->>>>> Compatibility
->>>>> =============
->>>>>
->>>>> By keeping the legacy offset intact, this series aims to remain
->>>>> compatible across mixed kernel versions. The observable changes are
->>>>> limited to correct mask/vector reporting and safer execution context
->>>>> handling.
->>>>>
->>>>> Patches 1-7 (PCI Endpoint) and 8-12 (NTB) are independent and can be
->>>>> applied separately through the respective trees. They are sent together so
->>>>> the two sides of the same legacy layout do not drift apart, and the
->>>>> resulting code stays easier to follow.
->>>>>
->>>>> The plan is still to take the whole series through the PCI EP tree once the
->>>>> remaining NTB acks are collected. See:
->>>>> https://lore.kernel.org/linux-pci/rnzsnp5de4qf5w7smebkmqekpuaqckltx73rj6ha3q2nrby5yp@7hsgvdzvjkp6/
->>>>>
->>>>>
->>>>> Note
->>>>> ====
->>>>>
->>>>> Most v3->v4 changes are responses to Sashiko feedback:
->>>>> https://sashiko.dev/#/patchset/20260323031544.2598111-1-den%40valinux.co.jp
->>>>>
->>>>> Sashiko also flagged a broader driver-unbind lifetime concern around the
->>>>> vNTB PCI driver. That is real, but it predates this series and needs a
->>>>> proper .remove() path, including NTB unregistration and work cancellation.
->>>>> I am keeping it as follow-up lifecycle work:
->>>>>
->>>>> https://lore.kernel.org/linux-pci/20260226084142.2226875-1-den@valinux.co.jp/
->>>>>
->>>>> This v4 only clears the deferred doorbell state added by this series around
->>>>> EPC init/cleanup.
->>>>>
->>>>>
->>>>> ---
->>>>> Changelog
->>>>> =========
->>>>>
->>>>> Changes since v3:
->>>>>   - Rebased on the dependencies listed above.
->>>>>   - For Sashiko feedback on state added by this series: clear
->>>>>     peer_db_pending around work enable/disable, mask peer_db_set() with
->>>>>     db_valid_mask, and use __ffs64().
->>>>>   - For pre-existing issues made more relevant by per-vector semantics:
->>>>>     stop deriving ntb_hw_epf vectors from Linux IRQ numbers, pass
->>>>>     per-vector request_irq() context, ignore the reserved slot, and
->>>>>     validate vectors before BIT_ULL()/ntb_db_event().
->>>>>   - Added adjacent hardening: pci-epf-vntb db_count range/configfs guards,
->>>>>     bounded db_vector masks, ntb_hw_epf mw_count precheck, and helper guard
->>>>>     cleanups.
->>>>>   - Dropped Reviewed-by tags from patches that changed to non-trivial extent.
->>>>>
->>>>> Changes since v2:
->>>>>   - No functional changes.
->>>>>   - Rebased onto current pci/endpoint
->>>>>     e022f0c72c7f ("selftests: pci_endpoint: Skip reserved BARs").
->>>>>     * Patch 2 needed a trivial context-only adjustment while rebasing, due
->>>>>       to commit d799984233a5 ("PCI: endpoint: pci-epf-vntb: Stop
->>>>>       cmd_handler work in epf_ntb_epc_cleanup").
->>>>>   - Picked up additional Reviewed-by tags from Frank.
->>>>>   - Fixed the incorrect v2 series title.
->>>>>
->>>>> Changes since v1:
->>>>>   - Addressed feedback from Dave (add a source code comment, introduce
->>>>>     enum to eliminate magic numbers)
->>>>>   - Updated source code comment in Patch 2.
->>>>>   - No functional changes, so retained Reviewed-by tags by Frank and Dave.
->>>>>     Thank you both for the review.
->>>>>
->>>>> v3: https://lore.kernel.org/linux-pci/20260323031544.2598111-1-den@valinux.co.jp/
->>>>> v2: https://lore.kernel.org/linux-pci/20260227084955.3184017-1-den@valinux.co.jp/
->>>>> v1: https://lore.kernel.org/linux-pci/20260224133459.1741537-1-den@valinux.co.jp/
->>>>>
->>>>>
->>>>> Best regards,
->>>>> Koichiro
->>>>>
->>>>>
->>>>> Koichiro Den (12):
->>>>>   PCI: endpoint: pci-epf-vntb: Document legacy MSI doorbell offset
->>>>>   PCI: endpoint: pci-epf-vntb: Defer pci_epc_raise_irq() out of atomic
->>>>>     context
->>>>>   PCI: endpoint: pci-epf-vntb: Report 0-based doorbell vector via
->>>>>     ntb_db_event()
->>>>>   PCI: endpoint: pci-epf-vntb: Reject unusable doorbell counts
->>>>>   PCI: endpoint: pci-epf-vntb: Guard configfs writes after EPC attach
->>>>>   PCI: endpoint: pci-epf-vntb: Exclude reserved slots from db_valid_mask
->>>>>   PCI: endpoint: pci-epf-vntb: Implement db_vector_count/mask for
->>>>>     doorbells
->>>>>   NTB: epf: Document legacy doorbell slot offset in
->>>>>     ntb_epf_peer_db_set()
->>>>>   NTB: epf: Make db_valid_mask cover only real doorbell bits
->>>>>   NTB: epf: Report 0-based doorbell vector via ntb_db_event()
->>>>>   NTB: epf: Fix doorbell bitmask and IRQ vector handling
->>>>>   NTB: epf: Implement db_vector_count/mask for doorbells
->>>>>
->>>>>  drivers/ntb/hw/epf/ntb_hw_epf.c               | 133 ++++++++---
->>>>>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 210 ++++++++++++++++--
->>>>>  2 files changed, 296 insertions(+), 47 deletions(-)
->>>>>
->>>>
->>>
->>
-
+Do you know what could be causing the duplicate file here?
