@@ -1,165 +1,139 @@
-Received: from mail-dy1-f173.google.com (mail-dy1-f173.google.com [74.125.82.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BBBD30E0F1
-	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 18:49:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.173
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779821370; cv=pass; b=ENX8lljVj6RIcb1Y01I/DUV95hbKNEaaoB04uwAqMn8ANY0Mb++r8PgzsiYhG700xvkdV9B6dM55OJtTnkWPDFhiw3KwIiYooXCqfxl+s7ZLlX86NqBTmofq1SBdiNfR5xsP6OzVtHD3pk9N3nmKsmPdtFRFuZlPDXwZdMSdyac=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779821370; c=relaxed/simple;
-	bh=Ee8xVylefUxsgAC7/wUPXBUGosnDj2MjwQFydFBfjuU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=JVj5kM69yZWA6H8hr0anjTkoeZiFqxzAhUw1wu1ddZwmlOpEtjwqEkGzl0LHqYUbNGJh5oiPW4Z+Pa2qDUzxIgxmgiEVc6/s/+oJ/rJQfQXpMi2XSEkbGQFfZIiYA9ypNbmpZb2no/jmVq8CAGKtFUlRFbUfMXHRyPD3SDJKL+I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H/gtWsTx; arc=pass smtp.client-ip=74.125.82.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19C643B9D9B
+	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 19:00:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779822056; cv=none; b=Hnim1ahFHNMlMqVGmLmaGvIcsF4IF691piA+s+HtIF7XOS6712v+DPGLG0ncnOA7F80tPyZJqhpSkClbvEUEh458oI5uBCAsquF69VT0n+T7ZqIXE+mjmdE8GQDX2qXHrUZrTQJmppZSb5DblyplG+xcqciETNT6tbKv7xElo90=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779822056; c=relaxed/simple;
+	bh=NAqTM/iHvs1CJNgfOdeRKNHSJJzboCUG/g3OUm3c3ww=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=f+YV+1bs6LlsSbPd8bbFka+PyN4PnfqlzVnP4523CTR2RTTWfe3vFUeAcNhovOj1NdgN0KcS79g3x5DGT8ZgxiQRwQ+poprFrENvBZhRCr60dY6vgDr0W2MnuB/bdPgbNmtssLo+EPZyn/BCFmKixjUfAFZaixruo8O9c4kUjqU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A5buxD9u; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H/gtWsTx"
-Received: by mail-dy1-f173.google.com with SMTP id 5a478bee46e88-3044f23f716so359196eec.1
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 11:49:28 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1779821368; cv=none;
-        d=google.com; s=arc-20240605;
-        b=U3UiFGYA/O3IGE0FswwopsbPZjJl9tnOwKIrw57ujkIJNiIrfY7PLzot+CPUJRpbaF
-         ExQiyd+jv+hBsuREWTlxdhR9n+nyZ4uaHI337l2GJkZlNOj+80ABUK3PyDKJNR/CRpFQ
-         jxYHmpzUyEWR1AJu0uOGGXnO4xOzliPXcnpfeYjJxnq4eOJB+vSNNN7zlat/w7fZEaey
-         ZAUlClnDvV7dTbRmbxIrcRwKlCnVFrungkBcjEhB5oEtigRA4fX7wXRHWoa81i07l3ok
-         7+pJgfKB6GdBqif6ndJ9SLYXQsaHAeZDVfsWN76ztXXcU7rwch4NkOCh+mqR5b/7k64h
-         j03g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=gq/O5ZHqDltDecbFmxpc8E+jT5oOcbB4Yuea57wtwdA=;
-        fh=aPaEpr5U2ljpSlLhKiiptoeJ8LHaTyIxh3fcxcOvZvQ=;
-        b=MWCqo0OYKqNeKKiKJpa3eRO3Xfeksho+ULjorilTehSV2KklfZ6e4S1rqBayWvjH1L
-         A/LWMTEAA8D4DI9WUzdglI5/dcr68wvRtBMv06URvZIQqMdevct4knNIlEdbYYJscBe1
-         8VC1QlZAvPPx02v9UT3jFmzMfmWsYwe5khaDkRzIzTQoy9cLhL/Umf2e2y5Li73H6e7/
-         vmkBOBDoisbDqEBBicaSfu+9njHW0ZImBsIR1FAWUVCVP571TzJTwSCikseD6opmsgSB
-         f/56HGmUnoBFiO4sSSrVriVzhJCWSmveYxlgm31jNVNT+MfQzh5cVZiw7SI1HfhjDvq8
-         P2iA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779821368; x=1780426168; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gq/O5ZHqDltDecbFmxpc8E+jT5oOcbB4Yuea57wtwdA=;
-        b=H/gtWsTxLU0K+b4gFr28hm1M2IqFsQtp4OhQbOtWzR54nA/ZWN3No/6X/dzvj2sjCI
-         tI1SGQ/6hvbxgGEa4S4DaMWZ2UZx2QHLMa/SddknnO4shgZFUzr1qjKX5H6YqO/YltR1
-         R2KyKjtM5f1mOQxdlutG4DMBrlXHvM61XCxRtqLq7Z41pZjXRwrc1fhoC5JoDq7Lzme9
-         XfmcQrhbEUshzeGkdyJRCHqfeuxp6qaxRBJ1PTfswoFhRD8OiVJSjIDm3ZWlwJ4SzMkp
-         i0Zy4SaYI+HOJ/7EgzgfiDlPLcjU0bM7xMZv50tVSH2f9hM00/tvYeQscvP7+VM9a4II
-         nHYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779821368; x=1780426168;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=gq/O5ZHqDltDecbFmxpc8E+jT5oOcbB4Yuea57wtwdA=;
-        b=d5klBhBmmcLzoyCQjw8+cuW+h6Zy4pg/Duk9ezn7wrnyBtPTtpIZVO1NoePXdP8alh
-         tGEJJuH7ly2H9G4/Xl8ECNsgdP2vqmhcTNBwEKPevKatVKkEdIZzfnmSrXgf87XcG3No
-         cPSqDGIhLc4usPpyPBDbnrgNEbcIPpcbliNVIRCnXDCSeKD/G+6eGZvpoSuKLhwO7TJ7
-         qPVGNLy4+QQwigTyxCFq0e4CRvR9FtTtfvZGMe20mvc7DdqxbXmG8n9XhLh2NwpSy5I4
-         qTdK7UYZ5ohQvWuilqweCQ0r71XTKme+UMak8rJYlkCf0RmMXmV7yCf9VptbV4quZD5d
-         7Pxw==
-X-Forwarded-Encrypted: i=1; AFNElJ8yWi7pvWRDMQzPJ55MOTOJYTHvTFSwc3mu7MzJ6VDieMhTSuDpnrzTXiD4/GKAxBspCi0JH4gv0WU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx2CqRPTwPkBpysHZEbg2SD6PEvOYQ70XI+DbuqQKdncSF2AgLc
-	BMUQRvVOMFIKbKtfulSV9p3uQRp8QrQCSsSFDoXgWQj/e7ngBkhTyaKCAB86jQwAvc1J5t+XekQ
-	sXuzUjn6SjSMOK2ChRVHsMQsAFaZH1cA=
-X-Gm-Gg: Acq92OE4xcZqhzwYndwrzEYgZ64hIGFv2Ng/AElVazQgDBpXbP1mZnv+gqS59El3fV0
-	TLuciE9J582isiPRGS3uZFTtorV+qG23UWk23eH2L525Hfn7QGhS50ivGreh3AXlQLSIpWo+uge
-	gLaop7UHFbxg7+yt7XkPHwkJgQzPIvX9fYaH8NqMEYkCMndAz5FGo5fOHemdXO65ejkKMd+g3Z1
-	GndmOl6IiDaffPZqVWWDohnGXrNkhDUZYpWs3Ezim6oLhiiFT7ZEtAUbEhvaZd8nVI4d9ht36mk
-	rbGNsHYdRYmcRlts+7kX2DsJd59UJdtPXxrQhdwRVWMMZpBjgIowOtAkw8Q136uZXnn9AdOtK4j
-	vDhCUAr2qZkImuqZlZeFOxAQ=
-X-Received: by 2002:a05:7300:5711:b0:2dc:e799:934f with SMTP id
- 5a478bee46e88-30449099a11mr4340063eec.3.1779821368216; Tue, 26 May 2026
- 11:49:28 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A5buxD9u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37BAD1F000E9;
+	Tue, 26 May 2026 19:00:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779822047;
+	bh=t4lTsb40wxZvXl+vavOz4+xMdITr9rzuM0hhUOl5tMc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=A5buxD9utW4vJHjwu1lnIClKcX1/YlMZAN7FD4/eKLR0diLb91/0UaaJ10NxzKt8L
+	 WdrGlwMhFxksHHCVlt5+uUYcJ5PzWgQX5AsjUmIUUGRhl0B9PZYz8xZqApfgySdUYY
+	 ufYNvy5+CEI50/aKd9Vz8H+juc0atnotvSOn24Y7yu6PWCOPi3koJTLAYM9OWqL8H2
+	 xPEXhyp7YE9pjNquhLjkBA0FLmHvUcDSn7ENkhY9q6nGOmCEaZ7KR4iVSyA12vVCsD
+	 PM4nF9wI9rES2FVn7OYtFSUCJztjTzMQcRs0k1p46P4aFXFivEk9yCUO7OFlzBZbf+
+	 yKxn1hgWNtbOg==
+From: sashiko-bot@kernel.org
+Subject: Re: [RFC PATCH 1/2] PCI/CXL: Add RDPAS parsing support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Dave Jiang" <dave.jiang@intel.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260526182334.1010870-2-dave.jiang@intel.com>
+References: <20260526182334.1010870-2-dave.jiang@intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 26 May 2026 19:00:46 +0000
+Message-Id: <20260526190047.37BAD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260525202921.124698-1-dakr@kernel.org> <20260525202921.124698-23-dakr@kernel.org>
-In-Reply-To: <20260525202921.124698-23-dakr@kernel.org>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Tue, 26 May 2026 20:49:15 +0200
-X-Gm-Features: AVHnY4LynmVmerdJFsxXUCWY1urLy48wQB7u14V2mO2sDmYd9U9x9x1s6x7Cz50
-Message-ID: <CANiq72=iLUncNw35tpRinUt15W0aqsEiNn+rMcjC3VGq0gx0Rg@mail.gmail.com>
-Subject: Re: [PATCH v5 22/24] rust: types: add `ForLt` trait for higher-ranked
- lifetime support
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: gregkh@linuxfoundation.org, rafael@kernel.org, acourbot@nvidia.com, 
-	aliceryhl@google.com, david.m.ertman@intel.com, ira.weiny@intel.com, 
-	leon@kernel.org, viresh.kumar@linaro.org, m.wilczynski@samsung.com, 
-	ukleinek@kernel.org, bhelgaas@google.com, kwilczynski@kernel.org, 
-	abdiel.janulgue@gmail.com, robin.murphy@arm.com, markus.probst@posteo.de, 
-	ojeda@kernel.org, boqun@kernel.org, gary@garyguo.net, 
-	bjorn3_gh@protonmail.com, lossin@kernel.org, a.hindborg@kernel.org, 
-	tmgross@umich.edu, igor.korotin@linux.dev, daniel.almeida@collabora.com, 
-	pcolberg@redhat.com, driver-core@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, nova-gpu@lists.linux.dev, 
-	dri-devel@lists.freedesktop.org, linux-pm@vger.kernel.org, 
-	linux-pwm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	rust-for-linux@vger.kernel.org, Eliot Courtney <ecourtney@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, May 25, 2026 at 10:32=E2=80=AFPM Danilo Krummrich <dakr@kernel.org>=
- wrote:
->
-> +/// Representation of types generic over a lifetime.
-> +///
-> +/// The type must be covariant over the generic lifetime, i.e. the lifet=
-ime parameter
-> +/// can be soundly shortened.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] RDPAS entries for an RCEC with multiple downstream ports are incor=
+rectly dropped as duplicates.
+- [High] Missing length and boundary validation for ACPI CEDT RDPAS subtabl=
+e can lead to out-of-bounds memory access.
+- [Low] The patch introduces `#include <cxl/ras.h>` in multiple files, but =
+the header file itself is missing from the commit.
+--
 
-I wonder if we could keep some of the commit message around here -- it
-was a well-written one!
+commit 579799797ed7b991cdee3c9ccb1b1c1f0f8e3e23
+Author: Dave Jiang <dave.jiang@intel.com>
+Subject: PCI/CXL: Add RDPAS parsing support
 
-> +/// The full syntax is
-> +/// ```
+This commit adds parsing for the RCEC Downstream Port Association Structure
+(RDPAS) from the CXL Early Discovery Table (CEDT). It stores the 64-bit base
+address for CXL.io in an xarray indexed by the RCEC segment and BDF.
 
-Nit: we are not fully consistent treewide about this, but please add a
-newline before (and after) examples/code blocks.
+> diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
+> index 127537628817e..e33cae64def9a 100644
+> --- a/drivers/cxl/acpi.c
+> +++ b/drivers/cxl/acpi.c
+> @@ -7,6 +7,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/pci.h>
+>  #include <linux/node.h>
+> +#include <cxl/ras.h>
 
-> +/// ForLt!(TypeThatUse<'_>) // Equivalent to `ForLt!(for<'a> TypeThatUse=
-<'a>)`
+[Severity: Low]
+Is this missing a new header file? The patch includes <cxl/ras.h> here and =
+in
+aer_cxl_rch.c, but the file doesn't seem to be added in this commit, which
+will cause a build failure.
 
-Nit: please end comments with a period (most in the patch are already OK).
+[ ... ]
 
-> +        // https://github.com/rust-lang/rust/issues/152489
+> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rc=
+h.c
+> index e471eefec9c40..3f3f6177a828b 100644
+> --- a/drivers/pci/pcie/aer_cxl_rch.c
+> +++ b/drivers/pci/pcie/aer_cxl_rch.c
 
-Linked to:
+[ ... ]
 
-  https://github.com/Rust-for-Linux/linux/issues/355
+> +static int __cxl_parse_rdpas(struct acpi_cedt_rdpas *rdpas, struct devic=
+e *dev)
+> +{
+> +	unsigned long index;
+> +	int rc;
+> +
+> +	/* Skip CXL.cachemem as the current RDPAS scheme only supports CXL.io */
+> +	if (rdpas->protocol !=3D CXL_RDPAS_PROTO_IO)
 
-and tagged the issue with our label upstream.
+[Severity: High]
+Does this need to validate the subtable length before accessing fields?
 
-> +    // Currently the Rust compiler doesn't check this, see the above Pro=
-veWf documentation.
+If the ACPI table provides a truncated RDPAS entry where header->length is
+less than sizeof(struct acpi_cedt_rdpas), accessing rdpas->protocol (and la=
+ter
+rdpas->address) could result in an out-of-bounds read.
 
-Nit: `ProveWf`
+> +		return 0;
+> +
+> +	u64 *addr __free(kfree) =3D kzalloc(sizeof(*addr), GFP_KERNEL);
+> +	if (!addr)
+> +		return -ENOMEM;
+> +
+> +	*addr =3D rdpas->address;
+> +
+> +	index =3D __rdpas_index(rdpas->segment, rdpas->bdf);
+> +	rc =3D xa_insert(&cxl_rdpas, index, addr, GFP_KERNEL);
 
-> +/// Obtain a type that implements `ForLt` for the given higher-ranked ty=
-pe.
+[Severity: High]
+Will this drop valid RDPAS entries if an RCEC is associated with multiple
+downstream ports?
 
-Nit: [`ForLt`] like below.
+According to the CXL specification, an RCEC with multiple downstream ports =
+will
+have a separate RDPAS structure for each port. Since the xarray index is ba=
+sed
+only on the RCEC's segment and BDF, won't xa_insert() return -EBUSY for the
+subsequent downstream ports, causing them to be incorrectly discarded as
+duplicates?
 
-> +/// Please refer to the documentation of [`ForLt`] trait.
+> +	if (rc) {
+> +		if (rc !=3D -EBUSY)
+> +			return rc;
+> +
+> +		dev_dbg(dev, "Duplicate RDPAS: PCI %04x:%02lx:%02lx.%ld\n",
+> +			rdpas->segment, FIELD_GET(GENMASK(15, 8), rdpas->bdf),
 
-"of the"?
-
-> +#[allow(non_snake_case)] // The macro shares the name with the trait.
-
-We normally put comments on top of attributes, but if somehow that
-messes up the formatting or similar, please ignore it.
-
-Acked-by: Miguel Ojeda <ojeda@kernel.org>
-
-Thanks!
-
-Cheers,
-Miguel
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260526182334.1010=
+870-1-dave.jiang@intel.com?part=3D1
