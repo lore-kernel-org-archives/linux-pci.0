@@ -1,213 +1,354 @@
-Received: from OS0P286CU010.outbound.protection.outlook.com (mail-japanwestazon11021112.outbound.protection.outlook.com [40.107.74.112])
+Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A018515A864;
-	Tue, 26 May 2026 06:24:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.74.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779776645; cv=fail; b=EjJeJ2cJv9hPZMeSvGimK5E1KwjMUYDiFBZLBmJFWXZfOTpFqvpAEHu0nhhkdGTlWNOak1muaxdu1eme4QznEhJ9WXBD1nnVZKbmz0fgKCvtxH/78a3yGQD1f11o2xPV5kwo5QiUevfG+ezx1S+6YL3iRrat7+hDzrxXnj5furw=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779776645; c=relaxed/simple;
-	bh=DOAVpM+kx/r2rgTyxHfO90fPT2EoS00FAAywUi3NmAc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=f0PxGQijYJZLhYfIL+Pog7i/dgoE472q2xCAxme16v0WUn34OY7v9QWg6Q9mrK+1wk/tLCVN2REAapYJ5e5Zf7fwNoEYDCS6/IyH4wdjftft02pWLL4NaZ3t4Yb3UCiMqJQUHpjsxnO+Xtc5JBQJQUjKEF0RHirejHuFySw8yPo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp; spf=pass smtp.mailfrom=valinux.co.jp; dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b=eQajecFH; arc=fail smtp.client-ip=40.107.74.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=valinux.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=valinux.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A700B3C09F7;
+	Tue, 26 May 2026 06:29:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779776975; cv=none; b=bLoq83JyFfMSpv/AmAB5FZPkt+1lygWoCuD6y2nVTz4vh4lxS4c6SkBHWqp7PoDLtlkuqoVsaZgGq3Nr2gPsfJrGGAjutAqFRRr4Ez9znqyYoD2vezB7t6Wmq/LLKXN16EYd4vLKpDWAzsLqmup9pWGckw2urFaDqB1OBTwEIkg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779776975; c=relaxed/simple;
+	bh=myc9srhre8R2a2/GTSs/nvUGqfo++Ll/SKMOUuaQqgc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=POCx6v3boKQ6486vtL9MVFwqrCs/H83ho7RvOvvZo/IQGRYMQ28lLbgu+izeSYkUXTcNGfKR5y4/xgH+CqWyrq7irxSPt7idjix0HQ0/1LirDtvWsuxGafDdlXksor+BL1iNpD+2YbtSwnyqc+5MJ4L7VyadjC3BQAwXXLuG1ig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=ceBt+Vuq; arc=none smtp.client-ip=113.46.200.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=valinux.co.jp header.i=@valinux.co.jp header.b="eQajecFH"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=LmkYXqAlTc9d+fiNf2nQfMd45yF0G+zNn9UxajvElqq8+Ba2kote3You2jZczLl/PmUCypIX8s95+VhYY9e6xSvblXkoptEsYO8ZtOc+FwvaeVBDv+CmGSyXkVg0leQkJfg/M4gtHGgxg2/wRGmH/tQmrm80A1dksrKiJI1ssafbMWceq6Vp3Yla5AvLS/NEzlPg6vjk5ER2JqxrxGQEA2TIo0ChdHd2BJtOw7yUaArIbxghjZ68fS1NenlRatmEHwhjpEMwiqO1vjdsKNxT6D1slG95TJMTZRfMdsGaCAQRaJgpI3+FGgCEoC9cwdp5murawdmTzFp5booAtpcWPQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=matCIdXAygQBvwCToZcgmY9YQuRh1fRBEJar7Dx1xjM=;
- b=gUOgRkUxiqaQ0uTu27nKRJVpoNIHuIG1au/N58tswxPFkSpTjDeLMURBW3E9a9f38ABVMPgjfU20i468x5P8TsVyYnqgDyzq3BRtFAtcy6VtLmYuZXn1TVabxeldTz5ZeGQgTY/8KZ+4fnMGfOYq7DyytV1j6wtykA3fU5tS+l2dRGEMNn6xasaux056CPNj/tPBKjmX50ScboykOQVQOMNxevGqHQMK2mMbv6aa24g5gTUp2IzQW16m2VcwZuDhJRmSSSY4rYdupHJ3s6TZPYo91GNDH7OGquW5baXaH5wR0/0GXTfDDfIvXCqotG8HA/0h4V1JjfmztR8maGshzg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=valinux.co.jp; dmarc=pass action=none
- header.from=valinux.co.jp; dkim=pass header.d=valinux.co.jp; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=valinux.co.jp;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=matCIdXAygQBvwCToZcgmY9YQuRh1fRBEJar7Dx1xjM=;
- b=eQajecFHqO2wBshOdb1HnwTCFmdSwgNcy7H4MVPzMBWFCFFkqDD0wkMlnT1Yfc5CG2WHOTWIyo39fk8aG3vG4/fum6i13hbV+BsIbg9fO8BtsxIyISPg6jrPpf1EEmsCzSo8MdCuk87V71dlgywA43AnyiTZ/hc6TjFHQ3JV1uE=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=valinux.co.jp;
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:38f::10)
- by TY4P286MB7008.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:340::5) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.20; Tue, 26 May
- 2026 06:23:59 +0000
-Received: from TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32]) by TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- ([fe80::2305:327c:28ec:9b32%5]) with mapi id 15.21.0048.019; Tue, 26 May 2026
- 06:23:59 +0000
-Date: Tue, 26 May 2026 15:23:57 +0900
-From: Koichiro Den <den@valinux.co.jp>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, 
-	Frank Li <Frank.Li@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Vinod Koul <vkoul@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Damien Le Moal <dlemoal@kernel.org>, Marek Vasut <marek.vasut+renesas@mailbox.org>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] PCI: endpoint: Add PCI DMA endpoint function
- (part 3/3)
-Message-ID: <b5qre4rphbq4datwi3apyh5jy5b7obz4aj3pfn2gzmke6znmib@gpdbheezoi2z>
-References: <20260525063456.3317509-1-den@valinux.co.jp>
- <xnfnxv64hpil6if4ikyohxnarvsekbmjcc37k5zej264ix46z3@qtu6xj2uy3xi>
- <ahQJ4kuaBKMhj52L@ryzen>
- <3dkicfydmrlm2i6ks34kwjdmlvb22ryftkfw2yj62o4rtj5xvl@f4gby5vlwtdf>
- <F31848F5-5481-4402-9B45-9EC7BCC8B0B6@kernel.org>
- <ll76isrjb62ieiz4vhn3u3upp46vnzed3slpqxnni5hymsc4mw@avbx7k473uo4>
- <F8664D81-EABE-4E36-B0C9-2B0C7FA36DC0@kernel.org>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <F8664D81-EABE-4E36-B0C9-2B0C7FA36DC0@kernel.org>
-X-ClientProxiedBy: TYCP286CA0353.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:7c::10) To TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:405:38f::10)
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="ceBt+Vuq"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=Um3vskZODifbfeUX6kCi4lUUt/2FPn9XXLI2b92pr4A=;
+	b=ceBt+VuqqaBj/KSRKlBrJylsd3/VMfAx5/0EQHQZ13GK4xJYzODPHcLuiRG0sF+slPJNGweMl
+	zcGAwmmi8n8SXpTbqKJluV4WmsM5ifyt1G6UvckgGdi2XWDvG++lhV+FB9Q1raVjFuS6mmuwykx
+	vbvNeSAtSj22pnfhhFoiZOg=
+Received: from mail.maildlp.com (unknown [172.19.162.140])
+	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4gPjMd1TvvzpSvR;
+	Tue, 26 May 2026 14:22:05 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 508AF20104;
+	Tue, 26 May 2026 14:29:29 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 26 May 2026 14:29:28 +0800
+Message-ID: <4e1055e9-3e75-4cf7-a5c6-ccffe9c1b585@huawei.com>
+Date: Tue, 26 May 2026 14:29:28 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY7P286MB7722:EE_|TY4P286MB7008:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6f2f2eca-3e26-4c6b-6b27-08debaef5f4f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|7416014|376014|10070799003|18002099003|56012099003|22082099003|6133799003|4143699003;
-X-Microsoft-Antispam-Message-Info:
-	11mmZbNCecQO4huj9VGcqPMFkNX+aA1HYLi7MvMKpxziIdCAsnO19nYPssbgorBtv8duwxoF1yuCBtJawOWlM9GqkJs4X1OIGoNuC6AcUzb8zfMimkQT2G0/WhETvdyFD7uvtMBhEz/lAxKpWYlsQs3RRDw1piMfEbbGb0d8L7TZd4YU+XwjRD0o0WCMXRjry0OFjWsTq+at1KZwUppcaJDMM/SjaSr4ukrzeI2JzcD1u666caYUOcjJWIfeC68rBPgFcHO3fR3hlcH4oHLkTYeZfhZtDh/MQ/qWLQFytEs2lcD58aLdEPFmbuKIMF9fhRA/pdiigOC7wNzAICQEGLd0Cox+TvBkuJSCY9F+AhndMMpnpVeeWBGSnzxyFBsDUgXn3XtRuEFWs1OwOiwkhcN+9Th0IL8HfgkGGPgKmQ2oUUEedrjGJIwrLmt07rzTwFIVkk79kI+hiNoQPSWqV67c/ezQmTiLOS+/tIOJ1wE8q6YpQ+ruqMXXM0FFwM7AWR8MRzXRaWdtvgX8GqJJBasILOZyREUidUxFflhicKall1rT42jH79eM7PUZny4DrglbRYMQov0M5paHXgMSTZKabTPxsj2gPJzMPEPdFy63yvheLRmR6yxD01BA2g53WVwvD6fI39BWaTTmxqsyn0pWnTfnGYNMvyNZliVMNrkf6smens9qAYVHetnwU0jwwCtMD2GetgeuOPIBFVmMDA==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(10070799003)(18002099003)(56012099003)(22082099003)(6133799003)(4143699003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?ISnNCCr5hV1O1N/3jCDJkhH4HrxInx2Hl/nCOeo15K232Fh2n7QtrMBh9aip?=
- =?us-ascii?Q?5k9xOS9CScBZ1LqYQnpZsp/o+UmQNWeDTntQUDY6nqqaLm8bNMUld5Y2o+B0?=
- =?us-ascii?Q?DfkvclTMSDk58RhvJ+mpmT/I4GTGK0rBqQMa1NRizkxo3mArdTKzyym8FPxe?=
- =?us-ascii?Q?b6NCj6kVzeVpC8OGBCXBx7f2I28AEzStjXOdcG5EfKwMg8WWKCdEG8mITXaY?=
- =?us-ascii?Q?FI63oXTYywfS8rRigkH5UpeyjirrwQ8Gp+vk818eaiuKqJa1YI5/uw0O6rK7?=
- =?us-ascii?Q?ZLtW9o4pTwQHyRGjw6401TP8pHZbucqaInw4W3LVlICSO8y2USbm4O7kVoCT?=
- =?us-ascii?Q?5qK+3HT9Js1xzjZjNqmR1D94UxuB1bZ7XhrTNcqrTWQmQrS8otRRCB0Lc836?=
- =?us-ascii?Q?kqq4uUOKGRRv0quRzgrdwu5C2plJNm18M86xmIwN9eUm1aL1cbJibbdqqQs9?=
- =?us-ascii?Q?572WQZg6eXu+2IlERoU4yNRt2TqjSFSlA0lTwJQ1sJmF9qlf+w7/rci2MoCO?=
- =?us-ascii?Q?xNqbbgJsVrEv6r4+r5pRZohFPwSm8vdqpLLMh8lEpdH/Vw4nRL/cYzyuq6yY?=
- =?us-ascii?Q?/FxOZwYt1M2MxJlII9SPPb5i9imNW3zGpkR4cC58bwBUtY9Llkf2F8d+gX2g?=
- =?us-ascii?Q?I7PXgEzZ0fBB5cyPN9rMswnWY1p1vybm2oCsePqYuRVqQlOgj1BWoTZa/qLk?=
- =?us-ascii?Q?S0qX/UEs2L/9gZuxJPkPodX6NJqeysQP5/+wIKm+8pIPZE6Aj0H+SmjsSzW9?=
- =?us-ascii?Q?9m3sITZNkdRS/NGXEm+UBNbkrW0Mi7yIfkHDlBhjsv9ffYKoAW9U2MfihRFH?=
- =?us-ascii?Q?9Iky2HasI+cVpt0yAlwn9daUemUisCRxmpPwwYwxs0AfYJo+z9vHmMAUWZmp?=
- =?us-ascii?Q?5khm1SXn2PKdGEc9m6297kvPaKR3BoFr6rPXcyqiTCmSx5sRWpj4MmM41eXk?=
- =?us-ascii?Q?wax4J+M8oBby/3FshLxx9BJMU6BEk89UQHcnDXKNuzKLp4iV7VKH4cWyB8LT?=
- =?us-ascii?Q?TH5I7YPONxbJJtERN3RLYEZZMWDEt3k1yPa8WVOR3lpF1RNFoGI94bZSk/4i?=
- =?us-ascii?Q?aFYJcZZLfJOKTFkgS5c/9vYkiqfEaZSZND9rJli0BM2ZuDcwDMTiLfLSF/Rb?=
- =?us-ascii?Q?Z8G4wvCV2orm/7B1bqBA4ID8MqEhRhgmzkeGicY3vHvEw+BiHiqrr6a2rVCH?=
- =?us-ascii?Q?/O0hCr2L+jhZg7TqwCft8JeIEEDUH5/ujaorkKMDBnEUCn7XBbVhnjEssmki?=
- =?us-ascii?Q?jzjXgywGW8QRokfSBNiv4RPDJIFiBcoonjfoUYcKpuqYzZ4366O9KBRr7TAI?=
- =?us-ascii?Q?KhfMOZ3Mdi6m7YL1LtOgNx9tESwmt0swNTavfA55ogLuUkS6gaqIrtRYj5Qn?=
- =?us-ascii?Q?t7XwFJXZ7omrejdqRmr7zmCHEE0bb+B1xSbaCSXUyVvrl62xoU0U2PL5rxH/?=
- =?us-ascii?Q?O1vls/1ejPLTbds8GVKeMDQlmqp908il6uOLcxsiNLH9tYooVI/YsNd9kFj5?=
- =?us-ascii?Q?NV9kJQaUVvfZZVwOfjeBwOdsAvjywVyqhoavOsDHqUVVNiPs+ztSzbShITx6?=
- =?us-ascii?Q?6PMoaFaACAJ+hATLyzPCuezBXw11a1pZOiHlbwctxum21OBLfG3og2LYOR/w?=
- =?us-ascii?Q?EzyADw0kaZz5+Nhgv1xVz1/oRg2wLYZACkBiCQcN+ipkSuoYs3nDilgEulu0?=
- =?us-ascii?Q?LyG8QDGIUG5HK9PdUGpRa5U9bKlVg96WrMPQjlmyvaWx2/TZmVSjTU3VmQV8?=
- =?us-ascii?Q?Ylrpv4Q0PgNCysUvIsZPJPumYTLczEEuja7Zth+EN5vtQcIW5XCj?=
-X-OriginatorOrg: valinux.co.jp
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6f2f2eca-3e26-4c6b-6b27-08debaef5f4f
-X-MS-Exchange-CrossTenant-AuthSource: TY7P286MB7722.JPNP286.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 May 2026 06:23:59.3078
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 7a57bee8-f73d-4c5f-a4f7-d72c91c8c111
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hEI4mkdKsImyIQYrqW+jEeiaBdkeOItGA3ZcPAj8+/vEAkpFcu3uZXLMXnf0opR36NuG7GPASObE/bijymUJmg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TY4P286MB7008
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v11 5/5] vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST for TPH
+ ST entry management
+To: Alex Williamson <alex@shazbot.org>
+CC: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
+	<wei.huang2@amd.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+References: <20260518071701.25177-1-fengchengwen@huawei.com>
+ <20260518071701.25177-6-fengchengwen@huawei.com>
+ <20260521221008.59ddf977@shazbot.org>
+ <512bce27-13a2-44a1-aa5b-b5ea77c174ba@huawei.com>
+ <20260522082730.3d843a7f@shazbot.org>
+Content-Language: en-US
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260522082730.3d843a7f@shazbot.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On Tue, May 26, 2026 at 07:35:06AM +0200, Niklas Cassel wrote:
-> Hello Koichiro,
+On 5/22/2026 10:27 PM, Alex Williamson wrote:
+> On Fri, 22 May 2026 18:04:13 +0800
+> fengchengwen <fengchengwen@huawei.com> wrote:
 > 
-> On 26 May 2026 04:04:07 CEST, Koichiro Den <den@valinux.co.jp> wrote:
-> >On Mon, May 25, 2026 at 10:32:06PM +0200, Niklas Cassel wrote:
-> >> On 25 May 2026 16:03:35 CEST, Koichiro Den <den@valinux.co.jp> wrote:
-> >> >On Mon, May 25, 2026 at 10:35:46AM +0200, Niklas Cassel wrote:
-> >> >> On Mon, May 25, 2026 at 04:05:02PM +0900, Koichiro Den wrote:
-> >> >> 
-> >> >That restriction should be documented with the new NTB transport, which I will
-> >> >submit if the direction taken by this series is acceptable.
-> >> 
-> >> This is easy for me to say, since I am not the NTB maintainer, but it would be nice if we could somehow come up with a design where we don't only support EPCs that have 'max-functions' != 1, because IIRC, most PCI EPCs have 'max-functions' == 1.
-> >
-> >Yes, that's fair point. As a quick check on v7.1-rc5, among DWC-based EP nodes,
-> >only 6 out of 45 set max-functions > 1 (about 13%). Assuming there are no cases
-> >where the hardware supports more functions than the DT advertises, that means only
-> >about 13% of DWC-based EP instances described in DT could support the "NTB
-> >transport backed by PCI EP DMA" use case. If I also count non-DWC EP nodes, I
-> >get 15 out of 64 (about 23%).
+>> On 5/22/2026 12:10 PM, Alex Williamson wrote:
+>>> On Mon, 18 May 2026 15:17:01 +0800
+>>> Chengwen Feng <fengchengwen@huawei.com> wrote:
+>>>   
+>>>> Add VFIO_DEVICE_FEATURE_TPH_ST to allow userspace to manage PCIe TPH
+>>>> Steering Tag entries.
+>>>>
+>>>> SET: Program contiguous ST entries when ST table resides in TPH Capability
+>>>>      or MSI-X table. U32_MAX CPU ID clears the corresponding ST entry.
+>>>> GET: Retrieve ST values per CPU ID, only available in DS mode.
+>>>>
+>>>> Both operations are only valid when TPH is enabled on the device.  
+>>>
+>>> What?  That doesn't align with the hardware programming model.  The
+>>> specification even suggests that the device should be quiesced or TPH
+>>> disabled during programming of the steering tags for deterministic
+>>> behavior.  
+>>
+>> As mentioned in the 4/5 commit, obtaining ST must first enable TPH.
+>> Of course, I think it might be necessary to calculate pdev->tph_req_type
+>> during the capability detection phase, so that we can modify ST before
+>> enabling TPH. Do you think such a modification is needed?
 > 
-> The only DMA "backend" added in your 3-part series is the eDMA in DWC-based controllers.
+> I think a uAPI that doesn't align with the recommended programming
+> order of the specification, potentially resulting in non-deterministic
+> behavior is bogus.
 > 
-> So if all three of your series lands, then 13% of the DWC-based endpoint controllers can theoretically use this new feature.
-> 
-> 
-> >
-> >If supporting single-function EPCs is a requirement, then the separate PCI DMA
-> >EPF model is not a good choice for that NTB transport use case. We would need to
-> >keep the DMA delegation metadata inside the vNTB function, or use some other
-> >single-function design.
-> >
-> >That is basically option 2 from my earlier mail:
-> >https://lore.kernel.org/linux-pci/xnfnxv64hpil6if4ikyohxnarvsekbmjcc37k5zej264ix46z3@qtu6xj2uy3xi/
-> >
-> >    [snip]
-> >    2. Treat endpoint DMA as a first-class part of vNTB. The RC-side ntb_hw_epf
-> >       would create an auxiliary device, and a new dw-edma-aux driver would create
-> >       the delegated DMA channels on the RC side.
-> >    
-> >       [PATCH 00/15] PCI: endpoint: Remote DMA support via vNTB
-> >       https://lore.kernel.org/linux-pci/20260312165005.1148676-1-den@valinux.co.jp/
-> >    
-> >       I added an ASCII diagram for the overview as a follow-up comment here:
-> >       https://lore.kernel.org/all/sn67hi7kljh7cgmgodatb3naz2astlaklqfobdbxyyzgoohxqb@4nnetbhqwba4/
-> >    [snip]
-> >
-> >Do you prefer the vNTB-integrated model over this series?
-> 
-> My take:
-> 
-> I do think that the design in  this series is more elegant that the vNTB-integrated model.
-> 
-> However, if the design in this series only supports 13% of DWC-based endpoint controllers, when the vNTB-integrated model can support 100% of DWC-based endpoint controllers...
-> 
-> What good it is to have an elegant design if in reality, it supports drastically fewer SoCs?
-> 
-> But please don't listen only to my opinion, Mani is the maintainer, so it would be interesting to hear his thoughts as well.
+>>>> Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+>>>> ---
+>>>>  drivers/vfio/pci/vfio_pci_core.c | 91 ++++++++++++++++++++++++++++++++
+>>>>  include/uapi/linux/vfio.h        | 41 ++++++++++++++
+>>>>  2 files changed, 132 insertions(+)
+>>>>
+>>>> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+>>>> index 0d0140202280..13a22c1d6ea6 100644
+>>>> --- a/drivers/vfio/pci/vfio_pci_core.c
+>>>> +++ b/drivers/vfio/pci/vfio_pci_core.c
+>>>> @@ -1558,6 +1558,95 @@ static int vfio_pci_core_feature_token(struct vfio_pci_core_device *vdev,
+>>>>  	return 0;
+>>>>  }
+>>>>  
+>>>> +static int vfio_pci_core_feature_tph_st(struct vfio_pci_core_device *vdev,
+>>>> +					u32 flags,
+>>>> +					struct vfio_device_feature_tph_st __user *arg,
+>>>> +					size_t argsz)
+>>>> +{
+>>>> +	bool is_set = !!(flags & VFIO_DEVICE_FEATURE_SET);
+>>>> +	struct vfio_device_feature_tph_st tph_st;
+>>>> +	struct pci_dev *pdev = vdev->pdev;
+>>>> +	enum tph_mem_type mtype;
+>>>> +	int i, j, ret;
+>>>> +	u32 *cpus;
+>>>> +	u16 st;
+>>>> +
+>>>> +	guard(mutex)(&vdev->tph_lock);  
+>>>
+>>> Wrong place for this lock.  Why do we even need it?  If a user races
+>>> SET/GET with enable/disable, that's their problem.  
+>>
+>> OK, will fix in next version
 
-Yes, I also think the architecture of this series is much cleaner. The option 2
-series may look like it overloads and complicates vNTB a bit too much, and the
-auxiliary device created from ntb_hw_epf only for the channel delegation purpose
-may look awkward to some.
+I still keep the lock which used to protect the ST table shadow
 
-The coverage concern is a real downside of this direction though. This is a
-trade-off between a cleaner PCI/DMA model and broader EPC coverage. On my side,
-R-Car Gen4+ is the main target, so the multi-function requirement is acceptable.
-In that sense, I am also curious whether future DWC-based SoCs will typically
-support more than one function or not.
+>>
+>>>   
+>>>> +
+>>>> +	ret = vfio_check_feature(flags, argsz,
+>>>> +				 VFIO_DEVICE_FEATURE_GET |
+>>>> +				 VFIO_DEVICE_FEATURE_SET,
+>>>> +				 sizeof(tph_st));
+>>>> +	if (ret <= 0)
+>>>> +		return ret;
+>>>> +
+>>>> +	if (!enable_unsafe_tph ||  
+>>>
+>>> Why did we allow the feature to be probe if it can't be used?  
+>>
+>> OK, will fix in next version
 
-Thanks for sharing your thoughts, Niklas. I would also like to hear Mani's view
-on this series vs. previous attempts. Any comments from others are also very
-welcome.
+done in v12
 
-Best regards,
-Koichiro
+>>
+>>>   
+>>>> +		pcie_tph_enabled_mode(pdev) == PCI_TPH_ST_NS_MODE)  
+>>>
+>>> Here's that ambiguity of reporting NS_MODE for disabled, but as above
+>>> it's a bogus requirement.  
+>>
+>> OK, will fix in next version
+
+done in v12
+
+>>
+>>>   
+>>>> +		return -EOPNOTSUPP;
+>>>> +	if (!is_set && pcie_tph_enabled_mode(pdev) != PCI_TPH_ST_DS_MODE)  
+>>>
+>>> Why?  Let the interface be symmetric that GET works regardless of mode.  
+>>
+>> OK, will remove the restrict
+
+done in v12
+
+>>
+>>>   
+>>>> +		return -EOPNOTSUPP;
+>>>> +	if (is_set && pcie_tph_get_st_table_loc(pdev) == PCI_TPH_LOC_NONE)
+>>>> +		return -EOPNOTSUPP;
+>>>> +
+>>>> +	if (copy_from_user(&tph_st, arg, sizeof(tph_st)))
+>>>> +		return -EFAULT;
+>>>> +
+>>>> +	if (tph_st.count == 0 || tph_st.count > VFIO_TPH_ST_MAX_COUNT ||
+>>>> +		tph_st.flags > VFIO_TPH_ST_MEM_TYPE_PM)  
+>>>
+>>> Wrong operation for a flags field.  
+>>
+>> Because currently flags only use bit0 (0-VM, 1-PM), this judge make sure
+>> it will return error if userspace passing non-zero in remain bits.
+> 
+> This should be a mask to test undefined bits are not set, not a value
+> comparison.
+
+done in v12
 
 > 
+>>>> +		return -EINVAL;
+>>>> +	if (!is_set && tph_st.index != 0)  
+>>>
+>>> We can only GET index 0?  Why?  
+>>
+>> Because GET operation don't need index, this judgment make sure
+>> it will return error if userspace passing non-zero index.
 > 
-> Kind regards,
-> Niklas
+> The interface is not symmetric.
+
+Referring to your suggestion, I redesigned the interface (v12).
+
+supporting two mutually exclusive operation modes:
+    1. Raw table read/write: Operate shadow ST table, sync updates to hardware
+       TPH capability or MSI-X table. Failed batch write triggers entry
+       rollback to keep hardware consistent.
+    2. CPU ID lookup: Query translated steering tag by specified memory type,
+       pure read-only without modifying ST table.
+
+The first operation (raw table) is symmetric.
+
+>  
+>>>> +		return -EINVAL;
+>>>> +	if (is_set && (tph_st.index >= VFIO_TPH_ST_MAX_COUNT ||
+>>>> +		       tph_st.index + tph_st.count > VFIO_TPH_ST_MAX_COUNT))  
+>>>
+>>> DS can have more that 2048 steering tags.  
+>>
+>> I check the PCIE protocol, DS mode with ST in pcie-config or msi-x must not
+>> hold > 2048 steering tags.
+> 
+> The MSI-X storage location is limited to 2048, but DS mode doesn't
+> necessarily use either of these storage locations.
+> 
+>>>> +		return -EINVAL;
+>>>> +
+>>>> +	cpus = memdup_array_user(&arg->data, tph_st.count, sizeof(*cpus));  
+>>>
+>>> Use an __aligned_u64 data_uptr like iommufd does and avoid copying this
+>>> into the kernel.  Isn't this steering tags, why's it named cpus?  
+>>
+>> we reuse the field which according your previous suggestion:
+>> in GET, user pass in cpus, and vfio will feedback steering tags in cpus.
+> 
+> Perhaps this was over stated, but aligning to the generic uAPI name
+> since it's dual-purpose would seem to make sense.
+>  
+>>>> +	if (IS_ERR(cpus))
+>>>> +		return PTR_ERR(cpus);
+>>>> +
+>>>> +	mtype = tph_st.flags & VFIO_TPH_ST_MEM_TYPE_PM ? TPH_MEM_TYPE_PM :
+>>>> +							 TPH_MEM_TYPE_VM;  
+>>>
+>>> Then why did we use two flag bits for this?  
+>>
+>> VFIO_TPH_ST_MEM_TYPE_PM is just one bit, could you explain the two flag bits?
+> 
+> My bad, I overlooked that they're both shifted by 0.  Typically we
+> wouldn't define both the 0 and 1 value, only the latter.
+>  
+>>>> +	if (!is_set) {
+>>>> +		for (i = 0; i < tph_st.count; i++) {
+>>>> +			ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);  
+>>>
+>>> My understanding was that GET would return the translated values from a
+>>> previous SET, not translate on the fly.  I think in order to support
+>>> writing STs before enabling TPH, we're going to need to store them
+>>> somewhere anyway so that we can push them to the correct location when
+>>> TPH is enabled.  That means there a buffer for SET/GET regardless of
+>>> the mode that's enabled.  
+>>
+>> OK, will try to fix
+
+done in v12
+
+>>
+>>>   
+>>>> +			if (ret)
+>>>> +				goto out;
+>>>> +			cpus[i] = st;
+>>>> +		}
+>>>> +		goto out;
+>>>> +	}
+>>>> +
+>>>> +	for (i = 0; i < tph_st.count; i++) {
+>>>> +		if (cpus[i] == U32_MAX) {
+>>>> +			ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, 0);  
+>>>
+>>> Why do we need a magic value to set it to zero?  Hardware doesn't have
+>>> a "clear ST register value".  
+>>
+>> So you mean for SET, usespace direct passing steering-tag not cpus in this patch?
+> 
+> How does this work with Zhiping's series where there might be TPH values
+> exposed through the dma-buf to support p2p DMA?  Where would that level
+> of TPH programming occur?
+
+My patch set has two basic functions:
+1. Obtain the ST corresponding to the specified CPU.
+2. Set and read the ST table.
+
+Zhiping's patchset is used to cache the P2P data to an Lx cache in the GPU, it
+include two part:
+1. Set the ST corresponding to a DMABUF of the GPU (the ST is obtained in another
+   way and is not in the kernel).
+2. Set the ST to the ST table of the MLX NIC.
+
+The two can be unified to some extent, as long as the following two points are met:
+1. An interface is provided to obtain whether the req_tph_type is normal or extend.
+   In this way, the 8-bit ST or 16-bit ST of the GPU can be selected based on the
+   type.
+2. An interface is provided to obtain the target ST index. In this way, the
+   corresponding ST index can be directly written based on my patchset.
+
+The following uses the setting of the ST cache stash for P2P as an example:
+1. The application obtains the ST corresponding to a DMABUF of the GPU in other ways.
+   The ST can be 8-bit or 16-bit or both.
+2. The application calls the VFIO interface to obtain the req_tph_type supported by
+   the NIC device (whether only 8-bit or 16-bit is supported).
+3. The application determines which ST to be selected based on 1 and 2.
+4. The application calls the interface to obtain the target ST index. This interface
+   may be provided by the vendor driver.
+5. The application calls the SET ST ENTRY VFIO interface to set the ST to the NIC.
+
+>  
+>>>> +			if (ret)
+>>>> +				goto out;
+>>>> +			continue;
+>>>> +		}
+>>>> +
+>>>> +		ret = pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);
+>>>> +		if (ret)
+>>>> +			goto out;
+>>>> +		ret = pcie_tph_set_st_entry(pdev, tph_st.index + i, st);
+>>>> +		if (ret)
+>>>> +			goto out;  
+>>>
+>>> Clearly broken for DS mode.  
+>>
+>> For DS mode:
+>> 1\ if ST table in CONFIG or MSI-X, then it could done by this way
+>> 2\ if ST table not in CONFIG or MSI-X, then it only need invoke GET, and set by device-specific way.
+> 
+> The SET only after enable model is broken, DS mode needs to support
+> SET, where GET returns the host translations.  Thanks,
+
+done in v12
+
+BTW, there are two points I would like to retain:
+1. Whether to allocate temporary cache in ioctl—I retained it in version v12
+   because the interface supports batch operations, and copying only a portion
+   each time would affect performance.
+2. After the device is taken over and released by vfio, I still maintained the
+   call to pcie_disable_tph in v12 because this ensures that the software state
+   remains consistent with the hardware state.
+
+Thanks
+
+> 
+> Alex
+
