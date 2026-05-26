@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 439143FD15C;
-	Tue, 26 May 2026 14:46:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4680D3FFACF;
+	Tue, 26 May 2026 14:54:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779806817; cv=none; b=hPa5SPN/HbOYZchyAQ3Z3tLyQfBorO/7eW2F+OR/asi/bFFyiswdlmKT7kgwqJ3tALvxffHEYx+EwKAWkhrjEnEwTDF0T/Oa6R+Xl55txb61SUvwnUdTMsgyF8+iAvG6Z6O7t0zfDcY7WQT7Y1gAGOTxM9KnhlguDrw/mytxxLU=
+	t=1779807298; cv=none; b=ARe2OTmcsI77JtWV1yyh3mQ9MmekWn4TvPQJgh/ybuUCu7AvO7ILsjq1jSp8LD7HfvZR3yBFRDWgB8kNvsOomBnVo8l9O9QNrTbnauPJXeNc8N89ZHvt/7eSKfb5nz5ZV+YsZeGcO2p78Hjhb+ZzNMVReML2MIUbScKsUQlCwzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779806817; c=relaxed/simple;
-	bh=cWd99PV5i1/wwHzXhpwkU/1IWBMNd/CIwE0gfZNuNqw=;
+	s=arc-20240116; t=1779807298; c=relaxed/simple;
+	bh=sEWmEoDeKV3e8XmvxvpVCz5qpEiEFRtT/L/nyenoHfM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iu7Rbpe6dw3U2hoQ5t6WF8kHYwotTZpp0v+fIZGhnl1BxjqR7BBBKfC/OaIb2o+6SANfsIhmZ2IiKrkTdGun4i6L+tzsUZ50JwAXLRc6Ttf3IY7FMnGVO2EzI6bmNdRovY8n5zhIOuRMh43sco+nSDV2W4zW1M2H6HAgE37Pf1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DFRNYBtt; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ine1Mcf6Txf2lefcnZ1j0KDGyMnknPRlG6zvgldX5mPU6+1RzIiPVjpdRLKdagaBKgIzTEmrIXvYAgxuZC/d+w3JGSIBSfGQS45sVqWNIRGJG12o6drdLniMTI2pb1S19eo8yDaC0DWimgVMwN3IsXf7IrX/KdR4OYg7ek8ZOEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nka0MBj8; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DFRNYBtt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC1C91F000E9;
-	Tue, 26 May 2026 14:46:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nka0MBj8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A29A71F00A3A;
+	Tue, 26 May 2026 14:54:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779806816;
-	bh=MdSG/zAtkJWOQxwxf+SU3n5z7OdeKAIAKo2ylUcELSI=;
+	s=k20260515; t=1779807297;
+	bh=Gz1XDPEqMOede6w3QiL6LZiwFKjg/p5trACYiKw7+M8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DFRNYBttKSy5u2zhkG1o6P1u3jGJdB8ntV8xB+AcohmYYKprMEpEN9Jrj+Qu6mNM9
-	 iNU6JX7vMjsGM3mgk5BYe74FQtaWHAXX1X/l+t6JSkGBGS/Ii9vHHhy+fwCHR3pGK1
-	 qVWzNUtxRUFLtv/CpP2AKEkz45WSJ5Lx6dloWiI7+LXZ0d77ihZz999E9MJ72+j451
-	 Av0d6AIDPTkYPAw/Y07VP0c7SQO5DWDMSz6NTfQjDZzZ80vPBDEM+qhN9YgSX/Mx3r
-	 heM1p5AMOFWtVIlSlwjnvChznfaziJlfJbOMs0gHaK9It9w3QEifwfM4V0wY8IO/rp
-	 OgJPqAFqeQfEA==
-Date: Tue, 26 May 2026 20:16:51 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
+	b=Nka0MBj8qZwX0efF+YTCpVSV5CRLDdNArlqWNJrbtk4cr3mfS9/8GQKE1CTmkbNIG
+	 SjyvOGgA+YTrF2aTyhr0G0peBARIOywlyARllBnVFmwT3s1V8PyGyzPUNZIyBdieuq
+	 +lxy/iEyFLx+zSwBZ6d2Wy5sKQnT2aDLbZLuVUtxc+1gllMfuUWkjQhKmpHbn9AGO+
+	 PCdi70c+4q3OZk7ENpFgqroxtHMjfqr0J4RQ1rYdsmEaRHo+Z426cJfblyM4E0kbqO
+	 3MGTgeF3OiTkXRMFR/0yBf2zYKnOD3L7dDKkGyPsHGJZQwn3q2rhHk74tO67LkxjMW
+	 XYJyM8hPPF0GA==
+Date: Tue, 26 May 2026 09:54:52 -0500
+From: Bjorn Andersson <andersson@kernel.org>
 To: Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>, linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, linux-pci@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH] PCI: qcom: avoid duplicate PERST# GPIO acquisition in
  legacy path
-Message-ID: <vadkszqfpmi4jssf4rqm22xs544en7tmcjnqukdbhzpjd3ckk3@bjdhzu7hvnxn>
+Message-ID: <ahW0HOEMnJIHviLi@baldur>
 References: <20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -44,9 +44,8 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
 In-Reply-To: <20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com>
 
 On Tue, May 26, 2026 at 05:02:30PM +0530, Kathiravan Thirumoorthy wrote:
@@ -57,7 +56,14 @@ On Tue, May 26, 2026 at 05:02:30PM +0530, Kathiravan Thirumoorthy wrote:
 > 
 > However, on platforms such as IPQ5424, both PERST# and PHY are
 > described under the RC node and are intended to be handled via the
-> legacy binding path. Since PERST# is already acquired during Root Port
+> legacy binding path.
+
+Please send patches to update IPQ5424 to the non-legacy binding.
+
+Thanks,
+Bjorn
+
+> Since PERST# is already acquired during Root Port
 > parsing, attempting to acquire it again in the legacy path fails,
 > resulting in probe failures as shown below:
 > 
@@ -87,11 +93,53 @@ On Tue, May 26, 2026 at 05:02:30PM +0530, Kathiravan Thirumoorthy wrote:
 >  
 >  	if (pcie->reset) {
 > +		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be fixed!\n");
-
-This will cause spat for each child node. So switched to dev_warn_once() and
-squashed this fix to the offending commit, thanks!
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+>  		reset = pcie->reset;
+>  		goto skip_perst_parsing;
+>  	}
+> @@ -1912,8 +1913,6 @@ static int qcom_pcie_parse_ports(struct qcom_pcie *pcie)
+>  						      GPIOD_OUT_HIGH);
+>  		if (IS_ERR(pcie->reset))
+>  			return PTR_ERR(pcie->reset);
+> -
+> -		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be fixed!\n");
+>  	}
+>  
+>  	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
+> @@ -1942,7 +1941,6 @@ static int qcom_pcie_parse_legacy_binding(struct qcom_pcie *pcie)
+>  	struct device *dev = pcie->pci->dev;
+>  	struct qcom_pcie_perst *perst;
+>  	struct qcom_pcie_port *port;
+> -	struct gpio_desc *reset;
+>  	struct phy *phy;
+>  	int ret;
+>  
+> @@ -1950,10 +1948,6 @@ static int qcom_pcie_parse_legacy_binding(struct qcom_pcie *pcie)
+>  	if (IS_ERR(phy))
+>  		return PTR_ERR(phy);
+>  
+> -	reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
+> -	if (IS_ERR(reset))
+> -		return PTR_ERR(reset);
+> -
+>  	ret = phy_init(phy);
+>  	if (ret)
+>  		return ret;
+> @@ -1970,7 +1964,7 @@ static int qcom_pcie_parse_legacy_binding(struct qcom_pcie *pcie)
+>  	INIT_LIST_HEAD(&port->list);
+>  	list_add_tail(&port->list, &pcie->ports);
+>  
+> -	perst->desc = reset;
+> +	perst->desc = pcie->reset;
+>  	INIT_LIST_HEAD(&port->perst);
+>  	INIT_LIST_HEAD(&perst->list);
+>  	list_add_tail(&perst->list, &port->perst);
+> 
+> ---
+> base-commit: d387b06f7c15b4639244ad66b4b0900c6a02b430
+> change-id: 20260525-fix_perst_gpio_handling-5a4fee9228fd
+> 
+> Best regards,
+> --  
+> Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
+> 
+> 
