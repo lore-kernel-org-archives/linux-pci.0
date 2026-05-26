@@ -1,109 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43F0F3A963B
-	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 12:21:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECC0E3FA5F2
+	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 13:34:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779798112; cv=none; b=C3YOO3fsY50JnbOUY0qLEnDvxDaNmyCN3VkEHG4UftRu6at/ikHyzzA227M+D09zkB9s4dyyt2bSfZ9+6hnYqVn4IRUgDyKldrU3WXjPe6qE+XfgpqTTZusqxXUODzaiNb6XD2w96PHZyxVdjmjrGXDUaiOyF2pgbsPVYzJhZWQ=
+	t=1779802464; cv=none; b=K0425ez3ZexwCUyGnDomspyAZydE7YgrisdYK/LUuTp/lQoR/A9AjObnBsAsTQzPT87Gs43wDWYGERIJraUx5blGNXbb54UB2HlYjp2nx14hPuI5gkwrGwOmkheqxFBMNx/LKTA8UOdbpdeqo1oH9wQcNE3NwvUF/FWY5q75TuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779798112; c=relaxed/simple;
-	bh=PJqC9la0QCKs70r0CMZUmrCob+OgB+3McxcZq9WoDT4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RCK6SO/rHCf4ybzMAsMxITeoKs6pC/0czASQW31e7a2/KgePcfJF1U+CefPFQv18GZoNDWF5lYPLxnAgw2nPlPtFWZdixXQP1Zsd9sbWEs7SoLUcoXrjloY5O1ftLbON1R5NRMrlUF1XEcqUnYChhA283WpreMZCtTVGnGKHbaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lq9bxkaK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779802464; c=relaxed/simple;
+	bh=1LfDPPdF9kRVOmTHDImgSfPA/ijutNtWhD5EG362RAQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BP6hR8Zec+MPTGsWpSDb+tibhKtoM4qhwu/oKI2O3b1DA+mew0f4rFjMFl/JQKW+R5kWIFYRRdKrkunaV9hGsPw40QPsMdfsJqAv2CiIgsY4VYWCqPNjXiNQcK64ncugCO/U7PMnCziD9rddvwIu35seDFA7xIWFGBTHVsXPRrs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LkrmPebR; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lq9bxkaK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4BF21F000E9;
-	Tue, 26 May 2026 12:21:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779798111;
-	bh=o0CSNQ8UlhzpV1bAqBYsiblA6esnkhUkKgZeWDum1JA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=lq9bxkaKVQRxSSzyaDsQYO47b3iZLxQ2WUScaKy0guwyNtnWrjfqAZCY8J7UvYg2k
-	 45tqUG8/TKKsHvUuD0hWUbUYAK24l8vQz+aztyiZtLaXkfVJcKi6JDIHPXdrvchdOU
-	 ORPTuYY65eMJ2cmecpNfmLSIxIYRwUBmBqTwYYTIS/B9Oy2/g/C6CvvyQa1cusrkaO
-	 CAjDxVwDsarwYbIAfiOKrOUBmS7HiPNQ9Gl4W2RqyWjC+RFl/MoE2UBW+HxaTig/ZV
-	 P7ZacKFBVToc7VxOVpCJoHqbKU48jlqw58h69TJI+IIe0Sg9WsfsQYegOqBiS4RQ3e
-	 NiHegXGNCyjFQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: qcom: avoid duplicate PERST# GPIO acquisition in
- legacy path
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Kathiravan Thirumoorthy" <kathiravan.thirumoorthy@oss.qualcomm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com>
-References: <20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 26 May 2026 12:21:37 +0000
-Message-Id: <20260526122150.D4BF21F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LkrmPebR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1779802462;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Mg1+kRsSNGZTbkMwaTAPjKmNsacasOv1PicS0GJAsds=;
+	b=LkrmPebR59H/oESZwCytzjxegJ7mZIwdknDckWgoOfFycPoyEfya0tjadYrWLQai6F2gxW
+	yz4mDiKh5k0ioDtV0CUYt+7P1xmGKS+FpRDrkGCOD3TQLYah5gGWNALaTBHqegw2bGVETS
+	Y1OqckzjmDb23ifz0tYIJqX1OWUzkI0=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-157-UaVwC7iTOSGZqixkkIMblQ-1; Tue,
+ 26 May 2026 09:34:17 -0400
+X-MC-Unique: UaVwC7iTOSGZqixkkIMblQ-1
+X-Mimecast-MFC-AGG-ID: UaVwC7iTOSGZqixkkIMblQ_1779802456
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 974E9195609F;
+	Tue, 26 May 2026 13:34:16 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.65.22])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A3D71180034E;
+	Tue, 26 May 2026 13:34:15 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH v2] PCI: Prevent workqueue code nesting in local_pci_probe()
+Date: Tue, 26 May 2026 09:34:03 -0400
+Message-ID: <20260526133403.1253961-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Low] Moving `dev_warn()` into the recursive `qcom_pcie_parse_perst()` fu=
-nction causes log spam for every descendant node.
---
+local_pci_probe() and hence pci_call_probe() can be called
+recursively. If the recursive calls are done indirectly via workqueue
+kworker, a lockdep recursive warning can be produced.
 
-commit e491f3a5670e129d05694d3da834893bd5b7fd00
-Author: Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
+There are older commits that tries to prevent that. One example is
+commit 12c3156f10c5 ("PCI: Avoid unnecessary CPU switch when calling
+driver .probe() method") which prevents work_on_cpu() recursion when
+the current device is a virtual function and the physical device has
+been probed. However, there are still other cases where workqueue code
+nesting is possible leading to a lockdep recursive locking warning like
+the following stack trace on a 4-socket x86-64 Skylake server.
 
-PCI: qcom: avoid duplicate PERST# GPIO acquisition in legacy path
+  <TASK>
+    :
+  start_flush_work+0x40b/0x9b0
+  __flush_work+0xbd/0x1a0
+  pci_call_probe+0x510/0x700
+  pci_device_probe+0x17c/0x270
+  call_driver_probe+0x68/0x1f0
+  really_probe+0x197/0x7b0
+  __driver_probe_device+0x32d/0x460
+  driver_probe_device+0x49/0x120
+  __device_attach_driver+0x162/0x290
+  bus_for_each_drv+0x109/0x190
+  __device_attach+0x1a2/0x3f0
+  device_initial_probe+0x7d/0xa0
+  pci_bus_add_device+0x93/0xe0
+  pci_bus_add_devices+0x83/0x190
+  vmd_enable_domain+0x11fb/0x1b80
+  vmd_probe+0x34c/0x4b0
+  local_pci_probe+0xdf/0x190
+  local_pci_probe_callback+0x35/0x80
+  process_one_work+0x919/0x1af0
+  worker_thread+0x5a6/0xd10
+    :
+  </TASK>
 
-This patch aims to fix probe failures on platforms where PERST# and PHY
-are described under the Root Complex node by reusing the PERST#
-descriptor obtained during Root Port parsing. It also moves the warning
-about reusing the PERST# from the Root Complex node into
-qcom_pcie_parse_perst() to avoid polluting dmesg during legacy bindings.
+Fix that by adding a new wq_kworker() helper to check if the current
+task is a workqueue kworker. If so, call local_pci_probe() directly
+instead of calling into workqueue code recursively. However, this patch
+will increase the level of local_pci_probe() nesting that is possible.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index 11fc604898926..77cbd204ac5cc 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1824,6 +1824,7 @@ static int qcom_pcie_parse_perst(struct qcom_pcie *=
-pcie,
->  	int ret;
-> =20
->  	if (pcie->reset) {
-> +		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be f=
-ixed!\n");
->  		reset =3D pcie->reset;
->  		goto skip_perst_parsing;
->  	}
+For this particular system with a patched kernel built with a RHEL
+based kernel config file, the local_pci_probe() nesting is only 2
+levels deep. The additional stack usage from one local_pci_probe()
+to the next is measured to be 792 bytes.  With a 16k kernel stack,
+it can sustain up to 20 local_pci_probe() nesting loop. The mileage
+may vary depending on what kernel options are enabled and future code
+changes in the PCI driver code base.
 
-[Severity: Low]
-Could moving this warning here result in log spam for every descendant
-node in the device tree?
+It is unlikely that we will see a real system with a very deeply nested
+PCIe topology requiring more levels of nesting than is supportable by
+a 16k kernel stack. To be cautious, a comment is added to mention that
+kernel stack exhaustion can be a possibility if a very deeply nested
+PCIe topology is to be supported as further change to how PCI device
+probing works may be needed.
 
-Looking at qcom_pcie_parse_perst(), the function traverses the device
-tree topology by recursively calling itself:
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ drivers/pci/pci-driver.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-qcom_pcie_parse_perst()
-    ...
-    if (pcie->reset) {
-        dev_warn(...);
-        ...
-        goto skip_perst_parsing;
-    }
-    ...
-    skip_perst_parsing:
-        ...
-    parse_child_node:
-        for_each_available_child_of_node_scoped(np, child) {
-            ret =3D qcom_pcie_parse_perst(pcie, port, child);
+ [v2] Directly check PF_WQ_WORKER as suggested by Sashiko and document
+ the kernel stack exhaustion issue with deeply nested PCIe topology.
 
-Since pcie->reset is globally set on the pcie struct, this block will
-evaluate to true during all recursive calls. Will this cause the warning
-to be printed repeatedly for every switch or downstream endpoint?
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index e3f59001785a..6d9944b42c3c 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -370,6 +370,14 @@ static bool pci_physfn_is_probed(struct pci_dev *dev)
+ #endif
+ }
+ 
++/*
++ * Return true if current task is a workqueue kworker
++ */
++static bool wq_kworker(void)
++{
++	return current->flags & PF_WQ_WORKER;
++}
++
+ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 			  const struct pci_device_id *id)
+ {
+@@ -387,10 +395,17 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 	cpu_hotplug_disable();
+ 	/*
+ 	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
+-	 * device is probed from work_on_cpu() of the Physical device.
++	 * device is probed from work_on_cpu() of the Physical device or when
++	 * the current task is a workqueue kworker.
++	 *
++	 * TODO: With a deeply nested PCIe topology, pci_call_probe() can be
++	 * recursively called multiple times. If the nesting is deep enough,
++	 * it may cause exhaustion of the kernel stack. So some additional
++	 * changes will be needed if such a deeply nested topology is to be
++	 * supported.
+ 	 */
+ 	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
+-	    pci_physfn_is_probed(dev)) {
++	    pci_physfn_is_probed(dev) || wq_kworker()) {
+ 		error = local_pci_probe(&ddi);
+ 	} else {
+ 		struct pci_probe_arg arg = { .ddi = &ddi };
+-- 
+2.54.0
 
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260526-fix_perst_=
-gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com?part=3D1
