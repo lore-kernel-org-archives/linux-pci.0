@@ -1,160 +1,168 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013049.outbound.protection.outlook.com [40.93.201.49])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 195BC29D264;
-	Tue, 26 May 2026 05:48:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.49
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779774499; cv=fail; b=CuJQEqlq7Ri1OghU+c2eWwvoBfwLnm898WXy0Cr8Kx/ilChpM4cmEdo63NzyGuqoyc/eT5LWpdLUVmTccumKNQik+hnImp7rrWeI9gnOrje93xPFQTEwF+ZyzJMxW3OYIxKCDOKwXnMNQgFIZDw0Mu1mO5dto2sczYsJqQ/RV7A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779774499; c=relaxed/simple;
-	bh=gaGhEBgnO7Xo5n6Nty3gtRgo3LwETWX9IPTIPtfLQWg=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=aFM2uQE/z07uWDoDiYD9+HhWMoGD1BtAErDT+kNisIiowVIGjm67YcQK6Ht0WoYMWFnq3NMGDU2XMgsYZrUUI2cvUFGwv2ZECZG1LuSAqVvuSRArSJ+6KZ4nJSRtHdyYurzOf4LevVsgjwsyO7JMLDD1mjjy0XAV83qP22id+ws=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=CL+fQ+Bp; arc=fail smtp.client-ip=40.93.201.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B51A61DBB3A;
+	Tue, 26 May 2026 06:09:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779775765; cv=none; b=kV5UEblZsfiIzVIN8Ut4j2Awcx4nyjvAz4qdDhKZXyHWncthSlST/fyfEKYW8ShxnnUv9PfiWMOvJcsEZ992pFFhQg/1RNPA1yb7RgSitrzwfGzrTnitPITIXoMOjRNWU0DL//jA6pDTaJuqn+RvYvl2v4a4nLq+OiX7IjHWLGM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779775765; c=relaxed/simple;
+	bh=U322n/qX24WfW4XoPi3jiVoFQsdKe4rjCXM0VoA8UAw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=hyzvvDMnORGtk2A4OsXpVWFEpU9LtLJUvfQLJBE73cXoq+Sxo7Qaq6S7mdvAUAOoU4yjRzim8eEEn7jWiKCsdE8ujb9VPkTVGrlC6OT7RTUs0T4h+zCCm+5FSy+LwYi1YV/iSMa6R9js7YjFGME2kHj5VE3fO0mGhJhfbz/7j8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YAUzbUJ6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="CL+fQ+Bp"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=B6xggtZJxlppsrJ/2nfPnWLiXS6PsrKSKjCL2qGw7iAc1depdDqWDTwlVFLwwuwRoqQ5eicthHz4s0WAqUHOieOA3z1Lr2NV3vejmfzzF3bl6lkO0iJIPA6JDgILJPgIWK2UNPrzMWSeNEbqSoPDPSYy+0TDnOLmM6AwJW8QAuuqHzjU7jerUGWSvPYccu8WACTZMFN9o0+YSE8WF0zbtv9c5NQi2SKLbGykZQiy0N3YO6PUfsBfOVxQ5B7xJnX/ix8uEOJdthWwLkIbVVBSB2K/JnfPTiEwPneHEl6RmD6miTLZ+Mtfb7s2F43+P4h1tDhdeg/tT6abo0zyiMS/cw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gaGhEBgnO7Xo5n6Nty3gtRgo3LwETWX9IPTIPtfLQWg=;
- b=Tvhcr1nf2lXtDi1/yljbMmJl82j1BLrk00khYSrOSsuU6hudRYjPly5pDfw1FKrlAzteVaPRKW9UYdOQVvqpuOA4fsPtrfuL8qJbdr6ickynILxcKz5S1b8d1gpWHecPQQKtWcvi0Q5kHBFWNgquYt2S86brwWvqu325vnM3xQvYYJCf2+BMRp1xUjr0KcrXJ4fR3G8LvgFDvKSNTOf/L879r0z5Kda9zufcE8QvBHjIWTGh4s1pOrAUY+DIaY+q7EJAiW1Rh4Wi9+unIHrpwdROSHSI9VpfvUOFtDy4u+PaMw9rKDtQWpJkWa3Xyz7w6raX3i69IueX1+oigSKZTg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gaGhEBgnO7Xo5n6Nty3gtRgo3LwETWX9IPTIPtfLQWg=;
- b=CL+fQ+Bpo81/O/Vcp6HNhVU6bl7GMbGOkFTqD9Fx82g3kOHRjJemYp3MXznAUdST69oxOteAoXwwWvwvpsO6ZHVQNuYE+mzEESv0BtJ9f75j0dbZJHhTjKqqKRwluA2AyExAropzss004GlmXJb9TiKf4wbSCm5IbLmEcoCwmqgPtfwczmjK561Jh0s8zQDAnVt1u8FLngrnaU23WkiGdMhV0tzLde+r/Y+J4G5KPmKNnAKUdr3se+6E0/vCy+1xjkutkdakJhoduLAjq4i+mkQZ8aDIgzZ+St3BbmXvXqrVhxxshyhd/T+SkO1pcxFmLS5kwm1sKijBmiXSxeGXyA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from MN2PR12MB3997.namprd12.prod.outlook.com (2603:10b6:208:161::11)
- by PH8PR12MB6676.namprd12.prod.outlook.com (2603:10b6:510:1c3::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.20; Tue, 26 May
- 2026 05:48:13 +0000
-Received: from MN2PR12MB3997.namprd12.prod.outlook.com
- ([fe80::73c6:e479:9b75:b2cf]) by MN2PR12MB3997.namprd12.prod.outlook.com
- ([fe80::73c6:e479:9b75:b2cf%6]) with mapi id 15.21.0048.016; Tue, 26 May 2026
- 05:48:12 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YAUzbUJ6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30F8B1F000E9;
+	Tue, 26 May 2026 06:09:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779775763;
+	bh=PQAoBHyGvx1uYfDXigDRWV5iHFLDA1yCWhVIGyAiJws=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=YAUzbUJ60VVfwaxgNHXYBA+JaIicPKOSBxay8bM0MF4HoEijYTzGfI8NE8brGGSim
+	 06fN06Yw5DyLtQpB9QOpgeKbIWCp/KpYbOuEI0X2SfJijS/jdDmRlak6xXS80bM3UC
+	 5jGzRmlVea4Iynw0DA9MEsvMa87EkTjpvsFrpoiHAwX8p1NGA1qxfSdXBH496aWXsx
+	 PuxxW52On1f/H6yejgfbQke03TuJEOJdbXukB4iYUyIEFSAXNlgII6DCAdt96YVU2x
+	 q6ayMvNlXveQHodUElSEwZ2xuTLX87wd+KXThmREspE+7RcAxrHjL5sKlHktJkrG9E
+	 TqnD6dg9aURVA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v12 5/6] vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST for
+ PCIe TPH steering tag management
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260526040830.52854-6-fengchengwen@huawei.com>
+References: <20260526040830.52854-6-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 26 May 2026 14:48:01 +0900
-Message-Id: <DISDEDNTJTAM.34F0G4ZRHG37@nvidia.com>
-Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>,
- <aliceryhl@google.com>, <david.m.ertman@intel.com>, <ira.weiny@intel.com>,
- <leon@kernel.org>, <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>,
- <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>
-Subject: Re: [PATCH REF v4 24/27] gpu: nova-core: use lifetime for Bar
-From: "Alexandre Courbot" <acourbot@nvidia.com>
-To: "Danilo Krummrich" <dakr@kernel.org>
-References: <20260521233501.1191842-1-dakr@kernel.org>
- <20260521233501.1191842-25-dakr@kernel.org>
- <DIS8RFZO6IF6.OMCDPD24RSXN@nvidia.com>
-In-Reply-To: <DIS8RFZO6IF6.OMCDPD24RSXN@nvidia.com>
-X-ClientProxiedBy: TYWP286CA0018.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:178::8) To BY5PR12MB3986.namprd12.prod.outlook.com
- (2603:10b6:a03:195::27)
+Date: Tue, 26 May 2026 06:09:22 +0000
+Message-Id: <20260526060923.30F8B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR12MB3997:EE_|PH8PR12MB6676:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0b2f3c84-a2b7-4c69-93df-08debaea5eeb
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|7416014|10070799003|366016|18002099003|11063799006|4143699003|56012099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	bX85PBywj+hQ868Du3ngLrH0cK/CUTpUne/4J+OcOM+KkLmRrY5bMf01Lwr3s0kAJYFYrcHBQa2NZ8mn5/iUKOibaI3ufUDS9Wj8lwOseZNvSBcuKEzztgx6FQeIGzdE+9P6nEkjL+ouhxT28LdN50szZMFMZPZi7vOPdNAqsNJxLUl8FXJ75TCxxuYPIM5JdZjrOwk27sS28PXXZWW/uXEdaP7BeVK9vVWVETJx7h2QfZSMPGlWUSUHS6VfvJ8trIXc0ntU8NJW7BSgvjcYwRRXqHKgjL4n6pqEAlL+lxnJIg88hpIqyV0Ym4DKg8eqFkwAbziGbecgnAr9M24+qBBwvqfi8SoMdYXK99JvfIOaWbJJ++yeDHiyxkvMNmIOW7NGt+n+JSHeuZU4K2Svm2fQi6oVaWW1OsH3ks6R8Pta3QF2kkbkjghdz8vovKs67hlPhdZF7TaqdCPcpmLibmeALhYTl2W65d6N3bMCo+s3e7RhDxY/icFleyUUDWIj4dkc1xTAojV88gB7xE5ww/V0rKNIEtzGECzn0kyUQjx2qgMmKC/Dl5iyLBN4yx7fuzGaPNx1HlJbSvQT2L4cz2E001fX6jLjhI/p9oQbSZzTxSlhaNUG19MbcUvBCOg+EG7GWAyYlGE5jWKaNg9vxUJPODd1c7KPoSoZPa6NoHx05nX356ebdiN8XetHuqbw
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR12MB3997.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(10070799003)(366016)(18002099003)(11063799006)(4143699003)(56012099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?WGFUVlFrVWdKNFpYUHJQdTAvM3lua3JGay83WndhemRURlF5eGExaHdVNFJS?=
- =?utf-8?B?aTgzWGplU2YvTHU5UjlmeWdRSE84aG4xVkt5NU1uZHA2Uk9rUUlkTEs0anRy?=
- =?utf-8?B?bFFiR3BUc1RIYjV0STdOQ3RuUnNLd1NkVHdYd1FqQ01DRytHYVNZN1ZHa1pL?=
- =?utf-8?B?MjcxbkJOd1ltM2NHZW4rY2hMOGpNV0xrRDFwa0FmRFJ3S0xUQW9YTzdVNHRZ?=
- =?utf-8?B?VEJxTmYzQWRON0F2N09JQU0xY25sSjlYVytRWm1WVE5PSERBM3JoR1d1TSt4?=
- =?utf-8?B?RDNuc0l2cFRVQXBaMG1pZ2V6TUU2MmsrMFZCZnVONGFjTytielk1Q3VnWWtz?=
- =?utf-8?B?OTRTQnN2aGdEVlQ5V1NwMmU1VHlJcEJCNUJ4MThBeEVBTi9rUmJ1d1dkMU9K?=
- =?utf-8?B?bjVRTmhNdEYrMzRnMVlDc1QwY3dyKyszTDZWeVVNRVY4UGhPbVVxQnlqWm1i?=
- =?utf-8?B?RGxPV1hMV3dZeEVlWWtnckkvSDJCd3dTS0lHMVBwS01jOHRZSnpqQm15cnNG?=
- =?utf-8?B?UlNQajhyS3lNTUNnbmFhZmtSNVNnZjFWZGtsUHJsMWt5VE5yK0tkQU41TTY1?=
- =?utf-8?B?ZGg5TXZsUEJrVHpQUTVrdjgrOEpxZy9GaEdkS1Z3UlJaOENNVTU4ZEFOcUoz?=
- =?utf-8?B?Wm96WkdRbW5PUlFSTFk3S2drdzZ0Tm1Wa3Vsc256dEZid2ZmWGlNSUVLRVk3?=
- =?utf-8?B?ZTZ6d1NqQTFuSzFIcGNWQ292Yk5aTzNpRkVzVnVza0YxM21EUFZYM1FhVjdX?=
- =?utf-8?B?eitjeExscW9pbkFoSXdRNmJKUzJzWklmRk9HOU43K2RBZ1dmWlRka2RyTERB?=
- =?utf-8?B?V0dYU3ZIdTcxUzUxMmY5RzZiWlNuZ25CRVJLR2VvNzdyTmpZdkdONUY2c2hU?=
- =?utf-8?B?US8wZFp4UTJQUkJWUUZTU240N21jQjRUMnZWRVpla1RyZEo5SGQ0Z0hHc2dm?=
- =?utf-8?B?SCtoQ2NtMFg2TmlJK3ZvQkMvM2ZaQzhvQWY2MUJZZWdoa1VhTXZ4bVFmWWEw?=
- =?utf-8?B?L1dRcWk0NG0rRThxeFN4OFM2cXg2KzYzT28zZU5KblJ1R2YxWVpScThHZVFS?=
- =?utf-8?B?bDhCUndhRGFaaHpORk11aGtySFRjSEdiR2pid1Z2allHVE5XOHV0TVU4alRx?=
- =?utf-8?B?TEl1cnA0TFZGQ3B4cmtmQmFNT3cxVjl0MzJEN2hpRXM3R2c4bmh4SmlsY1cy?=
- =?utf-8?B?WlRhQTR0cExQRXR4NGJqbmFBUVppVlFmSDVGVUFUeS9GYmlKT0ViTWxkWjJn?=
- =?utf-8?B?L255QnVmT2xPUUVsRVI2TE1jamU0SmcyQ1BMMWViK3dWYWRtUlNTMnBQamVk?=
- =?utf-8?B?a0NlUEFqM0FvTW9FWm50aUViQk52OHBMRmFHZkw4dnE4S2dFeG9Wd2NGWncx?=
- =?utf-8?B?cFErQWllREZVMWpvK3B3OFhaZUpKbVFZdEpxbk90aGowQ3QzWU8rK2UvR2JF?=
- =?utf-8?B?Y2lJS3dXZ2toREJmNlJRL1RZZEFTejZoWDZ5Z3hqNWF3TWFrcjJmcTdIRmx3?=
- =?utf-8?B?K3NWUjBrMjFMWTMwYWFNU0dQRXhZN0F0NEJIelRUZ1dleC9xNnlDZHZrWUV6?=
- =?utf-8?B?UEpIcWlUUXY3aDV3UDBER0xCUUc4TldYUm4vNVkzSEFNU2hIN3pnRXNaZjZu?=
- =?utf-8?B?amxLVEpQcEFnelp1Qk1CNm9VZFR6VWN3RlRNSmdUb0Zob3ZuU3pRQjNLL3NW?=
- =?utf-8?B?WTM0eXk1UjJKbkFSdXFSR3h3STBkWDFrRE1Hb3ZWOXJjUE9WL0xRQUZxL1px?=
- =?utf-8?B?R0dBK3NlME9haGNxb09rZlc5ZXljcm5pZWxubGVyQWg1REZrZWdFbnkwOC94?=
- =?utf-8?B?SFZjbVRrVW5FZVArUGZaYkhaSTJ4V1lCZjVqYWZlTFJUekxIaFFzUG83VWt0?=
- =?utf-8?B?QmZRanlsVm1LUWw5WFlXM3hHeFJ3UlNkQUtoWmFEMnlzSXJCT1VFRnBLWUZI?=
- =?utf-8?B?ZHk5K0xBM0ZkSlgveTZnWWJKQUNsSzdFYnNEQVhuamZEcDF0emxSY0xUV1Nq?=
- =?utf-8?B?SWxZWk52akRZbEp1QXhWRDdQQndEVXAvdWNuYUFVZy9BWTAvdW5Db0dWaTBE?=
- =?utf-8?B?QzFhWnc2NFp5TG54OTR1bzFhUGZKQzFCTmZnZndXZi9MdjFya2pVK2ZMQ3RI?=
- =?utf-8?B?Q21IMkV0RXFhRFNxeHFuK2JJcUl0T1V4SHFHUHBFdlhxNjJrTUZKOWlReGtU?=
- =?utf-8?B?NEFyTXpWV1daRG1oQlVNUlh0UUdGaEN6eVF2RElYaXVBQVNIMXNrWW05UUlw?=
- =?utf-8?B?dnhUbzI2QTBOMjM2cEwyc0R1L3NMUFVHZklhMkJZMEpqTkF1OXA1SkVoc00x?=
- =?utf-8?B?ajlkT3AwUnlVdUZqa1J3VmRBanhzN1J4MkZzZ3hvVVFPYkt6eFg5eTlRTWda?=
- =?utf-8?Q?hepK4QQKUXy7WTkXg1cqcDvicCdF5vltqJKWNIDKx/xeH?=
-X-MS-Exchange-AntiSpam-MessageData-1: CBWZVf9zLcksWg==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0b2f3c84-a2b7-4c69-93df-08debaea5eeb
-X-MS-Exchange-CrossTenant-AuthSource: BY5PR12MB3986.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 May 2026 05:48:12.8009
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: XEL1ea1Nj/VQWrHa+IssFshmfsmXkpoLME4IyZ/Ou8nXcPT3vLpXR4d2C8bVf/ap7iRLBdQW2A4YCY1XxiXyPg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6676
 
-On Tue May 26, 2026 at 11:10 AM JST, Alexandre Courbot wrote:
-> On Fri May 22, 2026 at 8:34 AM JST, Danilo Krummrich wrote:
->> Take advantage of the lifetime-parameterized pci::Bar<'bound> to hold
->> the BAR mapping directly in NovaCore<'bound>, and pass a borrowed
->> reference to Gpu<'bound>.
->>
->> This eliminates the Arc<Devres<Bar0>> indirection, removes runtime
->> revocation checks for BAR access, and simplifies Gpu::unbind().
->>
->> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
->
-> I see that this patch is not in v5 (and it is marked `REF` here), do you
-> intend to push it soon? Knowing that would be useful to understand which
-> base to use for work that depends on HRT.
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [High] The return value of `copy_to_user()` is mishandled in `vfio_pci_tp=
+h_op_cpu_query()`, resulting in a positive return value to userspace on mem=
+ory faults.
+- [High] Hardware modifications to the ST table via MSI-X MMIO occur withou=
+t ensuring the PCI device is in an active power state (e.g., D0), risking P=
+CIe errors.
+- [Low] Unconditional memory allocation for the TPH ST shadow table during =
+device initialization, even when the TPH feature is globally disabled.
+--
 
-Just noticed your "gpu: nova: adopt driver lifetime
-infrastructure" series. Sorry for the noise.
+commit 467d413fb2d015dba9001b9372af0200c578a4c6
+Author: Chengwen Feng <fengchengwen@huawei.com>
+
+vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST for PCIe TPH steering tag manageme=
+nt
+
+Add new userspace device feature to access and maintain PCIe TPH Steering
+Tag table entries, supporting two mutually exclusive operation modes:
+raw table read/write and CPU ID lookup.
+
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 3f8d093aacf8a..8cf341689a478 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+[ ... ]
+> @@ -1516,6 +1518,159 @@ static int vfio_pci_core_feature_token(struct vfi=
+o_pci_core_device *vdev,
+[ ... ]
+> +static int vfio_pci_tph_op_cpu_query(struct vfio_pci_core_device *vdev,
+> +				     struct vfio_device_feature_tph_st *arg)
+> +{
+[ ... ]
+> +	for (i =3D 0; i < arg->count; i++) {
+> +		ret =3D pcie_tph_get_cpu_st(pdev, mtype, cpus[i], &st);
+> +		if (ret)
+> +			goto out;
+> +		cpus[i] =3D st;
+> +	}
+> +
+> +	ret =3D copy_to_user(uptr, cpus, arg->count * sizeof(u32));
+> +out:
+> +	kfree(cpus);
+> +	return ret;
+
+[Severity: High]
+Does this return a positive value to userspace if the copy fails?=20
+copy_to_user() returns the number of bytes that failed to copy, so returnin=
+g=20
+it directly here instead of a negative error code like -EFAULT might break=
+=20
+the ioctl ABI, as userspace typically checks for negative error codes.
+
+> +}
+> +
+> +static int vfio_pci_core_feature_tph_st(struct vfio_pci_core_device *vde=
+v,
+> +					u32 flags,
+> +					struct vfio_device_feature_tph_st __user *arg,
+> +					size_t argsz)
+> +{
+[ ... ]
+> +	switch (op_type) {
+> +	case VFIO_TPH_ST_OP_RAW_TABLE:
+> +		if (is_set && is_get)
+> +			return -EINVAL;
+> +		return vfio_pci_tph_op_raw_table(vdev, is_get, &tph_st);
+
+[Severity: High]
+Is it possible for the device to be in a suspended power state (e.g., D3hot=
+)=20
+when this ioctl is called?=20
+
+If userspace triggers this while suspended, the subsequent call to=20
+pcie_tph_set_st_entry() might perform direct MMIO writes to the MSI-X table.
+Accessing MMIO on a suspended device can cause PCIe Unsupported Request (UR)
+errors or Target Aborts.=20
+
+Should there be a pm_runtime_resume_and_get() or similar power state check=
+=20
+before accessing hardware registers?
+
+> +	case VFIO_TPH_ST_OP_CPU_QUERY:
+> +		if (is_set)
+> +			return -EOPNOTSUPP;
+> +		return vfio_pci_tph_op_cpu_query(vdev, &tph_st);
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +}
+[ ... ]
+> @@ -2097,12 +2254,23 @@ int vfio_pci_core_init_dev(struct vfio_device *co=
+re_vdev)
+>  	mutex_init(&vdev->igate);
+>  	spin_lock_init(&vdev->irqlock);
+>  	mutex_init(&vdev->ioeventfds_lock);
+> +	mutex_init(&vdev->tph_lock);
+> +	vdev->tph_st_entries =3D vfio_pci_tph_st_shadow_size(vdev);
+> +	vdev->tph_st_shadow =3D NULL;
+> +	if (vdev->tph_st_entries) {
+> +		vdev->tph_st_shadow =3D kcalloc(vdev->tph_st_entries, sizeof(u16),
+> +					      GFP_KERNEL);
+
+[Severity: Low]
+Does this code unconditionally allocate memory for the shadow table even wh=
+en=20
+the enable_unsafe_tph module parameter is false?=20
+
+While the allocation is relatively small, operations will be rejected with=
+=20
+-EOPNOTSUPP anyway if the feature is disabled globally. Perhaps this=20
+allocation can be avoided entirely in that case to save kernel memory.
+
+> +		if (!vdev->tph_st_shadow)
+> +			return -ENOMEM;
+> +	}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260526040830.5285=
+4-1-fengchengwen@huawei.com?part=3D5
