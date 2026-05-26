@@ -1,101 +1,101 @@
-Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71F283ABDA2
-	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 04:26:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CECF3A7186;
+	Tue, 26 May 2026 04:31:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779769595; cv=none; b=SD77+kNGK8D+KZEbcI8qKEWeSpqi4fkDfmyVSA6d9+qXKxOp3ljZW5H5/gY2M/zrHexkAJeOYu3sZbUKqGFftbNuRRuGviyVGRviTDldtOq/qDUe/OmrOCVjOhAnzwhCMfepJXEcQ5xQ000yBvq0ggF3B/WsMe56PbBxhMEOBFQ=
+	t=1779769899; cv=none; b=hgBf5ZmrbM4HmG5ZfcGHfm8jipSHQHGzFmQB3X2eg165hxHPuh3PZdPA2Dg0a1Fz3/3t4Dbr3bzfXz/leJ+PkCWn+224+XAk//NWN/S8ycZRMiLGOBZ7n/8ww0q50d7xqqykiqrNAyrEv1CMU82Vqe8D0snUcH7LpHFdD0d8hb8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779769595; c=relaxed/simple;
-	bh=x3tekH87wGGlm9/Qn54UhWRdZIZUIxu/583l2R4pIp0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YLAMrCZ9U1k/saiyaxUBQMLwd4zLc48Uoy/56QcelgFDdAEhn1LPU2SGaOjavwZerb8Y0K2L9a06CabX4dmekKXbnA0JIT92TCsrzc8twBcgFtGI23D7XsupeG4uV108+LKfE23hRj6RdDDiUMGr+OG0unfc+C7b6m9stQUmyDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JJCjV8Uc; arc=none smtp.client-ip=209.85.216.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779769899; c=relaxed/simple;
+	bh=6RnQIGHpeQIVlxqzzYzE6uYM1KIm4SZlzj9Kuk4thd0=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=ER8Rym1olnJCDyuYbNa+7LMKxwKQY2BkY0DbxTNZLcNf70M1ChIaougbqW6YfdBFByR73U2FmutL0cEQyI2m52HV1SvKvPyIQnwECt5mnE7blCm0DAOTt5eLNBtbnkrXWWABaeF9FGPhdlCSzXol+nGBqVBukH6c1XQ5EaTGPx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f7sy2BB3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JJCjV8Uc"
-Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-36ac67f489aso1154650a91.0
-        for <linux-pci@vger.kernel.org>; Mon, 25 May 2026 21:26:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779769592; x=1780374392; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=GudgJJHZbsUHPisZInCPF6lXDepNPrpt+98+m4g4yPw=;
-        b=JJCjV8UcRDj08p0dLt1c0n+wi0MD2PcoaLq6VW2CLZLSmtc7awmQR+ITG1d7ymWk5Z
-         C3r13zpnk5EA4sIKspa0X9mXieDl6fP+JODF6RRaJFZXrMcrr31lHIR/kj0KfqVbBHip
-         K+74hTeS5pXfbT2n6ca68wK+5DDbcnwdL0gYCSj1+C4pUorhA9a37SiuyPe7bLnvbYLU
-         pAveONK6QkF3zMQVSILKT3XNamr6N8sIIb4sBNTQOs+htN5w4JSsjaIxvGa2wKZcfEYU
-         GVOiHO78LVXYR3LAWrFgKQkMl3fPWMSsEzAduXFeuuG11yO4eFfj9jizUBdvJv6PePOq
-         I0dQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779769592; x=1780374392;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GudgJJHZbsUHPisZInCPF6lXDepNPrpt+98+m4g4yPw=;
-        b=sdLFKXJ5CinZmpKviPbt+3TKwhrbsiHd4W3KGwLj09S1p9lmc3ZoMaBC1KZOu/+6Qj
-         4uqoT7pMA5q+9AtYUlUewDbmE5UCdqFuL7xiql64YIfgAPTQ+xXyuVnSjEuKISUDJiDT
-         IXPELGmQHdNjNmDWL14jVSh0/LV0cV7qjZmsVLvaA8sTK7wEIphzyitOIYlTIJgA/AK9
-         C5nYw3uIrkEjEPrTyXlX3x1Eq2dIdJ7w64lzHQc3hvnKZmQubp35dhlReH5rshfuI+uM
-         djRPn/6Y/WQcNMYJDxIm8rnaEykAlRV5Dwdt44m9NFR33Q6EFdb2yAa4Grf+t4O6Qel0
-         wDOA==
-X-Gm-Message-State: AOJu0Yy2Y/tR14E2cfheI1+hiCOs5Ns+8iLi5KMvmaWH9xLHkUGNVakG
-	enrNkQeFt8oFw083B375yGbXvnmTPpK32bqF92uHlUuay/1AH91dCl3v6BO0ng==
-X-Gm-Gg: Acq92OFppdMUodwyNdy449eLPF/YsmnRIIm+c8qhA8gQaiUcK4Vr/21/aLe34Hel0ib
-	GKr/futY/m12BZWODBjoUYVt7Kph+2x6WDvhZ849ZDV0pSpxqGCz0iQ+nAYD3JXqDotf4h5X1+3
-	O+2HSSuJPmUyJVgJa52XQ7Z/waWL0OF2LgmZrwhUCIy9/lZO1J5t60wGDIeSb5rglpHlGY07lwU
-	s2IKmH+R2PuAeVcW+rlNMBMYy0hx5tKVENXQ0r5cLzL5aTw+9egHZ7zVRS0AYHx0TOpZYEj/B1L
-	fNAwRChkPjaQLpk+ek0FR+w/kOYT/Zdv4a4ndBmD8uY7VOS9GETuGY9jjfTOcPeqjfB6EPCYE77
-	NYDcjsbVUmc+doTzUMe3mGH3npRYlHtvI6chfPykDwPOqNK9qL4KI7AaDorI6rkVto2fvVm/TO5
-	COUqoWh0O+6VfpcbWj+S31HuBjqeaw54iI8RO3mXBltCqWptDfdZtiq6neFrUPD23JnzsGp3gwa
-	cTcaFNQ5tqAtHPci6MS1V0EVCcDbFGog2M=
-X-Received: by 2002:a17:90b:560b:b0:35b:d795:cf5d with SMTP id 98e67ed59e1d1-36a6bb5b91dmr12330998a91.5.1779769592097;
-        Mon, 25 May 2026 21:26:32 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36a723cf27csm11044021a91.13.2026.05.25.21.26.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 May 2026 21:26:31 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linusw@kernel.org,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCHv2] PCI: hotplug: compaq: fix X86 dependency
-Date: Mon, 25 May 2026 21:26:14 -0700
-Message-ID: <20260526042614.1013867-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f7sy2BB3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3494D1F000E9;
+	Tue, 26 May 2026 04:31:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779769895;
+	bh=tljaTvv0fA8n5ojHqWJ2qf4OK0bi1oyUg1k+/OqmkdA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=f7sy2BB3PWyqCFlr0QUluYO3vABJnEXYSHsFS5Ag1cs99C5sP4Ms+3daPw7AB0PsQ
+	 lZ9tkipRI5+yiVam/ushytMstZERPCcC9JvYdvsukZzFQaDDI20FiZUinvuGNRfo1g
+	 xhrjo+7WqndpVmItahWUdCA0zvODHzI0RhJX0cIL2mq9EArmomG2wC7PIE+6+mKF7h
+	 n2U7Vh1mUyR54zOQxTNuiIwLIaNegPS4QtOUkRuWL6vZzaao6HL4Ka+B/aVBBgivQU
+	 MYl8gpkrAQxhcPfvEAoRnWpXfe6oExd0V2zdoKDqvOVur5TcmTeEFcn0B3UVeSjI4R
+	 e+ydrgMtOSW1g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v12 1/6] PCI/TPH: Fix pcie_tph_get_st_table_loc() field
+ extraction
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260526040830.52854-2-fengchengwen@huawei.com>
+References: <20260526040830.52854-2-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 26 May 2026 04:31:34 +0000
+Message-Id: <20260526043135.3494D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-This driver needs X86_32, not X86. It does not compile on x86_64 because
-of invalid assembly there.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Authored-by: Claude:Sonnet-4.6
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- v2: use X86_32
- drivers/pci/hotplug/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Pre-existing issues:
+- [High] Exported functions pcie_tph_get_st_table_loc() and pcie_tph_get_st=
+_table_size() do not verify that the device actually supports TPH (pdev->tp=
+h_cap !=3D 0) before accessing the capability offset.
+--
 
-diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
-index 891a81bac5e9..392cf75aeac9 100644
---- a/drivers/pci/hotplug/Kconfig
-+++ b/drivers/pci/hotplug/Kconfig
-@@ -20,7 +20,7 @@ if HOTPLUG_PCI
- 
- config HOTPLUG_PCI_COMPAQ
- 	tristate "Compaq PCI Hotplug driver"
--	depends on X86 && PCI_BIOS
-+	depends on X86_32 && PCI_BIOS
- 	help
- 	  Say Y here if you have a motherboard with a Compaq PCI Hotplug
- 	  controller.
--- 
-2.54.0
+commit 778a377b4fe5a5811f9d4225d057f7de399a56a3
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
+PCI/TPH: Fix pcie_tph_get_st_table_loc() field extraction
+
+This commit fixes the ST table location detection in
+pcie_tph_get_st_table_loc() by using bitwise AND with PCI_TPH_CAP_LOC_MASK
+instead of FIELD_GET(). The function was designed to return raw
+PCI_TPH_LOC_* values without shifting.
+
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 91145e8d9d951..877cf556242b4 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
+> @@ -170,7 +170,7 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
+> =20
+>  	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
+
+[Severity: High]
+This is a pre-existing issue, but should this function verify that the devi=
+ce
+actually supports TPH (pdev->tph_cap !=3D 0) before reading the capability?
+
+If a device lacks the TPH capability, pdev->tph_cap is 0, which results in a
+read of the generic PCI Command & Status registers at offset 0x04. The ST
+Table Location mask (bits 9-10) maps exactly to the Fast Back-to-Back Enable
+and Interrupt Disable bits in the Command register.
+
+If Interrupt Disable is set (which is standard for MSI/MSI-X devices), would
+this incorrectly return PCI_TPH_LOC_MSIX (0x400)? If Fast Back-to-Back Enab=
+le
+is set, it might return PCI_TPH_LOC_CAP (0x200) and then incorrectly extract
+the table size from the PCI Status register in pcie_tph_get_st_table_size().
+
+Since these are EXPORT_SYMBOL APIs, they can be called by external modules
+that might not independently validate pdev->tph_cap. This could lead to
+falsely detecting TPH support and allocating unnecessary shadow memory.
+
+> -	return FIELD_GET(PCI_TPH_CAP_LOC_MASK, reg);
+> +	return reg & PCI_TPH_CAP_LOC_MASK;
+>  }
+>  EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260526040830.5285=
+4-1-fengchengwen@huawei.com?part=3D1
