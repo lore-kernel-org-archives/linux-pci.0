@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE1E3CF03E;
-	Tue, 26 May 2026 08:53:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 174533CF045;
+	Tue, 26 May 2026 08:53:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779785613; cv=none; b=t4CiJ1d018LVkC4PIJD13z+ALzwIt7g5TmbWl+ABbvrQZY4pxKt0bdhcyyRBePJOeKpPXVQR9OJsclcDmrUSCuAvC+0Kw5oK08wXjPWgber7Ylfy35q5SWDJ15hIsPaN0+TQ1a2V2n1EmmWDDNFs8mfzPBuuX4L/ITTVKejVC/8=
+	t=1779785618; cv=none; b=OnXCEpMU9r8tIQWeOutBqb8NXnHJoAF7WgTOaMqM90wG6oPTL5r/2yGJZpJecTaF6kgG7w3VQcfrsPsRri4rHJL5dBGjxlt2aIA50aNawESyQQ/E42cJHcZj7ZVlD/ExwGbhpwC1wNgVLq4JlZtm8ReTy8VSXTv7FWtLvmWQp9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779785613; c=relaxed/simple;
-	bh=B8ij85Hw/qLn5RVZglRVIKe28UjQQOL3hPs8+BosxGE=;
+	s=arc-20240116; t=1779785618; c=relaxed/simple;
+	bh=XecAz66Kc7C4Cw05n6XeHD+LQOmdU+k9XBpXT/ryWoM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=iOz7rk4Culsw+xRR9OJfL8s3V1AaCLUvHUIko+eUORFyju2e/uIX/K0Ah/a+PwBt5ewrbhiaDw280eEl8nqjhSvhB3DUhY/3hx49kqEyio4o5fFFR4+U9bEAgdI7Psn1UtK7nCHKVnKwkUMUICnzp2ldEddy/gFfVYTBBJru6qw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fLJpYADu; arc=none smtp.client-ip=100.103.45.18
+	 In-Reply-To:To:Cc; b=aYM98Ddk0ChG2tDsL71Ay5vq5taJstMTCn+/DKTjCp//cnqCUaBYGTjqWVyLdwRlNOGSFTpYjFazZOgGiUR7NMzQwArfhIFTfLFWgtJ9cjUyUsTJMcK92uDiDpigNKEzZLNkoMtKf2k5TJFBabEniDhzKRAgaAFZBRzOcSupKxI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkkP+EH4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fLJpYADu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EC281F00A3A;
-	Tue, 26 May 2026 08:53:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkkP+EH4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D25F1F000E9;
+	Tue, 26 May 2026 08:53:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779785612;
-	bh=FTfoCK53LZqTZePQr1um+a30TBuhboiR4GXKJunKjI4=;
+	s=k20260515; t=1779785614;
+	bh=rBXLQu9NLzvQphj7Js4vMSROMFTI28St6wAsdKq0lsk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=fLJpYADuO9aDwXTgr1i6axXNU6GKD++aYW/x1kjnKWN1K0oYy5TiGmCkHM1WD5Z/9
-	 dPSi43RgtGbPE51wxE2zLq6FVIZI+z9Y5IK/zCXBJsPI27Fzcggc94Bqets7gLrPi4
-	 nSC4Ll4iQHnykhEJ1Wa2YRSO7UO598Daw6PWcoB/CNyoQm0kkVyhC2OuXNpJjNLrTd
-	 dPwu57x+qDHf6uvr65rlY1EOcJ329rqeAd6hxhxL7AYSoOO5TBhuM9MLujvacwgj25
-	 qx1uam2RySG9qSn0ON0utoilUCB+/sYeXkHsPXfvr9lkftMcfs+F5uNvAJ1YdMPkiU
-	 BMiPW68mU3EVA==
+	b=YkkP+EH4UcabGkIH2+0r647amnMbSm+nRawxdaIYTAAvvMWgGotJ51FV1O9D9HRpL
+	 HvQWrk+j6adgjHWLFIoXmBOWdJGCHqv2ZH3VGaP1RXpzqS9fay3/T6K7dkY+3XaE8/
+	 NwdpZl1jt+irl/LyFpWW4WUf+4PjdiBh3fdtNLYP3MNREQdSGNvGdT3c3cwpMsC+97
+	 VjorU9pRMRQBDX9ca2yG4hk3kiqj0FZ1wzwSZkiSnfYGdJV7e73lnPJMkrpogtz6/c
+	 a+F1uC8QuUZX89+PXF5WGmt6um6R9LkWOv2blvq+I1pfBUuekPT8XVzy1AzzTS0JeY
+	 +OAV8JM4+X6cA==
 From: Thierry Reding <thierry.reding@kernel.org>
-Date: Tue, 26 May 2026 10:53:11 +0200
-Subject: [PATCH v5 2/4] PCI: Use standard wait times for PCIe link
- monitoring
+Date: Tue, 26 May 2026 10:53:12 +0200
+Subject: [PATCH v5 3/4] PCI: tegra: Add Tegra264 support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260526-tegra264-pcie-v5-2-84a813b979d7@nvidia.com>
+Message-Id: <20260526-tegra264-pcie-v5-3-84a813b979d7@nvidia.com>
 References: <20260526-tegra264-pcie-v5-0-84a813b979d7@nvidia.com>
 In-Reply-To: <20260526-tegra264-pcie-v5-0-84a813b979d7@nvidia.com>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -57,226 +56,658 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
  Thierry Reding <thierry.reding@kernel.org>, Aksh Garg <a-garg7@ti.com>
 Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
  linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>
+ linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+ Manikanta Maddireddy <mmaddireddy@nvidia.com>
 X-Mailer: b4 0.15.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7887; i=treding@nvidia.com;
- h=from:subject:message-id; bh=21/xDPo1GJPZ4Dc6CWXBd9Y2Su9238+zhKdFG/Km44U=;
- b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBqFV+Damiy3x3fwh0koJF9O4ZPkaHgfWQb1cEPr
- CE4hIyGVqiJAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCahVfgwAKCRDdI6zXfz6z
- oYCKEACR+lTR3MhKk1M0IaR+PUW2zrhUjqZYEjFzd4AyM4cT2iril4pJniXGhjDoLkAdHHbxLsm
- GxgZ5tkMVjSBmLJLT/GLLmvSPuWTv9/Ij0K55VDk0ZlLd3fE18mCERaXwHQT9JEtvT6pIeeexNu
- nONfXbWRyw4uUpPvUClqJO3++w389E2eFQAdlJqXEqlPl/ScZk2UnIKb+Xp7cgEkDVpf5/GRthF
- g31RtBB/4FDbz8aV84qfLbCBXbcJuzqDaEOHaW6P0+39XouGOLTpvh/NVXjeEJV0BJxjAkrK4Dl
- WGBzOURG1NhR9a5P8We/o9CMLlsH07K9Mo/eyH9c7LTCdWkYVnPuGXnkDXDvAAgK9sEiPGhlfiG
- E5XlwVdOhD8PT4DCicDlS0D6SmJ/B4JFTynnSrf6zVdvg6SXAUBJO7J9VFiUH24T3G9cQvz0wk3
- 4k7fQqECVX4GSoImR0ouschP/mWFrQ2NyQ9jl/SurHFCQcp9zXUAhGqZVBipbKdR2jvUilBAdAd
- 7VBVwLtm7LqneYa0jEX9IhVG7gArIzk4Jzgfg0z5St0V7VSJSSoLS34O3L4fF4Ty7Xysmwb58sU
- 6zc5QdMcDjJ2U5MyF4SglkjvyCMObaNaU+aXDE80gEY3iEgN3YBoEoc2Uu9iWZ2p+mhkQ0ojB2V
- K0FH8HeNQgehRkg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=19120; i=treding@nvidia.com;
+ h=from:subject:message-id; bh=C6wodI18oJnklRbqnEZqqad4qIqipoTuniMMZqw8g+0=;
+ b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBqFV+EA6tSAjhG9geWeJGFN6BnIa9nxqoaztcbu
+ Kq6j64sWrWJAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCahVfhAAKCRDdI6zXfz6z
+ ocKhD/4ktPxAjVFtRQwjjpte0iZ8qKQofg4SEAVivFlx0LctLz0H2UxctgkGCo3unoGYlK7lAFo
+ m92F5clTH4Mw2G90ifPKuC61pvOOND0W4DusmZaw8mWY2eOTrlo2wcOsw1pGYUvRT5JNqO8pBiv
+ 3vrerWLCKmbOmyxFcRptXTmLEJY0+xnblx+c4egnef7KWt+fVm/2UuyxMCs1ftfkcxNNyb9AglK
+ FQ+TN+bukTSL0P9uVkuBE6F/oR1BBXhS1OJa+rCQXgpZVb8r8GnR6WqNRC0U7H/Y639jZAoYGPD
+ GtGR5x2wYVdecHG2ElY6OSsn3HwIeheSMy3AJTmhhkBUc9TdM1QHFU3S6ZWSBd6hGrU606GAYi9
+ eAPMXIKiH89AtWBXn3et14GnamwtJIjtnqz0dEMscnOrL3yqk/xsiXeW18upDFEZhfs1oth9DLH
+ ECFJjsCwRjCRhq3KfZR81WjZEW4acd5vnv44oT/l4okyMM6FuWX57C6KJrbOqKPDNa9HimdzkCL
+ n8UqB4nUJttOfTNiFqKCr0TZ31o01dP+D4SOBXxoVSHdYrbZrXboVJnK+kqQ/cG9pfm9guE2cxO
+ GViqPMbmbp4N6gZenctlk+pnu0Bj6qWJHhzJ6qH+qxVVATBwWyds+23x2Lf/vqcy/vQ7R3EX441
+ W54ZqTQc+KoeZIQ==
 X-Developer-Key: i=treding@nvidia.com; a=openpgp;
  fpr=88EAC3080149CCF7C08DC89FDD23ACD77F3EB3A1
 
 From: Thierry Reding <treding@nvidia.com>
 
-Instead of defining the wait values for each driver, use common values
-defined in the core pci.h header file. Note that most drivers don't use
-the millisecond waits, but rather usleep_range(), so add these commonly
-used values to the header so that all drivers can use them.
+Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
+driver is very small, with its main purpose being to set up the address
+translation registers and then creating a standard PCI host using ECAM.
 
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
-Changes in v2:
-- fix build for Cadence
----
- drivers/pci/controller/cadence/pcie-cadence-host-common.c | 6 ++++--
- drivers/pci/controller/cadence/pcie-cadence-lga-regs.h    | 5 -----
- drivers/pci/controller/mobiveil/pcie-mobiveil.c           | 4 ++--
- drivers/pci/controller/mobiveil/pcie-mobiveil.h           | 5 -----
- drivers/pci/controller/pci-aardvark.c                     | 7 ++-----
- drivers/pci/controller/pcie-xilinx-nwl.c                  | 9 ++-------
- drivers/pci/controller/plda/pcie-starfive.c               | 9 ++-------
- drivers/pci/pci.h                                         | 2 ++
- 8 files changed, 14 insertions(+), 33 deletions(-)
+Changes in v5:
+- make PCIE_TEGRA264 symbol tristate
+- drop dependency on PCI_MSI
+- reorganize tegra264_pcie struct
+- use standard wake-gpios property
+- rename tegra264_pcie_bpmp_set_rp_state() to tegra264_pcie_power_off()
+- use dev_err() instead of dev_info() for some error messages
+- add clarifying comment as to why bandwidth requests aren't fatal
+- address some compiler warnings on 32-bit physical address platforms
+- drop needless comments
+- explicitly deinitialize controller on suspend
+- use devm_pm_runtime_active_enabled()
+- rename "free" label to "free_ecam"
+- use dev_err_probe() in more places
+- reselect default pin state during resume, not probe
+- return early on absence of wake GPIO
+- simplify BW value calculation
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host-common.c b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-index 2b0211870f02..72b36c70f389 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host-common.c
-@@ -15,6 +15,8 @@
- #include "pcie-cadence.h"
- #include "pcie-cadence-host-common.h"
- 
-+#include "../../pci.h"
+Changes in v2:
+- specify generations applicable for PCI_TEGRA driver to avoid confusion
+- drop SPDX-FileCopyrightText tag
+- rename link_state to link_up to clarify meaning
+- replace memset() by an empty initializer
+- sanity-check only enable BAR regions
+- bring PCI link out of reset in case firmware didn't
+- use common wait times instead of defining our own
+- use core helpers to parse and print PCI link speed
+- fix multi-line comment
+- use dev_err_probe() more ubiquitously
+- fix probe sequence and error cleanup
+- use DEFINE_NOIRQ_DEV_PM_OPS() to avoid warnings for !PM_SUSPEND
+- reuse more standard registers and remove unused register definitions
+- use %pe and ERR_PTR() to print symbolic errors
+- add signed-off-by from Manikanta as the original author
+- add myself as author after significantly modifying the driver
+---
+ drivers/pci/controller/Kconfig         |   9 +-
+ drivers/pci/controller/Makefile        |   1 +
+ drivers/pci/controller/pcie-tegra264.c | 544 +++++++++++++++++++++++++++++++++
+ 3 files changed, 553 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 2247709ef6d6..dde2f59fef7a 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -255,7 +255,14 @@ config PCI_TEGRA
+ 	select IRQ_MSI_LIB
+ 	help
+ 	  Say Y here if you want support for the PCIe host controller found
+-	  on NVIDIA Tegra SoCs.
++	  on NVIDIA Tegra SoCs (Tegra20 through Tegra186).
 +
- #define LINK_RETRAIN_TIMEOUT HZ
++config PCIE_TEGRA264
++	tristate "NVIDIA Tegra264 PCIe controller"
++	depends on ARCH_TEGRA || COMPILE_TEST
++	help
++	  Say Y here if you want support for the PCIe host controller found
++	  on NVIDIA Tegra264 SoCs.
  
- u64 bar_max_size[] = {
-@@ -53,12 +55,12 @@ int cdns_pcie_host_wait_for_link(struct cdns_pcie *pcie,
- 	int retries;
- 
- 	/* Check if the link is up or not */
--	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+	for (retries = 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (pcie_link_up(pcie)) {
- 			dev_info(dev, "Link up\n");
- 			return 0;
- 		}
--		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+ config PCIE_RCAR_HOST
+ 	bool "Renesas R-Car PCIe controller (host mode)"
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index ac8db283f0fe..d478743b5142 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -7,6 +7,7 @@ obj-$(CONFIG_PCI_HYPERV_INTERFACE) += pci-hyperv-intf.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+ obj-$(CONFIG_PCI_AARDVARK) += pci-aardvark.o
+ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
++obj-$(CONFIG_PCIE_TEGRA264) += pcie-tegra264.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+ obj-$(CONFIG_PCIE_RCAR_HOST) += pcie-rcar.o pcie-rcar-host.o
+ obj-$(CONFIG_PCIE_RCAR_EP) += pcie-rcar.o pcie-rcar-ep.o
+diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/controller/pcie-tegra264.c
+new file mode 100644
+index 000000000000..0b8e0f724e25
+--- /dev/null
++++ b/drivers/pci/controller/pcie-tegra264.c
+@@ -0,0 +1,544 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * PCIe host controller driver for Tegra264 SoC
++ *
++ * Copyright (c) 2022-2026, NVIDIA CORPORATION. All rights reserved.
++ */
++
++#include <linux/delay.h>
++#include <linux/gpio/consumer.h>
++#include <linux/init.h>
++#include <linux/interconnect.h>
++#include <linux/interrupt.h>
++#include <linux/iopoll.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_device.h>
++#include <linux/of.h>
++#include <linux/of_pci.h>
++#include <linux/of_platform.h>
++#include <linux/pci-ecam.h>
++#include <linux/pci.h>
++#include <linux/pinctrl/consumer.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++
++#include <soc/tegra/bpmp.h>
++#include <soc/tegra/bpmp-abi.h>
++#include <soc/tegra/fuse.h>
++
++#include "../pci.h"
++
++/* XAL registers */
++#define XAL_RC_ECAM_BASE_HI			0x00
++#define XAL_RC_ECAM_BASE_LO			0x04
++#define XAL_RC_ECAM_BUSMASK			0x08
++#define XAL_RC_IO_BASE_HI			0x0c
++#define XAL_RC_IO_BASE_LO			0x10
++#define XAL_RC_IO_LIMIT_HI			0x14
++#define XAL_RC_IO_LIMIT_LO			0x18
++#define XAL_RC_MEM_32BIT_BASE_HI		0x1c
++#define XAL_RC_MEM_32BIT_BASE_LO		0x20
++#define XAL_RC_MEM_32BIT_LIMIT_HI		0x24
++#define XAL_RC_MEM_32BIT_LIMIT_LO		0x28
++#define XAL_RC_MEM_64BIT_BASE_HI		0x2c
++#define XAL_RC_MEM_64BIT_BASE_LO		0x30
++#define XAL_RC_MEM_64BIT_LIMIT_HI		0x34
++#define XAL_RC_MEM_64BIT_LIMIT_LO		0x38
++#define XAL_RC_BAR_CNTL_STANDARD		0x40
++#define XAL_RC_BAR_CNTL_STANDARD_IOBAR_EN	BIT(0)
++#define XAL_RC_BAR_CNTL_STANDARD_32B_BAR_EN	BIT(1)
++#define XAL_RC_BAR_CNTL_STANDARD_64B_BAR_EN	BIT(2)
++
++/* XTL registers */
++#define XTL_RC_PCIE_CFG_LINK_STATUS		0x5a
++
++#define XTL_RC_MGMT_PERST_CONTROL		0x218
++#define XTL_RC_MGMT_PERST_CONTROL_PERST_O_N	BIT(0)
++
++#define XTL_RC_MGMT_CLOCK_CONTROL		0x47c
++#define XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_TO_PRSNT	BIT(9)
++
++struct tegra264_pcie {
++	struct device *dev;
++
++	/* I/O memory */
++	void __iomem *xal;
++	void __iomem *xtl;
++	void __iomem *ecam;
++
++	/* bridge configuration */
++	struct pci_config_window *cfg;
++	struct pci_host_bridge *bridge;
++
++	/* wake IRQ */
++	struct gpio_desc *wake_gpio;
++	unsigned int wake_irq;
++
++	/* BPMP and bandwidth management */
++	struct icc_path *icc_path;
++	struct tegra_bpmp *bpmp;
++	u32 ctl_id;
++
++	bool link_up;
++};
++
++static int tegra264_pcie_parse_dt(struct tegra264_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	int err;
++
++	pcie->wake_gpio = devm_gpiod_get_optional(dev, "wake", GPIOD_IN);
++	if (IS_ERR(pcie->wake_gpio))
++		return PTR_ERR(pcie->wake_gpio);
++
++	if (!pcie->wake_gpio)
++		return 0;
++
++	device_init_wakeup(dev, true);
++
++	err = gpiod_to_irq(pcie->wake_gpio);
++	if (err < 0)
++		return dev_err_probe(dev, err, "failed to get wake IRQ\n");
++
++	pcie->wake_irq = (unsigned int)err;
++
++	return 0;
++}
++
++static void tegra264_pcie_power_off(struct tegra264_pcie *pcie)
++{
++	struct tegra_bpmp_message msg = {};
++	struct mrq_pcie_request req = {};
++	int err;
++
++	req.cmd = CMD_PCIE_RP_CONTROLLER_OFF;
++	req.rp_ctrlr_off.rp_controller = pcie->ctl_id;
++
++	msg.mrq = MRQ_PCIE;
++	msg.tx.data = &req;
++	msg.tx.size = sizeof(req);
++
++	err = tegra_bpmp_transfer(pcie->bpmp, &msg);
++	if (err)
++		dev_err(pcie->dev, "failed to turn off PCIe #%u: %pe\n",
++			pcie->ctl_id, ERR_PTR(err));
++
++	if (msg.rx.ret)
++		dev_err(pcie->dev, "failed to turn off PCIe #%u: %d\n",
++			pcie->ctl_id, msg.rx.ret);
++}
++
++static void tegra264_pcie_icc_set(struct tegra264_pcie *pcie)
++{
++	u32 value, speed, width;
++	int err;
++
++	value = readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
++	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, value);
++	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, value);
++
++	value = Mbps_to_icc(width * PCIE_SPEED2MBS_ENC(speed));
++
++	/*
++	 * We don't want to error out here because a boot-critical device
++	 * could be connected to this root port. Failure to set the bandwidth
++	 * request may have an adverse impact on performance, but it is not
++	 * generally fatal, so we opt to continue regardless so that users
++	 * get a chance to fix things.
++	 */
++	err = icc_set_bw(pcie->icc_path, value, value);
++	if (err < 0)
++		dev_err(pcie->dev,
++			"failed to request bandwidth (%u MBps): %pe\n",
++			value, ERR_PTR(err));
++}
++
++/*
++ * The various memory regions used by the controller (I/O, memory, ECAM) are
++ * set up during early boot and have hardware-level protections in place. If
++ * the DT ranges don't match what's been setup, the controller won't be able
++ * to write the address endpoints properly, so make sure to validate that DT
++ * and firmware programming agree on these ranges.
++ */
++static bool tegra264_pcie_check_ranges(struct platform_device *pdev)
++{
++	struct tegra264_pcie *pcie = platform_get_drvdata(pdev);
++	struct device_node *np = pcie->dev->of_node;
++	struct of_pci_range_parser parser;
++	phys_addr_t phys, limit, hi, lo;
++	struct of_pci_range range;
++	struct resource *res;
++	bool status = true;
++	u32 value;
++	int err;
++
++	err = of_pci_range_parser_init(&parser, np);
++	if (err < 0)
++		return false;
++
++	for_each_of_pci_range(&parser, &range) {
++		unsigned int addr_hi, addr_lo, limit_hi, limit_lo, enable;
++		unsigned long type = range.flags & IORESOURCE_TYPE_BITS;
++		phys_addr_t start, end, mask;
++		const char *region = NULL;
++
++		end = range.cpu_addr + range.size - 1;
++		start = range.cpu_addr;
++
++		switch (type) {
++		case IORESOURCE_IO:
++			addr_hi = XAL_RC_IO_BASE_HI;
++			addr_lo = XAL_RC_IO_BASE_LO;
++			limit_hi = XAL_RC_IO_LIMIT_HI;
++			limit_lo = XAL_RC_IO_LIMIT_LO;
++			enable = XAL_RC_BAR_CNTL_STANDARD_IOBAR_EN;
++			mask = SZ_64K - 1;
++			region = "I/O";
++			break;
++
++		case IORESOURCE_MEM:
++			if (range.flags & IORESOURCE_PREFETCH) {
++				addr_hi = XAL_RC_MEM_64BIT_BASE_HI;
++				addr_lo = XAL_RC_MEM_64BIT_BASE_LO;
++				limit_hi = XAL_RC_MEM_64BIT_LIMIT_HI;
++				limit_lo = XAL_RC_MEM_64BIT_LIMIT_LO;
++				enable = XAL_RC_BAR_CNTL_STANDARD_64B_BAR_EN;
++				region = "prefetchable memory";
++			} else {
++				addr_hi = XAL_RC_MEM_32BIT_BASE_HI;
++				addr_lo = XAL_RC_MEM_32BIT_BASE_LO;
++				limit_hi = XAL_RC_MEM_32BIT_LIMIT_HI;
++				limit_lo = XAL_RC_MEM_32BIT_LIMIT_LO;
++				enable = XAL_RC_BAR_CNTL_STANDARD_32B_BAR_EN;
++				region = "memory";
++			}
++
++			mask = SZ_1M - 1;
++			break;
++		}
++
++		/* not interested in anything that's not I/O or memory */
++		if (!region)
++			continue;
++
++		/* don't check regions that haven't been enabled */
++		value = readl(pcie->xal + XAL_RC_BAR_CNTL_STANDARD);
++		if ((value & enable) == 0)
++			continue;
++
++		hi = readl(pcie->xal + addr_hi);
++		lo = readl(pcie->xal + addr_lo);
++		phys = ((hi << 16) << 16) | lo;
++
++		hi = readl(pcie->xal + limit_hi);
++		lo = readl(pcie->xal + limit_lo);
++		limit = ((hi << 16) << 16) | lo | mask;
++
++		if (phys != start || limit != end) {
++			dev_err(pcie->dev,
++				"%s region mismatch: %pap-%pap -> %pap-%pap\n",
++				region, &phys, &limit, &start, &end);
++			status = false;
++		}
++	}
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam");
++	if (!res)
++		return false;
++
++	hi = readl(pcie->xal + XAL_RC_ECAM_BASE_HI);
++	lo = readl(pcie->xal + XAL_RC_ECAM_BASE_LO);
++	phys = ((hi << 16) << 16) | lo;
++
++	value = readl(pcie->xal + XAL_RC_ECAM_BUSMASK);
++	limit = phys + ((value + 1) << 20) - 1;
++
++	if (phys != res->start || limit != res->end) {
++		dev_err(pcie->dev,
++			"ECAM region mismatch: %pap-%pap -> %pap-%pap\n",
++			&phys, &limit, &res->start, &res->end);
++		status = false;
++	}
++
++	return status;
++}
++
++static bool tegra264_pcie_link_up(struct tegra264_pcie *pcie,
++				  enum pci_bus_speed *speed)
++{
++	u16 value = readw(pcie->ecam + XTL_RC_PCIE_CFG_LINK_STATUS);
++
++	if (value & PCI_EXP_LNKSTA_DLLLA) {
++		if (speed)
++			*speed = pcie_link_speed[FIELD_GET(PCI_EXP_LNKSTA_CLS,
++							   value)];
++
++		return true;
++	}
++
++	return false;
++}
++
++static void tegra264_pcie_init(struct tegra264_pcie *pcie)
++{
++	enum pci_bus_speed speed;
++	unsigned int i;
++	u32 value;
++
++	/* bring the endpoint out of reset */
++	value = readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
++	value |= XTL_RC_MGMT_PERST_CONTROL_PERST_O_N;
++	writel(value, pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
++
++	if (!tegra_is_silicon()) {
++		dev_info(pcie->dev,
++			 "skipping link state for PCIe #%u in simulation\n",
++			 pcie->ctl_id);
++		pcie->link_up = true;
++		return;
++	}
++
++	for (i = 0; i < PCIE_LINK_WAIT_MAX_RETRIES; i++) {
++		if (tegra264_pcie_link_up(pcie, NULL))
++			break;
++
 +		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
- 	}
- 
- 	return -ETIMEDOUT;
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h b/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
-index 857b2140c5d2..15dc4fcaf45d 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
-@@ -10,11 +10,6 @@
- 
- #include <linux/bitfield.h>
- 
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES	10
--#define LINK_WAIT_USLEEP_MIN	90000
--#define LINK_WAIT_USLEEP_MAX	100000
--
- /* Local Management Registers */
- #define CDNS_PCIE_LM_BASE	0x00100000
- 
-diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.c b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-index 62ecbaeb0a60..cc102032c1e6 100644
---- a/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-+++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-@@ -218,11 +218,11 @@ int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
- 	int retries;
- 
- 	/* check if the link is up or not */
--	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+	for (retries = 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (mobiveil_pcie_link_up(pcie))
- 			return 0;
- 
--		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
-+		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
- 	}
- 
- 	dev_err(&pcie->pdev->dev, "link never came up\n");
-diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-index 7246de6a7176..11010a99e27c 100644
---- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-+++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-@@ -122,11 +122,6 @@
- #define IB_WIN_SIZE			((u64)256 * 1024 * 1024 * 1024)
- #define MAX_PIO_WINDOWS			8
- 
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES		10
--#define LINK_WAIT_MIN			90000
--#define LINK_WAIT_MAX			100000
--
- #define PAGED_ADDR_BNDRY		0xc00
- #define OFFSET_TO_PAGE_ADDR(off)	\
- 	((off & PAGE_LO_MASK) | PAGED_ADDR_BNDRY)
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index e34bea1ff0ac..506323a6c72b 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -255,9 +255,6 @@ enum {
- #define PIO_RETRY_CNT			750000 /* 1.5 s */
- #define PIO_RETRY_DELAY			2 /* 2 us*/
- 
--#define LINK_WAIT_MAX_RETRIES		10
--#define LINK_WAIT_USLEEP_MIN		90000
--#define LINK_WAIT_USLEEP_MAX		100000
- #define RETRAIN_WAIT_MAX_RETRIES	10
- #define RETRAIN_WAIT_USLEEP_US		2000
- 
-@@ -349,11 +346,11 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
- 	int retries;
- 
- 	/* check if the link is up or not */
--	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+	for (retries = 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (advk_pcie_link_up(pcie))
- 			return 0;
- 
--		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-+		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
- 	}
- 
- 	return -ETIMEDOUT;
-diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-index 7db2c96c6cec..fc65e9fdddb3 100644
---- a/drivers/pci/controller/pcie-xilinx-nwl.c
-+++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-@@ -140,11 +140,6 @@
- #define PCIE_PHY_LINKUP_BIT		BIT(0)
- #define PHY_RDY_LINKUP_BIT		BIT(1)
- 
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES          10
--#define LINK_WAIT_USLEEP_MIN           90000
--#define LINK_WAIT_USLEEP_MAX           100000
--
- struct nwl_msi {			/* MSI information */
- 	DECLARE_BITMAP(bitmap, INT_PCI_MSI_NR);
- 	struct irq_domain *dev_domain;
-@@ -203,10 +198,10 @@ static int nwl_wait_for_link(struct nwl_pcie *pcie)
- 	int retries;
- 
- 	/* check if the link is up or not */
--	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+	for (retries = 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (nwl_phy_link_up(pcie))
- 			return 0;
--		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-+		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
- 	}
- 
- 	dev_err(dev, "PHY link never came up\n");
-diff --git a/drivers/pci/controller/plda/pcie-starfive.c b/drivers/pci/controller/plda/pcie-starfive.c
-index 298036c3e7f9..542a751b6f4d 100644
---- a/drivers/pci/controller/plda/pcie-starfive.c
-+++ b/drivers/pci/controller/plda/pcie-starfive.c
-@@ -45,11 +45,6 @@
- #define STG_SYSCON_LNKSTA_OFFSET		0x170
- #define DATA_LINK_ACTIVE			BIT(5)
- 
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES	10
--#define LINK_WAIT_USLEEP_MIN	90000
--#define LINK_WAIT_USLEEP_MAX	100000
--
- struct starfive_jh7110_pcie {
- 	struct plda_pcie_rp plda;
- 	struct reset_control *resets;
-@@ -217,12 +212,12 @@ static int starfive_pcie_host_wait_for_link(struct starfive_jh7110_pcie *pcie)
- 	int retries;
- 
- 	/* Check if the link is up or not */
--	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+	for (retries = 0; retries < PCIE_LINK_WAIT_MAX_RETRIES; retries++) {
- 		if (starfive_pcie_link_up(&pcie->plda)) {
- 			dev_info(pcie->plda.dev, "port link up\n");
- 			return 0;
- 		}
--		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-+		usleep_range(PCIE_LINK_WAIT_US_MIN, PCIE_LINK_WAIT_US_MAX);
- 	}
- 
- 	return -ETIMEDOUT;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index b36667969ad5..54a9e06e85f8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -63,6 +63,8 @@ struct pcie_tlp_log;
- /* Parameters for the waiting for link up routine */
- #define PCIE_LINK_WAIT_MAX_RETRIES	10
- #define PCIE_LINK_WAIT_SLEEP_MS		90
-+#define PCIE_LINK_WAIT_US_MIN		90000
-+#define PCIE_LINK_WAIT_US_MAX		100000
- 
- /* Format of TLP; PCIe r7.0, sec 2.2.1 */
- #define PCIE_TLP_FMT_3DW_NO_DATA	0x00 /* 3DW header, no data */
++	}
++
++	if (tegra264_pcie_link_up(pcie, &speed)) {
++		msleep(PCIE_RESET_CONFIG_WAIT_MS);
++		dev_info(pcie->dev, "PCIe #%u link is up (speed: %s)\n",
++			 pcie->ctl_id, pci_speed_string(speed));
++		tegra264_pcie_icc_set(pcie);
++		pcie->link_up = true;
++	} else {
++		dev_info(pcie->dev, "PCIe #%u link is down\n", pcie->ctl_id);
++
++		value = readl(pcie->xtl + XTL_RC_MGMT_CLOCK_CONTROL);
++
++		/*
++		 * Set link state only when link fails and no hot-plug feature
++		 * is present.
++		 */
++		if ((value & XTL_RC_MGMT_CLOCK_CONTROL_PEX_CLKREQ_I_N_PIN_USE_CONV_TO_PRSNT) == 0) {
++			dev_info(pcie->dev,
++				 "PCIe #%u link is down and not hotplug-capable, turning off\n",
++				 pcie->ctl_id);
++			tegra264_pcie_power_off(pcie);
++			pcie->link_up = false;
++		} else {
++			pcie->link_up = true;
++		}
++	}
++}
++
++static void tegra264_pcie_deinit(struct tegra264_pcie *pcie)
++{
++	u32 value;
++
++	/* take the endpoint into reset */
++	value = readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
++	value &= ~XTL_RC_MGMT_PERST_CONTROL_PERST_O_N;
++	writel(value, pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
++}
++
++static int tegra264_pcie_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct pci_host_bridge *bridge;
++	struct tegra264_pcie *pcie;
++	struct resource_entry *bus;
++	struct resource *res;
++	int err;
++
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct tegra264_pcie));
++	if (!bridge)
++		return dev_err_probe(dev, -ENOMEM,
++				     "failed to allocate host bridge\n");
++
++	pcie = pci_host_bridge_priv(bridge);
++	platform_set_drvdata(pdev, pcie);
++	pcie->bridge = bridge;
++	pcie->dev = dev;
++
++	err = tegra264_pcie_parse_dt(pcie);
++	if (err < 0)
++		return dev_err_probe(dev, err, "failed to parse device tree\n");
++
++	pcie->xal = devm_platform_ioremap_resource_byname(pdev, "xal");
++	if (IS_ERR(pcie->xal))
++		return dev_err_probe(dev, PTR_ERR(pcie->xal),
++				     "failed to map XAL memory\n");
++
++	pcie->xtl = devm_platform_ioremap_resource_byname(pdev, "xtl-pri");
++	if (IS_ERR(pcie->xtl))
++		return dev_err_probe(dev, PTR_ERR(pcie->xtl),
++				     "failed to map XTL-PRI memory\n");
++
++	bus = resource_list_first_type(&bridge->windows, IORESOURCE_BUS);
++	if (!bus)
++		return dev_err_probe(dev, -ENODEV,
++				     "failed to get bus resources\n");
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam");
++	if (!res)
++		return dev_err_probe(dev, -ENXIO,
++				     "failed to get ECAM resource\n");
++
++	pcie->icc_path = devm_of_icc_get(dev, "write");
++	if (IS_ERR(pcie->icc_path))
++		return dev_err_probe(dev, PTR_ERR(pcie->icc_path),
++				     "failed to get ICC\n");
++
++	/*
++	 * Parse BPMP property only for silicon, as interaction with BPMP is
++	 * not needed for other platforms.
++	 */
++	if (tegra_is_silicon()) {
++		pcie->bpmp = tegra_bpmp_get_with_id(dev, &pcie->ctl_id);
++		if (IS_ERR(pcie->bpmp))
++			return dev_err_probe(dev, PTR_ERR(pcie->bpmp),
++					     "failed to get BPMP\n");
++	}
++
++	err = devm_pm_runtime_active_enabled(dev);
++	if (err < 0)
++		return dev_err_probe(dev, "failed to enable runtime PM\n");
++
++	pm_runtime_get_sync(dev);
++
++	/* sanity check that programmed ranges match what's in DT */
++	if (!tegra264_pcie_check_ranges(pdev)) {
++		err = -EINVAL;
++		goto put_pm;
++	}
++
++	pcie->cfg = pci_ecam_create(dev, res, bus->res, &pci_generic_ecam_ops);
++	if (IS_ERR(pcie->cfg)) {
++		err = dev_err_probe(dev, PTR_ERR(pcie->cfg),
++				    "failed to create ECAM\n");
++		goto put_pm;
++	}
++
++	bridge->ops = (struct pci_ops *)&pci_generic_ecam_ops.pci_ops;
++	bridge->sysdata = pcie->cfg;
++	pcie->ecam = pcie->cfg->win;
++
++	tegra264_pcie_init(pcie);
++
++	if (!pcie->link_up)
++		goto free_ecam;
++
++	err = pci_host_probe(bridge);
++	if (err < 0) {
++		dev_err_probe(dev, ERR_PTR(err), "failed to register host\n");
++		goto free_ecam;
++	}
++
++	return 0;
++
++free_ecam:
++	pci_ecam_free(pcie->cfg);
++put_pm:
++	pm_runtime_put_sync(dev);
++
++	if (tegra_is_silicon())
++		tegra_bpmp_put(pcie->bpmp);
++
++	return err;
++}
++
++static void tegra264_pcie_remove(struct platform_device *pdev)
++{
++	struct tegra264_pcie *pcie = platform_get_drvdata(pdev);
++
++	/*
++	 * If we undo tegra264_pcie_init() then link goes down and need
++	 * controller reset to bring up the link again. Remove intention is
++	 * to clean up the root bridge and re-enumerate during bind.
++	 */
++	pci_lock_rescan_remove();
++	pci_stop_root_bus(pcie->bridge->bus);
++	pci_remove_root_bus(pcie->bridge->bus);
++	pci_unlock_rescan_remove();
++
++	pm_runtime_put_sync(&pdev->dev);
++	pm_runtime_disable(&pdev->dev);
++
++	if (tegra_is_silicon())
++		tegra_bpmp_put(pcie->bpmp);
++
++	pci_ecam_free(pcie->cfg);
++}
++
++static int tegra264_pcie_suspend_noirq(struct device *dev)
++{
++	struct tegra264_pcie *pcie = dev_get_drvdata(dev);
++	int err;
++
++	tegra_pcie_deinit(pcie);
++
++	if (pcie->wake_gpio && device_may_wakeup(dev)) {
++		err = enable_irq_wake(pcie->wake_irq);
++		if (err < 0)
++			dev_err(dev, "failed to enable wake IRQ: %pe\n",
++				ERR_PTR(err));
++	}
++
++	return 0;
++}
++
++static int tegra264_pcie_resume_noirq(struct device *dev)
++{
++	struct tegra264_pcie *pcie = dev_get_drvdata(dev);
++	int err;
++
++	err = pinctrl_pm_select_default_state(dev);
++	if (err < 0)
++		dev_err(dev, "failed to configure sideband pins: %pe\n",
++			ERR_PTR(err));
++
++	if (pcie->wake_gpio && device_may_wakeup(dev)) {
++		err = disable_irq_wake(pcie->wake_irq);
++		if (err < 0)
++			dev_err(dev, "failed to disable wake IRQ: %pe\n",
++				ERR_PTR(err));
++	}
++
++	if (pcie->link_up == false)
++		return 0;
++
++	tegra264_pcie_init(pcie);
++
++	return 0;
++}
++
++static DEFINE_NOIRQ_DEV_PM_OPS(tegra264_pcie_pm_ops,
++			       tegra264_pcie_suspend_noirq,
++			       tegra264_pcie_resume_noirq);
++
++static const struct of_device_id tegra264_pcie_of_match[] = {
++	{
++		.compatible = "nvidia,tegra264-pcie",
++	},
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, tegra264_pcie_of_match);
++
++static struct platform_driver tegra264_pcie_driver = {
++	.probe = tegra264_pcie_probe,
++	.remove = tegra264_pcie_remove,
++	.driver = {
++		.name = "tegra264-pcie",
++		.pm = &tegra264_pcie_pm_ops,
++		.of_match_table = tegra264_pcie_of_match,
++	},
++};
++module_platform_driver(tegra264_pcie_driver);
++
++MODULE_AUTHOR("Manikanta Maddireddy <mmaddireddy@nvidia.com>");
++MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
++MODULE_DESCRIPTION("NVIDIA Tegra264 PCIe host controller driver");
++MODULE_LICENSE("GPL");
 
 -- 
 2.52.0
