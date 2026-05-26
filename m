@@ -1,128 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from out30-119.freemail.mail.aliyun.com (out30-119.freemail.mail.aliyun.com [115.124.30.119])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7523D1CA5;
-	Tue, 26 May 2026 09:15:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 282943D75D6
+	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 09:27:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.119
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779786929; cv=none; b=UPA1MFUy1cXcTmC2cEg1JGGP7MDgxvLcDyKvN6N4hLH+QYaEXk5pVMw6f+wIErYSqzTLZqejZ0KbGra/rFmWcwpuGL/JQFBAB+9/a9IKVoHLt6M8M10MAM9DOv48kDAnJnkXIVe+fHnkrxb+tEtJPeshIlTTWTOCt6kmimt1YCI=
+	t=1779787635; cv=none; b=uMadWBF3VegrMEJak6fr+olSoRsSuww28/gsHE4PXi8XGWMNaeJWbZM78tiEcRUhSngWTXJOTo+8gvYHrTj2ypcoQnF6HU201FiRimVc9KVlMaQxeWTREAcD6eb3Up87UqpkUikyxSLsF1JZ5MSDBZ0r8uTdc6APxXd8ksJTjJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779786929; c=relaxed/simple;
-	bh=DXR/yTlNzmL+/oEQzzehaiiL7pmNOez5x9j123Hydvg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fbPLNCTuic9/FjAiJHWPLEUiy5XMfshOlU7M6lB+MImB5aHqWS8qIwNHL/YkEahQkq9cz37Nf9qpwfAanWId+dszsvMLwX6VlVvlPVoQKfEyOiQciN3ayTwOkMJr9tKd4c6V4FKfb9j8LzrPuP/VIq9lL8kF3v2HbxRLxw6h5jg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=czW0cHMK; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779787635; c=relaxed/simple;
+	bh=Nbw2L11H8OeSwwL79pkT/i8CWBtxF5CaIRrjz2ju7FA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=THRV1Nn76HC3OW/MCm3965WhTG24DHVkn+WHNR0i/7z8xBkY1TkfzyFgNxAOngDQ153jEpjXIKdyL8C7BqOYo1NWro12cJqV0piQcxsOkmSVm8F9df0VDetALtcrXWf4qh9OTjkz9qkO/cybqcLbmQQ9tH1bpT605UFgr1vK1JQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=sNpVhMs1; arc=none smtp.client-ip=115.124.30.119
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="czW0cHMK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F8341F000E9;
-	Tue, 26 May 2026 09:15:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779786927;
-	bh=kRPtTNncZXdj/I1gBQSuUAqQGNqfTw2zxjhWg8DBkSk=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=czW0cHMK7C/iRlLCgqEAUUJVmGiN0OrK5ufFGfa/PMpQcpoj7iwEbpQhD/3ZTxWCp
-	 eXf/JuqBVY5vi48mQanCxaLm0PW+I+tdk4PWn60D4zx/grVrK/7riCbh8gmTMmnMiK
-	 1zCtdh3vL7thQqp7NklAKSL/jclK2PuhF3Du7efzalNgsVaJ1JoX1ba2SpvOn2Dszb
-	 sZrAA1Cb+dUtnJA5HKhGid12deKlp/rQd9xorgcn2IMqY5+bRz95zdGpYn0jgiHGiU
-	 vhGMGuucj6sJN3spnV4RqYcfTRarAVehsNr//j3Z1CaU/VpXUUvImMr6wTMD1sjHNy
-	 SH9+OZD1IpbuA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 1/4] dt-bindings: pci: Strictly distinguish C0 from
- C1-C5
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Thierry Reding" <thierry.reding@kernel.org>
-Cc: devicetree@vger.kernel.org, conor+dt@kernel.org, robh@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260526-tegra264-pcie-v5-1-84a813b979d7@nvidia.com>
-References: <20260526-tegra264-pcie-v5-1-84a813b979d7@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 26 May 2026 09:15:26 +0000
-Message-Id: <20260526091527.9F8341F000E9@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="sNpVhMs1"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1779787625; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=RR4lUZdYoL3Vw06ZGP2CnNvK2bEQNqhFe15x28HIaWg=;
+	b=sNpVhMs1G7R+xFHrgNqoY767+x0Kdhl0bzGXLypc4UyfD9iRliRogUb/WkWPOYYI8AzLhZWZUDMECtZM9BgEnN+j6ZaToLJ8tcC2kTJltOSEMNoB8eDtiuPYQtZs/JdctleHU8hsCT1IRpLdgI6uHdd/xBJoHz5potzGP5J3Wbs=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R111e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045098064;MF=cp0613@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0X3fq5Z7_1779787612;
+Received: from DESKTOP-S9E58SO.localdomain(mailfrom:cp0613@linux.alibaba.com fp:SMTPD_---0X3fq5Z7_1779787612 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 26 May 2026 17:27:04 +0800
+From: Chen Pei <cp0613@linux.alibaba.com>
+To: sashiko-bot@kernel.org
+Cc: cp0613@linux.alibaba.com,
+	linux-pci@vger.kernel.org,
+	sashiko-reviews@lists.linux.dev
+Subject: Re: [PATCH] cxl/acpi: Defer probe when ACPI0016 PCI root bridge is not ready
+Date: Tue, 26 May 2026 17:26:46 +0800
+Message-ID: <20260526092652.171319-1-cp0613@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260526031200.C19341F000E9@smtp.kernel.org>
+References: <20260526031200.C19341F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=y
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] The `oneOf` conditional branches for C0 and C1-C5 controllers fa=
-il to specify `minItems` and `maxItems` for `reg` and `reg-names`, allowing=
- incorrect array lengths to pass schema validation.
---
+On Tue, 26 May 2026 03:12:00 +0000, sashiko-bot@kernel.org wrote:
 
-commit e94ac7315673fefb739d35acd2b3406eaf80cdbc
-Author: Thierry Reding <treding@nvidia.com>
+> > +
+> > +	/* Clear _DEP dependencies to allow consumers to enumerate */
+> > +	acpi_dev_clear_dependencies(device);
+> > +
+> >  	return 1;
+> >  
+> >  remove_dmar:
+> >  	if (hotadd)
+> >  		dmar_device_remove(handle);
+> >  end:
+> >  	kfree(root);
+> 
+> [Severity: High]
+> This is a pre-existing issue, but does the dmar_device_add() error path
+> leave a dangling pointer in device->driver_data?
+> 
+> Earlier in acpi_pci_root_add(), the allocated root object is assigned to
+> device->driver_data:
+> 
+> 	root->device = device;
+> 	root->segment = segment & 0xFFFF;
+> 	device->driver_data = root;
+> 
+> If dmar_device_add() fails during a hot-add, the code jumps to the end
+> label and frees the root pointer via kfree().
+> 
+> However, it doesn't explicitly reset device->driver_data to NULL, unlike
+> the later pci_acpi_scan_root() error path. Since the ACPI core does not
+> automatically clear driver_data on an attach failure, could subsequent calls
+> to acpi_pci_find_root() by other subsystems fetch and dereference this freed
+> pointer?
 
-dt-bindings: pci: Strictly distinguish C0 from C1-C5
+Good catch — you're right. On the dmar_device_add() failure path, the
+code jumps to end: and frees root via kfree(), but
+device->driver_data is left pointing at the freed memory. The later
+pci_acpi_scan_root() failure path explicitly clears it to NULL, which
+makes the omission on the dmar path look like an oversight rather than
+intentional.
 
-This commit strictly distinguishes the C0 controller from the C1-C5
-controllers in the Tegra264 PCIe binding. It updates the register lists
-and names for each variant under an allOf oneOf block to match the
-hardware correctly.
+Since this is unrelated to the _DEP clearing change in this patch, I'd
+prefer to keep it out of this patch and send a separate fix on top. Both
+failure paths converge at end: and need the same cleanup, so I plan to
+consolidate the NULL assignment there:
 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.y=
-aml b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
-> index dc4f8725c9f59..acb677d477fb3 100644
-> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml
-[ ... ]
->  properties:
->    compatible:
->      const: nvidia,tegra264-pcie
-> =20
->    reg:
->      minItems: 4
-> +    maxItems: 5
-> =20
->    reg-names:
->      minItems: 4
-> +    maxItems: 5
-[ ... ]
-> @@ -70,6 +61,40 @@ required:
-> =20
->  allOf:
->    - $ref: /schemas/pci/pci-host-bridge.yaml#
-> +  - oneOf:
-> +      - description: C0 controller (no UPHY)
-> +        properties:
-> +          reg:
-> +            items:
-> +              - description: application layer registers
-> +              - description: transaction layer registers
-> +              - description: privileged transaction layer registers
-> +              - description: ECAM compatible configuration space
-> +
-> +          reg-names:
-> +            items:
-> +              - const: xal
-> +              - const: xtl
-> +              - const: xtl-pri
-> +              - const: ecam
+@@ -724,7 +724,6 @@ static int acpi_pci_root_add(struct acpi_device *device,
+		if (!root->bus) {
+				dev_err(&device->dev,
+						"Bus %04x:%02x not present in PCI namespace\n",
+						root->segment, (unsigned int)root->secondary.start);
+-				device->driver_data = NULL;
+				result = -ENODEV;
+				goto remove_dmar;
+		}
+@@ -764,6 +763,7 @@ static int acpi_pci_root_add(struct acpi_device *device,
+remove_dmar:
+		if (hotadd)
+				dmar_device_remove(handle);
+end:
++		device->driver_data = NULL;
+		kfree(root);
+		return result;
+}
 
-[Severity: Medium]
-Will this schema fully enforce the register counts for each variant?
+This way every path reaching end: clears driver_data before freeing
+root, and any future error path that does goto end; is automatically
+correct. Does that split sound OK to you?
 
-Since JSON schema tuple validation only evaluates elements present up to the
-length of the instance array, it does not enforce bounds on the length unle=
-ss
-minItems and maxItems are explicitly provided in these conditional branches.
-
-Because the top-level schema permits minItems: 4 and maxItems: 5, a C0 node
-providing 5 registers might incorrectly pass validation against the C0 bran=
-ch.
-The first 4 items match the items list, the 5th item is unconstrained by the
-C0 branch, and the array satisfies the top-level maxItems: 5.
-
-Similarly, a C1-C5 node providing only 4 registers could pass the C1-C5
-branch below. The 5th constraint would never be evaluated on a 4-item array,
-and the array would satisfy the top-level minItems: 4.
-
-Should explicit minItems: 4 and maxItems: 4 be added to the C0 properties
-block, along with minItems: 5 and maxItems: 5 for the C1-C5 properties bloc=
-k,
-to ensure the strict distinction mentioned in the commit message?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260526-tegra264-p=
-cie-v5-0-84a813b979d7@nvidia.com?part=3D1
+Thanks,
+Pei
