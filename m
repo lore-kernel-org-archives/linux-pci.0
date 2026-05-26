@@ -1,144 +1,130 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FCA288C2D;
-	Tue, 26 May 2026 05:35:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 889672BD59C;
+	Tue, 26 May 2026 05:35:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779773710; cv=none; b=rH++ALKnQGMx90/t9l7+wEq99Q1QMgvsRLSp0SnWzfUPJeLYqFneJ7EAKN0JMqhU9IUu9tI1F9lCDGta2VTbaTHXogycSuK6pVfC+wFvZv7pi5iU55sGA4pIJWqRzJDgfuhgoXEfMnxRm7nFsX6HlckelQK3QPpNsKNBSGxplt0=
+	t=1779773718; cv=none; b=NkGW8B/JJRG60hgalFEpUwfSn8IWcfJ7bB/L6zdl46TxcaeO4+mXIpQW0tk1ppgzONilDFA6XvPuiSFGj404bI638IWYrUcXJY84hPxvVAgQzHHjSzjBWuaCovpqYJvxbuPUPmXu/vS57Puirn5OXsFNBmOuQi55W8+yN1CCV4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779773710; c=relaxed/simple;
-	bh=BCZ2U2fo+yH+zZPLh+gZxROwJlkA/+J2mSkfKof/QbA=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=HDFyGNJGpLHcb/TASFwjB9V7zn8b0mIVfoPlJSFrlLFT9lXuAusAmkeCIQ6yeANJsBw5YeXoyBN9B62zSqIBW4rot7/wf/sjR6EU6T1qAW52dAtHmdwqyIzwRT5i2JcKvPtplweKRD87sCGviPU45SvTr6p02sIGHwnBNBPbqmo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NZeGcnLF; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779773718; c=relaxed/simple;
+	bh=dS+yRPjxuCH9eURYCBmn2179wOJNLxiFbf+4lAeJ9wg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=lVTFtUSOGoiRhq5O2s7YfJuQX7A7mG156k1LMkQJBj4E4IQMg/1ei4BB26f+1bCwqiClnJ85JdzN3lbyifwV2rNPNZ0TReI5DMPQiJYBIEoMcHR3twlvUmeQocrVi1q+w6R5YrVQPqJKpKRQURu82Y5aJBL0ebiwlLlyWJ/a/xA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YIkoCs7A; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NZeGcnLF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A5A91F000E9;
-	Tue, 26 May 2026 05:35:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YIkoCs7A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAC291F000E9;
+	Tue, 26 May 2026 05:35:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779773709;
-	bh=BZeCFiWwomXsNSoC7p5OXyKFyX+acoYY9otOOgn2FJ0=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References;
-	b=NZeGcnLFvKxmYXoy9mb+eGDs/eV9D6KkS6d2B7ZuB8Anx/O02L34gwFNZdAVS71TX
-	 XTW1hnNcj4J56+d7gK8TB9YH6l/C2obr78iLkmzLBdm0wvMkFaF88R2eT2WIRmqkIH
-	 Xxfgpsii4SR9c7k4uKh/acFZ0FQT7oVENeg3/o20veqXPIXIjA40GlDtDwfF/CViA3
-	 65vPTnSawSXL6e0de5d/ANoutOuSivQPH8qOinWjntbcmMME5qw2ypDrCjkztDcRZe
-	 jNEauHN4jBCD9pMPe/6PJVK7BQokskE24Mw5S5Du2jOCsXDiWOpAWZP/bE3/dcxGfy
-	 2IP02AT77tIcA==
-Date: Tue, 26 May 2026 07:35:06 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Koichiro Den <den@valinux.co.jp>
-CC: Manivannan Sadhasivam <mani@kernel.org>, Frank Li <Frank.Li@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Jonathan Corbet <corbet@lwn.net>,
- Shuah Khan <skhan@linuxfoundation.org>, Vinod Koul <vkoul@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, Damien Le Moal <dlemoal@kernel.org>,
- Marek Vasut <marek.vasut+renesas@mailbox.org>,
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
- linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: =?US-ASCII?Q?Re=3A_=5BPATCH_v2_0/3=5D_PCI=3A_endpoint=3A_Add?=
- =?US-ASCII?Q?_PCI_DMA_endpoint_function_=28part_3/3=29?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <ll76isrjb62ieiz4vhn3u3upp46vnzed3slpqxnni5hymsc4mw@avbx7k473uo4>
-References: <20260525063456.3317509-1-den@valinux.co.jp> <xnfnxv64hpil6if4ikyohxnarvsekbmjcc37k5zej264ix46z3@qtu6xj2uy3xi> <ahQJ4kuaBKMhj52L@ryzen> <3dkicfydmrlm2i6ks34kwjdmlvb22ryftkfw2yj62o4rtj5xvl@f4gby5vlwtdf> <F31848F5-5481-4402-9B45-9EC7BCC8B0B6@kernel.org> <ll76isrjb62ieiz4vhn3u3upp46vnzed3slpqxnni5hymsc4mw@avbx7k473uo4>
-Message-ID: <F8664D81-EABE-4E36-B0C9-2B0C7FA36DC0@kernel.org>
+	s=k20260515; t=1779773717;
+	bh=jgA2u5j0ckNgiSh3irJR5q9iwXwLn8IRsgK0y0/U6YM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=YIkoCs7AZ5v2xQT7IjOI2vTebjrswTHv6dRiA3OTwvUgsDvSoZ1PYWLClplrzuWrY
+	 53GOVJyxAXDEeOC32wLa996hsPI1iWx4er44YcqEnDfnJogKDipv+xphowl5XFcY5H
+	 L/dHZcBK7VnRZpMO0TQxauoX8CiHjFW/Ag32//pi49UIBIPYz8pr9lXGqIC4EPYNeS
+	 tF/Ql0v6pdKCEuPZ97TF9krPciCF63SCD0GDfe94Ib+TTiTxz24G7Cj5xJy65IDkS/
+	 a0a1ED0HFrYFfmRNNn+ZCAKMUkXAJMomoEzJ66pLFE04PQInkALXeYwRrNN4cDM+iq
+	 9cVXuUpt63iSQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v12 4/6] PCI/TPH: Move tph_req_type initialization into
+ pci_tph_init
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260526040830.52854-5-fengchengwen@huawei.com>
+References: <20260526040830.52854-5-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 26 May 2026 05:35:16 +0000
+Message-Id: <20260526053516.DAC291F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-Hello Koichiro,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-On 26 May 2026 04:04:07 CEST, Koichiro Den <den@valinux=2Eco=2Ejp> wrote:
->On Mon, May 25, 2026 at 10:32:06PM +0200, Niklas Cassel wrote:
->> On 25 May 2026 16:03:35 CEST, Koichiro Den <den@valinux=2Eco=2Ejp> wrot=
-e:
->> >On Mon, May 25, 2026 at 10:35:46AM +0200, Niklas Cassel wrote:
->> >> On Mon, May 25, 2026 at 04:05:02PM +0900, Koichiro Den wrote:
->> >>=20
->> >That restriction should be documented with the new NTB transport, whic=
-h I will
->> >submit if the direction taken by this series is acceptable=2E
->>=20
->> This is easy for me to say, since I am not the NTB maintainer, but it w=
-ould be nice if we could somehow come up with a design where we don't only =
-support EPCs that have 'max-functions' !=3D 1, because IIRC, most PCI EPCs =
-have 'max-functions' =3D=3D 1=2E
->
->Yes, that's fair point=2E As a quick check on v7=2E1-rc5, among DWC-based=
- EP nodes,
->only 6 out of 45 set max-functions > 1 (about 13%)=2E Assuming there are =
-no cases
->where the hardware supports more functions than the DT advertises, that m=
-eans only
->about 13% of DWC-based EP instances described in DT could support the "NT=
-B
->transport backed by PCI EP DMA" use case=2E If I also count non-DWC EP no=
-des, I
->get 15 out of 64 (about 23%)=2E
+Pre-existing issues:
+- [High] The function pcie_tph_set_st_entry() lacks internal serialization,=
+ allowing concurrent modifications to the TPH Control Register and violatin=
+g the PCIe specification.
+- [High] Unprotected modifications to the pdev->tph_enabled bitfield can ca=
+use silent data corruption of adjacent pci_dev state flags.
+--
 
-The only DMA "backend" added in your 3-part series is the eDMA in DWC-base=
-d controllers=2E
+commit c7677c01bf11b8624e4ab3ed133719b3aefd9b43
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-So if all three of your series lands, then 13% of the DWC-based endpoint c=
-ontrollers can theoretically use this new feature=2E
+PCI/TPH: Move tph_req_type initialization into pci_tph_init
+   =20
+Relocate tph_req_type resolution logic from pcie_enable_tph() to
+pci_tph_init(). The request type is fixed per device and root port topology
+at probe time, no need recalculation on each TPH enable.
 
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 95e2a95055eeb..3660ad5d36239 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
+> @@ -371,7 +371,6 @@ void pcie_disable_tph(struct pci_dev *pdev)
+>  	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, 0);
 
->
->If supporting single-function EPCs is a requirement, then the separate PC=
-I DMA
->EPF model is not a good choice for that NTB transport use case=2E We woul=
-d need to
->keep the DMA delegation metadata inside the vNTB function, or use some ot=
-her
->single-function design=2E
->
->That is basically option 2 from my earlier mail:
->https://lore=2Ekernel=2Eorg/linux-pci/xnfnxv64hpil6if4ikyohxnarvsekbmjcc3=
-7k5zej264ix46z3@qtu6xj2uy3xi/
->
->    [snip]
->    2=2E Treat endpoint DMA as a first-class part of vNTB=2E The RC-side =
-ntb_hw_epf
->       would create an auxiliary device, and a new dw-edma-aux driver wou=
-ld create
->       the delegated DMA channels on the RC side=2E
->   =20
->       [PATCH 00/15] PCI: endpoint: Remote DMA support via vNTB
->       https://lore=2Ekernel=2Eorg/linux-pci/20260312165005=2E1148676-1-d=
-en@valinux=2Eco=2Ejp/
->   =20
->       I added an ASCII diagram for the overview as a follow-up comment h=
-ere:
->       https://lore=2Ekernel=2Eorg/all/sn67hi7kljh7cgmgodatb3naz2astlaklq=
-fobdbxyyzgoohxqb@4nnetbhqwba4/
->    [snip]
->
->Do you prefer the vNTB-integrated model over this series?
+[Severity: High]
+This isn't a bug introduced by this patch, but does pcie_tph_set_st_entry()
+also need internal serialization when writing to the TPH Control Register?
 
-My take:
+pcie_tph_set_st_entry() temporarily disables TPH via set_ctrl_reg_req_en(),
+updates the ST table, and then re-enables TPH.
 
-I do think that the design in  this series is more elegant that the vNTB-i=
-ntegrated model=2E
+Network drivers like bnxt call this function from irq_affinity_notify
+callbacks, which execute in multi-threaded workqueues.
 
-However, if the design in this series only supports 13% of DWC-based endpo=
-int controllers, when the vNTB-integrated model can support 100% of DWC-bas=
-ed endpoint controllers=2E=2E=2E
+If multiple IRQ affinities are changed simultaneously, these callbacks can =
+run
+concurrently on different CPUs for the same pdev.
 
-What good it is to have an elegant design if in reality, it supports drast=
-ically fewer SoCs?
+Without a lock protecting this sequence, could one thread re-enable TPH whi=
+le
+another thread is still actively updating its ST table entry?
 
-But please don't listen only to my opinion, Mani is the maintainer, so it =
-would be interesting to hear his thoughts as well=2E
+This would violate PCIe r6.2, sec 6.17.3 (which requires TPH to be disabled
+during ST updates) and cause overlapping read-modify-write operations on the
+TPH Control Register, potentially leading to device instability.
 
+> =20
+>  	pdev->tph_mode =3D 0;
+> -	pdev->tph_req_type =3D 0;
+>  	pdev->tph_enabled =3D 0;
 
-Kind regards,
-Niklas
+[Severity: High]
+This is a pre-existing issue, but can unprotected modifications to the
+pdev->tph_enabled bitfield cause silent data corruption of adjacent pci_dev
+state flags?
+
+tph_enabled is defined as an unsigned int bitfield in struct pci_dev, shari=
+ng
+a memory word with critical flags like block_cfg_access, is_busmaster, and
+msi_enabled.
+
+Bitfield assignments compile to non-atomic read-modify-write (RMW) operatio=
+ns
+on the surrounding word.
+
+pcie_enable_tph() and pcie_disable_tph() modify tph_enabled locklessly from
+the PCI subsystem's perspective (e.g., bnxt calls it during device open und=
+er
+rtnl_lock).
+
+If another subsystem concurrently modifies an adjacent bitfield (e.g.,
+pci_cfg_access_lock() updating block_cfg_access while holding pci_lock), wi=
+ll
+the overlapping RMW cycles cause one of the updates to be silently lost,
+corrupting the overall PCI device state?
+
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260526040830.5285=
+4-1-fengchengwen@huawei.com?part=3D4
