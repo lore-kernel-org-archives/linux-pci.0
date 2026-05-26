@@ -1,97 +1,110 @@
-Received: from out30-131.freemail.mail.aliyun.com (out30-131.freemail.mail.aliyun.com [115.124.30.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8666833372A;
-	Tue, 26 May 2026 02:51:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 515B43A873B
+	for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 03:12:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779763904; cv=none; b=deN1llcfI5EE1Qy8x15G+g3xv+gMGBVD6c3AUC46BsVi02YJh+aeRRopC7JguBg0ZsfxnnriaMIreuqaTjEEU37PSixekrITlMri1t8OG8Jz1WGgjf+To1Ce4NxpbL8K/gF9NCPO9M4wc7NM7YWdpyNR52Yoelc77wBM7CrAcOI=
+	t=1779765122; cv=none; b=Vdn9zT4G8uOi+7IwtYCoRdUpV6ADXJooxVtPCgqjddz9LL3r8Dc8T5bZVnKRnfqsXW+A7uorUK5N8JVgQWp7g2BCcEh8aUuQz4iI6o7+eEMyqOvgIb5EC4u/deYakRdaI1xpPSzHf2tb/Juuer2Px9xO626NGiO8OY44lRmxXiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779763904; c=relaxed/simple;
-	bh=0EtKyD/kblfplZ2ON/Zvk+WGZXMH5s0IffCgBNJEHgs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pKATw+0t/eznmuWqCKGzjnEdPfCvpbfK2KCbSbj5HIxJrxVh5BfMPyo8wHg1XTpuFSbHgt6BQn/HjozvWePuY1yYyY7dIzKmf+98jWLhzWs2T1bgiyK0RWSuTNCOs35LZg9aW1xh4pXMoe+Iahaowm5/Hg1+i5DfPTP0z55lARo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=FItRGxoI; arc=none smtp.client-ip=115.124.30.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1779765122; c=relaxed/simple;
+	bh=CuUdkwIzArnudW+SNmXdBm1exvaNbX+pPlCcw9dYpk4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=SYdNnHK4xe1UhxTBPqQmC6tZqp3e3mnmoO8nxglRG5sE8wtwTOrkL1GRlL9lnT5jTXVXLEmSNJVnEnqra+REVrqa7G3eCmcVs2rXu0g3kABkOk9IYc7Rje5RtiMWH+AaDlHU//l1l2jYr0U5MP6lvtCs13INUb9M2l/4NopHzqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UtJgNocd; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="FItRGxoI"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1779763893; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=LxYuBwN9AXRSucCAjyvV+41WLYlKfeEQW/OlC6lobtE=;
-	b=FItRGxoImaraFbsitFzSn8QW9sD3UmrrwECAOshTS8NC3KOCXEEr44iyOdBpMOFUuyE9kao8bedsvkuGJqasAtBVnaDoQTirS4nJh+Akp2EkA5t3zY7zhAPdxI7EvMF5rAqxlSi9UeO+Xjpch2R+ghnwYYkXX0Zg3fWUko//anY=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033045098064;MF=cp0613@linux.alibaba.com;NM=1;PH=DS;RN=13;SR=0;TI=SMTPD_---0X3egDpV_1779763887;
-Received: from DESKTOP-S9E58SO.localdomain(mailfrom:cp0613@linux.alibaba.com fp:SMTPD_---0X3egDpV_1779763887 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 26 May 2026 10:51:32 +0800
-From: Chen Pei <cp0613@linux.alibaba.com>
-To: dave.jiang@intel.com,
-	alison.schofield@intel.com,
-	djbw@kernel.org,
-	icheng@nvidia.com,
-	bhelgaas@google.com,
-	rafael@kernel.org,
-	lenb@kernel.org,
-	guoren@kernel.org
-Cc: linux-pci@vger.kernel.org,
-	linux-cxl@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chen Pei <cp0613@linux.alibaba.com>
-Subject: [PATCH 0/2] ACPI/PCI/CXL: Enforce _DEP ordering between ACPI0016 and ACPI0017
-Date: Tue, 26 May 2026 10:51:16 +0800
-Message-ID: <20260526025118.38935-1-cp0613@linux.alibaba.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UtJgNocd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C19341F000E9;
+	Tue, 26 May 2026 03:12:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779765120;
+	bh=zG5gY09pj4RukzHlpdn1ItI97cOyxSCK1M82wlDnw80=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=UtJgNocdobsMo7q/Q/ZBbBPKBSHAMFQSA68DWjYWj2uPwaRkowfXNaAU2bZf1Efta
+	 +2ext/0rD4WNhgY/8JZxKfZRlQxkpo2bL6+PjBCFaXdOZbEhi4ptiLjy5CNp4Lb9O5
+	 Y58AuGzKRHGkcgazlcxl9sL2MQ4MdQ5M+cH5xkyt8UoeTgJW+/PueALKCswTCr0J/6
+	 BHNCvatH0FrgMlNXPXFaV3d5BFVWxxhRe8ZjMnhT5364+MHoKdiZ6990r/f2yLq2l2
+	 tuPLsd4B1f0/vjoPHncGTUSflXuxI0ycDsp2Roo2WiR0B4uB8ba8ZNF98CblrSpHTd
+	 Ej3hOq8gq4C6g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/2] ACPI: PCI: Clear _DEP dependencies after PCI root
+ bridge attach
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chen Pei" <cp0613@linux.alibaba.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260526025118.38935-2-cp0613@linux.alibaba.com>
+References: <20260526025118.38935-2-cp0613@linux.alibaba.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 26 May 2026 03:12:00 +0000
+Message-Id: <20260526031200.C19341F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-On platforms whose ACPI namespace exposes a CXL host bridge (ACPI0016)
-with an ACPI0017 CXL root device declaring _DEP on the host bridge,
-cxl_acpi can probe before acpi_pci_root has attached the PCI root.
-acpi_pci_find_root() then returns NULL, decoder targets read as 0,
-and no port/endpoint device shows up under /sys/bus/cxl/devices/.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-The root cause is twofold:
+Pre-existing issues:
+- [High] acpi_pci_root_add() leaves a dangling pointer in device->driver_da=
+ta on the dmar_device_add() error path.
+--
 
-  1. acpi_pci_root_add() never calls acpi_dev_clear_dependencies(),
-     so _DEP suppliers downstream of a PCI root are never released.
+commit c50bc9cc7a48e4b92d2f6107b97e5bdf5d2b47a4
+Author: Chen Pei <cp0613@linux.alibaba.com>
 
-  2. ACPI0016 is not on acpi_honor_dep_ids[], so even when ACPI0017
-     declares _DEP on it, acpi_dev_ready_for_enumeration() bypasses
-     the dep_unmet check and lets cxl_acpi probe early.
+ACPI: PCI: Clear _DEP dependencies after PCI root bridge attach
 
-On x86 the bug is usually masked by link order (acpi_pci_root is
-built in and probed before cxl_acpi). On architectures like RISC-V
-that ordering is not guaranteed, so the standard ACPI _DEP mechanism
-must actually work.
+This commit clears _DEP dependencies at the end of acpi_pci_root_add(),
+allowing consumers like ACPI0017 CXL root devices to safely enumerate
+once the PCI root bridge has been attached.
 
-This series fixes both sides and the two patches must be applied
-together; applying only patch 2 would prevent cxl_acpi from ever
-probing on ACPI0016 systems, because the supplier would never clear
-the dependency.
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index a0ba64e45e8ab..4c06c3ffd0cbb 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -755,6 +755,10 @@ static int acpi_pci_root_add(struct acpi_device *dev=
+ice,
+>  	pci_lock_rescan_remove();
+>  	pci_bus_add_devices(root->bus);
+>  	pci_unlock_rescan_remove();
+> +
+> +	/* Clear _DEP dependencies to allow consumers to enumerate */
+> +	acpi_dev_clear_dependencies(device);
+> +
+>  	return 1;
+> =20
+>  remove_dmar:
+>  	if (hotadd)
+>  		dmar_device_remove(handle);
+>  end:
+>  	kfree(root);
 
-  Patch 1 makes acpi_pci_root_add() clear _DEP on the supplier once
-          the PCI root bus has been added.
-  Patch 2 adds ACPI0016 to acpi_honor_dep_ids[] so the dependency
-          declared by ACPI0017 is enforced.
+[Severity: High]
+This is a pre-existing issue, but does the dmar_device_add() error path
+leave a dangling pointer in device->driver_data?
 
-The approach in this series follows the discussion of an earlier
-posting:
-https://lore.kernel.org/linux-cxl/20260514023238.49984-1-cp0613@linux.alibaba.com/
+Earlier in acpi_pci_root_add(), the allocated root object is assigned to
+device->driver_data:
 
-Chen Pei (2):
-  ACPI: PCI: clear _DEP dependencies after PCI root bridge attach
-  ACPI: scan: honor _DEP for ACPI0016 PCI/CXL host bridge
+	root->device =3D device;
+	root->segment =3D segment & 0xFFFF;
+	device->driver_data =3D root;
 
- drivers/acpi/pci_root.c | 4 ++++
- drivers/acpi/scan.c     | 1 +
- 2 files changed, 5 insertions(+)
+If dmar_device_add() fails during a hot-add, the code jumps to the end
+label and frees the root pointer via kfree().
 
--- 
-2.50.1
+However, it doesn't explicitly reset device->driver_data to NULL, unlike
+the later pci_acpi_scan_root() error path. Since the ACPI core does not
+automatically clear driver_data on an attach failure, could subsequent calls
+to acpi_pci_find_root() by other subsystems fetch and dereference this freed
+pointer?
 
+>  	return result;
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260526025118.3893=
+5-1-cp0613@linux.alibaba.com?part=3D1
