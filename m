@@ -1,334 +1,328 @@
-Received: from fout-a7-smtp.messagingengine.com (fout-a7-smtp.messagingengine.com [103.168.172.150])
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010032.outbound.protection.outlook.com [52.101.193.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B13837C929;
-	Wed, 27 May 2026 22:38:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.150
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779921525; cv=none; b=JMk/BWswy1MyQsrvWSz66D2eRSZUfzEAOa4oZPO/AmZMSvMv6wp/hre+nXFnkt/bNKdZ44zHRkJvro1HsiM3NM9ZRI9x9ieGDf3kC8kPgwMhLDkoxQ11BzMbJTpbKvQqUKgs24etsmVkqNO/iG6FRalW26w961JIZQBTdKRuAP4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779921525; c=relaxed/simple;
-	bh=+fgVPPV2OOkhwHIm2WuqC/uyxVtaCxOSWZNCUJrmO40=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZVKOoiwLk35Fse4E6RgCaL955+eIILVeFJnASSw2kDak1AZaFTpNyTEB0cGtQv1dsDQow0HYmfknRjJ/1zKst57j1MRxTDoMIqqLfAbL5pmCV/A3RHh1HzV2kCM3TRHYShALIrJWE0BuyGRxPQkjI9UkGQH/MIl9bUWlEJXRV1w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=hj0Xnh2l; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=hwzCJGs9; arc=none smtp.client-ip=103.168.172.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C0C231ED83;
+	Wed, 27 May 2026 22:55:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779922532; cv=fail; b=jNmIoImpKor6LzBGrRQoLHAYXw8nCApWan3d9Q/PSoK/7efeuTvxaPANK1ajBkNdcDD1nWkf6eXDslx8b8WqSrWHyKZ/S3fh96TWNfcM+iWVkOJQEDxnEwk0V7GXgis5UiPO9aLiK5VaJwt/4MUhlDgqZ055iuVlVHcYAjdhg/o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779922532; c=relaxed/simple;
+	bh=c7lDuxxP46PHrbTWA/w2nu4/A9f6aX1nVb1fBWHD4Dw=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=AuihbX8IFB4dcd5tCcy8aqA+2uu3O5/MVs8icAXYtCrS2Kk6gyZrQezUxbn+tR/akOwPc9yWVHgdPMJAFnBv/cl/UqddWApxkW9GFufNpRh5c/z77tofcfhQ+qMAYwhPEDWuNh4ckYmsGhAsuilGe+k8nqMBXd2WpFJC9XAeJ0E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=pQyRV0vc; arc=fail smtp.client-ip=52.101.193.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="hj0Xnh2l";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="hwzCJGs9"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.phl.internal (Postfix) with ESMTP id 26AA9EC013A;
-	Wed, 27 May 2026 18:38:41 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-02.internal (MEProxy); Wed, 27 May 2026 18:38:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1779921521;
-	 x=1780007921; bh=8MmDbyDdyfeL+yHv+zdd4HPvUYer2VEbvbP3UaA28IA=; b=
-	hj0Xnh2lXS/+Dchf2E7c73LTAYb+mATBswtmkQX6nFdx6by6DzdYG9Ss2u0Lr0kq
-	oWqH6CtArjzhzcp5ytS/IWg0OvgHqS3MozfdAMcgdrTjEMB4sHcKCq6YYEV8OuNA
-	R6IhFeMyqptMqv/1Y8Ut/M4eOia8XKDBR3YDEeEq8AeotfI3T/fQTwuPunRXU7LL
-	G8fZFIgKpyrjX6Ze7f0tvqMzJuwO64xwJwdzb/EtPixzbBV7x7Ssb7xLhMedpJN5
-	ubvTzye/SVLb47QjrR7kn9aL4O/4u0ECC5W3S1KGcSbTEvBzjca2pB3u04yooxKi
-	JtBg44DkVqWushZlvoan6g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779921521; x=
-	1780007921; bh=8MmDbyDdyfeL+yHv+zdd4HPvUYer2VEbvbP3UaA28IA=; b=h
-	wzCJGs9I3ndDcL+I7MTrQqe2Olkz/BmWFv1ZVr52SajhpLa3SrcrC8NVf5559l/5
-	3u+/PlU86TI1bBk3AF7Y46jzIdIuOuUXITIgpLOZ/b7dQvCRAPgwedxAInH5ADnL
-	3i/BfCZxWpfw7yAaaVM0fQoVY9tgxbEuc5Xw6qH53DOzepjGUAF5CNSvOusHHQva
-	B5eHqzsIE8KQzDGvsXuTOXHTPEybIP7tbL0jSjJxXO6bCRMw12VJuNz17cW+Y5lK
-	Lp1sZR3aVJ/4eTMSNkWDVtba2eIYrJ4T47zZ3rznqVG6MJoB/aOCjISnPWkyQqc9
-	6087omd2wnNZXCrZj7Jsg==
-X-ME-Sender: <xms:cHIXaqKqW5EJbsPTL_HE4HsIEIIzTESSEIoGfYhWj6W3iSBIQa-i5g>
-    <xme:cHIXat0CUBX0jRLxN8SAeHW10XwYi1avGvNUPwa-zn6zq38TIq_j0aL7Lo00NRQwx
-    -tO3_F6rc5d3dpMvFc3r-_gVWg8GtZfftOGxmlipcGsPjkUOJqGle0>
-X-ME-Received: <xmr:cHIXalYfqNt3WHyeJsv5SEym3HruHkfmbU8IqXwxxjNiXRKGGsqymE89d7o>
-X-ME-Proxy-Cause: dmFkZTGdNJ0uUGeVj1NBRJYBU9K38RfrCWXFG3XsTl9AIKrXguYdj+fE8TS337IWHDmk4w
-    Fw4pZ7j35TAr2g7k5qM5+cHD9E6RMkCpZpL3ZEmxZM9aVfup+gzJ8MrH+cJw1exb19Fawg
-    H7CXFcuv9gqT2u8c9tn4fLEc6vgDbfFDMVLtsfWXGKu6yaB8NKMnaCUkqj2Ds3ldpTPKYs
-    7eh8scgMDK74Fuutv7IhevaZn7Cc/XneKsRgnKBb4N/rS96y7t0sYlhtKo9qiq1ZyUa2t1
-    en/3InleJyTXeIftwyZKJVQHnxfmF5GQCsl1blUOVzzpXpaIdCERGOuHp7jueXVgOOeMss
-    q9358a7YxijCU4Da8hX/2XEvc5B1JDkLHU9gF9qVFpMpNzQ8/yaJqgT4h40Qtxxjytakhn
-    KMbKNNw+9VeqMdrVw5yb/7e1r3WkTGkg6n6hhhk+i3JdU3IPepPSn6rkNvligaaIaJGHNq
-    AcgLTqCiv0wcvcvwYR+h2gf2C8XkqZqxTJuz7InvAA6QcsJv9YOn6lFAJONEj+24/AT/p8
-    jX83mhqW+ws+htPgJpvA44oAgy2mJUWhLkbL/fkfB6sDWbtnd1bVCd0z9ALX887x0HiP4b
-    XLslRQM2Fn0lYQ06gxSrEQiJIhjG7uc6azmhqQVvXtGntg69UmGeMzH/AUxw
-X-ME-Proxy: <xmx:cHIXagXjLthIGvuAlANuJ6ZfQk2OHJqVfyFHeR3PbPFEQfv0u4DBYg>
-    <xmx:cHIXagdnRhOEKIJLhTEarxw4sGjhGfgTBQfD-JAJK8oamHFY4jEPIQ>
-    <xmx:cHIXatM42vPxwXTOCBSe1xt5FtwHNF4emS-VeKJDGMnzAJraB9kI2A>
-    <xmx:cHIXaoIWRA6exdE95Y5I9pQfEKvYYNVuG7GU0JsQFdOCfoUSoMC4aw>
-    <xmx:cXIXaoO4-vhWBctvcH0KGgDRcrsmYHGmK2czPpgelQYBKMYg24I9yUg1>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 27 May 2026 18:38:38 -0400 (EDT)
-Date: Wed, 27 May 2026 16:38:37 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Matt Evans <mattev@meta.com>
-Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
- Alex Mastro <amastro@fb.com>, Christian =?UTF-8?B?S8O2bmln?=
- <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, Logan
- Gunthorpe <logang@deltatee.com>, Mahmoud Adam <mngyadam@amazon.de>, David
- Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>, Kevin Tian
- <kevin.tian@intel.com>, Ankit Agrawal <ankita@nvidia.com>, Pranjal
- Shrivastava <praan@google.com>, Alistair Popple <apopple@nvidia.com>, Vivek
- Kasireddy <vivek.kasireddy@intel.com>, <linux-kernel@vger.kernel.org>,
- <linux-media@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
- <linaro-mm-sig@lists.linaro.org>, <kvm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, alex@shazbot.org
-Subject: Re: [PATCH v2 2/9] vfio/pci: Add a helper to look up PFNs for
- DMABUFs
-Message-ID: <20260527163837.02be1e7c@shazbot.org>
-In-Reply-To: <20260527102319.100128-3-mattev@meta.com>
-References: <20260527102319.100128-1-mattev@meta.com>
-	<20260527102319.100128-3-mattev@meta.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="pQyRV0vc"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=JUmmwHX7bivQIKDsrD36xcz7wsgHB+JoR8OApN3KO4grRejcheamHTsfE1VcLOLAbFFSVny5afAZ+rip722W5E/YQbPL6K947ESrEPWS5r/+u0s2aFk1U8jrSjuDrjKQk53vQ26m1CDBGWvqhgLPHr8/uve7REhJjM/N99u6YLST6ETBCwbmXUvLrd6SZBgpU25AcsiYyFpcxzZJ/xj4EDv1NXDTXr7epawCJMHrE0ZhK854akB/Pmru0QNM8r9Q2hxV3ehQ8S3YjARN5nlrCY7yK1rM1sYrhbH9fxfQG2IULSvqnFnkesjVl2NyiYHGRe5Z6aGOxhNQPC+qkUGyOg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1mkJ8tK5U1AQTCclPHyrzeX9tD/r/3M83djqI4ie3ME=;
+ b=KjR4g4t2v1sQ6jcsu355RnNgwTC9VjNq0jKgYYaZA3UkWvdgkk5hGKjdxl+YI0vKrLzwaxpzKQ5Q6XHhSKfHAiFCDjMurXb7OUHxEZdF8AY9ZHCMQZT2DLAdl7RNJuNwqRh9JSRU1gHpS+kmkTV8kqxaD86wEfvITuf6wbvWuwqXesNXvv9bfanb8+DVEwc+LXpft84sNqn9e+WCh3vyQi7rujcAJj5qyPIEEdz/91DYCUKywkMpwhnC3yc12B/ejB4rhmLpof85P/ky+qDH22HIlGoOV+ii5WcWu+DPf6em8uP7g13Fglb7Q99kL9QyKP9HvTgvfg6UwdiNCtPyYQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1mkJ8tK5U1AQTCclPHyrzeX9tD/r/3M83djqI4ie3ME=;
+ b=pQyRV0vcK+uj6wxU8bk9WAC3+bgAJTw+jAk3XLDYvmRlzRgqHZZK/S6xL8sBDROlOUAOVhY5qhL0l/4PsvQTvwMRY1o++SUxt9OHpTlhfp+PoR5CSMriWLn7560h2Jb07WX12C547sI2AH1LnMbb1wCHcxP1LLN2xyzwByxX85dYnCobQsxHvlBfOICmtWcvv/agt70qU+Mi32/Lwz1kj2+1FvZZFWqNKVDY5RspZbgwWkHyUHXavGYCw+qJG38Tv5MWhKhDH5Q/bjA6MbfJcbXqWjsPhPK1V7iGEKDKwUU5ny4tNGSfhJdA8Sh3JBuofK2PN4GsC6ekeYllRy3yZg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9715.namprd12.prod.outlook.com (2603:10b6:408:2a0::7)
+ by MN2PR12MB4046.namprd12.prod.outlook.com (2603:10b6:208:1da::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.19; Wed, 27 May
+ 2026 22:55:27 +0000
+Received: from LV8PR12MB9715.namprd12.prod.outlook.com
+ ([fe80::e74f:2cf8:cf2c:142]) by LV8PR12MB9715.namprd12.prod.outlook.com
+ ([fe80::e74f:2cf8:cf2c:142%6]) with mapi id 15.21.0071.011; Wed, 27 May 2026
+ 22:55:27 +0000
+Message-ID: <55b57a12-6714-4c51-8ce1-f47c97cfecde@nvidia.com>
+Date: Thu, 28 May 2026 01:55:21 +0300
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 4/4] RDMA/mlx5: get tph for p2p access when registering
+ dma-buf mr
+To: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>,
+ Christian Konig <christian.koenig@amd.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
+ linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+ netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+ Yishai Hadas <yishaih@nvidia.com>
+References: <20260526144401.1485788-1-zhipingz@meta.com>
+ <20260526144401.1485788-5-zhipingz@meta.com>
+Content-Language: en-US
+From: Michael Gur <michaelgur@nvidia.com>
+In-Reply-To: <20260526144401.1485788-5-zhipingz@meta.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR5P281CA0044.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:f3::16) To LV8PR12MB9715.namprd12.prod.outlook.com
+ (2603:10b6:408:2a0::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9715:EE_|MN2PR12MB4046:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0a4204e0-44b4-4840-7962-08debc430b49
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|7416014|4143699003|11063799006|18002099003|22082099003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	FI/rmeukIpbmCgaHBokn33kYdQnkljrtV85laLSom/rP3Oi54SP2jPZ+qvzW7sCaNLUiWf2690IInr/IV+9zQYyiOCNaN1MW7FJgX38TlhR6HAqDnXNFTWRKWwolDEMvW9H68+vrsEyrhxHsOsfdV4cTywhjAoEGn6gHYu61kB/XKSMfK0uuUEZBkVh9yhQageA3KFfD7d7N6cFuW9bpBWvuRqLiHDbQKNwllNsoSMy7eHJ4HwugnA1IN8xwpkUuXwdUZOyRaiWsdFUX1NAHxREbrTxWMlY+fX+kOGN16jKlhQz4VkpKyqn3oK8QjtO2M98vlCLBJC+5ceoNS5sIj/RIuiUzP/OJFTd06ent4Vy+y1yVzZFZOjq6m7My3YgB26DhN72DgxJRH9zv6JjS/SEqsGMgQaGCC+lqNWZLq5D7jXRkr//OMOQKIWwozedXhBHyROVmvooydmAGWiEf98Gh74RNKeSTFnma67MRS9qYxQ/7nZc3kgDbnOGDwqspN+xLA1NxWAF8dZVu+KlRNnVLY43FezUnQl0HvJQn9Qiq7iH+CRbGTTbq+a9y1IDZ0pHQsBFlHopqZaQCVX2zZTttK6n1zxopT4ivsIAZvXGTTWRYjpT8oLNLDPWyWbzazx62k5mFxhWeI/B6h7R0/7b/izI53EH5UquMN4EE0LMZj4wJOFUps+KvJ6WSpiEI
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9715.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(4143699003)(11063799006)(18002099003)(22082099003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?Zk9QWFVJZldRRXNQS3dGT0R3QmpKWUg1d3Z5VUFGMHpuNFZxSU4xYmM1RGVm?=
+ =?utf-8?B?OEpRQ29rN1BReE44MHU2RTVremRIZUZzOFU3cFp3U2J5TmtKTStsVERXUlRz?=
+ =?utf-8?B?NEJWOW5OY2VZRzMrVm81V2Yrd1A0eS9hVCtPaFFLMUhDTG42dEVjQ0pvUWxF?=
+ =?utf-8?B?anBacWtqYVo2cTlVRldxUGFkcGZaVGQ5T2l6aU1wVXpjaUlzRkIwY2tmczk5?=
+ =?utf-8?B?N1VTaXZuR09JYmVwOGtVbGFzVHVHTXp5ZDkzR2dSa2ZkWEVwaVJia0lod0FL?=
+ =?utf-8?B?Q2xLNHd0aG1acXVEWlNmSnUzTm9yZElWOGtTOXFkaDZRK25HS0pRbFpuTEtR?=
+ =?utf-8?B?Vy9GUzkzeFFjSDJ1TksydVdhUEZ1eHExZDVRRG02Q2NKUmhJUmtUdFB1ZHBr?=
+ =?utf-8?B?YVdLTFUyLzVlRVpGeERpdVpGWUo1NWRFMzhscFI4Z0NoUnFTbkJudFU5eHhp?=
+ =?utf-8?B?empSejBRYjVjT0RwNUwvQ20yem5OVC9ZblkwZy9MVDVpckl0ZnkyL3ptc252?=
+ =?utf-8?B?YVE0UERSRTRiVFZqc1RTMEZkaERQYk9peFNtQWZTY0wvQ080VEwvQTAxUnp0?=
+ =?utf-8?B?KzhxcCtndjAxZkpGa3l6bWxCeTYrcTRGdlcxMkFYTmtwTkRKS3Z2ck10R1dR?=
+ =?utf-8?B?L2tOdUV6bGI0ZEQveHJaTnBBallZUG9VTmlFanQ3ai9vYmNVRWFFM2w3c3Nu?=
+ =?utf-8?B?SW5oR043WnlVRkUyZTNnSHAxSW9WMTZnL2lUeGRxN2NvY0tTSUhxRGdKMCtt?=
+ =?utf-8?B?S1ltV2lidzVpbHJJaXUxVlJXK0xEdFB0cHFsRGRxNDRldlNCVFlqWHFTSDVy?=
+ =?utf-8?B?bE9lV0xsOG5tUEZQUDhoeVh4TXdyeDNmUlJ0a2NhNk5sOGw0WmtqWk8xYXp2?=
+ =?utf-8?B?amhwc01oSm1YM2ljWTEzdlZJU1pRTDJEQ1R4YldGSldtRURFNDZlQUs3Zzcy?=
+ =?utf-8?B?MGNpdUtpVXNUQ0dMQUxoTDZxTVlBQkdkTGtMUnFQSTBoeTBoZmxCLzhoUTNT?=
+ =?utf-8?B?MkR6Ti8yaUVZbXAxZEpGd01EOGQzY0xyVXNzdXNHT3JuWUdXUzUxTitvYUtO?=
+ =?utf-8?B?L2o5OUJaWXNtMkxRd1NBQjdPRVZYTTBFempDNFByMFMva2FGdXhXTG55MFNH?=
+ =?utf-8?B?VUlxc1d5WFhkRDhFYStLSVhOWEZDbFVqbDc4c21PT2EzNGlMNlY2RWVYYVpX?=
+ =?utf-8?B?QXZ3TTZzSFVwYlFxQ3dqR211Zk1iVGplRk9VQTBGb2Q3d3hoTnF2cldMUDlW?=
+ =?utf-8?B?L3ltRC8vVGhnTTlrOUNhbVo1bTFzYTNBMklNM0IyanZxTXBER0tMTnlPUFoy?=
+ =?utf-8?B?UEY1dldhZUpFMW9WMUZEOGxESHNXRW45bEVCa0ZyelAxclQvbzgrMnMzTkdm?=
+ =?utf-8?B?N3JhQ2JmSTdwT0hyaUpnTVZTN2ZtQkVnNW1WOXpRb3g3K1IzYnppaVovOW9q?=
+ =?utf-8?B?Q3lubFVNK3ZoQzk1L2VDTG5rZ3ZmaUNocWo5b2JlUWszQ0YxZXlLMjhrNlU4?=
+ =?utf-8?B?OXhGOEVBTmhlRGRQUXc5SDBnbi9ZNCtJU0pnREl1N05qSzQzVFAweWk1NFdN?=
+ =?utf-8?B?aHpkQmR6L01FVUFUUVgvalJPOWNIbW5SRmI3SDF5R3NJREVieGZweG5jNW9o?=
+ =?utf-8?B?SXhlSWxvc3BqTGw0VnJzVXc5Nm82THN3aEdQK3BoYkFmQkhqeWtnOFY2Q2tL?=
+ =?utf-8?B?V3Y5UktJNWRPR2dTMDlUNnZJQVpGaWlGckVoQXlGOUxYWloxbDFucXFCUWRY?=
+ =?utf-8?B?UEp5cXp0cjJKUkY4Wmk3SXVCQnBqd1ZmYnpFeFhFeW5QK0NJMER0amh3Y0I1?=
+ =?utf-8?B?TXhOQ1gzdUhNcUZoZjZoZ2UwaE9XY1I0ZzMvU0QvWU9TQ0FFOGExRDhkclJF?=
+ =?utf-8?B?L1NLSWNGdTBFby9hL2tIZjNTWTN1Q1Y1NzlCcGRzMmsyZG5ZMmZvQ2RyaElz?=
+ =?utf-8?B?bHd0VEIweXZzUndMcU9vYlF6eVVuMzdCK3NPbm1uR1M3U25aN1ptZUkwdXIr?=
+ =?utf-8?B?ZDZ4TGEzZzV6NEx6bmFtT1M1aEVJMDBhZUhlQ05HYU8zQW96Tms3UHVkMm16?=
+ =?utf-8?B?Qzh2dnRkdVB0UkpIclJBbzN0ODVBY05UVnEyTjV3ajI3dGVQdVRBSFRuTWdr?=
+ =?utf-8?B?NWVxcyt0WFA1RE5kM1NTenk5SzRwQ3ZZVlNqUlo2UlFPUXlHVEp6N1BVTWI1?=
+ =?utf-8?B?VXFNZC9LcnFyeXhqQ0JYY1NLdG5LU0toNHlET1NMdGdIYlhQNUJGN09vR3FE?=
+ =?utf-8?B?aGpTSTBmSXZscjNmdHVYU2pvQ2pSbzZxaTFqSDFtTTlJRXVSN1RnZmZCck9W?=
+ =?utf-8?B?N2FLcGloMXJ4MEhSTEQwT015U3Z0cUpZL3Z2VmpsQUlWRVhrQ2lkdz09?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0a4204e0-44b4-4840-7962-08debc430b49
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9715.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2026 22:55:27.3224
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: owlS+/VMj+irdecxmCiRNlwBSLOuMzXYD8RCsW/3RZWpMFE1KJixei3uMFwHOGfUzBq1To+z7FMvxlSFnvPT8Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4046
 
-On Wed, 27 May 2026 03:23:05 -0700
-Matt Evans <mattev@meta.com> wrote:
 
-> Add vfio_pci_dma_buf_find_pfn(), which a VMA fault handler can use to
-> find a PFN.
-> 
-> This supports multi-range DMABUFs, which typically would be used to
-> represent scattered spans but might even represent overlapping or
-> aliasing spans of PFNs.
-> 
-> Because this is intended to be used in vfio_pci_core.c, we also need
-> to expose the struct vfio_pci_dma_buf in the vfio_pci_priv.h header.
-> 
-> Signed-off-by: Matt Evans <mattev@meta.com>
+On 5/26/2026 5:43 PM, Zhiping Zhang wrote:
+> Query dma-buf TPH metadata when registering a dma-buf MR for peer-to-
+> peer access and translate the returned steering tag into an mlx5 ST
+> index. Keep the DMAH path as the first priority and only fall back to
+> DMA-buf metadata when no DMAH is supplied.
+>
+> Track per-MR ownership of the allocated ST index and release it on MR
+> setup failure, destroy, and FRMR-pool reuse. Release the ST index before
+> the MR is pushed back into the FRMR pool, and free mlx5_st_idx_data when
+> its refcount reaches zero so repeated allocation/deallocation does not
+> leak memory.
+>
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 > ---
->  drivers/vfio/pci/vfio_pci_dmabuf.c | 142 ++++++++++++++++++++++++++---
->  drivers/vfio/pci/vfio_pci_priv.h   |  20 ++++
->  2 files changed, 149 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> index c16f460c01d6..0d132c4ca95f 100644
-> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-> @@ -9,19 +9,6 @@
->  
->  MODULE_IMPORT_NS("DMA_BUF");
->  
-> -struct vfio_pci_dma_buf {
-> -	struct dma_buf *dmabuf;
-> -	struct vfio_pci_core_device *vdev;
-> -	struct list_head dmabufs_elm;
-> -	size_t size;
-> -	struct phys_vec *phys_vec;
-> -	struct p2pdma_provider *provider;
-> -	u32 nr_ranges;
-> -	struct kref kref;
-> -	struct completion comp;
-> -	u8 revoked : 1;
-> -};
-> -
->  static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
->  				   struct dma_buf_attachment *attachment)
->  {
-> @@ -106,6 +93,135 @@ static const struct dma_buf_ops vfio_pci_dmabuf_ops = {
->  	.release = vfio_pci_dma_buf_release,
->  };
->  
-> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *vpdmabuf,
-
-This private dmabuf object pointer is named priv pretty consistently
-throughout the rest of the file.
-
-> +			      struct vm_area_struct *vma,
-> +			      unsigned long address,
-> +			      unsigned int order,
-> +			      unsigned long *out_pfn)
-> +{
-> +	/*
-> +	 * Given a VMA (start, end, pgoffs) and a fault address,
-> +	 * search the corresponding DMABUF's phys_vec[] to find the
-> +	 * range representing the address's offset into the VMA, and
-> +	 * its PFN.
-> +	 *
-> +	 * The phys_vec[] ranges represent contiguous spans of VAs
-> +	 * upwards from the buffer offset 0; the actual PFNs might be
-> +	 * in any order, overlap/alias, etc.  Calculate an offset of
-> +	 * the desired page given VMA start/pgoff and address, then
-> +	 * search upwards from 0 to find which span contains it.
-> +	 *
-> +	 * On success, a valid PFN for a page sized by 'order' is
-> +	 * returned into out_pfn.
-> +	 *
-> +	 * Failure occurs if:
-> +	 * - The page would cross the edge of the VMA
-> +	 * - The page isn't entirely contained within a range
-> +	 * - We find a range, but the final PFN isn't aligned to the
-> +	 *   requested order.
-> +	 *
-> +	 * (Upon failure, the caller is expected to try again with a
-> +	 * smaller order; the tests above will always succeed for
-> +	 * order=0 as the limit case.)
-> +	 *
-> +	 * It's suboptimal if DMABUFs are created with neigbouring
-> +	 * ranges that are physically contiguous, since hugepages
-> +	 * can't straddle range boundaries.  (The construction of the
-> +	 * ranges vector should merge such ranges.)
-> +	 *
-> +	 * Finally, vma_pgoff_adjust is used for a DMABUF representing
-> +	 * a VFIO BAR mmap, which is created from the start of the
-> +	 * offset region.  It should be zero, or equal vm_pgoff.
-> +	 */
-> +
-> +	const unsigned long pagesize = PAGE_SIZE << order;
-> +	unsigned long vma_off = ((vma->vm_pgoff - vpdmabuf->vma_pgoff_adjust) <<
-> +				 PAGE_SHIFT) & VFIO_PCI_OFFSET_MASK;
-> +	unsigned long rounded_page_addr = ALIGN_DOWN(address, pagesize);
-> +	unsigned long rounded_page_end = rounded_page_addr + pagesize;
-> +	unsigned long page_buf_offset;
-> +	unsigned long range_buf_offset = 0;
-> +	unsigned int i;
-> +
-> +	if (rounded_page_addr < vma->vm_start || rounded_page_end > vma->vm_end) {
-> +		if (order > 0)
-> +			return -EAGAIN;
-> +
-> +		/* A fault address outside of the VMA is absurd. */
-> +		WARN(1, "Fault addr 0x%lx outside VMA 0x%lx-0x%lx\n",
-> +		     address, vma->vm_start, vma->vm_end);
-> +		return -EFAULT;
-> +	}
-> +
-> +	if (vpdmabuf->vma_pgoff_adjust != 0 &&
-> +	    vpdmabuf->vma_pgoff_adjust != (vma->vm_pgoff &
-> +					   (VFIO_PCI_OFFSET_MASK >> PAGE_SHIFT))) {
-> +		WARN(1, "Unexpected vma_pgoff_adjust 0x%lx (vm_pgoff 0x%lx)\n",
-> +		     vpdmabuf->vma_pgoff_adjust, vma->vm_pgoff);
-> +		return -EFAULT;
-> +	}
-
-This appears to be user trigger'able, by causing a vma to be split, and
-also unnecessary as it seems the math works out correctly for the split
-case.
-
-> +
-> +	if (unlikely(check_add_overflow(rounded_page_addr - vma->vm_start,
-> +					vma_off, &page_buf_offset)))
-> +		return -EFAULT;
-> +
-> +	for (i = 0; i < vpdmabuf->nr_ranges; i++) {
-> +		unsigned long page_buf_offset_end;
-> +		size_t range_len = vpdmabuf->phys_vec[i].len;
-> +		phys_addr_t range_start = vpdmabuf->phys_vec[i].paddr;
-> +
-> +		if (unlikely(check_add_overflow(page_buf_offset, pagesize,
-> +						&page_buf_offset_end)))
-> +			return -EFAULT;
-
-Why is this inside the loop, the args are invariant of anything
-modified in the loop.  Thanks,
-
-Alex
-
-> +		/*
-> +		 * If the current range starts after the page's span,
-> +		 * this and any future range won't match.  Bail early.
-> +		 */
-> +		if (page_buf_offset_end <= range_buf_offset)
-> +			break;
-> +
-> +		if (page_buf_offset >= range_buf_offset &&
-> +		    page_buf_offset_end <= range_buf_offset + range_len) {
-> +			/*
-> +			 * The faulting page is wholly contained
-> +			 * within the span represented by the range.
-> +			 * Validate PFN alignment for the order:
+>   drivers/infiniband/hw/mlx5/mlx5_ib.h          |  6 ++
+>   drivers/infiniband/hw/mlx5/mr.c               | 86 ++++++++++++++++++-
+>   .../net/ethernet/mellanox/mlx5/core/lib/st.c  | 28 ++++--
+>   include/linux/mlx5/driver.h                   |  7 ++
+>   4 files changed, 115 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/infiniband/hw/mlx5/mlx5_ib.h b/drivers/infiniband/hw/mlx5/mlx5_ib.h
+> index e156dc4d7529..4ab867392267 100644
+> --- a/drivers/infiniband/hw/mlx5/mlx5_ib.h
+> +++ b/drivers/infiniband/hw/mlx5/mlx5_ib.h
+> @@ -721,6 +721,12 @@ struct mlx5_ib_mr {
+>   			u8 revoked :1;
+>   			/* Indicates previous dmabuf page fault occurred */
+>   			u8 dmabuf_faulted:1;
+> +			/* Set when the MR owns dmabuf_st_index and must
+> +			 * release it via mlx5_st_dealloc_index() once the
+> +			 * firmware mkey is no longer referencing it.
 > +			 */
-> +			unsigned long pfn = (range_start + page_buf_offset -
-> +					     range_buf_offset) / PAGE_SIZE;
+mkey st value is kept after revoke, regardless of st alloc and dealloc.
+mkeys are kept in FRMR pool for future reuse even if their st index is 
+currently stale.
+> +			u8 dmabuf_st_owned:1;
+> +			u16 dmabuf_st_index;
+st_index can be read from the frmr pool key. No need to store again.
+>   			struct mlx5_ib_mkey null_mmkey;
+>   		};
+>   	};
+> diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5/mr.c
+> index 3b6da45061a5..8059b5e4da97 100644
+> --- a/drivers/infiniband/hw/mlx5/mr.c
+> +++ b/drivers/infiniband/hw/mlx5/mr.c
+> @@ -38,6 +38,7 @@
+>   #include <linux/delay.h>
+>   #include <linux/dma-buf.h>
+>   #include <linux/dma-resv.h>
+> +#include <linux/pci-tph.h>
+>   #include <rdma/frmr_pools.h>
+>   #include <rdma/ib_umem_odp.h>
+>   #include "dm.h"
+> @@ -46,6 +47,8 @@
+>   #include "data_direct.h"
+>   #include "dmah.h"
+>   
+> +MODULE_IMPORT_NS("DMA_BUF");
 > +
-> +			if (IS_ALIGNED(pfn, 1 << order)) {
-> +				*out_pfn = pfn;
-> +				return 0;
-> +			}
-> +			/* Retry with smaller order */
-> +			return -EAGAIN;
-> +		}
-> +		range_buf_offset += range_len;
+>   static int mkey_max_umr_order(struct mlx5_ib_dev *dev)
+>   {
+>   	if (MLX5_CAP_GEN(dev->mdev, umr_extended_translation_offset))
+> @@ -899,6 +902,63 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_attach_ops = {
+>   	.invalidate_mappings = mlx5_ib_dmabuf_invalidate_cb,
+>   };
+>   
+> +/*
+> + * Query TPH metadata from @dmabuf and translate the raw steering tag into
+> + * an mlx5 ST index. On success, returns 0 and the caller becomes the
+> + * owner of *@st_index (must be released with mlx5_st_dealloc_index()
+> + * once the firmware mkey no longer references it). On any failure
+> + * *@st_index and *@ph are left as the no-TPH defaults set by the caller.
+> + *
+> + * @dmabuf must already be referenced by the caller (e.g. via the umem's
+> + * attachment) so we don't re-resolve the user's fd here and avoid a
+> + * dup2() TOCTOU between umem creation and TPH lookup.
+> + */
+> +static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, struct dma_buf *dmabuf,
+> +			      u16 *st_index, u8 *ph)
+> +{
+> +	u8 req_type;
+> +	u16 steering_tag;
+> +	u8 st_width;
+> +	int ret;
+> +
+> +	if (!dmabuf->ops->get_tph)
+> +		return;
+> +
+> +	req_type = pcie_tph_enabled_req_type(dev->mdev->pdev);
+> +	switch (req_type) {
+> +	case PCI_TPH_REQ_TPH_ONLY:
+> +		st_width = 8;
+> +		break;
+> +	case PCI_TPH_REQ_EXT_TPH:
+> +		st_width = 16;
+> +		break;
+> +	default:
+> +		return;
 > +	}
 > +
-> +	/*
-> +	 * A hugepage straddling a range boundary will fail to match a
-> +	 * range, but the address will (eventually) match when retried
-> +	 * with a smaller page.
-> +	 */
-> +	if (order > 0)
-> +		return -EAGAIN;
+> +	ret = dmabuf->ops->get_tph(dmabuf, &steering_tag, ph, st_width);
+> +	if (ret) {
+> +		mlx5_ib_dbg(dev, "get_tph failed (%d)\n", ret);
+> +		*ph = MLX5_IB_NO_PH;
+> +		return;
+> +	}
 > +
-> +	/*
-> +	 * If we get here, the address fell outside of the span
-> +	 * represented by the (concatenated) ranges.  Setup of a
-> +	 * mapping must ensure that the VMA is <= the total size of
-> +	 * the ranges, so this should never happen.  But, if it does,
-> +	 * force SIGBUS for the access and warn.
-> +	 */
-> +	WARN_ONCE(1, "No range for addr 0x%lx, order %d: VMA 0x%lx-0x%lx pgoff 0x%lx, %u ranges, size 0x%zx\n",
-> +		  address, order, vma->vm_start, vma->vm_end, vma->vm_pgoff,
-> +		  vpdmabuf->nr_ranges, vpdmabuf->size);
-> +
-> +	return -EFAULT;
+> +	ret = mlx5_st_alloc_index_by_tag(dev->mdev, steering_tag, st_index);
+> +	if (ret) {
+> +		*ph = MLX5_IB_NO_PH;
+> +		mlx5_ib_dbg(dev, "st_alloc_index_by_tag failed (%d)\n", ret);
+> +	}
 > +}
 > +
->  /*
->   * This is a temporary "private interconnect" between VFIO DMABUF and iommufd.
->   * It allows the two co-operating drivers to exchange the physical address of
-> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-> index fca9d0dfac90..c8f6f959056a 100644
-> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> @@ -23,6 +23,20 @@ struct vfio_pci_ioeventfd {
->  	bool			test_mem;
->  };
->  
-> +struct vfio_pci_dma_buf {
-> +	struct dma_buf *dmabuf;
-> +	struct vfio_pci_core_device *vdev;
-> +	struct list_head dmabufs_elm;
-> +	size_t size;
-> +	struct phys_vec *phys_vec;
-> +	struct p2pdma_provider *provider;
-> +	u32 nr_ranges;
-> +	struct kref kref;
-> +	struct completion comp;
-> +	unsigned long vma_pgoff_adjust;
-> +	u8 revoked : 1;
-> +};
+> +static void mlx5_ib_mr_put_dmabuf_st(struct mlx5_ib_mr *mr)
+> +{
+> +	if (mr->umem && mr->dmabuf_st_owned) {
+> +		mlx5_st_dealloc_index(mr_to_mdev(mr)->mdev,
+> +				      mr->dmabuf_st_index);
+> +		mr->dmabuf_st_owned = 0;
+> +	}
+> +}
 > +
->  bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
->  void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev);
->  
-> @@ -114,6 +128,12 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->  	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
->  }
->  
-> +int vfio_pci_dma_buf_find_pfn(struct vfio_pci_dma_buf *vpdmabuf,
-> +			      struct vm_area_struct *vma,
-> +			      unsigned long address,
-> +			      unsigned int order,
-> +			      unsigned long *out_pfn);
+>   static struct ib_mr *
+>   reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
+>   		   u64 offset, u64 length, u64 virt_addr,
+> @@ -941,16 +1001,26 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
+>   		ph = dmah->ph;
+>   		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
+>   			st_index = mdmah->st_index;
+> +	} else {
+> +		get_tph_mr_dmabuf(dev, umem_dmabuf->attach->dmabuf,
+> +				  &st_index, &ph);
+>   	}
+>   
+>   	mr = alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
+>   				access_flags, access_mode,
+>   				st_index, ph);
+>   	if (IS_ERR(mr)) {
+> +		if (!dmah && st_index != MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
+> +			mlx5_st_dealloc_index(dev->mdev, st_index);
+>   		ib_umem_release(&umem_dmabuf->umem);
+>   		return ERR_CAST(mr);
+>   	}
+>   
+> +	if (!dmah && st_index != MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX) {
+> +		mr->dmabuf_st_index = st_index;
+> +		mr->dmabuf_st_owned = 1;
+> +	}
 > +
->  #ifdef CONFIG_VFIO_PCI_DMABUF
->  int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  				  struct vfio_device_feature_dma_buf __user *arg,
+>   	mlx5_ib_dbg(dev, "mkey 0x%x\n", mr->mmkey.key);
+>   
+>   	atomic_add(ib_umem_num_pages(mr->umem), &dev->mdev->priv.reg_pages);
+> @@ -1377,9 +1447,17 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib_mr *mr)
+>   	bool is_odp = is_odp_mr(mr);
+>   	int ret;
+>   
+> -	if (mr->ibmr.frmr.pool && !mlx5_umr_revoke_mr_with_lock(mr) &&
+> -	    !ib_frmr_pool_push(mr->ibmr.device, &mr->ibmr))
+> -		return 0;
+> +	if (mr->ibmr.frmr.pool && !mlx5_umr_revoke_mr_with_lock(mr)) {
+> +		/*
+> +		 * The mkey has been revoked: firmware no longer references
+> +		 * dmabuf_st_index, so release it before this mr can re-enter
+> +		 * the FRMR cache for reuse by another registration.
+> +		 */
+> +		mlx5_ib_mr_put_dmabuf_st(mr);
+> +
+> +		if (!ib_frmr_pool_push(mr->ibmr.device, &mr->ibmr))
+> +			return 0;
+> +	}
 
+The Sashiko comment on previous version of this series was wrong about 
+the concept of FRMR pools and its reuse of mkeys.
+
+Please move the st put operation outside the mkey cleanup flow.
+
+>   
+>   	if (is_odp)
+>   		mutex_lock(&to_ib_umem_odp(mr->umem)->umem_mutex);
+> @@ -1400,6 +1478,8 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib_mr *mr)
+>   		dma_resv_unlock(
+>   			to_ib_umem_dmabuf(mr->umem)->attach->dmabuf->resv);
+>   	}
+> +	if (!ret)
+> +		mlx5_ib_mr_put_dmabuf_st(mr);
+>   	return ret;
+>   }
+>   
