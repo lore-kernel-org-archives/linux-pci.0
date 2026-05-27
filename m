@@ -1,90 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC06C30AD15
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 17:30:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3E3244E045
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 17:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779903037; cv=none; b=RHOlLKWgztAQ1OxPVkR/9cHQi1DDAZwftoWqQqO1tB6BeL9J7EVZ9kdtdKBUpw3meGqrxCbwMJxDwPmC8jnp+91wwzbNfsXCLLUBVr//fiDkBdFJASazRY+5fFyr1Yaj+PefZeKDjsqMARjVHAk3JcdVxUsOhKM/tJZNyo66lUk=
+	t=1779903215; cv=none; b=GcqodrIsGoaNK5l2bxkEYgvWCQwXSR5Jcmzb0zheRKgwy/AjOq5Rvz3NiNoNCSfLREnOzweAQ+pcwz1Lr9r8K0GI0GUcJhbAJu3B64TzfKg32YoWtMzeriAq95HadFDi3r9bX8lgvP/6cDIXALWV7/FpLBnJox0veIvW9UrFJsY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779903037; c=relaxed/simple;
-	bh=Zlo8MU5MUH6M//JgnGKPMmb9vCR7NwjHtQlwpB5XVvk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ahw1SfMVU+z4jUxCMGzCfCDHAMpgRJAYywuDOkrQE80o7yfmbn7WDGRhZeg7/OVDGZuMsVUAtjAoiY0JWrjG0KXrtM0aIxYrHSmnhPa5LI1RqdfjzEG/tw0EVGD6xV0C7y3daLgnUJKdjr2Fhizcjcxpeea95OEfjHViuURQPtY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dNOm/+xY; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779903215; c=relaxed/simple;
+	bh=PDaZ/m0U90KProbi0AUtOZhGxAv3/isfFFaJmH6CDsQ=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=NlHzFswcxtb8JS0bTaql9Ierxt1elZIBzp/Bk078tdoDQe8iO1RpP4LP9MwRWlM6J1Oxl7kVdM3E4XdFZURFMKJoW5VAg1Ud5O3wA6wsarCY1mR7bbT/ukytGpBGTr+VglpGEN2iTDzU0vCLPeCGiFPSlCp3O4CvFg3EV8GxtFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E0zIY1oP; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dNOm/+xY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 453A01F000E9;
-	Wed, 27 May 2026 17:30:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779903036;
-	bh=fuea7FT7HTreB/IIuRln/W0lYEIc81/WCGz00TeKS2o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dNOm/+xYf8fMStDiLQxj1WEu2UwaeYSL+ORcrU0QJ4oN738DTzLJx0wI03yqUqHOp
-	 GVkSOc2fMyBQoLNRSRDM7B+CzGGiW/VIGcO63PAPtGWUSrbN8JJHAlnDflz3WSvFQS
-	 sN5P2QywTjbCq4PDm5nkVM3w1eRktac0FP+18IbAAyf58GYT/sDu10FC3WinaVJzeD
-	 C11bVjGZbvapUp/sBCHTfzdfAg1JQODK9nVjYnAmqX+SA+3DgjzWd0e9+ZGdAsPEWL
-	 8o/Z+YtEA1z0sqzuvGivav3y2vCLOJuROIveH+OEPA5Ph7mGKKe37XRiiO/pzalKuF
-	 6xFIZiDXnkjig==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] x86/amd_node: Add PCI Device ID for AMD 1Ah Family
- Models 80h-8Fh
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Muralidhara M K" <muralidhara.mk@amd.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E0zIY1oP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779903213; x=1811439213;
+  h=date:from:to:cc:subject:message-id;
+  bh=PDaZ/m0U90KProbi0AUtOZhGxAv3/isfFFaJmH6CDsQ=;
+  b=E0zIY1oPEp9AvSHI60xl3cHyVqD8GDYdnF08w/0abrZZNZ6p3AyH/VDi
+   D3pd/M1VpWetH/Dsq0JO6uX3H8rrEoHtngUEO9/pGqP/UNRPfmZcM0LeP
+   LJvcNGQNlMEC4X5KCTDjKSWAfWrzKnoJQz/iAJG4SChk36BogsZs7yUei
+   lJ7OVswMOPkMcUCw2WZxtT7C0xaejdxlMyeUtu5ffwzAOMr1V3+RqFBSg
+   xPIUy8C0uSOmWSlbGuremappv4Er6T0qF5WnvEYFPpTfMZhEHneJUjrAR
+   QQG9WIbfkCNRVS8VRIG7sbvn/G6daxKDkBi9a9MKTxmQfY+r65CUCztqQ
+   g==;
+X-CSE-ConnectionGUID: 7nkiSqNTQ4avS6avAFC5Vw==
+X-CSE-MsgGUID: KjgLifh6QkGr9uxnRdxxSQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="80468141"
+X-IronPort-AV: E=Sophos;i="6.24,171,1774335600"; 
+   d="scan'208";a="80468141"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 10:33:32 -0700
+X-CSE-ConnectionGUID: Z861l0yfReWWWP7Trk9XOg==
+X-CSE-MsgGUID: 0hFM6KLsTledjwddW4dbLw==
+X-ExtLoop1: 1
+Received: from lkp-server01.sh.intel.com (HELO f0d55cb201f0) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 27 May 2026 10:33:30 -0700
+Received: from kbuild by f0d55cb201f0 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1wSI8F-000000004Gs-3tpF;
+	Wed, 27 May 2026 17:33:27 +0000
+Date: Thu, 28 May 2026 01:32:32 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260527171731.2370179-1-muralidhara.mk@amd.com>
-References: <20260527171731.2370179-1-muralidhara.mk@amd.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 27 May 2026 17:30:35 +0000
-Message-Id: <20260527173036.453A01F000E9@smtp.kernel.org>
+Subject: [pci:controller/dwc-qcom] BUILD SUCCESS
+ e9769bb172696b7e924eb30fc94909e0c30786cf
+Message-ID: <202605280121.iMDX9yvG-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] The commit defines a new PCI Device ID macro but fails to add it=
- to any driver's device table, rendering it unused and incomplete.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc-qcom
+branch HEAD: e9769bb172696b7e924eb30fc94909e0c30786cf  PCI: qcom: Program T_POWER_ON
+
+elapsed time: 1526m
+
+configs tested: 63
+configs skipped: 12
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha             allnoconfig    gcc-15.2.0
+alpha            allyesconfig    gcc-15.2.0
+arc              allmodconfig    gcc-15.2.0
+arc               allnoconfig    gcc-15.2.0
+arc              allyesconfig    gcc-15.2.0
+arm               allnoconfig    clang-23
+arm              allyesconfig    gcc-15.2.0
+arm64            allmodconfig    clang-19
+arm64             allnoconfig    gcc-15.2.0
+csky             allmodconfig    gcc-15.2.0
+csky              allnoconfig    gcc-15.2.0
+hexagon          allmodconfig    clang-17
+hexagon           allnoconfig    clang-23
+i386              allnoconfig    gcc-14
+i386             allyesconfig    gcc-14
+loongarch        allmodconfig    clang-19
+loongarch         allnoconfig    clang-23
+m68k             allmodconfig    gcc-15.2.0
+m68k              allnoconfig    gcc-15.2.0
+m68k             allyesconfig    gcc-15.2.0
+microblaze        allnoconfig    gcc-15.2.0
+microblaze       allyesconfig    gcc-15.2.0
+mips             allmodconfig    gcc-15.2.0
+mips              allnoconfig    gcc-15.2.0
+mips             allyesconfig    gcc-15.2.0
+nios2            allmodconfig    gcc-11.5.0
+nios2             allnoconfig    gcc-11.5.0
+openrisc         allmodconfig    gcc-15.2.0
+openrisc          allnoconfig    gcc-15.2.0
+openrisc            defconfig    gcc-15.2.0
+parisc           allmodconfig    gcc-15.2.0
+parisc            allnoconfig    gcc-15.2.0
+parisc           allyesconfig    gcc-15.2.0
+parisc              defconfig    gcc-15.2.0
+powerpc          allmodconfig    gcc-15.2.0
+powerpc           allnoconfig    gcc-15.2.0
+riscv            allmodconfig    clang-23
+riscv             allnoconfig    gcc-15.2.0
+riscv            allyesconfig    clang-16
+s390             allmodconfig    clang-18
+s390              allnoconfig    clang-23
+s390             allyesconfig    gcc-15.2.0
+sh               allmodconfig    gcc-15.2.0
+sh                allnoconfig    gcc-15.2.0
+sh               allyesconfig    gcc-15.2.0
+sh                  defconfig    gcc-15.2.0
+sparc             allnoconfig    gcc-15.2.0
+sparc               defconfig    gcc-15.2.0
+sparc       sparc32_defconfig    gcc-15.2.0
+sparc64          allmodconfig    clang-23
+sparc64             defconfig    clang-20
+um               allmodconfig    clang-19
+um                allnoconfig    clang-23
+um               allyesconfig    gcc-14
+um                  defconfig    clang-23
+um             i386_defconfig    gcc-14
+um           x86_64_defconfig    clang-23
+x86_64           allmodconfig    clang-20
+x86_64            allnoconfig    clang-20
+x86_64           allyesconfig    clang-20
+x86_64              defconfig    gcc-14
+x86_64          rhel-9.4-rust    clang-20
+xtensa            allnoconfig    gcc-15.2.0
+
 --
-
-commit b8176196e7cd4eadef9e2045b12170c737ec764f
-Author: Muralidhara M K <muralidhara.mk@amd.com>
-
-x86/amd_node: Add PCI Device ID for AMD 1Ah Family Models 80h-8Fh
-
-This commit adds a new PCI Device ID to the MISC IDs list. It intends to
-support the new generation of AMD 1Ah family 80h-8Fh Models of processors.
-
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 24cb42f66e4b6..3301224c58454 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -585,6 +585,7 @@
->  #define PCI_DEVICE_ID_AMD_1AH_M20H_DF_F3 0x16fb
->  #define PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3 0x124b
->  #define PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3 0x12bb
-> +#define PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3 0x1243
-
-[Severity: Medium]
-Should this new ID be added to a driver's device match table, such as
-k10temp_id_table in drivers/hwmon/k10temp.c?
-
-The commit message states the intent is to support the new generation of AMD
-1Ah family processors. However, the patch only defines the macro here in
-pci_ids.h.
-
-Since the macro is not added to any driver device matching table, will the
-kernel actually recognize or support the new processor models as intended, =
-or
-is this ID effectively unused code at this point?
-
->  #define PCI_DEVICE_ID_AMD_MI200_DF_F3	0x14d3
->  #define PCI_DEVICE_ID_AMD_MI300_DF_F3	0x152b
->  #define PCI_DEVICE_ID_AMD_VANGOGH_USB	0x163a
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260527171731.2370=
-179-1-muralidhara.mk@amd.com?part=3D1
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
