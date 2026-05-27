@@ -1,259 +1,167 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022084.outbound.protection.outlook.com [52.101.101.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C55F3DD531;
-	Wed, 27 May 2026 13:40:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBE173E92BF;
+	Wed, 27 May 2026 13:41:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.84
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779889207; cv=pass; b=aHxydmTX6GhLK5mjUAgFJNkojU9tSK0PMlNALnyiviU6H4ZW//NviESS6Yi8bEGHdBmofNvGR/WrySSVcTybTt48A8PkcUB6qnNlYO6VdonV5zlnFNi1xBL48Bw4sIQe3h0KECDsOj6HgompcXkKe1u1jd3PalsWT5DXwoDVpJo=
+	t=1779889301; cv=fail; b=pTqCjv4UUd2CZbWryQ/Dgm506o54G5sI1JvT1memduoY4UJDMH1k96qzX8ne/WMj3+3+oFnjOVcuKkC3T47aHq+jrQ2NQCoeRBU5z23N5ZDzonxXBA/aSR5/v/cQRJIbSMefOCAIUZbpw9HmdqwKi+SoQiL/E/F4+61NMGTjM2w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779889207; c=relaxed/simple;
-	bh=y/yenOk6WMktkywSzBANqFEfCqHm73KYiJZPpCiAfO4=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=M/Nhqls1VqwZbnScvOp0t8R1LmIzsTM/HkSZ5lx/evPovdUDI4nleTofBjynbmokFpGl2fai5NDAI5lAlfR/taDXTYZg6IWj5uYIAYB+uD0W1Vw4Rp5k0Ldjx3yTa1kNRsjGagMSXgkcu0RcXv91O0Iz273NePogvYwwAzB7KNY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=HFdEeSA0; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1779889301; c=relaxed/simple;
+	bh=fRs+zn5r9KxH2teEw1OPkeHxbJCtGHCKfGlyqjsR3Vk=;
+	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
+	 In-Reply-To:MIME-Version; b=Ct2DYKb5TziEMsZTjHP8eWLhJ2M5AzoJznhv90SqPWgwKrHuNsP5EW76uxfch3LY39Ve7Ek7m5eWkTbX3eEmYkw71blk91+dqVSLpjj/9pCovL2WZvf1fy1pp7Sv6lo0G8NgZiODAml1UNKdyNwYXmjPcsortAEEkp8Zr2vkR9Q=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=upC4Av2C; arc=fail smtp.client-ip=52.101.101.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="HFdEeSA0"
-ARC-Seal: i=1; a=rsa-sha256; t=1779889143; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=A53WMoFTh4qmZlfGBesvsGfcd2hRyqtNdQw9iuZvSmNUsREmc3dfN/Et1zOFrsq84htdkIE2FkcAP3EJq8FlyZpm0+xBiYawrQw4Prjbox30VXJZSJzdDdLJFzZArEI9R6lBKR0chE+c0tUxfdB1473vifhZwIdgyAApK4Qjg+0=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1779889143; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=nEEugzNfKPOCaWmJFszVxAfTXaai2yTXj9vTxlKTC+E=; 
-	b=CllLONVCDfzfJFTLA+qb907oxXgHBK/lrgm65ASQBK4wcqlaXdC6VFkgp1lewDIVmW4TT84OVxPioacpfndUFL8wtfAWsBaC6Ff+WZq8tFAOconePX4rBGx/z9EdA5Tx48WyekLxe3YYqWm2WRgumwvbChmxgHqhS0xMbaoxswI=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
-	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1779889143;
-	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
-	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
-	bh=nEEugzNfKPOCaWmJFszVxAfTXaai2yTXj9vTxlKTC+E=;
-	b=HFdEeSA0m5hN+GZZgqpHkjkLvH/3FiSsWxxzwyAW1D1B0ziAKBF/umHeDF6YdFFr
-	BoKHKmeLyjzLjjXw6jG2btwQiL1dMlHX79IgGUflstjeMHgRhXLIBr3xhmJx1OKvUV5
-	NDM9manI0g8sq+p2QW3QCyvphTYYSQUZlTqLDJkI=
-Received: by mx.zohomail.com with SMTPS id 1779889140488922.6898610590684;
-	Wed, 27 May 2026 06:39:00 -0700 (PDT)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="upC4Av2C"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ysMeQKdpbw1+Syj3XmUpYGr6yeu76ualltormG3wSmYRE6AJwz7ViwU9anIPE3IlC8t94L534dpjHw9DUc2qoiwlj8o+ocsVT7LchSiaW2LYfvjacGLKcznyOs5BLcis8TFf/HsQNiTTNGr8nADKT9TyLur+DOYDccHoYOMIYT+pnezpF0/UiPxH6WEj2Fywn+OkyJi942EOVzmp3pRElGrxR+SZ2jPgLQfFryNqFBsfL7StwVb66YFRVxd9h2McPPD4A/2xWBlnNqh7Rz9+QX4+DiDP56D8NyH52cH+ux4sZ4UYWqy3bpaZDIBtNW9fRir4ZgvuZCy57O1huXAgPg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AqAinA3aRgngkWEVVhKNGrAQ36reSKp+0Ob8OuDqulg=;
+ b=tAwMMLmIMASv5t3cNHDzMsoAObw8LMqhRH4TbHxKh0JbQsGD4hv/jn8rqFJwfB39Io0vNf9FucKPuVa76K9ZScZPclCrQeZ6VBHC56l+aUu5AbQnKJ7aXth5PHpmQdwgXuuZo3zxVUix1bs1r0Gdtj7awh+T9tOD1zHErNKhLboGpN5RSUaLJZsys4+P/wxjyQyYsfXl1kJrqviWcBn1srW0bfnVu1MWzgp7nWE1uHIKDQrnFrQKklHglOHKAIq9ZNVliXmulQNcDSjrZl+P6/sprZrHTYRAp9zLK/HNuauowj67MQzYWMjQiOn1yabi9hkMf7Gyz9hj2zExVFhllw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AqAinA3aRgngkWEVVhKNGrAQ36reSKp+0Ob8OuDqulg=;
+ b=upC4Av2CU5copVgjkDgMT4RWAwq9xQYDkHJzElXijR8uM3yarzwRjDRr38fX+E2s3TC2dToI+N7Rrdl2C1BEUrvQPJ3nYrl8b4e1EwyVJINEs3HredJF5DKHRe3Gaq9TKc+dQ3lH9mYHhxxN8g7Ue+KqM04H0Mk+u9hmuav+7v4=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by LO4P265MB6528.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2e3::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.13; Wed, 27 May
+ 2026 13:41:30 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0071.011; Wed, 27 May 2026
+ 13:41:29 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 27 May 2026 14:41:28 +0100
+Message-Id: <DITI3F11JL6Y.3VAA9L56F6M95@garyguo.net>
+Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
+ <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>, "Eliot
+ Courtney" <ecourtney@nvidia.com>
+Subject: Re: [PATCH v5 20/24] samples: rust: rust_driver_pci: use HRT
+ lifetime for Bar
+From: "Gary Guo" <gary@garyguo.net>
+To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
+ <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
+ <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
+ <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
+ <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
+ <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
+ <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
+ <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
+X-Mailer: aerc 0.21.0
+References: <20260525202921.124698-1-dakr@kernel.org>
+ <20260525202921.124698-21-dakr@kernel.org>
+In-Reply-To: <20260525202921.124698-21-dakr@kernel.org>
+X-ClientProxiedBy: LO4P123CA0516.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:272::9) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Re: [PATCH v5 15/24] rust: usb: make Driver trait
- lifetime-parameterized
-From: Daniel Almeida <daniel.almeida@collabora.com>
-In-Reply-To: <20260525202921.124698-16-dakr@kernel.org>
-Date: Wed, 27 May 2026 10:38:38 -0300
-Cc: gregkh@linuxfoundation.org,
- rafael@kernel.org,
- acourbot@nvidia.com,
- aliceryhl@google.com,
- david.m.ertman@intel.com,
- ira.weiny@intel.com,
- leon@kernel.org,
- viresh.kumar@linaro.org,
- m.wilczynski@samsung.com,
- ukleinek@kernel.org,
- bhelgaas@google.com,
- kwilczynski@kernel.org,
- abdiel.janulgue@gmail.com,
- robin.murphy@arm.com,
- markus.probst@posteo.de,
- ojeda@kernel.org,
- boqun@kernel.org,
- gary@garyguo.net,
- bjorn3_gh@protonmail.com,
- lossin@kernel.org,
- a.hindborg@kernel.org,
- tmgross@umich.edu,
- igor.korotin@linux.dev,
- pcolberg@redhat.com,
- driver-core@lists.linux.dev,
- linux-kernel@vger.kernel.org,
- nova-gpu@lists.linux.dev,
- dri-devel@lists.freedesktop.org,
- linux-pm@vger.kernel.org,
- linux-pwm@vger.kernel.org,
- linux-pci@vger.kernel.org,
- rust-for-linux@vger.kernel.org,
- Eliot Courtney <ecourtney@nvidia.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <DC5BAEBC-3FF1-44E3-BD89-8770761D7548@collabora.com>
-References: <20260525202921.124698-1-dakr@kernel.org>
- <20260525202921.124698-16-dakr@kernel.org>
-To: Danilo Krummrich <dakr@kernel.org>
-X-Mailer: Apple Mail (2.3826.700.81)
-X-ZohoMailClient: External
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO4P265MB6528:EE_
+X-MS-Office365-Filtering-Correlation-Id: 267022fb-efae-4f37-877c-08debbf5a7dc
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|7416014|10070799003|366016|921020|56012099006|4143699003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	zxlVBPCFtNbTAFVyxZEp7S1+j+cd1O13wn5H25h9212TC5BTJ8xe24GWGHrKSVh7252NiuYEXD1gb0u10uUSsBTLg/b+vGu1cF3hCcA4tC+WIH7+VcaET3n4mbNe5dIKVjFpiNlKUQ67AuohiTCf43M98XD2Z9dH2oLfRd/FmbAv8P+ew6vIFFSvSrct5LQbnFTW/L09Mk7hdTmDBS9pSU/0D5gt4Oxbm3VV0n2jf9DtWM2EK4znJgSnm4kxxZxesfJaXfteUp0ZzPjU/G5NK+l0uGDHDALL73OXRMo2QEb0TmCCUUPgK4gM9r7eoSu+2eNPl3/2ZeUohJcUVzbwwSCBjOreu/7zcKodGlUsnm4s0Jzb16CERYvgN4RGMT72QrBQ297cg/9Nzx6X84YnX+8sK9TgsFUhF+H/PjQ5wsjmAGJsoX2wHDTGo70GNsM70cmKywGBEEVqPs4r8UdgtLx9npHjLpBGCXS8y+PbGS/LbgJVUo5XVPPnU2RVIdgSqVofdv+uywC14xGI1moplr7rUGO9nC6u2M7D/LjV4T3wWu4jzcBV1GlgUsHMr+kLfiLA+x4TmCyW06agBePU1cgXZEKjC2Mgr4uc5123B0fgOYvmRRydE3mLL5FKvc7Db1n8tcmyUxiQdFO4xbMj7+2O+tKwF5vBX1Yuqa/rj7MlGjyXzbLfA/MZHyDFD/sZH7TrNE4c1wgfNxpfuj+akIo931uTRedEpXQwHtCMsxQ=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(10070799003)(366016)(921020)(56012099006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?VHhPUnNIbk1yWjlOdE82YzRveHh4T21FT1ptVWpiOTY4NzNZa3dWSVJQYVZr?=
+ =?utf-8?B?cmhRMHIyVkhUVkJQT0RxRURaeXRpR00zcmcrOVdvejBIcEtNWk4xSHVNZ2Ni?=
+ =?utf-8?B?L3ZVSmlmM2Z4Q2V6WUova0ZWaDRySkoxN2hwaE9wUzlyUFB3NVh6a0gyVXd2?=
+ =?utf-8?B?ZHpORkNxUmtrVVB3QkNpWGRHZVNQVzl1OVVkRFg4QTAzSWdteGVQbllHUnpr?=
+ =?utf-8?B?OWZmNWZBYXVQbkFZdGkwNFhCNXVWYTdFdWJjWFMyWDhKSnRxdVI5NTNWOVhR?=
+ =?utf-8?B?VERZK1hlSkdkOGpFaW5kOEg4UkE3di9nVllpT3pCQ3NSNXEyc0hOS1BxVzY0?=
+ =?utf-8?B?NDlIRlppcUlDMXd5N0JRa0ZEZngwc2F5QXFwMjhzbTZxYW5pNldiTXdCZTRN?=
+ =?utf-8?B?OTcyYk5jWlZJSTVxMXVpajZkWjdoQ3JCZnl1WHc5ZWxCOHFQUkthaFl2WHY0?=
+ =?utf-8?B?amhpVGNKNHFma0ZGc0NORGNvVmg1Smc3U2t5K0p3N3ZoaVZuZmVtZkxzTHkr?=
+ =?utf-8?B?d043alRUbS82ZmI3Qndna1ZHZWNLcHg4YnhmSHRkck4zdEpSOXJHTWI4cjdl?=
+ =?utf-8?B?REJJNnJLcW1VVTlFS1pQZVhLaUhyS2tPbmwxc3p4dEFvbllJSGhPbVlsazlx?=
+ =?utf-8?B?eXcyYlRKYXhFTlk1WFcxMUpBcmcyd1FQdjJWa1lGNWt3cDluTlJHSVJvbFNs?=
+ =?utf-8?B?VEIyZHRTcURpb09LeTRKMXNyLzhlckprcm1PRjBYSzd2MGdTSkYvL1ltZTJH?=
+ =?utf-8?B?K2JoQ2ZidUZjZktVS2VnL01wbWZVSE0zUXVaOGdYdFFOWEdVbkEwbmhkdk5N?=
+ =?utf-8?B?NXRicEFkV3pGRXQ5UVZpdXhWMDJSdExvK3BheEY0KzlsVXJzMERKcHRLL01t?=
+ =?utf-8?B?cVduWERucFJDd083UXE1TTBJcWlnTUpDeDI1RnlyakNmWldHa1FCQk9RTmJQ?=
+ =?utf-8?B?aWdsVHlDZTRETUduRDdFT0lyaG9JZ1JMRmJHWGdqQWM4YTF6d2w1ZTZuM3lS?=
+ =?utf-8?B?NnZtODlTOXAyOVJWOUh3amh3dHpUU2tjK1QxbHhLN293a3BDUWhTdmFQOXRk?=
+ =?utf-8?B?NHl3ZFkwNmU2d3duOUZNcW5aTm1lZThvRmhuakRVcFdTRUtXMzlRcFMyMS9n?=
+ =?utf-8?B?Vk1VcGI0TE9zKzhhWXpYNmVLVnhoQlNKVFI0OW5JQ1hGVmluOFVMbmNuZmVZ?=
+ =?utf-8?B?TjJJSGhpQnByWmwyR3Y4Q0J2eDZlYnZLcGRibmJnVm5CUG9ydUFGa24zT29y?=
+ =?utf-8?B?aUVuTklma0VWYzRXRVdjTFh2WHgyT3FOeC85cXpsd0RYVFZjK21JRVg1YVZ5?=
+ =?utf-8?B?Q1J4NVJsa3JuUVpvTFJjaHE4VmF1SHU4U2NtdUN3ajM3bDJsb1hUdy90NjRm?=
+ =?utf-8?B?Uml6Q3dYOW1maHVHa0I4bHYrV2xuRHNhLzhLZG9GT2h4anBFTnNpMVBuNENL?=
+ =?utf-8?B?YS9HcUMyTDlxWXlDTkhCeTdsdGlGQ1c0VFQrWFRxL0RkZXZka2ZlejdXZWph?=
+ =?utf-8?B?Y0NmcHhjNzhMTE5LQjhoT0ZTR251M213RUxOUWp6YWR1d0kzRlJ2WnJzNXlh?=
+ =?utf-8?B?UFBMTTBmdGlmUy9xbEY2alJUMkhsRVV3b0xFdDkrb1ZJK01qMG9ZTlNGUVFK?=
+ =?utf-8?B?NGJTbmxSTTd6bi91UmRUbnROZ3FTMUJIQ1ZmTkl4Z2lETGZoalVrajBiWC92?=
+ =?utf-8?B?QktZekJnWVlMYnZUWnF0MHRYY3p4WVVFRndvcTNUUC9JbUczeWxLcmhxb1ho?=
+ =?utf-8?B?a0QzcDdYR2NwZVFXZTZKekxsL3hFaGJhUjBiaWdPUmJMZFh4cEN3OHVZSTRm?=
+ =?utf-8?B?d0JvQjhITTlGVnQ0N2pCenFMb05HdUVYMjhyV3Myelk2RkU4TlliV2tIc1FI?=
+ =?utf-8?B?ejd1a05IWTFUTERKc1VpQndDQ2lhNmFCV0MxZWMvUlRmL0IyRHNYVm04VFY4?=
+ =?utf-8?B?d3UwNEwxQ2l4K3gzR3pia1l2elp6TysvZjMza2QzUnJCRWt6R1ZGNGhUcEdx?=
+ =?utf-8?B?RXNGOG9mcDZtOWpkdWRvNmplUyswakdVODcxWXBabDY4VzM0YlV5c1BTTmpR?=
+ =?utf-8?B?KzA3b1JsZ25YWlFYdUZPOU5kcVlhY1ZLQjk2bUowcDdHRGdUTXpZM0phcnhH?=
+ =?utf-8?B?czJOKzlOM3JTSkRtdm1ORzI0TjJkZWdhM0R0alluZ0dHdExBSkxTWGt0RmZl?=
+ =?utf-8?B?VXhqRFp4NEJsdVJjUDlVbXcvaGFLRkdOa0lTWU9wWVBmdWJZNkVyU3B1ZFRz?=
+ =?utf-8?B?SHFZcnhmZjk2ck84TDVjR2Q4ZXNzaVRSVDIzaHl3TGFMVTh0aXVuR1UyNUtX?=
+ =?utf-8?B?SUdkVGRYQkRFQ1JXS1FWQjAxNlM5YWRPTHlZSjI5RlNLWVRVUW1FUT09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 267022fb-efae-4f37-877c-08debbf5a7dc
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2026 13:41:29.1589
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: a3+IjqqfS8pJzZtU7JLCvvxuN6WHvmSk4HjzpjwJPeyvZ0y0Ty9QBz1gcCnsNrT/JIiju3b0rTebsFrXtw2ZqA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO4P265MB6528
 
+On Mon May 25, 2026 at 9:21 PM BST, Danilo Krummrich wrote:
+> Convert the sample driver to SampleDriver<'bound>, taking advantage of
+> the lifetime-parameterized Driver trait.
+>=20
+> The driver struct holds &'bound pci::Device directly instead of
+> ARef<pci::Device>, and pci::Bar<'bound> directly instead of
+> Devres<pci::Bar>. This removes PinnedDrop, pin_init_scope, and runtime
+> revocation checks on BAR access.
 
+It looks like the original code doesn't need pin_init to begin with, so it'=
+s not
+like the lifetime actually helps here, but it's still a good cleanup.
 
-> On 25 May 2026, at 17:21, Danilo Krummrich <dakr@kernel.org> wrote:
+Reviewed-by: Gary Guo <gary@garyguo.net>
+
 >=20
-> Add a 'bound lifetime to the associated Data, changing type Data to =
-type
-> Data<'bound>.
->=20
-> This allows the driver's bus device private data to capture the device =
-/
-> driver bound lifetime; device resources can be stored directly by
-> reference rather than requiring Devres.
->=20
-> The probe() and disconnect() callbacks thus gain a 'bound lifetime
-> parameter on the methods themselves; avoiding a global lifetime on the
-> trait impl.
->=20
-> Existing drivers set type Data<'bound> =3D Self, preserving the =
-current
-> behavior.
->=20
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > Reviewed-by: Eliot Courtney <ecourtney@nvidia.com>
+> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
 > Signed-off-by: Danilo Krummrich <dakr@kernel.org>
 > ---
-> rust/kernel/usb.rs              | 37 ++++++++++++++++++++-------------
-> samples/rust/rust_driver_usb.rs | 12 +++++------
-> 2 files changed, 28 insertions(+), 21 deletions(-)
->=20
-> diff --git a/rust/kernel/usb.rs b/rust/kernel/usb.rs
-> index 1dbb8387b463..7aff0c82d0af 100644
-> --- a/rust/kernel/usb.rs
-> +++ b/rust/kernel/usb.rs
-> @@ -41,7 +41,7 @@
-> // - `DEVICE_DRIVER_OFFSET` is the correct byte offset to the embedded =
-`struct device_driver`.
-> unsafe impl<T: Driver> driver::DriverLayout for Adapter<T> {
->     type DriverType =3D bindings::usb_driver;
-> -    type DriverData<'bound> =3D T::Data;
-> +    type DriverData<'bound> =3D T::Data<'bound>;
->     const DEVICE_DRIVER_OFFSET: usize =3D =
-core::mem::offset_of!(Self::DriverType, driver);
-> }
->=20
-> @@ -109,8 +109,8 @@ extern "C" fn disconnect_callback(intf: *mut =
-bindings::usb_interface) {
->=20
->         // SAFETY: `disconnect_callback` is only ever called after a =
-successful call to
->         // `probe_callback`, hence it's guaranteed that =
-`Device::set_drvdata()` has been called
-> -        // and stored a `Pin<KBox<T::Data>>`.
-> -        let data =3D unsafe { dev.drvdata_borrow::<T::Data>() };
-> +        // and stored a `Pin<KBox<T::Data<'_>>>`.
-> +        let data =3D unsafe { dev.drvdata_borrow::<T::Data<'_>>() };
->=20
->         T::disconnect(intf, data);
->     }
-> @@ -287,18 +287,22 @@ macro_rules! usb_device_table {
-> ///
-> /// impl usb::Driver for MyDriver {
-> ///     type IdInfo =3D ();
-> -///     type Data =3D Self;
-> +///     type Data<'bound> =3D Self;
-> ///     const ID_TABLE: usb::IdTable<Self::IdInfo> =3D &USB_TABLE;
-> ///
-> -///     fn probe(
-> -///         _interface: &usb::Interface<Core<'_>>,
-> +///     fn probe<'bound>(
-> +///         _interface: &'bound usb::Interface<Core<'_>>,
-> ///         _id: &usb::DeviceId,
-> -///         _info: &Self::IdInfo,
-> -///     ) -> impl PinInit<Self::Data, Error> {
-> +///         _info: &'bound Self::IdInfo,
-> +///     ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound {
-> ///         Err(ENODEV)
-> ///     }
-> ///
-> -///     fn disconnect(_interface: &usb::Interface<Core<'_>>, _data: =
-Pin<&Self::Data>) {}
-> +///     fn disconnect<'bound>(
-> +///         _interface: &'bound usb::Interface<Core<'_>>,
-> +///         _data: Pin<&Self::Data<'bound>>,
-> +///     ) {
-> +///     }
-> /// }
-> ///```
-> pub trait Driver {
-> @@ -306,7 +310,7 @@ pub trait Driver {
->     type IdInfo: 'static;
->=20
->     /// The type of the driver's bus device private data.
-> -    type Data: Send;
-> +    type Data<'bound>: Send + 'bound;
->=20
->     /// The table of device ids supported by the driver.
->     const ID_TABLE: IdTable<Self::IdInfo>;
-> @@ -315,16 +319,19 @@ pub trait Driver {
->     ///
->     /// Called when a new USB interface is bound to this driver.
->     /// Implementers should attempt to initialize the interface here.
-> -    fn probe(
-> -        interface: &Interface<device::Core<'_>>,
-> +    fn probe<'bound>(
-> +        interface: &'bound Interface<device::Core<'_>>,
->         id: &DeviceId,
-> -        id_info: &Self::IdInfo,
-> -    ) -> impl PinInit<Self::Data, Error>;
-> +        id_info: &'bound Self::IdInfo,
-> +    ) -> impl PinInit<Self::Data<'bound>, Error> + 'bound;
->=20
->     /// USB driver disconnect.
->     ///
->     /// Called when the USB interface is about to be unbound from this =
-driver.
-> -    fn disconnect(interface: &Interface<device::Core<'_>>, data: =
-Pin<&Self::Data>);
-> +    fn disconnect<'bound>(
-> +        interface: &'bound Interface<device::Core<'_>>,
-> +        data: Pin<&Self::Data<'bound>>,
-> +    );
-> }
->=20
-> /// A USB interface.
-> diff --git a/samples/rust/rust_driver_usb.rs =
-b/samples/rust/rust_driver_usb.rs
-> index e900993335e9..02bd5085f9bc 100644
-> --- a/samples/rust/rust_driver_usb.rs
-> +++ b/samples/rust/rust_driver_usb.rs
-> @@ -26,21 +26,21 @@ struct SampleDriver {
->=20
-> impl usb::Driver for SampleDriver {
->     type IdInfo =3D ();
-> -    type Data =3D Self;
-> +    type Data<'bound> =3D Self;
->     const ID_TABLE: usb::IdTable<Self::IdInfo> =3D &USB_TABLE;
->=20
-> -    fn probe(
-> -        intf: &usb::Interface<Core<'_>>,
-> +    fn probe<'bound>(
-> +        intf: &'bound usb::Interface<Core<'_>>,
->         _id: &usb::DeviceId,
-> -        _info: &Self::IdInfo,
-> -    ) -> impl PinInit<Self, Error> {
-> +        _info: &'bound Self::IdInfo,
-> +    ) -> impl PinInit<Self, Error> + 'bound {
->         let dev: &device::Device<Core<'_>> =3D intf.as_ref();
->         dev_info!(dev, "Rust USB driver sample probed\n");
->=20
->         Ok(Self { _intf: intf.into() })
->     }
->=20
-> -    fn disconnect(intf: &usb::Interface<Core<'_>>, _data: Pin<&Self>) =
-{
-> +    fn disconnect<'bound>(intf: &'bound usb::Interface<Core<'_>>, =
-_data: Pin<&Self>) {
->         let dev: &device::Device<Core<'_>> =3D intf.as_ref();
->         dev_info!(dev, "Rust USB driver sample disconnected\n");
->     }
-> --=20
-> 2.54.0
->=20
->=20
-
-Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+>  samples/rust/rust_driver_pci.rs | 89 +++++++++++++++------------------
+>  1 file changed, 40 insertions(+), 49 deletions(-)
 
