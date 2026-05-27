@@ -1,106 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B19DB3F9278
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 11:38:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1896A3F6612;
+	Wed, 27 May 2026 11:55:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779881907; cv=none; b=XnQnYfBLWzoPwIrdwnXQbUS8fS0/7Q8HNtWjkl3C+7VUAgJoEc5jkXyG9Hk+u7SO2h8ynrfvsTe19VVSKfFWsVWp5DUHcv3Vk/bBZBre4u+/nqO4/sfgScUu+98XecXibNVWXh/qJFK2yLf3plMcgUvNmLGMZe+uEVmMoa+fSpY=
+	t=1779882926; cv=none; b=rRVSFtgh0Hi91lAfpthmBjf/HRhbG7mTKB7KSfdZXAyHKj0kCdfkBzexLZzSDMOWBuEBDDx8zAi4INLl6xBOWai2/Y+Ad078PmCECburt285f5xRCQTJn4by30XSOmR7EgLYWTBoDU2vXDRn9nFkFCvZMx6TGy4mA8MhMhfw3NY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779881907; c=relaxed/simple;
-	bh=C/JDoMskpVNUsPhkPS1ppZP++rW/kUPM4ELPNhRx98k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=TnGUh4DSx5uHlgR4e1hXIxzzvhyYDguzpYHtY+euE1vd0/VnlcsLBh/fu5AbQPxWsuMKZRRghFvjK8AY2icRjQjPVOyPkYTAgEE7ZbLQKHTS4+3hgfTv/XEml4iSq1s0yj1zghoHAuLqHSDgy6UrsvGGnU5pQOzqBSLySfeXN1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dR3APR+a; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779882926; c=relaxed/simple;
+	bh=YOxq85BhoK+UeFka8Zxzm7yB2mOJp2IBDAa3h85nUxM=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=SZ3X4SOoFe0IEG8lIy7cZ3NXm4tpBJED3dCEQ5KaXqOVV18PdBrizDYrdcamVCpZnYDpRpbdatSWOcM5+qIN9XJS1+e9rx29JTykkrKxyPS69g0leZxWMGIvcdlx93Wui5QfC9ugCvO7yo2tdqdZqvyjDpptXBnbh9Tzpr4hyJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DCaFa/qD; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dR3APR+a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 088391F000E9
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 11:38:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DCaFa/qD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 807C01F000E9;
+	Wed, 27 May 2026 11:55:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779881905;
-	bh=DDPMa0fdpYJQTQJTQSaNefV6P/6fs1Q+aFlsuPZjNBc=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=dR3APR+a8wJ1jq1ChSlC5tFGoMXAFQ0RAFnWIq1ij/QbD9KWR0s/GsgetNI5YCt5K
-	 RNlDgHRv7YAKOIu/Kvoq/BECZDO79BzVbJMPYy87noZkhCDDinkRBYXK9Xj4dOdyo8
-	 chXS8/ifsuBB5GTbAjU1EinUAEZ/aeLRcVymzaD1Fh0mgH3ksx8yG63WdtrRj3ZYNL
-	 2lVgCDIEh+VILTumQ7vzFcPNfa1wZFRcnYdKdk2lFRT4HVu0UPLgm+AIASj+tQzhde
-	 FJ3GzlEpJnF9HOKx6JvY/fSXdH8u1M/+NQL7o75HEL5HcZWyTkujy0KX8bEZnc8CUm
-	 7FIYymL+eQeog==
-Received: by mail-vk1-f175.google.com with SMTP id 71dfb90a1353d-5873983d19eso4886663e0c.2
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 04:38:25 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ+Ie8FpBn6ewDULRKvwUXz9y98dnQuICVVmSPU+XM/pfCZ85k2OnhioPOrfyX6VYQJQVOf+wtWrejE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzxchhyFLuZZhIF4riV3qaJevVovH6uggIWjIfMx5iB7NoNTkmG
-	qwmGgQBFZzsMYcSYfty7wFC8McnUwM6dPxZ+mE7MILTye6WB2z6RBCTV6CjaZNjZzXU3cdOr1GY
-	3ngaUcbQxdEToaMao5TRTjP6Zm8y7vv4=
-X-Received: by 2002:a05:6122:4317:b0:576:1a8d:8989 with SMTP id
- 71dfb90a1353d-58658a3d6f0mr12430648e0c.0.1779881904343; Wed, 27 May 2026
- 04:38:24 -0700 (PDT)
+	s=k20260515; t=1779882924;
+	bh=rwYv4TseoI1EneuWWYSVd5SVs3X9jXRq/3Su1LCmXYo=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=DCaFa/qDRf4IJ+5AkAnS+HaKC5Z9K+BxSmtKWTVAkgwhQ4mMz7+qq/m+7deBlemr9
+	 yfwjwLKoyZ+lhkWuuw6kw8mVWvuLK2dmi2DvdL+wnqlYQJQ7Yzs/hJb8qlKWi4kmkM
+	 FJjX7znGJ1sBZQgPNRHVReRBGgL4VFBin8Kz95REE9h4fYkLzhVWZBPYF3gi5EIClv
+	 9dKw6++5+2elpvUWIRwkWWayib1RRnIzZGeutGDvzI5vE4/ZH/e+LLWQvr6/GLRAFq
+	 FCGlc9TX5er09Ag2QeO+hNWoV5rKZYLuFl9BcLnTypoyD0uocMemQ61US8p57aain7
+	 Yjxyd1QdK4g1w==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v13 4/8] PCI/TPH: Add requester policy to
+ pcie_tph_get_cpu_st()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260527094719.43886-5-fengchengwen@huawei.com>
+References: <20260527094719.43886-5-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 27 May 2026 11:55:23 +0000
+Message-Id: <20260527115524.807C01F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20260526025118.38935-1-cp0613@linux.alibaba.com> <20260526025118.38935-3-cp0613@linux.alibaba.com>
-In-Reply-To: <20260526025118.38935-3-cp0613@linux.alibaba.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 27 May 2026 13:38:08 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0guqiYf-7u-XOHARWZEYytYBZ=5XahXmtXzZ7Urv8bnJA@mail.gmail.com>
-X-Gm-Features: AVHnY4K470KiQWLSRdffFvGwoRgQxOZnZHDAqVE4J9GvFpSBp6vdb7nYMJ5CXEQ
-Message-ID: <CAJZ5v0guqiYf-7u-XOHARWZEYytYBZ=5XahXmtXzZ7Urv8bnJA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ACPI: scan: Honor _DEP for ACPI0016 PCI/CXL host bridge
-To: Chen Pei <cp0613@linux.alibaba.com>
-Cc: dave.jiang@intel.com, alison.schofield@intel.com, djbw@kernel.org, 
-	icheng@nvidia.com, bhelgaas@google.com, guoren@kernel.org, 
-	linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Ira Weiny <ira.weiny@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, May 26, 2026 at 4:51=E2=80=AFAM Chen Pei <cp0613@linux.alibaba.com>=
- wrote:
->
-> CXL root devices (ACPI0017) declare _DEP on their parent ACPI0016
-> PCI/CXL host bridge so that cxl_acpi probes only after acpi_pci_root
-> has attached the PCI root and registered it for acpi_pci_find_root().
-> However, acpi_dev_ready_for_enumeration() only consults dep_unmet
-> when the supplier's HID is on acpi_honor_dep_ids[]; otherwise the
-> dependency is silently ignored.
->
-> Without honoring the dependency, cxl_acpi can probe before the PCI
-> root is ready. The resulting CXL topology is broken: decoder targets
-> read as 0 and no port/endpoint devices appear under
-> /sys/bus/cxl/devices/.
->
-> Add ACPI0016 to acpi_honor_dep_ids[] so the _DEP declared by ACPI0017
-> is enforced. This relies on the preceding patch ("ACPI: PCI: clear
-> _DEP dependencies after PCI root bridge attach"), which releases the
-> dependency once the PCI root is fully enumerated; the two patches
-> must be applied together.
->
-> Signed-off-by: Chen Pei <cp0613@linux.alibaba.com>
-> ---
->  drivers/acpi/scan.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 530547cda8b2..5f20e7748f36 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -866,6 +866,7 @@ static const char * const acpi_honor_dep_ids[] =3D {
->         "RSCV0005", /* RISC-V SBI MPXY MBOX */
->         "RSCV0006", /* RISC-V RPMI SYSMSI */
->         "PNP0C0F",  /* PCI Link Device */
-> +       "ACPI0016", /* CXL/PCIe host bridge: CXL root (ACPI0017) depends =
-on PCI root attach */
->         NULL
->  };
->
-> --
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-If anyone has any objections or comments on this one, please let me
-know.  In the absence of any, it will be queued up (as 7.2 material)
-next week.
+Pre-existing issues:
+- [Critical] Use-After-Free of `irq->cpu_mask` in `bnxt_free_irq()` because=
+ it frees the CPU mask before cancelling the asynchronous IRQ affinity noti=
+fication work.
+- [High] Lockless read-modify-write on the shared `PCI_TPH_CTRL` register i=
+n `pcie_tph_set_st_entry()` leads to state corruption and hardware instabil=
+ity.
+--
 
-Thanks!
+commit e83a9eff13ffcc47efd9212a157c144fb33f5bdc
+Author: Chengwen Feng <fengchengwen@huawei.com>
+
+PCI/TPH: Add requester policy to pcie_tph_get_cpu_st()
+
+This commit extends pcie_tph_get_cpu_st() to accept a requester policy
+argument. It allows callers to explicitly retrieve steering tags for standa=
+rd
+or extended TPH explicitly. The patch updates driver call sites and=20
+documentation to pass the new TPH_REQ_AUTO argument.
+
+> diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt.c b/drivers/net/ethe=
+rnet/broadcom/bnxt/bnxt.c
+> --- a/drivers/net/ethernet/broadcom/bnxt/bnxt.c
+> +++ b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
+> @@ -11734,6 +11734,7 @@ static void bnxt_irq_affinity_notify(struct irq_a=
+ffinity_notify *notify,
+>  		return;
+> =20
+>  	if (pcie_tph_get_cpu_st(irq->bp->pdev, TPH_MEM_TYPE_VM,
+> +				TPH_REQ_AUTO,
+>  				cpumask_first(irq->cpu_mask), &tag))
+
+[Severity: Critical]
+This is a pre-existing issue, but could this lead to a use-after-free of
+irq->cpu_mask?
+
+If bnxt_free_irq() frees the CPU mask (which happens via free_cpumask_var()
+when CONFIG_CPUMASK_OFFSTACK is enabled) before cancelling the pending
+affinity notification work, could the asynchronous execution of
+bnxt_irq_affinity_notify() access the freed memory when evaluating
+cpumask_first(irq->cpu_mask)?
+
+[Severity: High]
+This is also a pre-existing issue, but is it safe to update the steering
+tag without any locking?
+
+Since bnxt_irq_affinity_notify() executes asynchronously in a workqueue,
+multiple instances can run concurrently if several IRQs change affinity
+at once.
+
+Does calling pcie_tph_set_st_entry() after this block cause a race condition
+on the shared PCI_TPH_CTRL register during the lockless read-modify-write
+cycle? Could one thread re-enable TPH while another is still writing to the
+ST table?
+
+>  		return;
+
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260527094719.4388=
+6-1-fengchengwen@huawei.com?part=3D4
