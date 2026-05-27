@@ -1,186 +1,124 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010021.outbound.protection.outlook.com [52.101.201.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6F844D014
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 17:13:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779902019; cv=none; b=foFqiiP5L2X3hO3CrmZYAh0AesRL2a5Y8CKF+ddj06sDIUWXZJbLzXO/h3NPsbZcj18goetCS/MNhXl+IcXz8E5xTHd6M90hjDlKdLpX3clofd85PfeIkp7KNKbxmOL/GXAeMoTdyWV+yw6XBzN3r13KsNd1/ACovulNkfGjnRY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779902019; c=relaxed/simple;
-	bh=sUh2qgnb1rvjNwwYWycAZ+HszzMtG96sy5yb7iUgUrM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OXJcv6Jbl06g0tDe3CwR37acRGrEj/YpwYVG4X9NI9+1rQk2UW0kqt+r9FEuMsQdsoGIHQPzFT5C71u5MleImDpcoTh2uNgeYADGmeaPGJv+tkCS8x9IptzsNoWUd1DV5ou4WFQubGLZQ7KSG5SL07332Wwi9vQJKoRebGEw3sE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=kbPRowui; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 336043F9A08;
+	Wed, 27 May 2026 17:18:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779902283; cv=fail; b=aNF5rC13y/H2U3LpMbq8I8dIhQz/jlLd8sI46RP+Zxbqf9uNuIfhQiDvIqWb1H9CW1qy53AXmrUILNHis+ZUBvg3Ja0+37I1J8kVfotXGof8ReDn1C/5exQMgtO/GThrx5tR2e5VG5TxeE7Ubyr3OGkTjDKjY3WWjADxjS7ZXHE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779902283; c=relaxed/simple;
+	bh=/3CX7jSjnTk8JybAFH9vqP0sta4V7PHcZxcLdcLkG7U=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=h/QvuhDVfmWhFNXQ6KgIPnl/7TnT+Eg+sH0Kp8iww4VdEaWmUtZI2Q0QZgCesKHAKKUke9AoX/Y3ltgoBjViNgXAE4T6CItnd0cBesOb0fSSWBqrSnRgxbdUN67CxEVC9Jy0bIC1EtGaGcTUSm987WH2Ta8OCbsXN9dJrpei0IE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=OU+UeQ7L; arc=fail smtp.client-ip=52.101.201.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="kbPRowui"
-Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64R6bn3A2159480
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 10:13:32 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=mF5ddP6Uato8c/uzw9iXykGIYPHqrtpIex8OCXzcenM=; b=kbPRowui4ML0
-	YT114Vj1aVyNdnJJnjW848sZsqDgsQYxXf2af4lfe3yF9FH23tSklBFjrFv+o1wO
-	ucJMCKwm9TylaOZQY0BhdJmQkngp6DAyA55R8lVRUQsexRgIwmUgj+H/mCR04y4k
-	/GAEdHJqvYT6gQSouuHInLdwLedo/MVWAuYOky/jMujuavyWL/YFHal9G71FuvZm
-	tUxMcxI1AwosqBr40clgGXAGZXRDcjjOD1Jq/WacVJpLsQehhEaY4Ed2cuHf56jB
-	IOS9EOaVolYK/24AqeQ1zfm7jhCYBImKoLNKwH7NA+wFXFoDOJcUcF7lf4ehsFGn
-	OeD1ICtoLg==
-Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4edugs37uj-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 10:13:32 -0700 (PDT)
-Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-304c46babe7so1945275eec.0
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 10:13:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779902011; x=1780506811;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mF5ddP6Uato8c/uzw9iXykGIYPHqrtpIex8OCXzcenM=;
-        b=nbhL+z7ycdihUi+jc537fiHqvBYumGhOM/Hv2k+2nAiEDeT4wZkoYJrL+gt6r4keR0
-         VhO4tCAC6XptSHundOktMjju+QiI+38jnkbCjFUPfL6QJ/xlQm9J/+jjgVX2i2iR0PPi
-         Z3WrnJay7v96qVP3gKA/cKaRlhWbDX7HIjY3VFRDcqgQWLXfl9OakhDAFFtlPnOgw0Xl
-         mf9m/EhToI9lrEROMma7XwtMWEH9A914C6nn3TRLErNiJFQGOXnvZjDR1HNe2cjoT64A
-         Cd9jAat57FhPzHvMi+WK/XoT3aQsRm7MzecG6WFj3DkxZG6zFuAmBlYZPfvC1A7vqB3G
-         MIlA==
-X-Forwarded-Encrypted: i=1; AFNElJ+ae5UM9uuAnsgtgMBsTBAT3QTUtSfSP98b2LDmwcDRPPR7C5n4P4mOZQ/hggRdBsnqc1jyHcgCJ0w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxJyCSAj3qZjF3S9VWwOS0S8M7exAaS/lfboNL3vDRpMJ/Vxzr7
-	zI2Neh8MdwkjtZyydfyj9nIPPDS+czJQXTPI7qw/Onctu6u0G8Cm6pB8iOqfdyxEDXSVi3ywt83
-	oupknFSeOzUxOITg1Q1RkYdkbBbMt9I5d1yvafjtcF49TBaYJN9uxWr2dsO1f
-X-Gm-Gg: Acq92OFKfzh+YCp97BkluUvWnXpfsQfEAmPt7EYLjQZQCtsqH9vm6u+QUcW0qPjzPvK
-	kg0XBgjscSHDUOd0+TfBvfQ7I4exhYQUq0WtAYGBNbUYGUKo6Icpk5wHqXt3IRG6ovuv8xdG3HF
-	6h3H4DCbE6HCil++qXdXK/OHMu+nVRdzsrlbDbagEvuvnfHzeBrU2ZNO2anYsqlHTvrF1v/Rs+y
-	bRO1EQjzJNbgRM9fP9utYyuSbAihhaGFyk/VKABKLohr3zoFD7MGXieGUD1Ptu4lj+A651osVvu
-	XsvVOId1B4qHiXWTmeyYfd7LnZi5RTSZKZKnn84vYr7wMIzObKm5HNv4xCdQjUBwXccfsmN0KLh
-	W4GSIOgx7AdMkzNoGEJjvVLcU4dAIe2zfFZI=
-X-Received: by 2002:a05:7022:913:b0:135:e814:d03f with SMTP id a92af1059eb24-1365fc7d7e9mr8777503c88.36.1779902011292;
-        Wed, 27 May 2026 10:13:31 -0700 (PDT)
-X-Received: by 2002:a05:7022:913:b0:135:e814:d03f with SMTP id a92af1059eb24-1365fc7d7e9mr8777489c88.36.1779902010729;
-        Wed, 27 May 2026 10:13:30 -0700 (PDT)
-Received: from [10.0.40.30] ([51.52.155.79])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-136b3706ad6sm9223289c88.13.2026.05.27.10.13.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 May 2026 10:13:30 -0700 (PDT)
-Message-ID: <1f1b9967-7182-401c-ac30-373b73216e81@meta.com>
-Date: Wed, 27 May 2026 18:13:25 +0100
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="OU+UeQ7L"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=v9WbfekwSPz5tTXNSKaklO8bOGdY0/+HL30SB/D9TkXxhT25hRD3OGf1oG3UMotxpCyXrxUR3RbqArdHMTSCPT2AWMyEUAEv6b0dKS/UnMbzh1Z37JkgWcio7V0468RJg2F86xWb+TNjeUtqcpK6MIwtn15fOMqcPUY27kZlJkhIZUmsHHf5KEnlTqRxSobwdD4N/9Zzk6gJNYY3wahdPwJPMF6hXMl1H61ejjm/RaNCbwX6PWd/Yh3TToH/JgBRi7lBGAaIF2GWPDaeXmHWMUqUcvQrt5Cc2F7v5qAK4oNnYXQCAOvUP8jjXUvdukWDi5FGYaMKGrX1lZ8VL/WZkQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Wsz+EE5gLV4/gMIgQl1Gvo/OCWMzWUTc9Aesda9Z+vw=;
+ b=mlBVHe9VVN6zmKUtmYSgd5OjPUT6q/We27Qph/p6snw04DRCbuW85Zz6Q34ow4pGpE48j4VYiFpIsa8/G10LWcGIWF+2Clwwj1vw3p2EHqgvl6orm+0n2pDEwPwwtJs/1HjjMKoZ+p5kknKJ7lLJFExIYWBiLR/j1Xx0pUH8yJOHaYtfX0dHHoDFVtQ75sF6dDp5bPNhl1mYGKLlkwTQ6kiZWq+sNp6sXtJ9zfG7YWLV8PmCfCJRvbq4tHEFmk/MzHwzrjf0ihdpR6hB1ulsFveviek25KOx9OBJLcWxvtr5AmkeOkZNfEdFecIaU64jsDYigBiPKnGzi3WLAKrJ6g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Wsz+EE5gLV4/gMIgQl1Gvo/OCWMzWUTc9Aesda9Z+vw=;
+ b=OU+UeQ7LjY8Zv5KFhID4KXDrqiwR/7ghbcHOL2fYi9oL6Mb8AT4yijMdGt3ViW5QHgY7NMyoL8iIohVj5H62bfIhHfudlxIIHTCjAnLrwqaZ3Y+b5XxPywBSGRygUdHR/90OVbtRfYn9nDM50jJpLC0aHsOaoIm7hWacA+EcBzU=
+Received: from BY3PR05CA0014.namprd05.prod.outlook.com (2603:10b6:a03:254::19)
+ by IA0PR12MB9012.namprd12.prod.outlook.com (2603:10b6:208:485::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.19; Wed, 27 May
+ 2026 17:17:58 +0000
+Received: from CO1PEPF00012E81.namprd03.prod.outlook.com
+ (2603:10b6:a03:254:cafe::8c) by BY3PR05CA0014.outlook.office365.com
+ (2603:10b6:a03:254::19) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.4 via Frontend Transport; Wed, 27
+ May 2026 17:17:57 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ CO1PEPF00012E81.mail.protection.outlook.com (10.167.249.56) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.71.7 via Frontend Transport; Wed, 27 May 2026 17:17:57 +0000
+Received: from dcsm-trdripper1.amd.com (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Wed, 27 May
+ 2026 12:17:53 -0500
+From: Muralidhara M K <muralidhara.mk@amd.com>
+To: <bhelgaas@google.com>, <bp@alien8.de>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<x86@kernel.org>, Muralidhara M K <muralidhara.mk@amd.com>
+Subject: [PATCH] x86/amd_node: Add PCI Device ID for AMD 1Ah Family Models 80h-8Fh
+Date: Wed, 27 May 2026 22:47:31 +0530
+Message-ID: <20260527171731.2370179-1-muralidhara.mk@amd.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-Content-Language: en-GB
-To: Logan Gunthorpe <logang@deltatee.com>, Alex Williamson
- <alex@shazbot.org>,
-        Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
-        Alex Mastro <amastro@fb.com>,
-        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
-        =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        Kevin Tian <kevin.tian@intel.com>, Ankit Agrawal <ankita@nvidia.com>,
-        Pranjal Shrivastava <praan@google.com>,
-        Alistair Popple <apopple@nvidia.com>,
-        Vivek Kasireddy <vivek.kasireddy@intel.com>,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-        kvm@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20260527102319.100128-1-mattev@meta.com>
- <20260527102319.100128-2-mattev@meta.com>
- <843e8525-5927-45b5-a3e2-a5ec16234398@deltatee.com>
-From: Matt Evans <mattev@meta.com>
-In-Reply-To: <843e8525-5927-45b5-a3e2-a5ec16234398@deltatee.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=D4537PRj c=1 sm=1 tr=0 ts=6a17263c cx=c_pps
- a=cFYjgdjTJScbgFmBucgdfQ==:117 a=2UbFsIa4v//lIgRL4kGwwA==:17
- a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=7x6HtfJdh03M6CCDgxCd:22 a=wpfVPzegXHpEFt3DAXn9:22 a=VabnemYjAAAA:8
- a=gXLdhW2jAAAA:8 a=1nsJja_hzN5yKYYIz30A:9 a=QEXdDO2ut3YA:10
- a=scEy_gLbYbu1JhEsrz4S:22 a=gKebqoRLp9LExxC7YDUY:22 a=Dn9eIPSr_RzuO0KTJioD:22
-X-Proofpoint-ORIG-GUID: JV9bMmW0WkF7KSVG4xFUmIU05YVgXkvT
-X-Proofpoint-GUID: JV9bMmW0WkF7KSVG4xFUmIU05YVgXkvT
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI3MDE3MiBTYWx0ZWRfX9ACnFUhhtsZz
- GTLCI3C7UkfBcuZIwoQqI3t7Re7vuQ48Y5jYBj2JKkIj/fLl6trh/VsF7fSZzo0BJs2veaXYC1C
- GqEc5yNIYHYbWpx0qz+uj2QhJlyY+v0vsnwV0AWTuQ4Tz+rtJldWFollWbyNpyAzkWMQ3XQPBMu
- sFTMA036k+bTog5s+rHKFfuf9bIBJ8K85m62dxn9JJjS1ydcODsRLPA6Cw9ji7e9D21RzkhtAAh
- QVZ/NfBPGmaDDCeKU9P6hWwfERpq/YNpHYWckTZd/Q+qP+r7DLtx2Od/uiTSU+4dSsGU8yciEd6
- O+W3e25QxJ7H9aJwprPq/0gH7NJ7yJVfiWelvufccJSbAoPQoC9MDVshJrvXyjgExEKLfDNvVI+
- +ScLKqRZAqg11RGON7sBzwYSBdXRCblGxtGaS+OybnPUgfDX2Q+YbWTaiNwBnOtfcG9hMDodZoA
- nKOEi7Mj8iiq7IszPnQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-05-27_03,2026-05-26_03,2025-10-01_01
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
+ (10.181.42.216)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF00012E81:EE_|IA0PR12MB9012:EE_
+X-MS-Office365-Filtering-Correlation-Id: 021e7274-891a-4154-de29-08debc13e5be
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|36860700016|376014|1800799024|11063799006|56012099006|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	eyjiHzBpcZxcEiLHulRQ+3M8VZ9su8mE5KudzF3BqIh5Vi89Bru2lgCjP5HB6/DNkqYNsyVlqHUkvWzywpCoy32KNf6hWewWLeNMmG7B2Q7P4a9pHLqULKkx5YuZ8L16iBVfZccfJqeT5kcOU1Lwm7PgjF3X1wmmsfl4dhk24DcSN7McOKgWGG63nwzUQ76bj3eTbJ8CGOTwmz58wtS1GwjjH6A4AY+Uy9fmc2V6dXm4htrvXOD1vsyIF31aOFSrEiNqJJ0SVe8H71+mseqITmPLWhm4/T7eOscIfOPkJgNmLBYlLlbykAC0xsN7ccM1cQfPDFISU6hwik2xjCWnYm1n8c7inDXUfcZg/kBfmyPXGuHHM6ZsidlpjRaqflpmLI6H/8tFDwe4egpm5ycWFl9t7ob9+NS3Fr2L2SlUz6mZ274TFNvAPzY6lqgOhek2O6V2qC+V69Ah1HmRRPi4tUgECNUehktORO06mKrr6SHxFGqStlHbgiGKbkgsvOGhaLA8DhtOpmrG/xtoQ+zdUvFpf28vOVYzobRe37O+bforgyG/RORFcuFcJUKz+EBp+Y6Y3efO2Q0u8cpG+u/JNvsGh4QmqfmKbCnXGtt9PYIYgrM7HYpv5h5v0zA1QLEg3hT9Vfwqr1sNZ3YgLETDIsZys3Di/EhhkCSEfzwETswzV5CbXrK5Lfh3YiaEqyswmkraTDhiuA2xWbndnoUmt0+QJRIubo1Vw+Oi3RUlZGw=
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(376014)(1800799024)(11063799006)(56012099006)(18002099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	1dPaB/5CCJA67m8FjV6kGNT9MsE0EyFsiRRRGKao94ClwjKYRwDmplXwFWp8R+TL3CdWCd2zWoh4Xgeo2r9ZTriMMvfa/62ikuZJc5PaymxdyZiSGQb4XY0NV8bq9CoD+8WnMslCrJ1XoGGUSurL2UrBa0FP899oj3xN9cSs0uxXjpbDiSHGQyS9GzQldj6/AcR972vxbL6HmDOS73N/eemoF4H7x5+oxo7rPXLz8OL9QlZemyLg7cbqkLVi4xCpy0sq0P0IHgPwXAF0Y49raBG86WarkQGHJRC0kMoGXx9PiN6Wx/RXUVllwreH7D8UHToHdgwNNUrwdH1Eg0IcXt2lMeFaC66dFCAJ50nVzGg2v6rzAEQ3pTK8y4u+k5QJaDPROigw6OxoMoo4lwYyJ/Q2MnBTZA43aEXB11LpFURU0/ymFprU5B+cBKxSQaGY
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2026 17:17:57.6732
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 021e7274-891a-4154-de29-08debc13e5be
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CO1PEPF00012E81.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB9012
 
-Hi Logan,
+Add the new PCI Device ID to the MISC IDs list to support the new
+generation of AMD 1Ah family 80h-8Fh Models of processors.
 
-On 27/05/2026 17:07, Logan Gunthorpe wrote:
-> 
-> On 2026-05-27 04:23, Matt Evans wrote:
->> The P2PDMA code currently provides two features under the same
->> CONFIG_PCI_P2PDMA option:
->>
->>   1.  Locate providers via pcim_p2pdma_provider()
->>   2.  Manage actual P2P DMA
->>
->> Other code (such as vfio-pci) depends on 1, without having a hard
->> dependency on 2.
->>
->> A future commit expands the use of DMABUF in vfio-pci for non-P2P
->> scenarios, relying on pcim_p2pdma_provider() always being present.  If
->> that depended on CONFIG_PCI_P2PDMA, it would make vfio-pci only
->> available if CONFIG_ZONE_DEVICE is present (e.g. 64-bit systems), even
->> when P2P is not needed.
->>
->> To resolve this, introduce CONFIG_PCI_P2PDMA_CORE which contains the
->> basic provider functionality to make it available even if the
->> CONFIG_PCI_P2PDMA feature is disabled or unavailable due to
->> !CONFIG_ZONE_DEVICE.  Users such as vfio-pci can enable their own P2P
->> features based off the original CONFIG_PCI_P2PDMA (available when
->> CONFIG_ZONE_DEVICE is set).
->>
->> Signed-off-by: Matt Evans <mattev@meta.com>
-> 
-> Largely this looks good to me. I have one minor nit below that you can
-> apply or not. Either way, feel free to add:
-> 
-> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-> 
-> 
->>   static void pci_p2pdma_release(void *data)
->>   {
->>   	struct pci_dev *pdev = data;
->> @@ -241,11 +251,13 @@ static void pci_p2pdma_release(void *data)
->>   		synchronize_rcu();
->>   	xa_destroy(&p2pdma->map_types);
->>   
->> +#ifdef CONFIG_PCI_P2PDMA
->>   	if (!p2pdma->pool)
->>   		return;
->>   
->>   	gen_pool_destroy(p2pdma->pool);
->>   	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
->> +#endif
->>   }
-> 
-> I'm personally not a fan of adding #ifdefs inside functions like this.
-> This instance is small and easy to understand, but it can quickly become
-> a bit of a mess if we start adding more features. I probably would have
-> created a pci_p2pdma_release_pool() helper which does the inverse of
-> pci_p2pdma_setup_pool(), it would be called in pci_p2pdma_release() and
-> an empty implementation would be provided in the case where
-> CONFIG_PCI_P2PDMA is not set.
+Signed-off-by: Muralidhara M K <muralidhara.mk@amd.com>
+---
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-That's cleaner, I'll do that.  Thanks for the review.
-
-
-Matt
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 24cb42f66e4b..3301224c5845 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -585,6 +585,7 @@
+ #define PCI_DEVICE_ID_AMD_1AH_M20H_DF_F3 0x16fb
+ #define PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3 0x124b
+ #define PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3 0x12bb
++#define PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3 0x1243
+ #define PCI_DEVICE_ID_AMD_MI200_DF_F3	0x14d3
+ #define PCI_DEVICE_ID_AMD_MI300_DF_F3	0x152b
+ #define PCI_DEVICE_ID_AMD_VANGOGH_USB	0x163a
+-- 
+2.34.1
 
