@@ -1,170 +1,176 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBFE43DA5D4
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 08:28:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCC863955C8
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 09:09:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779870539; cv=none; b=kCrm68CviagXkW190uWw7rCmqQys/TO1Y1dhd2c10YIWZJ7YLzT51wqfV3FlmaLbxE+ObCPRP29dFm1TFQWx/UPASNuCv3Uedj1qsOz5XCZ/eIw/zuKiFhFkzsZgo6uJ2oyZTrLAktXtE1gMa0F+y0Pe2AWC5/fxBqgO1UsfYCU=
+	t=1779872951; cv=none; b=bWyzAY6/qQs1Vu1yltFv93LbagY2zq7NOt5iMjA7KCEPvIDD4NR6/A8R/CpKdN4lZU3pjbAtkVoJjvebzeazYT99FGqXMq8g6e+MP+s9ukUbrB1xGMyfJi8dKJBUylIyEiAAvU3D7Waefxr1oyQxY7p3/xYN4B3zxHfKTPYbHQA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779870539; c=relaxed/simple;
-	bh=dnKKV4k9imrwOYYrkrG7utWup+ZEdJNlE4/zhl36kBI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rs/dxGn4cz7xAFX7OD6HdhSkGZMgEj/tpKeQkX6LVqXi8FYPI0b5c8uMOrGki4V/aXLUNQwk1UgNSbeVYbZ+sjM9vXWfffvz5ZtR1lRCPcnkgec/vo5uWCIju5+JjZ5JuGGyLTPAnubrKYmzo7cisl+QxU3usLTtBHLpRwsZUYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Hq698nOU; arc=none smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779872951; c=relaxed/simple;
+	bh=uk+Y9McimyRzOsd0YhEs83MD/E5PV+dINoRYf5IqMR8=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=M9/KZUEctHZ5J5cmJ9bJ2qVupDu4QmmZhcht41DSr6HQnSioZbyKd5oYkYMESlFY2qLLaH9fYuqVgqSmnYEsj/K8B+MDjOJeCAtTU04rGc5J0bxkbnR2yAGf+0aX0J8vpvCizAW51xRJwfNJgaZpydJUNOvtMMwcsXEEwFv5bPI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JK9OuhMD; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=FSC76nnW; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hq698nOU"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-452169ae568so7389635f8f.3
-        for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 01:28:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JK9OuhMD";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="FSC76nnW"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64R8mQK7871123
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 09:09:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	pqmIsOoLyRuRIFaNUnIrGpypfnkG8bRGf2nm6VpOocU=; b=JK9OuhMDf1owPTVW
+	rjFYWFnUlb0QxBTrdBd0pqcAwMBJYT+PDjkBVUp9H4Ua3bDzFCBvyzNW1NzXR4YU
+	6i9PZ2XSNIDo3SpHtd1RC2qitRp1Mkt6Y5W1y93gpY4aYKujjZSHA060wt9FrcqI
+	qHbrP+gtasUGC6gNPyd8DQdZZy371Mo0nLobYww0mEyQS8j3KlZJpDQA1tnQWy96
+	692odr1gNiTTBNoH7NJEBFLg8TlmJthdh73cZ/HUFnAo+qSevQXNn1iFIBtBGDHX
+	Pv97r6fIIAEnswhVQadGuu9SmIN8vwAeZVK7GGDAkozUkKF7cQp5fUbyEc0U2X0w
+	w3J4zw==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eduru8g8f-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 09:09:08 +0000 (GMT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-5104b861649so23724601cf.1
+        for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 02:09:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779870536; x=1780475336; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RXP90BLkmwM022fcUvwY7xPlmUwoYsB+/2erQUJ8WqM=;
-        b=Hq698nOUn4wUZTU18JpCC2UeibTPT3RxLM11uHaERs5WIG4PXnTt7IFoKvxGKOfO2s
-         rUIBjxBYd8QjS18JjHhqBAZ9cohwcCNPxgF7tare23DAQX1t8OoVZ21lyFkNBUgbanK1
-         DDHx+Zs5vNTHU+KwTKWgjUXittWyo//W64HFduvlrUMr1OZeFNadh7Wpnz95NLYxKJMy
-         zXGdMkzOhsbzRUZA+W5fmYl5izkAFj7ywlGylCy6e8DqLf2vTcy3crbNN3zlwdsY3pb4
-         1GyadCEIQbENK7HaZjyrj+XxRtLprmxbcePVkAkQE03rml9oT+HvVcKtHXPrZE9SARBX
-         wr4Q==
+        d=oss.qualcomm.com; s=google; t=1779872948; x=1780477748; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pqmIsOoLyRuRIFaNUnIrGpypfnkG8bRGf2nm6VpOocU=;
+        b=FSC76nnWG6IptUrir2agAOxUiBw3sBFgKDnAnAJRQ61RzBSqAX21sdDazuq/ZbaeQ2
+         4UzQiMkRsKH9+RKdqX4VQe7RSIFO0WZNGF81rSV9/UYTNLE/Ui5W9M9n3cW2D5pbwyZY
+         Wq/MmnpvssEWfnaw7R1D45HWlMXFja2173q19SqQmzAYfKMcBZo1CWV36cgaldE+8s8+
+         8u27LM/biHFCM2EIxqzGa3Cr+k59GF9ORSZKP9kpFFORGRijeNaU0GX22wTVZS/UGOfa
+         M3aMWeG5Jxpf9qRLcPUJ9rE5sQ8mAvVB27JuLXi5r9wNC6T/oC3CDoAX4v1wzOo0qRhv
+         MKMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779870536; x=1780475336;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=RXP90BLkmwM022fcUvwY7xPlmUwoYsB+/2erQUJ8WqM=;
-        b=JI8qbgZiFCb13NkK/eBynSu7p9UhSgoMnvXXtPuz7WCqWBXrfE7hYtQCJ3Xz/99uyr
-         nruGTW+Bq9Gvsw4OKuRSLr9EoGMk/+qE6vjBVOWrdchLvyUx4VASkLa+SoEw/4JWvPdp
-         kLtvcJBEb8xJKJcMdtP57rVIkIUfCn+MgbALn29yzZA4iAaM2n4OVIs7PDuM1A7mcPGT
-         7frBzt6hAxD8cqRUIgT8D9R8eirVT7VFvq5tWdMCkI2Yg4qkBFFvOqO6tcqCHmsO0eJd
-         IerkS/BSDSHa9+xgAQ708/lzmrn67ft8Obh7NXJIh6UxQLNIHG8/u98H0hp7Mj3lnN++
-         sLWw==
-X-Forwarded-Encrypted: i=1; AFNElJ9VeiBwcketN+PaLs279esW+AxaGMLXTSd8aJu+u+/AOqNVWJoFmn6YVYsU+kfDMJ3rUpk3+v6jQAI=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyki2k3jt6LiaFREK5zkCaMLBJ4LMt9DlT4G0U27EGw7m6qT2sM
-	PIvE6bhU/iCDN8J12iPnSshSWpuFKHk28GlZc+PJ0DBlVtitC0Av6mnG
-X-Gm-Gg: Acq92OFh+q9O4//p6RbR4AGhgyz0Cmbpt4ZjL5Iu3iKmy9Z5zDaTLcbcZ2QkVYLZD8N
-	esu0extBUkkwbRf+HyPu+SLuuI5WEOrpby3wPh0w/54uR5X6r36tadmA8RtXaAdkqfmo4DEG1sJ
-	flNDcC6Laro5rqr0aQQztfyQ2yoyaGJw+2XjRYsjMsCPOyLaI5EDZN7eI2Yyu1IVgaGlim8tYGP
-	bbDYKUmD/l9bxaj30EKpXkdcsvkWZxSNskHyyKnDjhN8IlVSbw+etpyooTY/K9fL1XpHCguz0J0
-	7cPyIHfN4HSj2OkiBwp1vhLlDFurXygEwGvt6nIHUVlilLwxsj+jdKWTiyOC+csI7laawJOSQje
-	jmrSGSgGPOIKJYBCfw89mJOG7XyYXPv0pUd9NOFkPrb9Am+mx6njgrzqVAnZuxuwMnw3fWRMie6
-	sUHd4j30xY5MW8z/siv5DGH0B7CoRYqzfm8GowfN3kayPRSICBbIWvoWQcG7tT65/8dIt1OxpfM
-	so83hSapA81ew==
-X-Received: by 2002:a05:6000:4b07:b0:43c:cf25:f29a with SMTP id ffacd0b85a97d-45eb3689049mr34779824f8f.8.1779870536122;
-        Wed, 27 May 2026 01:28:56 -0700 (PDT)
-Received: from orome (p200300e41f1bda00f22f74fffe1f3a53.dip0.t-ipconnect.de. [2003:e4:1f1b:da00:f22f:74ff:fe1f:3a53])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45edb5c27e7sm4474850f8f.35.2026.05.27.01.28.53
+        d=1e100.net; s=20251104; t=1779872948; x=1780477748;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=pqmIsOoLyRuRIFaNUnIrGpypfnkG8bRGf2nm6VpOocU=;
+        b=QxjaDa+5RdcQ9yQSw6S+cBJs6BbWbWCoc9Vokwh+j1IAlwozLPh4vGF1TqFw7syzoa
+         idCPLw862I+WBA0AzW03mwCMAtRVovNKz9BVStYG9lD1J+ggi1lSzgyW3HUR8il0ADdn
+         Lw2S1xyXOvcEOTQyFXT17d2EIeOqCNax8X3TMYibs8Pv4G0JhSNRvqJMlm0Tm/pPBWu2
+         SPT3iNWgc/fT61kUrmG3E975GpxSbLeglJdHX/akuoxfat1xhEKwmAyVrBYdJ6N/F6hB
+         H9XOP9xJn3Lz8rkRn+iePj6jaJo+/UXWL3FWUmNDbt9T9SjdqcEuEqOrdnQGTDGYLzTG
+         GYPA==
+X-Forwarded-Encrypted: i=1; AFNElJ+OEkylox72mH9fRd7Hz7pFgvL4mgOS+mEQiVl4XyJOfUha6oyXoIQdka65df1Xzcz2C+kOZ/x2Wqw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwEhoksvkztI9olOr/kgmKOxEOFfPs2xNlAlUoeDAe22aLoyni5
+	fxIlqTl6E58YvLLw73F9NyX6K5IRRhMmbqLM040wtW7p2EJzuFSnqbox+2UA35kMawDW2P4Xqnm
+	pIeFPqFUVXTXFjdRGgWvlyaPOy5Kb489pCVRvvI4nPgQayvKUtW4GtW024YdIoO4=
+X-Gm-Gg: Acq92OH8YghpB/0AOJTuFH8DW0LEXlApIlL5Fi64rWe8TLSqAJtaPGEiKgKlQeXbLeV
+	EJuqMwUhi7us2p3wFndWvpGNOzwHxMVtRKscYClYmXzg/Ovc6LFn1YA9IN5f6T8RWsO+Sg5gQxG
+	RKCnjKXJXssBWy9D/U5VMGxLEBir99U8fijHIqbrV+DvG2MU2uzmahsmBPf+cmoKTfms1zoKzuI
+	L/APT4bl15FKGbRGuqNNwNnGmEqhhWU8UT8wgA2MRHZQF+6VD1cGxxYBS+HO5QIPxzjq6jyQXxl
+	l5a4eFZ1/CUccmtsAW4G0LPgWAeXiIuAabsCLPGVP5ZKqaSIiglsfs9zdq/eeqmraj+PZzpivLz
+	fqPUntoqlWY7Spdpf0e47VynZUMT2+/fGwcDrZ8fVDgY1lkov6jSAZ64d
+X-Received: by 2002:a05:622a:2445:b0:516:dfc9:8449 with SMTP id d75a77b69052e-516dfc99abamr269163171cf.59.1779872947860;
+        Wed, 27 May 2026 02:09:07 -0700 (PDT)
+X-Received: by 2002:a05:622a:2445:b0:516:dfc9:8449 with SMTP id d75a77b69052e-516dfc99abamr269162621cf.59.1779872947099;
+        Wed, 27 May 2026 02:09:07 -0700 (PDT)
+Received: from work.wifi.ville-nice.fr (62-193-63-110.as16211.net. [62.193.63.110])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-45edb5a2908sm4525082f8f.18.2026.05.27.02.09.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 May 2026 01:28:54 -0700 (PDT)
-Date: Wed, 27 May 2026 10:28:51 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Thierry Reding <thierry.reding@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof Wilczy??ski <kwilczynski@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Jonathan Hunter <jonathanh@nvidia.com>, 
-	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, 
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>, 
-	Michal Simek <michal.simek@amd.com>, Kevin Xie <kevin.xie@starfivetech.com>, 
-	Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH v5 2/4] PCI: Use standard wait times for PCIe link
- monitoring
-Message-ID: <ahanoZgDwq3v6x8M@orome>
-References: <20260526-tegra264-pcie-v5-0-84a813b979d7@nvidia.com>
- <20260526-tegra264-pcie-v5-2-84a813b979d7@nvidia.com>
- <ahV_r6NJWnmJptT2@wunner.de>
+        Wed, 27 May 2026 02:09:06 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
+To: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Frank Li <Frank.Li@nxp.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Niklas Cassel <cassel@kernel.org>, Koichiro Den <den@valinux.co.jp>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        ntb@lists.linux.dev
+In-Reply-To: <20260513024923.451765-1-den@valinux.co.jp>
+References: <20260513024923.451765-1-den@valinux.co.jp>
+Subject: Re: [PATCH v4 00/12] PCI: endpoint: pci-epf-vntb / NTB: epf:
+ Enable per-doorbell bit handling
+Message-Id: <177987294527.16042.10832046004394503042.b4-ty@b4>
+Date: Wed, 27 May 2026 11:09:05 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="y57fabq4zbjqmwuy"
-Content-Disposition: inline
-In-Reply-To: <ahV_r6NJWnmJptT2@wunner.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.0
+X-Authority-Analysis: v=2.4 cv=VY3H+lp9 c=1 sm=1 tr=0 ts=6a16b4b4 cx=c_pps
+ a=JbAStetqSzwMeJznSMzCyw==:117 a=xizqlaZpAqmNt8UN1ov9oQ==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
+ a=VwQbUJbxAAAA:8 a=F3aNAmEVrqB_ix-ASpUA:9 a=QEXdDO2ut3YA:10
+ a=uxP6HrT_eTzRwkO_Te1X:22
+X-Proofpoint-ORIG-GUID: qHFxngiwtE8ShfsvmMYYNapKwfft4yDK
+X-Proofpoint-GUID: qHFxngiwtE8ShfsvmMYYNapKwfft4yDK
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI3MDA4NyBTYWx0ZWRfX64QC09l0M7KY
+ /T4Hcmz1v6Yksz6CsamsIetVdcZhjAFZPObtPLduHMEltCVn0tVnN5hHWwEphrvafw84TyBOh+k
+ XEiIVgHr2qsCLZK4fqRnpkQInT7hyizZ7TNrM0RkxJytaa83j5TTlKvGfU1BOFNOmj8aiKfn7me
+ nNFJyVWrT+OdkUQNa52gc56BJIVCbd+Yet7ytvp6awOf3rsxouZD4/0e5kqAbtCDnnEE7o5/wkN
+ FBU56tGUfOw8IQHlE8Hn5dVCkywTyzl+fYfHxM6qi3b69cU56CDgNc3QOGvl1GvSBSq5TngYqnE
+ E2rRlD3I59BZxOiac4kO+Kjyr0aQdq84Ni7/RSrt1vkYvN6t0z1WMN69kgJCqULuRjqlpTK3yJz
+ ZKCojDrRmjHPq7gDLqryh7KrTfgVaF6WlNOhqSkhn85ugLCFSmIVOCtlEmEKCQRso0iqpdMoKzw
+ 5I9OK15IoqUh7wvUz1Q==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-05-27_01,2026-05-26_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 suspectscore=0 adultscore=0 clxscore=1015 impostorscore=0
+ phishscore=0 malwarescore=0 spamscore=0 bulkscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605130000 definitions=main-2605270087
 
 
---y57fabq4zbjqmwuy
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH v5 2/4] PCI: Use standard wait times for PCIe link
- monitoring
-MIME-Version: 1.0
+On Wed, 13 May 2026 11:49:11 +0900, Koichiro Den wrote:
+> This series fixes doorbell bit/vector handling for the EPF-based NTB
+> pair (ntb_hw_epf <-> pci-epf-*ntb). Its primary goal is to enable safe
+> per-db-vector handling in the NTB core and clients (e.g. ntb_transport),
+> without changing the on-the-wire doorbell mapping.
+> 
+> 
+> Background / problem
+> ====================
+> 
+> [...]
 
-On Tue, May 26, 2026 at 01:10:39PM +0200, Lukas Wunner wrote:
-> On Tue, May 26, 2026 at 10:53:11AM +0200, Thierry Reding wrote:
-> > Instead of defining the wait values for each driver, use common values
-> > defined in the core pci.h header file. Note that most drivers don't use
-> > the millisecond waits, but rather usleep_range(), so add these commonly
-> > used values to the header so that all drivers can use them.
->=20
-> Hm, why not just replace usleep_range() with msleep() and use the existing
-> macro instead of defining new ones?
+Applied, thanks!
 
-I'm trying to somewhat unify the implementations across drivers without
-changing behaviour. I don't have a way of testing any of these drivers,
-so keeping the existing implementation and just switching out the symbol
-seemed like a good compromise.
+[01/12] PCI: endpoint: pci-epf-vntb: Document legacy MSI doorbell offset
+        commit: 683f8a747ab35886cc9bef96025712011309eae5
+[02/12] PCI: endpoint: pci-epf-vntb: Defer pci_epc_raise_irq() out of atomic context
+        commit: 84dd5950df2f540e52bd6cbcb5682cb4dff5f2a5
+[03/12] PCI: endpoint: pci-epf-vntb: Report 0-based doorbell vector via ntb_db_event()
+        commit: 7c54a7152588e8892a7f7f2c69117f00c1bf24f4
+[04/12] PCI: endpoint: pci-epf-vntb: Reject unusable doorbell counts
+        commit: 86b48f07a5a398ce1cd88e2f06ddab52c2181df0
+[05/12] PCI: endpoint: pci-epf-vntb: Guard configfs writes after EPC attach
+        commit: 9da8fecbe9173cc1d48667b2b821e4d1f383edbb
+[06/12] PCI: endpoint: pci-epf-vntb: Exclude reserved slots from db_valid_mask
+        commit: 12f666206720cb462ac4eaeb61a03e492737e1ef
+[07/12] PCI: endpoint: pci-epf-vntb: Implement db_vector_count/mask for doorbells
+        commit: d7eacad42e2d812872fc7da83466657b7759dde1
+[08/12] NTB: epf: Document legacy doorbell slot offset in ntb_epf_peer_db_set()
+        commit: d3de5eb64ecd836160afad84aa3ff639acb489cb
+[09/12] NTB: epf: Make db_valid_mask cover only real doorbell bits
+        commit: 615dc10082a96423743d3a7b8b90eed80580916d
+[10/12] NTB: epf: Report 0-based doorbell vector via ntb_db_event()
+        commit: c8220ccb30e8c092db9b6fa7dcb06dfd5340457d
+[11/12] NTB: epf: Fix doorbell bitmask and IRQ vector handling
+        commit: 1c981bf355e8ab78c45717fbd322bd67fafa8082
+[12/12] NTB: epf: Implement db_vector_count/mask for doorbells
+        commit: e6ff30150738af5c7aa20fad08b74cbf9b86d3a2
 
-> > +++ b/drivers/pci/pci.h
-> > @@ -63,6 +63,8 @@ struct pcie_tlp_log;
-> >  /* Parameters for the waiting for link up routine */
-> >  #define PCIE_LINK_WAIT_MAX_RETRIES	10
-> >  #define PCIE_LINK_WAIT_SLEEP_MS		90
-> > +#define PCIE_LINK_WAIT_US_MIN		90000
-> > +#define PCIE_LINK_WAIT_US_MAX		100000
->=20
-> If you absolutely positively want to add a new macro, consider
-> 90 * USEC_PER_MSEC instead of 90000.
+Best regards,
+-- 
+Manivannan Sadhasivam <mani@kernel.org>
 
-That seems rather useless to me. We have a _US infix in those symbolic
-names, so it's obvious what the unit is, so nobody should be confused as
-to the purpose of these. I suppose if you want to make sure it
-correlates to the SLEEP_MS variant we could maybe do:
-
-  #define PCIE_LINK_WAIT_US_MIN (PCIE_LINK_WAIT_SLEEP_MS * USEC_PER_MSEC)
-
-Then again, I count 2 drivers (in linux-next) that use the existing
-PCIE_LINK_WAIT_SLEEP_MS, one of which multiplies by MILLI to get at the
-US version (so it could easily be converted to the US_MIN version). Only
-pcie-designware.c uses msleep() with PCIE_LINK_WAIT_SLEEP_MS, so it is
-clearly the outlier.
-
-Maybe I should just go all the way and drop the SLEEP_MS symbol and
-replace usage by the US versions?
-
-> Moreover, consider using fsleep() instead of adding an additional MAX
-> macro.
-
-This would then be changing behaviour again for all the drivers.
-
-Thierry
-
---y57fabq4zbjqmwuy
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAmoWq0EACgkQ3SOs138+
-s6HatRAAg8da90RqnHjyUFhXOqP7Cjo9/fYMdwG9qKAW71wcGfZM2pK1xmC/LV0g
-MIyhmSbMyevnALrOnbkobpjgl5QbrSNXE2CqxEKR49UlV0o2lATFB+EJlmtPiSN3
-7Q464BWjHaibyl6UU5/FV9VDV0pJK5JQfH/x6I+G27E+XQqzMerQeYuq/Gl3ZLQf
-1VZqhztZQ7U/GQBX2g+8FO06udWT0JDk5eNXwrqjg11zIG1C5rXkam1kmgXKYB4w
-YDg5TN7DAqnWeSyE0j6DYVXNImRv3X+MvVW5fH09eJ5yE5m8KXdr26kDKTQ+n931
-TTuyEB+mDL+FjI8JRMSU7nHPs3T16m4CtADOSx5UItd3EnHi/gIJMkmsbdo7P5yq
-LNYGdCameYwMq2r7NO65c9R6H7ARCA81z8frzhj8cT9LyNmwwpLwPnc77oBArl/o
-DsdZknA8CG5mHmZOvtcQkTfrdKTJQVolANFj8ARi1pg5p30uGNORSnDrsHSyCygR
-8oZSWZr5pKs+aYMYk5c2HgNUQ2IHgEaFkTjdBVpOCTzTXX665DNQH+vANxV91jmx
-oM5yyVFbEhPq2SdXpSuXAhDqjqLFWckgdB2NFdQ+A0qvjkUzyHqNsYBirxrtU4Cn
-DGjDBzWzYCnn4KcL8eLVcYxybJBsBD+JwfOUv/k3QCFRDwtoqt8=
-=BbZl
------END PGP SIGNATURE-----
-
---y57fabq4zbjqmwuy--
