@@ -1,167 +1,226 @@
-Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022084.outbound.protection.outlook.com [52.101.101.84])
+Received: from sender4-pp-o94.zoho.com (sender4-pp-o94.zoho.com [136.143.188.94])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBE173E92BF;
-	Wed, 27 May 2026 13:41:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E83293EE1D0;
+	Wed, 27 May 2026 13:47:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.94
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779889301; cv=fail; b=pTqCjv4UUd2CZbWryQ/Dgm506o54G5sI1JvT1memduoY4UJDMH1k96qzX8ne/WMj3+3+oFnjOVcuKkC3T47aHq+jrQ2NQCoeRBU5z23N5ZDzonxXBA/aSR5/v/cQRJIbSMefOCAIUZbpw9HmdqwKi+SoQiL/E/F4+61NMGTjM2w=
+	t=1779889648; cv=pass; b=NRXs61HXs1kSqii3ZTG2oAn4Ru52WJdTnZ+bNgcDa1UFUO+oB/uUBX/aj8ST0v7u1tDm353/S5LX2uwoXS0TVmTeHKBAsvqwyNWSHbViiiPNeZkI4NjEc2fCOU6/Q8dDSWn5FIQ1KPRXX5HUhAuW+uXNgSZuPaHeYFjcI6ltL7I=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779889301; c=relaxed/simple;
-	bh=fRs+zn5r9KxH2teEw1OPkeHxbJCtGHCKfGlyqjsR3Vk=;
-	h=Content-Type:Date:Message-Id:Cc:Subject:From:To:References:
-	 In-Reply-To:MIME-Version; b=Ct2DYKb5TziEMsZTjHP8eWLhJ2M5AzoJznhv90SqPWgwKrHuNsP5EW76uxfch3LY39Ve7Ek7m5eWkTbX3eEmYkw71blk91+dqVSLpjj/9pCovL2WZvf1fy1pp7Sv6lo0G8NgZiODAml1UNKdyNwYXmjPcsortAEEkp8Zr2vkR9Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=upC4Av2C; arc=fail smtp.client-ip=52.101.101.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	s=arc-20240116; t=1779889648; c=relaxed/simple;
+	bh=FKDOQZWRVPuFrSLbzbr5r6irAJprU3nMHZtx7Iikv70=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=G26wqo2SdesTb1yqvAy/Xl5OTCKmGBfrU+p9qs8tBIT2rWc9AoMTk453HLRC65MdIaeroPqmdYH5/nrOxw1rYMCdK8TUE/tM7ursv2gKCflCrY/lsOasEUMADQXL2vsQmI2uostc+zwf8MW2f8/J9L6lt7fE3L8lUbKAldFCzxA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b=FGRTv+lZ; arc=pass smtp.client-ip=136.143.188.94
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="upC4Av2C"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ysMeQKdpbw1+Syj3XmUpYGr6yeu76ualltormG3wSmYRE6AJwz7ViwU9anIPE3IlC8t94L534dpjHw9DUc2qoiwlj8o+ocsVT7LchSiaW2LYfvjacGLKcznyOs5BLcis8TFf/HsQNiTTNGr8nADKT9TyLur+DOYDccHoYOMIYT+pnezpF0/UiPxH6WEj2Fywn+OkyJi942EOVzmp3pRElGrxR+SZ2jPgLQfFryNqFBsfL7StwVb66YFRVxd9h2McPPD4A/2xWBlnNqh7Rz9+QX4+DiDP56D8NyH52cH+ux4sZ4UYWqy3bpaZDIBtNW9fRir4ZgvuZCy57O1huXAgPg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AqAinA3aRgngkWEVVhKNGrAQ36reSKp+0Ob8OuDqulg=;
- b=tAwMMLmIMASv5t3cNHDzMsoAObw8LMqhRH4TbHxKh0JbQsGD4hv/jn8rqFJwfB39Io0vNf9FucKPuVa76K9ZScZPclCrQeZ6VBHC56l+aUu5AbQnKJ7aXth5PHpmQdwgXuuZo3zxVUix1bs1r0Gdtj7awh+T9tOD1zHErNKhLboGpN5RSUaLJZsys4+P/wxjyQyYsfXl1kJrqviWcBn1srW0bfnVu1MWzgp7nWE1uHIKDQrnFrQKklHglOHKAIq9ZNVliXmulQNcDSjrZl+P6/sprZrHTYRAp9zLK/HNuauowj67MQzYWMjQiOn1yabi9hkMf7Gyz9hj2zExVFhllw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AqAinA3aRgngkWEVVhKNGrAQ36reSKp+0Ob8OuDqulg=;
- b=upC4Av2CU5copVgjkDgMT4RWAwq9xQYDkHJzElXijR8uM3yarzwRjDRr38fX+E2s3TC2dToI+N7Rrdl2C1BEUrvQPJ3nYrl8b4e1EwyVJINEs3HredJF5DKHRe3Gaq9TKc+dQ3lH9mYHhxxN8g7Ue+KqM04H0Mk+u9hmuav+7v4=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
- by LO4P265MB6528.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2e3::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.13; Wed, 27 May
- 2026 13:41:30 +0000
-Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0071.011; Wed, 27 May 2026
- 13:41:29 +0000
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 27 May 2026 14:41:28 +0100
-Message-Id: <DITI3F11JL6Y.3VAA9L56F6M95@garyguo.net>
-Cc: <driver-core@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
- <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>,
- <linux-pm@vger.kernel.org>, <linux-pwm@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <rust-for-linux@vger.kernel.org>, "Eliot
- Courtney" <ecourtney@nvidia.com>
-Subject: Re: [PATCH v5 20/24] samples: rust: rust_driver_pci: use HRT
- lifetime for Bar
-From: "Gary Guo" <gary@garyguo.net>
-To: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <acourbot@nvidia.com>, <aliceryhl@google.com>,
- <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
- <viresh.kumar@linaro.org>, <m.wilczynski@samsung.com>,
- <ukleinek@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <abdiel.janulgue@gmail.com>, <robin.murphy@arm.com>,
- <markus.probst@posteo.de>, <ojeda@kernel.org>, <boqun@kernel.org>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
- <a.hindborg@kernel.org>, <tmgross@umich.edu>, <igor.korotin@linux.dev>,
- <daniel.almeida@collabora.com>, <pcolberg@redhat.com>
-X-Mailer: aerc 0.21.0
-References: <20260525202921.124698-1-dakr@kernel.org>
- <20260525202921.124698-21-dakr@kernel.org>
-In-Reply-To: <20260525202921.124698-21-dakr@kernel.org>
-X-ClientProxiedBy: LO4P123CA0516.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:272::9) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:488::16)
+	dkim=pass (1024-bit key) header.d=zohomail.com header.i=ming.li@zohomail.com header.b="FGRTv+lZ"
+ARC-Seal: i=1; a=rsa-sha256; t=1779889637; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=j9I/HMIF04PE2YVzZkcifqrOTmuuXoSr/bJRyrO56e6Uo7bWlviwmuAcgACBI/yHlADQz1MvtLWRh0avn//AFvWrhgbsb4a+1RO+R9D4SKn0AAKl+D/cYM3jYA3Zvk5RpRyzd6k51jHNdzA6A00SvSH5rdlVvJnZochfM1ZZz4g=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1779889637; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=OrUy8xROCnILGgIy/Yq3KNp0pC2flvaMyDE2u6t01bg=; 
+	b=jjJHf1CbSkXJWzNlbzDnH3/RYfoqBWqRTasFJoMRgylXob4hVqDw5UZvJUD2WwB+sN/uY/Gm7+J9QfAJJmZ00z9NSQyjLtv6GJ96VZJNBceoFfJSydA8Z6Ovaeku6WPu2acaURhVYYiekCGOvPac6uZ05T0upFe+4Gz4Qh2XrIw=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=zohomail.com;
+	spf=pass  smtp.mailfrom=ming.li@zohomail.com;
+	dmarc=pass header.from=<ming.li@zohomail.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1779889637;
+	s=zm2022; d=zohomail.com; i=ming.li@zohomail.com;
+	h=Message-ID:Date:Date:MIME-Version:Subject:Subject:To:To:Cc:Cc:References:From:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:Feedback-ID:Message-Id:Reply-To;
+	bh=OrUy8xROCnILGgIy/Yq3KNp0pC2flvaMyDE2u6t01bg=;
+	b=FGRTv+lZXP/bjR3jGw0PznkQgHLoF/I/1rEDtAPgBypDkKi3BMfbxY6PzGZfGGJt
+	FvHPj0H4yFt1ZJv6IIsmUm18ZLjBqTuueLNhkOR8gjUc9mfRLxV5J+GRESm7ke2INrN
+	I18Fe0g0BnB0iTDgD0RBDkU2xCzEruGjtoeQjNsc=
+Received: by mx.zohomail.com with SMTPS id 1779889634909567.695257599686;
+	Wed, 27 May 2026 06:47:14 -0700 (PDT)
+Message-ID: <2a448110-569d-4296-8430-19a115d7d651@zohomail.com>
+Date: Wed, 27 May 2026 21:47:10 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|LO4P265MB6528:EE_
-X-MS-Office365-Filtering-Correlation-Id: 267022fb-efae-4f37-877c-08debbf5a7dc
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|7416014|10070799003|366016|921020|56012099006|4143699003|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	zxlVBPCFtNbTAFVyxZEp7S1+j+cd1O13wn5H25h9212TC5BTJ8xe24GWGHrKSVh7252NiuYEXD1gb0u10uUSsBTLg/b+vGu1cF3hCcA4tC+WIH7+VcaET3n4mbNe5dIKVjFpiNlKUQ67AuohiTCf43M98XD2Z9dH2oLfRd/FmbAv8P+ew6vIFFSvSrct5LQbnFTW/L09Mk7hdTmDBS9pSU/0D5gt4Oxbm3VV0n2jf9DtWM2EK4znJgSnm4kxxZxesfJaXfteUp0ZzPjU/G5NK+l0uGDHDALL73OXRMo2QEb0TmCCUUPgK4gM9r7eoSu+2eNPl3/2ZeUohJcUVzbwwSCBjOreu/7zcKodGlUsnm4s0Jzb16CERYvgN4RGMT72QrBQ297cg/9Nzx6X84YnX+8sK9TgsFUhF+H/PjQ5wsjmAGJsoX2wHDTGo70GNsM70cmKywGBEEVqPs4r8UdgtLx9npHjLpBGCXS8y+PbGS/LbgJVUo5XVPPnU2RVIdgSqVofdv+uywC14xGI1moplr7rUGO9nC6u2M7D/LjV4T3wWu4jzcBV1GlgUsHMr+kLfiLA+x4TmCyW06agBePU1cgXZEKjC2Mgr4uc5123B0fgOYvmRRydE3mLL5FKvc7Db1n8tcmyUxiQdFO4xbMj7+2O+tKwF5vBX1Yuqa/rj7MlGjyXzbLfA/MZHyDFD/sZH7TrNE4c1wgfNxpfuj+akIo931uTRedEpXQwHtCMsxQ=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(10070799003)(366016)(921020)(56012099006)(4143699003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?VHhPUnNIbk1yWjlOdE82YzRveHh4T21FT1ptVWpiOTY4NzNZa3dWSVJQYVZr?=
- =?utf-8?B?cmhRMHIyVkhUVkJQT0RxRURaeXRpR00zcmcrOVdvejBIcEtNWk4xSHVNZ2Ni?=
- =?utf-8?B?L3ZVSmlmM2Z4Q2V6WUova0ZWaDRySkoxN2hwaE9wUzlyUFB3NVh6a0gyVXd2?=
- =?utf-8?B?ZHpORkNxUmtrVVB3QkNpWGRHZVNQVzl1OVVkRFg4QTAzSWdteGVQbllHUnpr?=
- =?utf-8?B?OWZmNWZBYXVQbkFZdGkwNFhCNXVWYTdFdWJjWFMyWDhKSnRxdVI5NTNWOVhR?=
- =?utf-8?B?VERZK1hlSkdkOGpFaW5kOEg4UkE3di9nVllpT3pCQ3NSNXEyc0hOS1BxVzY0?=
- =?utf-8?B?NDlIRlppcUlDMXd5N0JRa0ZEZngwc2F5QXFwMjhzbTZxYW5pNldiTXdCZTRN?=
- =?utf-8?B?OTcyYk5jWlZJSTVxMXVpajZkWjdoQ3JCZnl1WHc5ZWxCOHFQUkthaFl2WHY0?=
- =?utf-8?B?amhpVGNKNHFma0ZGc0NORGNvVmg1Smc3U2t5K0p3N3ZoaVZuZmVtZkxzTHkr?=
- =?utf-8?B?d043alRUbS82ZmI3Qndna1ZHZWNLcHg4YnhmSHRkck4zdEpSOXJHTWI4cjdl?=
- =?utf-8?B?REJJNnJLcW1VVTlFS1pQZVhLaUhyS2tPbmwxc3p4dEFvbllJSGhPbVlsazlx?=
- =?utf-8?B?eXcyYlRKYXhFTlk1WFcxMUpBcmcyd1FQdjJWa1lGNWt3cDluTlJHSVJvbFNs?=
- =?utf-8?B?VEIyZHRTcURpb09LeTRKMXNyLzhlckprcm1PRjBYSzd2MGdTSkYvL1ltZTJH?=
- =?utf-8?B?K2JoQ2ZidUZjZktVS2VnL01wbWZVSE0zUXVaOGdYdFFOWEdVbkEwbmhkdk5N?=
- =?utf-8?B?NXRicEFkV3pGRXQ5UVZpdXhWMDJSdExvK3BheEY0KzlsVXJzMERKcHRLL01t?=
- =?utf-8?B?cVduWERucFJDd083UXE1TTBJcWlnTUpDeDI1RnlyakNmWldHa1FCQk9RTmJQ?=
- =?utf-8?B?aWdsVHlDZTRETUduRDdFT0lyaG9JZ1JMRmJHWGdqQWM4YTF6d2w1ZTZuM3lS?=
- =?utf-8?B?NnZtODlTOXAyOVJWOUh3amh3dHpUU2tjK1QxbHhLN293a3BDUWhTdmFQOXRk?=
- =?utf-8?B?NHl3ZFkwNmU2d3duOUZNcW5aTm1lZThvRmhuakRVcFdTRUtXMzlRcFMyMS9n?=
- =?utf-8?B?Vk1VcGI0TE9zKzhhWXpYNmVLVnhoQlNKVFI0OW5JQ1hGVmluOFVMbmNuZmVZ?=
- =?utf-8?B?TjJJSGhpQnByWmwyR3Y4Q0J2eDZlYnZLcGRibmJnVm5CUG9ydUFGa24zT29y?=
- =?utf-8?B?aUVuTklma0VWYzRXRVdjTFh2WHgyT3FOeC85cXpsd0RYVFZjK21JRVg1YVZ5?=
- =?utf-8?B?Q1J4NVJsa3JuUVpvTFJjaHE4VmF1SHU4U2NtdUN3ajM3bDJsb1hUdy90NjRm?=
- =?utf-8?B?Uml6Q3dYOW1maHVHa0I4bHYrV2xuRHNhLzhLZG9GT2h4anBFTnNpMVBuNENL?=
- =?utf-8?B?YS9HcUMyTDlxWXlDTkhCeTdsdGlGQ1c0VFQrWFRxL0RkZXZka2ZlejdXZWph?=
- =?utf-8?B?Y0NmcHhjNzhMTE5LQjhoT0ZTR251M213RUxOUWp6YWR1d0kzRlJ2WnJzNXlh?=
- =?utf-8?B?UFBMTTBmdGlmUy9xbEY2alJUMkhsRVV3b0xFdDkrb1ZJK01qMG9ZTlNGUVFK?=
- =?utf-8?B?NGJTbmxSTTd6bi91UmRUbnROZ3FTMUJIQ1ZmTkl4Z2lETGZoalVrajBiWC92?=
- =?utf-8?B?QktZekJnWVlMYnZUWnF0MHRYY3p4WVVFRndvcTNUUC9JbUczeWxLcmhxb1ho?=
- =?utf-8?B?a0QzcDdYR2NwZVFXZTZKekxsL3hFaGJhUjBiaWdPUmJMZFh4cEN3OHVZSTRm?=
- =?utf-8?B?d0JvQjhITTlGVnQ0N2pCenFMb05HdUVYMjhyV3Myelk2RkU4TlliV2tIc1FI?=
- =?utf-8?B?ejd1a05IWTFUTERKc1VpQndDQ2lhNmFCV0MxZWMvUlRmL0IyRHNYVm04VFY4?=
- =?utf-8?B?d3UwNEwxQ2l4K3gzR3pia1l2elp6TysvZjMza2QzUnJCRWt6R1ZGNGhUcEdx?=
- =?utf-8?B?RXNGOG9mcDZtOWpkdWRvNmplUyswakdVODcxWXBabDY4VzM0YlV5c1BTTmpR?=
- =?utf-8?B?KzA3b1JsZ25YWlFYdUZPOU5kcVlhY1ZLQjk2bUowcDdHRGdUTXpZM0phcnhH?=
- =?utf-8?B?czJOKzlOM3JTSkRtdm1ORzI0TjJkZWdhM0R0alluZ0dHdExBSkxTWGt0RmZl?=
- =?utf-8?B?VXhqRFp4NEJsdVJjUDlVbXcvaGFLRkdOa0lTWU9wWVBmdWJZNkVyU3B1ZFRz?=
- =?utf-8?B?SHFZcnhmZjk2ck84TDVjR2Q4ZXNzaVRSVDIzaHl3TGFMVTh0aXVuR1UyNUtX?=
- =?utf-8?B?SUdkVGRYQkRFQ1JXS1FWQjAxNlM5YWRPTHlZSjI5RlNLWVRVUW1FUT09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 267022fb-efae-4f37-877c-08debbf5a7dc
-X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2026 13:41:29.1589
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: a3+IjqqfS8pJzZtU7JLCvvxuN6WHvmSk4HjzpjwJPeyvZ0y0Ty9QBz1gcCnsNrT/JIiju3b0rTebsFrXtw2ZqA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO4P265MB6528
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 2/2] PCI/CXL: Enable usage of RDPAS to shortcut error
+ device discovery
+To: Dave Jiang <dave.jiang@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org
+Cc: terry.bowman@amd.com, bhelgaas@google.com, jic23@kernel.org,
+ djbw@kernel.org
+References: <20260526182334.1010870-1-dave.jiang@intel.com>
+ <20260526182334.1010870-3-dave.jiang@intel.com>
+From: Li Ming <ming.li@zohomail.com>
+In-Reply-To: <20260526182334.1010870-3-dave.jiang@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Feedback-ID: zu080112278ceaabbc429b0ab2b6c21c940000b405874c7349be97be95be42aa48e62be90079df1b06c47bc4:ZohoMail
+X-Zoho-CM-AccountID: abd763e7b9fa23acf4f42a44f9876d2d993e05abdb9290f9ccb1008c977bf7f0
+X-ZohoMailClient: External
 
-On Mon May 25, 2026 at 9:21 PM BST, Danilo Krummrich wrote:
-> Convert the sample driver to SampleDriver<'bound>, taking advantage of
-> the lifetime-parameterized Driver trait.
->=20
-> The driver struct holds &'bound pci::Device directly instead of
-> ARef<pci::Device>, and pci::Bar<'bound> directly instead of
-> Devres<pci::Bar>. This removes PinnedDrop, pin_init_scope, and runtime
-> revocation checks on BAR access.
 
-It looks like the original code doesn't need pin_init to begin with, so it'=
-s not
-like the lifetime actually helps here, but it's still a good cleanup.
-
-Reviewed-by: Gary Guo <gary@garyguo.net>
-
->=20
-> Reviewed-by: Eliot Courtney <ecourtney@nvidia.com>
-> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Reviewed-by: Alexandre Courbot <acourbot@nvidia.com>
-> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+在 2026/5/27 02:23, Dave Jiang 写道:
+> The RDPAS allows the CXL RCH error handler to find the device directly
+> instead of iterating through a set number of RCiEP in order to discover
+> which device triggered an error. For the CXL.io protocol, the base
+> address provided from the cxl_rdpas xarray points to the RCRB of the
+> device. The RCRB mirrors the configuration space of the device via MMIO.
+> The error handler can walk the RCRB to find the AER capability block and
+> therefore read the root status as well as the error source in order
+> to determine the BDF of the error device.
+>
+> Change the current RCH error handler behavior so it will probe the
+> RCRB first to see if the error device can be discovered quickly
+> before falling back to the current method of iterating through RCiEPs.
+>
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 > ---
->  samples/rust/rust_driver_pci.rs | 89 +++++++++++++++------------------
->  1 file changed, 40 insertions(+), 49 deletions(-)
+>   drivers/pci/pcie/aer_cxl_rch.c | 103 +++++++++++++++++++++++++++++++--
+>   1 file changed, 99 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/pcie/aer_cxl_rch.c b/drivers/pci/pcie/aer_cxl_rch.c
+> index 37bbecf495af..0fd6c4234856 100644
+> --- a/drivers/pci/pcie/aer_cxl_rch.c
+> +++ b/drivers/pci/pcie/aer_cxl_rch.c
+> @@ -80,7 +80,7 @@ int cxl_parse_rdpas(union acpi_subtable_headers *header, void *arg,
+>   }
+>   EXPORT_SYMBOL_FOR_MODULES(cxl_parse_rdpas, "cxl_acpi");
+>   
+> -static int __maybe_unused cxl_get_rdpas_by_rcec(struct pci_dev *rcec, u64 *dsp_addr)
+> +static int cxl_get_rdpas_by_rcec(struct pci_dev *rcec, u64 *dsp_addr)
+>   {
+>   	u64 index;
+>   	u64 *addr;
+> @@ -134,6 +134,94 @@ static int cxl_rch_handle_error_iter(struct pci_dev *dev, void *data)
+>   	return 0;
+>   }
+>   
+> +static u16 rcrb_to_aer(void __iomem *rcrb)
+> +{
+> +	u16 offset;
+> +	u32 cap_hdr;
+> +
+> +	/* Start from PCIe extended capabilities at offset 0x100 */
+> +	offset = PCI_CFG_SPACE_SIZE;
+> +	cap_hdr = readl(rcrb + offset);
+> +	if (cap_hdr == 0 || cap_hdr == ~0u)
+> +		return 0;
+> +
+> +	while (PCI_EXT_CAP_ID(cap_hdr) != PCI_EXT_CAP_ID_ERR) {
+> +		offset = PCI_EXT_CAP_NEXT(cap_hdr);
+> +		if (!offset)
+> +			return 0;
+> +
+> +		if (offset >= SZ_4K)
+> +			return 0;
+> +
+> +		cap_hdr = readl(rcrb + offset);
+> +	}
+> +
+> +	return offset;
+> +}
+> +
+> +DEFINE_FREE(iounmap, void __iomem *, if (_T) iounmap(_T))
+> +static u16 cxl_rch_get_err_src_id(u64 rcrb_base)
+> +{
+> +	u32 root_status, err_src;
+> +	void __iomem *aer_base;
+> +	u16 aer_offset;
+> +
+> +	void __iomem *rcrb __free(iounmap) = ioremap(rcrb_base, SZ_4K);
+> +	if (!rcrb)
+> +		return 0;
+> +
+> +	aer_offset = rcrb_to_aer(rcrb);
+> +	if (!aer_offset)
+> +		return 0;
+> +
+> +	aer_base = rcrb + aer_offset;
+> +
+> +	root_status = readl(aer_base + PCI_ERR_ROOT_STATUS);
+> +	if (!(root_status & (PCI_ERR_ROOT_COR_RCV | PCI_ERR_ROOT_UNCOR_RCV)))
+> +		return 0;
+> +
+> +	err_src = readl(aer_base + PCI_ERR_ROOT_ERR_SRC);
+> +
+> +	if (root_status & PCI_ERR_ROOT_UNCOR_RCV)
+> +		return FIELD_GET(GENMASK(31, 16), err_src);
+> +
+> +	if (root_status & PCI_ERR_ROOT_COR_RCV)
+> +		return FIELD_GET(GENMASK(15, 0), err_src);
+> +
+> +	return 0;
+> +}
+> +
+> +static bool cxl_rch_handled_error_by_rdpas(struct pci_dev *rcec,
+> +					   struct aer_err_info *info)
+> +{
+> +	u8 bus, devfn;
+> +	u64 dsp_addr;
+> +	u16 segment;
+> +	u16 src_id;
+> +	int rc;
+> +
+> +	rc = cxl_get_rdpas_by_rcec(rcec, &dsp_addr);
+> +	if (rc)
+> +		return false;
+> +
+> +	src_id = cxl_rch_get_err_src_id(dsp_addr);
+> +	if (!src_id)
+> +		return false;
+> +
+> +	/* Try uncorrectable error source first, then correctable */
 
+I am a little bit confused about this comment and 
+cxl_rch_get_err_src_id(). I think aer_err_info->severify idendifies 
+current ERR is a correctable error or not.
+
+In cxl_rch_get_err_src_id() always handles UNCOR_ERR before COR_ERR, is 
+it possible that getting an UNCOR_ERR src id for a COR_ERR aer_err_info?
+
+E.g. aer_err_info is created for a COR_ERR, but the RCH DSP masks 
+PCI_ERR_ROOT_UNCOR_RCV after the aer_err_info created.
+
+Maybe I misunderstand something, please correct me if I am wrong.
+
+Ming
+
+> +	segment = pci_domain_nr(rcec->bus);
+> +	bus = FIELD_GET(GENMASK(15, 8), src_id);
+> +	devfn = FIELD_GET(GENMASK(7, 0), src_id);
+> +
+> +	struct pci_dev *pdev __free(pci_dev_put) =
+> +		pci_get_domain_bus_and_slot(segment, bus, devfn);
+> +	if (!pdev)
+> +		return false;
+> +
+> +	cxl_forward_error(dev, info);
+> +	return true;
+> +}
+> +
+>   void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
+>   {
+>   	/*
+> @@ -141,9 +229,16 @@ void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
+>   	 * RCH's downstream port. Check and handle them in the CXL.mem
+>   	 * device driver.
+>   	 */
+> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC &&
+> -	    is_aer_internal_error(info))
+> -		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
+> +	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_EC)
+> +		return;
+> +
+> +	if (!is_aer_internal_error(info))
+> +		return;
+> +
+> +	if (cxl_rch_handled_error_by_rdpas(dev, info))
+> +		return;
+> +
+> +	pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
+>   }
+>   
+>   static int handles_cxl_error_iter(struct pci_dev *dev, void *data)
