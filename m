@@ -1,416 +1,200 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72E843603EB
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 19:01:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA421389107
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 19:34:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779908503; cv=none; b=Y9XgHklK/p0sSMRKr1gzllTmcxOglO2avdPzAAaDjyB2jK6P9GjTaOI+j7tb7P5j5ihowSAlPH0p+kYyuhcuu5DyKf9r3H2Fycpb88JCFVrl52reLfzjxrvBVJn2aQGafWSfm769xGkRIVUjLE0xnB/0swuT2gOY1ws+HRPbKug=
+	t=1779910495; cv=none; b=Y24mK0FWSp7dtftfdpMOZK+S2FrGwDvR2c5YUe7ijUEM4HuLJ1MoPndAexDTDHPuHe8KhgwjQek/PVSu2XeeJsf1qiMscYMUFQW/qNKcPZ6ZLUPfILPZaBrbjbziIisDi/eEHywFN17Lbfccq3aBTW3vALSAgbRsB8If/wxPI3w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779908503; c=relaxed/simple;
-	bh=v5UdqIyL0wq4a7b6EsRSY5HKApx33R4+rTM+MHxs3Og=;
-	h=Date:From:To:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=miaHIsquUgiHAqeXwPqdpIfgKNTKB4tKnHuxdQiSPAeEkdTWEIvBWqIcbhTfopdg2JQPhz2fBoAR48Gvd4lyzDSZM7ZEj/l2L8Nd5+aa0ZDj8u/3ljgjdWAdfBj9OnrP5rVJo/ViygtfNWWo6JPpIUlqN7P3d45ZrxQVjsg7KK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JSrbm7xq; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1779910495; c=relaxed/simple;
+	bh=MvsH5smzuNUer2UWEdYz1V89kf/txOlN+sciyYSwOkY=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GbdRsuKNmrzKT1Q/89d9kftio4t4oL+EIXvmyhQg6+ORya9ogJVAJrCawDL6SQph4L5+XoXHMFvqQpbuW/2col2ns7F+dMFJjzthCGSHtFejgkfSNe3J/NhUDuFzFF5eIVWc/sMiUzqZZmDlH+UxjNCJHWruP6h1Qel+A5H3294=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B62i6LW+; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JSrbm7xq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1779908502; x=1811444502;
-  h=date:from:to:subject:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=v5UdqIyL0wq4a7b6EsRSY5HKApx33R4+rTM+MHxs3Og=;
-  b=JSrbm7xqYsRBFIf5OTFZr/17XtkXYLzgPysvwafbh0Y8gkL966RArH6w
-   0OUbd/99Va/jw1uUygViQ1Q96fK4YjwLfTEY0BKJJEQqRkZ11Sgcls01P
-   mzwXaj93za7pmj2fTcePyYvf05nHylhVaLmxHNk65ZcL5/RA3HeRoNaXD
-   du9ASbyew8MonL5euebVdWI0OTaU5MxbA45V2fjGLxCymXJqTgAftbYb2
-   E9KGe/xkR71TQ4SfXWA1ArcVICNxV2QKylDjmo2GVLwn1w9hVHqk1M3e4
-   t/ojQMRw/6XwiYkWYuRfEqpuqks6CIKKOkoZ3PYpxJ8jjWUZu8chp13qT
-   Q==;
-X-CSE-ConnectionGUID: 9vw2RaqiTxyQDuUJsc8F6A==
-X-CSE-MsgGUID: Y2YiRuBARGeso8h0vVwUqQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="91055570"
-X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="91055570"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:01:41 -0700
-X-CSE-ConnectionGUID: Wlj8v81yS3qRwJhwq7AaEQ==
-X-CSE-MsgGUID: qjHp7WcnTiOmeico8/n/Yw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
-   d="scan'208";a="280453685"
-Received: from patelni-desk.amr.corp.intel.com (HELO localhost) ([10.2.248.44])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:01:41 -0700
-Date: Wed, 27 May 2026 12:01:39 -0700
-From: Nirmal Patel <nirmal.patel@linux.intel.com>
-To: <linux-pci@vger.kernel.org>, nirmal.patel@intel.com
-Subject: Re: [PATCH v4] PCI: vmd: Add feature to scan BIOS enumerated
- devices.
-Message-ID: <20260527120139.00004254@linux.intel.com>
-In-Reply-To: <20260522150829.5246-1-nirmal.patel@linux.intel.com>
-References: <20260522150829.5246-1-nirmal.patel@linux.intel.com>
-X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B62i6LW+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F37FA1F000E9;
+	Wed, 27 May 2026 19:34:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779910479;
+	bh=THKsxDyess097JzzayVASytXNP6IJRmumVcbK5jAvDI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=B62i6LW++xSPZCeLLXawPgW6EbStbw8QO5sKEfLsmuAYZses6zx3atT9VG7hzpMLX
+	 kWDcWIOnCM8WZ9gzLeLummnpxPFAJqp51BziniRrU3eyzrah4guKrtOwbCQmEpJTIg
+	 /yuspLlmEoHOb9+meF2oVGMR4yt+rdfl5sRxtE4nRxcF9/4Fpzo6/7co/WZ66Nn4R8
+	 F5fEfYjkEl0JndOfqOjZVAlcvVfSaEW+4aEjJpC86YsefLkIzaHY7z1rF0I7C2wGxV
+	 A7zrFctMDjQhy0ETj9Os1YBconWZBmrNr2L296PL5X8c1b0nTQG1FIks/92zLEcdlw
+	 L3SBT70sG4aHA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 1/3] ppc/pnv: Add null checks for OpenCapi PHBs
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Aditya Gupta" <adityag@linux.ibm.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260527180816.2749186-2-adityag@linux.ibm.com>
+References: <20260527180816.2749186-2-adityag@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 27 May 2026 19:34:38 +0000
+Message-Id: <20260527193438.F37FA1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 
-On Fri, 22 May 2026 15:08:29 +0000
-Nirmal Patel <nirmal.patel@linux.intel.com> wrote:
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-> Newer VMD  with device ID 0x28c1 has unique settings compared to its
-> predecessor where BIOS enumerates the entire VMD device tree and
-> assigns respective configurations.
-> 
-> VMD configuration BAR0 carries over from GNR legacy VMD as the
-> mechanism to access the configuration space of the devices owned by
-> VMD. The size of this window is fixed at 256 MB, where each function
-> consumes 4 KB and every bus consumes 1 MB.
-> 
-> The shadow and scratchpad registers have been relocated from the VMD
-> configuration space to the VMD MMIO space in VMD BAR4/BAR5, otherwise
-> refers to as MEMBAR2 or MSI-X bar.
-> 
-> VMD MSI-X remapping enable/disable is no longer supported.
-> 
-> All the VMD driver code needs to do is to obtain bus hide range along
-> with shadow register values set by BIOS and perform a bus scan.
-> 
-> The patch also involves small refactoring of vmd_enable_domain
-> function.
-> 
-> Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-> ---
-> v4 : Updating vmd_set_msi_remapping for supported devices only.
-> v3 : Hard code configbar .end to 0xff same as probe.c; Adjust membar2
->      offset to accommodate more registers in 28C1. Remove redundant
->      IORESOURCE_MEM check in vmd_prepare_offsets_and_bus.
-> v2 : Using PCI features flag instead of devic ID and fixing corner
-> cases for vmd_remove_irq.
-> ---
->  drivers/pci/controller/vmd.c | 174
-> +++++++++++++++++++++++++++-------- include/linux/pci_ids.h      |
-> 1 + 2 files changed, 136 insertions(+), 39 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/vmd.c
-> b/drivers/pci/controller/vmd.c index d4ae250d4bc6..7c90243b5ff0 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -37,6 +37,12 @@
->  #define MB2_SHADOW_OFFSET	0x2000
->  #define MB2_SHADOW_SIZE		16
->  
-> +/* DMR BAR4 register offsets */
-> +#define SHADOW_MEMBAR1_28C1		0x2818 /* MEMBAR1
-> physical address */ +#define SHADOW_MEMBAR2_28C1
-> 0x2820 /* MEMBAR2 physical address */ +#define
-> BASE_ID_REG_28C1		0x2840 +#define
-> MEMBAR2_OFFSET_28C1		0x30d0 +
->  enum vmd_features {
->  	/*
->  	 * Device may contain registers which hint the physical
-> location of the @@ -77,6 +83,15 @@ enum vmd_features {
->  	 * proper power management of the SoC.
->  	 */
->  	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
-> +
-> +	/*
-> +	 * Newer VMD  with device ID 0x28c1 has unique settings
-> compared to its
-> +	 * predecessor where BIOS enumerates the entire VMD device
-> tree and
-> +	 * stores respective configurations including bus start
-> range and
-> +	 * shadow registers in VMD MMIO space in VMD BAR4/BAR5,
-> otherwise refers
-> +	 * to as MEMBAR2 or MSI-X bar.
-> +	 */
-> +	VMD_FEAT_USE_BIOS_INFO		= (1 << 6),
->  };
->  
->  #define VMD_BIOS_PM_QUIRK_LTR	0x1003	/* 3145728 ns */
-> @@ -142,6 +157,7 @@ struct vmd_dev {
->  	u8			first_vec;
->  	char			*name;
->  	int			instance;
-> +	unsigned long		features;
->  };
->  
->  static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
-> @@ -365,6 +381,8 @@ static int vmd_create_irq_domain(struct vmd_dev
-> *vmd) static void vmd_set_msi_remapping(struct vmd_dev *vmd, bool
-> enable) {
->  	u16 reg;
-> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
+Pre-existing issues:
+- [High] Pre-existing NULL pointer dereference in the error path of `pnv_ph=
+p_alloc_slot()` due to an uninitialized bus pointer.
+- [High] Unbalanced `pci_enable_device()` refcount leak during setup failur=
+es and normal teardown.
+- [High] Concurrent accesses to `pnv_php_enable_slot` and `pnv_php_disable_=
+slot` can cause double-frees due to lack of state locking.
+- [Medium] Improper error code in `pnv_php_reset_slot()` prematurely aborts=
+ PCI reset method discovery.
+--
+
+commit 534a90517227ad6163f935501ac2f0ed9cf60b83
+Author: Aditya Gupta <adityag@linux.ibm.com>
+
+ppc/pnv: Add null checks for OpenCapi PHBs
+
+This patch adds null checks for php_slot->pdev across several PCI hotplug
+operations in pnv_php.c. It prevents NULL pointer dereferences for OpenCAPI
+PHB direct slots where the bus has no self device, fixing kernel crashes
+observed during boot and hotplug events.
+
+Cc: stable@vger.kernel.org
+Fixes: 80f9fc236279 ("PCI: pnv_php: Work around switches with broken presen=
+ce detection")
+
+> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+> index ff92a5c301b81..d0f5e8ad1f716 100644
+> --- a/drivers/pci/hotplug/pnv_php.c
+> +++ b/drivers/pci/hotplug/pnv_php.c
+> @@ -47,6 +47,9 @@ static void pnv_php_disable_irq(struct pnv_php_slot *ph=
+p_slot,
+>  	struct pci_dev *pdev =3D php_slot->pdev;
+>  	u16 ctrl;
+> =20
+> +	if (!pdev)
 > +		return;
->  
->  	pci_read_config_word(vmd->dev, PCI_REG_VMCONFIG, &reg);
->  	reg = enable ? (reg & ~VMCONFIG_MSI_REMAP) :
-> @@ -374,6 +392,8 @@ static void vmd_set_msi_remapping(struct vmd_dev
-> *vmd, bool enable) 
->  static void vmd_remove_irq_domain(struct vmd_dev *vmd)
->  {
-> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
+> +
+>  	if (php_slot->irq > 0) {
+>  		pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &ctrl);
+>  		ctrl &=3D ~(PCI_EXP_SLTCTL_HPIE |
+>  			  PCI_EXP_SLTCTL_PDCE |
+>  			  PCI_EXP_SLTCTL_DLLSCE);
+>  		pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, ctrl);
+> =20
+>  		free_irq(php_slot->irq, php_slot);
+
+[Severity: High]
+This is a pre-existing issue, but can concurrent accesses to the slot
+operations cause a double-free here?
+
+If pnv_php_disable_slot() is called concurrently by two threads (for exampl=
+e,
+via sysfs writes to the power attribute racing with the workqueue event
+handler), both threads can bypass the state check because php_slot->state is
+not locked.
+
+They could both execute pnv_php_disable_all_downstream_irqs() and reach
+this point. Since both would see php_slot->irq > 0, they would both call
+free_irq(php_slot->irq, php_slot).
+
+Should there be some synchronization around the state transitions?
+
+[ ... ]
+
+> @@ -1093,6 +1107,9 @@ static void pnv_php_enable_irq(struct pnv_php_slot =
+*php_slot)
+>  	struct pci_dev *pdev =3D php_slot->pdev;
+>  	int irq, ret;
+> =20
+> +	if (!pdev)
 > +		return;
+> +
 >  	/*
->  	 * Some production BIOS won't enable remapping between soft
-> reboots.
->  	 * Ensure remapping is restored before unloading the driver.
-> @@ -393,7 +413,12 @@ static void __iomem *vmd_cfg_addr(struct vmd_dev
-> *vmd, struct pci_bus *bus, unsigned int devfn, int reg, int len)
->  {
->  	unsigned int busnr_ecam = bus->number - vmd->busn_start;
-> -	u32 offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
-> +	u32 offset;
-> +
-> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
-> +		busnr_ecam = bus->number;
-> +
-> +	offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
->  
->  	if (offset + len >=
-> resource_size(&vmd->dev->resource[VMD_CFGBAR])) return NULL;
-> @@ -661,6 +686,46 @@ static int vmd_get_bus_number_start(struct
-> vmd_dev *vmd) return 0;
->  }
->  
-> +static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
-> +				       resource_size_t *offset1,
-> +				       resource_size_t *offset2)
-> +{
-> +	u64 phys1, phys2, bar4_2840;
-> +	void __iomem *bar4;
-> +	u32 base_id;
-> +	u8 base_bus;
-> +
-> +
-> +	bar4 = pci_ioremap_bar(vmd->dev, 4);
-> +	if (!bar4)
-> +		return -ENOMEM;
-> +
-> +	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical
-> addresses. */
-> +	phys1 = readq(bar4 + SHADOW_MEMBAR1_28C1);
-> +	phys2 = readq(bar4 + SHADOW_MEMBAR2_28C1);
-> +
-> +	/*
-> +	 * Read and set bus start number from Base ID register.
-> +	 * 24-bit Base ID register is part of 64-bit shadowed reqid
-> hide
-> +	 * range register and holds segment, bus, device and
-> function.
-> +	 */
-> +	bar4_2840 = readq(bar4 + BASE_ID_REG_28C1);
-> +	base_id = bar4_2840 & 0xFFFFFF;
-> +	base_bus = base_id >> 8;
-> +	vmd->busn_start = base_bus;
-> +
-> +	/* Calculate offsets like vmd_get_phys_offsets() does. */
-> +	if (phys1)
-> +		*offset1 = vmd->dev->resource[VMD_MEMBAR1].start -
-> +			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
-> +	if (phys2)
-> +		*offset2 = vmd->dev->resource[VMD_MEMBAR2].start -
-> +			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
-> +
-> +	pci_iounmap(vmd->dev, bar4);
-> +	return 0;
-> +}
-> +
->  static irqreturn_t vmd_irq(int irq, void *data)
->  {
->  	struct vmd_irq_list *irqs = data;
-> @@ -711,6 +776,53 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
->  	return 0;
->  }
->  
-> +static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
-> +					unsigned long features,
-> +					resource_size_t
-> *membar2_offset,
-> +					resource_size_t *offset1,
-> +					resource_size_t *offset2)
-> +{
-> +	int ret;
-> +
-> +	/*
-> +	 * Shadow registers may exist in certain VMD device ids
-> which allow
-> +	 * guests to correctly assign host physical addresses to the
-> root ports
-> +	 * and child devices. These registers will either return the
-> host value
-> +	 * or 0, depending on an enable bit in the VMD device.
-> +	 */
-> +	/*
-> +	 * For certain VMD devices (i.e. 0x28C1), BIOS places device
-> info
-> +	 * in BAR4 shadow registers to determine the base bus number
-> and memory
-> +	 * offsets.
-> +	 */
-> +	if (features & VMD_FEAT_USE_BIOS_INFO) {
-> +		*membar2_offset = MEMBAR2_OFFSET_28C1;
-> +		ret = vmd_get_bus_info_from_bar4(vmd, offset1,
-> offset2);
-> +		if (ret)
-> +			return ret;
-> +	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
-> +		*membar2_offset = MB2_SHADOW_OFFSET +
-> MB2_SHADOW_SIZE;
-> +		ret = vmd_get_phys_offsets(vmd, true, offset1,
-> offset2);
-> +		if (ret)
-> +			return ret;
-> +	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
-> +		ret = vmd_get_phys_offsets(vmd, false, offset1,
-> offset2);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
-> +	/*
-> +	 * Certain VMD devices may have a root port configuration
-> option which
-> +	 * limits the bus range to between 0-127, 128-255, or
-> 224-255.
-> +	 */
-> +	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
-> +		ret = vmd_get_bus_number_start(vmd);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +	return 0;
-> +}
-> +
->  /*
->   * Since VMD is an aperture to regular PCIe root ports, only allow
-> it to
->   * control features that the OS is allowed to control on the
-> physical PCI bus. @@ -784,38 +896,16 @@ static int
-> vmd_enable_domain(struct vmd_dev *vmd, unsigned long features) struct
-> pci_dev *dev; int ret;
->  
-> -	/*
-> -	 * Shadow registers may exist in certain VMD device ids
-> which allow
-> -	 * guests to correctly assign host physical addresses to the
-> root ports
-> -	 * and child devices. These registers will either return the
-> host value
-> -	 * or 0, depending on an enable bit in the VMD device.
-> -	 */
-> -	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
-> -		membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
-> -		ret = vmd_get_phys_offsets(vmd, true, &offset[0],
-> &offset[1]);
-> -		if (ret)
-> -			return ret;
-> -	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
-> -		ret = vmd_get_phys_offsets(vmd, false, &offset[0],
-> &offset[1]);
-> -		if (ret)
-> -			return ret;
-> -	}
-> -
-> -	/*
-> -	 * Certain VMD devices may have a root port configuration
-> option which
-> -	 * limits the bus range to between 0-127, 128-255, or 224-255
-> -	 */
-> -	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
-> -		ret = vmd_get_bus_number_start(vmd);
-> -		if (ret)
-> -			return ret;
-> -	}
-> +	ret = vmd_prepare_offsets_and_bus(vmd, features,
-> &membar2_offset,
-> +					  &offset[0], &offset[1]);
-> +	if (ret)
-> +		return ret;
->  
->  	res = &vmd->dev->resource[VMD_CFGBAR];
->  	vmd->resources[0] = (struct resource) {
->  		.name  = "VMD CFGBAR",
->  		.start = vmd->busn_start,
-> -		.end   = vmd->busn_start + (resource_size(res) >>
-> 20) - 1,
-> +		.end   = 0xff,
->  		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
->  	};
->  
-> @@ -868,19 +958,21 @@ static int vmd_enable_domain(struct vmd_dev
-> *vmd, unsigned long features)
->  	 * acceptable because the guest is usually CPU-limited and
-> MSI
->  	 * remapping doesn't become a performance bottleneck.
+>  	 * The MSI/MSIx interrupt might have been occupied by other
+>  	 * drivers. Don't populate the surprise hotplug capability
+>  	 * in that case.
 >  	 */
-> -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> -	    offset[0] || offset[1]) {
-> -		ret = vmd_alloc_irqs(vmd);
-> -		if (ret)
-> -			return ret;
-> +	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
-> +		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
-> +		    offset[0] || offset[1]) {
-> +			ret = vmd_alloc_irqs(vmd);
-> +			if (ret)
-> +				return ret;
->  
-> -		vmd_set_msi_remapping(vmd, true);
-> +			vmd_set_msi_remapping(vmd, true);
->  
-> -		ret = vmd_create_irq_domain(vmd);
-> -		if (ret)
-> -			return ret;
-> -	} else {
-> -		vmd_set_msi_remapping(vmd, false);
-> +			ret = vmd_create_irq_domain(vmd);
-> +			if (ret)
-> +				return ret;
-> +		} else {
-> +			vmd_set_msi_remapping(vmd, false);
-> +		}
+>  	if (pci_dev_msi_enabled(pdev))
+>  		return;
+> =20
+>  	ret =3D pci_enable_device(pdev);
+>  	if (ret) {
+>  		SLOT_WARN(php_slot, "Error %d enabling device\n", ret);
+>  		return;
 >  	}
->  
->  	pci_add_resource(&resources, &vmd->resources[0]);
-> @@ -998,6 +1090,7 @@ static int vmd_probe(struct pci_dev *dev, const
-> struct pci_device_id *id) 
->  	vmd->dev = dev;
->  	vmd->sysdata.domain = PCI_DOMAIN_NR_NOT_SET;
-> +	vmd->features = features;
->  	vmd->instance = ida_alloc(&vmd_instance_ida, GFP_KERNEL);
->  	if (vmd->instance < 0)
->  		return vmd->instance;
-> @@ -1114,6 +1207,9 @@ static const struct pci_device_id vmd_ids[] = {
->  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
->  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
->  				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
-> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_28C1),
-> +		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
-> +				VMD_FEAT_USE_BIOS_INFO,},
->  	{PCI_VDEVICE(INTEL, 0x467f),
->  		.driver_data = VMD_FEATS_CLIENT,},
->  	{PCI_VDEVICE(INTEL, 0x4c3d),
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 24cb42f66e4b..2a8ebe7df92e 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2889,6 +2889,7 @@
->  #define PCI_DEVICE_ID_INTEL_HDA_ICH8	0x284b
->  #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850
->  #define PCI_DEVICE_ID_INTEL_VMD_28C0	0x28c0
-> +#define PCI_DEVICE_ID_INTEL_VMD_28C1    0x28c1
->  #define PCI_DEVICE_ID_INTEL_ICH9_0	0x2910
->  #define PCI_DEVICE_ID_INTEL_ICH9_2	0x2912
->  #define PCI_DEVICE_ID_INTEL_ICH9_3	0x2913
 
-Gentle reminder. FYI, I also addressed comments from AI review.
+[Severity: High]
+This is a pre-existing issue, but does this leak the enable_cnt refcount?
 
-Thanks.
+pci_enable_device(pdev) increments the device's enable count. If the
+subsequent IRQ initialization steps fail, this function returns without
+calling pci_disable_device().
+
+Additionally, during normal slot teardown, pnv_php_disable_irq() is called
+with disable_device =3D false, meaning pci_disable_device() is skipped duri=
+ng
+hot-unplug. This would permanently prevent the device from entering low-pow=
+er
+states and block clean driver unbinding.
+
+Is there a missing pci_disable_device() in the error paths and unplug flow?
+
+While reviewing this code, I also noticed a few other pre-existing issues in
+this file:
+
+drivers/pci/hotplug/pnv_php.c:pnv_php_reset_slot() {
+    ...
+	/*
+	 * The CAPI folks want pnv_php to drive OpenCAPI slots
+	 * which don't have a bridge. Only claim to support
+	 * reset_slot() if we have a bridge device (for now...)
+	 */
+	if (probe)
+		return !bridge;
+    ...
+}
+
+[Severity: Medium]
+This is a pre-existing issue, but does returning 1 here abort the PCI reset
+method discovery loop prematurely?
+
+The PCI core's __pci_reset_function_locked() expects -ENOTTY to indicate a
+reset method is unsupported. When !bridge evaluates to 1, the PCI core sees
+rc !=3D -ENOTTY and aborts the entire loop, which prevents falling back to
+other reset methods like FLR or PM reset.
+
+---
+
+drivers/pci/hotplug/pnv_php.c:pnv_php_alloc_slot() {
+    ...
+	if (!php_slot->wq) {
+		SLOT_WARN(php_slot, "Cannot alloc workqueue\n");
+		goto free_id;
+	}
+    ...
+}
+
+[Severity: High]
+This is a pre-existing issue, but could this SLOT_WARN cause a NULL pointer
+dereference?
+
+The php_slot structure is zero-initialized on allocation. If
+alloc_workqueue() fails, SLOT_WARN evaluates php_slot->pdev (which is NULL)
+and takes the false branch to use &php_slot->bus->dev.
+
+However, php_slot->bus has not been assigned yet. Computing &(NULL)->dev
+yields an invalid pointer offset that is passed to the underlying dev_warn()
+function, which will crash when it attempts to dereference it.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260527180816.2749=
+186-1-adityag@linux.ibm.com?part=3D1
