@@ -1,102 +1,100 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1788E23EAB2
-	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 00:31:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08CCB288D0
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 00:48:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779841869; cv=none; b=pQj6JE+GzQnM/GoZiEgMiXeuRnThmQC9Y5OXW6XhQm+eAe9wUXTR/jrUbe3Y+lF0Ucjql9+l+G3k6RsV+Dc9I8AH3xZrZuaopxPiDrLB2SS0q59s0/Fos1mMnU3m1YMnnjmq0CWjGxNZZmTlNo2LbRfEZp9Ie/KmRFDEYxZwej8=
+	t=1779842921; cv=none; b=TqMVDliwwFKHTeh55sOCLtyquiMafsbhkX316BSs9aJpMUPvqHyEz4w1LpVWjOnkvtkIVwCpomHqEzvH+jZwb9Goohs970nCMYwluEBjh7pZbsGqjdkFONdzRGUa9AwPg6fXl8QMDugqObiO9k4nfQt9vdE8JoG9YfpqT0/Kjj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779841869; c=relaxed/simple;
-	bh=56hZR2esecc8IXvQ6LfJWlb7Dw4Vo8ZEHwkjvgsTqBY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WWD9BeA7xqnc1TCBc33ikdVLhp4kyb4HOi7INqUg9Q/jy8qSr5YEE4gFoOx3NR/oLioIKyCYgGhnNe14CYE5RsWUBFqR6hhbNsMVjeQ/VeujURC4uHbRNy2P6+MKt8MKi0xRe+leaguUlFHJomrvzHie11g3A4XjjkhNPMpx+04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r7v2v923; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1779842921; c=relaxed/simple;
+	bh=HdLTrwyEGm75MZrtP85phwsXGqPr7nKxJAdvqSuKbdQ=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VbGA92QUp63dfxgiGivoz96BvryoLcorPp9oU+GK5RXOjciYMYecsBGzW0YoUw7b3cO2M/tTKqSKMxjXdXl5iAnCJi6yojt7s17fiO4HYJ0GImzOw53nQxXkQJDhhFAvWlNHyyzqvGxC1C+Zd/HjaAR1uyxLA3crnkxh5kPPtUI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cFdoMS14; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r7v2v923"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-837b39eb078so7722723b3a.2
-        for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 17:31:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1779841864; x=1780446664; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=/XFpz0HlR/MR311tqNY67oX2GF6bZeQSkrGf+Ws6Afw=;
-        b=r7v2v923wf1FHQAR0uoS/VneFvUzHxyHlJDoonk1FA4ssc4gxkAzd+toCuR9LxXtAQ
-         jYgsxuoy0AP9QLN3K5l8uzunAZbmwwoYAksTWMHMSP8QlZ002DeoR2IO5JGVd6B1gf+F
-         clZHeqEdyWyDU4gxfJ+4RaqHIo4IsnRER2Ck6GdsxyZp789xM4Ly5/aeAQyQm46qfQ2X
-         L/0Al9sQNW5Q9i/xfte6chcpZYajVNnQrp7gh8Q35obpWWE+aTq4/3D6CSZP5Lk7a4HR
-         4/XfdrJSAzEUWCFQbk2cz0Py0kP4R9U79/yLA5/xsKQVKv1Tuf8Kpcg2QRe9/fYCYTsE
-         bw2Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1779841864; x=1780446664;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/XFpz0HlR/MR311tqNY67oX2GF6bZeQSkrGf+Ws6Afw=;
-        b=ksczaWsT4D06I1d+lDbsQQ9T7BFYd2R0/ElnxGuurXFe720q3a/l0vxsba9X6/WUJq
-         mw+kX8b5nwUluCw6l1GEJFnb6XOadESwWegacfgzRviDOEcteKGEYmfovd6FF0sYgXz/
-         f9Ib8GL7CZfl2WEgBLPq0Fx5Lz+dmgeLwHurBpB/xYwTWS3rcTFFI9wugyynH6m8OGPk
-         qu49M57DEzuJ0LzF8aWQ+AiQeR23apB9b+ZfAkou1jCAxJ4BMynZnN1Eq4kqESdylpwD
-         2EHbi4uvcdY53oYWsq03cc+4jY6bdyXrB/nsYSvikYBbGA0Oo0NxV3jXcFzpm3TrWu4F
-         hFnQ==
-X-Gm-Message-State: AOJu0YyXWw44MQwEO7BRWgY7bEW6kTizceD/N6gY3AlvjfCX9mPnUPfR
-	aQplMF4Odjo/XluN2+XmZNFb9ErUvr2eH3OSvWb0zQtNVci1yq8EJXwXG5Uxrg==
-X-Gm-Gg: Acq92OEmi3FuTp8aQAqADpDA+8mvCoqf4pwnD2xWDIz+HOYAfQ6rW7hBW/0a3w8g/lo
-	mOk8zZJlQJoRc/um67o8fPptv5Rix3QVbVdIrCScJYLi9yg4+IK1MBJBbHXiLIZOdOrIyZL5J4T
-	7Y1bxkBAswOd4FfHZrfsXcG/xfBmKVOEo1CqIwleL04HQHl64HdezUsHRIhE9MM+UAl776cTPfq
-	SURfnW139H2kbwNsAxIISkiy9dpf1pnrv2D4KY8S9KtuxoMczSNFT6sT9gdOjQpIrVvE+H19Hfe
-	aN6ttFRodvMgxrDlYpXnVctAkENgRvM9cVqlthcB+qeBfF7Aj8HMcIOGSEDsiugN0nAQFCGKURo
-	TIwb0PE9XB2mYfWc+L6xI91JdeckB9rDAmP3PgE+J6bZpvkX0WLwpLslvhMLOM+hlriwzVuXUj8
-	hV6CZn57Zk83iPxV+h04DbNwDnk7zFwUnE7uTM6V5w9S4e/guZR34Lab0C7nTYP41j6hYnksDqT
-	TCdljtM7jUfXcn5XrqakAyFZyEPZgZA+W0=
-X-Received: by 2002:a05:6a00:3003:b0:82c:d986:e917 with SMTP id d2e1a72fcca58-8415f56374bmr19768382b3a.22.1779841864209;
-        Tue, 26 May 2026 17:31:04 -0700 (PDT)
-Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-841d70df178sm477219b3a.42.2026.05.26.17.31.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 May 2026 17:31:03 -0700 (PDT)
-From: Rosen Penev <rosenp@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] PCI: hotplug: ibm: remove PCI_BIOS dependency
-Date: Tue, 26 May 2026 17:30:46 -0700
-Message-ID: <20260527003046.20031-1-rosenp@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cFdoMS14"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C541A1F000E9;
+	Wed, 27 May 2026 00:48:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779842919;
+	bh=VJJs0NHJOs/TBh7M+MRBpALQFvuUpM59iQjvziJTmGw=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=cFdoMS14JB7MrHLsU8jP3E3ihLvtv98PirleFe5sbQ469wWA9W7UUCKJlNJmiuF0b
+	 96nH7S/JevO1hJWOT9TRS/Xig2rSVV8D8svteTCRuooe4CAbfHPst37JZw3OE4+R/w
+	 CiZw7vy0VC7QRQcezJk7W2cY/X8TIvHuWbZDpl6B3NY0zobhjMFl4C/hU4ulQUvrdS
+	 TLXFbPNAwpsgoTSutayaZhBdMCwVDNWTRTSckQxZM10bj+iDVu8ZjIV6cLwj3ZvBOd
+	 CGjx91Jq1LgQZXBD52EytsVu1Fl1BNOzWlqoVqKN8vUmvwDQweJjj12vSrcVUXfPXx
+	 t9OAon/zzWhWQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: hotplug: ibm: remove PCI_BIOS dependency
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Rosen Penev" <rosenp@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260527003046.20031-1-rosenp@gmail.com>
+References: <20260527003046.20031-1-rosenp@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 27 May 2026 00:48:39 +0000
+Message-Id: <20260527004839.C541A1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-PCI_BIOS depends on 32-bit x86 so removed for that reason. The driver
-can be built on 64-bit as well.
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [Medium] The commit message incorrectly states that the `X86_IO_APIC` sym=
+bol selects `X86_32 || X86_64`.
+- [Low] Removing the `PCI_BIOS` dependency causes a link-time error on x86_=
+64 architectures or on x86_32 when `CONFIG_PCI_BIOS` is manually disabled.
+--
 
-The remaining X86_IO_APIC symbol selects X86_32 || X86_64 so no need for
-X86 which does the same thing.
+commit 50e741eebfa53ab7690287f752d2374b6c6ccd49
+Author: Rosen Penev <rosenp@gmail.com>
 
-Assisted-By: Claude:Sonnet-4.6
-Signed-off-by: Rosen Penev <rosenp@gmail.com>
----
- drivers/pci/hotplug/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+PCI: hotplug: ibm: remove PCI_BIOS dependency
 
-diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
-index 3207860b52e4..891a81bac5e9 100644
---- a/drivers/pci/hotplug/Kconfig
-+++ b/drivers/pci/hotplug/Kconfig
-@@ -42,7 +42,7 @@ config HOTPLUG_PCI_COMPAQ_NVRAM
- 
- config HOTPLUG_PCI_IBM
- 	tristate "IBM PCI Hotplug driver"
--	depends on X86_IO_APIC && X86 && PCI_BIOS
-+	depends on X86_IO_APIC
- 	help
- 	  Say Y here if you have a motherboard with a IBM PCI Hotplug
- 	  controller.
--- 
-2.54.0
+This commit removes the PCI_BIOS and X86 dependencies for the IBM PCI
+Hotplug driver to allow it to be built on 64-bit architectures.
 
+> The remaining X86_IO_APIC symbol selects X86_32 || X86_64 so no need for
+> X86 which does the same thing.
+
+[Severity: Medium]
+Is this description accurate? Looking at the definition of X86_IO_APIC in
+arch/x86/Kconfig, it is defined as a def_bool y that depends on
+X86_LOCAL_APIC || X86_UP_IOAPIC, rather than selecting X86_32 or X86_64.
+
+> diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+> index 3207860b52e42..891a81bac5e94 100644
+> --- a/drivers/pci/hotplug/Kconfig
+> +++ b/drivers/pci/hotplug/Kconfig
+> @@ -42,7 +42,7 @@ config HOTPLUG_PCI_COMPAQ_NVRAM
+> =20
+>  config HOTPLUG_PCI_IBM
+>  	tristate "IBM PCI Hotplug driver"
+> -	depends on X86_IO_APIC && X86 && PCI_BIOS
+> +	depends on X86_IO_APIC
+
+[Severity: Low]
+Does removing this PCI_BIOS dependency cause a link-time error on x86_64 or
+when CONFIG_PCI_BIOS is disabled?
+
+The driver unconditionally calls pcibios_get_irq_routing_table():
+
+drivers/pci/hotplug/ibmphp_core.c:ibmphp_init() {
+    ...
+    rtable =3D pcibios_get_irq_routing_table();
+    ...
+}
+
+This function is implemented in arch/x86/pci/pcbios.c, which is only
+compiled when CONFIG_PCI_BIOS is enabled (obj-$(CONFIG_PCI_BIOS) +=3D
+pcbios.o), and there appears to be no fallback stub in
+arch/x86/include/asm/pci.h.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260527003046.2003=
+1-1-rosenp@gmail.com?part=3D1
