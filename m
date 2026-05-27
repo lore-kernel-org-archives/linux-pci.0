@@ -1,149 +1,186 @@
-Received: from fhigh-b6-smtp.messagingengine.com (fhigh-b6-smtp.messagingengine.com [202.12.124.157])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 394B1330B3B;
-	Wed, 27 May 2026 17:03:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6F844D014
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 17:13:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779901428; cv=none; b=PtCB/I5T4kUJR705EqQyadCTtZXZmuefw7Y8J3hQ3dHM0Kc6LGfsezE/iGm+99L9qUen9b7u3fHuY9D2TeD0wyTMAHyhkn6GEvU0Xh/gvcs/uJf5yXDNQs21Rl8DEK2qI2SMlSSdhQpq+Qv5E+ket8RyH9HJmLE/IlU5r57sUCo=
+	t=1779902019; cv=none; b=foFqiiP5L2X3hO3CrmZYAh0AesRL2a5Y8CKF+ddj06sDIUWXZJbLzXO/h3NPsbZcj18goetCS/MNhXl+IcXz8E5xTHd6M90hjDlKdLpX3clofd85PfeIkp7KNKbxmOL/GXAeMoTdyWV+yw6XBzN3r13KsNd1/ACovulNkfGjnRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779901428; c=relaxed/simple;
-	bh=/xXCIqZg0D8XwLkgfozxgA+43ECEOp+EOCDyToXR2vU=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RtFNzwW/pR+K6a9/DdmsbHzw8T//UeASo6XGJd36z/MzKpfzZGgEFdi86kWglczVD324tqxhwNquK/rYVSq/nTBn2ss3JUZEbOH+3yrGUg5CEcubwFz2vyL5B4ID96sIU6EHE5hqSUHZ5ExvPspWRistYb9jDXPuHLdKj9BJFKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=AaxabphA; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=iNeyWCtn; arc=none smtp.client-ip=202.12.124.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1779902019; c=relaxed/simple;
+	bh=sUh2qgnb1rvjNwwYWycAZ+HszzMtG96sy5yb7iUgUrM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OXJcv6Jbl06g0tDe3CwR37acRGrEj/YpwYVG4X9NI9+1rQk2UW0kqt+r9FEuMsQdsoGIHQPzFT5C71u5MleImDpcoTh2uNgeYADGmeaPGJv+tkCS8x9IptzsNoWUd1DV5ou4WFQubGLZQ7KSG5SL07332Wwi9vQJKoRebGEw3sE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=kbPRowui; arc=none smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="AaxabphA";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="iNeyWCtn"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 8E1FE7A0073;
-	Wed, 27 May 2026 13:03:43 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Wed, 27 May 2026 13:03:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1779901423;
-	 x=1779987823; bh=W7sJHu3X3lqZ/+F+nLKQX33IaAFOhmRus2xF/6aombA=; b=
-	AaxabphAoo6w78R+giTZxGMumpkaYExgTgANkm0L7z049fjebaxLG34fGrEBRTwM
-	0mxx2Rmc/XguHJmNgAJRNfh9xnVYzOGLT5/6ICaVB4KZ5QugxDThviUsC5lXgzch
-	3nvGnR0ntdAiNEwb6EXszCLOmA0PoFrkuxWbpKaimGJu7fZMzDHtcBmTzrxUxCoU
-	EUj3A/rk1Q8VyYhjtX1jcNtuLkyfY1lHDckAZc7cdPEWn1QXO/Bq3M0lJkvW1bpW
-	2O4cuQs5wJ+5LOwCEMjB4T+YNw1WoHJufNx8jL+/iAAG7doB+Zi7HFwW+43AQeV4
-	6rSZKa8QucaleZHcd4kpnA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779901423; x=
-	1779987823; bh=W7sJHu3X3lqZ/+F+nLKQX33IaAFOhmRus2xF/6aombA=; b=i
-	NeyWCtnDfJBw0XfwXA+Kba/WTFuC7S8UHIh7oJzMJWzOfqAazyIvBfykWzA7ad0S
-	1uDDx5f8qr7Jux/Jp0WNTRJs3UzQ/59RB+qoZwjR5qgqqPocXG5BxiXoQBcN7Uo+
-	EXBRehRLY/PW/uoRSNTZSb7q3MLaW/mKUrtESTUe4uw0lRGkuqhzVwEDwZZPFd7J
-	JrzdSeddUpRJWNcz8DhV9MljEQALYGfbDFwdvpDoYxoVNHqoRgX3Ga4dwAA0Ha6g
-	ZRoPs2Lhs5RpLXVh4LE2en7nQTGhZ8/b+921ib0rCzqYpYP1+wREspJk7qyuyvSr
-	nJDR0DEA84czK18SkF7RQ==
-X-ME-Sender: <xms:7iMXal4seHozvvDvAA9MM-LrnGPT_6AD7eO9VZY8AeIY0kDWpPWqow>
-    <xme:7iMXaqcnQd6i3eyIY0ITia-eu54QBdiVFlQY0zPZNkRXwdaIXxpgIA0gaXXWhcPGR
-    hk6eb9bUYTj8gWVy3On0M5PH-IwtptOJHeahrUluO_fOHWyNj7VFw>
-X-ME-Received: <xmr:7iMXasH2_KW3WwEkhodc8P4Evg3OVr1J3tlDI_K3wVHIEQwXLIBzYFTii3g>
-X-ME-Proxy-Cause: dmFkZTGxcVZESYa1ffk92r9u7bA5CJRTGW5mmmN1n+HTRN9GHNe7b0bEFT1hm4KYChXyqK
-    9nz8ZYt0Fx5NUXMS8jZogLQNwBocT39E50Wwhz9qWYNH+79P69GN3uDGGXdgmSdzLm1r5P
-    bkgWmjCeL5D7oaTsJMN1wmLMkDfnvJaPsjo9Bg7dSmeAEWmgWYzPbiHM+hw4pojGhw7M7c
-    tErY5ufRoYQszzxMddGV/UwNpRRFXmpwO47lEHpXJy6H7e+Rwfv4TXluSH+L6B+C4V1K4q
-    Ti6nlCPzGKfjeQ75Bb/GW7vcsB4DNilTIAYDebmMu3+zwtKnWdEEVDr6wbjaVGnRnbbol2
-    P0A4hcvRhQ8rG11feiZNw4CKpev/4N6/CnNZJfSRCA8Pj5hqTnR6nlvhZer2/3xl4nwp2I
-    BXiW7qCYmtKj/8eWvQ9uZ47s/NjVW0fE+3gDKxmranb0qTfiEzERX1wFjZ2RodeOXtPByW
-    XJAihLMQme1uOfSXE4H0IWYRXxichWw2o6N56L5e3M0sZfDP1469YumJtbC4ge34SXsS5J
-    ocj6+FDqOmbXJYtBBvP9JIfINw8u76k4b/NbuAmgPGdmDT7wI/5SqI5a2rF+AIs+3q1kPL
-    wQm0C478OgWX5LS+0Ch9zSRBvbMtlYI5JCyzN6ry72wEnWsjPec7mTf0mKwQ
-X-ME-Proxy: <xmx:7iMXaq7VBX5LZI_dEfC6hxsiS3uwvkSpIC3WImdJkqseUI6_jw9-ig>
-    <xmx:7iMXavvWL9sCyz_j7015hc7UIAHZDyGnxxuV7p0KCF7oWQmnkVvcNA>
-    <xmx:7iMXau9IbgeRrjkf4NhDd5xYZuNC5I1MjCzwzxtt_Inbh9CStiUDIw>
-    <xmx:7iMXapnjyzMVxA3xzlhxj94f0o_BdY6G-jsscFnXna7OcWjM1_sKkg>
-    <xmx:7yMXamkyoqc9miOMUeqwiZXcioIbaKPYghwpx6v0DHhXoHqQtACSm5o3>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 27 May 2026 13:03:41 -0400 (EDT)
-Date: Wed, 27 May 2026 11:03:40 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Sumit
- Semwal <sumit.semwal@linaro.org>, Christian Konig
- <christian.koenig@amd.com>, Bjorn Helgaas <helgaas@kernel.org>,
- <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
- <dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>, Yochai
- Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
- alex@shazbot.org
-Subject: Re: [PATCH v5 2/4] dma-buf: add optional get_tph() callback
-Message-ID: <20260527110340.5547dd30@shazbot.org>
-In-Reply-To: <20260526144401.1485788-3-zhipingz@meta.com>
-References: <20260526144401.1485788-1-zhipingz@meta.com>
-	<20260526144401.1485788-3-zhipingz@meta.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="kbPRowui"
+Received: from pps.filterd (m0109331.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64R6bn3A2159480
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 10:13:32 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=mF5ddP6Uato8c/uzw9iXykGIYPHqrtpIex8OCXzcenM=; b=kbPRowui4ML0
+	YT114Vj1aVyNdnJJnjW848sZsqDgsQYxXf2af4lfe3yF9FH23tSklBFjrFv+o1wO
+	ucJMCKwm9TylaOZQY0BhdJmQkngp6DAyA55R8lVRUQsexRgIwmUgj+H/mCR04y4k
+	/GAEdHJqvYT6gQSouuHInLdwLedo/MVWAuYOky/jMujuavyWL/YFHal9G71FuvZm
+	tUxMcxI1AwosqBr40clgGXAGZXRDcjjOD1Jq/WacVJpLsQehhEaY4Ed2cuHf56jB
+	IOS9EOaVolYK/24AqeQ1zfm7jhCYBImKoLNKwH7NA+wFXFoDOJcUcF7lf4ehsFGn
+	OeD1ICtoLg==
+Received: from mail-dy1-f199.google.com (mail-dy1-f199.google.com [74.125.82.199])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4edugs37uj-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 10:13:32 -0700 (PDT)
+Received: by mail-dy1-f199.google.com with SMTP id 5a478bee46e88-304c46babe7so1945275eec.0
+        for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 10:13:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779902011; x=1780506811;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mF5ddP6Uato8c/uzw9iXykGIYPHqrtpIex8OCXzcenM=;
+        b=nbhL+z7ycdihUi+jc537fiHqvBYumGhOM/Hv2k+2nAiEDeT4wZkoYJrL+gt6r4keR0
+         VhO4tCAC6XptSHundOktMjju+QiI+38jnkbCjFUPfL6QJ/xlQm9J/+jjgVX2i2iR0PPi
+         Z3WrnJay7v96qVP3gKA/cKaRlhWbDX7HIjY3VFRDcqgQWLXfl9OakhDAFFtlPnOgw0Xl
+         mf9m/EhToI9lrEROMma7XwtMWEH9A914C6nn3TRLErNiJFQGOXnvZjDR1HNe2cjoT64A
+         Cd9jAat57FhPzHvMi+WK/XoT3aQsRm7MzecG6WFj3DkxZG6zFuAmBlYZPfvC1A7vqB3G
+         MIlA==
+X-Forwarded-Encrypted: i=1; AFNElJ+ae5UM9uuAnsgtgMBsTBAT3QTUtSfSP98b2LDmwcDRPPR7C5n4P4mOZQ/hggRdBsnqc1jyHcgCJ0w=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxJyCSAj3qZjF3S9VWwOS0S8M7exAaS/lfboNL3vDRpMJ/Vxzr7
+	zI2Neh8MdwkjtZyydfyj9nIPPDS+czJQXTPI7qw/Onctu6u0G8Cm6pB8iOqfdyxEDXSVi3ywt83
+	oupknFSeOzUxOITg1Q1RkYdkbBbMt9I5d1yvafjtcF49TBaYJN9uxWr2dsO1f
+X-Gm-Gg: Acq92OFKfzh+YCp97BkluUvWnXpfsQfEAmPt7EYLjQZQCtsqH9vm6u+QUcW0qPjzPvK
+	kg0XBgjscSHDUOd0+TfBvfQ7I4exhYQUq0WtAYGBNbUYGUKo6Icpk5wHqXt3IRG6ovuv8xdG3HF
+	6h3H4DCbE6HCil++qXdXK/OHMu+nVRdzsrlbDbagEvuvnfHzeBrU2ZNO2anYsqlHTvrF1v/Rs+y
+	bRO1EQjzJNbgRM9fP9utYyuSbAihhaGFyk/VKABKLohr3zoFD7MGXieGUD1Ptu4lj+A651osVvu
+	XsvVOId1B4qHiXWTmeyYfd7LnZi5RTSZKZKnn84vYr7wMIzObKm5HNv4xCdQjUBwXccfsmN0KLh
+	W4GSIOgx7AdMkzNoGEJjvVLcU4dAIe2zfFZI=
+X-Received: by 2002:a05:7022:913:b0:135:e814:d03f with SMTP id a92af1059eb24-1365fc7d7e9mr8777503c88.36.1779902011292;
+        Wed, 27 May 2026 10:13:31 -0700 (PDT)
+X-Received: by 2002:a05:7022:913:b0:135:e814:d03f with SMTP id a92af1059eb24-1365fc7d7e9mr8777489c88.36.1779902010729;
+        Wed, 27 May 2026 10:13:30 -0700 (PDT)
+Received: from [10.0.40.30] ([51.52.155.79])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-136b3706ad6sm9223289c88.13.2026.05.27.10.13.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 May 2026 10:13:30 -0700 (PDT)
+Message-ID: <1f1b9967-7182-401c-ac30-373b73216e81@meta.com>
+Date: Wed, 27 May 2026 18:13:25 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
+Content-Language: en-GB
+To: Logan Gunthorpe <logang@deltatee.com>, Alex Williamson
+ <alex@shazbot.org>,
+        Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+        Alex Mastro <amastro@fb.com>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+        =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Kevin Tian <kevin.tian@intel.com>, Ankit Agrawal <ankita@nvidia.com>,
+        Pranjal Shrivastava <praan@google.com>,
+        Alistair Popple <apopple@nvidia.com>,
+        Vivek Kasireddy <vivek.kasireddy@intel.com>,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+        kvm@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260527102319.100128-1-mattev@meta.com>
+ <20260527102319.100128-2-mattev@meta.com>
+ <843e8525-5927-45b5-a3e2-a5ec16234398@deltatee.com>
+From: Matt Evans <mattev@meta.com>
+In-Reply-To: <843e8525-5927-45b5-a3e2-a5ec16234398@deltatee.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=D4537PRj c=1 sm=1 tr=0 ts=6a17263c cx=c_pps
+ a=cFYjgdjTJScbgFmBucgdfQ==:117 a=2UbFsIa4v//lIgRL4kGwwA==:17
+ a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=7x6HtfJdh03M6CCDgxCd:22 a=wpfVPzegXHpEFt3DAXn9:22 a=VabnemYjAAAA:8
+ a=gXLdhW2jAAAA:8 a=1nsJja_hzN5yKYYIz30A:9 a=QEXdDO2ut3YA:10
+ a=scEy_gLbYbu1JhEsrz4S:22 a=gKebqoRLp9LExxC7YDUY:22 a=Dn9eIPSr_RzuO0KTJioD:22
+X-Proofpoint-ORIG-GUID: JV9bMmW0WkF7KSVG4xFUmIU05YVgXkvT
+X-Proofpoint-GUID: JV9bMmW0WkF7KSVG4xFUmIU05YVgXkvT
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI3MDE3MiBTYWx0ZWRfX9ACnFUhhtsZz
+ GTLCI3C7UkfBcuZIwoQqI3t7Re7vuQ48Y5jYBj2JKkIj/fLl6trh/VsF7fSZzo0BJs2veaXYC1C
+ GqEc5yNIYHYbWpx0qz+uj2QhJlyY+v0vsnwV0AWTuQ4Tz+rtJldWFollWbyNpyAzkWMQ3XQPBMu
+ sFTMA036k+bTog5s+rHKFfuf9bIBJ8K85m62dxn9JJjS1ydcODsRLPA6Cw9ji7e9D21RzkhtAAh
+ QVZ/NfBPGmaDDCeKU9P6hWwfERpq/YNpHYWckTZd/Q+qP+r7DLtx2Od/uiTSU+4dSsGU8yciEd6
+ O+W3e25QxJ7H9aJwprPq/0gH7NJ7yJVfiWelvufccJSbAoPQoC9MDVshJrvXyjgExEKLfDNvVI+
+ +ScLKqRZAqg11RGON7sBzwYSBdXRCblGxtGaS+OybnPUgfDX2Q+YbWTaiNwBnOtfcG9hMDodZoA
+ nKOEi7Mj8iiq7IszPnQ==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-05-27_03,2026-05-26_03,2025-10-01_01
 
-On Tue, 26 May 2026 07:43:54 -0700
-Zhiping Zhang <zhipingz@meta.com> wrote:
+Hi Logan,
 
-> Add an optional dma-buf get_tph callback so an exporter can return TPH
-> (TLP Processing Hints) metadata to an importer.
+On 27/05/2026 17:07, Logan Gunthorpe wrote:
 > 
-> 8-bit ST and 16-bit Extended ST are distinct namespaces in the PCIe TPH
-> ST table and may both be present with different values. The importer
-> passes its supported steering-tag width and the exporter returns the
-> matching value, or -EOPNOTSUPP if no metadata is available for that
-> width.
+> On 2026-05-27 04:23, Matt Evans wrote:
+>> The P2PDMA code currently provides two features under the same
+>> CONFIG_PCI_P2PDMA option:
+>>
+>>   1.  Locate providers via pcim_p2pdma_provider()
+>>   2.  Manage actual P2P DMA
+>>
+>> Other code (such as vfio-pci) depends on 1, without having a hard
+>> dependency on 2.
+>>
+>> A future commit expands the use of DMABUF in vfio-pci for non-P2P
+>> scenarios, relying on pcim_p2pdma_provider() always being present.  If
+>> that depended on CONFIG_PCI_P2PDMA, it would make vfio-pci only
+>> available if CONFIG_ZONE_DEVICE is present (e.g. 64-bit systems), even
+>> when P2P is not needed.
+>>
+>> To resolve this, introduce CONFIG_PCI_P2PDMA_CORE which contains the
+>> basic provider functionality to make it available even if the
+>> CONFIG_PCI_P2PDMA feature is disabled or unavailable due to
+>> !CONFIG_ZONE_DEVICE.  Users such as vfio-pci can enable their own P2P
+>> features based off the original CONFIG_PCI_P2PDMA (available when
+>> CONFIG_ZONE_DEVICE is set).
+>>
+>> Signed-off-by: Matt Evans <mattev@meta.com>
 > 
-> The first user is VFIO_DEVICE_FEATURE_DMA_BUF_TPH in vfio-pci, with the
-> mlx5 RDMA driver as the first importer.
+> Largely this looks good to me. I have one minor nit below that you can
+> apply or not. Either way, feel free to add:
 > 
-> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
-> ---
->  include/linux/dma-buf.h | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
+> Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 > 
-> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> index d1203da56fc5..49eb6ad644a2 100644
-> --- a/include/linux/dma-buf.h
-> +++ b/include/linux/dma-buf.h
-> @@ -113,6 +113,27 @@ struct dma_buf_ops {
->  	 */
->  	void (*unpin)(struct dma_buf_attachment *attach);
->  
-> +	/**
-> +	 * @get_tph:
-> +	 * @dmabuf: DMA buffer for which to retrieve TPH metadata
-> +	 * @steering_tag: Returns the raw TPH steering tag for @st_width
-> +	 * @ph: Returns the TPH processing hint (2-bit value)
-> +	 * @st_width: Consumer's supported steering tag width in bits (8 or 16)
-> +	 *
-> +	 * Return the TPH (TLP Processing Hints) metadata associated with this
-> +	 * DMA buffer for the requested steering-tag width. 8-bit ST and 16-bit
-> +	 * Extended ST are distinct namespaces in the PCIe TPH ST table and may
-> +	 * both be present with different values, so the exporter must select the
-> +	 * value that matches @st_width and must not substitute one for the other.
-> +	 *
-> +	 * Return 0 on success, -EOPNOTSUPP if no metadata is available for the
-> +	 * requested width, or -EINVAL if @st_width is not 8 or 16.
-> +	 *
-> +	 * This callback is optional.
-> +	 */
-> +	int (*get_tph)(struct dma_buf *dmabuf, u16 *steering_tag, u8 *ph,
-> +		       u8 st_width);
+> 
+>>   static void pci_p2pdma_release(void *data)
+>>   {
+>>   	struct pci_dev *pdev = data;
+>> @@ -241,11 +251,13 @@ static void pci_p2pdma_release(void *data)
+>>   		synchronize_rcu();
+>>   	xa_destroy(&p2pdma->map_types);
+>>   
+>> +#ifdef CONFIG_PCI_P2PDMA
+>>   	if (!p2pdma->pool)
+>>   		return;
+>>   
+>>   	gen_pool_destroy(p2pdma->pool);
+>>   	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
+>> +#endif
+>>   }
+> 
+> I'm personally not a fan of adding #ifdefs inside functions like this.
+> This instance is small and easy to understand, but it can quickly become
+> a bit of a mess if we start adding more features. I probably would have
+> created a pci_p2pdma_release_pool() helper which does the inverse of
+> pci_p2pdma_setup_pool(), it would be called in pci_p2pdma_release() and
+> an empty implementation would be provided in the case where
+> CONFIG_PCI_P2PDMA is not set.
 
-Why not make this `bool extended` rather than `u8 st_width` to avoid
-the entire class of errors involving an invalid width?  Thanks,
+That's cleaner, I'll do that.  Thanks for the review.
 
-Alex
+
+Matt
+
