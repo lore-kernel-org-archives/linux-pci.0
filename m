@@ -1,91 +1,57 @@
-Received: from fout-a8-smtp.messagingengine.com (fout-a8-smtp.messagingengine.com [103.168.172.151])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A4233630A0;
-	Wed, 27 May 2026 19:00:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72E843603EB
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 19:01:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779908451; cv=none; b=UuDWt0iSyYT4t5mGsqJDzCKzvuXyXFN/DvNLbQoNlDb76uaSQH9BAhJq9jsIwf4WWneLMNJmL4pgEOdamHhwf/BR4Nm3G85dhgTCGkFb0z1SlI9pdVFJlNGby4bmYBe4vdMinLS8aVEggdRh2orsCtJW6Pvuv7RGLaOEwnE6CPQ=
+	t=1779908503; cv=none; b=Y9XgHklK/p0sSMRKr1gzllTmcxOglO2avdPzAAaDjyB2jK6P9GjTaOI+j7tb7P5j5ihowSAlPH0p+kYyuhcuu5DyKf9r3H2Fycpb88JCFVrl52reLfzjxrvBVJn2aQGafWSfm769xGkRIVUjLE0xnB/0swuT2gOY1ws+HRPbKug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779908451; c=relaxed/simple;
-	bh=zVYumL1TQMBjpa94qtturgLFdRZdyaHrxiIPuQWN0Po=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GP24bTmypHl6zd4wIBPdxWA1dJUePAJTP9KTza2Q+NMWRJ/3yup6qiGSFWjNaDhaXDmmwx0g4tdIyHgMMSi7rnLmynjgho+IViZTlOcdXLKIbXeopERdD0tPFUzTvPICiZA6GfVHZKiQWwvm0CyVMncVXrHg+SBOibUEa03QtUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=M/oq2HzD; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=ji8XVn7J; arc=none smtp.client-ip=103.168.172.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1779908503; c=relaxed/simple;
+	bh=v5UdqIyL0wq4a7b6EsRSY5HKApx33R4+rTM+MHxs3Og=;
+	h=Date:From:To:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=miaHIsquUgiHAqeXwPqdpIfgKNTKB4tKnHuxdQiSPAeEkdTWEIvBWqIcbhTfopdg2JQPhz2fBoAR48Gvd4lyzDSZM7ZEj/l2L8Nd5+aa0ZDj8u/3ljgjdWAdfBj9OnrP5rVJo/ViygtfNWWo6JPpIUlqN7P3d45ZrxQVjsg7KK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JSrbm7xq; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="M/oq2HzD";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="ji8XVn7J"
-Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
-	by mailfout.phl.internal (Postfix) with ESMTP id AD614EC01CD;
-	Wed, 27 May 2026 15:00:47 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Wed, 27 May 2026 15:00:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm2; t=1779908447;
-	 x=1779994847; bh=dWbmHmsFhL1JO+fiI5q5drCmWA2QA+KCJc5JMtUlBmM=; b=
-	M/oq2HzDusPURhX3PIJQvFC8elfwFPJblxkoLAsvhV+5zowU6LCrF/RayghKfENS
-	n39TYd0JXcGOoGdYcwejVM9s7oN4VV7R7b8MFrRSaLXzGlKiXihojunP6epKfxMN
-	i9nYUZ/qg/Sxlq0xQzecX1sbbri8ULBozPIz/am7O3684p3VONsIERy2cB6qw83g
-	sJ0mdVsmsdeKAP14g672QEQAnjRsL0/incTsSFEbhPDGYXbyaR0aqqHFNf7kFt3Q
-	xCOKukR1nRtTR64hzEGxql2j1Fr7QIafGxoj2lbJVkOa9hqzoLbua78Fz1HTQfJa
-	UkLrAFTc0KLfC14JACS2hA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1779908447; x=
-	1779994847; bh=dWbmHmsFhL1JO+fiI5q5drCmWA2QA+KCJc5JMtUlBmM=; b=j
-	i8XVn7JYwhv53sC0PHW/A/GYHCDOuzw6RS1mDqkKrnbgrx8YIbaXEK25T5ILq5He
-	CG0U9A6997j8+I1lfIolQRgGAy0K6qSqtKRlTY7gKCGtfR4tesdKx2QL+pibpSgq
-	Zt9YGLuqw4uxw+MRprBvo1vkHzb9/DlswUOFe00SiAgwDss0lc+sMSRCH3kpMUQV
-	98wfZvvv3UUtJYz+18EU1UWuLKa/4E63PtO2CJBqQefdJjZWy4w/TNrbTAWtP6+2
-	DdZoDC45yGkAnRqu92du188czVZOdKbq40f3eeINIxUOmPbZbBKMnKTAMZKCljCg
-	Ptmd5Ni4G0kWM0AetkLiQ==
-X-ME-Sender: <xms:Xz8XarMOxMVYc8P7wGikv_5Skw5e_5UVYl1q0Y0F_fiIV6i5s5QXqw>
-    <xme:Xz8XatjjRHfD-SDnIxDxc_GiTQGU5RRsN9U_eIN3ApEu7RZeeeIVze8wEQknkzR1y
-    U1xWjY_qQMcomzZfrbKEKgiOK-G9ywjFJpsgsBaqdHGsnnYqHNZUQ>
-X-ME-Received: <xmr:Xz8Xap4d1CKb0fT04S8_EbsVfRNfmzwM0neIUzlbIEv3g2nb4EIcrWdA4Qg>
-X-ME-Proxy-Cause: dmFkZTE5WtTqMLkQXWrOLoLo7pE4j0s8oEtY8S5EKw1HdzVXgTrDfWP6Czu+t/MsztoF8+
-    crha1tfirvoCetGitPp1eWqmDGW+r/VUAROv464BItTXNIQReEVPlSbXtNbu1N/fI0E1nk
-    ujXyyLb9/htjvVvAvOKyuVGrqCso38H6hnJbYOUHe0Sh7FNhdlaHC3u6VRV2hNxPPUKAQi
-    FJJ0bUnKultMtPpcL5NORMRvE90xqPQVC8tvb09OD1a6VXD6SP8IXC9Cj9YF9AwMdZD/uF
-    NOLX/dNjjRu1tqXw4n5gXZ8ieR5dVxmzP1OMLXD44+iGeSjwE2F6fQpdpQzTjD8MIkyuXw
-    rJETSR72SLRFlIfjMxopSf3ILBynVZVBuIMeLLdnj65PcpK6djQTtpg4pJFpCcKLMHJVzG
-    X34OxntDhM6t/Blwh8QrNzSKmROlkl3ANkDbRfxmM8ULgwt6xWDAkGtdRIvSKjP3aMVlqK
-    hF5mjqO+T0bVSbIiDe+rP0MviTqH+N4yBsjjzFKnykSnioV8jIYBfKioSCyDB6MMIZIk7V
-    Q/Pf2SXPK1PUdPoNuEqAkWbWCq7SMe292XJJ7mUS+KZK24UJJhXaVi9wk02yhLWL7vBCpV
-    8ldj8DEX0ndddiSdITV8r6W2S6oqynyosbniib4xPJIjkWFldrif4Aq9K1VQ
-X-ME-Proxy: <xmx:Xz8XasfvR2ynvW8tkCdbOdxuSYAYoq3reazvIpLaW8MqAtk1yfFwQw>
-    <xmx:Xz8XaqBp0206C-vByNU_CcKsGhFZrWsNwLB44bywICdDFslBMZKo0Q>
-    <xmx:Xz8XajD377KiwNhqz0AtxqDeb0QL6b8sKY70D4NAlgpGLyDwqYaiBw>
-    <xmx:Xz8XakZ7fb6HYf1LWcJ_o5pZFOpDQepVweIh43Giquz05XhkFSkQVA>
-    <xmx:Xz8Xah3EVrvET6SjEVcfY8519Kvq8W1HTr4dxiaxNjvqJ7Jx3sjp7NKs>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 27 May 2026 15:00:46 -0400 (EDT)
-Date: Wed, 27 May 2026 13:00:45 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Sumit
- Semwal <sumit.semwal@linaro.org>, Christian Konig
- <christian.koenig@amd.com>, Bjorn Helgaas <helgaas@kernel.org>,
- <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
- <dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>, Yochai
- Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
- alex@shazbot.org
-Subject: Re: [PATCH v5 4/4] RDMA/mlx5: get tph for p2p access when
- registering dma-buf mr
-Message-ID: <20260527130045.704a4502@shazbot.org>
-In-Reply-To: <20260526144401.1485788-5-zhipingz@meta.com>
-References: <20260526144401.1485788-1-zhipingz@meta.com>
-	<20260526144401.1485788-5-zhipingz@meta.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.51; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JSrbm7xq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1779908502; x=1811444502;
+  h=date:from:to:subject:message-id:in-reply-to:references:
+   mime-version:content-transfer-encoding;
+  bh=v5UdqIyL0wq4a7b6EsRSY5HKApx33R4+rTM+MHxs3Og=;
+  b=JSrbm7xqYsRBFIf5OTFZr/17XtkXYLzgPysvwafbh0Y8gkL966RArH6w
+   0OUbd/99Va/jw1uUygViQ1Q96fK4YjwLfTEY0BKJJEQqRkZ11Sgcls01P
+   mzwXaj93za7pmj2fTcePyYvf05nHylhVaLmxHNk65ZcL5/RA3HeRoNaXD
+   du9ASbyew8MonL5euebVdWI0OTaU5MxbA45V2fjGLxCymXJqTgAftbYb2
+   E9KGe/xkR71TQ4SfXWA1ArcVICNxV2QKylDjmo2GVLwn1w9hVHqk1M3e4
+   t/ojQMRw/6XwiYkWYuRfEqpuqks6CIKKOkoZ3PYpxJ8jjWUZu8chp13qT
+   Q==;
+X-CSE-ConnectionGUID: 9vw2RaqiTxyQDuUJsc8F6A==
+X-CSE-MsgGUID: Y2YiRuBARGeso8h0vVwUqQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11799"; a="91055570"
+X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
+   d="scan'208";a="91055570"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:01:41 -0700
+X-CSE-ConnectionGUID: Wlj8v81yS3qRwJhwq7AaEQ==
+X-CSE-MsgGUID: qjHp7WcnTiOmeico8/n/Yw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,172,1774335600"; 
+   d="scan'208";a="280453685"
+Received: from patelni-desk.amr.corp.intel.com (HELO localhost) ([10.2.248.44])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 May 2026 12:01:41 -0700
+Date: Wed, 27 May 2026 12:01:39 -0700
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
+To: <linux-pci@vger.kernel.org>, nirmal.patel@intel.com
+Subject: Re: [PATCH v4] PCI: vmd: Add feature to scan BIOS enumerated
+ devices.
+Message-ID: <20260527120139.00004254@linux.intel.com>
+In-Reply-To: <20260522150829.5246-1-nirmal.patel@linux.intel.com>
+References: <20260522150829.5246-1-nirmal.patel@linux.intel.com>
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -95,292 +61,356 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-On Tue, 26 May 2026 07:43:56 -0700
-Zhiping Zhang <zhipingz@meta.com> wrote:
+On Fri, 22 May 2026 15:08:29 +0000
+Nirmal Patel <nirmal.patel@linux.intel.com> wrote:
 
-> Query dma-buf TPH metadata when registering a dma-buf MR for peer-to-
-> peer access and translate the returned steering tag into an mlx5 ST
-> index. Keep the DMAH path as the first priority and only fall back to
-> DMA-buf metadata when no DMAH is supplied.
+> Newer VMD  with device ID 0x28c1 has unique settings compared to its
+> predecessor where BIOS enumerates the entire VMD device tree and
+> assigns respective configurations.
 > 
-> Track per-MR ownership of the allocated ST index and release it on MR
-> setup failure, destroy, and FRMR-pool reuse. Release the ST index before
-> the MR is pushed back into the FRMR pool, and free mlx5_st_idx_data when
-> its refcount reaches zero so repeated allocation/deallocation does not
-> leak memory.
+> VMD configuration BAR0 carries over from GNR legacy VMD as the
+> mechanism to access the configuration space of the devices owned by
+> VMD. The size of this window is fixed at 256 MB, where each function
+> consumes 4 KB and every bus consumes 1 MB.
 > 
-> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> The shadow and scratchpad registers have been relocated from the VMD
+> configuration space to the VMD MMIO space in VMD BAR4/BAR5, otherwise
+> refers to as MEMBAR2 or MSI-X bar.
+> 
+> VMD MSI-X remapping enable/disable is no longer supported.
+> 
+> All the VMD driver code needs to do is to obtain bus hide range along
+> with shadow register values set by BIOS and perform a bus scan.
+> 
+> The patch also involves small refactoring of vmd_enable_domain
+> function.
+> 
+> Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
 > ---
->  drivers/infiniband/hw/mlx5/mlx5_ib.h          |  6 ++
->  drivers/infiniband/hw/mlx5/mr.c               | 86 ++++++++++++++++++-
->  .../net/ethernet/mellanox/mlx5/core/lib/st.c  | 28 ++++--
->  include/linux/mlx5/driver.h                   |  7 ++
->  4 files changed, 115 insertions(+), 12 deletions(-)
+> v4 : Updating vmd_set_msi_remapping for supported devices only.
+> v3 : Hard code configbar .end to 0xff same as probe.c; Adjust membar2
+>      offset to accommodate more registers in 28C1. Remove redundant
+>      IORESOURCE_MEM check in vmd_prepare_offsets_and_bus.
+> v2 : Using PCI features flag instead of devic ID and fixing corner
+> cases for vmd_remove_irq.
+> ---
+>  drivers/pci/controller/vmd.c | 174
+> +++++++++++++++++++++++++++-------- include/linux/pci_ids.h      |
+> 1 + 2 files changed, 136 insertions(+), 39 deletions(-)
 > 
-> diff --git a/drivers/infiniband/hw/mlx5/mlx5_ib.h b/drivers/infiniband/hw/mlx5/mlx5_ib.h
-> index e156dc4d7529..4ab867392267 100644
-> --- a/drivers/infiniband/hw/mlx5/mlx5_ib.h
-> +++ b/drivers/infiniband/hw/mlx5/mlx5_ib.h
-> @@ -721,6 +721,12 @@ struct mlx5_ib_mr {
->  			u8 revoked :1;
->  			/* Indicates previous dmabuf page fault occurred */
->  			u8 dmabuf_faulted:1;
-> +			/* Set when the MR owns dmabuf_st_index and must
-> +			 * release it via mlx5_st_dealloc_index() once the
-> +			 * firmware mkey is no longer referencing it.
-> +			 */
-> +			u8 dmabuf_st_owned:1;
-> +			u16 dmabuf_st_index;
->  			struct mlx5_ib_mkey null_mmkey;
->  		};
->  	};
-> diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5/mr.c
-> index 3b6da45061a5..8059b5e4da97 100644
-> --- a/drivers/infiniband/hw/mlx5/mr.c
-> +++ b/drivers/infiniband/hw/mlx5/mr.c
-> @@ -38,6 +38,7 @@
->  #include <linux/delay.h>
->  #include <linux/dma-buf.h>
->  #include <linux/dma-resv.h>
-> +#include <linux/pci-tph.h>
->  #include <rdma/frmr_pools.h>
->  #include <rdma/ib_umem_odp.h>
->  #include "dm.h"
-> @@ -46,6 +47,8 @@
->  #include "data_direct.h"
->  #include "dmah.h"
+> diff --git a/drivers/pci/controller/vmd.c
+> b/drivers/pci/controller/vmd.c index d4ae250d4bc6..7c90243b5ff0 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -37,6 +37,12 @@
+>  #define MB2_SHADOW_OFFSET	0x2000
+>  #define MB2_SHADOW_SIZE		16
 >  
-> +MODULE_IMPORT_NS("DMA_BUF");
+> +/* DMR BAR4 register offsets */
+> +#define SHADOW_MEMBAR1_28C1		0x2818 /* MEMBAR1
+> physical address */ +#define SHADOW_MEMBAR2_28C1
+> 0x2820 /* MEMBAR2 physical address */ +#define
+> BASE_ID_REG_28C1		0x2840 +#define
+> MEMBAR2_OFFSET_28C1		0x30d0 +
+>  enum vmd_features {
+>  	/*
+>  	 * Device may contain registers which hint the physical
+> location of the @@ -77,6 +83,15 @@ enum vmd_features {
+>  	 * proper power management of the SoC.
+>  	 */
+>  	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
 > +
-
-This doesn't appear to add any dma-buf namespace dependencies.
-
->  static int mkey_max_umr_order(struct mlx5_ib_dev *dev)
->  {
->  	if (MLX5_CAP_GEN(dev->mdev, umr_extended_translation_offset))
-> @@ -899,6 +902,63 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_attach_ops = {
->  	.invalidate_mappings = mlx5_ib_dmabuf_invalidate_cb,
+> +	/*
+> +	 * Newer VMD  with device ID 0x28c1 has unique settings
+> compared to its
+> +	 * predecessor where BIOS enumerates the entire VMD device
+> tree and
+> +	 * stores respective configurations including bus start
+> range and
+> +	 * shadow registers in VMD MMIO space in VMD BAR4/BAR5,
+> otherwise refers
+> +	 * to as MEMBAR2 or MSI-X bar.
+> +	 */
+> +	VMD_FEAT_USE_BIOS_INFO		= (1 << 6),
 >  };
 >  
-> +/*
-> + * Query TPH metadata from @dmabuf and translate the raw steering tag into
-> + * an mlx5 ST index. On success, returns 0 and the caller becomes the
-> + * owner of *@st_index (must be released with mlx5_st_dealloc_index()
-> + * once the firmware mkey no longer references it). On any failure
-> + * *@st_index and *@ph are left as the no-TPH defaults set by the caller.
-> + *
-> + * @dmabuf must already be referenced by the caller (e.g. via the umem's
-> + * attachment) so we don't re-resolve the user's fd here and avoid a
-> + * dup2() TOCTOU between umem creation and TPH lookup.
-> + */
-> +static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, struct dma_buf *dmabuf,
-> +			      u16 *st_index, u8 *ph)
-> +{
-> +	u8 req_type;
-> +	u16 steering_tag;
-> +	u8 st_width;
-> +	int ret;
-> +
-> +	if (!dmabuf->ops->get_tph)
+>  #define VMD_BIOS_PM_QUIRK_LTR	0x1003	/* 3145728 ns */
+> @@ -142,6 +157,7 @@ struct vmd_dev {
+>  	u8			first_vec;
+>  	char			*name;
+>  	int			instance;
+> +	unsigned long		features;
+>  };
+>  
+>  static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
+> @@ -365,6 +381,8 @@ static int vmd_create_irq_domain(struct vmd_dev
+> *vmd) static void vmd_set_msi_remapping(struct vmd_dev *vmd, bool
+> enable) {
+>  	u16 reg;
+> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
 > +		return;
-> +
-> +	req_type = pcie_tph_enabled_req_type(dev->mdev->pdev);
-> +	switch (req_type) {
-> +	case PCI_TPH_REQ_TPH_ONLY:
-> +		st_width = 8;
-> +		break;
-> +	case PCI_TPH_REQ_EXT_TPH:
-> +		st_width = 16;
-> +		break;
-> +	default:
-> +		return;
-> +	}
-> +
-> +	ret = dmabuf->ops->get_tph(dmabuf, &steering_tag, ph, st_width);
-> +	if (ret) {
-> +		mlx5_ib_dbg(dev, "get_tph failed (%d)\n", ret);
-> +		*ph = MLX5_IB_NO_PH;
-> +		return;
-> +	}
-> +
-> +	ret = mlx5_st_alloc_index_by_tag(dev->mdev, steering_tag, st_index);
-> +	if (ret) {
-> +		*ph = MLX5_IB_NO_PH;
-> +		mlx5_ib_dbg(dev, "st_alloc_index_by_tag failed (%d)\n", ret);
-> +	}
-> +}
-
-ph handling is inconsistent, why not use a local variable and only set
-the caller's pointer on success?
-
-> +
-> +static void mlx5_ib_mr_put_dmabuf_st(struct mlx5_ib_mr *mr)
-> +{
-> +	if (mr->umem && mr->dmabuf_st_owned) {
-> +		mlx5_st_dealloc_index(mr_to_mdev(mr)->mdev,
-> +				      mr->dmabuf_st_index);
-> +		mr->dmabuf_st_owned = 0;
-> +	}
-> +}
-> +
->  static struct ib_mr *
->  reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
->  		   u64 offset, u64 length, u64 virt_addr,
-> @@ -941,16 +1001,26 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
->  		ph = dmah->ph;
->  		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
->  			st_index = mdmah->st_index;
-> +	} else {
-> +		get_tph_mr_dmabuf(dev, umem_dmabuf->attach->dmabuf,
-> +				  &st_index, &ph);
->  	}
 >  
->  	mr = alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
->  				access_flags, access_mode,
->  				st_index, ph);
->  	if (IS_ERR(mr)) {
-> +		if (!dmah && st_index != MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
-> +			mlx5_st_dealloc_index(dev->mdev, st_index);
->  		ib_umem_release(&umem_dmabuf->umem);
->  		return ERR_CAST(mr);
->  	}
->  
-> +	if (!dmah && st_index != MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX) {
-> +		mr->dmabuf_st_index = st_index;
-> +		mr->dmabuf_st_owned = 1;
-> +	}
-> +
->  	mlx5_ib_dbg(dev, "mkey 0x%x\n", mr->mmkey.key);
->  
->  	atomic_add(ib_umem_num_pages(mr->umem), &dev->mdev->priv.reg_pages);
-> @@ -1377,9 +1447,17 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib_mr *mr)
->  	bool is_odp = is_odp_mr(mr);
->  	int ret;
->  
-> -	if (mr->ibmr.frmr.pool && !mlx5_umr_revoke_mr_with_lock(mr) &&
-> -	    !ib_frmr_pool_push(mr->ibmr.device, &mr->ibmr))
-> -		return 0;
-> +	if (mr->ibmr.frmr.pool && !mlx5_umr_revoke_mr_with_lock(mr)) {
-> +		/*
-> +		 * The mkey has been revoked: firmware no longer references
-> +		 * dmabuf_st_index, so release it before this mr can re-enter
-> +		 * the FRMR cache for reuse by another registration.
-> +		 */
-> +		mlx5_ib_mr_put_dmabuf_st(mr);
-> +
-> +		if (!ib_frmr_pool_push(mr->ibmr.device, &mr->ibmr))
-> +			return 0;
-> +	}
->  
->  	if (is_odp)
->  		mutex_lock(&to_ib_umem_odp(mr->umem)->umem_mutex);
-> @@ -1400,6 +1478,8 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib_mr *mr)
->  		dma_resv_unlock(
->  			to_ib_umem_dmabuf(mr->umem)->attach->dmabuf->resv);
->  	}
-> +	if (!ret)
-> +		mlx5_ib_mr_put_dmabuf_st(mr);
->  	return ret;
->  }
->  
-> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
-> index 997be91f0a13..8929c17c88bc 100644
-> --- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
-> +++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
-> @@ -29,7 +29,7 @@ struct mlx5_st *mlx5_st_create(struct mlx5_core_dev *dev)
->  	u8 direct_mode = 0;
->  	u16 num_entries;
->  	u32 tbl_loc;
-> -	int ret;
-> +	int ret = 0;
-
-Unnecessary change.
-
->  
->  	if (!MLX5_CAP_GEN(dev, mkey_pcie_tph))
->  		return NULL;
-> @@ -92,23 +92,18 @@ void mlx5_st_destroy(struct mlx5_core_dev *dev)
->  	kfree(st);
->  }
->  
-> -int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
-> -			unsigned int cpu_uid, u16 *st_index)
-> +int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
-> +			       u16 *st_index)
+>  	pci_read_config_word(vmd->dev, PCI_REG_VMCONFIG, &reg);
+>  	reg = enable ? (reg & ~VMCONFIG_MSI_REMAP) :
+> @@ -374,6 +392,8 @@ static void vmd_set_msi_remapping(struct vmd_dev
+> *vmd, bool enable) 
+>  static void vmd_remove_irq_domain(struct vmd_dev *vmd)
 >  {
->  	struct mlx5_st_idx_data *idx_data;
->  	struct mlx5_st *st = dev->st;
->  	unsigned long index;
->  	u32 xa_id;
-> -	u16 tag;
-> -	int ret;
-> +	int ret = 0;
->  
->  	if (!st)
->  		return -EOPNOTSUPP;
->  
-> -	ret = pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
-> -	if (ret)
-> -		return ret;
-> -
->  	if (st->direct_mode) {
->  		*st_index = tag;
->  		return 0;
-> @@ -152,6 +147,20 @@ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
->  	mutex_unlock(&st->lock);
->  	return ret;
->  }
-> +EXPORT_SYMBOL_GPL(mlx5_st_alloc_index_by_tag);
+> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
+> +		return;
+>  	/*
+>  	 * Some production BIOS won't enable remapping between soft
+> reboots.
+>  	 * Ensure remapping is restored before unloading the driver.
+> @@ -393,7 +413,12 @@ static void __iomem *vmd_cfg_addr(struct vmd_dev
+> *vmd, struct pci_bus *bus, unsigned int devfn, int reg, int len)
+>  {
+>  	unsigned int busnr_ecam = bus->number - vmd->busn_start;
+> -	u32 offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
+> +	u32 offset;
 > +
-> +int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
-> +			unsigned int cpu_uid, u16 *st_index)
+> +	if (!!(vmd->features & VMD_FEAT_USE_BIOS_INFO))
+> +		busnr_ecam = bus->number;
+> +
+> +	offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
+>  
+>  	if (offset + len >=
+> resource_size(&vmd->dev->resource[VMD_CFGBAR])) return NULL;
+> @@ -661,6 +686,46 @@ static int vmd_get_bus_number_start(struct
+> vmd_dev *vmd) return 0;
+>  }
+>  
+> +static int vmd_get_bus_info_from_bar4(struct vmd_dev *vmd,
+> +				       resource_size_t *offset1,
+> +				       resource_size_t *offset2)
 > +{
-> +	u16 tag;
+> +	u64 phys1, phys2, bar4_2840;
+> +	void __iomem *bar4;
+> +	u32 base_id;
+> +	u8 base_bus;
+> +
+> +
+> +	bar4 = pci_ioremap_bar(vmd->dev, 4);
+> +	if (!bar4)
+> +		return -ENOMEM;
+> +
+> +	/* Read shadow registers for MEMBAR1 and MEMBAR2 physical
+> addresses. */
+> +	phys1 = readq(bar4 + SHADOW_MEMBAR1_28C1);
+> +	phys2 = readq(bar4 + SHADOW_MEMBAR2_28C1);
+> +
+> +	/*
+> +	 * Read and set bus start number from Base ID register.
+> +	 * 24-bit Base ID register is part of 64-bit shadowed reqid
+> hide
+> +	 * range register and holds segment, bus, device and
+> function.
+> +	 */
+> +	bar4_2840 = readq(bar4 + BASE_ID_REG_28C1);
+> +	base_id = bar4_2840 & 0xFFFFFF;
+> +	base_bus = base_id >> 8;
+> +	vmd->busn_start = base_bus;
+> +
+> +	/* Calculate offsets like vmd_get_phys_offsets() does. */
+> +	if (phys1)
+> +		*offset1 = vmd->dev->resource[VMD_MEMBAR1].start -
+> +			(phys1 & PCI_BASE_ADDRESS_MEM_MASK);
+> +	if (phys2)
+> +		*offset2 = vmd->dev->resource[VMD_MEMBAR2].start -
+> +			(phys2 & PCI_BASE_ADDRESS_MEM_MASK);
+> +
+> +	pci_iounmap(vmd->dev, bar4);
+> +	return 0;
+> +}
+> +
+>  static irqreturn_t vmd_irq(int irq, void *data)
+>  {
+>  	struct vmd_irq_list *irqs = data;
+> @@ -711,6 +776,53 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
+>  	return 0;
+>  }
+>  
+> +static int vmd_prepare_offsets_and_bus(struct vmd_dev *vmd,
+> +					unsigned long features,
+> +					resource_size_t
+> *membar2_offset,
+> +					resource_size_t *offset1,
+> +					resource_size_t *offset2)
+> +{
 > +	int ret;
 > +
-> +	ret = pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
+> +	/*
+> +	 * Shadow registers may exist in certain VMD device ids
+> which allow
+> +	 * guests to correctly assign host physical addresses to the
+> root ports
+> +	 * and child devices. These registers will either return the
+> host value
+> +	 * or 0, depending on an enable bit in the VMD device.
+> +	 */
+> +	/*
+> +	 * For certain VMD devices (i.e. 0x28C1), BIOS places device
+> info
+> +	 * in BAR4 shadow registers to determine the base bus number
+> and memory
+> +	 * offsets.
+> +	 */
+> +	if (features & VMD_FEAT_USE_BIOS_INFO) {
+> +		*membar2_offset = MEMBAR2_OFFSET_28C1;
+> +		ret = vmd_get_bus_info_from_bar4(vmd, offset1,
+> offset2);
+> +		if (ret)
+> +			return ret;
+> +	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
+> +		*membar2_offset = MB2_SHADOW_OFFSET +
+> MB2_SHADOW_SIZE;
+> +		ret = vmd_get_phys_offsets(vmd, true, offset1,
+> offset2);
+> +		if (ret)
+> +			return ret;
+> +	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
+> +		ret = vmd_get_phys_offsets(vmd, false, offset1,
+> offset2);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +
+> +	/*
+> +	 * Certain VMD devices may have a root port configuration
+> option which
+> +	 * limits the bus range to between 0-127, 128-255, or
+> 224-255.
+> +	 */
+> +	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
+> +		ret = vmd_get_bus_number_start(vmd);
+> +		if (ret)
+> +			return ret;
+> +	}
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Since VMD is an aperture to regular PCIe root ports, only allow
+> it to
+>   * control features that the OS is allowed to control on the
+> physical PCI bus. @@ -784,38 +896,16 @@ static int
+> vmd_enable_domain(struct vmd_dev *vmd, unsigned long features) struct
+> pci_dev *dev; int ret;
+>  
+> -	/*
+> -	 * Shadow registers may exist in certain VMD device ids
+> which allow
+> -	 * guests to correctly assign host physical addresses to the
+> root ports
+> -	 * and child devices. These registers will either return the
+> host value
+> -	 * or 0, depending on an enable bit in the VMD device.
+> -	 */
+> -	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
+> -		membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
+> -		ret = vmd_get_phys_offsets(vmd, true, &offset[0],
+> &offset[1]);
+> -		if (ret)
+> -			return ret;
+> -	} else if (features & VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP) {
+> -		ret = vmd_get_phys_offsets(vmd, false, &offset[0],
+> &offset[1]);
+> -		if (ret)
+> -			return ret;
+> -	}
+> -
+> -	/*
+> -	 * Certain VMD devices may have a root port configuration
+> option which
+> -	 * limits the bus range to between 0-127, 128-255, or 224-255
+> -	 */
+> -	if (features & VMD_FEAT_HAS_BUS_RESTRICTIONS) {
+> -		ret = vmd_get_bus_number_start(vmd);
+> -		if (ret)
+> -			return ret;
+> -	}
+> +	ret = vmd_prepare_offsets_and_bus(vmd, features,
+> &membar2_offset,
+> +					  &offset[0], &offset[1]);
 > +	if (ret)
 > +		return ret;
-> +
-> +	return mlx5_st_alloc_index_by_tag(dev, tag, st_index);
-> +}
->  EXPORT_SYMBOL_GPL(mlx5_st_alloc_index);
 >  
->  int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index)
-> @@ -175,6 +184,7 @@ int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index)
+>  	res = &vmd->dev->resource[VMD_CFGBAR];
+>  	vmd->resources[0] = (struct resource) {
+>  		.name  = "VMD CFGBAR",
+>  		.start = vmd->busn_start,
+> -		.end   = vmd->busn_start + (resource_size(res) >>
+> 20) - 1,
+> +		.end   = 0xff,
+>  		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+>  	};
 >  
->  	if (refcount_dec_and_test(&idx_data->usecount)) {
->  		xa_erase(&st->idx_xa, st_index);
-> +		kfree(idx_data);
->  		/* We leave PCI config space as was before, no mkey will refer to it */
+> @@ -868,19 +958,21 @@ static int vmd_enable_domain(struct vmd_dev
+> *vmd, unsigned long features)
+>  	 * acceptable because the guest is usually CPU-limited and
+> MSI
+>  	 * remapping doesn't become a performance bottleneck.
+>  	 */
+> -	if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+> -	    offset[0] || offset[1]) {
+> -		ret = vmd_alloc_irqs(vmd);
+> -		if (ret)
+> -			return ret;
+> +	if (!(features & VMD_FEAT_USE_BIOS_INFO)) {
+> +		if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) ||
+> +		    offset[0] || offset[1]) {
+> +			ret = vmd_alloc_irqs(vmd);
+> +			if (ret)
+> +				return ret;
+>  
+> -		vmd_set_msi_remapping(vmd, true);
+> +			vmd_set_msi_remapping(vmd, true);
+>  
+> -		ret = vmd_create_irq_domain(vmd);
+> -		if (ret)
+> -			return ret;
+> -	} else {
+> -		vmd_set_msi_remapping(vmd, false);
+> +			ret = vmd_create_irq_domain(vmd);
+> +			if (ret)
+> +				return ret;
+> +		} else {
+> +			vmd_set_msi_remapping(vmd, false);
+> +		}
 >  	}
-
-Should this be pulled out as a fix separate from the feature added
-here?  Thanks,
-
-Alex
-
 >  
-> diff --git a/include/linux/mlx5/driver.h b/include/linux/mlx5/driver.h
-> index 04b96c5abb57..523a9ab0ae1e 100644
-> --- a/include/linux/mlx5/driver.h
-> +++ b/include/linux/mlx5/driver.h
-> @@ -1166,10 +1166,17 @@ int mlx5_dm_sw_icm_dealloc(struct mlx5_core_dev *dev, enum mlx5_sw_icm_type type
->  			   u64 length, u16 uid, phys_addr_t addr, u32 obj_id);
->  
->  #ifdef CONFIG_PCIE_TPH
-> +int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
-> +			       u16 *st_index);
->  int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem_type,
->  			unsigned int cpu_uid, u16 *st_index);
->  int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index);
->  #else
-> +static inline int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev,
-> +					     u16 tag, u16 *st_index)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
->  static inline int mlx5_st_alloc_index(struct mlx5_core_dev *dev,
->  				      enum tph_mem_type mem_type,
->  				      unsigned int cpu_uid, u16 *st_index)
+>  	pci_add_resource(&resources, &vmd->resources[0]);
+> @@ -998,6 +1090,7 @@ static int vmd_probe(struct pci_dev *dev, const
+> struct pci_device_id *id) 
+>  	vmd->dev = dev;
+>  	vmd->sysdata.domain = PCI_DOMAIN_NR_NOT_SET;
+> +	vmd->features = features;
+>  	vmd->instance = ida_alloc(&vmd_instance_ida, GFP_KERNEL);
+>  	if (vmd->instance < 0)
+>  		return vmd->instance;
+> @@ -1114,6 +1207,9 @@ static const struct pci_device_id vmd_ids[] = {
+>  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
+>  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+>  				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
+> +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_28C1),
+> +		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
+> +				VMD_FEAT_USE_BIOS_INFO,},
+>  	{PCI_VDEVICE(INTEL, 0x467f),
+>  		.driver_data = VMD_FEATS_CLIENT,},
+>  	{PCI_VDEVICE(INTEL, 0x4c3d),
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 24cb42f66e4b..2a8ebe7df92e 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2889,6 +2889,7 @@
+>  #define PCI_DEVICE_ID_INTEL_HDA_ICH8	0x284b
+>  #define PCI_DEVICE_ID_INTEL_ICH8_6	0x2850
+>  #define PCI_DEVICE_ID_INTEL_VMD_28C0	0x28c0
+> +#define PCI_DEVICE_ID_INTEL_VMD_28C1    0x28c1
+>  #define PCI_DEVICE_ID_INTEL_ICH9_0	0x2910
+>  #define PCI_DEVICE_ID_INTEL_ICH9_2	0x2912
+>  #define PCI_DEVICE_ID_INTEL_ICH9_3	0x2913
 
+Gentle reminder. FYI, I also addressed comments from AI review.
+
+Thanks.
