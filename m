@@ -1,123 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5C513D7A19;
-	Wed, 27 May 2026 12:32:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0AB3403EAB
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 12:36:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779885165; cv=none; b=WtzOiV+f2ycadOks19q2ej9ikMk1CMKSmyLRNonxo/Erd2sJ2QFH283EQT5WOxoqS5G3Bvh83IKOYv2ON52CzXK7fSpWfDwWug+vq9PfSy+RvFjUcAVQaIGrWz7GxAsrhfiHRIxMZq8Rj4JBjW6z2Ep2xsfqQXbeYYNAF0PW7MI=
+	t=1779885401; cv=none; b=LJmNAO0XiNwzPK5S/f7+d1Rk4K06Jf3IOZoOUWkJMI22KwU36vVaqwa1VLdjiaQTXlA0K5wQOZbp9k1gtvPOdfqPyzUZOktC+Gv+Wsf0fxrQnVW5lvJuCrZAIi/7RNvHdyGMBiTnporywz2HR7kmUSXPB+rsDmD7LZuF0LFgubw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779885165; c=relaxed/simple;
-	bh=OKoAmXzWtNWOD0pTDY8lNhx5nUHJXMymuDY1gIr3570=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=WlCZxbPfHokBddpMPFy1HN1XLxmMTr+LH16WwkfetSZeVWYwab4rjkBWmV0ScqFouulwtiCpPbzW8zrwNw/KzvcJi5t41UE4guDTQ7K2BjwDGuc4sbyc90W/LN7XCAteGgbHFDto8q08MqBjGH1XskNkvL+rHFdnBErd8j/b7tQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bMS/7GE7; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779885401; c=relaxed/simple;
+	bh=H7p6mpDtDLxmKvgOZ4pgS/ak1T+DvZzVyyf47SslWwI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mcpMmOQwVvx2Dx0bjo3Ixy4ocz0l9+97xE9Mv432VnCWv0WxPZ8DBRsaLqnNgMb8wDYu7Hp/B2pDNRTPlkzYZCfRSYOFHvOMkPlZbszUIppd1AH/qFSUNKzq0Vw2u8OLt1KfkeRibsP+rzI8LzZEhlpBZLDzHDxVuTl1L/uI/m4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=UVUIw1Pe; arc=none smtp.client-ip=209.85.222.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bMS/7GE7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7363E1F000E9;
-	Wed, 27 May 2026 12:32:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779885154;
-	bh=TLff9wAVxhvlfLxLLPW9TFL/YoJTIf8ieWrJEGUe7hU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=bMS/7GE7wLgb0nFEmbuJ9K/tk8nooRkW2tPTso2AmzUkXNYZAXs52QOL9rUBNIpwh
-	 Vr99VtQmbPlUYg3XivJAEVTp/dXo1j+MifuDyEZiZBWlHNlzz241HH109TmRffrHqD
-	 08/quz4Eb33s+RBaPSjh5jX3EwbpPvlEiv3w4xyjD3RRGMtfmGmqRs5/5WwQkxctXF
-	 QIah6VxT5Vlay2ZTjkyg8qI8A01+tc4WvBscQmXxX3afQ8wzOQwUD5SJi+V/B/SDp+
-	 cEgNLQyekXn7NlKUCRG3c3Zt/ri9g0OBVfywIf/IpMVmoLCUURmsVEGQV0jJG0VbX9
-	 JHJNARrQvMZTQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v13 6/8] vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST_CONFIG
- for PCIe TPH ST configuration
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Chengwen Feng" <fengchengwen@huawei.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260527094719.43886-7-fengchengwen@huawei.com>
-References: <20260527094719.43886-7-fengchengwen@huawei.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 27 May 2026 12:32:34 +0000
-Message-Id: <20260527123234.7363E1F000E9@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="UVUIw1Pe"
+Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-902deb2412fso1323914585a.3
+        for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 05:36:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1779885396; x=1780490196; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=oAXF5UZCW6iJvbxUWxjJToe/IDClMd9U7HBLuJfAyw0=;
+        b=UVUIw1Pe+iVgP2MaWntCCcmTVdFtxJ43P4b9vkG6V1hz2oZ71ktASAYU+aXvwRtFzI
+         4rmquspQgOIxfrJO7NE5Dfk+n3R9xiugHdCOzkWe7AYTGau3DVbRW89DDJrhC81sLaE+
+         o6a6B18gLyrs7UQieFJwpEBol3hnlgs0gxkWfow1CvLpCIRXlNPoMJCkG96es13xPOin
+         4d0BYlETpf3nX4upGpx0q00LdG5X8YdDbvKEf+fu3iB+XUkiBHhr4sI76mCB3WkEdpEj
+         PTk67x4NA2ZHuWq9h9KCgW/rVZvP8Ncl51og1pGtrBnuYvzZHf6c6yfaTHPsQzPzcR1n
+         17pQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779885396; x=1780490196;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=oAXF5UZCW6iJvbxUWxjJToe/IDClMd9U7HBLuJfAyw0=;
+        b=iH3tXPXCQ9qVjd8MVFV4+NxzSzOuVhpFYf6DEAoXOyNiGKMVqtSWuGj4/qLF/8Zrqx
+         QpVvsLuhvu/Eer3entNqH3QNfutAPJ4J08aNecjxEpLfG0cUWnZccL3EJv0SuBDXa6gP
+         wo2jnnUlM6FuEfbWCgHPWEzRZI1b3v5E8QUvg7lxfSHGXGVjZuZZZvTI1cxOcMTQUziM
+         EKkSNMKpYPQI8V6nA40ApI+S7TPs5Wz2STRT0XRo0YaNyt4ZLX+h52hGz4fYRhSEg8dr
+         nhBuGcgIGPIqksi3+isBohHh0jTHfDf5HWlu7kTo+YIywGHjMSY0YsKaUSiSyGJ5Q61Q
+         4KpQ==
+X-Forwarded-Encrypted: i=1; AFNElJ+KwI1aKo5NXWKYhXebDngYdeVEx0QnZobjYp793Bzko5bTYQg8B7u47Zazv3bPI2IqWMmjwzDghQE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzJhiILR/IhyOFlEHNkANqHdXSrfO45N/fpweQJ8LFg7+wfcl9u
+	ZsVkp1seS4SDK4icCI2+npjp8k2xUOHxytETh92moQ4k5/X7y679ahLLvUYQ9UIaHbU=
+X-Gm-Gg: Acq92OFBLTC+yWV44TgLmIdeXTJE4f6HvoKLp9Vo6fKQcWnrK2jm5K8ZqnM55IjFybm
+	I0j+RQltMT5ev6Hltz+Xheg2TFfp5eaJ+Ya/0P55ikPpXAjTWd4bPjdJzYF00/CwmHlmA7GDqjS
+	4cu4IKKvpan4ED1OiNVPNdiUhs5SGZmSix+m09dEzzEkiVHjjV4PtmHm2xvJ0pVT1vP3m7AyT9Q
+	o/7EVAlz9SvmQkvXTw4V9Vwj4w9X70e1PBTVkBwhjv9MQOkWAwkCAPdULrjseX2G8PnOX3Cm2jL
+	0aN3xcahgIjCe1rGGdbrkIUoSvfVHVe+djUdl4Sjhl67KU2G5xf7cr+qcVtFITgxo2ohq7GsJKG
+	mqJsqNWW4I3glVMe9fX2/vz9lv5VFdOLDdnoMsFj6kPAQN6jJOFanUNnv49UyiGehVzt4nCqkBB
+	/ErcJZ8e2j/+kBa+Z8Ov0Ml+mUj2tEzRXtpc3K/oEdkRErd9D9Y0+MMzdMPhNU7lZvezIXf0xQh
+	3lpTw==
+X-Received: by 2002:a05:620a:438a:b0:914:aaba:8d2e with SMTP id af79cd13be357-914b49336ddmr3211226285a.14.1779885395945;
+        Wed, 27 May 2026 05:36:35 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-914f8800e1dsm455621385a.34.2026.05.27.05.36.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 May 2026 05:36:34 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wSDUw-0000000EOYw-0lyZ;
+	Wed, 27 May 2026 09:36:34 -0300
+Date: Wed, 27 May 2026 09:36:34 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Cc: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+	Yishai Hadas <yishaih@nvidia.com>
+Subject: Re: [PATCH v5 0/4] vfio/dma-buf: add TPH support for peer-to-peer
+ access
+Message-ID: <20260527123634.GK2487554@ziepe.ca>
+References: <20260526144401.1485788-1-zhipingz@meta.com>
+ <a8cd01ab-d7aa-465d-bfa3-431f78f33ee1@amd.com>
+ <20260527121438.GJ2487554@ziepe.ca>
+ <ff247643-73e7-44e2-b3d5-8ac0a8efb871@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ff247643-73e7-44e2-b3d5-8ac0a8efb871@amd.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Medium] Mixing goto-based error handling with guard() scope-based cleanu=
-p.
---
+On Wed, May 27, 2026 at 02:23:46PM +0200, Christian König wrote:
 
-commit 77e99e8523577d196dfd91b6ec41bc5663f81d8e
-Author: Chengwen Feng <fengchengwen@huawei.com>
+> Yeah that's a good point, I should probably rephrase the question.
+> 
+> I'm aware of how TPH works by adding the extra ST to the TLP.
+> 
+> But my question is how is that useful to a PCIe endpoint? What is the effect of the ST here?
 
-vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST_CONFIG for PCIe TPH ST configurati=
-on
+TBH I've never heard Meta explain what their device is doing with
+it. At least it seems to be super important to their device..
 
-This commit adds the VFIO_DEVICE_FEATURE_TPH_ST_CONFIG feature to allow
-userspace configuration of PCIe TPH Steering Tag table entries. It introduc=
-es
-a shadow ST table with per-device mutex protection and an enable_unsafe_tph
-module parameter to gate the feature.
-
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-[ ... ]
-> +static int vfio_pci_core_feature_tph_st_config(
-> +			struct vfio_pci_core_device *vdev,
-> +			u32 flags,
-> +			struct vfio_device_feature_tph_st_config __user *arg,
-> +			size_t argsz)
-> +{
-[ ... ]
-> +	guard(mutex)(&vdev->tph_lock);
-> +
-> +	uptr =3D u64_to_user_ptr(config.data_uptr);
-> +	sts =3D memdup_array_user(uptr, config.count, sizeof(u16));
-> +	sz =3D config.count * sizeof(u16);
-> +	if (IS_ERR(sts))
-> +		return PTR_ERR(sts);
-> +
-> +	if (pcie_tph_enabled_req_type(pdev) =3D=3D PCI_TPH_REQ_DISABLE) {
-> +		memcpy(&vdev->tph_st_shadow[config.index], sts, sz);
-> +		kfree(sts);
-> +		return 0;
-> +	}
-> +
-> +	for (i =3D 0; i < config.count; i++) {
-> +		idx =3D config.index + i;
-> +		ret =3D pcie_tph_set_st_entry(pdev, idx, sts[i]);
-> +		if (ret)
-> +			goto rollback;
-> +	}
-> +
-> +	memcpy(&vdev->tph_st_shadow[config.index], sts, sz);
-> +	kfree(sts);
-> +	return 0;
-> +
-> +rollback:
-> +	while (i-- > 0) {
-> +		idx =3D config.index + i;
-> +		pcie_tph_set_st_entry(pdev, idx, vdev->tph_st_shadow[idx]);
-> +	}
-> +	kfree(sts);
-> +	return ret;
-> +}
-
-[Severity: Medium]
-Is it appropriate to mix goto-based error handling with guard() here?
-
-The kernel cleanup guidelines note that for a given routine, either all
-resources that need cleanup should be converted to scope-based cleanup,
-or none of them.
-
-Could sts be converted to use __free(kfree) to eliminate the goto, or could
-guard() be replaced with explicit mutex_lock() and mutex_unlock() calls?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260527094719.4388=
-6-1-fengchengwen@huawei.com?part=3D6
+Jason
