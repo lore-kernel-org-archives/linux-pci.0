@@ -1,159 +1,102 @@
-Received: from PH8PR06CU001.outbound.protection.outlook.com (mail-westus3azon11012032.outbound.protection.outlook.com [40.107.209.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C546F22A80D;
-	Wed, 27 May 2026 00:08:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.209.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779840495; cv=fail; b=eXspys5dZeoVZbqa1qNRKOtgPu3eOtKIimrLDAkOLIVnziaKKM5Ei0R1N9v5ruwLYrAI+A1okYiYXCbO2zqca17ZQPpMv5FifTtsaOGbKAPWqEbGAl6cGlzSW1Ead3/lk3VsvqJyxRk0jZ3j8nwGOFFJEMhcGE2MVnls7NBvG+g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779840495; c=relaxed/simple;
-	bh=xAkmQM4vEPRTjJHmQhC0+STEUO7jufuPuYgHx/B62p4=;
-	h=From:To:CC:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=lVRju41R8stpnrKUat9IdtQFSzGlxfXVKwfHSr0eLsiFNr1ZMnya+7GPEabQPWAa2rNoW4jIcPBT0akTUX8vActrr3k8ilLTvz4/vDm1XHP4/UQP0DPPjDPRkU23Q2tOe8fIjqEwL5Y30LvX7V8lpfXk+HHFH1XuVntTXnAMFkw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=bFQJZ9D+; arc=fail smtp.client-ip=40.107.209.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1788E23EAB2
+	for <linux-pci@vger.kernel.org>; Wed, 27 May 2026 00:31:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1779841869; cv=none; b=pQj6JE+GzQnM/GoZiEgMiXeuRnThmQC9Y5OXW6XhQm+eAe9wUXTR/jrUbe3Y+lF0Ucjql9+l+G3k6RsV+Dc9I8AH3xZrZuaopxPiDrLB2SS0q59s0/Fos1mMnU3m1YMnnjmq0CWjGxNZZmTlNo2LbRfEZp9Ie/KmRFDEYxZwej8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1779841869; c=relaxed/simple;
+	bh=56hZR2esecc8IXvQ6LfJWlb7Dw4Vo8ZEHwkjvgsTqBY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WWD9BeA7xqnc1TCBc33ikdVLhp4kyb4HOi7INqUg9Q/jy8qSr5YEE4gFoOx3NR/oLioIKyCYgGhnNe14CYE5RsWUBFqR6hhbNsMVjeQ/VeujURC4uHbRNy2P6+MKt8MKi0xRe+leaguUlFHJomrvzHie11g3A4XjjkhNPMpx+04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=r7v2v923; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="bFQJZ9D+"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=TvnJhlt0qblvhBg200I46N0xQwxD2v0R8Qzi5L1lIxgUE/UuSqqepZRSWbolNWCqCm//NaQMeCBuVJxQ2j4FthyO3t9x52odnX5bete225nYguWv3G+iLc5VzX1ltq8ncfAOwCXAilDeZqoLs3ii+OYZ2bkXFH77A3xugc1hHN5clVcglwlb6u85EJD5rzOSO14Os0aBIcuSyr5eFcGwE353zGQ0cvvENJV6/jiaNImXl6yuzhtNx+P2EDbOaMUpEHrWSvIxdP5VCzks1IXLI5wc03Ey4Pqpu4G8tS8XS/XmMDOQRrj4HYV1N5bZf8W+RJMTHVQy751ZPxVTFidwOg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5785gYNiNXKc4yZTEnKc/KUeIkEu1/HCMcfPzjKnhDw=;
- b=Smmzih13dZWqN7zztkT9Flcwu8uKn4WmDf8fYpxzxeNLPGDHbR3rewNFqIacoAgv0S5JBdWPtIT1t9BTYn+rSLj6HEV+Cs0ufua2h36lgERr/y0oQIiYlmuN7kyUufwTTy7vWnXWLyavwsg8oqxZvWKh5TVRp8pQIOh0JPPEyAjY/syNlahYr7Pwll7N4Gk2r8sGUAGCYsLTSeSNTpD24NoG/X/Nlbt4QkQlaVQGSysR9CYN9Rq6kLSt95gyPeu1R9zajiI62QHWEFIeZ/GDLwFxSvuZe3VPr6/0gJXVV6mqPKTwz7DECzUAIK44qId2GHKG18tpvJqBRWZWrwPGig==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=lists.linux.dev smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5785gYNiNXKc4yZTEnKc/KUeIkEu1/HCMcfPzjKnhDw=;
- b=bFQJZ9D+DsyB1s4ayz225P3pKCxUHqLzFes3YhgoVuh4gaelNrqrrxD3TWm4Qz50iT/CE9N3NCPqqnQBCbnHMtRfz4u3jpSy95GwLJEJqPyx25fDwmyXglO9LWzjogOjN1NVPjivOK8t2901CjqS4+47VwDljggHXUAxchl9L9s=
-Received: from SJ0PR03CA0096.namprd03.prod.outlook.com (2603:10b6:a03:333::11)
- by DM4PR12MB6640.namprd12.prod.outlook.com (2603:10b6:8:8f::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.48.20; Wed, 27 May
- 2026 00:08:04 +0000
-Received: from SJ5PEPF00000209.namprd05.prod.outlook.com
- (2603:10b6:a03:333:cafe::84) by SJ0PR03CA0096.outlook.office365.com
- (2603:10b6:a03:333::11) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.71.11 via Frontend Transport; Wed, 27
- May 2026 00:08:03 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- SJ5PEPF00000209.mail.protection.outlook.com (10.167.244.42) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.71.7 via Frontend Transport; Wed, 27 May 2026 00:08:03 +0000
-Received: from localhost (10.180.168.240) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Tue, 26 May
- 2026 19:08:03 -0500
-From: Nathan Lynch <nathan.lynch@amd.com>
-To: <sashiko-reviews@lists.linux.dev>, Nathan Lynch via B4 Relay
-	<devnull+nathan.lynch.amd.com@kernel.org>
-CC: <vkoul@kernel.org>, <linux-pci@vger.kernel.org>,
-	<dmaengine@vger.kernel.org>, <Frank.Li@kernel.org>
-Subject: Re: [PATCH v2 07/23] dmaengine: sdxi: Allocate administrative context
-In-Reply-To: <20260513022009.22A3EC2BCB0@smtp.kernel.org>
-References: <20260511-sdxi-base-v2-7-889cfed17e3f@amd.com>
- <20260513022009.22A3EC2BCB0@smtp.kernel.org>
-Date: Tue, 26 May 2026 19:07:57 -0500
-Message-ID: <874ijt90ki.fsf@amd.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="r7v2v923"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-837b39eb078so7722723b3a.2
+        for <linux-pci@vger.kernel.org>; Tue, 26 May 2026 17:31:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779841864; x=1780446664; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=/XFpz0HlR/MR311tqNY67oX2GF6bZeQSkrGf+Ws6Afw=;
+        b=r7v2v923wf1FHQAR0uoS/VneFvUzHxyHlJDoonk1FA4ssc4gxkAzd+toCuR9LxXtAQ
+         jYgsxuoy0AP9QLN3K5l8uzunAZbmwwoYAksTWMHMSP8QlZ002DeoR2IO5JGVd6B1gf+F
+         clZHeqEdyWyDU4gxfJ+4RaqHIo4IsnRER2Ck6GdsxyZp789xM4Ly5/aeAQyQm46qfQ2X
+         L/0Al9sQNW5Q9i/xfte6chcpZYajVNnQrp7gh8Q35obpWWE+aTq4/3D6CSZP5Lk7a4HR
+         4/XfdrJSAzEUWCFQbk2cz0Py0kP4R9U79/yLA5/xsKQVKv1Tuf8Kpcg2QRe9/fYCYTsE
+         bw2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779841864; x=1780446664;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/XFpz0HlR/MR311tqNY67oX2GF6bZeQSkrGf+Ws6Afw=;
+        b=ksczaWsT4D06I1d+lDbsQQ9T7BFYd2R0/ElnxGuurXFe720q3a/l0vxsba9X6/WUJq
+         mw+kX8b5nwUluCw6l1GEJFnb6XOadESwWegacfgzRviDOEcteKGEYmfovd6FF0sYgXz/
+         f9Ib8GL7CZfl2WEgBLPq0Fx5Lz+dmgeLwHurBpB/xYwTWS3rcTFFI9wugyynH6m8OGPk
+         qu49M57DEzuJ0LzF8aWQ+AiQeR23apB9b+ZfAkou1jCAxJ4BMynZnN1Eq4kqESdylpwD
+         2EHbi4uvcdY53oYWsq03cc+4jY6bdyXrB/nsYSvikYBbGA0Oo0NxV3jXcFzpm3TrWu4F
+         hFnQ==
+X-Gm-Message-State: AOJu0YyXWw44MQwEO7BRWgY7bEW6kTizceD/N6gY3AlvjfCX9mPnUPfR
+	aQplMF4Odjo/XluN2+XmZNFb9ErUvr2eH3OSvWb0zQtNVci1yq8EJXwXG5Uxrg==
+X-Gm-Gg: Acq92OEmi3FuTp8aQAqADpDA+8mvCoqf4pwnD2xWDIz+HOYAfQ6rW7hBW/0a3w8g/lo
+	mOk8zZJlQJoRc/um67o8fPptv5Rix3QVbVdIrCScJYLi9yg4+IK1MBJBbHXiLIZOdOrIyZL5J4T
+	7Y1bxkBAswOd4FfHZrfsXcG/xfBmKVOEo1CqIwleL04HQHl64HdezUsHRIhE9MM+UAl776cTPfq
+	SURfnW139H2kbwNsAxIISkiy9dpf1pnrv2D4KY8S9KtuxoMczSNFT6sT9gdOjQpIrVvE+H19Hfe
+	aN6ttFRodvMgxrDlYpXnVctAkENgRvM9cVqlthcB+qeBfF7Aj8HMcIOGSEDsiugN0nAQFCGKURo
+	TIwb0PE9XB2mYfWc+L6xI91JdeckB9rDAmP3PgE+J6bZpvkX0WLwpLslvhMLOM+hlriwzVuXUj8
+	hV6CZn57Zk83iPxV+h04DbNwDnk7zFwUnE7uTM6V5w9S4e/guZR34Lab0C7nTYP41j6hYnksDqT
+	TCdljtM7jUfXcn5XrqakAyFZyEPZgZA+W0=
+X-Received: by 2002:a05:6a00:3003:b0:82c:d986:e917 with SMTP id d2e1a72fcca58-8415f56374bmr19768382b3a.22.1779841864209;
+        Tue, 26 May 2026 17:31:04 -0700 (PDT)
+Received: from ryzen ([2601:644:8000:5b5d:7285:c2ff:fe45:8a32])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-841d70df178sm477219b3a.42.2026.05.26.17.31.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 May 2026 17:31:03 -0700 (PDT)
+From: Rosen Penev <rosenp@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] PCI: hotplug: ibm: remove PCI_BIOS dependency
+Date: Tue, 26 May 2026 17:30:46 -0700
+Message-ID: <20260527003046.20031-1-rosenp@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
- (10.181.42.216)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ5PEPF00000209:EE_|DM4PR12MB6640:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6bccc2d3-563d-437a-957d-08debb840567
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700016|376014|6133799003|11063799006|4143699003|56012099006|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	BaK8UhjFkXDvN9xyraX7TKFwsZa1JWwtvVoFv4dpqIVtsgAe6BN+qznpg4T33xPnecG/Ou3bmPXXBNFQDcpzHFfIkxG3KbR4i1rB6bWDuRdmGAILPf9uLYMCauXjE0o9Czh8W/nko9j9AWafsPYuAs2mIxNd5+TysTrlstyWXd8+JXYHk9uavzg7rcoUdP7AZ9EdjCf2MVf/FKtZ+j32k5iIhAI9jHkTrzrVyxAYCUkn0pJfT/kzJ7PD58kIs8Wn8fQz7gI0OWO9InKIMmSfY8bSkrBXPVj+RUgEFvFWnEHrqmFm15Z71eCvg/Y/bH640Fzk41p3vxdZ1vHqKXO1oyo7GHjlWWVrSZpXEkfTMJiYryKm8CNyL8i+k0MI55n3MABK6AWRMYiVhHVgQSsVc9YVl0bKilmXN0onCJx8dXOGzAoUMu3362f5qsRRNajxQM0YzPElLz8ZxV4RPtTOzO7tDaFcr3xyzhMcynilAwc3IPPOF2k4M8f4n1v55+9C1445Y7oKSeIolVtQlzXlk6DGVx4Vmi64yydeuYHL6nrNELyiVv5UFXVi9LLOGvG26qHkRFtdKH/6iVFpbnDqNIyCe+gGJUI23hcxxRrTDpCLB9WDxV4CkB57zCvyjLbEez+0ikMz08N+G59xe6rMD4nZcHr5d1RTUpaMQrOlTzw=
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700016)(376014)(6133799003)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	PRa/6NkCu7iMS/zAZxJTSVYs2laDNCvrZbcFWGPcAvLWuHO1wTowkRIPhy+wU7qqKN+IYoW6tTsABhkKb9A5Euq78gi2jP0zY25oRaYQmhFzO05Z7gKv5blFyeFGM99bnChKVLj2kzMOx7Mcw0ZGkZzR7i2cLIIobre/0W4/uWaeuEwvLuDiawU0FFO7VzWn1Kznh86ZGkRx9Awj5HSvE6GZS8jJVozlRKrSHZduSR2woKPt5XxsH+5ZhxWvNjZU/CNFT3rWzx8ezz1B4P2sGrO8JQ6cyuc+Y6A6tO04yjpuGQtBFTtzYTjC7ajfEVTwu72SLr2TW0oOdmf/x6dSPeTP3RUStlxaaf/XPDRT/UQbVe3pBe4atAOCcgDg4WC38OB+0yNY1LuvniOnnah+73tkpmCJ+VgnlndYnS4EwJYOVHUWVWh7bB7gY+HRK4Fz
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2026 00:08:03.3286
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6bccc2d3-563d-437a-957d-08debb840567
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ5PEPF00000209.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6640
+Content-Transfer-Encoding: 8bit
 
-sashiko-bot@kernel.org writes:
+PCI_BIOS depends on 32-bit x86 so removed for that reason. The driver
+can be built on 64-bit as well.
 
-> Thank you for your contribution! Sashiko AI review found 1 potential issu=
-e(s) to consider:
-> - [High] Incorrect error check for `dma_pool_zalloc()` allocation using t=
-he DMA handle instead of the virtual address.
-> --
->
-> commit 67ceee55512586a3fbe30b9f642ed7c90819e736
-> Author: Nathan Lynch <nathan.lynch@amd.com>
->
-> dmaengine: sdxi: Allocate administrative context
->
-> This commit creates the control structure hierarchy in memory for the
-> per-function administrative context. It uses devres to queue the cleanup
-> since the admin context is a device-scope resource.
->
->> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
->> new file mode 100644
->> index 0000000000000..27821cfaf0311
->> --- /dev/null
->> +++ b/drivers/dma/sdxi/context.c
->
-> [ ... ]
->
->> +/* Allocate a context and its control structure hierarchy in memory. */
->> +static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
->> +{
->
-> [ ... ]
->
->> +	cxt->cxt_ctl =3D dma_pool_zalloc(sdxi->cxt_ctl_pool, GFP_KERNEL,
->> +				       &cxt->cxt_ctl_dma);
->> +	if (!cxt->cxt_ctl_dma)
->> +		return NULL;
->
-> Could this incorrectly treat a valid allocation as a failure?
->
-> A DMA handle of 0 is a valid DMA address on many hardware platforms and
-> IOMMU configurations. If dma_pool_zalloc() succeeds and returns a DMA
-> address of 0, checking the DMA handle might falsely trigger this error
-> path and return NULL.
->
-> Should this check the returned virtual address (!cxt->cxt_ctl) instead,
-> similar to how the subsequent cxt_sts and write_index allocations are
-> validated?
+The remaining X86_IO_APIC symbol selects X86_32 || X86_64 so no need for
+X86 which does the same thing.
 
-Yes, this is a legit bug likely caused by a code completion error on my
-part.
+Assisted-By: Claude:Sonnet-4.6
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ drivers/pci/hotplug/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
-> --=20
-> Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260511-sdxi-bas=
-e-v2-0-889cfed17e3f@amd.com?part=3D7
+diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+index 3207860b52e4..891a81bac5e9 100644
+--- a/drivers/pci/hotplug/Kconfig
++++ b/drivers/pci/hotplug/Kconfig
+@@ -42,7 +42,7 @@ config HOTPLUG_PCI_COMPAQ_NVRAM
+ 
+ config HOTPLUG_PCI_IBM
+ 	tristate "IBM PCI Hotplug driver"
+-	depends on X86_IO_APIC && X86 && PCI_BIOS
++	depends on X86_IO_APIC
+ 	help
+ 	  Say Y here if you have a motherboard with a IBM PCI Hotplug
+ 	  controller.
+-- 
+2.54.0
+
