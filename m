@@ -1,109 +1,104 @@
-Received: from smtp-relay-canonical-0.canonical.com (smtp-relay-canonical-0.canonical.com [185.125.188.120])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A93A30AD15;
-	Thu, 28 May 2026 03:30:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.188.120
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C573D2FE05B
+	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 03:41:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779939006; cv=none; b=IUFYarTpcMwwKPpPICwA1jK3f1R4OXlXFhxbspn+1WSGqWpUhozd/EGYi9eUuakRj/sliZuf2Vz+f+0Yaoe6hedDl4KD9APrFqqzk6j7gGLjFMGjgV33zlJDMw81kBrJZfknegFAxjTE1/eXSQTKSjo/xiRpWKwi4t8GcEkqHPs=
+	t=1779939673; cv=none; b=gMd0eeaXguHb/gKBy+gaNSHlhe+gDse7QarK4YvvW0CS2zamTbC9hQF8Ot2zoOxGhVVkp+bWmRNl13rws3+W/AJQ4e28KxKc7q4QYTZIJCoR483RTj/+JMA+8r/DC04wzx+PF5I57a7A9fE4EkC3Y2gVjSkDPVD5zSwSa864uGM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779939006; c=relaxed/simple;
-	bh=UcfvJwpMxNQoHYDIJKCPXcxcMS04xsdCX2xRVZHpQLE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=E4m6Kzcg8TK2IgflfFChSJ7UsAm1iAR1QKPCISlNUV4LfGG4pufLvfQspPWg1yV7R+KEjvW5P40CD9+c4inUuaL0kVEyeq3F9Qfsc4VLi1i1kbkIK9h2O+cX9yZjfxE5g7w9SrllNtGUmONlQaaUEZVxb5G/NHKOz+1SviaN1r4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b=f2V9wwtT; arc=none smtp.client-ip=185.125.188.120
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
+	s=arc-20240116; t=1779939673; c=relaxed/simple;
+	bh=SzEEPoVvoARGS/qcdE1RCai9UElINv1jJqvYAVj8UXk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=RgBwX1LsWD+Q0I+roq0biM56kRgTtbVcwE/TgqkHYO6lQcrBvq3oOWbKWV+UoO8vYtPnmogk6+aX5DZTftotqFHj+OrRHAGkJwRJllgfu0jA4svV0bMUVbX5SrzqoNcqiQkYFAVdZpabBEc/nuSi7qAxYjj3STlssiEQfti85Vs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RuZz3oYX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key) header.d=canonical.com header.i=@canonical.com header.b="f2V9wwtT"
-Received: from localhost.localdomain (unknown [10.101.193.199])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id D0A783FB50;
-	Thu, 28 May 2026 03:24:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-	s=20251003; t=1779938669;
-	bh=lYSQ0BTYVGmf/Hu1BSADR2oxIBwOTwCgiaAujfeQhPE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version;
-	b=f2V9wwtT6aT+2iG3y2D9NlG3kDInXxyavIfJWYp3NshQTgqizOFqYv2zkx/qXNH8g
-	 t5KLM96uS0aJDRnBdDk13gaZQMimteJ/QxKL5V+Iq/M1Rs33uVKsSR6v90C6ZYYekv
-	 oOu35GrqZWpWzxYuNaAW94v41YFM61DCGGMcFxEm363mNBC2LGjByncrwgmbMYV8gk
-	 AKO/9pIncoAL0PrJreovMsM1I9oC4oi+HjAX429yljSDmtzYdoOb1UE71QJwhd+oAV
-	 dsYQ35++Bt/hlJjMzW1gDEMD0uZm/9Xh/Q0cAif5Ph0Soqtd2QldDmtt7w59AbwHGz
-	 DQ4UpGKb4lS5DDo8NuAoFtqBg9rXfO07QK8nuZOoQ4JH6n+4mZF59I8dEhxNt3jKwP
-	 UWMFDxSRESj76IxafVg/HkoWurIpPx1E1XtJqwYGYcvPNRj5OuEXOjAGrkzvpzaRtg
-	 iIN1c7W06/diJxSRE3h+LpkcKgr+FdMfP2kIx8U2L2fab+l4ZhOrKTtky70rPMmI7P
-	 DEwjMlGx1K1VbQtJ6EEMWL2uLzPTnwucbezviaIjPlLAur25dVruAd5NTtWHFtd8eU
-	 edipV9AL5/2PyWkQwFH+QxxDFPUy74Kt+Y+iHC0kg+O6dHpiqNBODuLpYMguMRIypI
-	 zfwioAx55iHVBHH/FgjzfkKs=
-From: Max Lee <max.lee@canonical.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	acelan.kao@canonical.com,
-	Max Lee <max.lee@canonical.com>
-Subject: [PATCH] PCI: Mask Replay Timer Timeout for Realtek RTS525A
-Date: Thu, 28 May 2026 11:23:47 +0800
-Message-ID: <20260528032347.644365-1-max.lee@canonical.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RuZz3oYX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC29B1F000E9;
+	Thu, 28 May 2026 03:41:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1779939672;
+	bh=xkf4ytNH2mcUDwxSp1Uj0lVw/UhwAnwx8SWaQ8oDtII=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=RuZz3oYXJlaZ/+iTU9oi/jkwczXHuvN4p5bJmXPsd1AH3qfLTD2gkJO1RvfGGaxvO
+	 XdZJA3pV6GCpWAuZwsWNr0z3VpXT2lhmQW+M+Ff7xAYaAsYYJmtZX96C7zWrDPkzBx
+	 EMaK3aVOiYGvfDT+1tQL12rB8u7i6wZeLmF8TBHTWqWfh/UiVmPd4HzMTiY+KjcBSV
+	 DHPH1Mx9T2a7m3+G6/GkcHYXnzPAy87DyUs4JA6jk1XLxrzWpSNRX04c0mzJcV5HYx
+	 31xLi54qbtm+Nvawi3KHBVy2d2ug5XwxnTvSqR9MoZN55R6gyCVaZ3ravKcg/2OIn5
+	 D9+HJ/Q2908+Q==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: Mask Replay Timer Timeout for Realtek RTS525A
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Max Lee" <max.lee@canonical.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260528032347.644365-1-max.lee@canonical.com>
+References: <20260528032347.644365-1-max.lee@canonical.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 28 May 2026 03:41:11 +0000
+Message-Id: <20260528034111.DC29B1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The Realtek RTS525A PCI-Express SD card reader (10ec:525a) generates
-excessive Correctable Error (Replay Timer Timeout) AER events during
-PCIe link initialization. On systems where firmware enables AER
-reporting (CERptEn+), this causes an AER storm of ~240K error events
-within 11 seconds of boot, overwhelming the kernel's error handler and
-blocking shutdown/reboot.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [High] The quirk returns early if the endpoint lacks the AER capability, =
+unintentionally skipping the AER mask on the parent root port.
+--
 
-The root cause is a transient link training instability inherent to this
-device -- even on BIOS versions that suppress reporting, the error
-status register (CESta) shows Timeout+ set.
+commit 33ed73136f45313933a545d6af06c38d893ebef2
+Author: Max Lee <max.lee@canonical.com>
 
-Unlike the GL9750/GL9755 fixup (which only masks the parent root port),
-the RTS525A additionally requires masking the endpoint's own Correctable
-Error Mask register bit 12 (PCI_ERR_COR_REP_TIMER) to prevent it from
-sending ERR_COR messages upstream. Call pci_mask_replay_timer_timeout()
-to mask the parent root port as well.
+PCI: Mask Replay Timer Timeout for Realtek RTS525A
 
-Signed-off-by: Max Lee <max.lee@canonical.com>
----
- drivers/pci/quirks.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+This commit adds a PCI fixup quirk for the Realtek RTS525A SD card reader.
+It masks the Replay Timer Timeout on both the endpoint and its parent root
+port to prevent an AER storm during PCIe link initialization.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index caaed1a01dc0..072d1456daad 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -6380,4 +6380,23 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
-+
-+static void pci_mask_replay_timer_timeout_on_endpoint(struct pci_dev *pdev)
-+{
-+	u32 val;
-+
-+	if (!pdev->aer_cap)
-+		return;
-+
-+	pci_info(pdev, "mask Replay Timer Timeout on endpoint due to hardware defect\n");
-+
-+	pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_COR_MASK, &val);
-+	val |= PCI_ERR_COR_REP_TIMER;
-+	pci_write_config_dword(pdev, pdev->aer_cap + PCI_ERR_COR_MASK, val);
-+
-+	/* Also mask the parent root port */
-+	pci_mask_replay_timer_timeout(pdev);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REALTEK, 0x525a,
-+			 pci_mask_replay_timer_timeout_on_endpoint);
- #endif
--- 
-2.43.0
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index caaed1a01dc02..072d1456daad4 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -6380,4 +6380,23 @@ static void pci_mask_replay_timer_timeout(struct p=
+ci_dev *pdev)
+>  }
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer=
+_timeout);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer=
+_timeout);
+> +
+> +static void pci_mask_replay_timer_timeout_on_endpoint(struct pci_dev *pd=
+ev)
+> +{
+> +	u32 val;
+> +
+> +	if (!pdev->aer_cap)
+> +		return;
 
+[Severity: High]
+If the endpoint lacks the AER capability, this early return will entirely
+skip masking the parent root port later in the function. Does this leave the
+system vulnerable to the AER storm from the parent port if the endpoint's
+AER capability is disabled or hidden?
+
+Could this be restructured so that the parent root port masking is still
+applied even when the endpoint lacks the AER capability?
+
+> +
+> +	pci_info(pdev, "mask Replay Timer Timeout on endpoint due to hardware d=
+efect\n");
+> +
+> +	pci_read_config_dword(pdev, pdev->aer_cap + PCI_ERR_COR_MASK, &val);
+> +	val |=3D PCI_ERR_COR_REP_TIMER;
+> +	pci_write_config_dword(pdev, pdev->aer_cap + PCI_ERR_COR_MASK, val);
+> +
+> +	/* Also mask the parent root port */
+> +	pci_mask_replay_timer_timeout(pdev);
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528032347.6443=
+65-1-max.lee@canonical.com?part=3D1
