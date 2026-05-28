@@ -1,188 +1,88 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF86B3E3C72
-	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 12:25:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E7136BCF0;
+	Thu, 28 May 2026 12:25:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779971111; cv=none; b=qPgjGlrFD6cP3ZbCXqRA4gYHnCETT1oQT1vrZSK9XvMWTtt3kLsx9QwP47IgAi1965Ej7QgtNInk/3VITtDlOZ+vMblA0mr0ecW2m/pzRIpqN3JpJMBukrtKCA4LAga6G6/6GKSpGTh4KyPud+L1osymzynZW315yX0eCpKRfjg=
+	t=1779971126; cv=none; b=jr/dknS8k7HhD5qYwnRzAl172VJCpZ1DteMX7tEsfsZkLRhOXjOlKbf7QhcSgI0yvV+CzFx4tfurEs2T6yJrg/jcukOOToSceoJtxc0XukBSFUhCHm+s+7bO8dUZ/FQP/BZuJdow5lghdkjglICGHuWmGB9QjUKdnm3zsBbjyvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779971111; c=relaxed/simple;
-	bh=SZzyV6zVpfcAUlErInHgwGuTjTzARo3+txHuiCbZ0AA=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=bMVOkLTSNQXjOHvYjl9PJB32esFMdKrgXscIkBl6UdhSduS3c3/XxuOTbuixi+XDc5D4wGDcKDShxIr9aCx7wsOfWb2kUI9dUmpyhQsydKVkOp0hAJpSg/pH2yeQZbbeVfOY+LFVxkxjSlw39DrxM00IOWczdBKBXaMNcLR4eDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iYosvVxd; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779971126; c=relaxed/simple;
+	bh=auMGNsBQxma9YoUqqEhZAHbQr2HiBAMAuunbQwSQ2aQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=if0Oc40tUWXQtKxT/9x6ytVcjL8ph1NqPmHzg6djYCmIViuEDUU/NKaLCGtIsYaaWE2cjKYBbedI9hJXbpwuRX6oy0dZLyTQkFFqErYBBCQf8l6rH6IkUx4JXslTWKRZV6NCj80YLa9hvCCqJAHltq6YEEFHJhUsVg4Up1qC8pU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OkM3dV3E; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iYosvVxd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 899271F00A3A;
-	Thu, 28 May 2026 12:25:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OkM3dV3E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89ECA1F00A3E;
+	Thu, 28 May 2026 12:25:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779971109;
-	bh=VlV2+U7Meti+TsbG8mNI6A6wt6Uxrmad1CHHgXpKHfA=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=iYosvVxd99lBrNZe0lrEY+1lzSdKkcae/Gcmn5rjh2gCdlqauYMb9BvuHSEZqBbgX
-	 qPTAMDrttHqnQBGoDHmnWnDd1340XuIqHvEF1pIfMTGpg6mR3zTM4diNul/DIGSKjp
-	 T6LfwkAUosbcN/y9JwGgpZ2qrEQcA3dyldvkf/kd3FF08BPbfy4EOodkhZB0Dh9/cn
-	 JeKCgmxibz82AyN60kyc6dG+yTPWqkOafuIltpd9oMVhd0jfYnIs4an1PLth+Vlxjd
-	 xHpcYhkrpYLIYrydAZ8WuuJtkOs7YOhX3+RF/Pp5GBAlV12QaRopHnniLEYq2mExsN
-	 uGg4B0lA8O4tQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 7/9] cxl/pci: Orchestrate CXL reset for affected
- memdevs
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260528083154.137979-8-smadhavan@nvidia.com>
-References: <20260528083154.137979-8-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 28 May 2026 12:25:08 +0000
-Message-Id: <20260528122509.899271F00A3A@smtp.kernel.org>
+	s=k20260515; t=1779971125;
+	bh=ee57S4UZoQ6zqEqaoGqq0lps43BN3W9FOYLXp5yMnKQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=OkM3dV3ERw2tXIJ/kTsqCbcTPyJe8iIEgSqPZAAVyjMk2nAAJhnuu1/i/1HQBPwE9
+	 zH78yBVPODNYltObKXkEdcBEYHSIA67ldc30pjl9uRrX6cwMYEz5sZ7xKg1EJDPRMZ
+	 fx4gwdMjtXUcONFdoyP+1aVREttCLTIL1x2RB/SW/psrkfud68GOp7thPm63PALyru
+	 ZJcm7GXgPWfk5fzSVZRWFbRNzzFWAypM7NpsVyti9U6GyOl03Swm75cxk/1v3OlW1u
+	 hPaSJCU0zURMzayD/XMTa4xHaZOqB3v9vpmDpZuNvGY98B4/EvGh3qBs8xS8y6zMgJ
+	 Qcx83/AKBySFA==
+Date: Thu, 28 May 2026 14:25:21 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Shawn Guo <shengchao.guo@oss.qualcomm.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, linux-pci@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Disable ASPM L0s for SA8775P
+Message-ID: <63ekyvawag6wsihfvjdwhqwlapkaw2o6eivp3loeueffvrxo3c@h45hhk3muhqf>
+References: <20260419093934.1223027-1-shengchao.guo@oss.qualcomm.com>
+ <453jc2ff65zdn3yahdwkdh2uqzz2coi4kv3siqfygfgmfd3v4w@4dkwj3s4dkfp>
+ <aebnPAPLO8cI0H-J@QCOM-aGQu4IUr3Y>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aebnPAPLO8cI0H-J@QCOM-aGQu4IUr3Y>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
-- [High] cxl_reset_disable_memdevs() fails to update cxlds->media_ready to =
-false when disabling CXL.mem.
-- [High] Missing wait for pending DMA transactions before blocking the IOMM=
-U for sibling PCI functions.
-- [High] Early PCI config state restore re-enables bus mastering while the =
-IOMMU is still blocked.
-- [Medium] Mixing goto-based error handling and scope-based cleanup helpers=
- in the same function.
---
+On Tue, Apr 21, 2026 at 10:55:56AM +0800, Shawn Guo wrote:
+> On Mon, Apr 20, 2026 at 12:08:25PM +0530, Manivannan Sadhasivam wrote:
+> > On Sun, Apr 19, 2026 at 05:39:34PM +0800, Shawn Guo wrote:
+> > > Commit f5cd8a929c82 ("PCI: dwc: Remove MSI/MSIX capability for Root Port
+> > > if iMSI-RX is used as MSI controller") removed MSI/MSI-X capabilities
+> > > from the Root Port on platforms using iMSI-RX (including SA8775P, which
+> > > has no msi-parent/msi-map in DT).  This causes PME and AER service
+> > > drivers to fall back from MSI to INTx.
+> > > 
+> > > With INTx-based PME active, the QCN9100 modem endpoint sends PME messages
+> > > during D-state transitions early in boot.  The level-triggered INTx
+> > > assertion coincides with ASPM L0s exit sequencing on SA8775P hardware,
+> > > causing Data Link Layer Replay Timer Timeout errors on both sides of the
+> > > link.
+> > > 
+> > 
+> > How did you conclude that INTx collides with ASPM L0s exit sequence? Also,
+> > AFAIK, L0s is supported and work well on this chipset.
+> > 
+> > What we are dealing with could be the board specific issue.
+> 
+> I just got looped into an internal discussion.  The issue seems to
+> be refgen voting related, so likely affects all Lemans (and Monaco)
+> boards with PCIe enabled.
+> 
+> Before a proper fix is available, 'pcie_aspm=off' on kernel cmdline is
+> suggested as a temporary workaround.
+> 
 
-commit 1e8789977f0aca50924f7c6f37e03c4dc2387cd7
-Author: Srirangan Madhavan <smadhavan@nvidia.com>
+As I checked internally, it turned out that the SA8775p SoC has some hardware
+issue that affects the transition from L0s to L0. So I went ahead and applied
+the patch with a change in commit message and fixes tag, thanks!
 
-cxl/pci: Orchestrate CXL reset for affected memdevs
+- Mani
 
-This commit adds a reset flow for CXL devices that coordinates the target
-function, sibling functions, and active memdevs. It collects regions,
-flushes caches, saves and disables functions, and then executes the CXL
-reset before restoring PCI config space and re-enabling CXL.mem.
-
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index c755c18c8d84a..486c447e98f3f 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-
-[ ... ]
-
-> +static int cxl_pci_functions_reset_prepare(struct cxl_reset_context *ctx)
-> +{
-> +	int rc, i;
-> +
-> +	ctx->nr_siblings_prepared =3D 0;
-> +
-> +	for (i =3D 0; i < ctx->nr_siblings_locked; i++) {
-> +		struct pci_dev *sibling =3D ctx->siblings[i];
-> +
->  		pci_dev_save_and_disable(sibling);
->  		rc =3D pci_dev_reset_iommu_prepare(sibling);
-
-[Severity: High]
-Is it safe to block the IOMMU here without waiting for in-flight DMA
-transactions to drain?
-
-pci_dev_save_and_disable() disables bus mastering, but any transactions
-already in flight might be dropped by the IOMMU and raise AERs (Advanced
-Error Reporting faults) if we don't wait for them.
-
-The target device correctly drains its transactions using
-pci_wait_for_pending_transaction(), could we do the same for the sibling
-functions here?
-
-[ ... ]
-
-> +static void cxl_pci_functions_restore_state(struct cxl_reset_context *ct=
-x)
-> +{
-> +	int i;
-> +
-> +	for (i =3D ctx->nr_siblings_prepared - 1; i >=3D 0; i--)
-> +		pci_restore_state(ctx->siblings[i]);
-> +}
-
-[Severity: High]
-Does restoring the PCI config space here re-enable bus mastering while the
-IOMMU is still actively blocking requests?
-
-pci_restore_state() restores the entire saved PCI config space, including
-the PCI_COMMAND register with the PCI_COMMAND_MASTER bit set.
-
-Since the IOMMU is not unblocked until pci_dev_reset_iommu_done() runs
-later during cleanup, could this allow the device to issue DMAs (or
-MSI/MSI-X interrupts) that will trigger IOMMU faults and AERs?
-
-[ ... ]
-
-> +static void cxl_reset_disable_memdevs(struct cxl_reset_context *ctx)
-> +{
-> +	int rc, i;
-> +
-> +	for (i =3D ctx->nr_memdevs - 1; i >=3D 0; i--) {
-> +		struct cxl_memdev *cxlmd =3D ctx->memdevs[i].cxlmd;
-> +
-> +		if (!ctx->memdevs[i].active)
-> +			continue;
-> +
-> +		rc =3D cxl_set_mem_enable(cxlmd->cxlds, 0);
-
-[Severity: High]
-Could this leave the device state indicating the media is active when
-physical memory decode has been disabled?
-
-cxl_set_mem_enable() disables CXL.mem on the device, but
-cxlds->media_ready isn't updated to false here. If the system subsequently
-attempts to access this memory, could it result in unhandled unsupported
-requests (UR) and trigger fatal bus errors?
-
-[ ... ]
-
-> +static int __maybe_unused cxl_do_reset(struct pci_dev *pdev, bool mem_cl=
-ear)
-> +{
-> +	struct cxl_reset_context ctx =3D {
-> +		.target =3D pdev,
-> +	};
-> +	int rc;
-> +
-> +	/*
-> +	 * Snapshot the CXL r3.2 9.7 device reset scope before taking
-> +	 * cxl_rwsem.region. Hot-added functions after this point are not
-> +	 * coordinated by this reset operation.
-> +	 */
-> +	rc =3D cxl_reset_collect_siblings(&ctx);
-> +	if (rc)
-> +		goto out;
-> +
-> +	rc =3D cxl_reset_collect_memdevs(&ctx);
-> +	if (rc)
-> +		goto out;
-> +
-> +	scoped_guard(rwsem_write, &cxl_rwsem.region)
-> +		rc =3D cxl_do_reset_locked(&ctx, mem_clear);
-> +
-> +out:
-> +	cxl_reset_context_destroy(&ctx);
->  	return rc;
->  }
-
-[Severity: Medium]
-Is it intended to mix goto-based error handling and scope-based cleanup
-helpers in the same function?
-
-This function uses "goto out" for early error paths, but then uses
-scoped_guard() below. The cleanup subsystem guidelines in
-include/linux/cleanup.h state that goto and cleanup helpers should never be
-mixed in the same function, as it can create confusing ownership semantics
-and increase the risk of double-free or resource leak bugs.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528083154.1379=
-79-1-smadhavan@nvidia.com?part=3D7
+-- 
+மணிவண்ணன் சதாசிவம்
