@@ -1,143 +1,215 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF963E6DD4
-	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 13:03:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 040663F86EE;
+	Thu, 28 May 2026 15:17:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779973422; cv=none; b=ShxLDUsI5G5KbpBiuxqLpRFgKR7LHJG9vSrifaCu5oy+BwsAvVfqxRzgFrLaGeQTqCvj5DRn0ps4FN4vJxEF6CVRaQ2yt6LWHW75OHu3NgFTOTJHg0C0dCtbeNFfE7el+8FIKHqe6hQDbsvLeOuCWCj7raP1Gn48YJMG6B3t/1Y=
+	t=1779981427; cv=none; b=l8vCx/AE1CYNzoSDo9Q+0DawT3H8Z2zdZqCCjf8O11R30MqYM/oVaz4n1KqOJ60znPqTxBigGXul0o06KObr2JSMS2Cat8f7w/iS2x2WXks4V7B4fJJPVDI2MpIJuAgvZrlVrEBM1SMlQS+bO/d/hErorv0ruLXF3h+QaFdlY3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779973422; c=relaxed/simple;
-	bh=iFtmiKupOg4ipnTkiEXKzJ4cF5wuBxfG0/pr1D9pGrY=;
+	s=arc-20240116; t=1779981427; c=relaxed/simple;
+	bh=dwA0YTqr4NyC5rutMAr6SkJTYr7pTZ92MDNppgAdAg8=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cfNuNOP8fs05H/ZZBQlHfLQVPHH3YMyFgOlKPLVasmmuMQdNkz/V0sHPxJEBj2bdt9o1kLr6d9m5QDLcJtUuMKM97A18tB5Rcpq8yCXetNYDvaP3BycemG2o8UM0CUfxoImzeLhD1Zc75oustfdBQYH2XOBgnksRjytl6Jp3GYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a1L2pIVw; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=enQifuyennopkMAKlamMPHUI/CPStwyjfT/QctKFiU5J6QGb1yXtDaubOu/V0eIQ+Ykh5NnM69mJFbzIU0No88hc1lymSIRSKPxFMRBM6U0eW0KZeL70iYvvWphW4pSAQKLtTx16ZqklR2R6yzHS5D8MWF5xXYJhzMuqI9nkkqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lxZ0NPFF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a1L2pIVw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 013001F000E9;
-	Thu, 28 May 2026 13:03:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lxZ0NPFF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE851F000E9;
+	Thu, 28 May 2026 15:17:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779973421;
-	bh=OPW8AVB7+XhQZ13CYHBbk651XM7nfiS9QIsToE3JXfc=;
+	s=k20260515; t=1779981426;
+	bh=rq15zvGSndm/umeaMOKzXIRp6RgjyCc8b3wTSZ+PTyg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=a1L2pIVwowuqf/CZ3KJj0KFLarki5/f26hKw4/Gwpc7rtPK5sIKd+BUVkfBhXaqvy
-	 Hy4kIap2kfk0vAIyrOXMUH1suL6eZzMUGeESu1hPmMgA32PlKL2HoE29pi3vPP3DQd
-	 JHr0VyTTQAwJEfPP7vE4DuNvRcM4jzSgtdOMyh01bwyIBE0Xta2oF4eNTuZvyIsL6p
-	 Ij6nSuMN1i207xGtRwjt/Pa9W/IzTqYavBZB4m8KajFx5k4X0xf4OiyOUxIXuGVyhl
-	 YEZvePb+2X7xp95LvzlKKF+oS/KE7awDTZFuwAGsyO6xGkuJ5vx4kbtgfLg4tPyYew
-	 wh34vgRpKNWZg==
+	b=lxZ0NPFFHjRaSQKNR4mrF0VgAXOPk9ozakZzMgn3v7zdNnb35v61pqEXzCXxPSWUl
+	 pBUCtcgO+SvIacchxkMytNEIdrUmJhI5HHjPIHxAi6+asU74kWQlQySJX6vgw9Pves
+	 KwzZv7U4sY7Es82HdXxkcQUt60pUMZMGYFJhfTrezcnYfJiYTi352FoaE435siIdQB
+	 yUKAOjtUgly05UTtvccI6t6wO/p1hmyTC/kkbB5RxZHQaUUPGx59bJlg7NORqAqtqV
+	 II3HxBeOnzqAYRvfjslw3McL7JK6NqwIvyH/qlh8sSxLyLFh+55VNSJfLxHK/QkdC7
+	 Rg5BlKbgECx3A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 8/9] cxl/memdev: Add cxl_reset sysfs attribute
+Subject: Re: [PATCH v14 6/8] vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST_CONFIG
+ for PCIe TPH ST configuration
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Srirangan Madhavan" <smadhavan@nvidia.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260528083154.137979-9-smadhavan@nvidia.com>
-References: <20260528083154.137979-9-smadhavan@nvidia.com>
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260528124649.14732-7-fengchengwen@huawei.com>
+References: <20260528124649.14732-7-fengchengwen@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 28 May 2026 13:03:40 +0000
-Message-Id: <20260528130341.013001F000E9@smtp.kernel.org>
+Date: Thu, 28 May 2026 15:17:05 +0000
+Message-Id: <20260528151706.5BE851F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] The probe logic incorrectly restricts the 'cxl_reset' attribute to=
- Type 2 CXL devices, completely excluding standard Type 3 memory expanders.
-- [High] The reset probe logic searches for the CXL Device DVSEC on the cur=
-rent PCI function instead of Function 0, causing the capability probe to er=
-roneously fail on multi-function devices.
+- [High] The ioctl handler accesses device hardware registers without ensur=
+ing the device is in the D0 power state, which can cause host crashes.
+- [Medium] The shadow ST table is not populated with the initial hardware s=
+tate, leading to hardware state corruption upon rollback.
+- [Low] Mixing goto-based error handling with scope-based cleanup (`guard()=
+`) violates kernel cleanup guidelines.
+- [Low] Shadow ST table memory is allocated unconditionally during device i=
+nitialization, ignoring the module parameter gate.
 --
 
-commit 0a3bf8b7cbd748c710f06177b6aba985e72cc401
-Author: Srirangan Madhavan <smadhavan@nvidia.com>
+commit f65e8a2860b984f5dfa0664d516582dd9981c329
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-cxl/memdev: Add cxl_reset sysfs attribute
+vfio/pci: Add VFIO_DEVICE_FEATURE_TPH_ST_CONFIG for PCIe TPH ST configurati=
+on
+   =20
+This commit adds a new VFIO device feature to allow userspace to configure
+PCIe TPH Steering Tag table entries. It implements a shadow ST table to cac=
+he
+entries and introduces a module parameter to gate the feature.
 
-This commit exposes the CXL reset functionality via a write-only sysfs
-attribute on the CXL memdev device. The attribute is only made visible
-when the underlying PCI parent device advertises CXL Reset capability.
-
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 486c447e98f3f..09f016544d245 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 050e7542952ed..c9035c0acaf08 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
 
 [ ... ]
 
-> @@ -1207,6 +1207,22 @@ static bool cxl_reset_has_cache_or_mem(struct pci_=
-dev *pdev)
->  	return cap & (PCI_DVSEC_CXL_CACHE_CAPABLE | PCI_DVSEC_CXL_MEM_CAPABLE);
+> @@ -1551,6 +1563,116 @@ static int vfio_pci_core_feature_token(struct vfi=
+o_pci_core_device *vdev,
+>  	return 0;
 >  }
 > =20
-> +static bool cxl_reset_is_type2(struct pci_dev *pdev)
+> +static int vfio_pci_tph_st_shadow_size(struct vfio_pci_core_device *vdev)
+
+[ ... ]
+
+> +static int vfio_pci_tph_init(struct vfio_pci_core_device *vdev)
 > +{
-> +	u16 dvsec, cap;
+> +	vdev->tph_st_entries =3D vfio_pci_tph_st_shadow_size(vdev);
+> +	vdev->tph_st_shadow =3D NULL;
 > +
-> +	dvsec =3D pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_DEVICE);
-> +	if (!dvsec)
-> +		return false;
+> +	if (vdev->tph_st_entries) {
+> +		vdev->tph_st_shadow =3D kcalloc(vdev->tph_st_entries, sizeof(u16),
+> +					      GFP_KERNEL);
+
+[Severity: Low]
+Since this feature is gated by the enable_unsafe_tph module parameter during
+ioctl execution, should this memory allocation also be gated by that parame=
+ter?
+
+If the feature is disabled (the default), this allocates memory for every
+TPH-capable device that will never be used.
+
+> +		if (!vdev->tph_st_shadow)
+> +			return -ENOMEM;
+> +	}
 > +
-> +	if (pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap))
-> +		return false;
+> +	mutex_init(&vdev->tph_lock);
 > +
-> +	return (cap & PCI_DVSEC_CXL_CACHE_CAPABLE) &&
-> +	       (cap & PCI_DVSEC_CXL_MEM_CAPABLE);
-
-[Severity: High]
-Does this logic unintentionally exclude standard Type 3 memory expanders?
-
-Standard Type 3 devices only advertise the PCI_DVSEC_CXL_MEM_CAPABLE bit.
-Because this function requires both the cache and mem bits to be set, it
-will fail for Type 3 memdevs, preventing the cxl_reset attribute from
-becoming visible.
-
+> +	return 0;
 > +}
-> +
 
 [ ... ]
 
-> @@ -1966,3 +1982,87 @@ static int __maybe_unused cxl_do_reset(struct pci_=
-dev *pdev, bool mem_clear)
-
-[ ... ]
-
-> +static bool cxl_memdev_probe_reset_capable(struct cxl_memdev *cxlmd)
+> +static int vfio_pci_core_feature_tph_st_config(
+> +			struct vfio_pci_core_device *vdev,
+> +			u32 flags,
+> +			struct vfio_device_feature_tph_st_config __user *arg,
+> +			size_t argsz)
 > +{
-> +	struct device *dev =3D cxlmd->dev.parent;
-> +	struct pci_dev *pdev, *fn0;
-> +	int dvsec;
-> +	u16 cap;
+> +	struct vfio_device_feature_tph_st_config config;
+> +	struct pci_dev *pdev =3D vdev->pdev;
+> +	void __user *uptr;
+> +	int i, idx, ret;
+> +	size_t sz;
+> +	u16 *sts;
 > +
-> +	if (!dev || !dev_is_pci(dev))
-> +		return false;
+> +	if (!enable_unsafe_tph || !vdev->tph_st_shadow)
+> +		return -EOPNOTSUPP;
 > +
-> +	pdev =3D to_pci_dev(dev);
-> +	if (!cxl_reset_is_type2(pdev))
-> +		return false;
+> +	ret =3D vfio_check_feature(flags, argsz,
+> +				 VFIO_DEVICE_FEATURE_SET |
+> +				 VFIO_DEVICE_FEATURE_PROBE,
+> +				 sizeof(config));
+> +	if (ret <=3D 0)
+> +		return ret;
 > +
-> +	fn0 =3D cxl_reset_get_fn0(pdev);
+> +	if (copy_from_user(&config, arg, sizeof(config)))
+> +		return -EFAULT;
+> +
+> +	if (config.count =3D=3D 0 || config.index >=3D vdev->tph_st_entries ||
+> +		config.count > vdev->tph_st_entries ||
+> +		config.index + config.count > vdev->tph_st_entries ||
+> +		config.reserved !=3D 0)
+> +		return -EINVAL;
+> +
+> +	guard(mutex)(&vdev->tph_lock);
+
+[Severity: Low]
+Is it okay to mix guard() based locking with goto-based error handling in t=
+he
+same function?
+
+According to include/linux/cleanup.h, the expectation is to convert all
+resources to scope-based cleanup or convert none of them. This code uses a
+goto rollback pattern and manual kfree() alongside guard().
+
+> +
+> +	uptr =3D u64_to_user_ptr(config.data_uptr);
+> +	sts =3D memdup_array_user(uptr, config.count, sizeof(u16));
+> +	sz =3D config.count * sizeof(u16);
+> +	if (IS_ERR(sts))
+> +		return PTR_ERR(sts);
+> +
+> +	if (pcie_tph_enabled_req_type(pdev) =3D=3D PCI_TPH_REQ_DISABLE) {
+> +		memcpy(&vdev->tph_st_shadow[config.index], sts, sz);
+> +		kfree(sts);
+> +		return 0;
+> +	}
+> +
+> +	for (i =3D 0; i < config.count; i++) {
+> +		idx =3D config.index + i;
+> +		ret =3D pcie_tph_set_st_entry(pdev, idx, sts[i]);
 
 [Severity: High]
-Can this capability probe erroneously fail on multi-function devices?
+Does this code need to ensure the device is in the D0 power state before
+accessing its hardware registers?
 
-The code checks for the CXL Device DVSEC on the current PCI function
-(via cxl_reset_is_type2(pdev)) before acquiring the Function 0 pointer.
+The ioctl handler directly calls pcie_tph_set_st_entry() which accesses the
+device's PCI configuration space or memory-mapped MSI-X table. If userspace
+has placed the device into a low-power state (like D3hot) and no runtime PM
+reference is acquired here, accessing MMIO regions could result in Unsuppor=
+ted
+Requests and potentially trigger a fatal machine check exception.
 
-Since the CXL specification requires the CXL Device DVSEC to be implemented
-on Function 0, calling pci_find_dvsec_capability on pdev directly will fail
-if the memdev is bound to a function greater than 0.
-
-Could this check be moved to happen after getting fn0?
-
-> +	if (!fn0)
-> +		return false;
+> +		if (ret)
+> +			goto rollback;
+> +	}
 > +
+> +	memcpy(&vdev->tph_st_shadow[config.index], sts, sz);
+> +	kfree(sts);
+> +	return 0;
+> +
+> +rollback:
+> +	while (i-- > 0) {
+> +		idx =3D config.index + i;
+> +		pcie_tph_set_st_entry(pdev, idx, vdev->tph_st_shadow[idx]);
+
+[Severity: Medium]
+Will this rollback write zeros to the hardware during the first ioctl call?
+
+The shadow ST table vdev->tph_st_shadow is allocated with kcalloc and never
+synchronized with the initial hardware state. If a batch write fails after
+successfully modifying some entries, this rollback loop appears to write the
+zeroed shadow contents back to the hardware, potentially overwriting valid
+BIOS- or host-configured ST entries instead of their true initial values.
+
+> +	}
+> +	kfree(sts);
+> +	return ret;
+> +}
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528083154.1379=
-79-1-smadhavan@nvidia.com?part=3D8
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528124649.1473=
+2-1-fengchengwen@huawei.com?part=3D6
