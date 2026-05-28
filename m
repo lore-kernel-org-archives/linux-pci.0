@@ -1,162 +1,130 @@
-Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f178.google.com (mail-qk1-f178.google.com [209.85.222.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2488B3F0744;
-	Thu, 28 May 2026 12:47:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D59393EFFA2
+	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 12:56:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779972427; cv=none; b=fqCqLy5QGOTG1DrK/TgJPJ2MePxExxKpt11nyB/Kbh59FSKmeFFFsL47ws8qeiJ6FzaGNZlg9/ENnBFy6BwjQd6gvtyVhXdZBxwBOhfNyRJlLgyoNNuJQw6YOfd89xA7QXwAJDbGVWsViQ7ixM3rIiDvG6PBomo0l0m+cS/c/uc=
+	t=1779972985; cv=none; b=n85fH+kdo6IpXbkPhg99Q82ERyEu4F5Uxe2P3v/37rbWsBaq77E8i2LlP+UycoZHRX6Ku6K+Avsm8QFIsklK2Pz8pWwZedD7oDfag5t7jQpAcGc70TO9TrM52+ePzOkAufIDIucP2kKx8lyBPiLj4StFXx5UwzezfN0PhtxH6RA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779972427; c=relaxed/simple;
-	bh=3FaX2WJAhH/EujqnWLa0GLdnAJm92Pycr7hHKsBmRjE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aDColc28aN7zhb8gg7Jhy7iCBlHSrMxa1KO3RvGxirE7pmKwKXMZjfQR/M9VMrZcH3n0e84GBwXBH73yAmQAXeYA9Ce4G6xu1SiyrnCzbYL3GegiVqd+0AOlT3vhD7zrIu6R94THiMJIV+EbIiGmZV6z1kUV+0yM4P+TQNMQ43I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=sw+1TZ1c; arc=none smtp.client-ip=113.46.200.216
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1779972985; c=relaxed/simple;
+	bh=YfZssVGDne01dMYMgGTcgNvcudPc2T+XxFJkjcazgS0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=jUUO29+kNepZcB/A5jt68WJLVzRAYI13MRtRDd9/SZnOqny28FkJ4Ar3rJXx9x6ktTV4r8ZoY45awgg/dHSSCBAdi2dFv22nMdPnDlH88oFE8M6heULRInZ3kuOu3PgHLK0Zxu1aDm/tiIk6HVSCBP9k/qeNBj9vKWAfAOKGUtU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IPKJhu5K; arc=none smtp.client-ip=209.85.222.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="sw+1TZ1c"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=xAcl6PF6laJpOoYxVBIWhgfoHYJzq8q8tMWFa6YpUdA=;
-	b=sw+1TZ1cQFTWg4D1wJWYsR/Zc8byQqCieIQ1RQjXAd+fFPe6yLUcJpiOARs9PWuw94qbkgWVg
-	515+H3nUSpdF2xJkSSHK3+ER7RiqnbsyPAlck+UGukZm9vVeAo5hA5GpUECW6VzZuJG890c55G3
-	SEHH0BqxYGj9xVBt7jHiJOg=
-Received: from mail.maildlp.com (unknown [172.19.163.104])
-	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4gR5dT4wWLz1T4Fx;
-	Thu, 28 May 2026 20:38:53 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 76B584048F;
-	Thu, 28 May 2026 20:46:56 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 28 May 2026 20:46:55 +0800
-From: Chengwen Feng <fengchengwen@huawei.com>
-To: <alex@shazbot.org>, <jgg@ziepe.ca>
-CC: <wathsala.vithanage@arm.com>, <helgaas@kernel.org>, <wei.huang2@amd.com>,
-	<zhipingz@meta.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v14 2/8] PCI/TPH: Cache TPH requester capability at probe time
-Date: Thu, 28 May 2026 20:46:43 +0800
-Message-ID: <20260528124649.14732-3-fengchengwen@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20260528124649.14732-1-fengchengwen@huawei.com>
-References: <20260528124649.14732-1-fengchengwen@huawei.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IPKJhu5K"
+Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-90ca6f20872so1558180185a.0
+        for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 05:56:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1779972983; x=1780577783; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BlTiMO+AqzsfMF73zg1sUXIUWFi0uPkexNI2Y+w2IWA=;
+        b=IPKJhu5KafV3j2zNhIWpFJG1ODUa3LK7J2/HzlQNckUSG+ivyUPTtrmnv937lxcqp0
+         htLaUQbF4tS8pw5eWEawCIz6PIO8iXFdlWXwQDeklfVWuV59Y3TtGPe8hCvjFGVQAqAP
+         29BIq//PeRs635L9OBM54AHaaL5ApJWJtLkcyd26Dpk5KYO2bNqpEIBC284KZMmo0A61
+         9F169KPZPZ6JKO6YWj4xJ2mJj6lCVMXrD4HpWrsR0kgEuZhoRiPTiWZP+IRDUjUOsVGe
+         pZGTCrBJVP6UdS/LmiXyDuKP/ogITIR6G97C1G4OtHf8iK5pRXgr4uxdIZdXhPW3uvf3
+         GAPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1779972983; x=1780577783;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=BlTiMO+AqzsfMF73zg1sUXIUWFi0uPkexNI2Y+w2IWA=;
+        b=inRc2v5fgJY+NvKP2G22d3ixXI8/dmg5Lq+Vn/SLkx7AYUsRWfuLFX6Id/kGP+Vhyh
+         sLzwugiGnjVGqPmDKZ2XJdTh76NwlWQRCFiuDcBIyIE0q5wo49ZMicOeCQEczHy1ZzSN
+         AFaUtNlAugYlOSv3nDhZe3p+STfXJPTpR1LnmMOvrLI3VtJWj4c6DL1Vdnklf9dFxd8h
+         WCjawltiVx4nXzhwPWDWhN/eFqVdIDx2PJdteXTT+YBqoP7Ian6OOXIhpuSrDhWpwjso
+         WcPBMYj67PkajcarTlc0Io//nG9DG7sr8/XWekQPy+jQfbiXqUu6nsEpd5D672NjAcRh
+         ztSQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9mQgQADojMpW3mTs62IXqyI2ZpigDTQkDjx7dVbRO07vfaGjf05SRCV118jL821jVTiBfvLaDQ5dE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzoKTISJu4oWii+dgj5wKmSqQAGKnSniuXTI6Io814GFBm1+2gu
+	jPQa4W21Oefc9m6Qs+Mj3q1maR9QW/fZ1LigtSyqimm4SLD1lpXnfBEf
+X-Gm-Gg: Acq92OFQv3hdKaDHv831YKM3rocIWS2mwhw1VaNLMFcVOrgzj/QTPpKB1NRmbxcNUT8
+	495UvGKl7CIrrnR8MTIP+edtr9tFZvVOsFuB5blCRU62NuvwrAeXVghXtkzpHaBvUOyJBjUNJbe
+	m0M7NCW+Bhs0Lsog24cmrCSbUH5aW/ZnenZcZALPsS9JMEt8QHRn3x7McUSE/FxaUVnURCrCa5S
+	EXsSyM8S/vWinrhkkrCQu685IupHNxl9oecIekhGpVWUGu5Ptmvy69B4szgV2Zajl0Yqr0qMWg4
+	5weQ7q8IiA3r0W0Af87AJ5tZM6SSZvCt+JIWh/s8UmpkvES8u1KRIptZ2eyOxhgu29+v23XH2xt
+	pu5oemsUzJmNcb+1XgguVIGu2QcN6h/Kq69uKjmmdbBS+rhS9RhkFwte2I4J4QyZgbE4wxhQxjq
+	QTrO0JHh/GeREp7MYfDLN8mKEqwOA2FzJX52jzlhgoq4ejw3eOHXN2WNShDAqM//86kQFI9UpAg
+	5iE/tClvac5iemA6F0w0FWNG6D08Q==
+X-Received: by 2002:a05:620a:1b8a:b0:8cd:d688:7aef with SMTP id af79cd13be357-91521722eaamr138903585a.19.1779972982782;
+        Thu, 28 May 2026 05:56:22 -0700 (PDT)
+Received: from leonardoc-nb ([67.159.246.222])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-914f86e9b34sm813683585a.5.2026.05.28.05.56.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 May 2026 05:56:22 -0700 (PDT)
+From: Leonardo Costa <leoreis.costa@gmail.com>
+To: kwilczynski@kernel.org
+Cc: leonardo.costa@toradex.com,
+	achill@achill.org,
+	akpm@linux-foundation.org,
+	bhelgaas@google.com,
+	broonie@kernel.org,
+	conor@kernel.org,
+	f.fainelli@gmail.com,
+	francesco@dolcini.it,
+	gregkh@linuxfoundation.org,
+	hargar@microsoft.com,
+	hongxing.zhu@nxp.com,
+	jonathanh@nvidia.com,
+	leoreis.costa@gmail.com,
+	linux-imx@nxp.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux@roeck-us.net,
+	lkft-triage@lists.linaro.org,
+	patches@kernelci.org,
+	patches@lists.linux.dev,
+	pavel@nabladev.com,
+	rwarsow@gmx.de,
+	ryanmatthews@fastmail.com,
+	shuah@kernel.org,
+	sr@sladewatkins.com,
+	stable@vger.kernel.org,
+	sudipm.mukherjee@gmail.com,
+	torvalds@linux-foundation.org
+Subject: Re: [PATCH 6.6 000/508] 6.6.141-rc1 review
+Date: Thu, 28 May 2026 09:56:05 -0300
+Message-ID: <20260528125605.255471-1-leoreis.costa@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260526183025.GA1285841@rocinante>
+References: <20260526183025.GA1285841@rocinante>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
- kwepemk500009.china.huawei.com (7.202.194.94)
+Content-Transfer-Encoding: 8bit
 
-Calculate the negotiated TPH requester type from device and root port
-capabilities once in pci_tph_init().
+Hello Krzysztof,
 
-Add tph_ext_requester flag to cache whether the device is allowed to
-issue Extended TPH requests after topology negotiation. If the final
-requester type is disabled, clear TPH capability to prevent usage.
+> > When you have a moment, consider changes from the following series:
+> > 
+> >   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=sysfs
+> > 
+> > Test, and let us know if this fixes the problem for you.
+> > 
+> > I would appreciate if you could test this for us.
+> 
+> I realise that 6.6 is a bit of a far cry from changes against the upcoming
+> 7.2 release, so you might have to massage the series/patches into sensible
+> state, so to speak.
+> 
+> Let me know if testing is too involved, given the need to potentially
+> backport a lot.  I will think of something.
 
-Simplify pcie_enable_tph() by using the cached requester capability
-instead of recalculating every time.
+I tried backporting the patches to do a test, but it turned out giving too many
+errors due to the different context. Since it's not really breaking anything,
+we'll leave it as it currently is.
 
-Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
----
- drivers/pci/tph.c   | 43 +++++++++++++++++++++++++------------------
- include/linux/pci.h |  1 +
- 2 files changed, 26 insertions(+), 18 deletions(-)
+Either way thanks a lot for clarifying this! It's good knowing the patches
+where this issue was addressed.
 
-diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-index bef3a55539c4..b4ecc510033a 100644
---- a/drivers/pci/tph.c
-+++ b/drivers/pci/tph.c
-@@ -384,7 +384,6 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- {
- 	u32 reg;
- 	u8 dev_modes;
--	u8 rp_req_type;
- 
- 	/* Honor "notph" kernel parameter */
- 	if (pci_tph_disabled)
-@@ -404,23 +403,8 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode)
- 
- 	pdev->tph_mode = mode;
- 
--	/* Get req_type supported by device and its Root Port */
--	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
--	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
--		pdev->tph_req_type = PCI_TPH_REQ_EXT_TPH;
--	else
--		pdev->tph_req_type = PCI_TPH_REQ_TPH_ONLY;
--
--	/* Check if the device is behind a Root Port */
--	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
--		rp_req_type = get_rp_completer_type(pdev);
--
--		/* Final req_type is the smallest value of two */
--		pdev->tph_req_type = min(pdev->tph_req_type, rp_req_type);
--	}
--
--	if (pdev->tph_req_type == PCI_TPH_REQ_DISABLE)
--		return -EINVAL;
-+	pdev->tph_req_type = pdev->tph_ext_requester ? PCI_TPH_REQ_EXT_TPH :
-+						       PCI_TPH_REQ_TPH_ONLY;
- 
- 	/* Write them into TPH control register */
- 	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, &reg);
-@@ -510,13 +494,36 @@ void pci_no_tph(void)
- 
- void pci_tph_init(struct pci_dev *pdev)
- {
-+	u8 tph_req_type, rp_req_type;
- 	int num_entries;
- 	u32 save_size;
-+	u32 reg = 0;
- 
- 	pdev->tph_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_TPH);
- 	if (!pdev->tph_cap)
- 		return;
- 
-+	/* Get req_type supported by device and its Root Port */
-+	pci_read_config_dword(pdev, pdev->tph_cap + PCI_TPH_CAP, &reg);
-+	if (FIELD_GET(PCI_TPH_CAP_EXT_TPH, reg))
-+		tph_req_type = PCI_TPH_REQ_EXT_TPH;
-+	else
-+		tph_req_type = PCI_TPH_REQ_TPH_ONLY;
-+
-+	/* Check if the device is behind a Root Port */
-+	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_RC_END) {
-+		rp_req_type = get_rp_completer_type(pdev);
-+		/* Final req_type is the smallest value of two */
-+		tph_req_type = min(tph_req_type, rp_req_type);
-+	}
-+
-+	if (tph_req_type == PCI_TPH_REQ_DISABLE) {
-+		pdev->tph_cap = 0;
-+		return;
-+	}
-+
-+	pdev->tph_ext_requester = !!(tph_req_type == PCI_TPH_REQ_EXT_TPH);
-+
- 	num_entries = pcie_tph_get_st_table_size(pdev);
- 	save_size = sizeof(u32) + num_entries * sizeof(u16);
- 	pci_add_ext_cap_save_buffer(pdev, PCI_EXT_CAP_ID_TPH, save_size);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2c4454583c11..0f4361aca794 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -509,6 +509,7 @@ struct pci_dev {
- 	unsigned int	rom_bar_overlap:1;	/* ROM BAR disable broken */
- 	unsigned int	rom_attr_enabled:1;	/* Display of ROM attribute enabled? */
- 	unsigned int	non_mappable_bars:1;	/* BARs can't be mapped to user-space  */
-+	unsigned int    tph_ext_requester:1;	/* Can issue Extended TPH requests */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
--- 
-2.17.1
-
+Leonardo
