@@ -1,151 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 670C63612D8;
-	Thu, 28 May 2026 10:22:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 614373BC669
+	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 10:41:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779963736; cv=none; b=eiNzv9OaP/XUT3cudfQmSbhqo6D+NJGYCK8WO+VRUz2MpYYrK3Vk53F+vGa+jzb2vpA+H9L7duV4nmUBqiC2X14FW1F2hVm5dcnqmWxl3aw+rjYqjXrmSNBK8NTXf2Zt/VTngBEFx4+YC8B/C+foewFYxSOxmj5zUE9KhlroNDo=
+	t=1779964912; cv=none; b=MaCFBxRj5f2HXjrSonZfuN7qk58rMFvTF4NQRE9lYZN9htrEeKz+cBUxKSFsB2ah7sUxztdP4YjoEdm3cazW6fgCR+gB9On9hlat74IeIEXmuu5BtmESArT3i/L9IEppxmAd+Jl0L9SqfwwCDWuIVmRq5CTuZ3ni+p01jE7vrCs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779963736; c=relaxed/simple;
-	bh=hXn7ZvPzhthx+OdAaHDKUl2queVc/bnAHoooLyWA5ZA=;
+	s=arc-20240116; t=1779964912; c=relaxed/simple;
+	bh=vj2/5mMhv8/p3KmdLqljh6NFgld8drBt5D0ESPzJko4=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=IramauJVyOhlg0zfk1YOTtqzylTi+7hUQdJLw4flkozc/b8H4seT7Tkg+eYqLWnbNBxz+H+z98QdiBIPyaEBxQ6VvzNwhuKYACsb3OsQOkSSQ5l7Xapvyj6aUd0y4sbz6DwHM/KFJsQWZaKBuNTq1hyzko+sOhyRZ55QjzCyD3E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e/ewSVdp; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=QvlQEaG/JRXNGtSCup/Wht3rIDj96vyFN1LxAq4B5dxaScrnUW95GucRwzwmDgy4E4R7TYY8sf5EKCycg5R6Sra84YgljaOFukI6JCEWcD6WptvHjknQ91vuuwE2pfDsU4OIcjjAy38y2sQBveIbnq1OsHpxEY+pmRngYjN2HhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=a0U0vlfm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e/ewSVdp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2D221F000E9;
-	Thu, 28 May 2026 10:22:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a0U0vlfm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C5781F00A3A;
+	Thu, 28 May 2026 10:41:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779963735;
-	bh=0sv7qFHe7C9PU5aBfxhtmDXPIWcf4oqJAJXq2oF5Msc=;
+	s=k20260515; t=1779964911;
+	bh=fNosBqDb5ZZNhp7GbD9zU44SyTob/fjLnlA8RslkzYU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=e/ewSVdpEsM227NTwG2WmGM5kv3KGc7bqRy/NcP0naRdGo+p4gh6OGEhAg4/pOmY9
-	 howEz0CwT0fR0AYd2JMrr5V8TDvKiPDWA5FFn9DJDSDZym0G/L9eu98mdiDjE7b9Ow
-	 7srq6wfzEVtxfrtwU+hmO01v8s0aewjG+m+S4MusYmYCO5TzCYkmLTV5Kn09LNzn80
-	 yRznyZ5uUlMPuNfh0OCOyVMJCYStFfRjvdoxO3O4xfRaiwliL3ZiusywUjXsuTClvu
-	 Y3Px0Z4qB0vBhLUiLrQG4u8r9b4F/cpiVGsJOwYagkwbr3XcsBsKigc08C+sCOoW88
-	 NW8PEDbLTWelg==
+	b=a0U0vlfmjhqhhy2nP7Hnd4FWoxeys0wd3C2eyDQz+tneYCjqI26UaioPDW90Z1KMO
+	 PA0SFd4S0D4zdY4c7z/MrSoGA3QzWpDKYTA2Je1TlS50183pHum8AUgscTAXc5ntwO
+	 M+OVrdOlCCqozMnFbPZ0IrzSMf4POVvSr1sVYpcldMNXH0CSw5t3AxdBQSNnRTbWP8
+	 xh0iDelkw3vwMLwKArzYdyZcnCs0ay05bbj4mS/K1rtxsCvALeEwslizjGBianWy1z
+	 5aZ3rUuf2ywKvpb/DWDA/y11iT4RaAIWXKNHWA7+KiduTYiPblbyfr9s99DYdmy6nb
+	 jRAX/KTVyj0mg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU
- readiness check via CXL DVSEC
+Subject: Re: [PATCH v6 4/9] PCI/CXL: Add sibling function coordination for
+ reset
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Ankit Agrawal" <ankita@nvidia.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260528093840.4018-1-ankita@nvidia.com>
-References: <20260528093840.4018-1-ankita@nvidia.com>
+To: "Srirangan Madhavan" <smadhavan@nvidia.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260528083154.137979-5-smadhavan@nvidia.com>
+References: <20260528083154.137979-5-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 28 May 2026 10:22:14 +0000
-Message-Id: <20260528102214.D2D221F000E9@smtp.kernel.org>
+Date: Thu, 28 May 2026 10:41:50 +0000
+Message-Id: <20260528104150.8C5781F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] TOCTOU race in lockless device readiness checks causes unexpected =
--EAGAIN or VM_FAULT_SIGBUS errors instead of waiting for the device.
-- [High] The 256-second device readiness polling uses uninterruptible `msle=
-ep()` loops, which can trigger hung task panics and renders user tasks unki=
-llable.
+- [High] Incorrect bit indexing when checking the Non-CXL Function Map DVSE=
+C for non-ARI devices.
 --
 
-commit a85819b2171b67b275d15e9b87eb7447b4dd63a4
-Author: Ankit Agrawal <ankita@nvidia.com>
+commit b310856ad85d3fc081d86a4d5ea3b158b15fce9f
+Author: Srirangan Madhavan <smadhavan@nvidia.com>
 
-vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness check via CXL DVSEC
+PCI/CXL: Add sibling function coordination for reset
 
-Adds a CXL DVSEC-based readiness check for Blackwell-Next GPUs in addition
-to the existing legacy BAR0 polling. The device readiness is determined by
-polling the Memory_Active bit outside the memory lock for up to 256 seconds.
+This commit adds helpers to collect CXL sibling PCI functions affected by a
+CXL reset and prepares them by saving and disabling them. It uses the
+Non-CXL Function Map DVSEC to filter out non-CXL functions and functions
+without CXL.cache or CXL.mem capabilities.
 
-> diff --git a/drivers/vfio/pci/nvgrace-gpu/main.c b/drivers/vfio/pci/nvgra=
-ce-gpu/main.c
-> index fa056b69f899a..04fcc0d088f54 100644
-> --- a/drivers/vfio/pci/nvgrace-gpu/main.c
-> +++ b/drivers/vfio/pci/nvgrace-gpu/main.c
+> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+> index 318744695f628..01effbb4e7cd1 100644
+> --- a/drivers/cxl/core/pci.c
+> +++ b/drivers/cxl/core/pci.c
 
 [ ... ]
 
-> +static int nvgrace_gpu_wait_device_ready_cxl(struct nvgrace_gpu_pci_core=
-_device *nvdev)
+> @@ -1096,3 +1102,204 @@ cxl_reset_flush_cpu_caches(struct cxl_reset_regio=
+n_context *ctx)
+
+[ ... ]
+
+> +static bool cxl_reset_is_cxl_sibling(struct pci_dev *pdev,
+> +				     struct pci_dev *sibling,
+> +				     unsigned long *non_cxl_func_map)
 > +{
-> +	unsigned long deadline =3D jiffies + msecs_to_jiffies(POLL_QUANTUM_MS);
-> +	bool active_phase =3D false;
-> +	u32 status;
-> +	int ret;
+> +	if (sibling =3D=3D pdev || sibling->bus !=3D pdev->bus)
+> +		return false;
 > +
-> +	for (;;) {
-
-[ ... ]
-
-> +		if (time_after(jiffies, deadline))
-> +			return -ETIME;
+> +	if (pci_ari_enabled(pdev->bus))
+> +		return !test_bit(sibling->devfn, non_cxl_func_map);
 > +
-> +		msleep(POLL_QUANTUM_MS);
-> +	}
+> +	if (PCI_SLOT(sibling->devfn) !=3D PCI_SLOT(pdev->devfn))
+> +		return false;
+> +
+> +	return !test_bit(PCI_FUNC(sibling->devfn) * 32 +
+> +			 PCI_SLOT(sibling->devfn), non_cxl_func_map);
+
+[Severity: High]
+Does this formula correctly index the Non-CXL Function Map for non-ARI
+devices?
+
+For a non-ARI device, the function map typically uses bits 0-7 to represent
+functions 0-7. With this formula, a sibling at function 0 and slot 2 will
+evaluate to bit 2 (0 * 32 + 2) instead of bit 0.
+
+If bit 2 happens to be set (indicating function 2 is non-CXL), function 0
+could be incorrectly identified as a non-CXL function and excluded from the
+reset coordination.
+
+Will this cause the skipped function to miss having its state saved and
+IOMMU blocked, potentially leading to lost configuration state, unhandled
+IOMMU faults, or driver crashes during the reset?
+
 > +}
 
-[Severity: High]
-Will this uninterruptible sleep trigger hung task panics?
-
-Since the CXL device readiness can take up to 256 seconds and msleep() plac=
-es
-the task in the TASK_UNINTERRUPTIBLE state, processes accessing the device
-during a reset will become unresponsive and immune to signals (including
-SIGKILL) for up to 4 minutes.
-
-With the default Linux hung_task_timeout_secs at 120 seconds, blocking here
-is highly likely to trigger the hung task detector and cause a kernel panic
-on systems with hung_task_panic enabled. Would it be better to use an
-interruptible sleep and abort on pending fatal signals?
-
-[ ... ]
-
-> @@ -313,6 +399,21 @@ static vm_fault_t nvgrace_gpu_vfio_pci_huge_fault(st=
-ruct vm_fault *vmf,
->  	pfn =3D PHYS_PFN(memregion->memphys) + addr_to_pgoff(vma, addr);
-> =20
->  	if (is_aligned_for_order(vma, addr, pfn, order)) {
-> +		/*
-> +		 * Exit early under memory_lock to avoid a potentially lengthy
-> +		 * device readiness wait on a runtime-suspended device. Any
-> +		 * race after the lock is dropped is benign as the re-check
-> +		 * inside the scoped guard below catches it.
-> +		 */
-> +		scoped_guard(rwsem_read, &vdev->memory_lock) {
-> +			if (vdev->pm_runtime_engaged)
-> +				return VM_FAULT_SIGBUS;
-> +		}
-> +
-> +		if (nvdev->cxl_dvsec && READ_ONCE(nvdev->reset_done) &&
-> +		    nvgrace_gpu_wait_device_ready_cxl(nvdev))
-> +			return VM_FAULT_SIGBUS;
-
-[Severity: High]
-Can this lockless check race with a concurrent device reset and bypass the
-intended polling mechanism?
-
-If a concurrent device reset finishes and sets reset_done =3D true right af=
-ter
-this lockless check evaluates to false, the thread proceeds without polling
-and blocks waiting for memory_lock.
-
-Once the lock is acquired, the thread calls nvgrace_gpu_check_device_ready()
-which observes reset_done =3D=3D true and invokes the fallback
-nvgrace_gpu_test_device_ready_cxl() under the lock. Because this CXL test is
-non-blocking, it immediately returns -EAGAIN, causing
-nvgrace_gpu_vfio_pci_huge_fault() to return VM_FAULT_SIGBUS and crash user
-applications instead of waiting.
-
-> +
->  		scoped_guard(rwsem_read, &vdev->memory_lock) {
->  			if (vdev->pm_runtime_engaged ||
->  			    nvgrace_gpu_check_device_ready(nvdev))
-
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528093840.4018=
--1-ankita@nvidia.com?part=3D1
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528083154.1379=
+79-1-smadhavan@nvidia.com?part=3D4
