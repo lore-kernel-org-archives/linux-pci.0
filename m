@@ -1,88 +1,115 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E7136BCF0;
-	Thu, 28 May 2026 12:25:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7F153F075D;
+	Thu, 28 May 2026 12:46:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779971126; cv=none; b=jr/dknS8k7HhD5qYwnRzAl172VJCpZ1DteMX7tEsfsZkLRhOXjOlKbf7QhcSgI0yvV+CzFx4tfurEs2T6yJrg/jcukOOToSceoJtxc0XukBSFUhCHm+s+7bO8dUZ/FQP/BZuJdow5lghdkjglICGHuWmGB9QjUKdnm3zsBbjyvA=
+	t=1779972423; cv=none; b=VZ3ThwDg6iPT5/wSD0wPQt7jyf2Nrpy8LOE+rl8JVV6GzyIjB3/XsG7/c4wZraR7sChC9w7pI/QhUzEmmI5WUGVPlFi68UBqoU3KY0qyFuidzh0xUNs63SS6lvWH4vg/rPd2JKH+aGVkGMBC1geFS4vJ9nxJrIIhzqGG2p78+1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779971126; c=relaxed/simple;
-	bh=auMGNsBQxma9YoUqqEhZAHbQr2HiBAMAuunbQwSQ2aQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=if0Oc40tUWXQtKxT/9x6ytVcjL8ph1NqPmHzg6djYCmIViuEDUU/NKaLCGtIsYaaWE2cjKYBbedI9hJXbpwuRX6oy0dZLyTQkFFqErYBBCQf8l6rH6IkUx4JXslTWKRZV6NCj80YLa9hvCCqJAHltq6YEEFHJhUsVg4Up1qC8pU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OkM3dV3E; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1779972423; c=relaxed/simple;
+	bh=FMd3MY7wTwb9NOngMOEVR20srd2mxVySi5Xm/TaYKZg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=V3bxrw2QQBGE3VNcoEHq+Y4gZ3sZvJSFUQvUf5Q/f+3eHcRjC6wndMlxM6Ocla4/Tf8DTigY8hGfKpI5pxBKKz3ZLII+AioZE53JLnS0Mlx8b+ii0LJk4DUIgTfWMfXWVHwg7PvTmxqCXTQxUMPikFvLAG6niXb3YV/s1p0d6vA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=KBI9aVCT; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OkM3dV3E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89ECA1F00A3E;
-	Thu, 28 May 2026 12:25:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779971125;
-	bh=ee57S4UZoQ6zqEqaoGqq0lps43BN3W9FOYLXp5yMnKQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=OkM3dV3ERw2tXIJ/kTsqCbcTPyJe8iIEgSqPZAAVyjMk2nAAJhnuu1/i/1HQBPwE9
-	 zH78yBVPODNYltObKXkEdcBEYHSIA67ldc30pjl9uRrX6cwMYEz5sZ7xKg1EJDPRMZ
-	 fx4gwdMjtXUcONFdoyP+1aVREttCLTIL1x2RB/SW/psrkfud68GOp7thPm63PALyru
-	 ZJcm7GXgPWfk5fzSVZRWFbRNzzFWAypM7NpsVyti9U6GyOl03Swm75cxk/1v3OlW1u
-	 hPaSJCU0zURMzayD/XMTa4xHaZOqB3v9vpmDpZuNvGY98B4/EvGh3qBs8xS8y6zMgJ
-	 Qcx83/AKBySFA==
-Date: Thu, 28 May 2026 14:25:21 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Shawn Guo <shengchao.guo@oss.qualcomm.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, linux-pci@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Disable ASPM L0s for SA8775P
-Message-ID: <63ekyvawag6wsihfvjdwhqwlapkaw2o6eivp3loeueffvrxo3c@h45hhk3muhqf>
-References: <20260419093934.1223027-1-shengchao.guo@oss.qualcomm.com>
- <453jc2ff65zdn3yahdwkdh2uqzz2coi4kv3siqfygfgmfd3v4w@4dkwj3s4dkfp>
- <aebnPAPLO8cI0H-J@QCOM-aGQu4IUr3Y>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="KBI9aVCT"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=xDnrHAih70P5U+Gb4fQkG+mHDydABO7euckLoroXUFk=;
+	b=KBI9aVCTRbPT+aIdRq8f6JHdLAF8owlKoCtFRrst9Gq0luFd4MX4bOaWIVmM7BiOvRCr1SpVx
+	7GFOYUQbEN8CC31PkSMNoABv1q6dcaKkPsRzjx5Q/Z717tTauisf39QyYP/r4KneaA5u1bCUZP1
+	Eb4YboEfIJBXsQ2o4P0B4Ow=
+Received: from mail.maildlp.com (unknown [172.19.163.127])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4gR5dq3tqgzLlwx;
+	Thu, 28 May 2026 20:39:11 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7E730402AB;
+	Thu, 28 May 2026 20:46:57 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Thu, 28 May 2026 20:46:56 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <alex@shazbot.org>, <jgg@ziepe.ca>
+CC: <wathsala.vithanage@arm.com>, <helgaas@kernel.org>, <wei.huang2@amd.com>,
+	<zhipingz@meta.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH v14 5/8] PCI/TPH: expose the enabled TPH requester type
+Date: Thu, 28 May 2026 20:46:46 +0800
+Message-ID: <20260528124649.14732-6-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20260528124649.14732-1-fengchengwen@huawei.com>
+References: <20260528124649.14732-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aebnPAPLO8cI0H-J@QCOM-aGQu4IUr3Y>
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-On Tue, Apr 21, 2026 at 10:55:56AM +0800, Shawn Guo wrote:
-> On Mon, Apr 20, 2026 at 12:08:25PM +0530, Manivannan Sadhasivam wrote:
-> > On Sun, Apr 19, 2026 at 05:39:34PM +0800, Shawn Guo wrote:
-> > > Commit f5cd8a929c82 ("PCI: dwc: Remove MSI/MSIX capability for Root Port
-> > > if iMSI-RX is used as MSI controller") removed MSI/MSI-X capabilities
-> > > from the Root Port on platforms using iMSI-RX (including SA8775P, which
-> > > has no msi-parent/msi-map in DT).  This causes PME and AER service
-> > > drivers to fall back from MSI to INTx.
-> > > 
-> > > With INTx-based PME active, the QCN9100 modem endpoint sends PME messages
-> > > during D-state transitions early in boot.  The level-triggered INTx
-> > > assertion coincides with ASPM L0s exit sequencing on SA8775P hardware,
-> > > causing Data Link Layer Replay Timer Timeout errors on both sides of the
-> > > link.
-> > > 
-> > 
-> > How did you conclude that INTx collides with ASPM L0s exit sequence? Also,
-> > AFAIK, L0s is supported and work well on this chipset.
-> > 
-> > What we are dealing with could be the board specific issue.
-> 
-> I just got looped into an internal discussion.  The issue seems to
-> be refgen voting related, so likely affects all Lemans (and Monaco)
-> boards with PCIe enabled.
-> 
-> Before a proper fix is available, 'pcie_aspm=off' on kernel cmdline is
-> suggested as a temporary workaround.
-> 
+From: Zhiping Zhang <zhipingz@meta.com>
 
-As I checked internally, it turned out that the SA8775p SoC has some hardware
-issue that affects the transition from L0s to L0. So I went ahead and applied
-the patch with a change in commit message and fixes tag, thanks!
+Add pcie_tph_enabled_req_type() so drivers can query the enabled TPH
+requester mode without reaching into pci_dev internals.
 
-- Mani
+Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+---
+ drivers/pci/tph.c       | 12 ++++++++++++
+ include/linux/pci-tph.h |  3 +++
+ 2 files changed, 15 insertions(+)
 
+diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+index 4a2c3575a883..c7957b4a28d3 100644
+--- a/drivers/pci/tph.c
++++ b/drivers/pci/tph.c
+@@ -460,6 +460,18 @@ int pcie_enable_tph(struct pci_dev *pdev, int mode,
+ }
+ EXPORT_SYMBOL(pcie_enable_tph);
+ 
++/**
++ * pcie_tph_enabled_req_type - Return the device's enabled TPH requester type
++ * @pdev: PCI device to query
++ *
++ * Return: PCI_TPH_REQ_DISABLE, PCI_TPH_REQ_TPH_ONLY or PCI_TPH_REQ_EXT_TPH.
++ */
++u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
++{
++	return pdev->tph_req_type;
++}
++EXPORT_SYMBOL(pcie_tph_enabled_req_type);
++
+ void pci_restore_tph_state(struct pci_dev *pdev)
+ {
+ 	struct pci_cap_saved_state *save_state;
+diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+index 7f78a40173c9..55af14d2457e 100644
+--- a/include/linux/pci-tph.h
++++ b/include/linux/pci-tph.h
+@@ -44,6 +44,7 @@ int pcie_tph_get_cpu_st(struct pci_dev *dev,
+ void pcie_disable_tph(struct pci_dev *pdev);
+ int pcie_enable_tph(struct pci_dev *pdev, int mode,
+ 		    enum tph_req_policy req_policy);
++u8 pcie_tph_enabled_req_type(struct pci_dev *pdev);
+ u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
+ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
+ #else
+@@ -59,6 +60,8 @@ static inline void pcie_disable_tph(struct pci_dev *pdev) { }
+ static inline int pcie_enable_tph(struct pci_dev *pdev, int mode,
+ 				  enum tph_req_policy req_policy)
+ { return -EINVAL; }
++static inline u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
++{ return PCI_TPH_REQ_DISABLE; }
+ static inline u16 pcie_tph_get_st_table_size(struct pci_dev *pdev)
+ { return 0; }
+ static inline u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
 -- 
-மணிவண்ணன் சதாசிவம்
+2.17.1
+
