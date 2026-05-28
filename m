@@ -1,107 +1,166 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0313137BE7C
-	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 08:59:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1D1B389106
+	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 09:12:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1779958791; cv=none; b=CYSimL00JN0veMwy/g0+8n8qAamkj9ylsbMujCLyeqZHCHa4l5xjnrdtHpTY5jZtieSNaYLdY7gEJJmhtcrRciOHZLMfy/g5a3Yn2Fm6mdtB8TyPmByUwKdw9ZguRwJYfevWuRfa6lSYov1x+j1eucmyUAn5BW9Mrg6wDpdBTMY=
+	t=1779959533; cv=none; b=sRjGOrWfBh3reVMFJ+obMzHskVntW2a/5lYimlqnaWaWbJvfEI7/pHPyDvknTyWpZ7WGdXREH7iJT/jUv2RdvAvhrO5LOCnvuDYzOcAsu0+dmTA/X9xjQqEVvFp+rQMEVxKTx/eHGkahzhOZZVmC2Vidoi1/JRb12QMYc+8PqR0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1779958791; c=relaxed/simple;
-	bh=zPDDn28jxSYY9h0mMdk5wTP1lKGYJVvB3/cS7aenkAA=;
+	s=arc-20240116; t=1779959533; c=relaxed/simple;
+	bh=FtE4otJa0Ru24yq/kC05tfoVqpyJ/HrNt2rV3me53mc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=TfYGsf8Kunm99hlBdpEQGrJMwcOHa6XWG+nND2j1wuEtMWsBc+cWcDywJ0yFQNQJm1SMDLF+t5a7g4bK6gSQBRVJLQ6WzEhW9CaMC7dzIECIBNZPOm9lDna9oGmEbp+2dAgZFegtvP90021T3IZoiRtIiiLfrfrWrl+LI+K5hnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eY7hCa0V; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=j9Cmh2qpjd34jx4AP210zzm0nsYyGQYm2CDFd/md7qNiRhB0trW1RA1XzaKfrDBStkocbegxbZJU1rupbFZiACgm/ZtxohZA84tl6yCZRSqqTGapPnjR/OVOc/NFe9IyIMkIRANUMxk9mLZTpObK59pQzDqszjNTkKwEEd/MxOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EDAUG1De; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eY7hCa0V"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B69101F000E9;
-	Thu, 28 May 2026 08:59:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EDAUG1De"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 641531F000E9;
+	Thu, 28 May 2026 09:12:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1779958789;
-	bh=Lp4jCvXB8WSksztNeF7c+KdTupT3/plHSWl3xdlMR+E=;
+	s=k20260515; t=1779959531;
+	bh=gcflqZfEBAIcp6dd2itzk/Pd/XMkuWFdvgXBnuSWhiM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=eY7hCa0V4SCUa/yjC/ZjWFP300uFZye8RJD457QT1QK1u/3JAz58MPYzzi9339MSc
-	 1B5MA0FYQuEJ2qvw/jdhKUw1ZTSvfXSSEQhHYvl0UODg03dcsuk9mCfXg7oKosy3rK
-	 eCdkv4NXvfr7hOGJ6ojAO7u7NCC3hNSrrM+yOnYBXqcMgMxzzvqH/yfGRTxUUvo8lE
-	 /lb7m1SdrjtkZtnR/fwr3fWe8tsXUC7hHnO8lT5PQ+nx1cfZOBaIIXmTAsw01wNrv+
-	 m3JkJSpEfWibRtcuaUOKoZ0NSV4xXWCF7rA7dVPZ3+5AIPThXDYnQxkXucq8Vk8oFK
-	 SPOR02dxG7BZg==
+	b=EDAUG1DesN9ej+ebF3lFwqhCX2Io/seVqsra9apT6EcwuGx7eYBp2YEptDd3i0ipr
+	 fa5L2akuD3J7jfJhxEYYU6MiQN0TYoobTeA2mM9BB5KWu9ZOSzc8qR/F7oXRsxko7r
+	 klDzRPx5H9Khz4ig/raxtCF8eimvEyW3aOITK0iK2d+SVwf4/uEpx00t//vXHQuMcU
+	 SRJkklgE/dCGPvEAYgJen1CWr2fXg5Zi4SIaIlz+bEafLVCi2ozq3Qm64A8WbWJ/47
+	 KGGOItwsEJjw0qTd4pQh2Be5PWD0EDf7hnxC2on+7O82okrVvFbofzjjOzPKNLSAdG
+	 I1MlnMrWKzX+Q==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 08/11] iommu/arm-smmu-v3: Allocate IOPF queue for
- ARM_SMMU_FEAT_PRI
+Subject: Re: [PATCH v6 1/9] cxl/hdm: Add helpers to restore and commit
+ memdev decoders
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Nicolin Chen" <nicolinc@nvidia.com>
+To: "Srirangan Madhavan" <smadhavan@nvidia.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <a02e498421b4ce702900d015881fd351c28ceadf.1779944354.git.nicolinc@nvidia.com>
-References: <a02e498421b4ce702900d015881fd351c28ceadf.1779944354.git.nicolinc@nvidia.com>
+In-Reply-To: <20260528083154.137979-2-smadhavan@nvidia.com>
+References: <20260528083154.137979-2-smadhavan@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 28 May 2026 08:59:49 +0000
-Message-Id: <20260528085949.B69101F000E9@smtp.kernel.org>
+Date: Thu, 28 May 2026 09:12:10 +0000
+Message-Id: <20260528091211.641531F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-
-Pre-existing issues:
-- [Critical] The condition for allocating the IOPF queue incorrectly mandat=
-es `ARM_SMMU_FEAT_SVA`, leaving `evtq.iopf` NULL on platforms supporting ST=
-ALLS or PRI but lacking SVA. This leads to a fatal NULL pointer dereference=
- in `arm_smmu_enable_iopf()`.
+- [High] Modifying CXL HDM decoder base/size registers before ensuring the =
+decoder is uncommitted violates the CXL specification and introduces a race=
+ condition.
+- [High] `cxl_restore_dvsec_range()` propagates positive PCIBIOS_* error co=
+des instead of returning standard negative errnos, violating the expected A=
+PI contract.
 --
 
-commit 4cb5a675156f4120c4c0531ad8a519bcc597afe7
-Author: Nicolin Chen <nicolinc@nvidia.com>
+commit 9296092c66325a5bcb4efe105b5c2a5e625c1363
+Author: Srirangan Madhavan <smadhavan@nvidia.com>
+Subject: cxl/hdm: Add helpers to restore and commit memdev decoders
 
-iommu/arm-smmu-v3: Allocate IOPF queue for ARM_SMMU_FEAT_PRI
+Add helpers to restore endpoint decoder programming for a CXL memdev from
+CXL core's cached decoder objects, then commit it as a distinct step.
 
-arm_smmu_init_queues() allocates smmu->evtq.iopf only when FEAT_SVA and
-ARM_SMMU_FEAT_STALLS are both advertised. A subsequent change will add PRI
-support on top of the IOPF infrastructure, so the IOPF workqueue must also
-exist on SMMUs supporting FEAT_PRI without FEAT_STALLS. Extend the
-allocation condition to include FEAT_PRI.
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 0c80b76a5f9b4..f7af1041a9fc2 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
-arm/arm-smmu-v3/arm-smmu-v3.c
-> index 72fd5caa27368..87e4880a145f1 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -4504,7 +4504,7 @@ static int arm_smmu_init_queues(struct arm_smmu_dev=
-ice *smmu)
->  		return ret;
-> =20
->  	if ((smmu->features & ARM_SMMU_FEAT_SVA) &&
-> -	    (smmu->features & ARM_SMMU_FEAT_STALLS)) {
-> +	    (smmu->features & (ARM_SMMU_FEAT_STALLS | ARM_SMMU_FEAT_PRI))) {
+[ ... ]
 
-[Severity: Critical]
-This is a pre-existing issue, but does mandating ARM_SMMU_FEAT_SVA leave
-evtq.iopf as NULL on platforms that support STALLS or PRI but lack SVA?
+> +static int cxl_restore_dvsec_range(struct cxl_memdev *cxlmd,
+> +				   struct cxl_endpoint_decoder *cxled)
+> +{
+> +	struct cxl_dev_state *cxlds =3D cxlmd->cxlds;
+> +	struct cxl_decoder *cxld =3D &cxled->cxld;
+> +	struct pci_dev *pdev =3D to_pci_dev(cxlds->dev);
+> +	u64 base =3D cxld->hpa_range.start;
+> +	u64 size =3D range_len(&cxld->hpa_range);
+> +	u32 lo;
+> +	int dvsec =3D cxlds->cxl_dvsec;
+> +	int id =3D cxld->id;
+> +	int rc;
+> +
+> +	if (!dvsec)
+> +		return 0;
+> +
+> +	if (id >=3D CXL_DVSEC_RANGE_MAX)
+> +		return 0;
+> +
+> +	rc =3D pci_write_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_BASE_HI=
+GH(id),
+> +				    upper_32_bits(base));
+> +	if (rc)
+> +		return rc;
 
-The SMMU driver sets master->stall_enabled =3D true if ARM_SMMU_FEAT_STALLS=
- is
-present (e.g. when dma-can-stall is true), without requiring the runtime SVA
-feature bit (ARM_SMMU_FEAT_SVA).
+[Severity: High]
+Since pci_write_config_dword() returns positive PCIBIOS_* error codes on
+failure, will this function return a positive value instead of a standard
+negative errno?
 
-If a userspace application (e.g., via IOMMUFD) creates an HWPT with
-IOMMU_HWPT_FAULT_ID_VALID and attaches a device with STALLS enabled but SVA
-unsupported, arm_smmu_enable_iopf() will be invoked.
+This propagates up to cxl_restore_memdev_decoders(), whose documentation
+states it returns negative errno on failure. Callers checking if (rc < 0)
+might treat these failures as success. Should this use pcibios_err_to_errno=
+()
+to translate the error values?
 
-Since it only performs a compile-time check for SVA
-(IS_ENABLED(CONFIG_ARM_SMMU_V3_SVA)), it proceeds to call:
-iopf_queue_add_device(master->smmu->evtq.iopf, master->dev)
+[ ... ]
 
-Since evtq.iopf is NULL, will iopf_queue_add_device unconditionally
-dereference it at mutex_lock(&queue->lock) and cause a kernel panic?
+> +static int cxl_restore_hdm_decoder(struct cxl_hdm *cxlhdm,
+> +				   struct cxl_endpoint_decoder *cxled)
+> +{
+> +	struct cxl_decoder *cxld =3D &cxled->cxld;
+> +	void __iomem *hdm;
+> +	u64 base, size, skip;
+> +	u32 ctrl;
+> +	int id;
+> +
+> +	id =3D cxld->id;
+> +	hdm =3D cxlhdm->regs.hdm_decoder;
+> +	ctrl =3D readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+> +		return 0;
+> +
+> +	base =3D cxld->hpa_range.start;
+> +	size =3D range_len(&cxld->hpa_range);
+> +	skip =3D cxled->skip;
+> +
+> +	ctrl &=3D ~(CXL_HDM_DECODER0_CTRL_LOCK |
+> +		  CXL_HDM_DECODER0_CTRL_COMMIT |
+> +		  CXL_HDM_DECODER0_CTRL_COMMITTED |
+> +		  CXL_HDM_DECODER0_CTRL_COMMIT_ERROR);
+> +	if (cxld_set_interleave_fields(cxld, &ctrl))
+> +		return -EINVAL;
+> +	cxld_set_type(cxld, &ctrl);
+> +
+> +	/* Preserve setup_hw_decoder() programming order, without COMMIT. */
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id)=
+);
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id)=
+);
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(skip), hdm + CXL_HDM_DECODER0_SKIP_HIGH(id));
+> +	writel(lower_32_bits(skip), hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
+> +	wmb();
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
 
->  		smmu->evtq.iopf =3D iopf_queue_alloc(dev_name(smmu->dev));
->  		if (!smmu->evtq.iopf)
->  			return -ENOMEM;
+[Severity: High]
+Does this violate the CXL specification by writing to the range registers
+before ensuring the hardware un-commit is complete?
+
+The code clears the COMMIT bit in the local variable but writes to the BASE,
+SIZE, and SKIP registers before writing the updated control register to
+hardware. If the hardware decoder was previously committed, changing these
+registers is not allowed until the COMMITTED bit actually reads as 0.
+
+Also, since the un-commit is only initiated at the end of this function,
+could cxl_commit_restored_hdm_decoder() read the control register before the
+hardware finishes un-committing? It might see COMMITTED =3D=3D 1 and return=
+ 0
+without setting COMMIT, leaving the decoder uncommitted and traffic disable=
+d.
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1779944354.gi=
-t.nicolinc@nvidia.com?part=3D8
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260528083154.1379=
+79-1-smadhavan@nvidia.com?part=3D1
