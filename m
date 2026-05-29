@@ -1,95 +1,109 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6F2D2E0925
-	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 13:07:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD46E33D4EC
+	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 13:44:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780060053; cv=none; b=ZFIap+bCTezaVYK7rmbqPmmdJ/1Pfvg3zqxSlGPrzKOlj3Jv2LZU06R2znIr+aCBRaoN7Er77uV3BL8MgMT6PkpZh9JnNlHUhQiIFZSQTB5ojDh46EOizHGwdhcO0vzW2RXUpHOVRGn2GcFg6PiKYu5VZUvTiN1kj9jo44XLKfY=
+	t=1780062288; cv=none; b=ClNBbhnTSz0ud8aki2f4R1qHlaknpv+lY/w63oXdS7MRn4Kq1B37U4iXUDQfMgD40Pi/xao5xtesdlfTHud9BwNOYy5dfK2HfRs9Ebx3euaVAMIhpvrzepQj/MAfaCJWq+pWyA4nuALI5taCQHOkGA4NBmGeLKzFRlQO/pA6BcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780060053; c=relaxed/simple;
-	bh=hd4LcNwj6ksj2iLj3ZD/dP35j67yXqIvzJr4hsBXpJ4=;
+	s=arc-20240116; t=1780062288; c=relaxed/simple;
+	bh=pmRr1WoVRXfZjFNFusCm46LD9YTmkOvWPKxoItv4qlc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Xw8NqBqpGXjRRfSgylTc5N2kzhr8OU7289TwCy2FqCeH3sW3lgIpUh7kFGADKdE07DHt6NeYfQ8xrwyHDAQv53XEInQhvXTpHhjNjxTyBB+9gVv0Rxkh6HwPeCpQSAko5y5oyW5RRlE4l8Bp/Uc47n6bOlkNmOwqHLoVt4gTDXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WD/DP8DV; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=peWiJTL+zis6CPVOMOVV1+vbnTiBvmGZXGcbicmwirE8Ieab5yWCY4aPTgYp5PLJ3hJMQt/im1Lun4PXFoFJAgiU6oVBE3xQHvGkcHAhRsBqaFIFCsiQoky/V8/1mex40W9LQXQjLkcY57uWdD7RhOJ3QB0O25xkBIRtcRNwCjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IFFB9O7K; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WD/DP8DV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A26F1F00893;
-	Fri, 29 May 2026 13:07:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IFFB9O7K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292921F00893;
+	Fri, 29 May 2026 13:44:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780060052;
-	bh=ux8H2pFS6ildcVRJ51mseZ3+aU3sAxVBu3awp4TkCis=;
+	s=k20260515; t=1780062287;
+	bh=EdQrJjPAsSpUbObAtne4pbjhOdwwDLrsEj+qOR0M7DM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WD/DP8DVfwtfd/f1UgwWXExgqAaUO3Hybb32broHP/UwqZWxIAgc712NszWQOYy9n
-	 qg1LrI07iCAFA7okPHeSOHlizUnSvBHerFSA39NDQe0TVfAFwnpPkQmXBbElVlUCRN
-	 vKek8z7G7xFeJOJJMgmtWxBnfPGtvBFz3FCPkafwXqbTJthnvhD5qrxk2uNvxvM+lg
-	 4d5aTIL+1Ejqw0ysdO9MhtOFXp8wnD6pm0qtbD+c+hdkevDTqkA+fYegdi0/etMeDa
-	 v0RKbl3CgqNW8nczZHw6pMKGpf9yPMsY1t/+lsPVDluLJXrSggYEwE411sUdSUX9N1
-	 gidtXY6H09TQw==
+	b=IFFB9O7Kf6KgJChMYmyqOHL8L8rHY8Y5B4YGqBGxWaClEYPdHYR5fDvqiYZcuJSbZ
+	 6oWVa5U1ZxcWSjEcVV7ib+vZp65PCoTTmV38n06sX+ZzNczYKdhfkojqvxBMw9NR5G
+	 JooBixVXqmNAmuzteDq4IP8RPPKprDLbD+2cC46unb2dk1RxYZND6drlxxrgVHqTXB
+	 Q0d1rca5+GeGsCDzcnheAwAQQPDuesxsP2qZAzyj6KDhi5z1cqrQyI2BNpuTbdfoRP
+	 wa+Uz1bLSeYFsq8nhfUOflfA+4i8ccm8UKOr3LCd2wPLb0EAcQS/ljvPEegO/wpIWK
+	 cnsG6s3/oxoPw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 3/6] PCI/ATS: Mandate checking pci_ats_supported()
- before pci_prepare_ats()
+Subject: Re: [PATCH v6 4/6] iommu/arm-smmu-v3: Standardize ATS enablement
+ failure reporting
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pranjal Shrivastava" <praan@google.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260529111208.387412-4-praan@google.com>
-References: <20260529111208.387412-4-praan@google.com>
+In-Reply-To: <20260529111208.387412-5-praan@google.com>
+References: <20260529111208.387412-5-praan@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 29 May 2026 13:07:31 +0000
-Message-Id: <20260529130732.5A26F1F00893@smtp.kernel.org>
+Date: Fri, 29 May 2026 13:44:46 +0000
+Message-Id: <20260529134447.292921F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Adding a WARN_ON() inside pci_prepare_ats() causes severe kernel w=
-arning spam during boot and creates a DoS vector via hotplugging on AMD sys=
-tems.
+- [Medium] The error message drops the specific device context.
+- [Low] State-mutating function call placed inside WARN() macro condition.
 --
 
-commit d186831ffc8e024f9925cf7f6047ad60755bc2d8
+commit f858943c568bf1c4936c2371054b39b080e8ae6a
 Author: Pranjal Shrivastava <praan@google.com>
 
-PCI/ATS: Mandate checking pci_ats_supported() before pci_prepare_ats()
+iommu/arm-smmu-v3: Standardize ATS enablement failure reporting
 
-This commit updates pci_prepare_ats() to wrap the internal
-pci_ats_supported() check in a WARN_ON(), mandating callers to verify ATS
-support prior to calling it. It also updates the function documentation.
+This commit moves failable ATS configuration to the probe phase and
+updates the commit phase to use WARN() for enablement failures. Since
+hardware capabilities are verified earlier, failures here are considered
+kernel bugs.
 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index 9cb23780093dd..f1434f86ac40b 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
+Link: https://lore.kernel.org/all/cover.1779392420.git.nicolinc@nvidia.com/
+
+> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
+arm/arm-smmu-v3/arm-smmu-v3.c
+> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
 [ ... ]
-> @@ -64,7 +66,7 @@ int pci_prepare_ats(struct pci_dev *dev, int ps)
->  {
->  	u16 ctrl;
-> =20
-> -	if (!pci_ats_supported(dev))
-> +	if (WARN_ON(!pci_ats_supported(dev)))
+> @@ -2956,8 +2956,14 @@ static void arm_smmu_enable_ats(struct arm_smmu_ma=
+ster *master)
+>  	 * ATC invalidation of PASID 0 causes the entire ATC to be flushed.
+>  	 */
+>  	arm_smmu_atc_inv_master(master, IOMMU_NO_PASID);
+> -	if (pci_enable_ats(pdev, stu))
+> -		dev_err(master->dev, "Failed to enable ATS (STU %zu)\n", stu);
+> +
+> +	/*
+> +	 * Any failure at this point is a kernel bug. pci_ats_supported()
+> +	 * and pci_prepare_ats() have already verified the hardware capability
+> +	 * and programmed the STU. Thus, pci_enable_ats() should not fail here.
+> +	 */
+> +	WARN(pci_enable_ats(pdev, stu),
+> +	     "Failed to enable ATS (STU %zu)\n", stu);
 
-[Severity: High]
-Will this trigger severe warning spam during boot on AMD systems?
+[Severity: Low]
+Does placing a state-mutating function like pci_enable_ats() directly inside
+the WARN() macro condition hide essential hardware configuration logic?
 
-Currently, the AMD IOMMU driver unconditionally calls pci_prepare_ats() for
-every PCI device in amd_iommu_probe_device() without checking if ATS is
-supported. Since most standard devices lack ATS capability,
-pci_ats_supported() returns false, which seems like it would trigger this
-stack trace for every such device during probe.
+While Linux's generic WARN() macro currently evaluates its condition exactly
+once, placing this logic inside an error-reporting macro can degrade code
+readability and break developer expectations. Could the function call be
+extracted and its return value evaluated instead?
 
-This breaks git bisect and causes boot panics on systems with panic_on_warn
-enabled, or provides a local DoS vector via device hotplugging.
+[Severity: Medium]
+Does this change drop the specific device context from the error message?
 
-I noticed this is fixed later in the series by commit e469ff12f2f6
-(iommu/amd: Fail probe on ATS configuration failure). Should the AMD IOMMU
-driver be updated before this patch to preserve bisectability?
+The previous dev_err() call automatically prefixed the log message with the
+specific device's identifier (like its PCI BDF address), which is crucial
+for determining exactly which hardware component failed. By switching to a
+generic WARN(), this device context is lost.
 
->  		return -EINVAL;
+Would it be better to use dev_WARN(master->dev, ...) or explicitly include
+dev_name(master->dev) in the format string to preserve observability for
+debugging specific hardware failures?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260529111208.3874=
-12-1-praan@google.com?part=3D3
+12-1-praan@google.com?part=3D4
