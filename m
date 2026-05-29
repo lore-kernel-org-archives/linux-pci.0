@@ -1,83 +1,46 @@
-Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F1F83451B5
-	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 20:11:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 020392DF717;
+	Fri, 29 May 2026 20:31:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780085494; cv=none; b=R4ckAKy5hTnkCWpXoy8AnzKlmemHt4w2eW8PKCw5xQE54v75Z2YFrrtm8iAHB2sCWMzRBsUvkOB3lQv5lSvhuTzRLggotFGy8PxYtCVNKH1bRxFAO26QjrpgrlYeskuhkNsu18+B5KXkW3dLIsO/6XAd2SBxiDVpAe8/XtUEsMw=
+	t=1780086693; cv=none; b=IFMTILIW7jyyfad3KTOhzGXmujRnWXe7FVOVIru4J3WbLUraYVZaOE7FEvyQtEx5wMCClhrvMCCI35BDcgnhFFlE9N/AgAr8YAT33tYv8KH+R/j79C6nbWmKbDyrKtvpClWHx6rbfeePuLJQ7denR7mXaQUdiR8mCkbncr8xJ64=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780085494; c=relaxed/simple;
-	bh=yIjjEsSzcNVlj5Jerb5VL9COIWs3RWb5zUy94AhWr9c=;
+	s=arc-20240116; t=1780086693; c=relaxed/simple;
+	bh=uajjuqb/XF50ia154Qjr+gRVrNC1XNs9EZvGuMYP1rk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pS/TxtNSB3wdShL4/oV5OHQDYsSY4alSgZt7TFJHTWzy5W0n4Z0StymmTr9LQi3YaW2RQhJl79BFjuvTCGoU8k6wH+eRaH1nNsVCfyT8fgAN7AbmfOXYA04rWF/BdjPullgueZxt+bSs2BJqC4aQNb6NHeeJd5tvEVb8kMzNfSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=W6mucJMI; arc=none smtp.client-ip=209.85.222.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	 Content-Type:Content-Disposition:In-Reply-To; b=MEtIRC5Rij1X4ZgZ5OmR4D4W5c4DUq8e71QBadW1NmCFERMSacfCHG3DCCnGig7BV6oLn79owbitY9SxPhNu6Hh0MqPcY4vJ7dn0Yj5JXKJdwZWNhW/koPzQ6XbI0JAcc7lFIfShRFA0USYAoorpQ4z/0EK7+deYscY+/5dC/Mk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F152Qvw6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="W6mucJMI"
-Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-914b5f85129so697282485a.3
-        for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 13:11:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1780085492; x=1780690292; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=x50nMfXuC2+erTFJFRG2pVEkXmZORi5k9T8WBzn0C8s=;
-        b=W6mucJMILm76P1OvgIkeoQrHk1o7XL8eEki7XJZS1XS2OjCf+Mt31OyMtZjR2qaphh
-         JYplHQ+jawZn32wdHnTUZ7/BfzMzKsTBm8Fig6rF907+pur3pR03NcbXI3r1E4jPnjWi
-         Pj4l7r9Cd2P7VD6P6PcOKOr4ri/urmF4R+FIVF9YA78pTdvWQQSYvF7Z7feosxpyprw7
-         +tFE69MQ32W/Mxl0Hefoqfx48geK4OASrV2q31UfG3eYxFQEg3WoFwURPR8t8K7LU6Z6
-         3WzIrlfGGwk+6WgLZUiy5+fga84k7c35MG0crSnEaA2c5absa3at7TeFsmJ2pdiwI3bK
-         qt4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780085492; x=1780690292;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=x50nMfXuC2+erTFJFRG2pVEkXmZORi5k9T8WBzn0C8s=;
-        b=dv/3lqYM3KN6DCB+mwQZulzaidyIvew1CRW+y3hSEwkiAdbpF9w22d2EAfHn71Ak06
-         /0q/Ppp3zMANUIkQTgM0H5GkfKriA1JnJil/oDBONRtt43uoQ4rIxLRyMmJHQg4zYOR9
-         rHo/rxrPIMccduM3eslXHXZ3QRhXCxfBWdQk/rS01vacvnmc9ngXEd7WXIWfWEJSTiPI
-         R86xE31FKpVB9qLeasjSHKcEe7zCf1hxYeVyWTCxfkya3ncXLbVD1urCm21XwS5hPf+z
-         LJlbgULp6taCy03fYLt7DHYhc92znK5uGs8iUXhu0cSvE229O4wA41EgUJN6RflmqVRu
-         Ad2g==
-X-Forwarded-Encrypted: i=1; AFNElJ8oWsV6qgFKrT8TQutgWMr6J8AA8pWIR28nFBNavyP3B79W7M4iA3VLy68aUzRbkf9fhYcYwlhx0tQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwP31HaRX8MznAOlqFB8leTPooU+hqGSCc9oqQqPL+JFc/eYOI8
-	/JP0frzVyTUViIm6PLADWDQehlNyodiKl1TQoQxrC9vYXylrf1da0ZoyGjZukqSIsMU=
-X-Gm-Gg: Acq92OHdchYFxEwIF+XOgYmC7ITC8hlkz8YcPH1RUoftOczThEzVQhKbWdxhNAGH7Y9
-	tcqQSHaa4uNUlEqCaP+exEv4rjLXwYPT1MsJxkdctwNVGpxOXOP3CI35cUJ0JQCtt0Xn4S0k6an
-	etBQHBxtcXihIUQPEIn2V1YLbMr6zuPishpzih+HOyJHjH4Kww5FI5oWCTKvuymUJbXQPo/AEX6
-	28TkN2vfoyKizg30lWUew0iLvg4gfeYp4zjZyLVgk/z3jXY1R+atRyQId8WIwaAhIAZi88pmNej
-	hgGkeCZ57zRPJkBg0T+ezJi7CfVBHrbavHlYljJKHZeXFiwPDT3DYsw9DY/6r5tqSCo8q1E0VBg
-	BhAbaMOx9dEAJFLFcJLY0LLlWtOG3Hssr8VoEnYOF2Gh3Si36XeWGIgV+j/ijjI5tGvNqW5hhmi
-	1aa+8rQrwFPY/0myXUTb6MDVs4NyhpV05NQxQgAaiJB5UEP49Zd03hYUq51s4p3N0Ha3A3A8x84
-	GY26Zwl8ovIg99K
-X-Received: by 2002:a05:620a:649c:b0:912:671b:d090 with SMTP id af79cd13be357-9153d999728mr194543785a.24.1780085492316;
-        Fri, 29 May 2026 13:11:32 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9153244de53sm312617585a.8.2026.05.29.13.11.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 May 2026 13:11:31 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wT3YI-00000000q8h-45Mx;
-	Fri, 29 May 2026 17:11:30 -0300
-Date: Fri, 29 May 2026 17:11:30 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Cc: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F152Qvw6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB0DD1F00893;
+	Fri, 29 May 2026 20:31:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780086692;
+	bh=DZuhqXRZ7B73ropw+7ipWGbAJYsiDVXSY0jkt4goiLg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=F152Qvw6yKoLFyZh9kVnYLSDLYITRbxREEo+3G+y61xFLW8Vh2JRdVJ4dy9+uKN0t
+	 4F9yskFnkeUwrPTubsw44PP3e7bsixkmtdMFhW+UsOjhATizHGcLDtjQO6x0GqpmD9
+	 d5Je41Pw76d7wxiSYhgV/1UOx+Ifmv7QUFE79BdEjBYMBtKoK2Ae7N7cFboY1J3hF5
+	 DR3eKcr6eIypH23s/My2lx2HSeSzEjfKyarJygx7JftCrwgrlCFzh5Db8wKhw7JY43
+	 muaNntq3czmhow09X/r2E7jwChAscPvpZPMauDxURhCeIOIZCQ3xY7/btpjzz4POHe
+	 +N3Gd4X9w/J+g==
+Date: Fri, 29 May 2026 14:31:30 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Cc: Zhiping Zhang <zhipingz@meta.com>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Alex Williamson <alex@shazbot.org>,
 	Leon Romanovsky <leon@kernel.org>,
 	Sumit Semwal <sumit.semwal@linaro.org>,
 	Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
 	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
 	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
+	Yochai Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
 	Linus Torvalds <torvalds@linuxfoundation.org>
 Subject: Re: [PATCH v5 0/4] vfio/dma-buf: add TPH support for peer-to-peer
  access
-Message-ID: <20260529201130.GU2487554@ziepe.ca>
+Message-ID: <ahn3ovmkEq-Y-LKt@kbusch-mbp>
 References: <20260526144401.1485788-1-zhipingz@meta.com>
  <a8cd01ab-d7aa-465d-bfa3-431f78f33ee1@amd.com>
  <20260527121438.GJ2487554@ziepe.ca>
@@ -94,38 +57,35 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
 In-Reply-To: <8d9bb0b7-182d-4930-b683-d5d24da6b2ab@amd.com>
 
-On Fri, May 29, 2026 at 09:36:00AM +0200, Christian KÃ¶nig wrote:
+On Fri, May 29, 2026 at 09:36:00AM +0200, Christian König wrote:
 > On 5/29/26 08:34, Zhiping Zhang wrote:
 > ...
 > > There's no in-tree vendor PF driver
 > 
-> Well I have to admit it's a bit on the edge but this sentence is a
-> show stopper.
+> Well I have to admit it's a bit on the edge but this sentence is a show stopper.
+> 
+> DMA-buf is an in kernel interface for buffer sharing between drivers and any change to it needs an in kernel driver as justification for the added complexity.
+> 
+> > - the device is a Meta MTIA
+> > accelerator managed entirely from userspace via VFIO passthrough.
+> 
+> When you have a complete open source driver stack which utilizes VFIO passthrough as the interface to communicate with the kernel drivers then we can eventually talk about that.
+> 
+> But as far as I can see without upstreaming or at least open sourcing the full stack to utilize this functionality it's a clear NAK to upstreaming this.
 
-I think he means the device is not SRIOV. vfio-pci is the in-kernel PF
-driver.
+But the existing dmabuf for vfio-pci was accepted upstream without these
+requirements. I see you had concerns about even that, but still Acked
+under the same model that's propsed in this series:
 
-> DMA-buf is an in kernel interface for buffer sharing between drivers
-> and any change to it needs an in kernel driver as justification for
-> the added complexity.
+  https://lore.kernel.org/linux-pci/57b8876f-1399-4e4d-a44b-1177787aa17d@amd.com/
 
-vfio is the in-kernel driver, this series fully shows the in-kernel
-API using vfio as the exporter and mlx5 as the importer. It certainly
-meets the standard required to show in-tree users.
-
-> When you have a complete open source driver stack which utilizes
-> VFIO passthrough as the interface to communicate with the kernel
-> drivers then we can eventually talk about that.
-
-That decision is not up to dmabuf - what VFIO subsystem requires to
-accept a new UAPI is up to the VFIO maintainers.
-
-DRM and VFIO have very different views on what is required to merge a
-new uAPI.
-
-Jason
+So with vfio-pci and mlx5 both in-tree dmabuf users, implementing and
+consuming the callback, does this not satisfy the requirement? The
+userspace-driven semantics are inherent to VFIO's design. I don't see
+what additional value open sourcing the user-side provides for the
+kernel-side review process.
