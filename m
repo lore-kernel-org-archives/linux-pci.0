@@ -1,227 +1,166 @@
-Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 792A92877DA
-	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 06:41:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780036913; cv=fail; b=F0PFWdarA/hHyFyrtp+3go3dxbYPCyGLT0QA6P0DFUBwvF6XTjJpG7ZU+BZ6LLiMkzL2rqqcakJpEEytcNJ9eYyBtQOwxYnQv4bTu6c4iJND/Vi0l60CpY0Rg7W2YzVgylNKkzYHl5DnFg8BV4O5CFkES9N++yA3HPQ5fKm313s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780036913; c=relaxed/simple;
-	bh=RUFhAdhfxdt+409Lo5x+VBLswnLbP635ULre/4vDtdY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DGRSpufEaM8GsTZ/nAr2G8fbY5jXYoXxsMi0aVYX/Mg4ne2VWUWerpCOP+2UX34AypdzNx1w9CrftZtlq3E13alNCGokD1zegEyvQ0brcoa4jTPkNCpzbKjh2QxMMWHSUgxhl/n2o7LiBjp8gfUq1jV9+Ah9LJJoT8UVLpM0mLA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=myui/KH8; arc=fail smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A53783A16B2
+	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 07:03:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780038232; cv=none; b=jaXiIgjJ5enWjDfEzStFsaFvalEYZDjjvZwA5kI4Adhmw9FP/U4OIuEjSKnyFshE70ysRyGdnuHyc3/s58IhNufJr4UqKqyVUKg0AAawrUGuxckTlqIJx2Hnx7w9w8MRecMfomH+Qrf/dMh7LE7nvot13LhQdjytiOUDrnHIswg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780038232; c=relaxed/simple;
+	bh=K37FJrlJLgQ48xNBlfd/0e/D+IfYMnIA6C3+yZ6AfF0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dDcTCB4lW4BPoT4dwz8GCfWpoOEPDwUMJniIKm89tzLK0LqLOv4dOcfpLs/eY6YVsFzkc+mGPhrpeTuBrnKI03kOoRbihFbY2RINgsefp7WRUs4dDodaGoE5JVmM6zOgu5LfqdeFqGR4M/RvdbeQwglar20cq2eBqst1GW2ad6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=B0SuzoBi; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="myui/KH8"
-Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 64SNXkYt1251604
-	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 23:41:51 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=wjl2lJMhu3x6YF6VZMdTDkNQcozAcKqTdHEY7+axmxo=; b=myui/KH8juDb
-	9VFRxDDFEIimNoAd5XwHhraUO/L1qE4ZtZnO5K+/nzprny+oPTbRJWHwUl7Iab/B
-	cMLPIr8HMpKYeWusLbb/K+iwCBNNEvNQ4TbH/N8JWoEGZzYAl66wAE0qc8sarvKy
-	NYv2JsEurivQoqaAHfEmVHaXwieB82fQ7S1h7lyRTkK45xQ7kvSunBJhbh5mhqcS
-	R4u4gH7+DhvThFUOuSUwR7HsCG5Cx58JsKiG3AGPcpDd3+2CHCL50PZkKvpuBsSW
-	56zV2uZKI0BOQNtMOtj246H6KVeuu5CBuNc+Twlud+11KyL2joGJMeL7vJmJjcwU
-	nf9M3D97/Q==
-Received: from mail-oi1-f197.google.com (mail-oi1-f197.google.com [209.85.167.197])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4ee7x1a7y3-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 23:41:51 -0700 (PDT)
-Received: by mail-oi1-f197.google.com with SMTP id 5614622812f47-479d74f0d95so20061182b6e.0
-        for <linux-pci@vger.kernel.org>; Thu, 28 May 2026 23:41:51 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1780036911; cv=none;
-        d=google.com; s=arc-20240605;
-        b=XVN0pS8DDnhWWt/XMri1/wWW16bZA/RmjUOdFbaHFI8K6u1tdUChMbBX6/rMF67E7x
-         5+/uyQvddRlKQcaNq5VRbLCFMyOmm/aZIq8OX7kGPCGVhZo4FS1N9hu7H7a12p+pIX+O
-         7HPBEWBBcrfrdA9W+QvenMpTmG/KIhGgAlfJOmtjtzjkY68zSnFc+RMEUd1xHapo0tv4
-         HZfjy1OIeQ/TBeoY5W0k6rOCinNCYPk/YRDndno38CZ860uF6UCEq4EKciBDdRcU1u/3
-         MkbBwyu6w33HwFmY3wzefPiCdp5J2X20LVmFCgh2q4DaCs531lSELqR2pv8AwS2fhi3P
-         wahA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=5hKWaaPr0jpqnvHMhDmJMKNnaKkhbQEW5A8xM9/5BHs=;
-        fh=kU2V3bfYfvLVRunLZUz3swabjIyXEAOv1spDtwmi/ac=;
-        b=ABjbetF1AP7XOULa4jTksJAK0zUn2jOttnDFOX3oTByCNZRfos5EYYRq1BaTntkv9Z
-         SMM6vPTISZ1/3kp/1Au9UBihvcwd0LNIfTRckFJEcEDlaJFlBeWwNHKewTkllnUNNDEd
-         QLrPqWvzyp/Dr4jr2V0SSyM0cRlcLRipjczaM2uF4EmngoxQiKlue/Plw+YVdrqR8D1j
-         SjRmnPhtx2I7oynVy/C9MF9gGwwy3VWNb5HFL9bDDPAz3zupLXuTKMUn117E4J83Lv0b
-         t2VYd7eRtjA92BzkudTOAdC2GHtlQKOvD7JoIrKx2P7nnzZYFm5cwQojk3ATc9GFU3Ze
-         V0nA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="B0SuzoBi"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2bf2911f93cso745ad.1
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 00:03:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1780038231; x=1780643031; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wayzXiIvXZ+65LI5CwNwB4BPx1PsmW3NvKiQ0xrMIcM=;
+        b=B0SuzoBidHBRoedq5Ea9WnVE3wiNzFrgEHFv/RnCPiWpEmy95aqkiq30AdSBgAdQZk
+         skPKoCLtPEGx5GP/IISCQH2xmaFGUDUKA67kcbXExc33LFCF5jREAaibVpSCnFNYWDRR
+         SRla9QfrQEnxgQSyBaZmGOG2/RylCnG+Jdsq3Fap5ypU76CxdbnjjbG6zvj3tZksZQgJ
+         k8oQfasq1O5+BnCmE0job3hOpAJDkWHhG7IGrVr/Ibub4TYE4Recw/6mms7Z13AZzU5s
+         hqwhfUQXiCNUubpsEaT3zyrWjo13K4ciEA7vqUb9HQyMHKfge/NlWRAlk4lCXs99qgDh
+         oRdw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780036911; x=1780641711;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=5hKWaaPr0jpqnvHMhDmJMKNnaKkhbQEW5A8xM9/5BHs=;
-        b=H7bUzyNuju6XIFe/smqDEMZrnTimbGy12LIg7HBJutwNa7Q2EKqkqbRRKdtX3POYD1
-         KJclg+eAQaKpYUVSJVSuyk5JFQx6vyqQA3bZajoC75h5CCmdO4ap1FzkNuKdYDuC2LRX
-         0zbR7YlioQHje7ac2CPkvMZRul5hap93P2hok8OF5UF4PLlahp8COJjv7CiEtd95xRIT
-         UG3mlAZsT9NTfflsMygJy0ZYwj92J0+12Dg/nMmkegAlWV9KpcncsmKMX62PywnFHTX0
-         URL6vMQbPn/ZMDL4DsPGiLysODPldheyT30jELPUqnC8ot3ntWEWabwnMkO3TA9ju1Sd
-         32/Q==
-X-Forwarded-Encrypted: i=1; AFNElJ+5MmyvytgaNmrL4FPTfqPMxN3+S5/T1UTmMF5KIEMDEldifA3qdwEOZ+t/HrfR7lrqJvCrILZAXOs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzeYdiSSu4IjhN0FtWcT6o2mnCqUfiOC0RGZmcpAdEyEnAV7y9G
-	zEF6zT8kpGQnf09V2tr2FSxIwIKtkGVZIoDOuGEKzuv6uVil6BmZokRXpzY1BU5jGTONcacyKtw
-	GEBSwfX4kATdxrqy56Ef+0aG+uUibRVIrRRy/fBwA+WMqNjsuTVVn0sf3DRlkQtdri88zW1AAJq
-	L3NONkFFOLtuz/P/gXgceT3ZLHNOSLqL4Qtzc=
-X-Gm-Gg: Acq92OEJX0m/Wst7KiHGwuOBb+EqFJrDabUyQ6wgyfzgf9edUHbmXr7UDbwEZKVPPm0
-	Bssk33J+aUs+8WJaKJ8NUkRS72pfuUsOCI5OEUklPg1sfSBwFXxku9BfjIKeGv/fih5fFUdV07h
-	cltYzo8o7DsQ2yXeCTaaEq6icBe6wlphv7qiVf5aZS2AEnaA5y57safkzc5McFr6+YtnaczM4VW
-	Zl9AOfVQ2S9iXKlsEgUndUnI8fUksRvdMLnU6b0UsIliUy5LLg=
-X-Received: by 2002:a05:6808:1c07:b0:467:1212:46eb with SMTP id 5614622812f47-485e6dc0223mr972288b6e.35.1780036910684;
-        Thu, 28 May 2026 23:41:50 -0700 (PDT)
-X-Received: by 2002:a05:6808:1c07:b0:467:1212:46eb with SMTP id
- 5614622812f47-485e6dc0223mr972266b6e.35.1780036910218; Thu, 28 May 2026
- 23:41:50 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1780038231; x=1780643031;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=wayzXiIvXZ+65LI5CwNwB4BPx1PsmW3NvKiQ0xrMIcM=;
+        b=bBTA6FQIKDyJ50YAMbTzhKc6K3auI2tJFdlabjU8Iist2/3QeWL6GeZMrmOPLjkbKo
+         7KkteHlW4/jZ8L26SlK8csx7p6nhuK3CDyXCrPE0g35/yYwi+BYe6RBK1jKSK5CI5twD
+         HtqfSg4YNCeQ1x+VG3naqIpYiGxePQeaSMcBrgzi6bixGWnVFcyYEE4l2oWrAjWp4nXG
+         g42wNd8P51Uf8/3lKSbE/MgDEiOWIvnSy+FDj61QNaPYRUviA6nW4tnoX11X5mJC3VJK
+         ln89+UH45uWLakLV4M1f+uBBIDqL2tm0C200TnXCyAGWGkuPZvxsq6R20pEaQalH0vr1
+         mqgQ==
+X-Forwarded-Encrypted: i=1; AFNElJ/IA+OkNzhp3dI+4r+9tTTexYIA+TTuNNEsH76lToL35zJA2Iq+jse3h1ASZa1AVvudJBWmhHdK2l4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yys2pw5b36k5Ie7AOGhVSoT2dC7pWLmOfFO7XLxHPRl4h4WFiQM
+	8cUTL9KY7OGID2rt/mCH0b4kHBA5ZBa/PH8byvw9pP/MbFlAqsaJUDuB2RexgChVtQ==
+X-Gm-Gg: Acq92OH1By67kIAJJ9lrOzOMEWYrL/s/dU5tRamoB0/Zmn/8JUxg0CfX+et7lakIPIF
+	v794Ymip0UBny/ODsWRV+XHHLHV6MH+MTyyVnbHn/mc51WzqPUBUAA67BDCeis+JcOdsXhOpyem
+	PCgp/XvTsvOi+3l0p32Mq6Cg8iJAvuJHOFxeARZij2uyu/bI5rTryZqD9vgwJeSyRiNO/gJ/Nq8
+	X/tcphqBQ7IoGU7QzKncy+BUKi8B3OmduXO/RoEENNh0Ous7LoSKuGLA1OetYijfQtpqt/6jN19
+	8Sw5ymJuDcTZeavI5QzoCMdASWQpIq7Dyhh/3WXsD/N902t63l640YukCSc6KMN3oyP7eHrb+IW
+	z4u6uzfmIBwH3UgeSOQHT2hC18F1vuYuod9wJ11FGxvHgWMMIrx4VvW7bMgzEn250Qfj5WrIAb3
+	xno4lU0+R6RO/c4ZELzebe0N6sLTiK3K5WWgmUBQFAiqhypbGRMR4I4nYhn3x9mGZp+riHaqE0A
+	Waiids=
+X-Received: by 2002:a17:903:41c7:b0:2bf:1ae5:2c51 with SMTP id d9443c01a7336-2bf22e488b9mr1020105ad.1.1780038230320;
+        Fri, 29 May 2026 00:03:50 -0700 (PDT)
+Received: from google.com (44.234.124.34.bc.googleusercontent.com. [34.124.234.44])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36bbe12456esm592183a91.4.2026.05.29.00.03.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 May 2026 00:03:49 -0700 (PDT)
+Date: Fri, 29 May 2026 07:03:41 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Baolu Lu <baolu.lu@linux.intel.com>
+Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Nicolin Chen <nicolinc@nvidia.com>,
+	David Matlack <dmatlack@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Mostafa Saleh <smostafa@google.com>
+Subject: Re: [PATCH v5 6/7] iommu/vt-d: Fail probe on ATS configuration
+ failure
+Message-ID: <ahk6TchfnjsGUzs9@google.com>
+References: <20260528202353.3422206-1-praan@google.com>
+ <20260528202353.3422206-7-praan@google.com>
+ <3fa3d4c9-c083-4167-93fe-814f0ecfcb7f@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260526144401.1485788-1-zhipingz@meta.com> <20260526144401.1485788-2-zhipingz@meta.com>
- <20260527145332.30412ea4@shazbot.org> <CAH3zFs3Yv2G0rQNE7x8DjBWPE+3sFC_3X6ZtF4x-mPp==h0BQA@mail.gmail.com>
- <65b3d63a-271a-4aa8-ba8c-fc2b186349dc@huawei.com>
-In-Reply-To: <65b3d63a-271a-4aa8-ba8c-fc2b186349dc@huawei.com>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Thu, 28 May 2026 23:41:39 -0700
-X-Gm-Features: AVHnY4JOme_X08lKUfayqc49fxg4J4ab3o3Y14UzTjVjHMNZxrhWL7QV4gYwqO4
-Message-ID: <CAH3zFs3eddZUtb08oNpjEg5b2=DJtRCuEcjsxuPyRA-zB2idag@mail.gmail.com>
-Subject: Re: [PATCH v5 1/4] PCI/TPH: expose the enabled TPH requester type
-To: fengchengwen <fengchengwen@huawei.com>
-Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        Christian Konig <christian.koenig@amd.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-        Yishai Hadas <yishaih@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-ORIG-GUID: PdMXZcoxcc70maKAdjtSi_McisKJHFdy
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNTI5MDA2MiBTYWx0ZWRfX0z7W2KaZr58T
- S3y/AIh5pPsawOmEHKf5XksIe1sFPSMeUFcE7rMBbtRHmFRP3V9RMWfUbydfmQf3awy1B5RTGhs
- zXgKwfo5bUkJJc0NBmJJkbCz82rVfsbdBb3Uz5cEMMLG+9c6pf7HR7PbnsPXxG/dJSuO3jonmL5
- pos3tDzUXg4pc5veiIS5x7lpbbSoao6hWAER2cUn2QX+yHG+FK9zhlF8kMpHm4R/E0RKQV42TXp
- /YHgmBs9WIyHHqbXT9YAJuMpu2N9fSYrZQxMxC8dQF5mgy3Lag91go8Kxhs5aYJO4JWNDMAVDPq
- VL2yc7tCFXJ7460eKDHtOKzc2ZIMwFnz/pmxF95YuK50oxXibTt5OHAtfBeXXKa9yewDlSOU0M5
- JgEDQO9Llft805fR64ixkP67fo0CqY71ViHIlwAEuU4zqkIS4rPLILiJ2tf45hA3d0PRY2JuQ/y
- PCV9s+VPIfJidF0fXgg==
-X-Proofpoint-GUID: PdMXZcoxcc70maKAdjtSi_McisKJHFdy
-X-Authority-Analysis: v=2.4 cv=F6NnsKhN c=1 sm=1 tr=0 ts=6a19352f cx=c_pps
- a=WJcna6AvsNCxL/DJwPP1KA==:117 a=IkcTkHD0fZMA:10 a=NGcC8JguVDcA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=JnKecZnUtZousrUlYMGU:22
- a=i0EeH86SAAAA:8 a=r1p2_3pzAAAA:8 a=VabnemYjAAAA:8 a=zzBG9ipUb6nLY-ocZWUA:9
- a=QEXdDO2ut3YA:10 a=_Y9Zt4tPzoBS9L09Snn2:22 a=r_pkcD-q9-ctt7trBg_g:22
- a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-05-29_02,2026-05-28_03,2025-10-01_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3fa3d4c9-c083-4167-93fe-814f0ecfcb7f@linux.intel.com>
 
-On Thu, May 28, 2026 at 1:04=E2=80=AFAM fengchengwen <fengchengwen@huawei.c=
-om> wrote:
->
-> >
-> On 5/28/2026 1:35 PM, Zhiping Zhang wrote:
-> > On Wed, May 27, 2026 at 1:53=E2=80=AFPM Alex Williamson <alex@shazbot.o=
-rg> wrote:
-> >>
-> >>>
-> >> On Tue, 26 May 2026 07:43:53 -0700
-> >> Zhiping Zhang <zhipingz@meta.com> wrote:
-> >>
-> >>> Add pcie_tph_enabled_req_type() so drivers can query the enabled TPH
-> >>> requester mode without reaching into pci_dev internals.
-> >>>
-> >>> This keeps pci_dev::tph_req_type inside the PCI/TPH code and provides=
- a
-> >>> !CONFIG_PCIE_TPH stub for callers.
-> >>>
-> >>> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
-> >>> ---
-> >>>  drivers/pci/tph.c       | 12 ++++++++++++
-> >>>  include/linux/pci-tph.h |  2 ++
-> >>>  2 files changed, 14 insertions(+)
-> >>>
-> >>> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> >>> index 91145e8d9d95..6c4492075ae9 100644
-> >>> --- a/drivers/pci/tph.c
-> >>> +++ b/drivers/pci/tph.c
-> >>> @@ -174,6 +174,18 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pd=
-ev)
-> >>>  }
-> >>>  EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
-> >>>
-> >>> +/**
-> >>> + * pcie_tph_enabled_req_type - Return the device's enabled TPH reque=
-ster type
-> >>> + * @pdev: PCI device to query
-> >>> + *
-> >>> + * Return: PCI_TPH_REQ_DISABLE, PCI_TPH_REQ_TPH_ONLY or PCI_TPH_REQ_=
-EXT_TPH.
-> >>> + */
-> >>> +u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
-> >>> +{
-> >>> +     return pdev->tph_req_type;
-> >>> +}
-> >>> +EXPORT_SYMBOL(pcie_tph_enabled_req_type);
-> >>> +
-> >>>  /*
-> >>>   * Return the size of ST table. If ST table is not in TPH Requester =
-Extended
-> >>>   * Capability space, return 0. Otherwise return the ST Table Size + =
-1.
-> >>> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
-> >>> index be68cd17f2f8..fe572737b409 100644
-> >>> --- a/include/linux/pci-tph.h
-> >>> +++ b/include/linux/pci-tph.h
-> >>> @@ -30,6 +30,7 @@ void pcie_disable_tph(struct pci_dev *pdev);
-> >>>  int pcie_enable_tph(struct pci_dev *pdev, int mode);
-> >>>  u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
-> >>>  u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
-> >>> +u8 pcie_tph_enabled_req_type(struct pci_dev *pdev);
-> >>>  #else
-> >>>  static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
-> >>>                                       unsigned int index, u16 tag)
-> >>> @@ -41,6 +42,7 @@ static inline int pcie_tph_get_cpu_st(struct pci_de=
-v *dev,
-> >>>  static inline void pcie_disable_tph(struct pci_dev *pdev) { }
-> >>>  static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
-> >>>  { return -EINVAL; }
-> >>> +static inline u8 pcie_tph_enabled_req_type(struct pci_dev *pdev) { r=
-eturn 0; }
-> >>
-> >> nit, s/0/PCI_TPH_REQ_DISABLE/ for consistency.  Thanks,
->
-> It need add #include <linux/pci.h> at beginning too, else it will counter=
- compile error like this:
->
->    In file included from drivers/vdpa/mlx5/core/mr.c:8:
->    In file included from include/linux/mlx5/qp.h:36:
->    In file included from include/linux/mlx5/device.h:37:
->    In file included from include/rdma/ib_verbs.h:46:
-> >> include/linux/pci-tph.h:48:10: error: use of undeclared identifier 'PC=
-I_TPH_LOC_NONE'
->       48 | { return PCI_TPH_LOC_NONE; }
->          |          ^
->    1 error generated.
->
+On Fri, May 29, 2026 at 02:39:26PM +0800, Baolu Lu wrote:
+> On 5/29/26 04:23, Pranjal Shrivastava wrote:
+> > Update the Intel VT-d driver to handle ATS configuration and enablement
+> > more strictly. Specifically, update the device probe to fail if
+> > pci_prepare_ats() returns an error. This ensures that any ATS-capable
+> > master reaching the attach phase is guaranteed to have a valid config.
+> > 
+> > Additionally, update iommu_enable_pci_ats() to WARN() if pci_enable_ats
+> > fails. Since earlier checks in the probe phase preclude config-related
+> > failures, any failure during hardware enablement is considered a kernel
+> > bug.
+> > 
+> > Signed-off-by: Pranjal Shrivastava <praan@google.com>
+> > ---
+> >   drivers/iommu/intel/iommu.c | 15 ++++++++++++---
+> >   1 file changed, 12 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+> > index ed6d3a0203f5..f13da16717fe 100644
+> > --- a/drivers/iommu/intel/iommu.c
+> > +++ b/drivers/iommu/intel/iommu.c
+> > @@ -876,8 +876,14 @@ static void iommu_enable_pci_ats(struct device_domain_info *info)
+> >   	if (!pci_ats_page_aligned(pdev))
+> >   		return;
+> > -	if (!pci_enable_ats(pdev, VTD_PAGE_SHIFT))
+> > -		info->ats_enabled = 1;
+> > +	/*
+> > +	 * pci_enable_ats() should not fail here because earlier checks
+> > +	 * have already verified support and configuration.
+> > +	 */
+> > +	if (WARN_ON(pci_enable_ats(pdev, VTD_PAGE_SHIFT)))
+> > +		return;
+> > +
+> > +	info->ats_enabled = 1;
+> >   }
+> >   static void iommu_disable_pci_ats(struct device_domain_info *info)
+> > @@ -3292,7 +3298,10 @@ static struct iommu_device *intel_iommu_probe_device(struct device *dev)
+> >   	dev_iommu_priv_set(dev, info);
+> >   	if (pdev && pci_ats_supported(pdev)) {
+> > -		pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
+> > +		ret = pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
+> > +		if (ret)
+> > +			goto free;
+> > +
+> >   		ret = device_rbtree_insert(iommu, info);
+> >   		if (ret)
+> >   			goto free;
+> 
+> Sashiko made a valuable review comment, and I believe it applies here as
+> well:
+> 
+> [Severity: High]
+> Since ATS is an optional performance optimization, does failing the
+> IOMMU probe when pci_prepare_ats() fails break backward compatibility?
+> 
+> This completely prevents devices with buggy ATS capabilities (or VF/PF
+> STU mismatches) from attaching to the IOMMU.
+> 
+> Could this disable DMA translation entirely for hardware that would
+> otherwise work correctly without ATS?
 
-Great catch =E2=80=94 thanks for testing.  I will add
-#include <linux/pci_regs.h> to pci-tph.h so the TPH macros
-(PCI_TPH_REQ_*, PCI_TPH_LOC_*) are in scope wherever the header is
-included.
+Ack. We explored the "not failing probe" strategy in v3, but following
+discussion with Jason, we moved toward this "Fail Hard" policy [1]
+
+The rationale is that we ONLY enable ATS IFF ats_is_supported().
+If a function claims ATS support via pci_ats_supported() but then fails
+in pci_prepare_ats() (e.g., due to an STU mismatch between PF and VF),
+it indicates a bug or hardware inconsistency.
 
 Thanks,
-Zhiping
+Praan
+
+[1] https://lore.kernel.org/all/20260519145947.GK7702@ziepe.ca/
+
