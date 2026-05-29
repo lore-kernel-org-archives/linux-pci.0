@@ -1,116 +1,211 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61BC229AAFD
-	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 14:30:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A660133B97B
+	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 15:32:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780065050; cv=none; b=qtmY0TiSSya+Wk0BQSXyNpZmMxe4juLtsojnodefeikIddKGsWW6D9SRcgmlsVK/OQdazHnrfDH/zlfEqQBeMqe1OBw1qqet6T9bp1Rn7hDyOjDvULVStDonUH2y6h8vDPyz1Wboh0HooOi3aCI9/ylwr1hCaSvg15fqdcCTEo0=
+	t=1780068737; cv=none; b=cMpZwHOlQJ5tAF61k9WgZNbKFaBgNva9Ou3F78csv2Vmx72zAJ7cMKU4LRNwJZ9EsX/TixeQOZnMSlrqPQcotKkUazCturZHCP20HPGQ2RhTaJllA/JdbSPNw9eYj7FOHBgcXfbHUkxzhpF5SQjPs9XdHlyigWp0B/Tk5/A5NWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780065050; c=relaxed/simple;
-	bh=VmHZouFFFIUxdx2cYWvSw1y8DVy4mcatDS+pnUzWwlI=;
+	s=arc-20240116; t=1780068737; c=relaxed/simple;
+	bh=GVIf9vN3bJC4BXs/25y+sbAgjgE1CCsidT8P8ZILemA=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=vB7fJQOmr9fvoX7oyv5poCs45NV2flOQ1jMnAw1SkOMSSCXuzc0nJVLQ6hile/K9w+GBIq4hUmMQHZ0xrlxJFL9r+xCjJPsU3YFVblhdzTXr7Q8c/1imXyeNKsmQtWSFX2GZB43OU4Nv1bloswd9vKzLsN2tXOx7hP99yz5ke08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NkGnbxQ5; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=F5GX9QPOvbeWOwQBq1M/PD0ZnbVaxNd7H7AXPODuZCtWOV3DapXTwzBz9gdwVbnd7v8Szi+MuBXvfVLtB6gp9f6518y1BOBb6Vl0GnfHg8h4XMiWycZUbZ/dYoy5GP/o+HEBd7svivyuU2PxLPjJC0m9tmxRMgtjZ44BVOWTPSs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d9cb10HG; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NkGnbxQ5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED8471F00893;
-	Fri, 29 May 2026 14:30:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d9cb10HG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AD1E1F00899;
+	Fri, 29 May 2026 15:32:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780065049;
-	bh=O7N7MyN8KHRVGDicApsBDchsjRkwG/FhSXrOTQROno0=;
+	s=k20260515; t=1780068736;
+	bh=NmIgcTcztvOBGgp6tnTUFe+lHaHCiiIPQykhW2PUqXc=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=NkGnbxQ5duoOOwnsHUJEVZHM7Rg2zKxkaUaXf02yws7HQE699nKjhdDKeVH58VvdE
-	 Acdbo5NKT4IZ3gt9XziUKBtLCeHOyhmJIXJy7hHeOisHEu5sZbSD0oH7FskQT3aIL5
-	 fWXG1gz0w7R1RefOzphlr7NRG0L8je2FQwH1icAY3jPn8d5tsmG60pW5a7+pY6xK9L
-	 ZN/wAp8Vk4XkGV8da1MijZGfv7Ct38NgSeIEq00gD9OSDesE0d7KGXp1bJrByyRr5x
-	 RWLaseSSut0N1aPja2jdCN+jEVbDt0h36l93v4cMcc5j5DFLvDqSUywS/n3s81/8Gk
-	 RBvijAll1auhQ==
+	b=d9cb10HG9IPRAR8n2CIWhYHxof67ljPyVZ/rTgo1DdPNywhWHML/8Cx2NdbtCctQ6
+	 qO5R8/1jOjJuZCvXwiwImpElGkRH8YnGRiVdTQiBc82CAw+o45CgvuewLPpSqqLx/F
+	 /YXp8O6zuh74boOaKJIKaBb46K7JXg2bw9jAcSGMBBaVPEerCQ3vicKYOrR517Ja4z
+	 oLa3i9mhjNzK4fSpaIjH6i1vVxUayNgkA/fthlGMWJnuUBlTdBaVTE6wtShoxrVH/K
+	 0PsRabI4UtMBHsZMdXLpSlFB/OHtMDoPv+tQyTQXQBJ7DsZ1sXOwuahjX16Y/uQyoQ
+	 rlHSl8kggLaYw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 5/6] iommu/vt-d: Fail probe on ATS configuration
+Subject: Re: [PATCH v6 6/6] iommu/amd: Fail probe on ATS configuration
  failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pranjal Shrivastava" <praan@google.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260529111208.387412-6-praan@google.com>
-References: <20260529111208.387412-6-praan@google.com>
+In-Reply-To: <20260529111208.387412-7-praan@google.com>
+References: <20260529111208.387412-7-praan@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 29 May 2026 14:30:48 +0000
-Message-Id: <20260529143048.ED8471F00893@smtp.kernel.org>
+Date: Fri, 29 May 2026 15:32:15 +0000
+Message-Id: <20260529153216.2AD1E1F00899@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
 
+New issues:
+- [Critical] Unconditional iommu_ignore_device() on probe failure breaks IR=
+Q remapping in PD_MODE_NONE.
+- [High] Failing IOMMU probe on optional ATS configuration failure causes d=
+evice breakage and leaves a dangling MSI domain.
+- [Low] Redundant double invocation of iommu_ignore_device() on iommu_init_=
+device() failure.
+
 Pre-existing issues:
-- [High] Unconditional call to `device_rbtree_remove()` for an uninserted `=
-rb_node` corrupts the IOMMU device rbtree.
+- [High] iommu_ignore_device() fails to clear DTEs for PCI aliases due to i=
+ncorrect operation ordering.
+- [High] Unprotected, non-atomic memset() on the hardware-accessed dev_tabl=
+e array.
 --
 
-commit 28c5be83fdd5509a29185b7292f784b77e8d22e7
+commit e469ff12f2f6dc9d49a92308828b4812fa6c58ef
 Author: Pranjal Shrivastava <praan@google.com>
 
-iommu/vt-d: Fail probe on ATS configuration failure
+iommu/amd: Fail probe on ATS configuration failure
 
-Update the Intel VT-d driver to handle ATS configuration strictly by failing
-the device probe if pci_prepare_ats() returns an error. Also, add a WARN_ON
-in iommu_enable_pci_ats() to catch enablement failures.
+The patch updates the AMD IOMMU driver to fail device probe if ATS
+configuration (pci_prepare_ats) fails. It also adds a WARN_ON for
+pci_enable_ats failure and unconditionally calls iommu_ignore_device
+on all probe failures to fix a use-after-free risk.
 
-> diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-> index 4d0e65bc131d7..22308e4911e1f 100644
-> --- a/drivers/iommu/intel/iommu.c
-> +++ b/drivers/iommu/intel/iommu.c
-[ ... ]
-> @@ -3288,7 +3294,10 @@ static struct iommu_device *intel_iommu_probe_devi=
-ce(struct device *dev)
+> diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
+> index 84cad43dc188c..b74c4504bee39 100644
+> --- a/drivers/iommu/amd/iommu.c
+> +++ b/drivers/iommu/amd/iommu.c
+> @@ -2502,10 +2508,22 @@ static struct iommu_device *amd_iommu_probe_devic=
+e(struct device *dev)
+>  	else
+>  		dev_data->max_irqs =3D MAX_IRQS_PER_TABLE_512;
 > =20
->  	dev_iommu_priv_set(dev, info);
->  	if (pdev && pci_ats_supported(pdev)) {
-> -		pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
-> +		ret =3D pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
-> +		if (ret)
-> +			goto free;
+> -	if (dev_is_pci(dev))
+> -		pci_prepare_ats(to_pci_dev(dev), PAGE_SHIFT);
+> +	if (dev_is_pci(dev)) {
+> +		struct pci_dev *pdev =3D to_pci_dev(dev);
 > +
->  		ret =3D device_rbtree_insert(iommu, info);
->  		if (ret)
->  			goto free;
+> +		if (pci_ats_supported(pdev)) {
+> +			ret =3D pci_prepare_ats(pdev, PAGE_SHIFT);
+> +			if (ret) {
+> +				iommu_dev =3D ERR_PTR(ret);
+> +				goto out_err;
 
 [Severity: High]
-This is a pre-existing issue, but I wanted to ask about the error handling
-paths in this function. If a device does not support ATS or isn't a PCI
-device, device_rbtree_insert() is skipped here.
+Does this error path leave a dangling MSI domain?
 
-However, if a subsequent initialization step fails, such as allocating the
-PASID table:
+Since ATS is an optional PCIe performance enhancement, failing the probe
+disables the device in the IOMMU. However, earlier in the probe sequence,
+amd_iommu_set_pci_msi_domain() assigned the device's MSI domain to the
+IOMMU's IRQ domain.
 
-intel_iommu_probe_device() {
+Because this assignment is not reverted on error, the device is left in an
+inconsistent state. The device will be assigned to a default bypass or
+direct DMA ops, but will be forced to use the IOMMU's IRQ domain for MSIs.
+
+When the driver requests MSIs, irq_remapping_alloc() will fail to find the
+IOMMU in the rlookup_table, breaking interrupt allocation completely for
+the device.
+
+> +			}
+> +		}
+> +	}
+> =20
+>  out_err:
+> +	if (IS_ERR(iommu_dev))
+> +		iommu_ignore_device(iommu, dev);
+
+[Severity: Low]
+Is this double invocation of iommu_ignore_device() intentional?
+
+The patch adds a new call to iommu_ignore_device() here to ensure cleanup
+on all probe failure paths, but it leaves the pre-existing explicit call
+inside the error handling block for iommu_init_device():
+
+drivers/iommu/amd/iommu.c:amd_iommu_probe_device() {
 	...
-	if (sm_supported(iommu) && !dev_is_real_dma_subdevice(dev)) {
-		ret =3D intel_pasid_alloc_table(dev);
-		if (ret) {
-			dev_err(dev, "PASID table allocation failed\n");
-			goto clear_rbtree;
-		}
-	...
-clear_rbtree:
-	device_rbtree_remove(info);
-free:
-	kfree(info);
+	ret =3D iommu_init_device(iommu, dev);
+	if (ret) {
+		dev_err(dev, "Failed to initialize - trying to proceed anyway\n");
+		iommu_dev =3D ERR_PTR(ret);
+		iommu_ignore_device(iommu, dev);
+		goto out_err;
+	}
 	...
 }
 
-Does this unconditionally call device_rbtree_remove() on a zero-initialized
-and uninserted rb_node?
+If iommu_init_device() fails, the code evaluates IS_ERR(iommu_dev) as true
+at out_err and calls the cleanup function a second time. While not function=
+ally
+damaging, it iterates over DMA aliases and clears tables twice unnecessaril=
+y.
 
-If rb_erase() is called on this uninserted node, could it treat the zeroed
-node as the root and overwrite the actual rbtree root with NULL, corrupting
-the IOMMU device tracking tree and dropping previously probed ATS devices?
+
+[Severity: Critical]
+Does unconditionally calling iommu_ignore_device() on probe failure break
+IRQ remapping when the page table mode is PD_MODE_NONE?
+
+Previously, when amd_iommu_pgtable =3D=3D PD_MODE_NONE (DMA translation
+unsupported/disabled), the probe returned -ENODEV to disable DMA
+translation for the device but intentionally bypassed iommu_ignore_device().
+
+This kept the device in the rlookup_table, allowing IRQ remapping to
+function correctly. By executing iommu_ignore_device() unconditionally
+here, the rlookup_table entry is cleared.
+
+Consequently, irq_remapping_alloc() will fail to find the IOMMU for any
+device, breaking MSI allocation system-wide when the IOMMU is in
+IRQ-remapping-only mode.
+
+
+[Severity: High]
+This is a pre-existing issue, but does iommu_ignore_device() clear DTEs
+for PCI aliases in the correct order?
+
+Looking at iommu_ignore_device():
+
+drivers/iommu/amd/iommu.c:iommu_ignore_device() {
+	...
+	pci_seg->rlookup_table[devid] =3D NULL;
+	...
+	setup_aliases(iommu, dev);
+}
+
+Inside setup_aliases(), the callback clone_alias() attempts to look up
+the IOMMU using rlookup_amd_iommu(&pdev->dev), which internally reads
+rlookup_table[devid].
+
+Because it was already set to NULL, the lookup fails, and clone_alias()
+immediately returns 0. This skips clearing the Device Table Entries (DTEs)
+for the device's DMA aliases, leaving them active and dangling.
+
+
+[Severity: High]
+This is a pre-existing issue, but does iommu_ignore_device() use a
+non-atomic memset() on the hardware-accessed dev_table array?
+
+Looking at iommu_ignore_device():
+
+drivers/iommu/amd/iommu.c:iommu_ignore_device() {
+	...
+	memset(&dev_table[devid], 0, sizeof(struct dev_table_entry));
+	...
+}
+
+The AMD IOMMU driver explicitly documents that "IOMMU reads the entire
+Device Table entry in a single 256-bit transaction" and requires that
+the "DTE[V|GV] bit is being written first when clearing".
+
+A non-atomic clear can cause torn writes where the IOMMU hardware
+concurrently reads a partially modified entry (e.g., seeing the Valid
+bit still set while the page table pointers are zeroed), leading to
+IOMMU faults or wild DMAs.
+
+> +
+>  	return iommu_dev;
+>  }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260529111208.3874=
-12-1-praan@google.com?part=3D5
+12-1-praan@google.com?part=3D6
