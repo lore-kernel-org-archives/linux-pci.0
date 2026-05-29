@@ -1,136 +1,131 @@
-Received: from mail-pf1-f201.google.com (mail-pf1-f201.google.com [209.85.210.201])
+Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F6C2771B
-	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 20:11:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F1F83451B5
+	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 20:11:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780085473; cv=none; b=gF4Jjh2GZh1/HPkMkDerk3roYNblbybV8fK1d0E0vXeXsVK+r5CDyLRX3+iVupMrmE/NKM7sx4pi3CdeAFAtk6fieL7ydCT13OVJsyFNJldE/YG7LnUSMzrpTv1Jg3sOlOkGpZKhD1YaFV1hRpvWJg9SImBaOYooqtj4x/XePwc=
+	t=1780085494; cv=none; b=R4ckAKy5hTnkCWpXoy8AnzKlmemHt4w2eW8PKCw5xQE54v75Z2YFrrtm8iAHB2sCWMzRBsUvkOB3lQv5lSvhuTzRLggotFGy8PxYtCVNKH1bRxFAO26QjrpgrlYeskuhkNsu18+B5KXkW3dLIsO/6XAd2SBxiDVpAe8/XtUEsMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780085473; c=relaxed/simple;
-	bh=HwPhK/sm4pTOAakje5v7D1r/K6bMRpeicEANH4ENtaM=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=DzCvEuCOtkBzDnjFDiK4ZCJNOlfO7uO6T3RL/REv+7/O70YPFJl2pSURPSCvfgbcDZfWBTJ9mtEYCqsp++D81JNV+0jEiT98RTj5DLR7cijHUd17Mme0rxmC9cs549izcp/xKOBhsooNLPT5sXSFHOAlU6+XwjqQT9MQWI2O1As=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mgx4/XAN; arc=none smtp.client-ip=209.85.210.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
+	s=arc-20240116; t=1780085494; c=relaxed/simple;
+	bh=yIjjEsSzcNVlj5Jerb5VL9COIWs3RWb5zUy94AhWr9c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pS/TxtNSB3wdShL4/oV5OHQDYsSY4alSgZt7TFJHTWzy5W0n4Z0StymmTr9LQi3YaW2RQhJl79BFjuvTCGoU8k6wH+eRaH1nNsVCfyT8fgAN7AbmfOXYA04rWF/BdjPullgueZxt+bSs2BJqC4aQNb6NHeeJd5tvEVb8kMzNfSg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=W6mucJMI; arc=none smtp.client-ip=209.85.222.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mgx4/XAN"
-Received: by mail-pf1-f201.google.com with SMTP id d2e1a72fcca58-837d43e9ff3so9581455b3a.2
-        for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 13:11:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="W6mucJMI"
+Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-914b5f85129so697282485a.3
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 13:11:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780085471; x=1780690271; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+f5PwTRtQw0NnCrpunqjHa+0pqSt5ykYfwDM0Ecjt7k=;
-        b=mgx4/XANoCPsRtW7xBzRpW1H9but9219eZNE2BZYs/Rfxc0o7p+lf/I8AJuASa4zBx
-         PuNoBQJtg8madedyEd3s1AYmqi9VaZJKSftxaBsPi00PpHAC1abjJbAYtPOyWPmfAfP4
-         A8lH9RXXZdIkEC+zNieURPCTsrXNVL2gX5B7L4S/86bgNhvDGoIDk2hUKMXTaZ375DI9
-         lYuPaewjp7Wii0AuDD/nLde3BHE4vuqCBaSHLczbLNvI+C93E7a/YjxWIsusJx1sFGTY
-         m45NrPr+90wWN0v488eBciXrNf1BZvLkHpCgID98o7Eu9Ri96IMNAbOZghB+03+jPl2s
-         hwtQ==
+        d=ziepe.ca; s=google; t=1780085492; x=1780690292; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=x50nMfXuC2+erTFJFRG2pVEkXmZORi5k9T8WBzn0C8s=;
+        b=W6mucJMILm76P1OvgIkeoQrHk1o7XL8eEki7XJZS1XS2OjCf+Mt31OyMtZjR2qaphh
+         JYplHQ+jawZn32wdHnTUZ7/BfzMzKsTBm8Fig6rF907+pur3pR03NcbXI3r1E4jPnjWi
+         Pj4l7r9Cd2P7VD6P6PcOKOr4ri/urmF4R+FIVF9YA78pTdvWQQSYvF7Z7feosxpyprw7
+         +tFE69MQ32W/Mxl0Hefoqfx48geK4OASrV2q31UfG3eYxFQEg3WoFwURPR8t8K7LU6Z6
+         3WzIrlfGGwk+6WgLZUiy5+fga84k7c35MG0crSnEaA2c5absa3at7TeFsmJ2pdiwI3bK
+         qt4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780085471; x=1780690271;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+f5PwTRtQw0NnCrpunqjHa+0pqSt5ykYfwDM0Ecjt7k=;
-        b=QX3fH8JZvi3/GvU24EonUkHNfSkEyAXZfXLA/ajj/uqVZ1d48/kCZqAs83od50tmIE
-         sZJDPuE43OyXQF1EuCznLvgHfxkvzjRgj/YLBtNhYoNz6YH6pdEXBvjNMPq1HCJToQCP
-         jq4NykO8BHquuo10WV7hiRXbokauBjqcp8mEwjF47sZ+LjRX6/62/A8ioFADgQEQxz8j
-         qEayQClmFOQ2U3g05vtEAXQPrnRNF85oYqkCCpRxznseWggl7arQXsbLnz4Wij7BZzhQ
-         XdIamhw61OYPfrNze+XLrFc7VmMVB1e3ODewHP+V1uqwcgIVoW0zsHDD+SPVOKbJQzS6
-         813g==
-X-Forwarded-Encrypted: i=1; AFNElJ/TOrLeeiy9XAkWNDX8cFySEP1kFbSog30hP6TYcmwGkIOkJU60YU2bCJVOP9b12Ivhd2ieidgPCoI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyUNfPXowAvU/wd2b6lHbKaJxA7fhsKVmUMTW3z0nL1Ewb1MFMq
-	D0dmARgcQ4KZD4Tz8C04rZUIxKsEnj1fo9rMfnhFQgYIoxRL3VFA4DNXNgQLGQ5PzfODY7bPlFH
-	8hA==
-X-Received: from pfbga12.prod.google.com ([2002:a05:6a00:620c:b0:835:687a:d19d])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a00:a88c:b0:83a:35b2:2bf
- with SMTP id d2e1a72fcca58-8422579c5e4mr911561b3a.41.1780085470690; Fri, 29
- May 2026 13:11:10 -0700 (PDT)
-Date: Fri, 29 May 2026 20:11:05 +0000
-In-Reply-To: <20260403222750.1215002-1-dmatlack@google.com>
+        d=1e100.net; s=20251104; t=1780085492; x=1780690292;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=x50nMfXuC2+erTFJFRG2pVEkXmZORi5k9T8WBzn0C8s=;
+        b=dv/3lqYM3KN6DCB+mwQZulzaidyIvew1CRW+y3hSEwkiAdbpF9w22d2EAfHn71Ak06
+         /0q/Ppp3zMANUIkQTgM0H5GkfKriA1JnJil/oDBONRtt43uoQ4rIxLRyMmJHQg4zYOR9
+         rHo/rxrPIMccduM3eslXHXZ3QRhXCxfBWdQk/rS01vacvnmc9ngXEd7WXIWfWEJSTiPI
+         R86xE31FKpVB9qLeasjSHKcEe7zCf1hxYeVyWTCxfkya3ncXLbVD1urCm21XwS5hPf+z
+         LJlbgULp6taCy03fYLt7DHYhc92znK5uGs8iUXhu0cSvE229O4wA41EgUJN6RflmqVRu
+         Ad2g==
+X-Forwarded-Encrypted: i=1; AFNElJ8oWsV6qgFKrT8TQutgWMr6J8AA8pWIR28nFBNavyP3B79W7M4iA3VLy68aUzRbkf9fhYcYwlhx0tQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwP31HaRX8MznAOlqFB8leTPooU+hqGSCc9oqQqPL+JFc/eYOI8
+	/JP0frzVyTUViIm6PLADWDQehlNyodiKl1TQoQxrC9vYXylrf1da0ZoyGjZukqSIsMU=
+X-Gm-Gg: Acq92OHdchYFxEwIF+XOgYmC7ITC8hlkz8YcPH1RUoftOczThEzVQhKbWdxhNAGH7Y9
+	tcqQSHaa4uNUlEqCaP+exEv4rjLXwYPT1MsJxkdctwNVGpxOXOP3CI35cUJ0JQCtt0Xn4S0k6an
+	etBQHBxtcXihIUQPEIn2V1YLbMr6zuPishpzih+HOyJHjH4Kww5FI5oWCTKvuymUJbXQPo/AEX6
+	28TkN2vfoyKizg30lWUew0iLvg4gfeYp4zjZyLVgk/z3jXY1R+atRyQId8WIwaAhIAZi88pmNej
+	hgGkeCZ57zRPJkBg0T+ezJi7CfVBHrbavHlYljJKHZeXFiwPDT3DYsw9DY/6r5tqSCo8q1E0VBg
+	BhAbaMOx9dEAJFLFcJLY0LLlWtOG3Hssr8VoEnYOF2Gh3Si36XeWGIgV+j/ijjI5tGvNqW5hhmi
+	1aa+8rQrwFPY/0myXUTb6MDVs4NyhpV05NQxQgAaiJB5UEP49Zd03hYUq51s4p3N0Ha3A3A8x84
+	GY26Zwl8ovIg99K
+X-Received: by 2002:a05:620a:649c:b0:912:671b:d090 with SMTP id af79cd13be357-9153d999728mr194543785a.24.1780085492316;
+        Fri, 29 May 2026 13:11:32 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9153244de53sm312617585a.8.2026.05.29.13.11.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 May 2026 13:11:31 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wT3YI-00000000q8h-45Mx;
+	Fri, 29 May 2026 17:11:30 -0300
+Date: Fri, 29 May 2026 17:11:30 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Cc: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Linus Torvalds <torvalds@linuxfoundation.org>
+Subject: Re: [PATCH v5 0/4] vfio/dma-buf: add TPH support for peer-to-peer
+ access
+Message-ID: <20260529201130.GU2487554@ziepe.ca>
+References: <20260526144401.1485788-1-zhipingz@meta.com>
+ <a8cd01ab-d7aa-465d-bfa3-431f78f33ee1@amd.com>
+ <20260527121438.GJ2487554@ziepe.ca>
+ <ff247643-73e7-44e2-b3d5-8ac0a8efb871@amd.com>
+ <20260527123634.GK2487554@ziepe.ca>
+ <a5ff1930-e9fb-43f5-82ab-9875d7a28421@amd.com>
+ <CAH3zFs2KALuHXReLZG_uoqvBBWvBzU6rHKakmt6HBV7PZEsD=w@mail.gmail.com>
+ <71302a7a-6b9f-40da-af81-b1862dbd637a@amd.com>
+ <CAH3zFs036sr93duQKx613pCyOYw4t0_x_TdSza1xBCaEmqijyA@mail.gmail.com>
+ <8d9bb0b7-182d-4930-b683-d5d24da6b2ab@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20260403222750.1215002-1-dmatlack@google.com>
-X-Mailer: git-send-email 2.54.0.823.g6e5bcc1fc9-goog
-Message-ID: <20260529201105.1239477-1-praan@google.com>
-Subject: Re: [PATCH v3] PCI: Ensure ATS disabled via quirk before notifying
- IOMMU drivers
-From: Pranjal Shrivastava <praan@google.com>
-To: dmatlack@google.com
-Cc: aleksander.lobakin@intel.com, andriy.shevchenko@linux.intel.com, 
-	baolu.lu@linux.intel.com, bartosz.pawlowski@intel.com, bhelgaas@google.com, 
-	dwmw2@infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	rananta@google.com, Pranjal Shrivastava <praan@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <8d9bb0b7-182d-4930-b683-d5d24da6b2ab@amd.com>
 
-On Fri, Apr 03, 2026 at 10:27:50PM +0000, David Matlack wrote:
-> Ensure that PCI devices always have ATS disable via quirk before IOMMU
-> drivers are notified about the device. Fix this by converting the
-> existing quirks from final to header fixups and changing the quirk logic
-> to set a new no_ats bit in struct pci_dev that prevents pci_dev.ats_cap
-> from ever getting set.
->
-> Use header fixups instead of early fixups since not enough of struct
-> pci_dev is set up in during early fixups: quirk_amd_harvest_no_ats()
-> needs subsystem_device and subsystem_vendor to be set.
->
-> This change ensures that pci_ats_supported() always takes quirks into
-> account during iommu_ops.probe_device(), when IOMMU drivers are notified
-> about devices, and that pci_ats_supported() returns the same value when
-> the device is released in iommu_ops.release_device().
->
-> Notably, the Intel IOMMU driver uses pci_ats_supported() in
-> probe/release to determine whether to add/remove a device from a data
-> structure, which easily leads to a use-after-free without this fix.
->
-> This change also makes disabling ATS via quirk behave the same way as
-> the pci=noats command line option, in that pci_ats_init() bails
-> immediately and never initializes pci_dev.ats_cap.
->
-> Note: In practice this fix only matters for PCI devices created after
-> IOMMU bus notifiers are set up (e.g. hot-plugged devices and VFs).
->
-> Fixes: a18615b1cfc0 ("PCI: Disable ATS for specific Intel IPU E2000 devices")
-> Closes: https://lore.kernel.org/linux-iommu/aYUQ_HkDJU9kjsUl@google.com/
-> Signed-off-by: David Matlack <dmatlack@google.com>
-> ---
-> v3:
->  - Clarify in commit message that only devices added after boot are
->    affected (Baolu)
->  - Use header fixups instead of early to avoid breaking
->    quirk_amd_harvest_no_ats() (Sashiko)
->  - Use u8 instead of unsigned int for no_ats to avoid affecting the
->    offsets of existing fields in struct pci_dev (me)
->
-> v2: https://lore.kernel.org/linux-pci/20260327211649.3816010-1-dmatlack@google.com/
->
-> v1: https://lore.kernel.org/linux-pci/20260223184017.688212-1-dmatlack@google.com/
->
-> Cc: Raghavendra Rao Ananta <rananta@google.com>
-> Cc: David Woodhouse <dwmw2@infradead.org>
-> Cc: Lu Baolu <baolu.lu@linux.intel.com>
-> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->
->  drivers/pci/ats.c    |  2 +-
->  drivers/pci/quirks.c | 50 ++++++++++++++++++++++----------------------
->  include/linux/pci.h  |  1 +
->  3 files changed, 27 insertions(+), 26 deletions(-)
->
+On Fri, May 29, 2026 at 09:36:00AM +0200, Christian König wrote:
+> On 5/29/26 08:34, Zhiping Zhang wrote:
+> ...
+> > There's no in-tree vendor PF driver
+> 
+> Well I have to admit it's a bit on the edge but this sentence is a
+> show stopper.
 
-Applying ATS quirks during the HEADER phase seems correct for the IOMMU
-drivers to get the right view. I observed side effects due to the quirks
-being applied in the FINAL phase [1] which seem to go away with this fix.
+I think he means the device is not SRIOV. vfio-pci is the in-kernel PF
+driver.
 
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
-Tested-by: Pranjal Shrivastava <praan@google.com>
+> DMA-buf is an in kernel interface for buffer sharing between drivers
+> and any change to it needs an in kernel driver as justification for
+> the added complexity.
 
-Thanks,
-Praan
+vfio is the in-kernel driver, this series fully shows the in-kernel
+API using vfio as the exporter and mlx5 as the importer. It certainly
+meets the standard required to show in-tree users.
 
-[1] https://lore.kernel.org/all/20260504163842.2692314-1-praan@google.com/
+> When you have a complete open source driver stack which utilizes
+> VFIO passthrough as the interface to communicate with the kernel
+> drivers then we can eventually talk about that.
+
+That decision is not up to dmabuf - what VFIO subsystem requires to
+accept a new UAPI is up to the VFIO maintainers.
+
+DRM and VFIO have very different views on what is required to merge a
+new uAPI.
+
+Jason
