@@ -1,109 +1,116 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD46E33D4EC
-	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 13:44:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61BC229AAFD
+	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 14:30:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780062288; cv=none; b=ClNBbhnTSz0ud8aki2f4R1qHlaknpv+lY/w63oXdS7MRn4Kq1B37U4iXUDQfMgD40Pi/xao5xtesdlfTHud9BwNOYy5dfK2HfRs9Ebx3euaVAMIhpvrzepQj/MAfaCJWq+pWyA4nuALI5taCQHOkGA4NBmGeLKzFRlQO/pA6BcM=
+	t=1780065050; cv=none; b=qtmY0TiSSya+Wk0BQSXyNpZmMxe4juLtsojnodefeikIddKGsWW6D9SRcgmlsVK/OQdazHnrfDH/zlfEqQBeMqe1OBw1qqet6T9bp1Rn7hDyOjDvULVStDonUH2y6h8vDPyz1Wboh0HooOi3aCI9/ylwr1hCaSvg15fqdcCTEo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780062288; c=relaxed/simple;
-	bh=pmRr1WoVRXfZjFNFusCm46LD9YTmkOvWPKxoItv4qlc=;
+	s=arc-20240116; t=1780065050; c=relaxed/simple;
+	bh=VmHZouFFFIUxdx2cYWvSw1y8DVy4mcatDS+pnUzWwlI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=peWiJTL+zis6CPVOMOVV1+vbnTiBvmGZXGcbicmwirE8Ieab5yWCY4aPTgYp5PLJ3hJMQt/im1Lun4PXFoFJAgiU6oVBE3xQHvGkcHAhRsBqaFIFCsiQoky/V8/1mex40W9LQXQjLkcY57uWdD7RhOJ3QB0O25xkBIRtcRNwCjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IFFB9O7K; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=vB7fJQOmr9fvoX7oyv5poCs45NV2flOQ1jMnAw1SkOMSSCXuzc0nJVLQ6hile/K9w+GBIq4hUmMQHZ0xrlxJFL9r+xCjJPsU3YFVblhdzTXr7Q8c/1imXyeNKsmQtWSFX2GZB43OU4Nv1bloswd9vKzLsN2tXOx7hP99yz5ke08=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NkGnbxQ5; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IFFB9O7K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 292921F00893;
-	Fri, 29 May 2026 13:44:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NkGnbxQ5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED8471F00893;
+	Fri, 29 May 2026 14:30:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780062287;
-	bh=EdQrJjPAsSpUbObAtne4pbjhOdwwDLrsEj+qOR0M7DM=;
+	s=k20260515; t=1780065049;
+	bh=O7N7MyN8KHRVGDicApsBDchsjRkwG/FhSXrOTQROno0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=IFFB9O7Kf6KgJChMYmyqOHL8L8rHY8Y5B4YGqBGxWaClEYPdHYR5fDvqiYZcuJSbZ
-	 6oWVa5U1ZxcWSjEcVV7ib+vZp65PCoTTmV38n06sX+ZzNczYKdhfkojqvxBMw9NR5G
-	 JooBixVXqmNAmuzteDq4IP8RPPKprDLbD+2cC46unb2dk1RxYZND6drlxxrgVHqTXB
-	 Q0d1rca5+GeGsCDzcnheAwAQQPDuesxsP2qZAzyj6KDhi5z1cqrQyI2BNpuTbdfoRP
-	 wa+Uz1bLSeYFsq8nhfUOflfA+4i8ccm8UKOr3LCd2wPLb0EAcQS/ljvPEegO/wpIWK
-	 cnsG6s3/oxoPw==
+	b=NkGnbxQ5duoOOwnsHUJEVZHM7Rg2zKxkaUaXf02yws7HQE699nKjhdDKeVH58VvdE
+	 Acdbo5NKT4IZ3gt9XziUKBtLCeHOyhmJIXJy7hHeOisHEu5sZbSD0oH7FskQT3aIL5
+	 fWXG1gz0w7R1RefOzphlr7NRG0L8je2FQwH1icAY3jPn8d5tsmG60pW5a7+pY6xK9L
+	 ZN/wAp8Vk4XkGV8da1MijZGfv7Ct38NgSeIEq00gD9OSDesE0d7KGXp1bJrByyRr5x
+	 RWLaseSSut0N1aPja2jdCN+jEVbDt0h36l93v4cMcc5j5DFLvDqSUywS/n3s81/8Gk
+	 RBvijAll1auhQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 4/6] iommu/arm-smmu-v3: Standardize ATS enablement
- failure reporting
+Subject: Re: [PATCH v6 5/6] iommu/vt-d: Fail probe on ATS configuration
+ failure
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Pranjal Shrivastava" <praan@google.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260529111208.387412-5-praan@google.com>
-References: <20260529111208.387412-5-praan@google.com>
+In-Reply-To: <20260529111208.387412-6-praan@google.com>
+References: <20260529111208.387412-6-praan@google.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Fri, 29 May 2026 13:44:46 +0000
-Message-Id: <20260529134447.292921F00893@smtp.kernel.org>
+Date: Fri, 29 May 2026 14:30:48 +0000
+Message-Id: <20260529143048.ED8471F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] The error message drops the specific device context.
-- [Low] State-mutating function call placed inside WARN() macro condition.
+
+Pre-existing issues:
+- [High] Unconditional call to `device_rbtree_remove()` for an uninserted `=
+rb_node` corrupts the IOMMU device rbtree.
 --
 
-commit f858943c568bf1c4936c2371054b39b080e8ae6a
+commit 28c5be83fdd5509a29185b7292f784b77e8d22e7
 Author: Pranjal Shrivastava <praan@google.com>
 
-iommu/arm-smmu-v3: Standardize ATS enablement failure reporting
+iommu/vt-d: Fail probe on ATS configuration failure
 
-This commit moves failable ATS configuration to the probe phase and
-updates the commit phase to use WARN() for enablement failures. Since
-hardware capabilities are verified earlier, failures here are considered
-kernel bugs.
+Update the Intel VT-d driver to handle ATS configuration strictly by failing
+the device probe if pci_prepare_ats() returns an error. Also, add a WARN_ON
+in iommu_enable_pci_ats() to catch enablement failures.
 
-Link: https://lore.kernel.org/all/cover.1779392420.git.nicolinc@nvidia.com/
-
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
-arm/arm-smmu-v3/arm-smmu-v3.c
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+> index 4d0e65bc131d7..22308e4911e1f 100644
+> --- a/drivers/iommu/intel/iommu.c
+> +++ b/drivers/iommu/intel/iommu.c
 [ ... ]
-> @@ -2956,8 +2956,14 @@ static void arm_smmu_enable_ats(struct arm_smmu_ma=
-ster *master)
->  	 * ATC invalidation of PASID 0 causes the entire ATC to be flushed.
->  	 */
->  	arm_smmu_atc_inv_master(master, IOMMU_NO_PASID);
-> -	if (pci_enable_ats(pdev, stu))
-> -		dev_err(master->dev, "Failed to enable ATS (STU %zu)\n", stu);
+> @@ -3288,7 +3294,10 @@ static struct iommu_device *intel_iommu_probe_devi=
+ce(struct device *dev)
+> =20
+>  	dev_iommu_priv_set(dev, info);
+>  	if (pdev && pci_ats_supported(pdev)) {
+> -		pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
+> +		ret =3D pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
+> +		if (ret)
+> +			goto free;
 > +
-> +	/*
-> +	 * Any failure at this point is a kernel bug. pci_ats_supported()
-> +	 * and pci_prepare_ats() have already verified the hardware capability
-> +	 * and programmed the STU. Thus, pci_enable_ats() should not fail here.
-> +	 */
-> +	WARN(pci_enable_ats(pdev, stu),
-> +	     "Failed to enable ATS (STU %zu)\n", stu);
+>  		ret =3D device_rbtree_insert(iommu, info);
+>  		if (ret)
+>  			goto free;
 
-[Severity: Low]
-Does placing a state-mutating function like pci_enable_ats() directly inside
-the WARN() macro condition hide essential hardware configuration logic?
+[Severity: High]
+This is a pre-existing issue, but I wanted to ask about the error handling
+paths in this function. If a device does not support ATS or isn't a PCI
+device, device_rbtree_insert() is skipped here.
 
-While Linux's generic WARN() macro currently evaluates its condition exactly
-once, placing this logic inside an error-reporting macro can degrade code
-readability and break developer expectations. Could the function call be
-extracted and its return value evaluated instead?
+However, if a subsequent initialization step fails, such as allocating the
+PASID table:
 
-[Severity: Medium]
-Does this change drop the specific device context from the error message?
+intel_iommu_probe_device() {
+	...
+	if (sm_supported(iommu) && !dev_is_real_dma_subdevice(dev)) {
+		ret =3D intel_pasid_alloc_table(dev);
+		if (ret) {
+			dev_err(dev, "PASID table allocation failed\n");
+			goto clear_rbtree;
+		}
+	...
+clear_rbtree:
+	device_rbtree_remove(info);
+free:
+	kfree(info);
+	...
+}
 
-The previous dev_err() call automatically prefixed the log message with the
-specific device's identifier (like its PCI BDF address), which is crucial
-for determining exactly which hardware component failed. By switching to a
-generic WARN(), this device context is lost.
+Does this unconditionally call device_rbtree_remove() on a zero-initialized
+and uninserted rb_node?
 
-Would it be better to use dev_WARN(master->dev, ...) or explicitly include
-dev_name(master->dev) in the format string to preserve observability for
-debugging specific hardware failures?
+If rb_erase() is called on this uninserted node, could it treat the zeroed
+node as the root and overwrite the actual rbtree root with NULL, corrupting
+the IOMMU device tracking tree and dropping previously probed ATS devices?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260529111208.3874=
-12-1-praan@google.com?part=3D4
+12-1-praan@google.com?part=3D5
