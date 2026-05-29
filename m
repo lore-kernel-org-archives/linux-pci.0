@@ -1,54 +1,54 @@
 Received: from mail-pl1-f202.google.com (mail-pl1-f202.google.com [209.85.214.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 854E23D090E
-	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 11:12:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6572C3D16E5
+	for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 11:12:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780053140; cv=none; b=p7WLjBAuk1dWz1CTQE4J2a8K3eep+qt37y3NU0QYrMfnCe9cdCT9KOaAxBbGYNHcCt4eWNuONE4hkK6TRQbwCu89r88ARwt7gujwpGYblIEzR3PSrC3w4IIuuQCvx/RdiIy5CbU+hVS4Yqg+9tjacyYRahR3Qr+epD4KPGr7E3M=
+	t=1780053142; cv=none; b=Z8KQz4wOOmqL1ypOcCWmzR3dNZwCj3H+xN2gIFBttM6R7fuIfeOcrg4OEp4BAU4lsk57uNNwQRi2NTQhAYVZisLjxOk56DrJDbCMiF/qGEET3mH8i+RjnAqWQUoZYC/sT/JojCqh59Wg1YIAbs9zgwWGFLXzQhscJSKg5Kaz9S4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780053140; c=relaxed/simple;
-	bh=QMWF1Nn5UhAxAEgwX3QVOSlhArpqB7BokO3nvPMLRNI=;
+	s=arc-20240116; t=1780053142; c=relaxed/simple;
+	bh=zLhKJQfxvv+d9aNsqJrU4irOe5OKs7/A2799Tf2JNWI=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=u4ngmTVJOdAX8va5HvGFQ5pk4/2iCabBdQrM1/DNB6pkIe3T+xo9Kfv8Qj8vh/s4tfPEOpbW5dNnAVdhIwi1effQoxWGSDEEM2Ij2rYyGbmscsaX2/9MuSVQfMuQNGHi/HQvcMuWDmBB+bODvBTGyi3/oRuefZ2QtKEMJJYFYzM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=H4ZO5Kis; arc=none smtp.client-ip=209.85.214.202
+	 To:Cc:Content-Type; b=cGayswdHB+5fW8mhT8QkiZYemcaDx22Q3CT76UMFyUSS9iuOhwCRQldSSlteykGuYEhiPmjSqTOc8tjw8AvCOvBv4CvS/HcVoXU04dZu6e194jtEn/o1OZNRaQhHsQbLxnVt0GfSaQz0OHY1H/Nm02yjObFrwdLmUtoNwcvL8Qc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=wSUoIdbO; arc=none smtp.client-ip=209.85.214.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="H4ZO5Kis"
-Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2babbeff9e4so154495745ad.0
-        for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 04:12:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="wSUoIdbO"
+Received: by mail-pl1-f202.google.com with SMTP id d9443c01a7336-2bf004bf8beso25954365ad.3
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 04:12:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780053136; x=1780657936; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1780053134; x=1780657934; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=V1OhefJlO7SddiDjet5+3aQQ9KCjHVV2cUEJthb1Tt4=;
-        b=H4ZO5Kis1MYZqmLHyWql4WPlWzWcSIcICNglPrLf9MdVyO9T59gKRvnWtu4auFdvl+
-         QLtYdeqqQJ9MAGSTof7thaJIpsFcFOO3eQ/ZDddZLqMwC/1nFCB/Tykfseq6Rx75aInP
-         8OpeXeVEjbYevf8yMs9doqkTwWI2G1qGnyoTk349ke+OKoAcGYThU4mK/dxO2lmmZuhj
-         xiPu2ZMDYPkvSkpSwdDgZXPnpRaf6l1xFCAlH4r4FHtf5jY8PLSshVh5DUBHIsv4pvjL
-         EkCZoL5mnnR2rHEinQmB0gILz7mqtRd+SbvVt9WYxgvdH0Qg1TR0xqaEmECK/9YUwx8x
-         E8jw==
+        bh=H1WHbQ1I/exyopX3p7b75ehhnkD9ODb3Bve7jByn9iQ=;
+        b=wSUoIdbO7fFMo9G4JafqQaEVtqtyTZ31hqyLopqjaby3Tvx6KI/Omn1lNYGAayNejO
+         7nSFJCAId5T/6PFskeIZ+pMRfTpbsp5u36kG73eFy3h0eyjo99VCabaw0VMY0nqNbsWY
+         o/8dG0OMlZDwZj4r6RfL+wtJQT0aGv5bRePYrYAw6JJDQP9iNTUav0JZ8gZNWYTcObLF
+         maMSkXkRNWyRhcsle7XyPEmuwpvEcSPj6zF1Hh1fNg7I0y9Ci3ClAKncz6XJxemVKFFs
+         VCPhaBzOCINcOpo0m8JL6I1lw7KddXnT2K4f9Hfm8Dr0/vQaY9HbpeQUu2sX8Y2PXAWB
+         yVaw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780053136; x=1780657936;
+        d=1e100.net; s=20251104; t=1780053134; x=1780657934;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=V1OhefJlO7SddiDjet5+3aQQ9KCjHVV2cUEJthb1Tt4=;
-        b=M5i3oMCdjqQ+kgsbp//M8RvOV8g/bX0FxElVn2p2K9fHZHpx5b3ZwbCe0jBDPlTSEZ
-         zfi8IS800cHPLxWqJPyhj2WQz26ibltwUXq5QUTcVz7DAJQpx91pH32Zsnn9gCDHyy1d
-         kFIy9b2beeaYFlX6t4avVxYjywmyGfc+O8HQyUJwTN7ih58oKI9YQ7ZiuZHrXsj2OwQY
-         LnQKOgq7XqswO2akY1zWjMbhXNag19KMZcbV79euzBmNfT7OUdV40mjR3IkRPqmuldTj
-         syD4MngnVmduyWkx1PpaAR2NS1C2Yzjctsg2wYPUhqpMA8rBcEmrXPAON7cBep3XRE21
-         K1Pg==
-X-Forwarded-Encrypted: i=1; AFNElJ/nDld9BtMKAKO7E7CBpDz1BoJ0Ksnihq7Rq0uaBmbJiGE5F3J+/XakYiGcyst846G4zL7DxN56uSs=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzuVDUEQY+9/Twb70GIvScKYWKF5WSuswwcGE76C8RrD7J0Lq9f
-	b/ibw9Hc/Yc1Jo4gDScZHnJmTq80j3lN0+mAkxcl10AHdzGHa07yBTLMHsDeSXbdA1DZrUBlWyr
-	bbA==
-X-Received: from ploe7.prod.google.com ([2002:a17:903:2407:b0:2bf:a0d:a7e8])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:19cc:b0:2ba:838b:bfae
- with SMTP id d9443c01a7336-2bf20dfae24mr24843145ad.18.1780053136322; Fri, 29
- May 2026 04:12:16 -0700 (PDT)
-Date: Fri, 29 May 2026 11:12:04 +0000
+        bh=H1WHbQ1I/exyopX3p7b75ehhnkD9ODb3Bve7jByn9iQ=;
+        b=YwbMxm7rb4fqpFBCxZpdzA3u5Izxp/kexskhQ2F2QCTFhYTHYIThbwv4IXH0oiS99J
+         1zRApkiok0aqaVhny3wMN/NuOOM8dJBrYH7qTxSk7Z+F+2DtXCkGIl03Y87Uj96HBrmt
+         pM7/5jE9EmFg6c+XqqBxLdwrKrhhDtKKj/OcI2I0ZxOiNeYEmaUoKS3OZ8l6cwsjmqSw
+         zZhfCiqffB+oANviXgz/c0DnfXvmMUdkCSMvrCuSH0YpzX+HAe/kx2tVdBKTxk2mxbqs
+         CCOYQfA8kubES8qtjrplOk5CxrYTBbyfang25DdDBl/dQdpOsYCbGtT/rQsInqY36GS2
+         nfxA==
+X-Forwarded-Encrypted: i=1; AFNElJ9lLXmi3JN0nUUHZVsuNlKenHCRzSOkjLkKBrAGr8ss2MsZ1JZ2yQqUUsuISmEzQobznya1z1Lpkp0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyHSHiv/4T6Gv3YNQGqsnuxVX9B4jed68PeWslDWJBR3KgsDw29
+	3e9P3MyP5KquepmC8YIrhWwSz/v8FNiCFAw46itFK6W2LIR6vuiNNoJESPQYOqg88NjnQ3o8M6l
+	6cA==
+X-Received: from pln12.prod.google.com ([2002:a17:903:360c:b0:2bd:5ced:c1c0])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:ced0:b0:2bc:7d1d:b677
+ with SMTP id d9443c01a7336-2bf20ce01c6mr32213585ad.36.1780053134160; Fri, 29
+ May 2026 04:12:14 -0700 (PDT)
+Date: Fri, 29 May 2026 11:12:03 +0000
 In-Reply-To: <20260529111208.387412-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -58,8 +58,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260529111208.387412-1-praan@google.com>
 X-Mailer: git-send-email 2.54.0.823.g6e5bcc1fc9-goog
-Message-ID: <20260529111208.387412-3-praan@google.com>
-Subject: [PATCH v6 2/6] PCI/ATS: Validate STU for VFs in pci_prepare_ats()
+Message-ID: <20260529111208.387412-2-praan@google.com>
+Subject: [PATCH v6 1/6] PCI/ATS: Ensure pci_ats_supported() is PF-aware for VFs
 From: Pranjal Shrivastava <praan@google.com>
 To: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
@@ -73,21 +73,11 @@ Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
 	Pranjal Shrivastava <praan@google.com>, Jason Gunthorpe <jgg@nvidia.com>
 Content-Type: text/plain; charset="UTF-8"
 
-While every PCI Function that implements ATS has an independent ATS
-Extended Capability structure with a Read/Write Smallest Translation
-Unit (STU) field, the kernel manages SR-IOV ATS by requiring the IOMMU
-driver to configure the STU on the Physical Function (PF) before any
-any Virtual Functions (VFs) are created.
-
-Currently, pci_prepare_ats() bails out early for VFs, assuming that the
-PF has already been correctly prepared. However, this creates a potential
-mismatch if a VF is subsequently prepared with a different page shift.
-
-Update pci_prepare_ats() to validate that the requested page shift (ps)
-matches the STU already configured in the associated PF. This ensures
-early detection of incompatible configurations and maintains the kernel's
-policy of consistent STU sizing across all functions associated with a
-given SMMU.
+Update pci_ats_supported() to additionally check the associated PF's
+status when called on a VF. This ensures that PF-level quirks and
+untrusted status are correctly propagated to VFs, providing a robust
+support check that aligns with the kernel's PF-centric ATS configuration
+model and is immune to the timing of VF-specific fixups.
 
 Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
@@ -95,27 +85,29 @@ Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
 Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
 ---
- drivers/pci/ats.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/pci/ats.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 679a3c3c1d54..9cb23780093d 100644
+index 96efa00d9743..679a3c3c1d54 100644
 --- a/drivers/pci/ats.c
 +++ b/drivers/pci/ats.c
-@@ -73,8 +73,12 @@ int pci_prepare_ats(struct pci_dev *dev, int ps)
- 	if (ps < PCI_ATS_MIN_STU)
- 		return -EINVAL;
+@@ -40,10 +40,13 @@ void pci_ats_init(struct pci_dev *dev)
+  */
+ bool pci_ats_supported(struct pci_dev *dev)
+ {
+-	if (!dev->ats_cap)
++	if (!dev->ats_cap || dev->untrusted)
+ 		return false;
  
--	if (dev->is_virtfn)
-+	if (dev->is_virtfn) {
-+		if (pci_physfn(dev)->ats_stu != ps)
-+			return -EINVAL;
+-	return (dev->untrusted == 0);
++	if (dev->is_virtfn)
++		return pci_ats_supported(pci_physfn(dev));
 +
- 		return 0;
-+	}
++	return true;
+ }
+ EXPORT_SYMBOL_GPL(pci_ats_supported);
  
- 	dev->ats_stu = ps;
- 	ctrl = PCI_ATS_CTRL_STU(dev->ats_stu - PCI_ATS_MIN_STU);
 -- 
 2.54.0.823.g6e5bcc1fc9-goog
 
