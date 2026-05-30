@@ -1,116 +1,200 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56C3D312836
-	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 02:12:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD21288D0
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 03:10:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780107152; cv=none; b=dNZSpdu0SypMNuci2VdVfpvcLcpNLiN8dgRPb7do1wBbDo7sptTiSRDzpSvw0ZlPobb3mbfRNfLp5T7+apBOR9s6BXpD46EVdfewhPqwjDCVEyCTwGrfswj3d4p2Yvjxi14jlgBaCbI8AL2aZq1OdvrGKOeGtvvKFmHGN+E+4hQ=
+	t=1780110630; cv=none; b=Apb109xuwz0MdK0bZgsmFPiOiDobcXNa7t3Q0PwoIv1lNdnydXIC5oflrmci1IstQtEHTLUM+1Ah1JN4933kS1taj7C5Lg3abY+t1YMhmjVDsMYwGmrsiUsnpPD7i/NTGQv08kOrJLJbuvQ7Hoy0zEO0E5fCnMOZlxX7PKwan5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780107152; c=relaxed/simple;
-	bh=NbDuEZTa+IJAfPy68xTCTTrLwN7ylOuD2YzNNHvm4+8=;
+	s=arc-20240116; t=1780110630; c=relaxed/simple;
+	bh=PstWNaS9wVwM9Xyh/sz69ieg9Bk2KHHpV5gu08rXJ3c=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kkbFGsO4z/1TCWn8rIU6aJRmznFbATj/BZXFhpRY6Fuf8h20/8FxGZn1f/um37Vry7kQaqMMk2sMJSDjV+WuNJ6gRu924+amavoWpJo3hxhmnK5Lx1cgfemW2ueiangNOFNFkfmXwg0FEafi1ERigFz9pTKUib7hzLWGQ6JknRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=owYISFR/; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=Yw4nhaqE3bQPnWrSCPJ4fjmJqEuVSXP2xT2CV8g2fHMSGMXQmjS1TCGYAoFjbyuSmbKMAi4iBRzu2dXLNAfiLyeFMjbYOoUZcfYMr0LtPAZzFyW8zT3eGvGYGSIaEBXxVQAbK9yVzondKS7awXq/xJeT2nc31f/SvDOIVPZt/44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJMnuwGX; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="owYISFR/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C265B1F00893;
-	Sat, 30 May 2026 02:12:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJMnuwGX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA331F0089A;
+	Sat, 30 May 2026 03:10:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780107151;
-	bh=DjpL5PeHz3Cc+DIH3Xk/3acC8jhBsOi4kOCE+yAkgIs=;
+	s=k20260515; t=1780110615;
+	bh=lQLk8yyglFEQ/F5bN9UI8o7ZMlKyFrtoLePswOir5S8=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=owYISFR/H1DSEtqyBtiP7kUQkUd8NFcbiUdn+KOWlNCAyqvPcUvrAaxHa3iwNdXe0
-	 D9kZcEfwgexenW/fDsLiV6aub5tCvbRWXznxQmrIXuADQAAxB8jFne3UOVniXZecoE
-	 OwNSi6p0JXoTOjjlXNAYeHLziUG4bmPQUEmGVoqIbXsQOsunvES0BiH5osKeqKF/mp
-	 bfOK5FOlNV++zyw2kLJcELx+5TGSLvtukjaoz1+KWoZAg/O0v7fWfdGQ/H+9vt0x5X
-	 2F5zwaFidr6vCK1Sj/S2jawpDRF5pQAXSrHA1/DtT3sko0TxwiaMZEkWw2LIctQ5jV
-	 x2l6SKN7Tnjrw==
+	b=UJMnuwGXuwD56H4VagW0rKQgm8zIkIMhxhLY5JrtOiGJPWOVKy74/UouDRfK33yW9
+	 f1fGL2B5k4APd8Yo+KKwOewKCnTKqf3ADYTKfHGbu01WAHHF0I2CrXUyv0aFesmTgv
+	 BRoEzNmNeiCfAJ9fo/BSkV6xmGZ2XDA47MckiZuneETR3J66mDwjwGw/bBaZkLmAke
+	 naumjVj3HJ/89GS7rI3WsnX8S2N/Lw2ir2ey4eW8ljz2H4kS9ElWqdTUe6QBXVfDhL
+	 aQG1VsrwLBbALLuI1CvnHEgJj+89g/PVrOj9CAi8m0hV8LWQqC5OonocKYFPRM7Zru
+	 PGFTk12ZZEtrA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 1/3] rust: leds: add basic led classdev abstractions
+Subject: Re: [PATCH v17 3/3] rust: leds: add multicolor classdev
+ abstractions
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Markus Probst" <markus.probst@posteo.de>
 Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260530-rust_leds-v17-1-c0698c4368e2@posteo.de>
-References: <20260530-rust_leds-v17-1-c0698c4368e2@posteo.de>
+In-Reply-To: <20260530-rust_leds-v17-3-c0698c4368e2@posteo.de>
+References: <20260530-rust_leds-v17-3-c0698c4368e2@posteo.de>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 02:12:28 +0000
-Message-Id: <20260530021230.C265B1F00893@smtp.kernel.org>
+Date: Sat, 30 May 2026 03:10:14 +0000
+Message-Id: <20260530031015.7CA331F0089A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
 s) to consider:
-- [High] Lifetime erasure in `DeviceBuilder::build` allows `led_classdev.na=
-me` to hold a dangling pointer, leading to a use-after-free.
-- [High] `Device::drop` unconditionally constructs an `ARef<FwNode>` from t=
-he underlying C device's `fwnode`, which can drop unowned references and ca=
-use a refcount underflow/use-after-free.
+- [High] Data race and Undefined Behavior in `MultiColorDevice::subleds()` =
+due to exposing concurrently mutable fields without interior mutability.
+- [High] Undefined Behavior due to mismatched capacity when reconstructing =
+`KVec` during teardown and error handling.
+- [High] Incorrect `fwnode` reference management when `name` is provided le=
+ads to permanent memory leaks and refcount underflow (Use-After-Free).
+- [Low] Missing `#[inline]` annotation on small forwarding abstraction func=
+tion.
 --
 
-commit 3bf2be04b997951443702ccedf215841f12a00f7
+commit 9445e701d1ca0b8b1d07c7890ba8fe351626ede1
 Author: Markus Probst <markus.probst@posteo.de>
 
-rust: leds: add basic led classdev abstractions
+rust: leds: add multicolor classdev abstractions
 
-This commit implements the core abstractions needed for led class devices,
-including LedOps, DeviceBuilder, and Device wrappers around led_classdev.
+This commit implements the abstractions needed for multicolor led class
+devices. It introduces the led mode implementation, a wrapper around
+mc_subled, and a function to register a new multicolor led class device.
 
-> diff --git a/rust/kernel/led/normal.rs b/rust/kernel/led/normal.rs
+> diff --git a/rust/kernel/led/multicolor.rs b/rust/kernel/led/multicolor.rs
 > new file mode 100644
+> index 0000000000000..524d6e98562aa
 > --- /dev/null
-> +++ b/rust/kernel/led/normal.rs
+> +++ b/rust/kernel/led/multicolor.rs
+
 [ ... ]
-> +impl<'a, S: DeviceBuilderState> DeviceBuilder<'a, S> {
-> +    /// Registers a new [`Device`].
-> +    pub fn build<T: LedOps>(
-> +        self,
-> +        parent: &'a T::Bus,
-> +        ops: impl PinInit<T, Error> + 'a,
-> +    ) -> impl PinInit<Devres<Device<T>>, Error> + 'a {
+
+> +pub struct MultiColorSubLed {
+> +    /// the color of the sub led
+> +    pub color: Color,
+> +    /// the brightness of the sub led.
+> +    ///
+> +    /// The value will be automatically calculated.
+> +    /// See `MultiColor::pre_brightness_set`.
+> +    pub brightness: u32,
+> +    /// the intensity of the sub led.
+> +    pub intensity: u32,
+> +    /// arbitrary data for the driver to store.
+> +    pub channel: u32,
+> +}
+
 [ ... ]
-> +                    unsafe {
-> +                        ptr.write(bindings::led_classdev {
-[ ... ]
-> +                            name: self.name.map_or(core::ptr::null(), CS=
-trExt::as_char_ptr),
-> +                            ..bindings::led_classdev::default()
-> +                        })
-> +                    };
+
+> +                    let mut subleds_vec =3D KVec::new();
+> +                    subleds_vec.extend_from_slice(subleds, GFP_KERNEL)?;
+> +                    let (subled_info, num_colors, capacity) =3D subleds_=
+vec.into_raw_parts();
+> +                    debug_assert_eq!(num_colors, capacity);
+> +
+> +                    let subled_guard =3D ScopeGuard::new(|| {
+> +                        // SAFETY: `subled_info` is guaranteed to be a v=
+alid array pointer to
+> +                        // `mc_subled` with the length and capacity of `=
+num_colors`.
+> +                        drop(unsafe { KVec::from_raw_parts(subled_info, =
+num_colors, num_colors) });
+> +                    });
 
 [Severity: High]
-Does this erase the lifetime bounds of the name string and risk a
-use-after-free?
+Could reconstructing the vector using num_colors instead of the original
+capacity cause undefined behavior during deallocation?
 
-In the DeviceBuilder definition, the name field has a bounded lifetime 'a:
+The extend_from_slice() call might allocate memory with a capacity strictly
+greater than num_colors. By discarding the true capacity and passing
+num_colors to KVec::from_raw_parts(), the safety contract is violated.
 
-    name: Option<&'a CStr>
-
-However, the returned impl PinInit builds a Device<T> which does not capture
-the 'a lifetime parameter, meaning the resulting device can outlive the
-provided string. If a caller uses a short-lived string (like a dynamically
-allocated CString) for the name, the string will be dropped after device
-initialization.
-
-Since this raw pointer is written directly into led_classdev.name without
-requiring a 'static lifetime or taking internal ownership, could the kernel
-access freed memory when reading the name later, such as via sysfs or debug
-logs?
+Rust requires the capacity passed to from_raw_parts() to exactly match the
+original allocation capacity, otherwise it can produce an incorrect layout
+during deallocation.
 
 [ ... ]
+
+> +                    // SAFETY:
+> +                    // - `parent.as_ref().as_raw()` is guaranteed to be =
+a pointer to a valid
+> +                    //    `device`.
+> +                    // - `ptr` is guaranteed to be a pointer to an initi=
+alized `led_classdev_mc`.
+> +                    to_result(unsafe {
+> +                        bindings::led_classdev_multicolor_register_ext(
+> +                            parent.as_ref().as_raw(),
+> +                            ptr,
+> +                            if self.name.is_none() {
+> +                                &raw mut init_data
+> +                            } else {
+> +                                core::ptr::null_mut()
+> +                            },
+> +                        )
+> +                    })?;
+> +
+> +                    subled_guard.dismiss();
+> +
+> +                    core::mem::forget(self.fwnode); // keep the referenc=
+e count incremented
+
+[Severity: High]
+Does this sequence leak the fwnode reference when a name is provided?
+
+If self.name is provided, core::ptr::null_mut() is passed instead of
+init_data, meaning the C subsystem never takes ownership of the provided
+fwnode. However, core::mem::forget(self.fwnode) is called unconditionally,
+which would permanently leak the reference in this case.
+
+[ ... ]
+
+> +impl<T: LedOps<Mode =3D MultiColor>> MultiColorDevice<T> {
+> +    /// # Safety
+> +    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded =
+within a
+> +    /// `led::MultiColorDevice`.
+> +    unsafe fn from_raw<'a>(led_cdev: *mut bindings::led_classdev) -> &'a=
+ Self {
+
+[Severity: Low]
+Should this small forwarding function have an #[inline] annotation?
+
+The Rust subsystem guidelines require that functions which are small or
+forwarding to a binding call should be annotated with #[inline].
+
+[ ... ]
+
+> +    /// Returns the subleds passed to [`Device::new_multicolor`].
+> +    #[inline]
+> +    pub fn subleds(&self) -> &[MultiColorSubLed] {
+
+[Severity: High]
+Does returning a shared slice of MultiColorSubLed here lead to undefined
+behavior if the C subsystem mutates the fields?
+
+When the C LED subsystem mutates the brightness fields of mc_subled
+concurrently (such as in led_mc_calc_color_components()), it modifies the
+underlying memory.
+
+Since MultiColorSubLed defines these fields as plain u32 types and we return
+a safe &[MultiColorSubLed] slice, Rust's strict aliasing rules are violated
+because shared references guarantee memory immutability without an interior
+mutability primitive.
+
+[ ... ]
+
 > +#[pinned_drop]
-> +impl<T: LedOps> PinnedDrop for Device<T> {
+> +impl<T: LedOps<Mode =3D MultiColor>> PinnedDrop for MultiColorDevice<T> {
 > +    fn drop(self: Pin<&mut Self>) {
 > +        let raw =3D self.classdev.get();
 > +        // SAFETY: The existence of `self` guarantees that `self.classde=
 v.get()` is a pointer to a
-> +        // valid `led_classdev`.
+> +        // valid `led_classdev_mc`.
 > +        let dev: &device::Device =3D unsafe { device::Device::from_raw((=
-*raw).dev) };
+*raw).led_cdev.dev) };
 > +
 > +        let _fwnode =3D dev
 > +            .fwnode()
@@ -121,26 +205,45 @@ en
  });
 
 [Severity: High]
-Can this unconditionally drop unowned fwnode references and cause a
-refcount underflow?
+Could this underflow the parent device's fwnode reference count?
 
-In DeviceBuilder::build(), the fwnode reference count is only leaked via
-core::mem::forget(self.fwnode) if self.fwnode was explicitly provided.
+If init_data was ignored during registration (because self.name was set), t=
+he
+C core typically assigns the parent device's fwnode to the new LED device
+without incrementing its refcount.
 
-However, here in Device::drop(), the fwnode is read back from the underlying
-C device structure using dev.fwnode(), and unconditionally wrapped in an
-ARef to decrement its reference count.
+During drop, the teardown logic blindly steals a reference via
+ARef::from_raw() and drops it, which would underflow the parent device's
+fwnode refcount and potentially cause a use-after-free.
 
-If the device was initialized without an explicitly provided fwnode, but the
-kernel's driver core later automatically assigns one to the child device fr=
-om
-its parent (e.g., during device_add), dev.fwnode() will return a valid
-pointer.
+[ ... ]
 
-Would this cause Device::drop() to decrement the reference count of an fwno=
-de
-it never actually owned, leading to a use-after-free?
+> +        // SAFETY: `subled_info` is guaranteed to be a valid array point=
+er to `mc_subled` with the
+> +        // length and capacity of `led_cdev.num_colors`. See `led::Multi=
+colorDevice::new`.
+> +        drop(unsafe {
+> +            KVec::from_raw_parts(
+> +                led_cdev.subled_info,
+> +                led_cdev.num_colors as usize,
+> +                led_cdev.num_colors as usize,
+> +            )
+> +        });
+> +    }
+> +}
+
+[Severity: High]
+Similar to the error path above, could reconstructing the vector using
+num_colors instead of the original capacity cause undefined behavior during
+deallocation here?
+
+The extend_from_slice() call during initialization might allocate memory wi=
+th
+a capacity strictly greater than num_colors. Discarding the true capacity a=
+nd
+passing num_colors to KVec::from_raw_parts() violates the safety contract
+and can produce an incorrect layout during deallocation.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530-rust_leds-=
-v17-0-c0698c4368e2@posteo.de?part=3D1
+v17-0-c0698c4368e2@posteo.de?part=3D3
