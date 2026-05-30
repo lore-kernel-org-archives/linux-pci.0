@@ -1,111 +1,264 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DF6C2DB7BF;
-	Sat, 30 May 2026 00:46:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55D861ABED9
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 01:11:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780101964; cv=none; b=EbrQxqUHlgX+PVreew3Ba7fZ6VV5gwJRLiLujbZAx629bxfV7exNbh4bWZI3NVDIp/5BtsurSJip+SyuqPblEowomxkCJmmOdBXm3rYam7JdetcA1orfS0EQhN3UlFaos9lQHUyBOyoBwBtPRRI7g2HApZKXPEZl+lY7QPEDeWU=
+	t=1780103510; cv=none; b=g7HSAEdSyQ2/0eR1DYgSuuXTdTVwV38iDb3wr1ImbqiSpGsIiKdmv3LrA/67qIIL02VH5SDxDlyNihiJoBUvDe8nnkZoJyozL1wzsj0EVsxftzQkWQ4nul/L/7QmO9jLmNuAEfszqvKXyxfvZBGau4ZJhBxt7W5Xd3+Ana/8WBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780101964; c=relaxed/simple;
-	bh=K0+J+UcsLatDZgMrzII2EndHog2w4aS02JUTm38DK/A=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PQ7oJiPUI/zKM3sf56numfew1j/5aCIUkL2QNebKM+4Zn3R/T4eYVkGfcAPlVMr2rENu6Hh0WVi3c5pfRA5iPA5Qwqz5mUt41dLu0eyCC2cC3Ty4YT2K8fXqTl6tlVrMGlP5m5FCRKm9HrWznjQhdlhQe14k9nO0GPX1bpqCPS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XRAtuKuE; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780103510; c=relaxed/simple;
+	bh=cIPmenTZ/6OjEpZggOylCPhvLo1J2uxTYs4hRgQgPcA=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=jawtoIMCf1mDQlA5Wq3WbTkja+QTZvFXlH54TCvClebMOQWNvUF6AdqO4jRX8hyLACO61lzHrB/O0dzH01pqT2d8ZyN9jP+k7kDPQ7mzop7+IKAO17b5VJptnNNFuBhu6eoTVVb2rrvI6VNB67/03KNcnu/23Z7DcX7tAXLwUbM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=L511i3tL; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XRAtuKuE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82F6D1F00893;
-	Sat, 30 May 2026 00:46:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780101961;
-	bh=tgcInZqyhkkP4msOEISdWXRIsJwIfldxBc7ekr2WWpY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XRAtuKuEXgLh/hjMC8cC8ApyruWRCX+1Xaa2KU0mjtakH9Fc6EJ7z6djMhhKbT1id
-	 hYgRP6SmITSVyy7tgVUaO0XX0vsLDrqJv5/CZKdtzjL8UsoNnmz6Ze6+Fp5lSzgulg
-	 f2x4HI7FfZfjSLSlcBgGWTe92YmJv/P8a5D5krnS9gYZsXh0bT08Vj2RrM1MpHzlPr
-	 epkRIVdaEHWOpnMzQ9EO+BV97V39EFjbd26woMtDBwdXFm/882cz4N144+QnMzVLJU
-	 /fjjq2BpVN8BCU5/DR6tgnXPpbnFy8DX8IdbR2T7M+nXEGvtZJuxWj5W3pC5Ybjala
-	 rv+YiqJ6zq1yw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 11/11] moduleparam: Drop legacy kernel_param_ops
- .get_str field and dispatch logic
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Kees Cook" <kees@kernel.org>
-Cc: dmaengine@vger.kernel.org, vkoul@kernel.org, kvm@vger.kernel.org, linux-modules@vger.kernel.org, linux-pci@vger.kernel.org, Frank.Li@kernel.org, linux-media@vger.kernel.org
-In-Reply-To: <20260521133326.2465264-11-kees@kernel.org>
-References: <20260521133326.2465264-11-kees@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 00:46:01 +0000
-Message-Id: <20260530004601.82F6D1F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="L511i3tL"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id E01E1240103
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 03:11:39 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1780103499; bh=4/QpZC7LxSYMVYR4nA2xm6rwUz4aL+qn2WRWX/CiPPw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
+	b=L511i3tLvx7kiPkoduj+6RKuIJdK67TA7f+RDu1w2bdZR/AdT8kJr7Q7WLGfuXl1T
+	 UV4NC6pDq8sxpiGxNU+7dQdpzi3xw8WxpkLLx8RRBLekImarFVXm56jtoqo8li2pKk
+	 eruJQSnQLr8qX2U1z9tFD8HiIw2iLk9uuPwv0dXhDMNTP9sD7OjwWPT2HmM+RaHt/e
+	 5789hnzipD4RgoWsdIHquhFEgtG0srVNREkABDg3eE8D4UKdOL+mZDYs8/5ZtpfLzz
+	 4oI6UBq1SYNeUn5wmSH1vOob3B++6hUvB7VDtyPk7HqdpKavYUAJ+lV8unKxgVm0+l
+	 VXlT1/b5YwhCg==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4gS2HX5tzKz6txq;
+	Sat, 30 May 2026 03:11:36 +0200 (CEST)
+From: Markus Probst <markus.probst@posteo.de>
+Subject: [PATCH v17 0/3] rust: leds: add led classdev abstractions
+Date: Sat, 30 May 2026 01:11:39 +0000
+Message-Id: <20260530-rust_leds-v17-0-c0698c4368e2@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIADs5GmoC/2XS227DIAwG4FepuF4qTDCHXu09pmkKYNZIa9OFN
+ NpU9d3ntqqSLDdIIH8/GPkiCvUtFbHbXERPY1va7sgbsC8bEffN8ZOqNvGBUFIhAOiqP5fh44t
+ SqRqPPtuoss1ecP2pp9z+3MPe3nm/b8vQ9b/37NHdTp8pOEsZXSWr5BsNuUbE2r2eujJQt00kb
+ imjn0s/l56lMxEwNeClqf9LkE9qJEgzpyDZkmwAjXZOZ7+yMFleFhbYosME0QVSMq6smlu7sIp
+ tTgHBabDB4srWk63Vol2o2Spo0PuIQSVYWT1ZrZb3arY66wCWMCGYlcW5Xd6LbL0lb4OyFML6z
+ WayKGFhzc1m7iQnSjEt/vn6GJqevs88eMNjckRoClWxOxzaYbcZ7ZbzInLx9Q/u7K5TrQIAAA=
+ =
+X-Change-ID: 20251114-rust_leds-a959f7c2f7f9
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+ Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
+ Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Boqun Feng <boqun@kernel.org>, Boqun Feng <boqun@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Markus Probst <markus.probst@posteo.de>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4873;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=cIPmenTZ/6OjEpZggOylCPhvLo1J2uxTYs4hRgQgPcA=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBqGjlHm1aB5f0cQHYlIm9jfY8Ut1+COwhWucxTa
+ MmhdkSehCmJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaho5RxsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9JuNg/6Al4ov7JlK4It9kIWEbxwoW+7+ToSvyr
+ lVQ9hPiJ4GNJGphhoYv1VJRtbpPhUuTGr7zmaiNTBFKHvErN/6ezDSJdWnwa110YZMp3ZGMSuc8
+ 9ZSY74uogKmA1NWZ3jqVtBBNRdOeSpA/hXQMut0vwv+rCXTKqIer54N2Xd+5tH8q9xYjWa4fnRG
+ bCbnknjSu9DFSR4AQOClyeX08hkWtSV7pHwuubeS/92xVjQpLgIc8T/tXPM4Xcst5zN5c7pPfBR
+ aOKRFPg+oIHRusDpD7Yiba2ZB8ED3Bd19aJgXVnQkS3R3zk/TDTaSFq/zXkcYWucv8QT3S5vZaa
+ dhQ8lWQ8V1S0zcz3sMPsDLLZCfjzclVPOhPTPxeJTQoUEbpc625Yd4DFiaxA43S3pT2g9uFPmAN
+ 41k68kFzeky3Ppuh7VGKBEUHh+gTC73ukIcfyCjOc84UXW2mSt9wtfdrFnvHtIeyiBBikrmMTri
+ KZueqhZ5Sf0OtND2pm6JMnL+EdjZmkhjJJV89YsDEphYdx9SzYPJiYCtIh6jNNKvkvdchw7CzP9
+ s2TckQFAp4YmMVxBMf6/wl6LwZmwQKeXM/f1zzZ3AFoRRmrHEDGCZlOvcyDa5nlccOZe9JVwGYn
+ o75FKozdm8Qq42uuA5pNuV60ucUSBO3W0UvI3l7TBK4gKExU5ZrA=
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+This patch series has previously been contained in
+https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
+which added a rust written led driver for a microcontroller via i2c.
 
-Pre-existing issues:
-- [High] Unconditional call to `arr->ops->get()` without a NULL check can c=
-ause a kernel panic if the array parameter element lacks a `.get` callback.
---
+As the reading and writing to the i2c client via the register!
+macro has not been implemented yet [1], the patch series will only
+contain the additional abstractions required.
 
-commit a252ae87a187a5b644d160fded352c545493a611
-Author: Kees Cook <kees@kernel.org>
+[1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@kernel.org/
 
-moduleparam: Drop legacy kernel_param_ops .get_str field and dispatch logic
+The following changes were made:
+* add basic led classdev abstractions to register and unregister leds
 
-All struct kernel_param_ops .get callbacks have been migrated to using
-struct seq_buf. Drop the migration scaffolding.
+* add basic led classdev abstractions to register and unregister
+  multicolor leds
 
-> diff --git a/kernel/params.c b/kernel/params.c
-> index 25f0c8d5d19f3..6b410189297b1 100644
-> --- a/kernel/params.c
-> +++ b/kernel/params.c
-[ ... ]
-> @@ -470,23 +469,9 @@ static int param_array_get(struct seq_buf *s, const =
-struct kernel_param *kp)
->  		p.arg =3D arr->elem + arr->elemsize * i;
->  		check_kparam_locked(p.mod);
-> =20
-> -		if (arr->ops->get) {
-> -			ret =3D arr->ops->get(s, &p);
-> -			if (ret < 0)
-> -				goto out;
-> -		} else {
-[ ... ]
-> -		}
-> +		ret =3D arr->ops->get(s, &p);
+Changes since v16:
+* use for loops for duplicate checking
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does this unconditional call=
- to
-arr->ops->get() need a NULL check to avoid a kernel panic?
+Changes since v15:
+* fix issues reported by Sashiko bot:
+  * fix returning error not possible on `brightness_get` callback
 
-If a module defines a write-only array parameter where the element's
-kernel_param_ops struct lacks a .get callback, and assigns it write-only sy=
-sfs
-permissions, root can still attempt to read the file. When this happens, sy=
-sfs
-invokes param_attr_show().
+Changes since v14:
+* fix issues reported by Sashiko bot:
+  * add missing inlines
+  * add missing Sync trait bound
+  * fix vertical import layout for public export of private types
+  * fix potential memory leak, if a multicolor led device with over
+    `u32::MAX` subleds is registered
+* remove default_trigger option
+* fix missing CAST doc
 
-For normal parameters, param_attr_show() has a safety check that rejects the
-read if ops->get is NULL. However, for array parameters, ops resolves to
-param_array_ops which has a valid .get callback, bypassing the safeguard.
+Changes since v13:
+* rebased onto v7.1-rc1
 
-Could this result in a NULL pointer dereference when arr->ops->get(s, &p) is
-executed? Before this patch, the code fell back to calling .get_str(), which
-would also be NULL for a write-only type, resulting in the same kernel pani=
-c.
+Changes since v12:
+* add `led::DeviceBuilder::name()` and `DeviceBuilderState'
+* add `led::Color::as_c_str`
 
-> +		if (ret < 0)
-> +			return ret;
-> =20
->  		/* Nothing got written (e.g. overflow) =E2=80=94 stop. */
->  		if (s->len =3D=3D before)
+Changes since v11:
+* use `led::DeviceBuilder` instead of `led::InitData`
+* use static_assert instead of const { assert!(...) }
+* restructured patches to avoid moving `led::Device` from
+  rust/kernel/led.rs to rust/kernel/led/normal.rs in the 2. patch
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260521133315.work=
-.845-kees@kernel.org?part=3D11
+Changes since v10:
+* allow in-place initialization of `LedOps`
+* run rustfmt for code inside `try_pin_init!`
+
+Changes since v9:
+* add missing periods in documentation
+* duplicate `led::Device` and `led::Adapter` instead of using a complex
+  trait
+* fix imports not using prelude
+* adapt to CStr change
+* documented `led::Color::Multi` and `led::Color::Rgb`
+
+Changes since v8:
+* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
+* make functions in `MultiColorSubLed` const
+* drop the "rust: Add trait to convert a device reference to a bus
+  device reference" patch, as it has been picked into driver-core
+
+Changes since v7:
+* adjusted import style
+* added classdev parameter to callback functions in `LedOps`
+* implement `led::Color`
+* extend `led::InitData` with
+  - initial_brightness
+  - default_trigger
+  - default_color
+* split generic and normal led classdev abstractions up (see patch 3/4)
+* add multicolor led class device abstractions (see patch 4/4)
+* added MAINTAINERS entry
+
+Changes since v6:
+* fixed typos
+* improved documentation
+
+Changes since v5:
+* rename `IntoBusDevice` trait into `AsBusDevice`
+* fix documentation about `LedOps::BLOCKING`
+* removed dependency on i2c bindings
+* added `AsBusDevice` implementation for `platform::Device`
+* removed `device::Device` fallback implementation
+* document that `AsBusDevice` must not be used by drivers and is
+  intended for bus and class device abstractions only.
+
+Changes since v4:
+* add abstraction to convert a device reference to a bus device
+  reference
+* require the bus device as parent device and provide it in class device
+  callbacks
+* remove Pin<Vec<_>> abstraction (as not relevant for the led
+  abstractions)
+* fixed formatting in `led::Device::new`
+* fixed `LedOps::BLOCKING` did the inverse effect
+
+Changes since v3:
+* fixed kunit tests failing because of example in documentation
+
+Changes since v2:
+* return `Devres` on `led::Device` creation
+* replace KBox<T> with T in struct definition
+* increment and decrement reference-count of fwnode
+* make a device parent mandatory for led classdev creation
+* rename `led::Handler` to `led::LedOps`
+* add optional `brightness_get` function to `led::LedOps`
+* use `#[vtable]` instead of `const BLINK: bool`
+* use `Opaque::cast_from` instead of casting a pointer
+* improve documentation
+* improve support for older rust versions
+* use `&Device<Bound>` for parent
+
+Changes since v1:
+* fixed typos noticed by Onur Özkan
+
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+Markus Probst (3):
+      rust: leds: add basic led classdev abstractions
+      rust: leds: add Mode trait
+      rust: leds: add multicolor classdev abstractions
+
+ MAINTAINERS                     |   8 +
+ rust/bindings/bindings_helper.h |   1 +
+ rust/kernel/led.rs              | 351 +++++++++++++++++++++++++++++++++++
+ rust/kernel/led/multicolor.rs   | 400 ++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/led/normal.rs       | 238 ++++++++++++++++++++++++
+ rust/kernel/lib.rs              |   1 +
+ 6 files changed, 999 insertions(+)
+---
+base-commit: 9e171fc1d7d7ab847a750c03571c87ac3c17bd84
+change-id: 20251114-rust_leds-a959f7c2f7f9
+
