@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D137D2F12AB
-	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 16:04:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68462F12AB
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 16:04:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780157068; cv=none; b=KbBh0WtojESxIVujbqtAFTEjIAQpDQTSMeWtvxfFM6SkGCWGG5v1kNvPDdnRtoAB/KVUaVJS+ObF85qF8mBoR4XgNNaRRASCCnjdOm/G4A7hGlGCN/W/qiapgWUeb2vTRP8gYDywdfMrs4EfDomY5fiLFYrv3p0jVcw+Hefkt4I=
+	t=1780157074; cv=none; b=sFDOlkjB2fRHQI6tdNw0JKwdDtHXcnqpd6iAsr7f5ZqsvK+k8cpoNEHJnt4/P/u8ih/SM+T/tvuLJ8xS8p6sdeCWviTPw6oeldXYf/haKszJIzbneMC6vRaedvy6ZShggzNbJSMve5ask9ngMzlSRgKbmyybJ11P6vvue78Qte4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780157068; c=relaxed/simple;
-	bh=IHtyyW5cFCHiV2+JxW5qeCP2l4JxRC6JjB4cLuEe3tU=;
+	s=arc-20240116; t=1780157074; c=relaxed/simple;
+	bh=hvGQLxLBb1NhqpbFp8l/raHZQQo1xlCUEZ5Sk5thW3Y=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=cbCI836lnCB1o739eDYAA6x2FBMjKuexK5UEHkWbvD+sgJZVaPdSeol3VkparEMf1gfI4+o9diB45N8s9hnZOORt9GH7DIvKpw/5ks8L/2EhZDiMu3/TNkmsN4MnC1su1KKzGEk56xQPOu1ivT55VNghjc4egAu/anruuaEQpYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D1jtFagX; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=VgTV70sF/HAMUGeszG2PFci3u2LDcgusxUMenLf3Vu0Tdbkaop9//AvZdLn2uOw5enDIKkdTwSrtCpuVVMf3cxgWgbAEGrizPBUy8xaHFZ1/P6LiJYSYchDZswui7xg4WEF2m8iTOFqf1cRjez34fBKvBep1G9ofn8/blzGoeSQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WBj/ao+x; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D1jtFagX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99A3E1F00893;
-	Sat, 30 May 2026 16:04:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WBj/ao+x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AD961F00893;
+	Sat, 30 May 2026 16:04:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780157067;
-	bh=Q2fjlxWHg7I6HtBHr4fSpGOPljZvB3EQjE5Qbs+EEBs=;
+	s=k20260515; t=1780157073;
+	bh=wr1Zs7KLCbLxcsZXonw6gdRFXZI49E3G+JoPND87x80=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=D1jtFagXPdBt2s+J+70HaOAB+WzTGp4WJLBIi8lHnND3Ur6ekh5ENcTY/yo2o8+g9
-	 6fCu2l8jY3irYuU1wVd1GvLhLlT/gjXfNc+/dVz035f/5PAmTC8IMpmHQ2VvwzXg4M
-	 YrEOKmKiMQj7tZQk33dE3sfbBLBP8299L4IJttQ4ksxb6w9jWZJUdfnP4e3MYyc/f3
-	 OdDgWGMeRQRKWNuC7rdjGX4PmBdBIxJ6w0wdwUsjlL9idebyWRnZHGsqs/ubGioXwh
-	 dQm8QZbj22mBcAEIMsUOmptCZ56Flaz26wigxUNqSMcg6PEjsf8pWDfhxarWXPcOkT
-	 3Xpjt0rPZ49hQ==
+	b=WBj/ao+xe1JIvusueSUrXSM54HNldsj+Zz2YfzIr7ncm8jRo/6c3WJZlOvWe5bTGz
+	 yszkOxKo+RrRr1NGL6TedYvMFfFyqDIZjuUOkFibCmzdC+0NnLVaKC1LadTdWzFgIx
+	 m8yWMR+qHkwvElp1uof6L52bZbKRTwchHAl6m4NHAcMGDJqeUGW3Z2awXFEDw3Jojk
+	 UdS4RfYD22IfofiWu8go9bj8KqHwfyNiNjnJcpxD3GuGvIjRDAmATxwFectYOlvDBu
+	 IjmWOBt/otDgvMzoK5sucqN4zrCh9FTzJOkEn6gE0AVRWbvvbubXsQrbMkIEYpKLM0
+	 +OmXlKJ33ETfQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 09/16] PCI: dwc: intel-gw: Use cached PCIe capability
- offset
+Subject: Re: [PATCH v2 04/16] PCI: dwc: layerscape-ep: Use cached PCIe
+ capability offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260530153101.695580-10-18255117159@163.com>
-References: <20260530153101.695580-10-18255117159@163.com>
+In-Reply-To: <20260530153101.695580-5-18255117159@163.com>
+References: <20260530153101.695580-5-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 16:04:27 +0000
-Message-Id: <20260530160427.99A3E1F00893@smtp.kernel.org>
+Date: Sat, 30 May 2026 16:04:32 +0000
+Message-Id: <20260530160433.2AD961F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,76 +48,91 @@ Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
 Pre-existing issues:
-- [High] The `intel_pcie_resume_noirq` function resets the DWC PCIe core bu=
-t fails to restore the Root Complex configuration (ATU, BARs, MSI).
-- [High] Reading and writing back 32-bit values to 16-bit configuration reg=
-isters (`PCI_EXP_LNKCTL` and `PCI_COMMAND`) unintentionally clears Write-1-=
-to-Clear (W1C) bits in their adjacent registers (`PCI_EXP_LNKSTA` and `PCI_=
-STATUS`).
+- [High] Sleeping in atomic context due to mutex_lock() inside hardirq hand=
+ler
+- [High] Race condition in DBI register access leading to silent PCIe confi=
+guration failures
 --
 
-commit a2b3beed30ec9a660c2061cc97db74ca27bb57d7
+commit 68e2e619ed44719a7c9ec1273ed94120c179ed09
 Author: Hans Zhang <18255117159@163.com>
 
-PCI: dwc: intel-gw: Use cached PCIe capability offset
+PCI: dwc: layerscape-ep: Use cached PCIe capability offset
+   =20
+Replace these with dw_pcie_get_pcie_cap(). The hardware is already enabled
+by the driver before ls_pcie_ep_probe() and before the interrupt handler
+runs. dw_pcie_get_pcie_cap() will cache the offset on first call, and
+subsequent calls (including inside dw_pcie_ep_init) will use the cached
+value without re-searching.
 
-dw_pcie_host_init() calls .init before caching the offset, so inside
-.init we must call dw_pcie_get_pcie_cap() to obtain the offset (hardware
-is already enabled). The helper will cache the result for later use.
-
-> diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/con=
-troller/dwc/pcie-intel-gw.c
-> index 2674cd376f495..568b2634d08da 100644
-> --- a/drivers/pci/controller/dwc/pcie-intel-gw.c
-> +++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
-> @@ -120,7 +120,7 @@ static void intel_pcie_ltssm_disable(struct intel_pci=
-e *pcie)
->  static void intel_pcie_link_setup(struct intel_pcie *pcie)
->  {
->  	u32 val;
-> -	u8 offset =3D dw_pcie_find_capability(&pcie->pci, PCI_CAP_ID_EXP);
-> +	u8 offset =3D dw_pcie_get_pcie_cap(&pcie->pci);
+> diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci=
+/controller/dwc/pci-layerscape-ep.c
+> index 8936975ff104e..b2d0b51df3c53 100644
+> --- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> @@ -83,9 +82,6 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, vo=
+id *dev_id)
+>  		return IRQ_NONE;
 > =20
->  	val =3D pcie_rc_cfg_rd(pcie, offset + PCI_EXP_LNKCTL);
+>  	if (val & PEX_PF0_PME_MES_DR_LUD) {
+> -
+> -		offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> -
+>  		/*
+>  		 * The values of the Maximum Link Width and Supported Link
+>  		 * Speed from the Link Capabilities Register will be lost
+> @@ -93,7 +89,8 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, vo=
+id *dev_id)
+>  		 * that configured by the Reset Configuration Word (RCW).
+>  		 */
+>  		dw_pcie_dbi_ro_wr_en(pci);
+> -		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, pcie->lnkcap);
+> +		dw_pcie_writel_dbi(pci, pci->pcie_cap + PCI_EXP_LNKCAP,
+> +				   pcie->lnkcap);
+>  		dw_pcie_dbi_ro_wr_dis(pci);
 
 [Severity: High]
-This is a pre-existing issue, but does this 32-bit read-modify-write clear
-Write-1-to-Clear (W1C) bits in the adjacent PCI_EXP_LNKSTA register?
+This isn't a bug introduced by this patch, but does using
+dw_pcie_dbi_ro_wr_en() and dw_pcie_dbi_ro_wr_dis() in hardirq context
+here create a race condition with process-context operations?
 
-Modifying PCI_EXP_LNKCTL via a 32-bit read and write back will include
-the upper 16 bits containing PCI_EXP_LNKSTA. Writing the read value back
-to these W1C bits could clear any set error or status flags, such as the
-Link Bandwidth Management Status or Detected Parity Error.
+Since dw_pcie_dbi_ro_wr_dis() unconditionally clears PCIE_DBI_RO_WR_EN:
 
-Would the same issue occur in pcie_update_bits() when it modifies
-PCI_COMMAND, potentially clearing W1C bits in PCI_STATUS?
-
-> =20
->  	val &=3D ~(PCI_EXP_LNKCTL_LD | PCI_EXP_LNKCTL_ASPMC);
->  	pcie_rc_cfg_wr(pcie, offset + PCI_EXP_LNKCTL, val);
->  }
-
-There is also another pre-existing issue in this file regarding the resume
-flow. When intel_pcie_resume_noirq() runs, it calls intel_pcie_host_setup():
-
-drivers/pci/controller/dwc/pcie-intel-gw.c:intel_pcie_host_setup() {
-    ...
-    intel_pcie_core_rst_assert(pcie);
-    intel_pcie_device_rst_assert(pcie);
-    intel_pcie_core_rst_deassert(pcie);
-    ...
+static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+{
+	...
+	val &=3D ~PCIE_DBI_RO_WR_EN;
+	dw_pcie_writel_dbi(pci, reg, val);
 }
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does the core reset in
-intel_pcie_host_setup() wipe the internal DWC controller state, including
-ATU mappings?
+If this hardirq interrupts a process-context operation (like
+dw_pcie_ep_set_bar_programmable()) right after it enabled RO_WR_EN but
+before it writes to a DBI register, will this unconditionally clear the
+flag, causing the interrupted thread's subsequent writes to be silently
+ignored by the hardware?
 
-By overriding the generic resume flow and bypassing dw_pcie_setup_rc(), the
-driver appears to leave the ATU windows unprogrammed. Will outbound memory
-accesses from the CPU to PCIe devices and inbound DMA/MSI transactions fail
-upon resume without the ATU being restored?
+> =20
+>  		cfg =3D ls_pcie_pf_lut_readl(pcie, PEX_PF0_CONFIG);
+
+[Severity: High]
+This is a pre-existing issue, but does the code in this same hardirq
+handler sleep in atomic context?
+
+Shortly after this point in ls_pcie_ep_event_handler(), the code calls:
+
+	dw_pcie_ep_linkup(&pci->ep);
+
+Which invokes pci_epc_linkup() in the EPC core, doing:
+
+void pci_epc_linkup(struct pci_epc *epc)
+{
+	mutex_lock(&epc->list_lock);
+	...
+}
+
+Will attempting to acquire this sleepable mutex from hardirq context
+trigger a BUG for scheduling while atomic?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530153101.6955=
-80-1-18255117159@163.com?part=3D9
+80-1-18255117159@163.com?part=3D4
