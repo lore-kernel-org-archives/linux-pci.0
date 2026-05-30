@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68462F12AB
-	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 16:04:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6888D2F12AB
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 16:06:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780157074; cv=none; b=sFDOlkjB2fRHQI6tdNw0JKwdDtHXcnqpd6iAsr7f5ZqsvK+k8cpoNEHJnt4/P/u8ih/SM+T/tvuLJ8xS8p6sdeCWviTPw6oeldXYf/haKszJIzbneMC6vRaedvy6ZShggzNbJSMve5ask9ngMzlSRgKbmyybJ11P6vvue78Qte4=
+	t=1780157166; cv=none; b=nHLgGGqulFW+iDga8oFb1O2BzoPaTikNlYFdwVdR3uP9MIxbLR3/VYb+wy2GLi28C5aoPNHCHPLS6GhM8gJqnQlOC3dlvsT1CTlm0jGt8xrjnhncU6jjOVTvncOx5XLQC4OLM1RlxhTzTOzlKFOeQejMoVSlViYXNg3GOO3cgRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780157074; c=relaxed/simple;
-	bh=hvGQLxLBb1NhqpbFp8l/raHZQQo1xlCUEZ5Sk5thW3Y=;
+	s=arc-20240116; t=1780157166; c=relaxed/simple;
+	bh=NoSEsysmPuKo+2842O7y2Ja1eXh15xCM/nCllJRLzyI=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=VgTV70sF/HAMUGeszG2PFci3u2LDcgusxUMenLf3Vu0Tdbkaop9//AvZdLn2uOw5enDIKkdTwSrtCpuVVMf3cxgWgbAEGrizPBUy8xaHFZ1/P6LiJYSYchDZswui7xg4WEF2m8iTOFqf1cRjez34fBKvBep1G9ofn8/blzGoeSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WBj/ao+x; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=UNtY/hLocLjc3PsGzDb1f64BWNN0QfWPOUQvz+7lsDa+f45/RdJbPIVgYwWn9ZRlpqaXUllQ+Bzac++q9ElqHj32IyYwGY6TCTUrIKHPaJBJxwWV1HKRcSlGoYl88iqps4eZ5irjcWkMM1RMiomZ3NOxlceUqJGYCUVV/NZJVY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SNF7cBJB; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WBj/ao+x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AD961F00893;
-	Sat, 30 May 2026 16:04:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SNF7cBJB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4C311F00893;
+	Sat, 30 May 2026 16:06:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780157073;
-	bh=wr1Zs7KLCbLxcsZXonw6gdRFXZI49E3G+JoPND87x80=;
+	s=k20260515; t=1780157165;
+	bh=rELWmQF2agNh70vcoUyQEuo0p83GavllqyaSkcF0nTM=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=WBj/ao+xe1JIvusueSUrXSM54HNldsj+Zz2YfzIr7ncm8jRo/6c3WJZlOvWe5bTGz
-	 yszkOxKo+RrRr1NGL6TedYvMFfFyqDIZjuUOkFibCmzdC+0NnLVaKC1LadTdWzFgIx
-	 m8yWMR+qHkwvElp1uof6L52bZbKRTwchHAl6m4NHAcMGDJqeUGW3Z2awXFEDw3Jojk
-	 UdS4RfYD22IfofiWu8go9bj8KqHwfyNiNjnJcpxD3GuGvIjRDAmATxwFectYOlvDBu
-	 IjmWOBt/otDgvMzoK5sucqN4zrCh9FTzJOkEn6gE0AVRWbvvbubXsQrbMkIEYpKLM0
-	 +OmXlKJ33ETfQ==
+	b=SNF7cBJBCSJWXhGZVp7BUqv6Q1DSlBXWx8+wglI++G2zubdtwRQfSNQMy7KbdSNMg
+	 RY7Z5MdrkN/r/MZFjgjCKhsm0H+ypnAQgKXJmQ4Y1DOyXnvrFn7G+9h5sPuBQh6KOX
+	 jeZV2vmA0ZKdg7pXoraoDRkiqeeaNoa4PsZTPxomCbqXapUvxKxR2X1Ihuw8FWtHdt
+	 R9u9WD1V2H09Gid6m9vZvlx45frusWc7LnhDQ+oKOcR8CO/bqWnnLEOXjKlUlI88KO
+	 D/Qfq/Dw4FSIuyra7plZEHZeCIaxAXJIfPRd+OwwAPUUMGu3AorrdocMqQf5MfPJ9Y
+	 h2Q25NTnXxicQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 04/16] PCI: dwc: layerscape-ep: Use cached PCIe
+Subject: Re: [PATCH v2 14/16] PCI: dwc: spear13xx: Use cached PCIe
  capability offset
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Hans Zhang" <18255117159@163.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260530153101.695580-5-18255117159@163.com>
-References: <20260530153101.695580-5-18255117159@163.com>
+In-Reply-To: <20260530153101.695580-15-18255117159@163.com>
+References: <20260530153101.695580-15-18255117159@163.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 16:04:32 +0000
-Message-Id: <20260530160433.2AD961F00893@smtp.kernel.org>
+Date: Sat, 30 May 2026 16:06:04 +0000
+Message-Id: <20260530160604.E4C311F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,92 +47,142 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
 
+New issues:
+- [High] Uninitialized variable usage leading to PCI register corruption.
+
 Pre-existing issues:
-- [High] Sleeping in atomic context due to mutex_lock() inside hardirq hand=
-ler
-- [High] Race condition in DBI register access leading to silent PCIe confi=
-guration failures
+- [High] Race condition in shared IRQ registration causing NULL pointer der=
+eference.
 --
 
-commit 68e2e619ed44719a7c9ec1273ed94120c179ed09
+commit f26cde06f20af920dcaa766788767c35c06c971e
 Author: Hans Zhang <18255117159@163.com>
 
-PCI: dwc: layerscape-ep: Use cached PCIe capability offset
-   =20
-Replace these with dw_pcie_get_pcie_cap(). The hardware is already enabled
-by the driver before ls_pcie_ep_probe() and before the interrupt handler
-runs. dw_pcie_get_pcie_cap() will cache the offset on first call, and
-subsequent calls (including inside dw_pcie_ep_init) will use the cached
-value without re-searching.
+PCI: dwc: spear13xx: Use cached PCIe capability offset
 
-> diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci=
-/controller/dwc/pci-layerscape-ep.c
-> index 8936975ff104e..b2d0b51df3c53 100644
-> --- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-> +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-> @@ -83,9 +82,6 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, vo=
-id *dev_id)
->  		return IRQ_NONE;
+Inside .init we must call dw_pcie_get_pcie_cap() to obtain the offset,
+because the core has not yet cached it. The hardware is already enabled
+by the driver's own initialization before this point.
+
+> diff --git a/drivers/pci/controller/dwc/pcie-spear13xx.c b/drivers/pci/co=
+ntroller/dwc/pcie-spear13xx.c
+> index 01794a9d3ad29..6e4c11b497d45 100644
+> --- a/drivers/pci/controller/dwc/pcie-spear13xx.c
+> +++ b/drivers/pci/controller/dwc/pcie-spear13xx.c
+> @@ -122,7 +122,7 @@ static int spear13xx_pcie_host_init(struct dw_pcie_rp=
+ *pp)
+>  {
+>  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
+>  	struct spear13xx_pcie *spear13xx_pcie =3D to_spear13xx_pcie(pci);
+> -	u32 exp_cap_off =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	u8 exp_cap_off =3D dw_pcie_get_pcie_cap(pci);
+>  	u32 val;
 > =20
->  	if (val & PEX_PF0_PME_MES_DR_LUD) {
-> -
-> -		offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> -
->  		/*
->  		 * The values of the Maximum Link Width and Supported Link
->  		 * Speed from the Link Capabilities Register will be lost
-> @@ -93,7 +89,8 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, vo=
-id *dev_id)
->  		 * that configured by the Reset Configuration Word (RCW).
->  		 */
->  		dw_pcie_dbi_ro_wr_en(pci);
-> -		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, pcie->lnkcap);
-> +		dw_pcie_writel_dbi(pci, pci->pcie_cap + PCI_EXP_LNKCAP,
-> +				   pcie->lnkcap);
->  		dw_pcie_dbi_ro_wr_dis(pci);
+>  	spear13xx_pcie->app_base =3D pci->dbi_base + 0x2000;
 
 [Severity: High]
-This isn't a bug introduced by this patch, but does using
-dw_pcie_dbi_ro_wr_en() and dw_pcie_dbi_ro_wr_dis() in hardirq context
-here create a race condition with process-context operations?
+This is a pre-existing issue, but is it possible for a shared interrupt
+to fire before app_base is initialized here?
 
-Since dw_pcie_dbi_ro_wr_dis() unconditionally clears PCIE_DBI_RO_WR_EN:
+In spear13xx_add_pcie_port(), devm_request_irq() requests the shared IRQ
+before dw_pcie_host_init() is called. If the shared IRQ fires early,
+spear13xx_pcie_irq_handler() will execute and unconditionally read from
+the uninitialized app_base:
 
-static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
-{
-	...
-	val &=3D ~PCIE_DBI_RO_WR_EN;
-	dw_pcie_writel_dbi(pci, reg, val);
+drivers/pci/controller/dwc/pcie-spear13xx.c:spear13xx_pcie_irq_handler() {
+    ...
+    struct pcie_app_reg __iomem *app_reg =3D spear13xx_pcie->app_base;
+    ...
+    status =3D readl(&app_reg->int_sts);
+    ...
 }
 
-If this hardirq interrupts a process-context operation (like
-dw_pcie_ep_set_bar_programmable()) right after it enabled RO_WR_EN but
-before it writes to a DBI register, will this unconditionally clear the
-flag, causing the interrupted thread's subsequent writes to be silently
-ignored by the hardware?
+Because app_base is still NULL, would this result in a read from physical
+address 0x18 and lead to a kernel crash?
 
+
+Additionally, an issue was found in another commit in this series:
+
+commit 1d7762e21cba69c340ccc430485c442e06488028
+Author: Hans Zhang <18255117159@163.com>
+
+PCI: dwc: qcom: Use cached PCIe capability offset
+
+dw_pcie_host_init() caches the offset after .init, so .post_init callbacks
+and later functions (.link_up, icc_opp_update) can use pci->pcie_cap
+directly. For .init itself, we must call dw_pcie_get_pcie_cap() inside
+qcom_pcie_host_init() to obtain the offset (hardware is already enabled).
+
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
+ler/dwc/pcie-qcom.c
+> index 11fc604898926..80783353d5398 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+[ ... ]
+> @@ -360,7 +360,6 @@ static void qcom_pcie_clear_aspm_l0s(struct dw_pcie *=
+pci)
 > =20
->  		cfg =3D ls_pcie_pf_lut_readl(pcie, PEX_PF0_CONFIG);
+>  static void qcom_pcie_set_slot_nccs(struct dw_pcie *pci)
+>  {
+> -	u16 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+>  	u32 val;
+> =20
+>  	dw_pcie_dbi_ro_wr_en(pci);
+> @@ -370,9 +369,9 @@ static void qcom_pcie_set_slot_nccs(struct dw_pcie *p=
+ci)
+>  	 * notifications for the Hot-Plug commands. So set the NCCS field to
+>  	 * avoid waiting for the completions.
+>  	 */
+> -	val =3D readl(pci->dbi_base + offset + PCI_EXP_SLTCAP);
+> +	val =3D readl(pci->dbi_base + pci->pcie_cap + PCI_EXP_SLTCAP);
+>  	val |=3D PCI_EXP_SLTCAP_NCCS;
+> -	writel(val, pci->dbi_base + offset + PCI_EXP_SLTCAP);
+> +	writel(val, pci->dbi_base + pci->pcie_cap + PCI_EXP_SLTCAP);
 
 [Severity: High]
-This is a pre-existing issue, but does the code in this same hardirq
-handler sleep in atomic context?
+Since qcom_pcie_set_slot_nccs() is called during qcom_pcie_host_init()
+via the pcie->cfg->ops->post_init(pcie) callback, is pci->pcie_cap
+guaranteed to be initialized here?
 
-Shortly after this point in ls_pcie_ep_event_handler(), the code calls:
+The DWC core in dw_pcie_host_init() appears to cache pci->pcie_cap only
+after the pp->ops->init callback returns. If pci->pcie_cap is still 0
+when this executes, won't this write to offset 0x14 (PCI_BASE_ADDRESS_1)
+and corrupt the configuration space instead of configuring the intended
+slot capability?
 
-	dw_pcie_ep_linkup(&pci->ep);
+[ ... ]
+> @@ -935,7 +934,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pci=
+e)
+>  static int qcom_pcie_post_init_2_3_3(struct qcom_pcie *pcie)
+>  {
+>  	struct dw_pcie *pci =3D pcie->pci;
+> -	u16 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	u8 offset =3D pci->pcie_cap;
+>  	u32 val;
+> =20
+>  	/* Force PHY out of lowest power state */
 
-Which invokes pci_epc_linkup() in the EPC core, doing:
+[Severity: High]
+Similarly, will pci->pcie_cap be 0 when qcom_pcie_post_init_2_3_3() is
+called from the post_init callback during qcom_pcie_host_init()?
 
-void pci_epc_linkup(struct pci_epc *epc)
-{
-	mutex_lock(&epc->list_lock);
-	...
-}
+If so, this would result in a corrupted offset here as well.
 
-Will attempting to acquire this sleepable mutex from hardirq context
-trigger a BUG for scheduling while atomic?
+[ ... ]
+> @@ -1257,7 +1256,7 @@ static int qcom_pcie_init_2_9_0(struct qcom_pcie *p=
+cie)
+>  static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+>  {
+>  	struct dw_pcie *pci =3D pcie->pci;
+> -	u16 offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> +	u8 offset =3D pci->pcie_cap;
+>  	u32 val;
+>  	int i;
+
+[Severity: High]
+Does this suffer from the same uninitialized pci->pcie_cap issue as
+qcom_pcie_post_init_2_3_3() when called from the post_init callback?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530153101.6955=
-80-1-18255117159@163.com?part=3D4
+80-1-18255117159@163.com?part=3D14
