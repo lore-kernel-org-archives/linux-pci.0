@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CEDE32470A;
-	Sat, 30 May 2026 15:31:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B3732B132;
+	Sat, 30 May 2026 15:31:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780155101; cv=none; b=o/f4BvwzdCas37pspU5myuppiRpaUMNbybbnqZw50kqHHqbbC72Sr5td0cYqNScye2VyYPnCal/GxHtSkjv+MQcY+k4xr/RsljSkD8gTqRBg9A1LSUe4AdNAJr+GNxzO1bd3C52pi0JbD62CtU1ixT3G9FyWi8kEd+jhR3k6hRg=
+	t=1780155103; cv=none; b=jC3zmR7cF/tR5VZ2rQiXpfa2nYjQ+xCl+IZUdFssuvWq+G9RoXE1nzG6Aa4Id+jsn8urbVWXvKAj3zkpvhDXcqhomsQ4W7A6+miMHPnGxA6k1aQbvw+FtcSn3EkElB2Jpnt5ASC2DPbM2n6vw3ZwEY/wxgw8nR+ilQHVvxKL+N8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780155101; c=relaxed/simple;
-	bh=mIytoK3lew0cX17GUo/AcvnZGAx0EilUFv+nt/as9Ms=;
+	s=arc-20240116; t=1780155103; c=relaxed/simple;
+	bh=9Wi8kdht8lhxIjVDT1F1ydsI+q/9FXN2ycAGic8ObUM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rz8J1uzRjNyOOfIS4Iu11a8xEf6F0Ph0XooBy0lg4Zfl1XDvkljVzXC2YTU50L785G/l2lun0BIvJ4e3vK1yUpsjlphX+wKQh6hz1vKKReU0nsEfG3ZFoyNHqoVHrB/MB86AxMtpXD6ODNB0LN0flJDTeeNITzSsEqMwmoy3Qdk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=IP8e1nK+; arc=none smtp.client-ip=220.197.31.2
+	 MIME-Version; b=tgIOZrZq7eAEGWGbA96NtGOEg/KzIxUZoM/9goINA+5AquJFMuuQz16QvvYJC45HTikIfdZCkOtL7t4Ajf4i+iDUeUFC0AqF5caE6NeanStbUcBWBrGj0/pT+tyoZRm7QLMgkHrcr1Uaxsy73zf1rvfVDIt5sPfGnezFA/NcyQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=DE7HBqXE; arc=none smtp.client-ip=220.197.31.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="IP8e1nK+"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="DE7HBqXE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=4y
-	5vcEN60ecF7HKIQYbaUtTi06S+eWZoH1exAeXgq1g=; b=IP8e1nK+YQJKgRSENz
-	A4hPpTSnQju/btwFm6lTAJyGXOT08Y4XTZNx75sth5nXlKu2wLCOrdtz/XCBNYA7
-	Ur/dESOOCWkHAwiDvG8KF4l/wZyWWvl8nwDcIkG+uUXBB9Q7j+OG+k4/rhdqtsA7
-	03GKZR23MrpJMZ2tfzLfJw3Hg=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=uU
+	GqaCcyquHK8pE7kIHQ3gogw7hU58ZTcDwGQkRQHYQ=; b=DE7HBqXE2n39u44hH3
+	Q79Q8U0OHWgG4rN2L8BQay9lC0uIsRaTM/1+58yr4Ca7JpONou740vwYhtWsZYUL
+	FxFAb6Njn0uF63QALQKuaSB+diq1PVX37AYKJC8HVZe3UpWOEKFueHMVg/ePpu3O
+	SqkwtELU6Pj27vHiTwkBZt29c=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnfA+4AhtqjqjeAQ--.36562S8;
-	Sat, 30 May 2026 23:31:09 +0800 (CST)
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnfA+4AhtqjqjeAQ--.36562S3;
+	Sat, 30 May 2026 23:31:06 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -36,9 +36,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 06/16] PCI: dwc: rockchip: Use cached PCIe capability offset
-Date: Sat, 30 May 2026 23:30:51 +0800
-Message-Id: <20260530153101.695580-7-18255117159@163.com>
+Subject: [PATCH v2 01/16] PCI: dwc: Add pcie_cap field and helper in designware header
+Date: Sat, 30 May 2026 23:30:46 +0800
+Message-Id: <20260530153101.695580-2-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260530153101.695580-1-18255117159@163.com>
 References: <20260530153101.695580-1-18255117159@163.com>
@@ -49,44 +49,60 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnfA+4AhtqjqjeAQ--.36562S8
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ZFy3CF1kCF43ZrW7AF15XFb_yoW8JF4Dpa
-	yYyryjyryrGr4Sg3Z2v3Z8ur1SqF9xArW7Ja97Gw1SvFy2k34UG3yYkr98tFn7GF4jyFyY
-	kw1Ut34rGrsxAFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRBMKZUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6x0RtGobAr0v7QAA3f
+X-CM-TRANSID:_____wDnfA+4AhtqjqjeAQ--.36562S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KFWxCF4kArWUWw4fGr1fXrb_yoW8Ww45pa
+	y7JF1akF48AFWavF43AanxZr15tF93ArW7Ga9rKw1SgFyaya4UGa10yryYyF17Kr4Ikrya
+	kw45t34rCF45JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zN4E_UUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xoQs2obArovlAAA3g
 
-dw_pcie_host_init() calls .init before caching the offset. So inside
-.init we call dw_pcie_get_pcie_cap() to trigger caching. The helper will
-perform the DBI read (hardware is already enabled) and cache the result.
+Add a pcie_cap field to struct dw_pcie to store the offset of the
+PCI Express Capability structure. Provide a helper dw_pcie_get_pcie_cap()
+which performs the capability search on first call and caches the result.
+
+This is a preparatory step for replacing repetitive capability searches
+in both core and platform drivers.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-In pcie-dw-rockchip, the call chain is:
+ drivers/pci/controller/dwc/pcie-designware.h | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-  static const struct dw_pcie_host_ops rockchip_pcie_host_ops = {
-    .init = rockchip_pcie_host_init,
-  };
-  rockchip_pcie_host_init()
-    -> rockchip_pcie_enable_l0s()
-      -> dw_pcie_find_capability()
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 731d93663cca..be8b6187913d 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -369,7 +369,7 @@ static void rockchip_pcie_enable_l0s(struct dw_pcie *pci)
- 	u32 cap, lnkcap;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 7dac37521b8e..561b434fe335 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -596,6 +596,8 @@ struct dw_pcie {
+ 	 * use_parent_dt_ranges to true to avoid this warning.
+ 	 */
+ 	bool			use_parent_dt_ranges;
++
++	u8			pcie_cap;	/* PCIe capability offset */
+ };
  
- 	/* Enable L0S capability for all SoCs */
--	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	cap = dw_pcie_get_pcie_cap(pci);
- 	if (cap) {
- 		lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
- 		lnkcap |= PCI_EXP_LNKCAP_ASPM_L0S;
+ #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
+@@ -834,6 +836,21 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+ 	dw_pcie_writel_dbi(pci, reg, val);
+ }
+ 
++/**
++ * dw_pcie_get_pcie_cap() - Return cached PCIe Capability offset
++ * @pci: DWC instance
++ *
++ * Finds and caches the offset of PCI_CAP_ID_EXP on first call.
++ * Returns 0 if the capability is not present.
++ */
++static inline u8 dw_pcie_get_pcie_cap(struct dw_pcie *pci)
++{
++	if (!pci->pcie_cap)
++		pci->pcie_cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++
++	return pci->pcie_cap;
++}
++
+ static inline int dw_pcie_start_link(struct dw_pcie *pci)
+ {
+ 	if (pci->ops && pci->ops->start_link)
 -- 
 2.34.1
 
