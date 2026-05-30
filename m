@@ -1,124 +1,300 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B20992F25E4
-	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 16:25:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8E073783D5
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 22:49:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780158305; cv=none; b=U02dWwz0eMMwBWQ0TM0pdeIH6IQ5mPbGbWL9/t7O1gHIe5JekX7NwgiVfqnlgQCApZ8gRPYOFzPtq+jhJi1q3MhhEV+fxPoJED5Nuj5vN7CXzJo8trIq8KAlsD//FhT4eWYtRij/94v+Ciw+oPc3HQ8gzTa0GZWSLHUEQKG0ZA0=
+	t=1780181399; cv=none; b=HZVU1hpckhoFg929iW0gKiu6tRR27Oi0djz4Bqh9ZWkupeMZh/ni7hb5K7UiQnK8vUYYID1Mp0e3R4jzuFMcV+48jWJtN2obAyawVlvAxeXMHZ86cPWS00mAeo7B1fSjoWMZ94Zh6Q1HhXts7xoM010LNcVOuXWlsy4qOXUm90M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780158305; c=relaxed/simple;
-	bh=J9K+gPfB+lJ8y/+j7AxJe52XcH2SckBiH9QM07KXdVg=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=CpGMcI0GElKIlN724beBaxsk6JHKe4A2lq2g8BSgCSMJKXSohoYQqKwmAqlStwKxZsjLlcs+ObI5D/reCJmPnJQEqA98RoxGe9lHfJcPNF+qYCRUWJ1TMYsJP57MGAHXCh+vy3VSQbV06wSdY+t/8sJ+OU84GwTiaXAci7n9T0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PDkcWIpj; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780181399; c=relaxed/simple;
+	bh=roVLExnpIaMObMPaZrFKCNa69Hln1PQuPN37cu/TRow=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=dLsZDv4/002tk/ELZHOXjnLpWCLpzwioPdniDOA9A+S+kRFGf72BFxiZNaokLb0RmaS7SQ2Xj3pu9KVr5GrZvb6jdiLQAScD3KxF3FOU/W9eq5n8JYiWd+tvLASUoN1D/S3atMzLrvrYLtl5V8kO5PjHyzkpovv+GJAfnwxg40k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=T8UWuI8a; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PDkcWIpj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 798CD1F00893;
-	Sat, 30 May 2026 16:25:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780158304;
-	bh=W4E5yJf25vIZdrLTAWBn8hHUT/iMJv1MprHH5NSq9Ek=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PDkcWIpjKAJOJ1VN6Wv8d8/Ep4wxNu0CmmnWWg34T0iDVh2Ii4rijEjBvvsbKRIHw
-	 yiz8UTKKlyTsFD9Qw5dR/9YoD+1YAFkt4lsTgBlPswlQOZ6YlRePz1RbBDcbKeYJ6w
-	 InXLlFVcdGOLLjdYBIHk6LRJkWNDXiR42GYdjripxpSa2ui4RUbK5Xqm7wm//04qEB
-	 cVpN42AN0BgEPfqjkbuzEmmHj16EwkVOTXEuOKBLCeyBINWn9pAE4MCd9MP10+5AtY
-	 N8rgj0lnGXN/DkFZ9GlnsgVS7JQEAgjc10G7CF//H1/R5ctM+KKsT7+H8EHW2NyzJa
-	 sjg5V2luqocRw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 12/16] PCI: dwc: sophgo: Use cached PCIe capability
- offset
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Hans Zhang" <18255117159@163.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260530153101.695580-13-18255117159@163.com>
-References: <20260530153101.695580-13-18255117159@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 16:25:04 +0000
-Message-Id: <20260530162504.798CD1F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="T8UWuI8a"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 25BEB24002B
+	for <linux-pci@vger.kernel.org>; Sun, 31 May 2026 00:49:55 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1780181395; bh=vZNrT/AiYScKg+D2/XI1ox+KlfIduX1mjvnWcZA00cc=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:To:Cc:Autocrypt:OpenPGP:From;
+	b=T8UWuI8ao3GDUcySLSfnqtoUo51JIGzh4ngm8DMR030Groj50987VVOjkXvOfwRjX
+	 I/OtSKzjosSq1ySaGrxDSOaRjenpEu30/7oWF8QqOFzgukOSNsVv1vyeXQDkS+dpWX
+	 aID1Wng/YZL6XhMOQmf4bu2dKUOI1kIHejz0JXtT9g88dk+UHzJ4YHVKWG5gzeAR8E
+	 wxxkdei42YlfPiVi0g6INwdDmul59hPmlCzMgnXUXzcZGZ7pxqrLNkJ6u/YcC5Hpoy
+	 L6AC7wdV+FtytkAzE3O9g16WbGuGQDUwRNYnXctkzyQx3uybay6JHhbofmnmztu1n1
+	 LO3KSjqW16KNQ==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4gSb5W5ssZz6twh;
+	Sun, 31 May 2026 00:49:51 +0200 (CEST)
+From: Markus Probst <markus.probst@posteo.de>
+Subject: [PATCH v18 0/3] rust: leds: add led classdev abstractions
+Date: Sat, 30 May 2026 22:49:54 +0000
+Message-Id: <20260531-rust_leds-v18-0-d07102ba5170@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAIlpG2oC/23S227bMAwG4FcJfD0boiTqkKu+xzAUOlCt0SZuJ
+ dfoUPTdx6QrYs+7sUHB3y/S4EfXqI7UuuPho6u0jG2czlyA+3Ho0mM4P1A/Zj7opJAIALqvb22
+ +f6bc+uDRF5tkscV3/P1LpTK+X8N+/uL6cWzzVH9fsxd3Of1OwVXK4nrRZx80FIWIyt29TG2ma
+ cjUXVIWv5Z+LT1LZxJgDuCFUf9KEN/UCBBmTUGwJREAjXZOF7+zcLP82Fhgiw4zJBdJirSzcm3
+ txkq2JUcEp8FGizurblbJzbig2EoI6H3CKDPsrL5ZLbf3ara66AiWMCOYncW13d6LbL0lb6O0F
+ OO+Z3OzKGBjzcUWnqRkyinv/7NdWSU21rJNwniXtDKO5Np+fi1cpdc3Xtr5a+u6E7UWrjt7PPx
+ tBwGlFmJQngtveuhzeKp3T1TP9DxM9eGyunsnkd9ewgBScwf/ZzE06tN0Oo3z8bDYgUdPyL19/
+ gH1kU/sWAMAAA==
+X-Change-ID: 20251114-rust_leds-a959f7c2f7f9
+To: Lee Jones <lee@kernel.org>, Pavel Machek <pavel@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+ Leon Romanovsky <leon@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
+ Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
+ Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+ Danilo Krummrich <dakr@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Boqun Feng <boqun@kernel.org>, Boqun Feng <boqun@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-leds@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Markus Probst <markus.probst@posteo.de>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=6931;
+ i=markus.probst@posteo.de; h=from:subject:message-id;
+ bh=roVLExnpIaMObMPaZrFKCNa69Hln1PQuPN37cu/TRow=;
+ b=owEBiQJ2/ZANAwAIATR2H/jnrUPSAcsmYgBqG2mO7alZ14+Y/hjBs4QQfbhOAMg2oVqnkNTyx
+ jua3fY6saSJAk8EAAEIADkWIQSCdBjE9KxY53IwxHM0dh/4561D0gUCahtpjhsUgAAAAAAEAA5t
+ YW51MiwyLjUrMS4xMiwyLDIACgkQNHYf+OetQ9IMfw//dEsDiXq/buIvEcBh8cvfGRG6bTI5D/Q
+ s8lifteNQt9eK/NlJ772k2GFUG4dnxuC/4fWhkcFnPGLPEucj8Kf7uboD9zLbeb0NvNfFVVG/wG
+ Ea/HexoRSgLV/YL191TWDHF7HA6CrBXEX/d3QfO5yJO7i/2KLlNae4RJxK8gDGUQlgA5uR8+SGe
+ uZ753wQGZlJzyKCZlIujGqbnM2YuZpjQI/mUWUCTgrE2v8PfJwZTrcz4e9Ie5uHRawSvGL+XUgg
+ Ruk14kGa7sTE9QeGaBEQKzZOsG1Sin48HBF35+IBO9mROy7mgEfLgqF9uANt9XIVEG/HU4mMVHP
+ gVGPHYWoYRcaVf+RoB5uYMrWMA8iQWctzNUvYCeiXWdlKIzjYm7c1Oy7QQeQfT1Ukkuu69fMs0W
+ A7FrJcvuChmi+L+cck3mlf4l2DeLJGhVuL8yvFt/QiEIXOVGzbDPcs4ZcFmQLs0KW/kdfociKha
+ ZqI4BIe0EAZO+rievjyrwaySeTc4Rr9O4cReJPfyt5LkGc4q3IR6W682ltvc5p+U4ByISMlcUm6
+ EoYeZbBKBe6s6RJ5yu5IwbQmou65g78feME0iaax5s67Ao7M0X3NvP9/7w15DYTVxYI2WnOgK4F
+ bGJ+dYWohmpVSDCqhilIvqcX+c5YaweiYaJMBcxdNVxwvV4jXGYU=
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp;
+ fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+This patch series has previously been contained in
+https://lore.kernel.org/rust-for-linux/20251008181027.662616-1-markus.probst@posteo.de/T/#t
+which added a rust written led driver for a microcontroller via i2c.
 
-Pre-existing issues:
-- [High] Missing `.deinit` callback causes IRQ domain leak and leaves a dan=
-gling chained IRQ handler if `dw_pcie_host_init()` fails.
---
+As the reading and writing to the i2c client via the register!
+macro has not been implemented yet [1], the patch series will only
+contain the additional abstractions required.
 
-commit bec8b7e2c9e17ca16137f5895fed067563f850fa
-Author: Hans Zhang <18255117159@163.com>
+This series depends on [2].
 
-PCI: dwc: sophgo: Use cached PCIe capability offset
+[1] https://lore.kernel.org/rust-for-linux/DDDS2V0V2NVJ.16ZKXCKUA1HUV@kernel.org/
+[2] https://lore.kernel.org/rust-for-linux/20260525202921.124698-1-dakr@kernel.org/
 
-dw_pcie_host_init() calls .init before caching, so we must call
-dw_pcie_get_pcie_cap() inside .init. The hardware is already enabled by
-the driver's own initialization before this point. The helper will cache
-the offset and avoid redundant searches.
+The following changes were made:
+* add basic led classdev abstractions to register and unregister leds
 
-> diff --git a/drivers/pci/controller/dwc/pcie-sophgo.c b/drivers/pci/contr=
-oller/dwc/pcie-sophgo.c
-> index 044088898819e..39703d2b7b5f2 100644
-> --- a/drivers/pci/controller/dwc/pcie-sophgo.c
-> +++ b/drivers/pci/controller/dwc/pcie-sophgo.c
-> @@ -164,9 +164,10 @@ static void sophgo_pcie_msi_enable(struct dw_pcie_rp=
- *pp)
->  static void sophgo_pcie_disable_l0s_l1(struct dw_pcie_rp *pp)
->  {
->  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
-> -	u32 offset, val;
-> +	u8 offset;
-> +	u32 val;
-> =20
-> -	offset =3D dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-> +	offset =3D dw_pcie_get_pcie_cap(pci);
-> =20
->  	dw_pcie_dbi_ro_wr_en(pci);
-> =20
+* add basic led classdev abstractions to register and unregister
+  multicolor leds
 
-[Severity: High]
-This is a pre-existing issue, but while reviewing this init sequence,
-I noticed a potential resource leak and dangling pointer on the error path.
+Changes since v17:
+* use lifetimes instead of Devres
 
-If dw_pcie_host_init() fails (e.g. due to a link training timeout), it invo=
-kes
-the .deinit callback to tear down host-specific resources. However, the dri=
-ver
-is missing a .deinit callback:
+Changes since v16:
+* use for loops for duplicate checking
 
-drivers/pci/controller/dwc/pcie-sophgo.c:
-static const struct dw_pcie_host_ops sophgo_pcie_host_ops =3D {
-	.init =3D sophgo_pcie_host_init,
-};
+Changes since v15:
+* fix issues reported by Sashiko bot:
+  * fix returning error not possible on `brightness_get` callback
 
-In sophgo_pcie_host_init(), an IRQ domain and a chained handler are set up:
+Changes since v14:
+* fix issues reported by Sashiko bot:
+  * add missing inlines
+  * add missing Sync trait bound
+  * fix vertical import layout for public export of private types
+  * fix potential memory leak, if a multicolor led device with over
+    `u32::MAX` subleds is registered
+* remove default_trigger option
+* fix missing CAST doc
 
-drivers/pci/controller/dwc/pcie-sophgo.c:sophgo_pcie_host_init() {
-    ...
-	irq =3D sophgo_pcie_init_irq_domain(pp);
-	if (irq < 0)
-		return irq;
+Changes since v13:
+* rebased onto v7.1-rc1
 
-	irq_set_chained_handler_and_data(irq, sophgo_pcie_intx_handler, pp);
-    ...
-}
+Changes since v12:
+* add `led::DeviceBuilder::name()` and `DeviceBuilderState'
+* add `led::Color::as_c_str`
 
-Because there is no .deinit callback, the IRQ domain and chained handler are
-never removed when dw_pcie_host_init() fails.
+Changes since v11:
+* use `led::DeviceBuilder` instead of `led::InitData`
+* use static_assert instead of const { assert!(...) }
+* restructured patches to avoid moving `led::Device` from
+  rust/kernel/led.rs to rust/kernel/led/normal.rs in the 2. patch
 
-When sophgo_pcie_probe() returns an error, devres will free the struct
-sophgo_pcie (which contains pp).
+Changes since v10:
+* allow in-place initialization of `LedOps`
+* run rustfmt for code inside `try_pin_init!`
 
-If the parent interrupt fires later, could the dangling chained handler
-(sophgo_pcie_intx_handler) execute and dereference the freed pp pointer,
-leading to a use-after-free panic?
+Changes since v9:
+* add missing periods in documentation
+* duplicate `led::Device` and `led::Adapter` instead of using a complex
+  trait
+* fix imports not using prelude
+* adapt to CStr change
+* documented `led::Color::Multi` and `led::Color::Rgb`
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530153101.6955=
-80-1-18255117159@163.com?part=3D12
+Changes since v8:
+* accept `Option<ARef<Fwnode>>` in `led::InitData::fwnode()`
+* make functions in `MultiColorSubLed` const
+* drop the "rust: Add trait to convert a device reference to a bus
+  device reference" patch, as it has been picked into driver-core
+
+Changes since v7:
+* adjusted import style
+* added classdev parameter to callback functions in `LedOps`
+* implement `led::Color`
+* extend `led::InitData` with
+  - initial_brightness
+  - default_trigger
+  - default_color
+* split generic and normal led classdev abstractions up (see patch 3/4)
+* add multicolor led class device abstractions (see patch 4/4)
+* added MAINTAINERS entry
+
+Changes since v6:
+* fixed typos
+* improved documentation
+
+Changes since v5:
+* rename `IntoBusDevice` trait into `AsBusDevice`
+* fix documentation about `LedOps::BLOCKING`
+* removed dependency on i2c bindings
+* added `AsBusDevice` implementation for `platform::Device`
+* removed `device::Device` fallback implementation
+* document that `AsBusDevice` must not be used by drivers and is
+  intended for bus and class device abstractions only.
+
+Changes since v4:
+* add abstraction to convert a device reference to a bus device
+  reference
+* require the bus device as parent device and provide it in class device
+  callbacks
+* remove Pin<Vec<_>> abstraction (as not relevant for the led
+  abstractions)
+* fixed formatting in `led::Device::new`
+* fixed `LedOps::BLOCKING` did the inverse effect
+
+Changes since v3:
+* fixed kunit tests failing because of example in documentation
+
+Changes since v2:
+* return `Devres` on `led::Device` creation
+* replace KBox<T> with T in struct definition
+* increment and decrement reference-count of fwnode
+* make a device parent mandatory for led classdev creation
+* rename `led::Handler` to `led::LedOps`
+* add optional `brightness_get` function to `led::LedOps`
+* use `#[vtable]` instead of `const BLINK: bool`
+* use `Opaque::cast_from` instead of casting a pointer
+* improve documentation
+* improve support for older rust versions
+* use `&Device<Bound>` for parent
+
+Changes since v1:
+* fixed typos noticed by Onur Özkan
+
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+Markus Probst (3):
+      rust: leds: add basic led classdev abstractions
+      rust: leds: add Mode trait
+      rust: leds: add multicolor classdev abstractions
+
+ MAINTAINERS                     |   8 +
+ rust/bindings/bindings_helper.h |   1 +
+ rust/kernel/led.rs              | 339 +++++++++++++++++++++++++++++++++
+ rust/kernel/led/multicolor.rs   | 405 ++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/led/normal.rs       | 237 +++++++++++++++++++++++
+ rust/kernel/lib.rs              |   1 +
+ 6 files changed, 991 insertions(+)
+---
+base-commit: 9e171fc1d7d7ab847a750c03571c87ac3c17bd84
+change-id: 20251114-rust_leds-a959f7c2f7f9
+prerequisite-message-id: 20260505152400.3905096-1-dakr@kernel.org
+prerequisite-patch-id: d2aebf69b153c039bbed1d0ed26906708fd22534
+prerequisite-patch-id: 84b28da2f5de20fc1785095c647b2ffc35d969a5
+prerequisite-patch-id: 67318671a5eed5fb4ad23a450f1cf0e442bf8ca2
+prerequisite-message-id: 20260525202921.124698-1-dakr@kernel.org
+prerequisite-patch-id: b84db329d4372a175cb8d49e4e88c3eecf7eb228
+prerequisite-patch-id: 2c30303f409cc8288cc87e241920219f5ddd8390
+prerequisite-patch-id: 4e4f0ad370d763ad00b0f75b91fa216f2cc95953
+prerequisite-patch-id: 5bcd6b37f3498feebda275dfef78136eba34004e
+prerequisite-patch-id: 872b0982f3e5e7d1698d9df3b325e4cd27b27789
+prerequisite-patch-id: 3a3c7749e017d9335f58497404d1350e96caf471
+prerequisite-patch-id: 3526c9154f581497a11465b936d83ef61a875454
+prerequisite-patch-id: 65d8c757b52475c2acc7d22ddc92cd3f0152b55d
+prerequisite-patch-id: 4bd31f1414d5248dc080884caadf5f21684a8427
+prerequisite-patch-id: 7beadbb0da3e589ed86d12f512d1c83427dd82b4
+prerequisite-patch-id: 12cd0f67ffd27347f90c065db491945908206b7f
+prerequisite-patch-id: 4642e31f66331f6c3b579377111ea733dbb3a11c
+prerequisite-patch-id: 52d67b40b4396c741e2222d6a5bc7927abcb77aa
+prerequisite-patch-id: 74ca82ff26cf9c7a993757c87db8be62006e820f
+prerequisite-patch-id: 466fb9fa7febbffd8ef51b311c7d9893c11fc0f0
+prerequisite-patch-id: e515cd98b06e26721cbbe6a4fbacd251d0073b63
+prerequisite-patch-id: 8dc8e75d9f6499a554ef7e474bbacdbf3660a9f2
+prerequisite-patch-id: 5fdb9f71dca2f44dd293760a60db125b770f1f55
+prerequisite-patch-id: c766a24c2d5064f5ec09daada0b8e8fba862d3aa
+prerequisite-patch-id: b768f6456d35fa7a80c015e34bbdba6082dbd593
+prerequisite-patch-id: 6a8b17234f12f7084e6e2ce843a7031b0a891ce4
+prerequisite-patch-id: 98b2deb9e60c1f28f90c5ee34fd608aaa9fd9420
+prerequisite-patch-id: 774b29be66e641ee50cedb4704cf49d8b9fabf50
+prerequisite-patch-id: cf95dc936cfc4b3a7a363435a51a48d9009645b3
+
