@@ -1,66 +1,124 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11E953976B8;
-	Sat, 30 May 2026 10:06:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC28514ABE;
+	Sat, 30 May 2026 15:31:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780135601; cv=none; b=sn2ydy/MCubxsdTCR8jLb1v+ZvJuRtLMIDC6dv40xMP4BNLp67Qyi3TUzBcEvW0ZmAyrtvjYS3qI5m4oH/YBykC7YxH/+7trQfHyAIaO3gQtkKrelsX+z/7tCtgY/yUiTAG68ZjJgpi0ZRIpSoLiJbOTfMw3skifW1FYNXPJxZw=
+	t=1780155101; cv=none; b=XMAGscBt6TOCw35sZpsDpKNlMt9FQT2SGIN8GK59jKD2QUav39/xGNw9Si3VWgF1eVGoo7fuD6DUfJPeLerOcJMgv/6HWouL7sn8shqAX1iSkIzA/8n6iYApq8hESGWUysTyHfcQ+vcAvtg012//baDs2sFPsR5RQxWwxlcO8ds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780135601; c=relaxed/simple;
-	bh=x7O3sIx0yZKm06mnDzuY18z8FK0uHxez2xVHO3zxjlQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gPc/ieP/hmzu7sshN6QfuIWO+k93broZEfOBwrmAzcsUBofDLUMMI4abvI69Sr9sFM2Ma+lYoTmwmM5ttc+29zauUbNWRIFkaBg2/L4V8UmMZmRHPm6uFkgsVuWj/m+zI7kC4WErwBtySn4wb9Zdi44CJarqLyy+A1cbd8iYEYo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nN3JdtTS; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780155101; c=relaxed/simple;
+	bh=CwQvJhYMmSpEtBnu8YgoO14KM8+fei2hTUBjvIMzffE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jnOxItW8QkPBX+rFQe2X7L9wgt7vduwMIcoJOW0vG5mlLfmMS9th3tgR9N/Dsz1ihib++rh63/6XIgQWPvb8hq5gnzFlbrK0AdJO1zCygOJjSJ9yT8E6jkxHMBqCCyL4peYEPShT97/QGotgfUQThUpe1t627tk26u0oBFSnmbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=eT8GqHUC; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nN3JdtTS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 645031F00893;
-	Sat, 30 May 2026 10:06:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780135601;
-	bh=QZ0RJ/Wj036Ergbz2w4ILZdo4NvA2nmIivVqplv6Blw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=nN3JdtTS+4CNppDHiM6KHDJGi14KNJ5ikoIhvjGmGw8ONb/fF75aG5auVuKnBCQ1r
-	 cx59/cDuGC7t3JBeg8EPb4+WgY0VL9eRVe9DDzt64iHQLLy3f0bV8x89x2BUI4Y8wA
-	 x6cW4Nf3x9MtHx1XvoGFrwLS1uzrULviyYwuKpsYbwlCQ6WmyCbxn6F5yNqEYVdXr8
-	 n3CC7C8CIS0+dVbH1V3r26lx1yj564Y2ZyOtUYuB0wbziXdHT7Menj5taZw+CiUWhY
-	 I8mARjTa6zhAmjuk9wE7SfIRZWPjKu+kyOTX1hV2cuPr0rRk2Fe80DGPVvZ7+5b4VV
-	 q43hjN+yfEduw==
-Date: Sat, 30 May 2026 12:06:38 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Matthew Leung <matthew.leung@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: qcom: Document the Hawi PCIe
- Controller
-Message-ID: <20260530-glistening-loyal-nightingale-f5f117@quoll>
-References: <20260529-hawi-pcie-v2-0-de87c6cc230c@oss.qualcomm.com>
- <20260529-hawi-pcie-v2-1-de87c6cc230c@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="eT8GqHUC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=sC
+	5IK7rcAYFVlcW/qRjCYlhzV8RYd8qBA49KkuguIVM=; b=eT8GqHUCGLC9IgExlr
+	m7fELH0xN24rgY9XrNisOTFUZ76V/XRZclI+SkVjn9KyidK8trIHHYR82M7n1MN5
+	YnvNpOPCp5wD52jDlJPooF6O9bQOElbUxlpAcNBVLka493ELYFo2q8UgPHlfmi1k
+	4gEPT7bMi00N8RSm0gI5jJjHM=
+Received: from zhb.. (unknown [])
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnfA+4AhtqjqjeAQ--.36562S6;
+	Sat, 30 May 2026 23:31:08 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	s-vadapalli@ti.com,
+	a-garg7@ti.com
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v2 04/16] PCI: dwc: layerscape-ep: Use cached PCIe capability offset
+Date: Sat, 30 May 2026 23:30:49 +0800
+Message-Id: <20260530153101.695580-5-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260530153101.695580-1-18255117159@163.com>
+References: <20260530153101.695580-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260529-hawi-pcie-v2-1-de87c6cc230c@oss.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDnfA+4AhtqjqjeAQ--.36562S6
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZF15KF4kXF1ktr18Gry8Xwb_yoW5GF1kpF
+	WUXF4YkF18Jr4SgFsrZan8Wr13GF9akFy7J397Kr1aqry2vryUGa90yry5tFn7GFWqkFyj
+	934rtFy7u345JrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRByIUUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwxwRtGobArx1sAAA3w
 
-On Fri, May 29, 2026 at 01:10:08AM +0000, Matthew Leung wrote:
-> Add a dedicated schema for the PCIe controllers found on the Hawi
-> platform.
-> 
-> Signed-off-by: Matthew Leung <matthew.leung@oss.qualcomm.com>
-> ---
->  .../devicetree/bindings/pci/qcom,hawi-pcie.yaml    | 204 +++++++++++++++++++++
+Replace these with dw_pcie_get_pcie_cap(). The hardware is already enabled
+by the driver before ls_pcie_ep_probe() and before the interrupt handler
+runs. dw_pcie_get_pcie_cap() will cache the offset on first call, and
+subsequent calls (including inside dw_pcie_ep_init) will use the cached
+value without re-searching.
 
-As replied to cover letter, cannot be tested by tooling, so dropping
-from Patchwork.
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+In pci-layerscape-ep, dw_pcie_find_capability() is called in:
 
-Best regards,
-Krzysztof
+  ls_pcie_ep_probe()
+    -> offset = dw_pcie_find_capability()
+    -> pcie->lnkcap = dw_pcie_readl_dbi(offset + PCI_EXP_LNKCAP)
+    -> dw_pcie_ep_init()
+    -> ls_pcie_ep_interrupt_init()
+        -> devm_request_irq(..., ls_pcie_ep_event_handler)
+          -> ls_pcie_ep_event_handler()
+            -> dw_pcie_find_capability()
+---
+ drivers/pci/controller/dwc/pci-layerscape-ep.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+index 8936975ff104..b2d0b51df3c5 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
++++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+@@ -74,7 +74,6 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, void *dev_id)
+ 	struct ls_pcie_ep *pcie = dev_id;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	u32 val, cfg;
+-	u8 offset;
+ 
+ 	val = ls_pcie_pf_lut_readl(pcie, PEX_PF0_PME_MES_DR);
+ 	ls_pcie_pf_lut_writel(pcie, PEX_PF0_PME_MES_DR, val);
+@@ -83,9 +82,6 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, void *dev_id)
+ 		return IRQ_NONE;
+ 
+ 	if (val & PEX_PF0_PME_MES_DR_LUD) {
+-
+-		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-
+ 		/*
+ 		 * The values of the Maximum Link Width and Supported Link
+ 		 * Speed from the Link Capabilities Register will be lost
+@@ -93,7 +89,8 @@ static irqreturn_t ls_pcie_ep_event_handler(int irq, void *dev_id)
+ 		 * that configured by the Reset Configuration Word (RCW).
+ 		 */
+ 		dw_pcie_dbi_ro_wr_en(pci);
+-		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, pcie->lnkcap);
++		dw_pcie_writel_dbi(pci, pci->pcie_cap + PCI_EXP_LNKCAP,
++				   pcie->lnkcap);
+ 		dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 		cfg = ls_pcie_pf_lut_readl(pcie, PEX_PF0_CONFIG);
+@@ -266,7 +263,7 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+ 
+ 	platform_set_drvdata(pdev, pcie);
+ 
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	offset = dw_pcie_get_pcie_cap(pci);
+ 	pcie->lnkcap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+ 
+ 	ret = dw_pcie_ep_init(&pci->ep);
+-- 
+2.34.1
 
