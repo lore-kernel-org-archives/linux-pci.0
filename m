@@ -1,151 +1,178 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010050.outbound.protection.outlook.com [52.101.56.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dy1-f180.google.com (mail-dy1-f180.google.com [74.125.82.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8188733E344;
-	Fri, 29 May 2026 23:05:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.50
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780095960; cv=fail; b=IGQ8pUKluTByXfzU/HGxfxnX6lTB6boog30ZoBq40kCO6z2rMqFOMNI6lctPyik9MYpsxNuf52i4nuSFyYt5/CcDAtHsmREP9fMjKGFKpPX2SUJDE7rVmd2YdfjJ0uEOflF8BeVWlNrtr/ybdf0+S0ponAbCF0jNSwotqrfMquk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780095960; c=relaxed/simple;
-	bh=RziyMbkKHyUWUWzlPjEEyWD4Nc+3G0IVUGLNP8JX+Gk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=QkedAxkPykUP3mJ0ysLonUbTAiWPZcpk0nMdI488qpXroEnTolxJOxzfRmjafTG7UtQaARPcCLhV2yLbbMoWKCkN9l7WyISK2KV9w0Va906bBS8qQVsm7BHPL9tgeUmXA9YcchcJdlihdJXdMw/S+7LoiY5bU5LnCrJSiHweYZs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=l3Ng2q8e; arc=fail smtp.client-ip=52.101.56.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EA31A9F97
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 00:35:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.180
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780101320; cv=none; b=nVD6Agk0H18fDth2Iw+oTTYWtQ+9xSFVIC/y7lJ0HyqaqjlhpJidlmJ9cgs+qr6jVs5oxH2nspw0BQmBU/iVENGKS0gvDju5FJwYgX2+7JlpztjrVDhB1L5jQ6qKKaWLeZrRrB5UJ5bfGVd4nnhNSgq4Wl4RSzXoHm5Ili89uME=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780101320; c=relaxed/simple;
+	bh=p9VB8mi00fhJHvqbkWD1f5hU4430riMH379SGSdgcRI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Br38oM2c/eGsF7AYc7CxRQNFYJOZvVCr9HcsYRxcK4buvDd/vlSTlmVqCtGTlP7jGJ8bYWLDCA3j8VmtT7mcsSTfyl8G2Ecss5UmZUx1Y+1IlWmqTXLgZxm2Tt/TK/si69oDbOm8ij+jfG+jojDUdSxB7GfNx+i27i39ZXxJzzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=ZWzPaRCH; arc=none smtp.client-ip=74.125.82.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="l3Ng2q8e"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=edksMy7JlPiv04a+YjUJLi5EIvKFqGZRo21iibTGTA2GB7odUiflr+nKlzunmQPeCM+RQ+HrMqhL24Wh6vseWzE0Rb7sQFcBszhrEYqlKU6nJ7jVPi4WFbHaiXq9Hbt6gqFNpuDih2D46fM9NOIFDqUdgXG+FMc0iIYzg+gMhC23cZ+4luRXkBXbRZpTkFASb7m3C2WpcIy8Y6Xj8uYEn4xkv/gibVP9cwNFKU7DYgBeCq7VedRRsl/8zvrlUrVvBbeSJjcKYhd5A2tVvwQYCw4d2BDt3RvZKp496fPlFWpdhQYXhPhIPemgLdabL9QFULTQVTprmTHsc/ZOat9tug==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rrXUordAcCsxjK8J1Ixlzg2ge5OitCdOBt3xcZXadRc=;
- b=OX9NFVk0pPs2ctLZPjM9tj0pD5ankv/SUeW8ByY8cUsyMeWZwPAfsRrwbBttc4DNmtAyIE6ShUJ1L9Tn6rBicsd7SZC3z+DgfowKLIT/ydN+FvVTqJktokefSHDzLiHQtly5S0HTQdaucxWZhgRT3F+rSlGD1yqZFMl89jAyhjPyOo2yHbnfUXmKdih1q9EmpJVFHCeNbUdt5uEW4LIfvGS8zKit6Qx4Cel+ZehST6NIycwIxSa3bHMOvBVLBmRtxSF+sMDbDCwTD9ZrNys2bNrHdn3No2qooERcdCuycIb+N+AzOH/3wrnVly2PfWqg366Td6qO31swC3lli/LwpA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rrXUordAcCsxjK8J1Ixlzg2ge5OitCdOBt3xcZXadRc=;
- b=l3Ng2q8eiCy90t2eKUjF2Q7UCDAiw4jgPWeSW3Rqps8Nyrb2pVtUeRW4YKpYroqjJwbrmWOSh/i8o6JKPr5s/ZQSXJ/kanjpZojKlyNHWe41+lbZVQ6362JvAKkKUvrqYCFLu/xfai5RNSW7ukA7Kvc+rpUQUd/roDgITBRiXhzFoCULltvQgdNsk8YcvT8epAxyO10HbSGSLdgNEJsNbDOSvk/jOO391k/tinn/7MF0RydbdXuStiF18HqlSkAnoJsopJ5YU2Fs6RXMrM0sltAjV7+fW4n4RDmuHUT+9z+rwcosGTjLL4KeqJ1WilMg0ZyQ0a+azC4yg0MLLJ1XFA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by SN7PR12MB8435.namprd12.prod.outlook.com (2603:10b6:806:2e2::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.14; Fri, 29 May
- 2026 23:05:54 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0071.011; Fri, 29 May 2026
- 23:05:54 +0000
-Date: Fri, 29 May 2026 20:05:53 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Alex Williamson <alex.williamson@nvidia.com>
-Cc: Matt Evans <mattev@meta.com>, Leon Romanovsky <leon@kernel.org>,
-	Alex Mastro <amastro@fb.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-Message-ID: <20260529230553.GE3195266@nvidia.com>
-References: <20260527102319.100128-1-mattev@meta.com>
- <20260527102319.100128-2-mattev@meta.com>
- <20260527150946.312b3042@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260527150946.312b3042@nvidia.com>
-X-ClientProxiedBy: YT4PR01CA0457.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:d6::27) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ZWzPaRCH"
+Received: by mail-dy1-f180.google.com with SMTP id 5a478bee46e88-304ffa40c5dso807429eec.1
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2026 17:35:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1780101318; x=1780706118; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=OFuLdZPUcaeYfp9j7gX4E3uZ3myAQG0aKak+9UAYUik=;
+        b=ZWzPaRCHH1VOicTBABqDhFwy2i7ztGHfndQjMpX2cKdXeOjqQ1Z9Y6HbvRSw548bXn
+         ZMZEDd/YC9Txp1QHEr9xa4W5o8QuP7vHMulXmiSiEaSypmHAA9EjGW9YVLsqHF1iayCX
+         TLVFgj4yjq4nHdX3OoHqFVKQmpIIohyKbb4QU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780101318; x=1780706118;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=OFuLdZPUcaeYfp9j7gX4E3uZ3myAQG0aKak+9UAYUik=;
+        b=DjkU0UyRJot8q2FsyzscpoMQ9PgIER8JLORBMEY77bxiSdMI7ZWA4OZSHMASllc1mj
+         4Xcm5uDIyN6WM+eb9J5YIDXndHQ+z7K6sMJ4Vl2Zb6KfpBjTz3HHhnYPnL8gbTHC4N0g
+         9oryQ4da7Wz1xJRKjSMB7ga5MKvqsDVJeIyy2q8Ksn6E659j82djda7EIhDFmWwLG6B9
+         S6s5L4wk/NCu/8XvTjz6N/chj3Q9+oKQaU5cAlhtBvHPdqHLjJgs7/AYlQsM2K9+Lxok
+         LQHrRQ5dt0WCUzKdFuwMqCp/94Ix4hV7xy1PHyNTu8Tcj40QzFTpvo0BFIL/EbiqM3Gw
+         f8zg==
+X-Forwarded-Encrypted: i=1; AFNElJ8XEKZAhWzMwA4NRbeE2wPS5CHeftej2jhnahCHxjL2fH6RyCE1eK0wDxXEkHQKj/343NMlTi6T+DI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyzoEOV2Fb4xargx1NJO+fF0VbfCANUsmzfvwmRmAHU7ZmJvhua
+	ctgItmxhPuX6i9RG5BJlT7TF/ziucfo4QZDtF4/o5So94YvI67JlwCtpddN21b/nWA==
+X-Gm-Gg: Acq92OEWPsMUWO5TgzsBdK3sgM2RTz1/P+YWiQkKYow4OMcf6A1kr+G6vPY53kucKst
+	kC8UkkYDTg1mQvqPGNbAef6ZgnFtUZAb82xBK3hfWtrZcAsjQ52Td/IwqPXLWSCWd2XHFn3G0cT
+	4U9FFZMQl6muqTtZiwKt9/pXcUIor1hLfGxSnl6JPT4PMLCu70tztcalVOGiSBxrsQeDMPK2XQ0
+	J9VMcTw16sr6RFN182z0dOyJq3OEYlFKjT5zbg4pIhhTCTY1JRhJbQ080RGB7vJTDRL8FXfivxz
+	PDd3GM4ipvgWvU+LBr3u5WDWVaQpM/rR9YtwnE5tN0c/+iUC3wU37pzMYmyLz/w04RqErSWXWgO
+	oydRHKBAEEF5ccMFGRr4flnce2P8TLea2oLPagBFFyUfubG+hf1UItixMcFA3jmGvhyVfJMXIDg
+	C66uTGDRE6jHwREJTtqT+wNfHV85syfYWs9ssfW8zP3KAJ4DhlqFqqb069wkUc/Fqgu1FHe1Pk
+X-Received: by 2002:a05:7300:1899:b0:2ed:e15:c925 with SMTP id 5a478bee46e88-304fa695496mr1024072eec.33.1780101317945;
+        Fri, 29 May 2026 17:35:17 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:9fdf:e1c8:e808:b604])
+        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-304ed5d26d1sm2732316eec.30.2026.05.29.17.35.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 May 2026 17:35:17 -0700 (PDT)
+Date: Fri, 29 May 2026 17:35:13 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Radu Rendec <radu@rendec.net>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Daniel Tsai <danielsftsai@google.com>,
+	Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
+	Krishna Chaitanya Chundru <quic_krichai@quicinc.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Brian Masney <bmasney@redhat.com>,
+	Eric Chanudet <echanude@redhat.com>,
+	Jared Kangas <jkangas@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] PCI: dwc: Enable MSI affinity support
+Message-ID: <ahowweKTZXteLgZS@google.com>
+References: <20251128212055.1409093-1-rrendec@redhat.com>
+ <20251128212055.1409093-4-rrendec@redhat.com>
+ <ahC8Pyuatu_AvnZp@google.com>
+ <ahDvvGew5UK3KSpi@google.com>
+ <73f04f467e65b13fd455a3650dc2bd106af1e5a6.camel@rendec.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|SN7PR12MB8435:EE_
-X-MS-Office365-Filtering-Correlation-Id: bc427a06-c47d-4e54-d782-08debdd6d5ef
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|366016|1800799024|56012099006|4143699003|11063799006|18002099003|22082099003;
-X-Microsoft-Antispam-Message-Info:
-	cpd79Yy5ZDbF6crmEWoV7Mzf8DOjw3RJTqfABohrxnhcgGN2mRhk3KabnSeSgJYslBHYtMM1V2wZ4D9og1Jjxc8cyPEG4WshdIQpYyG9Ek3dDl+qnS7j1FcbOpIKVH7NbkqCIFDyBZRjQ8VREKVTaVtWc04PugNjaG3sPKPgzbt4R6iGj0aWct06+ymNxSJT0hWbyNBcQgDySUNJjpqsDPvaxX64YWHpwWspfZ/PIBaqV8pQk3qDmLFlLbpeCE3ni8stO4vUux6IBusa1NHtyI8XSz1Gglr+0AoqlS5Ykdx050a8ajY6n1b5Xk3t2rEbed7TrUGfwYw/NGqulfuDf4G52kZbEhk63HHyuE3ILFWArud63JNzP7Y6Pl03GxJ0guCx5yngQPa2rxfA1JcHUbBFijrqVvvv+uIvtImR95xEGaHrCLsy2Josq4DdappNLWNgMMHBw5UBvSq3JTHhR5PQVvnuGNgpgUUokiFY7iDlgXDzbeRI1dBgmPtigZJLzXQeJibqoj+TFRgLDuluxTzaOGbz6oPhfX5tQNizFyBkrVcyVoGR4Bf69IkLmBjH1aIwKVOjYteTSjbKbmujOi7oCPTJvU9F8NCSWc+E9GZHlakSML5058qzGMfpXrl1bvMC9IVfx3w9rw8ZQeZsERBQFenSoJC8a3N58DYtcDLCc2NjZqmKaXRT9fRgaBcCC5s6MSLHrYM3pc8Xf6za6g==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(56012099006)(4143699003)(11063799006)(18002099003)(22082099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?DZEQ1eDRFRojqt+doPd/0pTuE6O2oaRyVQ6FLIN9qt9v79+T0ZZ8S9CG/Ydq?=
- =?us-ascii?Q?LliZleAC8hvS+isX3n3E/1yEp4Tcrz6zFoq/m735N1kUQ8GLV2nzUrbZpA7F?=
- =?us-ascii?Q?vgg4ILL30q0aDVrVrAsn04JhFWle60psvqVec+DxYAIVvQ14qxgIBl0lQkv4?=
- =?us-ascii?Q?xNcYMsqiAyIXv8FUATxXMtTuo2/A7WDltVPkmIfQ6cY21r/8odl5qa1IQdnE?=
- =?us-ascii?Q?iA99MVh4gPSCuRSHWkE7PV6RKmE0g3Vu0NRVfLvpRGUGLTNURAaX6hvzLKRN?=
- =?us-ascii?Q?uSQqCEJWBeajBV2g3/gZhBJLTmvt/a8h+/mC3aFx5zKh6ceQiblcOmnIZSBW?=
- =?us-ascii?Q?1yJzkzw9OJkZ/0YCIn93ONBCuporgb8NrmMLCWT0p6eAZDZ8GHMUuT0gO/Lr?=
- =?us-ascii?Q?VivQ+tkPMxxrX2OpRi5D+JGG5wLG/eU+YYgNgpNgz27JoqggTtFSALOBaXKu?=
- =?us-ascii?Q?IOXcdZI0yrXAipheXTve75iIxpQbIYEWhSqYYdQeB3LrXN4ybW7VNYPW2HMA?=
- =?us-ascii?Q?ElT8bzKNbE2sbHEpsOB9OVCLgr9YoiAPo6C3uSUJ4Av19bgJ+qknwQQh5ZFS?=
- =?us-ascii?Q?qDgnFBO6xq8Mt1WZQPoK6NX8XfCHyZl15pZCaYz6HH7tXUu4VK0cgX9Wenkf?=
- =?us-ascii?Q?10ud7ol6Njb8OLfhOyViseKRkJ9gTNfD+4bJ2y/VHYc+L7qtzAyfyRYKxlqq?=
- =?us-ascii?Q?xYwOBo65f6swiuttOje3h/sR4s0ssIZ7472Go010xyb4p9NwbKrKJtOImgPc?=
- =?us-ascii?Q?gmE+pTKjd9PoVNVL7+xpqgK1xWWnIQthoEd2XgmfI/UQznZwt973hLtB/QkI?=
- =?us-ascii?Q?epl8e14Vh7ryDTdneGP75ycrDKEP5CgN1riNLCl3sOi4aYW9N2kM0AoMqpKt?=
- =?us-ascii?Q?QL4M2FgQH00c5fAyTP72goZVfBIp8gzALa0x5a2t2t+OnV+oiFEMUdeTYLDb?=
- =?us-ascii?Q?LVkBSftvhc5f6yWilqXO5mUMRMdoKCw8cOhUEBPo5JB5Um6gKzKY7YqSsQp2?=
- =?us-ascii?Q?7CldeAyT9waql1j5RWK0oOHJ8SnTROPkAP8frRqAyapITcYOJe3KLsluLgmK?=
- =?us-ascii?Q?1WddKwYn7K0hvNQypc2iOhTvhDdAvq2Pvb63DzE0VyUEeubjmWQTbRjte14V?=
- =?us-ascii?Q?kZBIGDKIPUk/IQB2zTGXMxw6aCsJgpnhfVxAg4Duqrnd6OQ7dff3WcQev4wj?=
- =?us-ascii?Q?aG4yBhWoNrnAciClMOVkTNtljqwbaAqWwpF5l5+CtNSDmvchukQkEBtNFXID?=
- =?us-ascii?Q?2Jl2eDaMp9c4lj310YnpRG6Wn2LFY6GAnhvA9jv5nfxQaCWDdqRMZA1vuj4u?=
- =?us-ascii?Q?zkQLB+N2xCDIXGWipYPR8JC2EsJf6qMKmJSOdlMA445lKio2xBO12X5pv1LO?=
- =?us-ascii?Q?zWPmHywV9Ie/NWVHWF09vPRcV2xZGoePLFKWTTqpeSP0JtlK+m4uwLSLM2Eb?=
- =?us-ascii?Q?U0lcHroftbph71bmeb7D97CP7KcB0DcwOejrfB6cXubECDeEfv0nSy2imGo9?=
- =?us-ascii?Q?UWpptL9950swfcuC1DfotnCJ5cC6Oc49wJlyfej/YyeGgkc2ysZX9lmdDiZE?=
- =?us-ascii?Q?megKbrq/aNFejHOq1kMkjiwgYAxWU4fOpR3xMQr9/S3IbwMvFELaKcVSQNpc?=
- =?us-ascii?Q?wgeHjzoGuI67YmYB/oeYQ0zzhosgINE7iHQh8X+zUbKq0YQBYoKEVbR7kTAu?=
- =?us-ascii?Q?fExY3qbaKUTbJhsMrPZ1FHQ5/HSaTn9+3Z8t5zfMCuh4vqiF?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bc427a06-c47d-4e54-d782-08debdd6d5ef
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 May 2026 23:05:54.7174
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: aIvvPZIb23L0qqHVpuqpDjMpH+6znoaEauLJnjSF9CFJui3drdFrodH69AlFLg3H
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB8435
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <73f04f467e65b13fd455a3650dc2bd106af1e5a6.camel@rendec.net>
 
-On Wed, May 27, 2026 at 03:09:46PM -0600, Alex Williamson wrote:
-> This deserves a /* CONFIG_PCI_P2PDMA */ reference like the previous
-> long span, though potentially a better solution would be to split the
-> core code out to a separate file with shared header.  I asked opus to
-> see what this would look like and it generated the patch below
-> (unverified, compile tested only).  Bigger diff, harder to follow
-> blame, but the shape of the core is much more apparent.  You're welcome
-> to take or leave it.
+Hi Radu,
 
-I think it is a good idea, it will make it easier to add more stuff to
-these different aspects.
+On Mon, May 25, 2026 at 12:48:09PM -0400, Radu Rendec wrote:
+> On Fri, 2026-05-22 at 17:07 -0700, Brian Norris wrote:
+> > (Updating Radu's email; dropping another bouncing email)
+> 
+> Thanks for doing that! Obviously, I no longer have access to the email
+> address that was used to post the patch, and I was lazy in setting up
+> scripts that follow the mailing lists to catch messages that are
+> addressed to me directly but using old email addresses.
 
-Really they are now two different things with one layered on top of
-the other.
+No worries. The email bounce notified me rather quickly, and in the end,
+you saw this within a few hours of first report anyway :)
 
-Jason
+> > On Fri, May 22, 2026 at 01:27:43PM -0700, Brian Norris wrote:
+> > > I'll see if I can learn anything more here on my own, but I figured I'd
+> > > report it in case you have any thoughts or leads I should investigate.
+> 
+> Thanks for reporting it! I do not have any thoughts or leads yet, but I
+> do plan to look at it during the next few days and hopefully come up
+> with something. I also apologize for the slowness in my replies.
+
+I'm only getting occasional time to spend on this too, so I'm a bit slow
+as well.
+
+> > In an hour or two of poking, all I've learned so far is that the problem
+> > also seems to go away if I:
+> > 
+> > (a) add a few dump_stack() and other noisy logs to a few key places (for
+> >     now, __pci_write_msi_msg(), pci_power_up() failures, and
+> >     irq_chip_redirect_set_affinity() -- I think __pci_write_msi_msg()
+> >     was the most significant, possibly because it produced the most log
+> >     text) and
+> > 
+> > (b) leave a 115200 baud UART kernel console running.
+> > 
+> > (This is on a sample size of 20+ suspend cycles, whereas previous
+> > bisection would fail 100%.)
+> > 
+> > It then reappers when I quiet the kernel logging a bit with `dmesg -n3`.
+> > 
+> > I think that simply tells me that there's some timing issue or race
+> > condition involved.
+> 
+> That's very useful! Interrupts are migrated on suspend to the main CPU
+> and then migrated back on resume, and the ordering and synchronization
+> around that is tricky. The stack trace in your previous message tells
+> me that the nvme driver is waiting for IO completion, which is normally
+> signaled by an interrupt, except that interrupt never arrives.
+
+That's true. But the first failure is:
+
+  nvme 0001:01:00.0: Unable to change power state from unknown to D0, device inaccessible
+
+That means the PCI config read of the PM status register is returning
+all-0xff, so we're not really able to guarantee the NVMe PCIe device has
+powered back up at all. In my experience, that's indicative that the
+PCIe link has failed in some way, or the root complex is otherwise
+misbehaving. If the link is not functional, we won't receive any NVMe
+MSIs.
+
+I still can't explain what about this patch is causing a PCIe link
+failure though.
+
+> With my patch included, the demultiplexed interrupt (the nvme interrupt
+> in this case) has an opportunity to be migrated during suspend/resume,
+> whereas previously it did not. That's one more moving part, and I'll
+> have to look closer at the code and think what could go wrong. I agree
+> it's likely a race condition or a timing issue because it works with
+> that extra logging, which adds small delays as a side effect.
+
+I also tried hot-unplugging all non-boot CPUs before suspending the
+system:
+
+  for i in /sys/devices/system/cpu/cpu{1,2,3,4,5,6,7}/online; do echo 1 > $i; done
+  echo +10 > /sys/class/rtc/rtc0/wakealarm
+  echo mem > /sys/power/state
+
+I believe that means all the affinity/migration will occur while the
+system is fully online, so we're less likely to run into power
+management race conditions. In this test, NVMe is still functional after
+the first step (CPU offline), but it still fails after suspend-to-mem.
+
+This seems to tell me the irq_set_affinity()/migration process isn't
+really what's killing things, but something else.
+
+Brian
