@@ -1,29 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55F9432B9A9;
-	Sat, 30 May 2026 15:31:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F31C3382F7;
+	Sat, 30 May 2026 15:31:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780155107; cv=none; b=pZ+9RGGtSpuHTEQMBL1VQ17RsULfgK68eC7ugzFHhr5cG/UxXddwVJ8UCW89vbzwrKmFqOBptBwxmi8cAfYKghGJUsS4VMpDCDxyQmldSjTeIU5Oqi4Icb5qGHFzKzEN77Q8DsC5d7idLn7KQId4SVKlXowgS1SxhDAX3Zh0kcE=
+	t=1780155108; cv=none; b=bVEU3Qy481vWuSwyYkKn0TTj5LRt/4WotEFgE9KG9qJ08TCuw6uHIJ4/833SegyIFM4ZlZ+aMZiiReDwzpeWXgMqD70vcODQCBFdGGl7cnYI2+MRcRgCeX7f7EZvn4t92P9TLcNe6/kXZh5yoFUS6Y7tN1Nk/4J/QdhO78pT7Ds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780155107; c=relaxed/simple;
-	bh=fEK98gR/zB9gEFIBAqp/XvWYAqb+0sgLn2OwsqQIGzM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=eCwjceeWBeQ1geNGjqTXtHysQJ7KQPqfuylkCUOGXnCNSkaN9gdyQ+VrTi9NNc7zz4F4aelAoG1lcll4gt1heBXDyy0XqGpCFe7T5EOs3XJQ+v1yxlvFNhIv/3IguvsScjxPwDCuhsk6qNtCveHKFIx9gfBU8+q6ssgKmoIVz+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=W+xeNbNS; arc=none smtp.client-ip=117.135.210.2
+	s=arc-20240116; t=1780155108; c=relaxed/simple;
+	bh=32M/PdsAFc/9DPQK2sFcE+ASvTTCe66eK5B3WyZp7/4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Riv0QKfEMJ2GrzAEnlNaebYmLbXfTLoC+FLKtA2YyOyjPjqdpNaXN1oRQOKYVUiesnMrZl52HRCFjlvwclzeU+Y0pgC6NPv2Fmu749XrqS5xxbGxyHUvHimD5XPbYiqoKTO7uvccKFUxiqsBu12gMSfWJ2DBHDVAtsC4/8tdalI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Xs2/nOCb; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="W+xeNbNS"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Xs2/nOCb"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Bj
-	RgFojgsTnP1227FE9wENDhbHeKJ14NsArd5sJv8G8=; b=W+xeNbNSlMYgALNiYx
-	flOCTEUzXCHXQK8oVYxyVZoI3f0hR4wk7DMoq70Un3OjZtYUQmPKYYlIukUFQQkP
-	F1GlLid3FWNYj03SABw+Yyp3BebRR/dxFp7WdFHiFmtwpdUEt7QUj5zVcLGYtJDJ
-	GC6QWvF1ygceWfWYJtH5L+NwM=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Tu
+	ra2KdjQW2HVx3hWRZaEz0M07jdxiudkOkLoIpL7hg=; b=Xs2/nOCbi7kYCh5SeX
+	0FlHHHNZ+Vv43rivL3380Bwm6EuO4t2622wWPeozIGAVvkHO7s4l9gRf6SKxjO28
+	ubRS+cYKZWnhuVFWE/wQcOvpeIwUIvaLIxTFMF2a7O4oPrqZDIFTDrMCNGvlZHRW
+	yo924VGLZniLfgLz4YYlulwVA=
 Received: from zhb.. (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDnfA+4AhtqjqjeAQ--.36562S2;
-	Sat, 30 May 2026 23:31:04 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDXxtTBAhtqVqDdFA--.47036S5;
+	Sat, 30 May 2026 23:31:18 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -35,10 +36,12 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 00/16] PCI: dwc: Cache PCIe capability offset and simplify drivers
-Date: Sat, 30 May 2026 23:30:45 +0800
-Message-Id: <20260530153101.695580-1-18255117159@163.com>
+Subject: [PATCH v2 11/16] PCI: dwc: qcom: Use cached PCIe capability offset
+Date: Sat, 30 May 2026 23:30:56 +0800
+Message-Id: <20260530153101.695580-12-18255117159@163.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260530153101.695580-1-18255117159@163.com>
+References: <20260530153101.695580-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,127 +49,137 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnfA+4AhtqjqjeAQ--.36562S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGFWDCw43JF4ktw47WFykXwb_yoW7JFW8pa
-	9IqrWSyr1ftr4avF4xA3WUZFy5uas3CFyUJ393Ww1SvFy3u3WUJr1rArWFyFy7Kr4Ivr13
-	Kw12q34xuFWkJF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piJ5rxUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xoQs2obArovgQAA31
+X-CM-TRANSID:PigvCgDXxtTBAhtqVqDdFA--.47036S5
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCF4xJFWUKFWfWFyfXr47Jwb_yoWrCw4Dpa
+	s0vrn0yF45Jr48WFnFyFZ3Xr1agrnxArW7Aa97Kr1SqF9xtryUGa1jyrySyFn3GFZrtFy7
+	Gry8tryUX3Wrtr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ptYLm3UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxAYTtmobAsZ6-QAA3V
 
-Hi,
+dw_pcie_host_init() caches the offset after .init, so .post_init callbacks
+and later functions (.link_up, icc_opp_update) can use pci->pcie_cap
+directly. For .init itself, we must call dw_pcie_get_pcie_cap() inside
+qcom_pcie_host_init() to obtain the offset (hardware is already enabled).
 
-The DWC PCIe core and its many platform drivers repeatedly call
-dw_pcie_find_capability(pci, PCI_CAP_ID_EXP) to obtain the offset of the
-PCI Express Capability structure. This is wasteful and makes the code
-verbose. Some drivers even search for the offset in suspend/resume paths.
-
-Add a cached pcie_cap field in struct dw_pcie and a helper
-dw_pcie_get_pcie_cap() to initialize it once at the point when the
-hardware is ready. Then replace all explicit capability searches with
-the cached value across the entire dwc subtree.
-
-**Safety analysis: DBI access timing**
-The PCIe Capability offset is read from DBI configuration space. DBI
-registers are only accessible after the controller's clocks, resets, and
-power are enabled. The following call graph demonstrates that all
-dw_pcie_find_capability() replacements occur only after hardware is ready:
-
-- For Root Complex mode:
-  dw_pcie_host_init()
-    ...
-    if (pp->ops->init)
-      pp->ops->init   [enables clocks/resets]
-    dw_pcie_get_pcie_cap()   [caches offset]
-    ...
-    dw_pcie_link_up
-      pci->ops->link_up
-    ...
-    dw_pcie_start_link
-      pci->ops->start_link
-    ...
-    pci_host_probe
-    if (pp->ops->post_init)
-      pp->ops->post_init
-    ...
-
-- For Endpoint mode:
-  dw_pcie_ep_init()
-    ep->ops->pre_init()    [enables clocks/resets]
-    dw_pcie_get_pcie_cap()   [caches offset]
-    dw_pcie_ep_init_non_sticky_registers() etc.
-
-- Some platform drivers (e.g., layerscape-ep, tegra194) need the offset
-  before calling dw_pcie_ep_init() / dw_pcie_host_init(). They already
-  enable hardware themselves and explicitly call dw_pcie_get_pcie_cap()
-  before the core caches it. This is safe and ensures the cached value is
-  available for all later users.
-
-Thus, no DBI access occurs before hardware is operational.
-
-Changes in v2:
-- Move dw_pcie_get_pcie_cap() from the beginning of dw_pcie_host_init()
-  and dw_pcie_ep_init() to after the hardware initialization callbacks
-  (host_init/pre_init). This can prevent the reading of DBI when the clock
-  is turned off or when the hardware is not ready.
-- Convert all platform drivers to use the cached offset via
-  dw_pcie_get_pcie_cap() or directly pci->pcie_cap where safe.
-- Fix type mismatches (u16 -> u8).
-- Properly split per-driver modifications.
-
-v1:
-https://patchwork.kernel.org/project/linux-pci/cover/20260509135152.2241235-1-18255117159@163.com/
-
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-**Why splitting into per-driver patches**  
-To facilitate review and potential bisection, each platform driver is
-modified in its own patch. The core changes are in patches 1-2, and
-follow-up patches convert individual glue drivers. If maintainers prefer
-to squash them, please let me know and I will merge in v3.
+In pcie-qcom, dw_pcie_find_capability() appears in multiple call chains:
 
-This splitting patch of each controller was carried out solely for
-the convenience of code review.
+  static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
+    .init = qcom_pcie_host_init,
+  };
+  qcom_pcie_host_init()
+    -> qcom_pcie_clear_aspm_l0s()
+      -> dw_pcie_find_capability()
+
+  static const struct qcom_pcie_ops ops_* = {
+    .post_init = qcom_pcie_post_init_*,
+  };
+  qcom_pcie_post_init_*()
+    -> qcom_pcie_set_slot_nccs()  (for many versions)
+      -> dw_pcie_find_capability()
+    -> For 2_3_3 and 2_9_0: also calls dw_pcie_find_capability() directly
+
+  static const struct dw_pcie_ops dw_pcie_ops = {
+    .link_up = qcom_pcie_link_up,
+  };
+  qcom_pcie_link_up()
+    -> dw_pcie_find_capability()
+
+  qcom_pcie_probe()
+    -> dw_pcie_host_init()
+    -> qcom_pcie_icc_opp_update()
+      -> dw_pcie_find_capability()
 ---
+ drivers/pci/controller/dwc/pcie-qcom.c | 21 +++++++++------------
+ 1 file changed, 9 insertions(+), 12 deletions(-)
 
-Hans Zhang (16):
-  PCI: dwc: Add pcie_cap field and helper in designware header
-  PCI: dwc: Use cached PCIe capability offset in core
-  PCI: dwc: imx6: Use cached PCIe capability offset
-  PCI: dwc: layerscape-ep: Use cached PCIe capability offset
-  PCI: dwc: meson: Use cached PCIe capability offset
-  PCI: dwc: rockchip: Use cached PCIe capability offset
-  PCI: dwc: eswin: Use cached PCIe capability offset
-  PCI: dwc: fu740: Use cached PCIe capability offset
-  PCI: dwc: intel-gw: Use cached PCIe capability offset
-  PCI: dwc: qcom-ep: Use cached PCIe capability offset
-  PCI: dwc: qcom: Use cached PCIe capability offset
-  PCI: dwc: sophgo: Use cached PCIe capability offset
-  PCI: dwc: spacemit-k1: Use cached PCIe capability offset
-  PCI: dwc: spear13xx: Use cached PCIe capability offset
-  PCI: dwc: tegra194: Use cached PCIe capability offset
-  PCI: dwc: ultrarisc: Use cached PCIe capability offset
-
- drivers/pci/controller/dwc/pci-imx6.c         |  6 +++---
- .../pci/controller/dwc/pci-layerscape-ep.c    |  9 +++-----
- drivers/pci/controller/dwc/pci-meson.c        |  4 ++--
- .../pci/controller/dwc/pcie-designware-ep.c   |  4 +++-
- .../pci/controller/dwc/pcie-designware-host.c |  2 ++
- drivers/pci/controller/dwc/pcie-designware.c  | 16 ++++++--------
- drivers/pci/controller/dwc/pcie-designware.h  | 17 +++++++++++++++
- drivers/pci/controller/dwc/pcie-dw-rockchip.c |  2 +-
- drivers/pci/controller/dwc/pcie-eswin.c       |  3 +--
- drivers/pci/controller/dwc/pcie-fu740.c       |  2 +-
- drivers/pci/controller/dwc/pcie-intel-gw.c    |  2 +-
- drivers/pci/controller/dwc/pcie-qcom-ep.c     | 11 ++++------
- drivers/pci/controller/dwc/pcie-qcom.c        | 21 ++++++++-----------
- drivers/pci/controller/dwc/pcie-sophgo.c      |  5 +++--
- drivers/pci/controller/dwc/pcie-spacemit-k1.c |  2 +-
- drivers/pci/controller/dwc/pcie-spear13xx.c   |  2 +-
- drivers/pci/controller/dwc/pcie-tegra194.c    |  6 ++----
- drivers/pci/controller/dwc/pcie-ultrarisc.c   |  2 +-
- 18 files changed, 61 insertions(+), 55 deletions(-)
-
-
-base-commit: 3a97877d13e1a29c50ab15ed0a0aba87b75061dd
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 11fc60489892..80783353d539 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -341,13 +341,13 @@ static int qcom_pcie_start_link(struct dw_pcie *pci)
+ static void qcom_pcie_clear_aspm_l0s(struct dw_pcie *pci)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+-	u16 offset;
++	u8 offset;
+ 	u32 val;
+ 
+ 	if (!pcie->cfg->no_l0s)
+ 		return;
+ 
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	offset = dw_pcie_get_pcie_cap(pci);
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 
+@@ -360,7 +360,6 @@ static void qcom_pcie_clear_aspm_l0s(struct dw_pcie *pci)
+ 
+ static void qcom_pcie_set_slot_nccs(struct dw_pcie *pci)
+ {
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	u32 val;
+ 
+ 	dw_pcie_dbi_ro_wr_en(pci);
+@@ -370,9 +369,9 @@ static void qcom_pcie_set_slot_nccs(struct dw_pcie *pci)
+ 	 * notifications for the Hot-Plug commands. So set the NCCS field to
+ 	 * avoid waiting for the completions.
+ 	 */
+-	val = readl(pci->dbi_base + offset + PCI_EXP_SLTCAP);
++	val = readl(pci->dbi_base + pci->pcie_cap + PCI_EXP_SLTCAP);
+ 	val |= PCI_EXP_SLTCAP_NCCS;
+-	writel(val, pci->dbi_base + offset + PCI_EXP_SLTCAP);
++	writel(val, pci->dbi_base + pci->pcie_cap + PCI_EXP_SLTCAP);
+ 
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ }
+@@ -935,7 +934,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ static int qcom_pcie_post_init_2_3_3(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u8 offset = pci->pcie_cap;
+ 	u32 val;
+ 
+ 	/* Force PHY out of lowest power state */
+@@ -1257,7 +1256,7 @@ static int qcom_pcie_init_2_9_0(struct qcom_pcie *pcie)
+ static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u8 offset = pci->pcie_cap;
+ 	u32 val;
+ 	int i;
+ 
+@@ -1303,8 +1302,7 @@ static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+ 
+ static bool qcom_pcie_link_up(struct dw_pcie *pci)
+ {
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	u16 val = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
++	u16 val = readw(pci->dbi_base + pci->pcie_cap + PCI_EXP_LNKSTA);
+ 
+ 	return val & PCI_EXP_LNKSTA_DLLLA;
+ }
+@@ -1663,15 +1661,14 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
+ 
+ static void qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
+ {
+-	u32 offset, status, width, speed;
++	u32 status, width, speed;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct dev_pm_opp_key key = {};
+ 	unsigned long freq_kbps;
+ 	struct dev_pm_opp *opp;
+ 	int ret, freq_mbps;
+ 
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
++	status = readw(pci->dbi_base + pci->pcie_cap + PCI_EXP_LNKSTA);
+ 
+ 	/* Only update constraints if link is up. */
+ 	if (!(status & PCI_EXP_LNKSTA_DLLLA))
 -- 
 2.34.1
 
