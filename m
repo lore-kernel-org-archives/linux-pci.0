@@ -1,249 +1,147 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD21288D0
-	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 03:10:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1427D19ABD8
+	for <linux-pci@vger.kernel.org>; Sat, 30 May 2026 04:59:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780110630; cv=none; b=Apb109xuwz0MdK0bZgsmFPiOiDobcXNa7t3Q0PwoIv1lNdnydXIC5oflrmci1IstQtEHTLUM+1Ah1JN4933kS1taj7C5Lg3abY+t1YMhmjVDsMYwGmrsiUsnpPD7i/NTGQv08kOrJLJbuvQ7Hoy0zEO0E5fCnMOZlxX7PKwan5E=
+	t=1780117152; cv=none; b=TfHmq6Vy1H4iZKBzTiWS3ZuxoxRIjl5hMJWRYgEFo+ycrBtiqUncthw7k/U9KnIayZdl8vkTft2NOWTTvlQqPVkhtQCYwYBoUAjeUiScPeTUkAgqR/Yxft5PCer511spnS4ZByLb3/nnJIJSop9HTMshwJdukk12lL5MoR1uREU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780110630; c=relaxed/simple;
-	bh=PstWNaS9wVwM9Xyh/sz69ieg9Bk2KHHpV5gu08rXJ3c=;
+	s=arc-20240116; t=1780117152; c=relaxed/simple;
+	bh=e3PmXAI+p39v7VJwt5cgfWnoZXR4pnFsKXV4zb1Mhvc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Yw4nhaqE3bQPnWrSCPJ4fjmJqEuVSXP2xT2CV8g2fHMSGMXQmjS1TCGYAoFjbyuSmbKMAi4iBRzu2dXLNAfiLyeFMjbYOoUZcfYMr0LtPAZzFyW8zT3eGvGYGSIaEBXxVQAbK9yVzondKS7awXq/xJeT2nc31f/SvDOIVPZt/44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UJMnuwGX; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=DpYvgiqN3LmD4oFXxTP3tU3yR9Fk91WM3HLilJ4AO72SFG03z1OKtfsamjqVtNVIehs2CVtyQYIEsX0jeLKsIwE66tZjFBtooZnGl6oJgHNrA09TU/nsfeuGrK1tz78TMcGmc/coFErUrJW/ABePkENcKay0YvhG30KfUAFVwNo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FiMsvRdE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UJMnuwGX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA331F0089A;
-	Sat, 30 May 2026 03:10:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FiMsvRdE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73C781F00893;
+	Sat, 30 May 2026 04:59:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780110615;
-	bh=lQLk8yyglFEQ/F5bN9UI8o7ZMlKyFrtoLePswOir5S8=;
+	s=k20260515; t=1780117150;
+	bh=M4Ir//HMC0l8Tfb6iRmP/bOFSIxhXpuHFcAI8lbDC4w=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=UJMnuwGXuwD56H4VagW0rKQgm8zIkIMhxhLY5JrtOiGJPWOVKy74/UouDRfK33yW9
-	 f1fGL2B5k4APd8Yo+KKwOewKCnTKqf3ADYTKfHGbu01WAHHF0I2CrXUyv0aFesmTgv
-	 BRoEzNmNeiCfAJ9fo/BSkV6xmGZ2XDA47MckiZuneETR3J66mDwjwGw/bBaZkLmAke
-	 naumjVj3HJ/89GS7rI3WsnX8S2N/Lw2ir2ey4eW8ljz2H4kS9ElWqdTUe6QBXVfDhL
-	 aQG1VsrwLBbALLuI1CvnHEgJj+89g/PVrOj9CAi8m0hV8LWQqC5OonocKYFPRM7Zru
-	 PGFTk12ZZEtrA==
+	b=FiMsvRdEppCoeMAdud28L9BGYG9TZOUX+t7egQG471WyLIOZZ3RYi+rBZwePtHYz1
+	 EtSzCxSxyWdgNfZmySvAgmmqIcxdmSciyAvj8acRa3+JANqI8DI6GefInzl6XKBIxo
+	 6BvpNmWHgrIa6KR3tQJ18Rh7Zs9LNYaslDeG9MY210v6eP74VAeDFkgieCy1T6KKlA
+	 zNm3HHSiB7aUDSHtjV3UOtOa6XdV11IteUPILK7iV02MtsFrw4aRKb570d+z/6IfYS
+	 Y8QATzjeqDlkcm5b94eoIq2R53+ZTRN4pUPsdXYtdJRdFA1k5opdhQdacrpfXG849u
+	 hU3KbF39LMgPw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 3/3] rust: leds: add multicolor classdev
- abstractions
+Subject: Re: [PATCH v2 06/11] iommu/arm-smmu-v3: Support PRI Page Request in
+ arm_smmu_handle_ppr()
 Reply-To: sashiko-reviews@lists.linux.dev
-To: "Markus Probst" <markus.probst@posteo.de>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260530-rust_leds-v17-3-c0698c4368e2@posteo.de>
-References: <20260530-rust_leds-v17-3-c0698c4368e2@posteo.de>
+To: "Nicolin Chen" <nicolinc@nvidia.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <bfb23bc455b4f3d8c39663fb2316dbede8f5e7d9.1779944354.git.nicolinc@nvidia.com>
+References: <bfb23bc455b4f3d8c39663fb2316dbede8f5e7d9.1779944354.git.nicolinc@nvidia.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 30 May 2026 03:10:14 +0000
-Message-Id: <20260530031015.7CA331F0089A@smtp.kernel.org>
+Date: Sat, 30 May 2026 04:59:10 +0000
+Message-Id: <20260530045910.73C781F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Data race and Undefined Behavior in `MultiColorDevice::subleds()` =
-due to exposing concurrently mutable fields without interior mutability.
-- [High] Undefined Behavior due to mismatched capacity when reconstructing =
-`KVec` during teardown and error handling.
-- [High] Incorrect `fwnode` reference management when `name` is provided le=
-ads to permanent memory leaks and refcount underflow (Use-After-Free).
-- [Low] Missing `#[inline]` annotation on small forwarding abstraction func=
-tion.
+
+Pre-existing issues:
+- [High] Unbounded memory allocation in report_partial_fault() allows a mal=
+icious PCIe endpoint to exhaust kernel memory (OOM).
+- [High] Unratelimited logging of unexpected PRI requests allows a maliciou=
+s endpoint to flood the kernel log.
 --
 
-commit 9445e701d1ca0b8b1d07c7890ba8fe351626ede1
-Author: Markus Probst <markus.probst@posteo.de>
+commit 9904fc0d39f6cc48ddad4141a58759c0d2ae2811
+Author: Nicolin Chen <nicolinc@nvidia.com>
 
-rust: leds: add multicolor classdev abstractions
+iommu/arm-smmu-v3: Support PRI Page Request in arm_smmu_handle_ppr()
+   =20
+Now, arm_smmu_page_response() can issue CMDQ_OP_PRI_RESP for page requests
+from the IOPF infrastructure. Forward PRI requests from the priq into the
+IOPF infrastructure for PRI-enabled masters by building an iopf_fault from
+the priq entry and calling iommu_report_device_fault().
 
-This commit implements the abstractions needed for multicolor led class
-devices. It introduces the led mode implementation, a wrapper around
-mc_subled, and a function to register a new multicolor led class device.
-
-> diff --git a/rust/kernel/led/multicolor.rs b/rust/kernel/led/multicolor.rs
-> new file mode 100644
-> index 0000000000000..524d6e98562aa
-> --- /dev/null
-> +++ b/rust/kernel/led/multicolor.rs
-
-[ ... ]
-
-> +pub struct MultiColorSubLed {
-> +    /// the color of the sub led
-> +    pub color: Color,
-> +    /// the brightness of the sub led.
-> +    ///
-> +    /// The value will be automatically calculated.
-> +    /// See `MultiColor::pre_brightness_set`.
-> +    pub brightness: u32,
-> +    /// the intensity of the sub led.
-> +    pub intensity: u32,
-> +    /// arbitrary data for the driver to store.
-> +    pub channel: u32,
-> +}
-
-[ ... ]
-
-> +                    let mut subleds_vec =3D KVec::new();
-> +                    subleds_vec.extend_from_slice(subleds, GFP_KERNEL)?;
-> +                    let (subled_info, num_colors, capacity) =3D subleds_=
-vec.into_raw_parts();
-> +                    debug_assert_eq!(num_colors, capacity);
+> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
+arm/arm-smmu-v3/arm-smmu-v3.c
+> index 061f1d46fda0d..371a8bbdf6756 100644
+> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+> @@ -2252,6 +2253,37 @@ static void arm_smmu_handle_ppr(struct arm_smmu_de=
+vice *smmu, u64 *evt)
+>  	last =3D FIELD_GET(PRIQ_0_PRG_LAST, evt[0]);
+>  	grpid =3D FIELD_GET(PRIQ_1_PRG_IDX, evt[1]);
+> =20
+> +	mutex_lock(&smmu->streams_mutex);
+> +	master =3D arm_smmu_find_master(smmu, sid);
+> +	if (master && master->pri_enabled) {
+> +		struct iopf_fault iopf_fault =3D {0};
+> +		struct iommu_fault *fault =3D &iopf_fault.fault;
 > +
-> +                    let subled_guard =3D ScopeGuard::new(|| {
-> +                        // SAFETY: `subled_info` is guaranteed to be a v=
-alid array pointer to
-> +                        // `mc_subled` with the length and capacity of `=
-num_colors`.
-> +                        drop(unsafe { KVec::from_raw_parts(subled_info, =
-num_colors, num_colors) });
-> +                    });
-
-[Severity: High]
-Could reconstructing the vector using num_colors instead of the original
-capacity cause undefined behavior during deallocation?
-
-The extend_from_slice() call might allocate memory with a capacity strictly
-greater than num_colors. By discarding the true capacity and passing
-num_colors to KVec::from_raw_parts(), the safety contract is violated.
-
-Rust requires the capacity passed to from_raw_parts() to exactly match the
-original allocation capacity, otherwise it can produce an incorrect layout
-during deallocation.
+> +		fault->type =3D IOMMU_FAULT_PAGE_REQ;
+> +		if (last)
+> +			fault->prm.flags |=3D IOMMU_FAULT_PAGE_REQUEST_LAST_PAGE;
 
 [ ... ]
 
-> +                    // SAFETY:
-> +                    // - `parent.as_ref().as_raw()` is guaranteed to be =
-a pointer to a valid
-> +                    //    `device`.
-> +                    // - `ptr` is guaranteed to be a pointer to an initi=
-alized `led_classdev_mc`.
-> +                    to_result(unsafe {
-> +                        bindings::led_classdev_multicolor_register_ext(
-> +                            parent.as_ref().as_raw(),
-> +                            ptr,
-> +                            if self.name.is_none() {
-> +                                &raw mut init_data
-> +                            } else {
-> +                                core::ptr::null_mut()
-> +                            },
-> +                        )
-> +                    })?;
+> +		fault->prm.addr =3D FIELD_GET(PRIQ_1_ADDR_MASK, evt[1]) << 12;
 > +
-> +                    subled_guard.dismiss();
+> +		iommu_report_device_fault(master->dev, &iopf_fault);
+
+[Severity: High]
+This isn't a bug introduced by this patch, but does the path handling parti=
+al
+faults lack bounds checking?
+
+When a PRI request lacks the LAST_PAGE flag, the fault is processed via
+report_partial_fault() in drivers/iommu/io-pgfault.c, which dynamically
+allocates memory for it:
+
+drivers/iommu/io-pgfault.c:report_partial_fault() {
+...
+        iopf =3D kzalloc_obj(*iopf);
+        if (!iopf)
+                return -ENOMEM;
+
+        iopf->fault =3D *fault;
+
+        mutex_lock(&fault_param->lock);
+        list_add(&iopf->list, &fault_param->partial);
+        mutex_unlock(&fault_param->lock);
+...
+}
+
+Is it possible for a compromised PCIe endpoint to exhaust kernel memory by
+spamming partial page requests with the PRG_LAST bit cleared, completely
+bypassing IOMMU queue limits and triggering an OOM condition?
+
+> +		mutex_unlock(&smmu->streams_mutex);
+> +		return;
+> +	}
+> +	mutex_unlock(&smmu->streams_mutex);
 > +
-> +                    core::mem::forget(self.fwnode); // keep the referenc=
-e count incremented
+>  	dev_info(smmu->dev, "unexpected PRI request received:\n");
+>  	dev_info(smmu->dev,
+>  		 "\tsid 0x%08x.0x%05x: [%u%s] %sprivileged %s%s%s access at iova 0x%01=
+6llx\n",
 
 [Severity: High]
-Does this sequence leak the fwnode reference when a name is provided?
+This is a pre-existing issue, but could this logging lead to log flooding o=
+r a
+soft lockup?
 
-If self.name is provided, core::ptr::null_mut() is passed instead of
-init_data, meaning the C subsystem never takes ownership of the provided
-fwnode. However, core::mem::forget(self.fwnode) is called unconditionally,
-which would permanently leak the reference in this case.
+Since this message is unratelimited and can be triggered by external device
+events in arm_smmu_handle_ppr(), an endpoint sending millions of invalid PRI
+requests for disabled or unrecognized Stream IDs could force the kernel to
+synchronously print to the log buffer.
 
-[ ... ]
+Would it make sense to use dev_info_ratelimited() here to prevent CPU
+starvation and disk space exhaustion?
 
-> +impl<T: LedOps<Mode =3D MultiColor>> MultiColorDevice<T> {
-> +    /// # Safety
-> +    /// `led_cdev` must be a valid pointer to a `led_classdev` embedded =
-within a
-> +    /// `led::MultiColorDevice`.
-> +    unsafe fn from_raw<'a>(led_cdev: *mut bindings::led_classdev) -> &'a=
- Self {
-
-[Severity: Low]
-Should this small forwarding function have an #[inline] annotation?
-
-The Rust subsystem guidelines require that functions which are small or
-forwarding to a binding call should be annotated with #[inline].
-
-[ ... ]
-
-> +    /// Returns the subleds passed to [`Device::new_multicolor`].
-> +    #[inline]
-> +    pub fn subleds(&self) -> &[MultiColorSubLed] {
-
-[Severity: High]
-Does returning a shared slice of MultiColorSubLed here lead to undefined
-behavior if the C subsystem mutates the fields?
-
-When the C LED subsystem mutates the brightness fields of mc_subled
-concurrently (such as in led_mc_calc_color_components()), it modifies the
-underlying memory.
-
-Since MultiColorSubLed defines these fields as plain u32 types and we return
-a safe &[MultiColorSubLed] slice, Rust's strict aliasing rules are violated
-because shared references guarantee memory immutability without an interior
-mutability primitive.
-
-[ ... ]
-
-> +#[pinned_drop]
-> +impl<T: LedOps<Mode =3D MultiColor>> PinnedDrop for MultiColorDevice<T> {
-> +    fn drop(self: Pin<&mut Self>) {
-> +        let raw =3D self.classdev.get();
-> +        // SAFETY: The existence of `self` guarantees that `self.classde=
-v.get()` is a pointer to a
-> +        // valid `led_classdev_mc`.
-> +        let dev: &device::Device =3D unsafe { device::Device::from_raw((=
-*raw).led_cdev.dev) };
-> +
-> +        let _fwnode =3D dev
-> +            .fwnode()
-> +            // SAFETY: the reference count of `fwnode` has previously be=
-en
-> +            // incremented in `led::Device::new`.
-> +            .map(|fwnode| unsafe { ARef::from_raw(NonNull::from(fwnode))=
- });
-
-[Severity: High]
-Could this underflow the parent device's fwnode reference count?
-
-If init_data was ignored during registration (because self.name was set), t=
-he
-C core typically assigns the parent device's fwnode to the new LED device
-without incrementing its refcount.
-
-During drop, the teardown logic blindly steals a reference via
-ARef::from_raw() and drops it, which would underflow the parent device's
-fwnode refcount and potentially cause a use-after-free.
-
-[ ... ]
-
-> +        // SAFETY: `subled_info` is guaranteed to be a valid array point=
-er to `mc_subled` with the
-> +        // length and capacity of `led_cdev.num_colors`. See `led::Multi=
-colorDevice::new`.
-> +        drop(unsafe {
-> +            KVec::from_raw_parts(
-> +                led_cdev.subled_info,
-> +                led_cdev.num_colors as usize,
-> +                led_cdev.num_colors as usize,
-> +            )
-> +        });
-> +    }
-> +}
-
-[Severity: High]
-Similar to the error path above, could reconstructing the vector using
-num_colors instead of the original capacity cause undefined behavior during
-deallocation here?
-
-The extend_from_slice() call during initialization might allocate memory wi=
-th
-a capacity strictly greater than num_colors. Discarding the true capacity a=
-nd
-passing num_colors to KVec::from_raw_parts() violates the safety contract
-and can produce an incorrect layout during deallocation.
+>  		 sid, ssid, grpid, last ? "L" : "",
 
 --=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260530-rust_leds-=
-v17-0-c0698c4368e2@posteo.de?part=3D3
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1779944354.gi=
+t.nicolinc@nvidia.com?part=3D6
