@@ -1,92 +1,128 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0112E2D6407;
-	Sun, 31 May 2026 11:47:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29AB054763;
+	Sun, 31 May 2026 13:21:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780228040; cv=none; b=T5uaipeCRTkqZrlcX4F0Sel9cPOFB3ewzgtDCUX7HJRrcJlYLYpjJfTDnx6IDaTzRCbrOI2RTvZpheYJFqvihJtaS9DXjT3AA9j2fP+KtlJQvDGX32zI5KyQgVVKrkdYxJjJ71q9GSh+tClFlp+aMqouEgEtKwBJtG9AG4y2ySY=
+	t=1780233678; cv=none; b=ccY+B7BLQTAwxSCZ8vpy8uqemk+Iskg/nKH3fdNGK7PKYG/gHDM6gGxdzTAe2xjrZ2fqE1ZWAvCleY03xpms/p5eBdrXNgRZCINrsBiitTH6ms6+xkR/NOQb3QZwj7XIezfPJcLAruhWIZRQrKFiQqy8SN3gFneqFvArj+JzLMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780228040; c=relaxed/simple;
-	bh=gN86oofKCEFJpKNMYabO1UCbKCN84jTmlVIlPXcZULk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ewD31rng1vaVmcN2ZjUVAi+Vu3eFGmwjSrqz3kX9OvqgQHMywdnuTq+hLZqF/u9GA2hhOUr1Fd/hwHTP6j1+eyJ/wt2bIJq5rR98z/Z3mKGSyHCg2rrG+WRsiCeFaAPIfPJ3myLWt0obPCFD23snQxEmxo5z43OuXktpRhjALxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TnsFonrr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780233678; c=relaxed/simple;
+	bh=D2b96bpT//bRq15xL4d2iEh1wwnmcO9QOqblE0YyH98=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NERFRGBfIkwAntonRko3bKrEu78IoE7OXxuw+W8eQmiZyqzF70PN5GwnN4eeA2jx7uX7pvP62LJGlNeAaCp/PEzdx0vEvBDdiYmeygwcoGH3iXwnc/fCenAAJ9eUJzP7z/BdhV2SOAD+o4SmjNxOYsuds9A5ErRNSfyoi4FDqG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H2Ghbqlb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TnsFonrr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 363291F00893;
-	Sun, 31 May 2026 11:47:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H2Ghbqlb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A5CC1F00893;
+	Sun, 31 May 2026 13:21:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780228039;
-	bh=ct8HY92i6QZ17YyTCxgrZWO6N6bGL7NsPGPY6sbzL1w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=TnsFonrrBOVdJXLe1AySwEBB+ooQtPGNMReKfpeM7ET3Nt5+omF8h4GU5185mDWSy
-	 ppHIKAR4DsR8dRb+22Ry+cjAyLnA4lJIB+tWwyVCXa9XhH2svVYpkoJ8Cv48RMOsNA
-	 I9wBKL8IeybkWVI/RjH6b5NGPSSpbfKwIJzAvpx9K01WXdO3BiHvxtz8rzYHZKDnFt
-	 OVSItln/t3ZwzEQUTptgDu7tLRUArTc29bIEDRZNcEgl3GbVo+Ep/6RUi57gZ9Omq0
-	 gM1hscwckle8DxzmU3rI2d58VYmUa/yRNMNBII3P67kPLsayflvuweivChd6dzdXBB
-	 k8mSNLi6q8e2A==
-Date: Sun, 31 May 2026 13:47:16 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	bhelgaas@google.com, frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, mani@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de, 
-	festevam@gmail.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	devicetree@vger.kernel.org, imx@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 1/3] dt-bindings: imx6q-pcie: Add optional interrupt
- entries for intr, aer and pme
-Message-ID: <20260531-benevolent-malkoha-from-wonderland-cdfafc@quoll>
-References: <20260521093255.61585-1-hongxing.zhu@nxp.com>
- <20260521093255.61585-2-hongxing.zhu@nxp.com>
+	s=k20260515; t=1780233676;
+	bh=ucei/Km5pTxeBW0GqGAGxBN/tmGyfgYst8kZ8KmZjaQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=H2GhbqlbA4jVp+/XBpaAJWcxUhFfRoJi9+gKEit8tscC/y1lF2Vt1DVIa8avsg9yi
+	 ZV3i3WfprvWXekEeWWWvofPCJngCFGRHbNTrZKmvsQYNVG6trArcYERMREnzK+IOWg
+	 KsJNJfLeMfjap/QwcEcBtFbEPrV4ltGGP+RGV3b89QkqqQ5lILu6Wh/j0EO24q3x1t
+	 RrQBzDMXPHee5/A9BXxOgIwiqZv+OdHF9SoHgl5bvcL7sm/iF6qeJN3cajL5rxkI2U
+	 CRuVqXQMLjKeAsV7fjLCP2G5Fyaen336T4FmjVjJCGVEfEasGxfhPeHSBgvpFNkodf
+	 UxfQ9w5u3JzZw==
+Message-ID: <cf379972-6b2d-42e5-9660-32d031516862@kernel.org>
+Date: Sun, 31 May 2026 15:21:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20260521093255.61585-2-hongxing.zhu@nxp.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION][BISECTED] HDA controller MMIO unreadable on Intel
+ 5-series PCH (Ibex Peak) since v6.16
+Content-Language: en-US
+To: Filippe Duke <fduke@greennet.ua>,
+ "regressions@lists.linux.dev" <regressions@lists.linux.dev>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
+ "tiwai@suse.com" <tiwai@suse.com>
+References: <5e54aea4a97f1cbbe866d9d8f3f25f9f2958e1c9.camel@greennet.ua>
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <5e54aea4a97f1cbbe866d9d8f3f25f9f2958e1c9.camel@greennet.ua>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Thu, May 21, 2026 at 05:32:53PM +0800, Richard Zhu wrote:
-> The i.MX95 PCIe controller introduces three dedicated hardware interrupt
-> lines:
-> - intr: general controller events
-> - aer: Advanced Error Reporting
-> - pme: Power Management Events
+
+
+On 5/29/26 20:26, Filippe Duke wrote:
+> #regzbot introduced: 4d4c10f763d7
 > 
-> Earlier i.MX PCIe variants (imx6q, imx6sx, imx6qp, imx7d, imx8mm, imx8mp,
-> imx8mq, imx8q) do not have these dedicated interrupt lines.
+> Hi,
 > 
-> PCIe basic functionality (enumeration, configuration, and data transfer)
-> works correctly regardless of whether these interrupts are present. Mark
-> these interrupts as optional to maintain backward compatibility with SoCs
-> that lack these hardware interrupt lines.
+> The HDA controller on old Intel 5-series PCH (Ibex  Peak) becomes non- 
+> functional since 6.16.
+> PCI configuration space is ok;
+> PCI function power state appears to be D0;
+> However MMIO always reads 0xFFFF, causing CORB timeouts;
+> ALC269VB codec enumeration fails (no AFG/MFG node found).
+> HW works on v6.15.x and earlier and works under WinPE on the same machine.
 > 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> Bisected to first bad commit:
+> 4d4c10f763d7 PCI: Explicitly put devices into D0 when initializing
+> 
+> On top of v6.16, commenting out the single call to
+> |pci_pm_power_up_and_verify_state(dev)| in |pci_pm_init()| (drivers/pci/ 
+> pci.c:3273)
+> is sufficient to restore working audio. The one-line diff is attached.
+> 
+> HW:
 > ---
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 6 ++++++
->  1 file changed, 6 insertions(+)
+> DMI:  Acer Aspire 4745G / JV41_CP, BIOS V1.25 03/16/2011 (Insyde)
+> CPU: Intel Core i7 M 640
+> PCH: Intel 5-series (Ibex Peak)
+> HDA: 0000:00:1b.0 [8086:3b56] rev 05, SSID [1025:0357]
+> Codec: Realtek ALC269VB
+> GPU: Switchable:  Intel HD (Ironlake, 8086:0046) +
+> AMD Radeon HD Cedar (1002:68e0, 01:00.0)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> index 9d1349855b42..cf709132ff1e 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-> @@ -58,12 +58,18 @@ properties:
->      items:
->        - description: builtin MSI controller.
->        - description: builtin DMA controller.
-> +      - description: PCIe event interrupt.
-> +      - description: builtin AER SPI standalone interrupt line.
-> +      - description: builtin PME SPI standalone interrupt line.
+> Symptom (dmesg):
+> ---
+> snd_hda_intel 0000:00:1b.0: enabling device (0000 -> 0002)
+> snd_hda_intel 0000:00:1b.0: bound 0000:00:02.0 (ops 
+> intel_audio_component_bind_ops [i915])
+> snd_hda_intel 0000:00:1b.0: number of I/O streams is 30, forcing 
+> separate stream tags
+> snd_hda_intel 0000:00:1b.0: CORB reset timeout#2, CORBRP = 65535
+> hdaudio hdaudioC0D0: no AFG or MFG node found
+> hdaudio hdaudioC0D1: no AFG or MFG node found
+> hdaudio hdaudioC0D2: no AFG or MFG node found
+> hdaudio hdaudioC0D3: no AFG or MFG node found
+> snd_hda_intel 0000:00:1b.0: no codecs initialized
+> 
+> Hence the sound device is missing from ALSA.
+> HDMI audio on AMD (01:00.1) is not affected by the issue.
+> Attaching you lshw, lspci, DSDT, dmesg and diff.
+> 
+> Best regards
+> 
+> -- 
+> 
+> Filippe Duke
+> System Engineer
+> 
+> GREENNET
+> Kyiv, 7B Lesi Ukrainky St.,
+> Cell.: +380672772879
+> Email: fduke@greennet.ua
+> Web: https://greennet.ua
+> 
 
-Same feedback as before, nothing improved. Schema says imx6q has these
-interrupts, commit msg says otherwise.
+There have been a few commits that have adjusted the behavior due to the 
+commit you identified.  So I believe it's potentially the tip of the 
+iceberg.
 
-Please read entire binding - you would easily guess what is there to do.
-And you already received such comments.
+Can you please see if this issue still exists on 7.1-rc5?
 
-NAK
+This is the most recent commit (from 7.1-rc3) that I know of changing it.
 
+https://git.kernel.org/torvalds/c/909f7bf9b080c
+
+Thanks!
