@@ -1,128 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29AB054763;
-	Sun, 31 May 2026 13:21:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9880839281F
+	for <linux-pci@vger.kernel.org>; Sun, 31 May 2026 17:06:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780233678; cv=none; b=ccY+B7BLQTAwxSCZ8vpy8uqemk+Iskg/nKH3fdNGK7PKYG/gHDM6gGxdzTAe2xjrZ2fqE1ZWAvCleY03xpms/p5eBdrXNgRZCINrsBiitTH6ms6+xkR/NOQb3QZwj7XIezfPJcLAruhWIZRQrKFiQqy8SN3gFneqFvArj+JzLMw=
+	t=1780247191; cv=none; b=YI4VymrRnHYPoyV8RuJhKacwA0FEb1G7+w2AOO4P5BRHv/YewcLDm2hbDN4hWp9OIxyIXiSUZC7Hsp/9L5GTPEpRKsoZ7ikS+GgYPTWEc6W9jmgSqXkiWoi1dZkdjIX663oV66hQO3nbMOfVF73tWyp+fcxwC2tIq+lpHaNMRJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780233678; c=relaxed/simple;
-	bh=D2b96bpT//bRq15xL4d2iEh1wwnmcO9QOqblE0YyH98=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NERFRGBfIkwAntonRko3bKrEu78IoE7OXxuw+W8eQmiZyqzF70PN5GwnN4eeA2jx7uX7pvP62LJGlNeAaCp/PEzdx0vEvBDdiYmeygwcoGH3iXwnc/fCenAAJ9eUJzP7z/BdhV2SOAD+o4SmjNxOYsuds9A5ErRNSfyoi4FDqG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H2Ghbqlb; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780247191; c=relaxed/simple;
+	bh=YjiDVVzZWacAL/M5Ubr5olPaoNX77xqsVgKjn5ZivrQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PZPo7N157xTYssurzVHxWboTUkZpVLuHmueFEHPdscAfwGFvACquyL9FpeA9qMx2dnPycuEK//LylEBZt4+ghwvqJ9cy1uSw3GpoA1GsI29tLn9oC8hfQyntZxAJ/SptxqI3ZfEp767E5BYTAOTTD9RN/dLOdsujFEO+c80xjw4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Ym3S6tHQ; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H2Ghbqlb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A5CC1F00893;
-	Sun, 31 May 2026 13:21:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780233676;
-	bh=ucei/Km5pTxeBW0GqGAGxBN/tmGyfgYst8kZ8KmZjaQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=H2GhbqlbA4jVp+/XBpaAJWcxUhFfRoJi9+gKEit8tscC/y1lF2Vt1DVIa8avsg9yi
-	 ZV3i3WfprvWXekEeWWWvofPCJngCFGRHbNTrZKmvsQYNVG6trArcYERMREnzK+IOWg
-	 KsJNJfLeMfjap/QwcEcBtFbEPrV4ltGGP+RGV3b89QkqqQ5lILu6Wh/j0EO24q3x1t
-	 RrQBzDMXPHee5/A9BXxOgIwiqZv+OdHF9SoHgl5bvcL7sm/iF6qeJN3cajL5rxkI2U
-	 CRuVqXQMLjKeAsV7fjLCP2G5Fyaen336T4FmjVjJCGVEfEasGxfhPeHSBgvpFNkodf
-	 UxfQ9w5u3JzZw==
-Message-ID: <cf379972-6b2d-42e5-9660-32d031516862@kernel.org>
-Date: Sun, 31 May 2026 15:21:13 +0200
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Ym3S6tHQ"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2c0b1a48855so425ad.0
+        for <linux-pci@vger.kernel.org>; Sun, 31 May 2026 10:06:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1780247189; x=1780851989; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=BmuO3W1I2r8igx3GUMilp2TWl+RQ7oW1rVuzlsosPns=;
+        b=Ym3S6tHQwvZqH0peQAmekER+z0u9eVK+3xQXx6RXGtSblOPonEvPHWn1z7JGjsYxsm
+         zKq0h9CwdrtO97jp2d9q9VoyvDYnUqES+b0W1aJxUOmEhSDfJZs3yBn5wVyKoPwM/y9S
+         HINa5tQl4OWcI2cYXYWISVCGCzYFhLigBhbZqbLG053lis1/Tp/LxhZ+P0z/gaJdPTSB
+         6Ixnn8jLWhqv8W0C6WNO616QgdEAPQhlZ6wHvGyCIoy39pWD6oR7imlvBrB1mw2rEYb8
+         ijTCmE1n0hFKLbXZkA5exhgMcZfnUxgA3fuZ67j8h11wChVSdhcpFKnOXyyWLWvxzTs2
+         Ue7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780247189; x=1780851989;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BmuO3W1I2r8igx3GUMilp2TWl+RQ7oW1rVuzlsosPns=;
+        b=Mp3NQF6ORH14M0zIpOkat2YWHKmC5ij5YM0sDQy05oDUZBOJrSbI3JySzMMoDansFM
+         JQVRWXxDN2WPul1in+w0zBNUTOzchQ6M0NZbIF84ZQ5pSOhhLsd5VtB9aBxv/S47TmhT
+         10HhANXXJrR/o7DFaZV/A0qarUQZ7PkHv4px+/Z4kkJ6SdfsYq1E7hk9eXF9iiKrgHsR
+         xg+0Hm8MibZqp97WyOmzJzDzihSBnSYW7nD/AcpY47FoNj7shmRjvMVvkdceGQYqtHeR
+         thKqHH/DqepECqu8lwDWbNgtlWLkM9kc503JKwKuNeJNgFkyCyDH3BLz7kGQF4BUjEoY
+         8HDA==
+X-Forwarded-Encrypted: i=1; AFNElJ/JaVh0eG/LG0Q2E6N/UGGVuAL1LpU+QV1AIlSgF7J6b7Ergkw3wHxGivI2IyrXF9fj2GQxKD5MtEA=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw+7rynA03F4pSXCemUY24SqBpFptoEEk3zOfWpgcXItAUyYp8M
+	cEmOZrRZjQLHlJSi086T4eMLi71EIZLyfmmKYF7pLfCo9BKYgeccqH2fZVHYZPuOAQ==
+X-Gm-Gg: Acq92OH53kC5QnIhJwUrxJIUVxFl3SqaMtoysmRRnMp2MIJ/nZrav/7x03XIRmQht4K
+	ks1BtdkiEmydnZ/aQyfXf/4CDmNJfgRriLFH8uLirH/2SjDg6/VRyOiS0bt7EAtf47JjfaC1W3F
+	bI53Hshs+McatCwooZm/9H7CXIxxkUPI8n6rpL1YwZd3kcu/0fniDTXYHCxXc+ldpTO6veTNoev
+	E+qVdvY/AmO6AV9CRywWpwNQnlfsNXeYuJyrfrKJT6QuWKkg1pKajPytTVO18/UmSGg1wP3fYF4
+	xlmCP5lNTMVLlN6oawFfVtIaYKnRgYgsLyZwxdSiB5qSiOuqx8ZSXLSOjToYB6gGTd6AZA+yZ1w
+	2nxJHanwa39ndnvHllcjD/bSjUxURtbasF8oxRPwF+gyTxI40oGudHtDtVc+UBou+eoEHSG8UPr
+	Fyk8CMnsqfHgfelsVsB5RwQQOcB2pDdppsEm5Jh8iQSMxfmSSLU9fq5CQ0ocV4CHX6AzeLqmE=
+X-Received: by 2002:a17:902:d4c5:b0:2bd:6dad:7cca with SMTP id d9443c01a7336-2bf975b1f95mr4195355ad.22.1780247187838;
+        Sun, 31 May 2026 10:06:27 -0700 (PDT)
+Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2bf23c2da36sm97965615ad.69.2026.05.31.10.06.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 31 May 2026 10:06:27 -0700 (PDT)
+Date: Sun, 31 May 2026 17:06:20 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, David Matlack <dmatlack@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Mostafa Saleh <smostafa@google.com>
+Subject: Re: [PATCH v6 3/6] PCI/ATS: Mandate checking pci_ats_supported()
+ before pci_prepare_ats()
+Message-ID: <ahxqjLg3yRzWhgqE@google.com>
+References: <20260529111208.387412-1-praan@google.com>
+ <20260529111208.387412-4-praan@google.com>
+ <ahoLccjQvmoE90sx@Asurada-Nvidia>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [REGRESSION][BISECTED] HDA controller MMIO unreadable on Intel
- 5-series PCH (Ibex Peak) since v6.16
-Content-Language: en-US
-To: Filippe Duke <fduke@greennet.ua>,
- "regressions@lists.linux.dev" <regressions@lists.linux.dev>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "alsa-devel@alsa-project.org" <alsa-devel@alsa-project.org>,
- "tiwai@suse.com" <tiwai@suse.com>
-References: <5e54aea4a97f1cbbe866d9d8f3f25f9f2958e1c9.camel@greennet.ua>
-From: Mario Limonciello <superm1@kernel.org>
-In-Reply-To: <5e54aea4a97f1cbbe866d9d8f3f25f9f2958e1c9.camel@greennet.ua>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ahoLccjQvmoE90sx@Asurada-Nvidia>
 
-
-
-On 5/29/26 20:26, Filippe Duke wrote:
-> #regzbot introduced: 4d4c10f763d7
+On Fri, May 29, 2026 at 02:56:01PM -0700, Nicolin Chen wrote:
+> On Fri, May 29, 2026 at 11:12:05AM +0000, Pranjal Shrivastava wrote:
+> > Currently, pci_prepare_ats() internally calls pci_ats_supported() and
+> > returns -EINVAL if the device does not support ATS. While this provides
+> > a silent safety check, it conflates support detection with configuration.
+> > 
+> > Update pci_prepare_ats() to wrap the internal pci_ats_supported check in
+> > a WARN_ON(). This mandates all callers to call pci_prepare_ats() only if
+> > the function supports ATS.
+> > 
+> > Update the function documentation to mention that callers must verify
+> > ATS support (via pci_ats_supported()) before calling pci_prepare_ats().
+> > 
+> > Suggested-by: Baolu Lu <baolu.lu@linux.intel.com>
+> > Signed-off-by: Pranjal Shrivastava <praan@google.com>
 > 
-> Hi,
-> 
-> The HDA controller on old Intel 5-series PCH (Ibex  Peak) becomes non- 
-> functional since 6.16.
-> PCI configuration space is ok;
-> PCI function power state appears to be D0;
-> However MMIO always reads 0xFFFF, causing CORB timeouts;
-> ALC269VB codec enumeration fails (no AFG/MFG node found).
-> HW works on v6.15.x and earlier and works under WinPE on the same machine.
-> 
-> Bisected to first bad commit:
-> 4d4c10f763d7 PCI: Explicitly put devices into D0 when initializing
-> 
-> On top of v6.16, commenting out the single call to
-> |pci_pm_power_up_and_verify_state(dev)| in |pci_pm_init()| (drivers/pci/ 
-> pci.c:3273)
-> is sufficient to restore working audio. The one-line diff is attached.
-> 
-> HW:
-> ---
-> DMI:  Acer Aspire 4745G / JV41_CP, BIOS V1.25 03/16/2011 (Insyde)
-> CPU: Intel Core i7 M 640
-> PCH: Intel 5-series (Ibex Peak)
-> HDA: 0000:00:1b.0 [8086:3b56] rev 05, SSID [1025:0357]
-> Codec: Realtek ALC269VB
-> GPU: Switchable:  Intel HD (Ironlake, 8086:0046) +
-> AMD Radeon HD Cedar (1002:68e0, 01:00.0)
-> 
-> Symptom (dmesg):
-> ---
-> snd_hda_intel 0000:00:1b.0: enabling device (0000 -> 0002)
-> snd_hda_intel 0000:00:1b.0: bound 0000:00:02.0 (ops 
-> intel_audio_component_bind_ops [i915])
-> snd_hda_intel 0000:00:1b.0: number of I/O streams is 30, forcing 
-> separate stream tags
-> snd_hda_intel 0000:00:1b.0: CORB reset timeout#2, CORBRP = 65535
-> hdaudio hdaudioC0D0: no AFG or MFG node found
-> hdaudio hdaudioC0D1: no AFG or MFG node found
-> hdaudio hdaudioC0D2: no AFG or MFG node found
-> hdaudio hdaudioC0D3: no AFG or MFG node found
-> snd_hda_intel 0000:00:1b.0: no codecs initialized
-> 
-> Hence the sound device is missing from ALSA.
-> HDMI audio on AMD (01:00.1) is not affected by the issue.
-> Attaching you lshw, lspci, DSDT, dmesg and diff.
-> 
-> Best regards
-> 
-> -- 
-> 
-> Filippe Duke
-> System Engineer
-> 
-> GREENNET
-> Kyiv, 7B Lesi Ukrainky St.,
-> Cell.: +380672772879
-> Email: fduke@greennet.ua
-> Web: https://greennet.ua
+> Sashiko pointed out a bisect issue. So, you might want to reorder
+> a bit. The patch itself looks good to me.
 > 
 
-There have been a few commits that have adjusted the behavior due to the 
-commit you identified.  So I believe it's potentially the tip of the 
-iceberg.
+Ack. I'll re-order for bisectibility.
 
-Can you please see if this issue still exists on 7.1-rc5?
-
-This is the most recent commit (from 7.1-rc3) that I know of changing it.
-
-https://git.kernel.org/torvalds/c/909f7bf9b080c
+> Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
 
 Thanks!
+Praan
