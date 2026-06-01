@@ -1,42 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED5A2DAFBD;
-	Mon,  1 Jun 2026 22:42:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CF421339B1;
+	Mon,  1 Jun 2026 23:22:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780353746; cv=none; b=JB03EWMqNSuLYmsG/bCxeQ7onK/G3s+pu08FkZPrjdpR5yw3KMzewQNCL/9EUtdnWOQVg9jHCrlAtL+r9fw90PUma8n5LxGhZK1Efvyu6sRQYncgz8X6/oU8dknF6fKE94zcUvPlTe/WrVNEkkZ+wjI/EcNkjeeHswUee5DWxtk=
+	t=1780356160; cv=none; b=b9MBCOild9dmBCNQ9qwfjQHWbd1aojc0TQZ8v6fvOoXie6OQdnW5X2YpNO/Dw2tfBn1V96Ivp3pUH4I1QshCW1hA20oJ2IOEuzZm0k7/iPbHWeoS+4pLkUU1Nuqz8rirEzz4pprdvgHycIKmvMV/MI7UOjVr5kQS2AZuQV6L3Co=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780353746; c=relaxed/simple;
-	bh=wNGLFUTn0t6+IOaCNavAkSqQlewHHI2X5Kw7kaffiGo=;
+	s=arc-20240116; t=1780356160; c=relaxed/simple;
+	bh=8JPptXofzftbZfk+jBjs0hIOrObiAo6U/ml8w+ZHZYw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W4mkqMjcm9jle4k75587rxU2h+c2jMTZu2xjvXUF/BRiYUh2QVU+OrvJJjtxVV7rxlDELlHgdR+yF/Att4PyoOkdGLRzfXW1IOzGe3chc2tW/QGfqO3NJPLVZ//Mol4n6pg8aVKAGnZa0v//HHOBRHOlGNWYGci19XZrsPc9JD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WOlBjc3d; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=UCiovjtxdJaVl6bN94dnTFJpn5LD+4K7hNlCsnGlXcQh3mDi2Xv6rp7lxUCvk05+LD23P1kqMXRnGiJ5KuV1e7abn/HStClOfYMcKovADPA67Y0THeF496bnWB9pfH3rOD+OephXw2w17G9UsgDGjjb+qu3j5ZR3ggc9Ciiv180=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aMPMZ6kI; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WOlBjc3d"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D45991F00893;
-	Mon,  1 Jun 2026 22:42:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aMPMZ6kI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBEBA1F00893;
+	Mon,  1 Jun 2026 23:22:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780353745;
-	bh=VMd//81yT+NVvlnl/F76YYhKc40UAK/meNTrVFMbKP4=;
+	s=k20260515; t=1780356158;
+	bh=fZ4HvA/e592DsQSw1Bl5h6ntlU8grYxMDW9LiWsgfR0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=WOlBjc3dm2X6zFFAE34XdTKRjaGzUdXFgKnUF/EQvnfdRHFyxN6YZDNUuFKJPsCL4
-	 H4NkZXVKMjkQBXunwR1bk6RWq7gdsLdzEalq+i0eDRhWeA1oR7g6DY2FWgt1nYDuKj
-	 15mVLGYI7I+SBKDgQyN/sakwhLUPAusdYgLOLFgib6fW8KHqSerYBmDLadPt0H9pVo
-	 FfbqkxXb7vjwrUmXsL5ouM9CmRCWzap1aJfbRsSS2dqfX/nmR+L87GF/qKVrL+kLyY
-	 R6Yct8SgnKZNJum54VnYHLPKayZ7FxrsIRPL2XKWrWsESAd08uz21qz1RgFcyTT2Vk
-	 fV989UQvpfw8A==
-Date: Mon, 1 Jun 2026 17:42:24 -0500
-From: Rob Herring <robh@kernel.org>
-To: Inochi Amaoto <inochiama@gmail.com>
-Cc: sashiko-reviews@lists.linux.dev, devicetree@vger.kernel.org,
-	conor+dt@kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 4/5] dt-bindings: PCI: spacemit: Introduce Spacemit K3
- PCIe host controller
-Message-ID: <20260601224224.GA116470-robh@kernel.org>
-References: <20260517014841.254085-5-inochiama@gmail.com>
- <20260517024848.4F346C19425@smtp.kernel.org>
- <aglF_fbl--RgS7gQ@inochi.infowork>
+	b=aMPMZ6kI942daUEfCHVwTcaYmqUKpQtAxeoGnSVi/Qn6doj7se7V2NZfBE39fJYtc
+	 U3MElu8hp53Oi56bKP3HNFUaL5MIzSNYJXhrOJB6zHRyLNXEgBNcHlXqOsjD2LFItZ
+	 dZWqAl1sqjKjf9ILniy5UokVpe8CqwLGp1Z+U+3Z23TRBXz2tB0BV2xrP0udhsbmKH
+	 hKnGlTLpAkaAeUbPn+HuO6Lm3GX2k0PqAXwZoiLo5SVndkCrnog9DKeCH0fqOj1YqS
+	 zx+a8sSJLY/2gqdgmWpQGdHvqzVz9l1VZ1QPN7xq6SgC+WsHJ2H6UuBsDn9rsU5YAf
+	 +xj4iH5iDYo3A==
+Date: Mon, 1 Jun 2026 18:22:38 -0500
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Prabhakar <prabhakar.csengg@gmail.com>
+Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>,
+	linux-renesas-soc@vger.kernel.org,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Subject: Re: [PATCH v3 1/4] dt-bindings: PCI: renesas,r9a08g045-pcie: Add
+ RZ/V2H(P) support
+Message-ID: <178035615742.177937.1822067747423866705.robh@kernel.org>
+References: <20260520164823.436992-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260520164823.436992-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,57 +57,49 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aglF_fbl--RgS7gQ@inochi.infowork>
+In-Reply-To: <20260520164823.436992-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
 
-On Sun, May 17, 2026 at 12:38:39PM +0800, Inochi Amaoto wrote:
-> On Sun, May 17, 2026 at 02:48:47AM +0000, sashiko-bot@kernel.org wrote:
-> > Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
-> > - [Medium] The binding completely omits the `interrupts` and `interrupt-names` properties for the host controller.
-> > - [Medium] The schema omits standard legacy INTx interrupt routing properties (`#interrupt-cells`, `interrupt-map`, `interrupt-map-mask`).
-> > - [Low] The `phy-names` property lacks an `items` definition to restrict valid string values.
-> > --
-> > 
-> > commit 7b8ba34456e71d6a9cf1028caa5504d64e8f58ba
-> > Author: Inochi Amaoto <inochiama@gmail.com>
-> > 
-> > dt-bindings: PCI: spacemit: Introduce Spacemit K3 PCIe host controller
-> > 
-> > This commit adds device tree binding support for the PCIe controller on the
-> > SpacemiT K3 SoC. The controller is based on the Synopsys DesignWare PCIe IP
-> > with some extra link and reset state control.
-> > 
-> > > diff --git a/Documentation/devicetree/bindings/pci/spacemit,k3-pcie-host.yaml b/Documentation/devicetree/bindings/pci/spacemit,k3-pcie-host.yaml
-> > > new file mode 100644
-> > > index 0000000000000..46147a37a9ce6
-> > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/pci/spacemit,k3-pcie-host.yaml
-> > [ ... ]
-> > > +  reset-names:
-> > > +    items:
-> > > +      - const: dbi
-> > > +      - const: mstr
-> > > +      - const: slv
-> > > +
-> > > +  msi-parent: true
-> > > +
-> > 
-> > The driver implementation reads and clears interrupt status registers for
-> > host-level events, and references registers for receiving INTx events from
-> > downstream devices.
-> > 
-> > Should this binding include interrupts and interrupt-names properties to
-> > document the host's interrupt routing?
-> > 
-> > Additionally, should standard legacy INTx interrupt routing properties like
-> > #interrupt-cells, interrupt-map, and interrupt-map-mask be included in the
-> > schema and example to support downstream devices that do not use MSI?
-> > 
+
+On Wed, 20 May 2026 17:48:20 +0100, Prabhakar wrote:
+> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 > 
-> The driver just does the interrupt cleanup as it requires, and no
-> additional interrupt is needed
+> Add support for the PCIe controller found on the Renesas RZ/V2H(P) SoC.
+> 
+> The RZ/V2H(P) controller is similar to the RZ/G3E variant but includes
+> additional registers and configuration bits for PCIe lane control. It
+> supports multilink operation configured as either a single x4 link
+> or two independent x2 link controllers.
+> 
+> Unlike earlier SoCs supported by this driver which only feature a single
+> PCIe controller, the RZ/V2H(P) SoC implements two controllers. Both
+> instances rely on the system controller (SYSC) for configuration, but
+> the required registers reside at different offsets for each controller.
+> 
+> To correctly identify the controller instance and map the corresponding
+> system controller registers, update the "renesas,sysc" property to a
+> phandle-array. For the RZ/V2H(P) SoC, require an accompanying cell to
+> specify the controller instance index (0 or 1). For all earlier SoCs,
+> strictly restrict the property to a single phandle with zero argument
+> cells.
+> 
+> Additionally, make the "num-lanes" property mandatory for this SoC and
+> restrict its values according to the hardware capabilities.
+> 
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> ---
+> v2->v3:
+> - Dropped using linux,pci-domain property.
+> - Switched property to phandle-array for renesas,sysc
+>   to support multiple controllers with different SYSC register sets.
+> - Updated commit message for clarity.
+> 
+> v1->v2:
+> - Updated commit message.
+> - Dropped un-necessary new line in schema.
+> ---
+>  .../bindings/pci/renesas,r9a08g045-pcie.yaml  | 34 +++++++++++++++++--
+>  1 file changed, 31 insertions(+), 3 deletions(-)
+> 
 
-Unless there are no interrupts and only MSIs are supported, then you 
-need to define 'interrupts' property at least. The common schema only 
-defines all possible names, but not which ones are used and the order.
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 
-Rob
