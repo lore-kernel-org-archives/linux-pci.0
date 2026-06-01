@@ -1,36 +1,40 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D035E3ADBAF;
-	Mon,  1 Jun 2026 19:59:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CEA337E30F;
+	Mon,  1 Jun 2026 20:24:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780343993; cv=none; b=d/14E24sRTgRlzKDWGaFYz0V+XwfPEEaJwl5JrCtVY2iNwg69bHOkp5icX6CPL93fSDtqtgTfv+O0le9Lk2Tu2ljUt8f6gnPbx3GPBMa+ExV5kR2QiK15egkD5xDsLg+3NLRow5HNOTcQ/oGtpZJbT7wCLyxJ7sgryM1yTQCJEo=
+	t=1780345463; cv=none; b=JO064iHtiRGhJk9CJ4YVy46rjntTacS25eTJ07t9K8lFea9Zul7ipvEaYd3kc1mNZSou95kS2n6JrECnIp28EFG7gy1OylAKMmcpcmQzmnWe+A/l/mD8j212K/AFIp6LcF6k6loDmeBIe6J7XfrRI0sbkZzG19SSZ/YrW3BvIQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780343993; c=relaxed/simple;
-	bh=mqezQcqx9istaPeCmmXZaMwR719orDM1w23ry+SfsJU=;
+	s=arc-20240116; t=1780345463; c=relaxed/simple;
+	bh=l3dLCfo8STCCjPr/FqdtQ/3GS1wUw1HahkL+2RftIZg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XhtjzjjnZCvHpCBSexyKH1ukDjjZx+ob50B13ShpY/D5MJad40tq/6eMrxGF/3zDBprT/rTURA2QSZD9uQUvOTuGvJwC57gwawuTZuuAYsdCa3e9mMUCSNvdPKQhh1GFxwomn2ucfeJrw86MECp49KuOcRvKBd0ZbxrwGHbmsiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jPPf1HSE; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=UKPrEQh6Hps01Kb1Y3KPK/oWFn31YcWM9+QDtgSb9mSjBJ1PNpVBSf7I/+diJFqLeJ8hN4t9rehpbW+p8R3slESZqltvauOcgj3SYTlPnXHJSnqjStNlCx+FNG7vVkVdnBSYlDCvy9QStDile0PiVm+V09+876wSH+sMVXiveYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JD/rgItE; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jPPf1HSE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D6831F00893;
-	Mon,  1 Jun 2026 19:59:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780343990;
-	bh=XNCn/hiuq2TSQD0/7268qMBjDGPldqx55TcTTgULBQo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jPPf1HSEtTmrOkKgXG7yZ4L4yWlXriv9f4UInH3EUjfr7uRqEixqsswHEVJD66e/i
-	 UYMnZm3AwHRFYgRV2ih8KtH9UMVsaXegF2blXd/AV6FabDLb+h4l5NmMOw9ZVrD++N
-	 KcX2jHWXOHM02LWFJzDj4MfNwHTR6omd404TzjNZvpI6ZIAf59Yvhv/clTseKbIOtO
-	 ETM1funcq4ukCXv67pvcGJzgYBqL/gNfgi123wCjIaYqeaTkJBGmaBAvvqiI5vVIDR
-	 F9G7b/Sg9jjyGT7K98XQKfJ06MeRLxen4rImVcQChLpFwv+lALs23w52eL46/a7lq6
-	 WVHwgppy+tSkw==
-Date: Mon, 1 Jun 2026 12:59:49 -0700
-From: Kees Cook <kees@kernel.org>
-To: Petr Pavlu <petr.pavlu@suse.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JD/rgItE"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=6/5W0G6Gs1Q9GB3IxcldPERQvThA7tz7U249bqa4a9U=; b=JD/rgItEItTF3waKZU0fyhZfOO
+	p6KhOF2dIKsWbBlXDH6Szda6v6pwxYE0KSLQ6p9Jvu4aC0kMd1Jp91bHbXXGW1JY4kLAuzDZFSXs9
+	P7bQk5/xrqJRa6GrGWdxnMhnM9cOr/Mh7DhOreUlDgBnF2TcRdtGfQbRd9WsBVDwHFqfKKNmW2p+o
+	Eq81r5ZCto6v0j62Ti/4LX0nmYsBAqhcbZ6JenvK3VL8pcuJJabuzAf2wJL1ohACsCSDs/sp5+nbD
+	m2tuZulS6JhmLQAZ2oWemvoJrOfuaHp1Sctzmp2YTWfFeramTBO8sylg/IQVtL1hc2i3NQH4Kt9qQ
+	+ovW+CfA==;
+Received: from willy by casper.infradead.org with local (Exim 4.99.1 #2 (Red Hat Linux))
+	id 1wU9Av-00000000iHG-2DOC;
+	Mon, 01 Jun 2026 20:23:53 +0000
+Date: Mon, 1 Jun 2026 21:23:53 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: David Laight <david.laight.linux@gmail.com>
+Cc: Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>, stable@vger.kernel.org,
+	Petr Pavlu <petr.pavlu@suse.com>,
 	Richard Weinberger <richard@nod.at>,
 	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
@@ -100,10 +104,12 @@ Cc: Luis Chamberlain <mcgrof@kernel.org>,
 	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
 	linux-arch@vger.kernel.org, netdev@vger.kernel.org,
 	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 00/11] Convert moduleparams to seq_buf
-Message-ID: <202606011259.CE6E74CE@keescook>
+Subject: Re: [PATCH 01/11] params: bound array element output to the caller's
+ page buffer
+Message-ID: <ah3qWZ4cqhrbHZcl@casper.infradead.org>
 References: <20260521133315.work.845-kees@kernel.org>
- <88c5ca1d-eeda-4023-bc7a-397b92780db9@suse.com>
+ <20260521133326.2465264-1-kees@kernel.org>
+ <20260521174631.71a06440@pumpkin>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -112,40 +118,18 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <88c5ca1d-eeda-4023-bc7a-397b92780db9@suse.com>
+In-Reply-To: <20260521174631.71a06440@pumpkin>
 
-On Tue, May 26, 2026 at 08:53:06AM +0200, Petr Pavlu wrote:
-> On 5/21/26 3:33 PM, Kees Cook wrote:
-> > Hi,
-> > 
-> > I tried to trim the CC list here, but it's still pretty huge...
-> > 
-> > We've had a long-standing issue with "write to a string pointer" callbacks
-> > that don't bounds check the destination (and for which the bounds is
-> > also not part of the callback prototype, even if it is "known" to be
-> > PAGE_SIZE, which sysfs_emit() depends on). Both moduleparams and sysfs
-> > use this pattern. As a first step, and to test the migration method,
-> > migrate moduleparams first.
-> > 
-> > There are 2 "mechanical" treewide patches that are handled by Coccinelle:
-> > - treewide: Convert struct kernel_param_ops initializers to DEFINE_KERNEL_PARAM_OPS
-> > - treewide: Convert custom kernel_param_ops .get callbacks to seq_buf via cocci
-> > 
-> > The last treewide patch is manual, and may need to be broken up into
-> > per-subsystem patches, though I'd prefer to avoid this, as it would
-> > extend the migration from 1 relase to at least 2 releases. (1 to
-> > release the migration infrastructure, then 1 release to collect all the
-> > subsystem changes, and possibly 1 more release to remove the migration
-> > infrastructure.)
-> > 
-> > Thoughts, questions?
+On Thu, May 21, 2026 at 05:46:31PM +0100, David Laight wrote:
+> On Thu, 21 May 2026 06:33:14 -0700
+> Kees Cook <kees@kernel.org> wrote:
+> > Collect each element into a temporary PAGE_SIZE buffer first and then
+> > copy only the remaining space into the caller's page buffer.
 > 
-> This looks reasonable to me. I added a few minor comments on the patches
-> but they already look solid.
+> Should this be using a 4k buffer on all architectures?
+> Initially perhaps just using a different name for the constant until
+> all the associated PAGE_SIZE limits have been removed.
 
-Thanks for the review! I'll get a v2 prepared with your notes addressed. :)
-
--Kees
-
--- 
-Kees Cook
+If we're acually going to think about this, even 4KiB is too big.
+An 80x25 terminal is 2000 bytes (assuming no utf8), so 4KiB is two
+entire screenfuls.  Limiting to 2048 would seem reasonable to me.
