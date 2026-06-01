@@ -1,186 +1,147 @@
-Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
+Received: from mail-dy1-f179.google.com (mail-dy1-f179.google.com [74.125.82.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C576352004
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 18:48:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38056356742
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 19:02:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780339722; cv=none; b=J89sU6NLaf7vf9vNZiZu+OAFltfLqE0r1gYoFnY3S00I0bptjfk8shbbHwo/ZWUtvc7fvw7qOdTmyQGRuUFqK9ir7BOWdvZ8Z3+Iq4fY58QOBwIhpc24WRUY2ZBqzmFAF5xgJHtia/2ycj9UVIcgHWNM4W/D0HWq7i8vh4yfDuo=
+	t=1780340531; cv=none; b=a4msBFGcptvoIRPS6ANAPj1cig/iN5cV/N/GUZNuk9IxAmmLqhT3QVd51DUl7s0uRD29tg8xXs//oMLuhpx3fcNm5SHIOstwq6/MmVBH9gtkU/ubH/5b46umQSOk3ocunrr7XnwzXeO2Iv+4nzs7hvGxuR1vAjQA1xrWY0Q0D7E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780339722; c=relaxed/simple;
-	bh=dpwh9EurGC8PWJHM2nwOEMbtuDAWOKFskADoJMJikXc=;
+	s=arc-20240116; t=1780340531; c=relaxed/simple;
+	bh=KaHGhf4byy+LVR424XvxK1ysT7KJHJgWUd7ihlz9U/8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NV5ftDgEc6QZcmQ6BD62OMyn+MU8n6qf87YvY9ipabAzrtfz4PGmBIhKrxW8L5ducBoK19ZGwJOM7t/+FefDFbuOl+GLfTmzd3WsDJsaWTrrz7UmOFrsPuvDcau8I28UF6H1UPqBjtf4yoS0aQFkxdHE22pf43wL4wdSC9696rs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=g8VwfbQ6; arc=none smtp.client-ip=209.85.222.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	 Content-Type:Content-Disposition:In-Reply-To; b=kvqEvU+LoANyGkGU7HffyswryCckBY5FBw9mxmURA2fl/+Hw4PaVBKOd26fq4PnRB0tes+kxLpdI5nKQiHErP3hz9OM13JJVwyx+0wrCiA57OqjnBnHRLGYUebLp3+vjy8ov5wqXax4AbLnAKSssVPzLoDeJcpoKBi7ehKhD1Y0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=iCi5C1AC; arc=none smtp.client-ip=74.125.82.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="g8VwfbQ6"
-Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-914bbfc2464so829998985a.1
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 11:48:40 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="iCi5C1AC"
+Received: by mail-dy1-f179.google.com with SMTP id 5a478bee46e88-304cf518c9dso6705935eec.1
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 12:02:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1780339720; x=1780944520; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=ZOVGBJ+B1pIGsdNReY7mg4M6+73TAYZ+OPVziP9NXJE=;
-        b=g8VwfbQ6/OQdI+ssi72qB/rPbqUxNqrG0AwhNoH/u/48EizSI2O4Hxjc9PC9FiFhle
-         gYaxDuKwklcxwE0R62QrehCjGP4mXnCKCN3rnL5qe1NSzg4geZWep8jezMiDHrUBngID
-         v5bwNcXovAurH+sb4zbeyZbeIN6hQMN6OJb1xp3qn1Xt+16aIU+bvuVU+gCMvpn6NOuT
-         daXS6fCOsUo8SdGhK16F/tUJ3UvyLJQ7r2MpXAZNEhd+kqVZDJgIaKZOwqTHJHHhWYcl
-         /x/yIWCza/NV861UVCqG0H3T1y/6cI/tCPloRGkfJ3irllFEcNi9N+OAxS8MV4Xcxpsa
-         dnoQ==
+        d=chromium.org; s=google; t=1780340529; x=1780945329; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/F6zSnrZsJYVN0xGf0C0erkpZXQIz/UeKORQq5fNkL4=;
+        b=iCi5C1ACxb0DpTvRXQQ2jBAWWGHgnDSBHrKR8vPgspvq6avePpvSSdw2/HuQ5XxOdW
+         rjcawDze8JjHRNuoH5QWDkb/bP1kOg1sQpSiwc/uNzTb2b0PjGFgiJve286ZMBKyBrm9
+         A7v+a/lIo0KUaoR2+1lzOiSVoxlYQ81znpueQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780339720; x=1780944520;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZOVGBJ+B1pIGsdNReY7mg4M6+73TAYZ+OPVziP9NXJE=;
-        b=BUwMidmwKZ8VpmxxLKJNzmThggPfEwtNvijFcj5caURrOWJMROLyVZrXsvQE+ciEHp
-         aAAQroILZjZWlmYXUhPYp7AUuj1AtRV+yzjiXMDYPwJ5eje1gQlkfEmoBpd0PsOesan7
-         p71qm587o/Yqd6LK9hV+9BqRPgHlmXpEU/NF/c+6uboGnAenTMfB/IffXA/5FEjtm77N
-         fC9UmJqoQxUtBhPMt3linFTvgvAhLKOLIZuZYgbsbLvtfLi+p8NO2wfQ/5p7o3KN5HiI
-         oRXB/pfBm/1n2orHfe+0NLBS+SH5b7sk3GoTB0UgVerXcGhKRlaZNQdx0lETi0cemshr
-         UqTQ==
-X-Forwarded-Encrypted: i=1; AFNElJ/1QdOnmhAIQ923obCJWE6SemAkFwHWj0wMLJeBSZszhUJjZtGIl7tkgd0avZVBUnjvRO39pyHb7E8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzjux2oajv7nzeMwiOVspqtdZop4lQqmK5fRtdO/RjSM5gOTY6L
-	VHTBE0ENUMd0w3m8RGGgE9arIWmsY/ks9z8RBm34VSAOEAepKbbFpR+RiGbD0bNnbB0=
-X-Gm-Gg: Acq92OFE3/UTY+zXHLP0JDlkb+U1EZYvTrlFwVDnSXXnrq44K9rpNxNBICMZe98kQnb
-	a+MaGifuHOfRLlleMeZnYZ4Q8MBUlt7JzlRzxOxFSr0mGeeFtahjN8FGbAAjLk32tqEaNbxhE7Q
-	998eydN/em8ZMLvyuP6ETPMJZj3Yk9X/pnZC36OCrnifccg7tEfN76Jabv5g3HpKfMn0N5V/46+
-	JBWuMz3OI5mSvm147G0sVwCbQinYrIhhpdSUvLVmDukr9dHGEc7eBUdY5TvGRFC5AibVXpj7cau
-	DpfECMU8f6ZIlHpsecPLbqPYWpaJc2uR51UvR6jXRIDHvlPDj4ccbTC5ZNjour/Tdo81ZS2YEgr
-	6Qu+LtWLe051zqY3iREej+t8P67d7TgtaWAC3xuvdj9e5EW19R5JvFJDzzpUeejp2tp+fu6ILO2
-	R7potks+UFeEgnUWp/P9oe5HUpIiD3ALEgS0bpQtG0llSTAbYqLpmvFmEMI6KfmgpnAn0KNByo4
-	l5mA3qU8XOgTpJo
-X-Received: by 2002:a05:620a:630f:20b0:912:1206:ddd1 with SMTP id af79cd13be357-9153d93b157mr1356674885a.1.1780339720004;
-        Mon, 01 Jun 2026 11:48:40 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-9153262f45dsm1098180085a.41.2026.06.01.11.48.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Jun 2026 11:48:39 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wU7gk-00000002GHG-3uxy;
-	Mon, 01 Jun 2026 15:48:38 -0300
-Date: Mon, 1 Jun 2026 15:48:38 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Cc: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
-	Leon Romanovsky <leon@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
-	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Linus Torvalds <torvalds@linuxfoundation.org>
-Subject: Re: [PATCH v5 0/4] vfio/dma-buf: add TPH support for peer-to-peer
- access
-Message-ID: <20260601184838.GE2487554@ziepe.ca>
-References: <20260527123634.GK2487554@ziepe.ca>
- <a5ff1930-e9fb-43f5-82ab-9875d7a28421@amd.com>
- <CAH3zFs2KALuHXReLZG_uoqvBBWvBzU6rHKakmt6HBV7PZEsD=w@mail.gmail.com>
- <71302a7a-6b9f-40da-af81-b1862dbd637a@amd.com>
- <CAH3zFs036sr93duQKx613pCyOYw4t0_x_TdSza1xBCaEmqijyA@mail.gmail.com>
- <8d9bb0b7-182d-4930-b683-d5d24da6b2ab@amd.com>
- <20260529201130.GU2487554@ziepe.ca>
- <190a1eeb-bd70-4b7b-93a4-60e14f0d6c7e@amd.com>
- <20260601174734.GB2487554@ziepe.ca>
- <dedd8e8f-118c-4ee5-9552-cd2220dbdd23@amd.com>
+        d=1e100.net; s=20251104; t=1780340529; x=1780945329;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/F6zSnrZsJYVN0xGf0C0erkpZXQIz/UeKORQq5fNkL4=;
+        b=d6AZNomoOJpK0sMndyPJyVFgo/gr9pU4PGnFvY1d/MYsfYJJegonAEVJjwy+F3ZWtP
+         dTQf4xmIjMKKD4WcapWDFUKQ9qgVimQuizX9DI3ONMtKyLRsUGRG9yq8ChMb+dNfe2Om
+         glPnRXVcBds6k0+TbXcD/UwrJ/A7vB1qMZJPMjdrL0TWb3zwHCZ5Wh3jrvwseRABSuqo
+         1Oke9ak7P3flUD18eVKyuOGCRiRwo2DxF7dvmaatVlGg8mqTxcho5DnrT5D4hMaC88KV
+         aCB/fkSn9LnCneWYaEHFMWg5j5nKjDapkVlD7Xs8yje2+bT4HpiwlR8E3p7QUiU8SFxm
+         F4Hg==
+X-Forwarded-Encrypted: i=1; AFNElJ+HC0uOXcx28Ea/YI6R5iSdH6i5NWvGTtvVc0itLxswZn4TBOSwrGnKIDEIr6JWN84uzMhUr4HoxOM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxCUSZwCyJbNfmQfepP9jK4k+BOIRZZnjujYsjd0puqmi255X45
+	J1iUVpyKBCELqSDlmUIcMX/WJyJEEMe9hp1Ir6F0CzKdlO6JLAeXkhdDSO/u4pP2Fg==
+X-Gm-Gg: Acq92OHtMAW/E41VDCqhtLi7o+/yAerp0A9Oewcave8GU9aJIiZ5kZyn+9q4d+tLifO
+	zZ/W+/4uqF4o86W3uHC1IxouEGF9uQpYH07hng1sNWTnaWvFlgL31q77HPv9yJC07y0/mNzIc16
+	zLzvbqIbdHfJ0ujs275Hf0y8kV6zfeEM51UEvuayCgCLgyUk7uxOIkLMAnfxWnL5NJ2AzrWm69M
+	PIVghETa9PurKIcMkIa++AHUvud7FsiiVT7hOoAw/pUHunvZKJYE6ykBh9Bs4E/Xj5DkccYLIsA
+	xfFH6bbntzJhFj6Xy4BaXiVDpW6eqWd8dE8BPATMl7uCJc4DGB+wfKS7QWUUSbq9cUCJJzFEipZ
+	Uo8iGcEpGDEjv0T/oVLyoBpCQ2aWgqZIGmWyh146Bghpubh2Zff/7Is1v+SVqAU3FQJLlun1yUX
+	UCG5+XsSEJM2Ks9F97D0Pt+A6rsKwOL/QpPn308U1fDSrUiNf79HwfuTnMLe0J8ttiwoQzBAMXS
+	ugNiMgm6go=
+X-Received: by 2002:a05:693c:3006:b0:304:d388:c33e with SMTP id 5a478bee46e88-304fa4a7fd1mr7288853eec.1.1780340528759;
+        Mon, 01 Jun 2026 12:02:08 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e7c:8:d53d:3040:2c80:7717])
+        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-304ee0dd8e1sm12978919eec.21.2026.06.01.12.02.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Jun 2026 12:02:07 -0700 (PDT)
+Date: Mon, 1 Jun 2026 12:02:05 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Radu Rendec <radu@rendec.net>, Thomas Gleixner <tglx@linutronix.de>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Daniel Tsai <danielsftsai@google.com>,
+	Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
+	Krishna Chaitanya Chundru <quic_krichai@quicinc.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Brian Masney <bmasney@redhat.com>,
+	Eric Chanudet <echanude@redhat.com>,
+	Jared Kangas <jkangas@redhat.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bjorn Andersson <andersson@kernel.org>,
+	Jon Hunter <jonathanh@nvidia.com>
+Subject: Re: [PATCH v3 3/3] PCI: dwc: Enable MSI affinity support
+Message-ID: <ah3XLfI7E39B1UPh@google.com>
+References: <20251128212055.1409093-1-rrendec@redhat.com>
+ <20251128212055.1409093-4-rrendec@redhat.com>
+ <ahC8Pyuatu_AvnZp@google.com>
+ <ahDvvGew5UK3KSpi@google.com>
+ <73f04f467e65b13fd455a3650dc2bd106af1e5a6.camel@rendec.net>
+ <ahowweKTZXteLgZS@google.com>
+ <ah1At6tb_V2jxIfS@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <dedd8e8f-118c-4ee5-9552-cd2220dbdd23@amd.com>
+In-Reply-To: <ah1At6tb_V2jxIfS@ryzen>
 
-On Mon, Jun 01, 2026 at 08:17:15PM +0200, Christian König wrote:
-> On 6/1/26 19:47, Jason Gunthorpe wrote:
-> > On Mon, Jun 01, 2026 at 11:59:55AM +0200, Christian König wrote:
-> >>>> When you have a complete open source driver stack which utilizes
-> >>>> VFIO passthrough as the interface to communicate with the kernel
-> >>>> drivers then we can eventually talk about that.
-> >>>
-> >>> That decision is not up to dmabuf
-> >>
-> >> Yes it is. This is the DMA-buf API which is added here.
+(CC a few more)
+
+Hi Niklas,
+
+On Mon, Jun 01, 2026 at 10:20:07AM +0200, Niklas Cassel wrote:
+> On Fri, May 29, 2026 at 05:35:13PM -0700, Brian Norris wrote:
 > > 
-> > It is a DMA-buf kernel API that is added, I think it is overreaching
-> > to try to veto a VFIO uAPI that calls it..
+> > This seems to tell me the irq_set_affinity()/migration process isn't
+> > really what's killing things, but something else.
 > 
-> Well as long as that is a private interface between VFIO and mlx5 I
-> have no objection at all.
-
-Well, as you know, we are using dmabuf to mediate many of these
-connections now.
-
-I don't mind a "private" interface as a starting point, but it does
-need to discoverable and negotiated without weird module dependencies
-or symbol_gets.
-
-> But when it starts to affect DMA-buf I need to make sure that it
-> works for everybody. And without even being able to test it that
-> becomes really tricky.
-
-They should have an argument how it can be used for CPU backed memory,
-IMHO.
-
-> > This exposes a PCI SIG defined TPH capability in a reasonable simple
-> > VFIO uAPI that can be re-used by any other device that happens to
-> > support TPH on inbound MMIO. The uAPI has sensible general semantics
-> > based around the PCI spec.
+> Hello Brian,
 > 
-> That it's implementing an official PCI spec is a good argument.
-> 
-> But on the other hand looking at the spec it's not really specifying
-> much since everything is architecture specific.
+> Perhaps a long-shot, but have you tried to apply:
+> https://lore.kernel.org/linux-pci/20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com/
 
-Yeah, spec doesn't say what TPH does when it is received. It is
-intended as an opaque channel between the source and target.
+For the record, that's:
 
-Even on the CPU DRAM side we make an opaque call into ACPI and the
-BIOS returns back the right value to use for the CPU. The whole thing
-is agressively opaque as to what the values mean to any particular
-device.
+[PATCH v2 0/4] PCI: Introduce pci_suspend_retains_context() API
 
-So I don't have an issue with VFIO supplying a value for MMIO it
-owns, it fits the general architecture.
+> to see if it helps your problem?
 
-> > Anyone can repeat the demonstration Meta outlined in their cover
-> > letter: Use this new VFIO uAPI, import the DMABUF to mlx5, use a PCI
-> > analyzer and you will see the PCI SIG defined TPH bits set the way the
-> > VFIO uAPI says they should be set.
-> > 
-> > There is nothing uniquely tied to Meta's device here, or unusable by
-> > someone else's devices. Arguably this is actually a mlx5 feature to
-> > allow VFIO to control its TPH generation HW.
-> 
-> Would it be possible to demonstrate the functionality with some FPGA
-> implementing an PCIe endpoint?
+It also seemed like a long-shot, but I tried it and it does resolve my
+problems. Maybe I can provide a Tested-by there.
 
-Sure, you don't even need a special endpoint, any endpoint that
-doesn't explode when it receives a TPH is fine to illustrate that mlx5
-is emitting it correctly.
+> https://lore.kernel.org/linux-pci/r247uuc7ilkhn65vcbsaoxhgypif37lj3r3mvb7ooqqdg55vnm@vx3ip6klg6ha/
+> also seems to mention a recent PSCI fix:
+> https://lore.kernel.org/all/20251231162126.7728-1-manivannan.sadhasivam@oss.qualcomm.com/
 
-A fpga reference board with an out of the box PCIe IP demo is likely
-entirely sufficient, and you can use a FPGA logic analyzer to inspect
-the packets.
+That's:
+[PATCH] firmware: psci: Set pm_set_resume/suspend_via_firmware() for SYSTEM_SUSPEND
 
-Though keep in mind mlx5 is formally supporting TPH in a growing
-number of kernel contexts, so we do test and verify our device is
-working properly as an initiator. So I wouldn't advocate anyone
-actually use their time on FPGA :)
+> Which also sounds somewhat related.
 
-> Doesn't needs to be anything funky, just the ability to exercise
-> this for basically everybody who can spend a few $ on the HW.
+Yes, that looks somewhat related. I tried it, and it seems to resolve my
+issue as well.
 
-Topologically you also probably need a PCIe switch as the CPU P2P
-likely discards the header.
+It looks like Mani suggests both patch sets are valid proposals,
+although solving slightly different variations depending on the Qualcomm
+firmware in question? But the PSCI patch looks like it's stuck in
+/dev/null. Dunno if a Tested-by would help there too?
 
-Jason
+I'm also perplexed at why:
 
+1) those patches claim that NVMe wasn't really working on Qcom systems
+   before, and yet the laptop in question was working fine before v7.0;
+   and
+
+2) this bisected to commit eaf290c404f7 ("PCI: dwc: Enable MSI affinity
+   support").
+
+Anyway, thanks for the pointers.
+
+Brian
