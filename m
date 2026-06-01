@@ -1,131 +1,162 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2A243E00A5
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 17:45:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB8043E00A9
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 17:47:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780335917; cv=none; b=BEIYUB7vg4JbwRaGtURd+ffVfYB9MN2hy9iPeUDkTd+9s6WS53AP5wXlKYJ3nLhfwKztBYZQRsXr/nnkSL6uW6qO2YBPCs5CYpWM4jwUK3tUowSs1qealBDkaHIf/BNbNH9cF3k0cB+i9Q1gUXciEuZljMfvK1jKWi86073HRwA=
+	t=1780336058; cv=none; b=tWtb7msm/HMURKiKx9/DpW1w66XAzizI/FVQaS9HDyyhjYsSfqEV/estGWiaeL7/v5x1jndRJiDQyxYG/Or0DKTNj8H0dOJv7EiK9bKBcTeEDHIfe2WCdoIWjgoEABCD6awMhCzMCwKsuPkL7d4mh4L5Z6BZVXTbBsB7e4U0H4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780335917; c=relaxed/simple;
-	bh=EUaevAzgtzlvUB5/tuC/JSEZdio1mHCw6ZYwf4PCo8o=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=byu0KtjZ3Mp5toE8gW9SSz5TDEfDtbQ3pR52Jq+ygC6U3MFayvVeCBebzqW4ReVjs4yQpqrdfu+U28BbpVN9y3+ZAMa4rSUwcg2OJlypgSucQkPimTuIJEfN+qD3YgHeH6/F3TEGCDYS+VItKCQawoo6tVzAzYh+osxxVRo98hc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oEfNe5Pt; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780336058; c=relaxed/simple;
+	bh=eDqBBuInzy1c9i8vrcrIJaFNBUagTiKlEOwIxuahu44=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=H1Yv0dA+8ukbnCjTLrMECRI79umZGfSXaoYsoxSqnSk/sqggYs1uu5lz9PV9cFA/scP9zXApteTZOVo8i5rUvX7kV8VnNuLO9B0Ck7MzFXfY6zkIBYPXo/NFUYhRx/ULiBrMIl7NJd/0ebJxuyW85ZqvljTriU4pZEic0cxykrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=JBYhAqZc; arc=none smtp.client-ip=209.85.219.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oEfNe5Pt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2B9C1F008A3
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 17:45:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780335915;
-	bh=NQXET+HIwUHzkASejrWXITD/EhCJ1l5nthigBOUX5B4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=oEfNe5Pth2hdrzxmWdaSbNtuXmcjlg8gKIUg223dP+4ZwdGCXMPQ33PsBKQQIajO0
-	 +AmomxAsFo0OH7Cm9NVqZdKVAj2VPqmGM1B76rNnW+f979D/0veSKY8drBAH+nfGNc
-	 iwtxjto4v9iCqHQz09tMd7gQ6idoNceMM5Om1KMkm0MooI9YWggQuGJ3sx852rMKAf
-	 ykVuZ4ic3qP0RDUVaPvxl1uMg34mvKS3QR2OjIRjvU/pc/YHl7ZAPGJ+16pMm5xxo/
-	 jtM5xKa1OGdj8riB12cmSmbmoc7xp6GteeVjPnL4ENRX/FlIHrQCtAH6t+eJhHXx16
-	 RCC5q7A+dxBFA==
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5aa68cfc182so1546658e87.0
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 10:45:15 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ+q0KdJaGi6rp1X77kDjQHLiMm8u/oSpv6aZAXXVnqo/t0Woip3MCcMrPhKaY9yk4oB8Zj+m6F+320=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyFRWsNIX7uNkRFDednnWo3AP3aCZJdpZfJyKprZvAC6Ll49i5I
-	w7yAeg42yEkPTXFryOWgxuIZfOcdJtcCOsFHkeFgpTwwJ2Uqpko1WL9Q+72PRYhbSzYpseNNqSN
-	GFjum+vJUD0Sy3k7BvU8So0JqAGpNAwA=
-X-Received: by 2002:a05:6512:3b97:b0:5aa:6e86:55c8 with SMTP id
- 2adb3069b0e04-5aa6e8657c0mr1302970e87.12.1780335912894; Mon, 01 Jun 2026
- 10:45:12 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="JBYhAqZc"
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-8cceaa6f75bso53866526d6.0
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 10:47:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1780336056; x=1780940856; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=yZ9wJintER1aMQNJJDa24+/EucywMy/j2tmrZTRhl8o=;
+        b=JBYhAqZcrdFABjH5HkSQ6NJsusDEPyaNx3vvmooevzrPf3fMyIsolj2AUHjspXjR4J
+         F+nNZpzC3j3+xoAlPApfQdRSYv+RnG6xCEZkXzj+zLkyaUM6f07ZA1bK029II7sRJZQ1
+         8mb6mCs7R9a54RwfAQBulmx1bryRUrJlOdCYoJLLDXvqsVZl63EOjr6deLshJ19RTTaX
+         QGzMfSIm+4yCJd6s95DC0nEXdjkww26ZXt8SONmsbMRO20uIg2ozGQXqZWMzQv56i6Vc
+         I3XxWperKVcR5Nh+gvyaYcp/1GBDI9Pz6SOhcKd4W1FuS1+KYCw/MA9B8XunvL20LNGF
+         MGFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780336056; x=1780940856;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=yZ9wJintER1aMQNJJDa24+/EucywMy/j2tmrZTRhl8o=;
+        b=RKktCDRd6AQ87plGWJM8U9NHnzfmh6yopTj+e25lD5H7zaQioPRWg5fXHSmADWOTtM
+         fVvFDhpgHBuz6KaHS7suQ8xOHc4I4HrGx3Y/0PUQDGYYNJDr/t/d/P9FfLw8t0XDk6yV
+         g7rB7JMJ7x5G+c4h+L2f8UCQ2EnglpS3wGL/pg7H9ItLEzWKVGr7nPrb2rc9oM9N5xfx
+         9G6nsYtdx5PLogKDvxkkubztfR3LJgTIZCmQQWC92i3cWRqA9DpgiFMSQH4bLmiWWwUS
+         0MuPATanZq4H9yyiwkBiILhXSYyJA152hFVNnMA0wgFnIjZTSoJaT8CA9EeB13jFhAbd
+         Lkrg==
+X-Forwarded-Encrypted: i=1; AFNElJ+saxxY8tsbIH4q9SsEs0fgZap6R5q0jzxcQMoaC4xm/pvE+RglYx/+lU1Z3NAXDuYx+RpMPy1+Ft0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzn5TdDUj4CWoPP13vhWG7bffwj1kYHG4iZWAzgrr2PJQdGcSm9
+	6HovTuB6Ec/s6d/Bdujoj6syU516a4EFoMVaFGCNorxuF60jxtuKHlNXO635s059rhw=
+X-Gm-Gg: Acq92OEaMVnQtS35xB0YbTtvTuWpBugpO3Nt9hc18Cdrmp9WDYvtRzFXJauNaQSmZU3
+	06kAFIk9d2Tp8LNHsEYSwJzXsQ3ToYtdijwc1UhHV+YcPmVCu1rBKT7iEyHvbwLvNda/KFXKW0m
+	J68CNrXlmdHf0a2JTAFx3voNycK1+dabWJU67ul98hSWH6KJ7lFgyfWImpTzWqr14j3jIt8fPXD
+	Gk90uSQPOlXM5NQldvtimXSZt3q1W9wBHPFTIvgCbuH7zv6eD/oBgjP3wbJMN5Lsw6HzFLsdsII
+	SH1dNsyYKO6t45FOHirOOx6IRaHtKibqCr9J8FEu85tZcUMWNb2JRvM/ddzlt1GPJylYUf2L52E
+	NjRdavg/rO3STSMblUCWve5hiRRZF3uoc5Oy3c2ewf6IL1aY/17GEoyPLz4yu6uIE2240uk3J1l
+	wS19XdrVRqLdEJSegJM57ATO455neyxCAFe3v78cfTXtd4riBWRdv8Z1QEi01kgk/vGzM+VT95R
+	GzbmFpwmlOpaFo+
+X-Received: by 2002:ad4:4eec:0:b0:8ac:b258:71d1 with SMTP id 6a1803df08f44-8ccefb29374mr211892386d6.3.1780336055817;
+        Mon, 01 Jun 2026 10:47:35 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ccea25f64bsm96664256d6.47.2026.06.01.10.47.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Jun 2026 10:47:35 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wU6je-000000027Jd-2qcE;
+	Mon, 01 Jun 2026 14:47:34 -0300
+Date: Mon, 1 Jun 2026 14:47:34 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Cc: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
+	linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Linus Torvalds <torvalds@linuxfoundation.org>
+Subject: Re: [PATCH v5 0/4] vfio/dma-buf: add TPH support for peer-to-peer
+ access
+Message-ID: <20260601174734.GB2487554@ziepe.ca>
+References: <20260527121438.GJ2487554@ziepe.ca>
+ <ff247643-73e7-44e2-b3d5-8ac0a8efb871@amd.com>
+ <20260527123634.GK2487554@ziepe.ca>
+ <a5ff1930-e9fb-43f5-82ab-9875d7a28421@amd.com>
+ <CAH3zFs2KALuHXReLZG_uoqvBBWvBzU6rHKakmt6HBV7PZEsD=w@mail.gmail.com>
+ <71302a7a-6b9f-40da-af81-b1862dbd637a@amd.com>
+ <CAH3zFs036sr93duQKx613pCyOYw4t0_x_TdSza1xBCaEmqijyA@mail.gmail.com>
+ <8d9bb0b7-182d-4930-b683-d5d24da6b2ab@amd.com>
+ <20260529201130.GU2487554@ziepe.ca>
+ <190a1eeb-bd70-4b7b-93a4-60e14f0d6c7e@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260528183625.870813-1-ynorov@nvidia.com> <20260528183625.870813-6-ynorov@nvidia.com>
-In-Reply-To: <20260528183625.870813-6-ynorov@nvidia.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 1 Jun 2026 19:45:01 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0gPZL7Cmi7Sm5pVN01AG7rb8NiwWkUJ9X6gwim67EUZPQ@mail.gmail.com>
-X-Gm-Features: AVHnY4L1KYHIevdOf61kuP7a6ocAZfa6dkfv0T6IORvr_Om4IsQ3giCPU7iBHEE
-Message-ID: <CAJZ5v0gPZL7Cmi7Sm5pVN01AG7rb8NiwWkUJ9X6gwim67EUZPQ@mail.gmail.com>
-Subject: Re: [PATCH 05/16] ACPI: pad: Use sysfs_emit() for idlecpus show
-To: Yury Norov <ynorov@nvidia.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
-	Russell King <linux@armlinux.org.uk>, Frank Li <Frank.Li@nxp.com>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, Madhavan Srinivasan <maddy@linux.ibm.com>, 
-	Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, Peter Zijlstra <peterz@infradead.org>, 
-	Ingo Molnar <mingo@redhat.com>, Arnaldo Carvalho de Melo <acme@kernel.org>, Namhyung Kim <namhyung@kernel.org>, 
-	Mark Rutland <mark.rutland@arm.com>, 
-	Alexander Shishkin <alexander.shishkin@linux.intel.com>, Jiri Olsa <jolsa@kernel.org>, 
-	Ian Rogers <irogers@google.com>, Adrian Hunter <adrian.hunter@intel.com>, 
-	James Clark <james.clark@linaro.org>, Thomas Gleixner <tglx@kernel.org>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, "H. Peter Anvin" <hpa@zytor.com>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Danilo Krummrich <dakr@kernel.org>, 
-	Chanwoo Choi <cw00.choi@samsung.com>, MyungJoo Ham <myungjoo.ham@samsung.com>, 
-	Kyungmin Park <kyungmin.park@samsung.com>, Heiko Stuebner <heiko@sntech.de>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Xu Yilun <yilun.xu@intel.com>, Tom Rix <trix@redhat.com>, 
-	Moritz Fischer <mdf@kernel.org>, Yicong Yang <yangyicong@hisilicon.com>, 
-	Jonathan Cameron <jic23@kernel.org>, 
-	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Leon Romanovsky <leon@kernel.org>, Dan Williams <djbw@kernel.org>, 
-	Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
-	Ira Weiny <ira.weiny@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Shuai Xue <xueshuai@linux.alibaba.com>, Will Deacon <will@kernel.org>, 
-	Jiucheng Xu <jiucheng.xu@amlogic.com>, Neil Armstrong <neil.armstrong@linaro.org>, 
-	Kevin Hilman <khilman@baylibre.com>, Jerome Brunet <jbrunet@baylibre.com>, 
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Robin Murphy <robin.murphy@arm.com>, 
-	Jing Zhang <renyu.zj@linux.alibaba.com>, Xu Yang <xu.yang_2@nxp.com>, 
-	Linu Cherian <lcherian@marvell.com>, Gowthami Thiagarajan <gthiagarajan@marvell.com>, 
-	Ji Sheng Teoh <jisheng.teoh@starfivetech.com>, Khuong Dinh <khuong@os.amperecomputing.com>, 
-	Daniel Lezcano <daniel.lezcano@kernel.org>, Zhang Rui <rui.zhang@intel.com>, 
-	Lukasz Luba <lukasz.luba@arm.com>, Yury Norov <yury.norov@gmail.com>, Kees Cook <kees@kernel.org>, 
-	=?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>, 
-	Aboorva Devarajan <aboorvad@linux.ibm.com>, "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>, 
-	Ilkka Koskinen <ilkka@os.amperecomputing.com>, Besar Wicaksono <bwicaksono@nvidia.com>, 
-	Ma Ke <make24@iscas.ac.cn>, Chengwen Feng <fengchengwen@huawei.com>, 
-	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, 
-	linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	linux-perf-users@vger.kernel.org, linux-acpi@vger.kernel.org, 
-	driver-core@lists.linux.dev, linux-pm@vger.kernel.org, 
-	linux-rockchip@lists.infradead.org, linux-fpga@vger.kernel.org, 
-	linux-rdma@vger.kernel.org, nvdimm@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-amlogic@lists.infradead.org, linux-cxl@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <190a1eeb-bd70-4b7b-93a4-60e14f0d6c7e@amd.com>
 
-On Thu, May 28, 2026 at 8:36=E2=80=AFPM Yury Norov <ynorov@nvidia.com> wrot=
-e:
->
-> idlecpus_show() is a sysfs show callback. Use sysfs_emit() and
-> cpumask_pr_args() to emit the mask.
->
-> This prepares for removing cpumap_print_to_pagebuf().
->
-> Signed-off-by: Yury Norov <ynorov@nvidia.com>
-> ---
->  drivers/acpi/acpi_pad.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/acpi/acpi_pad.c b/drivers/acpi/acpi_pad.c
-> index ec94b09bb747..04d61a6cc95f 100644
-> --- a/drivers/acpi/acpi_pad.c
-> +++ b/drivers/acpi/acpi_pad.c
-> @@ -334,8 +334,8 @@ static ssize_t idlecpus_store(struct device *dev,
->  static ssize_t idlecpus_show(struct device *dev,
->         struct device_attribute *attr, char *buf)
->  {
-> -       return cpumap_print_to_pagebuf(false, buf,
-> -                                      to_cpumask(pad_busy_cpus_bits));
-> +       return sysfs_emit(buf, "%*pb\n",
-> +                         cpumask_pr_args(to_cpumask(pad_busy_cpus_bits))=
-);
->  }
->
->  static DEVICE_ATTR_RW(idlecpus);
-> --
+On Mon, Jun 01, 2026 at 11:59:55AM +0200, Christian König wrote:
+> >> When you have a complete open source driver stack which utilizes
+> >> VFIO passthrough as the interface to communicate with the kernel
+> >> drivers then we can eventually talk about that.
+> > 
+> > That decision is not up to dmabuf
+> 
+> Yes it is. This is the DMA-buf API which is added here.
 
-Applied (with a tweaked subject) as 7.2 material, thanks!
+It is a DMA-buf kernel API that is added, I think it is overreaching
+to try to veto a VFIO uAPI that calls it..
+
+> > - what VFIO subsystem requires to
+> > accept a new UAPI is up to the VFIO maintainers.
+> 
+> As far as I can see vfio-pci is used as a stub driver to avoid
+> opening up the real driver.
+
+Yeah, that's probably true.
+
+Frankly, I'd rather they use VFIO like this than to upstream another
+driver for proprietary custom built HW which nobody except Meta even
+has, let alone can use.
+
+> Upstreaming an API changes only makes sense if others can use it and
+> this here is something completely special to this particular use
+> case, without all components involved nobody else can use it.
+
+It is not 'nobody else can use it', if it was true VFIO wouldn't be
+leaning toward the uAPI being OK.
+
+This exposes a PCI SIG defined TPH capability in a reasonable simple
+VFIO uAPI that can be re-used by any other device that happens to
+support TPH on inbound MMIO. The uAPI has sensible general semantics
+based around the PCI spec.
+
+Anyone can repeat the demonstration Meta outlined in their cover
+letter: Use this new VFIO uAPI, import the DMABUF to mlx5, use a PCI
+analyzer and you will see the PCI SIG defined TPH bits set the way the
+VFIO uAPI says they should be set.
+
+There is nothing uniquely tied to Meta's device here, or unusable by
+someone else's devices. Arguably this is actually a mlx5 feature to
+allow VFIO to control its TPH generation HW.
+
+For a long time the general kernel has had a philosophy that as long
+as these niche features are generally implemented and *in theory*
+usable by anyone who wants it is OK. Every knows the initial userspace
+implementations of *alot* of stuff starts locked up in proprietary
+software owned by database, and now cloud, companies. Yes, some
+subystems are stricter, that's OK too.
+
+> So as far as I can see that here is a no-go. But at the end of the
+> day it's Linus who needs to say if that's ok or not, that's why I
+> put him on CC.
+
+Well, based on what I heard when I argued for fwctl, and the
+discussion with sched_ext, I don't think implementing functionality a
+standards body defined in a logical way is going to raise concerns..
+
+Jason
