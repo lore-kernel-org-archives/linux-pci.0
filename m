@@ -1,93 +1,130 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB45339A07E;
-	Mon,  1 Jun 2026 10:27:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD7137187E
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 10:35:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780309629; cv=none; b=HcdwE8QMzn+OtjWU6tSO6zcqEO24cVbCHzpfd3caJPias5qboXa1u33A47CpMVwkaZUv96R2pA1OOX8XnMj2Pg05hiTExbDrrTa/3BxYBDa+CCFsPCvT8EyAJ/8Z4chwksikoWb/VrpCWigTlsOtsVEu6JmfaYdZ71pDuQJmKDA=
+	t=1780310120; cv=none; b=Fs0OfcWAB050BX4Qi4IKzIJHq4yYqfz4DsWz8f22ipTkYvozFkKfAADCgCgfJjM+9lqF/YGQKnFeJu8HDRG7Y14/2LvcGkWnXacVwV6sIz+/fuX7E/fTV0aNDoKgXlsTKUFTk45PfLtk0yKGKAMofsMO68AzGqhkIu6LNRegLmY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780309629; c=relaxed/simple;
-	bh=0qst/tslyWgQOAB1I6G7gBQUJ6DGJGeBEs5F/zIj+jg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TCA29qW3gS3XlJDmBF1/QhEpSTNQw+/SY+P4UIYuR8KRFtAwJsU3wjtr4Wz29Z8iWPn/l442CQcpuguBtZr+ZPhqbMvwekQMtvL7uXgVTZTHcNO4JB23f/o16UK1+wZ4sguSbe4jRcZeKDeXxUaljyraXt5VUyxdKOYLPwtA00o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cHuN98qR; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1780310120; c=relaxed/simple;
+	bh=EsLJvdLsMAdY3Oobb657DBhag9gfNQ+8zMcfmReVvxU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=f3pDNySax0APJQ5oWEzUn3EPg5IpPt9wPb7BET5GXnClhIVsua/l2TuTEsoZTuyf0cMbaoi4sKdffhGniSJgn1ZnqJ2OWIx3BQ3SjchpKq4gVrBR/8OpWVxojmWcMAWbljdx/5LpyFgSyGvPVbvYruNi8qb3DtGuLl6VPOTu9O4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=j6BIR0qI; arc=none smtp.client-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cHuN98qR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780309628; x=1811845628;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=0qst/tslyWgQOAB1I6G7gBQUJ6DGJGeBEs5F/zIj+jg=;
-  b=cHuN98qRNy5eLzdbQb3Qpb/pyXFa1MxkfubnbVZPaHUeZYUnF3DAlafB
-   1BtDddiWfn5oPuvWmi1tCHodtURxqc32YkOarXFPzQITwLeYowlMePGaA
-   ozY8OODJnfm3tRLTJJncIODGqFVLj3qL/Bc3saqbdfUIzFqN3iAlqVDC9
-   GOhz4XKBUgNBpPNrZdrskrlLKaDGlDIFc2ncD6oPTICkl4e8pSRAyKsej
-   v6P8KbFkBmjU+Vc2MKN/oGHUECE7XB613p1WqUBMxIBPAWoGx0dpFFVPm
-   nADyZ+v9gH0JgfSBcVfW25z6PD/5sqkQB/AjPbngg02qkBuN74NtcGPGi
-   A==;
-X-CSE-ConnectionGUID: XoZ/HY0mSKWMu+KzkAHqPw==
-X-CSE-MsgGUID: i72tIkoISgKeyakP7Sb2CQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11803"; a="80796474"
-X-IronPort-AV: E=Sophos;i="6.24,181,1774335600"; 
-   d="scan'208";a="80796474"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jun 2026 03:27:07 -0700
-X-CSE-ConnectionGUID: YQOYhM68S+OQsvHIc5zYEQ==
-X-CSE-MsgGUID: t7ZQ3Du5RU2dwov6U/Pg9g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,181,1774335600"; 
-   d="scan'208";a="243371797"
-Received: from weba0957.iind.intel.com (HELO WEBA0932.iind.intel.com) ([10.224.186.34])
-  by orviesa008.jf.intel.com with ESMTP; 01 Jun 2026 03:27:05 -0700
-From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: linux-pci@vger.kernel.org,
-	bhelgaas@google.com,
-	ravishankar.srivatsa@intel.com,
-	chethan.tumkur.narayan@intel.com,
-	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
-Subject: [PATCH v1] Bluetooth: btintel_pcie: Fix null pointer dereference in remove
-Date: Mon,  1 Jun 2026 15:56:11 +0530
-Message-ID: <20260601102612.2164388-1-chandrashekar.devegowda@intel.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="j6BIR0qI"
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2bf2911f93cso585ad.1
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 03:35:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1780310119; x=1780914919; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=oDUgrIyB02FM5mea3gf7dEX+Hdw7+v6D42bl2KCdIiE=;
+        b=j6BIR0qI+z8qob63Ef4nXHl8QzgmzEIoKk2ikwxkSKxSd/WbBSctmO8ad0NUE7e1Mr
+         vMNqeBd32ZWrXLZEPCvi+UcBA2ONvd7d5VaEqcuQ+k58MWj248un8UbGvk6rMH7myv8S
+         0veUMk4bZkiJ/2Gp43+WNbjbZkEtPU7FhLWfVXgPYVX/QgbvJ/f/l83SGqlBxCjSEA15
+         5p6ldXawEEuQfHWROtjasJEMLQr3E76rwoyI8aexWkiaPwE2Z9u1/LoT8ItpwN/IEHBa
+         6IScjYAGm7I15vXVcE2TYGr+PwTA+4oN6WSA6lG9e26eWIFCE7kiCHW0d5dqXro9rG/d
+         RIVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780310119; x=1780914919;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=oDUgrIyB02FM5mea3gf7dEX+Hdw7+v6D42bl2KCdIiE=;
+        b=ikjDmYq6jx1Rd+OOfMAPa2VCSrmCZ1eu4u4WSYkw9g/yBX/VeMjYhhwb5FdckQdTwh
+         n4xuqdX0zC6Se3riKqmCOnPXrn8ZYkzySNs1UIOhrbb/V9zsSALsLf5B8pop56rbwqVa
+         6VsqrxXROPqcYcDAbziN2Ywalt31VQVP31jiTYsRRGue0r+6l94QBPbYVU3esIz8DuC/
+         /h3BrzS8q7VXygKriOfqj1v3aqKRn84zq2/72TPPlJBk/w8KaW4IgJjcShzNUjlBRvNP
+         7d5w0vMkXuBdXyzZGVE2Lyq10mmtNpwyqV96fVJ1PRySbB/d3OXxVFHCYtMZB6B+/Z42
+         HkJg==
+X-Forwarded-Encrypted: i=1; AFNElJ+akCohBu7IuR/D7HBzQNv//eCv3eSEe4pNSqgNfPOCan7oLB4jPHw5yISzljuay4hGXxgmiFB4Cks=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNTanmSodo/Otu9PQYpc40cfLyo/6ieyvE7/uvcFnNzA0KPPLX
+	10Fpg8alUHJuIIls33n5+wMVKZLvI+8mIfWXo2uoOkruTOYpblLyzfR35yRl3ELL8r35DoHeweI
+	m8xyEOA==
+X-Gm-Gg: Acq92OG057kH1LBkGFiLabiy8Vh9zBX2hb8fUZ2S6qSGdqvde3nOQBHY+gM042Kjbbq
+	5nOF4LVTwWuSQKT4LCrHvV+BC4pp1mTamDimx779Fu6OrwkDE6b8ycO9SKCOUW4rv8trGWkHnos
+	E5q627rH+O3MDJb4JMR63lB2W0uX8kBvQa33BAeaRcBLc8pvRuDVnGGH8D8VjbFc5tBCl+ECaZ5
+	35tiLTBSmOnUKuuOEVuQr/v4uqAGk3BSwq2vRtZ5cp3l5qPVpw23BHF7A+YAzdH8owgjQvt0CY/
+	64WVXQehuj6KOQ/rO1Dfd5aEYbiKXKvq1yAy9ENKckLHyoDmzh+ggPeMOm00HKlvglJLEl9Op+O
+	wuCEJtptXPwtoUQUZjinhs7VO57vtuhjJ7EEHIwx8vAUYB/gmiOhcualE1jcqteZvM7VAvxEyFZ
+	58G45Db1zaRMOTOZCl3Rw8aZwZT+lpGgikOnpWT2CmuTjuypJpXQ7zI3nMeAvapWbvEK7YTmI=
+X-Received: by 2002:a17:903:15c8:b0:2b4:58ad:e987 with SMTP id d9443c01a7336-2c07cb4cf8dmr4904775ad.17.1780310118403;
+        Mon, 01 Jun 2026 03:35:18 -0700 (PDT)
+Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84214affe29sm9720174b3a.3.2026.06.01.03.35.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Jun 2026 03:35:17 -0700 (PDT)
+Date: Mon, 1 Jun 2026 10:35:10 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Ankit Soni <Ankit.Soni@amd.com>
+Cc: Vasant Hegde <vasant.hegde@amd.com>, iommu@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Lu Baolu <baolu.lu@linux.intel.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Nicolin Chen <nicolinc@nvidia.com>,
+	David Matlack <dmatlack@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>,
+	Daniel Mentz <danielmentz@google.com>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	Mostafa Saleh <smostafa@google.com>
+Subject: Re: [PATCH v6 6/6] iommu/amd: Fail probe on ATS configuration failure
+Message-ID: <ah1gXgPIdVXBzo_w@google.com>
+References: <20260529111208.387412-1-praan@google.com>
+ <20260529111208.387412-7-praan@google.com>
+ <unqzyef2n26wdf6tmc6vvwvpsgv244uvz7cxji4scymqmoofyb@trkzr7ix5bog>
+ <ah0kyi5asHpnrpgC@google.com>
+ <drmnqcya6v6wtcazil4wojno2crp4obywudycl45uvqszp66ms@5t5uj2624dor>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <drmnqcya6v6wtcazil4wojno2crp4obywudycl45uvqszp66ms@5t5uj2624dor>
 
-Add a NULL check for pci_get_drvdata() in btintel_pcie_remove() to
-prevent a null pointer dereference. This can occur when
-btintel_pcie_remove() is called concurrently from the PLDR
-device_reprobe path on another CPU, after pci_set_drvdata(pdev, NULL)
-has already been executed.
+On Mon, Jun 01, 2026 at 08:17:23AM +0000, Ankit Soni wrote:
+> 
+> Hi Pranjal,
+> 
+> Plan looks good. One pushback: I don't think you need the
+> amd_iommu_restore_msi_domain() helper.
+> 
+> If point 1 preserves rlookup_table on the PD_MODE_NONE and
+> pci_prepare_ats() failure paths, dev->msi_domain pointing at
+> iommu->ir_domain stays functional - irq_remapping_alloc() /
+> __rlookup_amd_iommu() find the iommu and the chain works.
+> So fixing rlookup makes the MSI assignment correct, 
+> not dangling - no restore needed.
 
-Fixes: 8c0693e29dba ("Bluetooth: btintel_pcie: Support Product level reset")
-Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
----
- drivers/bluetooth/btintel_pcie.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Ack. That makes sense—if we preserve the rlookup_table entry, the MSI
+the MSI domain mapping remains functionally correct and the chain
+stays intact. Thank you for clarifying that.
 
-diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
-index eba563b66090..eeaefffaaf6b 100644
---- a/drivers/bluetooth/btintel_pcie.c
-+++ b/drivers/bluetooth/btintel_pcie.c
-@@ -2694,6 +2694,10 @@ static void btintel_pcie_remove(struct pci_dev *pdev)
- 	struct btintel_pcie_data *data;
- 
- 	data = pci_get_drvdata(pdev);
-+	if (!data) {
-+		BT_WARN("PCI driver data is NULL, aborting remove");
-+		return;
-+	}
- 
- 	/* Cancel pending reset work. Skip only when remove() is called from
- 	 * within the reset work itself (PLDR device_reprobe path) to avoid
--- 
-2.43.0
+> 
+> On splitting: While patches 1-5 are essentially settled. I'd lean 
+> toward pulling AMD into a separate follow-up so the rest doesn't wait,
+> but defer to Vasant/Suravee on that.
 
+Ack. I agree with the suggestion to pull the AMD-specific work into a
+separate follow-up series. 
+
+> 
+> +Vasant
+
+Apologies for missing the CC! I thought I had Joerg's latest tree and
+get_maintainers would automatically add Vasant.
+
+Thanks,
+Praan
