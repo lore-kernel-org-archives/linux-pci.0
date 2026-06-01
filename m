@@ -1,54 +1,54 @@
-Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
+Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5B0E3BF66B
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 14:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8A45374E46
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 14:36:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780324610; cv=none; b=GUKWuYA00JZ4LC8kNiVaNhze3EedqwiWteynzEVM1MWkjbx7s3wWrfelBZgvmh+LWAUMzhlWMf+m8cMOfn87vdI+G8arzRsFGps2rd2eY01PaXEf6/v4LEzR9AwgkZ4FiE2e+W/2WYCoSgRucPo8XZ7wjwMksxj9HlDyhqcEfas=
+	t=1780324614; cv=none; b=obYBANg+1IIdS+Z+acLQQ+2ZVwcM3mjKVaK2Sez6cIaNom9e6PDPEOpc/2QKiB0Fby2iz+BG/5RPjiyag3bX9Rikufdw6p9/Z8LIMmRnnl/6XJVFQM1IWs5SDhQzuk05ztHBkhYEmjVgNMOcifAsBSG9RLRHfs1ssfdBGwQJyOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780324610; c=relaxed/simple;
-	bh=zLhKJQfxvv+d9aNsqJrU4irOe5OKs7/A2799Tf2JNWI=;
+	s=arc-20240116; t=1780324614; c=relaxed/simple;
+	bh=ZY1CHI2qLE7gvcNu09TeXmB6q3EuV2tMfE05QxQiulQ=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=jo0abAn1KIMnc4wGyKGscy7BYJzKGwN2UUgmrnOGK4f+ANvbwrzC4lz5egLdzEeUTucW/ojZYhy55jhsQJpD/bkn75sniZkfgs8WlEPnht1u2jZZ/w094C5blTu4hcthBFXltPOsv2Qk7sTBp7nwJIoDIQPxsORjJ46yOxf+Fso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=o86A/2+d; arc=none smtp.client-ip=209.85.214.201
+	 To:Cc:Content-Type; b=IABWHiZdjZ25Bd4S+vhvjqSj2d5IzX0HN58+ERV0U7t0Mb6jrnniHp/2znt7kYNdUy91M5FiMGpJrkQc4jSVryy+u2xIQmgmIxURKyURQb5jV+AY6hKjcYAnUscEYlA8YpTDDNFoEUk+y4+jYzxP1zbm41YkAxW6nsjHQDZFH1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Y3lcZCDl; arc=none smtp.client-ip=209.85.216.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="o86A/2+d"
-Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-2bf32fb7cb2so18642455ad.2
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 07:36:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Y3lcZCDl"
+Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-36d97a4e08fso1325226a91.0
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 07:36:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780324609; x=1780929409; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1780324613; x=1780929413; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=H1WHbQ1I/exyopX3p7b75ehhnkD9ODb3Bve7jByn9iQ=;
-        b=o86A/2+dhHNysWMSV7dnGUt4JeucHi4nygMBcNXIqvXfXlfoAYu9/S/s3fTM+qSFCV
-         ouKaVInfWoUqTa5pX8xVCQw26ij7C2GvzLmVjI01salrBw9moknHYqAo3l3vIByMpKEj
-         qcNmu8neQpGrx2FrIhpKWSa/xLnig5q0Ww5AznQIDkscL386Vz+lE2Tv+JM+vHBasT3Y
-         NbSRCdnlvTACMNf2nDtAnWj8Gxubk68Y6LeTdysdRE2YEV1+DivNm0uhyJQ2ZkFcMDgp
-         xB1RuUKBPHqCzAsNwudeJ83ad0tuLFZNsPUpmlA4nj71+TAU0VHBB1f15ovtZVzQKqIv
-         T3sg==
+        bh=J1VlFw02VkFXjGZD0LXM1rfEtalYzEU51knuxCZNQpI=;
+        b=Y3lcZCDl1kDBStCHLH0UqlGSbpkNQUnS3rQrug9CN6eEE8nHQM1XNzajFokwXhaoPr
+         cOkDxPSTcbzmAlf+xA+3jao8A/coSRnQdV+hL7pHG7CdEJpkpklq4iOWYvLqKqXFD8KV
+         ovDf/bRBUSAxDOzSvjLqnR89wZjNDjsbynb7skFYi591ymsRKtGP7lIfuhtY3YzOOXBG
+         UILNPdcGQ4lJuj40Bbr9GTdrcvrTCkAIctuL3oy8dG+NnUV5a1PRsay0goSTxnWZ32jP
+         KUIFfR+4SnC5+I5jVGR+HJCWwG5hku/9plBR4JtLya804bEI/UorurMAyMrQ9h7pkF08
+         oQvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780324609; x=1780929409;
+        d=1e100.net; s=20251104; t=1780324613; x=1780929413;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=H1WHbQ1I/exyopX3p7b75ehhnkD9ODb3Bve7jByn9iQ=;
-        b=GMm5DjNI3oMDXo6sLMxlX4feHir5LcVe4AdKP0klJZqzQtreRtqukpUSbYvWa53JEB
-         vQph6HzCJbUfgOurV7GEx4td9Ew1BuXkr2zrqExw30uvl6xe0TKSsjwkW535L2Ba/6jc
-         IoP3TVfaAdG/T4EPlWm9gOUTYsvEWhPOvBzzfEJIksnRubvaOyxcfXx+iizDuRVNyc+V
-         O51gU+OeLNu7At7m7YTB6XBjMXhetvre7dgUogntIAFZ+iqnRn3hZbRQRBs/Jz9ciO1B
-         7Pbvyl6Ukd0OZ9QgqzFveb8oFC+yGUFKSd05L+gxQGkr2b9rverskq5Gre5ALtDf7IMO
-         9GXg==
-X-Forwarded-Encrypted: i=1; AFNElJ8gl40j1S28gVxeEQ2w6dp4yltxfmnnFX73BkU0353gv3p3oyNYpy1N0MSyGQrMlmgEsh8HiL8xl4E=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzM0gu289mte+CjtkR1aV4VQc0MBYYYKEpxArtdAr8R6KnXlXy/
-	pO5b4x355zQGGxyoOERmCuBci/Q5nmAgnDkzkVtQgJEB5lVOlxsccFD3cPnh5Wp3JMeeNTpki4s
-	Pyw==
-X-Received: from pldy13.prod.google.com ([2002:a17:902:cacd:b0:2b2:a70b:98ea])
- (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:903:4b07:b0:2c0:b6c7:2273
- with SMTP id d9443c01a7336-2c0b6c7267emr92934605ad.3.1780324608765; Mon, 01
- Jun 2026 07:36:48 -0700 (PDT)
-Date: Mon,  1 Jun 2026 14:36:40 +0000
+        bh=J1VlFw02VkFXjGZD0LXM1rfEtalYzEU51knuxCZNQpI=;
+        b=NNbMoChWYAkeIwIiXTe9wOSAPI+RhWq30VxNr7oFeLyB1QJiX4MZrLfsFYpPm9Jk0p
+         h7JiQFJ01ZwdKZhxdtcPEILF+AjeF67GqNlAubNduXCEEQiHdv6Fh5ZOtBucqzAptRmo
+         mPTWfDoa7/pVRpwPrwTQ5rD1vPzvv7kYLbKxa26UXX70ly9EADpGRQhcY3okpt7NrEHj
+         tUvQ2Ss6JGKMQANzOMhEeyQ7kCaxdnpYNjnR9tyAyhcBwTn1hVPNO8pwfmI1JoHFxxjl
+         2krCMpuANcl59p0bj/PxokW+VqSVF/xTubE9qC5LrpEZfyKHVKyzamp4pHd9mOBRs7Ra
+         v6pg==
+X-Forwarded-Encrypted: i=1; AFNElJ92/kobp+9VgSRPmGJZ4i8cqkld8B8mHMtaw4jtBGL1aAKslE5txYlht+JwwPcNiUDfy9m0PpGBkoU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxpo9z4clP1AJZOMfhUPaXzkMevUXulGKMLM+nvZxbAr4j8Ax5h
+	hkd0AjgpkAVpEfyLiif27GE4sIRG76kYKY3YgbxaFwEw9OwUrVkLTuMVA4cU5bpzHhfogqIXvli
+	RAA==
+X-Received: from pjnj13.prod.google.com ([2002:a17:90a:840d:b0:368:eea2:5650])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:2c84:b0:36b:9faf:8396
+ with SMTP id 98e67ed59e1d1-36c4ff6b3cdmr10066002a91.11.1780324612870; Mon, 01
+ Jun 2026 07:36:52 -0700 (PDT)
+Date: Mon,  1 Jun 2026 14:36:42 +0000
 In-Reply-To: <20260601143644.2358771-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -58,8 +58,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20260601143644.2358771-1-praan@google.com>
 X-Mailer: git-send-email 2.54.0.823.g6e5bcc1fc9-goog
-Message-ID: <20260601143644.2358771-2-praan@google.com>
-Subject: [PATCH v7 1/5] PCI/ATS: Ensure pci_ats_supported() is PF-aware for VFs
+Message-ID: <20260601143644.2358771-4-praan@google.com>
+Subject: [PATCH v7 3/5] iommu/arm-smmu-v3: Fix a UAF in the probe_device error path
 From: Pranjal Shrivastava <praan@google.com>
 To: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
@@ -67,44 +67,29 @@ Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
 	Robin Murphy <robin.murphy@arm.com>, Baolu Lu <baolu.lu@linux.intel.com>, 
 	Jason Gunthorpe <jgg@nvidia.com>, Kevin Tian <kevin.tian@intel.com>, 
 	Bjorn Helgaas <bhelgaas@google.com>, Samiullah Khawaja <skhawaja@google.com>, 
-	Pranjal Shrivastava <praan@google.com>, Nicolin Chen <nicolinc@nvidia.com>
+	Pranjal Shrivastava <praan@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-Update pci_ats_supported() to additionally check the associated PF's
-status when called on a VF. This ensures that PF-level quirks and
-untrusted status are correctly propagated to VFs, providing a robust
-support check that aligns with the kernel's PF-centric ATS configuration
-model and is immune to the timing of VF-specific fixups.
+Clear the iommu->priv to NULL while returning an error from probe_device.
 
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
-Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
-Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
+Fixes: a2be6218e649 ("iommu/arm-smmu-v3: Improve add_device() error handling")
 Signed-off-by: Pranjal Shrivastava <praan@google.com>
 ---
- drivers/pci/ats.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 96efa00d9743..679a3c3c1d54 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -40,10 +40,13 @@ void pci_ats_init(struct pci_dev *dev)
-  */
- bool pci_ats_supported(struct pci_dev *dev)
- {
--	if (!dev->ats_cap)
-+	if (!dev->ats_cap || dev->untrusted)
- 		return false;
- 
--	return (dev->untrusted == 0);
-+	if (dev->is_virtfn)
-+		return pci_ats_supported(pci_physfn(dev));
-+
-+	return true;
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index a10affb483a4..54c7f1ae3a84 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -4206,6 +4206,7 @@ static struct iommu_device *arm_smmu_probe_device(struct device *dev)
+ 	arm_smmu_disable_pasid(master);
+ 	arm_smmu_remove_master(master);
+ err_free_master:
++	dev_iommu_priv_set(dev, NULL);
+ 	kfree(master);
+ 	return ERR_PTR(ret);
  }
- EXPORT_SYMBOL_GPL(pci_ats_supported);
- 
 -- 
 2.54.0.823.g6e5bcc1fc9-goog
 
