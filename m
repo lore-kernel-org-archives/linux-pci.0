@@ -1,125 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4BBF3D8117
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 15:06:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6642D3D9672;
+	Mon,  1 Jun 2026 15:10:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780326376; cv=none; b=iYvdlTJmDutOeslnV/PjUbOImqCUr+FBkhTLN07tKel4nwOBXneAMXZROhXOS6zq7OAAS1zwp+skMyoRBFh/yHktaH2RH44DJa3RBSSqc1dAfDkZIJ27dL26u3B4CA2RJW0DHg3YCcygeurBeIKon8wp2rN93DIFx1FYPy6b/Lo=
+	t=1780326606; cv=none; b=Xzg4WZvv+qg/QknwqgPXlRN/GWe5hS+zb4V4wMAFOJ/JdmhjTMY1bVcV5P+LJopzhmKAtwBtV0xUL9ozn/cgk6Kg/D6nVQQG4e8LeC4pkhvIG/FqRBDCReu2nHLfIFkYk7YYbwnCu0jSdCXjGT7iy4YB+iECyzUrUOqJeksNoCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780326376; c=relaxed/simple;
-	bh=lYpvWmZlpLwqfjWLhV7P+kYs4avfhrBbGxvzjiuHYPk=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=a7ck+3fuS8ig0ZGwi3KQM35eZdpRfJXoxiDO34D2wqrSFoa0eJ3LdDOtxbrVIe1WRfy93+QYq4b9Ttc40NUv9LLKCKfGi99kD0qRPRGAZRBoHlaAjbQTcjdrN9e2vyAw4GzIbrtsI8vE5DbAYhFzUu0dqd5iSUfMZWbl7LPz3Ek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kHAcsgjP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780326606; c=relaxed/simple;
+	bh=Qaj0RrUB7MeEP1B0GOhOYkFMIJHYElSdhOD4zbJy+z0=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
+	 References:In-Reply-To; b=EUpxwcsCrWhbwSU6qT38vv42cOpvywHtnwB6T4fLwDxV3uhtfK8bWOvthLORvuol8vJlp73neNQbNlD2ATO6mR7ydIlo6AiL9/UMfh2nSoNYE6kpFcFthZplgQ3gMvZnJyt8Vj/yNK/QqZsaK4YsZK2xzhUSD1PQvR4SyiKcdHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H6GKp/dz; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kHAcsgjP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F9B61F00893;
-	Mon,  1 Jun 2026 15:06:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H6GKp/dz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D74AC1F00898;
+	Mon,  1 Jun 2026 15:10:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780326373;
-	bh=AA8eX6PJxpFChSpB4KHS8jvBxJ7W1133mTSa4LAsExM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=kHAcsgjPr3/WUfCRlGGvDx23thMsLHzRCtX+6mprDgcHL0+jpR4zxqoKpkjPN7hFs
-	 nIcbbq0zjECQR7cIBW813axH2Dcq/6xtq9u+QGykv6VZigM0lC5oEzuCFi6AzURywJ
-	 tI7oDxEQExfwqGkFy+Dj0kaYodVzFU7dGaAgCvLTlAISJta8u26X7M6qAiYmBX2FTz
-	 5bNVTlA5gxIlcH1xMk3PFcCIJgYDIKyU+ZBVO6Qk+HNPP6pyZJ7fl+RlLDLG9iWP+Y
-	 LixCMHkadv8nJwP7IisYMN4axlwBE+sCGJHQLQLV3JFh0+8jnA1/b8eVmGIntUli4w
-	 WIisFW4jaAYYw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 3/5] iommu/arm-smmu-v3: Fix a UAF in the probe_device
- error path
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pranjal Shrivastava" <praan@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260601143644.2358771-4-praan@google.com>
-References: <20260601143644.2358771-4-praan@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 01 Jun 2026 15:06:12 +0000
-Message-Id: <20260601150613.0F9B61F00893@smtp.kernel.org>
+	s=k20260515; t=1780326605;
+	bh=CQQ3fHPI7z0+oYhhy2SS2++wUzwKs9NFKfTFjo35QFE=;
+	h=Date:Subject:Cc:To:From:References:In-Reply-To;
+	b=H6GKp/dzqdK9ORxjj0B40gPyyI+Oji2zXc3Le5Sabsl/dFTi0wga5rdS2Kf9sYveJ
+	 XADB9m10hTqyRD5XENfhigGHA6xbgGDk5NPtM7BRolacY8BQaIOlaU446uf7Dmi2zl
+	 hmTmsBeVFgywVd9Y3U6r51xN20vw8Ze9xskMuxrAa47Xae4rrZ8vgH4MN2CEybz50K
+	 t0WarlKSDJf6hW39j5PwA/N/G5xNTmutyB0YQ00tyPqnfT86uMY8B+GdTphTkwt7P2
+	 LdEJxogDT4R4mCI3zNbccAbuKOvpgTUNEVxQ8s0MVQxcsYAv5scNpsLLfUgtDOeX68
+	 YjwLO0KryJm/Q==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Mon, 01 Jun 2026 17:09:59 +0200
+Message-Id: <DIXT3WV9XAWK.3E0JOPV2K6NC1@kernel.org>
+Subject: Re: [PATCH v16 0/5] shut down devices asynchronously
+Cc: <linux-kernel@vger.kernel.org>, <driver-core@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <linux-scsi@vger.kernel.org>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Tarun Sahu" <tarunsahu@google.com>, "Pasha Tatashin"
+ <tatashin@google.com>, =?utf-8?q?Micha=C5=82_C=C5=82api=C5=84ski?=
+ <mclapinski@google.com>, "Jordan Richards" <jordanrichards@google.com>,
+ "Ewan Milne" <emilne@redhat.com>, "John Meneghini" <jmeneghi@redhat.com>,
+ "Lombardi, Maurizio" <mlombard@redhat.com>, "Stuart Hayes"
+ <stuart.w.hayes@gmail.com>, "Laurence Oberman" <loberman@redhat.com>, "Bart
+ Van Assche" <bvanassche@acm.org>, "Bjorn Helgaas" <helgaas@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>, "John Garry"
+ <john.g.garry@oracle.com>, <kexec@lists.infradead.org>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>
+To: "David Jeffery" <djeffery@redhat.com>
+From: "Danilo Krummrich" <dakr@kernel.org>
+References: <20260518193204.14273-1-djeffery@redhat.com>
+In-Reply-To: <20260518193204.14273-1-djeffery@redhat.com>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+On Mon May 18, 2026 at 9:31 PM CEST, David Jeffery wrote:
+> These patches are now rebased against the driver-core tree's driver-core-=
+next
+> branch.
 
-Pre-existing issues:
-- [Critical] Calling `rb_erase()` on an unlinked, zero-initialized stream n=
-ode silently corrupts the SMMU streams rbtree by zeroing the tree root.
---
+[...]
 
-commit 785579083a69b017d9dafe6dce3c844bea656662
-Author: Pranjal Shrivastava <praan@google.com>
+> Changes from V15:
+>
+> The async_shutdown bit field is converted to a device flags bit Convert a=
+ll
+> patches to use the flag bit accessor macros to set or check if async shut=
+down
+> should be used Added documentation on the kernel parameter to control use=
+ of
+> async shutdown
 
-iommu/arm-smmu-v3: Fix a UAF in the probe_device error path
+Did you have a look at the Sashiko report from v15 [1]? Some of the concern=
+s
+raised seem valid at a quick glance.
 
-Clear the iommu->priv to NULL while returning an error from probe_device.
+(It seems that this version has not been picked up by Sashiko (despite you
+mentioning they are based on driver-core-next). I'd assume it doesn't like =
+that
+the series was not sent with '--base'.)
 
-> diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/=
-arm/arm-smmu-v3/arm-smmu-v3.c
-> index a10affb483a4f..54c7f1ae3a841 100644
-> --- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-> @@ -4206,6 +4206,7 @@ static struct iommu_device *arm_smmu_probe_device(s=
-truct device *dev)
->  	arm_smmu_disable_pasid(master);
->  	arm_smmu_remove_master(master);
+Can you have a look at [1] please?
 
-[Severity: Critical]
-This is a pre-existing issue, but could calling arm_smmu_remove_master()
-here silently corrupt the smmu streams rbtree if there are duplicate
-Stream IDs?
+Thanks,
+Danilo
 
-In arm_smmu_insert_master(), master->streams is allocated with kzalloc,
-leaving the rb_node zero-initialized. If a device has duplicate Stream IDs
-(expected for bridged PCI devices), it skips inserting the duplicate node
-into smmu->streams:
+[1] https://sashiko.dev/#/patchset/20260429175016.7915-1-djeffery%40redhat.=
+com
 
-drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c:arm_smmu_insert_master() {
-    ...
-			/* Bridged PCI devices may end up with duplicated IDs */
-			if (existing_master =3D=3D master)
-				continue;
-    ...
-}
+> Stuart Hayes (2):
+>   driver core: separate function to shutdown one device
+>   driver core: do not always lock parent in shutdown
+>
+> David Jeffery (3):
+>   driver core: async device shutdown infrastructure
+>   PCI: Enable async shutdown support
+>   scsi: Enable async shutdown support
 
-However, arm_smmu_remove_master() unconditionally calls rb_erase() on all
-nodes:
+Not sure it will make it for 7.2, but I think it would be good to give this=
+ some
+more time in linux-next anyways.
 
-drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c:arm_smmu_remove_master() {
-    ...
-	for (i =3D 0; i < fwspec->num_ids; i++)
-		rb_erase(&master->streams[i].node, &smmu->streams);
-    ...
-}
+Bjorn, James, Martin:
 
-Since the rb_erase() implementation interprets a zero-initialized node as a
-root node with no children, it clears it by setting root->rb_node =3D NULL.
-Does this detach the entire stream tracking tree?
+Should the PCI and scsi patch go through the driver-core tree too?
 
-The error path in arm_smmu_insert_master() also unconditionally calls
-rb_erase() on processed nodes:
-
-drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c:arm_smmu_insert_master() {
-    ...
-		for (i--; i >=3D 0; i--)
-			rb_erase(&master->streams[i].node, &smmu->streams);
-    ...
-}
-
-Would this also trigger the same corruption if a failure happens after
-skipping a duplicate ID?
-
->  err_free_master:
-> +	dev_iommu_priv_set(dev, NULL);
->  	kfree(master);
->  	return ERR_PTR(ret);
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260601143644.2358=
-771-1-praan@google.com?part=3D3
+Do you prefer a signed tag with the driver-core changes to merge into the P=
+CI
+and scsi trees?
