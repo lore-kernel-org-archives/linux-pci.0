@@ -1,75 +1,109 @@
-Received: from mail-dy1-f170.google.com (mail-dy1-f170.google.com [74.125.82.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA0A1A6839
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 19:16:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D035E3ADBAF;
+	Mon,  1 Jun 2026 19:59:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780341384; cv=none; b=rJ3S/E64rpqLFZhkB/orQUwefjadg5YsLDXbY41I2GRISsN2eDBKb/Vl3FYLFZEpHJbSVZ//ab+mmMbVRMB+X3xvsEo/cQ9xYUhNkNUBQ95TZLWZ/U/JLDxEtmcxqoZ3B3vpSt39yjAvuASISFSC0HpHQbCNPrJGIGQijqPkMfU=
+	t=1780343993; cv=none; b=d/14E24sRTgRlzKDWGaFYz0V+XwfPEEaJwl5JrCtVY2iNwg69bHOkp5icX6CPL93fSDtqtgTfv+O0le9Lk2Tu2ljUt8f6gnPbx3GPBMa+ExV5kR2QiK15egkD5xDsLg+3NLRow5HNOTcQ/oGtpZJbT7wCLyxJ7sgryM1yTQCJEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780341384; c=relaxed/simple;
-	bh=pfzOzaqWA/AH3npRNvlp0MxpAD4DF0Z7Hw40WYdOvag=;
+	s=arc-20240116; t=1780343993; c=relaxed/simple;
+	bh=mqezQcqx9istaPeCmmXZaMwR719orDM1w23ry+SfsJU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XXIHzH9ovaVCTzc8sPcJRSaRkAZqwSsgukVHRxXAJ8zKGQU2fEaLGxqiSzgaGqdR6cR7Rtol9iKYRuc7JTmie/RSeIiLfuLAn1Y1SuoB366xCXqgXFAbvdf8fSFt3Ka47YJrQqJkDahHyS/AkG34oKeWyARAOjYVLvEZW9FPMHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=myfmX6/d; arc=none smtp.client-ip=74.125.82.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=XhtjzjjnZCvHpCBSexyKH1ukDjjZx+ob50B13ShpY/D5MJad40tq/6eMrxGF/3zDBprT/rTURA2QSZD9uQUvOTuGvJwC57gwawuTZuuAYsdCa3e9mMUCSNvdPKQhh1GFxwomn2ucfeJrw86MECp49KuOcRvKBd0ZbxrwGHbmsiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jPPf1HSE; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="myfmX6/d"
-Received: by mail-dy1-f170.google.com with SMTP id 5a478bee46e88-304cf518c9dso6728498eec.1
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 12:16:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1780341382; x=1780946182; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5YY0AKjuRmhN5jXS67K9oBDfInraYXWkuQQvtFh6y0A=;
-        b=myfmX6/dok18af1IkfDaIQnFS4k6cfp0IZpwppNQTbz2Z63pDdrnH9ZyaTJ7Yj5udk
-         hxaCijVoQBFOiVgfLKLhxKMWMtdAM1mKoT3ibWlEXa2/Z65EC74baiSCI/GB0ZlnCcwg
-         UPiGVTOlda3krVqKEUqHlDgrgipPhmNZUQ2Zo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780341382; x=1780946182;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5YY0AKjuRmhN5jXS67K9oBDfInraYXWkuQQvtFh6y0A=;
-        b=MTVrvlG/DtiLTD8x87PFXtkMuQAtTe6uNhbH2sIbiimndAzDh+kdXXDFJ/a2xs2tcO
-         UG3wBYXzLYiAfmppA9DZQeuL8FDJ2h4/uAGknBj7093wd/3UMHCPtz8vcMLrjpAHbqaS
-         kg74PYvfJA/AH/HSLIQRs1MAqtv3S+XfwOWfR3xUHWzqKxCOn4NhjSkufdOzXQ1vqpJb
-         aCmE6XM67yP7aCD8bwg/5yywQlcMEuI3sTK+dGcFGs9xCvYbZxafnAkPJV/i9wgvr4r2
-         /Y4dMcMvRLseG37fLDpqUaQhNCpcZMiqRHrJAF/FJmsJ2KtYzhvOs/H8G/RwJjcWn3fT
-         OqiQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+ZM3Kl4IkpsXsNHBSr3QM1pT2G/YRJu3ddWj67FvMrzbbhtFG8yIJ3sjDFW6WMiMA2kp36gFOcBhE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyJeTgl9Vbm0QCJljnV8WochffnV8JNAFdm4Tk+MQjehjApToAB
-	kAkgMVEfP3S6g07+pG5KORjfn49fGLl/S859C6FQvUTNKPbnEciB2pS1NkH5osonvOWQzSl8ydK
-	um/U=
-X-Gm-Gg: Acq92OE5a+UkT21xn+XQFUsWP3XK8bQqm7DsseyurEaEtQXH4ynGajlHgczO4BF9QZv
-	XcF3p+K1DSRh36wu5N4Y6q7FfCgcXfttob7EY3mxnYLOowu5glP6Qan3OEGMT+9dbDzePBpMDSN
-	9gGwAMEHe1vfq++dVX8F74T8BwdHgbn7CZMbBy0tHbXpWT71c5sZe1sVyVNrqEYtM7mLfYmuuLd
-	oL8HLMfhBVAeIpwf7SpW0hpG4fbJjT9SuYLn74Vxj5IBASpnybkRNvsonp8UTus+M95vf9GPnyB
-	sPgPNI8T5L8UpgrFbGXnSHJa4UvA7G0QcnF9L2T47Dx7vNDyJWnzpPfxjXEHCNrJ2AbYCDAF2ib
-	/vik4cqDjPghr9u7Lpf9Zy12BPyHy4ExAlBzTtbAafiGY+j9YKSXKeLgqpJcw7PDXcquCL/DqLD
-	5Eeu9vPT08kg2/ebO5X67ZfrFrInymwXkcR1lX1z4A/3YNeeH8GUiHq/noeYSeUjylRz2mr9sL
-X-Received: by 2002:a05:7300:ef83:b0:304:9b48:53da with SMTP id 5a478bee46e88-304fa6438afmr5420329eec.26.1780341381977;
-        Mon, 01 Jun 2026 12:16:21 -0700 (PDT)
-Received: from localhost ([2a00:79e0:2e7c:8:d53d:3040:2c80:7717])
-        by smtp.gmail.com with UTF8SMTPSA id 5a478bee46e88-304ee0dd8e1sm13033848eec.21.2026.06.01.12.16.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Jun 2026 12:16:21 -0700 (PDT)
-Date: Mon, 1 Jun 2026 12:16:18 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: manivannan.sadhasivam@oss.qualcomm.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Keith Busch <kbusch@kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v2 0/4] PCI: Introduce pci_suspend_retains_context() API
-Message-ID: <ah3agpwmcDfn9plX@google.com>
-References: <20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jPPf1HSE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D6831F00893;
+	Mon,  1 Jun 2026 19:59:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780343990;
+	bh=XNCn/hiuq2TSQD0/7268qMBjDGPldqx55TcTTgULBQo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=jPPf1HSEtTmrOkKgXG7yZ4L4yWlXriv9f4UInH3EUjfr7uRqEixqsswHEVJD66e/i
+	 UYMnZm3AwHRFYgRV2ih8KtH9UMVsaXegF2blXd/AV6FabDLb+h4l5NmMOw9ZVrD++N
+	 KcX2jHWXOHM02LWFJzDj4MfNwHTR6omd404TzjNZvpI6ZIAf59Yvhv/clTseKbIOtO
+	 ETM1funcq4ukCXv67pvcGJzgYBqL/gNfgi123wCjIaYqeaTkJBGmaBAvvqiI5vVIDR
+	 F9G7b/Sg9jjyGT7K98XQKfJ06MeRLxen4rImVcQChLpFwv+lALs23w52eL46/a7lq6
+	 WVHwgppy+tSkw==
+Date: Mon, 1 Jun 2026 12:59:49 -0700
+From: Kees Cook <kees@kernel.org>
+To: Petr Pavlu <petr.pavlu@suse.com>
+Cc: Luis Chamberlain <mcgrof@kernel.org>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>,
+	Gabriel Somlo <somlo@cmu.edu>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	Jason Baron <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>,
+	Tiwei Bie <tiwei.btw@antgroup.com>,
+	Benjamin Berg <benjamin.berg@intel.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	"David E. Box" <david.e.box@linux.intel.com>,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Alexander Potapenko <glider@google.com>,
+	Marco Elver <elver@google.com>, Dmitry Vyukov <dvyukov@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
+	kasan-dev@googlegroups.com, linux-mm@kvack.org,
+	apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
+	linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net, qemu-devel@nongnu.org,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, netdev@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 00/11] Convert moduleparams to seq_buf
+Message-ID: <202606011259.CE6E74CE@keescook>
+References: <20260521133315.work.845-kees@kernel.org>
+ <88c5ca1d-eeda-4023-bc7a-397b92780db9@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,59 +112,40 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260519-l1ss-fix-v2-0-b2c3a4bdeb15@oss.qualcomm.com>
+In-Reply-To: <88c5ca1d-eeda-4023-bc7a-397b92780db9@suse.com>
 
-On Tue, May 19, 2026 at 01:41:19PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> Hi all,
+On Tue, May 26, 2026 at 08:53:06AM +0200, Petr Pavlu wrote:
+> On 5/21/26 3:33 PM, Kees Cook wrote:
+> > Hi,
+> > 
+> > I tried to trim the CC list here, but it's still pretty huge...
+> > 
+> > We've had a long-standing issue with "write to a string pointer" callbacks
+> > that don't bounds check the destination (and for which the bounds is
+> > also not part of the callback prototype, even if it is "known" to be
+> > PAGE_SIZE, which sysfs_emit() depends on). Both moduleparams and sysfs
+> > use this pattern. As a first step, and to test the migration method,
+> > migrate moduleparams first.
+> > 
+> > There are 2 "mechanical" treewide patches that are handled by Coccinelle:
+> > - treewide: Convert struct kernel_param_ops initializers to DEFINE_KERNEL_PARAM_OPS
+> > - treewide: Convert custom kernel_param_ops .get callbacks to seq_buf via cocci
+> > 
+> > The last treewide patch is manual, and may need to be broken up into
+> > per-subsystem patches, though I'd prefer to avoid this, as it would
+> > extend the migration from 1 relase to at least 2 releases. (1 to
+> > release the migration infrastructure, then 1 release to collect all the
+> > subsystem changes, and possibly 1 more release to remove the migration
+> > infrastructure.)
+> > 
+> > Thoughts, questions?
 > 
-> This series introduces a new PCI API, pci_suspend_retains_context() to
-> let the client drivers know whether they can expect context retention across
-> suspend/resume or not and uses it in the NVMe PCI host driver.
-> 
-> This new API is targeted to abstract the PCI power management details away from
-> the client drivers. This is needed because client drivers like NVMe make use of
-> APIs such as pm_suspend_via_firmware() and decide to keep the device in low
-> power mode if this API returns 'false'. But some platforms may have other
-> limitations like in the case of Qcom, where if the RC driver removes the PCIe RC
-> resource vote to allow the SoC to enter low power mode, it cannot reliably exit
-> the L1ss state when the endpoint asserts CLKREQ#. So in this case also, the
-> client drivers cannot keep the device in low power state during suspend and
-> expect context retention.
-> 
-> And these limitations may just keep adding in the future. Without a unified
-> API, the client drivers have to implement their own logic which may cause code
-> duplication and may also lead to drivers missing some of the platform
-> limitations.
-> 
-> Once this series gets merged, we can extend this API usage to other client
-> drivers as well.
-> 
-> Testing
-> =======
-> 
-> This series is tested on Qualcomm Hamoa based Lenovo Thinkpad T14s latop with
-> NVMe drive.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> This looks reasonable to me. I added a few minor comments on the patches
+> but they already look solid.
 
-FWIW, this was already applied to pci/next for v7.2, but I'll add that
-it seems this resolves what appeared as a regression in v7.0 for me when
-using a Qualcomm SC7280-based laptop
-(arch/arm64/boot/dts/qcom/sc7280-herobrine-crd.dts):
+Thanks for the review! I'll get a v2 prepared with your notes addressed. :)
 
-report: https://lore.kernel.org/linux-pci/ahC8Pyuatu_AvnZp@google.com/
-test notes: https://lore.kernel.org/linux-pci/ah3XLfI7E39B1UPh@google.com/
+-Kees
 
-In short, my NVMe failed to resume from suspend-to-mem:
-
-[   58.384442] nvme 0001:01:00.0: Unable to change power state from unknown to D0, device inaccessible
-...
-[   68.875606] nvme 0001:01:00.0: PM: **** DPM device timeout ****
-
-Notably, this regression bisected to commit eaf290c404f7 ("PCI: dwc:
-Enable MSI affinity support"), though I'm still not quite sure why.
-
-Anyway, for $subject series, I'll provide my late tags:
-
-Closes: https://lore.kernel.org/linux-pci/ahC8Pyuatu_AvnZp@google.com/
-Tested-by: Brian Norris <briannorris@chromium.org>
+-- 
+Kees Cook
