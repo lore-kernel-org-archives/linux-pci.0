@@ -1,175 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 918723BCD1A
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 14:30:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8EC037B000
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 14:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780324246; cv=none; b=FtVPkXClx28fSp96L26dZsbav8IKqpSqxAXvgJAgtd18HrIr7emLKfQYp7I2qFmq4BLEWv5sTjfvpfT+G48b1lGxwj/yj2GDe5TrZHVqjQcZQgLRi063C60Gl0eUpKvVPFu1DJ/3yqEVGBg9dXVeRjIW33JjiKKnz3LDaAq96gQ=
+	t=1780324610; cv=none; b=oiTRHVcbnP/OdMyPX1vlsT5ER6YlzA6NSeNNc54HpcOkyIMj3q97cedJPP7uG2cShW47k4ufWner8UT6SXD2Tk/OTejHqGKjbAwAEamMqa2KgYzs31DkW/WK2iKnYP5akl12z7QiZKbf3PBBxnxv1brF2wgsZW/ye2nFPq9EDzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780324246; c=relaxed/simple;
-	bh=X7k1Wgigc4dwyBc3DX8M+8a4zopa6h/qT3M78LhgZxc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=P/f6lvrmqXZFipqIYDujwbQpZ3Q2D5FIqHop47I6MIoATEx7aEYSi/EJdwsO1MG+9AzNvrqQl6W3DhL97xCtJl2cS/UhRjKga+BsjKzYcBVFV0wmGKx7HFneuSW8zbk7ix2sunAHnZe++XWE+VRTW+iPvr4pZxKzsWFwphTAgQ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aKBDcnum; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780324610; c=relaxed/simple;
+	bh=+aUZFujOJt1HzKW2d/02qPS6+H/Sp7A9/BMfcdW8tvE=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=RhAxfVxglqOVeJWIbJGIkAav4J5ryTzTcvA981EOqshIXC3GtSryzlAeKXcLnGsPFKTDhpLqrjKBHqk/1h00RJ4IWqws4/fE9WwHJ+aBiId+wNUSOD682/mofcIZNHCbzhmQdZx0n7jbYCYVFTQ06EoaVl7ERRPHLbygZOlSALc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Y+BDTqRm; arc=none smtp.client-ip=209.85.216.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aKBDcnum"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CE501F00893;
-	Mon,  1 Jun 2026 14:30:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780324245;
-	bh=X7wWfPcd4S1C4MJsBh0CKZHrnkJGUOw+KTjRyhSXH7o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aKBDcnumCqAa7kgVyYnNCi8HkUaUJP+Z5LJZZGQ0buMJ+2KNSaLvqqfiNIA/ZzOf9
-	 JEFflLgbjwxY6FTZu3mgPTzOfiSjxM+OzLBkTIqmM7azK7TlAxHkleaNVa2IdqPF+C
-	 vNPfP1DlBsGwSVEqM1DN+1N+BO/oNHGkFTBFV3q9y0WvTspAB30KrM/MAYr6HjjTJ6
-	 TYFuqjkqoZdgLfnL8nbqpQGJvVL4u/SyL/hCFhOa6+KQSYy2MLuVbTB5kMKsT6EavO
-	 v+JqhhNjAs+DBPztjmNy4m6Fkq/UGd9Quw1/3BqQ6gzGETKCpxhD9e8Qe0N3yC6nEg
-	 wPzDu6FE44Mcw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 3/6] iommu/amd: Split probe error paths to preserve IRQ
- remapping
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pranjal Shrivastava" <praan@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260601134204.2150602-4-praan@google.com>
-References: <20260601134204.2150602-4-praan@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 01 Jun 2026 14:30:44 +0000
-Message-Id: <20260601143045.1CE501F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Y+BDTqRm"
+Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-36b7c55406bso3378879a91.2
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 07:36:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20251104; t=1780324607; x=1780929407; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=mq680t4Gx83PdTUYD69e7f2qCRhIL2CvllXumPUWfXM=;
+        b=Y+BDTqRmuiaRZh3yi220AIz9o12OFiGyhf8OxjTWn9QYMjAHoURULUkbCxOwIh46qm
+         AK/z8Fo8WyXB8uQoQf0nDRyrTCbJJ6K7iDiVuObBpWO6yGwu6HW9FqSqIQg93g2QcKnU
+         WK2Lrnb03Bh7s/V0gCVOJvK6yDx1MMTX/SKubTKaS8/ys5/8wzD2dxFu0JH8G4IZaOxK
+         3W9Yh0nfzynYbZcT+1YPPYlQw9KB+r3ax3h88wvvovua6mOOzCqtzUxB/1oNpbUQLkts
+         YKfqZN+/Bgl1fLYR44wdHmcIfWHH9lSjCwT/WYoy+33ue2++aIdZMzZ5Frd6WOW42L8d
+         8Ceg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780324607; x=1780929407;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mq680t4Gx83PdTUYD69e7f2qCRhIL2CvllXumPUWfXM=;
+        b=CXqgmu/BcuwriZ+4StGogEaM41w4bw5THLxhv1eSGDJ5XYNdy2TiqLyNoDnIGBBvU6
+         vm4/KiOfRm5cQVIM+3vo6TURv4D+o622634gucNpzbx4Pdvjm7oNE8qYS5+Sw+ZUSNjN
+         eF4/h06YDjSF1mE+uJHFVo0aL0Y5T7rvM62HoegUGUcd4vGhKMZb6zB5RgpPxtJBv60h
+         EGS98bCPb9tyZFbmlcpUTn7vKTk01h6j0ebhj2gcoJKRRJbwxQO9E4exihqflJPl0H5w
+         OSSYKyKQ3nYKs8lPT5FiOQfTmldufwDxNUnJJUwMmcmEs/fYiGQ7CpqtS8s4kjtVncPa
+         0pPA==
+X-Forwarded-Encrypted: i=1; AFNElJ84RNQYo0Q1cEmLr3PThsPRTOxbNB3gLihjPIZ/+Cw1xeczTAQVs6MvQJjZg8SzDduVxBl0Rf+Ww0E=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxXsFM4Kv8rm4xn+cHHxJ/V/5kH9i4GkfnweQXDN0QjIBV6+zN2
+	uEzSt7Pfhi/m3L1DN67qoTOGkbx3eS3wlbpjsHHqqXgHiAV+5c0HJoFTuNbi29MU2wonbaDHdbl
+	pAw==
+X-Received: from pjsg9.prod.google.com ([2002:a17:90a:7149:b0:36b:b005:e76b])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:564c:b0:366:10f1:3d91
+ with SMTP id 98e67ed59e1d1-36c4fef3035mr11248821a91.1.1780324606616; Mon, 01
+ Jun 2026 07:36:46 -0700 (PDT)
+Date: Mon,  1 Jun 2026 14:36:39 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.54.0.823.g6e5bcc1fc9-goog
+Message-ID: <20260601143644.2358771-1-praan@google.com>
+Subject: [PATCH v7 0/5] iommu: Standardize ATS robustness and state tracking
+From: Pranjal Shrivastava <praan@google.com>
+To: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, Baolu Lu <baolu.lu@linux.intel.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Kevin Tian <kevin.tian@intel.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Samiullah Khawaja <skhawaja@google.com>, 
+	Pranjal Shrivastava <praan@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+The primary motivation for this series is an ATS state mismatch observed
+under heavy load (via iova_stress). A failure in pci_enable_ats() leaves
+IOMMU drivers like arm-smmu-v3 with inconsistent state leading to PCI core
+warnings during device detach.
 
-New issues:
-- [High] `iommu_ignore_device()` suffers from dead code and incorrect reord=
-ering, resulting in broken alias clearance, log spam, and unsafe non-atomic=
- DTE clearing (torn writes).
-- [Low] The commit silently fixes a build failure by adding a missing `dev_=
-data` variable declaration that was used in the previous commit, breaking g=
-it bisect.
+While David's recent work [1] addressed a discovery race for specific
+quirked devices by moving them to the HEADER phase, gaps remained
+regarding how Virtual Functions (VFs) inherit state from their Physical
+Functions (PFs). Specifically, pci_ats_supported() did not account for
+PF-level quirked status, and pci_prepare_ats() lacked STU validation for
+VFs.
 
-Pre-existing issues:
-- [High] Skipping configuration on `PD_MODE_NONE` leaves `dev_data->max_irq=
-s` uninitialized (0), completely breaking IRQ remapping.
---
+Based on discussion with Jason and Baolu in v3/v5, it was decided that the
+IOMMU drivers should explicitly check pci_ats_supported() before calling
+pci_prepare_ats(). To enforce this, pci_prepare_ats() now noisily checks
+for support via WARN_ON(). Furthermore, the device probe should fail if
+pci_prepare_ats() fails. Since these early gates preclude software
+configuration errors, any remaining failure during pci_enable_ats() is
+treated as a kernel bug.
 
-commit b695f2fee16ac1c72b6f21b22dedf39b5ec55656
-Author: Pranjal Shrivastava <praan@google.com>
+Additionally, while fixing probe paths for Intel, I also spotted a
+minor fix for arm-smmu-v3 (patch 3).
 
-iommu/amd: Split probe error paths to preserve IRQ remapping
+Following the discussion with the community, the driver-specific series
+have been posted separately:
 
-This commit splits the error paths in amd_iommu_probe_device() to ensure
-proper initialization failures clear the device, while configuration failur=
-es
-like PD_MODE_NONE preserve the rlookup_table entry for IRQ remapping.
+ - Intel IOMMU fixes reported by Sashiko [2]
+ - Refactors for AMD IOMMU [3]
 
-Reported-by: sashiko-bot@kernel.org
-Closes: https://lore.kernel.org/all/20260529153216.2AD1E1F00899@smtp.kernel=
-.org/
-Suggested-by: Ankit Soni <ankit.soni@amd.com>
+[1] https://lore.kernel.org/linux-pci/20260403222750.1215002-1-dmatlack@google.com/
+[2] https://lore.kernel.org/all/20260531170254.60493-1-praan@google.com/
+[3] https://lore.kernel.org/all/20260601134204.2150602-1-praan@google.com/
 
-> diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
-> index 9b5861e241d71..c3b3750d4a22d 100644
-> --- a/drivers/iommu/amd/iommu.c
-> +++ b/drivers/iommu/amd/iommu.c
-> @@ -737,6 +737,7 @@ static int iommu_init_device(struct amd_iommu *iommu,=
- struct device *dev)
->  static void iommu_ignore_device(struct amd_iommu *iommu, struct device *=
-dev)
->  {
->  	struct amd_iommu_pci_seg *pci_seg =3D iommu->pci_seg;
-> +	struct iommu_dev_data *dev_data =3D dev_iommu_priv_get(dev);
+[v7]
+ - Moved patch PCI/ATS: Mandate checking pci_ats_supported() before pci_prepare_ats()
+    to the AMD series [3] to maintain bisectibility
+ - Added a UAF fix for arm-smmu-v3 to set iommu->priv = NULL
 
-[Severity: Low]
-Does this silently fix a build failure from a previous commit?
+[v6]
+  - Reverted the decoupling of pci_ats_supported() from pci_prepare_ats().
+  - Added a WARN_ON() to the internal support check in pci_prepare_ats().
+  - Dropped the standalone Intel bugfixes (RB-tree and UAF) to be sent as a
+   separate standalone series per maintainer request.
+  - Kept the folded UAF fix in the AMD IOMMU patch to ensure the new error
+   path is immediately safe.
+  - Collected Reviewed-by tags from Lu Baolu for PCI core patches.
 
-It appears the preceding commit in this series introduced the use of dev_da=
-ta
-in iommu_ignore_device() but failed to declare it. Adding the declaration h=
-ere
-fixes the build, but breaks bisectability between the two commits.
+[v5]
+  - https://lore.kernel.org/all/20260528202353.3422206-1-praan@google.com/
+  - Decoupled pci_ats_supported() from pci_prepare_ats() in the PCI core.
+  - Rebased SMMUv3 support on top of Nicolin Chen's "Always-On ATS" series.
+  - Fixed pre-existing RB-tree corruption in VT-d probe (Baolu/Sashiko).
+  - Addressed the pre-existing UAF in AMD IOMMU probe suggested by Sashiko.
 
-Could this fix be squashed into the commit that introduced the bug to ensure
-the series remains fully bisectable?
+[v4]
+  - https://lore.kernel.org/all/20260525184347.4059549-1-praan@google.com/
+  - Standardized the pattern across Intel VT-d and AMD IOMMU drivers.
+  - Replaced the SMMUv3 ats_prepared gate with a fatal probe-fail logic.
+  - Utilized WARN() macros for runtime enablement failures in all drivers.
+  - Collected R-b tags from Jason and Sami.
 
-[Severity: High]
-Is dev_data always NULL when iommu_ignore_device() is called here?
+Pranjal Shrivastava (5):
+  PCI/ATS: Ensure pci_ats_supported() is PF-aware for VFs
+  PCI/ATS: Validate STU for VFs in pci_prepare_ats()
+  iommu/arm-smmu-v3: Fix a UAF in the probe_device error path
+  iommu/arm-smmu-v3: Standardize ATS enablement failure reporting
+  iommu/vt-d: Fail probe on ATS configuration failure
 
-Since iommu_ignore_device() is exclusively invoked from the error path of
-amd_iommu_probe_device() when iommu_init_device() fails, dev_data will be
-NULL because iommu_init_device() fails before dev_iommu_priv_set() is calle=
-d.
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c |  8 +++++++-
+ drivers/iommu/intel/iommu.c                 | 15 ++++++++++++---
+ drivers/pci/ats.c                           | 13 ++++++++++---
+ 3 files changed, 29 insertions(+), 7 deletions(-)
 
-If dev_data is NULL, the atomic DTE clearing block in this function becomes
-dead code, and it falls back to the unsafe memset(), which risks torn writes
-on live hardware:
+-- 
+2.54.0.823.g6e5bcc1fc9-goog
 
-drivers/iommu/amd/iommu.c:iommu_ignore_device() {
-    ...
-    if (dev_data) {
-        struct dev_table_entry new =3D {};
-        amd_iommu_make_clear_dte(dev_data, &new);
-        update_dte256(iommu, dev_data, &new);
-    } else {
-        memset(&dev_table[devid], 0, sizeof(struct dev_table_entry));
-    }
-    ...
-}
-
-Additionally, because setup_aliases() is unconditionally called before this,
-its internal clone_alias() will abort on the NULL dev_data and generate pr_=
-err
-log spam without actually clearing the alias DTEs.
-
-[ ... ]
-
-> @@ -2512,6 +2512,10 @@ static struct iommu_device *amd_iommu_probe_device=
-(struct device *dev)
->  	if (dev_is_pci(dev))
->  		pci_prepare_ats(to_pci_dev(dev), PAGE_SHIFT);
-> =20
-> +	return iommu_dev;
-> +
-> +err_deinit:
-> +	iommu_ignore_device(iommu, dev);
->  out_err:
-
-[Severity: High]
-This is a pre-existing issue, but does skipping the device configuration
-leave max_irqs uninitialized?
-
-The commit message notes that configuration failures like PD_MODE_NONE
-skip iommu_ignore_device() to preserve the rlookup_table entry for IRQ
-remapping.
-
-However, because amd_iommu_probe_device() jumps directly to out_err on
-PD_MODE_NONE, it bypasses the initialization of dev_data->max_irqs, leaving
-it at 0.
-
-Later, when alloc_irq_index() tries to allocate an IRQ, it relies on max_ir=
-qs:
-
-drivers/iommu/amd/iommu.c:alloc_irq_index() {
-    ...
-    for (index =3D ALIGN(table->min_index, alignment), c =3D 0;
-         index < max_irqs;) {
-    ...
-}
-
-Since max_irqs is 0, the loop is skipped and it returns -ENOSPC, which
-completely breaks IRQ allocation for the device, defeating the purpose
-of preserving the rlookup entry.
-
->  	return iommu_dev;
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260601134204.2150=
-602-1-praan@google.com?part=3D3
