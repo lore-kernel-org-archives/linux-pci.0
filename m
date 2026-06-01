@@ -1,188 +1,135 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCC8C37B40A
-	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 13:54:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB003C8C71
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2026 13:57:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780322082; cv=none; b=FBlsGTwhh7f+swZD2CLh/l0UydVyBGBawGS6CAXOkbQqT7omP4pwh3cPEYkKoTvVRopf8wYyveZsK9nXYz+u4Y7N1llejs2mX07VDyT/PYKYl0upz5NI4UOUMXSSG7qfhsJHpsz8B0jOf1Pv991QtYVfI7T3FKXSDznUl9WDZeM=
+	t=1780322275; cv=none; b=Os+e1JBsucAdOUdEhgM9mqYlTWeWgGxRgZH0rxl0DfDUVa/6GjC1tQAfLmOOPf6OK0wr2bXgBbteOxCki3YuDyTVoDzU6GMWnzzk+Q4W4s/8DSnmfeYqMnDtf5zCW9O+THFZNuPmEdPhc4KdolMeWgiIZvEi24QHzvnD8wINNOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780322082; c=relaxed/simple;
-	bh=Q3ZengQ4IRLYGNBWNlpT/D14IZyioia1aG8jgyEp4ko=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Gl7kg6ndHLCFA+84XDbLwDYZYK3Um0AXWdVeoeJdb9+JU/xikpjtr27IKl6GvifZOlHAbQXJvIYXN+Sm+1s3Eqemx5Toji3P9/3Hnt47mH10+rpfaBfqlES/VVJxRJA1ai5PdHZbHt8R+1n/aXJxw26/AtliizTkxD3aGxNBZD0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=mLx6/naC; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=Hwqk+Ihx; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1780322275; c=relaxed/simple;
+	bh=NRj4TZyV91L5D/ZZo5711y7U4ZusHW4cX0hJKGLh0t8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=RNieixwLULcDBp0eLP3h2Xx0DGzbQbj/R66Jfz58ldb7U1jROIcRwPy/U8Xz5xkaLuOA5H2KOAVWC87AXVGL0DjePNRYi+u4QRFruHfIkYXSxLHsLcViabbBB+F7MB0XFTZpMpkTlEsvPFfaWAl/jc0sCgWZRrZnVDRI14x03ZU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kcwfEzQi; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="mLx6/naC";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="Hwqk+Ihx"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6518fmq04066046
-	for <linux-pci@vger.kernel.org>; Mon, 1 Jun 2026 13:54:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	tsQa+ooxL+KuyWD5mAiKr5e5uyRG+3xbCwHL6U6EsC0=; b=mLx6/naCcM8HzVqR
-	G15vzsmGz5ceDbttRzUdtzZPnV3cnSZhAb9Lh2mN7B5zYX82u9gadkBsH/BM60IN
-	pqalWF/KsB2nPa4PIohAPjIIr6Cpho/reP0VZnXfvUnO0iXip7sta3H+GFx0i+J4
-	u3t7y3czd9oyoUjn0tCGelrAk7djqBKOWfYfoQemk3CoEZgwI9ERP9QEqrEBLZ0X
-	nolNi8vXtvR/er1kYX9uAcz2EcjtSVNEhwtvbS0xczHUwEzSh5LmXG3yXAm0chdq
-	uS1EuSpkFF0vjAB65FPmeouuE1+A9PFrzeUp4qlmTxfEbayLc7A/7MX+/oenlFXo
-	PtfUSQ==
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eh6sws7tu-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 13:54:39 +0000 (GMT)
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-3041ab826ddso17497626eec.0
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 06:54:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780322079; x=1780926879; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tsQa+ooxL+KuyWD5mAiKr5e5uyRG+3xbCwHL6U6EsC0=;
-        b=Hwqk+Ihxtn0tatYJGeMy2OF9+ls2d+r8k8zQVhW6t0ZZxegjpiNt5hRNsQLhE2BkRv
-         Iffu0d3VpN6vppx1FMVd29rR1OQPibSn+actuZg0wlTNt0zRi91Y18F7tUc2+ovTexHr
-         SDTtEMGPXnH3IWixkygeZRLkpQst9vv/JrloTfNo48b7wHmrufT6fLFgbEIS+0g6M1Qz
-         GrU7sDf/RGkUHxVsfKNE0oF19Kq3o5q3YNxnMs/zUGz/dC+Lhhwjx5Dq6YtxA3aIO6g6
-         LTeoM/peL6wGez4suaOOmkBA94tGcSfvqFHRm2vmUDxU5ngMwL6SoPsMEmsMyQRvojVp
-         wOQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780322079; x=1780926879;
-        h=content-transfer-encoding:in-reply-to:content-language:from
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tsQa+ooxL+KuyWD5mAiKr5e5uyRG+3xbCwHL6U6EsC0=;
-        b=GmGOnSexr7gUxP5Lt/BeY13TOtMaa8M9x5qW+EcmBkz+N4u8/3QW9ZJbU/rBdO51QJ
-         tRyhOAgwS2byeucpYD5qS0fDAciiMHDB3UaMuKy1NRDJlQPotugJs7qx38KacXv99pri
-         AXWcdVIX0bwn0ezcOI5VtGXruDI8cyyH2xbXUtTdMd60eJ9PpnFFjMBqf7mqILGgXJB5
-         TPOo+S9B5btUJ37gOQDLxvXFcVQVuWsAurZwDC/JXhS9r6wQpQJxsZt/MTFSN3JwJODr
-         lGHXzccFfd6tGqdlM6Iixu1i/uuvGPaaWJ6ACH/7bV+MPrGY7MZGIwOyIzWUJ9The6qG
-         gZgQ==
-X-Forwarded-Encrypted: i=1; AFNElJ+kBinVVLGvAydYC0JZbSHr7fqBGhc7OjKdyZhVXqju5VH8VziEdTNm8R4rltDcboPMa3VuoBo0ZkY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwJ4y93vuO3WSs10gOISlcyxygvw39pf+nnznG0MKodqfnMVSZL
-	DBodG989kKNYeWzZfBRyipZ8HTkkApMWO7oKyy1L3oE2Hm2U5L5dniSd9RaU4jI4fwsBfv1BWnH
-	TKdhiQfNnVEdtOy8b64PPFyTLMv7wiywS0pDytDqIHiiSb5UCB+aJoZkoxF33WQE=
-X-Gm-Gg: Acq92OHDB9v7GKWn4iTP5OXudcQl/fFMX6WhxHV5JFZz15T8EuyVizmxC4fWCVFIeW2
-	mhJcGBEm04UU1L68u7VUIj7iOmZn6N/DB98AYWpi5pgIYiNzMaXJYkCvtk/HFLI3XV59Fd2pZGc
-	gBzcSg8KJWKn04l6Iew0bS6JMxQQD5SxxEpHToWCK5dRkXkCtN02lc13IW7S+QQVeUwTn3wDTta
-	txBXmvydWD+zDeyZD8lgvXY72D+hIzkjg75HUZf062VL/wig5fXR6fZuklOKHx6mmpIoeD3a5y6
-	ZG2tUMingyp6TZ1ROeDgXT+P1xI8HxR495ZvA5dYXqwSw1hgRWY97Uh+KVtHebhmM/stbNxuNj9
-	cmynRR4NwdaTZXahgBSd9h+4qAKd/wkV/LtXrLEHjXSJsBXyS0gyAENEn5WHuqUz1MBAE8p+hYu
-	39eV6/HbOxib9Eb5D9
-X-Received: by 2002:a05:7300:72c5:b0:2f2:6dde:df66 with SMTP id 5a478bee46e88-304fa628f82mr5384223eec.22.1780322078924;
-        Mon, 01 Jun 2026 06:54:38 -0700 (PDT)
-X-Received: by 2002:a05:7300:72c5:b0:2f2:6dde:df66 with SMTP id 5a478bee46e88-304fa628f82mr5384181eec.22.1780322078081;
-        Mon, 01 Jun 2026 06:54:38 -0700 (PDT)
-Received: from [10.227.110.203] (i-global254.qualcomm.com. [199.106.103.254])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-304ed5a0b7dsm9202218eec.22.2026.06.01.06.54.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Jun 2026 06:54:37 -0700 (PDT)
-Message-ID: <e5b487ea-151f-4d22-b046-b72447c023cf@oss.qualcomm.com>
-Date: Mon, 1 Jun 2026 06:54:35 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kcwfEzQi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 907831F00893;
+	Mon,  1 Jun 2026 13:57:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780322273;
+	bh=7mjQLyjZp39S7OhmVHQhHCvpMsL32X3f6qb0L/lvuJE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kcwfEzQiev6i0TtnHJKs+xK1RBYpsetwzX6q361Y2qOf3k+Df7+IthLpgAbtlQ+Y1
+	 orO9+HN2AXYxNvLLeQIGhnwMgTpuhYep2NznazTvqTirRVb19P8RSXUxV+5wPQH4X3
+	 QBJ17SSB/BujyqhGTJmsRmAhvJha8bCQfws7GTmJ47VzUDYx7Jnw4dtjQS9DtOSHmp
+	 JoEtAL0t+tOC1PyXNz45kmcwQ7RWh/JVMvMv5uJ+bhDrODFtv7YR9A1i8doCH2NC1x
+	 oY1nS9QYTt81aM35e9RxjY/ncWicYRF8rF+UA2aMnAVXRu6cIxDrQ0B6RV1U+M8QJV
+	 jdPtGnT9eudGg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 1/6] iommu/amd: Clear aliases before setting the
+ rlookup_table to NULL
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pranjal Shrivastava" <praan@google.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260601134204.2150602-2-praan@google.com>
+References: <20260601134204.2150602-2-praan@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 01 Jun 2026 13:57:53 +0000
+Message-Id: <20260601135753.907831F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/7] wifi: ath11k: enable support for WCN6851
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Qiang Yu <qiang.yu@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
-        Rocky Liao <quic_rjliao@quicinc.com>,
-        Bjorn Andersson
- <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath11k@lists.infradead.org, devicetree@vger.kernel.org,
-        Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org
-References: <20260601-sm8350-wifi-v1-0-242917d88031@oss.qualcomm.com>
- <20260601-sm8350-wifi-v1-2-242917d88031@oss.qualcomm.com>
-From: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
-Content-Language: en-US
-In-Reply-To: <20260601-sm8350-wifi-v1-2-242917d88031@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=Z4Hc2nRA c=1 sm=1 tr=0 ts=6a1d8f1f cx=c_pps
- a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=rJkE3RaqiGZ5pbrm-msn:22
- a=bC-a23v3AAAA:8 a=EUspDBNiAAAA:8 a=8x70SPmrBkAdAYyFYvgA:9 a=QEXdDO2ut3YA:10
- a=bBxd6f-gb0O0v-kibOvt:22 a=FO4_E8m0qiDe52t0p3_H:22
-X-Proofpoint-GUID: WnB0upYhUjvUnr8PCSxMXUtz5Fe34y35
-X-Proofpoint-ORIG-GUID: WnB0upYhUjvUnr8PCSxMXUtz5Fe34y35
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAxMDEzOSBTYWx0ZWRfX1W9dktr9VIbK
- thKIlJ31tYeZo6KXJ/Eg4gjlPsJLhqi0sDUocOKC+qDGF3t83Vk9X+9Tksi68BJokAn2gSq06yg
- z8W+8clYvuiGaMgfVO64vdjLXc6fgWdMF7YGoEnrQiLJH/rxBw22oTzLnnSqx42V6whRK7ujiPM
- lnTht/UmFSNTS1B0ciPrp3ItHMRqOQIPb0wyheBXoZFOgBGLmOvPmZhrJFHITlmqk2fJrTJid9N
- z3Dz9Dmk8VBCNRgA9upvwYZ02tS77XpWW7dBuaMjQbNYGan25zpFbv4o8tQ8xhxX67Ev/fv6m8M
- tVd1sYeqEpXeRJledk7A4EToHcQMh8Mdquw+M2S2MwtV3yutVcifMUpRJ2t5uY+tnJkgG6AvWsm
- eoG61uMcBWS/NVg6qmMfjUMSR3AoStw7DMyC6+5SuxpeZX9Eit0BmVsD+s3tlxMZwyHHZGm2+bh
- 4f7kPvQFcIj7QKf7zeQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-01_04,2026-05-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 suspectscore=0 bulkscore=0 adultscore=0 phishscore=0
- impostorscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0 clxscore=1011
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606010139
 
-On 6/1/2026 2:46 AM, Dmitry Baryshkov wrote:
-> The WCN6851, found e.g. on SM8350 platforms, is an earlier version of
-> WCN6855 platform. It identifies itself as hw1.1. Copy WCN6855 hw 2.0
-> configuration to support hw1.1 version.
-> 
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath11k/core.c | 92 ++++++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath11k/core.h |  1 +
->  drivers/net/wireless/ath/ath11k/mhi.c  |  1 +
->  drivers/net/wireless/ath/ath11k/pci.c  |  9 ++++
->  drivers/net/wireless/ath/ath11k/pcic.c | 11 ++++
->  5 files changed, 114 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-> index 3f6f4db5b7ee..7e997016cf6e 100644
-> --- a/drivers/net/wireless/ath/ath11k/core.c
-> +++ b/drivers/net/wireless/ath/ath11k/core.c
-> @@ -393,6 +393,98 @@ static const struct ath11k_hw_params ath11k_hw_params[] = {
->  		.cfr_num_stream_bufs = 0,
->  		.cfr_stream_buf_size = 0,
->  	},
-> +	{
-> +		.name = "wcn6855 hw1.1",
-> +		.hw_rev = ATH11K_HW_WCN6855_HW11,
-> +		.fw = {
-> +			.dir = "WCN6855/hw1.1",
-> +			.board_size = 256 * 1024,
-> +			.cal_offset = 128 * 1024,
-> +		},
-...> +		.num_vdevs = 2 + 1,
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Moving setup_aliases() before clearing the primary DTE incorrectly=
+ copies the active (uncleared) DTE to DMA aliases, failing to clear them.
+- [Medium] Reordering setup_aliases() before clearing rlookup_table exposes=
+ a missing dev_data error path, causing log spam and aborting alias iterati=
+on.
+--
 
-this value is being modified to 4 in:
-https://msgid.link/20260525020711.2590815-1-wei.zhang@oss.qualcomm.com
+commit 3c05610e625a1605bf16151c884edcdce09fdf2d
+Author: Pranjal Shrivastava <praan@google.com>
 
-It is merging into ath-next today and should reach linux-next very soon.
+iommu/amd: Clear aliases before setting the rlookup_table to NULL
 
-/jeff
+In iommu_ignore_device(), clearing the primary devid in the lookup table
+before calling setup_aliases() causes rlookup_amd_iommu() to fail for
+aliases. This commit moves the setup_aliases() call before clearing the
+rlookup_table entry.
 
+Fixes: 99fc4ac3d297 ("iommu/amd: Introduce per PCI segment alias_table")
+Reported-by: sashiko-bot@kernel.org
+Closes: https://lore.kernel.org/all/20260529153216.2AD1E1F00899@smtp.kernel=
+.org/
+Signed-off-by: Pranjal Shrivastava <praan@google.com>
 
+> diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
+> index f1333071da103..a94de66a885e7 100644
+> --- a/drivers/iommu/amd/iommu.c
+> +++ b/drivers/iommu/amd/iommu.c
+> @@ -745,10 +745,12 @@ static void iommu_ignore_device(struct amd_iommu *i=
+ommu, struct device *dev)
+>  		return;
+> =20
+>  	devid =3D PCI_SBDF_TO_DEVID(sbdf);
+> -	pci_seg->rlookup_table[devid] =3D NULL;
+> -	memset(&dev_table[devid], 0, sizeof(struct dev_table_entry));
+> =20
+> +	/* Clear aliases while rlookup is still valid */
+>  	setup_aliases(iommu, dev);
+
+[Severity: High]
+Does this copy the active DTE instead of the cleared DTE to the DMA aliases?
+
+By moving the call to setup_aliases() before the memset() that clears the
+primary Device Table Entry (DTE), setup_aliases() will read the primary
+device's uncleared DTE and write this active DTE to the aliases.
+
+Then memset() clears only the primary DTE, leaving the aliases retaining
+their old active translations. Could this lead to unauthorized DMA or hardw=
+are
+use-after-free if the domain's page tables are subsequently freed?
+
+[Severity: Medium]
+Does this reordering also expose a missing dev_data error path when
+iommu_ignore_device() is called during early initialization?
+
+If this is called from an early initialization error path before dev_data is
+set, dev_data will be NULL. Previously, because rlookup_table[devid] was set
+to NULL first, rlookup_amd_iommu() inside clone_alias() would return NULL a=
+nd
+safely exit without further processing.
+
+With this patch, rlookup_table is still valid when setup_aliases() is calle=
+d,
+so clone_alias() proceeds and hits the check:
+
+drivers/iommu/amd/iommu.c:clone_alias() {
+    ...
+    dev_data =3D dev_iommu_priv_get(&pdev->dev);
+    if (!dev_data) {
+        pr_err("%s : Failed to get dev_data for 0x%x\n", __func__, devid);
+        ret =3D -EINVAL;
+        goto out;
+    }
+    ...
+}
+
+Returning -EINVAL causes pci_for_each_dma_alias() to immediately abort its
+iteration. Can this cause unintended log spam and prevent the remaining
+aliases from being processed?
+
+> +
+> +	pci_seg->rlookup_table[devid] =3D NULL;
+> +	memset(&dev_table[devid], 0, sizeof(struct dev_table_entry));
+>  }
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260601134204.2150=
+602-1-praan@google.com?part=3D1
