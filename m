@@ -1,109 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2684C3A8FE8
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:56:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6E1F372060;
+	Tue,  2 Jun 2026 07:58:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780387017; cv=none; b=QTW7nf50ZWALPP0sUbDGMchkJ77yNz+UyiJaR906+kJbZEULBM1d8wRgHPQNH18j55Oit+fPJivfDRgYrENtpLQQT2cdyR2pKYtvZYpLOYwE83VBigxWguLP+1aYka5fMJZKkJBKZtgpgeoAfxu/83UXzUO3FsmKFNZEgRGHywc=
+	t=1780387107; cv=none; b=AJzOuNd11VUZDLGx31+Frj6Pa6aHXWMKJydcZQRWGIqn3iFIE/c9RiSsWqfobJ+k0+EksWoS4G1NlInn3zSv/jBdZPiHfUuoaqMGV/XjfU5larmWk2V41JNUaczglDreC4Y9MLPFYWTylVT5pabXfIiLeYCjNrbCAorKI2ZMLxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780387017; c=relaxed/simple;
-	bh=i0fsA2ivhe11Y8u5gaIykHCgQXF8turnGuDsfusfryM=;
-	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=lbXkGQCPY9ORJw+GXI4ikO6iXdH6Cumy0Q4b0KF4g5dSsBfhGWgKMP8GO2rL6F7BcVAt9aiYbA2fi0tm0YcGoLe7LR2d3rum6RhcFx/ELBBZCUJqWRK2hiEiidzzfTJEO3v/IAUVVEdhv7dgGzUf0hFACEuTX83xoxtpuVFdl7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aEpJQeDN; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aEpJQeDN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E5B4A1F008A1
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:56:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780387015;
-	bh=IBxDHoejwDo5SnSlUDfdE/v8ud8psoV97bK5W9arbl0=;
-	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=aEpJQeDNxVOJDJPBBf19yEHjTbR7/+nVZ7nqQQRCBDv/LUDugcWAsCAZlrEMLKmnj
-	 yFg9pWLQsiCzLg63dZQd51BV3x8jrChMNJGPjN5pFu5YlB/Cadi2MOAX9ItrKiV+Od
-	 7XyWSKwhqvUWE7TsTPq3gSFYq1lO/lObD9Ayrt4nR+HAD6w0cJbQhmbLyfoFjCfblL
-	 MAzxnh7iRc7PO+jMp9d/RQIRSUjnwEe0iDrmIHNfI2umlGde7oQr1lMK/fvJw8lkUQ
-	 qT3ge1O3pP2JnA1lApYrWIQzlNr0ON7E4f8O6Q3SLIdwyy/HrnG/l9InbXeBcJcev+
-	 fmdyGmFBlXQhQ==
-Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-3965adfd75fso34996101fa.1
-        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 00:56:55 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ9jd0Ep6XLk3YCrx+ize1QQrgBz5V1qSdtqP1r0W7qK9BZ4oj2EvDkapNkLnkIW4nzIuIF5YUo2Q90=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyQ+DdbJoNmFGwRYOnSWXL+YbT75ovhPq0Rg4DPk4ZHuHukKRF3
-	EbzaXPBdsq2w+AncRUQtwy6OydHjtnLB6Jww2aPbzlW13YUEjmgEf9ddv6b6vrZMH1SWC7/JJFD
-	lNJjqAzUc2I6Bvlx8WOU+RhbwrMBzq5MplsjEdoq0Vg==
-X-Received: by 2002:a2e:bc83:0:b0:396:7927:2d14 with SMTP id
- 38308e7fff4ca-39679272f2cmr33518171fa.8.1780387014648; Tue, 02 Jun 2026
- 00:56:54 -0700 (PDT)
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 2 Jun 2026 00:56:53 -0700
-Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 2 Jun 2026 00:56:53 -0700
-From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260601-sm8350-wifi-v1-4-242917d88031@oss.qualcomm.com>
+	s=arc-20240116; t=1780387107; c=relaxed/simple;
+	bh=Z+wFpdpN9q5VMOna1l7B4znqNx4XniYoBkGVnzAnnO8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iTYiBTefR73xC4I46+36u8Lye6hphJMKYJC/P0fjjkmWVheOMlUOeqxdPPaX2MpB7HsJnFVC/ez0qoTnjI84R0UrVI31VOuVhsi9+Fh9FqIcYIsd2JqzyBA9WDu55Vgqu3crrFlLjQLHb9Z0uaxLl+esAxVLu9bzb+6wFQh23ko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A4291F00898;
+	Tue,  2 Jun 2026 07:58:22 +0000 (UTC)
+Message-ID: <ecf75d2e-5aa8-4d68-b691-47ee03e6a261@tuxon.dev>
+Date: Tue, 2 Jun 2026 10:58:20 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260601-sm8350-wifi-v1-0-242917d88031@oss.qualcomm.com> <20260601-sm8350-wifi-v1-4-242917d88031@oss.qualcomm.com>
-Date: Tue, 2 Jun 2026 00:56:53 -0700
-X-Gmail-Original-Message-ID: <CAMRc=Mec4ZU4TswetjpWX+S8y9AmfAeu3mteDOx9zKLL_SB15A@mail.gmail.com>
-X-Gm-Features: AVHnY4JD_Y8TgJ1t0LpA1dRA878Luk7CeT7uJ1XWJwhH04aYi2i6ZsE-lBCnpKc
-Message-ID: <CAMRc=Mec4ZU4TswetjpWX+S8y9AmfAeu3mteDOx9zKLL_SB15A@mail.gmail.com>
-Subject: Re: [PATCH 4/7] dt-bindings: bluetooth: qcom,wcn6855-bt: document WCN6851
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
-	Jeff Johnson <jjohnson@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, 
-	Mark Brown <broonie@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	ath11k@lists.infradead.org, devicetree@vger.kernel.org, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/4] PCI: rzg3s-host: Use shared reset controls for
+ power domain resets
+To: Prabhakar <prabhakar.csengg@gmail.com>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Magnus Damm <magnus.damm@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Biju Das <biju.das.jz@bp.renesas.com>,
+ Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
+ Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20260520164823.436992-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260520164823.436992-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Language: en-US
+From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+In-Reply-To: <20260520164823.436992-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, 1 Jun 2026 11:46:52 +0200, Dmitry Baryshkov
-<dmitry.baryshkov@oss.qualcomm.com> said:
-> WCN6851 is an earlier version of WCN6855 WiFi/BT chip, compatible with
-> it. Add a device-specific compat string with the fallback to WCN6855
-> one.
->
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-> ---
->  .../devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml        | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml b/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml
-> index 0beda26ae8bb..ec766f40a042 100644
-> --- a/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml
-> +++ b/Documentation/devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml
-> @@ -13,8 +13,12 @@ maintainers:
->
->  properties:
->    compatible:
-> -    enum:
-> -      - qcom,wcn6855-bt
-> +    oneOf:
-> +      - items:
-> +          - const: qcom,wcn6851-bt
-> +          - const: qcom,wcn6855-bt
-> +      - enum:
-> +          - qcom,wcn6855-bt
->
->    enable-gpios:
->      maxItems: 1
->
-> --
-> 2.47.3
->
->
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+
+On 5/20/26 19:48, Prabhakar wrote:
+> From: Lad Prabhakar<prabhakar.mahadev-lad.rj@bp.renesas.com>
+> 
+> Switch to shared reset controls for PCIe power resets to prepare for
+> RZ/V2H(P) support. On this platform, multiple PCIe controllers share
+> the same reset line, requiring shared ownership of the reset control.
+> 
+> Signed-off-by: Lad Prabhakar<prabhakar.mahadev-lad.rj@bp.renesas.com>
+
+Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+
+Tested on RZ/G3S:
+
+Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
