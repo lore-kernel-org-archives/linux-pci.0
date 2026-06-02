@@ -1,46 +1,46 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012060.outbound.protection.outlook.com [40.93.195.60])
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011046.outbound.protection.outlook.com [52.101.52.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2CD137883D;
-	Tue,  2 Jun 2026 20:34:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.60
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75EAC376A0E;
+	Tue,  2 Jun 2026 20:34:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.46
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780432472; cv=fail; b=q90JvDuwJXXWOUIxAPC4s7JhjzbZ4XI+dJVNrYOZkS4+bEssHO0K2kw+yc7mQ7VgTMwTwMDcjfob6FAh3JoI66Xgm4UtiF9zjkZEJRkb4HPL37olXlT+PeHKydKQSuM9vEUmZzywWB6r6t1GWuqHWDv2lZLZtNpULOiTLFKkugo=
+	t=1780432480; cv=fail; b=WnfEEZQos7oPCaaIIZcc0q/tcpHMGCq7AdZU5sLtOAL+CX208BElAJ8Px4kEh8SZAdB17l9H+xFLDRr4ZGTEpk5R6Lr4ZuCB6uIOSrqDc7WjWw+Xg80USs4of4QWUkgvXUuHqVwRv8OG0FTgnZEAHohjWM+ySoEYKA4mPigxllU=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780432472; c=relaxed/simple;
-	bh=ciuh4i4+IY/0LDarvBnB9kRjcrTDumG6GuVCbYIstNQ=;
+	s=arc-20240116; t=1780432480; c=relaxed/simple;
+	bh=VD7mhuAqLNgyzpCnGzdNve7n/YDRrK+GdgggtsqsgK4=;
 	h=Message-ID:Date:MIME-Version:From:Subject:To:CC:References:
-	 In-Reply-To:Content-Type; b=tMU89jlMnDM/eHwXusruMZ8t3mNjZ3lIbjWSrk9ZZtmf9Pqg25ICXoVju+ZRddzsE2jCRks1o2LcdTiCg/N4Fm9Nha+cJMv0mcMDGnAqe//liF4asECJBeCK1Wmo+/r7ogtX61xz4e0EVZNY4/eVrdpJaWby2Gy8tgYE9/rJ0e0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=NhEbIB8I; arc=fail smtp.client-ip=40.93.195.60
+	 In-Reply-To:Content-Type; b=Kr01x+qyl7SPw4ZcGbkijb7zNX8mpte+V1NT5EFCevQH/BSDkSsFRuV0Zywqscde8h7VDjp6C/FXCgBsgDyGwBatoFRJHrnvFuQzw6ey2J8/1ZgJpIIShQ3ZFoTrqmCKG2kEkSylJfUtqNJl06vBYoCRLY276dIP8LgB3lo3UNM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=r8tcBs/s; arc=fail smtp.client-ip=52.101.52.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="NhEbIB8I"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="r8tcBs/s"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Qd9RC8YwsqzxcPiXk26RwNX2O4BgxSKcCx3zpEtQz0NaTHcR403w31xo1/4Q0hdKRnsEOM56BtloSzIW9gyqOKerk/HaH//kcMPM6olgCL4dH3aqLAf1e+BWeWiQ4GvnOeXL8YWGbuiIAv+ctWGdouBD6e+DBTf02fzSmD0+mhCfKOsYhjx6JvtlVIxkasQPiQG/0FtVxO0SvZS9y/6FiIuci8Wi4T5co8z1ql8HDqhUMIggOVqhy9ub/OpLZjStjdi/NktL4neISZES2lC5xD2R1qNg5gBAZ/l4bv4enQIe8Hy9qZ6qtKrAZ+0A6uOvgD6H73FLbDrzUO/+hJ7hbQ==
+ b=Q/piFltLnIlYOvXMZXdMCysmtEmEIcplNelZtPnZlIwPsFsNmBcvwAnmR/saeH3MV+Wy/h9hAMxQamUGfyrEaNYMeGvm6/Q4Ype68w0OyYHSNFrwCfXQ6VMw4xsMUYWddDBZJTfZJZPXkNpLsa8CN5BTnU6GbeuYqQXolqymyQ7AwPvmsu+q9hkb+Erp8E+5pL7qcqpCd7qfgaVmgcesvF/swcNxVnb/3MkT9c3l2UjTE9sysf0f7RPz3fSYsg/VL5enXRomDLPXVhiqQtbjvTqZfE5C1XtGcBOnPetoa05rC1gu7rdvvnxtWoq/nudfW8otkF7f8G+AGYl9CgzYfQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LkkrUY0vpugaUWERsOEH2cMAFP0juY/q2d3IKDWY5eU=;
- b=Hr05qlOYlAOUgFycoWFsjV7ioOsgK7nSAm3bBUfv2M/xCv0uMrNTfyzPAPDPQUPOl/4HyGnOCEZQmU/i+InT2WjGm/718/w7GQbGnVuj9wiaG/fYHtXkBxfRSl7aBtSGDxUvH5hdbUQY9X80CX/ddoZfSbIc+29Mxv7Y81kYnbSQQVeCwMHN1oKoQm8+YN+pzzAvZbqSRRUzNUX7oyMko0JMo8nq5rX7BraMtGY+oRH/eHS8VaC/d6jS3BjGEZhVti993e0Tq6MDwHSD2w84j43MrH3wZvVNdf7XKOQzj8Ew/UYn3QgAUEbyPX07+Ih3KoxnBXvAmh+p9VXi73KP4g==
+ bh=/wCCYfBduaPvdJu1NsnUqgtZKcc9wwJbswhlKjcNgiU=;
+ b=peXrLqyvRNI5aMaYhme68D0tuQjRPHw3kVO5d5DD3uZpKV6uWDHyEIHwaUQwbtbasH2XMvq4O0z6b8WnTA18fMPhfmbmwPgUI6J0VAC2/fkn2Y29vkT8flkEq7WuXEy0GarlV7suUuL2Q4sKrAWoBeN1k0VigxzwHcu901FOdHSdmIjdFF1rZUwLWaQZudTMqVUcx+qrPFmqHd4YcgrjrPSH3+CaMCBMkVc72H/GiHGplsXZGz46FxKl0hkzrY/I/37ELY31kvUhc1iLl+AkQWF2/aaI9C+lXDDIbmRhquo9ZSQKqxVgsNjbEmYZammV5lC+rAu3tV9B+LDrMgVC0Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LkkrUY0vpugaUWERsOEH2cMAFP0juY/q2d3IKDWY5eU=;
- b=NhEbIB8IO1urDhbFaS5tc+KBoyDFEwQDPKjGtbVoN9d2Y3jg1BxzMlhSACsFLn0CH8JMO57pwZzBBqDyhChQC0FRAU409XeereXc4chBlp7dT552ALD4P092awaSBdI9cZJnDvmdYAKUZE8zhts/5lVxRb3/3yEYkT0bPIn1y6U=
-Received: from SJ0PR03CA0334.namprd03.prod.outlook.com (2603:10b6:a03:39c::9)
- by IA1PR12MB6332.namprd12.prod.outlook.com (2603:10b6:208:3e2::13) with
+ bh=/wCCYfBduaPvdJu1NsnUqgtZKcc9wwJbswhlKjcNgiU=;
+ b=r8tcBs/sKv0L26SU31MT6q/C3VXLB0bvNmwO4qJT7hSacHt3CWxFGSlkHcPn2j4PzcGvY/Ip2CqW2VVU+23rhgSMYL8VU6WCV7SyanGqIgF6rKpO90SvbPi4k/sLY5+Y/SZDkEiod1Fzj+dzioZLduGR5WK3LYalXu72leq8H7g=
+Received: from SJ0PR03CA0332.namprd03.prod.outlook.com (2603:10b6:a03:39c::7)
+ by BN5PR12MB9538.namprd12.prod.outlook.com (2603:10b6:408:2ac::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.16; Tue, 2 Jun 2026
- 20:34:23 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.17; Tue, 2 Jun 2026
+ 20:34:33 +0000
 Received: from SJ1PEPF00002323.namprd03.prod.outlook.com
- (2603:10b6:a03:39c:cafe::a8) by SJ0PR03CA0334.outlook.office365.com
- (2603:10b6:a03:39c::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.7 via Frontend Transport; Tue, 2
- Jun 2026 20:34:22 +0000
+ (2603:10b6:a03:39c:cafe::93) by SJ0PR03CA0332.outlook.office365.com
+ (2603:10b6:a03:39c::7) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.71.17 via Frontend Transport; Tue, 2
+ Jun 2026 20:34:31 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -50,13 +50,13 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from satlexmb07.amd.com (165.204.84.17) by
  SJ1PEPF00002323.mail.protection.outlook.com (10.167.242.85) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.92.5 via Frontend Transport; Tue, 2 Jun 2026 20:34:22 +0000
+ 15.21.92.5 via Frontend Transport; Tue, 2 Jun 2026 20:34:31 +0000
 Received: from [10.236.179.233] (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Tue, 2 Jun
- 2026 15:34:21 -0500
-Message-ID: <0e295798-7e48-4235-b6bc-870634e74347@amd.com>
-Date: Tue, 2 Jun 2026 15:34:21 -0500
+ 2026 15:34:29 -0500
+Message-ID: <3c9badfa-7a8f-4177-89d6-85f6c78f519c@amd.com>
+Date: Tue, 2 Jun 2026 15:34:29 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -65,7 +65,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 From: "Cheatham, Benjamin" <benjamin.cheatham@amd.com>
-Subject: Re: [PATCH v6 6/9] cxl/pci: Track memdevs affected by CXL reset
+Subject: Re: [PATCH v6 0/9] cxl: Add cxl_reset sysfs attribute for memdevs
 To: Srirangan Madhavan <smadhavan@nvidia.com>, <linux-cxl@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 CC: <vsethi@nvidia.com>, <alwilliamson@nvidia.com>, Dan Williams
@@ -74,265 +74,192 @@ CC: <vsethi@nvidia.com>, <alwilliamson@nvidia.com>, Dan Williams
 	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
 	<icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
 References: <20260528083154.137979-1-smadhavan@nvidia.com>
- <20260528083154.137979-7-smadhavan@nvidia.com>
 Content-Language: en-US
-In-Reply-To: <20260528083154.137979-7-smadhavan@nvidia.com>
+In-Reply-To: <20260528083154.137979-1-smadhavan@nvidia.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF00002323:EE_|IA1PR12MB6332:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3b19cfb9-0cd5-4308-5580-08dec0e65490
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00002323:EE_|BN5PR12MB9538:EE_
+X-MS-Office365-Filtering-Correlation-Id: 29fb56c1-81ae-423e-2206-08dec0e6598f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|36860700016|1800799024|376014|13003099007|3023799007|6133799003|22082099003|11063799006|18002099003|56012099006|4143699003;
+	BCL:0;ARA:13230040|36860700016|7416014|82310400026|376014|1800799024|56012099006|11063799006|3023799007|5023799004|6133799003|22082099003|18002099003|13003099007;
 X-Microsoft-Antispam-Message-Info:
-	sS7GgMG7HYeL+sIDe27oGNh/7NXyKIKEpVF3kq3CxPkBVYNOolmhMOYf13EUNRy24TfO2TxPGABbsbIRj8S7Mg5tjEsn0JO+iRxtTxxBj9lUY7U5P3eu7egM0LU0rDHRw/oCMdukVNVtT3TGq3EQu0H51uoQr227Gngulg/dsL3+7V62v173ySFup4rQfJzST69eVABird04hg15HTjAomxZBUvB0abrPdOtgn9pEHM4YXSAhbIxAc5RvUTmHwiXYOt4kje9fJSQ9fOO0AiR73tvbIhUmVBGCTcCgt2An1GtM/uvDFyNH3bHiJH2E5jJjq+9voUkD2LuMLTLobyNW0bY1nwo2JkDD1LyJfskIWvKPNDOcsXTjbCteXj3KXJ1xAntoEgr4oNZ/BJiQ7s2V6lcNfHi1JUA4ahXpFdei5C+KgvnKnCJ3Ks8o7ZhpJ8FkObMCPK4pp4MtJLcPsw6YAz5YEHaKECPvrAKBO53cMSmG2mp5lHtsrNvIqYOc6VDZrOddudXn01nrngrJE6qf8ed16Sb7078Qp/8U0B+pFuB22uwfEBrmLOVeP/x12hev0njLLeOUX3O3sX17NR2EoVPzc8EQaiTSUEkHCDRae2aQGnf0N7t6mB4GCOUHvCb0PK5x8/OJvwqN88qy+RrJHeLkFMwj0/NORiYrW7WaXg+wNTC9Y8UPH1w4sUZ6Fnp
+	LZE/Yivld8rmE1jUAEWQClHSJaYjdi8kAlP+8xuN5E24p6NfPIuveebmKjB7xM7yTsTv1OgIbdATa+Aq7FBoxeSUmoryKvXysrH7Iy16rlw+uc7Y8kq4fQK8AhaLyCQLjtfpGEIpe3ZxN5lKGRf7aa5HWGvl4K645IiVhZ85ccaRS7xedFtMx4fn4Jt3TWLPFR9rs8tQOwR/y2O5MfulbTvO6ESP8LmbXMiBM9XpnUrwNcilRKVDFYsJxzApEzRfXjvho/mSUt/jTG4S6Vh8jpIoIYRh4ZEF5CcEVxc/or7mUVfUOKxthkF72PMIHXZZt3EWO0dwBdmduCiEijMXA1ujD6zM8JzhT44guW2pv93qX7MI/uFYPpgrSRrIngrFMGacEvycXC9OaibKmz+WbfyrGhj9yH3BM271EqoQHKIUIYC5He/FQ/+4l3ekd+ROvQSc74QK6jom6vJeMD85+7D7cbfl8PI9lnvmdHHYyD4aRkwonAJtNccdpRF4Pj3nH8ckb5aSfao8iT32Me6cMKORRBPXJ7VhhIuHWtiXMOH7CMRH0b9fTuwRPBafmpbz0vWo5AQc0JPyPN0/jKxXVI6Z1vWnw3hD/SATx7GqO4Qgg/2Ix7sr40f0rkZ9N/Q06ZAPYhVRDZ6FP+Ew76qjGHGWrzH6VAnAyQ6BN/DStsxeAo4LrBuuBl16ltEqu3An
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(36860700016)(1800799024)(376014)(13003099007)(3023799007)(6133799003)(22082099003)(11063799006)(18002099003)(56012099006)(4143699003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(7416014)(82310400026)(376014)(1800799024)(56012099006)(11063799006)(3023799007)(5023799004)(6133799003)(22082099003)(18002099003)(13003099007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	DNCb6G/zN2P5JV7aTjTfPyu2jtfaQgLyiBesrEyjYk+BqCwAfroxsIwSaXYPUv4naM5U4XAoiM2Li8+7+/u5n/etZKXIa6DsXtioMKOcDCpVOCmG/ZXz9z435S3VyTp0zYapM2RhRRgajK3wEgLzYhWWH6VFp4/RNZgMvjYkszQa9pm/nbwSrsDm2WsA8Xtye2v7soXvRdlJHN6mcNSo8gRlhA3hkwRUNjS7JWU6AzBIoOJEgadJZztpIRCTxK2NOEnbijqrmp5xNPZB02qlyO/5zySk8cvN+FE8yZN7EQa3wfSgYAUHlOO0XuElEx8eLJHIGTY6T0otZPXS5LnLEl58f+hzSaeBzDU4/ET4TzDmRbB01+xPfCpRF/iKVmNMNrV/VmsXZCI+2zVjgfOjdUpMurTpclUG3C77sijTwNljz1prNGlTHvfQnCxscvh/
+	pAhMP7F/XBZ3sHI2VJlQoN4tRNWOP5JoQXQm7qlOb9V6KGJYF63V+OvQiCHUwAH5h6pQaCDabQ3/F+le7Zxj5FxdVjfkEvA3F1eGc1fPA1Jt3o5dKA5DAWnmz/eC/sLd8MWFSQBWDh6LNKqsHmTrth6U0wQ+CY2zZKq0xIYU+rT3lwUkd9gy06dVXh6YuapeIueUu4LxT4lG7TXdk5AyhSDvtnCrObJVqFDIphtGfPHre4jrLii9IVNHg7YY3Wtey41GAWZYdMVPiJG7FSLFV0xYTcBwIlwSc/kC5WjuRqELwQhDqFfWvULVVxSJ2Ovho3W28YZPYrIaiq3rZwvc5Qfagl5mRLXY+KusLUn2eGqBHUT5aozEyoLRMdrPpsUR1EhLfrtEhCmrP2JW3HcF6/Zi8Cq2+5hiRAC+brlnzs6ARP2rZYmreFXgZbPUK0KV
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2026 20:34:22.6273
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2026 20:34:31.0085
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3b19cfb9-0cd5-4308-5580-08dec0e65490
+X-MS-Exchange-CrossTenant-Network-Message-Id: 29fb56c1-81ae-423e-2206-08dec0e6598f
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	SJ1PEPF00002323.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6332
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN5PR12MB9538
 
 On 5/28/2026 3:31 AM, Srirangan Madhavan wrote:
-> CXL reset is scoped to the CXL.cache/mem function set, so reset
-> orchestration needs to account for the target memdev and any affected
-> sibling-function memdevs.
-
-I would move this patch to be right after 4/9 since it's doing the back
-half of finding the devices affected by reset.
+> Hi folks!
 > 
-> Add reset context tracking for affected memdevs. Collect the memdevs
-> associated with the target and sibling PCI functions, track which ones
-> are active, collect their regions, and provide helpers to lock and
-> revalidate the active memdevs before reset proceeds.
+> This patch series introduces support for the CXL Reset method for CXL
+> Type 2 devices, implementing the reset procedure outlined in the CXL
+> Specification r3.2 [1], Sections 8.1.3, 9.6, and 9.7.
 > 
-> The reset orchestration and CXL.mem restore flow are added separately.
+> The userspace ABI is a write-only cxl_reset attribute under the CXL
+> memdev device:
 > 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/core/pci.c | 176 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 176 insertions(+)
+>     /sys/bus/cxl/devices/memX/cxl_reset
 > 
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 1dd880f5a333..c755c18c8d84 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -1106,8 +1106,17 @@ cxl_reset_flush_cpu_caches(struct cxl_reset_region_context *ctx)
->  	return 0;
->  }
->  
-> +struct cxl_reset_memdev {
-> +	struct cxl_memdev *cxlmd;
-> +	bool active;
-> +	bool locked;
-> +};
-> +
->  struct cxl_reset_context {
->  	struct pci_dev *target;
-> +	struct cxl_reset_memdev *memdevs;
-> +	int nr_memdevs;
-> +	int memdev_capacity;
->  	struct pci_dev **siblings;
->  	int nr_siblings;
->  	int sibling_capacity;
-> @@ -1237,6 +1246,173 @@ static int cxl_reset_collect_siblings(struct cxl_reset_context *ctx)
->  	return wctx.rc;
->  }
->  
-> +static int cxl_reset_match_memdev_by_parent(struct device *dev,
-> +					    const void *parent)
-> +{
-> +	return is_cxl_memdev(dev) && dev->parent == parent;
-> +}
-> +
-> +static bool cxl_reset_memdev_active(struct cxl_memdev *cxlmd)
-> +{
-> +	return cxlmd->dev.driver && cxlmd->endpoint &&
-> +	       !IS_ERR(cxlmd->endpoint);
+> The memdev is the userspace handle, while the implementation coordinates
+> the target PCI function, affected sibling PCI functions, active CXL
+> memdevs, and any CXL regions reachable through those memdevs.
+> 
 
-You can replace the last two checks with !IS_ERR_OR_NULL(cxlmd->endpoint).
-> +}
-> +
-> +static int cxl_reset_collect_pci_memdev(struct cxl_reset_context *ctx,
-> +					struct pci_dev *pdev)
-> +{
-> +	struct cxl_reset_memdev *memdevs;
-> +	struct cxl_memdev *cxlmd;
-> +	struct device *dev;
-> +	int capacity, i;
-> +
-> +	dev = bus_find_device(&cxl_bus_type, NULL, &pdev->dev,
-> +			      cxl_reset_match_memdev_by_parent);
-> +	if (!dev)
-> +		return 0;
-> +
-> +	cxlmd = to_cxl_memdev(dev);
-> +	for (i = 0; i < ctx->nr_memdevs; i++) {
-> +		if (ctx->memdevs[i].cxlmd == cxlmd) {
-> +			put_device(dev);
-> +			return 0;
-> +		}
-> +	}
-> +
-> +	if (ctx->nr_memdevs < ctx->memdev_capacity)
-> +		goto add;
+This may be a dumb question, but where do type 2 driver slot into this?
+I think it's expected that they'll implement the ->reset_XXX callbacks for
+their own handling? If not, you may want to look at where type 2 drivers
+outside of drivers/cxl/ can have a hook to do any reset related clean up
+or prep.
 
-The goto here isn't great, I'd just add the memdev inside the if statement
-and return here.
-> +
-> +	capacity = ctx->memdev_capacity ? ctx->memdev_capacity * 2 :
-> +		   CXL_RESET_SIBLINGS_INIT;
-> +	memdevs = krealloc(ctx->memdevs, capacity * sizeof(*memdevs),
-> +			   GFP_KERNEL);
-> +	if (!memdevs) {
-> +		put_device(dev);
-
-Should you null out ctx->memdevs here? Is it possible it would have a stale value at this
-point?
-> +		return -ENOMEM;
-> +	}
-> +
-> +	ctx->memdevs = memdevs;
-> +	ctx->memdev_capacity = capacity;
-> +
-> +add:
-> +	ctx->memdevs[ctx->nr_memdevs++] = (struct cxl_reset_memdev) {
-> +		.cxlmd = cxlmd,
-> +	};
-> +	return 0;
-> +}
-> +
-> +/*
-> + * CXL Reset is device scoped for CXL.cache/mem. Use the affected PCI
-> + * function set to find memdevs whose regions and endpoint decoder state must
-> + * be handled around the reset.
-> + */
-> +static int __maybe_unused cxl_reset_collect_memdevs(struct cxl_reset_context *ctx)
-> +{
-> +	int rc, i;
-> +
-> +	rc = cxl_reset_collect_pci_memdev(ctx, ctx->target);
-> +	if (rc)
-> +		return rc;
-> +
-> +	for (i = 0; i < ctx->nr_siblings; i++) {
-> +		rc = cxl_reset_collect_pci_memdev(ctx, ctx->siblings[i]);
-> +		if (rc)
-> +			return rc;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int __maybe_unused
-> +cxl_reset_collect_regions(struct cxl_reset_context *ctx,
-> +			  struct cxl_reset_region_context *region_ctx)
-> +{
-> +	int rc, i;
-> +
-> +	lockdep_assert_held_write(&cxl_rwsem.region);
-> +
-> +	for (i = 0; i < ctx->nr_memdevs; i++) {
-> +		struct cxl_reset_memdev *rmd = &ctx->memdevs[i];
-> +		struct cxl_memdev *cxlmd = rmd->cxlmd;
-> +
-> +		if (!device_trylock(&cxlmd->dev))
-> +			return -EAGAIN;
-
-Use ACQUIRE() here.
-
-> +
-> +		if (cxl_reset_memdev_active(cxlmd)) {
-> +			rc = cxl_reset_collect_memdev_regions(region_ctx,
-> +							      cxlmd);
-> +			if (!rc)
-> +				rmd->active = true;
-> +		} else {
-> +			rc = 0;
-> +		}
-> +
-> +		device_unlock(&cxlmd->dev);
-> +		if (rc)
-> +			return rc;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void cxl_reset_unlock_memdevs(struct cxl_reset_context *ctx)
-> +{
-> +	int i;
-> +
-> +	for (i = ctx->nr_memdevs - 1; i >= 0; i--) {
-> +		struct cxl_reset_memdev *rmd = &ctx->memdevs[i];
-> +
-> +		if (!rmd->locked)
-> +			continue;
-> +
-> +		device_unlock(&rmd->cxlmd->dev);
-> +		rmd->locked = false;
-> +	}
-> +}
-> +
-> +static int __maybe_unused cxl_reset_lock_memdevs(struct cxl_reset_context *ctx)
-> +{
-> +	int i;
-> +
-> +	lockdep_assert_held_write(&cxl_rwsem.region);
-> +
-> +	for (i = 0; i < ctx->nr_memdevs; i++) {
-> +		struct cxl_reset_memdev *rmd = &ctx->memdevs[i];
-> +		struct cxl_memdev *cxlmd = rmd->cxlmd;
-> +
-> +		if (!rmd->active)
-> +			continue;
-> +
-> +		if (!device_trylock(&cxlmd->dev))
-> +			goto err;
-> +
-> +		rmd->locked = true;
-> +		if (!cxl_reset_memdev_active(cxlmd)) {
-> +			cxl_reset_unlock_memdevs(ctx);
-> +			return -ENODEV;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +
-> +err:
-> +	cxl_reset_unlock_memdevs(ctx);
-> +	return -EAGAIN;
-> +}
-> +
-> +static void __maybe_unused cxl_reset_put_memdevs(struct cxl_reset_context *ctx)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < ctx->nr_memdevs; i++)
-> +		put_device(&ctx->memdevs[i].cxlmd->dev);
-> +
-> +	kfree(ctx->memdevs);
-> +	ctx->memdevs = NULL;
-> +	ctx->nr_memdevs = 0;
-> +	ctx->memdev_capacity = 0;
-> +}
-> +
->  static void cxl_pci_functions_reset_done(struct cxl_reset_context *ctx)
->  {
->  	int i;
+Thanks,
+Ben
+> v6 changes (from v5 [2]):
+> - Rebased on the current CXL tree used for v7.1-rc4 development.
+> - Move the ABI from /sys/bus/pci/devices/.../cxl_reset to
+>   /sys/bus/cxl/devices/memX/cxl_reset.
+> - Use the memdev as the userspace handle while keeping the reset
+>   orchestration scoped to the CXL device reset scope.
+> - Reduce the earlier PCI/CXL save/restore series [3] to a single CXL HDM
+>   decoder restore/commit helper patch, included here as patch 1.
+> - Do not offline or hot-remove memory as part of reset. Return -EBUSY
+>   if an affected CXL region is online as System RAM or has an active
+>   region driver bound.
+> - Add reset-idle validation and CPU cache invalidation for affected CXL
+>   regions.
+> - Add CXL sibling PCI function discovery using the Non-CXL Function Map
+>   DVSEC and CXL.cache/CXL.mem capability bits.
+> - Coordinate PCI save/disable/restore and IOMMU reset prepare/done for
+>   the target and affected sibling functions.
+> - Add CXL DVSEC reset sequencing, including CXL.cache disable,
+>   writeback-invalidate, a minimum 100ms quiet period, reset-complete
+>   polling, and Reset Error reporting.
+> - Track affected memdevs, lock active memdevs across reset, restore and
+>   commit decoder state, re-enable CXL.mem, and wait for media ready
+>   after reset.
+> - Cache reset capability at memdev registration time for sysfs
+>   visibility.
+> - Document reset scope, Memory Clear not being requested, and -EBUSY
+>   behavior for active CXL regions.
+> 
+> Motivation:
+> -----------
+> - As support for Type 2 devices is being introduced, more devices need a
+>   CXL-specific reset mechanism beyond bus-wide PCI reset methods.
+> 
+> - FLR does not affect CXL.cache or CXL.mem protocol state, making CXL
+>   Reset the appropriate mechanism for cases where those protocols must
+>   be reset.
+> 
+> - The CXL specification highlights use cases such as function rebinding
+>   and error recovery where CXL Reset is explicitly required.
+> 
+> Change Description:
+> -------------------
+> 
+> Patch 1: cxl/hdm: Add helpers to restore and commit memdev decoders
+> - Restore endpoint decoder programming from CXL core's cached decoder
+>   objects while keeping CXL.mem disabled.
+> - Commit restored HDM decoders as a separate step so reset orchestration
+>   can re-enable CXL.mem only after safety checks complete.
+> 
+> Patch 2: PCI: Export pci_dev_save_and_disable() and pci_dev_restore()
+> - Export PCI reset lifecycle helpers so CXL reset orchestration can save,
+>   disable, restore, and invoke reset callbacks for affected functions.
+> 
+> Patch 3: cxl: Add reset-idle and cache flush helpers
+> - Collect CXL regions affected by a memdev reset.
+> - Fail reset if affected regions are not idle.
+> - Invalidate CPU caches for each affected region once.
+> 
+> Patch 4: PCI/CXL: Add sibling function coordination for reset
+> - Identify CXL.cache/CXL.mem sibling functions in the reset scope.
+> - Use the Non-CXL Function Map DVSEC to exclude non-CXL functions.
+> - Save, disable, restore, and unlock affected PCI sibling functions.
+> 
+> Patch 5: cxl/pci: Add CXL DVSEC reset helper
+> - Execute CXL Reset through the CXL Device DVSEC.
+> - Disable CXL.cache and request writeback-invalidate where supported.
+> - Enforce the post-reset quiet period and poll for reset completion.
+> - Block and restore IOMMU traffic while reset is active.
+> 
+> Patch 6: cxl/pci: Track memdevs affected by CXL reset
+> - Track the target memdev and any sibling-function memdevs affected by
+>   reset.
+> - Revalidate and lock active memdevs before reset proceeds.
+> 
+> Patch 7: cxl/pci: Orchestrate CXL reset for affected memdevs
+> - Coordinate region validation, CPU cache invalidation, PCI function
+>   preparation, DVSEC reset, decoder restore and commit, CXL.mem enable,
+>   and media-ready wait.
+> 
+> Patch 8: cxl/memdev: Add cxl_reset sysfs attribute
+> - Expose /sys/bus/cxl/devices/memX/cxl_reset.
+> - Only make the attribute visible when the underlying PCI function is
+>   Type 2 and reset capable.
+> - Write a boolean true value, such as "1" or "true", to trigger reset.
+> 
+> Patch 9: Documentation/ABI: Document CXL memdev cxl_reset
+> - Document the new memdev sysfs ABI, reset scope, Memory Clear behavior,
+>   and idle-region requirement.
+> 
+> The CPU cache invalidation step depends on
+> cpu_cache_invalidate_memregion() support for the affected address ranges.
+> If no provider is available, reset fails before hardware reset is
+> requested.
+> 
+> Command line to test CXL reset on a capable memdev:
+> 
+>     echo 1 > /sys/bus/cxl/devices/memX/cxl_reset
+> 
+> Basic CXL DVSEC reset testing was done on a CXL Type 2 device. The reset
+> sequence completed successfully and ResetComplete was observed. Full
+> memdev/region integration testing is still in progress.
+> 
+> References:
+> [1] https://computeexpresslink.org/wp-content/uploads/2024/12/CXL_3.2-Spec-Announcement_FINAL-1.pdf
+> [2] https://lore.kernel.org/linux-cxl/20260306092322.148765-1-smadhavan@nvidia.com/
+> [3] https://lore.kernel.org/linux-cxl/20260306080026.116789-1-smadhavan@nvidia.com/
+> 
+> Srirangan Madhavan (9):
+>   cxl/hdm: Add helpers to restore and commit memdev decoders
+>   PCI: Export pci_dev_save_and_disable() and pci_dev_restore()
+>   cxl: Add reset-idle and cache flush helpers
+>   PCI/CXL: Add sibling function coordination for reset
+>   cxl/pci: Add CXL DVSEC reset helper
+>   cxl/pci: Track memdevs affected by CXL reset
+>   cxl/pci: Orchestrate CXL reset for affected memdevs
+>   cxl/memdev: Add cxl_reset sysfs attribute
+>   Documentation/ABI: Document CXL memdev cxl_reset
+> 
+>  Documentation/ABI/testing/sysfs-bus-cxl |   28 +
+>  drivers/cxl/core/hdm.c                  |  318 ++++++-
+>  drivers/cxl/core/memdev.c               |   30 +
+>  drivers/cxl/core/pci.c                  | 1140 +++++++++++++++++++++++
+>  drivers/cxl/cxl.h                       |    5 +
+>  drivers/cxl/cxlmem.h                    |    2 +
+>  drivers/pci/pci.c                       |   22 +-
+>  include/linux/pci.h                     |    2 +
+>  include/uapi/linux/pci_regs.h           |   15 +
+>  9 files changed, 1557 insertions(+), 5 deletions(-)
+> 
+> base-commit: abb3c0de119032f4c0c81177884a3bb0a133e6ca
 
