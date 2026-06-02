@@ -1,178 +1,200 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEC7A30F815
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 11:17:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68C4B36A03A;
+	Tue,  2 Jun 2026 11:27:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780399058; cv=none; b=mo8csZgwMvBdOTO+pCZLSy0TCeNVLF/4tl7JW159c0SYg3151Hwr+mcNGGIrzqTNIe1fc3IHwu7bc4AKYAiCVJ7pTgoGs63Cuf1gg94zxGZk1YK+fZZEOBP7yTpGlL5iW5z0fBbauQ0L5fEYnCg4mSWfOluoMhjidKphjjDZeRA=
+	t=1780399631; cv=none; b=YGSKUDZVmOvrSjOK37t8/orP7PGEimetOYIVjhZTXRwprO81+zT5ZhH+pEsysVq8bF/O76rMGd+JJKO8h6mc1yopRItik2yxTvHO7MVqf6/iESuWJV/oEFiI5/P0bI8+B34GlQNSg85fYw5jlDv8Oe9lMiCB4XPWDgryfyKnKFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780399058; c=relaxed/simple;
-	bh=D24L5DcBOXbqNu04qQRktX8kEasgjJJu0mAxpqFJ2m4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=tf73ML2k9gtD7x35B69R/3AgnRFfLqxN/zSk4mOEvxbjtt/Ky9cAFoRU2ECMGhJ6X0xm+iRng0xcEPZWRSdNKX+27FDvsQggbiFFGxTAriWARLlVnd8bC1cia3UVRKnYS2aV+HfI/8CS7aPd/gAfwPC4Gdi2j4mxz2VOG0UKjOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=crZfwdaC; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780399631; c=relaxed/simple;
+	bh=vFe0YHJbZeLES+sUauMUh5hZ46dD8ew9Ej6lDFLoT9Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Rr6jO1fByXYRx+tKEK7oTG4goSfF7waXcXdlLuctriRPjvmmYXgrxRRMfeZmLjnhcsB26z04C5zk7rXis6u4wOAZSP+LWrbDBXU493YwRtXD1OrEKJ9qdFg/28FfxBFreuc3DLPZS1xXWQ44/bD7tNJ5VtEr6kS4PNen2nqbcK8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OpuvB+TC; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="crZfwdaC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EFA11F00893;
-	Tue,  2 Jun 2026 11:17:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780399050;
-	bh=QjB86anNSTPBmxi3wXZoRmPdvNkjgvpeBas1HN00EVU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=crZfwdaCBPisbJfwYF94xj6tagWZfNAXCmZE+hAR4rMad66brc7FKGOCAjgey32Gl
-	 7QHnBq3gOvUdGTIQ9T1D7RwWefBX7KrFLiCLjkuC8XvWpTz2GYUWyu64FFQa9mdAXQ
-	 aZ4AcBOPNYgx2Kv07QxOCmFAiWY6IJkucVavlXsmd5Gtv5Rolkq0OkLsEvt6ywobmM
-	 mHVRLeiBUQjmj4hhf+yE7HSRGxfugm3fMev+XFWjVycRZf03l86HPhp57KjUDVGvlS
-	 sc1XjTPl9GEd5Ohg6x6JC6aaXemDcGbSpmrKCztR2NIGtBtc9e0bQ3Ofp1FR1gprjO
-	 lNtqBuNggYpYQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 1/2] PCI: Add pci=noaer_recovery kernel boot option
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yury Murashka" <yurypm@arista.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260602105558.1799563-2-yurypm@arista.com>
-References: <20260602105558.1799563-2-yurypm@arista.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 02 Jun 2026 11:17:29 +0000
-Message-Id: <20260602111730.2EFA11F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OpuvB+TC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1780399630; x=1811935630;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=vFe0YHJbZeLES+sUauMUh5hZ46dD8ew9Ej6lDFLoT9Q=;
+  b=OpuvB+TCFOlrTj1dTsQq4IO6bT0RYvhdqKiNi7guAfItcI40qmxJuR+2
+   JxfSI7H8Vs0pb6lSzui2MNNzEWzxhK2dqWRYpbiEiVo05UowkhP/brLIc
+   ZVeqrXsY/GHqe3VM+ZWp1v4ClJFL3WOZdAoNffJszSxQymB3W2SmL0kdn
+   EoTQOQCHyRV6IH4CmL1hEzveBQPF06YlAMtiXnjfxI7VYYLoSP3+xGnlr
+   LFm/IXvUvXoEkVqVbja68afnmQGU98K68zOP52EZcPPPHvMGyw+ljzTra
+   1vViH6ezFD00NvPoMZN+e9EIaC8+Q8JOgg1j4bdpBSO6q8EyVZiF5BWXP
+   A==;
+X-CSE-ConnectionGUID: oIlO4b2fRxuCw2x5D/ONOg==
+X-CSE-MsgGUID: uezSZkyoSk+dL6kVsxakLg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11804"; a="84804995"
+X-IronPort-AV: E=Sophos;i="6.24,183,1774335600"; 
+   d="scan'208";a="84804995"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 04:27:07 -0700
+X-CSE-ConnectionGUID: 57WJuzJhQk+bJIT4F8AZnw==
+X-CSE-MsgGUID: InV+5AxmRSKrEz4WoNh7bQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,183,1774335600"; 
+   d="scan'208";a="240879149"
+Received: from mkosciow-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.229])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 04:26:48 -0700
+Date: Tue, 2 Jun 2026 14:26:46 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Kees Cook <kees@kernel.org>
+Cc: Luis Chamberlain <mcgrof@kernel.org>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>, stable@vger.kernel.org,
+	Petr Pavlu <petr.pavlu@suse.com>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>,
+	Gabriel Somlo <somlo@cmu.edu>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	Jason Baron <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>,
+	Tiwei Bie <tiwei.btw@antgroup.com>,
+	Benjamin Berg <benjamin.berg@intel.com>,
+	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	"David E. Box" <david.e.box@linux.intel.com>,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Alexander Potapenko <glider@google.com>,
+	Marco Elver <elver@google.com>, Dmitry Vyukov <dvyukov@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
+	kasan-dev@googlegroups.com, linux-mm@kvack.org,
+	apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
+	linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net, qemu-devel@nongnu.org,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, netdev@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 01/11] params: bound array element output to the caller's
+ page buffer
+Message-ID: <ah699hwLxIIOZ0-7@ashevche-desk.local>
+References: <20260521133315.work.845-kees@kernel.org>
+ <20260521133326.2465264-1-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260521133326.2465264-1-kees@kernel.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+On Thu, May 21, 2026 at 06:33:14AM -0700, Kees Cook wrote:
+> 
+> param_array_get() appends each element's string representation into the
+> shared sysfs page buffer by passing buffer + off to the element getter.
+> 
+> That works for getters that only write a small bounded string, but
+> param_get_charp() and similar helpers format against PAGE_SIZE from the
+> pointer they receive. Once off is non-zero, an element getter can
+> therefore write past the end of the original sysfs page buffer.
+> 
+> Collect each element into a temporary PAGE_SIZE buffer first and then
+> copy only the remaining space into the caller's page buffer.
 
-New issues:
-- [Critical] Bypassing recovery incorrectly returns the uninitialized inter=
-mediate state `PCI_ERS_RESULT_CAN_RECOVER`, which causes the ACPI EDR subsy=
-stem to report a recovery failure to firmware, potentially triggering a sys=
-tem reset.
-- [High] The `pci=3Dnoaer_recovery` option clears non-fatal AER error statu=
-s bits but fails to clear fatal AER error status bits, leaving the device i=
-n a persistent error state.
-- [High] Bypassing recovery skips `dpc_reset_link()`, causing DPC containme=
-nt to permanently disable the link and triggering PCIe hotplug (`pciehp`) t=
-o destroy the device state.
-- [High] Bypassing AER recovery accesses PCI configuration space without PM=
- runtime protection, potentially targeting a suspended device.
+...
 
-Pre-existing issues:
-- [High] PM runtime reference is dropped before invoking the final permanen=
-t failure callbacks, risking suspended device access.
---
+> +	elem_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
 
-commit 10d2b1d7566623bafffeeabe2e066bc1a7bfb30d
-Author: Yury Murashka <yurypm@arista.com>
+get_free_page() (or how it is called)?
 
-PCI: Add pci=3Dnoaer_recovery kernel boot option
-
-AER error recovery is part of the AER error handling subsystem in the
-Linux kernel. On large modular systems with a complex PCIe tree, AER
-recovery could cause unexpected behavior and side effects. Sometimes it
-would be nice to have the option to keep the system in an unmodified
-state and be able to handle PCIe errors from userspace.
-
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index bebe4bc111d75..c022cfd85b939 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-
-[ ... ]
-
-> @@ -216,6 +223,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *de=
-v,
->  	pci_ers_result_t status =3D PCI_ERS_RESULT_CAN_RECOVER;
->  	struct pci_host_bridge *host =3D pci_find_host_bridge(dev->bus);
-> =20
-> +	if (pcie_aer_recovery_disable) {
-> +		if (host->native_aer || pcie_ports_native) {
-> +			pcie_clear_device_status(dev);
-
-[Severity: High]
-Does clearing the device status here attempt to access the configuration
-space without PM runtime protection?
-
-The early return block clears error statuses before the later PM runtime get
-call, so the endpoint device may have entered a low-power state like D3hot
-or D3cold before the handler executes.
-
-Could this lead to dropped writes, failure to clear the error status, and
-potential Uncorrectable Request errors on the bus?
-
-> +			pci_aer_clear_nonfatal_status(dev);
-
-[Severity: High]
-Since this path deliberately bypasses recovery, will the downstream hardware
-bus reset that normally clears fatal errors implicitly ever occur?
-
-This function masks out fatal error bits, which leaves them permanently set
-in the AER Uncorrectable Error Status register.
-
-Does this block future AER reporting for the same error type and leave a
-stale error state that might cause firmware or userspace to reset the
-device?
-
-> +		}
-> +		return status;
-
-[Severity: Critical]
-By returning the intermediate status value PCI_ERS_RESULT_CAN_RECOVER, will
-the ACPI EDR subsystem report a recovery failure to the firmware?
-
-The Error Disconnect Recover subsystem checks if the return value is exactly
-PCI_ERS_RESULT_RECOVERED. Receiving CAN_RECOVER causes EDR to send an
-EDR_OST_FAILED message, which can lead the firmware to inject a Machine
-Check Exception or reset the platform.
-
-[Severity: High]
-Does bypassing the shared recovery path unconditionally skip the
-dpc_reset_link() call?
-
-Without this call, the DPC Trigger Status is never cleared to release
-hardware containment. When PCIe hotplug handles the Link Down event, it
-waits for the waitqueue which times out:
-
-drivers/pci/pcie/dpc.c:pci_dpc_recovered() {
-    ...
-    wait_event_timeout(dpc_completed_waitqueue, dpc_completed(pdev),
-                       msecs_to_jiffies(4000));
-    ...
-}
-
-Does this cause the driver to be unbound and the device deleted, preventing
-userspace from accessing or recovering it?
-
-> +	}
+> +	if (!elem_buf)
+> +		return -ENOMEM;
 > +
->  	/*
->  	 * If the error was detected by a Root Port, Downstream Port, RCEC,
->  	 * or RCiEP, recovery runs on the device itself.  For Ports, that
+>  	for (i = off = 0; i < (arr->num ? *arr->num : arr->max); i++) {
+> -		/* Replace \n with comma */
+> -		if (i)
+> -			buffer[off - 1] = ',';
+>  		p.arg = arr->elem + arr->elemsize * i;
+>  		check_kparam_locked(p.mod);
+> -		ret = arr->ops->get(buffer + off, &p);
+> +		ret = arr->ops->get(elem_buf, &p);
+>  		if (ret < 0)
+> -			return ret;
+> +			goto out;
+> +		ret = min(ret, (int)(PAGE_SIZE - 1 - off));
 
-[Severity: High]
-This isn't a bug introduced by this patch, but does dropping the PM runtime
-reference before invoking the permanent failure callbacks risk accessing a
-suspended device?
+It's usually discouraged to use castings in min/max/clamp. Can we make ret long
+or do something different here?
 
-Looking at the error path later in pcie_do_recovery():
+> +		if (!ret)
+> +			break;
 
-drivers/pci/pcie/err.c:pcie_do_recovery() {
-    ...
-failed:
-    pci_walk_bridge(bridge, pci_pm_runtime_put, NULL);
+> +		/* Replace the previous element's trailing newline with a comma. */
+> +		if (i)
+> +			buffer[off - 1] = ',';
 
-    pci_walk_bridge(bridge, report_perm_failure_detected, NULL);
-    ...
-}
+Can't we do this after with help of strreplace()?
 
-Because the reference is released first, the device could immediately
-transition to a low-power state. If the driver's callback attempts to access
-registers for cleanup, could this trigger fatal bus Uncorrectable Request
-errors?
+> +		memcpy(buffer + off, elem_buf, ret);
+>  		off += ret;
+> +		if (off == PAGE_SIZE - 1)
+> +			break;
+>  	}
+>  	buffer[off] = '\0';
+> -	return off;
+> +	ret = off;
+> +out:
+> +	kfree(elem_buf);
+> +	return ret;
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260602105558.1799=
-563-1-yurypm@arista.com?part=3D1
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
