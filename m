@@ -1,350 +1,119 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85FDB387566;
-	Tue,  2 Jun 2026 22:10:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4663B6C0C
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 22:15:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780438257; cv=none; b=X5oUIe0wg53xsclaFo3MPkVQeRCH77llfSpC37miVFH13Pj/loWXQH/AZvo/qS9wL05J/oTrwp0JVoH7NqSJ1XZm+86lsLY7XSwDtJvpeswQGhJaJa4Mcylz14QIytYMsj+O5dKBf/+1Z1qt1PMgbwNHyh7jZSiEgoSTOvCOGM0=
+	t=1780438530; cv=none; b=HzfO2/zOsY/i2KmF85zxaZ4QjtsqirSGa2bNraVP2vDev8TK/6z8MS7kuNc7IE8IITUt6d4Qa+CyZ8p/TPA5angAloeApxynNScWuutQxRZKzWP+dKPgIvFVfHVjg2b+spmNd+X5+AxDvjLbjBMA4QyIVKIEZtSSNut14cwMD1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780438257; c=relaxed/simple;
-	bh=Uq+vN5govkehHLvBwr0MpcwboOqfdHLYWbgkEji+IsE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ktXP3Q74GzQuzxMFeZ2YR/hWwEdZk4uf4Xc2fTKRSe+wqIuacBp2wLyQxsXBXJy8E8T0XUbKDR1amO+n7211T+UAtfEXpgD1QSKX6/ggQ0cCuPCkhgpXoTnIZsJsQaq7Z5gLKe48muNQZ8Ji+Qm+SC9fEKprUGsIX/yG6ZlW2ko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FYj+1kX5; arc=none smtp.client-ip=198.175.65.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1780438530; c=relaxed/simple;
+	bh=PkFkKBkasyNkfpdY3psVfIwGsVxbjYhDPSzlbu1Zp/w=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HxRS2vEFdN+kNyHjlFa2Do1t1yW+zo2gkP6/TMm1StOyFON9FySy2xKA+8XY7AQdpBZKwnlZwhmnVSbwiEJYsjZwMoPEUXsTNlqpltjCWCVOvsTa3cOklL/lQwpMQE1Q7mQqyp7Yuzw3svm2rxALSSA1y+KQ/25sHs41OfUedGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jTYOmuHG; arc=none smtp.client-ip=209.85.216.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FYj+1kX5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780438256; x=1811974256;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Uq+vN5govkehHLvBwr0MpcwboOqfdHLYWbgkEji+IsE=;
-  b=FYj+1kX5lRvjXwEKXhKARi1GceAhiLOWRio1yJPgdjYtOn8e/gDPJV5K
-   YY7gKcoRlbnSzkyNQHBFmkEwRKjo08h3HT6THuFcxeomBqkjry/Xd4VAk
-   SdEPHk14SeXF73z+hl6/zh1gz2MEYaI4zKq2WFqkbqbzVLTKpbaLdtldu
-   maKvTc6PaU0+osq3A/ORXyivygynxA//ZrsrZL1tYuCiCIEEfJXRhR8BP
-   UWtdUjrTHcG4Qm8N0n4jgl7oWzxjwGqvUxIqBzJQV6EjQMZbgCzpndck2
-   /pKETipdVI/Uay8jFQN8QAGXtMzduAEHgv6XDkUmPX9q3oHo9/xxhQYUa
-   w==;
-X-CSE-ConnectionGUID: DFMtHhqJRdeZhEeucMCWiQ==
-X-CSE-MsgGUID: 8U+T64s8TdugnJO/D1mILQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11805"; a="81418626"
-X-IronPort-AV: E=Sophos;i="6.24,184,1774335600"; 
-   d="scan'208";a="81418626"
-Received: from orviesa003.jf.intel.com ([10.64.159.143])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 15:10:56 -0700
-X-CSE-ConnectionGUID: a5zdfxwYS2ekStnqgOuGQg==
-X-CSE-MsgGUID: EhwZebTJTIiNVYeBGUNJ7w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,184,1774335600"; 
-   d="scan'208";a="247983312"
-Received: from rchatre-mobl4.amr.corp.intel.com (HELO [10.125.108.56]) ([10.125.108.56])
-  by ORVIESA003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 15:10:55 -0700
-Message-ID: <b26107b2-a722-4c28-9df8-6e11eec3c7d4@intel.com>
-Date: Tue, 2 Jun 2026 15:10:54 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jTYOmuHG"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-36d8b644473so3108502a91.3
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 15:15:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780438528; x=1781043328; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Wyg13nmb1cl4XVRXyc9+1Xf9pv1Lvsh32cV5wFSbV18=;
+        b=jTYOmuHGSIBX9DfJAMz0WxP0meWF9ha79aFb3GomCFAjsUWxMze7GsZJolFPUDZbKn
+         4fpn/BoLCWezVoIlVQcQgfYy0d2FBpLjbKyy1h6JPp929X2PYDqt9n51tTzLkFTm8aMM
+         Cy88PMmDINZSXu2zw6wpsywHpPkzMCtHm/P7kGXGa/1hS8Xu7kVT60q7+F7/1Xozpzpy
+         8wxerHJEGbvlWnqjpQX2myKgbtvPOYi8qC+/PYmGdeMQ7IoGJ7y856bsueeOnRXZAdaO
+         Cv2r88j8UxVkfTr1eFkoeUI1exZB795/w/Y5iEy4T04TycfgCcgs+UjLoyaayewa/zYz
+         RJOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780438528; x=1781043328;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Wyg13nmb1cl4XVRXyc9+1Xf9pv1Lvsh32cV5wFSbV18=;
+        b=HX1budbNcID1tNv8NLoCbExrCOhnOrDaomm8HtqXw4gMyLy/tsgK+jzu2VLrS46gN3
+         /HBqQCqganeuCDlciLGTikR9chQfpDNHMEJyLI+w3ftjkp/h1t25NAonKNtPCjl+BEni
+         nTK4RpOk4Vn7nZ3pn4sTZiXtXuy4PBqUaJTl4En0YFokllofS8vModl3bvhn6DTAe5f8
+         Wzs5Q7H1D7gx0ypbOAfudnfVi3fjiavYSNQQK0T/FONVyoN2DtFFJYyTfgip0JoDgxGd
+         75es4Levb9WipLjmO5zp1AhG1VQcw3RMkOY22XZ5vOSXTtDcma/8d2k0rK8qe7h6aJrm
+         woxA==
+X-Forwarded-Encrypted: i=1; AFNElJ9rv8vId1G0J8w5Nra559CaDXyUev4wr0Got1eC8Atf3o6x0Po7TfE6DXx2Ue66mz2yQB0yzXj7fbc=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yye/EEd7VmRNW5Yt/3vVG4WTaeYhWCfnmu8XOIhMFbMF/D32vEe
+	MFFS1ng2PAZ7Jj2mMhCFFz8hw+vgGUqTG4CpXg3+YB2YxNT2rU6pUqKi
+X-Gm-Gg: Acq92OHLP9VcLuwo5MhPaAcxqyRN3GghuVpt7STRm59fOPk/7E8P8eUCmEyyrCXAhL7
+	ouonshW4bbRmVT+UmKk5jo7eRy0tztT8e7nAyaIxm7Z4ymjEfOte6hUlE7aGtaQnmeQmTtHDAxC
+	L/BnZTqL8nWAg2Vk91ebAVFe37M9TKSr34Fc6nMsYg8FdpXLVktKEr+nZlAO0oa+3knspGq9nDg
+	NReXDT11Buu64sP/dBzEZTsh1yFAR4306sFK/yyH0A3J799dKrLGR0GYAfc+kMUYMCB4XSWmLol
+	anCLWBWhkVoD58O329oNJrB+Vv1TxDGGC7+1QR5wI20pFLQrjvN0O/peoWSxrH+beaTApXT1sPv
+	TAZE+lnfRhXiEJx4tyvf4/efUvG5cWilB+ZbIaUDijbO2NbhSwkBybbSq/Zhh7DIRt5vCnZD2uY
+	hPJIAL+IUsHfcvESN907jOqn9O49Wmht6Pe4oGcTp3UprA
+X-Received: by 2002:a17:90b:1d87:b0:368:a297:bd38 with SMTP id 98e67ed59e1d1-36e2f3c11dcmr712758a91.7.1780438528332;
+        Tue, 02 Jun 2026 15:15:28 -0700 (PDT)
+Received: from localhost ([2001:19f0:8001:1b2d:5400:5ff:fefa:a95d])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36e174db6afsm287366a91.2.2026.06.02.15.15.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Jun 2026 15:15:27 -0700 (PDT)
+Date: Wed, 3 Jun 2026 06:15:08 +0800
+From: Inochi Amaoto <inochiama@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Chen Wang <unicorn_wang@outlook.com>, Paul Walmsley <pjw@kernel.org>, 
+	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
+	Alexandre Ghiti <alex@ghiti.fr>, Zixian Zeng <sycamoremoon376@gmail.com>, 
+	Han Gao <gaohan@iscas.ac.cn>
+Cc: Inochi Amaoto <inochiama@gmail.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, sophgo@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	linux-riscv@lists.infradead.org, Han Gao <rabenda.cn@gmail.com>
+Subject: Re: (subset) [PATCH 0/2] riscv: sophgo: sg2042: Enable PCIe DMA
+ coherence
+Message-ID: <ah9VwHZbIuDSqmbe@inochi.infowork>
+References: <20260331171248.973014-1-gaohan@iscas.ac.cn>
+ <178028263198.557087.6386925175219722340.b4-ty@b4>
+ <ah6gcvKQlHlrW1qn@inochi.infowork>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 4/9] PCI/CXL: Add sibling function coordination for
- reset
-To: Srirangan Madhavan <smadhavan@nvidia.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: vsethi@nvidia.com, alwilliamson@nvidia.com,
- Dan Williams <danwilliams@nvidia.com>,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260528083154.137979-1-smadhavan@nvidia.com>
- <20260528083154.137979-5-smadhavan@nvidia.com>
-Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260528083154.137979-5-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ah6gcvKQlHlrW1qn@inochi.infowork>
 
-
-
-On 5/28/26 1:31 AM, Srirangan Madhavan wrote:
-> Add helpers to collect CXL sibling PCI functions affected by a CXL reset
-> and prepare them for reset by saving and disabling them. Restore those
-> siblings and drop their references when reset coordination completes.
+On Tue, Jun 02, 2026 at 05:21:32PM +0800, Inochi Amaoto wrote:
+> On Mon, Jun 01, 2026 at 10:57:24AM +0800, Inochi Amaoto wrote:
+> > On Wed, 01 Apr 2026 01:12:46 +0800, Han Gao wrote:
+> > > The SG2042 hardware design supports cache-coherent PCIe.
+> > > 
+> > > With recent firmware updates [1], it allows to use DMA coherent.
+> > > 
+> > > [1] https://github.com/sophgo/edk2-non-osi/commit/017a5aea26a066fd2bf501b7893937183165af36
+> > > 
+> > > Han Gao (2):
+> > >   dt-bindings: pci: sophgo: Add dma-coherent property for SG2042
+> > >   riscv: dts: sophgo: Add dma-coherent to SG2042 PCIe controllers
+> > > 
+> > > [...]
+> > 
+> > Applied to for-next, thanks!
+> > 
+> > [2/2] riscv: dts: sophgo: Add dma-coherent to SG2042 PCIe controllers
+> >       https://github.com/sophgo/linux/commit/e728a57834d06b9bbf9bbed69e3ea16416d257d5
+> > 
+> > Thanks,
+> > Inochi
+> > 
 > 
-> Use the Non-CXL Function Map DVSEC to exclude non-CXL functions, and
-> filter remaining siblings to functions that advertise CXL.cache or
-> CXL.mem capability.
+> Revoke this apply due to https://lore.kernel.org/sophgo/ahu57vcS0oOFmCI9@mertle/
 > 
-> Use pci_dev_trylock() for sibling locking and unwind on contention or
-> allocation failure, so competing reset paths fail with an errno.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/core/pci.c        | 207 ++++++++++++++++++++++++++++++++++
->  include/uapi/linux/pci_regs.h |   2 +
->  2 files changed, 209 insertions(+)
-> 
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 318744695f62..01effbb4e7cd 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -1,9 +1,11 @@
->  // SPDX-License-Identifier: GPL-2.0-only
->  /* Copyright(c) 2021 Intel Corporation. All rights reserved. */
->  #include <linux/units.h>
-> +#include <linux/bitmap.h>
->  #include <linux/io-64-nonatomic-lo-hi.h>
->  #include <linux/device.h>
->  #include <linux/delay.h>
-> +#include <linux/iommu.h>
->  #include <linux/memregion.h>
->  #include <linux/pci.h>
->  #include <linux/pci-doe.h>
-> @@ -15,6 +17,10 @@
->  #include "core.h"
->  #include "trace.h"
->  
-> +#define CXL_RESET_MAX_FUNCTIONS		256
 
-Can use MAX_NR_DEVFNS defined by PCI
+Reapply this as this error is resolved.
 
-DJ
-
-> +#define CXL_RESET_FUNCTION_MAP_REGS	(CXL_RESET_MAX_FUNCTIONS / 32)
-> +#define CXL_RESET_SIBLINGS_INIT		8
-> +
->  /**
->   * DOC: cxl core pci
->   *
-> @@ -1096,3 +1102,204 @@ cxl_reset_flush_cpu_caches(struct cxl_reset_region_context *ctx)
->  
->  	return 0;
->  }
-> +
-> +struct cxl_reset_context {
-> +	struct pci_dev *target;
-> +	struct pci_dev **siblings;
-> +	int nr_siblings;
-> +	int sibling_capacity;
-> +	int nr_siblings_prepared;
-> +};
-> +
-> +struct cxl_reset_walk_ctx {
-> +	struct cxl_reset_context *ctx;
-> +	unsigned long *non_cxl_func_map;
-> +	int rc;
-> +};
-> +
-> +static void
-> +cxl_reset_read_non_cxl_func_map(struct pci_dev *pdev,
-> +				unsigned long *non_cxl_func_map)
-> +{
-> +	u32 map[CXL_RESET_FUNCTION_MAP_REGS] = {};
-> +	u16 dvsec;
-> +	int rc, i;
-> +
-> +	bitmap_zero(non_cxl_func_map, CXL_RESET_MAX_FUNCTIONS);
-> +
-> +	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_FUNCTION_MAP);
-> +	if (!dvsec)
-> +		return;
-> +
-> +	for (i = 0; i < CXL_RESET_FUNCTION_MAP_REGS; i++) {
-> +		rc = pci_read_config_dword(pdev,
-> +					   dvsec + PCI_DVSEC_CXL_FUNCTION_MAP_REG +
-> +					   i * sizeof(map[i]), &map[i]);
-> +		if (rc) {
-> +			pci_warn(pdev,
-> +				 "failed to read CXL Function Map; treating all siblings as CXL: %d\n",
-> +				 rc);
-> +			bitmap_zero(non_cxl_func_map, CXL_RESET_MAX_FUNCTIONS);
-> +			return;
-> +		}
-> +	}
-> +
-> +	bitmap_from_arr32(non_cxl_func_map, map, CXL_RESET_MAX_FUNCTIONS);
-> +}
-> +
-> +static bool cxl_reset_is_cxl_sibling(struct pci_dev *pdev,
-> +				     struct pci_dev *sibling,
-> +				     unsigned long *non_cxl_func_map)
-> +{
-> +	if (sibling == pdev || sibling->bus != pdev->bus)
-> +		return false;
-> +
-> +	if (pci_ari_enabled(pdev->bus))
-> +		return !test_bit(sibling->devfn, non_cxl_func_map);
-> +
-> +	if (PCI_SLOT(sibling->devfn) != PCI_SLOT(pdev->devfn))
-> +		return false;
-> +
-> +	return !test_bit(PCI_FUNC(sibling->devfn) * 32 +
-> +			 PCI_SLOT(sibling->devfn), non_cxl_func_map);
-> +}
-> +
-> +static bool cxl_reset_has_cache_or_mem(struct pci_dev *pdev)
-> +{
-> +	u16 dvsec, cap;
-> +
-> +	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_DEVICE);
-> +	if (!dvsec)
-> +		return false;
-> +
-> +	if (pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap))
-> +		return false;
-> +
-> +	return cap & (PCI_DVSEC_CXL_CACHE_CAPABLE | PCI_DVSEC_CXL_MEM_CAPABLE);
-> +}
-> +
-> +static int cxl_reset_add_sibling(struct cxl_reset_context *ctx,
-> +				 struct pci_dev *sibling)
-> +{
-> +	struct pci_dev **siblings;
-> +	int capacity;
-> +
-> +	if (ctx->nr_siblings < ctx->sibling_capacity)
-> +		goto add;
-> +
-> +	capacity = ctx->sibling_capacity ? ctx->sibling_capacity * 2 :
-> +		   CXL_RESET_SIBLINGS_INIT;
-> +	siblings = krealloc(ctx->siblings, capacity * sizeof(*siblings),
-> +			    GFP_KERNEL);
-> +	if (!siblings)
-> +		return -ENOMEM;
-> +
-> +	ctx->siblings = siblings;
-> +	ctx->sibling_capacity = capacity;
-> +
-> +add:
-> +	pci_dev_get(sibling);
-> +	ctx->siblings[ctx->nr_siblings++] = sibling;
-> +	return 0;
-> +}
-> +
-> +static int cxl_reset_collect_sibling(struct pci_dev *sibling, void *data)
-> +{
-> +	struct cxl_reset_walk_ctx *wctx = data;
-> +	struct cxl_reset_context *ctx = wctx->ctx;
-> +	struct pci_dev *pdev = ctx->target;
-> +
-> +	if (!cxl_reset_is_cxl_sibling(pdev, sibling, wctx->non_cxl_func_map))
-> +		return 0;
-> +
-> +	if (!cxl_reset_has_cache_or_mem(sibling))
-> +		return 0;
-> +
-> +	wctx->rc = cxl_reset_add_sibling(ctx, sibling);
-> +	return wctx->rc;
-> +}
-> +
-> +static int cxl_reset_collect_siblings(struct cxl_reset_context *ctx)
-> +{
-> +	DECLARE_BITMAP(non_cxl_func_map, CXL_RESET_MAX_FUNCTIONS);
-> +	struct cxl_reset_walk_ctx wctx = {
-> +		.ctx = ctx,
-> +		.non_cxl_func_map = non_cxl_func_map,
-> +	};
-> +
-> +	cxl_reset_read_non_cxl_func_map(ctx->target, non_cxl_func_map);
-> +	pci_walk_bus(ctx->target->bus, cxl_reset_collect_sibling, &wctx);
-> +	return wctx.rc;
-> +}
-> +
-> +static void cxl_pci_functions_reset_done(struct cxl_reset_context *ctx)
-> +{
-> +	int i;
-> +
-> +	for (i = ctx->nr_siblings_prepared - 1; i >= 0; i--) {
-> +		struct pci_dev *sibling = ctx->siblings[i];
-> +
-> +		pci_dev_reset_iommu_done(sibling);
-> +		pci_dev_restore(sibling);
-> +		pci_dev_unlock(sibling);
-> +	}
-> +
-> +	for (i = 0; i < ctx->nr_siblings; i++)
-> +		pci_dev_put(ctx->siblings[i]);
-> +
-> +	kfree(ctx->siblings);
-> +	ctx->siblings = NULL;
-> +	ctx->nr_siblings = 0;
-> +	ctx->sibling_capacity = 0;
-> +	ctx->nr_siblings_prepared = 0;
-> +}
-> +
-> +static int __maybe_unused
-> +cxl_pci_functions_reset_prepare(struct cxl_reset_context *ctx)
-> +{
-> +	int rc, i;
-> +
-> +	ctx->siblings = NULL;
-> +	ctx->nr_siblings = 0;
-> +	ctx->sibling_capacity = 0;
-> +	ctx->nr_siblings_prepared = 0;
-> +
-> +	rc = cxl_reset_collect_siblings(ctx);
-> +	if (rc)
-> +		goto err;
-> +
-> +	for (i = 0; i < ctx->nr_siblings; i++) {
-> +		struct pci_dev *sibling = ctx->siblings[i];
-> +
-> +		if (!pci_dev_trylock(sibling)) {
-> +			rc = -EAGAIN;
-> +			goto err;
-> +		}
-> +
-> +		pci_dev_save_and_disable(sibling);
-> +		rc = pci_dev_reset_iommu_prepare(sibling);
-> +		if (rc) {
-> +			pci_err(sibling,
-> +				"failed to block IOMMU for CXL reset: %d\n",
-> +				rc);
-> +			/*
-> +			 * Undo save_and_disable() for this sibling. IOMMU
-> +			 * prepare failed, so this sibling is not counted in
-> +			 * nr_siblings_prepared and must not get iommu_done().
-> +			 */
-> +			pci_dev_restore(sibling);
-> +			pci_dev_unlock(sibling);
-> +			goto err;
-> +		}
-> +
-> +		ctx->nr_siblings_prepared++;
-> +	}
-> +
-> +	return 0;
-> +
-> +err:
-> +	cxl_pci_functions_reset_done(ctx);
-> +	return rc;
-> +}
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 14f634ab9350..fa1fcd26af01 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -1349,6 +1349,7 @@
->  /* CXL r4.0, 8.1.3: PCIe DVSEC for CXL Device */
->  #define PCI_DVSEC_CXL_DEVICE				0
->  #define  PCI_DVSEC_CXL_CAP				0xA
-> +#define   PCI_DVSEC_CXL_CACHE_CAPABLE			_BITUL(0)
->  #define   PCI_DVSEC_CXL_MEM_CAPABLE			_BITUL(2)
->  #define   PCI_DVSEC_CXL_HDM_COUNT			__GENMASK(5, 4)
->  #define  PCI_DVSEC_CXL_CTRL				0xC
-> @@ -1366,6 +1367,7 @@
->  
->  /* CXL r4.0, 8.1.4: Non-CXL Function Map DVSEC */
->  #define PCI_DVSEC_CXL_FUNCTION_MAP			2
-> +#define  PCI_DVSEC_CXL_FUNCTION_MAP_REG			0x0C
->  
->  /* CXL r4.0, 8.1.5: Extensions DVSEC for Ports */
->  #define PCI_DVSEC_CXL_PORT				3
-
+Regards,
+Inochi
