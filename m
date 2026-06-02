@@ -1,139 +1,161 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70E0522156C
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 11:28:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 066663DC862;
+	Tue,  2 Jun 2026 11:33:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780399703; cv=none; b=KKsZNXP6q09QV0PyC9zUyLYzbP/rhEQ5arbi6oJ1BipK2RMDypckaYjDpsTdztmWs8RnGVz2N687dFNXK5bvYUezYqY6s5BT6X7Z+5x3dsgIJcd3+c3DrfXi3KK0FySW2iMiSQLfTj47rjFDc0k2YfoS9sZzCn1W5VJOd32jlHc=
+	t=1780400035; cv=none; b=hojwwaiBUz1iBPqBbDq+0vqVovodvThpor0INgLjZAyDgMILtf9xFVu/SJ3ot/PptCuvqUKco83pAOW7NhVopHwdPofPzHOcP13gPCB/W27zOW0+vlYPHb2Mt72QXF9UsRS8vuyDRfA6TkvdqP7SLEWznFQM/e4Jw96jPyEn27c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780399703; c=relaxed/simple;
-	bh=BKifaNHvzzGxlvXa02lmWMAuo7StAF6v4zQ+3mwpGlc=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=rTyydkRwYRtu7HiVSvH8WVRtpCL3as2ifiv8H/SBSRcGtQbGZwZgTJuXVuCo89ExOCWSTRVmnUqiC/+bow+4uD3kbEH/wI9Qn9iW9P5vS0dex+VgukVyDIZVu5OgdJbclyTwHYVPcz96PLeG0p8WKTQ2L78VYDp7AzuimGDBGHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F4zxf9jT; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780400035; c=relaxed/simple;
+	bh=KMH2/ojjq+sbTJGjYAXNbmCc7sW0lbLCjB6n1xLpikE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=DlgJsaaxW6m5KrEoKzYGJNejlZ7KAGqg/NnzNmwVMykhQgFe7plLcSpp94xyK/AoTCq166nNjbHHR/RkiuiluvpOcQPxZHBDYMny1RMRPI5QYVMVYrq3hp4lisG/74HWkZhplkpNZKVRzdIx3jCdhjPm8ka1+wZsH6GiZeeG2Vw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=owAzFEni; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F4zxf9jT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AA631F00893;
-	Tue,  2 Jun 2026 11:28:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="owAzFEni"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02AEE1F00893;
+	Tue,  2 Jun 2026 11:33:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780399702;
-	bh=gERvYyuiyCSM7mZlTY3IuFsfR07ZziVCNWuVRZe6frM=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=F4zxf9jTCBRByDhRVDfOnycOH97G15GRksfGlFaBaTphFU9Z0tb2k5RZ0/hk2MSMT
-	 naYZJdute1ZuqAbvfvYoOzio4fvc6GjF2DAyc2QIChVGgCt7IiKeeya1i87sd0l7t4
-	 aLDBwN4i4pBboxqlZqfALQlmyWapVF/HvGko4QoFraKCZo9bmyoobyOlnVvomisjFi
-	 mSLAM8NoBfXGkHOSTmRv3wf6N2cjCw987WpZXsrmByZoCqXh768vGAP+2b8J9zGSuF
-	 Ld1lxahvrF3OHdcrampzPADCCyV7RBuKc3JXb/CMzpdfJGQfbdEhCEH0TRR3dnZsz8
-	 TqW/vuTuPSImA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 2/2] PCI: Add pci=nodpc kernel boot option
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Yury Murashka" <yurypm@arista.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260602105558.1799563-3-yurypm@arista.com>
-References: <20260602105558.1799563-3-yurypm@arista.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 02 Jun 2026 11:28:21 +0000
-Message-Id: <20260602112822.2AA631F00893@smtp.kernel.org>
+	s=k20260515; t=1780400029;
+	bh=MZzE5gk2ciiNwh8D62gBS31R5AnJefl9q3snq9zcyYo=;
+	h=From:Subject:Date:To:Cc;
+	b=owAzFEnicFWBRgJqHkdTWoN1icFPa/bZmfdiwBaDNWDZDMZI5N+GBn1e78fRmTyQk
+	 44eI/v7RkdhhnNQ4To/qj/XdfCZmUYBsoyV9C7UFjJb1rBYKL2aLMz83C5WMkKyzzZ
+	 fPSMVtKW7sDZviz6tFtcSFp41QfC0oBBUZdJUatZsDwNe8cvpIBv1w8cYxEWET7G2G
+	 PTnTZGcT8MLnfmOCVzZKBfgaQiqYtXNbPj/WZ1X1mdFomwUnRjw7/LSyxxME6ob7GN
+	 aBN6/rDXrMh7FDipwiUPz3Nn5AbJZ2iNsq+tabYLvekHHHBsvZ+5aTXtb8Oggb++gi
+	 5K4yu2v18oWgQ==
+From: Thierry Reding <thierry.reding@kernel.org>
+Subject: [PATCH v6 0/4] PCI: tegra: Add Tegra264 support
+Date: Tue, 02 Jun 2026 13:33:22 +0200
+Message-Id: <20260602-tegra264-pcie-v6-0-edbcfa7a78fe@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/4XQTU7DMBAF4KtUXmPLM/6LWfUeiIWTDOkATSonR
+ FRV7o7TLFpg0c3IT5rvjeSLGCkzjeJ5dxGZZh556EvwTzvRHFLfkeS2ZIEavbYa5URdTuitPDV
+ MkoxONaFpkw6imFOmN/6+9r28bnn8qt+pmdaSdePA4zTk8/XgDOve1m0ggtcAWiGUt7MS5HRgy
+ vmsMrXcd/sPyj19qiF3Yu2e8U6Xic5ao9AFiKgfa3OvPRhXOacwRAc2Ptb2pv//ymyllgiEBDF
+ Wgap9P3PLSTXDcePuxh36v9wVXtlUgaljiG34xZdl+QHEd7pFtgEAAA==
+X-Change-ID: 20260402-tegra264-pcie-e30abe23da07
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, 
+ Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
+ Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, 
+ Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+ =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
+ Michal Simek <michal.simek@amd.com>, Kevin Xie <kevin.xie@starfivetech.com>, 
+ Thierry Reding <thierry.reding@kernel.org>, Aksh Garg <a-garg7@ti.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>, 
+ Manikanta Maddireddy <mmaddireddy@nvidia.com>
+X-Mailer: b4 0.15.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3197; i=treding@nvidia.com;
+ h=from:subject:message-id; bh=KMH2/ojjq+sbTJGjYAXNbmCc7sW0lbLCjB6n1xLpikE=;
+ b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBqHr+aOvgqGQG0k6eSTa7z3hs4cYHPs5PzvpZKD
+ LCemG2aNq6JAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCah6/mgAKCRDdI6zXfz6z
+ oRV8D/9QlFkG5wdTVG2PVMh5At6JOV6geS7SFf/6N1DV9ISijGAhn5MGG1biY2iYtsynJXvZebc
+ 9q+xRz4qNII+4Me+sR26s6QsAnP7uN+uafxngtmk/a0hjSL2FT9RJZIMdz323IJe9yf8RHUO36v
+ LUNBjmBmHWENiC+/fPq8tFNWgWe0zE3sSqUi1SZP0CUeUrvPErSebaVZl7HyOW234CPG4QmWlya
+ iSYCXJbwIqkwSdy8iKIof0hVOIAw2Td8mPG4V+8399GV/yknzhCI8IyacLzojoSIDFrVsX85q8p
+ vnorZ69nsDQ6wxLjmeYzPu7CfwwxGUtodwxXDfUG/WboYAUjiQuaLaWngjYSN6SaLE8jFf9D+Fx
+ KknKOwcvhFequcX1e9a4Jtx7ElPnCKXP0hAwQP1VPk1gXVYPPcLh999pdLrVJXIGdQX59zIHOmP
+ R8h+gRwuJuDQGHi8LG78kHNsbhYARRfQr9UtyAxQM5mCrVDK8JwDdGSU57lBqZY9BS1zxH2xaan
+ Phv5YPVu9wz+rwo3nihBnUPKpl9/kABlqkcRQQxeYSnkPMabuJ2riMn8MCMuR5SBOQLP6X5/8Ib
+ WxCJLMmK+Cl39iYjiloRa09T/rArjOo+THqrslYwZXT0tRwxLCu6RdWS6lTvp0SSoZjDWzfOfWj
+ gENYK4HUDB8AWeA==
+X-Developer-Key: i=treding@nvidia.com; a=openpgp;
+ fpr=88EAC3080149CCF7C08DC89FDD23ACD77F3EB3A1
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [Critical] Using the `pci=3Dnodpc` boot parameter prevents initialization=
- of `pdev->dpc_cap`, leaving it as 0. However, the DPC port service is stil=
-l probed, causing the driver to use 0 as the base offset and corrupt standa=
-rd PCI configuration registers.
---
+Hi,
 
-commit 85278f34398b97df6932c6536a28ecec0294df49
-Author: Yury Murashka <yurypm@arista.com>
+this series adds support for the PCIe controllers found on the Tegra264
+SoC. There are six instances, one of which is for internal purposes only
+and the other five are general purpose.
 
-PCI: Add pci=3Dnodpc kernel boot option
-   =20
-PCI DPC (Downstream Port Containment) support can be advertised by PCIe
-devices, but it might not be fully supported in the firmware. On large
-modular systems with a complex PCIe tree, enabling DPC could cause
-unexpected behavior and side effects. Sometimes it would be nice to have
-the option to keep the system in an unmodified state and be able to
-handle PCIe errors from userspace.
-   =20
-Add pci=3Dnodpc kernel boot option to disable PCI DPC. When this option
-is set, DPC initialization, state save/restore, and recovery are all
-skipped.
+The first patch tweaks the DT bindings slightly to avoid new DT compiler
+warnings that slipped through because they are now disabled by default
+(-Wno-unit_address_vs_reg).
 
-> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-> index 2b779bd1d861b..10d1a0e026d74 100644
-> --- a/drivers/pci/pcie/dpc.c
-> +++ b/drivers/pci/pcie/dpc.c
+Before adding the driver in patch 3, patch 2 introduces some new common
+wait times for PCIe and unifies the way that drivers use them. Finally,
+patch 4 reorders the reg and reg-names property entries to match the
+bindings changes from patch 1.
 
-[ ... ]
+All of the prerequisites were merged in v7.1-rc1, so this can be applied
+to the PCI tree directly. Optionally I can also pick up patch 4 into the
+Tegra tree, but there should be no conflicts, so feel free to pick this
+up with the rest.
 
-> @@ -404,6 +411,9 @@ void pci_dpc_init(struct pci_dev *pdev)
->  {
->  	u16 cap;
-> =20
-> +	if (pcie_dpc_disable)
-> +		return;
-> +
+Thanks,
+Thierry
 
-[Severity: Critical]
-If pcie_dpc_disable is true, pdev->dpc_cap remains 0. However, does this
-completely prevent the DPC service from probing?
+Changes in v6:
+- address review comments from Sashiko
+- rebase onto v7.1-rc1, adjust DT bindings patch accordingly
+- Link to v5: https://patch.msgid.link/20260526-tegra264-pcie-v5-0-84a813b979d7@nvidia.com
 
-Looking at get_port_device_capability() in drivers/pci/pcie/portdrv.c, it
-queries the hardware directly instead of checking pcie_dpc_disable:
+Changes in v5:
+- address review comments for the PCI driver patch
+- Link to v4: https://patch.msgid.link/20260402-tegra264-pcie-v4-0-21e2e19987e8@nvidia.com
 
-drivers/pci/pcie/portdrv.c:get_port_device_capability() {
-    ...
-    if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
-        pci_aer_available())
-            services |=3D PCIE_PORT_SERVICE_DPC;
-    ...
-}
+Changes in v4:
+- strip out dependencies that are going in through the ARM SoC tree
+- revert bindings to oneOf construct so that we don't produce new DTC
+  warnings
+- Link to v3: https://patch.msgid.link/20260326135855.2795149-1-thierry.reding@kernel.org
 
-This will cause the port driver to register the DPC service anyway, and
-dpc_probe() will be called.
+Changes in v3:
+- integrate PCI standard wait times patch into the series to maintain
+  bisectability
+- fix review comments from Mikko
+- Link to v2: https://patch.msgid.link/20260320225443.2571920-1-thierry.reding@kernel.org
 
-Since pdev->dpc_cap is 0, won't dpc_probe() and dpc_enable() use 0 as the
-base offset for DPC registers?
+Changes in v2:
+- fix an issue with sanity-checking disabled BARs
+- address review comments
+- Link to v1: https://patch.msgid.link/20260319160110.2131954-1-thierry.reding@kernel.org
 
-drivers/pci/pcie/dpc.c:dpc_enable() {
-    ...
-    pci_read_config_word(pdev, dpc + PCI_EXP_DPC_CTL, &ctl);
-    ...
-}
+Thanks,
+Thierry
 
-Using 0 as the base means PCI_EXP_DPC_CTL accesses offset 0x06, which is
-the standard PCI_STATUS register. Writing back to it could inadvertently
-clear critical Write-1-to-Clear (W1C) bits like PCI_STATUS_SIG_SYSTEM_ERROR.
+---
+Thierry Reding (4):
+      dt-bindings: pci: Strictly distinguish C0 from C1-C5
+      PCI: Use standard wait times for PCIe link monitoring
+      PCI: tegra: Add Tegra264 support
+      arm64: tegra: Reorder reg and reg-names to match bindings
 
-Furthermore, in dpc_irq():
+ .../bindings/pci/nvidia,tegra264-pcie.yaml         |  79 ++-
+ arch/arm64/boot/dts/nvidia/tegra264.dtsi           |  48 +-
+ drivers/pci/controller/Kconfig                     |   9 +-
+ drivers/pci/controller/Makefile                    |   1 +
+ .../controller/cadence/pcie-cadence-host-common.c  |   6 +-
+ .../pci/controller/cadence/pcie-cadence-lga-regs.h |   5 -
+ drivers/pci/controller/mobiveil/pcie-mobiveil.c    |   4 +-
+ drivers/pci/controller/mobiveil/pcie-mobiveil.h    |   5 -
+ drivers/pci/controller/pci-aardvark.c              |   7 +-
+ drivers/pci/controller/pcie-tegra264.c             | 556 +++++++++++++++++++++
+ drivers/pci/controller/pcie-xilinx-nwl.c           |   9 +-
+ drivers/pci/controller/plda/pcie-starfive.c        |   9 +-
+ 12 files changed, 655 insertions(+), 83 deletions(-)
+---
+base-commit: 9153998d6bc78594c0c853e0eea84db778855a47
+change-id: 20260402-tegra264-pcie-e30abe23da07
 
-drivers/pci/pcie/dpc.c:dpc_irq() {
-    ...
-    pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
-    ...
-}
+Best regards,
+--  
+Thierry Reding <treding@nvidia.com>
 
-This will read offset 0x08 (PCI_CLASS_REVISION). Since DPC registers a
-shared IRQ, when it fires for another device, a Revision ID with bits 0 and
-3 set could be interpreted as a DPC trigger. This could cause a spurious
-PCIe link reset, disconnecting downstream devices.
-
-Could the pcie_dpc_disable flag be checked in get_port_device_capability(),
-or could dpc_probe() verify that pdev->dpc_cap is non-zero before
-proceeding?
-
->  	pdev->dpc_cap =3D pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
->  	if (!pdev->dpc_cap)
->  		return;
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260602105558.1799=
-563-1-yurypm@arista.com?part=3D2
