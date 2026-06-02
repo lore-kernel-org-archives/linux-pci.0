@@ -1,188 +1,178 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011023.outbound.protection.outlook.com [52.101.52.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF5C53E0240;
-	Tue,  2 Jun 2026 12:29:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.23
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780403383; cv=fail; b=HZYFho0fqyCq6jZN61HcHKzrBcAx7ep88oPd9FyF9dRrI01fz112dbkWhNx/Lbv/3WlGvYFsAG3QTyY9X+/iZiD4sacWhGiM0HEmUc4QXGPxwk45KgSLtzdKP/0bVkM1cw8pa4Y9BCfXr4F0LUUJCeM2iBsu+CdwtYtAsh31k7c=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780403383; c=relaxed/simple;
-	bh=dv2hMuSTdJlDEkpoZi4V7unUWfqacIEu8kujrQgZQtg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=BJIS44ANH1WWphV7W91QkZ1dKcTbtPo4GUCWBLOJPKHuHMhZFzh5NBdl5019icHeRHUhw4C4qLK8twp7a2rveU0+vnbIlgFW8Fif+3nE9qz+wJaSbCUhqA3hvF5xYLAJKWNG8uy+yK4Sk+fZvTGH9eO/9y6pVAvu76WBuoor8PQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=PlLtb5PN; arc=fail smtp.client-ip=52.101.52.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B78133F59F
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 12:33:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780403630; cv=none; b=lQboqidoPAZdvZTiPceeYAqDijZs9Je0RwSPiMvN1VLWPTlS+KzM5fLXB50dScvl3NUL/Uwn6AC6eoqUTmpgOIeEDBLmgUIdWP3B0UY8Ye7+EOe68mvudYqEefzSBUltzfuyEZ6MS6EUscB130scjoFTJmOTZLpNYzLpBJP/l3s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780403630; c=relaxed/simple;
+	bh=Dt7ynl7RjMDm10IwkFbV7yaqQ3XCHkv1Jhl7dMLZbl4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BsDvI7GQYVSmfjdeJ+G5EGQiSeq/VJ7w0dPRiXjCTY0wRAcK4yFjKdZBceeKNXi+QVySDDhEWYxyoMFSJ/mHuSnx6AZGqEEef4W4QCQunh9xsoqPSui/6wwatxC+CNJ9/uFvyLKF/GmA+SYuVZhQs1oW5JrPnDDBpACXinSOtqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=Mjg0KMTz; arc=none smtp.client-ip=209.85.160.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="PlLtb5PN"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=P5XoIo24pUSNpc0NJUlN+ICkGFIwYFSc/lvqLwnB3NgJdyJw2d38sgHfzyavkcYzKtz0AVd/lt4xpa0ekqHSg3H4aoY0B0gQrGAQ/khsC4UMGFM1XsdmZFLc57V7xpz2X3MaegUSUgwU9juxduYBwB3Ib2xaDQ0PJN2Uf4+O0rMKSoFoMQtlplLVhPLEtRGNpSQ5ALH++/gFMhi4zLTR6LpEsksDJEw1lKI5qrB/N4PYcf8M/Sew4+SKVPfuo54jXX3Y1kE6jEkkCvIGrUpfQ69/t2/5etvW5LcI4i+ckX8ZLo9BnKS1gdR4U26QYBmajZHxnzP8gW2lL0ITcdmU6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iN+XTpJkXntJSSywd1/M/e6tFwvJeJQXpUYwUBPhhcw=;
- b=OaPRefjvSNEhXG/CSlLzJOwmKb3Ij5afsjw5tnytYQo/J+3sJk3MHOplSB6wjuxDL2VQM5R1FQDUx9KHf25+46hWUvVKIc6qtLdYKpS0927EWSz7VsRTS72F16y1um/xbcZfEctXRHpKOCfKg6um1EIJ6TFoSGWgZIIM1iG0Gsd4pLIKtfl5D5RD6BXtqw4fX+ucuMT/x3lfoV2E6rD+DOoSjvUXejlTdyeLY+a6IaXK++Bbih+3pfzyX17p505+sYcAOiHplHKtG0LmYxspl3xthWEzK5yHRFG/Ig/IXRojyy6byA4aTRxRLRi7DoWGOZMqwoJCJDXqj+MHAcgigA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iN+XTpJkXntJSSywd1/M/e6tFwvJeJQXpUYwUBPhhcw=;
- b=PlLtb5PNLffCD0NiqML4DDLEfKSovJMwuTf6t65dS2SKCwjvUU2pGBKt7qbl+VREW2a7XDyH2us92f6WGyAno4Myb5+NEmQ00Wn8An3jCBt6JxWK79/ZmJFmdQLR811YqzBxjLTpz7wKtay4ROKVvmVygNFSNv/p1OQTKNWVyQ3ooEZkvAw+YK8DuJiWtveAhGP8ZBrRvrV5XkGEo3TB6BG0rbJrgP9OzBnc2dZjogdUwl3DJtyplVkAB/2mhioLUCN1eA4lbQGrcQTmKi4dWVz6EqfaAbkmE9uvPvKGf6wbBYj1rY/DLyY01JpHDQ7zFtD3ywdQPc2wTrextahe2A==
-Received: from SAVPR12MB999121.namprd12.prod.outlook.com
- (2603:10b6:806:4e7::18) by CY8PR12MB9036.namprd12.prod.outlook.com
- (2603:10b6:930:78::22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.12; Tue, 2 Jun 2026
- 12:29:37 +0000
-Received: from SAVPR12MB999121.namprd12.prod.outlook.com
- ([fe80::93ef:92fe:74d1:380f]) by SAVPR12MB999121.namprd12.prod.outlook.com
- ([fe80::93ef:92fe:74d1:380f%6]) with mapi id 15.20.9913.009; Tue, 2 Jun 2026
- 12:29:37 +0000
-From: Ankit Agrawal <ankita@nvidia.com>
-To: "alex@shazbot.org" <alex@shazbot.org>, "kvm@vger.kernel.org"
-	<kvm@vger.kernel.org>
-CC: "jgg@ziepe.ca" <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>, Shameer
- Kolothum Thodi <skolothumtho@nvidia.com>, "kevin.tian@intel.com"
-	<kevin.tian@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"clg@redhat.com" <clg@redhat.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v8 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness
- check via CXL DVSEC
-Thread-Topic: [PATCH v8 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU
- readiness check via CXL DVSEC
-Thread-Index: AQHc8llUjn8y6mjsCU2e97g2INaIobYrLzkP
-Date: Tue, 2 Jun 2026 12:29:37 +0000
-Message-ID:
- <SAVPR12MB99912160844F6B16D7AB2E570EB0122@SAVPR12MB999121.namprd12.prod.outlook.com>
-References: <20260602063015.3915-1-ankita@nvidia.com>
-In-Reply-To: <20260602063015.3915-1-ankita@nvidia.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SAVPR12MB999121:EE_|CY8PR12MB9036:EE_
-x-ms-office365-filtering-correlation-id: 82c1bda7-1b30-4408-d60c-08dec0a29c47
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|376014|38070700021|22082099003|18002099003|56012099006|11063799006;
-x-microsoft-antispam-message-info:
- wLu1yUN0Tv3cz+p3sq0X7FTK8/yg6noWVBLEoGY/NFwJlO0rXWx68yTcJYIRkaA5DO2KZ1jhcmyjRNcFoXNF8EcyHA3Zj4AR2y2JVRY75fkZi9CoZ6hpQ99Bw0h3cfW2+BCGfvaLmAJZb2FVbX+qWhqSjypqggksor3/X3mAixbpSWPcWYxExdHOgGW5p5XcypCKjIrrSqkSISZII8zLOL2mqG1FuzISjMGXkPAuBbXZctHHl0jZkC+CK63o+SjBMmb0BvkIOuucghfh9YD+5yGCnOF8m2SDt3o+UMNPOQrYcxm0IYTORPgaxacUP/rEAnnSzbkm2v7Uq6EvfHNLKbqd+1yJ7f7K3TnnKqmvjZRXC1jjsSGbekhI4JzYpvXOYiV5kdRvoNXjy6g+WO6cNS1HIPKJ5QAGSYZIDWdoMOsw75Sie2IrcXkPSRkRx/D41DbOLI8GgWUnMCy4d7cMmiP8s9FFmJZxMeSX5L7fBF/vQvvH90tUlQpAfZ4hLtyYgNBIVuM5Aqo2Fki4SR5PsJg0bwVIcoPGwfMpROTFUGRq+nPcOOjwXjELUlBxWLD97NuyxY3u0smaLsPBW3oDSKsDAdu8IJwakkKfpZBZVqryo9H4ksD4sjRwXxg4EFh7RnMgVRUENeffdwMEbX7OBzM4npJu+UjE/AInnjwrmuTUyG7h43+N/pZrqaxlYok1DLxWIOOw1OjsVkVCjhP4lKT+qb6BfZs3xvb0NYLUEaVGUE8joQZ31pQxrrZbx63Q
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SAVPR12MB999121.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700021)(22082099003)(18002099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?LVSxLxnE8UOINAWV0Q5gwC8ZEj126WftnpFbXnJnHtEfyTWP8DmAk1OY5B?=
- =?iso-8859-1?Q?mR9oovvHiLMDv+CjWIMkT1eNr1K3OzGb1C5mUyJct4KiK99iw+1OP5H+C8?=
- =?iso-8859-1?Q?Gu+8/90/RgoF8MF4CinC0+xOPuh4UXTDMpMtI1H5yyuIf0O2IDbNhInq2H?=
- =?iso-8859-1?Q?jSLATRXBsumx6ALdTu0zTwWvTDjsIEOLiRgriIHYi7uNk302kLtPZ3rTIZ?=
- =?iso-8859-1?Q?iiO/IDQ6oNc0AzVPy4UK29yuuvNwTBTyO3YgTRuc1HxcKJ7ntJ8SCRK0Wf?=
- =?iso-8859-1?Q?iJ7+mXqgVcIA4Bsc+khCFNHyp8muj1jQds6tNDAPo2uhdnXbCI5A2iwIUd?=
- =?iso-8859-1?Q?llhFpVjw94YdKqBA7vLllgAH7CngEJTNKUl2Rfhc6hkBRb2dMAioMsYTgg?=
- =?iso-8859-1?Q?AYUfoJB0ov11ra4gyAAcnIev8kSAOpNxP7C26CSM48wD1v3F2wsJoRVHHJ?=
- =?iso-8859-1?Q?Qmuu0RxDhecZkPDhXNK1tjYmUEmFFg6xbzxTAr+QMOJDMYXRFBoWrGU4u7?=
- =?iso-8859-1?Q?vHsB9TWvpiFzx2RvgXpg/jnhR/1VTFVZR+ddm+780SR1lXVtMYMTJpHJHT?=
- =?iso-8859-1?Q?Xti586R7hc4nRcHo2imVgwor6/fvzVOt0Kj5Nomx0wgRLrw3Sjs4kv+f4k?=
- =?iso-8859-1?Q?eFnEgWArtB5ODTkmzs1GfQfP4M8fY8Lnuvhih2NQ+nOQNcK9acF80touGc?=
- =?iso-8859-1?Q?rIMXUeEo9t3pqfoyuti0FkX4PLAHzAQa9XEzQOmBYmnP/14u1wdDUmHgXp?=
- =?iso-8859-1?Q?6p5Mc9oYDLid9fpL08TEHGTlnyBrgvl+imZdSvskUO+JzkWvPLgOx/dAvK?=
- =?iso-8859-1?Q?ebHpY/WziUrrUODHD17EPYOa+H/wvDBsDxtunY7vOKvGyOZHrnf9UAVheb?=
- =?iso-8859-1?Q?C9J+AsqYd09W55eaIZDeesNMt0V7DcZDj6AJYkLPIoOLWDmLRENicEUOwH?=
- =?iso-8859-1?Q?bhEbBTNJrEafBErk9Ab8ByygzoY0GnKSalYPvqd1TZWwhWxIIuzKSy6Y3q?=
- =?iso-8859-1?Q?MOVcyEEZtfCndSF8BPy+3fCQo5rWNBaafyamSWFSkoS9D8Hqaov4y2xo/A?=
- =?iso-8859-1?Q?qllSHrnjKDFK6qmozk7//cNjys6UElmEDBhIQpjMhzAEWysVSpXcNr+afp?=
- =?iso-8859-1?Q?u535LACdWlUefF6E87rv6nw+ik+Af/TIRQwhWIGU6NxJ3HPY/30HDxyHc5?=
- =?iso-8859-1?Q?iQgmHtZjaJ8DHup6HxXg35hZfT+eNDCU3f6pCFawU+vM8SUOsew0rmBfxZ?=
- =?iso-8859-1?Q?3r8Y6vhR0StIEYvPa2K+d9O3pORBrQRmefpWu4VBu72zNOXW0oJ+UM3BUu?=
- =?iso-8859-1?Q?+BaxAhErL9KlrSgiGDyFWbwDLjQcRM3OSIaZt8StB+Y2Rs53Frx3pHP2K0?=
- =?iso-8859-1?Q?1TM20QtamL4laEmCWb5E8AKir4AbAFWZ807CA5vx2NIc6BKbg8c8atj6p4?=
- =?iso-8859-1?Q?LT5BImDZlEiSnOlFOdxx90IVh31B671qWPDhaq5hdhW7kEqqZ1l5Dj3yhj?=
- =?iso-8859-1?Q?MNTYvfYdx1DmmhTQRzcKEPO6KSc/tHeX3kZnASxPcBcQ0XkLY/G5uUFUA1?=
- =?iso-8859-1?Q?N19llBQeYwUkojvqmhdjNYNBg2YDSIlk75FapszyevGhoUG0STfEhoDG2r?=
- =?iso-8859-1?Q?V1HiCltmtvxwLQ4k9qAhrD2OW3sUhGbAAEUWKk5MHWQyd8kllz6xsI/nOw?=
- =?iso-8859-1?Q?Dr/Nxiv3V8+Uovf/isYdKpj52T2++8ef+0sCsr1ghvMd/8dyh4BlxlszTQ?=
- =?iso-8859-1?Q?Le63ypljAe2AVzpN48ZY3kswRQRe2M1NlrAxw7gxNqmuto?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Mjg0KMTz"
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-5176465a4a4so13345981cf.2
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 05:33:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1780403626; x=1781008426; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3fuMy8ZTlB4sZmM4SRNfS45Rtpr0e2y/Uhs3uZMD108=;
+        b=Mjg0KMTzNzeCi7FV4Cglipctnd4qTRNJBs44FcFTysdYrVy+WlGmP/0GDFu0J+wJ7m
+         R/AuPEohevy1QNUE+WUDGubmJcDZZnffsV7i/Zze94JkqRPhbPdy15Qk6yh0s9q2hu1/
+         bI7dm1G26H7om23e5xJModDeVrIOi0meO3NUWse+J5lk5WegiPpkj76Qz79IXx4wghAH
+         J1I3OvFvwHvZLYWvaUMDTJFwu8CeiZpFpTAa6VbXuL1p2SxsoyL2H/fX/865+UB4pvvq
+         PhJR1KIiS2V1O2Xw5dcvwmRIXL5LbfWF9nRanp+5gjV4eMn6+GEiDs6cHaCPjs+09FpH
+         tsZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780403626; x=1781008426;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3fuMy8ZTlB4sZmM4SRNfS45Rtpr0e2y/Uhs3uZMD108=;
+        b=N4J/mHIqegjH2Be6M0tPZtCB7HWhs+YAzQ6/qjnx8cbgOXLuLvjCQvxd3I4+MfCYUk
+         ZPNjiqQjKP0zYn72ZEx4ZopB5+Ja9uzEMHxhhUWQ7lQ/u9x43dVJKlNGXojexC5lsOs9
+         FO+JJIx9WIzdFIrFocnHkdJf5oqbF6wGNvY5r3MpGMxKQwVjgKJbZ20tu+PiaBBjoVpK
+         U2co1ImLXyjSUwps8CSFO7Z2QfxhuYSAYX1n2GiEJbJW2PsA3zHsGEHz21ifqJgqIdCC
+         sODKvZ34SsZYY6SJJVHUWWGv31OKxu4RTPH24uryN/7c3ml8ruakU83SA82NRhAdWgNL
+         ywPg==
+X-Forwarded-Encrypted: i=1; AFNElJ+VAo830BPII3Tag4VNWr/9OXEGg/iB1eeiiJjWqeH2CaA64lXfVGVhZI3FqY3xmVHDNzd7KQyNVUg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyA/WvZZ1XN9HhzCFIPV/1l6iG4YJri4fibCuO6HFOXMqnHptFe
+	RKtRQifO62ClrMojo3e6tTnQ1ZFy/eoq8qwmPnTd2Ae5KhF7u6f4e6g7iiIvpeDUmlM=
+X-Gm-Gg: Acq92OH2jHdxW8/nn94cMtkHKcje9WITEqZZ9VmnH2V3v54MgJY//43qsXlvlgk0Jkk
+	yZhW8GIzfhWocYUjs0U+jlA4FQeMP7N0h/86uddprP1xxDKnP+OoA2FUCevs6+OPLIf1NhYDAI6
+	qNHYkSoRKt8FNeS0QDQGXmnTvvtls7tN4gXK+7wqE4FbpN0F+ONKb83VBdsKoplMzUF1tS+OWLb
+	tFtvoaF83/nWkh9/FwXCGQl+qG4qp9rKVSLjduRAnvLxv6ULvLN/HHD78YetSpk+5b87B6mP7up
+	rsnzb/M4cw3VIoTjIaAFQWhmTtz7n7TMDYzKmgMrzj9mfUfrmTCf9ZlZpT/xO5ov/mQyqhu4zww
+	Hu1DjEHP9mrEGMg1Mk1nODhsy0Tr8cDtpiEHUsKiczopP16XYizMtBxQHPQ57+2+v9tygKyyldW
+	6CJ76jn8ZZ0vFoNfTmL8lSxLhp/Ljl08sieNbHdIIvo0OhvoBEXZll33HUhdPKCSbFIAVrtfszt
+	9xDWcBFa+BVrjvp
+X-Received: by 2002:a05:622a:190a:b0:509:2527:d789 with SMTP id d75a77b69052e-5173a5c05ecmr228232631cf.6.1780403625864;
+        Tue, 02 Jun 2026 05:33:45 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51741d6a240sm78686221cf.18.2026.06.02.05.33.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Jun 2026 05:33:45 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wUOJU-00000003m5x-3DKO;
+	Tue, 02 Jun 2026 09:33:44 -0300
+Date: Tue, 2 Jun 2026 09:33:44 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>,
+	Pengpeng Hou <pengpeng@iscas.ac.cn>, stable@vger.kernel.org,
+	Petr Pavlu <petr.pavlu@suse.com>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>,
+	Gabriel Somlo <somlo@cmu.edu>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Leon Romanovsky <leon@kernel.org>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Hans de Goede <hansg@kernel.org>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Daniel Lezcano <daniel.lezcano@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>,
+	Jason Baron <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>,
+	Tiwei Bie <tiwei.btw@antgroup.com>,
+	Benjamin Berg <benjamin.berg@intel.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	"David E. Box" <david.e.box@linux.intel.com>,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Sean Christopherson <seanjc@google.com>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>,
+	Frank Li <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	Alexander Potapenko <glider@google.com>,
+	Marco Elver <elver@google.com>, Dmitry Vyukov <dvyukov@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	John Johansen <john.johansen@canonical.com>,
+	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
+	"Serge E. Hallyn" <serge@hallyn.com>,
+	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
+	kasan-dev@googlegroups.com, linux-mm@kvack.org,
+	apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
+	linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net, qemu-devel@nongnu.org,
+	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, netdev@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH 01/11] params: bound array element output to the caller's
+ page buffer
+Message-ID: <20260602123344.GG2487554@ziepe.ca>
+References: <20260521133315.work.845-kees@kernel.org>
+ <20260521133326.2465264-1-kees@kernel.org>
+ <ah699hwLxIIOZ0-7@ashevche-desk.local>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SAVPR12MB999121.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 82c1bda7-1b30-4408-d60c-08dec0a29c47
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Jun 2026 12:29:37.2144
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7cyOifxAhFlWCAOw/sgvfjlO2NnJb1YxCk9wc2RtrCTH+O6rsBWs7/4uqpgQ1Kb30hPzZzhlIBfobQTgogXNDg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB9036
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ah699hwLxIIOZ0-7@ashevche-desk.local>
 
-Got the below review comments from Sashiko [1].=0A=
-=0A=
-> > @@ -712,6 +825,12 @@ nvgrace_gpu_read_mem(struct nvgrace_gpu_pci_core_d=
-evice *nvdev,=0A=
-> >   else=0A=
-> >           mem_count =3D min(count, memregion->memlength - (size_t)offse=
-t);=0A=
-> >=0A=
-> > + if (nvdev->cxl_dvsec && READ_ONCE(nvdev->reset_done)) {=0A=
-> > +         ret =3D nvgrace_gpu_wait_device_ready_cxl(nvdev);=0A=
-> > +         if (ret)=0A=
-> > +                 return ret;=0A=
-> > + }=0A=
-> > +=0A=
-> >   scoped_guard(rwsem_read, &vdev->memory_lock) {=0A=
-> >           ret =3D nvgrace_gpu_check_device_ready(nvdev);=0A=
-> >           if (ret)=0A=
->=0A=
-> [Severity: High]=0A=
-> If a reset races between the lockless wait and the in-lock check, could t=
-his=0A=
-> code return -EAGAIN to userspace?=0A=
-> [...]=0A=
-> Should nvgrace_gpu_read_mem() include the same retry loop around the wait=
-=0A=
-> and lock acquisition as the fault handler?=0A=
->=0A=
-> > @@ -846,6 +965,12 @@ nvgrace_gpu_write_mem(struct nvgrace_gpu_pci_core_=
-device *nvdev,=0A=
-> > + if (nvdev->cxl_dvsec && READ_ONCE(nvdev->reset_done)) {=0A=
-> > +         ret =3D nvgrace_gpu_wait_device_ready_cxl(nvdev);=0A=
-> > +         if (ret)=0A=
-> > +                 return ret;=0A=
-> > + }=0A=
-> > +=0A=
-> >   scoped_guard(rwsem_read, &vdev->memory_lock) {=0A=
-> >           ret =3D nvgrace_gpu_check_device_ready(nvdev);=0A=
-> >           if (ret)=0A=
->=0A=
-> [Severity: High]=0A=
-> Does nvgrace_gpu_write_mem() have the same missing retry logic?=0A=
->=0A=
-> Similar to the read path, a racing reset could cause this to return a=0A=
-> spurious -EAGAIN to userspace.=0A=
-=0A=
-This is the same point Alex addressed on v7 [2].=0A=
-=0A=
-"Note that the read/write paths also have this gap where we can wait for=0A=
-the device to be ready, but the check under memory_lock returns=0A=
--EAGAIN.  The difference is that userspace will already automatically=0A=
-handle the -EAGAIN vs the SIGBUS could be fatal."=0A=
-=0A=
-So I'll skip this.=0A=
-=0A=
-[1] https://lore.kernel.org/all/20260528115613.63f1b178@shazbot.org/=0A=
-[2] https://lore.kernel.org/all/20260602065100.48B2D1F00893@smtp.kernel.org=
-/=0A=
+On Tue, Jun 02, 2026 at 02:26:46PM +0300, Andy Shevchenko wrote:
+> On Thu, May 21, 2026 at 06:33:14AM -0700, Kees Cook wrote:
+> > 
+> > param_array_get() appends each element's string representation into the
+> > shared sysfs page buffer by passing buffer + off to the element getter.
+> > 
+> > That works for getters that only write a small bounded string, but
+> > param_get_charp() and similar helpers format against PAGE_SIZE from the
+> > pointer they receive. Once off is non-zero, an element getter can
+> > therefore write past the end of the original sysfs page buffer.
+> > 
+> > Collect each element into a temporary PAGE_SIZE buffer first and then
+> > copy only the remaining space into the caller's page buffer.
+> 
+> ...
+> 
+> > +	elem_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+> 
+> get_free_page() (or how it is called)?
+
+I thought modern mm guidance was to use kmalloc whenever possible and
+not use get_free_page() unless you intend to use the struct page bits?
+
+Jason
