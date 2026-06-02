@@ -1,298 +1,573 @@
-Received: from fout-b1-smtp.messagingengine.com (fout-b1-smtp.messagingengine.com [202.12.124.144])
+Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010039.outbound.protection.outlook.com [52.101.56.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C397014A619;
-	Tue,  2 Jun 2026 20:32:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.144
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780432329; cv=none; b=jUjJ1H2l+84mzXismqNVkROCoFm+ZL/Iy//GCAMx9KV3IR/uoT//rsTlxBzUZelKiukiU0fPPUmPe0gDqZuApHFo/1PhbiGP3s3IhMM0Ck37PSoOM2JFkkNxz2o90eDRi63ug9ACp7OiLKnXMjL4RPPCn5xlWjGzlMhYOz8sm3c=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780432329; c=relaxed/simple;
-	bh=XriJpakl3eeNtBAmRCwuqsAe3EytmLDNQD88oqSmE5A=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Q3wx649uVk+o3GXRnZeoO83SNg8hBu0kN7KTUknOFkgxXzRIV3BDNYoHLm9rQmPBOGcaYjB1bQuxa3UCAOlaI0J8Xbad0UsQEAotwlzJgLHvJRIQG9q8Li+StW9NYHB1zliYxd+DRXx6gwrM9bKYTnkPszwnedUK2yZrqwgdwIY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=TGQ4H+ge; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=QmrlAI98; arc=none smtp.client-ip=202.12.124.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB43A3403E0;
+	Tue,  2 Jun 2026 20:34:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.39
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780432457; cv=fail; b=eBc0kGYJ52VWL0rXZbgoJfLWgSyxsSdxccl9V4yVwQWNbclVNdCo1SUKkfHNpYsh9xnCFIS3WZiDOQJXpqiAhuzjTzCk6L7paOnjN7eqcSG4KjkTP8nDUGkIpEzgPyAwVNky2Wp3KqFxlOPtebrwOv/3FhaP3Y/NYH/0kAeS+x0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780432457; c=relaxed/simple;
+	bh=of56vpLXiHlxcgio8fhmybJNHT/pAm3Q6ONQsnikqoc=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:CC:References:
+	 In-Reply-To:Content-Type; b=WlKRrOeif7M6GKbyPDKGuNDHrsA+e3TF0CF3PM01t0A336/UD9De/ntnFDTC/CXyFwCEGWQkxdK1fKQ0dQ3XOZEcsNt31kjXwt5XhduG8RqibfBrSnFl8EGlrZj6mdl961xUpVA126hAPW9A2khaImbNm3cxMCT76E2+C1TlJdA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=KJD99y0Z; arc=fail smtp.client-ip=52.101.56.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="TGQ4H+ge";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="QmrlAI98"
-Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
-	by mailfout.stl.internal (Postfix) with ESMTP id 5A9E31D000B1;
-	Tue,  2 Jun 2026 16:32:05 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-07.internal (MEProxy); Tue, 02 Jun 2026 16:32:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1780432325;
-	 x=1780518725; bh=S/7ObgL4kdORe1WMDW9bBxpxZCDDMLrxGhBZJcH1Ckg=; b=
-	TGQ4H+ge3y2NRLD63TU8FyTT7GTbnz+TWa5sRmmtx5Z36fLVa07jYKQa7HZIdqib
-	Wtd5vrzEEgzDYIAIO8Umzu2Q1WfVudJc99QZwJSHmEmQNUw2vJ72IjCNf7mAI9yz
-	1cLEKww3di3h7RAbo5ltZYM+u79Bdhbw1uUEoUbG6PNLBrdFyOLeBx45UveeRP9a
-	p4OZg1FAk0FLRR1sKYG1fScRPYg6I4EdSQUtIBAw28unDStrfZ7ANPfpp79mcUEg
-	jBoArnYeNl2RwDLb86M7LI38TqWQLP6ONO4wn8jmSJ4Sg9tvZ/wqAG+qODmERSTr
-	MFPjhWtl7pBg3gnQfWeLuw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780432325; x=
-	1780518725; bh=S/7ObgL4kdORe1WMDW9bBxpxZCDDMLrxGhBZJcH1Ckg=; b=Q
-	mrlAI98Ge+WIYczsbpfB3938rO9sHiZKDEkFgmW17DD00fjmcRmWNlzYNTp11ygL
-	6nYRcf5RDX1YyvMsXdcP1smUIEYjoAnzhx+f5HfqpsUBtuPjkVaqroHfTVRVU9XQ
-	2OlXggxZPmdipBiJ3PrPTaw4HBg0Vw8Afz/p6awov9qsw7qwYMZQ/7Jewmq0nDA9
-	HQOaQ6KzFYis/nqZPi7ANvzzexkUsN1CcKyeCZMfXvmVKcIWzH25OpxUs4pTV6m7
-	2Hwk/shgjvw+S8MZ8pn1xSTuUzZnP/uTJ2TCNuXMuG1xLTexn1OpymxLAeaYLz4b
-	PDkCBaoQM+KQrmgvnI0hw==
-X-ME-Sender: <xms:xD0fajvq3hC6uGZzoltDUU87IAu-KFYUwb7mutTuDAEj2bZtpNaocg>
-    <xme:xD0fak5zYJ-NMBEgh_vjS6J_y9xR1zlctcEXj0Bt7eUMHic8bDBN-JA343vvOK8au
-    dUHXihty-309BPlKorMM0DSDL-64Ahc8V-bdKM7Q7S5MiBz13187w>
-X-ME-Received: <xmr:xD0fancomDwSix8KUsJMSt3GJRg5ikck8aWy5iSv4D_7HSjfo1dKaQyOM1k>
-X-ME-Proxy-Cause: dmFkZTFmhR1UEdp+RegDlkR7XrCRU2o0u1DxFjG4SCp4OPPUEvLbEqK+6NiWQcHXxQBjd9
-    x3uFHlb8TCsLu2tjN0LNDa1C0isKbNZiV+dB/21oFmEY8i0/gWtFKBqCSvJM4sisZtFGc3
-    BK4QBCF+j2XizZbPzmpOPDDChjxNHJu0lcADdI6EiVdNNBW8UdX3JLCXikXo685iEqS81j
-    C0lCT3W5hSutEkfAI88akBKEnKdf8cYGqqYNBtE/DeOsJELJygl/ZoYPu5s1ILvDz1TMo2
-    1jChlh0c7IydsvfjZ8wLuiXneKiy1abOKaf4Se4v6BFTgBuezfMrC2P4jHouu0NSx6QDMs
-    P96V/fr0o+pBafJELp1ceIC0WWTgKdbKTdvbIqW2m1xmhOtVN+u65rqPhsyWqBc1VHF3CF
-    Fy+eipdFMuhNwzsxVaZsxWzfqeVA6ODjMFLAshMpF9u1pCbGmgiYYyFAb/DvCnJ9SkRttf
-    JHqUlT/qLogUaIxDpx/QMT73uIDGMBm+Bk+P7FvRy7FnktByDLTuM3CVvbjKjmXZQQEbQL
-    zHCXrpRCE/ybLErZZoQ27zXfRUiHBCiHAGekQgrNfP0tEnyKB544VnWrJJbROijrNg29O0
-    RKTIte4pcbZ4fFqIKG73/OX1/0PNpqsu5mNb2pKXLgxQFlQDPOtZbWIcOXoA
-X-ME-Proxy: <xmx:xD0fapwLpHgIko0JHETRdny6S6DgLK0ZA8jXB9HyolqTVsONeHolpA>
-    <xmx:xD0fak9SvS8sPqtohx8SrIgOECniOR40FhpG4MHsiLqKlfZD_vIH7Q>
-    <xmx:xD0favwG2P6qbT-c4AA-9xivcpb_8GNWUnX4EVtUzc1ke67GPLt-1g>
-    <xmx:xD0fako5r-xJUvmNo-Gg322iw5gEx1H3T5GgDWffNG7GkwJU096HKA>
-    <xmx:xT0fariwunGr8illK9CUNw9KvbhakstpcZU7T91yHpSX22OtlpEP8zqb>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 2 Jun 2026 16:32:03 -0400 (EDT)
-Date: Tue, 2 Jun 2026 14:32:02 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
- mjrosato@linux.ibm.com, alex@shazbot.org
-Subject: Re: [PATCH v17 5/7] vfio-pci/zdev: Add a device feature for error
- information
-Message-ID: <20260602143202.6395e9e2@shazbot.org>
-In-Reply-To: <20260520171113.1111-6-alifm@linux.ibm.com>
-References: <20260520171113.1111-1-alifm@linux.ibm.com>
-	<20260520171113.1111-6-alifm@linux.ibm.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="KJD99y0Z"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=MqDUVZf23b+XDPZj4yOcdEcGQ+nG3i2ocxgG+pU+P+cQUa1Ea7auuLQfK5cuLxyJtMJ+HLoK2Is8bz2rScCwLkZoXfFO7GZdVx+DKhEySMOuNDjzqohIZaWOgBCr+V2/7eVjxl98omk8MjQodDDbP6lFg3LD/kszHKxfgEPs2JVO6aPX4JSsfl2gynsP+mEj6B8l3KcpAosxgsXbgAkBtihrdep2wXgasQ4ShW5zZjJgLgU+ZVBwf3AuojMMYGzI8NnwEFiFM2Fcl1AAlk6hby6QeUVnva9O5+U7Nh+4Qw5YboirSa3kQMTMdoMBfrQgPhFMP5fq3eoCc66sudrOYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hwSekZ++HEmqG1Txfj8S0RFkA7zBwdYdmDQBeiWYMkw=;
+ b=C1SpWr+yxyf+0sfYtLeXnkr0gbqlFQ2A29YbDRIqoe8icorulS19V4zm+iDD3ZXQtBrZU93OkwmnnJvsycVUKbwV0UhlbNBLv84Wkya/9tc9ogqyUg1t77gyQZGX1/fTqGkRma9Gu3L+THzi3zt0M0lhyGjyg6Gua8xGB007AmKnC045rdzUrU7nCjZ+y19MciDr+jEaLUwIwXzG1si6tGjzkaVp6wW/GZDqXEMIOV9iQNsUTlMiL/VwTH8U1viXuWGpdPSoZJST4m3lkIXsI7T4xPRjHGpsJCRo66iJoTwc01q2NonWc8b8ig/FPgOY/JGtQ2Mu0K84o3IqgL8hGg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hwSekZ++HEmqG1Txfj8S0RFkA7zBwdYdmDQBeiWYMkw=;
+ b=KJD99y0ZQPSNV8Zl4axMPYCDGPB02IgXxmHUC4AEldkel1nzzMn4qTbhMxTVbDbX/E7g4ixbVMmdd/vEFBYNFnaMcSfouFk9GWu0GD4uqwgXLrwv1NjWclierj7DzEgK22l5jTKnKqm3aemE1acvFNBysnC9XTDw4blM6ky7XBk=
+Received: from MW4PR03CA0347.namprd03.prod.outlook.com (2603:10b6:303:dc::22)
+ by CH1PPF7A6EE32B1.namprd12.prod.outlook.com (2603:10b6:61f:fc00::616) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.15; Tue, 2 Jun 2026
+ 20:34:04 +0000
+Received: from SJ1PEPF00002321.namprd03.prod.outlook.com
+ (2603:10b6:303:dc:cafe::a1) by MW4PR03CA0347.outlook.office365.com
+ (2603:10b6:303:dc::22) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.71.17 via Frontend Transport; Tue, 2
+ Jun 2026 20:34:03 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ SJ1PEPF00002321.mail.protection.outlook.com (10.167.242.91) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.92.5 via Frontend Transport; Tue, 2 Jun 2026 20:34:03 +0000
+Received: from [10.236.179.233] (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Tue, 2 Jun
+ 2026 15:34:02 -0500
+Message-ID: <47ba3ee2-2a3b-4c86-9bc3-4ae4c80d81ab@amd.com>
+Date: Tue, 2 Jun 2026 15:34:01 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+From: "Cheatham, Benjamin" <benjamin.cheatham@amd.com>
+Subject: Re: [PATCH v6 1/9] cxl/hdm: Add helpers to restore and commit memdev
+ decoders
+To: Srirangan Madhavan <smadhavan@nvidia.com>, <linux-cxl@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <vsethi@nvidia.com>, <alwilliamson@nvidia.com>, Dan Williams
+	<danwilliams@nvidia.com>, Sai Yashwanth Reddy Kancherla
+	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
+	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
+	<icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
+References: <20260528083154.137979-1-smadhavan@nvidia.com>
+ <20260528083154.137979-2-smadhavan@nvidia.com>
+Content-Language: en-US
+In-Reply-To: <20260528083154.137979-2-smadhavan@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
+ (10.181.42.216)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00002321:EE_|CH1PPF7A6EE32B1:EE_
+X-MS-Office365-Filtering-Correlation-Id: 04ab584c-f23a-40a2-4983-08dec0e64932
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|82310400026|36860700016|376014|4143699003|18002099003|22082099003|56012099006|11063799006|5023799004|3023799007|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	3UFDf6cBJSobA0QX6PixO5CWYk49Z9aVBUUYXhZKxQYxTW9av1KOLecogQp8peDRwlohWXPJ+tR4KfhdNXKBy1LzYFkByJtdNCjblnsytRn12B52daXD0bQpPNiaBrmtqtIjUV7j0PhVxMNTNogq+4bUm6zvEcMqrmJpFjaMWewBq7KAuEMEQQJaBdd9lmS8KS4tR8MwKF+P7n+PqPETvJirUA8kwQzxBO+m+l/Y3f1V5lNpxOP0ljmhug3VCpi7WSdJ2mR3T7c3DDLgMn/wXKerNbvojhjIfcpSvSJe5wfv8WSbZHV/4T/NJfRpiuEariHrqhjSK1S02Eno2T0h45kPp0fW/9renGsrG7WuatVtdMlenQcdOPp2Vkgwkr2g33wPRbuIWoTRRdV84R1lGmztv+P7FTI4/OfdOh4Dttojt9jAg5hhj+Lb6lEanl2yUQwvX4+moGbc52sODpQkFew0389dOnbwRliyafiiA5xfZktKpiN0Y7peKzwwyPatALMVXYYKIEnM/6g22Din1/l5zOymmJ1Omg1uk5ALs2wIHxo1iChJ3BqZ3zZ3AvYmS+y9J8SlhLJ2maoLzY5SPifkfEMX8LeOQvtS9SFOnZgEOfV/1pWvklaxyADJVxaCKDWs4lZt0lDIbA34H0huJzp1HiWZHWjKUI4/O2gTfY+U30sC+alFV8BA7t0r/qBQhlnlHCaA5Z1JZ29R5CP0b23MGDL7aIoE6tqYZUICD68=
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(82310400026)(36860700016)(376014)(4143699003)(18002099003)(22082099003)(56012099006)(11063799006)(5023799004)(3023799007)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	v4MThvgi7SgYakBBaKTMaooCsa6KNmw93wqWXGchB+6MeEi8WZpeLm0TTwqzLLCeXhbtvW1W7taK32Kc65n+UKXw1G25h+esux+Fv5MpONcpPOeCanzGZk9sD0I5EGdmuhuW35PSYnMUKQiWdo5JQQ7I8IYnxp4qAzaTrldxEoI77wDZ7DkHZiDaWgfdvipf603dJUi3F9uMHtWV0kM+HP2UmMGsWbUPt4BX84HXWLBLySm5+ebE8dE7DgxRgEz//8HFgNDviE7Eu76vNmsNfwWu/h25MqWAM/3NSE+4NWHNW88SbwUg3cwKllVdbjyAfc4Wj74yxcFZ7KkV+P4k/WiWaCPUP+ris9zIqHAUtPS8LYjnNbhXIkhgqGe8gGgjU6WhLbriXqahRerwhiR3QDdvuQsmLf/7ep4yNj2Mi/wt426zn8VNWeSspaYqHsAF
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2026 20:34:03.4960
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 04ab584c-f23a-40a2-4983-08dec0e64932
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	SJ1PEPF00002321.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH1PPF7A6EE32B1
 
-On Wed, 20 May 2026 10:11:11 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
-
-> For zPCI devices, we have platform specific error information. The platform
-> firmware provides this error information to the operating system in an
-> architecture specific mechanism. To enable recovery from userspace for
-> these devices, we want to expose this error information to userspace. Add a
-> new device feature to expose this information.
+On 5/28/2026 3:31 AM, Srirangan Madhavan wrote:
+> Add helpers to restore endpoint decoder programming for a CXL memdev from
+> CXL core's cached decoder objects, then commit it as a distinct step.
+> Callers are expected to have established reset safety and to hold
+> cxl_rwsem.region for write.
 > 
-> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
-> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> cxl_restore_memdev_decoders() restores programmable decoder state while
+> keeping traffic disabled. For HDM-backed endpoints it programs enabled
+> endpoint decoder fields without COMMIT, keeps the HDM Decoder Capability
+> disabled, and mirrors matching endpoint DVSEC ranges where possible. For
+> endpoints without HDM decoder registers, it restores the legacy DVSEC
+> ranges that model endpoint decode.
+> 
+> cxl_commit_memdev_decoders() enables the HDM Decoder Capability and
+> commits enabled, unlocked endpoint decoders after safety checks pass. It
+> sets COMMIT only after decoder fields have been restored, does not
+> re-lock decoders, and does not set DVSEC MEM_ENABLE.
+> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
 > ---
->  arch/s390/include/asm/pci.h      |  2 ++
->  arch/s390/pci/pci_event.c        | 19 ++++++++++++++++
->  drivers/vfio/pci/vfio_pci_core.c |  2 ++
->  drivers/vfio/pci/vfio_pci_priv.h |  9 ++++++++
->  drivers/vfio/pci/vfio_pci_zdev.c | 39 ++++++++++++++++++++++++++++++++
->  include/uapi/linux/vfio.h        | 30 ++++++++++++++++++++++++
->  6 files changed, 101 insertions(+)
+>  drivers/cxl/core/hdm.c | 318 ++++++++++++++++++++++++++++++++++++++++-
+>  drivers/cxl/cxl.h      |   2 +
+>  2 files changed, 317 insertions(+), 3 deletions(-)
 > 
-> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-> index 016386f7ef4a..88a125b92bdd 100644
-> --- a/arch/s390/include/asm/pci.h
-> +++ b/arch/s390/include/asm/pci.h
-> @@ -364,6 +364,8 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
->  int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
->  void zpci_start_mediated_recovery(struct zpci_dev *zdev);
->  void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
-> +int zpci_get_pending_error(struct zpci_dev *zdev,
-> +			   struct zpci_ccdf_err *ccdf);
->  
->  #ifdef CONFIG_NUMA
->  
-> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
-> index cf2ffa21ab8c..db1b44baf8fa 100644
-> --- a/arch/s390/pci/pci_event.c
-> +++ b/arch/s390/pci/pci_event.c
-> @@ -75,6 +75,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
->  	return 0;
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 0c80b76a5f9b..f7af1041a9fc 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -679,7 +679,7 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
 >  }
 >  
-> +int zpci_get_pending_error(struct zpci_dev *zdev,
-> +			   struct zpci_ccdf_err *ccdf)
-> +{
-> +	int head = 0;
-> +
-> +	guard(mutex)(&zdev->pending_errs_lock);
-> +
-> +	if (!zdev->pending_errs.count)
-> +		return -ENOMSG;
-> +
-> +	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
-> +	memcpy(ccdf, &zdev->pending_errs.err[head],
-> +	       sizeof(struct zpci_ccdf_err));
-> +	zdev->pending_errs.head++;
-> +	zdev->pending_errs.count--;
+> -static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+> +static int cxld_set_interleave_fields(struct cxl_decoder *cxld, u32 *ctrl)
+>  {
+>  	u16 eig;
+>  	u8 eiw;
+> @@ -690,14 +690,22 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+>  	 */
+>  	if (WARN_ONCE(ways_to_eiw(cxld->interleave_ways, &eiw),
+>  		      "invalid interleave_ways: %d\n", cxld->interleave_ways))
+> -		return;
+> +		return -EINVAL;
+>  	if (WARN_ONCE(granularity_to_eig(cxld->interleave_granularity, &eig),
+>  		      "invalid interleave_granularity: %d\n",
+>  		      cxld->interleave_granularity))
+> -		return;
+> +		return -EINVAL;
+>  
+>  	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+>  	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
 > +	return 0;
 > +}
-> +EXPORT_SYMBOL_GPL(zpci_get_pending_error);
 > +
->  void zpci_start_mediated_recovery(struct zpci_dev *zdev)
->  {
->  	guard(mutex)(&zdev->pending_errs_lock);
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 050e7542952e..27642f10fe97 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -1569,6 +1569,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
->  		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
->  	case VFIO_DEVICE_FEATURE_DMA_BUF:
->  		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
-> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
->  	default:
->  		return -ENOTTY;
+> +static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+> +{
+> +	if (cxld_set_interleave_fields(cxld, ctrl))
+> +		return;
+> +
+>  	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+>  }
+
+Few issues here:
+	1. This isn't used in this patch, so it should be moved to the patch it's used in
+	2. There's no mention that this sets the COMMIT bit. A name update would be best,
+	but a comment above the function could work as well.
+
+I haven't looked ahead, but if this only gets used once or twice I would just remove this
+helper, keep the name the same for cxld_set_interleave_fields(), and manually set the COMMIT
+bit when you need to.
+
+>  
+> @@ -927,6 +935,310 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
 >  	}
-> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-> index fca9d0dfac90..4e7162234a2e 100644
-> --- a/drivers/vfio/pci/vfio_pci_priv.h
-> +++ b/drivers/vfio/pci/vfio_pci_priv.h
-> @@ -93,6 +93,8 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->  				struct vfio_info_cap *caps);
->  int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev);
->  void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev);
-> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
-> +			      void __user *arg, size_t argsz);
->  #else
->  static inline int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->  					      struct vfio_info_cap *caps)
-> @@ -107,6 +109,13 @@ static inline int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
->  
->  static inline void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
->  {}
-> +
-> +static inline int vfio_pci_zdev_feature_err(struct vfio_device *device,
-> +					    u32 flags, void __user *arg,
-> +					    size_t argsz)
-> +{
-> +	return -ENOTTY;
-> +}
->  #endif
->  
->  static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
-> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
-> index 78a28db00c6d..cc148123a97b 100644
-> --- a/drivers/vfio/pci/vfio_pci_zdev.c
-> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
-> @@ -141,6 +141,45 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
->  	return ret;
 >  }
 >  
-> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
-> +			      void __user *arg, size_t argsz)
+> +static int cxl_restore_dvsec_range(struct cxl_memdev *cxlmd,
+> +				   struct cxl_endpoint_decoder *cxled)
 > +{
-> +	struct vfio_device_feature_zpci_err err = {};
-> +	struct vfio_pci_core_device *vdev;
-> +	struct zpci_ccdf_err ccdf = {};
-> +	struct zpci_dev *zdev;
-> +	int ret;
+> +	struct cxl_dev_state *cxlds = cxlmd->cxlds;
+> +	struct cxl_decoder *cxld = &cxled->cxld;
+> +	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
+> +	u64 base = cxld->hpa_range.start;
+> +	u64 size = range_len(&cxld->hpa_range);
+> +	u32 lo;
+
+Nit: this should be after id below
+> +	int dvsec = cxlds->cxl_dvsec;
+> +	int id = cxld->id;
+> +	int rc;
 > +
-> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
-> +	zdev = to_zpci(vdev->pdev);
-> +	if (!zdev)
-> +		return -ENODEV;
+> +	if (!dvsec)
+> +		return 0;
 > +
-> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
-> +				 sizeof(err));
-> +	if (ret != 1)
-> +		return ret;
+> +	if (id >= CXL_DVSEC_RANGE_MAX)
+> +		return 0;
 > +
-> +	ret = zpci_get_pending_error(zdev, &ccdf);
-> +	if (ret)
-> +		return ret;
+> +	rc = pci_write_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_BASE_HIGH(id),
+> +				    upper_32_bits(base));
+> +	if (rc)
+> +		return rc;
 > +
-> +	err.fh = ccdf.fh;
-> +	err.fid = ccdf.fid;
-> +	err.ett = ccdf.ett;
-> +	err.mvn = ccdf.mvn;
-> +	err.dmaas = ccdf.dmaas;
-> +	err.q = ccdf.q;
-> +	err.rw = ccdf.rw;
-> +	err.faddr = ccdf.faddr;
-> +	err.pec = ccdf.pec;
+> +	rc = pci_read_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_BASE_LOW(id),
+> +				   &lo);
+> +	if (rc)
+> +		return rc;
+> +	lo &= ~PCI_DVSEC_CXL_MEM_BASE_LOW;
+> +	lo |= lower_32_bits(base) & PCI_DVSEC_CXL_MEM_BASE_LOW;
 > +
-> +	if (copy_to_user(arg, &err, sizeof(err)))
-> +		return -EFAULT;
+> +	rc = pci_write_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_BASE_LOW(id),
+> +				    lo);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_write_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_SIZE_HIGH(id),
+> +				    upper_32_bits(size));
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_read_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(id),
+> +				   &lo);
+> +	if (rc)
+> +		return rc;
+> +
+> +	/*
+> +	 * Preserve MEM_INFO_VALID / MEM_ACTIVE and any reserved bits while
+> +	 * restoring only the programmable size bits.
+> +	 */
+
+I would move this to where you do the masking above. I think it's (effectively) doing the same thing,
+so putting it at the first instance makes it easier on the reader.
+
+> +	lo &= ~PCI_DVSEC_CXL_MEM_SIZE_LOW;
+> +	lo |= lower_32_bits(size) & PCI_DVSEC_CXL_MEM_SIZE_LOW;
+> +
+> +	return pci_write_config_dword(pdev,
+> +				      dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(id),
+> +				      lo);
+> +}
+> +
+> +static int cxl_restore_hdm_decoder(struct cxl_hdm *cxlhdm,
+> +				   struct cxl_endpoint_decoder *cxled)
+> +{
+> +	struct cxl_decoder *cxld = &cxled->cxld;
+> +	void __iomem *hdm;
+> +	u64 base, size, skip;
+> +	u32 ctrl;
+> +	int id;
+> +
+> +	id = cxld->id;
+> +	hdm = cxlhdm->regs.hdm_decoder;
+
+
+I would go ahead and set these variables at the top.
+
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+> +		return 0;
+> +
+> +	base = cxld->hpa_range.start;
+> +	size = range_len(&cxld->hpa_range);
+> +	skip = cxled->skip;
+
+Same with these.
+
+> +
+> +	ctrl &= ~(CXL_HDM_DECODER0_CTRL_LOCK |
+> +		  CXL_HDM_DECODER0_CTRL_COMMIT |
+> +		  CXL_HDM_DECODER0_CTRL_COMMITTED |
+> +		  CXL_HDM_DECODER0_CTRL_COMMIT_ERROR);
+
+You don't need the CXL_HDM_DECODER0_CTRL_LOCK bit here since you've already
+verified it isn't set above.
+
+> +	if (cxld_set_interleave_fields(cxld, &ctrl))
+> +		return -EINVAL;
+> +	cxld_set_type(cxld, &ctrl);
+> +
+> +	/* Preserve setup_hw_decoder() programming order, without COMMIT. */
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(skip), hdm + CXL_HDM_DECODER0_SKIP_HIGH(id));
+> +	writel(lower_32_bits(skip), hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
+> +	wmb();
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
 > +
 > +	return 0;
 > +}
-
-There's a concern here that the error is dequeued but we can still fail
-resulting in a lost error.  Is that a sufficiently unlikely scenario to
-ignore or should it at least be documented?
-
 > +
->  int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
->  {
->  	struct zpci_dev *zdev = to_zpci(vdev->pdev);
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 5de618a3a5ee..3eead86a00ab 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1534,6 +1534,36 @@ struct vfio_device_feature_dma_buf {
->   */
->  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
->  
-> +/**
-> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
-> + * userspace for vfio-pci devices on s390. On s390, PCI error recovery
-> + * involves platform firmware and notification to operating systems is done
-> + * by architecture specific mechanism. Exposing this information to
-> + * userspace allows it to take appropriate actions to handle an
-> + * error on the device. The ioctl returns -ENOMSG if there are no pending
-> + * PCI errors.
-> + */
-> +
-> +struct vfio_device_feature_zpci_err {
-> +	__u32 feature_flags;		/* Indicate future features */
-> +	__u32 reserved1;
-> +	__u32 fh;			/* function handle */
-> +	__u32 fid;			/* function id */
-> +	__u32 ett		:  4;	/* expected table type */
-> +	__u32 mvn		: 12;	/* MSI vector number */
-> +	__u32 dmaas		:  8;	/* DMA address space */
-> +	__u32 reserved2		:  6;
-> +	__u32 q			:  1;	/* event qualifier */
-> +	__u32 rw		:  1;	/* read/write */
-> +	__u64 faddr;			/* failing address */
-> +	__u32 reserved3;
-> +	__u16 reserved4;
-> +	__u16 pec;			/* PCI event code */
-> +	__u8 reserved5[28];		/* Allow for future expansion */
+> +struct cxl_restore_ctx {
+> +	struct cxl_memdev *cxlmd;
+> +	struct cxl_hdm *cxlhdm;
 > +};
 > +
-> +#define VFIO_DEVICE_FEATURE_ZPCI_ERROR 13
+> +static int cxl_restore_decoder(struct device *dev, void *data)
+> +{
+> +	struct cxl_restore_ctx *ctx = data;
+> +	struct cxl_endpoint_decoder *cxled;
+> +	struct cxl_decoder *cxld;
+> +	int rc;
 > +
+> +	if (!is_endpoint_decoder(dev))
+> +		return 0;
+> +
+> +	cxled = to_cxl_endpoint_decoder(dev);
+> +	cxld = &cxled->cxld;
+> +	if ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)
+> +		return 0;
+> +
+> +	if (ctx->cxlhdm->regs.hdm_decoder) {
+> +		if (cxld->id >= ctx->cxlhdm->decoder_count)
+> +			return -EINVAL;
+> +
+> +		rc = cxl_restore_hdm_decoder(ctx->cxlhdm, cxled);
+> +		if (rc)
+> +			return rc;
 
-There are currently at least 4 different patch series, including this
-one, that are vying for device feature allocations.  This series spans
-PCI, s390, and vfio, and I'm not entirely sure which maintainer should
-take it.  With Niklas' review on patch 4, should we ask Bjorn to take
-1-3 through PCI, share a branch, and I could merge 4-7 through vfio?
-Thanks,
+I'm pretty sure HDM decoders and range registers are mutually exclusive,
+so this should just return the result of cxl_restore_hdm_decoder() here.
 
-Alex
+I think you could also fallback to restoring the range registers, but I'm
+not sure if you need more set up to do so.
+> +	}
+> +
+> +	return cxl_restore_dvsec_range(ctx->cxlmd, cxled);
+> +}
+> +
+> +static int cxl_restore_decoders(struct cxl_memdev *cxlmd, struct cxl_hdm *cxlhdm)
+> +{
+> +	struct cxl_port *port = cxlhdm->port;
+> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+> +	struct cxl_restore_ctx ctx = {
+> +		.cxlmd = cxlmd,
+> +		.cxlhdm = cxlhdm,
+> +	};
+> +	u32 global_ctrl;
+> +
+> +	if (hdm) {
+> +		global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +		writel(global_ctrl & ~CXL_HDM_DECODER_ENABLE,
+> +		       hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +	}
+> +
+> +	return device_for_each_child(&port->dev, &ctx, cxl_restore_decoder);
+
+Now that I'm looking at it, I think it would be better to modify cxl_restore_dvsec_range()
+to be usable by device_for_each_child() and rework this function to:
+
+static int cxl_restore_decoders(struct cxl_memdev *cxlmd, struct cxl_hdm *cxlhdm)
+{
+	struct cxl_port *port = cxlhdm->port;
+	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+	struct cxl_restore_ctx ctx = {
+		.cxlmd = cxlmd,
+		.cxlhdm = cxlhdm,
+	};
+	u32 global_ctrl;
+
+	if (hdm) {
+		global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+		writel(global_ctrl & ~CXL_HDM_DECODER_ENABLE,
+		       hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+
+		return device_for_each_child(&port->dev, &ctx, cxl_restore_decoder());
+	}
+
+	return device_for_each_child(&port->dev, &ctx, cxl_restore_dvsec_range());
+}
+
+That would allow you to remove the hdm register NULL checks and keep the same behavior.
+Only drawback is that cxl_restore_dvsec_range() wouldn't take typed parameters, but you
+could use a wrapper function for that if needed.
+> +}
+> +
+> +/**
+> + * cxl_restore_memdev_decoders - Restore endpoint decoder programming
+> + * @cxlmd: CXL memdev whose endpoint decoders need to be restored
+> + *
+> + * Restore only programmable decoder state from CXL core's cached decoder
+> + * objects. For endpoints with HDM decoder registers, program the HDM decoder
+> + * fields and mirror decoder ids representable by CXL_DVSEC_RANGE_MAX into the
+> + * DVSEC range registers when present. For endpoints without HDM decoder
+> + * registers, restore DVSEC range registers only.
+> + *
+> + * This helper leaves CXL.mem disabled: it does not commit HDM decoders, enable
+> + * the HDM Decoder Capability, set PCI_DVSEC_CXL_MEM_ENABLE, or restore
+> + * unrelated DVSEC CTRL, CTRL2, LOCK, MEM_ENABLE, or other control state.
+> + * Callers must perform final commit/resume steps only after reset safety checks
+> + * pass.
+> + *
+> + * Return: 0 on success, negative errno on failure.
+> + */
+> +int cxl_restore_memdev_decoders(struct cxl_memdev *cxlmd)
+> +{
+> +	struct cxl_port *endpoint = cxlmd->endpoint;
+> +	struct cxl_hdm *cxlhdm;
+> +	int rc;
+> +
+> +	lockdep_assert_held_write(&cxl_rwsem.region);
+> +
+> +	if (!endpoint)
+> +		return -ENODEV;
+> +
+> +	cxlhdm = dev_get_drvdata(&endpoint->dev);
+> +	if (!cxlhdm)
+> +		return -ENODEV;
+> +
+> +	scoped_guard(rwsem_read, &cxl_rwsem.dpa)
+> +		rc = cxl_restore_decoders(cxlmd, cxlhdm);
+
+I don't think you need the scoped guard here, just use a regular one? i.e.:
+
+guard(rwsem_read, &cxl_rwsem.dpa);
+return cxl_restore_decoders(cxlmd, cxlhdm);
+> +	return rc;
+> +}
+> +
+> +static int cxl_commit_restored_hdm_decoder(struct cxl_hdm *cxlhdm,
+> +					   struct cxl_endpoint_decoder *cxled)
+> +{
+> +	struct cxl_decoder *cxld = &cxled->cxld;
+> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+> +	u32 ctrl;
+> +	int id;
+> +
+> +	if ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)
+> +		return 0;
+> +
+> +	if (!hdm)
+> +		return 0;
+
+Can combine the two above checks.
+
+> +
+> +	id = cxld->id;
+> +	if (id >= cxlhdm->decoder_count)
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * cxl_restore_hdm_decoder() programmed the decoder fields first. This
+> +	 * control register write sets COMMIT as the final programming step.
+> +	 */
+
+Don't need the second sentence in this comment, it's pretty self-explanatory.
+
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+> +		return 0;
+> +
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_COMMITTED)
+> +		return 0;
+> +
+> +	ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +
+> +	return cxld_await_commit(hdm, id);
+> +}
+> +
+> +struct cxl_commit_decoder_ctx {
+> +	struct cxl_hdm *cxlhdm;
+> +	int id;
+> +};
+> +
+> +static int cxl_commit_restored_decoder_by_id(struct device *dev, void *data)
+> +{
+> +	struct cxl_commit_decoder_ctx *ctx = data;
+> +	struct cxl_endpoint_decoder *cxled;
+> +	int rc;
+> +
+> +	if (!is_endpoint_decoder(dev))
+> +		return 0;
+> +
+> +	cxled = to_cxl_endpoint_decoder(dev);
+> +	if (cxled->cxld.id != ctx->id)
+> +		return 0;
+> +
+> +	rc = cxl_commit_restored_hdm_decoder(ctx->cxlhdm, cxled);
+> +	return rc ?: 1;
+> +}
+> +
+> +/**
+> + * cxl_commit_memdev_decoders - Commit restored endpoint decoder programming
+> + * @cxlmd: CXL memdev whose endpoint decoders need to be committed
+> + *
+> + * Resume endpoint decoding after cxl_restore_memdev_decoders() has restored
+> + * programmable decoder fields. For endpoints with HDM decoder registers, enable
+> + * the HDM Decoder Capability and commit enabled, unlocked endpoint decoders.
+> + * Locked decoders are left to their current hardware/firmware-owned state.
+> + *
+> + * This helper does not set PCI_DVSEC_CXL_MEM_ENABLE. Callers must enable
+> + * CXL.mem only after all reset safety checks and decoder restore/commit steps
+> + * have completed.
+> + *
+> + * Return: 0 on success, negative errno on failure.
+> + */
+> +int cxl_commit_memdev_decoders(struct cxl_memdev *cxlmd)
+> +{
+> +	struct cxl_port *endpoint = cxlmd->endpoint;
+> +	struct cxl_hdm *cxlhdm;
+> +	void __iomem *hdm;
+> +	u32 global_ctrl;
+> +	int i, rc;
+> +
+> +	lockdep_assert_held_write(&cxl_rwsem.region);
+> +
+> +	if (!endpoint)
+> +		return -ENODEV;
+> +
+> +	cxlhdm = dev_get_drvdata(&endpoint->dev);
+> +	if (!cxlhdm)
+> +		return -ENODEV;
+> +
+> +	hdm = cxlhdm->regs.hdm_decoder;
+> +	if (!hdm)
+> +		return 0;
+> +
+> +	global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +	writel(global_ctrl | CXL_HDM_DECODER_ENABLE,
+> +	       hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +
+> +	for (i = 0; i < cxlhdm->decoder_count; i++) {
+> +		struct cxl_commit_decoder_ctx ctx = {
+> +			.cxlhdm = cxlhdm,
+> +			.id = i,
+> +		};
+> +
+> +		/*
+> +		 * Per CXL Spec 3.1 8.2.4.20.12 software must commit decoders
+
+Update to 4.0 spec.
+
+> +		 * in HPA order. Region setup already enforces that ordering by
+> +		 * decoder id, so restore commits follow ascending id order.
+> +		 */
+> +		rc = device_for_each_child(&endpoint->dev, &ctx,
+> +					   cxl_commit_restored_decoder_by_id);
+> +		if (rc < 0)
+> +			return rc;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static int cxl_setup_hdm_decoder_from_dvsec(
+>  	struct cxl_port *port, struct cxl_decoder *cxld, u64 *dpa_base,
+>  	int which, struct cxl_endpoint_dvsec_info *info)
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 1297594beaec..b51b1e9d6400 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -794,6 +794,8 @@ int cxl_port_setup_regs(struct cxl_port *port,
+>  struct cxl_dev_state;
+>  int cxl_dvsec_rr_decode(struct cxl_dev_state *cxlds,
+>  			struct cxl_endpoint_dvsec_info *info);
+> +int cxl_restore_memdev_decoders(struct cxl_memdev *cxlmd);
+> +int cxl_commit_memdev_decoders(struct cxl_memdev *cxlmd);
+>  
+>  bool is_cxl_region(struct device *dev);
+>  
+
