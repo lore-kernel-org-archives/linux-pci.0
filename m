@@ -1,130 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from canpmsgout03.his.huawei.com (canpmsgout03.his.huawei.com [113.46.200.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33C6719CD1D;
-	Tue,  2 Jun 2026 13:45:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF2CB3346A6;
+	Tue,  2 Jun 2026 14:40:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780407954; cv=none; b=O3qvFAZE3D+vcEehHPurKX+XHkENL3S3yrlLd/hAnW3oXHiN2wowNlzjoBknoKSgD3vceISvy3zALxr0KpSAwwt2OFI32vt3t4m51pui3fNb5cr5YZyLUUYRRJbdHA5WM47y2Urhnh9/xHOlNEAVK03iwF8dh1rHWGQvnTe2JJo=
+	t=1780411256; cv=none; b=egpleFp28miWXkFk0b5UaFeIonICgNw8R24eEtqXguYSB4hcfS6E2bgHofa8jmWEKQmUvYFvpX5kWCX/Ao3wEXElNfTC2Qiv+fhfcCV38WyJjunhKfyP7VqQWZ9gAWNYgQiy5hjB+jnlq0uaqRv30Q4eYF+ZQ0Ic6483amDFarc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780407954; c=relaxed/simple;
-	bh=i2F2xxA4N6W+L727x7k9zcmhj1x+y0qs/OqbqJewpmE=;
-	h=Date:Content-Type:MIME-Version:From:Cc:To:In-Reply-To:References:
-	 Message-Id:Subject; b=lJ/pbu5wSwnNHvd+mvG5wUzphtC/UXJHtLe5nLKa7plOMwcJoLz8BPzhNmSESHuL/8cJOIaMijQteyVkTrKAEEGz4+imJDxPZtHvELNsqIcO46QugwwHbozGFk2jtz7xcxmdAGSjL3/1wSeFMxlgnLUebsUYav6Ml8aZYn7kjos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B98OVdpJ; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780411256; c=relaxed/simple;
+	bh=QBjYnhjsLOsS5U01z8H+mbXxPskW9sjz3If4JlLHWe8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TlOAUkbUxIf6RCj7pF32x0RZn9aaKpA/Mmxtia/iC8m4sgDgNYbEK7/737y6YIgaKdQGH+6oDgV3lfK4qjJGvlA3qqXpqc5XFAfOoD+IsYMElBVDP4ExvHpybnI9f0B3y5atTajC+6BOpPYrSistw+juWLAHAK0mzA/cEyEQzuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=cmoWmSq0; arc=none smtp.client-ip=113.46.200.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B98OVdpJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C24AE1F00893;
-	Tue,  2 Jun 2026 13:45:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780407952;
-	bh=M9+6BaKxCtZ2oRdla2ck1apQ7Hfje/TDxTyYeJJkXPM=;
-	h=Date:From:Cc:To:In-Reply-To:References:Subject;
-	b=B98OVdpJWUZAnFL1XvRYfwcafAsY8Qj0f7Suj/5iVWCuVw8xd59E+1gcLe/h2RJJO
-	 r/PYoiWBfSmNDftOOJ0Y0B2n3RBwMrt58D34mIPQosd/3h3wOvsu/eUUzZ5TSSQe12
-	 8QFAX4Yhzjt5aOHRTS8F5Z0I48MLo9jUjAikSnP5c/2ttsX7sAgVbFYAw2+y4eh2pr
-	 DRGkB8gDqMu56oW20Oi+vzJcVnvZSMsRiovmHk0Keg+LxYamuHL36YfdPBSDSxSYOL
-	 57HWDb3FHotn1jXRUpvoRnUT8wd9Qy9XCyhAGsyNnKXMdCbdPf7X9kqx6aWHlAJZDR
-	 KIWb+xj137gOw==
-Date: Tue, 02 Jun 2026 08:45:52 -0500
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="cmoWmSq0"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=alDxMPbT4q0uVJf73YCIDVm+R1WiOElmSFdLYZ0JDHg=;
+	b=cmoWmSq0UoO606EiSbX9HsuERBBG/sBQRtdKFNhm/G0YuZtinFJ96EjzNIQBQBn9QBdRumMR7
+	TyNrZEfJOPnJuOk+RtxVx3K36Y9Muo1ehf+LmmouCRol/siPXpKWdLv5BZD/QZTsaSkbBeFwNkp
+	6dd8p5ynVpPvMEwE1YHhOlk=
+Received: from mail.maildlp.com (unknown [172.19.162.197])
+	by canpmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4gVCx43WT4zpStl;
+	Tue,  2 Jun 2026 22:33:12 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8883540569;
+	Tue,  2 Jun 2026 22:40:49 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 2 Jun 2026 22:40:48 +0800
+From: Chengwen Feng <fengchengwen@huawei.com>
+To: <alex@shazbot.org>, <jgg@ziepe.ca>
+CC: <wathsala.vithanage@arm.com>, <helgaas@kernel.org>, <wei.huang2@amd.com>,
+	<zhipingz@meta.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
+	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: [PATCH v15 03/10] PCI/TPH: Fix tph_enabled concurrent update race by bitfield packing
+Date: Tue, 2 Jun 2026 22:40:16 +0800
+Message-ID: <20260602144023.25254-4-fengchengwen@huawei.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20260602144023.25254-1-fengchengwen@huawei.com>
+References: <20260602144023.25254-1-fengchengwen@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
- Thierry Reding <thierry.reding@gmail.com>, linux-kernel@vger.kernel.org, 
- Jonathan Hunter <jonathanh@nvidia.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Michal Simek <michal.simek@amd.com>, 
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- linux-arm-kernel@lists.infradead.org, 
- Kevin Xie <kevin.xie@starfivetech.com>, Bjorn Helgaas <bhelgaas@google.com>, 
- linux-tegra@vger.kernel.org, Manivannan Sadhasivam <mani@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, devicetree@vger.kernel.org, 
- Thierry Reding <treding@nvidia.com>, linux-pci@vger.kernel.org, 
- Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Aksh Garg <a-garg7@ti.com>, 
- =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-In-Reply-To: <20260602-tegra264-pcie-v6-1-edbcfa7a78fe@nvidia.com>
-References: <20260602-tegra264-pcie-v6-0-edbcfa7a78fe@nvidia.com>
- <20260602-tegra264-pcie-v6-1-edbcfa7a78fe@nvidia.com>
-Message-Id: <178040795218.231197.636617303245801505.robh@kernel.org>
-Subject: Re: [PATCH v6 1/4] dt-bindings: pci: Strictly distinguish C0 from
- C1-C5
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
+Split tph_enabled from shared pci_dev bitfield into spare bit of tph_cap's
+u16: tph_cap is immutable post-enumeration (15 bits for offset), remaining
+1 bit stores tph_enabled. Removes cross-bitfield concurrent write hazards
+highlighted by Sashiko after VFIO TPH exposure. No functional changes.
 
-On Tue, 02 Jun 2026 13:33:23 +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> Instead of using the ECAM registers as the first entry, strictly make a
-> distinction between C0 and C1-C5. This is needed because otherwise the
-> unit address doesn't match the first "reg" entry. We also cannot change
-> the ordering of these nodes to follow the ECAM addresses because that
-> would put them outside of their "control bus" hierarchy since the ECAM
-> address space is a global one outside of any of the control busses.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> Changes in v6:
-> - add maxItems as suggested by Sashiko
-> 
-> Changes in v5:
-> - rebase on top of v7.1-rc1, make it into a fix
-> 
-> Changes in v4:
-> - ECAM is outside of the controller's region, so it cannot be the first
->   reg entry, otherwise we get warnings because it doesn't match the
->   unit-address, so revert back to oneOf construct
-> 
-> Changes in v2:
-> - move ECAM region first and unify C0 vs. C1-C5
-> - move unevaluatedProperties to right before the examples
-> - add description to clarify the two types of controllers
-> - add examples for C0 and C1-C5
-> ---
->  .../bindings/pci/nvidia,tegra264-pcie.yaml         | 79 +++++++++++++++-------
->  1 file changed, 54 insertions(+), 25 deletions(-)
-> 
+Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
+---
+ include/linux/pci.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-My bot found errors running 'make dt_binding_check' on your patch:
-
-yamllint warnings/errors:
-
-dtschema/dtc warnings/errors:
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml: allOf:1:oneOf:0:properties:reg-names: {'maxItems': 4, 'items': [{'const': 'xal'}, {'const': 'xtl'}, {'const': 'xtl-pri'}, {'const': 'ecam'}]} should not be valid under {'required': ['maxItems']}
-	hint: "maxItems" is not needed with an "items" list
-	from schema $id: http://devicetree.org/meta-schemas/items.yaml
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml: allOf:1:oneOf:0:properties:reg: {'maxItems': 4, 'items': [{'description': 'application layer registers'}, {'description': 'transaction layer registers'}, {'description': 'privileged transaction layer registers'}, {'description': 'ECAM compatible configuration space'}]} should not be valid under {'required': ['maxItems']}
-	hint: "maxItems" is not needed with an "items" list
-	from schema $id: http://devicetree.org/meta-schemas/items.yaml
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml: allOf:1:oneOf:1:properties:reg-names: {'maxItems': 5, 'items': [{'const': 'xal'}, {'const': 'xtl'}, {'const': 'xtl-pri'}, {'const': 'xpl'}, {'const': 'ecam'}]} should not be valid under {'required': ['maxItems']}
-	hint: "maxItems" is not needed with an "items" list
-	from schema $id: http://devicetree.org/meta-schemas/items.yaml
-/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/nvidia,tegra264-pcie.yaml: allOf:1:oneOf:1:properties:reg: {'maxItems': 5, 'items': [{'description': 'application layer registers'}, {'description': 'transaction layer registers'}, {'description': 'privileged transaction layer registers'}, {'description': 'data link/physical layer registers'}, {'description': 'ECAM compatible configuration space'}]} should not be valid under {'required': ['maxItems']}
-	hint: "maxItems" is not needed with an "items" list
-	from schema $id: http://devicetree.org/meta-schemas/items.yaml
-
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.kernel.org/project/devicetree/patch/20260602-tegra264-pcie-v6-1-edbcfa7a78fe@nvidia.com
-
-The base for the series is generally the latest rc1. A different dependency
-should be noted in *this* patch.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit after running the above command yourself. Note
-that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-your schema. However, it must be unset to test all examples with your schema.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0f4361aca794..2a78935c0834 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -471,7 +471,6 @@ struct pci_dev {
+ 	unsigned int	ats_enabled:1;		/* Address Translation Svc */
+ 	unsigned int	pasid_enabled:1;	/* Process Address Space ID */
+ 	unsigned int	pri_enabled:1;		/* Page Request Interface */
+-	unsigned int	tph_enabled:1;		/* TLP Processing Hints */
+ 	unsigned int	fm_enabled:1;		/* Flit Mode (segment captured) */
+ 	unsigned int	is_managed:1;		/* Managed via devres */
+ 	unsigned int	is_msi_managed:1;	/* MSI release via devres installed */
+@@ -590,7 +589,8 @@ struct pci_dev {
+ 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
+ 
+ #ifdef CONFIG_PCIE_TPH
+-	u16		tph_cap;	/* TPH capability offset */
++	u16		tph_cap:15;	/* TPH capability offset */
++	u16		tph_enabled:1;	/* Whether TPH is enabled */
+ 	u8		tph_mode;	/* TPH mode */
+ 	u8		tph_req_type;	/* TPH requester type */
+ #endif
+-- 
+2.17.1
 
