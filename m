@@ -1,58 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C1E3B813A
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:58:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3AC3B83E1
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:59:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780387124; cv=none; b=Br82sPzn50CpnKtpU2/GIN469AjOlKoKhWZwzDQG0Q8aS7GaoJyFxPshP3mQzrWL0J1+sHDtk2ydGwWl59UDNdLln56i659Vh66GOrP7wjKUdtGQ+7kYgPTrVXcNFbKSadQmCQJJzdUPoW2FFsuhqNzktUHE9yvnxg+HM4aOuUc=
+	t=1780387156; cv=none; b=fzBRV8m9eU0R+LPnXcPGz8l/zfUzYZxN+cGLkd9jkG2qdAAz2wnu0e49Ek8/cPVpl8zoQWWwJMC++ZHU5uULMgz7JIUDCYRbDYBZpC8/vtKIc/KUNW8YaKBBeHzbxJh1XKjpXZKKdSHkDGepIAMlG0AkC5c/29ajUdMjmiQs7JY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780387124; c=relaxed/simple;
-	bh=XYy3V5eZVklfkWl8JgnpZ2HUfddY5d0AG93Z+sOiyhY=;
+	s=arc-20240116; t=1780387156; c=relaxed/simple;
+	bh=G/HpCIqlG2HxGomUFcoIVzuyzpu9MWocyL926EjXgmk=;
 	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=N2I6xdIesT61t3LW5E9ZaldOdaxS7XPo/K4NGMUu1dn5IY6rm2uk9agdrhZouwXfDMK9aDUBpJbisfRWlXAF2ygJph4kYwR5KYS7o6CYkPuqG798jW/s5tbtizb20YDMkeGi3/n5AdmSAWT34x6DvjcRv6/QgXXbQajtnhkDqjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iTqgna7E; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=tcGy5bXTWxjAw5v6CsrgOTdmvozeh6C1WSJ3yIJHD+OKcV6vD8+Afq4za94n4f2Uqnv5ry35HTt9ODb7NKal45cUiVkPsGbeS47Az7NEXP1w8V8oRxJnk8UMlrdPnw2mU/JINLxI5LMh7Nw0r/aEKZsuIhupgupkuOZvwtb9WnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VU56cKix; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iTqgna7E"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC1BB1F008A1
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:58:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VU56cKix"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE7B11F008A0
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:59:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780387123;
-	bh=Y+nB6IjclCObNAHhbLPlcvSO9M8DxxTvdwCzmJ5QJZg=;
+	s=k20260515; t=1780387155;
+	bh=G/HpCIqlG2HxGomUFcoIVzuyzpu9MWocyL926EjXgmk=;
 	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=iTqgna7E+hWKHD3aOI8+v/yhc5iKnW6VNU+6H1Y4UXKRk+uta+rit+vS0MXOgaGxj
-	 olYKG6qoAkvQfShSjr2BXKUeMd/Hs8C2dhYXTcdp9a3nujrhrvdXqjmIAkn7V89jQc
-	 iYyHdVKR/PWtx+9+yFRusM0v98GkqnhiFHf25y9t0UwXfhuh9OjyYhYUH15Vf2uIUW
-	 kixiaK3VwwcfyqM0mp4kAy0QCmmE3BwmxAe9UZG5AR/jIhDikWV0OQQqNpDZYaR0Q4
-	 SUO7cl2so0yYnMljjdS2Abij55Z8uYsYD3ZBq4Pp4RepmMvj1vTs1lL0JKeUMjboiV
-	 B9St35uCjfNtg==
-Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-39677245e15so24769111fa.1
-        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 00:58:43 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ9O/tUOfZPdCZonLbbZFSzVJ9KianXoULn8ljunnKTxd9caXWhPFD4jObLQ4SGIuOxMNNtxNTksWAo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzPJZXyaOHr0iYWUX1s0GFB9UwqEnxF/SwY+FGOc9ZFOXaZACWe
-	Jn6NPGyUNi7xtg1gYvwaaN3sT0PkU2j5OcKQ8kRj3edyhJUAEkuZh/z8pOLd6FkCD/Q1S5j5pjI
-	Julu44LGKIsiClRA2Jm3sfKVrLcax2LnicDeQZYToxw==
-X-Received: by 2002:a2e:984d:0:b0:393:c6b5:993b with SMTP id
- 38308e7fff4ca-39664f1631cmr31958381fa.24.1780387122616; Tue, 02 Jun 2026
- 00:58:42 -0700 (PDT)
+	b=VU56cKixBIDeC2J/S3kuGNTkdWzTND796sQiRbvRjPsWIIxdR5AQTls/gapJ2Kpz4
+	 CP7v+v/I6a+Hb66HaYbyE4LUTpx3UPrkYmtHQy/d4PAVJyNxz4nPgaPzgBiYcthFNI
+	 D3hPSHH+PDZXPAofn1wbxBiY1Cn0Hq25kS8/spmGAMHUaxlXt9EZNLrS2LwTdzogUp
+	 TtOT1oTZXVGf6vLEJC7NzyJYEapDmkadUxV1BscXVTw6VZJJht4ikMmgLXDm1sLN9d
+	 HIpFP9J+wzk58cp+Z7ZDpVcbtBflzOZZBVQaiXNTs7//x5FCI9dSkIyMRegbC41DdW
+	 zdd8ZwBNJtLJA==
+Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-3967717c951so29238481fa.1
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 00:59:15 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ/hih1s7Wd955MXeif0F4JTLMwc1n/AHvvyqKrprngTR5sKXfv5Emx2lqo0HsUv+HwkDsm0IB0Bdew=@vger.kernel.org
+X-Gm-Message-State: AOJu0YymqrWU60GODp8O/PTQA+4eAkndzfy9wZBCVTRGh0ffcgZoPfpW
+	0HGvMc7MsXJnMa3epfPiqPOsIrOyhUDTjOOjFfdZYVMOu+KTHH45jmQGQ58j7XEMczfTp4cWrC2
+	h42eLlnUQwBpRQtV3NpHSrWVrWEXxQGYP23CkQOSBQw==
+X-Received: by 2002:a2e:bea6:0:b0:396:9897:4cc5 with SMTP id
+ 38308e7fff4ca-3969a852edamr10861651fa.5.1780387154481; Tue, 02 Jun 2026
+ 00:59:14 -0700 (PDT)
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 2 Jun 2026 02:58:40 -0500
+ HTTPREST; Tue, 2 Jun 2026 07:59:12 +0000
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Tue, 2 Jun 2026 02:58:40 -0500
+ HTTPREST; Tue, 2 Jun 2026 07:59:12 +0000
 From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260601-sm8350-wifi-v1-5-242917d88031@oss.qualcomm.com>
+In-Reply-To: <20260601-sm8350-wifi-v1-6-242917d88031@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260601-sm8350-wifi-v1-0-242917d88031@oss.qualcomm.com> <20260601-sm8350-wifi-v1-5-242917d88031@oss.qualcomm.com>
-Date: Tue, 2 Jun 2026 02:58:40 -0500
-X-Gmail-Original-Message-ID: <CAMRc=MeDtwzBN2Hb7tZ9DLXRy9XjVnZpRCp4NZUNB8Ads6S_cw@mail.gmail.com>
-X-Gm-Features: AVHnY4JkGrXXY2Io5k3AOPxVnoFnOn_nu0dA5WLYX-xPYi8QVC5JYyOfCFzeixs
-Message-ID: <CAMRc=MeDtwzBN2Hb7tZ9DLXRy9XjVnZpRCp4NZUNB8Ads6S_cw@mail.gmail.com>
-Subject: Re: [PATCH 5/7] arm64: dts: qcom: sm8350: expand UART18 to 4 pins config
+References: <20260601-sm8350-wifi-v1-0-242917d88031@oss.qualcomm.com> <20260601-sm8350-wifi-v1-6-242917d88031@oss.qualcomm.com>
+Date: Tue, 2 Jun 2026 07:59:12 +0000
+X-Gmail-Original-Message-ID: <CAMRc=Me1OFX9YO9bqBKFffaCS8FH7-_bSS4BsVgW+qoYQmDjVg@mail.gmail.com>
+X-Gm-Features: AVHnY4Jj6PQ-4DZSgjCutJzrmJiIfEI2Eoc9MefyrTPUsszRaLc0Op3HHJ1m_C8
+Message-ID: <CAMRc=Me1OFX9YO9bqBKFffaCS8FH7-_bSS4BsVgW+qoYQmDjVg@mail.gmail.com>
+Subject: Re: [PATCH 6/7] arm64: dts: qcom: sm8350: modernize PCIe entries
 To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
@@ -70,34 +70,14 @@ Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
 	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 
-On Mon, 1 Jun 2026 11:46:53 +0200, Dmitry Baryshkov
+On Mon, 1 Jun 2026 11:46:54 +0200, Dmitry Baryshkov
 <dmitry.baryshkov@oss.qualcomm.com> said:
-> On SM8350 platforms the primary use of UART18 is a 4-pin UART (targeting
-> Bluetooth or other similar applications). Add all 4 pins to the default
-> pinctrl entry for the UART.
+> The recent suggestion is to have PERST# / WAKE pins and PHYs in the PCIe
+> port rather than RC device. The kernel recently started warning about
+> the older style of DT. Modernize DT for SM8350 platform by moving the
+> entries under the root port device node.
 >
 > Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 > ---
->  arch/arm64/boot/dts/qcom/sm8350.dtsi | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/arch/arm64/boot/dts/qcom/sm8350.dtsi b/arch/arm64/boot/dts/qcom/sm8350.dtsi
-> index c830953156ec..eb2a795d8edb 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8350.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sm8350.dtsi
-> @@ -3309,7 +3309,7 @@ qup_uart6_default: qup-uart6-default-state {
->  			};
->
->  			qup_uart18_default: qup-uart18-default-state {
-> -				pins = "gpio68", "gpio69";
-> +				pins = "gpio68", "gpio69", "gpio70", "gpio71";
->  				function = "qup18";
->  				drive-strength = <2>;
->  				bias-disable;
->
-> --
-> 2.47.3
->
->
 
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
