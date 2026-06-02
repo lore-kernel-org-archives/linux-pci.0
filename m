@@ -1,119 +1,317 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-b2-smtp.messagingengine.com (fout-b2-smtp.messagingengine.com [202.12.124.145])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E4663B6C0C
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 22:15:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D5B23C3443;
+	Tue,  2 Jun 2026 22:33:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780438530; cv=none; b=HzfO2/zOsY/i2KmF85zxaZ4QjtsqirSGa2bNraVP2vDev8TK/6z8MS7kuNc7IE8IITUt6d4Qa+CyZ8p/TPA5angAloeApxynNScWuutQxRZKzWP+dKPgIvFVfHVjg2b+spmNd+X5+AxDvjLbjBMA4QyIVKIEZtSSNut14cwMD1I=
+	t=1780439628; cv=none; b=evTEe3bTrQxxtt2djwz7DtX6+21HVyFVMnlwKqwuWeHsaFXzNpTYWMhf+fKwPJEdAKSGnBSZUEy8M97yduzeyfYR15BTmiZ6mYlfPvTGzJWg6iqKr6BeZGnul6RXJZDuAFWnuTkbyuTRJoJZ30Tvv8uP7aTswug/vjUEKjAaJ/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780438530; c=relaxed/simple;
-	bh=PkFkKBkasyNkfpdY3psVfIwGsVxbjYhDPSzlbu1Zp/w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HxRS2vEFdN+kNyHjlFa2Do1t1yW+zo2gkP6/TMm1StOyFON9FySy2xKA+8XY7AQdpBZKwnlZwhmnVSbwiEJYsjZwMoPEUXsTNlqpltjCWCVOvsTa3cOklL/lQwpMQE1Q7mQqyp7Yuzw3svm2rxALSSA1y+KQ/25sHs41OfUedGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jTYOmuHG; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780439628; c=relaxed/simple;
+	bh=zZItSxvdNYv+Ugqol510+DGowtXqXRzDbWmbElgKg+U=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=QIa7HKxsykrhVMmjS+OlebQWzSiKprTr9pt0X11wMIvD/YNPdgmmypDS1a0EixGKcU9uT0FMlhdmtaSaBHZyP+6E/qmwfKWuqo2lke2sFWkj2l2AeaertR8i5bN7iFfTza59ccpIAp8uUw9fdArYxglnxphDxXvpqLMrHjI9tto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=HidOBnen; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=NhBfY8rn; arc=none smtp.client-ip=202.12.124.145
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jTYOmuHG"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-36d8b644473so3108502a91.3
-        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 15:15:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780438528; x=1781043328; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Wyg13nmb1cl4XVRXyc9+1Xf9pv1Lvsh32cV5wFSbV18=;
-        b=jTYOmuHGSIBX9DfJAMz0WxP0meWF9ha79aFb3GomCFAjsUWxMze7GsZJolFPUDZbKn
-         4fpn/BoLCWezVoIlVQcQgfYy0d2FBpLjbKyy1h6JPp929X2PYDqt9n51tTzLkFTm8aMM
-         Cy88PMmDINZSXu2zw6wpsywHpPkzMCtHm/P7kGXGa/1hS8Xu7kVT60q7+F7/1Xozpzpy
-         8wxerHJEGbvlWnqjpQX2myKgbtvPOYi8qC+/PYmGdeMQ7IoGJ7y856bsueeOnRXZAdaO
-         Cv2r88j8UxVkfTr1eFkoeUI1exZB795/w/Y5iEy4T04TycfgCcgs+UjLoyaayewa/zYz
-         RJOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780438528; x=1781043328;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Wyg13nmb1cl4XVRXyc9+1Xf9pv1Lvsh32cV5wFSbV18=;
-        b=HX1budbNcID1tNv8NLoCbExrCOhnOrDaomm8HtqXw4gMyLy/tsgK+jzu2VLrS46gN3
-         /HBqQCqganeuCDlciLGTikR9chQfpDNHMEJyLI+w3ftjkp/h1t25NAonKNtPCjl+BEni
-         nTK4RpOk4Vn7nZ3pn4sTZiXtXuy4PBqUaJTl4En0YFokllofS8vModl3bvhn6DTAe5f8
-         Wzs5Q7H1D7gx0ypbOAfudnfVi3fjiavYSNQQK0T/FONVyoN2DtFFJYyTfgip0JoDgxGd
-         75es4Levb9WipLjmO5zp1AhG1VQcw3RMkOY22XZ5vOSXTtDcma/8d2k0rK8qe7h6aJrm
-         woxA==
-X-Forwarded-Encrypted: i=1; AFNElJ9rv8vId1G0J8w5Nra559CaDXyUev4wr0Got1eC8Atf3o6x0Po7TfE6DXx2Ue66mz2yQB0yzXj7fbc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yye/EEd7VmRNW5Yt/3vVG4WTaeYhWCfnmu8XOIhMFbMF/D32vEe
-	MFFS1ng2PAZ7Jj2mMhCFFz8hw+vgGUqTG4CpXg3+YB2YxNT2rU6pUqKi
-X-Gm-Gg: Acq92OHLP9VcLuwo5MhPaAcxqyRN3GghuVpt7STRm59fOPk/7E8P8eUCmEyyrCXAhL7
-	ouonshW4bbRmVT+UmKk5jo7eRy0tztT8e7nAyaIxm7Z4ymjEfOte6hUlE7aGtaQnmeQmTtHDAxC
-	L/BnZTqL8nWAg2Vk91ebAVFe37M9TKSr34Fc6nMsYg8FdpXLVktKEr+nZlAO0oa+3knspGq9nDg
-	NReXDT11Buu64sP/dBzEZTsh1yFAR4306sFK/yyH0A3J799dKrLGR0GYAfc+kMUYMCB4XSWmLol
-	anCLWBWhkVoD58O329oNJrB+Vv1TxDGGC7+1QR5wI20pFLQrjvN0O/peoWSxrH+beaTApXT1sPv
-	TAZE+lnfRhXiEJx4tyvf4/efUvG5cWilB+ZbIaUDijbO2NbhSwkBybbSq/Zhh7DIRt5vCnZD2uY
-	hPJIAL+IUsHfcvESN907jOqn9O49Wmht6Pe4oGcTp3UprA
-X-Received: by 2002:a17:90b:1d87:b0:368:a297:bd38 with SMTP id 98e67ed59e1d1-36e2f3c11dcmr712758a91.7.1780438528332;
-        Tue, 02 Jun 2026 15:15:28 -0700 (PDT)
-Received: from localhost ([2001:19f0:8001:1b2d:5400:5ff:fefa:a95d])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36e174db6afsm287366a91.2.2026.06.02.15.15.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Jun 2026 15:15:27 -0700 (PDT)
-Date: Wed, 3 Jun 2026 06:15:08 +0800
-From: Inochi Amaoto <inochiama@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Chen Wang <unicorn_wang@outlook.com>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Alexandre Ghiti <alex@ghiti.fr>, Zixian Zeng <sycamoremoon376@gmail.com>, 
-	Han Gao <gaohan@iscas.ac.cn>
-Cc: Inochi Amaoto <inochiama@gmail.com>, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, sophgo@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, Han Gao <rabenda.cn@gmail.com>
-Subject: Re: (subset) [PATCH 0/2] riscv: sophgo: sg2042: Enable PCIe DMA
- coherence
-Message-ID: <ah9VwHZbIuDSqmbe@inochi.infowork>
-References: <20260331171248.973014-1-gaohan@iscas.ac.cn>
- <178028263198.557087.6386925175219722340.b4-ty@b4>
- <ah6gcvKQlHlrW1qn@inochi.infowork>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="HidOBnen";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="NhBfY8rn"
+Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
+	by mailfout.stl.internal (Postfix) with ESMTP id 324081D0007A;
+	Tue,  2 Jun 2026 18:33:46 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-04.internal (MEProxy); Tue, 02 Jun 2026 18:33:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1780439626;
+	 x=1780526026; bh=Ja9GdzTTUf5X91j/iSsP0H5D1+AI2jDabH9dd0Cg+30=; b=
+	HidOBnenj1y+rxk0Ju/Po2jheyhztOBOxVIMDAZuj4A88/3UBdWzZpRoa59J6JRV
+	sD6H6QD9sfSyspOCRHMjrGf+11pe8UHC/JNuEQu4+kpezyAhdWU7HuSpvL5ps/OB
+	UOwywxtB+SnbHKEGrX8Ra1UZn9kcoooa+l613qussFf9NBWvsS9FIuXsX7bdusD7
+	++XvOVRmVAtAoYDu9ylhOPuSpk3AdKfp0n+rCt/pBUGLF8AcnZ/q2Exqt+QfC3lA
+	Yni8JWZaLqilfI1RSlfVXZfKXCKgTLZWmgEg/zRceJo2J1fg/TdMPt0VTeQHKwmN
+	JSQCuqaVGwqAPTtMddzjrA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780439626; x=
+	1780526026; bh=Ja9GdzTTUf5X91j/iSsP0H5D1+AI2jDabH9dd0Cg+30=; b=N
+	hBfY8rnFS3mh1V4kQlVf8yXKWfSYrDCe5W6AAG98hE0MVJXfMThdFp4DEMveXjgQ
+	xKj4gyxy5SzxN1a5ySjy1A7lMI+8HJ8XIUOHBhm7U8i7OYYh1zH7Polwykk0XFsY
+	lT20PCXfkWNAmmMoX9hEcxn6lwZcCJe/COwQZAwwMmHZFoyhws9beA2ZighSlYeL
+	uxb9NpJnBlT5pYh/4WPb2cNDp+UtZhHEv89O4g31/oi/0JYiwWpHIW43eIdLiimv
+	eqW5gHxISX0d4QAA8lBSZYFUF1yWw2ytymdB8pTzVCGiLEkz1GviT9pWP2MCCY4A
+	NHUdIhrCqfTiIMEa0lh/w==
+X-ME-Sender: <xms:SVofaq3bWU3m9D-YRGl7r4vH96e1fY4yjRE-mJ6-hVQOV9AraTXQng>
+    <xme:SVofauryIv1JrAYuoYYEIFEkz1f8yDC0SXltSTF0V4Cv78C0P9iuT1l7fEylmgeUJ
+    zyML3ZumInW_Ovowood7t-wYvqeIZymFVAO-kaw0IcIuQbOxiXQoA>
+X-ME-Received: <xmr:SVofapOQo4Gr7UVKPaUr_GgiA90bP4m35foN00y1s60LIymAcElfjxz_Xyg>
+X-ME-Proxy-Cause: dmFkZTEns0hgSaiGRNx/9Qdwg3aHNCmwkwGrifY/S+ykA9yIyzp1P0xOrwjVOQvaJSDTw2
+    U0MWHmA2AJQGaasOuAzzmsk0u8Db+6T6F7dFS0pDtTU5/sGSE2exMfscAhxYEc90ZIjPCG
+    cUzaos5gP81qC2uCaab6BbD4rkTzyLZxcmHJgS5RPHp3+n1Un/bTF/zr3owRHeP8MPc5bS
+    yvr2PrSMXuFtmWETTDOv4xeoXy90eKLTbHbbwvaoVIblxU1XFbZ+SV/KtTPrMT0qoFfNIO
+    W/bqBun8TR8e6I6FONCMHrY2BaBUnQ+Uz3CcgEQ9qmZ3/l9cpqgErosO3AC3erU1BnnCkQ
+    tGxG6RgMURr8XeGJl6+99ogpXZ3YT296TJENfKZntNQFnvzE8B/Js3/WOj7Zm/7Y/fPlW2
+    6/R78qqvY3KlrYAdVJbiooO9BOawfWktLbnO8cHzzkT7qDxeBZ0e0/+p50tRf9jRevTgv9
+    OhN7l8pi7Qtc7DvKkWPv7C5pRIzp5rYWj/1xgUhBJ0h0cc3vKeq7EgQCzoL6Kdbrgakrt4
+    XX7ATr1fSM4AX0qji7/tjup8skdfnfionj1U+S9YI0YHCTqKScR/0XtvzWglmIGqSMxXau
+    BjfJy9YziQvQ1BW1eJvV24tkPW5K8y0bF0XsXVLgJvJ4xglvhxDGlce1xEJg
+X-ME-Proxy: <xmx:SVofanrZslvgK-rRQL-e_46a-mc2Z9GNoWmaoZ1hiYihVO-nPSx2fg>
+    <xmx:Slofaks2dzNaZFZNMTVAVSBIIwCULAG4zbsF1j_QLpAhpvCAkzt08Q>
+    <xmx:Slofau1Xy3cl3CgFQ0mGCqsI9fpE9Ecmi257_Vmh2uphezEj_awlSw>
+    <xmx:SlofanHVESC0XSpyYnNoZfeeaMneNpwA46j2dWnF_RzgDqtW2OLFFg>
+    <xmx:Slofaluqob2l2MGrmAEbFsrp6bXW8dSdrHmoLFOcrSOR2BIiBRjyY7vP>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 2 Jun 2026 18:33:45 -0400 (EDT)
+Date: Tue, 2 Jun 2026 16:33:44 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
+ mjrosato@linux.ibm.com, alex@shazbot.org
+Subject: Re: [PATCH v17 5/7] vfio-pci/zdev: Add a device feature for error
+ information
+Message-ID: <20260602163344.1eda12d2@shazbot.org>
+In-Reply-To: <a35f1171-eaad-4b5b-a85f-dfb64dbc6454@linux.ibm.com>
+References: <20260520171113.1111-1-alifm@linux.ibm.com>
+	<20260520171113.1111-6-alifm@linux.ibm.com>
+	<20260602143202.6395e9e2@shazbot.org>
+	<a35f1171-eaad-4b5b-a85f-dfb64dbc6454@linux.ibm.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ah6gcvKQlHlrW1qn@inochi.infowork>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 02, 2026 at 05:21:32PM +0800, Inochi Amaoto wrote:
-> On Mon, Jun 01, 2026 at 10:57:24AM +0800, Inochi Amaoto wrote:
-> > On Wed, 01 Apr 2026 01:12:46 +0800, Han Gao wrote:
-> > > The SG2042 hardware design supports cache-coherent PCIe.
-> > > 
-> > > With recent firmware updates [1], it allows to use DMA coherent.
-> > > 
-> > > [1] https://github.com/sophgo/edk2-non-osi/commit/017a5aea26a066fd2bf501b7893937183165af36
-> > > 
-> > > Han Gao (2):
-> > >   dt-bindings: pci: sophgo: Add dma-coherent property for SG2042
-> > >   riscv: dts: sophgo: Add dma-coherent to SG2042 PCIe controllers
-> > > 
-> > > [...]
-> > 
-> > Applied to for-next, thanks!
-> > 
-> > [2/2] riscv: dts: sophgo: Add dma-coherent to SG2042 PCIe controllers
-> >       https://github.com/sophgo/linux/commit/e728a57834d06b9bbf9bbed69e3ea16416d257d5
-> > 
+On Tue, 2 Jun 2026 14:38:56 -0700
+Farhan Ali <alifm@linux.ibm.com> wrote:
+
+> On 6/2/2026 1:32 PM, Alex Williamson wrote:
+> > On Wed, 20 May 2026 10:11:11 -0700
+> > Farhan Ali <alifm@linux.ibm.com> wrote:
+> >  
+> >> For zPCI devices, we have platform specific error information. The platform
+> >> firmware provides this error information to the operating system in an
+> >> architecture specific mechanism. To enable recovery from userspace for
+> >> these devices, we want to expose this error information to userspace. Add a
+> >> new device feature to expose this information.
+> >>
+> >> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
+> >> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> >> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+> >> ---
+> >>   arch/s390/include/asm/pci.h      |  2 ++
+> >>   arch/s390/pci/pci_event.c        | 19 ++++++++++++++++
+> >>   drivers/vfio/pci/vfio_pci_core.c |  2 ++
+> >>   drivers/vfio/pci/vfio_pci_priv.h |  9 ++++++++
+> >>   drivers/vfio/pci/vfio_pci_zdev.c | 39 ++++++++++++++++++++++++++++++++
+> >>   include/uapi/linux/vfio.h        | 30 ++++++++++++++++++++++++
+> >>   6 files changed, 101 insertions(+)
+> >>
+> >> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+> >> index 016386f7ef4a..88a125b92bdd 100644
+> >> --- a/arch/s390/include/asm/pci.h
+> >> +++ b/arch/s390/include/asm/pci.h
+> >> @@ -364,6 +364,8 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
+> >>   int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
+> >>   void zpci_start_mediated_recovery(struct zpci_dev *zdev);
+> >>   void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
+> >> +int zpci_get_pending_error(struct zpci_dev *zdev,
+> >> +			   struct zpci_ccdf_err *ccdf);
+> >>   
+> >>   #ifdef CONFIG_NUMA
+> >>   
+> >> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
+> >> index cf2ffa21ab8c..db1b44baf8fa 100644
+> >> --- a/arch/s390/pci/pci_event.c
+> >> +++ b/arch/s390/pci/pci_event.c
+> >> @@ -75,6 +75,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
+> >>   	return 0;
+> >>   }
+> >>   
+> >> +int zpci_get_pending_error(struct zpci_dev *zdev,
+> >> +			   struct zpci_ccdf_err *ccdf)
+> >> +{
+> >> +	int head = 0;
+> >> +
+> >> +	guard(mutex)(&zdev->pending_errs_lock);
+> >> +
+> >> +	if (!zdev->pending_errs.count)
+> >> +		return -ENOMSG;
+> >> +
+> >> +	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
+> >> +	memcpy(ccdf, &zdev->pending_errs.err[head],
+> >> +	       sizeof(struct zpci_ccdf_err));
+> >> +	zdev->pending_errs.head++;
+> >> +	zdev->pending_errs.count--;
+> >> +	return 0;
+> >> +}
+> >> +EXPORT_SYMBOL_GPL(zpci_get_pending_error);
+> >> +
+> >>   void zpci_start_mediated_recovery(struct zpci_dev *zdev)
+> >>   {
+> >>   	guard(mutex)(&zdev->pending_errs_lock);
+> >> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> >> index 050e7542952e..27642f10fe97 100644
+> >> --- a/drivers/vfio/pci/vfio_pci_core.c
+> >> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> >> @@ -1569,6 +1569,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+> >>   		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
+> >>   	case VFIO_DEVICE_FEATURE_DMA_BUF:
+> >>   		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
+> >> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
+> >> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
+> >>   	default:
+> >>   		return -ENOTTY;
+> >>   	}
+> >> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+> >> index fca9d0dfac90..4e7162234a2e 100644
+> >> --- a/drivers/vfio/pci/vfio_pci_priv.h
+> >> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+> >> @@ -93,6 +93,8 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+> >>   				struct vfio_info_cap *caps);
+> >>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev);
+> >>   void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev);
+> >> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+> >> +			      void __user *arg, size_t argsz);
+> >>   #else
+> >>   static inline int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+> >>   					      struct vfio_info_cap *caps)
+> >> @@ -107,6 +109,13 @@ static inline int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+> >>   
+> >>   static inline void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
+> >>   {}
+> >> +
+> >> +static inline int vfio_pci_zdev_feature_err(struct vfio_device *device,
+> >> +					    u32 flags, void __user *arg,
+> >> +					    size_t argsz)
+> >> +{
+> >> +	return -ENOTTY;
+> >> +}
+> >>   #endif
+> >>   
+> >>   static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+> >> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
+> >> index 78a28db00c6d..cc148123a97b 100644
+> >> --- a/drivers/vfio/pci/vfio_pci_zdev.c
+> >> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
+> >> @@ -141,6 +141,45 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+> >>   	return ret;
+> >>   }
+> >>   
+> >> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+> >> +			      void __user *arg, size_t argsz)
+> >> +{
+> >> +	struct vfio_device_feature_zpci_err err = {};
+> >> +	struct vfio_pci_core_device *vdev;
+> >> +	struct zpci_ccdf_err ccdf = {};
+> >> +	struct zpci_dev *zdev;
+> >> +	int ret;
+> >> +
+> >> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
+> >> +	zdev = to_zpci(vdev->pdev);
+> >> +	if (!zdev)
+> >> +		return -ENODEV;
+> >> +
+> >> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
+> >> +				 sizeof(err));
+> >> +	if (ret != 1)
+> >> +		return ret;
+> >> +
+> >> +	ret = zpci_get_pending_error(zdev, &ccdf);
+> >> +	if (ret)
+> >> +		return ret;
+> >> +
+> >> +	err.fh = ccdf.fh;
+> >> +	err.fid = ccdf.fid;
+> >> +	err.ett = ccdf.ett;
+> >> +	err.mvn = ccdf.mvn;
+> >> +	err.dmaas = ccdf.dmaas;
+> >> +	err.q = ccdf.q;
+> >> +	err.rw = ccdf.rw;
+> >> +	err.faddr = ccdf.faddr;
+> >> +	err.pec = ccdf.pec;
+> >> +
+> >> +	if (copy_to_user(arg, &err, sizeof(err)))
+> >> +		return -EFAULT;
+> >> +
+> >> +	return 0;
+> >> +}  
+> > There's a concern here that the error is dequeued but we can still fail
+> > resulting in a lost error.  Is that a sufficiently unlikely scenario to
+> > ignore or should it at least be documented?  
+> 
+> IMHO this scenario would be unlikely and could be ignored. I think to 
+> handle this we would need something like a peek() API and only remove 
+> and update the pending_errs if copy_to_user succeeds. This would be 
+> adding more complexity for a relatively low possibility of failure.
+
+Or just a dev_warn_ratelimited().
+
+> >> +
+> >>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+> >>   {
+> >>   	struct zpci_dev *zdev = to_zpci(vdev->pdev);
+> >> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> >> index 5de618a3a5ee..3eead86a00ab 100644
+> >> --- a/include/uapi/linux/vfio.h
+> >> +++ b/include/uapi/linux/vfio.h
+> >> @@ -1534,6 +1534,36 @@ struct vfio_device_feature_dma_buf {
+> >>    */
+> >>   #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+> >>   
+> >> +/**
+> >> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
+> >> + * userspace for vfio-pci devices on s390. On s390, PCI error recovery
+> >> + * involves platform firmware and notification to operating systems is done
+> >> + * by architecture specific mechanism. Exposing this information to
+> >> + * userspace allows it to take appropriate actions to handle an
+> >> + * error on the device. The ioctl returns -ENOMSG if there are no pending
+> >> + * PCI errors.
+> >> + */
+> >> +
+> >> +struct vfio_device_feature_zpci_err {
+> >> +	__u32 feature_flags;		/* Indicate future features */
+> >> +	__u32 reserved1;
+> >> +	__u32 fh;			/* function handle */
+> >> +	__u32 fid;			/* function id */
+> >> +	__u32 ett		:  4;	/* expected table type */
+> >> +	__u32 mvn		: 12;	/* MSI vector number */
+> >> +	__u32 dmaas		:  8;	/* DMA address space */
+> >> +	__u32 reserved2		:  6;
+> >> +	__u32 q			:  1;	/* event qualifier */
+> >> +	__u32 rw		:  1;	/* read/write */
+> >> +	__u64 faddr;			/* failing address */
+> >> +	__u32 reserved3;
+> >> +	__u16 reserved4;
+> >> +	__u16 pec;			/* PCI event code */
+> >> +	__u8 reserved5[28];		/* Allow for future expansion */
+> >> +};
+> >> +
+> >> +#define VFIO_DEVICE_FEATURE_ZPCI_ERROR 13
+> >> +  
+> > There are currently at least 4 different patch series, including this
+> > one, that are vying for device feature allocations.  This series spans
+> > PCI, s390, and vfio, and I'm not entirely sure which maintainer should
+> > take it.  With Niklas' review on patch 4, should we ask Bjorn to take
+> > 1-3 through PCI, share a branch, and I could merge 4-7 through vfio?
 > > Thanks,
-> > Inochi
-> > 
+> >
+> > Alex  
 > 
-> Revoke this apply due to https://lore.kernel.org/sophgo/ahu57vcS0oOFmCI9@mertle/
-> 
+> If it helps I can break the series into PCI only and vfio only patches. 
+> Please let me know if there is anything I can help with to make the 
+> merge easier.
 
-Reapply this as this error is resolved.
+Let's do that.  Thanks,
 
-Regards,
-Inochi
+Alex
