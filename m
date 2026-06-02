@@ -1,208 +1,173 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3DC3E073D;
-	Tue,  2 Jun 2026 11:34:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D1C730FF2A;
+	Tue,  2 Jun 2026 11:58:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780400045; cv=none; b=coYC/QBKKs9EdLk38KINBMPwDX7QnoUZ+9jY3A4GBbSKrQnhgrIQK3q7E/ejzTHR+Rwpy/H9KLf9tKRKJRg8u6R1bzl2a5NE1YIsVajrvxF4tBsDVvSJgkDI/8IzTZxBWuFcxnvCJ8aQqtSUKCFDEDwATkV1RN65uPc5giUqSUM=
+	t=1780401486; cv=none; b=d+MMA9pBgNRp6JlmsQDhj+0d0WdD6pmC6mJ/A7FxfFIPHvf+ztlGxR7yROauwEs/NNtGYKg1OEhzgvYvgswfZ4g+wgqw6k/dAXUPIAWKfr7YSic+Yfw4zDEKW307wFKXBZxHIysFLg9CXsyTf5vLi+C7BJnjj0FlOGMIB/Y8498=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780400045; c=relaxed/simple;
-	bh=trggnQpagTpo0390QW2tgPU0KSvTD5Yf1/Ga/nCYYK8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=RSfaoaCJzUTw6kq2P2j2XYLzVV3DbZBzTy5+F0LEg1pxlZz0ArJAIfAmbIZ7DromLiJISf9PYUtwp4INQWyIjH7bgrrJ+lXuDqaMkun0IH9ZgtKBiL1G2GzGCJrwM7hAScnVW3NTPN7mxnrkHNR6uWCgCz4ISlZm9YGYKF6JfC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kXUkBGFg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780401486; c=relaxed/simple;
+	bh=vp4eUwXln+M8k1SOsKN2ACcB5l3KMAcwsrxAtGNSZ8Y=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=SXFRSUsbpWz0o8gbhJirPyH3aUZesKtdaWRKuVTM4fV1K1BRAiYQwFTOcHdMu5lpVOrWdHIWzRJFbaH2tl0upwyJjVFUhnjYV+0lX9kPaWnx0ZXDex3x0TAiIgvLT2p3tlY3NrkKfo34GaOJGTkYTEimO5/eOBpbjVrs8gO+crE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hITajqik; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kXUkBGFg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 998471F0089C;
-	Tue,  2 Jun 2026 11:33:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hITajqik"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA6411F00893;
+	Tue,  2 Jun 2026 11:58:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780400040;
-	bh=QXP0Lk4WLSqnO/9+5RQSK4FKezw1pmUzuzZnns5PaSI=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=kXUkBGFgEYCGm65KPGOwDPkT+ANqUDTB2zw5BuKwVRr0ygfYc+IxoHiIzKslPp1qa
-	 z/5+VRZOh5WkBVdOnvjmEWqPurtuhqi2TS/BrtHiVPHQspFwlJ873UxEESmOv2vSMt
-	 YJH0CCLqtI/EJvDwo+OTdNhU/CYugOVkWL+UAZ/VtXz7OOtUaUVYNP7Z84ugFzBJQs
-	 5U4umGtWo8kNgGmBAf1ObNRO5Blk2mM8lBsGT+xr6JlrYDEPvwqSaeJq5+fuFj93sj
-	 QapMBTARlf6ejTy+17H1g4Yo2p4F3+yYtoJYqAEEHaNvD2bm3BUVDi0Zb+0q9M+wFu
-	 d+nhy/bwt4gyQ==
-From: Thierry Reding <thierry.reding@kernel.org>
-Date: Tue, 02 Jun 2026 13:33:26 +0200
-Subject: [PATCH v6 4/4] arm64: tegra: Reorder reg and reg-names to match
- bindings
+	s=k20260515; t=1780401485;
+	bh=O2q2bZQABrDDvRHJcBt58vY6lK+y115s5rXk3WNZGBc=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=hITajqikkaQRqwQFiUgl/Y15x14X6TSvDIQlZSPZ5MuXF4fEV+yCec+jxmlkj5oph
+	 /GmA7c4IIsCdnWf1f88YlmYoBxvdJLVh4xWBx5khXFIaNEkZusQZBLvqyY3rLP32C8
+	 ITi0dImff1YnxbVWcPyHk0I1a6SFiuwYh8NKbHbLmUEDTa/WUUIThQLNq+W9At1FuW
+	 ZVzn7pPtzAk8C4YR7lH3XmMelU1XY7eKFqq6YDvDgIMZ1jcy2OouW2v3y0WQJbhdcs
+	 OGoB2dZKCPUYTXv8PDn0NnocT04HvLeNUcMSLKJd6UBI7xzYjOVkE7MWNoSX3h90VD
+	 WP7RcG0fgNm/g==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 3/4] PCI: tegra: Add Tegra264 support
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Thierry Reding" <thierry.reding@kernel.org>
+Cc: robh@kernel.org, conor+dt@kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20260602-tegra264-pcie-v6-3-edbcfa7a78fe@nvidia.com>
+References: <20260602-tegra264-pcie-v6-3-edbcfa7a78fe@nvidia.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 02 Jun 2026 11:58:04 +0000
+Message-Id: <20260602115804.CA6411F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260602-tegra264-pcie-v6-4-edbcfa7a78fe@nvidia.com>
-References: <20260602-tegra264-pcie-v6-0-edbcfa7a78fe@nvidia.com>
-In-Reply-To: <20260602-tegra264-pcie-v6-0-edbcfa7a78fe@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Thierry Reding <thierry.reding@gmail.com>, 
- Jonathan Hunter <jonathanh@nvidia.com>, 
- Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>, 
- Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, 
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- =?utf-8?q?Pali_Roh=C3=A1r?= <pali@kernel.org>, 
- Michal Simek <michal.simek@amd.com>, Kevin Xie <kevin.xie@starfivetech.com>, 
- Thierry Reding <thierry.reding@kernel.org>, Aksh Garg <a-garg7@ti.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
- linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, Thierry Reding <treding@nvidia.com>
-X-Mailer: b4 0.15.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4765; i=treding@nvidia.com;
- h=from:subject:message-id; bh=ltYlWZgcjQpPPeqy9wq2FjpCCCUz1OFaSP+BBIfGYIY=;
- b=owEBbQKS/ZANAwAKAd0jrNd/PrOhAcsmYgBqHr+awhbiDapJGroKc+2dEx6tR0EbTMkD529dn
- jNuPptxT0eJAjMEAAEKAB0WIQSI6sMIAUnM98CNyJ/dI6zXfz6zoQUCah6/mgAKCRDdI6zXfz6z
- oQEtD/wKjnM5GtMKPiiJMJDbSU6UwWzY/nLlloOWknhhyZ3fZaX0B320BMQRqD/67BrTjoVpfoo
- hK41DXfQIHbDCDgseP6U5AUdZPOQaxqd9mGW6M2kJ/0xz57MT492HCjq329sHumCkcU4BEYvczv
- sfADULCpQjO4CsNkuc3kDOB8bfvNjfNFOWZSXQr1YB2a18k82vFKJw4wgZDj6AMsqJZAfzmuOAx
- r3ekRibC6/zR/wEAayi2YckTMSbZsx3vjv3fpibYuohp0bEIWCV2O47SisIeYrhS+ePdUM9u/G0
- clfQLcKiU1skYyRE6ppeNVrQqydol3tD2oO0VV7eNT27ko5orHzCk5h8gblWCGelg9r9zOa+rp8
- UWqBSUua4N3zo9vcwxmHSIybqSr1YIzzJ2BQJQYVu+xokd+lBRKRWN3Z9mmPFNDbadZh4CXIXna
- 3WVqdb6hCzKCU1QYk8RIV0hWo2fSXNqvyDykVwn/Gk6PiMvW4R7cl+Wb/LUGkw2Dyrdect7b2YQ
- lXO0gMgR3fpUk07GTdxk79zJ1q50Md2cwVDOtUBc0UueSaM6tfHms7n41eUcU1VZvTdDmdBNMyv
- 4l8yBKp8OIyI/bnHHLEYErcYG0YiPVa8XoiDdrTYWIKBVJRLOrle9ofczbdno7lwo5rbAALNnwx
- ITyjwSwTYqBkODQ==
-X-Developer-Key: i=treding@nvidia.com; a=openpgp;
- fpr=88EAC3080149CCF7C08DC89FDD23ACD77F3EB3A1
 
-From: Thierry Reding <treding@nvidia.com>
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
+- [High] NULL pointer dereference in tegra264_pcie_remove() if PCIe link fa=
+ils to come up
+- [High] System suspend crashes due to MMIO access of a powered-off control=
+ler
+- [Medium] Runtime PM usage counter leak on pm_runtime_get_sync() error pat=
+h in probe
+- [Low] Missing Kconfig Dependency causing potential Link Failure
+--
 
-The ECAM region cannot be the first entry in the "reg" property, because
-in that case the unit-address wouldn't match the first entry. The order
-of the nodes can also not be changed to match the ECAM entry because the
-ECAM region is global and outside of any of the control busses.
+commit f7c63558c21039995bb013c2149a0292a9cfadb2
+Author: Thierry Reding <treding@nvidia.com>
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v5:
-- rebase onto v7.1-rc1
+PCI: tegra: Add Tegra264 support
 
-Changes in v4:
-- revert ECAM "reg" entry order
+Add a driver for the PCIe controller found on NVIDIA Tegra264 SoCs. The
+driver is very small, with its main purpose being to set up the address
+translation registers and then creating a standard PCI host using ECAM.
 
-Changes in v2:
-- order ECAM "reg" entry before others
----
- arch/arm64/boot/dts/nvidia/tegra264.dtsi | 48 ++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 24 deletions(-)
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kcon=
+fig
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -255,7 +255,14 @@ config PCI_TEGRA
+>  	select IRQ_MSI_LIB
+>  	help
+>  	  Say Y here if you want support for the PCIe host controller found
+> -	  on NVIDIA Tegra SoCs.
+> +	  on NVIDIA Tegra SoCs (Tegra20 through Tegra186).
+> +
+> +config PCIE_TEGRA264
+> +	tristate "NVIDIA Tegra264 PCIe controller"
+> +	depends on ARCH_TEGRA || COMPILE_TEST
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra264.dtsi b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-index 8f4350c7793b..4c701abd25a8 100644
---- a/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra264.dtsi
-@@ -3513,11 +3513,11 @@ cmdqv4: cmdqv@b200000 {
- 
- 		pci@c000000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xd0 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x0c000000 0x0 0x00004000>,
-+			reg = <0x00 0x0c000000 0x0 0x00004000>,
- 			      <0x00 0x0c004000 0x0 0x00001000>,
--			      <0x00 0x0c005000 0x0 0x00001000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri";
-+			      <0x00 0x0c005000 0x0 0x00001000>,
-+			      <0xd0 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3893,12 +3893,12 @@ gpio_uphy: gpio@8300000 {
- 
- 		pci@8400000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xa8 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08400000 0x0 0x00004000>,
-+			reg = <0x00 0x08400000 0x0 0x00004000>,
- 			      <0x00 0x08404000 0x0 0x00001000>,
- 			      <0x00 0x08405000 0x0 0x00001000>,
--			      <0x00 0x08410000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08410000 0x0 0x00010000>,
-+			      <0xa8 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3925,12 +3925,12 @@ pci@8400000 {
- 
- 		pci@8420000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xb0 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08420000 0x0 0x00004000>,
-+			reg = <0x00 0x08420000 0x0 0x00004000>,
- 			      <0x00 0x08424000 0x0 0x00001000>,
- 			      <0x00 0x08425000 0x0 0x00001000>,
--			      <0x00 0x08430000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08430000 0x0 0x00010000>,
-+			      <0xb0 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3957,12 +3957,12 @@ pci@8420000 {
- 
- 		pci@8440000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xb8 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08440000 0x0 0x00004000>,
-+			reg = <0x00 0x08440000 0x0 0x00004000>,
- 			      <0x00 0x08444000 0x0 0x00001000>,
- 			      <0x00 0x08445000 0x0 0x00001000>,
--			      <0x00 0x08450000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08450000 0x0 0x00010000>,
-+			      <0xb8 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -3989,12 +3989,12 @@ pci@8440000 {
- 
- 		pci@8460000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xc0 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08460000 0x0 0x00004000>,
-+			reg = <0x00 0x08460000 0x0 0x00004000>,
- 			      <0x00 0x08464000 0x0 0x00001000>,
- 			      <0x00 0x08465000 0x0 0x00001000>,
--			      <0x00 0x08470000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08470000 0x0 0x00010000>,
-+			      <0xc0 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -4021,12 +4021,12 @@ pci@8460000 {
- 
- 		pci@8480000 {
- 			compatible = "nvidia,tegra264-pcie";
--			reg = <0xc8 0xb0000000 0x0 0x10000000>,
--			      <0x00 0x08480000 0x0 0x00004000>,
-+			reg = <0x00 0x08480000 0x0 0x00004000>,
- 			      <0x00 0x08484000 0x0 0x00001000>,
- 			      <0x00 0x08485000 0x0 0x00001000>,
--			      <0x00 0x08490000 0x0 0x00010000>;
--			reg-names = "ecam", "xal", "xtl", "xtl-pri", "xpl";
-+			      <0x00 0x08490000 0x0 0x00010000>,
-+			      <0xc8 0xb0000000 0x0 0x10000000>;
-+			reg-names = "xal", "xtl", "xtl-pri", "xpl", "ecam";
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
+[Severity: Low]
+If this driver is built with COMPILE_TEST and no other enabled driver
+selects PCI_ECAM, will it cause link-time errors due to unresolved
+references to pci_ecam_create and pci_generic_ecam_ops? Should this
+entry select PCI_ECAM or PCI_HOST_COMMON?
 
--- 
-2.52.0
+> diff --git a/drivers/pci/controller/pcie-tegra264.c b/drivers/pci/control=
+ler/pcie-tegra264.c
+> new file mode 100644
+> --- /dev/null
+> +++ b/drivers/pci/controller/pcie-tegra264.c
+[ ... ]
+> +static int tegra264_pcie_probe(struct platform_device *pdev)
+> +{
+[ ... ]
+> +	err =3D devm_pm_runtime_set_active_enabled(dev);
+> +	if (err < 0) {
+> +		dev_err_probe(dev, err, "failed to enable runtime PM\n");
+> +		goto put_bpmp;
+> +	}
+> +
+> +	err =3D pm_runtime_get_sync(dev);
+> +	if (err < 0) {
+> +		dev_err_probe(dev, err, "failed to power on device\n");
+> +		goto put_bpmp;
+> +	}
 
+[Severity: Medium]
+Does jumping to put_bpmp on failure here leak the runtime PM usage
+counter? Since pm_runtime_get_sync() unconditionally increments the
+counter even on failure, it seems a pm_runtime_put_noidle() might
+be needed before returning.
+
+[ ... ]
+> +	tegra264_pcie_init(pcie);
+> +
+> +	if (!pcie->link_up)
+> +		return 0;
+> +
+> +	err =3D pci_host_probe(bridge);
+> +	if (err < 0) {
+> +		dev_err_probe(dev, err, "failed to register host\n");
+> +		goto free_ecam;
+> +	}
+> +
+> +	return 0;
+[ ... ]
+> +static void tegra264_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct tegra264_pcie *pcie =3D platform_get_drvdata(pdev);
+> +
+> +	/*
+> +	 * If we undo tegra264_pcie_init() then link goes down and need
+> +	 * controller reset to bring up the link again. Remove intention is
+> +	 * to clean up the root bridge and re-enumerate during bind.
+> +	 */
+> +	pci_lock_rescan_remove();
+> +	pci_stop_root_bus(pcie->bridge->bus);
+> +	pci_remove_root_bus(pcie->bridge->bus);
+
+[Severity: High]
+If the link fails to come up during probe, pci_host_probe() is
+skipped and pcie->bridge->bus remains NULL. If the device is
+subsequently unbound via sysfs, will tegra264_pcie_remove() pass
+a NULL bus pointer to pci_stop_root_bus() and pci_remove_root_bus()
+causing a kernel panic?
+
+[ ... ]
+> +static int tegra264_pcie_suspend(struct device *dev)
+> +{
+> +	struct tegra264_pcie *pcie =3D dev_get_drvdata(dev);
+> +	int err;
+> +
+> +	tegra264_pcie_deinit(pcie);
+
+[Severity: High]
+Can this cause a synchronous external abort during system suspend?
+
+If the PCIe link is down and hot-plug is unsupported,
+tegra264_pcie_init() powers off the controller via BPMP firmware.
+During suspend, tegra264_pcie_suspend() unconditionally calls
+tegra264_pcie_deinit() which attempts to read MMIO registers:
+
+tegra264_pcie_deinit()
+    value =3D readl(pcie->xtl + XTL_RC_MGMT_PERST_CONTROL);
+
+Will accessing these registers on a powered-off controller crash
+the kernel? Should the suspend function check if the controller
+is active before touching the hardware?
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260602-tegra264-p=
+cie-v6-0-edbcfa7a78fe@nvidia.com?part=3D3
