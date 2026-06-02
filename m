@@ -1,134 +1,197 @@
-Received: from fhigh-b7-smtp.messagingengine.com (fhigh-b7-smtp.messagingengine.com [202.12.124.158])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 203953A6B73;
-	Tue,  2 Jun 2026 19:14:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.158
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780427663; cv=none; b=geSd4QuWhTri21YojL2Gv0VTLi9P+ihj+GB2xXs8dD1VVpAbt5pV0gG/4fcEU2+nJmGWaNe8exVwnqSy69tupDwKOtgOorF7QBvaDj4Zej1/C7zjuBsc6FcS37kNj8V9k9dlLxZXibNBAl51fz2CkrexoIZwDlXdyWS9DH6cZQU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780427663; c=relaxed/simple;
-	bh=tAzkKETTuRf48VD4z0ecJB0e+JzCLTbr80+eKXBKgI4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hgfwiOTQi0998oEraQioTn1lGEEn7DgVcnlbofItP+2CcLXaHAWrGN6teRgnzlcGiOAmw/1gJ31rnhYtqa5q++lzzw9Xraxa4qiocfy5Hi55fwT1k+eF3Mnxmcf10+fyR3rWyJ19J+uejFWYh5xPHhS6crpqxOqebO7qTLZTCtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=fYi8WswM; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=gHZnmppg; arc=none smtp.client-ip=202.12.124.158
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D878731F985
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 19:41:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.221.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780429318; cv=pass; b=iq0VWFdiYZ/fhN2IFtgWbKRt4gikfbZwINISu0rvcueE/W+Kw6rV8WfVUBIvvZwJV81evHYGqLx3KUEZPW+aC9Mb3IVrV+e2bowIFZ6zaL+OWLn2i/8GU9u4crcpd4+5fQ9hZLStzveYCBBNoX3KEFIKXApcyNK36mNBSSpukh0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780429318; c=relaxed/simple;
+	bh=EBlHZlU/yQb6bBWjzw7fMGP8qSSTAGTVxYB6n+3g18g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=p5rbRYMfbQU8VXMYo8h5gmoBuZo/o1koonEw9VodQ175/EguTtNHP47bc7cdNQ7yHhMzvKNNPJXRZOFIvNwvHM4aWoUvsiOmlTpY5zMPzxy1kg+n18mjM5oFBf57nJdDCNXmxRX361pXmpPksVjpDUz/Vw7qtl67NKIvbB6HRVc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cGV2txhM; arc=pass smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="fYi8WswM";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="gHZnmppg"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id DAE987A00A1;
-	Tue,  2 Jun 2026 15:14:20 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-06.internal (MEProxy); Tue, 02 Jun 2026 15:14:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1780427660;
-	 x=1780514060; bh=SpvDioedx7EBp7REkfmzqAAh1WhYtz7APHz8F+X6T5w=; b=
-	fYi8WswM+/hkbi1Bd3EOzRsKS9w1UWkyvLNnwfILgyvyDaBqcCjA1b8c6n4DxuHQ
-	Rufm0/3+n7fZ26/ntN0+xsHEmNNi3P8QbUAcLR8nsZUosIqvWis3u8AolZriPI5C
-	YuWzbB1x/a5RsQQ1T3bRDmQy07wOdEr+RnzVSVcyClofhmTc1p89+VepqJFS1A2s
-	boZQIsQD2T1hd72DAgKjy38GRJ3hZX/K0uCtHnvNzynsNlyEpmni5pyFIc3DvAA1
-	8mxM7s/xKW22LT3Tp2TeRal0XVGYLuqUPZFlA4P7fr3myk/3/p70msI7f0lMYXPR
-	xsnJ7JUaM1wXfRmR3tavOg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780427660; x=
-	1780514060; bh=SpvDioedx7EBp7REkfmzqAAh1WhYtz7APHz8F+X6T5w=; b=g
-	HZnmppgaNPwItEsd4IStTSIXHz/n3NR53RCJvTj0RmQJN0ZSzjnWudHLZVX8hvc0
-	yYJ/eY/QzBkPOiNbalDsZSWi42bWUKGCUmefFmVZ2IL1XHDBYKhAFOqHH37GSFd1
-	jC8iVrtGTTz/cfIOQnCTAmWEsJFY7EhljeRoSD+1k+zlg7G3Jf94qulTJTOesJv3
-	Hzhbzen7f4bxAYIByco1J7y33aGJDc/xd5c/co7lCx1KXDa6hc/gLo8Na6N+Pttt
-	0vW+LPbolONIOrIpL/GHLHus850xqwENSkNrZrJTbr1f6V9IdU4g0YuyK9cPKid4
-	lDWDW3cMun2To0zyPP+iQ==
-X-ME-Sender: <xms:jCsfatLxzGt4VmdphbTdirJSQA1MpXYAMU1AMk1ebq0AnJs_1Jeu1w>
-    <xme:jCsfak1ywB2nbz5-55Y0zhhPWofz1giRpo09yL9rwnimIX7i-assB9XOPGWFIRpr5
-    XJp7_E0K6tzBljN9p4UzOSfH8JF1N-pauhM5PzpmGWB3k6DpC3swnM>
-X-ME-Received: <xmr:jCsfagYy5lIUmzqcyr8sK6G-KvfKQkqy25ngGic9PvuAbbyU2Qgn8s0qYKA>
-X-ME-Proxy-Cause: dmFkZTEbaR6LWAxxEP7bF1oueZFOpQlufeO72chHj023mPTzizOII6z5ldTM+xHFULHcJd
-    KN0hIAhV7kszSpGu8UYILvRB9QwRkTWj6khZsy0V2rhu6mvc3076amoNLLnrXC8wle5U8k
-    e19xr29yQwkD+fyr3WNDGif+swnmavasRDpBG5bCnmixecj00gr5lXamekgkoOQ078cPts
-    CnXa3RTvGxPZyyfK6c2P8lMcR3Bqd7Dd7ndk2OxIQZ0W8xoZoK4MdeQC//3l03vQWShVsD
-    EnUUq+uNCd37UWLpguugGlt1xZl9XZO9lvsgn8Ktzy5+1OPCSQ/Hf4drjV01A/xmVAV8CJ
-    XpXvFZZpm977G6evGreJs5c5E24hbpdLz+gaYoOYEQSSTCNZea3/qiLwfKEbttRfEGlnH5
-    eUXReTuUjJSZw0Vjd1jXIAisrp6/6CqkroxMamWciT724xZYyeqP+Ou6NNohqsy1JhZxYY
-    wZWHdg+ejxcOFd2TKlDcMQsLQWZ5XnT4kPV9vb0StqKqW//5ig/43r+FnPSQFBBGWf3uvi
-    axl7yZ8MoHUEOb/wAdyn6SUir2uA6YCrKa/Q1QYRUeanFm58uZvdaCc2O2wVqV3rulFM8Y
-    Pa1Mrg8R7jNWd7YPWht2zrHTwn4TzEafYAgL7BMKCrlHQjzA7rkyTd0Ts6Zg
-X-ME-Proxy: <xmx:jCsfavX3pjxaVqCjv-vNEJkZoYem228vgb7Tlrw96X6YTaLmLZL0Dw>
-    <xmx:jCsfajfxdiqfCns1rdUltuUBKkUkVuHpMkhTRGUDqFdzzagH_55Szg>
-    <xmx:jCsfakMv7HPAAbuT9s2pnOQqBkP7VCw7ZvoO_vwFKLSo9goyHr3C9A>
-    <xmx:jCsfajKkkggVbUx4PVdT_hrwyyf95lGKwviIP2ZwvTE3uw23DIrUXw>
-    <xmx:jCsfarNoi6G6E-ic1DExI19pAuGQmsJuNEpE-Dvf8S4w2sXQo0GLhuNp>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 2 Jun 2026 15:14:18 -0400 (EDT)
-Date: Tue, 2 Jun 2026 13:14:17 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Matt Evans <mattev@meta.com>
-Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
- Alex Mastro <amastro@fb.com>, Christian =?UTF-8?B?S8O2bmln?=
- <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, Logan
- Gunthorpe <logang@deltatee.com>, Mahmoud Adam <mngyadam@amazon.de>, David
- Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>, Kevin Tian
- <kevin.tian@intel.com>, Ankit Agrawal <ankita@nvidia.com>, Pranjal
- Shrivastava <praan@google.com>, Alistair Popple <apopple@nvidia.com>, Vivek
- Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH v2 9/9] vfio/pci: Add mmap() attributes to DMABUF
- feature
-Message-ID: <20260602131417.41366391@shazbot.org>
-In-Reply-To: <8854824e-06c2-43b3-86c2-8c2c28f9ad63@meta.com>
-References: <20260527102319.100128-1-mattev@meta.com>
-	<20260527102319.100128-10-mattev@meta.com>
-	<20260528171432.771a1a30@shazbot.org>
-	<8854824e-06c2-43b3-86c2-8c2c28f9ad63@meta.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cGV2txhM"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-45ef29c5561so2643860f8f.0
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 12:41:56 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1780429315; cv=none;
+        d=google.com; s=arc-20240605;
+        b=aHH+PfkYHVfNdvKL+BvacAHwkYw3IZFuzau58rSUQeae2BxS/19mxwDoFlFjbzO0cE
+         BV4OFzry0g1VZac7OrWt+LdJgdJcxxR/D4lqhC9yaH574nO7KXZ5m7Mkh9Xc/0gpiAHD
+         uIzh/pv9c7GCG0SSI0jNZqZigztsXeyo39GcMHNlyEyMsE7D6RUu1XwUuCSwk0D6gjyr
+         dCikucYgrBjLaPYpAZWRxe5bU6pTs9qJoptTWy7KsjurRkWnaN+sfWeiiewBN+Fp/su6
+         0aO9P9vJvSJNOxRHhhFmqUCdP3VBIxmuKENWTcWtTJtSYRKOPTgugMs7BgICTi7RxXmk
+         4a5A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=sEMh5W15s3ZL+Zo+DJX6OYmqs9feRMkS6Ofgti1mA8U=;
+        fh=U2NJlVqfa0ikO8sepxEsjA482AhZZZSukDsqM3S+O8U=;
+        b=D5WyJY024RTBS2xfGSt6RWwRsXe4eY3lGxgesStVLaWwPmGOPlK89U5WloqPUaO5Td
+         2EMhobWX1l05WJBPdV8bhgyiBXaYz2wmt4t+g40AMJ8k8qq6qol+B/1DKVe5taEQHgL8
+         b99lKy3l7sAnZ6y6FmIKLlu35t9p7sMBGX1oW2KBEjLebnGNo2HjiEJi9W/WINPpgPyZ
+         fA09cFdXXwT7SjBdGOGjSWIRGMND1kXyLHzJQd2w2hw1H7ArVPvnOGeSS8g1+j3JTCSi
+         nS21+ITUMvjnJ2zTEYc/NZe82Eio2IXZArjU8fCX9haE51JtOa5v74Jw7RFpjSAJLbyz
+         2LgA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780429315; x=1781034115; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=sEMh5W15s3ZL+Zo+DJX6OYmqs9feRMkS6Ofgti1mA8U=;
+        b=cGV2txhMoLt57fIdn+/Nh0eqKujDeRLSChuzJd/mUtIXSsba3ameMWIW08BcR6nRIy
+         1nj7HsPcP+sDSkgZFTMm/4xeKqW9Ky9MW9gkEHCHIlNthG2dUcB/PDxCBWM8WgOSb+Fb
+         6c1eFowSDblf4cfx4pEK+xE7tmByy3wGGYVdGfR/gyZsLXt8lMY6yG/Hy7UPEM134Xdc
+         gp4F3X0/+50gG99RrgkReoHSXVoaAz1LGhMXeQY5gv2ZLovTlUNCt5sK0wcbUVdZOU6W
+         5qMqVDnpzvPY+M9zxQvZXFAI8ArwRbaKoD5HfhNCFXTRaE396atPTFc1UrQbQQFnRB1Q
+         lihw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780429315; x=1781034115;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=sEMh5W15s3ZL+Zo+DJX6OYmqs9feRMkS6Ofgti1mA8U=;
+        b=iCNCzFDZe66joV3aHJJfpg1Pdifs7stS1Syc/vdLbaBF1dbp5ZCkrGI6iNTl86NS5e
+         /ROTLKlT8xTjuzWTmulhUgl1kSSIDLfp7PKpmeHho87gCryNWtFEMxTrWofYaNa2gqwe
+         jhEwygMombhn6fdJXITZrHWUGumknuitS3/KjephU/LeZ0qyDcZ7NsqU8Q/O90I5Tntu
+         zxFlXf033PpJhSRuWv1+alFY98qWcqzjz+Bi2Txe8Mm41AhmYjlHrOn7q7T3ihGtIUts
+         j03ctlao2ibOh8j4HPYfZZmoeKylqM/8+esWvEy3giAnlGCl+K8tW0x0E7ItM4Xseof4
+         3ytQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8Rd9pJyekmmrr6XIUEGleWL2IkD6ZbxwQTduTsOcDPVJ0YCI8Sr1AcBI+utdKAMwcq7ykRCv3eV9M=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxKuH2rMgD8kiaEzLXcb8dYmpD4sSa+RoMQ0maa8NkcNJoH9bKd
+	t1W/KqmSk1ifLOwG1GAslXVzryOky9iaIOlHg4wRYt3LOgLX2okkQ3qyM7jDTwDHPbFnpypqGQs
+	NQQd/loOSaZwe61U9w17wXLG/NvZi4Mc=
+X-Gm-Gg: Acq92OFOw2uedHa7duA7Ekp5RKgmtWPJuB3qVmzAYTPXbw6KVBkriEnRHRmGjAKmKpK
+	nXsrurzfFCUFIss2+urxTljLXRnwL052/few7lfMtQFbBoXW+zNLcrOnYcg1VjIZcrJrcY3SeA4
+	kNpNRt46cvRNVZTVd9TmYztdkyJK+tn9kSUdwlsgtxhkmoQkyOeAuecaQp5OoFA8Y/ddq0OSYHW
+	yTKFCuKUbEbSkrmgNtIh36nyu4hEzYBtpZmx3Ro+V4fK+fuKdYRDEJRW1aaxhb2yjgDZyhSeneu
+	Cdz2JMx0Ry2OnAvbOL8YqDJz4HkN08RcarmLZaktxuufIdU3mYATwzWuidGpQWrrcFNgbGn6fU4
+	RBcu6dxjejYRzioP4IljTLS+hxEaNP9LJ3GM=
+X-Received: by 2002:adf:e508:0:b0:45f:1bd:a04d with SMTP id
+ ffacd0b85a97d-4601f4fac09mr882189f8f.7.1780429315314; Tue, 02 Jun 2026
+ 12:41:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20260520164823.436992-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260520164823.436992-5-prabhakar.mahadev-lad.rj@bp.renesas.com> <86e80877-b860-4b93-a5ae-a416840eb393@tuxon.dev>
+In-Reply-To: <86e80877-b860-4b93-a5ae-a416840eb393@tuxon.dev>
+From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date: Tue, 2 Jun 2026 20:41:28 +0100
+X-Gm-Features: AVHnY4LH3tVnbhX2kihO8dGiFPGS7IjVgtm6CenunWIAP8asGwsAHQWQnCcdEGs
+Message-ID: <CA+V-a8vR0tOXdMZcA4fi+VykwHokHQqm-s97UNKMbPAaq-3ctg@mail.gmail.com>
+Subject: Re: [PATCH v3 4/4] PCI: rzg3s-host: Add support for RZ/V2H(P) SoC
+To: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Philipp Zabel <p.zabel@pengutronix.de>, Geert Uytterhoeven <geert+renesas@glider.be>, 
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Biju Das <biju.das.jz@bp.renesas.com>, 
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2 Jun 2026 17:50:04 +0100
-Matt Evans <mattev@meta.com> wrote:
-> On 29/05/2026 00:14, Alex Williamson wrote:
-> > On Wed, 27 May 2026 03:23:12 -0700
-> > Matt Evans <mattev@meta.com> wrote:
-> >> +		uint32_t old_attr = priv->memattr;
-> >> +
-> >> +		if (flags & VFIO_DEVICE_FEATURE_SET) {
-> >> +			switch(db_attr.memattr) {
-> >> +			case VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_NC:
-> >> +			case VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_WC:
-> >> +				priv->memattr = db_attr.memattr;
-> >> +				break;
-> >> +
-> >> +			default:
-> >> +				ret = -ENOTSUPP;  
-> > 
-> > -EINVAL  
-> 
-> I'd like to push back on this one; ENOTSUPP distinguishes trying to use 
-> a wild attribute value from all manner of other screwups such as
-> trying to GET (with it no longer supported), passing an fd that isn't a 
-> DMABUF, etc.
-> 
-> I'm not wed to the value ENOTSUPP, just something distinctive versus the 
-> other errors userspace might see, and that value seems appropriate.
+Hi Claudiu,
 
-It needs to be a uAPI errno though, aiui ENOTSUPP is an internal NFS
-errno.  How about EOPNOTSUPP?  Thanks,
+Thank you for the review.
 
-Alex
+On Tue, Jun 2, 2026 at 9:00=E2=80=AFAM Claudiu Beznea <claudiu.beznea@tuxon=
+.dev> wrote:
+>
+> Hi, Prabhakar,
+>
+> On 5/20/26 19:48, Prabhakar wrote:
+> > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> >
+> > Add support for the RZ/V2H(P) SoC PCIe controllers to the rzg3s-host
+> > driver.
+> >
+> > The RZ/V2H(P) SoC features two independent PCIe controllers that share
+> > four physical lanes. The hardware supports two configuration modes:
+> > single x4 mode where the first controller uses all four lanes, or dual
+> > x2 mode where both controllers use two lanes each.
+> >
+> > Introduce a setup_lanes() function pointer to configure the PCIe lanes
+> > based on the hardware instance. Implement rzv2h_pcie_setup_lanes() to
+> > detect the configuration at boot time and program the lane mode via the
+> > system controller.
+> >
+> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > ---
+> > v2->v3:
+> > - Parsed controller-id from the "renesas,sysc" property instead of
+> >    using linux,pci-domain.
+> >
+> > v1->v2:
+> > - Updated commit message.
+> > - Added locks to protect shared lane configuration state and
+> >    prevent concurrent access issues during probe.
+> > - Added cleanup action to release lanes on driver removal.
+> > - Reconfigured RZG3S_SYSC_FUNC_ID_LINK_MASTER in resume path.
+> > - Renamed num_channels to num_pcie_controllers for clarity.
+> > ---
+> >   drivers/pci/controller/pcie-rzg3s-host.c | 180 ++++++++++++++++++++++=
++
+> >   1 file changed, 180 insertions(+)
+> >
+> > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/con=
+troller/pcie-rzg3s-host.c
+> > index edb49af7429a..15879b2c0bd2 100644
+>
+> [ ...]
+>
+> > +static int rzv2h_pcie_setup_lanes(struct rzg3s_pcie_host *host)
+> > +{
+> > +     struct device_node *np =3D host->dev->of_node;
+> > +     u32 num_lanes;
+> > +     int ret;
+> > +
+> > +     ret =3D of_property_read_u32(np, "num-lanes", &num_lanes);
+> > +     if (ret)
+> > +             return ret;
+> > +
+> > +     /*
+> > +      * RZ/V2H(P) supports up to 4 lanes, but only in single x4 mode
+> > +      * for the first controller. Dual x2 mode is supported with 2
+> > +      * lanes for both controllers.
+> > +      */
+> > +     if (num_lanes !=3D 4 && num_lanes !=3D 2)
+> > +             return -EINVAL;
+> > +
+> > +     if (host->controller_id =3D=3D RZG3S_PCIE_CONTROLLER_ID_1 && num_=
+lanes > 2)
+> > +             return -EINVAL;
+> > +
+> > +     guard(spinlock)(&rzv2h_lane_lock);
+> > +     if (rzv2h_num_total_lanes + num_lanes > RZV2H_PCIE_MAX_LANES)
+> > +             return -EINVAL;
+> > +
+> > +     ret =3D rzg3s_sysc_config_func(host->sysc, RZG3S_SYSC_FUNC_ID_LIN=
+K_MASTER,
+> > +                                  num_lanes =3D=3D 2 ?
+> > +                                  RZG3S_SYSC_LINK_MODE_DUAL_X2 :
+> > +                                  RZG3S_SYSC_LINK_MODE_SINGLE_X4);
+> > +     if (!ret) {
+>
+> I personally would prefer:
+>
+>         if (ret)
+>                 return ret;
+>
+Sure, I'll update it as above and send a new version.
+
+Cheers,
+Prabhakar
