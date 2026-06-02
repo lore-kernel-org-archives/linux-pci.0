@@ -1,101 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C95A93ED125;
-	Tue,  2 Jun 2026 15:40:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D77DC3F23C4
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 16:00:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780414810; cv=none; b=TwXeP5D5Hhbom8b5/xhz9z0JjNa71CXG+ihQhbzdPPqXYdhcyWF5yRy/srAN9vclTC3ar6bPkWZt3l73uQsLNFBDLh6wHyeHNQDrQrowf3OyDRcqMOh6b57uSHc1jc5YRAdLX33PHnjX7S/Uac004R4XDCUqRBxIGsstF23TM/M=
+	t=1780416043; cv=none; b=MGCYds+yovJEnTR0B7sCBLAwYA7vrDErJTRP090E0WaPycaFJ51Wb0SfPPVJ7FEsRlAjY+vzC5qtIdY/PS0u6AL2kjFbsIM569QxHz151eVUTwugVwjy3EZujuxmwuZIGUlsG1mQXcHgyGnMExA6sI8HfXpDI62+l0HTBEdLWpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780414810; c=relaxed/simple;
-	bh=/W4kUxk/d+9cy5oz4vpcI68h1R9vlRc/o4AtfkrLvMQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SYqGhTpHWi/Uv2lVnJe6HkBXeqoA0oNh/EawJfndyTK6MHV17j9A3DPt7bMOwHzFMB0tQmarcqrbuESrQVwtDJabjk+cVAx9hUGClFik/bsbHB/D+Xlmz8eCq5nzz0qMCKWNGvZL/TaMEicLBnh5baLPmygMBsW0l9qhxiNytTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FE6GfdYw; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780416043; c=relaxed/simple;
+	bh=uZdF596PNZnuGbALi2cUiTrmcQOsXIobn1K8xAwNAh4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cLLSyWlWFKvKls5ZF/hvzyAP0CHH4zv2eOMe+Bxkmo0aF1jSbC7lu3kf52c5o9gyw8eJ7Yc6UKnZ9Y79fAwfOXiEr0elTyLGBhEv0jrEnCj0v/yqukVJ1A0pkmvKH7CJMv8S62pWpYu2eVkzASaAx8TJ0dR1xgyZbEiO78RfWuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FIMmeIaz; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FE6GfdYw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3EDC91F00893;
-	Tue,  2 Jun 2026 15:40:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780414809;
-	bh=XwIHfh84CVCmmZSgMIfKRu78vSsVBQrQxj9tsie8akg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FE6GfdYwE5QtQPOD68lh1a4gGQbnW5I+zpJ/VY0+MmKcFBKBnXrNVNDU0f7sV+VIx
-	 SFMd3uddjTFAxhxyJ9wiSuH1Y4F3rh9afJM9Db5Iq4Kj7q4e2FzPo807ytrtIs51qr
-	 6A+EzjjBVcM0NVqe/ZY7Nlns5+Q2QlD62yTQKSpKR0XO8I3Mula7JNpRyhrnho/TOr
-	 amSdfDCrEc4SS7QMd/izMj40+ORlC9cx+ZXulrUzgWJ2ZShCQHmok8JsbLX8/OWRLm
-	 XS3wTDcUPPFoMQzvP3ZZ0lfDFEeR5Dupk8MVWzNVNM3nKBDJH1D/crwZCVMgmem7l+
-	 HR4fL3wTdAOOw==
-Date: Tue, 2 Jun 2026 10:40:08 -0500
-From: Rob Herring <robh@kernel.org>
-To: Thierry Reding <thierry.reding@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
-	Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-	Michal Simek <michal.simek@amd.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>, Aksh Garg <a-garg7@ti.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Thierry Reding <treding@nvidia.com>
-Subject: Re: [PATCH v6 1/4] dt-bindings: pci: Strictly distinguish C0 from
- C1-C5
-Message-ID: <20260602154008.GA362770-robh@kernel.org>
-References: <20260602-tegra264-pcie-v6-0-edbcfa7a78fe@nvidia.com>
- <20260602-tegra264-pcie-v6-1-edbcfa7a78fe@nvidia.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FIMmeIaz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1780416041;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ScNxumSQCLZY0CA50/rf+ukYfKVFTKvR4NqwPnDooNA=;
+	b=FIMmeIaz1XioY/qa5i+y6sY9wteHOXBq9qmtxAFnd5r4CH4LVoqHI3GSL0zQBdyUmUZF7d
+	hB8ZEE3/Rh6yZQsrBvSlXmlu3AaJsgBd45mAG5skXtD1+KVzwWI567JwwY5/dg+7dkiOSE
+	YNte45w2Rtk8806KgeNQsNNUkbShF+M=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-371-jBXE21GHNhyXaxH5QHis2w-1; Tue,
+ 02 Jun 2026 12:00:37 -0400
+X-MC-Unique: jBXE21GHNhyXaxH5QHis2w-1
+X-Mimecast-MFC-AGG-ID: jBXE21GHNhyXaxH5QHis2w_1780416034
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1698C18005B6;
+	Tue,  2 Jun 2026 16:00:34 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.109])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A22961956095;
+	Tue,  2 Jun 2026 16:00:29 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: bhelgaas@google.com,
+	alex@shazbot.org
+Cc: jjohnson@kernel.org,
+	mani@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org,
+	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Subject: [PATCH v6 0/3] PCI: Add d3cold and device-specific reset for Qualcomm devices
+Date: Tue,  2 Jun 2026 18:00:21 +0200
+Message-ID: <20260602160024.1171949-1-jtornosm@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260602-tegra264-pcie-v6-1-edbcfa7a78fe@nvidia.com>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Tue, Jun 02, 2026 at 01:33:23PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> Instead of using the ECAM registers as the first entry, strictly make a
-> distinction between C0 and C1-C5. This is needed because otherwise the
-> unit address doesn't match the first "reg" entry. We also cannot change
-> the ordering of these nodes to follow the ECAM addresses because that
-> would put them outside of their "control bus" hierarchy since the ECAM
-> address space is a global one outside of any of the control busses.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> Changes in v6:
-> - add maxItems as suggested by Sashiko
+Some PCIe devices lack working reset methods for VFIO passthrough scenarios.
+These devices typically have no FLR, advertise NoSoftRst+ (blocking PM reset),
+and have broken or unavailable bus reset. When a VM crashes, VFIO cannot reset
+the device for reuse without a working reset method.
 
-Sashiko was wrong here. While the analysis was correct for json schema, 
-it didn't account for DT schema's processing of the schemas to the final 
-json schema. In this case, this:
+This series addresses the problem by adding general d3cold infrastructure and
+device-specific reset for Qualcomm devices:
 
-items:
- - {}
- - {}
+**Patch 1/3: d3cold reset method**
+Adds D3cold as a general reset method with strict _PR3 requirement. Only
+attempts true power cycling via platform control (ACPI _PR3), never falls
+back to D3hot. This provides genuine power-off reset on platforms that
+support it.
 
-is transformed to:
+**Patch 2/3: device-specific reset for Qualcomm devices**
+Adds device-specific reset entries for Qualcomm ath11k/ath12k WiFi and
+SDX62/SDX65 modems using D3cold power cycling with automatic D3hot fallback.
+Uses pci_set_power_state(D3cold) which automatically falls back to D3hot on
+platforms without _PR3. Extracts shared pci_dev_d3cold_d0_cycle() helper to
+avoid code duplication with general d3cold method. Device-specific reset is
+position #1 in reset hierarchy, providing immediate working reset for these
+Qualcomm devices.
 
-type: array
-additionalItems: false
-minItems: 2
-maxItems: 2
-items:
- - {}
- - {}
+**Patch 3/3: Qualcomm quirk_no_bus_reset**
+Disables broken bus reset for Qualcomm devices. Testing proves this is
+device-specific: MediaTek MT7925e works correctly with bus reset using the
+same passive M.2-to-PCIe adapters where Qualcomm devices fail, confirming
+PERST# is properly wired and the issue is not deployment-specific. Acts as
+safety net to prevent broken SBR if users override via sysfs.
 
-The reason is a fixed, defined length list is the rule, not the 
-exception for DT.
+v6: - Patch 1/3 and 3/3 unchanged from v5
+    - For patch 2/3, fix double IOMMU handling for device-specific reset:
+      remove pci_dev_reset_iommu_prepare/done from pci_dev_d3cold_d0_cycle()
+      helper, keep in pci_d3cold_reset() caller
+    - Qualcomm maintainers CC'd
+v5: https://lore.kernel.org/all/20260521130512.515125-1-jtornosm@redhat.com/
 
-Rob
+Jose Ignacio Tornos Martinez (3):
+  PCI: Add d3cold as general reset method
+  PCI: Add device-specific reset for Qualcomm devices
+  PCI: Disable broken bus reset on Qualcomm devices
+
+--
+2.53.0
+
