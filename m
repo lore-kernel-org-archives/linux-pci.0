@@ -1,81 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B8E2C029D;
-	Tue,  2 Jun 2026 07:58:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C1E3B813A
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:58:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780387111; cv=none; b=TaCxDZ7/wBzlaU6BPVEsTfIiXxeAsQpZqdj46cFY8NaVXawRNhgFsgv2C+e0/c61uubigOXCf8TvsmNOr1sBAZs2i1H9gHVUTBRmkd2NbzMlfhLkaE/MQg4OMbaBcrK62qIiLqofL/AneXIzd6oyJpqma7vvRguvNc0gqX2OEek=
+	t=1780387124; cv=none; b=Br82sPzn50CpnKtpU2/GIN469AjOlKoKhWZwzDQG0Q8aS7GaoJyFxPshP3mQzrWL0J1+sHDtk2ydGwWl59UDNdLln56i659Vh66GOrP7wjKUdtGQ+7kYgPTrVXcNFbKSadQmCQJJzdUPoW2FFsuhqNzktUHE9yvnxg+HM4aOuUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780387111; c=relaxed/simple;
-	bh=fPhIVUl+47zpfZ7LUJdtEMaCzAB6l58q2iwFPhSxUQw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g9Qg/G8gDVqm8e/cJg/GcSkLmki0XKdAzTJ53ORMQKGx7XjaKrMY6ujtpiEHna+0ldU1XYGcBjZPK4vF2a0UyVq/1HaAujJRheER0tD2NrC2D8nMIEC0D8ThAvB3NZUBdatUNYKCuQyTMYFtkaCHreSIt0sel0VPs8QAhN51m28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD6BB1F00899;
-	Tue,  2 Jun 2026 07:58:26 +0000 (UTC)
-Message-ID: <52d6e1e0-ee68-4932-af20-b353655bac77@tuxon.dev>
-Date: Tue, 2 Jun 2026 10:58:25 +0300
+	s=arc-20240116; t=1780387124; c=relaxed/simple;
+	bh=XYy3V5eZVklfkWl8JgnpZ2HUfddY5d0AG93Z+sOiyhY=;
+	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=N2I6xdIesT61t3LW5E9ZaldOdaxS7XPo/K4NGMUu1dn5IY6rm2uk9agdrhZouwXfDMK9aDUBpJbisfRWlXAF2ygJph4kYwR5KYS7o6CYkPuqG798jW/s5tbtizb20YDMkeGi3/n5AdmSAWT34x6DvjcRv6/QgXXbQajtnhkDqjQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iTqgna7E; arc=none smtp.client-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iTqgna7E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC1BB1F008A1
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 07:58:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780387123;
+	bh=Y+nB6IjclCObNAHhbLPlcvSO9M8DxxTvdwCzmJ5QJZg=;
+	h=From:In-Reply-To:References:Date:Subject:To:Cc;
+	b=iTqgna7E+hWKHD3aOI8+v/yhc5iKnW6VNU+6H1Y4UXKRk+uta+rit+vS0MXOgaGxj
+	 olYKG6qoAkvQfShSjr2BXKUeMd/Hs8C2dhYXTcdp9a3nujrhrvdXqjmIAkn7V89jQc
+	 iYyHdVKR/PWtx+9+yFRusM0v98GkqnhiFHf25y9t0UwXfhuh9OjyYhYUH15Vf2uIUW
+	 kixiaK3VwwcfyqM0mp4kAy0QCmmE3BwmxAe9UZG5AR/jIhDikWV0OQQqNpDZYaR0Q4
+	 SUO7cl2so0yYnMljjdS2Abij55Z8uYsYD3ZBq4Pp4RepmMvj1vTs1lL0JKeUMjboiV
+	 B9St35uCjfNtg==
+Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-39677245e15so24769111fa.1
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 00:58:43 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9O/tUOfZPdCZonLbbZFSzVJ9KianXoULn8ljunnKTxd9caXWhPFD4jObLQ4SGIuOxMNNtxNTksWAo=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzPJZXyaOHr0iYWUX1s0GFB9UwqEnxF/SwY+FGOc9ZFOXaZACWe
+	Jn6NPGyUNi7xtg1gYvwaaN3sT0PkU2j5OcKQ8kRj3edyhJUAEkuZh/z8pOLd6FkCD/Q1S5j5pjI
+	Julu44LGKIsiClRA2Jm3sfKVrLcax2LnicDeQZYToxw==
+X-Received: by 2002:a2e:984d:0:b0:393:c6b5:993b with SMTP id
+ 38308e7fff4ca-39664f1631cmr31958381fa.24.1780387122616; Tue, 02 Jun 2026
+ 00:58:42 -0700 (PDT)
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Tue, 2 Jun 2026 02:58:40 -0500
+Received: from 969154062570 named unknown by gmailapi.google.com with
+ HTTPREST; Tue, 2 Jun 2026 02:58:40 -0500
+From: Bartosz Golaszewski <brgl@kernel.org>
+In-Reply-To: <20260601-sm8350-wifi-v1-5-242917d88031@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/4] dt-bindings: PCI: renesas,r9a08g045-pcie: Add
- RZ/V2H(P) support
-To: Prabhakar <prabhakar.csengg@gmail.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Magnus Damm <magnus.damm@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- Biju Das <biju.das.jz@bp.renesas.com>,
- Fabrizio Castro <fabrizio.castro.jz@renesas.com>,
- Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <20260520164823.436992-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20260520164823.436992-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Language: en-US
-From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
-In-Reply-To: <20260520164823.436992-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20260601-sm8350-wifi-v1-0-242917d88031@oss.qualcomm.com> <20260601-sm8350-wifi-v1-5-242917d88031@oss.qualcomm.com>
+Date: Tue, 2 Jun 2026 02:58:40 -0500
+X-Gmail-Original-Message-ID: <CAMRc=MeDtwzBN2Hb7tZ9DLXRy9XjVnZpRCp4NZUNB8Ads6S_cw@mail.gmail.com>
+X-Gm-Features: AVHnY4JkGrXXY2Io5k3AOPxVnoFnOn_nu0dA5WLYX-xPYi8QVC5JYyOfCFzeixs
+Message-ID: <CAMRc=MeDtwzBN2Hb7tZ9DLXRy9XjVnZpRCp4NZUNB8Ads6S_cw@mail.gmail.com>
+Subject: Re: [PATCH 5/7] arm64: dts: qcom: sm8350: expand UART18 to 4 pins config
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	ath11k@lists.infradead.org, devicetree@vger.kernel.org, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+	Jeff Johnson <jjohnson@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, 
+	Mark Brown <broonie@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
+On Mon, 1 Jun 2026 11:46:53 +0200, Dmitry Baryshkov
+<dmitry.baryshkov@oss.qualcomm.com> said:
+> On SM8350 platforms the primary use of UART18 is a 4-pin UART (targeting
+> Bluetooth or other similar applications). Add all 4 pins to the default
+> pinctrl entry for the UART.
+>
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+> ---
+>  arch/arm64/boot/dts/qcom/sm8350.dtsi | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/arch/arm64/boot/dts/qcom/sm8350.dtsi b/arch/arm64/boot/dts/qcom/sm8350.dtsi
+> index c830953156ec..eb2a795d8edb 100644
+> --- a/arch/arm64/boot/dts/qcom/sm8350.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sm8350.dtsi
+> @@ -3309,7 +3309,7 @@ qup_uart6_default: qup-uart6-default-state {
+>  			};
+>
+>  			qup_uart18_default: qup-uart18-default-state {
+> -				pins = "gpio68", "gpio69";
+> +				pins = "gpio68", "gpio69", "gpio70", "gpio71";
+>  				function = "qup18";
+>  				drive-strength = <2>;
+>  				bias-disable;
+>
+> --
+> 2.47.3
+>
+>
 
-
-On 5/20/26 19:48, Prabhakar wrote:
-> From: Lad Prabhakar<prabhakar.mahadev-lad.rj@bp.renesas.com>
-> 
-> Add support for the PCIe controller found on the Renesas RZ/V2H(P) SoC.
-> 
-> The RZ/V2H(P) controller is similar to the RZ/G3E variant but includes
-> additional registers and configuration bits for PCIe lane control. It
-> supports multilink operation configured as either a single x4 link
-> or two independent x2 link controllers.
-> 
-> Unlike earlier SoCs supported by this driver which only feature a single
-> PCIe controller, the RZ/V2H(P) SoC implements two controllers. Both
-> instances rely on the system controller (SYSC) for configuration, but
-> the required registers reside at different offsets for each controller.
-> 
-> To correctly identify the controller instance and map the corresponding
-> system controller registers, update the "renesas,sysc" property to a
-> phandle-array. For the RZ/V2H(P) SoC, require an accompanying cell to
-> specify the controller instance index (0 or 1). For all earlier SoCs,
-> strictly restrict the property to a single phandle with zero argument
-> cells.
-> 
-> Additionally, make the "num-lanes" property mandatory for this SoC and
-> restrict its values according to the hardware capabilities.
-> 
-> Signed-off-by: Lad Prabhakar<prabhakar.mahadev-lad.rj@bp.renesas.com>
-
-Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
-
+Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
