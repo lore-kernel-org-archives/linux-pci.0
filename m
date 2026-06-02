@@ -1,200 +1,139 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68C4B36A03A;
-	Tue,  2 Jun 2026 11:27:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70E0522156C
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 11:28:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780399631; cv=none; b=YGSKUDZVmOvrSjOK37t8/orP7PGEimetOYIVjhZTXRwprO81+zT5ZhH+pEsysVq8bF/O76rMGd+JJKO8h6mc1yopRItik2yxTvHO7MVqf6/iESuWJV/oEFiI5/P0bI8+B34GlQNSg85fYw5jlDv8Oe9lMiCB4XPWDgryfyKnKFc=
+	t=1780399703; cv=none; b=KKsZNXP6q09QV0PyC9zUyLYzbP/rhEQ5arbi6oJ1BipK2RMDypckaYjDpsTdztmWs8RnGVz2N687dFNXK5bvYUezYqY6s5BT6X7Z+5x3dsgIJcd3+c3DrfXi3KK0FySW2iMiSQLfTj47rjFDc0k2YfoS9sZzCn1W5VJOd32jlHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780399631; c=relaxed/simple;
-	bh=vFe0YHJbZeLES+sUauMUh5hZ46dD8ew9Ej6lDFLoT9Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Rr6jO1fByXYRx+tKEK7oTG4goSfF7waXcXdlLuctriRPjvmmYXgrxRRMfeZmLjnhcsB26z04C5zk7rXis6u4wOAZSP+LWrbDBXU493YwRtXD1OrEKJ9qdFg/28FfxBFreuc3DLPZS1xXWQ44/bD7tNJ5VtEr6kS4PNen2nqbcK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OpuvB+TC; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1780399703; c=relaxed/simple;
+	bh=BKifaNHvzzGxlvXa02lmWMAuo7StAF6v4zQ+3mwpGlc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=rTyydkRwYRtu7HiVSvH8WVRtpCL3as2ifiv8H/SBSRcGtQbGZwZgTJuXVuCo89ExOCWSTRVmnUqiC/+bow+4uD3kbEH/wI9Qn9iW9P5vS0dex+VgukVyDIZVu5OgdJbclyTwHYVPcz96PLeG0p8WKTQ2L78VYDp7AzuimGDBGHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F4zxf9jT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OpuvB+TC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780399630; x=1811935630;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=vFe0YHJbZeLES+sUauMUh5hZ46dD8ew9Ej6lDFLoT9Q=;
-  b=OpuvB+TCFOlrTj1dTsQq4IO6bT0RYvhdqKiNi7guAfItcI40qmxJuR+2
-   JxfSI7H8Vs0pb6lSzui2MNNzEWzxhK2dqWRYpbiEiVo05UowkhP/brLIc
-   ZVeqrXsY/GHqe3VM+ZWp1v4ClJFL3WOZdAoNffJszSxQymB3W2SmL0kdn
-   EoTQOQCHyRV6IH4CmL1hEzveBQPF06YlAMtiXnjfxI7VYYLoSP3+xGnlr
-   LFm/IXvUvXoEkVqVbja68afnmQGU98K68zOP52EZcPPPHvMGyw+ljzTra
-   1vViH6ezFD00NvPoMZN+e9EIaC8+Q8JOgg1j4bdpBSO6q8EyVZiF5BWXP
-   A==;
-X-CSE-ConnectionGUID: oIlO4b2fRxuCw2x5D/ONOg==
-X-CSE-MsgGUID: uezSZkyoSk+dL6kVsxakLg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11804"; a="84804995"
-X-IronPort-AV: E=Sophos;i="6.24,183,1774335600"; 
-   d="scan'208";a="84804995"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 04:27:07 -0700
-X-CSE-ConnectionGUID: 57WJuzJhQk+bJIT4F8AZnw==
-X-CSE-MsgGUID: InV+5AxmRSKrEz4WoNh7bQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,183,1774335600"; 
-   d="scan'208";a="240879149"
-Received: from mkosciow-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.229])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 04:26:48 -0700
-Date: Tue, 2 Jun 2026 14:26:46 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Kees Cook <kees@kernel.org>
-Cc: Luis Chamberlain <mcgrof@kernel.org>,
-	Pengpeng Hou <pengpeng@iscas.ac.cn>, stable@vger.kernel.org,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>,
-	Gabriel Somlo <somlo@cmu.edu>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Hans de Goede <hansg@kernel.org>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Daniel Lezcano <daniel.lezcano@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Jiri Slaby <jirislaby@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	Jason Baron <jbaron@akamai.com>, Jim Cromie <jim.cromie@gmail.com>,
-	Tiwei Bie <tiwei.btw@antgroup.com>,
-	Benjamin Berg <benjamin.berg@intel.com>,
-	Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	"David E. Box" <david.e.box@linux.intel.com>,
-	"Maciej W. Rozycki" <macro@orcam.me.uk>,
-	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Sean Christopherson <seanjc@google.com>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>,
-	Frank Li <Frank.Li@kernel.org>, Daniel Gomez <da.gomez@kernel.org>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Aaron Tomlin <atomlin@atomlin.com>,
-	Alexander Potapenko <glider@google.com>,
-	Marco Elver <elver@google.com>, Dmitry Vyukov <dvyukov@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	John Johansen <john.johansen@canonical.com>,
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org,
-	kasan-dev@googlegroups.com, linux-mm@kvack.org,
-	apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
-	linux-um@lists.infradead.org, linux-acpi@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net, qemu-devel@nongnu.org,
-	intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-rdma@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, netdev@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 01/11] params: bound array element output to the caller's
- page buffer
-Message-ID: <ah699hwLxIIOZ0-7@ashevche-desk.local>
-References: <20260521133315.work.845-kees@kernel.org>
- <20260521133326.2465264-1-kees@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F4zxf9jT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AA631F00893;
+	Tue,  2 Jun 2026 11:28:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780399702;
+	bh=gERvYyuiyCSM7mZlTY3IuFsfR07ZziVCNWuVRZe6frM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=F4zxf9jTCBRByDhRVDfOnycOH97G15GRksfGlFaBaTphFU9Z0tb2k5RZ0/hk2MSMT
+	 naYZJdute1ZuqAbvfvYoOzio4fvc6GjF2DAyc2QIChVGgCt7IiKeeya1i87sd0l7t4
+	 aLDBwN4i4pBboxqlZqfALQlmyWapVF/HvGko4QoFraKCZo9bmyoobyOlnVvomisjFi
+	 mSLAM8NoBfXGkHOSTmRv3wf6N2cjCw987WpZXsrmByZoCqXh768vGAP+2b8J9zGSuF
+	 Ld1lxahvrF3OHdcrampzPADCCyV7RBuKc3JXb/CMzpdfJGQfbdEhCEH0TRR3dnZsz8
+	 TqW/vuTuPSImA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH 2/2] PCI: Add pci=nodpc kernel boot option
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Yury Murashka" <yurypm@arista.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260602105558.1799563-3-yurypm@arista.com>
+References: <20260602105558.1799563-3-yurypm@arista.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 02 Jun 2026 11:28:21 +0000
+Message-Id: <20260602112822.2AA631F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260521133326.2465264-1-kees@kernel.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu, May 21, 2026 at 06:33:14AM -0700, Kees Cook wrote:
-> 
-> param_array_get() appends each element's string representation into the
-> shared sysfs page buffer by passing buffer + off to the element getter.
-> 
-> That works for getters that only write a small bounded string, but
-> param_get_charp() and similar helpers format against PAGE_SIZE from the
-> pointer they receive. Once off is non-zero, an element getter can
-> therefore write past the end of the original sysfs page buffer.
-> 
-> Collect each element into a temporary PAGE_SIZE buffer first and then
-> copy only the remaining space into the caller's page buffer.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Critical] Using the `pci=3Dnodpc` boot parameter prevents initialization=
+ of `pdev->dpc_cap`, leaving it as 0. However, the DPC port service is stil=
+l probed, causing the driver to use 0 as the base offset and corrupt standa=
+rd PCI configuration registers.
+--
 
-...
+commit 85278f34398b97df6932c6536a28ecec0294df49
+Author: Yury Murashka <yurypm@arista.com>
 
-> +	elem_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+PCI: Add pci=3Dnodpc kernel boot option
+   =20
+PCI DPC (Downstream Port Containment) support can be advertised by PCIe
+devices, but it might not be fully supported in the firmware. On large
+modular systems with a complex PCIe tree, enabling DPC could cause
+unexpected behavior and side effects. Sometimes it would be nice to have
+the option to keep the system in an unmodified state and be able to
+handle PCIe errors from userspace.
+   =20
+Add pci=3Dnodpc kernel boot option to disable PCI DPC. When this option
+is set, DPC initialization, state save/restore, and recovery are all
+skipped.
 
-get_free_page() (or how it is called)?
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index 2b779bd1d861b..10d1a0e026d74 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
 
-> +	if (!elem_buf)
-> +		return -ENOMEM;
+[ ... ]
+
+> @@ -404,6 +411,9 @@ void pci_dpc_init(struct pci_dev *pdev)
+>  {
+>  	u16 cap;
+> =20
+> +	if (pcie_dpc_disable)
+> +		return;
 > +
->  	for (i = off = 0; i < (arr->num ? *arr->num : arr->max); i++) {
-> -		/* Replace \n with comma */
-> -		if (i)
-> -			buffer[off - 1] = ',';
->  		p.arg = arr->elem + arr->elemsize * i;
->  		check_kparam_locked(p.mod);
-> -		ret = arr->ops->get(buffer + off, &p);
-> +		ret = arr->ops->get(elem_buf, &p);
->  		if (ret < 0)
-> -			return ret;
-> +			goto out;
-> +		ret = min(ret, (int)(PAGE_SIZE - 1 - off));
 
-It's usually discouraged to use castings in min/max/clamp. Can we make ret long
-or do something different here?
+[Severity: Critical]
+If pcie_dpc_disable is true, pdev->dpc_cap remains 0. However, does this
+completely prevent the DPC service from probing?
 
-> +		if (!ret)
-> +			break;
+Looking at get_port_device_capability() in drivers/pci/pcie/portdrv.c, it
+queries the hardware directly instead of checking pcie_dpc_disable:
 
-> +		/* Replace the previous element's trailing newline with a comma. */
-> +		if (i)
-> +			buffer[off - 1] = ',';
+drivers/pci/pcie/portdrv.c:get_port_device_capability() {
+    ...
+    if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+        pci_aer_available())
+            services |=3D PCIE_PORT_SERVICE_DPC;
+    ...
+}
 
-Can't we do this after with help of strreplace()?
+This will cause the port driver to register the DPC service anyway, and
+dpc_probe() will be called.
 
-> +		memcpy(buffer + off, elem_buf, ret);
->  		off += ret;
-> +		if (off == PAGE_SIZE - 1)
-> +			break;
->  	}
->  	buffer[off] = '\0';
-> -	return off;
-> +	ret = off;
-> +out:
-> +	kfree(elem_buf);
-> +	return ret;
+Since pdev->dpc_cap is 0, won't dpc_probe() and dpc_enable() use 0 as the
+base offset for DPC registers?
 
--- 
-With Best Regards,
-Andy Shevchenko
+drivers/pci/pcie/dpc.c:dpc_enable() {
+    ...
+    pci_read_config_word(pdev, dpc + PCI_EXP_DPC_CTL, &ctl);
+    ...
+}
 
+Using 0 as the base means PCI_EXP_DPC_CTL accesses offset 0x06, which is
+the standard PCI_STATUS register. Writing back to it could inadvertently
+clear critical Write-1-to-Clear (W1C) bits like PCI_STATUS_SIG_SYSTEM_ERROR.
 
+Furthermore, in dpc_irq():
+
+drivers/pci/pcie/dpc.c:dpc_irq() {
+    ...
+    pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+    ...
+}
+
+This will read offset 0x08 (PCI_CLASS_REVISION). Since DPC registers a
+shared IRQ, when it fires for another device, a Revision ID with bits 0 and
+3 set could be interpreted as a DPC trigger. This could cause a spurious
+PCIe link reset, disconnecting downstream devices.
+
+Could the pcie_dpc_disable flag be checked in get_port_device_capability(),
+or could dpc_probe() verify that pdev->dpc_cap is non-zero before
+proceeding?
+
+>  	pdev->dpc_cap =3D pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+>  	if (!pdev->dpc_cap)
+>  		return;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260602105558.1799=
+563-1-yurypm@arista.com?part=3D2
