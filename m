@@ -1,188 +1,223 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012048.outbound.protection.outlook.com [52.101.53.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F15CDB640
-	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2026 04:34:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780374871; cv=none; b=n0JNNZyWCFsFMNpDU1cwhYeIXDJPvGpYWBVRB4Q7GEPD/ob5VkK9mRjSA0r8yg6moBaipCqP9x9BTvpt4HCrKXYfDLxH6Wwl96IVuH47H546h6CsLJtvhAFUV04xZsEdlD9ZUgoJGNFmOx64jRU/31LNk6RP/azyMhhFF5HCpu0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780374871; c=relaxed/simple;
-	bh=ty+HAAsHAxkUJXff9F+TEX/K6iMhWXyTR1OBcpL/1fE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=N1D4XnJmqTBwekuOK+my6X88WqEhYjiwa0Yz6sKsRmZPfSDUJb9lxb100Cfcr09FsHIIK7neKvQlTdP9jB4tNDtYuEg416nd9++qUBBroNuuqY2OSp5JbFY32uCA8/+1LuOatzFFI4Gu8fay+lKJNiEUut5ew7Cq76TLt1f9I5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=FV6dGG8I; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=aRspB8lT; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8606A282F1B;
+	Tue,  2 Jun 2026 05:44:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780379095; cv=fail; b=O2Rh69bS6ZAuW20fqcbvY69J92bFFVdqWG0KOE+FBRzvpw3MySuR7D8UaO6XffI9sOLn4ekR3RvtPD3acp55vZg0ZKNoEE7t00DgdDlyYgFf2GhG4vDQeUSdyaO4IgrCDvMwbnaROmu30ORZRt5VcdHzMSTLJPucuvAImWLwjLc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780379095; c=relaxed/simple;
+	bh=TYhx4vDeseZEj50onu62+x7CGPphBIlYdo9NjvSD0G8=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RdpVVS6DjHsr6C8TmalLYD3Dld3vbS3p2lqjOMMdvBLwpgzBf9aVAxTYRAwI2Q8Su3dCIlzvYISX8720LUrXkMG1vJFziknoZyUz0KzTBukPALXuQdI1tkHkeNYjRbk9YkeThY6+SjMxK/vcYdI7wkZ1z0ChhGLZLB824nVtGAw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RpFqpGSQ; arc=fail smtp.client-ip=52.101.53.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="FV6dGG8I";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="aRspB8lT"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65203Lc71214129
-	for <linux-pci@vger.kernel.org>; Tue, 2 Jun 2026 04:34:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ehXOCZHzAdL2E3/HvP4lXm7p39a6i3gpcELOmcTa4Lg=; b=FV6dGG8IuMFpF+pS
-	MumxC+FMJW4eQmnrKCs7cfPWR2FwYBp7kggCWgcpjN7UBoj/MLhh8lOhXLSO0N6d
-	I2FU02qo5iFX0hbGjnl+YmRVX5vFjhNAcqhR2fIsCoiSick4eSoy90zdTFaKlf++
-	ZA5XcPfaqcmZXklbpoXpXBe4ZKoa3zaUMvlcwG+Di+dAO/ddgwpeVhfJI825Vk/+
-	o2q25duMRUNhOlT7/BmxpOHYCoa1QW0lKSEc1DCg0qpScEK7OhbCrfhbAKSr6Bpn
-	7X6EnO9GcQWeSzlraltJNCAPRP0QEL87RGiiK9P5RpZEfDh5DrXhDX46tyYhOYPd
-	iFhS+A==
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4eh6s9ch7k-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2026 04:34:29 +0000 (GMT)
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-36bc54005a7so5061718a91.0
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2026 21:34:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780374869; x=1780979669; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ehXOCZHzAdL2E3/HvP4lXm7p39a6i3gpcELOmcTa4Lg=;
-        b=aRspB8lTqRjj+xQJMBkLdc0usKolUlmxrQ6QpkShpmElPuRFQKHFd9PRWtuFn5uByu
-         X6wWNfwrfVtRclIWk2MldAe9oPtqSSC5JO0CKmLjFPXoAFZByvbadQNpKDIr+DmZaP8+
-         H8B3CJXJBHI/kzlp/L95HqhX02UWddg9TP5SdDuqftwTF20Bu3Mot56/G9XexAhRhtM0
-         809On6yg1F5PRVhMlaeLN46ozjntuHhmC/QhXCLmDDMUcLk82Dqc14DAgLHIGoOCEdAi
-         tuNv81YJQfUV0Y2+MwcZuHPA+z3l+9n6uaPAAELnq7HmKdkTCwXyhbFoonUknjKriybh
-         9+PQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780374869; x=1780979669;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ehXOCZHzAdL2E3/HvP4lXm7p39a6i3gpcELOmcTa4Lg=;
-        b=dhnWTaaIN1jPJVDqY22c9bWcqQ53Vrn4+7ECtnmshzYo+pTRTZ0dC8P70F3uNOjxuS
-         ur0xpjoyGZX7RIh/xnsEXH41GzZII62mthy6juZcjpr0ypSOAoIoyraCz5mPw5pKdGs0
-         jPOnZl/Ig4mN4bEKR4bOuLcASqVxXyfFfhVKTpks9CLQ7txP1MpldSbdf1JvqYwCwHtb
-         cWHVA5xYkRo1iLpaoM3m5UfTNTKsx0AgMWncyHGhyLNmGWrq38qF3cXAcyoRFvt46IFI
-         kVDgv0T0ouPLUPvE9WfEC6QmhuZhcjhVfq4ZjSi2mgkaleBQ5juImguH/M5F9Amy1n5M
-         aN7w==
-X-Forwarded-Encrypted: i=1; AFNElJ8pT2Jjz/ICVGtxBwsFZSNlGTuMQ4PrTcHOfzJ6cZNnNGmLTrh6e7fY6AmRHyk6r3K3VKEP4sm44Vg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwE+o3FzKdH6JDdq5jJuUt39+P9iweC9dvweobbIMJoIlEIJShZ
-	ESXvVWX/E0io0gkT5I5djWqYLYFEZfo2K2LBYza5u1+5jtHzVkQPzOuAV+RJPIlU34N9xYnjk23
-	tBq7xFzD/ZWMYCXxWshOROwcA9hgZYoogUFagiikK5IRy6K4gwW0CINQlab5okts=
-X-Gm-Gg: Acq92OGPDUsLOvhdROkQdBnv29VRDy4GgsmEEQkPyG3mB4mUcGxXljK/J2cNIYWQ/qG
-	vregKc/pfAO3zb0gKrZmXEqGX6eySidIkfT66mZN4QjlZUOxG4SS/9g4g6TmwRpJ+dbmeqkqF6T
-	eCR8KhRWkbroWra4evSkSAupkhF5J3MCdI7lBBtq0fl1ykh18oqnaTK5jWUvfPpaOjHQns2a/JL
-	FDzb+X6UPTDgykeftRbFko6nyKOxnlnmsvlgh2u+H2NdDd7yaoFIKy2PJPZ2mrey+5Okv2f8RDL
-	y5hjeAZICNH+zXu9jZViXAOzWoKAkwSo8xVF0mmbd3BvyYAgR/PaM/JQ9buo5B/3nY08IynqJAA
-	Vw72RX6GnaCCbA3TkC2RatLUmsIFyBc/eStMyfL6q+MHxV7fNk/YZWv9dZBBf6d7czu9Vw/J9nw
-	4I
-X-Received: by 2002:a05:6a21:a34c:b0:3b2:b1ed:d1df with SMTP id adf61e73a8af0-3b427f2cff8mr16397471637.29.1780374868606;
-        Mon, 01 Jun 2026 21:34:28 -0700 (PDT)
-X-Received: by 2002:a05:6a21:a34c:b0:3b2:b1ed:d1df with SMTP id adf61e73a8af0-3b427f2cff8mr16397437637.29.1780374868135;
-        Mon, 01 Jun 2026 21:34:28 -0700 (PDT)
-Received: from [10.151.37.217] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-842222e2394sm9874515b3a.2.2026.06.01.21.34.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Jun 2026 21:34:27 -0700 (PDT)
-Message-ID: <0bd70e70-68fe-436b-8366-8a497861e21d@oss.qualcomm.com>
-Date: Tue, 2 Jun 2026 10:04:22 +0530
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RpFqpGSQ"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=dkorlzYCKU3VHnH5zqQRnuyVOZPuVxSDhJmtybpeTW79NzWQAWUTz9QwtsDaJFpUmdOeVAPf9nIafLb3M7ghkdWjQyMk8Xm3qDT9JIfcevA8UhijPk8WhEBgECXsKsth50d+CbemrDDVAgnlRi7c0ZbJRF1SwMX1WigyMJNeD0AGfG09VioVsfkQ14KwWFx2CD+3MQuIIqCY7IcdTuXwBxpIkOyDkd+kRu2UoRTfE7fwJa+gaHTRxy8CQOD+RjZMlI+Y8JRW3fqdrxm8jOM/FD+XIjmiMCpJj+2PX+9Df1qOgKcDEnxhZ/VPZAs8HF96bfwM+hbspF+e2PN9rO1I7A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sjsJaHR1py00onar7p+ORVRER5NY5pItpBN72A/VwaE=;
+ b=O8V7QdDpJ5D+WaorIQfH4d0v2yUt6UbtLGtGfygFXZbzH4GMcL3ZN+l/B4YJNPnYwezhkHf/QxslFJrla0TDd80o6pp7O96ixU6pBagR8MftNULf3nIQIIM6RCudwFrl/L3eExRHRwCbsJ1CNla6D6EYEbPWd4K8kxREsSeSpP0MXR1gamHoVXvT5jexO2MpK8aIagr6vhYy+ri1+AwAH37DLQQZxS6npBPBHCRJ4W4RYhkQETUcfpIxWF7hnadS3TSBEYUxZ7lC6/wmimX6sIPqHjk73COHfMl1oUgCrP/vPK/2yyYaUERvTplvi0ONWv/pMqto+uXoznEdoipoIw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.233) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sjsJaHR1py00onar7p+ORVRER5NY5pItpBN72A/VwaE=;
+ b=RpFqpGSQ5vPLo0PAxcF/nBIP6mVABWaMzFwmnhPe+FLuT7HbVFWwfOQRcZyMYqMjRzm9afgXu6hKS+D6CutZWpTj1oG8mkT79G2ll5mXAGF6gV4enr3Mp9+J02Qc9K+UfjVLBNKq5tOb/cNQFbyH3CRJLUKVlKU+/9L6gXMKghGxqo9vwFPyCphPdUWnk0tDRLj8YKRdpxrKiG3c8gpYLPQkjii18pEiTJ/qXjdHZZ1vD2gCEX8jCAAms5/zEz8MG9Z0IqRTF3BKNXJlJN16twKDspD0IxkNF+2p/pSn8rJR8J1LHSeLI1iqEq66+i4DBtePWv0F2lwgGEiITtnX6w==
+Received: from CH0P223CA0001.NAMP223.PROD.OUTLOOK.COM (2603:10b6:610:116::32)
+ by CH3PR12MB9217.namprd12.prod.outlook.com (2603:10b6:610:195::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.16; Tue, 2 Jun 2026
+ 05:44:48 +0000
+Received: from DM2PEPF00003FC6.namprd04.prod.outlook.com
+ (2603:10b6:610:116:cafe::8) by CH0P223CA0001.outlook.office365.com
+ (2603:10b6:610:116::32) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.71.16 via Frontend Transport; Tue, 2
+ Jun 2026 05:44:47 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.233) by
+ DM2PEPF00003FC6.mail.protection.outlook.com (10.167.23.25) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.92.5 via Frontend Transport; Tue, 2 Jun 2026 05:44:47 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Mon, 1 Jun
+ 2026 22:44:39 -0700
+Received: from drhqmail203.nvidia.com (10.126.190.182) by
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Mon, 1 Jun 2026 22:44:38 -0700
+Received: from Asurada-Nvidia (10.127.8.9) by mail.nvidia.com (10.126.190.182)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Mon, 1 Jun 2026 22:44:37 -0700
+Date: Mon, 1 Jun 2026 22:44:36 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+CC: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, "Joerg
+ Roedel" <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J .
+ Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, "Pranjal
+ Shrivastava" <praan@google.com>, Mostafa Saleh <smostafa@google.com>, Lu
+ Baolu <baolu.lu@linux.intel.com>, Kevin Tian <kevin.tian@intel.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <vsethi@nvidia.com>, Shuai Xue
+	<xueshuai@linux.alibaba.com>
+Subject: Re: [PATCH v4 18/24] iommu/arm-smmu-v3: Introduce master->ats_broken
+ flag
+Message-ID: <ah5txKCvspL8zMeG@Asurada-Nvidia>
+References: <cover.1779161849.git.nicolinc@nvidia.com>
+ <49dde0a2e2dc88e421a3010956db33d47cc92aa8.1779161849.git.nicolinc@nvidia.com>
+ <20260519120658.GB3477375@nvidia.com>
+ <aho9DB6it2R5O5Nm@Asurada-Nvidia>
+ <20260601123231.GG3195266@nvidia.com>
+ <ah3udmX5SIO9lAXR@Asurada-Nvidia>
+ <20260602001547.GR3195266@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: qcom: Handle mixed PERST#/PHY DT configuration
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        Qiang Yu <qiang.yu@oss.qualcomm.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-References: <20260508-mix_perst_phy_dts-v1-1-9eff6ee9b51a@oss.qualcomm.com>
- <gieaybsg2ckxpctvqj77nlwu7utama2yeyvebkonmexsxrra3v@v3fobqasxnmy>
-Content-Language: en-US
-From: Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
-In-Reply-To: <gieaybsg2ckxpctvqj77nlwu7utama2yeyvebkonmexsxrra3v@v3fobqasxnmy>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: GkvvdyCEsisw-B8YbQyLSMc6ximUr58O
-X-Proofpoint-GUID: GkvvdyCEsisw-B8YbQyLSMc6ximUr58O
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAyMDAzOCBTYWx0ZWRfX0U1Hyq4abUVS
- RtpwlMHrC+MP0B63oB+thzPV5U2KT3odNdiYm9PKsMAOeLxhymEQABWIcmhjD4BdNB5obfFGtjr
- BrEq4rPey42YUwurhMNtrWNEQINaw0MqVOJH294z1UdAhgiN1ViCum+BjMX42JyB7tBphGNMZFK
- E9SarF3hUqxkMAvEvSljO93tOFc5bmrUoY0ExYUrEV2NOjPUVRhyhOJ9PoyvOmfxA0P8GqcknBU
- 1y9ozCjj1MWZw0U0qcC6Zj+PjoRUJmxRBHVRnS9Ma0jugML4sDCn2zID/36Dd3oT0ndggFvzdxj
- NS7L78FvntjAtaXvrtQ0pCUYYNFUjrH/WLtIB3iF44kf5YKWVc4+FhVfEDj9Q0STNwIvurvI/BQ
- SVY05dGZA7vOgmfnfn4+GmUvF+Y31pouDqjuyh4HPXyPbgF4hFUj9nRID1kjfvUO64Ghq/1qAtR
- buG44ZZQjxuIWHV3LoQ==
-X-Authority-Analysis: v=2.4 cv=Zo7d7d7G c=1 sm=1 tr=0 ts=6a1e5d55 cx=c_pps
- a=RP+M6JBNLl+fLTcSJhASfg==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=YW_819I0oaYKz_JYO2kA:9 a=QEXdDO2ut3YA:10
- a=iS9zxrgQBfv6-_F4QbHw:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-01_07,2026-05-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 clxscore=1015 impostorscore=0 spamscore=0 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 malwarescore=0 phishscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606020038
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20260602001547.GR3195266@nvidia.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM2PEPF00003FC6:EE_|CH3PR12MB9217:EE_
+X-MS-Office365-Filtering-Correlation-Id: b9807550-d834-47da-62e7-08dec06a0eb6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|82310400026|1800799024|7416014|376014|36860700016|18002099003|56012099006|11063799006|4143699003|5023799004|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	m0RmmVkDSp30j9EYwnr6prRt7ZBvHDzJzckrKbySyAlPw8uDJ//CVpJ9Qncv860czYzQ5l+tNjH6OTBGmSBkWRyXWaoYuhfWmU1/mozGCVgv2hWYf4X6N7/O84KxnVjdDxT0//bWbNbZLxVYM+kN68fsD4KXgsPvX65Nld/RjtAtDGQEVY7WTiKXu8aQVvvL7buzFK0untTrL87yqdFCgjZEj1Hvkt8fBhI1XEjuZEAYyzoZMX9L+NuCwDm5Scq/Zydmld0V5z55ZIIbBqnrlyaxdVos/ZQsCrHgWqi4oNS/0NAzQO4wHvFSY8sScKMdSCIE6Drtd1E8qa1+prOBqNkfu58hgLAeOXeW1jWKqynQ/s7S2EIxUqteexxUpzXtxW1na9VpRNAJgEyXY8UtniwI3XOdLUyxr8aNasywvwGP6fqAavNmnQOgtmqa2+Fw0Qz+hLJ3a7rDEktIi7pkq0m8UmqFUOIGoOJHD2eTQwd8KG3VuJSHB27KqoYGzJSFqmKHsWyiN18vR+OQL2OHRb6GutslM0jr2wMWxBWFGLzGRTuvpWP+mT8g+1Ei66U8Xys78aMCR0JE3gEimNlTksfYvHasxlBJZ7Y+uUjsDo5RiIvZrn6kvmo4aAgsY/eDOJFeBPn69e/k3BEw0oFrjHRCPe2EnQJ/cEqAsDBHMMil6AmL7HDjmHUVftc0dVoOQESp+jl6XpYIPUziiAHPwf36A4nXvmWHdBmv90HLGpk=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(7416014)(376014)(36860700016)(18002099003)(56012099006)(11063799006)(4143699003)(5023799004)(22082099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	C8linV14utpEEA5F5wTSSuE5i3JaNoXp/dyM4U5Slrud1Hux1xultJ3RQIRG4N7QIMyvgDURrKMcy4YOPxc+wAY+UC49Fe1CbyriMtIfAF+08y/BbpvwQf556hxYy3LN2SR1DDRkaSgzxWVlZ5yPNQm5l1yMHtHIxVHkDIfgP31whyX8Uavt9r7BYfKhsuQIIwiWNg6H4bavQV1kqHoVe2VWSd0hdBFcVDCdHMToGGBLnUpb15Dnvi2GUMWOumWlH5yHuSyvMJJHFX/LV1GALJhOlVL17O31J22T1A1O1dsknwfYrp4GYtL/Mp7GAr2klGjkr5KutfxWEvcN/UlmGRt1JfXMnFQ3Q6FFw78A8KVwHcowlN5LFUv+QOh4P7rcXEZ9s/mfrD1wzaEmzJ1JMyiV9gA55+5OoeKvJsThCZRqF0mOuVUaDBshj5QBKutc
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2026 05:44:47.7545
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: b9807550-d834-47da-62e7-08dec06a0eb6
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DM2PEPF00003FC6.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9217
 
+On Mon, Jun 01, 2026 at 09:15:47PM -0300, Jason Gunthorpe wrote:
+> On Mon, Jun 01, 2026 at 01:41:26PM -0700, Nicolin Chen wrote:
+> > On Mon, Jun 01, 2026 at 09:32:31AM -0300, Jason Gunthorpe wrote:
+> > > On Fri, May 29, 2026 at 06:27:40PM -0700, Nicolin Chen wrote:
+> > > > On Tue, May 19, 2026 at 09:06:58AM -0300, Jason Gunthorpe wrote:
+> > > > > On Mon, May 18, 2026 at 08:39:01PM -0700, Nicolin Chen wrote:
+> > > > So I've tried INV_TYPE_ATS_BROKEN: during per-domain invalidation,
+> > > > each batch is built from domain->invs so it can carry the "invs";
+> > > > if the batch times out, we can immediately mutate its ATS entries.
+> > > > 
+> > > > But I realized a limitation. E.g., if a device attaches to two SVA
+> > > > domains on two SSIDs. An invalidation timing out on one of the SVA
+> > > > domains could mark INV_TYPE_ATS_BROKEN in its own invs, but not in
+> > > > the other SVA domain's invs?
+> > > 
+> > > You'd have to mark all the S1's sharing the STE.
+> > 
+> > That would be a bit convoluted as we would have to go through all
+> > other domains' invs arrays.
+> 
+> Ok, that is certainly an annoying problem.
+> 
+> I don't have a better idea than storing the master unfortunately
+> 
+> But I think the locking for that is going to be tricky, I'm not sure it does
+> actually fully work..
 
-On 5/31/2026 4:37 PM, Dmitry Baryshkov wrote:
-> On Fri, May 08, 2026 at 02:54:19AM -0700, Qiang Yu wrote:
->> The driver currently supports two PERST# and PHY DT configuration. In one
->> case, PHY, PERST#, are described in the RC node. In the other case, they
->> are described in the RP node.
->>
->> A mixed setup is not supported. One common example is PHY on the RP node
->> while PERST# remains on the RC node. In that case the driver goes through
->> the RP parse path, does not find PERST# on RP, and does not report an
->> error because PERST# is optional. Probe can then succeed silently while
->> PERST# is left uncontrolled, and PCIe endpoints fails to work later. This
->> silent probe success makes debugging difficult.
->>
->> Handle this mixed case in the RP parse path by checking whether PERST# is
->> present on RC and, if so, using the RC PERST# GPIO for RP ports while
->> keeping RP parsing for PHY. Emit a warning to indicate mixed DT content so
->> it can be fixed.
->>
->> This keeps mixed systems functional and makes the configuration issue
->> visible instead of failing later at endpoint bring-up.
->>
->> Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
->> Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
->> ---
->>   drivers/pci/controller/dwc/pcie-qcom.c | 15 +++++++++++++++
->>   1 file changed, 15 insertions(+)
->>
->> @@ -1778,6 +1785,14 @@ static int qcom_pcie_parse_ports(struct qcom_pcie *pcie)
->>   	struct device *dev = pcie->pci->dev;
->>   	int ret = -ENODEV;
->>   
->> +	if (of_find_property(dev->of_node, "perst-gpios", NULL)) {
->> +		pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
->> +		if (IS_ERR(pcie->reset))
->> +			return PTR_ERR(pcie->reset);
->> +
->> +		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be fixed!\n");
-> This patch breaks legacy DTs (I stumbled on it on SM8350 HDK), because
-> now devm_gpiod_get_optional() in qcom_pcie_parse_legacy_binding()
-> returns -EBUSY (as the GPIO is already requested here). I'll send a
-> patch fixing the issue, but it's sad to see existing platforms being
-> broken for the sake of undeclared "mixed" case.
+Yes, there can be a race that sets STE.EATS back while per-master
+flag is set, which would skip the ATC_INV in commit(), so no more
+ATC_INV timeout that resets STE.EATS=0. To close it, we can force 
+STE.EATS=0 at the end of commit() when state->ats_enabled and the
+per-master flag are both set, which is only possible in a race.
 
-Dmitry,
+However, after more thought, I found that there's a big trade-off
+to pay in the invalidation path, if we go on this path. The invs
+array only has SID, so it needs to convert it to master using the
+rb_tree for every entry (holding streams_lock).
 
-I have sent[1] fix for this issue and it is squashed with the offending 
-commit itself[2] and part of controller/dwc-qcom in the PCI tree.
+I asked AI to list and compare the three solutions that we have:
 
-[1] 
-https://lore.kernel.org/linux-arm-msm/20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com/T/#u
+(1) Per-invs marker: INV_TYPE_ATS_BROKEN + master_domains
+    disable_ats() in the timeout path walks master->master_domains
+    and flips matching ATS invs entries to the BROKEN type.
 
-[2] 
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc-qcom&id=1a23bcb452d95f099e530414504c0d99ee076b3f
+  + invs walker is free (one case label in the existing type switch).
+  + No lock or pointer deref in the invs walker.
+  + No master pointer stored in invs; no lifetime concern.
 
+  - disable_ats() walks every (master, domain) and marks each invs
+    set; the list needs locking usable from atomic.
+  - No master-level flag, so atc_inv_master loses the cheap early
+    skip and attach has nothing to gate ats_enabled on. Concurrent
+    quarantine self-heals only after the next ATC_INV times out (~1s),
+    unless we also keep a master flag (i.e. a hybrid of (1) and (2)).
+
+(2) Per-master flag + streams_lock
+    invs walker resolves SID -> master via streams_lock and reads
+    master->ats_broken.
+
+  + Single source of truth on the master.
+  + disable_ats() is one WRITE_ONCE.
+  + atc_inv_master early-skips via one READ_ONCE.
+  + attach gates ats_enabled on the flag; a concurrent quarantine
+    race can be closed by a short post-attach re-check in commit()
+  + No master pointer in invs; no lifetime concern.
+
+  - invs walker pays streams_lock + rb_find(SID) per ATS entry on
+    every invalidation. Measurable on ATS-heavy workloads.
+
+(3) Per-master flag + inv->master pointer (v4)
+    invs entry carries a master pointer; the invs walker reads
+    cur->master->ats_broken directly.
+
+  + invs walker is one READ_ONCE through a cached pointer.
+  + disable_ats is one WRITE_ONCE.
+  + atc_inv_master early-skip via one READ_ONCE.
+  + attach gate + post-attach re-check, same as (2).
+
+  - invs holds a master ptr, so release_device must synchronize_rcu()
+    before freeing the master to drain walkers under rcu_read_lock().
+    We dropped this from v4 for that reason.
+
+Side-by-side:
+                (1)      (2)      (3)
+  invs walker   fastest  slow     fast
+  disable_ats   slow     fast     fast
+  atc_inv skip  slow     fast     fast
+  attach race   slow     fast     fast
+  master free   fast     fast     slow
+
+FWIW, AI picks (3), but this would reintroduce synchronize_rcu()
+that you dislike. My personal feeling is that (1) is the cleanest
+shirt in the dirty laundry?
+
+I'd like to hear your thought before finalizing the design.
+
+Thanks
+Nicolin
