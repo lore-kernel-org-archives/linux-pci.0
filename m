@@ -1,62 +1,60 @@
-Received: from BL0PR03CU003.outbound.protection.outlook.com (mail-eastusazon11012044.outbound.protection.outlook.com [52.101.53.44])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 899D2367B90;
-	Tue,  2 Jun 2026 21:35:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.53.44
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780436145; cv=fail; b=bQpll7+lSBwnqslMMJw336ZU8IbryVHJPAtJ6yKhKfH6r+UhuBDMsvQiEd29ujQdOx2hQ3uzx66mu2DVAjSiGP5ojr4+U2bJwYZfaC64UMmmVoEf6WaBTZaS5sWkJdVs8rvwY10GTFFaCQKZr6KVS2C3n9HOoO1Nb/00KS4TcSA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780436145; c=relaxed/simple;
-	bh=1lx11/mxqK17LpuaQU1GBGi7ufgCkKOd0mccmgvqWus=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:CC:References:
-	 In-Reply-To:Content-Type; b=PNx5PbV2m1yOzIbLRMNpDnvzd4hXUEyvgOQdinZhw7vo34IxhFKlVKjqv/ZOastznC0n1alkA0C6Si2c0MmB3Z9h2ZbZZmEEaTPWfGh0lnOGPWHk0xALSrgW/EDj3z2fb9STwX/fJkWKQW8sLUW2giZcbsrwyr2fDpB/Iu8CFnM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=rM6z3DGR; arc=fail smtp.client-ip=52.101.53.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9B273A7F40;
+	Tue,  2 Jun 2026 21:39:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780436347; cv=none; b=pKHWNZRacwL2YhKVd0qKZuU6mP1CVtg3ZUkJs5YRNEMDkOHcoG1zTtSPiNNtfBmgJ8KbTzzQooLvswwRRxFmUXlmtGQVTx4uBuHNNHx7kALEMYMXAMG0aWvJgDDjGA6kjzmP/1c33Lg7ehDuroT53tA1PJseDuo7z+g2KMtePCM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780436347; c=relaxed/simple;
+	bh=Thawo5EVJPBQQZBDlv12MGpumeYPQEhw6IrKqGeYdSs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aIEqauzBFw1Uf8QLyRS/sDhPXcmW2/4wbfpj9osmDO5y3zp1EAyzfUItFmQvOO47O4AsQf/zDvmKouRy+9twqXaDqFJ32hxbqnpOFuBxFj1rHdh5dZzbUWAQGiIPM0xIIWXw1Vsgd3f1lSNS86/kT1EsrmKDWFmWpiOS13/1tRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=OHN9FWRp; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="rM6z3DGR"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RcmVvaPWT8CazoLhJ1tNf4AJx0z1fZKjTUCdSauJusitapMYTqIHFbzkFc9/F3iBs5fQGxemF4WQFA+mB7LKMZuLwTTnextsXukdnr2uKVRwiPejMEroZDp9XRkwwtdkE0WBJ/vJE2K3/LsPYtEM+0HE380WrRBnzRdLk73bm06wOnOtBHcXPqcCoPkMEiTKIVqpapbNCOmuqYTpL0LNpLqHwgLSDJ+PH0wpQ6VgtNEedVEqWmkMe7Gcb+THfE2duxMEBwE2Xz9XM4PQednDBoO4XW2pkdv/4tMnfin/fPodSMeNKQgLokWhu4ojAUfVTfQ0oni7QKh/wDIiydIJzQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GsCdX+ZwY5Jwq8sJaFcwy9c/tYM2PGeq/EIzHtViLMU=;
- b=Y8S/x+WHzuaxrGoJd4Isb0j8/23/5LVDWGnBBsszGaNM39Vu8bNgW7iFLU23Y3sz2NXqGcey7UtBMb+sFtkA2SSYyGPDp38LL9kw7wQX4tAT8Z7h7B4rvldGSpJuitgtnM4gjzElJvwLZw/6DsqPy3byHNT+X1XCXN6jOrtO2fh6aB9HYzMEVunBTJOsN00a4UcQud9oETHVzhe45A5sPTj2C6Ne956j+ZcKdHF36resqtone28pngMu0fFbbKUMUHm+iJwYrDSkc16wDnBjEVT5c9tlA3ooRh1n+DlA73C9c3Dp0ql3CXCFs5RKGI39oSQzI1SL70sjNeeZ83ttRg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=nvidia.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GsCdX+ZwY5Jwq8sJaFcwy9c/tYM2PGeq/EIzHtViLMU=;
- b=rM6z3DGRMOmSbnHVmZzerOLMWtaAUy5pDn0RHisI33E0yZz/6m+Qn5vcG6a/6pl4iOunbFHbmfHK+oJ2xrePwEfgXSWlXrYBQc4jsWjWCZ/NqQFFFGPzjfglxyGU8x6AJeZgHT3H/rEMjoJHYRThufXA5kSYOFBC9Dlcc1oHgjw=
-Received: from CY5PR15CA0054.namprd15.prod.outlook.com (2603:10b6:930:1b::20)
- by MW6PR12MB8735.namprd12.prod.outlook.com (2603:10b6:303:245::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.17; Tue, 2 Jun 2026
- 21:35:38 +0000
-Received: from CH2PEPF0000009B.namprd02.prod.outlook.com
- (2603:10b6:930:1b:cafe::8b) by CY5PR15CA0054.outlook.office365.com
- (2603:10b6:930:1b::20) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.7 via Frontend Transport; Tue, 2
- Jun 2026 21:35:38 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- CH2PEPF0000009B.mail.protection.outlook.com (10.167.244.23) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.92.5 via Frontend Transport; Tue, 2 Jun 2026 21:35:38 +0000
-Received: from [10.236.179.233] (10.180.168.240) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Tue, 2 Jun
- 2026 16:35:37 -0500
-Message-ID: <0659eee1-d978-41f5-b626-b872ab87431d@amd.com>
-Date: Tue, 2 Jun 2026 16:35:37 -0500
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="OHN9FWRp"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 652KeB8t2386944;
+	Tue, 2 Jun 2026 21:39:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=QySHnO
+	ZE758w6JZq8bd2B9c49LnptW/4kYvCb1t8DDI=; b=OHN9FWRp5BB5xs6LbtytGr
+	oVz1uXNMzuBdlubg+oyPwZ2gjCMulH7V6o48BwD9IIB8NJgwTryo48hhug3FxP3x
+	j8LALWzYKMdK5Y4O0mMUQChv+tBrr63tLlvdMWv+37z3MMcNo/BYWsLAPKHEUH99
+	rQd/QkJ9BnhJjDUWz33ONtETkoUvtza71Jl0foDzn0/f5A/a8mIVuUvi6HcfaaUr
+	DzuAdfcmn0dLdjJjVkshKk+rdgj4kQiZQ6kStU7eEHzpLBtXEzJKwNuE90heD1EI
+	ZeNkccm9gGHP8Z9Q9W3dVPm19py8Qxp7FBsb6D+ZbXjDs++tLYs/iK44xsaVm9mQ
+	==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4efqd484vg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 02 Jun 2026 21:39:01 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 652LODpV004823;
+	Tue, 2 Jun 2026 21:39:00 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4egcegn1pe-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 02 Jun 2026 21:39:00 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 652Lcwul39060120
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 2 Jun 2026 21:38:58 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 72B7758051;
+	Tue,  2 Jun 2026 21:38:58 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E4A605805A;
+	Tue,  2 Jun 2026 21:38:57 +0000 (GMT)
+Received: from [9.61.249.141] (unknown [9.61.249.141])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Tue,  2 Jun 2026 21:38:57 +0000 (GMT)
+Message-ID: <a35f1171-eaad-4b5b-a85f-dfb64dbc6454@linux.ibm.com>
+Date: Tue, 2 Jun 2026 14:38:56 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -64,298 +62,264 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: "Cheatham, Benjamin" <benjamin.cheatham@amd.com>
-Subject: Re: [PATCH v6 8/9] cxl/memdev: Add cxl_reset sysfs attribute
-To: Srirangan Madhavan <smadhavan@nvidia.com>, <linux-cxl@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <vsethi@nvidia.com>, <alwilliamson@nvidia.com>, Dan Williams
-	<danwilliams@nvidia.com>, Sai Yashwanth Reddy Kancherla
-	<skancherla@nvidia.com>, Vishal Aslot <vaslot@nvidia.com>, Manish Honap
-	<mhonap@nvidia.com>, Jiandi An <jan@nvidia.com>, Richard Cheng
-	<icheng@nvidia.com>, <linux-tegra@vger.kernel.org>
-References: <20260528083154.137979-1-smadhavan@nvidia.com>
- <20260528083154.137979-9-smadhavan@nvidia.com>
+Subject: Re: [PATCH v17 5/7] vfio-pci/zdev: Add a device feature for error
+ information
+To: Alex Williamson <alex@shazbot.org>
+Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
+        mjrosato@linux.ibm.com
+References: <20260520171113.1111-1-alifm@linux.ibm.com>
+ <20260520171113.1111-6-alifm@linux.ibm.com>
+ <20260602143202.6395e9e2@shazbot.org>
 Content-Language: en-US
-In-Reply-To: <20260528083154.137979-9-smadhavan@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260602143202.6395e9e2@shazbot.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: satlexmb08.amd.com (10.181.42.217) To satlexmb07.amd.com
- (10.181.42.216)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH2PEPF0000009B:EE_|MW6PR12MB8735:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7aadadde-3857-47f2-813f-08dec0eee390
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700016|376014|7416014|6133799003|13003099007|3023799007|5023799004|4143699003|22082099003|18002099003|56012099006|11063799006;
-X-Microsoft-Antispam-Message-Info:
-	P4XAmpFr4gdPPwo/n6R2LBPy7izEegadwCjZFDvcXR6t+0qONq+qN+5erM8Aau1K0XzDZodUCUbX3HodtD6CcHrKJyc3cLDSJoF5oLjwYrYiQsRB7HJphWaaSKumLpmja71KvwwLrROKBNhLiEvDd2aFchwSGROiDxCvGgCpQzJvgVKq6Z1d0q7GiCgFXYC0m3C+SIKlT3cqvoLNFAJLAwGtxKrB9bJ/JIQ+iRZd//TJFQJnOFMbYxkDQEAdrXe/sPRr6iR8MalPiWcKmCEhhmfA3DTCmGs24s9pN/QN38ooiO/IxWbjbT2fnO9xlromQeNTjUviduH9KbAiTE79YaZv5yyyDTNBvVHbWqCfnUahLaPyDKeJQKctG3KqkkSk/JojyBc0uMdshbTOajfAQI3JpTc35PfEhZKhPVFV93/WkDyWtoqgFKGQrC0G1oqLEGmHsh0Z84RPp9WDPr9wMWI1E/wm3Drff0QSASi9LcJU01LqbAuDVR/S5rpu8/54Y/89e/DL0ekczsxUNFtW3xkQp6tcGoOovr2p9M3NRki5eIsnWQ8/Fr7UuKVMAQafX+M2HTtv6XXgbQAWfi3zV/Ef6Q1uWKVki7Cjr1adKCxXtE/qkT+ZJBGTlEnAsLwFQtoFqrU+kS1rdALy//S7Aw92Noe6hZqEPpRHKHGAfybTKS9lwFdCzqWBnxPuc9Xn
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700016)(376014)(7416014)(6133799003)(13003099007)(3023799007)(5023799004)(4143699003)(22082099003)(18002099003)(56012099006)(11063799006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	m+ErdA+NWSC3Z1RuDEfzZFSLBwV+WXpt1/1zAGX4hUj2/zghv0Oq7kojKQUoNp1lFlO5at4N2teLnFM1tVHx96zQyrdkmQZUdCwihyVUAeQgdj4Xj+p/KQJS78aR7mM0c7oZiJsjrNjXKyc7HSEhXmgrun31X5NZmcOhUq4G2EeDi9dEsylKwHlGag7CCs36/YnpgDCPuF3KMtLjLAbGYec44JxVONFF3WXbBvfjwa8yq3ridYFZSdSBLKdCQjBxfkJPeFzCCygLoZDb7V0bOmrGso6wiDv+Lmsbf4LBHMBDvRciczjvg0+brpipOICRsXbHP9phNuOKuU2cycou8YMpZj2/qRlenklLgjSV2R9Emq5JYEeX0bXueD+idwSOThOuYRQhBEfI7FKFJIxY69LK0Ndq+n80xHfcFEDvnD47fIyUDwVu3mc4xCuRmUA8
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2026 21:35:38.5502
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7aadadde-3857-47f2-813f-08dec0eee390
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH2PEPF0000009B.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR12MB8735
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAyMDIxMCBTYWx0ZWRfXz8r/gaSk6aVB
+ F+b+S2YkballFBoaVQ6COvsSzjpFhToTP0WTpqDFWv+RqGAXTDq+4vVNuWN0g/Tpb69OfdEG0iU
+ mwz7qiYxpSPlMVQKJnQASOjfb0R10BCO4BGg/S6csm3prDstB0qIOysBCFgjG3a69Ve2QgtPLta
+ Kg4XVi3JndFA2T1ScLbfJxse8EO1GXuvXDgTVRIrl/kNJS/CEjm6B0nEcRmPyq09Hw2EL6XDNY0
+ 4OGysGrR3Gl1vEQMaif/cNSjMvLQHAooo2TwfdZIHsvbbrS7SlkluHGpZp4jroED6iSQ8NpFOvV
+ NDZ7YcepT4/WdTD6Ha4VOZi1EdS92daIRrpnqOsQW/fE6AqbRjafvXNGQ2JIq3T78PkuKFpVm4U
+ GzmzdZhZEoStR7w7nuGINHkyv3FKWNd3a7KOXc1fDBnxeKn/1yYgJKHa3MxQMEfXc7ozpHcABVU
+ Nv+FW1Q1Z4bzt0w+bLw==
+X-Proofpoint-GUID: U_7TgJ7qY5rVqdiFGn4niH1FMOs95q5l
+X-Proofpoint-ORIG-GUID: U_7TgJ7qY5rVqdiFGn4niH1FMOs95q5l
+X-Authority-Analysis: v=2.4 cv=DZknbPtW c=1 sm=1 tr=0 ts=6a1f4d75 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VnNF1IyMAAAA:8
+ a=y--LQT-nAaOemKz3C48A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-02_04,2026-05-28_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 clxscore=1015 suspectscore=0 impostorscore=0 lowpriorityscore=0
+ phishscore=0 malwarescore=0 priorityscore=1501 bulkscore=0 adultscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606020210
 
-On 5/28/2026 3:31 AM, Srirangan Madhavan wrote:
-> Expose CXL reset through the CXL memdev device. The reset flow
-> depends on CXL memdev state to identify affected regions, coordinate
-> decoder restore, and keep CXL-specific policy out of the PCI sysfs ABI.
-> 
-> Add a write-only cxl_reset attribute under memX. The attribute is visible
-> only when the memdev's PCI parent advertises CXL Reset capability.
-> Writing a true boolean value invokes the CXL reset orchestration.
-> 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  drivers/cxl/core/memdev.c |  30 +++++++++++
->  drivers/cxl/core/pci.c    | 102 +++++++++++++++++++++++++++++++++++++-
->  drivers/cxl/cxl.h         |   3 ++
->  drivers/cxl/cxlmem.h      |   2 +
->  4 files changed, 136 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/cxl/core/memdev.c b/drivers/cxl/core/memdev.c
-> index 80e65690eb77..af67fa3d11b8 100644
-> --- a/drivers/cxl/core/memdev.c
-> +++ b/drivers/cxl/core/memdev.c
-> @@ -199,6 +199,26 @@ static ssize_t security_erase_store(struct device *dev,
->  static struct device_attribute dev_attr_security_erase =
->  	__ATTR(erase, 0200, NULL, security_erase_store);
->  
-> +static ssize_t cxl_reset_store(struct device *dev,
-> +			       struct device_attribute *attr, const char *buf,
-> +			       size_t len)
-> +{
-> +	struct cxl_memdev *cxlmd = to_cxl_memdev(dev);
-> +	bool reset;
-> +	int rc;
-> +
-> +	rc = kstrtobool(buf, &reset);
-> +	if (rc)
-> +		return rc;
-> +
-> +	if (!reset)
-> +		return -EINVAL;
-> +
-> +	rc = cxl_memdev_reset(cxlmd);
-> +	return rc ? rc : len;
-> +}
-> +static DEVICE_ATTR_WO(cxl_reset);
-> +
->  bool cxl_memdev_has_poison_cmd(struct cxl_memdev *cxlmd,
->  			       enum poison_cmd_enabled_bits cmd)
->  {
-> @@ -421,6 +441,7 @@ static struct attribute *cxl_memdev_attributes[] = {
->  	&dev_attr_payload_max.attr,
->  	&dev_attr_label_storage_size.attr,
->  	&dev_attr_numa_node.attr,
-> +	&dev_attr_cxl_reset.attr,
->  	NULL,
->  };
->  
-> @@ -485,8 +506,16 @@ static struct attribute *cxl_memdev_security_attributes[] = {
->  static umode_t cxl_memdev_visible(struct kobject *kobj, struct attribute *a,
->  				  int n)
->  {
-> +	struct device *dev = kobj_to_dev(kobj);
-> +	struct cxl_memdev *cxlmd = to_cxl_memdev(dev);
-> +
->  	if (!IS_ENABLED(CONFIG_NUMA) && a == &dev_attr_numa_node.attr)
->  		return 0;
-> +
-> +	if (a == &dev_attr_cxl_reset.attr &&
-> +	    !cxl_memdev_reset_capable(cxlmd))
-> +		return 0;
-> +
->  	return a->mode;
->  }
->  
-> @@ -1099,6 +1128,7 @@ static int cxlmd_add(struct cxl_memdev *cxlmd, struct cxl_dev_state *cxlds)
->  
->  	cxlmd->cxlds = cxlds;
->  	cxlds->cxlmd = cxlmd;
-> +	cxl_memdev_init_reset(cxlmd);
->  
->  	rc = cdev_device_add(&cxlmd->cdev, &cxlmd->dev);
->  	if (rc) {
-> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-> index 486c447e98f3..09f016544d24 100644
-> --- a/drivers/cxl/core/pci.c
-> +++ b/drivers/cxl/core/pci.c
-> @@ -1207,6 +1207,22 @@ static bool cxl_reset_has_cache_or_mem(struct pci_dev *pdev)
->  	return cap & (PCI_DVSEC_CXL_CACHE_CAPABLE | PCI_DVSEC_CXL_MEM_CAPABLE);
->  }
->  
-> +static bool cxl_reset_is_type2(struct pci_dev *pdev)
-> +{
-> +	u16 dvsec, cap;
-> +
-> +	dvsec = pci_find_dvsec_capability(pdev, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_DEVICE);
-> +	if (!dvsec)
-> +		return false;
-> +
-> +	if (pci_read_config_word(pdev, dvsec + PCI_DVSEC_CXL_CAP, &cap))
-> +		return false;
-> +
-> +	return (cap & PCI_DVSEC_CXL_CACHE_CAPABLE) &&
-> +	       (cap & PCI_DVSEC_CXL_MEM_CAPABLE);
-> +}
-> +
->  static int cxl_reset_add_sibling(struct cxl_reset_context *ctx,
->  				 struct pci_dev *sibling)
->  {
-> @@ -1939,7 +1955,7 @@ static int cxl_do_reset_locked(struct cxl_reset_context *ctx, bool mem_clear)
->  	return rc;
->  }
->  
-> -static int __maybe_unused cxl_do_reset(struct pci_dev *pdev, bool mem_clear)
-> +static int cxl_do_reset(struct pci_dev *pdev, bool mem_clear)
->  {
->  	struct cxl_reset_context ctx = {
->  		.target = pdev,
-> @@ -1966,3 +1982,87 @@ static int __maybe_unused cxl_do_reset(struct pci_dev *pdev, bool mem_clear)
->  	cxl_reset_context_destroy(&ctx);
->  	return rc;
->  }
-> +
-> +static struct pci_dev *cxl_reset_get_fn0(struct pci_dev *pdev)
-> +{
-> +	unsigned int devfn;
-> +
-> +	/*
-> +	 * CXL Reset control/status is exposed in Function 0 and affects all
-> +	 * CXL.cache/mem functions in the device.
-> +	 */
-> +	if (pci_ari_enabled(pdev->bus))
-> +		devfn = 0;
-> +	else
-> +		devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), 0);
-> +
-> +	if (pdev->devfn == devfn)
-> +		return pci_dev_get(pdev);
-> +
-> +	return pci_get_slot(pdev->bus, devfn);
-> +}
-> +
-> +static bool cxl_memdev_probe_reset_capable(struct cxl_memdev *cxlmd)
-> +{
-> +	struct device *dev = cxlmd->dev.parent;
-> +	struct pci_dev *pdev, *fn0;
-> +	int dvsec;
-> +	u16 cap;
-> +
-> +	if (!dev || !dev_is_pci(dev))
-> +		return false;
-> +
-> +	pdev = to_pci_dev(dev);
-> +	if (!cxl_reset_is_type2(pdev))
-> +		return false;
-> +
-> +	fn0 = cxl_reset_get_fn0(pdev);
-> +	if (!fn0)
-> +		return false;
-> +
-> +	dvsec = pci_find_dvsec_capability(fn0, PCI_VENDOR_ID_CXL,
-> +					  PCI_DVSEC_CXL_DEVICE);
-> +	if (!dvsec)
-> +		goto out;
-> +
-> +	if (pci_read_config_word(fn0, dvsec + PCI_DVSEC_CXL_CAP, &cap))
-> +		goto out;
-> +
-> +	pci_dev_put(fn0);
-> +	return cap & PCI_DVSEC_CXL_RST_CAPABLE;
-> +
-> +out:
-> +	pci_dev_put(fn0);
-> +	return false;
-> +}
-> +
-> +void cxl_memdev_init_reset(struct cxl_memdev *cxlmd)
-> +{
-> +	cxlmd->reset_capable = cxl_memdev_probe_reset_capable(cxlmd);
-> +}
-> +
-> +bool cxl_memdev_reset_capable(struct cxl_memdev *cxlmd)
-> +{
-> +	return cxlmd->reset_capable;
-> +}
 
-I would get rid of these and just set reset_capable in cxlmd_add() and check
-reset_capable directly.
+On 6/2/2026 1:32 PM, Alex Williamson wrote:
+> On Wed, 20 May 2026 10:11:11 -0700
+> Farhan Ali <alifm@linux.ibm.com> wrote:
+>
+>> For zPCI devices, we have platform specific error information. The platform
+>> firmware provides this error information to the operating system in an
+>> architecture specific mechanism. To enable recovery from userspace for
+>> these devices, we want to expose this error information to userspace. Add a
+>> new device feature to expose this information.
+>>
+>> Reviewed-by: Matthew Rosato <mjrosato@linux.ibm.com>
+>> Reviewed-by: Niklas Schnelle <schnelle@linux.ibm.com>
+>> Signed-off-by: Farhan Ali <alifm@linux.ibm.com>
+>> ---
+>>   arch/s390/include/asm/pci.h      |  2 ++
+>>   arch/s390/pci/pci_event.c        | 19 ++++++++++++++++
+>>   drivers/vfio/pci/vfio_pci_core.c |  2 ++
+>>   drivers/vfio/pci/vfio_pci_priv.h |  9 ++++++++
+>>   drivers/vfio/pci/vfio_pci_zdev.c | 39 ++++++++++++++++++++++++++++++++
+>>   include/uapi/linux/vfio.h        | 30 ++++++++++++++++++++++++
+>>   6 files changed, 101 insertions(+)
+>>
+>> diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
+>> index 016386f7ef4a..88a125b92bdd 100644
+>> --- a/arch/s390/include/asm/pci.h
+>> +++ b/arch/s390/include/asm/pci.h
+>> @@ -364,6 +364,8 @@ int zpci_clear_error_state(struct zpci_dev *zdev);
+>>   int zpci_reset_load_store_blocked(struct zpci_dev *zdev);
+>>   void zpci_start_mediated_recovery(struct zpci_dev *zdev);
+>>   void zpci_stop_mediated_recovery(struct zpci_dev *zdev);
+>> +int zpci_get_pending_error(struct zpci_dev *zdev,
+>> +			   struct zpci_ccdf_err *ccdf);
+>>   
+>>   #ifdef CONFIG_NUMA
+>>   
+>> diff --git a/arch/s390/pci/pci_event.c b/arch/s390/pci/pci_event.c
+>> index cf2ffa21ab8c..db1b44baf8fa 100644
+>> --- a/arch/s390/pci/pci_event.c
+>> +++ b/arch/s390/pci/pci_event.c
+>> @@ -75,6 +75,25 @@ static int zpci_store_pci_error(struct pci_dev *pdev,
+>>   	return 0;
+>>   }
+>>   
+>> +int zpci_get_pending_error(struct zpci_dev *zdev,
+>> +			   struct zpci_ccdf_err *ccdf)
+>> +{
+>> +	int head = 0;
+>> +
+>> +	guard(mutex)(&zdev->pending_errs_lock);
+>> +
+>> +	if (!zdev->pending_errs.count)
+>> +		return -ENOMSG;
+>> +
+>> +	head = zdev->pending_errs.head % ZPCI_ERR_PENDING_MAX;
+>> +	memcpy(ccdf, &zdev->pending_errs.err[head],
+>> +	       sizeof(struct zpci_ccdf_err));
+>> +	zdev->pending_errs.head++;
+>> +	zdev->pending_errs.count--;
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(zpci_get_pending_error);
+>> +
+>>   void zpci_start_mediated_recovery(struct zpci_dev *zdev)
+>>   {
+>>   	guard(mutex)(&zdev->pending_errs_lock);
+>> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+>> index 050e7542952e..27642f10fe97 100644
+>> --- a/drivers/vfio/pci/vfio_pci_core.c
+>> +++ b/drivers/vfio/pci/vfio_pci_core.c
+>> @@ -1569,6 +1569,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+>>   		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
+>>   	case VFIO_DEVICE_FEATURE_DMA_BUF:
+>>   		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
+>> +	case VFIO_DEVICE_FEATURE_ZPCI_ERROR:
+>> +		return vfio_pci_zdev_feature_err(device, flags, arg, argsz);
+>>   	default:
+>>   		return -ENOTTY;
+>>   	}
+>> diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
+>> index fca9d0dfac90..4e7162234a2e 100644
+>> --- a/drivers/vfio/pci/vfio_pci_priv.h
+>> +++ b/drivers/vfio/pci/vfio_pci_priv.h
+>> @@ -93,6 +93,8 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+>>   				struct vfio_info_cap *caps);
+>>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev);
+>>   void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev);
+>> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+>> +			      void __user *arg, size_t argsz);
+>>   #else
+>>   static inline int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+>>   					      struct vfio_info_cap *caps)
+>> @@ -107,6 +109,13 @@ static inline int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+>>   
+>>   static inline void vfio_pci_zdev_close_device(struct vfio_pci_core_device *vdev)
+>>   {}
+>> +
+>> +static inline int vfio_pci_zdev_feature_err(struct vfio_device *device,
+>> +					    u32 flags, void __user *arg,
+>> +					    size_t argsz)
+>> +{
+>> +	return -ENOTTY;
+>> +}
+>>   #endif
+>>   
+>>   static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+>> diff --git a/drivers/vfio/pci/vfio_pci_zdev.c b/drivers/vfio/pci/vfio_pci_zdev.c
+>> index 78a28db00c6d..cc148123a97b 100644
+>> --- a/drivers/vfio/pci/vfio_pci_zdev.c
+>> +++ b/drivers/vfio/pci/vfio_pci_zdev.c
+>> @@ -141,6 +141,45 @@ int vfio_pci_info_zdev_add_caps(struct vfio_pci_core_device *vdev,
+>>   	return ret;
+>>   }
+>>   
+>> +int vfio_pci_zdev_feature_err(struct vfio_device *device, u32 flags,
+>> +			      void __user *arg, size_t argsz)
+>> +{
+>> +	struct vfio_device_feature_zpci_err err = {};
+>> +	struct vfio_pci_core_device *vdev;
+>> +	struct zpci_ccdf_err ccdf = {};
+>> +	struct zpci_dev *zdev;
+>> +	int ret;
+>> +
+>> +	vdev = container_of(device, struct vfio_pci_core_device, vdev);
+>> +	zdev = to_zpci(vdev->pdev);
+>> +	if (!zdev)
+>> +		return -ENODEV;
+>> +
+>> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_GET,
+>> +				 sizeof(err));
+>> +	if (ret != 1)
+>> +		return ret;
+>> +
+>> +	ret = zpci_get_pending_error(zdev, &ccdf);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	err.fh = ccdf.fh;
+>> +	err.fid = ccdf.fid;
+>> +	err.ett = ccdf.ett;
+>> +	err.mvn = ccdf.mvn;
+>> +	err.dmaas = ccdf.dmaas;
+>> +	err.q = ccdf.q;
+>> +	err.rw = ccdf.rw;
+>> +	err.faddr = ccdf.faddr;
+>> +	err.pec = ccdf.pec;
+>> +
+>> +	if (copy_to_user(arg, &err, sizeof(err)))
+>> +		return -EFAULT;
+>> +
+>> +	return 0;
+>> +}
+> There's a concern here that the error is dequeued but we can still fail
+> resulting in a lost error.  Is that a sufficiently unlikely scenario to
+> ignore or should it at least be documented?
 
-I guess these could be used by a type 2 driver in the future, but it's probably
-better to defer creating these functions until then.
+IMHO this scenario would be unlikely and could be ignored. I think to 
+handle this we would need something like a peek() API and only remove 
+and update the pending_errs if copy_to_user succeeds. This would be 
+adding more complexity for a relatively low possibility of failure.
 
-> +
-> +int cxl_memdev_reset(struct cxl_memdev *cxlmd)
-> +{
-> +	struct device *dev = cxlmd->dev.parent;
-> +	struct pci_dev *fn0;
-> +	int rc;
-> +
-> +	if (!cxl_memdev_reset_capable(cxlmd))
-> +		return -EOPNOTSUPP;
-> +
-> +	if (!dev || !dev_is_pci(dev))
-> +		return -ENODEV;
-> +
-> +	fn0 = cxl_reset_get_fn0(to_pci_dev(dev));
-> +	if (!fn0)
-> +		return -ENODEV;
-> +
-> +	rc = cxl_do_reset(fn0, false);
-> +	pci_dev_put(fn0);
-> +	return rc;
-> +}
-> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> index b51b1e9d6400..bf65996e24dc 100644
-> --- a/drivers/cxl/cxl.h
-> +++ b/drivers/cxl/cxl.h
-> @@ -796,6 +796,9 @@ int cxl_dvsec_rr_decode(struct cxl_dev_state *cxlds,
->  			struct cxl_endpoint_dvsec_info *info);
->  int cxl_restore_memdev_decoders(struct cxl_memdev *cxlmd);
->  int cxl_commit_memdev_decoders(struct cxl_memdev *cxlmd);
-> +void cxl_memdev_init_reset(struct cxl_memdev *cxlmd);
-> +bool cxl_memdev_reset_capable(struct cxl_memdev *cxlmd);
-> +int cxl_memdev_reset(struct cxl_memdev *cxlmd);
->  
->  bool is_cxl_region(struct device *dev);
->  
-> diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-> index 776c50d1db51..c8e7349fb130 100644
-> --- a/drivers/cxl/cxlmem.h
-> +++ b/drivers/cxl/cxlmem.h
-> @@ -48,6 +48,7 @@ struct cxl_memdev_attach {
->   * @cxl_nvd: optional bridge to an nvdimm if the device supports pmem
->   * @endpoint: connection to the CXL port topology for this memory device
->   * @attach: creator of this memdev depends on CXL link attach to operate
-> + * @reset_capable: cached CXL Reset support
->   * @id: id number of this memdev instance.
->   * @depth: endpoint port depth
->   * @scrub_cycle: current scrub cycle set for this device
-> @@ -65,6 +66,7 @@ struct cxl_memdev {
->  	struct cxl_nvdimm *cxl_nvd;
->  	struct cxl_port *endpoint;
->  	const struct cxl_memdev_attach *attach;
-> +	bool reset_capable;
 
-Should this go into cxl_dev_state instead? This seems like a driver state thing, but the
-line is a bit blurry here.
+>
+>> +
+>>   int vfio_pci_zdev_open_device(struct vfio_pci_core_device *vdev)
+>>   {
+>>   	struct zpci_dev *zdev = to_zpci(vdev->pdev);
+>> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+>> index 5de618a3a5ee..3eead86a00ab 100644
+>> --- a/include/uapi/linux/vfio.h
+>> +++ b/include/uapi/linux/vfio.h
+>> @@ -1534,6 +1534,36 @@ struct vfio_device_feature_dma_buf {
+>>    */
+>>   #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+>>   
+>> +/**
+>> + * VFIO_DEVICE_FEATURE_ZPCI_ERROR feature provides PCI error information to
+>> + * userspace for vfio-pci devices on s390. On s390, PCI error recovery
+>> + * involves platform firmware and notification to operating systems is done
+>> + * by architecture specific mechanism. Exposing this information to
+>> + * userspace allows it to take appropriate actions to handle an
+>> + * error on the device. The ioctl returns -ENOMSG if there are no pending
+>> + * PCI errors.
+>> + */
+>> +
+>> +struct vfio_device_feature_zpci_err {
+>> +	__u32 feature_flags;		/* Indicate future features */
+>> +	__u32 reserved1;
+>> +	__u32 fh;			/* function handle */
+>> +	__u32 fid;			/* function id */
+>> +	__u32 ett		:  4;	/* expected table type */
+>> +	__u32 mvn		: 12;	/* MSI vector number */
+>> +	__u32 dmaas		:  8;	/* DMA address space */
+>> +	__u32 reserved2		:  6;
+>> +	__u32 q			:  1;	/* event qualifier */
+>> +	__u32 rw		:  1;	/* read/write */
+>> +	__u64 faddr;			/* failing address */
+>> +	__u32 reserved3;
+>> +	__u16 reserved4;
+>> +	__u16 pec;			/* PCI event code */
+>> +	__u8 reserved5[28];		/* Allow for future expansion */
+>> +};
+>> +
+>> +#define VFIO_DEVICE_FEATURE_ZPCI_ERROR 13
+>> +
+> There are currently at least 4 different patch series, including this
+> one, that are vying for device feature allocations.  This series spans
+> PCI, s390, and vfio, and I'm not entirely sure which maintainer should
+> take it.  With Niklas' review on patch 4, should we ask Bjorn to take
+> 1-3 through PCI, share a branch, and I could merge 4-7 through vfio?
+> Thanks,
+>
+> Alex
 
->  	int id;
->  	int depth;
->  	u8 scrub_cycle;
+If it helps I can break the series into PCI only and vfio only patches. 
+Please let me know if there is anything I can help with to make the 
+merge easier.
+
+Thanks
+
+Farhan
 
