@@ -1,161 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F3444B695
-	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 11:39:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B5E447ECC1;
+	Wed,  3 Jun 2026 12:44:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780486780; cv=none; b=PwQydQS0KgqDSy8wE9+d14ulvkeV19dXz/FpwvdT6pyjJNAFL0nQ2i9UkiwPUrl+RFy05S5jBIHpbVXE06AD6ezzCptsoJCWTAqt9hWs/Nzc26BBNQJHyUDipLwhHZfcAKsGTcvun2uJ8dnyWO0Id+wXOYLUD5HieLY+f4Lb+6w=
+	t=1780490694; cv=none; b=rGSd1iqP45ZVsyZo7/e6bgtkFuWUpTX3s9PkF+7YII3zieFGsKl3l4c3d/2mE8dA4u7UhuX33IEBX38vscJCSVqvqhcPdEn0GyzfF97TltK+ZpAUsZhAUP8c0y8yXWQw4V0m20SVrOw12Lgt2dASYtWt6tpx4fcNSvhHt2Jstbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780486780; c=relaxed/simple;
-	bh=WRE5bY3NDe0VKP2RwHC3Q9kyYCxkbG2jeWLMSuT2T08=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=DJdF/co6RlB0pWC9L8gWQvm3iyVlitWrprXAqUQgAkqKoip45KlqyJkmfc6NRcePvDibXbJtqGQd02+hCUW3jx110zqTCJS7N011OXqu0YadbUNVaFc0JwB/GRwto3wxTRAQaWvRtGzjpjwseaf1jdyTAmooRcoEZRxtkSXrwCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oeA624QE; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oeA624QE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCAD81F00893;
-	Wed,  3 Jun 2026 11:39:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780486779;
-	bh=ksW6Gd7nEtm88cY41pNqvoOkC+O4H3mMs52alE+llJo=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=oeA624QEzUKabCBZXp1AydaV4MahUn5n0Y/iNZY07EYnuSusChdoSWVG1AnycjUiV
-	 4jge2jmzhokdt3DZqOOJXI+Moif/afXDkbdc36Q9vyISaz7BVtGBYUI7R53B5V/luD
-	 rK0KbJVAp/1DE3QN6baVdsndseorLEjKsllVPquANkqUPaRUniV8ebbThbVhGEcbjl
-	 57mOig96T27C4TNP1KuKlt6rhTXw7ZcMwvx2CjrhyTIDADjnCgvBMY6QaRXInc0FRq
-	 GxbstfoCPw5LRfvBBfWlkHpNas9PocWPfrQl/sd/FMeGLrUHb+v1Xj67KynSmAP4dg
-	 qr8cPVOWshGFA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v6 2/3] PCI: Add device-specific reset for Qualcomm
- devices
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260603105853.326290-3-jtornosm@redhat.com>
-References: <20260603105853.326290-3-jtornosm@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 03 Jun 2026 11:39:38 +0000
-Message-Id: <20260603113938.DCAD81F00893@smtp.kernel.org>
+	s=arc-20240116; t=1780490694; c=relaxed/simple;
+	bh=lFBvHYlZhwPL57No0pMFcMgYeicKhRPvHKBsQwOso4A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HsQpkkCXN8xPzSgTwZAAYFJLebmyfL+ym4bwSDu66Tpo7WymFW5+S3QmyQJFQlaiKTVoheA9XBm5Ettl4yog4vH1iZXenjnk/CyBQMf7QMvEHwZ7GcBZtrA7Z1Sw3zX3aqI5dtX/1LZhhawOI7qotnd9FtnCRTuZwqrhGpyU9kc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id D331810E08;
+	Wed, 03 Jun 2026 14:44:41 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id B8DA960C92C3; Wed,  3 Jun 2026 14:44:27 +0200 (CEST)
+Date: Wed, 3 Jun 2026 14:44:27 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Yingying Zheng <zhengyingying@sangfor.com.cn>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ?????? <dinghui@sangfor.com.cn>
+Subject: Re: [RFC PATCH] PCI: readiness condition with Configuration RRS in
+ pci_dev_wait()
+Message-ID: <aiAhq-BO5baJBfVl@wunner.de>
+References: <96e8ff0e-b538-42d5-a328-96515fc3fa9e@sangfor.com.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <96e8ff0e-b538-42d5-a328-96515fc3fa9e@sangfor.com.cn>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Missing Device Readiness Wait
-- [High] Unprotected State Modifications (IOMMU ATS invalidation on suspend=
-ed device)
-- [Medium] Commit Message Discrepancy (IOMMU preparation)
---
+On Wed, Jun 03, 2026 at 05:32:54PM +0800, Yingying Zheng wrote:
+> However, with some PCIe switches (in our case Broadcom/LSI PEX890xx PCIe
+> Gen5 switch), when the downstream device is in reset or link training is
+> not completed, the switch exposes a Virtual PCIe Placeholder Endpoint on
+> the downstream side. During this window, reads to the GPU BDF Vendor ID
+> return the placeholder endpoint Vendor/Device ID (Broadcom/LSI) instead
+> of the expected 0x0001 RRS-visible value.
 
-commit d37c19884265543746b79161f5a1ed58d8af78d3
-Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+What's the OEM and model name of the system you're observing this on?
 
-PCI: Add device-specific reset for Qualcomm devices
+We ran into this issue on a Supermicro SYS-421-GE-TNRT server with
+AOM-PCIE5-418P-1-P board.  The two Broadcom PCIe switches are located
+on the AOM board.
 
-This commit adds a device-specific reset method for certain Qualcomm device=
-s=20
-(WCN6855, WCN7850, SDX62/SDX65) via D3cold/D3hot power cycling. It also
-extracts a shared helper function for the power cycle transition.
+Do you happen to use the same system?
 
-> Extract a shared pci_dev_d3cold_d0_cycle() helper function to avoid code
-> duplication between pci_d3cold_reset() (strict _PR3 requirement) and the
-> new reset_d3cold_d3hot() device-specific reset (automaticfallback). The
-> helper handles IOMMU preparation, performs the power cycle via
-> pci_set_power_state(), and cleans up IOMMU state.
+The Broadcom PCIe switches support a "Synthetic Mode" (alternatively to
+"Base Mode") for use cases where a single PCI function is accessible to 
+multiple hosts.
 
-[Severity: Medium]
-Is the description of the helper function accurate? The commit message stat=
-es=20
-that the helper handles IOMMU preparation and cleanup, but the extracted=20
-pci_dev_d3cold_d0_cycle() function does not perform these operations and=20
-explicitly requires the caller to handle them.=20
+In Synthetic Mode, the Broadcom switch spoofs responses when the actual
+device downstream of the switch is inaccessible.  The spoofed responses
+come from the virtual placeholder device with ID [1000:02b2].
 
-Could the commit message be updated to reflect the actual implementation?
+When I investigated the issue, I cooked up a tentative patch to recognize
+spoofed responses in the PCI core:
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 096868f80cd4c..f7a7443287fdf 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-[ ... ]
-> @@ -4491,6 +4491,32 @@ static int pci_pm_reset(struct pci_dev *dev, bool =
-probe)
->  	return ret;
->  }
-> =20
-> +/**
-> + * pci_dev_d3cold_d0_cycle - Perform D3cold->D0 power cycle
-> + * @dev: Device to power cycle
-> + *
-> + * Common helper to perform D3cold->D0 power cycle for reset methods.
-> + * Attempts D3cold transition with automatic fallback to D3hot on platfo=
-rms
-> + * without ACPI _PR3 power resources.
-> + *
-> + * Caller must handle IOMMU preparation/cleanup if needed.
-> + *
-> + * Returns 0 on success, negative error code on failure.
-> + */
-> +int pci_dev_d3cold_d0_cycle(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +
-> +	if (dev->current_state !=3D PCI_D0)
-> +		return -EINVAL;
-> +
-> +	ret =3D pci_set_power_state(dev, PCI_D3cold);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return pci_set_power_state(dev, PCI_D0);
+https://github.com/l1k/linux/commits/broadcom/
 
-[Severity: High]
-Does this sequence need to wait for the device to become ready? After
-returning to D0 via pci_set_power_state(), the device undergoes a reset,
-and the PCI spec requires polling Configuration Request Retry Status (CRS)
-before it is ready.
+After some back and forth with Broadcom and Supermicro FAEs, it turned out
+that the switch had an outdated firmware with version 04.101.00.00.
 
-Unlike pci_pm_reset(), which explicitly calls pci_dev_wait(), this helper
-returns immediately. Since callers like pci_d3cold_reset() and
-reset_d3cold_d3hot() rely on this, will this cause the PCI core to execute
-pci_dev_restore() before the device is responsive, potentially leading to
-dropped configuration writes?
+The Supermicro server had already been updated to the latest BIOS version,
+but the BIOS update does not include updates for the PCIe switches.
+One has to contact Broadcom directly and ask for a separate firmware
+update.  In our case, we received a file called
+"AOM-PCIe5-418P-1 _PLX FW 4.16.0 Package.zip".
 
-> +}
-> +
->  /**
->   * pci_d3cold_reset - Put device into D3cold and back to D0 for reset
->   * @dev: PCI device to reset
-> @@ -4520,22 +4546,13 @@ static int pci_d3cold_reset(struct pci_dev *dev, =
-bool probe)
->  	if (probe)
->  		return 0;
-> =20
-> -	if (dev->current_state !=3D PCI_D0)
-> -		return -EINVAL;
-> -
->  	ret =3D pci_dev_reset_iommu_prepare(dev);
+The zip file contained a g4Xdiagnostics.efi utility which can be run from
+an EFI shell to query the current firmware version on the Broadcom switches.
+It can also flash the switches with a new firmware, which was included in
+the zip file as:
+"AOM-PCIe5-418P-1_4.16.0GCA_PLX1_07172024.fw" and
+"AOM-PCIe5-418P-1_4.16.0GCA_PLX2_07172024.fw".
+                               ^
+After updating the switches with these files, they reported 04.16.00.00
+as firmware version.  In that version, Synthetic Mode is deactivated,
+the placeholder device does not appear and reset on passthrough works
+as it should.
 
-[Severity: High]
-Can this trigger ATS invalidations on suspended devices?
+According to the Broadcom FAE, the OEMs own the switch firmware settings
+and so the kernel is not permitted to deactivate Synthetic Mode at runtime.
 
-By moving the power state check inside the pci_dev_d3cold_d0_cycle()
-helper, pci_dev_reset_iommu_prepare() is now executed before verifying that
-the device is in D0. If the device is currently in D3, interacting with
-the IOMMU to detach domains can trigger PCIe ATS invalidations, which may
-result in Master Aborts or completion timeouts.
+Because the problem was no longer reproducible after updating the switch
+firmware, we decided that this is the recommended way to solve the problem
+and I did not pursue an in-kernel workaround as a result.
 
-Should the state check remain before IOMMU preparation?
+As an aside, the amdgpu driver contains a workaround for Broadcom Synthetic
+Mode which was introduced with 1dd2fa0e00f1 (and subsequently fixed up with
+9b608fe94870 and 4e89d629dc72).  Obviously, this only helps if there are
+AMD devices downstream of the Broadcom switch, and not with those of other
+vendors.
 
->  	if (ret) {
->  		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
->  		return ret;
->  	}
+Thanks,
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260603105853.3262=
-90-1-jtornosm@redhat.com?part=3D2
+Lukas
