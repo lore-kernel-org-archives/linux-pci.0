@@ -1,110 +1,173 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23B262DC321
-	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 13:28:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2F50481AAB
+	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 14:22:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780493321; cv=none; b=rPO/OtzAE/CXlxiE0tgr9Lx+0N88iZoPTC2KjYRxzHy98omPKoEf5m3Cty1D0P9DWXu/TLl6fah9scdiUxpfIRwZP1bNUZK6MRl/8yUPNqv3wL309G2wPHsImE/EoIrjU6ZqjflHJ+r1NiwUv01icQDIsduR1S8X+s+6pEEh8mw=
+	t=1780496551; cv=none; b=fA6Axy83luPCswkC02uaeNowdjrBJbRQWTWQRx+U0IzVGTp4xRZFW5LuiVVu/U9F+DfrBDdMWhUgFsMn7781s2T6c3VmFIGOv+VzMg9gr9H8oSVJ2ytDWsuhcFXgsQKF6G6pXQtmfJBE8kX8yXA7fyzJqSIZfYVBnzjFYUqfGnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780493321; c=relaxed/simple;
-	bh=9BWuaZqYbE2xZQJ56+qGW6ufhtqU4X4Evjgd7IH1HgI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MqHh6uiqwgOu9QvDQSvpLvKU3DSe0Lc5myUPCrPG6sNrKhKu7G0jTJAhU8k8xxM30ALcptlKQQ8dlkd9XH8e8Qq0n0j7BK93agw7Vb+OSbB0XRP8rxD0mhSi4r6zCItfSn1aNG44RZR6j3ZOt7wFuvhwFFfI7tlJE9wIaZ0Ht/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=mODDCWFn; arc=none smtp.client-ip=209.85.160.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1780496551; c=relaxed/simple;
+	bh=obaUumRSEaiR1Wty6Xgu6N15cGNjCTMsp1x89kLIsEk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tLrFO9HxusZWEplpHpAOzlSRVXaExJzp0f9z0eU7KaYEm/5WfevS3TehwcuZ0CGY9mDlQk6Xx/dgZ/J1yle75azkkJxTp4b2dNLwsyVxFPyZgqKFzmr5tyXPzii18rkhxXHy0ojsqdMLrOc6NHm3TjtQVvTa0Kc2r1Vuo6HalhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=srLuqfx+; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="mODDCWFn"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-5175d339e8bso486461cf.0
-        for <linux-pci@vger.kernel.org>; Wed, 03 Jun 2026 06:28:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780493319; x=1781098119; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wV8eYWbv/I03NtOIpbrdNUBR1gCQqSNReaPud8ZUHs4=;
-        b=mODDCWFnSVie6N7/JnQJh0bNh8N6tJb/r6Hig9QaAQY98uFGQtcDLeY2OCzWx8AR/t
-         IxxQmdix6VEfXvzErJiBarEi61ExsMNSuZaJl1Gzb6V/0/FRaOu23z+xReH8r1QFpuHH
-         WJ1Y61K5ckP0EyqaY78mDvxjVWWgPChgB0yV8kSYMGJgZMSGyTAkk1oFXuUgxiGyqoG2
-         GAYwocKlVKNFfrGCg54PWfdIKzyuCcnT4JwQtojkCSpv8I/G/xpqYYi9ci0Kc+mY2udF
-         2JLW4ZLlpSUgfq/lKdsV6E4VdM5FzyuWuklm3ijaBuMo1KN2Qcav+e/1v1vowT/v3yvW
-         aPBw==
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="srLuqfx+"
+Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 652MSvjC2747893
+	for <linux-pci@vger.kernel.org>; Wed, 3 Jun 2026 07:22:29 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=YNScBoT6fWRdM9NkrxjASUlxGuUaN5ox/szwoVCoD/M=; b=srLuqfx+FXuC
+	bzE9LkokrAimE5iY6tNN+9tUNfEUn2ef7Lf+87pai3WStxYfRanSdrRxchFrsRaa
+	hVp4NgdWnzJDmE0szjBwoM0UI8p/Oe1nmi8cfpFlZ72sJ6MKjrvWVKWCW7EgqGZU
+	WY5n4wx/L7mDEsXGDKTFRggrDyDhnviCYwZR1mFhx23XQN1Hossmfj02lNA97hnq
+	tldmWLaYSlQaubMvRXFHZmLKUM4/IZrzYGEXU+A7/okfjXt0q6FEFIPesfkDIXRX
+	kiDV5EiNC27PctqlfT0z16mTfJF9Zn8GQkNgtJFwMsBAzv/dJKpmMRbazdFqdpR2
+	coUlXhATAA==
+Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4ej0yb7jxq-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Wed, 03 Jun 2026 07:22:28 -0700 (PDT)
+Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-304ea1eea05so16510741eec.0
+        for <linux-pci@vger.kernel.org>; Wed, 03 Jun 2026 07:22:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780493319; x=1781098119;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wV8eYWbv/I03NtOIpbrdNUBR1gCQqSNReaPud8ZUHs4=;
-        b=bowzmXhp7zrb874q2m+stp7Px6LHIno14WDz1MflUs6XqwDZoTKMrNupZimWZHVIy8
-         Rn6ETP5WZim0R0jfSN0qjxwpLpYrbTkNQyYS+UjfOemxa5JWL747cdGIY52ZkIBD1NI1
-         3WsUnXx5YWk1t5mBE7GD3dFBQ2QkPEDh9D9CtbbwygYOkN1wfv5iIncLUg5zmWZmneYs
-         S2XVp6SvLl+UMKHhStJwnw09ITG6gZ2Q4w5yj3DaD8lahJcF3Z4Sr3vVz43Esc0RVnqQ
-         n7oDvFfshHMrzJXohxhfJvEaHAG+KEeUaMWVpWf7q4uS/yVr+WjAXZP7axhcKN0d3kwh
-         FGng==
-X-Forwarded-Encrypted: i=1; AFNElJ/es2CV/bUMCgdqLVj08/Q+f6vf1wkMaAF/TxTQYzYIlfmdf6eP/ComkM7djODf/zTObdgYWiN7EvI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YymuCkU6FZRuZEuwUVXPkeDMDwpffpHKjcmnJHJpbx5C3jnUi7v
-	OZENGF08L4XTyKvjI4F/9hf+Lg1gomp3x+ZU0qys6CvmasmlJqq67sUtw/q3gUzQMA==
-X-Gm-Gg: Acq92OEEikbElDl9ve2sjsC5ahTEnuSRNNsZ69KYTcf6W5jbFzfVWdY56IvVlAxiVrS
-	yhqUGwYcgIGra08WddDcs/Vw6U2DxAfkyDreSwt/f614BwXeMuA5HVCQog3bnu9Io9J6O2ksro4
-	8aEFBTKDKjTTheE91Uxb7XZ3Ly8uOuY9xW8lCLiliO2gFC5KK78x7IZnlcZeATzBXpkfGKda4mH
-	M9zGjZbYYg+7K9Q3S2VGIokCODDrReAuMh09CUusFa+UkX3iaJvz609+t4ToBWiDR3K3CkOGq6r
-	4V8lwzJGW0XfDuBXXb9zHjB70pB5lD/UGBx/Uo4A4iM5sTG7DgJV9EPuddWEo/wiuraE3nd4XZN
-	HeNePYIf10jpUZD3Rh2kqFiPCAQrmHsZYhAXVqD9e10uh+p+a1gZTHHgEtux112nmIq35Q/iJG6
-	R5qqHN5XtsTqUPOC+dqMOjFrumE9WZ0ERqPyX9QMkhAcwLB4ZmbRdxDH34m002spO7wH6Lqm8=
-X-Received: by 2002:ac8:6897:0:b0:516:d25f:f038 with SMTP id d75a77b69052e-5177b9a4747mr6943111cf.10.1780493317250;
-        Wed, 03 Jun 2026 06:28:37 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8ceccdb915csm20063146d6.14.2026.06.03.06.28.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jun 2026 06:28:36 -0700 (PDT)
-Date: Wed, 3 Jun 2026 13:28:29 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Baolu Lu <baolu.lu@linux.intel.com>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Samiullah Khawaja <skhawaja@google.com>
-Subject: Re: [PATCH v7 3/5] iommu/arm-smmu-v3: Fix a UAF in the probe_device
- error path
-Message-ID: <aiAr_YZqVwijXyQ5@google.com>
-References: <20260601143644.2358771-1-praan@google.com>
- <20260601143644.2358771-4-praan@google.com>
- <DM6PR11MB369078B4E5BC3C6514A99AFE8C132@DM6PR11MB3690.namprd11.prod.outlook.com>
+        d=1e100.net; s=20251104; t=1780496548; x=1781101348;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=YNScBoT6fWRdM9NkrxjASUlxGuUaN5ox/szwoVCoD/M=;
+        b=fQJ+JOJmbDcYVIiirtnGaS26AGX6gwub2PL3MT7ScpYGwhrVnk2RtxdsyCCgWMd4ME
+         RimHaeT/YG9nB7ZZ8tdlYHh2hehQaKjCHWYnaX2jNhGHCsKUSMG/vsxRKmnpsCketh5o
+         XxwLSCmvVwcaqnSr8oqyh1rkjcjOoEWL3mDbpt6qnsaBi9zUdoysb+qPCMWHgyZki4TT
+         PVD1xzUXyRE687Yqn601wnA17vDwAqbSVnc6vxtn72ya4yXnYN/4ZV/pdHsOgkuwjkW7
+         i2d8Znm7AXYZbAsi5DTwdEmR7y7nJaMPNHboNMv57keOPj3b7O31TayqN/xCNp7PNDfi
+         F4rw==
+X-Forwarded-Encrypted: i=1; AFNElJ+n+5wv1EaXjWwvFZG9Kr5NZ0T0BZgWw89CMBwy3ejJHcooJko3SqKybSfDqR10uEGE2Wj1JN3z0fM=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzby8Hn7yG+g4pAfeHtJt8OxQGziA8IuqdYcg5g6QMatCumBiUJ
+	PeLAC0k/8xDxelc5Q6SyQslKoE5TwgwXnps/EZKzJtZoeAlMsO5Mie/OnKC4e2Y3HzaowFKr9W+
+	qfsXpq5HRFVoIfgV0SIoSuWX7ld7GO3j5Ar8okRFDqWss+yJwclozRAYSxENk
+X-Gm-Gg: Acq92OFt0x3Qu3HT5llRsTSbEZwmJ8aFHj1J43sIWxclYUhbzRne1lMSWMLlozFGQ0F
+	yudwAS1uDrYCJn7yaet7/fu5LUIgkVFgMPwWU0CjhhjbBH6Yh52VIO5yClyixPio4cAxUMhGUCh
+	TEZ5FouiILqXBe1Sbn5ri1xf9bJGAF/y+DHxJKXdOsVvCCLqEUB6eNQ1IIDRlh6iIl3TbFNaeSO
+	T3/Uj1he4Un3fWTKTA5knhnHsSUsBeRJm5AFFy09LaWmjP7QxzmcukwJtcQvmp3UOFFqwxgKejt
+	NrD+mGb1HRQ0at6UaDtyCvP4wFNMDq7aoERz5N5JePjI9tBgTx2pEc0MUfxN9Oqi82wGvU2vZ18
+	BhYmLwOfm2vrZ+msmeK5hsYTuWaHP884c2bEUl+nW
+X-Received: by 2002:a05:7300:2142:b0:304:630d:e4c4 with SMTP id 5a478bee46e88-3074fab7663mr1925015eec.10.1780496548234;
+        Wed, 03 Jun 2026 07:22:28 -0700 (PDT)
+X-Received: by 2002:a05:7300:2142:b0:304:630d:e4c4 with SMTP id 5a478bee46e88-3074fab7663mr1924977eec.10.1780496547695;
+        Wed, 03 Jun 2026 07:22:27 -0700 (PDT)
+Received: from [10.0.40.30] ([51.52.155.79])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3074dea8e8csm2504082eec.16.2026.06.03.07.22.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 03 Jun 2026 07:22:27 -0700 (PDT)
+Message-ID: <b7635ebb-c746-48e6-bce3-a10bd288e0c7@meta.com>
+Date: Wed, 3 Jun 2026 15:22:22 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DM6PR11MB369078B4E5BC3C6514A99AFE8C132@DM6PR11MB3690.namprd11.prod.outlook.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 9/9] vfio/pci: Add mmap() attributes to DMABUF feature
+Content-Language: en-GB
+To: Alex Williamson <alex@shazbot.org>
+Cc: Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
+        Alex Mastro <amastro@fb.com>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+        =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
+ <bjorn@kernel.org>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Kevin Tian <kevin.tian@intel.com>, Ankit Agrawal <ankita@nvidia.com>,
+        Pranjal Shrivastava <praan@google.com>,
+        Alistair Popple
+ <apopple@nvidia.com>,
+        Vivek Kasireddy <vivek.kasireddy@intel.com>,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+        kvm@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20260527102319.100128-1-mattev@meta.com>
+ <20260527102319.100128-10-mattev@meta.com>
+ <20260528171432.771a1a30@shazbot.org>
+ <8854824e-06c2-43b3-86c2-8c2c28f9ad63@meta.com>
+ <20260602131417.41366391@shazbot.org>
+From: Matt Evans <mattev@meta.com>
+In-Reply-To: <20260602131417.41366391@shazbot.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=AureGu9P c=1 sm=1 tr=0 ts=6a2038a4 cx=c_pps
+ a=wEP8DlPgTf/vqF+yE6f9lg==:117 a=2UbFsIa4v//lIgRL4kGwwA==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=7x6HtfJdh03M6CCDgxCd:22 a=03ozwUkBphtHgyqjj1sw:22 a=VabnemYjAAAA:8
+ a=AWNa1KPf0UDjnrnzYgsA:9 a=QEXdDO2ut3YA:10 a=bBxd6f-gb0O0v-kibOvt:22
+ a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjAzMDEzOCBTYWx0ZWRfX2JHjj8EnCgKS
+ FQxe9+3LS1g8xq6do/fXg8BTbv0UJwci3SmCAhIsKd9x8AuEcvgALMJiQn+DnBMLHZYo5Nhgv7O
+ 6GkZx0Tt7dQgKmW1XxR/7l8pljoDSwU4wPe0rUfebeLK8XRbiFrbZIzkX1lKNXZ/7/aMA3BVNo8
+ LwC+uXU+XR2uKOvTeBXKCiMJ5SsQNmg4VU4Q1xu/NDpQAwU5+oj6l1bwJG8WRkOPu9b2IrvOD+z
+ rcG2ZUwgVPanF+oBuuZfm3aiQiyteoRH0a71e3lR7dotwOHfCxbYMg/Fk4lIz1Gv+HDNnpQTHKB
+ hNs4ntJ7BfJCJw8IPhHQSCCvpGsFLTW6j0uYFSRwIbkiaP1eUvNsUPEJMWKpur0xBV5Bli93tOQ
+ 4fLQ7ykV0w9gW7B1miO28IlVkSN9r/2BUeNeOVJv9/Mx4k/EqNs3ltgv6Rh5F6saG47v+1hQPwv
+ i1A4evBLZnLcimokEKw==
+X-Proofpoint-ORIG-GUID: nn0JNtaY-h1Of2j0IjJgIcB6Vr5WIRjX
+X-Proofpoint-GUID: nn0JNtaY-h1Of2j0IjJgIcB6Vr5WIRjX
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-03_05,2026-05-28_03,2025-10-01_01
 
-On Wed, Jun 03, 2026 at 07:31:38AM +0000, Tian, Kevin wrote:
-> > From: Pranjal Shrivastava <praan@google.com>
-> > Sent: Monday, June 1, 2026 10:37 PM
-> > 
-> > Clear the iommu->priv to NULL while returning an error from probe_device.
-> > 
-> > Fixes: a2be6218e649 ("iommu/arm-smmu-v3: Improve add_device() error
-> > handling")
-> > Signed-off-by: Pranjal Shrivastava <praan@google.com>
-> 
-> probably add a note that UAF is theoretical at this point.
-> 
-> iommu_init_device() calls dev_iommu_free() right after @probe_device()
-> fails...
+Hi Alex,
 
-Ack. This is just to prevent a UAF against future refactors. I saw the
-intel & amd iommu drivers doing it and felt this is missing from smmuv3
-
+On 02/06/2026 20:14, Alex Williamson wrote:
 > 
-> Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+> On Tue, 2 Jun 2026 17:50:04 +0100
+> Matt Evans <mattev@meta.com> wrote:
+>> On 29/05/2026 00:14, Alex Williamson wrote:
+>>> On Wed, 27 May 2026 03:23:12 -0700
+>>> Matt Evans <mattev@meta.com> wrote:
+>>>> +		uint32_t old_attr = priv->memattr;
+>>>> +
+>>>> +		if (flags & VFIO_DEVICE_FEATURE_SET) {
+>>>> +			switch(db_attr.memattr) {
+>>>> +			case VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_NC:
+>>>> +			case VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_WC:
+>>>> +				priv->memattr = db_attr.memattr;
+>>>> +				break;
+>>>> +
+>>>> +			default:
+>>>> +				ret = -ENOTSUPP;
+>>>
+>>> -EINVAL
+>>
+>> I'd like to push back on this one; ENOTSUPP distinguishes trying to use
+>> a wild attribute value from all manner of other screwups such as
+>> trying to GET (with it no longer supported), passing an fd that isn't a
+>> DMABUF, etc.
+>>
+>> I'm not wed to the value ENOTSUPP, just something distinctive versus the
+>> other errors userspace might see, and that value seems appropriate.
+> 
+> It needs to be a uAPI errno though, aiui ENOTSUPP is an internal NFS
+> errno.  How about EOPNOTSUPP?  Thanks,
+
+Ew, right!  TIL, and it's caught by checkpatch too (which I fastidiously 
+run but still missed this somehow...) :(  "ENOTSUPP is not a standard 
+error code and should be avoided in new patches.  EOPNOTSUPP should be 
+used instead."
+
+Fixed.
 
 Thanks,
-Praan
+
+
+Matt
+
