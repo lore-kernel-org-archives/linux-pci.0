@@ -1,258 +1,329 @@
-Received: from fout-b1-smtp.messagingengine.com (fout-b1-smtp.messagingengine.com [202.12.124.144])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 966934C9563;
-	Wed,  3 Jun 2026 22:20:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1AEE4D990A;
+	Wed,  3 Jun 2026 22:35:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780525223; cv=none; b=Z5Fyiyr2wxzre+lka+9GWa3W/HEuEfTkI6ZKjttFgWP3nd8a4AsftrIz4adXYhnnH4TIZIySlfCQlF3UiyQOWCp23J6cfGE6QjlYD/44FHAzS99kPLw1g0CLpxm7uDa2yb1p89exASBqywgkQnOXKpdNw0NGt1EeRMQ33fdqPuQ=
+	t=1780526111; cv=none; b=Vz2avh/ga/kWbsGGkU+tODhfm6vJ+KidliOh1C6h9rfsDMfBLYKTCwm0o8EDJKY/cODhextXSF0/8jGItsRP81tZD78rVokdufVXMjeKFSIteaeVpdBJuo66fZOSpyV+fIR4kwRyb/92ZyUWoOndbeUn6XGdvAqzuhtZjRroskc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780525223; c=relaxed/simple;
-	bh=EhlBlQFfgXncPqsu9f3zgRymJFfQVj5WLn7oHMFBbr4=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MS5AeaYK4TIBmbeZWb2Kotj4PZwwSRbnzvI85i7g3R9z1nksq88YwJz6G6UVHBJgPuxxJFMtE2gpKLswt5R3LP+zDkKBpTj32Z7+0kXQOdUfFf06kKh18jJYC4FJ8B6X3zTD1Rcdw8HR5trF3zxwPUsvGQiGiTOR8R0Ybp/FwME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=YqS5V9JK; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Nc6dHaN3; arc=none smtp.client-ip=202.12.124.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1780526111; c=relaxed/simple;
+	bh=R4Y+8SNHLKoJpj52gg66m46z0ZQGfnBFSR58yqc2y/M=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 Mime-Version:Content-Type; b=T+RIftJt80v3OtVBRttup6rFBH8xunb+Nuk+YxEodDUBJW9EjjcqqfdjPLazhHs+NCN/CKIJcTyEUrfwsXzS846LJjbSQe113WhbKFrSaSuao1GFQyxvHcL1XvSbMmUb6U3+83xwl8PxCUJwUtJj5BwXbFVjTe36nUVzAfNbVYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EgStjOlr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="YqS5V9JK";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Nc6dHaN3"
-Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
-	by mailfout.stl.internal (Postfix) with ESMTP id 8B12B1D000FB;
-	Wed,  3 Jun 2026 18:20:09 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-02.internal (MEProxy); Wed, 03 Jun 2026 18:20:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1780525209;
-	 x=1780611609; bh=9kZhKZGJz0v4KTv+sA6NCtH1KkRlsAFv9a7Yznk7BYU=; b=
-	YqS5V9JKO7OB67qFV127l7bRjJ0WMiiGfiwXvOejk+Hbz9ybMgWD4xGTB7g5Hqx2
-	OISg+eZS1GpKhH4+FVCxu2aKT786f2+kq2EX0trMDhnywnLaJ+F/FHHyYck0DFfE
-	AScsW6ZnDBqNopgVLSiXfYI9rIY3p1nOqrZhINefD6qkOGMCCuwrNYTGM5UEL+h7
-	m98jdqkBuL3Fjs7j/vkXGHPvyFsjioMFujBJ9c6hpmNn6hwZagJDWAA3joMMiJia
-	hF+05nlb/yx/JwFAItpKvs8hWQwmKtdUuc9m0eXs5z2DDuSF6eZQWvF50Cl2DeOE
-	6iDlw+nRaPo/lqxB8Ne+Ng==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780525209; x=
-	1780611609; bh=9kZhKZGJz0v4KTv+sA6NCtH1KkRlsAFv9a7Yznk7BYU=; b=N
-	c6dHaN34QMQ+VQ2ivmgOiBdOAWYOzDX5fXZSXgRZzSTfRQaKqMJoGeGJ0k1IBVeX
-	lfsFJx5Q1Zl9RrQ2XxWGwG3y4nPv3gCxAgOJBL5bXK2xwyDC95ywgPvUPWtcPo13
-	RemqKormSyvM/LvM5AIQZ4DRNbfQmuhUJ/gGEY7FhaichIn5kNSNpZZHGrxuTTw0
-	OcUhrZ9gtW0/AyCAmcKSW/qVlP9hp0VCaFdy/s+nDSxxi5hS26ExGzt2ROzY20pN
-	CNYeKPv1vKhk88sXDiv+3AuucbfastkouMsHr367NBrVUF6iJPCvvLQtGRLip6z1
-	/gKcCcv3ONCQumrDRo9rA==
-X-ME-Sender: <xms:mKggapdImNWyI9Xl6LZdFDazKuLQFSbO2BIi04xDVzn4aST-2GhHhw>
-    <xme:mKgganpI5LGoYA8s0JhV6OEpdx-Z8PnLrww1KZQHO-aEVUJ4cB5fXdQrKBzJfnk4p
-    TpuuIRQZ2q8cLsW41oF9BLR_JZEEUSuJ5bb5NL9mOLFqx7nCBDB3g>
-X-ME-Received: <xmr:mKggajN0zzwoT4_mSGYbjp4Y5OZQ1Jxdacaya2z-x2SkfJDxm1ujUoidlkw>
-X-ME-Proxy-Cause: dmFkZTFl48SMsTNMd/jGCpgDHRd9W6JwBWzYhz/u5NgrllOUiKDSu/jLbzVVJxAxkxsy+H
-    WOGl97jH4VSfLNdbHN6iFYwqsSywnmLCPv5AHo7gSBanjdPXPDQDvhrgfkkRWmzxHbI5g6
-    LtZLq+K5UHmO8jNgjTSuquPSQXzTRQR35DRU5WI8X51j45RoTTEfnSchk5NLPMDo9BFdYU
-    hBgJMIQbCNdqV3Czu4JwC1b2yryst0rUIXeaGXWDBnhkm+hVi7hHPDHsOCBjVKWZ0/m5H6
-    y1nO+RF4lh2NIvr5ojdHyXCG6we4DVdzWuBcefasuOZHwByJ2qqyLy1ncsiPi8zj4I2zec
-    tsKD3WEBF6cfWfQvMD9vOcPcyxZwauiLEyGTF9YdEh0GlCTY+mPLyAJ0QctpJWtigOcQYw
-    fjUR9xB87HoPszJJuB3+7a4YlEpzdjrMjbiFvua/QNXHKngmSBn0324rpe6waYD15jng8f
-    g5bJXHi+eYaTF6oJsLkcgwkv4ka02ecjnntwmT4HCEeiz5qidpqxbv4hkqUmzJx0egdNCB
-    vwLheARx46jPgJupLG2hscG7pI1A8xi2oF20M8UcP6tGeM2wlrG7Gpbh1KqXppD/ysIhSt
-    HUlW2IV+1ZvGXoEWnpFMwmUILoce3mFFaTYemJvd+vipXhcRUtsxXd6rsGOQ
-X-ME-Proxy: <xmx:mKggaqgyihdncXwQ8sniFF1nAGXQq4d94WEqZG_GuxewBth5k6Fe8A>
-    <xmx:mKggamu64AW6LJHiuy3mC-2jB3z2kjRrbyJ2vANRn_owm5W1ke3zrw>
-    <xmx:mKggauiCRD1wSwtCQ5753LGVgF5Ggn_5d4TzCEMs-yV7gCnD9jay9g>
-    <xmx:mKggasYExt0pKvljDYA_kaddUzINOnDnO6Jkwj9__EN97AT_qKI0VA>
-    <xmx:maggalVLtb_xkm0VFr95t5nb92KYaArCPBNDQO4TUunO6qMtiqIiUBl5>
-Feedback-ID: i03f14258:Fastmail
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EgStjOlr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADEF51F00893;
+	Wed,  3 Jun 2026 22:35:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780526107;
+	bh=OcOdae9aW3iLF8mIid4aYhtVq0pp0FWKSQgXqyu7sgY=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject;
+	b=EgStjOlr7dek1SQsLibL0h82UgYUsq+BzI1LNM0Furk5gcuhF31o2c6E4cI5H9KUt
+	 hU23okPULS+bUQ/zZ6axjCKeJIoaGZLFrdumy5MTXo+widPZYTS+plk0nIo9LzlPnK
+	 GC89xuHJJqhJ/i4oL3/lcOsUBLPgj69szT8qY5ValTaBnEJV7rTOrI7rLlA2FMBQ/q
+	 KvVQzfVdRsISZKTC01lpXBwdL+abKlPmkcZfNjCldW1g/vgt/GEIWugPvmyzWs/8Vq
+	 9oEJ0OS8D2yiTeKY9zo9EZb24OFr9bSRjvPd9H0Utx0BbzTohpoc5W9EC3oW6gw06O
+	 PMAxpHUjxszgw==
+Received: from phl-compute-05.internal (phl-compute-05.internal [10.202.2.45])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 04F9AF4007A;
+	Wed,  3 Jun 2026 18:35:06 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Wed, 03 Jun 2026 18:35:06 -0400
+X-ME-Sender: <xms:Gawgah8nXtIAPGGAGPiF8ERwSlzGIlyWD0MQlDyU5-tpzVCdNfwGKQ>
+    <xme:GawgaiECsVyJlbZbs12LgL9dApVJ1LJOcg-76_vLe-a-uwCOidhdfTraDGsqsZmPb
+    ugeM7UWcnbqhBSfbceRrUfBK2C6LfaWM8eWIFSSwziA1134Y0ZY-3A>
+X-ME-Received: <xmr:Gawgajcfb1Z1Ss-xUUFtpohKa4N-tQQw9hxhyyN2I8tZllJSMoVc3y2_k9-J5xj9rS1pUgt6XuVFYkIE94WDwx7khXrpjVI0Cc0>
+X-ME-Proxy-Cause: dmFkZTFX0j9sA6Wn6+0SHbB+uAnsGUuUTkIQ/IG92bQ8SWXL+2nOfGVQYN3SuFpcuyraSy
+    gwilbXDO2FeldZhYaMLbp/icLYg2aI/62Vz1d6pgPJHELN04Hz3biMknEMug0aTN0YKs17
+    6OVgLgH1oXPT49MIJL83dUy7zwS2LqADZczGc+s6oFiY893y36qw3Nw4WxVeNfy5fdNHxE
+    1NReFr7YSnTLG1+7Fka8iFyXEVQuzfuk5/D5SSn3UamAFriCIPaBrMa6tx0rksq4zxZREQ
+    7O5cjH8ayu5kLs+O7WmRQdQWmYYzMFq9AnD1HvJQbGOL5L71Yt2K9Kq3WcRFI7b6U73mZM
+    AwQ7pFB7B43Vw42HhZKuqT/iYqKJCnW3ndhv8fJIdnPjvzoweDNxg8bXmnhRGHfGoIK0ev
+    KDpmBmmKLhyz5PaNQYmzfdenbYSPFVdm5C4cPfWbOp52IR3h/PVbBBcuDKlgCtsT/kFCBP
+    iQl5W/kXrKRr/KamjnNI28YqfGP44c1rm4qtVh1ONjzdq4bxfmFoYTAgyC+w0maJkhL7ui
+    UU3usNIb5t0ABX9rNBB5k0KORX6c1KBnaht8QlAMW3ZAecyuqCYLXHDmVZUn6zKd3fj9LK
+    t9lN3rnRAelX7u62eXwDF5RFv5iY8PpSYd1v0xZ97xg1/qHDDay5Ic1CJdHg
+X-ME-Proxy: <xmx:GawgajnJRKPBuQxHHlSbQxoVBXF77oxwUBs08hNYkCa3YEBPXX81lw>
+    <xmx:GawgaiqDZewJTZ3ESejfybqg0AaLjreBaG-Pvh68hqlR_VIYrAiBwQ>
+    <xmx:GawgagG5L02g7zRfsheBtapaDON15iJWvFysqYb7CWFhsSY4dAecGw>
+    <xmx:GawgaoSwn7zKuKTdOvw-RFsb8Va2l1gjQCW1Pb-nWB2-xRg4hlTkbQ>
+    <xmx:GqwgamMz7y2YWcRcMvw3qD7_RrwWEhw4XweldNdFUL7uTWLuDuKZ5DLk>
+Feedback-ID: i67ae4b3e:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 3 Jun 2026 18:20:07 -0400 (EDT)
-Date: Wed, 3 Jun 2026 16:20:06 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
- mjrosato@linux.ibm.com, alex@shazbot.org
-Subject: Re: [PATCH v18 1/4] s390/pci: Store PCI error information for
- passthrough devices
-Message-ID: <20260603162006.27b78de5@shazbot.org>
-In-Reply-To: <20260603182415.2324-2-alifm@linux.ibm.com>
-References: <20260603182415.2324-1-alifm@linux.ibm.com>
-	<20260603182415.2324-2-alifm@linux.ibm.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+ 3 Jun 2026 18:35:05 -0400 (EDT)
+Date: Wed, 03 Jun 2026 15:35:03 -0700
+From: "Dan Williams (nvidia)" <djbw@kernel.org>
+To: Srirangan Madhavan <smadhavan@nvidia.com>, 
+ linux-cxl@vger.kernel.org, 
+ linux-pci@vger.kernel.org, 
+ linux-kernel@vger.kernel.org
+Cc: vsethi@nvidia.com, 
+ alwilliamson@nvidia.com, 
+ Dan Williams <danwilliams@nvidia.com>, 
+ Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>, 
+ Vishal Aslot <vaslot@nvidia.com>, 
+ Manish Honap <mhonap@nvidia.com>, 
+ Jiandi An <jan@nvidia.com>, 
+ Richard Cheng <icheng@nvidia.com>, 
+ linux-tegra@vger.kernel.org, 
+ Srirangan Madhavan <smadhavan@nvidia.com>
+Message-ID: <6a20ac17906d8_42b91004f@djbw-dev.notmuch>
+In-Reply-To: <20260528083154.137979-2-smadhavan@nvidia.com>
+References: <20260528083154.137979-1-smadhavan@nvidia.com>
+ <20260528083154.137979-2-smadhavan@nvidia.com>
+Subject: Re: [PATCH v6 1/9] cxl/hdm: Add helpers to restore and commit memdev
+ decoders
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=utf-8
 Content-Transfer-Encoding: 7bit
 
-On Wed,  3 Jun 2026 11:24:12 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
-> @@ -81,6 +52,47 @@ static bool is_driver_supported(struct pci_driver *driver)
->  	return true;
+Srirangan Madhavan wrote:
+> Add helpers to restore endpoint decoder programming for a CXL memdev from
+> CXL core's cached decoder objects, then commit it as a distinct step.
+> Callers are expected to have established reset safety and to hold
+> cxl_rwsem.region for write.
+
+In the /sys/bus/.../reset path the PCI device only has cached HDM state,
+no 'struct cxl_region' objects. So this needs a simpler method to
+determine that HDM is unmapped. It probably also needs account for
+userspace mappings. The closest approximation to "this phys addr is not
+mapped anywhere, even /dev/mem" is a successful __request_region().
+
+> cxl_restore_memdev_decoders() restores programmable decoder state while
+> keeping traffic disabled. For HDM-backed endpoints it programs enabled
+> endpoint decoder fields without COMMIT, keeps the HDM Decoder Capability
+> disabled, and mirrors matching endpoint DVSEC ranges where possible. For
+> endpoints without HDM decoder registers, it restores the legacy DVSEC
+> ranges that model endpoint decode.
+
+Ideally just use the same helper for restoring the configuration as
+writing the configuration. I.e. I am not sure that writing all the
+address ranges first is required since per decoder commit is still
+required. Effectively trying to maximize identical flows for the reset
+and dynamic configuration paths.
+
+> cxl_commit_memdev_decoders() enables the HDM Decoder Capability and
+> commits enabled, unlocked endpoint decoders after safety checks pass. It
+> sets COMMIT only after decoder fields have been restored, does not
+> re-lock decoders, and does not set DVSEC MEM_ENABLE.
+> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+>  drivers/cxl/core/hdm.c | 318 ++++++++++++++++++++++++++++++++++++++++-
+>  drivers/cxl/cxl.h      |   2 +
+>  2 files changed, 317 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 0c80b76a5f9b..f7af1041a9fc 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -679,7 +679,7 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, u64 size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
 >  }
 >  
-> +static int zpci_store_pci_error(struct pci_dev *pdev,
-> +				 struct zpci_ccdf_err *ccdf)
-> +{
-> +	struct zpci_dev *zdev = to_zpci(pdev);
-> +	int i;
-> +
-> +	guard(mutex)(&zdev->pending_errs_lock);
-> +	if (!zdev->pending_errs.mediated_recovery)
+> -static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+> +static int cxld_set_interleave_fields(struct cxl_decoder *cxld, u32 *ctrl)
+>  {
+>  	u16 eig;
+>  	u8 eiw;
+> @@ -690,14 +690,22 @@ static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+>  	 */
+>  	if (WARN_ONCE(ways_to_eiw(cxld->interleave_ways, &eiw),
+>  		      "invalid interleave_ways: %d\n", cxld->interleave_ways))
+> -		return;
 > +		return -EINVAL;
+>  	if (WARN_ONCE(granularity_to_eig(cxld->interleave_granularity, &eig),
+>  		      "invalid interleave_granularity: %d\n",
+>  		      cxld->interleave_granularity))
+> -		return;
+> +		return -EINVAL;
+>  
+>  	u32p_replace_bits(ctrl, eig, CXL_HDM_DECODER0_CTRL_IG_MASK);
+>  	u32p_replace_bits(ctrl, eiw, CXL_HDM_DECODER0_CTRL_IW_MASK);
+> +	return 0;
+> +}
+
+It is awkward to get all the way down to restoring the interleave to
+find that the original interleave settings were invalid to start.
+
+I think it is also impossible. These warnings have never provided any
+value and should probably be deleted rather than honored and reflected
+up the stack.
+
 > +
-> +	if (zdev->pending_errs.count >= ZPCI_ERR_PENDING_MAX) {
-> +		pr_err("%s: Maximum number (%d) of pending error events queued\n",
-> +		       pci_name(pdev), ZPCI_ERR_PENDING_MAX);
-
-Is this really an err condition or just a warn?  Nothing is
-fundamentally broken here, the queue is just full and we're losing
-errors.  Maybe this should be a warn?
-
-Can this create a DoS if a device continues to generate errors and
-nobody is consuming them?  Userspace could ignore the error.  This
-should probably be _ratelimited.
-
-pr_err + pci_name suggests this should be a pci_ or dev_ call and since
-the pci variant doesn't exist, use dev_warn_ratelimited().
-
-> +		return -ENOMEM;
-> +	}
+> +static void cxld_set_interleave(struct cxl_decoder *cxld, u32 *ctrl)
+> +{
+> +	if (cxld_set_interleave_fields(cxld, ctrl))
+> +		return;
 > +
-> +	i = zdev->pending_errs.tail % ZPCI_ERR_PENDING_MAX;
-> +	memcpy(&zdev->pending_errs.err[i], ccdf, sizeof(struct zpci_ccdf_err));
-> +	zdev->pending_errs.tail++;
-> +	zdev->pending_errs.count++;
+>  	*ctrl |= CXL_HDM_DECODER0_CTRL_COMMIT;
+>  }
+>  
+> @@ -927,6 +935,310 @@ static void cxl_decoder_reset(struct cxl_decoder *cxld)
+>  	}
+>  }
+>  
+> +static int cxl_restore_dvsec_range(struct cxl_memdev *cxlmd,
+> +				   struct cxl_endpoint_decoder *cxled)
+> +{
+> +	struct cxl_dev_state *cxlds = cxlmd->cxlds;
+> +	struct cxl_decoder *cxld = &cxled->cxld;
+> +	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
+> +	u64 base = cxld->hpa_range.start;
+> +	u64 size = range_len(&cxld->hpa_range);
+> +	u32 lo;
+> +	int dvsec = cxlds->cxl_dvsec;
+> +	int id = cxld->id;
+> +	int rc;
+> +
+> +	if (!dvsec)
+> +		return 0;
+> +
+> +	if (id >= CXL_DVSEC_RANGE_MAX)
+> +		return 0;
+> +
+> +	rc = pci_write_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_BASE_HIGH(id),
+> +				    upper_32_bits(base));
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_read_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_BASE_LOW(id),
+> +				   &lo);
+> +	if (rc)
+> +		return rc;
+> +	lo &= ~PCI_DVSEC_CXL_MEM_BASE_LOW;
+> +	lo |= lower_32_bits(base) & PCI_DVSEC_CXL_MEM_BASE_LOW;
+> +
+> +	rc = pci_write_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_BASE_LOW(id),
+> +				    lo);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_write_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_SIZE_HIGH(id),
+> +				    upper_32_bits(size));
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = pci_read_config_dword(pdev, dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(id),
+> +				   &lo);
+> +	if (rc)
+> +		return rc;
+> +
+> +	/*
+> +	 * Preserve MEM_INFO_VALID / MEM_ACTIVE and any reserved bits while
+> +	 * restoring only the programmable size bits.
+> +	 */
+> +	lo &= ~PCI_DVSEC_CXL_MEM_SIZE_LOW;
+> +	lo |= lower_32_bits(size) & PCI_DVSEC_CXL_MEM_SIZE_LOW;
+
+No need for lower_32_bits() with the mask.
+
+> +
+> +	return pci_write_config_dword(pdev,
+> +				      dvsec + PCI_DVSEC_CXL_RANGE_SIZE_LOW(id),
+> +				      lo);
+> +}
+> +
+> +static int cxl_restore_hdm_decoder(struct cxl_hdm *cxlhdm,
+> +				   struct cxl_endpoint_decoder *cxled)
+> +{
+> +	struct cxl_decoder *cxld = &cxled->cxld;
+> +	void __iomem *hdm;
+> +	u64 base, size, skip;
+> +	u32 ctrl;
+> +	int id;
+> +
+> +	id = cxld->id;
+> +	hdm = cxlhdm->regs.hdm_decoder;
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	if (ctrl & CXL_HDM_DECODER0_CTRL_LOCK)
+> +		return 0;
+> +
+> +	base = cxld->hpa_range.start;
+> +	size = range_len(&cxld->hpa_range);
+> +	skip = cxled->skip;
+> +
+> +	ctrl &= ~(CXL_HDM_DECODER0_CTRL_LOCK |
+> +		  CXL_HDM_DECODER0_CTRL_COMMIT |
+> +		  CXL_HDM_DECODER0_CTRL_COMMITTED |
+> +		  CXL_HDM_DECODER0_CTRL_COMMIT_ERROR);
+> +	if (cxld_set_interleave_fields(cxld, &ctrl))
+> +		return -EINVAL;
+> +	cxld_set_type(cxld, &ctrl);
+> +
+> +	/* Preserve setup_hw_decoder() programming order, without COMMIT. */
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(skip), hdm + CXL_HDM_DECODER0_SKIP_HIGH(id));
+> +	writel(lower_32_bits(skip), hdm + CXL_HDM_DECODER0_SKIP_LOW(id));
+> +	wmb();
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +
 > +	return 0;
 > +}
 > +
-> +void zpci_start_mediated_recovery(struct zpci_dev *zdev)
-> +{
-> +	guard(mutex)(&zdev->pending_errs_lock);
-> +	zdev->pending_errs.mediated_recovery = true;
-> +}
-> +EXPORT_SYMBOL_GPL(zpci_start_mediated_recovery);
+> +struct cxl_restore_ctx {
+> +	struct cxl_memdev *cxlmd;
+> +	struct cxl_hdm *cxlhdm;
+> +};
 > +
-> +void zpci_stop_mediated_recovery(struct zpci_dev *zdev)
+> +static int cxl_restore_decoder(struct device *dev, void *data)
 > +{
-> +	guard(mutex)(&zdev->pending_errs_lock);
-> +	zdev->pending_errs.mediated_recovery = false;
-> +	if (zdev->pending_errs.count)
-> +		pr_info("Unhandled PCI error events count=%d for PCI function 0x%x\n",
-> +			zdev->pending_errs.count, zdev->fid);
-
-It seems like there's always a race that an error could occur as the
-user is closing the device.  Is this really worth logging at anything
-more than a dbg level, pci_dbg() in this case?
-
-> +	memset(&zdev->pending_errs, 0, sizeof(struct zpci_ccdf_pending));
-> +}
-> +EXPORT_SYMBOL_GPL(zpci_stop_mediated_recovery);
-> +
->  static pci_ers_result_t zpci_event_notify_error_detected(struct pci_dev *pdev,
->  							 struct pci_driver *driver)
->  {
-> @@ -175,12 +187,15 @@ static pci_ers_result_t zpci_event_do_reset(struct pci_dev *pdev,
->   * and the platform determines which functions are affected for
->   * multi-function devices.
->   */
-> -static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
-> +static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev,
-> +							  struct zpci_ccdf_err *ccdf)
->  {
->  	pci_ers_result_t ers_res = PCI_ERS_RESULT_DISCONNECT;
->  	struct zpci_dev *zdev = to_zpci(pdev);
-> +	bool mediated_recovery = false;
->  	char *status_str = "success";
->  	struct pci_driver *driver;
+> +	struct cxl_restore_ctx *ctx = data;
+> +	struct cxl_endpoint_decoder *cxled;
+> +	struct cxl_decoder *cxld;
 > +	int rc;
->  
->  	/*
->  	 * Ensure that the PCI function is not removed concurrently, no driver
-> @@ -194,13 +209,6 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
->  	}
->  	pdev->error_state = pci_channel_io_frozen;
->  
-> -	if (is_passed_through(pdev)) {
-> -		pr_info("%s: Cannot be recovered in the host because it is a pass-through device\n",
-> -			pci_name(pdev));
-> -		status_str = "failed (pass-through)";
-> -		goto out_unlock;
-> -	}
-> -
->  	driver = to_pci_driver(pdev->dev.driver);
->  	if (!is_driver_supported(driver)) {
->  		if (!driver) {
-> @@ -216,12 +224,24 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
->  		goto out_unlock;
->  	}
->  
-> +	rc = zpci_store_pci_error(pdev, ccdf);
-> +	if (!rc || rc == -ENOMEM)
-> +		mediated_recovery = true;
-
-This is a convoluted way to get the state of
-zdev->pending_errs.mediated_recovery, which becomes invalid out of
-pending_errs_lock anyway.
-
 > +
->  	ers_res = zpci_event_notify_error_detected(pdev, driver);
->  	if (ers_result_indicates_abort(ers_res)) {
->  		status_str = "failed (abort on detection)";
->  		goto out_unlock;
->  	}
->  
-> +	if (mediated_recovery) {
-> +		pr_info("%s: Leaving recovery of pass-through device to user-space\n",
-> +			pci_name(pdev));
-> +		ers_res = PCI_ERS_RESULT_RECOVERED;
-> +		status_str = "in progress";
-> +		goto out_unlock;
+> +	if (!is_endpoint_decoder(dev))
+> +		return 0;
+> +
+> +	cxled = to_cxl_endpoint_decoder(dev);
+> +	cxld = &cxled->cxld;
+> +	if ((cxld->flags & CXL_DECODER_F_ENABLE) == 0)
+> +		return 0;
+> +
+> +	if (ctx->cxlhdm->regs.hdm_decoder) {
+> +		if (cxld->id >= ctx->cxlhdm->decoder_count)
+> +			return -EINVAL;
+> +
+> +		rc = cxl_restore_hdm_decoder(ctx->cxlhdm, cxled);
+> +		if (rc)
+> +			return rc;
 > +	}
-
-Since zdev->pending_errs.mediated_recovery is only valid while holding
-pending_errs_lock, this is really no better than the
-is_passed_through() test.
-
 > +
->  	if (ers_res != PCI_ERS_RESULT_NEED_RESET) {
->  		ers_res = zpci_event_do_error_state_clear(pdev, driver);
->  		if (ers_result_indicates_abort(ers_res)) {
-> @@ -266,25 +286,19 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
->   * @pdev: PCI function for which to report
->   * @es: PCI channel failure state to report
->   */
-> -static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es)
-> +static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es,
-> +				  struct zpci_ccdf_err *ccdf)
->  {
->  	struct pci_driver *driver;
->  
->  	pci_dev_lock(pdev);
->  	pdev->error_state = es;
-> -	/**
-> -	 * While vfio-pci's error_detected callback notifies user-space QEMU
-> -	 * reacts to this by freezing the guest. In an s390 environment PCI
-> -	 * errors are rarely fatal so this is overkill. Instead in the future
-> -	 * we will inject the error event and let the guest recover the device
-> -	 * itself.
-> -	 */
-> -	if (is_passed_through(pdev))
-> -		goto out;
+> +	return cxl_restore_dvsec_range(ctx->cxlmd, cxled);
+> +}
 > +
-> +	zpci_store_pci_error(pdev, ccdf);
->  	driver = to_pci_driver(pdev->dev.driver);
->  	if (driver && driver->err_handler && driver->err_handler->error_detected)
->  		driver->err_handler->error_detected(pdev, pdev->error_state);
+> +static int cxl_restore_decoders(struct cxl_memdev *cxlmd, struct cxl_hdm *cxlhdm)
+> +{
+> +	struct cxl_port *port = cxlhdm->port;
+> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+> +	struct cxl_restore_ctx ctx = {
+> +		.cxlmd = cxlmd,
+> +		.cxlhdm = cxlhdm,
+> +	};
+> +	u32 global_ctrl;
+> +
+> +	if (hdm) {
+> +		global_ctrl = readl(hdm + CXL_HDM_DECODER_CTRL_OFFSET);
+> +		writel(global_ctrl & ~CXL_HDM_DECODER_ENABLE,
+> +		       hdm + CXL_HDM_DECODER_CTRL_OFFSET);
 
-How do you intend to stage this versus QEMU changes?  This seems like a
-big regression if we're suddenly triggering the eventfd that causes
-QEMU to halt.  Do you need userspace to opt-in to mediated recovery
-rather than automatically enabling it on open?  Thanks,
+After reset, global control should not require re-disabling.
 
-Alex
+> +	}
+> +
+> +	return device_for_each_child(&port->dev, &ctx, cxl_restore_decoder);
+
+This gets cleaner when being able to skip the device_for_each_child()
+and just walk the array of cached HDM info in the device.
