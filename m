@@ -1,112 +1,137 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0296E46AEDD
-	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 10:59:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 254BD44B68E
+	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 11:20:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780484369; cv=none; b=qoyJCsR7l+mUiAAuld7T3O2aYKOIBT56nKtw+sYgzlzAD/p2QtMs3H/wAsAC/Wkw23RbK0Yp21Vq86XrnE286KRoVVYRAU7+keG5rycJVRKR32XOz+XC7NjdK3yqD000FF5ZHHGP0MdLi8ghmAGb0L2eFPBkh2v1Q5b7eADulEs=
+	t=1780485620; cv=none; b=gzDIvJ1Zyvo03Hmua9Rmp+yL93pXyoBH8i4Ybvw4eHFFJcRllNwLP27gT0ocGbL0/B+FScc/KBqAmg0WAMfypj4IsaBXhV3ljJqiL7cSUBiWzO+wK75ziPp1lCdyX1Gas/KVVJDIsQEOpznRMuLDB9dBTHQwsHd6l+DOd7OlPv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780484369; c=relaxed/simple;
-	bh=L3Jdr9zTMk5w62f8RZI5ycLB+ZJKY7o+2/iVui+gdw8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QnKEGE8roXjAtKDqWXrAeJNuB6rSHMQ6DjuYjDq+JlV9oqVG2F32hoJiarTtpWZLeQlCx3tEOVt2VbxYfNcFcrtOE249/hlnhA5QyFD/pSH6jPn1OCYhgPt73K0lQlI/m5BGt26NWolhpdixHQh8lL4zg9rHvflYyCcVnp3Wh1c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BtnvWVSM; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1780485620; c=relaxed/simple;
+	bh=hc3enqvCeEkFHYyExA894HQOy2nwzFdWRp7DcL4w3xo=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=GLd3RfiSZ8JspJsUEPvphdT3w/LA+yysk4iSA3HC0B2UQLc1tgGHNmx1bqGxePXFyLg9ElrUQ+LlqP3XTRTjKvdM6xuqGDHn6SEH6vH7o68H5k0RO7wmKrFMDl6aw5ABuVj1QZtSO7Miz88HKWRvxlQVACpPbCDMwDO4rr0/8/U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GbbELx5w; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BtnvWVSM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1780484367;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bEIpI5UUbeeTmfMn6Fr/4J/TUJu4+0oPS+MQRpTIvRU=;
-	b=BtnvWVSMu10502NarybxDcWmmXkltgEkGETibtJ0mLA7D9DBfONkIZu8HLGLRvgXmKL/+4
-	whtA7Cv2oFUsNKG2oVXe/m73/Fi0JlzMYdJC3du/GNY+xUs2/7/FGGqq7hWuzaUNiBI8OP
-	TQLntpWrQQZLKfLCvydfD2CEBslvARs=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-659-PUfFB2SnOdiqVZzE7BNLTg-1; Wed,
- 03 Jun 2026 06:59:24 -0400
-X-MC-Unique: PUfFB2SnOdiqVZzE7BNLTg-1
-X-Mimecast-MFC-AGG-ID: PUfFB2SnOdiqVZzE7BNLTg_1780484362
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 74FA21800370;
-	Wed,  3 Jun 2026 10:59:22 +0000 (UTC)
-Received: from fedora.redhat.com (unknown [10.44.48.81])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6C7B41956095;
-	Wed,  3 Jun 2026 10:59:18 +0000 (UTC)
-From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-To: bhelgaas@google.com,
-	alex@shazbot.org
-Cc: jjohnson@kernel.org,
-	mani@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org,
-	mhi@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Subject: [PATCH v7 3/3] PCI: Disable broken bus reset on Qualcomm devices
-Date: Wed,  3 Jun 2026 12:58:53 +0200
-Message-ID: <20260603105853.326290-4-jtornosm@redhat.com>
-In-Reply-To: <20260603105853.326290-1-jtornosm@redhat.com>
-References: <20260603105853.326290-1-jtornosm@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GbbELx5w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97AA41F00893;
+	Wed,  3 Jun 2026 11:20:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780485618;
+	bh=nvRa2qTx4zwd7RE5TvFMCbmz9P3TG0GOfQaswWRmpik=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=GbbELx5w0LNilXBfmm5ADA3peeRaLNtLTaVLslWRCjDtg45P0fRjLUg1D6ptFoUw5
+	 oF15dPKIbc1JP8upuEc2F3inghUTahf1jjRY05IwdI+U1Tm7XzPHoN0QLHbqXWEGyH
+	 S5SjVa+R/84n72b3KlG/Ddmkg9XMwr61B1XxzpJjRC7WmLKb1RP++Xixv0l+3B/0gg
+	 TZsftpmXhnFPSXndcUte7KdF5UnZv/yuELTHrTiUOQn81Hvyo5fX/X2PTZcdGihXX/
+	 ji2UsXx8cm5d+Yp4Mv6cL0qM8diQIPa5Kqp9vB2MknLtbWNx+2wmMVHXQUYSVJ0LGb
+	 KHIA4xCLxR1mw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 1/3] PCI: Add d3cold as general reset method
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260603105853.326290-2-jtornosm@redhat.com>
+References: <20260603105853.326290-2-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 03 Jun 2026 11:20:18 +0000
+Message-Id: <20260603112018.97AA41F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
-do not properly support Secondary Bus Reset (SBR).
-
-Testing confirms this is device-specific, not deployment-specific:
-MediaTek MT7925e successfully uses bus reset through the same passive
-M.2-to-PCIe adapters where Qualcomm devices fail, proving PERST# is
-properly wired through the adapters.
-
-This quirk acts as a safety net, preventing the broken bus reset from being
-attempted if users override reset methods (device_specific or d3cold when
-available) via sysfs.
-
-Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
----
-v7: Address the comments from Jeff Johnson: the problem was detected for
-    the specific devices WCN6855 and WCN7850, use the name of the devices
-    instead of the related drivers ath11k and ath12k, which support a large
-    number of devices
-v6: https://lore.kernel.org/all/20260602160024.1171949-4-jtornosm@redhat.com/
-
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 000000000000..111111111111 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3789,6 +3789,9 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0034, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003e, quirk_no_bus_reset);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1103, quirk_no_bus_reset); /* WCN6855 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x1107, quirk_no_bus_reset); /* WCN7850 */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_QCOM, 0x0308, quirk_no_bus_reset); /* SDX62/SDX65 */
-
- /*
-  * Root port on some Cavium CN8xxx chips do not successfully complete a bus
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] pci_d3cold_reset() fails to wait for device readiness after transi=
+tioning from D3cold to D0, leading to immediate config read failures and st=
+ate corruption.
+- [High] pci_d3cold_reset() does not prevent execution on single-function b=
+ridges, leading to permanent state corruption and physical data loss of all=
+ subordinate devices.
 --
-2.53.0
 
+commit c7a8523521475c131fd83bc43a00b0cc028fc9a1
+Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+
+PCI: Add d3cold as general reset method
+
+This patch adds D3cold power cycling as a reset method for single-function
+devices via ACPI _PR3, placing it at the end of the reset hierarchy.
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f7cfcc000901..096868f80cd4c 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+
+[ ... ]
+
+> +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	int ret;
+> +
+> +	if (dev->multifunction)
+> +		return -ENOTTY;
+> +
+
+[Severity: High]
+Does this allow execution on single-function bridges, such as PCIe Root
+Ports?
+
+If pci_set_power_state(dev, PCI_D3cold) is called on a bridge, it recursive=
+ly
+updates all subordinate devices' tracking state to D3cold via
+__pci_bus_set_current_state() and physically removes power from them.
+
+The subsequent transition back to D0 only updates the bridge itself. This
+leaves all downstream devices tracked as PCI_D3cold indefinitely, and they
+lose all their configuration and BARs since the reset framework only saves
+and restores the bridge's configuration state.=20
+
+> +	if (!pci_pr3_present(dev))
+> +		return -ENOTTY;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (dev->current_state !=3D PCI_D0)
+> +		return -EINVAL;
+> +
+> +	ret =3D pci_dev_reset_iommu_prepare(dev);
+> +	if (ret) {
+> +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	ret =3D pci_set_power_state(dev, PCI_D3cold);
+> +	if (ret)
+> +		goto done;
+> +
+> +	ret =3D pci_set_power_state(dev, PCI_D0);
+
+[Severity: High]
+Does this sequence fail to account for the mandatory wait time before the
+device is responsive to config space accesses?
+
+A D3cold to D0 transition acts as a fundamental reset. pci_set_power_state()
+internally invokes pci_power_up(), which applies power and immediately
+attempts to read PCI_PM_CTRL without waiting for link training or handling
+Configuration Request Retry Status (CRS).
+
+Because the device is unready, this read can return 0xFFFF (Unsupported
+Request) and cause pci_power_up() to spuriously fail with -EIO. Should this
+include a polling delay, similar to pci_dev_wait(), to prevent the reset
+framework from blindly failing or restoring state to an uninitialized devic=
+e?
+
+> +
+> +done:
+> +	pci_dev_reset_iommu_done(dev);
+> +	return ret;
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260603105853.3262=
+90-1-jtornosm@redhat.com?part=3D1
