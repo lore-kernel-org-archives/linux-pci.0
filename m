@@ -1,155 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFB3376462
-	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 19:04:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7AD14A2E07;
+	Wed,  3 Jun 2026 21:39:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780513478; cv=none; b=AtU1JvOQhbVuK2rE1YBmHyMz4uO4PoSWqVtaPFrLYhDbCqtd0OF631y5gUJAmwLx5BJkcQs7s0EysoRICXIxUGk7TAYXkCxdDrugFjc9BM+oVgztujonc3u2A1u5uSoDaJmciwNiyM17ToU4AhSplmiVATDdMbRFhrAucSnKW70=
+	t=1780522774; cv=none; b=C5Ibx7KZSdSjPrRdNDwHEYUpk7E3YDWijoRddn4CwtGE1G6ZdW+9bs/sOO/nCg0Qe199ip/GL4pNZfS7uLutvDoRzPgztUHMLTPGbMBuHtC4c5eKCROdwgacJMIkJD9zDBeyLyq1MFjvcIHmRBzhQaceBxixEtsIsLDTC65LPFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780513478; c=relaxed/simple;
-	bh=53oLg0H7dPwIyQ71iC6fFfMcZcta/2raKHAhti7i0aI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=LXGEZ+XrkqUuscyhxg2WyR14J8GpD8emdLBDeW8DNpFnkP1x9zhYMSCWSDNZ1cu/j3Zx94mMHNV5Yfzel/AqSOSMCiMVsz2RPjFEul1iK4ghBUjs2YmcmguKinYe8Qya0nIBLSoBPvb3g5QqOEeLYpFZYkEBz85/2lUL0DeGmcw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EZJkYuy7; arc=none smtp.client-ip=100.103.45.18
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EZJkYuy7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 599761F00898;
-	Wed,  3 Jun 2026 19:04:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780513476;
-	bh=mAih/9rrq5aXbmAZqm4vtf3M9k/eiRe626gDnWjkhB4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=EZJkYuy7815lI++WFdVrMTrYrFVhuszN4JY9p8XshVg/By8xpmsKB/ooZgL4njuXO
-	 o8RHIAVNqvkSkSER3NuhItwYvSw+Oe+z3VkO+WEf5Lz3gzpPowX40aB1RALKslCfYH
-	 QTWeAkei+K8hZIQejcf1WeOU/UTmGSsnewng3H3EG7Azu66YuA5o/7niWdAmxdaw2I
-	 irxf6u045TYYISybARwb6sN05gWvCNzxabv2mbnWijAvE3F/ys8U6+cP0BIOE1skND
-	 CwJNjyWis8/L45UfZUvJbz61ukBObfOEeglLwIvHgzkGtIqPEGDNJ/0WA6XyDHQD9B
-	 F8izGn1R+PmeA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v18 3/4] vfio/pci: Add a reset_done callback for
- vfio-pci driver
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Farhan Ali" <alifm@linux.ibm.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260603182415.2324-4-alifm@linux.ibm.com>
-References: <20260603182415.2324-4-alifm@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 03 Jun 2026 19:04:35 +0000
-Message-Id: <20260603190436.599761F00898@smtp.kernel.org>
+	s=arc-20240116; t=1780522774; c=relaxed/simple;
+	bh=4ixFSV/12Id5tf/md9aSMpcT24U/Cz8Zv3drM0rLg14=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=SFQB5u1wrQ6bk0OIbhMPSA427JzkCvRvmRzFA6kMc5oOBL7fPw63LEIsHjjTeDWb23rEfGliLS0hcJzKF110BIlEaQxb0tgFCQgH396gRGw8w7gvZCKKTFuTuqnwDKCssF03ccmH5bk5ANFlnwoCn6YQ/2EVmNa89GYwHM6Dc0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A3131F0089B;
+	Wed,  3 Jun 2026 21:39:31 +0000 (UTC)
+Received: by venus (Postfix, from userid 1000)
+	id 7F4B0181D83; Wed, 03 Jun 2026 23:39:29 +0200 (CEST)
+From: Sebastian Reichel <sebastian.reichel@collabora.com>
+To: linux-phy@lists.infradead.org, 
+ Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc: Vinod Koul <vkoul@kernel.org>, 
+ Neil Armstrong <neil.armstrong@linaro.org>, dri-devel@lists.freedesktop.org, 
+ freedreno@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, 
+ linux-arm-msm@vger.kernel.org, linux-can@vger.kernel.org, 
+ linux-gpio@vger.kernel.org, linux-ide@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+ linux-riscv@lists.infradead.org, linux-rockchip@lists.infradead.org, 
+ linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ linux-sunxi@lists.linux.dev, linux-tegra@vger.kernel.org, 
+ linux-usb@vger.kernel.org, netdev@vger.kernel.org, spacemit@lists.linux.dev, 
+ UNGLinuxDriver@microchip.com, Abhinav Kumar <abhinav.kumar@linux.dev>, 
+ Alexandre Belloni <alexandre.belloni@bootlin.com>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, 
+ =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
+ Andrew Lunn <andrew+netdev@lunn.ch>, 
+ Andrzej Hajda <andrzej.hajda@intel.com>, Andy Yan <andy.yan@rock-chips.com>, 
+ Bart Van Assche <bvanassche@acm.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Can Guo <quic_cang@quicinc.com>, Chanho Park <chanho61.park@samsung.com>, 
+ Chen-Yu Tsai <wens@kernel.org>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
+ Damien Le Moal <dlemoal@kernel.org>, 
+ Daniel Machon <daniel.machon@microchip.com>, 
+ David Airlie <airlied@gmail.com>, "David S. Miller" <davem@davemloft.net>, 
+ Dmitry Baryshkov <lumag@kernel.org>, Eric Dumazet <edumazet@google.com>, 
+ Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.Li@nxp.com>, 
+ Geert Uytterhoeven <geert+renesas@glider.be>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ =?utf-8?q?Heiko_St=C3=BCbner?= <heiko@sntech.de>, 
+ Inki Dae <inki.dae@samsung.com>, Jagan Teki <jagan@amarulasolutions.com>, 
+ Jakub Kicinski <kuba@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ JC Kuo <jckuo@nvidia.com>, Jernej Skrabec <jernej.skrabec@gmail.com>, 
+ Jessica Zhang <jesszhan0024@gmail.com>, Joe Perches <joe@perches.com>, 
+ Johan Hovold <johan+linaro@kernel.org>, Jonas Karlman <jonas@kwiboo.se>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, 
+ Kevin Xie <kevin.xie@starfivetech.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Laurent Pinchart <Laurent.pinchart@ideasonboard.com>, 
+ Linus Walleij <linusw@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Magnus Damm <magnus.damm@gmail.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Marc Kleine-Budde <mkl@pengutronix.de>, 
+ Marek Szyprowski <m.szyprowski@samsung.com>, 
+ Marijn Suijten <marijn.suijten@somainline.org>, 
+ Markus Schneider-Pargmann <msp@baylibre.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Mathias Nyman <mathias.nyman@intel.com>, 
+ Mauro Carvalho Chehab <mchehab@kernel.org>, 
+ Maxime Ripard <mripard@kernel.org>, Michael Dege <michael.dege@renesas.com>, 
+ Nicolas Ferre <nicolas.ferre@microchip.com>, 
+ Niklas Cassel <cassel@kernel.org>, Nitin Rawat <quic_nitirawa@quicinc.com>, 
+ Paolo Abeni <pabeni@redhat.com>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Peter Chen <peter.chen@kernel.org>, 
+ Peter Griffin <peter.griffin@linaro.org>, 
+ Rob Clark <robin.clark@oss.qualcomm.com>, Robert Foss <rfoss@kernel.org>, 
+ Rob Herring <robh@kernel.org>, 
+ "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>, 
+ Samuel Holland <samuel@sholland.org>, Sandy Huang <hjc@rock-chips.com>, 
+ Sascha Hauer <s.hauer@pengutronix.de>, Sean Paul <sean@poorly.run>, 
+ Sebastian Reichel <sre@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, 
+ Shawn Lin <shawn.lin@rock-chips.com>, Simona Vetter <simona@ffwll.ch>, 
+ Steen Hegelund <Steen.Hegelund@microchip.com>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ Thinh Nguyen <Thinh.Nguyen@synopsys.com>, 
+ Thomas Zimmermann <tzimmermann@suse.de>, 
+ Tudor Ambarus <tudor.ambarus@linaro.org>, 
+ Vincent Mailhol <mailhol@kernel.org>, Xu Yang <xu.yang_2@nxp.com>, 
+ Yixun Lan <dlan@kernel.org>, 
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+In-Reply-To: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
+References: <20260505100523.1922388-1-vladimir.oltean@nxp.com>
+Subject: Re: (subset) [PATCH v8 phy-next 00/31] Split Generic PHY consumer
+ and provider API
+Message-Id: <178052276949.2678508.3221123153750103034.b4-ty@collabora.com>
+Date: Wed, 03 Jun 2026 23:39:29 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [Critical] The `reset_done` callback breaks standard device resets by irr=
-eversibly overwriting the runtime PCI configuration space.
-- [High] Concurrent execution of `vfio_pci_core_aer_reset_done` and `vfio_p=
-ci_core_disable` leads to a Use-After-Free on `vdev->pci_saved_state`.
-- [High] The `reset_done` callback is never invoked during AER error recove=
-ry.
---
 
-commit ea3a78b14c5b561020bd16d25cbb09f0536e6e7a
-Author: Farhan Ali <alifm@linux.ibm.com>
+On Tue, 05 May 2026 13:04:52 +0300, Vladimir Oltean wrote:
+> The biggest problem requiring this split is the fact that consumer
+> drivers poke around in struct phy, accessing fields which shouldn't be
+> visible to them. Follow the example of mux, gpio, iio, spi offload,
+> pwrsec, pinctrl and regulator, which each expose separate headers for
+> consumers and providers.
+> 
+> Some off-list discussions were had with Vinod Koul regarding the 3 PHY
+> providers outside the drivers/phy/ subsystem. It was agreed that it is
+> desirable to relocate them to drivers/phy/, rather than to publish
+> phy-provider.h to include/linux/phy/ for liberal use. Only phy.h and
+> (new) phy-props.h - consumer-facing headers - stay there.
+> 
+> [...]
 
-vfio/pci: Add a reset_done callback for vfio-pci driver
+Applied, thanks!
 
-On error recovery for a PCI device bound to vfio-pci driver, we want to
-recover the state of the device to its last known saved state. The callback
-restores the state of the device to its initial saved state.
+[26/31] power: supply: cpcap-charger: include missing <linux/property.h>
+        commit: a9e36028b688d693d8aefbf84a9899f31a20fcf0
 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-> index 27642f10fe973..95af3e827ee05 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -2290,6 +2290,17 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(st=
-ruct pci_dev *pdev,
->  }
->  EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
-> =20
-> +static void vfio_pci_core_aer_reset_done(struct pci_dev *pdev)
-> +{
-> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
-> +
-> +	if (!vdev->pci_saved_state)
-> +		return;
+Best regards,
+-- 
+Sebastian Reichel <sebastian.reichel@collabora.com>
 
-[Severity: High]
-Can this race with vfio_pci_core_disable() and cause a use-after-free on
-vdev->pci_saved_state?
-
-When a user closes the device fd, vfio_pci_core_disable() is invoked:
-
-vfio_pci_core_disable()
-    pci_load_and_free_saved_state(pdev, &vdev->pci_saved_state);
-
-This frees the memory and sets the pointer to NULL without holding the PCI
-device_lock.
-
-Concurrently, if a system-initiated function reset occurs, the PCI core
-holds device_lock and invokes this reset_done callback via
-pci_dev_restore().
-
-Because there is no common lock between these two paths, can the pointer be
-freed by vfio_pci_core_disable() immediately after the NULL check here, but
-before it is dereferenced in pci_load_saved_state()?
-
-> +
-> +	pci_load_saved_state(pdev, vdev->pci_saved_state);
-> +	pci_restore_state(pdev);
-
-[Severity: Critical]
-Does this unintentionally overwrite the runtime PCI configuration space
-during normal device resets?
-
-The PCI core invokes reset_done at the end of standard PCI function resets
-via pci_dev_restore(), which includes pci_try_reset_function() triggered by
-the VFIO_DEVICE_RESET ioctl.
-
-Normally, pci_try_reset_function() transparently saves the runtime state,
-resets the device, and restores it.
-
-However, restoring vdev->pci_saved_state here unconditionally applies the
-state from when the device was initially opened. Could this revert all
-runtime configuration changes made by a guest VM, such as BAR programming
-and MSI-X enablement?
-
-> +}
-> +
->  int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
->  				  int nr_virtfn)
-
-[ ... ]
-
-> @@ -2354,6 +2365,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
-> =20
->  const struct pci_error_handlers vfio_pci_core_err_handlers =3D {
->  	.error_detected =3D vfio_pci_core_aer_err_detected,
-> +	.reset_done =3D vfio_pci_core_aer_reset_done,
-
-[Severity: High]
-Will this callback actually be invoked during AER error recovery?
-
-The commit message mentions restoring the device state during PCIe AER error
-recovery. However, the AER core in pcie_do_recovery() coordinates recovery
-by calling .error_detected, .mmio_enabled, .slot_reset, and .resume.
-
-It uses low-level hardware resets like pci_bus_error_reset() or
-pcie_reset_flr() which do not trigger the pci_dev_restore() wrapper.
-
-Since reset_done is exclusively called from pci_dev_restore() during
-standard function resets, does the state restoration logic belong in
-.slot_reset instead to ensure it executes during an AER event?
-
->  };
->  EXPORT_SYMBOL_GPL(vfio_pci_core_err_handlers);
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260603182415.2324=
--1-alifm@linux.ibm.com?part=3D3
