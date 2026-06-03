@@ -1,250 +1,234 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fout-b4-smtp.messagingengine.com (fout-b4-smtp.messagingengine.com [202.12.124.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E7613D9695
-	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 16:39:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7EF93557F3;
+	Wed,  3 Jun 2026 17:58:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780504783; cv=none; b=hpTy5HWri+mUKJlhR2s5uBS1jw3z1OK2VQD6B1qsPFWejhKYYyccTDDk8Jx7OVj4Sa9I9WGUQ/kYrjFejoFYRvrMl2m41ZlG5nC+tn93Qv+faCAvoJ5XTiGBFSPO2+FcFtzGkxLps8jaOAmPhI/nDrxM6zKaD/yEQJXxkia3kHQ=
+	t=1780509516; cv=none; b=CIKjayoUhL+YYIISJQhgl17ZhY7Jz/dnhLNWeR/Enh599nXxX+W50ILF6zVpWKJ7RXjUeN4zcJ1kr+/F9elOJAw88YdsPoATVsu41NsrUh17Qq3yBMh3au4w3P5/AsnY0gtM7b2XxscNRIniGLl8vmgKBlV7yFT1hlVz4UOUUzw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780504783; c=relaxed/simple;
-	bh=vneAbs4Rw8ed5dFG2IXnldwZPBJlSxDvcQHIFnAk7gI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=iFpCXWfeTlm+myiG80pvB+DGOHXK0LBKZe45Hh5BNcf4WivAcQeeH7ea/6/HfEisayEcpJacO2cPCBIsaFMDcM4cTSVuFnEAEaDo9Saf2Xd6syN0WBJhZbqPsINjraK3ZFZcxVQIsLOdyYp5tyCQg3eD9AxDhXtoxTZt8BGHr7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MrBgib/M; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780509516; c=relaxed/simple;
+	bh=XCZVfbUq+NtLi9h9dNX3wljSjcgEuqKEmriX0TqT1+o=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tMclMYYkDlXwnWaskYWvp8crBchyA84BnCTzyiXHOcfIu7sH+tdXf4wDLp16imMR2/kbynCsgf5CeXlnpV2IkOGYXfxrz9A7e/y1HSXTZ2p5gFtY76p+NKxcCdvb+U5dkNxSmF/Y/lPQbmR8RCwk1InVDInzSL0p1NjI2wqty7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=TVBB/EWN; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=VzhTMtFI; arc=none smtp.client-ip=202.12.124.147
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MrBgib/M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ECB51F00893;
-	Wed,  3 Jun 2026 16:39:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780504781;
-	bh=z6Y0UxaNkYg1xfMBWaKJK5uGxcvYBdd56ek4y1YNLy4=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=MrBgib/MuxlX5lnBa8LU824bnMeANC7hcrzMJV3J6g/Qmu7sAd6Xe7Kk8IdACa6t0
-	 tR79TV13bPGuywehsH5FSVy8Yjl63NiI4g67Xf2U7HZtxVqk1B86Ycx6d6DyApuWfo
-	 YHVafWgoqFueu76/aBnU26q8EWTc//NcXuSs6tM1gbfuwhMk/HlsDbpdHaun5Q+Yy4
-	 KCsedLQyc34Qkk/z9avD5W3dmDjg2Fy0C5IaB4GN/gLQjv15T+gqQQeeYC/OsJJQBZ
-	 7H4+uuyBVBUmvhkBerSd7xkDSx1zv/Yu2SOnVg+C13PyWVNmDZIDvezETd767FqTcN
-	 9ptk2pIBfE5mw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v19 3/3] rust: leds: add multicolor classdev
- abstractions
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Markus Probst" <markus.probst@posteo.de>
-Cc: linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260603-rust_leds-v19-3-2a71085deae3@posteo.de>
-References: <20260603-rust_leds-v19-3-2a71085deae3@posteo.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 03 Jun 2026 16:39:40 +0000
-Message-Id: <20260603163941.5ECB51F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="TVBB/EWN";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="VzhTMtFI"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfout.stl.internal (Postfix) with ESMTP id 9360C1D00168;
+	Wed,  3 Jun 2026 13:58:32 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-10.internal (MEProxy); Wed, 03 Jun 2026 13:58:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1780509512;
+	 x=1780595912; bh=/hyimqtR3dJ5OSnVN0tycpqCgAq8wZ0lo2UnF9x9zw4=; b=
+	TVBB/EWNtgL9Q9if4oobSp6uYZT7zRhR4fDLBvg0MZhNIHIh2RsN7VFfqJ+bOvmx
+	uEvcCdAH8y/U8r3OfsdeVL/u5VJokPMBveYEuPET+FIlo6MyTVzn2fTJ/lZCqwqd
+	W7GRdzOx1/6JhPArcVe66fwgOPkvfTjDqysmUj4QjComwBskSb2b+yKxFgVZghSo
+	+WMH8+HkFviW6uDwvMwTpMeDq2EhDVLZ7/ieIBI4Ca6nWeGg7Va3eFoGistnrDoF
+	ewUbwK8zX5wwMRUEaUxHOIFeUK7pdH8F10nWuGUK5bJSCWkk5DcISYpduYRBKo1X
+	YXqdLU2sdWKZEJTgerVypA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780509512; x=
+	1780595912; bh=/hyimqtR3dJ5OSnVN0tycpqCgAq8wZ0lo2UnF9x9zw4=; b=V
+	zhTMtFIQW2q/Lqigo+5Trpn61eg53OdxjThbxigG+AFFop0C/gQ/siIhzVALXwmR
+	kCYYcfAP9swK9ikYygKwde/tvEIF1vt33ZJ6Vk3xwuOLyZ7awMbqwwo1cG6vZOr6
+	BWTGyV1f2srCAmt+E1+Xb8R4oW+NzpmoLF319jwr2ft06WxSMll7WwsYMPwvyKoO
+	+rnaMWZXu2KZTwif2oohUIxWCDdOV1kqCZxLPsqTK8KntZtUiiuBCJXAOZam9Epp
+	9Pt10dP90w/mGWvvZVfgjTBOd2yeUfRdTGli5nzQcqmJu2ffSWweexPc2AZZ2LHl
+	v9YZnn7ihgJaLoQX4Ye6A==
+X-ME-Sender: <xms:R2sgakfTa0y8eAGD7TQuL7kdSH-S0uojubUjLRkW5RsVsWI7AQ-ANg>
+    <xme:R2sganz83PPOPENsX0TuNzhL5auMNRbe4_aMV69lzCsLiN5n7qnZ4Lzz6Ysw-ainB
+    402LkL_SRoIkI7OSzzfxgeRC7GKgV2EkY5J724IfRWtmMLdD3xIEBs>
+X-ME-Received: <xmr:R2sgakx_yfDVqZXyuzANs5gsbpNd1VZ_vjJQIF0kS1GqNjeO__7K_UYDqvg>
+X-ME-Proxy-Cause: dmFkZTEb3F3VfJcFBZ0xYpcN9Zp/SWYi8J6XsDYqlGHMDUQhXDkYx8wDBYnTnwwAxdMNoN
+    /ebJJ7G8AkyfCHPesErchj4FkJ7AdZ3CYGDTP41B5kV5QuSX5U+a0CtpAYQ8W87wtf6RvA
+    c4xrhupsru9ILIE54VpjvF8Hc0N9pVoNVTqZKNb4EUfq6ivopM0y/RUkLws80KQZ3yjzdH
+    SsnfFT/dPin/Ie5Np9h6n1h++eifHpgc9Q4Q1YWP6b12Gy/+SG1ephCl1NDqFKtFA1GZoz
+    pY/uXyfExlYixJ4YIFVWbejzzL8hKh1bByGI1t1EpS29NYK4nGQNhXuYDCyxRIVfxFclHZ
+    udI/LkHWyX3o+9pQacHM0ElwO7F5Yh5Vk3NDrscMVvkxcsAHFiI9W3Jwfswux+VIVWnLUq
+    2otrbDsHCzZ8vT2jIyCL3knQU5RJz/UqrlLOLlRLWCWWfReRgGGGGYplW9zm7e3yHjA268
+    Ppl0eneWwEPbwt027AlJl9nKlykR3p8rxX02xK1QJ7D2uriK1wPk4WdvB8NCtgGnhVp6BE
+    w0vavPi+AV0q8Umq3XsrrN+MQi+iY+m6ouVMRz2OE5t7auQTxW8IvPIXnwe10oa09ElOqJ
+    KOSdFC8FVLm5JKfKC/TqXYNc2Dyslvfc84se1i6rNH/5ewd4qNdlrxL1AExw
+X-ME-Proxy: <xmx:R2sgagZNOPsjr3haXeD1RE9mqzAjo_dm5o-6jbRR6QvY8UGb9UY4GA>
+    <xmx:R2sgal09TYuKOWttpxY8WgfAKsRggqsun9dqzOsuC9gYXMUC2i1d-w>
+    <xmx:R2sgaictKz8XxcSgiwcgRYVJKsak_f4NwAKkXIFduDcE58ws9vWaDA>
+    <xmx:R2sgaiJl157Kn8cOscq8Bu7UqlV48dM92FDvaJj3jhB4W97N4li1jQ>
+    <xmx:SGsgagQBBAaXj87kuRC9gEMZT7Yq8Khp6QCpTbyo5lrMeLSrGm6wG5ko>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 3 Jun 2026 13:58:30 -0400 (EDT)
+Date: Wed, 3 Jun 2026 11:58:28 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: fengchengwen <fengchengwen@huawei.com>
+Cc: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
+ <wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
+ <wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, alex@shazbot.org
+Subject: Re: [PATCH v14 0/8] vfio/pci: Add PCIe TPH support
+Message-ID: <20260603115828.21216c0f@shazbot.org>
+In-Reply-To: <3f8d1722-6749-4f3a-b630-c96303cec284@huawei.com>
+References: <20260528124649.14732-1-fengchengwen@huawei.com>
+	<20260601095840.3aaaa508@shazbot.org>
+	<59c82855-59a7-4f0e-b534-d35535d04b93@huawei.com>
+	<20260602170847.75bd159d@shazbot.org>
+	<3f8d1722-6749-4f3a-b630-c96303cec284@huawei.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] Reconstructing `KVec` with `num_colors` as capacity leads to Undef=
-ined Behavior due to a capacity and type mismatch.
-- [High] Exposing `brightness` and `intensity` as plain `u32` fields in a s=
-hared reference `&[MultiColorSubLed]` violates Rust's aliasing rules and in=
-troduces data races.
-- [High] The `MultiColorDevice` API has a soundness hole that fails to capt=
-ure the `'a` lifetime of the `name` string, leading to a Use-After-Free of =
-`led_cdev->name`.
---
+On Wed, 3 Jun 2026 08:34:53 +0800
+fengchengwen <fengchengwen@huawei.com> wrote:
 
-commit a904c5bd0f7e2718f470d76c33437063136b14c4
-Author: Markus Probst <markus.probst@posteo.de>
+> On 6/3/2026 7:08 AM, Alex Williamson wrote:
+> > On Tue, 2 Jun 2026 22:46:13 +0800
+> > fengchengwen <fengchengwen@huawei.com> wrote:  
+> >> On 6/1/2026 11:58 PM, Alex Williamson wrote:  
+> >>>
+> >>>
+> >>>  - Patch 2/ sets tph_cap to zero if TPH cannot be enabled, but this is
+> >>>    never propagated to vfio-pci to drop the TPH capability from the
+> >>>    capability chain.
+> >>>
+> >>>  - Patch 3/ exposing the enum to callers is a bit ugly, maybe we should
+> >>>    retain pci_enable_tph() as the "auto" wrapper, resulting in no
+> >>>    change to existing users, and add _ext and _std wrappers.
+> >>>
+> >>>  - Patch 4/ same, multiple wrappers keeps the "auto" api cleaner.  Also
+> >>>    note that auto is broken before TPH is enabled when tph_req_type is
+> >>>    zero.
+> >>>
+> >>>  - Patch 6/:
+> >>>    - mutex_init/destroy belong in vfio_pci_core_init_dev/release_dev()
+> >>>    - Re-order to avoid forward declarations.
+> >>>    - vfio_check_feature() does not require declaring PROBE as a
+> >>>      supported op.
+> >>>    - pcie_tph_set_st_entry() can write to MMIO space without testing
+> >>>      for or enabling device memory or power state.
+> >>>    - tph_init allocates shadow table regardless of opt-in for tph
+> >>>      support.
+> >>>    - Redundant tests for count/index in feature function.
+> >>>    - Duplicate memcpy/kfree in feature function.
+> >>>
+> >>>  - Patch 7/:
+> >>>    - Unclear why it's vfio-pci's responsibility to provide this
+> >>>      translation interface.
+> >>>    - PROBE is unnecessary for vfio_check_feature().
+> >>>    - Array size conversion is strange.
+> >>>
+> >>>  - Patch 8/:
+> >>>    - default config read handles emulated bits.  Clear the bit if
+> >>>      necessary in vconfig, use p_setd() to mark PCI_TPH_CAP_EXT_TPH
+> >>>      virtualized, read-only.
+> >>>    - Follow examples like vfio_pm_config_write, vfio_vpd_config_write,
+> >>>      vfio_exp_config_write, etc.  Set the virtualized and writable
+> >>>      bits, perform default config write, evaluate if anything was
+> >>>      enabled, effect the change in hardware via kernel APIs.
+> >>>    - pcie_disable_tph() happens after the restore state is recorded.
+> >>>    - TPH capability becomes read/write, an ABI change to the user, with
+> >>>      only a host-based opt-in.  Seems like the userspace driver also
+> >>>      needs to opt-in to the ABI change.
+> >>>    - Memory enable not assured for pcie_tph_set_st_entry().
+> >>>    - Sashiko notes there are existing hazards in the tph_enabled
+> >>>      storage unit relative to multiple bitfields that can be updated
+> >>>      concurrently.  The problem is worse with this exposed through
+> >>>      vfio-pci.    
+> >>
+> >> Thanks for review, all your comments are resolved in v15:  
+> > 
+> > Not everything.  At a glance I can see that v15 is still pushing for
+> > vfio-pci to provide the interface to translate CPU IDs to steering
+> > tags, despite my push back above that it doesn't seem within vfio-pci's
+> > scope to provide a CPU ID -> ST interface.  
+> 
+> This translation helper is required to handle varied TPH configurations,
+> including cases where ST entries live inside device private registers
+> instead of MSI-X or TPH capability space.
+> 
+> Prior discussion with Jason (
+> ref: https://lore.kernel.org/all/20260414151125.GF2577880@ziepe.ca/)
+> indicated VFIO-PCI is the correct component for per-device TPH
+> implementation.
+> 
+> Production high-speed NICs from multiple vendors rely on this CPU-to-ST
+> mapping logic for DPDK optimized polling I/O; removing this helper would
+> render the whole TPH userspace control feature unusable for existing
+> target workloads.
+> 
+> Therefore, I believe it is appropriate to support it.
 
-rust: leds: add multicolor classdev abstractions
+The citation is only describing that vfio should provide a way to
+program the steering tags.  That's not the issue I'm raising.
 
-Implement the abstractions needed for multicolor led class devices,
-including MultiColor, MultiColorSubLed, MultiColorDevice, and build_multico=
-lor.
+The proposed uAPI has morphed from one where the user provides CPU IDs,
+which are translated to STs and written to the device or returned to
+support device specific implementations, to one where raw STs are used.
 
-> diff --git a/rust/kernel/led/multicolor.rs b/rust/kernel/led/multicolor.rs
-> new file mode 100644
-> index 0000000000000..973c18c5566d1
-> --- /dev/null
-> +++ b/rust/kernel/led/multicolor.rs
+I think this was a result of my question of how this interface
+integrates with the concurrently proposed interface where drivers can
+expose TPH values for a dmabuf.  Suddenly the user is managing raw TPH
+values and what used to be an integrated feature of performing CPU ID
+to ST value, with necessary ugliness of exposing that raw ST value for
+device specific support, becomes largely a standalone translation
+interface, which might be more generically implemented elsewhere in the
+kernel.  It largely loses any direct association to the vfio aspect of
+the device.
 
-[ ... ]
+The interface now looks more like one where raw STs are provided to
+vfio-pci through various sources.  It then becomes unclear why vfio-pci
+itself is necessarily one of those sources.
 
-> +#[repr(C)]
-> +#[derive(Copy, Clone, Debug)]
-> +#[non_exhaustive]
-> +pub struct MultiColorSubLed {
-> +    /// the color of the sub led
-> +    pub color: Color,
-> +    /// the brightness of the sub led.
-> +    ///
-> +    /// The value will be automatically calculated.
-> +    pub brightness: u32,
-> +    /// the intensity of the sub led.
-> +    pub intensity: u32,
+> > The host-only opt-in issue above also doesn't appear to be addressed or
+> > rebutted.  
+> 
+> enable_unsafe_tph host opt-in already fully gates all new TPH ABI:
+> TPH cap + feature ioctl are completely hidden from userspace when off,
+> no userspace opt-in needed.
 
-[Severity: High]
-Will exposing brightness and intensity as plain u32 fields violate Rust's
-aliasing rules?
+I'd argue that opt-in on the host doesn't mean we should ignore the ABI
+change to userspace.  There's an entire virtualization stack that needs
+to be built on this change, intercepting writes to the TPH control
+register, MSI-X vectors, and capability ST entries.  The host opt-in is
+a global switch, it might enable your userspace driver, but it might
+also break QEMU, where writes to the TPH capability had been dropped
+previously.  A per instance opt-in, gated by the host opt-in, allows
+seamless integration of the new feature.
 
-When a driver calls subleds() to get a &[MultiColorSubLed], it receives an
-immutable reference which guarantees the underlying memory won't be modified
-concurrently. However, the C LED subsystem can mutate these fields
-concurrently (for instance, via multi_intensity_store() or
-led_mc_calc_color_components()). Should these fields be wrapped in Opaque<u=
-32>
-or UnsafeCell<u32> to allow safe concurrent modifications?
+> > Typically v15 would be an indication that a series is coming to
+> > maturity, but with the quick cadence and lack of discussion throughout
+> > this development, I'm not even sure we've arrived at a proper uAPI for
+> > this feature.  Thanks,  
+> 
+> Sorry for sending frequent quick updates without leaving adequate window
+> for list review.
+> 
+> This feature originates from an earlier ARM prototype posted last year for
+> DPDK TPH acceleration scenarios. Based on that foundational exploration,
+> this series has refined the interface through continuous upstream review
+> feedback.
+> 
+> All recent rapid iterations are code improvements and review fixes.
 
-> +    /// arbitrary data for the driver to store.
-> +    pub channel: u32,
-> +}
+The issue is that feedback like above is represented as if it's been
+addressed and changelogs are scant on details, requiring significant,
+repeated effort to understand the actual changes between iterations.
+The issues raised and interface design require discussion, not simply
+assertions that it's correct and addressed.  Thanks,
 
-[ ... ]
-
-> +impl<'a, S: DeviceBuilderState> DeviceBuilder<'a, S> {
-> +    /// Registers a new [`MulticolorDevice`].
-> +    pub fn build_multicolor<'bound: 'a, T: LedOps<Mode =3D MultiColor> +=
- 'bound>(
-> +        self,
-> +        parent: &'bound T::Bus,
-> +        ops: impl PinInit<T, Error> + 'a,
-> +        subleds: &'a [MultiColorSubLed],
-> +    ) -> impl PinInit<MultiColorDevice<'bound, T>, Error> + 'a {
-
-[Severity: High]
-Could the returned initialization type fail to capture the 'a lifetime of
-the name string in DeviceBuilder?
-
-Because MultiColorDevice<'bound, T> does not capture 'a, safe code might
-pass a short-lived stack-allocated CString to the builder and drop it after
-registration, while the registered MultiColorDevice remains alive.
-
-> +        const_assert!(T::MAX_BRIGHTNESS <=3D i32::MAX.unsigned_abs() || =
-!T::HAS_BRIGHTNESS_GET);
-> +
-> +        try_pin_init!(MultiColorDevice {
-> +            ops <- ops,
-> +            classdev <- Opaque::try_ffi_init(|ptr: *mut bindings::led_cl=
-assdev_mc| {
-
-[ ... ]
-
-> +                let mut subleds_vec =3D KVec::new();
-> +                subleds_vec.extend_from_slice(subleds, GFP_KERNEL)?;
-> +                let (subled_info, num_colors, capacity) =3D subleds_vec.=
-into_raw_parts();
-> +                debug_assert_eq!(num_colors, capacity);
-
-[Severity: High]
-Can discarding the true capacity from into_raw_parts() lead to undefined
-behavior during deallocation?
-
-When extend_from_slice() allocates the underlying buffer, the allocator may
-reserve a larger capacity than exactly num_colors. If the true capacity is
-discarded, later reconstructing the vector with capacity set to num_colors
-violates the from_raw_parts() safety contract and could pass the wrong
-layout to the deallocator.
-
-> +
-> +                let subled_guard =3D ScopeGuard::new(|| {
-> +                    // SAFETY: `subled_info` is guaranteed to be a valid=
- array pointer to
-> +                    // `mc_subled` with the length and capacity of `num_=
-colors`.
-> +                    drop(unsafe { KVec::from_raw_parts(subled_info, num_=
-colors, num_colors) });
-> +                });
-
-[ ... ]
-
-> +                unsafe {
-> +                    ptr.write(bindings::led_classdev_mc {
-> +                        led_cdev: bindings::led_classdev {
-> +                            brightness_set: (!T::BLOCKING)
-> +                                .then_some(Adapter::<T>::brightness_set_=
-callback),
-> +                            brightness_set_blocking: T::BLOCKING
-> +                                .then_some(Adapter::<T>::brightness_set_=
-blocking_callback),
-> +                            brightness_get: T::HAS_BRIGHTNESS_GET
-> +                                .then_some(Adapter::<T>::brightness_get_=
-callback),
-> +                            blink_set: T::HAS_BLINK_SET
-> +                                .then_some(Adapter::<T>::blink_set_callb=
-ack),
-> +                            max_brightness: T::MAX_BRIGHTNESS,
-> +                            brightness: self.initial_brightness,
-> +                            color: self.color as u32,
-> +                            name: self.name.map_or(core::ptr::null(), CS=
-trExt::as_char_ptr),
-
-[Severity: High]
-Might assigning self.name directly to the C struct without copying result in
-a use-after-free?
-
-If the DeviceBuilder was provided a short-lived string, this pointer will
-become dangling once the string is dropped, as mentioned above. Should the =
-API
-require &'static CStr or duplicate the string to avoid a use-after-free?
-
-> +                            ..bindings::led_classdev::default()
-> +                        },
-
-[ ... ]
-
-> +    /// Returns the subleds passed to [`Device::new_multicolor`].
-> +    #[inline]
-> +    pub fn subleds(&self) -> &[MultiColorSubLed] {
-
-[Severity: High]
-Is it safe to return a shared reference &[MultiColorSubLed] when C code may
-concurrently mutate fields?
-
-Because MultiColorDevice is Sync, drivers might retain this slice and
-concurrently read the brightness and intensity fields. Since they are plain
-u32 fields, this could introduce data races.
-
-> +        // SAFETY: The existence of `self` guarantees that `self.classde=
-v.get()` is a pointer to a
-> +        // valid `led_classdev_mc`.
-> +        let raw =3D unsafe { &*self.classdev.get() };
-
-[ ... ]
-
-> +#[pinned_drop]
-> +impl<'bound, T: LedOps<Mode =3D MultiColor> + 'bound> PinnedDrop for Mul=
-tiColorDevice<'bound, T> {
-> +    fn drop(self: Pin<&mut Self>) {
-> +        let raw =3D self.classdev.get();
-
-[ ... ]
-
-> +        // SAFETY: `subled_info` is guaranteed to be a valid array point=
-er to `mc_subled` with the
-> +        // length and capacity of `led_cdev.num_colors`. See `led::Multi=
-colorDevice::new`.
-> +        drop(unsafe {
-> +            KVec::from_raw_parts(
-> +                led_cdev.subled_info,
-> +                led_cdev.num_colors as usize,
-> +                led_cdev.num_colors as usize,
-> +            )
-> +        });
-> +    }
-> +}
-
-[Severity: High]
-Does this KVec reconstruction cause undefined behavior upon deallocation?
-
-Similar to the ScopeGuard above, passing num_colors as the capacity
-instead of the original capacity violates the from_raw_parts() contract.
-Additionally, reconstructing using KVec::from_raw_parts with
-bindings::mc_subled instead of the original MultiColorSubLed type might
-violate allocator provenance rules.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260603-rust_leds-=
-v19-0-2a71085deae3@posteo.de?part=3D3
+Alex
