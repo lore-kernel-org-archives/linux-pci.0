@@ -1,50 +1,40 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from canpmsgout08.his.huawei.com (canpmsgout08.his.huawei.com [113.46.200.223])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02DB2556E;
-	Wed,  3 Jun 2026 00:11:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7439923C4FA;
+	Wed,  3 Jun 2026 00:34:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780445476; cv=none; b=LO4dWdMez/wOZkXqszV0RJlUwLHAOA2y1IIoh6UoJD9fvD3pveoh5d93eAiZky+ZXiujGVefJfVeUlC7CMqm5kSfnMWp4ilsAgj4h9I06I6m/cjVuoK6rb4jw77MZglENdw2NdECHcZyUPi6dtL/loDcMHtWQJqj3XnzxQ3rTMI=
+	t=1780446901; cv=none; b=ApvTfvH5vEuODmx0rQVM83ys9k1FwCbcC68vl0rjr61NX6oRpq65XH2oz6ICx2s2JJc5qxntxneYA33doKYuRBDB/TGoZfArHTgj4t+crCb4cICzwcB8RVXsIL83YTL7LOH1SvLi6uw+iWpq9UjihxRSZ8Z0XWLS+7gf0RATF6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780445476; c=relaxed/simple;
-	bh=3miLjCrBc1xIc3dtkAU18SFsgdmreVXrhMsqcFVtiwA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=n/dfnSq9YPrL+1Eb1uEsFYdqqsA0D2E4DO6F2EE3aZ9U04G/8dCZYAWyZE31am5rX0Fxi3uBOoqnlFvl1Et8G/zY6zCGh7ioGH6aaeSWEy/OfAnT8OhiZxePFCRyPfWBBj9FQZkfjRW11Fh1VpRNj+35AgSDPWhaJNRxHQHVSb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lOzGusJV; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1780446901; c=relaxed/simple;
+	bh=MpMy5Yp4Beb9pMOhlHv+mlf0JFPt14SWV8Lpr8c+tAo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=eob2u8IRKGGeCKg58f6gU4zruE9rBlzNGK3kEubXP6THyWt2gkpczdtzzsJOaVMKsqsDtd13PP2UEL3lSVeLymOOwfEW/nrkpR/NqK7UAP5xH1H3tFwhTpkNPvcsc7arSzVL9218Sb7VkX8KCHQfHdlcrc+85UTnwg7yJcLWass=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=Eo9xx0Kj; arc=none smtp.client-ip=113.46.200.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lOzGusJV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1780445474; x=1811981474;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=3miLjCrBc1xIc3dtkAU18SFsgdmreVXrhMsqcFVtiwA=;
-  b=lOzGusJVPONsP5br/8sKV4CwNCDX7tJE52HWRXpPAN2vRtNYGWSrJ2wW
-   Dlq4svEigbsKF9pA0Hi9A9nvmWvsu+2rqZjSk7qGUcuU8HOhE1O6Kb1fc
-   TT1SNWVJFTjflB0khojKgfvzoxwbGzN619OKOse2oWOVSk/yssjeYPNEH
-   rgIQiuYzTOEBqmawN1agMhKfuCPmS5gJQFTHEiGuXtxjY2dbvPbsOXfF/
-   zpdji2OEdJ/TP+6puTVqU20Bst5HrVSyPSVygv3HJgtX2j+JzJbs2Tub6
-   EI7MZvUMiXHfDi0irW7Y/SzjXJNUfvwB1sNVBcFGv2R4cDO6uqi99Pk0I
-   g==;
-X-CSE-ConnectionGUID: fyyXzCfhTxuCOQopDurpqA==
-X-CSE-MsgGUID: zKoj1WnCRdCntErVSbkXqw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11805"; a="81274414"
-X-IronPort-AV: E=Sophos;i="6.24,184,1774335600"; 
-   d="scan'208";a="81274414"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 17:11:13 -0700
-X-CSE-ConnectionGUID: GtutgX/6TIuJ5yXSWZwa4g==
-X-CSE-MsgGUID: Y6a+WXQSQwGf+qTjqv/tyA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,184,1774335600"; 
-   d="scan'208";a="244143562"
-Received: from rchatre-mobl4.amr.corp.intel.com (HELO [10.125.108.56]) ([10.125.108.56])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2026 17:11:13 -0700
-Message-ID: <396e18d5-6fa7-4abc-9c8b-ab5e8b260345@intel.com>
-Date: Tue, 2 Jun 2026 17:11:11 -0700
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="Eo9xx0Kj"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=fpUsxheRKc4Ux8F3sC8Xw6FZAYMrQ57a984N8NIBuRU=;
+	b=Eo9xx0KjbITqbYhqCNb0wBVoHK3175c47KX9pLQzKq0z8TdB8dPSObc5EMjX7CyqmoIYIjrQ5
+	AMXh+2QYk50YPeFyOHPpxB8p0/tXX0nhjsINhE1YVwCBoPddYVuxpYE4HAErZhUVkPI9WDlnSO8
+	N6bRRYcXg9H7+I3cEb757JA=
+Received: from mail.maildlp.com (unknown [172.19.163.200])
+	by canpmsgout08.his.huawei.com (SkyGuard) with ESMTPS id 4gVT6H73gQzmV7S;
+	Wed,  3 Jun 2026 08:27:03 +0800 (CST)
+Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id E8C1340563;
+	Wed,  3 Jun 2026 08:34:54 +0800 (CST)
+Received: from [10.67.121.161] (10.67.121.161) by
+ kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 3 Jun 2026 08:34:54 +0800
+Message-ID: <3f8d1722-6749-4f3a-b630-c96303cec284@huawei.com>
+Date: Wed, 3 Jun 2026 08:34:53 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,77 +42,127 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 9/9] Documentation/ABI: Document CXL memdev cxl_reset
-To: Srirangan Madhavan <smadhavan@nvidia.com>, linux-cxl@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: vsethi@nvidia.com, alwilliamson@nvidia.com,
- Dan Williams <danwilliams@nvidia.com>,
- Sai Yashwanth Reddy Kancherla <skancherla@nvidia.com>,
- Vishal Aslot <vaslot@nvidia.com>, Manish Honap <mhonap@nvidia.com>,
- Jiandi An <jan@nvidia.com>, Richard Cheng <icheng@nvidia.com>,
- linux-tegra@vger.kernel.org
-References: <20260528083154.137979-1-smadhavan@nvidia.com>
- <20260528083154.137979-10-smadhavan@nvidia.com>
+Subject: Re: [PATCH v14 0/8] vfio/pci: Add PCIe TPH support
+To: Alex Williamson <alex@shazbot.org>
+CC: <jgg@ziepe.ca>, <wathsala.vithanage@arm.com>, <helgaas@kernel.org>,
+	<wei.huang2@amd.com>, <zhipingz@meta.com>, <wangzhou1@hisilicon.com>,
+	<wangyushan12@huawei.com>, <liuyonglong@huawei.com>, <kvm@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+References: <20260528124649.14732-1-fengchengwen@huawei.com>
+ <20260601095840.3aaaa508@shazbot.org>
+ <59c82855-59a7-4f0e-b534-d35535d04b93@huawei.com>
+ <20260602170847.75bd159d@shazbot.org>
 Content-Language: en-US
-From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20260528083154.137979-10-smadhavan@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
+From: fengchengwen <fengchengwen@huawei.com>
+In-Reply-To: <20260602170847.75bd159d@shazbot.org>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk500009.china.huawei.com (7.202.194.94)
 
-
-
-On 5/28/26 1:31 AM, Srirangan Madhavan wrote:
-> Document the write-only cxl_reset attribute under CXL memdev devices.
-> The attribute is visible only when the memdev's PCI parent advertises
-> CXL Reset capability, and writing a true boolean value requests the CXL
-> reset flow.
+On 6/3/2026 7:08 AM, Alex Williamson wrote:
+> On Tue, 2 Jun 2026 22:46:13 +0800
+> fengchengwen <fengchengwen@huawei.com> wrote:
+>> On 6/1/2026 11:58 PM, Alex Williamson wrote:
+>>>
+>>>
+>>>  - Patch 2/ sets tph_cap to zero if TPH cannot be enabled, but this is
+>>>    never propagated to vfio-pci to drop the TPH capability from the
+>>>    capability chain.
+>>>
+>>>  - Patch 3/ exposing the enum to callers is a bit ugly, maybe we should
+>>>    retain pci_enable_tph() as the "auto" wrapper, resulting in no
+>>>    change to existing users, and add _ext and _std wrappers.
+>>>
+>>>  - Patch 4/ same, multiple wrappers keeps the "auto" api cleaner.  Also
+>>>    note that auto is broken before TPH is enabled when tph_req_type is
+>>>    zero.
+>>>
+>>>  - Patch 6/:
+>>>    - mutex_init/destroy belong in vfio_pci_core_init_dev/release_dev()
+>>>    - Re-order to avoid forward declarations.
+>>>    - vfio_check_feature() does not require declaring PROBE as a
+>>>      supported op.
+>>>    - pcie_tph_set_st_entry() can write to MMIO space without testing
+>>>      for or enabling device memory or power state.
+>>>    - tph_init allocates shadow table regardless of opt-in for tph
+>>>      support.
+>>>    - Redundant tests for count/index in feature function.
+>>>    - Duplicate memcpy/kfree in feature function.
+>>>
+>>>  - Patch 7/:
+>>>    - Unclear why it's vfio-pci's responsibility to provide this
+>>>      translation interface.
+>>>    - PROBE is unnecessary for vfio_check_feature().
+>>>    - Array size conversion is strange.
+>>>
+>>>  - Patch 8/:
+>>>    - default config read handles emulated bits.  Clear the bit if
+>>>      necessary in vconfig, use p_setd() to mark PCI_TPH_CAP_EXT_TPH
+>>>      virtualized, read-only.
+>>>    - Follow examples like vfio_pm_config_write, vfio_vpd_config_write,
+>>>      vfio_exp_config_write, etc.  Set the virtualized and writable
+>>>      bits, perform default config write, evaluate if anything was
+>>>      enabled, effect the change in hardware via kernel APIs.
+>>>    - pcie_disable_tph() happens after the restore state is recorded.
+>>>    - TPH capability becomes read/write, an ABI change to the user, with
+>>>      only a host-based opt-in.  Seems like the userspace driver also
+>>>      needs to opt-in to the ABI change.
+>>>    - Memory enable not assured for pcie_tph_set_st_entry().
+>>>    - Sashiko notes there are existing hazards in the tph_enabled
+>>>      storage unit relative to multiple bitfields that can be updated
+>>>      concurrently.  The problem is worse with this exposed through
+>>>      vfio-pci.  
+>>
+>> Thanks for review, all your comments are resolved in v15:
 > 
-> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
-> ---
->  Documentation/ABI/testing/sysfs-bus-cxl | 28 +++++++++++++++++++++++++
->  1 file changed, 28 insertions(+)
+> Not everything.  At a glance I can see that v15 is still pushing for
+> vfio-pci to provide the interface to translate CPU IDs to steering
+> tags, despite my push back above that it doesn't seem within vfio-pci's
+> scope to provide a CPU ID -> ST interface.
+
+This translation helper is required to handle varied TPH configurations,
+including cases where ST entries live inside device private registers
+instead of MSI-X or TPH capability space.
+
+Prior discussion with Jason (
+ref: https://lore.kernel.org/all/20260414151125.GF2577880@ziepe.ca/)
+indicated VFIO-PCI is the correct component for per-device TPH
+implementation.
+
+Production high-speed NICs from multiple vendors rely on this CPU-to-ST
+mapping logic for DPDK optimized polling I/O; removing this helper would
+render the whole TPH userspace control feature unusable for existing
+target workloads.
+
+Therefore, I believe it is appropriate to support it.
+
 > 
-> diff --git a/Documentation/ABI/testing/sysfs-bus-cxl b/Documentation/ABI/testing/sysfs-bus-cxl
-> index 16a9b3d2e2c0..d5d055e7a756 100644
-> --- a/Documentation/ABI/testing/sysfs-bus-cxl
-> +++ b/Documentation/ABI/testing/sysfs-bus-cxl
-> @@ -110,6 +110,34 @@ Description:
->  		affinity for this device.
->  
->  
-> +What:		/sys/bus/cxl/devices/memX/cxl_reset
-> +Date:		May, 2026
-> +KernelVersion:	v7.1
-> +Contact:	linux-cxl@vger.kernel.org
-> +Description:
-> +		(WO) Write a boolean true value, for example "1" or "true", to
-> +		request CXL Reset for this memory device. The driver performs
-> +		CXL-specific reset coordination for the target memdev before
-> +		issuing reset, including any required preparation for affected
-> +		CXL memory regions and related CXL memory devices.
-> +
-> +		CXL Reset control is Function 0 scoped. A write to this
-> +		attribute resets the CXL.cache and CXL.mem state for all
-> +		CXL.cache or CXL.mem functions in the same CXL device reset
-> +		scope, not only the memX device associated with this file.
-> +
-> +		The optional CXL Reset Memory Clear operation is not exposed by
-> +		this attribute.
-> +
-> +		A reset fails with -EBUSY if any affected CXL region is
-> +		online as System RAM or has an active region driver bound.
-> +		Userspace must first quiesce and release affected CXL memory
-> +		mappings.
-> +
-> +		If this file is not present, then CXL Reset is not supported
-> +		for the device.
+> The host-only opt-in issue above also doesn't appear to be addressed or
+> rebutted.
 
-Need to mention this is only shows up for type2 devices. Also missing information about decoder and dvsec range restore.
+enable_unsafe_tph host opt-in already fully gates all new TPH ABI:
+TPH cap + feature ioctl are completely hidden from userspace when off,
+no userspace opt-in needed.
 
+> 
+> Typically v15 would be an indication that a series is coming to
+> maturity, but with the quick cadence and lack of discussion throughout
+> this development, I'm not even sure we've arrived at a proper uAPI for
+> this feature.  Thanks,
 
-> +
-> +
->  What:		/sys/bus/cxl/devices/memX/security/state
->  Date:		June, 2023
->  KernelVersion:	v6.5
+Sorry for sending frequent quick updates without leaving adequate window
+for list review.
+
+This feature originates from an earlier ARM prototype posted last year for
+DPDK TPH acceleration scenarios. Based on that foundational exploration,
+this series has refined the interface through continuous upstream review
+feedback.
+
+All recent rapid iterations are code improvements and review fixes.
+
+Thanks
+
+> 
+> Alex
 
