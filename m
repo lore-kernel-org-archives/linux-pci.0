@@ -1,143 +1,141 @@
-Received: from BYAPR05CU005.outbound.protection.outlook.com (mail-westusazon11010058.outbound.protection.outlook.com [52.101.85.58])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6791A38425A;
-	Wed,  3 Jun 2026 09:17:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.85.58
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780478245; cv=fail; b=Dy3RpAWsXKG3dyuk3RCRfxDd48Z2zkd35al/D9STGmJhp5L1WDAs2SHhrKvVOjnJERwi8PR9SKBDdVbNWpS7INHT4ENg/2ZIBbQQEnySttpiS+gcTPzt/ro0TTrihbhZ1XK/3sYS0oMDTi7GurrQq7nSNbYDHK6l+godyis8gig=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780478245; c=relaxed/simple;
-	bh=fdjG1HhRR9oIKOnd9ZuPfEXkeH2psY964RFoI3NuR+Y=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=U7WnSVvOIorI+19Sph/af7Q/kvSM0EA1Dn6MOOYvJR7ldG/s7tDj1uVNufJg1gKkR3+M+VMnmuMpRXiYbmtMqBavqboof6BEOWR4LDTieYlhmHd6Xq2ZkUAs3X2OegJCzFbB7cGGb2NKc6ayvmZSyDO88k7pupSmmAnym9lz4Qg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=X0dnfbOh; arc=fail smtp.client-ip=52.101.85.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC0B33016E3
+	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2026 09:24:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780478673; cv=none; b=Li8/56fCLLL0ZLeDt8JJfXP/Owo6NxHtNfUj3fJtK31cEfzHHM3H4qGPRzeOJ76de/Pd0oVqnVsm7plk3Ok2IWGyzH34xBTdcXnTXgZn2pM8DPsXtAGT8272Dzu+qIhZ6LU4FLf7nUrJo9L1Gy2QaGCzql/fAdnJQuWkcwOOR4Y=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780478673; c=relaxed/simple;
+	bh=tQj2iyJK/ty6qWuD2nWo27J7s0BD+yJmE/SnLkDfTOw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fpf4tqP66/Z6mMjTk/4nAxB4CRJ8NNO2uliqpd1B4v9ufBCd/tWvEpwAOFZS6bZSji3rtkD1UnDhU45zpfFVcozxrJNQk/kB6D0rXTDlTRao47/ZM963GPmKKlNM5QMWbJNWVIrrWwpS+kvOciBLaSNfaqsXu2r+eFsa40ujnbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GsQBXovb; arc=none smtp.client-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="X0dnfbOh"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xt4OSoFXPZx+2IhfnsX/afzhlhBNuNNbrYzHyrM4VFM3Vor6BDc2h7FKBWt4EeEalc3HMnl0vaN/mAuaaQGjHnXsPKeZi7wmeCTX20AdJVrV6qtjGfGhbM/RQOc/CzL8J80btEeFlkrHSYR9nM0sFO6aeLYI3cfItM2x2PtoLxUs/Jl1kXojsK1q03ch03dATiu6F5ObZbpEK0dMgn9O3RIp3dhWXXli1RIizLKvD8rL0Osrce8f3WZlf+tJgMAfGOQy5C5s4v55wrVQqEy12U2/tibhg1lBg5arozERtzoYMv1cUTXCVPU/CuoyWMAqBYHWS3HWEXMZO0mZBtcJcg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fdjG1HhRR9oIKOnd9ZuPfEXkeH2psY964RFoI3NuR+Y=;
- b=Ie3qVMmKoYxC5P5gQ4ZCNf9l1h9CRzRt/sqqgUa6RYuRVvMUVbKc1i8wOu7s7h1goef2Bytq0G8RjOfBeqcd0k19WXFKReWYHwbIS4dcA210YR3juKoh4L0NiJfHG7ijn24nyU07Y6bFoZnt8XnItfdeMonDZCzIaaJynoWF70bmCHkU7M4JKSyqdkKVnfrzo6LofowrA7V/CrK9hG2P9KZdEnPnFluJhS+SnkAp/xSLzESiF203HOY9bt9mw93xU0eDpoTNE2IR4Ho+09F8rAA1QKLDhh+exVnAKXzm/7rXorwJMMFPLRePai0KuanpGK8i/UNmp8xUdFAg4gToaw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fdjG1HhRR9oIKOnd9ZuPfEXkeH2psY964RFoI3NuR+Y=;
- b=X0dnfbOhvBXkuWpPn32HpsoGF0quPMYHMiofdCUiKvkdd5EEFKELPv8poFxjXhe2W2JqfJexX4n633ZjbdY2rctu6DddM335QDwfm46ret0Ebt2LPbX4ULjlYc0JLo8zsa02VuDpejaP4AJM8qJ+YaSGERak26NYXnHFm6V2zuHch+E8gIrF1HPZn/rr2hQcSU4pr5ZjMDfV4ricj4WP+SFacwVCsabkKnqK9puLgmM5UwujFyU+WEVrUk79b54pnTwus/GjAjVMcPSWOBACMH1sbaBpON0mt4in08nXhYVAaQHsbP5trtbeSzc05rolbrsMitkmolajGok2KaMwqQ==
-Received: from SAVPR12MB999121.namprd12.prod.outlook.com
- (2603:10b6:806:4e7::18) by LV2PR12MB6016.namprd12.prod.outlook.com
- (2603:10b6:408:14e::5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.16; Wed, 3 Jun 2026
- 09:17:17 +0000
-Received: from SAVPR12MB999121.namprd12.prod.outlook.com
- ([fe80::93ef:92fe:74d1:380f]) by SAVPR12MB999121.namprd12.prod.outlook.com
- ([fe80::93ef:92fe:74d1:380f%6]) with mapi id 15.20.9913.009; Wed, 3 Jun 2026
- 09:17:15 +0000
-From: Ankit Agrawal <ankita@nvidia.com>
-To: =?iso-8859-1?Q?C=E9dric_Le_Goater?= <clg@redhat.com>, "alex@shazbot.org"
-	<alex@shazbot.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
-CC: "jgg@ziepe.ca" <jgg@ziepe.ca>, Yishai Hadas <yishaih@nvidia.com>, Shameer
- Kolothum Thodi <skolothumtho@nvidia.com>, "kevin.tian@intel.com"
-	<kevin.tian@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v8 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU readiness
- check via CXL DVSEC
-Thread-Topic: [PATCH v8 1/1] vfio/nvgrace-gpu: Add Blackwell-Next GPU
- readiness check via CXL DVSEC
-Thread-Index: AQHc8llUjn8y6mjsCU2e97g2INaIobYsfiIAgAAKCxo=
-Date: Wed, 3 Jun 2026 09:17:15 +0000
-Message-ID:
- <SAVPR12MB999121C53E93D42F89C39C8949B0132@SAVPR12MB999121.namprd12.prod.outlook.com>
-References: <20260602063015.3915-1-ankita@nvidia.com>
- <ad24ef7e-9e2c-42af-b2c7-8b72031ebf0f@redhat.com>
-In-Reply-To: <ad24ef7e-9e2c-42af-b2c7-8b72031ebf0f@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SAVPR12MB999121:EE_|LV2PR12MB6016:EE_
-x-ms-office365-filtering-correlation-id: ec5cc789-941a-4eac-87ee-08dec150e77d
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|1800799024|366016|56012099006|4143699003|3023799007|11063799006|22082099003|18002099003|38070700021;
-x-microsoft-antispam-message-info:
- 7mAnciRAwFzdTTpmS/XvBYAPnoA3xiQwR8QlL08UsbAIAm8G/qlEBncNJA8IFmymh3CcJzFQ07z/ohy6+VMzF+nS/TFYVNHIAMTo8PIkZaiespqTyU1f1vN+W219SB8AuYk2UKkJVFU0BpgzTEr0XI7nfFYvDDbhXnBbq1SkDxQENrWLAHhhyTIOG39vrYaRkeo1XM7nJAfN4hTCChSdzRbh1p+u9VYjdkvLgdj5ecvPGtRU4betd4pQTBSQZcLg+hzc+5lSw0JHLWJiQ1yAPnNQITPkghPo9429MDnYDRpj+dty5VGzgmBm0W4oeFFPxvXOn/Isvoj6LBLLH3zxHcnkLpr8+1P61Vm6g9P+TEAQ+KQFMWW3tYR3Lxt2YDq6WdZ8yp7Rj0CVFvIo1CFYqadUp8NqJiEatOvsCxaK23eaN6IL8A9oQkm1E5xEFo1UOItlLX67YJchwnT+vHB8ATVBfBxve2Jq3JQ9Cn9AD+D6ePbK6wYRaD3+Vu5h5yVRbue7fsnU94akejnYCXNPJAu/G8juMJibhumcqMWSNwqRAYORFBPKn8PhZYrTbit+a3NhIZau0xqjUXm3QZcTM8bSMRK8pLvJEPwd2frXHxM0y1CXlJ0G7PVkCN+RUTakVmaMldrXBftj5jpGnHXGosf0oNN6yxJQgYB0kogcF/3YQOzy4QF10Y4lhVq0iufA5CAUi6Rux18WQjaNfEmiIDG1fjZbMPYbvyGq1xWsXmpcSSj2mFzs1A09ITjV+3nd
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SAVPR12MB999121.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(56012099006)(4143699003)(3023799007)(11063799006)(22082099003)(18002099003)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?5bzRtMJfFmIVYFRxbt2p1cXj8x5a5cKYbjiiO8vQ8W9uceZsnIm6laY1yP?=
- =?iso-8859-1?Q?YQcDfrgtMseWjjynBON0IDX5WbDMKhePAfgnsBDKpj5W86r3OGpa7tOLet?=
- =?iso-8859-1?Q?mGLstYwwITTHzg7iwEvcTdG27tPmD07G4frZuzMWGAD3G1BpF988KjbPoe?=
- =?iso-8859-1?Q?+sFUsz5lu4Zy3J7b0ntqmigKlfkUTLLIglXmG4VhPPm2N4XOo9BzZJAD9t?=
- =?iso-8859-1?Q?AGhlDF2w8xG6Rr5OWso+TkIYwp5+cEZqT8kbungYK7QSMov4VCIT5DqBoP?=
- =?iso-8859-1?Q?0JjAIlQBODedJ5gr/oYLSSGIOvqIhmgkhK4kUae+OKBrPuhicMSf/7Jjjz?=
- =?iso-8859-1?Q?uF4BsnIiuMWX9PrH5zTi26/wZ8P+Dupq9/Bp6LdLpYsMJqqNuYBW5ekTEz?=
- =?iso-8859-1?Q?oNUb46m6ymhhTObF74rb2FngOPYrqlvbEtHbwXUuXOYuPmGNL1prphPhMA?=
- =?iso-8859-1?Q?bpt8zyB2eceovl1AVSIy9jQRgSP7P/Q5PThbfuYvsA1l6zEqviPDCXRUGF?=
- =?iso-8859-1?Q?r5rsR8wldKdYiKsWqbbXezX9/nxvK5mi5BfpVlZp+602nmVSD946g85GTW?=
- =?iso-8859-1?Q?APDpG37hG3J8ZmNu/RehiCgA7a27n3EDjFAnv5OsPqcFhaJOIRLO2QN6E1?=
- =?iso-8859-1?Q?Hhm+mRU5soM2X9W7aIXcPYnJwGgJEpBA7GnUGqP3cGlu3ylXYjQ98NVPJX?=
- =?iso-8859-1?Q?jfxZoNGSjSLuZtnNuWuSi8w4UyzYoIXg8c95jU+FScCLTcWD4VKRXaQK0p?=
- =?iso-8859-1?Q?m2zq0PFDkq5xMEPw6p2pM7imCsQyFQJtxNzWPYeGbv3MQC5ctIWdWqCjS2?=
- =?iso-8859-1?Q?VZaNIhSPt5pu2zibZIhJzBK9sIK2yne8JEfbidupDFnmktR8tTG19XIkxY?=
- =?iso-8859-1?Q?DxkeLZ/Jzbb1RNPZY/xqx65gUFZDf2VlvUa77XfISaiYVfTGAE1+JscR0e?=
- =?iso-8859-1?Q?luXnyZlUsp65zUEJXPriHonerrbFbnuFq1BCmZ5UBRZmmZ6Q/W8RJuE+Fx?=
- =?iso-8859-1?Q?1mk4pJr9krZoMoaK8E7UL4oIUfCITDkOmSwtY8dMrMkYOYp+ikPzGFwtHJ?=
- =?iso-8859-1?Q?UUJxhw99m9JSh/CCdKFP6stxMzboxhDLAGTtP1XqR0eXNL3Yao2xZnvT3Q?=
- =?iso-8859-1?Q?cRhdUDTKJJPZc4mCm7eNczVtx9b/UaHAtvub6uwZzIYQz5Xd5NlBnm53E3?=
- =?iso-8859-1?Q?R85UJQCVNpwyphYhDccBU+i0Wx1EtzzVnHxEYilAl+7cp6/qRaeCdfo47m?=
- =?iso-8859-1?Q?lJPt5zL3EIg6plhMCTVQYgmm1edw8CaHfb36mhbFd0ZBRpAuICQUdg10Y6?=
- =?iso-8859-1?Q?VxsUYWsRIrsjDWf1RvT58MsTGDspNaeuypk2w5FrgXeSlR+z/JhMrlqke5?=
- =?iso-8859-1?Q?q2ScyIWtuI1npFhZZ/GhokwKhspwf4U5AijHXri8M2/8pygA99mHUsAu42?=
- =?iso-8859-1?Q?SlGjaJq7UcU10I8rX64uozibU5MwnP+GzNPOfTx+5jHF07NcYtr0Yf4Gmu?=
- =?iso-8859-1?Q?uAnBMo7ApjFe2EQFVZuUzedA4jmnrcupNz+VPOyo/YdklRsUEMH4WcjaaL?=
- =?iso-8859-1?Q?lvPww5aO1d4yQKlq4R+rUhURGtWGv6REfWGxTXT1PmgqGxiMTnvQGKisW8?=
- =?iso-8859-1?Q?c6gOK3GLYNBBr04hf8SSti+kAc5+mSNORvTxbdiw7M+EpYC5UTVseh0bWa?=
- =?iso-8859-1?Q?OUcEWmEcOkl0uqvdY+OVZwEe9CiRHSeb42DnbLmFqROT8JtqWSrXd8y1dj?=
- =?iso-8859-1?Q?8TRaoeRQ3cR9/5THAh2CSzSP0mJ3YKTSuE/WoIH56fV3FK?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GsQBXovb"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-36d98b68d68so2370826a91.2
+        for <linux-pci@vger.kernel.org>; Wed, 03 Jun 2026 02:24:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780478672; x=1781083472; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+evDZWLT5KzG1ZaMkX3r55/gKlKfN0VfS6IPwHPUrVw=;
+        b=GsQBXovbGdARAw1pgk5FGKHkDydrlbGmG20n/+U2X+/Y8+dR4lbFZW7mVz/y6AuSWZ
+         GB2JqEomZ5yLcUy0prQcJJuvpOYC+ZNvuIsGXdtKglMYZA0urAW2SgVx1DZhkpmyF+Es
+         NCOsUw0cY2OCPHEN1PFvow8H5aSfghLPsBnv0yAuSi83roV0WKy/wakhEPQKzcgymCSK
+         fmKCWqX9DJTfHmHzbn5ctrPwHqynEqd1BgUXu1qqzpTwSX2kA3qCIiQnHP+kQeagw3Bi
+         nJoCJEbFgWb+WiCQoIzg5mO8ueusnyvuZrF2vlK0tc2cWwyyLXuvai/PSa9h/Pfsf9ZF
+         tC/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780478672; x=1781083472;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+evDZWLT5KzG1ZaMkX3r55/gKlKfN0VfS6IPwHPUrVw=;
+        b=nqS/zvP/uuG4Ig1vPExnGF1tZKqhsMolqwyJpL0H83qZKOBUiYMdYl4kZPVpzdwtFc
+         d95pW3Ix/Pj9s2v7F3QGOs7e1+dQL3slwuN9MO/mWgU+1iTTbxGdrZD6WGKDFil2aNKd
+         mRBRyQYHWwPUEvcm2vDNuI/3h+joItzY4ZdJsER3f4r21n4+AIYclN5k9XznVQZ4Vfk+
+         kq37XiSa6Q6fg1+hmWNbx+frkqC9gklwEwk4I0MJYlc5S7YQmET6Rc6zQOSjRWGseOCe
+         swTp5AwfZ4j+q6RC/CL7KALJxNOTGM6JleRV3RP3/dvgLMtbrRpcEW1piLNZkMQnBcV8
+         LB7g==
+X-Forwarded-Encrypted: i=1; AFNElJ9ObHUKVTWcubzjwYT4n78Ki7lBU9ZtFO4uaMXQeyr2KqZqMjZycQ2a40jKJqC3crgqhbaZMfleNSY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwPsUSJNvK0/8V8NgB20JHOby8FKi+gcS7nlEYtZJB1aOPTanP7
+	OuPSKAXuLgQVESm0nth1Q07ZklZvu4qRpLuTe1DilfQEQeJIWDPSlqny
+X-Gm-Gg: Acq92OEzY0ImIlDVoA1utCfunHENHUcrOlDCcjp4NU2TYXebo77wfhRUGu1XWvwDxzv
+	DELjvFOnzRykbpNmvnWjnYGgIQEbMlsksoa009m3QCQ3e+s6bMNeM+B+dX1Ixtc+XbMLjkl2i4V
+	mIUsqUFpVpzxP7nqNLPuSuDbY6pLdmRap0vTV9XV3e1CZVmzIlJ9ysg/8XRJlCdcIgu5LQw4V3B
+	pNGg7mknphV8SsmKzRaXIrBlbsBeYhGfvqH++n5nw2m6ckeTQYIvW9oKetiBLgMddPpP71Td0cK
+	NQJi8Lkwe9yxtXhKWh+BfPITYP3LTFm6gt63SLLVJCI9TrsMyoFuMreWPF72HbZIwYB0ER+jxsL
+	SsjduE2MKLSwmWZS29jLmmy6dj/nqHXufj55UjlFYOIVi6l8X53qexfUUMmK1sqsw0saSQH0NTR
+	x81vm5OMsdcw/QwT+DT9NfccmTwxkiSvu3jw==
+X-Received: by 2002:a17:90b:2d8d:b0:36b:e8b9:46a4 with SMTP id 98e67ed59e1d1-36e32285cf3mr2634132a91.14.1780478671804;
+        Wed, 03 Jun 2026 02:24:31 -0700 (PDT)
+Received: from localhost ([2001:19f0:8001:1b2d:5400:5ff:fefa:a95d])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36e0a276ef2sm2484283a91.11.2026.06.03.02.24.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Jun 2026 02:24:30 -0700 (PDT)
+Date: Wed, 3 Jun 2026 17:24:10 +0800
+From: Inochi Amaoto <inochiama@gmail.com>
+To: Rob Herring <robh@kernel.org>, Inochi Amaoto <inochiama@gmail.com>
+Cc: sashiko-reviews@lists.linux.dev, devicetree@vger.kernel.org, 
+	conor+dt@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 4/5] dt-bindings: PCI: spacemit: Introduce Spacemit K3
+ PCIe host controller
+Message-ID: <ah_yGaCYLnTL1nyW@inochi.infowork>
+References: <20260517014841.254085-5-inochiama@gmail.com>
+ <20260517024848.4F346C19425@smtp.kernel.org>
+ <aglF_fbl--RgS7gQ@inochi.infowork>
+ <20260601224224.GA116470-robh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SAVPR12MB999121.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ec5cc789-941a-4eac-87ee-08dec150e77d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Jun 2026 09:17:15.7875
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: YnuGgvTIcKmrJnEl6OpBViyRMTjdMCM0oB9v9zq7uK1f3cAyzNTkyn1j+1ctCTJqa6gaLh8OyVVCRBcR/GyUpg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB6016
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260601224224.GA116470-robh@kernel.org>
 
->> +=0A=
->>=A0=A0=A0=A0=A0=A0=A0 dev_set_drvdata(&pdev->dev, &nvdev->core_device);=
-=0A=
->>=A0=A0 =0A=
->>=A0=A0=A0=A0=A0=A0=A0 if (ops =3D=3D &nvgrace_gpu_pci_ops) {=0A=
->=0A=
-> Shouldn't an update be made to nvgrace_gpu_vfio_pci_table?=0A=
-=0A=
-Hi Cedric, we don't have a production device id finalized.=0A=
-=0A=
-So binding could be done via new_id / driver_override to exercise=0A=
-the new readiness path.=
+On Mon, Jun 01, 2026 at 05:42:24PM -0500, Rob Herring wrote:
+> On Sun, May 17, 2026 at 12:38:39PM +0800, Inochi Amaoto wrote:
+> > On Sun, May 17, 2026 at 02:48:47AM +0000, sashiko-bot@kernel.org wrote:
+> > > Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> > > - [Medium] The binding completely omits the `interrupts` and `interrupt-names` properties for the host controller.
+> > > - [Medium] The schema omits standard legacy INTx interrupt routing properties (`#interrupt-cells`, `interrupt-map`, `interrupt-map-mask`).
+> > > - [Low] The `phy-names` property lacks an `items` definition to restrict valid string values.
+> > > --
+> > > 
+> > > commit 7b8ba34456e71d6a9cf1028caa5504d64e8f58ba
+> > > Author: Inochi Amaoto <inochiama@gmail.com>
+> > > 
+> > > dt-bindings: PCI: spacemit: Introduce Spacemit K3 PCIe host controller
+> > > 
+> > > This commit adds device tree binding support for the PCIe controller on the
+> > > SpacemiT K3 SoC. The controller is based on the Synopsys DesignWare PCIe IP
+> > > with some extra link and reset state control.
+> > > 
+> > > > diff --git a/Documentation/devicetree/bindings/pci/spacemit,k3-pcie-host.yaml b/Documentation/devicetree/bindings/pci/spacemit,k3-pcie-host.yaml
+> > > > new file mode 100644
+> > > > index 0000000000000..46147a37a9ce6
+> > > > --- /dev/null
+> > > > +++ b/Documentation/devicetree/bindings/pci/spacemit,k3-pcie-host.yaml
+> > > [ ... ]
+> > > > +  reset-names:
+> > > > +    items:
+> > > > +      - const: dbi
+> > > > +      - const: mstr
+> > > > +      - const: slv
+> > > > +
+> > > > +  msi-parent: true
+> > > > +
+> > > 
+> > > The driver implementation reads and clears interrupt status registers for
+> > > host-level events, and references registers for receiving INTx events from
+> > > downstream devices.
+> > > 
+> > > Should this binding include interrupts and interrupt-names properties to
+> > > document the host's interrupt routing?
+> > > 
+> > > Additionally, should standard legacy INTx interrupt routing properties like
+> > > #interrupt-cells, interrupt-map, and interrupt-map-mask be included in the
+> > > schema and example to support downstream devices that do not use MSI?
+> > > 
+> > 
+> > The driver just does the interrupt cleanup as it requires, and no
+> > additional interrupt is needed
+> 
+> Unless there are no interrupts and only MSIs are supported, then you 
+> need to define 'interrupts' property at least. The common schema only 
+> defines all possible names, but not which ones are used and the order.
+> 
+> Rob
+
+Yes, currently there is no interrupts that should be enabled in Linux, 
+and only MSI is supported without INTx. So I think it is fine to removed
+the interrupt properity.
+
+Regards,
+Inochi
