@@ -1,192 +1,407 @@
-Received: from AS8PR04CU009.outbound.protection.outlook.com (mail-westeuropeazon11011041.outbound.protection.outlook.com [52.101.70.41])
+Received: from fhigh-a1-smtp.messagingengine.com (fhigh-a1-smtp.messagingengine.com [103.168.172.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9F503C1412;
-	Thu,  4 Jun 2026 19:48:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.70.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780602493; cv=fail; b=t2YAY51/0DzIrUtlZst3xJQOHqNuc4APr4IxKF5fyWrE8O0FisQZdSveHyDjr7FJ1ALj88Xqm6gT4Bgw2/FNAq3gY9As0Pp4rW4KUCnfaEhUTtBB1LZLR9JXnVXVVlYj1jlSdwPLAab10uT2f+/KV/bM+FLiMWlY8mhSsbHhdDs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780602493; c=relaxed/simple;
-	bh=E9aOvrE2MgHcZCLz1uriSlhxRr9M7llrYlxeEZfcl/U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=Z6LuR2JJJ+f1SunmTHLvtCNJ6DZRiGVeDwTMhmS4cGBYnMj0jC8pJSzdINnS8Ct/uf3jo34y4qVR4STBNgzVx4+pr61//C5u3pMqN4PRqz84AuiNsDx/1U6QhFFhIoSSb6sjNm0z3fFS3clP8sWmH6THURXB38yN7GULcX+wXq0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=fail (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=ROwa3+17 reason="signature verification failed"; arc=fail smtp.client-ip=52.101.70.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D6EC3C6A5C;
+	Thu,  4 Jun 2026 19:57:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.152
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780603046; cv=none; b=qnGhIGpuGzQ9fL86l6x8+pA7g1EaSp1mF4ZPCkh06PAL9j0ze8saspjBHQbIlzaEmucleUvDNTxvOag3yaQsnp60fVXB+14EP48DQMRUl/0caIqHGQ7koSGepioIXL8oA1PcNuz35DvFJdiXC+0w8MC0B4SFS0gvMa2g95CSgZE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780603046; c=relaxed/simple;
+	bh=1MdcKlqthG+hzs8PICe3pYtdd+ZxP43J4uLyODZiNfI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tNebNLS2VUOJarfxiEH97525MaZrurrB//rgcD+uzcB4p3rcDSzjzVyW7WZxDWBG5cdJusIkx35mhcUy8ktjvqbdBXMx4pacplCGJ5vP+/UOrkx00I89MqJ5dmme6rsfdM2N4j5qAen5+YH/h3jxkCwdeA1DVTAxpGgJWYP4WU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=XLCSQJqa; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fs2Coo/I; arc=none smtp.client-ip=103.168.172.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="ROwa3+17"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=bQPdLyMwhKP7RMnOa4fzRFAqmCNWJku+F2nhBNKiACEHBpsd6Jna/A6Q31nkQdgvY/psIGjoP0QwnBThTJ7BxZrMRqh8d4bSasCqQ3ExVUVymU/vXGdLQPTimw3D21qyplh5fOVSI5TSowFtjq5WMGfqLMiXvBeO+zhGccgBIqLRapvWiZEUGBCe2AzUkZjZrS9ylQauIM0smEhhkcvoF2XPjaI4vSzLPNnb/t8uK55NrGKIVhbBZA8flyctCxUOar4ljefg4F/dDZpql2EcemLQ0huOwvAByJBmz2WxrsRp0Y8coiK3d/YLnSubWrOdG1xDyJ01SR+/n6IoGkBqJg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qe9A82OanSxxz+T1BZKryjUD7OT29+LNwDHQTm47lzA=;
- b=Tfb3BPTzwz7W7TVEvhyXuApyBVLK+xo2zZSw4Pq3HmvUQuh4/NwEyo2Xk6RNOlVdaKqUMsr9f7PSTOy0ALttdCTM0THQgU8bt98Hxz223spmQPSOpxFqqfXKCYkyzzsmrGpHH8a7RChWlupEIldTj63e6HgYW0wyF5QOrL5SdTrvGVS1KbUlA8JJr8wmLBUnBrR1ISlN5ofJk2Q7vIVQPuW0LvhsMx96PvZOaYEEQlKjNronGNHCddX9eT3MaUipmstugReoOYWiGyq5IqMr4H2LlfGAQZnxjsMMlLmQAJoxnuRln/gT7s5caxzaC6NWOpavxSnnLwniuQe5PQK4YQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qe9A82OanSxxz+T1BZKryjUD7OT29+LNwDHQTm47lzA=;
- b=ROwa3+177x+vqFvbIYQSP92eOGsLnNnxCNweUP7AYqYk0TNfwvOQcYB8ak1WXfSwCEkgI1dWLp7dRPapjgo2A5+6/sFAbO81Jp9e4pwThs/UrReufJG6Ath4aqtFUysml+2WbJNfxuj9CCzyW/0laAO9XVG60npEskpcMF74pjRXXagk6IsTQiviqjyIzmFcoH43IrPITmbRfLcF+MFhvSCtldRKpmBEFEUEtmvwMW0IFEjb5OII3ZpP6Yl9qjP5iZXJb9xk4RVeoSCGC1u7E9RwI9vzlKLquxoKbGGoWemTyslLH/65P1T7o8PWIJnqTDUwLqDj+LQHInHOC99mWQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com (2603:10a6:102:2a9::8)
- by DB8PR04MB7148.eurprd04.prod.outlook.com (2603:10a6:10:12d::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.7; Thu, 4 Jun 2026
- 19:48:08 +0000
-Received: from PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588]) by PA4PR04MB9366.eurprd04.prod.outlook.com
- ([fe80::75e4:8143:ddbc:6588%3]) with mapi id 15.21.0092.006; Thu, 4 Jun 2026
- 19:48:08 +0000
-Date: Thu, 4 Jun 2026 15:48:01 -0400
-From: Frank Li <Frank.li@nxp.com>
-To: Devendra K Verma <devendra.verma@amd.com>
-Cc: bhelgaas@google.com, mani@kernel.org, vkoul@kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, michal.simek@amd.com
-Subject: Re: [PATCH v1] dmaengine: dw-edma: Add Xilinx CPM6-DMA DeviceID
-Message-ID: <aiHWcdGfP-rdRn0o@lizhi-Precision-Tower-5810>
-References: <20260603143158.3243500-1-devendra.verma@amd.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260603143158.3243500-1-devendra.verma@amd.com>
-X-ClientProxiedBy: PH7PR03CA0022.namprd03.prod.outlook.com
- (2603:10b6:510:339::6) To PA4PR04MB9366.eurprd04.prod.outlook.com
- (2603:10a6:102:2a9::8)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="XLCSQJqa";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fs2Coo/I"
+Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id DBC3D140013A;
+	Thu,  4 Jun 2026 15:57:21 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-10.internal (MEProxy); Thu, 04 Jun 2026 15:57:21 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1780603041;
+	 x=1780689441; bh=3ldYKV+aJOGFJUhEnX3t7Ye52Gtyp0rTgCFtJaRdzSc=; b=
+	XLCSQJqa0goCb09vwLmKLy7UTum2rutG/eIrUuLB3/hVXNnoyjo4qAO94qvcjYge
+	hA0AUMcU68vsimSwT3exKM5sPrfhzT40wbOMbkUzqP5RcPiu7HPpxnpRXu2ZI9wL
+	iOvguQkLOOvP13Jx/8rKeqlTZ+E3I7fZPHmzwxtKos8MOJa60w9+ounpCNazcJBt
+	GrDrhad6PMV0a9CPoHFlWFgDkPPdpZ7wu/HEM9ohU7W8kgJnpW8Ryt0h8/pYc2GN
+	VXeKypGuY8PvuJJRVibb/vyZc1KLp+urD0VdHszEhoWji6jwRUd5Wn3WmcjkWp8q
+	6Gqr/a9FCQt6fBFp0/1YdQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780603041; x=
+	1780689441; bh=3ldYKV+aJOGFJUhEnX3t7Ye52Gtyp0rTgCFtJaRdzSc=; b=f
+	s2Coo/IYtAOjMLZcpa4FeN9kFqPQE90vOLc06icrX8nhcHgfFoDeaNhMJfq/57tB
+	C7QgYjvUjszg89rfzj6ssrSnlByT/YUoONTFrwNE5KJjM2bH4H+tgybKX/aDkf0u
+	WVfy1X53Hfmujic8Bg4Q74PffwHedPWqOLCvVS64DYL93X93BqFqf1EJAXxhDk2X
+	9wk8TVhStP5ORnm7viPVlcWWvPKau7jwcroJ4fA/vgOudqtPZ3hJg/6mxrLJOm+n
+	5T16AuBV6uCIQQsvaaHMfE7aaYxik5H9mT57J2ET2d3V73Vp7mOcepMfQ3N8Ue97
+	gDRsg58i508X+D3LJlTcw==
+X-ME-Sender: <xms:oNghar-S6w106eexkOCiDx4iFU1qKh86X0gCEScCL1VuyTqFW4n5KA>
+    <xme:oNghauGTo8-tuAV0RfU_fMGZSHiUiMRyr88jeQifYnKlWQ2k-iWCn55BWAepLdvTd
+    CeUsI5mxt5vE4_zSgeWr8rz8vw1FlbQiYtFDiqiCME0KW1VcDbTqAI>
+X-ME-Received: <xmr:oNghalQ-3k1eU2IYJFY06WcPJ-Gl4Wm6U9PswL9FWpEP0fOdR3iaO-RFVFI>
+X-ME-Proxy-Cause: dmFkZTFtDuF3mNlTIcDf1bkmaiXAeRv34Wiks5LqE8J6ULTQdhFFDbJNuESjEnRMNQ+EqT
+    VymHIQ+C/xhhcPXWsry9fBdNmLbdho34Q+StnZZNr3NVvv2xMPBF1iYAY/TQfJ2vdyOArw
+    bXDmEuwfOkGP4zcPiv7Ovq4d+YBBXCuVI1mP9F6ohn2uPI+tIHjtRtLqX8SbPbUZy1ZAIW
+    4bjv86hHn3FR3N9Yy2+GTs1+so1H6Oey/JNMuprs4WBue+7M0VUcLhLtRCMl+0lqVoYMvP
+    IOiI6MgPiEsY7yZ3Q/S2Ns0dmscfQm91YU5y4hS4h0dfQprWIWaQGS7MkUfRbm3OjmRDb7
+    pwfHrfSHKAkEjvKEa9XBkqc84C2TOrKw6oKLlANFb5EScVyxmYyCPppKi94vvvw3oYCmv4
+    xzGzgCn++eLeHLQvdJBqNgYs4iUOt4u+PHANKBpXztaojrcjTexMUm5CFdsb4J/wsG5EbT
+    YCtZhm/Obg7+a1neWgG6DTXuFLbrUAFa4EL7jpAfRg8FubRp8DuKvhOpPhNjcT3jKMMLD7
+    /a24P+WVuRT3wB3dS3/WrUsAqfxcukPID+1d4XnKp4PB1PTAG2DXJUtKAaUSZ1Can4ooBz
+    UYQB0XIrpt5jjq0/zW8yMb+vEDdVwoGRNs7a1PdBdz6dRX/SxB+EkMogkrMg
+X-ME-Proxy: <xmx:oNghalShfYaKj6UJjkJWxc_lyufFCS5egy2n_UAYIcQUPHbsjWV6lA>
+    <xmx:odghao0zyUz-RofCut-8KXfx5b9S4VEpuH_jdyhxMRwr26uXHi7veg>
+    <xmx:odghavzsoU87Polxoz6AtQyLvRMcf7P_7ZMrOAlEapnJVklcFXlHYA>
+    <xmx:odghakwyGt1DIVwq9koRLFTQVneuZ2o2TrglDKhzgJNSbcW6AExdgw>
+    <xmx:odghahone3v7Vu-SRpVadWVLBvhckJR9EuOzPXV5_QGLL6mu1OSB_nuv>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
+ 4 Jun 2026 15:57:19 -0400 (EDT)
+Date: Thu, 4 Jun 2026 13:57:17 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: Keith Busch <kbusch@kernel.org>, linux-s390@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ helgaas@kernel.org, schnelle@linux.ibm.com, mjrosato@linux.ibm.com, Julian
+ Ruess <julianr@linux.ibm.com>, alex@shazbot.org, Chengwen Feng
+ <fengchengwen@huawei.com>
+Subject: Re: [PATCH v18 3/4] vfio/pci: Add a reset_done callback for
+ vfio-pci driver
+Message-ID: <20260604135717.5dc69583@shazbot.org>
+In-Reply-To: <d9ca420b-a1e6-4d12-bd42-3993e401d58b@linux.ibm.com>
+References: <20260603182415.2324-1-alifm@linux.ibm.com>
+	<20260603182415.2324-4-alifm@linux.ibm.com>
+	<aiE3I0bL0TX1nOec@kbusch-mbp>
+	<d9ca420b-a1e6-4d12-bd42-3993e401d58b@linux.ibm.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PA4PR04MB9366:EE_|DB8PR04MB7148:EE_
-X-MS-Office365-Filtering-Correlation-Id: 712fc0f0-9d8b-4cb0-a0e5-08dec27233a0
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|366016|19092799006|52116014|376014|22082099003|18002099003|11063799006|56012099006|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	lU2nqnPRXneXTYiThnrDZWeqszCTjWVFZIR+rZR3zs1e4KM7jAgt87ZMwL4XkuMaRMbiGj06xOVmFNiCyOn4JADeMf0X4PAuW7vHhL8ljrYICFeBT/9VE30YrXRSCOAB1B867glWgNru9yW9uKfpa4bdwCXl4b33rb1KyEetdWVO76TjFVgP+VI/hDUAPlmHQcZkv2+YCpkcehFMiaUhp+6e+lazDnphRQyUKnk3U3b9E/GTdRSho2zXe6j4P4MsW3hWg9hKdsz4ZB5vfGXdLofT5AGjbIWD9KGv92FL+tqVS9SdeLYW1/ZO7E3EjtYUbWq5+GtAb8jcjPoFA4KA+/HDWhRTOdGbs7x+r6PatEOYOFn8bEcuoARj7US4NNnE9N38woUe94t0ty3UhBdDYH+r/AEZMgXm6mtUwdxPP3JLo+Ld7X3xFVBtKtyz3xcs53K4JXIt9UvxitJYbwhw/xsHketMhwG/OZCrve14fOR1Ncjw4f9zISMlyUnWCRgY3lNqA1qquUrK1jq6IWkDxEDTdld4WQ6mHD9o6yA5ghaGFtHRZULH6a1z3e1op36Nhie0v3L1kicbtLURBMlwFehn/nZOU82X8XB4CSle3139PIwZ7CZ1ZlpqX0nI3ELPSrtQWuuF4otTORLfndC8vy1DsovSzQpmb8ytJ9s8QCSUACLzVyDggnwBY4ZaFKwRcUEeqVXrzxt85KFv7+UbX56jLhxTc9S5RZLSXGhNXO8NnQzZg6hEDMRGkDbDk1s7
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PA4PR04MB9366.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(19092799006)(52116014)(376014)(22082099003)(18002099003)(11063799006)(56012099006)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?iso-8859-1?Q?wLfLTZE3GoSq0f47apBwK79CNl0AUkKGVTywjutWhQ2LlyX/NuJ1aC/PZ7?=
- =?iso-8859-1?Q?oEFsm55t3T7J81Zt4+jnXFHWAx6HliKmXm/vjhVe33nZlQWFG/Y0vdEiuG?=
- =?iso-8859-1?Q?6h6TjIJd4sQxaY7OVZ4FTCOD1NLaaN8yc0GwQgPFR8mLB815Gd0j1pqGDK?=
- =?iso-8859-1?Q?N3VQg3E4CmF/W/Odr6vPhPUK1DbKUI2jA2DUpa1KXy0jfktTAj0v3S8aqs?=
- =?iso-8859-1?Q?05Qfh3D14ORC5yvMDrCrDhQsjuJHhMk/eQOktiaxv/6c/Hv2gzumqI4H2h?=
- =?iso-8859-1?Q?fEoMgXtUt74djA20Agg7YYyHmA9GVFxBMX71BAWCekKPn/OvaV0G9YFC3F?=
- =?iso-8859-1?Q?j6/khwNL3rXGjDYLRslTgY5DhWp60zzR8IeG/B0iFGWwOFrdEOZcSb2xd8?=
- =?iso-8859-1?Q?Sg5B+OkQA2mW19S2cR5YmWEkYoshJu0AxA6RY4zLYtGxagpQoC0Qn30gZN?=
- =?iso-8859-1?Q?FFO/nRiQnWM8XNj2uvP2wgX43s2mKvpEAjZ+zlRP9XWEJ0daaHBGRh7R1q?=
- =?iso-8859-1?Q?K5pqMPYLdjb3JOdyMLFSdkObx4k4I13UJ8Wx+5Aj3BImClcCLEe1KYPlZF?=
- =?iso-8859-1?Q?aM5gOsJliPUSYrihefeiKCSYulKBR+youWgB2I3znEVmPMbDhagLemBCH4?=
- =?iso-8859-1?Q?DEat3XAsYNOXdtLQnbb3dRdCCVyoyIgFYj+HRYf9QYweLZJkhHAnvkzg3F?=
- =?iso-8859-1?Q?w2r9DzxmlnOpXdQ8vSDcJ7AOucUo53CtWArb7tRl81oyXNjX5W5/UNF/t4?=
- =?iso-8859-1?Q?U9vm+t/ENZk3ntII9JSgUau70wsxeW874dDlnJqzug/l/BSxlj8JWVfZSN?=
- =?iso-8859-1?Q?mlu+FxjpAAU3Rf5b/td59LtKgjY2tsbr8n9CcHAF3pROXFxujLb1iaIQ1J?=
- =?iso-8859-1?Q?r6CkiJUwgvOdpy0J/Ng5ZrB5okNwiAACChlzJd7zHjuk6tqf7im2n9BrPH?=
- =?iso-8859-1?Q?xKGxGM2IUrEseTSeXb3heQ1fViRTT/6mSqh1ktsJ4q30525oMuxmEc8TCH?=
- =?iso-8859-1?Q?L9ZduRh6yCKwvpnbXUy2xC3FzOFP2JQBR6zLlZcqKrPvf76ul+UgrlXxWm?=
- =?iso-8859-1?Q?VzmJObh2DcShFWgXkskqjQlwG0v+zLxffuJr9/DlmIuDCBOaNYLRVE/Xs4?=
- =?iso-8859-1?Q?9vU0lkx51VmJmXCf0MEIlMMMFCTabAi0is7V/UGvlnxkpVLOMbSwmSmHIa?=
- =?iso-8859-1?Q?nt15QK+EkO1JDByCftGVodeVRQv7W10vt+EzAeZHMX38rB5UOok6MNI1n6?=
- =?iso-8859-1?Q?fuaD0V3AMcrQ/duC/u7ghpy57lhxdvtCu4TmrJ2vW34jtqvOjNQ11AEXVO?=
- =?iso-8859-1?Q?712MTeeO7ILe7eUUh0d4HBlq69dDR7c07AUqbkVQ8+TPpnuzXzGcxGYRf/?=
- =?iso-8859-1?Q?0Zgu5ZsecJsWc6nL3PK9oI4NbqwFi7JciU6K3Plbr908oqelgpyRxOxC6Z?=
- =?iso-8859-1?Q?TpIHzmp3Pe+iQzim98QuYPXE/FI2jlhbPsEux67hXAkgAeSmZz+Svh6dws?=
- =?iso-8859-1?Q?6cAQbHmACAdjOXRHmrBeMxWfZ2xv+fwcQutqTVwH0XvLwMXIUiDks4BrRz?=
- =?iso-8859-1?Q?N7sHo8nLyvESyoUh/S1M2Fw8rESfJTrBsLsrnAMOipwMJiLyzJVM9K2pRt?=
- =?iso-8859-1?Q?zVwZBSamkOVATAPQmbxar2uqU9srpn0Bwu1qlEOOyx8gzIidggkVrR7tBD?=
- =?iso-8859-1?Q?oelbyeAPIRlV6X0ZMaoX7pFYlx1+UwZLgUJQxq86ztCMmyAiq6C6TAQYZP?=
- =?iso-8859-1?Q?61qbU3CPGDY1LPmjvgEd0GKtp5xJhYfpnDKc/36rtlBwK+ohTMhph1AQL4?=
- =?iso-8859-1?Q?yb+WzgbBRQ=3D=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 712fc0f0-9d8b-4cb0-a0e5-08dec27233a0
-X-MS-Exchange-CrossTenant-AuthSource: PA4PR04MB9366.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jun 2026 19:48:08.2635
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: y93PMciayYKKXHgnTcr62BzBBcLdi4t2CyhjZP/sVMxPnFNDoChvSmk3A3lE2VxLjXvHS8/2HaWN/kY8r8Z8VA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8PR04MB7148
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jun 03, 2026 at 08:01:58PM +0530, Devendra K Verma wrote:
-> From: Devendra K Verma <devverma@amd.com>
->
-> Add Device ID for AMD (Xilinx) CPM6 DMA IP.
-> This IP enables 64 Read and 64 Write Channels.
->
-> Adding the relevant dw_edma_pcie_data to use
-> 8 Read and 8 Write Channels for initial commit.
+On Thu, 4 Jun 2026 10:17:04 -0700
+Farhan Ali <alifm@linux.ibm.com> wrote:
 
-Nit: wrap at 75 char
+> On 6/4/2026 1:28 AM, Keith Busch wrote:
+> > On Wed, Jun 03, 2026 at 11:24:14AM -0700, Farhan Ali wrote: =20
+> >> +static void vfio_pci_core_aer_reset_done(struct pci_dev *pdev)
+> >> +{
+> >> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
+> >> +
+> >> +	if (!vdev->pci_saved_state)
+> >> +		return;
+> >> +
+> >> +	pci_load_saved_state(pdev, vdev->pci_saved_state);
+> >> +	pci_restore_state(pdev);
+> >> +} =20
+> > Shouldn't there be a cooresponding user space notification that the
+> > device has been restored? There's an eventfd on the error detected side
+> > so user space can know the device needs recovery, but how does it come
+> > to know that the reset is completed? =20
+>=20
+> I think if the VFIO_DEVICE_RESET ioctl completes successfully it should=20
+> be an indication that the reset has completed? AFAIU the ioctl will=20
+> drive a reset via pci_try_reset_function(). If reset completes completes=
+=20
+> successfully the reset_done() callback is called via pci_dev_restore().=20
+> So I don't think we need an eventfd to notify on reset completion.=20
+> Otherwise we would have the same problem today, where userspace is=20
+> unaware that VFIO_DEVICE_RESET did indeed successfully reset the device,=
+=20
+> no? Or am I missing something?
 
->
-> Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
-> ---
->  drivers/dma/dw-edma/dw-edma-pcie.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
->
-> diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-> index 0b30ce138503..4ba368d18cb1 100644
-> --- a/drivers/dma/dw-edma/dw-edma-pcie.c
-> +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-> @@ -27,6 +27,7 @@
->
->  /* AMD MDB (Xilinx) specific defines */
->  #define PCI_DEVICE_ID_XILINX_B054		0xb054
-> +#define PCI_DEVICE_ID_XILINX_B00F		0xb00f
->
->  #define DW_PCIE_XILINX_MDB_VSEC_DMA_ID		0x6
->  #define DW_PCIE_XILINX_MDB_VSEC_ID		0x20
-> @@ -125,6 +126,19 @@ static const struct dw_edma_pcie_data xilinx_mdb_data = {
->  	.rd_ch_cnt			= 8,
->  };
->
-> +static const struct dw_edma_pcie_data xilinx_cpm6_dma_data = {
-> +	/* MDB registers location */
-> +	.rg.bar				= BAR_0,
-> +	.rg.off				= SZ_4K,	/*  4 Kbytes */
-> +	.rg.sz				= SZ_8K,	/*  8 Kbytes */
-> +
-> +	/* Other */
-> +	.mf				= EDMA_MF_HDMA_NATIVE,
-> +	.irqs				= 1,
-> +	.wr_ch_cnt			= 8,
-> +	.rd_ch_cnt			= 8,
-> +};
-> +
->  static void dw_edma_set_chan_region_offset(struct dw_edma_pcie_data *pdata,
->  					   enum pci_barno bar, off_t start_off,
->  					   off_t ll_off_gap, size_t ll_size,
-> @@ -547,6 +561,8 @@ static const struct pci_device_id dw_edma_pcie_id_table[] = {
->  	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, &snps_edda_data) },
->  	{ PCI_VDEVICE(XILINX, PCI_DEVICE_ID_XILINX_B054),
->  	  (kernel_ulong_t)&xilinx_mdb_data },
-> +	{ PCI_VDEVICE(XILINX, PCI_DEVICE_ID_XILINX_B00F),
-> +	  (kernel_ulong_t)&xilinx_cpm6_dma_data },
+I'm starting to feel a little sketchy about this.  I asked claude to
+enumerate the state restores and the source of that restored state.
+Hopefully this ascii table survives:
 
-Please .driver_data = (kernel_ulong_t)&xilinx_cpm6_dma_data
+  =E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=AC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=AC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=90
+  =E2=94=82           Step           =E2=94=82         Source         =E2=
+=94=82 Snapshot-dependent? =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82                          =E2=94=82 EXP cap save buffer    =E2=
+=94=82                     =E2=94=82
+  =E2=94=82 pci_restore_pcie_state   =E2=94=82 (pci_find_saved_cap,   =E2=
+=94=82 YES                 =E2=94=82
+  =E2=94=82                          =E2=94=82 cap.data)              =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82                          =E2=94=82 live                   =E2=
+=94=82                     =E2=94=82
+  =E2=94=82 pci_restore_pasid_state  =E2=94=82 pdev->pasid_enabled +  =E2=
+=94=82 no                  =E2=94=82
+  =E2=94=82                          =E2=94=82 pasid_features         =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_pri_state    =E2=94=82 live pdev->pri_enabled =E2=
+=94=82 no                  =E2=94=82
+  =E2=94=82                          =E2=94=82  + pri_reqs_alloc      =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_ats_state    =E2=94=82 live dev->ats_enabled  =E2=
+=94=82 no                  =E2=94=82
+  =E2=94=82                          =E2=94=82 + ats_stu              =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_vc_state     =E2=94=82 VC ext-cap save buffer =E2=
+=94=82 YES                 =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82                          =E2=94=82 live resource_size()   =E2=
+=94=82                     =E2=94=82
+  =E2=94=82 pci_restore_rebar_state  =E2=94=82 (re-derived, written   =E2=
+=94=82 no                  =E2=94=82
+  =E2=94=82                          =E2=94=82 to hw)                 =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_dpc_state    =E2=94=82 DPC ext-cap save       =E2=
+=94=82 YES                 =E2=94=82
+  =E2=94=82                          =E2=94=82 buffer                 =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_ptm_state    =E2=94=82 PTM ext-cap save       =E2=
+=94=82 YES                 =E2=94=82
+  =E2=94=82                          =E2=94=82 buffer                 =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82                          =E2=94=82 TPH ext-cap save       =E2=
+=94=82                     =E2=94=82
+  =E2=94=82 pci_restore_tph_state    =E2=94=82 buffer, gated on live  =E2=
+=94=82 YES (gated)         =E2=94=82
+  =E2=94=82                          =E2=94=82 tph_enabled            =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_aer_clear_status     =E2=94=82 clears hw status (not  =E2=
+=94=82 n/a                 =E2=94=82
+  =E2=94=82                          =E2=94=82 a restore)             =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_aer_state    =E2=94=82 ERR ext-cap save       =E2=
+=94=82 YES                 =E2=94=82
+  =E2=94=82                          =E2=94=82 buffer                 =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82                          =E2=94=82 saved_config_space[16] =E2=
+=94=82                     =E2=94=82
+  =E2=94=82 pci_restore_config_space =E2=94=82  =E2=80=94 type-0 header    =
+   =E2=94=82 YES                 =E2=94=82
+  =E2=94=82                          =E2=94=82 (COMMAND, BARs,        =E2=
+=94=82                     =E2=94=82
+  =E2=94=82                          =E2=94=82 cacheline=E2=80=A6)         =
+   =E2=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_pcix_state   =E2=94=82 PCI-X cap save buffer  =E2=
+=94=82 YES                 =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_msi_state    =E2=94=82 live msi_desc list +   =E2=
+=94=82 no                  =E2=94=82
+  =E2=94=82                          =E2=94=82 msi(x)_enabled         =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_enable_acs           =E2=94=82 re-derived from ACS    =E2=
+=94=82 no                  =E2=94=82
+  =E2=94=82                          =E2=94=82 policy                 =E2=
+=94=82                     =E2=94=82
+  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=A4
+  =E2=94=82 pci_restore_iov_state    =E2=94=82 live dev->sriov        =E2=
+=94=82 no                  =E2=94=82
+  =E2=94=82                          =E2=94=82 (num_VFs, ctrl)        =E2=
+=94=82                     =E2=94=82
+  =E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=B4=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=80=E2=94=80=E2=94=80=E2=94=B4=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
+=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
+=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
+=98
 
-Now Uwe Kleine-König is cleanup this.
+For things like MSI/X, SR-IOV, RE-BAR, etc. we're actually restoring
+from the kernel internal state rather than the save buffer state, so
+this is a no-op.  However, one thing in that list stands out, TPH.
 
-See similar thread
-https://lore.kernel.org/linux-i3c/20260504143324.2122737-2-u.kleine-koenig@baylibre.com/
+We don't yet support enabling TPH, but there are series on the list
+that propose to add this.  The TPH buffer space in the saved state is
+allocated just by the capability being present.  On open TPH is
+disabled and the saved state is untouched, zeros.  If TPH is then
+enabled and the device reset, the pre-reset save state populates the
+TPH save buffer and we restore that state post-reset.  With the change
+here, reset_done would then push the open saved state.  The live TPH
+state is enabled, therefore the restore pushes the original open state,
+zeros.
 
-Frank
+This would result in a visible user change and maybe more importantly
+shows that we're relying on ad-hoc behavior, without really any specific
+policy to have this work reliably.  It actually seems like only in the
+close function, where we've disabled anything the user might have
+enabled, is it really valid to restore the original state.  Thanks,
 
->  	{ }
->  };
->  MODULE_DEVICE_TABLE(pci, dw_edma_pcie_id_table);
-> --
-> 2.43.0
->
+Alex
