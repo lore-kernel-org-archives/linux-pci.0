@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E9C32741B6;
-	Thu,  4 Jun 2026 07:59:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B632F691D;
+	Thu,  4 Jun 2026 08:01:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780560000; cv=none; b=rCn9Kkl+XLHEMcyeXlEIWGPzlmuwOx9bM8TK3iNxjZcAOM4C9r5Ol7qda2mFrHSPyJmCX4MF716hTRA8CPqfd7yQJnaUWnKN/gIDHmp9f0t8bxd2w5+J5uQsSPWJo/gp9rCbCDSAD1GOz9NvFbvukvDXrbOvg/ryH9r7pXtWDjo=
+	t=1780560076; cv=none; b=t80auB71bHz838rF8JInGEjKHUFKoNvfFZ48YcAPvtz9DlbkRmch9bD84kpr7P7OM//Tww3il8Z62uAYsQPVn9qlehw0OySLzWCNVKZtf0ic6JrbyXsDE8MUYTZnjhVoJsaGgTBFZwezAfF/Fe1W+rJjZBzP/2SSCQJ9FBljWLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780560000; c=relaxed/simple;
-	bh=vsXa3Tsz9ZOdJ1/hV1tgpWiHr6LJb2vQPgLnoj2kdjM=;
+	s=arc-20240116; t=1780560076; c=relaxed/simple;
+	bh=V2xeaMuooKIL206Mu1rEZ2QfNIRpXu/7x5mV6kj8EDQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eVLqESLN5V+O3ecH99+eKqvGckSMMb9/uECVZf4evygPqBjuzhRn5UC9dV0pbv5zQe1gCQ9c6MgCB5cyrqJo9oGMLzqMBzBqd6N4NRqo5B/g8JxQj3PE6B0a1buaTR0t0F6qaIfuJ4GKjTKuYTHboMxZoAqLipARj2ceAamQegc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ry7SS8tt; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=PXYpUCPB1bS8LJYgqmQVtoUqY89BUwNkiy8Sogf+zD1X+WZLhoX2gx7f3IXF3LOuntwI+VS8jlIuwOJKttp8AnCSb92WrAjjqhLA54Gca38dM790roF7wheJmX6TyxZ2ZNJj0GTVXqYydsSvq5jsSzJiWQJEtOEB/ihIakiLvmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=We5W1yRT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ry7SS8tt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A77611F00893;
-	Thu,  4 Jun 2026 07:59:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="We5W1yRT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97F781F00893;
+	Thu,  4 Jun 2026 08:01:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780559998;
-	bh=EiEege1qLpPLcLo8Q2GkcX5GrwEPGjJle4bMNZmC+EU=;
+	s=k20260515; t=1780560074;
+	bh=7GBkcLtg0uqitR4e64V97wE61NpFm/OY8SkjUIKZ20U=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Ry7SS8ttWfGim2vsSpXqAXGqjpIZgJVIfIVwGFw1DfT1UvX4dJexBmwrch0jagdS/
-	 0AFwHZahaBfB/LmnEXJPiilCkvYpR6JUf8IdfzDfrid09+eCRB/s8soGLSFNORPqeO
-	 zenEQvfVS621ftbfEEKP3p5ao787dGGJ2jmCRkRcadty2LkO2YgIh+iy+naKVqr4oM
-	 T5EZC7uFTohrM3JSkRgs9wzVyWR7d3+8lmretBU+o9K/loVBkRxkWciiGuOxe04K10
-	 7Q0uc5MIZjNE+USs+6mIOwGlhzlWqYOSFOlB3LPI3AuJj62hT6F92371vATdJdFGuc
-	 VW856QbN0VlHQ==
+	b=We5W1yRTORKjYvkbhHtCSa5RHEZusZIpYQYTmQTZUm6lrPtmj0vU5Yf03joA45ltl
+	 HeUm63AH8qg0sUEZ74GGdSB1uabxDZ6kmNuFJvzMDrtr73e8GDdDzlpnwiTySTdWI4
+	 sB5voiJdPO7VD8kUyt0hOr5JZFivugAtSozOnHCt8nzHCTxlol7TPzqgrFSjDcEwUB
+	 wKQJsZba6CCd614yQLACVmFO0B3pMFZfm+mw29wmsUsCiRahd/kdF+HYCmdqwSx0uF
+	 6c1AP5RMT1zN9YBJtBBbNN/6Mu77UwHMfEG+ai4waHoCYfd1mjzYkwx0LxuVZOZHdv
+	 ePrbiCeDEf7wQ==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH 02/10] perf hisi-ptt: Fix PTT trace TLP Header parsing
+Subject: Re: [PATCH 08/10] perf hisi-ptt: Add parsing of supported message
+ types
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Sizhe Liu" <liusizhe5@huawei.com>
-Cc: linux-perf-users@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260604075005.2219785-3-liusizhe5@huawei.com>
-References: <20260604075005.2219785-3-liusizhe5@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-perf-users@vger.kernel.org
+In-Reply-To: <20260604075005.2219785-9-liusizhe5@huawei.com>
+References: <20260604075005.2219785-9-liusizhe5@huawei.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 07:59:58 +0000
-Message-Id: <20260604075958.A77611F00893@smtp.kernel.org>
+Date: Thu, 04 Jun 2026 08:01:14 +0000
+Message-Id: <20260604080114.97F781F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,68 +46,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [Medium] Relying on C bitfields without endianness macros breaks cross-pl=
-atform decoding on big-endian hosts.
+- [Medium] The decoder uses C bitfields (`dw0_4dw` and the newly added `dw0=
+_8dw`) to parse hardware headers from a host-endian integer, which breaks c=
+ross-platform perf trace analysis on big-endian architectures.
 --
 
-commit acedfe06d43ba61d4515f85b3f80767187e8bcb7
+commit e6402a0d73ba805c4892540373d8a6a210da4d39
 Author: Sizhe Liu <liusizhe5@huawei.com>
 
-perf hisi-ptt: Fix PTT trace TLP Header parsing
+perf hisi-ptt: Add parsing of supported message types
 
-This commit fixes the DW0 bit field layout of the hisi_ptt_4dw union to
-match the actual bit ordering after little-endian memory extraction. It
-also changes the hex value printout to big-endian for readability, aligning
-with the format diagram.
+This commit adds logic to parse TLP message types from Header DW0 Format and
+Type fields for 4DW and 8DW packets. It stores the parsed message type in t=
+he
+packet buffer to select the correct field layout for subsequent decoding st=
+eps.
 
 > diff --git a/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c b/to=
 ols/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
-> index c48b2ce7c4a3d..67024f18ebbbc 100644
+> index 9ec84d398cc1b..59ab8ec3a03da 100644
 > --- a/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
 > +++ b/tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
-> @@ -75,14 +76,14 @@ static const char * const hisi_ptt_4dw_pkt_field_name=
-[] =3D {
-> =20
->  union hisi_ptt_4dw {
->  	struct {
-> -		uint32_t format : 2;
-> -		uint32_t type : 5;
-> -		uint32_t t9 : 1;
-> -		uint32_t t8 : 1;
-> -		uint32_t th : 1;
-> -		uint32_t so : 1;
-> -		uint32_t len : 10;
->  		uint32_t time : 11;
-> +		uint32_t len : 10;
-> +		uint32_t so : 1;
-> +		uint32_t th : 1;
-> +		uint32_t t8 : 1;
-> +		uint32_t t9 : 1;
+[ ... ]
+> @@ -90,9 +121,41 @@ union hisi_ptt_field_data {
+>  		uint32_t type : 5;
+>  		uint32_t format : 2;
+>  	} dw0_4dw;
+> +	/* Header DW0 for 8DW format */
+> +	struct {
+> +		uint32_t others : 24;
 > +		uint32_t type : 5;
-> +		uint32_t format : 2;
->  	};
->  	uint32_t value;
->  };
+> +		uint32_t format : 3;
+> +	} dw0_8dw;
 
 [Severity: Medium]
-Does this bitfield layout break on big-endian hosts?
+Will this bitfield layout break cross-platform perf trace analysis on
+big-endian architectures?
 
-In C, bitfield memory layout within a struct is implementation-defined. GCC
-packs bitfields from LSB to MSB on little-endian architectures, but from MSB
-to LSB on big-endian architectures.
+The hardware payload is loaded via le32_to_cpu(), which correctly guarantee=
+s a
+host-endian integer, but mapping C bitfields onto that integer relies on
+implementation-defined behavior. On big-endian hosts, GCC packs bitfields
+starting from the most significant bit, so accessing dw.dw0_8dw.format or
+dw.dw0_8dw.type will extract the wrong bits.
 
-By unconditionally reordering the bitfields, the time: 11 field extracts the
-lowest bits on little-endian hosts. However, on big-endian hosts, it will
-incorrectly fetch bits 31-21 of the 32-bit native integer instead of bits 1=
-0-0,
-resulting in corrupted trace decoding.
+Could these fields be extracted using standard bitwise shifts and masks
+instead of relying on bitfield layout?
 
-Should this struct use endianness macros (e.g., #if defined(__LITTLE_ENDIAN=
-_BITFIELD))=20
-or bitwise shifts instead of relying on C bitfields to ensure cross-platfor=
-m=20
-decoding works correctly?
+>  	uint32_t value;
+>  };
+> =20
+> +static int hisi_ptt_parse_pkt_msg_type(union hisi_ptt_field_data dw,
+> +				       enum hisi_ptt_pkt_type pkt_type)
+> +{
+> +	uint32_t format, type;
+> +
+> +	format =3D (pkt_type =3D=3D HISI_PTT_4DW_PKT) ? dw.dw0_4dw.format :
+> +						  dw.dw0_8dw.format;
+> +	type =3D (pkt_type =3D=3D HISI_PTT_4DW_PKT) ? dw.dw0_4dw.type :
+> +						dw.dw0_8dw.type;
+[ ... ]
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604075005.2219=
-785-1-liusizhe5@huawei.com?part=3D2
+785-1-liusizhe5@huawei.com?part=3D8
