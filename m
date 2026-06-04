@@ -1,126 +1,69 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A5B4A2E22;
-	Thu,  4 Jun 2026 20:14:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C836533B96B
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 20:20:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780604099; cv=none; b=alLoDP2x03ZYEXuT9eMI2Q12NoBgacbaU5Yx2xjUW9gC20+Wda2AdOTk+lmKb6TM+UGcbFgZZ/jBdeO6Y8cdr+NwLjbep+fipQ9tCrVHZ5bTedpwOEgqejKE6SpyOhMlxG+1Pgj34Rd92usN4j/Rq7yRxCcRvqVVnikQ3yTxiZk=
+	t=1780604418; cv=none; b=M/b/Jvm0lh9BTPb7nLk2SlPqvW7IuTQcokxE+DOrQe5STld2GY2nsoHKp8DC6yBbJNrzrHh5hEawPDMkKtz1s6mu+rIxTrguVuH/7PB5dJ9d7bJcFkELBa+z59X64RIMGe3rmxjNKbneT434ZKqq4a5GQCb8gEMtCWhHb5LamWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780604099; c=relaxed/simple;
-	bh=Yk6QSotN2tq3Mqa2udN0WeFejqVXfRoesEZYyBbnFJ8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=gaPt8Wb/ILejREQmFoy8H+KUrilO5ZYtopbazn5r78gu4L6eC8bO3+cmI+z7eKsM33mmg/H5rRJuYjblDJkMPufUEiRZx77n+ATWs+VJa4dKtXJiVJ3BdvAb2AW4bDi6/95cZ1SKu7nQbP4O3IOLLd3HQYj/HT9gFeCs4SlLO5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=emyi1bE3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780604418; c=relaxed/simple;
+	bh=bGxZFbUliXuOot/Y2cFjMm1EYrL2vkwCUoNyO2rpOtE=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=YSHABM0x7QppcDu+xqvBuGHtJOdqtl7RM3cRXs89GjYR/ezWxdQ6ETISBPBGupZSyS3sO9DjoWQk4wZTObmUZls6nzGogvuZOQXTnWjOhISMaYW6JEh9kAOjyXk1LwcJQbgKOlK9EEVj/cAymvzaB2kdE9loBwamNMBQqHp9yoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S9G/XZZS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="emyi1bE3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 946FA1F00898;
-	Thu,  4 Jun 2026 20:14:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S9G/XZZS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33E191F00893;
+	Thu,  4 Jun 2026 20:20:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780604095;
-	bh=t4H8eqNZN4/mIO1u313XVeuHkqdUneIpioBG/gGEBMQ=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=emyi1bE3lT84UiMs0H/e5sWLBpipKD8aP4rx9nCFc5ww2rHWzTrNroixBU1R1eW3k
-	 VvDyq+Y9/EKTN5YutDxaS2ya7aaz09ocK8otk3HD4GePbWSC8Nq3UzR3jpHPJsKnlW
-	 D+G1ixqQ2oKb5RLaZIvJKK62Ge4aMEzL6NR04y47K5UJ14jmX8IhLAu4hN5UEpcV0p
-	 QeUQfwkvgeuV7wWv1oUW5AiTbIKO9lPOEnLAnAOPOPK8bI7//XDk5clHDilppzR/TY
-	 GZxIkL2upvxl1wSbQAKqhnKfs+Sb4dtPjK9uSDcEaZPvRLUc9O84wyUuh3WcYXZw+B
-	 dXBq+GQKoz+hA==
-From: Andreas Hindborg <a.hindborg@kernel.org>
-Date: Thu, 04 Jun 2026 22:11:22 +0200
-Subject: [PATCH v17 10/10] rust: page: add `from_raw()`
+	s=k20260515; t=1780604417;
+	bh=bGxZFbUliXuOot/Y2cFjMm1EYrL2vkwCUoNyO2rpOtE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=S9G/XZZSwvyXiTkoSdzWuZ9Sdvv4nqWcGbt+WlUzCUMZaLAoA0LADqP7zb78H30W/
+	 WZ/LJOngXs0VhrP+fAxa9IMAWX/eUArsxHO/Lxuaw4FBSHHr2K72cxaN1vRQW+HwjC
+	 HZRFSgtmkU1VheaWQ8P4m+lMY2Kp5qmE5iRsY0/823F7KzdhcrVAT2v3Km6dp2O6aM
+	 rMWLE3VPvV7sx7I0h/GATXDmGawdT1HYpj7aouLqZ1IwbbUFskuE0/KbN9oppZjU6X
+	 DhMJQ+iGs+aM3NbTNjYpWqUpvRGAkp09aR38rh8a3ormdvb/P/NXOyzooSaFjbp9yc
+	 QLQ0LxOSBGOQA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v17 08/10] rust: aref: update formatting of use
+ statements
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Andreas Hindborg" <a.hindborg@kernel.org>
+Cc: linux-pci@vger.kernel.org, ojeda@kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260604-unique-ref-v17-8-7b4c3d2930b9@kernel.org>
+References: <20260604-unique-ref-v17-8-7b4c3d2930b9@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 04 Jun 2026 20:20:16 +0000
+Message-Id: <20260604202017.33E191F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260604-unique-ref-v17-10-7b4c3d2930b9@kernel.org>
-References: <20260604-unique-ref-v17-0-7b4c3d2930b9@kernel.org>
-In-Reply-To: <20260604-unique-ref-v17-0-7b4c3d2930b9@kernel.org>
-To: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
- Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
- Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
- Serge Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
- Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>, 
- Lorenzo Stoakes <ljs@kernel.org>, Vlastimil Babka <vbabka@kernel.org>, 
- "Liam R. Howlett" <liam@infradead.org>, 
- Igor Korotin <igor.korotin@linux.dev>, 
- Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Boqun Feng <boqun@kernel.org>, 
- Igor Korotin <igor.korotin@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
- "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>
-Cc: linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
- linux-block@vger.kernel.org, linux-security-module@vger.kernel.org, 
- dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, 
- linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, 
- Andreas Hindborg <a.hindborg@kernel.org>, driver-core@lists.linux.dev, 
- Andreas Hindborg <a.hindborg@kernel.org>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1098; i=a.hindborg@kernel.org;
- h=from:subject:message-id; bh=MTxQNyPl556p/37N9iYrjSR5gCSkwSCTZpMY90B8pEY=;
- b=owEBbQKS/ZANAwAKAfpQKQiqxb3QAcsmYgBqIdvvpNub7j04mvxMdRLdPaAd/MQZCqnEQ9G7x
- 6NHPMMF+bKJAjMEAAEKAB0WIQRXitnI2WZ2JirAaob6UCkIqsW90AUCaiHb7wAKCRD6UCkIqsW9
- 0MI+D/0QPO+RBFAbjZRXC9pKgYwjFXnKxpO8ZzAKgdud2wdZcrmS6XnxjFCuPYPaFQ93AhOYZJa
- 4HV8ITv5TB34RklZib+C1ex0+Q7HyqZjU22svIR16LfDNFX/PzVeBvcMhmc1WvMZxfKE72VeYMD
- lG1FuQHv/rWnofDymriWJ1qTmmIh7KcWTZTBWOBoRgKjjYMflJitin0NXq39YIxXu1MqcEGW20v
- ceF6r4JVyWfA1qLVdGeuXR56Z/tP/9demSf0WEz4n/JNfPwSO2fQGqgHU5Wl5QkOeyepnUg4nCf
- V7AX9lwpje33yM15jdHfXun61mNZa7LYV/QZyVny/IV39nPfxrEMJMFFzFZhx3H9v6+wmG7Rl7h
- cOtjeMyzfmUxEJ95Tx/gR6H9Lv9v03K0ZTh/L5YdaCZvaNDy0gi0KOnWUL1eP93qbY2kiyZmE5f
- t+Xfj7TX4TebKhIwyEuO/uBVPqXJyZTHt2mkjJ2wP+OAjZlc3btrRL3brJE0UGHxHzedtn8XHk8
- TyidsBvAMRGQ+VtyZO8Vi+OXdrfsKfO4XV4jyBjM1uPFGEafgzam59BvvN/aO0sZQB62OEFCXKc
- SQoUbEQRjie1O1BooUeWFUAPW1OpcbGv5nlsQmCDSxE49cATUzyJjv+bd3ihJjA8yLKgc8vmC5j
- m2qAWViBmLjYVlA==
-X-Developer-Key: i=a.hindborg@kernel.org; a=openpgp;
- fpr=3108C10F46872E248D1FB221376EB100563EF7A7
 
-From: Andreas Hindborg <a.hindborg@samsung.com>
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Low] Typo in the commit message: 'if' instead of 'of'.
+--
 
-Add a method to `Page` that allows construction of an instance from `struct
-page` pointer.
+commit 903f28665e4d9847cce4458bdb8092b6304d076a
+Author: Andreas Hindborg <a.hindborg@kernel.org>
 
-Signed-off-by: Andreas Hindborg <a.hindborg@samsung.com>
----
- rust/kernel/page.rs | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+rust: aref: update formatting of use statements
 
-diff --git a/rust/kernel/page.rs b/rust/kernel/page.rs
-index 844c75e54134..d56ae597f692 100644
---- a/rust/kernel/page.rs
-+++ b/rust/kernel/page.rs
-@@ -214,6 +214,18 @@ pub fn nid(&self) -> i32 {
-         unsafe { bindings::page_to_nid(self.as_ptr()) }
-     }
- 
-+    /// Create a `&Page` from a raw `struct page` pointer.
-+    ///
-+    /// # Safety
-+    ///
-+    /// `ptr` must be convertible to a shared reference with a lifetime of `'a`.
-+    #[inline]
-+    pub unsafe fn from_raw<'a>(ptr: *const bindings::page) -> &'a Self {
-+        // SAFETY: By function safety requirements, `ptr` is not null and is convertible to a shared
-+        // reference.
-+        unsafe { &*ptr.cast() }
-+    }
-+
-     /// Runs a piece of code with this page mapped to an address.
-     ///
-     /// The page is unmapped when this call returns.
+This commit updates the formatting of the use statements in the aref.rs
+module. It expands a single-line use statement into a multi-line format
+to prepare for upcoming changes.
 
--- 
-2.51.2
+> Update formatting if use statements in preparation for next commit.
 
+[Severity: Low]
+This isn't a bug, but there is a typo in this sentence ("if" instead of
+"of").
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604-unique-ref=
+-v17-0-7b4c3d2930b9@kernel.org?part=3D8
