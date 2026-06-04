@@ -1,126 +1,262 @@
-Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010045.outbound.protection.outlook.com [52.101.201.45])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26E61E3DDE;
-	Thu,  4 Jun 2026 20:33:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780605215; cv=fail; b=IFym2nRJGbwqfSqb2qsjl2jHXlf44YRbJnHjuTVWOyqf0quiFrO8VEa/38PKlwILuyGMpEaHAdCvISBdLZ3e68RnrQiSAVmA+NIT0AUoIBRTliKk3zaGqOUOkWknsqDY7BoTO0bPF8aT2UhNi3xETCysquDITIbd8OeHMdr9P8s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780605215; c=relaxed/simple;
-	bh=9zZzyrBF2s99oJAy/VUcMD5yvUgwSkLnF4E26jGo4Ps=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=izvWOHyrWj8gAtXonetIiOt6gRwd/xqzpL6p4M9/84eC+NHPuadg8kH5eQYkclZCMAJgtjGHEBvrrddMjp8drxU5TdrwjqwGXOKVDk83Wy2Db5KkthqRH6krNOeB8HkUVxgKhoCcCfGRZqBvay9XnTKgHF2CvpleilBxniT4Ksc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=DLhhlnh2; arc=fail smtp.client-ip=52.101.201.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A466E370D6B
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 20:35:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780605332; cv=none; b=JBWopBP54gm9oWrt8V4eW6hWW/u65GO8ANg843VHwLrV/zveM3Ym6dGp0cl3nMsn7dIvDHQlK/cm5x7drs5I7KBPS2dBLbwK5mgeyhMVyrpd2UvWw3DE++Wc56LEFE7ScGRzIxH0OL1R3YxnNhah7hxqLmTI4ocJyuzRnKm5oqQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780605332; c=relaxed/simple;
+	bh=HJzEuaTwM3/c1IPxpacborJNW2SoSgFc//fiBt5/apk=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=NkwzPyBRmQQyIyPgl5gZNUsTJPwYFKbBY9dYlNBMK9log12seShzyv8X+Y2Ir0SjhaZEYt2TWn76xcGYk6xEnh8e/5jT9RSI6Y7MuEIs3sLWlDZi0RuosvbGQ4Ed32yMB5oApiNz80nBZQGIlBDHlf8ZCEEsVWYHh+5nadR5EbQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IhkPoGo4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="DLhhlnh2"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=q+GqPuu8yBl8Nf+gHD3o+tf2or+yE1Cqz2bVFC9PTRwXcupUpi9C2b1RE4oxcjx1DgcQzQE2HPl/H/XhzbY2QdYhNclq50DUfYtQvGToukIIEYatrk8pbzleVm0nixVphNcuNotuMPjnShJrO6dcytGA3bPUdROmzkY7nxoe9QfX1oGgw5dz3RyqbsBIlbCn+ME4P76+XXCV9OwSF4HsoZXbUdOdyZUKc/AvgfpJdW3dEstYcArpZ7G/+GJH+Lg85ReNnspJ6z5ahP95rEPxQM6nli5vNOc7vbCB+RZxPdGCJXj0w8DLJprjp9JkCBAyxZ1TahpRrbqy0aUc4N+tlg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=OdlnEtA1tLmN9JfDk/jCDK7IQ+P4a0oaWLZKJddjXt8=;
- b=PZ71W2T96RAKoH7C3VGkoQvRc9Wf1FKID8Fe1UFXEHZeUmvW0x9W325vESLNa8e6iHSd6DzVgT6j86RbRH2Lbu+PFdH1ItB4TVDEl2sO8Dyq1X5yNlX91C47TeCTv9bYBR62rjBNMjjfkK893ELazXdvj9wJz0Kpn2gfbQ9yPMN2QcSy7a5YGZ89SNDst11+9IozSMvHVEe4+5xD0Xha0eKE/Ar1RBHsQ2Ce7zY6bYdwwaH5cCGGSyq0Mbq1iM86yN6FVLiU58+xf2+OOy9EFzvYb4BHhRjL1akyNC339HeXVgjdWltlCIWnCkjfiJF3HaZkwQgkTRoZ9zQmJ2lt1Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OdlnEtA1tLmN9JfDk/jCDK7IQ+P4a0oaWLZKJddjXt8=;
- b=DLhhlnh2HI2erekSpvnBRf+yfWxC5m3P5fqLXrmLP5nn8FgHjL+w8N9DhUvmdfgNVgz5Y7moBP6qW8nl4VrJnwG58mRueZ1RHQZnzwAdxSycvvbmGphDsAPG1n9HP1eI7TAKPeHIhAoY+45BsnquOEDinSA20VCtFlyPPAzdu+ycFUQpE1Swev94nyS6JfQZuAXSXBulg2OngAACoNyeKVHrCveufqWAxr5Vg5w9v8ysPNVgOWrWl2F2zXYvFToWib2eDh1DVgPxH9orareUS80ZaocI0unHp49rYl75D3IoYLvhimBm7ExNbvL31sv3wuJm5/YVPybZIlR9I/53qg==
-Received: from BL1P223CA0005.NAMP223.PROD.OUTLOOK.COM (2603:10b6:208:2c4::10)
- by PH0PR12MB7862.namprd12.prod.outlook.com (2603:10b6:510:26d::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.7; Thu, 4 Jun 2026
- 20:33:28 +0000
-Received: from BL6PEPF0002256E.namprd02.prod.outlook.com
- (2603:10b6:208:2c4:cafe::6e) by BL1P223CA0005.outlook.office365.com
- (2603:10b6:208:2c4::10) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.8 via Frontend Transport; Thu, 4
- Jun 2026 20:33:28 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- BL6PEPF0002256E.mail.protection.outlook.com (10.167.249.36) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.92.5 via Frontend Transport; Thu, 4 Jun 2026 20:33:27 +0000
-Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 4 Jun
- 2026 13:33:11 -0700
-Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.20; Thu, 4 Jun 2026 13:33:11 -0700
-Received: from Asurada-Nvidia (10.127.8.9) by mail.nvidia.com (10.126.190.180)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Thu, 4 Jun 2026 13:33:10 -0700
-Date: Thu, 4 Jun 2026 13:33:08 -0700
-From: Nicolin Chen <nicolinc@nvidia.com>
-To: Pranjal Shrivastava <praan@google.com>
-CC: <iommu@lists.linux.dev>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>, Will Deacon
-	<will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, Baolu Lu
-	<baolu.lu@linux.intel.com>, Jason Gunthorpe <jgg@nvidia.com>, Kevin Tian
-	<kevin.tian@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Samiullah
- Khawaja" <skhawaja@google.com>
-Subject: Re: [PATCH v8 3/4] iommu/arm-smmu-v3: Standardize ATS enablement
- failure reporting
-Message-ID: <aiHhBIwMhJ3DsbTt@Asurada-Nvidia>
-References: <20260604182116.3179005-1-praan@google.com>
- <20260604182116.3179005-4-praan@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IhkPoGo4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F1DC1F00893;
+	Thu,  4 Jun 2026 20:35:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780605331;
+	bh=IIxcMeNXT+0eKOWo78BZVp+nuWcgXzSKung3HXiYRPs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IhkPoGo4miUiP38H4AmI6GnagwrNWKJqDCBNXvlJ2PzC1dwg0oM3AvOiOKIDJ+dZ2
+	 2aHKLgc7W6nhjslZ6xyaCy81xvYWY5tFW1IknwSk3LxijIbSNQ/Kef6MmrVQqyoK4S
+	 qVut+TT+IDVXbLlAYb/1eI9y0zu00J2wfS8qHYxsCuAI4FswEnTglq0rMibFQaZAzi
+	 4R6lVIEQJntN8bo+c5yWc8fo5DjgR9PUYMnVB0k9pMUPmL6AhJobv/Pfx9EKZtkemh
+	 joOFyvYKx+alwsV4hGJVjNMFEk/GjOC01RNkHa0fcnNCAc4sQYJajscMK4KPPlT7jq
+	 eZJlhvmAdvNzw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v17 09/10] rust: Add `OwnableRefCounted`
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Andreas Hindborg" <a.hindborg@kernel.org>
+Cc: ojeda@kernel.org, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260604-unique-ref-v17-9-7b4c3d2930b9@kernel.org>
+References: <20260604-unique-ref-v17-9-7b4c3d2930b9@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 04 Jun 2026 20:35:30 +0000
+Message-Id: <20260604203531.4F1DC1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20260604182116.3179005-4-praan@google.com>
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF0002256E:EE_|PH0PR12MB7862:EE_
-X-MS-Office365-Filtering-Correlation-Id: 80896dc9-a2cb-44c8-433e-08dec27888d3
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|82310400026|36860700016|1800799024|11063799006|4143699003|56012099006|22082099003|18002099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	7OT3DVib5V+ktozIr8OTzHJnovN/TqdnnjXbBgk1aI7h3p2WKjLrrdswc3HYUCjoXIhUemIJ0XBJ6lL4/kl5dyR9OyUwvB79GfE/e9En0/FmGAmdEP51Yoc8CBvFrcfF4NEjunQPBkS1lyT79aUHXKg5ZgkJDTIjLvtHFn1/EIT6hIduQJaUSTKJWiG9OCGMbr0t4g6l9UBh/qCfWEYcMjK2driBscVsog/GNlXFpPN3/pwALbtJHz7YKwTJ11KpnlAA8jDFDWSUp13R7BIbaepKd89eaybVSKxkksZU8Fs7Wsd/0tHsQTIIKvej+KFiO/J8nJ2c93S6LcZ7rS5+GST+UwJJ/2ZNEg2n8wzep1cVP8IQTzFbWomzAPhpxNF8C4YD1RnRZAGEA2sgaWIIRwBke5NHxW1THRWuVitRA/J/uPjcQeHx2EYjKw+gxu0cGiZqgLupYYf8lIfIEY3/aQRIsYaGqn3JgyICR2fIXQ7xdIns9Jzoao5g6Lz3Sn8U4TP9Tz2tl7KJNrzsAgTN/ODyrkm6+rXmGaMjTteeBSC5/NYkkVXGu1y5NraF13fS0GAYu9l8nq0aBRD7+tCrrXiAfCd7Reuc06DxU6SbtbsSUpqrBruqxEDdUQ9Rk4RIq6EbIuCmg0J6yXDFGPClqmHqwKQByO6l7uTeIT/DZXdGWrfygflB87cD8eFtHLyVjI6LMnv9TrzO6twkc/4o4KlykuwOdJnw2Cqrn+nyQoM=
-X-Forefront-Antispam-Report:
-	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(376014)(82310400026)(36860700016)(1800799024)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	deitUMlEuMnIWiTeNmeh2Ow/lf8wE7rq3nGv0MBV6e6jumc+GY8DQGlifzqF8u9yzlFCwaNdQ+FV7sfxxde/xwee7F6grPk79HBsGv7taemGPA0QlKXKgSOXOAD+EhiR/Ken73f5kiCSDqFiv8EnRZGHprBttEDkAmvGWoZ1IbMbcRoIY6KBVkIB/eUkQPPzdgJaTrRUoG0noTIu4ALzYSY0BlDjOjhGx2roAKrbfkuKj6+xeputO9y91f07DtfIjSRnODXABE27gPVKmWWPMZ5VPDTAjvvaVoz1jOLdakte4+NbaMDmIp3evcZDtLEDB/+jg224sVdo+Q+b2QUCk/VB5Jb1Q2O2eDGtdZJjZGUn2z4IP4bHSj3yaTlmQUS4+HYGR/Li78xDv1fNKEDZCG3dnRbUe4EUBOryAuuJp2nkduVUlyAn4vAE6yYPDnst
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jun 2026 20:33:27.8688
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 80896dc9-a2cb-44c8-433e-08dec27888d3
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL6PEPF0002256E.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB7862
 
-On Thu, Jun 04, 2026 at 06:21:15PM +0000, Pranjal Shrivastava wrote:
-> Update arm_smmu_enable_ats() to wrap the pci_enable_ats() call in
-> WARN_ON(). Since probe-time checks now preclude configuration errors
-> any failure during hardware enablement is considered a kernel bug.
-> 
-> Reviewed-by: Kevin Tian <kevin.tian@intel.com>
-> Signed-off-by: Pranjal Shrivastava <praan@google.com>
- 
-Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
+Thank you for your contribution! Sashiko AI review found 7 potential issue(=
+s) to consider:
+- [High] `OwnableRefCounted` is a safe trait, but its default `into_shared`=
+ method contains an `unsafe` block relying on undocumented invariants.
+- [High] `ForeignOwnable::FOREIGN_ALIGN` for `Owned<T>` incorrectly promise=
+s the alignment of `Owned<T>` rather than `T`, leading to under-aligned poi=
+nters.
+- [High] `Ownable::release` takes `&mut self` but is expected to free the u=
+nderlying memory, violating Rust's Stacked Borrows aliasing rules.
+- [Low] Incorrect link destination for `ARef<Self>` in doc comments.
+- [Low] Missing `// INVARIANT:` comment when constructing `Foo` in the doct=
+est.
+- [Low] Missing `// INVARIANT:` comment when constructing `Owned<T>` in `Fo=
+reignOwnable::from_foreign`.
+- [Low] Unnecessary `mut` keyword in the doc example for `ARef::from(foo)`.
+--
+
+commit 7e04551249f9cff4815fc7ad79ac13555baea1a7
+Author: Oliver Mangold <oliver.mangold@pm.me>
+
+rust: Add OwnableRefCounted
+
+This commit introduces the OwnableRefCounted trait to allow safe conversions
+between ARef and Owned pointer types. It also updates documentation and adds
+examples for reference-counted types requiring both shared and unique acces=
+s.
+
+> diff --git a/rust/kernel/owned.rs b/rust/kernel/owned.rs
+> index bedd4fef84fa2..9db0daab22256 100644
+> --- a/rust/kernel/owned.rs
+> +++ b/rust/kernel/owned.rs
+[ ... ]
+>  pub trait Ownable {
+[ ... ]
+>      unsafe fn release(&mut self);
+
+[Severity: High]
+Does taking &mut self here violate Rust's Stacked Borrows aliasing rules?
+
+The Ownable trait defines release as taking &mut self. Owned<T>'s Drop
+implementation creates a mutable reference to the heap allocation and passes
+it to T::release.
+
+Implementations of release are expected to deallocate the memory backing th=
+is
+reference. Deallocating memory that a mutable reference points to before the
+lifetime of that reference ends is Undefined Behavior in Rust.
+
+Should release take a raw pointer like NonNull<Self> instead of a mutable
+reference?
+
+[ ... ]
+>  impl<T: Ownable> Drop for Owned<T> {
+>      #[inline]
+>      fn drop(&mut self) {
+>          // SAFETY: By existence of `&mut self` we exclusively own `self`=
+ and the underlying `T`. As
+>          // we are dropping `self`, we can transfer ownership of the `T` =
+to the `release` method.
+>          unsafe { T::release(self.ptr.as_mut()) };
+
+[Severity: High]
+Is it safe to pass self.ptr.as_mut() here if release frees the memory?
+
+This creates the mutable reference that gets passed to release and is
+subsequently deallocated, triggering the Stacked Borrows violation described
+above.
+
+[ ... ]
+>  unsafe impl<T: Ownable + 'static> ForeignOwnable for Owned<T> {
+>      const FOREIGN_ALIGN: usize =3D core::mem::align_of::<Owned<T>>();
+
+[Severity: High]
+Does this incorrectly promise the alignment of Owned<T> rather than T?
+
+ForeignOwnable::into_foreign guarantees that the returned pointer has a
+minimum alignment of FOREIGN_ALIGN. For Owned<T>, into_foreign returns a
+raw pointer to T. Therefore, the alignment of this pointer is strictly
+determined by T.
+
+If T has an alignment smaller than 8, FOREIGN_ALIGN will falsely promise an
+8-byte alignment. Data structures like XArray rely on this statically
+guaranteed minimum alignment. Passing an under-aligned pointer will cause t=
+he
+pointer to be corrupted by tag data.
+
+[ ... ]
+>      #[inline]
+>      unsafe fn from_foreign(ptr: *mut kernel::ffi::c_void) -> Self {
+>          Self {
+>              // SAFETY: By function safety contract, `ptr` came from
+>              // `into_foreign` and cannot be null.
+>              ptr: unsafe { NonNull::new_unchecked(ptr.cast()) },
+>          }
+
+[Severity: Low]
+Should there be an // INVARIANT: comment here?
+
+The struct Owned<T> has an Invariants section. ForeignOwnable::from_foreign
+constructs Self { ptr: ... } without an // INVARIANT: comment to justify why
+the ownership and pinning invariants are upheld.
+
+[ ... ]
+> @@ -231,3 +237,125 @@ unsafe fn borrow_mut<'a>(ptr: *mut kernel::ffi::c_v=
+oid) -> Self::BorrowedMut<'a>
+[ ... ]
+> +struct Foo {
+> +    refcount: Cell<usize>,
+> +}
+> +
+> +impl Foo {
+> +    fn new() -> Result<Owned<Self>> {
+> +        // We are just using a `KBox` here to handle the actual allocati=
+on, as our `Foo` is
+> +        // not actually a C-allocated object.
+> +        let result =3D KBox::new(
+> +            Foo {
+> +                refcount: Cell::new(1),
+> +            },
+> +            flags::GFP_KERNEL,
+> +        )?;
+
+[Severity: Low]
+Should we add an // INVARIANT: comment here?
+
+The struct Foo is documented with invariants above, but this construction
+lacks the comment explaining why the invariants are satisfied.
+
+> +        let result =3D KBox::into_non_null(result);
+> +        // SAFETY:
+> +        //  - We just allocated the `Self`, thus it is valid and we own =
+it.
+> +        //  - We can transfer this ownership to the `from_raw` method.
+> +        Ok(unsafe { Owned::from_raw(result) })
+> +    }
+> +}
+[ ... ]
+> +let foo =3D Foo::new()?;
+> +let mut foo =3D ARef::from(foo);
+
+[Severity: Low]
+Can we remove the mut keyword here?
+
+The variable foo is only cloned and consumed by Owned::try_from, but never
+mutated. This will trigger an unused mutability warning which can break the
+build for documentation tests when warnings are treated as errors.
+
+> +{
+> +    let bar =3D foo.clone();
+> +    assert!(Owned::try_from(bar).is_err());
+> +}
+> +assert!(Owned::try_from(foo).is_ok());
+> +# Ok::<(), Error>(())
+> +```
+> +pub trait OwnableRefCounted: RefCounted + Ownable + Sized {
+> +    /// Checks if the [`ARef`] is unique and converts it to an [`Owned`]=
+ if that is the case.
+> +    /// Otherwise it returns again an [`ARef`] to the same underlying ob=
+ject.
+> +    fn try_from_shared(this: ARef<Self>) -> Result<Owned<Self>, ARef<Sel=
+f>>;
+> +
+> +    /// Converts the [`Owned`] into an [`ARef`].
+> +    #[inline]
+> +    fn into_shared(this: Owned<Self>) -> ARef<Self> {
+> +        // SAFETY: Safe by the requirements on implementing the trait.
+> +        unsafe { ARef::from_raw(Owned::into_raw(this)) }
+
+[Severity: High]
+Does into_shared rely on undocumented invariants that make this unsafe block
+unsound?
+
+Since OwnableRefCounted is a safe trait, any safe code can implement it. The
+default implementation of into_shared calls ARef::from_raw, which assumes t=
+he
+raw pointer has an active reference count increment that can be taken
+ownership of.
+
+Because there are no safety requirements on the trait preventing it, a user
+could safely implement OwnableRefCounted for a type where Owned<T> does not
+hold a reference count increment. Calling into_shared on such a type would
+pass a pointer without an active refcount to ARef::from_raw, and when dropp=
+ed,
+it would decrement a non-existent refcount.
+
+Should this trait be declared as unsafe trait OwnableRefCounted to prevent
+undefined behavior?
+
+> +    }
+> +}
+> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
+> index 818c84fa923a3..68d31f43e6743 100644
+> --- a/rust/kernel/sync/aref.rs
+> +++ b/rust/kernel/sync/aref.rs
+[ ... ]
+> @@ -35,7 +39,10 @@
+>  /// Note: Implementing this trait allows types to be wrapped in an [`ARe=
+f<Self>`]. It requires an
+>  /// internal reference count and provides only shared references. If uni=
+que references are required
+>  /// [`Ownable`](crate::types::Ownable) should be implemented which allow=
+s types to be wrapped in an
+> -/// [`Owned<Self>`](crate::types::Owned).
+> +/// [`Owned<Self>`](crate::types::Owned). Implementing the trait
+> +/// [`OwnableRefCounted`] allows to convert between unique and
+> +/// shared references (i.e. [`Owned<Self>`](crate::types::Owned) and
+> +/// [`ARef<Self>`](crate::types::Owned)).
+
+[Severity: Low]
+Is this doc link destination correct for ARef<Self>?
+
+The link target incorrectly points to Owned instead of ARef. It should point
+to the correct type, e.g., crate::sync::aref::ARef.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604-unique-ref=
+-v17-0-7b4c3d2930b9@kernel.org?part=3D9
