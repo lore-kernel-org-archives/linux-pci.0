@@ -1,157 +1,167 @@
-Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011070.outbound.protection.outlook.com [52.101.52.70])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [144.76.133.104])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0FD842188A;
-	Thu,  4 Jun 2026 11:44:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.70
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780573469; cv=fail; b=ViX/yBOzexpwD0qwBAgyRgG6BWlgdoNGpxvALyJj33Y7Uc8Da6TrlvSk5F3/CcmNSyu5wC/zwR7N1H3Fo6b/NA1Fm4CKsf456be4fD51N1q/Z8iz4Eoj1RwznuvPuIAqIOg5dv7d9K+qa9Nc1g5ll+g7I3t5nEjmxHUU8UboSGk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780573469; c=relaxed/simple;
-	bh=YAqYy2JhOShF1xC4L7BvQolewalbz3zf5dwPiTMXc6M=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s5WclQhigzj5LbyvUDSNrwRc30K573WRbejOdpjdGpHG9IE5PP0eagxir7ca5GKRzfOhCahIrbVlauLo3VnghgQ3K7y9S0Uq5g2tMZpex3ssZv2zfLK20i2xFbKEukAgQTwZsNCa6rAKGExkGvYrCmqIpNck8esFa/tieNeepbM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=uKCT05hc; arc=fail smtp.client-ip=52.101.52.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="uKCT05hc"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Pvql9myHLUZv5753r96eVK60Vo4WGHVS4b5Xpzi/SUYOlL6nE5C6yfHazK4wZB/vH0AP4SV50YfNFgCVWT28v/SVlHeP2X63+S+ef3lYbHWbUI9Ag7nVZgqg513SirfOUT9GRpGxEnXj+4OWhyqV3V3BDht6Ws3ug7xHIstga0U8XtQe5g88gmukZ1Be2Tf+pL4toa33ZoCrWHFFK+QeN3D3fVrZxXo7vRMdHX48RdxT2kVn/HqekmcOx793zQyFXN9Ju3IuAcMJrTj7Vq85UXHwx9mlsx2UpBoqvuSQ4voOgZ9yY4skL2iRxOB5o8RutA4rfyWmLWNSaKgjBbHvWQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rSMgM3UgTjsktBTB8+dwoPwNjo94GgxLMqJZGM9Ngew=;
- b=ZW/ZVZuINdHU8Zzk+FBXW/Q8GpZZdZBD+CjB9X7feVQ9cGAZQoolnSdXy0xeS9bpUvPj2lAxnE8dyU6a3Uw4WKg2oXhxtoOyOO96LBQ/58RYYwXovMVTJ3p5dT/8J2dup+WJvdeKkjsE3tnoyMHch2nY2OgBVk/qF8z0l5aWO3OtKq0ZM9haQ+NSIit3xogDtaydciBLAyuMF9nNeQZDl3JaEZV1iPIgBIY+Zxw18EF7Y/tnmKU69IGAhQs/Hbfb/c2BghSIKwXWmC7VSuWhDoL05CbArP5fFqnuGesQwrO+CdsVYme9zzXOTJWclY52jUp9/0fZXUE2H/njS1oTvw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rSMgM3UgTjsktBTB8+dwoPwNjo94GgxLMqJZGM9Ngew=;
- b=uKCT05hcQ+vjHfNomTVm6I0VlROAk9xQj6jWKwbvWxBT1qKRiA/5wpZVxSIq3QoyhWxZ83k7kBuIcOcX8CC9RF2hPXL5CrbkYI60MekdRf2J10FQk6IayOvF2yJHeO7MtO6hYmOLVWOhrO38oCGPBQYtgfMY1zhMrh960Bs/dCGZdqJ+N0SVV2mHbjn3Rc/BdCqNUhkzGsO4OUKt4t9nyopqQxVkY1eqcy9TPBVpHEBKqTk32w0Pu21ph5OzJQPRD6hfDyjofZVcb18hOLcbXGZwG7sR6la0TQuMVPusl3oGxOa0jM9iYNskQRqL4MNGL7b0fLIxEln9YLkPVlWrQw==
-Received: from SJ0PR05CA0072.namprd05.prod.outlook.com (2603:10b6:a03:332::17)
- by PH7PR12MB7913.namprd12.prod.outlook.com (2603:10b6:510:27b::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.7; Thu, 4 Jun 2026
- 11:44:20 +0000
-Received: from SJ1PEPF000023D3.namprd21.prod.outlook.com
- (2603:10b6:a03:332:cafe::86) by SJ0PR05CA0072.outlook.office365.com
- (2603:10b6:a03:332::17) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.7 via Frontend Transport; Thu, 4
- Jun 2026 11:44:20 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- SJ1PEPF000023D3.mail.protection.outlook.com (10.167.244.68) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.113.2 via Frontend Transport; Thu, 4 Jun 2026 11:44:20 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 4 Jun
- 2026 04:44:06 -0700
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 4 Jun
- 2026 04:44:05 -0700
-Received: from inno-dell.mtl.com (10.127.8.9) by mail.nvidia.com (10.129.68.9)
- with Microsoft SMTP Server id 15.2.2562.20 via Frontend Transport; Thu, 4 Jun
- 2026 04:43:57 -0700
-From: Zhi Wang <zhiw@nvidia.com>
-To: <dakr@kernel.org>, <airlied@gmail.com>, <simona@ffwll.ch>
-CC: <ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
-	<gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <lossin@kernel.org>,
-	<a.hindborg@kernel.org>, <aliceryhl@google.com>, <tmgross@umich.edu>,
-	<jhubbard@nvidia.com>, <acourbot@nvidia.com>, <ecourtney@nvidia.com>,
-	<joelagnelf@nvidia.com>, <apopple@nvidia.com>, <cjia@nvidia.com>,
-	<smitra@nvidia.com>, <kjaju@nvidia.com>, <alkumar@nvidia.com>,
-	<ankita@nvidia.com>, <aniketa@nvidia.com>, <kwankhede@nvidia.com>,
-	<targupta@nvidia.com>, <nova-gpu@lists.linux.dev>,
-	<linux-kernel@vger.kernel.org>, <zhiwang@kernel.org>, Zhi Wang
-	<zhiw@nvidia.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: [PATCH 1/9] rust: pci: expose sriov_get_totalvfs() helper
-Date: Thu, 4 Jun 2026 14:43:31 +0300
-Message-ID: <20260604114339.1565660-2-zhiw@nvidia.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20260604114339.1565660-1-zhiw@nvidia.com>
-References: <20260604114339.1565660-1-zhiw@nvidia.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAEBF425CF0
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 11:50:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.133.104
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780573813; cv=none; b=uz9XNQRWR0LAzsndo/iHxFAFhfQCbTN4Rvsi66sMGb8xTqHmVJxS0wtQ6vXrKrxvPoaoXVe5V+rfq3zzb27kwNihz23uCoBx52y0BxNFQda2PH23m2hHBqFxdjGCfOtTWPOXo8Qa7QrkmqvSVQWYRp9pF1p4dGtPAstNAVAyatQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780573813; c=relaxed/simple;
+	bh=dCzv0cIv3Qk51Yf4DLbNNd769CV5JA3m4Tp3eQ4Q2XQ=;
+	h=Message-Id:From:Date:Subject:To:Cc; b=Ew5yiQqCSv9yU3qOURzM55GXjgRL8Y7WqY1Ywn7tbtYpRE166llsZZHz0Jcy96RS+s1DCrfIX3rM8hlUpDzd4MhlsLbmJZleqXZeGE7nQOeKVMHVxCHOwNwnWyftOieQpwoJnF239EuFvTVyJSvYdP8F7CvFYY0ioTwM8jKLlSI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=144.76.133.104
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id EC2EBC34;
+	Thu, 04 Jun 2026 13:50:08 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id B196F60077B6; Thu,  4 Jun 2026 13:50:08 +0200 (CEST)
+Message-Id: <4ea5265495876beb5fb5e6d479b2782f882bcbb3.1780570508.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Thu, 4 Jun 2026 13:50:08 +0200
+Subject: [PATCH] PCI/P2PDMA: Add Intel QAT, DSA, IAA devices to whitelist
+To: Bjorn Helgaas <helgaas@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, Giovanni Cabiddu <giovanni.cabiddu@intel.com>, "Vinicius Costa Gomes" <vinicius.gomes@intel.com>
+Cc: linux-pci@vger.kernel.org, qat-linux@intel.com, Damir Chanyshev <conflict342@gmail.com>, Simon Richter <sjr@debian.org>, Tomasz Ossowski <tomasz.ossowski@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-NV-OnPremToCloud: ExternallySecured
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ1PEPF000023D3:EE_|PH7PR12MB7913:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0b43f63d-e523-4ef2-c4f4-08dec22e9dd6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|36860700016|7416014|1800799024|82310400026|22082099003|18002099003|11063799006|6133799003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	76BUCbpnPCSb/sgAPkPq4jhBSmha9QzvpkdlWkFUJQkeFniMZJpQ86HVVvZ9cQAu12ioYBAjYIun4UCR2bI6Ac+A+AE+Fx4LJfsygIaKslEnX6egP4tihl4LzipQExgWVo/g/evCLw6rqCOJBxW0OqeQo4wj+zEm/ls0tKs+a7jJPoY0NOhevMbMLTBYwo5QmiFkz8OLTzELt33nwpObcGAbGAXuooYFBpLn0BXleGpP+PVSHDjQ7agGFC5+CYeHyliz7klop3rwL7YevWEzOgza2bSlpUXJt1/rklpTNsesdZjQ39x6U5OIFtNu54GNGUOhEK/75n6QnbVcD1Lq9E1GY0feRnMDIvPdeElTuPlV9Z6REHwJ04Flpz4XS/ORKalUWK3Y0gX0WEAaS3/OOVmcFKtWVrB2lYv1DfuDyoPXJpuDx+DOqiraJp7zyYIXf7k/TxofmpmwOiUrLvPlRh47QJsyjdo72Tb7m6x8IMmhjbdNnETqBHOx/C2K7CVSOKPZpxELUtn8r3ytdFse6bUz+2VtWCQNkJqvelZjWDDVQPcndpmpN0RdFOZ+fjsC2MOiKz4hdj3M1SIAPKBe1pAIEpjiP7PumHmZHwAzmzALoG/UbseJp2ih0EU9FED1O200jc0nWmF9NUTLUIhpT8EaLxvBYu2152jh7Ruw//0FO2viEWO2O9JP5jz/Y4XCiBXd4r9pSFeyj54mwFo5HrKDhLrCJDJ9I4TIZhkV4QY=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(36860700016)(7416014)(1800799024)(82310400026)(22082099003)(18002099003)(11063799006)(6133799003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	evhU2WjcVRK35J4rZZqa8rkK32oEsrEGOzrFQAdcAC8qpvsXqhuGYzivLtn8ws/I6Z7a0xUPI6qcUZxsMO8XMw8FjDt5YFhU6KBKQ9Cf1kHBSEa9rrzjJPd6OtWFlh12D95+9FSIaw6rk+HGyS+PDbdnjKZFmY/YAdOIaaXa/bpM6QXWuVs/fFZaQhuO03xCTZuO9AB4miB/VeW1Sdttov1rTWkyOwk8qW5BWiagL9pR+pcxzCrf9c4JrGHHvSqLXa1bbyPkmkh+E7E4V0mJEAVpjtsH/RNg5/1XNR1Zcs1JIPUDihsjugBKHUJfy19Em5YnKaObaq7dl3CPSb29gNlko+CSkyywLl6jGJl6rpR0XMNGr5L0MV9mwrvAbF0EpEGGbmRo8/e1ywDoOY42SJsulNqBxTZeI1e402psL7SrrJGpafqRpv/CpVYcTqIp
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jun 2026 11:44:20.4568
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0b43f63d-e523-4ef2-c4f4-08dec22e9dd6
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SJ1PEPF000023D3.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB7913
 
-Add a wrapper for the `pci_sriov_get_totalvfs()` helper, allowing drivers
-to query the number of total SR-IOV virtual functions a PCI device
-supports.
+The first device on a PCI root bus determines whether the host bridge is
+whitelisted for P2PDMA.  All Intel Xeon chips since Ice Lake (ICX, 2021)
+expose a device with ID 0x09a2 as first device.  It is loosely associated
+with the IOMMU.  All these Xeon chips support P2PDMA, so since the
+addition of the device with commit feaea1fe8b36 ("PCI/P2PDMA: Add Intel
+3rd Gen Intel Xeon Scalable Processors to whitelist"), P2PDMA has been
+allowed on all new Xeons without the need to amend the whitelist:
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Zhi Wang <zhiw@nvidia.com>
+Xeons with Performance Cores:
+  Sapphire Rapids (SPR, 2023)
+  Emerald Rapids (EMR, 2023)
+  Granite Rapids (GNR, 2024)
+  Diamond Rapids (DMR, 2026)
+
+Xeons with Efficiency Cores:
+  Sierra Forest (SRF, 2024)
+  Clearwater Forest (CWF, 2026)
+
+However these Xeons also expose accelerators as first device on a root bus
+of its own:
+
+  QuickAssist Technology (QAT, crypto & compression accelerator)
+  Data Streaming Accelerator (DSA, dma engine)
+  In-Memory Analytics Accelerator (IAA, dma engine)
+
+Whitelist them for P2PDMA as well.  Move their Device ID macros from the
+accelerator drivers to <linux/pci_ids.h> for reuse by P2PDMA code.
+
+Unfortunately the Device IDs vary across Xeon generations as additional
+features were added to the accelerators.  This currently necessitates an
+amendment for each new Xeon chip.
+
+For future chips, this need shall be avoided by an ongoing effort to
+extend ACPI HMAT with PCIe P2PDMA characteristics (latency, bandwidth,
+ordering constraints).  The PCI core will be able look up in this
+BIOS-provided ACPI table whether P2PDMA is supported, instead of relying
+on a whitelist that needs to be amended continuously.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org
 ---
- rust/kernel/pci.rs | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/crypto/intel/qat/qat_common/adf_accel_devices.h |  5 -----
+ drivers/dma/idxd/registers.h                            |  3 ---
+ drivers/pci/p2pdma.c                                    | 10 ++++++++++
+ include/linux/pci_ids.h                                 |  8 ++++++++
+ 4 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/rust/kernel/pci.rs b/rust/kernel/pci.rs
-index 5071cae6543f..d04e5f6841f2 100644
---- a/rust/kernel/pci.rs
-+++ b/rust/kernel/pci.rs
-@@ -450,6 +450,18 @@ pub fn pci_class(&self) -> Class {
-         // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev`.
-         Class::from_raw(unsafe { (*self.as_raw()).class })
-     }
-+
-+    /// Returns total number of VFs, or `Err(ENODEV)` if none available.
-+    pub fn sriov_get_totalvfs(&self) -> Result<i32> {
-+        // SAFETY: `self.as_raw()` is a valid pointer to a `struct pci_dev`.
-+        let vfs = unsafe { bindings::pci_sriov_get_totalvfs(self.as_raw()) };
-+
-+        if vfs == 0 {
-+            return Err(ENODEV);
-+        }
-+
-+        Ok(vfs)
-+    }
- }
+diff --git a/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h b/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
+index 03a4e96..cbd1d1e 100644
+--- a/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
++++ b/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
+@@ -28,15 +28,10 @@
+ #define ADF_4XXX_DEVICE_NAME "4xxx"
+ #define ADF_420XX_DEVICE_NAME "420xx"
+ #define ADF_6XXX_DEVICE_NAME "6xxx"
+-#define PCI_DEVICE_ID_INTEL_QAT_4XXX 0x4940
+ #define PCI_DEVICE_ID_INTEL_QAT_4XXXIOV 0x4941
+-#define PCI_DEVICE_ID_INTEL_QAT_401XX 0x4942
+ #define PCI_DEVICE_ID_INTEL_QAT_401XXIOV 0x4943
+-#define PCI_DEVICE_ID_INTEL_QAT_402XX 0x4944
+ #define PCI_DEVICE_ID_INTEL_QAT_402XXIOV 0x4945
+-#define PCI_DEVICE_ID_INTEL_QAT_420XX 0x4946
+ #define PCI_DEVICE_ID_INTEL_QAT_420XXIOV 0x4947
+-#define PCI_DEVICE_ID_INTEL_QAT_6XXX 0x4948
+ #define PCI_DEVICE_ID_INTEL_QAT_6XXX_IOV 0x4949
  
- impl<'a> Device<device::Core<'a>> {
+ #define ADF_DEVICE_FUSECTL_OFFSET 0x40
+diff --git a/drivers/dma/idxd/registers.h b/drivers/dma/idxd/registers.h
+index f954113..1dce26d 100644
+--- a/drivers/dma/idxd/registers.h
++++ b/drivers/dma/idxd/registers.h
+@@ -10,9 +10,6 @@
+ #endif
+ 
+ /* PCI Config */
+-#define PCI_DEVICE_ID_INTEL_DSA_GNRD	0x11fb
+-#define PCI_DEVICE_ID_INTEL_DSA_DMR	0x1212
+-#define PCI_DEVICE_ID_INTEL_IAA_DMR	0x1216
+ #define PCI_DEVICE_ID_INTEL_IAA_PTL	0xb02d
+ #define PCI_DEVICE_ID_INTEL_IAA_WCL	0xfd2d
+ 
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 7c89854..1cb4474 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -548,6 +548,16 @@ static bool cpu_supports_p2pdma(void)
+ 	{PCI_VENDOR_ID_INTEL,	0x2033, 0},
+ 	{PCI_VENDOR_ID_INTEL,	0x2020, 0},
+ 	{PCI_VENDOR_ID_INTEL,	0x09a2, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_SPR0, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_IAX_SPR0, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_GNRD, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_DMR, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_IAA_DMR, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_4XXX, 0},  /* SPR/EMR-XCC */
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_401XX, 0}, /* SPR/EMR-MCC */
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_402XX, 0}, /* GNR/SRF/CWF */
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_420XX, 0}, /* GNR-D */
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_6XXX, 0},  /* DMR */
+ 	/* Google SoCs. */
+ 	{PCI_VENDOR_ID_GOOGLE,	PCI_ANY_ID, 0},
+ 	{}
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 24cb42f..1c9d40e 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2732,6 +2732,9 @@
+ #define PCI_DEVICE_ID_INTEL_82815_MC	0x1130
+ #define PCI_DEVICE_ID_INTEL_82815_CGC	0x1132
+ #define PCI_DEVICE_ID_INTEL_SST_TNG	0x119a
++#define PCI_DEVICE_ID_INTEL_DSA_GNRD	0x11fb
++#define PCI_DEVICE_ID_INTEL_DSA_DMR	0x1212
++#define PCI_DEVICE_ID_INTEL_IAA_DMR	0x1216
+ #define PCI_DEVICE_ID_INTEL_82092AA_0	0x1221
+ #define PCI_DEVICE_ID_INTEL_82437	0x122d
+ #define PCI_DEVICE_ID_INTEL_82371FB_0	0x122e
+@@ -3052,6 +3055,11 @@
+ #define PCI_DEVICE_ID_INTEL_5400_FBD1	0x4036
+ #define PCI_DEVICE_ID_INTEL_HDA_TGL_H	0x43c8
+ #define PCI_DEVICE_ID_INTEL_HDA_DG1	0x490d
++#define PCI_DEVICE_ID_INTEL_QAT_4XXX	0x4940
++#define PCI_DEVICE_ID_INTEL_QAT_401XX	0x4942
++#define PCI_DEVICE_ID_INTEL_QAT_402XX	0x4944
++#define PCI_DEVICE_ID_INTEL_QAT_420XX	0x4946
++#define PCI_DEVICE_ID_INTEL_QAT_6XXX	0x4948
+ #define PCI_DEVICE_ID_INTEL_HDA_EHL_0	0x4b55
+ #define PCI_DEVICE_ID_INTEL_HDA_EHL_3	0x4b58
+ #define PCI_DEVICE_ID_INTEL_HDA_WCL	0x4d28
 -- 
 2.51.0
 
