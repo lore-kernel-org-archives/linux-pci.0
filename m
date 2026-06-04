@@ -1,105 +1,95 @@
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1523A59B1
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 18:59:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39BD71F30BB
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 19:12:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780599600; cv=none; b=n4cPK0byPknfnggIfBn7wFCGzN4WOCAYW9QPsbim47Vbktz650jcg1b5zaUCURdbH+BCSppY1JXPplfbUUdYCwWRg1EaN8wJXpc5vi1SqyryFq7kyQ2Je+h+iyf93Zdo2TUdkPFX1VECyEVBB/dTsbJhyJkyN32pgAuGlrPkN/I=
+	t=1780600327; cv=none; b=dpJpfJokE+WQAhnTtvrnuGcDC1mEBw5t/xmH7eNah2amkSq6A/HB6PkyeioLRYSH9owf4KG7e0wx9BbEbH38ojfBumDJPIzrHIz8FqBqqbVyaO5skT1xFqHUvnh5s8SNF55gONjSo99mFOdV4MddTXAabKOnI5rNOZHry2WfTD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780599600; c=relaxed/simple;
-	bh=h+ptx8C/cbQHJsE3+Kk3U3Vtl4JYBPi0lsNxAoa1VMA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=U/LiB+MS/NNIfA1dFkm6WJAU7N/IS/9tL1i8wvKU6OSQeT+r7BWoFktP6Jv6WiN5VVYPZMVTOA8X8ZF6h3RrZMkPFFN3lb06iduC+C1xquav/qwcddr4/tTstsDnyXFlZ/z1q8wSN8bA35hnvkHky3qVT4f/NEjTOcFaJbUj3ws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MhB3yNfH; arc=none smtp.client-ip=209.85.218.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1780600327; c=relaxed/simple;
+	bh=CbQSSw25eXLmweuGz9KliNL75/R/JZRLAlEaPsmDjMs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=d0/tzJBUvfBaBzPOxSc2idBlVOtaTIwRRXP656Z4+JwRpNkCqBuyA50Kht6meeylWAFtuO/KxQJ7h1AgnPnP6dg7kog92uxJyympnDIJMgWIwouKI9wACPGf9YZtSuWLSOxFHcZL7YuT04H9CxMrOTm0NgT4835RiDbK3JJ2dj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o1HeDLab; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MhB3yNfH"
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-bec449cf976so147687466b.2
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 11:59:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780599597; x=1781204397; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=UdDPcFn45o8eOdopqzCXPMjHN3/Cvgt3UFvkr3Oo5TI=;
-        b=MhB3yNfHQQI/wXHLWUaW20PTQn2acuPo6ARpEy7Eux1pXxpyLKZ5NigRzdcOm4zlRH
-         sM7w4wJEYTSrwrEPw1Afw/WNfbCWwyupGQSGOUw9jbwZUuYvLg2gxypPBxgX10xTY0a+
-         YULwSEJ4IdAx+iEEz/i+871NbBBVPpkKfyE3wUlfSkkclktRsWMGRRgpkpzLCxd6Xxyk
-         Ht3bKgdquSbUAwhaMx3cdvhAI7Gn0G1P42wQ1P3MYT0vMx0WhyYruuRXA7CbqhHDzQvo
-         Km/J8LvrbIH3rMQI3KREPcZNM0HexaaHyyDfQixaHVkOKnoyI5KvWBZHpbjD7WKHMQ/o
-         8/3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780599597; x=1781204397;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UdDPcFn45o8eOdopqzCXPMjHN3/Cvgt3UFvkr3Oo5TI=;
-        b=YZ3K1sz9xzEmY7IQRIWhS4GQLfoH15HTX2MgWMQ5rnqEhhwZwg62qh86lYijHOQQWv
-         A8ZPytTVrL0V8X6L4oMzq/4h1vR+ozZx2fPK609e0EF1TeA98ovclIokQ+h4LeXnnrw0
-         6LJUsb0/IL/arQYPbIHyhZ633578X7mHYmjmpzDu2Mx8uKV0UU5HihqrthEgH9ju1q53
-         CYAIhHU1PE3ayZ0qmNG6G1aOVsOocFZFOjiAsu30Ud+wvB0wZ4UjK04bnru2F/3yBxnH
-         Ybz/nfzvLvdApkrhXzWcLM23IV5zoPx6ZKCtqFyjWo8MC+bzjPPnP0Je+kovCPvW8Qgt
-         ZCtQ==
-X-Gm-Message-State: AOJu0YyPD1/E/FwPdSi+Z/h32iMuQuj2XKuIaui0PgfVE/+Y7J+15xr4
-	W5sD3MiXOq787kDHzoFjivYdnQa4oJX1KSxSRzM1OZwRDp5dKVNAzRWw/R6EYNYQfM0=
-X-Gm-Gg: Acq92OGxOVxkQNZyN/9YF0YsBw9r3zlPd1tYxCFSL4qMENNHJYH0nwTl6zpW8aVj3ZN
-	/jc4HXybyYyRSonR4ofUDk5TDNQJCO9qHwOqIQnC2MNWshaEsHIjChjN4M9pHs/M//pzSJkSMJj
-	HdGude+UnJROP0OsHrtnkrYaLIZhXK1lg46T8HHifA4CKTJSdjaEWFApY4Poh+uoNx1Dt83Wosh
-	4ICFc1J3Afn7v31LEduPw93+0Ue8lLcPpHhjw2zljhKUPTg8IUViETzPKrIybzbTlPEk78I1iQH
-	M/Q+We+7JffmiQgDi6Xa5o03DzWT9ZnWbzxcUj9tXbQuUW0nyQ/rTxHHvdGxQWWIG8J14GbX+VM
-	xxcfKat+aJxN5jEDEmLfLN+76iiQc9lrXBVafzm0wuB52dJJiChL/5HxWLkY1yM17/SPCbFfNYV
-	qmfpA55dqqDBEkwbEqYazkHeguWmYk9sZKBSHMre8Ra8uEG7YtKfcAKIDqslp0vGTp+es=
-X-Received: by 2002:a17:907:60d3:b0:bdc:bb72:7bc7 with SMTP id a640c23a62f3a-bf0aab1b72dmr528603466b.31.1780599597207;
-        Thu, 04 Jun 2026 11:59:57 -0700 (PDT)
-Received: from ali-monster-pc.localdomain ([45.92.224.105])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-bf05228a16csm339673466b.28.2026.06.04.11.59.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 11:59:56 -0700 (PDT)
-From: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	Ali Alaei <ali.alaei.tabatabaei@gmail.com>
-Subject: [PATCH] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow Lake-HX
-Date: Thu,  4 Jun 2026 20:59:53 +0200
-Message-ID: <20260604185953.17177-1-ali.alaei.tabatabaei@gmail.com>
-X-Mailer: git-send-email 2.54.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o1HeDLab"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 905A81F00893;
+	Thu,  4 Jun 2026 19:12:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780600325;
+	bh=zbflrSgw+AQjspbuHuK7YbXNGyxQ3ih9tDGR4/qlEbA=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=o1HeDLabyOCu3lfv+2PGXdlrrdIA7StUrVpGGqnkqJ6KUl9Kkq4J+Wj2ShXn5m0LY
+	 VSwCK4OIpQZiI99iTm0ZxFqdqZ1haJezoGJwxroBqLJHXPZkZILaEhj/GYM7b04aXG
+	 idSBSTHe6U9vzZPxNe17am5lr5jG00IKt/ZROtyjM5tPlqLntespyNKVLcUQbNnS4S
+	 kT+4N9Su/bHEiGGKo5BhCo4//dXThQsOynHQfnznnqwDJKAeioLkGfv0a6IDG1Tmav
+	 bCOMN4nm9Ji91hckSpmRAS6ghL2BsNTXkO1CYPlm7tqLLEkbGj3v5bMlsKphi7ksDb
+	 RLTSrWyFrmufg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow
+ Lake-HX
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Ali Alaei" <ali.alaei.tabatabaei@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260604185953.17177-1-ali.alaei.tabatabaei@gmail.com>
+References: <20260604185953.17177-1-ali.alaei.tabatabaei@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 04 Jun 2026 19:12:05 +0000
+Message-Id: <20260604191205.905A81F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Intel Arrow Lake-HX platforms (e.g., Core Ultra 9 275HX) use VMD device
-8086:ad0b, which is already in the driver's ID table. However, on these
-platforms the VMCONFIG register's BUS_RESTRICT_CFG field returns 3 during
-probe. vmd_get_bus_number_start() only handles values 0-2 and returns
--ENODEV for anything else, causing VMD probe to fail and leaving NVMe
-drives behind the VMD controller invisible to the OS.
-
-Handle cfg=3 the same as cfg=2 (busn_start=224).
-
-Tested on: Acer Predator PH16-73 with Intel Core Ultra 9 275HX
-           (VMD controller 0000:00:0e.0, 8086:ad0b).
-
-Signed-off-by: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
----
- drivers/pci/controller/vmd.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index XXXXXXX..YYYYYYY 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -649,6 +649,7 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
- 		case 1:
- 			vmd->busn_start = 128;
- 			break;
-+		case 3:
- 		case 2:
- 			vmd->busn_start = 224;
- 			break;
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] Unchecked PCI configuration reads can cause device removal or re=
+ad failures to be treated as a valid configuration (case 3), falsely contin=
+uing probe.
 --
-2.49.0
+
+commit fde973a5965da08fe76816c224c875b5ef1e4a2e
+Author: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+
+PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow Lake-HX
+
+This commit adds support for Intel Arrow Lake-HX platforms where the VMD
+controller's VMCONFIG register returns 3 for the BUS_RESTRICT_CFG field,
+mapping it to a bus number start of 224.
+
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index d4ae250d4bc6d..9cf5ea2e1e20f 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+
+[ ... ]
+
+> @@ -648,6 +648,7 @@ static int vmd_get_bus_number_start(struct vmd_dev *v=
+md)
+>  		case 1:
+>  			vmd->busn_start =3D 128;
+>  			break;
+> +		case 3:
+
+[Severity: Medium]
+Does this change unintentionally mask device removal errors?
+
+If the device is removed during probe, pci_read_config_word() does not
+necessarily return an error code and the hardware typically returns 0xFFFF.
+Because BUS_RESTRICT_CFG(0xFFFF) evaluates to 3, the driver will now treat a
+read failure as a valid configuration instead of aborting the probe.
+
+Before this patch, the value 3 hit the default case and safely returned
+-ENODEV. Should there be a check to ensure the register value is not 0xFFFF
+before evaluating the configuration?
+
+>  		case 2:
+>  			vmd->busn_start =3D 224;
+>  			break;
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604185953.1717=
+7-1-ali.alaei.tabatabaei@gmail.com?part=3D1
