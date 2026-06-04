@@ -1,315 +1,117 @@
-Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B255481ABD;
-	Thu,  4 Jun 2026 13:28:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2117B225403;
+	Thu,  4 Jun 2026 13:48:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780579705; cv=none; b=I+mWaviHlpk20rpSDvTzwk7iXQeLTl6jsXZ8adwfhqBUFfsPjY0aYmfkeA9LJKQ4zZrGdjP9Nglr8WSYTpimTS26Ry/R4vTEQbeHwzdd0EWwOgbl/x7Cat6O151hDYXNi5jvdFtss2x6CGu1p9zmFflObalu89R78VlnJjFvf3M=
+	t=1780580915; cv=none; b=aOm3zCAfWbxM/TwBKTb21cpjDY+zkxqKJf7A9imu0g21UQ0uNPV68UAqx+p2FbqceQ4vzUrWUBWyjqF2tA3E1VysjxlJnvBhF6uO80ci9Yjmv30xff/TnSEk+liluerkppGcNNOBX6/W74k3QGFUo/Y9wf4uGer9kI3FCwAKscE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780579705; c=relaxed/simple;
-	bh=7VMLP7Ky8coJWuNa0XloE9CsY16ZowmSKPxur3uUTNE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ex/eLgCS0a7qlk4XMlbKblTBNU2zzZ141IXlqBo0vTm9JuEp+Q6qAqi0+nI0Lo7t8uzkqZwn+1qVohhqazVY507W3I5cMWgkNjeL7Xn5ridB/JjgLt4wO8CYWdZA4bx2DKmWTxenVEu5kBsqLCs/2Q+7LNh59oHhsb+o7t4SvZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=phhezJJm; arc=none smtp.client-ip=113.46.200.225
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1780580915; c=relaxed/simple;
+	bh=PnEgEQ632XisQvmjfKF0uuXQJ4LYvzbAxOpwWFQMRfg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=Y+V1nuYgdfJ4wcdSmiJ0g/01Wtc55voE5mg7kDwDdQ2sTOWjCzET7URvR8c0k88nY1Nw8/q/2RQ+94Nt6Ht+YNhEVAWPfxBIaioXEzvCEF9trYwCBxtWEAD0ApjHG057BiV3kdAByb1oYjT7JoeOmX1rI0vN8Ta+z6valIa9348=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BAaF0Vh0; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="phhezJJm"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=QHNkxzJriMX4tQmawtKpjg+Ru8IHnjtpeoe8FCw9TBE=;
-	b=phhezJJmMkPq2ZMsH/fb3R2SShD7yG18ROs1ssesPhYWaFe+egu7X5prRbonQaMWlsa6UCjb3
-	Gr2OtNac6DTHUL4Gt2ev9EGJhf/iXantoMR22PRnHe2YEB1OdZ+DX/LyxYWveZ1aF9rmwNByznL
-	zH0UJyAoal9rFQf0rXGxuI0=
-Received: from mail.maildlp.com (unknown [172.19.162.92])
-	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4gWQD95ZSZz1K96h;
-	Thu,  4 Jun 2026 21:20:25 +0800 (CST)
-Received: from kwepemk500009.china.huawei.com (unknown [7.202.194.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 249A140565;
-	Thu,  4 Jun 2026 21:28:15 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- kwepemk500009.china.huawei.com (7.202.194.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 4 Jun 2026 21:28:14 +0800
-From: Chengwen Feng <fengchengwen@huawei.com>
-To: <alex@shazbot.org>, <jgg@ziepe.ca>
-CC: <wathsala.vithanage@arm.com>, <helgaas@kernel.org>, <wei.huang2@amd.com>,
-	<zhipingz@meta.com>, <wangzhou1@hisilicon.com>, <wangyushan12@huawei.com>,
-	<liuyonglong@huawei.com>, <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v16 11/12] vfio/pci: Add TPH_ST_CONFIG for PCIe TPH ST configuration
-Date: Thu, 4 Jun 2026 21:28:03 +0800
-Message-ID: <20260604132804.28678-12-fengchengwen@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20260604132804.28678-1-fengchengwen@huawei.com>
-References: <20260604132804.28678-1-fengchengwen@huawei.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BAaF0Vh0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 991281F00893;
+	Thu,  4 Jun 2026 13:48:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780580913;
+	bh=USNzHh52wuk0OoFgBY2F8TjiIoWulAGqxSoxEgFypQE=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=BAaF0Vh0tmgNpnXfl2crKqCtmwY4fP7+/19zvPuqg5pv/C+cxlWev/47SIhe31kFL
+	 n80toSkuwqfaMr6+RyV1fS7vBdbwgR3CZrZ5cGot3edjIVJSGkgW2hA98kG8tKyn41
+	 JErJl1q19EqvVTOvAkd4xGy7nkM1ph6Z5DQmAE/qLCrQlfe5C+yKcqj6ymjHeA1p+b
+	 x/M92y1qHKJ8Dm3R2fCTdNSZApq5RcDbQlx3NFQU0jlz+yS62TdBSHQjHNwqx+2bRP
+	 gtkiIngI+h8RCEGg1sbRJzaVlSGOk4vwzYDB/pIWTbT2G2P9z5RUx7MTAhq71DI9Eb
+	 j9fprYyTeDzsg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v16 08/12] vfio/pci: Hide TPH capability when TPH is
+ unsupported
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Chengwen Feng" <fengchengwen@huawei.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260604132804.28678-9-fengchengwen@huawei.com>
+References: <20260604132804.28678-9-fengchengwen@huawei.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 04 Jun 2026 13:48:33 +0000
+Message-Id: <20260604134833.991281F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemk500009.china.huawei.com (7.202.194.94)
 
-Add a new VFIO device feature VFIO_DEVICE_FEATURE_TPH_ST_CONFIG to allow
-userspace to configure PCIe TPH Steering Tag table entries. This interface
-supports only configuration writes, read operations are not permitted.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-Implement shadow ST table to cache entries, paired with per-device mutex
-for concurrent access protection. Batch write failure triggers entry
-rollback to guarantee hardware and shadow table consistency.
+Pre-existing issues:
+- [Critical] Missing bounds check on parsed PCIe capability length causes h=
+eap buffer overflow.
+--
 
-The feature is double gated:
-1. Global enable_unsafe_tph module parameter must be enabled;
-2. Userspace needs to firstly SET VFIO_DEVICE_FEATURE_TPH_ENABLE
-   to set per-device tph_permit flag before using TPH_CPU_CONFIG.
+commit 2c400d6c4f255c3b600592b504b9399d3cd59033
+Author: Chengwen Feng <fengchengwen@huawei.com>
 
-Signed-off-by: Chengwen Feng <fengchengwen@huawei.com>
----
- drivers/vfio/pci/vfio_pci_core.c | 129 +++++++++++++++++++++++++++++++
- include/linux/vfio_pci_core.h    |   3 +
- include/uapi/linux/vfio.h        |  22 ++++++
- 3 files changed, 154 insertions(+)
+vfio/pci: Hide TPH capability when TPH is unsupported
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 91c0737727f2..0851fdf0daac 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -530,6 +530,50 @@ static const struct dev_pm_ops vfio_pci_core_pm_ops = {
- 			   NULL)
- };
- 
-+static int vfio_pci_tph_st_shadow_size(struct vfio_pci_core_device *vdev)
-+{
-+	struct pci_dev *pdev = vdev->pdev;
-+	u32 loc = pcie_tph_get_st_table_loc(pdev);
-+	int ret;
-+
-+	if (loc == PCI_TPH_LOC_CAP) {
-+		return pcie_tph_get_st_table_size(pdev);
-+	} else if (loc == PCI_TPH_LOC_MSIX) {
-+		ret = pci_msix_vec_count(pdev);
-+		if (ret < 0)
-+			return 0;
-+		return ret;
-+	} else {
-+		return 0;
-+	}
-+}
-+
-+static int vfio_pci_tph_init(struct vfio_pci_core_device *vdev)
-+{
-+	vdev->tph_st_entries = 0;
-+	vdev->tph_st_shadow = NULL;
-+
-+	if (!enable_unsafe_tph)
-+		return 0;
-+
-+	vdev->tph_st_entries = vfio_pci_tph_st_shadow_size(vdev);
-+	if (vdev->tph_st_entries) {
-+		vdev->tph_st_shadow = kcalloc(vdev->tph_st_entries, sizeof(u16),
-+					      GFP_KERNEL);
-+		if (!vdev->tph_st_shadow)
-+			return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static void vfio_pci_tph_deinit(struct vfio_pci_core_device *vdev)
-+{
-+	kfree(vdev->tph_st_shadow);
-+	vdev->tph_st_shadow = NULL;
-+	vdev->tph_st_entries = 0;
-+}
-+
- int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-@@ -556,6 +600,11 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- 		goto out_disable_device;
- 
- 	vdev->reset_works = !ret;
-+
-+	ret = vfio_pci_tph_init(vdev);
-+	if (ret)
-+		goto out_disable_device;
-+
- 	pci_save_state(pdev);
- 	vdev->pci_saved_state = pci_store_saved_state(pdev);
- 	if (!vdev->pci_saved_state)
-@@ -613,6 +662,7 @@ int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
- out_free_state:
- 	kfree(vdev->pci_saved_state);
- 	vdev->pci_saved_state = NULL;
-+	vfio_pci_tph_deinit(vdev);
- out_disable_device:
- 	pci_disable_device(pdev);
- out_power:
-@@ -681,6 +731,7 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
- 	kfree(vdev->region);
- 	vdev->region = NULL; /* don't krealloc a freed pointer */
- 
-+	vfio_pci_tph_deinit(vdev);
- 	vfio_config_free(vdev);
- 
- 	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-@@ -1637,6 +1688,79 @@ static int vfio_pci_core_feature_tph_cpu_st(struct vfio_pci_core_device *vdev,
- 	return ret;
- }
- 
-+static int vfio_pci_core_feature_tph_st_config(
-+			struct vfio_pci_core_device *vdev,
-+			u32 flags,
-+			struct vfio_device_feature_tph_st_config __user *arg,
-+			size_t argsz)
-+{
-+	struct vfio_device_feature_tph_st_config config;
-+	struct pci_dev *pdev = vdev->pdev;
-+	void __user *uptr;
-+	int i, idx, ret;
-+	size_t sz;
-+	u16 *sts;
-+
-+	if (!vdev->tph_permit || !vdev->tph_st_shadow)
-+		return -EOPNOTSUPP;
-+
-+	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-+				 sizeof(config));
-+	if (ret <= 0)
-+		return ret;
-+
-+	if (copy_from_user(&config, arg, sizeof(config)))
-+		return -EFAULT;
-+
-+	if (config.count == 0 || config.reserved != 0 ||
-+		config.index >= vdev->tph_st_entries ||
-+		config.count > vdev->tph_st_entries - config.index)
-+		return -EINVAL;
-+
-+	uptr = u64_to_user_ptr(config.data_uptr);
-+	sts = memdup_array_user(uptr, config.count, sizeof(u16));
-+	sz = config.count * sizeof(u16);
-+	if (IS_ERR(sts))
-+		return PTR_ERR(sts);
-+
-+	down_write(&vdev->memory_lock);
-+	ret = vfio_pci_set_power_state(vdev, PCI_D0);
-+	if (ret)
-+		goto out_unlock_memory;
-+
-+	mutex_lock(&vdev->tph_lock);
-+
-+	if (pcie_tph_enabled_req_type(pdev) == PCI_TPH_REQ_DISABLE)
-+		goto update_shadow;
-+
-+	for (i = 0; i < config.count; i++) {
-+		idx = config.index + i;
-+		ret = pcie_tph_set_st_entry(pdev, idx, sts[i]);
-+		if (ret)
-+			goto rollback;
-+	}
-+
-+update_shadow:
-+	memcpy(&vdev->tph_st_shadow[config.index], sts, sz);
-+	ret = 0;
-+	goto out_unlock_tph;
-+
-+rollback:
-+	while (i-- > 0) {
-+		idx = config.index + i;
-+		pcie_tph_set_st_entry(pdev, idx, vdev->tph_st_shadow[idx]);
-+	}
-+
-+out_unlock_tph:
-+	mutex_unlock(&vdev->tph_lock);
-+
-+out_unlock_memory:
-+	up_write(&vdev->memory_lock);
-+
-+	kfree(sts);
-+	return ret;
-+}
-+
- int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 				void __user *arg, size_t argsz)
- {
-@@ -1660,6 +1784,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 	case VFIO_DEVICE_FEATURE_TPH_CPU_ST:
- 		return vfio_pci_core_feature_tph_cpu_st(vdev, flags,
- 							arg, argsz);
-+	case VFIO_DEVICE_FEATURE_TPH_ST_CONFIG:
-+		return vfio_pci_core_feature_tph_st_config(vdev, flags,
-+							   arg, argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-@@ -2223,6 +2350,7 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
- 	mutex_init(&vdev->igate);
- 	spin_lock_init(&vdev->irqlock);
- 	mutex_init(&vdev->ioeventfds_lock);
-+	mutex_init(&vdev->tph_lock);
- 	INIT_LIST_HEAD(&vdev->dummy_resources_list);
- 	INIT_LIST_HEAD(&vdev->ioeventfds_list);
- 	INIT_LIST_HEAD(&vdev->sriov_pfs_item);
-@@ -2244,6 +2372,7 @@ void vfio_pci_core_release_dev(struct vfio_device *core_vdev)
- 
- 	mutex_destroy(&vdev->igate);
- 	mutex_destroy(&vdev->ioeventfds_lock);
-+	mutex_destroy(&vdev->tph_lock);
- 	kfree(vdev->region);
- 	kfree(vdev->pm_save);
- }
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 662a04943511..652e278974b7 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -143,6 +143,9 @@ struct vfio_pci_core_device {
- 	struct notifier_block	nb;
- 	struct rw_semaphore	memory_lock;
- 	struct list_head	dmabufs;
-+	struct mutex		tph_lock;
-+	u16			*tph_st_shadow;
-+	u16			tph_st_entries;
- };
- 
- enum vfio_pci_io_width {
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 19b5fb7eeae6..3df52b4dcf46 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -1572,6 +1572,28 @@ struct vfio_device_feature_tph_cpu_st {
- 	__aligned_u64 data_uptr;
- };
- 
-+/**
-+ * VFIO_DEVICE_FEATURE_TPH_ST_CONFIG - Configure PCIe TPH Steering Tag entries
-+ *
-+ * Provides userspace interface to configure PCIe TPH ST table entries.
-+ *
-+ * @index: Start entry offset within ST table
-+ * @count: Number of consecutive entries to configure
-+ * @data_uptr: Userspace data buffer for 16-bit raw ST values
-+ *
-+ * This feature requires two preconditions:
-+ * 1. Global enable_unsafe_tph module parameter is enabled;
-+ * 2. VFIO_DEVICE_FEATURE_TPH_ENABLE has been SET on the device beforehand.
-+ */
-+#define VFIO_DEVICE_FEATURE_TPH_ST_CONFIG	15
-+
-+struct vfio_device_feature_tph_st_config {
-+	__u16 index;
-+	__u16 count;
-+	__u32 reserved; /* Reserved for future use, must be zero */
-+	__aligned_u64 data_uptr;
-+};
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
--- 
-2.17.1
+Check the device negotiated TPH support status before parsing the TPH
+extended capability. Return zero length to hide the capability from
+userspace if TPH is disabled during topology negotiation.
 
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_p=
+ci_config.c
+> index a10ed733f0e3a..5c6ab172df6c0 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+[ ... ]
+> @@ -1450,6 +1451,8 @@ static int vfio_ext_cap_len(struct vfio_pci_core_de=
+vice *vdev, u16 ecap, u16 epo
+>  		byte &=3D PCI_DPA_CAP_SUBSTATE_MASK;
+>  		return PCI_DPA_BASE_SIZEOF + byte + 1;
+>  	case PCI_EXT_CAP_ID_TPH:
+> +		if (!pcie_tph_supported(pdev, false))
+> +			return 0;
+>  		ret =3D pci_read_config_dword(pdev, epos + PCI_TPH_CAP, &dword);
+>  		if (ret)
+>  			return pcibios_err_to_errno(ret);
+
+[Severity: Critical]
+This is a pre-existing issue, but since we are adding support for another
+variable-length capability, can the capability length returned here cause a
+heap buffer overflow?
+
+Looking at vfio_ecap_init() in drivers/vfio/pci/vfio_pci_config.c, the
+returned length is used in memset() and vfio_fill_vconfig_bytes() without
+bounds checking against the size of the config space buffer:
+
+drivers/vfio/pci/vfio_pci_config.c:vfio_ecap_init() {
+    ...
+    len =3D vfio_ext_cap_len(vdev, ecap, epos);
+    ...
+    memset(map + epos, ecap, len);
+    ret =3D vfio_fill_vconfig_bytes(vdev, epos, len);
+    ...
+}
+
+If a malicious or compromised PCIe endpoint provides forged values for
+capabilities like TPH or VNDR, resulting in a length that makes
+epos + len > pdev->cfg_size, would this result in an out-of-bounds write
+past the boundaries of the map and vconfig heap buffers?
+
+A similar issue appears to exist for standard capabilities in vfio_cap_init=
+()
+where length is also not bounds-checked:
+
+drivers/vfio/pci/vfio_pci_config.c:vfio_cap_init() {
+    ...
+    memset(map + pos, cap, len);
+    ret =3D vfio_fill_vconfig_bytes(vdev, pos, len);
+    ...
+}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604132804.2867=
+8-1-fengchengwen@huawei.com?part=3D8
