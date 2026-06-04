@@ -1,59 +1,59 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 005AB175A6E;
-	Thu,  4 Jun 2026 03:13:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE01E30C17E
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 03:25:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780542789; cv=none; b=iFfNJxsNiFQcBkKUJ4+nzqTL/i+ri4CDyZ2cugGmLdjaY7N4rgsusukSm6KJ6rV0LJizhuVmF+aBY9xaxdXlsQw7Xy10xKmNiQ8mqSHagAqCJ/yN/tBWJXFgYtUYWrrjadoWro2+ghswFZlfWCs504wZc0N8usSuOEs3OnHBehY=
+	t=1780543507; cv=none; b=BnYzrhIavyqAJiHcXpbl5qbJJnU2ObPLS28Uansp1HasVSkb10BEpddZ+oicKmE3Lo8d1J+5cn1nTXqVcB9ELOA+KaltS85kvNQG7jextPwGS0tS/txj6WU9XEK17Oul3D6CCZcRnojVeLz28ThBXmNGqyLHJdxStmXpNULT3Bg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780542789; c=relaxed/simple;
-	bh=cVFOiRw0Dbts0+UiFbiTM+VB4PaBozEeh2vLYB67g3A=;
+	s=arc-20240116; t=1780543507; c=relaxed/simple;
+	bh=lmBYwbfsa4e23p67rM3REKZjZPWZCovxdHMj0Z9UqDo=;
 	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
-	 Mime-Version:Content-Type; b=eAy1n+4ge+u5JWNh+onbg9mCAc+HfHmbRPc9zOa9c2FSChzsIjuKy61jOm8tx7sUYeZ4tal8F2h1f8bDh1xp1+5HEDpGY5D2BXn8H4XEz64HJFGP07H0Z1iksUNkpyf+T5mHLOWQJNoYv7V9NcIzDXEUnNe2DABEWWBN/1Dcev0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KJbTalYI; arc=none smtp.client-ip=100.103.45.18
+	 Mime-Version:Content-Type; b=Ntn9hXTGB30QIm0co1/DVejn9KOhWNHCNI8aL8VuyeDM6+5FFoilpxPU7Xa1VxJnWCyovQk8oAT8tNQovwH9MYGMsvpAOS9p4a5rkXDFCMIP8/8dd5RmWzhrXly4c2Y65KB2CI0rk8IHS3J3d4SYcpUH5+0J1648k9S+XYrWfC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bPjWfsLA; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KJbTalYI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A2B01F00899;
-	Thu,  4 Jun 2026 03:13:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bPjWfsLA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CC261F00893;
+	Thu,  4 Jun 2026 03:25:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780542787;
-	bh=nlppWMLpCM22Hv5DcjYZHb6hoEyvBsTnWA3GV7sEuRk=;
+	s=k20260515; t=1780543506;
+	bh=d0Xz4a1Q+gJ22qJ5F1MHpUZ+0nilJhq4jgGVp55bDsk=;
 	h=Date:From:To:Cc:In-Reply-To:References:Subject;
-	b=KJbTalYI5FweqJu/pDvP7NhQwOxrS8rx4N8QX1sj9gApDKC7IQexeNxxorl6wHFrE
-	 bCFK6tjBKQ7v+WmWwBMXgyYrR+3q7bc9Wme7A1jQprAYLJaskuB6s05K5hgHE/eBjO
-	 iTmMdxCcfDcaibIS9tJYWhhTPlLe0A8z7H0eLiemHTsONLsNLCzfxZmRWaiwprmtB1
-	 bTOAEia61gK8BTn70SOgi+TarAiYJ5k2ezCPiaA+gKzcyzD4s9SUEAAPHDMRQBITNk
-	 b8M0Wob1TIe1J3vkVGKtvE8eilwamE7XGwne9uIxvrg5cgU1aPCOTUZg/o87isId/n
-	 fSXYx4e1rzFlQ==
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 6F5EFF4007F;
-	Wed,  3 Jun 2026 23:13:06 -0400 (EDT)
+	b=bPjWfsLAgvgMG188ISGw0naYxqICj43VQJHxNnhqDUgngJBAMOQ8x8LolLqx0AMHA
+	 gG8ArkVMlwoa25Upr+JRbw6PNWjjHuPcoqZwnOPnsBe33i9XPw6tHTs+rjgtVhxPz5
+	 d0ChasdallOAklJP6RhsSt8+DuSpBd1vt87WZpcYDQUDi9YzKn1CMLoNb9jNMBMfgP
+	 OrF1ciRGjWpPA1OKe0TFQ9ZADWNTDyMSNh30jcqy/JYT8yYbj9cu1WuwP442dZ5vWU
+	 l1n94T1h4BMO1BckaafnUwFGssEhxiqVGkpO6p+eYEUCzekMzy2s9m+UNaZYLSHlVO
+	 J7BzUdxZbDiCA==
+Received: from phl-compute-03.internal (phl-compute-03.internal [10.202.2.43])
+	by mailfauth.phl.internal (Postfix) with ESMTP id 823DFF40072;
+	Wed,  3 Jun 2026 23:25:05 -0400 (EDT)
 Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-04.internal (MEProxy); Wed, 03 Jun 2026 23:13:06 -0400
-X-ME-Sender: <xms:Qu0gapHGExgIkNdxOX10RtkRyDx5P6wJjbnI-b5fu_pK3G_43-kPBQ>
-    <xme:Qu0gaudiORNBtZ0QP16T-8L0rxh66KSjxlp_5AE_rgYXswkyP83cM-l85QqSklVAI
-    hepRpXrmGc8ePZvnwP_r91eEup3B6AXNmOnPHMVZylsbqEod84tuQ>
-X-ME-Received: <xmr:Qu0gaim7c8RkJkwBsLu9dqu8ysGuWw4sYL49Fh5iVdlap9zEFZ18um7oZhjvKWxcwKVnDKnI8lD2z-PjRu3XSNVojp7Vox8Gs_0>
-X-ME-Proxy-Cause: dmFkZTGR9uasAgaiJwYgGNQNVXP3RLnc02vrupb4uY86cFDYrULwArM4AgV10ycMl8N/Y2
-    3sNNuuhxgDkm+pTQqL933Og6Id+euhVmQfQFu5dyMSrDbNTtvUKSy+CimlkPvLQoBA0p0M
-    7LiqQQ/B/Fx6REsLZJLUdWFP/8WcaY5bf7gqJRHMeEbfZliTfF207Qa1KrhoJkjI8y7h1b
-    RsWOAfOfcb1EywGo2pNDSppBjZX7aguAgDYTmVYn0EiKpFIYp1KAd2c+HeQGQ2dj59IuMI
-    zu1FgIA1eRwwAUqwcMMuVD7eiRyf79i9i4SanM/tyRsXHmczBsEP2AyFf08EOSe+BnETcL
-    sq5nRbh9WAeSFVtnoNTFx98OLCC/QR4TyTx7ETc4yy6IBo/8owf6RGUD5jckXkDfxfoRZF
-    llvneAhHOwGUoSwQ1i6MopABxbxbxa+WT0bey58TZVKg8kZ136fmeMbgT0NIWr1u5+rf3o
-    c1M+daq4QmrMSWc5SHaPSeKevtymhjo0XJSGLwwPBIocferK6kBc3jjoz9ZYPSMcKn0wWv
-    9POVaXm4gXsXvosUkqubaMWZp536ThefyvKbJC6tQ+k6DPRs/Hi5Zx0PSO/7RoQWMAlNG7
-    J9uq9dbAEiCbw22Dyhm5MxuTLb8C6Y/Dz3lnDS+hzzpRi+3+yY4E7zZ9B4vQ
-X-ME-Proxy: <xmx:Qu0galomAGQSEt1_kvYzMYxEMeDPJVBs5Yf7r2jgeAv0ltOhoEICLw>
-    <xmx:Qu0ganFU5Dg94wp86FyBan8mxJVq8cEryMbo1KxWj5C_qCfzSZwN2w>
-    <xmx:Qu0gajR_bMf4pvmQy2f_sO_4--jL2zMdundVg9DXWNr41NzJpvhMvQ>
-    <xmx:Qu0galNUFfPNayexHSVrd2EpqGgd5Io5tGOOew_nLvqNRJqBMTQLmw>
-    <xmx:Qu0gaonpPsFU1BZqxrI0PzepvRxh5UrraiQtUjryWmMk9EnddZkAtHk7>
+  by phl-compute-03.internal (MEProxy); Wed, 03 Jun 2026 23:25:05 -0400
+X-ME-Sender: <xms:EfAgau7Bl1B7hKDJnkllUR84iDLfO1VjGLfUmU84d7sEIJHgBj7P_w>
+    <xme:EfAgakTmIRVUX8uaPJj6V3AX0JmwJEpeKrHvn516ALla-bNkbSa8umEbniMtVLhEi
+    wwmhCZbF2NzmW_YxJhK3ie6O2GUfUEWWVrZtStzsV-yileowb8VWds>
+X-ME-Received: <xmr:EfAgah60u_WSgGtwx1_fSE1RjMlE_tvKLfpD-xJ9Oc33BH4stGOMF9aSAxD9ZDuww5-jGYplhNA6rNVj-vF9wiS9BEYVDFJHXfc>
+X-ME-Proxy-Cause: dmFkZTGtZnA4lNhAzhIaRH8KwXqznKm4Ddz0tb+abeDm3D/TQ9NI6sQFQ/x/eAhTBP3pEo
+    yOE9ctGNQoZE0BTSgrR5e3Hs2d4DQ0IZdR+HcAqI7q8SFCiCPQRxa3eWlxx0JW5KP7Qy4G
+    xkeY/F/rRw0+mfG/w2Q0Ln+LbRsLtIlIbHmqVKzMAq81lDZsVOMJeOF6gzy5EisTWGJVwH
+    WHsmhM7vgTCLxhtdd5Vh+M4UTwLxk7Cm7Yx4FX847XDLGmHZs0jKTnDGx9qoSBAUtXh2hu
+    gyW5/rglanUcKSz/zzuB+6klHXbhZ5uFWFT5v2YEWTnhKObQ+h2GVbcP7YPTArRwdxAgg5
+    gb4tOl4Sfq+KGx/vOlZhKVhzdFdpSqjKxKoweoc0zzrM6uB+nh5izeBwrnliADjYGNBBSD
+    QXo5opBbuXrCFr2fWC5qPzGS0nMcmVUlYC9R5mxrnloipQ0dyAqkcKWz57qowNZNC0VXrY
+    plGsmsSOqBG7FV1HqaGQFXd39okxtsU6Um8B7Gds1tXApzvczNptVZqkkGhjccx8a/t40f
+    9xKvjvn1E9MEUdCTDlK7YhDyFfIY9EPWS8p6fTt5GJ5xoDdCyIahfA4mXGZcjwl6iPK+Jo
+    tF97nVqgzgDMHEOB0SBYT9LcR/mHPDzYA5a/hkQF3RafWh8qA38MfG8JbUUQ
+X-ME-Proxy: <xmx:EfAgapS5m9tfi2ufyvloLtJnxCAxKvAxewLpcC7LgrwFAIztibbAfQ>
+    <xmx:EfAgaumbP4O0ehHGG_uLs_YtYPeVY9PtngG3esIrcW2vsBKRZQEEaQ>
+    <xmx:EfAgalTcW-xMkk0cCjby6f4G6CkZLB99FlsmTXB5jlNBHJ30isvkog>
+    <xmx:EfAgattMq7SbCkuI-ihBOqeuya1E2o_JT7LAaCPcPWhOXdKsoElncw>
+    <xmx:EfAgam7uistIMLZyLyEIXy2aBW-9cNH-qd74PIEiXp_r6qklwd8zvDdD>
 Feedback-ID: i67ae4b3e:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 3 Jun 2026 23:13:05 -0400 (EDT)
-Date: Wed, 03 Jun 2026 20:13:04 -0700
+ 3 Jun 2026 23:25:04 -0400 (EDT)
+Date: Wed, 03 Jun 2026 20:25:03 -0700
 From: "Dan Williams (nvidia)" <djbw@kernel.org>
 To: Srirangan Madhavan <smadhavan@nvidia.com>, 
  linux-cxl@vger.kernel.org, 
@@ -69,12 +69,12 @@ Cc: vsethi@nvidia.com,
  Richard Cheng <icheng@nvidia.com>, 
  linux-tegra@vger.kernel.org, 
  Srirangan Madhavan <smadhavan@nvidia.com>
-Message-ID: <6a20ed40c14f1_42b910022@djbw-dev.notmuch>
-In-Reply-To: <20260528083154.137979-5-smadhavan@nvidia.com>
+Message-ID: <6a20f00f8d965_42b910033@djbw-dev.notmuch>
+In-Reply-To: <20260528083154.137979-8-smadhavan@nvidia.com>
 References: <20260528083154.137979-1-smadhavan@nvidia.com>
- <20260528083154.137979-5-smadhavan@nvidia.com>
-Subject: Re: [PATCH v6 4/9] PCI/CXL: Add sibling function coordination for
- reset
+ <20260528083154.137979-8-smadhavan@nvidia.com>
+Subject: Re: [PATCH v6 7/9] cxl/pci: Orchestrate CXL reset for affected
+ memdevs
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -86,32 +86,30 @@ Content-Type: text/plain;
 Content-Transfer-Encoding: 7bit
 
 Srirangan Madhavan wrote:
-> Add helpers to collect CXL sibling PCI functions affected by a CXL reset
-> and prepare them for reset by saving and disabling them. Restore those
-> siblings and drop their references when reset coordination completes.
+> Add the reset flow that coordinates the target function, affected CXL
+> sibling functions, and any active memdevs in the CXL.cache/mem reset
+> scope.
 > 
-> Use the Non-CXL Function Map DVSEC to exclude non-CXL functions, and
-> filter remaining siblings to functions that advertise CXL.cache or
-> CXL.mem capability.
+> The flow collects regions for the affected memdevs under
+> cxl_rwsem.region, verifies that those regions are idle, flushes CPU
+> caches for the affected ranges, saves and disables the target and sibling
+> PCI functions, and locks active memdevs to revalidate that their
+> endpoints are still present before reset.
 > 
-> Use pci_dev_trylock() for sibling locking and unwind on contention or
-> allocation failure, so competing reset paths fail with an errno.
+> After the CXL DVSEC reset completes, restore PCI config space so CXL
+> MMIO is accessible, restore decoder programming for all active affected
+> memdevs, commit their restored decoders, and only then re-enable CXL.mem
+> for the affected set.
+> 
+> Signed-off-by: Srirangan Madhavan <smadhavan@nvidia.com>
+> ---
+[..]
+> +	rc = cxl_reset_collect_memdevs(&ctx);
 
-This is a pile of code just to precisely save and restore only the
-functions impacted by the reset. What is not clear to me is what is the
-cost of over saving and restoring. The specification seems to imply that
-CXL Reset has the same effect as FLR as far as CXL.io is concerned.
-Which could maybe be read as all functions that speak CXL.io (all of
-them) see the reset even if only a subset participate in CXL.cachemem.
+There can never me more than one memdev or cache interface to reset per
+device, right? Those controls only exist for function0. The siblings
+will not have their own reset and cache disable control DVSECs.
 
-Otherwise, there is a good chance that the pci_dev_reset_iommu_prepare()
-is all going to all apply to the same iommu group for this device.
-
-	pci_dev_save_and_disable(sibling);
-	rc = pci_dev_reset_iommu_prepare(sibling);
-
-...maybe the simple thing to do is just treat this like slot reset and
-use the existing method of walking the device list by matching slot to
-save and disable every function on the device. In other words, it is not
-clear that the precision of saving some extra save_and_disable cycles is
-worth it.
+So, per the other observation that this probably does not need to /
+cannot worry about save_and_disable precision, it only needs to invoke
+the actual reset/cache management for function0.
