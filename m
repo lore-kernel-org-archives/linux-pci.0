@@ -1,407 +1,374 @@
-Received: from fhigh-a1-smtp.messagingengine.com (fhigh-a1-smtp.messagingengine.com [103.168.172.152])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D6EC3C6A5C;
-	Thu,  4 Jun 2026 19:57:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE44D3D8907;
+	Thu,  4 Jun 2026 20:13:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780603046; cv=none; b=qnGhIGpuGzQ9fL86l6x8+pA7g1EaSp1mF4ZPCkh06PAL9j0ze8saspjBHQbIlzaEmucleUvDNTxvOag3yaQsnp60fVXB+14EP48DQMRUl/0caIqHGQ7koSGepioIXL8oA1PcNuz35DvFJdiXC+0w8MC0B4SFS0gvMa2g95CSgZE=
+	t=1780603998; cv=none; b=IFF0ihZvIzhHd2Z4aB2EQkAn9qcCXbQaA8sGn3rDJjflUpsKMCS++nfWFxH2V1KKSqUSN4/QsS7VMPLabh9WCYJchpO3IorRSD1dk0/ce4ey4AF/vgdfl8PtePbrIT36AqDGaU/kazsR0g2F5oThiapcKTn9jQhMx22+6vxBsMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780603046; c=relaxed/simple;
-	bh=1MdcKlqthG+hzs8PICe3pYtdd+ZxP43J4uLyODZiNfI=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tNebNLS2VUOJarfxiEH97525MaZrurrB//rgcD+uzcB4p3rcDSzjzVyW7WZxDWBG5cdJusIkx35mhcUy8ktjvqbdBXMx4pacplCGJ5vP+/UOrkx00I89MqJ5dmme6rsfdM2N4j5qAen5+YH/h3jxkCwdeA1DVTAxpGgJWYP4WU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=XLCSQJqa; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=fs2Coo/I; arc=none smtp.client-ip=103.168.172.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1780603998; c=relaxed/simple;
+	bh=1O8hcxxp/kMcvtu9yjMVb2lB/y685VrmQp32UNfHOYw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=EhSng2Kv51OuGtMs41pxXmevrJI7gszt7CqSxNyBZq6lAXC4zyyUnUAbfZrDKl66nCnfJxPrFpBZ/vutDtDIZd7GnjmcLUxuTl6245O4S67d4/pZlQsyUSk2cd/VtKWDQLRO+xvJCXwOH8BBqEGnerYyKXfaNN9spQ7LHdibp4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d7+DGx4k; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="XLCSQJqa";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="fs2Coo/I"
-Received: from phl-compute-10.internal (phl-compute-10.internal [10.202.2.50])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id DBC3D140013A;
-	Thu,  4 Jun 2026 15:57:21 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-10.internal (MEProxy); Thu, 04 Jun 2026 15:57:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1780603041;
-	 x=1780689441; bh=3ldYKV+aJOGFJUhEnX3t7Ye52Gtyp0rTgCFtJaRdzSc=; b=
-	XLCSQJqa0goCb09vwLmKLy7UTum2rutG/eIrUuLB3/hVXNnoyjo4qAO94qvcjYge
-	hA0AUMcU68vsimSwT3exKM5sPrfhzT40wbOMbkUzqP5RcPiu7HPpxnpRXu2ZI9wL
-	iOvguQkLOOvP13Jx/8rKeqlTZ+E3I7fZPHmzwxtKos8MOJa60w9+ounpCNazcJBt
-	GrDrhad6PMV0a9CPoHFlWFgDkPPdpZ7wu/HEM9ohU7W8kgJnpW8Ryt0h8/pYc2GN
-	VXeKypGuY8PvuJJRVibb/vyZc1KLp+urD0VdHszEhoWji6jwRUd5Wn3WmcjkWp8q
-	6Gqr/a9FCQt6fBFp0/1YdQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780603041; x=
-	1780689441; bh=3ldYKV+aJOGFJUhEnX3t7Ye52Gtyp0rTgCFtJaRdzSc=; b=f
-	s2Coo/IYtAOjMLZcpa4FeN9kFqPQE90vOLc06icrX8nhcHgfFoDeaNhMJfq/57tB
-	C7QgYjvUjszg89rfzj6ssrSnlByT/YUoONTFrwNE5KJjM2bH4H+tgybKX/aDkf0u
-	WVfy1X53Hfmujic8Bg4Q74PffwHedPWqOLCvVS64DYL93X93BqFqf1EJAXxhDk2X
-	9wk8TVhStP5ORnm7viPVlcWWvPKau7jwcroJ4fA/vgOudqtPZ3hJg/6mxrLJOm+n
-	5T16AuBV6uCIQQsvaaHMfE7aaYxik5H9mT57J2ET2d3V73Vp7mOcepMfQ3N8Ue97
-	gDRsg58i508X+D3LJlTcw==
-X-ME-Sender: <xms:oNghar-S6w106eexkOCiDx4iFU1qKh86X0gCEScCL1VuyTqFW4n5KA>
-    <xme:oNghauGTo8-tuAV0RfU_fMGZSHiUiMRyr88jeQifYnKlWQ2k-iWCn55BWAepLdvTd
-    CeUsI5mxt5vE4_zSgeWr8rz8vw1FlbQiYtFDiqiCME0KW1VcDbTqAI>
-X-ME-Received: <xmr:oNghalQ-3k1eU2IYJFY06WcPJ-Gl4Wm6U9PswL9FWpEP0fOdR3iaO-RFVFI>
-X-ME-Proxy-Cause: dmFkZTFtDuF3mNlTIcDf1bkmaiXAeRv34Wiks5LqE8J6ULTQdhFFDbJNuESjEnRMNQ+EqT
-    VymHIQ+C/xhhcPXWsry9fBdNmLbdho34Q+StnZZNr3NVvv2xMPBF1iYAY/TQfJ2vdyOArw
-    bXDmEuwfOkGP4zcPiv7Ovq4d+YBBXCuVI1mP9F6ohn2uPI+tIHjtRtLqX8SbPbUZy1ZAIW
-    4bjv86hHn3FR3N9Yy2+GTs1+so1H6Oey/JNMuprs4WBue+7M0VUcLhLtRCMl+0lqVoYMvP
-    IOiI6MgPiEsY7yZ3Q/S2Ns0dmscfQm91YU5y4hS4h0dfQprWIWaQGS7MkUfRbm3OjmRDb7
-    pwfHrfSHKAkEjvKEa9XBkqc84C2TOrKw6oKLlANFb5EScVyxmYyCPppKi94vvvw3oYCmv4
-    xzGzgCn++eLeHLQvdJBqNgYs4iUOt4u+PHANKBpXztaojrcjTexMUm5CFdsb4J/wsG5EbT
-    YCtZhm/Obg7+a1neWgG6DTXuFLbrUAFa4EL7jpAfRg8FubRp8DuKvhOpPhNjcT3jKMMLD7
-    /a24P+WVuRT3wB3dS3/WrUsAqfxcukPID+1d4XnKp4PB1PTAG2DXJUtKAaUSZ1Can4ooBz
-    UYQB0XIrpt5jjq0/zW8yMb+vEDdVwoGRNs7a1PdBdz6dRX/SxB+EkMogkrMg
-X-ME-Proxy: <xmx:oNghalShfYaKj6UJjkJWxc_lyufFCS5egy2n_UAYIcQUPHbsjWV6lA>
-    <xmx:odghao0zyUz-RofCut-8KXfx5b9S4VEpuH_jdyhxMRwr26uXHi7veg>
-    <xmx:odghavzsoU87Polxoz6AtQyLvRMcf7P_7ZMrOAlEapnJVklcFXlHYA>
-    <xmx:odghakwyGt1DIVwq9koRLFTQVneuZ2o2TrglDKhzgJNSbcW6AExdgw>
-    <xmx:odghahone3v7Vu-SRpVadWVLBvhckJR9EuOzPXV5_QGLL6mu1OSB_nuv>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 4 Jun 2026 15:57:19 -0400 (EDT)
-Date: Thu, 4 Jun 2026 13:57:17 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: Keith Busch <kbusch@kernel.org>, linux-s390@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- helgaas@kernel.org, schnelle@linux.ibm.com, mjrosato@linux.ibm.com, Julian
- Ruess <julianr@linux.ibm.com>, alex@shazbot.org, Chengwen Feng
- <fengchengwen@huawei.com>
-Subject: Re: [PATCH v18 3/4] vfio/pci: Add a reset_done callback for
- vfio-pci driver
-Message-ID: <20260604135717.5dc69583@shazbot.org>
-In-Reply-To: <d9ca420b-a1e6-4d12-bd42-3993e401d58b@linux.ibm.com>
-References: <20260603182415.2324-1-alifm@linux.ibm.com>
-	<20260603182415.2324-4-alifm@linux.ibm.com>
-	<aiE3I0bL0TX1nOec@kbusch-mbp>
-	<d9ca420b-a1e6-4d12-bd42-3993e401d58b@linux.ibm.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d7+DGx4k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B489B1F00893;
+	Thu,  4 Jun 2026 20:13:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780603994;
+	bh=FyqbifIs0gEb+brR0HRbFPYYe8b52/vPAxEVwbskZ2U=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc;
+	b=d7+DGx4kRvBF22JK7YfD6UvK3MZe3cZ/G1pHGIQ/3H8UfQSOg7Ieg0mx1bvLq8xYE
+	 stPU76+2J+5djPEJUrJ1IJm9wxEsW9K1zFRweb/+eze4ZwWaK8HxgXzLBfo8ZCB7ex
+	 E6JVc6TzkG/cwill6Ag6itwfXLT+HjIzQS4e2j4JAEXcKLJ1ea2ES/Y2Aixk+6YMcV
+	 +zPKqF7gU8duISScX8HUFNycYk6Q9tClZy4tbVRZfiMySzFe/DI/+aarw/vw5bQ+zy
+	 sK5VJR26InjGBY29wYKn90akDlQ9bsTfZNRrgTc8VLd0dHkUdyQeYrz3ziSwEvPitl
+	 Du+Cpa9aaWiug==
+From: Andreas Hindborg <a.hindborg@kernel.org>
+Date: Thu, 04 Jun 2026 22:11:14 +0200
+Subject: [PATCH v17 02/10] rust: types: Add Ownable/Owned types
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20260604-unique-ref-v17-2-7b4c3d2930b9@kernel.org>
+References: <20260604-unique-ref-v17-0-7b4c3d2930b9@kernel.org>
+In-Reply-To: <20260604-unique-ref-v17-0-7b4c3d2930b9@kernel.org>
+To: Miguel Ojeda <ojeda@kernel.org>, Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <lossin@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+ Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
+ Leon Romanovsky <leon@kernel.org>, Paul Moore <paul@paul-moore.com>, 
+ Serge Hallyn <sergeh@kernel.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ Alexander Viro <viro@zeniv.linux.org.uk>, 
+ Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
+ Daniel Almeida <daniel.almeida@collabora.com>, 
+ Viresh Kumar <vireshk@kernel.org>, Nishanth Menon <nm@ti.com>, 
+ Stephen Boyd <sboyd@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>, 
+ Lorenzo Stoakes <ljs@kernel.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, 
+ Igor Korotin <igor.korotin@linux.dev>, 
+ Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Boqun Feng <boqun@kernel.org>, 
+ Igor Korotin <igor.korotin@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>
+Cc: linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+ linux-block@vger.kernel.org, linux-security-module@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linux-fsdevel@vger.kernel.org, 
+ linux-mm@kvack.org, linux-pm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ Andreas Hindborg <a.hindborg@kernel.org>, driver-core@lists.linux.dev, 
+ Asahi Lina <lina+kernel@asahilina.net>, 
+ Oliver Mangold <oliver.mangold@pm.me>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=10553;
+ i=a.hindborg@kernel.org; h=from:subject:message-id;
+ bh=ofZDFIhDjpLPpUbpvtXo6zWuRmODfjHMDH0JWHuSFdY=;
+ b=owEBbQKS/ZANAwAKAfpQKQiqxb3QAcsmYgBqIdvofKBkFboGfACnM0viGjPeiixT1NxDQcbNU
+ MsW74xazMuJAjMEAAEKAB0WIQRXitnI2WZ2JirAaob6UCkIqsW90AUCaiHb6AAKCRD6UCkIqsW9
+ 0DEkD/4gf7Ho/vS4edp6caiLITOv/bLkSQN5bDrgSo/Dqw6VjWYilBwVVAiLblnteDI9tSnZAz4
+ evcQDaMvY7IrsQilUAtM8OixDbWtvlR+x/eslY/TZ3XhvbZhSLsMnQ8UkkHAOto8tCBTvl53I5a
+ G8FmcHac+ptW26zaW0XNDXoedp4ZU4w/MElpuhCWopnNx578V/5+/Kd0++KK9AJdewxigY+O09R
+ XKMuyGtiteZwpDtUCDrndWu6LUELJFBk8DlTERSF7P+OV3b/Z3bb9nsbkjC2dNa6SG0WmIUu3OP
+ QeyC4cPcKPSTzIGcS8ecFZzwJp5ChQN+O3DEGMwV9NTEV9WrrGRGEeqcW05Jd8akGmDILrPT9uw
+ 7PPhGLGSGJvPJ94joJDKzhWeGGQKN4Ypt7eKVQMrFp9Ydul9sXRxfanYsRd7xUsVCJsXHe0qRhw
+ axz+zRqxcYG96KESp5w1DAN0DXXjeDg5Tip6/Di/vvvoZrcnl66TJxO8IaBQoKUir/7KAjhvDKh
+ 6sAopNMKeJY/bAeb+sNVhiaT50U9xhsI6ME1e6JBNS2dFoe68qSHt4tpl0mNEtS+P2FRcWnIkw8
+ 9wvr6lwo2ivn1lb6ppIFBpmHrqozyBAsxUj/60/7Ugd0+pXRJQrGpGnYAMRg8JMKgAIEIQN+hgo
+ Di9hhF085JUUMWg==
+X-Developer-Key: i=a.hindborg@kernel.org; a=openpgp;
+ fpr=3108C10F46872E248D1FB221376EB100563EF7A7
 
-On Thu, 4 Jun 2026 10:17:04 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
+From: Asahi Lina <lina+kernel@asahilina.net>
 
-> On 6/4/2026 1:28 AM, Keith Busch wrote:
-> > On Wed, Jun 03, 2026 at 11:24:14AM -0700, Farhan Ali wrote: =20
-> >> +static void vfio_pci_core_aer_reset_done(struct pci_dev *pdev)
-> >> +{
-> >> +	struct vfio_pci_core_device *vdev =3D dev_get_drvdata(&pdev->dev);
-> >> +
-> >> +	if (!vdev->pci_saved_state)
-> >> +		return;
-> >> +
-> >> +	pci_load_saved_state(pdev, vdev->pci_saved_state);
-> >> +	pci_restore_state(pdev);
-> >> +} =20
-> > Shouldn't there be a cooresponding user space notification that the
-> > device has been restored? There's an eventfd on the error detected side
-> > so user space can know the device needs recovery, but how does it come
-> > to know that the reset is completed? =20
->=20
-> I think if the VFIO_DEVICE_RESET ioctl completes successfully it should=20
-> be an indication that the reset has completed? AFAIU the ioctl will=20
-> drive a reset via pci_try_reset_function(). If reset completes completes=
-=20
-> successfully the reset_done() callback is called via pci_dev_restore().=20
-> So I don't think we need an eventfd to notify on reset completion.=20
-> Otherwise we would have the same problem today, where userspace is=20
-> unaware that VFIO_DEVICE_RESET did indeed successfully reset the device,=
-=20
-> no? Or am I missing something?
+By analogy to `AlwaysRefCounted` and `ARef`, an `Ownable` type is a
+(typically C FFI) type that *may* be owned by Rust, but need not be. Unlike
+`AlwaysRefCounted`, this mechanism expects the reference to be unique
+within Rust, and does not allow cloning.
 
-I'm starting to feel a little sketchy about this.  I asked claude to
-enumerate the state restores and the source of that restored state.
-Hopefully this ascii table survives:
+Conceptually, this is similar to a `KBox<T>`, except that it delegates
+resource management to the `T` instead of using a generic allocator.
 
-  =E2=94=8C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=AC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=AC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=90
-  =E2=94=82           Step           =E2=94=82         Source         =E2=
-=94=82 Snapshot-dependent? =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82                          =E2=94=82 EXP cap save buffer    =E2=
-=94=82                     =E2=94=82
-  =E2=94=82 pci_restore_pcie_state   =E2=94=82 (pci_find_saved_cap,   =E2=
-=94=82 YES                 =E2=94=82
-  =E2=94=82                          =E2=94=82 cap.data)              =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82                          =E2=94=82 live                   =E2=
-=94=82                     =E2=94=82
-  =E2=94=82 pci_restore_pasid_state  =E2=94=82 pdev->pasid_enabled +  =E2=
-=94=82 no                  =E2=94=82
-  =E2=94=82                          =E2=94=82 pasid_features         =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_pri_state    =E2=94=82 live pdev->pri_enabled =E2=
-=94=82 no                  =E2=94=82
-  =E2=94=82                          =E2=94=82  + pri_reqs_alloc      =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_ats_state    =E2=94=82 live dev->ats_enabled  =E2=
-=94=82 no                  =E2=94=82
-  =E2=94=82                          =E2=94=82 + ats_stu              =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_vc_state     =E2=94=82 VC ext-cap save buffer =E2=
-=94=82 YES                 =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82                          =E2=94=82 live resource_size()   =E2=
-=94=82                     =E2=94=82
-  =E2=94=82 pci_restore_rebar_state  =E2=94=82 (re-derived, written   =E2=
-=94=82 no                  =E2=94=82
-  =E2=94=82                          =E2=94=82 to hw)                 =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_dpc_state    =E2=94=82 DPC ext-cap save       =E2=
-=94=82 YES                 =E2=94=82
-  =E2=94=82                          =E2=94=82 buffer                 =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_ptm_state    =E2=94=82 PTM ext-cap save       =E2=
-=94=82 YES                 =E2=94=82
-  =E2=94=82                          =E2=94=82 buffer                 =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82                          =E2=94=82 TPH ext-cap save       =E2=
-=94=82                     =E2=94=82
-  =E2=94=82 pci_restore_tph_state    =E2=94=82 buffer, gated on live  =E2=
-=94=82 YES (gated)         =E2=94=82
-  =E2=94=82                          =E2=94=82 tph_enabled            =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_aer_clear_status     =E2=94=82 clears hw status (not  =E2=
-=94=82 n/a                 =E2=94=82
-  =E2=94=82                          =E2=94=82 a restore)             =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_aer_state    =E2=94=82 ERR ext-cap save       =E2=
-=94=82 YES                 =E2=94=82
-  =E2=94=82                          =E2=94=82 buffer                 =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82                          =E2=94=82 saved_config_space[16] =E2=
-=94=82                     =E2=94=82
-  =E2=94=82 pci_restore_config_space =E2=94=82  =E2=80=94 type-0 header    =
-   =E2=94=82 YES                 =E2=94=82
-  =E2=94=82                          =E2=94=82 (COMMAND, BARs,        =E2=
-=94=82                     =E2=94=82
-  =E2=94=82                          =E2=94=82 cacheline=E2=80=A6)         =
-   =E2=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_pcix_state   =E2=94=82 PCI-X cap save buffer  =E2=
-=94=82 YES                 =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_msi_state    =E2=94=82 live msi_desc list +   =E2=
-=94=82 no                  =E2=94=82
-  =E2=94=82                          =E2=94=82 msi(x)_enabled         =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_enable_acs           =E2=94=82 re-derived from ACS    =E2=
-=94=82 no                  =E2=94=82
-  =E2=94=82                          =E2=94=82 policy                 =E2=
-=94=82                     =E2=94=82
-  =E2=94=9C=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=BC=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=A4
-  =E2=94=82 pci_restore_iov_state    =E2=94=82 live dev->sriov        =E2=
-=94=82 no                  =E2=94=82
-  =E2=94=82                          =E2=94=82 (num_VFs, ctrl)        =E2=
-=94=82                     =E2=94=82
-  =E2=94=94=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=B4=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=80=E2=94=80=E2=94=80=E2=94=B4=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=
-=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=
-=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=80=E2=94=
-=98
+[ om:
+  - Split code into separate file and `pub use` it from types.rs.
+  - Make from_raw() and into_raw() public.
+  - Remove OwnableMut, and make DerefMut dependent on Unpin instead.
+  - Usage example/doctest for Ownable/Owned.
+  - Fixes to documentation and commit message.
+]
 
-For things like MSI/X, SR-IOV, RE-BAR, etc. we're actually restoring
-from the kernel internal state rather than the save buffer state, so
-this is a no-op.  However, one thing in that list stands out, TPH.
+Link: https://lore.kernel.org/all/20250202-rust-page-v1-1-e3170d7fe55e@asahilina.net/
+Signed-off-by: Asahi Lina <lina+kernel@asahilina.net>
+Co-developed-by: Oliver Mangold <oliver.mangold@pm.me>
+Signed-off-by: Oliver Mangold <oliver.mangold@pm.me>
+Reviewed-by: Boqun Feng <boqun.feng@gmail.com>
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+[ Andreas: Updated documentation, examples, and formatting. Change safety
+  requirements, safety comments. Use a reference for `release`. ]
+Reviewed-by: Gary Guo <gary@garyguo.net>
+Co-developed-by: Andreas Hindborg <a.hindborg@kernel.org>
+Signed-off-by: Andreas Hindborg <a.hindborg@kernel.org>
+---
+ rust/kernel/lib.rs       |   1 +
+ rust/kernel/owned.rs     | 187 +++++++++++++++++++++++++++++++++++++++++++++++
+ rust/kernel/sync/aref.rs |   5 ++
+ rust/kernel/types.rs     |  11 +++
+ 4 files changed, 204 insertions(+)
 
-We don't yet support enabling TPH, but there are series on the list
-that propose to add this.  The TPH buffer space in the saved state is
-allocated just by the capability being present.  On open TPH is
-disabled and the saved state is untouched, zeros.  If TPH is then
-enabled and the device reset, the pre-reset save state populates the
-TPH save buffer and we restore that state post-reset.  With the change
-here, reset_done would then push the open saved state.  The live TPH
-state is enabled, therefore the restore pushes the original open state,
-zeros.
+diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
+index b72b2fbe046d..d07759eec799 100644
+--- a/rust/kernel/lib.rs
++++ b/rust/kernel/lib.rs
+@@ -100,6 +100,7 @@
+ pub mod of;
+ #[cfg(CONFIG_PM_OPP)]
+ pub mod opp;
++pub mod owned;
+ pub mod page;
+ #[cfg(CONFIG_PCI)]
+ pub mod pci;
+diff --git a/rust/kernel/owned.rs b/rust/kernel/owned.rs
+new file mode 100644
+index 000000000000..456e239e906e
+--- /dev/null
++++ b/rust/kernel/owned.rs
+@@ -0,0 +1,187 @@
++// SPDX-License-Identifier: GPL-2.0
++
++//! Unique owned pointer types for objects with custom drop logic.
++//!
++//! These pointer types are useful for C-allocated objects which by API-contract
++//! are owned by Rust, but need to be freed through the C API.
++
++use core::{
++    mem::ManuallyDrop,
++    ops::{
++        Deref,
++        DerefMut, //
++    },
++    pin::Pin,
++    ptr::NonNull, //
++};
++
++/// Types that specify their own way of performing allocation and destruction. Typically, this trait
++/// is implemented on types from the C side.
++///
++/// Implementing this trait allows types to be referenced via the [`Owned<Self>`] pointer type. This
++/// is useful when it is desirable to tie the lifetime of the reference to an owned object, rather
++/// than pass around a bare reference. [`Ownable`] types can define custom drop logic that is
++/// executed when the owned reference [`Owned<Self>`] pointing to the object is dropped.
++///
++/// Note: The underlying object is not required to provide internal reference counting, because it
++/// represents a unique, owned reference. If reference counting (on the Rust side) is required,
++/// [`AlwaysRefCounted`](crate::types::AlwaysRefCounted) should be implemented.
++///
++/// # Examples
++///
++/// A minimal example implementation of [`Ownable`] and its usage with [`Owned`] looks like
++/// this:
++///
++/// ```
++/// # #![expect(clippy::disallowed_names)]
++/// # use core::cell::Cell;
++/// # use core::ptr::NonNull;
++/// # use kernel::sync::global_lock;
++/// # use kernel::alloc::{flags, kbox::KBox, AllocError};
++/// # use kernel::types::{Owned, Ownable};
++///
++/// // Let's count the allocations to see if freeing works.
++/// kernel::sync::global_lock! {
++///     // SAFETY: we call `init()` right below, before doing anything else.
++///     unsafe(uninit) static FOO_ALLOC_COUNT: Mutex<usize> = 0;
++/// }
++/// // SAFETY: We call `init()` only once, here.
++/// unsafe { FOO_ALLOC_COUNT.init() };
++///
++/// struct Foo;
++///
++/// impl Foo {
++///     fn new() -> Result<Owned<Self>> {
++///         // We are just using a `KBox` here to handle the actual allocation, as our `Foo` is
++///         // not actually a C-allocated object.
++///         let result = KBox::new(
++///             Foo {},
++///             flags::GFP_KERNEL,
++///         )?;
++///         let result = KBox::into_non_null(result);
++///         // Count new allocation
++///         *FOO_ALLOC_COUNT.lock() += 1;
++///         // SAFETY:
++///         //  - We just allocated the `Self`, thus it is valid and we own it.
++///         //  - We can transfer this ownership to the `from_raw` method.
++///         Ok(unsafe { Owned::from_raw(result) })
++///     }
++/// }
++///
++/// impl Ownable for Foo {
++///     unsafe fn release(&mut self) {
++///         // SAFETY: The [`KBox<Self>`] is still alive. We can pass ownership to the [`KBox`], as
++///         // by requirement on calling this function.
++///         drop(unsafe { KBox::from_raw(self) });
++///         // Count released allocation
++///         *FOO_ALLOC_COUNT.lock() -= 1;
++///     }
++/// }
++///
++/// {
++///    let foo = Foo::new()?;
++///    assert!(*FOO_ALLOC_COUNT.lock() == 1);
++/// }
++/// // `foo` is out of scope now, so we expect no live allocations.
++/// assert!(*FOO_ALLOC_COUNT.lock() == 0);
++/// # Ok::<(), Error>(())
++/// ```
++pub trait Ownable {
++    /// Tear down this `Ownable`.
++    ///
++    /// Implementers of `Ownable` can use this function to clean up the use of `Self`. This can
++    /// include freeing the underlying object.
++    ///
++    /// # Safety
++    ///
++    /// Callers must ensure that the caller has exclusive ownership of `T`, and this ownership can
++    /// be transferred to the `release` method.
++    unsafe fn release(&mut self);
++}
++
++/// A mutable reference to an owned `T`.
++///
++/// The [`Ownable`] is automatically freed or released when an instance of [`Owned`] is
++/// dropped.
++///
++/// # Invariants
++///
++/// - Until `T::release` is called, this `Owned<T>` exclusively owns the underlying `T`.
++/// - The `T` value is pinned.
++pub struct Owned<T: Ownable> {
++    ptr: NonNull<T>,
++}
++
++impl<T: Ownable> Owned<T> {
++    /// Creates a new instance of [`Owned`].
++    ///
++    /// This function takes over ownership of the underlying object.
++    ///
++    /// # Safety
++    ///
++    /// Callers must ensure that:
++    /// - `ptr` points to a valid instance of `T`.
++    /// - Until `T::release` is called, the returned `Owned<T>` exclusively owns the underlying `T`.
++    #[inline]
++    pub unsafe fn from_raw(ptr: NonNull<T>) -> Self {
++        // INVARIANT: By function safety requirement we satisfy the first invariant of `Self`.
++        // We treat `T` as pinned from now on.
++        Self { ptr }
++    }
++
++    /// Consumes the [`Owned`], returning a raw pointer.
++    ///
++    /// This function does not drop the underlying `T`. When this function returns, ownership of the
++    /// underlying `T` is with the caller.
++    #[inline]
++    pub fn into_raw(me: Self) -> NonNull<T> {
++        ManuallyDrop::new(me).ptr
++    }
++
++    /// Get a pinned mutable reference to the data owned by this `Owned<T>`.
++    #[inline]
++    pub fn as_pin_mut(&mut self) -> Pin<&mut T> {
++        // SAFETY: The type invariants guarantee that the object is valid, and that we can safely
++        // return a mutable reference to it.
++        let unpinned = unsafe { self.ptr.as_mut() };
++
++        // SAFETY: By type invariant `T` is pinned.
++        unsafe { Pin::new_unchecked(unpinned) }
++    }
++}
++
++// SAFETY: It is safe to send an [`Owned<T>`] to another thread when the underlying `T` is [`Send`],
++// because of the ownership invariant. Sending an [`Owned<T>`] is equivalent to sending the `T`.
++unsafe impl<T: Ownable + Send> Send for Owned<T> {}
++
++// SAFETY: It is safe to send [`&Owned<T>`] to another thread when the underlying `T` is [`Sync`],
++// because of the ownership invariant. Sending an [`&Owned<T>`] is equivalent to sending the `&T`.
++unsafe impl<T: Ownable + Sync> Sync for Owned<T> {}
++
++impl<T: Ownable> Deref for Owned<T> {
++    type Target = T;
++
++    #[inline]
++    fn deref(&self) -> &Self::Target {
++        // SAFETY: The type invariants guarantee that the object is valid.
++        unsafe { self.ptr.as_ref() }
++    }
++}
++
++impl<T: Ownable + Unpin> DerefMut for Owned<T> {
++    #[inline]
++    fn deref_mut(&mut self) -> &mut Self::Target {
++        // SAFETY: The type invariants guarantee that the object is valid, and that we can safely
++        // return a mutable reference to it.
++        unsafe { self.ptr.as_mut() }
++    }
++}
++
++impl<T: Ownable> Drop for Owned<T> {
++    #[inline]
++    fn drop(&mut self) {
++        // SAFETY: By existence of `&mut self` we exclusively own `self` and the underlying `T`. As
++        // we are dropping `self`, we can transfer ownership of the `T` to the `release` method.
++        unsafe { T::release(self.ptr.as_mut()) };
++    }
++}
+diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
+index 9989f56d0605..4ee5fac0e0b6 100644
+--- a/rust/kernel/sync/aref.rs
++++ b/rust/kernel/sync/aref.rs
+@@ -29,6 +29,11 @@
+ /// Rust code, the recommendation is to use [`Arc`](crate::sync::Arc) to create reference-counted
+ /// instances of a type.
+ ///
++/// Note: Implementing this trait allows types to be wrapped in an [`ARef<Self>`]. It requires an
++/// internal reference count and provides only shared references. If unique references are required
++/// [`Ownable`](crate::types::Ownable) should be implemented which allows types to be wrapped in an
++/// [`Owned<Self>`](crate::types::Owned).
++///
+ /// # Safety
+ ///
+ /// Implementers must ensure that increments to the reference count keep the object alive in memory
+diff --git a/rust/kernel/types.rs b/rust/kernel/types.rs
+index 4329d3c2c2e5..4aec7b699269 100644
+--- a/rust/kernel/types.rs
++++ b/rust/kernel/types.rs
+@@ -11,6 +11,17 @@
+ };
+ use pin_init::{PinInit, Wrapper, Zeroable};
+ 
++pub use crate::{
++    owned::{
++        Ownable,
++        Owned, //
++    },
++    sync::aref::{
++        ARef,
++        AlwaysRefCounted, //
++    }, //
++};
++
+ /// Used to transfer ownership to and from foreign (non-Rust) languages.
+ ///
+ /// Ownership is transferred from Rust to a foreign language by calling [`Self::into_foreign`] and
 
-This would result in a visible user change and maybe more importantly
-shows that we're relying on ad-hoc behavior, without really any specific
-policy to have this work reliably.  It actually seems like only in the
-close function, where we've disabled anything the user might have
-enabled, is it really valid to restore the original state.  Thanks,
+-- 
+2.51.2
 
-Alex
+
