@@ -1,197 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A635B3C4B9F;
-	Thu,  4 Jun 2026 17:26:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0752F1DC9B3
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 18:20:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780593979; cv=none; b=Hi3jcCE9QllFUj0ZjX5PxO3Vx6S8wF6r74+dwjIZhJehk1BoICjOksjcATZ8rXIjMb9Phc0RboVY/lNEJARpkOhMnLrKhVrxx9rAnSgTBFcd4qpKqzjM+a3BsOW7qC8XLIMn+inMbTHKDod+3O9Fqwipr8sYe7UgaE60untNwb0=
+	t=1780597235; cv=none; b=GaSOVFDI5xAjHI5yQCjfY6nJYZGajqhYMmvpvT28d8xVkJdQ4O3jLGynno/aSHPUdlWNucHFypxWar3eoN1B5RdEvdPEMFye2eO9iippack+DULGt0wSF442I3vQwvhUl/9o4oGY8i3nQ7RvEnxnhDVlDvRr9FSGg37114o1iuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780593979; c=relaxed/simple;
-	bh=7ZFPvY/I/PsSY8fcm8vfefmAGor7doQwI6PrTZ0rd1g=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=c7IrIr9GdfU6lLLf/amgT4LLffA0KIBN7egMyniwUZ43jN2A8iUj43Up5F8mhcgwrry7HOUBMUyZ1OZMgnBm0kQvdeHMKH9BxojgA3uDGQtrSTdr7+y41x8+OnevNnGsbcgP8IWPpbljbt3bLT9WWebZZXhZcCmmI4BRo4hDJSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PNUxAzx8; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780597235; c=relaxed/simple;
+	bh=ouL5XvfeSLQ6GEaEsqJR0/FGgzHrau6qGhqQ/UmaVCg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hM2mrdLcw9SspWoTZuUPuM72utRbExIo0kSlwHZZVl/AhpyfO84AdYosDAs346FnVEH4IuDlkMA2qB5iIwu5XUKv9e+wOL0JHKcRfyBL8QFeBY+8LbOARkF2A361/LdF+bkLILKlKzhsEHyxtadQFxe0dxPXQ4WiyPrK3/JRtdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=bZJM9Ddc; arc=none smtp.client-ip=209.85.222.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PNUxAzx8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 242B81F00893;
-	Thu,  4 Jun 2026 17:26:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780593978;
-	bh=FXqQYk9Ehwutv2yNZxQbQfRhJ+5UbUFJWhCjY7BqmDY=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=PNUxAzx83pMPen16YzmCgCd/9MC7cuXXasMWQBj9uHAKaTDD/e/WTTqhXjbBwK5z4
-	 cQ4DDwDNta7YJGNiAmg2YzFybPHXpW3X0rEJvp4LwYt3F13uu99LnubN4uGI6iFGgE
-	 xmR1GUUzzMowPKz+QmE4OVIjDKUyE6pLDm7yM2BZM6kXUQ06G8IW+UJqDo0ryIG9QJ
-	 2T1WY+hMrBY9jAe35Stvf+hWXhj0+/b+mskDG50VXZjnR7NlPx+ME128YN/2BCAsxS
-	 Ic5jYYv85hhRLqod0++irSpYzC2sLD2TZbMs+/WXQcKZ7Kmx8V86qvWMkm/Nc8sEcM
-	 E9qv6F+Xz2kUw==
-From: sashiko-bot@kernel.org
-Subject: Re: [RFC 04/12] PCI: Convert arch/powerpc to pci_is_sriov_* helpers
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Dimitri Daskalakis" <dimitri.daskalakis1@gmail.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260604150153.3619662-5-dimitri.daskalakis1@gmail.com>
-References: <20260604150153.3619662-5-dimitri.daskalakis1@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 17:26:17 +0000
-Message-Id: <20260604172618.242B81F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="bZJM9Ddc"
+Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-91587626ae1so118827885a.3
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 11:20:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1780597233; x=1781202033; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=cznawapF5vO4PWrDdsZF/fc6qNY58JTcnmMkw1TddjY=;
+        b=bZJM9Ddc41JZholXg+7Xw13JitkdVXhfvJNIwp+n21XOpUUmaTsj56rV12lxw1bACa
+         bymQmIsGk+gklIpxidxBCI7znUxxwGpMRQbMhTQnhzVUhy4a4DhwG+9fldnC/DIENL2x
+         uyHazBvUC8NYMS4CL7jeZldX2326HMV292vG7eDsYZptXRoYUa+0cmvE/Zr4vZPGRTo/
+         OO4mmsXFif3eGzAvDgoJoHZ6LUculXktoVTDGLHRvotMoqXWb7e4yXv+3b5vw0dQuq1t
+         eUbZCTx69hQK5MlkjNHbS+EdHvo8JeBKWNLiTKQHTUmN+hh5PJQSAremU83+Aky1zY+1
+         70QA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780597233; x=1781202033;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=cznawapF5vO4PWrDdsZF/fc6qNY58JTcnmMkw1TddjY=;
+        b=dYhdtCkXfOeSYPOQFC0/uVGz/eKWYDZBJKk8Ot+apDcWQ32OUMafMiOWRpWPG+OSRy
+         BLi3GkTqdPVBp7FQWlMio9KPuDfYClpHDBT1x6JNoQFJGLN9YllIHY+3RN2PaGtxspg8
+         CDZYNZP23leEmbnUsD+emXnVJMLEE1oWnD/S4onijTx98gXEKAe8oZ28kI7+waJ3sphI
+         qkX5aT/nEgdYwxxriTO1j8WPA+s8H6aCsULmGTvF/PH3wu/p35fD6a0aw8ZG9vMgdXrQ
+         DI4JgErjqOjmnB4xsTcttHAwkd3D5Rznu7iz2ZqTN970l8NiS3g/hyWArbm7x3PKHVFy
+         uEsQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9r9RWyyHZ1yMPF85StyCaMV3EsR866Lrkos/RnkmbAXf5m5w/3+c0tWeyD6LLoty2P4wiNZKo27sQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzjf6fz66GmmY1G+pw4gKCPg9QgpPMWidnTMCT+e9+G/OVm2Il8
+	EktEvRMrDQGgtqB9jFiy3WhvbolPVYkh3VHbAT16SZ2GBmVlYYIGuw0sWlRKC0K+zoQ=
+X-Gm-Gg: Acq92OEhl+E2QOUjSse6hwJOddLkFdz0dBHhAj2Vs/VXyfg3fUz8/k4vEUbpBvmRv8w
+	X+pEZ6HH6FK3CuBlSzTEwxM6/d2GB+9qZVLIItrzll9stU2M7YaDfEwfkGObp4OcUzW4g/cQuBt
+	Yet44qEiBXhPwVil9A5zYpH51oUP/mCTOEfKwiJgLmrkOGtyFQlzcN+T3gOEMS8k1VfeTtfRb52
+	/TLl3IHDi2/5gJhp+aYKHilX8itH13clZN7+skkjZC9jp6FYDd8yJQwFFJLT4tlOdsxsW4+DuIw
+	SS4KR7b9vNsVBaUQo2Lutm8HsGmZgQh5rin2tJqXuB+ECJczhqrx9OvRLeCzfTNOgNunr6s/i6S
+	/lGUMD8iINAHOo+cgsBnDMBVIwyyuieNDwtZIl5N+ktCOlsbPgt0wkh2APk+p8jAOdjYlyfxR6g
+	26MD4NPTwUXX8GEZl0Vx5NL2SNfgYs+n9v1lFz4Sz7iQJZ4H88DlgIXiK6nzsI6sHrNAdN76yDi
+	CM/kYtEZm6REuYC
+X-Received: by 2002:a05:620a:a414:20b0:914:afc1:c66d with SMTP id af79cd13be357-915a9c75c96mr40356185a.11.1780597232897;
+        Thu, 04 Jun 2026 11:20:32 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8cecd051d61sm58430626d6.29.2026.06.04.11.20.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Jun 2026 11:20:32 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wVCgB-00000008erz-2jW4;
+	Thu, 04 Jun 2026 15:20:31 -0300
+Date: Thu, 4 Jun 2026 15:20:31 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Dimitri Daskalakis <dimitri.daskalakis1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Christophe Leroy <chleroy@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Leon Romanovsky <leon@kernel.org>, Juergen Gross <jgross@suse.com>,
+	Stefano Stabellini <sstabellini@kernel.org>,
+	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Alexander Duyck <alexanderduyck@fb.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Dimitri Daskalakis <daskald@meta.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	kvm@vger.kernel.org, xen-devel@lists.xenproject.org
+Subject: Re: [RFC 00/12] PCI: Add support for Scalable I/O Virtualization
+Message-ID: <20260604182031.GB2487554@ziepe.ca>
+References: <20260604150153.3619662-1-dimitri.daskalakis1@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260604150153.3619662-1-dimitri.daskalakis1@gmail.com>
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+On Thu, Jun 04, 2026 at 08:01:41AM -0700, Dimitri Daskalakis wrote:
+> With this patchset core enumarates the SIOV capability and can identify
+> SIOV PFs. But there is no central mechanism to allocate/manage SIOV VFs.
+> To support device pass through, devices will need to add a vfio-mdev
+> driver with IOMMUFD support (or something similar).
 
-New issues:
-- [High] Missed conversions of SR-IOV specific is_virtfn and is_physfn chec=
-ks.
+There is an enormous amount of missing work to do something useful
+with the SIOVr2 stuff. IIRC there is even supposed to be BIOS
+components in this plan and there are some missing PCI SIG topics too
+IIRC.
 
-Pre-existing issues:
-- [High] Unconditional NULL pointer dereference in pnv_pci_sriov_disable() =
-if PE allocation fails.
-- [High] Unchecked NULL pointer dereference in pnv_pci_ioda_fixup_iov() for=
- VFs with failed configuration.
-- [High] Failure to unshift IOV BAR resources in pnv_pci_sriov_disable() if=
- the first VF's PE failed to configure.
-- [High] Lockless list traversal of phb->ioda.pe_list exposes traversal to =
-concurrent modifications.
---
+So, I'm not sure how much value there is in merging just the cap
+discovery without a roadmap for the missing parts..
 
-commit 5e49eb3e31cb4ac469a301b263f891c4ba0713e3
-Author: Dimitri Daskalakis <daskald@meta.com>
+Also, I'm quite surprised to see this out of the blue, there is an OCP
+workstream that was building out a standard that outlines how all the
+different components have to act to successfully implement it.  What
+is in PCI SIG was just some minor foundational adjustments without any
+context on how to form them into a solution.
 
-PCI: Convert arch/powerpc to pci_is_sriov_* helpers
+I think it is extremely premature to merge anything related to SIOV to
+the kernel. Join the OCP work stream if you are interested. I think
+the general feeling was there is not sufficient interest in the
+industry to do this and it has gone quiet.
 
-This patch converts SR-IOV specific is_physfn and is_virtfn reads in the
-PowerPC PCI code to use pci_is_sriov_physfn() and pci_is_sriov_virtfn().
-This is intended to keep SR-IOV semantics intact once those flags are
-widened to cover other virtualization types.
-
-> Convert SR-IOV-specific is_physfn / is_virtfn reads in the PowerPC
-> PCI code to use pci_is_sriov_physfn() / pci_is_sriov_virtfn(). These
-> call sites are all SR-IOV-specific: they guard SR-IOV state
-> dereferences, VF PE management, or sit inside #ifdef CONFIG_PCI_IOV
-> blocks.=20
-
-[Severity: High]
-The commit message states that all SR-IOV specific is_physfn and is_virtfn
-reads are converted, but did we miss some checks in other PowerPC PCI files?
-
-For instance, in arch/powerpc/kernel/eeh.c:eeh_break_device():
-
-    if (pdev->is_virtfn) {
-        ...
-        pos =3D pci_find_ext_capability(pdev->physfn, PCI_EXT_CAP_ID_SRIOV);
-        ...
-
-If a non-SR-IOV VF (like SIOV) has is_virtfn set, wouldn't this read from
-pdev->physfn (which might be NULL) or fail to find the SR-IOV capability
-(pos =3D 0) and corrupt the PCI config space at offset 8 (PCI_SRIOV_CTRL)?
-
-Similarly, there appear to be missed conversions guarding SR-IOV logic in:
-- arch/powerpc/platforms/powernv/eeh-powernv.c:pnv_eeh_get_upstream_pe()
-- arch/powerpc/kernel/eeh_sysfs.c:eeh_notify_resume_add()
-- arch/powerpc/kernel/eeh_sysfs.c:eeh_notify_resume_remove()
-
-
-> diff --git a/arch/powerpc/platforms/powernv/pci-sriov.c b/arch/powerpc/pl=
-atforms/powernv/pci-sriov.c
-> index 7105a573aec42..1113488f43720 100644
-> --- a/arch/powerpc/platforms/powernv/pci-sriov.c
-> +++ b/arch/powerpc/platforms/powernv/pci-sriov.c
-> @@ -225,7 +225,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct p=
-ci_dev *pdev)
-> =20
->  void pnv_pci_ioda_fixup_iov(struct pci_dev *pdev)
->  {
-> -	if (pdev->is_virtfn) {
-> +	if (pci_is_sriov_virtfn(pdev)) {
->  		struct pnv_ioda_pe *pe =3D pnv_ioda_get_pe(pdev);
-> =20
->  		/*
-> @@ -235,7 +235,7 @@ void pnv_pci_ioda_fixup_iov(struct pci_dev *pdev)
->  		 */
->  		pe->pdev =3D pdev;
-
-[Severity: High]
-This is a pre-existing issue, but can pnv_ioda_get_pe() return NULL here,
-leading to a NULL pointer dereference when assigning pe->pdev =3D pdev?
-
-During SR-IOV enablement, if pnv_ioda_configure_pe() fails for a specific VF
-in pnv_ioda_setup_vf_PE(), the error is ignored and the VF's PE number
-remains IODA_INVALID_PE. When the PCI core subsequently adds the VF and cal=
-ls
-this function, pnv_ioda_get_pe() will return NULL because the PE number is
-invalid.
-
-[ ... ]
-
-> @@ -479,7 +479,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pd=
-ev)
-> =20
->  	phb =3D pci_bus_to_pnvhb(pdev->bus);
-> =20
-> -	if (!pdev->is_physfn)
-> +	if (!pci_is_sriov_physfn(pdev))
->  		return;
-> =20
->  	/* FIXME: Use pnv_ioda_release_pe()? */
->  	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
-
-[Severity: High]
-This is a pre-existing issue, but does this lockless traversal of
-phb->ioda.pe_list expose us to concurrent modifications?
-
-The lock phb->ioda.pe_list_mutex is only held briefly during list_del()
-inside this loop. However, other PCI hotplug paths (such as
-pnv_ioda_setup_PE()) add entries to this list while holding the mutex.
-
-If a concurrent hotplug event mutates the list during this traversal,
-could it corrupt the cached pe_n pointer or list linkages, leading to
-a use-after-free?
-
-[ ... ]
-
-[Severity: High]
-This is a pre-existing issue, but I noticed a potential NULL pointer
-dereference in pnv_pci_sriov_disable() in the same file if PE allocation
-fails:
-
-arch/powerpc/platforms/powernv/pci-sriov.c:pnv_pci_sriov_disable() {
-    ...
-    base_pe =3D iov->vf_pe_arr[0].pe_number;
-    ...
-}
-
-In pnv_pci_sriov_enable(), if pnv_ioda_alloc_pe() fails, it returns -EBUSY
-and iov->vf_pe_arr remains NULL. The generic PCI core handles this failure
-by calling pcibios_sriov_disable(), which invokes pnv_pci_sriov_disable().
-This unconditionally accesses iov->vf_pe_arr[0], which would crash.
-
-[Severity: High]
-This is another pre-existing issue in pnv_pci_sriov_disable(). Does the
-error teardown path fail to unshift IOV BAR resources if the first VF's
-PE failed to configure?
-
-arch/powerpc/platforms/powernv/pci-sriov.c:pnv_pci_sriov_disable() {
-    ...
-    base_pe =3D iov->vf_pe_arr[0].pe_number;
-    ...
-    pnv_pci_vf_resource_shift(pdev, -base_pe);
-    ...
-}
-
-During SR-IOV enablement, pnv_pci_vf_resource_shift() shifts the IOV BARs
-based on the allocated base PE number. If pnv_ioda_configure_pe() fails
-for the first VF (VF 0), it zero-initializes the PE structure. During
-error teardown, base_pe is read as 0, resulting in a call to
-pnv_pci_vf_resource_shift(pdev, -0). This fails to unshift the IOV BARs
-back to their original addresses, which could leak the shifted MMIO windows.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604150153.3619=
-662-1-dimitri.daskalakis1@gmail.com?part=3D4
+Jason
