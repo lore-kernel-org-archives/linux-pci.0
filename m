@@ -1,207 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azon11010045.outbound.protection.outlook.com [52.101.201.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A081DED40
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 20:32:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780605160; cv=none; b=VhPJ/1byWnuQ3Ii/mVrJS/PY5KPfZ+fgZfbzn5Rg1tWdNsBwLXFArYuXClBCy6G33iXD2W8eiCJpb7EUD5fFTS+LGml4zvjg71y54A+YH7xex/+Y+N5U7H7juyHnY9ooXHhxFkDV2DKLoDM7iQQvBTPXoc+2n9E/ZTE515a1dQc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780605160; c=relaxed/simple;
-	bh=iC4PCN3EvZ3vbDafh6pppgbHo9EDczLBjmFM29+3+mE=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=fR0Pq5G71u4Ex3gz00GZ8DGXdPWsz9sYPHqGdWnIeVUE04nyviiLbNZMYLN1M48TJ2TiY0nbbQKTfl8dctehETyILL4euAhmAqTdzeCZNROK4JhHkVf5IkV4ss7Mst0Gu12/uYIupr+Gov2I/DcMtTo+u2sRaIQa1f2EYWAMwRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Pc0KbbSv; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A26E61E3DDE;
+	Thu,  4 Jun 2026 20:33:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.201.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780605215; cv=fail; b=IFym2nRJGbwqfSqb2qsjl2jHXlf44YRbJnHjuTVWOyqf0quiFrO8VEa/38PKlwILuyGMpEaHAdCvISBdLZ3e68RnrQiSAVmA+NIT0AUoIBRTliKk3zaGqOUOkWknsqDY7BoTO0bPF8aT2UhNi3xETCysquDITIbd8OeHMdr9P8s=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780605215; c=relaxed/simple;
+	bh=9zZzyrBF2s99oJAy/VUcMD5yvUgwSkLnF4E26jGo4Ps=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=izvWOHyrWj8gAtXonetIiOt6gRwd/xqzpL6p4M9/84eC+NHPuadg8kH5eQYkclZCMAJgtjGHEBvrrddMjp8drxU5TdrwjqwGXOKVDk83Wy2Db5KkthqRH6krNOeB8HkUVxgKhoCcCfGRZqBvay9XnTKgHF2CvpleilBxniT4Ksc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=DLhhlnh2; arc=fail smtp.client-ip=52.101.201.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Pc0KbbSv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E3A51F00893;
-	Thu,  4 Jun 2026 20:32:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780605158;
-	bh=pg4jFJrnmDg2RQyBrb+Q9dUjl+QotqBgU0tz/1DoBdE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Pc0KbbSvtK2FkAqc+wQMGbBtpaiVNZWSUnJCcUtpxzAmczKRBqFf4vxXLLdjuZfPc
-	 fCOC3dZ+oIVB0uHHZilT9DUlw6TIGXGFi3xhV5q3Ibf30ee4OHy2T0p6r/wZ2hu7pu
-	 vVD0SkYTyCQkpWTmo2I5VQAWRwBv/xiLzYlI2djimA7V12WFpVlYP+NmxPbV9dPFlt
-	 KpOJFwIri/JZ6B6gqHs2twHmWyEjPPHa2REwhHPlYGmHuMA3AxHe8EntF6VD233Epm
-	 RN5Hx6r/Pwn2bcFwuRxaIdHFoV9+13jyKKpQz2RLc1diU+yOiC2rJ2k3YTGiMZKWpA
-	 oTAl2ZKR+ZQOQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 07/10] rust: Add missing SAFETY documentation for
- `ARef` example
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, ojeda@kernel.org
-In-Reply-To: <20260604-unique-ref-v17-7-7b4c3d2930b9@kernel.org>
-References: <20260604-unique-ref-v17-7-7b4c3d2930b9@kernel.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 20:32:38 +0000
-Message-Id: <20260604203238.8E3A51F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="DLhhlnh2"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=q+GqPuu8yBl8Nf+gHD3o+tf2or+yE1Cqz2bVFC9PTRwXcupUpi9C2b1RE4oxcjx1DgcQzQE2HPl/H/XhzbY2QdYhNclq50DUfYtQvGToukIIEYatrk8pbzleVm0nixVphNcuNotuMPjnShJrO6dcytGA3bPUdROmzkY7nxoe9QfX1oGgw5dz3RyqbsBIlbCn+ME4P76+XXCV9OwSF4HsoZXbUdOdyZUKc/AvgfpJdW3dEstYcArpZ7G/+GJH+Lg85ReNnspJ6z5ahP95rEPxQM6nli5vNOc7vbCB+RZxPdGCJXj0w8DLJprjp9JkCBAyxZ1TahpRrbqy0aUc4N+tlg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=OdlnEtA1tLmN9JfDk/jCDK7IQ+P4a0oaWLZKJddjXt8=;
+ b=PZ71W2T96RAKoH7C3VGkoQvRc9Wf1FKID8Fe1UFXEHZeUmvW0x9W325vESLNa8e6iHSd6DzVgT6j86RbRH2Lbu+PFdH1ItB4TVDEl2sO8Dyq1X5yNlX91C47TeCTv9bYBR62rjBNMjjfkK893ELazXdvj9wJz0Kpn2gfbQ9yPMN2QcSy7a5YGZ89SNDst11+9IozSMvHVEe4+5xD0Xha0eKE/Ar1RBHsQ2Ce7zY6bYdwwaH5cCGGSyq0Mbq1iM86yN6FVLiU58+xf2+OOy9EFzvYb4BHhRjL1akyNC339HeXVgjdWltlCIWnCkjfiJF3HaZkwQgkTRoZ9zQmJ2lt1Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OdlnEtA1tLmN9JfDk/jCDK7IQ+P4a0oaWLZKJddjXt8=;
+ b=DLhhlnh2HI2erekSpvnBRf+yfWxC5m3P5fqLXrmLP5nn8FgHjL+w8N9DhUvmdfgNVgz5Y7moBP6qW8nl4VrJnwG58mRueZ1RHQZnzwAdxSycvvbmGphDsAPG1n9HP1eI7TAKPeHIhAoY+45BsnquOEDinSA20VCtFlyPPAzdu+ycFUQpE1Swev94nyS6JfQZuAXSXBulg2OngAACoNyeKVHrCveufqWAxr5Vg5w9v8ysPNVgOWrWl2F2zXYvFToWib2eDh1DVgPxH9orareUS80ZaocI0unHp49rYl75D3IoYLvhimBm7ExNbvL31sv3wuJm5/YVPybZIlR9I/53qg==
+Received: from BL1P223CA0005.NAMP223.PROD.OUTLOOK.COM (2603:10b6:208:2c4::10)
+ by PH0PR12MB7862.namprd12.prod.outlook.com (2603:10b6:510:26d::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.7; Thu, 4 Jun 2026
+ 20:33:28 +0000
+Received: from BL6PEPF0002256E.namprd02.prod.outlook.com
+ (2603:10b6:208:2c4:cafe::6e) by BL1P223CA0005.outlook.office365.com
+ (2603:10b6:208:2c4::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.8 via Frontend Transport; Thu, 4
+ Jun 2026 20:33:28 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ BL6PEPF0002256E.mail.protection.outlook.com (10.167.249.36) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.92.5 via Frontend Transport; Thu, 4 Jun 2026 20:33:27 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20; Thu, 4 Jun
+ 2026 13:33:11 -0700
+Received: from drhqmail201.nvidia.com (10.126.190.180) by
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.20; Thu, 4 Jun 2026 13:33:11 -0700
+Received: from Asurada-Nvidia (10.127.8.9) by mail.nvidia.com (10.126.190.180)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Thu, 4 Jun 2026 13:33:10 -0700
+Date: Thu, 4 Jun 2026 13:33:08 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Pranjal Shrivastava <praan@google.com>
+CC: <iommu@lists.linux.dev>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>, Will Deacon
+	<will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, Baolu Lu
+	<baolu.lu@linux.intel.com>, Jason Gunthorpe <jgg@nvidia.com>, Kevin Tian
+	<kevin.tian@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, "Samiullah
+ Khawaja" <skhawaja@google.com>
+Subject: Re: [PATCH v8 3/4] iommu/arm-smmu-v3: Standardize ATS enablement
+ failure reporting
+Message-ID: <aiHhBIwMhJ3DsbTt@Asurada-Nvidia>
+References: <20260604182116.3179005-1-praan@google.com>
+ <20260604182116.3179005-4-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20260604182116.3179005-4-praan@google.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL6PEPF0002256E:EE_|PH0PR12MB7862:EE_
+X-MS-Office365-Filtering-Correlation-Id: 80896dc9-a2cb-44c8-433e-08dec27888d3
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|82310400026|36860700016|1800799024|11063799006|4143699003|56012099006|22082099003|18002099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	7OT3DVib5V+ktozIr8OTzHJnovN/TqdnnjXbBgk1aI7h3p2WKjLrrdswc3HYUCjoXIhUemIJ0XBJ6lL4/kl5dyR9OyUwvB79GfE/e9En0/FmGAmdEP51Yoc8CBvFrcfF4NEjunQPBkS1lyT79aUHXKg5ZgkJDTIjLvtHFn1/EIT6hIduQJaUSTKJWiG9OCGMbr0t4g6l9UBh/qCfWEYcMjK2driBscVsog/GNlXFpPN3/pwALbtJHz7YKwTJ11KpnlAA8jDFDWSUp13R7BIbaepKd89eaybVSKxkksZU8Fs7Wsd/0tHsQTIIKvej+KFiO/J8nJ2c93S6LcZ7rS5+GST+UwJJ/2ZNEg2n8wzep1cVP8IQTzFbWomzAPhpxNF8C4YD1RnRZAGEA2sgaWIIRwBke5NHxW1THRWuVitRA/J/uPjcQeHx2EYjKw+gxu0cGiZqgLupYYf8lIfIEY3/aQRIsYaGqn3JgyICR2fIXQ7xdIns9Jzoao5g6Lz3Sn8U4TP9Tz2tl7KJNrzsAgTN/ODyrkm6+rXmGaMjTteeBSC5/NYkkVXGu1y5NraF13fS0GAYu9l8nq0aBRD7+tCrrXiAfCd7Reuc06DxU6SbtbsSUpqrBruqxEDdUQ9Rk4RIq6EbIuCmg0J6yXDFGPClqmHqwKQByO6l7uTeIT/DZXdGWrfygflB87cD8eFtHLyVjI6LMnv9TrzO6twkc/4o4KlykuwOdJnw2Cqrn+nyQoM=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(7416014)(376014)(82310400026)(36860700016)(1800799024)(11063799006)(4143699003)(56012099006)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	deitUMlEuMnIWiTeNmeh2Ow/lf8wE7rq3nGv0MBV6e6jumc+GY8DQGlifzqF8u9yzlFCwaNdQ+FV7sfxxde/xwee7F6grPk79HBsGv7taemGPA0QlKXKgSOXOAD+EhiR/Ken73f5kiCSDqFiv8EnRZGHprBttEDkAmvGWoZ1IbMbcRoIY6KBVkIB/eUkQPPzdgJaTrRUoG0noTIu4ALzYSY0BlDjOjhGx2roAKrbfkuKj6+xeputO9y91f07DtfIjSRnODXABE27gPVKmWWPMZ5VPDTAjvvaVoz1jOLdakte4+NbaMDmIp3evcZDtLEDB/+jg224sVdo+Q+b2QUCk/VB5Jb1Q2O2eDGtdZJjZGUn2z4IP4bHSj3yaTlmQUS4+HYGR/Li78xDv1fNKEDZCG3dnRbUe4EUBOryAuuJp2nkduVUlyAn4vAE6yYPDnst
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jun 2026 20:33:27.8688
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 80896dc9-a2cb-44c8-433e-08dec27888d3
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL6PEPF0002256E.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB7862
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
-- [High] `ForeignOwnable` implementation for `Owned<T>` provides an incorre=
-ct `FOREIGN_ALIGN`.
-- [High] The `Ownable::release` trait method takes `&mut self` but is used =
-to deallocate the memory backing `self`, causing Undefined Behavior.
-- [Low] The return type of `Page::alloc_page` and the `Page` struct definit=
-ion were changed without updating the `drivers/android/binder` caller, caus=
-ing a build breakage.
---
-
-commit b6a2c6eeac2c111155591c361b9cdb16d0cb61b7
-Author: Oliver Mangold <oliver.mangold@pm.me>
-
-rust: Add missing SAFETY documentation for ARef example
-
-This commit fixes a missing SAFETY comment in the rustdoc example for
-ARef. It replaces a TODO comment with a proper safety explanation.
-The series also introduces the Ownable trait and updates
-Page::alloc_page to return an Owned<Page>.
-
-> diff --git a/rust/kernel/owned.rs b/rust/kernel/owned.rs
-> new file mode 100644
-> --- /dev/null
-> +++ b/rust/kernel/owned.rs
-> @@ -0,0 +1,233 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +
-> +//! Unique owned pointer types for objects with custom drop logic.
-
-[ ... ]
-
-> +pub trait Ownable {
-> +    /// Tear down this `Ownable`.
-> +    ///
-> +    /// Implementers of `Ownable` can use this function to clean up the =
-use of `Self`. This can
-> +    /// include freeing the underlying object.
-> +    ///
-> +    /// # Safety
-> +    ///
-> +    /// Callers must ensure that the caller has exclusive ownership of `=
-T`, and this ownership can
-> +    /// be transferred to the `release` method.
-> +    unsafe fn release(&mut self);
-> +}
-
-[Severity: High]
-Does taking a mutable reference here lead to undefined behavior when
-deallocating the memory backing it?
-
-In Rust's memory model, a reference must point to valid memory for its
-entire lifetime, which extends until the method returns.
-
-Deallocating the memory backing &mut self while the reference is still
-active in the function is a strict aliasing violation.
-
-For instance, Page implements this by calling bindings::__free_pages
-on the memory backing self.
-
-Could this method take a raw pointer (like NonNull<Self>) or pass
-ownership of the wrapper instead to avoid this issue?
-
-[ ... ]
-
-> +// SAFETY: We derive the pointer to `T` from a valid `T`, so the returned
-> +// pointer satisfy alignment requirements of `T`.
-> +unsafe impl<T: Ownable + 'static> ForeignOwnable for Owned<T> {
-> +    const FOREIGN_ALIGN: usize =3D core::mem::align_of::<Owned<T>>();
-
-[Severity: High]
-Is it possible this alignment is incorrect for the underlying type?
-
-The ForeignOwnable trait guarantees that the pointer returned by
-into_foreign has a minimum alignment of FOREIGN_ALIGN. Here,
-into_foreign extracts and returns a raw pointer to the underlying T.
-
-However, FOREIGN_ALIGN is defined as the alignment of the wrapper
-Owned<T> (typically an 8-byte pointer), rather than the alignment of T.
-
-If T is an Ownable type with a smaller alignment requirement, the
-returned pointer might not be 8-byte aligned. This would violate the
-trait's safety contract and potentially cause undefined behavior when
-passed to subsystems like XArray.
-
-Should this use core::mem::align_of::<T>() instead?
-
-> diff --git a/rust/kernel/page.rs b/rust/kernel/page.rs
-> index adecb200c6549..844c75e541345 100644
-> --- a/rust/kernel/page.rs
-> +++ b/rust/kernel/page.rs
-
-[ ... ]
-
-> @@ -177,19 +192,20 @@ impl Page {
->      /// # Ok::<(), kernel::alloc::AllocError>(())
->      /// ```
->      #[inline]
-> -    pub fn alloc_page(flags: Flags) -> Result<Self, AllocError> {
-> +    pub fn alloc_page(flags: Flags) -> Result<Owned<Self>, AllocError> {
->          // SAFETY: Depending on the value of `gfp_flags`, this call may =
-sleep. Other than that, it
->          // is always safe to call this method.
->          let page =3D unsafe { bindings::alloc_pages(flags.as_raw(), 0) };
->          let page =3D NonNull::new(page).ok_or(AllocError)?;
-> -        // INVARIANT: We just successfully allocated a page, so we now h=
-ave ownership of the newly
-> -        // allocated page. We transfer that ownership to the new `Page` =
-object.
-> -        Ok(Self { page })
-> +        // SAFETY: We just successfully allocated a page, so we now have=
- ownership of the newly
-> +        // allocated page. We transfer that ownership to the new `Owned<=
-Page>` object.
-> +        // Since `Page` is transparent, we can cast the pointer directly.
-> +        Ok(unsafe { Owned::from_raw(page.cast()) })
->      }
-
-[Severity: Low]
-Does this change in return type break existing callers?
-
-The return type of Page::alloc_page was changed to return
-Result<Owned<Page>, AllocError> and Page was converted to an
-Ownable opaque wrapper.
-
-However, ShrinkablePageRange::use_page_slow in
-drivers/android/binder/page_range.rs still expects Page::alloc_page
-to return a Page by value.
-
-It attempts to pass the Owned<Page> to PageInfo::set_page(page: Page),
-which causes a type mismatch and breaks the build.
-
-Could the caller in drivers/android/binder be updated to handle
-the new Owned<Page> return type?
-
-[ ... ]
-
-> @@ -364,10 +380,12 @@ pub unsafe fn copy_from_user_slice_raw(
->      }
->  }
-> =20
-> -impl Drop for Page {
-> +impl Ownable for Page {
->      #[inline]
-> -    fn drop(&mut self) {
-> -        // SAFETY: By the type invariants, we have ownership of the page=
- and can free it.
-> -        unsafe { bindings::__free_pages(self.page.as_ptr(), 0) };
-> +    unsafe fn release(&mut self) {
-> +        let ptr: *mut Self =3D self;
-> +        // SAFETY: By the function safety requirements, we have ownershi=
-p of the page and can free
-> +        // it. Since Page is transparent, we can cast the raw pointer di=
-rectly.
-> +        unsafe { bindings::__free_pages(ptr.cast(), 0) };
->      }
->  }
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604-unique-ref=
--v17-0-7b4c3d2930b9@kernel.org?part=3D7
+On Thu, Jun 04, 2026 at 06:21:15PM +0000, Pranjal Shrivastava wrote:
+> Update arm_smmu_enable_ats() to wrap the pci_enable_ats() call in
+> WARN_ON(). Since probe-time checks now preclude configuration errors
+> any failure during hardware enablement is considered a kernel bug.
+> 
+> Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+> Signed-off-by: Pranjal Shrivastava <praan@google.com>
+ 
+Reviewed-by: Nicolin Chen <nicolinc@nvidia.com>
