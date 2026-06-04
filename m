@@ -1,132 +1,148 @@
-Received: from mail-qk1-f177.google.com (mail-qk1-f177.google.com [209.85.222.177])
+Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0752F1DC9B3
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 18:20:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855C0357D14
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 18:21:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780597235; cv=none; b=GaSOVFDI5xAjHI5yQCjfY6nJYZGajqhYMmvpvT28d8xVkJdQ4O3jLGynno/aSHPUdlWNucHFypxWar3eoN1B5RdEvdPEMFye2eO9iippack+DULGt0wSF442I3vQwvhUl/9o4oGY8i3nQ7RvEnxnhDVlDvRr9FSGg37114o1iuw=
+	t=1780597284; cv=none; b=Eyd57u6iCkJFgmeSz/MoRTbhz2WRrriXzsrZFuuSJnGEtyTRW4JTm11/e0sPrrEzNXdyADWtMI4PjP6TC77y9CNY9inpUpRHy5A5qF0VCUOsOikNoytIzfsOnVWGrvNat6XL4dal7+qTUik9wD2A5AeifNWuhlHipmms4gRiRwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780597235; c=relaxed/simple;
-	bh=ouL5XvfeSLQ6GEaEsqJR0/FGgzHrau6qGhqQ/UmaVCg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hM2mrdLcw9SspWoTZuUPuM72utRbExIo0kSlwHZZVl/AhpyfO84AdYosDAs346FnVEH4IuDlkMA2qB5iIwu5XUKv9e+wOL0JHKcRfyBL8QFeBY+8LbOARkF2A361/LdF+bkLILKlKzhsEHyxtadQFxe0dxPXQ4WiyPrK3/JRtdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=bZJM9Ddc; arc=none smtp.client-ip=209.85.222.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1780597284; c=relaxed/simple;
+	bh=o+wk7iXC6VauNnExxfg0TzcqhGJk19ik5VMdWoMy+Io=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=fjYU4bg8unZd9UrOZeEKcLYHO0OPfkQzipAdI5OXjICcHdq2o35B+QC+M6TRXFblVyVgr46xWHGO/XOLmCMZlTAiLNeZ0vuatmUHsgGzG5/lJA1ZTfTkmyzmU/Fc9GrFg8vgwxTO18L21nULiED2rpJbv6Bv2lrWpwsrDRrgDjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=EvTk+BMk; arc=none smtp.client-ip=209.85.216.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="bZJM9Ddc"
-Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-91587626ae1so118827885a.3
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 11:20:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="EvTk+BMk"
+Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-36d98b76d12so791973a91.2
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 11:21:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1780597233; x=1781202033; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cznawapF5vO4PWrDdsZF/fc6qNY58JTcnmMkw1TddjY=;
-        b=bZJM9Ddc41JZholXg+7Xw13JitkdVXhfvJNIwp+n21XOpUUmaTsj56rV12lxw1bACa
-         bymQmIsGk+gklIpxidxBCI7znUxxwGpMRQbMhTQnhzVUhy4a4DhwG+9fldnC/DIENL2x
-         uyHazBvUC8NYMS4CL7jeZldX2326HMV292vG7eDsYZptXRoYUa+0cmvE/Zr4vZPGRTo/
-         OO4mmsXFif3eGzAvDgoJoHZ6LUculXktoVTDGLHRvotMoqXWb7e4yXv+3b5vw0dQuq1t
-         eUbZCTx69hQK5MlkjNHbS+EdHvo8JeBKWNLiTKQHTUmN+hh5PJQSAremU83+Aky1zY+1
-         70QA==
+        d=google.com; s=20251104; t=1780597281; x=1781202081; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=WNm7tdHA24ucfyXJdikAS1wgOMt/Xm5IGhATPcb6sag=;
+        b=EvTk+BMkKImtgblqMXTyvkE+M6a9idYR0XQ+1unJ7IFUGm5cFWTKqQ25jxcmr68gwu
+         UCnC4LufvjKnVWflqjvY5YzyYL9hNcKrSk52OW8CXHrDajNjNcqnikP8PLSxw3Jc481E
+         v4SY/Ez11DJ4hoWXN2GJ8ahJg4i9Ycu5HSlZACEqyp0vBJGw2EbCEW1ifGfCPf+NM5DR
+         jPrWcFzcE1Ii+Og+x06jwsENfFy2/Qs22wSZF0P1plgKi2mIsWBN5kJw/RQA0KXMphso
+         sPLRBvkXaxFUJj29KKOEN8+yprjJuSzmMD9wNI1dXqTntKcsBc6DkPjNzTmMwwktXkx8
+         71uw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780597233; x=1781202033;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cznawapF5vO4PWrDdsZF/fc6qNY58JTcnmMkw1TddjY=;
-        b=dYhdtCkXfOeSYPOQFC0/uVGz/eKWYDZBJKk8Ot+apDcWQ32OUMafMiOWRpWPG+OSRy
-         BLi3GkTqdPVBp7FQWlMio9KPuDfYClpHDBT1x6JNoQFJGLN9YllIHY+3RN2PaGtxspg8
-         CDZYNZP23leEmbnUsD+emXnVJMLEE1oWnD/S4onijTx98gXEKAe8oZ28kI7+waJ3sphI
-         qkX5aT/nEgdYwxxriTO1j8WPA+s8H6aCsULmGTvF/PH3wu/p35fD6a0aw8ZG9vMgdXrQ
-         DI4JgErjqOjmnB4xsTcttHAwkd3D5Rznu7iz2ZqTN970l8NiS3g/hyWArbm7x3PKHVFy
-         uEsQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9r9RWyyHZ1yMPF85StyCaMV3EsR866Lrkos/RnkmbAXf5m5w/3+c0tWeyD6LLoty2P4wiNZKo27sQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzjf6fz66GmmY1G+pw4gKCPg9QgpPMWidnTMCT+e9+G/OVm2Il8
-	EktEvRMrDQGgtqB9jFiy3WhvbolPVYkh3VHbAT16SZ2GBmVlYYIGuw0sWlRKC0K+zoQ=
-X-Gm-Gg: Acq92OEhl+E2QOUjSse6hwJOddLkFdz0dBHhAj2Vs/VXyfg3fUz8/k4vEUbpBvmRv8w
-	X+pEZ6HH6FK3CuBlSzTEwxM6/d2GB+9qZVLIItrzll9stU2M7YaDfEwfkGObp4OcUzW4g/cQuBt
-	Yet44qEiBXhPwVil9A5zYpH51oUP/mCTOEfKwiJgLmrkOGtyFQlzcN+T3gOEMS8k1VfeTtfRb52
-	/TLl3IHDi2/5gJhp+aYKHilX8itH13clZN7+skkjZC9jp6FYDd8yJQwFFJLT4tlOdsxsW4+DuIw
-	SS4KR7b9vNsVBaUQo2Lutm8HsGmZgQh5rin2tJqXuB+ECJczhqrx9OvRLeCzfTNOgNunr6s/i6S
-	/lGUMD8iINAHOo+cgsBnDMBVIwyyuieNDwtZIl5N+ktCOlsbPgt0wkh2APk+p8jAOdjYlyfxR6g
-	26MD4NPTwUXX8GEZl0Vx5NL2SNfgYs+n9v1lFz4Sz7iQJZ4H88DlgIXiK6nzsI6sHrNAdN76yDi
-	CM/kYtEZm6REuYC
-X-Received: by 2002:a05:620a:a414:20b0:914:afc1:c66d with SMTP id af79cd13be357-915a9c75c96mr40356185a.11.1780597232897;
-        Thu, 04 Jun 2026 11:20:32 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-8cecd051d61sm58430626d6.29.2026.06.04.11.20.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 11:20:32 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wVCgB-00000008erz-2jW4;
-	Thu, 04 Jun 2026 15:20:31 -0300
-Date: Thu, 4 Jun 2026 15:20:31 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Dimitri Daskalakis <dimitri.daskalakis1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	Christophe Leroy <chleroy@kernel.org>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver O'Halloran <oohall@gmail.com>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Leon Romanovsky <leon@kernel.org>, Juergen Gross <jgross@suse.com>,
-	Stefano Stabellini <sstabellini@kernel.org>,
-	Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-	Keith Busch <kbusch@kernel.org>,
-	Alexander Duyck <alexanderduyck@fb.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Dimitri Daskalakis <daskald@meta.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	kvm@vger.kernel.org, xen-devel@lists.xenproject.org
-Subject: Re: [RFC 00/12] PCI: Add support for Scalable I/O Virtualization
-Message-ID: <20260604182031.GB2487554@ziepe.ca>
-References: <20260604150153.3619662-1-dimitri.daskalakis1@gmail.com>
+        d=1e100.net; s=20251104; t=1780597281; x=1781202081;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=WNm7tdHA24ucfyXJdikAS1wgOMt/Xm5IGhATPcb6sag=;
+        b=Ftuo/mcXSpaTWABU/mSkZl8KQ42c+lrH5+y2S3FB+YqPHbtW7kpFwatRD6q94Pq49k
+         KkWf2d7dVMNWM+dNvyJ1qffVhVWipJVBKhmx3rMNIvgde1AVBrBxg4LKxyNN4NhGqI2q
+         2xEwH/dtifIhLZi2HDaYr4rgZbYqHk6ZoIAaWxDY9CwhRCRcAgOkj4VV9hYVxri4ooqH
+         FM5eIRf3zfR8hN3HkT7KWqQLggLzEynV0hRh7RJ78xM45phMnUF/YtmyJyiDEgU7NAma
+         VgabxoEXncRcDX2kwYz+hzHlK5tbY5HtQY8P/xYFwiINo16IODCVBWPKD0Ad486MBU+Z
+         1GiA==
+X-Forwarded-Encrypted: i=1; AFNElJ/VbzIRmTzNJhuEHOwiSMaIW84pvusvPcoBtAlyGSWAHv1EWo3qbD6BOUtnYCU2UQ1PQ9mUqJNIm5o=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwXoElcLAvVoFcD8cQ1mgJVZj+uXNwC4V0U8u+FChT46LSNu4Rj
+	tEhFFSt74vgvZ++FTKKa8v/FnzGZGSQ6KakcuboYgep3HIIyRWQMcMSJJqYX+/veG3kKLzweNOI
+	eCA==
+X-Received: from pjbiq7.prod.google.com ([2002:a17:90a:fb47:b0:36b:dc35:1b43])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:588b:b0:36d:bc21:4ae1
+ with SMTP id 98e67ed59e1d1-370f133294emr115252a91.27.1780597280556; Thu, 04
+ Jun 2026 11:21:20 -0700 (PDT)
+Date: Thu,  4 Jun 2026 18:21:12 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260604150153.3619662-1-dimitri.daskalakis1@gmail.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.54.0.1032.g2f8565e1d1-goog
+Message-ID: <20260604182116.3179005-1-praan@google.com>
+Subject: [PATCH v8 0/4] iommu: Standardize ATS robustness and state tracking
+From: Pranjal Shrivastava <praan@google.com>
+To: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Cc: Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, Baolu Lu <baolu.lu@linux.intel.com>, 
+	Jason Gunthorpe <jgg@nvidia.com>, Kevin Tian <kevin.tian@intel.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Samiullah Khawaja <skhawaja@google.com>, 
+	Pranjal Shrivastava <praan@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Jun 04, 2026 at 08:01:41AM -0700, Dimitri Daskalakis wrote:
-> With this patchset core enumarates the SIOV capability and can identify
-> SIOV PFs. But there is no central mechanism to allocate/manage SIOV VFs.
-> To support device pass through, devices will need to add a vfio-mdev
-> driver with IOMMUFD support (or something similar).
+The primary motivation for this series is an ATS state mismatch observed
+under heavy load (via iova_stress). A failure in pci_enable_ats() leaves
+IOMMU drivers like arm-smmu-v3 with inconsistent state leading to PCI core
+warnings during device detach.
 
-There is an enormous amount of missing work to do something useful
-with the SIOVr2 stuff. IIRC there is even supposed to be BIOS
-components in this plan and there are some missing PCI SIG topics too
-IIRC.
+While David's recent work [1] addressed a discovery race for specific
+quirked devices by moving them to the HEADER phase, gaps remained
+regarding how Virtual Functions (VFs) inherit state from their Physical
+Functions (PFs). Specifically, pci_ats_supported() did not account for
+PF-level quirked status, and pci_prepare_ats() lacked STU validation for
+VFs.
 
-So, I'm not sure how much value there is in merging just the cap
-discovery without a roadmap for the missing parts..
+Based on discussion with Jason and Baolu in v3/v5, it was decided that the
+IOMMU drivers should explicitly check pci_ats_supported() before calling
+pci_prepare_ats(). To enforce this, pci_prepare_ats() now noisily checks
+for support via WARN_ON(). Furthermore, the device probe should fail if
+pci_prepare_ats() fails. Since these early gates preclude software
+configuration errors, any remaining failure during pci_enable_ats() is
+treated as a kernel bug.
 
-Also, I'm quite surprised to see this out of the blue, there is an OCP
-workstream that was building out a standard that outlines how all the
-different components have to act to successfully implement it.  What
-is in PCI SIG was just some minor foundational adjustments without any
-context on how to form them into a solution.
+Following the discussion with the community, the driver-specific series
+have been posted separately:
 
-I think it is extremely premature to merge anything related to SIOV to
-the kernel. Join the OCP work stream if you are interested. I think
-the general feeling was there is not sufficient interest in the
-industry to do this and it has gone quiet.
+ - Intel IOMMU fixes reported by Sashiko [2]
+ - Refactors for AMD IOMMU [3]
 
-Jason
+[1] https://lore.kernel.org/linux-pci/20260403222750.1215002-1-dmatlack@google.com/
+[2] https://lore.kernel.org/all/20260531170254.60493-1-praan@google.com/
+[3] https://lore.kernel.org/all/20260601134204.2150602-1-praan@google.com/
+
+[v8]
+ - Collected R-b tags from Kevin & Lu
+ - Dropped the SMMU dev_iommu_priv_set(dev, NULL) patch.
+
+[v7]
+ - https://lore.kernel.org/all/20260601143644.2358771-1-praan@google.com/
+ - Moved patch PCI/ATS: Mandate checking pci_ats_supported() before pci_prepare_ats()
+    to the AMD series [3] to maintain bisectibility
+ - Added a UAF fix for arm-smmu-v3 to set iommu->priv = NULL
+
+[v6]
+  - Reverted the decoupling of pci_ats_supported() from pci_prepare_ats().
+  - Added a WARN_ON() to the internal support check in pci_prepare_ats().
+  - Dropped the standalone Intel bugfixes (RB-tree and UAF) to be sent as a
+   separate standalone series per maintainer request.
+  - Kept the folded UAF fix in the AMD IOMMU patch to ensure the new error
+   path is immediately safe.
+  - Collected Reviewed-by tags from Lu Baolu for PCI core patches.
+
+[v5]
+  - https://lore.kernel.org/all/20260528202353.3422206-1-praan@google.com/
+  - Decoupled pci_ats_supported() from pci_prepare_ats() in the PCI core.
+  - Rebased SMMUv3 support on top of Nicolin Chen's "Always-On ATS" series.
+  - Fixed pre-existing RB-tree corruption in VT-d probe (Baolu/Sashiko).
+  - Addressed the pre-existing UAF in AMD IOMMU probe suggested by Sashiko.
+
+[v4]
+  - https://lore.kernel.org/all/20260525184347.4059549-1-praan@google.com/
+  - Standardized the pattern across Intel VT-d and AMD IOMMU drivers.
+  - Replaced the SMMUv3 ats_prepared gate with a fatal probe-fail logic.
+  - Utilized WARN() macros for runtime enablement failures in all drivers.
+  - Collected R-b tags from Jason and Sami.
+
+Pranjal Shrivastava (4):
+  PCI/ATS: Ensure pci_ats_supported() is PF-aware for VFs
+  PCI/ATS: Validate STU for VFs in pci_prepare_ats()
+  iommu/arm-smmu-v3: Standardize ATS enablement failure reporting
+  iommu/vt-d: Fail probe on ATS configuration failure
+
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c |  7 ++++++-
+ drivers/iommu/intel/iommu.c                 | 15 ++++++++++++---
+ drivers/pci/ats.c                           | 13 ++++++++++---
+ 3 files changed, 28 insertions(+), 7 deletions(-)
+
+
+base-commit: 542627e4a4aad76ccdf66436d7a8ea0d29069796
+-- 
+2.54.0.1032.g2f8565e1d1-goog
+
