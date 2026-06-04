@@ -1,128 +1,135 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4555D334C1F;
-	Thu,  4 Jun 2026 15:23:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0192326D51;
+	Thu,  4 Jun 2026 15:24:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780586600; cv=none; b=QT/CGnIdYbYMrsPCNFJeBnn1Fwn2uQboIf1YksFp/5o7nE5UWc09xb2ZxohZtwkjNwgE3Do63GgmZZr+BnthUSQJmnuHopfC9yvMoH0dFUrIeTbZmTwxcMEEeaXgYhOgsvRCfzT9cRuEktAiJJKld/h9Zcg7vf4eUJeZ+beBbAw=
+	t=1780586679; cv=none; b=Xi04CzmiJZfOWFH2T6/7OAFf8tMv0RO0vt/MKqgbTNG7aNVltxEMCu99Zcot5Gq2OnrvlsEBSOpoBNSedg0xdaTD8XkPZHJZunvxC8yg3ML++e5iEbA6HtWmrRCQx2A3VjihLDM7o3/eDwgVc/IlsOm9b24rCnyJSuMYm3G0x0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780586600; c=relaxed/simple;
-	bh=4ZBa/mylKJUvf3fkA/emIvhHwwS4lWypGKfQwFGFH54=;
+	s=arc-20240116; t=1780586679; c=relaxed/simple;
+	bh=OtYIwdUAxpHZS8KVVlVBNnrK1jqSWiAD8wBFniKvarQ=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NnFZnoath/JcR5dsIJgxhN9V17XCZ4HfMNA6QVg5h9HdynGEsaL8La2HCnQmrerAw8+R6YyFNzo4fA73DWJYsZyGnDJD4zD1XthbkrG6CISJgbt7cxAfNq8lbbuctYQ30TZJ3ww7KmZNDmp31tMWBMuYEdp8d7yGHEZjcT2SwNE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nzGYJGMa; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=c/6RDQK6PUMawpT1VpVkUIwDciJwP469JRuwJrnw5Y7YZ5t/ZgwwwKskEaIIJF5FXN8PVKtmz9a87HWJTAqcJG4gUKVQHOOXAoD7FrbDYNk8iGvgInBxhYpeNKmnm00tw+QD/p4BU2xvi1COlwg8kK9is08TfkvYeQZZhMx0V20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RfID/TIW; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nzGYJGMa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2BDA1F00893;
-	Thu,  4 Jun 2026 15:23:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RfID/TIW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 510441F00893;
+	Thu,  4 Jun 2026 15:24:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780586598;
-	bh=v4MSCF+ZT/9tx1uh0/OLmbJ7i6I3FhVhCeg7u+k8GAc=;
+	s=k20260515; t=1780586678;
+	bh=sRfVqMgXjbJL90GRnsXXEwjSzBU8nPLOQuIHfMhk9ec=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=nzGYJGMan48Vp5nfo4VSJoQUd1qTFKZF9stlXKOoKqMO6JkKlB3SHCZ4x1rhgsQT8
-	 MN/5uBXwjXB0nDaZ40NnID22r52dHSG0g7leuAhkf5jdkvOHjUdD4aYRLAfM6vI0M/
-	 GzVWhwX3xDeMLoaU1AAnptQFTYIbbO5YYxTVfP5Kzvgm/fdpSL6hSYwDGVQunAz81T
-	 jIonrhUhFu9r4GlQOQRzkZc1CBBwucbzW3NUcFN0Z1dePvgm/ddG3Dux4rh0SY4GYX
-	 b0uORSsN+fg1KxkjFzkWMcuGkaLJ0vtFcHRVc7H37Ypa8nrjVlQi0z6OpVGktTtKj6
-	 +Aem0szWDlcMQ==
+	b=RfID/TIW3ClI9it8qjUOadZccJbKLtfnegyvKRpbCrrSTm07yo6J6d44NIZDejJed
+	 WJlhWi0ya+TwCUStkSMknIjPQs1esAFYOU1jLBGyI6JYM5MhSK+/8+4Xy0e9cFmcJg
+	 R6RCKZIRH0hgo0bSBFMXve8eOYCPrkWytSxPn1TRYEwQf7iPbXREk1WcFCWZssXK/7
+	 XgG5nW7RYI3ffSpvOM4feRQqFrj3iSxaYUnkSLm8wDY3G04ILWuYQvWoqkoxoPIiRH
+	 74JbTZrS9wWVLHiUvy5HNeSYrISvKvQMAkDpEoTDEujXRAHtBJZl/M2xr4KpdvUwto
+	 uU4jJgshHp4dw==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC 10/12] PCI: Add Scalable I/O Virtualization data structure
- definitions
+Subject: Re: [RFC 07/12] PCI: Convert xen-pciback and pci-driver to
+ pci_is_sriov_* helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dimitri Daskalakis" <dimitri.daskalakis1@gmail.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
-In-Reply-To: <20260604150153.3619662-11-dimitri.daskalakis1@gmail.com>
-References: <20260604150153.3619662-11-dimitri.daskalakis1@gmail.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260604150153.3619662-8-dimitri.daskalakis1@gmail.com>
+References: <20260604150153.3619662-8-dimitri.daskalakis1@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 15:23:18 +0000
-Message-Id: <20260604152318.B2BDA1F00893@smtp.kernel.org>
+Date: Thu, 04 Jun 2026 15:24:37 +0000
+Message-Id: <20260604152438.510441F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Refactoring of VF routing ID calculation introduces a silent 16-bi=
-t truncation that bypasses the maximum bus number bounds check.
+
+New issues:
+- [Medium] Incomplete implementation: missed conversion of dev->is_virtfn i=
+n vpci.c.
+
+Pre-existing issues:
+- [High] Concurrent driver unbind can cause a use-after-free of `pcistub_de=
+vice` in `pci_stub_notifier`.
 --
 
-commit ca9b97e7dff7c499701ce4b55ae9cf14d51bbed7
+commit 88d02306e6f1bfe4b75d5df018b4e5de4f2ff35a
 Author: Dimitri Daskalakis <daskald@meta.com>
 
-PCI: Add Scalable I/O Virtualization data structure definitions
+PCI: Convert xen-pciback and pci-driver to pci_is_sriov_* helpers
 
-Define the PCIe SIOV extended capability registers per the PCIe 7.0
-spec, and introduce the kernel-internal data structures needed to track
-SIOV state on a Physical Function. Add an is_siov bit to struct pci_dev
-along with helpers to identify SIOV PFs/VFs.
+No functional changes.
 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 45411960fd2ef..fd7c04e26c164 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -683,6 +683,19 @@ struct pci_sriov {
->  	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
->  };
+Assisted-by: Claude:claude-opus-4.7
+Signed-off-by: Dimitri Daskalakis <daskald@meta.com>
+
+[Severity: Medium]
+The commit message explicitly states its scope is to convert xen-pciback and
+pci-driver to the new pci_is_sriov_* helpers. Did we miss converting
+dev->is_virtfn in drivers/xen/xen-pciback/vpci.c?
+
+For example, in __xen_pcibk_add_pci_dev() there are still direct accesses:
+
+drivers/xen/xen-pciback/vpci.c:__xen_pcibk_add_pci_dev() {
+    ...
+	if (!dev->is_virtfn || func) {
+    ...
+			if (t->dev->is_virtfn && !PCI_FUNC(t->dev->devfn))
+    ...
+}
+
+Leaving these direct accesses unconverted means they will fail to distingui=
+sh
+between SRIOV and SIOV VFs when the helpers are updated to check dev->is_sr=
+iov
+in later patches.
+
+> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback=
+/pci_stub.c
+> index 79a2b5dfd6941..fd5a13f79fcf4 100644
+> --- a/drivers/xen/xen-pciback/pci_stub.c
+> +++ b/drivers/xen/xen-pciback/pci_stub.c
+> @@ -1695,7 +1695,7 @@ static int pci_stub_notifier(struct notifier_block =
+*nb,
+>  	if (action !=3D BUS_NOTIFY_UNBIND_DRIVER)
+>  		return NOTIFY_DONE;
 > =20
-> +/* Scalable I/O Virtualization */
-> +struct pci_siov {
-> +	struct pci_dev	*self;		/* This PF */
-> +	u32		cap;		/* SIOV Capabilities */
-> +	u16		pos;		/* Capability position */
-> +	u16		total_SDIs;	/* Total SDIs associated with the PF */
-> +	u16		num_SDIs;	/* Number of SDIs currently enabled */
-> +	u16		offset;		/* First SDI Routing ID offset */
-> +	u16		stride;		/* Following SDI stride */
-> +	u16		driver_max_SDIs;/* Max num SDIs driver supports */
-> +	u8		max_SDI_buses;	/* Max buses consumed by SDIs */
-> +};
-> +
+> -	if (!pdev->is_physfn)
+> +	if (!pci_is_sriov_physfn(pdev))
+>  		return NOTIFY_DONE;
+> =20
+>  	for (;;) {
 
 [Severity: High]
-This patch series relies on the pci_virtfn_routing_id() helper introduced in
-an earlier commit ("PCI: Add helper to compute VF Routing ID to pci.h"), but
-doesn't this helper introduce a silent truncation issue?
+This is a pre-existing issue, but is there a use-after-free risk here if a
+concurrent unbind occurs?
 
-In drivers/pci/pci.h:
+find_vfs() searches the pcistub_devices list and returns a pcistub_device
+pointer without taking a reference count via pcistub_device_get():
 
-static inline u16 pci_virtfn_routing_id(struct pci_dev *pf, u16 offset,
-				     u16 stride, int id)
-{
-	return (pf->bus->number << 8) + pf->devfn + offset + stride * id;
-}
-
-If the calculated bus number exceeds 255, the internal calculation exceeds
-0xFFFF and is truncated by the u16 return type.
-
-When this is used to determine the bus number in drivers/pci/iov.c:
-
-int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
-{
+drivers/xen/xen-pciback/pci_stub.c:pci_stub_notifier() {
     ...
-	return pci_virtfn_routing_id(dev, dev->sriov->offset,
-				  dev->sriov->stride, vf_id) >> 8;
-}
-
-The right shift is performed on the truncated 16-bit value, resulting in a
-wrapped-around bus number.
-
-Consequently, does this allow the bounds check in sriov_enable() to be
-bypassed?
-
-drivers/pci/iov.c:sriov_enable() {
-    ...
-	bus =3D pci_iov_virtfn_bus(dev, nr_virtfn - 1);
-	if (bus > dev->bus->busn_res.end) {
+	for (;;) {
+		struct pcistub_device *psdev =3D find_vfs(pdev);
+		if (!psdev)
+			break;
+		device_release_driver(&psdev->dev->dev);
+	}
     ...
 }
 
-Because the wrapped-around bus value appears to be within bounds, this could
-allow VFs to be enabled on invalid, overlapping bus numbers.
+If a concurrent thread unbinds the VF (e.g., via sysfs unbind),
+pcistub_remove() executing under the VF's device lock will remove the device
+from the list and drop the final reference using pcistub_device_put(), free=
+ing
+psdev before the notifier has a chance to execute.
+
+The notifier thread would then dereference the freed psdev memory when
+evaluating &psdev->dev->dev in device_release_driver().
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604150153.3619=
-662-1-dimitri.daskalakis1@gmail.com?part=3D10
+662-1-dimitri.daskalakis1@gmail.com?part=3D7
