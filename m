@@ -1,157 +1,174 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1852329E6C
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 15:17:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03AD432E6B4
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 15:18:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780586240; cv=none; b=YI3KkvOYpt82SXvsPoaB1IC5PQBztO8ewyo51J4bQLtAz/i8B1+mV8RRCCPpu4X08cvcQ5hyQy5NABOiWqCAlCRVTcOJ5ZuJV+LtEmtc7soIk5mSukPEHb736Xsfft24BeroInTsm/rKn6QXsBT71QqYukzxLwHfkydO7+Z23ws=
+	t=1780586339; cv=none; b=MXaEyknraDoMbfNtKuiQBodLkg45GY9+CwwyFiIvh1y3GZ2VUEeh4Wb+Ut0JFo0Qdy1jBHdYhzrLvFHSr8tdNXjK/VHKjLYuAmg/NvhzIleN7vWO+HkWN76pQI6XYT5334u8wvizLbCrw+uAPc/pzk5CG7gGv++FBBqeTz3zlTY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780586240; c=relaxed/simple;
-	bh=55eRzc49XQKfDWS1O8dxkPsHVhg/QwtdOvqGU6X75Ys=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=jsZLrOFTjjMA6E2cBkJ/oFJ+q/bBx8uJVFz3J3tDwc2gXkFZVUUYhXav39NLdbLrPrx7dOYtKWfmMzI15dgLTrUizb9yX0iDe1Mz+XToLAw2+DClBE4MCP5syGDORPrDcDbaQcZGI8xIMBQwWL32uSdXFGWEhgNO/WPYd8zVyCU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AUgM11EW; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=KUC+Hbwm; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AUgM11EW";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="KUC+Hbwm"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 654CpGae2477902
-	for <linux-pci@vger.kernel.org>; Thu, 4 Jun 2026 15:17:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	bFw7BY85jww+07T2JWkvw4wi2HmXdSajOuwYTRkQLFg=; b=AUgM11EWzaUpyFeW
-	a/OQc4yjCOmDKPqU78As5F4myfGzoLHBKrbYLSI0nHK+2FSGTPy3n1YZ6h7l29kW
-	EvNYbmoxR8AHrnEf5lX31xn5Mgfc8ViK1XZL8xvrsFHLUK6b2nWVrIlOQbt1C0BG
-	9/gTryi3LTiEyJvEfbkD35XC81IYdtiJhPmMKV2CYTsSjQOt2iVv1cXkFgiFerPi
-	KuqtEkqv0A06u11rGWhFLhsuu4qyQixIvUfJZV81LW9TAPKw07d/gsJ/F0k6JCG7
-	5o/6AZhRtaBbYTc5ewHGf8QjSc54gSjpKHPxuhq+FFMZs0ejbS5kq+qO51EIdN//
-	Yy9T0w==
-Received: from mail-vk1-f198.google.com (mail-vk1-f198.google.com [209.85.221.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4ek4hvj1fb-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 15:17:19 +0000 (GMT)
-Received: by mail-vk1-f198.google.com with SMTP id 71dfb90a1353d-59ece6adf0cso723422e0c.3
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 08:17:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780586238; x=1781191038; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bFw7BY85jww+07T2JWkvw4wi2HmXdSajOuwYTRkQLFg=;
-        b=KUC+HbwmNnoe+BxqUqTtjHCeW2/BE9OeqjFsMACeiztUVOtL2Q4c0EJJl6euDtTzGG
-         eAftvDFSbj404fR/AnmTy23UhjJweLAAPbKcjwOeXFijMm07tjtKUc+8Sl6oB7rsOnwS
-         LnptYwFMOZ9iGmGRW2GNVINrJ2CjMMYZ8c8Ic6OgcvCg5+uG3Eq3yBAu3NjTTDgOr6pw
-         WaPZWSsw/q2NZwfZBo6lQz8GuaZoDZScJpj8aC0fpC/AQBHxm9jCDhesl4/5SfS+Uxtb
-         bnK0wEX5FB03/uy/2J85AaDbhtrHgCYD/OxIfdbasNuoMCsOlXvIZkijmfkDd2HPu89Q
-         v7yw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780586238; x=1781191038;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=bFw7BY85jww+07T2JWkvw4wi2HmXdSajOuwYTRkQLFg=;
-        b=UOQNZhaI1+lg5Ar64AlTC/imIIya6DcTVU05D+SPJCVsYA6jNCXy+V1FysRpCqADSO
-         cURQcicvMhrFhygV0Z8SDgVAMYl1TzdoZvYFR1IaQ0iLGtQcdvQs+6xOkZ7kgokfzNwl
-         DBteqOEX5VNxFae3LvV8VxYv9JKlUT1GzfPUZ4nLngiHnjTOqHDMCo5h5QJ6daxS/Xjq
-         x6GzlwfgbKiyr/mywE+8W/k1FHA+3C7BYmao5P9QUBkJ/Q4fC64J6AEF9vmqoQNmFbW4
-         fyNOaNKvU1IMbEOnNC8hcjN5As7dVVqMtyiY3YorFvVnX+BArIkOS+xu4FvtqIuJEExA
-         qVWA==
-X-Forwarded-Encrypted: i=1; AFNElJ+c7Ll0g/ImOXQyJS48ei6lZ13J0PegCGpNlhK0arU+w/OlwU0WCcFDhvlFtgNfZm2OfwFQp8sPa/w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YywvTvUTU0OeAtLmSe7gh8X5M/n2XW3aH4oOBP/A7yQr3BEQO6Z
-	VcF/jxDwFyrg4dn4SsRPXh8KRAgQVND02XVcwXxZzTqzhqf9r6Jbg0lBXOXpDU65nR1wzPvPppa
-	E2R6fjW3Wbne3Hyk5N9E+/9MTln5arQR8qxI4tqhuOivO9+dT2sX7uNFoQf8tglo=
-X-Gm-Gg: Acq92OHlnvkgh863RXCE3NL8eGPAwwBCFkc1/4+abipighJYGb6aHv3qydYKpZGvVMe
-	O7yHXakXCZu91DxPfsrlxNcGqlmSFzMywBiIWAP/fChuZVvDHD9jpK95VPoY/wmzOxJn505u0zX
-	WyTJv2hKPVwYz6Q3iZGy+WOXx3DkuzMaQzjBTMFzHbn+lK86p5gD7jZJeE38Yw1V3S3N+prv2it
-	Du7S4D4k5c1+HJciFfJnvqLJTCuZM8x8+4oZx8ToQKn+2SqQ6lUKReOCf983Ar1O1kmxFszFOVZ
-	0od5nP+VpsAbMCVCKXTB51gbsKkLwvzHPk1oO9HgkrF943sx7g9ecziyVT7Wswkb5voCq/NHIwn
-	BT2rZwEe46bWfNrgAvyjowe09JJVibqfvfsJ1pLmt3+B1j9BDEm6GLegs0mff
-X-Received: by 2002:a05:6122:d0a:b0:5a4:6680:64f0 with SMTP id 71dfb90a1353d-5a6e521209fmr4600064e0c.4.1780586237850;
-        Thu, 04 Jun 2026 08:17:17 -0700 (PDT)
-X-Received: by 2002:a05:6122:d0a:b0:5a4:6680:64f0 with SMTP id 71dfb90a1353d-5a6e521209fmr4599998e0c.4.1780586237214;
-        Thu, 04 Jun 2026 08:17:17 -0700 (PDT)
-Received: from [10.128.1.107] (2-228-54-83.ip190.fastwebnet.it. [2.228.54.83])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-490b7e6c774sm85165085e9.1.2026.06.04.08.17.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 08:17:16 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Yadu M G <yadu.mg@oss.qualcomm.com>
-Cc: shawn.lin@rock-chips.com, jingoohan1@gmail.com, lpieralisi@kernel.org,
-        kwilczynski@kernel.org, bhelgaas@google.com, robh@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-In-Reply-To: <20260604122418.727274-1-yadu.mg@oss.qualcomm.com>
-References: <20260604122418.727274-1-yadu.mg@oss.qualcomm.com>
-Subject: Re: [PATCH v3] PCI: qcom: Initialize DWC MSI lock for
- firmware-managed ECAM hosts
-Message-Id: <178058623569.8794.8357357263848810603.b4-ty@b4>
-Date: Thu, 04 Jun 2026 17:17:15 +0200
+	s=arc-20240116; t=1780586339; c=relaxed/simple;
+	bh=RMNms4XFaTFzjGMxn2rSTZJ7CKRlwVZE8jX6xkBzz5U=;
+	h=Message-Id:From:Date:Subject:To:Cc; b=jP6lIWSH6DudxFyl7OV3BaldunkDeFy0AqI4bIRanToqCPVw4cKdMbbBhvFISszkTKATbEy5zTQL4v2AcRvySe5644J1nA8E2to2l5jCctw/Di8j0U7w0+W2VDgvSBKlsEFWrz0GEnTldDF9PqHDushH8iZOac4sv/oRmQw3YAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature ECDSA (secp384r1) server-digest SHA384
+	 client-signature ECDSA (secp384r1) client-digest SHA384)
+	(Client CN "*.hostsharing.net", Issuer "GlobalSign GCC R6 AlphaSSL CA 2025" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 06974397;
+	Thu, 04 Jun 2026 17:12:14 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id E43BD600C2BD; Thu,  4 Jun 2026 17:12:13 +0200 (CEST)
+Message-Id: <6aac4922b5fe7070b11874427a9285e42ddd05a4.1780585518.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Thu, 4 Jun 2026 17:12:08 +0200
+Subject: [PATCH v2] PCI/P2PDMA: Add Intel QAT, DSA, IAA devices to whitelist
+To: Bjorn Helgaas <helgaas@kernel.org>, Logan Gunthorpe <logang@deltatee.com>, Giovanni Cabiddu <giovanni.cabiddu@intel.com>, Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Cc: linux-pci@vger.kernel.org, qat-linux@intel.com, Damir Chanyshev <conflict342@gmail.com>, Simon Richter <sjr@debian.org>, Tomasz Ossowski <tomasz.ossowski@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.0
-X-Proofpoint-GUID: d-ahoanKNS8zSCp8fjoiHWBvb92wokl-
-X-Proofpoint-ORIG-GUID: d-ahoanKNS8zSCp8fjoiHWBvb92wokl-
-X-Authority-Analysis: v=2.4 cv=Zp/d7d7G c=1 sm=1 tr=0 ts=6a2196ff cx=c_pps
- a=1Os3MKEOqt8YzSjcPV0cFA==:117 a=F4J0OHcPalsv3C1teIDEwQ==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_K5XuSEh1TEqbUxoQ0s3:22
- a=VwQbUJbxAAAA:8 a=sfCulqXE5xkfyo85eKEA:9 a=QEXdDO2ut3YA:10
- a=hhpmQAJR8DioWGSBphRh:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA0MDE0OSBTYWx0ZWRfX2aJNeY2+F12T
- Kcu8jQtOEV3ZNxHG4/VKuQgj91X5H/QbrjcncZ2XaPYovepMZHmeHCT67Opiey9GuRHJz6pdGP0
- NRHNrhUqzbHz3X/6NIx0vqKgzQpVFv8Rq47dYBfYP3jMrjkZ+v0mbu5warCg0Y7U7lM37Mmbwlh
- MgXrFxRmiYemeWAZDADt3ZBIkKtoei6i4jPG1AXse2CCerz6Uke/yZnc7rsBopB3iQMQo2Tq0gc
- RSG0d+CwSuFgeQeKrMxi1pvPppxK9e9AU01t5GEbmfbCVlSb9FtjAgs5yRel9kOWGtUYXibyom+
- 8Mtn2fi9V3k+cX0yHa1SmNPSXLbKxEjf7EckxTKOUiI3j4fpdcmft0910nXuGShS2sPkOlQp+kb
- 2xLARJv20enWNvbwQBuKU7nFTzjE6gB0bcExPneuBDLZVaf13J8B4r55w69tRaiSogXZURk6tsx
- Vis8EApiTq7JNWzB6zw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-04_04,2026-05-28_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
- bulkscore=0 adultscore=0 suspectscore=0 priorityscore=1501 spamscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606040149
 
+The first device on a PCI root bus determines whether the host bridge is
+whitelisted for P2PDMA.  All Intel Xeon chips since Ice Lake (ICX, 2021)
+expose a device with ID 0x09a2 as first device.  It is loosely associated
+with the IOMMU.  All these Xeon chips support P2PDMA, so since the
+addition of the device with commit feaea1fe8b36 ("PCI/P2PDMA: Add Intel
+3rd Gen Intel Xeon Scalable Processors to whitelist"), P2PDMA has been
+allowed on all new Xeons without the need to amend the whitelist:
 
-On Thu, 04 Jun 2026 17:54:18 +0530, Yadu M G wrote:
-> A lockdep warning is observed during boot on a Qcom firmware-managed
-> platform:
-> 
->   INFO: trying to register non-static key.
->   The code is fine but needs lockdep annotation, or maybe
->   you didn't initialize this object before use?
->   turning off the locking correctness validator.
->   ...
->   Call trace:
->    register_lock_class+0x128/0x4d8
->    __lock_acquire+0x110/0x1db0
->    lock_acquire+0x278/0x3d8
->    _raw_spin_lock_irq+0x6c/0xc0
->    dw_pcie_irq_domain_alloc+0x48/0x190
->    irq_domain_alloc_irqs_parent+0x2c/0x48
->    msi_domain_alloc+0x90/0x160
->   ...
-> 
-> [...]
+Xeons with Performance Cores:
+  Sapphire Rapids (SPR, 2023)
+  Emerald Rapids (EMR, 2023)
+  Granite Rapids (GNR, 2024)
+  Diamond Rapids (DMR, 2026)
 
-Applied, thanks!
+Xeons with Efficiency Cores:
+  Sierra Forest (SRF, 2024)
+  Clearwater Forest (CWF, 2026)
 
-[1/1] PCI: qcom: Initialize DWC MSI lock for firmware-managed ECAM hosts
-      commit: e0779713a1e2f891aeec53e629dbbd33f423c629
+However these Xeons also expose accelerators as first device on a root bus
+of its own:
 
-Best regards,
+  QuickAssist Technology (QAT, crypto & compression accelerator)
+  Data Streaming Accelerator (DSA, dma engine)
+  In-Memory Analytics Accelerator (IAA, dma engine)
+
+Whitelist them for P2PDMA as well.  Move their Device ID macros from the
+accelerator drivers to <linux/pci_ids.h> for reuse by P2PDMA code.
+
+Unfortunately the Device IDs vary across Xeon generations as additional
+features were added to the accelerators.  This currently necessitates an
+amendment for each new Xeon chip.
+
+For future chips, this need shall be avoided by an ongoing effort to
+extend ACPI HMAT with PCIe P2PDMA characteristics (latency, bandwidth,
+ordering constraints).  The PCI core will be able look up in this
+BIOS-provided ACPI table whether P2PDMA is supported, instead of relying
+on a whitelist that needs to be amended continuously.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org
+---
+Changes v1 -> v2:
+* Drop code comments associating QAT generation with CPUs because a
+  QAT generation can go to different CPUs or plug-in cards (Giovanni)
+
+Link to v1:
+https://lore.kernel.org/r/4ea5265495876beb5fb5e6d479b2782f882bcbb3.1780570508.git.lukas@wunner.de/
+
+ drivers/crypto/intel/qat/qat_common/adf_accel_devices.h |  5 -----
+ drivers/dma/idxd/registers.h                            |  3 ---
+ drivers/pci/p2pdma.c                                    | 10 ++++++++++
+ include/linux/pci_ids.h                                 |  8 ++++++++
+ 4 files changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h b/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
+index 03a4e96..cbd1d1e 100644
+--- a/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
++++ b/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
+@@ -28,15 +28,10 @@
+ #define ADF_4XXX_DEVICE_NAME "4xxx"
+ #define ADF_420XX_DEVICE_NAME "420xx"
+ #define ADF_6XXX_DEVICE_NAME "6xxx"
+-#define PCI_DEVICE_ID_INTEL_QAT_4XXX 0x4940
+ #define PCI_DEVICE_ID_INTEL_QAT_4XXXIOV 0x4941
+-#define PCI_DEVICE_ID_INTEL_QAT_401XX 0x4942
+ #define PCI_DEVICE_ID_INTEL_QAT_401XXIOV 0x4943
+-#define PCI_DEVICE_ID_INTEL_QAT_402XX 0x4944
+ #define PCI_DEVICE_ID_INTEL_QAT_402XXIOV 0x4945
+-#define PCI_DEVICE_ID_INTEL_QAT_420XX 0x4946
+ #define PCI_DEVICE_ID_INTEL_QAT_420XXIOV 0x4947
+-#define PCI_DEVICE_ID_INTEL_QAT_6XXX 0x4948
+ #define PCI_DEVICE_ID_INTEL_QAT_6XXX_IOV 0x4949
+ 
+ #define ADF_DEVICE_FUSECTL_OFFSET 0x40
+diff --git a/drivers/dma/idxd/registers.h b/drivers/dma/idxd/registers.h
+index f954113..1dce26d 100644
+--- a/drivers/dma/idxd/registers.h
++++ b/drivers/dma/idxd/registers.h
+@@ -10,9 +10,6 @@
+ #endif
+ 
+ /* PCI Config */
+-#define PCI_DEVICE_ID_INTEL_DSA_GNRD	0x11fb
+-#define PCI_DEVICE_ID_INTEL_DSA_DMR	0x1212
+-#define PCI_DEVICE_ID_INTEL_IAA_DMR	0x1216
+ #define PCI_DEVICE_ID_INTEL_IAA_PTL	0xb02d
+ #define PCI_DEVICE_ID_INTEL_IAA_WCL	0xfd2d
+ 
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 7c89854..206e3fe 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -548,6 +548,16 @@ static bool cpu_supports_p2pdma(void)
+ 	{PCI_VENDOR_ID_INTEL,	0x2033, 0},
+ 	{PCI_VENDOR_ID_INTEL,	0x2020, 0},
+ 	{PCI_VENDOR_ID_INTEL,	0x09a2, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_SPR0, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_IAX_SPR0, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_GNRD, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_DMR, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_IAA_DMR, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_4XXX, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_401XX, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_402XX, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_420XX, 0},
++	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_6XXX, 0},
+ 	/* Google SoCs. */
+ 	{PCI_VENDOR_ID_GOOGLE,	PCI_ANY_ID, 0},
+ 	{}
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 24cb42f..1c9d40e 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2732,6 +2732,9 @@
+ #define PCI_DEVICE_ID_INTEL_82815_MC	0x1130
+ #define PCI_DEVICE_ID_INTEL_82815_CGC	0x1132
+ #define PCI_DEVICE_ID_INTEL_SST_TNG	0x119a
++#define PCI_DEVICE_ID_INTEL_DSA_GNRD	0x11fb
++#define PCI_DEVICE_ID_INTEL_DSA_DMR	0x1212
++#define PCI_DEVICE_ID_INTEL_IAA_DMR	0x1216
+ #define PCI_DEVICE_ID_INTEL_82092AA_0	0x1221
+ #define PCI_DEVICE_ID_INTEL_82437	0x122d
+ #define PCI_DEVICE_ID_INTEL_82371FB_0	0x122e
+@@ -3052,6 +3055,11 @@
+ #define PCI_DEVICE_ID_INTEL_5400_FBD1	0x4036
+ #define PCI_DEVICE_ID_INTEL_HDA_TGL_H	0x43c8
+ #define PCI_DEVICE_ID_INTEL_HDA_DG1	0x490d
++#define PCI_DEVICE_ID_INTEL_QAT_4XXX	0x4940
++#define PCI_DEVICE_ID_INTEL_QAT_401XX	0x4942
++#define PCI_DEVICE_ID_INTEL_QAT_402XX	0x4944
++#define PCI_DEVICE_ID_INTEL_QAT_420XX	0x4946
++#define PCI_DEVICE_ID_INTEL_QAT_6XXX	0x4948
+ #define PCI_DEVICE_ID_INTEL_HDA_EHL_0	0x4b55
+ #define PCI_DEVICE_ID_INTEL_HDA_EHL_3	0x4b58
+ #define PCI_DEVICE_ID_INTEL_HDA_WCL	0x4d28
 -- 
-Manivannan Sadhasivam <mani@kernel.org>
+2.51.0
 
