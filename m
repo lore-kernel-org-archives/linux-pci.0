@@ -1,146 +1,163 @@
-Received: from fhigh-a8-smtp.messagingengine.com (fhigh-a8-smtp.messagingengine.com [103.168.172.159])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com [209.85.222.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 891DE36F916;
-	Thu,  4 Jun 2026 18:28:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.159
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32C1D274B39
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 18:33:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780597687; cv=none; b=iihdf0TDgqggUpfXwY0Ire79ugnsiFImTSzbN/E2Cbp0Wala4/It5vRP+8iett82T5DXCOUcqxmVSEko/69GmBVDaF1S4LbrKw3ajIycZMSQFvJ6IVhvhjGfn1TQxSi2SHxgiGiCMR6wVqbI2bfatdEESsqEBefV8u1f6+G564E=
+	t=1780597986; cv=none; b=d2ylNDfkYQsFzPMlq53K8Y4QdIOiq/7KTJtHOKaecoeVhK/hfRtVBcpzPuDCWUY7Mr/KWQ3uM9pQA3BFQBNMA0L4asvG2VkRVHOsVd2Ty61KxOLecgjPs2K4VKlfhJWO6Zl4bR4g5/L4OJvmAfc80Ap2uxnM2smGpBdDVCY5elc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780597687; c=relaxed/simple;
-	bh=Ik4mCn79H08NfxjQwYhmsPj5gW25lcs/pBKsKAuaa6k=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ubLI9mr0eQ05HL+eYvSHvriGfc1soOClnMa7V+rfxVHMeKu/pcX7u8PwHwFqpPdIQaZ4L/GPTFfR13U6aJosXOpqGV/lB4EBV5M8KmkYoeW4MevCbmUY4qM7VEfQLaF4YLJt4hz4HatkaOp2mtoa5ylSYIjH7ivh+mpbl2xGDs0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=iVPGQJAV; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=HYFrRm4h; arc=none smtp.client-ip=103.168.172.159
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1780597986; c=relaxed/simple;
+	bh=+nl1kEKt44yDxCMl/11ffRuwiMWmCEuCgafc3BLq0+s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OMnW83XkbHvnLRcSUpd6bem5M77W3vBXjEKH+Vr5QO+CNSqmE06uVxbveGfz4FBXqs/2yOPXWsFz670PpkiRGoPCIirU0zPVKMMc79nqT5ElicxGHL3FYfkT3vUf7xw93i1tMCax5gqT+GhA8pPqV44AkzMphDdbkzqoiHUMYTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=iugymXtY; arc=none smtp.client-ip=209.85.222.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="iVPGQJAV";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="HYFrRm4h"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 74D681400112;
-	Thu,  4 Jun 2026 14:28:03 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-04.internal (MEProxy); Thu, 04 Jun 2026 14:28:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1780597683;
-	 x=1780684083; bh=YLuwcShMcdzzUSh2tbyuyXlsX4IxkjRP5LzQXfP2jlU=; b=
-	iVPGQJAV5AoVf+8MweyfeB0XS5NMEJCtByqeHjvRIU0PfqDSAX0dE0e2LtvX3ekg
-	y326NNIsHFwIldsvofF3IxRLBUed+GzP9bbIWD++pHrAN+i/Yfe9krKfbSy1WtFY
-	WzA9LF2dZen36Wlvl/chAnE4N/dEpON8ClITI5XoJ62YNe9QNLpxpAVzwX97dUWO
-	+rgeuRELwd2+t15IKTxzwAOG53b0Vd4kbxv7FQkPlqiUasBSFeKjldPGpWnlQiAd
-	JikOQSOyXGzWeeeplgPx4Emycom8tBgKzTYE/8d3KEd5kR2oEpbQGhO8B1Cce58+
-	AjAqOveRzQq9PSvp74Q0Ig==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1780597683; x=
-	1780684083; bh=YLuwcShMcdzzUSh2tbyuyXlsX4IxkjRP5LzQXfP2jlU=; b=H
-	YFrRm4ha1iIAg2ufJvSfU2srBncNdZks/EEW63P7VtYJ7mGbBCoMwB9qmyz1Zm4z
-	0c96RihYJdx07H+xWUmcQXO2BVBlTJ1qKk5WguyK8S0M/UEDyh2t7hK2Uvii6U1I
-	IfRvXG4m7FwwqMFQAu3rqAS33L7oJ5MsXJ3/VP0QO1ZKsKN2Qtp9FLFUk48ZfvRl
-	tThH8XBjETQQfQLZchnRFsQcry9BpNs2gYo7CCJLue23KAfjIERiH4Eco9pZ+Cz/
-	XQC7d/Oi8ZpnlJttOirbSOSdGDT3Fm6qNCHR0At7NXvTobUlcP+8PSgljKE2W2No
-	9P2PrRW8LBQ8L4OYfCdow==
-X-ME-Sender: <xms:s8Mhaq_z-DmrlZ2QKmfSzOOKI-ejSa7spYg8AL_ZYhNuh6tHVfFOjw>
-    <xme:s8MharKx5NJjFaZ6Jsm4-eWOiuWh4oYzY-4KEs849skkkxLLD_pP268nD-9avuY_C
-    8nf3Vxr6TJjPn5W80Vl9kH5_mVn_-iMD6LS2Nem7pPWd6VJ59M2HA>
-X-ME-Received: <xmr:s8MhaguRJDgEx_mM22dd5N4ouB4G78WLcIbH2xUzUhoNnDUqwc2_duNck48>
-X-ME-Proxy-Cause: dmFkZTEyunn1xCydYZioEvQrQ6JJoJPvVC6c95rueJ4u1Jw6cf+NIQ9dS1De7en0/I9A7G
-    CB7izDe5vGrKLXdND1nmOouahFS8AXzWff589jg98K4cPfON1s+E0ytn7VpnDjm2ovs3ay
-    iXP1nzZtNnSnI2AWyrBSHpQytfFzQqYasdNYRA3XOvu+6bzSiU9vEtCK594/5l9QVCIKa3
-    o9ANQekbYW4Fj6NKnWAuc0TcR23nMGauTXDrTNrQFuBN15mwvlD2ATYBzmgRdFOqiAZRbl
-    LXtl667/Aj0ak/ZNZGpwONfGuMAF2fKp6rZnnapFIrOfdx0+PdDlC0zTGhGqpQjSKhO8KR
-    NQK/jvYV8elr52lkXg/Y544DzysstPs+gvWBVMLId2EEgPF7awLbbei1e1p1jAnP1jH0Ig
-    RGfmhe8WwiIIy36FKzk6itAHSGeaq7bczbvHzYN8m7pbjuvkns4BRStJw/p7csQmNo7vLA
-    8L0XD0bdhvExI7aVRD/wWEzpGKLeYFT2eJBxFxqasAr3KQ4/VS/t468zUrZoGNzaJCtv7C
-    8WefMPXt2d5PSw3p1r+C7gOMLMPmyDeyJCWfmQuciyIo8xcH2VtF1U0DGJocFtVTs8tOvn
-    AicH2a572pVUIBRi3xXhcUfh5yPVy+7pMgIWQbzDzhtVC7hzRtx2BIQyfPEA
-X-ME-Proxy: <xmx:s8MhaqCK0XlHZwyyverwQSTof4lPMI4nL9nfVgSvSgubc3imCtQMTg>
-    <xmx:s8MhagP_6R-WIbZQM8Mfws4trgWUw4i4IxIW9GcFAErBCd_HYqgiSw>
-    <xmx:s8MhaqBH97JrAvic4agShzFnszzvTphsbCvbmQ1n40iFBjoC7NByog>
-    <xmx:s8Mhah4XQYGf10wDBFoXn0Ho0zk92PwpV6CpeGtJeQcXN8EyT-Wz-A>
-    <xmx:s8Mhag2Ip_r7Vs12m4vTB3JARaPnkW7NaUsL0dd632Mz6dijuaM0Yovs>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 4 Jun 2026 14:28:01 -0400 (EDT)
-Date: Thu, 4 Jun 2026 12:27:59 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, helgaas@kernel.org, schnelle@linux.ibm.com,
- mjrosato@linux.ibm.com, alex@shazbot.org
-Subject: Re: [PATCH v18 1/4] s390/pci: Store PCI error information for
- passthrough devices
-Message-ID: <20260604122759.34f43e25@shazbot.org>
-In-Reply-To: <d352f011-3c47-475a-b0a3-6005e56ef21d@linux.ibm.com>
-References: <20260603182415.2324-1-alifm@linux.ibm.com>
-	<20260603182415.2324-2-alifm@linux.ibm.com>
-	<20260603162006.27b78de5@shazbot.org>
-	<d352f011-3c47-475a-b0a3-6005e56ef21d@linux.ibm.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="iugymXtY"
+Received: by mail-qk1-f175.google.com with SMTP id af79cd13be357-91574384cc2so121825185a.2
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 11:33:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1780597984; x=1781202784; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=r/LCwRdhQlgTVuDKFSQeE5uTXHnTHhiJcy4MpZmW+vo=;
+        b=iugymXtYDnBSUiU7gBpK6tJkMhXuIENh7Bv+NQIrFPx/jkV1evTZ24qfDEeo8GsfIN
+         Qnt4N+XVZq7zx4dgzbx4lkjd1XGcrCJ7MkwBz5mc58a7OZPcjkgTabDM4sYB53En87pH
+         D8qwqgkzK4ZQVTZm/8NHpxH1m6m7ALszYwB3lEfK8eARBqHRM6BXuu1Jrxg/poVOVYwP
+         B7ySyr0SM9sthImhik+plVnvrjKoovnKeBGSG5ZoO3ziEtnEh11T5JL0TmN+V391VFg8
+         g5YZlA/LC2KE1cfOeGkXTX6+yGki8fI6VZ4FWhKwdzp83m9Mf2zF9cdVizRPB62V6mLr
+         W1EQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780597984; x=1781202784;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=r/LCwRdhQlgTVuDKFSQeE5uTXHnTHhiJcy4MpZmW+vo=;
+        b=KozzzulU5hTWl23C6HJDR+1ndkR+0L542IcjwdrAlsw/R/BxS5hNZ/Z1G88qjcgPVz
+         Cb97Xe0l2Gc9UOh+7uePoYb5ts7ytB+9zqmgxb31O9nnZav4TwC7LZD046tc5RZcjh7V
+         rHrF003n2MhA5Yz0nQvcW5bPhUvlHyK/EgYtaIv269v1PtZ7QbSQxnmRdl+t1VhcxH8Y
+         mSX46SUpK+EpRgwTL7V1gw10HcIBIP5rLGjixfa6SfVc9gSbcMPUNbgn0JTo2AZCXWiQ
+         G2hTSh6Nd1KcqqTbtd5LuE4OvF1Dx8Jgs+EmA46g5qqG/jjyn7K+gf67Jk4xTvRbs/Ea
+         YGOg==
+X-Forwarded-Encrypted: i=1; AFNElJ/e08Jl+avpFPRSvO6nv4mvfkwnZ3LwkMIfYVQWmFcQe6VNRLEulgp8vitj7Ilx7DruB9TmCHPxU60=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyoYX4arNW/QDdJB9MI8RlQfy0k/1LnEX1iT4QVgBubhxem3Meg
+	iB6ly7wvbpqqyhuq9SrKiGJk7xqImIDarK+zTdeyggwLP/9ouvdUN84IJ/gnBVRKELE6vIFdvSC
+	URiIe
+X-Gm-Gg: Acq92OFUd9pVJt+kqgpJFiDnRUQsErhrtYcogVd19+UmoZZ5q7gRvLfx58Q0SKN4Knf
+	LVClsGS4zn49TAdbpLePO8HLsfPfpNxQqTI8kNbO5VYHc1dcLhrA8sOmpKP10zh5UYXvadVUEca
+	PsvFVBI0KjP2l8IzoEXhw5iy9ae1Q9p/x/ItNvGkb3R31rt6Mkf9ZGQuZkK3uxih6wwHsLpeIDO
+	vXlr3i7+2/nwU+Ck49QpnqaZeqgAj0EpPBPAzHZivElEwKRHNoAkKBuZekz9eBepPY8AA4U1lOd
+	EQ1OtzeK7IW43FPihKkh31t8XOPXnDVJ+6RBuc6f3rd5jBrHkqyZT8oQrRCRRpboO84gyGYyFJd
+	qdXQr2+y6Zfy/XE9wQQVn5Lv9okT3F712j+MR+Et2xN0f3thRqffY43c1wdAcWHExWexOEOdY88
+	KH7gM0h6dIurNgkjgWwftpReOjdmI6FgLUI0PYqXO7KU5N6VzxGn9x/sCeU+q9IT1XC+SdPixgb
+	u6WPoIZyUe/SBaf
+X-Received: by 2002:a05:620a:4550:b0:915:8ff7:e4fc with SMTP id af79cd13be357-915a9d892b2mr54215985a.33.1780597984062;
+        Thu, 04 Jun 2026 11:33:04 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-9158a40d566sm640266785a.47.2026.06.04.11.33.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Jun 2026 11:33:03 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wVCsI-00000008gLN-47oc;
+	Thu, 04 Jun 2026 15:33:02 -0300
+Date: Thu, 4 Jun 2026 15:33:02 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Alex Williamson <alex@shazbot.org>
+Cc: fengchengwen <fengchengwen@huawei.com>, wathsala.vithanage@arm.com,
+	helgaas@kernel.org, wei.huang2@amd.com, zhipingz@meta.com,
+	wangzhou1@hisilicon.com, wangyushan12@huawei.com,
+	liuyonglong@huawei.com, kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v14 0/8] vfio/pci: Add PCIe TPH support
+Message-ID: <20260604183302.GD2487554@ziepe.ca>
+References: <20260528124649.14732-1-fengchengwen@huawei.com>
+ <20260601095840.3aaaa508@shazbot.org>
+ <59c82855-59a7-4f0e-b534-d35535d04b93@huawei.com>
+ <20260602170847.75bd159d@shazbot.org>
+ <3f8d1722-6749-4f3a-b630-c96303cec284@huawei.com>
+ <20260603004524.GL2487554@ziepe.ca>
+ <20260603125308.0116aa14@shazbot.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260603125308.0116aa14@shazbot.org>
 
-On Wed, 3 Jun 2026 16:35:11 -0700
-Farhan Ali <alifm@linux.ibm.com> wrote:
-> On 6/3/2026 3:20 PM, Alex Williamson wrote:
-> > On Wed,  3 Jun 2026 11:24:12 -0700
-> > Farhan Ali <alifm@linux.ibm.com> wrote:  
-> >> @@ -266,25 +286,19 @@ static pci_ers_result_t zpci_event_attempt_error_recovery(struct pci_dev *pdev)
-> >>    * @pdev: PCI function for which to report
-> >>    * @es: PCI channel failure state to report
-> >>    */
-> >> -static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es)
-> >> +static void zpci_event_io_failure(struct pci_dev *pdev, pci_channel_state_t es,
-> >> +				  struct zpci_ccdf_err *ccdf)
-> >>   {
-> >>   	struct pci_driver *driver;
-> >>   
-> >>   	pci_dev_lock(pdev);
-> >>   	pdev->error_state = es;
-> >> -	/**
-> >> -	 * While vfio-pci's error_detected callback notifies user-space QEMU
-> >> -	 * reacts to this by freezing the guest. In an s390 environment PCI
-> >> -	 * errors are rarely fatal so this is overkill. Instead in the future
-> >> -	 * we will inject the error event and let the guest recover the device
-> >> -	 * itself.
-> >> -	 */
-> >> -	if (is_passed_through(pdev))
-> >> -		goto out;
-> >> +
-> >> +	zpci_store_pci_error(pdev, ccdf);
-> >>   	driver = to_pci_driver(pdev->dev.driver);
-> >>   	if (driver && driver->err_handler && driver->err_handler->error_detected)
-> >>   		driver->err_handler->error_detected(pdev, pdev->error_state);  
-> > How do you intend to stage this versus QEMU changes?  This seems like a
-> > big regression if we're suddenly triggering the eventfd that causes
-> > QEMU to halt.  Do you need userspace to opt-in to mediated recovery
-> > rather than automatically enabling it on open?  Thanks,
-> >
-> > Alex  
+On Wed, Jun 03, 2026 at 12:53:08PM -0600, Alex Williamson wrote:
+> On Tue, 2 Jun 2026 21:45:24 -0300
+> Jason Gunthorpe <jgg@ziepe.ca> wrote:
 > 
-> AFAIU userspace registering an eventfd to receive notification for error 
-> events is an opt-in? And yes for QEMU the current behavior halts the 
-> guest, but even today on an error device becomes unusable and requires 
-> manual intervention. I am not sure if we need to add another opt-in 
-> mechanism for QEMU.
+> > On Wed, Jun 03, 2026 at 08:34:53AM +0800, fengchengwen wrote:
+> > 
+> > > This translation helper is required to handle varied TPH configurations,
+> > > including cases where ST entries live inside device private registers
+> > > instead of MSI-X or TPH capability space.  
+> > 
+> > I thought we agreed vfio had to block that feature in config space due
+> > to security concerns? That's what enable_unsafe_tph is about, right?
+> 
+> Steering tags can effectively live in one of three places.  The
+> architected locations are the TPH capability itself and the MSI-X
+> table, where support is mutually exclusive.  However the device can
+> support either of these and still enable DS mode, thus essentially
+> a third location.
+> 
+> None of these are particularly more or less unsafe than another.  It's
+> inadvisable for drivers to write to the MSI-X vector table, versus
+> using the SET_IRQS uAPI, but it's not prevented anymore via mmap. 
 
-Yes, QEMU is performing an opt-in, but we're also now calling through
-to that opt-in in more cases.  Arguably this is coming more in line
-with AER handling where I believe only uncorrected errors trigger this
-path and we signal through the error eventfd for all uncorrected AER
-errors.  So long as you've considered the implications for existing
-userspace, I won't object. Thanks,
+We'd have to go back to preventing it..
 
-Alex
+> We don't provide direct write access to the TPH capability, but
+> backdoors to config space are not uncommon.  
+
+I think we can discount this, if a device exposes TPH through config
+then it should keep it secure.
+
+> I'm actually still wrestling with the question whether any of this is
+> really unsafe beyond the scope of ownership of the device at all.
+
+Well there is certainly some kind of DOS argument for calling it
+unsafe, and we don't actually know what effects the TPH value even
+has.
+
+I'd be much more worried about some "smart" accelerator device doing
+something impactful based on TPH than insecure config space for
+example.
+
+> > I agree in general that the presence of enable_unsafe_tph VFIO has to
+> > report the per-device steering tags to userspace so it can program the
+> > device specific registers, nothing else can do this.
+> 
+> What's the scope of "nothing else" here?  The raw ST value for a CPU is
+> derived from an ACPI _DSM associated to a root port.  So if the scope
+> is that the kernel needs to provide that translation, I agree, but
+> where in the kernel it's provided may still require some thought.
+
+The APIs accept a PCI device:
+
+int pcie_tph_get_cpu_st(struct pci_dev *pdev, enum tph_mem_type mem_type,
+			unsigned int cpu, u16 *tag)
+
+
+IIRC the ACPI allows it to vary based on the source. Nothing else
+could provide the PCI device owned by VFIO to these functions..
+
+> We also need to consider how this incorporates Zhiping's series, where
+> TPH values can be associated to a dmabuf.  Would userspace get access
+> to those raw TPH values to program the initiator?  It must for DS
+> support.  Therefore the interface became one of the user handling raw
+> ST values and the CPU ID to ST translation became this ill-fitting
+> sidecar.
+
+Arguably yes, likely iommufd would need an API to return the ST of the
+dmabuf when it maps it.
+
+Jason
