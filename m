@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0BCC3093B8
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 20:24:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83B723D6690
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 20:26:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780604663; cv=none; b=c/nVkNeevFKfeiEjZnO+KsiK0m3T0X1tzbOAB6CSztIcMqtrM0Tx37x256bdBhQDWQyqfSBFt41ZQbtH+bomE7djGE41NXrX/7oAV/s7mVxWTIRcsEdxLwNdC6EZVbTzfw6LBfdDaiDZD4Svybi53I/+016gqc2NzY+rbZjR9i0=
+	t=1780604766; cv=none; b=JK4jiTjzg5smHIvokfqKbyfHTFm441JDQ+tR2UIBgo3js9Nzz9iqJUjRAPeZuS9S+YXVQSAjrl+8N4i/1P8pyDgz+Ahv7rfKphFEuWy7Bz0qW6LROlA10Rerl1bmRw0GQvirnfjzLYWoq40hRcu3LoMZNOzdd4hexc0qWZk7QYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780604663; c=relaxed/simple;
-	bh=dEOoxXB0r1h7tUxH+wMjt938pkIeivRUlRMUFQF0O+E=;
+	s=arc-20240116; t=1780604766; c=relaxed/simple;
+	bh=kXeW9BmquLy9PiZLjbH900yryy/ihfm4PAc4TrkpCW0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=GfkrztnVZzVBzd98rezlWRnhdaBTaj8Q8eM/7rXjdAoA1LntRcM1zQN3dTjQXzyG8OZRbnsDPYiuxPtLcrOn2bVWRfa0LY9OYsHJvpeY4lc3izmd8gk7gfBjF50kyz1TIZl8nXYmWznHn7yC5EQmVB0K0ZzDoAJwEno5IWf+6j0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X6BoWS1o; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=aLFNrDNE5cSsg2l+zOE0eRrGpB9RHy8OxAdovizD1n1fPgA1BAUaS6874YhSrmwwAglh015Jt18heLYZ7et0kUm2rdhSDDp2T+/b94ePWqIwcbJmpoi3xof+4WyyRGJ76mA4R7feCEHYxrIFJhcqX6tT98pltFH5PRsR4BYKws8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hl6tK+JR; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X6BoWS1o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 340981F00893;
-	Thu,  4 Jun 2026 20:24:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hl6tK+JR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E51551F00893;
+	Thu,  4 Jun 2026 20:26:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780604661;
-	bh=QfSrwsy4h63k8R1NgFs9hzn4oHFV07X8TtyVzxw2KTo=;
+	s=k20260515; t=1780604765;
+	bh=5ITOkeVkekdwi/A0DDI2o7Cw0EGGh4FSGNprGqGQYRU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=X6BoWS1o4mT0r190+r2uWTZ/95EYf6GAnWsVhrdixre1zk0nMpH9UV3/8ARQIdWOB
-	 U3O866K33wrzPwY/ADRrxFGzWCthkf/p03IlgMQ1f7tlbqGx7nrV/uGu+2/rFYyLgd
-	 yF+AvCvE871mX3P29HSlLOFbfN8GMhdwIN69HI/RMwAeoS5zAW0kcwws9EU81w5Tpn
-	 zrXr0QRUVfxIAmGzAfeQxCkOFbFTvPdS3JF56/JXNDcnP8GoR9OYPFmusACXAfUgN/
-	 d7uGnoHUMKZ1slaRS1QzctDwMlquB6v5SdSj0LE6P11Ys1FhjH6Q5A1PObt4MTgrAn
-	 xces+0+SStjEg==
+	b=hl6tK+JRaK9cqg/53BshntXCzvluaFu6hxxvDVEuzteINc8UYK5vhkTJFNv89EwPo
+	 7oTXt0avxO4eeflJ37cpov+eTGvi1smixEiNsBx+3xJBuzVzvrLHNPqDLPwWu28xqM
+	 A8hSW9CoTCOS5gJL9PHwsdLut4wmir3nY3KmMJ6gBe8W+YrluatSz0Oy8tWdfa/aPJ
+	 zV00u3nGqgr1DR8bImMGRaq52RrA1gUGaXrRhFCLU2QD+GPp0m+Y6J09dGILZTVOCH
+	 EU0zC3AxQywG8nDC6cqBtFUr0wOkud+QGlEF84gLe10CFeqM+TPRuKekfD7Y3Vp2Uo
+	 soihHas3GYY4g==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 06/10] rust: rename `AlwaysRefCounted` to
- `RefCounted`.
+Subject: Re: [PATCH v17 02/10] rust: types: Add Ownable/Owned types
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: dri-devel@lists.freedesktop.org, ojeda@kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260604-unique-ref-v17-6-7b4c3d2930b9@kernel.org>
-References: <20260604-unique-ref-v17-6-7b4c3d2930b9@kernel.org>
+Cc: ojeda@kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260604-unique-ref-v17-2-7b4c3d2930b9@kernel.org>
+References: <20260604-unique-ref-v17-2-7b4c3d2930b9@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 20:24:20 +0000
-Message-Id: <20260604202421.340981F00893@smtp.kernel.org>
+Date: Thu, 04 Jun 2026 20:26:04 +0000
+Message-Id: <20260604202604.E51551F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,84 +45,113 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Low] The patch misses updating `rust/kernel/pwm.rs` for the `AlwaysRefCo=
-unted` trait split, resulting in a compilation failure.
-- [Low] Lingering `AlwaysRefCounted` trait bounds in `aref.rs` and `workque=
-ue.rs` artificially restrict `ARef<T>` functionality for types that only im=
-plement `RefCounted`.
+- [High] `Ownable::release` takes `&mut self` instead of a raw pointer, cau=
+sing Undefined Behavior due to invalidating a live reference during dealloc=
+ation and narrowing pointer provenance.
+- [High] `Owned<T>` inherently pins its contents, but the safety contracts =
+for `Ownable` and `from_raw` fail to enforce or document this Pin guarantee.
 --
 
-commit 821007fa381542ee45e7b6c5b8f66ecf2e17afcd
-Author: Oliver Mangold <oliver.mangold@pm.me>
+commit 14ba35325a0c0c8b1032beb4bbdfd6396842dfdc
+Author: Asahi Lina <lina+kernel@asahilina.net>
 
-rust: rename AlwaysRefCounted to RefCounted.
+    rust: types: Add Ownable/Owned types
+   =20
+    By analogy to AlwaysRefCounted and ARef, an Ownable type is a
+    (typically C FFI) type that may be owned by Rust, but need not be. Unli=
+ke
+    AlwaysRefCounted, this mechanism expects the reference to be unique
+    within Rust, and does not allow cloning.
 
-This commit splits the AlwaysRefCounted trait into RefCounted (which holds
-inc_ref and dec_ref) and an empty marker trait AlwaysRefCounted. It updates
-various implementers across the kernel to use the new traits.
+    Link: https://lore.kernel.org/all/20250202-rust-page-v1-1-e3170d7fe55e@=
+asahilina.net/
 
-> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
-> index 4ee5fac0e0b67..2d656f672b97c 100644
-> --- a/rust/kernel/sync/aref.rs
-> +++ b/rust/kernel/sync/aref.rs
-> @@ -40,9 +38,8 @@
->  /// at least until matching decrements are performed.
->  ///
->  /// Implementers must also ensure that all instances are reference-count=
-ed. (Otherwise they
-> -/// won't be able to honour the requirement that [`AlwaysRefCounted::inc=
-_ref`] keep the object
-> -/// alive.)
-> -pub unsafe trait AlwaysRefCounted {
-> +/// won't be able to honour the requirement that [`RefCounted::inc_ref`]=
- keep the object alive.)
-> +pub unsafe trait RefCounted {
-
-[Severity: Low]
-Does rust/kernel/pwm.rs need to be updated for this trait split? It appears
-Chip<T> still implements AlwaysRefCounted and attempts to define inc_ref and
-dec_ref within that block, which are no longer part of the trait and will c=
-ause
-a compilation failure:
-
-unsafe impl<T: PwmOps> AlwaysRefCounted for Chip<T> {
-    #[inline]
-    fn inc_ref(&self) {
+> diff --git a/rust/kernel/owned.rs b/rust/kernel/owned.rs
+> new file mode 100644
+> index 0000000000000..456e239e906ef
+> --- /dev/null
+> +++ b/rust/kernel/owned.rs
+> @@ -0,0 +1,187 @@
+> +// SPDX-License-Identifier: GPL-2.0
 
 [ ... ]
 
-> @@ -70,7 +83,7 @@ pub unsafe trait AlwaysRefCounted {
->  ///
->  /// The pointer stored in `ptr` is non-null and valid for the lifetime o=
-f the [`ARef`] instance. In
->  /// particular, the [`ARef`] instance owns an increment on the underlyin=
-g object's reference count.
-> -pub struct ARef<T: AlwaysRefCounted> {
-> +pub struct ARef<T: RefCounted> {
->      ptr: NonNull<T>,
->      _p: PhantomData<T>,
->  }
+> +pub trait Ownable {
+> +    /// Tear down this `Ownable`.
+> +    ///
+> +    /// Implementers of `Ownable` can use this function to clean up the =
+use of `Self`. This can
+> +    /// include freeing the underlying object.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// Callers must ensure that the caller has exclusive ownership of `=
+T`, and this ownership can
+> +    /// be transferred to the `release` method.
+> +    unsafe fn release(&mut self);
 
-[Severity: Low]
-Since ARef now only requires T: RefCounted, should we also relax the trait
-bounds for ARef in rust/kernel/sync/aref.rs for PartialEq and Eq? They still
-explicitly bind T: AlwaysRefCounted, which prevents equality checks on ARef
-wrappers of types that are only RefCounted:
+[Severity: High]
+Does taking a mutable reference here instead of a raw pointer risk undefined
+behavior?
 
-impl<T: AlwaysRefCounted + PartialEq<U>, U: AlwaysRefCounted> PartialEq<ARe=
-f<U>> for ARef<T> {
+If Owned::drop() creates a temporary reference and passes it to release(),
+deallocating the backing memory of this live mutable reference violates
+Rust's aliasing rules because the reference remains in scope during the fre=
+e:
 
-Similarly, should the trait bounds in rust/kernel/workqueue.rs for
-WorkItemPointer, RawWorkItem, and RawDelayedWorkItem be relaxed? They curre=
-ntly
-enforce the old bound, which prevents workqueue scheduling via ARef for typ=
-es
-that are only RefCounted:
+Owned::drop()
+    T::release(self.ptr.as_mut())
 
-unsafe impl<T, ID> WorkItemPointer<ID> for ARef<T>
-where
-    T: AlwaysRefCounted,
+Additionally, if T is an opaque C-allocated type (often represented as a
+Zero-Sized Type), creating a mutable reference narrows the pointer's
+provenance to exactly 0 bytes. Converting this back to a raw pointer and
+passing it to a C deallocator would be invalid.
+
+Would it be safer for release() to take a raw pointer (like NonNull<Self> or
+*mut Self), similar to AlwaysRefCounted::dec_ref()?
+
+[Severity: High]
+Since Owned<T> guarantees that its underlying T is pinned and exposes
+Pin<&mut T> via as_pin_mut(), does Ownable need to be an unsafe trait
+to enforce pinning invariants?
+
+Currently, Ownable is safe to implement, and release() provides an unpinned
+mutable reference. A safe implementation of release() could potentially move
+the value. When Owned::drop() is called, this would move a value that was
+previously pinned, violating the pinning guarantees.
+
+> +}
+
+[ ... ]
+
+> +impl<T: Ownable> Owned<T> {
+> +    /// Creates a new instance of [`Owned`].
+> +    ///
+> +    /// This function takes over ownership of the underlying object.
+> +    ///
+> +    /// # Safety
+> +    ///
+> +    /// Callers must ensure that:
+> +    /// - `ptr` points to a valid instance of `T`.
+> +    /// - Until `T::release` is called, the returned `Owned<T>` exclusiv=
+ely owns the underlying `T`.
+> +    #[inline]
+> +    pub unsafe fn from_raw(ptr: NonNull<T>) -> Self {
+
+[Severity: High]
+Does the safety documentation for from_raw() need to require that the
+allocation is permanently pinned?
+
+Without this requirement, a caller could pass an unpinned allocation,
+extract it later via into_raw(), and move it. This would violate the
+internal pinning assumptions made by Owned<T> when calling as_pin_mut().
+
+> +        // INVARIANT: By function safety requirement we satisfy the firs=
+t invariant of `Self`.
+> +        // We treat `T` as pinned from now on.
+> +        Self { ptr }
+> +    }
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604-unique-ref=
--v17-0-7b4c3d2930b9@kernel.org?part=3D6
+-v17-0-7b4c3d2930b9@kernel.org?part=3D2
