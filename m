@@ -1,42 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11D3D3C76B9
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 20:23:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0BCC3093B8
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 20:24:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780604615; cv=none; b=Ht+g1TzJ26uSDnQ+bhgnU1WoCtRWWwNA2y6fKR9n+zZxD9L/9cBoVSDUcDL9072LpxFAzpwLsJzPzoaIToto5Q1l69482QbirECnH591Qc1jIfcZQn/smyhdJ9TriKlJT/4V8MClF4xdGTPmBeg18EObP4lbG0jLvr2zQt5q8Sk=
+	t=1780604663; cv=none; b=c/nVkNeevFKfeiEjZnO+KsiK0m3T0X1tzbOAB6CSztIcMqtrM0Tx37x256bdBhQDWQyqfSBFt41ZQbtH+bomE7djGE41NXrX/7oAV/s7mVxWTIRcsEdxLwNdC6EZVbTzfw6LBfdDaiDZD4Svybi53I/+016gqc2NzY+rbZjR9i0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780604615; c=relaxed/simple;
-	bh=YgqZbCQnSYJdwV2VAZQWVB49itFC3XpKUaqKzCRkOxg=;
+	s=arc-20240116; t=1780604663; c=relaxed/simple;
+	bh=dEOoxXB0r1h7tUxH+wMjt938pkIeivRUlRMUFQF0O+E=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Slq7/bd7QzZUDQY5h3XYKk2ruirzKJHIv4ejsiaEl/c9IhJa8inuhaA1+MzzuHHGgAvIsLFvx0Qe0AEbfGl+jRPZ+WEd5coJ5UBgJ8WRRv0XH6/EJH1BiAEwhFiX5+AL1Q2V/1fqpGx8MFXSYxsXRP1/6lx/yr9v4w98AY45qMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GPAk5dbP; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=GfkrztnVZzVBzd98rezlWRnhdaBTaj8Q8eM/7rXjdAoA1LntRcM1zQN3dTjQXzyG8OZRbnsDPYiuxPtLcrOn2bVWRfa0LY9OYsHJvpeY4lc3izmd8gk7gfBjF50kyz1TIZl8nXYmWznHn7yC5EQmVB0K0ZzDoAJwEno5IWf+6j0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X6BoWS1o; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GPAk5dbP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77AB11F00893;
-	Thu,  4 Jun 2026 20:23:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X6BoWS1o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 340981F00893;
+	Thu,  4 Jun 2026 20:24:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780604613;
-	bh=9ZapocUyvwmCbzJ737qw9fhwPN1lL/Oo/9fxm6AZ+P0=;
+	s=k20260515; t=1780604661;
+	bh=QfSrwsy4h63k8R1NgFs9hzn4oHFV07X8TtyVzxw2KTo=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=GPAk5dbPrq8ympgdca6zln4OqRcmI5Xbl+0YDE1nhgIC2yccsUuTPOIwRGobeS5+R
-	 OdSnuWcbdDSC9L2ZWGPRuH+2g86BJrL3Ak8ny3XB6tdUqmjSmJrUTzZTOKz2zXrmFH
-	 fEaxdqc0qDLTReJH5zjb8+zVMko0T/7dYepDhun5UYMkc5rVaTdouhY4hTTuEB3KjC
-	 GtZjW0PvnDtMA8nfZqICEMvvNDIU3BIsmSzfssts+P3c7m5WMDleXWDAdXTWWr53Z2
-	 M0LsqF/IJwavLv7uWdthMbKnNQuHicRknVEozvm6lLmDOZHujND5pJLchzMioWBxhj
-	 38lvsIGPrv9BA==
+	b=X6BoWS1o4mT0r190+r2uWTZ/95EYf6GAnWsVhrdixre1zk0nMpH9UV3/8ARQIdWOB
+	 U3O866K33wrzPwY/ADRrxFGzWCthkf/p03IlgMQ1f7tlbqGx7nrV/uGu+2/rFYyLgd
+	 yF+AvCvE871mX3P29HSlLOFbfN8GMhdwIN69HI/RMwAeoS5zAW0kcwws9EU81w5Tpn
+	 zrXr0QRUVfxIAmGzAfeQxCkOFbFTvPdS3JF56/JXNDcnP8GoR9OYPFmusACXAfUgN/
+	 d7uGnoHUMKZ1slaRS1QzctDwMlquB6v5SdSj0LE6P11Ys1FhjH6Q5A1PObt4MTgrAn
+	 xces+0+SStjEg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v17 03/10] rust: implement `ForeignOwnable` for `Owned`
+Subject: Re: [PATCH v17 06/10] rust: rename `AlwaysRefCounted` to
+ `RefCounted`.
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Andreas Hindborg" <a.hindborg@kernel.org>
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, ojeda@kernel.org
-In-Reply-To: <20260604-unique-ref-v17-3-7b4c3d2930b9@kernel.org>
-References: <20260604-unique-ref-v17-3-7b4c3d2930b9@kernel.org>
+Cc: dri-devel@lists.freedesktop.org, ojeda@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260604-unique-ref-v17-6-7b4c3d2930b9@kernel.org>
+References: <20260604-unique-ref-v17-6-7b4c3d2930b9@kernel.org>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 20:23:33 +0000
-Message-Id: <20260604202333.77AB11F00893@smtp.kernel.org>
+Date: Thu, 04 Jun 2026 20:24:20 +0000
+Message-Id: <20260604202421.340981F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,86 +46,84 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] `FOREIGN_ALIGN` is incorrectly set to `align_of::<Owned<T>>()` ins=
-tead of `align_of::<T>()`, violating the `ForeignOwnable` safety contract a=
-nd risking pointer corruption when used with `XArray`.
-- [Low] Missing `// INVARIANT:` comment when constructing `Owned<T>` in `fr=
-om_foreign()`.
+- [Low] The patch misses updating `rust/kernel/pwm.rs` for the `AlwaysRefCo=
+unted` trait split, resulting in a compilation failure.
+- [Low] Lingering `AlwaysRefCounted` trait bounds in `aref.rs` and `workque=
+ue.rs` artificially restrict `ARef<T>` functionality for types that only im=
+plement `RefCounted`.
 --
 
-commit 65031e6cc93134c76e2f6b85f3d269f18d531a88
-Author: Andreas Hindborg <a.hindborg@kernel.org>
-rust: implement ForeignOwnable for Owned
+commit 821007fa381542ee45e7b6c5b8f66ecf2e17afcd
+Author: Oliver Mangold <oliver.mangold@pm.me>
 
-This commit implements the ForeignOwnable trait for Owned<T>. This enables
-the use of Owned<T> in collections like XArray.
+rust: rename AlwaysRefCounted to RefCounted.
 
-> diff --git a/rust/kernel/owned.rs b/rust/kernel/owned.rs
-> index 456e239e906ef..5eacdf327d121 100644
-> --- a/rust/kernel/owned.rs
-> +++ b/rust/kernel/owned.rs
-[ ... ]
-> @@ -185,3 +188,46 @@ fn drop(&mut self) {
->          unsafe { T::release(self.ptr.as_mut()) };
->      }
->  }
-> +
-> +// SAFETY: We derive the pointer to `T` from a valid `T`, so the returned
-> +// pointer satisfy alignment requirements of `T`.
-> +unsafe impl<T: Ownable + 'static> ForeignOwnable for Owned<T> {
-> +    const FOREIGN_ALIGN: usize =3D core::mem::align_of::<Owned<T>>();
+This commit splits the AlwaysRefCounted trait into RefCounted (which holds
+inc_ref and dec_ref) and an empty marker trait AlwaysRefCounted. It updates
+various implementers across the kernel to use the new traits.
 
-[Severity: High]
-Does this alignment calculation break the ForeignOwnable contract if T has a
-smaller alignment than Owned<T>?
-
-The ForeignOwnable trait guarantees that pointers returned by into_foreign()
-will have a minimum alignment of FOREIGN_ALIGN. However, into_foreign()
-returns a raw pointer to the underlying T, while FOREIGN_ALIGN is hardcoded
-to the alignment of Owned<T> (which evaluates to the alignment of NonNull<T=
->,
-typically 8 bytes).
-
-If T is a type with a smaller alignment requirement (such as 1 or 4 bytes),
-into_foreign() might return a pointer that is not 8-byte aligned, yet
-FOREIGN_ALIGN will falsely claim it is. XArray relies on this alignment
-to use the lower bits for internal tagging. Could this lead to pointer
-corruption when inserting an Owned<T> holding an underaligned T into an
-XArray?
-
-> +
-> +    type Borrowed<'a> =3D &'a T;
-> +    type BorrowedMut<'a> =3D Pin<&'a mut T>;
-> +
-> +    #[inline]
-> +    fn into_foreign(self) -> *mut kernel::ffi::c_void {
-> +        let ptr =3D self.ptr.as_ptr().cast();
-> +        core::mem::forget(self);
-> +        ptr
-> +    }
-> +
-> +    #[inline]
-> +    unsafe fn from_foreign(ptr: *mut kernel::ffi::c_void) -> Self {
-> +        Self {
+> diff --git a/rust/kernel/sync/aref.rs b/rust/kernel/sync/aref.rs
+> index 4ee5fac0e0b67..2d656f672b97c 100644
+> --- a/rust/kernel/sync/aref.rs
+> +++ b/rust/kernel/sync/aref.rs
+> @@ -40,9 +38,8 @@
+>  /// at least until matching decrements are performed.
+>  ///
+>  /// Implementers must also ensure that all instances are reference-count=
+ed. (Otherwise they
+> -/// won't be able to honour the requirement that [`AlwaysRefCounted::inc=
+_ref`] keep the object
+> -/// alive.)
+> -pub unsafe trait AlwaysRefCounted {
+> +/// won't be able to honour the requirement that [`RefCounted::inc_ref`]=
+ keep the object alive.)
+> +pub unsafe trait RefCounted {
 
 [Severity: Low]
-This isn't a bug, but is this missing an invariant comment for the Owned<T>
-struct construction?
+Does rust/kernel/pwm.rs need to be updated for this trait split? It appears
+Chip<T> still implements AlwaysRefCounted and attempts to define inc_ref and
+dec_ref within that block, which are no longer part of the trait and will c=
+ause
+a compilation failure:
 
-According to the Rust subsystem guidelines, when a struct with an
-Invariants documentation section is constructed, the code should have an
-// INVARIANT: comment explaining why the invariants are satisfied. The
-from_foreign() implementation constructs Self { ptr: ... } without this
-mandatory comment explaining how reconstructing the struct maintains the
-ownership and pinning invariants.
+unsafe impl<T: PwmOps> AlwaysRefCounted for Chip<T> {
+    #[inline]
+    fn inc_ref(&self) {
 
-> +            // SAFETY: By function safety contract, `ptr` came from
-> +            // `into_foreign` and cannot be null.
-> +            ptr: unsafe { NonNull::new_unchecked(ptr.cast()) },
-> +        }
-> +    }
 [ ... ]
+
+> @@ -70,7 +83,7 @@ pub unsafe trait AlwaysRefCounted {
+>  ///
+>  /// The pointer stored in `ptr` is non-null and valid for the lifetime o=
+f the [`ARef`] instance. In
+>  /// particular, the [`ARef`] instance owns an increment on the underlyin=
+g object's reference count.
+> -pub struct ARef<T: AlwaysRefCounted> {
+> +pub struct ARef<T: RefCounted> {
+>      ptr: NonNull<T>,
+>      _p: PhantomData<T>,
+>  }
+
+[Severity: Low]
+Since ARef now only requires T: RefCounted, should we also relax the trait
+bounds for ARef in rust/kernel/sync/aref.rs for PartialEq and Eq? They still
+explicitly bind T: AlwaysRefCounted, which prevents equality checks on ARef
+wrappers of types that are only RefCounted:
+
+impl<T: AlwaysRefCounted + PartialEq<U>, U: AlwaysRefCounted> PartialEq<ARe=
+f<U>> for ARef<T> {
+
+Similarly, should the trait bounds in rust/kernel/workqueue.rs for
+WorkItemPointer, RawWorkItem, and RawDelayedWorkItem be relaxed? They curre=
+ntly
+enforce the old bound, which prevents workqueue scheduling via ARef for typ=
+es
+that are only RefCounted:
+
+unsafe impl<T, ID> WorkItemPointer<ID> for ARef<T>
+where
+    T: AlwaysRefCounted,
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604-unique-ref=
--v17-0-7b4c3d2930b9@kernel.org?part=3D3
+-v17-0-7b4c3d2930b9@kernel.org?part=3D6
