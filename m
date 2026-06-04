@@ -1,135 +1,126 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0192326D51;
-	Thu,  4 Jun 2026 15:24:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB57133066D;
+	Thu,  4 Jun 2026 15:25:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780586679; cv=none; b=Xi04CzmiJZfOWFH2T6/7OAFf8tMv0RO0vt/MKqgbTNG7aNVltxEMCu99Zcot5Gq2OnrvlsEBSOpoBNSedg0xdaTD8XkPZHJZunvxC8yg3ML++e5iEbA6HtWmrRCQx2A3VjihLDM7o3/eDwgVc/IlsOm9b24rCnyJSuMYm3G0x0s=
+	t=1780586706; cv=none; b=iaXM0TJO7agozbHw2f7rSzHbDi3edcedajh21QQ3YJvFkdey8goaKQy8ERflNDidpyksyo2hyXplm44yqmU5tWugm/X6W+V64rr9Ap0SRWb2DIJ/Cquh2dmOMXpvsXNBNYyh/6qJeiJV1O0W4aJmeftEgKhb8DDPFoUjiuXGPPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780586679; c=relaxed/simple;
-	bh=OtYIwdUAxpHZS8KVVlVBNnrK1jqSWiAD8wBFniKvarQ=;
+	s=arc-20240116; t=1780586706; c=relaxed/simple;
+	bh=OQ+QaNy4xyY7IgRO1ARMjZRfYIndC6qUnQZr/LxYons=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=c/6RDQK6PUMawpT1VpVkUIwDciJwP469JRuwJrnw5Y7YZ5t/ZgwwwKskEaIIJF5FXN8PVKtmz9a87HWJTAqcJG4gUKVQHOOXAoD7FrbDYNk8iGvgInBxhYpeNKmnm00tw+QD/p4BU2xvi1COlwg8kK9is08TfkvYeQZZhMx0V20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RfID/TIW; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=foTwcVKxGw/qrHPewhUXC49bdpfphNLneCbgry4dViJ8QB6ZvVEPs6KjK9zI/HVihMViPeLPi/i4QPfmJ/bVs+rdFsRTGWkC+Bgqu7jxzXrKF1hJoYeHBiXj90aapWEXIeGNaONByqEcW++1VuZl4w2aCd/D263I7MF6WwSp7aI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g66ew9lC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RfID/TIW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 510441F00893;
-	Thu,  4 Jun 2026 15:24:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g66ew9lC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 800DA1F00893;
+	Thu,  4 Jun 2026 15:25:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780586678;
-	bh=sRfVqMgXjbJL90GRnsXXEwjSzBU8nPLOQuIHfMhk9ec=;
+	s=k20260515; t=1780586705;
+	bh=LxfcEt0IAYmYX/vKuB8zV1FQniRLQpXYWjT3W5b+CAU=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=RfID/TIW3ClI9it8qjUOadZccJbKLtfnegyvKRpbCrrSTm07yo6J6d44NIZDejJed
-	 WJlhWi0ya+TwCUStkSMknIjPQs1esAFYOU1jLBGyI6JYM5MhSK+/8+4Xy0e9cFmcJg
-	 R6RCKZIRH0hgo0bSBFMXve8eOYCPrkWytSxPn1TRYEwQf7iPbXREk1WcFCWZssXK/7
-	 XgG5nW7RYI3ffSpvOM4feRQqFrj3iSxaYUnkSLm8wDY3G04ILWuYQvWoqkoxoPIiRH
-	 74JbTZrS9wWVLHiUvy5HNeSYrISvKvQMAkDpEoTDEujXRAHtBJZl/M2xr4KpdvUwto
-	 uU4jJgshHp4dw==
+	b=g66ew9lC1M5t1n2XYEwiXjpz9VGjA7Co7CxpiYGp5fY40WoiyXP3jr36aKRq2hMe1
+	 k2ZlToe++wnLY1DWEzhoqpXZAWW5ahM7DTFMieJBaaBxdfKpdiEkyasANdZ4zYHJbf
+	 WCFV7qblQ/aZ0FUjmrERMDrjga2qDCjC0RHpwuih+sM5Z+J2sl5A8zIMWODp9rH4xM
+	 g1UmNncZYT4mbC6CuTQ25RtfC0+LI6bLBNacadXiR2evcdcXVVdoD4K20fXNUjHwop
+	 8l5ov5ATRw2Vk4V8os4b6cRL2Sd1uP93bbaOgEGUnUv+rg/ShEY/eKbUc/FciSQlgj
+	 jiVnECUGyb0+A==
 From: sashiko-bot@kernel.org
-Subject: Re: [RFC 07/12] PCI: Convert xen-pciback and pci-driver to
- pci_is_sriov_* helpers
+Subject: Re: [RFC 12/12] PCI: Reserve bus range for SIOV devices
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Dimitri Daskalakis" <dimitri.daskalakis1@gmail.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-In-Reply-To: <20260604150153.3619662-8-dimitri.daskalakis1@gmail.com>
-References: <20260604150153.3619662-8-dimitri.daskalakis1@gmail.com>
+Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org
+In-Reply-To: <20260604150153.3619662-13-dimitri.daskalakis1@gmail.com>
+References: <20260604150153.3619662-13-dimitri.daskalakis1@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 15:24:37 +0000
-Message-Id: <20260604152438.510441F00893@smtp.kernel.org>
+Date: Thu, 04 Jun 2026 15:25:05 +0000
+Message-Id: <20260604152505.800DA1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [Medium] Incomplete implementation: missed conversion of dev->is_virtfn i=
-n vpci.c.
-
 Pre-existing issues:
-- [High] Concurrent driver unbind can cause a use-after-free of `pcistub_de=
-vice` in `pci_stub_notifier`.
+- [High] Malicious PCIe configuration can cause an integer underflow in bus=
+ numbering reservation, leading to broken bus allocation logic.
 --
 
-commit 88d02306e6f1bfe4b75d5df018b4e5de4f2ff35a
+commit b3162f0225b56986a66cccbae6221dcaf9c28ae6
 Author: Dimitri Daskalakis <daskald@meta.com>
+Subject: PCI: Reserve bus range for SIOV devices
 
-PCI: Convert xen-pciback and pci-driver to pci_is_sriov_* helpers
+SDI routing IDs are computed from the PF's devfn plus an offset and
+stride. When the stride pushes routing IDs past the current bus number,
+additional bus numbers must be reserved during PCI bus scanning. This
+commit adds pci_siov_bus_range() to compute the maximum number of
+additional buses required, parallel to SR-IOV.
 
-No functional changes.
-
-Assisted-by: Claude:claude-opus-4.7
-Signed-off-by: Dimitri Daskalakis <daskald@meta.com>
-
-[Severity: Medium]
-The commit message explicitly states its scope is to convert xen-pciback and
-pci-driver to the new pci_is_sriov_* helpers. Did we miss converting
-dev->is_virtfn in drivers/xen/xen-pciback/vpci.c?
-
-For example, in __xen_pcibk_add_pci_dev() there are still direct accesses:
-
-drivers/xen/xen-pciback/vpci.c:__xen_pcibk_add_pci_dev() {
-    ...
-	if (!dev->is_virtfn || func) {
-    ...
-			if (t->dev->is_virtfn && !PCI_FUNC(t->dev->devfn))
-    ...
-}
-
-Leaving these direct accesses unconverted means they will fail to distingui=
-sh
-between SRIOV and SIOV VFs when the helpers are updated to check dev->is_sr=
-iov
-in later patches.
-
-> diff --git a/drivers/xen/xen-pciback/pci_stub.c b/drivers/xen/xen-pciback=
-/pci_stub.c
-> index 79a2b5dfd6941..fd5a13f79fcf4 100644
-> --- a/drivers/xen/xen-pciback/pci_stub.c
-> +++ b/drivers/xen/xen-pciback/pci_stub.c
-> @@ -1695,7 +1695,7 @@ static int pci_stub_notifier(struct notifier_block =
-*nb,
->  	if (action !=3D BUS_NOTIFY_UNBIND_DRIVER)
->  		return NOTIFY_DONE;
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index bebc32c8d374f..9ef6827ab3453 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -3100,8 +3100,8 @@ static unsigned int pci_scan_child_bus_extend(struc=
+t pci_bus *bus,
+>  	for (devnr =3D 0; devnr < PCI_MAX_NR_DEVS; devnr++)
+>  		pci_scan_slot(bus, PCI_DEVFN(devnr, 0));
 > =20
-> -	if (!pdev->is_physfn)
-> +	if (!pci_is_sriov_physfn(pdev))
->  		return NOTIFY_DONE;
-> =20
->  	for (;;) {
+> -	/* Reserve buses for SR-IOV capability */
+> -	used_buses =3D pci_iov_bus_range(bus);
+> +	/* Reserve buses for SR-IOV and SIOV capability */
+> +	used_buses =3D max(pci_iov_bus_range(bus), pci_siov_bus_range(bus));
 
 [Severity: High]
-This is a pre-existing issue, but is there a use-after-free risk here if a
-concurrent unbind occurs?
+This isn't a bug introduced by this patch, but if pci_siov_bus_range()
+returns a negative integer due to a 16-bit capability wraparound, won't
+assigning it to the unsigned int used_buses result in an underflow?
 
-find_vfs() searches the pcistub_devices list and returns a pcistub_device
-pointer without taking a reference count via pcistub_device_get():
+If used_buses becomes a massive positive value, the subsequent
+max +=3D used_buses would wrap max backwards. This could corrupt the PCI
+enumeration state, cause overlapping bus assignments, and potentially
+bypass IOMMU isolation if RIDs collide.
 
-drivers/xen/xen-pciback/pci_stub.c:pci_stub_notifier() {
-    ...
-	for (;;) {
-		struct pcistub_device *psdev =3D find_vfs(pdev);
-		if (!psdev)
-			break;
-		device_release_driver(&psdev->dev->dev);
-	}
-    ...
-}
+>  	max +=3D used_buses;
+> =20
+>  	/*
+> diff --git a/drivers/pci/siov.c b/drivers/pci/siov.c
+> index 7372ce95714b2..6405a88300524 100644
+> --- a/drivers/pci/siov.c
+> +++ b/drivers/pci/siov.c
 
-If a concurrent thread unbinds the VF (e.g., via sysfs unbind),
-pcistub_remove() executing under the VF's device lock will remove the device
-from the list and drop the final reference using pcistub_device_put(), free=
-ing
-psdev before the notifier has a chance to execute.
+[ ... ]
 
-The notifier thread would then dereference the freed psdev memory when
-evaluating &psdev->dev->dev in device_release_driver().
+> @@ -111,3 +111,24 @@ void pci_siov_release(struct pci_dev *dev)
+> +int pci_siov_bus_range(struct pci_bus *bus)
+> +{
+> +	int max =3D 0;
+> +	struct pci_dev *dev;
+> +
+> +	list_for_each_entry(dev, &bus->devices, bus_list) {
+> +		if (!dev->siov)
+> +			continue;
+> +		if (dev->siov->max_SDI_buses > max)
+> +			max =3D dev->siov->max_SDI_buses;
+> +	}
+> +
+> +	return max ? max - bus->number : 0;
+
+[Severity: High]
+This is a pre-existing issue inherited from SR-IOV, but could a malicious
+PCIe device provide offset and stride values that cause the 16-bit
+capability to wrap around?
+
+If max_SDI_buses wraps around and ends up strictly less than bus->number
+(but non-zero), this subtraction yields a negative integer, leading to
+the underflow in pci_scan_child_bus_extend() mentioned above.
+
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604150153.3619=
-662-1-dimitri.daskalakis1@gmail.com?part=3D7
+662-1-dimitri.daskalakis1@gmail.com?part=3D12
