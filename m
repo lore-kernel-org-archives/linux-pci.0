@@ -1,122 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9350525B098
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 18:34:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1523A59B1
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 18:59:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780598094; cv=none; b=YFnT5hbiN/7JWyAa5HCRB8uQLa3Pb7Gw1NFdh4C/4BqJHlw43IFGugt1dFPrDlLhOXSZGb9CmwQ9LztCY38qV3mip5d8iEecGCH5mWprOm+F7mNZJ5CiEiR0D9pWEbCEsiDUermEXPBt7EXepRA6HWspGQrS/X5jnRSc2ZXLC2E=
+	t=1780599600; cv=none; b=n4cPK0byPknfnggIfBn7wFCGzN4WOCAYW9QPsbim47Vbktz650jcg1b5zaUCURdbH+BCSppY1JXPplfbUUdYCwWRg1EaN8wJXpc5vi1SqyryFq7kyQ2Je+h+iyf93Zdo2TUdkPFX1VECyEVBB/dTsbJhyJkyN32pgAuGlrPkN/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780598094; c=relaxed/simple;
-	bh=9KnrFzJCQqKmA4zZD397xl18lBMfPyxxIRWtLIyr4J0=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eQczrPfckb9/GHS76SO1xEI7uTC/yl/q/DMAX0tjxALfe884LVt3ApsOVePaA6zccWVrV4qn3lTU96v8PSFkInByF02nKXetEBkkuZ/ZfH0rBVjjKHsAgHzpppcpmt8CX6ytyLUURUMx28st7dCoL0+BdQ8zb4wLktISMvWAxU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XBOjt0ID; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780599600; c=relaxed/simple;
+	bh=h+ptx8C/cbQHJsE3+Kk3U3Vtl4JYBPi0lsNxAoa1VMA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=U/LiB+MS/NNIfA1dFkm6WJAU7N/IS/9tL1i8wvKU6OSQeT+r7BWoFktP6Jv6WiN5VVYPZMVTOA8X8ZF6h3RrZMkPFFN3lb06iduC+C1xquav/qwcddr4/tTstsDnyXFlZ/z1q8wSN8bA35hnvkHky3qVT4f/NEjTOcFaJbUj3ws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MhB3yNfH; arc=none smtp.client-ip=209.85.218.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XBOjt0ID"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFD021F00893;
-	Thu,  4 Jun 2026 18:34:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780598093;
-	bh=qPpO0w+jd19d50aJ+3CYEE2zIDspddv7+ruBAVLiDeU=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=XBOjt0ID3Onp1zKUWjJPvtfcs/hozaB0B8iBAeIZ5xRqkOV3KqEHEbW/2wOFo6ZJH
-	 D9HsdrWuU62ttmm6dObhEGpKGZG0OcQgqzKtRdmdju/WI45uNzwkI9SFBPF7dPpujq
-	 utNrk16o6FOgBRmRSSN3QKoC9RBLxBwvZz88+cM/h8/JEBPvkh7j4Njv/92HEXJrw0
-	 Jwq1wSax51DZGEpAW+9x/1cPs4wBaqs2urAR/eFLCd8Dtbk4XJ6Ak09LBQZtFPKr/C
-	 EGG8nhcHWQa0JxHz7EMYwZRgzgr1Uu4et0XFgKjT1hiWUU11ACAoTEZlW3inJUXRmM
-	 0+/lM3KQkhxRA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v8 4/4] iommu/vt-d: Fail probe on ATS configuration
- failure
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Pranjal Shrivastava" <praan@google.com>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260604182116.3179005-5-praan@google.com>
-References: <20260604182116.3179005-5-praan@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 04 Jun 2026 18:34:52 +0000
-Message-Id: <20260604183452.DFD021F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MhB3yNfH"
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-bec449cf976so147687466b.2
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 11:59:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780599597; x=1781204397; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=UdDPcFn45o8eOdopqzCXPMjHN3/Cvgt3UFvkr3Oo5TI=;
+        b=MhB3yNfHQQI/wXHLWUaW20PTQn2acuPo6ARpEy7Eux1pXxpyLKZ5NigRzdcOm4zlRH
+         sM7w4wJEYTSrwrEPw1Afw/WNfbCWwyupGQSGOUw9jbwZUuYvLg2gxypPBxgX10xTY0a+
+         YULwSEJ4IdAx+iEEz/i+871NbBBVPpkKfyE3wUlfSkkclktRsWMGRRgpkpzLCxd6Xxyk
+         Ht3bKgdquSbUAwhaMx3cdvhAI7Gn0G1P42wQ1P3MYT0vMx0WhyYruuRXA7CbqhHDzQvo
+         Km/J8LvrbIH3rMQI3KREPcZNM0HexaaHyyDfQixaHVkOKnoyI5KvWBZHpbjD7WKHMQ/o
+         8/3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780599597; x=1781204397;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UdDPcFn45o8eOdopqzCXPMjHN3/Cvgt3UFvkr3Oo5TI=;
+        b=YZ3K1sz9xzEmY7IQRIWhS4GQLfoH15HTX2MgWMQ5rnqEhhwZwg62qh86lYijHOQQWv
+         A8ZPytTVrL0V8X6L4oMzq/4h1vR+ozZx2fPK609e0EF1TeA98ovclIokQ+h4LeXnnrw0
+         6LJUsb0/IL/arQYPbIHyhZ633578X7mHYmjmpzDu2Mx8uKV0UU5HihqrthEgH9ju1q53
+         CYAIhHU1PE3ayZ0qmNG6G1aOVsOocFZFOjiAsu30Ud+wvB0wZ4UjK04bnru2F/3yBxnH
+         Ybz/nfzvLvdApkrhXzWcLM23IV5zoPx6ZKCtqFyjWo8MC+bzjPPnP0Je+kovCPvW8Qgt
+         ZCtQ==
+X-Gm-Message-State: AOJu0YyPD1/E/FwPdSi+Z/h32iMuQuj2XKuIaui0PgfVE/+Y7J+15xr4
+	W5sD3MiXOq787kDHzoFjivYdnQa4oJX1KSxSRzM1OZwRDp5dKVNAzRWw/R6EYNYQfM0=
+X-Gm-Gg: Acq92OGxOVxkQNZyN/9YF0YsBw9r3zlPd1tYxCFSL4qMENNHJYH0nwTl6zpW8aVj3ZN
+	/jc4HXybyYyRSonR4ofUDk5TDNQJCO9qHwOqIQnC2MNWshaEsHIjChjN4M9pHs/M//pzSJkSMJj
+	HdGude+UnJROP0OsHrtnkrYaLIZhXK1lg46T8HHifA4CKTJSdjaEWFApY4Poh+uoNx1Dt83Wosh
+	4ICFc1J3Afn7v31LEduPw93+0Ue8lLcPpHhjw2zljhKUPTg8IUViETzPKrIybzbTlPEk78I1iQH
+	M/Q+We+7JffmiQgDi6Xa5o03DzWT9ZnWbzxcUj9tXbQuUW0nyQ/rTxHHvdGxQWWIG8J14GbX+VM
+	xxcfKat+aJxN5jEDEmLfLN+76iiQc9lrXBVafzm0wuB52dJJiChL/5HxWLkY1yM17/SPCbFfNYV
+	qmfpA55dqqDBEkwbEqYazkHeguWmYk9sZKBSHMre8Ra8uEG7YtKfcAKIDqslp0vGTp+es=
+X-Received: by 2002:a17:907:60d3:b0:bdc:bb72:7bc7 with SMTP id a640c23a62f3a-bf0aab1b72dmr528603466b.31.1780599597207;
+        Thu, 04 Jun 2026 11:59:57 -0700 (PDT)
+Received: from ali-monster-pc.localdomain ([45.92.224.105])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-bf05228a16csm339673466b.28.2026.06.04.11.59.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Jun 2026 11:59:56 -0700 (PDT)
+From: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+Subject: [PATCH] PCI: vmd: Handle BUS_RESTRICT_CFG value 3 for Arrow Lake-HX
+Date: Thu,  4 Jun 2026 20:59:53 +0200
+Message-ID: <20260604185953.17177-1-ali.alaei.tabatabaei@gmail.com>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
+Intel Arrow Lake-HX platforms (e.g., Core Ultra 9 275HX) use VMD device
+8086:ad0b, which is already in the driver's ID table. However, on these
+platforms the VMCONFIG register's BUS_RESTRICT_CFG field returns 3 during
+probe. vmd_get_bus_number_start() only handles values 0-2 and returns
+-ENODEV for anything else, causing VMD probe to fail and leaving NVMe
+drives behind the VMD controller invisible to the OS.
 
-Pre-existing issues:
-- [High] Unconditional rbtree removal of an unlinked node on error paths in=
- `intel_iommu_probe_device()` empties the device tracking tree.
+Handle cfg=3 the same as cfg=2 (busn_start=224).
+
+Tested on: Acer Predator PH16-73 with Intel Core Ultra 9 275HX
+           (VMD controller 0000:00:0e.0, 8086:ad0b).
+
+Signed-off-by: Ali Alaei <ali.alaei.tabatabaei@gmail.com>
+---
+ drivers/pci/controller/vmd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index XXXXXXX..YYYYYYY 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -649,6 +649,7 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
+ 		case 1:
+ 			vmd->busn_start = 128;
+ 			break;
++		case 3:
+ 		case 2:
+ 			vmd->busn_start = 224;
+ 			break;
 --
-
-commit edcf0a64984f0847eb81ddb322f530951d47a01a
-Author: Pranjal Shrivastava <praan@google.com>
-
-iommu/vt-d: Fail probe on ATS configuration failure
-
-Update the Intel VT-d driver to handle ATS configuration and enablement
-more strictly. Specifically, update the device probe to fail if
-pci_prepare_ats() returns an error. This ensures that any ATS-capable
-master reaching the attach phase is guaranteed to have a valid config.
-
-> diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-> index c3d18cd77d2f1..9242cd9651307 100644
-> --- a/drivers/iommu/intel/iommu.c
-> +++ b/drivers/iommu/intel/iommu.c
-
-[ ... ]
-
-> @@ -3288,7 +3294,10 @@ static struct iommu_device *intel_iommu_probe_devi=
-ce(struct device *dev)
-> =20
->  	dev_iommu_priv_set(dev, info);
->  	if (pdev && pci_ats_supported(pdev)) {
-> -		pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
-> +		ret =3D pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
-> +		if (ret)
-> +			goto free;
-> +
->  		ret =3D device_rbtree_insert(iommu, info);
->  		if (ret)
->  			goto free;
-
-[Severity: High]
-This is a pre-existing issue, but unconditional rbtree removal of an unlink=
-ed
-node on error paths in intel_iommu_probe_device() empties the device
-tracking tree.
-
-If a device does not support ATS, it skips the device_rbtree_insert() call
-above. If a subsequent failure occurs, such as intel_pasid_alloc_table()
-failing, the error path jumps to clear_rbtree and unconditionally calls
-device_rbtree_remove():
-
-intel_iommu_probe_device() {
-    ...
-    clear_rbtree:
-        device_rbtree_remove(info);
-}
-
-This function directly invokes rb_erase() without verifying whether the node
-is actually linked to the tree:
-
-device_rbtree_remove() {
-    ...
-    rb_erase(&info->node, &iommu->device_rbtree);
-}
-
-Because the node is unlinked and completely zero-initialized, the parent
-pointer evaluates to NULL. The rbtree implementation treats the node as the
-tree's root and overwrites the root with NULL, completely clearing the IOMMU
-device tracking tree.
-
-Could we add a check to verify the node is actually linked before calling
-rb_erase(), or only jump to clear_rbtree if the node was successfully
-inserted?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260604182116.3179=
-005-1-praan@google.com?part=3D4
+2.49.0
