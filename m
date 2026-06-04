@@ -1,62 +1,62 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 502EA31DDBB
-	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 15:02:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC49733F59A
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2026 15:02:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780585326; cv=none; b=Z1URmt3wjuFdUhL4eDcsZ7b8/6sKj+/7Qwa7sknh0VVlS3+k2qHtqqjctpK/2ZaziR5OlzDCPzXSAkO2EAFvR4gzuLTrvkffkfnvDXlegVXoxUjyUHjHJq0LZBiuMIZPaxtalbvRGRhXFkgBFDrRmbbHcDOZJlv+S3/fjNG5HI8=
+	t=1780585329; cv=none; b=Vyvsb70zUOVi/Zu9L51DevsZ8eApoVLQg0cc3Tkc7tXrrpXDfmDj4+Kb6fhSy6RChldSlTmhEh6tmgsTguPy4OfSlTb9WtJytmaAW8+RSq314AysZ4wpKCTfSZKt8eFd8LRHLkB4t0p+okMmMVuCCC7sDEWeATJA8pD7JpuMdPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780585326; c=relaxed/simple;
-	bh=ugi8jDRcPzL1WqkEZW8QFJz3JbQ/n6QVLYj9qIogyFM=;
+	s=arc-20240116; t=1780585329; c=relaxed/simple;
+	bh=nvFyjCT5ppH/Q/ZoWQSkEOugTOmlUlVEiME03kna43M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o9AbbgXAdi83/pvdsFhXGg8pw+W8/f3mLnqiZ4XmrUOd6dTwllNb4sAxxgYlWHm0qn3Uz8rqei3V1PQUa2z5t7QaHT4mlCQZo0bvAW2ctzzJmJBOs1LCfsBSnyoj1KYw28Nacu62bIyb+WzSoVMYvlbpAl32wz4+LEdVz5NeNG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Nu4VVDF6; arc=none smtp.client-ip=209.85.214.176
+	 MIME-Version; b=LEVvoWpb5IS6i49VsQ5e/sCKvb31htDZQAr3tLtCswlibwMTVwkU2hlNHPVCBZxMl1Tyk5Ec+Z00MQV+lB/KnZT6Zy9iBjSQysynXLhP7dKK/aBAq4BhYrkMuI8mvtyKcNJp9OfHs5ivPvO6gIgBGtYVnjUmLJdaESXkYJucFM4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k+vqdimJ; arc=none smtp.client-ip=209.85.216.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Nu4VVDF6"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2c0c2a68d01so5878775ad.1
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 08:02:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k+vqdimJ"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-36bcf3d2565so605210a91.3
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 08:02:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1780585322; x=1781190122; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1780585325; x=1781190125; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=4avmxi/DteAkFA5/0YsT4Z/7bVnyoihvSIvhh9yQxIo=;
-        b=Nu4VVDF67GJyyjqYrBOL6CXuIE1QHdnEC8c7NVUfmdDxzSAwm95s5Gop3d04LelDMM
-         K0p9E8JIt3wkGCE86d3JQxpz8wVLM0se+Dw1ACQWlpK7QkqZoNcOkTPPQGT9uMg/nL46
-         FP39Usp55Ep87E/nTU3T/zxfPcENKsbxk+CxUcwnHgh6tCzdwUgcRkjjaBYx6YI3EEib
-         ZPRwpwx+S6O0m6SImm8wmL47SvhrlatBwZNgsmVKBwoyjZQGb69abbzs4ktbCl3YZTXU
-         rNk2udLfgK/LcrL/jjFu+/gmdatPEyLG2slisjDcMKVD67z6ODjASXlyGjJmeiXDmKd+
-         C6LA==
+        bh=xaX3iBh5aQ6ieP4wRDACjZGRgQdbq9tB2uoE6aInkl8=;
+        b=k+vqdimJVhQIwiOXTPEluKSN82aPaYZbR4Wdh5bMJaYz0eaiTE1HpFogEkkGMJT2BD
+         3gyQ+jup4TDLoVawAMcBYrRea+CPYuRECpiJZoOY/DrQ9+2JxytLpLWqqgQ5BGpNMXrK
+         BLFR7IL5WEed7YFjr3o7l/qr6EHV+2ii2CWt1/8P+H1AGC1+0Z1yZSCS1isboTcLfg6s
+         MDtlobdbTD/WM1N4eTnmjIsNe1LwhrUyHpOrdIiBA3wvnbKl1t/FjadenOeo05sbdLqh
+         eKN9reiTA6fRBH4xEwQXJoqPYMbloI0xhQCJ9lVLAb3NZ9g2YB70gbcuVEpDSPePFWHl
+         3zGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780585322; x=1781190122;
+        d=1e100.net; s=20251104; t=1780585325; x=1781190125;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=4avmxi/DteAkFA5/0YsT4Z/7bVnyoihvSIvhh9yQxIo=;
-        b=EqJSS5P6SMi0f4w90XXlCZ11LuvzpUTfBJWPETdsXGD2wZTJB3eF6V8Tfz0KOGLx7l
-         hP5hq/N9n3gN2NRGtmsJp36y4b+FOZYCJnDL8UtHfhn3D2iWGTnNzT0kd6E6i/k6kwXM
-         7MMjGYm+BsdKRClqxuC1MoQXvx8RKf99t+cXr0n02P4WpfdiFNEpVVCrMt4m7zK7DT+X
-         BlTrwAsJy+T/uC0Yp5hTog56eYf4CRHQLRf7guf716tOtGeCxQVx50q5yQD4Mp1zTW7j
-         vpdgaJepYW7xcBs2vfZrDF+aC+4CEhERvs1IFiB/GZhZxga6TM9uoTTWsLlEy1ojz5k7
-         mWHA==
-X-Gm-Message-State: AOJu0YyD+1eXUenaavpKAcz4BMZgw+0fp+HiVbPm+d0uS26HUOgBALk2
-	bUnu1WSiFwCWECSDzBnrnBsY0c+ffoX8k7rFBip20blMFKcKMsM77RYO
-X-Gm-Gg: Acq92OFJnV9htKPhKOAPdoaH04Z+0Dhz/pADaNDyJn8sVRzSKikKEJE8zIDYtUZHzYL
-	btVJBzBJOvm/Z3ibNjimMDrHIb6MHoh7BSb6N3ohnb99B823VeC2Y9tCkxyS1Z2n3EqEvUV6wyq
-	EqRDHi3PaktC0QsG0ZADLXiq0D7yVRWiaat5EzFDzKsbBmUsimWYiU13L7khXNiqg6aDqAuYRWX
-	Ok31Ie4nNDyvdlbhfex2cHbpwFjtrLfYXSkZxn+0e5CSieZtey1tG5U0NFQ1va0x511vsYG9b/G
-	8uw0a/UgqOMGchh8i5FIAOXw07tVyvOoubUjv6M574JpbfY6yU0zJJ5TxT+otYNqpzMGLWptP/I
-	O3dH48HckvsxJVfsz7uExrlbvx/o8I0bX0HlSb//8KG7Ou2Lad1oQT++EI0jy+1UwoqwYoAvBVz
-	rMjqq9BgBl3e/A/lGY/aVp79OAd728dMx46362UDE=
-X-Received: by 2002:a17:903:37c4:b0:2b4:59bf:5728 with SMTP id d9443c01a7336-2c1644ca7bfmr89624145ad.25.1780585321320;
-        Thu, 04 Jun 2026 08:02:01 -0700 (PDT)
-Received: from localhost ([2a03:2880:7ff:55::])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c164f6e2adsm67111415ad.5.2026.06.04.08.02.00
+        bh=xaX3iBh5aQ6ieP4wRDACjZGRgQdbq9tB2uoE6aInkl8=;
+        b=fyE3KHblezVEvgY3XUXugvOEJdPH3zFzaC39njrdjBTmgUoTmLBkmhVCgQGphNcW2O
+         cc2wVQ8YyoB89rLy6zqIpr6YwUOyphPJmPmyw/Fg7rl5IOjxiVuwuBfBoqYCUllaJTos
+         Nq+pMDtMVGvzFiSAL5+1y/R8sBqEWXxt3OIy496Za+ivAa+mW6R7m1tc0Q8l15fo0NYO
+         /hClb+GY3iCIPDNKoFCry8VsQKf6CFdAlnO0JjgGsftQtgiAvsyrg/PTcRCe7iwJiVsD
+         y2zz2HkKnq7qAE73DEFoeH8GZehaD5RL7y0dEA7NOPTXZYqrAYm2KFN6HAmvdgAnmi9P
+         Cb7g==
+X-Gm-Message-State: AOJu0YwdtFrH9DOYufIf/q0Z4SDFbdShMEivSuQKkCEctPFME9PaYGSf
+	lq1exuBZn0Cbqh2/moRM5rICGWKJ3CPC1XCVaK7O/vpuqHdbHvj+YNCC
+X-Gm-Gg: Acq92OFRFQksxZoMaQIcFw/bGXTC6DM64oc5GpCP2xFg8l0f569FzRBiLfpXLZj3bry
+	bJWfdsk1EpmQRIFpUbAnwQB7svPyq9Ync5+nexSATkRZuIVdGm2c/l3t1U8ypfFpO9C7+vj5rgo
+	7RQnzzf/PfaBAOhX3re1JjdMyQEbnGKeb09X8i458iv23+j5ZKsSAxwmAihcrWwJolDSTpMtupP
+	DvV2BMxHHPb8tKry3RAdejStzx5WpL5n5MQrTrR5DMO+FaXlKFBYch3bT4/facyzgS+8eGoiuh3
+	yx7D9yAjs4QGiKz7rAaCi2aspaZj6wub8wgnfmtG67TOfFHWx7PE4YtwjTEx1qipF6bUJY1oEKa
+	mqBxyql77vX1oS9oWnh/2rxAbXKOIIduJwslFtK7CjmALtJJ6SrRF1TfnO4Vq41J6Af+KHa91nv
+	SXaK0a0t4FyGKile7hasJNKAarybDNzHHVau19yZ4=
+X-Received: by 2002:a17:90b:3bc4:b0:36a:1ed8:6fe6 with SMTP id 98e67ed59e1d1-36e332f7e45mr8166646a91.24.1780585324132;
+        Thu, 04 Jun 2026 08:02:04 -0700 (PDT)
+Received: from localhost ([2a03:2880:7ff:41::])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f6d109dcdsm4398717a91.9.2026.06.04.08.02.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 08:02:00 -0700 (PDT)
+        Thu, 04 Jun 2026 08:02:03 -0700 (PDT)
 From: Dimitri Daskalakis <dimitri.daskalakis1@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org,
@@ -89,9 +89,9 @@ Cc: linux-pci@vger.kernel.org,
 	linux-s390@vger.kernel.org,
 	kvm@vger.kernel.org,
 	xen-devel@lists.xenproject.org
-Subject: [RFC 04/12] PCI: Convert arch/powerpc to pci_is_sriov_* helpers
-Date: Thu,  4 Jun 2026 08:01:45 -0700
-Message-ID: <20260604150153.3619662-5-dimitri.daskalakis1@gmail.com>
+Subject: [RFC 06/12] PCI: Convert vfio_pci_core.c to pci_is_sriov_* helpers
+Date: Thu,  4 Jun 2026 08:01:47 -0700
+Message-ID: <20260604150153.3619662-7-dimitri.daskalakis1@gmail.com>
 X-Mailer: git-send-email 2.52.0
 In-Reply-To: <20260604150153.3619662-1-dimitri.daskalakis1@gmail.com>
 References: <20260604150153.3619662-1-dimitri.daskalakis1@gmail.com>
@@ -105,196 +105,70 @@ Content-Transfer-Encoding: 8bit
 
 From: Dimitri Daskalakis <daskald@meta.com>
 
-Convert SR-IOV-specific is_physfn / is_virtfn reads in the PowerPC
-PCI code to use pci_is_sriov_physfn() / pci_is_sriov_virtfn(). These
-call sites are all SR-IOV-specific: they guard SR-IOV state
-dereferences, VF PE management, or sit inside #ifdef CONFIG_PCI_IOV
-blocks. Converting them keeps SR-IOV semantics intact once is_physfn
-and is_virtfn widen to cover any virtualization type.
-
-Files touched:
-  arch/powerpc/kernel/pci_dn.c
-  arch/powerpc/platforms/powernv/pci-ioda.c
-  arch/powerpc/platforms/powernv/pci-sriov.c
-  arch/powerpc/platforms/pseries/eeh_pseries.c
-  arch/powerpc/platforms/pseries/setup.c
-
 No functional changes.
 
 Assisted-by: Claude:claude-opus-4.7
 Signed-off-by: Dimitri Daskalakis <daskald@meta.com>
 ---
- arch/powerpc/kernel/pci_dn.c                 |  4 ++--
- arch/powerpc/platforms/powernv/pci-ioda.c    |  6 +++---
- arch/powerpc/platforms/powernv/pci-sriov.c   | 10 +++++-----
- arch/powerpc/platforms/pseries/eeh_pseries.c |  8 ++++----
- arch/powerpc/platforms/pseries/setup.c       |  4 ++--
- 5 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/vfio/pci/vfio_pci_core.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index a7b664befed2..cf44ec368a36 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -176,7 +176,7 @@ struct pci_dn *add_sriov_vf_pdns(struct pci_dev *pdev)
- 	int i;
- 
- 	/* Only support IOV for now */
--	if (WARN_ON(!pdev->is_physfn))
-+	if (WARN_ON(!pci_is_sriov_physfn(pdev)))
- 		return NULL;
- 
- 	/* Check if VFs have been populated */
-@@ -221,7 +221,7 @@ void remove_sriov_vf_pdns(struct pci_dev *pdev)
- 	int i;
- 
- 	/* Only support IOV PF for now */
--	if (WARN_ON(!pdev->is_physfn))
-+	if (WARN_ON(!pci_is_sriov_physfn(pdev)))
- 		return;
- 
- 	/* Check if VFs have been populated */
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 32ecbc46e74b..63eacc8001fe 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -987,7 +987,7 @@ static void pnv_pci_ioda_dma_dev_setup(struct pci_dev *pdev)
- 	pe = pnv_pci_bdfn_to_pe(phb, pci_dev_id(pdev));
- 	if (!pe) {
- 		/* VF PEs should be pre-configured in pnv_pci_sriov_enable() */
--		if (WARN_ON(pdev->is_virtfn))
-+		if (WARN_ON(pci_is_sriov_virtfn(pdev)))
- 			return;
- 
- 		pnv_pci_configure_bus(pdev->bus);
-@@ -2379,7 +2379,7 @@ static void pnv_pci_release_device(struct pci_dev *pdev)
- 	struct pnv_ioda_pe *pe;
- 
- 	/* The VF PE state is torn down when sriov_disable() is called */
--	if (pdev->is_virtfn)
-+	if (pci_is_sriov_virtfn(pdev))
- 		return;
- 
- 	if (!pdn || pdn->pe_number == IODA_INVALID_PE)
-@@ -2391,7 +2391,7 @@ static void pnv_pci_release_device(struct pci_dev *pdev)
- 	 * the iov state at probe time since we need to fiddle with the IOV
- 	 * resources.
+diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+index 3f8d093aacf8..ad8069612cb2 100644
+--- a/drivers/vfio/pci/vfio_pci_core.c
++++ b/drivers/vfio/pci/vfio_pci_core.c
+@@ -1856,7 +1856,7 @@ int vfio_pci_core_match_token_uuid(struct vfio_device *core_vdev,
+ 	 *
+ 	 * If the VF token is provided but unused, an error is generated.
  	 */
--	if (pdev->is_physfn)
-+	if (pci_is_sriov_physfn(pdev))
- 		kfree(pdev->dev.archdata.iov_data);
- #endif
+-	if (vdev->pdev->is_virtfn) {
++	if (pci_is_sriov_virtfn(vdev->pdev)) {
+ 		struct vfio_pci_core_device *pf_vdev = vdev->sriov_pf_core_dev;
+ 		bool match;
  
-diff --git a/arch/powerpc/platforms/powernv/pci-sriov.c b/arch/powerpc/platforms/powernv/pci-sriov.c
-index 7105a573aec4..1113488f4372 100644
---- a/arch/powerpc/platforms/powernv/pci-sriov.c
-+++ b/arch/powerpc/platforms/powernv/pci-sriov.c
-@@ -225,7 +225,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+@@ -1979,13 +1979,13 @@ static int vfio_pci_bus_notifier(struct notifier_block *nb,
+ 	struct pci_dev *physfn = pci_physfn(pdev);
  
- void pnv_pci_ioda_fixup_iov(struct pci_dev *pdev)
- {
--	if (pdev->is_virtfn) {
-+	if (pci_is_sriov_virtfn(pdev)) {
- 		struct pnv_ioda_pe *pe = pnv_ioda_get_pe(pdev);
+ 	if (action == BUS_NOTIFY_ADD_DEVICE &&
+-	    pdev->is_virtfn && physfn == vdev->pdev) {
++	    pci_is_sriov_virtfn(pdev) && physfn == vdev->pdev) {
+ 		pci_info(vdev->pdev, "Captured SR-IOV VF %s driver_override\n",
+ 			 pci_name(pdev));
+ 		WARN_ON(device_set_driver_override(&pdev->dev,
+ 						   vdev->vdev.ops->name));
+ 	} else if (action == BUS_NOTIFY_BOUND_DRIVER &&
+-		   pdev->is_virtfn && physfn == vdev->pdev) {
++		   pci_is_sriov_virtfn(pdev) && physfn == vdev->pdev) {
+ 		struct pci_driver *drv = pci_dev_driver(pdev);
  
- 		/*
-@@ -235,7 +235,7 @@ void pnv_pci_ioda_fixup_iov(struct pci_dev *pdev)
- 		 */
- 		pe->pdev = pdev;
- 		WARN_ON(!(pe->flags & PNV_IODA_PE_VF));
--	} else if (pdev->is_physfn) {
-+	} else if (pci_is_sriov_physfn(pdev)) {
- 		/*
- 		 * For PFs adjust their allocated IOV resources to match what
- 		 * the PHB can support using its M64 BAR table.
-@@ -479,7 +479,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+ 		if (drv && drv != pci_dev_driver(vdev->pdev))
+@@ -2005,7 +2005,7 @@ static int vfio_pci_vf_init(struct vfio_pci_core_device *vdev)
+ 	struct pci_dev *physfn;
+ 	int ret;
  
- 	phb = pci_bus_to_pnvhb(pdev->bus);
- 
--	if (!pdev->is_physfn)
-+	if (!pci_is_sriov_physfn(pdev))
- 		return;
- 
- 	/* FIXME: Use pnv_ioda_release_pe()? */
-@@ -508,7 +508,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- 	u16 num_vfs;
- 	int i;
- 
--	if (!dev->is_physfn)
-+	if (!pci_is_sriov_physfn(dev))
- 		return -EINVAL;
- 	iov = pnv_iov_get(dev);
- 
-@@ -620,7 +620,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	struct pnv_iov_data   *iov;
- 	struct pci_dn         *pdn;
- 
--	if (!pdev->is_physfn)
-+	if (!pci_is_sriov_physfn(pdev))
- 		return;
- 
- 	phb = pci_bus_to_pnvhb(pdev->bus);
-diff --git a/arch/powerpc/platforms/pseries/eeh_pseries.c b/arch/powerpc/platforms/pseries/eeh_pseries.c
-index b12ef382fec7..32030ac9be51 100644
---- a/arch/powerpc/platforms/pseries/eeh_pseries.c
-+++ b/arch/powerpc/platforms/pseries/eeh_pseries.c
-@@ -54,7 +54,7 @@ static void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
- 
- 	dev_dbg(&pdev->dev, "EEH: Setting up device\n");
- #ifdef CONFIG_PCI_IOV
--	if (pdev->is_virtfn) {
-+	if (pci_is_sriov_virtfn(pdev)) {
- 		pdn->device_id  =  pdev->device;
- 		pdn->vendor_id  =  pdev->vendor;
- 		pdn->class_code =  pdev->class;
-@@ -68,7 +68,7 @@ static void pseries_pcibios_bus_add_device(struct pci_dev *pdev)
- #endif
- 	pseries_eeh_init_edev(pdn);
- #ifdef CONFIG_PCI_IOV
 -	if (pdev->is_virtfn) {
 +	if (pci_is_sriov_virtfn(pdev)) {
  		/*
- 		 * FIXME: This really should be handled by choosing the right
- 		 *        parent PE in pseries_eeh_init_edev().
-@@ -731,7 +731,7 @@ static int pseries_call_allow_unfreeze(struct eeh_dev *edev)
- 	if (!vf_pe_array)
- 		return -ENOMEM;
- 	if (pci_num_vf(edev->physfn ? edev->physfn : edev->pdev)) {
--		if (edev->pdev->is_physfn) {
-+		if (pci_is_sriov_physfn(edev->pdev)) {
- 			cur_vfs = pci_num_vf(edev->pdev);
- 			pdn = eeh_dev_to_pdn(edev);
- 			parent = pdn->parent;
-@@ -779,7 +779,7 @@ static int pseries_notify_resume(struct eeh_dev *edev)
- 	if (rtas_function_token(RTAS_FN_IBM_OPEN_SRIOV_ALLOW_UNFREEZE) == RTAS_UNKNOWN_SERVICE)
- 		return -EINVAL;
+ 		 * If this VF was created by our vfio_pci_core_sriov_configure()
+ 		 * then we can find the PF vfio_pci_core_device now, and due to
+@@ -2025,7 +2025,7 @@ static int vfio_pci_vf_init(struct vfio_pci_core_device *vdev)
+ 	}
  
--	if (edev->pdev->is_physfn || edev->pdev->is_virtfn)
-+	if (pci_is_sriov_physfn(edev->pdev) || pci_is_sriov_virtfn(edev->pdev))
- 		return pseries_call_allow_unfreeze(edev);
- 
- 	return 0;
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 50b26ed8432d..8165ae9adbd6 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -778,7 +778,7 @@ static void pseries_pci_fixup_iov_resources(struct pci_dev *pdev)
- 	const int *indexes;
- 	struct device_node *dn = pci_device_to_OF_node(pdev);
- 
--	if (!pdev->is_physfn)
-+	if (!pci_is_sriov_physfn(pdev))
- 		return;
- 	/*Firmware must support open sriov otherwise don't configure*/
- 	indexes = of_get_property(dn, "ibm,open-sriov-vf-bar-info", NULL);
-@@ -799,7 +799,7 @@ static resource_size_t pseries_pci_iov_resource_alignment(struct pci_dev *pdev,
- 	if (!reg)
- 		return pci_iov_resource_size(pdev, resno);
- 
+ 	/* Not a SRIOV PF */
 -	if (!pdev->is_physfn)
 +	if (!pci_is_sriov_physfn(pdev))
  		return 0;
- 	return pseries_get_iov_fw_value(pdev,
- 					resno - PCI_IOV_RESOURCES,
+ 
+ 	vdev->vf_token = kzalloc_obj(*vdev->vf_token);
+@@ -2166,7 +2166,7 @@ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
+ 		return -EBUSY;
+ 	}
+ 
+-	if (pci_is_root_bus(pdev->bus) || pdev->is_virtfn) {
++	if (pci_is_root_bus(pdev->bus) || pci_is_sriov_virtfn(pdev)) {
+ 		ret = vfio_assign_device_set(&vdev->vdev, vdev);
+ 	} else if (!pci_probe_reset_slot(pdev->slot)) {
+ 		ret = vfio_assign_device_set(&vdev->vdev, pdev->slot);
 -- 
 2.52.0
 
