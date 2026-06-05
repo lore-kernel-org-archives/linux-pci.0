@@ -1,221 +1,193 @@
-Received: from CO1PR03CU002.outbound.protection.outlook.com (mail-westus2azon11010063.outbound.protection.outlook.com [52.101.46.63])
+Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013040.outbound.protection.outlook.com [40.93.201.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 335C93CFF69;
-	Fri,  5 Jun 2026 23:03:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.46.63
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 802A73D333B;
+	Fri,  5 Jun 2026 23:26:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.40
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780700605; cv=fail; b=n4Gt901/o8yWxJQPAfDykFPh2iisprNqvUv2HbLodaRPUJ45R9Hi6daZFiGwMRTfH7MXl0SwdH7CnQiPSI8nTMuKsS7uDMbwZDe9obPLVRq/YGSrUDUMcJSEy+PBy5g0UorOl3k8TJaROSGzlkORrXcVVSWVnlJr71AVCR3A+mA=
+	t=1780702009; cv=fail; b=EN/IaWDPqUAOR8W/rO2M+mbGtmk/p6034yJ4dBy7z6soscSyAUe5KRuzcLjaNTcOWuYTQjQK0I7kEfme/JJ8MHXz4S79rfFucKeUkdMa/LQ3jdI/zy+MyOV7UTnhp14eZb3rht4ba6gu57U/w/pmLGtgfdYYRVdZ0aea8NcrBFQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780700605; c=relaxed/simple;
-	bh=uaomvVnKPACTsnbewZlbIOwmISUhXwKVgGuKCSNCl9s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=Y23E8kRpjrV0wNIprfJGtmzuErk/ncSiAbRGfqdVK96VGlcWEJJKm8VF2/suy6ZbQG3xRL7FwjkfsXbY8Kq6vv4O35f49csKRdWAA9F3dmdEq5XpxENgwmbC62c+JkBgJuX9uQljpqkd+dJH71TahlmPbOmywytP2a5GAXca4FM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=I79br5XY; arc=fail smtp.client-ip=52.101.46.63
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	s=arc-20240116; t=1780702009; c=relaxed/simple;
+	bh=L41a86jmyLp6lO7jhykgClXroux/cGkqLO/dMTFRjoI=;
+	h=From:To:CC:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=UO5e86+L3YdPqccJbZGtxkwUeTpEpx+nlFFLVJeSRGDXDIxedCATdf90QVg5GVEjqx4BwX9d7vk/HRYriH4rU3dsBYHyTbEojXJKYHzrFkgpn23CpR6uVDduu9ZlIocecjWRKrxk2SPripmNLzSkv0EKVqu4xisEVjFA18EbTM8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=hv7x+s/+; arc=fail smtp.client-ip=40.93.201.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="I79br5XY"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="hv7x+s/+"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ZfPPtl9Dn7Msk/heGEyB6giz+VhMxAQxDTsdXAI6RMq87zsECsGmHbGywcY2IZbl8EUZrViiuwQI97iTcvsO1Dww/8bbLxRYYwxMlhJF5u5fa2kuC1AoAvzU1zgJAnhc2GJf7x4FVSZM2FocmWrNUzy50Tc56OTWOQlpgUhflYU5t5IphiMVNWcvL0Go+8UFJgmrKrXCsgS86XtJdPb8XFf2fH1IWpyb265FyNNurPJ3dmTYd35u7QcYS0nXNl8CJAxD5EXvL16fkFho0Is6X+1p8enQMEcF3N3dumPaODvPxaj88BgteTwFvw7i+ipxgEaYyUwgG0BIqf+3pJdKFw==
+ b=fcm7PXON8ynnwSlPigwCsWTs8QLUPJNKbgc1/ERuPx1kSSsqLqfFflEp2EWcxEo5olJy9ddN+QM3XBgzcWhX34jPXKL9Njncw4apGeYQjWnWYjOYZLLLyS+T+A0s/i6f3sbZwry5c6geJ3nsArPqYy51w88JgErE/t7k1hTHXNfIbs+TPQjkua+qiEteRu7l4D23Ng1OaKrC8AMCFSszRL4H+8F9HUQhOalNwJHTlf10EIXJ6Gy/mzomMPQ8OZdVCTiRvG1LuFvbC7Pt1MzyMvV4GbE7ZyrhawW2hy1m1/bQMjiA3+PEMK6Q12N5DAWf1ew7ZrcyTjJvM1hSjjwK5w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NJXBtCaiiZlydeySBJ0Sh8PMzpq2y3Y8HSAq3152oo4=;
- b=D/fuSI5NPkfTktIaOpogomqYIUBxkG0HxxplpwjURyYGa0dHZZ12N3+0NEwr8MC0TghSzZ5In5w+IBhf/g1XnZAa9+WgMu1eiaT8Y2jqUrJScRJ0NJFF6czWreiZv1o8PBBjMy140/jRIz2TYEZFiCQqNcrkbYZBsOttKFOO9+5n1pBSz09R3yJ83aiAWQ2v/66eI02sDWs8hKcpkL1H1wWzic0iWoE0d7XFPdL7zpiCmErwDbV6xyplqsXXRTQflSfVzjeRxwzfNhx8bL6l1grLrzTA3wAYfp1ytn11aaqCexVBaFnCctBOHWqNmnc0tCgqPGkUIP6COHXAkvH8Hg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
+ bh=ymCQEqQpsXU+m7DMNHrYlVlphOPHa1sLKZjhD0FeCt4=;
+ b=R59Ftl7ocauxXQSgYY0vIgp4EXC8Xf6q27HG6qw0l2Edzeh6o4lQFjuzi+Z+DsAO7lgEral68urHIcz1rOFxUkIdg1ZTlJx/bn1EZ/QVIuDrzH5dOlBKDRFRTvAorXaFL6B07mj7mAbyR/zjjBEbYvYJ+PdnGFLYaAxORV3PVpqfGlPLLzeil0nwIsb44RP6zIQbMAXXQPdbhD3g1oYFOGEjOXvutT7D+0RZ4/vT5KH+ME9qySJlCrplpMRcDsLDIOMZT3t5vO+XVXEaCQgCuoDxN2jeUSKWHHsnPMgaRwf8OxGe8RVGQKbG3VC3n8AeZGqzJcRBc8/eOyzs/5XxjQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=lists.linux.dev smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NJXBtCaiiZlydeySBJ0Sh8PMzpq2y3Y8HSAq3152oo4=;
- b=I79br5XYuPK5e4KOJzzVoA+OCFT3cAbRCBi2XjSCJ6KN6r6ska2TLPJn1JSB8qcC8ttXhegRSSWat3WXdn4BqdnXWCodMP7VwyCsrLi2gxelmCA/myDBbD1VD4CTzIjnSG0ReyYYnqPOL4aprejumx64VnTjkjESEc47w4T8pmggdOGZ7/xPM+AxshDg+ipT02C4tAQTTfZx+lqFW7X0tFELB7lwvbYOwq4rr1NWBo77V7ub4JbEP1fL+9C598RoUgPLYjt4ogLf/WmGw8Vi3kNQSyOeyvXviSyTFL48EmLbB7PmmF/auXnxvTgX6u26gKRcU52lwwi1H4FPHDHRhQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com (2603:10b6:408:2a1::19)
- by CH2PR12MB4037.namprd12.prod.outlook.com (2603:10b6:610:7a::20) with
+ bh=ymCQEqQpsXU+m7DMNHrYlVlphOPHa1sLKZjhD0FeCt4=;
+ b=hv7x+s/+i7khvEPG40fN+qoaPpUR6cOnNKVK+Vey3MRrrF3h6mqItHB9S1HqJJV3nGlonIgB+ooEguSz2+7j5YsxUa2D9oxtFxOkVUU2ZJkOonzmU6z3B09X8MCQtp5knrBhEwgnFn32mBuEE8mVj6H/vaZRn6MidwpGB5Q2/bE=
+Received: from CY5PR15CA0146.namprd15.prod.outlook.com (2603:10b6:930:67::15)
+ by LV5PR12MB9779.namprd12.prod.outlook.com (2603:10b6:408:301::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.15; Fri, 5 Jun 2026
- 23:03:17 +0000
-Received: from LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528]) by LV8PR12MB9620.namprd12.prod.outlook.com
- ([fe80::299d:f5e0:3550:1528%4]) with mapi id 15.21.0092.007; Fri, 5 Jun 2026
- 23:03:17 +0000
-Date: Fri, 5 Jun 2026 20:03:15 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Nicolin Chen <nicolinc@nvidia.com>
-Cc: Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>, Pranjal Shrivastava <praan@google.com>,
-	Mostafa Saleh <smostafa@google.com>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, vsethi@nvidia.com,
-	Shuai Xue <xueshuai@linux.alibaba.com>
-Subject: Re: [PATCH v4 18/24] iommu/arm-smmu-v3: Introduce master->ats_broken
- flag
-Message-ID: <20260605230315.GF1962447@nvidia.com>
-References: <cover.1779161849.git.nicolinc@nvidia.com>
- <49dde0a2e2dc88e421a3010956db33d47cc92aa8.1779161849.git.nicolinc@nvidia.com>
- <20260519120658.GB3477375@nvidia.com>
- <aho9DB6it2R5O5Nm@Asurada-Nvidia>
- <20260601123231.GG3195266@nvidia.com>
- <ah3udmX5SIO9lAXR@Asurada-Nvidia>
- <20260602001547.GR3195266@nvidia.com>
- <ah5txKCvspL8zMeG@Asurada-Nvidia>
- <20260605194259.GE1962447@nvidia.com>
- <aiNF9kzjzDY/u1NG@nvidia.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aiNF9kzjzDY/u1NG@nvidia.com>
-X-ClientProxiedBy: YT4PR01CA0230.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:eb::10) To LV8PR12MB9620.namprd12.prod.outlook.com
- (2603:10b6:408:2a1::19)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.8; Fri, 5 Jun 2026
+ 23:26:45 +0000
+Received: from DS2PEPF00003443.namprd04.prod.outlook.com
+ (2603:10b6:930:67:cafe::ad) by CY5PR15CA0146.outlook.office365.com
+ (2603:10b6:930:67::15) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.9 via Frontend Transport; Fri, 5
+ Jun 2026 23:26:44 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
+Received: from satlexmb07.amd.com (165.204.84.17) by
+ DS2PEPF00003443.mail.protection.outlook.com (10.167.17.70) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.92.5 via Frontend Transport; Fri, 5 Jun 2026 23:26:44 +0000
+Received: from localhost (10.180.168.240) by satlexmb07.amd.com
+ (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Fri, 5 Jun
+ 2026 18:26:43 -0500
+From: Nathan Lynch <nathan.lynch@amd.com>
+To: <sashiko-reviews@lists.linux.dev>
+CC: <vkoul@kernel.org>, <Frank.Li@kernel.org>, <linux-pci@vger.kernel.org>,
+	<dmaengine@vger.kernel.org>
+Subject: Re: [PATCH v2 08/23] dmaengine: sdxi: Install administrative context
+In-Reply-To: <20260513031712.0C8EDC2BCB0@smtp.kernel.org>
+References: <20260511-sdxi-base-v2-8-889cfed17e3f@amd.com>
+ <20260513031712.0C8EDC2BCB0@smtp.kernel.org>
+Date: Fri, 5 Jun 2026 18:26:42 -0500
+Message-ID: <87pl24d0wd.fsf@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
+X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
+ (10.181.42.216)
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV8PR12MB9620:EE_|CH2PR12MB4037:EE_
-X-MS-Office365-Filtering-Correlation-Id: 23d646a1-7480-4246-d124-08dec356a11a
+X-MS-TrafficTypeDiagnostic: DS2PEPF00003443:EE_|LV5PR12MB9779:EE_
+X-MS-Office365-Filtering-Correlation-Id: e8894267-39a3-4739-3575-08dec359e7d8
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|1800799024|366016|18002099003|56012099006|4143699003|5023799004|11063799006|6133799003|22082099003;
+	BCL:0;ARA:13230040|376014|36860700016|82310400026|1800799024|4143699003|56012099006|11063799006|5023799004|6133799003|18002099003|22082099003;
 X-Microsoft-Antispam-Message-Info:
-	H6PAANQSch6H12G36TPVcgUzTqjvE7YYIHxR77c2nHP1c7ultVaHTKRJRIwLJwLIUMFMfUbVAGe6rBKbQtW3jUhA/sqgw5wHDkEJDoVfP9YT3Y06apCtlzZ1Xl27FZ1I7wQKN0uj/AzAPPZugHNL9+LORX3JZkMv1qjsTYG5dtIJRj1RfcBj+i8QKVjhPHdtjBTqTiMbe8P9q29Y7J3dvZtiaIUEMvo+4wZsW5aWND/IzpPD13GdHy+JP98KiJrNPt0c3sknBHZd7kmi/tFZOeWuLxzvqZ4VJhyB1K4mHbPtANcvAtmnrJRzD8XhoztLQp9Y5px6CroW2+u5fqfdCAAsSUf6D2XfMGCEct0J/onNc2dXxj6uA9PreGFBpVouBk7aBFnTlY00wDuBVMgq/yHj0Z3/e+U9X4CHzgwjdo3XPYk5Ap341MTazjSJ558jIHclimYAhVtUpTsrA9pjckR8HRVvuQdJEj6f0uKVEeAK5TrVr1LdumZcga0SDxTMfYQZ9u0LWBQw5Oq2T9GReNeSxZRFRoPRFyZHS+7NLu4CMqXWgC8KE6Ypzwpgw2sTLQlfzKKbfAp1YOxKGNhY7RvquTrwgFPF1jm0+Ex1LC8Hv0qluXZXo+GexuupARZyJwjc+Zekp0NYlIVxquCbtGSkMeIqG+9Q2ri3M6LxlJVN4KBU6+YYTqkNRHYUVN2C
+	6Gi5YIWoAPbG5c0xoEfvX/+Ud4cQhhobnWRyIQJbq2HxFMczkOaGXgvQs1KzAjDk+3F3tbMKHdahkuYqYgBxlqPzqVuBoUXKX0EqgvRog2jEuz8CLiU+Mqgw8NyKdCN8IoDXh3OYGbqbY9hi88mtuJJMjiZzgxjon8i+ZazbSpNPIPauWMPsRPFSqQJis/Sp4ngnuqfMIwZHv6YThn1RelOQmtXGBIXB9m32YmswYZp4JNbJ6suVlPEWuWb1T0OzeqAVVRKDMIn+FvYAjHelmTic3fX6H36/MAzuqrvPDoRR5GiPGzkVTcAa4flxNHuLpAsZfsNudh5xU9f7dRD42NT2BCtsFbycbLolnDpD5+bmVyA7IOAHmeRx7RKNlv6LKz20sNEbI1WYjNTEgOgHDHZQOXUKQtIYHbDhP60K7+zNH/l8BGbgpUR+QOx5GxfeHwu4PkLXS2ZE4RlbTbdY2azlSTxmQm1SasmKam1XXI+phgiVx7jMLs5P/MBho8aFUrqltHIv93Eaf7jdw4If4zLqsN3jWIWkMH3aQRajPV3kQdyuVFlarpjAKMZPNF2zOPtupNdPOuq/3hl97Ua6yH730zmzMMFm5bm4ywYzfMF+rh+g8Lcm4o8h/9+2Bns+Wg2S3Ipl6sU8BVJLu2SitsVr27PVgfFczpN01tv3KW7ATvxRWKKWIuyEk60DmK0VW0K1KBQBuSYswdeqrC0x9f7C+9/xHVVJKnbFiju5wWY=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9620.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(18002099003)(56012099006)(4143699003)(5023799004)(11063799006)(6133799003)(22082099003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(36860700016)(82310400026)(1800799024)(4143699003)(56012099006)(11063799006)(5023799004)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?LiVeC43xLZ9q9lFn02mDLV5Htl+oHV2bDdMu8R0f+Sn4+eTqwVkHWSV4qQkM?=
- =?us-ascii?Q?qoK22wT47OZPVeSiB6sCEvwFV/PC+qvTMnmvw2etZPohtGTKE1LmedLXhZVQ?=
- =?us-ascii?Q?DJb2UXQRGlkkivJM/6CKACIt6484DWY49PZBeDZ4sy9Rd66fAvWR1HnCOlac?=
- =?us-ascii?Q?KqqxwPm6eoWFD5fAEQXp684XZRA1HKns7BfYj/Vf9laX33CNJM+5Gdg4EWqE?=
- =?us-ascii?Q?q7YUyP0rVE9ABtCurIT0sceDYdR8+AbTLcohier3Dyu1lER53Qum5VYKBrkS?=
- =?us-ascii?Q?p4qEf4U2jS+Cxnwk/St3uw2tuFMAoOsh++8cwMspj56SSO8yUZOVG+xqROQG?=
- =?us-ascii?Q?exKZL3ObAbgTzW4ZHu3L5XAYK+EFn7Etl0X2DjTPYrljPHd/YJTKDjb7HC8x?=
- =?us-ascii?Q?Vop4AOTQWIQD/BdqvpsjGFJTNyhpej5mrQyobqWxhA+l0iGE5756xoZWGxfT?=
- =?us-ascii?Q?udtrHYBsitWFqPbuAEzBZ46pWD/Ju+hyVsJ5BVSBQ0h8i457yY5X0EO2lk/7?=
- =?us-ascii?Q?ux9sGYauPE0fy8ct93i59BZDfsFxYxJu+txz38SaNh0X0pxq2g+unynqM7Q5?=
- =?us-ascii?Q?ispVqqz6hkAh57ocTnSDBVuLkNhsGgqb1vxmzVTel/9hWoqhdhSvL3ziPsjd?=
- =?us-ascii?Q?m70kdeIhVsJAJ6AE7i4X8rupfFUNOP9dAqx+jju7W7BGQFZaBrlw6E72xEu5?=
- =?us-ascii?Q?005IRYYTmY665ClW1DTZuaAmKW2BtLlUEHdTCJGp44naa2JJ8eg4ZUANe6K2?=
- =?us-ascii?Q?TSDAp/xsT5lxvb+/6nMNL9/ArTZNcvDgw8l9WAwha9rZZxAC5z8UcGqcnRgU?=
- =?us-ascii?Q?7GkwtscGGYQHCnWKy4RpCYVB+gcTm05yuhqhWYmQh36khwb8IHApJunGdfww?=
- =?us-ascii?Q?XQNwwJpXHgTkaGL9b0OTYu3HubURa+3EzZr6YW31IzYnEYrpivAunem0Ivpy?=
- =?us-ascii?Q?iClUwXyTxebeRzS22nwH4msqYAOfCJqX7bPY+5/o3KWL4lYgSWaaDiFUWKXk?=
- =?us-ascii?Q?RMndByMbIg3uwel5cZEdQ7DL3FMOjJG2xR0fu5/+nvSPHvji3/mGlGDN5YoB?=
- =?us-ascii?Q?A8ijaHce89MDCKWNgwtevPvE71hUijOBeviQxsGJs9DoWAPMhrW40lpapaHG?=
- =?us-ascii?Q?ASHvJ5PYsVCELadjoRxcMWhj3bk0Nhb+aqVRX7Kw6gApVpYKoQEFM07aEhyX?=
- =?us-ascii?Q?ndLnZ1h2Nv5OCdGwDTS3Hli9uycazrgzvZL6DD+2zI+NVQzP1o066Fdnbdco?=
- =?us-ascii?Q?OkRSIFvwegUx5rnz8zjEJT1kfqD9Bzio3GCIpdSdecrKdTP5+v26h5cTi0rn?=
- =?us-ascii?Q?eaChEcloZiRogRYhrfPFeSEjAhBfMQjjOblKiqUYQRLYHUly77x9T60ZrU6X?=
- =?us-ascii?Q?hm11Eat/HNGzmCvG0Pn/1W+dwJaGUvt7mzcye7s4EyN/E8DglQOL2l1fTYd0?=
- =?us-ascii?Q?GWFTFT9bjVbueNnMvI2Mt2pm54vw4LZirvaWIXD+Ybhe7ERoP2PlTMVf72OM?=
- =?us-ascii?Q?YITHNG8A3JYAUvsWe8ica0GROqQktOyBfksmXkP8v2Rse9swbCKSmWyanN1H?=
- =?us-ascii?Q?EWg36j6gcrjD3bcQd5jXmH/7UB2GYL5KYqBNg3VIcdtWHZLCkBtB7QklcyqD?=
- =?us-ascii?Q?unGxH7p/VmORzPkx0NceGRFT5WSbRpR2ndA/GUjUjUpfgNGLrLO0Z+OmYYwR?=
- =?us-ascii?Q?+XbTv4+W8rY0Hu+sHH0Pv+ghmpegVQt9Oj/q91zB3qXuVvyX?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 23d646a1-7480-4246-d124-08dec356a11a
-X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9620.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2026 23:03:17.2893
+	+9lwD7cfL4fthK6ns+gmBBAlUObsALR4jO/bqISRzfYRMr5PS2SIFLzj4iizM6aeEiIAjg7WD3jaEaNToW9OLiQx+GDhameu5hOMyiJ/X8uoGWVMC6d8f4OFC/FIdImTOcMbAJJN86hOwbT7e7lEqY3wJqCd4GYMHV34od6OSP7KAtWL1miKGQJZCDxcVVZezalaJ4b2VEKfjBVO0EaHKCEeK9PGDAwQo4Qe8T2ily+8Q5eqLZruNHlIMIlKxLdG0/lvBKRoE0oJvUtvHjkXVUPuMzDzMKP3Oa1PKWK7TY+Uq7wthIBwsERa6RwXqvI2BWxwJgAvMmj/VJ+urxW6osI+cVoMg1fqr5arVJaxYBwGHg0u8KUlcC1qFfB8KhovALqyXik8hFHppU8+nRttcs8KEP4atLKYvHBF2cH1qZIl8uV9CH4y7B91eflSjlIz
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2026 23:26:44.1957
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CP0T6J6QuBrrIhla0lUrxHYv52E3mAZX8bkeP9OBPOWNeeI8qIcpQ3HXFOQOtviZ
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4037
+X-MS-Exchange-CrossTenant-Network-Message-Id: e8894267-39a3-4739-3575-08dec359e7d8
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS2PEPF00003443.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV5PR12MB9779
 
-On Fri, Jun 05, 2026 at 02:56:06PM -0700, Nicolin Chen wrote:
-> On Fri, Jun 05, 2026 at 04:42:59PM -0300, Jason Gunthorpe wrote:
-> > I don't see any of these options as appealing. We have to maintain a
-> > few key invariants, and I think it cannot be done without a way to
-> > find all the domains that are using the STE.
-> > 
-> > One way or another you have to be using the invs list rw locks to
-> > synchronize the EATS state changes.
-> > 
-> > It is okayish to be sloppy when turning EATS off, but when turning it
-> > back on we do need to cycle through every invs list and toggle its
-> > lock to ensure that the invalidations are synchronized before
-> > EATS=enable happens.
-> 
-> I think the core guarantees that "cycle through every invs list"
-> happens: a PCI reset calls reset_prepare() blocking all the RID
-> and PASID domains and removing ATS entries from every invs list,
-> and then calls reset_done() that re-attach RID/PASID domains so
-> freshly new ATS entries will be installed before EATS=enable.
+sashiko-bot@kernel.org writes:
+> Thank you for your contribution! Sashiko AI review found 3 potential issue(s) to consider:
+> - [Critical] Hardware Use-After-Free due to missing admin context teardown
+> - [High] Torn writes on 32-bit platforms exposing incomplete addresses to hardware
+> - [Medium] Incorrect error check for `dma_pool_zalloc()` using the DMA handle instead of the virtual pointer
+> --
+>
+> commit 794d6cb84f7ad6a7699311744a5e9c87b9d20316
+> Author: Nathan Lynch <nathan.lynch@amd.com>
+>
+> dmaengine: sdxi: Install administrative context
+>
+> This commit serializes the context control block, akey table, and L1 entry for
+> the admin context. It makes the descriptor ring, write index, and context
+> status block visible to the SDXI implementation once activated.
+>
+>> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
+>> index 27821cfaf0311..c0b55c945cc4e 100644
+>> --- a/drivers/dma/sdxi/context.c
+>> +++ b/drivers/dma/sdxi/context.c
+>
+> [ ... ]
+>
+>> @@ -106,6 +112,152 @@ static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
+>
+> [ ... ]
+>
+>> +static int configure_cxt_ctl(struct sdxi_cxt_ctl *ctl, const struct sdxi_cxt_ctl_cfg *cfg)
+>> +{
+>> +	u64 ds_ring_ptr, cxt_sts_ptr, write_index_ptr;
+>
+> [ ... ]
+>
+>> +	ds_ring_ptr = FIELD_PREP(SDXI_CXT_CTL_VL, 1) |
+>> +		      FIELD_PREP(SDXI_CXT_CTL_QOS, cfg->qos) |
+>> +		      FIELD_PREP(SDXI_CXT_CTL_SE, cfg->se) |
+>> +		      FIELD_PREP(SDXI_CXT_CTL_CSA, cfg->csa) |
+>> +		      FIELD_PREP(SDXI_CXT_CTL_DS_RING_PTR,
+>> +				 cfg->ds_ring_ptr >> DESC_RING_BASE_PTR_SHIFT);
+>> +	/* Ensure other fields are visible before hw sees vl=1. */
+>> +	dma_wmb();
+>> +	WRITE_ONCE(ctl->ds_ring_ptr, cpu_to_le64(ds_ring_ptr));
+>
+> Can this introduce a regression with torn writes on 32-bit platforms?
 
-I think this whole thing is so async and racy this is not something we
-can truely rely on. The driver is going to have to make sure it
-doesn't get turned on accidentally while the CD is still populated.
+As mentioned elsewhere the driver will just depend on CONFIG_64BIT for
+now.
 
-> > Given you must have a way to go from STE -> master -> all invs lists
-> > I'm not sure either option really makes such a large difference.
-> > 
-> > If so then adjusting the invs to disable the ATS is pretty simple, run
-> > over the xarray and set them all off. Yes you could find the master
-> > through a SID lookup with some locking adjustment.
-> > > 
-> > > (1) Per-invs marker: INV_TYPE_ATS_BROKEN + master_domains
-> > >     disable_ats() in the timeout path walks master->master_domains
-> > >     and flips matching ATS invs entries to the BROKEN type.
-> > > 
-> > >   + invs walker is free (one case label in the existing type switch).
-> > >   + No lock or pointer deref in the invs walker.
-> > >   + No master pointer stored in invs; no lifetime concern.
-> > > 
-> > >   - disable_ats() walks every (master, domain) and marks each invs
-> > >     set; the list needs locking usable from atomic.
-> > 
-> > This doesn't seem so bad
-> 
-> Yea, the only thing is that the disable path has to deal with a
-> complexity from going through a per-device domain list. Maybe it
-> can reuse iommu_group->pasid_array by taking xa_lock?
 
-Maybe the locking seems tricky as the locks might end up nesting in
-weird ways.
+>> +static void free_admin_cxt(void *ptr)
+>> +{
+>> +	struct sdxi_dev *sdxi = ptr;
+>> +
+>> +	sdxi_free_cxt(sdxi->admin_cxt);
+>> +}
+>
+> Does this sequence cause a use-after-free regression?
+>
+> In sdxi_publish_cxt(), the admin context is published to the hardware by
+> setting the valid bit (VL=1) in the L1_table.
+>
+> When the context is torn down via the devres cleanup action free_admin_cxt(),
+> it directly invokes sdxi_free_cxt(), which frees the DMA memory for the
+> context control block, descriptor ring, and akey table.
+>
+> However, the VL bit in the hardware's L1 table entry is never cleared. Could
+> this leave the hardware actively fetching from freed physical
+> addresses?
 
-The streams rb tree and existing master domains linked list seems
-appealing if the locking can nest acceptably.
+No I don't think so, the code as written ensures the device is in
+stopped state when we get to the point of freeing the admin context
+control structures.
 
-> > > (3) Per-master flag + inv->master pointer (v4)
-> > >     invs entry carries a master pointer; the invs walker reads
-> > >     cur->master->ats_broken directly.
-> > > 
-> > >   + invs walker is one READ_ONCE through a cached pointer.
-> > >   + disable_ats is one WRITE_ONCE.
-> > >   + atc_inv_master early-skip via one READ_ONCE.
-> > >   + attach gate + post-attach re-check, same as (2).
-> > > 
-> > >   - invs holds a master ptr, so release_device must synchronize_rcu()
-> > >     before freeing the master to drain walkers under rcu_read_lock().
-> > >     We dropped this from v4 for that reason.
-> > 
-> > synchronize_rcu is not right because you have to have gone through the
-> > rwlock so there can be no readers.
-> 
-> Ah, I think you are right! When release_device() is invoked, the
-> device must be already in the release (blocked) domain. So there
-> should be no domain->invs in the system holding its ATS entries.
-> And the enable part would work as (2).
-> 
-> In this case, (3) seems the best? It's fast on every aspect.
 
-I don't like it mainly because of the sketch enable side, and if we
-tighten that then you can just do 1 which doesn't have a perf impact..
+> Additionally, looking at the sdxi_alloc_cxt() implementation, the return value
+> of dma_pool_zalloc() is checked via the DMA address instead of the virtual
+> pointer:
+>
+> 	cxt->cxt_ctl = dma_pool_zalloc(sdxi->cxt_ctl_pool, GFP_KERNEL,
+> 				       &cxt->cxt_ctl_dma);
+> 	if (!cxt->cxt_ctl_dma)
+> 		return NULL;
+>
+> Since physical address 0 is a valid DMA address on many architectures and IOMMU
+> configurations, could this regression incorrectly abort initialization if a
+> successful allocation returns DMA address 0? Should this code check the
+> returned virtual pointer (!cxt->cxt_ctl) instead?
 
-But still, I'm not sure how all the asyncess and races will resolve in
-any of these cases.
-
-Jason
+Valid bug but I think this is a redundant report, the bot pointed it out
+elsewhere in the thread.
