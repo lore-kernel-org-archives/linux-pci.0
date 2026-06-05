@@ -1,63 +1,63 @@
-Received: from mail-dl1-f48.google.com (mail-dl1-f48.google.com [74.125.82.48])
+Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F2A9407571
-	for <linux-pci@vger.kernel.org>; Fri,  5 Jun 2026 05:42:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A91B23C98B5
+	for <linux-pci@vger.kernel.org>; Fri,  5 Jun 2026 06:11:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780638127; cv=none; b=P4Ax//8dmbRrmhFepI0DM6/8U6jQGiOqsC1vORSTekc/uqmAsJ860Eha0nA1zc1pa2/FfP4Efl6KqPbEg7K7CerytruJ/L+hUyqxHbZessKqmQiM4IUNfWzuU836ooFb5b+aEDy6efuD3BNIecXCDqiuYWKzTpsLmmOwkBvBXE4=
+	t=1780639891; cv=none; b=ftAY1C9AqkhBCn3K2hU6n2Nwe215cgs3eNW3utXAaRVDopn1I4478XYn6c9YuWs8Fw3NqbEVbN56zlZr9efogf18PECAfqNOx3MLFkTqTNBddOfo/kp027LnOu0r1IJ8dLrDuWcxcFF+Wue/bTg2iPJ00eV5vUxC2xs57aLeX/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780638127; c=relaxed/simple;
-	bh=vyPxlSjO6tbgGdJvKWRY97zHRXm672uv5NrREWHPfeE=;
+	s=arc-20240116; t=1780639891; c=relaxed/simple;
+	bh=bDPSYW4sbBXupjVGuQ9fNmCdsAtmh74koaGYMZY927s=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TCa904zGmsV04/jjddvtycpqTZL/jYMzCHAKoRp3gzfvF9SxW4xkQjJgJjk/+17GPKQvcU475a+1qZicofyNv9hAAnfK5NSLE/BY2I3h3eWS+95rOyUruW9AVrUZ31l0HcXfZrb+LZ4C6p3HfTUcya5r9OVK4Hq3p3u6dkE4ByU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aUEoaGdE; arc=none smtp.client-ip=74.125.82.48
+	 Content-Type:Content-Disposition:In-Reply-To; b=mHoBPyRbcPJPoz1EJ5O/l6Uga+BwX41z5k6Rbd4Wz4G+Scbni8+kMf7nxu+O8RI+1l+CrTF8QpLi0u5xz3D29u10szJ2N1VTcXbSyDPE9C2/21KBZuetc/MTdgTbX0ktE/svL2BFdJe/cJhcX0+AsZK2QmCi1Bl7KhK+IGXl31Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ac8UwFJC; arc=none smtp.client-ip=74.125.82.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aUEoaGdE"
-Received: by mail-dl1-f48.google.com with SMTP id a92af1059eb24-137ff9a7d5eso6095c88.1
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 22:42:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ac8UwFJC"
+Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-133362c30cfso9157c88.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 23:11:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780638125; x=1781242925; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1780639890; x=1781244690; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Rbv0AZ2j24l1SmU6m1H5V7hzpCBteEa/IZu6sKIRnTI=;
-        b=aUEoaGdE5xeLiqjFRYh8R+9uF57aT6yN6Bzoo6hn+5Jd6ygxas+pD+2/fLa/CGCCY2
-         W2BeRb7mx0nbIVcSEJVAmkmxxOy59AorDZS73yj5E/sthVK8wJgIAS1G/8Dt4X9vGK1w
-         KNj1asIlSXKf4u0dSiaYC77XUxR4fDydKpt1G/XiWcSdokyxRJXd+Ev1rtRxI9mVh9LG
-         tc/9FHc9+Qhj2f5r+aF9IhNY1ULFC2dRPFADPzeYvVrz3+3Hvb8D4noNwDAOOkHfnp9v
-         O+0bHnFE80/zfpN2CK8Wa81Td49lA8p6jk0pk9sjEEaTOe3xMdSR9JzFeXzJUsVLdCIr
-         PXdg==
+        bh=+JACYJJsZuvAWWpivo6XAMCeidn10mj5aCjcUHoRua0=;
+        b=ac8UwFJCMdi8cGmFT7lTPe2kToZwck/hosTgZ+nKsa2tc3jel7u2SOWhFUd13Vu1Gz
+         1Wx5PK7EpnoGe0kgKQjmZx+yX9Z+MEHvvZqIAboO4H7HnLpSqgRM8QHIt9BoFK4apFck
+         /QvePhnw8yE2v01+0MWo56rAT57153ut56VKfl61YS9fIJoS56EY4BQeRIYxaZr/mZN1
+         SqzbaWHnME3f0V8LtomNdkd4EsflEW0F28b7ZFsn/uH8IVXXDPM+o8qdcXQ5GM/jAIDV
+         aCcdMAJ/IoiB8vRivJ71j1+QlZQPCyC/0u92BfVhNKefBYk6+CgwIR5wabnWBalm6D22
+         jsxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780638125; x=1781242925;
+        d=1e100.net; s=20251104; t=1780639890; x=1781244690;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Rbv0AZ2j24l1SmU6m1H5V7hzpCBteEa/IZu6sKIRnTI=;
-        b=fvUxweZGaPFI9jROss31qtys0ckZgkbVnZvnGd3IZ0vJ6yg7nozFAUVEmUIvGof5ON
-         JR2r5IMDFy9ZqfMTsLyRtQnjIRKRg+x6kVyxPDgT3abwb/h45z7gl1RMlTaYHYPJbB8p
-         bC0CH5qEgBGB5vu9u/bmr0GJeweReIBBRy+Nlb8rwX2Qfhr5+EwM7niGXXT7Cqc9gjXP
-         7yNE8hufxXJU9KSZqPbfe3P0XMIIotkQIKgn96naFLR4ZZtHEORKCiW1nFENIpPemIdE
-         26+9bqNZADqL4y4Mhz7+wHfpS/xK/TH9DZ/vE2dxGo1jkxDxF9cqCXzeyX3aq9GoMdZu
-         BGSw==
-X-Forwarded-Encrypted: i=1; AFNElJ8vgMq6LDxMU44H4Znvzgd8CYodjw6713su12MvH0LvT0xlNwzVZy+H5suS40VxBinanFY4/z3tAs8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyXV+PfH9VTDBEDLvzE6tRaeueOsPhm/lBFbuiCLH4NYOkO2LG2
-	0hFwBa+7ZWbOdyEmD9AHXacnmz4HT1gEwQbvbPWAMz08y4xypCGNJitfh9HuQLGipQ==
-X-Gm-Gg: Acq92OGMprkwGzylbPtshgnzpR87u9RtwFGKz2JcSRbXodIcCqytkA0tpdnL67qBZHF
-	cvi32BX5dQQhoMs0RKRzMLIFZu6IMwtXN8oY5i9TD/NB6+4HZfuCFcXoBcEwyMzDR5Zu1ZnXda6
-	OX0eOW/N7OCpZ73EJBEEL443Jm7aMLPcPmq677HGwomdSlcoj4/ESf0x8yJcWuO1rCnikTo/a+T
-	pvxLQv4KDVCPfqppW/n6VwzjOIYlgeSQOJ2Wqqfx/cuYT7kPwMvS4her9nSsQ91nhoXq8nmNh0W
-	OftTpUDJwguzaIrWXdN5ZbNoguEwn6Lb9jBVn6c7nUhAfnU5a2CWYtgK6mxDg5lj8RfACHnwtyt
-	jCGODVdoSObnm7R2itcMwJhLVy2j2WzXRGvDum1pVX61V7Haq/oTAuTOnnFtG30FdslUSXi1w/g
-	ldSiAH8NZEfjHB/HsZqhSR2WePluX5kK8Um5CKXiMn3ofNZ0cOpo3YVGtI13esN+eiHKlA0qg=
-X-Received: by 2002:a05:7022:107:b0:136:d02a:67ee with SMTP id a92af1059eb24-13807cf45e2mr63052c88.24.1780638123822;
-        Thu, 04 Jun 2026 22:42:03 -0700 (PDT)
+        bh=+JACYJJsZuvAWWpivo6XAMCeidn10mj5aCjcUHoRua0=;
+        b=DXNPbzd/jCUreSUW0efcqlK01GvApgDk+tFTM2rz2cnPrkIgD7XdeLq+EYtXSPpluI
+         aCoDfBsmIf8gSmuRtOo/HAivmveaiG3Euy5DayW7eEEu3H7hUsY0tQBEZtonD6YrLm/J
+         lJ1V6bKyt3CrkXyUvOzqY4ST/FjSY6FxN6eKn0v1EQKdbFApKObT3lQ3ZglJerZ2yK9F
+         Qa8ta6+4cmP32IbHkpPvJ92X9Ea6cVERX1JhwX+D8YcnlJV0xGNYpaAPJBppPxtiKXDN
+         UAlgkqTSB0gYZv4DNpoSAfA8DwucLCoN3Q8KNoLoiP+c4VhKeWfidddqXezgs6HNJAbe
+         Pl+w==
+X-Forwarded-Encrypted: i=1; AFNElJ/1Wm1A+QkVHouPTaS+xWEAKDGTKuHGpCTlEVldsPG2WKUOIXD7f2/ahhYGe2m45zDHQ29M+sNu67A=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxEIx1hQL8wLnurPJ2n8SwPTivgdCpWGYDjYaQY7FHABOmUkUHc
+	Zvt62Aw8K2Lsv4hkklCxQWklmJBMyhSTAwGWrZOEOdbMn0D6zbbtDORRx4DQrwNWVA==
+X-Gm-Gg: Acq92OGHVBuDKopYU1fXQ55di/4itz/3cDnlyIi6E0YzrOhEhxkXDc9wlt+zD8AF2rh
+	Thmb28PQTdt8Be78Yw2TRJxng4A9YOpvwZwQHE76flKiKI2yAgdfjuGfkbeasFXhrmru4k6IeW1
+	tYQzFmxRrHhvW4pJ2dtpVwmUzC6TzP6C01LbPkK+6w9zUJrBVnFuLZ2lDN1Lbz8H9QMqlQmN7ka
+	gYmh6NAc8uueQ/H3L9LUfUoCRjVRcpnPKrR/mIMSnPqy7PjfdcDc/eTGKOmTpaXHnMej7RBr+wa
+	HFSq7Gj0d6ZjiZBm4ENSHw/9f5OHhk8AMyeQxtZfR8SmAEbOBIHFRYib6+UkbkEyGujmWBieABG
+	N19gpx9pSC3gCnjLqzuTq/Fbsx8VW12VgQKgWwGX+6oWMxn516ohcYU2zw3RwWampcJQS4wi0PO
+	rxPF/Ftqmk0XhdZI4vORsQbtJY+u74Qoh0fi3A2zSk8r75Q5UX+ewGglBpoaRs3RKY6Hj5RE8=
+X-Received: by 2002:a05:7022:6289:b0:134:a710:ca44 with SMTP id a92af1059eb24-13807ccb5f0mr74668c88.18.1780639888034;
+        Thu, 04 Jun 2026 23:11:28 -0700 (PDT)
 Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3074deaab1asm6539103eec.17.2026.06.04.22.41.57
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3074d9fde90sm10632107eec.0.2026.06.04.23.11.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 22:42:03 -0700 (PDT)
-Date: Fri, 5 Jun 2026 05:41:54 +0000
+        Thu, 04 Jun 2026 23:11:27 -0700 (PDT)
+Date: Fri, 5 Jun 2026 06:11:18 +0000
 From: Pranjal Shrivastava <praan@google.com>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -80,11 +80,11 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 01/12] PCI: liveupdate: Set up FLB handler for the PCI
- core
-Message-ID: <aiJhoq_Yj6-1Hl5r@google.com>
+Subject: Re: [PATCH v6 02/12] PCI: liveupdate: Track outgoing preserved PCI
+ devices
+Message-ID: <aiJohr2dD6Jf8m3r@google.com>
 References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-2-dmatlack@google.com>
+ <20260522202410.3104264-3-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -93,89 +93,41 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260522202410.3104264-2-dmatlack@google.com>
+In-Reply-To: <20260522202410.3104264-3-dmatlack@google.com>
 
-On Fri, May 22, 2026 at 08:23:59PM +0000, David Matlack wrote:
-> Set up a File-Lifecycle-Bound (FLB) handler for the PCI core to enable
-> it to participate in the preservation of PCI devices across Live Update.
-> Essentially, this commit enables the PCI core to allocate a struct
-> (struct pci_ser) and preserve it across a Live Update whenever at least
-> one device is preserved.
+On Fri, May 22, 2026 at 08:24:00PM +0000, David Matlack wrote:
+> Add APIs to allow drivers to notify the PCI core of which devices are
+> being preserved across a Live Update for the next kernel, i.e.
+> "outgoing" devices.
 > 
-> Preserving PCI devices across Live Update is built on top of the Live
-> Update Orchestrator's (LUO) support for file preservation. Drivers are
-> expected to expose a file to userspace to represent a single PCI device
-> and support preservation of that file. This is intended primarily to
-> support preservation of PCI devices bound to VFIO drivers.
+> Drivers must notify the PCI core when devices are preserved so that the
+> PCI core can update its FLB data (struct pci_ser) and track the list of
+> outgoing devices. pci_liveupdate_preserve() notifies the PCI core that a
+> device must be preserved across Live Update. pci_liveupdate_unpreserve()
+> reverses this (cancels the preservation of the device).
 > 
-> This commit enables drivers to register their liveupdate_file_handler
-> with the PCI core so that the PCI core can do its own tracking and
-> enforcement of which devices are preserved.
+> This tracking ensures the PCI core is fully aware of which devices may
+> need special handling during shutdown and kexec, and so that it can be
+> handed off to the next kernel.
 > 
->   pci_liveupdate_register_flb(driver_file_handler);
->   pci_liveupdate_unregister_flb(driver_file_handler);
-> 
-> When the first file (with a handler registered with the PCI core) is
-> preserved, the PCI core will be notified to allocate its tracking struct
-> (pci_ser). When the last file is unpreserved (i.e. preservation
-> cancelled) the PCI core will be notified to free struct pci_ser.
-> 
-> This struct is preserved across a Live Update using KHO and can be
-> fetched by the PCI core during early boot (e.g. during device
-> enumeration) so that it knows which devices were preserved.
-> 
-> Note: This commit only allocates struct pci_ser and preserves it across
-> Live Update. A subsequent commit will add an API for drivers to tell the
-> PCI core exactly which devices are being preserved.
-> 
-> Note: There is no reason to check for kho_is_enabled() since it can be
-> assumed to return true. If KHO was not enabled then Live Update would
-> not be enabled and these routines would never run.
-> 
+> Signed-off-by: David Matlack <dmatlack@google.com>
 
 [...]
 
-> +/**
-> + * struct pci_dev_ser - Serialized state about a single PCI device.
-> + *
-> + * @domain: The device's PCI domain number (segment).
-> + * @bdf: The device's PCI bus, device, and function number.
-> + * @padding: Padding to naturally align struct pci_dev_ser.
-> + */
-> +struct pci_dev_ser {
-> +	u32 domain;
-> +	u16 bdf;
-> +	u16 padding;
-> +} __packed;
-> +
-> +/**
-> + * struct pci_ser - PCI Subsystem Live Update State
-> + *
-> + * This struct tracks state about all devices that are being preserved across
-> + * a Live Update for the next kernel.
-> + *
-> + * @max_nr_devices: The length of the devices[] flexible array.
-> + * @nr_devices: The number of devices that were preserved.
-> + * @devices: Flexible array of pci_dev_ser structs for each device.
-> + */
-> +struct pci_ser {
-> +	u32 max_nr_devices;
-> +	u32 nr_devices;
-> +	struct pci_dev_ser devices[];
-> +} __packed;
-> +
-> +/* Ensure all elements of devices[] are naturally aligned. */
-> +static_assert(offsetof(struct pci_ser, devices) % sizeof(unsigned long) == 0);
-> +static_assert(sizeof(struct pci_dev_ser) % sizeof(unsigned long) == 0);
+>  
+>  /**
+>   * struct pci_dev_ser - Serialized state about a single PCI device.
+>   *
+>   * @domain: The device's PCI domain number (segment).
+>   * @bdf: The device's PCI bus, device, and function number.
+> - * @padding: Padding to naturally align struct pci_dev_ser.
+> + * @refcount: Reference count used by the PCI core to keep track of whether it
+> + *            is done using a device's struct pci_dev_ser. The value of the
+> + *            refcount is equal to 1 when the struct pci_dev_ser is in use, and
+> + *            0 otherwise.
 
-Minor Nit: Shall we consider using specific bitwidth types here?
-I'm wondering if down the line another u32 field is added to 
-struct pci_dev_ser.. in that case on a 32-bit machine 12 % 4 == 0 but on
-a 64-bit machine 12 % 8 != 0..
-
-[...]
-
-With the nit:
+Note to fellow reviewers: This may seem like a bool instead of refcount,
+but this is changed in Patch 6. 
 
 Reviewed-by: Pranjal Shrivastava <praan@google.com>
 
