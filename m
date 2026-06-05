@@ -1,135 +1,92 @@
-Received: from mail-dl1-f42.google.com (mail-dl1-f42.google.com [74.125.82.42])
+Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A91B23C98B5
-	for <linux-pci@vger.kernel.org>; Fri,  5 Jun 2026 06:11:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D70E13A9DB9
+	for <linux-pci@vger.kernel.org>; Fri,  5 Jun 2026 06:26:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780639891; cv=none; b=ftAY1C9AqkhBCn3K2hU6n2Nwe215cgs3eNW3utXAaRVDopn1I4478XYn6c9YuWs8Fw3NqbEVbN56zlZr9efogf18PECAfqNOx3MLFkTqTNBddOfo/kp027LnOu0r1IJ8dLrDuWcxcFF+Wue/bTg2iPJ00eV5vUxC2xs57aLeX/E=
+	t=1780640811; cv=none; b=dwJa++FseZwf+AQIvYDk2outgP4wpaW/AzyOrCbiAZ33P9IO0Wku8Jjdm8+8WtgyZ3ZT8xv5ROcrPH8Od5UIqytpGbieLCfdm5ycNGkmPAGrdYjJ+6w8ftsEQ8EzgVdPn61wZ5MZHaMIaYG7HR5xlwokEMIsaA20WttMBnzgssI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780639891; c=relaxed/simple;
-	bh=bDPSYW4sbBXupjVGuQ9fNmCdsAtmh74koaGYMZY927s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mHoBPyRbcPJPoz1EJ5O/l6Uga+BwX41z5k6Rbd4Wz4G+Scbni8+kMf7nxu+O8RI+1l+CrTF8QpLi0u5xz3D29u10szJ2N1VTcXbSyDPE9C2/21KBZuetc/MTdgTbX0ktE/svL2BFdJe/cJhcX0+AsZK2QmCi1Bl7KhK+IGXl31Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ac8UwFJC; arc=none smtp.client-ip=74.125.82.42
+	s=arc-20240116; t=1780640811; c=relaxed/simple;
+	bh=O96Kd5nCMNC5vhy8bUzXigz/IEAI2pnsxYggVkV7Sfs=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=fGWvVzZ9MDgVMrx3ZHkCdnTh8OliD5D8VvYDBowNtY/ckjrFfrzsDUeo169Isk/G/x0mPJSMGIUHU9tXU3uhbUYZGRYHGcugn2hFhqQlJ2hhmXaf3WIkhlyVLDH51YVDDF9WPHXyPttSFRc7UbSDGjy7llGm3Nfb12NWhlhKv0U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=usIHUtce; arc=none smtp.client-ip=209.85.210.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ac8UwFJC"
-Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-133362c30cfso9157c88.0
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 23:11:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="usIHUtce"
+Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-8424aac207eso1326831b3a.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2026 23:26:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780639890; x=1781244690; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+JACYJJsZuvAWWpivo6XAMCeidn10mj5aCjcUHoRua0=;
-        b=ac8UwFJCMdi8cGmFT7lTPe2kToZwck/hosTgZ+nKsa2tc3jel7u2SOWhFUd13Vu1Gz
-         1Wx5PK7EpnoGe0kgKQjmZx+yX9Z+MEHvvZqIAboO4H7HnLpSqgRM8QHIt9BoFK4apFck
-         /QvePhnw8yE2v01+0MWo56rAT57153ut56VKfl61YS9fIJoS56EY4BQeRIYxaZr/mZN1
-         SqzbaWHnME3f0V8LtomNdkd4EsflEW0F28b7ZFsn/uH8IVXXDPM+o8qdcXQ5GM/jAIDV
-         aCcdMAJ/IoiB8vRivJ71j1+QlZQPCyC/0u92BfVhNKefBYk6+CgwIR5wabnWBalm6D22
-         jsxA==
+        d=google.com; s=20251104; t=1780640809; x=1781245609; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=khdJqNPKXPEiqKWLMRj6izd0dTEEX7BxQCSIjhtaalo=;
+        b=usIHUtcevkqWp6FR2gipqBiZN56/sjM7fgpd911vnZyDcUBD4YKXJAgnUPfJlhhiNV
+         VYNTJbaHIhXnWfMK721a3Q506UqT+dDGMhM/g4Q7nGAKz/2RP/z6QUfRVsHgF6Se9vp1
+         cTcpK/hhr9jSmXJL2jKkmKDFHMuj+5qGrywsTsqLi2ZN8MjSWJayW+UDjIRV05Qs+CBf
+         ycE9yHNeVEKrgQraEPxT14JJXCkWpDUgkaKaBfSzP9N2ixAATnLFnDVoHLPvDFgpz3wA
+         gBu2Os9HfVRgJ2rm0bQzznA7pkaHkwHydYFQRTmRiQO8rGpgAxnfGj2RM/bLekcGgPlR
+         inUw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780639890; x=1781244690;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+JACYJJsZuvAWWpivo6XAMCeidn10mj5aCjcUHoRua0=;
-        b=DXNPbzd/jCUreSUW0efcqlK01GvApgDk+tFTM2rz2cnPrkIgD7XdeLq+EYtXSPpluI
-         aCoDfBsmIf8gSmuRtOo/HAivmveaiG3Euy5DayW7eEEu3H7hUsY0tQBEZtonD6YrLm/J
-         lJ1V6bKyt3CrkXyUvOzqY4ST/FjSY6FxN6eKn0v1EQKdbFApKObT3lQ3ZglJerZ2yK9F
-         Qa8ta6+4cmP32IbHkpPvJ92X9Ea6cVERX1JhwX+D8YcnlJV0xGNYpaAPJBppPxtiKXDN
-         UAlgkqTSB0gYZv4DNpoSAfA8DwucLCoN3Q8KNoLoiP+c4VhKeWfidddqXezgs6HNJAbe
-         Pl+w==
-X-Forwarded-Encrypted: i=1; AFNElJ/1Wm1A+QkVHouPTaS+xWEAKDGTKuHGpCTlEVldsPG2WKUOIXD7f2/ahhYGe2m45zDHQ29M+sNu67A=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxEIx1hQL8wLnurPJ2n8SwPTivgdCpWGYDjYaQY7FHABOmUkUHc
-	Zvt62Aw8K2Lsv4hkklCxQWklmJBMyhSTAwGWrZOEOdbMn0D6zbbtDORRx4DQrwNWVA==
-X-Gm-Gg: Acq92OGHVBuDKopYU1fXQ55di/4itz/3cDnlyIi6E0YzrOhEhxkXDc9wlt+zD8AF2rh
-	Thmb28PQTdt8Be78Yw2TRJxng4A9YOpvwZwQHE76flKiKI2yAgdfjuGfkbeasFXhrmru4k6IeW1
-	tYQzFmxRrHhvW4pJ2dtpVwmUzC6TzP6C01LbPkK+6w9zUJrBVnFuLZ2lDN1Lbz8H9QMqlQmN7ka
-	gYmh6NAc8uueQ/H3L9LUfUoCRjVRcpnPKrR/mIMSnPqy7PjfdcDc/eTGKOmTpaXHnMej7RBr+wa
-	HFSq7Gj0d6ZjiZBm4ENSHw/9f5OHhk8AMyeQxtZfR8SmAEbOBIHFRYib6+UkbkEyGujmWBieABG
-	N19gpx9pSC3gCnjLqzuTq/Fbsx8VW12VgQKgWwGX+6oWMxn516ohcYU2zw3RwWampcJQS4wi0PO
-	rxPF/Ftqmk0XhdZI4vORsQbtJY+u74Qoh0fi3A2zSk8r75Q5UX+ewGglBpoaRs3RKY6Hj5RE8=
-X-Received: by 2002:a05:7022:6289:b0:134:a710:ca44 with SMTP id a92af1059eb24-13807ccb5f0mr74668c88.18.1780639888034;
-        Thu, 04 Jun 2026 23:11:28 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3074d9fde90sm10632107eec.0.2026.06.04.23.11.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2026 23:11:27 -0700 (PDT)
-Date: Fri, 5 Jun 2026 06:11:18 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 02/12] PCI: liveupdate: Track outgoing preserved PCI
- devices
-Message-ID: <aiJohr2dD6Jf8m3r@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-3-dmatlack@google.com>
+        d=1e100.net; s=20251104; t=1780640809; x=1781245609;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=khdJqNPKXPEiqKWLMRj6izd0dTEEX7BxQCSIjhtaalo=;
+        b=DdxnKTSTI1hJTc/s2UJMkDl1Sb2vZCuwMuTR8/nHM4QR1ohBZQxwzIvDD0yXFowOrC
+         E8AfihcrPraihu6mw7TMyHsm2MfDWfU9W5fnjf5zisQHfk/3ZA1xVspBddfzq7qaIKHK
+         zqoUv6TlfvgEZ0x+rXIZKOqAKLM7R08vKYW7pmpeAdcinGrQ38vINahxkYvPFvFvGolk
+         XAyjqgEA6tuPnH1boiIUztYVUZ7nzUPqpWbZ9AtlTnd7VQlz1A+y82NivGCZg/zI4+zn
+         m7cyBkdkIdp3Dc7hCpM8oI6jReDP3UBTdMgXU5YW7CUEhTlbvWE3IKkQ13/2EOKCIbky
+         JBmA==
+X-Gm-Message-State: AOJu0YxSncyrTEeQ67PyOYMT2qEhFzj3SyU54LFFW7LcZR29N6HOazdh
+	xjVDgQGzf1E9HkZySoD76FzYCezJCIVuaNON64N+1Pno5K754CAg0QoFtNNzGG4li5+yIglr1jY
+	gQw==
+X-Received: from pgbda1.prod.google.com ([2002:a05:6a02:2381:b0:c73:bc95:cca8])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a21:3a94:b0:3aa:f9cb:d438
+ with SMTP id adf61e73a8af0-3b4ccdc2d18mr3060292637.21.1780640808801; Thu, 04
+ Jun 2026 23:26:48 -0700 (PDT)
+Date: Fri,  5 Jun 2026 06:26:47 +0000
+In-Reply-To: <CALzav=fgi_ezr7JV3to=RM-RC7sF_XsEcash_+vp65J-jXnkWQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260522202410.3104264-3-dmatlack@google.com>
+Mime-Version: 1.0
+References: <CALzav=fgi_ezr7JV3to=RM-RC7sF_XsEcash_+vp65J-jXnkWQ@mail.gmail.com>
+X-Mailer: git-send-email 2.54.0.1032.g2f8565e1d1-goog
+Message-ID: <20260605062647.4025725-1-praan@google.com>
+Subject: Re: [PATCH v6 02/12] PCI: liveupdate: Track outgoing preserved PCI devices
+From: Pranjal Shrivastava <praan@google.com>
+To: dmatlack@google.com
+Cc: linux-pci@vger.kernel.org, sashiko-reviews@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, May 22, 2026 at 08:24:00PM +0000, David Matlack wrote:
-> Add APIs to allow drivers to notify the PCI core of which devices are
-> being preserved across a Live Update for the next kernel, i.e.
-> "outgoing" devices.
-> 
-> Drivers must notify the PCI core when devices are preserved so that the
-> PCI core can update its FLB data (struct pci_ser) and track the list of
-> outgoing devices. pci_liveupdate_preserve() notifies the PCI core that a
-> device must be preserved across Live Update. pci_liveupdate_unpreserve()
-> reverses this (cancels the preservation of the device).
-> 
-> This tracking ensures the PCI core is fully aware of which devices may
-> need special handling during shutdown and kexec, and so that it can be
-> handed off to the next kernel.
-> 
-> Signed-off-by: David Matlack <dmatlack@google.com>
+On Fri, May 22, 2026 at 2:28 PM David Matlack <dmatlack@google.com> wrote:
+>
+> Gemini found 3 files where pci_dev_put() is called under a spinlock:
+>
+>  - drivers/net/ethernet/microsoft/mana/gdma_main.c (mana_driver_exit())
+>  - arch/x86/pci/i386.c (pcibios_fw_addr_list_del())
+>  - arch/powerpc/platforms/pasemi/dma_lib.c (pasemi_dma_init())
+>
+> OTOH, pci_release_dev() does not seem atomic-safe. On s390, it can
+> take the zpci_add_remove_lock mutex via pcibios_release_device(). And
+> on all architectures it can call kernfs_remove() via pci_bus_put(),
+> which takes multiple semaphores.
 
-[...]
+AFAICT, Sashiko seems to be wrong here.. pci_dev_put calls put_device()
+The put_device() doc clearly mentions might_sleep [1] to warns that 
+dropping the final reference may trigger a sleepable cleanup.
 
->  
->  /**
->   * struct pci_dev_ser - Serialized state about a single PCI device.
->   *
->   * @domain: The device's PCI domain number (segment).
->   * @bdf: The device's PCI bus, device, and function number.
-> - * @padding: Padding to naturally align struct pci_dev_ser.
-> + * @refcount: Reference count used by the PCI core to keep track of whether it
-> + *            is done using a device's struct pci_dev_ser. The value of the
-> + *            refcount is equal to 1 when the struct pci_dev_ser is in use, and
-> + *            0 otherwise.
+Any existing code calling put_device in atomic context is in violation.
+put_device / release are *expected* to sleep.
 
-Note to fellow reviewers: This may seem like a bool instead of refcount,
-but this is changed in Patch 6. 
-
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
+This patch doesn't introduce any sleep-in-atomic issues.
 
 Thanks,
 Praan
+
+[1] https://elixir.bootlin.com/linux/v7.1-rc6/source/drivers/base/core.c#L3812
