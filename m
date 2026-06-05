@@ -1,139 +1,183 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11011029.outbound.protection.outlook.com [40.107.130.29])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EDB5416CE8
-	for <linux-pci@vger.kernel.org>; Fri,  5 Jun 2026 16:20:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780676416; cv=none; b=gj2Thp2Ncn1SNDX/mw7puegnwMkFFIF+Xci16qga0VpVi8xSpQqZlHH0lkBne8eaERdlrRygJhrXV7cDTWVQCY6yaUjXNx0bEhmtdm3DgT4/6a3f1xHcpS2RyGkXRkCHlJ0Z95Wk+Q/IKyONOhf/3VMridws6dLlGbmVBfn8s80=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780676416; c=relaxed/simple;
-	bh=6nR3Juh9NDxntaUq247tAwVpN47pOLeSUP+bEF88yFs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=easy4gt5iFs3CFO702pyj9DQcQk5n51+uDqpqatWMkT6EppuEadcLSLGgEvX1RLqn/9zQCq9UCokycP7IbGGhjiaN+4oXaGPUW6WJfs+Qyb3WVFznwf1jfW1X/k2tJKihLBLWzXPxujNVP+uudVtaE+0E6DngVJvCgfpFegRJFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=PbeZTzfB; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCBD65464D;
+	Fri,  5 Jun 2026 18:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.130.29
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780683516; cv=fail; b=PsBUCHX+hZFivJ3/+CnEbx1w/VmgJHJBOd/+Wmr0nvs1dNGTr5oQATQCJUHV616trVJprVBuwQNMbcQKQSsycXN6Buq8Gd1DUM1OTOIDTLZh1h3qZanRzI3DpK8Wy6E6tWGgG3FMSTSogaJVVQORC4LEPHmSQ9nNqD9SmGFYc9A=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780683516; c=relaxed/simple;
+	bh=8ChIDkIeTaCEDWRBMo1gGymy8opRGb53Fsw8h05CzLI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=K3ZD4wi0AueMcJRAOkP8f3GcNuXQ+iHZX7bLXiq/eOW15FMUHHteddmDIipRk3LZxSFX2VqjrGfpHjTx2+GynJblqU+ytWCewK+AANr1Zj08+ARUPXKhunz/ih0I+n7VlMmcPBfIaeDXTQ1rrVl5wIDh0s5w9jY58XPgwSrMfd8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=TowAr7k8; arc=fail smtp.client-ip=40.107.130.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PbeZTzfB"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2bf2911f93cso102495ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2026 09:20:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780676415; x=1781281215; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=FLyfkCJtSXXJACwZ2rxgqL5LKRr/9vEGg7rw7W2SG6k=;
-        b=PbeZTzfBfJr0RNYZ2WMS+lsAsmAtpUSBQEJIA6X0h/wuqdvh6N03XtxRYR5iLWE5qR
-         U+Ie54mwfE5M7MFwcwP/Arn5oTdDYKCqP9uOsU6xuacd1CATqXfEcz411Edbr0iRXcB3
-         BlxBvxmjxHvrTSRCgWZ47p31ljQ9OLVvwRwY1shV56PfFuHMbmLW34LUNczalEJhk7JZ
-         mhppzM3s6ksq390SONzCIpVOcCOnsDn1lgv4OT7v1UOdB9eC8qec0p76D5JXzYvr4Fwf
-         qZmdxX6P4sFrTlwvCe7aleFAcQt5suVHLnA5I8WPCVZ8fp64qlfD+MkRLOBU60benQz6
-         eB7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780676415; x=1781281215;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FLyfkCJtSXXJACwZ2rxgqL5LKRr/9vEGg7rw7W2SG6k=;
-        b=XwvQQjyWng6Pxco8CvW4j6pvbUC0maMWYKEWmXWHf86Zn2b/OZSkXK6FlbJVkub7q6
-         dtquThvd1IYEpwaQFqZbO/deUi2UvsYnpyJjj5oftD8jsYwKmp1p8sfjvczgeSa4kkaf
-         h7RT2w39OZxmrIX2Avcp+J5YQSK2MbDR3OpYN+NfkJkP1pEbZtnC33S13fDdHU39/b4Y
-         ax2Fm17K7XcMlEthfAWYBH2vqbhxOJVzBKMsJRcaXuqi1hrizsH5iZKG1C/m0Bhi5e44
-         GIA2smclM5yK4gvfrCniJSkH8zOmPSGbbW/zbgKh3KxeIUMjDaMekgZnn7jhkNOEYEPp
-         LYVw==
-X-Forwarded-Encrypted: i=1; AFNElJ/ATTdcV50SA0l/MZ8M1fPE09BuZz8YiaoELVGyT0J/lc0OiPHkvdizy9BI8i0fL2peBH7evH21nZw=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyt0VNgJh8WlonYgzZIJ7Is6/fZkWrRG0bEkhJuezfmvrO+I2F6
-	zU3ZMYdpTGlB2j+XUf7Cahp8+e8b17PQL1KhM42Vbx9N7NUIqfFw0OWsJB2ubMmE9A==
-X-Gm-Gg: Acq92OHaSXBwrJaKPxvqEVNLE2yNqkGaT5hBO9TwBNEAXe6cdPAQSB00vtl0r6tMAAL
-	42keGMzY6dp/rybfwJH9lvwHjhIaVu8qVFRIjW/nlJ1P967RAEkxkwoC+YYAACL+xI8dg4FZm84
-	db+X/6qYOYYgfEVKC5nXRdfDRsmJMZ3Zylil5tlDEcK0GhJ1OHmKGblXpIiXF1GElisjCoKjfUz
-	R3YNJQr5C609hfww2wYvx+V5Zi78Hn7opKDP81ulirPB/Cm/6UjtEQO5behpqiDOvolbR8LOGvb
-	0q+LGI4WUXKGtAOZyaUG8oCsP5rdZkcII5rsVVm1ROVhYV1QiY0GUgU2tIgdFh4uZEuamEnUs+K
-	nn5lzo6dFxqHCxpHZ5IwecNzRTy6F2SXTxIGQ6DmnEsEUtd7fQG22meN2LPJXkt20zPiA/81Ts+
-	f9ehsliB+VHzs5gEvIXwNxyqJWFhfvaYhe1T5S6RRMTlzLsVAu368BHapCc/7D/FCyTL0qj59/E
-	MRHQ/V3kuQFq7VdgVH6K2YXeXzQCn4TeelgQytZ
-X-Received: by 2002:a17:903:fa5:b0:2c1:ee6e:4e4d with SMTP id d9443c01a7336-2c1ee6e520bmr1529335ad.30.1780676414213;
-        Fri, 05 Jun 2026 09:20:14 -0700 (PDT)
-Received: from google.com (25.75.145.34.bc.googleusercontent.com. [34.145.75.25])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f6bf827f1sm8989696a91.3.2026.06.05.09.20.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Jun 2026 09:20:13 -0700 (PDT)
-Date: Fri, 5 Jun 2026 16:20:09 +0000
-From: Samiullah Khawaja <skhawaja@google.com>
-To: Pranjal Shrivastava <praan@google.com>
-Cc: iommu@lists.linux.dev, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, Baolu Lu <baolu.lu@linux.intel.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Kevin Tian <kevin.tian@intel.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v8 4/4] iommu/vt-d: Fail probe on ATS configuration
- failure
-Message-ID: <aiL3Mztpm7UjEqvz@google.com>
-References: <20260604182116.3179005-1-praan@google.com>
- <20260604182116.3179005-5-praan@google.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="TowAr7k8"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Mhd+QcxKNDpJGnLHO9yoMMTpYl6xish4UGj+wubuc4DXnvndPDHJWSdpqUMD1My9lpNYNPUlhRGTSTjYQt1L/t3l/6f7uJvzE+6Gnd7rLzkddE+tR9n1MfatxS6yB0PTANwR8CiSluymsQt9CCWVLSwg1a8daccmnWxbpzPsLHyPVx6U1IvBxefCRLduMEzHZO/lKpohB8x5UUSoilpDC8wWu21/S2vJS8CP/eahIy8jRFTGNvVINYutiqdtuSou2cembvLlYI7HHau+lUfLs+vZslpZo0yjBN+aHa0gzoDonWFQWhq/2efMBYBOn0jQRk0+hDfONUPGnysOMSlXaQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7PwpHd25vN1UrT3kYzzMOBfClnTJVl6ssAi8pI7TP2U=;
+ b=DAgb8xywwTCurUO4L0gKnO8yLkrM0sdeNsEZb+J2xY4f+R9sNvIyAJBKy5fcR3nJW4CaMtNYoJWI/XXYeWHTnm8T6Bbe0YtYXYeeZN2UClYT3UH1PrD238fxByPD44CjxB/uv1oKiwyzYDVf5LHZJKE2INxgrUwQU16VMmWtSORWlGrIIU9ICTHduzU/O9qKRdRc52MUyJF5giaSaIpZirlnXEmhKuV7k8Mwx/XL0vfJV13RtzGLMCJt/lzkPcImjw/VLzDVdO0sL2f/784CrmMMyQySjjV9OQ8pq6LpvRK1AskG7TX2QCInMuxkEpoBmViY/L9jrhoJ2uESAr8/SQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7PwpHd25vN1UrT3kYzzMOBfClnTJVl6ssAi8pI7TP2U=;
+ b=TowAr7k82SdVa2KrYp2nWkl9A1MU8dKtSonoOuK0kbYzhVbfa0u8fxM48OlmQvqaBNADWkKdTIQH9rE4ABC4UOqxY1F/07LML9UmUYn7tip7VMZFI44RFLKugUtk+8oN+fPuC8N25KZbWEtmNy5XT7afPI0FOAZLfom0joQDxPA7+E+tviBvsA6a09cLqvUuK9grHeegnP5sokQl2Sz8o+f9E9LrK4gwpPYd90NwOZWrgloFe9gLXAEj+8bvjbHjDwLum4+vsLAGCJgUryBUNRr4iawebQuH+WcvmUY2VlPgcJPCCQsut/7wk7bAccrJkV5YgV3p3zJJCtIVHjsUJg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from DU0PR04MB9372.eurprd04.prod.outlook.com (2603:10a6:10:35b::7)
+ by DU4PR04MB11031.eurprd04.prod.outlook.com (2603:10a6:10:592::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.8; Fri, 5 Jun 2026
+ 18:18:31 +0000
+Received: from DU0PR04MB9372.eurprd04.prod.outlook.com
+ ([fe80::4f6:1e57:c3b9:62b4]) by DU0PR04MB9372.eurprd04.prod.outlook.com
+ ([fe80::4f6:1e57:c3b9:62b4%5]) with mapi id 15.21.0092.007; Fri, 5 Jun 2026
+ 18:18:31 +0000
+Date: Fri, 5 Jun 2026 14:18:24 -0400
+From: Frank Li <Frank.li@nxp.com>
+To: Devendra K Verma <devendra.verma@amd.com>
+Cc: bhelgaas@google.com, mani@kernel.org, vkoul@kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, michal.simek@amd.com
+Subject: Re: [PATCH v2] dmaengine: dw-edma: Add Xilinx CPM6-DMA DeviceID
+Message-ID: <aiMS8D3j8hTgA9Dd@lizhi-Precision-Tower-5810>
+References: <20260605112829.679697-1-devendra.verma@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260605112829.679697-1-devendra.verma@amd.com>
+X-ClientProxiedBy: PH7P223CA0001.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:510:338::22) To DU0PR04MB9372.eurprd04.prod.outlook.com
+ (2603:10a6:10:35b::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20260604182116.3179005-5-praan@google.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DU0PR04MB9372:EE_|DU4PR04MB11031:EE_
+X-MS-Office365-Filtering-Correlation-Id: 900729ee-2d07-45a5-0617-08dec32ed934
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|19092799006|366016|52116014|376014|1800799024|18002099003|22082099003|38350700014|56012099006|11063799006;
+X-Microsoft-Antispam-Message-Info:
+	xUFX0YoqAk4qlB97ngES0gcYzf4MB90HmH0uFounkH5R/DY1dl+W4agIM4GPp/OcGeNJLo6aPAjOs57tjQovLrxp/63sXhGFFn0dCzdXEcU/WpnurYoC1GDEIA4ztQWO21HPpgKPjLZKDkVLu1VbYjN3Y1/IYv2hdlba52u3ZWE4vJLFrXXpv9TWV1fba3rBkOINOGTDRjB8VX7Vh/BYbByCrLBJrcuu82UF56uXpxMH7uPGlj1DuBI1+rCvSRESuJOSkqrHBun5zT0rej3MNZN8Me46xDN4bw0Uv3CGtnq3vX1hMMbPoJl2x8Foo5palL8+bc4MtuKc4gpkbqVm1RP7HgyyN6g/ipoBa7E7nhcRIugf8oyawhJds1yViWcgIG2DPgURrhPr4S1WEBxMBU+H0u5FQv5AbymZ9WM2ZW8O2AdIZoOuUPqKAsqId432NPxhXyrss506P9LPmfl7Y1POe9c+5uPf5k39A/Psf6AkgoFEgng4B9QnOzMOV3zcUCtzjeKcC43X7J3SkTY81ZmbrwSyH5BNwH99+0Bj9MYnfHqMvqjHLJQsrRDAWX0CxtOgC0SNeHdAJHwGvdbKyrGiD1Slo6CWDW8XZuAEXtnIWxYVBBkq7Fwg9uWiBGYWJfIhFw092Xa5XVBVelzRYw4M5yrT0wCHRt7qCPv/MCJ64ZIMeU6NwxyYVfZClf2XW2NC74xXxS/xY8QenozP3f1DFBUs3oyRLnGdqOPub5vBmQ1T/YdnoWJWE6HW4N+k
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU0PR04MB9372.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(366016)(52116014)(376014)(1800799024)(18002099003)(22082099003)(38350700014)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?GAq2AM0bXDKGqaSkTBj8KecKUZflro+o75ex4k/B6pOn7UdSGMH49c4H2yX+?=
+ =?us-ascii?Q?avN6E3K2xE5K6nI2F0YuWzGSGoZJz82yHpbclOtyVZ9lloo8z4/XYTvgPcfW?=
+ =?us-ascii?Q?3vR37Cr/xqA7XqB8J8JBfnenGxpsppYanv1iftIOamiOQvEAuLFoZVflZhst?=
+ =?us-ascii?Q?pe5shL3k/2/LkzlCgfKYHrKBxBQq3KZLIfL/yo+wfuTWn6+ZZ62svCuYwBcV?=
+ =?us-ascii?Q?DE7GBvd5ieyApuIpWg/SYhmwCfd2Dvnnx8MkteKN3XHAzrSpsgzdDXiOWAl5?=
+ =?us-ascii?Q?N69vjrpVjIBJqZSUTMjjmHjrG5dniUzeY2ZsSY4FhainC0ubF5uxstuYDa1V?=
+ =?us-ascii?Q?z8Va/jT1F5kCFeyCYK4ob02mqWJAOnOejmsScV+F/TN/Vaa752H2AZ/Rz1+L?=
+ =?us-ascii?Q?v+6SzWmKIQFkQ6WjufcS3j4W0sxSEMnsbt938Ux3uYgrHPhy5JDZlbW37xOb?=
+ =?us-ascii?Q?/abmh3u8Ii6dhcMb8AY4PYdaEPpsulkyeDmljIw2mkB/MtQD92DYnAhaJVYp?=
+ =?us-ascii?Q?MP5NyJfKUVcUz0tzejHryRm2qF/Goxgg+bIe1c+Xfhzd+c9pFIS3qdifbSUq?=
+ =?us-ascii?Q?NNeyzXw/F04X1pI+FPxqDGoeRRa/EuTysG7NMXEhaIpmfYgURsSA0L+MMPg5?=
+ =?us-ascii?Q?I1eN9bWhxkomBRhKqyoPgyVgDMe4KGf+IRU63X7wzSmXm4dzBr3TyZPtMe75?=
+ =?us-ascii?Q?YbrEhn0URp+v9hXbtvJGANJO72EwL3GkDq5Xupv8T6u1pd2sFj+hua5hgxDU?=
+ =?us-ascii?Q?6l0xbUbO8hLNDEHQVizFFIToFWcd+pxQ7385JUPFvLr7nee8sy9jd6vQVy0e?=
+ =?us-ascii?Q?TwxaRw64XI546Uk2t5MHbrdfFF9t2EJisfa1PSj7jPdjQlVtkaZSNVyoiDDV?=
+ =?us-ascii?Q?tpaBBv2jlKYm1QccMs6mqE+YjldhoL6JXdmns/EvREruQY5f1rrtuS66TkWr?=
+ =?us-ascii?Q?lcgh4e6igAVK6fGLO3TAsY/PTeT2f7SAFeSbj5dv7eA8FzXFr1bCCE8QwMVN?=
+ =?us-ascii?Q?wl7Q93GxYJh+RX4/9jZVad4BtMxljFZnXP/FNdReelVPcJHhBxyUTVE5xMLs?=
+ =?us-ascii?Q?iLweciRdceAKHoB0R36nI8dQigHtxKHKLnTcUtKGYXn4cKo2F+TTJv5Wu5xD?=
+ =?us-ascii?Q?7WqtYEwU7vUOhWj56wTPbT1gFbhT36jdJgVxlboisuR6YalOmjHEruBxnS/5?=
+ =?us-ascii?Q?ocLoa42F+1+XfmPlsuM53+fpDhY7AG0Y2p16pfw8iLAqLDJNbaDJG0dwK0PB?=
+ =?us-ascii?Q?2ywCma3LlKj/GhTH8VsdxEiyelDE0OGKtZTQzTnzLjk580gsxYW1Dl81U9Ov?=
+ =?us-ascii?Q?8N8yN//J1HNVBsyDWCMkgbZ9pku+XyyjYsA3XPBbV9dRKyp1gaJr1RRu2ogi?=
+ =?us-ascii?Q?gcDMhNwhZw8pcuFfBdk5AOFctwqtAnkrYMUaDFBlr7f3D1OfCyIeCW2qAnM5?=
+ =?us-ascii?Q?5Eivt4LuYeZFE41OBMX3hqdBon6wZ3HDm9wABbYUIz16QIHbG5Vt/qbE3Qku?=
+ =?us-ascii?Q?jZGYy9YJ2tuaDpzC8bR8ulrLtu1g3wn26OwEx5xP8k6xnZ4NQh/GW1+AWgts?=
+ =?us-ascii?Q?9nXSnTpidprPoR7SXN1nOsZiUEM3nH+wczHWsRyupPJ6hiRdWAUrrymHyTbj?=
+ =?us-ascii?Q?9TGvM8+BJNVuQ0ojvuTrO0xnEuMC1BdGya7J6isPUQcl1sIyqvP+re4JFVag?=
+ =?us-ascii?Q?PF3CeR+TXmyQksG575n9Z+kZO0Md+vGiLe9BSnib5dvg21hfaVYNy3P7y7s7?=
+ =?us-ascii?Q?iY95lp9chQ=3D=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 900729ee-2d07-45a5-0617-08dec32ed934
+X-MS-Exchange-CrossTenant-AuthSource: DU0PR04MB9372.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2026 18:18:31.4557
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: nlKhYk0OhWzBKeoRNiYVsPU70/8+OZ4UHBjW9zCkcCX4WNiXrXeIcNIGaBtv1Sk+H/Pqr10sFmEeIN5sMWlwvQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU4PR04MB11031
 
-On Thu, Jun 04, 2026 at 06:21:16PM +0000, Pranjal Shrivastava wrote:
->Update the Intel VT-d driver to handle ATS configuration and enablement
->more strictly. Specifically, update the device probe to fail if
->pci_prepare_ats() returns an error. This ensures that any ATS-capable
->master reaching the attach phase is guaranteed to have a valid config.
+On Fri, Jun 05, 2026 at 04:58:29PM +0530, Devendra K Verma wrote:
+> From: Devendra K Verma <devverma@amd.com>
 >
->Additionally, update iommu_enable_pci_ats() to WARN() if pci_enable_ats
->fails. Since earlier checks in the probe phase preclude config-related
->failures, any failure during hardware enablement is considered a kernel
->bug.
+> Add Device ID for AMD (Xilinx) CPM6 DMA IP. This IP enables
+> 64 Read and 64 Write Channels.
 >
->Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
->Reviewed-by: Kevin Tian <kevin.tian@intel.com>
->Signed-off-by: Pranjal Shrivastava <praan@google.com>
->---
-> drivers/iommu/intel/iommu.c | 15 ++++++++++++---
-> 1 file changed, 12 insertions(+), 3 deletions(-)
+> Adding the relevant dw_edma_pcie_data to use 8 Read and 8 Write
+> channels for initial commit.
 >
->diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
->index 849d06dfe1ae..f39451323553 100644
->--- a/drivers/iommu/intel/iommu.c
->+++ b/drivers/iommu/intel/iommu.c
->@@ -876,8 +876,14 @@ static void iommu_enable_pci_ats(struct device_domain_info *info)
-> 	if (!pci_ats_page_aligned(pdev))
-> 		return;
->
->-	if (!pci_enable_ats(pdev, VTD_PAGE_SHIFT))
->-		info->ats_enabled = 1;
->+	/*
->+	 * pci_enable_ats() should not fail here because earlier checks
->+	 * have already verified support and configuration.
->+	 */
->+	if (WARN_ON(pci_enable_ats(pdev, VTD_PAGE_SHIFT)))
->+		return;
->+
->+	info->ats_enabled = 1;
-> }
->
-> static void iommu_disable_pci_ats(struct device_domain_info *info)
->@@ -3292,7 +3298,10 @@ static struct iommu_device *intel_iommu_probe_device(struct device *dev)
->
-> 	dev_iommu_priv_set(dev, info);
-> 	if (pdev && pci_ats_supported(pdev)) {
->-		pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
->+		ret = pci_prepare_ats(pdev, VTD_PAGE_SHIFT);
->+		if (ret)
->+			goto free;
->+
-> 		ret = device_rbtree_insert(iommu, info);
-> 		if (ret)
-> 			goto free;
->-- 
->2.54.0.1032.g2f8565e1d1-goog
->
+> Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
+> ---
 
-Reviewed-by: Samiullah Khawaja <skhawaja@google.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+
+> Change in v1:
+>   o changed the pointer assignment to intended pointer for clarity.
+> ---
+>  drivers/dma/dw-edma/dw-edma-pcie.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+>
+> diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+> index 0b30ce138503..2082d0021a8d 100644
+> --- a/drivers/dma/dw-edma/dw-edma-pcie.c
+> +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+> @@ -27,6 +27,7 @@
+>
+>  /* AMD MDB (Xilinx) specific defines */
+>  #define PCI_DEVICE_ID_XILINX_B054		0xb054
+> +#define PCI_DEVICE_ID_XILINX_B00F		0xb00f
+>
+>  #define DW_PCIE_XILINX_MDB_VSEC_DMA_ID		0x6
+>  #define DW_PCIE_XILINX_MDB_VSEC_ID		0x20
+> @@ -125,6 +126,19 @@ static const struct dw_edma_pcie_data xilinx_mdb_data = {
+>  	.rd_ch_cnt			= 8,
+>  };
+>
+> +static const struct dw_edma_pcie_data xilinx_cpm6_dma_data = {
+> +	/* MDB registers location */
+> +	.rg.bar				= BAR_0,
+> +	.rg.off				= SZ_4K,	/*  4 Kbytes */
+> +	.rg.sz				= SZ_8K,	/*  8 Kbytes */
+> +
+> +	/* Other */
+> +	.mf				= EDMA_MF_HDMA_NATIVE,
+> +	.irqs				= 1,
+> +	.wr_ch_cnt			= 8,
+> +	.rd_ch_cnt			= 8,
+> +};
+> +
+>  static void dw_edma_set_chan_region_offset(struct dw_edma_pcie_data *pdata,
+>  					   enum pci_barno bar, off_t start_off,
+>  					   off_t ll_off_gap, size_t ll_size,
+> @@ -547,6 +561,8 @@ static const struct pci_device_id dw_edma_pcie_id_table[] = {
+>  	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, &snps_edda_data) },
+>  	{ PCI_VDEVICE(XILINX, PCI_DEVICE_ID_XILINX_B054),
+>  	  (kernel_ulong_t)&xilinx_mdb_data },
+> +	{ PCI_VDEVICE(XILINX, PCI_DEVICE_ID_XILINX_B00F),
+> +	  .driver_data = (kernel_ulong_t)&xilinx_cpm6_dma_data },
+>  	{ }
+>  };
+>  MODULE_DEVICE_TABLE(pci, dw_edma_pcie_id_table);
+> --
+> 2.43.0
+>
