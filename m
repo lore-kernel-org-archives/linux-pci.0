@@ -1,167 +1,292 @@
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011053.outbound.protection.outlook.com [52.101.57.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC2804D8D88;
-	Fri,  5 Jun 2026 11:28:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.57.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E78A4D2EDA
+	for <linux-pci@vger.kernel.org>; Fri,  5 Jun 2026 11:55:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.48
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780658925; cv=fail; b=RbiknzYkQF6/9rY/E2lrvWGUHOUAk2+P0LzPrjom6tSfAuq6BZZqwNEmaCmAKABXDydEY2hAD0pd4dUEGmQ7a0EV7lkVb2ZbDtmrfobdOVWwbtIE5JBS5xHnG5VOT6dpR9J0kZwtvRHzL9hxSDYBcqAXx0A7hmvnvrP1mm0tRFo=
+	t=1780660517; cv=pass; b=IRDNVn0uKSoo/A+T9BRcZrJodWsdmop0LDye5R7PATdHl4eKPt1m7G1cEEcA6uKjlZ+zMsWiByvbQpP9CD/RaSQmjpy7CCUC6p/mYJi1Wc3wsM9utTNlNKXvXHCpRG29daCBSPWCOviAbnOq38+3kSduZyIHy840jHdHOIlvQN8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780658925; c=relaxed/simple;
-	bh=j0B9D4AmNG40qYcx7e1cAsv+xQGPRN4KlZnFtRiAiiE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=P+qaUDwjcRae9vdmVGW+ZMlMlr0Z9cbsgxn/PXJl42mylWpieImbADdzLzIU7+lhLRAblpdXrPhpLJMiQszTdVAT3KVo076WVLV95l2LOjHbpQdAkMKLk+9/yF8IeRaQyaedC1l8k1tLTTIPOAyL9/jTZaY0cGv2gdJzKQSzKAk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=JUIozBaY; arc=fail smtp.client-ip=52.101.57.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1780660517; c=relaxed/simple;
+	bh=yAV2IqFZk0cBvmTqD1yhsCjtpJ5DzXtfK4LNoJf4AHk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GM9IxH13IWxeFMFJ5+6aHJyy9bBGQdXt9YhValcY1+LHFCWOmZu4bqqST8k1tEhg22PCVhlrCGbazza3pu5srWUcoyHPa0i/6P/4NNdb7Bck1rJLib/hWsN6AfBNlpELl5bOKmths34VMSHDWVoeDnDwNfAa0bpmxMk+7Er2BGM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=rOiYAipi; arc=pass smtp.client-ip=209.85.128.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="JUIozBaY"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=S+Gh20EfJL4L2alwIXDWw6srwWslG9GJk3/8RphsCFgwghUZdFkoODXvE4rn7Tj6DaloqzlPOj0ERt+qmaniANoArkFY2fKKFW4aGFg5PZxk53svbMWcq4W3F5g2yG5A0+tzHIB6NfFWDWESwmbflV3Fxi22ceP7oNtuyj0n0F5rn9sMr9zkJ7GsQb6Azbn3yk7C98oHewJ96LEW3Fxvq2gpl8bR+NKQ94T6nC2dbIw2HoiEgGIBxXA15ckkQidZUdT5ACrh2cUyQD62pufF6V6Zx/45Eh7D7Te+lO4So1VvgfzXA3IJF5IEPG/GcTWycMap+Vk4lta1bt/ZT/epDQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AWZ78HTa0QeDHZbQ/9CGlqT7xtGTkreJzSj7EwoH2ws=;
- b=cBJQb5ibvni1Rl4Z1feE1D14EDyIMHoOZEANZeEZhWzTNuWo+DjcmJk2TAbPTBTbtAadhA2auBy72nlAFiK4fC3De8juNWsMnTtLKlxAdjSeY9zQcsn26/ef3whszrmO10gfa60ePZKSpgo3QYXtCMPQpu0TPS2n4t6wUkkrnS+02OBeMVlVJCOP3FL+FOuYEqjzh2fk1iPffIY3ZjYrukc6KbeWwaJO/TGMWJgd9F6MTXX5H5i97UvOTMXgrGcHLEE/p1GIa/K2XYdo71LaHcVhxu9CexbRiiT9JOZU7964UKgPsfH0cGcuP6aWeRGm8GK8cBBPu2iYeS2krlo9pg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AWZ78HTa0QeDHZbQ/9CGlqT7xtGTkreJzSj7EwoH2ws=;
- b=JUIozBaYg8sngGGSCf8Y5mhPEpwSY1pm3DNtvSXeWFmT3JOKcujboL6Je0CMvVPxUxJCA/44lfHdUX21GslxVg8AMPU0QfxDkHByrX8ggTloHyzFHkKgn3q2t9icrepolAeLcONX9bac0Z1riNTsDLUppfnpNvJJEffoEr5dwXs=
-Received: from CH0PR08CA0004.namprd08.prod.outlook.com (2603:10b6:610:33::9)
- by SA1PR12MB6678.namprd12.prod.outlook.com (2603:10b6:806:251::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.9; Fri, 5 Jun 2026
- 11:28:33 +0000
-Received: from CH1PEPF0000AD78.namprd04.prod.outlook.com
- (2603:10b6:610:33:cafe::2) by CH0PR08CA0004.outlook.office365.com
- (2603:10b6:610:33::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.92.8 via Frontend Transport; Fri, 5
- Jun 2026 11:28:32 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- CH1PEPF0000AD78.mail.protection.outlook.com (10.167.244.56) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.92.5 via Frontend Transport; Fri, 5 Jun 2026 11:28:32 +0000
-Received: from satlexmb10.amd.com (10.181.42.219) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Fri, 5 Jun
- 2026 06:28:32 -0500
-Received: from satlexmb07.amd.com (10.181.42.216) by satlexmb10.amd.com
- (10.181.42.219) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.41; Fri, 5 Jun
- 2026 06:28:32 -0500
-Received: from xhddevverma40x.xilinx.com (10.180.168.240) by
- satlexmb07.amd.com (10.181.42.216) with Microsoft SMTP Server id 15.2.2562.41
- via Frontend Transport; Fri, 5 Jun 2026 06:28:30 -0500
-From: Devendra K Verma <devendra.verma@amd.com>
-To: <bhelgaas@google.com>, <mani@kernel.org>, <vkoul@kernel.org>
-CC: <dmaengine@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
-	<Devendra.Verma@amd.com>
-Subject: [PATCH v2] dmaengine: dw-edma: Add Xilinx CPM6-DMA DeviceID
-Date: Fri, 5 Jun 2026 16:58:29 +0530
-Message-ID: <20260605112829.679697-1-devendra.verma@amd.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rOiYAipi"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-490b915ded5so14864635e9.3
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2026 04:55:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1780660514; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Q5iGGuDYSywz+GbDcdoBM2czdy6jB46EuluBfsynbEtpVjWGsNxP3Xdo+lXg5MXpmX
+         KtwB+LEhioZTvYS6XkXVVjUIyqJsaCJctCUS1BUcMhlORH1HRARqddSziOzUJkzshKuN
+         eONyJd6/FQCBF1LMc4zPih3YDhy9sEOS5lc/Oh0oFi8sqKvf7uM5o2tYc4jM/z14porB
+         7YcgLkZSMalHuGSv6nahTE6UHMKlwHoTwLH7QgxAmf+GsCmq6yP/0UuR4ruisUwOITNL
+         cvXqUsgHLDQR3QZqBIUrtD+QXsoS0DgPGLYXjWkGLP10FryK6+/K8ZRwUlEUCvsB/WDc
+         tDCQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=//GYdD1yw302I0yF7ELThPMAvwk15VF1Q6zXK20rZgU=;
+        fh=SJ2gokAPsl5B/7XauZS9wTZVa4qTd5wrqZbaLq63LCI=;
+        b=WHtTavPFt1lNlYUU37sxCVFbuk3IplfgqfAewyXOBKzCaqTthlQo9O/P7XableiPBK
+         FdhPcUE7hwrqxNaZ+xSfYtGhcEXPNUmUKdQp+3lI3pPlHWAe2Nz+E34T2CxFJilsOLGI
+         wiNyFksNWRQUBVFk/bHPUj9GdPXMJQ1rrZhm1IpjFsBfwcGbniYeVwqCA9a2xUOPEdzD
+         lG9/4cJbQZzH0TaZdxioVsXxbbV0pHXd87JbVJBW0ocfM+iAftwQ6+i0Tkyq7/rTrw8o
+         ZY44n+ryfITd4rI9TSnJ7eeVZwk96297xWUO9eWecl7n+EgekUTsviq0qjwUHBuaNRnC
+         aMtA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780660514; x=1781265314; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=//GYdD1yw302I0yF7ELThPMAvwk15VF1Q6zXK20rZgU=;
+        b=rOiYAipiboBVsqdOJTkr5py9fojcBM6dvHDyQCrLMVanyH9xZq8xCfa2bteJn+LCAe
+         9q3qAYB/48tTj/MIXofqJECKeY15EaM0jMx4GCBjuSC37tnaDViyw1J+HGOnta9kXtwz
+         KZs/obvbgo1RdqQ67cp9DVDv0AfXO/AuNgov6kzKETEl1NVAtxrzGmvI1sC4gqO703g5
+         nEG1MD5VvXddAwKfZP7eTrRGf8iVw95HVH9j0HbOVcfnsJErS3U42BnhBg0vQhsKMTGe
+         sOmU4wGkb4BDCBMS4oFh/g0gZcx+YvH5qQQnbldqKjYBAmJfqHbcI2IITbF1aovmJIhY
+         IMkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780660514; x=1781265314;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=//GYdD1yw302I0yF7ELThPMAvwk15VF1Q6zXK20rZgU=;
+        b=guPRZ0/RBDkbMSZOSYha+MXnJOy3cSJwTbPI8q5E1S2B4Ifsi37uMhXMUDmlzTbo6k
+         nlQ7eqzuIsn5ICf7czylZk5pLpuHzjjuK5rg6ZlC+bLdNVgaUtK8k/9Gh7C+fEmiyF6r
+         5GRX0SsENuBk4KIdc5v7sS90NZkkZdaMxmHe7wmownG+P8IBvHYh6ieYqEcu1VYao0ff
+         SyTDkT0kwcY0B36uV23ESEI5qxq3EqLn3f4KlxxXFXKdNsOodkoyCAzNFNrM0JLlX1Zy
+         5L3WHf7sABhi40r+ETTd4tXApqRB3xXcQ7/jIzV1MH/LDINn7veN26eLW+F0iV9KwOFR
+         c4TA==
+X-Forwarded-Encrypted: i=1; AFNElJ8ont0uihh5iMb7heQB5r90iHbvHOPtCT6vX96VtxOfs8xkmN8Ig29g4/+Bo4wEvcFg8R7tE0yudA0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx2sTpN/LPkKuFsgtcyH9hhlBo2tjrsz7ARRg5JA/Qe0jjjunuo
+	kWDJTLOww1gO8mG+sUu/V+gdPOzklW/DGgHdPDmcMvVknX7th7jRFswUgvcoHNsHsKp41+PGsyc
+	aeFc90lThe4Eej+2z2ktAtk+JR7HbVJs=
+X-Gm-Gg: Acq92OG+bLjySd+JR7ODDgqtyMOGZfjQGnIoXfGbbHUofA510G01l4n/u3utAmdaZDO
+	FK4dwVCDGaUrq+G/htLbdnjHfohwYZcTYKwmuaw8t43/uSPzONLNraOQeq+LKV0BNy7Ls8xLuCf
+	OljKwlfBQwE0zGB5eXHBuwVxLXr2oz7qptznJ8uR3U/GrhZ+KPgNpoSU6Nk71YuMR6uOR4ZgJgH
+	ineu7dOxesgciXOslRxtZ/eynSDwd6Yzwk7FfA+vdMTBx5DPGKgEdQQz2DkVg5Wh3MYkZvqiSVl
+	ipv3W1n9MrDb9jm8vswN57Gq+JuxXzUT5iqpUw1G1QduVl9qkwLfMGtZZHpKeh8ePhaucxlzGgO
+	QdaE=
+X-Received: by 2002:a05:600c:4fc9:b0:490:b8c0:d474 with SMTP id
+ 5b1f17b1804b1-490c25eee06mr49053305e9.14.1780660513812; Fri, 05 Jun 2026
+ 04:55:13 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH1PEPF0000AD78:EE_|SA1PR12MB6678:EE_
-X-MS-Office365-Filtering-Correlation-Id: 132fdef8-5620-4dc2-5d36-08dec2f59338
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|376014|36860700016|82310400026|18002099003|11063799006|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	JlgFcpmnQRohOHggClbSKiDTJ4Zg9jQDK9FyZWIQk5UzuQckmKt25zcGph06d/Nwl1EL9wF/z1Bwx08jiheJ/8JdEllLaur+UIhriPiJolKe6uTUzHjWRPgKzmgnJBdETI23YPjn0MQeHw5fViOjYhzeFlWAxIqf5K7YNvnYPzwjY6z3uMmS+fBU6rER/Ad3+S/ITIkau0iQ6/NAPq5moB7sPr0E5eDQc53Vv1B2YcR5bygI1vWZvHY0Cxbqc7RdR4O70mSpaoFCk5XadkKi3Jm+dU3tKxV/Kwao1JKxzcETHgX+2O1yyelEdR1WoqDcWta8XPFZN3rnv0vhLAFb5CBihO+JQFJOfVgBxxRjeTKCBgW+oZAPrK0YnTaPWseuAkxgktcwkXR70A8Ez536CXrbMTJrpkDWvU1pXeZ8pbT9cDogTbd0gkJ6q2T4mB7BXEkJjQwp58vggHHbyp28Cx8T7aAmv0OQeOtloYCq84BpLC7CQ732P21MKaJOc55QqERNYJHnyvCLcx9xGbOxLa7o4MKszguMnbOpWcNJwwMUHd2H2kGUI92oY01OBcqpj1IeJw9JcHq50ykYdePPAkovycCc4G164Xymkmzr/aNxXn891nqzXRiNWcVqXB4a3rSW9e1f6B6Yoril4CloMlnNUB1ECggl/e4DBTQVG4kwMV9OoPuC9UhshtkZeJESIHZpFQsYGzVHm1j3tdzdymmzc3wK9CLnTF7nrXkU/KI=
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(376014)(36860700016)(82310400026)(18002099003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	0rRJj+aKj//JG61hSdSRjnBqXn1vh+B++4M4WbamIcBKz4lXr6C8TrF6v0HE3lDd8wtOw4R+3QnMYFtvbar1MK+iEtV9u3WuB2sanYHaSMilOTM0VF9a+2619xaO6Tn/mc2QR/unFwqnHXykvVE4gl0+9GF+FKRhVfle0V93HZHVrSxeeZOGvMQvvsVE/yl/l/Tm/6sHHihplh7RDc9/AWTuY010LJ3wAoIWW/r23CkKidaAR5BROx1t7cR1mFfVyWOlyMEc5/P67LAsPQ+tIRNruQESaqlncWjDgGJTNeEVpNGY25fgfuaz1bGARxdcBunFNQGw/1XgIbYG6wXCa3y//itW0JDrMQ6Vrs6bq56HtJtijZwl225hB8HPf2ct7axcT4OGLpzzE6HmBgWq+EmCTJenM/98Tp5ck5E3utsNnrrhpoFQK8WkRwaWBTGC
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2026 11:28:32.5495
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 132fdef8-5620-4dc2-5d36-08dec2f59338
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CH1PEPF0000AD78.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB6678
+References: <20260602195019.1798126-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20260602195019.1798126-3-prabhakar.mahadev-lad.rj@bp.renesas.com> <50a908557bb3ce5f14b67396d1e73e70289a583a.camel@pengutronix.de>
+In-Reply-To: <50a908557bb3ce5f14b67396d1e73e70289a583a.camel@pengutronix.de>
+From: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date: Fri, 5 Jun 2026 12:54:46 +0100
+X-Gm-Features: AVVi8Cd2p_5wb21Ju7uN_UymgXZMavWTnmT2NoxOvQc6wSw-uyndN3rDgEYj9Gc
+Message-ID: <CA+V-a8uGho2RMhreDgieOOZTggUALoF0bGyjdEEDvyL_75sAyw@mail.gmail.com>
+Subject: Re: [PATCH v4 2/4] PCI: rzg3s-host: Use shared reset controls for
+ power domain resets
+To: Philipp Zabel <p.zabel@pengutronix.de>
+Cc: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
+	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Biju Das <biju.das.jz@bp.renesas.com>, 
+	Fabrizio Castro <fabrizio.castro.jz@renesas.com>, 
+	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Devendra K Verma <devverma@amd.com>
+Hi Philipp,
 
-Add Device ID for AMD (Xilinx) CPM6 DMA IP. This IP enables
-64 Read and 64 Write Channels.
+Thank you for the review.
 
-Adding the relevant dw_edma_pcie_data to use 8 Read and 8 Write
-channels for initial commit.
+On Wed, Jun 3, 2026 at 9:16=E2=80=AFAM Philipp Zabel <p.zabel@pengutronix.d=
+e> wrote:
+>
+> On Di, 2026-06-02 at 20:50 +0100, Prabhakar wrote:
+> > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> >
+> > Switch to shared reset controls for PCIe power resets to prepare for
+> > RZ/V2H(P) support. On this platform, multiple PCIe controllers share
+> > the same reset line, requiring shared ownership of the reset control.
+> >
+> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > Reviewed-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> > Tested-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+> > ---
+> > v3->v4:
+> > - Added RB/TB tags.
+> >
+> > v2->v3:
+> > - No change.
+> >
+> > v1->v2:
+> > - Updated commit message.
+> > ---
+> >  drivers/pci/controller/pcie-rzg3s-host.c | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/pcie-rzg3s-host.c b/drivers/pci/con=
+troller/pcie-rzg3s-host.c
+> > index d86e7516dcc2..a5192e4b58df 100644
+> > --- a/drivers/pci/controller/pcie-rzg3s-host.c
+> > +++ b/drivers/pci/controller/pcie-rzg3s-host.c
+> > @@ -1276,9 +1276,9 @@ static int rzg3s_pcie_resets_prepare_and_get(stru=
+ct rzg3s_pcie_host *host)
+> >       for (i =3D 0; i < data->num_cfg_resets; i++)
+> >               host->cfg_resets[i].id =3D data->cfg_resets[i];
+> >
+> > -     ret =3D devm_reset_control_bulk_get_exclusive(host->dev,
+> > -                                                 data->num_power_reset=
+s,
+> > -                                                 host->power_resets);
+> > +     ret =3D devm_reset_control_bulk_get_shared(host->dev,
+> > +                                              data->num_power_resets,
+> > +                                              host->power_resets);
+> >       if (ret)
+> >               return ret;
+> >
+>
+> I have a few questions about this.
+>
+> Can you move rzg3s_pcie_resets_prepare_and_get() and
+> rzg3s_pcie_power_resets_deassert() up before setting
+> RZG3S_SYSC_FUNC_ID_MODE and RZG3S_SYSC_FUNC_ID_RST_RSM_B in
+> rzg3s_pcie_probe() without ill effect?
+>
+> Can you move rzg3s_pcie_power_resets_deassert() up before setting
+> RZG3S_SYSC_FUNC_ID_MODE and RZG3S_SYSC_FUNC_ID_RST_RSM_B
+> rzg3s_pcie_resume_noirq()?
+>
+> Those would have the same effect as the reset already being deasserted
+> by the other controller.
+>
+Yes to both. I have reordered the sequences as suggested, and it works
+perfectly without any ill effects.
 
-Signed-off-by: Devendra K Verma <devendra.verma@amd.com>
----
-Change in v1:
-  o changed the pointer assignment to intended pointer for clarity.
----
- drivers/dma/dw-edma/dw-edma-pcie.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+The RZG3S_SYSC_FUNC_ID_MODE and RZG3S_SYSC_FUNC_ID_RST_RSM_B
+properties configure registers belonging entirely to the System
+Controller (SYSC) block, whereas the power reset "aresetn" belongs
+directly to the PCIe 0/1 controllers.
 
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index 0b30ce138503..2082d0021a8d 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -27,6 +27,7 @@
- 
- /* AMD MDB (Xilinx) specific defines */
- #define PCI_DEVICE_ID_XILINX_B054		0xb054
-+#define PCI_DEVICE_ID_XILINX_B00F		0xb00f
- 
- #define DW_PCIE_XILINX_MDB_VSEC_DMA_ID		0x6
- #define DW_PCIE_XILINX_MDB_VSEC_ID		0x20
-@@ -125,6 +126,19 @@ static const struct dw_edma_pcie_data xilinx_mdb_data = {
- 	.rd_ch_cnt			= 8,
- };
- 
-+static const struct dw_edma_pcie_data xilinx_cpm6_dma_data = {
-+	/* MDB registers location */
-+	.rg.bar				= BAR_0,
-+	.rg.off				= SZ_4K,	/*  4 Kbytes */
-+	.rg.sz				= SZ_8K,	/*  8 Kbytes */
-+
-+	/* Other */
-+	.mf				= EDMA_MF_HDMA_NATIVE,
-+	.irqs				= 1,
-+	.wr_ch_cnt			= 8,
-+	.rd_ch_cnt			= 8,
-+};
-+
- static void dw_edma_set_chan_region_offset(struct dw_edma_pcie_data *pdata,
- 					   enum pci_barno bar, off_t start_off,
- 					   off_t ll_off_gap, size_t ll_size,
-@@ -547,6 +561,8 @@ static const struct pci_device_id dw_edma_pcie_id_table[] = {
- 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, &snps_edda_data) },
- 	{ PCI_VDEVICE(XILINX, PCI_DEVICE_ID_XILINX_B054),
- 	  (kernel_ulong_t)&xilinx_mdb_data },
-+	{ PCI_VDEVICE(XILINX, PCI_DEVICE_ID_XILINX_B00F),
-+	  .driver_data = (kernel_ulong_t)&xilinx_cpm6_dma_data },
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, dw_edma_pcie_id_table);
--- 
-2.43.0
+> Is the "power-on" mentioned in the comment about the delay in
+> rzg3s_pcie_power_resets_deassert() the same for both controllers or are
+> they powered on individually? Specifically, when the first controller
+> deasserts the resets during resume, is it guaranteed that the necessary
+> delay has also passed for the second controller, which is resumed
+> later?
+>
+Because "aresetn" is shared at the SoC silicon level, whichever
+controller finishes its resume routine first handles the physical
+de-assertion sequence and absorbs the 5ms fsleep() stabilization
+penalty. When the second controller triggers its resume sequence, the
+reset framework safely intercepts the request, increments the
+deassert_count reference counter.
 
+The delay is the same for both controllers. Since the reset is shared
+between the controllers the one which comes up first adheres to the
+delay and de-asserts. When the second one comes up it just waits for
+the delay, and the de-assert operation doesn't happen (instead, the
+counter gets incremented) because the reset is already de-asserted by
+the first controller.
+
+> Can the reset_control_bulk_assert(..., host->power_resets) be moved
+> down past setting RZG3S_SYSC_FUNC_ID_RST_RSM_B in
+> rzg3s_pcie_suspend_noirq() and in the rzg3s_pcie_resume_noirq() error
+> path without issue? That would have the same effect as the reset still
+> being held deasserted by the other controller.
+>
+Yes, as mentioned, RZG3S_SYSC_FUNC_ID_RST_RSM_B configures registers
+in the system controller.
+
+The only downside is that up until both controllers execute their
+suspend routines, the reset line will remain in a de-asserted state.
+However, this is expected behavior for a shared reset topology and
+ensures neither controller disrupts the operational state of the other
+during a power-down sequence.
+
+Logs:
+root@rzv2h-evk:~# lspci
+0000:00:00.0 PCI bridge: Renesas Technology Corp. Device 003b
+0000:01:00.0 Non-Volatile memory controller: YEESTOR Microelectronics
+Co., Ltd Device ef25 (rev 01)
+0001:00:00.0 PCI bridge: Renesas Technology Corp. Device 003b
+0001:01:00.0 Non-Volatile memory controller: MAXIO Technology
+(Hangzhou) Ltd. NVMe SSD Controller MAP1202 (DRAM-less) (rev 01)
+root@rzv2h-evk:~#
+root@rzv2h-evk:~#
+root@rzv2h-evk:~#
+root@rzv2h-evk:~# echo mem > /sys/power/state
+[   56.187674] PM: suspend entry (s2idle)
+[   56.192194] Filesystems sync: 0.000 seconds
+[   56.203463] Freezing user space processes
+[   56.210884] Freezing user space processes completed (elapsed 0.002 secon=
+ds)
+[   56.217890] OOM killer disabled.
+[   56.221149] Freezing remaining freezable tasks
+[   56.226901] Freezing remaining freezable tasks completed (elapsed
+0.001 seconds)
+[   56.234336] printk: Suspending console(s) (use no_console_suspend to deb=
+ug)
+[   56.281005] renesas-gbeth 15c40000.ethernet end1: Link is Down
+[   56.281829] renesas-gbeth 15c30000.ethernet end0: Link is Down
+[   63.409122] rzg3s-pcie-host 13400000.pcie: PCIe link status [0x110034e]
+[   63.700160] rzg3s-pcie-host 13410000.pcie: PCIe link status [0x10030e]
+[   63.915436] dwmac4: Master AXI performs fixed burst length
+[   63.915549] renesas-gbeth 15c30000.ethernet end0: No Safety
+Features support found
+[   63.915681] renesas-gbeth 15c30000.ethernet end0: IEEE 1588-2008
+Advanced Timestamp supported
+[   63.915908] renesas-gbeth 15c30000.ethernet end0: configuring for
+phy/rgmii-id link mode
+[   63.924556] dwmac4: Master AXI performs fixed burst length
+[   63.924659] renesas-gbeth 15c40000.ethernet end1: No Safety
+Features support found
+[   63.924778] renesas-gbeth 15c40000.ethernet end1: IEEE 1588-2008
+Advanced Timestamp supported
+[   63.924996] renesas-gbeth 15c40000.ethernet end1: configuring for
+phy/rgmii-id link mode
+[   63.936404] nvme nvme0: 4/0/0 default/read/poll queues
+[   63.936559] nvme nvme1: 4/0/0 default/read/poll queues
+[   63.937729] nvme nvme1: Ignoring bogus Namespace Identifiers
+[   64.032789] OOM killer enabled.
+[   64.036185] Restarting tasks: Starting
+[   64.042572] Restarting tasks: Done
+[   64.046083] random: crng reseeded on system resumption
+[   64.051750] PM: suspend exit
+root@rzv2h-evk:~#
+root@rzv2h-evk:~# lspci[   66.985040] renesas-gbeth 15c30000.ethernet
+end0: Link is Up - 1Gbps/Full - flow control rx/tx
+[   66.985076] renesas-gbeth 15c40000.ethernet end1: Link is Up -
+1Gbps/Full - flow control rx/tx
+
+0000:00:00.0 PCI bridge: Renesas Technology Corp. Device 003b
+0000:01:00.0 Non-Volatile memory controller: YEESTOR Microelectronics
+Co., Ltd Device ef25 (rev 01)
+0001:00:00.0 PCI bridge: Renesas Technology Corp. Device 003b
+0001:01:00.0 Non-Volatile memory controller: MAXIO Technology
+(Hangzhou) Ltd. NVMe SSD Controller MAP1202 (DRAM-less) (rev 01)
+root@rzv2h-evk:~#
+
+> The power_resets are initially deasserted in rzg3s_pcie_probe(), but
+> never asserted in .remove. This unbalances the deassertion counter if
+> one controller is unbound and rebound while the other still holds the
+> reset requested, which would cause the reset to never be asserted
+> during suspend.
+>
+Since this driver explicitly sets .suppress_bind_attrs =3D true in its
+platform_driver structure, manual unbind and rebind operations are
+completely disabled for this controller.
+
+Cheers,
+Prabhakar
