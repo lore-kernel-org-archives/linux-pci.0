@@ -1,209 +1,265 @@
-Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596F62E7F3A
-	for <linux-pci@vger.kernel.org>; Sat,  6 Jun 2026 11:10:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F31C91A285
+	for <linux-pci@vger.kernel.org>; Sat,  6 Jun 2026 17:01:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780744242; cv=none; b=rUs3B3Ivtz/ipAU+Hftnxq+Igk2NjCrRs6pxlSl4gvcBe8PM7Mm1tWRh0FQTJATkMfGJxPc7tvMjOlBe3pvUZ8X2TuoZ9idr8NWJfS4e57H7Qejp9XUQoQLfdoF8wmZ9y9g0T2950Jq1TxE49EEaiwmPKQza5lqDnQvBP6M3H2k=
+	t=1780765311; cv=none; b=Qvtp407/DsRXEX7SB57lPl6Q4cbaLHS/wQ77YnX/bGYDt2AXl9Rb4ZvblJlSw6AhaLVz6SqVfF/qyR6U8wu/k8CNgqrvBQZvFJmYn/ndF91I1P324TtuO6DmjUbb0y2BqVz4jLRu9ZynB5Z5zPsihce7+FYxNfRQ/UFihWgtL/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780744242; c=relaxed/simple;
-	bh=8rGT5m9JBzmFPEylx70cZknpUvaFHjWy4EYaVq8UyiA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aMJryt3CiChpyi3tO3kh/NLbb8bWkwL1tXWJ5ITrTyERJxXcvR8szvBKyYPUaVluvIenTS5eH4Gl+FSGo1tbJI4+9kg6YskxVCZgpFgE1GpyZwZXNIOt6nWRT4N65J6n7oYhX4zicKSXE9mWdXXJf0U6OCtYSGeXLHrcztU3FL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=XkblMaQE; arc=none smtp.client-ip=74.125.82.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1780765311; c=relaxed/simple;
+	bh=Zv4njHjOtI7hl0UmRW97HJDS6QuINXOa/KRI+jxUMk0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=PvLG9TxEPJSBKld6yyeZn3sLv98mfunAT4HairWI3/ONhY8Nx7Jqtfui5KnPOefPgiiciXI4kbeIKmxa1IfBNfeLqANbbQPQF/MCi2yKyt/98Zl+GA25cjfuuW5COIa9ysxUTV0lP48m3FFapIGuY8DlXaD9JNnY3P5v1LUcTOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l2NNyISa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="XkblMaQE"
-Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-133362c30cfso19651c88.0
-        for <linux-pci@vger.kernel.org>; Sat, 06 Jun 2026 04:10:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780744239; x=1781349039; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=F1UvGUn3KRDrygvBE4DSDRKEnm/sK5Y67p5+Nbu/YEQ=;
-        b=XkblMaQEmTxwt4sd2VW4eBWR30yK9bgRaaR+sSjlgNCqLN96DXeAgro8yGjyUB6YgA
-         2VIC+intydL1m6gMixL38HNA+oIVlLICgrdCJlx8urbzlPzekkN38mN0Jujhjvtl0r9/
-         9c4pQ6Zf8MrX5XCHMdHAbgYrhRSINFTJc0ZvLjsnlyZeTI+WDMmVH/RsZ83CswEe17N3
-         RXrxaiE5MbhT2JJKss4+IDlFDGn6VOilog2UX930sd2mL77ZQGNaHKveVtoiOH/0LdRM
-         zgqKf6b3KjqkRPTu0BWgqaTP/AiYAjdkFFBs02PEVtxtzxQZtjnM7dqIInQrIBYXLC+p
-         4asw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780744239; x=1781349039;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=F1UvGUn3KRDrygvBE4DSDRKEnm/sK5Y67p5+Nbu/YEQ=;
-        b=TqKFbgOF+1d5rd/JubJBxJKEIijeO+8Aj5jpt2ryFPrxI6wQ4VDuTBeAWOvOQcC79e
-         zzLSGa2S8x59di/TWCm8W+W3c3hzzqxtMespgM3+CWBG2zxm73z7UpraQEGvQIVQZE2/
-         P0s2D1+zhu7UKSsz/F3OWe2RY6YnOpkxWuCzDpo1iW9aX2XBsoDctm2yz30dTiV2+fGq
-         9gTwV9vTmeBkBHOd+XQtAJV5Jiw+kvK9SokmX9KTEisE/g0iP82t3rFu/ZHz2pLK4Rkc
-         EyotPqMVS2fToWyPhxFoeNUiF7V4GxkbLjzUDx6Ye1y+tjpyfP/QvJBEgJOOAOKT6Dva
-         Tw8Q==
-X-Forwarded-Encrypted: i=1; AFNElJ81hoVH4gE5CAD2D8nEOseA5ngzMVMlmxD1RBNmWKZ79zd3djcL9p+QCbUU5HH7ZSTfx8NnzbOHCsU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwRM0WqUw5yZZ4a2NmaCQ71L2wioZ1Lv4jL2Ij0C2xVb+KVypvu
-	i6okMhcND+Rimp3LW66qVzhRgXfgzlCC46a9bVn4RE0Lb9mPNohdbihSgbaMTh+sfg==
-X-Gm-Gg: Acq92OGl4daSyXodGvVt4krazilajNklHLKqGAilTVhbzLwl3VpdJd/Ege3m/kATH1o
-	RugrjRvi4hKi8N6nkRZehqysIVyGVVYFIi+wkIt+CvYSOUGPVaUdHIu+VV21PKTLdKuzgix3278
-	/9WsDoVGsBk8nQFAGqhMG7YOOE5H326tHJcnD5yWsdUq81RrPbh+lcBKn9T3IaiGO5veJk7bNX0
-	9WD0s0qwvxSOXOkBxRX+kjEIcQ7i7Pjn1673k45iHjACssSNEH84+dLeSy4bpvvmfQ3FkZubrwV
-	deDgO77sFVHB5RENNlVNPaktUzWht9kw+aDxRV/52Q7zS/OKczBswrrmzx6CcUVVff4tGyBFIUR
-	9oSxk/JVqn8uXXukZyDGwuC3yovSruBz+M6YrgSi3QUWBHx/3ZJzxZlCGS/DlqW8qPvwkeO2e3x
-	w4aiphwg3W/3/wrkozJ42d3tN1Q4uEt/414Y80QXBsC2HL2Mjifc0cne7YefjIps9/Lfk+G+FhI
-	q8jyprruw==
-X-Received: by 2002:a05:7022:38f:b0:133:12e0:aab7 with SMTP id a92af1059eb24-13807c6a877mr251422c88.11.1780744238685;
-        Sat, 06 Jun 2026 04:10:38 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-13803eb106esm4391089c88.5.2026.06.06.04.10.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 06 Jun 2026 04:10:38 -0700 (PDT)
-Date: Sat, 6 Jun 2026 11:10:29 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 05/12] PCI: liveupdate: Keep bus numbers constant
- during Live Update
-Message-ID: <aiQAJRINEKiwCmVm@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-6-dmatlack@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l2NNyISa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DDC51F00893;
+	Sat,  6 Jun 2026 17:01:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780765309;
+	bh=PrL53VI89GLlF0IaU0PB6ryHLfFN8JXmCSzkitj9Rys=;
+	h=From:To:Cc:Subject:Date;
+	b=l2NNyISa/Nf6AhreNK2kmd5suzsbbKUhqQUdcJCWdfd8j/HgZ6CrRqkrd6VC+Hepo
+	 Mw3pdPTyd9Cxv98XfORtq37ka/bNq2a0Ws7LSiBgds47YEXrOZckLQ4mj0PnEjbxJE
+	 Fx++dBK4I6msUZuVkI96/mhanw3PsqOo/GfNCoejzrdHGbybu7RgbpLWM/e+4L6SaF
+	 g8L8o99t0SvD1RNpocBNZOsEDy3g57yP5QaKp7ShR68RF3MXw0kG3RJVsilcU3eFxG
+	 LadZkRn93whwUZ5fp1TrJDu0zTrO/KDtlzCZceAR5INYnqDuw07dGwqLQr1AMw9Itw
+	 ZIduB56ZxHE6g==
+From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Shuan He <heshuan@bytedance.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2] PCI/proc: Fix race between pci_proc_init() and pci_bus_add_device()
+Date: Sat,  6 Jun 2026 17:01:46 +0000
+Message-ID: <20260606170146.673140-1-kwilczynski@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260522202410.3104264-6-dmatlack@google.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, May 22, 2026 at 08:24:03PM +0000, David Matlack wrote:
-> During a Live Update, preserved devices must be allowed to continue
-> performing memory transactions so the kernel cannot change the fabric
-> topology, including bus numbers, since that would require disabling
-> and flushing any memory transactions first.
-> 
-> To keep bus numbers constant, always inherit the secondary and
-> subordinate bus numbers assigned to bridges during scanning, instead of
-> assigning new ones, if any PCI devices are being preserved. Note that
-> the kernel inherits bus numbers even on bridges without any downstream
-> endpoints that were preserved. This avoids accidentally assigning a
-> bridge a new window that overlaps with a preserved device that is
-> downstream of a different bridge.
-> 
-> If a bridge is scanned with a broken topology or has no bus numbers
-> set during a Live Update, refuse to assign it new bus numbers and refuse
-> to enumerate devices below it until the Live Update is finished. This is
-> a safety measure to prevent topology conflicts.
-> 
-> Require that CONFIG_CARDBUS is not enabled to enable
-> CONFIG_PCI_LIVEUPDATE since inheriting bus numbers on PCI-to-CardBus
-> bridges requires additional work but is not a priority at the moment.
-> 
-> Signed-off-by: David Matlack <dmatlack@google.com>
-> ---
->  .../admin-guide/kernel-parameters.txt         |  6 +-
->  drivers/pci/Kconfig                           |  2 +-
->  drivers/pci/liveupdate.c                      | 83 ++++++++++++++++++-
->  drivers/pci/liveupdate.h                      | 14 ++++
->  drivers/pci/probe.c                           | 17 +++-
->  include/linux/pci_liveupdate.h                |  4 +
->  6 files changed, 119 insertions(+), 7 deletions(-)
-> 
+pci_proc_attach_device() creates procfs entries for PCI devices and is
+called from pci_bus_add_device().  It lazily creates the per-bus procfs
+directory (bus->procdir) via proc_mkdir() on first use, and returns
+early if proc_initialized is not yet set.
 
-[...]
+On x86 with ACPI, PCI enumeration occurs at subsys_initcall, before
+pci_proc_init() sets proc_initialized at device_initcall.  The
+for_each_pci_dev() loop in pci_proc_init() then creates procfs entries
+for these already-enumerated devices, but runs without holding
+pci_rescan_remove_lock.
 
-> +		incoming = pci_liveupdate_flb_get_incoming();
-> +		if (!incoming) {
-> +			dev->liveupdate.inherit_buses = false;
-> +			goto out;
-> +		}
-> +
-> +		/*
-> +		 * It is safe to sample incoming->ser->nr_devices and then
-> +		 * drop the rwsem since nr_devices will only decrease. Thus the
-> +		 * only "race" is that the current scan will be overly
-> +		 * conservative and force bus inheritance.
-> +		 */
-> +		dev->liveupdate.inherit_buses = incoming->ser->nr_devices;
+On ARM64 with devicetree, PCI host bridges probe at device_initcall.
+With async probing enabled, pci_bus_add_device() can run concurrently
+with pci_proc_init(), and both may call pci_proc_attach_device() for
+the same device or for different devices on the same bus.  As
+pci_host_probe() holds pci_rescan_remove_lock while pci_proc_init()
+does not, there is no serialisation between the two paths.
 
-Nit: inherit_buses is a bool, while compiler will handle it correctly,
-maybe we could:
+When two threads concurrently call pci_proc_attach_device() for devices
+on the same bus, both observe bus->procdir as NULL and both call
+proc_mkdir().  The proc filesystem serialises directory creation
+internally, so only one caller succeeds.  The other receives NULL
+(duplicate entry) and unconditionally stores it to bus->procdir,
+corrupting the valid pointer set by the first caller.
 
-dev->liveupdate.inherit_buses = !!incoming->ser->nr_devices 
+Thus, extract the bus procfs directory creation from
+pci_proc_attach_device() into a new pci_proc_attach_bus() function,
+and call it from the two bus creation paths: pci_register_host_bridge()
+for root buses and pci_alloc_child_bus() for child buses.  These are
+the only two callers of pci_alloc_bus(), so for buses created after
+proc_initialized is set, bus->procdir is in place before any device
+can be added to the bus.
 
-OR
+Therefore, by the time pci_proc_attach_device() runs on these buses,
+bus->procdir is already set and the racy proc_mkdir() call is never
+reached.
 
-dev->liveupdate.inherit_buses = (incoming->ser->nr_devices > 0)
+For buses created before pci_proc_init() sets proc_initialized (the
+common x86 ACPI case), the bus creation hooks return early.  As such,
+add a fallback call to pci_proc_attach_bus() from pci_proc_attach_device()
+to handle these pre-init buses.
 
-for readability?
+Additionally, wrap the for_each_pci_dev() loop in pci_proc_init() with
+pci_lock_rescan_remove() to serialise against concurrent PCI bus
+operations, add an early return in pci_proc_attach_device() when
+dev->procent is already set to make the function idempotent, and clear
+bus->procdir in pci_proc_detach_bus() to prevent use of a dangling
+pointer after proc_remove().
 
-> +		pci_liveupdate_flb_put_incoming();
-> +	}
-> +
-> +out:
-> +	return dev->liveupdate.inherit_buses;
-> +}
-> +
+Closes: https://lore.kernel.org/linux-pci/20250702155112.40124-2-heshuan@bytedance.com/
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+---
+Changes in v2:
+  https://lore.kernel.org/linux-pci/20260430003542.455198-1-kwilczynski@kernel.org/
+
+  - Extracted bus->procdir creation into new pci_proc_attach_bus()
+    function, addressing the suggestion to move proc_mkdir() to a bus
+    creation path, as per Bjorn Helgaas' feedback.
+  - Added bus->procdir = NULL in pci_proc_detach_bus() for symmetry
+    and to prevent dangling pointer after proc_remove().
+
+ drivers/pci/pci.h   |  6 +++--
+ drivers/pci/probe.c |  6 +++++
+ drivers/pci/proc.c  | 63 +++++++++++++++++++++++++++++++--------------
+ 3 files changed, 53 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 13d998fbacce..5e8520bb229c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -343,13 +343,15 @@ void pci_allocate_vc_save_buffers(struct pci_dev *dev);
  
-[...]
+ /* PCI /proc functions */
+ #ifdef CONFIG_PROC_FS
++int pci_proc_attach_bus(struct pci_bus *bus);
++int pci_proc_detach_bus(struct pci_bus *bus);
+ int pci_proc_attach_device(struct pci_dev *dev);
+ int pci_proc_detach_device(struct pci_dev *dev);
+-int pci_proc_detach_bus(struct pci_bus *bus);
+ #else
++static inline int pci_proc_attach_bus(struct pci_bus *bus) { return 0; }
++static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_attach_device(struct pci_dev *dev) { return 0; }
+ static inline int pci_proc_detach_device(struct pci_dev *dev) { return 0; }
+-static inline int pci_proc_detach_bus(struct pci_bus *bus) { return 0; }
+ #endif
+ 
+ /* Functions for PCI Hotplug drivers to use */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index bccc7a4bdd79..90248813d2cf 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1071,6 +1071,9 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(bus);
+ 
++	/* Create procfs directory for this bus */
++	pci_proc_attach_bus(bus);
++
+ 	if (parent)
+ 		dev_info(parent, "PCI host bridge to bus %s\n", name);
+ 	else
+@@ -1279,6 +1282,9 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(child);
+ 
++	/* Create procfs directory for this bus */
++	pci_proc_attach_bus(child);
++
+ 	return child;
+ }
+ 
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index ce36e35681e8..a33a246ec830 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -416,34 +416,51 @@ static const struct seq_operations proc_bus_pci_devices_op = {
+ 
+ static struct proc_dir_entry *proc_bus_pci_dir;
+ 
+-int pci_proc_attach_device(struct pci_dev *dev)
++int pci_proc_attach_bus(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus = dev->bus;
+-	struct proc_dir_entry *e;
+ 	char name[16];
+ 
+ 	if (!proc_initialized)
+ 		return -EACCES;
+ 
+-	if (!bus->procdir) {
+-		if (pci_proc_domain(bus)) {
+-			sprintf(name, "%04x:%02x", pci_domain_nr(bus),
+-					bus->number);
+-		} else {
+-			sprintf(name, "%02x", bus->number);
+-		}
+-		bus->procdir = proc_mkdir(name, proc_bus_pci_dir);
+-		if (!bus->procdir)
+-			return -ENOMEM;
+-	}
++	if (bus->procdir)
++		return 0;
++
++	if (pci_proc_domain(bus))
++		sprintf(name, "%04x:%02x", pci_domain_nr(bus), bus->number);
++	else
++		sprintf(name, "%02x", bus->number);
++
++	bus->procdir = proc_mkdir(name, proc_bus_pci_dir);
++	if (!bus->procdir)
++		return -ENOMEM;
++
++	return 0;
++}
++
++int pci_proc_attach_device(struct pci_dev *dev)
++{
++	char name[16];
++	int ret;
++
++	if (!proc_initialized)
++		return -EACCES;
++
++	if (dev->procent)
++		return 0;
++
++	/* Ensure bus procdir exists for buses created before pci_proc_init() */
++	ret = pci_proc_attach_bus(dev->bus);
++	if (ret)
++		return ret;
+ 
+ 	sprintf(name, "%02x.%x", PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
+-	e = proc_create_data(name, S_IFREG | S_IRUGO | S_IWUSR, bus->procdir,
+-			     &proc_bus_pci_ops, dev);
+-	if (!e)
++	dev->procent = proc_create_data(name, S_IFREG | S_IRUGO | S_IWUSR,
++					dev->bus->procdir, &proc_bus_pci_ops,
++					dev);
++	if (!dev->procent)
+ 		return -ENOMEM;
+-	proc_set_size(e, dev->cfg_size);
+-	dev->procent = e;
++	proc_set_size(dev->procent, dev->cfg_size);
+ 
+ 	return 0;
+ }
+@@ -458,18 +475,24 @@ int pci_proc_detach_device(struct pci_dev *dev)
+ int pci_proc_detach_bus(struct pci_bus *bus)
+ {
+ 	proc_remove(bus->procdir);
++	bus->procdir = NULL;
+ 	return 0;
+ }
+ 
+ static int __init pci_proc_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
++
+ 	proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
+ 	proc_create_seq("devices", 0, proc_bus_pci_dir,
+-		    &proc_bus_pci_devices_op);
++			&proc_bus_pci_devices_op);
++
+ 	proc_initialized = 1;
++
++	pci_lock_rescan_remove();
+ 	for_each_pci_dev(dev)
+ 		pci_proc_attach_device(dev);
++	pci_unlock_rescan_remove();
+ 
+ 	return 0;
+ }
+-- 
+2.54.0
 
->  		/*
-> @@ -1497,8 +1501,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  		 * do in the second pass.
->  		 */
->  		if (!pass) {
-> -			if (pcibios_assign_all_busses() || broken)
-> -
-> +			if (assign_new_buses || broken)
->  				/*
->  				 * Temporarily disable forwarding of the
->  				 * configuration cycles on all bridges in
-> @@ -1512,6 +1515,11 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  			goto out;
->  		}
->  
-> +		if (liveupdate) {
-> +			pci_err(dev, "Cannot reconfigure bridge during Live Update, skipping\n");
-> +			goto out;
-> +		}
-
-Quite helpful! Thanks :)
-
-> +
->  		/* Clear errors */
->  		pci_write_config_word(dev, PCI_STATUS, 0xffff);
->  
-> @@ -1572,6 +1580,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
->  	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, bctl);
->  
->  	pm_runtime_put(&dev->dev);
-> +	pci_liveupdate_scan_bridge_end(dev, pass);
->  
->  	return max;
->  }
-
-With the minor nit above,
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
-
-Thanks,
-Praan
