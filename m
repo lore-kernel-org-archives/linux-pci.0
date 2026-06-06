@@ -1,122 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DA9D199385;
-	Sat,  6 Jun 2026 00:24:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 585B82248A3;
+	Sat,  6 Jun 2026 00:26:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780705498; cv=none; b=DTcw5DueFPouBkgLXAsmC2zLhNlt05N3kcptey7I3RJYsWiieHfN3uwnUmtuXQzwLWj/i5/71mhYndQuGslk+rWL1/bOnFdtfCXFtt0jS8nzcFPEdF19X8JG41OIIaQa3ISfzcGcJgF9Yw6a6rJEUDYTeE6LxTpv3blBmw9ID9s=
+	t=1780705600; cv=none; b=OcGVu+8ruy2pHnX5iZ0SDVfNqmt1M49D6fRMkQW0dOppBdd0+OUxy52X2UAOgDbXs2rMXmSQRCS0iFUc5U8ignGC4vGSYTBRPe9FyYplUGCelguxuzsgPrY2JKFeW4NBhXEGMiUjOPIUSaH+CJjCKVF1fIvqaFQNmjlIvhJnXvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780705498; c=relaxed/simple;
-	bh=85a+ZMOLVUDMgdb5VnDtIHQOh00au+drbiqXiadO2+U=;
+	s=arc-20240116; t=1780705600; c=relaxed/simple;
+	bh=257nY1KOi0hxr8bzdF3zWvWlAGtdbN2T/wXPHS9UXFM=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=ieAVzsPGJCxnmXEwFwNZPbxuz7OyLiw/8IL63v5DlQunszzb1kYoymZfYKOS/NUkxNEzYdteriTElCHyTrlJgQ0ivbu0YLenog90j4BF+CavRmnMN/ZtnYLTSrcm0ivk37RS8mCzg0TwIKc+/pesEwbf8jpUitwVlx3E3L/Pgo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OWklmAKN; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=mBVln/KcX+o5Pcp23EqxqlP2nZS4wNX88Yt0zv39+zBBCGL/TH73VnA41RL2kHY5NX5G8sER+gQrmRVPln9zBP0GDRa9o8MYAdW96NLlGIehu7Ko9LDGHgP5fNF64NM2WgbDxhtTUSfs9qBxfj1HylyFNRbzqoDDXZts2G8mBTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LEvQ7Wgm; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OWklmAKN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5533A1F00893;
-	Sat,  6 Jun 2026 00:24:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LEvQ7Wgm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA96B1F00893;
+	Sat,  6 Jun 2026 00:26:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780705496;
-	bh=WiSEczeLurMKUEyGluvk+DuVbxIXyIC5eryA1lsi29o=;
+	s=k20260515; t=1780705598;
+	bh=ZoeWKOoCfE//lsEZdvgy1YIU9Wy12g4ctb6rVAercF0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=OWklmAKNs8BhWlRgi/ReAJ7Or8JpcCCqgxGJpFh604Cs1AGU0XOl6X2SDpfNlj+wS
-	 Cg31hBRgFp0OW2IRCfkiZHE6FJm8yYQHMdp/LfHll/KO+F8X88YwhuEifRNII05D7z
-	 yT1mvycc637BEy55sO4aghTqVH14MV0Mu9ePjrII5ZRkMUnCtwtJ8j8LPvgyH1zHgz
-	 KJwaE4bxRqDQwW/DSnyIKOwUnI+wZFm0aYmhCSuMGZYm93gLo9nJdMAc7FJOhtY+J3
-	 FRRRwTcwNikprRLUJUcISuvTzXcZBsCBtc4oq82O9UKnVm9sbibHARjwqijSdhuROs
-	 eiNKaL+2+T9gA==
+	b=LEvQ7Wgmv1G8/JieLeuOfQPIvwX25skvnHJmExfsz301YKqz/YXiXww/Fk4X49LCR
+	 rYrX/dnZgyWzu6ecnT/cOYiNqPoAatX5rrZpP9nIqGF9FJzgZ3lcdUZbzF1r0VtcJE
+	 CNKqUYC3AJ9nyN9N8d3B9UeLF0oBF2vf9eDH4KGsAOOJFs2P9E4mEl5JK+0GVmU5aJ
+	 QZoImZlIDNlSp5xbAhI3/NYH1QSJNFAXZGy1BYNfeyDo63F4T5HcUCiiPx8meh0/Di
+	 EQgkA/qqWBiqUJF0SXqcJJVVala/TaJXUqH7/jFJCg7WHU6m0EunzXyq8Nzjq+LRWq
+	 2VBe9yySZ18tA==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 14/23] dmaengine: sdxi: Attach descriptor ring state
- to contexts
+Subject: Re: [PATCH v3 21/23] dmaengine: sdxi: Add unit tests for descriptor
+ encoding
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Nathan Lynch via B4 Relay" <devnull+nathan.lynch.amd.com@kernel.org>
-Cc: Frank.Li@kernel.org, linux-pci@vger.kernel.org, vkoul@kernel.org, dmaengine@vger.kernel.org
-In-Reply-To: <20260605-sdxi-base-v3-14-4d38ca2bdffe@amd.com>
-References: <20260605-sdxi-base-v3-14-4d38ca2bdffe@amd.com>
+Cc: vkoul@kernel.org, Frank.Li@kernel.org, linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
+In-Reply-To: <20260605-sdxi-base-v3-21-4d38ca2bdffe@amd.com>
+References: <20260605-sdxi-base-v3-21-4d38ca2bdffe@amd.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Sat, 06 Jun 2026 00:24:55 +0000
-Message-Id: <20260606002456.5533A1F00893@smtp.kernel.org>
+Date: Sat, 06 Jun 2026 00:26:37 +0000
+Message-Id: <20260606002637.DA96B1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-
-New issues:
-- [High] Driver teardown frees descriptor ring state while threads may be w=
-aiting, causing a use-after-free.
-
-Pre-existing issues:
-- [High] This problem wasn't introduced by this patch, but hardware stalls =
-lead to permanent D-state hangs in `sdxi_ring_reserve`.
+- [Low] Copy-paste error in the `cxt_stop` test causing it to assert on an =
+incorrect union field (`desc.cxt_start.vflags`).
 --
 
-commit 7d20c79380e3ebc097f2724f0a53221cb5571730
+commit cabf8e94603d8e7f4dadb05e7df3a65c6cd9cd8f
 Author: Nathan Lynch <nathan.lynch@amd.com>
 
-dmaengine: sdxi: Attach descriptor ring state to contexts
+dmaengine: sdxi: Add unit tests for descriptor encoding
 
-This commit allocates and attaches a sdxi_ring_state structure to each
-sdxi_cxt upon context allocation. The ring state's lifetime is tied to
-the context and is freed upon context release.
+This commit adds unit tests for the SDXI descriptor encoder functions.
+It uses the packing API to independently decode and verify the descriptor
+layouts without relying on the driver's bitfield macros.
 
-> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-> index 2f9a29df5d9ce..907547ac450f2 100644
-> --- a/drivers/dma/sdxi/context.c
-> +++ b/drivers/dma/sdxi/context.c
+> diff --git a/drivers/dma/sdxi/descriptor_kunit.c b/drivers/dma/sdxi/descr=
+iptor_kunit.c
+> new file mode 100644
+> index 0000000000000..1f3c2e7ab2ddf
+> --- /dev/null
+> +++ b/drivers/dma/sdxi/descriptor_kunit.c
 [ ... ]
-> @@ -63,6 +64,7 @@ static void sdxi_free_cxt(struct sdxi_cxt *cxt)
->  		dma_free_coherent(sdxi->dev, sq->ring_size,
->  				  sq->desc_ring, sq->ring_dma);
->  	kfree(cxt->sq);
-> +	kfree(cxt->ring_state);
+> +static void cxt_stop(struct kunit *t)
+> +{
+> +	struct unpacked_desc unpacked;
+> +	struct sdxi_cxt_stop stop =3D {
+> +		.range =3D sdxi_cxt_range_single(2),
+> +	};
+> +	struct sdxi_desc desc;
+> +
+> +	desc_poison(&desc);
+> +	KUNIT_ASSERT_EQ(t, 0, sdxi_encode_cxt_stop(&desc, &stop));
+> +
+> +	unpack_cxt_stop(&unpacked, &desc);
+> +
+> +	/* Check op-specific fields. */
+> +	KUNIT_EXPECT_EQ(t, 0, desc.cxt_start.vflags);
 
-[Severity: High]
-Does this free cause a use-after-free if threads are still waiting in
-sdxi_ring_reserve()?
-
-During teardown, contexts may be forcefully exited without stopping DMA
-channels or ensuring active users have left. If sdxi_unregister() calls
-sdxi_cxt_exit() -> sdxi_free_cxt(), the ring_state struct is freed.
-
-Threads blocked in sdxi_ring_reserve() rely on the wait queue head and lock
-inside this freed allocation:
-
-drivers/dma/sdxi/ring.c:sdxi_ring_reserve() {
-    wait_event(rs->wqh,
-               (ret =3D sdxi_ring_try_reserve(rs, nr, resv)) !=3D -EBUSY);
-}
-
-When a sleeping task is spuriously woken up, it could dereference the freed
-rs pointer, leading to memory corruption.
-
-[Severity: High]
-This is a pre-existing issue, but can hardware stalls lead to permanent
-D-state hangs here?
-
-Looking at sdxi_ring_reserve(), the uninterruptible wait_event() lacks
-a timeout and ignores signals:
-
-drivers/dma/sdxi/ring.c:sdxi_ring_reserve() {
-    wait_event(rs->wqh,
-               (ret =3D sdxi_ring_try_reserve(rs, nr, resv)) !=3D -EBUSY);
-}
-
-If the hardware encounters a fatal error and stops processing descriptors, =
-it
-will never increment the read index. Any process attempting to submit a com=
-mand
-will sleep indefinitely.
-
->  	kfree(cxt);
->  }
->
+[Severity: Low]
+Is there a copy-paste error here? This is the cxt_stop test, but it checks
+desc.cxt_start.vflags instead of desc.cxt_stop.vflags.
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260605-sdxi-base-=
-v3-0-4d38ca2bdffe@amd.com?part=3D14
+v3-0-4d38ca2bdffe@amd.com?part=3D21
