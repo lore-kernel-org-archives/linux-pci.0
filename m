@@ -1,115 +1,112 @@
-Received: from mail.sntiq.com (mail.sntiq.com [45.149.154.214])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AE302B9BA;
-	Sat,  6 Jun 2026 20:48:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.149.154.214
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA6330E0EC
+	for <linux-pci@vger.kernel.org>; Sat,  6 Jun 2026 21:23:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780778905; cv=none; b=FvcU2qzsPScYQ0ff8KcEwDbrQriPMh71mBkgl2HhRfyuSttynKmtlPTzxIKAk6UTDRFIfJdOZ/qwM9I6Y+YhYIig1VkywGcAUgDddCKPd9MMa8p9MtAUEnOt+WE8R6l62r2rUg9MkOFvP52uLcHCLFkwy9XKyheXwccVLbD4E4Y=
+	t=1780781004; cv=none; b=m0bFUv6mvGWkZchiNM+Q9w/Z2P/5mKEm2/Ee7A/j63mz557EwmrQldLqulqO3OLwzil3YySw0vV7ql/z8QPNfyB7QkPc7ldAVv0IImalN+mx5NdTTPrHwmCQbxVeK/pAkgi/ieLwygtIhzxjuFhHfLjY7lKahsjfgL0mCoJHNg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780778905; c=relaxed/simple;
-	bh=NJS+1gnRo13cWn5Qb4zVJR5/2rcakmHdTCU/G41UEog=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DQ6bkxN1F1MHS7GB8U4Y1timxYhrC2HEclArxzIXuadgf1FrQzd/JE8eE9V4hD2vMueyl6a5GkGEaZZvFMPcXRa3w+11CH9ahHBtExC83ulJScVyzAoZlKpUtW6/WECZWS+1wKVRykocgij1U4y2cRorasA3+tMq+1YmZUkL2BI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntiq.com; spf=pass smtp.mailfrom=sntiq.com; dkim=pass (2048-bit key) header.d=sntiq.com header.i=@sntiq.com header.b=zAzHWrhT; arc=none smtp.client-ip=45.149.154.214
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sntiq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntiq.com
+	s=arc-20240116; t=1780781004; c=relaxed/simple;
+	bh=lSPj+OryKoZmvCG2UliazO0ttED2j9YVbCqnKBpcShg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dT8ogxeJw3G3RjlelY6zUgozKEiOQXHsB111Bu2t3jAkSWgVt40LvNZJvmR0HsZCrDyruPBdFzK7Y2m2YJmnkJ8nId1uErnjZBAcSmK+bT8XXT3syOCfHhQDQzvidQRncJj7oe/EKp+9dwryL0xvhNMV5J+XuUg9WWJdltuN5iY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ika4TdmT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sntiq.com header.i=@sntiq.com header.b="zAzHWrhT"
-Received: from node (unknown [145.224.74.243])
-	by mail.sntiq.com (Postfix) with ESMTPSA id 180AF800EE;
-	Sat,  6 Jun 2026 20:46:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sntiq.com; s=dkim;
-	t=1780778894;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=SQb9JeKL+scqTl2jLRA5Uwz3PfPgEyDqCt2OIiZ5moM=;
-	b=zAzHWrhTkihr34aX3VI+Pa8YGY+YHaJmGNqwamwIb7QzgYthyiMfiHPOWTi/q/XSRgLaLU
-	ykpirp9Bb7/DZzGgg/SvqeRx6WVkFFt3pHiXde1rZ5UI0aePVR8JZSKyIee9KC20xHRGkP
-	2Zd1noL02c8uk8wEmWU+l2B9IIVI5AU48AdwxF7HWUEssC2LhHWmuVKkWw3+pLtX0t7EJ7
-	qLGOskv6aqkw4qlFmueZdYOxF/F6tEt+W5IuBMBKOjXapxf3pz5gEdlLHoT+398idWy4sy
-	8SdbDaKld9/QtAgJwh+OON4hLliggkQl8XGISFrKQ/D6uPj+rePJQtO/9z/Hhg==
-From: David Glushkov <david.glushkov@sntiq.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ika4TdmT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6A4D1F00893;
+	Sat,  6 Jun 2026 21:23:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780781003;
+	bh=eWUNGZB+xkUYKscuHPv5kURfrkwAttnLVW9NCQ85WsM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ika4TdmTjJ9qnMUuLWfEPNyN3UZJQI5cUDKH929qdDlmQ9VFMyuULQg18QK3pD3hg
+	 MQlPWYuW/G80FtqPu5M2KABWDQdVBqPOD/ZFRq/t1/uPAMGTdIUFubDcQU8IzTsWVm
+	 N9EpJsJ+06X8oTmquoChZxilD1PGXYR65Lz3RMBRgj2ibun/X2z9KOSyCQW+fhUEY+
+	 bnfokWGAtY0x3bvuaorR2H5GDzxIQzG4qq3Ba4nUrNzYsGYIe7HG00a4G4NvjmPD/N
+	 5d4k1oUY0eP16VGlgIFFxhgvd4z5ZGad6xI37Lvww4hAcZNaQthRoRwCE/AjAq8xJ4
+	 L6jDsgfH0otWA==
+Date: Sun, 7 Jun 2026 06:23:21 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Disable async suspend for MSI Raider A18 HX A9WJG audio
-Date: Sat,  6 Jun 2026 22:45:47 +0200
-Message-ID: <20260606204547.11945-1-david.glushkov@sntiq.com>
-X-Mailer: git-send-email 2.54.0
+Cc: Bjorn Helgaas <helgaas@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, Shuan He <heshuan@bytedance.com>, 
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI/proc: Fix race between pci_proc_init() and
+ pci_bus_add_device()
+Message-ID: <20260606212045.GA2380983@rocinante>
+References: <20260606203022.743558-1-kwilczynski@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260606203022.743558-1-kwilczynski@kernel.org>
 
-On the MSI Raider A18 HX A9WJG, the AMD ACP function and AMD
-Azalia/HDA function are exposed as separate PCI functions, but the ACPI
-CPMACPV4 table tracks their presence with shared state and uses common
-power-gating methods for both.
+Hello,
 
-With asynchronous system suspend/resume, these two functions can resume in
-parallel. On this machine that can leave the HDA controller unresponsive,
-with CORBRP reads returning 0xffff and the kernel logging:
+> pci_proc_attach_device() creates procfs entries for PCI devices and is
+> called from pci_bus_add_device().  It lazily creates the per-bus procfs
+> directory (bus->procdir) via proc_mkdir() on first use, and returns
+> early if proc_initialized is not yet set.
+> 
+> On x86 with ACPI, PCI enumeration occurs at subsys_initcall, before
+> pci_proc_init() sets proc_initialized at device_initcall.  The
+> for_each_pci_dev() loop in pci_proc_init() then creates procfs entries
+> for these already-enumerated devices, but runs without holding
+> pci_rescan_remove_lock.
+> 
+> On ARM64 with devicetree, PCI host bridges probe at device_initcall.
+> With async probing enabled, pci_bus_add_device() can run concurrently
+> with pci_proc_init(), and both may call pci_proc_attach_device() for
+> the same device or for different devices on the same bus.  As
+> pci_host_probe() holds pci_rescan_remove_lock while pci_proc_init()
+> does not, there is no serialisation between the two paths.
+> 
+> When two threads concurrently call pci_proc_attach_device() for devices
+> on the same bus, both observe bus->procdir as NULL and both call
+> proc_mkdir().  The proc filesystem serialises directory creation
+> internally, so only one caller succeeds.  The other receives NULL
+> (duplicate entry) and unconditionally stores it to bus->procdir,
+> corrupting the valid pointer set by the first caller.
+> 
+> Thus, extract the bus procfs directory creation from
+> pci_proc_attach_device() into a new pci_proc_attach_bus() function,
+> and call it from the two bus creation paths: pci_register_host_bridge()
+> for root buses and pci_alloc_child_bus() for child buses.  These are
+> the only two callers of pci_alloc_bus(), so for buses created after
+> proc_initialized is set, bus->procdir is in place before any device
+> can be added to the bus.
+> 
+> Therefore, by the time pci_proc_attach_device() runs on these buses,
+> bus->procdir is already set and the racy proc_mkdir() call is never
+> reached.
+> 
+> For buses created before pci_proc_init() sets proc_initialized (the
+> common x86 ACPI case), the bus creation hooks return early.  As such,
+> add a fallback call to pci_proc_attach_bus() from pci_proc_attach_device()
+> to handle these pre-init buses.
+> 
+> Additionally, wrap the for_each_pci_dev() loop in pci_proc_init() with
+> pci_lock_rescan_remove() to serialise against concurrent PCI bus
+> operations, add an early return in pci_proc_attach_device() when
+> dev->procent is already set to make the function idempotent, and clear
+> bus->procdir in pci_proc_detach_bus() to prevent use of a dangling
+> pointer after proc_remove().
+> 
+> Closes: https://lore.kernel.org/linux-pci/20250702155112.40124-2-heshuan@bytedance.com/
 
-  snd_hda_intel 0000:6a:00.6: CORB reset timeout#2, CORBRP = 65535
+Applied to procfs, as I want this to have some soak time via linux-next,
+plus 0-day bot will test it for me, too.
 
-When this happens, HDA speaker playback fails after resume and the ACP
-DMIC path can also fail with PDM DMA trigger timeouts. Disabling runtime
-PM and D3cold for both functions does not avoid the failure, but disabling
-asynchronous PM globally via /sys/power/pm_async does.
+Lorenzo, do you think you could re-test this on your hardware platform?
 
-Disable async suspend only for the affected MSI subsystem and only for
-the two AMD audio functions, so the rest of the system can continue to
-use async suspend/resume.
+Shuan, any chance for you to test this again on your RISC-V based platform?
 
-This is independent of the ASoC DMI quirk which exposes the ACP DMIC on
-this system; that quirk makes the microphone visible, while this PCI quirk
-fixes the resume ordering problem between the ACP and HDA PCI functions.
+Thank you!
 
-Tested on MSI Raider A18 HX A9WJG (MS-182L), BIOS E182LAMS.31A, with
-pm_async=1 over s2idle. After resume, HDA speaker playback worked and the
-PipeWire ACP DMIC source recorded successfully, with no CORB reset timeout,
-ACP timeout, or ASoC error in the checked post-resume log.
-
-Link: https://lore.kernel.org/r/20260531214512.170716-1-david.glushkov@sntiq.com
-Signed-off-by: David Glushkov <david.glushkov@sntiq.com>
----
- drivers/pci/quirks.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 5d7df95d2010..8702ccfc2265 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1904,6 +1904,25 @@ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_CLASS_STORA
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x2362, quirk_jmicron_async_suspend);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x236f, quirk_jmicron_async_suspend);
- 
-+/*
-+ * MSI Raider A18 HX A9WJG (MS-182L) exposes ACP and Azalia as separate PCI
-+ * functions, but ACPI uses shared power gating for both.  If they suspend or
-+ * resume in parallel, the HDA controller may become unresponsive.
-+ */
-+static void quirk_msi_a18_audio_async_suspend(struct pci_dev *dev)
-+{
-+	if (dev->subsystem_vendor != 0x1462 ||
-+	    dev->subsystem_device != 0x14a5)
-+		return;
-+
-+	device_disable_async_suspend(&dev->dev);
-+	pci_info(dev, "async suspend disabled to avoid audio power-on ordering issue\n");
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15e2,
-+			quirk_msi_a18_audio_async_suspend);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x15e3,
-+			quirk_msi_a18_audio_async_suspend);
-+
- #ifdef CONFIG_X86_IO_APIC
- static void quirk_alder_ioapic(struct pci_dev *pdev)
- {
--- 
-2.54.0
-
+	Krzysztof
