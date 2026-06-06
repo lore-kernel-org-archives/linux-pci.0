@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF00927FD44;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9F3279336;
 	Sat,  6 Jun 2026 00:02:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780704143; cv=none; b=psE5nCjfJr1ecWAS8h80s8SSzwdbNS35Tlu5noyq9TY+Kc5n4pvhRjqU73iLYFpPCPV+DdwT/mK1tshn8mnimTZ3VPPhNNI48us2lhbfXBHQrx1qPTJRwcOz0rCQF1Prc//qRjEM4QpweEFN4xx6EKJAmMgZOUvDd3xoxEvhbPQ=
+	t=1780704143; cv=none; b=uKYq9ctEw+Ukai4DFNJUbRRynIw7yvPF6n1PfpmVd5NWrDZrdXBbuIbIJ0QSxD5liIhwE941yB/NW82Nmv8ni/I6jD2QW1yInn/GH08QnqADJdp13a+vjvaJTcrxcEvk4FTM47WmoTxuSeoKA9YvVJJGWzQFCnLbiBvzfwjlfjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1780704143; c=relaxed/simple;
-	bh=CfhFOUVHuW3ofHeuIzbI6s3yDV2GuJ9tuZ5kbiDPJLE=;
+	bh=XNMxRjNWQZv1sZpGhMm8KbMRB44Aeh/fKvTyGO6KSrM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=LpHqo0ZaKJMr0k+27PXvlTA4Ei5GKG6+i6HNnAKGmmtYYNJGk+eVv5c8pML/yNV6OtoW1nRwxMw+63rqf8xgUtFaS/WWejrwBSOboqIpihrabWZICUhkkvofuE5x4BtLCjJTKA50sh5TUlCEkQvLSqO26adprgPega3gROS8Gws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pHHOazkR; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=fIZD1+q7RTiIrGazVpSwga9lnXHGvJwT95JaNU9HkfngNtDphAjnjNlA1M6GFF8/YzJWSOBbfFI8G7Drfm0dFGCcnv5nZOds3qa7SfN6qbjIlAIbTs6YgbzvDQ81zPFtwgt9TTbjcxtyNKi2/iFCAr/WwxYSLOIdJu2GpjL5Nr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VqUAPY1/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pHHOazkR"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id AF024C2BCB9;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VqUAPY1/"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9F1AAC2BCFB;
 	Sat,  6 Jun 2026 00:02:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1780704143;
-	bh=CfhFOUVHuW3ofHeuIzbI6s3yDV2GuJ9tuZ5kbiDPJLE=;
+	bh=XNMxRjNWQZv1sZpGhMm8KbMRB44Aeh/fKvTyGO6KSrM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=pHHOazkR86s08QozvI0+OCkw/JFU+Eg9BDCzbqHz8gnde8ppUCWNOWwqaQnSxbi75
-	 uWv576bDLoktMJ3birP8n/aCjTAg8yVs//zPLHELUqAKwz4w7e9QfrPgIsc2xmlp5g
-	 CWqtd4RiKRa8efnWYSBceiTXnfNdiHRRi88hyKAfPQyM/6sjJuSmmXql4++7jpgKUo
-	 5TZhWYeX5QRc8xEnQGQBwzbeKnMQCZ5TpmW1e798ATlBjzJskXTdxlMOJJG0gbqvqC
-	 r8oYkiUpBd7xBnBKm0ftHceFbxggqhymGByR9BfSZDzX4jbhy9vzYByyQ2tQms6C/X
-	 S7fshkKnqARfw==
+	b=VqUAPY1/ghwHdJswlWKZ0F5ucUA3sfEPJCuHSyIT0ARdOzRteG7RexbuFke3Wc4sZ
+	 RnOEkJNhnVVVjR8hunOsxC1az6h6pDOSmUdIIULuWiLj8DoOHdxDMWkPsmPKEMy/DG
+	 /sE5I/vYBsyz5fp5JV7JUVKE/44LSlPfEjw34VLQaKqqG+IaOoAOPqc2qojr08yLps
+	 DikTILjViWOyVfw47Kg0qAzmUVpb97ytSVbVYmiv++3k1xcAaZhQrbWTzmgpiAFUqe
+	 Ufk979ULnqxfGA6iE3Qb0E1wkrpoZf9KrTMqcmkN93jevR7LHxL1RM5u+MXCIe5jN2
+	 NiU5GQUcawIzg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E4EDCD8C8B;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90001CD6E7C;
 	Sat,  6 Jun 2026 00:02:23 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 05 Jun 2026 19:02:23 -0500
-Subject: [PATCH v3 20/23] dmaengine: sdxi: Encode nop, copy, and interrupt
- descriptors
+Date: Fri, 05 Jun 2026 19:02:22 -0500
+Subject: [PATCH v3 19/23] dmaengine: sdxi: Provide context start and stop
+ APIs
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260605-sdxi-base-v3-20-4d38ca2bdffe@amd.com>
+Message-Id: <20260605-sdxi-base-v3-19-4d38ca2bdffe@amd.com>
 References: <20260605-sdxi-base-v3-0-4d38ca2bdffe@amd.com>
 In-Reply-To: <20260605-sdxi-base-v3-0-4d38ca2bdffe@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
@@ -53,14 +53,13 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  Stephen Bates <Stephen.Bates@amd.com>, Tycho Andersen <tycho@kernel.org>, 
  Wei Huang <wei.huang2@amd.com>, Wei Xu <weixugc@google.com>, 
  dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, Frank Li <Frank.Li@nxp.com>, 
- Nathan Lynch <nathan.lynch@amd.com>
+ linux-pci@vger.kernel.org, Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1780704140; l=7417;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1780704140; l=3811;
  i=nathan.lynch@amd.com; s=20260410; h=from:subject:message-id;
- bh=a3ebJiN0ISff/LauBhfxJYv8Eu1uDiFLARue6Sq4bgQ=;
- b=xw7bfXU473M7bwYRtBCXxTQeO80J8zGtOPND3NQ1rI9Av7/XX5oV2HKl5d4eQgeaG9zvjU7gw
- mnznC8N7daPDGFRTSwo5/OJwOwCnJse+Ayo3nycQwt3z3siGN8tWW+q
+ bh=a8RlzeUJApQL3roCOqXKGm7r59rjbXIKAHqZ0W+U7Qo=;
+ b=ErRDUoZcunLBgZc6QZG1VjBkv6/G0jO31CX0CVoWt54GZDeaB4TovJT4Nh5mQ2CRbmtokjjuG
+ 79gvNiKu7lvDGkZveVj2HRA6pVMV4Aypf60jyVokNmOOK0fB2y9VqRR
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=PK4ozhq+/z9/2Jl5rgDmvHa9raVomv79qM8p1RAFpEw=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260410 with
@@ -70,261 +69,132 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Introduce low-level support for serializing three operation types to
-the descriptor ring of a client context: nop, copy, and interrupt.
-As with the administrative descriptor support introduced earlier, each
-operation has its own distinct type that overlays the generic struct
-sdxi_desc, along with a dedicated encoder function that accepts an
-operation-specific parameter struct.
+Starting and stopping SDXI client contexts is implemented by submitting
+special-purpose descriptors to a function's admin context.
 
-Copy descriptors are used to implement memcpy offload for the DMA
-engine provider, and interrupt descriptors are used to signal the
-completion of preceding descriptors in the ring. Nops can be used in
-error paths where a ring reservation has been obtained and the caller
-needs to submit valid descriptors before returning.
-
-Conditionally expose sdxi_encode_size32() for unit testing.
+Introduce high-level context start and stop APIs that operate on
+struct sdxi_cxt objects, encapsulating the administrative descriptor
+submission and completion signaling. These are intended for use by
+clients such as the DMA engine provider to come.
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/descriptor.c | 107 ++++++++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/descriptor.h |  25 ++++++++++
- drivers/dma/sdxi/hw.h         |  33 +++++++++++++
- 3 files changed, 165 insertions(+)
+ drivers/dma/sdxi/context.c | 77 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/context.h |  3 ++
+ 2 files changed, 80 insertions(+)
 
-diff --git a/drivers/dma/sdxi/descriptor.c b/drivers/dma/sdxi/descriptor.c
-index be2a9244ce19..41019e747528 100644
---- a/drivers/dma/sdxi/descriptor.c
-+++ b/drivers/dma/sdxi/descriptor.c
-@@ -7,12 +7,119 @@
+diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
+index 9b0984842d9a..afd341416342 100644
+--- a/drivers/dma/sdxi/context.c
++++ b/drivers/dma/sdxi/context.c
+@@ -22,7 +22,9 @@
+ #include <asm/barrier.h>
+ #include <asm/rwonce.h>
  
- #include <kunit/visibility.h>
- #include <linux/bitfield.h>
-+#include <linux/bug.h>
-+#include <linux/range.h>
-+#include <linux/sizes.h>
- #include <linux/types.h>
- #include <asm/byteorder.h>
- 
++#include "completion.h"
+ #include "context.h"
++#include "descriptor.h"
  #include "hw.h"
- #include "descriptor.h"
- 
-+VISIBLE_IF_KUNIT int __must_check sdxi_encode_size32(u64 size, __le32 *dest)
-+{
-+	/*
-+	 * sizes are encoded as value - 1:
-+	 * value    encoding
-+	 *     1           0
-+	 *     2           1
-+	 *   ...
-+	 *    4G  0xffffffff
-+	 */
-+	if (WARN_ON_ONCE(size > SZ_4G) ||
-+	    WARN_ON_ONCE(size == 0))
-+		return -EINVAL;
-+	size = clamp_val(size, 1, SZ_4G);
-+	*dest = cpu_to_le32((u32)(size - 1));
-+	return 0;
-+}
-+EXPORT_SYMBOL_IF_KUNIT(sdxi_encode_size32);
-+
-+void sdxi_serialize_nop(struct sdxi_desc *desc)
-+{
-+	u32 opcode = (FIELD_PREP(SDXI_DSC_SUBTYPE, SDXI_DSC_OP_SUBTYPE_NOP) |
-+		      FIELD_PREP(SDXI_DSC_TYPE, SDXI_DSC_OP_TYPE_DMAB));
-+	u64 csb_ptr = FIELD_PREP(SDXI_DSC_NP, 1);
-+
-+	*desc = (typeof(*desc)) {
-+		.nop = (typeof(desc->nop)) {
-+			.opcode = cpu_to_le32(opcode),
-+			.csb_ptr = cpu_to_le64(csb_ptr),
-+		},
-+	};
-+
-+}
-+
-+int sdxi_encode_copy(struct sdxi_desc *desc, const struct sdxi_copy *params)
-+{
-+	u64 csb_ptr;
-+	u32 opcode;
-+	__le32 size;
-+	int err;
-+
-+	err = sdxi_encode_size32(params->len, &size);
-+	if (err)
-+		return err;
-+	/*
-+	 * Reject overlapping src and dst. "Software ... shall not
-+	 * overlap the source buffer, destination buffer, Atomic
-+	 * Return Data, or completion status block." - SDXI 1.0 5.6
-+	 * Memory Consistency Model
-+	 */
-+	if (range_overlaps(&(const struct range) {
-+				   .start = params->src,
-+				   .end   = params->src + params->len - 1,
-+			   },
-+			   &(const struct range) {
-+				   .start = params->dst,
-+				   .end   = params->dst + params->len - 1,
-+			   }))
-+		return -EINVAL;
-+
-+	opcode = (FIELD_PREP(SDXI_DSC_SUBTYPE, SDXI_DSC_OP_SUBTYPE_COPY) |
-+		  FIELD_PREP(SDXI_DSC_TYPE, SDXI_DSC_OP_TYPE_DMAB));
-+
-+	csb_ptr = FIELD_PREP(SDXI_DSC_NP, 1);
-+
-+	*desc = (typeof(*desc)) {
-+		.copy = (typeof(desc->copy)) {
-+			.opcode = cpu_to_le32(opcode),
-+			.size = size,
-+			.akey0 = cpu_to_le16(params->src_akey),
-+			.akey1 = cpu_to_le16(params->dst_akey),
-+			.addr0 = cpu_to_le64(params->src),
-+			.addr1 = cpu_to_le64(params->dst),
-+			.csb_ptr = cpu_to_le64(csb_ptr),
-+		},
-+	};
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_IF_KUNIT(sdxi_encode_copy);
-+
-+int sdxi_encode_intr(struct sdxi_desc *desc,
-+		     const struct sdxi_intr *params)
-+{
-+	u64 csb_ptr;
-+	u32 opcode;
-+
-+	opcode = (FIELD_PREP(SDXI_DSC_SUBTYPE, SDXI_DSC_OP_SUBTYPE_INTR) |
-+		  FIELD_PREP(SDXI_DSC_TYPE, SDXI_DSC_OP_TYPE_INTR));
-+
-+	csb_ptr = FIELD_PREP(SDXI_DSC_NP, 1);
-+
-+	*desc = (typeof(*desc)) {
-+		.intr = (typeof(desc->intr)) {
-+			.opcode = cpu_to_le32(opcode),
-+			.akey = cpu_to_le16(params->akey),
-+			.csb_ptr = cpu_to_le64(csb_ptr),
-+		},
-+	};
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_IF_KUNIT(sdxi_encode_intr);
-+
- int sdxi_encode_cxt_start(struct sdxi_desc *desc,
- 			  const struct sdxi_cxt_start *params)
- {
-diff --git a/drivers/dma/sdxi/descriptor.h b/drivers/dma/sdxi/descriptor.h
-index 5b8fd7cbaa03..14f92c8dea1d 100644
---- a/drivers/dma/sdxi/descriptor.h
-+++ b/drivers/dma/sdxi/descriptor.h
-@@ -9,6 +9,7 @@
-  */
- 
- #include <linux/bitfield.h>
-+#include <linux/kconfig.h>
- #include <linux/minmax.h>
- #include <linux/ratelimit.h>
- #include <linux/types.h>
-@@ -16,6 +17,10 @@
- 
- #include "hw.h"
- 
-+#if IS_ENABLED(CONFIG_KUNIT)
-+int __must_check sdxi_encode_size32(u64 size, __le32 *dest);
-+#endif
-+
- static inline void sdxi_desc_vl_expect(const struct sdxi_desc *desc, bool expected)
- {
- 	u8 vl = FIELD_GET(SDXI_DSC_VL, le32_to_cpu(desc->opcode));
-@@ -80,6 +85,26 @@ static inline struct sdxi_cxt_range sdxi_cxt_range_single(u16 nr)
- 	return sdxi_cxt_range(nr, nr);
+ #include "ring.h"
+ #include "sdxi.h"
+@@ -335,6 +337,81 @@ int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
+ 	return devm_add_action_or_reset(sdxi->dev, free_admin_cxt, sdxi);
  }
  
-+void sdxi_serialize_nop(struct sdxi_desc *desc);
++int sdxi_start_cxt(struct sdxi_cxt *cxt)
++{
++	struct sdxi_cxt *adm = to_admin_cxt(cxt);
++	struct sdxi_desc *desc;
++	struct sdxi_ring_resv resv;
++	int err;
 +
-+struct sdxi_copy {
-+	dma_addr_t src;
-+	dma_addr_t dst;
-+	u64 len;
-+	u16 src_akey;
-+	u16 dst_akey;
-+};
++	might_sleep();
 +
-+int sdxi_encode_copy(struct sdxi_desc *desc,
-+		     const struct sdxi_copy *params);
++	struct sdxi_completion *sc __free(sdxi_completion) =
++		sdxi_completion_alloc(cxt->sdxi);
 +
-+struct sdxi_intr {
-+	u16 akey;
-+};
++	if (!sc)
++		return -ENOMEM;
 +
-+int sdxi_encode_intr(struct sdxi_desc *desc,
-+		     const struct sdxi_intr *params);
++	/* This is not how to start the admin context. */
++	if (WARN_ON(adm == cxt))
++		return -EINVAL;
 +
- struct sdxi_cxt_start {
- 	struct sdxi_cxt_range range;
- };
-diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
-index d340ed7dc061..566bebf3f356 100644
---- a/drivers/dma/sdxi/hw.h
-+++ b/drivers/dma/sdxi/hw.h
-@@ -164,6 +164,30 @@ struct sdxi_desc {
- 	static_assert(offsetof(struct tag_, csb_ptr) ==			\
- 		      offsetof(struct sdxi_dsc_generic, csb_ptr))
++	err = sdxi_ring_reserve(adm->ring_state, 1, &resv);
++	if (err)
++		return err;
++
++	desc = sdxi_ring_resv_next(&resv);
++	sdxi_encode_cxt_start(desc, &(const struct sdxi_cxt_start) {
++			.range = sdxi_cxt_range_single(cxt->id),
++		});
++	sdxi_completion_attach(desc, sc);
++	sdxi_desc_make_valid(desc);
++	sdxi_cxt_push_doorbell(adm, sdxi_ring_resv_dbval(&resv));
++
++	return sdxi_completion_poll(sc);
++}
++
++void sdxi_stop_cxt(struct sdxi_cxt *cxt)
++{
++	struct sdxi_cxt *adm = to_admin_cxt(cxt);
++	struct sdxi_desc *stop, *sync;
++	struct sdxi_ring_resv resv;
++	int err;
++
++	might_sleep();
++
++	struct sdxi_completion *sc __free(sdxi_completion) =
++		sdxi_completion_alloc(cxt->sdxi);
++
++	if (!sc)
++		return;
++
++	/* This is not how to stop the admin context. */
++	if (WARN_ON(adm == cxt))
++		return;
++
++	err = sdxi_ring_reserve(adm->ring_state, 2, &resv);
++	if (WARN_ON_ONCE(err))
++		return;
++
++	stop = sdxi_ring_resv_next(&resv);
++	sync = sdxi_ring_resv_next(&resv);
++
++	sdxi_encode_cxt_stop(stop, &(const struct sdxi_cxt_stop) {
++			.range = sdxi_cxt_range_single(cxt->id),
++		});
++	sdxi_encode_sync(sync, &(const struct sdxi_sync) {
++			.filter = SDXI_SYNC_FLT_STOP,
++			.range = sdxi_cxt_range_single(cxt->id),
++		});
++	sdxi_completion_attach(sync, sc);
++	sdxi_desc_make_valid(stop);
++	sdxi_desc_make_valid(sync);
++	sdxi_cxt_push_doorbell(adm, sdxi_ring_resv_dbval(&resv));
++
++	WARN_ON(sdxi_completion_poll(sc));
++}
++
+ /*
+  * Temporary owner for context id until it can be assigned to a
+  * context object; enables scope-based cleanup.
+diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
+index a8511f18db5d..880e7a289810 100644
+--- a/drivers/dma/sdxi/context.h
++++ b/drivers/dma/sdxi/context.h
+@@ -68,6 +68,9 @@ int sdxi_admin_cxt_init(struct sdxi_dev *sdxi);
+ struct sdxi_cxt *sdxi_cxt_new(struct sdxi_dev *sdxi);
+ void sdxi_cxt_exit(struct sdxi_cxt *cxt);
  
-+		/* SDXI 1.0 Table 6-6: DSC_DMAB_NOP Descriptor Format */
-+		define_sdxi_dsc(sdxi_dsc_dmab_nop, nop,
-+			__u8 rsvd_0[52];
-+		);
++int sdxi_start_cxt(struct sdxi_cxt *cxt);
++void sdxi_stop_cxt(struct sdxi_cxt *cxt);
 +
-+		/* SDXI 1.0 Table 6-8: DSC_DMAB_COPY Descriptor Format */
-+		define_sdxi_dsc(sdxi_dsc_dmab_copy, copy,
-+			__le32 size;
-+			__u8 attr;
-+			__u8 rsvd_0[3];
-+			__le16 akey0;
-+			__le16 akey1;
-+			__le64 addr0;
-+			__le64 addr1;
-+			__u8 rsvd_1[24];
-+		);
-+
-+		/* SDXI 1.0 Table 6-12: DSC_INTR Descriptor Format */
-+		define_sdxi_dsc(sdxi_dsc_intr, intr,
-+			__u8 rsvd_0[8];
-+			__le16 akey;
-+			__u8 rsvd_1[42];
-+		);
-+
- 		/* SDXI 1.0 Table 6-14: DSC_CXT_START Descriptor Format */
- 		define_sdxi_dsc(sdxi_dsc_cxt_start, cxt_start,
- 			__u8 rsvd_0;
-@@ -207,11 +231,20 @@ static_assert(sizeof(struct sdxi_desc) == 64);
- 
- /* SDXI 1.0 Table 6-1: SDXI Operation Groups */
- enum sdxi_dsc_type {
-+	SDXI_DSC_OP_TYPE_DMAB    = 0x001,
- 	SDXI_DSC_OP_TYPE_ADMIN   = 0x002,
-+	SDXI_DSC_OP_TYPE_INTR    = 0x004,
- };
- 
- /* SDXI 1.0 Table 6-2: SDXI Operation Groups, Types, and Subtypes */
- enum sdxi_dsc_subtype {
-+	/* DMA Base */
-+	SDXI_DSC_OP_SUBTYPE_NOP     = 0x01,
-+	SDXI_DSC_OP_SUBTYPE_COPY    = 0x03,
-+
-+	/* Interrupt */
-+	SDXI_DSC_OP_SUBTYPE_INTR = 0x00,
-+
- 	/* Administrative */
- 	SDXI_DSC_OP_SUBTYPE_CXT_START_NM = 0x03,
- 	SDXI_DSC_OP_SUBTYPE_CXT_STOP     = 0x04,
+ static inline struct sdxi_cxt *to_admin_cxt(const struct sdxi_cxt *cxt)
+ {
+ 	return cxt->sdxi->admin_cxt;
 
 -- 
 2.54.0
