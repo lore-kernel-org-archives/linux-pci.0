@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E053F13DDA4;
-	Sat,  6 Jun 2026 00:02:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B9981E376C;
+	Sat,  6 Jun 2026 00:02:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780704143; cv=none; b=Tw8rrdET1x+VZuQBYkvcsqvFvEyLN+aEzeOqo6VRtBfaiyct4vbmFPhtFhYYbi4P18Y52KhHsdp379fKHHayO337VlNGb/fK4qcME1EYHdcRH6iHq3b948+/tcPKzyRY4CAXqncpnYLAqPMJyUyNC5Db5AYQQcgBwFRH2YitfZY=
+	t=1780704143; cv=none; b=eQISRIG1Sx7K77UyBoDi57+9O9SEsujjKc9bo/QxrPJkM3E9poLe672GHeMtj2lbvTkQcAFZv57WSJgDNaT7V0ZsXHq9u+T20V3P8glMKRiVMRzKpzOG02XlmhWMdxQ9Oy8fNA1idnml46rCsrVFMXcI8LybgcoQzuFarcZ42GI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1780704143; c=relaxed/simple;
-	bh=Tp2DRlO6SqKW2OmnnN6MqpnTkP5tD4sN8tnLoKhufPg=;
+	bh=3r8qAeadjqF7U6wgSq1wgMd5o+VrpDZ0Osek0TCOqQA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=qm7VlpzvCv1F1PwRt9vdtnX05Xu45o4/xMGgFAsa+NXuEuaIzzZ6Gl+HCDL2Ndg2S8HFBLsocVS2P/hrsupwUMUN48yK7el0+ux2xP7xMty3rjSkZUqKJtOPDwX90qNl2Q+dDueQxU0qoUelUqwPLjdFlxmBSlYcrUCYzTBur1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RMlYRuwp; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=bzmageyuIQDKyLRdeIKmPhboobJ2DJC4mgZmgpQNO0FM4rcYNjB6lxPt8ID80PvZSPvGtzLv5OO5X5HnMNRMtfTV9rfbimIVk3ha2op0HKzlvn55dZy7oIMtt5pMSRF9tLRqC0ooKN+BFH0nsj///oGdiytr7qX2EzjdRgRG5qo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ceHoYd7V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RMlYRuwp"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C045CC2BD05;
-	Sat,  6 Jun 2026 00:02:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ceHoYd7V"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0BD4FC2BCFB;
+	Sat,  6 Jun 2026 00:02:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1780704142;
-	bh=Tp2DRlO6SqKW2OmnnN6MqpnTkP5tD4sN8tnLoKhufPg=;
+	s=k20201202; t=1780704143;
+	bh=3r8qAeadjqF7U6wgSq1wgMd5o+VrpDZ0Osek0TCOqQA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=RMlYRuwpBUvhCH6vvDx/LEHsjFtkhpVa0+FRsCgOV0N3IDu1IEa84+d63gYqbU9gM
-	 OYv6klxAEmqfAd1hx6puw4+O79DT0o4XVMgrr+vGiBuU3ECUdp9kZCHEg66zo4vhmU
-	 I76lMxOntzkV0DOUJm6z8CzyK5uSyd9QFEUlolztE/FB67GsTeqpGK0AjQhuYRPcHP
-	 YLmLYdrHCivVsVeZr7GU9QA5Y9/8ydiWmMdiWIuafOCnwhlkZac6+RqfOx5nAT9mo5
-	 uwrdeiOzfh13illIcy6pF6A8d9X6AbgSzlDzI77zvLMHW7XSFiKxycihddT9RFCSKh
-	 fBO/9eAsj+tGg==
+	b=ceHoYd7VNVDv/3Kpi9ukx8+QJ9Q0wv5m/T3XS//wugDkCnMCPhvGRWbFTvM2B6hS0
+	 unxH8u+SAGNbk3/VsDQ5ijsce1jjSvuII7iZttW0hdfoTvMBSHaXJuERiQXgfYi270
+	 Wa+sCUc2fxtUMHyOxJpPUsD9APpJBsJ1n+0+GOqQO3RpF6bD0qNunA+88TXM7kKvh3
+	 Zz0jQn6yQdyFF5SPVkHCz2WG3HGMO6QdBF8NXRZaumuJ0NuvqvrsRX9WMRvYeuTerW
+	 SoZvy2HIZQWDdCywlDVQiRhvnXJGEk4OCVu7Cz/8jiBSESGlBYqAvDnmk+pIeqiCbl
+	 vFs+Ap9AlOPSA==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B841CCD8C81;
-	Sat,  6 Jun 2026 00:02:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05224CD6E7C;
+	Sat,  6 Jun 2026 00:02:23 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 05 Jun 2026 19:02:11 -0500
-Subject: [PATCH v3 08/23] dmaengine: sdxi: Install administrative context
+Date: Fri, 05 Jun 2026 19:02:15 -0500
+Subject: [PATCH v3 12/23] dmaengine: sdxi: Add descriptor ring management
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260605-sdxi-base-v3-8-4d38ca2bdffe@amd.com>
+Message-Id: <20260605-sdxi-base-v3-12-4d38ca2bdffe@amd.com>
 References: <20260605-sdxi-base-v3-0-4d38ca2bdffe@amd.com>
 In-Reply-To: <20260605-sdxi-base-v3-0-4d38ca2bdffe@amd.com>
 To: Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>
@@ -54,11 +54,11 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
  dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-pci@vger.kernel.org, Nathan Lynch <nathan.lynch@amd.com>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1780704140; l=9174;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1780704140; l=9311;
  i=nathan.lynch@amd.com; s=20260410; h=from:subject:message-id;
- bh=zW988Sovngm2snUuwqnu55nb+6mHuS+MKCdhjdyAMsI=;
- b=7XxWXdYXlti/8gV4wmltQKSYR89kye/zJuHomV2vjs0l/aygalZGlJChaMcFQMj/uOV9nmIzi
- VnyHdc9IzvCCctQKH2ib1iGZCzzjRCwpzzFMdIqaWYvFzyhnbNg3Lpc
+ bh=dJ2kLZpgYp+5rraz3GSkb+EuvGuJnIu5vJ8Fkw1RpTc=;
+ b=uYXRsuaJsLgpTfCQzCpN60PLsGx021Ah9Z17RB7p+PmgeT9VvYEztIcuJ6KxHy3kBDUKxmiSy
+ c06dU1wXds9C7osbsx+TVN84obv55Isq3zaRkz66fGY2zzfeAz0tCQl
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=PK4ozhq+/z9/2Jl5rgDmvHa9raVomv79qM8p1RAFpEw=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20260410 with
@@ -68,301 +68,305 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Serialize the context control block, akey table, and L1 entry for the
-admin context, making its descriptor ring, write index, and context
-status block visible to the SDXI implementation once it is activated.
+Introduce a library for managing SDXI descriptor ring state. It
+encapsulates determining the next free space in the ring to deposit
+descriptors and performing the update of the write index correctly, as
+well as iterating over slices (reservations) of the ring without
+dealing directly with ring offsets/indexes.
+
+The central abstraction is sdxi_ring_state, which maintains the write
+index and a wait queue. An internal spin lock serializes checks for
+space in the ring and updates to the write index.
+
+Reservations (sdxi_ring_resv) are intended to be short-lived on-stack
+objects representing slices of the ring for callers to populate with
+descriptors. Both blocking and non-blocking reservation APIs are
+provided.
+
+Descriptor access within a reservation is provided via
+sdxi_ring_resv_next() and sdxi_ring_resv_foreach().
+
+Completion handlers must call sdxi_ring_wake_up() when descriptors
+have been consumed so that blocked reservations can proceed.
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/context.c | 162 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/context.h |   7 ++
- drivers/dma/sdxi/hw.h      |  15 +++++
- drivers/dma/sdxi/sdxi.h    |   9 +++
- 4 files changed, 193 insertions(+)
+ drivers/dma/sdxi/Makefile |   3 +-
+ drivers/dma/sdxi/ring.c   | 159 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/ring.h   |  84 ++++++++++++++++++++++++
+ 3 files changed, 245 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-index 443c231303af..cc99fe9ecf92 100644
---- a/drivers/dma/sdxi/context.c
-+++ b/drivers/dma/sdxi/context.c
-@@ -7,16 +7,22 @@
+diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
+index cdf8a455077b..bfcb443f1e64 100644
+--- a/drivers/dma/sdxi/Makefile
++++ b/drivers/dma/sdxi/Makefile
+@@ -2,7 +2,8 @@
+ obj-$(CONFIG_SDXI_CORE) += sdxi-core.o
+ sdxi-core-y := \
+ 	context.o     \
+-	device.o
++	device.o      \
++	ring.o
  
- #define pr_fmt(fmt)     "SDXI: " fmt
- 
-+#include <linux/align.h>
-+#include <linux/bitfield.h>
- #include <linux/bug.h>
- #include <linux/cleanup.h>
- #include <linux/device/devres.h>
- #include <linux/dma-mapping.h>
- #include <linux/dmapool.h>
- #include <linux/errno.h>
-+#include <linux/iommu.h>
- #include <linux/slab.h>
- #include <linux/types.h>
+ obj-$(CONFIG_SDXI_PCI) += sdxi-pci.o
+ sdxi-pci-y := pci.o
+diff --git a/drivers/dma/sdxi/ring.c b/drivers/dma/sdxi/ring.c
+new file mode 100644
+index 000000000000..91b28c7afbbf
+--- /dev/null
++++ b/drivers/dma/sdxi/ring.c
+@@ -0,0 +1,159 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * SDXI descriptor ring state management. Handles advancing the write
++ * index correctly and supplies "reservations" i.e. slices of the ring
++ * to be filled with descriptors.
++ *
++ * Copyright Advanced Micro Devices, Inc.
++ */
++#include <kunit/visibility.h>
++#include <linux/io-64-nonatomic-lo-hi.h>
++#include <linux/lockdep.h>
++#include <linux/range.h>
++#include <linux/sched.h>
++#include <linux/spinlock.h>
++#include <linux/types.h>
++#include <linux/wait.h>
 +#include <asm/barrier.h>
++#include <asm/byteorder.h>
++#include <asm/div64.h>
 +#include <asm/rwonce.h>
- 
- #include "context.h"
++
++#include "ring.h"
 +#include "hw.h"
- #include "sdxi.h"
- 
- #define DEFAULT_DESC_RING_ENTRIES 1024
-@@ -106,6 +112,152 @@ static struct sdxi_cxt *sdxi_alloc_cxt(struct sdxi_dev *sdxi)
- 	return_ptr(cxt);
- }
- 
-+struct sdxi_cxt_ctl_cfg {
-+	dma_addr_t ds_ring_ptr;
-+	dma_addr_t cxt_sts_ptr;
-+	dma_addr_t write_index_ptr;
-+	u32 ds_ring_sz;
-+	u8 qos;
-+	u8 csa;
-+	bool se;
-+};
-+
-+static int configure_cxt_ctl(struct sdxi_cxt_ctl *ctl, const struct sdxi_cxt_ctl_cfg *cfg)
-+{
-+	u64 ds_ring_ptr, cxt_sts_ptr, write_index_ptr;
-+
-+	write_index_ptr = FIELD_PREP(SDXI_CXT_CTL_WRITE_INDEX_PTR,
-+				     cfg->write_index_ptr >> WRT_INDEX_PTR_SHIFT);
-+	cxt_sts_ptr = FIELD_PREP(SDXI_CXT_CTL_CXT_STS_PTR,
-+				 cfg->cxt_sts_ptr >> CXT_STATUS_PTR_SHIFT);
-+
-+	*ctl = (typeof(*ctl)) {
-+		/*
-+		 * ds_ring_ptr contains the validity bit and is updated
-+		 * after a barrier is issued.
-+		 */
-+		.ds_ring_sz      = cpu_to_le32(cfg->ds_ring_sz),
-+		.cxt_sts_ptr     = cpu_to_le64(cxt_sts_ptr),
-+		.write_index_ptr = cpu_to_le64(write_index_ptr),
-+	};
-+
-+	ds_ring_ptr = FIELD_PREP(SDXI_CXT_CTL_VL, 1) |
-+		      FIELD_PREP(SDXI_CXT_CTL_QOS, cfg->qos) |
-+		      FIELD_PREP(SDXI_CXT_CTL_SE, cfg->se) |
-+		      FIELD_PREP(SDXI_CXT_CTL_CSA, cfg->csa) |
-+		      FIELD_PREP(SDXI_CXT_CTL_DS_RING_PTR,
-+				 cfg->ds_ring_ptr >> DESC_RING_BASE_PTR_SHIFT);
-+	/* Ensure other fields are visible before hw sees vl=1. */
-+	dma_wmb();
-+	WRITE_ONCE(ctl->ds_ring_ptr, cpu_to_le64(ds_ring_ptr));
-+
-+	return 0;
-+}
 +
 +/*
-+ * Logical representation of CXT_L1_ENT subfields.
++ * Initialize ring management state. Caller is responsible for
++ * allocating, mapping, and initializing the actual control structures
++ * shared with hardware: the indexes and ring array.
 + */
-+struct sdxi_cxt_L1_cfg {
-+	dma_addr_t cxt_ctl_ptr;
-+	dma_addr_t akey_ptr;
-+	u32 cxt_pasid;
-+	u32 opb_000_enb;
-+	u16 max_buffer;
-+	u8 akey_sz;
-+	bool ka;
-+	bool pv;
-+};
-+
-+static int configure_L1_entry(struct sdxi_cxt_L1_ent *ent,
-+			      const struct sdxi_cxt_L1_cfg *cfg)
++void sdxi_ring_state_init(struct sdxi_ring_state *rs, const __le64 *read_index,
++			  __le64 *write_index, u32 entries,
++			  struct sdxi_desc descs[static SZ_1K])
 +{
-+	u64 cxt_ctl_ptr, akey_ptr;
-+	u32 misc0;
++	WARN_ON_ONCE(!read_index);
++	WARN_ON_ONCE(!write_index);
++	/*
++	 * See SDXI 1.0 Table 3-1 Memory Structure Summary. Minimum
++	 * descriptor ring size in bytes is 64KB; thus 1024 64-byte
++	 * entries.
++	 */
++	WARN_ON_ONCE(entries < SZ_1K);
 +
-+	if (WARN_ON_ONCE(!IS_ALIGNED(cfg->cxt_ctl_ptr, SZ_64)))
-+		return -EFAULT;
-+	if (WARN_ON_ONCE(!IS_ALIGNED(cfg->akey_ptr, SZ_4K)))
-+		return -EFAULT;
-+
-+	akey_ptr = FIELD_PREP(SDXI_CXT_L1_ENT_AKEY_SZ, cfg->akey_sz) |
-+		   FIELD_PREP(SDXI_CXT_L1_ENT_AKEY_PTR,
-+			      cfg->akey_ptr >> L1_CXT_AKEY_PTR_SHIFT);
-+
-+	misc0 = FIELD_PREP(SDXI_CXT_L1_ENT_PASID, cfg->cxt_pasid) |
-+		FIELD_PREP(SDXI_CXT_L1_ENT_MAX_BUFFER, cfg->max_buffer);
-+
-+	*ent = (typeof(*ent)) {
-+		/*
-+		 * cxt_ctl_ptr contains the validity bit and is
-+		 * updated after a barrier is issued.
-+		 */
-+		.akey_ptr    = cpu_to_le64(akey_ptr),
-+		.misc0       = cpu_to_le32(misc0),
-+		.opb_000_enb = cpu_to_le32(cfg->opb_000_enb),
++	*rs = (typeof(*rs)) {
++		.write_index = le64_to_cpu(*write_index),
++		.write_index_ptr = write_index,
++		.read_index_ptr = read_index,
++		.entries = entries,
++		.entry = descs,
 +	};
++	spin_lock_init(&rs->lock);
++	init_waitqueue_head(&rs->wqh);
++}
++EXPORT_SYMBOL_IF_KUNIT(sdxi_ring_state_init);
 +
-+	cxt_ctl_ptr = FIELD_PREP(SDXI_CXT_L1_ENT_VL, 1) |
-+		      FIELD_PREP(SDXI_CXT_L1_ENT_KA, cfg->ka) |
-+		      FIELD_PREP(SDXI_CXT_L1_ENT_PV, cfg->pv) |
-+		      FIELD_PREP(SDXI_CXT_L1_ENT_CXT_CTL_PTR,
-+				 cfg->cxt_ctl_ptr >> L1_CXT_CTRL_PTR_SHIFT);
-+	/* Ensure other fields are visible before hw sees vl=1. */
-+	dma_wmb();
-+	WRITE_ONCE(ent->cxt_ctl_ptr, cpu_to_le64(cxt_ctl_ptr));
-+
-+	return 0;
++static u64 sdxi_ring_state_load_ridx(struct sdxi_ring_state *rs)
++{
++	lockdep_assert_held(&rs->lock);
++	return le64_to_cpu(READ_ONCE(*rs->read_index_ptr));
 +}
 +
-+/*
-+ * Make the context control structure hierarchy valid from the POV of
-+ * the SDXI implementation. This may eventually involve allocation of
-+ * a L1 table page, so it needs to be fallible.
-+ */
-+static int sdxi_publish_cxt(const struct sdxi_cxt *cxt)
++static void sdxi_ring_state_store_widx(struct sdxi_ring_state *rs, u64 new_widx)
 +{
-+	struct sdxi_cxt_ctl_cfg ctl_cfg;
-+	struct sdxi_cxt_L1_cfg L1_cfg;
-+	struct sdxi_cxt_L1_ent *ent;
-+	u8 l1_idx;
-+	int err;
++	lockdep_assert_held(&rs->lock);
++	rs->write_index = new_widx;
++	WRITE_ONCE(*rs->write_index_ptr, cpu_to_le64(new_widx));
++}
 +
-+	if (WARN_ONCE(cxt->id > cxt->sdxi->max_cxtid,
-+		      "can't install cxt with id %u (limit %u)",
-+		      cxt->id, cxt->sdxi->max_cxtid))
++/* Non-blocking ring reservation. Callers must handle ring full (-EBUSY). */
++int sdxi_ring_try_reserve(struct sdxi_ring_state *rs, size_t nr,
++			  struct sdxi_ring_resv *resv)
++{
++	u64 new_widx;
++
++	/*
++	 * Caller bug, warn and reject.
++	 */
++	if (WARN_ONCE(nr < 1 || nr > rs->entries,
++		      "Reservation of size %zu requested from ring of size %u\n",
++		      nr, rs->entries))
 +		return -EINVAL;
 +
-+	ctl_cfg = (typeof(ctl_cfg)) {
-+		.se              = 1,
-+		.csa             = 1,
-+		.ds_ring_ptr     = cxt->sq->ring_dma,
-+		.ds_ring_sz      = cxt->sq->ring_size >> 6,
-+		.cxt_sts_ptr     = cxt->sq->cxt_sts_dma,
-+		.write_index_ptr = cxt->sq->write_index_dma,
++	scoped_guard(spinlock_irqsave, &rs->lock) {
++		u64 ridx = sdxi_ring_state_load_ridx(rs);
++
++		/*
++		 * Bug: the read index should never exceed the write index.
++		 * TODO: sdxi_err() or similar; need a reference to
++		 * the device.
++		 */
++		if (ridx > rs->write_index)
++			return -EIO;
++
++		new_widx = rs->write_index + nr;
++
++		/*
++		 * Not enough space available right now.
++		 * TODO: sdxi_dbg() or tracepoint here.
++		 */
++		if (new_widx - ridx > rs->entries)
++			return -EBUSY;
++
++		sdxi_ring_state_store_widx(rs, new_widx);
++	}
++
++	*resv = (typeof(*resv)) {
++		.rs = rs,
++		.range = {
++			.start = new_widx - nr,
++			.end = new_widx - 1,
++		},
++		.iter = new_widx - nr,
 +	};
 +
-+	err = configure_cxt_ctl(cxt->cxt_ctl, &ctl_cfg);
-+	if (err)
-+		return err;
-+
-+	l1_idx = ID_TO_L1_INDEX(cxt->id);
-+
-+	ent = &cxt->sdxi->L1_table->entry[l1_idx];
-+
-+	L1_cfg = (typeof(L1_cfg)) {
-+		.ka          = 1,
-+		.pv          = 0,
-+		.cxt_ctl_ptr = cxt->cxt_ctl_dma,
-+		.akey_sz     = akey_table_order(cxt->akey_table),
-+		.akey_ptr    = cxt->akey_table_dma,
-+		.cxt_pasid   = IOMMU_NO_PASID,
-+		.max_buffer  = 11, /* 4GB */
-+		.opb_000_enb = cxt->sdxi->op_grp_cap,
-+	};
-+
-+	return configure_L1_entry(ent, &L1_cfg);
-+	/* todo: need to send DSC_CXT_UPD to admin */
-+}
-+
- static void free_admin_cxt(void *ptr)
- {
- 	struct sdxi_dev *sdxi = ptr;
-@@ -115,13 +267,23 @@ static void free_admin_cxt(void *ptr)
- 
- int sdxi_admin_cxt_init(struct sdxi_dev *sdxi)
- {
-+	int err;
-+	struct sdxi_sq *sq;
-+
- 	struct sdxi_cxt *cxt __free(sdxi_cxt) = sdxi_alloc_cxt(sdxi);
- 	if (!cxt)
- 		return -ENOMEM;
- 
-+	sq = cxt->sq;
-+	/* SDXI 1.0 4.1.8.4.b: Set CXT_STS.state to CXTV_RUN. */
-+	sq->cxt_sts->state = FIELD_PREP(SDXI_CXT_STS_STATE, CXTV_RUN);
- 	cxt->id = SDXI_ADMIN_CXT_ID;
- 	cxt->db = sdxi->dbs + cxt->id * sdxi->db_stride;
- 
-+	err = sdxi_publish_cxt(cxt);
-+	if (err)
-+		return err;
-+
- 	sdxi->admin_cxt = no_free_ptr(cxt);
- 
- 	return devm_add_action_or_reset(sdxi->dev, free_admin_cxt, sdxi);
-diff --git a/drivers/dma/sdxi/context.h b/drivers/dma/sdxi/context.h
-index a29387900df7..65b773446ba3 100644
---- a/drivers/dma/sdxi/context.h
-+++ b/drivers/dma/sdxi/context.h
-@@ -20,6 +20,13 @@ struct sdxi_akey_table {
- 	struct sdxi_akey_ent entry[SZ_4K / sizeof(struct sdxi_akey_ent)];
- };
- 
-+/* For encoding the akey table size in CXT_L1_ENT's akey_sz. */
-+static inline u8 akey_table_order(const struct sdxi_akey_table *tbl)
-+{
-+	static_assert(sizeof(*tbl) == SZ_4K);
 +	return 0;
 +}
++EXPORT_SYMBOL_IF_KUNIT(sdxi_ring_try_reserve);
 +
- /* Submission Queue */
- struct sdxi_sq {
- 	u32 ring_entries;
-diff --git a/drivers/dma/sdxi/hw.h b/drivers/dma/sdxi/hw.h
-index 55d63d50a01b..4b65337a5975 100644
---- a/drivers/dma/sdxi/hw.h
-+++ b/drivers/dma/sdxi/hw.h
-@@ -45,8 +45,16 @@ static_assert(sizeof(struct sdxi_cxt_L2_table) == 4096);
- /* SDXI 1.0 Table 3-3: Context Level 1 Table Entry (CXT_L1_ENT) */
- struct sdxi_cxt_L1_ent {
- 	__le64 cxt_ctl_ptr;
-+#define SDXI_CXT_L1_ENT_VL             BIT_ULL(0)
-+#define SDXI_CXT_L1_ENT_KA             BIT_ULL(1)
-+#define SDXI_CXT_L1_ENT_PV             BIT_ULL(2)
-+#define SDXI_CXT_L1_ENT_CXT_CTL_PTR    GENMASK_ULL(63, 6)
- 	__le64 akey_ptr;
-+#define SDXI_CXT_L1_ENT_AKEY_SZ        GENMASK_ULL(3, 0)
-+#define SDXI_CXT_L1_ENT_AKEY_PTR       GENMASK_ULL(63, 12)
- 	__le32 misc0;
-+#define SDXI_CXT_L1_ENT_PASID          GENMASK(19, 0)
-+#define SDXI_CXT_L1_ENT_MAX_BUFFER     GENMASK(23, 20)
- 	__le32 opb_000_enb;
- 	__u8 rsvd_0[8];
- } __packed __aligned(32);
-@@ -62,10 +70,17 @@ static_assert(sizeof(struct sdxi_cxt_L1_table) == 4096);
- /* SDXI 1.0 Table 3-4: Context Control (CXT_CTL) */
- struct sdxi_cxt_ctl {
- 	__le64 ds_ring_ptr;
-+#define SDXI_CXT_CTL_VL             BIT_ULL(0)
-+#define SDXI_CXT_CTL_QOS            GENMASK_ULL(3, 2)
-+#define SDXI_CXT_CTL_SE             BIT_ULL(4)
-+#define SDXI_CXT_CTL_CSA            BIT_ULL(5)
-+#define SDXI_CXT_CTL_DS_RING_PTR    GENMASK_ULL(63, 6)
- 	__le32 ds_ring_sz;
- 	__u8 rsvd_0[4];
- 	__le64 cxt_sts_ptr;
-+#define SDXI_CXT_CTL_CXT_STS_PTR    GENMASK_ULL(63, 4)
- 	__le64 write_index_ptr;
-+#define SDXI_CXT_CTL_WRITE_INDEX_PTR GENMASK_ULL(63, 3)
- 	__u8 rsvd_1[32];
- } __packed __aligned(64);
- static_assert(sizeof(struct sdxi_cxt_ctl) == 64);
-diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-index f5e0cd986b9e..903bf18bd3cc 100644
---- a/drivers/dma/sdxi/sdxi.h
-+++ b/drivers/dma/sdxi/sdxi.h
-@@ -15,6 +15,15 @@
- 
- #include "mmio.h"
- 
-+#define ID_TO_L1_INDEX(id)	((id) & 0x7F)
++/* Blocking ring reservation. Retries until success or non-transient error. */
++int sdxi_ring_reserve(struct sdxi_ring_state *rs, size_t nr,
++		      struct sdxi_ring_resv *resv)
++{
++	int ret;
 +
-+#define DESC_RING_BASE_PTR_SHIFT	6
-+#define CXT_STATUS_PTR_SHIFT		4
-+#define WRT_INDEX_PTR_SHIFT		3
++	wait_event(rs->wqh,
++		   (ret = sdxi_ring_try_reserve(rs, nr, resv)) != -EBUSY);
 +
-+#define L1_CXT_CTRL_PTR_SHIFT		6
-+#define L1_CXT_AKEY_PTR_SHIFT		12
++	return ret;
++}
 +
- struct sdxi_dev;
- 
- /**
++/* Completion code should call this whenever descriptors have been consumed. */
++void sdxi_ring_wake_up(struct sdxi_ring_state *rs)
++{
++	wake_up_all(&rs->wqh);
++}
++
++static struct sdxi_desc *
++sdxi_desc_ring_entry(const struct sdxi_ring_state *rs, u64 index)
++{
++	return &rs->entry[do_div(index, rs->entries)];
++}
++
++struct sdxi_desc *sdxi_ring_resv_next(struct sdxi_ring_resv *resv)
++{
++	if (resv->range.start <= resv->iter && resv->iter <= resv->range.end)
++		return sdxi_desc_ring_entry(resv->rs, resv->iter++);
++	/*
++	 * Caller has iterated to the end of the reservation.
++	 */
++	if (resv->iter == resv->range.end + 1)
++		return NULL;
++	/*
++	 * Should happen only if caller messed with internal
++	 * reservation state.
++	 */
++	WARN_ONCE(1, "reservation[%llu,%llu] with iter %llu",
++		  resv->range.start, resv->range.end, resv->iter);
++	return NULL;
++}
++EXPORT_SYMBOL_IF_KUNIT(sdxi_ring_resv_next);
+diff --git a/drivers/dma/sdxi/ring.h b/drivers/dma/sdxi/ring.h
+new file mode 100644
+index 000000000000..d5682687c05c
+--- /dev/null
++++ b/drivers/dma/sdxi/ring.h
+@@ -0,0 +1,84 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/* Copyright Advanced Micro Devices, Inc. */
++#ifndef DMA_SDXI_RING_H
++#define DMA_SDXI_RING_H
++
++#include <linux/io-64-nonatomic-lo-hi.h>
++#include <linux/range.h>
++#include <linux/spinlock.h>
++#include <linux/types.h>
++#include <linux/wait.h>
++#include <asm/barrier.h>
++#include <asm/byteorder.h>
++#include <asm/div64.h>
++#include <asm/rwonce.h>
++
++#include "hw.h"
++
++/*
++ * struct sdxi_ring_state - Descriptor ring management.
++ *
++ * @lock: Guards *read_index_ptr (RO), *write_index_ptr (RW),
++ *   write_index (RW). *read_index is incremented by hw.
++ * @write_index: Cached write index value, minimizes dereferences in
++ *   critical sections.
++ * @write_index_ptr: Location of the architected write index shared with
++ *   the SDXI implementation.
++ * @read_index_ptr: Location of the architected read index shared with
++ *   the SDXI implementation.
++ * @entries: Number of entries in the ring.
++ * @entry: The descriptor ring itself, shared with the SDXI implementation.
++ * @wqh: Pending reservations.
++ */
++struct sdxi_ring_state {
++	spinlock_t lock;
++	u64 write_index; /* Cache current value of write index. */
++	__le64 *write_index_ptr;
++	const __le64 *read_index_ptr;
++	u32 entries;
++	struct sdxi_desc *entry;
++	wait_queue_head_t wqh;
++};
++
++/*
++ * Ring reservation and iteration state.
++ */
++struct sdxi_ring_resv {
++	const struct sdxi_ring_state *rs;
++	struct range range;
++	u64 iter;
++};
++
++void sdxi_ring_state_init(struct sdxi_ring_state *ring, const __le64 *read_index,
++			  __le64 *write_index, u32 entries,
++			  struct sdxi_desc descs[static SZ_1K]);
++void sdxi_ring_wake_up(struct sdxi_ring_state *rs);
++int sdxi_ring_reserve(struct sdxi_ring_state *ring, size_t nr,
++		      struct sdxi_ring_resv *resv);
++int sdxi_ring_try_reserve(struct sdxi_ring_state *ring, size_t nr,
++			  struct sdxi_ring_resv *resv);
++struct sdxi_desc *sdxi_ring_resv_next(struct sdxi_ring_resv *resv);
++
++/* Reset reservation's internal iterator. */
++static inline void sdxi_ring_resv_reset(struct sdxi_ring_resv *resv)
++{
++	resv->iter = resv->range.start;
++}
++
++/*
++ * Return the value that should be written to the doorbell after
++ * serializing descriptors for this reservation, i.e. the value of the
++ * write index after obtaining the reservation.
++ */
++static inline u64 sdxi_ring_resv_dbval(const struct sdxi_ring_resv *resv)
++{
++	return resv->range.end + 1;
++}
++
++#define sdxi_ring_resv_foreach(resv_, desc_)			\
++	for (sdxi_ring_resv_reset(resv_),			\
++	     desc_ = sdxi_ring_resv_next(resv_);		\
++	     desc_;						\
++	     desc_ = sdxi_ring_resv_next(resv_))
++
++#endif /* DMA_SDXI_RING_H */
 
 -- 
 2.54.0
