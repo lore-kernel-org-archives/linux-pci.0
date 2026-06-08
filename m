@@ -1,367 +1,92 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EB4539D6DD
-	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 06:59:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93EC637C906;
+	Mon,  8 Jun 2026 07:08:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780901988; cv=none; b=shpTGcUCzkFFYNe5PYstS0XJ+UaQSrKUeRLh4/esg90LQXe37iQMRMXJHMc5xtumOvf7ibNXGqeFwWdyXNfnUHLraTd3uQI7lkO0eP+9NpKO9m7BA8VdbmUYwa0j9f5wk68fLqKcerJ8coa6/aU2l8ce8TapEf2V7KZRFNnhKP8=
+	t=1780902502; cv=none; b=A4PDSdtrRYP0jNRS9LDUq67WYlpV0oQ4EKU0fvxatN2J2PGO506gYEcmUKr+r8JsHea8nEEDJa+Z5V835hE4npfKF0RC3bu2/fV4OJHyYQoxT53/UScL3et6l7nOvwBdJvXQgjv8F2OagD/61oLdK7vLb8ck3zArRZfdY8x6B40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780901988; c=relaxed/simple;
-	bh=ivfez+E9B3qAfRh5L70SB2bSHUzO4GoveMoTJ4pZ8Vc=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ntsZuHz+ByI0Aeq5HsfN1KPigH3Aw+rDLBXeMndTt2tYSmE+VKtpwTcuObt3NF2Mf2QzQ28Tvf5ows7Eu5tpJpMA/jGvAQ4bUKJuEvijN1b8VgNkOUdrTsbzFdcx91KZHuaDsDFr05Ou44MfKLzGKwCb6I6zZrJBKPeg2W/fm60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gLwKCEW2; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=WgjoX0pl; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1780902502; c=relaxed/simple;
+	bh=MSp1zFVTzzyrEteGAegFOP1tnfbkgBe1/3oS6QZ68ys=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=gqh3UzD4Cql82deybvDaZTyneCq8L0YdvEwJGZjvN+a26r4JphnPVTog0GpcN77/L9Wx51HdWUOO+uoTLWI/JWv8iikH2nqDSCHnc3CqaPCZETS5mk9PvmniM0Px+CU7H9E4JAJxcMYeZ//0xntldfR1cQhEFNLC75Es4PrzUjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lVumnqtC; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gLwKCEW2";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="WgjoX0pl"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6586RWG02833503
-	for <linux-pci@vger.kernel.org>; Mon, 8 Jun 2026 06:59:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	5UUGNkY7j3/4zh2rLPHPzZHPlPL1HtPoB4XrZlt6ez8=; b=gLwKCEW2PQCeQqva
-	NS9QXhcWMAFJYCt3Ee6FPAJqCW5CTFsfrMtgC/znIDmEHt/IZyEm03DkAA5KGJ/1
-	5/pRX7IO5XHkSXjmiOu9qYe6De/Y93LzCYg1xbo9zhYga7NksFr1SWrpm7gn1y07
-	uRSPpNt6EAbmOFdnTPnou1nwDppjVJjafGEa23+o/r5Kb6goroP80DimL/E88YXD
-	W0Q6Sn+PnZHootbHWjf91m2/DOs+sBrdxV40ituPeG2xBOxjY+6/VaX8Xm48w/T6
-	2pollpjB1KvahgeFe+4v9aHCG7Sny//Yum1GzNiIYsgq3t4fmkROSc6ohANdv0oJ
-	+sNNSQ==
-Received: from mail-vs1-f69.google.com (mail-vs1-f69.google.com [209.85.217.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4emaj4xp7y-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 06:59:45 +0000 (GMT)
-Received: by mail-vs1-f69.google.com with SMTP id ada2fe7eead31-6cff652cc58so6518652137.3
-        for <linux-pci@vger.kernel.org>; Sun, 07 Jun 2026 23:59:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780901985; x=1781506785; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5UUGNkY7j3/4zh2rLPHPzZHPlPL1HtPoB4XrZlt6ez8=;
-        b=WgjoX0plvX9hDxG+KGeXkihOmxiUmHoHjT/l5RBzxHYARojYXvKMx3Iue23CZ9aj8m
-         FvxZcP7BKQq7b3uGiwVfLrnXUY/7s3jm83WVMPgYiBGchLJ+NGP194oy7gS35oWRp1LI
-         Av+hCJaSDI7fqGZHTamj73mWYZ8XouZPZO8Bv4TgOuWp+hgMoxNUoDPOzmIy+NJWuHwB
-         wSX5qkN0lZL7+X8GPEcokP1XovCrnWxAaK69i53k28GN/rS7kMH8E2IRECCUZp69Ttbi
-         /IcYmHVaec76cYjFDxAjmB57KNNX4Rlvf7cQdnKdSU0rhew5svXen+OFrDM5PtNoFejj
-         6jkA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780901985; x=1781506785;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=5UUGNkY7j3/4zh2rLPHPzZHPlPL1HtPoB4XrZlt6ez8=;
-        b=E9+vD6pEsR8bOMiJdql4d8dtFS4YNKhLfP5tA4IrhU/m6eLHk27DPAsAlDBjIjV48b
-         NgleP8JxKE4ngWEOaMb9O/0fPXV4IXE9Q+YwMaEfRBil6e8aBI2ZLZLsbm2aXQ8VCKvY
-         yUapSOpypOSLAirOpzQoDPGTlrZBVT53i+QjOjs6KbwqO8rE4exgZniimaFU45WJ70Kx
-         TXb9YLT41C7xcBLQAlL9c2jo36ONA2+uvH5hsGA6tCV4t38maXLDUNBXWgcpuNS0d8jS
-         O3YqaQdK3Iov1HwbEdLZ/3MiaCUmtt7/IIPqUWambjpQHubhT1uh9kSYTm+wr+lLGL3r
-         S9pQ==
-X-Forwarded-Encrypted: i=1; AFNElJ95CsLQGcOy3vsK3Tc9kTeerLE5GNLFO8Iwpj2UnPqKsoMLJuLyiswYOhmRz4vQeJ+e0IXXp6yp9vo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxD2mSTJoiV4LQJvPyUhsprY32x6i83KEHnKu5bUB/ftNSEafxe
-	ayHlXFlTiTaQmNNTxlfFNhHJc139i6ULMKtmDk5jmQ6l0Cnk7kNofd0zsGpRV8OvLQI/jxDle4y
-	2pBAe9b+4GAmLDUa2HLBGs0Ovj+7y5zMZBeCToeMRVVYo8sk1RpkpmOLMGgUeOAk=
-X-Gm-Gg: Acq92OFAjTGgFmYn0Hh3LdxmeBnGU+02aNR4VlFGrE1QugdW1js23tKP3UBmn4pKDrK
-	REwJacrwtseI/QmC902qWQHGFEkTPqLTYGv/s/j4NyPKO9XG2VRemKMUKMzZvxdkEO3A4zavLYH
-	odonZUWH7nRse9r4AXjmGFlv6H6PBKprpHP6fdgaKYUJ3OQSAN6liJErGU73O7c9YZ2HIO/z1gz
-	mLRTgEAEGth3njG7K5U3FlG2T/QZC9o/J2G/nHlRH26WRwfDGZGhnpwvOkJpRqO/p21HwRSyLlq
-	DctsMa0SwhaNG2kQpX4BmDlfpudtC99q8QoKnY1WXTffJzVkHnSJz4tQ4mCWq0d0KhPUn2OTV/c
-	5qgnvJjWObK8SAW9nVvSRWAvAePQfpq+zcfMa53t2Y02CJFMuRUSqnlQ7z+8oQs4pD+1YgP68LC
-	cYgTAjPfop5ytE8sGfbrt3jiXimxVsU2pXlsvWC/Kjrf6MJQ==
-X-Received: by 2002:a05:6102:3e0b:b0:6ef:d9b8:88d with SMTP id ada2fe7eead31-6fefc8b6fd2mr7182308137.8.1780901985350;
-        Sun, 07 Jun 2026 23:59:45 -0700 (PDT)
-X-Received: by 2002:a05:6102:3e0b:b0:6ef:d9b8:88d with SMTP id ada2fe7eead31-6fefc8b6fd2mr7182278137.8.1780901984873;
-        Sun, 07 Jun 2026 23:59:44 -0700 (PDT)
-Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5aa7b8ed789sm3638621e87.3.2026.06.07.23.59.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 07 Jun 2026 23:59:41 -0700 (PDT)
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Date: Mon, 08 Jun 2026 09:59:25 +0300
-Subject: [PATCH v2 7/7] arm64: dts: qcom: sm8350-hdk: describe WiFi/BT chip
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lVumnqtC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCBF31F00893;
+	Mon,  8 Jun 2026 07:08:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1780902500;
+	bh=awD455x8uXP7MLUpzp45rI5BDx4pZOgCn5eBKrrLO5s=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=lVumnqtCnKdebttKd4BmkKf/740e6B8KpHSWTbG2oszOk1NX/Dspa6ozIezKd+7Lw
+	 MEyHXNxrSTDoZEfKLKrbqYWPRqsgnGawCdDmv9cRjsalR98vdjaYz3ILU8LkMblzIe
+	 Jbc+5V3BprpnpEkTMQg01gwToUq1vDGwiZgDZ1PYz06/CPanV0UIxbWiSfVIxxdTpV
+	 Q5AjqHqWOxdaKkSdYxVgG7NGetK79gMPlxvYsSmOUPB7J2AU0vdLTPHlnbFAxQ1ZrV
+	 +nwkRrDLNgQKIxgkul5mZ9tBovBNrqAs/+RA1SVHq32iucStTfuA/pCdL+UQrOKa2b
+	 2NcSr92Fa40RQ==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v2 2/7] wifi: ath11k: enable support for WCN6851
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Dmitry Baryshkov" <dmitry.baryshkov@oss.qualcomm.com>
+Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260608-sm8350-wifi-v2-2-efb68f1ff04c@oss.qualcomm.com>
+References: <20260608-sm8350-wifi-v2-2-efb68f1ff04c@oss.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Mon, 08 Jun 2026 07:08:19 +0000
+Message-Id: <20260608070819.CCBF31F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260608-sm8350-wifi-v2-7-efb68f1ff04c@oss.qualcomm.com>
-References: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com>
-In-Reply-To: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Qiang Yu <qiang.yu@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
-        Rocky Liao <quic_rjliao@quicinc.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath11k@lists.infradead.org, devicetree@vger.kernel.org,
-        Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6193;
- i=dmitry.baryshkov@oss.qualcomm.com; h=from:subject:message-id;
- bh=ivfez+E9B3qAfRh5L70SB2bSHUzO4GoveMoTJ4pZ8Vc=;
- b=owEBbQGS/pANAwAKAYs8ij4CKSjVAcsmYgBqJmhMuqGfQoyOCl1z0/vW5dE+0jogozA0K9B7r
- kku4lpySs+JATMEAAEKAB0WIQRMcISVXLJjVvC4lX+LPIo+Aiko1QUCaiZoTAAKCRCLPIo+Aiko
- 1XabCACw2Bp0Gz+PrGS7tDbpoA4CbJky6pod9M426pAO+JrCgMofF5yNPYfSbJdixO6vvT3t004
- XRNGoysRpBKyIrZCROWXoj8W66wckYFcKMntiwBCl3OZmZgoulp9sfIA4Rj8S+96k77801TNZNn
- K+BpDr+GcMfk3eH46QBM3/5wO5zmglfFTWmIwiQ5l5kb+Lq7f79XetrIglxNYnEPp/NzBLFToJg
- cXIfLqhtff6pRJtjSGY370yRkPgjeW+zV7D43PVBb7q6Z0SAtdtlkIUfLAgDAGGJ/IHUbKsMxb7
- sq1NwizoyGv4tyXrnlNYcGR8MH9VmN0DFZ92s8nFLlGbKCl7
-X-Developer-Key: i=dmitry.baryshkov@oss.qualcomm.com; a=openpgp;
- fpr=8F88381DD5C873E4AE487DA5199BF1243632046A
-X-Proofpoint-ORIG-GUID: JgAc8rPj4A7nnHfVtcoJ_QfJ1uevOzPL
-X-Proofpoint-GUID: JgAc8rPj4A7nnHfVtcoJ_QfJ1uevOzPL
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDA2MiBTYWx0ZWRfXw+zCnV+YLAMz
- WHyIgO9RwWJWBsGCqv8MYUw5HG1iwKl2boAvNIxfvcJzdTGo3Q5/3SD4+CjQcogDmIKrj6T3pWX
- 0A/phUNeEOGSODlDiff8BCtX53v0ErD24zWrPSi43jYSCPTiWmt8vSIWN9ZmwmKsEn8BwCtSeCB
- fkHh587Ya2esJiQ4ZFur8x7ixQtoEbSkJBsgLrf0WsUEg4eUCmpmVyI9HdCvdG9/en8pLpv/R8y
- N0IvfEPTaqKOa0xVhsWMATk1q12e/ZrPlDuzAFCavJ9UYb/edit0BFpDZtiQYtbJLqmrqLPU+r4
- 8L4B1see8p5R/OFanwYwWSLHqO5JoNSv9DnperM3YXoYDtbcDh0X408HeFG3+F4V9CEgEVqP33y
- fkaxb+iMVawMBDk/3omk5XqPfHrA3pDthTkUOtXeoLxfqNx39oABQihigksau1DeGpC3lj7x6yl
- rOWU5Jx2Rf2fpGgdkHQ==
-X-Authority-Analysis: v=2.4 cv=TLh1jVla c=1 sm=1 tr=0 ts=6a266861 cx=c_pps
- a=5HAIKLe1ejAbszaTRHs9Ug==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22 a=EUspDBNiAAAA:8
- a=o9ryCBrv46mMSQ48XGcA:9 a=QEXdDO2ut3YA:10 a=gYDTvv6II1OnSo0itH1n:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-08_02,2026-06-05_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 suspectscore=0 spamscore=0 adultscore=0 clxscore=1015
- phishscore=0 malwarescore=0 impostorscore=0 bulkscore=0 lowpriorityscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606080062
 
-The SM8350 HDK has onboard WiFi/BT chip, WCN6851. It is an earlier
-version of well-known WCN6855 WiFI/BT SoC. Describe the PMU, BT and WiFI
-parts of the device.
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
+- [Medium] The newly added WCN6855 hw1.1 support is missing a corresponding=
+ MODULE_FIRMWARE() declaration in pci.c.
+--
 
-The firmware isn't (yet) available as a part of linux-firmware, so it
-was verified with the firmware files from the vendor-supplied package
-(wcn prefix was applied to Bluetooth firmware files to make them follow
-upstream driver changes, vendor provided hpbtfw10.tlv and hpnv10.b06).
+commit f54482207008ed0cfb8ad9e52b108a170f4c03af
+Author: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 
-Bluetooth: hci0: QCA Product ID   :0x00000013
-Bluetooth: hci0: QCA SOC Version  :0x400c0110
-Bluetooth: hci0: QCA ROM Version  :0x00000100
-Bluetooth: hci0: QCA Patch Version:0x00001017
-Bluetooth: hci0: QCA controller version 0x01100100
-Bluetooth: hci0: QCA Downloading qca/wcnhpbtfw10.tlv
-Bluetooth: hci0: QCA Downloading qca/wcnhpnv10.b06
-Bluetooth: hci0: QCA setup on UART is completed
-Bluetooth: hci0: HFP non-HCI data transport is supported
+wifi: ath11k: enable support for WCN6851
 
-ath11k_pci 0000:01:00.0: BAR 0 [mem 0x60400000-0x605fffff 64bit]: assigned
-ath11k_pci 0000:01:00.0: MSI vectors: 32
-ath11k_pci 0000:01:00.0: wcn6855 hw1.1
-mhi mhi0: Requested to power ON
-mhi mhi0: Power on setup success
-mhi mhi0: Wait for device to enter SBL or Mission mode
-ath11k_pci 0000:01:00.0: chip_id 0x0 chip_family 0xb board_id 0x6 soc_id 0x400c0110
-ath11k_pci 0000:01:00.0: fw_version 0x110c80c8 fw_build_timestamp 2021-05-25 21:43 fw_build_id WLAN.HSP.1.1.c3-00200-QCAHSPSWPL_V1_V2_SILICONZ-1
-ath11k_pci 0000:01:00.0 wlp1s0: renamed from wlan0
+The WCN6851, found e.g. on SM8350 platforms, is an earlier version of
+WCN6855 platform. It identifies itself as hw1.1. Copy WCN6855 hw 2.0
+configuration to support hw1.1 version.
 
-For the reference, the driver looks for the board data for
-bus=pci,vendor=17cb,device=1103,subsystem-vendor=17cb,subsystem-device=0108,qmi-chip-id=0,qmi-board-id=6,variant=QC_8350_HDK
+> diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireles=
+s/ath/ath11k/core.c
+> index 8dacc878c0068..78a226ca081c7 100644
+> --- a/drivers/net/wireless/ath/ath11k/core.c
+> +++ b/drivers/net/wireless/ath/ath11k/core.c
+> @@ -393,6 +393,98 @@ static const struct ath11k_hw_params ath11k_hw_param=
+s[] =3D {
+>  		.cfr_num_stream_bufs =3D 0,
+>  		.cfr_stream_buf_size =3D 0,
+>  	},
+> +	{
+> +		.name =3D "wcn6855 hw1.1",
+> +		.hw_rev =3D ATH11K_HW_WCN6855_HW11,
+> +		.fw =3D {
+> +			.dir =3D "WCN6855/hw1.1",
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
----
- arch/arm64/boot/dts/qcom/sm8350-hdk.dts | 126 ++++++++++++++++++++++++++++++++
- 1 file changed, 126 insertions(+)
+[Severity: Medium]
+Since this adds a new firmware directory for hw1.1, should there be a
+corresponding MODULE_FIRMWARE(ATH11K_FW_DIR "/WCN6855/hw1.1/*") declaration
+added to drivers/net/wireless/ath/ath11k/pci.c alongside the existing
+entries for hw2.0 and hw2.1?=20
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8350-hdk.dts b/arch/arm64/boot/dts/qcom/sm8350-hdk.dts
-index 4973a3eb11b5..8e35216e4272 100644
---- a/arch/arm64/boot/dts/qcom/sm8350-hdk.dts
-+++ b/arch/arm64/boot/dts/qcom/sm8350-hdk.dts
-@@ -115,6 +115,70 @@ lt9611_3v3: lt9611-3v3-regulator {
- 		regulator-boot-on;
- 		regulator-always-on;
- 	};
-+
-+	wcn6855-pmu {
-+		compatible = "qcom,wcn6851-pmu", "qcom,wcn6855-pmu";
-+
-+		pinctrl-0 = <&bt_en>, <&wlan_en>, <&swctrl>;
-+		pinctrl-names = "default";
-+
-+		wlan-enable-gpios = <&tlmm 64 GPIO_ACTIVE_HIGH>;
-+		bt-enable-gpios = <&tlmm 65 GPIO_ACTIVE_HIGH>;
-+		swctrl-gpios = <&tlmm 153 GPIO_ACTIVE_HIGH>;
-+
-+		vddio-supply = <&vreg_s10b_1p8>;
-+		vddaon-supply = <&vreg_s11b_0p95>;
-+		vddpmu-supply = <&vreg_s11b_0p95>;
-+		vddpmumx-supply = <&vreg_s2e_0p85>;
-+		vddpmucx-supply = <&vreg_s11b_0p95>;
-+		vddrfa0p95-supply = <&vreg_s11b_0p95>;
-+		vddrfa1p3-supply = <&vreg_s12b_1p25>;
-+		vddrfa1p9-supply = <&vreg_s1c_1p86>;
-+		vddpcie1p3-supply = <&vreg_s12b_1p25>;
-+		vddpcie1p9-supply = <&vreg_s1c_1p86>;
-+
-+		regulators {
-+			vreg_pmu_rfa_cmn_0p8: ldo0 {
-+				regulator-name = "vreg_pmu_rfa_cmn_0p8";
-+			};
-+
-+			vreg_pmu_aon_0p8: ldo1 {
-+				regulator-name = "vreg_pmu_aon_0p8";
-+			};
-+
-+			vreg_pmu_wlcx_0p8: ldo2 {
-+				regulator-name = "vreg_pmu_wlcx_0p8";
-+			};
-+
-+			vreg_pmu_wlmx_0p8: ldo3 {
-+				regulator-name = "vreg_pmu_wlmx_0p8";
-+			};
-+
-+			vreg_pmu_btcmx_0p8: ldo4 {
-+				regulator-name = "vreg_pmu_btcmx_0p8";
-+			};
-+
-+			vreg_pmu_pcie_1p8: ldo5 {
-+				regulator-name = "vreg_pmu_pcie_1p8";
-+			};
-+
-+			vreg_pmu_pcie_0p9: ldo6 {
-+				regulator-name = "vreg_pmu_pcie_0p9";
-+			};
-+
-+			vreg_pmu_rfa_0p8: ldo7 {
-+				regulator-name = "vreg_pmu_rfa_0p8";
-+			};
-+
-+			vreg_pmu_rfa_1p2: ldo8 {
-+				regulator-name = "vreg_pmu_rfa_1p2";
-+			};
-+
-+			vreg_pmu_rfa_1p7: ldo9 {
-+				regulator-name = "vreg_pmu_rfa_1p7";
-+			};
-+		};
-+	};
- };
- 
- &adsp {
-@@ -373,6 +437,13 @@ vreg_l7e_2p8: ldo7 {
- 			regulator-name = "vreg_l7e_2p8";
- 			regulator-min-microvolt = <2800000>;
- 			regulator-max-microvolt = <2800000>;
-+
-+			/*
-+			 * This is used by the RF front-end for which there is
-+			 * no way to represent it in DT (yet?).
-+			 */
-+			regulator-boot-on;
-+			regulator-always-on;
- 		};
- 	};
- };
-@@ -499,6 +570,23 @@ &pcie0 {
- &pcie0_port0 {
- 	reset-gpios = <&tlmm 94 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 96 GPIO_ACTIVE_HIGH>;
-+
-+	wifi@0 {
-+		compatible = "pci17cb,1103";
-+		reg = <0x10000 0x0 0x0 0x0 0x0>;
-+
-+		vddrfacmn-supply = <&vreg_pmu_rfa_cmn_0p8>;
-+		vddaon-supply = <&vreg_pmu_aon_0p8>;
-+		vddwlcx-supply = <&vreg_pmu_wlcx_0p8>;
-+		vddwlmx-supply = <&vreg_pmu_wlmx_0p8>;
-+		vddpcie1p8-supply = <&vreg_pmu_pcie_1p8>;
-+		vddpcie0p9-supply = <&vreg_pmu_pcie_0p9>;
-+		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
-+		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
-+		vddrfa1p8-supply = <&vreg_pmu_rfa_1p7>;
-+
-+		qcom,calibration-variant = "QC_8350_HDK";
-+	};
- };
- 
- &pcie0_phy {
-@@ -763,6 +851,20 @@ &tlmm {
- 		"HST_WLAN_UART_TX",
- 		"HST_WLAN_UART_RX";
- 
-+	wlan_en: wlan-en-state {
-+		pins = "gpio64";
-+		function = "gpio";
-+		drive-strength = <16>;
-+		bias-disable;
-+	};
-+
-+	bt_en: bt-en-state {
-+		pins = "gpio65";
-+		function = "gpio";
-+		drive-strength = <16>;
-+		bias-disable;
-+	};
-+
- 	pcie0_default_state: pcie0-default-state {
- 		perst-pins {
- 			pins = "gpio94";
-@@ -815,12 +917,36 @@ sdc2_card_det_n: sd-card-det-n-state {
- 		drive-strength = <2>;
- 		bias-pull-up;
- 	};
-+
-+	swctrl: swctrl-state {
-+		pins = "gpio153";
-+		function = "gpio";
-+		drive-strength = <16>;
-+		bias-disable;
-+	};
- };
- 
- &uart2 {
- 	status = "okay";
- };
- 
-+&uart18 {
-+	status = "okay";
-+
-+	bluetooth {
-+		compatible = "qcom,wcn6851-bt", "qcom,wcn6855-bt";
-+
-+		vddrfacmn-supply = <&vreg_pmu_rfa_cmn_0p8>;
-+		vddaon-supply = <&vreg_pmu_aon_0p8>;
-+		vddwlcx-supply = <&vreg_pmu_wlcx_0p8>;
-+		vddwlmx-supply = <&vreg_pmu_wlmx_0p8>;
-+		vddbtcmx-supply = <&vreg_pmu_btcmx_0p8>;
-+		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
-+		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
-+		vddrfa1p7-supply = <&vreg_pmu_rfa_1p7>;
-+	};
-+};
-+
- &ufs_mem_hc {
- 	status = "okay";
- 
+Missing this might cause tools like modinfo or dracut to not recognize the
+dependency, potentially leaving the firmware out of the initramfs.
 
--- 
-2.47.3
+> +			.board_size =3D 256 * 1024,
+> +			.cal_offset =3D 128 * 1024,
+> +		},
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608-sm8350-wif=
+i-v2-0-efb68f1ff04c@oss.qualcomm.com?part=3D2
