@@ -1,105 +1,189 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9613E36DA18;
-	Mon,  8 Jun 2026 07:13:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 162B438644F
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 07:43:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780902796; cv=none; b=ai7SGGbci5vhdFmuySOh5gyZ/uHLdV3tx9cxpehTB5kyyISoQBDuBgrlRfFt3zyr/PiE0dvsCQyd/LiDoGlij4V9nc7b4sqTgEUXsvYsGLBpraQ8r1aqTLaL7hhYuLrm7+onYM1OfIMz/HzsAMETS/SWC8yTyHzyzilr9RnIubs=
+	t=1780904634; cv=none; b=qjqt3PqDLIZsJc2dWh+/KaGxg+R+E1WafqHtm16znf1efmxNSZ/d4GpqprlS9WfieqGBbIFpoadV4uTKg9pYPNNr1aLU6Gp54Y/mBOi3X0sNvwahxyxJNIkCF4feucY5YKpH/cjjmulLh2J+BsuOuVLQEcBi8mO7m3CcvV2x/SY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780902796; c=relaxed/simple;
-	bh=Z7Oa6agaH+e0aQ0FQqR04RGhsz3mACVFqe9OkAVJOd4=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Kfvi06eERwyCZj3t1NRc80QdPc8lIMqVqQNQ2FIuKzi+/j+BUEmyLrcyaO+ydIZ96TC8Vw3A1QspEEhuyAgVps50DiNqKKxaXt5DozSXZnThsuiPpk9sfEUsPDfwYWBs8KjARei+jDt4bIjG8/dcC80EUaWF7K6qUnimm9V9WGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hd5PM5xM; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780904634; c=relaxed/simple;
+	bh=mmyfZPaCUwrVyVzelZcY/HtUTXHtqBdi6SVGNq/yq2M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YwD36aA2SW4I/bsFl1HlJPNRRdfYErqCZ1uckEQugY3uBXYGXD9T+A8UwSG5pefCxpjJSOwnszICWsLKRM+kFpfuiF1Aq8El7a1CTf3QTJDcBy2nzqZxrVSMPH9kOTOZlDqMp5DFCGE/D6oucAjIqKq8SwJ0D29nTO9eFLsXcU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ArHoDZaD; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=kMD7jPip; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hd5PM5xM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02CC51F00893;
-	Mon,  8 Jun 2026 07:13:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780902795;
-	bh=z0lzKPKtx3yLg7coUx/9j5mKVJAlKY8Kg0znnpC+T7o=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=Hd5PM5xMV/izOTmuttaOSu3vRpUjrkUHcDHEbRti6Ip8GCOKdkIbtY+2oq2ds0SWo
-	 uLzKzg4Gj5QuPs/A8NikOkiQF/QYzvJu54ExBEEXe2QbnFqqKK2fnkNjT1e9HuBrws
-	 QjyQnaIxk4Z3nhUYBlDpfrW7qfobdhXKhFKXL3+Wl5keXC4Ew5jEs5gOgzmdPibvXi
-	 AnKpudwB6Own1knnF5dMpGTTeIK30qfA8BrzX/eTvueQnqSCspGxZH4A4eJIFHkgwc
-	 NoYq5r2Tk3frSt93Q1SDQ1NlPZHdmZH3SwdsM0uyTZbDuuqrTy8HBiB++nYZ+5XrvF
-	 iscAMZqfcksfw==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v2 1/7] PCI: qcom: fix parsing of PERST# in the legacy
- case
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Dmitry Baryshkov" <dmitry.baryshkov@oss.qualcomm.com>
-Cc: devicetree@vger.kernel.org, robh@kernel.org, linux-pci@vger.kernel.org, conor+dt@kernel.org
-In-Reply-To: <20260608-sm8350-wifi-v2-1-efb68f1ff04c@oss.qualcomm.com>
-References: <20260608-sm8350-wifi-v2-1-efb68f1ff04c@oss.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Mon, 08 Jun 2026 07:13:14 +0000
-Message-Id: <20260608071315.02CC51F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ArHoDZaD";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="kMD7jPip"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6586Pko92733114
+	for <linux-pci@vger.kernel.org>; Mon, 8 Jun 2026 07:43:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=v+iBuTlJCGQPNjwvDXc2jqve
+	RsmYKmF0YLF0hTmr7hg=; b=ArHoDZaDltiuEKPKeaKHn6mF443fBaa7o7B40KOm
+	RiQEWFxSeU37PIgJ/aB1iRmZOCb7GumPzM/kFDEKUnPvx5WB/NdriWqus2Dzkd4N
+	oqM/pycXMImx3aJtpppD1kZIJGwZXsF8rtU7uKxQsHMspEUh7b302kZ24gZQXGYo
+	PUhkY3HA+F4d7DuCbi9kQres7w6EIls3etClxglrh3OxeABDrPDAuRSnOdkrzJYR
+	96bcmfidO6GUEpIZT1hKZwq6fNpOiaFQbQnaQM76WUqF8Xjeu+pXXRpQX9jJs5rT
+	hF22CiBX89YUzRbk0aGEE2uJVZmVFtXwTl5nVuijCo3Bmg==
+Received: from mail-vs1-f69.google.com (mail-vs1-f69.google.com [209.85.217.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4emavf6q27-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 07:43:50 +0000 (GMT)
+Received: by mail-vs1-f69.google.com with SMTP id ada2fe7eead31-6ce6f8465a9so4944009137.3
+        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 00:43:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=oss.qualcomm.com; s=google; t=1780904630; x=1781509430; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=v+iBuTlJCGQPNjwvDXc2jqveRsmYKmF0YLF0hTmr7hg=;
+        b=kMD7jPipW85hjez7AOSPkED5GxnIkHqYiIKuJfOTQ9f4xP4TOn92Q2fDbHkybVbd9y
+         gO+jd1MIB+QtVSUZdwj9SyQdWcH4Uz/MHxIAri3p3Hqt0rJM2HrTM4Y3t97aCv4H+YED
+         lZLy+fiApbd0HWGs9PRf+P+BBD7jTNxrYzU99d9gBEibQEZ2odC/vYHicfo+713fcPIG
+         kaKjUPTlCSnfWqKL4U18keqEuOBU27emuC9Rqm1WD1ZtBIr+nglaKN+KizbODK+bMnJx
+         0P9Mx0p3G9nlaWyhYgyoE3ndzLcqFhG9mtD0qXpBLqnyXpTYwffcefJjsJlDAJKQxGwL
+         HBYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780904630; x=1781509430;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=v+iBuTlJCGQPNjwvDXc2jqveRsmYKmF0YLF0hTmr7hg=;
+        b=PMYeKmlJQIP084XlBrCIVnI7P1PYp8T/yVB40xuFWupFDNbJvsC159VEPr/yEpprHK
+         JbjJ8mM6Eu2zMdUXnNAfV9FzaBgC4EAIFopR9ty/a1vkWCy5h3rGeikGN3ww69U3KY/a
+         nrxKW9/c/jqZfN4JB+KeUUNfhFW65nAbrp1Gee9Ya62owFoaBQuq+a8SOQ1HAUmcs/UM
+         SA/y5fXA4DD56XSQTEmUGBJ5GCDBVeP06CvfB2ySwkIiz6Nb/8mvX7P6lWH4u30Lqp+p
+         iL7Hw3X+Io5suFPXPNxbVGeHvlqd2Q/W8xOn+erl0G/6m9BWj7uwp7xbLktP/cpRztYO
+         cNoQ==
+X-Forwarded-Encrypted: i=1; AFNElJ8gMDZbqwo1AtV0bAY8bjyrr15dsFYa+1hnXxjablKg96asO0gLeectIhp4JE8AsXlQp+NJlY1CeV0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5Qq9qw6EZeYE0oIbVL2A5jmuzMzHPf5pF+qStnMleyBQAX1Bp
+	F5wlt2HRqzWTF664ZPHje+dZa2o6WYWysoMMBmbSpZNrXWsUzKz7OD0V+PoA65gDPzykTVbOxYM
+	wUsKOY2LWhrbE75eCAcTD2FuT/cVRVsM//Co4fZ2p/Rr0LJYJ1L5dt9jIv+P0Se8=
+X-Gm-Gg: Acq92OFBtrl0ohej8/fxUjWESoeQB4tV6VZzk6GSaQlNwZ8OEWBpJxB15t/0W7xKEMV
+	QPAcqBLo0JWFLWmnea58K+LHObmDzKQKPbTvp7MrN+SRjzlL4u3BwNgqZsE8cQo84dfMwSD26Lq
+	PZ9z1M9PmGsF0HTPu34K110V85TXLkbK9rJz6c3/YZQ/Y3G+AeCejlSsN5bI/4XR7yXb6m246c6
+	0X6j2OMeja/5AF29A2bpiR0LHDfSfy5D90Bm3yTBUgV4RcJ2+kxSddUPNwg5j6O0xsesmOrir3Q
+	AKm4agcZ4ttU14OyRdsxabQpKWFx64w7MY3q5kDCC624xcbIB2HP5sniGsXE0Zi6Nil+I8hb/Zm
+	QC30DvowuL17KDsXFCmmMVpLmlHha40YSEJmKK7XqFK5UR+gdri3pAeik4bqbMmIrLwBQmLvQTb
+	W9laLKyZ8sGBPwWMN7Q2vh9MnHyuyKucF5PnPhCCM879WX1g==
+X-Received: by 2002:a05:6102:6b0a:b0:631:7781:fe8a with SMTP id ada2fe7eead31-6ff084a55demr6792173137.19.1780904630274;
+        Mon, 08 Jun 2026 00:43:50 -0700 (PDT)
+X-Received: by 2002:a05:6102:6b0a:b0:631:7781:fe8a with SMTP id ada2fe7eead31-6ff084a55demr6792161137.19.1780904629881;
+        Mon, 08 Jun 2026 00:43:49 -0700 (PDT)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5aa7b90421dsm3582675e87.30.2026.06.08.00.43.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Jun 2026 00:43:48 -0700 (PDT)
+Date: Mon, 8 Jun 2026 10:43:47 +0300
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Kathiravan Thirumoorthy <kathiravan.thirumoorthy@oss.qualcomm.com>
+Cc: Qiang Yu <qiang.yu@oss.qualcomm.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Subject: Re: [PATCH] PCI: qcom: Handle mixed PERST#/PHY DT configuration
+Message-ID: <usvxtl4r2ioxpmmlp47ms3stoqz7b42agpnuiromaw7qwvz67a@y7suscxylym6>
+References: <20260508-mix_perst_phy_dts-v1-1-9eff6ee9b51a@oss.qualcomm.com>
+ <gieaybsg2ckxpctvqj77nlwu7utama2yeyvebkonmexsxrra3v@v3fobqasxnmy>
+ <0bd70e70-68fe-436b-8366-8a497861e21d@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0bd70e70-68fe-436b-8366-8a497861e21d@oss.qualcomm.com>
+X-Authority-Analysis: v=2.4 cv=I4JVgtgg c=1 sm=1 tr=0 ts=6a2672b6 cx=c_pps
+ a=5HAIKLe1ejAbszaTRHs9Ug==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=ZpdpYltYx_vBUK5n70dp:22 a=VwQbUJbxAAAA:8
+ a=EUspDBNiAAAA:8 a=1EBqKiz8AxVLgVlipLgA:9 a=CjuIK1q_8ugA:10
+ a=gYDTvv6II1OnSo0itH1n:22
+X-Proofpoint-ORIG-GUID: -gUOaPoYBRjJsIkzsvPonLYPlFb98mjN
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDA3MCBTYWx0ZWRfXy80OUs5lcNl3
+ MuWD4pW+4dOctinocRFjqPFhpmOi5tBjInd1hBCxDwsnLbvLVCF+vkxXs/tgk/FnZEDo1yVwgZq
+ haX5EpI9czwMuKri2dZWUUc5pMcLGyb1zJ+Gf7gDjBfeU1HvMwMdxRct8HeplIOYyrPWjJdryNJ
+ d82AyTxHPImR8gOkpYu84BEAju0SpvNGl4enm4A+RKe0mZbOXZ1VSOjberJtOE1E4xQ2+9cpM1i
+ pSMG2n8XknqWTj4F9Kuu5IornSQf30H4tGgFXUzQbUJwM5oi9NlA4PfYEfi9TmNj4hRMakU7lmk
+ 5GS72oCk3sHcXBkHmkRNPd9p4kolC/1wzqhVA9JFLLI9o1PRoewhOjr630Qn5tJ4+QfaOAAXbBI
+ 3HrwXmw6iKliefyFwka58mLD5TUsV85HYGBkAwWLzdw0qzITQET4k+f2vDHuVHD05dcCXnFJv9F
+ aGWL7RIZNcc5RRRQakA==
+X-Proofpoint-GUID: -gUOaPoYBRjJsIkzsvPonLYPlFb98mjN
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-08_02,2026-06-05_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 adultscore=0 impostorscore=0 malwarescore=0 priorityscore=1501
+ bulkscore=0 phishscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606080070
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
-s) to consider:
-- [High] Direct return on `devm_gpiod_get_optional` failure in `qcom_pcie_p=
-robe` bypasses `pm_runtime` cleanup.
---
+On Tue, Jun 02, 2026 at 10:04:22AM +0530, Kathiravan Thirumoorthy wrote:
+> 
+> On 5/31/2026 4:37 PM, Dmitry Baryshkov wrote:
+> > On Fri, May 08, 2026 at 02:54:19AM -0700, Qiang Yu wrote:
+> > > The driver currently supports two PERST# and PHY DT configuration. In one
+> > > case, PHY, PERST#, are described in the RC node. In the other case, they
+> > > are described in the RP node.
+> > > 
+> > > A mixed setup is not supported. One common example is PHY on the RP node
+> > > while PERST# remains on the RC node. In that case the driver goes through
+> > > the RP parse path, does not find PERST# on RP, and does not report an
+> > > error because PERST# is optional. Probe can then succeed silently while
+> > > PERST# is left uncontrolled, and PCIe endpoints fails to work later. This
+> > > silent probe success makes debugging difficult.
+> > > 
+> > > Handle this mixed case in the RP parse path by checking whether PERST# is
+> > > present on RC and, if so, using the RC PERST# GPIO for RP ports while
+> > > keeping RP parsing for PHY. Emit a warning to indicate mixed DT content so
+> > > it can be fixed.
+> > > 
+> > > This keeps mixed systems functional and makes the configuration issue
+> > > visible instead of failing later at endpoint bring-up.
+> > > 
+> > > Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> > > Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+> > > ---
+> > >   drivers/pci/controller/dwc/pcie-qcom.c | 15 +++++++++++++++
+> > >   1 file changed, 15 insertions(+)
+> > > 
+> > > @@ -1778,6 +1785,14 @@ static int qcom_pcie_parse_ports(struct qcom_pcie *pcie)
+> > >   	struct device *dev = pcie->pci->dev;
+> > >   	int ret = -ENODEV;
+> > > +	if (of_find_property(dev->of_node, "perst-gpios", NULL)) {
+> > > +		pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
+> > > +		if (IS_ERR(pcie->reset))
+> > > +			return PTR_ERR(pcie->reset);
+> > > +
+> > > +		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be fixed!\n");
+> > This patch breaks legacy DTs (I stumbled on it on SM8350 HDK), because
+> > now devm_gpiod_get_optional() in qcom_pcie_parse_legacy_binding()
+> > returns -EBUSY (as the GPIO is already requested here). I'll send a
+> > patch fixing the issue, but it's sad to see existing platforms being
+> > broken for the sake of undeclared "mixed" case.
+> 
+> Dmitry,
+> 
+> I have sent[1] fix for this issue and it is squashed with the offending
+> commit itself[2] and part of controller/dwc-qcom in the PCI tree.
 
-commit a1eb87e2fab2443f5d8889e3755038df391d4632
-Author: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-PCI: qcom: fix parsing of PERST# in the legacy case
+Ack, thanks
 
-This commit moves the parsing of the RC's perst-gpios into qcom_pcie_probe()
-to share it between mixed and legacy platforms. This prevents -EBUSY errors
-when acquiring the PERST# GPIO in legacy cases.
+> 
+> [1] https://lore.kernel.org/linux-arm-msm/20260526-fix_perst_gpio_handling-v1-1-9170507bb4e9@oss.qualcomm.com/T/#u
+> 
+> [2] https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=controller/dwc-qcom&id=1a23bcb452d95f099e530414504c0d99ee076b3f
+> 
 
-Link: https://lore.kernel.org/r/gieaybsg2ckxpctvqj77nlwu7utama2yeyvebkonmex=
-sxrra3v@v3fobqasxnmy/
-
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/control=
-ler/dwc/pcie-qcom.c
-> index 11fc604898926..7664c7c28c0e3 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-
-[ ... ]
-
-> @@ -2107,6 +2093,15 @@ static int qcom_pcie_probe(struct platform_device =
-*pdev)
-> =20
->  	pp->ops =3D &qcom_pcie_dw_ops;
-> =20
-> +	if (of_find_property(dev->of_node, "perst-gpios", NULL)) {
-> +		pcie->reset =3D devm_gpiod_get_optional(dev, "perst",
-> +						      GPIOD_OUT_HIGH);
-> +		if (IS_ERR(pcie->reset))
-> +			return PTR_ERR(pcie->reset);
-
-[Severity: High]
-Does this direct return leak the runtime PM usage count?
-
-Earlier in qcom_pcie_probe(), pm_runtime_get_sync() is called to increment
-the PM usage count. If devm_gpiod_get_optional() fails here, returning
-directly bypasses the err_pm_runtime_put cleanup path, which leaves runtime
-PM enabled and causes an unbalanced count.
-
-Should this be setting ret =3D PTR_ERR(pcie->reset) and jumping to
-err_pm_runtime_put instead?
-
-> +
-> +		dev_warn(dev, "Reusing PERST# from Root Complex node. DT needs to be u=
-pdated!\n");
-> +	}
-> +
->  	ret =3D qcom_pcie_parse_ports(pcie);
->  	if (ret) {
->  		if (ret !=3D -ENODEV) {
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608-sm8350-wif=
-i-v2-0-efb68f1ff04c@oss.qualcomm.com?part=3D1
+-- 
+With best wishes
+Dmitry
