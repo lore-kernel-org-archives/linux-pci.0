@@ -1,90 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 013AC3D1CCA
-	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 14:25:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2747E30DED0
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 14:30:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780928710; cv=none; b=Str7nD/sSxRGgYbGfKVOeYdyNOTVmB2Ce+7l9ULmHXbNpyTY30bzG9wVf4ZMbvohXaUQUBde1iZeN93RJZ00i/zimWpT83KzyBBidu0+8uVWZbH+usCX3BQ+tKzk5zE3vhYSpVMW8T6QxEhmO959HdqjCnK/meo2aPBZ/gPnXH8=
+	t=1780929044; cv=none; b=QEl17CseYz6S2XwLqT2lzFlQw3g8U3zp3O+48DY0l0rG+W8FtQpTWXKDz6OWc2lWXk3AFULotA58fcqK6a9kKyfk3hh3MW3CR2VQPGYs0dLDHLLvdEJT7ZsndwRvxGt4Hz3pEX27W+t2r/Er9q8I1eBsC0kiIJriVVnf0U93alg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780928710; c=relaxed/simple;
-	bh=r39JWjk3eEXkxQF9LVlH6CaX8c7vjwP9g4eg5PVmHzo=;
+	s=arc-20240116; t=1780929044; c=relaxed/simple;
+	bh=DgevYk+trI9a01XYiR93DkcK4FlvyCsJcciplo5M4a4=;
 	h=From:In-Reply-To:MIME-Version:References:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iLh7YaXJNf93B3RJICHNe6Owdjd5P57qtFIMYZeLrCBMrmIu3f4oSzJKbgBbMtGlBhlgiryagstB07zdKQfW0SL/dQy3bSG3gsy+KcZeIX736Vjv2TPppb8abA76i7iOtXN0BwjkHuI11AaCvHd0/gsCP8ef9kTmguS15sYkHmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=C7WJPTtF; arc=none smtp.client-ip=100.103.45.18
+	 To:Cc:Content-Type; b=gXtSz7JEaItDsIiNbiQf1pV988naR5FQRvnt/0OmASbhD53Rx+pR2LxjjirtlGIWfK9H1PwZFyp6OidCA9+wo/msfGbJB9kgMJ5Ym19bk4JOKF1uJR6B6CeQAmJEAcpprflA+0oKNEpfduD5IVwTfTHzGq0ZdslNtFAk93Y+I0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Yq6+gp7o; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C7WJPTtF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A28AE1F0089E
-	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 14:25:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Yq6+gp7o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC1FB1F008A6
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 14:30:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780928709;
-	bh=r39JWjk3eEXkxQF9LVlH6CaX8c7vjwP9g4eg5PVmHzo=;
+	s=k20260515; t=1780929042;
+	bh=DgevYk+trI9a01XYiR93DkcK4FlvyCsJcciplo5M4a4=;
 	h=From:In-Reply-To:References:Date:Subject:To:Cc;
-	b=C7WJPTtF168w0LXhxWPp6pmkxAbRRbddws71GFa8KOBA6y4dP24N6TENZ6Dy30Jqy
-	 4Z1OK6zEd5Bw3yrGpNswhH+WusL6GAlPzDD1T88ODHfSLO1/jdVoc+YlGcpkkFw5II
-	 fYBZCPdvPeECvoB0U87xeX1++A2oJHUSsr883bTMPsDQp1yhqOWg+Yp88UWPfku9eC
-	 TXV7RICLa9cwAcu0xm2CKjfRHWTqKDNq31OYtetRUgzOHEURE0KzV7pCNKKy5lIWta
-	 Q7NhbszK6JLM13KrXn4uJb5lC8XIwM1vOS7A2WXsSu5hQRe3wmwcWxSQswI5SjxIkP
-	 VMOyrBMShmzoQ==
-Received: by mail-dl1-f42.google.com with SMTP id a92af1059eb24-1382c509485so621580c88.1
-        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 07:25:09 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AFNElJ8BtIo1ACEJZ3R3+jnWFSu03CNefDvQScEsqfK8uoqyvZhbKsH2vavCje1gW55XkN7xidENpRxpmVI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyvJBpLXFsz3pDbpxA/trZv/isxaq4kBm+4IQKisjXSdwbybRaY
-	T+3e39Mc2LYUnIIp0t4zbEdpstB0DDcxqInNerSXp4nhWmoz32JzyUYmy6vHQUKKI5PP6FuSTXu
-	aBi3vu7gvLzR5NAn0TUdc7tz2FpJVoJv9ENFXZuLbWQ==
-X-Received: by 2002:a05:7022:62a3:b0:135:d749:574f with SMTP id
- a92af1059eb24-138066d530cmr7679756c88.13.1780928709070; Mon, 08 Jun 2026
- 07:25:09 -0700 (PDT)
+	b=Yq6+gp7o+t+YQI0mcfmczBWPQRT/vd6mpMnL5zm7lJV5zufTqvuUZFav2lmFFR1zr
+	 vU2EVs2llYOb0dtHlYEy9NzYr8JNJOb9R1lU5oyaRfZwTC3rjT9WFZNADXH/tZMrle
+	 rQWEi5ICOGsWewXIS0NwPziENp+foPhZM/T9FRSdghgNLaHkUvpi++XUTe79xgkI13
+	 mJw1ghKOSb9H72lLnbQC9gNsmjTHJqMFItaCAHvhmMAdMrViPbYjMDv0qYB1s2n2AK
+	 kjAgcHKa7c135LL3iv5tW2H8Cj5Lg7JHQ1PfB1H1fFtJmIM6y7uSF6hbjgUcRa/JXR
+	 UDwXwOdmoqi8w==
+Received: by mail-dl1-f53.google.com with SMTP id a92af1059eb24-137eb0d76beso3100232c88.0
+        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 07:30:42 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AFNElJ9sRevJiBcNyhkKFNHQYjlTtTygjP5CLSTQqNmqswcg0vKpjJj39Vy+o+5E94ByoogGiUUn9C+zGL4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxl/eLQ6kV7sUZZQoGlh4YYmltk3iH06Tv/Heo8Jz7qSrXjlNkm
+	piQn7mx3hHoUy5M64TJ1TriZfWsOi3TPaQdrmsawSMU1K6tvdOhrlig93sbNeIrw0/9UZ5GTLEq
+	taG4Pt5FhlkimGZ2xFR8C61RF914mNF4CYnBWJ2uQxw==
+X-Received: by 2002:a05:701a:c951:b0:12d:b8e5:5e2 with SMTP id
+ a92af1059eb24-13807dbc1f2mr6212351c88.23.1780929042235; Mon, 08 Jun 2026
+ 07:30:42 -0700 (PDT)
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 8 Jun 2026 07:25:06 -0700
+ HTTPREST; Mon, 8 Jun 2026 07:30:38 -0700
 Received: from 969154062570 named unknown by gmailapi.google.com with
- HTTPREST; Mon, 8 Jun 2026 07:25:05 -0700
+ HTTPREST; Mon, 8 Jun 2026 07:30:38 -0700
 From: Bartosz Golaszewski <brgl@kernel.org>
-In-Reply-To: <20260608091702.3797437-3-wei.deng@oss.qualcomm.com>
+In-Reply-To: <20260608-sm8350-wifi-v2-1-efb68f1ff04c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260608091702.3797437-1-wei.deng@oss.qualcomm.com> <20260608091702.3797437-3-wei.deng@oss.qualcomm.com>
-Date: Mon, 8 Jun 2026 07:25:05 -0700
-X-Gmail-Original-Message-ID: <CAMRc=Mdiih9kFj9mWe_9cqd5T4B4Q0ekd-5YhJ6X+dgiqwLtLQ@mail.gmail.com>
-X-Gm-Features: AVVi8CeA1Wijm5yAWA_-v3VlKzCbZNsMunOIP4iwNyh2boGjmtB7gJWUNbsUdIY
-Message-ID: <CAMRc=Mdiih9kFj9mWe_9cqd5T4B4Q0ekd-5YhJ6X+dgiqwLtLQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] arm64: dts: qcom: lemans-evk: Describe the PCIe M.2
- Key E connector
-To: Wei Deng <wei.deng@oss.qualcomm.com>
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-pm@vger.kernel.org, quic_chezhou@quicinc.com, 
-	cheng.jiang@oss.qualcomm.com, shuai.zhang@oss.qualcomm.com, 
-	jinwang.li@oss.qualcomm.com, xiuzhuo.shang@oss.qualcomm.com, 
-	mengshi.wu@oss.qualcomm.com, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>
+References: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com> <20260608-sm8350-wifi-v2-1-efb68f1ff04c@oss.qualcomm.com>
+Date: Mon, 8 Jun 2026 07:30:38 -0700
+X-Gmail-Original-Message-ID: <CAMRc=MctdRxo4WFf6F9A1pFOeTq8us6brdSEzTZsNPFwqrSnNQ@mail.gmail.com>
+X-Gm-Features: AVVi8CcaZhXYOpCv2x74C9QF-11-iy12puwZY5pM4Q7NOmmptdOTSpcIOV1fL7E
+Message-ID: <CAMRc=MctdRxo4WFf6F9A1pFOeTq8us6brdSEzTZsNPFwqrSnNQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/7] PCI: qcom: fix parsing of PERST# in the legacy case
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+	Jeff Johnson <jjohnson@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, 
+	Mark Brown <broonie@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	ath11k@lists.infradead.org, devicetree@vger.kernel.org, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-On Mon, 8 Jun 2026 11:17:02 +0200, Wei Deng <wei.deng@oss.qualcomm.com> said:
-> The lemans EVK has the PCIe M.2 Mechanical Key E connector to connect
-> wireless connectivity cards over PCIe and UART interfaces. Hence,
-> describe the connector node and link it with the PCIe 0 Root Port and
-> UART17 nodes through graph port/endpoint.
+On Mon, 8 Jun 2026 08:59:19 +0200, Dmitry Baryshkov
+<dmitry.baryshkov@oss.qualcomm.com> said:
+> Commit deed8aec62dc ("PCI: qcom: Handle mixed PERST#/PHY DT
+> configuration") fixed support for the "mixed" platforms which declare
+> PERST# pin the RC node and the PHY in the RP node, however it also broke
+> support for a majority of existing platforms, which declare both PERST#
+> and PHY in the RC node, because now PERST# is first acquired in
+> qcom_pcie_parse_ports(), which then returns -ENODEV (as there are no
+> PHYs in the RP nodes). Later qcom_pcie_parse_legacy_binding() tries to
+> acquire the PERST# GPIO again and fails with -EBUSY (as the GPIO has
+> already been requested).
 >
-> Also add 'compatible = "pciclass,0604"' to the pcieport0 node in
-> lemans.dtsi to allow the PCI subsystem to associate the DT node with
-> the PCI-to-PCI bridge device.
+> Move parsing of RC's perst-gpios to qcom_pcie_probe(), making it obvious
+> that it's shared for both cases and skip parsing it in both functions.
 >
-> The M.2 Key E connector is powered by a 3.3V fixed regulator
-> (vreg_wcn_3p3) which is sourced from the board's 12V DC input rail
-> (vreg_dcin_12v). Both regulators are always-on and are required by the
-> pcie-m2-e-connector binding.
->
-> Also add the serial1 = &uart17 alias, which is required for the
-> Bluetooth serdev device to be enumerated on the UART17 interface.
->
-> Signed-off-by: Wei Deng <wei.deng@oss.qualcomm.com>
+> Fixes: deed8aec62dc ("PCI: qcom: Handle mixed PERST#/PHY DT configuration")
+> Closes: https://lore.kernel.org/r/gieaybsg2ckxpctvqj77nlwu7utama2yeyvebkonmexsxrra3v@v3fobqasxnmy/
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 > ---
 
-Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Acked-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
