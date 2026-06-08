@@ -1,63 +1,63 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CDCC271464
-	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 10:49:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAB0F32F76D
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 11:33:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780915782; cv=none; b=sTCIFZud+upu3ZhFhD9oy50JAOtHiUcaPjFMWGCEvZtDFLmBRk0dMJe6EMK8UTC7GwCtAidYtG/QCO3oJIkE8zBOUAx11SbnBByrsr5Rsf3O6EKCKsm2eibaZZ4Q7nXnb/5Ai/jPu+CWsbvAcb6FMCBTVQewzr+u1lkaVI89Q88=
+	t=1780918399; cv=none; b=Q54A/hNM8qNFxq1hqwYLy2WaIdJS2+8rbYFXmE5uGq+9xAzVvDlCl/ENR8N3Sd6s6SFypDIHkRSlJgKD7FtqPQ7WwVseYmKXkeMsRAZXdzNupOypwsg6GbIYOfWasmmEtw2dcUyM9F3hwjDNDG1ffRay5doKqK5qLoxxvHkT/xg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780915782; c=relaxed/simple;
-	bh=eed3wx8kSh9cvFIuH8h1g7Va9HBHOdti091cZ6XjzuU=;
+	s=arc-20240116; t=1780918399; c=relaxed/simple;
+	bh=eHyGunCkEOCT/+vgrLK+pZ8fYBfJ59/R1TOD7yr0PNA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y0v2noZbTFjYXdB9KKgl0OmYSIDcqW4r4y9n9eHamTzozapwx3YCmnu1N5a+pYmsb0IWxX/RxOSbyiz2z4eYcK9CLSzOw86504naOYVAbodR9+zixQ/YbS6y/L7v+GxHOnGW/6s4SBy7cqEocwLrBxcltVIqkj4E+MuNUG6JazY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qJ/SVItb; arc=none smtp.client-ip=209.85.214.175
+	 Content-Type:Content-Disposition:In-Reply-To; b=V4UWSylPMYZz48lC3jdGLiGMcEp4gSxB3bbU1DKrw1MNTcSqtbG+m4aGdhCsJFeGyBR59zQLXN+/JT9hZYAjFquqOfQXINuFeWOEw39rWFYaulN3+PpES4YWN0i7PHgcpPJMWGLmmelmgUjzDV3s+ueR2JYFjkgXkuyLWPWRyL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=HRHtpz+i; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qJ/SVItb"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2bf22c18ad3so368955ad.0
-        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 03:49:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HRHtpz+i"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-2c0b1a48855so368985ad.0
+        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 04:33:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1780915779; x=1781520579; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1780918397; x=1781523197; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=fmn+PdTc6vMvIeP/V6J1RAe1SscwIO8ISTB8QBGG6KU=;
-        b=qJ/SVItbRXNSBHiLcnfG5JzHGRMU1n5wfZeE8A7lXjQ4jVVQplBI+OPWx9CH2Tpp7C
-         F9u34LLm5QyTlSg8/cuQdVrEeL4dVGo7RPvXJA+CLbuX9bYQ4Qrl0wD6AjmE4mGeWrCG
-         R6fH5Qo15fVB5GS5+ZSlpcDVWLvh4qTSeNWnJM70kTUw7b2dH7Bhes7W4ZXGCvJ3fu+P
-         DINne3vj25nMCEa5LwQ9jWOtKnoWsMR5+G5wV4MMuwBcGMwptxVP/qYNpsCyvvj4lrGM
-         Eyb3Ro0YNBnWYZeCLh+9fUyDsym8wceWipCz06QbSVpCRqkWcW/W/a+VqIB5KcyNSpsY
-         j+HA==
+        bh=/AClK5b2UGJLL9HjNCJk/rNNqh+8+sTLcKYFLOrhzbk=;
+        b=HRHtpz+iT7e8oEEhWle0XNZ6kadxAoQOUYX+a0adQBWGWSHavLa6QOEJjqMaQT2akw
+         XU4x/Eep9A9YIZqKQDf0DTKExiNnynaTRvFzoryvEN5axBsImSWSpqjNNOjXamz3PBTf
+         ikPFf7lcyJWrA9+5EePXsfolsC+S39c1m1Br/kQFzGERMZ8LGCQHp/TDTQcnGidVHCer
+         Y5jE8mLR2jFZP0u4nFZEf1aG2kjyyEilhTEGHp66jRtwih8ffQtENlglWdSguvx+ymXJ
+         J1IDYUgQeXPksKkAMD5qm2uR/FOgXptEMP3xTPIGP60u5FV4dzgauV4TGaT+zMJteXpg
+         TyTg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780915779; x=1781520579;
+        d=1e100.net; s=20251104; t=1780918397; x=1781523197;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fmn+PdTc6vMvIeP/V6J1RAe1SscwIO8ISTB8QBGG6KU=;
-        b=fQp9z/99AkPJYnJ8oUYRTIylsMrQQuDBSehjC88/G8c9DrwACnfcS8SfAiAKm4GVwb
-         TUJGlyoavg4sp5XIh/fWfsh5AEvTnK2QOLt0tj+hQKgKHd5gtcgWkOu9Cftj5viT7/nh
-         mcgTE8D7djO7y1CxfAenL2myNYdhaDV7jOszjPEAVI334YIDjDoYKPeRg3tFvVs3+P8Z
-         8TbBxVAeJw6lRGQinYQ5H3GgGbqTHqKWGTwL2IIehKuyyKdnyJkYuRfwR9ChP6pp28cU
-         6tivBKR/X97879Fq+c4jmsbo0u+4N1n3hUGOEZWjB+8abHicnjtreX0kL3gNzFIE7yDw
-         SZOQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9e1B5AGC3H7OMUsHcYXfqCtd+jzUwsxb0qywgyBpA+WSQkVLBa4aaCsk87UOgvpUOOv05x+inFwSA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw7ijQXdYOCGJtHO7Z2+Die5lR/BqlClDnJ6JsLLOUykuD+DMCN
-	PDmxUaZJxXMPqNxcHt/gIAmF4h/OHV7/r7WshhIkp9EEiOGO5FwYHIuhLsfoyXwzQA==
-X-Gm-Gg: Acq92OGHgYbsQ0TsjoRejqDAPpZhPssQsiHrgPKJKJxfPaBp4s0gt6IgN2Ao1qddobq
-	STS5ysVj15Lao9sx3LtOJvRmlMRF2O9PKiHW/DEvEuhqrruiUsXwS9NOc3X7furgSoWN9elfIUh
-	pLZd64PuX0choyV+wlmzxaINor0qKU+BK0X/9XWcRMxqh6uPdK4aYBxHSc2IFtm7AbheY73UviY
-	h9qHf8HaMTUWuNgaEpCMWBc/gpwnc22tgMjGAC8fCtjBQSbUdFDI2rrHHCrD2D95qeZMXcyo55v
-	xkjLT6ALAsP/XqVocHaTEnY6rhBK/x5A7FBFkz0xuh8SbitZigUiP4ailE9sYDDCOEPsKx354tJ
-	Spse7WNonRcU/vyarNJuuNJ8fpHsHgdYoTkmDEh/JANYUgKXhTbVuWASL0FQTdiuqxM/n2OgTHr
-	g7hvCWY49ewTYBsP3SQzfa0y8KNh2jT3MK517f4Ok8JB9u04y6UmtWoZ5pegV7RFO7xM8aBc0=
-X-Received: by 2002:a17:903:1986:b0:2c1:ee6e:4e50 with SMTP id d9443c01a7336-2c1ee6e51d9mr4607285ad.33.1780915778977;
-        Mon, 08 Jun 2026 03:49:38 -0700 (PDT)
+        bh=/AClK5b2UGJLL9HjNCJk/rNNqh+8+sTLcKYFLOrhzbk=;
+        b=drMYemnK0XvVX1kxVomjcdPdbjoTpUgjUaY5LoV0RRC38OXkdsBo/iwhwP3uMcs86v
+         JFOZp/R81SiF39+Ftt8LqQD7yhu1Z0iHGtROU/YvS0MWvN9ARsF0jq9igDwdH3FIpvep
+         f4dAdGuXd7yl/HHasTuO+VFRu3qdt5G30e5Tg9Ce8ajy5qkyAfI6CZ8KIzMHKA3AFh0l
+         ilYoeJwCo94S5GeBkuPEy2N35IxdXlSlI5WU0FXTBpEpfcMRDtdB+QpXCrjQhVeLi9/D
+         ZaqvEPEmGEiskOty92aeQrNQbYOGSBNWqwjEiIbo9IsHtTJU67VY+MgBeHa9AhBRSG6l
+         RyyA==
+X-Forwarded-Encrypted: i=1; AFNElJ+hWG53eWdR79yeBlHUHJoHnRjXOGJzs2js8ethUGTpLSQ/Z4z77ioSPY9Qm/NT7n95MURDsfQZOAg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfLQn/tyEItao/hY5f6ceQMXhLFHokOkbR2ytDNFyQd9TrSrSY
+	P+2aCU7iA7O6yYlKYAivf00knK1WebzSoz2kkOsIoXXnETEt41gWa+kW0ctLkY9Z0Q==
+X-Gm-Gg: Acq92OEppVQHhYuXvFg5ZyqFVJVyCXm9+xbhqxIeggDhd5fBC76DcpTxDBLkhAA0Lyd
+	B6HS2fycKzdsrjc8oQ/PTcgskBkGRnxPkkQ0Rtlo+ww3XQdeOagaysCiA2rwqrfQxtu5RuYBBzB
+	QT78ow7rRB18KkjBIpBtW6oUfDMgXlBuMIrlsJhTM0Smun7AMUFuY/4bMKSH8GfWkI1SLeP0sB6
+	TMrh6swTwGmW507qRpmjakqMJVsrynjVi/jiko1ZYKkr64HMlsOZ1hM+24aiooi0MT+jY/OoDIt
+	lu5Q6lSRTj0Pn+4KcKKCx6BjgnPj2zAezQKw+GGtEwaAqe/pIkpsSge71VMAGRO1KJsO8/2aksH
+	HHrzNAl7FrdNWJD3t8Mfigzfn2zJFSTTaJRZzfV/m1ndxMhBX67CDkS3kkPDK/7QzraEqbYMmF6
+	eQDeeT0P801bA9pPskvh6cyMgSEcXn+B4d0xM8AhiJBAxRqPq960b7cqR6L+JLDzZuZGmXa38=
+X-Received: by 2002:a17:903:2349:b0:2bd:3c1b:3073 with SMTP id d9443c01a7336-2c1ebea9c71mr4318635ad.16.1780918396547;
+        Mon, 08 Jun 2026 04:33:16 -0700 (PDT)
 Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c16649c302sm173906215ad.73.2026.06.08.03.49.33
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c164f9ed6csm182143405ad.31.2026.06.08.04.33.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Jun 2026 03:49:38 -0700 (PDT)
-Date: Mon, 8 Jun 2026 10:49:29 +0000
+        Mon, 08 Jun 2026 04:33:15 -0700 (PDT)
+Date: Mon, 8 Jun 2026 11:33:07 +0000
 From: Pranjal Shrivastava <praan@google.com>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -80,12 +80,11 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 08/12] PCI: liveupdate: Inherit ACS flags in incoming
- preserved devices
-Message-ID: <aiaeOVomxQZhoM3K@google.com>
+Subject: Re: [PATCH v6 09/12] PCI: liveupdate: Inherit ARI Forwarding Enable
+ on preserved bridges
+Message-ID: <aiaoc6Y6qeF_5Wn9@google.com>
 References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-9-dmatlack@google.com>
- <aiXWmR-ettxin4LC@google.com>
+ <20260522202410.3104264-10-dmatlack@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -94,69 +93,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aiXWmR-ettxin4LC@google.com>
+In-Reply-To: <20260522202410.3104264-10-dmatlack@google.com>
 
-On Sun, Jun 07, 2026 at 08:37:45PM +0000, Pranjal Shrivastava wrote:
-> On Fri, May 22, 2026 at 08:24:06PM +0000, David Matlack wrote:
-> > Inherit Access Control Services (ACS) flags on all incoming preserved
-> > devices (endpoints and upstream bridges) during a Live Update.
-> > 
-> > Inheriting ACS flags avoids changing routing rules while memory
-> > transactions are in flight from preserved devices. This is also strictly
-> > necessary to ensure that IOMMU group assignments do not change across
-> > a Live Update for preserved devices, as changing ACS configurations can
-> > split or merge IOMMU groups.
-> > 
-> > Cache the inherited ACS controls established by the previous kernel in
-> > struct pci_dev so that ACS controls do not change after a reset
-> > (pci_restore_state() calls pci_enable_acs()).
-> > 
-> > To simplify ACS inheritance, reject preserving any devices that require
-> > quirks to enable ACS as those quirks would also have to take Live Update
-> > into account.
-> > 
-> > Signed-off-by: David Matlack <dmatlack@google.com>
-> > ---
-> >  drivers/pci/liveupdate.c       | 68 ++++++++++++++++++++++++++++++++++
-> >  drivers/pci/liveupdate.h       | 11 ++++++
-> >  drivers/pci/pci.c              |  5 +++
-> >  drivers/pci/pci.h              |  5 +++
-> >  drivers/pci/quirks.c           |  7 ++++
-> >  include/linux/pci_liveupdate.h |  6 +++
-> >  6 files changed, 102 insertions(+)
-> > 
+On Fri, May 22, 2026 at 08:24:07PM +0000, David Matlack wrote:
+> Inherit the ARI Forwarding Enable on preserved bridges and update
+> pci_dev->ari_enabled accordingly during a Live Update. This ensures that
+> the preserved devices on the bridge's secondary bus can be identified
+> with the same expanded 8-bit function number after a Live Update.
 > 
-> [...]
+> Signed-off-by: David Matlack <dmatlack@google.com>
+> ---
+>  drivers/pci/liveupdate.c | 18 ++++++++++++++++++
+>  drivers/pci/liveupdate.h |  6 ++++++
+>  drivers/pci/pci.c        |  8 +++++++-
+>  3 files changed, 31 insertions(+), 1 deletion(-)
 > 
-> >  
-> > +void pci_liveupdate_init_acs(struct pci_dev *dev)
-> > +{
-> > +	guard(rwsem_read)(&pci_liveupdate.rwsem);
-> > +
-> > +	if (!dev->acs_cap || !dev->liveupdate.incoming)
-> > +		return;
-> > +
-> > +	pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL, &dev->liveupdate.acs_ctrl);
-> 
-> I might be thinking out loud here, but as an attacker, this motivates me
-> to somehow hack the EP FW to mis-report the PCI_ACS_CTRL register across
-> a liveupdate to fool the incoming kernel. If the FW feeds a 0, it silently
-> strips ACS protections.
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index a93b7ef065f2..701276ef6cfb 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -128,6 +128,10 @@
+>   *    way after Live Update and ensures that IOMMU groups do not change. Note
+>   *    that a device will use its inherited ACS flags for the lifetime of its
+>   *    struct pci_dev (i.e. even after pci_liveupdate_finish()).
+> + *
+> + *  * The PCI core inherits ARI Forwarding Enable on all bridges with downstream
+> + *    preserved devices to ensure that all preserved devices on the bridge's
+> + *    secondary bus are addressable after the Live Update.
+>   */
+>  
+>  #define pr_fmt(fmt) "PCI: liveupdate: " fmt
+> @@ -756,6 +760,20 @@ int pci_liveupdate_enable_acs(struct pci_dev *dev)
+>  	return 0;
+>  }
+>  
+> +int pci_liveupdate_configure_ari(struct pci_dev *dev)
+> +{
+> +	u16 val;
+> +
+> +	guard(rwsem_read)(&pci_liveupdate.rwsem);
+> +
+> +	if (!dev->liveupdate.incoming)
+> +		return -EINVAL;
+> +
+> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &val);
 
-Minor note here: I used "0" as an example value, I'm aware that'll
-effectively disable ACS and kernel will enforce more security.
+Again, I might be thinking out loud here, but since these are
+hot-pluggable devices, with some FW / SW running on them, I'm a little
+worried while assuming the HW registers can be trusted across a kexec.
 
-My point was that a FW exploit can meddle with the bitfields of the
-ACS_CTRL to spoof and mis-report the ACS flags.
+Say, if the bridge experiences a reset (e.g. link drop etc) during the
+kexec blackout, the PCI_EXP_DEVCTL2 register could revert to its default
+state, meaning the ARI bit will be 0.
 
-Additionally, we might give rise to use-cases that start depending on
-this, for e.g. if someone wants to change ACS policies in the
-new kernel, the FW may silently update these flags across a kexec.
+In that scenario, pci_liveupdate_configure_ari() will read 0, set
+bridge->ari_enabled = false, and bypass the pci_configure_ari() logic
+as well, permanently leaving ARI disabled on the bridge. Any preserved
+downstream devices with function numbers > 7 will instantly become
+unaddressable, breaking the Live Update. Even if that's desired it gets
+hard to identify why the Liveupdate broke.
 
-> 
-> Should we also serialize ACS state in ser somehow to ensure we aren't 
-> fooled by something like this?
-> 
+Should ari_enabled be serialized with bridge's pci_ser to ensure we
+correctly restore / match it in case HW changed it during the kexec?
+
+> +	dev->ari_enabled = !!(val & PCI_EXP_DEVCTL2_ARI);
+> +	return 0;
+> +}
+> +
+
+[...]
 
 Thanks,
 Praan
