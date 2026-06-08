@@ -1,49 +1,67 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f47.google.com (mail-dl1-f47.google.com [74.125.82.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E3E330B3F
-	for <linux-pci@vger.kernel.org>; Sun,  7 Jun 2026 23:55:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3D402C15BB
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 00:37:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780876528; cv=none; b=O3ask6+IDQ21hDvrd2sCyd5VdH4m7JeYM/8WWNUfury1/ZYC4fJzGdWDLLxTkCii0IUa0WxPa2uMcoC4fArym2yb2bT3C5RL5WqhwLgnMY+7QASk7DYcjVeFbdV611aqV7tTWzMsDPuKb8CPnZ0P7ZcX4MqqTDb+Fc9PU00oC5I=
+	t=1780879041; cv=none; b=J0BKH6+yP3eabxvtVIY+k0fNNJvXt7pkg3iC5nQw2YZu0GJ4rshTgTjnsJd66gEy4YB4VN59Cb6ucTAZaKeDvzJdIc5bQhhZ5oMG3ZruGL8HsJ63nSL1PaTN11OwRIxDDYwb1cnwQ8mU+LkgDAoVpYm96IwI6F/8fhiun7swCZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780876528; c=relaxed/simple;
-	bh=cH+nBD5+lmWPsH8F5RUUCmD4YEo9lH4Hm5Wwlk05A64=;
+	s=arc-20240116; t=1780879041; c=relaxed/simple;
+	bh=cbQSqd5uL2iKZXD9QIiW866G8yMZD7yl2KWSR4aU6x8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZYIgYzUNbrdHPZT4Bi6yJchEtN1mbZy1516H8TintDNzX9WUEsdABxNZOVgUs1gO/dbRBrIR5/us/Uw2OGHpbLzhTW1ojFT/rmHJlfjce4a9y4Q9CTU2+f4LjsShtd20+pB3+VDQlRPf5oRyzI52DwXJ6FFglKwM1gix+f3d5VI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iunc2Gal; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=JtLfdOCESKUuiD03A0uQTy6vAv7AbHq3dZisNYEOszBjaL6xVWKI4PV7OfrI9tTaRj5Tquk7hz0QuKoaG6me3a79yQYh1gufvurmiV5VtvNGcMmCrTZMhOqffIEXFJsDNxaZFe0zBbCtJBj+b2UWk0q/TRbQkpLw8yEFk8J29Uc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ti+ZYGtR; arc=none smtp.client-ip=74.125.82.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iunc2Gal"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1780876525;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=UdRc0TPpX14AW/HtwGItvSrXl/DVs2P0pWud8MsakpQ=;
-	b=iunc2GalXO9IEuhHRuoHdnIUAQ/Rx1HJ/Lw9npsuUP1OsPPntqnj0vLy+FatY4sAq6cffn
-	nDrFU2hIMhq+ES/q2DYeU/9AccqeIb4Ek6eIUqhOa95mezx7OIG0BFzplm+CecbWr2Wmvz
-	Qay2vly60EzwdadAWJRNn2vS6RWKuIE=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-493-_LqvAoF6NDWFFFBlyp-I6Q-1; Sun,
- 07 Jun 2026 19:55:23 -0400
-X-MC-Unique: _LqvAoF6NDWFFFBlyp-I6Q-1
-X-Mimecast-MFC-AGG-ID: _LqvAoF6NDWFFFBlyp-I6Q_1780876523
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E181C180034A;
-	Sun,  7 Jun 2026 23:55:22 +0000 (UTC)
-Received: from [10.22.88.52] (unknown [10.22.88.52])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7A20B3000232;
-	Sun,  7 Jun 2026 23:55:22 +0000 (UTC)
-Message-ID: <06cc7492-0261-4b4a-a92f-96962fb23da7@redhat.com>
-Date: Sun, 7 Jun 2026 19:55:21 -0400
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ti+ZYGtR"
+Received: by mail-dl1-f47.google.com with SMTP id a92af1059eb24-137335bc3caso4415833c88.0
+        for <linux-pci@vger.kernel.org>; Sun, 07 Jun 2026 17:37:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1780879038; x=1781483838; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=rsDQ4UZzRAQ5obFtcMk+V/ytcJzk5rFjcVjggi4FGCA=;
+        b=Ti+ZYGtRLhjL8aVorvlO8o2ZpCEQcTqP2lpt9cn4hCJw6sJuOuqCMXBWSZhvYMLE8w
+         uUi9sPSe3bV0Py33IqDnsJnXs2wnvpikJX7FWBbNZC/H8fl8W3C0ukmVx9QEXGStj7gd
+         xZDLVZMVEFcghdZEbEzNW2lJSGg2zk8sJil+7Dt8MkQMq0UqTWueO9bwyER5U2jzZqoY
+         RamrcWoUpia/VgZpElllISVYf+2aQbcM40+97wPIypOhCB8AZOiRPNc1GRDi1e3dYw/q
+         uzQgtHoAnL44J1d2cA4FqSv7iF7Xeh3IS366yvLGBh8fKs5zEJXmad4//xLb1uZ6JVp7
+         jynA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1780879038; x=1781483838;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rsDQ4UZzRAQ5obFtcMk+V/ytcJzk5rFjcVjggi4FGCA=;
+        b=JgqNb1MoqSaJjMY/UAvWm/xrO58lF5ZfvF4sogULhZT3UKCYEe0HAfkg9Rn0XTQ94Q
+         bRoOnVPfVLfEMnBz+vbQE0M4O21mZelWqJZf+t7dAXsMRmnSQOO5PE1gLhNAPONsMoGC
+         oibUuaf8Cjx8E18eHr8O0QMJUInGiOGzu0p5NOZP1g81OLvf3EihUjKMLScoX2XyHEYo
+         HmMm28M/V0ztBQsn1oJgJOtn8zwedH2UnTa53w/9pd2aOfYo0IMGaqFFmqrcoTSomUbO
+         Mac3Js7gmdpwKO9iEAiSurvti3FmT8xPLQwfgmrwXuJ89P4JnBD4ffyXcFZVKoH+r6Ja
+         Uaag==
+X-Gm-Message-State: AOJu0YzDIkjll4MAJ2ueSweJxDaispImg4NKqIrYiVWICKsNgygfqSua
+	cWgYtohwX5x4MkJZOpYj8DAbKcGA5sJgz0q0EELSDq1qYUd/oCI09WuN
+X-Gm-Gg: Acq92OFm76eJfr7g0T7oPaak0IHNB0EwVTMZ5ozRdgNcHy9jN2uVsF7kP3wGci3KxpT
+	jB9kLdAW7hXVfuIuOThqs60OczeSqIdEjEXEt6S4ALEQkl2sldoVd6czC5TuNo6ixOweSDtIs9W
+	uJlFdZbE+LVkTBfRNlZRXXwb61AjbnVuo88gp1JusWuvw7jCRg5T2gmrCuSSzM4pRzip79oIpjn
+	/XTtKUMEH26OOcI6xHQVrk4zlKwikzYsFEZWzU6l/OPR1t18Swaw0TG6F/yFMqwyLmZYy7fJYJD
+	UVn6EVkkPkkO4YQUyH3BADvKD24rRRxl8L6HCty69E/GfMS7d96i4ZTpQuI6d4kcgePLwVE7f24
+	7i0OBs7FxCslLu2vKpKT92f4963GR0N1YohlcRJ593Y6s6y3wRQeJ4g2jwVSaxteiMppzkPaP5z
+	UGTElrrtxWmA1VHHU1OaB84yEGbKE3NmiLqJfvxLj3HVlU+BUJA713RqFJssElu+AERJzf0xTjZ
+	KYbiwIcBOlh1nT9VO0A9g==
+X-Received: by 2002:a05:7300:d70d:b0:304:c520:4e14 with SMTP id 5a478bee46e88-3077b32888bmr8065408eec.11.1780879037946;
+        Sun, 07 Jun 2026 17:37:17 -0700 (PDT)
+Received: from ?IPV6:2600:1700:e321:62f0:da43:aeff:fecc:bfd5? ([2600:1700:e321:62f0:da43:aeff:fecc:bfd5])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3074db528dcsm18102986eec.3.2026.06.07.17.37.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 07 Jun 2026 17:37:17 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Message-ID: <ea12eccf-a35a-4e1d-8837-83d85dc0d679@roeck-us.net>
+Date: Sun, 7 Jun 2026 17:37:16 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,98 +69,102 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: Call local_pci_probe() directly if current CPU is
- in the right node
-To: sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-References: <20260607221103.703133-1-longman@redhat.com>
- <20260607222035.E05961F00893@smtp.kernel.org>
+Subject: Re: [PATCH v2] hwmon: (k10temp) Add thermal support for AMD 1Ah
+ Family Models 80h-8Fh
+To: Muralidhara M K <muralidhara.mk@amd.com>, clemens@ladisch.de,
+ bhelgaas@google.com, bp@alien8.de
+Cc: linux-pci@vger.kernel.org, linux-hwmon@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20260529111242.2748206-1-muralidhara.mk@amd.com>
 Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260607222035.E05961F00893@smtp.kernel.org>
+From: Guenter Roeck <linux@roeck-us.net>
+Autocrypt: addr=linux@roeck-us.net; keydata=
+ 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
+ np3900V20aS7eD9K8GTU0TGC1pyz6IVJwIE=
+In-Reply-To: <20260529111242.2748206-1-muralidhara.mk@amd.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On 6/7/26 6:20 PM, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 1 potential issue(s) to consider:
->
-> Pre-existing issues:
-> - [High] Incomplete fix for workqueue recursive locking deadlock hazard due to conflating NUMA affinity optimization with deadlock avoidance.
-> --
->
-> commit 00ce8bc63ea5f4dc858bb9687e393f23de7912a4
-> Author: Waiman Long <longman@redhat.com>
->
-> PCI: Call local_pci_probe() directly if current CPU is in the right node
->
-> This commit attempts to fix a lockdep recursive warning in pci_call_probe()
-> by directly calling local_pci_probe() when the current task is a kworker
-> executing on the desired NUMA node.
->
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
-> [ ... ]
->
->> @@ -376,14 +378,27 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->>   	 */
->>   	node = dev_to_node(&dev->dev);
->>   	dev->is_probed = 1;
->> +	node_invalid = node < 0 || node >= MAX_NUMNODES || !node_online(node);
->> +	node_cpus = node_invalid ? cpu_online_mask : cpumask_of_node(node);
->> +
->> +	/*
->> +	 * If the current task is a wq kworker activated by queue_work_on()
->> +	 * below, the kworker is affined to a designated CPU and won't be
->> +	 * switched to another one. So the current CPU can be checked to see
->> +	 * if it is in the right node.
->> +	 */
->> +	if (current->flags & PF_WQ_WORKER) {
->> +		cpu_in_node = cpumask_test_cpu(get_cpu(), node_cpus);
->> +		put_cpu();
->> +	}
->>   
->>   	cpu_hotplug_disable();
->>   	/*
->>   	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
->> -	 * device is probed from work_on_cpu() of the Physical device.
->> +	 * device is probed from work_on_cpu() of the Physical device or when
->> +	 * the current CPU is in the desired node.
->>   	 */
->> -	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
->> -	    pci_physfn_is_probed(dev)) {
->> +	if (node_invalid || cpu_in_node || pci_physfn_is_probed(dev)) {
-> [Severity: High]
-> This is a pre-existing issue, but does using NUMA locality as a proxy for
-> deadlock avoidance provide an incomplete fix for the workqueue recursive
-> locking hazard?
-Yes, it is an incomplete fix, but this patch should prevent this 
-recursive locking hazard in most cases.
->
-> While this suppresses the lockdep warning for typical setups where a parent
-> and child share the same NUMA node, what happens if a nested probe occurs
-> for a device assigned to a different NUMA node?
-This should be unlikely, though I can't say it won't happen.
->
-> If cpu_in_node evaluates to false during a cross-node nested probe, it
-> appears the code will fall through to the else block, queue a new work item
-> to pci_probe_wq, and call flush_work() on it.
->
-> If this nested probe is initiated from a work item already executing on
-> pci_probe_wq, wouldn't waiting on a new work item queued to the same
-> workqueue trigger the exact same recursive lockdep warning, and potentially
-> deadlock if the workqueue's max_active workers are exhausted?
+On 5/29/26 04:12, Muralidhara M K wrote:
+> Add the new PCI Device ID for AMD 1Ah Family 80h-8Fh Models and wire
+> it into the k10temp PCI device table so that thermal monitoring works
+> out of the box on these processors.
+> 
+> Signed-off-by: Muralidhara M K <muralidhara.mk@amd.com>
+> ---
+>   drivers/hwmon/k10temp.c | 1 +
+>   include/linux/pci_ids.h | 1 +
+>   2 files changed, 2 insertions(+)
+> 
+> diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
+> index a5d8f45b7881..8e8614cdfcda 100644
+> --- a/drivers/hwmon/k10temp.c
+> +++ b/drivers/hwmon/k10temp.c
+> @@ -568,6 +568,7 @@ static const struct pci_device_id k10temp_id_table[] = {
+>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M50H_DF_F3) },
+>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3) },
+>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3) },
+> +	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3) },
+>   	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_1AH_M90H_DF_F3) },
+>   	{ PCI_VDEVICE(HYGON, PCI_DEVICE_ID_AMD_17H_DF_F3) },
+>   	{}
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 24cb42f66e4b..3301224c5845 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -585,6 +585,7 @@
+>   #define PCI_DEVICE_ID_AMD_1AH_M20H_DF_F3 0x16fb
+>   #define PCI_DEVICE_ID_AMD_1AH_M60H_DF_F3 0x124b
+>   #define PCI_DEVICE_ID_AMD_1AH_M70H_DF_F3 0x12bb
+> +#define PCI_DEVICE_ID_AMD_1AH_M80H_DF_F3 0x1243
+>   #define PCI_DEVICE_ID_AMD_MI200_DF_F3	0x14d3
+>   #define PCI_DEVICE_ID_AMD_MI300_DF_F3	0x152b
+>   #define PCI_DEVICE_ID_AMD_VANGOGH_USB	0x163a
 
-The WQ_MAX_ACTIVE is 2048, WQ_DFL_ACTIVE is 1024. They are large enough 
-that I don't think it is possible to exhaust all the workers.
 
-If other PCI developers have any suggestion, I would like to hear it.
+As Sashiko pointed out, this device ID should be defined in
+drivers/hwmon/k10temp.c (unless it is used elsewhere, and then it
+should be defined in a separate patch).
 
-Thanks,
-Longman
-
->
->>   		error = local_pci_probe(&ddi);
->>   	} else {
->>   		struct pci_probe_arg arg = { .ddi = &ddi };
+Guenter
 
