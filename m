@@ -1,143 +1,163 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9ECF31F9B4
-	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 20:13:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3E1377EC5
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 20:14:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780949615; cv=none; b=bxRbgy/GEDP0Jhuuv4zoRP0fzZlVPxUuNNPq+g7EG2Jp6hC1i6qiUmtiyqRAmo1QN0CihvIGrpFUABx2ekqdWwrqA7ZKAWmW9QJHMpjiIczo0Jb3A/8N4pqmSz54EzBG6mFLr5FflzhUUdNASEqJLi+hk4MgjKIZnDQUwPqZ7CQ=
+	t=1780949642; cv=none; b=MO0kPdFYNJRrNk9FblPMnutIx4ItJnOhXfyVXXpn6j2DMWWhgD54SU7hKdysgymucZw8kadDeaziiqS0kvl5WVJ3puKj+yd7rRkCFdTBPiLdCTCiVM9+KNNVFyNAVaBt7GLBawZrOjI0Bfyq0UmEGmWakINqxiXgN/LYzKP6Vcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780949615; c=relaxed/simple;
-	bh=PQb1TMX+zCqC+2MsP3KvmKevtopYyT54/absCJrXbR4=;
+	s=arc-20240116; t=1780949642; c=relaxed/simple;
+	bh=pOy7kZ0vOClrRQanPVE1/w9f9DcFrgO8FdqyvQrz+qc=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=PmFYgXHsiYOfZfU5W0SUwm0ajy0DwNssIztdiMs+FuzcJUawcAhDQPGTelmpXgZX/WLuu3W+vphYQN524uHTbqJqEHA5sHYuqE3pblfX2sbiqWcpaq8rSo7s/nZtfqmksQVS5Ktl3NJ2xfQauEP/kXbBXSELK0OqvQelrwPL3Wc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aF2JUpvs; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=dL/GhOfFqXkm1DSWfZwJfDqFpp3OTPK1ra4hY42SCwdwQu/2DRri8cl4FyIrRcwbH+ejjeGp7In4cu3Zk3ezicFk8ogm63YidNk6j/0XtDgtUp7sQCvhGbWQ6axtq+ZOMibxzmGcSXwQyErCINWmV45kwIoU6NpgReBDcpPhXFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RAFTumQb; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aF2JUpvs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29E3C1F00893;
-	Mon,  8 Jun 2026 20:13:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RAFTumQb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7147A1F00893;
+	Mon,  8 Jun 2026 20:14:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780949614;
-	bh=UvcQTI6EibJjPeOUTPMzYzCxMBLaGxs1pbLSUh6LVfI=;
+	s=k20260515; t=1780949640;
+	bh=8orBKRM4MAXgqBpW0aJAW+AhXYKRSn96Pqp90lBMjPI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=aF2JUpvsWajlegNhd++mcAAw5DRYRpyfDvfYBkabuh5I3M/NyvzW0B/Y7mOJiYzy0
-	 yXPRpCcczJ5moZmFGsT1E5+dRdl1lAgDMAHpEm5ipGx0TJvZn7IXBSsPbevhjiXl9J
-	 kSYGVmOV+kI6uYikjWAYRrSPfFMBqTnHlqDeKJ5mN7GqT6hxvI/bfncKDxkwrswUbA
-	 1VCs/IJMAM0rc1c21tpBDYTUyWhIDa2dVq2k7hHOHFp/UbaFdzpKX6DgnUOjKm2wYc
-	 b6PM9gjrWY9J2Yrex/aXrB3i89vhCtl4dRo9mHES4D11UHhjWTvPD6uAmKf5S+o8Gt
-	 5fcUE/Rp5JTFg==
+	b=RAFTumQbFMg1UbQeAB48dRU2RpivMu+c/ccKi4CkBlFowdeOCya4G5ztdP5l/P4L6
+	 HBvhv4hZWYm3q6M0zGYu/x+s2J5z706IRvzsviy0sZ7OoOFP5/NDNv71EUdKkkgHYF
+	 H2srw+tRGvj+nwJxzKhecI38c2wSsf1vJoLOjRjLB3aKESg+MSfD7vTpKrj9bTk+YT
+	 UA3rIG6SMhJvc77eixUTq+JDchydgPdfpDzO1xgLbGQ7UwVectWselDNBCkBLx2xOr
+	 nZ/VXxjn9y2bAr1qH16VwgxOtbFfiX0kRetYJ15MqpCaLIITDYVbBxH/gbE98y32im
+	 /lY4PuGMyI/+A==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 02/19] rust: io: add missing safety requirement in
- `IoCapable` methods
+Subject: Re: [PATCH v3 12/19] rust: io: add projection macro and methods
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, ojeda@kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, "Alexandre
- Courbot" <acourbot@nvidia.com>
-In-Reply-To: <20260608-io_projection-v3-2-c5cde13a5ec4@garyguo.net>
-References: <20260608-io_projection-v3-2-c5cde13a5ec4@garyguo.net>
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, ojeda@kernel.org, "Danilo
+ Krummrich" <dakr@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>
+In-Reply-To: <20260608-io_projection-v3-12-c5cde13a5ec4@garyguo.net>
+References: <20260608-io_projection-v3-12-c5cde13a5ec4@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 08 Jun 2026 20:13:33 +0000
-Message-Id: <20260608201334.29E3C1F00893@smtp.kernel.org>
+Date: Mon, 08 Jun 2026 20:13:59 +0000
+Message-Id: <20260608201400.7147A1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [High] Compile-time and runtime alignment checks in `Io` diverge, leading=
- to inconsistent validation for types where size exceeds alignment.
+- [High] Unsound `AsBytes` implementation for `Region<SIZE>` leading to und=
+efined behavior due to alignment padding.
+- [Low] Incorrect use of `#[inline(always)]` on `ProjectHelper` methods, vi=
+olating subsystem coding guidelines.
 --
 
-commit 5d5fe99db5fb0c140eaa13601726daff7a857423
+commit ab6f2e99706c5568aaec1a417178b7f6d1435b90
 Author: Gary Guo <gary@garyguo.net>
 
-rust: io: add missing safety requirement in IoCapable methods
+rust: io: add projection macro and methods
 
-This commit updates the safety comments for io_read and io_write to cover
-alignment requirements. It also expands the Io validation checks to take the
-base address into account when verifying that an offset is aligned.
+Add a io_project!() macro allows projection from Io to a subview of it,
+using the pointer projection mechanism to perform compile-time checks.
+For cases where type-casting is required, the try_cast() function may be
+used where the size and alignment checks are performed at runtime.
 
 > diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index dcf3b40ffa48f..a58fb9a21dcad 100644
+> index 9c2ea17ca87b5..173f8c0ba2d6c 100644
 > --- a/rust/kernel/io.rs
 > +++ b/rust/kernel/io.rs
-> @@ -197,13 +197,15 @@ pub fn maxsize(&self) -> usize {
->  #[repr(transparent)]
->  pub struct Mmio<const SIZE: usize =3D 0>(MmioRaw<SIZE>);
-> =20
-> -/// Checks whether an access of type `U` at the given `offset`
-> +/// Checks whether an access of type `U` at the given `base` and the giv=
-en `offset`
->  /// is valid within this region.
-> +///
-> +/// The `base` is used for alignment checking only. This can be set to 0=
- to skip the check.
->  #[inline]
-> -const fn offset_valid<U>(offset: usize, size: usize) -> bool {
-> +const fn offset_valid<U>(base: usize, offset: usize, size: usize) -> boo=
-l {
->      let type_size =3D core::mem::size_of::<U>();
->      if let Some(end) =3D offset.checked_add(type_size) {
-> -        end <=3D size && offset % type_size =3D=3D 0
-> +        end <=3D size && (base.wrapping_add(offset) % type_size =3D=3D 0)
-
-[Severity: High]
-Does this logic incorrectly use the type size instead of its alignment
-requirement?
-
-If a type has a size greater than its alignment, such as u64 on 32-bit
-architectures or custom array types, checking modulo type_size demands an
-overly strict alignment. This could force an array access to require a base
-address aligned to the size of the entire array.
-
->      } else {
->          false
->      }
-
 [ ... ]
-
-> @@ -311,7 +315,11 @@ pub trait Io {
->      // Always inline to optimize out error path of `build_assert`.
->      #[inline(always)]
->      fn io_addr_assert<U>(&self, offset: usize) -> usize {
-> -        build_assert!(offset_valid::<U>(offset, Self::Target::MIN_SIZE));
-> +        // We cannot check alignment with `offset_valid` using `self.add=
-r()`. So set 0 for it and
-> +        // ensure alignment by checking that the alignment of `U` is sma=
-ller or equal to the
-> +        // alignment of `Self::Target`.
-> +        const_assert!(Alignment::of::<U>().as_usize() <=3D Self::Target:=
-:MIN_ALIGN.as_usize());
-> +        build_assert!(offset_valid::<U>(0, offset, Self::Target::MIN_SIZ=
-E));
+> @@ -92,6 +96,11 @@ fn size(p: *const Self) -> usize {
+>      }
+>  }
+> =20
+> +// SAFETY: I/O regions can compose of arbitrary bytes.
+> +unsafe impl<const SIZE: usize> kernel::transmute::FromBytes for Region<S=
+IZE> {}
+> +// SAFETY: Values read from I/O are always treated as initialized.
+> +unsafe impl<const SIZE: usize> kernel::transmute::AsBytes for Region<SIZ=
+E> {}
 
 [Severity: High]
-Does bypassing the base check here create a divergence between the compile-=
-time
-and runtime alignment checks?
+Does this implementation of AsBytes for Region<SIZE> introduce undefined
+behavior due to alignment padding?
 
-Because offset_valid uses type_size rather than alignment, passing 0 for the
-base here will cause the compile-time check to evaluate offset % size_of::<=
-U>().
-However, the runtime check in io_addr uses the true base address.
+Region<SIZE> is defined with an alignment constraint and contains an
+unsized [u8] field. Because core::mem::size_of_val for dynamically sized
+types rounds the size up to a multiple of the alignment, a Region created
+with a size that is not a multiple of 8 (on 64-bit systems) will include
+trailing padding bytes.
 
-For example, if base is 4 and offset is 8 for an 8-byte sized type with 4-b=
-yte
-alignment, this compile-time check passes (8 % 8 =3D=3D 0) while the runtim=
-e check
-would fail ((4 + 8) % 8 !=3D 0). Conversely, if base is 4 and offset is 4,
-the compile-time check fails (4 % 8 !=3D 0) but the runtime check passes.
+Since AsBytes::as_bytes() relies on size_of_val(self) to slice the memory,
+calling it on &Region<SIZE> could produce a &[u8] that extends past the
+actual allocated length into out-of-bounds or uninitialized memory.
 
-Should offset_valid be updated to use align_of::<U>() to resolve both this
-divergence and the overly strict array alignment constraint?
+> +
+>  /// Raw representation of an MMIO region.
+>  ///
+>  /// `MmioRaw<T>` is equivalent to `T __iomem *` in C.
+[ ... ]
+> @@ -983,3 +1039,78 @@ pub fn relaxed(self) -> RelaxedMmio<'a, T> {
+>  // MMIO regions on 64-bit systems also support 64-bit accesses.
+>  #[cfg(CONFIG_64BIT)]
+>  impl_mmio_io_capable!(RelaxedMmioBackend, u64, readq_relaxed, writeq_rel=
+axed);
+> +
+> +// This helper turns associated functions to methods so it can be invoke=
+d in macro.
+> +// Used by `io_project!()` only.
+> +#[doc(hidden)]
+> +#[derive(Clone, Copy)]
+> +pub struct ProjectHelper<T>(pub T);
+> +
+> +impl<'a, T> ProjectHelper<T>
+> +where
+> +    T: Io<'a, Backend: IoBackend<View<'a, T::Target> =3D T>>,
+> +{
+> +    // These helper methods must not have symbols present in binary to a=
+void confusion.
+> +    #[inline(always)]
+> +    pub fn as_ptr(self) -> *mut T::Target {
 
-> =20
->          self.addr() + offset
->      }
+[Severity: Low]
+This isn't a bug, but should this use #[inline] instead of #[inline(always)=
+]?
+
+According to the rust subsystem guidelines, functions that are small or
+forwarding to a binding call in abstractions should be annotated with
+#[inline].
+
+The #[inline(always)] annotation should be reserved for functions using
+build_assert!() that depend on function parameters.
+
+> +        T::Backend::as_ptr(self.0)
+> +    }
+> +
+> +    /// # Safety
+> +    ///
+> +    /// Same as `IoBackend::project_view`
+> +    #[inline(always)]
+> +    pub unsafe fn project_view<U: ?Sized + KnownSize>(
+
+[Severity: Low]
+This isn't a bug, but should this use #[inline] instead of #[inline(always)=
+]?
+
+According to the rust subsystem guidelines, functions that are small or
+forwarding to a binding call in abstractions should be annotated with
+#[inline].
+
+The #[inline(always)] annotation should be reserved for functions using
+build_assert!() that depend on function parameters.
+
+> +        self,
+> +        ptr: *mut U,
+> +    ) -> <T::Backend as IoBackend>::View<'a, U> {
+> +        // SAFETY: Per safety requirement.
+> +        unsafe { T::Backend::project_view::<T::Target, _>(self.0, ptr) }
+> +    }
+> +}
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608-io_project=
-ion-v3-0-c5cde13a5ec4@garyguo.net?part=3D2
+ion-v3-0-c5cde13a5ec4@garyguo.net?part=3D12
