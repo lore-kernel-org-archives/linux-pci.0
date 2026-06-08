@@ -1,183 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D0B34C81
-	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 20:09:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 234103E51F8
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 20:11:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780949385; cv=none; b=rAOytERe57714RUfH9Svl8UeUczrMKUMV0iLQMa3Sku4L7fhVzqF3tvxZzbR+h8nCRqwIplW+SEM+j5usLUKy6JMmglXeKuv+VjC/x0yDUDqI1soreQWoEdhiRMDOg5FLH8YGrYsIGu64bNUjXji0uVkLkLoJ9Tg5nhfGUftchA=
+	t=1780949508; cv=none; b=XolDZhPsoqFkEITlGs2lJMFiAWa2LvfFIUfaNaGmIlPsrExHXlDckV9JXkNIhlCDN70bbhZ4QyJ7ttugjoj1FWwBKSKjttOYkQFNJWZ8UWgXRfk47ygl2AmI/hOT7JqT070S2F4Sdx1MCwsrtcmkDVksmiONFkxWvL/cW99rhyQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780949385; c=relaxed/simple;
-	bh=LM7fQgWeybrENw4TdJCnS2AMi0cYGIz6u1wF2/RdO5M=;
+	s=arc-20240116; t=1780949508; c=relaxed/simple;
+	bh=cl6R6JDzrpr3PmWuxi92AzRxMFKhTXgMZrItQCeHng0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=kbLHMbVXkoOW+7316vvzNH9sas18ZvM91xaKG+u+mhX286LvYeK6b8kjGDKlveM+ycrxltry8yM2hqat2d2q6wt80BL1mYi20Q/mVzXpsGcIQkrBBExQ5Y2F5/WvcxA9+Gob0b0yPQcMwW2KprKUeXamPTE+DPZVkXWbweOw3i4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SxlTOf2U; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=lPKGqtj9ivTn7NIPb+AN6N1lWSYYkRH0KgYX+CJN3DWcJN2w5soGxVKsNLgs42YtG7bfnuMmT/H2GP5LrXazL/T2XhNfk0EyvUSKa0wrsYqkUzg1x9QcmY+fid72OBahmETw/IOZczZnYXAurpBhsnFniNL7lQmy8GJFocWg85E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=niLk0ONf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SxlTOf2U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0393A1F00898;
-	Mon,  8 Jun 2026 20:09:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="niLk0ONf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70E111F00893;
+	Mon,  8 Jun 2026 20:11:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780949384;
-	bh=B2zm4p05VMMW/N8ec1jbpv/zD3S9tUl1Fx5w+6hjul0=;
+	s=k20260515; t=1780949506;
+	bh=aGoSGf4/3Co8QabBU5DlHxcT0QrDmh3zpzQ19Bd3JXI=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=SxlTOf2U0lm+SYj93zDyeOZxsYsrjv9IaQrKAHWDnoW9+Mj3n+jF4Es2rHj58LTgl
-	 lybKWEb+4vgxdZ8AN80S3WTDfOIMavte7nUZDFtTDBi9htCGvASMYpl8WiexYoQJk4
-	 ZH4MG3yN5i+tlqnmQKW15A8pOf8hsW0isnMe/j00dqkiUKweyFrmBJrZyQC4sqJifH
-	 ivC0Xqn997++A3YcyR/a7ST3vhnRUBYS5OrJwEqZyy7qx1BFATlW3X0c+bvubQNcfT
-	 p3WWM0ssN5SbfUuMdmz0dJSmUNTWk/DPCxb4LjdmOeL5ycgPoFhEAHFrLiEa8gUQY3
-	 dkX/zfOpP/NxA==
+	b=niLk0ONfSzyta4Qzw+zT9AZKXvSQTwxQ0gb7bENOUPlv3CdicPhRSwzSqDk4Ok68b
+	 9Qfoh3z1U6MfRwU/C4aqPOjjKx/z4d7Ib3xR588Pf4WsXdEeHLT/WbXjOqL0K4YeqN
+	 QDLk8siNFItAV2c18mr+glkzxIBGd0pJNEb8DeM2zCjb8boqbx3wnES4BL8rqnLm8U
+	 teJR2NHv89n6nyeIygmdYvG3lUBMejBCB8N9rQidOzdjrPWoVQC66zlXCaWfMVELOw
+	 8z7pqkzEY4ohqqgUoShibHruVrsrAoz47JqXdIM1VVkHLfpPYgaG/ndHRPehx0l5fY
+	 M9/CZKG+mHPOg==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v3 13/19] rust: io: add I/O backend for system memory
- with volatile access
+Subject: Re: [PATCH v3 08/19] rust: pci: io: make `ConfigSpace` a view
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Gary Guo" <gary@garyguo.net>
-Cc: dri-devel@lists.freedesktop.org, ojeda@kernel.org, linux-pci@vger.kernel.org, "Danilo
- Krummrich" <dakr@kernel.org>, "Alexandre Courbot" <acourbot@nvidia.com>
-In-Reply-To: <20260608-io_projection-v3-13-c5cde13a5ec4@garyguo.net>
-References: <20260608-io_projection-v3-13-c5cde13a5ec4@garyguo.net>
+Cc: "Danilo Krummrich" <dakr@kernel.org>, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, ojeda@kernel.org, "Alexandre
+ Courbot" <acourbot@nvidia.com>
+In-Reply-To: <20260608-io_projection-v3-8-c5cde13a5ec4@garyguo.net>
+References: <20260608-io_projection-v3-8-c5cde13a5ec4@garyguo.net>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Mon, 08 Jun 2026 20:09:43 +0000
-Message-Id: <20260608200944.0393A1F00898@smtp.kernel.org>
+Date: Mon, 08 Jun 2026 20:11:46 +0000
+Message-Id: <20260608201146.70E111F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
-- [High] Missing explicit `Send` and `Sync` trait implementations for `SysM=
-em`.
-- [High] `RelaxedMmio` lacks `Send` and `Sync` trait implementations.
-- [Low] Missing `#[inline]` annotations on small forwarding functions `io_r=
-ead` and `io_write` in `SysMemBackend`.
+- [High] The `ConfigSpace` struct silently lost its auto-derived `Send` and=
+ `Sync` implementations due to the introduction of a raw pointer (`*mut T`)=
+, breaking concurrent and async usage.
 --
 
-commit d4531b875e419c5220ee6e82d5fc9e251929f095
-Author: Laura Nao <laura.nao@collabora.com>
-Subject: rust: io: add I/O backend for system memory with volatile access
+commit be5814bc2aca3acaf94cbcc863fd786a8ccdd291
+Author: Gary Guo <gary@garyguo.net>
 
-This commit adds a SysMem structure and backend for kernel virtual address
-ranges. It implements the IoCapable trait for primitive types, utilizing
-volatile accesses to provide safe access to shared memory. This provides an
-alternative to Coherent memory when another layer handles device mapping.
+rust: pci: io: make ConfigSpace a view
 
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index 173f8c0ba2d6c..580ca88c46ccc 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-> @@ -1040,6 +1040,120 @@ pub fn relaxed(self) -> RelaxedMmio<'a, T> {
+This commit splits I/O types into owned objects and views to support I/O
+projection. It updates ConfigSpace to be a generic view that represents a
+subregion by encoding the offset and size directly via pointers.
 
-[Severity: High]
-Does RelaxedMmio lack explicit Send and Sync trait implementations?
-
-Similar to SysMem introduced below, RelaxedMmio was refactored earlier in
-this patch series to contain a *mut T inside its ptr field:
-
-rust/kernel/io.rs:
-pub struct RelaxedMmio<'a, T: ?Sized> {
-    ptr: *mut T,
-    phantom: PhantomData<&'a ()>,
-}
-
-While Mmio explicitly implements Send and Sync, RelaxedMmio does not.
-Because of this, it is now implicitly !Send and !Sync. This seems to be a
-regression introduced by this series, as the prior version of RelaxedMmio
-implicitly derived Send/Sync from a usize address representation.
-
-Without these traits, RelaxedMmio cannot be shared between threads, stored
-in a Mutex, or passed across thread boundaries. Could this limit its usabil=
-ity
-in device drivers?
-
->  #[cfg(CONFIG_64BIT)]
->  impl_mmio_io_capable!(RelaxedMmioBackend, u64, readq_relaxed, writeq_rel=
-axed);
+> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
+> index e0acb62f58a23..a4cfa1ec6e62f 100644
+> --- a/rust/kernel/pci/io.rs
+> +++ b/rust/kernel/pci/io.rs
 
 [ ... ]
 
-> +macro_rules! impl_sysmem_io_capable {
-> +    ($ty:ty) =3D> {
-> +        impl IoCapable<$ty> for SysMemBackend {
-> +            fn io_read(view: SysMem<'_, $ty>) -> $ty {
-
-[Severity: Low]
-Does this small forwarding function need an #[inline] annotation?
-
-According to the Rust Subsystem guidelines for abstractions, functions that=
- are
-small or just forward to an underlying call should be annotated with #[inli=
-ne].
-Since io_read is extremely short and directly wraps read_volatile, does it
-require the attribute to prevent suboptimal code generation?
-
-> +                // SAFETY:
-> +                // - Per type invariant, `ptr` is valid and aligned.
-> +                // - Using read_volatile() here so that race with hardwa=
-re is well-defined.
-> +                // - Using read_volatile() here is not sound if it races=
- with other CPU per Rust
-> +                //   rules, but this is allowed per LKMM.
-> +                // - The macro is only used on primitives so all bit pat=
-terns are valid.
-> +                unsafe { view.ptr.read_volatile() }
-> +            }
-> +
-> +            fn io_write(view: SysMem<'_, $ty>, value: $ty) {
-
-[Severity: Low]
-Should this small forwarding function also have an #[inline] annotation?
-
-Like io_read above, this directly wraps write_volatile and appears to fall
-under the guidelines requiring #[inline] for small forwarding functions.
-
-> +                // SAFETY:
-> +                // - Per type invariant, `ptr` is valid and aligned.
-> +                // - Using write_volatile() here so that race with hardw=
-are is well-defined.
-> +                // - Using write_volatile() here is not sound if it race=
-s with other CPU per Rust
-> +                //   rules, but this is allowed per LKMM.
-> +                unsafe { view.ptr.write_volatile(value) }
-> +            }
-> +        }
-> +    };
-> +}
-
-[ ... ]
-
-> +/// System memory region.
-> +///
-> +/// Provides `Io` trait implementation for kernel virtual address ranges,
-> +/// using volatile read/write to safely access shared memory that may be
-> +/// concurrently accessed by external hardware.
-> +///
-> +/// # Invariants
-> +///
-> +/// `self.ptr.addr() .. self.ptr.addr() + KnownSize::size(self.ptr)` is =
-valid and aligned kernel
-> +/// accessible memory region for the lifetime `'a`.
-> +pub struct SysMem<'a, T: ?Sized> {
+> -pub struct ConfigSpace<'a, S: ?Sized + ConfigSpaceKind =3D Extended> {
+> +pub struct ConfigSpace<'a, T: ?Sized =3D Extended> {
+>      pub(crate) pdev: &'a Device<device::Bound>,
+> -    _marker: PhantomData<S>,
 > +    ptr: *mut T,
-> +    phantom: PhantomData<&'a ()>,
 > +}
 
 [Severity: High]
-Does SysMem need explicit Send and Sync implementations?
+Does the introduction of the raw pointer ptr: *mut T silently drop the Send
+and Sync auto-trait implementations for ConfigSpace?
 
-Because SysMem holds a *mut T internal pointer, it is implicitly !Send
-and !Sync.
+Previously, with PhantomData, ConfigSpace safely inherited Send and Sync
+from its Device reference. Because raw pointers do not implement these
+traits, ConfigSpace might now be restricted to single-threaded use. This
+could prevent it from being passed to workqueues or held across await
+points in async driver code.
 
-Since it represents an I/O mapping which can be safely shared across threads
-(provided T: Sync) and volatile accesses handle hardware races according to
-the LKMM, missing these implementations prevents SysMem from being passed
-across thread boundaries or embedded into device state structures managed by
-Arc or Mutex.
-
-Will this severely restrict its usability in multi-threaded environments,
-such as typical device drivers?
+Are explicit unsafe impl Send and unsafe impl Sync blocks needed here to
+restore concurrent usage capabilities?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608-io_project=
-ion-v3-0-c5cde13a5ec4@garyguo.net?part=3D13
+ion-v3-0-c5cde13a5ec4@garyguo.net?part=3D8
