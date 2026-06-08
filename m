@@ -1,102 +1,84 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71E48399372
-	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 08:14:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB2EE3AFD1A
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 08:48:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780906488; cv=none; b=pVOIfGy3qcQ+XxOF/oRGGRFbV7pK0+Q83jgdVDO8ocX1FEN8Aqmy66KABj8wxHCfHHCSZfzgM5Jbu3oF1VM4rCBxmncxGrjWAc2gxQCGI1k8kfBN28bJWgr3L56g0qRpAnJCwoROThfkQ0KXDfshecMP1goeRta9hDscelKcugw=
+	t=1780908506; cv=none; b=tcmfbtSQd4QiTgNNUrnns3TlhB2ZuugB54zbUodCpzGH6yJZeR6KLS7ZBPMI3hXAXvt9qO8e6tlZdBgKbE2XliUMnC/cqpaI+em3q3h4H1TKUfpEZwG7AxfHqWrswwK/KsWDC0FeSyvNHHv3jjZGfEG+jyXqDTW1lUnhgg6R26I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780906488; c=relaxed/simple;
-	bh=cTz+CEmaNf4eHDQpnwOU3c1JCvIbyzwOrTtHWyDNG/4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Y+Po1Z2NmCd4zw+FljnlmlsnbDH1DA4JRF2Yh9eu9UVF6bsVxWhANRnrgd6fw7hW+azTmi4nTxfqhjTWXewcYgrux6O4JpJBbMbz5STfL29p4vaBphKmTreHWl1Ae6izMIpJ8gHBNYYfl+7DpcMXSV3UePa68tzfcaQAEpX4NEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AhzRjdpm; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ZCdm78Bz; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1780908506; c=relaxed/simple;
+	bh=cdsPMqfeWD35Ac1rhIkKLbMsGtZjV2Cq7h7n1rY1KCQ=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=ExUcSo7t/AZpCws4iStu+u+xGpob/kZqD8lEy+nh/1f93dNBiEP0TMPy7DwMTKDPm4KKJB21vug69PXXVqf50ZMR25mwcAKYbFOHoGNa7QktalpBgXcOaTM0BR38OXMRvB46aaQxauqV5KGFAAy3kXZ02ikysYUYxUG8YosLA8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=aideAHVE; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=ZbBgFDwy; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AhzRjdpm";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ZCdm78Bz"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6586OeAD2385869
-	for <linux-pci@vger.kernel.org>; Mon, 8 Jun 2026 08:14:46 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="aideAHVE";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="ZbBgFDwy"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6586QqA42771101
+	for <linux-pci@vger.kernel.org>; Mon, 8 Jun 2026 08:48:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	lRRLoMyY3I4u7nHJezOej3HGDZ30vhH6pQAsB8UUioc=; b=AhzRjdpmxx6GwFrr
-	gzvq2hVtpTAsgTqU90UZ3SdOn7IJaz7+BEa0Yt51bE+aTxSvoBT0PlUOYJ+PKS7c
-	LdDQo2a9q9FmQHtbYDHPc54Qh1WQG8VTsxUjaoILeR3fp+0X7f4Ed92RjOMcfU+D
-	VtKWA9cNcolPPHRORcwOfR/QEU8NFCHDIQ/UrZ/VmZlPug3bwrJjf7qoo1dWYOsj
-	7eCglthF/uvJkbhPwiNgyR5yYEHy8XYcQaSfAoaNGByZ6g48HS5Yn3suX7LADWEO
-	GIiGLpVfQRknKwG7T8Deokxbctks52CAwQHYShFF03TeMwa1veyGsXDokqyndG9E
-	3vrdaw==
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4emcu8xgwb-1
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=2aTHTubIziKVG4zlKxyz0c
+	AXqTiwuCicZ1yd32rnqXk=; b=aideAHVEgxtRLrcoemMiLwDOXftCri25RqAneU
+	cXk9HkPN8NW+I+qqha55fmAv4ebCTJk/Uqk9udgFdQYUYsodKnGfuFCxLUCJp9v4
+	tIZG8yb+TnJYuYSMBktwyLXzuiSp/gi2+BbtynZFr+IjG6wWCl0Rd/5wMq2uv8lf
+	snvrbkFbg+i3mpQU0oPMDoZORf+17i+3ZT4QnHHmj6CgRR3ySpGnq9OlodjObvct
+	nj9Jweo/h0FyqFF5vepo0wLzaNiFEFH05NbYzZNFTiu7ngvgKF5YjMJX+mWqjONS
+	gj5K79eWV96wcNhhm3iYbHtXXu5JKBhDY8SVfstAR23vjiQQ==
+Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4embx6etu5-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 08:14:45 +0000 (GMT)
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-517b75c1ee3so11910771cf.3
-        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 01:14:45 -0700 (PDT)
+	for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 08:48:23 +0000 (GMT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-36d98b828c8so5138097a91.2
+        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2026 01:48:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780906485; x=1781511285; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lRRLoMyY3I4u7nHJezOej3HGDZ30vhH6pQAsB8UUioc=;
-        b=ZCdm78BzWLcv4+ToYGLypi1GBdWEQDbkP7SVmRyyMsLYBvgdXyo+9xcIrxZB/7w0ZE
-         cXRmePiiknzwneNo4LyrUOTXSZgLnPpUDXQupjjkFYkc5Oy6tP0UEZ98j9Yq7lxiy9d+
-         m2P6ItJWlXBDp/IDL7xrSskS5JoK60ifcGZ+wUa7HOOZjnsDT6DhzXaRcUYtTyDsgQCI
-         cHi7Y3TAC+LgiSgqdIc335Gx6+Uo6elqECnE+mbkPqiSKJ0CPpuLyDtr8YNaxz2pANy8
-         2HZgHrF1X56iYFwv2kgUM7qpPSS12l3vmcXkYaQ9SAnwBtOMz+Oa8ibV7G+beRhaGMY2
-         3YJQ==
+        d=oss.qualcomm.com; s=google; t=1780908503; x=1781513303; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=2aTHTubIziKVG4zlKxyz0cAXqTiwuCicZ1yd32rnqXk=;
+        b=ZbBgFDwyhYspPF2ipxWOgrdLFqpa1MxivIXRA5zgN+LVzjC4yngYlbmrM03N9RbSYI
+         eqfcxiconHCl5HYi3eq34GnB1TPTArNe8KwluI64ZodcVRX8FkzApmkK1CxlMrFpKmui
+         na//EUUh1dyp1LEZBt2BmmjPrV/qX+VNaMNB8JRo6N5GF7Z4lhPRuMs4AZWn0V9SBENT
+         DTM/wHzzY7iNcRloQwtEMyiDWk9LT60Afvfr5zfMPzsZTtMqsJSBTzepoA6/5Tsy1RfC
+         KlnC8Pf1zlO2mKnsR5wK05j7oVf3SKy+5wK+xqp9yAFOxfXj6LEMxR1wW8WJEYjzABkg
+         0wGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780906485; x=1781511285;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=lRRLoMyY3I4u7nHJezOej3HGDZ30vhH6pQAsB8UUioc=;
-        b=cabc/NGTC9TE5XvM9HF3PEaDbrEToqkrhBejT3i9k8a5QHhTFpGdFDTCaFug1dVXRE
-         jK1NvAUe/eMhG/Nt2h319HpX9Jv6sP0kyjrip1PCewZ02wF5sYtZTvd6pzXOC/AA5G46
-         Ph3cvw9tR9qxqhvfhrp9BHQkPA4E+RqtHONt03O5PoA5uV+XRKP9CP4nwqqfn9ONm+g0
-         6Q1uyH959pI+oG18ak/X6uks/ekBkIbo2oIVFdX1ENtq2twa1uywA0U6GPn6ELbsKEas
-         JQ4QRZ61ZJro134JY70w0NlwIuDSuronD6mv9M8ZzDJ6xUrgUAFw+z6sv7C1q/3Sb344
-         wVEA==
-X-Forwarded-Encrypted: i=1; AFNElJ/bVePSJJycnAP4uJ46Xtg2kX9DjgbDRnMambKkB2Xb/1B1zNUGnHrcJfhUj5D5UsDO76BLdA59+1w=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxQZN2KK0B0Us39v47geZgd4zAOCIDEPryx9qNr6plabpXFSktK
-	eC9iB1AfXvUR+FsjW8xYH5DXFSjUc4O2d34VmPEqo9ec240BYiJvCqCLJNpdzJuiEy4vE6sW10h
-	jq2QJX2RKistKXWktUvVXDzZsxFvbQQURKWahZVHNvY51wPi4cwKoKcib1CvVBh0WZnzRQDosgQ
-	==
-X-Gm-Gg: Acq92OFB2nYZHBgHdPyGhZ39Wz9ifRULdAAyrm3LPbIFq27ScUuegnUabMM51XwAzmG
-	+hPXj+6ioyI8OGmnen9r1as43oRjibdxJdpNQTfJpYUblxwreAZ/nORjKZ6o/Ll2rUaZAAP8dog
-	jWlEGRzMuj1fHv86gJ8ra6/nnwwXecwgVf312Y1WlyWad5pbh57xEAf9CyQLvyDCDu+LBAUEtTt
-	0bLjxVX5otexCMYq6ZCizJ5ciZif+Vl6b6EPDVXNdIutRqsMvvhTX7YjzctE4UF8vS3oI5Cyfun
-	2RmTVUfltacXavNb9KYK1ZgHPElWB794iYbNYeMAX73a27zFzrqtaSVfqgZIIQXRsL5QxFy1Re/
-	naljCERW5cbhMAjsGpbdb+CMlMPhPtJOZIIWjD7naR8y85EU81RCnK/P9FCY=
-X-Received: by 2002:a05:622a:1b10:b0:517:760d:48d5 with SMTP id d75a77b69052e-51795b1545emr206567511cf.23.1780906484769;
-        Mon, 08 Jun 2026 01:14:44 -0700 (PDT)
-X-Received: by 2002:a05:622a:1b10:b0:517:760d:48d5 with SMTP id d75a77b69052e-51795b1545emr206567321cf.23.1780906484402;
-        Mon, 08 Jun 2026 01:14:44 -0700 (PDT)
-Received: from brgl-qcom.home ([2a01:cb1d:dc:7e00:4904:8660:26f:8b6a])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4601f3446aesm54904623f8f.24.2026.06.08.01.14.43
+        d=1e100.net; s=20251104; t=1780908503; x=1781513303;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2aTHTubIziKVG4zlKxyz0cAXqTiwuCicZ1yd32rnqXk=;
+        b=LWVdZRTF3tI8iFyqHGA2DX846uf4wTmO7OqA6ClmS5yghNAsoHW7fTpzgFkQCfE2O0
+         LAgwYhL7gQv+wnFzPTyfee+jxS5l/L98Lvm3SlHPl+0VSVuar81F0mgPY1Df6faHEsdM
+         Uv5yBXguv8zsJI5+PDo99uPnByJUFJBwtc9HsMPDcT5g8ADTml2CD0HMMtB9Sd5QY+Vg
+         /adXwI0aAdgMfDyzrozY3p8B2c0HS8TcZZtzKDdxFry3TxxUUWc3a4jj1Mr6R3wR6wmW
+         JaUfSRh/vZKZp+3zOH4zuqlgXmo85mccZTp+OQ4BNzNC4lgwiJCc2RKPP36Eg5fcoc8Y
+         4kRQ==
+X-Forwarded-Encrypted: i=1; AFNElJ9idpA852L07U7N8Q5v8c4nYfUaoDL3ZMRkZv+06i4WAGHUV0fT4FIrCzrcR9eVKMQTVATYm4mbLNY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhOssjSYWcwkSyiLseQpdZ7uFqqYQC2pA2TS2s5039FT49rfhb
+	HWLLYoTsPOo6pDt39XoeKByM9cLF2r6OHmxeh1CuqmIYNRCoit8U5z8U1pgB5RrZatjkoN19J9t
+	lNY+SXp7meR9TVcgPIgmJu+F2fjZZ705pVZBvPe6ERi4EKVHB843n49QWtHah2RU=
+X-Gm-Gg: Acq92OE5epNtfc+F4TddAc6ywJVW4VOMrnoPCTdf6Q4gHdRulotWCgmd1ui1XzHu6G8
+	jguFim1aH77Qd8WTxjbh0Hc9ygeAdcHzL8/YcxW3aC3Ksgotz0Ol2Hy+6G+joARgdjTRMAfBL/x
+	IQImocDS3twPGUxmHiezf/YelWPZJMLBDEyxm1NSHHLV2y0HzPnynXP0P7rTmwjjwI/4DgKSjn4
+	wCjyWAtIiYfRPs04HcqFA3YJHz9eHM5czx3VTWF/4nCjs1iBLQyqvj2+ntMx8o7Hbwz6oUSNqhP
+	CjjBhUXQ6e826wFeAl3gGEuuaDTzOhVsSIJ8P8K13Nz8htkHu5cVERKhgiQ0eWQf6bQnigGyrfv
+	2ofGBjY5MPb8VivWxNbSzhyRk88qx041I3Aj5o6RSjgO72j3uBU640YjbJen2dg3mYAY=
+X-Received: by 2002:a17:90b:1d89:b0:368:ea0c:1b75 with SMTP id 98e67ed59e1d1-370ee82fe25mr15451770a91.6.1780908502804;
+        Mon, 08 Jun 2026 01:48:22 -0700 (PDT)
+X-Received: by 2002:a17:90b:1d89:b0:368:ea0c:1b75 with SMTP id 98e67ed59e1d1-370ee82fe25mr15451729a91.6.1780908502386;
+        Mon, 08 Jun 2026 01:48:22 -0700 (PDT)
+Received: from hu-krichai-hyd.qualcomm.com ([202.46.23.25])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f712de91asm15070198a91.16.2026.06.08.01.48.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Jun 2026 01:14:43 -0700 (PDT)
-From: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Cc: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-bluetooth@vger.kernel.org, Wei Deng <wei.deng@oss.qualcomm.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Subject: Re: (subset) [PATCH v3 0/9] Fixes/improvements for the PCI M.2 power sequencing driver
-Date: Mon,  8 Jun 2026 10:14:42 +0200
-Message-ID: <178090645194.42922.8536349476896784920.b4-ty@oss.qualcomm.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20260519-pwrseq-m2-bt-v3-0-b39dc2ae3966@oss.qualcomm.com>
-References: <20260519-pwrseq-m2-bt-v3-0-b39dc2ae3966@oss.qualcomm.com>
+        Mon, 08 Jun 2026 01:48:21 -0700 (PDT)
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: [PATCH v3 0/3] PCI: qcom: Add support for Eliza
+Date: Mon, 08 Jun 2026 14:18:12 +0530
+Message-Id: <20260608-eliza-v3-0-9bdeb7434b28@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -104,61 +86,100 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: dgE248DIKgnWtrliJp59axugEnZ5ULT1
-X-Authority-Analysis: v=2.4 cv=deGwG3Xe c=1 sm=1 tr=0 ts=6a2679f5 cx=c_pps
- a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=YMgV9FUhrdKAYTUUvYB2:22 a=VwQbUJbxAAAA:8
- a=EUspDBNiAAAA:8 a=vezmLmUXWD6nqp7YAy0A:9 a=QEXdDO2ut3YA:10
- a=a_PwQJl-kcHnX1M80qC6:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDA3NCBTYWx0ZWRfX4jPjWNlocsIK
- r9ARYI4485d65NJfFR8jT2gjgci0SyLxiKesNb6OZ19LYLk8gbBdmOcpEvLmQ1ff/UOfqIB3WfW
- F1dkOjeHPUM0IKreb8Ye+gNvspTRfFN+Ue+EzePif41+XIDzP6is4ggggCNl5FeaZKUEGmqTAxX
- D8yysYvOWHCRFjSqOESMCddVQ5ixQDCIwjwkBYEZZxXqkyqzIvLKZY8WNuHZy8NJ1MqYm/ocL0r
- SWpUBtTxAlgLznhCIawBTM8CKmZoe96bfe3CKh65bo4wVWwGA02mO4UP9ZAlzIEW9Ep82gDXt/Z
- xFEybAPHWE1RNH+MFh15zNYUsoUiP0Rl4yqU6y3k3p2qqv9XuGX0DWtyyQmN3bRnZIWFSDeVYQ8
- jtQT5OIjkxIICFPn/8g1qF2dnhcS/kA7emzSU7Y6iVK7ZOY/zAdJ2u6wsfCf2PX0VtdE7akGJlB
- 8nxf8uQeQvusv6u2y0Q==
-X-Proofpoint-GUID: dgE248DIKgnWtrliJp59axugEnZ5ULT1
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAMyBJmoC/22NzQ6CMBAGX4X0bAltKT+efA/jobSr1ADVFhqV8
+ O62YPTiZZNJvpmdkQOrwaF9MiMLXjtthgBslyDZiuECWKvAiGa0yHJaYuj0S2DgjHAuoKooQWF
+ 7s3DWj7VzPG3spuYKcoxyXLTajcY+10eexN3W5JR8mp7gDNelVE3IsqpWB+Ncep9EJ03fp+Ggm
+ Pb0JxfZV6ZBLpo8l7WkTHH4Iy/L8gYx+WBt8AAAAA==
+X-Change-ID: 20260427-eliza-e53155ae8821
+To: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bjorn Andersson <andersson@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+X-Mailer: b4 0.15.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1780908496; l=1742;
+ i=krishna.chundru@oss.qualcomm.com; s=20230907; h=from:subject:message-id;
+ bh=cdsPMqfeWD35Ac1rhIkKLbMsGtZjV2Cq7h7n1rY1KCQ=;
+ b=ecrik45mYwX77ErSUKzG8xA3oHBydDoNjh+Dyt1/LxNH8+i5JjlSkyEgZfViU7d5S6sgMQMf6
+ Ju9syZl1cUwCc4e1Wh/vrygWyWiYrecOUYAYVTouvVPE0NX9TjeN5J9
+X-Developer-Key: i=krishna.chundru@oss.qualcomm.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-Authority-Analysis: v=2.4 cv=cvmrVV4i c=1 sm=1 tr=0 ts=6a2681d7 cx=c_pps
+ a=0uOsjrqzRL749jD1oC5vDA==:117 a=ZePRamnt/+rB5gQjfz0u9A==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yx91gb_oNiZeI1HMLzn7:22
+ a=bC-a23v3AAAA:8 a=EUspDBNiAAAA:8 a=RZHP3SvTWnTKgiXxB68A:9 a=QEXdDO2ut3YA:10
+ a=mQ_c8vxmzFEMiUWkPHU9:22 a=FO4_E8m0qiDe52t0p3_H:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA4MDA4MCBTYWx0ZWRfX4uuYHlP08CG2
+ +rZbbkuOJRkFqWEYTBs87DbnTeMXNWQKbPVf8Ht7Ivf9ki5bOfuB1mVe1cNHN1jlRp0UOJRIRZk
+ Qy6IGxlQ9hc4X9rbK6fzZboBxtJ1IqTM2zLVw/wjTSNXylTzvmHeTzCo93pUivP5YuUpDKzNY0H
+ nv3mZkQvirRNwxaVtg/fluJ/b9dnv+3jfm7D9iM5W+AvpLSLjWjt+xbyfy53eaLfDKcAhBrYQgI
+ h9iFFUx3dijplSB9g9AUcvAod9wLNK32/aQ3SVOcZsyo3AeFUxGWVNcFqvgABXGcgzUYyxz3LqZ
+ vEgnY05vQSrvxJPLQMmlaeX91UVZKC/NWIvwFLN0eTN0SFp/DRf8em9KoNhxluY3irHdfs2qDXt
+ 8lL80o7oaPGkWD/ZXKHxzjorsHejaTSyNazYgCoKupHdl+VufmVkWXiVF6kjTfx2zv+vinMcWDO
+ CvdQ4Gfar3+Qv5uL95w==
+X-Proofpoint-GUID: 6ajYdtTMbybS-gQ7nSK5DOxpkreQghWX
+X-Proofpoint-ORIG-GUID: 6ajYdtTMbybS-gQ7nSK5DOxpkreQghWX
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-08_02,2026-06-05_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 clxscore=1015 phishscore=0 impostorscore=0 priorityscore=1501
- bulkscore=0 adultscore=0 malwarescore=0 suspectscore=0 lowpriorityscore=0
+ adultscore=0 spamscore=0 lowpriorityscore=0 priorityscore=1501 bulkscore=0
+ suspectscore=0 phishscore=0 clxscore=1015 malwarescore=0 impostorscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606080074
+ reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606080080
 
+This series adds PCIe support for the Qualcomm Eliza SoC. Eliza includes
+two PCIe root complex controllers capable of 8GT/s x1 and 8GT/s x2.
 
-On Tue, 19 May 2026 14:25:55 +0530, Manivannan Sadhasivam wrote:
-> This series has several key improvements and fixes to the M.2 power sequencing
-> driver and also the BT HCI_QCA driver. Notably, this series allows the M.2 power
-> sequencing driver to work with more M.2 cards, not just WCN7850. It also allows
-> the BT HCI_QCA driver to detect whether it can control BT_EN (or W_DISABLE2#)
-> signal on the connector and set the HCI_QUIRK_NON_PERSISTENT_SETUP quirk.
-> 
-> Testing
-> =======
-> 
-> [...]
+The QMP PCIe PHY support adds a new Gen3x1 PHY configuration with
+Eliza-specific initialization tables, and reuses the existing SM8550
+Gen3x2 configuration for the x2 PHY instance.
 
-To make Mani's work easier next cycle, I'm queuing the power sequencing changes
-for v7.2 now.
+The series consists of:
+- dt-bindings for the Eliza PCIe QMP PHY
+- dt-bindings schema for the Eliza PCIe controller
+- QMP PCIe PHY initialization tables and configuration for Eliza
 
-[1/9] power: sequencing: pcie-m2: Fix inconsistent function prefixes
-      https://git.kernel.org/brgl/c/da35b212f8cfd2fb2b7beaf46f4ae758f29c4ea7
-[2/9] power: sequencing: pcie-m2: Allow creating serdev for multiple PCI devices
-      https://git.kernel.org/brgl/c/0822425512762d492d7d1500a38d8d519a2b96fe
-[3/9] power: sequencing: pcie-m2: Improve PCI device ID check
-      https://git.kernel.org/brgl/c/8ababf888685c3167f49c77bcfae6f82bf661be6
-[4/9] power: sequencing: pcie-m2: Create serdev for PCI devices present before probe
-      https://git.kernel.org/brgl/c/c4be520907a42981fd32736b6eec18aaaee738c8
-[5/9] power: sequencing: pcie-m2: Create BT node based on the pci_device_id[] table
-      https://git.kernel.org/brgl/c/f2aeaa6d47d3e94285b6ff648b929f3eeb5ce600
-[6/9] power: sequencing: Add an API to return the pwrseq device's 'dev' pointer
-      https://git.kernel.org/brgl/c/9085f71285375485c86c06071a13111606b404d7
+Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+---
+Changes in v3:
+- Add allOf constraints for eliza (Krzysztof)
+- Link to v2: https://patch.msgid.link/20260601-eliza-v2-0-6b44c9c23d5e@oss.qualcomm.com
+
+Changes in v2:
+- Remove the driver patch and instead use compatible of sm8550 just like
+  kaanapali (Krzysztof)
+- Move all the phy settings to lowercase (Dimitry).
+- Link to v1: https://patch.msgid.link/20260521-eliza-v1-0-97cdbe88389d@oss.qualcomm.com
+
+---
+Krishna Chaitanya Chundru (3):
+      dt-bindings: phy: sc8280xp-qmp-pcie: Document Eliza PCIe phy
+      dt-bindings: PCI: qcom,pcie-sm8550: Add Eliza compatible
+      phy: qcom: qmp-pcie: Add QMP PCIe PHY support for Eliza
+
+ .../devicetree/bindings/pci/qcom,pcie-sm8550.yaml  |  50 ++++++++
+ .../bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml   |   6 +
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c           | 139 +++++++++++++++++++++
+ drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v6.h    |   1 +
+ 4 files changed, 196 insertions(+)
+---
+base-commit: 254f49634ee16a731174d2ae34bc50bd5f45e731
+change-id: 20260427-eliza-e53155ae8821
 
 Best regards,
--- 
-Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+--  
+Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+
