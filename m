@@ -1,46 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D50223EAAD;
-	Mon,  8 Jun 2026 15:39:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1B602E9729;
+	Mon,  8 Jun 2026 15:44:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780933191; cv=none; b=Sl8uXm0/xyUskWbWDRD3bp4d56N3HpWUP70YrIcIibn4J6ERoRQl+dYBJzhKl8U4gIeKGbseoz173AnKINd9rTXdQRrhRUxZWbNVf8StVJpGy6BGBeVO61RL1aDxXmQpzJm/0wgVkajGQswFISuk5hcj+MDBFe5rghPq4axsOno=
+	t=1780933473; cv=none; b=MHi6BVZOLwrr8Rmq16o7T4WK1rkuYvFVqEnEFBLqVPj0bB1iShYRsRN0p/o4EreF3gAGy7tD7I7+ID4xRS4n9rm0Jlv+R7wdEGRIiYWNalDK8VD8NYjfh4OnS0biMp3Z2iOnDc9zJzyMenoLx0uHMgNiJCtS/nHaSyocJCxmsAk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780933191; c=relaxed/simple;
-	bh=RUgZeGhk3mrRGKLYq0a/yy5JNCEBELDVcua38Q5Kkds=;
+	s=arc-20240116; t=1780933473; c=relaxed/simple;
+	bh=9H1+IAr+cX7/YPZowzjYlyASpJNhEZTYrSMu5XRIfeE=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=CC3QtwPVfHrO/ZkcU5LatvsFBDkKVp0BRMFG8LdoQHwV/3UgdqTtHkXolrloegm6CoRBng+AUsZv1BQkIO8JRZv20u0aRKCivV2e9Dh0gQuI7srPh5BWnJkHv0Uxni95MiQFCGGYBeT/Yc3ms0VCY1OABrOFp8Z7ysmJCgzhbZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ASw9aDWd; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=reyvxc1h8LWvwgy8hI5YOESaA09B+w1Ym85nGs+fF2GVgvRNbOOLZ1dlDSejKcp4qyp2y5bDZ3xB+64Vf1/+SzVJqRctoQTudky3kWEMRgdPvgQM1gdEeHeJmvzF9HR0lMVbkbAYdHz0VLRrsuCai4L3MzqWoM2SowRFD4KLTK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VFquHVI6; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ASw9aDWd"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 5FC471F00893;
-	Mon,  8 Jun 2026 15:39:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VFquHVI6"
+Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 1A65E1F00893;
+	Mon,  8 Jun 2026 15:44:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780933189;
-	bh=N3oy4xmq4C4ND1356+b9YpxpOAFUgRGxgZuuCWGlALs=;
+	s=k20260515; t=1780933472;
+	bh=Lw/Xcp0P7CyMiPt/7LQ9xmZdvftr7VlOQ72Z6l9jLMw=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ASw9aDWdRcO7+VnSW2ORQGoUq5sR68vKzzC5eSwoopKcdBsNabRop9c+64TT3Q8q1
-	 OZCkT82Xu3lHjUeb11mlsrsVw/S45chKYAyMTNAUji+8Avn2GqonWR3Sdt9keDJ9K3
-	 Rp0phRCU8VvKmlicMoRxl//sXnhu7b5+p/bD8/F2m/nbRZIRLOPxtHG86//XU8uEBv
-	 oBf1QOqvaL4iOZWjBEpnxN48WixHqyPmOeujDfNFZPGzT+snWhA7HvTTN2EI1eSAbS
-	 eJ4DEznL5qblmRj9QvlrobqcL8e2eADX0spcyGJpnwwD3I9K2Nmb4P0g8f8+9PXLib
-	 ve9A0Eri3Z+Yg==
-Date: Mon, 8 Jun 2026 10:39:48 -0500
+	b=VFquHVI6BdJzhXA8gbjd+I06+m8yUP/owdM1OSopjnDKRofXc/J8hNQRjhOgQCLb9
+	 MGnGdFRzxcpIqtXZBWSOkXEu2lviBI4gm0ER8D6e2/YZn3tKxc/ZQttfq/Disp18tR
+	 N09slHqrqmEmQkpD4qAMoONWK9hkqpzMG08OdACQg6oZdU7/lS+xFKsY7xG6GYqP0Z
+	 1kR5MiVtt7xK0iVIKUIb4/2zjHqV9iGruPesI2Y6T62G9mWbEznjwo7+dA+TL+kdNO
+	 OAUn8LAQM8x9uIuENOHExk3r1oV1xoL6fGbLXWPKMYCClePfOYF8ItwBAD2BysA1i3
+	 OfQRxeEGARqWg==
+Date: Mon, 8 Jun 2026 10:44:31 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Aditya Gupta <adityag@linux.ibm.com>
-Cc: linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	Madhavan Srinivasan <maddy@linux.ibm.com>,
-	Timothy Pearson <tpearson@raptorengineering.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Anastasio <sanastasio@raptorengineering.com>,
-	sashiko-bot@kernel.org, linux-pci@vger.kernel.org,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Nicholas Piggin <npiggin@gmail.com>,
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v2 1/3] ppc/pnv: Add null checks for OpenCapi PHBs
-Message-ID: <20260608153948.GA36499@bhelgaas>
+To: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
+Cc: linux-cxl@vger.kernel.org, Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI/CXL: Allow PM Init to complete on cxl_bus reset
+ if ACS SV enabled
+Message-ID: <20260608154431.GA36788@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,69 +49,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260527180816.2749186-2-adityag@linux.ibm.com>
+In-Reply-To: <20260428182454.464655-2-fabio.m.de.francesco@linux.intel.com>
 
-On Wed, May 27, 2026 at 11:38:14PM +0530, Aditya Gupta wrote:
-> For opencapi phb direct slots, the .pdev for php_slots will be NULL
+On Tue, Apr 28, 2026 at 08:24:34PM +0200, Fabio M. De Francesco wrote:
+> CXL r4.0 sec 8.1.5.1 Implementation Note describes a scenario in which
+> issuing a Secondary Bus Reset on a CXL Downstream Port leaves the
+> Port Power Management Initialization Complete bit unset when the PCIe
+> Access Control Service (ACS) Source Validation bit (SV) is enabled on
+> the Downstream Port. The spec states that another SBR alone will not
+> facilitate recovery and shows a software recovery sequence.
 > 
-> Various sections of the code in pnv_php can do a null dereference and
-> crash the kernel.
+> Implement the sequence by extending cxl_reset_bus_function() to save,
+> clear, and restore ACS SV and Bus Master Enable (BME) on the Downstream
+> Port around the SBR with the use of helpers.
 > 
-> Originally, the issue was hit during boot:
-> 
->     [    1.568588] PowerPC PowerNV PCI Hotplug Driver version: 0.1
->     [    1.569722] BUG: Kernel NULL pointer dereference at 0x00000074
->     [    1.569811] Faulting instruction address: 0xc000000000b75fd0
->     [    1.569890] Oops: Kernel access of bad area, sig: 11 [#1]
->     [    1.569963] LE PAGE_SIZE=64K MMU=Hash  SMP NR_CPUS=2048 NUMA PowerNV
->     ...
->     [    1.571492] NIP [c000000000b75fd0] pnv_php_get_adapter_state+0x60/0x154
->     [    1.571604] LR [c000000000b75fbc] pnv_php_get_adapter_state+0x4c/0x154
->     [    1.571690] Call Trace:
->     [    1.571725] [c000c0000688f990] [c000000000b75fbc] pnv_php_get_adapter_state+0x4c/0x154 (unreliable)
->     [    1.571783] [c000c0000688fa20] [c000000000b78bd0] pnv_php_enable+0x94/0x378
->     [    1.571951] [c000c0000688fac0] [c000000000b7912c] pnv_php_register_one.isra.0+0x11c/0x1e0
+> The wait inside pci_bridge_secondary_bus_reset() covers the 100 ms
+> referenced by the spec. The helpers return when ACS SV is not enabled on
+> the Downstream Port.
 
-Drop timestamps since they don't add useful information.
+When reposting, fix subject line of cover letter.
 
-Indent quoted material by two spaces to reduce wrapping.
+> + * cxl_reset_bus_function - SBR for a child of a CXL downstream port
+> + * @dev: child device whose upstream bridge is a CXL downstream port
+> + * @probe: if true, only check whether the reset is supported
+> + *
+> + * Issues an SBR on @dev's parent bus. Temporarily sets the CXL Port
+> + * DVSEC Unmask SBR bit across the reset. When ACS Source Validation
+> + * is enabled on the bridge, also temporarily clears Bus Master Enable
+> + * and ACS Source Validation, per CXL r4.0 sec 8.1.5.1.
 
-Run "git log --oneline drivers/pci/hotplug/pnv_php.c" and "git log
---oneline drivers/pci/hotplug/" and match subject line style.
+Use imperative mood consistently.  ("Issue ...", "Temporarily set
+...").
 
-> This occurs for hotplug slots on root buses where bus->self == NULL,
-> such as OpenCAPI PHB direct slots. An added debug print (not part of
-> this patch) confirmed it was opencapi:
-
-Style "OpenCAPI" and "PHB" consistently in commit log and subject.
-
->     [    1.617227] pnv_php: slot 'OPENCAPI-0009' has NULL pdev (bus 0009:00, parent=NO (root bus))
->     [    1.617308] pnv_php: slot 'OPENCAPI-0009' dn->full_name='pciex@603a000000000', compatible='ibm,power10-pau-opencapi-pciex'
+> + * Return: 0 on success, -ENOTTY if the reset cannot be issued, or an
+> + * errno from the reset path.
+> + */
+>  static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  {
+>  	struct pci_dev *bridge;
+>  	u16 dvsec, reg, val;
+> +	u16 saved_cmd = 0, saved_acs_ctrl = 0;
+>  	int rc;
+>  
+>  	bridge = pci_upstream_bridge(dev);
+> @@ -4957,6 +5002,8 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  		return rc;
+>  	}
+>  
+> +	cxl_disable_acs_sv_bme(bridge, &saved_cmd, &saved_acs_ctrl);
+> +
+>  	if (reg & PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR) {
+>  		val = reg;
+>  	} else {
+> @@ -4971,6 +5018,8 @@ static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
+>  		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
+>  				      reg);
+>  
+> +	cxl_restore_acs_sv_bme(bridge, saved_cmd, saved_acs_ctrl);
+> +
+>  	pci_dev_reset_iommu_done(dev);
+>  	return rc;
+>  }
+> -- 
+> 2.53.0
 > 
-> This only required null check in 'pnv_php_get_adapter_state', which
-> caused the kernel to boot.
-> 
-> Even with 'pnv_php_get_adapter_state' null check, there are more
-> possible null dereferences pointed by sashiko, including cases where
-> userspace crashes the kernel, such as:
-> 
->     $ cat /sys/bus/pci/slots/*/attention
->     ...
->     [  557.036295] Kernel attempted to read user page (6e) - exploit attempt? (uid: 0)
->     [  557.036354] BUG: Kernel NULL pointer dereference on read at 0x0000006e
->     [  557.036383] Faulting instruction address: 0xc000000000a83334
->     [  557.036413] Oops: Kernel access of bad area, sig: 11 [#1]
->     [  557.036449] LE PAGE_SIZE=64K MMU=Hash  SMP NR_CPUS=2048 NUMA PowerNV
->     ...
->     [  557.037749] [c000000046707a20] [c000000046707b90] 0xc000000046707b90 (unreliable)
->     [  557.037795] [c000000046707a70] [0000000000000001] 0x1
->     [  557.037850] [c000000046707ab0] [c000000000acb00c] attention_read_file+0x54/0xa8
->     [  557.037910] [c000000046707b30] [c000000000abfbfc] pci_slot_attr_show+0x3c/0x58
->     [  557.037977] [c000000046707b50] [c0000000008181ec] sysfs_kf_seq_show+0xd4/0x204
->     [  557.038022] [c000000046707be0] [c000000000815004] kernfs_seq_show+0x44/0x58
-> 
-> Add null checks to prevent the null dereferences.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 80f9fc236279 ("PCI: pnv_php: Work around switches with broken presence detection")
-> Signed-off-by: Aditya Gupta <adityag@linux.ibm.com>
