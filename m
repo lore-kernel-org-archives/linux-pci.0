@@ -1,39 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 272BC30EF64;
-	Mon,  8 Jun 2026 15:59:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EAD53D45FA
+	for <linux-pci@vger.kernel.org>; Mon,  8 Jun 2026 16:51:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780934383; cv=none; b=WZBmv04UUUqh2c124H0GCGTwZPyKt9677lrl5XWLrLLPixM22WgDvr4AL43XhgGcet2H325v42L6HVjvsYHW4OycCGxYo4PBgOdCOfdqkGMSNzqod7V7GMdt3OPwc/P+kwjH6Lg4EdvcwvcKbtYqcPRvUYRFFVfrCQLWYgT1Zyc=
+	t=1780937501; cv=none; b=KPWlMidApBdrBYGhmAVpHpXHPYrBtcnMHXWp7LMuUYSIpny//3zMpI+hLXiVg8sb5UxyWhD5FDTKcy3NlxRW4KTXYf2HRYAb7hOy+gkkHor52z4aIIGyrmZKh6zbCneTzHPQSvsk5BKnlbpZD5pd+e0CCyWwsJE31Oh0L/A+uEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780934383; c=relaxed/simple;
-	bh=hsPFwd6bFzldr9WlAPgzd2QW/6jBZKsRJPRXHnw4VZo=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=I8JHocY4aq22g+8Kh3j94r1xLkNvI8fKbsxjJgdOpOFcmj4dQo7ddZ0Yui7MYuVwO6cvpLiMLyfI1nUruOtrEEJYUjJQyRJ2UAW/DUOaT9vYjV/qzsrVgG5bdaoZKcSTEDj71cr25bxo0HRILVhCl6MLTZvcL3v6gfa7fqyll00=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zvx3H9TD; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1780937501; c=relaxed/simple;
+	bh=ar28/s3JG2fowVQKqZqkTS6799z9s83mIjsqEYMmYOc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZIC6PEagPH9T4N3qtAQAFp4NaMMk6iQZlGvCeVFUxJu3KKmp1GRX85xnzqxFYyJjvrYdH8corzueb2+2z4BK6jnvI8EJcA+8TSjVinGI/yxgSB2aTcZZDgmLyss8SyBpx57cfxRh1qgza5ZHLnBYSbTUJCl5pO9cPopEDqcjOco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SqWIJDnS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zvx3H9TD"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 9B9291F00893;
-	Mon,  8 Jun 2026 15:59:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SqWIJDnS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A566C1F00893;
+	Mon,  8 Jun 2026 16:51:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1780934381;
-	bh=2fg3xJu2SeOTvWj9nC6kVs1L8oJdNyr9FCt7P84bJ+E=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=Zvx3H9TDdF+B64fOTrkShwawqhfz7LIzN9h8sFsP+j4iDbu/XCT4M/PDdov8PeD7i
-	 kejTQVdbMd1XijGclKcFhTCpWMpPoqzzUKTzOy38juD2r93Ny7UJHTHhD/xwg9oDMK
-	 iUdkHal49uNoy8EBd/M+j2dvRFsBxhWwRSDcF+JkVLlouZ3PN5XCCLihayGH7i+tLT
-	 txSzWzo3MuTH0RUM7RYAizawNvOPI8gbL48vcLFn4CGcDFCTI69MrwCwcdvpeDChNS
-	 g7PU3gRYqv4Y9LXsdmrhHyYnwAeT2u3mB6BV6eNw8tuos3bT7YHCgw5v5HpwoAODJr
-	 Ju2SO1MKZUFLA==
-Date: Mon, 8 Jun 2026 10:59:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sumedh Thakre <tsunedh74@gmail.com>
-Cc: lpieralisi@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: dwc: custom-arm: reduce bus enumeration latency
- by ~15%
-Message-ID: <20260608155940.GA37162@bhelgaas>
+	s=k20260515; t=1780937500;
+	bh=hCqk/GnnFAb5hDQyED5zwb6pXr2GRoHU0WRcgx7aWLE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=SqWIJDnSjuMylw5lb8s/tiYcJ5fkWmZ6Y0L3m1AJ5oGRo44MrsVGVQFUFJtLGRDqa
+	 JRZ8r03jEhr2s4uNhUar9pO+oZ7GwhqcJbNGgkAhV941F7/D2oKGx1tBwyLknn30rA
+	 +RVAxQAbdDv2pcsD4UjvWmUiHLq+BZhtzwJBcavJw42tQZFMPDDQWKNkdHmbl6lV+g
+	 lrMRREc1lyDIzD0oCqKfvhVaH+cyuM8gzhzvIrezJbD63y85cS83dSXsnex/79PfJh
+	 jmsKgf2c9Fdeo6gZBEcToycAxhkFi/N7VrJZJoZcDLVkIwKfMiFCKtBhwdFaU1XA2d
+	 XhGTdDxhyfD8g==
+Date: Mon, 8 Jun 2026 22:21:34 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Nirmal Patel <nirmal.patel@linux.intel.com>
+Cc: linux-pci@vger.kernel.org, lpieralisi@kernel.org, 
+	nirmal.patel@intel.com
+Subject: Re: [PATCH v4] PCI: vmd: Add feature to scan BIOS enumerated devices.
+Message-ID: <hqcwvmh2kz6sxx4udassaatuwc3foc3v6j7stekpsdbiipmrj7@swazc3hukadc>
+References: <20260522150829.5246-1-nirmal.patel@linux.intel.com>
+ <20260527120139.00004254@linux.intel.com>
+ <20260608073320.000035a0@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,55 +45,36 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJkrBpvmxxfmnj4iwuxqEhAxUJrt4EOXmM7=sX=aNHjN8te2aw@mail.gmail.com>
+In-Reply-To: <20260608073320.000035a0@linux.intel.com>
 
-On Mon, Jun 01, 2026 at 11:24:45PM +0530, Sumedh Thakre wrote:
-> Hi Lorenzo and Bjorn,
-> 
-> I'd like to submit a two-patch series that fixes three independent boot-time
-> latency regressions in the custom ARM DesignWare PCIe root complex driver
-> and
-> its companion device tree.
-> 
-> The patches reduce PCIe bus enumeration time by ~15% (7,100 µs mean
-> improvement across 500 cold-boot cycles) on a Cortex-A55 / DesignWare Gen3 /
-> NVMe platform:
-> 
->   Root cause                          | Component | Savings
->   ------------------------------------|-----------|--------
->   Double PHY reset via .host_init()   | Driver    | ~8 ms
->   Sequential PHY + clock init (DTS)   | DTS       | ~5 ms
->   1 ms link-up poll on 2–4 ms hw link | Driver    | ~2 ms
-> 
->   Baseline: 47,300 µs ±820 µs (n=500)
->   Patched : 40,200 µs ±610 µs (n=500)
-> 
-> Patch 1/2 adds a phy_initialized guard to prevent double PHY reset and
-> introduces a platform-specific 250 µs link-up polling interval
-> (compliant with PCIe Base Spec 4.0 §6.6.1).
-> 
-> Patch 2/2 corrects the device tree to declare explicit PHY clock parents
-> (enabling parallel probe), adds the required REFCLK stagger margin
-> (250 ns, fixes sporadic LTSSM failures below 10 °C), and aligns
-> PERST# assert timing and poll properties with the driver changes.
-> 
-> Both patches are independently bisectable. The series has been tested with:
->   - 500 cold-boot iteration benchmark (ftrace timestamps)
->   - dtc validation and dt_binding_check
->   - dt-validate against dt-schema
->   - Sparse (make C=1): no new warnings
->   - checkpatch.pl: 0 errors, 0 warnings
-> 
-> The patches are attached to this email and are also available at:
-> 
-> https://github.com/tsunedh74-droid/linux-pcie-custom-arm-latency-fix/tree/main
+On Mon, Jun 08, 2026 at 07:33:20AM -0700, Nirmal Patel wrote:
 
-If it's possible to send the patches directly as responses (not
-attachments), that would be better:
-https://people.kernel.org/tglx/notes-about-netiquette
+[...]
 
-Looking at the github tree, the patches touch
-drivers/pci/controller/dwc/pcie-custom-arm.c and
-arch/arm64/boot/dts/vendor/custom-arm-pcie.dts.  Neither exists
-upstream.  Maybe this work is based on some downstream tree that
-includes a driver that isn't yet upstream?
+> > Gentle reminder. FYI, I also addressed comments from AI review.
+> > 
+> > Thanks.
+> 
+> Gentle review reminder.
+> Thanks.
+> 
+
+./scripts/get_maintainer.pl drivers/pci/controller/vmd.c
+
+Nirmal Patel <nirmal.patel@linux.intel.com> (maintainer:PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (...)
+Jonathan Derrick <jonathan.derrick@linux.dev> (reviewer:PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (...)
+Lorenzo Pieralisi <lpieralisi@kernel.org> (maintainer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
+"Krzysztof Wilczyński" <kwilczynski@kernel.org> (maintainer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
+Manivannan Sadhasivam <mani@kernel.org> (maintainer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
+Rob Herring <robh@kernel.org> (reviewer:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS)
+Bjorn Helgaas <bhelgaas@google.com> (maintainer:PCI SUBSYSTEM)
+linux-pci@vger.kernel.org (open list:PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (...)
+linux-kernel@vger.kernel.org (open list)
+
+You didn't CC more than half of the above entries. So you can expect the patch
+to fall through the crack...
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
