@@ -1,41 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7A1A43635E;
-	Tue,  9 Jun 2026 14:45:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 254E94218A1;
+	Tue,  9 Jun 2026 14:49:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781016335; cv=none; b=Iabpq2ROSMxnLVfBu9Acse3PmeMQ7+Znmyuk3lknnJ+wzXHz87D/kcMAgbKt7aYkg84A2fuOSTSOUUWEsPSJ68spJ41lVhLzrqgg9ev3yaodi39Mk+6FtyGwSk88vZ3hDYBvkvrl+LfG3u4IHQEZWkqhjiam5Zbr/ND1i6uGxGc=
+	t=1781016576; cv=none; b=Lk8zZG683cKqZAJ0OjccIDRZ4DSYw7Jrewza20vzO+Jz8KZFBp0pWN4NzAYFlK6NGX686b/nTEgDmr4BQkkBflPFXtblQMkb69QaemiaMukpCMOxYPbMSAY8+2cwkAWrg74+vQOmZ7ydXr6cJiVnblBeiuMwTTjkAjw8VvAFXDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781016335; c=relaxed/simple;
-	bh=j6tC4XvNLCSrmGlsdlptyNckumJ7AQ6LxOk2sA6mJn8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=mUoK54aybOp1WrMNnrC/jiU1Y2ZgUAxpHPrgoViMYh9U3LcdJ2PafV+CYuJ/ZEZgvQqL5O17gaYWpTFKFtATANXY4ZNlGE63xzbl8O7fHID7z6MWYLlrpDT7pHRVJhL9KC0AKiQWsBHzJtnCh6/OccYgyEdkoUtgAtgTxFAnUo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ihlrrl6Q; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781016576; c=relaxed/simple;
+	bh=7Z2e8ukGc3KhQzq9CXL9zA+rmMjw439SLKHDG9lz3kA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z4TP/KlaMrMix+B4gWRWvlEJgnRCmPvaFv+08R+R2nIuP0XHh/eP2szjpxgYUGnou5QbJocnurRK9aG7NL5vste+gj/3yRTwT3rCaxJ3be7ZR/5XNtmbbBoBWWBcZSkfAad13k7DnTAgbD3Tp4O6br09RED2qLQcxbkKcvZAsWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dWde64V7; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ihlrrl6Q"
-Received: by smtp.kernel.org (Postfix) with UTF8SMTPSA id 3E2571F00893;
-	Tue,  9 Jun 2026 14:45:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781016333;
-	bh=DT+xz6ypM6hLHzaMyiMzGKHLZEoQ1yT2AY12QYD03q4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=ihlrrl6QKkW/FD9GEoNkCG0RChf9wGHv7Jq6WCnwXPrLxInhHx1obFW1ja84FlIXK
-	 dOqCw3KTLzFF12vb3aFIf7zPxxv1/uTTdTnnXXW/9DzuWJgvLC0vOdzVnXfIFlR3Wi
-	 37xUSVXBJe1zwk44SEFm4jX8WcPsa3ldmj55tuZQQArYCK1Zx1A+iW2rV4/f/icj6L
-	 2fLjlwvS9KOVLpMIZhCX1tVorLU6NmHi7tLrVJ/zOkEgTk3QAnNSkstODffwLJBMug
-	 FSpo9sHE+s0o9xENr17R/XBUd6b5gw4HS0lkwWMkUvwiuWNCezFGJ+ZrpdtkeWz99V
-	 uESCTXxlKBhtw==
-Date: Tue, 9 Jun 2026 09:45:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
-	Alex Williamson <alex@shazbot.org>
-Cc: bhelgaas@google.com, nbd@nbd.name, lorenzo@kernel.org,
-	shayne.chen@mediatek.com, sean.wang@mediatek.com,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4] PCI: Disable broken FLR on MediaTek MT7925
-Message-ID: <20260609144532.GA104629@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dWde64V7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1781016574; x=1812552574;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=7Z2e8ukGc3KhQzq9CXL9zA+rmMjw439SLKHDG9lz3kA=;
+  b=dWde64V7BEMuAMat7h68IOaF3/V9LnDEWMn5+mefFiHprlyk29uUk3a0
+   QvqsOoxG2GjoZ5X8MIp+x2pIiW83BVU/6y4UHlpYDLOoMqlQEovj5WT1d
+   HxGC670XcwhFQWUX7XW0MYk62Zjn+d8USNLK1PLvNP1W/lYi/yNeL2ElP
+   bfXamy9ZMaggpV83Q1FiHnc6K4EbHqjc3E4F5oWstrHaFxaby80PSXElX
+   tcUWmFUAdfl43SsJSe2IDAaffOqgRWFvt24zTcI6Eq/VIw1TiKtIMG4hr
+   9dze4oxKCmS88jccmat6FbNw8Ps/gynGVTur24JxMQEe/AW1xQHrXpp1N
+   Q==;
+X-CSE-ConnectionGUID: l76ygdzwR4KLK0wpoZeWSw==
+X-CSE-MsgGUID: EGFAn94ETierQAJu4wTh7g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11812"; a="81527054"
+X-IronPort-AV: E=Sophos;i="6.24,196,1774335600"; 
+   d="scan'208";a="81527054"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2026 07:49:33 -0700
+X-CSE-ConnectionGUID: Vor5LSMvR1y7lXA9Z9vPLg==
+X-CSE-MsgGUID: JO+VAp6lR9Kw7gZOYCCT5Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,196,1774335600"; 
+   d="scan'208";a="242923218"
+Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.162])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2026 07:49:26 -0700
+Date: Tue, 9 Jun 2026 17:49:23 +0300
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Inochi Amaoto <inochiama@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>,
+	Paul Walmsley <pjw@kernel.org>, Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>, Alexandre Ghiti <alex@ghiti.fr>,
+	Christian Bruel <christian.bruel@foss.st.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Senchuan Zhang <zhangsenchuan@eswincomputing.com>,
+	Alex Elder <elder@riscstar.com>, Nam Cao <namcao@linutronix.de>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Randolph Lin <randolph@andestech.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+	spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>,
+	Longbin Li <looong.bin@gmail.com>
+Subject: Re: [PATCH v2 5/5] PCI: spacemit-k1: Add Spacemit K3 PCIe host
+ controller support
+Message-ID: <aign88JV3k_wn2HK@ashevche-desk.local>
+References: <20260517014841.254085-1-inochiama@gmail.com>
+ <20260517014841.254085-6-inochiama@gmail.com>
+ <wztjdv4t5cn7djj3jyvheest7rn5nr2g3efzwods2fz3yy5wn2@hbl644sd6fst>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,82 +82,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260522070646.203115-1-jtornosm@redhat.com>
+In-Reply-To: <wztjdv4t5cn7djj3jyvheest7rn5nr2g3efzwods2fz3yy5wn2@hbl644sd6fst>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-[cc->to: Alex]
+On Tue, Jun 09, 2026 at 07:48:12PM +0530, Manivannan Sadhasivam wrote:
+> On Sun, May 17, 2026 at 09:48:40AM +0800, Inochi Amaoto wrote:
+> > The PCIe controller on Spacemit K3 is almost a standard Synopsys
+> > DesignWare PCIe IP with extra link and reset control. Unlike
+> > the PCIe controller on K1, this controller supports external MSI
+> > interrupt controller and can use multiple PHYs at the same time.
+> > 
+> > Add driver to support PCIe controller on Spacemit K3 PCIe.
 
-On Fri, May 22, 2026 at 09:06:46AM +0200, Jose Ignacio Tornos Martinez wrote:
-> The MediaTek MT7925 WiFi device advertises FLR capability, but it does
-> not work correctly. This manifests in VFIO passthrough scenarios: normal
-> VM operation works fine, including clean shutdown/reboot. However, when
-> the VM terminates uncleanly (crash, force-off), VFIO attempts to reset
-> the device before it can be assigned to another VM. Because FLR is broken,
-> the reset fails preventing reuse.
-> 
-> This is similar to its predecessor MT7922 (see commit 81f64e925c29 ("PCI:
-> Avoid FLR for Mediatek MT7922 WiFi")), but with different symptoms.
-> The MT7922 issue manifests as config read failures (returning ~0) after
-> FLR. The MT7925 shows different behavior: config reads work correctly
-> after FLR, but firmware communication fails.
-> 
-> First VM start with MT7925 works fine:
->   mt7925e 0000:08:00.0: ASIC revision: 79250000
->   mt7925e 0000:08:00.0: WM Firmware Version: ____000000, Build Time:
->     20260106153120
-> 
-> After force reset or VM crash, when VFIO attempts FLR to reset the device
-> for reassignment, firmware initialization fails:
->   mt7925e 0000:08:00.0: ASIC revision: 79250000
->   mt7925e 0000:08:00.0: Message 00000010 (seq 1) timeout
->   mt7925e 0000:08:00.0: Failed to get patch semaphore
->   [Repeats with increasing sequence numbers 2-10]
->   mt7925e 0000:08:00.0: hardware init failed
-> 
-> The driver cannot acquire the patch semaphore needed for firmware
-> initialization, indicating that FLR does not properly reset the firmware
-> state. The device remains in this broken state until physical power cycle.
-> 
-> Disable FLR for MT7925 so the PCI core falls back to Secondary Bus Reset,
-> which successfully resets the device and allows reinitialization for VFIO
-> passthrough reuse.
-> 
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+...
 
-Applied to pci/virtualization for v7.2, thanks!
+> > +static int k3_pcie_enable_phy(struct k1_pcie *pcie)
+> > +{
+> > +	int i, ret;
 
-Alex, are you OK with this?  The v2 conversation talks about SBR also
-being broken, but maybe that turned out to be a red herring?
+No need to have i signed.
 
-  https://lore.kernel.org/linux-pci/20260508145153.717641-1-jtornosm@redhat.com/t/#u
+> > +
+> > +	for (i = 0; i < pcie->phy_count; i++) {
+> > +		ret = phy_init(pcie->phy[i]);
+> > +		if (ret)
+> > +			goto err_phy;
+> > +	}
+> > +
+> > +	return 0;
+> > +
+> > +err_phy:
+> > +	while (--i >= 0)
 
-> ---
-> v4: Improved commit message with specific dmesg evidence showing firmware
->   initialization failure after FLR (Bjorn Helgaas feedback)
-> v2: https://lore.kernel.org/all/20260521061205.12727-1-jtornosm@redhat.com/
-> 
->  drivers/pci/quirks.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 000000000000..111111111111 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5607,6 +5607,7 @@
->   * Intel 82579LM Gigabit Ethernet Controller 0x1502
->   * Intel 82579V Gigabit Ethernet Controller 0x1503
->   * Mediatek MT7922 802.11ax PCI Express Wireless Network Adapter
-> + * Mediatek MT7925 802.11be PCI Express Wireless Network Adapter
->   */
->  static void quirk_no_flr(struct pci_dev *dev)
->  {
-> @@ -5617,6 +5618,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x7901, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x0616, quirk_no_flr);
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_MEDIATEK, 0x7925, quirk_no_flr);
-> 
->  /* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
->  static void quirk_no_flr_snet(struct pci_dev *dev)
-> --
-> 2.53.0
-> 
+	while (i--)
+
+is shorter form of the same.
+
+> > +		phy_exit(pcie->phy[i]);
+> > +
+
+...
+
+> > +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
+> > +			PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT);
+> > +	usleep_range(1000, 2000);
+
+fsleep(1 * USEC_PER_MSEC)
+
+> > +	regmap_clear_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC, PCIE_PERSTN_OUT);
+> > +
+> > +	msleep(PCIE_T_PVPERL_MS);
+
+...
+
+> > +	int i;
+
+Why is 'i' signed?
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
