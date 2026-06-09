@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D2B743CED8
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 18:03:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37A4348A2AA
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 18:03:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781028216; cv=none; b=le2TAaEHs4vzjiTqYc+5hLfER+CSQ+ntljy9sNqrWvkuZm8nn5sSNhKYGfoKbAg7JEwxAPOODMipH4hU+t5Ck2keacsTcjYIEZqxmxNvLuPXEIEaKxIerzbYGA307+kOJv62s8Y/KpUtvVlJzAFW04SE/i2JN7MqJ7/fXhWlH2Y=
+	t=1781028218; cv=none; b=p+Hqk9RXd7ASGM9Ojgj9ttMCBRh/JnJ9aIZBgvT1AJ6KZkbcGfAOf6Ucq8XFfgNaqXUsoUrHP5JL/1yqkrQ2FOnslbkxBFaF6OObS/GBbD28WW3CbVdk+3sEoe3/O7/uvPvvHak95aQvYoZt2itG0zjYfXEkVhdAacCl/XR4g+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781028216; c=relaxed/simple;
-	bh=Q65ug760ZPb/OlYGqOGNlVJO+R74CPaBf2rOMM9K0rA=;
+	s=arc-20240116; t=1781028218; c=relaxed/simple;
+	bh=SX4qlgoV3gU2rCl9ddPaVZbThQtE6NOnGGJYyrnmR60=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ej00rPUXOeGm7V5U75tVW6R1MYluhYE1BI/ffHIPsNcynsVYmkDVUFXdf7zOSFobkZF4G+vG34OTVGg78K4I0Z+5b+2lohOrAvrDqcZR9xXe3B6euBWNXkjr/J1BPlDX+mihYPE3X7Kn7K84s3n3D325nsaB+FCl0mnsVuBoCAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L4+cC09Q; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=eR1G7i+i1xPMU3YLVBnUPrb9cO9o6l5J1Fn6AOBj7oThk2SOR1UMCdnWeZqrq6O0dXxiatfNKGjty99YQGEqhtCyqXGQYxPEJ4LjoniEL9BNvSELo5JzPMMEuByjc7O0mqxREUyluGtiVvfx1lM79vbQv+erR5PwvnSun2l142A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=TmJh3bzV; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L4+cC09Q"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TmJh3bzV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781028214;
+	s=mimecast20190719; t=1781028216;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=bba3ShkPXLnJs6fxJeKo/039rEsBR36+Fx7OF6O65d4=;
-	b=L4+cC09Q6KJMG+GjmyDLC6XxfuyfaC1XxcACgpiBUPmQtlYulGVBfoLkwObdya/Y2MbiMa
-	8YpD54BmOFBw9XPWM3md7rTowCMYUB0OHzTmEvocGYcayX9zkXlNEB3a5E+43T130lpUIx
-	Cs2zMGyxjv5Z4zcnuFVsYIptMV8tKmY=
+	bh=NnBmtUsOV6AR26m1a1E5hJ29QcWIbb9DPjXBH0i0AVU=;
+	b=TmJh3bzVn1RslJPoyuby30Fit6lkEG5GfeM48DVlGP89+6VvV37QW3wOagVM77G+6oxS0C
+	b1j3Itu0tZvNXpIVfdCPQhgPtUVysJDq/XBBRc8TC2Nm9wj0IhFIGb5OZRJ+bVcQNdPzT5
+	AhuP6j4zVSj5RSGNaH19dL+SvQD8Pts=
 Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-690-uwoDDCC3PHSB1WBo60-8WQ-1; Tue,
- 09 Jun 2026 14:03:29 -0400
-X-MC-Unique: uwoDDCC3PHSB1WBo60-8WQ-1
-X-Mimecast-MFC-AGG-ID: uwoDDCC3PHSB1WBo60-8WQ_1781028208
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-381-eHNEtef5POS2HK6RRmRYhQ-1; Tue,
+ 09 Jun 2026 14:03:31 -0400
+X-MC-Unique: eHNEtef5POS2HK6RRmRYhQ-1
+X-Mimecast-MFC-AGG-ID: eHNEtef5POS2HK6RRmRYhQ_1781028209
 Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D2F7C180131A;
-	Tue,  9 Jun 2026 18:03:27 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 75D371835E2B;
+	Tue,  9 Jun 2026 18:03:29 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.65.187])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6345A18005B8;
-	Tue,  9 Jun 2026 18:03:26 +0000 (UTC)
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1785C18005B8;
+	Tue,  9 Jun 2026 18:03:27 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org,
@@ -52,9 +52,9 @@ Cc: linux-pci@vger.kernel.org,
 	Tejun Heo <tj@kernel.org>,
 	Jinhui Guo <guojinhui.liam@bytedance.com>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH v4 1/2] PCI: Suppress false positive lockdep warning in pci_call_probe()
-Date: Tue,  9 Jun 2026 14:03:14 -0400
-Message-ID: <20260609180315.850637-2-longman@redhat.com>
+Subject: [PATCH v4 2/2] PCI: Call local_pci_probe() directly in pci_call_probe() if affined to the right node
+Date: Tue,  9 Jun 2026 14:03:15 -0400
+Message-ID: <20260609180315.850637-3-longman@redhat.com>
 In-Reply-To: <20260609180315.850637-1-longman@redhat.com>
 References: <20260609180315.850637-1-longman@redhat.com>
 Precedence: bulk
@@ -66,84 +66,83 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-local_pci_probe() and hence pci_call_probe() can be called recursively,
-e.g. when vmd_probe() calls .probe() for devices in the new hierarchy
-below VMD or a PF .probe() enables VFs and calls .probe() for them. If
-the recursive calls are done indirectly via workqueue kworker, a lockdep
-recursive warning like the following can be produced.
+Currently pci_call_probe() will unconditionally queue a work function
+to perform the actual device probing whenever the device is associated
+with a valid NUMA node. The use of work function originally comes from
+commit 873392ca514f ("PCI: work_on_cpu: use in drivers/pci/pci-driver.c")
+to execute the device probing and allocate memory on the right node
+where the device bus is attached to.
 
-  ============================================
-  WARNING: possible recursive locking detected
-  7.1.0-rc6-test+ #1 Not tainted
-  --------------------------------------------
-  kworker/52:1/1593 is trying to acquire lock:
-  ffffc9001498f708 ((work_completion)(&arg.work)){+.+.}-{0:0}, at: start_flush_work+0x3e9/0x9a0
+This is inefficient to schedule another work function in the same or a
+neigboring CPU and wait for its completion when the current task is a
+work function itself queued by pci_call_probe() or async_schedule_dev()
+that has been affined to the right node already. It will also reduce
+the amount of parallelism as noted in [1].
 
-  but task is already holding lock:
-  ffffc9001498fd10 ((work_completion)(&arg.work)){+.+.}-{0:0}, at: process_one_work+0xd4c/0x1390
+Fix that by calling local_pci_probe() directly if the current task has
+been affined to the right NUMA node. Now lockdep dynamic key will only
+be used if the current task is a wq kworker but is not affined to the
+right node.
 
-  other info that might help us debug this:
-   Possible unsafe locking scenario:
-
-         CPU0
-         ----
-    lock((work_completion)(&arg.work));
-    lock((work_completion)(&arg.work));
-
-   *** DEADLOCK ***
-
-This is a false positive warning due to the limitation on the number
-of distinct lockdep keys allowed. The same lockdep key is used when the
-INIT_WORK_ONSTACK() macro is called in pci_call_probe(). So when a work
-function queued by pci_call_probe() calls into pci_call_probe() again
-and another work function is queued and flushed, the lockdep warning
-will be displayed. This can be suppressed by registering a dynamic key
-and used it whenever the current task is a wq kworker.
-
-Dynamic lockdep keys are limited finite resources and they should be
-used only when really necessary.
+[1] https://lore.kernel.org/linux-pci/20251227113326.964-1-guojinhui.liam@bytedance.com/
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- drivers/pci/pci-driver.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ drivers/pci/pci-driver.c | 23 +++++++++++++++++------
+ 1 file changed, 17 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index e3f59001785a..bc8c0f061072 100644
+index bc8c0f061072..70e7b944c097 100644
 --- a/drivers/pci/pci-driver.c
 +++ b/drivers/pci/pci-driver.c
-@@ -394,8 +394,21 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+@@ -375,6 +375,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ {
+ 	int error, node, cpu;
+ 	struct drv_dev_and_id ddi = { drv, dev, id };
++	bool node_invalid, affine_to_node;
++	const struct cpumask *node_cpus;
+ 
+ 	/*
+ 	 * Execute driver initialization on node where the device is
+@@ -383,14 +385,24 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 	 */
+ 	node = dev_to_node(&dev->dev);
+ 	dev->is_probed = 1;
++	node_invalid = node < 0 || node >= MAX_NUMNODES || !node_online(node);
++
++	if (node_invalid) {
++		node_cpus = cpu_online_mask;
++		affine_to_node = false;
++	} else {
++		node_cpus = cpumask_of_node(node);
++		/* Check if the current task is affined to the right node */
++		affine_to_node = cpumask_subset(current->cpus_ptr, node_cpus);
++	}
+ 
+ 	cpu_hotplug_disable();
+ 	/*
+-	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
+-	 * device is probed from work_on_cpu() of the Physical device.
++	 * Prevent nesting queue_work_on() for the case where a Virtual Function
++	 * device is probed from queue_work_on() of the Physical function or
++	 * when the current task is affined to the right node.
+ 	 */
+-	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
+-	    pci_physfn_is_probed(dev)) {
++	if (node_invalid || affine_to_node || pci_physfn_is_probed(dev)) {
  		error = local_pci_probe(&ddi);
  	} else {
  		struct pci_probe_arg arg = { .ddi = &ddi };
-+		struct lock_class_key key;
-+
-+		/*
-+		 * A nested pci_call_probe() via a work func will produce a
-+		 * false positive lockdep recursive locking warning. Use
-+		 * lockdep_register_key() to provision a dynamic key to
-+		 * suppress this warning when the current task is a wq kworker.
-+		 */
-+		if (current->flags & PF_WQ_WORKER) {
-+			lockdep_register_key(&key);
-+			INIT_WORK_ONSTACK_KEY(&arg.work, local_pci_probe_callback, &key);
-+		} else {
-+			INIT_WORK_ONSTACK(&arg.work, local_pci_probe_callback);
-+		}
+@@ -417,8 +429,7 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+ 		 * targets.
+ 		 */
+ 		rcu_read_lock();
+-		cpu = cpumask_any_and(cpumask_of_node(node),
+-				      housekeeping_cpumask(HK_TYPE_DOMAIN));
++		cpu = cpumask_any_and(node_cpus, housekeeping_cpumask(HK_TYPE_DOMAIN));
  
--		INIT_WORK_ONSTACK(&arg.work, local_pci_probe_callback);
- 		/*
- 		 * The target election and the enqueue of the work must be within
- 		 * the same RCU read side section so that when the workqueue pool
-@@ -422,6 +435,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 		}
- 
- 		destroy_work_on_stack(&arg.work);
-+		if (current->flags & PF_WQ_WORKER)
-+			lockdep_unregister_key(&key);
- 	}
- 
- 	dev->is_probed = 0;
+ 		if (cpu < nr_cpu_ids) {
+ 			struct workqueue_struct *wq = pci_probe_wq;
 -- 
 2.54.0
 
