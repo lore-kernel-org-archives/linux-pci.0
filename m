@@ -1,364 +1,258 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fout-a6-smtp.messagingengine.com (fout-a6-smtp.messagingengine.com [103.168.172.149])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10C6B363C48;
-	Tue,  9 Jun 2026 21:38:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA7132EEE79;
+	Tue,  9 Jun 2026 21:46:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.149
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781041125; cv=none; b=CTGs1dKaUDZdoygXwqcc0q6uzn5zTNASIcq5SkuuLLvBUP9YaahJRmXvHoHp+KDFVpykHaeJDWnhqoBzvC76f4yIgzny9d5cT1ET6EhLYNKs39e/7bLaSdPwjvu3VYbDWNaAJQ3aU3zT77OJ2Tyo0cyfmKDajomQSqP4QjhCavo=
+	t=1781041600; cv=none; b=Y7rjfFnlWi6Tq7v+4FkQsL8lTCMERjQzdg4LSZ+lpSINtzefhJhfYX/ZrXGCKN9zLzvUguaIJ6vwOL9EnNylKFRJg1xwPVekVulXfIa/VWomAb1lzDPoY59Ja7FWWUDLay8XG/201mlJH2oCWriZfjQly0mHf7wDgKkm6+qXcVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781041125; c=relaxed/simple;
-	bh=aKkdm66U5qp6BRQLUe+gWmTpEgt54D1Np2cYwd/h1HU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gsru0QuGvLqhqUp2y83ZTGsZlgzIsRP78s8/Zv9kJ8tVUWu8VnR07wF2BDuWD2n1GaaE1R4OY/VPzMKn6v3zzys6IcaYG3CJoGR/ZCXSkGZ1YNUniE8hp9DSqZ5qWr4seXj+0QsWNedBwtUpp1nOXqcGOZRJKNJ1azJ+SEfbSTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jwH8AfK3; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781041600; c=relaxed/simple;
+	bh=BsLNVgcsHZe2ZdsnQZYPq8d5+s128ZmNZcF9+xivLx8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=rxC0w1UQsIb/pML2ncJghJMWtdvf5NaxLYbyvZjux0qeLIV/niM09n+XR9enrBK6NficlZM5ydpAdgbpmiOSpgehlZb53irkxEzn7tUKOJODHUnlr/wrvTH2aEn9eSL1/VwZbznm8VbXw/P74zogt4fxCFUuEpxQCIB6Chrvfu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=dAXXjj9F; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Qo21B5LF; arc=none smtp.client-ip=103.168.172.149
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jwH8AfK3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23AFE1F00893;
-	Tue,  9 Jun 2026 21:38:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781041122;
-	bh=hGAzSqRF3yiz6I29e/qPV+How0w2oE1P/oo9xL36Cb8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jwH8AfK32u4gcg6S/8pnBTe4NfMM9r7vPSGStu5dp8hdTnui5dcuCl9DAW+T1NXXJ
-	 UerKXsbIzLe3qO0VdGTKwH7sXN7/f6Gr3lmuTKzqOhpqP9kjHEnbG9aS1Hsp/Eal0e
-	 iDN3yOA6TpfxyScSyEmbJlDr8B4XDDYkMkuIby0i2lNqIKeUqH0vctK1P6qgAhE5FA
-	 6nyMQSArkFupzkCBaY3Bt6S4CjYOAmss1V+D1IAWsXmdNl3OBh+iE7CELioFrOYaTs
-	 zsD2N4V7PB8DzTSv7rEfTHnKG9nr3mLdQNLZ8Dv8uQI+eqXwNbnReZ5sr2dK+o+xts
-	 ubPhGXemwnUpw==
-Date: Tue, 9 Jun 2026 15:38:40 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, alex@shazbot.org, helgaas@kernel.org,
-	schnelle@linux.ibm.com, mjrosato@linux.ibm.com,
-	Julian Ruess <julianr@linux.ibm.com>
-Subject: Re: [PATCH v18 3/4] vfio/pci: Add a reset_done callback for vfio-pci
- driver
-Message-ID: <aiiH4HQlW-ldojwQ@kbusch-mbp>
-References: <20260603182415.2324-1-alifm@linux.ibm.com>
- <20260603182415.2324-4-alifm@linux.ibm.com>
- <aiE3I0bL0TX1nOec@kbusch-mbp>
- <d9ca420b-a1e6-4d12-bd42-3993e401d58b@linux.ibm.com>
- <aiHjIyYB_8ogbxfz@kbusch-mbp>
- <8d1cbef7-f7d9-4796-a6a1-460956adfb39@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="dAXXjj9F";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Qo21B5LF"
+Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
+	by mailfout.phl.internal (Postfix) with ESMTP id E59C2EC021C;
+	Tue,  9 Jun 2026 17:46:36 -0400 (EDT)
+Received: from phl-frontend-04 ([10.202.2.163])
+  by phl-compute-06.internal (MEProxy); Tue, 09 Jun 2026 17:46:36 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1781041596;
+	 x=1781127996; bh=Le4mzZitUOCcD3l+m59chdRcJdHFdgu8c/ZCYemC1C4=; b=
+	dAXXjj9FfExLlbaZ9I2g8ETi3RfKBVVFAjpT64jfIpEeerruRAoxo75VuDeTTOYH
+	C4WRuvCF61il3A6t7Vws5R6SpTeb1fv8D2rNZjTNLKjk15s/tfCHIqvyvQmSYPZM
+	KD0rnyJJ/kdT6YI5kByaNcrVyal5Ck6YJl96vuVv3jRgrNvkprWnUX5FnIU6eqJi
+	sQ4jreWBdxEs9n2gzMPa73E1wHEkoKP6VUDGj6arD4qir6OScDV/cw4Q3I+D55JZ
+	Sve/4zBKcQkY0Opq0utfqXU6SBh9oCwVYW2UHmVHWzn0X8tZZeZ5iYD0Nqv201Wl
+	d5pDFtoa32d4CB/TB+4skQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781041596; x=
+	1781127996; bh=Le4mzZitUOCcD3l+m59chdRcJdHFdgu8c/ZCYemC1C4=; b=Q
+	o21B5LF6+eVL0FrVT//T8T5IHgrmhItN0lO4QjPVCLE+55+XbYzUbECnJYNPnqpU
+	oioIUooojwU//H0OdfrU9N8VGfPuvJs6tmJ3gTZ7oG+3LV/3BCgXj5FNuvzRMBag
+	tm3Ebpy+m/Qyuiuy40/EYivPkRkLM1hMpzrqU0nT5My8eqDFJmfQqvzdjpxR3Qem
+	74fcufgERoS35lQRLdwbMBhabC598IW/uiESIPIod9FPnLtKrh2ZzePOPRjRJgO8
+	dahezYcPhB4IhzpYN0e6TSjqC/KWOyFXT7+QApoFjGly8i5lzGflLanrd/DSIK4j
+	uKQSN0LlNpWkjX8Yyjk7w==
+X-ME-Sender: <xms:vIkoav41sU7sUzGrTPA6Kff5nPOhMu_tjTb6AT9cHRwX6gkJpgJiVQ>
+    <xme:vIkoascAsBg9rjm1TIvDQLPRmo3JsuqYZfKzLN0ep1brQTA-tc4ZUYEbdWsD3z4sh
+    aHIQZtRYOWsFwwwsOypRNiBEEJ5CxLFFgBP3risaH7qSxWeUqtKxg>
+X-ME-Received: <xmr:vIkoamEpwgfC3N0c3HCxtvQF2l3JuR_hnvE96yKATYM1_m9HJ5DCmtEPQLs>
+X-ME-Proxy-Cause: dmFkZTGvUY/GUU1gU7Kcsq7cJWzYPAILCs/dFDD0hst22ThCwBi1vnbQlHAm+Nvcf7Bswg
+    rV++wJ6ac08HqzD/HSLDgPd/SlMmTO3zNwe5YrT/8VO+Q+5wZNBDjXouEW7LFTFvz+RBQ+
+    vlOKXPM6scyo8puzQmKqCveaX9HSJfQ2w2WRB0T912qT5whajjDBx3ext/e3Gh8OY/6MUC
+    L+qEUjjfT1XOZefkH/n5nReGu6UoHEQ6moOujnT8WMFvSnEeVIVESzvcI7l9CFe7ru6XCJ
+    PpRu4o7ejKUdJzxysGMIHOyfkdkThi58pkUt1P6FVOnn+7dGQIaw8N0aLCrRSRmWRM+PMh
+    ikaLjSpPoBdefLsitXogYOQsUUb07nZmsb1VJhDUaUDxH2g0KjaBiKMbZc0jFPjleo2Iyk
+    KfNbodWo8iutszHty+zZo5toIMA1VA6Xnvc8RtbExEfjg/4TDeUq67f9evEtZsA+7fBPzX
+    0VkyVmm2fiI30Vh/OuKtzGGaGTHFiJyglA0jGoi5s3r1MCCtYucoekbpoJMAslDejOBC10
+    QuX+elWdeC9DTHBdmtsu/M7La/kMfxu5OERbW+NMAVyH3lKzW/xMTCUanptzfek4kFoH9n
+    IdQmZJA9vlrGsGhG/KUeVFv+Sy10TDmJQghO7iPWhZhw/IFBIKUt/tPJ4jIw
+X-ME-Proxy: <xmx:vIkoas4j-LUxltDGhE3c2BEzr58JQdPq2sL1nVn3EGkTXjLWeiWMKg>
+    <xmx:vIkoapvaCyVyJiLgHqTcdsrjJPegXxR_V8GvUKpBiytgnbZ4Ik0uDg>
+    <xmx:vIkoag-U3Ty5QcEbjE9wXqfPiARWA8hlGVRxPn2FO4IGKLCUvbzTpw>
+    <xmx:vIkoajmgLfPH9lLOmlpZjWXYSL7XQCMrbH6d9qhFwJ-yNqnrIzRVWw>
+    <xmx:vIkoagld8r8MNa3yFhypdE_45wM3TTznM9aALYwL4tuY1ylX1DrQEkjw>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 9 Jun 2026 17:46:35 -0400 (EDT)
+Date: Tue, 9 Jun 2026 15:46:34 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Sumit
+ Semwal <sumit.semwal@linaro.org>, Christian Konig
+ <christian.koenig@amd.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
+ <dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>, Yochai
+ Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
+ alex@shazbot.org
+Subject: Re: [PATCH v6 4/5] vfio/pci: implement get_tph and DMA_BUF_TPH
+ feature
+Message-ID: <20260609154634.46ee8328@shazbot.org>
+In-Reply-To: <20260608185646.4085127-5-zhipingz@meta.com>
+References: <20260608185646.4085127-1-zhipingz@meta.com>
+	<20260608185646.4085127-5-zhipingz@meta.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8d1cbef7-f7d9-4796-a6a1-460956adfb39@linux.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jun 05, 2026 at 11:41:07AM -0700, Farhan Ali wrote:
-> But I am curious to learn about your thoughts for DPC/AER with vfio for
-> other platforms (x86/ARM?). Thanks
+On Mon, 8 Jun 2026 11:56:41 -0700
+Zhiping Zhang <zhipingz@meta.com> wrote:
+> @@ -327,12 +358,71 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
+>  err_free_phys:
+>  	kfree(priv->phys_vec);
+>  err_free_priv:
+> +	mutex_destroy(&priv->tph_lock);
+>  	kfree(priv);
+>  err_free_ranges:
+>  	kfree(dma_ranges);
+>  	return ret;
+>  }
+>  
+> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
+> +				      u32 flags,
+> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
+> +				      size_t argsz)
+> +{
+> +	struct vfio_device_feature_dma_buf_tph set_tph;
+> +	struct vfio_pci_dma_buf *priv;
+> +	struct dma_buf *dmabuf;
+> +	int ret;
+> +
+> +	if (!pcie_tph_supported(vdev->pdev))
+> +		return -EOPNOTSUPP;
 
-Sure. I think we just need a checkpoint mechanism between the user and
-kernel space, then the kernel's existing pci error recovery can proceed
-as-is. No architecture specifics needed.
+This tests for the TPH capability, but the TPH capability is only a
+requirement for functions that generate TLPs with TPH, ie. a requester.
+This feature is about providing TPH steering tags when the device is a
+completer.  Bits 13:12 of the Device Capabilities 2 register indicate
+if the device is supported as a TPH completer.
 
-The below is a quick example of what I had in mind for the kernel side.
-User space just needs to cooperate through the new feature here for this
-to work.
+Additionally these bits indicate if the device supports standard and
+extended TPH, which means we should not only fail if the device reports
+00b, but should reject extended steering tags unless the device reports
+11b.
 
----
-commit f67c0a83a75ee5f69a116894cfedc5c6de7b2195
-Author: Keith Busch <kbusch@kernel.org>
-Date:   Wed Apr 22 17:11:21 2026 -0700
+> +
+> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
+> +				 sizeof(set_tph));
+> +	if (ret != 1)
+> +		return ret;
+> +
+> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
+> +		return -EFAULT;
+> +
+> +	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
+> +		return -EINVAL;
+> +
+> +	/* PCIe TLP Processing Hint is a 2-bit field. */
+> +	if (set_tph.ph & ~0x3)
+> +		return -EINVAL;
 
-    vfio/pci: add error recovery handshake with userspace
-    
-    The existing VFIO PCI error handling fires an eventfd to notify
-    userspace of an AER error but immediately returns CAN_RECOVER, allowing
-    the kernel's AER recovery state machine to proceed with bus resets
-    while userspace may still be actively accessing the device.
-    
-    Introduce VFIO_PCI_ERR_NOTIFY_IRQ_INDEX, a new IRQ index that userspace
-    can register to opt into a proper error recovery handshake. When
-    registered, the error_detected callback signals the eventfd and waits
-    up to 60 seconds for userspace to acknowledge via VFIO_IRQ_SET_ACTION_UNMASK,
-    giving userspace time to quiesce device access before the kernel proceeds
-    with the reset. After the bus reset completes, the new slot_reset callback
-    signals the same eventfd again so userspace knows the device is ready for
-    reinitialization.
-    
-    The legacy VFIO_PCI_ERR_IRQ_INDEX behavior is preserved unchanged for
-    backward compatibility with existing userspace drivers.
-    
-    Signed-off-by: Keith Busch <kbusch@kernel.org>
+Sashiko notes what appears to be a false positive here, the uAPI states
+ph is to be in the range [0, 3] and nowhere else says that it's allowed
+to be garbage for a clear operation.
 
-diff --git a/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c b/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
-index bb121f635b9f7..cd045003093b7 100644
---- a/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
-+++ b/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
-@@ -1755,6 +1755,7 @@ static const struct pci_error_handlers hisi_acc_vf_err_handlers = {
- 	.reset_prepare = hisi_acc_vf_pci_reset_prepare,
- 	.reset_done = hisi_acc_vf_pci_aer_reset_done,
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- 
- static struct pci_driver hisi_acc_vfio_pci_driver = {
-diff --git a/drivers/vfio/pci/mlx5/main.c b/drivers/vfio/pci/mlx5/main.c
-index de306dee1d1ad..3262918abe5ed 100644
---- a/drivers/vfio/pci/mlx5/main.c
-+++ b/drivers/vfio/pci/mlx5/main.c
-@@ -1444,6 +1444,7 @@ MODULE_DEVICE_TABLE(pci, mlx5vf_pci_table);
- static const struct pci_error_handlers mlx5vf_err_handlers = {
- 	.reset_done = mlx5vf_pci_aer_reset_done,
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- 
- static struct pci_driver mlx5vf_pci_driver = {
-diff --git a/drivers/vfio/pci/nvgrace-gpu/main.c b/drivers/vfio/pci/nvgrace-gpu/main.c
-index fa056b69f899a..6f3472e2ce11a 100644
---- a/drivers/vfio/pci/nvgrace-gpu/main.c
-+++ b/drivers/vfio/pci/nvgrace-gpu/main.c
-@@ -1273,6 +1273,7 @@ static void nvgrace_gpu_vfio_pci_reset_done(struct pci_dev *pdev)
- static const struct pci_error_handlers nvgrace_gpu_vfio_pci_err_handlers = {
- 	.reset_done = nvgrace_gpu_vfio_pci_reset_done,
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- 
- static struct pci_driver nvgrace_gpu_vfio_pci_driver = {
-diff --git a/drivers/vfio/pci/pds/pci_drv.c b/drivers/vfio/pci/pds/pci_drv.c
-index 4923f18231263..50aba9e703ed0 100644
---- a/drivers/vfio/pci/pds/pci_drv.c
-+++ b/drivers/vfio/pci/pds/pci_drv.c
-@@ -174,6 +174,7 @@ static void pds_vfio_pci_aer_reset_done(struct pci_dev *pdev)
- static const struct pci_error_handlers pds_vfio_pci_err_handlers = {
- 	.reset_done = pds_vfio_pci_aer_reset_done,
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- 
- static struct pci_driver pds_vfio_pci_driver = {
-diff --git a/drivers/vfio/pci/qat/main.c b/drivers/vfio/pci/qat/main.c
-index ac9652539d66a..dc83b52162bbf 100644
---- a/drivers/vfio/pci/qat/main.c
-+++ b/drivers/vfio/pci/qat/main.c
-@@ -683,6 +683,7 @@ MODULE_DEVICE_TABLE(pci, qat_vf_vfio_pci_table);
- static const struct pci_error_handlers qat_vf_err_handlers = {
- 	.reset_done = qat_vf_pci_aer_reset_done,
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- 
- static struct pci_driver qat_vf_vfio_pci_driver = {
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index ad52abc46c04d..b2de978ac5221 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -738,8 +738,11 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
- 
- 	vfio_pci_dma_buf_cleanup(vdev);
- 
-+	complete(&vdev->err_notify_ack);
-+
- 	mutex_lock(&vdev->igate);
- 	vfio_pci_eventfd_replace_locked(vdev, &vdev->err_trigger, NULL);
-+	vfio_pci_eventfd_replace_locked(vdev, &vdev->err_notify_trigger, NULL);
- 	vfio_pci_eventfd_replace_locked(vdev, &vdev->req_trigger, NULL);
- 	mutex_unlock(&vdev->igate);
- }
-@@ -785,7 +788,8 @@ static int vfio_pci_get_irq_count(struct vfio_pci_core_device *vdev, int irq_typ
- 
- 			return (flags & PCI_MSIX_FLAGS_QSIZE) + 1;
- 		}
--	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX) {
-+	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX ||
-+		   irq_type == VFIO_PCI_ERR_NOTIFY_IRQ_INDEX) {
- 		if (pci_is_pcie(vdev->pdev))
- 			return 1;
- 	} else if (irq_type == VFIO_PCI_REQ_IRQ_INDEX) {
-@@ -2105,6 +2109,7 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
- 		return ret;
- 	INIT_LIST_HEAD(&vdev->dmabufs);
- 	init_rwsem(&vdev->memory_lock);
-+	init_completion(&vdev->err_notify_ack);
- 	xa_init(&vdev->ctx);
- 
- 	return 0;
-@@ -2242,16 +2247,53 @@ pci_ers_result_t vfio_pci_core_aer_err_detected(struct pci_dev *pdev,
- {
- 	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
- 	struct vfio_pci_eventfd *eventfd;
-+	unsigned long timeout;
-+
-+	rcu_read_lock();
-+	eventfd = rcu_dereference(vdev->err_notify_trigger);
-+	if (!eventfd) {
-+		eventfd = rcu_dereference(vdev->err_trigger);
-+		if (eventfd)
-+			eventfd_signal(eventfd->ctx);
-+		rcu_read_unlock();
-+		return PCI_ERS_RESULT_CAN_RECOVER;
-+	}
-+
-+	reinit_completion(&vdev->err_notify_ack);
-+	eventfd_signal(eventfd->ctx);
-+	rcu_read_unlock();
-+
-+	timeout = wait_for_completion_timeout(&vdev->err_notify_ack,
-+					      msecs_to_jiffies(60000));
-+	if (!timeout) {
-+		pci_warn(pdev, "vfio error handler timed out waiting for userspace ack\n");
-+		return PCI_ERS_RESULT_CAN_RECOVER;
-+	}
- 
- 	rcu_read_lock();
--	eventfd = rcu_dereference(vdev->err_trigger);
-+	eventfd = rcu_dereference(vdev->err_notify_trigger);
-+	rcu_read_unlock();
-+	if (!eventfd)
-+		return PCI_ERS_RESULT_CAN_RECOVER;
-+
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
-+
-+pci_ers_result_t vfio_pci_aer_slot_reset(struct pci_dev *pdev)
-+{
-+	struct vfio_pci_core_device *vdev = dev_get_drvdata(&pdev->dev);
-+	struct vfio_pci_eventfd *eventfd;
-+
-+	rcu_read_lock();
-+	eventfd = rcu_dereference(vdev->err_notify_trigger);
- 	if (eventfd)
- 		eventfd_signal(eventfd->ctx);
- 	rcu_read_unlock();
- 
--	return PCI_ERS_RESULT_CAN_RECOVER;
-+	return PCI_ERS_RESULT_RECOVERED;
- }
--EXPORT_SYMBOL_GPL(vfio_pci_core_aer_err_detected);
-+EXPORT_SYMBOL_GPL(vfio_pci_aer_slot_reset);
- 
- int vfio_pci_core_sriov_configure(struct vfio_pci_core_device *vdev,
- 				  int nr_virtfn)
-@@ -2317,6 +2359,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_sriov_configure);
- 
- const struct pci_error_handlers vfio_pci_core_err_handlers = {
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- EXPORT_SYMBOL_GPL(vfio_pci_core_err_handlers);
- 
-diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-index 33944d4d9dc43..d3a32d3695f0a 100644
---- a/drivers/vfio/pci/vfio_pci_intrs.c
-+++ b/drivers/vfio/pci/vfio_pci_intrs.c
-@@ -811,6 +811,31 @@ static int vfio_pci_set_err_trigger(struct vfio_pci_core_device *vdev,
- 					       count, flags, data);
- }
- 
-+static int vfio_pci_set_err_notify_trigger(struct vfio_pci_core_device *vdev,
-+					   unsigned index, unsigned start,
-+					   unsigned count, uint32_t flags,
-+					   void *data)
-+{
-+	if (index != VFIO_PCI_ERR_NOTIFY_IRQ_INDEX || start != 0 || count > 1)
-+		return -EINVAL;
-+
-+	return vfio_pci_set_ctx_trigger_single(vdev,
-+					       &vdev->err_notify_trigger,
-+					       count, flags, data);
-+}
-+
-+static int vfio_pci_set_err_notify_unmask(struct vfio_pci_core_device *vdev,
-+					  unsigned index, unsigned start,
-+					  unsigned count, uint32_t flags,
-+					  void *data)
-+{
-+	if (index != VFIO_PCI_ERR_NOTIFY_IRQ_INDEX || start != 0 || count != 0)
-+		return -EINVAL;
-+
-+	complete(&vdev->err_notify_ack);
-+	return 0;
-+}
-+
- static int vfio_pci_set_req_trigger(struct vfio_pci_core_device *vdev,
- 				    unsigned index, unsigned start,
- 				    unsigned count, uint32_t flags, void *data)
-@@ -864,6 +889,18 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
- 			break;
- 		}
- 		break;
-+	case VFIO_PCI_ERR_NOTIFY_IRQ_INDEX:
-+		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
-+		case VFIO_IRQ_SET_ACTION_TRIGGER:
-+			if (pci_is_pcie(vdev->pdev))
-+				func = vfio_pci_set_err_notify_trigger;
-+			break;
-+		case VFIO_IRQ_SET_ACTION_UNMASK:
-+			if (pci_is_pcie(vdev->pdev))
-+				func = vfio_pci_set_err_notify_unmask;
-+			break;
-+		}
-+		break;
- 	case VFIO_PCI_REQ_IRQ_INDEX:
- 		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
- 		case VFIO_IRQ_SET_ACTION_TRIGGER:
-diff --git a/drivers/vfio/pci/virtio/main.c b/drivers/vfio/pci/virtio/main.c
-index d2e5cbca13c85..8ca48140d0f0c 100644
---- a/drivers/vfio/pci/virtio/main.c
-+++ b/drivers/vfio/pci/virtio/main.c
-@@ -212,6 +212,7 @@ static void virtiovf_pci_aer_reset_done(struct pci_dev *pdev)
- static const struct pci_error_handlers virtiovf_err_handlers = {
- 	.reset_done = virtiovf_pci_aer_reset_done,
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- 
- static struct pci_driver virtiovf_pci_driver = {
-diff --git a/drivers/vfio/pci/xe/main.c b/drivers/vfio/pci/xe/main.c
-index 4ecadbbfd86ec..f7158d3913740 100644
---- a/drivers/vfio/pci/xe/main.c
-+++ b/drivers/vfio/pci/xe/main.c
-@@ -143,6 +143,7 @@ static const struct pci_error_handlers xe_vfio_pci_err_handlers = {
- 	.reset_prepare = xe_vfio_pci_reset_prepare,
- 	.reset_done = xe_vfio_pci_reset_done,
- 	.error_detected = vfio_pci_core_aer_err_detected,
-+	.slot_reset = vfio_pci_aer_slot_reset,
- };
- 
- static int xe_vfio_pci_open_device(struct vfio_device *core_vdev)
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 2ebba746c18f7..74ede0c9f7bd4 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -131,6 +131,8 @@ struct vfio_pci_core_device {
- 	struct pci_saved_state	*pm_save;
- 	int			ioeventfds_nr;
- 	struct vfio_pci_eventfd __rcu *err_trigger;
-+	struct vfio_pci_eventfd __rcu *err_notify_trigger;
-+	struct completion	err_notify_ack;
- 	struct vfio_pci_eventfd __rcu *req_trigger;
- 	struct eventfd_ctx	*pm_wake_eventfd_ctx;
- 	struct list_head	dummy_resources_list;
-@@ -191,6 +193,7 @@ void vfio_pci_core_finish_enable(struct vfio_pci_core_device *vdev);
- int vfio_pci_core_setup_barmap(struct vfio_pci_core_device *vdev, int bar);
- pci_ers_result_t vfio_pci_core_aer_err_detected(struct pci_dev *pdev,
- 						pci_channel_state_t state);
-+pci_ers_result_t vfio_pci_aer_slot_reset(struct pci_dev *pdev);
- ssize_t vfio_pci_core_do_io_rw(struct vfio_pci_core_device *vdev, bool test_mem,
- 			       void __iomem *io, char __user *buf,
- 			       loff_t off, size_t count, size_t x_start,
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 5de618a3a5eee..9ce3d17c6d755 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -645,6 +645,7 @@ enum {
- 	VFIO_PCI_MSIX_IRQ_INDEX,
- 	VFIO_PCI_ERR_IRQ_INDEX,
- 	VFIO_PCI_REQ_IRQ_INDEX,
-+	VFIO_PCI_ERR_NOTIFY_IRQ_INDEX,
- 	VFIO_PCI_NUM_IRQS
- };
- 
---
+> +
+> +	dmabuf = dma_buf_get(set_tph.dmabuf_fd);
+> +	if (IS_ERR(dmabuf))
+> +		return PTR_ERR(dmabuf);
+> +
+> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops) {
+> +		ret = -EINVAL;
+> +		goto out_put;
+> +	}
+> +
+> +	priv = dmabuf->priv;
+> +	if (priv->vdev != vdev) {
+> +		ret = -EINVAL;
+> +		goto out_put;
+> +	}
+
+Sashiko notes this may need READ_ONCE()/WRITE_ONCE() semantics, but
+that may get fixed as part of the resv lock usage.
+
+> +
+> +	scoped_guard(mutex, &priv->tph_lock) {
+> +		priv->tph_st = set_tph.steering_tag;
+> +		priv->tph_st_ext = set_tph.steering_tag_ext;
+> +		priv->tph_ph = set_tph.ph;
+> +		priv->tph_st_valid = !!(set_tph.flags & VFIO_DMA_BUF_TPH_ST);
+> +		priv->tph_st_ext_valid =
+> +			!!(set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT);
+> +	}
+> +	ret = 0;
+> +
+> +out_put:
+> +	dma_buf_put(dmabuf);
+> +	return ret;
+> +}
+> +
+>  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
+>  {
+>  	struct vfio_pci_dma_buf *priv;
+...
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 5de618a3a5ee..0ca26721849b 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+> @@ -1534,6 +1534,51 @@ struct vfio_device_feature_dma_buf {
+>   */
+>  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+>  
+> +/**
+> + * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) metadata
+> + * with a vfio-exported dma-buf. The dma-buf must have been created by
+> + * VFIO_DEVICE_FEATURE_DMA_BUF on this device, and the device must expose the
+> + * TPH Extended Capability (otherwise the ioctl returns -EOPNOTSUPP).
+> + *
+> + * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA_BUF.
+> + *
+> + * 8-bit ST (steering_tag) and 16-bit Extended ST (steering_tag_ext) are
+> + * distinct namespaces in the PCIe TPH ST table and may both be present with
+> + * different values. Userspace should populate the value(s) it has from the
+> + * firmware ST table for this device and set the matching VFIO_DMA_BUF_TPH_ST /
+> + * VFIO_DMA_BUF_TPH_ST_EXT bit in @flags. An importer requests a specific
+> + * width and receives the matching value; if the requested width is not
+> + * present, the importer is told TPH is unavailable for this dma-buf.
+> + *
+> + * This publishes the PCI SIG-defined ST/PH tuple for a VFIO-owned PCIe
+> + * completer. The dma-buf core treats the tuple as opaque completer-owned
+> + * metadata; an importer simply requests the namespace it supports and places
+> + * the returned value on generated TLPs.
+> + *
+> + * @flags == 0 clears any previously published metadata.
+
+This is overselling the invalidation.  It only flags the fields as
+invalid for future get_tph() requests, it does nothing to clear
+previously published metadata from importers.  Thanks,
+
+Alex
+
+
+> + *
+> + * ph is the 2-bit TLP Processing Hint and must be in the range [0, 3].
+> + *
+> + * Userspace is responsible for setting TPH on the dma-buf before handing the
+> + * fd to the importer. Calling SET again replaces the previously published
+> + * values; racing a SET against an importer that is already consuming the
+> + * dma-buf is a userspace ordering problem.
+> + *
+> + * Return: 0 on success, -errno on failure.
+> + */
+> +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
+> +
+> +#define VFIO_DMA_BUF_TPH_ST		(1 << 0)  /* steering_tag valid */
+> +#define VFIO_DMA_BUF_TPH_ST_EXT		(1 << 1)  /* steering_tag_ext valid */
+> +
+> +struct vfio_device_feature_dma_buf_tph {
+> +	__s32	dmabuf_fd;
+> +	__u32	flags;
+> +	__u16	steering_tag_ext;
+> +	__u8	steering_tag;
+> +	__u8	ph;
+> +};
+> +
+>  /* -------- API for Type1 VFIO IOMMU -------- */
+>  
+>  /**
+
