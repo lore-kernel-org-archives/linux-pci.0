@@ -1,198 +1,178 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBC923E44F0
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 19:26:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71E11346E7A;
+	Tue,  9 Jun 2026 19:38:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781033169; cv=none; b=N8L/aRBD2z+SmfbzcShT02O5C6F4175tT7J+w2D/luUsYL5ovhJt+e15lJEWvvUJrH8rAZuZbHorQVq8Vbjxa2NOHSpR6yH4UyA1/MYVZTXY0SrIOoitjq1K270lOB1WeLUSdD5AC7ITMHGAdM3lsr058mpstW8l3/bXv33K0qY=
+	t=1781033920; cv=none; b=HK+oOQZbe+l7WqeBdp5MfPsRyal303eamJFc+NhLJ1lataNNuWkqsFa4F2Zm3SgFnzdZd5MVh4crsDHAD0+mRn9Bk+RyW12vMGZsnkov21hheuo8krXLJVh7zQ4R2IrxB8d47gToMX1XddWeI5O3ZIP5CUQPYJIlNGfH4XwbXVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781033169; c=relaxed/simple;
-	bh=hUdS7/5D3n0KgikjBBkEhD+OHIyfzqMZYiz35QP0l64=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=atLEuu6MfJh4HVjMoytFpHSwjjabllyPUp0q/9UUSxoJueurOqdEbPtKMZXBA7hjOQxAorwC+ayLwVSNq2nDYOVnhMT5I9AzVGhCtv2DO0QxQAjsICeguS8P0tEu/zx5mGOuO/WiSexVs/Iq7UY21BqohlTYvteZzcnX+Yn2JSw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MntNxBDX; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1781033920; c=relaxed/simple;
+	bh=KEmtf101ZMIJ0jpmSMTIacoCWDu2qiGGkHnUjRVZkz4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=rEx2PBTWQazzJPLRvVdVJ0r1aFjb8FHGJn9bKhH0/nRYECWreWu2Yf5F9fDqlj52oubMHlYT7Atm8Lzbo/gL7jwZ5sAVDbHwDnQSTjeTfsWhrcCzdmwfjKn5JQXVOG3/3U2PYFZN3szRwfiaeRcri0wkIcIFN4T9jGpN2fbMUrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ny7mzlMr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MntNxBDX"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2c0b1a48855so552205ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 12:26:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781033167; x=1781637967; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=vpDQMG3B/X+zmrU+8qfo8gbz7yy+2Hc3r+dRrwN0wsk=;
-        b=MntNxBDXMVKekIS6eA+gJxuEbidNrNKIfeshL0WnIVq5rS2yhDIcvT+SnQU9QbT301
-         25q0Dt0El9GPLb/JtdqVPITJSTvDpKTXWZmncNKIb1ESKZr3bRebipXoc3zSaZLq/ixs
-         XZjDxnRN9jmOFwd9mUskz1/lin0W/aJ+TDuJuMC7xKTipZUeBswzFm0V0EfiDkR0h2/T
-         NLiL67Lctvgm2O57L+fZG11XKsj1XvZvLvvftbBcj0Wsn86uJrnGaEjbst8GtoFJUY6M
-         DF9ZiUVrU/O+kAl5c8Lk59DQcwdlVy4y5E6N5tIOgbt10NpmWxziHdhIpDAjpiQJew3Z
-         I/gg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781033167; x=1781637967;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vpDQMG3B/X+zmrU+8qfo8gbz7yy+2Hc3r+dRrwN0wsk=;
-        b=Q7iz7oS4Qi1/qgYUGok5BXnFoioTTO0+kbf0OQdFFJPT6sLkUhdDze0gSCKzTCf5Oc
-         138vQxxXHMtIgD2lKE/mcvwFI7pFgHU8zfW9Sqr6jOD4Ko33f/+aKukcVBRHNoxhg25y
-         ngPz6XGNqNBEu9j9ngJem55AFZYwKOKvWigRqDS/WqkOIbC9XIae7Hsip48bafo1qdqS
-         yQVbkU73R9Bb46hS+0QSxJPGYhCuczNqfN9BYyZpnhk4mDTXk5sTRuvX/a+Bm2Mm3iTI
-         8Lh0yiMNka2pLVxwNdhWbaTnIUDtPO7fRHJ4Rc9nJU/ek3OZuGPUCJwKJBsu0yjur2yg
-         3n9g==
-X-Forwarded-Encrypted: i=1; AFNElJ/3QrUBq1X3G/o1DCacqfivHw5gh4hg65wQ4SbSh1Brz0sld8k9hW1mkoRtNC1PRtLID3DwOKPLxGM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwE/y+pxz4MBC+0UCq5SDvGS8xVlj/W9/rCYgFh0xLlKp50H+1t
-	XJ2CeZWc6xAsqslBoxLYGsWhqmTLeK5EC50hcL5tiXfIeslmTbQ8n7y42R0icyor+g==
-X-Gm-Gg: Acq92OEuLM9cJsI/M9roP89mrT1G96Umt6CcepxnqTeO/w5kwvc2AOEI3UcBy3/BGDj
-	i0R+aL23sLcVjDr8HFRrwH3flXeViuadxAfC5nBe1TGhTuqzGWRx2k6uSNMzXFh5JcceCFZY+PE
-	jUl3vnvENOJpBAN97uAvR1g95or3ujfbXjgnwB8gcwvT6pnVmCGZ9yR3l+e6ReI99QVeYxRRAzI
-	tzjFoB1B9Z65ajt2mnGwRh6CO1XH3b5B6dJJe1nu5SfF/LK6EhWcj6o0024UXIHmhKCFUlMAtc3
-	jVxqFJFLOEfZ4WGicnYput4O3NSyt3CxGcJ+nQwz7oZfCWsNc6UNeKuKEgPD4Nay4s1X+SfX0ZM
-	2GDaFRGSBuzpgObSNgga7pdiVtB5Fa9m68UR20+OnTZUaFYNMeWU+YzKYTjuWfcSw3Ce1kMHmDV
-	+nbcBJKxQvoNkYcDxOTC992qmC5ZKorG5Hn9Q7z1IMxqCw8nE6/xp4rO8qiLUnn5pqtmABczw=
-X-Received: by 2002:a17:903:19ed:b0:2bf:3579:cdaa with SMTP id d9443c01a7336-2c1eb942782mr8088245ad.10.1781033166370;
-        Tue, 09 Jun 2026 12:26:06 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8428237430esm20445672b3a.21.2026.06.09.12.26.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 12:26:05 -0700 (PDT)
-Date: Tue, 9 Jun 2026 19:25:56 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 08/12] PCI: liveupdate: Inherit ACS flags in incoming
- preserved devices
-Message-ID: <aihoxGlb-ruwAaWC@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-9-dmatlack@google.com>
- <aiXWmR-ettxin4LC@google.com>
- <aic6mdiZ0qUJpFca@google.com>
- <aihLTgs1Y49OXQaV@google.com>
- <CALzav=dagHvcS8kbTti5rmMoks9DXuCpO3AjptkQ8z_PdG9JyQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ny7mzlMr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D337F1F00893;
+	Tue,  9 Jun 2026 19:38:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781033919;
+	bh=XPHGM0EGRSSY/Vy8eoWWttPOeuJ+XBDhfAa5o4+g8Sg=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=Ny7mzlMrbHxebg5xp2gHjvAYhkJI01uzJ+ouzby6qT7y1pViGH+4HhN3VO90rOnqN
+	 OLvd16IRq2uR9vJ0LJoGlfBslukL1uZAv434N4XtLfrfEW1jD+C8d3HprQRzo+Ji4D
+	 whC71dm75hgy+Ed5uAXqstfnMuA1IJMCcrgcZLEiQHSYxtxksZc2X61v8qMlX1CYeg
+	 q72g+JIrElHNwaSUYv56fxBATu9jFOhSbISPXK0JnAIAIFxDo9CIrCjzmVvSf6RnjB
+	 hU5sl/5T/jnaDA4Pd9ZSmX6j2ZU/UzwYKXAkNiJFetjyL9fQG6kngC6foFbKZUd9Qp
+	 tq+sH9lZ+B7pA==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 4/5] vfio/pci: implement get_tph and DMA_BUF_TPH
+ feature
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhiping Zhang" <zhipingz@meta.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260608185646.4085127-5-zhipingz@meta.com>
+References: <20260608185646.4085127-5-zhipingz@meta.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 09 Jun 2026 19:38:38 +0000
+Message-Id: <20260609193838.D337F1F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CALzav=dagHvcS8kbTti5rmMoks9DXuCpO3AjptkQ8z_PdG9JyQ@mail.gmail.com>
 
-On Tue, Jun 09, 2026 at 11:40:39AM -0700, David Matlack wrote:
-> On Tue, Jun 9, 2026 at 10:20 AM Pranjal Shrivastava <praan@google.com> wrote:
-> >
-> > On Mon, Jun 08, 2026 at 09:56:41PM +0000, David Matlack wrote:
-> > > On 2026-06-07 08:37 PM, Pranjal Shrivastava wrote:
-> > > > On Fri, May 22, 2026 at 08:24:06PM +0000, David Matlack wrote:
-> > > > > Inherit Access Control Services (ACS) flags on all incoming preserved
-> > > > > devices (endpoints and upstream bridges) during a Live Update.
-> > > > >
-> > > > > Inheriting ACS flags avoids changing routing rules while memory
-> > > > > transactions are in flight from preserved devices. This is also strictly
-> > > > > necessary to ensure that IOMMU group assignments do not change across
-> > > > > a Live Update for preserved devices, as changing ACS configurations can
-> > > > > split or merge IOMMU groups.
-> > > > >
-> > > > > Cache the inherited ACS controls established by the previous kernel in
-> > > > > struct pci_dev so that ACS controls do not change after a reset
-> > > > > (pci_restore_state() calls pci_enable_acs()).
-> > > > >
-> > > > > To simplify ACS inheritance, reject preserving any devices that require
-> > > > > quirks to enable ACS as those quirks would also have to take Live Update
-> > > > > into account.
-> > > > >
-> > > > > Signed-off-by: David Matlack <dmatlack@google.com>
-> > > > > ---
-> > > > >  drivers/pci/liveupdate.c       | 68 ++++++++++++++++++++++++++++++++++
-> > > > >  drivers/pci/liveupdate.h       | 11 ++++++
-> > > > >  drivers/pci/pci.c              |  5 +++
-> > > > >  drivers/pci/pci.h              |  5 +++
-> > > > >  drivers/pci/quirks.c           |  7 ++++
-> > > > >  include/linux/pci_liveupdate.h |  6 +++
-> > > > >  6 files changed, 102 insertions(+)
-> > > > >
-> > > >
-> > > > [...]
-> > > >
-> > > > >
-> > > > > +void pci_liveupdate_init_acs(struct pci_dev *dev)
-> > > > > +{
-> > > > > + guard(rwsem_read)(&pci_liveupdate.rwsem);
-> > > > > +
-> > > > > + if (!dev->acs_cap || !dev->liveupdate.incoming)
-> > > > > +         return;
-> > > > > +
-> > > > > + pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL, &dev->liveupdate.acs_ctrl);
-> > > >
-> > > > I might be thinking out loud here, but as an attacker, this motivates me
-> > > > to somehow hack the EP FW to mis-report the PCI_ACS_CTRL register across
-> > > > a liveupdate to fool the incoming kernel. If the FW feeds a 0, it silently
-> > > > strips ACS protections.
-> > > >
-> > > > Should we also serialize ACS state in ser somehow to ensure we aren't
-> > > > fooled by something like this?
-> > >
-> > > What does "EP FW" mean?
-> >
-> > I was referring to the Endpoint Firmware (basically any SW running on
-> > a downstream device)
-> >
-> > >
-> > > Does such an attacker even need Live Update to attack the system? It
-> > > seems like such an attacker could route TLPs in whatever malicious way
-> > > they want regardless of Live Update.
-> > >
-> >
-> > I agree that compromised PCIe devices are a menace anyway. But I was
-> > talking about the potential window opened up by Live Update here,
-> > suppose we have Device A & B assigned to 2 different VMs (implying they
-> > are in separate IOMMU groups because the switch set ACS_RR = 1).
-> >
-> > Now, the attacker has an opportunity with Liveupdate, since the devices
-> > are already assigned, if *somehow* it flips a bit like ACS_RR, the
-> > incoming kernel might see both the devices in the same IOMMU group.
-> > Who detects this case and what happens if this happens if the devices
-> > are kept assigned to these VMs?
-> 
-> I suspect that would be caught during the restore of the iommufds to
-> which those devices are attached.
-> 
-> The kernel would attempt to restore each device into a separate domain
-> (since that's how they were preserved before the Live Update) but that
-> will fail because they are in the same group now. Even if one of the
-> devices was not preserved, that will still cause a failure when a user
-> tries to start using that device (e.g. to try to attach it to a
-> different VM).
+Thank you for your contribution! Sashiko AI review found 3 potential issue(=
+s) to consider:
+- [Medium] Unconditional validation of the flag-gated `ph` parameter causes=
+ valid requests clearing metadata to be rejected.
+- [Low] Mixing `goto`-based error handling with scope-based cleanup helpers=
+ (`scoped_guard`) in the same function.
+- [Low] Unprotected read of `priv->vdev` races with concurrent write to `NU=
+LL`.
+--
 
-Yes, IOMMU would eventually catch-up but what about the DMAs that were
-done already? Say to an NVMe disk? We'll have to wipe the entire disk in
-such a case? Also, we wouldn't know the offending device..
+commit f7be31969e4c92a551932ef245b8d9697e571272
+Author: Zhiping Zhang <zhipingz@meta.com>
 
-If such situations aren't a problem, then I guess it's fine.
+vfio/pci: implement get_tph and DMA_BUF_TPH feature
 
-Thanks,
-Praan
+This commit implements the dma-buf get_tph callback for vfio-pci-exported
+dma-bufs. It also adds the VFIO_DEVICE_FEATURE_DMA_BUF_TPH feature to allow
+userspace to attach TPH metadata to a dma-buf.
 
+> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
+ci_dmabuf.c
+> index 1a177ce7de546..f1bc3733d3db5 100644
+> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
+> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
+[ ... ]
+> @@ -327,12 +358,71 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_c=
+ore_device *vdev, u32 flags,
+[ ... ]
+> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
+> +				      u32 flags,
+> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
+> +				      size_t argsz)
+> +{
+> +	struct vfio_device_feature_dma_buf_tph set_tph;
+> +	struct vfio_pci_dma_buf *priv;
+> +	struct dma_buf *dmabuf;
+> +	int ret;
+> +
+> +	if (!pcie_tph_supported(vdev->pdev))
+> +		return -EOPNOTSUPP;
+> +
+> +	ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
+> +				 sizeof(set_tph));
+> +	if (ret !=3D 1)
+> +		return ret;
+> +
+> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
+> +		return -EFAULT;
+> +
+> +	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
+> +		return -EINVAL;
+> +
+> +	/* PCIe TLP Processing Hint is a 2-bit field. */
+> +	if (set_tph.ph & ~0x3)
+> +		return -EINVAL;
+
+[Severity: Medium]
+Will this unconditionally reject requests clearing the metadata?
+
+The documentation mentions that setting flags to 0 clears previously publis=
+hed
+metadata. However, because this check is evaluated unconditionally, userspa=
+ce
+leaving the ph field uninitialized (containing stack garbage) when passing
+flags =3D 0 will cause the kernel to erroneously reject a valid clear reque=
+st
+with -EINVAL.
+
+Should this validation only occur if the relevant flags are set?
+
+> +
+> +	dmabuf =3D dma_buf_get(set_tph.dmabuf_fd);
+> +	if (IS_ERR(dmabuf))
+> +		return PTR_ERR(dmabuf);
+> +
+> +	if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
+> +		ret =3D -EINVAL;
+> +		goto out_put;
+> +	}
+> +
+> +	priv =3D dmabuf->priv;
+> +	if (priv->vdev !=3D vdev) {
+
+[Severity: Low]
+Does this unprotected read of priv->vdev race with concurrent unbound opera=
+tions?
+
+In vfio_pci_dma_buf_cleanup(), there is a concurrent write setting=20
+priv->vdev =3D NULL under the vdev->memory_lock semaphore.
+
+Since this read occurs without locks, can it race with the concurrent write
+and cause KCSAN warnings or load tearing? Would using READ_ONCE() here and
+WRITE_ONCE() in vfio_pci_dma_buf_cleanup() help prevent this?
+
+> +		ret =3D -EINVAL;
+> +		goto out_put;
+> +	}
+> +
+> +	scoped_guard(mutex, &priv->tph_lock) {
+> +		priv->tph_st =3D set_tph.steering_tag;
+> +		priv->tph_st_ext =3D set_tph.steering_tag_ext;
+> +		priv->tph_ph =3D set_tph.ph;
+> +		priv->tph_st_valid =3D !!(set_tph.flags & VFIO_DMA_BUF_TPH_ST);
+> +		priv->tph_st_ext_valid =3D
+> +			!!(set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT);
+> +	}
+> +	ret =3D 0;
+> +
+> +out_put:
+
+[Severity: Low]
+Is it okay to mix goto-based error handling and scope-based cleanup helpers=
+ in
+this function?
+
+The kernel cleanup guidelines discourage mixing goto labels for cleanup (li=
+ke
+goto out_put here) and scoped_guard() in the same function to avoid confusi=
+ng
+ownership semantics.
+
+Would it be better to either use a __free() wrapper for the dmabuf or stick=
+ to
+traditional mutex_lock()/mutex_unlock() here?
+
+> +	dma_buf_put(dmabuf);
+> +	return ret;
+> +}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260608185646.4085=
+127-1-zhipingz@meta.com?part=3D4
