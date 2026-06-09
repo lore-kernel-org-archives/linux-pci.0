@@ -1,176 +1,214 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 758793644A6
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 17:20:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 313613E009D
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 17:28:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781025628; cv=none; b=ndNHBxz5O5ztrsbkrfG3Yhvp7WZE2xiarJOupKPLJkZh5OHWqR05IFncjFfsK7234Ljljv+V+mogJ3Y8/jPQvE9w5BL7mawA3gxc6MW8TZ7wC+vMzrz7wKvllJqpP7zGg9Q8HeheW7U8pvkj2W+/Zj8gi5+HOXiXhKUvKTbSz4k=
+	t=1781026122; cv=none; b=mTRI0of06K4iPfU5PMJ9BlkVBxGzOF7ARi6fXvgvOFqBRZGgHe8W3aXR3eKN5VCXZvr5LvDUCti7Bbc1/gwwPRrbIu5ypHVgpImbUCQDug0IB5i5wWn5JtJ+/tXUBAyqNHvJvbOk7wijdeigM+/zhnkVZewywIoJq036DDSZ/K8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781025628; c=relaxed/simple;
-	bh=TK2+t/up9BNHR7cWnWPkUKbCONbG+0KU9N82d806Hmo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t4cfGS/SMQW/giccXjOmtOxFHd5XscbZJZlPVYhMP9/IISdfVUErRxWSn4jo7IrCBsk+pbWLg/Pihd6RVdyLZ4hODEX8NL4nBncI0S2OD/ZSyi8KXn5CXmJnYj4f83/zJo9XgLTp4xr0ctpm6KfdkSEy/D0oC+FNAiOwJ/5lqCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=LAtm0tOB; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1781026122; c=relaxed/simple;
+	bh=yXrIZoZTgc7TZlMyCfpbe5d2gymUoXsSJqc1OPlY+zQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=g8UQjlAVrAXOwL62JLtUb8qj45FEMG5J2lsC/Rp9eOZmNbdWSth29dC3CijASeMwth3crdjisZQ8CyAKaM3C2lZ/0wZbtAPAMizO0D0NiVs08eoCdH6Jo0Tn6CJsE3Lj1pzydXMFZ/zrB6MBWw/4JJ6+mOPprwuKeXteNG3hUyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C+mqgeXp; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LAtm0tOB"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2bf2911f93cso461945ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 10:20:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781025625; x=1781630425; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=01u/8EAi6NGn4gFgEAFXoW9+VQRDowjxcP1j39dvRbk=;
-        b=LAtm0tOBO31AXYeLi+UB/W5ChfPBv3oU+N91irOeaQv2UaSvc4ibQqfOhFM2llBMnq
-         9c+zb+lQb1MJoHIvMgh5a2fef7nDaqbOF/tV7o412PzQUtKoHlqpD81ryv0GWb6TtyNU
-         KxiGVOXcdiwTR1UK/SoPG9h9psrI4i3uoRBXBL3hTf1kSwY21797gp4coe3iLLzL9JB6
-         QXRhFmgnggvxP05kngC+5yWNlQuPldM81OBlBnScOp3j8gm9eVcmeiLnEM8SruNTfe9h
-         e82pHa1gA7J6PxbVTQr9HwTAPTe7v1x0eLnFc+SDiR7R/GoPIBE9+qO0CLvRTWg5ZYpy
-         LIlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781025625; x=1781630425;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=01u/8EAi6NGn4gFgEAFXoW9+VQRDowjxcP1j39dvRbk=;
-        b=gDCeedbCTb7wmaxBz3UCjyNSjkiarKDPfo4IV4LtDPmi0TYNRT944bFH3DZfMLOojV
-         uaEVAAP+FeUzSjUzeyZRJ72vm3ym/JV0U6K+GctgUT877Av6AqzD95mcubYqFBrqG0G9
-         eSLJyrIpeVzBRuvCEf7+E1dem87zjUfIOep0NIkOSn7IdezVbKoMJ696hA1bCcxeA2p8
-         +MEg6KwidGLua372zVEKSOnmKbJj1259hB7TSiSSmVPNmFFSaW6eR62ABK/T0yyncoki
-         6t0v4OS6wYyi7V1XESjFetNVLRrVbjkuuRlV+k/Rj6FDoLq1XWpQo5fFEV7cK13Yawwu
-         RUoA==
-X-Forwarded-Encrypted: i=1; AFNElJ9DpOvqDw76zLdc701wonRu0+lBuq2gHlH974kC5H5rx03t1BeBx/ABlEGJxPE88WFWGr1QgTrMMGo=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy38ZFJQqW1aZFj4wbv3Eod/YfAeXzDNFBnyL4lXbr1QeNONmQO
-	DF4cNgTLzgWBGVvHxnHSZOm9RVVi/UOr4emMy7L8GpEAUpvQc2S7GQPqxnMke9ulR9dYjbCR3dU
-	3/KJBLCKJ
-X-Gm-Gg: Acq92OEYpqo67eNl3PCU30iXLmKIol5/EZTwVxJQO5yCJweWwKwToKRaFt4vF50MRon
-	8MYYCs3kzotasoHJ06bqPkdGgKu5mDBr0dw91lyxtlZG11J2ullGZOJQQh4BrnmKXnKGnaq2O6R
-	UYqC/SicrmnZ3N1XzuCqJXN6FA1aodQ4rBlnYHCXkJf/mzuRmyIQzgnr8MeYobvL5rciYOpn8zj
-	bWhZDmPKWiDOdqbDa8qpHeHd0L6uEdrwaSeLHlxa56zMS3wE6pgrv3i4GmI16R56u/lZtRKekte
-	ViKTMMB8t1FfpRUu6fj57HlI/0YIAqEr6X2/evEMpTtZH+TSD1TsH5JmPLC7u5a8L9hU25oZkg1
-	nj5fRC9nNJ/SGd0b2+mCAaKYfMddSR70Ja5zgxY9mnznNCxkCe2DIIfoMmE4tLvRKIGZYiCoCOB
-	Pqx9ZrMfN+f48WzgzZCmJw8+QqluOSz+Qs7zz4hPpJa4ITcr9i2YbWOJDZ8bhwkXzT8qJXZx4YA
-	AgodQLdTA==
-X-Received: by 2002:a17:902:e744:b0:2bd:907:2ce5 with SMTP id d9443c01a7336-2c1eafbcbdamr9084545ad.7.1781025624007;
-        Tue, 09 Jun 2026 10:20:24 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f6bf827e6sm25059778a91.1.2026.06.09.10.20.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 10:20:23 -0700 (PDT)
-Date: Tue, 9 Jun 2026 17:20:14 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
-	Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 08/12] PCI: liveupdate: Inherit ACS flags in incoming
- preserved devices
-Message-ID: <aihLTgs1Y49OXQaV@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-9-dmatlack@google.com>
- <aiXWmR-ettxin4LC@google.com>
- <aic6mdiZ0qUJpFca@google.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C+mqgeXp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781026120;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lgku0msEV96RCrGT/KIp6NsMANiwS+rjoIorKjF9HvY=;
+	b=C+mqgeXpm1WTA8RbyxKFjumtthMBWRDKx0E/PYE2fZaQcgJCsVgNsBqV+WcN2pte8vXgrr
+	xbqkGEr2MNtG58kT0kEuom+lFltatIXJvzlUxkv64l2YT1LmV9B/Lax8nOF78ZHzmBu4kk
+	jU+NYlOyHjdCROsUk+Yl3HDneCjn2So=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-569-so6cIjY1NDai8mANBw9Ofg-1; Tue,
+ 09 Jun 2026 13:28:33 -0400
+X-MC-Unique: so6cIjY1NDai8mANBw9Ofg-1
+X-Mimecast-MFC-AGG-ID: so6cIjY1NDai8mANBw9Ofg_1781026112
+Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 25CC5180ACFA;
+	Tue,  9 Jun 2026 17:28:32 +0000 (UTC)
+Received: from [10.22.65.187] (unknown [10.22.65.187])
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C3F6536919;
+	Tue,  9 Jun 2026 17:28:30 +0000 (UTC)
+Message-ID: <a5d1a421-ca18-4c8a-9d8f-7432ef96cb9d@redhat.com>
+Date: Tue, 9 Jun 2026 13:28:29 -0400
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aic6mdiZ0qUJpFca@google.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] PCI: Call local_pci_probe() directly if current CPU is
+ in the right node
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+ Frederic Weisbecker <frederic@kernel.org>, Danilo Krummrich
+ <dakr@kernel.org>, Tejun Heo <tj@kernel.org>, driver-core@lists.linux.dev
+References: <20260608195111.GA46568@bhelgaas>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20260608195111.GA46568@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-On Mon, Jun 08, 2026 at 09:56:41PM +0000, David Matlack wrote:
-> On 2026-06-07 08:37 PM, Pranjal Shrivastava wrote:
-> > On Fri, May 22, 2026 at 08:24:06PM +0000, David Matlack wrote:
-> > > Inherit Access Control Services (ACS) flags on all incoming preserved
-> > > devices (endpoints and upstream bridges) during a Live Update.
-> > > 
-> > > Inheriting ACS flags avoids changing routing rules while memory
-> > > transactions are in flight from preserved devices. This is also strictly
-> > > necessary to ensure that IOMMU group assignments do not change across
-> > > a Live Update for preserved devices, as changing ACS configurations can
-> > > split or merge IOMMU groups.
-> > > 
-> > > Cache the inherited ACS controls established by the previous kernel in
-> > > struct pci_dev so that ACS controls do not change after a reset
-> > > (pci_restore_state() calls pci_enable_acs()).
-> > > 
-> > > To simplify ACS inheritance, reject preserving any devices that require
-> > > quirks to enable ACS as those quirks would also have to take Live Update
-> > > into account.
-> > > 
-> > > Signed-off-by: David Matlack <dmatlack@google.com>
-> > > ---
-> > >  drivers/pci/liveupdate.c       | 68 ++++++++++++++++++++++++++++++++++
-> > >  drivers/pci/liveupdate.h       | 11 ++++++
-> > >  drivers/pci/pci.c              |  5 +++
-> > >  drivers/pci/pci.h              |  5 +++
-> > >  drivers/pci/quirks.c           |  7 ++++
-> > >  include/linux/pci_liveupdate.h |  6 +++
-> > >  6 files changed, 102 insertions(+)
-> > > 
-> > 
-> > [...]
-> > 
-> > >  
-> > > +void pci_liveupdate_init_acs(struct pci_dev *dev)
-> > > +{
-> > > +	guard(rwsem_read)(&pci_liveupdate.rwsem);
-> > > +
-> > > +	if (!dev->acs_cap || !dev->liveupdate.incoming)
-> > > +		return;
-> > > +
-> > > +	pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL, &dev->liveupdate.acs_ctrl);
-> > 
-> > I might be thinking out loud here, but as an attacker, this motivates me
-> > to somehow hack the EP FW to mis-report the PCI_ACS_CTRL register across
-> > a liveupdate to fool the incoming kernel. If the FW feeds a 0, it silently
-> > strips ACS protections.
-> > 
-> > Should we also serialize ACS state in ser somehow to ensure we aren't 
-> > fooled by something like this?
-> 
-> What does "EP FW" mean?
 
-I was referring to the Endpoint Firmware (basically any SW running on
-a downstream device)
+On 6/8/26 3:51 PM, Bjorn Helgaas wrote:
+> [+cc Thomas, Frederic, Danilo, Tejun, driver-core]
+>
+> On Sun, Jun 07, 2026 at 06:11:03PM -0400, Waiman Long wrote:
+>> local_pci_probe() and hence pci_call_probe() can be called
+>> recursively.
+> Can we say something about the scenario that results in a recursive
+> call?  Based on the stack trace and the comment below, I guess two of
+> the scenarios are:
+>
+>    - vmd_probe() creates a new hierarchy below the VMD endpoint and
+>      enumerates it.  The pci_bus_add_device() in vmd_enable_domain()
+>      calls .probe() for devices below VMD.
+>
+>    - A PF .probe() calls pci_enable_sriov(), which enables VFs, and the
+>      pci_bus_add_device() in pci_iov_add_virtfn() calls .probe() for
+>      new VFs.
+>
+> Possible commit log text:
+>
+>    local_pci_probe() and hence pci_call_probe() can be called
+>    recursively, e.g., when vmd_probe() calls .probe() for devices in
+>    the new hierarchy below VMD or a PF .probe() enables VFs and calls
+>    .probe() for them.
+Thank for the suggestion. Will incorporate that in the next version.
+>> If the recursive calls are done indirectly via workqueue
+>> kworker, a lockdep recursive warning can be produced.
+> For non-workqueue experts like me, can we mention the reason why the
+> warning only affects the workqueue indirect case?
+>
+> And maybe include a line or two of the actual lockdep warning to help
+> search engines find this?  The stacktrace is good info, but not
+> specific to the warning.
 
-> 
-> Does such an attacker even need Live Update to attack the system? It
-> seems like such an attacker could route TLPs in whatever malicious way
-> they want regardless of Live Update.
-> 
+Will do that in the next version.
 
-I agree that compromised PCIe devices are a menace anyway. But I was
-talking about the potential window opened up by Live Update here,
-suppose we have Device A & B assigned to 2 different VMs (implying they
-are in separate IOMMU groups because the switch set ACS_RR = 1).
+BTW, the lockdep warning is actually a false positive. I will send an 
+alternative fix in the next version.
 
-Now, the attacker has an opportunity with Liveupdate, since the devices
-are already assigned, if *somehow* it flips a bit like ACS_RR, the
-incoming kernel might see both the devices in the same IOMMU group.
-Who detects this case and what happens if this happens if the devices
-are kept assigned to these VMs?
+>> Below is the
+>> stack trace of the lockdep warning on a 4-socket x86-64 Skylake server.
+>>
+>>    <TASK>
+>>      :
+>>    start_flush_work+0x40b/0x9b0
+>>    __flush_work+0xbd/0x1a0
+>>    pci_call_probe+0x510/0x700
+>>    pci_device_probe+0x17c/0x270
+>>    call_driver_probe+0x68/0x1f0
+>>    really_probe+0x197/0x7b0
+>>    __driver_probe_device+0x32d/0x460
+>>    driver_probe_device+0x49/0x120
+>>    __device_attach_driver+0x162/0x290
+>>    bus_for_each_drv+0x109/0x190
+>>    __device_attach+0x1a2/0x3f0
+>>    device_initial_probe+0x7d/0xa0
+>>    pci_bus_add_device+0x93/0xe0
+>>    pci_bus_add_devices+0x83/0x190
+>>    vmd_enable_domain+0x11fb/0x1b80
+>>    vmd_probe+0x34c/0x4b0
+>>    local_pci_probe+0xdf/0x190
+>>    local_pci_probe_callback+0x35/0x80
+>>    process_one_work+0x919/0x1af0
+>>    worker_thread+0x5a6/0xd10
+>>      :
+>>    </TASK>
+>>
+>> The use of work function originally comes from commit 873392ca514f
+>> ("PCI: work_on_cpu: use in drivers/pci/pci-driver.c") to execute the
+>> device probing and allocate memory on the right node where the device
+>> bus is attached to.
+>>
+>> In the case of nested device probing within a work function, the current
+>> CPU is likely to be in the right node already. So there is no point in
+>> scheduling another work function in the same or a neigboring CPU and wait
+>> for its completion. It will be more efficient to call local_pci_probe()
+>> directly when the current CPU is indeed in the right node. That will
+>> also avoid the lockdep warning due to nested calls to schedule and
+>> flush a work function.
+> Out of scope for this patch, but none of the CPU/node selection is
+> PCI-specific, and neither is the housekeeping cpuset and RCU stuff.
+Yes, they are not specific to PCI, but is more related to the proper use 
+of the housekeeping cpumasks.
+>
+> I think this would be improved if we could move the NUMA affinity and
+> async probe scheduling up to the driver core.  There was a little
+> discussion of that here:
+>
+>    https://lore.kernel.org/linux-pci/20251231165503.GA159243@bhelgaas/
 
-Thanks,
-Praan
+Thank for the background info. Will incorporate that in the next 
+version. As for moving the NUMA affinity and the async probe scheduling 
+up to the driver core. I will leave that to other engineers who have 
+more experience in those area.
+
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>   drivers/pci/pci-driver.c | 24 +++++++++++++++++++-----
+>>   1 file changed, 19 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index e3f59001785a..542b22537852 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -375,6 +375,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>>   {
+>>   	int error, node, cpu;
+>>   	struct drv_dev_and_id ddi = { drv, dev, id };
+>> +	bool node_invalid, cpu_in_node = false;
+>> +	const struct cpumask *node_cpus;
+>>   
+>>   	/*
+>>   	 * Execute driver initialization on node where the device is
+>> @@ -383,14 +385,27 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>>   	 */
+>>   	node = dev_to_node(&dev->dev);
+>>   	dev->is_probed = 1;
+>> +	node_invalid = node < 0 || node >= MAX_NUMNODES || !node_online(node);
+>> +	node_cpus = node_invalid ? cpu_online_mask : cpumask_of_node(node);
+>> +
+>> +	/*
+>> +	 * If the current task is a wq kworker activated by queue_work_on()
+>> +	 * below, the kworker is affined to a designated CPU and won't be
+>> +	 * switched to another one. So the current CPU can be checked to see
+>> +	 * if it is in the right node.
+>> +	 */
+>> +	if (current->flags & PF_WQ_WORKER) {
+>> +		cpu_in_node = cpumask_test_cpu(get_cpu(), node_cpus);
+>> +		put_cpu();
+>> +	}
+>>   
+>>   	cpu_hotplug_disable();
+>>   	/*
+>>   	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
+>> -	 * device is probed from work_on_cpu() of the Physical device.
+>> +	 * device is probed from work_on_cpu() of the Physical device or when
+>> +	 * the current CPU is in the desired node.
+> Since we're updating this comment, let's change "Physical device" to
+> "Physical Function" at the same time to match the spec terminology.
+
+Sure. Will make the change.
+
+Cheers,
+Longman
+
