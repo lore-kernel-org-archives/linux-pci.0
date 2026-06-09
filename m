@@ -1,258 +1,196 @@
-Received: from fout-a6-smtp.messagingengine.com (fout-a6-smtp.messagingengine.com [103.168.172.149])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA7132EEE79;
-	Tue,  9 Jun 2026 21:46:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BE7F374A0F
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 22:07:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781041600; cv=none; b=Y7rjfFnlWi6Tq7v+4FkQsL8lTCMERjQzdg4LSZ+lpSINtzefhJhfYX/ZrXGCKN9zLzvUguaIJ6vwOL9EnNylKFRJg1xwPVekVulXfIa/VWomAb1lzDPoY59Ja7FWWUDLay8XG/201mlJH2oCWriZfjQly0mHf7wDgKkm6+qXcVk=
+	t=1781042855; cv=none; b=fR4cmXmZClhi+DHAYeZLff5HvzpnMioLi/pjyQKidm8UILvuffHZNIPrq/FXLBDWAh7TfneySuAQYAyTTe6Z0PsdKNWby83xLfFStAUKvPdtI1klg7hXDzZJna2N1W5FNAQ6/ZHTHke/RRDcpf1njtLhh3W0Y7HwNvIUEFSOQqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781041600; c=relaxed/simple;
-	bh=BsLNVgcsHZe2ZdsnQZYPq8d5+s128ZmNZcF9+xivLx8=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=rxC0w1UQsIb/pML2ncJghJMWtdvf5NaxLYbyvZjux0qeLIV/niM09n+XR9enrBK6NficlZM5ydpAdgbpmiOSpgehlZb53irkxEzn7tUKOJODHUnlr/wrvTH2aEn9eSL1/VwZbznm8VbXw/P74zogt4fxCFUuEpxQCIB6Chrvfu4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=dAXXjj9F; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Qo21B5LF; arc=none smtp.client-ip=103.168.172.149
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1781042855; c=relaxed/simple;
+	bh=eiV6sQiVxbvcvUaNRZjKe5UdB4zuOSF6a78WgZZTalU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Ng/WB5nWmNWi9Z8LsH4a/asBbSYr5/iOOPMwTeb3ltJYlyiVPvD4ZhlYQGnvznzANCe6GgstMa28OsMZzBu11VMdeyDu9beV7xreKNCR2mIHZxy8yRsjyHqxXTgWpPSjrDh0SNiuqvFRJP/goc+hMx0aaf+fLXE/ClUeJ7Bg77M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HfLh3IdF; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="dAXXjj9F";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Qo21B5LF"
-Received: from phl-compute-06.internal (phl-compute-06.internal [10.202.2.46])
-	by mailfout.phl.internal (Postfix) with ESMTP id E59C2EC021C;
-	Tue,  9 Jun 2026 17:46:36 -0400 (EDT)
-Received: from phl-frontend-04 ([10.202.2.163])
-  by phl-compute-06.internal (MEProxy); Tue, 09 Jun 2026 17:46:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1781041596;
-	 x=1781127996; bh=Le4mzZitUOCcD3l+m59chdRcJdHFdgu8c/ZCYemC1C4=; b=
-	dAXXjj9FfExLlbaZ9I2g8ETi3RfKBVVFAjpT64jfIpEeerruRAoxo75VuDeTTOYH
-	C4WRuvCF61il3A6t7Vws5R6SpTeb1fv8D2rNZjTNLKjk15s/tfCHIqvyvQmSYPZM
-	KD0rnyJJ/kdT6YI5kByaNcrVyal5Ck6YJl96vuVv3jRgrNvkprWnUX5FnIU6eqJi
-	sQ4jreWBdxEs9n2gzMPa73E1wHEkoKP6VUDGj6arD4qir6OScDV/cw4Q3I+D55JZ
-	Sve/4zBKcQkY0Opq0utfqXU6SBh9oCwVYW2UHmVHWzn0X8tZZeZ5iYD0Nqv201Wl
-	d5pDFtoa32d4CB/TB+4skQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781041596; x=
-	1781127996; bh=Le4mzZitUOCcD3l+m59chdRcJdHFdgu8c/ZCYemC1C4=; b=Q
-	o21B5LF6+eVL0FrVT//T8T5IHgrmhItN0lO4QjPVCLE+55+XbYzUbECnJYNPnqpU
-	oioIUooojwU//H0OdfrU9N8VGfPuvJs6tmJ3gTZ7oG+3LV/3BCgXj5FNuvzRMBag
-	tm3Ebpy+m/Qyuiuy40/EYivPkRkLM1hMpzrqU0nT5My8eqDFJmfQqvzdjpxR3Qem
-	74fcufgERoS35lQRLdwbMBhabC598IW/uiESIPIod9FPnLtKrh2ZzePOPRjRJgO8
-	dahezYcPhB4IhzpYN0e6TSjqC/KWOyFXT7+QApoFjGly8i5lzGflLanrd/DSIK4j
-	uKQSN0LlNpWkjX8Yyjk7w==
-X-ME-Sender: <xms:vIkoav41sU7sUzGrTPA6Kff5nPOhMu_tjTb6AT9cHRwX6gkJpgJiVQ>
-    <xme:vIkoascAsBg9rjm1TIvDQLPRmo3JsuqYZfKzLN0ep1brQTA-tc4ZUYEbdWsD3z4sh
-    aHIQZtRYOWsFwwwsOypRNiBEEJ5CxLFFgBP3risaH7qSxWeUqtKxg>
-X-ME-Received: <xmr:vIkoamEpwgfC3N0c3HCxtvQF2l3JuR_hnvE96yKATYM1_m9HJ5DCmtEPQLs>
-X-ME-Proxy-Cause: dmFkZTGvUY/GUU1gU7Kcsq7cJWzYPAILCs/dFDD0hst22ThCwBi1vnbQlHAm+Nvcf7Bswg
-    rV++wJ6ac08HqzD/HSLDgPd/SlMmTO3zNwe5YrT/8VO+Q+5wZNBDjXouEW7LFTFvz+RBQ+
-    vlOKXPM6scyo8puzQmKqCveaX9HSJfQ2w2WRB0T912qT5whajjDBx3ext/e3Gh8OY/6MUC
-    L+qEUjjfT1XOZefkH/n5nReGu6UoHEQ6moOujnT8WMFvSnEeVIVESzvcI7l9CFe7ru6XCJ
-    PpRu4o7ejKUdJzxysGMIHOyfkdkThi58pkUt1P6FVOnn+7dGQIaw8N0aLCrRSRmWRM+PMh
-    ikaLjSpPoBdefLsitXogYOQsUUb07nZmsb1VJhDUaUDxH2g0KjaBiKMbZc0jFPjleo2Iyk
-    KfNbodWo8iutszHty+zZo5toIMA1VA6Xnvc8RtbExEfjg/4TDeUq67f9evEtZsA+7fBPzX
-    0VkyVmm2fiI30Vh/OuKtzGGaGTHFiJyglA0jGoi5s3r1MCCtYucoekbpoJMAslDejOBC10
-    QuX+elWdeC9DTHBdmtsu/M7La/kMfxu5OERbW+NMAVyH3lKzW/xMTCUanptzfek4kFoH9n
-    IdQmZJA9vlrGsGhG/KUeVFv+Sy10TDmJQghO7iPWhZhw/IFBIKUt/tPJ4jIw
-X-ME-Proxy: <xmx:vIkoas4j-LUxltDGhE3c2BEzr58JQdPq2sL1nVn3EGkTXjLWeiWMKg>
-    <xmx:vIkoapvaCyVyJiLgHqTcdsrjJPegXxR_V8GvUKpBiytgnbZ4Ik0uDg>
-    <xmx:vIkoag-U3Ty5QcEbjE9wXqfPiARWA8hlGVRxPn2FO4IGKLCUvbzTpw>
-    <xmx:vIkoajmgLfPH9lLOmlpZjWXYSL7XQCMrbH6d9qhFwJ-yNqnrIzRVWw>
-    <xmx:vIkoagld8r8MNa3yFhypdE_45wM3TTznM9aALYwL4tuY1ylX1DrQEkjw>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 9 Jun 2026 17:46:35 -0400 (EDT)
-Date: Tue, 9 Jun 2026 15:46:34 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Zhiping Zhang <zhipingz@meta.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>, Sumit
- Semwal <sumit.semwal@linaro.org>, Christian Konig
- <christian.koenig@amd.com>, Bjorn Helgaas <helgaas@kernel.org>,
- <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <netdev@vger.kernel.org>,
- <dri-devel@lists.freedesktop.org>, Keith Busch <kbusch@kernel.org>, Yochai
- Cohen <yochai@nvidia.com>, Yishai Hadas <yishaih@nvidia.com>,
- alex@shazbot.org
-Subject: Re: [PATCH v6 4/5] vfio/pci: implement get_tph and DMA_BUF_TPH
- feature
-Message-ID: <20260609154634.46ee8328@shazbot.org>
-In-Reply-To: <20260608185646.4085127-5-zhipingz@meta.com>
-References: <20260608185646.4085127-1-zhipingz@meta.com>
-	<20260608185646.4085127-5-zhipingz@meta.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HfLh3IdF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90DCF1F00893;
+	Tue,  9 Jun 2026 22:07:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781042853;
+	bh=8g4pul8M1WeB0Gfbq/12qO8SXWORuMnqYfHM6OxuyWI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=HfLh3IdFdKELLZ5ijylt+nLa8WgqH9H7wEECMkYrzNm2wflKWdTAEGz+a1FDE9j91
+	 HjEnjCjEIjMHojkLRxiP8zHG2CbBWXicXFUJjtjl5QvEwjCdWLGX5SdGs01G3+Zx1y
+	 s7Yxk4Ht6CNWnL46Wn31/VgTp08KzE+TIn0OtZf9sjGyGN6QsJTdlyTjgpF0az21eK
+	 WUgwg6BZ3dkT3UnOxQ+9InHqrGcdttCeGi3/Sk1F5xrU/1P3lva+2/DBwhVlxYxBqs
+	 9Wf7Zfka+WnZvOXu2b49iofCFdAtZDTSFgoo/Hteqxp9EQ94v0zaUQP6jCEr5w8Lvx
+	 BbYU1djC+Wn4g==
+Date: Tue, 9 Jun 2026 17:07:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+	Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+	Vinicius Costa Gomes <vinicius.gomes@intel.com>,
+	linux-pci@vger.kernel.org, qat-linux@intel.com,
+	Damir Chanyshev <conflict342@gmail.com>,
+	Simon Richter <sjr@debian.org>,
+	Tomasz Ossowski <tomasz.ossowski@intel.com>
+Subject: Re: [PATCH v2] PCI/P2PDMA: Add Intel QAT, DSA, IAA devices to
+ whitelist
+Message-ID: <20260609220732.GA131461@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6aac4922b5fe7070b11874427a9285e42ddd05a4.1780585518.git.lukas@wunner.de>
 
-On Mon, 8 Jun 2026 11:56:41 -0700
-Zhiping Zhang <zhipingz@meta.com> wrote:
-> @@ -327,12 +358,71 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
->  err_free_phys:
->  	kfree(priv->phys_vec);
->  err_free_priv:
-> +	mutex_destroy(&priv->tph_lock);
->  	kfree(priv);
->  err_free_ranges:
->  	kfree(dma_ranges);
->  	return ret;
->  }
+On Thu, Jun 04, 2026 at 05:12:08PM +0200, Lukas Wunner wrote:
+> The first device on a PCI root bus determines whether the host bridge is
+> whitelisted for P2PDMA.  All Intel Xeon chips since Ice Lake (ICX, 2021)
+> expose a device with ID 0x09a2 as first device.  It is loosely associated
+> with the IOMMU.  All these Xeon chips support P2PDMA, so since the
+> addition of the device with commit feaea1fe8b36 ("PCI/P2PDMA: Add Intel
+> 3rd Gen Intel Xeon Scalable Processors to whitelist"), P2PDMA has been
+> allowed on all new Xeons without the need to amend the whitelist:
+> 
+> Xeons with Performance Cores:
+>   Sapphire Rapids (SPR, 2023)
+>   Emerald Rapids (EMR, 2023)
+>   Granite Rapids (GNR, 2024)
+>   Diamond Rapids (DMR, 2026)
+> 
+> Xeons with Efficiency Cores:
+>   Sierra Forest (SRF, 2024)
+>   Clearwater Forest (CWF, 2026)
+> 
+> However these Xeons also expose accelerators as first device on a root bus
+> of its own:
+> 
+>   QuickAssist Technology (QAT, crypto & compression accelerator)
+>   Data Streaming Accelerator (DSA, dma engine)
+>   In-Memory Analytics Accelerator (IAA, dma engine)
+> 
+> Whitelist them for P2PDMA as well.  Move their Device ID macros from the
+> accelerator drivers to <linux/pci_ids.h> for reuse by P2PDMA code.
+> 
+> Unfortunately the Device IDs vary across Xeon generations as additional
+> features were added to the accelerators.  This currently necessitates an
+> amendment for each new Xeon chip.
+> 
+> For future chips, this need shall be avoided by an ongoing effort to
+> extend ACPI HMAT with PCIe P2PDMA characteristics (latency, bandwidth,
+> ordering constraints).  The PCI core will be able look up in this
+> BIOS-provided ACPI table whether P2PDMA is supported, instead of relying
+> on a whitelist that needs to be amended continuously.
+> 
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org
+
+Applied to pci/p2pdma for v7.2, thanks!
+
+I changed the IAA description to be "compression accelerator" as
+Vinicius suggested.
+
+> ---
+> Changes v1 -> v2:
+> * Drop code comments associating QAT generation with CPUs because a
+>   QAT generation can go to different CPUs or plug-in cards (Giovanni)
+> 
+> Link to v1:
+> https://lore.kernel.org/r/4ea5265495876beb5fb5e6d479b2782f882bcbb3.1780570508.git.lukas@wunner.de/
+> 
+>  drivers/crypto/intel/qat/qat_common/adf_accel_devices.h |  5 -----
+>  drivers/dma/idxd/registers.h                            |  3 ---
+>  drivers/pci/p2pdma.c                                    | 10 ++++++++++
+>  include/linux/pci_ids.h                                 |  8 ++++++++
+>  4 files changed, 18 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h b/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
+> index 03a4e96..cbd1d1e 100644
+> --- a/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
+> +++ b/drivers/crypto/intel/qat/qat_common/adf_accel_devices.h
+> @@ -28,15 +28,10 @@
+>  #define ADF_4XXX_DEVICE_NAME "4xxx"
+>  #define ADF_420XX_DEVICE_NAME "420xx"
+>  #define ADF_6XXX_DEVICE_NAME "6xxx"
+> -#define PCI_DEVICE_ID_INTEL_QAT_4XXX 0x4940
+>  #define PCI_DEVICE_ID_INTEL_QAT_4XXXIOV 0x4941
+> -#define PCI_DEVICE_ID_INTEL_QAT_401XX 0x4942
+>  #define PCI_DEVICE_ID_INTEL_QAT_401XXIOV 0x4943
+> -#define PCI_DEVICE_ID_INTEL_QAT_402XX 0x4944
+>  #define PCI_DEVICE_ID_INTEL_QAT_402XXIOV 0x4945
+> -#define PCI_DEVICE_ID_INTEL_QAT_420XX 0x4946
+>  #define PCI_DEVICE_ID_INTEL_QAT_420XXIOV 0x4947
+> -#define PCI_DEVICE_ID_INTEL_QAT_6XXX 0x4948
+>  #define PCI_DEVICE_ID_INTEL_QAT_6XXX_IOV 0x4949
 >  
-> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-> +				      u32 flags,
-> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
-> +				      size_t argsz)
-> +{
-> +	struct vfio_device_feature_dma_buf_tph set_tph;
-> +	struct vfio_pci_dma_buf *priv;
-> +	struct dma_buf *dmabuf;
-> +	int ret;
-> +
-> +	if (!pcie_tph_supported(vdev->pdev))
-> +		return -EOPNOTSUPP;
-
-This tests for the TPH capability, but the TPH capability is only a
-requirement for functions that generate TLPs with TPH, ie. a requester.
-This feature is about providing TPH steering tags when the device is a
-completer.  Bits 13:12 of the Device Capabilities 2 register indicate
-if the device is supported as a TPH completer.
-
-Additionally these bits indicate if the device supports standard and
-extended TPH, which means we should not only fail if the device reports
-00b, but should reject extended steering tags unless the device reports
-11b.
-
-> +
-> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-> +				 sizeof(set_tph));
-> +	if (ret != 1)
-> +		return ret;
-> +
-> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
-> +		return -EFAULT;
-> +
-> +	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
-> +		return -EINVAL;
-> +
-> +	/* PCIe TLP Processing Hint is a 2-bit field. */
-> +	if (set_tph.ph & ~0x3)
-> +		return -EINVAL;
-
-Sashiko notes what appears to be a false positive here, the uAPI states
-ph is to be in the range [0, 3] and nowhere else says that it's allowed
-to be garbage for a clear operation.
-
-> +
-> +	dmabuf = dma_buf_get(set_tph.dmabuf_fd);
-> +	if (IS_ERR(dmabuf))
-> +		return PTR_ERR(dmabuf);
-> +
-> +	if (dmabuf->ops != &vfio_pci_dmabuf_ops) {
-> +		ret = -EINVAL;
-> +		goto out_put;
-> +	}
-> +
-> +	priv = dmabuf->priv;
-> +	if (priv->vdev != vdev) {
-> +		ret = -EINVAL;
-> +		goto out_put;
-> +	}
-
-Sashiko notes this may need READ_ONCE()/WRITE_ONCE() semantics, but
-that may get fixed as part of the resv lock usage.
-
-> +
-> +	scoped_guard(mutex, &priv->tph_lock) {
-> +		priv->tph_st = set_tph.steering_tag;
-> +		priv->tph_st_ext = set_tph.steering_tag_ext;
-> +		priv->tph_ph = set_tph.ph;
-> +		priv->tph_st_valid = !!(set_tph.flags & VFIO_DMA_BUF_TPH_ST);
-> +		priv->tph_st_ext_valid =
-> +			!!(set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT);
-> +	}
-> +	ret = 0;
-> +
-> +out_put:
-> +	dma_buf_put(dmabuf);
-> +	return ret;
-> +}
-> +
->  void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revoked)
->  {
->  	struct vfio_pci_dma_buf *priv;
-...
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 5de618a3a5ee..0ca26721849b 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -1534,6 +1534,51 @@ struct vfio_device_feature_dma_buf {
->   */
->  #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
+>  #define ADF_DEVICE_FUSECTL_OFFSET 0x40
+> diff --git a/drivers/dma/idxd/registers.h b/drivers/dma/idxd/registers.h
+> index f954113..1dce26d 100644
+> --- a/drivers/dma/idxd/registers.h
+> +++ b/drivers/dma/idxd/registers.h
+> @@ -10,9 +10,6 @@
+>  #endif
 >  
-> +/**
-> + * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) metadata
-> + * with a vfio-exported dma-buf. The dma-buf must have been created by
-> + * VFIO_DEVICE_FEATURE_DMA_BUF on this device, and the device must expose the
-> + * TPH Extended Capability (otherwise the ioctl returns -EOPNOTSUPP).
-> + *
-> + * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA_BUF.
-> + *
-> + * 8-bit ST (steering_tag) and 16-bit Extended ST (steering_tag_ext) are
-> + * distinct namespaces in the PCIe TPH ST table and may both be present with
-> + * different values. Userspace should populate the value(s) it has from the
-> + * firmware ST table for this device and set the matching VFIO_DMA_BUF_TPH_ST /
-> + * VFIO_DMA_BUF_TPH_ST_EXT bit in @flags. An importer requests a specific
-> + * width and receives the matching value; if the requested width is not
-> + * present, the importer is told TPH is unavailable for this dma-buf.
-> + *
-> + * This publishes the PCI SIG-defined ST/PH tuple for a VFIO-owned PCIe
-> + * completer. The dma-buf core treats the tuple as opaque completer-owned
-> + * metadata; an importer simply requests the namespace it supports and places
-> + * the returned value on generated TLPs.
-> + *
-> + * @flags == 0 clears any previously published metadata.
-
-This is overselling the invalidation.  It only flags the fields as
-invalid for future get_tph() requests, it does nothing to clear
-previously published metadata from importers.  Thanks,
-
-Alex
-
-
-> + *
-> + * ph is the 2-bit TLP Processing Hint and must be in the range [0, 3].
-> + *
-> + * Userspace is responsible for setting TPH on the dma-buf before handing the
-> + * fd to the importer. Calling SET again replaces the previously published
-> + * values; racing a SET against an importer that is already consuming the
-> + * dma-buf is a userspace ordering problem.
-> + *
-> + * Return: 0 on success, -errno on failure.
-> + */
-> +#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
-> +
-> +#define VFIO_DMA_BUF_TPH_ST		(1 << 0)  /* steering_tag valid */
-> +#define VFIO_DMA_BUF_TPH_ST_EXT		(1 << 1)  /* steering_tag_ext valid */
-> +
-> +struct vfio_device_feature_dma_buf_tph {
-> +	__s32	dmabuf_fd;
-> +	__u32	flags;
-> +	__u16	steering_tag_ext;
-> +	__u8	steering_tag;
-> +	__u8	ph;
-> +};
-> +
->  /* -------- API for Type1 VFIO IOMMU -------- */
+>  /* PCI Config */
+> -#define PCI_DEVICE_ID_INTEL_DSA_GNRD	0x11fb
+> -#define PCI_DEVICE_ID_INTEL_DSA_DMR	0x1212
+> -#define PCI_DEVICE_ID_INTEL_IAA_DMR	0x1216
+>  #define PCI_DEVICE_ID_INTEL_IAA_PTL	0xb02d
+>  #define PCI_DEVICE_ID_INTEL_IAA_WCL	0xfd2d
 >  
->  /**
-
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 7c89854..206e3fe 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -548,6 +548,16 @@ static bool cpu_supports_p2pdma(void)
+>  	{PCI_VENDOR_ID_INTEL,	0x2033, 0},
+>  	{PCI_VENDOR_ID_INTEL,	0x2020, 0},
+>  	{PCI_VENDOR_ID_INTEL,	0x09a2, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_SPR0, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_IAX_SPR0, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_GNRD, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_DSA_DMR, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_IAA_DMR, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_4XXX, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_401XX, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_402XX, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_420XX, 0},
+> +	{PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_QAT_6XXX, 0},
+>  	/* Google SoCs. */
+>  	{PCI_VENDOR_ID_GOOGLE,	PCI_ANY_ID, 0},
+>  	{}
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 24cb42f..1c9d40e 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2732,6 +2732,9 @@
+>  #define PCI_DEVICE_ID_INTEL_82815_MC	0x1130
+>  #define PCI_DEVICE_ID_INTEL_82815_CGC	0x1132
+>  #define PCI_DEVICE_ID_INTEL_SST_TNG	0x119a
+> +#define PCI_DEVICE_ID_INTEL_DSA_GNRD	0x11fb
+> +#define PCI_DEVICE_ID_INTEL_DSA_DMR	0x1212
+> +#define PCI_DEVICE_ID_INTEL_IAA_DMR	0x1216
+>  #define PCI_DEVICE_ID_INTEL_82092AA_0	0x1221
+>  #define PCI_DEVICE_ID_INTEL_82437	0x122d
+>  #define PCI_DEVICE_ID_INTEL_82371FB_0	0x122e
+> @@ -3052,6 +3055,11 @@
+>  #define PCI_DEVICE_ID_INTEL_5400_FBD1	0x4036
+>  #define PCI_DEVICE_ID_INTEL_HDA_TGL_H	0x43c8
+>  #define PCI_DEVICE_ID_INTEL_HDA_DG1	0x490d
+> +#define PCI_DEVICE_ID_INTEL_QAT_4XXX	0x4940
+> +#define PCI_DEVICE_ID_INTEL_QAT_401XX	0x4942
+> +#define PCI_DEVICE_ID_INTEL_QAT_402XX	0x4944
+> +#define PCI_DEVICE_ID_INTEL_QAT_420XX	0x4946
+> +#define PCI_DEVICE_ID_INTEL_QAT_6XXX	0x4948
+>  #define PCI_DEVICE_ID_INTEL_HDA_EHL_0	0x4b55
+>  #define PCI_DEVICE_ID_INTEL_HDA_EHL_3	0x4b58
+>  #define PCI_DEVICE_ID_INTEL_HDA_WCL	0x4d28
+> -- 
+> 2.51.0
+> 
