@@ -1,103 +1,97 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2338147F2F1
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 16:44:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FF333B19AE
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 16:50:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781023487; cv=none; b=OWJ/3Net5UWdb5JEPPX9kVUn1EgLEw/5oROXv6kIg9JI9dJOMzM5D0OJdUpifDsKdlbtjiK2puQmondDsjgZTGwx4z2d3Lyk2qK7+brlGgHe2FEacGxhsQBsFj7kJUwPcJ25iGE6noh2Ie2DGKfydRffIY9ix+yb9kKSxyAYit8=
+	t=1781023834; cv=none; b=hdGwnyVWLRHkO+v3C0/4vAbZuTL/JJXDgc7B0fwK11jlvSizvAaImEhnxoEmhvFWxyeAbNLn2Dgq/aPmvr1ECkeyQqliNwzGQ8DOkCLbwr5UI1nl+3be15h7eVTQnvF7BnXx+N3KufRRjO+xn1tw4Tsw+T6NhQD3Mw3Kd5AmUdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781023487; c=relaxed/simple;
-	bh=oyC5sBnxB7lMPSD1kmVUARsAa59KUngbah9/j+wr6i8=;
+	s=arc-20240116; t=1781023834; c=relaxed/simple;
+	bh=m5K55rZTH6dKovu1gmAY39GkI5KStW8T7WINe/+PX7s=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=eUMfh1WpO8JZvdfTkQeXdsVaWHNdTIoBK/EnEIqGJVvPCKB23x7amPffC6TOcjbJ4OBSsoqu0gqtm2XAqUpXVICmhu0CeD74zvdH/e2FiU0KVr9yGL6Kg+x7EDJeSKzAmrYrB++L0b9jmiVV3gNSwKpRYgXehM4c+nWVw+mSyY4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Qs1uAAYi; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=MHfTOgSw; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=FFRwSOLYlN9I2tz4XxJlDFduXb7PEN2VNa6cxPcO9EYwoEtFGRmJPqlG5up1tYCroUcGycehlOjXmYDFIqyJJiouNfkWf60yyt+4Q5eYgQZkHRxZ5dbIOkvs+V8R1Lk9P3shGSkm/T9nGlUDTHZqOpO74dXyaNu8cB/ILQQ000k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=OpWHOwpr; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=LBOzTHhB; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Qs1uAAYi";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="MHfTOgSw"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 659GOjU42750410
-	for <linux-pci@vger.kernel.org>; Tue, 9 Jun 2026 16:44:45 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="OpWHOwpr";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="LBOzTHhB"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 659GOWEI2746154
+	for <linux-pci@vger.kernel.org>; Tue, 9 Jun 2026 16:50:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Xg4V4XVPFGl1sJFsiI9GpGRx0QGGgthYiJp8Gmdz5BE=; b=Qs1uAAYitqroo6oR
-	MEex2tM+jfALsKMXl4umzN17elvz1uSM5FrlKwfR8IqOh6Ya4uxiZnSVO0tbq9Tr
-	QK481/Xt0zZOHbucSbNwg/ACKwZBYUILxpCm3VtL189aNeTmat06ophQGOxKEXZa
-	Gs80R+I8O+HI3tCavUrCrRhQbyEg0mUr7VR6xgOLejbs8/POqlMQyKY4OabUupcN
-	qNXyFBkCCv4abVW2RcZbqDqfvjcGD1SbntKqVZSd2/ex/8+nFOxqSpbZJvyag/Dm
-	2sUVmlNpVRh6pxgWa12soJ7jCMC74ByJzUr2QOJ13cAC9aX3KRyypDVgEChjNt+7
-	dEO9eg==
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4epeqgjkxv-1
+	4APQVPv5UexJleRwUKeTyD/FNVUJhVermq4vMsM+NpE=; b=OpWHOwprrxOj/oee
+	8Qtn8B4DU1eBMJYuAEIiW7HH1wyUIRFdyOaNO/gikX2O72Pa7EjGWJ/2uQKy0OF3
+	+NbwjZMvptK04gRgGNXa5YvQKBfHdi/cufxLt5yn/8MvjA9M6ij1tckjo/k9Ljn0
+	qylcGNBetW6FOErjXMEfz8XrPOJUsdoXvHLocUKd5Yp3NtRHnZ2JRVfZFhXg/0kr
+	pE/YihJ6NVN9v9oP79Vp5dMJPreioHYv/4RYSvIKQ2binsYtzbSBNtd01A8lKaF2
+	xXVIrzm80qFNEhqn2QAxjYHVpDWVydRF3FZdHnCVRzCxRx6HXxHKJYUmp8U18dgh
+	AhhwIQ==
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com [209.85.215.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4epg3wj5tg-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 16:44:45 +0000 (GMT)
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-c85a2c129b3so2724151a12.1
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 09:44:45 -0700 (PDT)
+	for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 16:50:32 +0000 (GMT)
+Received: by mail-pg1-f199.google.com with SMTP id 41be03b00d2f7-c85dcdbe502so3804762a12.2
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 09:50:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1781023485; x=1781628285; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1781023832; x=1781628632; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:date:message-id:subject
          :references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Xg4V4XVPFGl1sJFsiI9GpGRx0QGGgthYiJp8Gmdz5BE=;
-        b=MHfTOgSwCfKq+geXiqFNSisGk5SQaR+EWe3058ngnJdUYPPZjHXU4IywLaHsM9qGoh
-         8MVBjM/0X8NqHMFrBh5ZaL73194hJ4eCMWKIJJlHtEG74ZvcU0eS0AHIsDZmnj1kLDsQ
-         +SxOD28Cze1bSGzVTUVQd6rKXXXmn79ilvYpvX/5oJFn3fcBV+P0mEecXE9M2v2X7ttG
-         vUTIHUQb4yJF4Ur1BbZ39un3FMeFOU0C1dKMRsHmEU6CBJl+KUMvUxut1nhQF1r4eSaw
-         qq56FaFY3xkD8HC+ZrRAvJHhwdPV+uAkHWTauPGJl4GNjStBAWpHwjUS9NzmhyTEyn1i
-         P7JA==
+        bh=4APQVPv5UexJleRwUKeTyD/FNVUJhVermq4vMsM+NpE=;
+        b=LBOzTHhB7FCPqo0S99nunZglSY+Zfqh2ML2GSZXfDG0Hw6zefZWpZyJ4iotjS7yL2n
+         kB4NMnwlJKFgJYlIYFTIq/NP7uGYjtyb2x3drVFt+diu9c78Rpw0pdLqATIKfRP7h6Vk
+         vdS+v8SkXFXHHKUjWTft/0rXvgBRKAqNxnq9eN9KdXB39I5s6yeN02Hp+iKDKOa+tcJH
+         dGYjQXclSkn1vnpZqkkFKc9TwupkqFaU/H1XpKSmgqqHff9LhCZFO0WmmGI2TF8px7rl
+         HVZMveC2PeJsV1wA1qcDPBu78mOVuTFNFuDXY+MHDtUU9I9jufWYfXL/sobqQRPN+L9o
+         RaJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781023485; x=1781628285;
+        d=1e100.net; s=20251104; t=1781023832; x=1781628632;
         h=content-transfer-encoding:mime-version:date:message-id:subject
          :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=Xg4V4XVPFGl1sJFsiI9GpGRx0QGGgthYiJp8Gmdz5BE=;
-        b=NaKahnqK9vQVGubLaWhsb0XVB2BfXwxz1O8ZE128vu+S0I2kTOO2UPTqAc+24Q+VBR
-         x9Ufm9z4uz8z6GXDqQhwRJsifrH+9IJx9LpkF71Wl3uXP1aKgn0zCoOhuUByzUYZcTpK
-         OWKrXLD0zF9z89RMLova4w3GOw7NAeu5PD7QyM7J+e9yRupmBMlGJsJk2qRJM5051GTk
-         lY0xr8WJCPdbkZNgJqtOIA+zL0J/Falfgw4y7aGiAKdNieIrUD8qckVCpWzTKaFZ4qJ7
-         mKgKKH/7x9w+engl9AvCzlBClj8SL7+7Voqo4rlT46DHd8XArGnguA9BEyt5PNH7nwuj
-         iDug==
-X-Forwarded-Encrypted: i=1; AFNElJ9kvMSARoFCACXOlUUO8DigHVnemtNWVVFilfbNWe5F8Jpdq+5BQvJF5npu+R73oyjK5eyaSRKbqnM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyj4DTcWIO/mXkNuR+c6g/M+gPQYCK4R78ozZ4hsYO+1ua3l7k9
-	QS6V+oh7Leq4evke3RhUzOT4HtB90GYwfcdyCVWrvN+P63fnQu2tHLwJFKzv6XcFdCA4PTEeAON
-	p47YO9XPg6R0gIGvrvxzMbPfInFX2Im2KTP4qwfjdHeMaYPQCGD9Lzg0yM3UAgPU=
-X-Gm-Gg: Acq92OHbVs12KLJz7v/6KBNKAK5VSwOgQ/o4adxON9MoOv9KSoQs5E+h42a5oP2K8Tm
-	Pp/0wkCFPWUtJg7OFf6QyF4XpCFBkEgrk0USlGURL4+io6gWzsUnk+nzmZtSu3XZZS9DMVBvFXI
-	16/rFTingv30Egpbo4q2LakIrbR3PaGQx/lT9arECENFaB5Z6dl6QY6ImMlU1iWeUVy17/8IsuG
-	1+RLI/Iq4AkgjiSJhf2miE1BcQG7MnER3de9T93P30mBe5sZmR3shDvR4x3Ov72hFJBHX6So7ga
-	34iNcfBqUXI07xXDf36VdBRYHI3OvVrt70C/izK+wcRRK3rQ0BerusxfVQQikmhu0qW644/KBtW
-	oiuP17v7vv/ASXKNPOlFI1N86MA3ACo8=
-X-Received: by 2002:a05:6a20:d505:b0:39b:89e0:2e37 with SMTP id adf61e73a8af0-3b53bc604dcmr5305644637.14.1781023484742;
-        Tue, 09 Jun 2026 09:44:44 -0700 (PDT)
-X-Received: by 2002:a05:6a20:d505:b0:39b:89e0:2e37 with SMTP id adf61e73a8af0-3b53bc604dcmr5305599637.14.1781023484241;
-        Tue, 09 Jun 2026 09:44:44 -0700 (PDT)
+        bh=4APQVPv5UexJleRwUKeTyD/FNVUJhVermq4vMsM+NpE=;
+        b=SWEM54fPvWoUB+NAmhQSR1I1zA496whuRP5lQ59iY1d8nP+cfJ8fC2BDGBJN720V2B
+         V2XSIon/Awxdkuj2Yp7Z3nG13mxy/FFC9f/0uSYYPKEtPWP0obbm3jJvcFJ6y+V9sDXt
+         4QFl5ESiPhqyq+0rYm5J4/TrFlYszEdbnv8f9HM3lNtf/rm+jAGgsc4QgnrjeAfM6/GQ
+         lc8AtTpbSpJPFJ4r5/S+KuSQWwvkvNkNcYFb5XEfaEgoUpELlNg8/4UjTTSsyNNzVDgj
+         BYf6KBuhLjTOJ7KL/2B9WPtL9xMunQBi/r8myYs+79Ir3gUjVQw3MkzP0j+2WHVui6hl
+         Kf9w==
+X-Forwarded-Encrypted: i=1; AFNElJ9m8y2FeGWeP/D7/3ZSZCIQFkykFQ7z855OqgueVyN3Aa9xYQAWUYrfnhpOwRaI5KbvjDAOLBEciYY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2ZBe6KkbQucn80aCu0s3I5LUX+p3yUSVE07vj3AomdZQJMH59
+	lVM20m16wBo/CiSzDfFzD2W/ZY3zxWAYl6rtw3tPWw2BsHxfJgNNJQq5rkoEWTxyTWhDUQyvjhd
+	si/KMETJtRYWXopOoButzVs75tRwxlC+DrMGiv8D0HSWjY100/WmsJZ0lF9BWHrk=
+X-Gm-Gg: Acq92OGRC2zZjj88ZgWEm6D5NTTJLPPANOTWOvkojM3EPc/183mgo7/VGJlmr98gW6o
+	GqlmqWG8gKoCzIZ4Bb31vqtYxASDEv79l57fyG+okR6HtZyDlg8DG4WobnlfvFlkvJaTUz7W0JX
+	gmTDNDpt/YCgyhmn+729Oq4BOAaErXkqyC9B0x5uiNRK/2YWuBV7ZJ7iSB1ATWp0zDmkSvMJsK3
+	m4LQWEzLy6cB9HeyBX/263ofd79xGUNxgig0a2r6vHkGMUNPiZKLw1oqVrdlHoYXzGM3TEFHuWq
+	huOg2Y2QMTa3y4UklTaX9QeKm/7unLThUzUVVZhcEHvpSosQywiyjELaVLGKe9CyRYyr7ibTGqE
+	JYkzK7LPqUEsFuZjS7MI8eQhz0q/qFNw=
+X-Received: by 2002:a05:6a00:1ad1:b0:842:4387:34c0 with SMTP id d2e1a72fcca58-842b0f1e8abmr22235198b3a.5.1781023831661;
+        Tue, 09 Jun 2026 09:50:31 -0700 (PDT)
+X-Received: by 2002:a05:6a00:1ad1:b0:842:4387:34c0 with SMTP id d2e1a72fcca58-842b0f1e8abmr22235170b3a.5.1781023831127;
+        Tue, 09 Jun 2026 09:50:31 -0700 (PDT)
 Received: from [192.168.1.11] ([120.56.203.186])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-c85df0b374fsm18673938a12.25.2026.06.09.09.44.38
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-84282882156sm21310593b3a.33.2026.06.09.09.50.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 09:44:43 -0700 (PDT)
+        Tue, 09 Jun 2026 09:50:30 -0700 (PDT)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, Yue Wang <yue.wang@Amlogic.com>,
-        Neil Armstrong <neil.armstrong@linaro.org>,
-        Shuvam Pandey <shuvampandey1@gmail.com>
-Cc: Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Fan Ni <fan.ni@samsung.com>, Shradha Todi <shradha.t@samsung.com>,
-        Hanjie Lin <hanjie.lin@amlogic.com>, linux-pci@vger.kernel.org,
-        linux-amlogic@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-In-Reply-To: <0f97352506d8d813f70f441de4d63fcd5b7d1c3e.1779123847.git.shuvampandey1@gmail.com>
-References: <0f97352506d8d813f70f441de4d63fcd5b7d1c3e.1779123847.git.shuvampandey1@gmail.com>
-Subject: Re: (subset) [PATCH 1/2] PCI: dwc: Guard RAS DES debugfs deinit
-Message-Id: <178102347813.14565.586041970354711771.b4-ty@kernel.org>
-Date: Tue, 09 Jun 2026 22:14:38 +0530
+To: ryder.lee@mediatek.com, jianjun.wang@mediatek.com, lpieralisi@kernel.org,
+        kwilczynski@kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Cc: robh@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org, Caleb James DeLisle <cjd@cjdns.fr>
+In-Reply-To: <20260521174617.17692-1-mani@kernel.org>
+References: <20260521174617.17692-1-mani@kernel.org>
+Subject: Re: [PATCH v2] PCI: mediatek: Fix IRQ domain leak when port fails
+ to enable
+Message-Id: <178102382633.15301.10190757934266235538.b4-ty@kernel.org>
+Date: Tue, 09 Jun 2026 22:20:26 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -107,48 +101,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.3
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDE1OSBTYWx0ZWRfX/2Q60hAe86JE
- j9yrHGapxfFDi2RTitvtcRo7S6HSjwlo96epKz9vPqkAWYi0s9BJUewvIEQG+oC+I9XHWDENWpG
- s81hxY570s02PYgxPwwBiuSMcq0fBHzrrSbQfLcwWsI5t6wJYwYEGQrroqv0dGY14wl4cKxwSMz
- mAHlm2aQVho+ZaJ/fQdXiE1DzsX/PkqySC3z7PGTR1irQWz+MKyLZSclJlYuPBAYU9V3JEG8tus
- QHuZ8GVFHD/NrDKty+wnqGqEpe2wXmtKFimFgA5h/kay5jGpfcTpjb+MXicaxv7kEq7L5Wq3eHw
- R/eJzVttaZIIGauPVuQ7Ko7fjb/8WAuUh7rFxFZu+qNUjnt8e9c7z05ZTT3BOapkYDz8c+v4eMd
- FAoaeUUtQCyfZqrRdclDK7ba+I0E5zFECXBTQp02X5VpOYtj5g3Oe7OucvnbET+d3POFccvtBRv
- lhrZHbP1SM25Om6Lltg==
-X-Proofpoint-ORIG-GUID: 4x342VHIns5cmFtI9qrU3w6X5WYLIuLy
-X-Authority-Analysis: v=2.4 cv=KdHidwYD c=1 sm=1 tr=0 ts=6a2842fd cx=c_pps
- a=oF/VQ+ItUULfLr/lQ2/icg==:117 a=eDurORsI8St+1bJHqsJewQ==:17
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDE1OSBTYWx0ZWRfX1HIQlgtj/Y2w
+ X2WnohULVfj6RMGl2j6P4576xHkDeUFiO0wS9AxyF0c+dojcdjD5BOJHO4sDQfuPJtEb0ESnuPL
+ wP2Lu0+5eIjdUkNjqwJe98hYMjpjlJ9h1FfPLII8OcUcOhrxa52qz1BJXcm90Qq9X+CS7/t7J6i
+ jJ0lUFaS54ndUPa8botIJyqHdtyAI+YckSBu4i76yqyw9BsqPOCSPiZgteBSeqgHOLmZIqhpM5B
+ YeRCq1fVxq2HnL4wmv3AN+yrF7ug9muv/21fmkmAMAJfOr533YvBs4d3A/MDmb+vaTlvMyCGGfc
+ XwzBZrbrehysmrXF/dLuz05qfUWFS6GqZBTKEnJbvyiw4Lkx3AxDCx9Ilb68o0WV2EjrlP1a9OF
+ vbdXZ3HQz7qRm3TagzHg0+oZHb5pTe7GxCCamkZs/9EwrbeDrcd4VhVPlmT0daaRnA5JVbc5Erj
+ JHVdnYfQYmyoFkgR2/w==
+X-Authority-Analysis: v=2.4 cv=csWrVV4i c=1 sm=1 tr=0 ts=6a284458 cx=c_pps
+ a=Oh5Dbbf/trHjhBongsHeRQ==:117 a=eDurORsI8St+1bJHqsJewQ==:17
  a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=eoimf2acIAo5FJnRuUoq:22
- a=VwQbUJbxAAAA:8 a=HaK6AIl19eK7yf7b4pgA:9 a=QEXdDO2ut3YA:10
- a=3WC7DwWrALyhR5TkjVHa:22
-X-Proofpoint-GUID: 4x342VHIns5cmFtI9qrU3w6X5WYLIuLy
+ a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22
+ a=VwQbUJbxAAAA:8 a=mJkhQync_lts4CGhekwA:9 a=QEXdDO2ut3YA:10
+ a=_Vgx9l1VpLgwpw_dHYaR:22
+X-Proofpoint-GUID: O0NChzYwst5QkgL56RgOmQkRVz57KKoU
+X-Proofpoint-ORIG-GUID: O0NChzYwst5QkgL56RgOmQkRVz57KKoU
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-09_04,2026-06-09_02,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0 suspectscore=0
- priorityscore=1501 bulkscore=0 clxscore=1015 adultscore=0 phishscore=0
+ priorityscore=1501 clxscore=1015 spamscore=0 adultscore=0 lowpriorityscore=0
+ malwarescore=0 impostorscore=0 phishscore=0 suspectscore=0 bulkscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606090159
 
 
-On Mon, 18 May 2026 22:44:17 +0545, Shuvam Pandey wrote:
-> dwc_pcie_rasdes_debugfs_init() returns success when the controller has
-> no RAS DES capability, leaving pci->debugfs->rasdes_info unset. The
-> common debugfs teardown path still calls
-> dwc_pcie_rasdes_debugfs_deinit(), which dereferences rasdes_info
-> unconditionally.
+On Thu, 21 May 2026 23:16:17 +0530, Manivannan Sadhasivam wrote:
+> When mtk_pcie_enable_port() fails, mtk_pcie_port_free() removes the port
+> from pcie->ports and frees the port structure. However, the IRQ domains set
+> up earlier by mtk_pcie_init_irq_domain() are never freed.
 > 
-> Return early when no RAS DES state was allocated. In that case no RAS DES
-> mutex was initialized, so there is nothing to destroy.
+> Fix this by refactoring mtk_pcie_irq_teardown() into a per-port helper,
+> mtk_pcie_irq_teardown_port(), and calling it from mtk_pcie_setup() when
+> mtk_pcie_enable_port() fails. Since the IRQ teardown must only happen in
+> the probe error path (during resume, child devices may have active MSI
+> mappings and the NOIRQ context prohibits sleeping locks),
+> mtk_pcie_enable_port() is changed to return an error code so callers can
+> distinguish the two paths and act accordingly.
 > 
 > [...]
 
 Applied, thanks!
 
-[1/2] PCI: dwc: Guard RAS DES debugfs deinit
-      commit: a5ee214bb36f43b4d8bb2615b30d3b5c0ea80826
+[1/1] PCI: mediatek: Fix IRQ domain leak when port fails to enable
+      commit: f865a57896bd92d7662eb2818d8f48872e2cbbc7
 
 Best regards,
 -- 
