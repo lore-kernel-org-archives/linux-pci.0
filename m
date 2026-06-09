@@ -1,204 +1,147 @@
-Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fout-a5-smtp.messagingengine.com (fout-a5-smtp.messagingengine.com [103.168.172.148])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED4624968FB
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 18:41:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.43
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781030469; cv=pass; b=okIaZ6mftFezbT0voEg/HWTQz5ySzX9746KCKPSWejckCBIt/EXhCfN93PKGI/NLVahXHr9+i/H2efvx6nC80mQRZQUxAC+Ho+6LUyGuztbL5P8pivdPWltInHTmBcKjLB4kLLd4JWPC8/vxyRQmjuQqV3m3umfzFMXLpxcSqQ8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781030469; c=relaxed/simple;
-	bh=dXGLi431l7+tBBr/wFP1O2Ys/PtUuKJInSX0D2b0rys=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YIVxl/WyFRhDhFAntbPSkzcjHXMPG3DgoQusLDFuUmR9V/OfMMtFdAMMCfbEQZB+dtPQCAJdQbFVSUm0e40AAH6rMwNYA0xwsgk0QmBCmKDYe01XM0vHrUgif3YdfFZlZq37QoR+POq2GZrfrphwGWhtx5DJ6h7CJ+pRTmqNAwo=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=H0L4IDFH; arc=pass smtp.client-ip=74.125.82.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D84FB4DB559;
+	Tue,  9 Jun 2026 19:16:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.148
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781032570; cv=none; b=FNXazdYf6xTgVyRs4p2qgSw9EoSiiKr3ac4NAVkQ24x6PdCJ5W7/Ru9cW12LAyIAOKv6J06MRG+fi7wk+sTYtYZq30XZ8WhQZ/0ZT4jQLsVM6sghVT6g3iIZ0jcxCTMxTdTk07l6mlsaFDyq3j4oxvfoWhKRGTxclK9RmQOw5es=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781032570; c=relaxed/simple;
+	bh=2dXul6EpZQ3L1XNvuNJqNmx+Wvf31tYng7dRqPDdLsk=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AzUsGS9G/wTnlz1prvTB4qEOpvR6tRfHE1NwETXN5FSovsa0vGaBKYG5P7E70jiVXURuLBeXSFOTjy74bN/RnX3SFS4UKCJJuxJJz8RufRTHsoVoKMkHka2pCZ11lszQROl6w3NzKRIJSehsuu7eJTSIJPm7kqCZg0Hn5Ke/GKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=L08ajDIL; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=cUWe2h4O; arc=none smtp.client-ip=103.168.172.148
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="H0L4IDFH"
-Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-137dd4cc208so3804083c88.1
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 11:41:07 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781030467; cv=none;
-        d=google.com; s=arc-20240605;
-        b=bRjlId0Ytw5KXYQa5DGKuj2u0T8cNqAg4cxPA3d9ZdQXTdrBTLGdZCRXq8DEd1QNV9
-         hM1Jo3VAJN04gPTObFYi0xq2b7/arJJdrOWUPDnxbD576YltcC7ktL1nEXI8X2C8/z51
-         z46DOkjLw0gRfD5P0NnbqLQQ2aM7DQrTUILS7RWxD3vqRS9mo7DrpZ1M7P0j4qwaMpTl
-         cTmvinc2obe4l+mMZO5mWTqFj+FmUAImLaOb3HSmxVZMSdEsyOnOL1T+PdCE1wSt91qi
-         /eukewu2zGbjHA5aRrLkZLkvckOvy0VXtHWAUjZiQuJDUyyR1VSsXoDPVLEgARKEyEQb
-         jb9g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=rp2AVHnvaLdz2Pq3FiqBKoQWbYzwYe73io7ef1uKgPQ=;
-        fh=vSubIA/qPoG9TfI4HzTU8gtfBe93saYM795NzW7SSdU=;
-        b=CQqX9nN12yOjPT+Wz7aVAxftPVg0kKaeK47AKMtGqkct+Au09y88UBtWrrzlXuOYk9
-         kOl3SrRrmTCJ83u47hZ6lJoRTWMxpQTldjz1a0a3wGnQZWSmNaMnGq5+Q5/X+XH3IPwa
-         Z6PsIU2qq9C8Jfnrr9mTMRtiEaDMJFE4a3Z2Hx4tvYogL0g71Y6yzOOcWA6f77LVgVIv
-         hmRk7hP5hT86596K0MMR+YEmx+WGI2ZHF1ToE93MH6+AROwTVird7RYdjnmqb0eCRYY2
-         9xEjXPEhL9t2bcndVsjdrbc4d4+J/cX7diR3OQ2WB965ZJn+eJKH370W3NDSv7EPCenn
-         IbPQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781030467; x=1781635267; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rp2AVHnvaLdz2Pq3FiqBKoQWbYzwYe73io7ef1uKgPQ=;
-        b=H0L4IDFHJn7p9izEmb0m3v+xqccfgHShqsBa9rSr5Xo6VBHgKnUKM1dNtnh6x8ySP9
-         5m0kgoQRXd7GpUl4u19Vwdc/McaOJ1Yn8luGzK6uHGiIhn6wvIPFrzR98HZA/77/+4ui
-         fQHIFFc8YNm67IS4YSr77e0zi+kDGZtdlDeRZR3pOvFoG7JLZYydDJ7LVkzjb2ZPI56O
-         9yH5PuyDsvUt4SI+zunlUaR4Q3pX4UKFoa/OSUEM2sdRUFRNh0Lvp0YZJxo5koeeRt1V
-         XLxcJZrKNL3JMDsWciu3zhPpO5WjiDLgnQ+TNhiiLYYT5p0DbcT5Lvfd7/aW8opNJ2QS
-         7hxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781030467; x=1781635267;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=rp2AVHnvaLdz2Pq3FiqBKoQWbYzwYe73io7ef1uKgPQ=;
-        b=aiRj3HQBb/Ziaf06Bc19703Vyq46+cLGwxMLcMR/ShlbrPQKOl4IGkpzP3i5V+o6UO
-         fvv/KN2K6FpAXGmUlG2Opkjanld1VoWK68KIWzLhamm4OspqZ+x5IOuAlIDVRnNgA21C
-         IXuoUfAugiLz6pV95mo7EpJ8TeZPB/426lr3y00Gc1Gm1xCkLKHVjvIuQR9wo+dkS/r/
-         VSGCrYr4vNwCku3N3fw5/t1qzYLh7+08MmdZdXQMGhL30eeqcA5+xQChg2WEHrSonVZJ
-         kQWP2xdxwZenX1Lki8DkTqErX6ZhxTNqUxnTFmWbgWmnQFAvL+UuG47h/ruGj8vGRqTv
-         tA/w==
-X-Forwarded-Encrypted: i=1; AFNElJ+bJqxkqP1eiQoRYy5hy+7eEWLhE1f5al8Y0tSCFhKXWZzoC/E3/6vsP1E5Ku7Sp1XGe3gz11TfYHI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyCg06f4qi7DAmNptQkSMpVICug5DiGt7EWgOdSqNz/p9zhVrxz
-	e5IWTKBbbc22kRmJtv866gO7aXevKIxG8GEa1qD6AWb9ZfU6aFNVpiuxDu53hgRD6S75ZU4dp/2
-	kE2uzZb7JkdS085ZEHe+7/3pzIXE/2feoQWF8QMfH
-X-Gm-Gg: Acq92OGSpD22PQTr31WkhfaxIL1VWiFlxwBC0itFFqjyBwWVDG8mu+26Nl9CsQ3Rbnr
-	iswwfR4HESxl4+k/gMlOj6HrQ6Ky/+oNaG6yjCdrayD8EDGUp41EB5WIGTbr595C1iFlzTzW0uP
-	8KZQSzJJE+qMa3g6btwh3HnKZOhiZD+GqAyBk9p6OeOSw0x9Shj1O75mYFtzwKcN3Q0SGoOoq52
-	9hDvUM0uhAtKD7L6Ku/Cf434T/0wCE5kMwVFJZjNQQGJ8UT/cGjx/b1dlLYebodtEhvI2ZWXZ5i
-	smUNbIc6n9oMMRkGAVd8b9UQ1ral
-X-Received: by 2002:a05:7022:327:b0:133:39b9:9720 with SMTP id
- a92af1059eb24-13807d7f8a8mr10097032c88.16.1781030466370; Tue, 09 Jun 2026
- 11:41:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="L08ajDIL";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="cUWe2h4O"
+Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
+	by mailfout.phl.internal (Postfix) with ESMTP id EC7F2EC022A;
+	Tue,  9 Jun 2026 15:16:06 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-01.internal (MEProxy); Tue, 09 Jun 2026 15:16:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1781032566;
+	 x=1781118966; bh=rN3rdmRzxAU6hb2xvro1GlJdcdDmOfuaXwfPA/DRbbs=; b=
+	L08ajDILMl9TdrjtO2ZP3P39yrkZNQscPZmwiYryDck77kabbKLDWZ4/501v+OtD
+	81K324fknDtNerzdz7fXjxAk1yAurT1TM8+qLksgcRdS2UJAZTPvQNHjCm7Nl/90
+	XoqTFjvKiC0cf1oeCMWyPhkTNNb5AEG4cL4RzTYdOQPBU7z+D/1aotAYQTQGQktm
+	PG7tQldFU3nidZe0AEHB7NEbK/5mPrTp6mGh6IsdrBNlb2Na0bzPM0gUt+xjhmDK
+	5BjztfpjQfhUcmlO8JPcmda7SUfkLytWZKtTboTPRmJmaAsFEuEKRHKwzPD1I8hH
+	Q+wJ5jY9MTQbuZBiwTSvIA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781032566; x=
+	1781118966; bh=rN3rdmRzxAU6hb2xvro1GlJdcdDmOfuaXwfPA/DRbbs=; b=c
+	UWe2h4OVQ0Eafr0nntwTJlWEBcfQM+xRDj78ILMpZSYOAGaQmjcEOjZvR1lM3vVR
+	ccUUWcnnqQLy9EoDDVNs8P/c29M5LX/A9W5hcBlTbGwtKoJb2twwUKuiy371CC5i
+	ln26nA1x/DBJruenM+bF+eJZzKDtsLOnKrJ8i1S2SIGpWvS5SUwmqCQdwxBRIX+O
+	GThZE4zF7MqALK1jgYZ/ECpNXP3EJqUVvmLgs7S3o+Dfs9htti19l7lTsosj9Su1
+	HEMZSG5aL9byYj5eGOvoJ0kFlLjgZnjkt0e/611piVHERJtXMUrufmzbsP6in1ti
+	IPvjtD1dXXFjPtro/r+Mg==
+X-ME-Sender: <xms:dmYoatEP4f1ewXbKgCZfOZuzPGfw8_0bU_A-dZytB4irB5IFzWkgQQ>
+    <xme:dmYoaosAIHJ8mUK5N6HWhkqFN0paf0ycCR9bJvevqaoABjtqt8sNv1djpII7lWlVW
+    afoqOS1qZAh0p7ROt1a3zvHyQ4CDX_apBMfxDI-OwEhqYLUSVzMBEo>
+X-ME-Received: <xmr:dmYoarY-Md94DrAbJ632tAimP0NJ_MW4BDBi2wSY9HSeejByH8y0JmeLkZw>
+X-ME-Proxy-Cause: dmFkZTFlC78n8oVY6BtWDnhxBMBGpkz2Mq4ap945DixZqO4SIR4z2ozKrwF+6ZeRVD9zWe
+    XpCjg/77uAgo7bj/JfC/ffad2QfN98gYTtkNsC3Ef8nSoOQcO8UO6h6zGgM5cJT0Q/l44r
+    B5frmpNAO3O93VbmJkZHdeE+X6Z90fupx2Kmu6r+jkQh3jC3GdIOEuJxtlmmqd97ZpHZ5V
+    nxS4e1AEfBYjYqoehStGIX+4Xiu9jIgALkvVcQo7ZXDFAkROl1WjvqyTG2xh4E/1O2wXu9
+    fD4EJFI55Yu78xBsUKgLGr5V/zHWTJ4xotrg7DGN3wS1vIbxTYm8+M2bPmL10FJJKSn3sR
+    jqlU3sMxjSTR1HgvqFS1AJ1Isz4iYmrCrJgZm2u+Wh/X+c2FK2RuXK5Kww+BWS8Kzvjc3E
+    0Pit/DqnIrEnZ4195w6vWK2x6mCx2OBZu1+2CCFaA6ouHjeuOsrKpdygYDVfIkamEOmb+m
+    imNX/vx3nEZcW2uaFWZlYfYEZN3grDr0WBd8n6fxsVz84LoVfw7Q1SrNyeyXp1lGodjFxC
+    vPYjxbWv2aQ2Ln8095F2KKBzpGoBtmQRXbVd2FqqUFBgUddAlZCxPmxu1WooEot3lkALhv
+    1NUUYz7W1+gOX7wmBzvJclEshG13ZLVKQ4R1vz0kwxBybmiwFj9/5RQy0Ipw
+X-ME-Proxy: <xmx:dmYoag7XhE9-vyYbcT_BM48PSZemQMIZBTG-LKVnI9Let5HVwlQKkw>
+    <xmx:dmYoar8vmDJq65kvIGQw_Ldb3l2oevvL_iBF9LdaicW_VpH2GI46nA>
+    <xmx:dmYoakY6cPm0ggu4pq7H51idNd0Bs6_9UsFWFpVOsDlX2Jf88uBDUg>
+    <xmx:dmYoas6Wme8YfOiWKY6K0X0sh3htEmQYfMjNJ3uRgF6p85vx3DFAGg>
+    <xmx:dmYoakymOxvEtNy4RQclknFmo0GHAHx4Uq1RMEUWyeY9XzA_sjTQGJ8L>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 9 Jun 2026 15:16:05 -0400 (EDT)
+Date: Tue, 9 Jun 2026 13:16:04 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Farhan Ali <alifm@linux.ibm.com>
+Cc: Keith Busch <kbusch@kernel.org>, linux-s390@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ helgaas@kernel.org, schnelle@linux.ibm.com, mjrosato@linux.ibm.com, Julian
+ Ruess <julianr@linux.ibm.com>, Chengwen Feng <fengchengwen@huawei.com>,
+ alex@shazbot.org
+Subject: Re: [PATCH v18 3/4] vfio/pci: Add a reset_done callback for
+ vfio-pci driver
+Message-ID: <20260609131604.227218e8@shazbot.org>
+In-Reply-To: <96c749ba-1b42-425f-8767-a3fce4a4d30b@linux.ibm.com>
+References: <20260603182415.2324-1-alifm@linux.ibm.com>
+	<20260603182415.2324-4-alifm@linux.ibm.com>
+	<aiE3I0bL0TX1nOec@kbusch-mbp>
+	<d9ca420b-a1e6-4d12-bd42-3993e401d58b@linux.ibm.com>
+	<20260604135717.5dc69583@shazbot.org>
+	<96c749ba-1b42-425f-8767-a3fce4a4d30b@linux.ibm.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260522202410.3104264-1-dmatlack@google.com> <20260522202410.3104264-9-dmatlack@google.com>
- <aiXWmR-ettxin4LC@google.com> <aic6mdiZ0qUJpFca@google.com> <aihLTgs1Y49OXQaV@google.com>
-In-Reply-To: <aihLTgs1Y49OXQaV@google.com>
-From: David Matlack <dmatlack@google.com>
-Date: Tue, 9 Jun 2026 11:40:39 -0700
-X-Gm-Features: AVVi8CfFJIkIzWoDM1n34NzkGcY8xgKn7goqY8e0r212_RJvyRI4sWlWr6KLrxY
-Message-ID: <CALzav=dagHvcS8kbTti5rmMoks9DXuCpO3AjptkQ8z_PdG9JyQ@mail.gmail.com>
-Subject: Re: [PATCH v6 08/12] PCI: liveupdate: Inherit ACS flags in incoming
- preserved devices
-To: Pranjal Shrivastava <praan@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
-	Adithya Jayachandran <ajayachandra@nvidia.com>, Alexander Graf <graf@amazon.com>, 
-	Alex Williamson <alex@shazbot.org>, Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Jacob Pan <jacob.pan@linux.microsoft.com>, 
-	Jason Gunthorpe <jgg@nvidia.com>, Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, Mike Rapoport <rppt@kernel.org>, 
-	Parav Pandit <parav@nvidia.com>, Pasha Tatashin <pasha.tatashin@soleen.com>, 
-	Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
-	Samiullah Khawaja <skhawaja@google.com>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jun 9, 2026 at 10:20=E2=80=AFAM Pranjal Shrivastava <praan@google.c=
-om> wrote:
->
-> On Mon, Jun 08, 2026 at 09:56:41PM +0000, David Matlack wrote:
-> > On 2026-06-07 08:37 PM, Pranjal Shrivastava wrote:
-> > > On Fri, May 22, 2026 at 08:24:06PM +0000, David Matlack wrote:
-> > > > Inherit Access Control Services (ACS) flags on all incoming preserv=
-ed
-> > > > devices (endpoints and upstream bridges) during a Live Update.
-> > > >
-> > > > Inheriting ACS flags avoids changing routing rules while memory
-> > > > transactions are in flight from preserved devices. This is also str=
-ictly
-> > > > necessary to ensure that IOMMU group assignments do not change acro=
-ss
-> > > > a Live Update for preserved devices, as changing ACS configurations=
- can
-> > > > split or merge IOMMU groups.
-> > > >
-> > > > Cache the inherited ACS controls established by the previous kernel=
- in
-> > > > struct pci_dev so that ACS controls do not change after a reset
-> > > > (pci_restore_state() calls pci_enable_acs()).
-> > > >
-> > > > To simplify ACS inheritance, reject preserving any devices that req=
-uire
-> > > > quirks to enable ACS as those quirks would also have to take Live U=
-pdate
-> > > > into account.
-> > > >
-> > > > Signed-off-by: David Matlack <dmatlack@google.com>
-> > > > ---
-> > > >  drivers/pci/liveupdate.c       | 68 ++++++++++++++++++++++++++++++=
-++++
-> > > >  drivers/pci/liveupdate.h       | 11 ++++++
-> > > >  drivers/pci/pci.c              |  5 +++
-> > > >  drivers/pci/pci.h              |  5 +++
-> > > >  drivers/pci/quirks.c           |  7 ++++
-> > > >  include/linux/pci_liveupdate.h |  6 +++
-> > > >  6 files changed, 102 insertions(+)
-> > > >
-> > >
-> > > [...]
-> > >
-> > > >
-> > > > +void pci_liveupdate_init_acs(struct pci_dev *dev)
-> > > > +{
-> > > > + guard(rwsem_read)(&pci_liveupdate.rwsem);
-> > > > +
-> > > > + if (!dev->acs_cap || !dev->liveupdate.incoming)
-> > > > +         return;
-> > > > +
-> > > > + pci_read_config_word(dev, dev->acs_cap + PCI_ACS_CTRL, &dev->live=
-update.acs_ctrl);
-> > >
-> > > I might be thinking out loud here, but as an attacker, this motivates=
- me
-> > > to somehow hack the EP FW to mis-report the PCI_ACS_CTRL register acr=
-oss
-> > > a liveupdate to fool the incoming kernel. If the FW feeds a 0, it sil=
-ently
-> > > strips ACS protections.
-> > >
-> > > Should we also serialize ACS state in ser somehow to ensure we aren't
-> > > fooled by something like this?
+On Mon, 8 Jun 2026 12:26:36 -0700
+Farhan Ali <alifm@linux.ibm.com> wrote:
+> On 6/4/2026 12:57 PM, Alex Williamson wrote:
+> > For things like MSI/X, SR-IOV, RE-BAR, etc. we're actually restoring
+> > from the kernel internal state rather than the save buffer state, so
+> > this is a no-op.  However, one thing in that list stands out, TPH.
 > >
-> > What does "EP FW" mean?
->
-> I was referring to the Endpoint Firmware (basically any SW running on
-> a downstream device)
->
+> > We don't yet support enabling TPH, but there are series on the list
+> > that propose to add this.  The TPH buffer space in the saved state is
+> > allocated just by the capability being present.  On open TPH is
+> > disabled and the saved state is untouched, zeros.  If TPH is then
+> > enabled and the device reset, the pre-reset save state populates the
+> > TPH save buffer and we restore that state post-reset.  With the change
+> > here, reset_done would then push the open saved state.  The live TPH
+> > state is enabled, therefore the restore pushes the original open state,
+> > zeros.
 > >
-> > Does such an attacker even need Live Update to attack the system? It
-> > seems like such an attacker could route TLPs in whatever malicious way
-> > they want regardless of Live Update.
+> > This would result in a visible user change and maybe more importantly
+> > shows that we're relying on ad-hoc behavior, without really any specific
+> > policy to have this work reliably.  It actually seems like only in the
+> > close function, where we've disabled anything the user might have
+> > enabled, is it really valid to restore the original state.  Thanks,
 > >
->
-> I agree that compromised PCIe devices are a menace anyway. But I was
-> talking about the potential window opened up by Live Update here,
-> suppose we have Device A & B assigned to 2 different VMs (implying they
-> are in separate IOMMU groups because the switch set ACS_RR =3D 1).
->
-> Now, the attacker has an opportunity with Liveupdate, since the devices
-> are already assigned, if *somehow* it flips a bit like ACS_RR, the
-> incoming kernel might see both the devices in the same IOMMU group.
-> Who detects this case and what happens if this happens if the devices
-> are kept assigned to these VMs?
+> > Alex  
+> 
+> I was trying to see if we can remove the callback and still restore the 
+> device. The original reason why we wanted the callback, was to restore 
+> the device state into something sane[1]. Since commit a2f1e22390ac 
+> ("PCI/ERR: Ensure error recoverability at all times"), which removed the 
+> saved_state check from pci_restore_state(), we will always restore from 
+> the last saved state. However, the last saved state in vfio can have the 
+> Command register Memory bit disabled (for example could be done through 
+> vfio_pci_pre_reset() in QEMU). This becomes problematic when we try to 
+> restore MSI-X from in kernel data and when MSI-X is enabled. AFAICT the 
+> msix restore path doesn't check if the Memory bit is enabled before 
+> writing the MSI-X message, which could cause an Unsupported Request 
+> error from the device. From my experiments, enabling Memory bit before 
+> restoring MSI-X state was sufficient to get the device in a sane state 
+> without this patch.
+> 
+> So we could remove this patch. But maybe there is a gap in MSI-X 
+> restoration path?
 
-I suspect that would be caught during the restore of the iommufds to
-which those devices are attached.
+I'd say yes, that's a gap in __pci_restore_msix_state() that it's
+writing to device MMIO space under the assumption that the device
+entered save/reset/restore with memory enabled.  It should really force
+memory enable to be set around the access and restored after.  Thanks,
 
-The kernel would attempt to restore each device into a separate domain
-(since that's how they were preserved before the Live Update) but that
-will fail because they are in the same group now. Even if one of the
-devices was not preserved, that will still cause a failure when a user
-tries to start using that device (e.g. to try to attach it to a
-different VM).
+Alex
