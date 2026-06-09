@@ -1,150 +1,157 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE9843D502
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 15:46:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3912736EAA6;
+	Tue,  9 Jun 2026 15:47:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781020008; cv=none; b=Z5QTVWgpnYagDjDkEV4u/gSVnwY3tuVYqNnnCm1+CqvNs4GjDeZ9tYA/KKFdYMIVNBfaD97sXqocUjgTvjaRk2tx7tuetAu9cohVg0g5WflY8Tr/u0BN5egfA+5FENX86HlIgScigIZ4zZguy+R/X5bOtRs2aQEMwoAAgkrYXrw=
+	t=1781020063; cv=none; b=KipAa8vuKLVMnjp22rP0VpXu4a/LuosCnJDkoWD2QNpepkbw6rRe5zwXoKb9f5sWKigMMDHVUMcBwViIch2W/AvzBXWfBIN63hFI0oX41LXKX2pnlvyvO7c3osrg87rd/ow9mZVL7VZTCuKWzhz871C/ODd+novNaXW5j+7sp6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781020008; c=relaxed/simple;
-	bh=zpF9w6itFSOJgKbyIAIC0rALq3fevBbd5Xb7VaWIxU0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=II74A/VpXKaTU9kajiP5ec6otFmYOWYGXI+rB2BPM/VjS5GXh5NXqihm3QzBomXmST7hhOF5Cxo8dHQnJ1OT8RhUZnsPJpZvbM2WHAXc/P22ZoVEwJ0quJQisWplWOkEYIzsxalLeD7b0gYrsa/uzMUcgZgugawTNlX2rQtI3gU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=WB/qeZzd; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=IDUmbCrw; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1781020063; c=relaxed/simple;
+	bh=hUY8WmaKPqdt5XKj0BNv9cUF5ZQbwgXw9S9j3KenIxE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L2s+Z4FfxQdbM6/0qLJnjWyrY9dtqIPosKdJJuIAp8wa0GWi9sWso186SNJ4PZ0fcGwf60QFOSteCU7PUMfsDl3/P48ZbYNv0LwoEBMJkt+GFOkbtAye1HVBOW/5gDPTgosSCoINYsQ3E6Zu0RzBPyvjEE1NQ3OGCbtHX/RMr5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ftE0Hrzt; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="WB/qeZzd";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="IDUmbCrw"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 659ClaGi2706270
-	for <linux-pci@vger.kernel.org>; Tue, 9 Jun 2026 15:46:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Bw+HTzEU5Iy7MtnFBkzSQ787/7xbF41rkOAgUgVqkcE=; b=WB/qeZzddWSLZJTu
-	/kqDbSiNiL8Z2yHm7uiR+9yGFtaSJt4XO1Oq2kxdOH77TwFt4I8fj/in4uXT+LQ9
-	VisEKgHgJ7omEEmwGHD64v/f3zq6eDcznHVcE8DEfsZcr15SBF9J/4UrSSn8X93B
-	KcSCLBZdKlCArg8oA1IXykcFFzX8vIVoz1v16dxA713hQrCBzUcUra5AGWqmgp0Q
-	EhzvjWlYFWyZGgwLin/ZxCrpU0lFSk+7lkj2euau6U7TCiNmTrjQ6aBFgMcp4YaO
-	TptR0OrX4j4zsKG+33g3lJnohWXnpUAGErm4XVxJu8y2xb9L05PgjH8/fexZqS5k
-	EV0aAA==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4epfdt228g-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 15:46:46 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2bd04e4fe3dso88170185ad.3
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 08:46:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1781020006; x=1781624806; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Bw+HTzEU5Iy7MtnFBkzSQ787/7xbF41rkOAgUgVqkcE=;
-        b=IDUmbCrw9bsQwQh4jiTkqo8xNuWkafqphJPWqxnQEA56YhExnONnL1yhjN8gjSBuP4
-         aOdfYPfehcXfpXqZj/9KuXYrS0X045DNayJizwioOyV2tjlso9pvINfuVfmDPrLbi5Cg
-         ZOPG0tcEwX57Sr2NfWYL2dpWSYkrKzNYXpNZeL3pjNGRljXfb2lLrRe0FjstPSTonPPf
-         +iBQFz6uUPBRq1lpgRZoe6HEfzkWUGNpKtGN8yaYHX8AZUPmTxopoyT7MSArFTeDbUyX
-         M1cq3SdYJ0gffsyTIeIV5i08ABg5rVSmWU15oNQfV0vRwgarIKSXE8El1WS27RwC3BNi
-         6SVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781020006; x=1781624806;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=Bw+HTzEU5Iy7MtnFBkzSQ787/7xbF41rkOAgUgVqkcE=;
-        b=JgmHDgls32S5qHVIRzglrMFxtgM8Wu2Z26tIPr5CP3cXfnybA9SSHmY9YMKC/3MwEE
-         eTRc7E2ajEJMBNOw47zxlFnKq94O16M+lOsCyVFSNEtYqCG27BrwwRUVcKsAxB6hlsAt
-         dHhwAVZk08Cirg/ZlLmsa1ldaOFaKX0hNeEBu8pHqrCgdsltecO40cblS6QCfd0RnfQP
-         DFAWxHWrTRjOCPsRZOqcIW7rgAENkMvxhozkJcFcNk6xzt+2cggOiyjoQiBGs5eWxh6+
-         RNm2LhZadOduzaUM/fIIayNu7QRVXenBOWzTTIA9Qr6oVs3gCJvpjo2x9Y4uYd8oEatc
-         D8YA==
-X-Gm-Message-State: AOJu0YxUQlMHAa0Cyzx1fNDoMZLwur8j5YPBfWY5Xw1DqOyS4NFL2HT1
-	39RFm49p2bhBEdNY/yZ8TKnyHQ6RGcroc6DOtfZqL2qXmn+eAHDm/5jGU8XCZqXF+hkfNI16deH
-	mTQs8frtQ1/fgORRbWNZn/49U0H2u/uesBRz6AtdDLn7bWAZsbDjew74LU5pejq4=
-X-Gm-Gg: Acq92OHcFADTdwa2Ab42jcIVNS+tDuuBksufmzPindNdIunc1+X37ok+d5Byy1ibaLZ
-	9hi1dXOoXfsSZD7h2kL5cPsIe4ltxgTNyToVYByB0XFySClfSC39VCYClClpk2FVvgDgrds/MLZ
-	RZTNYBqpZ2erGVqealZkf1RS4/c0Tacca/FmlK/3rv43HfhSgJ1mAOhRaKZr2FmODnOfintOm+n
-	aE9QXQJCpidT8JxtL1xVxZBP3J6vUylTii+ujzEz1MAADsUxJyk/eekgROkd8SDq1IgwvNNZsXg
-	NiaAWUyeJBcVfk8e+xY3NajBKerLZanuLyuLxgHG8JAfWvwTt/CIZeGpBboIsdaUF/zlKnNb/jy
-	y8cifrZ5y4TGVKbKmWBB3T2C72E+pGLk=
-X-Received: by 2002:a17:902:c409:b0:2c2:15c7:ad77 with SMTP id d9443c01a7336-2c215c7ae15mr207432735ad.37.1781020005570;
-        Tue, 09 Jun 2026 08:46:45 -0700 (PDT)
-X-Received: by 2002:a17:902:c409:b0:2c2:15c7:ad77 with SMTP id d9443c01a7336-2c215c7ae15mr207432405ad.37.1781020005013;
-        Tue, 09 Jun 2026 08:46:45 -0700 (PDT)
-Received: from [192.168.1.11] ([120.56.203.186])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c164f8792bsm223401015ad.23.2026.06.09.08.46.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 08:46:44 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-X-Google-Original-From: Manivannan Sadhasivam <mani@kernel.org>
-To: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
-        kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com,
-        s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com,
-        Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        imx@lists.linux.dev, linux-kernel@vger.kernel.org
-In-Reply-To: <20260518072715.3166514-1-hongxing.zhu@nxp.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ftE0Hrzt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 848DE1F00893;
+	Tue,  9 Jun 2026 15:47:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781020062;
+	bh=M1W7CRAqGX1E8dfJFnTYqdwHB0D9gv4yn30ZbnB9uVE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=ftE0HrztmsU8QOKAipN0RVsg9+hFmlEX/gcr/B0muCWCk2NcG6rBy14Kz3V4w59uv
+	 ySUyPSUYFtMVkok4w7vYMZe4GLCayGjLWr4Cb23yG+zCnOzBRivoFarrAoND0goLN7
+	 /b8RiY2cC44AXgj3fgnAtnwp3oNscE2qgBIa89ACDOmbqdI6e51NGe7x/h2hsYoAKo
+	 0Z+T5LZUgexpPN8pKGvpuSFDvOkrlEYspCSmErNL0QI/UyJRy6m/eZCLiDoolOYSPu
+	 fT31i7Y6VNydiZOelzi5FjWxASApqxkIqUpFhMRVxWFD3DKJgaZtC/7kd8aQQcMmOx
+	 70fjglbLcnhLw==
+Date: Tue, 9 Jun 2026 21:17:33 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, 
+	kwilczynski@kernel.org, robh@kernel.org, bhelgaas@google.com, s.hauer@pengutronix.de, 
+	kernel@pengutronix.de, festevam@gmail.com, linux-pci@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI: imx6: Configure REF_USE_PAD before PHY reset
+ for i.MX95
+Message-ID: <xwupi3bxiihnmddqkdc6xsixkbirdpnips6qy5n4xchtcysnfq@f6pa5usw2a4f>
 References: <20260518072715.3166514-1-hongxing.zhu@nxp.com>
-Subject: Re: [PATCH v2 0/2] PCI: imx6: Fix i.MX95 PCIe PHY initialization
- sequence
-Message-Id: <178101999933.10755.15039783004341281715.b4-ty@kernel.org>
-Date: Tue, 09 Jun 2026 21:16:39 +0530
+ <20260518072715.3166514-2-hongxing.zhu@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
-X-Proofpoint-ORIG-GUID: jeSYdiewP0ZXbs3gUiMJuIn9ePKR0mnJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDE0OSBTYWx0ZWRfXxivpV/80af3r
- 6+YZKcRXnOBHw2Xo9Z8URosB73yfSPYuXoW/DvsKpg2oOcbbe1AXJKKKH9z77il7uMxs8bMd7/3
- 1lGKAaEJAeo/ZiUDUqiHtG2T81Fij5+FEw3+ElElnZmOV3/xp+amDisjG/U76saWrXupMiJ620T
- UIDiA8/VBFgllAaviSbh/2btLKMNF+turFtaPqf6PPUq8qCfeynGdcxlvRP50HgVgqQPjzZHoWZ
- q0/vctO3MtKIEJDGwPR3d4ecTpCV/SZOBWXOlFXxUBnUH0tnhnsEYSvOJqLS3YsZCmw0OlTj6tg
- vl1P/90/kc4ns7E1GukUmJ2no3b0jLwpc/lHiJio+Vs5AchnBfwM5brxGPTvNn4o5hWfohtlEyd
- squckJNBVMQVvjItwff/KTvygFyPkAW+D+xyKLx/i0WfLR9zXFDXKqy9hVBCbxJKUaYb1TG2s/r
- K7Xsu4IGGsbxDsMnjRA==
-X-Proofpoint-GUID: jeSYdiewP0ZXbs3gUiMJuIn9ePKR0mnJ
-X-Authority-Analysis: v=2.4 cv=doTrzVg4 c=1 sm=1 tr=0 ts=6a283566 cx=c_pps
- a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=eDurORsI8St+1bJHqsJewQ==:17
- a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=gowsoOTTUOVcmtlkKump:22
- a=VwQbUJbxAAAA:8 a=6xSj6z8mzX6N8v9Jz00A:9 a=QEXdDO2ut3YA:10
- a=GvdueXVYPmCkWapjIL-Q:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-09_03,2026-06-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 spamscore=0 bulkscore=0 lowpriorityscore=0 priorityscore=1501
- impostorscore=0 phishscore=0 clxscore=1015 malwarescore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606090149
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260518072715.3166514-2-hongxing.zhu@nxp.com>
 
-
-On Mon, 18 May 2026 15:27:13 +0800, Richard Zhu wrote:
-> This series addresses PHY initialization sequence issues for i.MX95 PCIe
-> that were identified through careful review of the i.MX95 PCIe PHY Databook.
+On Mon, May 18, 2026 at 03:27:14PM +0800, Richard Zhu wrote:
+> According to the i.MX95 PCIe PHY Databook, the ref_use_pad signal in the
+> Common Block Signals section selects the reference clock source connected
+> to the PHY pads. Per the specification, any change to this input must be
+> followed by a PHY reset assertion to take effect.
 > 
-> The current implementation does not strictly follow the timing requirements
-> specified in the PHY documentation for reference clock configuration and
-> PHY reset sequencing. These violations can potentially lead to unreliable
-> PHY initialization.
+> Move the REF_USE_PAD configuration before the PHY reset toggle to comply
+> with the required initialization sequence.
 > 
-> [...]
+> Fixes: 47f54a902dcd ("PCI: imx6: Toggle the core reset for i.MX95 PCIe")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 27 ++++++++++++++++++++++++---
+>  1 file changed, 24 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 002e0a0d9382..66e760015c92 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -138,6 +138,7 @@ struct imx_pcie_drvdata {
+>  	const u32 mode_off[IMX_PCIE_MAX_INSTANCES];
+>  	const u32 mode_mask[IMX_PCIE_MAX_INSTANCES];
+>  	const struct pci_epc_features *epc_features;
+> +	int (*init_pre_reset)(struct imx_pcie *pcie);
 
-Applied, thanks!
+I renamed the callback and helper while applying:
 
-[1/2] PCI: imx6: Configure REF_USE_PAD before PHY reset for i.MX95
-      commit: 0c26b1c34d12d4debfb5363cc0be6cdf68e87ba2
-[2/2] PCI: imx6: Assert ref_clk_en after reference clock stabilizes on i.MX95
-      commit: 9dda3f83ba677b9cc2613cecd9120123000ae50f
+s/init_pre_reset/select_ref_clk_src
 
-Best regards,
+- Mani
+
+>  	int (*init_phy)(struct imx_pcie *pcie);
+>  	int (*enable_ref_clk)(struct imx_pcie *pcie, bool enable);
+>  	int (*core_reset)(struct imx_pcie *pcie, bool assert);
+> @@ -249,6 +250,24 @@ static unsigned int imx_pcie_grp_offset(const struct imx_pcie *imx_pcie)
+>  	return imx_pcie->controller_id == 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
+>  }
+>  
+> +static int imx95_pcie_init_pre_reset(struct imx_pcie *imx_pcie)
+> +{
+> +	bool ext = imx_pcie->enable_ext_refclk;
+> +
+> +	/*
+> +	 * Regarding the Signal Descriptions of i.MX95 PCIe PHY, ref_use_pad is
+> +	 * used to select reference clock connected to a pair of pads.
+> +	 *
+> +	 * Any change in this input must be followed by phy_reset assertion.
+> +	 */
+> +
+> +	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_GEN_CTRL,
+> +			   IMX95_PCIE_REF_USE_PAD,
+> +			   ext ? IMX95_PCIE_REF_USE_PAD : 0);
+> +
+> +	return 0;
+> +}
+> +
+>  static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
+>  {
+>  	bool ext = imx_pcie->enable_ext_refclk;
+> @@ -271,9 +290,6 @@ static int imx95_pcie_init_phy(struct imx_pcie *imx_pcie)
+>  			IMX95_PCIE_PHY_CR_PARA_SEL,
+>  			IMX95_PCIE_PHY_CR_PARA_SEL);
+>  
+> -	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_PHY_GEN_CTRL,
+> -			   IMX95_PCIE_REF_USE_PAD,
+> -			   ext ? IMX95_PCIE_REF_USE_PAD : 0);
+>  	regmap_update_bits(imx_pcie->iomuxc_gpr, IMX95_PCIE_SS_RW_REG_0,
+>  			   IMX95_PCIE_REF_CLKEN,
+>  			   ext ? 0 : IMX95_PCIE_REF_CLKEN);
+> @@ -1348,6 +1364,9 @@ static int imx_pcie_host_init(struct dw_pcie_rp *pp)
+>  		pp->bridge->disable_device = imx_pcie_disable_device;
+>  	}
+>  
+> +	if (imx_pcie->drvdata->init_pre_reset)
+> +		imx_pcie->drvdata->init_pre_reset(imx_pcie);
+> +
+>  	imx_pcie_assert_core_reset(imx_pcie);
+>  
+>  	if (imx_pcie->drvdata->init_phy)
+> @@ -2047,6 +2066,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.mode_mask[0] = IMX95_PCIE_DEVICE_TYPE,
+>  		.core_reset = imx95_pcie_core_reset,
+>  		.init_phy = imx95_pcie_init_phy,
+> +		.init_pre_reset = imx95_pcie_init_pre_reset,
+>  		.wait_pll_lock = imx95_pcie_wait_for_phy_pll_lock,
+>  		.enable_ref_clk = imx95_pcie_enable_ref_clk,
+>  		.clr_clkreq_override = imx95_pcie_clr_clkreq_override,
+> @@ -2102,6 +2122,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
+>  		.ltssm_mask = IMX95_PCIE_LTSSM_EN,
+>  		.mode_off[0]  = IMX95_PE0_GEN_CTRL_1,
+>  		.mode_mask[0] = IMX95_PCIE_DEVICE_TYPE,
+> +		.init_pre_reset = imx95_pcie_init_pre_reset,
+>  		.init_phy = imx95_pcie_init_phy,
+>  		.core_reset = imx95_pcie_core_reset,
+>  		.wait_pll_lock = imx95_pcie_wait_for_phy_pll_lock,
+> 
+> base-commit: 40b7f61a1a4d7fd18188f3f87e15ff5a90ce1d31
+> -- 
+> 2.37.1
+> 
+
 -- 
-Manivannan Sadhasivam <mani@kernel.org>
-
+மணிவண்ணன் சதாசிவம்
