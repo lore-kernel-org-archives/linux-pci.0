@@ -1,57 +1,56 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D893F7887
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76897296BCB
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781001926; cv=none; b=GvpP7FReCmdmGvJa+604x2szBq31QAjhnx3RGspM1ybHj62Ut1OX8Jh2yoELdMh8cY4yVijenHtAEfAnk9i7ASZASFCUeVGhp6umisIU+AIKEWvYSuIJBnEJCwYfAhTiTgiRqSP5tZQCzqTey3zRJLJCFPk0OsKukx/JA+XVVn8=
+	t=1781001932; cv=none; b=PZf3FP6EHycDXao6XRkz8gzs8480Y+mdJH1yWe9Quty20eU48Fjv/JtxjRq+kDNM6k/qO6nP2chmN7thUVoaEmNy/R68z2le54B5hunJp0yVvT+w1LLQ8vGSGswlSzPkYq/NBmMMULVuZkCpZYS9zAZJYKC5IasLvVm4e/lYDeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781001926; c=relaxed/simple;
-	bh=J7TgcS7/3af3/hA1Cs94wUWwSFBIj9WsH+K7ZAQalDA=;
+	s=arc-20240116; t=1781001932; c=relaxed/simple;
+	bh=BMKYO+5lI4bclvln6h1lFZmZj5qwBgGTXcPi2yU+1y4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=oCvKhqubyRX3kgF64xioYRaC7xD5dgL92RfjCVPX7/5aBm/CF6Lzn6sJQWZcKG8oomBa/RPL8gHz2FibayRLcp7ngN0+b4AEYgEqspwqlsMxkrZbu2I4J9pWPqe25qvYPDnPmrJVWl2RO6pDrBUGdw+qPaQG/1bxsJqFNjsiXlA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Kzg8/WpO; arc=none smtp.client-ip=203.254.224.25
+	 Content-Type:References; b=Lyt4IyTz72YmCRbAlfyI5esWrr8lrWg8a49oijMVdJ0kycuwHwTiRgrlbDGFXSIbDqfJtjZWaBIOSRGlyoELnYMAlbgB5QKEOXdVdAaWfAvoztKiDN+kzZ5yN5MBBhBoo/8bDWo+63/eREftWWvHHD0AHoc3+AY+uhAF+hUi8yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=pkqvXNQT; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Kzg8/WpO"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260609104523epoutp029cd6e632055add49db31b60241398ed9~3Y9As-DGR2768727687epoutp02k
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:23 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260609104523epoutp029cd6e632055add49db31b60241398ed9~3Y9As-DGR2768727687epoutp02k
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="pkqvXNQT"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260609104526epoutp031c3741ac3c9be94d0afe0f880a0dbb46~3Y9DzhKds0098100981epoutp03E
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:26 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260609104526epoutp031c3741ac3c9be94d0afe0f880a0dbb46~3Y9DzhKds0098100981epoutp03E
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1781001923;
-	bh=kMkgTZuJ/C4L91nSM6PkENeTgSP9+Fl1hfo4foCfyvM=;
+	s=mail20170921; t=1781001926;
+	bh=Uxe8siGpeBw5SZONkkYNgM/0xKYIi23/sklb1yT+pj8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Kzg8/WpO6518c/xezrBVBNN/zjxo6/epyhT23+3oYX7jF8AJSqxCTRkfZO90NbCKD
-	 AfFoQCrbmJyIpZE6CBRK4OgJMarpEGkQ10Z3jOUJ/K+BbN/WDxQMw0U9M0MOIsvyQ/
-	 rcabtg0T/woV+zPbFWLo/LeTQS2nP2OXSRIw3aig=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	b=pkqvXNQT/X4M3QJ6ekadT4738oNSD4VOnMvDDdvzwq9XPGS+cJ6pjNpe6tGA3r4BD
+	 5PdpuEMAldm7ga4GhKykY8ZchSjjMUV7kuSvukS35I8Ht050csiNIsVxitwQL+9ilX
+	 7VFzznH3FQxIm3BMnGf7HSGNqDtaG9b7jN3IOfaw=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
 	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20260609104522epcas5p439cb0cb8a4b0ff8ac258f238a87373ac~3Y9AUVs6j2655926559epcas5p4T;
-	Tue,  9 Jun 2026 10:45:22 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.90]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4gZQXy216Lz6B9m7; Tue,  9 Jun
-	2026 10:45:22 +0000 (GMT)
+	20260609104526epcas5p45f5c777149e46322a4b50b4fad6dc0d4~3Y9DjH1J03211032110epcas5p4K;
+	Tue,  9 Jun 2026 10:45:26 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.38.94]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4gZQY15PjJz2SSKY; Tue,  9 Jun
+	2026 10:45:25 +0000 (GMT)
 Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
 	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260609104521epcas5p1d91703d83cfe9fd9d38506a64fa276a7~3Y8-RXvoE1025210252epcas5p1V;
-	Tue,  9 Jun 2026 10:45:21 +0000 (GMT)
+	20260609104525epcas5p151a4e745f5303e79a2a92432180a6af7~3Y9CORnbY1025210252epcas5p1g;
+	Tue,  9 Jun 2026 10:45:25 +0000 (GMT)
 Received: from unvme-SYS-221H-TN24R.samsungds.net (unknown [107.99.40.127])
 	by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260609104520epsmtip111075b924d06186a6f24d55bfc9e6f84~3Y89s12ed2381023810epsmtip1U;
-	Tue,  9 Jun 2026 10:45:20 +0000 (GMT)
+	20260609104523epsmtip1c14a135ce5ac2255ceb339b0299225c1~3Y9ArC0xG2221922219epsmtip1m;
+	Tue,  9 Jun 2026 10:45:23 +0000 (GMT)
 From: Shrihari E S <shrihari.s@samsung.com>
 To: jic23@kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
 	qemu-devel@nongnu.org, cpgs@samsung.com
 Cc: arun.george@samsung.com, vikash.k5@samsung.com, s.neeraj@samsung.com,
 	shrihari.s@samsung.com, dongjoo.seo1@samsung.com, dave@stgolabs.net,
 	gost.dev@samsung.com
-Subject: [RFC 4/8] hw/cxl: Add Streamlined Virtual Channel (SVC) property to
- CXL ports
-Date: Tue,  9 Jun 2026 16:28:32 +0530
-Message-Id: <20260609105836.3702787-5-shrihari.s@samsung.com>
+Subject: [RFC 5/8] hw/cxl: Wire UIO capability into HDM decoder registers
+Date: Tue,  9 Jun 2026 16:28:33 +0530
+Message-Id: <20260609105836.3702787-6-shrihari.s@samsung.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260609105836.3702787-1-shrihari.s@samsung.com>
 Precedence: bulk
@@ -61,85 +60,232 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260609104521epcas5p1d91703d83cfe9fd9d38506a64fa276a7
+X-CMS-MailID: 20260609104525epcas5p151a4e745f5303e79a2a92432180a6af7
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
 X-CPGSPASS: Y
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260609104521epcas5p1d91703d83cfe9fd9d38506a64fa276a7
+X-CMS-RootMailID: 20260609104525epcas5p151a4e745f5303e79a2a92432180a6af7
 References: <20260609105836.3702787-1-shrihari.s@samsung.com>
-	<CGME20260609104521epcas5p1d91703d83cfe9fd9d38506a64fa276a7@epcas5p1.samsung.com>
+	<CGME20260609104525epcas5p151a4e745f5303e79a2a92432180a6af7@epcas5p1.samsung.com>
 
-Add Unordered IO (UIO) dependent property SVC to CXL ports
-(Root, Upstream and Downstream).
+Plumb the 'uio_capable' flag to CXL HDM decoder capability and
+control register interfaces. The UIO bit in the capability register
+is now set for CXL Type3 devices and ports when UIO support is
+advertised via 'x-uio-svc' property.
 
-The following properties are added to CXL ports:
-    - x-uio-svc: Enable UIO traffic via SVC3 (mandatory path)
-    - x-uio-svc-opt: Enable UIO traffic via SVC4 (optional path)
+Per CXL 4.0 specification Section 8.2.4.20.7, the decoder control
+UIO bit is validated against the advertised capability during
+HDM decoder commit operations.
 
-Note: 256B flit mode property was already added in CXL ports, so reused it.
+Additionally, replace hardcoded HDM decoder control write masks
+with spec-aligned 'WRMASK' definitions.
 
 Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
 Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
 ---
- hw/pci-bridge/cxl_downstream.c            | 2 ++
- hw/pci-bridge/cxl_root_port.c             | 1 +
- hw/pci-bridge/cxl_upstream.c              | 2 ++
- include/hw/pci-bridge/cxl_upstream_port.h | 1 +
- 4 files changed, 6 insertions(+)
+ hw/cxl/cxl-component-utils.c        | 29 +++++++++++++++++++++++------
+ hw/mem/cxl_type3.c                  |  9 ++++++++-
+ hw/pci-bridge/cxl_downstream.c      |  2 +-
+ hw/pci-bridge/cxl_root_port.c       |  2 +-
+ hw/pci-bridge/cxl_upstream.c        |  3 ++-
+ hw/pci-bridge/pci_expander_bridge.c |  3 ++-
+ include/hw/cxl/cxl_component.h      |  2 +-
+ include/hw/cxl/cxl_device.h         |  2 ++
+ 8 files changed, 40 insertions(+), 12 deletions(-)
 
+diff --git a/hw/cxl/cxl-component-utils.c b/hw/cxl/cxl-component-utils.c
+index 31bbedb502..9a5b382272 100644
+--- a/hw/cxl/cxl-component-utils.c
++++ b/hw/cxl/cxl-component-utils.c
+@@ -13,6 +13,19 @@
+ #include "hw/pci/pci.h"
+ #include "hw/cxl/cxl.h"
+ 
++/* CXL 4.0 specification 8.4.2.20.7 */
++#define CXL_HDM_DECODER_CTRL_WRMASK (    \
++    (0xfu << 0)   | /* IG */             \
++    (0xfu << 4)   | /* IW */             \
++    BIT(8)        | /* LOCK_ON_COMMIT */ \
++    BIT(9)        | /* COMMIT */         \
++    BIT(12)       | /* TYPE */           \
++    BIT(13)       | /* BI */             \
++    BIT(14)       | /* UIO */            \
++    (0xfu << 16)  | /* UIG */            \
++    (0xfu << 20)  | /* UIW */            \
++    (0xfu << 24))   /* ISP */
++
+ /* CXL r3.1 Section 8.2.4.20.1 CXL HDM Decoder Capability Register */
+ int cxl_decoder_count_enc(int count)
+ {
+@@ -305,7 +318,7 @@ static void ras_init_common(uint32_t *reg_state, uint32_t *write_msk)
+ }
+ 
+ static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
+-                            enum reg_type type, bool bi)
++                            enum reg_type type, bool bi, bool uio)
+ {
+     int decoder_count = CXL_HDM_DECODER_COUNT;
+     int hdm_inc = R_CXL_HDM_DECODER1_BASE_LO - R_CXL_HDM_DECODER0_BASE_LO;
+@@ -325,9 +338,12 @@ static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
+         ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, 3_6_12_WAY, 0);
+         ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, 16_WAY, 0);
+     }
+-    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO, 0);
++    ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, UIO,
++                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio);
+     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
+-                     UIO_DECODER_COUNT, 0);
++                     UIO_DECODER_COUNT,
++                     (type == CXL2_TYPE3_DEVICE || CXL2_UPSTREAM_PORT) && uio ?
++                     decoder_count : 0);
+     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, MEMDATA_NXM_CAP, 0);
+     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY,
+                      SUPPORTED_COHERENCY_MODEL,
+@@ -341,7 +357,8 @@ static void hdm_init_common(uint32_t *reg_state, uint32_t *write_msk,
+         write_msk[R_CXL_HDM_DECODER0_BASE_HI + i * hdm_inc] = 0xffffffff;
+         write_msk[R_CXL_HDM_DECODER0_SIZE_LO + i * hdm_inc] = 0xf0000000;
+         write_msk[R_CXL_HDM_DECODER0_SIZE_HI + i * hdm_inc] = 0xffffffff;
+-        write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] = 0x13ff;
++        write_msk[R_CXL_HDM_DECODER0_CTRL + i * hdm_inc] =
++                                             CXL_HDM_DECODER_CTRL_WRMASK;
+         if (type == CXL2_DEVICE ||
+             type == CXL2_TYPE3_DEVICE ||
+             type == CXL2_LOGICAL_DEVICE) {
+@@ -391,7 +408,7 @@ static void bi_decoder_init_common(uint32_t *reg_state, uint32_t *write_msk,
+ void cxl_component_register_init_common(uint32_t *reg_state,
+                                         uint32_t *write_msk,
+                                         enum reg_type type,
+-                                        bool bi)
++                                        bool bi, bool uio)
+ {
+     int caps = 0;
+ 
+@@ -431,7 +448,7 @@ void cxl_component_register_init_common(uint32_t *reg_state,
+     case CXL2_LOGICAL_DEVICE:
+         /* + HDM */
+         init_cap_reg(HDM, 5, 1);
+-        hdm_init_common(reg_state, write_msk, type, bi);
++        hdm_init_common(reg_state, write_msk, type, bi, uio);
+         /* fallthrough */
+     case CXL2_DOWNSTREAM_PORT:
+     case CXL2_DEVICE:
+diff --git a/hw/mem/cxl_type3.c b/hw/mem/cxl_type3.c
+index b7ad437cbc..4cdadc3e10 100644
+--- a/hw/mem/cxl_type3.c
++++ b/hw/mem/cxl_type3.c
+@@ -590,6 +590,11 @@ static void hdm_decoder_commit(CXLType3Dev *ct3d, int which)
+     /* TODO: Sanity checks that the decoder is possible */
+     ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, ERR, 0);
+     ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, COMMITTED, 1);
++    if (ct3d->uio_capable) {
++        ct3d->uio_enabled = FIELD_EX32(ctrl, CXL_HDM_DECODER0_CTRL, UIO);
++    } else {
++        ctrl = FIELD_DP32(ctrl, CXL_HDM_DECODER0_CTRL, UIO, 0);
++    }
+ 
+     /* Get interleave details for chmu */
+     ig = FIELD_EX32(ctrl, CXL_HDM_DECODER0_CTRL, IG);
+@@ -1512,7 +1517,8 @@ void ct3d_reset(DeviceState *dev)
+     pcie_cap_fill_link_ep_usp(PCI_DEVICE(dev), ct3d->width, ct3d->speed,
+                               ct3d->flitmode);
+     cxl_component_register_init_common(reg_state, write_msk,
+-                                       CXL2_TYPE3_DEVICE, ct3d->hdmdb);
++                                       CXL2_TYPE3_DEVICE, ct3d->hdmdb,
++                                       ct3d->uio_capable);
+     cxl_device_register_init_t3(ct3d, CXL_T3_MSIX_MBOX);
+ 
+     /*
+@@ -1552,6 +1558,7 @@ static const Property ct3_props[] = {
+                                 width, PCIE_LINK_WIDTH_16),
+     DEFINE_PROP_BOOL("x-256b-flit", CXLType3Dev, flitmode, false),
+     DEFINE_PROP_BOOL("hdm-db", CXLType3Dev, hdmdb, false),
++    DEFINE_PROP_BOOL("x-uio", CXLType3Dev, uio_capable, false),
+     DEFINE_PROP_UINT16("chmu-port", CXLType3Dev, cxl_dstate.chmu[0].port, 0),
+ };
+ 
 diff --git a/hw/pci-bridge/cxl_downstream.c b/hw/pci-bridge/cxl_downstream.c
-index 7c7a1d1221..6f6f332c07 100644
+index 6f6f332c07..e0fa6cfdc4 100644
 --- a/hw/pci-bridge/cxl_downstream.c
 +++ b/hw/pci-bridge/cxl_downstream.c
-@@ -260,6 +260,8 @@ static const Property cxl_dsp_props[] = {
-     DEFINE_PROP_PCIE_LINK_WIDTH("x-width", PCIESlot,
-                                 width, PCIE_LINK_WIDTH_16),
-     DEFINE_PROP_BOOL("x-256b-flit", PCIEPort, flitmode, true),
-+    DEFINE_PROP_BIT("x-uio-svc", PCIEPort, svc, UIO_MANDATORY_SVC, false),
-+    DEFINE_PROP_BIT("x-uio-svc-opt", PCIEPort, svc, UIO_OPTIONAL_SVC, false),
- };
+@@ -42,7 +42,7 @@ static void latch_registers(CXLDownstreamPort *dsp)
+     uint32_t *write_msk = dsp->cxl_cstate.crb.cache_mem_regs_write_mask;
  
- static void cxl_dsp_class_init(ObjectClass *oc, const void *data)
+     cxl_component_register_init_common(reg_state, write_msk,
+-                                       CXL2_DOWNSTREAM_PORT, true);
++                                       CXL2_DOWNSTREAM_PORT, true, false);
+ }
+ 
+ /* TODO: Look at sharing this code across all CXL port types */
 diff --git a/hw/pci-bridge/cxl_root_port.c b/hw/pci-bridge/cxl_root_port.c
-index e82685d1ab..83fb5968b8 100644
+index 83fb5968b8..4be2b400f9 100644
 --- a/hw/pci-bridge/cxl_root_port.c
 +++ b/hw/pci-bridge/cxl_root_port.c
-@@ -53,6 +53,7 @@ typedef struct CXLRootPort {
-     CPMUState cpmu;
-     MemoryRegion cpmu_registers;
-     PCIResReserve res_reserve;
-+    bool uio_capable;
- } CXLRootPort;
+@@ -108,7 +108,7 @@ static void latch_registers(CXLRootPort *crp)
+     uint32_t *write_msk = crp->cxl_cstate.crb.cache_mem_regs_write_mask;
  
- #define TYPE_CXL_ROOT_PORT "cxl-rp"
+     cxl_component_register_init_common(reg_state, write_msk, CXL2_ROOT_PORT,
+-                                       true);
++                                       true, crp->uio_capable);
+ }
+ 
+ static void build_dvsecs(PCIDevice *d, CXLComponentState *cxl)
 diff --git a/hw/pci-bridge/cxl_upstream.c b/hw/pci-bridge/cxl_upstream.c
-index ef5480b116..dadad3e15c 100644
+index dadad3e15c..a75d10e7b4 100644
 --- a/hw/pci-bridge/cxl_upstream.c
 +++ b/hw/pci-bridge/cxl_upstream.c
-@@ -437,6 +437,8 @@ static const Property cxl_upstream_props[] = {
-     DEFINE_PROP_PCIE_LINK_WIDTH("x-width", CXLUpstreamPort,
-                                 width, PCIE_LINK_WIDTH_16),
-     DEFINE_PROP_BOOL("x-256b-flit", CXLUpstreamPort, flitmode, false),
-+    DEFINE_PROP_BIT("x-uio-svc", PCIEPort, svc, UIO_MANDATORY_SVC, false),
-+    DEFINE_PROP_BIT("x-uio-svc-opt", PCIEPort, svc, UIO_OPTIONAL_SVC, false),
- };
+@@ -136,7 +136,8 @@ static void latch_registers(CXLUpstreamPort *usp)
+     uint32_t *write_msk = usp->cxl_cstate.crb.cache_mem_regs_write_mask;
  
- static void cxl_upstream_class_init(ObjectClass *oc, const void *data)
-diff --git a/include/hw/pci-bridge/cxl_upstream_port.h b/include/hw/pci-bridge/cxl_upstream_port.h
-index d4186234c8..d23541e23a 100644
---- a/include/hw/pci-bridge/cxl_upstream_port.h
-+++ b/include/hw/pci-bridge/cxl_upstream_port.h
-@@ -22,6 +22,7 @@ typedef struct CXLUpstreamPort {
+     cxl_component_register_init_common(reg_state, write_msk,
+-                                       CXL2_UPSTREAM_PORT, usp->flitmode);
++                                       CXL2_UPSTREAM_PORT, usp->flitmode,
++                                       usp->uio_capable);
+     ARRAY_FIELD_DP32(reg_state, CXL_HDM_DECODER_CAPABILITY, TARGET_COUNT, 8);
+ }
+ 
+diff --git a/hw/pci-bridge/pci_expander_bridge.c b/hw/pci-bridge/pci_expander_bridge.c
+index 25dfee6a9b..18b61eca20 100644
+--- a/hw/pci-bridge/pci_expander_bridge.c
++++ b/hw/pci-bridge/pci_expander_bridge.c
+@@ -301,7 +301,8 @@ static void pxb_cxl_dev_reset(DeviceState *dev)
+     uint32_t *write_msk = cxl_cstate->crb.cache_mem_regs_write_mask;
+     int dsp_count = 0;
+ 
+-    cxl_component_register_init_common(reg_state, write_msk, CXL2_RC, false);
++    cxl_component_register_init_common(reg_state, write_msk, CXL2_RC, false,
++                                       false);
+     /*
+      * The CXL specification allows for host bridges with no HDM decoders
+      * if they only have a single root port.
+diff --git a/include/hw/cxl/cxl_component.h b/include/hw/cxl/cxl_component.h
+index d734f88d2c..662fdb0833 100644
+--- a/include/hw/cxl/cxl_component.h
++++ b/include/hw/cxl/cxl_component.h
+@@ -315,7 +315,7 @@ void cxl_component_register_block_init(Object *obj,
+                                        const char *type);
+ void cxl_component_register_init_common(uint32_t *reg_state,
+                                         uint32_t *write_msk,
+-                                        enum reg_type type, bool bi);
++                                        enum reg_type type, bool bi, bool uio);
+ 
+ void cxl_component_create_dvsec(CXLComponentState *cxl_cstate,
+                                 enum reg_type cxl_dev_type, uint16_t length,
+diff --git a/include/hw/cxl/cxl_device.h b/include/hw/cxl/cxl_device.h
+index 3b5dcb5aec..20a1a90014 100644
+--- a/include/hw/cxl/cxl_device.h
++++ b/include/hw/cxl/cxl_device.h
+@@ -883,6 +883,8 @@ struct CXLType3Dev {
      PCIExpLinkSpeed speed;
      PCIExpLinkWidth width;
      bool flitmode;
 +    bool uio_capable;
++    bool uio_enabled;
  
+     /* DOE */
      DOECap doe_cdat;
-     uint64_t sn;
 -- 
 2.34.1
 
