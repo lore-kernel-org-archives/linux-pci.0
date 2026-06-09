@@ -1,214 +1,274 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from fhigh-a2-smtp.messagingengine.com (fhigh-a2-smtp.messagingengine.com [103.168.172.153])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 313613E009D
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 17:28:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D86673EB0E1;
+	Tue,  9 Jun 2026 17:53:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.153
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781026122; cv=none; b=mTRI0of06K4iPfU5PMJ9BlkVBxGzOF7ARi6fXvgvOFqBRZGgHe8W3aXR3eKN5VCXZvr5LvDUCti7Bbc1/gwwPRrbIu5ypHVgpImbUCQDug0IB5i5wWn5JtJ+/tXUBAyqNHvJvbOk7wijdeigM+/zhnkVZewywIoJq036DDSZ/K8=
+	t=1781027639; cv=none; b=XHHW5UhDWmYJZ5hxndNQHoXeIUFbd4ZINgiPC2mMjrbpUB1XtYwG3Zp168f5EaSG58n0wjFeFEEGd1s0oar4AuBy0+Wuct9kw+cFhiiEUOov1MHClE74DvnsOPNPdhHGGs/iF8GG65WI1I/zlFF0YC5t+7zim52OudpPNUIYis0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781026122; c=relaxed/simple;
-	bh=yXrIZoZTgc7TZlMyCfpbe5d2gymUoXsSJqc1OPlY+zQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g8UQjlAVrAXOwL62JLtUb8qj45FEMG5J2lsC/Rp9eOZmNbdWSth29dC3CijASeMwth3crdjisZQ8CyAKaM3C2lZ/0wZbtAPAMizO0D0NiVs08eoCdH6Jo0Tn6CJsE3Lj1pzydXMFZ/zrB6MBWw/4JJ6+mOPprwuKeXteNG3hUyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C+mqgeXp; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1781027639; c=relaxed/simple;
+	bh=G3dDSYxZITI4JoM1P6ag+zLEWWXbjY1AHlcB74bNZlI=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=q6ntwIHIKz8z7pnEgcNcoOUQRnKRd+QyOal3/BfNHSFBTX0leV4KVhutNlpbAl+TOLo9Zl0aivQbILkhPPDgBofViXgPtHJq+s6SeTzU3CrBESkytqJu5D1FR6ZLoVsJgiDX1acWe7gO7fYj2+9L+4V+T8Fv+tJxCahzUbKxa0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=XvipgDIu; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=EXmrpHyP; arc=none smtp.client-ip=103.168.172.153
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C+mqgeXp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1781026120;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lgku0msEV96RCrGT/KIp6NsMANiwS+rjoIorKjF9HvY=;
-	b=C+mqgeXpm1WTA8RbyxKFjumtthMBWRDKx0E/PYE2fZaQcgJCsVgNsBqV+WcN2pte8vXgrr
-	xbqkGEr2MNtG58kT0kEuom+lFltatIXJvzlUxkv64l2YT1LmV9B/Lax8nOF78ZHzmBu4kk
-	jU+NYlOyHjdCROsUk+Yl3HDneCjn2So=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-569-so6cIjY1NDai8mANBw9Ofg-1; Tue,
- 09 Jun 2026 13:28:33 -0400
-X-MC-Unique: so6cIjY1NDai8mANBw9Ofg-1
-X-Mimecast-MFC-AGG-ID: so6cIjY1NDai8mANBw9Ofg_1781026112
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 25CC5180ACFA;
-	Tue,  9 Jun 2026 17:28:32 +0000 (UTC)
-Received: from [10.22.65.187] (unknown [10.22.65.187])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C3F6536919;
-	Tue,  9 Jun 2026 17:28:30 +0000 (UTC)
-Message-ID: <a5d1a421-ca18-4c8a-9d8f-7432ef96cb9d@redhat.com>
-Date: Tue, 9 Jun 2026 13:28:29 -0400
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="XvipgDIu";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="EXmrpHyP"
+Received: from phl-compute-02.internal (phl-compute-02.internal [10.202.2.42])
+	by mailfhigh.phl.internal (Postfix) with ESMTP id 1BA30140016C;
+	Tue,  9 Jun 2026 13:53:55 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-02.internal (MEProxy); Tue, 09 Jun 2026 13:53:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1781027635;
+	 x=1781114035; bh=a7CVtmzOovR3wl8r9g3dFUCizxylV+cMA1xI3GoLUqo=; b=
+	XvipgDIuwM1znBDepE6HRKdzLIxZJ0zJ/bfnn/Wv+VMRHTp3ETT9qSQOri23PifY
+	6rUTJRutHeQSjmFr3RuKh8OMNAi0YtLxqBRDnC5Ti+/KJuxPoCdnYvVXDvQot4ts
+	7yOVgwH56chjAPAo04dFS45diFORy6zvGXExgHx2+qba9QlNpD0zH243FvnYGCs0
+	AIE+NeUopYCqA6uSWhyaat65xGZOT9eJhpgpV8Op9Jz1rvlKwLdfpoY4pQXxIDjH
+	csndRfRXVhrhgRgvnd8tzRm9HEQJv1658AQBfzc25ZDBxLktubup180VzxKLO5nm
+	p+56NCVMyp9YKQmgycuL7w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781027635; x=
+	1781114035; bh=a7CVtmzOovR3wl8r9g3dFUCizxylV+cMA1xI3GoLUqo=; b=E
+	XmrpHyPPpv1jn9UwJI2c19C/FFhNsdwd8+gqIcqZft7n5LaEKyXE2/hDKB3rBp0r
+	W0TvuPESkaA+AmAITl36DbHXpk20YyzBTeZker7hvkKkbe8ma/tarH46cJzWPo2e
+	cZ442aOBHfUMPRo5xIp1l/HniiHK5o1hQ8LlNEdDD0dPHyFNqJbC76wN4vHA3Nl1
+	X3zt5JzuhALoA5DdL2zTAZKq7fhtslc1EaqCcuqSEuDrcVb0iWF3c/Lrz8entMBY
+	PBp8V4sabfTFxryjNWay+8RAG3bTprizHpryOjrCrYC8N3FAFtj+1FFoFDJjxD9A
+	E1YjVIL+n8NzZK4UUMu1w==
+X-ME-Sender: <xms:MlMoalUGd6o3p476meUrAdF--kAe2V3_SvCox1-W8Q-1cNXP5_olGA>
+    <xme:MlMoatvhuDvGZP4Ce7lq9mRc5BbrOuJoly2KD4rpe9EQ-IEF2dxc6yPpLBzwK8oj-
+    nNwpufop2y95xM6gmEgvaoGZNsqwpwL_6yhPRTibFjmwfBzWa0V5Q>
+X-ME-Received: <xmr:MlMoag76H3JSuZ0cyE5-5Qlo9JA_SnWJ_uq_h3mxK2moL2U-jzLjDQi2IQ4>
+X-ME-Proxy-Cause: dmFkZTE1if/jpE/lTR6fAEmuWN1lAZ4H/eJ2GCBC95FwGXdoQnSuqhxsu9rTyd4IuvRvq1
+    h+9MlrfADCxGehVryUb0S3FUd+LOp7PSSdA81J97Qmq0R52mtdiqACZJKNlUB61wTLjSft
+    MQ7HYNGaavv+kTNwH65iFJ08RGkQkma0iHltFQVIFMiTHpSYLibEnmPdsH3EINMc5oOwcT
+    B8gLqhx3gkSaRMjaBCC+tBSu/Wagoidj2BbOPHxB3vBQvxz9GFun2Wu67vZry7++Gg8i9v
+    VnzqApG2p8Fv0Ezkf2ftLgAjqai175lues2XJWoyl4Ovw4SMDANoC/N4g+S1+eR6sjQmQS
+    V7kcbY/6+T7Bni9TcCszuG7OuzPjTIEd/9Q7bkk36JYcuiPLut69GwtC0KD/rKossoQhst
+    EgeVxJZT77At7qcEc5PGyCH1qOM4VsrBSw+rN9fb7ShRlQlGO+lsJvZfC8Ca8jRX6L37zi
+    33SUOVubNnYfqtiv0Kq5E8yFCYR+5chLBvpftihecsHy3td42ysQwAm7ZMV3cdnyI+n9Dr
+    j4yQPfUkVXtH7GaSRTk0zSjbvA7pAHDH2ZnUa4qQiFHZNrgUDECSw95pnzFvyvMQXmifod
+    OUV1uOSyk8aHvz8gbt06jglSGG+eMI3tYDqJUk9WsOtadbJpNtWnB1NuPZ6w
+X-ME-Proxy: <xmx:MlMoaoSKmE3FZMXcIca2shHXVwmnsshYN7LySb157tS3QzJnaQxvRA>
+    <xmx:MlMoaruzBb0D1lye9NGSFGrFWk1Ze_b39KoYSf8bHUULrphh_xZWvA>
+    <xmx:MlMoai8oudoO-PuPjUck68Vo0MW6izxGOUi1kcVKw_FoR5-BryZD4Q>
+    <xmx:MlMoasxgLuEzSU7M6mW2WLaF99SJz0kPsbn9z_ah15LEVdVLxDhVDQ>
+    <xmx:M1MoavAiZQk3APqYazZle3AHyxOsJ06XmoW3HjZVDH1I_K-AKsgSayH1>
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 9 Jun 2026 13:53:53 -0400 (EDT)
+Date: Tue, 9 Jun 2026 11:53:52 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, jjohnson@kernel.org, mani@kernel.org,
+ linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+ ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+ mhi@lists.linux.dev, linux-kernel@vger.kernel.org, alex@shazbot.org
+Subject: Re: [PATCH v8 2/3] PCI: Add device-specific reset for Qualcomm
+ devices
+Message-ID: <20260609115352.32acb6fe@shazbot.org>
+In-Reply-To: <20260609163649.319755-3-jtornosm@redhat.com>
+References: <20260609163649.319755-1-jtornosm@redhat.com>
+	<20260609163649.319755-3-jtornosm@redhat.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] PCI: Call local_pci_probe() directly if current CPU is
- in the right node
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
- Frederic Weisbecker <frederic@kernel.org>, Danilo Krummrich
- <dakr@kernel.org>, Tejun Heo <tj@kernel.org>, driver-core@lists.linux.dev
-References: <20260608195111.GA46568@bhelgaas>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20260608195111.GA46568@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
+On Tue,  9 Jun 2026 18:36:48 +0200
+Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
 
-On 6/8/26 3:51 PM, Bjorn Helgaas wrote:
-> [+cc Thomas, Frederic, Danilo, Tejun, driver-core]
->
-> On Sun, Jun 07, 2026 at 06:11:03PM -0400, Waiman Long wrote:
->> local_pci_probe() and hence pci_call_probe() can be called
->> recursively.
-> Can we say something about the scenario that results in a recursive
-> call?  Based on the stack trace and the comment below, I guess two of
-> the scenarios are:
->
->    - vmd_probe() creates a new hierarchy below the VMD endpoint and
->      enumerates it.  The pci_bus_add_device() in vmd_enable_domain()
->      calls .probe() for devices below VMD.
->
->    - A PF .probe() calls pci_enable_sriov(), which enables VFs, and the
->      pci_bus_add_device() in pci_iov_add_virtfn() calls .probe() for
->      new VFs.
->
-> Possible commit log text:
->
->    local_pci_probe() and hence pci_call_probe() can be called
->    recursively, e.g., when vmd_probe() calls .probe() for devices in
->    the new hierarchy below VMD or a PF .probe() enables VFs and calls
->    .probe() for them.
-Thank for the suggestion. Will incorporate that in the next version.
->> If the recursive calls are done indirectly via workqueue
->> kworker, a lockdep recursive warning can be produced.
-> For non-workqueue experts like me, can we mention the reason why the
-> warning only affects the workqueue indirect case?
->
-> And maybe include a line or two of the actual lockdep warning to help
-> search engines find this?  The stacktrace is good info, but not
-> specific to the warning.
+> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
+> lack working reset methods for VFIO passthrough scenarios. These devices
+> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> broken bus reset.
+> 
+> The problem manifests in VFIO passthrough scenarios:
+> 
+> - WCN6855 WiFi card (17cb:1103): Normal VM operation works fine, including
+>   clean shutdown/reboot. However, when the VM terminates uncleanly
+>   (crash, force-off), VFIO attempts to reset the device before it can
+>   be assigned to another VM. Without a working reset method, the device
+>   remains in an undefined state, preventing reuse.
+> 
+> - WCN7850 WiFi card (17cb:1107): Same behavior as WCN6855.
+> 
+> - SDX62/SDX65 5G modems (17cb:0308): Never successfully initialize even
+>   on first VM assignment without proper reset capability.
+> 
+> Add device-specific reset entries for these Qualcomm devices using D3cold
+> power cycling with automatic D3hot fallback. The implementation uses
+> pci_set_power_state(D3cold) which automatically falls back to D3hot on
+> platforms without ACPI _PR3 power resources. While not a complete reset
+> (BARs preserved), testing shows D3hot transition provides sufficient reset
+> for VFIO reuse.
+> 
+> Extract a shared pci_dev_d3cold_d0_cycle() helper function to avoid code
+> duplication between pci_d3cold_reset() (strict _PR3 requirement) and the
+> new reset_d3cold_d3hot() device-specific reset (automatic fallback).
+> The helper performs only the power cycle; IOMMU handling is done by the
+> caller (pci_d3cold_reset() for general method, __pci_dev_specific_reset()
+> wrapper for device-specific methods).
+> 
+> Device-specific reset is position #1 in the reset hierarchy, so these
+> Qualcomm devices will use power cycling as their primary reset method,
+> with the general d3cold method (position #8) available as a fallback on
+> _PR3-capable platforms if users override via sysfs.
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> ---
+> v8: Fix commit message: correct IOMMU handling description. The helper
+>     performs only the power cycle; IOMMU is handled by callers (this was
+>     v6 fix)
+> v7: https://lore.kernel.org/all/20260603105853.326290-3-jtornosm@redhat.com/
+> 
+>  drivers/pci/pci.c    | 37 +++++++++++++++++++++++++++----------
+>  drivers/pci/pci.h    |  1 +
+>  drivers/pci/quirks.c | 19 +++++++++++++++++++
+>  3 files changed, 47 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 096868f80cd4..f7a7443287fd 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4491,6 +4491,32 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+>  	return ret;
+>  }
+>  
+> +/**
+> + * pci_dev_d3cold_d0_cycle - Perform D3cold->D0 power cycle
+> + * @dev: Device to power cycle
+> + *
+> + * Common helper to perform D3cold->D0 power cycle for reset methods.
+> + * Attempts D3cold transition with automatic fallback to D3hot on platforms
+> + * without ACPI _PR3 power resources.
+> + *
+> + * Caller must handle IOMMU preparation/cleanup if needed.
+> + *
+> + * Returns 0 on success, negative error code on failure.
+> + */
+> +int pci_dev_d3cold_d0_cycle(struct pci_dev *dev)
+> +{
+> +	int ret;
+> +
+> +	if (dev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	ret = pci_set_power_state(dev, PCI_D3cold);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return pci_set_power_state(dev, PCI_D0);
+> +}
+> +
+>  /**
+>   * pci_d3cold_reset - Put device into D3cold and back to D0 for reset
+>   * @dev: PCI device to reset
+> @@ -4520,22 +4546,13 @@ static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+>  	if (probe)
+>  		return 0;
+>  
+> -	if (dev->current_state != PCI_D0)
+> -		return -EINVAL;
+> -
+>  	ret = pci_dev_reset_iommu_prepare(dev);
+>  	if (ret) {
+>  		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+>  		return ret;
+>  	}
+>  
+> -	ret = pci_set_power_state(dev, PCI_D3cold);
+> -	if (ret)
+> -		goto done;
+> -
+> -	ret = pci_set_power_state(dev, PCI_D0);
+> -
+> -done:
+> +	ret = pci_dev_d3cold_d0_cycle(dev);
+>  	pci_dev_reset_iommu_done(dev);
+>  	return ret;
+>  }
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 4a14f88e543a..a9942787de9e 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -234,6 +234,7 @@ void pci_init_reset_methods(struct pci_dev *dev);
+>  int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+>  int pci_bus_error_reset(struct pci_dev *dev);
+>  int pci_try_reset_bridge(struct pci_dev *bridge);
+> +int pci_dev_d3cold_d0_cycle(struct pci_dev *dev);
+>  
+>  struct pci_cap_saved_data {
+>  	u16		cap_nr;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e49136ac5dbf..70f3b0f26799 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4237,6 +4237,22 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Device-specific reset method via D3cold/D3hot power cycle.
+> + *
+> + * Some devices lack working FLR, advertise NoSoftRst+ (blocking PM reset),
+> + * and have broken bus reset. This function provides device-specific reset via
+> + * power cycling, attempting D3cold with automatic fallback to D3hot on platforms
+> + * without ACPI _PR3 power resources.
+> + */
 
-Will do that in the next version.
+My only complaint is that this is positioned a bit generically.  If the
+reset only achieves D3hot on a device that reports NoSoftRst+, then
+this appears as a no-op reset method.  The claim here is instead that
+despite reporting NoSoftRst+, the devices using this reset have notably
+improved behavior, especially across unexpected resets in device
+assignment scenarios.  This leads us to believe that some degree of
+reset is achieved, for devices that otherwise have no viable
+alternative reset method.
 
-BTW, the lockdep warning is actually a false positive. I will send an 
-alternative fix in the next version.
+Also, I know from previous discussions that much of the testing was
+done with M.2 adapters in slots without _PR3 support, which exercises
+the D3hot fallback rather than an actual D3cold power cycle.  Has each
+of these devices been tested on a platform where D3cold is actually
+achieved through this method?  Thanks,
 
->> Below is the
->> stack trace of the lockdep warning on a 4-socket x86-64 Skylake server.
->>
->>    <TASK>
->>      :
->>    start_flush_work+0x40b/0x9b0
->>    __flush_work+0xbd/0x1a0
->>    pci_call_probe+0x510/0x700
->>    pci_device_probe+0x17c/0x270
->>    call_driver_probe+0x68/0x1f0
->>    really_probe+0x197/0x7b0
->>    __driver_probe_device+0x32d/0x460
->>    driver_probe_device+0x49/0x120
->>    __device_attach_driver+0x162/0x290
->>    bus_for_each_drv+0x109/0x190
->>    __device_attach+0x1a2/0x3f0
->>    device_initial_probe+0x7d/0xa0
->>    pci_bus_add_device+0x93/0xe0
->>    pci_bus_add_devices+0x83/0x190
->>    vmd_enable_domain+0x11fb/0x1b80
->>    vmd_probe+0x34c/0x4b0
->>    local_pci_probe+0xdf/0x190
->>    local_pci_probe_callback+0x35/0x80
->>    process_one_work+0x919/0x1af0
->>    worker_thread+0x5a6/0xd10
->>      :
->>    </TASK>
->>
->> The use of work function originally comes from commit 873392ca514f
->> ("PCI: work_on_cpu: use in drivers/pci/pci-driver.c") to execute the
->> device probing and allocate memory on the right node where the device
->> bus is attached to.
->>
->> In the case of nested device probing within a work function, the current
->> CPU is likely to be in the right node already. So there is no point in
->> scheduling another work function in the same or a neigboring CPU and wait
->> for its completion. It will be more efficient to call local_pci_probe()
->> directly when the current CPU is indeed in the right node. That will
->> also avoid the lockdep warning due to nested calls to schedule and
->> flush a work function.
-> Out of scope for this patch, but none of the CPU/node selection is
-> PCI-specific, and neither is the housekeeping cpuset and RCU stuff.
-Yes, they are not specific to PCI, but is more related to the proper use 
-of the housekeeping cpumasks.
->
-> I think this would be improved if we could move the NUMA affinity and
-> async probe scheduling up to the driver core.  There was a little
-> discussion of that here:
->
->    https://lore.kernel.org/linux-pci/20251231165503.GA159243@bhelgaas/
+Alex
 
-Thank for the background info. Will incorporate that in the next 
-version. As for moving the NUMA affinity and the async probe scheduling 
-up to the driver core. I will leave that to other engineers who have 
-more experience in those area.
-
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   drivers/pci/pci-driver.c | 24 +++++++++++++++++++-----
->>   1 file changed, 19 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->> index e3f59001785a..542b22537852 100644
->> --- a/drivers/pci/pci-driver.c
->> +++ b/drivers/pci/pci-driver.c
->> @@ -375,6 +375,8 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->>   {
->>   	int error, node, cpu;
->>   	struct drv_dev_and_id ddi = { drv, dev, id };
->> +	bool node_invalid, cpu_in_node = false;
->> +	const struct cpumask *node_cpus;
->>   
->>   	/*
->>   	 * Execute driver initialization on node where the device is
->> @@ -383,14 +385,27 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
->>   	 */
->>   	node = dev_to_node(&dev->dev);
->>   	dev->is_probed = 1;
->> +	node_invalid = node < 0 || node >= MAX_NUMNODES || !node_online(node);
->> +	node_cpus = node_invalid ? cpu_online_mask : cpumask_of_node(node);
->> +
->> +	/*
->> +	 * If the current task is a wq kworker activated by queue_work_on()
->> +	 * below, the kworker is affined to a designated CPU and won't be
->> +	 * switched to another one. So the current CPU can be checked to see
->> +	 * if it is in the right node.
->> +	 */
->> +	if (current->flags & PF_WQ_WORKER) {
->> +		cpu_in_node = cpumask_test_cpu(get_cpu(), node_cpus);
->> +		put_cpu();
->> +	}
->>   
->>   	cpu_hotplug_disable();
->>   	/*
->>   	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
->> -	 * device is probed from work_on_cpu() of the Physical device.
->> +	 * device is probed from work_on_cpu() of the Physical device or when
->> +	 * the current CPU is in the desired node.
-> Since we're updating this comment, let's change "Physical device" to
-> "Physical Function" at the same time to match the spec terminology.
-
-Sure. Will make the change.
-
-Cheers,
-Longman
+> +static int reset_d3cold_d3hot(struct pci_dev *dev, bool probe)
+> +{
+> +	if (probe)
+> +		return 0;
+> +
+> +	return pci_dev_d3cold_d0_cycle(dev);
+> +}
+> +
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -4252,6 +4268,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  		reset_chelsio_generic_dev },
+>  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+>  		reset_hinic_vf_dev },
+> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_d3cold_d3hot },  /* WCN6855 */
+> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_d3cold_d3hot },  /* WCN7850 */
+> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_d3cold_d3hot },  /* SDX62/SDX65 */
+>  	{ 0 }
+>  };
+>  
 
