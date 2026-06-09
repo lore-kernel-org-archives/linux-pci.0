@@ -1,921 +1,262 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from LO2P265CU024.outbound.protection.outlook.com (mail-uksouthazon11021143.outbound.protection.outlook.com [52.101.95.143])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FE6031197C;
-	Tue,  9 Jun 2026 12:08:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781006917; cv=none; b=X+4hjGNzw2jONrHaDNS/H8OeiA2VEl/OmXCum6wnFEy3hFuG6k9xzqoBM+gIGZlravDOiLb0afSy1WQsxnlq9Od8Oa/AuS8nmWVoR7J9Uuogma/CBKmX/UzMMMrxQjUP3fs7/Np2I3NH6kBHsEZ8qkFUQVVyZqQ0Tcwid+Y3X2Y=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781006917; c=relaxed/simple;
-	bh=AU2JN8G/mg53giA5eAyW7DH9Rol/skVedjMXBcjMPiA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=X5S80nEYR2Zgc5pABabSVTUjgX+LojMBle+B/CPIV4x8HJKiCE//4JTr+nz8CH7Enm1VQJcNuU6PeAjxN3rzY5w9VMWZeg31jj10vwiUsoKP5Uao0BJf9fZ63AyH+5nTpk3alZYKVmm/kko8ejY8ZaSN5Qm7YDSmCisnr0Qyyl8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mBQKtJH9; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C09BD40860D;
+	Tue,  9 Jun 2026 12:44:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.95.143
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781009099; cv=fail; b=t1YndWZo6+bTs4wH8ihQcH87xOY2s5FdNC9CI9A1U5BhrgbQZ5E4y7J/ypQeUaJQ+834/oavcYcOrv1xISnbnKweMI1lBx4cXAYqT2iDNF68w8Caf/8fn8YC6bQ3LUZxc4Z8w2Rreno+J0wyJotRngY3AEocLcj7tM52td4nzQM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781009099; c=relaxed/simple;
+	bh=BAa4B7xlc9aulbSZecuAdUWzmJrSjoCBFXOCmgFRVfE=;
+	h=Content-Type:Date:Message-Id:To:Cc:Subject:From:References:
+	 In-Reply-To:MIME-Version; b=fbJDcFIJUjA8rUqAOVco5yqJfjoC3lJ3wbosCs/ZEVUmpMJRuZ5uRtLh/+2CCqGByhQjIPP1WPcRwZT3ZUmM/a30z/qm9E0XiALbkQNJHI6YHqCILRzqb2A/yh01ktoy729iLwnEuapElErsVwd8YiPznKnwIQsFLc0SxlSNQCg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=ZuDGzaGo; arc=fail smtp.client-ip=52.101.95.143
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mBQKtJH9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781006910; x=1812542910;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=AU2JN8G/mg53giA5eAyW7DH9Rol/skVedjMXBcjMPiA=;
-  b=mBQKtJH910guKsl92oMEx+HFquBuyiDFAMAkPZxbOZFxWrj+k9bA73FX
-   AVO4HX2/yjs8ZchqfgU9kvacZZf9bQ2NZ/BILki+tbJvw3vuss+btYPtS
-   o/W6ge6OkplfEXGKN0Ciyp7b+7ymFLVrLs19VtSc8vs2TAJtlDzN7bUkp
-   I2XSS5wCPSWUesxAigZJRN7G8i7msa3t5yfJdReqCaujyffdX2WDyTg9G
-   ZQjlsLobTHDL5CJ8V+AVYzz9A+mT0OP1r93ejoS3w1JVhFaP/LeeMrue1
-   pSd38L0+14WkRYxnbYSOgfsp0fwhO4YkInFub3seV3v4KPCzIOmlF65xQ
-   g==;
-X-CSE-ConnectionGUID: Y8MWxJ+bS6CBrwd9edQGmg==
-X-CSE-MsgGUID: Pj16GNalTrWzeaPV9U7z8Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11811"; a="99340744"
-X-IronPort-AV: E=Sophos;i="6.24,196,1774335600"; 
-   d="scan'208";a="99340744"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2026 05:08:29 -0700
-X-CSE-ConnectionGUID: /bA8fb8XTyCwoxf+6vUyMg==
-X-CSE-MsgGUID: RC7ujOelR5OcnR3Q0wQ5Ig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,196,1774335600"; 
-   d="scan'208";a="244989569"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa010.jf.intel.com with ESMTP; 09 Jun 2026 05:08:28 -0700
-Received: by black.igk.intel.com (Postfix, from userid 1001)
-	id CE85395; Tue, 09 Jun 2026 14:08:26 +0200 (CEST)
-Date: Tue, 9 Jun 2026 14:08:26 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dag B <dag@bakke.com>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>
-Subject: Re: Connecting multiple TB3 eGPUs via USB4 hub?'
-Message-ID: <20260609120826.GN2990@black.igk.intel.com>
-References: <f600c4de-955f-4403-9f47-4de1088a9f56@bakke.com>
- <20260608152640.GA35630@bhelgaas>
+	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="ZuDGzaGo"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=e+/UbTCKbPROOvE9XSbh1bnY8KYU08RQEu6YTp9vhvO+sqhDYmPcG5Ujow63IXItwabmk18Mz9ZvgFo+BtEKw/Rur6Tze/KNWX3PMQleerfPL3LePoQqEBXihRcz7RAgkIozCTUnQ2rByS+QTfZNg5/GVAOgjRXD67FCw4hCsqYbF2nl0Zo9bqGfSRv+jAp+8TNPnWUw+txaPqIKi4Xn2880ky0Mwlr9brDLmsrrN5Ul9AqNjYZlZA219jSv3u68WEH2G2saf4vQcWrr8KaP5u/E/P81IoOpbquYRKAMX5UCklMEuV79rcHZf68rdz9u/vmfsKgFwZWOw5TrBzM+IQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=IziIHHUojx0I67odiQ07xacq7bqaD1j00XTspPleLLQ=;
+ b=dVD4Jd2JL+nVhGt4hYz88NStvU563h5EOyaa5Zhy1tg1lxPTgcsb4BbewOFhWPZQuW+pZ5mAAeyF9VFrFLe/35w2LUNDUloGqDhRDAVBdF3+dhVco+HW7lQYfcPdRatUDoChdU0G5bSAaDOYDVyGYIMo8wVWG4BXYZRnVbyERrK8AXQh9N3LO5Z6KXBM8qWVT5HQvK6tO5oarTHUx+iZ+REvAwD+mTZkkGaZbBGHOog2lUliremAH7ee1VOK2q/R9TUICnZ2wdpRBGw15TzBYaCPFn3h7+RdY5SHZXUWq2VUfTV8+Bo1qpP1IwPp/7UD6kmrv9cUbO9DWKw256uZ0g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
+ dkim=pass header.d=garyguo.net; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IziIHHUojx0I67odiQ07xacq7bqaD1j00XTspPleLLQ=;
+ b=ZuDGzaGosVhS/NG2u/m5u8CTss3YAV3cqAh69PRU4dFUzE1Aupj+Bzmx/DSySAtrdTbMCrYOvz0lzmYzB/OHPCt+lBLJLCTPEB8JtNFaUPt35H+Slt0E+7/vYijYaubRgt42pLOfss3RtRqEwyTDHXuFMmjbVFFm8Gj/olRFeTc=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=garyguo.net;
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:488::16)
+ by CW1P265MB9331.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:28f::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.14; Tue, 9 Jun 2026
+ 12:44:52 +0000
+Received: from LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986]) by LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::1c3:ceba:21b4:9986%4]) with mapi id 15.21.0092.011; Tue, 9 Jun 2026
+ 12:44:52 +0000
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 09 Jun 2026 13:44:51 +0100
+Message-Id: <DJ4J15P03MPL.QU45B7NZNN0A@garyguo.net>
+To: "Gary Guo" <gary@garyguo.net>, "Danilo Krummrich" <dakr@kernel.org>,
+ "Alice Ryhl" <aliceryhl@google.com>, "Daniel Almeida"
+ <daniel.almeida@collabora.com>, "Greg Kroah-Hartman"
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "Miguel Ojeda" <ojeda@kernel.org>, "Boqun Feng" <boqun@kernel.org>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Trevor
+ Gross" <tmgross@umich.edu>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Abdiel
+ Janulgue" <abdiel.janulgue@gmail.com>, "Robin Murphy"
+ <robin.murphy@arm.com>, "Alexandre Courbot" <acourbot@nvidia.com>, "David
+ Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>
+Cc: <driver-core@lists.linux.dev>, <rust-for-linux@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <nova-gpu@lists.linux.dev>, <dri-devel@lists.freedesktop.org>, "Laura Nao"
+ <laura.nao@collabora.com>
+Subject: Re: [PATCH v3 00/19] rust: I/O type generalization and projection
+From: "Gary Guo" <gary@garyguo.net>
+X-Mailer: aerc 0.21.0
+References: <20260608-io_projection-v3-0-c5cde13a5ec4@garyguo.net>
+In-Reply-To: <20260608-io_projection-v3-0-c5cde13a5ec4@garyguo.net>
+X-ClientProxiedBy: LO4P123CA0389.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:18f::16) To LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:488::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260608152640.GA35630@bhelgaas>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LOVP265MB8871:EE_|CW1P265MB9331:EE_
+X-MS-Office365-Filtering-Correlation-Id: 43f587a8-d424-4d37-8d66-08dec624e6b4
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|366016|7416014|1800799024|10070799003|921020|56012099006|5023799004|6133799003|18002099003|22082099003;
+X-Microsoft-Antispam-Message-Info:
+	daYV0M75aBile6wWKS6BQuJpWjrXRHI8+/Zo1S4iczbs/89/9hsHH0wyl1RXwrmZd9VlUfnLydSuy+MkYJr3/rhdR674cqL1eAskZBhSR4qJjugY7AA5+WTOChjX73idEML6prbCnGxHrgQCVLYp2XrxLFLkdzjHc257visU1d4Jlzi86P1Coo+H70W8YxMO0xy/kjWZV00y73QiZAITwFYX7Ii0ujRALKI6OoMiRK6AttfaU6GPVrGW1xukbmiUTmMWZL0ZTcryFFC6HSDBwzxu893d6xXeCnM/LyvnloqLv5YgiYPpLD4yXjQmHIcLm0stEVoad+hyvfYvidiOIWZsFW//jsQEZaVOFxF7kUsaJHqnBJ7r0YdgYisnP2r/02LqOCKDDgXOWt+7ny12tSuy+2oanTQGrW+jvPnTpUAo8k9bLS+Pf/Hy91VjSPw/rQfhwjMWcOuvYIvqrgnetqfvSvUj6c1QBzks1lCx0/s0OOxB3A/jxj9Gepct5NRAx7yYjiRYhRyW/UwVgInxzNcY/Vhr1z6Llxb47qWTfZ1D8s2Iii3ESKQ5RJTlsqywAjI2wPpud4mAX9NeYyeCPDBQXYeJ/1I8BhOXnbcxuzE6ZF0AFkHKG2WuEWryOrGbNTyOouyP2G7TBCoodaRpYJmPZm60Y0T/sDL1CjFtuqV3PWZ5XztkPzWk3P0HTq9S
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(7416014)(1800799024)(10070799003)(921020)(56012099006)(5023799004)(6133799003)(18002099003)(22082099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?QmVJbVd3VlR2QkUyTDBhUzFidXFmK2k5ODEzdHd2dG9Ea3E2ajc1aWlkUExR?=
+ =?utf-8?B?WTZDQ2wwYUIrbWk4U1pxT3hZT2Z6QmJFUXA5SWFwRC9YelJwK2RwWVk5aTJY?=
+ =?utf-8?B?N0tEeFdacVE2UnpDcU9BQ1ZjOWdjSXVYOTJ6SVd3QXYybm40R0FMZFhmRUs4?=
+ =?utf-8?B?MUFwUlFaRjFyMU5STjd4bVM1T2MvWHYyRVBpTkpXb0d6cStibkV4YStYSjNz?=
+ =?utf-8?B?UVhuVFZLNEIrTlRxYy96ZHlQcURLT1ZIYmxpZjl2TGQ3UytNMy9pU1o5S1gv?=
+ =?utf-8?B?c1lWUDBpRGlsSHFVa1V4ZHIybksvay9iMnlGQnBKY3ozclVZUFhoeTRoQVZD?=
+ =?utf-8?B?SEtCMDNsVGRUd29kUVJnaDV2UEFiREI3Vm5la21vR2tJczg1OU00Mi9TZi9E?=
+ =?utf-8?B?d3hjajZBWjhPZDJlYStJaG8wSzZtSldyZ2RHbTRDcFdzMHpybmE5ZCtrREhx?=
+ =?utf-8?B?WGFjMitZNlhuOVZHQkxDWnN4eVQwUzFTbVFkalkyRVR5Y1gwTktrOVZ4NTUw?=
+ =?utf-8?B?eUdtdW1pMTVmMlB5c1B1bmhRazBwVS9EaFFFc2xmMzZ0TGtSclJXSkk0SzNS?=
+ =?utf-8?B?bXA5S2tGUGV1YTlxRiszVThTSHl3VWtMa2pzRnVWMVlPZkFVMU51ZVNOU2ZI?=
+ =?utf-8?B?Zmg3ZktUcHZLcHNValJyVG9wTUFpaUdMUWVnTkhzbGprRG4wY29tNUZrZzlX?=
+ =?utf-8?B?U013UkpNSCthdlVkQmRleHhFT3lFcmo3aFVEMDE0S1ZMM0txOVFxbmZKVnho?=
+ =?utf-8?B?VEY0VlBLazRHN0hBRVVoSGp4cVdmcHBKK2R3cWxYb2E5ZmdoVVBCa2luSDBL?=
+ =?utf-8?B?N2pacXVxL2VXUmNYOHphODBCeUQ5b0NiU1BBcXd3L1JReWRJVjdKYktoQTdW?=
+ =?utf-8?B?Z2JNVmZER3pBMEtheVFWN2Fwa2drUWZVRFkyUXM5aEl5cGxVZWFaT0tLVlgx?=
+ =?utf-8?B?cVVUWU42aHVHSzJ5ZUpXZXJwa1J6VEZVeENmK3N5STdRam1Cb3I1TEd3UHpQ?=
+ =?utf-8?B?MEFCcGtjSFIxUVJZZWFYSlYyenZieERGWFlMZ3lUaGhpMWxqdVd5Wk5GRm9J?=
+ =?utf-8?B?MUs2akY4cGxOMzExdHU4RGFPSzFUMXAzWEovaGcwRy8rRHJpRzdaVXdFbFBi?=
+ =?utf-8?B?aW44bU9tYmVhVktQc2lGeHBaa0xlZ0FySUNjeGN1L09tQlFQbVRmWDZON09a?=
+ =?utf-8?B?MGZQUjlYTnlQQzdBWFdRclZRVHRCWG50Q2dlUVgwMUVtRld6ZnRFdmlMa1lN?=
+ =?utf-8?B?aUVTMjRxNlZaVWgwUDRwWGpmM1lZWXhIOUJ6T0RRbTVzdG4vS1Z0b2tzR1lo?=
+ =?utf-8?B?K3laTElDb216eDVwMDNhSjZqUm9GNlR5cGcrNTFQK2VtUnhRUktzdEtobUZt?=
+ =?utf-8?B?ckVIa1p0Z0xVa0wrZVFKYTZScURXTzVYY1J3NU56TjlZRE0vdi9oY214MVQv?=
+ =?utf-8?B?Q2RreVc3aVIzVFBjQjRyYThHaWxoUW13VHBtd29xbndkbnd2YWJYRWhGZHUy?=
+ =?utf-8?B?am1jTHFwNHQvZndvbjRBRUJRMVo0aVplcDB2ZTFoOWpFaWVpaUx1Q21rQ3Ju?=
+ =?utf-8?B?VitsclhDSUFKSDRWVWtpVnpUTXNKa0Z0SVo1U0hUVy9nN2VjMk9RSHY4bVox?=
+ =?utf-8?B?Tml2ZHI2ek9MUkp4RGtudm1kcXlSUVhaMm8zVE9HQWw4eEQxc2E5M2gySGZy?=
+ =?utf-8?B?dVJYM2pqNVBybk9ZZkRmYnlWdnZWNnliUUZselVmc01yV28zNkt0MG9kUkN0?=
+ =?utf-8?B?bENpQXZJUXJGeVcxYmp2MjBHNDZLa3ZUK0NIRnFKYS91U0tWSlJmbG42OEdw?=
+ =?utf-8?B?YlNtNWdKNHZ2UmN6cWJ3TDE5ckorSnZ4TWFJOGJBYXcvSzFja213YW5VRnFo?=
+ =?utf-8?B?TXd4SXdBK0syWS9WTUdXSFNacEppalNiV0I5QjlQQTBrRFN1ZkZmRXZ1TFE3?=
+ =?utf-8?B?Q3g4MXZIdzB2OUFuL25rdmV5WDlYM3N6bEFQSkVjZFd4U0RoVXVxNFZIMUNo?=
+ =?utf-8?B?bDdYUVkxWHVBczMyd2JISktlMy9RVnBMV1JEZ096WFI0bW5LM3VXVHVaU3ll?=
+ =?utf-8?B?Mk5OVjVxc1VYdGRDbFhYTmk5aTk3c0FBREZHeGxxNStuSGhpRHMyZVA4anRP?=
+ =?utf-8?B?RFplRFhXVHFQemNhVjFwVkxxazRpTHVNdWJiTDlQd0cxQXlYMWx0aUJDZGpn?=
+ =?utf-8?B?Q0orTjdpY1Y0RGtvL0FYVjcyYkE5RzBzQVY3NFZVM2hnMkkvSmo5SHlEdnl5?=
+ =?utf-8?B?VnBETFJ2VUIxbmNOT2wvRzJJVStpaGYxOCsrNW1vSUZGb3ZyaS9aWUdjN1ZI?=
+ =?utf-8?B?U0EzcitOT3FvdjI5TVJvcHVZallBd0h5U3NrS3FDR0tDSlowdHQrdz09?=
+X-OriginatorOrg: garyguo.net
+X-MS-Exchange-CrossTenant-Network-Message-Id: 43f587a8-d424-4d37-8d66-08dec624e6b4
+X-MS-Exchange-CrossTenant-AuthSource: LOVP265MB8871.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jun 2026 12:44:52.5636
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: AT8XEmEiuYM+SEdy2EuLVL0Wfrlc94eQj0cyhodnucCUNl9v2+fkaR+jihPEaOHekvWGLp/9F4QQvnkTXQafKg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CW1P265MB9331
 
-Hi,
+On Mon Jun 8, 2026 at 8:58 PM BST, Gary Guo wrote:
+> This series present a major rework of I/O types, as a summary:
+>
+> - Make I/O regions typed. The existing untyped region still exists
+>   with a dynamically sized `Region` type.
+>
+> - Create I/O view types to represent subregion of a full I/O region mappe=
+d.
+>   A projection macro is added to allow safely create such subviews.
+>
+> - Split I/O traits, make I/O views play a central role, avoid
+>   duplicate monomorphization and less `unsafe` code.
+>
+> - Add a `SysMem` backend, and make `Coherent` implement `Io`.
+>
+> - Add copying methods (memcpy_{from,to}io and friends).
+>
+> This series generalize `Mmio` type from just an untyped region to typed
+> representations (so `MmioRaw<T>` is `__iomem *T`). This allows us to remo=
+ve
+> the `IoKnownSize` trait; the information is sourced from just the pointer
+> from the `KnownSize` trait instead.
+>
+> Building on top of that, `Mmio` and `ConfigSpace` have been converted to
+> typed views of I/O regions rather than just a big chunk of untyped I/O
+> memory. These changes made it possible to implement `Io` trait for
+> `Coherent<T>`.
+>
+> Shared system memory, `SysMem` is also added to the series, given it
+> similarity in implementation compared to `Coherent`. In fact, the series
+> use `SysMem` to implement `Coherent`'s I/O methods.
+>
+> Built on these generalization, this series add `io_project!()`.
+> `io_project!()` performs a safe way to project a bigger view to a small
+> subviews, and some Nova code has been converted in this series to
+> demonstrate cleanups possible with this addition.
+>
+> New `io_read!()`, `io_write!()` has been added that supersedes
+> `dma_read!()`, `dma_write!()` macro. Although, they work for primitives
+> only (to be exact, types that the backend is `IoCapable` of).
+> One feature that was lost from the old `dma_read!()` and `dma_write!()`
+> series was the ability to read/write a large structs. However, the
+> semantics was unclear to begin with, as there was no guarantee about thei=
+r
+> atomicity even for structs that were small enough to fit in u32.
+>
+> For completeness, I've also included the support for copying methods,
+> although this does not need to be taken together and can become a follow
+> up.
+>
+> The last commit in the series is included for reference only, as a
+> demonstration on how you can use all of this to implement `iosys_map` usi=
+ng
+> `Either` type. It automatically gains all the methods via `Io` trait and
+> can be projected with the macros.
 
-On Mon, Jun 08, 2026 at 10:26:40AM -0500, Bjorn Helgaas wrote:
-> [+cc linux-usb (Thunderbolt maintainers), Ilpo, Lukas]
-> 
-> On Sun, May 24, 2026 at 04:56:56PM +0200, Dag B wrote:
-> > I am attempting to connect two TB3 enclosures to the same USB4 port via a
-> > USB4 hub.
-> > 
-> > I cannot figure out of this is in violation of the TB3, TB4 or USB4 spec.
-> 
-> I'm not aware of a spec issue here.
+Sashiko points out a few issues. It repeatedly reported issues in multiple
+places, but ultimately there're just 3 issues:
 
-It should be fine but typically PCIe resources for one tunneled PCIe root
-port may not be enough for multiple GPUs. Therefore I suggest to connect
-them directly to the host USB4 ports without a hub.
+* `Region`'s alignment. Discussed on Zulip
+  https://rust-for-linux.zulipchat.com/#narrow/channel/288089-General/topic=
+/Generic.20I.2FO.20backends/with/601411822
+  I'll just make this 4-byte aligned (and also check that size is multiple =
+of
+  4). Luckily none of the existing driver depends on 8-byte aligned regions=
+.
 
-Second thing is that you have bunch of PCIe related command line parameters
-that may affect. I suggest removing all of them, and retry. There is hardly
-any reason to add these - the kernel should be able to handle this by
-default.
+* Missing `unsafe impl Send/Sync`. This is actually quite low severity (Sas=
+hiko
+  reported high) given it doesn't break drivers today (otherwise I'd noted =
+them
+  during compilation test). But I'll fix add in the next spin.
 
-Then provide full dmesg along with output of 'sudo lspci -vv' so we can
-look a the resource allocation.
+* `copy_from_io_slice` can trigger memcpy between two `SysMem` regions whic=
+h
+  overlap. This can be fixed by either using `memmove`, or perhaps dropping
+  `copy_from_io_slice` methods until users arise (this method was asked by
+  Danilo, maybe Danilo has some use cases in mind?), and we can change it t=
+o
+  `memmove` then. Anyhow copying methods can be delayed to its own patch se=
+ries
+  if there needs more discussion.
 
-> Below it looks like you hot-added the hub.  Does it make any
-> difference if everything is connected before boot?
-> 
-> Please don't filter the dmesg logs you collect.  We can do that if
-> needed.
-> 
-> > .... or, in case it is not:
-> > 
-> > Can this work with current USB4/Thunderbolt drivers in Linux? (I am not
-> > worried about bandwidth limitations.)
-> > 
-> > 
-> > This appears to be too niche to find answers anywhere else. I would be very
-> > grateful for any clarifying answer here, really.
-> > 
-> > 
-> > Hardware
-> > 
-> > - Framework 13 mb with 12th gen Alder Lake (Intel Corporation Alder Lake-P
-> > Thunderbolt 4 NHI)  (4 USB4 ports)
-> > 
-> > - Sonnettech Echo 5 hub (Intel Corporation Thunderbolt 4 Bridge [Goshen
-> > Ridge 2020] )
-> > 
-> > - Razer Core X (Intel Corporation JHL6340 Thunderbolt 3 Bridge (C step)
-> > [Alpine Ridge 2C 2016])
-> > 
-> > - GPUs are Nvidia RTX 3090. They expose two PCIe devices, the GPU and an
-> > audio device.
-> > 
-> > 
-> > Using kernel 7.0.10 with gentoo patches.
-> > 
-> > 
-> > Been playing *a lot* with various permutations of pci-related kernel
-> > options. Current options:
-> > 
-> > pci=realloc=on,hpmmiosize=256M,hpiosize=2M,hpmemsize=1G,hpbussize=0x33,pcie_scan_all,big_root_window
-> > 
-> > 
-> > pcie_port_pm=off
-> > 
-> > pcie_aspm.policy=performance
-> > 
-> > thunderbolt.clx=0
-> > 
-> > 
-> > 
-> > Booting with 2 eGPUS directly connected to separate USB4 ports.  (pcie
-> > messages only):
-> > 
-> > [    0.000000] Command line: root=/dev/nvme0n1p2 pci=realloc=on,hpmmiosize=256M,hpiosize=2M,hpmemsize=1G,hpbussize=0x33,pcie_scan_all,big_root_window
-> > pcie_port_pm=off pcie_aspm.policy=performance thunderbolt.clx=0
-> > [    0.082296] Kernel command line: pci=realloc=on,hpmmiosize=256M,hpiosize=2M,hpmemsize=1G,hpbussize=0x33,pcie_scan_all,big_root_window
-> > \
-> > [    0.082297] Kernel command line: pcie_port_pm=off
-> > pcie_aspm.policy=performance \
-> > [    0.864174] pcieport 0000:00:06.0: PME: Signaling with IRQ 122
-> > [    0.864343] pcieport 0000:00:07.0: PME: Signaling with IRQ 123
-> > [    0.864358] pcieport 0000:00:07.0: pciehp: Slot #3 AttnBtn- PwrCtrl- MRL-
-> > AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ IbPresDis- LLActRep+
-> > [    0.864661] pcieport 0000:00:07.1: PME: Signaling with IRQ 124
-> > [    0.864677] pcieport 0000:00:07.1: pciehp: Slot #4 AttnBtn- PwrCtrl- MRL-
-> > AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ IbPresDis- LLActRep+
-> > [    0.864900] pcieport 0000:00:07.2: PME: Signaling with IRQ 125
-> > [    0.864914] pcieport 0000:00:07.2: pciehp: Slot #5 AttnBtn- PwrCtrl- MRL-
-> > AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ IbPresDis- LLActRep+
-> > [    0.865139] pcieport 0000:00:07.3: PME: Signaling with IRQ 126
-> > [    0.865153] pcieport 0000:00:07.3: pciehp: Slot #6 AttnBtn- PwrCtrl- MRL-
-> > AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ IbPresDis- LLActRep+
-> > [    0.865376] pcieport 0000:00:1d.0: PME: Signaling with IRQ 127
-> > [    5.127515] pcieport 0000:00:07.3: pciehp: Slot(6): Card present
-> > [    5.134225] pcieport 0000:00:07.0: pciehp: Slot(3): Card present
-> > [    5.263158] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.263178] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.263197] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.263215] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.270527] pcieport 0000:00:07.3: PCI bridge to [bus 7d-a5]
-> > [    5.270529] pcieport 0000:00:07.3:   bridge window [mem
-> > 0x52000000-0x5e1fffff]
-> > [    5.270531] pcieport 0000:00:07.3:   bridge window [mem
-> > 0x6060000000-0x607bffffff 64bit pref]
-> > [    5.270537] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.270537] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.270538] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.270539] pcieport 0000:00:07.3: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.270577] pcieport 0000:00:07.3: PCI bridge to [bus 7d-a5]
-> > [    5.270579] pcieport 0000:00:07.3:   bridge window [mem
-> > 0x52000000-0x5e1fffff]
-> > [    5.270581] pcieport 0000:00:07.3:   bridge window [mem
-> > 0x6060000000-0x607bffffff 64bit pref]
-> > [    5.270703] pcieport 0000:7d:00.0: enabling device (0000 -> 0002)
-> > [    5.287127] pcieport 0000:7e:01.0: enabling device (0000 -> 0002)
-> > [    5.325065] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.325560] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.326061] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.326560] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.340678] pcieport 0000:00:07.0: PCI bridge to [bus 02-2a]
-> > [    5.340680] pcieport 0000:00:07.0:   bridge window [mem
-> > 0x7c000000-0x881fffff]
-> > [    5.340682] pcieport 0000:00:07.0:   bridge window [mem
-> > 0x6000000000-0x601bffffff 64bit pref]
-> > [    5.340688] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.340689] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.340690] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [    5.340690] pcieport 0000:00:07.0: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [    5.340741] pcieport 0000:00:07.0: PCI bridge to [bus 02-2a]
-> > [    5.340744] pcieport 0000:00:07.0:   bridge window [mem
-> > 0x7c000000-0x881fffff]
-> > [    5.340745] pcieport 0000:00:07.0:   bridge window [mem
-> > 0x6000000000-0x601bffffff 64bit pref]
-> > [    5.340866] pcieport 0000:02:00.0: enabling device (0000 -> 0002)
-> > [    5.355410] pcieport 0000:03:01.0: enabling device (0000 -> 0002)
-> > 
-> > 
-> > Then, connecting the hub with two additional eGPUs to a third USB4 port (all
-> > messages):
-> > 
-> > [  596.449718] thunderbolt 0-3: new device found, vendor=0x8 device=0x5f
-> > [  596.449771] thunderbolt 0-3: Sonnet Technologies, Inc. Echo 5 Thunderbolt
-> > 4 Hub
-> > [  596.710380] thunderbolt 0-0:3.1: new retimer found, vendor=0x8087
-> > device=0x15ee
-> > [  596.962295] usb 3-3: new high-speed USB device number 4 using xhci_hcd
-> > [  597.156102] usb 3-3: New USB device found, idVendor=1d5c, idProduct=5801,
-> > bcdDevice= 1.01
-> > [  597.156118] usb 3-3: New USB device strings: Mfr=1, Product=2,
-> > SerialNumber=0
-> > [  597.156130] usb 3-3: Product: USB2.0 Hub
-> > [  597.156138] usb 3-3: Manufacturer: Fresco Logic, Inc.
-> > [  597.157120] hub 3-3:1.0: USB hub found
-> > [  597.157152] hub 3-3:1.0: 6 ports detected
-> > [  597.458933] usb 2-2: new SuperSpeed Plus Gen 2x1 USB device number 4
-> > using xhci_hcd
-> > [  597.472670] usb 2-2: New USB device found, idVendor=8087, idProduct=0b40,
-> > bcdDevice=12.34
-> > [  597.472687] usb 2-2: New USB device strings: Mfr=1, Product=2,
-> > SerialNumber=0
-> > [  597.472700] usb 2-2: Product: USB3.0 Hub
-> > [  597.472711] usb 2-2: Manufacturer: Intel Corporation.
-> > [  597.473459] hub 2-2:1.0: USB hub found
-> > [  597.473587] hub 2-2:1.0: 4 ports detected
-> > [  597.559335] thunderbolt 0-303: new device found, vendor=0x127 device=0x1
-> > [  597.559350] thunderbolt 0-303: Razer Core X
-> > [  597.702310] usb 3-3.5: new full-speed USB device number 5 using xhci_hcd
-> > [  597.801389] usb 3-3.5: New USB device found, idVendor=2a8c,
-> > idProduct=205f, bcdDevice=17.46
-> > [  597.801406] usb 3-3.5: New USB device strings: Mfr=1, Product=2,
-> > SerialNumber=3
-> > [  597.801418] usb 3-3.5: Product: Echo 5 Thunderbolt 4 Hub
-> > [  597.801428] usb 3-3.5: Manufacturer: Sonnet Technologies,Inc.
-> > [  597.801438] usb 3-3.5: SerialNumber: 11AD1D0A510D2E0D381E0B00
-> > [  597.885632] usb 3-3.6: new high-speed USB device number 6 using xhci_hcd
-> > [  597.983768] usb 3-3.6: New USB device found, idVendor=1d5c,
-> > idProduct=5530, bcdDevice= 1.01
-> > [  597.983785] usb 3-3.6: New USB device strings: Mfr=1, Product=2,
-> > SerialNumber=0
-> > [  597.983798] usb 3-3.6: Product: Frescologic VENDOR HID
-> > [  597.983807] usb 3-3.6: Manufacturer: Frescologic
-> > [  597.985769] hid-generic 0003:1D5C:5530.0002: hidraw1: USB HID v1.01
-> > Device [Frescologic Frescologic VENDOR HID] on usb-0000:00:14.0-3.6/input0
-> > [  598.294042] thunderbolt 0-503: new device found, vendor=0x127 device=0x1
-> > [  598.294057] thunderbolt 0-503: Razer Core X
-> > [  598.619985] pcieport 0000:00:07.1: pciehp: Slot(4): Card present
-> > [  598.619999] pcieport 0000:00:07.1: pciehp: Slot(4): Link Up
-> > [  598.745860] pci 0000:2b:00.0: [8086:0b26] type 01 class 0x060400 PCIe
-> > Switch Upstream Port
-> > [  598.745987] pci 0000:2b:00.0: PCI bridge to [bus 00]
-> > [  598.746028] pci 0000:2b:00.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.746061] pci 0000:2b:00.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.746113] pci 0000:2b:00.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.746173] pci 0000:2b:00.0: enabling Extended Tags
-> > [  598.746450] pci 0000:2b:00.0: supports D1 D2
-> > [  598.746471] pci 0000:2b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.747002] pci 0000:2b:00.0: Adding to iommu group 22
-> > [  598.755705] pci 0000:2b:00.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.755945] pci 0000:2c:00.0: [8086:0b26] type 01 class 0x060400 PCIe
-> > Switch Downstream Port
-> > [  598.756014] pci 0000:2c:00.0: PCI bridge to [bus 00]
-> > [  598.756039] pci 0000:2c:00.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.756059] pci 0000:2c:00.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.756094] pci 0000:2c:00.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.756136] pci 0000:2c:00.0: enabling Extended Tags
-> > [  598.756346] pci 0000:2c:00.0: supports D1 D2
-> > [  598.756359] pci 0000:2c:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.756675] pci 0000:2c:00.0: Adding to iommu group 23
-> > [  598.756854] pci 0000:2c:01.0: [8086:0b26] type 01 class 0x060400 PCIe
-> > Switch Downstream Port
-> > [  598.756925] pci 0000:2c:01.0: PCI bridge to [bus 00]
-> > [  598.756950] pci 0000:2c:01.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.756970] pci 0000:2c:01.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.757863] pci 0000:2c:01.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.758743] pci 0000:2c:01.0: enabling Extended Tags
-> > [  598.759822] pci 0000:2c:01.0: supports D1 D2
-> > [  598.760599] pci 0000:2c:01.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.761582] pci 0000:2c:01.0: Adding to iommu group 24
-> > [  598.762477] pci 0000:2c:02.0: [8086:0b26] type 01 class 0x060400 PCIe
-> > Switch Downstream Port
-> > [  598.763270] pci 0000:2c:02.0: PCI bridge to [bus 00]
-> > [  598.764010] pci 0000:2c:02.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.764697] pci 0000:2c:02.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.765266] pci 0000:2c:02.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.765832] pci 0000:2c:02.0: enabling Extended Tags
-> > [  598.766513] pci 0000:2c:02.0: supports D1 D2
-> > [  598.767016] pci 0000:2c:02.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.767686] pci 0000:2c:02.0: Adding to iommu group 25
-> > [  598.768272] pci 0000:2c:03.0: [8086:0b26] type 01 class 0x060400 PCIe
-> > Switch Downstream Port
-> > [  598.768804] pci 0000:2c:03.0: PCI bridge to [bus 00]
-> > [  598.769323] pci 0000:2c:03.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.769815] pci 0000:2c:03.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.770317] pci 0000:2c:03.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.770816] pci 0000:2c:03.0: enabling Extended Tags
-> > [  598.771451] pci 0000:2c:03.0: supports D1 D2
-> > [  598.771929] pci 0000:2c:03.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.772596] pci 0000:2c:03.0: Adding to iommu group 26
-> > [  598.773173] pci 0000:2c:04.0: [8086:0b26] type 01 class 0x060400 PCIe
-> > Switch Downstream Port
-> > [  598.773694] pci 0000:2c:04.0: PCI bridge to [bus 00]
-> > [  598.774196] pci 0000:2c:04.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.774683] pci 0000:2c:04.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.775179] pci 0000:2c:04.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.775687] pci 0000:2c:04.0: enabling Extended Tags
-> > [  598.776319] pci 0000:2c:04.0: supports D1 D2
-> > [  598.776794] pci 0000:2c:04.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.777437] pci 0000:2c:04.0: Adding to iommu group 27
-> > [  598.777985] pci 0000:2b:00.0: PCI bridge to [bus 2c-53]
-> > [  598.778481] pci 0000:2c:00.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.778983] pci 0000:2c:01.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.779463] pci 0000:2c:02.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.779939] pci 0000:2c:03.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.780408] pci 0000:2c:04.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.780987] pci 0000:2c:00.0: PCI bridge to [bus 2d-53]
-> > [  598.781458] pci_bus 0000:2d: busn_res: [bus 2d-53] end is updated to 2d
-> > [  598.782096] pci 0000:2e:00.0: [8086:15da] type 01 class 0x060400 PCIe
-> > Switch Upstream Port
-> > [  598.782628] pci 0000:2e:00.0: PCI bridge to [bus 00]
-> > [  598.783089] pci 0000:2e:00.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.783548] pci 0000:2e:00.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.784020] pci 0000:2e:00.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.784493] pci 0000:2e:00.0: enabling Extended Tags
-> > [  598.785172] pci 0000:2e:00.0: supports D1 D2
-> > [  598.785624] pci 0000:2e:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.786319] pci 0000:2e:00.0: Adding to iommu group 28
-> > [  598.792407] pci 0000:2c:01.0: PCI bridge to [bus 2e-53]
-> > [  598.792880] pci 0000:2e:00.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.793579] pci 0000:2f:01.0: [8086:15da] type 01 class 0x060400 PCIe
-> > Switch Downstream Port
-> > [  598.794094] pci 0000:2f:01.0: PCI bridge to [bus 00]
-> > [  598.794559] pci 0000:2f:01.0:   bridge window [io 0x0000-0x0fff]
-> > [  598.795014] pci 0000:2f:01.0:   bridge window [mem 0x00000000-0x000fffff]
-> > [  598.795485] pci 0000:2f:01.0:   bridge window [mem 0x00000000-0x000fffff
-> > 64bit pref]
-> > [  598.795981] pci 0000:2f:01.0: enabling Extended Tags
-> > [  598.796665] pci 0000:2f:01.0: supports D1 D2
-> > [  598.797111] pci 0000:2f:01.0: PME# supported from D0 D1 D2 D3hot D3cold
-> > [  598.797785] pci 0000:2f:01.0: Adding to iommu group 29
-> > [  598.798344] pci 0000:2e:00.0: PCI bridge to [bus 2f-53]
-> > [  598.798826] pci 0000:2f:01.0: bridge configuration invalid ([bus 00-00]),
-> > reconfiguring
-> > [  598.799576] pci 0000:30:00.0: [10de:2204] type 00 class 0x030000 PCIe
-> > Legacy Endpoint
-> > [  598.800146] pci 0000:30:00.0: BAR 0 [mem 0x00000000-0x00ffffff]
-> > [  598.800598] pci 0000:30:00.0: BAR 1 [mem 0x00000000-0x0fffffff 64bit
-> > pref]
-> > [  598.801062] pci 0000:30:00.0: BAR 3 [mem 0x00000000-0x01ffffff 64bit
-> > pref]
-> > [  598.801512] pci 0000:30:00.0: BAR 5 [io  0x0000-0x007f]
-> > [  598.801961] pci 0000:30:00.0: ROM [mem 0x00000000-0x0007ffff pref]
-> > [  598.802697] pci 0000:30:00.0: PME# supported from D0 D3hot
-> > [  598.803421] pci 0000:30:00.0: 8.000 Gb/s available PCIe bandwidth,
-> > limited by 2.5 GT/s PCIe x4 link at 0000:00:07.1 (capable of 252.048 Gb/s
-> > with 16.0 GT/s PCIe x16 link)
-> > [  598.804053] pci 0000:30:00.0: Adding to iommu group 29
-> > [  598.804517] pci 0000:30:00.0: vgaarb: bridge control possible
-> > [  598.804969] pci 0000:30:00.0: vgaarb: VGA device added:
-> > decodes=io+mem,owns=none,locks=none
-> > [  598.805427] i915 0000:00:02.0: vgaarb: VGA decodes changed:
-> > olddecodes=none,decodes=none:owns=io+mem
-> > [  598.806033] pci 0000:30:00.1: [10de:1aef] type 00 class 0x040300 PCIe
-> > Endpoint
-> > [  598.806622] pci 0000:30:00.1: BAR 0 [mem 0x00000000-0x00003fff]
-> > [  598.807434] pci 0000:30:00.1: Adding to iommu group 29
-> > [  598.808118] pci 0000:2f:01.0: PCI bridge to [bus 30-53]
-> > [  598.808614] pci_bus 0000:30: busn_res: [bus 30-53] end is updated to 30
-> > [  598.809107] pci_bus 0000:2f: busn_res: [bus 2f-53] end is updated to 30
-> > [  598.809575] pci_bus 0000:2e: busn_res: [bus 2e-53] end is updated to 53
-> > [  598.810077] pci_bus 0000:54: busn_res: [bus 54-7c] end is updated to 7c
-> > [  598.810714] pci_bus 0000:7d: busn_res: [bus 7d-a5] end is updated to a5
-> > [  598.811226] pci_bus 0000:a6: busn_res: [bus a6] end is updated to a6
-> > [  598.811682] pci_bus 0000:2c: busn_res: [bus 2c-53] end can not be updated
-> > to a6
-> > [  598.812141] pci 0000:2c:00.0: disabling bridge window [mem
-> > 0x00000000-0x000fffff 64bit pref] to [bus 2d] (unused)
-> > [  598.812621] pci 0000:2c:00.0: disabling bridge window [mem
-> > 0x00000000-0x000fffff] to [bus 2d] (unused)
-> > [  598.813082] pci 0000:2c:01.0: bridge window [io  0x1000-0x1fff] to [bus
-> > 2e-53] add_size 1ff000
-> > [  598.813544] pci 0000:2c:01.0: bridge window [mem 0x10000000-0x21ffffff
-> > 64bit pref] to [bus 2e-53] add_size 2e000000 add_align 10000000
-> > [  598.814007] pci 0000:2c:01.0: bridge window [mem 0x01000000-0x020fffff]
-> > to [bus 2e-53] add_size 3ef00000 add_align 1000000
-> > [  598.814474] pci 0000:2b:00.0: bridge window [io  0x1000-0x2fff] to [bus
-> > 2c-53] add_size 1ff000
-> > [  598.814942] pci 0000:2b:00.0: bridge window [mem 0x10000000-0x21ffffff
-> > 64bit pref] to [bus 2c-53] add_size 2e000000 add_align 10000000
-> > [  598.815414] pci 0000:2b:00.0: bridge window [mem 0x01000000-0x020fffff]
-> > to [bus 2c-53] add_size 3ef00000 add_align 1000000
-> > [  598.815908] pcieport 0000:00:07.1: bridge window [io  size 0x200000] to
-> > [bus 2b-53] add_size 1ff000
-> > [  598.816393] pcieport 0000:00:07.1: bridge window [io  size 0x3ff000]:
-> > can't assign; no space
-> > [  598.816870] pcieport 0000:00:07.1: bridge window [io  size 0x3ff000]:
-> > failed to assign
-> > [  598.817346] pcieport 0000:00:07.1: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [  598.817828] pcieport 0000:00:07.1: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [  598.818304] pci 0000:2b:00.0: bridge window [mem size 0x40000000 64bit
-> > pref]: can't assign; no space
-> > [  598.818785] pci 0000:2b:00.0: bridge window [mem size 0x40000000 64bit
-> > pref]: failed to assign
-> > [  598.819281] pci 0000:2b:00.0: bridge window [mem 0x6e000000-0x7a0fffff]:
-> > assigned
-> > [  598.819765] pci 0000:2b:00.0: bridge window [io  size 0x200000]: can't
-> > assign; no space
-> > [  598.820250] pci 0000:2b:00.0: bridge window [io  size 0x200000]: failed
-> > to assign
-> > [  598.820740] pci 0000:2b:00.0: bridge window [mem 0x6e000000-0x7a0fffff]:
-> > releasing
-> > [  598.821235] pci 0000:2b:00.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: assigned
-> > [  598.821727] pci 0000:2b:00.0: bridge window [mem 0x6e000000-0x7a0fffff]:
-> > assigned
-> > [  598.822227] pci 0000:2b:00.0: bridge window [io  size 0x200000]: can't
-> > assign; no space
-> > [  598.822722] pci 0000:2b:00.0: bridge window [io  size 0x200000]: failed
-> > to assign
-> > [  598.823206] pci 0000:2b:00.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: failed to expand by 0x2e000000
-> > [  598.823697] pci 0000:2b:00.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: failed to add optional 2e000000
-> > [  598.824186] pci 0000:2c:01.0: bridge window [mem size 0x40000000 64bit
-> > pref]: can't assign; no space
-> > [  598.824679] pci 0000:2c:01.0: bridge window [mem size 0x40000000 64bit
-> > pref]: failed to assign
-> > [  598.825173] pci 0000:2c:01.0: bridge window [mem 0x6e000000-0x720fffff]:
-> > assigned
-> > [  598.825677] pci 0000:2c:00.0: bridge window [io  size 0x1000]: can't
-> > assign; no space
-> > [  598.826173] pci 0000:2c:00.0: bridge window [io  size 0x1000]: failed to
-> > assign
-> > [  598.826666] pci 0000:2c:01.0: bridge window [io  size 0xab000]: can't
-> > assign; no space
-> > [  598.827161] pci 0000:2c:01.0: bridge window [io  size 0xab000]: failed to
-> > assign
-> > [  598.827652] pci 0000:2c:01.0: bridge window [mem 0x6e000000-0x720fffff]:
-> > releasing
-> > [  598.828140] pci 0000:2c:01.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: assigned
-> > [  598.828630] pci 0000:2c:01.0: bridge window [mem 0x6e000000-0x720fffff]:
-> > assigned
-> > [  598.829132] pci 0000:2c:00.0: bridge window [io  size 0x1000]: can't
-> > assign; no space
-> > [  598.829623] pci 0000:2c:00.0: bridge window [io  size 0x1000]: failed to
-> > assign
-> > [  598.830116] pci 0000:2c:01.0: bridge window [io  size 0xab000]: can't
-> > assign; no space
-> > [  598.830606] pci 0000:2c:01.0: bridge window [io  size 0xab000]: failed to
-> > assign
-> > [  598.831099] pci 0000:2c:01.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: failed to expand by 0x2e000000
-> > [  598.831588] pci 0000:2c:01.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: failed to add optional 2e000000
-> > [  598.832080] pci 0000:2c:00.0: PCI bridge to [bus 2d]
-> > [  598.832605] pci 0000:2e:00.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: assigned
-> > [  598.833106] pci 0000:2e:00.0: bridge window [mem 0x6e000000-0x720fffff]:
-> > assigned
-> > [  598.833599] pci 0000:2e:00.0: bridge window [io  size 0xab000]: can't
-> > assign; no space
-> > [  598.834091] pci 0000:2e:00.0: bridge window [io  size 0xab000]: failed to
-> > assign
-> > [  598.834590] pci 0000:2e:00.0: bridge window [io  size 0xab000]: can't
-> > assign; no space
-> > [  598.835088] pci 0000:2e:00.0: bridge window [io  size 0xab000]: failed to
-> > assign
-> > [  598.835592] pci 0000:2f:01.0: bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]: assigned
-> > [  598.836098] pci 0000:2f:01.0: bridge window [mem 0x6e000000-0x720fffff]:
-> > assigned
-> > [  598.836600] pci 0000:2f:01.0: bridge window [io  size 0xab000]: can't
-> > assign; no space
-> > [  598.837097] pci 0000:2f:01.0: bridge window [io  size 0xab000]: failed to
-> > assign
-> > [  598.837585] pci 0000:2f:01.0: bridge window [io  size 0xab000]: can't
-> > assign; no space
-> > [  598.838073] pci 0000:2f:01.0: bridge window [io  size 0xab000]: failed to
-> > assign
-> > [  598.838559] pci 0000:30:00.0: BAR 1 [mem 0x6020000000-0x602fffffff 64bit
-> > pref]: assigned
-> > [  598.839079] pci 0000:30:00.0: BAR 3 [mem 0x6030000000-0x6031ffffff 64bit
-> > pref]: assigned
-> > [  598.839581] pci 0000:30:00.0: BAR 0 [mem 0x6e000000-0x6effffff]: assigned
-> > [  598.840063] pci 0000:30:00.0: ROM [mem 0x6f000000-0x6f07ffff pref]:
-> > assigned
-> > [  598.840538] pci 0000:30:00.1: BAR 0 [mem 0x6f080000-0x6f083fff]: assigned
-> > [  598.841020] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: can't assign; no
-> > space
-> > [  598.841496] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: failed to assign
-> > [  598.841974] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: can't assign; no
-> > space
-> > [  598.842463] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: failed to assign
-> > [  598.842941] pci 0000:2f:01.0: PCI bridge to [bus 30]
-> > [  598.843429] pci 0000:2f:01.0:   bridge window [mem 0x6e000000-0x720fffff]
-> > [  598.843918] pci 0000:2f:01.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.844415] pci 0000:2e:00.0: PCI bridge to [bus 2f-30]
-> > [  598.844901] pci 0000:2e:00.0:   bridge window [mem 0x6e000000-0x720fffff]
-> > [  598.845388] pci 0000:2e:00.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.845890] pci 0000:2c:01.0: PCI bridge to [bus 2e-53]
-> > [  598.846369] pci 0000:2c:01.0:   bridge window [mem 0x6e000000-0x720fffff]
-> > [  598.846845] pci 0000:2c:01.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.847319] pci 0000:2b:00.0: PCI bridge to [bus 2c-53]
-> > [  598.847789] pci 0000:2b:00.0:   bridge window [mem 0x6e000000-0x7a0fffff]
-> > [  598.848255] pci 0000:2b:00.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.848720] pcieport 0000:00:07.1: PCI bridge to [bus 2b-53]
-> > [  598.849198] pcieport 0000:00:07.1:   bridge window [mem
-> > 0x6e000000-0x7a1fffff]
-> > [  598.849667] pcieport 0000:00:07.1:   bridge window [mem
-> > 0x6020000000-0x603bffffff 64bit pref]
-> > [  598.850136] PCI: No. 2 try to assign unassigned res
-> > [  598.850602] pci 0000:2c:00.0: disabling bridge window [mem
-> > 0x00000000-0x000fffff 64bit pref disabled] to [bus 2d] (unused)
-> > [  598.851083] pci 0000:2c:00.0: disabling bridge window [mem
-> > 0x00000000-0x000fffff disabled] to [bus 2d] (unused)
-> > [  598.851556] pci 0000:2c:01.0: bridge window [io  size 0xab000] to [bus
-> > 2e-53] add_size 155000
-> > [  598.852035] pci 0000:2b:00.0: bridge window [io  size 0x200000] to [bus
-> > 2c-53] add_size 155000
-> > [  598.852530] pcieport 0000:00:07.1: bridge window [io  size 0x200000] to
-> > [bus 2b-53] add_size 155000
-> > [  598.853014] pcieport 0000:00:07.1: bridge window [io  size 0x355000]:
-> > can't assign; no space
-> > [  598.853493] pcieport 0000:00:07.1: bridge window [io  size 0x355000]:
-> > failed to assign
-> > [  598.853971] pcieport 0000:00:07.1: bridge window [io  size 0x200000]:
-> > can't assign; no space
-> > [  598.854448] pcieport 0000:00:07.1: bridge window [io  size 0x200000]:
-> > failed to assign
-> > [  598.854921] pci 0000:2b:00.0: bridge window [io  size 0x355000]: can't
-> > assign; no space
-> > [  598.855401] pci 0000:2b:00.0: bridge window [io  size 0x355000]: failed
-> > to assign
-> > [  598.855896] pci 0000:2b:00.0: bridge window [io  size 0x200000]: can't
-> > assign; no space
-> > [  598.856376] pci 0000:2b:00.0: bridge window [io  size 0x200000]: failed
-> > to assign
-> > [  598.856847] pci 0000:2c:00.0: bridge window [io  size 0x1000]: can't
-> > assign; no space
-> > [  598.857319] pci 0000:2c:00.0: bridge window [io  size 0x1000]: failed to
-> > assign
-> > [  598.857788] pci 0000:2c:01.0: bridge window [io  size 0x11c000]: can't
-> > assign; no space
-> > [  598.858255] pci 0000:2c:01.0: bridge window [io  size 0x11c000]: failed
-> > to assign
-> > [  598.858722] pci 0000:2c:00.0: bridge window [io  size 0x1000]: can't
-> > assign; no space
-> > [  598.859209] pci 0000:2c:00.0: bridge window [io  size 0x1000]: failed to
-> > assign
-> > [  598.859677] pci 0000:2c:01.0: bridge window [io  size 0x11c000]: can't
-> > assign; no space
-> > [  598.860143] pci 0000:2c:01.0: bridge window [io  size 0x11c000]: failed
-> > to assign
-> > [  598.860609] pci 0000:2c:00.0: PCI bridge to [bus 2d]
-> > [  598.861088] pci 0000:2e:00.0: bridge window [io  size 0x11c000]: can't
-> > assign; no space
-> > [  598.861556] pci 0000:2e:00.0: bridge window [io  size 0x11c000]: failed
-> > to assign
-> > [  598.862018] pci 0000:2e:00.0: bridge window [io  size 0x11c000]: can't
-> > assign; no space
-> > [  598.862501] pci 0000:2e:00.0: bridge window [io  size 0x11c000]: failed
-> > to assign
-> > [  598.862970] pci 0000:2f:01.0: bridge window [io  size 0x11c000]: can't
-> > assign; no space
-> > [  598.863429] pci 0000:2f:01.0: bridge window [io  size 0x11c000]: failed
-> > to assign
-> > [  598.863891] pci 0000:2f:01.0: bridge window [io  size 0x11c000]: can't
-> > assign; no space
-> > [  598.864349] pci 0000:2f:01.0: bridge window [io  size 0x11c000]: failed
-> > to assign
-> > [  598.864802] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: can't assign; no
-> > space
-> > [  598.865254] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: failed to assign
-> > [  598.865715] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: can't assign; no
-> > space
-> > [  598.866163] pci 0000:30:00.0: BAR 5 [io  size 0x0080]: failed to assign
-> > [  598.866615] pci 0000:2f:01.0: PCI bridge to [bus 30]
-> > [  598.867073] pci 0000:2f:01.0:   bridge window [mem 0x6e000000-0x720fffff]
-> > [  598.867528] pci 0000:2f:01.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.867992] pci 0000:2e:00.0: PCI bridge to [bus 2f-30]
-> > [  598.868448] pci 0000:2e:00.0:   bridge window [mem 0x6e000000-0x720fffff]
-> > [  598.868907] pci 0000:2e:00.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.869374] pci 0000:2c:01.0: PCI bridge to [bus 2e-53]
-> > [  598.869833] pci 0000:2c:01.0:   bridge window [mem 0x6e000000-0x720fffff]
-> > [  598.870286] pci 0000:2c:01.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.870749] pci 0000:2b:00.0: PCI bridge to [bus 2c-53]
-> > [  598.871209] pci 0000:2b:00.0:   bridge window [mem 0x6e000000-0x7a0fffff]
-> > [  598.871670] pci 0000:2b:00.0:   bridge window [mem
-> > 0x6020000000-0x6031ffffff 64bit pref]
-> > [  598.872132] pcieport 0000:00:07.1: PCI bridge to [bus 2b-53]
-> > [  598.872613] pcieport 0000:00:07.1:   bridge window [mem
-> > 0x6e000000-0x7a1fffff]
-> > [  598.873080] pcieport 0000:00:07.1:   bridge window [mem
-> > 0x6020000000-0x603bffffff 64bit pref]
-> > [  598.873649] pcieport 0000:2b:00.0: enabling device (0000 -> 0002)
-> > [  598.874666] pcieport 0000:2c:01.0: enabling device (0000 -> 0002)
-> > [  598.875244] pcieport 0000:2c:01.0: pciehp: Slot #1 AttnBtn- PwrCtrl- MRL-
-> > AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ IbPresDis- LLActRep+
-> > [  598.876454] pcieport 0000:2c:02.0: pciehp: Hotplug bridge without
-> > secondary bus, ignoring
-> > [  598.877284] pcieport 0000:2c:03.0: pciehp: Hotplug bridge without
-> > secondary bus, ignoring
-> > [  598.878335] pcieport 0000:2e:00.0: enabling device (0000 -> 0002)
-> > [  598.879210] pcieport 0000:2f:01.0: enabling device (0000 -> 0002)
-> > [  598.880224] nvidia 0000:30:00.0: enabling device (0000 -> 0002)
-> > [  598.880833] nvidia 0000:30:00.0: vgaarb: VGA decodes changed:
-> > olddecodes=io+mem,decodes=none:owns=none
-> > [  599.171370] [drm] [nvidia-drm] [GPU ID 0x00003000] Loading driver
-> > [  599.172273] [drm] Initialized nvidia-drm 0.0.0 for 0000:30:00.0 on minor
-> > 3
-> > [  599.172936] pci 0000:30:00.1: extending delay after power-on from D3hot
-> > to 20 msec
-> > [  599.173650] pci 0000:30:00.1: D0 power state depends on 0000:30:00.0
-> > [  683.104898] Loading firmware: nvidia/595.71.05/gsp_ga10x.bin
-> > [  683.634039] Loading firmware: nvidia/595.71.05/gsp_ga10x.bin
-> > [  684.043158] Loading firmware: nvidia/595.71.05/gsp_ga10x.bin
-> > 
-> > So, only one of the two hub-connected eGPUs are recognized.
-> > 
-> > 
-> > pciehp: Hotplug bridge without secondary bus, ignoring <-  This sounds less
-> > promising.
-> > 
-> > 
-> > lspci (after connecting hub):
-> > 
-> > 00:00.0 Host bridge: Intel Corporation 12th Gen Core Processor Host
-> > Bridge/DRAM Registers (rev 02)
-> > 00:02.0 VGA compatible controller: Intel Corporation Alder Lake-P GT2 [Iris
-> > Xe Graphics] (rev 0c)
-> > 00:04.0 Signal processing controller: Intel Corporation Alder Lake
-> > Innovation Platform Framework Processor Participant (rev 02)
-> > 00:06.0 PCI bridge: Intel Corporation 12th Gen Core Processor PCI Express x4
-> > Controller #0 (rev 02)
-> > 00:07.0 PCI bridge: Intel Corporation Alder Lake-P Thunderbolt 4 PCI Express
-> > Root Port #0 (rev 02)
-> > 00:07.1 PCI bridge: Intel Corporation Alder Lake-P Thunderbolt 4 PCI Express
-> > Root Port #1 (rev 02)
-> > 00:07.2 PCI bridge: Intel Corporation Alder Lake-P Thunderbolt 4 PCI Express
-> > Root Port #2 (rev 02)
-> > 00:07.3 PCI bridge: Intel Corporation Alder Lake-P Thunderbolt 4 PCI Express
-> > Root Port #3 (rev 02)
-> > 00:08.0 System peripheral: Intel Corporation 12th Gen Core Processor
-> > Gaussian & Neural Accelerator (rev 02)
-> > 00:0a.0 Signal processing controller: Intel Corporation Platform Monitoring
-> > Technology (rev 01)
-> > 00:0d.0 USB controller: Intel Corporation Alder Lake-P Thunderbolt 4 USB
-> > Controller (rev 02)
-> > 00:0d.2 USB controller: Intel Corporation Alder Lake-P Thunderbolt 4 NHI #0
-> > (rev 02)
-> > 00:0d.3 USB controller: Intel Corporation Alder Lake-P Thunderbolt 4 NHI #1
-> > (rev 02)
-> > 00:14.0 USB controller: Intel Corporation Alder Lake PCH USB 3.2 xHCI Host
-> > Controller (rev 01)
-> > 00:14.2 RAM memory: Intel Corporation Alder Lake PCH Shared SRAM (rev 01)
-> > 00:15.0 Serial bus controller: Intel Corporation Alder Lake PCH Serial IO
-> > I2C Controller #0 (rev 01)
-> > 00:15.1 Serial bus controller: Intel Corporation Alder Lake PCH Serial IO
-> > I2C Controller #1 (rev 01)
-> > 00:15.3 Serial bus controller: Intel Corporation Alder Lake PCH Serial IO
-> > I2C Controller #3 (rev 01)
-> > 00:16.0 Communication controller: Intel Corporation Alder Lake PCH HECI
-> > Controller (rev 01)
-> > 00:16.3 Serial controller: Intel Corporation Alder Lake AMT SOL Redirection
-> > (rev 01)
-> > 00:1d.0 PCI bridge: Intel Corporation Alder Lake PCI Express Root Port #9
-> > (rev 01)
-> > 00:1f.0 ISA bridge: Intel Corporation Alder Lake PCH eSPI Controller (rev
-> > 01)
-> > 00:1f.3 Audio device: Intel Corporation Alder Lake PCH-P High Definition
-> > Audio Controller (rev 01)
-> > 00:1f.4 SMBus: Intel Corporation Alder Lake PCH-P SMBus Host Controller (rev
-> > 01)
-> > 00:1f.5 Serial bus controller: Intel Corporation Alder Lake-P PCH SPI
-> > Controller (rev 01)
-> > 01:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD
-> > Controller PM9C1a (DRAM-less)
-> > 02:00.0 PCI bridge: Intel Corporation JHL6340 Thunderbolt 3 Bridge (C step)
-> > [Alpine Ridge 2C 2016] (rev 02)
-> > 03:01.0 PCI bridge: Intel Corporation JHL6340 Thunderbolt 3 Bridge (C step)
-> > [Alpine Ridge 2C 2016] (rev 02)
-> > 04:00.0 VGA compatible controller: NVIDIA Corporation GA102 [GeForce RTX
-> > 3090] (rev a1)
-> > 04:00.1 Audio device: NVIDIA Corporation GA102 High Definition Audio
-> > Controller (rev a1)
-> > 2b:00.0 PCI bridge: Intel Corporation Thunderbolt 4 Bridge [Goshen Ridge
-> > 2020] (rev 03)
-> > 2c:00.0 PCI bridge: Intel Corporation Thunderbolt 4 Bridge [Goshen Ridge
-> > 2020] (rev 03)
-> > 2c:01.0 PCI bridge: Intel Corporation Thunderbolt 4 Bridge [Goshen Ridge
-> > 2020] (rev 03)
-> > 2c:02.0 PCI bridge: Intel Corporation Thunderbolt 4 Bridge [Goshen Ridge
-> > 2020] (rev 03)
-> > 2c:03.0 PCI bridge: Intel Corporation Thunderbolt 4 Bridge [Goshen Ridge
-> > 2020] (rev 03)
-> > 2c:04.0 PCI bridge: Intel Corporation Thunderbolt 4 Bridge [Goshen Ridge
-> > 2020] (rev 03)
-> > 2e:00.0 PCI bridge: Intel Corporation JHL6340 Thunderbolt 3 Bridge (C step)
-> > [Alpine Ridge 2C 2016] (rev 02)
-> > 2f:01.0 PCI bridge: Intel Corporation JHL6340 Thunderbolt 3 Bridge (C step)
-> > [Alpine Ridge 2C 2016] (rev 02)
-> > 30:00.0 VGA compatible controller: NVIDIA Corporation GA102 [GeForce RTX
-> > 3090] (rev a1)
-> > 30:00.1 Audio device: NVIDIA Corporation GA102 High Definition Audio
-> > Controller (rev a1)
-> > 7d:00.0 PCI bridge: Intel Corporation JHL6340 Thunderbolt 3 Bridge (C step)
-> > [Alpine Ridge 2C 2016] (rev 02)
-> > 7e:01.0 PCI bridge: Intel Corporation JHL6340 Thunderbolt 3 Bridge (C step)
-> > [Alpine Ridge 2C 2016] (rev 02)
-> > 7f:00.0 VGA compatible controller: NVIDIA Corporation GA102 [GeForce RTX
-> > 3090 Ti] (rev a1)
-> > 7f:00.1 Audio device: NVIDIA Corporation GA102 High Definition Audio
-> > Controller (rev a1)
-> > a6:00.0 Ethernet controller: Intel Corporation Ethernet Controller I226-V
-> > (rev 04)
-> > 
-> > 
-> > /proc/iomem after connecting hub
-> > 
-> > 00000000-00000fff : Reserved
-> > 00001000-0009efff : System RAM
-> > 0009f000-000fffff : Reserved
-> >   000a0000-000bffff : PCI Bus 0000:00
-> >   000f0000-000fffff : System ROM
-> > 00100000-3727bfff : System RAM
-> > 3727c000-372cafff : Reserved
-> > 372cb000-388b2fff : System RAM
-> > 388b3000-388b3fff : Reserved
-> > 388b4000-3b138fff : System RAM
-> > 3b139000-3ba38fff : Reserved
-> > 3ba39000-3d84efff : System RAM
-> > 3d84f000-40a7efff : Reserved
-> > 40a7f000-43a2efff : ACPI Non-volatile Storage
-> >   43945000-43945fff : USBC000:00
-> > 43a2f000-43afefff : ACPI Tables
-> > 43aff000-43afffff : System RAM
-> > 43b00000-47ffffff : Reserved
-> > 49200000-493fffff : Reserved
-> > 4a000000-503fffff : Reserved
-> >   4c800000-503fffff : Graphics Stolen Memory
-> > 50400000-bfffffff : PCI Bus 0000:00
-> >   50400000-50400fff : 0000:00:1f.5
-> >   50500000-507fffff : PCI Bus 0000:a6
-> >     50500000-505fffff : 0000:a6:00.0
-> >       50500000-505fffff : igc
-> >     50600000-506fffff : 0000:a6:00.0
-> >     50700000-50703fff : 0000:a6:00.0
-> >       50700000-50703fff : igc
-> >   52000000-5e1fffff : PCI Bus 0000:7d
-> >     52000000-5e0fffff : PCI Bus 0000:7e
-> >       52000000-5e0fffff : PCI Bus 0000:7f
-> >         52000000-52ffffff : 0000:7f:00.0
-> >           52000000-52ffffff : nvidia
-> >         53000000-5307ffff : 0000:7f:00.0
-> >         53080000-53083fff : 0000:7f:00.1
-> >   60000000-6c1fffff : PCI Bus 0000:54
-> >   6e000000-7a1fffff : PCI Bus 0000:2b
-> >     6e000000-7a0fffff : PCI Bus 0000:2c
-> >       6e000000-720fffff : PCI Bus 0000:2e
-> >         6e000000-720fffff : PCI Bus 0000:2f
-> >           6e000000-720fffff : PCI Bus 0000:30
-> >             6e000000-6effffff : 0000:30:00.0
-> >               6e000000-6effffff : nvidia
-> >             6f000000-6f07ffff : 0000:30:00.0
-> >             6f080000-6f083fff : 0000:30:00.1
-> >   7a400000-7a4fffff : PCI Bus 0000:01
-> >     7a400000-7a403fff : 0000:01:00.0
-> >       7a400000-7a403fff : nvme
-> >   7a600000-7a60ffff : 0000:00:14.0
-> >     7a600000-7a60ffff : xhci-hcd
-> >   7a611000-7a611fff : 0000:00:16.3
-> >   7c000000-881fffff : PCI Bus 0000:02
-> >     7c000000-880fffff : PCI Bus 0000:03
-> >       7c000000-880fffff : PCI Bus 0000:04
-> >         7c000000-7cffffff : 0000:04:00.0
-> >           7c000000-7cffffff : nvidia
-> >         7d000000-7d07ffff : 0000:04:00.0
-> >         7d080000-7d083fff : 0000:04:00.1
-> > c0000000-cfffffff : PCI ECAM 0000 [bus 00-ff]
-> >   c0000000-cfffffff : PNP0C02:01
-> > fd000000-fd68ffff : PNP0C02:02
-> > fd690000-fd69ffff : INTC1055:00
-> > fd6a0000-fd6affff : INTC1055:00
-> > fd6b0000-fd6cffff : PNP0C02:02
-> > fd6d0000-fd6dffff : INTC1055:00
-> > fd6e0000-fd6effff : INTC1055:00
-> > fd6f0000-fdffffff : PNP0C02:02
-> > fe000000-fe01ffff : PNP0C02:02
-> > fe04c000-fe04ffff : PNP0C02:02
-> > fe050000-fe0affff : PNP0C02:02
-> > fe0d0000-fe0fffff : PNP0C02:02
-> > fe200000-fe7fffff : PNP0C02:02
-> > fec00000-fec003ff : IOAPIC 0
-> > fed00000-fed003ff : HPET 0
-> >   fed00000-fed003ff : PNP0103:00
-> > fed20000-fed7ffff : Reserved
-> >   fed40000-fed44fff : NTC0702:00
-> > fed90000-fed90fff : dmar0
-> > fed91000-fed91fff : dmar1
-> > feda0000-feda0fff : PNP0C02:01
-> > feda1000-feda1fff : PNP0C02:01
-> > fedc0000-fedc7fff : PNP0C02:01
-> > fee00000-feefffff : PNP0C02:01
-> > ff000000-ffffffff : PNP0C02:02
-> > 100000000-10afbfffff : System RAM
-> >   d6a000000-d6b1e52f7 : Kernel code
-> >   d6b200000-d6b7a0fff : Kernel rodata
-> >   d6b800000-d6bac0cff : Kernel data
-> >   d6c247000-d6c30ffff : Kernel bss
-> > 10afc00000-10afffffff : RAM buffer
-> > 4000000000-7fffffffff : PCI Bus 0000:00
-> >   4000000000-400fffffff : 0000:00:02.0
-> >   4010000000-4016ffffff : 0000:00:02.0
-> >   4017000000-4017000fff : 0000:00:15.0
-> >     4017000000-40170001ff : lpss_dev
-> >       4017000000-40170001ff : i2c_designware.0 lpss_dev
-> >     4017000200-40170002ff : lpss_priv
-> >     4017000800-4017000fff : idma64.0
-> >   4017001000-4017001fff : 0000:00:15.1
-> >     4017001000-40170011ff : lpss_dev
-> >       4017001000-40170011ff : i2c_designware.1 lpss_dev
-> >     4017001200-40170012ff : lpss_priv
-> >     4017001800-4017001fff : idma64.1
-> >   4017002000-4017002fff : 0000:00:15.3
-> >     4017002000-40170021ff : lpss_dev
-> >       4017002000-40170021ff : i2c_designware.2 lpss_dev
-> >     4017002200-40170022ff : lpss_priv
-> >     4017002800-4017002fff : idma64.2
-> >   4020000000-40ffffffff : 0000:00:02.0
-> >   6000000000-601bffffff : PCI Bus 0000:02
-> >     6000000000-6011ffffff : PCI Bus 0000:03
-> >       6000000000-6011ffffff : PCI Bus 0000:04
-> >         6000000000-600fffffff : 0000:04:00.0
-> >         6010000000-6011ffffff : 0000:04:00.0
-> >   6020000000-603bffffff : PCI Bus 0000:2b
-> >     6020000000-6031ffffff : PCI Bus 0000:2c
-> >       6020000000-6031ffffff : PCI Bus 0000:2e
-> >         6020000000-6031ffffff : PCI Bus 0000:2f
-> >           6020000000-6031ffffff : PCI Bus 0000:30
-> >             6020000000-602fffffff : 0000:30:00.0
-> >             6030000000-6031ffffff : 0000:30:00.0
-> >   6040000000-605bffffff : PCI Bus 0000:54
-> >   605c000000-605cffffff : 0000:00:02.0
-> >   605d000000-605d0fffff : 0000:00:1f.3
-> >   605d100000-605d13ffff : 0000:00:0d.3
-> >     605d100000-605d13ffff : thunderbolt
-> >   605d140000-605d17ffff : 0000:00:0d.2
-> >     605d140000-605d17ffff : thunderbolt
-> >   605d180000-605d19ffff : 0000:00:04.0
-> >     605d180000-605d19ffff : proc_thermal
-> >   605d1a0000-605d1affff : 0000:00:0d.0
-> >     605d1a0000-605d1affff : xhci-hcd
-> >   605d1b0000-605d1b7fff : 0000:00:0a.0
-> >   605d1b8000-605d1bbfff : 0000:00:1f.3
-> >   605d1bc000-605d1bffff : 0000:00:14.2
-> >   605d1c0000-605d1c00ff : 0000:00:1f.4
-> >     605d1c0000-605d1c00ff : i801_smbus
-> >   605d1c1000-605d1c1fff : 0000:00:16.0
-> >     605d1c1000-605d1c1fff : mei_me
-> >   605d1c5000-605d1c5fff : 0000:00:14.2
-> >   605d1c6000-605d1c6fff : 0000:00:0d.3
-> >   605d1c7000-605d1c7fff : 0000:00:0d.2
-> >   605d1c8000-605d1c8fff : 0000:00:08.0
-> >   6060000000-607bffffff : PCI Bus 0000:7d
-> >     6060000000-6071ffffff : PCI Bus 0000:7e
-> >       6060000000-6071ffffff : PCI Bus 0000:7f
-> >         6060000000-606fffffff : 0000:7f:00.0
-> >         6070000000-6071ffffff : 0000:7f:00.0
-> > 
-> > 
+I'll leave the series on the list for a while before I send out a new versi=
+on.
+If you're reviewing you can assume the first two bullets points will be fix=
+ed.
+
+Best,
+Gary
+
+>
+> ---
+> Changes in v3:
+> - This version presents a major rework from the last version, mostly insp=
+ired
+>   by discussions that happen during RustWeek. Notably, the new individual
+>   view types are now the central piece of `Io` traits rather than an ad-h=
+oc
+>   addon using the `View` type. They also benefit from type-erasure; the
+>   original type of `Mmio` or `Coherent` doesn't matter anymore for subvie=
+ws.
+>   This removes the need of specifying generics on types that take
+>   `CoherentView` on Nova code, which is something that I'm not fully happ=
+y
+>   with in the last version.
+> - Add `SysMem` backend and use it for `Coherent` (Laura Nao).
+> - Add examples to copying methods and read_val/write_val (Andreas).
+> - Add a reference patch on `Either` implementation.
+> - Link to v2: https://patch.msgid.link/20260421-io_projection-v2-0-4c251c=
+692ef4@garyguo.net
+>
+> Changes in v2:
+> - Rebased on projection syntax rework
+> - Added a new patch to forbid use of untyped I/O accessors and register
+>   macros on typed I/O structs (Alex).
+> - Fixed a few safety comments (Andreas).
+> - Added a new patch that implements copying methods (see above).
+> - Link to v1: https://lore.kernel.org/rust-for-linux/20260323153807.13607=
+05-1-gary@kernel.org/
