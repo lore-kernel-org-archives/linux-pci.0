@@ -1,57 +1,56 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C562E3EEAD4
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E3953F8EB2
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781001938; cv=none; b=ABQsm9rFzbuMNBZXyX9E4fVHaw2qzl9OmaUxTvATLqdZAoSKejhRFZha8YnO7LFVH77seoibM1N1fh5TKuayeCoj52X/aCVB8lBcrFDvSFC7TO9MXQ3pUSaXoTLeR+V2hcQUTswoC0tW/NYYtplBCdbJaH6ig3aI7C/PUFfXvd4=
+	t=1781001938; cv=none; b=uYo7aLdLrgMGZoTr4bnQnXvYk4h93gGPAhkm4jGp+SuZJp/F+AbwKOqbf35WX+oYMWUcF7+HuZfIRnskVXJyiflyBN+A9CjoqX8x+PjJuiXCQxzhfDXJ5nTvuMl2O5EF5dycvqKidd8/DGrMD1BzyvHOFOEhB/xkgiGGhuyxPqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1781001938; c=relaxed/simple;
-	bh=PTYs+SCZajTqtYURDNeBQ26ie5GuNRzuAzL5iA2Jgsc=;
+	bh=jbT4TeIu5qLYRlUa6VwPmhNjxvOAClqnJbxP67TxUz0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=ZVJ3b4vt6sSx20jFsW9YIV7C3SyuQZlb0Z8hMYyugVQ0hCkJQz9oSKOCi35HP9jGGQmjcAt39UD2RLpcJhV1YjTMaOP6RaoYf/iSc4ZPQXf1pmE2INclMJKtBvP3lo4FYM7p8NQRcGBzX2Y9hfoftPP1XDoCRgczskKTGBqMabs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=c21GxcQc; arc=none smtp.client-ip=203.254.224.25
+	 Content-Type:References; b=Kg8jHslg5P/XfXEdaBhTla7/2S0JCMW699Z4eiMHlfiECzoRPYyucN6772hMXHau/LzTMdwGAywOLH5NO23SJxrQJHP6jXNqf7F0oRIPAwoUyVmYA6BjP23y2/iwWwCA8Yv6SgOgFpr90ZYKqSG6jqY+0eIt6ItNHbNVKaymyEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=P8wvDtyo; arc=none smtp.client-ip=203.254.224.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="c21GxcQc"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20260609104532epoutp02003556dd4e65fafa5ed73a38a2137863~3Y9JWtkJ12730527305epoutp02z
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20260609104532epoutp02003556dd4e65fafa5ed73a38a2137863~3Y9JWtkJ12730527305epoutp02z
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="P8wvDtyo"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20260609104535epoutp04f0f6d7ad6f83996b68ae63b13bde3929~3Y9LsBA9F0041900419epoutp04H
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:35 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20260609104535epoutp04f0f6d7ad6f83996b68ae63b13bde3929~3Y9LsBA9F0041900419epoutp04H
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1781001932;
-	bh=TxxJCe8z8bGsTjg7U0bjaQsQUpIxab4OEeAVJoXOqEM=;
+	s=mail20170921; t=1781001935;
+	bh=jIahGxVrHix7BsYtz5UoC9vsS7ivK+HEKtPzcVjyb0o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=c21GxcQcB0HkvYH2CGAsCgTZtVbUY6ZUnXRjjiicZst8aqSTrjKA7K5KUd10xhBid
-	 6PKCBHHBz78Lw5gE6Sc/8d0N/u2xSUPlTDjE/FZtd+t9s0fvFPNJTSix4QmWTq/PjE
-	 P5A0oa4UQqQq37/N31zafumpuvJ8gG0CAH1868wA=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	b=P8wvDtyoVTVifaa0peeZc3a2YbUZyI1UoU0okqfQdKAYBSdu4fCvKJQVpF5cC54Rj
+	 Zl4cgm79GoQZY0wVVNb1MaOicc9g7ufurIOl1+HbLAuHH+JcL96oa5FkWqbNOawkGn
+	 uDjGBkPhhKaj2sq+9MpM/tAqIGfAnUVNXcazUlKQ=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
 	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20260609104532epcas5p33f246da5c968175e92657f238ae430b2~3Y9I9eNzE1373613736epcas5p3r;
-	Tue,  9 Jun 2026 10:45:32 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.86]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4gZQY74Hqjz2SSKX; Tue,  9 Jun
-	2026 10:45:31 +0000 (GMT)
+	20260609104534epcas5p3030dfc01d01081fc1a4863f303080048~3Y9LVaxB_1375213752epcas5p3o;
+	Tue,  9 Jun 2026 10:45:34 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.95]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4gZQYB13wbz6B9m7; Tue,  9 Jun
+	2026 10:45:34 +0000 (GMT)
 Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20260609104530epcas5p153380a0f04ac6db56fe1edbb252bbb22~3Y9HnOdmu0842708427epcas5p1x;
-	Tue,  9 Jun 2026 10:45:30 +0000 (GMT)
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20260609104533epcas5p2b80ad53ed807018b3bb4316e4984f89a~3Y9KNcdAB0412104121epcas5p2h;
+	Tue,  9 Jun 2026 10:45:33 +0000 (GMT)
 Received: from unvme-SYS-221H-TN24R.samsungds.net (unknown [107.99.40.127])
 	by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20260609104529epsmtip1eb3ddf39f5979cf72c95cd4d2505c618~3Y9GAP1LY2381323813epsmtip1Z;
-	Tue,  9 Jun 2026 10:45:28 +0000 (GMT)
+	20260609104531epsmtip128242981e16a2a3d2eb67e16690c8c80~3Y9IqBKnV2355923559epsmtip1o;
+	Tue,  9 Jun 2026 10:45:31 +0000 (GMT)
 From: Shrihari E S <shrihari.s@samsung.com>
 To: jic23@kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
 	qemu-devel@nongnu.org, cpgs@samsung.com
 Cc: arun.george@samsung.com, vikash.k5@samsung.com, s.neeraj@samsung.com,
 	shrihari.s@samsung.com, dongjoo.seo1@samsung.com, dave@stgolabs.net,
 	gost.dev@samsung.com
-Subject: [RFC 7/8] hw/pci: hw/cxl: Wire SVC initialization into port realize
- functions.
-Date: Tue,  9 Jun 2026 16:28:35 +0530
-Message-Id: <20260609105836.3702787-8-shrihari.s@samsung.com>
+Subject: [RFC 8/8] cxl: Add documentation for UIO-enabled CXL devices
+Date: Tue,  9 Jun 2026 16:28:36 +0530
+Message-Id: <20260609105836.3702787-9-shrihari.s@samsung.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260609105836.3702787-1-shrihari.s@samsung.com>
 Precedence: bulk
@@ -61,121 +60,87 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20260609104530epcas5p153380a0f04ac6db56fe1edbb252bbb22
+X-CMS-MailID: 20260609104533epcas5p2b80ad53ed807018b3bb4316e4984f89a
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
 X-CPGSPASS: Y
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20260609104530epcas5p153380a0f04ac6db56fe1edbb252bbb22
+X-CMS-RootMailID: 20260609104533epcas5p2b80ad53ed807018b3bb4316e4984f89a
 References: <20260609105836.3702787-1-shrihari.s@samsung.com>
-	<CGME20260609104530epcas5p153380a0f04ac6db56fe1edbb252bbb22@epcas5p1.samsung.com>
+	<CGME20260609104533epcas5p2b80ad53ed807018b3bb4316e4984f89a@epcas5p2.samsung.com>
 
-Integrate Streamlined Virtual Channel (SVC) capability initialization into the
-realize() functions of both PCIe and CXL ports. This change ensures that the
-'uio_capable' flag is correctly populated in CXL ports during the initialization
-sequence.
-
-'uio_capable' in CXL ports is responsible for enabling UIO capability in
-HDM decoder registers.
+Add a command-line example demonstrating a topology with three CXL Type-3
+devices connected via a switch. This example enables Unordered I/O (UIO) on
+all ports and endpoints to illustrate the correct usage of UIO-related
+properties.
 
 Signed-off-by: Shrihari E S <shrihari.s@samsung.com>
-Signed-off-by: Dongjoo Seo <dongjoo.seo1@samsung.com>
 ---
- hw/pci-bridge/cxl_downstream.c     | 1 +
- hw/pci-bridge/cxl_root_port.c      | 5 +++++
- hw/pci-bridge/cxl_upstream.c       | 4 ++++
- hw/pci-bridge/pcie_root_port.c     | 1 +
- hw/pci-bridge/xio3130_downstream.c | 1 +
- hw/pci-bridge/xio3130_upstream.c   | 1 +
- 6 files changed, 13 insertions(+)
+ docs/system/devices/cxl.rst | 50 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-diff --git a/hw/pci-bridge/cxl_downstream.c b/hw/pci-bridge/cxl_downstream.c
-index e0fa6cfdc4..a9eaeb81bb 100644
---- a/hw/pci-bridge/cxl_downstream.c
-+++ b/hw/pci-bridge/cxl_downstream.c
-@@ -229,6 +229,7 @@ static void cxl_dsp_realize(PCIDevice *d, Error **errp)
-                      PCI_BASE_ADDRESS_SPACE_MEMORY |
-                          PCI_BASE_ADDRESS_MEM_TYPE_64,
-                      &dsp->bar);
-+    pcie_config_uio_svc(d, errp);
+diff --git a/docs/system/devices/cxl.rst b/docs/system/devices/cxl.rst
+index 32b1b5d773..c39721b3f9 100644
+--- a/docs/system/devices/cxl.rst
++++ b/docs/system/devices/cxl.rst
+@@ -407,6 +407,56 @@ use HDM-DB for coherence, which requires operating in Flit mode::
+   -device cxl-type3,bus=swport3,volatile-memdev=cxl-mem3,id=cxl-mem3,sn=0x4 \
+   -M cxl-fmw.0.targets.0=cxl.1,cxl-fmw.0.size=4G,cxl-fmw.0.interleave-granularity=4k
  
-     return;
- 
-diff --git a/hw/pci-bridge/cxl_root_port.c b/hw/pci-bridge/cxl_root_port.c
-index 4be2b400f9..eafcf59f83 100644
---- a/hw/pci-bridge/cxl_root_port.c
-+++ b/hw/pci-bridge/cxl_root_port.c
-@@ -164,6 +164,7 @@ static void cxl_rp_realize(DeviceState *dev, Error **errp)
- {
-     PCIDevice *pci_dev     = PCI_DEVICE(dev);
-     PCIERootPortClass *rpc = PCIE_ROOT_PORT_GET_CLASS(dev);
-+    PCIEPort *p            = PCIE_PORT(dev);
-     CXLRootPort *crp       = CXL_ROOT_PORT(dev);
-     CXLComponentState *cxl_cstate = &crp->cxl_cstate;
-     ComponentRegisters *cregs = &cxl_cstate->crb;
-@@ -212,6 +213,10 @@ static void cxl_rp_realize(DeviceState *dev, Error **errp)
-                      PCI_BASE_ADDRESS_SPACE_MEMORY |
-                      PCI_BASE_ADDRESS_MEM_TYPE_64,
-                      &crp->bar);
-+    rc = pcie_config_uio_svc(pci_dev, errp);
-+    if (p->flitmode && rc >= 0) {
-+        crp->uio_capable = true;
-+    }
- }
- 
- static void cxl_rp_reset_hold(Object *obj, ResetType type)
-diff --git a/hw/pci-bridge/cxl_upstream.c b/hw/pci-bridge/cxl_upstream.c
-index a75d10e7b4..f6f5713437 100644
---- a/hw/pci-bridge/cxl_upstream.c
-+++ b/hw/pci-bridge/cxl_upstream.c
-@@ -411,6 +411,10 @@ static void cxl_usp_realize(PCIDevice *d, Error **errp)
-         goto err_cap;
-     }
- 
-+    rc = pcie_config_uio_svc(d, errp);
-+    if (p->flitmode && rc >= 0) {
-+        usp->uio_capable = true;
-+    }
-     return;
- 
- err_cap:
-diff --git a/hw/pci-bridge/pcie_root_port.c b/hw/pci-bridge/pcie_root_port.c
-index 20554bd854..5a74b0e978 100644
---- a/hw/pci-bridge/pcie_root_port.c
-+++ b/hw/pci-bridge/pcie_root_port.c
-@@ -97,6 +97,7 @@ static void rp_realize(PCIDevice *d, Error **errp)
-         goto err_int;
-     }
- 
-+    pcie_config_uio_svc(d, errp);
-     pcie_cap_arifwd_init(d);
-     pcie_cap_deverr_init(d);
-     pcie_cap_slot_init(d, s);
-diff --git a/hw/pci-bridge/xio3130_downstream.c b/hw/pci-bridge/xio3130_downstream.c
-index b0b297bb53..cc19fb1213 100644
---- a/hw/pci-bridge/xio3130_downstream.c
-+++ b/hw/pci-bridge/xio3130_downstream.c
-@@ -93,6 +93,7 @@ static void xio3130_downstream_realize(PCIDevice *d, Error **errp)
-     if (rc < 0) {
-         goto err_msi;
-     }
-+    pcie_config_uio_svc(d, errp);
-     pcie_cap_flr_init(d);
-     pcie_cap_deverr_init(d);
-     pcie_cap_slot_init(d, s);
-diff --git a/hw/pci-bridge/xio3130_upstream.c b/hw/pci-bridge/xio3130_upstream.c
-index 925df5add3..c28339dabe 100644
---- a/hw/pci-bridge/xio3130_upstream.c
-+++ b/hw/pci-bridge/xio3130_upstream.c
-@@ -84,6 +84,7 @@ static void xio3130_upstream_realize(PCIDevice *d, Error **errp)
-     if (rc < 0) {
-         goto err_msi;
-     }
-+    pcie_config_uio_svc(d, errp);
-     pcie_cap_flr_init(d);
-     pcie_cap_deverr_init(d);
++Unordered I/O (UIO) Support
++---------------------------
++
++CXL 3.2 and PCIe 6.1 introduce Unordered I/O (UIO), which allows memory
++transactions to bypass strict ordering requirements, potentially improving
++performance for certain workloads. UIO support requires:
++
++1. **256-byte Flit Mode**: Enabled via ``x-256b-flit=on`` on all ports and devices
++2. **Streamlined Virtual Channel (SVC)**: A PCIe 6.1 extended capability that
++   provides dedicated virtual channels for UIO traffic
++
++The SVC capability defines two paths for UIO traffic:
++
++- **SVC3 (Mandatory)**: Dedicated VC for UIO traffic only (``x-uio-svc=on``)
++- **SVC4 (Optional)**: Shared VC for both UIO and non-UIO traffic
++  (``x-uio-svc-opt=on``)
++
++Both paths require 256B flit mode. The CXL Type 3 device uses the ``x-uio=on``
++property to advertise UIO capability, which is then reflected in the HDM decoder
++capability registers.
++
++**Note**: Per the CXL specification, downstream switch ports do not track UIO
++capability separately; only root ports and upstream ports maintain the UIO
++capability.
++
++An example of 3 type3 devices with volatile memory below a switch. All the devices
++and ports support Unordered IO (UIO) feature which requires Streamlined Virtual Channel
++(SVC) capability and Flit mode::
++
++  qemu-system-x86_64 -M q35,cxl=on -m 4G,maxmem=8G,slots=8 -smp 4 \
++  ...
++  -device pxb-cxl,bus_nr=12,bus=pcie.0,id=cxl.1 \
++  -device cxl-rp,port=0,bus=cxl.1,id=rp13,chassis=0,slot=2,x-uio-svc=on,
++   x-uio-svc-opt=on,x-256b-flit=on,x-speed=64,x-width=32 \
++  -device cxl-upstream,port=2,sn=1234,bus=rp13,id=us0,x-uio-svc=on,
++   x-uio-svc-opt=on,x-256b-flit=on,x-speed=64,x-width=32 \
++  -device cxl-downstream,port=0,bus=us0,id=swport0,chassis=0,slot=4,
++   x-uio-svc=on,x-uio-svc-opt=on,x-256b-flit=on,x-speed=64,x-width=32 \
++  -device cxl-downstream,port=1,bus=us0,id=swport1,chassis=0,slot=5,
++   x-uio-svc=on,x-uio-svc-opt=on,x-256b-flit=on,x-speed=64,x-width=32  \
++  -device cxl-downstream,port=3,bus=us0,id=swport2,chassis=0,slot=6,
++   x-uio-svc=on,x-uio-svc-opt=on,x-256b-flit=on,x-speed=64,x-width=32  \
++  -object memory-backend-ram,id=target-mem1,size=512M \
++  -object memory-backend-ram,id=target-mem2,size=512M \
++  -object memory-backend-ram,id=target-mem3,size=512M \
++  -device cxl-type3,id=mem1,bus=swport0,volatile-memdev=target-mem1,x-uio=on,x-256b-flit=on,sn=1233 \
++  -device cxl-type3,id=mem2,bus=swport1,volatile-memdev=target-mem2,x-uio=on,x-256b-flit=on,sn=1234 \
++  -device cxl-type3,id=mem3,bus=swport2,volatile-memdev=target-mem3,x-uio=on,x-256b-flit=on,sn=1235 \
++  -M cxl-fmw.0.targets.0=cxl.1,cxl-fmw.0.size=4G,cxl-fmw.0.interleave-granularity=4k
++
+ A simple arm/virt example featuring a single direct connected CXL Type 3
+ Volatile Memory device::
  
 -- 
 2.34.1
