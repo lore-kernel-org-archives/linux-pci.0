@@ -1,164 +1,211 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012065.outbound.protection.outlook.com [52.101.48.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F7933EB7FB
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 07:52:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1780991570; cv=none; b=hlCo47Qy0EpDeWlA0gPWLc+PBVn0c/DZTT4V485mtiMhjxpaaDQhXjNcL9+boS0MRB+Qdz4G6SbhP1lqhjSXKLjF4IIric6Yb9MVvBJoibRe/RTX8rF5Rg9vmYn9aOI7WT/GIsbxASFuHbd7Wi6N8NwJMBtcFmIWOZ74oQSedKU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1780991570; c=relaxed/simple;
-	bh=az+zpCRnr38vmPuK2q43gKmU5L1LhMy3JC6M8/Khonw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b2FSlHPvbAJxUKNRZ/xZGVWQlNTJLqGDJ6Rti7iczqQQeix8810NicQtvxd5czw6mOYrpUCSQU2PybevEON/lwLuHP6c40JIpGKAQ4zs8RYfcFJprq5VbRJkruZ9OIBWHLhwVoux54OhEnxU91p3vDw3Yw9ziNHyl3YfSpn+64A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ct6gBRAq; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=cMohSA36; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5B003ED3D1;
+	Tue,  9 Jun 2026 08:10:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.48.65
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1780992626; cv=fail; b=sUYcbq4bANSK/c9N0LQsNkLqsbdzkCsPYj74F77RYcXxhZYnNC1ERae5/uP4OeP6zfDxjYGXLCkClBfdyyLH8/2sjzyQrIKe+uIXwoa/xoFpCiiWumit0D4FR3nOn7nZNNnenI7QkirBQPnTVDkXlhbfaVaSQvhWVUt0fWx/ANQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1780992626; c=relaxed/simple;
+	bh=bXO8ighz8OWl+s9OfXKdWMQa1OEXd+vYyO6+G+i4VzI=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=fv6+Ftl1Sk5EiSmSgQuSeRUb6Q2DZ3guNsXIT06NTE4kVH+AgSCoFlzYSfbgSFtiz2ae+jP8jVph67wxWrQmow7tEFnBKyIxT5a5NBYG5BmfQoj4WuZ4rVamnXibtwUQc4McATS/khja1YzJ+rIJVQA4KlT+D/Ojnnc5wRQUHn0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=b/0YjtP0; arc=fail smtp.client-ip=52.101.48.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ct6gBRAq";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="cMohSA36"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6597PYQx1973104
-	for <linux-pci@vger.kernel.org>; Tue, 9 Jun 2026 07:52:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=JgxXX2hS8aG2JxwC+zyGcbB4
-	dqKygStbIyRootZ5ISk=; b=ct6gBRAqo5x+AOIkv/RQvh9d55tSPazqtB7C/a6J
-	kaxu/CHnZ6WRsfqHq5JSTaW4PuqTW/DsSbAa12+bH3seoxPTuLH1RuEk25NDvM3o
-	0Y875S3nRF+L9wIdMqrgQxiTZ36HxgVrOdVCUlZchxhG8ZCJXTyrMtN83IyLQyKO
-	kCieWCMS9DK/rkMRSJ2aIiXleTBk4FTQkNavP3J2kPlKVETOTNZ1HUopIWtx+4ux
-	Z5vOnmmjPrcJ7Sx8tm6jONfQboGpaIYKpA023Sq7VPF4hRNvegfiFQ70VM7IvCbl
-	Q+zbbgO5grqHRou0O/NaBt4kALcfTC98TKpJ9i7rVpZ8fA==
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com [209.85.214.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4epeear36j-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 07:52:46 +0000 (GMT)
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-2c10cd7df22so69546185ad.2
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 00:52:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1780991565; x=1781596365; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=JgxXX2hS8aG2JxwC+zyGcbB4dqKygStbIyRootZ5ISk=;
-        b=cMohSA36+wTsHbqL0301jZCBpdA9iQJLMDLHOzgl/+guJyaHoXhgsc5dECcYQ2v2d/
-         m5GKysVx3ZIlLj2aLulCh2CjxIaNb3P6EYJP+aF6ysvHyCrb1ywryKy3c+1BweFvKcHP
-         iWGE5U42H2BYcal7vgqG20Iri8PYWyi716YiO8g39JT67zt95lxgBQbIhtY5YRKBvmcC
-         fm1XoRxIigRfRq9zFSoXTNgc2sywTAcuRVf8ebQjPvlqyWgvo958bZu6RTK4qjrBaBCx
-         DVu1D/jDzgqNMMjHCLa8K/aVyJpZNFkfYa1gKpDGQgzVcHt6tlXBXGUPEIAW6FNk9ZLi
-         UCuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1780991565; x=1781596365;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JgxXX2hS8aG2JxwC+zyGcbB4dqKygStbIyRootZ5ISk=;
-        b=geRuILCU/wBkMu/0ny9jeAb+3DR9rOkSf6nfNapTn4hvXx3utkjWDBdWlVwvyas/Gd
-         PYTI/xr9HLSjQUHGxhf2Yft2wOazcglJSa3LfCzmaASwjwntPHi0J8iVWqMmeHHBjXbl
-         +ux8PWyFygFuzWf7q3afmqeJ1Skz7D9ZfoITV0kFp0ifcX4cZuaGhWStJxB3lciqllb/
-         +whYFlAOHTocJlQ8cV0aCEhXZA7g21TWC0qJRBgyIWwiOfELbJ9nSK8uNGCG4xHSZPwC
-         XNTqIkeUUQG+0/eZRmrXMb/uPLi4G4SRdKeNlqU+cDW9V8Wv+LkwB7OxjbTs3Ev4ZNnk
-         T1PA==
-X-Forwarded-Encrypted: i=1; AFNElJ96WLiBHVbDAngwffjl4RsrnRkjDP2KQJWndOLt/nDRJCNiwLkv/ZJb0IjhT1YgaofsVWbvxefXBI8=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz3SWwUGS3adEZqfLe09S+a4ljgALfHP4IQ38NUZuT2/vuL57mZ
-	sRmpzoSIQe0L0pmPPXl5wLfO5QAZ8dDkh3yG4/utJVC7SoDX/X2h3P1VTWStuYqeseInj2he6aM
-	RU3QjnCsa6vhn7s3XTFag2V1a24uDgAh6Ezi3anf6Pr2J7MRZNpDDkGDtb2dxZII=
-X-Gm-Gg: Acq92OF1tUj/EMbRilxm06nGtaULQKb0JFOxdWU0rGV+RdwmaEWnmy1HMz+fFsRsM/d
-	Jon8V14w1xE7NqfWGhrwz4JL7YGs+QGCKe7wCSEE3xX+mImo7ppWFOTBYgdv6EBtWT7veZ0LPNh
-	32uAXqAHQrI0bcenXqLUttnpyxXT1SMY5FDW/4LCCiRbWW4h/nFQyKO4/gFEsJJU9Dkbf8KLLDn
-	3pDiDkLmO9K0ODP5T9QUdVCPUx8q8O1lbeWPS3z7b3CdDiuNtjgv/xJbXlSDoB911jR1peBD8RI
-	Z0lKP/c0IyHJCjOJfFyL2Eu8QZz35EHNAJ94axKXiffaTy+ggpJuRuPNzpPy4IQk7ojKVjdI/Nc
-	fiBes8a9onJXFjqJ+BPWCzNwgCWD8rWkWDe6LTZjOO2TNHOl8fZVPT4Fz3rfJhyn0LARyjN5MVK
-	za1bE4FQ9ppchFq/P3XCHe1sag0xQB6rM0X0ZEjA5SYjSSROFi489KWig82qUWyg==
-X-Received: by 2002:a17:902:bd0a:b0:2bf:2e93:c624 with SMTP id d9443c01a7336-2c1e85aad5emr150943925ad.27.1780991565585;
-        Tue, 09 Jun 2026 00:52:45 -0700 (PDT)
-X-Received: by 2002:a17:902:bd0a:b0:2bf:2e93:c624 with SMTP id d9443c01a7336-2c1e85aad5emr150943605ad.27.1780991565164;
-        Tue, 09 Jun 2026 00:52:45 -0700 (PDT)
-Received: from hu-varada-blr.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com. [103.229.18.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c164f87920sm206121665ad.24.2026.06.09.00.52.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 00:52:44 -0700 (PDT)
-Date: Tue, 9 Jun 2026 13:22:37 +0530
-From: Varadarajan Narayanan <varadarajan.narayanan@oss.qualcomm.com>
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] arm64: dts: qcom: ipq5210: Enable PCIe support
-Message-ID: <aifGReQQ12BdgCMb@hu-varada-blr.qualcomm.com>
-References: <20260514-pci-ipq5210-v1-0-a09436200b35@oss.qualcomm.com>
- <20260514-pci-ipq5210-v1-2-a09436200b35@oss.qualcomm.com>
- <dc7cb371-e94e-4f42-87d6-70f0f94d0d49@oss.qualcomm.com>
- <aiFhZsaZJoXzuMSk@hu-varada-blr.qualcomm.com>
- <d291cd03-ffd1-43a0-b4bd-bbad6a4fcec0@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="b/0YjtP0"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=LJ162TOjq3TYHEzJK1LF0SHmHxJZfYXYVqkPhP2h2C88zg1vBMbagBbLAOy5nZGV0F7D6QSqlYXsjHzL4sM9i9Vn9ftgsNqJcHxAX8+Ha4ou9ALHPlnEB3w/63g6dfPkLnNgkIA6YFIv8cFFI+eNXyiGoKAs3St+8/1R1vZP5bmTPxJqm/xh7qGeK4lzGOAASUG8lyEQDlcGrvsYey23KX4hVBw1+H2iJNnaGez1/qNt7K/wgQ9+Uq/+EwAecTX2+asgeemi3Ryt1xadMyb1y4rvRJtRMgitQ+ZF4wxyozLqQ96cwZXsbWke4PKuA3LYMc+j21ZiVCz1+Fpt6Hx2vg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=+OG/CD6Beh8bBjWm2fruFycMJJkPDh9J+6IKZy7nCz0=;
+ b=vfw5HyJrHlWFdQgOXpyXQ3+PCr/XrNZ7guGHTfjuBw2YBYwHzoxAeRu5FbM1/TzGu7VEAKuemBZK7yClQMFBsLaV/g+Iyr3KAWuYtM0xS0eD3BTFRnvAinP/7MtDznAu18K2812tfcpYxp7E2toslGjP296oGGhJBX/ss1fxphMFAf/kRVBM+7WL2WMAtfgGZJJZwnLEW6y8jA4pNg5wTpOuFwfajKScyLU9Mj1c4T/FI8sylAgBe55es1ACTN2ZUk6Tft04a1Fl10xcJDdfNkpWwO5xtL9wVfcFbs/d6dRV2avv1buP9xa/jsYIlsU24wk/VN5N45Z8sS2f3viyWQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+OG/CD6Beh8bBjWm2fruFycMJJkPDh9J+6IKZy7nCz0=;
+ b=b/0YjtP0INpnJvGNrV28KyrXkSIg/s2kjfqjPn9bHonIwY155ePtT0ZaeocafxOJ5XechoSdzy/MTkMb6cVc8zxNZSZVfxZ9/EizENHH5dTYHF2WHivbnxCw74+eJsoG28NlznBAoxD6RxoA8KZo6YOc6oRyt1atHLuP5ovOxDk=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
+ by IA1PR12MB8539.namprd12.prod.outlook.com (2603:10b6:208:446::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.92.14; Tue, 9 Jun 2026
+ 08:10:20 +0000
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c]) by PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c%5]) with mapi id 15.21.0092.006; Tue, 9 Jun 2026
+ 08:10:20 +0000
+Message-ID: <40243782-e4ff-435c-ae40-3ac1c7c4815e@amd.com>
+Date: Tue, 9 Jun 2026 10:10:15 +0200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 3/5] dma-buf: add optional get_tph() callback
+To: Zhiping Zhang <zhipingz@meta.com>, Alex Williamson <alex@shazbot.org>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
+ linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+ netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+ Yishai Hadas <yishaih@nvidia.com>
+References: <20260608185646.4085127-1-zhipingz@meta.com>
+ <20260608185646.4085127-4-zhipingz@meta.com>
+Content-Language: en-US
+From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+In-Reply-To: <20260608185646.4085127-4-zhipingz@meta.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR4P281CA0156.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:ba::18) To PH7PR12MB5685.namprd12.prod.outlook.com
+ (2603:10b6:510:13c::22)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d291cd03-ffd1-43a0-b4bd-bbad6a4fcec0@oss.qualcomm.com>
-X-Proofpoint-ORIG-GUID: K0iX3qFbmNQzvjuoupN0tzNZLVsTufC9
-X-Authority-Analysis: v=2.4 cv=Iey3n2qa c=1 sm=1 tr=0 ts=6a27c64e cx=c_pps
- a=cmESyDAEBpBGqyK7t0alAg==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=kj9zAlcOel0A:10 a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=u7WPNUs3qKkmUXheDGA7:22 a=_glEPmIy2e8OvE2BGh3C:22
- a=EUspDBNiAAAA:8 a=iXUmG0lFcv0RUynX9scA:9 a=CjuIK1q_8ugA:10
- a=1OuFwYUASf3TG4hYMiVC:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDA3MyBTYWx0ZWRfX3qsgRecT+zGA
- 2+cqQhN5p6OqFqawu5hOwRkmbgK8J1nr6OoweXpm6MLSYauQ37gJauDXdwef52y4h4T68xZkfYT
- zPsyaeyOIp1LVejq+zzQtSm9NgF3wvI49EAS1yBnO84wInJV2aN43TG7g4bb+VrR3Gn6cq9a+HE
- /6YKiplklhhsozqVrvishmc718RHv3i4oX/0+hEJspz3tqjoyxGihiYeOYQrn5PpRqaseADqwkz
- vW+YOP8btI9SMFHdfUfeMkrHybpmjrG3VqB/fuKqQ9av3TWoU61jl/dgkNYnwp915Vkr7T8VBEs
- ZZpR88td7fS+u7+1GLR5czTZ5b7birtAY4GypKPaKafZq4zVlva9/j2Qzpmo2hirrnDYijcZlwi
- UNBt4xbPrt5Eep24S9yEtgEz9vNxyQ60jmv/KE9U9UCK2gJ5t1j/Azyh3aL0Xtteg2E4ICiZNB4
- Zftyj4XS4/moRhRfJrQ==
-X-Proofpoint-GUID: K0iX3qFbmNQzvjuoupN0tzNZLVsTufC9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-09_01,2026-06-09_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 spamscore=0 bulkscore=0 phishscore=0 clxscore=1015
- priorityscore=1501 adultscore=0 suspectscore=0 impostorscore=0 malwarescore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606090073
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|IA1PR12MB8539:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5d2c72f9-4f2e-4cc3-7edb-08dec5fe8c5e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|7416014|18002099003|22082099003|4143699003|11063799006|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	FN8VdltyksNbhVVztnm2It9eyaKUCBHpjsuM6Rg0/VlO415hZ2mIIEpxh6uv78RDNhYVV8M+Uwp+Tvs1DShXSwSEc6Gfwl78So9RP/XLk1aWbEhDTDPBa3SUOBa+83cZmi0ky02cueiW/4mo+/cV9n14vWu3+P2gTgqk3Uo85Kv6oi+JZodY+Cz+JrcPnAGT4WsIalusmnUKPrVPJiGX3iCdldfqHTLg6H4HBPCvmNHBcjG0kphrKFw2EBsF0+2oN+SNTGsqWys24aOWyiszjPNkR98hPvSdr+zn0SCG/5rGcJyoZsWX69OfWvB10BHBgn3/dlgCxbWe0SBrS7tGNzM0q3Kk+xsnVvW2wDO8VXUrBOrRTvsD0sMi/lDMo+rxPHr1NHaNDBSi1UNA62yOsxdIMwpRam94+11UZeNDUqz0X/oAWMDPZFoznnEx0dHyflGrAbaLPDpdVbUfpIo9WrihDhFHTV2H7OfGPTx80wq657rkY89tye1t+w21/oZ2k9yCfQfNFt6Vek53jpLH2C7gizszLa6HMvTmTBUAn9haSfBzjF4gH9D5UOV3pykTLeo8KA4BoKjZxftJuPPA17DYnDeyRH3FFqGezE2/gYNHy+fVnQmseVWfRbsDikMMTtSD07cQYw3Utx76ChWPURDGyOq7zr8OBRiumNnjIyLfNDfnGYZ3AmR4kSuIqiQA
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(18002099003)(22082099003)(4143699003)(11063799006)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?Y2ZKRkc3VHRqNUdpZGFDNlYxMkMzR3lPUncvdkd1SnoxbUdYV3EyS2Z5eFJD?=
+ =?utf-8?B?L200UVdOczB3T0V3T3lrbmJrdEJ0bHdHRmhXZEJYb25UT2tjbHdsUmZKNFA2?=
+ =?utf-8?B?RnVMaGd4TjRPQWdPMi92cUcyUXp5M0lOckFOYWpMUFUxNnlUckVYcUV3TUxr?=
+ =?utf-8?B?c1hlcGllNDJ0NnJGdE4waG4waHJmT2huZFVveXhPMDQ2YXVLVVNkTWRmdHdw?=
+ =?utf-8?B?TldwL0l4dVVkeGpGcS9HdGltdHo2ZEE2ZmFXSnJQUXM1TzAvai9GOEczUDAy?=
+ =?utf-8?B?MVFuR2JNRWN0L05LUk1ubG9hT3haajFCQ2trOGFwRytrblhwKzdpeFB3R3d1?=
+ =?utf-8?B?SEJZMlZUY2p5S0VWYlhzak1adjNhcmZYNnlMMkptWjdEb2lpb0tqaGZtWUI5?=
+ =?utf-8?B?WFhtUGV6NkpjdEZha0RsdHE3VU1vMWhZUjlyOTlaTG52aGVuVkdVK2xITXZL?=
+ =?utf-8?B?UGZUV1ZweXQ4cHlWejcyUVRFcXdUY2Q1MWROZ1ArQWVJVEh3K2JKeGw2VUEy?=
+ =?utf-8?B?Y2dDb0RibzdDYjJHeW85cmsxU0RheCtvTG50V3duSzJIS2FlZU1YN3AwbXNy?=
+ =?utf-8?B?eEhvLzlPWmlMemJCWVJZTDBweU5kLzRVdGNJbExnUVdFU3F3bHlmeTNMblc0?=
+ =?utf-8?B?M0tsblhaM0FZN1J1eHVUY281T1RiR0d6Q3E3MVVOdGdEUGZsbnU4Si9nclVQ?=
+ =?utf-8?B?UWt6d0FpUmNwdUd0c2NaN0FTRlhucVNWTTdJTVBzZXNncUU2YTJHRCt5UmhH?=
+ =?utf-8?B?NW9QNDh0RGhaNlR2Q29GakoxZDF4RkNpZXNnbHNPUHFlbzdod2hrbHNra1Uw?=
+ =?utf-8?B?Mi9SSnpjdXZQaTlLN3JtQzRDVTVkR0lwTmVPaUthZXQ3UXlsbVI5b29DL2la?=
+ =?utf-8?B?SmFoMk9aYnV2dm5GY3pjVUxWcVpHaEJlZWJqU2ZuM1JDQ2RMMDRrenJyd2sv?=
+ =?utf-8?B?U0JrQnJ1UklLYUppczVLdkIxQlFWV3BZTWhOZ2tvUVd1S1ExM05LRXBScHNn?=
+ =?utf-8?B?WDZxa3JJMklDTUp5bndBSGU0MVVBVE5xbFVRZ1hkUDkyanRua1hUN0pRTnMr?=
+ =?utf-8?B?a29RQ2R0UWtEd1FUalA0N2Q3RFV2ZTMvT0VTbVhiTXp5R3ppdFNqVWZNY25u?=
+ =?utf-8?B?Ym5PWmhmZEpEeTVqVXVLb2FYalZwTFE5TnlUbGxNcitETlVnc3ZXRVFCL3Q4?=
+ =?utf-8?B?ZGhPMlh2MFMzQUZKZk1XY1E5Z1hnaWk5RGVkT3lMV0xQZ1BmTG9Qd3hJZGty?=
+ =?utf-8?B?L1VBa3NZa3FtN2ZiQW1DUTRKRkJNcW1GSkVNeDZERHk1L1M0aUUwM0VGOFZR?=
+ =?utf-8?B?eUxJaUhKOTZlQ3hiRndNUStFY25qVElXNEJwL0taOCt3QTRjNzRRQUUxaWRr?=
+ =?utf-8?B?ZUZKZkhhUFlUbjlWQVcwNDI1Z2MzTGdweTY1OFlUemV3T29iM3lUM1h4N2JM?=
+ =?utf-8?B?ZFVIMER3cXNBTzJrYUNRaTdtYklIS0JKY3JjcUpwa0N2Y1dvMHpCbUFiUndq?=
+ =?utf-8?B?TzZlMFJXa0FCMEV1Ykl1Yjd6MXBFY3AwRkl1ekM3OXc1S012YWVZVWYyN3hP?=
+ =?utf-8?B?bXl1Qk45MFNadHF0YkFsaVhXakx6VEUvMWlSb3pnWjJHOTF0dU9CNFFMV1Mr?=
+ =?utf-8?B?ZHdEeCsxOGtzUng0QWJQZmJJWHhUOUozMTdlYmhka3prNHpqSjV4VFVDcnM2?=
+ =?utf-8?B?ZjZsUmhmU2NobndNOUtJM3lTdFlJL1FHdEpsU1JWaEMwQng0RUYvQ0VHWlIv?=
+ =?utf-8?B?bVk2d1dLa2k1ajNrdkNmOFBrS3lTellpWndYdjRBRVFWTUg0QVVnMzhTcnBX?=
+ =?utf-8?B?Wml5VWduZW1yQ2JudkJoQlQ5NUJoSjkzcnVzbE15RW92MnZQcmsxYVBjNjZ0?=
+ =?utf-8?B?M1BFZ0x5cHZMTXlTQ1Yxd1VnbWFiYVdOTHdyNFJGNWtoTytaU3FFc2hGb2hn?=
+ =?utf-8?B?bGhZb1AyZXd6WTlkREJXK0ZMN3Z2ZDNnbzhSRkhTbUxXZFRONitFVkZQSHRZ?=
+ =?utf-8?B?YnlHeFhkWFJkcnI1cTVoRm4wMXRScTlnckk3S1RSTWkxbjQ0WTg0enUrMm41?=
+ =?utf-8?B?dVlPUDRZYmpoREFlWCsyaTUzOVo4ZlRqa1RNSHVDTVY3VDI2Q3FUdFphalNx?=
+ =?utf-8?B?K3NhMjVDNm1iYzZZL3BkeXJnM0xTZiswdThvL25QTDRTaDhPaTlqU28vRVZV?=
+ =?utf-8?B?akxtVlBpNmM2NFZEdDM3V3VsOG1qM1RGNmxhdTM4ZXRJQVVtRXVQTzZSSkNj?=
+ =?utf-8?B?c09VY0g0ZTdodXNweHdQWnVhZmJmNkF5RUQ2WUZQVnlsYlhXcXQ4TzNncFVl?=
+ =?utf-8?Q?gg1dsuGATmuDP9oRO/?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5d2c72f9-4f2e-4cc3-7edb-08dec5fe8c5e
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jun 2026 08:10:20.2326
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: fmYqpQaeHgyRt5afyFMdTzpoBQREunVx+E52ISUS7dwYKO/fBm881VHtquCcN02n
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8539
 
-On Mon, Jun 08, 2026 at 11:44:56AM +0200, Konrad Dybcio wrote:
-> On 6/4/26 1:28 PM, Varadarajan Narayanan wrote:
-> > On Fri, May 22, 2026 at 02:24:45PM +0200, Konrad Dybcio wrote:
-> >> On 5/14/26 6:13 AM, Varadarajan Narayanan wrote:
-> >>> Add DT entries to enable the PCIe controllers found in ipq5210.
-> >>>
-> >>> Signed-off-by: Varadarajan Narayanan <varadarajan.narayanan@oss.qualcomm.com>
-> >>> ---
->
-> [...]
->
-> >>> +
-> >>> +			resets = <&gcc GCC_PCIE0_PHY_BCR>,
-> >>> +				 <&gcc GCC_PCIE0PHY_PHY_BCR>;
-> >>> +			reset-names = "phy", "common";
-> >>> +
-> >>> +			#clock-cells = <0>;
-> >>> +			clock-output-names = "gcc_pcie0_pipe_clk_src";
-> >>
-> >> Having a gcc_ prefix here smells fishy..
-> >
-> > Followed what was used in ipq9574, ipq5424 etc. Will remove gcc_ & _src.
->
-> What is the name of the PHY's output in the clock plan? I would assume
-> it doesn't have gcc_, but it may end in _src..
+On 6/8/26 20:56, Zhiping Zhang wrote:
+> Add an optional dma-buf get_tph callback so an exporter can return TPH
+> (TLP Processing Hints) metadata to an importer.
+> 
+> 8-bit ST and 16-bit Extended ST are distinct namespaces in the PCIe TPH
+> ST table and may both be present with different values. The importer
+> passes its supported steering-tag width and the exporter returns the
+> matching value, or -EOPNOTSUPP if no metadata is available for that
+> width.
+> 
+> The callback is intentionally exporter-owned and optional. The exporter
+> owns the completing address space for the dma-buf, so only it can decide
+> whether it has meaningful TPH metadata for that completer. The dma-buf
+> core keeps the returned ST/PH tuple opaque and simply provides a
+> discoverable negotiation point between exporter and importer; exporters
+> that cannot derive a useful tuple just return -EOPNOTSUPP.
+> 
+> That keeps the kernel API generic rather than VFIO-specific. The first
+> user is VFIO_DEVICE_FEATURE_DMA_BUF_TPH in vfio-pci, with the mlx5 RDMA
+> driver as the first importer, but any future exporter that can derive a
+> TPH tuple for its completing address space can reuse the same callback.
+> 
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> ---
+>  include/linux/dma-buf.h | 31 +++++++++++++++++++++++++++++++
+>  1 file changed, 31 insertions(+)
+> 
+> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> index d1203da56fc5..8437dbe4a83e 100644
+> --- a/include/linux/dma-buf.h
+> +++ b/include/linux/dma-buf.h
+> @@ -113,6 +113,37 @@ struct dma_buf_ops {
+>  	 */
+>  	void (*unpin)(struct dma_buf_attachment *attach);
+>  
+> +	/**
+> +	 * @get_tph:
+> +	 * @dmabuf: DMA buffer for which to retrieve TPH metadata
+> +	 * @extended: false to request the 8-bit ST namespace, true to request
+> +	 *            the 16-bit Extended ST namespace
+> +	 * @steering_tag: Returns the raw TPH steering tag for the requested
+> +	 *                namespace
+> +	 * @ph: Returns the TPH processing hint (2-bit value)
+> +	 *
+> +	 * Return the TPH (TLP Processing Hints) metadata associated with this
+> +	 * DMA buffer for the requested steering-tag namespace. 8-bit ST and
+> +	 * 16-bit Extended ST are distinct namespaces in the PCIe TPH ST table
+> +	 * and may both be present with different values, so the exporter must
+> +	 * select the value that matches @extended and must not substitute one
+> +	 * for the other.
+> +	 *
+> +	 * The exporter owns the completing address space for @dmabuf and
+> +	 * therefore decides whether it can derive meaningful TPH metadata for
+> +	 * that completer. The dma-buf core treats the returned ST/PH tuple as
+> +	 * opaque transport metadata; importers that support TPH place it on
+> +	 * outbound TLPs, while exporters that cannot derive a useful tuple
+> +	 * simply return -EOPNOTSUPP.
+> +	 *
+> +	 * Return 0 on success, or -EOPNOTSUPP if no metadata is available for
+> +	 * the requested namespace.
+> +	 *
+> +	 * This callback is optional.
+> +	 */
+> +	int (*get_tph)(struct dma_buf *dmabuf, bool extended,
+> +		       u16 *steering_tag, u8 *ph);
+> +
 
-In the clock plan it is called as gcc_pcie0_pipe_clk_src and
-gcc_pcie1_pipe_clk_src.
+That needs a wrapper for importers to call which also handles if the callback isn't present.
 
--Varada
+Regards,
+Christian.
+
+>  	/**
+>  	 * @map_dma_buf:
+>  	 *
 
