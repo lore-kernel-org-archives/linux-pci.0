@@ -1,144 +1,193 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9E5035F19A
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:15:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD23B3F86F2
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:45:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781000155; cv=none; b=Nz3ObFXXuRJ7yLuouBVMAgHGywNN3Tm04s5BeLSkclahNFbrT9P74KW8W2haRtkIx0WpRMtvrHbNMR7X0oq3UymfUEMQgQmoOKAX5NlnIWCPkUvUAZgErb7jXK5w48+GAHpqVYh1KNlz1D3/0sroyQ1x1RToud0l4gu0QWQHJhI=
+	t=1781001908; cv=none; b=KazPaXBBpuIL81xEzmJluiMmmbs4a9GBx4GXCNAeSZXetv3S0PNJzrsrFSIj8lFLpwjimwrUtyT5Mdj1bB6/zRsj+NZNveHEObbaad3ejSbt4n53qZMeselPTAPZfLU2PdUFmfPptVzYoMVxxO+IxftsTaxNPVt4cTYrqA39LyE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781000155; c=relaxed/simple;
-	bh=tKOEfb0f3EYV39QeYGWacQ8MlJbTnGcxpnYC4LV+O78=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=U98wJ+727/tVa+9em0fdAdMXTVqptacISviRr4e0Rli7wO4YN01Nd3+T6mW+cZYft8jx70S8AXkpdPqfsLscAWQPPOi8SGBUb2Ra9Tk1UeB+9q+iYi/93n3d2ILfupXX3r9Dwk4VY4AWDJcQAangwdh5l+pBXwmT1HG+FTX3emY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hvY1WTsn; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781001908; c=relaxed/simple;
+	bh=Dk/Oy8PzO6WqaSH/b3savAbPbko7yk/VY5Jl6lUJCuM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=QcAiMHREbFjS3onk8DZKtuZMnwb971qobqPPOhQQ//OrFb4kIzK/lnyCeY3R3eJHXk/Es7KXnL9zzR2hu9i3XNY3jYj/Ivr8VtcIE1vWyzT6rX0Qmww0QWnBRmVPX+3zcIvjYW9zRFN/z6Hr0WQAeam+eya86BO1bVtU+dpGNgU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=UEowRL/I; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hvY1WTsn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36D4B1F00893;
-	Tue,  9 Jun 2026 10:15:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781000154;
-	bh=FdM+QMbd6X7YjAv6g7Tjjy9Ajj9mzxfk15kqvlP5Kvw=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=hvY1WTsnh4BXNgab7iZG8wpxsQhGFcaZ3b5D9iUWrKaLElvfilqpSWSj6Qn1/gV/u
-	 JIlb5P5vPybDZ4Y1gDj2yi7CtUnzkRGct4cB8WufwuHKFQF3FCYg8zLUdAUaIUhapC
-	 O3KP+0mo/ij+Sh/AbdTNF1XUGAa19Z76ZTfEuzhsHaeeEK+tUFG54U02XRsKWxN2lV
-	 skL1l0n/mZM1nJ5ZTtmcGJgJvzVNXi10Vf/hQlX2hJ50XrbVNJOMxO0019Mtioebf/
-	 GP7N0QDTeCFKkykKK58oRrOJpn5raJ/a9IIZU+SHlEajCgyiSvKF18CaiMsD4itAaM
-	 q4P78noEFXVew==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: qcom-ep: fix refcount leak in qcom_pcie_ep_probe()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Wentao Liang" <vulab@iscas.ac.cn>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260609100747.230521-1-vulab@iscas.ac.cn>
-References: <20260609100747.230521-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 09 Jun 2026 10:15:53 +0000
-Message-Id: <20260609101554.36D4B1F00893@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UEowRL/I"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20260609104456epoutp033358aa28108bb67b8eacd2e13b6c6e3a~3Y8nOcKQK3082530825epoutp03S
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:44:56 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20260609104456epoutp033358aa28108bb67b8eacd2e13b6c6e3a~3Y8nOcKQK3082530825epoutp03S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1781001896;
+	bh=LD8d5vmHP5Tmxkon0tBgZOgyWGJtg9xPIXNJ9p4pfUU=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=UEowRL/IO1mb1NFv6qonmwWKW7RD82awJOQ/5kXMBMwi5r+Mx2LHE/jnsmes3hRUI
+	 IVUZqND9Fjq8rAJJJAaijCI0js6Qrq3currFXyMjtAt1eXA7sB6grujJcN4SnSc9yz
+	 4Q4oCJVqmUGnW9x+EFfvd5t1eIfDwKJ/yfwoL9fM=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20260609104454epcas5p1be3e2032128ca29ed7051659822a91bd~3Y8mI0_uf2102621026epcas5p1E;
+	Tue,  9 Jun 2026 10:44:54 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.90]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4gZQXQ0xqfz6B9m6; Tue,  9 Jun
+	2026 10:44:54 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20260609104453epcas5p327a974e978790e693c0660f27f9b43ef~3Y8kh5-iA0141601416epcas5p3R;
+	Tue,  9 Jun 2026 10:44:53 +0000 (GMT)
+Received: from unvme-SYS-221H-TN24R.samsungds.net (unknown [107.99.40.127])
+	by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20260609104451epsmtip192722d3df57cbe3b1616dcc4e762275c~3Y8i1PTG32095220952epsmtip1l;
+	Tue,  9 Jun 2026 10:44:51 +0000 (GMT)
+From: Shrihari E S <shrihari.s@samsung.com>
+To: jic23@kernel.org, linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+	qemu-devel@nongnu.org, cpgs@samsung.com
+Cc: arun.george@samsung.com, vikash.k5@samsung.com, s.neeraj@samsung.com,
+	shrihari.s@samsung.com, dongjoo.seo1@samsung.com, dave@stgolabs.net,
+	gost.dev@samsung.com
+Subject: [RFC 0/8] pci: cxl: Add enumeration support for Unordered I/O (UIO)
+ feature.
+Date: Tue,  9 Jun 2026 16:28:28 +0530
+Message-Id: <20260609105836.3702787-1-shrihari.s@samsung.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20260609104453epcas5p327a974e978790e693c0660f27f9b43ef
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20260609104453epcas5p327a974e978790e693c0660f27f9b43ef
+References: <CGME20260609104453epcas5p327a974e978790e693c0660f27f9b43ef@epcas5p3.samsung.com>
 
-Thank you for your contribution! Sashiko AI review found 3 potential issue(=
-s) to consider:
+This series introduces enumeration and configuration support for the
+PCIe Unordered I/O (UIO) feature across standard PCIe and CXL ports.
+UIO, introduced in PCIe 6.1, relaxes strict transaction ordering rules. UIO is
+a PCIe transaction layer enhancement which shifts the ordering control from
+fabric to the requester device.
 
-New issues:
-- [High] Calling `pm_runtime_disable()` manually in the error path after us=
-ing `devm_pm_runtime_enable()` causes a double-disable, permanently breakin=
-g runtime PM.
-- [High] The error path for a failed `pm_runtime_put_sync()` falls through =
-to `err_rpm_put`, leading to a double decrement of the runtime PM usage_cou=
-nt.
+This implementation establishes the essential architectural foundation
+required for the OS to discover, negotiate, and configure UIO
+capabilities.
 
-Pre-existing issues:
-- [High] Failing the entire probe function if `pm_runtime_put_sync()` retur=
-ns an error is incorrect and brittle.
---
+UIO in CXL follows CXL.io protocol, where a CXL device can send read/write
+request to peer .mem device's HDM decoder at fabric level.
 
-commit 2adeb10c2dada5b5e65aed93fd2d269f6cd5a790
-Author: Wentao Liang <vulab@iscas.ac.cn>
+      __________________________________________
+     |                                          |
+     |              CXL Host Bridge             |
+     |              (Root Port/RC)              |
+     |__________________________________________|
+                         |
+      ___________________|______________________
+     |                                          |
+     |               CXL Switch                 |
+     |__________________________________________|
+        |                  |                 |
+     ___|____           ___|_____         ___|____
+    |        |         |         |       |        |
+    | Dev A  |         | Dev B   |       | Dev C  |
+    | (Req)  |         |(Target) |       |(Target)|
+    |________|         |_________|       |________|
 
-PCI: qcom-ep: fix refcount leak in qcom_pcie_ep_probe()
 
-This commit attempts to fix a runtime PM reference leak in the error paths
-of qcom_pcie_ep_probe() by introducing a new error label. The new label
-calls pm_runtime_put_noidle() and pm_runtime_disable() to properly release
-the reference before returning the error.
+For example, consider the topology shown above, in that if the requester device
+(Dev A) wants to read data from the target device (Dev C), then Dev A can
+prepare UIO command with the targeted HPA of Dev C and can send directly to the
+Dev C's HDM decoder at switch level. Here host gets bypassed in the data path.
+For this to happen, both the devices and the intermediate fabrics should support
+UIO and its dependencies.
 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/cont=
-roller/dwc/pcie-qcom-ep.c
-> index 257c2bcb5f76f..c01d4d3b49520 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-[ ... ]
-> @@ -932,6 +932,10 @@ static int qcom_pcie_ep_probe(struct platform_device=
- *pdev)
->  err_ep_deinit:
->  	dw_pcie_ep_deinit(&pcie_ep->pci.ep);
-> =20
-> +err_rpm_put:
-> +	pm_runtime_put_noidle(dev);
-> +	pm_runtime_disable(dev);
+The implementation relies on two key dependencies:
+    - 256B Flit Mode 
+    - Streamlined Virtual Channel (SVC) Extended Capability (from PCIe 6.1)
 
-[Severity: High]
-Does calling pm_runtime_disable() here in qcom_pcie_ep_probe() cause a
-double-disable of runtime PM?
+Key changes include:
 
-Earlier in the probe function, the code uses devm_pm_runtime_enable(dev).
-This registers a devres cleanup action that will automatically call
-pm_runtime_disable() upon probe failure or device removal.
+SVC Capability: Introduced a new hw/pci/pcie_svc.c module to manage the SVC
+                extended capability. It handles the mapping of UIO traffic to
+                dedicated virtual channels-VC3 (mandatory) and VC4 (optional).
 
-If we explicitly call pm_runtime_disable() here in the error path, it
-appears it will be executed twice (once explicitly, and once via the devres
-unwind). Because __pm_runtime_disable() unconditionally increments the
-device's disable_depth counter, could this leave the counter permanently
-elevated to 2 and break runtime PM for any subsequent probe attempts?
+Port Configuration: Added properties (x-uio-svc, x-uio-svc-opt, x-256b-flit) to
+                    PCIe and CXL ports to control UIO states.
 
-[Severity: High]
-Will this new error label result in a double decrement of the usage_count
-if the probe fails during pm_runtime_put_sync()?
+CXL Integration: Established a dependency chain in CXL root and upstream ports,
+                 where UIO is enabled only if both Flit Mode and SVC initialization
+                 succeed. The CXL HDM decoders now advertise UIO support per CXL 4.0
+                 specifications.
 
-Later in qcom_pcie_ep_probe(), if pm_runtime_put_sync() fails, the
-function jumps to err_disable_irqs:
+Patch Layout:
 
-    ret =3D pm_runtime_put_sync(dev);
-    if (ret < 0) {
-        dev_err(dev, "Failed to suspend device: %d\n", ret);
-        goto err_disable_irqs;
-    }
+Patch 1 and 2: Refactoring: Move Flit mode handling from PCIe slot to PCIe port
+               and extend it to all port types.
+Patch 3: Properties: Add SVC capability fields and UIO-related properties
+         (x-uio-svc, x-uio-svc-opt) to the PCIe port hierarchy.
+Patch 4: CXL Properties: Extend SVC properties to CXL ports and add uio_capable
+         logic to root/upstream ports.
+Patch 5: CXL HDM Decoder: Integrate UIO capability advertising into CXL HDM 
+         decoders.
+Patch 6: SVC Module: Implement the core PCIe SVC Extended Capability logic
+         in pcie_svc.c.
+Patch 7: Integration: Hook SVC initialization into the realize functions
+         for all PCIe and CXL ports.
+Patch 8: Documentation: Add usage examples for UIO-enabled CXL topologies.
 
-The err_disable_irqs path then falls through to this new err_rpm_put label.
-Because pm_runtime_put_sync() maps to __pm_runtime_idle() with the
-RPM_GET_PUT flag, the usage_count is decremented first before the idle
-check even begins.
+Base commit: 3c99db7705c1a885c795b7c14f751c7a3ba29ed8
+Repository: https://gitlab.com/jic23/qemu
+Branch: cxl-2026-01-09-draft
 
-If it returns an error like -EAGAIN, the usage_count has already been
-successfully dropped. Falling through to call pm_runtime_put_noidle()
-again will attempt to drop the usage_count a second time. Could this
-wrongfully steal a concurrent thread's reference and lead to an eventual
-counter underflow?
+Testing: Verified through Linux kernel based enumeration and configuration.
 
-[Severity: High]
-This isn't a bug introduced by this patch, but is it correct to treat a
-negative return from pm_runtime_put_sync() as a fatal probe failure?
+Future work: While the current series establishes the configuration
+infrastructure, the upcoming series focuses on UIO data transfer support.
+A subsequent patch series to be built on top of this series to add support for
+UIO data plane.
 
-Looking at the same code block referenced above in qcom_pcie_ep_probe(),
-a return value like -EAGAIN simply means the device cannot be synchronously
-suspended at this exact moment (for example, if another thread concurrently
-incremented the usage counter).
+Shrihari E S (8):
+  Refactor flitmode from PCIESlot to PCIEPort.
+  Move 'x-256b-flit' property from cxl_root_port to pcie_root_port.
+  Add SVC capability and UIO properties to PCIe ports
+  Add Streamlined Virtual Channel (SVC) property to CXL ports
+  Wire UIO capability into HDM decoder registers
+  Add PCIe Streamlined Virtual Channel (SVC) capability.
+  Wire SVC initialization into port realize functions.
+  Add documentation for UIO-enabled CXL devices
 
-Since this is a valid runtime PM state and not a hardware or initialization
-failure, does tearing down the fully working device and failing the probe
-cause spurious device initialization failures?
+ docs/system/devices/cxl.rst               |  50 +++++++
+ hw/cxl/cxl-component-utils.c              |  29 +++-
+ hw/mem/cxl_type3.c                        |   9 +-
+ hw/pci-bridge/cxl_downstream.c            |  11 +-
+ hw/pci-bridge/cxl_root_port.c             |  13 +-
+ hw/pci-bridge/cxl_upstream.c              |   9 +-
+ hw/pci-bridge/pci_expander_bridge.c       |   3 +-
+ hw/pci-bridge/pcie_root_port.c            |   4 +
+ hw/pci-bridge/xio3130_downstream.c        |   4 +
+ hw/pci-bridge/xio3130_upstream.c          |   9 ++
+ hw/pci/meson.build                        |   2 +-
+ hw/pci/pci.c                              |   4 +
+ hw/pci/pcie.c                             |  53 ++++++-
+ hw/pci/pcie_svc.c                         | 164 ++++++++++++++++++++++
+ include/hw/cxl/cxl_component.h            |   2 +-
+ include/hw/cxl/cxl_device.h               |   2 +
+ include/hw/pci-bridge/cxl_upstream_port.h |   1 +
+ include/hw/pci/pcie.h                     |   7 +
+ include/hw/pci/pcie_port.h                |  23 ++-
+ include/hw/pci/pcie_regs.h                |   1 +
+ include/hw/pci/pcie_svc.h                 |  91 ++++++++++++
+ 21 files changed, 466 insertions(+), 25 deletions(-)
+ create mode 100644 hw/pci/pcie_svc.c
+ create mode 100644 include/hw/pci/pcie_svc.h
 
-> +
->  	return ret;
->  }
+-- 
+2.34.1
 
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260609100747.2305=
-21-1-vulab@iscas.ac.cn?part=3D1
