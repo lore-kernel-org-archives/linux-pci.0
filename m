@@ -1,310 +1,177 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C08A534028B;
-	Tue,  9 Jun 2026 14:18:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781014706; cv=none; b=OEiUW8beLJOC324y/rrryT81mYHY8c5ImBgFeAT97qdBem1DSp9b+u7jIHUumxm69t3N8Ou12iMe8WIwlxtEEpqLIkl2VOrnQhqEmUxW1rjl4yOyJ0hnujEkQQs/vmREWUvCNzUxNQEt53cG8cbHmFqFIHivV7I+2Y8BcjSwwDU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781014706; c=relaxed/simple;
-	bh=hHuXk7hBPAOHuqknXfqxtiKUndx3Id7hByXgiQlLOaI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fougG8S46uh14NrlstZRVcNYnaH6epxpjF5yhdP5iPbYl4BhMYI2v4g8fRLnndwfp4yRD0B7jhxd7JgU9qK8oOpZqLX37i9Z3/RmfpI9W6JeblIcKiueexjuqiPp9kdqm3uFaurtD8xxEQ6vbmQABeSiEghUpLDS4OYzUkj/y4Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HM+xhsd/; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C13E1BD9C9
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 14:38:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=67.231.145.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781015903; cv=pass; b=GghSCE+moWosOB4PoxymzDGtouiwerQznLdcbTP86wbaO5Nqih7Exd69usJJu9wlv+/aORzbgUVkvJJKKt3dWcxsjMpCMPhMFVLvxt/rzyPq7qE/cyUx/aysH4LBo7G/upvJZXdiULopR09FDKyMjt53pRp8u8kU3xjGueN5hrQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781015903; c=relaxed/simple;
+	bh=y3AzoKCQuHgd+PJJX0Ml7tfsX3S9F63aRJW3c7mG6Ic=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lUOUa1PS5xD+w/l3u9E65iFbWaPrNenOsZms1ak6xxi5IIpyk05alCzgGrGsn2jNsLcQgFhp+Gk8vzJBqUq/WlEnR+cgXca0x6g/xgTf9L9r2oGkswaBnUnaM4kMG27cZ2BQaYBDfWcF8D0uFHHiDRnWMG63QQLWbukvtm20Pt8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=b+bzFh5l; arc=pass smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HM+xhsd/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D6AB1F00898;
-	Tue,  9 Jun 2026 14:18:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781014705;
-	bh=NSdCVXmf/FSFEPh76vybp3lyGq1hMV3I6z1fDAOvPXw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=HM+xhsd/kVgMNQ0nZoL5DJOSV+N4g5kXGk5GnoGwbaIeRcuBryIsN15/UDAiNShrb
-	 efSETT9eDOx82f6ZFhyuOZ9QeB1nJ/sQjZhfocHkge9t+m3HbKJTaGLS/U3D8E9jJg
-	 TnMK2zmNTQ0fWhs+hpo0J5pLXsjoBXdfJFtmOSduR7Q3gjBQcGLhFe/WmQQfFRukBd
-	 go8TnAYBoOeP5I7QC8x8DsUKAbIb7QcIIWH4MeVOYRLJ5P+5aU/ZxtY+//nUmp8/pP
-	 hVi/ORiW/RYclWvUzTGDXE9W6v/h8FNkFJaWN4PjJlfuiTC0Hct5RGK+u2STVG7IN8
-	 F4SIuBZtZR+9A==
-Date: Tue, 9 Jun 2026 19:48:12 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Inochi Amaoto <inochiama@gmail.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Yixun Lan <dlan@kernel.org>, Paul Walmsley <pjw@kernel.org>, 
-	Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>, 
-	Alexandre Ghiti <alex@ghiti.fr>, Christian Bruel <christian.bruel@foss.st.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, Senchuan Zhang <zhangsenchuan@eswincomputing.com>, 
-	Alex Elder <elder@riscstar.com>, Nam Cao <namcao@linutronix.de>, 
-	Siddharth Vadapalli <s-vadapalli@ti.com>, Randolph Lin <randolph@andestech.com>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Vidya Sagar <vidyas@nvidia.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Gustavo Pimentel <gustavo.pimentel@synopsys.com>, 
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, spacemit@lists.linux.dev, Yixun Lan <dlan@gentoo.org>, 
-	Longbin Li <looong.bin@gmail.com>
-Subject: Re: [PATCH v2 5/5] PCI: spacemit-k1: Add Spacemit K3 PCIe host
- controller support
-Message-ID: <wztjdv4t5cn7djj3jyvheest7rn5nr2g3efzwods2fz3yy5wn2@hbl644sd6fst>
-References: <20260517014841.254085-1-inochiama@gmail.com>
- <20260517014841.254085-6-inochiama@gmail.com>
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="b+bzFh5l"
+Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 659CQSil1458621
+	for <linux-pci@vger.kernel.org>; Tue, 9 Jun 2026 07:38:21 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=s2048-2025-q2; bh=A9sFQHsXqHrMgAiwxXHw
+	qbtJi56QK9Hsrm8AczETl1g=; b=b+bzFh5lZdFG6ZMxUJUlD8Yt1iTFLbUkN44J
+	0sEYOv5io+R4jUYJbE8CO/8bzyHasyD/fqldbu1TQANBQ68ej/P1D7bCh0Be/t9t
+	77ignPYiVT73nQeplrY12DpT/Cb+rEjERmUU6TVCa6V7eUZ7JLMt94G73fGvajze
+	zyUZleQxuZvCbUUSXYPL/gojMV01wKZCDt1r9+IxqZGQ1f29Qp3i37UJwt+6Vg4s
+	mCO5U7LHFg4UrHlCu+BS9DH360ffxI9Csawy+GcEYer3nQpVrv42nRoVOUC7IsxZ
+	e7IvZ+NUUzgTwRET8EbK90UUlwI9PBNVSniNuv50nJRdR5rglQ==
+Received: from mail-ot1-f69.google.com (mail-ot1-f69.google.com [209.85.210.69])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4epju80tfv-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 07:38:21 -0700 (PDT)
+Received: by mail-ot1-f69.google.com with SMTP id 46e09a7af769-7e6b550a521so6052708a34.0
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 07:38:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781015900; cv=none;
+        d=google.com; s=arc-20240605;
+        b=LAc9jsQq6yI/zN2HZ1gji6+oNqWpbt9tn5g85aTVHu/O8fq6OjL4lHTUppvlURUuOk
+         2hAOWDDKvUCEPYyUXoWY1AJxlhLPwpM3th6r9cZ4MucM+fZvr7BoAmHo3a8p4vMy2KdX
+         3qTV5BDh00arKx9yUpFtNX8Zm8Ux4jCzd5ainMjVRJO0ZG5WwfLY0/kylEFPqZOnUAg/
+         c8pc8jGYMpQLdg4UVfurXaEODXM5lQKOlKjxqgntNorrOD4xphXtmP6BEuo918F+H4FO
+         jiGIxrPzVdJZc3ndvFZET+3AjGheRFobLU4pR+3Bal8iKNbkOzKwdMJvgLwHYfzT73LY
+         KmfQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version;
+        bh=A9sFQHsXqHrMgAiwxXHwqbtJi56QK9Hsrm8AczETl1g=;
+        fh=NNEkb6ynXP8rlOT4+tR8L7RPIhdtk6F8MH4SJoblsKI=;
+        b=kbb/4nFAy1rFsbrvltA3dggcwg72/P38oJPJ1pG7SopeLxWzOfZ2oaw4UZNInUME6b
+         AGGcTwkRYiSXmWFI99L6JpxXkCEpxVkXxoXTa5eKiHmlh8ma11yM60fb8S2xPmJL1M9Q
+         R6Zu7tqAsfWUGqi9XcHJgSsh7e3zBgiqd2DyTxSZX6ln0RQ3EvEZ1tqUJY/5TcMO54Ny
+         INt7iDfkMoMChsXxSBFdl6xdJvCOhOKduRvXv9RNK8ZzFgNoFWL0UJ2Kbr/Dse4I2UPW
+         sCvmV6ELWFjXMcQgIm6FQMaSssMn1qO59s3CQ0saiLAKi5guiVzE4NlsKbMfVPyeF5kR
+         g6Dw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781015900; x=1781620700;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=A9sFQHsXqHrMgAiwxXHwqbtJi56QK9Hsrm8AczETl1g=;
+        b=PRMrftRBK8Y1N9stBP7PZBcv2dQFSTCnvwOsFIguhvWiHy0S9hy/piU3AzlMzZ6zVh
+         YkiC6OMeBECuLhlY+jqteCPK4MrV3rDsIHz+4zBCuvPsIep2NTjpCFEQYVkcfe4XbtjP
+         RuvXOZUWzAEe4tjsmzPKDMRob5hNYLEZlgAqSM2JxckA+LFpFEmDL9aHJe+Ubx9MWCuC
+         YrCjvMQWs6C8D9GijuoNImoWXS61OqI/LDVoqlyEChpBG9c9K/BeOoQVvuvaw5/+CzQ5
+         lQgYs7r8QijmiuH5jXSPSK4ZdAh0CFLXQOaKAQjLcdh5e41ccJUqRr7usgaCUc+5DwnW
+         dXyg==
+X-Forwarded-Encrypted: i=1; AFNElJ9ktDap/CndGf5zQKFlmTqx83A/GWA8Q5+yMZsxtxrzDdGugpnOyboIZcgqDHajF4zU/lkamZnQ4JM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwZ0GHE01oJS0HPMMIEKWEv1RdqKS8WQrOe9/FtV2PBsfaUNoal
+	01cHRQeLzaIUQ88dywbBtWCrp0AsKzo3b6NV+bBSgNZQT+ryG029cC2d55w9m/gIlIUq0rYvl0N
+	+fEQlI12lZ4X20Zp3EyKASBv3N41YAul5vS91tTy2eQcPGshz3pLdenBjIKQmkmT4FEWLkBiTV0
+	cqmpp8dc2iusL5gxXQ+emMmjeXk2JMgemFHko=
+X-Gm-Gg: Acq92OFCG9jd96TNgB9e9bEpW2Hwh9fgHFsvs0ftmhJQzDyzBQ8Pm9sQJwHLB7qY0Sg
+	Uvi3hl0Zss7CmIOntYisKNtm6dVttkXdOnNvp932d46y9X14ihNOSMLtNSW5UkuH5TQsxfg5FVD
+	Ku+KejHi6L/i8yjxpwPXFKfrq0P6KP7vNxHLJDyKd6oI9Pi6znDSl/ykNjimGAaRlrk3wKmigev
+	q4LJxqnj6T3ywnw5DONplDguFziaL3Zxk716uBqwQ0w3JbPqf4=
+X-Received: by 2002:a05:6830:6a96:b0:7d7:fb03:f6ba with SMTP id 46e09a7af769-7e70ca51cc9mr13515122a34.21.1781015900249;
+        Tue, 09 Jun 2026 07:38:20 -0700 (PDT)
+X-Received: by 2002:a05:6830:6a96:b0:7d7:fb03:f6ba with SMTP id
+ 46e09a7af769-7e70ca51cc9mr13515095a34.21.1781015899753; Tue, 09 Jun 2026
+ 07:38:19 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260517014841.254085-6-inochiama@gmail.com>
+References: <20260608185646.4085127-1-zhipingz@meta.com> <20260608185646.4085127-4-zhipingz@meta.com>
+ <40243782-e4ff-435c-ae40-3ac1c7c4815e@amd.com>
+In-Reply-To: <40243782-e4ff-435c-ae40-3ac1c7c4815e@amd.com>
+From: Zhiping Zhang <zhipingz@meta.com>
+Date: Tue, 9 Jun 2026 07:38:07 -0700
+X-Gm-Features: AVVi8CfGCq2wYUK9zUjDs8_E_dqHl5wHKtBE7B2eSNCP9pHNCaJrScoAmctUT8I
+Message-ID: <CAH3zFs1eE2VrxOZA9FoowJ9AKeBkdZE5P6t1cH0bxXq0iY6AhA@mail.gmail.com>
+Subject: Re: [PATCH v6 3/5] dma-buf: add optional get_tph() callback
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
+        Yishai Hadas <yishaih@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Proofpoint-ORIG-GUID: OLXfSZleCmmc4C5-Mabb81ZJMtUX8nHy
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjA5MDEzOSBTYWx0ZWRfX5Es7cPuDB7bQ
+ Oj+mBNAb+j1hS2Js3Vz+Yr2+XPbrRrN2GXeEZ+JyulwhfETg03S71w8tMIAzK8gJDXTURUiW0dw
+ Cpq02cWoXmJf7mWkzhEU71FmkyhSjle+qG3KEU7TYY+yi5H2CeRW2Iv3KWqPnCkVrEwgH6Dhdzn
+ ShhaLv/h+HcWNhxnvM2egNtSTHqYa9SO63CPWMqkKBy+yHf5/3uyDGdYXT/6nOd3KTTzXCIjUdJ
+ GBEOo2++AM0kpEG59pAmUbp1wRkb4yAbiqtnKWr1ecUNUHWj5K5Xt1zX9TvRmZIswKQJjAp6oVZ
+ 4tUWd3sWEhL9Y1WIx/sBw+WadMtLfAk7/fTV0hzmEdTkMSoXd8MQlSRLqLv3VbEU1JYmoAvbgAY
+ DYeWthBVECq99qqAk7V9fehsbZ0mzhEfPCCp5cMenLiUCLKPWK6U+KMjl7RxgGOyTgwU3sCkkV2
+ kPyugvZrlghzKVjXBqA==
+X-Proofpoint-GUID: OLXfSZleCmmc4C5-Mabb81ZJMtUX8nHy
+X-Authority-Analysis: v=2.4 cv=cr+rVV4i c=1 sm=1 tr=0 ts=6a28255d cx=c_pps
+ a=z9lCQkyTxNhZyzAvolXo/A==:117 a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=crHB47gyY4rKiduisYu9:22
+ a=KaHoPmoT-FsTecDK8CMA:9 a=QEXdDO2ut3YA:10 a=EyFUmsFV_t8cxB2kMr4A:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-09_03,2026-06-09_02,2025-10-01_01
 
-On Sun, May 17, 2026 at 09:48:40AM +0800, Inochi Amaoto wrote:
-> The PCIe controller on Spacemit K3 is almost a standard Synopsys
-> DesignWare PCIe IP with extra link and reset control. Unlike
-> the PCIe controller on K1, this controller supports external MSI
-> interrupt controller and can use multiple PHYs at the same time.
-> 
-> Add driver to support PCIe controller on Spacemit K3 PCIe.
-> 
-> Signed-off-by: Inochi Amaoto <inochiama@gmail.com>
-> ---
->  drivers/pci/controller/dwc/Kconfig            |   4 +-
->  drivers/pci/controller/dwc/pcie-spacemit-k1.c | 169 ++++++++++++++++++
->  2 files changed, 171 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index f2fde13107f2..fae971ecd876 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -439,7 +439,7 @@ config PCIE_SOPHGO_DW
->  	  Sophgo SoCs.
->  
->  config PCIE_SPACEMIT_K1
-> -	tristate "SpacemiT K1 PCIe controller (host mode)"
-> +	tristate "SpacemiT K1/K3 PCIe controller (host mode)"
+> >  include/linux/dma-buf.h | 31 +++++++++++++++++++++++++++++++
+> >  1 file changed, 31 insertions(+)
+> >
+> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> > index d1203da56fc5..8437dbe4a83e 100644
+> > --- a/include/linux/dma-buf.h
+> > +++ b/include/linux/dma-buf.h
+> > @@ -113,6 +113,37 @@ struct dma_buf_ops {
+> >        */
+> >       void (*unpin)(struct dma_buf_attachment *attach);
+> >
+> > +     /**
+> > +      * @get_tph:
+> > +      * @dmabuf: DMA buffer for which to retrieve TPH metadata
+> > +      * @extended: false to request the 8-bit ST namespace, true to request
+> > +      *            the 16-bit Extended ST namespace
+> > +      * @steering_tag: Returns the raw TPH steering tag for the requested
+> > +      *                namespace
+> > +      * @ph: Returns the TPH processing hint (2-bit value)
+> > +      *
+> > +      * Return the TPH (TLP Processing Hints) metadata associated with this
+> > +      * DMA buffer for the requested steering-tag namespace. 8-bit ST and
+> > +      * 16-bit Extended ST are distinct namespaces in the PCIe TPH ST table
+> > +      * and may both be present with different values, so the exporter must
+> > +      * select the value that matches @extended and must not substitute one
+> > +      * for the other.
+> > +      *
+> > +      * The exporter owns the completing address space for @dmabuf and
+> > +      * therefore decides whether it can derive meaningful TPH metadata for
+> > +      * that completer. The dma-buf core treats the returned ST/PH tuple as
+> > +      * opaque transport metadata; importers that support TPH place it on
+> > +      * outbound TLPs, while exporters that cannot derive a useful tuple
+> > +      * simply return -EOPNOTSUPP.
+> > +      *
+> > +      * Return 0 on success, or -EOPNOTSUPP if no metadata is available for
+> > +      * the requested namespace.
+> > +      *
+> > +      * This callback is optional.
+> > +      */
+> > +     int (*get_tph)(struct dma_buf *dmabuf, bool extended,
+> > +                    u16 *steering_tag, u8 *ph);
+> > +
+>
+> That needs a wrapper for importers to call which also handles if the callback isn't present.
+>
+> Regards,
+> Christian.
+>
+agreed, will use a wrapper in next revision.
 
-Can you just say 'SpacemiT PCIe controller (host mode)"? I believe I asked Alex
-while adding K1 support and he said this driver might not support future IP
-revisions, but here we are.
-
->  	depends on ARCH_SPACEMIT || COMPILE_TEST
->  	depends on HAS_IOMEM
->  	select PCIE_DW_HOST
-> @@ -447,7 +447,7 @@ config PCIE_SPACEMIT_K1
->  	default ARCH_SPACEMIT
->  	help
->  	  Enables support for the DesignWare based PCIe controller in
-> -	  the SpacemiT K1 SoC operating in host mode.  Three controllers
-> +	  the SpacemiT K1/K3 SoC operating in host mode. Three controllers
->  	  are available on the K1 SoC; the first of these shares a PHY
->  	  with a USB 3.0 host controller (one or the other can be used).
->  
-> diff --git a/drivers/pci/controller/dwc/pcie-spacemit-k1.c b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> index 7f6f1df31cd8..7854d26220a9 100644
-> --- a/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> +++ b/drivers/pci/controller/dwc/pcie-spacemit-k1.c
-> @@ -23,6 +23,7 @@
->  
->  #define PCI_VENDOR_ID_SPACEMIT		0x201f
->  #define PCI_DEVICE_ID_SPACEMIT_K1	0x0001
-> +#define PCI_DEVICE_ID_SPACEMIT_K3	0x0002
->  
->  /* Offsets and field definitions for link management registers */
->  #define K1_PHY_AHB_IRQ_EN			0x0000
-> @@ -32,8 +33,20 @@
->  #define SMLH_LINK_UP			BIT(1)
->  #define RDLH_LINK_UP			BIT(12)
->  
-> +#define INTR_STATUS				0x0010
-> +
->  #define INTR_ENABLE				0x0014
->  #define MSI_CTRL_INT			BIT(11)
-> +#define RDLH_LINK_UP_INT		BIT(20)
-> +
-> +#define K3_PHY_AHB_IRQSTATUS_INTX		0x0008
-> +
-> +#define K3_ADDR_INTR_STATUS1			0x0018
-> +
-> +#define K3_CACHE_MSTR_AWCACHE_MODE	GENMASK(14, 11)
-> +#define K3_CACHE_MSTR_AWCACHE_BEHAVIOR	0xf
-> +
-> +#define K3_MAX_PHY_NUMBER		6
-
-What does this mean? 6 ports?
-
->  
->  /* Some controls require APMU regmap access */
->  #define SYSCON_APMU			"spacemit,apmu"
-> @@ -48,6 +61,9 @@
->  
->  #define PCIE_CONTROL_LOGIC			0x0004
->  #define PCIE_SOFT_RESET			BIT(0)
-> +#define PCIE_PERSTN_OE			BIT(24)
-> +#define PCIE_PERSTN_OUT			BIT(25)
-> +#define PCIE_IGNORE_PERSTN		BIT(31)
->  
->  struct k1_pcie {
->  	struct dw_pcie pci;
-> @@ -262,6 +278,152 @@ static const struct dw_pcie_ops k1_pcie_ops = {
->  	.stop_link	= k1_pcie_stop_link,
->  };
->  
-> +static int k3_pcie_enable_phy(struct k1_pcie *pcie)
-> +{
-> +	int i, ret;
-> +
-> +	for (i = 0; i < pcie->phy_count; i++) {
-> +		ret = phy_init(pcie->phy[i]);
-> +		if (ret)
-> +			goto err_phy;
-> +	}
-> +
-> +	return 0;
-> +
-> +err_phy:
-> +	while (--i >= 0)
-> +		phy_exit(pcie->phy[i]);
-> +
-> +	return ret;
-> +}
-> +
-> +static int k3_pcie_init(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct k1_pcie *k1 = to_k1_pcie(pci);
-> +	u32 reset_ctrl = k1->pmu_off + PCIE_CLK_RESET_CONTROL;
-> +	u32 val;
-> +	int ret;
-> +
-> +	regmap_clear_bits(k1->pmu, reset_ctrl, LTSSM_EN);
-> +
-> +	k1_pcie_toggle_soft_reset(k1);
-> +
-> +	ret = k1_pcie_enable_resources(k1);
-> +	if (ret)
-> +		return ret;
-> +
-> +	regmap_set_bits(k1->pmu, reset_ctrl, PCIE_AUX_PWR_DET);
-> +	regmap_clear_bits(k1->pmu, reset_ctrl, APP_HOLD_PHY_RST);
-> +
-> +	ret = k3_pcie_enable_phy(k1);
-> +	if (ret) {
-> +		k1_pcie_disable_resources(k1);
-> +		return ret;
-> +	}
-> +
-> +	/* K3: Set IGNORE_PERSTN and drive PERSTN_OE high (assert reset) */
-
-What does this mean?
-
-> +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> +			PCIE_IGNORE_PERSTN | PCIE_PERSTN_OE | PCIE_PERSTN_OUT);
-> +	usleep_range(1000, 2000);
-> +	regmap_clear_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC, PCIE_PERSTN_OUT);
-> +
-> +	msleep(PCIE_T_PVPERL_MS);
-> +
-> +	/*
-> +	 * Put the controller in root complex mode, and indicate that
-> +	 * Vaux (3.3v) is present.
-> +	 */
-
-How can the driver confirm without checking DT for vpcie3v3aux-supply?
-
-> +	regmap_set_bits(k1->pmu, k1->pmu_off + PCIE_CONTROL_LOGIC,
-> +			PCIE_PERSTN_OUT | PCIE_PERSTN_OE);
-> +
-> +	val = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
-> +	val = u32_replace_bits(val, GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE,
-> +			       GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
-> +	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, val);
-> +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, PCI_VENDOR_ID_SPACEMIT);
-> +	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, PCI_DEVICE_ID_SPACEMIT_K3);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	/* Finally, as a workaround, disable ASPM L1 */
-> +	k1_pcie_disable_aspm_l1(k1);
-> +
-> +	return 0;
-> +}
-> +
-> +static int k3_pcie_msi_host_init(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	u32 val;
-> +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +
-> +	val = dw_pcie_readl_dbi(pci, COHERENCY_CONTROL_3_OFF);
-> +	val |= u32_replace_bits(val, K3_CACHE_MSTR_AWCACHE_BEHAVIOR,
-> +				K3_CACHE_MSTR_AWCACHE_MODE);
-> +	dw_pcie_writel_dbi(pci, COHERENCY_CONTROL_3_OFF, val);
-> +
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct dw_pcie_host_ops k3_pcie_host_ops = {
-> +	.init		= k3_pcie_init,
-> +	.deinit		= k1_pcie_deinit,
-> +	.msi_init	= k3_pcie_msi_host_init,
-> +};
-> +
-> +static const struct dw_pcie_ops k3_pcie_ops = {
-> +	.link_up	= k1_pcie_link_up,
-> +	.start_link	= k1_pcie_start_link,
-> +	.stop_link	= k1_pcie_stop_link,
-> +};
-> +
-> +static void k3_pcie_clear_irq_status(struct k1_pcie *k1,
-> +				     u32 *status0, u32 *status1, u32 *status2)
-> +{
-> +	*status0 = readl_relaxed(k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> +	*status1 = readl_relaxed(k1->link + INTR_STATUS);
-> +	*status2 = readl_relaxed(k1->link + K3_ADDR_INTR_STATUS1);
-> +
-> +	writel_relaxed(*status0, k1->link + K3_PHY_AHB_IRQSTATUS_INTX);
-> +	writel_relaxed(*status1, k1->link + INTR_STATUS);
-> +	writel_relaxed(*status2, k1->link + K3_ADDR_INTR_STATUS1);
-> +}
-> +
-> +static int k3_pcie_parse_port(struct k1_pcie *k1)
-> +{
-> +	struct device *dev = k1->pci.dev;
-> +	u32 status0, status1, status2;
-> +	int i;
-> +
-> +	k1->phy = devm_kmalloc_array(dev, K3_MAX_PHY_NUMBER, sizeof(*k1->phy),
-> +				     GFP_KERNEL);
-> +	if (!k1->phy)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < K3_MAX_PHY_NUMBER; i++) {
-> +		k1->phy[i] = devm_of_phy_get_by_index(dev, dev->of_node, i);
-> +		if (IS_ERR(k1->phy[i])) {
-> +			if (PTR_ERR(k1->phy[i]) == -ENODEV)
-> +				break;
-> +
-> +			return PTR_ERR(k1->phy[i]);
-> +		}
-> +	}
-> +
-> +	k1->phy_count = i;
-> +	if (k1->phy_count == 0)
-> +		return -EINVAL;
-> +
-> +	k3_pcie_clear_irq_status(k1, &status0, &status1, &status2);
-> +
-> +	return 0;
-> +}
-
-This function should iterate over the Root Port nodes defined in DT.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Thanks,
+Zhiping
