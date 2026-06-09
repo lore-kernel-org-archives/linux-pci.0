@@ -1,63 +1,63 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139623F4835
-	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 10:56:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A410F3FDBEC
+	for <linux-pci@vger.kernel.org>; Tue,  9 Jun 2026 11:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781002573; cv=none; b=XDti2irLXOUlmlqyyDo0x+Iq0/VSmSA4DQSAPoffuX4yFEr3K6qhzW6oQ27yv1gTFGL9QU13OpuWD8kRUmcsVKN04zYldSMJkjTOAdgroLahgy4qwrXFV17lwaTK4bCT1juqrkTG9LMZRGGwdrpBcTYrjaL+q4MsFv0N3a42lFQ=
+	t=1781003714; cv=none; b=h7OOGiCp50rIz457O5kZxvzN9oNgiAzmU3D1ku3VoPNgTqd5hcJ3Jk55xPMz1fKoLk0CoZE1xItzdMHMigAE4s9+ymaDSM/e4rAke6kbd9tGz1JpyIsA5MZDEyrDzguDcKHRq0Ras7aXOi2XPVoy2AmqI4o9dctgWEqjtiGz34w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781002573; c=relaxed/simple;
-	bh=pVQ8NOIWiqEzwBktd16L0HeYTmPDW7Os+iLDh6FPSSA=;
+	s=arc-20240116; t=1781003714; c=relaxed/simple;
+	bh=9SIAMrTDRCwU0rg5iW6FUT/EumfO9apNRmvR4Mu0DIo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tn53xKvNivUn2/ie/f+IB+69GlvOtGRB8JzGSKEc6MGt2npwxAqR6/PN7jQo7mceZruN74zV0hbDYRczLjHKbXGCd8/46M5XOMh90WMzp/+7i5nMhzkgknlpbE4EmnDuOMubhHO4oXUwftNcAB8vJp5hzb4kktBohtu1IzplWfw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cQ6vg1Gz; arc=none smtp.client-ip=209.85.214.173
+	 Content-Type:Content-Disposition:In-Reply-To; b=hMSYGXf8W3oenQgElTdx24iGtRQszFso+18PBhh5ll2RVgH2bgoYG5kyEDRb2PkPXeayyCAuCYLt+3cFHXue18IwLfr73VlRhJET8PEVjuTbl2++S2Mc8uWlcxr96ibo5gmMGR2lSO1AD+vyKMNhfrCyzYRfiZ1dOlnEUVOThms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=m3YQ3ZYx; arc=none smtp.client-ip=209.85.214.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cQ6vg1Gz"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-2c0b1a48855so496485ad.0
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 03:56:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="m3YQ3ZYx"
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-2c0b1a48855so497955ad.0
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2026 04:15:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781002571; x=1781607371; darn=vger.kernel.org;
+        d=google.com; s=20251104; t=1781003713; x=1781608513; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zdMxQIDs+l/KSPJFUNCwvqWbxtsN9baWYoGyb/P1vPg=;
-        b=cQ6vg1GzVVdc3mcOeEPOPzVSfX4jZ6CZM2ya9wYX7qPg7kxQ8qK7EdAXDCJ3n4R/GX
-         U7s7heGkFJJYDqOSpMP21+e6EAyucI7J3rDOTfjKdP84Z+cV+YV349HRsViR1FFMM3yf
-         ZIKEci//OejBFAv/bUoHxaTOtJ8BJK+xnNS5anXuKRIZ1e0zK2jDPwEI+UNQDmPYT32J
-         gNBZ5s69GRxpY3gsN9W1o5jPQa5U52cBnYkp0fYMsgohcexwn+NQGC6nQBLD+cBmiFYR
-         Ua+NIsITyAaYAf7RbNzTRnuubzadI6Savqv7SAhSBpNuIYuPXdZBHDv1KiG/vvVEvnzF
-         w59A==
+        bh=OIwRB/fzX43FvZDy8zd3F8cYltlmCTKmqxv8mTl/pb8=;
+        b=m3YQ3ZYxLsZHy4JBU1Y2bdKns3I0KkUDQ/IwPPN4fyfR/j4+tT1IF1PEkO/KTNq9B9
+         ZSuPJUgIiF0fIbEBVzh/w8tWjIzzsJM8IcxGjYADHjaWwjJdcLXGOKVuh6OyhgyyEJeS
+         +YThBihMk7fzw8MqQUGlkYoSs2K1bJ0OdyVATxgUmNu9l8kGSScgbPHFuWTjf2f1wSUx
+         EXKF2iOWWVsK6G6oPz0pIXvHXMBbjzka5hEW7ZVHbzrPNQU+/PqnpU4dl0+wiNYC4y+q
+         mt37iKdhfSBUnp7aC0A2J3Bqx1SmW8QGfC3sCwzJOP7s7eKjc4vca5PdIZBmr5a44rLQ
+         eVRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781002571; x=1781607371;
+        d=1e100.net; s=20251104; t=1781003713; x=1781608513;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=zdMxQIDs+l/KSPJFUNCwvqWbxtsN9baWYoGyb/P1vPg=;
-        b=Iff0eyY+lL1xO+ikS7A9gYWWv6hvGltUwyOi6waLomajtAjVNyWU6ai9q9O+EOPLpN
-         h3Z7C+RWO4p6jzMiO4i7OayvYJ5o7+Pe1FJY+eYQ2+I46mrnBnal4CBykbyV+aODaWGr
-         +QNKuleeO7FxdE+p7J7M4fEQ4oYx1q0bxxllIDencEQajNDu3ZkH4+G3y9u1rZq7d/eP
-         KFk6llHJgB/GTtkZPBZMO+W9LTW3j3Wixksi4IdbN0xWKkf1ob0Zo4JtN2UYllYV/JP0
-         78zpqPdZwiDRVBoqJzpLyyv71ZTjLuVUQ3Vi4Szw6h5ZMbKSHeUg4Ee0HfZ9OOE3JCiB
-         9KzQ==
-X-Forwarded-Encrypted: i=1; AFNElJ8o831mIYjLZkBMsN79hB4TKKc0HPOvZBUPpvp1QOkR5+gCJeOk+gE76HqwOcY4+BYbUX5vEfXkVE0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YztcoiJPYhpQnvSahd/2yB6fyKzL+bm+o3mp6PGUdgZ/N+MyJFF
-	kumpizgBV3Mprq0k2yJA3CXePpxCMEzC/9WyxLH8uscJU3IdVDApYaz2WmD0n+69/Q==
-X-Gm-Gg: Acq92OFoE3Hp5f5APhwzZ6EcN3zH/ORzB/bp773qm+ZW8EraLykOrRz/HF+lJRmHlHe
-	1XGUYkbLU6youYDN3umxc72i9rkSQc8hChVbuMoBfvu2YcipEbUaWjK2p7FSBqEE1T+zj/IBYhl
-	uyW2u7jgg84TVd2IpU+KVVKdH2tHUdOgLKBSpJxQUdttx/RVeP+ikBVrNYM3pqwawCyuG5et/YQ
-	vzke4+7c7fYEM3Q1qeillYQMUOlhVcVqUSrVAOZcudsUVpx6X7GgwhAULgjvTiQDc1hv2w25xKQ
-	DR53ToN9uzqTf3Lo6m3xO0v7cCTbw8ji2zlx81jrgRoROypv1Zht3wyGMdGcvjILGSmY+QEZG0L
-	vtfe/2rjAcLobrKRd5atAzM6W003svuWDiY6cQuHI8rzEj9tqMTJoa4lCz6Z57ee24oLy+9vWgG
-	D0RhcPYTmBPOW/+jLFWZjqKK087DJ4opOP04QZqYm5Y6B5YPZxcfPlsSoYmOest7K1RYQ6RFM=
-X-Received: by 2002:a17:902:f708:b0:2c1:ee6e:be23 with SMTP id d9443c01a7336-2c1ee6ec5ebmr6732565ad.33.1781002570788;
-        Tue, 09 Jun 2026 03:56:10 -0700 (PDT)
+        bh=OIwRB/fzX43FvZDy8zd3F8cYltlmCTKmqxv8mTl/pb8=;
+        b=QecBbgYg7EJc+URqRmG6JoKWzswkuO32c9PJIYN0hQQcsW5Vbn/+nJdDJhNmgyCOZa
+         JNGz2D7p0XAGIQY6dNpd0j7jT8X4dwFTCzucH9PfgAqcTL1JU1jg4pBSpwSy3MSgHpJV
+         4LSn7YEhtGKaThL/CwytLaYwIg3QdaPat3Xi5X1BZSXDc9eDlPP0vzqQsQAB8y7RJNSW
+         edqDNEHNUOGDJFivbuqeNweR49S1+rM08UC5Fz04nBBUxrP+XsAapcQAvjsNQBWquXNU
+         B39P9gQWV6FL/VyXfnrwA5S0MXrklb8vXG8zhLK/yVrIfLoDVmbmQLN0805y4elrrxG+
+         MCsQ==
+X-Forwarded-Encrypted: i=1; AFNElJ82oSnrmJyIrHdFdGKz8CmAsW2fq7yWHZtjJzbYBZjkxmSCyCGgM7uKl5yri+fnc46I4y8sP1la8Ec=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyfjm5RAPtyxoCL30H+dH34TTsfZDmyGGnvj7YZ+TIQXpUEPRw9
+	PMT7fISpBhWZGz0tqDGFHPMxpEOnzRiMXzw9+twCm4k+bFUctqhAH78dM1RQjtMx8g==
+X-Gm-Gg: Acq92OGFyF/nh/DZSnzNiJ6hNMPZAfUU8csuIOWtusOhb4Tt4C4OrUeOvQShC0/+BYC
+	DzgtNLQnlXVIvahvcCXOTBO3L5jF2R0MLZCa5/Ght+jm1/Jksehyz1QhOSAAmuNX8tRV7+jKA+s
+	ynE0VsachChT2NJsIXxXFvQDBMOg56L1Nrz4LK3YuCHa+S2GvUQIBDw/7CglcOzlde36PehmrTN
+	ExdSmr8dOfDXBEocOfh2oxgbh/8x5vtql6AHpOf1tuNQtZNmoI6dkmptPHobcOPkwN1/npJEKqy
+	XqbXAZBmJghPktZXNgHm/nNbGrlV9lsLrHh0vop1IfsGjnM428eD59wZO2vHnlGSSSgLhXVGZk6
+	b8Nq1ohgjdA/rliLZ3c6eu1l7ydna2vWC8m/De9wQjQnUjcraqrfjH3naphSW0+fAB6eQF2egl/
+	0ju8/PK6wQffwHvj839SyDIJ969krrO8aE8WlrtBfPd140v6FltiaKLOeAA1Puy/qklrTvdm8=
+X-Received: by 2002:a17:902:ffce:b0:2c2:50c7:5894 with SMTP id d9443c01a7336-2c250c75a1dmr4219375ad.24.1781003712132;
+        Tue, 09 Jun 2026 04:15:12 -0700 (PDT)
 Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f711e52b0sm19480623a91.15.2026.06.09.03.56.04
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-36f6d109dcdsm21430052a91.9.2026.06.09.04.15.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2026 03:56:10 -0700 (PDT)
-Date: Tue, 9 Jun 2026 10:56:01 +0000
+        Tue, 09 Jun 2026 04:15:11 -0700 (PDT)
+Date: Tue, 9 Jun 2026 11:15:02 +0000
 From: Pranjal Shrivastava <praan@google.com>
 To: David Matlack <dmatlack@google.com>
 Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
@@ -80,12 +80,13 @@ Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org,
 	Shuah Khan <skhan@linuxfoundation.org>,
 	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
 	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 07/12] PCI: Refactor matching logic for pci_dev_acs_ops
-Message-ID: <aifxQalxwM_hic6F@google.com>
+Subject: Re: [PATCH v6 06/12] PCI: liveupdate: Auto-preserve upstream bridges
+ across Live Update
+Message-ID: <aif1tq8TvHuYwUC-@google.com>
 References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-8-dmatlack@google.com>
- <aiW_M7y0fFwLN84G@google.com>
- <aic46OtIKfLhdoKy@google.com>
+ <20260522202410.3104264-7-dmatlack@google.com>
+ <aiSb85Ec6jW4xPaE@google.com>
+ <aic1gdmisIT4sqEN@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -94,101 +95,141 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aic46OtIKfLhdoKy@google.com>
+In-Reply-To: <aic1gdmisIT4sqEN@google.com>
 
-On Mon, Jun 08, 2026 at 09:49:28PM +0000, David Matlack wrote:
-> On 2026-06-07 07:01 PM, Pranjal Shrivastava wrote:
-> > On Fri, May 22, 2026 at 08:24:05PM +0000, David Matlack wrote:
-> > > Refactor the logic to match devices to pci_dev_acs_ops by factoring out
-> > > the loop and device matching into its own routine. This eliminates some
-> > > duplicate code between pci_dev_specific_enable_acs() and
-> > > pci_dev_specific_disable_acs_redir(), and will also be used in a
-> > > subsequent commit to check if a device requires device-specific
-> > > enable_acs() during a Live Update.
+On Mon, Jun 08, 2026 at 09:34:57PM +0000, David Matlack wrote:
+> On 2026-06-06 10:15 PM, Pranjal Shrivastava wrote:
+> > On Fri, May 22, 2026 at 08:24:04PM +0000, David Matlack wrote:
+> > > When a PCI device is preserved across a Live Update, all of its upstream
+> > > bridges up to the root port must also be preserved. This enables the PCI
+> > > core and any drivers bound to the bridges to manage bridges correctly
+> > > across a Live Update.
 > > > 
-> > > No functional change intended.
+> > > Notably, this will be used in subsequent commits to ensure that
+> > > preserved devices can continue performing memory transactions without a
+> > > disruption or change in routing.
+> > > 
+> > > To preserve bridges, the PCI core tracks the number of downstream
+> > > devices preserved under each bridge using a reference count in struct
+> > > pci_dev_ser. This allows a bridge to remain preserved until all its
+> > > downstream preserved devices are unpreserved or finish their
+> > > participation in the Live Update.
 > > > 
 > > > Signed-off-by: David Matlack <dmatlack@google.com>
 > > > ---
-> > >  drivers/pci/quirks.c | 50 ++++++++++++++++++--------------------------
-> > >  1 file changed, 20 insertions(+), 30 deletions(-)
+> > >  drivers/pci/liveupdate.c    | 136 +++++++++++++++++++++++++++++++-----
+> > >  include/linux/kho/abi/pci.h |   5 +-
+> > >  2 files changed, 122 insertions(+), 19 deletions(-)
 > > > 
 > > 
 > > [...]
 > > 
-> > >  } pci_dev_acs_ops[] = {
-> > >  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> > > +	    .match = pci_quirk_intel_pch_acs_match,
-> > >  	    .enable_acs = pci_quirk_enable_intel_pch_acs,
-> > >  	},
-> > >  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-> > > +	    .match = pci_quirk_intel_spt_pch_acs_match,
-> > >  	    .enable_acs = pci_quirk_enable_intel_spt_pch_acs,
-> > >  	    .disable_acs_redir = pci_quirk_disable_intel_spt_pch_acs_redir,
-> > >  	},
-> > >  };
-> > >  
-> > > -int pci_dev_specific_enable_acs(struct pci_dev *dev)
-> > > +static const struct pci_dev_acs_ops *pci_dev_acs_ops_get(struct pci_dev *dev)
-> > >  {
-> > >  	const struct pci_dev_acs_ops *p;
-> > > -	int i, ret;
-> > > +	int i;
-> > >  
-> > >  	for (i = 0; i < ARRAY_SIZE(pci_dev_acs_ops); i++) {
-> > >  		p = &pci_dev_acs_ops[i];
-> > > @@ -5481,33 +5475,29 @@ int pci_dev_specific_enable_acs(struct pci_dev *dev)
-> > >  		     p->vendor == (u16)PCI_ANY_ID) &&
-> > >  		    (p->device == dev->device ||
-> > >  		     p->device == (u16)PCI_ANY_ID) &&
-> > > -		    p->enable_acs) {
-> > > -			ret = p->enable_acs(dev);
-> > > -			if (ret >= 0)
-> > > -				return ret;
-> > > -		}
-> > > +		    p->match(dev))
-> > > +			return p;
+> > > +
+> > > +#define for_each_pci_dev_in_path(_d, _start, _end) \
+> > > +	for ((_d) = (_start); (_d) != (_end); (_d) = (_d)->bus->self)
+> > > +
+> > > +static void __pci_liveupdate_unpreserve_path(struct pci_ser *ser,
+> > > +					     struct pci_dev *start,
+> > > +					     struct pci_dev *end)
+> > > +{
+> > > +	struct pci_dev *dev;
+> > > +
+> > > +	for_each_pci_dev_in_path(dev, start, end) {
+> > > +		if (pci_liveupdate_unpreserve_device(ser, dev))
 > > 
-> > Nit:
-> > Should we check if (p->match != NULL) like we check for p->enable_acs &
-> > p->disable_acs_redir(). 
+> > I might be reading this wrong but are we leaking some upstream devs if 
+> > an intermediate node fails?
 > > 
-> > Otherwise, it seems like we're mandating the existence of a match op in
-> > the pci_dev_acs_ops here? Today, we just have two Intel entries in that
-> > array, both of which need the match op. However, AFAICT, it shouldn't be
-> > mandatory for future SoCs that might only need a simple vid + devid match
+> > 			  EP0
+> > 			/
+> > Assume we have: RC -> B1 -> B2 
+> > 				\
+> > 				 EP1
+> > 
+> > and EP0 & EP1 were preserved successfully.
+> > 
+> > And then we try unpreserving EP1, we follow:
+> > 
+> > unpreserve EP1 -> unpreserve B2 failed due to a corruption.
+> > 
+> > This aborts the loop, skipping B1 and RC completely?
+> > Their refcounts remain elevated, effectively leaking them as preserved 
+> > state permanently? (i.e. if we unpreserve EP0 after this, B1 & RC will
+> > still get preserved).
 > 
-> *shrug*
+> Yes, but that would only happen if there is some sort of kernel bug or
+> silent data corruption. I guess we could proceed with trying to
+> unpreserve the bridges upstream. But I opted to log a big warning and
+> bail immediately.
 > 
-> I would usually say those future SoCs should be the ones to make it
-> optional if and when they need to.
+> pci_liveupdate_finish_path() has the same behavior BTW.
 
-Well.. that's fair I guess.
+Fair point. I agree we are in a broken state if we hit this. 
+
+I was originally thinking of a situation where we'd want to keep the
+failure localized. For example: unpreserve EP1 fails -> user sees the
+warning -> resets EP1 -> retries preserving it later. 
+
+But given the recent discussion/decision that retrieve operations
+will no longer be retried, I guess there isn't really a use-case for
+retrying anything. It makes sense to just bail here.
 
 > 
-> But making p->matc optional now isn't so bad:
+> > 
+> > > +			return;
+> > > +	}
+> > > +}
+> > > +
+> > > +static void pci_liveupdate_unpreserve_path(struct pci_ser *ser,
+> > > +					   struct pci_dev *start)
+> > > +{
+> > > +	__pci_liveupdate_unpreserve_path(ser, start, /*end=*/NULL);
+> > > +}
+> > > +
+> > > +static int pci_liveupdate_preserve_path(struct pci_ser *ser,
+> > > +					struct pci_dev *start)
+> > > +{
+> > > +	struct pci_dev *dev;
+> > > +	int ret;
+> > > +
+> > > +	for_each_pci_dev_in_path(dev, start, NULL) {
+> > > +		ret = pci_liveupdate_preserve_device(ser, dev);
+> > > +		if (ret) {
+> > > +			__pci_liveupdate_unpreserve_path(ser, start, dev);
+> > > +			return ret;
+> > > +		}
+> > > +	}
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > >  /**
+> > >   * pci_liveupdate_preserve() - Preserve a PCI device across Live Update
+> > >   * @dev: The PCI device to preserve.
+> > > @@ -321,6 +403,9 @@ static int pci_liveupdate_preserve_device(struct pci_ser *ser, struct pci_dev *d
+> > >   * pci_liveupdate_preserve() from their struct liveupdate_file_handler
+> > >   * preserve() callback to ensure the outgoing struct pci_ser is already set up.
+> > >   *
+> > > + * pci_liveupdate_preserve() automatically preserves all bridges upstream of
+> > > + * @dev.
+> > > + *
+> > >   * Returns: 0 on success, <0 on failure.
+> > >   */
+> > >  int pci_liveupdate_preserve(struct pci_dev *dev)
+> > > @@ -336,7 +421,7 @@ int pci_liveupdate_preserve(struct pci_dev *dev)
+> > >  	if (IS_ERR(ser))
+> > >  		return PTR_ERR(ser);
+> > >  
+> > > -	return pci_liveupdate_preserve_device(ser, dev);
+> > > +	return pci_liveupdate_preserve_path(ser, dev);
+> > 
+> > Minor nit: I might be too nitpicky here (and it's NOT a strong opinion)
+> > but naming it pci_liveupdate_preserve_path_for_dev() reads better to me.
 > 
->         for (i = 0; i < ARRAY_SIZE(pci_dev_acs_ops); i++) {
->                 p = &pci_dev_acs_ops[i];
->                 if ((p->vendor == dev->vendor ||
->                      p->vendor == (u16)PCI_ANY_ID) &&
->                     (p->device == dev->device ||
-> -                    p->device == (u16)PCI_ANY_ID) &&
-> -                   p->enable_acs) {
-> -                       ret = p->enable_acs(dev);
-> -                       if (ret >= 0)
-> -                               return ret;
-> +                    p->device == (u16)PCI_ANY_ID)) {
-> +                       if (!p->match || p->match(dev))
-> +                               return p;
->                 }
->         }
-> 
-> I can include this in v7 if you would like.
+> Noted :). I'll keep the current name for now since that is pretty long,
+> but if anyone else votes for it I'm happy to be overridden.
 
-I don't have a strong opinion here, this should be fine.
-It's just that we have NULL checks for p->enable_acs and 
-disable_acs_redir too. It'd be nice to keep the same pattern.
+Sounds good.
 
 Thanks,
 Praan
