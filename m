@@ -1,37 +1,54 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 288272F747A;
-	Tue,  9 Jun 2026 22:33:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D84C73E450A;
+	Tue,  9 Jun 2026 22:45:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781044434; cv=none; b=e2HNMgNc+WZM0EUr7FEdon0AmtV7X+QROFefTPwtCeqOrCw+Zp88/9jvNIRcmxgRfNy7kMsPQrbNrtdPiTTR9t9q964p+RhtPm5fuTl5xUEn6NPiBPHOTcvhPNOCOVa532NghzH3nskihMNvSD+CIRHJTFKeQoinosow9K4+TAg=
+	t=1781045141; cv=none; b=AUzTHYsVYzYQCMgZy+5moO7mvgBSMyy7C5oTXPpX7CRvEXlaKSVugRX3dtxVKKX+trne2bV6oGROGqfWMXLbJ0RF4sjVMOUdk9R8EzAmbUiDqVVxxFCC9ILhjqyEC+a5IO5VbV1IT0VI4XpLseTBfThp3eOe76t210qLr6/taP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781044434; c=relaxed/simple;
-	bh=r71GeF13z15/J+HWB5HHcrrSSYx99fBCkIAz4OZaV2I=;
+	s=arc-20240116; t=1781045141; c=relaxed/simple;
+	bh=Yl6uFB7h4FcM9O57SFPkn7nr1pJ4LVyJ2RloXgxYQdY=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=uTNiNfhG/dOZ3I3+BwHLx0vbxgKJqJyJVpx2LlHo3MfYqmf/J4HiPgbS6a4B732Vpee3J0znfK9E84Au6bBpqF9cmb7YbGo1cjuu02dAkkE3qkVIyotwzD/vXLWhsrfKRZXix6fhCVo+beboR4yJ+jnMNykzx/4vQjNzaDiKY0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fOFDXQbs; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=MJ8bUBNnjO0i8GxCo8TE9wMMIjrJ+wMEw90hODP/5eaXcy0JB0ZWOKPQ3XM1XobQHgBO71ECc++DhkK+KAO97q4CcK8cYrgvhzmfvudjD/kYz39Qndi3Yz2dZ8l7TiPe6QmD9XE2NJOn7ODpBqyQ4zSPaL8bb4DUEtlNsbbaP5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BTr+6a2F; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fOFDXQbs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9639A1F00893;
-	Tue,  9 Jun 2026 22:33:52 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BTr+6a2F"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 516961F00893;
+	Tue,  9 Jun 2026 22:45:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781044432;
-	bh=//wNI/+v4p0T0vyPB0Hadc2N7fJrb9Azl2VcVsk9x0E=;
+	s=k20260515; t=1781045140;
+	bh=RsrMhm/FSh8bMoXqXZM8Zp+wWxL61CZwNUdEQaR+aVc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=fOFDXQbs8X5/s8PEGI/WaRbxbbWfghylGp7IxMLULFUw7SZbxALZZXw5B7ziDqJVk
-	 ev2pUi7EJuxgfYCWqPkBD8sEknGbySHXi1b94rdsiDjNPni6kUaoNzqc6xCEHrZSNl
-	 cAmdwpUHwSjafmQkncemn7ByQ4ExPu5VYty3mdk42MIqGY+bck0cfbj4Z2uCOTzsQI
-	 qYF5IyMbo7ztHUQ3vEpdnHh4Pw0bEload78ljk21e93LDoG2ogGzW7YfQhTBOlpPSJ
-	 IEuDO7FTutbTOxBE1XyvJHIqiI/CZVjQkm3enNz5rkBQdcVY39ei6/znm1VveQuLdd
-	 sxZih9rO6wpRg==
-Date: Tue, 9 Jun 2026 17:33:51 -0500
+	b=BTr+6a2FceXyQwi6ug2vSzw899jOk6cKAsipEiFouGdN9G5sFC+hWzeyurQ3aerOW
+	 jZ5HtkIKmyJeIw+s2izHlxhEM4UH4RTn5T0V8Yph1VdbYJuLzCYRHjRqHWDyI+DWXX
+	 W8XiGb9XZ8DfBHSBZrr66ugzufM+I9p6dcgO5IdVOcmJa+pRNYsSUgveLhah9qgHcO
+	 wPhfrXGEcLgBnMXGoxVlaenHLPexD+iMFew2tzVTd7HAG5/uzkFq9dnsCm8GW2d/1B
+	 u91VtOSzJsOgGlWZfopQOt2TKhdRL9ZI21iaTzIjzJnpOTDqNl1qw826z51K6Mtwwu
+	 9anj7xfA6487g==
+Date: Tue, 9 Jun 2026 17:45:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Farhan Ali <alifm@linux.ibm.com>, sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v18 3/3] PCI: Fail FLR when config space is inaccessible
-Message-ID: <20260609223351.GA157386@bhelgaas>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Alex Williamson <alex.williamson@nvidia.com>,
+	Matt Evans <mattev@meta.com>, Leon Romanovsky <leon@kernel.org>,
+	Alex Mastro <amastro@fb.com>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Mahmoud Adam <mngyadam@amazon.de>,
+	David Matlack <dmatlack@google.com>,
+	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>,
+	Pranjal Shrivastava <praan@google.com>,
+	Alistair Popple <apopple@nvidia.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
+Message-ID: <20260609224539.GA175244@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,42 +57,22 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260603185736.8345C1F00893@smtp.kernel.org>
+In-Reply-To: <20260529230553.GE3195266@nvidia.com>
 
-On Wed, Jun 03, 2026 at 06:57:36PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+On Fri, May 29, 2026 at 08:05:53PM -0300, Jason Gunthorpe wrote:
+> On Wed, May 27, 2026 at 03:09:46PM -0600, Alex Williamson wrote:
+> > This deserves a /* CONFIG_PCI_P2PDMA */ reference like the previous
+> > long span, though potentially a better solution would be to split the
+> > core code out to a separate file with shared header.  I asked opus to
+> > see what this would look like and it generated the patch below
+> > (unverified, compile tested only).  Bigger diff, harder to follow
+> > blame, but the shape of the core is much more apparent.  You're welcome
+> > to take or leave it.
 > 
-> Pre-existing issues:
-> - [High] The config space accessibility check is placed in pcie_reset_flr() instead of pcie_flr(), leaving direct callers of pcie_flr() exposed to 60-second hangs.
-> ...
-
-I don't know why sashiko calls this a "pre-existing" issue.  This
-patch *adds* the config space accessibility check, so it looks like an
-issue with this patch to me.
-
-> > +++ b/drivers/pci/pci.c
-> > @@ -4396,6 +4396,9 @@ int pcie_reset_flr(struct pci_dev *dev, bool probe)
-> >  	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
-> >  		return -ENOTTY;
-> >  
-> > +	if (!pci_dev_config_accessible(dev, "FLR"))
-> > +		return -ENOTTY;
-> > +
+> I think it is a good idea, it will make it easier to add more stuff to
+> these different aspects.
 > 
-> [Severity: High]
-> This isn't a bug introduced by this patch, but does placing this check in
-> pcie_reset_flr() leave direct callers of pcie_flr() exposed to 60-second
-> hangs?
-> 
-> Direct callers of pcie_flr() (like network and storage drivers during error
-> recovery) bypass this wrapper. They will still experience a stall in
-> pci_dev_wait() when attempting to reset a device with an inaccessible config
-> space. Should this accessibility check be moved into pcie_flr() instead to
-> protect all callers?
+> Really they are now two different things with one layered on top of
+> the other.
 
-I can't remember why we have both pcie_reset_flr() and pcie_flr(),
-other than the fact that callers don't need to supply a "probe"
-argument to pcie_flr().
-
-Is there a reason to call pci_dev_config_accessible() here rather than
-in pcie_flr()?
+Sounds good to me too.
