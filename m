@@ -1,267 +1,123 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 466291D6BB
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 09:02:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 968FE3563FA;
+	Wed, 10 Jun 2026 09:20:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781082129; cv=none; b=jGqaemzJx6cMZ+pXI2CHGrNNKetMLgiY9ac7xrlMDJ4bDoktamagB8whJzU95BxajkqxqySwy61iWvipDuBTr+snzTH/JmPOey2JdOyP9RF1C66Xec0yDAr0hhTOMWHRiIZqhkW4o8bi6/o9S2A9HeM0yFtWR36r6aK2RyE8DjQ=
+	t=1781083218; cv=none; b=C4bl3IT1pppeMSFVP5ISkU2o18ZUdLeq5i/VM7BMvZ9HCpUnzg+8dz6PIkMAPQfJTFZslwSXhKJtOvmC2jdWXa20kDtvlTAN25KpegS9rSLPRQEqCLUlsRgdq0xMPMZFY6F1x6y6NXbQhr9WFCuEIrSUVsCqdxLBp6Ovn88NJcI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781082129; c=relaxed/simple;
-	bh=cg0cagWFQ5g994lD+CudE4GuwNly3/D5kcRJzO8mdGE=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=hdHVWvBWI2//w7wK6lTNWImfWNernWd/ax8+rLBLvOt+EfZ58tcQAfHqXQhuO6igF9qTPtxiA7+cvCDEeuG7b+m4flmpNrBC+MiQ9umA0uqnZc3k8OMhhknzEH1wBUdGhmLsPtoSioyMWG6S0DmIkDJGPL7/BSQ+fM3GKJzyrkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dbg9cWBu; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1781083218; c=relaxed/simple;
+	bh=dAjGVbTG/Hl7i7F5CBUMJoQTOUpPtLLEFscIHk0DGZA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=JbCHg3YjOYX1NimT9T5PMuXIFLp+uRjj/M9XB3I5GUaI3dMM2PZfvD2IlGAe8jECisi3bjoih4yWn63RVB3aaysgFPx1mt62oQ631t09Fd1wWhb7NqtI3eo2/hKT3h9O4kCrHCCb6UKxdvMTP4tGDT7e2nwlYYcWTvtNVY6Vdro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=xcxeojkD; arc=none smtp.client-ip=115.124.30.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dbg9cWBu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781082127; x=1812618127;
-  h=date:from:to:cc:subject:message-id;
-  bh=cg0cagWFQ5g994lD+CudE4GuwNly3/D5kcRJzO8mdGE=;
-  b=dbg9cWBuWB74PTOh9olWEP8tFWVJTJkfcKxP3r35qBRJVO/Gs3RGata5
-   2WStMpKW4+UOegWt1iHdjfoEfBJQiWbfi20AHppPi1q9mlu+SF88eHSHc
-   hUPJ0mGto+CeUE9qtz52Z7jCdCqheL+xcjBA6BpXznzeUDqhVsuqXWsXy
-   sBDJakbOa5XMBxhwMqDnQsRwt388ZhNgtSIhCikkgjHPs+ZqsgBWI9Zp8
-   BRpUl565+AnavuDPaX7gQ9hefLdfi3oOU6M48zEcRsK4lxgwS0cQo1Ma1
-   BaZB3ejItUmhZ+Mhtah/o8yXZWYu5sKRPRVsI6J10KiwFHzXP+z/G455N
-   w==;
-X-CSE-ConnectionGUID: MO/TsSqmRmiSs5GzmZ6Krg==
-X-CSE-MsgGUID: kxHOvV8CSMaPxbNLO61CiQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11812"; a="69402953"
-X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
-   d="scan'208";a="69402953"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2026 02:02:07 -0700
-X-CSE-ConnectionGUID: dJPEKVKVT0u6eW5bGAQu7g==
-X-CSE-MsgGUID: D6Fc8+qFS9+0TIWxAZqISg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
-   d="scan'208";a="241683858"
-Received: from lkp-server01.sh.intel.com (HELO f0d55cb201f0) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 10 Jun 2026 02:02:05 -0700
-Received: from kbuild by f0d55cb201f0 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wXEp0-00000000LBC-3i38;
-	Wed, 10 Jun 2026 09:02:02 +0000
-Date: Wed, 10 Jun 2026 17:01:47 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/link_train_delay] BUILD SUCCESS
- 0ae259d0434bc31fc71696355538fd21027d6ebe
-Message-ID: <202606101739.AjUjX5UA-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="xcxeojkD"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1781083205; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=PpLApk7k70O5urYcFe1MKAGUNSaS1SnO8IfTeUhOOkI=;
+	b=xcxeojkDbogz0s1K6HsqzgtJ776cQgX/lay+1kIWG6qhx5cGCjPkRqLP9RDFKV6DdPrgMWRsxWKGWQ+BOTnt8Zp7tlHVsX0onC0U+T8rXMKIqed9AkTuUJhTNWbdBMhq9TggPMFfliLJgQr027wUHBI7Ek2KS3uvI/qm4pgC0PI=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R271e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=xiangzao@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0X4aHoG0_1781083191;
+Received: from localhost.localdomain(mailfrom:xiangzao@linux.alibaba.com fp:SMTPD_---0X4aHoG0_1781083191 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 10 Jun 2026 17:20:03 +0800
+From: Yuanhe Shu <xiangzao@linux.alibaba.com>
+To: linux@roeck-us.net,
+	lihaoxiang@isrc.iscas.ac.cn
+Cc: tglx@linutronix.de,
+	bhelgaas@google.com,
+	jgross@suse.com,
+	hans.zhang@cixtech.com,
+	himanshu.madhani@oracle.com,
+	roger.pau@citrix.com,
+	chrisl@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: add iounmap in msix_capability_init()
+Date: Wed, 10 Jun 2026 17:19:51 +0800
+Message-Id: <20260610091951.1073318-1-xiangzao@linux.alibaba.com>
+X-Mailer: git-send-email 2.39.3
+In-Reply-To: <b9705904-401b-4698-b0df-c84ef2b1e948@roeck-us.net>
+References: <20260125144452.2103812-1-lihaoxiang@isrc.iscas.ac.cn> <b9705904-401b-4698-b0df-c84ef2b1e948@roeck-us.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/link_train_delay
-branch HEAD: 0ae259d0434bc31fc71696355538fd21027d6ebe  PCI: rzg3s-host: Use common pci_host_common_link_train_delay() helper
+On Mon, 16 Mar 2026 at 10:22:12 -0700, Guenter Roeck wrote:
+> Does msix_setup_interrupts() already unmap this region? If it fails,
+> msix_setup_interrupts() calls pci_free_msi_irqs(), which appears to already
+> call iounmap(dev->msix_base) and sets dev->msix_base to NULL.
+>
+> If dev->msix_base was already set to NULL by pci_free_msi_irqs() during the
+> msix_setup_interrupts() error path, does this result in iounmap(NULL)?
 
-elapsed time: 936m
+Confirmed. We hit this on Intel Emerald Rapids (192 CPUs) when running
+tools/testing/selftests/kexec/test_kexec_jump.sh.
 
-configs tested: 190
-configs skipped: 3
+The commit message of 1a8d4c6ecb4c states:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+  "msix_capability_init() fails to unmap the MSI-X region if
+   msix_setup_interrupts() fails."
 
-tested configs:
-alpha                             allnoconfig    gcc-16.1.0
-alpha                            allyesconfig    gcc-16.1.0
-alpha                               defconfig    gcc-16.1.0
-arc                              allmodconfig    clang-23
-arc                              allmodconfig    gcc-16.1.0
-arc                               allnoconfig    gcc-16.1.0
-arc                              allyesconfig    gcc-16.1.0
-arc                                 defconfig    gcc-16.1.0
-arc                   randconfig-001-20260610    gcc-8.5.0
-arc                   randconfig-002-20260610    gcc-8.5.0
-arm                               allnoconfig    clang-23
-arm                               allnoconfig    gcc-16.1.0
-arm                              allyesconfig    clang-23
-arm                              allyesconfig    gcc-16.1.0
-arm                                 defconfig    gcc-16.1.0
-arm                   randconfig-001-20260610    gcc-8.5.0
-arm                   randconfig-002-20260610    gcc-8.5.0
-arm                   randconfig-003-20260610    gcc-8.5.0
-arm                   randconfig-004-20260610    gcc-8.5.0
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-16.1.0
-arm64                               defconfig    gcc-16.1.0
-csky                             allmodconfig    gcc-16.1.0
-csky                              allnoconfig    gcc-16.1.0
-csky                                defconfig    gcc-16.1.0
-hexagon                          allmodconfig    clang-23
-hexagon                          allmodconfig    gcc-16.1.0
-hexagon                           allnoconfig    clang-23
-hexagon                           allnoconfig    gcc-16.1.0
-hexagon                             defconfig    gcc-16.1.0
-hexagon                        randconfig-001    gcc-11.5.0
-hexagon               randconfig-001-20260610    gcc-11.5.0
-hexagon                        randconfig-002    gcc-11.5.0
-hexagon               randconfig-002-20260610    gcc-11.5.0
-i386                             allmodconfig    gcc-14
-i386                              allnoconfig    gcc-14
-i386                              allnoconfig    gcc-16.1.0
-i386                             allyesconfig    gcc-14
-i386        buildonly-randconfig-001-20260610    gcc-14
-i386        buildonly-randconfig-002-20260610    gcc-14
-i386        buildonly-randconfig-003-20260610    gcc-14
-i386        buildonly-randconfig-004-20260610    gcc-14
-i386        buildonly-randconfig-005-20260610    gcc-14
-i386        buildonly-randconfig-006-20260610    gcc-14
-i386                                defconfig    gcc-16.1.0
-i386                  randconfig-001-20260610    gcc-14
-i386                  randconfig-002-20260610    gcc-14
-i386                  randconfig-003-20260610    gcc-14
-i386                  randconfig-004-20260610    gcc-14
-i386                  randconfig-005-20260610    gcc-14
-i386                  randconfig-006-20260610    gcc-14
-i386                  randconfig-007-20260610    gcc-14
-i386                  randconfig-011-20260610    gcc-14
-i386                  randconfig-012-20260610    gcc-14
-i386                  randconfig-013-20260610    gcc-14
-i386                  randconfig-014-20260610    gcc-14
-i386                  randconfig-015-20260610    gcc-14
-i386                  randconfig-016-20260610    gcc-14
-i386                  randconfig-017-20260610    gcc-14
-loongarch                        allmodconfig    clang-19
-loongarch                         allnoconfig    clang-20
-loongarch                         allnoconfig    gcc-16.1.0
-loongarch                           defconfig    clang-23
-loongarch                      randconfig-001    gcc-11.5.0
-loongarch             randconfig-001-20260610    gcc-11.5.0
-loongarch                      randconfig-002    gcc-11.5.0
-loongarch             randconfig-002-20260610    gcc-11.5.0
-m68k                             allmodconfig    gcc-16.1.0
-m68k                              allnoconfig    gcc-16.1.0
-m68k                             allyesconfig    clang-23
-m68k                             allyesconfig    gcc-16.1.0
-m68k                                defconfig    clang-23
-microblaze                        allnoconfig    gcc-16.1.0
-microblaze                       allyesconfig    gcc-16.1.0
-microblaze                          defconfig    clang-23
-mips                             allmodconfig    gcc-16.1.0
-mips                              allnoconfig    gcc-16.1.0
-mips                             allyesconfig    gcc-16.1.0
-nios2                            allmodconfig    clang-20
-nios2                            allmodconfig    gcc-11.5.0
-nios2                             allnoconfig    clang-23
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    clang-23
-nios2                          randconfig-001    gcc-11.5.0
-nios2                 randconfig-001-20260610    gcc-11.5.0
-nios2                          randconfig-002    gcc-11.5.0
-nios2                 randconfig-002-20260610    gcc-11.5.0
-openrisc                         allmodconfig    clang-20
-openrisc                         allmodconfig    gcc-16.1.0
-openrisc                          allnoconfig    clang-23
-openrisc                          allnoconfig    gcc-16.1.0
-parisc                           allmodconfig    gcc-16.1.0
-parisc                            allnoconfig    clang-23
-parisc                            allnoconfig    gcc-16.1.0
-parisc                           allyesconfig    clang-23
-parisc                           allyesconfig    gcc-16.1.0
-parisc                randconfig-001-20260610    gcc-8.5.0
-parisc                randconfig-002-20260610    gcc-8.5.0
-parisc64                            defconfig    clang-23
-powerpc                          allmodconfig    gcc-16.1.0
-powerpc                           allnoconfig    clang-23
-powerpc                           allnoconfig    gcc-16.1.0
-powerpc               randconfig-001-20260610    gcc-8.5.0
-powerpc               randconfig-002-20260610    gcc-8.5.0
-powerpc64             randconfig-001-20260610    gcc-8.5.0
-powerpc64             randconfig-002-20260610    gcc-8.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                             allnoconfig    gcc-16.1.0
-riscv                            allyesconfig    clang-23
-riscv                 randconfig-001-20260610    gcc-15.2.0
-riscv                 randconfig-001-20260610    gcc-16.1.0
-riscv                 randconfig-002-20260610    gcc-16.1.0
-riscv                 randconfig-002-20260610    gcc-8.5.0
-s390                             allmodconfig    clang-23
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-16.1.0
-s390                  randconfig-001-20260610    clang-23
-s390                  randconfig-001-20260610    gcc-16.1.0
-s390                  randconfig-002-20260610    clang-23
-s390                  randconfig-002-20260610    gcc-16.1.0
-sh                               allmodconfig    gcc-16.1.0
-sh                                allnoconfig    clang-23
-sh                                allnoconfig    gcc-16.1.0
-sh                               allyesconfig    clang-23
-sh                               allyesconfig    gcc-16.1.0
-sh                                  defconfig    gcc-14
-sh                    randconfig-001-20260610    gcc-16.1.0
-sh                    randconfig-002-20260610    gcc-16.1.0
-sh                           se7724_defconfig    gcc-16.1.0
-sparc                             allnoconfig    clang-23
-sparc                             allnoconfig    gcc-16.1.0
-sparc                 randconfig-001-20260610    gcc-14.3.0
-sparc                 randconfig-002-20260610    gcc-14.3.0
-sparc64                          allmodconfig    clang-20
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260610    gcc-14.3.0
-sparc64               randconfig-002-20260610    gcc-14.3.0
-um                               allmodconfig    clang-23
-um                                allnoconfig    clang-16
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                               allyesconfig    gcc-16.1.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260610    gcc-14.3.0
-um                    randconfig-002-20260610    gcc-14.3.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-22
-x86_64                            allnoconfig    clang-22
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-22
-x86_64      buildonly-randconfig-001-20260610    gcc-14
-x86_64      buildonly-randconfig-002-20260610    gcc-14
-x86_64      buildonly-randconfig-003-20260610    gcc-14
-x86_64      buildonly-randconfig-004-20260610    gcc-14
-x86_64      buildonly-randconfig-005-20260610    gcc-14
-x86_64      buildonly-randconfig-006-20260610    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-22
-x86_64                randconfig-001-20260610    gcc-13
-x86_64                randconfig-002-20260610    gcc-13
-x86_64                randconfig-003-20260610    gcc-13
-x86_64                randconfig-004-20260610    gcc-13
-x86_64                randconfig-005-20260610    gcc-13
-x86_64                randconfig-006-20260610    gcc-13
-x86_64                randconfig-011-20260610    gcc-14
-x86_64                randconfig-012-20260610    gcc-14
-x86_64                randconfig-013-20260610    gcc-14
-x86_64                randconfig-014-20260610    gcc-14
-x86_64                randconfig-015-20260610    gcc-14
-x86_64                randconfig-016-20260610    gcc-14
-x86_64                randconfig-071-20260610    gcc-14
-x86_64                randconfig-072-20260610    gcc-14
-x86_64                randconfig-073-20260610    gcc-14
-x86_64                randconfig-074-20260610    gcc-14
-x86_64                randconfig-075-20260610    gcc-14
-x86_64                randconfig-076-20260610    gcc-14
-x86_64                               rhel-9.4    clang-22
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-22
-x86_64                    rhel-9.4-kselftests    clang-22
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-22
-xtensa                            allnoconfig    clang-23
-xtensa                            allnoconfig    gcc-16.1.0
-xtensa                           allyesconfig    clang-20
-xtensa                randconfig-001-20260610    gcc-14.3.0
-xtensa                randconfig-002-20260610    gcc-14.3.0
+This is incorrect. There is no leak on this error path.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+When msix_setup_interrupts() fails, the call chain is:
+
+  msix_setup_interrupts()
+    -> __msix_setup_interrupts()
+         struct pci_dev *dev __free(free_msi_irqs) = __dev;
+         ...
+         return ret;  // __free cleanup fires on error
+
+The __free(free_msi_irqs) cleanup calls pci_free_msi_irqs(), which
+already handles the unmap:
+
+  void pci_free_msi_irqs(struct pci_dev *dev)
+  {
+      pci_msi_teardown_msi_irqs(dev);
+      if (dev->msix_base) {
+          iounmap(dev->msix_base);   // already unmapped here
+          dev->msix_base = NULL;     // and set to NULL
+      }
+  }
+
+So dev->msix_base is unmapped and NULLed before msix_setup_interrupts()
+even returns to msix_capability_init(). The original "goto out_disable"
+was correct -- it skipped iounmap because the cleanup was already done.
+
+Commit 1a8d4c6ecb4c changed it to "goto out_unmap", adding a second
+iounmap() call on an already-NULL pointer, which triggers:
+
+  WARNING: CPU#44 at iounmap+0x2a/0xe0
+  Workqueue: nvme-reset-wq nvme_reset_work [nvme]
+  RIP: 0010:iounmap+0x2a/0xe0
+  ...
+  RDI: 0000000000000000
+  ...
+  Call Trace:
+   <TASK>
+   msix_capability_init+0x317/0x3f0
+   __pci_enable_msix_range+0x21d/0x2c0
+   pci_alloc_irq_vectors_affinity+0xa9/0x130
+   nvme_setup_io_queues+0x2a8/0x420 [nvme]
+   ? __pfx_nvme_calc_irq_sets+0x10/0x10 [nvme]
+   nvme_reset_work+0x151/0x340 [nvme]
+   process_one_work+0x197/0x3a0
+   worker_thread+0x1ab/0x320
+   ? __pfx_worker_thread+0x10/0x10
+
+RDI=0 confirms iounmap() is called with NULL.
+
+This commit should probably be reverted. The out_unmap label and its
+iounmap() are redundant with the __free(free_msi_irqs) scoped cleanup
+in __msix_setup_interrupts(), which already takes care of unmapping
+dev->msix_base on any error path.
+
