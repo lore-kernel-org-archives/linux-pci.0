@@ -1,121 +1,114 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EA7E275870;
-	Wed, 10 Jun 2026 16:00:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96BFA31D72E
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 16:28:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781107255; cv=none; b=Kqx0Yvc5awlucey9B/oJuScqw1XecmtdBMykPZm5vmPiwexu5xbR2bJgbYDjKwU1wCH45O29jeVziJiqeslyS3+iU8rXb5coKvpTQAeIlVh5B4t0mGN2lHa28V94fnrX6wGGcb6FZ4TgJ6Sm98xwYTXiZeMYqmOty5jvIyFZito=
+	t=1781108931; cv=none; b=iSwHMNTNu85K1EisSdGUBCwQ2P1NOhoTtfWlBBo71JJ3NqIo0iBSxCPOeiqa+9qKpkRNRKRFuPX0Oy1GAAT9YvJoMPZdTE0cKG7RuSnxNLprzEzpQsN6gMdpNalDJB0bIZoVtPikz2vkH+VPqmyo8Pz3nOQKUtP3mBFxLto5qnM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781107255; c=relaxed/simple;
-	bh=u0cfWQHO4BqT4UOku7Xois919JN2h7T81+Y0jfGvg2s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aMBoudZeREPb+xRpJ6qq5GQW15dOFQ9Gt8a9Lx3Z+iaGzcnxHVGG+rHPvm1atfJL2ILlj4eeX6+BjrXSeHVxk507BK5WV5ZFo+ld1RWIyfh1Hn9BXpyBH3vk9wuWyFwVcEHBX9352VpMvknYIW2sI0CcG1gV43rRS3G6EEB0ZXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=bB0PRaIM; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1781108931; c=relaxed/simple;
+	bh=oNtJLGUkWCaRM3PrOBCSWnEFF8AV6QL1YRj/wcqe5Nk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=L1b/0P6Kf/VjOVDWN42xA8VEKYerEIMxDuJC6B4R19NuXL4zoJqi2XseH9QGhoAjuk7PyTKFGJ/+rsW7XiO+v8kTwICuGiK1JdTtth/sgJ1tYgWIKwOXW0w2T1tQ908O+v4XAyZKXZHAbhrooyuto147DJd6dZaNT9wKt/QxxBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=HHqd+2Ox; arc=none smtp.client-ip=209.85.160.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="bB0PRaIM"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1781107251;
-	bh=eDEkk4f7S76uj36wByzSVbCn2IDwUfz2uxF1LUdS/0Q=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=bB0PRaIM4+jrYgnE3WcqtZCosNRTn/dSy2m0AXX+ymW/8IYLTa6cRUe8zxHtEFQAD
-	 ekpOcPyLvQEddGX9u07/sC5TMCQ430i5e03rRXfswTAd09MloYA/i4/ZUA8Wxu77eZ
-	 L7QoCI2PIOqKG7EnVRSjbclfVXwcpIjR8kBDaPWvry8DpAfjNQDTIz4jxE9h+L+5Oj
-	 ZYVROtNv2VyhvQdQVHoDwt3UF+8PrD2cNa6ICcjDtk5NHo/GRPy9byWtLrapYHhnU1
-	 HbcWbcePG9H1w4vZ95R189BPokROy+dyqpHNfzkw9/I+i13lgt9vQOCnrPZXRy/QH5
-	 h0WAye/RMrEUw==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gb9VN0LRgz4wCj;
-	Thu, 11 Jun 2026 02:00:43 +1000 (AEST)
-Message-ID: <39e5e731-bfa2-484d-ad29-a9e173ccc6d1@ozlabs.org>
-Date: Wed, 10 Jun 2026 17:00:38 +0100
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="HHqd+2Ox"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-51776b4de37so54085581cf.1
+        for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 09:28:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1781108929; x=1781713729; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=oNtJLGUkWCaRM3PrOBCSWnEFF8AV6QL1YRj/wcqe5Nk=;
+        b=HHqd+2Oxxgfstvd/wG7ueC47k9AaXG6HUc5jm1vsWWMzobtt2kxh0bE1kJobuLGFkn
+         C4UkRIdfPNS+oDSPxCUfu2WzD63r6SmUCCiU9m+hRhDZEbGPJMpfzMa1F5+e1mZLqCRp
+         g8TLpkzlMiZr+us2QE1wKo/uGSRpHRdPa4+4YeZ0uYgEigi8lVzd6IQWV8tnUUF7pLh3
+         h+xEpxrkrhBbvVUrY+hTXaSnD97UwE8QRtfrtBlVQ6WnImcz4jq61s89DyRtB8EqxNiA
+         9dZhEWoZNAhri5PzbUze1hF37Yz72zuQeoUV5/sEixNc0cIChevlf6TnLSCxaWjYLb6M
+         oSfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781108929; x=1781713729;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=oNtJLGUkWCaRM3PrOBCSWnEFF8AV6QL1YRj/wcqe5Nk=;
+        b=TwhQY0nCqJMgnFH++qqmjF0kzHEvJmhR0B+6T2Ecvd6vu7xlwb4cbwgktnI9I+lIM4
+         UQRu1i34IDZTzB3WuYQ/QcwT8u/HjHCUhNy9tZFUx0ZU1dZ7OAY/jY59N1bey8gIqsZm
+         xKmvI0frBfZeFhBXSdfPbfJNfp7SnHhEMdUHn42Yu5Lj8fBrdfYAbFB+4NmhdA47u3Uu
+         ObJJFMYLb1TYTO8X7v5mQ8f46+WmLWEeC8DPfAdNR1HB1LV/zzVcDJ2rptNvQtoUDS3L
+         cZ0+Dpp/K6ZcEHm+dTX0atD5ZbKD4nOKYdohpowjITeaznBGYrOZ7iK/C9y5+D408qvw
+         jBNg==
+X-Gm-Message-State: AOJu0YyzldgrkELeqjFadKn1I7u1tINoVLl6xCXcBDfA5DxKE15YkUAZ
+	VC987QUjMXQe3ZUYU7Ep6N3n9+aFhGL9Rwl3AhdYn6nxuEXZ4zNExEodt7yBy5BAUq0=
+X-Gm-Gg: Acq92OHTDys6/sMuzuTHSfph35pkIbMEPjQE4/seppjZ0AIX2fPxC75RvHsGszu6Pws
+	/kkFiumR0ZGojAVyMwtwhPO8RLD7b62uXabS3Dbddmbt2z7ng+2YG6Ymi29h8LRGyok4U7yo/2F
+	XTuyAsr710AER2PeMhM/9yIOj/8mJavibgq5oLIhVI5iKILv8dWe3M7pBD/mfcE5KrMx3xlTdZW
+	FQblAy+0HsR8bE2isGlgJ7wf9zAv2SJHm1dGau2tp39KMUg2F+TGFS/5835O5pQApfhVYcFInRE
+	sKzILHwsY+sToNQjFihcd62SHXFHJnlFQPMjwxt4BAkqcLTs9gleoJvEMUGdYJRb4kpM8Wp5gL/
+	WqYUVF3595mpST8raeLFMC43o6NoWo8A3ONSqh4jGcn8Yoa42FFwTkCD8Hh3KT5F0kIPO3DU+Be
+	C0Mfcy8Yo8e5yiQzAVgHLsJ9jHwfygwCZvLZSoJ64p2o4lK2ZngJl22ChlxGRXNuDQ36mS/J27s
+	nbliAt9qT4L/SkT
+X-Received: by 2002:a05:622a:5b0a:b0:517:7faf:bafb with SMTP id d75a77b69052e-51795bfd7d2mr326551591cf.40.1781108929553;
+        Wed, 10 Jun 2026 09:28:49 -0700 (PDT)
+Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-51775c60dedsm214392091cf.13.2026.06.10.09.28.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Jun 2026 09:28:48 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1wXLnM-000000047em-15sV;
+	Wed, 10 Jun 2026 13:28:48 -0300
+Date: Wed, 10 Jun 2026 13:28:48 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Pranjal Shrivastava <praan@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>, Matt Evans <mattev@meta.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Shivaji Kant <shivajikant@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>
+Subject: Re: [RFC PATCH 0/5] vfio/pci: Support ZONE_DEVICE-backed P2P
+ Registration
+Message-ID: <20260610162848.GO2764304@ziepe.ca>
+References: <20260610151853.3608948-1-praan@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-Content-Language: en-GB
-To: Pranjal Shrivastava <praan@google.com>, Jason Gunthorpe <jgg@nvidia.com>
-Cc: Alex Williamson <alex.williamson@nvidia.com>, Matt Evans
- <mattev@meta.com>, Leon Romanovsky <leon@kernel.org>,
- Alex Mastro <amastro@fb.com>, =?UTF-8?Q?Christian_K=C3=B6nig?=
- <christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Logan Gunthorpe <logang@deltatee.com>, Mahmoud Adam <mngyadam@amazon.de>,
- David Matlack <dmatlack@google.com>, =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?=
- <bjorn@kernel.org>, Sumit Semwal <sumit.semwal@linaro.org>,
- Kevin Tian <kevin.tian@intel.com>, Ankit Agrawal <ankita@nvidia.com>,
- Alistair Popple <apopple@nvidia.com>,
- Vivek Kasireddy <vivek.kasireddy@intel.com>, linux-kernel@vger.kernel.org,
- linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linaro-mm-sig@lists.linaro.org, kvm@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20260527102319.100128-1-mattev@meta.com>
- <20260527102319.100128-2-mattev@meta.com>
- <20260527150946.312b3042@nvidia.com> <20260529230553.GE3195266@nvidia.com>
- <aimCfaCM-m4TS2g9@google.com>
-From: Matt Evans <matt@ozlabs.org>
-In-Reply-To: <aimCfaCM-m4TS2g9@google.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260610151853.3608948-1-praan@google.com>
 
-Hi Praan,
+On Wed, Jun 10, 2026 at 03:18:48PM +0000, Pranjal Shrivastava wrote:
 
-On 10/06/2026 16:27, Pranjal Shrivastava wrote:
-> On Fri, May 29, 2026 at 08:05:53PM -0300, Jason Gunthorpe wrote:
->> On Wed, May 27, 2026 at 03:09:46PM -0600, Alex Williamson wrote:
->>> This deserves a /* CONFIG_PCI_P2PDMA */ reference like the previous
->>> long span, though potentially a better solution would be to split the
->>> core code out to a separate file with shared header.  I asked opus to
->>> see what this would look like and it generated the patch below
->>> (unverified, compile tested only).  Bigger diff, harder to follow
->>> blame, but the shape of the core is much more apparent.  You're welcome
->>> to take or leave it.
->>
->> I think it is a good idea, it will make it easier to add more stuff to
->> these different aspects.
->>
->> Really they are now two different things with one layered on top of
->> the other.
->>
-> 
-> A little late to this party. I agree with this split per status quo.
-> Although, one observation from me, I've posted a concurrent RFC [1] that
-> implements ZONE_DEVICE P2P registration for VFIO. That work relies on
-> pci_p2pdma_add_resource(), which requires ZONE_DEVICE and the full
-> CONFIG_PCI_P2PDMA stack rather than just the CORE part.
-> 
-> I guess I can be careful to guard the ZONE_DEVICE P2P registration 
-> feature in VFIO with the full PCI_P2PDMA config. Apart from that, this
-> split provides a clean foundation for both series to coexist.
+> Users utilize the standard sysfs p2pmem/allocate interface for managing
+> memory slices once a BAR is registered.
 
-Thanks for the heads-up/Cc.
+I'm shocked someone wants to use API, what are you expecting to do
+with it??
 
-From your description, I agree, just depend on/select CONFIG_PCI_P2PDMA
-as usual.  The only new thing in this split is the
-CONFIG_PCI_P2PDMA_CORE allows the subset, but the default case (as used
-by a couple of other drivers) stays the same.
+> An alternative implementation has been explored which integrates with the
+> ongoing VFIO DMABUF-mmap refactor [1]. In that approach, rather than
+> registering a BAR as a system-wide P2P provider, VFIO optionally
+> allocates ZONE_DEVICE pages only for specifically exported DMABUFs via a
+> new VFIO_DMA_BUF_FLAG_ALLOC_STRUCT_PAGES flag.
 
-I just posted a v3 including this split so you can see it in practice.
-(I'd done part of it manually anyway so just finished it off, not
-character-identical to Alex's patch but does the same thing.)
+That's probably more sensible but you can't have a DMABUF mmap
+actually install non-special memory. The native vfio mmap still can,
+but not mmap on the dmabuf fd. That's still workable, just keep in
+mind.
 
-Thanks,
+What do you even intend to do with this? With the new work to tie
+dmabuf directly into io_uring I really wonder if this is worth doing
+for VFIO?
 
-
-Matt
-
-
-> 
-> Thanks,
-> Praan
-> 
-> [1] https://lore.kernel.org/all/20260610151853.3608948-1-praan@google.com/
-
+Jason
