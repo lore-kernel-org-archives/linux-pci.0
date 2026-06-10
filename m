@@ -1,91 +1,88 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3175633438F;
-	Wed, 10 Jun 2026 09:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 864FC3EA970
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 10:01:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781083729; cv=none; b=uOoh5u7fdmiZv4cVJwvz/egQldzZUw8qXb2zOxC1ixWQbuoqUAPnK+X8XxMQ2WyPo4BTL5ce3EYYqK0sOcHMjVVAhZrH5eB60ipZH4kVCpLNVWm50jArAHoWFjw5aXQYt65QIDmGFfYL06FO0QnXRiwrw8yJKrk2cW6wlpOGg3U=
+	t=1781085677; cv=none; b=dhES+ihysjw4f5jnePKcXh+3U2tgcyH28kAzoknyjeJL/9D3ZUiDmxjXQ6waA1SOzN1zFAhBPgvQErK03RMDnqAimDGXLNwG+SYjF/mT8FRfGeiMjlhj7nLNXUIf9Wflt1tRFrO9tLUjzuOYD8+XHSh1SpBN8vZQjy+pWfSSjpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781083729; c=relaxed/simple;
-	bh=lwH4ZfrUxirKaBBeG24NcNOxwXVFZDIxg2Ure2KWCW0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=npcPJciEROc/mPJLjiyljEqTHKEc399KAUHxTUwiKzmjEXQLnwk6i/FcYvgewVS5wBJF5kwSfKvCY4BXv5ga+/48cBy8CicnohyfTasJXiESQgrbCE3+4Q+Iu79zl03Og8sKhc8a4K06VbmGS/SmJu19oqXBArx1o32LFmJIofY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VChNE68i; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781085677; c=relaxed/simple;
+	bh=NXj8s/f7UZBoXS9eyuxmfRgMWd0CvdIZLbRTYsC+3F4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=J/gXh1s44NkPT1lrVgae5o4B2GF0VCh5snnSVJerxVnWFCXKy5jLhQgMq7zGujkzu/Syfl1pzLUP8sMTFH3bY0R1mjUp4ecX2i7t51QQhudkBaNHODxUp7o2oO18HxqtfEmFZkulTHvGfzVPxb4/6r1w+uiErOSwwv6T6RXjOHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RccKFJtD; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VChNE68i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63A021F00893;
-	Wed, 10 Jun 2026 09:28:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781083727;
-	bh=WZrxmTMENGKmsKf33gp0XWxjNcKEiwhVqt+tFHKcI4k=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=VChNE68i9UsIZCwss5eZHoy6gOmeWDyM9xS3xoD1tjxYwUDJqrKNnpGXdaUBk0seE
-	 e1lOqYhqSpNQ4o98X5yLxpx5p5Jm1g4cbjYRTp4cbQFUbQrp7p73JuMS5M+4NDDRWS
-	 uRMZ8zEQwDav0mfJyXZAVvyTbE3yGenVnEELKjMGw7ZIP1BZrmCgia0ZyFHv5wg8ZM
-	 b017KBl7lGo6j2Dso6W4yDo1sRGwEdSdZBgz7j3f13p7ed5HXnNuPzeiqMbHh9zycE
-	 blMAk3VrfcpG6O1jMj7QxxpqI9MGlqmWU5piTi8G6UTgekS4FZ25EpY+kwOSA8BvZS
-	 i+1YwZSLNX0wA==
-Date: Wed, 10 Jun 2026 11:28:40 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Sherry Sun <sherry.sun@nxp.com>
-Cc: Krzysztof Kozlowski <krzk@kernel.org>, 
-	"sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>, 
-	"manivannan.sadhasivam@oss.qualcomm.com" <manivannan.sadhasivam@oss.qualcomm.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
-	"robh@kernel.org" <robh@kernel.org>, "Frank.Li@kernel.org" <Frank.Li@kernel.org>, 
-	"conor+dt@kernel.org" <conor+dt@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
-	"imx@lists.linux.dev" <imx@lists.linux.dev>
-Subject: Re: [PATCH 1/2] dt-bindings: connector: pcie-m2-e: Add 3.3Vaux
- supply support
-Message-ID: <mvxoynvocxcalxcwogbiovg5yurjczxqfu2fqkji33bunmlplz@zxqjsdjts65j>
-References: <20260609033840.2006078-2-sherry.sun@oss.nxp.com>
- <20260609034408.BC69D1F00893@smtp.kernel.org>
- <20260609-unique-magnificent-eel-eb623f@quoll>
- <VI0PR04MB121140EFB8E614326D799503A921A2@VI0PR04MB12114.eurprd04.prod.outlook.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RccKFJtD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1781085675;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=G0u3YOlBGasTqI/efMg4dbBFjH2Jdl45+ZYBRiUMwLY=;
+	b=RccKFJtDPo4DgG2felsRZuSHKS3o3EGgPrRgJL828fwwg3jYhVzfha6ylkHdd7joxMLSd9
+	4WzNE4foYkOizU+2hDx2JyH/Fgr4CtDIe9tkZVcFyIswLXKl268Lfa8l/ZBlpor0QgsHRA
+	ouXglVIIDJy9AU5APEHR9vQeyQeSYBs=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-308-kRo-Y_WdOd6I7y7utJw08Q-1; Wed,
+ 10 Jun 2026 06:01:09 -0400
+X-MC-Unique: kRo-Y_WdOd6I7y7utJw08Q-1
+X-Mimecast-MFC-AGG-ID: kRo-Y_WdOd6I7y7utJw08Q_1781085667
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 505BB1845575;
+	Wed, 10 Jun 2026 10:01:07 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.44.48.27])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E818C1800599;
+	Wed, 10 Jun 2026 10:01:01 +0000 (UTC)
+From: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+To: alex@shazbot.org
+Cc: ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org,
+	bhelgaas@google.com,
+	jjohnson@kernel.org,
+	jtornosm@redhat.com,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	mani@kernel.org,
+	mhi@lists.linux.dev
+Subject: Re: [PATCH v8 2/3] PCI: Add device-specific reset for Qualcomm devices
+Date: Wed, 10 Jun 2026 12:00:59 +0200
+Message-ID: <20260610100059.19235-1-jtornosm@redhat.com>
+In-Reply-To: <20260609115352.32acb6fe@shazbot.org>
+References: <20260609115352.32acb6fe@shazbot.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <VI0PR04MB121140EFB8E614326D799503A921A2@VI0PR04MB12114.eurprd04.prod.outlook.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Wed, Jun 10, 2026 at 08:40:54AM +0000, Sherry Sun wrote:
-> > On Tue, Jun 09, 2026 at 03:44:08AM +0000, sashiko-bot@kernel.org wrote:
-> > > Thank you for your contribution! Sashiko AI review found 1 potential
-> > issue(s) to consider:
-> > > - [Medium] The `vpcie3v3aux-supply` property describes a non-existent
-> > hardware feature on the M.2 Key E connector to work around a software
-> > policy.
-> > 
-> > Feels valid. Describe which pin on M2 connector are you representing.
-> > 
-> 
-> Refer to PCI Express M.2 Specification r5.1 sec3.1.1 Power Sources and
-> Grounds.
-> 
-> PCI Express M.2 Socket 1 utilizes a 3.3 V power source. The voltage
-> source, 3.3 V, is expected to be available during the system’s
-> stand-by/suspend state to support wake event processing on the
-> communications card.
-> 
-> But the current vpcie3v3-supply may be gated off during system suspend.
-> So I  tried to add vpcie3v3aux-supply to let this 3.3 V power source
-> always on for PCIe M.2 Key E connector. That means vpcie3v3aux-supply
-> and vpcie3v3-supply actually refer to the same 3.3 V power source.
-> 
-> @Mani, do you think this is reasonable? Or do you have any other better
-> solutions? Thanks!
-> 
+Hi Alex,
 
-There is no Vaux defined in the M.2 spec. So you cannot define that supply in
-the binding. You can define the custom Vaux supply as a fixed regulator in DT
-and mark it always on so that it is keeps supplying 3.3v to the card.
+> My only complaint is that this is positioned a bit generically...
+Ok, I'll make the comment of the function more specific for these Qualcomm
+devices.
+  
+> Has each of these devices been tested on a platform where D3cold is
+> actually achieved through this method?
+No, I don't have access to platforms with _PR3 support. All testing was on
+M.2 adapters (D3hot fallback only). Since D3hot works reliably and D3cold
+is a stronger reset mechanism, the approach should work - but I cannot
+confirm the D3cold path through testing.
 
-- Mani
+I'll send v9 with the updated comment.
 
--- 
-மணிவண்ணன் சதாசிவம்
+Thanks,
+Jose Ignacio
+
