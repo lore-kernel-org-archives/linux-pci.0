@@ -1,123 +1,91 @@
-Received: from out30-99.freemail.mail.aliyun.com (out30-99.freemail.mail.aliyun.com [115.124.30.99])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 968FE3563FA;
-	Wed, 10 Jun 2026 09:20:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3175633438F;
+	Wed, 10 Jun 2026 09:28:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781083218; cv=none; b=C4bl3IT1pppeMSFVP5ISkU2o18ZUdLeq5i/VM7BMvZ9HCpUnzg+8dz6PIkMAPQfJTFZslwSXhKJtOvmC2jdWXa20kDtvlTAN25KpegS9rSLPRQEqCLUlsRgdq0xMPMZFY6F1x6y6NXbQhr9WFCuEIrSUVsCqdxLBp6Ovn88NJcI=
+	t=1781083729; cv=none; b=uOoh5u7fdmiZv4cVJwvz/egQldzZUw8qXb2zOxC1ixWQbuoqUAPnK+X8XxMQ2WyPo4BTL5ce3EYYqK0sOcHMjVVAhZrH5eB60ipZH4kVCpLNVWm50jArAHoWFjw5aXQYt65QIDmGFfYL06FO0QnXRiwrw8yJKrk2cW6wlpOGg3U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781083218; c=relaxed/simple;
-	bh=dAjGVbTG/Hl7i7F5CBUMJoQTOUpPtLLEFscIHk0DGZA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JbCHg3YjOYX1NimT9T5PMuXIFLp+uRjj/M9XB3I5GUaI3dMM2PZfvD2IlGAe8jECisi3bjoih4yWn63RVB3aaysgFPx1mt62oQ631t09Fd1wWhb7NqtI3eo2/hKT3h9O4kCrHCCb6UKxdvMTP4tGDT7e2nwlYYcWTvtNVY6Vdro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=xcxeojkD; arc=none smtp.client-ip=115.124.30.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1781083729; c=relaxed/simple;
+	bh=lwH4ZfrUxirKaBBeG24NcNOxwXVFZDIxg2Ure2KWCW0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=npcPJciEROc/mPJLjiyljEqTHKEc399KAUHxTUwiKzmjEXQLnwk6i/FcYvgewVS5wBJF5kwSfKvCY4BXv5ga+/48cBy8CicnohyfTasJXiESQgrbCE3+4Q+Iu79zl03Og8sKhc8a4K06VbmGS/SmJu19oqXBArx1o32LFmJIofY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VChNE68i; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="xcxeojkD"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1781083205; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=PpLApk7k70O5urYcFe1MKAGUNSaS1SnO8IfTeUhOOkI=;
-	b=xcxeojkDbogz0s1K6HsqzgtJ776cQgX/lay+1kIWG6qhx5cGCjPkRqLP9RDFKV6DdPrgMWRsxWKGWQ+BOTnt8Zp7tlHVsX0onC0U+T8rXMKIqed9AkTuUJhTNWbdBMhq9TggPMFfliLJgQr027wUHBI7Ek2KS3uvI/qm4pgC0PI=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R271e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=xiangzao@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0X4aHoG0_1781083191;
-Received: from localhost.localdomain(mailfrom:xiangzao@linux.alibaba.com fp:SMTPD_---0X4aHoG0_1781083191 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 10 Jun 2026 17:20:03 +0800
-From: Yuanhe Shu <xiangzao@linux.alibaba.com>
-To: linux@roeck-us.net,
-	lihaoxiang@isrc.iscas.ac.cn
-Cc: tglx@linutronix.de,
-	bhelgaas@google.com,
-	jgross@suse.com,
-	hans.zhang@cixtech.com,
-	himanshu.madhani@oracle.com,
-	roger.pau@citrix.com,
-	chrisl@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: add iounmap in msix_capability_init()
-Date: Wed, 10 Jun 2026 17:19:51 +0800
-Message-Id: <20260610091951.1073318-1-xiangzao@linux.alibaba.com>
-X-Mailer: git-send-email 2.39.3
-In-Reply-To: <b9705904-401b-4698-b0df-c84ef2b1e948@roeck-us.net>
-References: <20260125144452.2103812-1-lihaoxiang@isrc.iscas.ac.cn> <b9705904-401b-4698-b0df-c84ef2b1e948@roeck-us.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VChNE68i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63A021F00893;
+	Wed, 10 Jun 2026 09:28:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781083727;
+	bh=WZrxmTMENGKmsKf33gp0XWxjNcKEiwhVqt+tFHKcI4k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=VChNE68i9UsIZCwss5eZHoy6gOmeWDyM9xS3xoD1tjxYwUDJqrKNnpGXdaUBk0seE
+	 e1lOqYhqSpNQ4o98X5yLxpx5p5Jm1g4cbjYRTp4cbQFUbQrp7p73JuMS5M+4NDDRWS
+	 uRMZ8zEQwDav0mfJyXZAVvyTbE3yGenVnEELKjMGw7ZIP1BZrmCgia0ZyFHv5wg8ZM
+	 b017KBl7lGo6j2Dso6W4yDo1sRGwEdSdZBgz7j3f13p7ed5HXnNuPzeiqMbHh9zycE
+	 blMAk3VrfcpG6O1jMj7QxxpqI9MGlqmWU5piTi8G6UTgekS4FZ25EpY+kwOSA8BvZS
+	 i+1YwZSLNX0wA==
+Date: Wed, 10 Jun 2026 11:28:40 +0200
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>, 
+	"sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>, 
+	"manivannan.sadhasivam@oss.qualcomm.com" <manivannan.sadhasivam@oss.qualcomm.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"robh@kernel.org" <robh@kernel.org>, "Frank.Li@kernel.org" <Frank.Li@kernel.org>, 
+	"conor+dt@kernel.org" <conor+dt@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
+	"imx@lists.linux.dev" <imx@lists.linux.dev>
+Subject: Re: [PATCH 1/2] dt-bindings: connector: pcie-m2-e: Add 3.3Vaux
+ supply support
+Message-ID: <mvxoynvocxcalxcwogbiovg5yurjczxqfu2fqkji33bunmlplz@zxqjsdjts65j>
+References: <20260609033840.2006078-2-sherry.sun@oss.nxp.com>
+ <20260609034408.BC69D1F00893@smtp.kernel.org>
+ <20260609-unique-magnificent-eel-eb623f@quoll>
+ <VI0PR04MB121140EFB8E614326D799503A921A2@VI0PR04MB12114.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <VI0PR04MB121140EFB8E614326D799503A921A2@VI0PR04MB12114.eurprd04.prod.outlook.com>
 
-On Mon, 16 Mar 2026 at 10:22:12 -0700, Guenter Roeck wrote:
-> Does msix_setup_interrupts() already unmap this region? If it fails,
-> msix_setup_interrupts() calls pci_free_msi_irqs(), which appears to already
-> call iounmap(dev->msix_base) and sets dev->msix_base to NULL.
->
-> If dev->msix_base was already set to NULL by pci_free_msi_irqs() during the
-> msix_setup_interrupts() error path, does this result in iounmap(NULL)?
+On Wed, Jun 10, 2026 at 08:40:54AM +0000, Sherry Sun wrote:
+> > On Tue, Jun 09, 2026 at 03:44:08AM +0000, sashiko-bot@kernel.org wrote:
+> > > Thank you for your contribution! Sashiko AI review found 1 potential
+> > issue(s) to consider:
+> > > - [Medium] The `vpcie3v3aux-supply` property describes a non-existent
+> > hardware feature on the M.2 Key E connector to work around a software
+> > policy.
+> > 
+> > Feels valid. Describe which pin on M2 connector are you representing.
+> > 
+> 
+> Refer to PCI Express M.2 Specification r5.1 sec3.1.1 Power Sources and
+> Grounds.
+> 
+> PCI Express M.2 Socket 1 utilizes a 3.3 V power source. The voltage
+> source, 3.3 V, is expected to be available during the system’s
+> stand-by/suspend state to support wake event processing on the
+> communications card.
+> 
+> But the current vpcie3v3-supply may be gated off during system suspend.
+> So I  tried to add vpcie3v3aux-supply to let this 3.3 V power source
+> always on for PCIe M.2 Key E connector. That means vpcie3v3aux-supply
+> and vpcie3v3-supply actually refer to the same 3.3 V power source.
+> 
+> @Mani, do you think this is reasonable? Or do you have any other better
+> solutions? Thanks!
+> 
 
-Confirmed. We hit this on Intel Emerald Rapids (192 CPUs) when running
-tools/testing/selftests/kexec/test_kexec_jump.sh.
+There is no Vaux defined in the M.2 spec. So you cannot define that supply in
+the binding. You can define the custom Vaux supply as a fixed regulator in DT
+and mark it always on so that it is keeps supplying 3.3v to the card.
 
-The commit message of 1a8d4c6ecb4c states:
+- Mani
 
-  "msix_capability_init() fails to unmap the MSI-X region if
-   msix_setup_interrupts() fails."
-
-This is incorrect. There is no leak on this error path.
-
-When msix_setup_interrupts() fails, the call chain is:
-
-  msix_setup_interrupts()
-    -> __msix_setup_interrupts()
-         struct pci_dev *dev __free(free_msi_irqs) = __dev;
-         ...
-         return ret;  // __free cleanup fires on error
-
-The __free(free_msi_irqs) cleanup calls pci_free_msi_irqs(), which
-already handles the unmap:
-
-  void pci_free_msi_irqs(struct pci_dev *dev)
-  {
-      pci_msi_teardown_msi_irqs(dev);
-      if (dev->msix_base) {
-          iounmap(dev->msix_base);   // already unmapped here
-          dev->msix_base = NULL;     // and set to NULL
-      }
-  }
-
-So dev->msix_base is unmapped and NULLed before msix_setup_interrupts()
-even returns to msix_capability_init(). The original "goto out_disable"
-was correct -- it skipped iounmap because the cleanup was already done.
-
-Commit 1a8d4c6ecb4c changed it to "goto out_unmap", adding a second
-iounmap() call on an already-NULL pointer, which triggers:
-
-  WARNING: CPU#44 at iounmap+0x2a/0xe0
-  Workqueue: nvme-reset-wq nvme_reset_work [nvme]
-  RIP: 0010:iounmap+0x2a/0xe0
-  ...
-  RDI: 0000000000000000
-  ...
-  Call Trace:
-   <TASK>
-   msix_capability_init+0x317/0x3f0
-   __pci_enable_msix_range+0x21d/0x2c0
-   pci_alloc_irq_vectors_affinity+0xa9/0x130
-   nvme_setup_io_queues+0x2a8/0x420 [nvme]
-   ? __pfx_nvme_calc_irq_sets+0x10/0x10 [nvme]
-   nvme_reset_work+0x151/0x340 [nvme]
-   process_one_work+0x197/0x3a0
-   worker_thread+0x1ab/0x320
-   ? __pfx_worker_thread+0x10/0x10
-
-RDI=0 confirms iounmap() is called with NULL.
-
-This commit should probably be reverted. The out_unmap label and its
-iounmap() are redundant with the __free(free_msi_irqs) scoped cleanup
-in __msix_setup_interrupts(), which already takes care of unmapping
-dev->msix_base on any error path.
-
+-- 
+மணிவண்ணன் சதாசிவம்
