@@ -1,58 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0608529ACC6
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 06:27:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7B3376BC1
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 06:43:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781072849; cv=none; b=BRSC6yvYUbja9NdRsUocUnE71cPKqHMthYxheagq2fq/VJGWbCaxqjmIJFfjqLYjrk6uYjgAA54T1yVvnkcuchsQNesfUkg8G+ml2X6FZik/ZCtkpEUr6eiTanz4MRGsvmnvJJ4m0xTt6x5q73OYMPUMihWaxuLWzEk4bJ5wPCw=
+	t=1781073816; cv=none; b=YNQnqKGOSrTAXzHqf9G1iHHgmSsNIaeG6qiGEHPH81EWBTRbY5TeQOsNP2SbHNAn9LWr4kLgzkVEy0iZFGda1aTBSPUJg2Si/hTPTszEpFOz1Cvf4kfUjieu+1fHrZXri8koukCnb6NPhKJmQkBLWwBkjuNFHlhkqyPggy59jv0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781072849; c=relaxed/simple;
-	bh=LO/5TvRPs8I5OlmqxcvBjDhmyFMpCavjIszaBnv/WVA=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=P96jaVMjlFjN6jbskH9uE5ZI01wDfbwRyO3/fmFr394ENabAZ3qrAYtk1sT/jiCvyQwtLtpIY/WdqI7trwpBYnPZ+AurfeynsftHo66mVDfRr8DXfFoxvzLTKsiWFFkGuX4ICxKvwgewUGmOlhDzLF0U1zrIjlTabYcJPX9OniI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MpD2VTm0; arc=none smtp.client-ip=198.175.65.17
+	s=arc-20240116; t=1781073816; c=relaxed/simple;
+	bh=d9j3QRiAjggM/p42VqQdjOiVI3hJUXsOOvy3aBRcPpI=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=St8x5Unhs+NOEFfqupiZxFarhSu37sqTYsROD4PlEVvYgoJdxP13WGwLSTP57gUFxqY2IG8wgQOVgKmb+yq/brgmO+Jv8cUBMAZy3qr5Tki85rCIqcMWTRY9YiH5aqp0V6D9ZEF/5THZc9jfjL5SVvpbbs9lKnAI9FLflmDaOSo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nKDEveRx; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MpD2VTm0"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nKDEveRx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781072848; x=1812608848;
+  t=1781073814; x=1812609814;
   h=date:from:to:cc:subject:message-id;
-  bh=LO/5TvRPs8I5OlmqxcvBjDhmyFMpCavjIszaBnv/WVA=;
-  b=MpD2VTm0bauG+yQ+CI65dxdbk+n11MCsj8eOTSgZrJeZUmkRpXvCf7Vr
-   Dl9rktXyB3XKJYfpSrmT1JpKbhyxrhW/Z++tiDXJT8Zp6oFxbbftNnM6i
-   6VX5g503k9UAQ7MtdkOnKI/gAaEIwlFTvKuh2DPZlhrveGGfaHvZ1FpqJ
-   u/e4zO+0os1s2mk1hq+fPluNJ1PDWx4S7uAZ0N2+/2GiZ1wPRbgfChepx
-   a8QkfVmXgezS6jgMMPjJM2L7mpDwS/z7ufh7FDNjS5HAw28EHEPUA+w6U
-   DHGRpimaoeM2RaJNWKB5WiGR9fXgteWLGtAcAk5nmm97o3ztInnnpFuZk
-   g==;
-X-CSE-ConnectionGUID: OcWofVaWTAiNhBo9ooFm9w==
-X-CSE-MsgGUID: 8c1e53fuS2eJtcfTFX1MPw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11812"; a="81860054"
+  bh=d9j3QRiAjggM/p42VqQdjOiVI3hJUXsOOvy3aBRcPpI=;
+  b=nKDEveRxntYc2brlnwWMmAWoYW7H1FwSwiep4/RW59Edtl6W4mu7YgxB
+   qbw1TyrMCsDHFwKlHkpVihentK1jha8z4q0uvMSEUf2p2/g1xTVshZb5l
+   tIEpCRoR5LuJbid8C6wLMCy4TT/CbJ4XQyypWAF3UREu33dM+7FX8b4ER
+   yp5tSTmrNkYclpKSDhyQgoKkBFuJHXpXwXUhUdiAhfgydNiB52tNtMEzf
+   4Hl5W+Hig8g8fkZwIoFUwjCP9+DiCB9HH3Hwzznash99PovPETJmVoEEm
+   F59IlyVAUC/6wdViJWTrShDo64fWLm6+2jXSeaNmH86XrE/o1qjRgGsFn
+   w==;
+X-CSE-ConnectionGUID: FrVPAYgwRhm8vWOYLAmJOA==
+X-CSE-MsgGUID: aHz+n7m1R9uSztzlZODCtA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11812"; a="107294776"
 X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
-   d="scan'208";a="81860054"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2026 23:27:27 -0700
-X-CSE-ConnectionGUID: csplix1VSQiRT9xUaxLpwQ==
-X-CSE-MsgGUID: NnTZkwgSTROJnQ3QBXK1iA==
-X-Ironport-Invalid-End-Of-Message: True
+   d="scan'208";a="107294776"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2026 23:43:33 -0700
+X-CSE-ConnectionGUID: bmuJIHh3TNWKy10WTet86g==
+X-CSE-MsgGUID: 78D6ncjRQ/Ke9wW3YrwNPw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
-   d="scan'208";a="245938801"
+   d="scan'208";a="244945718"
 Received: from lkp-server01.sh.intel.com (HELO f0d55cb201f0) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 09 Jun 2026 23:27:25 -0700
+  by orviesa006.jf.intel.com with ESMTP; 09 Jun 2026 23:43:33 -0700
 Received: from kbuild by f0d55cb201f0 with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1wXCPL-00000000L0Y-1m5j;
-	Wed, 10 Jun 2026 06:27:23 +0000
-Date: Wed, 10 Jun 2026 14:26:49 +0800
+	id 1wXCev-00000000L1K-499E;
+	Wed, 10 Jun 2026 06:43:30 +0000
+Date: Wed, 10 Jun 2026 14:42:38 +0800
 From: kernel test robot <lkp@intel.com>
 To: Manivannan Sadhasivam <mani@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/tlp_macros] BUILD SUCCESS
- 52015335e5db7e9b0d62d1ee1178de1b601ac7ba
-Message-ID: <202606101439.lFkFNuXa-lkp@intel.com>
+Subject: [pci:controller/mediatek] BUILD SUCCESS
+ f865a57896bd92d7662eb2818d8f48872e2cbbc7
+Message-ID: <202606101429.3xU93ff7-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -60,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/tlp_macros
-branch HEAD: 52015335e5db7e9b0d62d1ee1178de1b601ac7ba  PCI: cadence: Use common TLP type macros
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/mediatek
+branch HEAD: f865a57896bd92d7662eb2818d8f48872e2cbbc7  PCI: mediatek: Fix IRQ domain leak when port fails to enable
 
-elapsed time: 781m
+elapsed time: 797m
 
-configs tested: 197
+configs tested: 194
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -76,7 +75,6 @@ alpha                             allnoconfig    gcc-16.1.0
 alpha                            allyesconfig    gcc-16.1.0
 alpha                               defconfig    gcc-16.1.0
 arc                              allmodconfig    clang-23
-arc                              allmodconfig    gcc-16.1.0
 arc                               allnoconfig    gcc-16.1.0
 arc                              allyesconfig    clang-23
 arc                              allyesconfig    gcc-16.1.0
@@ -85,7 +83,6 @@ arc                   randconfig-001-20260610    gcc-8.5.0
 arc                   randconfig-002-20260610    gcc-8.5.0
 arm                               allnoconfig    gcc-16.1.0
 arm                              allyesconfig    clang-23
-arm                              allyesconfig    gcc-16.1.0
 arm                                 defconfig    gcc-16.1.0
 arm                   randconfig-001-20260610    gcc-8.5.0
 arm                   randconfig-002-20260610    gcc-8.5.0
@@ -143,7 +140,6 @@ loongarch             randconfig-002-20260610    clang-22
 m68k                             allmodconfig    gcc-16.1.0
 m68k                              allnoconfig    gcc-16.1.0
 m68k                             allyesconfig    clang-23
-m68k                             allyesconfig    gcc-16.1.0
 m68k                         apollo_defconfig    gcc-16.1.0
 m68k                                defconfig    clang-23
 microblaze                        allnoconfig    gcc-16.1.0
