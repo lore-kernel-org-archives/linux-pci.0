@@ -1,118 +1,76 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8126B37104C
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 07:31:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5145F2D063E;
+	Wed, 10 Jun 2026 07:41:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781076669; cv=none; b=GZX1L6U9o+G6CXaYyMmYuNmhJ+5xnIEBN0L84fjHZMGGG/7+ZmSRQxW7POz5ToVpaRxq7NvSVJH+aJjHubjZ5EChpx5fFKkU5cyj2xFOAlwmWlTOMXc0HCa6f3WNBDk/T16z3WxzddHTrjyqwbqk5dprZE/jL/DQbe4xwItGBEs=
+	t=1781077292; cv=none; b=pjAiy97C7xLxI5hP0S7/El/I00y0xo29cEQ+RoJ0cFkmKYDiB1Q4UkIwFpateyrGR+5VhNmAqdu5laMxG48Oj5986tRalOINoJRlBvwWGCFzyppjGFHZeSLBCAm2/tWym4ZrKW465OO7EDPY5bW8Udn48S8NUeSH55ryGb/sZEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781076669; c=relaxed/simple;
-	bh=V6v9W6QBhOWAxmO9DYhVqHQyI//KCEVDRfDBZnzuv0U=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NIKxEZ0N5zMzXge0bzN1Qk1P35f7M4bPxbNdv6eHSr+xH59VnzA4m9kKoLuOumwqBT60k95muH5g+NfN/NLs2cGFg7z95TzRjfh6RMQqEF4yeLNrm83F65yJgg8ubheuFIdV/Ycgza2IEo96A6qt3PuiqKKZLS0aZ0XS+A21kt8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Uc7lRs2h; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1781077292; c=relaxed/simple;
+	bh=NtOTToasxCE2jc40iWisPgV2xK93NZ0NraMiA5sg/Rk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SzIHchE3mvZvr8Z6Uj7X8y49/Unma8/VStQ8irooWY75vOfewj+S+pPz2hRGpCG07+CHUZ4cUKBp3AyOZOJ7PBBSd62Ux7rCaO8HC3YP5cXGYUtib3MKDRjNIwwxCrwswAWVNkn5osxYDu+StYHlhTeWlSWOI/JFXtbeSqbI1kY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N3yauVZS; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Uc7lRs2h"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781076667; x=1812612667;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=V6v9W6QBhOWAxmO9DYhVqHQyI//KCEVDRfDBZnzuv0U=;
-  b=Uc7lRs2hIMTO/4Bjb0ZKNqkB6/8cRjzBk3TFirCadIN8iwv0Y+FcOP4t
-   zTVuedyLj8Cs2KQDekFJJVOAqz+U269tzqnrRd2lMX44Dri/UpTkCDARk
-   LWHbdSUFcaxwuwipbgg3oRTeIMGG1d/k1JBGTxTRZlXKvIVuD3oJ/C0km
-   byENNFJn+jCuQj9KD8HOY0QCFySRdHWWwdQN+Ye8+gkKSVQfqpDwmcBUn
-   gzRfL2PQDCFH6H/MIhPfQTlwtubqLTx0ftz1swB7dyHVNGDCxY0Wa4bfm
-   VXFLEgYI+d394GIWTGN9kZJGW2th6y+2phUltSYQw9ROl39qTUkY1MBnm
-   A==;
-X-CSE-ConnectionGUID: rUZZzKquQqu9ne/nf7BpSg==
-X-CSE-MsgGUID: rBnVn/HBRySHPJDpVAeMPA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11812"; a="81973752"
-X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
-   d="scan'208";a="81973752"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2026 00:31:07 -0700
-X-CSE-ConnectionGUID: CLh5PFEvR4u7+TfZRyVVnw==
-X-CSE-MsgGUID: GBWODLlBTUOaSdqx38uHqg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,197,1774335600"; 
-   d="scan'208";a="247953161"
-Received: from ubuntu.igk.intel.com ([10.102.114.174])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2026 00:31:05 -0700
-From: Szymon Durawa <szymon.durawa@linux.intel.com>
-To: helgaas@kernel.org,
-	nirmal.patel@linux.intel.com,
-	szymon.durawa@linux.intel.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 0/8] VMD add second root bus support
-Date: Wed, 10 Jun 2026 09:51:36 +0000
-Message-ID: <20260610095147.200818-1-szymon.durawa@linux.intel.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N3yauVZS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DBC11F00893;
+	Wed, 10 Jun 2026 07:41:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781077291;
+	bh=EgV/NjGFw2TBnGNu1grd25blD1KwYsPIRIqEutCfpzc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=N3yauVZSBrf47qf05zumLqq/Yg56bWYcjmWs3qicj1JFe4cQx7KkFLZPodz/lycsr
+	 aaihNpg+Vq43zVq9abn/EkBkSOeY3BhN+4R/JyLPYnTCAXRRSrzc7GlCb/bmOA7IfK
+	 qyzerJOFwCiszfXk4wEbGDQSN6abHyem5iag0vy1PPECpR8Ca5aZeoiP456d50WmXn
+	 2tTdFGkVLD/lFEZKqu5b28jYpNGpKdzy35aB1qQxAn8OsOtI0jOBUK938yHgyoFvvT
+	 VacH128cjlgDJz6a765Ae/xyrfrmsCtj2rJ11InHyeZCjsQ3XJbdv50WWFjoGujyv6
+	 mxUHxrjjhwdvw==
+Date: Wed, 10 Jun 2026 09:41:27 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, Qiang Yu <qiang.yu@oss.qualcomm.com>, 
+	Jeff Johnson <jjohnson@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>, 
+	Mark Brown <broonie@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bartosz Golaszewski <brgl@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, Rocky Liao <quic_rjliao@quicinc.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, devicetree@vger.kernel.org, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+Subject: Re: [PATCH v2 4/7] dt-bindings: bluetooth: qcom,wcn6855-bt: document
+ WCN6851
+Message-ID: <20260610-lush-mellow-dragon-3ed9fd@quoll>
+References: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com>
+ <20260608-sm8350-wifi-v2-4-efb68f1ff04c@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20260608-sm8350-wifi-v2-4-efb68f1ff04c@oss.qualcomm.com>
 
-This patch series implements second rootbus support inside Intel VMD
-module. Current implementation allows VMD to take ownership of devices
-only on first bus (Rootbus0). Starting from Intel Arrow Lake, VMD exposes
-second bus (Rootbus1) to allow VMD to own devices on this bus as well.
-VMD MMIO BARs (CFGBAR. MEMBAR1 and MEMBAR2) are now shared between
-Rootbus0 and Rootbus1. Reconfiguration of 3 MMIO BARs is required by
-resizing current MMIO BARs ranges. It allows to find/register VMD Rootbus1
-and discovers devices or root ports under it.
+On Mon, Jun 08, 2026 at 09:59:22AM +0300, Dmitry Baryshkov wrote:
+> WCN6851 is an earlier version of WCN6855 WiFi/BT chip, compatible with
+> it. Add a device-specific compat string with the fallback to WCN6855
+> one.
+> 
+> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+> ---
+>  .../devicetree/bindings/net/bluetooth/qcom,wcn6855-bt.yaml        | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
 
-Patches 1 to 6 introduce code refactoring without functional changes.
-Patch 7 implements VMD Rootbus1 support and patch 8 provides workaround
-for rootbus number hardwired to fixed non-zero value. Patch 8 is necessary
-for correct enumeration attached devices under VMD Rootbus1. Without it
-user cannot access those devices as they are not visible in the system,
-only drives under VMD Rootbus0 are available to the user.
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
-Changes from v1:
-- splitting series into more commits, requested by Bjorn
-- adding helper functions, suggested by Bjorn
-- minor typos and unclear wording updated, suggested by Bjorn
-
-Changes from v2:
-- wording update in commit logs, suggested by Bjorn
-
-Changes from v3:
-- using GENMASK() instead of manual bits shifting, suggested by Bjorn
-- converting decimal number to hex representation, suggested by Bjorn
-- wording update in commit logs, suggested by Bjorn
-
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org
-Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
-
-Szymon Durawa (8):
-  PCI: vmd: Add vmd_bus_enumeration() helper function
-  PCI: vmd: Add vmd_configure_cfgbar() helper function
-  PCI: vmd: Add vmd_configure_membar() and 
-    vmd_configure_membar1_membar2()
-  PCI: vmd: Add vmd_create_bus()
-  PCI: vmd: Replace hardcoded values with enum and defines
-  PCI: vmd: Convert bus and busn_start to an array
-  PCI: vmd: Add support for second rootbus under VMD
-  PCI: vmd: Add workaround for bus number hardwired to fixed non-zero
-    value
-
- drivers/pci/controller/vmd.c | 488 +++++++++++++++++++++++++++--------
- 1 file changed, 376 insertions(+), 112 deletions(-)
-
--- 
-2.43.0
+Best regards,
+Krzysztof
 
