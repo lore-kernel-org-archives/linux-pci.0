@@ -1,179 +1,164 @@
-Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31DC23ACA5E
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 21:06:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.128.181
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781125591; cv=pass; b=Hk5EG0itMUdZ5eO34CQtK2d5z/hkYiofP5OreCM5nGO4fGMhHDa4W7j+vMkeHYX+Nu0leGoI2h1ce0rewKHd0jklKyyCvCq1tjbRCqo2+128qhtC1ngeYWB8kI3Kb8s7tv0iN47hTc6UfJrZUZ7Ir0IEGHppoE6SixSO+my03IQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781125591; c=relaxed/simple;
-	bh=8SPk+9kPUL0DQYsfiU6U+3rhy9CmKqHE6O0qDp+jLZI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=X/WIrZGIFraG0aqh933h0MeBXkIUmPPsNLWGixz/ygtwBqJznJ2vzh+IaSqjQdu/6t032x+iefQrUygOMo/CDEe7H67IYyIRmTpq+C+cFUDpxFVbQxkBatM2UsH7YiY7Q5FKSoeQ6PeLAzpX64zwy26qDsL6x0zW/mrlWA9Dqg8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jWOwKwlS; arc=pass smtp.client-ip=209.85.128.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E91E2346A10
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 21:56:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781128617; cv=none; b=l+Yxs7y8qn/supZ44260OnigZ4DMBqoGbFM5U9i96d80sOSokJXbUl6F4bqrhEssTS2cDuu0j5SBGJ9P6Lc9Fw+J69WTt5VMvvRcKYhK64GvrjZkimJms70j/FD2qByPWNBWCABfVA+X5SGk5+dtJeftKMQiG7ID6RBsFhDaaOA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781128617; c=relaxed/simple;
+	bh=7C0NhotO/ct92vsmQM84HeVr0jWz7wq5ePgEtOqQBso=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=K1FJ/HpvRrPwtVAa5uNq7abKjcS2yyxHoug2CrwksQKHjZRNsgScAvkywpXl7LbBDcylhLQQN3J56IT9bYxHZsGaoy3QxZ5/0muiRr+eUqUl9l1QrzEJqFfi/iqB5CpLWeNd+COgkleP13T0e67nd6ckWQqUcND9F0esMxghirg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=k/Lr07SU; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jWOwKwlS"
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-7f5eb760240so6968267b3.0
-        for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 14:06:30 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781125589; cv=none;
-        d=google.com; s=arc-20240605;
-        b=Zs9YgHHPjVOxNmpUz7YZifWSS9Gw7n35a8H5KFFVCYFcrFLQSvUXIl1WpLvDXaI9WD
-         sb/Dwiar5t9rdIW0FW31M4aLWQ/F1hovmlQxKYrF4KUSK6YakSF+oAq2RDdI/REKt5dJ
-         ffAYfibQFk20131xTmhQDKW9Zn3uYBEtVAv395HezeYi1uoTXg68QruuDitB3kxnOSuZ
-         j/pnAkFgxv0XZLgU4lXhz7TiV3CgxcxpcryZXr3kVQwPhZeowoUp8MuxRGBZKE8PeVfG
-         e2tDG9crNRe6G/rtADXuPD6ZWF6USXyc3OUO9w+80a+Akd88wnT6WrY/ATFKm0wRBTZk
-         4/rA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=96czj6yri6D29TEjjpnrX0Ms962E0G1MVyGNh2o55HQ=;
-        fh=scd3JL+EWwAB6Mtcmfvy3g7HQMp6zoNsoahZsCHMJvc=;
-        b=BToOBT5EMRiP6lRlQpRLZhRdqULL0E37THgBir9nrlVGcibwjRA7YqdcnNAtr2YiRq
-         QWqJbL5n97RUR+Y9jAvsHLCzVszy8ojvvFN+tmvTKup4Xn8fxUokfwxlCAWS9T8HBa9Z
-         9HpJ72U7dkGe1be7eg7RtMvNo6PqUsInVK4yIMPP3/BBWZ9cVqOJPGPSdENkzs84WwOU
-         q/xK7yH7kX4WvjMNZsNdk3NHyCEirWT1bINE4AnBJvFht0xpUOME7Nbr8rrpgMpUPixT
-         M6+RVu8g9Al1nx8/Tbr3bXHBDKCXqcOV8akBGwuGf+N32lpg1h+zZuJ7btI4WF0JsXq8
-         D/Hg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781125589; x=1781730389; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=96czj6yri6D29TEjjpnrX0Ms962E0G1MVyGNh2o55HQ=;
-        b=jWOwKwlStXwGgUAXfngBzfebepF/l+Iz4nUi1RY4ZFUDUceLV7UGbSPy/9QVHif4B8
-         ZPz1O75qxMy7MzdeNnHDuLBQRANDqdgtNr4gpz1YjTbGBhWiD5oYWhkIc+R75zzFDCkO
-         Meumk/PL2hxGiDTi1EoFtI5Rjo6hDtBgNs4khoSmLMvoD3D6m4fDnyZeU2/SVa8Rl3Nq
-         Np8qgXa+5CNjzN4wJqgw9w2Dk9ZrR505dzxMLNWm5lQRAcJlwSMMAmfpaaFKXCI38Fkc
-         kL00/uRMaIP0VLi90TJNN5Ph1pRYS3cFKXlldKH1fiRvxQ998TEqxSQ9HgBoZT5xJce+
-         N+TQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781125589; x=1781730389;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=96czj6yri6D29TEjjpnrX0Ms962E0G1MVyGNh2o55HQ=;
-        b=su4CSxlNDayfeICfgJc9jI8LFB5LpG595XN88EvxB/wJdlcC4UQ3G8/pO5y3jK6iln
-         P23wOiE85Qu+EYavgyCnAR8mfjA4WM6mQ+82E1ofhMfPN0ZVPKVXSt+19cE35YPIm6Tf
-         iNaWLXC+PdwcAcXaQC/mfRX6XOh72Dy3Tel9l6e3/a4HmaiUHAfY3yLPcEe3E7cHdxhu
-         VW1ihOmnsfy5lmdLV/fDAnGj2b9CvcvzJZqcvwWMTPPCI/PnTOtcgPAcWLINOqwOBr4b
-         VC/fyffqVdx38gkiv0VUSUzf8qqzUygVbnXWk7a9YWTDlvo0Cd+LuoK03pUa733qGFyl
-         Zq6g==
-X-Forwarded-Encrypted: i=1; AFNElJ/SbwEYVcmRlZvjgkOjNdcqUomuIjxdCgeowFPJXZygOEp5VBzwopdPBEZJEzSk5sQWugnqfL3rNqA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9mvp+UywbR1ru1QB1M6nTgH0gKYPPm7REXd5sGA9BGqmuDWkH
-	qGXAe829e+uUjEde8itkofZ/aWhdEf/KopMiHNAmgL5he7kCqJ1wpSwGla/qlEwQL5ire9Gv9m4
-	771flXE2Szg2TK41rd+UAzPbTC0w7MtY=
-X-Gm-Gg: Acq92OGVzFmFN+uFah6r/fgi9R2Arm3jqYppohFxIaXaqmy/65jllqPiBSKl6sjddEl
-	Uvt/wXwhvi8i2Jr5gJROhGuHtzTyv4FNz3mMbxVoCP4MXliTqOAOIWpi1vtWbyj2oSAXsB91LBr
-	N5ZQBoDdoj+4dG4EGqF0xUI9eJEwDJZR13ZufDjYgJoCUfMtLJPVjJ7yHc4AC1Qwjn0j7+pj7gk
-	4FGoD+fqdxeUro6UO/JuZAg98ORvnrpayfmINgINVigrzNiTXGz0Kwq1Sds66NvHCOQBcmPyu5m
-	4Ray+7FrlDw8ndKQjc4sKRhrRw==
-X-Received: by 2002:a05:690c:45c5:b0:7e9:ab56:3c99 with SMTP id
- 00721157ae682-7ed0adbb616mr276188567b3.6.1781125589039; Wed, 10 Jun 2026
- 14:06:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="k/Lr07SU"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65AJu6834146619;
+	Wed, 10 Jun 2026 21:56:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=qB6cAt
+	h/KRZuXG3KU4XmHSoiE44CuZfxcJe9UF9jpN8=; b=k/Lr07SUPHEvvQAZZsCOpJ
+	7CkhApHXwwPKXTOpGz9du+CROo723WR7LFJD0zngsFLb4vircHym6pNnl9hNirM4
+	FDX+PauyQIRTUiDoHPoJWYoA2A5kmjfgn02M29vAvfbHocBEoufxcXoafPjb4erT
+	loFoptsLF/eaiL/OOkj0RQ7uIBHg3EKCPBucSbq9xDc4TGSx7u0tlNKapGAV2R/K
+	nsMAviDNkrDNCPwbgD+QzEox/IKpjeNxxeQEFKBEz+fDQdHxQhKntJxwVZ6aKJrJ
+	5gUKvzAVWLTpwHSjhg3gHrZ6Lkf2zVfCHtKnHlZXgKtf23xzC5BMuelf7Xb2TDpg
+	==
+Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eqe8c0e3j-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Jun 2026 21:56:50 +0000 (GMT)
+Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma12.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65ALnfn7009800;
+	Wed, 10 Jun 2026 21:56:49 GMT
+Received: from smtprelay02.dal12v.mail.ibm.com ([172.16.1.4])
+	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4eqe09ggvn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Jun 2026 21:56:49 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+	by smtprelay02.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65ALumRD10420980
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 10 Jun 2026 21:56:48 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C23A258058;
+	Wed, 10 Jun 2026 21:56:48 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 639F058057;
+	Wed, 10 Jun 2026 21:56:48 +0000 (GMT)
+Received: from [9.61.241.23] (unknown [9.61.241.23])
+	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 10 Jun 2026 21:56:48 +0000 (GMT)
+Message-ID: <49059c51-e61b-48b2-81a9-2e164e0bd763@linux.ibm.com>
+Date: Wed, 10 Jun 2026 14:56:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260521133315.work.845-kees@kernel.org> <20260521133326.2465264-4-kees@kernel.org>
- <da358ae1-91b4-4a16-ac76-ffab99c230b9@suse.com>
-In-Reply-To: <da358ae1-91b4-4a16-ac76-ffab99c230b9@suse.com>
-From: jim.cromie@gmail.com
-Date: Wed, 10 Jun 2026 15:06:02 -0600
-X-Gm-Features: AVVi8CcLXClq9Fijm8VjZF47hQWmos5q_iXrehNZDw9kSOby-E_cMxEQI0SK-hU
-Message-ID: <CAJfuBxwRuT1K=rjPX+sdNyYurEJ=OjqbJaSa_S6JnY6yzTwTvQ@mail.gmail.com>
-Subject: Re: [PATCH 04/11] treewide: Convert struct kernel_param_ops
- initializers to DEFINE_KERNEL_PARAM_OPS
-To: Petr Pavlu <petr.pavlu@suse.com>
-Cc: Kees Cook <kees@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, 
-	Pengpeng Hou <pengpeng@iscas.ac.cn>, Richard Weinberger <richard@nod.at>, 
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Corey Minyard <corey@minyard.net>, 
-	Gabriel Somlo <somlo@cmu.edu>, "Michael S. Tsirkin" <mst@redhat.com>, 
-	Jani Nikula <jani.nikula@linux.intel.com>, 
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, 
-	Tvrtko Ursulin <tursulin@ursulin.net>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Bart Van Assche <bvanassche@acm.org>, Jason Gunthorpe <jgg@ziepe.ca>, 
-	Leon Romanovsky <leon@kernel.org>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, 
-	Hans de Goede <hansg@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Hannes Reinecke <hare@suse.de>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Daniel Lezcano <daniel.lezcano@kernel.org>, 
-	Zhang Rui <rui.zhang@intel.com>, Lukasz Luba <lukasz.luba@arm.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Alan Stern <stern@rowland.harvard.edu>, Jason Wang <jasowang@redhat.com>, 
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
-	Jason Baron <jbaron@akamai.com>, Tiwei Bie <tiwei.btw@antgroup.com>, 
-	Benjamin Berg <benjamin.berg@intel.com>, =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, 
-	"David E. Box" <david.e.box@linux.intel.com>, "Maciej W. Rozycki" <macro@orcam.me.uk>, 
-	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Peter Zijlstra <peterz@infradead.org>, 
-	Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
-	Sean Christopherson <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>, 
-	Thomas Gleixner <tglx@kernel.org>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, 
-	"H. Peter Anvin" <hpa@zytor.com>, Vinod Koul <vkoul@kernel.org>, Frank Li <Frank.Li@kernel.org>, 
-	Daniel Gomez <da.gomez@kernel.org>, Sami Tolvanen <samitolvanen@google.com>, 
-	Aaron Tomlin <atomlin@atomlin.com>, Alexander Potapenko <glider@google.com>, Marco Elver <elver@google.com>, 
-	Dmitry Vyukov <dvyukov@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	John Johansen <john.johansen@canonical.com>, Paul Moore <paul@paul-moore.com>, 
-	James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Georgia Garcia <georgia.garcia@canonical.com>, kvm@vger.kernel.org, 
-	dmaengine@vger.kernel.org, linux-modules@vger.kernel.org, 
-	kasan-dev@googlegroups.com, linux-mm@kvack.org, apparmor@lists.ubuntu.com, 
-	linux-security-module@vger.kernel.org, linux-um@lists.infradead.org, 
-	linux-acpi@vger.kernel.org, openipmi-developer@lists.sourceforge.net, 
-	qemu-devel@nongnu.org, intel-gfx@lists.freedesktop.org, 
-	dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org, 
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linuxppc-dev@lists.ozlabs.org, linux-serial@vger.kernel.org, 
-	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, 
-	virtualization@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	linux-arch@vger.kernel.org, netdev@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, linux-hardening@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v18 3/3] PCI: Fail FLR when config space is inaccessible
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org,
+        Alex Williamson <alex@shazbot.org>
+References: <20260610200249.GA388221@bhelgaas>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260610200249.GA388221@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjEwMDIwOCBTYWx0ZWRfX77q6sYhY06Wt
+ Kf+JbuXPUxhA+Etoq+AzOTpDfSuLOBqmmRJBx1mwJI5wbfXCpBKbCg5hjB2KWfhAxH1dWnulJsh
+ 20xG2t+cUzP9Kpr2FteeZhS4RB0EBF4=
+X-Authority-Analysis: v=2.4 cv=AYCB2XXG c=1 sm=1 tr=0 ts=6a29dda2 cx=c_pps
+ a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=uAbxVGIbfxUO_5tXvNgY:22 a=VwQbUJbxAAAA:8
+ a=whdsKiS9fNiBw4FZXBUA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: X3WdM7nHMXNKvfmwHjUYVjMgl7kTSNhG
+X-Proofpoint-ORIG-GUID: X3WdM7nHMXNKvfmwHjUYVjMgl7kTSNhG
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEwMDIwOCBTYWx0ZWRfXzmObRcbR7Pbb
+ agISDvbpupAHoSABHzx0VgAVGpdRdXf0vwBBShDJEKdAydlceRPGEV+1F7x7G7bjLV1nC+OSW4t
+ Kq+/55iGio+lCYY1nXMdkSTHpjbxOjhf2obRWlhd/NfQtwcYCuDTfZmFM1IjfoqYBOIO+huh7AE
+ nM35JPmHbaq63sdcNIcu5sfhvyOwxiIlbKxXlcJkeX8xSVH3lPgadNQFHXg0Pb/rZaw1ZfOClU0
+ lSYezBi66xAeWKZGwKGzHztbAVwyhQqCo/CDDlFM1zbiANJt5DcXChSL4rUqoQdU/matLg2Bg6o
+ /8lixU3uUcueD3TFYpVX3zs20gizgW6G/q4v5h14T0tBGMqIppEEenOS0p0CYMWLnuIzrkMUW21
+ CHTEg6iagpgKbWp3XCXHEqjuADyFaIP9jCLabmanErfDdhcHBjc5b53C7zi+uYYWsXvBKEck9XY
+ HfLq7vCmUua1KHVx30g==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-10_04,2026-06-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 suspectscore=0 malwarescore=0 spamscore=0 phishscore=0
+ lowpriorityscore=0 bulkscore=0 adultscore=0 priorityscore=1501 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606100208
 
-On Mon, May 25, 2026 at 7:35=E2=80=AFAM Petr Pavlu <petr.pavlu@suse.com> wr=
-ote:
->
-> On 5/21/26 3:33 PM, Kees Cook wrote:
-> > Using Coccinelle, rewrite every struct kernel_param_ops initializer tha=
-t
-> > sets .get into a DEFINE_KERNEL_PARAM_OPS-family macro invocation,
-> > for example:
-> >
-> > @@
-> > declarer name DEFINE_KERNEL_PARAM_OPS;
-> > identifier OPS;
-> > expression SET, GET;
-> > @@
-> > - const struct kernel_param_ops OPS =3D {
-> > -       .set =3D SET,
-> > -       .get =3D GET,
-> > - };
-> > + DEFINE_KERNEL_PARAM_OPS(OPS, SET, GET);
-> >
-> > Using the macro for initialization means future changes can manipulate
-> > the struct layout and callback prototypes without having to change ever=
-y
-> > initializer.
->
-> Nit: For consistency, I suggest also converting the few remaining
-> kernel_param_ops instances that specify only .set and no .get, such as
-> simdisk_param_ops_filename.
->
-> --
-> Thanks,
-> Petr
 
-for the dynamic-debug changes
+On 6/10/2026 1:02 PM, Bjorn Helgaas wrote:
+> [+cc Alex]
+>
+> On Wed, Jun 10, 2026 at 09:51:55AM -0700, Farhan Ali wrote:
+>> On 6/9/2026 3:33 PM, Bjorn Helgaas wrote:
+>>> On Wed, Jun 03, 2026 at 06:57:36PM +0000, sashiko-bot@kernel.org wrote:
+>>>> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+>>>>
+>>>> Pre-existing issues:
+>> ...
+>>>>> +++ b/drivers/pci/pci.c
+>>>>> @@ -4396,6 +4396,9 @@ int pcie_reset_flr(struct pci_dev *dev, bool probe)
+>>>>>    	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
+>>>>>    		return -ENOTTY;
+>>>>> +	if (!pci_dev_config_accessible(dev, "FLR"))
+>>>>> +		return -ENOTTY;
+>>>>> +
+>>>> [Severity: High]
+>>>> This isn't a bug introduced by this patch, but does placing this
+>>>> check in pcie_reset_flr() leave direct callers of pcie_flr()
+>>>> exposed to 60-second hangs?
+>>>>
+>>>> Direct callers of pcie_flr() (like network and storage drivers
+>>>> during error recovery) bypass this wrapper. They will still
+>>>> experience a stall in pci_dev_wait() when attempting to reset a
+>>>> device with an inaccessible config space. Should this
+>>>> accessibility check be moved into pcie_flr() instead to protect
+>>>> all callers?
+>>> I can't remember why we have both pcie_reset_flr() and pcie_flr(),
+>>> other than the fact that callers don't need to supply a "probe"
+>>> argument to pcie_flr().
+>>>
+>>> Is there a reason to call pci_dev_config_accessible() here rather
+>>> than in pcie_flr()?
+>> The reason we wanted the check in pcie_reset_flr() was so to be able
+>> to escalate to bus reset method if we can't do an FLR. I think the
+>> check could be moved to pcie_flr(). Is that more preferable?
+> What if we added a preliminary patch that folds the body of pcie_flr()
+> into pcie_reset_flr() and adds:
+>
+>    #define pcie_flr(dev)	pcie_reset_flr(dev, PCI_RESET_DO_RESET)
+>
+> That would mean pcie_flr() users would start paying attention to
+> PCI_DEV_FLAGS_NO_FLR_RESET and PCI_EXP_DEVCAP_FLR, which seems like a
+> good thing.
 
-Reviewed-by: Jim Cromie <jim.cromie@gmail.com>
+Looking at the history, it seems commit 56f107d7813f ("PCI: Add 
+pcie_reset_flr() with 'probe' argument") added pcie_reset_flr() to add 
+the probe and remove pcie_has_flr(). It also notes that callers of 
+pcie_flr() that didn't call pcie_has_flr() remain. I guess it didn't 
+want to change the drivers that called pcie_flr() unconditionally?
+
+There is also reset_intel_82599_sfp_virtfn() that mentions the need to 
+FLR without checking for FLR support due to some quirk. So I wonder if 
+there were genuine reasons to avoid doing the check for 
+PCI_DEV_FLAGS_NO_FLR_RESET and PCI_EXP_DEVCAP_FLR?
+
+Thanks
+
+Farhan
+
