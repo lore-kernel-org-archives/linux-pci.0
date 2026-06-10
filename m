@@ -1,186 +1,147 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2DD525B0AF;
-	Wed, 10 Jun 2026 16:45:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B982133986F;
+	Wed, 10 Jun 2026 16:52:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781109912; cv=none; b=bZ1REEULpzjk6QrBzzqCpO6BL12nmDgZ/J9hZ8N3QGNmPDrxkEetiOJzE05Uq8glLpVrEwA8eXl8nlucF4bASOD3ksKKUe/1r+KKh0F1KJK5i0IefF1gcI7btA4VDWfZ+vEIZhNqHtv3xXu1mdGOqLmvdH7pmLNXavmIG0Ff5pc=
+	t=1781110326; cv=none; b=AAMVu7ijk39wiw7m+JSf/iHL9R0Bo+G8EFc4jnOcCXGJZPKAjAF3MIvGcjGOUlATQy1Oq2rNcjgdX1s59SAT/a3NZd+uBYNEMykooq0OpoFgWZPBNYYXcsnWzLZUUwSNMZTkxxyJ9BI/ALpBmzlEVvCiuvkAJgODqXqbVEEiyXk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781109912; c=relaxed/simple;
-	bh=+ZB6Da2HWvZYv1vmMvNe9eSUtjNUaw1y1O1JZQiS8vQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=niFV1otHXYl6oVPFLwu1wC25jg8ZH+jEIJORoIUHjJWvpRJlkRLuMj47RBEteOK7nxywr11O5/BS0Q1sMEAibdd2h5r6bvNfpDx9qg7BaTUre0iyXJx5glFnp+imaIflFS8gKnKAkJT/ZvHvIAbRHAjezdJ7FelUXWM87MVOL2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bLXPA9rO; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781110326; c=relaxed/simple;
+	bh=9g3LnZnhZXVLFc+bSSI8JunJ3AORIelItZfpL0q6hSo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OU8j5IA5Ja2++k/bhGmKZEDl5kgj3X/QS2CH66Q7PMxt8fapDnfejM2UGdZ+vwFAX/MpdQTokWhs6cNmT0nwzWUZfYaD0lOjQyvt+RTiqXTPDsNoiN2S4HqeL4QizQz3KW/hEww0VxJJzlVzhejBXt143IT+LvFpapZ0LjUyB/s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Q8rfECLb; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bLXPA9rO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 204C41F00893;
-	Wed, 10 Jun 2026 16:45:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781109911;
-	bh=6gdHQGQUI+RdS7ZUuS8+/hjC20f5GnX3T6BFhRH2P2Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=bLXPA9rO+CKusqWUFkWKhbKrp6tW2aIKa+NIauigC5cJwmRCgLxstOPB94tmjJNG6
-	 eSnRtD5GsbKwFlWL5YfD4r6riqyBJS0zRIXYfgtix9QQ5OIAMJIqC8n0BRyI3J/JmL
-	 svlTyYKRiyt41Q4fftHHNx0DPaJYPSPUe3SWNQxLQo3L5sgfS68KeKuIJ5tJ0AjK9L
-	 c2TTpOSfgiT6dbuYT0X2Yrx1WT510CcZ/YPY/8EJKTYuyBW3s1YIkCA8KTGPOx3kud
-	 Sa3cexcbI+BiXiN/bp7/XfOTHDdH5dZ8THH4ZSUZjQuzf+XfW5NyIW+XpTnB38sPEs
-	 js2pkyRxv2Ifg==
-Date: Wed, 10 Jun 2026 18:44:59 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Stephan Gerhold <stephan.gerhold@linaro.org>
-Cc: Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, Rob Herring <robh@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, Greg KH <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
-	Nicolas Schier <nicolas.schier@linux.dev>, Hans de Goede <hansg@kernel.org>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, "Derek J . Clark" <derekjohn.clark@gmail.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, 
-	Bartosz Golaszewski <brgl@kernel.org>, linux-serial@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kbuild@vger.kernel.org, 
-	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-pm@vger.kernel.org, 
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v6 6/9] dt-bindings: connector: m2: Add M.2 1620 LGA
- soldered down connector
-Message-ID: <eftahohsx3bbvmgxuciofjjcrybnsm2qc752hwyt65rb2uwaon@h32nh5fcpo7p>
-References: <to2mrizprc3hjufqbiplpqyek7f4uutqtn4hx4gkmdgv2rykbc@ybwwjhdec4nm>
- <CAL_JsqJXrHCJt770bJkMmAUhirSF3kHjYwSzkG7cXp7-eys8Rg@mail.gmail.com>
- <6aef3xxjjd4nbgrfx6jc6jt6rpqmttoui6hil5zqgdpas2j6gj@ie6j72orenou>
- <fsvmmgoe5wslmxebhrrwmdg2ldcmhzvj53gjkdfnfg2m2rz2lw@dcfboaakz7ae>
- <bguhzabwryayyqkv4ilzwr3ixwv6bzxncblo3ircz2wm3fs52k@66zvcrfcb4oe>
- <blhm4csjyw6r667cleljgzd6rpwagttjo5rau7wjrlnjakq2qm@ekyhc4jvwmwf>
- <m44mupdmg7kgco62n4evcviagqo7wwgyt3gybugbxwesd4ekjz@o24r6v4tpezc>
- <3faffec9-dc9d-4eec-a652-a84d30d85c96@app.fastmail.com>
- <cvqdbqnzjmzoowxkvz2lyv4avropu5jw7h2r6zng3ecf245hgg@fsysjqflqd35>
- <acv2f1qbqu4PlSL1@linaro.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Q8rfECLb"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65AF4UXV3420508;
+	Wed, 10 Jun 2026 16:51:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=NPXuHq
+	vvYLt5zWP6sN8XsQdOsZoUKtQYj9UDQIL396I=; b=Q8rfECLb7ng4FO7a2Ct/U8
+	WGGo/WreNPwb0KA7CvdVii0JL+zxnJ6zsVnvKGBr+CqN22wK1YAT45IIGepvRIfd
+	ALYtNEobOMpH3guQ1FEFcKI0C5989xkZ/TqtTz6eU+AdcD2AI1EASm26KZJr4u18
+	ma86JmtkD3rSrwFtWK1P27E582qjmCsd0LR2aGxFWR2jtlThby4WeliIoCOwNX/t
+	J/ijTbHp09iOZyg9Hm+ZESnQGEXmIEop+3DB1xiQapj+GekIKcRwRo23BDw1Ch/f
+	EwQW8cGf//DUVirQqJ8YtgmInt4NTWf4fNb6q1SaPNDyhpEx8qbp74bqEtuASGuQ
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4em9ye9s0d-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Jun 2026 16:51:56 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65AGneIg013516;
+	Wed, 10 Jun 2026 16:51:56 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 4emxvjygma-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Jun 2026 16:51:56 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65AGptHL34341394
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 10 Jun 2026 16:51:56 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E3CDD58054;
+	Wed, 10 Jun 2026 16:51:55 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 77CFE5805A;
+	Wed, 10 Jun 2026 16:51:55 +0000 (GMT)
+Received: from [9.61.251.150] (unknown [9.61.251.150])
+	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 10 Jun 2026 16:51:55 +0000 (GMT)
+Message-ID: <66cb5988-ce72-4acf-8e1c-0eb72b4fbd41@linux.ibm.com>
+Date: Wed, 10 Jun 2026 09:51:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <acv2f1qbqu4PlSL1@linaro.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v18 3/3] PCI: Fail FLR when config space is inaccessible
+To: Bjorn Helgaas <helgaas@kernel.org>, sashiko-reviews@lists.linux.dev
+Cc: linux-pci@vger.kernel.org
+References: <20260609223351.GA157386@bhelgaas>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20260609223351.GA157386@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEwMDE1NiBTYWx0ZWRfX7B1YizrRt5b+
+ Kyb1g0HY5VfQ/AVrrgoEorB7WE1iooQHEXWdz6qvdtgbJ/XDyw05OdBCmkOKPH7DNb8J2y3U3/n
+ SylaBXPAhDMmLkGszahrB+e908ulzBflFo8z9ErsyZa/a1VYBr8O5W1EJVzEGuO6MI7JJaha6Nz
+ 7Wu0Z0/xn+4cl8PFf7WprgfcS6E0DxHYuAq406nXKDRToZnmFwwXNj/KgFLY/V1Hx7NcZbefaMH
+ hbjVIwe3BQMp/V3c37qgjG+UAXdsvjLpU5tmUuEkKbRAOP5TIFdv/Q9I9uJpm+ZlQ5sNbwvgtDn
+ Pd18ZqyKsifJarteF8kxoBXb5SCpBsDnhm/syrImGyiohZm7sJXjiilLwkd0k/AcHBkwzrx25pj
+ UE2c+f9GIapSzvYBNsY01EkOm9nKeYH2CvmlSkQMV21/KFJudk/LLbR8rgUkdXp99IaZiB/AqqR
+ SxlWV9iwRpE8xcStbyw==
+X-Authority-Analysis: v=2.4 cv=QKhYgALL c=1 sm=1 tr=0 ts=6a29962c cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=V8glGbnc2Ofi9Qvn3v5h:22 a=VwQbUJbxAAAA:8
+ a=U98x94yJvRYjzxI7CFwA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: DNNNCkJXf0NT4DOD7sBkiB5bI8nsPi5B
+X-Proofpoint-ORIG-GUID: DNNNCkJXf0NT4DOD7sBkiB5bI8nsPi5B
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-10_03,2026-06-09_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 lowpriorityscore=0 bulkscore=0 adultscore=0 phishscore=0
+ malwarescore=0 impostorscore=0 suspectscore=0 spamscore=0 clxscore=1011
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2605210000 definitions=main-2606100156
 
-On Tue, Mar 31, 2026 at 06:29:51PM +0200, Stephan Gerhold wrote:
-> On Wed, Mar 25, 2026 at 05:36:08PM +0530, Manivannan Sadhasivam wrote:
-> > On Mon, Mar 23, 2026 at 01:23:07PM -0400, Mark Pearson wrote:
-> > > On Mon, Mar 23, 2026, at 12:52 PM, Manivannan Sadhasivam wrote:
-> > > > On Mon, Mar 23, 2026 at 06:45:15PM +0200, Dmitry Baryshkov wrote:
-> > > >> On Mon, Mar 23, 2026 at 09:26:04PM +0530, Manivannan Sadhasivam wrote:
-> > > >> > On Mon, Mar 23, 2026 at 05:14:30PM +0200, Dmitry Baryshkov wrote:
-> > > >> > > On Mon, Mar 23, 2026 at 07:14:25PM +0530, Manivannan Sadhasivam wrote:
-> > > >> > > > On Mon, Mar 23, 2026 at 08:39:55AM -0500, Rob Herring wrote:
-> > > >> > > > > On Mon, Mar 23, 2026 at 7:16 AM Manivannan Sadhasivam <mani@kernel.org> wrote:
-> > > >> > > > > >
-> > > >> > > > > > On Sun, Mar 22, 2026 at 06:37:13PM -0500, Rob Herring wrote:
-> > > >> > > > > > > On Tue, Mar 17, 2026 at 09:59:56AM +0530, Manivannan Sadhasivam wrote:
-> > > >> > > > > > > > Lenovo Thinkpad T14s is found to have a soldered down version of M.2 1620
-> > > >> > > > > > > > LGA connector. Though, there is no 1620 LGA form factor defined in the M.2
-> > > >> > > > > > > > spec, it looks very similar to the M.2 Key E connector. So add the
-> > > >> > > > > > > > "pcie-m2-1620-lga-connector" compatible with "pcie-m2-e-connector" fallback
-> > > >> > > > > > > > to reuse the Key E binding.
-> > > >> > > > > > >
-> > > >> > > > > > > What is LGA?
-> > > >> > > > > > >
-> > > >> > > > > >
-> > > >> > > > > > Land Grid Array
-> > > >> > > > > >
-> > > >> > > > > > > If not in the spec, is it really something generic?
-> > > >> > > > > > >
-> > > >> > > > > >
-> > > >> > > > > > Good question. Yes and No! LGA is not something that Lenovo only uses. Other
-> > > >> > > > > > vendors may also use this form factor. PCIe connectors are full of innovation as
-> > > >> > > > > > the spec gives room for hardware designers to be as innovative as possible to
-> > > >> > > > > > save the BOM cost.
-> > > >> > > > > 
-> > > >> > > > > innovation == incompatible changes
-> > > >> > > > > 
-> > > >> > > > 
-> > > >> > > > Yes, I was trying to sound nice :)
-> > > >> > > > 
-> > > >> > > > > > This is why I do not want to make it Lenovo specific. But if you prefer that, I
-> > > >> > > > > > can name it as "lenovo,pcie-m2-1620-lga-connector".
-> > > >> > > > > 
-> > > >> > > > > Depends if you think that s/w needs to know the differences. Hard to
-> > > >> > > > > say with a sample size of 1.
-> > > >> > > > > 
-> > > >> > > > 
-> > > >> > > > Sure. Will add the 'lenovo' prefix then.
-> > > >> > > 
-> > > >> > > Is it really Lenovo? Or is it some other module vendor, whose LGAs are
-> > > >> > > being used by Lenovo?
-> > > >> > > 
-> > > >> > > I remember that DB820c also used some kind of a module for the WiFi card
-> > > >> > > (which might be M.2 compatible or might not, I can't find exact docs at
-> > > >> > > this point).
-> > > >> > > 
-> > > >> > 
-> > > >> > I don't know. These kind of designs might be reused by several vendors. But
-> > > >> > considering that we should not make it generic, I'd go with Lenovo as that's
-> > > >> > the only vendor we know as of now.
-> > > >> 
-> > > >> ... and later we learn that other vendors use the same idea /pinout,
-> > > >> then nothing stops us from still telling that it's a
-> > > >> "lenovo,pcie-m2-something-lga". 
-> > > >> 
-> > > >
-> > > > How do you possibly know whether a single vendor has introduced this form factor
-> > > > or reused by multiple ones? Atleast, I don't have access to such a source to
-> > > > confirm.
-> > > >
-> > > I've not really been following this thread/patchset in detail; but want me to try and check with the T14s platform team if this device is specifically made for us (Lenovo) or not?
-> > > I doubt it is - we just don't do that usually, but I can go and ask the question if it will help resolve this (with the caveat that it could hold up the review for a bit and I may not be able to get a straight answer)
-> > > 
-> > 
-> > I can drop this specific patch in the meantime.
-> > 
-> > > My vote (for what little it's worth) would be to make it non-Lenovo specific. Then when the same part causes issues on another vendors platform I won't get asked questions about why Lenovo is breaking <other vendor> :)
-> > > 
-> > 
-> > Even if Lenovo prefix is used, it won't break other vendors. Just that we will
-> > end up adding more compatibles.
-> > 
-> > Anyhow, I'll wait for your reply and drop this patch for next revision.
-> > 
-> 
-> If you need a vendor prefix, I think "qcom," would be more appropriate
-> than Lenovo. This form factor is used by most vendors for recent
-> soldered Qualcomm-based wireless cards, not just Lenovo:
-> 
->  - Dell XPS 13 9345 has exactly the same soldered M.2 card, I assume
->    there are several other vendors as well.
-> 
->  - https://www.sparklan.com/product/wnsq-290be/ is a third-party
->    (Qualcomm-based) M.2 LGA 1620 card, in the block diagram the
->    pinout is called "QM.2 1620 LGA 168pin".
-> 
->  - If you press F9 while booting the ThinkPad T14s, you should get to a
->    screen with "Regulatory Information". For the T14s, this screen says
->    "Contains FCC ID: J9C-QCNCM825". This is the WiFi/BT module in the
->    soldered form factor. If you look that up on the FCC website, the
->    applicant for this module is "Qualcomm Technologies, Inc.". This
->    seems to be some kind of "modular certification" that vendors can
->    reuse/adapt without going through the whole process again.
-> 
-> Perhaps you should ask around inside Qualcomm? :-)
-> 
 
-Sorry for getting back after this long. I did ask around, but our HW folks are
-saying that Qcom is not the first one to use LGA M.2 modules. They claim that
-other vendors also do that.
+On 6/9/2026 3:33 PM, Bjorn Helgaas wrote:
+> On Wed, Jun 03, 2026 at 06:57:36PM +0000, sashiko-bot@kernel.org wrote:
+>> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+>>
+>> Pre-existing issues:
+>> - [High] The config space accessibility check is placed in pcie_reset_flr() instead of pcie_flr(), leaving direct callers of pcie_flr() exposed to 60-second hangs.
+>> ...
+> I don't know why sashiko calls this a "pre-existing" issue.  This
+> patch *adds* the config space accessibility check, so it looks like an
+> issue with this patch to me.
 
-But for this specific card, it should be fine to use the 'qcom' prefix as
-apparently the module was supplied by Qcom.
+The way I interpreted it was, this issue in pcie_flr() of 60 second hang 
+would hit with or without this patch if config space in inaccessible.
 
-I'll submit the bindings patch together with DTS change for T14s.
 
-- Mani
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -4396,6 +4396,9 @@ int pcie_reset_flr(struct pci_dev *dev, bool probe)
+>>>   	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
+>>>   		return -ENOTTY;
+>>>   
+>>> +	if (!pci_dev_config_accessible(dev, "FLR"))
+>>> +		return -ENOTTY;
+>>> +
+>> [Severity: High]
+>> This isn't a bug introduced by this patch, but does placing this check in
+>> pcie_reset_flr() leave direct callers of pcie_flr() exposed to 60-second
+>> hangs?
+>>
+>> Direct callers of pcie_flr() (like network and storage drivers during error
+>> recovery) bypass this wrapper. They will still experience a stall in
+>> pci_dev_wait() when attempting to reset a device with an inaccessible config
+>> space. Should this accessibility check be moved into pcie_flr() instead to
+>> protect all callers?
+> I can't remember why we have both pcie_reset_flr() and pcie_flr(),
+> other than the fact that callers don't need to supply a "probe"
+> argument to pcie_flr().
+>
+> Is there a reason to call pci_dev_config_accessible() here rather than
+> in pcie_flr()?
 
--- 
-மணிவண்ணன் சதாசிவம்
+The reason we wanted the check in pcie_reset_flr() was so to be able to 
+escalate to bus reset method if we can't do an FLR. I think the check 
+could be moved to pcie_flr(). Is that more preferable?
+
+Thanks
+
+Farhan
+
