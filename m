@@ -1,43 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC849227EB9;
-	Wed, 10 Jun 2026 17:21:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C60B13446C7;
+	Wed, 10 Jun 2026 17:28:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781112096; cv=none; b=hUlCtLEvzUJ2n+XzWV1IxsT7694nyKN0WKovCgBrm2FVmPIng2FHp2c6FMfUpDpu7HWuloYQbA8iqmO1HiY+w5L3pD1iuCFLU+cSqukcH3Amog5hx50vuQUmXfq+Mi8Q1Aury50wyNdh9281WJJlTRfYQfm+mGeWLMowgQWRuI8=
+	t=1781112527; cv=none; b=qCxqUF7BooG6/2P+1SqHio0+l1+gPcB1e9iaIAfPIdUJiD2bMkwuC983yCdXULmU4IxKQMdaoW84Brl4jAENBK3KUmWuLD+O/9j1i0GPeyoC1XAGNuZ7ZchsNZ4qodRH8O9Wcz0nAmCs0gG/MLSJAWECoyLSBdlmV5X7FqrGZzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781112096; c=relaxed/simple;
-	bh=p7/yjDGnNGGaeD9XDdVqkaLGsm0yeDEEVsRNJsLKJBM=;
+	s=arc-20240116; t=1781112527; c=relaxed/simple;
+	bh=Q9WQirJVF4aqZ32jEMvsLOPaqWt6o09PIbeKmH/wKJs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Gua2JMiYYKrEJflp3n/VfK+IpI/tlxdil09XFN8Z5UxkKi6720LfrJ9H/T3idfzZZmeXtbRZfGuziIn3huHUoczU4Xg4tUNYSMw/QjT66/FUnyRL1qGJ1/8Hn8zaCcB5giqbEI94Ob+prJVUTzksiI0AIk921yuqGqMe2a/hbws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LK5y7GjK; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=uumyk7IznwhGInazLvEjel+fYz00Zfrhm6FOQjDEBKwtmA5w06nSPRCo0WSd8Su5B9+/RIro6KX5KZaF16VpK/FHZHekhm51Kq+E9Fh6nyB7YWaLqhiXxyk0oVWL+jge/VN8rbjB2Fj1u7KWgzajL8hSyAubWnyUxc0K1CPZ3C4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FyzEWFyQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LK5y7GjK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D69291F00898;
-	Wed, 10 Jun 2026 17:21:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FyzEWFyQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F2631F00893;
+	Wed, 10 Jun 2026 17:28:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781112095;
-	bh=iYpMpZcFJx4XV2SVcjE2n2VQBLmYwju4cPVuo0RdT/4=;
+	s=k20260515; t=1781112526;
+	bh=tZlE3BHAUYAhd7eSi9AydCCRFItUw8s+poNZbb1yMxE=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=LK5y7GjKsQfZFyVb1haUXwH8ig0lKBJ1Dz2R4q8xxh/1K6P/qSFql4ukmZHA192Bk
-	 J9kcHpIhxM+CfZaDJmK3P8rd8ShdKFR0wYv0HfJWKJJORg6COz97Ht3AKdX1O/hUrT
-	 V6jeGXI1NOikJ+RP/C4hQZ6DmSlHxTNztqUH42VF6SBjZJAEVYcDO+c1aiUmRytoQ5
-	 ZrL5SVjwuIGG2GKzPqPk1zPKXhbrx+m1I/+bFNePc3krheRa4zJL16JL3l4IdMT9rj
-	 nCkjgHDowr5O9Sw8WrH2YL6bMWFbpAIUhJYYTi4omqTrHkGHs3hRhxLmNR+46z5a2Y
-	 rbQUG7z1g5IfQ==
-Date: Wed, 10 Jun 2026 22:51:28 +0530
+	b=FyzEWFyQY3Lmf+4fEJggqKbz965JaUBRyo6K/HKbz9mi5IW8MnpuUS+nRXKHbjWS1
+	 R49KlNnID/NJVDKtpCB8ewwhP6dFjdghJZhxJBmdXGAEj0vxYQ7tPt61cZiY60qcR3
+	 lVCWv66Py9rcZPf/6D9tQCs7JTjL3U6qop8wXxo1iVpJQnEQGZgCkraOj99/3EKnKH
+	 +O4bRG855IpXoYd4o9Pjw1ZN1worJLXwv6OG+9ILSucQTiuvTrVcOz+wjFpO752Hvh
+	 ytnwoZkTRumuTjWlIzb6bpY2kMpnNTjSzkcPxxi2DSgnVyZOC7oKN7N2N15XOaqGqK
+	 IzJilJ+rzl7qA==
+Date: Wed, 10 Jun 2026 19:28:41 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Felix Gu <ustc.gu@gmail.com>
-Cc: Senchuan Zhang <zhangsenchuan@eswincomputing.com>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, Yu Ning <ningyu@eswincomputing.com>, 
-	Yanghui Ou <ouyanghui@eswincomputing.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: eswin: Fix resource leak on dw_pcie_host_init()
- failure
-Message-ID: <tpmaqs6ndkjzqktp6wyvlfbjl2clh3crim4unjvyemggmeilyx@rw7bcroyp32w>
-References: <20260520-eswin-v2-1-a221438a6317@gmail.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: Hans Zhang <18255117159@163.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 8/9] PCI: vmd: Protect root bus removal with rescan lock
+Message-ID: <r5vwd573ydynlrrax5iy6jt25dc2yiqkvlciqy366zsxxu4d7f@hyvqgsdj4ulw>
+References: <20260521161822.132996-9-18255117159@163.com>
+ <20260521212024.8689D1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,71 +43,56 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260520-eswin-v2-1-a221438a6317@gmail.com>
+In-Reply-To: <20260521212024.8689D1F000E9@smtp.kernel.org>
 
-On Wed, May 20, 2026 at 10:45:04PM +0800, Felix Gu wrote:
-> When dw_pcie_host_init() fails, the code jumps to err_init which
-> only calls pm_runtime_put() but skips the cleanup of port resources
-> allocated by eswin_pcie_parse_ports().
+On Thu, May 21, 2026 at 09:20:24PM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
 > 
-> Additionally, the incorrect port cleanup code in
-> eswin_pcie_host_init() error path is removed since port resources
-> should be released in probe's error handler, not in host_init.
+> New issues:
+> - [High] Acquiring `pci_rescan_remove_lock` in `vmd_remove()` introduces self-deadlocks and AB-BA lock inversions.
 > 
-> Fixes: b593c26d081a ("PCI: eswin: Add ESWIN PCIe Root Complex driver")
-> Signed-off-by: Felix Gu <ustc.gu@gmail.com>
-> ---
->    Changes in v2:
->    - Fix Mani's comment.
->    - Remove incorrect port cleanup code in eswin_pcie_host_init() error path.
->    - Link to v1: https://lore.kernel.org/lkml/20260416-eswin-v1-1-a4991725b5ca@gmail.com/
-> ---
->  drivers/pci/controller/dwc/pcie-eswin.c | 11 +++--------
->  1 file changed, 3 insertions(+), 8 deletions(-)
+> Pre-existing issues:
+> - [High] SRCU structures are destroyed in `vmd_remove()` while their corresponding interrupt handlers are still registered and active, leading to a Use-After-Free in interrupt context.
+> --
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-eswin.c b/drivers/pci/controller/dwc/pcie-eswin.c
-> index ce8d64f8a395..7a02ab91a190 100644
-> --- a/drivers/pci/controller/dwc/pcie-eswin.c
-> +++ b/drivers/pci/controller/dwc/pcie-eswin.c
-> @@ -182,7 +182,7 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	struct eswin_pcie *pcie = to_eswin_pcie(pci);
-> -	struct eswin_pcie_port *port, *tmp;
-> +	struct eswin_pcie_port *port;
->  	u32 val;
->  	int ret;
->  
-> @@ -252,10 +252,6 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
->  	reset_control_bulk_assert(ESWIN_NUM_RSTS, pcie->resets);
->  err_deassert:
->  	clk_bulk_disable_unprepare(pcie->num_clks, pcie->clks);
-> -	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> -		reset_control_put(port->perst);
-> -		list_del(&port->list);
-> -	}
+> commit 8d5d06b67e6b02d2cc99f2151e90ba61c0d16662
+> Author: Hans Zhang <18255117159@163.com>
+> 
+> PCI: vmd: Protect root bus removal with rescan lock
+> 
+> This commit acquires the pci_rescan_remove_global_lock while stopping
+> and removing the VMD root bus in vmd_remove(). This is intended to
+> prevent races with concurrent PCI rescan operations.
+> 
+> > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> > index d4ae250d4bc6d..9565567026cf0 100644
+> > --- a/drivers/pci/controller/vmd.c
+> > +++ b/drivers/pci/controller/vmd.c
+> > @@ -1056,9 +1056,11 @@ static void vmd_remove(struct pci_dev *dev)
+> >  {
+> >  	struct vmd_dev *vmd = pci_get_drvdata(dev);
+> >  
+> > +	pci_lock_rescan_remove();
+> 
+> [Severity: High]
+> Can acquiring pci_rescan_remove_lock here cause self-deadlocks or AB-BA lock
+> inversions?
+> 
+> When a VMD device is removed via PCI hotplug or sysfs remove node, the PCI
+> core calls pci_stop_and_remove_bus_device_locked(), which acquires
+> pci_rescan_remove_lock and eventually triggers vmd_remove(). Because
+> pci_rescan_remove_lock is a non-recursive mutex, won't attempting to acquire
+> it again immediately self-deadlock?
+> 
+> Also, when unbound via sysfs, the core holds device_lock and calls
+> vmd_remove(), which then waits for pci_rescan_remove_lock. Since normal PCI
+> rescans acquire pci_rescan_remove_lock first, then attempt to acquire
+> device_lock, does this create an AB-BA lock inversion?
+> 
 
-Unrelated change.
-
->  
->  	return ret;
->  }
-> @@ -347,18 +343,17 @@ static int eswin_pcie_probe(struct platform_device *pdev)
->  	ret = dw_pcie_host_init(&pci->pp);
->  	if (ret) {
->  		dev_err(dev, "Failed to init host\n");
-> -		goto err_init;
-> +		goto err_pm_runtime_put;
->  	}
->  
->  	return 0;
->  
->  err_pm_runtime_put:
-> +	pm_runtime_put(dev);
-
-When pm_runtime_get_sync() fails, pm_runtime_put_noidle() should be called in
-the error path. But now pm_runtime_put() will be called, which may attempt
-suspend.
+This is a valid concern. Since VMD is registered as a PCI driver, removing the
+VMD device through sysfs will trigger vmd_remove() callback and it will result
+in deadlock. The AB-BA lock inversion is also valid.
 
 - Mani
 
