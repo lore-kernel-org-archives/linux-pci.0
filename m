@@ -1,110 +1,125 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from xry111.site (xry111.site [89.208.246.23])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1675F299A82;
-	Wed, 10 Jun 2026 23:21:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A72929C328;
+	Wed, 10 Jun 2026 23:40:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.208.246.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781133681; cv=none; b=PP8/v77ABocUx6Zx/mH9Zb1rATWR1++xb36J5kqxy26wGiQLJojgh0fai3R7LgTvCiSBcHzPqnUHoO47Ufh8HI/9w31fEzRvPcucLLxyhJ4O7RKth9fxu6h6ef42+YjaadNoTrEY2xBuGUU5w5gohHFgnrO/imHnLnshKzYPXkY=
+	t=1781134857; cv=none; b=QC4DLREYjRI9kdcKoimftelSY9VDPszBXDxHZ1IhnA6oFeMPW/NXmTtvEVwxU04uWHlDX9Uqzv2a20G84vYwVp4s7LUGYxuNgfUH9t5fBb3nRXmQA7rEFxB8s4fNYMoLb0qaCk0m7jFpEBa9XcqKpO2uzDW+WOcwj4+QoLJ+vhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781133681; c=relaxed/simple;
-	bh=0ADfnQ8czZLpWCsiojUzxdOuhYUqCYDerD2scETEEgY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hSR8pQCTzrYdU045Wjn3JHdZNrFHEFsa2GzDl+s+WumFEoSuYUhb6catpF9EcKq87epQRXRxj9P/fZeJAihdQqT6ZTmB7Rshj6pPW3PENJ2xY7ChUAIaDq1CRE6eVB7vsZgywlfL5mSoAh91wrAmk2V44xI9Yz4UAoAUnlGKPRg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=pass smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=U3qJBmhZ; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1781134857; c=relaxed/simple;
+	bh=sVPLZELC1PoBEGXx46p9LvteI62tJ3s8nH3QK5JfNnE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=B9/txqPOY0a60o9kbyZFoxglLRUbxyPmhM3ewRYwbWVWN7CHMUNzX7E1cw44RIZDj3hzXYDzB2Lr3q9D3g87iu92gxr3Oyw0RnZG+Z1YqDCpoA1oNRmXmeTqwL9JQp2/wCoSFwbhPwIzCIv5Qf2QX74g3Py+mMPtydZYimZ/8T8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=xry111.site; spf=pass smtp.mailfrom=xry111.site; dkim=pass (1024-bit key) header.d=xry111.site header.i=@xry111.site header.b=Ffx6YIf7; arc=none smtp.client-ip=89.208.246.23
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=xry111.site
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xry111.site
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U3qJBmhZ"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=9wCKYk9ipCH/BA7MdLEIq6BkUVsdEsoO78w2x/7sZ2o=; b=U3qJBmhZf9CRxCeA9tY1a8rgQK
-	VvNBvitBupG4j41A1Ykgftr3bSAm13ZJ0N4DoyA6EgcFfHoTyGTgf8MuPFhEJZ4m9+yAQC6GFN+0F
-	4eYxlOSCkUY77IiU3VRCOxJ4e4USN+ibwSWtegvdo8Szvr3bac1IP0a7K55skCtAYL0lVB6ZPzBij
-	+4cAGwMm1CCKcvgjGXt424jkhsEIhvieJf+HCnTRRxv1grn1ByCaUJasJDvzgsHlgeUQAULnTnKXm
-	TmLpaw9y0Fx0kGpVnJVnsyF40yPZN68nSv0J7V1dhsXi79IA5S3d26gLRYcNvvt4cnNTCC/x7XnR6
-	ivK9G/5w==;
-Received: from [50.53.43.113] (helo=[192.168.254.34])
-	by bombadil.infradead.org with esmtpsa (Exim 4.99.1 #2 (Red Hat Linux))
-	id 1wXSEX-00000008Sdk-3Vuf;
-	Wed, 10 Jun 2026 23:21:17 +0000
-Message-ID: <cf1a1f6d-df63-45cd-b73a-cd3e26f2ce4a@infradead.org>
-Date: Wed, 10 Jun 2026 16:21:15 -0700
+	dkim=pass (1024-bit key) header.d=xry111.site header.i=@xry111.site header.b="Ffx6YIf7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=xry111.site;
+	s=default; t=1781134848;
+	bh=U1isU/Mjec0vZk6UMMGTWf7R7yQl0VtWPS2hoMTvoxE=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=Ffx6YIf7yj2YQcesRHQUAPsALp2RjktNgatHUFsD/imGLEu+SycLZfoQnY8lyJGHJ
+	 AjUD/AV1oVH4ret1ZYWSUptWuCIZRcQCSTFJmbVWOpAhNljqTZB9vdVm4oXaYAjsHb
+	 MVsjW/q8vbCw3i6LcVVjdQAUudnje0j8RSkDP/GQ=
+Received: from [IPv6:2409:8a4c:e12:98c1::376] (unknown [IPv6:2409:8a4c:e12:98c1::376])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature ECDSA (secp384r1) server-digest SHA384)
+	(Client did not present a certificate)
+	(Authenticated sender: xry111@xry111.site)
+	by xry111.site (Postfix) with ESMTPSA id E1A2565982;
+	Wed, 10 Jun 2026 19:40:44 -0400 (EDT)
+Message-ID: <2dbb12fcdebf6c7f375cce56cceb113746a92c4b.camel@xry111.site>
+Subject: Re: [PATCH] pci: loongson: Avoid L0s on LS7A1000 PCIe x8
+ [0014:7a29] Root Ports rev2
+From: Xi Ruoyao <xry111@xry111.site>
+To: Huacai Chen <chenhuacai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam
+ <mani@kernel.org>,  Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof
+ =?gb2312?Q?Wilczy=A8=BDski?= <kwilczynski@kernel.org>, Rob Herring
+ <robh@kernel.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Mingcong Bai	 <jeffbai@aosc.io>, Henry Chen <chenx97@aosc.io>, Han Gao
+ <gaohan@iscas.ac.cn>,  Jiaxun Yang <jiaxun.yang@flygoat.com>
+Date: Thu, 11 Jun 2026 07:40:39 +0800
+In-Reply-To: <CAAhV-H4QV=gYQH8+RRL3S8OTR3xq7c0iAUWgJAh0pETVikO-qw@mail.gmail.com>
+References: <20260609152511.753760-1-xry111@xry111.site>
+	 <CAAhV-H4QV=gYQH8+RRL3S8OTR3xq7c0iAUWgJAh0pETVikO-qw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.60.2 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 4/4] Documentation: PCI: Add documentation for DOE
- endpoint support
-To: Aksh Garg <a-garg7@ti.com>, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, mani@kernel.org, kwilczynski@kernel.org,
- bhelgaas@google.com, corbet@lwn.net, kishon@kernel.org,
- skhan@linuxfoundation.org, lukas@wunner.de, cassel@kernel.org,
- alistair@alistair23.me
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- s-vadapalli@ti.com, danishanwar@ti.com, srk@ti.com
-References: <20260610100256.1889111-1-a-garg7@ti.com>
- <20260610100256.1889111-5-a-garg7@ti.com>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20260610100256.1889111-5-a-garg7@ti.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+
+On Wed, 2026-06-10 at 16:21 +0800, Huacai Chen wrote:
+> Hi, Ruoyao,
+>=20
+> On Tue, Jun 9, 2026 at 11:26=E2=80=AFPM Xi Ruoyao <xry111@xry111.site> wr=
+ote:
+> >=20
+> > Commit f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for
+> > devicetree platforms") has broke booting of a Loongson 3B4000 + 7A1000
+> > server with an Intel 750 Series SSD.=C2=A0 We also found a Loongson 3A5=
+000
+> > board using the same 7A1000 bridge chip exhibiting the same issue with
+> > pcie_aspm=3Dforce and pcie_aspm.policy=3Dpowersave (ASPM is not enabled=
+ by
+> > default on the 3A5000 board because it's based on ACPI and the _OSC
+> > method has not been implemented in its DSDT/SSDT yet).
+> >=20
+> > This seems only affecting the 7A1000 chips shipping the revision 2 of
+> > the PCIe x8 Root Port: on other two boards with a (persumably older)
+> > LS7A1000 bridge chip utilizing the revision 1 of the root port, the
+> > issue does not reproduce.
+> Is that confirmed by chip designers?
+
+I don't have their contact.  This is based on our experiments on 5
+boards (two 3B4000 x 2 with rev2, one with rev1, one 3A4000 with rev1,
+one 3A5000 with rev2).
+
+> > Cc: Mingcong Bai <jeffbai@aosc.io>
+> > Cc: Henry Chen <chenx97@aosc.io>
+> > Cc: Han Gao <gaohan@iscas.ac.cn>
+> > Cc: Jiaxun Yang <jiaxun.yang@flygoat.com>
+> > Fixes: f3ac2ff14834 ("PCI/ASPM: Enable all ClockPM and ASPM states for =
+devicetree platforms")
+> > Signed-off-by: Xi Ruoyao <xry111@xry111.site>
+> > ---
+> > =C2=A0drivers/pci/controller/pci-loongson.c | 13 +++++++++++++
+> > =C2=A01 file changed, 13 insertions(+)
+> >=20
+> > diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/contro=
+ller/pci-loongson.c
+> > index a4250d7af1bf..dc7cee10643e 100644
+> > --- a/drivers/pci/controller/pci-loongson.c
+> > +++ b/drivers/pci/controller/pci-loongson.c
+> > @@ -212,6 +212,19 @@ static void loongson_pci_bridge_speed_quirk(struct=
+ pci_dev *pdev)
+> > =C2=A0DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c19, loongson=
+_pci_bridge_speed_quirk);
+> > =C2=A0DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LOONGSON, 0x3c29, loongson=
+_pci_bridge_speed_quirk);
+> >=20
+> > +/*
+> > + * Some devices, for example Intel 750 Series SSD, experiences data lo=
+ss
+> > + * (read timeout) on LS7A1000 PCIe x8 Root Port when ASPM L0s is enabl=
+ed.
+> > + * This seems only affecting the revision 2.
+> > + */
+> > +static void ls7a_pcie_port2_aspm_quirk(struct pci_dev *pdev)
+> It is better to follow the namings in this file, i.e.
+> loongson_pcie_port2_aspm_quirk, or loongson_pcie_aspm_quirk for short.
+
+I'd keep "7a" in the name so in case another ASPM quirk is needed for
+future products we'll not get a name clash.  Maybe
+loongson_7a_port2_aspm_quirk (I don't think _pcie_ is so useful here as
+the entire source file is for PCIe anyway).
 
 
-
-On 6/10/26 3:02 AM, Aksh Garg wrote:
-> Document the architecture and implementation details for the Data Object
-> Exchange (DOE) framework for PCIe Endpoint devices.
-> 
-> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-> Signed-off-by: Aksh Garg <a-garg7@ti.com>
-
-Tested-by: Randy Dunlap <rdunlap@infradead.org>
-Thanks.
-
-> ---
-> 
-> Changes from v4 to v5:
-> - Updated the DOE Abort handling setion.
-> 
-> Changes from v3 to v4:
-> - Updated the maximum size of the DOE object from 256KB to 1MB,
->   as per PCIe spec.
-> - Updated the DOE setup and cleanup sections.
-> 
-> Changes from v2 to v3:
-> - Rebased on 7.1-rc1.
-> 
-> Changes since v1:
-> - Squashed the patches [1] and [2], and moved the documentation file
->   to Documentation/PCI/endpoint/pci-endpoint-doe.rst to match the existing
->   naming scheme, as suggested by Niklas Cassel
-> - Updated the documentation as per the design and implementaion changes
->   made to previous patches in this series:
->   * Updated for static protocol array instead of dynamic registration
->   * Documented asynchronous callback model
->   * Updated request/response flow with new callback signature
->   * Updated memory ownership: DOE core frees request, driver frees response
->   * Updated initialization and cleanup sections for new APIs
-> 
-> v4: https://lore.kernel.org/all/20260522052434.802034-5-a-garg7@ti.com/
-> v3: https://lore.kernel.org/all/20260427051725.223704-5-a-garg7@ti.com/
-> v2: https://lore.kernel.org/all/20260401073022.215805-5-a-garg7@ti.com/
-> v1: [1] https://lore.kernel.org/all/20260213123603.420941-2-a-garg7@ti.com/
->     [2] https://lore.kernel.org/all/20260213123603.420941-5-a-garg7@ti.com/
-> 
->  Documentation/PCI/endpoint/index.rst          |   1 +
->  .../PCI/endpoint/pci-endpoint-doe.rst         | 333 ++++++++++++++++++
->  2 files changed, 334 insertions(+)
->  create mode 100644 Documentation/PCI/endpoint/pci-endpoint-doe.rst
-
-
--- 
-~Randy
+--=20
+Xi Ruoyao <xry111@xry111.site>
