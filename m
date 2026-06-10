@@ -1,100 +1,68 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C60B13446C7;
-	Wed, 10 Jun 2026 17:28:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E5B4230BDB;
+	Wed, 10 Jun 2026 18:32:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781112527; cv=none; b=qCxqUF7BooG6/2P+1SqHio0+l1+gPcB1e9iaIAfPIdUJiD2bMkwuC983yCdXULmU4IxKQMdaoW84Brl4jAENBK3KUmWuLD+O/9j1i0GPeyoC1XAGNuZ7ZchsNZ4qodRH8O9Wcz0nAmCs0gG/MLSJAWECoyLSBdlmV5X7FqrGZzo=
+	t=1781116368; cv=none; b=YlU8tofLy02yl9Cb2XFYVOytmNotjlFYBYNNZz931CfWZi40tCE0KOUhkF96uz9KVlqunVzA2mv7MMx5rp480Yklz9JxM5WpIukSntOUFD298uR2HrO9jQVJJ6Skpu3K0uVebfhHQWJQsbotWd4zDbHuZljxflqSj10Ma2XWfRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781112527; c=relaxed/simple;
-	bh=Q9WQirJVF4aqZ32jEMvsLOPaqWt6o09PIbeKmH/wKJs=;
+	s=arc-20240116; t=1781116368; c=relaxed/simple;
+	bh=TKOvpkWSiAS7b5th0YvBHsk/Cekxk5bwdMk6Ie758iw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uumyk7IznwhGInazLvEjel+fYz00Zfrhm6FOQjDEBKwtmA5w06nSPRCo0WSd8Su5B9+/RIro6KX5KZaF16VpK/FHZHekhm51Kq+E9Fh6nyB7YWaLqhiXxyk0oVWL+jge/VN8rbjB2Fj1u7KWgzajL8hSyAubWnyUxc0K1CPZ3C4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FyzEWFyQ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=ZnlPO7DGmT+syUozDIND0Vap0UbKBeZwvN9ljE75h9sopuu34/p4H8yYkgvKsXyFgP1Ztz+sc39J3dcAYbeChWxdRVjwFGu3v2jbn6ME+P3rdN21ILu/joZUcE64JuJVOZzSQxkwUuc43iEpXx+c+I1PzjhD6ZBTxZlmUkn2e/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bj9Pbd5b; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FyzEWFyQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F2631F00893;
-	Wed, 10 Jun 2026 17:28:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bj9Pbd5b"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 627C91F00893;
+	Wed, 10 Jun 2026 18:32:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781112526;
-	bh=tZlE3BHAUYAhd7eSi9AydCCRFItUw8s+poNZbb1yMxE=;
+	s=k20260515; t=1781116367;
+	bh=LlVd1CICzndplx6M5IsozYPz6Db/jaEab02kRkx/bZk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=FyzEWFyQY3Lmf+4fEJggqKbz965JaUBRyo6K/HKbz9mi5IW8MnpuUS+nRXKHbjWS1
-	 R49KlNnID/NJVDKtpCB8ewwhP6dFjdghJZhxJBmdXGAEj0vxYQ7tPt61cZiY60qcR3
-	 lVCWv66Py9rcZPf/6D9tQCs7JTjL3U6qop8wXxo1iVpJQnEQGZgCkraOj99/3EKnKH
-	 +O4bRG855IpXoYd4o9Pjw1ZN1worJLXwv6OG+9ILSucQTiuvTrVcOz+wjFpO752Hvh
-	 ytnwoZkTRumuTjWlIzb6bpY2kMpnNTjSzkcPxxi2DSgnVyZOC7oKN7N2N15XOaqGqK
-	 IzJilJ+rzl7qA==
-Date: Wed, 10 Jun 2026 19:28:41 +0200
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: sashiko-reviews@lists.linux.dev
-Cc: Hans Zhang <18255117159@163.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 8/9] PCI: vmd: Protect root bus removal with rescan lock
-Message-ID: <r5vwd573ydynlrrax5iy6jt25dc2yiqkvlciqy366zsxxu4d7f@hyvqgsdj4ulw>
-References: <20260521161822.132996-9-18255117159@163.com>
- <20260521212024.8689D1F000E9@smtp.kernel.org>
+	b=bj9Pbd5bRiBasPgI5ZjHY9FIRwM7WWrFpwIO0inFTbHKirrP2xTA2XdCHAB7lXgvW
+	 2NlD+920ghF8SlnXTeZyyYPxYdHL/4NVFSHivYJZKhR/mmkY9g7ZrT09GNLlO83RxA
+	 goPnrj/xLah5pPJZIMXgMSCjltxBElImVblOs6XEk4eRpiEDrriRpgPuR3rQ//2utN
+	 rn9Wjm99pJFPEhuv+VWONfauAPtu55v4EBteta4pxtZLkgcpmNLdIiyKsVLYVjahYD
+	 +BIcowBsVvH8E2OGIZOfrosmORDK0zJUoEFX7fBrYBQIVdNdsfQXHcyYBn8mth7Gf9
+	 Jz4r8sM83ZHhg==
+Date: Wed, 10 Jun 2026 21:32:40 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Pranjal Shrivastava <praan@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>, Matt Evans <mattev@meta.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	Shivaji Kant <shivajikant@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>
+Subject: Re: [RFC PATCH 0/5] vfio/pci: Support ZONE_DEVICE-backed P2P
+ Registration
+Message-ID: <20260610183240.GJ327369@unreal>
+References: <20260610151853.3608948-1-praan@google.com>
+ <20260610162848.GO2764304@ziepe.ca>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260521212024.8689D1F000E9@smtp.kernel.org>
+In-Reply-To: <20260610162848.GO2764304@ziepe.ca>
 
-On Thu, May 21, 2026 at 09:20:24PM +0000, sashiko-bot@kernel.org wrote:
-> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+On Wed, Jun 10, 2026 at 01:28:48PM -0300, Jason Gunthorpe wrote:
+> On Wed, Jun 10, 2026 at 03:18:48PM +0000, Pranjal Shrivastava wrote:
 > 
-> New issues:
-> - [High] Acquiring `pci_rescan_remove_lock` in `vmd_remove()` introduces self-deadlocks and AB-BA lock inversions.
+> > Users utilize the standard sysfs p2pmem/allocate interface for managing
+> > memory slices once a BAR is registered.
 > 
-> Pre-existing issues:
-> - [High] SRCU structures are destroyed in `vmd_remove()` while their corresponding interrupt handlers are still registered and active, leading to a Use-After-Free in interrupt context.
-> --
-> 
-> commit 8d5d06b67e6b02d2cc99f2151e90ba61c0d16662
-> Author: Hans Zhang <18255117159@163.com>
-> 
-> PCI: vmd: Protect root bus removal with rescan lock
-> 
-> This commit acquires the pci_rescan_remove_global_lock while stopping
-> and removing the VMD root bus in vmd_remove(). This is intended to
-> prevent races with concurrent PCI rescan operations.
-> 
-> > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> > index d4ae250d4bc6d..9565567026cf0 100644
-> > --- a/drivers/pci/controller/vmd.c
-> > +++ b/drivers/pci/controller/vmd.c
-> > @@ -1056,9 +1056,11 @@ static void vmd_remove(struct pci_dev *dev)
-> >  {
-> >  	struct vmd_dev *vmd = pci_get_drvdata(dev);
-> >  
-> > +	pci_lock_rescan_remove();
-> 
-> [Severity: High]
-> Can acquiring pci_rescan_remove_lock here cause self-deadlocks or AB-BA lock
-> inversions?
-> 
-> When a VMD device is removed via PCI hotplug or sysfs remove node, the PCI
-> core calls pci_stop_and_remove_bus_device_locked(), which acquires
-> pci_rescan_remove_lock and eventually triggers vmd_remove(). Because
-> pci_rescan_remove_lock is a non-recursive mutex, won't attempting to acquire
-> it again immediately self-deadlock?
-> 
-> Also, when unbound via sysfs, the core holds device_lock and calls
-> vmd_remove(), which then waits for pci_rescan_remove_lock. Since normal PCI
-> rescans acquire pci_rescan_remove_lock first, then attempt to acquire
-> device_lock, does this create an AB-BA lock inversion?
-> 
+> I'm shocked someone wants to use API, what are you expecting to do
+> with it??
 
-This is a valid concern. Since VMD is registered as a PCI driver, removing the
-VMD device through sysfs will trigger vmd_remove() callback and it will result
-in deadlock. The AB-BA lock inversion is also valid.
+I was under impression what we all want to move from that API.
 
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Thanks
