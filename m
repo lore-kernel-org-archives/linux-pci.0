@@ -1,188 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0799349CCD;
-	Wed, 10 Jun 2026 18:42:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0772DA765
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 18:51:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781116959; cv=none; b=NhLTnDyiK5A5jI1rJ4NkWALlpKpf4ZQ0hro1GvCXFdco8/u/OZ+DnUwIL75ncdOkp35JD8B8UgDXPvem9T0gjk4pDrexEBuiz1c77yAoX5Y+1gqJOFhD96bNlgn0J6JyekZ5Sqb3ewbhikKX/Mq3O1EmknObZN8hXYodTwEj7Do=
+	t=1781117467; cv=none; b=aO/plZ5U1B/yCZd2R/2JvMQJV427zS0wgOme8NWIwR4lgNs2TKBVr8mDsO2BSbHaY3v5UoRQrYV9FG4NKysDPQeERPQhxq3tFAbf3ZSosX8jgetpuZzN5Fat/4H7yk0ctijUAcTgqg/aWHs5cykBjf8P0wIUFpwyxQfMeLTEAJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781116959; c=relaxed/simple;
-	bh=bncw1kp2XmKdNd9PZSqbZND3nV3QuAke+Or/JDyh2x8=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=X4rF3xbIfLD+ScSOzpfX2PaE8Qlcdwp2MeqQd4amiHGbOTTm3Ln4aisLPUkkd6LV/H4VWkOo46Aekdogk8FmaGjEC7+awHQEn7u1Q5pejtBzQIdvsz7p0nnfj25nNiD3fH75iWR+AZFjdI3Nj94cqF0DdatG6TIvr/B+2DeIWjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gpyZegFr; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781117467; c=relaxed/simple;
+	bh=vrvXTQGaBYmGZvNYYbz+ZPRnJFdVOK/6Ow0Uktp8Z9I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AWrfd8Wkhls2OsJmra3U7WTggEogKzzk2YT3GIlW54uaB6P+cqZow4KT1OWhkhoOBZ9MiDqTrMaSbXQIXUT52ILh19D1Dlzalj5Zht9SqQweDglodcGBCBDfLXDi7t28YaDSX8uBO/dYOTVtzuEaDaQegsmEe+zGVtZFzzK/4kU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=wl96h33c; arc=none smtp.client-ip=80.241.56.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gpyZegFr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2812E1F00893;
-	Wed, 10 Jun 2026 18:42:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781116958;
-	bh=xnrO31LLlSXPRgDvDd03PEdMDaXIr+aCbScw5GFqWuU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=gpyZegFrsmlQCERexafvFL8huHGeATz3YXutJXCy3MFp08VXEsP/Tx8O3Hp3qUhlp
-	 HNY4ULM+9Sx/MlKcfrKbjfVKXQNpZs5FX5JNUbwrvgyPjDRXjHryZKNDe76hI0JVIE
-	 jUYTffFgdsfo8plKCaZPsVlldj2JtoqJHMO5ecLfUs5gZvlZ0U/GMBLuv/MUY1F4X4
-	 xFkQbfBYV1bDTRz54GDZxSuOFTlGMPIGRmHEaBUVUHB9/U8hg6djZB95N7AKe0FvqM
-	 0DB/0stigbLyXUHWSulkgaf03pnMZjUnOpieehIb6JBD3KpCyHqF6DPyjw5msHmrIq
-	 YgDuFmUZxz2SA==
-Date: Wed, 10 Jun 2026 13:42:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org,
-	mani@kernel.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-	ath12k@lists.infradead.org, mhi@lists.linux.dev,
-	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v7 1/3] PCI: Add d3cold as general reset method
-Message-ID: <20260610184236.GA236984@bhelgaas>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="wl96h33c"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4gbFGr3SPXz9tlV;
+	Wed, 10 Jun 2026 20:51:00 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1781117460;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZevjoKy/Qn5PiuRiWmQRfSmxLgVmXC1B3TwbFCvVne8=;
+	b=wl96h33cWAdzstipbUMKPkpVZAWpxgEZRAcozi3Tih1NMAmt+e4n4/uTYgPsdpxATlASW1
+	20bx2CmWqAwrU85fa/M70UlFMxh3gMjy+MM6tC9//7sBY7aYEy1nv0M620qDgBdllIk2Sg
+	2JMiS2u3UqQ5FSrTs8fjrpOhxZEJ/jX4dW8XulhoR5a2Lv5Qw6igkwed3k4LQmoe3rq4lD
+	a8yNnaWW70ApeOglgw3dVtz7Y9DbXDgQVvvzODGWl5Xu9i/S8JORqpX2Fp0lF1SKoR2jv9
+	qu3talF8YzpY537ShSNKuEgLuVhs7zeSKUUEJPJJhxz0elyTj19fQINhl/nJEg==
+Message-ID: <bc40e4c6-1922-4bce-99d1-341730a4e6f8@mailbox.org>
+Date: Wed, 10 Jun 2026 20:50:58 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260603105853.326290-2-jtornosm@redhat.com>
+Subject: Re: [PATCH v2] PCI: rcar-gen4: Limit Max_Read_Request_Size and
+ Max_Payload_Size to 256 Bytes
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
+References: <20260519195219.189323-1-marek.vasut+renesas@mailbox.org>
+ <20260519202037.8BD001F000E9@smtp.kernel.org>
+ <orrpfub5f2hkrgkmxrdtykhzmxyuclnky4dn6vnz3cgvvbdcvb@5altvzufcq53>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <orrpfub5f2hkrgkmxrdtykhzmxyuclnky4dn6vnz3cgvvbdcvb@5altvzufcq53>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: ttpgyhrq88jjhdar35rhcjkyco9uaiyp
+X-MBO-RS-ID: 175196a034898b0f73e
 
-[+cc linux-pm]
+On 6/10/26 7:11 PM, Manivannan Sadhasivam wrote:
 
-On Wed, Jun 03, 2026 at 12:58:51PM +0200, Jose Ignacio Tornos Martinez wrote:
-> Add D3cold power cycle as a general PCI reset method for single-function
-> devices on platforms with ACPI _PR3 power resources. This provides true
-> power cycle reset capability when the platform can physically cut power
-> to the device.
+[...]
+
+>>> +static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
+>>> +					struct pci_dev *dev)
+>>> +{
+>> [ ... ]
+>>> +	if (pcie_get_mps(dev) > 256) {
+>>> +		pci_info(dev, "Limiting MPS to 256 bytes\n");
+>>> +		pcie_set_mps(dev, 256);
+>>
+>> [Severity: High]
+>> Will modifying the Max_Payload_Size locally in the enable_device hook
+>> desynchronize it from the rest of the PCIe fabric?
+>>
+>> The PCIe specification and Linux PCI core generally manage MPS uniformly
+>> across the hierarchy during boot via pcie_bus_configure_settings().
+>> Because this hook runs later during driver probe via pci_enable_device(),
+>> if the upstream Root Port or Switch retains a larger MPS and transmits a
+>> TLP exceeding 256 bytes, could the downstream device drop it as a Malformed
+>> TLP and cause a fatal link error?
+>>
+>> Would it be safer to restrict the Root Port's MPS capabilities before
+>> enumeration so the core logic correctly scales the entire fabric?
+>>
 > 
-> The implementation strictly requires _PR3 to be present - the platform
-> must be able to control device power. This ensures d3cold only attempts
-> true power cycling, not falling back to D3hot transitions.
+> Marek, you said that Root Port's MPSS is fixed to 256B. So this means, PCI core
+> will only set the endpoint's MPS to <=256B. So I don't see a need to limit MPS
+> here.
+
+The MPS limiter is optional and I never saw MPS > 256 in my tests, 
+however I feel that to make this bulletproof, it would be good to keep 
+this check. If you feel strongly about this, I can drop it, just let me 
+know.
+
+[...]
+
+>> Should pp->bridge->no_inc_mrrs = 1 be set during this initialization
+>> to enforce the limit permanently?
+>>
 > 
-> D3cold reset is placed at the end of the reset hierarchy since it requires
-> specific platform support and should be tried after standard methods.
-> 
-> Reset hierarchy with this change:
-> 1. device_specific
-> 2. acpi
-> 3. flr
-> 4. af_flr
-> 5. pm (D3hot via config space, checks NoSoftRst)
-> 6. bus (SBR)
-> 7. cxl_bus
-> 8. d3cold (NEW - true power cycle, requires _PR3)
-> 
-> This benefits:
-> - Platforms with _PR3 support
-> - Single-function devices needing true power cycle
-> - VFIO passthrough scenarios where FLR/PM unavailable
+> This is a valid concern. I believe you should set 'pp->bridge->no_inc_mrrs = 1'
+> in the Rcar driver to prevent client drivers from increasing MRRS.
 
-I assume you have some specific device(s) in mind here; can we mention
-any examples so this is more than just theoretically useful?
+I will add this one.
 
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-> ---
-> v7: code unchanged from v6
-> v6: https://lore.kernel.org/all/20260602160024.1171949-2-jtornosm@redhat.com/
-> 
->  drivers/pci/pci.c   | 50 +++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  2 +-
->  2 files changed, 51 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8f7cfcc00090..096868f80cd4 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4491,6 +4491,55 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
->  	return ret;
->  }
->  
-> +/**
-> + * pci_d3cold_reset - Put device into D3cold and back to D0 for reset
-> + * @dev: PCI device to reset
-> + * @probe: if true, check if D3cold reset is supported; if false, perform reset
-> + *
-> + * Reset the device by transitioning through D3cold (actual power removal via
-> + * platform power control) and back to D0. This requires ACPI _PR3 power
-> + * resources to be present - the platform must be able to physically cut power
-> + * to the device.
-> + *
-> + * Only available for single-function devices to avoid affecting other
-> + * functions in multi-function devices.
-> + *
-> + * Returns 0 if device can be/was reset this way, -ENOTTY if not supported,
-> + * or other negative error code on failure.
-> + */
-> +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
-> +{
-> +	int ret;
-> +
-> +	if (dev->multifunction)
-> +		return -ENOTTY;
-> +
-> +	if (!pci_pr3_present(dev))
-> +		return -ENOTTY;
-
-platform_pci_set_power_state() is currently only implemented for MID
-and ACPI, but we're starting to see DT systems with power control for
-devices, so I assume it may someday be extended to support them.
-
-Checking pci_pr3_present() seems wrong to me because it assumes ACPI.  
-
-On ACPI systems, it seems like pci_set_power_state(PCI_D3cold) should
-return an error if the necessary ACPI methods are not present, and we
-wouldn't need this check.  Is that not the case?
-
-Or is this _PR3 check here just to support the "probe"?  I don't know
-if there's a generic interface to tell us whether we can control the
-power to a device.
-
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (dev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	ret = pci_dev_reset_iommu_prepare(dev);
-> +	if (ret) {
-> +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	ret = pci_set_power_state(dev, PCI_D3cold);
-> +	if (ret)
-> +		goto done;
-> +
-> +	ret = pci_set_power_state(dev, PCI_D0);
-> +
-> +done:
-> +	pci_dev_reset_iommu_done(dev);
-> +	return ret;
-> +}
-> +
->  /**
->   * pcie_wait_for_link_status - Wait for link status change
->   * @pdev: Device whose link to wait for.
-> @@ -5065,6 +5114,7 @@ const struct pci_reset_fn_method pci_reset_fn_methods[] = {
->  	{ pci_pm_reset, .name = "pm" },
->  	{ pci_reset_bus_function, .name = "bus" },
->  	{ cxl_reset_bus_function, .name = "cxl_bus" },
-> +	{ pci_d3cold_reset, .name = "d3cold" },
->  };
->  
->  /**
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2c4454583c11..1ca7b880ead7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -51,7 +51,7 @@
->  			       PCI_STATUS_PARITY)
->  
->  /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
-> -#define PCI_NUM_RESET_METHODS 8
-> +#define PCI_NUM_RESET_METHODS 9
->  
->  #define PCI_RESET_PROBE		true
->  #define PCI_RESET_DO_RESET	false
-> -- 
-> 2.54.0
-> 
+And I will also re-ask about the MRRS 256 Byte limit now.
