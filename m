@@ -1,207 +1,229 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4C983C1082
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 10:17:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0CC33750AD
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 10:17:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781086638; cv=none; b=OXHoQh71dfk9Enm65AmtLjxNvTReE+APcGJnxhhvQOsqQTDaMcZ30b/iASCYBXv6vrtQTO7yUii9akCOHtv43G5H7XcUi7t7bvYXQVBCDvQ/rVx3CliLSeRKB7FI7UPkGqT9gRlpqvqfJH/Cgp5u4YaUuEMm9Qod50PySunRur0=
+	t=1781086674; cv=none; b=niPTDxqBYaMrApEU9Z+E2FjXBHnwts8rXGFYp2/3znlpkJ8etstRyuMpm8OAD2s2lGgPQStT7lh+G1n4Pf7Iojs3bT6Iqt6Ag4qBpvQ/jMyMqm+lqUenUT7GNEeaQmn5k3hGzgWj8qXuA/jxkUx6GZoTfSO7pcMIY83lLgH41dE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781086638; c=relaxed/simple;
-	bh=vYnVDYPsBrJKMCuPcaNLEt0enZ+r2U+/XWxZg/7EhWM=;
+	s=arc-20240116; t=1781086674; c=relaxed/simple;
+	bh=oQY+gyuLbB6p2xD+i9KrjBOmSELgm6fyMfyOWPlT5DY=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=Gvi36TA44xaWZ0zS/EgIgAjC7k86xnTast5+kHHdZWL9LqB6v7I4/iSNwv2ak438OjJKC63RFPc/jzXKmobuJ3SBH+n5BwVFC1PvNnR19Sur4lwIidk4GoT2cj5RMm514VV4hhI7THSQ1/kH1975v0dQEfIrmwLviMPWOy1hPqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dOx2iGwi; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=rPjNOyYqTTy9FXV3cEPCqITvHA0yA8u3kywCCCZ5ZVGgEuf/cxfm8SEpMs96iiWUJRG8Ve7wRhqIz8xJfOVN0MYPBW25KcLSqHkrkRtIRAsTa1Uhqfm9nuK1+sTmq4T+JmTWRQc/KnZGp7AAe/+JUj9JrjILJMcWT/KjN6bu/R4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUbRRkus; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dOx2iGwi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95CD01F00898;
-	Wed, 10 Jun 2026 10:17:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUbRRkus"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A8E21F00893;
+	Wed, 10 Jun 2026 10:17:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781086636;
-	bh=iq4ownzHNxA4yip9rPsROTZhFZl/HML0CO5bcinRI28=;
+	s=k20260515; t=1781086672;
+	bh=JJozKJMmo3fpIDZCGzSqhpxfGV9QcSwzaq+2xQxP4e0=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=dOx2iGwicVRbXErh8LetZMOvXyLQYUF179v9dN9R9NHE6C89MSpyFRxVn0yzC0j+Y
-	 2UWqN37tx8z5pxGKXKLXR1nv6vnmsb6JiAbn/zBZwfFsfHxO8K6efdG6qy7cnJWpr5
-	 TI6eIOsysqv97CX/Qn+c+d81XlSQ2APyFvVa9DI5MWa9GNwiWD7Eyh3rSUkTXZ6Jyf
-	 vunlQc7DZArRoOJr2CQ5K9dQvwLExBs5HKSzmY36mi5VKRy2iIfs8WlGkaU6aHZ/z/
-	 tJj84g4MO/o+nRfaxBSAl4aR63V1L1Sny+s3wOycVLzxgc/AiftAhgGRD8rJ1ob3UC
-	 BaoYwMNvtX09w==
+	b=SUbRRkusIqlaCa6a6SvwUeRwl8DL/oq8dswzr1XnbHW+m3gKdVus8WQvNsvu8IOcA
+	 4bnhpZHMpg/6QGoK0dgO5AIzmMjsjzVEtl8IhC20jgGNMA9a3lObEUJn0+1urXgfD+
+	 63d7CLGLQHwDYEwpdoj5/JqwiK20IaoTMWOti4g/dn7rW0zlb8/l3iNdLYkeyBZlOK
+	 Z9XsPJk2sj32/Iqzu0Sqw2J1sK6FvxtXkb8hbgJfKc/U9JK+v/vUhXCD5cdeH3FAzG
+	 ZQpsNMPD1LFpHUOoS0o3TtZLP6iOPNEbh+2Rmt70sMZCuqjrAXlqac1vUTNEN+/qL0
+	 2PmtGRkFLUXLw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v5 2/4] PCI: endpoint: Add DOE mailbox support for
- endpoint functions
+Subject: Re: [PATCH v5 3/4] PCI: endpoint: Add support for DOE
+ initialization and setup in EPC core
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Aksh Garg" <a-garg7@ti.com>
 Cc: linux-pci@vger.kernel.org
-In-Reply-To: <20260610100256.1889111-3-a-garg7@ti.com>
-References: <20260610100256.1889111-3-a-garg7@ti.com>
+In-Reply-To: <20260610100256.1889111-4-a-garg7@ti.com>
+References: <20260610100256.1889111-4-a-garg7@ti.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Wed, 10 Jun 2026 10:17:16 +0000
-Message-Id: <20260610101716.95CD01F00898@smtp.kernel.org>
+Date: Wed, 10 Jun 2026 10:17:51 +0000
+Message-Id: <20260610101752.5A8E21F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+Thank you for your contribution! Sashiko AI review found 5 potential issue(=
 s) to consider:
-- [High] A sticky `PCI_DOE_FLAG_CANCEL` flag causes spurious aborts of vali=
-d requests following an idle mailbox abort.
-- [High] Potential hard deadlock due to acquiring non-IRQ-safe xarray spinl=
-ocks in hardirq context.
-- [High] A TOCTOU race between `pci_ep_doe_submit_task()` and `pci_ep_doe_d=
-estroy_mb()` causes `queue_work()` to be called on a destroyed workqueue.
-- [High] Clearing the `PCI_DOE_FLAG_CANCEL` flag unconditionally can silent=
-ly erase a concurrent DOE Abort signal from the host.
+- [High] Lockless check of `epc->init_complete` in `pci_epc_init_notify()` =
+and `pci_epc_deinit_notify()` creates a race condition leading to double in=
+itialization or double destruction of DOE mailboxes.
+- [High] Queueing a task on a mailbox's workqueue races with workqueue dest=
+ruction.
+- [Medium] DOE capability discovery completely skips Virtual Functions (VFs=
+).
+- [Medium] Inconsistent capability check assumes Physical Function 0 (PF0) =
+dictates controller-wide DOE features.
+- [Medium] DOE mailboxes and workqueues are leaked if the endpoint controll=
+er is destroyed without a prior `pci_epc_deinit_notify()` call.
 --
 
-commit 0a3d7b35451c74090ea52cb3095ab14d0e4a6a56
+commit f40c46636c83315eee171f04597bcd6e1bbbedab
 Author: Aksh Garg <a-garg7@ti.com>
 
-PCI: endpoint: Add DOE mailbox support for endpoint functions
+PCI: endpoint: Add support for DOE initialization and setup in EPC core
 
-This commit implements Data Object Exchange (DOE) for PCIe endpoint devices.
-It provides framework APIs to register mailboxes and handle DOE requests
-using workqueues. Discovery protocol support is built-in.
+This commit adds pci_epc_init_capabilities() and pci_epc_deinit_capabilitie=
+s()
+to the EPC core driver to initialize and tear down DOE capabilities. It
+discovers and registers DOE mailboxes for the functions in the endpoint
+controller.
 
-> diff --git a/drivers/pci/endpoint/pci-ep-doe.c b/drivers/pci/endpoint/pci=
--ep-doe.c
-> new file mode 100644
-> --- /dev/null
-> +++ b/drivers/pci/endpoint/pci-ep-doe.c
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/p=
+ci-epc-core.c
+> index 6c3c58185fc5d..e48f40eeed290 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+
 [ ... ]
-> +static struct pci_ep_doe_mb *pci_ep_doe_get_mailbox(struct pci_epc *epc,
-> +						    u8 func_no, u16 cap_offset)
-> +{
-> +	struct pci_ep_doe_mb *doe_mb;
-> +	unsigned long key;
-> +
-> +	if (!epc)
-> +		return NULL;
-> +
-> +	key =3D PCI_DOE_MB_KEY(func_no, cap_offset);
-> +
-> +	xa_lock(&epc->doe_mbs);
 
-[Severity: High]
-Does acquiring the plain xa_lock spinlock here pose a deadlock risk?
-
-Both pci_ep_doe_process_request() and pci_ep_doe_abort() call this function,
-and these are intended to be executed from a controller's hardware interrupt
-handler. Because xa_lock() does not disable interrupts, if a thread is
-accessing the xarray in process context (like in pci_ep_doe_add_mailbox() or
-pci_ep_doe_destroy()) and is preempted by a DOE interrupt on the same CPU,
-attempting to acquire the lock in the interrupt handler will deadlock.
-
-Could this be resolved by using xa_lock_irqsave() or initializing the xarray
-with XA_FLAGS_LOCK_IRQ?
-
-> +
-> +	doe_mb =3D xa_load(&epc->doe_mbs, key);
-> +	if (doe_mb && !refcount_inc_not_zero(&doe_mb->refs))
-> +		doe_mb =3D NULL;
-> +
-> +	xa_unlock(&epc->doe_mbs);
-> +
-> +	return doe_mb;
-> +}
-[ ... ]
-> +static void signal_task_complete(struct pci_ep_doe_task *task, int statu=
-s)
-> +{
-> +	struct pci_ep_doe_mb *doe_mb =3D task->doe_mb;
-> +
-> +	task->complete(doe_mb->epc, doe_mb->func_no, doe_mb->cap_offset,
-> +		       status, task->feat.vid, task->feat.type,
-> +		       task->response_pl, task->response_pl_sz);
-> +
-> +	/* Clear the CANCEL flag for next DOE request */
-> +	clear_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags);
-
-[Severity: High]
-Can this unconditional clear_bit() unintentionally erase a concurrent DOE
-Abort signal?
-
-If the host issues a DOE Abort interrupt while the task->complete() callback
-is still running, pci_ep_doe_abort() will set the PCI_DOE_FLAG_CANCEL bit.
-However, once the completion callback returns, clear_bit() is unconditional=
-ly
-called here, erasing the concurrent abort signal. As a result, subsequent
-queued requests might be processed instead of being aborted.
-
-> +
-> +	kfree(task->request_pl);
-> +	kfree(task);
-> +
-> +	/* Release the mailbox reference acquired during process_request */
-> +	pci_ep_doe_put_mailbox(doe_mb);
-> +}
-> +
+> @@ -842,6 +844,81 @@ void pci_epc_linkdown(struct pci_epc *epc)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_epc_linkdown);
+> =20
 > +/**
-> + * doe_ep_task_work() - Work function for processing DOE EP tasks
-> + * @work: Work structure
-> + *
-> + * Process a DOE request by calling the appropriate protocol handler.
-> + */
-> +static void doe_ep_task_work(struct work_struct *work)
-> +{
-> +	struct pci_ep_doe_task *task =3D container_of(work, struct pci_ep_doe_t=
-ask,
-> +						    work);
-> +	struct pci_ep_doe_mb *doe_mb =3D task->doe_mb;
-> +	pci_doe_protocol_handler_t handler;
-> +	int rc;
-> +
-> +	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags)) {
-> +		signal_task_complete(task, -EIO);
-> +		return;
-> +	}
-> +
-> +	/* Check if request was aborted */
-> +	if (test_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags)) {
+> + * pci_epc_doe_setup() - Discover and setup DOE mailboxes for all functi=
+ons
 
-[Severity: High]
-Is it possible for a newly submitted request to be erroneously aborted here
-due to a stale CANCEL flag?
-
-Because pci_ep_doe_abort() simply sets the PCI_DOE_FLAG_CANCEL flag and
-returns, the flag is only cleared by signal_task_complete(). If an abort
-occurs when the mailbox is entirely idle, no worker will execute to clear
-the flag. When the host eventually sends a valid request, this worker will
-see the old CANCEL flag, drop the new request with -ECANCELED, and only
-then clear it, breaking the expected request sequence.
-
-> +		signal_task_complete(task, -ECANCELED);
-> +		return;
-> +	}
 [ ... ]
-> +static int pci_ep_doe_submit_task(struct pci_ep_doe_mb *doe_mb,
-> +				  struct pci_ep_doe_task *task)
+
+> +static int pci_epc_doe_setup(struct pci_epc *epc)
 > +{
-> +	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags))
-> +		return -EIO;
+> +	u8 func_no, vfunc_no =3D 0;
+> +	u16 cap_offset;
+> +	int ret;
 > +
-> +	task->doe_mb =3D doe_mb;
-> +	INIT_WORK(&task->work, doe_ep_task_work);
-> +	queue_work(doe_mb->work_queue, &task->work);
+> +	if (!epc->ops || !epc->ops->find_ext_capability)
+> +		return -EINVAL;
+> +
+> +	/* Discover DOE capabilities for all functions */
+> +	for (func_no =3D 0; func_no < epc->max_functions; func_no++) {
+> +		mutex_lock(&epc->lock);
+> +		cap_offset =3D epc->ops->find_ext_capability(epc, func_no,
+> +							   vfunc_no, 0,
+> +							   PCI_EXT_CAP_ID_DOE);
+
+[Severity: Medium]
+Will this skip Virtual Functions during DOE capability discovery?
+
+The loop iterates over physical functions, but vfunc_no is permanently
+hardcoded to 0 here. VFs that advertise DOE capabilities won't be processed.
+
+> +		mutex_unlock(&epc->lock);
+
+[ ... ]
+
+> +static void pci_epc_init_capabilities(struct pci_epc *epc)
+> +{
+> +	const struct pci_epc_features *epc_features;
+> +	int ret;
+> +
+> +	epc_features =3D pci_epc_get_features(epc, 0, 0);
+
+[Severity: Medium]
+Is it intentional to check capability features exclusively against Physical
+Function 0 (PF0)?
+
+If the controller implements DOE on a non-zero function but not PF0, it
+seems initialization and cleanup will be skipped entirely. Capability
+checks might need to be dynamically evaluated per-function.
+
+> +	if (!epc_features)
+> +		return;
+
+[ ... ]
+
+> @@ -857,6 +934,9 @@ void pci_epc_init_notify(struct pci_epc *epc)
+>  	if (IS_ERR_OR_NULL(epc))
+>  		return;
+> =20
+> +	if (!epc->init_complete)
+> +		pci_epc_init_capabilities(epc);
+> +
 
 [Severity: High]
-Could a Time-Of-Check to Time-Of-Use race here cause queue_work() to be
-called on a destroyed workqueue?
+Could checking epc->init_complete without acquiring epc->list_lock lead to
+a data race?
 
-If the executing thread is preempted immediately after the lockless
-test_bit(PCI_DOE_FLAG_DEAD, ...) check evaluates to false, another thread
-running pci_ep_doe_destroy() could mark the mailbox DEAD and call
-destroy_workqueue(). The mailbox structure itself is kept alive by its
-reference count, but the workqueue pointer would point to freed memory.
+If pci_epc_init_notify() is invoked concurrently by different threads,
+both might see !epc->init_complete and execute pci_epc_init_capabilities(),
+which calls pci_ep_doe_init() twice. This overwrites the xarray internal
+lock and leaks previously registered mailboxes.
 
-When the preempted thread resumes, it would blindly call queue_work() on
-the freed workqueue, resulting in a use-after-free panic.
+>  	mutex_lock(&epc->list_lock);
+>  	list_for_each_entry(epf, &epc->pci_epf, list) {
 
-> +	return 0;
+[ ... ]
+
+> @@ -890,6 +970,27 @@ void pci_epc_notify_pending_init(struct pci_epc *epc=
+, struct pci_epf *epf)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_epc_notify_pending_init);
+> =20
+> +/**
+> + * pci_epc_deinit_capabilities() - Cleanup EPC capabilities
+
+[ ... ]
+
+> +static void pci_epc_deinit_capabilities(struct pci_epc *epc)
+> +{
+> +	const struct pci_epc_features *epc_features;
+> +
+> +	epc_features =3D pci_epc_get_features(epc, 0, 0);
+> +	if (!epc_features)
+> +		return;
+> +
+> +	if (IS_ENABLED(CONFIG_PCI_ENDPOINT_DOE) && epc_features->doe_capable) {
+> +		pci_ep_doe_destroy(epc);
+
+[Severity: High]
+Does destroying the workqueue here race with task queueing?
+
+When pci_ep_doe_destroy() is called, it eventually destroys the workqueue.
+However, in pci_ep_doe_submit_task(), there's a lockless test_bit() check:
+
+    if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags))
+        return -EIO;
+
+    ... queue_work(doe_mb->work_queue, &task->work);
+
+If the workqueue is destroyed right after test_bit() passes, the submission
+thread might attempt to queue work on the freed workqueue, leading to a
+use-after-free.
+
+[Severity: Medium]
+What happens to the DOE mailboxes and workqueues if the endpoint
+controller is destroyed without a prior pci_epc_deinit_notify() call?
+
+If the controller driver unbinds and calls pci_epc_destroy() directly,
+these resources might be leaked since pci_epc_destroy() does not have a
+fallback to clean up dynamically allocated DOE capabilities.
+
+> +		dev_dbg(&epc->dev, "DOE mailboxes destroyed\n");
+> +	}
 > +}
+
+[ ... ]
+
+> @@ -903,6 +1004,9 @@ void pci_epc_deinit_notify(struct pci_epc *epc)
+>  	if (IS_ERR_OR_NULL(epc))
+>  		return;
+> =20
+> +	if (epc->init_complete)
+> +		pci_epc_deinit_capabilities(epc);
+> +
+
+[Severity: High]
+Can this lockless check of epc->init_complete race similarly to the one in
+pci_epc_init_notify()?
+
+A concurrent call could cause double destruction of DOE mailboxes and
+corrupt the xarray.
+
+>  	mutex_lock(&epc->list_lock);
+>  	list_for_each_entry(epf, &epc->pci_epf, list) {
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260610100256.1889=
-111-1-a-garg7@ti.com?part=3D2
+111-1-a-garg7@ti.com?part=3D3
