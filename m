@@ -1,118 +1,150 @@
-Received: from fout-b6-smtp.messagingengine.com (fout-b6-smtp.messagingengine.com [202.12.124.149])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFE536897C;
-	Wed, 10 Jun 2026 19:15:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.149
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5EF2356773;
+	Wed, 10 Jun 2026 19:19:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781118923; cv=none; b=tupxjq5pepwETEs94G4yIV5edHSQ2qYHyU1UO/lCgs3JV7yi7LDi9ke6d2I+Kiz0HgUm8/rCShbBKtQauALIUkrYOFfT2pBhd6qIf8SZKuf1D4qgRctFvgfM9SfltCLn5kZqXfA3tZX8h63QYO3oia7XDISzhdlP0qKRSYnMMLU=
+	t=1781119172; cv=none; b=c74poGqhk0jSFGuDdi7fHuGd8VHSVlvXuTXrvBluG3TkPlpBeLnZKUMNBXHLBYWB2QJ0LDAeF8FUIdAhYB5UTbWBTCJL7kIKP63vMj6SHw+3B4jNv3mdQRGZdHP6wX7XJaMGdL43MC+siCdvGFhra68xTRrtJUrR5jr/tpIiPLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781118923; c=relaxed/simple;
-	bh=cYvkeDUtRmvAaKCdk9MF8yO3KaSVOMG+MKxosmL8KW0=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JuoqOqyTig0LHevhct+MlhyDoIrLFHRhsE2Kl0+oitrHu73SkmX13GzdSEvXD6iQRph0cVn04zfCYdA3ywoudWha5Pm1zChD9JpWiH0OdALl4StHt5xDJyzomEAorodSVNxe4H0Su/3BKR9DmwWro2kO9CwbOcxAq9D3Wj/QZkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=Gm/6IVI9; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Iifd/wVM; arc=none smtp.client-ip=202.12.124.149
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1781119172; c=relaxed/simple;
+	bh=+ohC2m3lunPe2kDC19X2zynsTw4zYYR9U8nZ3UMjr/8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ZRQb2lQsWIMybiwv54D+j6rcfYFYmtg+9PCRYrIcfnMh0ihdyHRJRl4vf1y80ox3tA0G9s/b7hg7f29R2b1XTYRVi6pIT8RvuxEGnTSCr76ys0w6J+ZIUamW4viUYpVw6XCWaE/Ix9gp6xSymPpdmqxd69mCtBSB0G8qMEoFVlo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K2q2jUNo; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="Gm/6IVI9";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Iifd/wVM"
-Received: from phl-compute-08.internal (phl-compute-08.internal [10.202.2.48])
-	by mailfout.stl.internal (Postfix) with ESMTP id F053B1D00018;
-	Wed, 10 Jun 2026 15:15:19 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-08.internal (MEProxy); Wed, 10 Jun 2026 15:15:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1781118919;
-	 x=1781205319; bh=CVy2JmiDScr+o6xC3nZ1IUbCbzhQKrbZ7/aFWDNXxFI=; b=
-	Gm/6IVI91Zc/JG+ombwZiuLgrzMLHSXnGDVtABxnArwqn2nqlpSpTvBsKRbNZGZG
-	Yz/ja+ig/TO+rmJ7JJKBhfrYFtaC4ofneMI/yvB+3z6b7nLbDhR9pa3AI1KZjSvU
-	yHWaCewWvPZd/PQ+bC7xujhGabuonupj8JpJZ3IrAcjuStlMYugUgBztyNmgKzFr
-	TJBwTt8ysks0dPxvaJjh5xnH8NfINUmYuAfQCZtrsaK1HOLHIZANBmDoefmVh4xS
-	Jo/3KiDTZGOD3WSrjQXvdISj7PuqGhvLZ412yVN71GF+sC9KULPppXj0VEUJlWfU
-	RUEsSH27bYhJ3Q7yCwC7gg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781118919; x=
-	1781205319; bh=CVy2JmiDScr+o6xC3nZ1IUbCbzhQKrbZ7/aFWDNXxFI=; b=I
-	ifd/wVMXad4h+Q+pRYOcuwKq6qlgm69ZyqmzpfHc8XBIyRrZnoM126Mgw0yX7M2D
-	o6x4oLZCROgqXnweQETTEI8aTcIw+cM3sRsbiAKVpqLdomJX9AO+BfHL2oFfhubP
-	o1LMx18aELOdNp+AVitRcFFSz/OwQ8yszvQkOdy/qiwaB68kfHiPOin9hjl61CI6
-	86SkAjx0fQj3AfsuSGB+kML6strk6b9lWoPfIwLYqUxzkkna+ULOg4qX1ItJ5ZPm
-	sjoUSAvhZrLh7MQFh8WcAJ4cAcxXnOOgaxXr6ZzQJVQXH0Cc3N3cIyiNbCbljMcz
-	TOwoN5IB4al4NaR+1GlDQ==
-X-ME-Sender: <xms:x7cpamCjkfFGc9EmOEpD1kZA2NiP17hjQi2ySPsgHCH07BYpNWy-ow>
-    <xme:x7cpaoqhSbuWQdfGZwxOepqVETldXraIVB9YZFn9wsrHYTXYgIKBtfrvnWjx9XIxO
-    jXLN8jx5GPfkGpgUCOuh764eVuhSCbzkZJttjAHO7WT1B5dSvCsSg>
-X-ME-Received: <xmr:x7cpapHRTEY3MuiFHABxYzE1iPN5V0pIXddzqakdFvMwXFjlok0bECPPhDY>
-X-ME-Proxy-Cause: dmFkZTENsJBpTOZ6YX/UOOE51y07s8b8SVjd2U/sBvvG7WPM7QaG22AiPLgsvtwA9p430B
-    CnyEyxsm53+lIa6P5muTNjBXD+k9Z0UKK24ENec4OWuaR2h6Gn82lHTTfWSwkTT0tPhJuq
-    ePnbvDc2uHk3EE/CYJwaWAqhqruRcaf3AljRIz9dOjW8IiRfzXdwjXVOnUelFUBRldRAWc
-    KG+E6MQwx4gzKpzX5cFwfw0C0WFNel+9bPdNpXfAqlkfk/jbeK9Gp4vy4wcwjHhFsgx2BL
-    r6c+YYwN+dNSmt5vAENm7R37LycxdRcYO0TJnwoMRyAdHY1cyDYZKN6I4obp+/ZUKD9BoQ
-    1OWbIEI5qNFY7/J8J/wCRGPCa/RHaO3N6uzzYmULgc9qZEbB2R8N/PMp9CEEere4niCwbR
-    DJNQ3Tx7bQ0wyvewZVWlkSVvS8I1JajyqV7MDE3S8f1HtwrtA5IiMzri12xaU44bebLJNT
-    sasMe59kizUEJHRDyMaNtk4k8pBfAYZ76odlyuszWW1sybZJPd84gAVgacXA9OGYjhU6Xc
-    bZ9PSl5+D48NmOP3fKV/7c/kGfd7x/ifeWosHGrmtqmeLpWOoxD2Bf5LIDM9ZsnOAJTTSo
-    mkNG3lH07rPbW73TpBRdz7TFZV53XkhVbHGDH973/iJ2DH5Lb0SgO/93cj5Q
-X-ME-Proxy: <xmx:x7cpakv_EzW2UhkEPqeCuRflpFC4KwX4RYwM0SGZCDg8ORUx-NIWiQ>
-    <xmx:x7cpanY29XA5mgNAkPsye3SRd8X_i2KK6UGGkUt5-kIJxaU5obH9Iw>
-    <xmx:x7cpas7Ti1UEGl3FAXtavMumA4H0rQiULnFaDPzPqDY7A9yHWuXqMQ>
-    <xmx:x7cpan9NpovVd1qoDNWqY9sJAkiF_2npBovgtxchW6iKBpjUxy6jyg>
-    <xmx:x7cpanskE_RjhJVMhfjRSLMFqDbr2qNNaYZbwMMkBZZhnuAzWSi3-jrU>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 10 Jun 2026 15:15:18 -0400 (EDT)
-Date: Wed, 10 Jun 2026 13:15:17 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: ath11k@lists.infradead.org, ath12k@lists.infradead.org,
- bhelgaas@google.com, jjohnson@kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org, mani@kernel.org,
- mhi@lists.linux.dev, alex@shazbot.org
-Subject: Re: [PATCH v8 2/3] PCI: Add device-specific reset for Qualcomm
- devices
-Message-ID: <20260610131517.6d7bd63a@shazbot.org>
-In-Reply-To: <20260610100059.19235-1-jtornosm@redhat.com>
-References: <20260609115352.32acb6fe@shazbot.org>
-	<20260610100059.19235-1-jtornosm@redhat.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K2q2jUNo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 566701F00893;
+	Wed, 10 Jun 2026 19:19:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781119170;
+	bh=u+OFX4ShvIerpDOzkkMG4kqhjwCu9CbuQ9Bmbry73tg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=K2q2jUNomfj2HJhbM3mQRyVWTlOWEa5HLmho6mBUc21MLPhjptzkIzoUnDORuyXJU
+	 sWU5ChG1T/NU2ot9x/e9gzcptCrPW4abiaV6B9mxJiAIxuurHA0zNzoJXQpwCL6GvR
+	 XPT1Dm44aiPi99Py+y7O9tS7Dgc/eR9IjF1WRAeOz/MI5MgJdzzBSPNF0oMNupaK2o
+	 EWHooUGlVhqt5OQYPHlROi16pgw0loQenJNgWC/RYZq/Eyt+vzdurlgZ/bMUjG+Ez2
+	 wcReK9Jy0rCIpnymTuIO8Ubqgl9gSy6Td2VkN+KKf4pusf0u/czL+8v1+EdI7DLs71
+	 GdsWDK/gi36tA==
+Date: Wed, 10 Jun 2026 14:19:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: sashiko-reviews@lists.linux.dev
+Cc: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
+	linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH v7 1/3] PCI: Add d3cold as general reset method
+Message-ID: <20260610191929.GA196607@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260603112018.97AA41F00893@smtp.kernel.org>
 
-On Wed, 10 Jun 2026 12:00:59 +0200
-Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
+[+cc Rafael, D3cold->D0 delays]
 
-> Hi Alex,
+On Wed, Jun 03, 2026 at 11:20:18AM +0000, sashiko-bot@kernel.org wrote:
+> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> - [High] pci_d3cold_reset() fails to wait for device readiness after transitioning from D3cold to D0, leading to immediate config read failures and state corruption.
+> - [High] pci_d3cold_reset() does not prevent execution on single-function bridges, leading to permanent state corruption and physical data loss of all subordinate devices.
+> --
 > 
-> > My only complaint is that this is positioned a bit generically...  
-> Ok, I'll make the comment of the function more specific for these Qualcomm
-> devices.
->   
-> > Has each of these devices been tested on a platform where D3cold is
-> > actually achieved through this method?  
-> No, I don't have access to platforms with _PR3 support. All testing was on
-> M.2 adapters (D3hot fallback only). Since D3hot works reliably and D3cold
-> is a stronger reset mechanism, the approach should work - but I cannot
-> confirm the D3cold path through testing.
+> commit c7a8523521475c131fd83bc43a00b0cc028fc9a1
+> Author: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> 
+> PCI: Add d3cold as general reset method
+> 
+> This patch adds D3cold power cycling as a reset method for single-function
+> devices via ACPI _PR3, placing it at the end of the reset hierarchy.
+> 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 8f7cfcc000901..096868f80cd4c 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> 
+> [ ... ]
+> 
+> > +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+> > +{
+> > +	int ret;
+> > +
+> > +	if (dev->multifunction)
+> > +		return -ENOTTY;
+> > +
+> 
+> [Severity: High]
+> Does this allow execution on single-function bridges, such as PCIe Root
+> Ports?
+> 
+> If pci_set_power_state(dev, PCI_D3cold) is called on a bridge, it recursively
+> updates all subordinate devices' tracking state to D3cold via
+> __pci_bus_set_current_state() and physically removes power from them.
+> 
+> The subsequent transition back to D0 only updates the bridge itself. This
+> leaves all downstream devices tracked as PCI_D3cold indefinitely, and they
+> lose all their configuration and BARs since the reset framework only saves
+> and restores the bridge's configuration state. 
 
-This seems to suggest that the D3cold reset method is also untested...
-I'd suggest dropping the D3cold throughout, unless you can get someone
-to volunteer to test it.  It seems like you really just want this quirk
-to do a D3hot regardless of NoSoftRst+ with a select set of devices
-where it appears to do more than nothing, where doing nothing is
-effectively what's left after the other reset methods are being quirked
-off for being worse than nothing.  Thanks,
+Secondary Bus Reset has a similar issue: the hot reset on the
+secondary side is propagated to downstream devices.
+pci_parent_bus_reset() returns -ENOTTY if we try to use SBR to reset a
+bridge.  I wonder if that check should be moved up to
+pci_reset_bus_function() we don't try to use pci_reset_hotplug_slot()
+on bridges either.
 
-Alex
+So I think it *is* a problem if we put a bridge in D3cold because
+that's also a reset of any downstream devices.
+
+> > +	if (!pci_pr3_present(dev))
+> > +		return -ENOTTY;
+> > +
+> > +	if (probe)
+> > +		return 0;
+> > +
+> > +	if (dev->current_state != PCI_D0)
+> > +		return -EINVAL;
+> > +
+> > +	ret = pci_dev_reset_iommu_prepare(dev);
+> > +	if (ret) {
+> > +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+> > +		return ret;
+> > +	}
+> > +
+> > +	ret = pci_set_power_state(dev, PCI_D3cold);
+> > +	if (ret)
+> > +		goto done;
+> > +
+> > +	ret = pci_set_power_state(dev, PCI_D0);
+> 
+> [Severity: High]
+> Does this sequence fail to account for the mandatory wait time before the
+> device is responsive to config space accesses?
+> 
+> A D3cold to D0 transition acts as a fundamental reset. pci_set_power_state()
+> internally invokes pci_power_up(), which applies power and immediately
+> attempts to read PCI_PM_CTRL without waiting for link training or handling
+> Configuration Request Retry Status (CRS).
+
+I don't think sashiko can infer this from the code, but my
+understanding is that platform_pci_set_power_state(PCI_D0) is
+responsible for delays after a D3cold -> D0 transition, so I don't
+think this one is actually an issue:
+
+  https://lore.kernel.org/all/CAJZ5v0iZN5NtUztqe=MxCRcXdBaaqzZ749OqSUkadwwBy0ugUQ@mail.gmail.com/
+
+> Because the device is unready, this read can return 0xFFFF (Unsupported
+> Request) and cause pci_power_up() to spuriously fail with -EIO. Should this
+> include a polling delay, similar to pci_dev_wait(), to prevent the reset
+> framework from blindly failing or restoring state to an uninitialized device?
+> 
+> > +
+> > +done:
+> > +	pci_dev_reset_iommu_done(dev);
+> > +	return ret;
+> > +}
+> 
+> -- 
+> Sashiko AI review · https://sashiko.dev/#/patchset/20260603105853.326290-1-jtornosm@redhat.com?part=1
