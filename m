@@ -1,125 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 852E2331ECF;
-	Wed, 10 Jun 2026 15:30:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC2E333FE15;
+	Wed, 10 Jun 2026 15:31:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781105401; cv=none; b=B8cGzm4pXurcKGd4r0tNHwx8mYJ9zk5W6A/uMp5UhKe3irR+yU9gRFnVltry4uZICZh3AxJftLIswv6bazsGtQvaWqY49gawrq++ywOo8XtClPqmGe53hDPKMnKdqF3DKPUhOIiHiBGgk1ncuQy3AaqYS3UVtt16wXWbfKvVqYo=
+	t=1781105472; cv=none; b=J+H6lZuWO2avsUdSfA5DLoOnuWJz5lfZLadBo9hzJt6Rb9jty57wDk2M/htVoMkUKlvSoKgSrH61yIjHD3MuYsC6Qo2d4VvYZacfcfZ2jl8mGh5kYFsDyBnSDwLJPfETpw9OSIBduqb+HFX7EVY3HFKjI9BYo65bqCDRf3oW5N0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781105401; c=relaxed/simple;
-	bh=f4ARvImfa2kme9BEBao2rzzrFZB5vzS5J2IscHB/oo0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q8HTOxTeSv9D5mXohGMuplIK/P1c1p9vVaqntPiQeHCEIdmhd/OrMfvFipxq3DIaUJAJ+JVTyGuNMH4bzGS1I8xPZQ8bIk0Bn3SUfljvvQHTgzeH8Y4UaqZxT9CQsMXAkhoKj7W8r1e/mZO8c38YU029IjG8xvk682eUkE1vMCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DoOAIhde; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781105472; c=relaxed/simple;
+	bh=wlqMR6ql6lJLXz7l5FjWb7Dktc7ZQRcSJ3J5Z2xjjM4=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=HQaZRNggf71eYxH2X0LAAGhTA9v3FLVrEOUvruJ95ko3ikiLNYP+h2G4gnSv25sK68GNyjyndySxeuFdALkd4NBw2mUN4YSBPs1lmk7yfZOd9WoIahiH+u7fJDIiuI56d/CiTPkvXDfAJrt1RcO8jJLHkaoU+Mfgsx+RhUV/WDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h3DDENyf; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DoOAIhde"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E30A1F00893;
-	Wed, 10 Jun 2026 15:29:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h3DDENyf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47B771F00893;
+	Wed, 10 Jun 2026 15:31:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781105400;
-	bh=wZRP8AhhvgZ8EEgAJLO+1bL+TPGneyCKqtP7iUuLHR0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=DoOAIhdeWZ2NEH60xzHnIBqtsJPWYRVavXhN4H0/qvO9id/fMcAhhad1aHHbDwTHv
-	 qNXBQE2R5Urcvc4Vl4K9iJeisrDOfHRhMee/yysUH7D2N4nXV5xbtWaBPhjT8SoZGu
-	 XGfFEbIpsV/U0EBX/fRjCE9MRGwOotujUFXO+BmwJVNt0apwnq391gaBdCV06jy/WJ
-	 P2EgOyxS7+MBODq8r4GYoDw9oUJbc33FnfvKsZdMRBOjaFCEh8nMyA8X4SgaIpduWz
-	 /HQJHsR1mGlMSglrv0fwCLj7hX3wOV8MEPCAObpD5cRLg+yxvdPXdauFalY7sc+20X
-	 S7oG4hYaY92YQ==
-Date: Wed, 10 Jun 2026 20:59:50 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: "Sherry Sun (OSS)" <sherry.sun@oss.nxp.com>
-Cc: robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
-	Frank.Li@nxp.com, s.hauer@pengutronix.de, kernel@pengutronix.de, 
-	festevam@gmail.com, lpieralisi@kernel.org, kwilczynski@kernel.org, 
-	bhelgaas@google.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de, 
-	imx@lists.linux.dev, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, sherry.sun@nxp.com
-Subject: Re: [PATCH V3 0/8] PCI: imx6: Integrate pwrctrl API and update
- device trees
-Message-ID: <cpgr6bt2635l2wijluapmqumtbeuskf6womowhvmx4pu36ab2v@gbvnwlmjckc6>
-References: <20260520084904.2424253-1-sherry.sun@oss.nxp.com>
+	s=k20260515; t=1781105470;
+	bh=DuYr8zJ9wqBSZ3/6oyj3O6t2ftqCYkpRs1QIiTwfWbU=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=h3DDENyf4glJiJ6nmR+oIcdNlWJuGe0rzvU9KZlOo6ETxC1qfXjroX2R1uhUj40DZ
+	 yVMg8A0GrVc3VleLTj/jjlCfizgxLqLPLjwgvl8wuZhFPwd3EdozkNh22Fp0pINBuw
+	 dPK4uTkWvl9r1oVuitrjRGx5lL3FkWxlxnjxaXAXvc3Z7ouZw2b/nTrgdYYiHao4UP
+	 NqTQNrdh4xbrHWjUhiJmw3kZAGGfyilbOGKMYTBPA81sjcBHT1yMHWybl7uyZhyRGP
+	 FvIr9ngS6QWC88KxXOgvWwnfy7lzjXdvHFkrkP8Or636vB+Y4Y4nQOdcwyoFX0NwX4
+	 2S3l2ytKVUC0w==
+From: sashiko-bot@kernel.org
+Subject: Re: [RFC PATCH 1/5] vfio: Add UAPI for ZONE_DEVICE-backed P2P
+ registration
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pranjal Shrivastava" <praan@google.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260610151853.3608948-2-praan@google.com>
+References: <20260610151853.3608948-2-praan@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 10 Jun 2026 15:31:09 +0000
+Message-Id: <20260610153110.47B771F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260520084904.2424253-1-sherry.sun@oss.nxp.com>
 
-On Wed, May 20, 2026 at 04:48:56PM +0800, Sherry Sun (OSS) wrote:
-> From: Sherry Sun <sherry.sun@nxp.com>
-> 
-> This series integrates the PCI pwrctrl framework into the pci-imx6
-> driver and updates i.MX EVK board device trees to support it.
-> 
-> Patches 2-8 update device trees for i.MX EVK boards which maintained
-> by NXP to move power supply properties from the PCIe controller node
-> to the Root Port child node, which is required for pwrctrl framework.
-> Affected boards:
-> - i.MX6Q/DL SABRESD
-> - i.MX6SX SDB
-> - i.MX8MM EVK
-> - i.MX8MP EVK
-> - i.MX8MQ EVK
-> - i.MX8DXL/QM/QXP EVK
-> - i.MX95 15x15/19x19 EVK
-> 
-> The driver maintains legacy regulator handling for device trees that
-> haven't been updated yet. Both old and new device tree structures are
-> supported.
-> 
-> Signed-off-by: Sherry Sun <sherry.sun@nxp.com>
-> ---
-> Changes in V3:
-> 1. Rebased on top of latest 7.1.0-rc4
-> 
-> Changes in V2:
-> 1. After commit 2d8c5098b847 ("PCI/pwrctrl: Do not power off on pwrctrl
->    device removal"), the pwrctrl drivers no longer power off devices
->    during removal. Update pci-imx6 driver's shutdown callback in patch#1
->    to explicitly call pci_pwrctrl_power_off_devices() before 
->    pci_pwrctrl_destroy_devices() to ensure devices are properly powered
->    off.
-> ---
-> 
-> Sherry Sun (8):
->   PCI: imx6: Integrate new pwrctrl API for pci-imx6
->   arm: dts: imx6qdl-sabresd: Move power supply property to Root Port
->     node
->   arm: dts: imx6sx-sdb: Move power supply property to Root Port node
->   arm64: dts: imx8mm-evk: Move power supply property to Root Port node
->   arm64: dts: imx8mp-evk: Move power supply properties to Root Port node
->   arm64: dts: imx8mq-evk: Move power supply properties to Root Port node
->   arm64: dts: imx8dxl/qm/qxp: Move power supply properties to Root Port
->     node
->   arm64: dts: imx95: Move power supply properties to Root Port node
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
+- [High] Dynamic creation of ZONE_DEVICE pages for VFIO-assigned BARs intro=
+duces intractable lifetime synchronization issues, leading to Denial of Ser=
+vice.
+- [Low] The newly introduced `VFIO_DEVICE_FEATURE_P2P_REGISTER` macro lacks=
+ a corresponding UAPI structure to specify the target PCI BAR index.
+--
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+commit c98c2e1f824821a8273fbcf6834c8210ddf76e75
+Author: Pranjal Shrivastava <praan@google.com>
 
-- Mani
+vfio: Add UAPI for ZONE_DEVICE-backed P2P registration
+   =20
+Introduce VFIO_DEVICE_FEATURE_P2P_REGISTER to the VFIO_DEVICE_FEATURE
+ioctl. This feature allows a privileged userspace process to register
+a specific PCI BAR with the kernel's PCI P2P DMA provider framework.
 
-> 
->  .../arm/boot/dts/nxp/imx/imx6qdl-sabresd.dtsi |  2 +-
->  arch/arm/boot/dts/nxp/imx/imx6sx-sdb.dtsi     |  2 +-
->  arch/arm64/boot/dts/freescale/imx8dxl-evk.dts |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi |  2 +-
->  arch/arm64/boot/dts/freescale/imx8mp-evk.dts  |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8mq-evk.dts  |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8qm-mek.dts  |  4 ++--
->  arch/arm64/boot/dts/freescale/imx8qxp-mek.dts |  4 ++--
->  .../boot/dts/freescale/imx95-15x15-evk.dts    |  4 ++--
->  .../boot/dts/freescale/imx95-19x19-evk.dts    |  8 +++----
->  drivers/pci/controller/dwc/Kconfig            |  1 +
->  drivers/pci/controller/dwc/pci-imx6.c         | 24 ++++++++++++++++++-
->  12 files changed, 43 insertions(+), 20 deletions(-)
-> 
-> -- 
-> 2.37.1
-> 
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 5de618a3a5eee..adbac3f965eb4 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+[ ... ]
+> +/**
+> + * Upon VFIO_DEVICE_FEATURE_SET register a PCI BAR with the kernel
+> + * P2P DMA subsystem (pci-p2pdma).
+> + *
+> + * Once a BAR is registered, it will be added to the device's P2P
+> + * pool and can be allocated via the standard sysfs p2pmem/allocate
+> + * interface.
+> + *
+> + * Note: Standard VFIO mmap() of the BAR will be blocked once it is
+> + * registered for native P2P.
+> + *
+> + * Return: 0 on success, -errno on failure.
+> + */
+> +#define VFIO_DEVICE_FEATURE_P2P_REGISTER 13
 
--- 
-மணிவண்ணன் சதாசிவம்
+[Severity: High]
+Does this feature introduce a regression with lifetime synchronization
+issues?
+
+When VFIO_DEVICE_FEATURE_P2P_REGISTER is used, ZONE_DEVICE pages are
+manufactured for the PCI BAR via devm_memremap_pages(). These pages can be
+mapped into userspace using the sysfs p2pmem/allocate interface.
+
+If userspace pins these pages via get_user_pages() (e.g., through an
+O_DIRECT read, io_uring, or passing them to another device), the page
+reference counts are elevated. If the VFIO device is subsequently unbound
+or the file descriptor is closed while the pin is active, the driver
+teardown triggers:
+
+vfio_pci_zap_bars()
+  -> pci_p2pdma_remove_resource()
+    -> devm_memunmap_pages()
+
+The unmap path kills the percpu refcount and waits synchronously via
+wait_for_completion() for all references to drop. Because the pages remain
+pinned by GUP, the references will never reach zero, causing the kernel
+thread to hang indefinitely.
+
+This blocks driver unbinding and holds global locks (such as
+vdev->memory_lock and driver core locks), causing a denial of service.
+
+[Severity: Low]
+Does this UAPI addition lack a corresponding structure to specify the target
+PCI BAR index?
+
+The implementation in vfio_pci_core_feature_p2p_register() appears to
+silently assume a primitive u32 payload when calling
+copy_from_user(&bar_index, arg, sizeof(bar_index)), creating a mismatch
+between documented UAPI and actual kernel expectations.
+
+Standard VFIO UAPI practices require explicit, strongly-typed structures
+(e.g., struct vfio_device_feature_p2p_register { __u32 bar_index; };) to
+accompany feature macros so that the ABI is well-documented and safe for
+userspace developers to consume.
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260610151853.3608=
+948-1-praan@google.com?part=3D1
