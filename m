@@ -1,55 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8F50331A41;
-	Wed, 10 Jun 2026 18:40:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0799349CCD;
+	Wed, 10 Jun 2026 18:42:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781116801; cv=none; b=Xa1xuMqHMbPtYiaEdigWCucXY2+GjqLpqcD6cdJsggrQeXNsMFmoHr/TvX4g4h2CvkUw/vqCDWlj6zuOJ9tVZC4bFPtyjaO2NS/P9HkMHVe5VdkMUy9kSwU6nJKcKGiy+DUR0Y/sLXhWaqhf9kSsOF/KKuDunFDmB4i9gPn1UV8=
+	t=1781116959; cv=none; b=NhLTnDyiK5A5jI1rJ4NkWALlpKpf4ZQ0hro1GvCXFdco8/u/OZ+DnUwIL75ncdOkp35JD8B8UgDXPvem9T0gjk4pDrexEBuiz1c77yAoX5Y+1gqJOFhD96bNlgn0J6JyekZ5Sqb3ewbhikKX/Mq3O1EmknObZN8hXYodTwEj7Do=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781116801; c=relaxed/simple;
-	bh=pcqvCel3cIid7Uxi8NGfFZNo5OffXfeC6iaAMBMqxqw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i8CUAPlbHCUie+Y74IpYsovBA3gqSBdX1cCs0N1wT90MZll4C2WINV/VnLV65+/LHoC3mKj+q6VsWLPa3UvrEuyuZCdplbWVIS9NUPymdXv8mQJKiJ9YLbC+KuVPdrjNOpiE/JgEb9W850vIUm1VuIFvOWWxL8pwsd9T6A7DXX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AXQg2sOU; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781116959; c=relaxed/simple;
+	bh=bncw1kp2XmKdNd9PZSqbZND3nV3QuAke+Or/JDyh2x8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=X4rF3xbIfLD+ScSOzpfX2PaE8Qlcdwp2MeqQd4amiHGbOTTm3Ln4aisLPUkkd6LV/H4VWkOo46Aekdogk8FmaGjEC7+awHQEn7u1Q5pejtBzQIdvsz7p0nnfj25nNiD3fH75iWR+AZFjdI3Nj94cqF0DdatG6TIvr/B+2DeIWjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gpyZegFr; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AXQg2sOU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BD661F00893;
-	Wed, 10 Jun 2026 18:39:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gpyZegFr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2812E1F00893;
+	Wed, 10 Jun 2026 18:42:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781116800;
-	bh=2O7wrREt4oiDQ0b6njA5QsbmFiFGcobC6ew3dRXWqcA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=AXQg2sOUQCvZAEJpOUDjFxgGFGvNfk8Y+NFsIF1/5oh/Jf0NM00X8fx1vrkj5uHRU
-	 OlivCH41ngLCnSfN3Chi7Nbnl211nqRmBag5EgqKauDJGnoTKxPiAeXPg3Im9QJr7C
-	 G/Mq1DzVMYclnYZohJe3cwSTZr098ztfrRB47bVZbuSTaTrtVEE98yEqSH9XqmKUs9
-	 3yot7t6yapyBUqRxmz6sKh59pKB+J1q5svMihAX9BkJwa/BC5TRn3xH7sUWMMWKBlM
-	 mSJOMDo83XjooT0ElGcgMVQVMiOomdtvmuTfggBaGn8mtlW19fIc56coy6MYgdanRT
-	 AW/Wmn8mfjmvA==
-Date: Wed, 10 Jun 2026 21:39:54 +0300
-From: Leon Romanovsky <leon@kernel.org>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@nvidia.com>,
-	Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-Message-ID: <20260610183954.GK327369@unreal>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-2-matt@ozlabs.org>
+	s=k20260515; t=1781116958;
+	bh=xnrO31LLlSXPRgDvDd03PEdMDaXIr+aCbScw5GFqWuU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=gpyZegFrsmlQCERexafvFL8huHGeATz3YXutJXCy3MFp08VXEsP/Tx8O3Hp3qUhlp
+	 HNY4ULM+9Sx/MlKcfrKbjfVKXQNpZs5FX5JNUbwrvgyPjDRXjHryZKNDe76hI0JVIE
+	 jUYTffFgdsfo8plKCaZPsVlldj2JtoqJHMO5ecLfUs5gZvlZ0U/GMBLuv/MUY1F4X4
+	 xFkQbfBYV1bDTRz54GDZxSuOFTlGMPIGRmHEaBUVUHB9/U8hg6djZB95N7AKe0FvqM
+	 0DB/0stigbLyXUHWSulkgaf03pnMZjUnOpieehIb6JBD3KpCyHqF6DPyjw5msHmrIq
+	 YgDuFmUZxz2SA==
+Date: Wed, 10 Jun 2026 13:42:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+Cc: bhelgaas@google.com, alex@shazbot.org, jjohnson@kernel.org,
+	mani@kernel.org, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	ath12k@lists.infradead.org, mhi@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v7 1/3] PCI: Add d3cold as general reset method
+Message-ID: <20260610184236.GA236984@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -58,44 +44,145 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260610154327.37758-2-matt@ozlabs.org>
+In-Reply-To: <20260603105853.326290-2-jtornosm@redhat.com>
 
-On Wed, Jun 10, 2026 at 04:43:15PM +0100, Matt Evans wrote:
-> The P2PDMA code currently provides two features under the same
-> CONFIG_PCI_P2PDMA option:
+[+cc linux-pm]
+
+On Wed, Jun 03, 2026 at 12:58:51PM +0200, Jose Ignacio Tornos Martinez wrote:
+> Add D3cold power cycle as a general PCI reset method for single-function
+> devices on platforms with ACPI _PR3 power resources. This provides true
+> power cycle reset capability when the platform can physically cut power
+> to the device.
 > 
->  1.  Locate providers via pcim_p2pdma_provider()
->  2.  Manage actual P2P DMA
+> The implementation strictly requires _PR3 to be present - the platform
+> must be able to control device power. This ensures d3cold only attempts
+> true power cycling, not falling back to D3hot transitions.
 > 
-> Some drivers (such as vfio-pci) depend on 1, without having a hard
-> dependency on 2.
+> D3cold reset is placed at the end of the reset hierarchy since it requires
+> specific platform support and should be tried after standard methods.
 > 
-> A future commit expands the use of DMABUF in vfio-pci for non-P2P
-> scenarios, relying on pcim_p2pdma_provider() always being present.  If
-> that depended on CONFIG_PCI_P2PDMA, it would make vfio-pci only
-> available if CONFIG_ZONE_DEVICE is present (e.g. 64-bit systems), even
-> when P2P is not needed.
+> Reset hierarchy with this change:
+> 1. device_specific
+> 2. acpi
+> 3. flr
+> 4. af_flr
+> 5. pm (D3hot via config space, checks NoSoftRst)
+> 6. bus (SBR)
+> 7. cxl_bus
+> 8. d3cold (NEW - true power cycle, requires _PR3)
 > 
-> To resolve this, introduce CONFIG_PCI_P2PDMA_CORE and refactor the
-> basic provider functionality into a new p2pdma_core.c file.  This is
-> available even if the CONFIG_PCI_P2PDMA feature is disabled (or
-> unavailable due to !CONFIG_ZONE_DEVICE).  Then, drivers can enable any
-> additional P2P features with the original CONFIG_PCI_P2PDMA (available
-> when CONFIG_ZONE_DEVICE is set).
-> 
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
+> This benefits:
+> - Platforms with _PR3 support
+> - Single-function devices needing true power cycle
+> - VFIO passthrough scenarios where FLR/PM unavailable
+
+I assume you have some specific device(s) in mind here; can we mention
+any examples so this is more than just theoretically useful?
+
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 > ---
->  MAINTAINERS                |   2 +-
->  drivers/pci/Kconfig        |  10 ++--
->  drivers/pci/Makefile       |   1 +
->  drivers/pci/p2pdma.c       | 109 ++--------------------------------
->  drivers/pci/p2pdma.h       |  29 +++++++++
->  drivers/pci/p2pdma_core.c  | 118 +++++++++++++++++++++++++++++++++++++
->  include/linux/pci-p2pdma.h |  24 ++++----
->  include/linux/pci.h        |   2 +-
->  8 files changed, 174 insertions(+), 121 deletions(-)
->  create mode 100644 drivers/pci/p2pdma.h
->  create mode 100644 drivers/pci/p2pdma_core.c
+> v7: code unchanged from v6
+> v6: https://lore.kernel.org/all/20260602160024.1171949-2-jtornosm@redhat.com/
+> 
+>  drivers/pci/pci.c   | 50 +++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  2 +-
+>  2 files changed, 51 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 8f7cfcc00090..096868f80cd4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4491,6 +4491,55 @@ static int pci_pm_reset(struct pci_dev *dev, bool probe)
+>  	return ret;
+>  }
+>  
+> +/**
+> + * pci_d3cold_reset - Put device into D3cold and back to D0 for reset
+> + * @dev: PCI device to reset
+> + * @probe: if true, check if D3cold reset is supported; if false, perform reset
+> + *
+> + * Reset the device by transitioning through D3cold (actual power removal via
+> + * platform power control) and back to D0. This requires ACPI _PR3 power
+> + * resources to be present - the platform must be able to physically cut power
+> + * to the device.
+> + *
+> + * Only available for single-function devices to avoid affecting other
+> + * functions in multi-function devices.
+> + *
+> + * Returns 0 if device can be/was reset this way, -ENOTTY if not supported,
+> + * or other negative error code on failure.
+> + */
+> +static int pci_d3cold_reset(struct pci_dev *dev, bool probe)
+> +{
+> +	int ret;
+> +
+> +	if (dev->multifunction)
+> +		return -ENOTTY;
+> +
+> +	if (!pci_pr3_present(dev))
+> +		return -ENOTTY;
 
-Thanks,
-Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
+platform_pci_set_power_state() is currently only implemented for MID
+and ACPI, but we're starting to see DT systems with power control for
+devices, so I assume it may someday be extended to support them.
+
+Checking pci_pr3_present() seems wrong to me because it assumes ACPI.  
+
+On ACPI systems, it seems like pci_set_power_state(PCI_D3cold) should
+return an error if the necessary ACPI methods are not present, and we
+wouldn't need this check.  Is that not the case?
+
+Or is this _PR3 check here just to support the "probe"?  I don't know
+if there's a generic interface to tell us whether we can control the
+power to a device.
+
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (dev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	ret = pci_dev_reset_iommu_prepare(dev);
+> +	if (ret) {
+> +		pci_err(dev, "failed to stop IOMMU for a PCI reset: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	ret = pci_set_power_state(dev, PCI_D3cold);
+> +	if (ret)
+> +		goto done;
+> +
+> +	ret = pci_set_power_state(dev, PCI_D0);
+> +
+> +done:
+> +	pci_dev_reset_iommu_done(dev);
+> +	return ret;
+> +}
+> +
+>  /**
+>   * pcie_wait_for_link_status - Wait for link status change
+>   * @pdev: Device whose link to wait for.
+> @@ -5065,6 +5114,7 @@ const struct pci_reset_fn_method pci_reset_fn_methods[] = {
+>  	{ pci_pm_reset, .name = "pm" },
+>  	{ pci_reset_bus_function, .name = "bus" },
+>  	{ cxl_reset_bus_function, .name = "cxl_bus" },
+> +	{ pci_d3cold_reset, .name = "d3cold" },
+>  };
+>  
+>  /**
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2c4454583c11..1ca7b880ead7 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -51,7 +51,7 @@
+>  			       PCI_STATUS_PARITY)
+>  
+>  /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
+> -#define PCI_NUM_RESET_METHODS 8
+> +#define PCI_NUM_RESET_METHODS 9
+>  
+>  #define PCI_RESET_PROBE		true
+>  #define PCI_RESET_DO_RESET	false
+> -- 
+> 2.54.0
+> 
