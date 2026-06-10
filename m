@@ -1,270 +1,194 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FDB039E9D6;
-	Wed, 10 Jun 2026 15:45:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D293D428463;
+	Wed, 10 Jun 2026 15:54:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781106306; cv=none; b=bne0Ji6U4DpAVctQCvbt7TkPxnM/ltZcs4LPM/Xbx2FSTjxreOapQgqZcNLvsQmsc3rho7a1ST428VEEIIh8IuLnIQ04q1guL6Anj6RFvm/MQLgsHQ+jmLUB0Z+U8yIQsMSenPc7j+dJyqjjYoybIW58aBk8yLv6XnY73Sx6zDc=
+	t=1781106892; cv=none; b=dfXrfgEm4EqeVK+fdVaJ/eyymBOc2uzOLTDgdlpIdCUnGa7sMGAdROPZNEfAFv69Et+s4qAa4jXgVbRVg8S7mvF6356e2U2+S4+DZ/rQEv3cQUmj7mF0eCgDm2iJ9FfNM4uXHtFCfQcjvg+/aqJnH3lHHdtDxekW3ORZBg/8LDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781106306; c=relaxed/simple;
-	bh=OTkUa/zGo32ZAgcw3U58zpcSoiBQxlo+aFvyuJ7oHSs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oL65+WltcjFSrM0GcxQxGEUqC6JjXcApxL9EaGY1SLN2/yC0LurMUtFfti7jv9sP5EGOmuOx6Jg8pQobvCoBLLXykQlsVMZMSvc2XGiXnCNBybmPIjHrUnLdQASpk/KnxY3/Cdpm8XQen/40hhx0uqjFJQ7u4wfDscHg7KeAoPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org; spf=pass smtp.mailfrom=ozlabs.org; dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b=Y+ffWGv8; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ozlabs.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ozlabs.org
+	s=arc-20240116; t=1781106892; c=relaxed/simple;
+	bh=ukW1c1uMt9ueafvMqFkHXTOSlFzpWGuyC9gLsCXloss=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=VPveNsCe9eVP4YoUIIoPcP1SMkudypZ4QUmDBHJ3/goRvcS7EcXTCoNjvfYI71ERW569IrhOnAjiFyEX+tKi1xgc+EBf3g8ccRBMopn63QigSZIdz3lvucYf9VZLnYsrFVZ2cWey0eb/D/3s4Y7P68ELZVHhF8baOg5HX8be+Do=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fXwMepDg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ozlabs.org header.i=@ozlabs.org header.b="Y+ffWGv8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ozlabs.org;
-	s=201707; t=1781106303;
-	bh=Y5kBW1vxNXDE6JRXBcV0sBowQzBU5fXbOfu7RYwBVRQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Y+ffWGv868slujFWV5zuulzhwGAZ1Q7EKf6Y6XNIJbaFt1u9yxffsBQ39HrQOX6+c
-	 KsDoBkSz4VxRFqLvhhuV4gGj90D10geNMa8k7tLgPDrOIEc/IolNDUEdkBnRBaVhFG
-	 oRXzTmhY8M2JapiGu8m9qjM7omF2pIK5F2vrNATXUQB5zW/jTOR3IsSSletWuLG3uR
-	 xX68poepfetCcscEVEgOSHevmtBSLBkknXbeZ+iYcv5lFPegkC1bQMpVul48HXICAI
-	 6bQBnf4PWaIN5phsfoB4KWtEKTiDS3oQr6/+0VG1YMTgNe60pPaDeE3yRN4loTWdGE
-	 ycrpjf7MGkCYw==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4gb98G16N4z4x98;
-	Thu, 11 Jun 2026 01:45:01 +1000 (AEST)
-From: Matt Evans <matt@ozlabs.org>
-To: Alex Williamson <alex@shazbot.org>,
-	Leon Romanovsky <leon@kernel.org>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	Alex Mastro <amastro@fb.com>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>
-Cc: Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?UTF-8?q?Bj=C3=B6rn=20T=C3=B6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v3 9/9] vfio/pci: Add mmap() attributes to DMABUF feature
-Date: Wed, 10 Jun 2026 16:43:23 +0100
-Message-ID: <20260610154327.37758-10-matt@ozlabs.org>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20260610154327.37758-1-matt@ozlabs.org>
-References: <20260610154327.37758-1-matt@ozlabs.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fXwMepDg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32E831F00893;
+	Wed, 10 Jun 2026 15:54:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781106890;
+	bh=oP35lkm7tGMje2LGiaFXL2/xfgQkw9B2auCSNuH9frI=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=fXwMepDghijxTfr+6Dwkpzz5P25W8gI+zIZgXmML989ZTt1kvi9ezwsQe+gRHxp5D
+	 5mB87Un+iW4kwbYWGoUOOJje/8mB0NvgXxoN/sO3+P1lLrg5cf8TOsvVHhYZJIHclJ
+	 kzV4aRg0JFmQMb/tJFw0413aVJXMNGwp4QVt7i/YTEq388pHZVKMKdNhMy/n3vvGck
+	 AmzgfGcs5JDF38NgAIVrzcu9F+XcLfZk3ja5quiU55GC1BQTbHU6bT9rGuTdq/X9eU
+	 H5VfKjLto7LnA5Vb/ohKdj7OM8FPgVQdwowyTwp1OTurvVQ/QCN1LrqrYq21jo25lk
+	 LLNKUrIhSsEBA==
+From: sashiko-bot@kernel.org
+Subject: Re: [RFC PATCH 5/5] PCI/P2PDMA: Introduce a helper to release P2P
+ resources
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Pranjal Shrivastava" <praan@google.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+In-Reply-To: <20260610151853.3608948-6-praan@google.com>
+References: <20260610151853.3608948-6-praan@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 10 Jun 2026 15:54:49 +0000
+Message-Id: <20260610155450.32E831F00893@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-A new VFIO feature, VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR, is added to
-set CPU-facing memory type attributes for a DMABUF exported from
-vfio-pci.  These are used for subsequent mmap()s of the buffer.
+Thank you for your contribution! Sashiko AI review found 4 potential issue(=
+s) to consider:
 
-There are two attributes supported:
- - The default, VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_NC
- - VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_WC, which results in WC
-   PTEs for the DMABUF's BAR region.
+New issues:
+- [Critical] `pci_p2pdma_remove_resource()` destroys the P2P memory pool wi=
+thout RCU synchronization, causing Use-After-Free and NULL pointer derefere=
+nces.
+- [High] `vfio_pci_core_feature_p2p_register()` modifies P2P resources with=
+out acquiring any serialization lock, causing data races with concurrent io=
+ctls and `vfio_pci_zap_bars()`.
+- [High] `devm_memunmap_pages()` blocks indefinitely in `vfio_pci_zap_bars(=
+)` if P2P memory pages are persistently pinned by userspace, causing a loca=
+l Denial of Service.
 
-Signed-off-by: Matt Evans <matt@ozlabs.org>
----
- drivers/vfio/pci/vfio_pci_core.c   |  2 ++
- drivers/vfio/pci/vfio_pci_dmabuf.c | 57 +++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_priv.h   | 14 ++++++++
- include/uapi/linux/vfio.h          | 27 ++++++++++++++
- 4 files changed, 99 insertions(+), 1 deletion(-)
+Pre-existing issues:
+- [High] Error path in `pci_p2pdma_add_resource()` leaves a dangling devres=
+ action, causing a Use-After-Free during driver unbind.
+--
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 064906b25467..dc9c6f479e2c 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1575,6 +1575,8 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
- 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
- 	case VFIO_DEVICE_FEATURE_DMA_BUF_REVOKE:
- 		return vfio_pci_core_feature_dma_buf_revoke(vdev, flags, arg, argsz);
-+	case VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR:
-+		return vfio_pci_core_feature_dma_buf_memattr(vdev, flags, arg, argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_pci_dmabuf.c
-index b47411992ab6..58b769e65ab8 100644
---- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-+++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-@@ -51,7 +51,10 @@ static int vfio_pci_dma_buf_mmap(struct dma_buf *dmabuf, struct vm_area_struct *
- 	 * contained within the DMABUF size before calling this.
- 	 */
- 
--	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
-+	if (READ_ONCE(priv->memattr) == VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_WC)
-+		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
-+	else
-+		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
- 	vma->vm_page_prot = pgprot_decrypted(vma->vm_page_prot);
- 
- 	/* See comments in vfio_pci_core_mmap() re VM_ALLOW_ANY_UNCACHED. */
-@@ -468,6 +471,7 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
- 	priv->vdev = vdev;
- 	priv->nr_ranges = get_dma_buf.nr_ranges;
- 	priv->size = length;
-+	priv->memattr = VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_NC;
- 	ret = vdev->pci_ops->get_dmabuf_phys(vdev, &priv->provider,
- 					     get_dma_buf.region_index,
- 					     priv->phys_vec, dma_ranges,
-@@ -755,6 +759,57 @@ int vfio_pci_core_feature_dma_buf_revoke(
- 		}
- 	}
- 
-+out_put_buf:
-+	dma_buf_put(dmabuf);
-+
-+	return ret;
-+}
-+
-+int vfio_pci_core_feature_dma_buf_memattr(
-+	struct vfio_pci_core_device *vdev, u32 flags,
-+	struct vfio_device_feature_dma_buf_memattr __user *arg,
-+	size_t argsz)
-+{
-+	struct vfio_device_feature_dma_buf_memattr db_attr;
-+	struct vfio_pci_dma_buf *priv;
-+	struct dma_buf *dmabuf;
-+	int ret;
-+
-+	if (!vdev->pci_ops || !vdev->pci_ops->get_dmabuf_phys)
-+		return -EOPNOTSUPP;
-+
-+	ret = vfio_check_feature(flags, argsz,
-+				 VFIO_DEVICE_FEATURE_SET,
-+				 sizeof(db_attr));
-+	if (ret != 1)
-+		return ret;
-+
-+	if (copy_from_user(&db_attr, arg, sizeof(db_attr)))
-+		return -EFAULT;
-+
-+	dmabuf = dma_buf_get(db_attr.dmabuf_fd);
-+	if (IS_ERR(dmabuf))
-+		return PTR_ERR(dmabuf);
-+
-+	/* Verify DMABUF: see comments in vfio_pci_dma_buf_revoke() */
-+	priv = dmabuf->priv;
-+	if (dmabuf->ops != &vfio_pci_dmabuf_ops ||
-+	    READ_ONCE(priv->vdev) != vdev) {
-+		ret = -ENODEV;
-+		goto out_put_buf;
-+	}
-+
-+	switch (db_attr.memattr) {
-+	case VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_NC:
-+	case VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_WC:
-+		WRITE_ONCE(priv->memattr, db_attr.memattr);
-+		ret = 0;
-+		break;
-+
-+	default:
-+		ret = -ENOENT;
-+	}
-+
- out_put_buf:
- 	dma_buf_put(dmabuf);
- 
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci_priv.h
-index 3c2f2575b670..3ec8b62194f3 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -41,6 +41,7 @@ struct vfio_pci_dma_buf {
- 	struct kref kref;
- 	struct completion comp;
- 	unsigned long vma_pgoff_adjust;
-+	u32 memattr;
- 	enum vfio_pci_dma_buf_status status;
- };
- 
-@@ -158,6 +159,10 @@ int vfio_pci_core_feature_dma_buf_revoke(
- 	struct vfio_pci_core_device *vdev, u32 flags,
- 	struct vfio_device_feature_dma_buf_revoke __user *arg,
- 	size_t argsz);
-+int vfio_pci_core_feature_dma_buf_memattr(
-+	struct vfio_pci_core_device *vdev, u32 flags,
-+	struct vfio_device_feature_dma_buf_memattr __user *arg,
-+	size_t argsz);
- #else
- static inline int
- vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
-@@ -166,6 +171,7 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32 flags,
- {
- 	return -ENOTTY;
- }
-+
- static inline int vfio_pci_core_feature_dma_buf_revoke(
- 	struct vfio_pci_core_device *vdev, u32 flags,
- 	struct vfio_device_feature_dma_buf_revoke __user *arg,
-@@ -173,6 +179,14 @@ static inline int vfio_pci_core_feature_dma_buf_revoke(
- {
- 	return -ENOTTY;
- }
-+
-+static inline int vfio_pci_core_feature_dma_buf_memattr(
-+	struct vfio_pci_core_device *vdev, u32 flags,
-+	struct vfio_device_feature_dma_buf_memattr __user *arg,
-+	size_t argsz)
-+{
-+	return -ENOTTY;
-+}
- #endif
- 
- #endif
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 697c0bb4b9bc..ab30b89399d0 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -1554,6 +1554,33 @@ struct vfio_device_feature_dma_buf_revoke {
- 	__s32	dmabuf_fd;
- };
- 
-+/**
-+ * Given a dma_buf fd previously created by
-+ * VFIO_DEVICE_FEATURE_DMA_BUF, SET the memory attribute that will be
-+ * used by future mmap()s of that fd.  SETting a new attribute does
-+ * not affect existing VMAs.
-+ *
-+ * The default, if no previous SET has been performed, is NC.
-+ *
-+ * Return: 0 on success, -1 and errno is set on failure:
-+ *
-+ *  EBADF, EINVAL: dmabuf_fd is not a DMABUF fd.
-+ *  ENODEV: The dmabuf_fd does not match this VFIO device.
-+ *  ENOENT: The given memattr is not supported.
-+ */
-+#define VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR 14
-+
-+/* Valid memory attributes for the memattr field */
-+enum vfio_device_dma_buf_memattr {
-+	VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_NC = 0, /* pgprot_noncached */
-+	VFIO_DEVICE_FEATURE_DMA_BUF_MEMATTR_WC = 1, /* pgprot_writecombine */
-+};
-+
-+struct vfio_device_feature_dma_buf_memattr {
-+	__s32	dmabuf_fd;
-+	__u32	memattr;
-+};
-+
- /* -------- API for Type1 VFIO IOMMU -------- */
- 
- /**
--- 
-2.50.1 (Apple Git-155)
+commit f498fe90fe30c1dceda58fbbdcd2de8314934e62
+Author: Pranjal Shrivastava <praan@google.com>
 
+PCI/P2PDMA: Introduce a helper to release P2P resources
+   =20
+Introduce pci_p2pdma_remove_resource() to allow manual teardown of a
+device's P2P DMA pool. The new API enables exclusive owners of a device,
+such as vfio-pci, to cleanly release P2P resources during session closure
+or hardware reset.
+
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index adb17a4f69396..2a48ffefa01c4 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+[ ... ]
+> @@ -466,6 +469,41 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, in=
+t bar, size_t size,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_p2pdma_add_resource);
+
+[Severity: High]
+This is a pre-existing issue, but does the error path in
+pci_p2pdma_add_resource() leave a dangling devres action?
+
+If gen_pool_add_owner() fails, the code jumps to pages_free:
+
+pages_free:
+	devm_memunmap_pages(&pdev->dev, pgmap);
+pgmap_free:
+	devm_kfree(&pdev->dev, p2p_pgmap);
+	return error;
+
+The devm_add_action_or_reset() called earlier registers
+pci_p2pdma_unmap_mappings() with the p2p_pgmap pointer, but it doesn't
+appear to be deregistered here. When the device driver later unbinds,
+will the devres core execute pci_p2pdma_unmap_mappings() with the already
+freed p2p_pgmap pointer, leading to a Use-After-Free of p2p_pgmap->mem->own=
+er?
+
+> +/**
+> + * pci_p2pdma_remove_resource - remove all p2p memory for a device
+> + * @pdev: the device to remove the memory from
+> + *
+> + * Tear down the entire p2p DMA pool for the device. Zap any existinga
+> + * userspace mappings of the p2pmem/allocate file
+> + */
+> +void pci_p2pdma_remove_resource(struct pci_dev *pdev)
+> +{
+[ ... ]
+> +	gen_pool_destroy(p2pdma->pool);
+> +	p2pdma->pool =3D NULL;
+
+[Severity: Critical]
+Does destroying the pool and setting it to NULL here without RCU
+synchronization cause Use-After-Free and NULL pointer dereferences?
+
+Because pdev->p2pdma is still active and accessible to RCU readers, it seems
+this can race with several concurrent operations:
+
+Concurrent sysfs readers like size_show() might read p2pdma->pool and
+trigger a Use-After-Free when executing gen_pool_size().
+
+Concurrent callers of pci_alloc_p2pmem() read p2pdma under RCU, see it is
+not NULL, and could unconditionally pass the now-NULL p2pdma->pool to
+gen_pool_alloc_owner(), causing a NULL pointer dereference.
+
+Additionally, the driver detach handler pci_p2pdma_release() checks
+if (p2pdma->pool) synchronize_rcu();. Since the pool is now NULL, it skips
+RCU synchronization and immediately destroys the xarray, leading to a UAF
+of the p2pdma structure itself by any remaining RCU readers.
+
+> +
+> +	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
+> +
+> +	pci_info(pdev, "removed all peer-to-peer DMA memory\n");
+> +}
+> +EXPORT_SYMBOL_GPL(pci_p2pdma_remove_resource);
+[ ... ]
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
+_core.c
+> index 7913b8916df91..7b58cb344408d 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1704,6 +1704,11 @@ static void vfio_pci_zap_bars(struct vfio_pci_core=
+_device *vdev)
+>  	loff_t len =3D end - start;
+> =20
+>  	unmap_mapping_range(core_vdev->inode->i_mapping, start, len, true);
+> +
+> +	if (vdev->p2p_registered_bars) {
+> +		pci_p2pdma_remove_resource(vdev->pdev);
+
+[Severity: High]
+Is it possible for devm_memunmap_pages() to block indefinitely here while
+holding a critical device rwsem?
+
+Inside pci_p2pdma_remove_resource(), devm_memunmap_pages() synchronously
+waits via wait_for_completion(&pgmap->done) for all device page references
+to be released. If userspace has persistently pinned these P2P pages (e.g.,
+by registering them with RDMA or io_uring), the reference count might remain
+elevated, causing the kernel thread to hang in uninterruptible sleep.
+
+Because vfio_pci_zap_bars() is called with down_write(&vdev->memory_lock)
+held, this hang could prevent any future operations on the device, including
+administrative driver unbinding.
+
+[Severity: High]
+Can pci_p2pdma_remove_resource() run concurrently with the ioctl handler
+vfio_pci_core_feature_p2p_register()?
+
+It looks like vfio_pci_core_feature_p2p_register() updates
+vdev->p2p_registered_bars and calls pci_p2pdma_add_resource() without taking
+vdev->memory_lock or any other serialization lock.
+
+Since vfio_pci_zap_bars() directly calls pci_p2pdma_remove_resource(),
+concurrent execution could cause a TOCTOU race and corrupt the p2pdma pool
+state and pagemaps, as the PCI P2P subsystem assumes exclusive access from
+the caller for state modifications.
+
+> +		vdev->p2p_registered_bars =3D 0;
+> +	}
+>  }
+> =20
+>  void vfio_pci_zap_and_down_write_memory_lock(struct vfio_pci_core_device=
+ *vdev)
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260610151853.3608=
+948-1-praan@google.com?part=3D5
