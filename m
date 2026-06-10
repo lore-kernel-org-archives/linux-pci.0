@@ -1,113 +1,141 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9CF411695
-	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 14:37:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADADC331202
+	for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 15:18:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781102236; cv=none; b=YUKgaEu+EzpQDA7QxqBu/RJMQYGmkncAFrlH86madDnc5koC5BnsQd7DdTTBWP7e6P1Vx0z8gvzFrFDRTHvxQIGn2mKUeiFzNy6FKIC5/904p26B1BdibqbUMnVVsrQfqLh1WwenP1YTo0bIVIJMBUnnNsoQ6/w8tdadPdJDpgg=
+	t=1781104737; cv=none; b=Jk9wRE79RZ//inwsu9B+Nflv/ZWUskIzZtibMxvhVP39zeiTZNfJ2K6qhOeXvc9e3DLmJX4dEkgPDl5J87L9K6nvN1j2i03foRME/ghbwVggR2VmFSwQWb4/N3sbhza6QeMrpBAiuj4jAHU6k7qdjXM8OOabBH3aYJhTbCzEq6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781102236; c=relaxed/simple;
-	bh=ObZjN4PnpBeEVp+PIf3DS7ox6I4fRLdYZ2Z6oeHyCmM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QWqWAh3k3kFXmYPpi5zXUKmiy+W2I/lAIrhuVNeJNSdkD5Fm/1Bn40PTuk1FD5X577zm+VdcZ7rPq28qYhycg6CMF9+Ae+qvi4krsZXilVBOdIBKdxoMZJ5bv5kIlUIBH3VqgRUlV/5lV2Qu4KxekNycUyNTqZ/pmDIR61CGFBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DQtV0Ph+; arc=none smtp.client-ip=209.85.214.181
+	s=arc-20240116; t=1781104737; c=relaxed/simple;
+	bh=2FikaBR52j14eG2q4c7uEh8VobH/ZwHZeG2IeNzY9To=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=rXgrI6Wehw6EbhURO3sj+u4P7PqnpLyyxe3yZrxUM1bnR297eVOYXFX+nz6Q/D/2bc1Ud5V2ScYgpSyrN467vpmh683VxTTDzoteLuZ1sHmULdgiE96wyGolhhZ5SuM8hYUyQtMGfWZFt03jnRtJKD6qEXp/H1Kc6gL4V44znuA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--praan.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=uodRyeWq; arc=none smtp.client-ip=209.85.216.73
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--praan.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DQtV0Ph+"
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2c0b1a48855so81015ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 07:37:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="uodRyeWq"
+Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-36b934a336eso5092655a91.2
+        for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 08:18:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781102235; x=1781707035; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hztkJLAOrt3y4FASh5Bx2C0OqdOIndw7eniIOKrpzws=;
-        b=DQtV0Ph+ELjeZrlrdJYfr2VECIrHkZW45XEQeEMlHhQSv3QwZCVWREo2Udx5bSy+XO
-         21u12ustc8JpSQ9QA1qDvRJTFgF3fIX8IEmvIgnSwXQ+scznhKH1M53pGBiyZs/CShnj
-         LdFoEwdJCHD9VuoQXEj6pjuqcfPh36CcT6SoWUS8OnQxTdrMTt7pwKEj/LFRnmwiFZqu
-         Nhj1RNexedtvoyLT8ETaqUsNjPHFmEI6WRxOeTujUxdVjxWIc6DcSfNhb3HpWDvkrdJa
-         tg5kjveRWVr1zX38zuHLr7gqY2eFkdax7mqjyv+y5/veaecmqao1tmEJ5Vnf1rMXTPeD
-         bSEQ==
+        d=google.com; s=20251104; t=1781104736; x=1781709536; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=B3ufllk0o8kYPSdIZb3vpcLex8ZiEWODUNKVQWpmUYY=;
+        b=uodRyeWqx2qrn/F7GC1FiUjPsxT03DAhr3png2dsGvE7wx+70Bas4NcySYhlrvHCtL
+         fUTUbhhzf7eSbrdwYSROX1gKLQ63Zy2Vd71phl3g7T1Sm/goljIb1PEB72lz12D2a8gW
+         wZys+OFE3hAkmhoWiBGRTtLuU8esUzGTL4cDbLy5RePE7smh/ncALvRLoHYHM3aqTcgP
+         IPGBjDkzHptgODU2keotgcYYDyvDP/PD/aQ6r63+IFpDWk7Ws6D30uDrkwLWetUnngaR
+         bkBcqyBHJ66BqX7cmRg0OErac6jhL8FGJOcmz+iPweX68Xa7J9V4mdiCZ23RFZhlYtHL
+         DEtg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781102235; x=1781707035;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=hztkJLAOrt3y4FASh5Bx2C0OqdOIndw7eniIOKrpzws=;
-        b=qwtvpHaP+EmQ7IFcK7ruuXHOSnCezqE7NAoXWjOy4swplENpJHAKMj1rPpQ1U/57Io
-         Ppha+iqLVwVul8ZJOEJzxtFX4RDdsNmXzGunBqx5BV3lAzBdRzq8MiR0+W2wItnl6idN
-         x9YzM9aItOllOsJaSZPUPb/IoUdsV3NKDANhU4PztBx0kZw1JvV+2jlqGirX01aq80eU
-         Sz0ySaLiVq+oyBgYPGpg8xTUxMc+6xUi0E80NS9H4U6UIcw8e78JCrRPFnv8ofdlgMMp
-         k/tnrgH+xRsKFccWKPntY8NU8tEgK66FO1jFJCAWvuFqW0+bFVpOwFdlKZDbdul+FLKi
-         +1WQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9hCAPzGtgnX5GZ5Q/+uM5dgOa+IgfjSFZeqnerWcLfbxZkyM0kvjKrV/u5/vvJxruU0NuCPjHtnhU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxHWEOEBTvRDvW0aUOM86E5/YyZLgOfxoZS5/rmdCgc19541BC6
-	Rq53ari6s1SGmhwjU7bFb6mngnasSCXtXpRJc70nxRpuXSMlQAZiJwzyOA+m6O1Ofw==
-X-Gm-Gg: Acq92OGtgvJh4VLiSuR0EZgmW8cY0W5PSial4YKOqBfgdKP6zjGEf/u69Ts6Uh6R92l
-	mPnM8gDME0LR2UrZTj8Otn2GcUOD64lQ4ZWzuOA/ZMCH8/6e8+QmgD6e50dYmCp0AJmwTt6VTaT
-	JUaxOqXQkqavG6NKTNMxYfxghEIRC6Fk6jkDrekCZH9RWm/AilsXUBgjE3mpWuZZTf1khEfW2ms
-	TzVwTBZUvC0Ygkx3VoUtWBU6bNBKLmUCGVdjQobi7ToP7Bv/G5t07fSvLnz+FgoVCaijWwHuqJk
-	wUYjuyQ/X7rdqUih8FgA5Ho/zqKB5IL3wai9KOuXAloDq/CK63051qE8eCaTD6wcoNAAxQIJ18y
-	lhO3Kael8FmERUcAs4QwTGCdtFiCUVeetYkdxcNMo7x0PADFhl+CRHXRvoxIcy+FmO+fJzZTK/S
-	Q/MmvJXOetvSd3S8EQ6+bieUFBQCTSKq2NiJ4L/3lgUl/W60kmD+ZrFBqts+DzqrbMqOJRjy0=
-X-Received: by 2002:a17:902:d4ce:b0:2c0:b1b0:376e with SMTP id d9443c01a7336-2c2d936f08cmr13905ad.8.1781102234239;
-        Wed, 10 Jun 2026 07:37:14 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-842828821c5sm23191040b3a.32.2026.06.10.07.37.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Jun 2026 07:37:13 -0700 (PDT)
-Date: Wed, 10 Jun 2026 14:37:04 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: David Matlack <dmatlack@google.com>, kexec@lists.infradead.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org, linux-pci@vger.kernel.org,
-	Adithya Jayachandran <ajayachandra@nvidia.com>,
-	Alexander Graf <graf@amazon.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Jacob Pan <jacob.pan@linux.microsoft.com>,
-	Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>,
-	Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>,
-	Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>,
-	Pasha Tatashin <pasha.tatashin@soleen.com>,
-	Pratyush Yadav <pratyush@kernel.org>,
-	Saeed Mahameed <saeedm@nvidia.com>,
-	Samiullah Khawaja <skhawaja@google.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Vipin Sharma <vipinsh@google.com>, William Tu <witu@nvidia.com>,
-	Yi Liu <yi.l.liu@intel.com>
-Subject: Re: [PATCH v6 08/12] PCI: liveupdate: Inherit ACS flags in incoming
- preserved devices
-Message-ID: <ail2kLnW43fF_Sqa@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-9-dmatlack@google.com>
- <aiXWmR-ettxin4LC@google.com>
- <aic6mdiZ0qUJpFca@google.com>
- <aihLTgs1Y49OXQaV@google.com>
- <20260610000704.GR1962447@nvidia.com>
+        d=1e100.net; s=20251104; t=1781104736; x=1781709536;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=B3ufllk0o8kYPSdIZb3vpcLex8ZiEWODUNKVQWpmUYY=;
+        b=rPsBesjnJvNFxCPZPIoz0VSQGUQfzeU+eeAWtaaOAB3iOT4nnGlWZt8kUSzzLfwVaY
+         S1phLKWvv5QvhsX1p1FBTcn6z4tLkURKQPgw8Bbx9OecY7zeyTVpbWZdSOZf7+GP6M0P
+         c6nGBu/w87XjON2bJ3yQGMPWjuwFak6UPfF42m8ST12WB7w2XZ7hZsDdlHF64Qs132Iw
+         HqkG2HtQ+LRKrQStqYuR/b+DVyZU7GgkJNkcfwKdSVA5NVvJ0uFOIoC/F34cxHKF3MKx
+         Qy9eg0N4aaN1aTX7o8t9/0pKczueh/xtdrMEWPrzblCoVlg32KDF1VsNwyXcEUO73oKX
+         paWg==
+X-Gm-Message-State: AOJu0YxZOfoaFOYGJh9gE6A8aeatOrbUoRn+zi6KlGD+c+Gc3UIBqkdN
+	HgMQjpQuYjU1njEjfg+2nZ0dledD9pz+S4SNmVCYswTlYSarwPM1eCoNdklrU39nLjcNKRnh/rF
+	hQLNW1Nj5p4Ak4YMQ7aueaw3CT7y/1LGLxOkEUf9H6Nfw+IPiBHN9hO5rowAUfLpYoadcexPo7R
+	3KFuc8xiRaSJdNDvV9kqIsBBS8brS8HjVdZmI=
+X-Received: from plbkn13.prod.google.com ([2002:a17:903:78d:b0:2b9:6a4a:141])
+ (user=praan job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:4a46:b0:36d:bbe0:de7c
+ with SMTP id 98e67ed59e1d1-370eeff19bamr24652982a91.12.1781104735720; Wed, 10
+ Jun 2026 08:18:55 -0700 (PDT)
+Date: Wed, 10 Jun 2026 15:18:48 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260610000704.GR1962447@nvidia.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.54.0.1099.g489fc7bff1-goog
+Message-ID: <20260610151853.3608948-1-praan@google.com>
+Subject: [RFC PATCH 0/5] vfio/pci: Support ZONE_DEVICE-backed P2P Registration
+From: Pranjal Shrivastava <praan@google.com>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	kvm@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>, 
+	Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>, Kevin Tian <kevin.tian@intel.com>, 
+	Pranjal Shrivastava <praan@google.com>, Ankit Agrawal <ankita@nvidia.com>, Matt Evans <mattev@meta.com>, 
+	Vivek Kasireddy <vivek.kasireddy@intel.com>, Leon Romanovsky <leon@kernel.org>, 
+	Shivaji Kant <shivajikant@google.com>, Samiullah Khawaja <skhawaja@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Jun 09, 2026 at 09:07:04PM -0300, Jason Gunthorpe wrote:
-> On Tue, Jun 09, 2026 at 05:20:14PM +0000, Pranjal Shrivastava wrote:
-> 
-> > Now, the attacker has an opportunity with Liveupdate, since the devices
-> > are already assigned, if *somehow* it flips a bit like ACS_RR, the
-> 
-> If this is possible then your environment is already security broken,
-> no need to involve live update.
+Introduce ZONE_DEVICE backing for VFIO-exposed PCIe BARs.
+Currently, kernel drivers can register their BARs with the P2PDMA
+subsystem to enable high-performance, page-backed P2P DMA. However, when
+a device is bound to vfio-pci, this capability is missing.
 
-Ack. Alright.
+As a framework, VFIO should support the same set of capabilities 
+available to kernel drivers, provided appropriate isolation and 
+lifecycles are maintained.
 
-Thanks,
-Praan
+This series adds support for VFIO to register BARs as page-backed P2P
+providers, enabling userspace drivers to perform zero-copy P2P DMA via
+standard POSIX APIs (e.g., O_DIRECT) which require struct page metadata.
+
+Design
+======
+The proposed design enables VFIO to leverage the kernel's pci-p2pdma 
+infrastructure, delegating memory management and slicing to the managed
+P2P pool.
+
+1. ZONE_DEVICE Registration
+A new feature, VFIO_DEVICE_FEATURE_P2P_REGISTER, is introduced to trigger
+pci_p2pdma_add_resource() for a target BAR which creates the ZONE_DEVICE
+struct pages and registers the BAR as a standard P2P provider.
+
+2. Mutual Exclusivity Policy
+A strict mutual exclusion policy is enforced:
+     - Registered BARs: Standard mmap() and DMABUF export are blocked.
+     - Exported BARs: Native P2P registration is blocked.
+
+Users utilize the standard sysfs p2pmem/allocate interface for managing
+memory slices once a BAR is registered.
+
+3. Lifecycle and Resource Reclamation
+A new helper is introduced: pci_p2pdma_remove_resource(), is implemented
+to support manual teardown of the P2P pool. VFIO invokes this helper 
+during device reset or session termination to ensure the pool is
+destroyed and the ZONE_DEVICE pages are unmapped.
+
+This is on github: https://github.com/pran005/linux/tree/vfio-p2p
+
+Alternative Approach: Page-backed DMABUF Export
+================================================
+An alternative implementation has been explored which integrates with the
+ongoing VFIO DMABUF-mmap refactor [1]. In that approach, rather than
+registering a BAR as a system-wide P2P provider, VFIO optionally
+allocates ZONE_DEVICE pages only for specifically exported DMABUFs via a
+new VFIO_DMA_BUF_FLAG_ALLOC_STRUCT_PAGES flag.
+
+A proof-of-concept of this approach is available at:
+https://github.com/pran005/linux/tree/vfio-p2p-alt
+
+[1] https://lore.kernel.org/all/20260527102319.100128-1-mattev@meta.com/
+
+Pranjal Shrivastava (5):
+  vfio: Add UAPI for ZONE_DEVICE-backed P2P registration
+  vfio/pci: Implement ZONE_DEVICE-backed P2P registration
+  vfio/pci: Block mmap & dmabuf export for ZONE_DEVICE-registered BARs
+  vfio/pci: Block ZONE_DEVICE registration for BARs with active DMABUFs
+  PCI/P2PDMA: Introduce a helper to release P2P resources
+
+ drivers/pci/p2pdma.c               | 38 ++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_core.c   | 57 ++++++++++++++++++++++++++++++
+ drivers/vfio/pci/vfio_pci_dmabuf.c | 22 ++++++++++++
+ drivers/vfio/pci/vfio_pci_priv.h   |  6 ++++
+ include/linux/pci-p2pdma.h         |  1 +
+ include/linux/vfio_pci_core.h      |  1 +
+ include/uapi/linux/vfio.h          | 15 ++++++++
+ 7 files changed, 140 insertions(+)
+
+-- 
+2.54.0.1099.g489fc7bff1-goog
+
