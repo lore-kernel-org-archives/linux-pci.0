@@ -1,167 +1,76 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0BDE3672B8
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 20:05:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3368B36A375
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 20:13:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781208312; cv=none; b=kvpapXP98pMM6uoELSME2cG/bZudUfS1rrmFDvNInx6aCw3RII+S16jhQBZs3y71Ahas/N6dL0Eo99IpmKAkfe8jreHbwVw0LWHWZk0JUFDa7SPNT81FjGl7QEo68/pfIxPsnp51AX3vE16aQM781uV0zoiF8JQogImvJX5JHlc=
+	t=1781208795; cv=none; b=c9SGH3oWPPgQgKIKKbGsUI/bdPJu0DjFcU6jmqi6JLHkyg7S/BkFCQyHeSxbyMP1csGQVrbcK2aADdyFCM25LsUw0tZzRm7nhSZ4kQ9yCwmVxB0fxssK440f5sztzhhDafBRewBHT/2Z9qCB/grpIv3xH5GBAqonZ4O/tK+cES0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781208312; c=relaxed/simple;
-	bh=/PJ574lbgqCaoCMVo1Yw/p6bzvW2kDDxvFjQvuxEDpM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g/2CklxlDpd7Yg2UQoKjV7OJ4SvUMQMYg7uiQEI95SLXkT9E1ESuuWHvAvT6G1cn8eonMRWsJksZfj/yrBv8oljWGK7sAiMYU0Ca9z2w33HuilM6XkL5y0r804eFCB/9bp8RfxbugX802Smmq2J5XXhrDTCMjQpzwqgC3owi3TA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=RAqxCevD; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=X2g+2WX/; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1781208795; c=relaxed/simple;
+	bh=zHIffRj2jIJqYpl9gLeh1QaBNStYpt5XQozgoJrpnQs=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=UOrKaTOQkoL5Y4dqsgO5zY/V++lmBExX8xXaEy7MewVo8XfeVA5cVblmqDy7UfpO3LlS53/cmWVataX20h+64nKyKDPKU5/3tKpfDnXNASBD7Ds1gezQgjnv4T48+HTx6RI9ps5w2B0hKk+jfLw875eXayKLmUAJqQDPOYI9BBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WgKufIYa; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="RAqxCevD";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="X2g+2WX/"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65BJ3fq61480157
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 20:05:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=YmR4e1Tj2lOm/nlzcOpM3CCI
-	VcV17DTEFBWvUeS7yO8=; b=RAqxCevDyP6U/Acy9PUbea+A/i5HTILTR2AhhSCx
-	axV4TvFQkK+2y+J+3UBiXH86NO0WvhLTnxp3XcSfyOr31elHHO9BbsXERpAI/UhU
-	8d0OAdRJz7pbQez+he93JLmCBmawgEYH0JsgtbOB+jjNIprXGN9Hjpp86R5PoLvM
-	RVfN2lstzHtk/3Bu9V/E/dtjnRhqFjg8SJmiF3Z2MUTSTdIOemd1nWXxANZVvHow
-	36X/KozWcnl5tYGNcECKkGUsL7jL92jVkFg0noGxjO6NoHbPD1SDkviSKf7VFLsr
-	bQ0S8hNEiDDAYQC4PvCwCCpBRRTufHAfQTGkmVuwl4ixew==
-Received: from mail-vs1-f71.google.com (mail-vs1-f71.google.com [209.85.217.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4er1cbgqf9-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 20:05:09 +0000 (GMT)
-Received: by mail-vs1-f71.google.com with SMTP id ada2fe7eead31-6cc5ae9b959so162971137.3
-        for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 13:05:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1781208309; x=1781813109; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=YmR4e1Tj2lOm/nlzcOpM3CCIVcV17DTEFBWvUeS7yO8=;
-        b=X2g+2WX/l+L1CJ1IGpESXQzyMVNspKqXaY1cgTxLaXdcWoowXjyj0IGI08T8R3KUFC
-         dLAnHRvP66toLRqKIHbnge5CQYs/Ahfhr0Rbo90xjksd2LT83aG7OiQLm6rfo/YpCYFe
-         sxspH+WjZ2f0/B8tUMgfHFf6oVlRPi1RwkASy+OVqOyHtNTHkMF4cGYslZrQCjT8RfKG
-         qOpbPe9659EyLz+YAIvmY+zVb6Y3GY4ZGG2Q4Yqye5Vo5BStZx80031jUhkSbwQkmcQI
-         MdmPxgwGV+mfs2i+oxiNysoO43BwpIF9oeP6yLH7gjRKmyHPsyVzFnUx3X2If9sL+0PJ
-         96Eg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781208309; x=1781813109;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YmR4e1Tj2lOm/nlzcOpM3CCIVcV17DTEFBWvUeS7yO8=;
-        b=FbI1oeriVfrOntPQgLCpiK6sqkCIGeHeEqV19XHKAKMXO6xocyZ3dnuc0j2PdBBLF4
-         naJF/0BMbK3mBCXN++QdawNnH0fUQCjCHrljyMUgWF+Hlq5+dlZIUGzeFpFv3LtPp2Aq
-         MWabh1P9OAaitdcx2sL2Fd4hpqb5QRJc1sCq2ujfp4MV7c4uxJ/AG3W3UMWnUvsCse4T
-         ez1YHf8HzklGsWFUO+FTcjXfK6uJqTMII0/nQ2lbbqxpMcJcwcwmxYp/nQcIP8vloXuP
-         KaLDIViIcmtGsRudQAPKfgE0oNSJk+MPo8zVKbH2KnFJBJQKz2DRTwbD8viKALJHhnXg
-         /1OQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9XYpYubfuKd17Z3nUimNem2iusfVbM0J0nV48WSpCi6og7zHnayO8nXpda5d/q7pg6fiu4WNzVzxQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw8WNITls2v3+EctlRTQqsLmrUbYUQ1cbzAwV+fMxTPF1CVHtL9
-	ysASDkTZLLMcFLAW6/z8hxZ9EeI7zCQJjH9mDK7pMnpe/+mRQUnrZdjGVboJBIRXxLxG3qX5i3I
-	vmSqZtPXoJsPLg6yOEQGAHQw4rQpCcg4S7WBiOUsstnRWFb62AA7p5CUegrdMkKU=
-X-Gm-Gg: Acq92OGP/QZByTqEo4f+zZWweDbQU1/RjtgPeVxi3SB5+F7s/vawIICSrP2aZpCRQ4c
-	1bxIPZsNX7qqtHI3+Zc3BntEQHzrkmlijOlhbilmLyG7gEngodolIJlufwOSpE1fZGWZDVtCmzW
-	/EDNk3BVlK2KquG3YYvKTTP9YKNsvORsJOYVxCL4Q0ShdSzh8fzZ1vrx/FwXXjiNBKLCe1WK5Pt
-	4vetyhSGGnzQnjrfmtJjA7MtUJQrrPwu0e3UArOI+AiGqu+6UXKj9HwvTQHXnEjjbH1xnkup3Qf
-	pJAitLGk/6t6o7FZGhrjSZNNypverXEE/26s3k4roQNVE4KcWXREoYT83eLIY71uo11EhrNPyMG
-	Fg0J3LIGLtRwAZNmnh/KfUkrBAoSsUV5OtUzjI+yMWQMzhWHTnCqacojtvY+rIhJXkKyditsYKu
-	b/FNoZfs6dIWHJK7fc+GEeY3E9tSPdKe1DfM4=
-X-Received: by 2002:a05:6102:5088:b0:6f0:3c5b:ce7a with SMTP id ada2fe7eead31-71d5c4731d1mr3076991137.17.1781208308987;
-        Thu, 11 Jun 2026 13:05:08 -0700 (PDT)
-X-Received: by 2002:a05:6102:5088:b0:6f0:3c5b:ce7a with SMTP id ada2fe7eead31-71d5c4731d1mr3076940137.17.1781208308534;
-        Thu, 11 Jun 2026 13:05:08 -0700 (PDT)
-Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5ad2cd98d97sm108447e87.80.2026.06.11.13.05.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jun 2026 13:05:07 -0700 (PDT)
-Date: Thu, 11 Jun 2026 23:05:05 +0300
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Qiang Yu <qiang.yu@oss.qualcomm.com>,
-        Jeff Johnson <jjohnson@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bartosz Golaszewski <brgl@kernel.org>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Balakrishna Godavarthi <quic_bgodavar@quicinc.com>,
-        Rocky Liao <quic_rjliao@quicinc.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath11k@lists.infradead.org, devicetree@vger.kernel.org,
-        Bartosz Golaszewski <brgl@bgdev.pl>, linux-bluetooth@vger.kernel.org,
-        Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v2 2/7] wifi: ath11k: enable support for WCN6851
-Message-ID: <fiuuh6rwohtlmwdiy7cwqee62e7jrtdgii7fklfy7jkgh25yul@mzlefhqgzo55>
-References: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com>
- <20260608-sm8350-wifi-v2-2-efb68f1ff04c@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WgKufIYa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFA801F00A3A;
+	Thu, 11 Jun 2026 20:13:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781208793;
+	bh=zHIffRj2jIJqYpl9gLeh1QaBNStYpt5XQozgoJrpnQs=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=WgKufIYa91pwLp3TEoekXp/gGGZyKb2djiY7q1rOzbPVadSFXD5NjH67PF6Vr34xo
+	 z6dIN4eoW2bllQUEaIm9Hea6qsJakFk8V1FoVmSJoH+mn85/cxDkIIU/o1tI9ckQw1
+	 vewDSRGiEwTdqLkjkXoErfUkL3PhEAlBJsBg1SR2ZS9vrCqrBLgkvjqeysl8TlI5RP
+	 YwUGGnTxtch/837GJSjuDktxMHfmhoPdR5Aj0AWaDeaaoBJyilYQ2j6/rUCf8JdrYL
+	 sjEIrndRMxdq0eJhgM4Iu1OV4UOQt/A4I1rte1Tq1f1s4VbDKEJEllU5sqG6sAU4KA
+	 43reLfCcJZxXw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v6 2/3] PCI: rockchip-host: do not attempt 5.0 GT/s
+ retraining
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Geraldo Nascimento" <geraldogabriel@gmail.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <fa9ed4fc6d4531a9216473151ddaebdb70398c20.1781207474.git.geraldogabriel@gmail.com>
+References: <fa9ed4fc6d4531a9216473151ddaebdb70398c20.1781207474.git.geraldogabriel@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Thu, 11 Jun 2026 20:13:13 +0000
+Message-Id: <20260611201313.BFA801F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260608-sm8350-wifi-v2-2-efb68f1ff04c@oss.qualcomm.com>
-X-Proofpoint-GUID: gB8ylOS217nCew9M9QUmtowS7BBAHImn
-X-Proofpoint-ORIG-GUID: gB8ylOS217nCew9M9QUmtowS7BBAHImn
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDIwMSBTYWx0ZWRfX7WHJG8Kxr/WU
- BlG7FFL4BX2GJX8Hzamq4FXtGzY76MpiLsSoOMVcdgePUyLgJBxvoF6fVfrRLhqHJIl/ZRw9GdE
- OIQy6VwycJmjZLuQP0NTNtH+yTzweLU=
-X-Authority-Analysis: v=2.4 cv=S57pBosP c=1 sm=1 tr=0 ts=6a2b14f5 cx=c_pps
- a=P2rfLEam3zuxRRdjJWA2cw==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
- a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=u7WPNUs3qKkmUXheDGA7:22 a=3WHJM1ZQz_JShphwDgj5:22 a=EUspDBNiAAAA:8
- a=TUQ72T3Q6eNCQUusxowA:9 a=CjuIK1q_8ugA:10 a=ODZdjJIeia2B_SHc_B0f:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDIwMSBTYWx0ZWRfX6EdRKK9bcFFh
- OFN5BeOHNWK22WYjJImoFRVKQpH7POCSHajXuYSgWkTtCB+kJkxC2SLZL2WzCx1QhSKyrctguaM
- Dciqhb9UPffJDxexSSPrS7wYMEYirGHXtMQiL3W/GaQI6S70fwonlKFMhAzud6gBXtpW5MxRfrw
- 9hy5VXalP/cGGoQ3mSUeHK5+K/ncSODLg+wfuPq/SGyn+Hboxu83QYrRDfMKk3tKbBPCLV+tsjn
- mNOSFstWZzxJhUtmfscZdX9+WnwrZOKXe7F3fxBhxtehDDXSf54of81ZnN4RCiQBNGGfOeRiiZ4
- 9FsK2fSAzR/f8btiOFVqwYnk2C2bnbCMXiHwVzWVk9fXa0meDkORbe7yY2QzSr7P1GhjlhSm28I
- BjzRPW86jJSOKc1OBYUBRCidrkPPUe08qaQteq42ahtngXkWtpXn3yZojt+ztmuQD0+ncSZtQpf
- pGZ+LFQwyvdHxU1GrDQ==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-11_04,2026-06-11_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 impostorscore=0 adultscore=0 phishscore=0 bulkscore=0
- lowpriorityscore=0 priorityscore=1501 malwarescore=0 clxscore=1015
- suspectscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2606040000
- definitions=main-2606110201
 
-On Mon, Jun 08, 2026 at 09:59:20AM +0300, Dmitry Baryshkov wrote:
-> The WCN6851, found e.g. on SM8350 platforms, is an earlier version of
-> WCN6855 platform. It identifies itself as hw1.1. Copy WCN6855 hw 2.0
-> configuration to support hw1.1 version.
-> 
-> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath11k/core.c | 92 ++++++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath11k/core.h |  1 +
->  drivers/net/wireless/ath/ath11k/mhi.c  |  1 +
->  drivers/net/wireless/ath/ath11k/pci.c  |  9 ++++
->  drivers/net/wireless/ath/ath11k/pcic.c | 11 ++++
->  5 files changed, 114 insertions(+)
+> Drop the 5.0 GT/s Link Speed retraining from Rockchip PCIe Root
+> Complex Mode Operation, so called host driver.
+>=20
+> The reason is that Shawn Lin from Rockchip has reiterated that there
+> may be danger of "catastrophic failure" in using their PCIe with
+> 5.0GT/s speeds.
+>=20
+> While Rockchip has done so informally without issuing a proper errata,
+> and the particulars are thus unknown, this may cause data loss or
+> worse.
+>=20
+> This change is corroborated by RK3399 official datasheet [1], which
+> states maximum link speed for this platform is 2.5 GT/s.
+>=20
+> [1] https://opensource.rock-chips.com/images/d/d7/Rockchip_RK3399_Datashe=
+et_V2.1-20200323.pdf
+>=20
+> Link: https://lore.kernel.org/all/ffd05070-9879-4468-94e3-b88968b4c21b@ro=
+ck-chips.com/
+> Cc: stable@vger.kernel.org
+> Reported-by: Dragan Simic <dsimic@manjaro.org>
+> Reported-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
 
-This crashes with the firmware that came with the board,
-WLAN.HSP.1.1.c3-00200-QCAHSPSWPL_V1_V2_SILICONZ. I will revert to 3
-vdevs for v3.
+Sashiko has reviewed this patch and found no issues. It looks great!
 
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/cover.1781207474.gi=
+t.geraldogabriel@gmail.com?part=3D2
 
--- 
-With best wishes
-Dmitry
