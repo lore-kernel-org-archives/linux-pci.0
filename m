@@ -1,43 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D34A8329C40;
-	Thu, 11 Jun 2026 20:25:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF683B6C13;
+	Thu, 11 Jun 2026 20:25:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781209559; cv=none; b=Z8kBZqZ48YwBLR1SqzmGhjIAaj5izFryWqXZxZ0DiBOfCPWKae9W6p6yLLQWfW5/ARzH+Fd5oqx1tyJzjlOTuETHNXWirj77V3ixfJ32bz6veAVrV0KyAgAzztGS6Lp4Ziu2WOGOdB0/qaL5bzWwu3cV5xiAAojdt7Dgb7w2EEw=
+	t=1781209561; cv=none; b=fJvv3e++AmTo3nVyHLDcb1DX8/Zr40YAVcDpCKExPZrBuCsvhQ9Qj6aYFU3pA9o8ZdmF5aE107HCgh55mgUFp8zTeT7jmTX4kSDL0IqFPVIMZga8WiiKs1pSzN/ALfiGAUpDHexM2y/D/iMdjZGvu+vgQGPu5iaiRD4Dr1ywri0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781209559; c=relaxed/simple;
-	bh=3smX+UxOJd6sEyZJR0uhyxP0XY7yNiSZdRfIrARIumE=;
+	s=arc-20240116; t=1781209561; c=relaxed/simple;
+	bh=CJw2j1MYSkMWzO5gt7/Ae0oqiW/l3qcmKeK0Kp8W6C0=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=NYAk7Q9yEQ80ynE10u2chjxYGZCMDE3y5SNUKet1L8+7xLKv/ij4K27FbRTyzWFdxl0KUQdYqt1kqNNEPc+yuK54N43dRuwbayNPW8UdpmFvN6+fEHPZUalzq0a+AYJTG+UMdxLXoTUWaxj/wd8+577cgr2rPq0UGrUcpTfXxtw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cdmmYE1g; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=myc6NJ+34XJ6VAJk1OqlfwuFAWWLWvZsfm9uklv7BHY93NogUh3tbj/VJPaAmL9DkaKHKNxsZzdtyeKgbKsC7k5IWYxEKaIrw19ZtVuVK23lGmEqsxna/vRrqVsJn2Wyn7AFLaRqVur+z4EtF/vJbLC8wmUeT0LhIpBAfAhHimM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TkzYHHtO; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cdmmYE1g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0FE31F000E9;
-	Thu, 11 Jun 2026 20:25:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TkzYHHtO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09C691F00A3A;
+	Thu, 11 Jun 2026 20:25:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781209556;
-	bh=cwZQ4Fkcp4Qe17h4r7IOj7PfdpW+0mtqRp4Cr44HjnI=;
+	s=k20260515; t=1781209558;
+	bh=RdzeKz5JEmi38OWy+iPUBUpytfeA/njUV2W7HTZgRKg=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=cdmmYE1gqMivjLvCV3iGtJtODJlL4jjwuVAlY1aJEWIcRe+IsSWQPSh9irNHGx7ys
-	 oULys0IO85O84kQ2e18N2YEahb1G6fLO2/XzsT0ys3DZVvTs9Jgj3KLK8zZcsCYiC3
-	 Uw+BKAmpFtQSCsfwBq7Fnh/tDkNWv3kDUxDqs0O/IYBPmaSvZt36JL8F00a8ysNdd3
-	 2OOqI1I28taUlHf1c2i9HLPlM6q8jmKssE22rjuS+AVCnY/KBmY5sQzny1VX4iMfAd
-	 csyUx650G3Sn6QxRw61fooa+DdXTSzG3ps1OmoxUCp027dFhrVCg9Bm4FHZ4nDeUn8
-	 iLlH+4ovOiwcg==
+	b=TkzYHHtO2zbdBeEdfH6529i1q7X3wcw8FHIkTrcuPWqxEZoP0jFwIrF0L+9F3Rg9S
+	 4vqa0Bp5n7gJ+xHEtSm2SNDcKXaY8wZ+Li0VSAmDL14ffrD0CA4y0ZKG0483A+YN+R
+	 2vky282EODak06Qa/Va5JHXZJv5aU+MRupmc1b2aLNyce+Hj0/ukRFQ7QGbD8kvJHA
+	 zeK+p0vmiHZTr3sTitPSrQYWcRnRZko35TaSgE00eZJj5kx9CYX4hJqcpOsT2MSFnf
+	 eXB63kegSZ05aRdi9H2WI6K3NHF04fYchP7cyn1ZUjgn3/GsyPAM2yP+EzLmdFIGDn
+	 jgoGZURuqU/vw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 4/5] vfio/pci: implement get_tph and DMA_BUF_TPH
- feature
+Subject: Re: [PATCH v7 2/5] PCI/TPH: Add requester/completer type helpers
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Zhiping Zhang" <zhipingz@meta.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260610193158.2614209-5-zhipingz@meta.com>
-References: <20260610193158.2614209-5-zhipingz@meta.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
+In-Reply-To: <20260610193158.2614209-3-zhipingz@meta.com>
+References: <20260610193158.2614209-3-zhipingz@meta.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 20:25:55 +0000
-Message-Id: <20260611202555.B0FE31F000E9@smtp.kernel.org>
+Date: Thu, 11 Jun 2026 20:25:57 +0000
+Message-Id: <20260611202558.09C691F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,86 +45,101 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
 Thank you for your contribution! Sashiko AI review found 2 potential issue(=
 s) to consider:
-- [Medium] Unconditional validation of the flag-gated 'ph' parameter can le=
-ad to spurious -EINVAL errors, breaking the syscall trust boundary.
-- [Medium] VFIO_DEVICE_FEATURE_PROBE falsely reports that VFIO_DEVICE_FEATU=
-RE_DMA_BUF_TPH is supported even if the hardware lacks TPH support.
+
+New issues:
+- [Medium] pcie_tph_completer_type() incorrectly returns PCI_EXP_DEVCAP2_TP=
+H_COMP_EXT_TPH when reading from a disconnected or hot-removed device.
+
+Pre-existing issues:
+- [High] The internal get_rp_completer_type() function was not updated to u=
+se the new pcie_tph_completer_type() helper, meaning it can still return th=
+e reserved 0b10 value, which can corrupt the device's TPH Requester Enable =
+state.
 --
 
-commit d57637d667ca6dc95def77a0a5bd339d62d4f506
+commit e3087f1c41da11f8e5258fd8b874372276270977
 Author: Zhiping Zhang <zhipingz@meta.com>
 
-vfio/pci: implement get_tph and DMA_BUF_TPH feature
+PCI/TPH: Add requester/completer type helpers
 
-This commit implements dma-buf get_tph for vfio-pci exported dma-bufs and
-adds the VFIO_DEVICE_FEATURE_DMA_BUF_TPH feature. This allows userspace to
-publish TPH metadata for a VFIO-owned device. It checks completer support
-and protects the metadata under dmabuf->resv.
+Add pcie_tph_enabled_req_type() and pcie_tph_completer_type() so drivers can
+query the enabled TPH requester mode and completer support safely. Fold the
+reserved 0b10 encoding into NONE so callers only see defined values.
 
-> diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
-ci_dmabuf.c
-> index 1a177ce7de546..0a0705c8dbea6 100644
-> --- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-> +++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 91145e8d9d951..4fe076bba953a 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
 [ ... ]
-
-> @@ -333,6 +360,71 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_co=
-re_device *vdev, u32 flags,
->  	return ret;
->  }
-> =20
-> +int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-> +				      u32 flags,
-> +				      struct vfio_device_feature_dma_buf_tph __user *arg,
-> +				      size_t argsz)
+> +u8 pcie_tph_completer_type(struct pci_dev *pdev)
 > +{
-> +	struct vfio_device_feature_dma_buf_tph set_tph;
-> +	struct vfio_pci_dma_buf *priv;
-> +	struct dma_buf *dmabuf;
-> +	u8 comp;
-> +	int ret;
+> +	u32 reg;
 > +
-> +	ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-> +				 sizeof(set_tph));
-> +	if (ret !=3D 1)
-> +		return ret;
+> +	if (pcie_capability_read_dword(pdev, PCI_EXP_DEVCAP2, &reg))
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
+> +
+> +	switch (FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg)) {
 
 [Severity: Medium]
-vfio_check_feature() returns 0 for VFIO_DEVICE_FEATURE_PROBE, causing an=20
-early return of success.=20
+If the device is hot-removed, pcie_capability_read_dword() returns success =
+(0)
+but can leave reg as 0xFFFFFFFF (PCI_ERROR_RESPONSE due to master abort).
 
-Should the hardware capability check (pcie_tph_completer_type) occur before
-checking the feature flags, to avoid falsely reporting that the feature is
-supported on devices that lack TPH?
+Will FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg) then extract 0b11 (3),
+matching PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH, causing the helper to falsely
+advertise that a disconnected device supports Extended TPH? Should this log=
+ic
+check if reg is ~0?
 
-> +
-> +	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
-> +		return -EFAULT;
-> +
-> +	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
-> +		return -EINVAL;
-> +
-> +	if (set_tph.ph & ~0x3)
-> +		return -EINVAL;
+> +	case PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY:
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY;
+> +	case PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH:
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH;
+> +	default:
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
+> +	}
+> +}
+> +EXPORT_SYMBOL(pcie_tph_completer_type);
 
-[Severity: Medium]
-When userspace clears the TPH metadata by passing flags =3D=3D 0, is it req=
-uired
-to zero-fill the unused ph field?=20
+[Severity: High]
+This is a pre-existing issue, but the internal get_rp_completer_type() func=
+tion
+was not updated to use this new pcie_tph_completer_type() helper.
 
-Since this check is unconditional, could stack garbage in the uninitialized=
-=20
-ph field cause spurious -EINVAL errors, rejecting a valid invalidation=20
-request?
+Because it still returns the raw extracted Completer Supported field, it can
+return the reserved 0b10 value without applying the safety folding introduc=
+ed
+here:
 
-> +
-> +	comp =3D pcie_tph_completer_type(vdev->pdev);
-> +	if (comp =3D=3D PCI_EXP_DEVCAP2_TPH_COMP_NONE)
-> +		return -EOPNOTSUPP;
+drivers/pci/tph.c:get_rp_completer_type() {
+    ...
+	return FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
+}
 
-[ ... ]
+If the device supports EXT_TPH (3) and the Root Port returns the reserved v=
+alue
+(2), could this incorrectly propagate the reserved value?
+
+drivers/pci/tph.c:pcie_enable_tph() {
+    ...
+		pdev->tph_req_type =3D min(pdev->tph_req_type, rp_req_type);
+    ...
+}
+
+This would then write the reserved value (2) into the hardware's TPH Control
+register, misconfiguring the device:
+
+drivers/pci/tph.c:pcie_enable_tph() {
+    ...
+	reg &=3D ~PCI_TPH_CTRL_REQ_EN_MASK;
+	reg |=3D FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, pdev->tph_req_type);
+
+	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
+    ...
+}
+
+Should get_rp_completer_type() be updated to use the new helper?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260610193158.2614=
-209-1-zhipingz@meta.com?part=3D4
+209-1-zhipingz@meta.com?part=3D2
