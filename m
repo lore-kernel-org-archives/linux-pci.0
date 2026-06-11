@@ -1,51 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505F82DC350;
-	Thu, 11 Jun 2026 06:13:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE4F23537FF;
+	Thu, 11 Jun 2026 06:30:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781158437; cv=none; b=UEd5b0mp6Xh+K2akJjOw74U7oc9RbGPeD7Fn8rIMsIogOb6YATSN6X4PYICk6ysoTkaRLCedYQowpd/ZtpGsecuflbScGn4h3QF9i6V5Gctfh/EFarRYzXdZrTgAPvoFn52tEZ62z6FMqTpyK4mcjrBGKpDsdRMc0LF3o5LlWcM=
+	t=1781159427; cv=none; b=UcpY5Okd+aOyhEo97HrYfQqJi0BfOAWXh0Nph8ryCOSHkPWr04ShdJBtDWjDntJKzhP+ok0+6kOl6A3kk5ndfZQOmJSFM9KX/VGedFbpZWm4XQukf7Rr6elhJV26fjYLTCwf27FSeXxsWsgBr037AVZrLybpEdp1lx+KI4cff3s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781158437; c=relaxed/simple;
-	bh=6zhvURZmlfW8zMTdnfRhUUFf36SCrAG+gzgidGoDtFY=;
+	s=arc-20240116; t=1781159427; c=relaxed/simple;
+	bh=Qin7AmylYBHMatUlL2WeyObb4kwcfsiyxzoYvrLofws=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nHK+xprwHnnbMSjt+3NauLiGhxRITjDBVuVzDMc1+a7gSgoGO0PV4YYUUduNJxKitYo6fuPxxXhAkw5i9oNsPpphC0wwHW/5De7S8WnG7KhV4B0TmAYYpqJovRaKPCkvX9zNG2d8h29BC/Y5IjMaTjueZnDdrnZvX0Kvwc9aOf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IzmudD+B; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Iyh3wntcOoWFe/mL+TwIL2ltw41WFOadA1aJnaUMNvSzW2NItv1WBspFUgwZxBube3kUaJFOJMJFammluZx2N4J0U/Na+RI9MJWwnt1RVysoctYlid5iWo2c+iOIxuaPpUG4ybVIRfQr8sUsr6WFvXGwhlFgcx7qhnzUJ1eIL+4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ASukD95u; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IzmudD+B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5408B1F00893;
-	Thu, 11 Jun 2026 06:13:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ASukD95u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21BC11F00893;
+	Thu, 11 Jun 2026 06:30:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781158436;
-	bh=M5WsnsZ4MAvmLf7nKfATl47R6VK/KMexUssZggzEOs4=;
+	s=k20260515; t=1781159426;
+	bh=Wd+byHBtYHSZdGGsBdy6n7QYm7gzRXImaoOcpxvi45g=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=IzmudD+B7ZucXc0KDJnmsz9xM1FnRQBwm/PIXROQNKj6CCc+H+5SGsBTgwBzN7Wzu
-	 k9177ZHMbKTJJPj+iXvlHum/tr130j9U5FJ2tdQdqpjH4fjvqcunNJ+a3vx03yeLiF
-	 bOnwBjnGOrrRCEHODZsB98PWCyovwmc3Zi07b1YVQ6Ndggo8QnhXt2pu4kOLA17836
-	 xgb0BlQcTQyI72kjrHIkuVSxKSSC5iDYlBefSbE5xmJpGLSy12blUQ3cMWt+TXAxq2
-	 jTxIykVDfebvWpq/74rFGbk+CpQtJRDmyC4NmI2hxqZne9DkhurG6flVCUgew9n3/G
-	 zkO5RXSENaZUg==
-Date: Thu, 11 Jun 2026 08:13:42 +0200
+	b=ASukD95uTzFQBBEm0r/FjUg+3E2HjL60voOzB2GtaPS7H+WiZyr2GJypzdIfenDdz
+	 qi0ekOGmQyVqmuExbGIAVNDIYYR+NagPCaP4myJOoyE99TeL4P1GS5trzYBEn4bUWz
+	 6wXBZeZ/cXuMLlMNJPQf46Da5jmc9Im9ZBRJD4r2DWIF8wfs7DfDGDlQ+8rihv5gv2
+	 XxD/y8Pj+4zX6mHrqHL/fCFxK8VENVQ+LvRhCeOcKTD/sJsH7xRQCUnQuaCiQ0DwIf
+	 Zx8J7xpWGTdBkYIkBuJ1EdbkmHgSqdkrepZ+4dbneTHMtFyKtAIsjl09KtB7QhQxSI
+	 YQArurZe7UPJA==
+Date: Thu, 11 Jun 2026 08:30:20 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, 
-	Qiang Yu <qiang.yu@oss.qualcomm.com>, Jeff Johnson <jjohnson@kernel.org>, 
-	Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Bartosz Golaszewski <brgl@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
-	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Balakrishna Godavarthi <quic_bgodavar@quicinc.com>, 
-	Rocky Liao <quic_rjliao@quicinc.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konradybcio@kernel.org>, linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, ath11k@lists.infradead.org, 
-	devicetree@vger.kernel.org, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	linux-bluetooth@vger.kernel.org, Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-Subject: Re: [PATCH v2 6/7] arm64: dts: qcom: sm8350: modernize PCIe entries
-Message-ID: <3qq4afo425imn25yb74ag62vpd5lhil4ctjbmknd3yrsvq3tw6@3hq23lknpm23>
-References: <20260608-sm8350-wifi-v2-0-efb68f1ff04c@oss.qualcomm.com>
- <20260608-sm8350-wifi-v2-6-efb68f1ff04c@oss.qualcomm.com>
+To: Hans Zhang <18255117159@163.com>
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 8/9] PCI: vmd: Protect root bus removal with rescan lock
+Message-ID: <xj42mezfer3jxlku3rg244skqpbxrf5dn47txnippxxsgan6mq@qhtmpolifzyv>
+References: <20260521161822.132996-9-18255117159@163.com>
+ <20260521212024.8689D1F000E9@smtp.kernel.org>
+ <r5vwd573ydynlrrax5iy6jt25dc2yiqkvlciqy366zsxxu4d7f@hyvqgsdj4ulw>
+ <7e46fd05-b190-42ed-8e5e-78c8a0a6bc20@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,122 +45,72 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260608-sm8350-wifi-v2-6-efb68f1ff04c@oss.qualcomm.com>
+In-Reply-To: <7e46fd05-b190-42ed-8e5e-78c8a0a6bc20@163.com>
 
-On Mon, Jun 08, 2026 at 09:59:24AM +0300, Dmitry Baryshkov wrote:
-> The recent suggestion is to have PERST# / WAKE pins and PHYs in the PCIe
-> port rather than RC device. The kernel recently started warning about
-> the older style of DT. Modernize DT for SM8350 platform by moving the
-> entries under the root port device node.
+On Thu, Jun 11, 2026 at 12:42:52PM +0800, Hans Zhang wrote:
 > 
-> Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@oss.qualcomm.com>
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+> 
+> On 6/11/26 01:28, Manivannan Sadhasivam wrote:
+> > On Thu, May 21, 2026 at 09:20:24PM +0000, sashiko-bot@kernel.org wrote:
+> > > Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+> > > 
+> > > New issues:
+> > > - [High] Acquiring `pci_rescan_remove_lock` in `vmd_remove()` introduces self-deadlocks and AB-BA lock inversions.
+> > > 
+> > > Pre-existing issues:
+> > > - [High] SRCU structures are destroyed in `vmd_remove()` while their corresponding interrupt handlers are still registered and active, leading to a Use-After-Free in interrupt context.
+> > > --
+> > > 
+> > > commit 8d5d06b67e6b02d2cc99f2151e90ba61c0d16662
+> > > Author: Hans Zhang <18255117159@163.com>
+> > > 
+> > > PCI: vmd: Protect root bus removal with rescan lock
+> > > 
+> > > This commit acquires the pci_rescan_remove_global_lock while stopping
+> > > and removing the VMD root bus in vmd_remove(). This is intended to
+> > > prevent races with concurrent PCI rescan operations.
+> > > 
+> > > > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> > > > index d4ae250d4bc6d..9565567026cf0 100644
+> > > > --- a/drivers/pci/controller/vmd.c
+> > > > +++ b/drivers/pci/controller/vmd.c
+> > > > @@ -1056,9 +1056,11 @@ static void vmd_remove(struct pci_dev *dev)
+> > > >   {
+> > > >   	struct vmd_dev *vmd = pci_get_drvdata(dev);
+> > > > +	pci_lock_rescan_remove();
+> > > 
+> > > [Severity: High]
+> > > Can acquiring pci_rescan_remove_lock here cause self-deadlocks or AB-BA lock
+> > > inversions?
+> > > 
+> > > When a VMD device is removed via PCI hotplug or sysfs remove node, the PCI
+> > > core calls pci_stop_and_remove_bus_device_locked(), which acquires
+> > > pci_rescan_remove_lock and eventually triggers vmd_remove(). Because
+> > > pci_rescan_remove_lock is a non-recursive mutex, won't attempting to acquire
+> > > it again immediately self-deadlock?
+> > > 
+> > > Also, when unbound via sysfs, the core holds device_lock and calls
+> > > vmd_remove(), which then waits for pci_rescan_remove_lock. Since normal PCI
+> > > rescans acquire pci_rescan_remove_lock first, then attempt to acquire
+> > > device_lock, does this create an AB-BA lock inversion?
+> > > 
+> > 
+> > This is a valid concern. Since VMD is registered as a PCI driver, removing the
+> > VMD device through sysfs will trigger vmd_remove() callback and it will result
+> > in deadlock. The AB-BA lock inversion is also valid.
+> > 
+> 
+> Hi Mani,
+> 
+> Thank you for your reply. I checked it and found that this is indeed the
+> registered PCI driver. This patch will be dropped from this series. I wonder
+> if you have any further comments or opinions regarding the remaining
+> patches. Do I need to send the next version?
+> 
 
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+I will skip this patch and apply the rest.
 
 - Mani
-
-> ---
->  arch/arm64/boot/dts/qcom/sm8350-hdk.dts | 18 +++++++++++-------
->  arch/arm64/boot/dts/qcom/sm8350.dtsi    | 12 ++++--------
->  2 files changed, 15 insertions(+), 15 deletions(-)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sm8350-hdk.dts b/arch/arm64/boot/dts/qcom/sm8350-hdk.dts
-> index 5f975d009465..4973a3eb11b5 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8350-hdk.dts
-> +++ b/arch/arm64/boot/dts/qcom/sm8350-hdk.dts
-> @@ -493,12 +493,14 @@ &pcie0 {
->  	pinctrl-names = "default";
->  	pinctrl-0 = <&pcie0_default_state>;
->  
-> -	perst-gpios = <&tlmm 94 GPIO_ACTIVE_LOW>;
-> -	wake-gpios = <&tlmm 96 GPIO_ACTIVE_HIGH>;
-> -
->  	status = "okay";
->  };
->  
-> +&pcie0_port0 {
-> +	reset-gpios = <&tlmm 94 GPIO_ACTIVE_LOW>;
-> +	wake-gpios = <&tlmm 96 GPIO_ACTIVE_HIGH>;
-> +};
-> +
->  &pcie0_phy {
->  	vdda-phy-supply = <&vreg_l5b_0p88>;
->  	vdda-pll-supply = <&vreg_l6b_1p2>;
-> @@ -507,15 +509,17 @@ &pcie0_phy {
->  };
->  
->  &pcie1 {
-> -	perst-gpios = <&tlmm 97 GPIO_ACTIVE_LOW>;
-> -	wake-gpios = <&tlmm 99 GPIO_ACTIVE_HIGH>;
-> -
-> -	pinctrl-names = "default";
->  	pinctrl-0 = <&pcie1_default_state>;
-> +	pinctrl-names = "default";
->  
->  	status = "okay";
->  };
->  
-> +&pcie1_port0 {
-> +	reset-gpios = <&tlmm 97 GPIO_ACTIVE_LOW>;
-> +	wake-gpios = <&tlmm 99 GPIO_ACTIVE_HIGH>;
-> +};
-> +
->  &pcie1_phy {
->  	status = "okay";
->  	vdda-phy-supply = <&vreg_l5b_0p88>;
-> diff --git a/arch/arm64/boot/dts/qcom/sm8350.dtsi b/arch/arm64/boot/dts/qcom/sm8350.dtsi
-> index eb2a795d8edb..136daa444865 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8350.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sm8350.dtsi
-> @@ -1583,12 +1583,9 @@ pcie0: pcie@1c00000 {
->  
->  			power-domains = <&gcc PCIE_0_GDSC>;
->  
-> -			phys = <&pcie0_phy>;
-> -			phy-names = "pciephy";
-> -
->  			status = "disabled";
->  
-> -			pcie@0 {
-> +			pcie0_port0: pcie@0 {
->  				device_type = "pci";
->  				reg = <0x0 0x0 0x0 0x0 0x0>;
->  				bus-range = <0x01 0xff>;
-> @@ -1596,6 +1593,7 @@ pcie@0 {
->  				#address-cells = <3>;
->  				#size-cells = <2>;
->  				ranges;
-> +				phys = <&pcie0_phy>;
->  			};
->  		};
->  
-> @@ -1692,12 +1690,9 @@ pcie1: pcie@1c08000 {
->  
->  			power-domains = <&gcc PCIE_1_GDSC>;
->  
-> -			phys = <&pcie1_phy>;
-> -			phy-names = "pciephy";
-> -
->  			status = "disabled";
->  
-> -			pcie@0 {
-> +			pcie1_port0: pcie@0 {
->  				device_type = "pci";
->  				reg = <0x0 0x0 0x0 0x0 0x0>;
->  				bus-range = <0x01 0xff>;
-> @@ -1705,6 +1700,7 @@ pcie@0 {
->  				#address-cells = <3>;
->  				#size-cells = <2>;
->  				ranges;
-> +				phys = <&pcie1_phy>;
->  			};
->  		};
->  
-> 
-> -- 
-> 2.47.3
-> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
