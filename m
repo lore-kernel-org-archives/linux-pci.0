@@ -1,174 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1587433F5BE
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 17:07:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10EAF405C57;
+	Thu, 11 Jun 2026 17:08:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781197657; cv=none; b=J6vP9G64PTArWSwWe6A4VqGjDibTp20381yRQxjkMEAjGMj3rVzjJUfbjOG+kcT3fubm97ZWahaGkL2ICW/5T6EBDL9t5CSQhwg720gZBRh1TsvKPE4BA7enNlgECp4zBOHcuXbmWussO2FCgvaZ+nblgWFV+H8lmI+OuEGZG+A=
+	t=1781197722; cv=none; b=E0hW4h8hL8ogAmHfZD5Akv7/CX8HT0yDcGih2p9wnPWmoK1knDBn0YXI9Ud6BDqP8zIDBqB9BLU9GY53Q/nhaLLqgQk2IQMlG4K854AwzFqOWZkpWYkLZvoRGcYD7NYxVFXKnfEiJmjRnQ5SgAcpg/Y87MbR6btYuvGUAOd7iow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781197657; c=relaxed/simple;
-	bh=PL+R6/I9FSH2Ardihu2XRc+CoYnsUSrsVfIiGrMV2lI=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=RmbPArL95+0wc8wRPxaOZoF6XBT4aNqPkWXIwTqBuz7pV1IPFiu3ZnVljv74DTsqg64+kGAFH47yNRUjbLOtzkGq4GuFMvatNMy3OZYeyapPPah1TnW4Ga30BpAmLDnFNolaSbNrFd3onGwX+bLcXmRhKdEqlr+AmUgI+F4oXZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gzZKqE4h; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781197722; c=relaxed/simple;
+	bh=egGjG/Z8RpGXuUkMcrmf1mJOAPq4qt7oZoc8fB0KWZI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bdMS76Gsqq2OT1xd16BZoii1gju9Md+cJvNlnaqPKq5iolhpoVY6mS14DHghi5dfa0tQFyn12wTn9E2jLlLRqBwHKcE648wViBr1CS6F0vFQ001CdRSVQd0HkQ6WEq0C9kpvZsIN9hWG/MFzcq9Hdo4Pu2YPONJEpaxLiPi/trE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XJhuRuUj; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gzZKqE4h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BB6E1F00893;
-	Thu, 11 Jun 2026 17:07:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781197655;
-	bh=fPpgR8Ii7Gq2wI/gsjk8ANn98sO4emon9U/HRJLVH9U=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=gzZKqE4hrOtoet+QGAnaY1umahBYvX4AIKt983gXlqGrQ2cDLacjmrAghIhhTadJY
-	 XQIze29JIx7M3ir72u6RiPas3LPr6YZNn27dYHwUxhW8ovpgxeqc4B+rrVtygg2aE8
-	 XhO62/bJzdD9R7dzMVQ5Fh3IfgS/TCPv0HxOWRNI6SYyKi7JTc3Aj77MHlY+Esy057
-	 vCUyYXPPijdGfMKuLZAoC5JVqcWdxmSAiRP2BXSKmfpdqgg6JKMCZg5Cs4mHF5kPu4
-	 jhKidNxaGmkY7Kg6aiENI7s/Py23xTgyWSzItduekhthGRps7CtrWZZcgrTqPQlD/x
-	 USKsgFpG28ljg==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v4 04/20] rust: io: implement `Io` on reference types
- instead
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Gary Guo" <gary@garyguo.net>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, ojeda@kernel.org, linux-pci@vger.kernel.org, "Alexandre
- Courbot" <acourbot@nvidia.com>, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260611-io_projection-v4-4-1f7224b02dcb@garyguo.net>
-References: <20260611-io_projection-v4-4-1f7224b02dcb@garyguo.net>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 17:07:30 +0000
-Message-Id: <20260611170731.1BB6E1F00893@smtp.kernel.org>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XJhuRuUj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
+	Content-Type; bh=OI7t1b36F4+UKnc6nJAr96ZUPjEMxmygm73wCkHRglo=;
+	b=XJhuRuUjT+QN2DOVNarE4pC5ad8+yPjlUhyQsBdl9UZ0Um54bwxj+DWqIFwJgR
+	IHrDlcvm+xPovj4ICxK6ErA/Oxyy87149WgeBdZuJMkSVCu5xYPCDaQIR4SY2EgR
+	fRWWh0Ur/2zwmbAZMPunx1weEZT4EQm8nz/l1LQRw7f4Q=
+Received: from [IPV6:240e:b8f:91b3:d000:5ea0:effd:ade2:b21d] (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgCHfs1u6ypqCwM2Bw--.42788S2;
+	Fri, 12 Jun 2026 01:07:59 +0800 (CST)
+Message-ID: <b323db24-0e36-4c1a-a451-2dcbfec68cc3@163.com>
+Date: Fri, 12 Jun 2026 01:07:58 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 0/3] PCI: Refactor PCIe speed validation and conversion
+ functions
+To: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
+ kwilczynski@kernel.org, mani@kernel.org, ilpo.jarvinen@linux.intel.com,
+ jingoohan1@gmail.com
+Cc: robh@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20260407130450.1489318-1-18255117159@163.com>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20260407130450.1489318-1-18255117159@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PigvCgCHfs1u6ypqCwM2Bw--.42788S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Kw13CF48ur4xWryrGF13XFb_yoW8KrWrpa
+	yYvw4fArWUGr9xCa97J3Wjqry5Wa93XrW0yry3Gas3Zw13AFn3JFWvgF1FvF9rXrWFvr42
+	vr12vw1kCw1qkFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UnF4iUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCwxA832oq63AZ5wAA3V
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+Hello Bjorn,
 
-New issues:
-- [Low] Missing lifetime specifiers in trait implementations for reference =
-types.
+Gentle ping. Please take a look at this series.
 
-Pre-existing issues:
-- [High] The safe trait `Io` provides safe methods that perform unchecked `=
-unsafe` operations relying on safe, overridable methods, violating Rust's s=
-oundness guarantees.
---
+Best regards,
+Hans
 
-commit d5084ac7c26ce79e46d5cb18b40703205bee53dd
-Author: Gary Guo <gary@garyguo.net>
+On 4/7/26 21:04, Hans Zhang wrote:
+> This series refactors PCIe speed validation and conversion logic to
+> shared functions in the public header, eliminating code duplication
+> and ensuring consistency across drivers.
+> 
+> ---
+> Changes for v7:
+> - patch 0002 add #include <asm/bug.h> (Ilpo)
+> - s/u32 link_speed/enum pci_bus_speed link_speed/ (Ilpo)
+> - The return value of pci_bus_speed2lnkctl2 uses the variable ctrl2_speed
+>    to avoid the abuse of variable types. (Ilpo)
+> 
+> Changes for v6:
+> https://patchwork.kernel.org/project/linux-pci/patch/20260406105613.1228673-1-18255117159@163.com/
+> 
+> - missing one line of code:
+>    link_speed = pcie_get_link_speed(pci->max_link_speed);
+> 
+> Changes for v5:
+> https://patchwork.kernel.org/project/linux-pci/patch/20260406104708.1218648-1-18255117159@163.com/
+> 
+> - Rebase to v7.0-rc1. (pci/next tree)
+> 
+> Changes for v4:
+> https://patchwork.kernel.org/project/linux-pci/patch/20251102143206.111347-1-18255117159@163.com/
+> 
+> - Maintain O(1) array-based lookup for speed conversion (addressing
+>    performance concerns from v3 feedback)
+> - Move pcie_valid_speed() and pci_bus_speed2lnkctl2() to pci.h
+> - Update dwc driver to use the shared functions
+> - Rebase to v6.18-rc3.
+> 
+> This addresses the feedback from Lukas Wunner and Manivannan Sadhasivam
+> on the v3 submission, ensuring no runtime performance regression while
+> achieving code reuse.
+> 
+> Changes for v3:
+> https://patchwork.kernel.org/project/linux-pci/patch/20250816154633.338653-1-18255117159@163.com/
+> 
+> - Rebase to v6.17-rc1.
+> - Gentle ping.
+> 
+> Changes for v2:
+> - s/PCIE_SPEED2LNKCTL2_TLS_ENC/PCIE_SPEED2LNKCTL2_TLS
+> - The patch commit message were modified.
+> ---
+> 
+> Hans Zhang (3):
+>    PCI: Add public pcie_valid_speed() for shared validation
+>    PCI: Move pci_bus_speed2lnkctl2() to public header
+>    PCI: dwc: Use common speed conversion function
+> 
+>   drivers/pci/controller/dwc/pcie-designware.c | 28 +++++++-------------
+>   drivers/pci/pci.h                            | 23 ++++++++++++++++
+>   drivers/pci/pcie/bwctrl.c                    | 22 ---------------
+>   3 files changed, 32 insertions(+), 41 deletions(-)
+> 
+> 
+> base-commit: 525e91d84dc085492b36d4b87abb7c1cc93fcb44
 
-rust: io: implement Io on reference types instead
-
-Currently, Io is implemented on owned I/O objects (e.g. Bar). This is
-going to change with I/O projections, as then Io need to work both for
-owned objects and views of them. Views are themselves reference-like
-(however they obviously cannot be references, because they belong to a
-different address space).
-
-To faciliate the change, change Io to be implemented on reference types
-for the owned I/O objects, and make methods take self instead of &self.
-When I/O views are implemented, we can then naturally implement Io for
-these objects.
-
-> diff --git a/rust/kernel/io.rs b/rust/kernel/io.rs
-> index 38281636b4da3..3b478dcf10f95 100644
-> --- a/rust/kernel/io.rs
-> +++ b/rust/kernel/io.rs
-[ ... ]
-> @@ -338,7 +338,7 @@ fn io_addr<U>(&self, offset: usize) -> Result<usize> {
-> =20
->      /// Fallible 8-bit read with runtime bounds check.
->      #[inline(always)]
-> -    fn try_read8(&self, offset: usize) -> Result<u8>
-> +    fn try_read8(self, offset: usize) -> Result<u8>
-
-[Severity: High]
-This is a pre-existing issue, but does the Io trait need to be marked as
-unsafe?
-
-The safe trait Io provides safe methods like try_read8() which contain an
-unsafe block calling self.io_read(). The safety of this block assumes
-that self.io_addr() always returns a valid memory address.
-
-However, since Io is a safe trait, any safe Rust code can implement it
-and arbitrarily override methods like io_addr(), addr(), or maxsize()
-to return invalid addresses. If this occurs, calling the safe try_read8()
-function will result in undefined behavior.
-
-Should Io or IoCapable be an unsafe trait so that the implementor is
-held formally responsible for upholding the invariants required by the
-unsafe blocks in the default methods?
-
-[ ... ]
-> @@ -800,13 +800,13 @@ fn update<T, L, F>(&self, location: L, f: F)
->  macro_rules! impl_mmio_io_capable {
->      ($mmio:ident, $(#[$attr:meta])* $ty:ty, $read_fn:ident, $write_fn:id=
-ent) =3D> {
->          $(#[$attr])*
-> -        impl<const SIZE: usize> IoCapable<$ty> for $mmio<SIZE> {
-> -            unsafe fn io_read(&self, address: usize) -> $ty {
-> +        impl<const SIZE: usize> IoCapable<$ty> for &$mmio<SIZE> {
-
-[Severity: Low]
-Does this implementation cause a compile error due to a missing lifetime
-specifier?
-
-Implementing a trait for a reference type requires an explicit lifetime
-parameter for that reference. Should this be updated to include the
-lifetime? For example:
-
-impl<'a, const SIZE: usize> IoCapable<$ty> for &'a $mmio<SIZE>?
-
-[ ... ]
-> diff --git a/rust/kernel/pci/io.rs b/rust/kernel/pci/io.rs
-> index b4996aa059d81..505305cd9b86c 100644
-> --- a/rust/kernel/pci/io.rs
-> +++ b/rust/kernel/pci/io.rs
-> @@ -79,8 +79,8 @@ pub struct ConfigSpace<'a, S: ?Sized + ConfigSpaceKind =
-=3D Extended> {
->  /// Implements [`IoCapable`] on [`ConfigSpace`] for `$ty` using `$read_f=
-n` and `$write_fn`.
->  macro_rules! impl_config_space_io_capable {
->      ($ty:ty, $read_fn:ident, $write_fn:ident) =3D> {
-> -        impl<'a, S: ?Sized + ConfigSpaceKind> IoCapable<$ty> for ConfigS=
-pace<'a, S> {
-> -            unsafe fn io_read(&self, address: usize) -> $ty {
-> +        impl<'a, S: ?Sized + ConfigSpaceKind> IoCapable<$ty> for &Config=
-Space<'a, S> {
-
-[Severity: Low]
-Similar to the regression in io.rs, is an outer lifetime specifier required
-for this reference type to compile?
-
-For example:
-
-impl<'a, 'b, S: ?Sized + ConfigSpaceKind> IoCapable<$ty>
-    for &'b ConfigSpace<'a, S>?
-
-[ ... ]
-> @@ -112,18 +112,18 @@ unsafe fn io_write(&self, value: $ty, address: usiz=
-e) {
->  impl_config_space_io_capable!(u16, pci_read_config_word, pci_write_confi=
-g_word);
->  impl_config_space_io_capable!(u32, pci_read_config_dword, pci_write_conf=
-ig_dword);
-> =20
-> -impl<'a, S: ?Sized + ConfigSpaceKind> Io for ConfigSpace<'a, S> {
-> +impl<'a, S: ?Sized + ConfigSpaceKind> Io for &ConfigSpace<'a, S> {
-
-[Severity: Low]
-As with the previous implementation, does this also need an outer lifetime
-specifier for the reference itself?
-
->      type Target =3D S;
-> =20
->      /// Returns the base address of the I/O region. It is always 0 for c=
-onfiguration space.
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611-io_project=
-ion-v4-0-1f7224b02dcb@garyguo.net?part=3D4
