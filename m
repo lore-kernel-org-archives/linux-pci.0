@@ -1,164 +1,207 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ECCD380FFA
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 23:09:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781219379; cv=fail; b=dPbzWhmQ8gc2xG1iXlsMLeabAlddczXqmHUO2Zf8KtKZEdkzoxb/xOpPQ8xt7s3Td3iJg7c9FrMZVLjhsPOK+a3qm2qcYsx7bGHW1oqWHIL0iv1cy7oiwabpL/msWHL8QtpsrkFX65LoL+wYO7CLa8a0IDbOwlpLoiSbN06t8aU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781219379; c=relaxed/simple;
-	bh=cBWMYoXs/GgliNDLcM7BNjaQh0ZcTgZ/O0lwWDyHBjk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DDIa1zl8pVts2jKbOz/847V3RODuOaCn4SmOzCfPRDPABNH646way2rx+a5HFy/XdOBTV4Z57zVVYJJoTWuWwR5OH3W9nXes80fghXB6JHsnS0sB4QXu/O5QfU5nFwJbBQGBNvaXaMQSMIlIV079fhGcUFCX0+uveBc848P6cls=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=USTVjs2G; arc=fail smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2892436CDFC
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 23:29:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781220554; cv=none; b=BzYNrDB5xCuvl1AS5xX4zahu+ciJKUcp7TwucX9h4AjwT9N/nCU2hmLdVCKMMgsOe4W0wsfJ68Jngi1tsgLfe0fNzDf0ouhwqOIV69yVlAkWxgUhvaBJNqeNwoLYIIyjaAUJLVpIhq0E1GlmUdS95yv4cycoKBk+azL94mHQZ08=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781220554; c=relaxed/simple;
+	bh=Pm7af7dLqeMPNCSZwLOFmr582pPUG+LONo0RlZhWmuk=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=OVljm2iwkAW9oz0IfIg+M9dExaC7quLMDCnZ+BVgxlbBLaCzmK4zCTicZ85lzXX9hGC9UVcgr/wXxzXajY4pGcbOcIbC2DA52t2zt+p5WFb8lhHMhrxwBKzS2q8ySv2MviWrcqcGj/mV3khCoEGKvHdGwJ8O8zVwkLUQBGOOuDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=X7SZ0Pzn; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="USTVjs2G"
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-	by m0001303.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 65BAifiL3021395
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 16:09:37 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="X7SZ0Pzn"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65BBABDU722462;
+	Thu, 11 Jun 2026 23:29:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=cBWMYoXs/GgliNDLcM7BNjaQh0ZcTgZ/O0lwWDyHBjk=; b=USTVjs2GSY6c
-	zWNomSf5E8qjahkAqgjmiQDPFbjEPZsjQeJ/b94zb0GF9NeM8mlmXX9Gk+kwYdrj
-	cTftYVPuOSFB/1Nr+8gqaK6p3IfQ3KYjnHVtCfJwHBjSmm33QENUybqoFyJiQ/fu
-	n4EJcipp1CqI7B0zNUDMYv+OiLaw5YrOS8y/AuI2CPHIovD+hq3X3/vXm3tTqiTy
-	HHxPhprLBQNWDBST0hkTSIsZqY1y3fvMFa5eDd8O3gaW+GcwgHrjI92X6wE8vhNV
-	AHzq3kcWmOiBGIroHAC2qW3JwOJCgC75sMNCqZsKh1VQyolLrORLN0mB76o4eHEv
-	+bQz7LwmGQ==
-Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
-	by m0001303.ppops.net (PPS) with ESMTPS id 4eqe7a9mrj-1
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 16:09:37 -0700 (PDT)
-Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7e71e43e89bso596051a34.3
-        for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 16:09:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781219376; cv=none;
-        d=google.com; s=arc-20240605;
-        b=cjVXAX+O46tF/tgQ69MXrWQf6AZIScMo8L3KtwucKoxjZEIZnDrgE7TJWDDVYVuwl+
-         Q04PoQ868BJ9vL5O8Q5lGkPE2jkxx+ahOGVmOvyOkpv5gD3el8ouPFQ7urnXypXoXnG3
-         VuQ+yS0W3J/6GqxS9vr3GqcaA3A6pKhyGidfcZtSB7XPMxkhyPMYfh1RoN3PxGk39Z1p
-         7VllcGB2vdcKsp5CJabZ0Kwl50dZkrl6hunN4yf8ynWKLPlZ59hACA4cRtdZpHYBGMD1
-         FV0c2GL2COoHKsqlnwFEGXYnmbCNXZUv1MEZlI3LTadvj3FFKMLRvmzWTboj012XIjTM
-         YV1A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version;
-        bh=a/OR5+y+259I5l0RIDoEhbbMuNcwkwEsP+caYwaJh3c=;
-        fh=1l9FPoid9rMIRd5PQegr2HcB4E9gzkpOnlIRsF+37oI=;
-        b=VY87C+tJHyVI2+cepxazxgS/WisXGivD1unFrRoWgkrpdg4ppTS9q5YF+0ZroJnsfP
-         U2ZYuRF7kDq1r0AEtbMA/xemltXWisqqxSTIP53DcEmsvHh+kzdm2t9sc5a3Zmy2+Tz0
-         mYK7tuur0nmq5BbljGcGOEAEKcXbXhHNy7eXx1CnCRMJBMeOjf8XCS7/6YdWU+FW1tyT
-         pgoiVOqswlfNmA3b74q4z0JWGTyU8RTudLWGVagRGk44ii39uen4mFM3O/BOXyW4cEra
-         r0y853k0J/Lrg4BaUYeuScuXOGMxbH6WpnAxOkw0pDFVTfmz5HyWEVvJgDnEbjgYGsVt
-         UmqA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781219376; x=1781824176;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=a/OR5+y+259I5l0RIDoEhbbMuNcwkwEsP+caYwaJh3c=;
-        b=JpAk5dtlcPYXqg5bj8UCCuRqWMOBqYQc4ICKaR0ilPHC5KTSs8iSuTA9LiMIRdEq8p
-         jy/X8k7x4amct1VQGA8hUhGpeHf3ibtjC0S+SUQSUx4VIINT2tVYNIjROxs0icHaWSyS
-         tWLNP0Kll8TgpBXStnvnEa32oY19/FRDH8eztH0X2ZVCfBA32GEu7FP+2sE7Mr+3OcPn
-         pgwSo/TXB7OIorU68vHO+wucFbfUxCCauTCmef/IpW9x6QF5W4Yo1iWIiHfI2XjoJAf1
-         vmYA2nYwZhV67QQ/v3wecV5RzweBvK86Pso0f90LbzXm1KGUTqCJgiqqLJdIwN6hOjQB
-         KUwg==
-X-Forwarded-Encrypted: i=1; AFNElJ8AgoZ+A8jeMJ1aAl/S/GZvveZLe8n+VBjeDDnNZVfMmYVDC8FNbpKv5h5/LStgdCyJ9aWaBOvIH1Q=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwlOkxG10kzOXp3QizPVEFjj+AXCDaQGLBHyZO8ls5dxVR39owx
-	04Km49+OWsaGORGwsqjlHayEj84nuc7HmF2L7kOaUCE2iwMBuCuebIK1y5RGsXFUyVfUvWHUxr1
-	PdaX7g1wgNgksoZCRs0mx3CzwRDkQcPhbhGmbh89ftg/DkJvwfX42tgEX4ibEh5M61wQFE7Mof9
-	Alscc7coel9FcAQdW/QbKcFBelAWDe552zHKY=
-X-Gm-Gg: Acq92OFfFT2ctYb6CCKb0qKgj+PaNIaMgA/aSghSMz9Ys4ZMQ0DFx26I2cYg3uWY0eG
-	GBm5KM1Okam3yYxam1zYTutT9iMIsxRnK1jYhhaCghNrF/YxUYJ9m66F1wGVKW2N9XauIS0Mcs6
-	8S+gUhV/M4kEnNUpDB4NL2LHfuFro5XMM0hutIRTW053djLwJ/QhR+swIiTtacnndgi443kbTwm
-	BYHz4oy1LRAtjnKg1Ea3g==
-X-Received: by 2002:a05:6830:83b1:b0:7e6:7dc7:4542 with SMTP id 46e09a7af769-7e78473ec89mr120379a34.16.1781219376589;
-        Thu, 11 Jun 2026 16:09:36 -0700 (PDT)
-X-Received: by 2002:a05:6830:83b1:b0:7e6:7dc7:4542 with SMTP id
- 46e09a7af769-7e78473ec89mr120344a34.16.1781219376083; Thu, 11 Jun 2026
- 16:09:36 -0700 (PDT)
+	:message-id:mime-version:references:subject:to; s=pp1; bh=HvUAM8
+	uB+jIourDZyyJ+heUVI3gU1WxmGWRC/FX1fpM=; b=X7SZ0PznZUVRJS4a5EoOa1
+	uOa6nVCvXqrnZQqwTqP2jWJxdmhkQfcvYlD1o8beDUGgcW2DIc4s57W6Wac8BLLS
+	pyYw2RXyO0PZ2W9TXBa8+ROZki7prbM4JO1zd2R2nFmYGJb5SOo+So/Cl0oHBijA
+	NsyWliDvDlPlvjt+sPXq/57EDiPoKA//L4Fu2G6MR8lNgaNKogs1JPs/acEfiFXn
+	M+3xPbGZ/MsnpCTsqFWMB0aQlr9IRhBYFcpRZGhqpXVfQDi2fkG60PnxvYui8StK
+	oiNGPbni0Fox3XIYk5kXKqEqZKBxUe6KPQPBtvHFef0wHzJRyskwZ4imvdvTLhzQ
+	==
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4eqe8debua-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 11 Jun 2026 23:29:07 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.7/8.18.1.7) with ESMTP id 65BNK8X3005982;
+	Thu, 11 Jun 2026 23:29:06 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4eqe09wd2n-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 11 Jun 2026 23:29:06 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 65BNT5s455771460
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 11 Jun 2026 23:29:06 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DE6085805A;
+	Thu, 11 Jun 2026 23:29:05 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8015758051;
+	Thu, 11 Jun 2026 23:29:05 +0000 (GMT)
+Received: from [9.61.248.230] (unknown [9.61.248.230])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 11 Jun 2026 23:29:05 +0000 (GMT)
+Message-ID: <1edb130d-8db5-4d48-8f26-1ed24dc544c8@linux.ibm.com>
+Date: Thu, 11 Jun 2026 16:29:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260610193158.2614209-1-zhipingz@meta.com> <20260610193158.2614209-6-zhipingz@meta.com>
- <4dc9ad01-97ce-4c97-9c8d-189822da53b2@nvidia.com>
-In-Reply-To: <4dc9ad01-97ce-4c97-9c8d-189822da53b2@nvidia.com>
-From: Zhiping Zhang <zhipingz@meta.com>
-Date: Thu, 11 Jun 2026 16:09:25 -0700
-X-Gm-Features: AVVi8CeB8nmACAn2v-1nCwadZsgAxPl-ide5TeaDE88hJZn8TEKcdfaG5LmdPSE
-Message-ID: <CAH3zFs3ngOXvA5DRzur-_gQ2e0N+-3Az2KmwxZTYczqw34n_Xw@mail.gmail.com>
-Subject: Re: [PATCH v7 5/5] RDMA/mlx5: get tph for p2p access when registering
- dma-buf mr
-To: Michael Gur <michaelgur@nvidia.com>
-Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        Christian Konig <christian.koenig@amd.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-        Yishai Hadas <yishaih@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDIzMiBTYWx0ZWRfX/iJmXE7DXq/r
- FzDAgS8aV/o6cz5vAglMNHOWRkDrodz0v8U6y8RG+IsUDxuNlvqiKo3M0ZQN9wiM+Sf0O1B8vQw
- AlNc/x4V0Nr6pwf+2xNSSS6nwb2SM56xe6zqSZV1bvFm3rOjXpvLgeb+FYOXnnbTxoqjWUx2Pxl
- dwt+JEB045URtnbKnoGWC90WM6Wegq1W/FHRgcU4c1JaENcuLAcTwUyr89/BjgpTJqiRVJ2O3Dp
- smO3b83atF5wW6ltYEd4W61osM4QlVkib7w2N0QvX1oDMNHAjQq5YNS4zFuhhcDLSWsNFd9bgNh
- K07HhUHXm+trGzY0OlmXG65u6bWHUmczTCpaIR4lV4YjZnTthUcZfvYrjowkMU9CThotft/JHl3
- kxEm787KJ8o9T8KXcqO6rmBeymDsn6CUMfBH2LQjoPjDiFOXvcsz1DzbEXBZrsSTiejGo30Qtek
- Heg4/eZZ15M86YJ1rDw==
-X-Authority-Analysis: v=2.4 cv=AKrEjgtd c=1 sm=1 tr=0 ts=6a2b4031 cx=c_pps
- a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=_78whYxrdx1mplLwxq1U:22
- a=Ikd4Dj_1AAAA:8 a=G2Tmg7Ww-o-apaxFWtcA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: W_e-Fj12guf9FrIdx0OEH7FQR6m_ywNR
-X-Proofpoint-ORIG-GUID: W_e-Fj12guf9FrIdx0OEH7FQR6m_ywNR
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDIzMiBTYWx0ZWRfX/UtXp0ojAAxa
- CfSQVQku2bP3YbJ0yusynYdo9jium23qq/aRpdV8gOdlweoZT/M3MWADoRaBo+raz0KQSbzWINf
- oIN/7P3w6cn1DHLYcxBQmW+bcdxGxa0=
+User-Agent: Mozilla Thunderbird
+From: Farhan Ali <alifm@linux.ibm.com>
+Subject: Re: [PATCH v18 3/3] PCI: Fail FLR when config space is inaccessible
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: sashiko-reviews@lists.linux.dev, linux-pci@vger.kernel.org,
+        Alex Williamson <alex@shazbot.org>
+References: <20260611192217.GA405982@bhelgaas>
+Content-Language: en-US
+In-Reply-To: <20260611192217.GA405982@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDIzMiBTYWx0ZWRfXzpS6ct/b/CNc
+ eUlrIed966Tkh8eR7WUvmPb6Xj8GcQ9MKZyaTwrKrAXOJKRZCL/4ARO67jnoijkwUF7AxBGKk5w
+ IzItkTyW8kWaGhCWpWqwZTf21OSp3BA=
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDIzMiBTYWx0ZWRfXxBayqoU8j6Gv
+ Ye9WSFxnPKpnKmreCDqmwTnfil5J3/i7h7ncoS6KEe5JVZ3c4/q+V8Rx5w2SREw9N1du4h2nAeO
+ Enm6YzbBqF5siG/2iIZFtO+oHjrVfHvYafCDF3cdUPYFSKUWkKT3f5MVnBZkOzuvATAjtI8sVoS
+ uJ33cuA3ZFx4MX320v7DNVwyZyjpfVJXLMKGlNXp/ykyezstFgumSSm1zQU365cL80nOM+vl5b0
+ 5DVuE8F18rxctZ9bAHLo8vsjAdpNwX+vG6ZhiTpalGzdbRXl0eoMRHRCIPWC9SvyqJT3ZCvlZ1X
+ qGkT7fP6GHZ2LOK0p9P7UGCnCGM8oSlaaNljS34xYMjJ0tGcKcp05vTwzxKWe1yBV23owShecBO
+ 3cpegD1qK7Bg5QVfThOZWn5EzwWUadzO5kHBLVXoS/nJIR97Clhh5mEKj8YhAXr0XjZ4B9XI5Tb
+ FkoY6DYbzncblRqf+gA==
+X-Proofpoint-ORIG-GUID: ueFsAY4KOXun1-40pakHIVjo4dDwbnxP
+X-Authority-Analysis: v=2.4 cv=GIM41ONK c=1 sm=1 tr=0 ts=6a2b44c3 cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=RnoormkPH1_aCDwRdu11:22 a=iQ6ETzBq9ecOQQE5vZCe:22 a=VwQbUJbxAAAA:8
+ a=Lg2p-DhD3Fgrwe0m5VcA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: ueFsAY4KOXun1-40pakHIVjo4dDwbnxP
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-11_05,2026-06-11_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 suspectscore=0 impostorscore=0 spamscore=0 phishscore=0
+ adultscore=0 lowpriorityscore=0 bulkscore=0 priorityscore=1501 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606110232
 
-On Thu, Jun 11, 2026 at 5:44=E2=80=AFAM Michael Gur <michaelgur@nvidia.com>=
- wrote:
->
-> >
->
-> On 6/10/2026 10:31 PM, Zhiping Zhang wrote:
-> > Query dma-buf TPH metadata when registering a dma-buf MR for peer-to-
-> > peer access to a PCIe endpoint and use it to program requester-side TPH
-> > on the outbound mkey. If the exporter has no metadata, fall back to the
-> > existing no-TPH path.
-> >
-> > For TPH-backed FRMRs, make the extra ST-table reference belong to the
-> > hardware mkey handle rather than the transient MR object. Extend the
-> > FRMR pool API so reuse and final destroy can transfer and drop that ref
-> > at the handle lifetime boundaries, and add mlx5_st_get_index() to take
-> > a ref on an already-known ST index.
-> I'd keep the ST reference tied to MRs, where the ST is actually in use.
-> There's no functional need to couple ST refcounting to mkey lifetime.
-> Once an MR is destroyed and its mkey revoked, the mkey can no longer
-> generate traffic, it's just an idle entry in the FRMR pool waiting to be
-> aged out or reused.
-> This lets us drop all FRMR pool changes from this patch and keep a
-> simple flow of 'acquire on MR create, release on MR destroy'.
-> > Also decode PH from kernel_vendor_key when recreating pooled mkeys so
-> > the requester hint matches the pool key.
-> I've fixed that in a series I've sent earlier this week, please rebase
-> next version on top of it.
->
-> Thanks,
-> Michael
 
-ack, thanks!
+On 6/11/2026 12:22 PM, Bjorn Helgaas wrote:
+> On Wed, Jun 10, 2026 at 02:56:48PM -0700, Farhan Ali wrote:
+>> On 6/10/2026 1:02 PM, Bjorn Helgaas wrote:
+>>> On Wed, Jun 10, 2026 at 09:51:55AM -0700, Farhan Ali wrote:
+>>>> On 6/9/2026 3:33 PM, Bjorn Helgaas wrote:
+>>>>> On Wed, Jun 03, 2026 at 06:57:36PM +0000,sashiko-bot@kernel.org wrote:
+>>>>>> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
+>>>>>>
+>>>>>> Pre-existing issues:
+>>>> ...
+>>>>>>> +++ b/drivers/pci/pci.c
+>>>>>>> @@ -4396,6 +4396,9 @@ int pcie_reset_flr(struct pci_dev *dev, bool probe)
+>>>>>>>     	if (!(dev->devcap & PCI_EXP_DEVCAP_FLR))
+>>>>>>>     		return -ENOTTY;
+>>>>>>> +	if (!pci_dev_config_accessible(dev, "FLR"))
+>>>>>>> +		return -ENOTTY;
+>>>>>>> +
+>>>>>> [Severity: High]
+>>>>>> This isn't a bug introduced by this patch, but does placing this
+>>>>>> check in pcie_reset_flr() leave direct callers of pcie_flr()
+>>>>>> exposed to 60-second hangs?
+>>>>>>
+>>>>>> Direct callers of pcie_flr() (like network and storage drivers
+>>>>>> during error recovery) bypass this wrapper. They will still
+>>>>>> experience a stall in pci_dev_wait() when attempting to reset a
+>>>>>> device with an inaccessible config space. Should this
+>>>>>> accessibility check be moved into pcie_flr() instead to protect
+>>>>>> all callers?
+>>>>> I can't remember why we have both pcie_reset_flr() and pcie_flr(),
+>>>>> other than the fact that callers don't need to supply a "probe"
+>>>>> argument to pcie_flr().
+>>>>>
+>>>>> Is there a reason to call pci_dev_config_accessible() here rather
+>>>>> than in pcie_flr()?
+>>>> The reason we wanted the check in pcie_reset_flr() was so to be able
+>>>> to escalate to bus reset method if we can't do an FLR. I think the
+>>>> check could be moved to pcie_flr(). Is that more preferable?
+>>> What if we added a preliminary patch that folds the body of pcie_flr()
+>>> into pcie_reset_flr() and adds:
+>>>
+>>>     #define pcie_flr(dev)	pcie_reset_flr(dev, PCI_RESET_DO_RESET)
+>>>
+>>> That would mean pcie_flr() users would start paying attention to
+>>> PCI_DEV_FLAGS_NO_FLR_RESET and PCI_EXP_DEVCAP_FLR, which seems like a
+>>> good thing.
+>> Looking at the history, it seems commit 56f107d7813f ("PCI: Add
+>> pcie_reset_flr() with 'probe' argument") added pcie_reset_flr() to
+>> add the probe and remove pcie_has_flr(). It also notes that callers
+>> of pcie_flr() that didn't call pcie_has_flr() remain. I guess it
+>> didn't want to change the drivers that called pcie_flr()
+>> unconditionally?
+> I think it's a mistake that we expose both pcie_reset_flr() and
+> pcie_flr() to drivers.  It's unnecessary complication and may lead to
+> pcie_flr() being used to work around device defects, e.g., the 82599
+> issue, without any explanation.
+>
+> Ideally I think we should convert the dozen or so callers of
+> pcie_flr() to pcie_reset_flr().  Since they never called
+> pcie_has_flr(), they initiate an FLR without checking for FLR support,
+> so they *could* have the same defect as 82599, i.e., they don't
+> advertise PCI_EXP_DEVCAP_FLR but FLR does actually work.
+>
+> So converting would be slightly risky but I think the number is small
+> enough to be manageable, though it would be out of scope for *this*
+> series, of course.
+>
+>> There is also reset_intel_82599_sfp_virtfn() that mentions the need
+>> to FLR without checking for FLR support due to some quirk. So I
+>> wonder if there were genuine reasons to avoid doing the check for
+>> PCI_DEV_FLAGS_NO_FLR_RESET and PCI_EXP_DEVCAP_FLR?
+> Yes.  That device looks defective in that FLR is mandatory for PFs and
+> VFs and PCI_EXP_DEVCAP_FLR must be set, but it is not set for 82599
+> VFs.
+>
+> When c763e7b58f71 ("PCI: add Intel 82599 Virtual Function
+> specific reset method") added reset_intel_82599_sfp_virtfn(),
+> pcie_flr() read PCI_EXP_DEVCAP to check for PCI_EXP_DEVCAP_FLR every
+> time it was called.
+>
+> PCI_EXP_DEVCAP is a read-only register that is now cached in
+> dev->devcap by set_pcie_port_type(), and pcie_reset_flr() checks the
+> cached value for PCI_EXP_DEVCAP_FLR.
+>
+> So I think reset_intel_82599_sfp_virtfn() could be reworked to be an
+> early quirk that sets PCI_EXP_DEVCAP_FLR in dev->devcap, instead of
+> being a device-specific reset method.  Then pcie_reset_flr() should
+> just work.
+
+I do agree exposing both pcie_flr() and pcie_reset_flr() is not ideal, 
+and having single API with all the checks would be good. I can take a 
+stab at it (separate from this series) and look into either folding the 
+contents of pcie_flr() to pcie_reset_flr() or converting all pcie_flr() 
+caller to pcie_reset_flr(). AFAICT reset_intel_82599_sfp_virtfn() could 
+be the only caller that actually needed to avoid the PCI_EXP_DEVCAP_FLR 
+check.
+
+
+FWIW when trying on s390x with the limited set of supported PCI devices, 
+I didn't see any issues.
+
+Thanks
+
+Farhan
+
