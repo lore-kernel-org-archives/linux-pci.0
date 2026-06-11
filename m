@@ -1,145 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFF683B6C13;
-	Thu, 11 Jun 2026 20:25:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3384D3A6B76;
+	Thu, 11 Jun 2026 20:26:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781209561; cv=none; b=fJvv3e++AmTo3nVyHLDcb1DX8/Zr40YAVcDpCKExPZrBuCsvhQ9Qj6aYFU3pA9o8ZdmF5aE107HCgh55mgUFp8zTeT7jmTX4kSDL0IqFPVIMZga8WiiKs1pSzN/ALfiGAUpDHexM2y/D/iMdjZGvu+vgQGPu5iaiRD4Dr1ywri0=
+	t=1781209562; cv=none; b=fhbg2/KPwN2sKSXOz7GRY3zYfFi3s9htyfG7PqR5K/5c9xEaEufjTSdkjmyxVKQGgsju4pqRNB2pPKeQzl3kEY3OGLEIgkejy5NsY+ul1sn25s/DcQ75yduSI4zQ9qGf4ILBx0IELhSH/rZ/zwhvO+MKsj54sYaR8GZH+yawC7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781209561; c=relaxed/simple;
-	bh=CJw2j1MYSkMWzO5gt7/Ae0oqiW/l3qcmKeK0Kp8W6C0=;
+	s=arc-20240116; t=1781209562; c=relaxed/simple;
+	bh=9auOMoPvpNl3avIAPuLdCMF2oDh8LZqoDQV7EUI3m/A=;
 	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=myc6NJ+34XJ6VAJk1OqlfwuFAWWLWvZsfm9uklv7BHY93NogUh3tbj/VJPaAmL9DkaKHKNxsZzdtyeKgbKsC7k5IWYxEKaIrw19ZtVuVK23lGmEqsxna/vRrqVsJn2Wyn7AFLaRqVur+z4EtF/vJbLC8wmUeT0LhIpBAfAhHimM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TkzYHHtO; arc=none smtp.client-ip=100.103.45.18
+	 Message-Id; b=hZczV1lhR/jxmhDnrnkedL1kL4zOx6anaOL2lBDuQ57PgRBaze9kqzvbnVISn0VhC/9CJGwQZJD0DqAppvSw2jq567znGHE0s6Io1OoHKzEiFxXQYMhKavei7NZWfMU0rMFlmMBW9UMKu02ku82Bz+t+j2oEJ+QTjPWqTOtDcoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n08kEcPg; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TkzYHHtO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09C691F00A3A;
-	Thu, 11 Jun 2026 20:25:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n08kEcPg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80EF21F000E9;
+	Thu, 11 Jun 2026 20:25:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781209558;
-	bh=RdzeKz5JEmi38OWy+iPUBUpytfeA/njUV2W7HTZgRKg=;
+	s=k20260515; t=1781209559;
+	bh=STvMrLJffPmLGT5LWmY4jKECc2USvp9zYePXFiZNp4g=;
 	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TkzYHHtO2zbdBeEdfH6529i1q7X3wcw8FHIkTrcuPWqxEZoP0jFwIrF0L+9F3Rg9S
-	 4vqa0Bp5n7gJ+xHEtSm2SNDcKXaY8wZ+Li0VSAmDL14ffrD0CA4y0ZKG0483A+YN+R
-	 2vky282EODak06Qa/Va5JHXZJv5aU+MRupmc1b2aLNyce+Hj0/ukRFQ7QGbD8kvJHA
-	 zeK+p0vmiHZTr3sTitPSrQYWcRnRZko35TaSgE00eZJj5kx9CYX4hJqcpOsT2MSFnf
-	 eXB63kegSZ05aRdi9H2WI6K3NHF04fYchP7cyn1ZUjgn3/GsyPAM2yP+EzLmdFIGDn
-	 jgoGZURuqU/vw==
+	b=n08kEcPg891VJZRixmwP3PrrS7CmKR2fJk9T+OrNKBfK4NZd4SRU4LObMeNBKUJ8+
+	 cJp40gK5iEk728cnGeo8Pvy+IcElt3MKd0ZXHa0SjV6xJJfNhLBYJ1MA1lxJbgfWFO
+	 OSHM4pocYqZgcxLwt9gcOLGxNQPOjtBAjhZ9XG1mLou+7SHO/gb0VgWRyJTbykAgKp
+	 BM1cea6nSXIA3b8h0RutTSJNf+MaVSbpW4gE86xlFWDYEngbJ/zfxZ1yjpRt7D/gd6
+	 fc+80lls4Un/ZHzr6HrR4eRFOuihgiKauxVem4sbI4YHAFPspXnd+A+OF4zjMtwroO
+	 JwKgAjm1NcWnw==
 From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 2/5] PCI/TPH: Add requester/completer type helpers
+Subject: Re: [PATCH v7 1/5] net/mlx5: free mlx5_st_idx_data on final dealloc
 Reply-To: sashiko-reviews@lists.linux.dev
 To: "Zhiping Zhang" <zhipingz@meta.com>
 Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260610193158.2614209-3-zhipingz@meta.com>
-References: <20260610193158.2614209-3-zhipingz@meta.com>
+In-Reply-To: <20260610193158.2614209-2-zhipingz@meta.com>
+References: <20260610193158.2614209-2-zhipingz@meta.com>
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 20:25:57 +0000
-Message-Id: <20260611202558.09C691F00A3A@smtp.kernel.org>
+Date: Thu, 11 Jun 2026 20:25:58 +0000
+Message-Id: <20260611202559.80EF21F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
 s) to consider:
 
-New issues:
-- [Medium] pcie_tph_completer_type() incorrectly returns PCI_EXP_DEVCAP2_TP=
-H_COMP_EXT_TPH when reading from a disconnected or hot-removed device.
-
 Pre-existing issues:
-- [High] The internal get_rp_completer_type() function was not updated to u=
-se the new pcie_tph_completer_type() helper, meaning it can still return th=
-e reserved 0b10 value, which can corrupt the device's TPH Requester Enable =
-state.
+- [Critical] Out-of-bounds read in UVERBS_METHOD_DMAH_ALLOC handler due to =
+missing bounds check on user-supplied cpu_id.
 --
 
-commit e3087f1c41da11f8e5258fd8b874372276270977
+commit efb72743b37fe4c5005fca2d75b36ef50832bc6c
 Author: Zhiping Zhang <zhipingz@meta.com>
 
-PCI/TPH: Add requester/completer type helpers
+net/mlx5: free mlx5_st_idx_data on final dealloc
+   =20
+When the last reference to an ST table entry is dropped,
+mlx5_st_dealloc_index() removed the entry from idx_xa but leaked the
+backing mlx5_st_idx_data allocation. Repeated alloc/dealloc cycles
+therefore accumulate one struct mlx5_st_idx_data per cycle.
+   =20
+Free idx_data after the xa_erase() so the lifetime of the bookkeeping
+struct matches the lifetime of the ST entry it tracks.
+   =20
+Fixes: 888a7776f4fb ("net/mlx5: Add support for device steering tag")
+Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 
-Add pcie_tph_enabled_req_type() and pcie_tph_completer_type() so drivers can
-query the enabled TPH requester mode and completer support safely. Fold the
-reserved 0b10 encoding into NONE so callers only see defined values.
+> diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/n=
+et/ethernet/mellanox/mlx5/core/lib/st.c
+> index 997be91f0a135..7cedc348790db 100644
+> --- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> +++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> @@ -175,6 +175,7 @@ int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, =
+u16 st_index)
+> =20
+>  	if (refcount_dec_and_test(&idx_data->usecount)) {
+>  		xa_erase(&st->idx_xa, st_index);
+> +		kfree(idx_data);
+>  		/* We leave PCI config space as was before, no mkey will refer to it */
+>  	}
+> =20
 
-> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
-> index 91145e8d9d951..4fe076bba953a 100644
-> --- a/drivers/pci/tph.c
-> +++ b/drivers/pci/tph.c
-[ ... ]
-> +u8 pcie_tph_completer_type(struct pci_dev *pdev)
-> +{
-> +	u32 reg;
-> +
-> +	if (pcie_capability_read_dword(pdev, PCI_EXP_DEVCAP2, &reg))
-> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
-> +
-> +	switch (FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg)) {
+[Severity: Critical]
+This is a pre-existing issue, but does
+UVERBS_HANDLER(UVERBS_METHOD_DMAH_ALLOC) in
+drivers/infiniband/core/uverbs_std_types_dmah.c lack bounds checking on the
+untrusted user-supplied dmah->cpu_id?
 
-[Severity: Medium]
-If the device is hot-removed, pcie_capability_read_dword() returns success =
-(0)
-but can leave reg as 0xFFFFFFFF (PCI_ERROR_RESPONSE due to master abort).
-
-Will FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg) then extract 0b11 (3),
-matching PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH, causing the helper to falsely
-advertise that a disconnected device supports Extended TPH? Should this log=
-ic
-check if reg is ~0?
-
-> +	case PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY:
-> +		return PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY;
-> +	case PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH:
-> +		return PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH;
-> +	default:
-> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
-> +	}
-> +}
-> +EXPORT_SYMBOL(pcie_tph_completer_type);
-
-[Severity: High]
-This is a pre-existing issue, but the internal get_rp_completer_type() func=
-tion
-was not updated to use this new pcie_tph_completer_type() helper.
-
-Because it still returns the raw extracted Completer Supported field, it can
-return the reserved 0b10 value without applying the safety folding introduc=
-ed
-here:
-
-drivers/pci/tph.c:get_rp_completer_type() {
+drivers/infiniband/core/uverbs_std_types_dmah.c:UVERBS_HANDLER(UVERBS_METHO=
+D_DMAH_ALLOC)() {
     ...
-	return FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg);
-}
+		ret =3D uverbs_copy_from(&dmah->cpu_id, attrs,
+				       UVERBS_ATTR_ALLOC_DMAH_CPU_ID);
+		if (ret)
+			goto err;
 
-If the device supports EXT_TPH (3) and the Root Port returns the reserved v=
-alue
-(2), could this incorrectly propagate the reserved value?
-
-drivers/pci/tph.c:pcie_enable_tph() {
-    ...
-		pdev->tph_req_type =3D min(pdev->tph_req_type, rp_req_type);
+		if (!cpumask_test_cpu(dmah->cpu_id, current->cpus_ptr)) {
+			ret =3D -EPERM;
+			goto err;
+		}
     ...
 }
 
-This would then write the reserved value (2) into the hardware's TPH Control
-register, misconfiguring the device:
+The dmah->cpu_id is copied directly from an untrusted uverbs attribute
+without value validation.
 
-drivers/pci/tph.c:pcie_enable_tph() {
-    ...
-	reg &=3D ~PCI_TPH_CTRL_REQ_EN_MASK;
-	reg |=3D FIELD_PREP(PCI_TPH_CTRL_REQ_EN_MASK, pdev->tph_req_type);
+Since cpumask_check only emits a warning if the CPU ID is out of bounds and
+does not cap the value, could test_bit compute a bit offset far outside the
+bounds of current->cpus_ptr?
 
-	pci_write_config_dword(pdev, pdev->tph_cap + PCI_TPH_CTRL, reg);
-    ...
-}
-
-Should get_rp_completer_type() be updated to use the new helper?
+Can an attacker exploit this to read unmapped kernel memory (causing a kern=
+el
+panic) or infer the contents of kernel memory by observing whether the
+syscall succeeds or fails with -EPERM?
 
 --=20
 Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260610193158.2614=
-209-1-zhipingz@meta.com?part=3D2
+209-1-zhipingz@meta.com?part=3D1
