@@ -1,245 +1,185 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mout.web.de (mout.web.de [212.227.15.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC54B30C366;
-	Thu, 11 Jun 2026 08:47:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA23C37B400;
+	Thu, 11 Jun 2026 09:25:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781167652; cv=none; b=EKM1YhGHj34B9D+3n4YwiUm6lfEeKmmLlM51LhlXu66VsG9poJioWxEZ3raL/k+nmAMWhuxzCZxS6T/rkaKzeyr3GXe+YZGWDLzSJkpxFfgLssjLWeE3Lvu9wfo0JMhFzcrlBrcf7Vdcm0sQr9dX2wd5sw1GoYEw+e8jiBdq2LA=
+	t=1781169922; cv=none; b=Hv8l16vF8wh3lcTsIURpvWG1DS+MJ0CeU6CVUOnxoP0mEi/X1A2Wpu52sSKDdvCZTp3aRKAbBjQaqIglAk99+QX1FprKe+wqLJ2dLmpVQXsN1d3xj8JM/3BPn67Q3xqPsFUulS5sSmKBMc3ehy37U0zBS22J1cAJT5SE/Rmlh3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781167652; c=relaxed/simple;
-	bh=67pHZ3TSGynPxEzu+fLDmz+mdHGIJ6SXEOKQqQadXPs=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=oYREMuteKWcoMn2p7YDqfr6Yc0kTztJZgQuCXz46noyp4vvYZL4tR01iv2kOoiBKpD7JJ8vacALEuMnvtuDP+z2TvTjuljxoyBa93hXAFoee8HrvEbhG+UdmTeE2VhBRz/WheBMHPFD0BOvcoyisIJtaEcNzV9ZHqlyXlMAttps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LfB7zZdc; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781169922; c=relaxed/simple;
+	bh=A5FE2LENBPGvUPFQVlI2GKQINKlOPPYPoNeDsOJQXGE=;
+	h=Message-ID:Date:MIME-Version:To:Cc:From:Subject:Content-Type; b=ngO/vbbFihD2FEbm5JMQU3OW+p5k91MvESuVymFtp0BLw60z+0IGYIyza3qQAQpZ0vL66UgoJFFUBQgBHAkT4yrUgDLZovJsWN84gmKlwF7QUInx4+FPOV/kNnnqYkEVnDrH6ychKPgNtYz67TpTm3EC57QLB2K9Kv0C0OATw10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=V07cRD5E; arc=none smtp.client-ip=212.227.15.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LfB7zZdc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 638101F00898;
-	Thu, 11 Jun 2026 08:47:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781167650;
-	bh=gSTauo0ljBCyKajozHATxAGtJgJBeZKLMPCocLiUM9E=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=LfB7zZdcMO115naXFitnLW7tMYot/pc7c/P4p62Mt1ugDWt9zoJuoqzkp0tvnde5G
-	 /+Bt4yB9psGeJU9TWf0EcKsg+5AT4FrEToUxc8kNohcSbvD87TZx2HksZ/LpWOuU8r
-	 ftYtwTVGVLpOdr2DrWD2s9T7oWrxC12Y9HsRriCaS0GTxjUpnPztg/w5Foo58JbU+M
-	 ntHT8czv7KfgjGU4rlTxJyrP1Am9mpR7R5prbDINrKBhKibkYCQZ1tdjUkQShKcwpG
-	 AthmomoGBzCyveqFyJ6bmuDxdn+9HLM70WqsYRk0fvqT1KF8RSnO86bB2hY1VO7jrx
-	 cCJmEBSTXcNMQ==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v10] PCI: mediatek: Add support for EcoNet EN7528 SoC
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Caleb James DeLisle" <cjd@cjdns.fr>
-Cc: conor+dt@kernel.org, devicetree@vger.kernel.org, linux-pci@vger.kernel.org, robh@kernel.org
-In-Reply-To: <20260611082329.243515-1-cjd@cjdns.fr>
-References: <20260611082329.243515-1-cjd@cjdns.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 08:47:29 +0000
-Message-Id: <20260611084730.638101F00898@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="V07cRD5E"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1781169919; x=1781774719; i=markus.elfring@web.de;
+	bh=YJ1iQIfPNsmLxuj29yx1wxVMuDrWhOf5jZ53qGeL5mE=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:From:
+	 Subject:Content-Type:Content-Transfer-Encoding:cc:
+	 content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=V07cRD5EllX7Lb0+NPkXX12r8k0Rhnh90+Y4FmlY8HlUQ8mtOAASfiFojZtgGMII
+	 GzJ9mu8JPS5HEzlpok9/11KmA+HAIb1oobpSKzKEclAGZ/KsflAXVCL2/m7aRaKVo
+	 Qv7EL2l4MxOlJQgUd8IOEqEB2fbi9l/nsz/oHar93OrR7VJhHeuHJ3QmtuT8ZUAxV
+	 JuShfDwtduV+PTiOBAbTLSpBi466pjH3C69BmZjwK6RN7l1Y7QbIi9g4mYeRqk4Y8
+	 EHP3cX0HgyiEMYOuzsduimu7Di47ph5X24yztCn4xcV0w6Zs/lLG8OLadNV+c/gIA
+	 5G+X2a0cx8IT42PB2g==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from client.hidden.invalid by smtp.web.de (mrweb005
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1MCXZf-1wOUqD3mUt-001aUS; Thu, 11
+ Jun 2026 11:25:18 +0200
+Message-ID: <5cd04727-44c5-4ace-af86-d3c227234d4b@web.de>
+Date: Thu, 11 Jun 2026 11:25:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Christophe Leroy <chleroy@kernel.org>,
+ Madhavan Srinivasan <maddy@linux.ibm.com>,
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>
+Content-Language: en-GB, de-DE
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org,
+ =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+From: Markus Elfring <Markus.Elfring@web.de>
+Subject: [PATCH] PCI: pnv_php: Use common error handling code in
+ pnv_php_alloc_slot()
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:LZch8ZynaARseotry4MbARvDbS62nRrmV177vgb+FPalq9amC3A
+ vpzbRiQQG6pQEKiirGYkuXmrbK6DNME4odM49TObQgUOwwB89g1NC7hYp6msTxCDMvjbKTj
+ 2n5DaLEI2jeShHgsJShPedq1AyaOE0Cw8a2C3uy4wXVQp4WpZxZ3ale89bnlNNrc/dJiE0M
+ 1cmO74UWbcy2Sbl3H2Rfw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:LePBFy1mcNM=;qr4BNwEcFutG8Sas0KPyqZf/ZmC
+ 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
+ yLfK938m5a2sCwTDBY=
 
-Thank you for your contribution! Sashiko AI review found 5 potential issue(=
-s) to consider:
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 11 Jun 2026 11:16:49 +0200
 
-New issues:
-- [High] Premature loop termination in `mtk_pcie_retrain` prevents remainin=
-g root ports from being retrained.
-- [Low] Calling `dev_err_probe()` on a child device from the parent's probe=
- context.
+Use an additional label so that a bit of exception handling can be better
+reused at the end of an if branch.
 
-Pre-existing issues:
-- [High] IRQ domains are leaked and leave dangling pointers when a PCIe por=
-t fails to start up.
-- [High] The PCIe port startup callbacks sleep while executing in the atomi=
-c noirq system resume phase.
-- [High] The `resource_size(mem)` parameter is silently truncated on 64-bit=
- platforms because `fls()` only accepts a 32-bit unsigned int.
---
+This issue was detected by using the Coccinelle software.
 
-commit f0ee2a994c044496f2233db60f4bbc71d16d530c
-Author: Caleb James DeLisle <cjd@cjdns.fr>
-Date:   Thu Jun 11 08:23:28 2026 +0000
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+=2D--
+ drivers/pci/hotplug/pnv_php.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-    PCI: mediatek: Add support for EcoNet EN7528 SoC
-   =20
-    Add support for the PCIe present on the EcoNet EN7528 (and EN751221) So=
-Cs.
-   =20
-    These SoCs have a mix of Gen1 and Gen2 capable ports, but the Gen2 ports
-    require re-training after startup.
-   =20
-    Co-developed-by: Ahmed Naseef <naseefkm@gmail.com>
-    Signed-off-by: Ahmed Naseef <naseefkm@gmail.com>
-    Signed-off-by: Caleb James DeLisle <cjd@cjdns.fr>
+diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+index ff92a5c301b8..e448f1802002 100644
+=2D-- a/drivers/pci/hotplug/pnv_php.c
++++ b/drivers/pci/hotplug/pnv_php.c
+@@ -791,16 +791,15 @@ static struct pnv_php_slot *pnv_php_alloc_slot(struc=
+t device_node *dn)
+ 		return NULL;
+=20
+ 	php_slot->name =3D kstrdup(label, GFP_KERNEL);
+-	if (!php_slot->name) {
+-		kfree(php_slot);
+-		return NULL;
+-	}
++	if (!php_slot->name)
++		goto free_php_slot;
+=20
+ 	/* Allocate workqueue for this slot's interrupt handling */
+ 	php_slot->wq =3D alloc_workqueue("pciehp-%s", WQ_PERCPU, 0, php_slot->na=
+me);
+ 	if (!php_slot->wq) {
+ 		SLOT_WARN(php_slot, "Cannot alloc workqueue\n");
+ 		kfree(php_slot->name);
++free_php_slot:
+ 		kfree(php_slot);
+ 		return NULL;
+ 	}
+=2D-=20
+2.54.0
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controlle=
-r/pcie-mediatek.c
-index 6d0ee089ca74b..f4963af0d6085 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-
-[ ... ]
-
-> @@ -750,6 +761,134 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie=
-_port *port)
->  	return 0;
->  }
-> =20
-> +static int mtk_pcie_startup_port_en7528(struct mtk_pcie_port *port)
-> +{
-> +	struct mtk_pcie *pcie =3D port->pcie;
-> +	struct pci_host_bridge *host =3D pci_host_bridge_from_priv(pcie);
-
-[ ... ]
-
-> +	/* Assert all reset signals */
-> +	writel(0, port->base + PCIE_RST_CTRL);
-> +
-> +	/*
-> +	 * Enable PCIe link down reset, if link status changed from link up to
-> +	 * link down, this will reset MAC control registers and configuration
-> +	 * space.
-> +	 */
-> +	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-> +
-> +	msleep(PCIE_T_PVPERL_MS);
-
-[Severity: High]
-This is a pre-existing issue in the driver's power management design, but
-will adding msleep() here cause a "scheduling while atomic" BUG?
-
-The driver's PM ops configure mtk_pcie_resume_noirq() to run during the
-system resume_noirq phase, which executes with local hardware interrupts
-disabled.
-
-Since mtk_pcie_resume_noirq() unconditionally calls mtk_pcie_enable_port(),
-which then invokes this startup callback, will calling sleepable functions
-like msleep() and regmap_read_poll_timeout() here trigger a panic during
-system resume?
-
-> +
-> +	/* De-assert PHY, PE, PIPE, MAC and configuration reset */
-> +	val =3D readl(port->base + PCIE_RST_CTRL);
-> +	val |=3D PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-> +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
-> +	writel(val, port->base + PCIE_RST_CTRL);
-> +
-> +	writel(PCIE_CLASS_CODE | PCIE_REVISION_ID,
-> +	       port->base + PCIE_CONF_REV_CLASS);
-> +	writel(EN7528_HOST_MODE, port->base);
-> +
-> +	link_mask =3D (port->slot =3D=3D 0) ? EN7528_RC0_LINKUP : EN7528_RC1_LI=
-NKUP;
-> +
-> +	/* 100ms timeout value should be enough for Gen1/2 training */
-> +	err =3D regmap_read_poll_timeout(pcie->cfg, EN7528_LINKUP_REG, val,
-> +				       !!(val & link_mask), 20,
-> +				       PCI_PM_D3COLD_WAIT * USEC_PER_MSEC);
-> +	if (err) {
-> +		dev_err(pcie->dev, "EN7528: port%d link timeout\n", port->slot);
-> +		return -ETIMEDOUT;
-
-[Severity: High]
-This is a pre-existing issue, but does returning an error here leak IRQ
-domains?
-
-When this function returns -ETIMEDOUT for an empty slot, the caller
-mtk_pcie_enable_port() executes its error path and calls
-mtk_pcie_port_free().
-
-However, mtk_pcie_port_free() frees the port struct using devm_kfree(), but
-it never tears down the IRQ domains using irq_domain_remove(). Does this
-permanently leak the IRQ domains on every empty slot timeout and leave their
-domain->host_data pointers dangling to the freed port struct?
-
-> +	}
-> +
-> +	/* Activate INTx interrupts */
-> +	val =3D readl(port->base + PCIE_INT_MASK);
-> +	val &=3D ~INTX_MASK;
-> +	writel(val, port->base + PCIE_INT_MASK);
-> +
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		mtk_pcie_enable_msi(port);
-> +
-> +	/* Set AHB to PCIe translation windows */
-> +	val =3D lower_32_bits(mem->start) |
-> +	      AHB2PCIE_SIZE(fls(resource_size(mem)));
-
-[Severity: High]
-This is a pre-existing issue, but is resource_size(mem) silently truncated
-here on 64-bit platforms?
-
-The resource_size(mem) function returns a resource_size_t, which is a 64-bit
-integer on 64-bit architectures. Since fls() only accepts a 32-bit unsigned
-int, if the resource size is 4GB (0x100000000) or larger, will the lower 32
-bits evaluate to zero or be truncated, causing fls() to return an
-incorrectly small value and misconfiguring the inbound translation window?
-
-> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-
-[ ... ]
-
-> +static int mtk_pcie_retrain(struct device *dev, struct pci_host_bridge *=
-host)
-> +{
-> +	struct pci_dev *rp;
-> +	int ret =3D -ENOENT;
-> +	u16 lnksta =3D 0;
-> +	u32 speed;
-> +
-> +	/* Should already have been warned about during startup_port */
-> +	if (!IS_BUILTIN(CONFIG_PCIE_MEDIATEK))
-> +		return 0;
-> +
-> +	guard(rwsem_read)(&pci_bus_sem);
-> +
-> +	for_each_pci_bridge(rp, host->bus) {
-> +		if (pci_pcie_type(rp) !=3D PCI_EXP_TYPE_ROOT_PORT)
-> +			continue;
-> +
-> +#if IS_BUILTIN(CONFIG_PCIE_MEDIATEK)
-> +		ret =3D pcie_retrain_link(rp, true);
-> +#endif
-> +
-> +		if (ret)
-> +			return dev_err_probe(&rp->dev, ret,
-> +					     "failed to retrain port\n");
-
-[Severity: High]
-Does returning early here prevent the remaining root ports on the bus from
-being retrained?
-
-If pcie_retrain_link() fails for any port (for example, due to a timeout on
-an empty slot), this aborts the loop. Since mtk_pcie_probe() intentionally
-ignores the return value of mtk_pcie_retrain(), the early return doesn't
-propagate the error but causes subsequent ports to be permanently stuck at
-Gen1 speeds.
-
-Should this instead log the error and continue to the next port?
-
-[Severity: Low]
-Additionally, is it correct to call dev_err_probe() on the root port
-(rp->dev) here?
-
-Since this function executes as part of the parent host controller's probe
-sequence (mtk_pcie_probe()), the root port is not the device actively
-probing. Will calling dev_err_probe() on a device that is not currently
-probing print a misleading message (like 'probe of <device> failed')?
-
-Should standard pci_err(rp, ...) be used instead?
-
-> +
-> +		pcie_capability_read_word(rp, PCI_EXP_LNKSTA, &lnksta);
-> +		speed =3D lnksta & PCI_EXP_LNKSTA_CLS;
-
-[ ... ]
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611082329.2435=
-15-1-cjd@cjdns.fr?part=3D1
