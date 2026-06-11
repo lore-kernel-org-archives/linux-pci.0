@@ -1,156 +1,213 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3557F345731
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 22:53:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 220E830E0DC
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 22:55:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.153.30
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781218426; cv=fail; b=lzA7MRExQtO5av4xLbUGb6UBG4YYgZTXHv1Crh62UXNb4SgT5EEHlrPEVer2/pPDUrF36s2DxLsWZlF6Ys4iYnPN9ySkBIPvjBrWAYKmXiI2JLu9DwYxXKNGVqOAyOr/1Iuu5PUdR7fAQFNR+2ePM0Bpj2yKxTxmaotsC5huGmY=
+	t=1781218512; cv=fail; b=IJe4iL7++x59UAuc9MV7N6y/x4D18pKZhi+W5L7JD+tFZAA8+FRekSa0ZW0LXGSercZdnoIfk4DosC0sw/dAAy7tZUid1zcqLdaEUpRpPW4ONyTdjCbS8hiEjuxVDVdu2c6UedcviHEtg1P5Jm5CkNYuBDyDGQpb/zHDs52G9Xk=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781218426; c=relaxed/simple;
-	bh=PxRZuLlxPed7g3+uVJRSQh6h+tl2QKNm0St8ryyYUCM=;
+	s=arc-20240116; t=1781218512; c=relaxed/simple;
+	bh=TIHi+z0G+5507IUn8zV5xzVcf+lqGAUQi74HLRRwRWk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=RGt43mYYmdpRHW9BiUao4OieRO1B/INIFsJzOHkb2QuthHEwxmdaUKc5AWTJ5TnA8cZpuLG2vC4pnwYWxLZNJdAhAoONFeU9nmVSl4wJQikgPmJ1QFyC6MW+WnxgPqwj39caT6vuEAbC/k3JcTHJAMXUOmgSwhEpV9BC6UEaRnU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=FDSJxjU9; arc=fail smtp.client-ip=67.231.153.30
+	 To:Cc:Content-Type; b=Q62Hr54b7XYAk9yP93r0etRELDKPb4H7VmintULBz6Gl5gBSTJyVjO9fdr4Kb/0fzBG7nXk8HdDv06z5zeRgHJnGgIVXMAfBlHZBWRZXEqJ9nnrQ1KDlcMjhwvHSPpYwb5HMun9BVBfAtwo27FKOUuKaDHeZN+BWNlgX8QmNgFk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=GSoH5Slu; arc=fail smtp.client-ip=67.231.153.30
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="FDSJxjU9"
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-	by m0089730.ppops.net (8.18.1.11/8.18.1.11) with ESMTP id 65BEFurD3822102
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:53:43 -0700
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="GSoH5Slu"
+Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65BEawnf1447396
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:55:06 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=PxRZuLlxPed7g3+uVJRSQh6h+tl2QKNm0St8ryyYUCM=; b=FDSJxjU9lKGB
-	zYwQmQEO00hYYEJ0A/ovopPo9d7CqKqD1XADgRLIn8Vqp1BtdkAsscjzjFBtTOm5
-	diVk99kItK4XNYmeAXC4rJxohR1w4XfXN9Bp6eaanw4NKiAW4gyJmERZSpkYpCSp
-	omOvIhSNxK+sDVYMbPZyhsgC+FkoO1ml34CzJ/gxKRcU8wmkmA9aQAC3EODqW0kl
-	lDxIU9Q+19d3J+fSdA/QNT4u7oggrCXALTCFp2seGU1YuaR3sFJx91cwBUas6m4P
-	Q7RVyD542fkWdg5hhoszqMfbGG+JSljRyZ8BmrK8G5dKPiI9D7qpr9eZb7kxJzyG
-	Yl+tOZEnCQ==
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com [209.85.210.70])
-	by m0089730.ppops.net (PPS) with ESMTPS id 4eqe7xhaww-1
+	 bh=PstN10mGGH+L0A0CuZvfxdqRssEKVpUiOodgdSJiiVo=; b=GSoH5SluoitA
+	ZhbhWOwNzZW0wVQslaRzOinRNj0iQBrT8vlZdPN2pSQ81NJhJsM6lrkRBfl65wwB
+	Y6XI9NxpND7U3QFlGs/3h9zNcYs5uhOwY47aIU5+EFwN8tL0uJjB3xT4Nc2flLB8
+	OuoRY9cJNAxqPnad+ocTYUbkKCVC8IBCfC3SpUi1FJ+WZQob1ge1Jpp9UqjUFdWz
+	K1c+zwzcafG7syWDN66Fj9WqXwz7FP2S9x2PYeJbkQE2VqOZpCCSJ1Pi0LPZggjM
+	b2aFPVkM2zchaidEebRvMGWAVwnPUS0gkiIJhE8DgZHNoygYJJTbBZkcw54dlUux
+	W3AMfKkv+w==
+Received: from mail-ot1-f72.google.com (mail-ot1-f72.google.com [209.85.210.72])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4eqe78hbdt-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:53:43 -0700 (PDT)
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-7e6e385508bso525310a34.1
-        for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:53:43 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781218422; cv=none;
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:55:05 -0700 (PDT)
+Received: by mail-ot1-f72.google.com with SMTP id 46e09a7af769-7e6d78299e9so859997a34.0
+        for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:55:05 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781218505; cv=none;
         d=google.com; s=arc-20240605;
-        b=hjiFqVA3wdHJDKRp32p9jE75U3iqGOCDumNGW1dNgDxyccIPa1Z64f5qqW32NiYaKX
-         fMCmb6TX53h1DFICG6NUfvARcEAGP6naZ4bB3ysB+45oK5CBByvV4irEwwRe/mNnkkck
-         odgyv3C0+ygoEjl9lfNJSGUZW5EyWMCbgmNf7MEo72WDl/RLpctQA/YsSUwOcosrDVt1
-         OG2r5kDHXjk+++cvp8mVfkg6yWzMOM5dvWVHQZ0QZTsWtabJ0pzDVCmW9pG4FMz5snqg
-         WZelgH2drmfZkXOO3fCxbhz4HtQzjCEKR3cruuDeiCSjwskCIm2BpE0clvcCJj+9vaps
-         0zFw==
+        b=aWepxEldBNvfjxFPhr8K4l4NlguG8cy2OHEauHfxiClRxSQk/BdjLysQu19JloB1w+
+         fYdzeNeCc+WrLQGwXVly4pKzelbyqQVM7O+1VbqdubOvkJs/4CW0xvqNbZwBTsqVM4rC
+         FqKA/uP2i91BnOVB7Jl+vSydAnw8RZ9+ncb4GBmbRXB4LNfEL5tPimJ0Cyq59dyCXoPo
+         0e5AbZqDlArrijOfOJrPf3eqyKHLGuIU7U6BTNg4DQsKPnMg5pKnnJgIe19onEcbCIji
+         ru5INZtK5+CUyHr4YRqICiUoOoZaaQ0/5BYQRfWfXZNF/to+PXODqFvoxp11M19jzxiY
+         Cxww==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version;
-        bh=bKpoPiSG0O/ElHpWyO7hVkQGPwY3Ah43xb7s+p7XAkg=;
-        fh=JgZX7hHoDw6fUUIsZ6OKap4Qr36VNH/4uyqqDLDTB/E=;
-        b=Rj59yiQ2M/LyIdyWbSefCzAGmtO76K0dyebZ8o7sH5r/n99Amozi8qed6PoFelt0Yx
-         Zl+RZk3dcEIZ//m3qiYsE2JYsSChrNOXZ8FqJITvl4dKUjEN5VhI4zzcC2nMJkj4NWm6
-         dBlmA8VrpygJQ4VrPSVo+bZ/m3YK8Fulgk3AjDqnipGRwffK266s66VK/JRYNqxieeIQ
-         LpryHFbogH6pEtLMceGLN16JJNNpKvQbaoSWP/careYepz3O3DdeBVfpWOAx86cKB6V6
-         9VtP4BIg2PAeowfhJaYUrFe73uYX4oNzTgylad9gaHicwFUDvl5W1M5uygynvT9/b5fE
-         9O9Q==;
+        bh=YYy1fCwoPtiMDCF76edFD+6WvAo/7l1hbbUr+kdv9e0=;
+        fh=UtdQbMPbxID1Hq7Kl7kjS9wNXUqBTpBciDeswT831jA=;
+        b=VGDd4jyOn55zOmHLQ7TZ0AIv/x9c6WqxgLIqT22IMSQKlofQZ2pyIxWJyy63645V8N
+         Uv2xY1B8fBCfA3oUqveOusTDZdcDpB3txCX/1RjKfsb/0cruAyiKdXNDEBJvvzbXo8JF
+         DeuwF+qc9D1AMk5uNA4PoMmi7Pv0hZV8dlrVXO9hE9W7u8xRyNom0tN2msNhq+XYvmaj
+         OZPZKpGT2GRbAPVItuskGs6QJL+j0CuulP0a/kC2bfv6bmyrvB6T7Dt8XN5qzA4jOkzF
+         tb+RkBH8of3wHrsI8GGHqqOosTHGMAN1x38L3GHMpWmcN15rCB5Zg/EK9Vjat7ULmKIV
+         0GTA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781218422; x=1781823222;
+        d=1e100.net; s=20251104; t=1781218505; x=1781823305;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=bKpoPiSG0O/ElHpWyO7hVkQGPwY3Ah43xb7s+p7XAkg=;
-        b=nTEfnVDsZ21szHsX163qHn/VRQAuSTN7OBP8jWBCLHFWnjOlWiXYKL1/0Miuj7sBaF
-         R42zhJD213sUHwHxAZalSdkTE0Ak8Sv/gX33+Z1VECJSWDkmJzWl/PQF+2alOXbFeBoV
-         NZBz4iWl1fJxqWI1IzY7eAveVvvZnrUYK7DcEYbHyBQVUps+PM5tvi6C+MdPRphbtf2F
-         4YHVPRqsbc5/8+wOtqbfwuG2CPmVMHHBX+C3Zv0iPTYA8/Huar6H4aMbqC4aa8P279Vj
-         a8Joch0bSK9psar2eicpATohEmmNWJK6eya6aimyuteQ8GEl/iwKtKJG7//hPcNPpnUi
-         xo5g==
-X-Forwarded-Encrypted: i=1; AFNElJ+qlt+H+MDmNShiE9I2zJs9qIGDmI56p43TZ2TugorwHNT//7hNRuGVEKv4TlvIJ86fnw4vDugmEFg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzvDdx+eyLHO3fSia8omP5tbDoiDmTIvXDkq0xA3pRYtOFOVlj2
-	gc/rmKwX0h9/X3coNxAD8E2tc62GPg7ff6Hl3ovIT7Agy7jZjuptocJT10BiFME5tv/BDQQUex4
-	33f2LpQQY0SmDfYsnVhSiSrCJPc73dQb7da5p+J6JkAsf5E2coobDoZF0tSHke5ARklYrRuU9vI
-	j7JtnYsTx37F/G0Zxr9ggDRkehMf4d+16hPQM=
-X-Gm-Gg: Acq92OFGD6SWO+NSIWt1Ca+8mi0rxChl9/WRBiEIUkAUsq5Uld7v2dP5vrNplscoIYS
-	mBg1LM0RYZ00HFqDuQ8Ai5NjlGZ9o4MhhoccOuLN2PBwab/e3SRex33kTOotRCK6cMo9qNqDaRy
-	J4RWL/++yOxEhwLA8LzDeGOF6Tsj7Z9jevPGh+ocNL1Q4djJMGz7TuSULbaeY2apdxNJLBi1nfL
-	dqVIT2WESpk491V1pB5VA==
-X-Received: by 2002:a05:6830:6d29:b0:7e6:d8ea:7dd9 with SMTP id 46e09a7af769-7e7847e1560mr60110a34.22.1781218422501;
-        Thu, 11 Jun 2026 15:53:42 -0700 (PDT)
-X-Received: by 2002:a05:6830:6d29:b0:7e6:d8ea:7dd9 with SMTP id
- 46e09a7af769-7e7847e1560mr60099a34.22.1781218422119; Thu, 11 Jun 2026
- 15:53:42 -0700 (PDT)
+        bh=YYy1fCwoPtiMDCF76edFD+6WvAo/7l1hbbUr+kdv9e0=;
+        b=XinoiIWYwwCABZz9XasMpYNiefIEMCgQzF4DONzU6+yQpy07tZWF7jhZOp2sFHXv/C
+         4dybuLPlOA+fYYS1y3/JkQl2IAyetKZ/4VAGQaCQgYHwC/S6WPR9yQPg5vTzX7vGosSB
+         bQcVhh+b0aUpjzH+h0xSGRFWYu5xicHirqEqHAPSd4HDdLE79hIEToD7zi6MEy2yeGtf
+         AUocwKDqScbHsKXFY2o53fiqgGJUrh7OMyWt+AMFP64qEfUS8DPpkeIu/Fh8U9yOv6VZ
+         8jwHFVUe5hvI1uxKOjqESLye/PsTy4XUgOiyJS5kk/IFxnqYED5kj9XFozWOlJw/UIXj
+         WwwA==
+X-Forwarded-Encrypted: i=1; AFNElJ85ShOFPO6nsLCKtJ1TACIl31IMNGMm9+QuarqMlq68rRZq6JQ+9k3Xzb1i3gY0oDKddKda1Zcy57k=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw9Ar5bXNqkKJdhy3lx3h/eTVJY+ojX3sob2Rq/6l18FnXr9doR
+	PHT1niYsCPepLC/ZQql/ff7C+xs+YJICy7UdYE/ahROqK9VuPDW6u6nJY1r1+18nsLW91WK9shX
+	OxFDYRb6hl+W58wqDNmGQs5olbLGN5B3XvZuDoG5raEhvq6OKS+Omc6tFIuGHFRM72EWGvnagJD
+	QGfL9B1qyjMMkSt3gH1g+t1Z7TyQuIf+J6taM=
+X-Gm-Gg: Acq92OGg15Lp7/GgPDCv8v0QhcH+zCRDn3CVw/Dpvc6g5mEMlK6+KCU9QNYiEUMECsw
+	bFSitDNB/F+As7pnPYAAyZLIRfZ2Im1+cWq57dDMy8Q7lusmy1iYs+t1cPm0Lo+vK509H09fn5N
+	aQO4bpKwJNJU6ycJDskFpw3Ie92daB1X+GPbVoK7z15moNFBwrTnxjisUvq2p6xPZ0ec24I67YU
+	QeDP1uWtDWuA6CfJCULMQ==
+X-Received: by 2002:a05:6830:3e01:b0:7e6:f9e4:539b with SMTP id 46e09a7af769-7e7846e89d4mr84838a34.9.1781218505372;
+        Thu, 11 Jun 2026 15:55:05 -0700 (PDT)
+X-Received: by 2002:a05:6830:3e01:b0:7e6:f9e4:539b with SMTP id
+ 46e09a7af769-7e7846e89d4mr84824a34.9.1781218504891; Thu, 11 Jun 2026 15:55:04
+ -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260610193158.2614209-1-zhipingz@meta.com> <20260610193158.2614209-2-zhipingz@meta.com>
- <555912e9-818f-4906-a883-6f14e0790672@amd.com>
-In-Reply-To: <555912e9-818f-4906-a883-6f14e0790672@amd.com>
+References: <20260610193158.2614209-2-zhipingz@meta.com> <20260611202559.80EF21F000E9@smtp.kernel.org>
+In-Reply-To: <20260611202559.80EF21F000E9@smtp.kernel.org>
 From: Zhiping Zhang <zhipingz@meta.com>
-Date: Thu, 11 Jun 2026 15:53:31 -0700
-X-Gm-Features: AVVi8CcTcZoIZDdh8OjH1IktxPjhUF1A0IE6AmeFSJNyea8GfNww1HwPJ1RCIPA
-Message-ID: <CAH3zFs2UeZfqm2M5tX5bBA6VRw2DjcyT45oGJJag5oT2WvKPJw@mail.gmail.com>
+Date: Thu, 11 Jun 2026 15:54:54 -0700
+X-Gm-Features: AVVi8Cec0xPin_3Tu2bkuOl2uwNE0xNjryiPQU2XmmSIcyBQ5hzh3oLNXw3MBdo
+Message-ID: <CAH3zFs1U92oXZse+8h5rKNrfWmtqt3SeCRJa8D9O8R02chnwTA@mail.gmail.com>
 Subject: Re: [PATCH v7 1/5] net/mlx5: free mlx5_st_idx_data on final dealloc
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: Alex Williamson <alex@shazbot.org>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        Bjorn Helgaas <helgaas@kernel.org>, kvm@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        Keith Busch <kbusch@kernel.org>, Yochai Cohen <yochai@nvidia.com>,
-        Yishai Hadas <yishaih@nvidia.com>
+To: sashiko-reviews@lists.linux.dev
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDIyOSBTYWx0ZWRfX+d5iu4FQinIx
- 083vv7VflgKm/umyGLPZP+qxp3XS235wiIEb5fK4J9QHXkxXfH7grW6Wsx9sQeowQ30MfRScX7m
- XRLcok16zTYxYRoOeu+L8o+DMfcux4o=
-X-Proofpoint-GUID: M2sUgPrqANSiUBXCxNyRdeAhwGH4eQ0K
-X-Proofpoint-ORIG-GUID: M2sUgPrqANSiUBXCxNyRdeAhwGH4eQ0K
-X-Authority-Analysis: v=2.4 cv=Zagt8MVA c=1 sm=1 tr=0 ts=6a2b3c77 cx=c_pps
- a=7uPEO8VhqeOX8vTJ3z8K6Q==:117 a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=855S8uPTkML1Oy45N9_h:22
- a=zd2uoN0lAAAA:8 a=VabnemYjAAAA:8 a=4OgE2WNpP8yww339eGMA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: MXEN5kYmscn6PydpGMXrTKGFPvOGTRDA
+X-Proofpoint-GUID: MXEN5kYmscn6PydpGMXrTKGFPvOGTRDA
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDIzMCBTYWx0ZWRfX5nbZYbwMgafm
+ O+um/n9M1CCysE3Eh3vAnROTICI+CX+peUiRkLOpzYof/aU5XMomop1ew91nQXsKrd5vulCMBE9
+ oMvDgx6wbmCrBDbLQUc9O6VuDybHbFoG+53gh1I5VEEzswnBP0Qa5nTwJbsAQAtJvvU+d2R+Ufw
+ mmaaAcIZ3w2ytRsFKtIDGzn+ACmcgQ/RdvVAI+k6Hx8vi/4gHlyPYsunMw6V8zqyIWUkQtXVV8a
+ b6dCWs7+3TDfa9GbkcKtvF/xLBGOuTmP0XRWnbTEzpQEKbsWXfz3CwGiFGcdm9o2w6g46kdWQwT
+ a7vNMb1uJ9foWOihBmf07NAZ2JQl6cOCK+UovfFebv+biq/0n4Cbg5IlNtiMvRZ2LU2i3OaJCAj
+ feZ78pMemW9Bq7nGx/cnnogq3TVK9S4eFVK3bR3MMkWUrmsDmYjcxHrPVj9HGBbF2fVXol8c641
+ VAwVcQzfqHuUFFP1yIg==
+X-Authority-Analysis: v=2.4 cv=L98theT8 c=1 sm=1 tr=0 ts=6a2b3cca cx=c_pps
+ a=+3WqYijBVYhDct2f5Fivkw==:117 a=IkcTkHD0fZMA:10 a=FelO9ux0wxsA:10
+ a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22 a=JnKecZnUtZousrUlYMGU:22
+ a=c92rfblmAAAA:8 a=VabnemYjAAAA:8 a=VwQbUJbxAAAA:8 a=37eGqx-N3tBcJSbcPa0A:9
+ a=QEXdDO2ut3YA:10 a=eYe2g0i6gJ5uXG_o6N4q:22 a=GvGzcOZaWPEFPQC_NcjD:22
  a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDIyOSBTYWx0ZWRfXxIR6HoB33U1o
- 94CnGoCzR+lB6lgeKd+AYLb/CAt4iuhcwihxsAPmZ0he4V9BDnLUxwVNNLqrlcHKutlc+dCgoZH
- rpAh17I5VBi15bBX9VpasJZYvP0w54PqbcC9ubcldli8jnYR45fFbkvuzxzWLYV7b2pErqEeW1Z
- n0rDrwQUfcP41eHSix/7gRZFqJYgpPC7g2HM3j8kjZMIiTSVRNzwGCwZRhtZR5QJlN3iDyzmMKg
- VqyqGNW/B//e3+c8IB6pJBzzTFPGdDRC0jh4e177fkY8jfqBkmB1pC965wdWdXnGONN8dz33h2X
- 8fU5LknqTLJS6hsSqMUHTb3jAo0/XwOx8owkRS04W24G0AGz49iQKq1Y5KiPvsIhT7cDq6Q5yd5
- SwhwO0x8kTCtQUUlVzQVKMvm4G8AvKafDbbUxnMn9psbUSFtsnomrVVMd/t3dnjxx4X0HxtwRGC
- t2kjdsHCQHb67uBu1+A==
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDIzMCBTYWx0ZWRfX78BQ5K6hKxS3
+ NwlV0GhZaBsuslH9xnYqlRYw/o1kkJ5maC9n/lJ4141+nQ2Pvh49cKxEjsPxsDm/rpDF0thFOi1
+ sFTQd2lJFvi3YZXfoKhvu0IzDhjfIug=
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
  definitions=2026-06-11_05,2026-06-11_01,2025-10-01_01
 
-On Thu, Jun 11, 2026 at 12:47=E2=80=AFAM Christian K=C3=B6nig
-<christian.koenig@amd.com> wrote:
+On Thu, Jun 11, 2026 at 1:26=E2=80=AFPM <sashiko-bot@kernel.org> wrote:
 >
 > >
-> On 6/10/26 21:31, Zhiping Zhang wrote:
-> > When the last reference to an ST table entry is dropped,
-> > mlx5_st_dealloc_index() removed the entry from idx_xa but leaked the
-> > backing mlx5_st_idx_data allocation. Repeated alloc/dealloc cycles
-> > therefore accumulate one struct mlx5_st_idx_data per cycle.
+> Thank you for your contribution! Sashiko AI review found 1 potential issu=
+e(s) to consider:
+>
+> Pre-existing issues:
+> - [Critical] Out-of-bounds read in UVERBS_METHOD_DMAH_ALLOC handler due t=
+o missing bounds check on user-supplied cpu_id.
+> --
+>
+> commit efb72743b37fe4c5005fca2d75b36ef50832bc6c
+> Author: Zhiping Zhang <zhipingz@meta.com>
+>
+> net/mlx5: free mlx5_st_idx_data on final dealloc
+>
+> When the last reference to an ST table entry is dropped,
+> mlx5_st_dealloc_index() removed the entry from idx_xa but leaked the
+> backing mlx5_st_idx_data allocation. Repeated alloc/dealloc cycles
+> therefore accumulate one struct mlx5_st_idx_data per cycle.
+>
+> Free idx_data after the xa_erase() so the lifetime of the bookkeeping
+> struct matches the lifetime of the ST entry it tracks.
+>
+> Fixes: 888a7776f4fb ("net/mlx5: Add support for device steering tag")
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+>
+> > diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers=
+/net/ethernet/mellanox/mlx5/core/lib/st.c
+> > index 997be91f0a135..7cedc348790db 100644
+> > --- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> > +++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+> > @@ -175,6 +175,7 @@ int mlx5_st_dealloc_index(struct mlx5_core_dev *dev=
+, u16 st_index)
 > >
-> > Free idx_data after the xa_erase() so the lifetime of the bookkeeping
-> > struct matches the lifetime of the ST entry it tracks.
+> >       if (refcount_dec_and_test(&idx_data->usecount)) {
+> >               xa_erase(&st->idx_xa, st_index);
+> > +             kfree(idx_data);
+> >               /* We leave PCI config space as was before, no mkey will =
+refer to it */
+> >       }
 > >
-> > Fixes: 888a7776f4fb ("net/mlx5: Add support for device steering tag")
-> > Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 >
-> Since this is an obvious bug fix I think it shouldn't be part of this pat=
-ch set and go upstream completely independent.
+> [Severity: Critical]
+> This is a pre-existing issue, but does
+> UVERBS_HANDLER(UVERBS_METHOD_DMAH_ALLOC) in
+> drivers/infiniband/core/uverbs_std_types_dmah.c lack bounds checking on t=
+he
+> untrusted user-supplied dmah->cpu_id?
 >
-> Regards,
-> Christian.
+> drivers/infiniband/core/uverbs_std_types_dmah.c:UVERBS_HANDLER(UVERBS_MET=
+HOD_DMAH_ALLOC)() {
+>     ...
+>                 ret =3D uverbs_copy_from(&dmah->cpu_id, attrs,
+>                                        UVERBS_ATTR_ALLOC_DMAH_CPU_ID);
+>                 if (ret)
+>                         goto err;
 >
+>                 if (!cpumask_test_cpu(dmah->cpu_id, current->cpus_ptr)) {
+>                         ret =3D -EPERM;
+>                         goto err;
+>                 }
+>     ...
+> }
+>
+> The dmah->cpu_id is copied directly from an untrusted uverbs attribute
+> without value validation.
+>
+> Since cpumask_check only emits a warning if the CPU ID is out of bounds a=
+nd
+> does not cap the value, could test_bit compute a bit offset far outside t=
+he
+> bounds of current->cpus_ptr?
+>
+> Can an attacker exploit this to read unmapped kernel memory (causing a ke=
+rnel
+> panic) or infer the contents of kernel memory by observing whether the
+> syscall succeeds or fails with -EPERM?
+>
+> --
+> Sashiko AI review =C2=B7 https://urldefense.com/v3/__https://sashiko.dev/=
+*/patchset/20260610193158.2614209-1-zhipingz@meta.com?part=3D1__;Iw!!Bt8RZU=
+m9aw!-yx89CgOVvF9E6-bX3TWkgI1oBHKqqBP1C88LmgmavxlZKHEFJdEeW7gwHdiVC2U2gzS3R=
+GnvW_CiJNQVwxS$
 
-Sure, Michael replied that he has made a patch to fix it, i will rebase on =
-top.
+Not relevant to my patch series.
+
+Zhiping
