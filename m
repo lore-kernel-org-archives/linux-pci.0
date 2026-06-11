@@ -1,53 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B49F3FFAD1;
-	Thu, 11 Jun 2026 16:07:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3FDA4192E5;
+	Thu, 11 Jun 2026 16:17:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781194072; cv=none; b=UScqE6+Gn3ZK6RJUPL+/lLpnx6ceFsWJsARfDXDuM6M1P173F2UuiieFMopLgFKr0tIrMaMxKcd0lzW+/RgCj60i6sPzttnLlGjTE6JJ9GyEHFeuCw+eHKSFmDqpgaqQFjGpbkOBcdT/ANuDPg5KLzXBRBi7zAMj1ckK+3OF8KA=
+	t=1781194628; cv=none; b=FT/htAQn8Al13RlcN+SLvZlvRI3Baojiyl9wK/1CS9sM7O49rSgKVwzNOrfbvrdXXj7+pbiS567LVkCkAggvHSHRafo8MUsof40X4RjnhrsSwiV9ageFt+avP+yxA65LFIsoCkxgmp/pXoolrivSPUoKA4JdFKTDt3obd2mDzj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781194072; c=relaxed/simple;
-	bh=U3xZxLpD8RZWX+DyVx8SGieHG8U7O26uoqmoOK0GYgY=;
+	s=arc-20240116; t=1781194628; c=relaxed/simple;
+	bh=89AyRdbchef7sjB/Yb5mFTiSDbyA+DCW4vDRX6so6wk=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ck1QM/PQiLBB9pLfEHJe06URq7T7TLFfoFCaa9vJQlEm7JUOTj+Ns9HmN4mYnGhcB1FVwNY/xUMLThJrD9/GgO1vmLb7OvgfvxHo+Yn7iIFGYsQjCcSqEXNWcUghfjSGyyMIp+Hxr3lqZCb01I/xhUAWxnCJ3WWJgiy/P6+j5iM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L1Zrk0QZ; arc=none smtp.client-ip=100.103.45.18
+	 Content-Disposition:In-Reply-To; b=qwCOpPINrZzo2UIYGfHtedXRHlpbQhdNIno3y4sP3QM1xpVmHF6+KCLCQ9bwKxPjUENP2Ra0jcl0oB/lUoDnLn+sV5AEkSUjxLMCOynX30qk1oUQ+MFB6xGhrlgF5M0qDmAcDvNUsdKT+e7g/QwJItS3bY/2Xy4wtMW4AugYa2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OVWTFu/T; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L1Zrk0QZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CF171F00893;
-	Thu, 11 Jun 2026 16:07:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OVWTFu/T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21BCE1F00893;
+	Thu, 11 Jun 2026 16:17:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781194070;
-	bh=FODH1d2l25lpiGGcZpHtnCfAB0Q222ShRwNYwgMpF+k=;
+	s=k20260515; t=1781194627;
+	bh=vzZhenHbPwepLaH1jkQZbPxGq+tZ5ZGXbuy3+e6Nifc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To;
-	b=L1Zrk0QZ1qX3eyuxtjnJdk+dWBBpC6QlshmDTeGDOZMyFLXoqJUbE2RSKRBDRYkbY
-	 /qUnN60oDtV/Ce52c7YIEPF30crxHl42JGpvfyBXXuHT4s73n4ZWNWH9mE/Z8TRjLr
-	 jqGXi5/G14a1yz6EkkXphC9k27eSfDUWt8DbpMsoLil03Pi93j6u6+nXmVO3ENLfnW
-	 DrpMfPn2Yb/ONriLS4mG3Tt3vy8eYx6l6NzfDudag11h5zPdYcx7L894Fj3nUH1C+f
-	 6B8TX9W/Z7KCsSsF0K7Vfu72e73b3UL7odrbFuf9CUZ5nOU4uy7w3splGfECMWL7ha
-	 UVtWB4nj5j2wQ==
-Date: Thu, 11 Jun 2026 11:07:49 -0500
+	b=OVWTFu/TSFSg3ELJDdAbFWDbM3Hi3TSeZBAet0Vz8UDsfS2ektb+YAEPPbmblPwgl
+	 DaP6LK0Jv5gePb7DFx5uE/iMovoFan/dVPOtRNqvPnWnb4hckPobwj3ThuIBecXtYx
+	 bNnuTlAH4OOh9zIN6Ialc5WjVVg7BJL0Jn8lSGXGEHXpP1OERyuyzKIgr7iC390ULw
+	 WRe1d5T+9TM0no5xmVJ6ZUr1Ca7M9yIrZJYdK3i9oz31MF3AHvm9rPEZ0XEfDMR6Rr
+	 E+0SA/LOnuK7tXPVC7zNwXlNElGaWfL6wuK84JCGkOO3Iko/rt05q8ToLPQMx0vO4g
+	 f/f1k/l3o+f6g==
+Date: Thu, 11 Jun 2026 11:17:05 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
-	Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Pranjal Shrivastava <praan@google.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/9] PCI/P2PDMA: Add CONFIG_PCI_P2PDMA_CORE
-Message-ID: <20260611160749.GA469670@bhelgaas>
+To: Rosen Penev <rosenp@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, linusw@kernel.org,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"moderated list:PCI DRIVER FOR MVEBU (Marvell Armada 370 and Ar...),linusw@kernel.org" <linux-arm-kernel@lists.infradead.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv2] PCI: mvebu: Use fixed-width interrupt masks
+Message-ID: <20260611161705.GA486072@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,86 +48,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260610154327.37758-2-matt@ozlabs.org>
+In-Reply-To: <20260526044016.1025613-1-rosenp@gmail.com>
 
-On Wed, Jun 10, 2026 at 04:43:15PM +0100, Matt Evans wrote:
-> The P2PDMA code currently provides two features under the same
-> CONFIG_PCI_P2PDMA option:
+On Mon, May 25, 2026 at 09:40:16PM -0700, Rosen Penev wrote:
+> Use u32-typed BIT and GENMASK helpers for PCIe interrupt register
+> masks.  This keeps inverted masks in the same width as the registers
+> and avoids truncation warnings on 64-bit compile-test builds.
 > 
->  1.  Locate providers via pcim_p2pdma_provider()
->  2.  Manage actual P2P DMA
+> Fixes this and similar warnings:
 > 
-> Some drivers (such as vfio-pci) depend on 1, without having a hard
-> dependency on 2.
+> drivers/pci/controller/pci-mvebu.c:316:21: error: implicit conversion from
+> 'unsigned long' to 'u32' (aka 'unsigned int') changes value from
+> 18446744069414584320 to 0 [-Werror,-Wconstant-conversion]
+>   316 |         mvebu_writel(port, ~PCIE_INT_ALL_MASK, PCIE_INT_UNMASK_OFF);
 > 
-> A future commit expands the use of DMABUF in vfio-pci for non-P2P
-> scenarios, relying on pcim_p2pdma_provider() always being present.  If
-> that depended on CONFIG_PCI_P2PDMA, it would make vfio-pci only
-> available if CONFIG_ZONE_DEVICE is present (e.g. 64-bit systems), even
-> when P2P is not needed.
+> Assisted-by: Codex:GPT-5.5
+> Signed-off-by: Rosen Penev <rosenp@gmail.com>
+> ---
+>  v2: remove sys_to_pcie change
+>  drivers/pci/controller/pci-mvebu.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> To resolve this, introduce CONFIG_PCI_P2PDMA_CORE and refactor the
-> basic provider functionality into a new p2pdma_core.c file.  This is
-> available even if the CONFIG_PCI_P2PDMA feature is disabled (or
-> unavailable due to !CONFIG_ZONE_DEVICE).  Then, drivers can enable any
-> additional P2P features with the original CONFIG_PCI_P2PDMA (available
-> when CONFIG_ZONE_DEVICE is set).
-> 
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> index e568528bad85..f5a3f7370552 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -57,9 +57,9 @@
+>  #define PCIE_CONF_DATA_OFF	0x18fc
+>  #define PCIE_INT_CAUSE_OFF	0x1900
+>  #define PCIE_INT_UNMASK_OFF	0x1910
+> -#define  PCIE_INT_INTX(i)		BIT(24+i)
+> -#define  PCIE_INT_PM_PME		BIT(28)
+> -#define  PCIE_INT_ALL_MASK		GENMASK(31, 0)
+> +#define  PCIE_INT_INTX(i)		BIT_U32(24 + (i))
+> +#define  PCIE_INT_PM_PME		BIT_U32(28)
+> +#define  PCIE_INT_ALL_MASK		GENMASK_U32(31, 0)
 
-I thought this was going to be just a code move and new Kconfig
-option, but it involves a little more than that, e.g., adding
-pci_p2pdma_release_pool() and tweaking the RCU synchronization.
-
-If possible, it would be nice to do that refactoring in a smaller
-preliminary patch so it's easier to review/bisect/etc and make this
-one a pure code move.
-
-I guess CONFIG_PCI_P2PDMA_CORE selects just part 1 ("Locate providers
-via pcim_p2pdma_provider()"), right?
-
-> +++ b/drivers/pci/p2pdma.h
-> @@ -0,0 +1,29 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/*
-> + * PCI Peer 2 Peer DMA support.
-> + */
-> +
-> +#ifndef _PCI_P2PDMA_H
-> +#define _PCI_P2PDMA_H
-> +
-> +#include <linux/genalloc.h>
-> +#include <linux/pci-p2pdma.h>
-> +#include <linux/xarray.h>
-> +
-> +struct pci_p2pdma {
-> +	struct gen_pool *pool;
-> +	bool p2pmem_published;
-> +	struct xarray map_types;
-> +	struct p2pdma_provider mem[PCI_STD_NUM_BARS];
-> +};
-> +
-> +#ifdef CONFIG_PCI_P2PDMA
-> +void pci_p2pdma_release_pool(struct pci_dev *pdev, struct pci_p2pdma *p2pdma);
-> +#else
-> +static inline void pci_p2pdma_release_pool(struct pci_dev *pdev, struct pci_p2pdma *p2pdma)
-
-Wrap to fit in 80 columns like the rest of drivers/pci/
-
-> +{
-> +}
-> +#endif
-> +
-> +#endif
-> +
-
-Spurious blank line at end.
-
-> +++ b/drivers/pci/p2pdma_core.c
-> @@ -0,0 +1,118 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * PCI Peer 2 Peer DMA support core, providing a bare-bones
-
-In this English text, I think I would spell out "Peer to Peer" instead
-of relying on the "2" homophone.  Same in p2pdma.h.
+This looks like something that could be an issue in dozens of drivers.
+Is it?  If so, I'd prefer to fix them all at once in a single patch
+instead of a slow trickle.
