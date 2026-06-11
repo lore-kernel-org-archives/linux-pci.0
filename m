@@ -1,320 +1,264 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA92F3EFFDC
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:01:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7680B301465
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:05:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781190121; cv=none; b=ggX/C4eocofjXDI5c1+pu6yU544hY6eYD6IQhtTTNFaNPSbWES3eGAQGpmEiXRYtY/J12FKNiUgWTy+Twb2NiEGnyCnYeerSCFbd/Lcd34hifbk2qSGKjyobr4mQ5fk8d5vx3hBTnhydiybD6jRFCHT6Vs3BPtMWGnQlcooPLT8=
+	t=1781190347; cv=none; b=EuDJElj5CJFnS05kouAiA7yNGdmNEdz8SwLjdbNozhEX+0Pi45sUsijlSc6GcByxC0sUGTSCrdXsM49L4A1bTz38+eaQTzqmqDCyHZDGvfyS1YudIlMwldxlcWYWMGVblIa0AdcZ4SOVkO5SaCok71UCXs51aDyw5ohWwLWLAbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781190121; c=relaxed/simple;
-	bh=uuLY2e2fWgpkxqrXISJS9gYjeWjFhBaRpA9y+4FOxcM=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Vjdcz9Z03A1fEJo1PsoIC7Pa5CCjKD5yStyWjMoXzz9YJP1BPXH2zdqw/7HrXy9bDWUz0hSJCtZFoFZZchQqc2Lnr8Pr6pk8q7g7iX5N5K6TatI9c637p8HzfrHkp+hfUIpA5fNiQLnFGxtJtXEKVYoZ4fjsNcptfLgJgUKmxE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Qlo3w1IN; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1781190347; c=relaxed/simple;
+	bh=Gr0JFxrlKTfB9cvXhx2CdDuraA23j+057lVM0O829sw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KavOs1/uYQzDJD9b2Yfqtx51UoPHmTUL64x8W3PsGw/jybqltMKYTg/I4xJ79W0ZRh9KYpFheR+0sUYlH9gOuEJY6zQ3pvo6FedTMRii/m8ROJ++TiJpFRzTm/+NuaFfeOX1NpFOc58vd2bLXHUwS5ArTO189/xbsx+QRkWb0Ew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z1fJP3Pe; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Qlo3w1IN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781190118; x=1812726118;
-  h=date:from:to:cc:subject:message-id;
-  bh=uuLY2e2fWgpkxqrXISJS9gYjeWjFhBaRpA9y+4FOxcM=;
-  b=Qlo3w1INOEUCyHmxKh2QmiR9WyNuBVwvZpexsD9ZVZY7gFPLKyQG4EvJ
-   PFJpRd5s7qhdP5r59Pa6vhy/gy7Qr82q7nyGd13K0aP+jI7wB//lGtPUU
-   3/3uB37ZTe8O+A6yiS7/sWlVX3Gg72yb5evDBPNudnMx/oWUhh4vQ6gBY
-   KS35GXzdmEifSrJej9JCUKVsQtDczYr4VAZXH6/wel2kNclxhS5Eax/2y
-   zD1M/iQTRGl3qBE2mHbm6npxMiqMRVv5md7ht9THlHvBShxpYfkn41kBe
-   CWIVUhVQHB1WY5+LD1+0KtRO3UpduGRRMDMhP5JhtE2PRvHVGwIX2orEq
-   A==;
-X-CSE-ConnectionGUID: YOtdHEiYQgytPawhm0SbFg==
-X-CSE-MsgGUID: XHGniftNQkiAo85MsFgCrQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11813"; a="84573386"
-X-IronPort-AV: E=Sophos;i="6.24,199,1774335600"; 
-   d="scan'208";a="84573386"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2026 08:01:47 -0700
-X-CSE-ConnectionGUID: S4rUh7IwSQKl2qNG0Rejqg==
-X-CSE-MsgGUID: btjnlGEZT5aSb9wYZR2ofg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,199,1774335600"; 
-   d="scan'208";a="243569950"
-Received: from lkp-server01.sh.intel.com (HELO f0d55cb201f0) ([10.239.97.150])
-  by fmviesa007.fm.intel.com with ESMTP; 11 Jun 2026 08:01:48 -0700
-Received: from kbuild by f0d55cb201f0 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1wXguf-00000000NH8-1WGR;
-	Thu, 11 Jun 2026 15:01:45 +0000
-Date: Thu, 11 Jun 2026 23:00:51 +0800
-From: kernel test robot <lkp@intel.com>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/rcar-host] BUILD SUCCESS
- 6ba90ce2069ae923b0ec787aebdf2d786e5d2a58
-Message-ID: <202606112343.Wu3OrVfg-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z1fJP3Pe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 174C81F00893;
+	Thu, 11 Jun 2026 15:05:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781190346;
+	bh=go2KM4+v56cy5TQS7b7R5oJgxVehyt3qB64HKqNHqg0=;
+	h=From:To:Cc:Subject:Date;
+	b=Z1fJP3Pe+glgMNT4up7O0yMeTfvVhn0vYKri0YZDx9eRKnK3iQjv/rLeRvNQ+dh3r
+	 XdqcL9uvN5ViN3dmHkTGNtQTMG2Y89GGm+DQmxjN7sdQTcVfoGEXw55CDtcxKpEgPe
+	 JH7geEgVufZya5+qCio/Iu92+qajjyF/S+SZLQqI924QoRma1aTZ9ROCL5dF78+Hd6
+	 AI2VVrRp4zG899a8QEVCdsZVFnI2gvzFmP0h3f9TBQw5s9nz2zn18Nk5IyjGp1gDeN
+	 t47zBPe0SrRzNHWqUo+FvrlTrHoKZ92V2LRtCC3r3odD5aFJm9E2PSKM5myaQRR6DP
+	 yAVpLM5UjNxrw==
+From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Shuan He <heshuan@bytedance.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v4] PCI/proc: Fix race between pci_proc_init() and pci_bus_add_device()
+Date: Thu, 11 Jun 2026 15:05:43 +0000
+Message-ID: <20260611150543.511422-1-kwilczynski@kernel.org>
+X-Mailer: git-send-email 2.54.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/rcar-host
-branch HEAD: 6ba90ce2069ae923b0ec787aebdf2d786e5d2a58  PCI: rcar-host: Remove unused LIST_HEAD(res)
+pci_proc_attach_device() creates procfs entries for PCI devices and is
+called from pci_bus_add_device().  It lazily creates the per-bus procfs
+directory (bus->procdir) via proc_mkdir() on first use, and returns
+early if proc_initialized is not yet set.
 
-elapsed time: 795m
+On x86 with ACPI, PCI enumeration occurs at subsys_initcall, before
+pci_proc_init() sets proc_initialized at device_initcall.  The
+for_each_pci_dev() loop in pci_proc_init() then creates procfs entries
+for these already-enumerated devices, but runs without holding
+pci_rescan_remove_lock.
 
-configs tested: 243
-configs skipped: 2
+On ARM64 with devicetree, PCI host bridges probe at device_initcall.
+With async probing enabled, pci_bus_add_device() can run concurrently
+with pci_proc_init(), and both may call pci_proc_attach_device() for
+the same device or for different devices on the same bus.  As
+pci_host_probe() holds pci_rescan_remove_lock while pci_proc_init()
+does not, there is no serialisation between the two paths.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+When two threads concurrently call pci_proc_attach_device() for
+devices on the same bus, both observe bus->procdir as NULL and both
+call proc_mkdir().  The proc filesystem serialises directory creation
+internally, so only one caller succeeds.  The other receives NULL
+(duplicate entry) and unconditionally stores it to bus->procdir,
+corrupting the valid pointer set by the first caller.
 
-tested configs:
-alpha                             allnoconfig    gcc-16.1.0
-alpha                            allyesconfig    gcc-16.1.0
-alpha                               defconfig    gcc-16.1.0
-arc                              allmodconfig    clang-23
-arc                              allmodconfig    gcc-16.1.0
-arc                               allnoconfig    gcc-16.1.0
-arc                              allyesconfig    clang-23
-arc                                 defconfig    gcc-16.1.0
-arc                        nsim_700_defconfig    gcc-16.1.0
-arc                            randconfig-001    gcc-14.3.0
-arc                   randconfig-001-20260611    gcc-14.3.0
-arc                            randconfig-002    gcc-14.3.0
-arc                   randconfig-002-20260611    gcc-14.3.0
-arm                               allnoconfig    gcc-16.1.0
-arm                              allyesconfig    clang-23
-arm                              allyesconfig    gcc-16.1.0
-arm                                 defconfig    gcc-16.1.0
-arm                           omap1_defconfig    gcc-16.1.0
-arm                          pxa910_defconfig    gcc-16.1.0
-arm                            randconfig-001    gcc-14.3.0
-arm                   randconfig-001-20260611    gcc-14.3.0
-arm                            randconfig-002    gcc-14.3.0
-arm                   randconfig-002-20260611    gcc-14.3.0
-arm                            randconfig-003    gcc-14.3.0
-arm                   randconfig-003-20260611    gcc-14.3.0
-arm                            randconfig-004    gcc-14.3.0
-arm                   randconfig-004-20260611    gcc-14.3.0
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-16.1.0
-arm64                               defconfig    gcc-16.1.0
-arm64                 randconfig-001-20260611    gcc-14.3.0
-arm64                 randconfig-002-20260611    gcc-14.3.0
-arm64                 randconfig-003-20260611    gcc-14.3.0
-arm64                 randconfig-004-20260611    gcc-14.3.0
-csky                             allmodconfig    gcc-16.1.0
-csky                              allnoconfig    gcc-16.1.0
-csky                                defconfig    gcc-16.1.0
-csky                  randconfig-001-20260611    gcc-14.3.0
-csky                  randconfig-002-20260611    gcc-14.3.0
-hexagon                          allmodconfig    clang-23
-hexagon                          allmodconfig    gcc-16.1.0
-hexagon                           allnoconfig    gcc-16.1.0
-hexagon                             defconfig    gcc-16.1.0
-hexagon               randconfig-001-20260611    clang-16
-hexagon               randconfig-001-20260611    clang-17
-hexagon               randconfig-002-20260611    clang-16
-hexagon               randconfig-002-20260611    clang-17
-i386                             allmodconfig    clang-22
-i386                              allnoconfig    gcc-16.1.0
-i386                             allyesconfig    clang-22
-i386                             allyesconfig    gcc-14
-i386                 buildonly-randconfig-001    clang-22
-i386        buildonly-randconfig-001-20260611    clang-22
-i386                 buildonly-randconfig-002    clang-22
-i386        buildonly-randconfig-002-20260611    clang-22
-i386                 buildonly-randconfig-003    clang-22
-i386        buildonly-randconfig-003-20260611    clang-22
-i386                 buildonly-randconfig-004    clang-22
-i386        buildonly-randconfig-004-20260611    clang-22
-i386                 buildonly-randconfig-005    clang-22
-i386        buildonly-randconfig-005-20260611    clang-22
-i386                 buildonly-randconfig-006    clang-22
-i386        buildonly-randconfig-006-20260611    clang-22
-i386                                defconfig    gcc-16.1.0
-i386                           randconfig-001    gcc-14
-i386                  randconfig-001-20260611    gcc-14
-i386                           randconfig-002    gcc-14
-i386                  randconfig-002-20260611    gcc-14
-i386                           randconfig-003    gcc-14
-i386                  randconfig-003-20260611    gcc-14
-i386                           randconfig-004    gcc-14
-i386                  randconfig-004-20260611    gcc-14
-i386                           randconfig-005    gcc-14
-i386                  randconfig-005-20260611    gcc-14
-i386                           randconfig-006    gcc-14
-i386                  randconfig-006-20260611    gcc-14
-i386                           randconfig-007    gcc-14
-i386                  randconfig-007-20260611    gcc-14
-i386                  randconfig-011-20260611    gcc-14
-i386                  randconfig-012-20260611    gcc-14
-i386                  randconfig-013-20260611    gcc-14
-i386                  randconfig-014-20260611    gcc-14
-i386                  randconfig-015-20260611    gcc-14
-i386                  randconfig-016-20260611    gcc-14
-i386                  randconfig-017-20260611    gcc-14
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    gcc-16.1.0
-loongarch                           defconfig    clang-23
-loongarch             randconfig-001-20260611    clang-16
-loongarch             randconfig-001-20260611    clang-17
-loongarch             randconfig-002-20260611    clang-16
-loongarch             randconfig-002-20260611    clang-17
-m68k                             allmodconfig    gcc-16.1.0
-m68k                              allnoconfig    gcc-16.1.0
-m68k                             allyesconfig    clang-23
-m68k                             allyesconfig    gcc-16.1.0
-m68k                                defconfig    clang-23
-microblaze                        allnoconfig    gcc-16.1.0
-microblaze                       allyesconfig    gcc-16.1.0
-microblaze                          defconfig    clang-23
-mips                             allmodconfig    gcc-16.1.0
-mips                              allnoconfig    gcc-16.1.0
-mips                             allyesconfig    gcc-16.1.0
-nios2                            allmodconfig    clang-20
-nios2                             allnoconfig    clang-23
-nios2                               defconfig    clang-23
-nios2                 randconfig-001-20260611    clang-16
-nios2                 randconfig-001-20260611    clang-17
-nios2                 randconfig-002-20260611    clang-16
-nios2                 randconfig-002-20260611    clang-17
-openrisc                         allmodconfig    clang-20
-openrisc                          allnoconfig    clang-23
-openrisc                            defconfig    gcc-16.1.0
-parisc                           allmodconfig    gcc-16.1.0
-parisc                            allnoconfig    clang-23
-parisc                           allyesconfig    clang-17
-parisc                           allyesconfig    clang-23
-parisc                              defconfig    gcc-16.1.0
-parisc                randconfig-001-20260611    gcc-13.4.0
-parisc                randconfig-002-20260611    gcc-13.4.0
-parisc64                            defconfig    clang-23
-powerpc                     akebono_defconfig    clang-23
-powerpc                          allmodconfig    gcc-16.1.0
-powerpc                           allnoconfig    clang-23
-powerpc               randconfig-001-20260611    gcc-13.4.0
-powerpc               randconfig-002-20260611    gcc-13.4.0
-powerpc                     tqm8540_defconfig    gcc-16.1.0
-powerpc64             randconfig-001-20260611    gcc-13.4.0
-powerpc64             randconfig-002-20260611    gcc-13.4.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                            allyesconfig    clang-23
-riscv                               defconfig    gcc-16.1.0
-riscv                          randconfig-001    gcc-12.5.0
-riscv                 randconfig-001-20260611    gcc-12.5.0
-riscv                          randconfig-002    gcc-12.5.0
-riscv                 randconfig-002-20260611    gcc-12.5.0
-s390                             allmodconfig    clang-17
-s390                             allmodconfig    clang-23
-s390                              allnoconfig    clang-23
-s390                             allyesconfig    gcc-16.1.0
-s390                                defconfig    gcc-16.1.0
-s390                           randconfig-001    gcc-12.5.0
-s390                  randconfig-001-20260611    gcc-12.5.0
-s390                           randconfig-002    gcc-12.5.0
-s390                  randconfig-002-20260611    gcc-12.5.0
-sh                               allmodconfig    gcc-16.1.0
-sh                                allnoconfig    clang-23
-sh                               allyesconfig    clang-17
-sh                               allyesconfig    clang-23
-sh                                  defconfig    gcc-14
-sh                             randconfig-001    gcc-12.5.0
-sh                    randconfig-001-20260611    gcc-12.5.0
-sh                             randconfig-002    gcc-12.5.0
-sh                    randconfig-002-20260611    gcc-12.5.0
-sparc                             allnoconfig    clang-23
-sparc                               defconfig    gcc-16.1.0
-sparc                 randconfig-001-20260611    gcc-15.2.0
-sparc                 randconfig-002-20260611    gcc-15.2.0
-sparc64                          allmodconfig    clang-20
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260611    gcc-15.2.0
-sparc64               randconfig-002-20260611    gcc-15.2.0
-um                               allmodconfig    clang-17
-um                               allmodconfig    clang-23
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-14
-um                               allyesconfig    gcc-16.1.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260611    gcc-15.2.0
-um                    randconfig-002-20260611    gcc-15.2.0
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-22
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-22
-x86_64               buildonly-randconfig-001    gcc-14
-x86_64      buildonly-randconfig-001-20260611    gcc-14
-x86_64               buildonly-randconfig-002    gcc-14
-x86_64      buildonly-randconfig-002-20260611    gcc-14
-x86_64               buildonly-randconfig-003    gcc-14
-x86_64      buildonly-randconfig-003-20260611    gcc-14
-x86_64               buildonly-randconfig-004    gcc-14
-x86_64      buildonly-randconfig-004-20260611    gcc-14
-x86_64               buildonly-randconfig-005    gcc-14
-x86_64      buildonly-randconfig-005-20260611    gcc-14
-x86_64               buildonly-randconfig-006    gcc-14
-x86_64      buildonly-randconfig-006-20260611    gcc-14
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-22
-x86_64                         randconfig-001    clang-22
-x86_64                randconfig-001-20260611    clang-22
-x86_64                randconfig-001-20260611    gcc-14
-x86_64                         randconfig-002    clang-22
-x86_64                randconfig-002-20260611    clang-22
-x86_64                randconfig-002-20260611    gcc-14
-x86_64                         randconfig-003    clang-22
-x86_64                randconfig-003-20260611    clang-22
-x86_64                randconfig-003-20260611    gcc-14
-x86_64                         randconfig-004    clang-22
-x86_64                randconfig-004-20260611    clang-22
-x86_64                randconfig-004-20260611    gcc-14
-x86_64                         randconfig-005    clang-22
-x86_64                randconfig-005-20260611    clang-22
-x86_64                randconfig-005-20260611    gcc-14
-x86_64                         randconfig-006    clang-22
-x86_64                randconfig-006-20260611    clang-22
-x86_64                randconfig-006-20260611    gcc-14
-x86_64                         randconfig-011    clang-22
-x86_64                randconfig-011-20260611    clang-22
-x86_64                randconfig-011-20260611    gcc-14
-x86_64                         randconfig-012    clang-22
-x86_64                randconfig-012-20260611    clang-22
-x86_64                randconfig-012-20260611    gcc-14
-x86_64                         randconfig-013    clang-22
-x86_64                randconfig-013-20260611    clang-22
-x86_64                randconfig-013-20260611    gcc-14
-x86_64                         randconfig-014    clang-22
-x86_64                randconfig-014-20260611    clang-22
-x86_64                randconfig-014-20260611    gcc-14
-x86_64                         randconfig-015    clang-22
-x86_64                randconfig-015-20260611    clang-22
-x86_64                randconfig-015-20260611    gcc-14
-x86_64                         randconfig-016    clang-22
-x86_64                randconfig-016-20260611    clang-22
-x86_64                randconfig-016-20260611    gcc-14
-x86_64                randconfig-071-20260611    clang-22
-x86_64                randconfig-072-20260611    clang-22
-x86_64                randconfig-073-20260611    clang-22
-x86_64                randconfig-074-20260611    clang-22
-x86_64                randconfig-075-20260611    clang-22
-x86_64                randconfig-076-20260611    clang-22
-x86_64                               rhel-9.4    clang-22
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-22
-x86_64                    rhel-9.4-kselftests    clang-22
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-22
-xtensa                            allnoconfig    clang-23
-xtensa                           allyesconfig    clang-20
-xtensa                randconfig-001-20260611    gcc-15.2.0
-xtensa                randconfig-002-20260611    gcc-15.2.0
+Thus, serialise access to proc_initialized, proc_bus_pci_dir,
+bus->procdir and dev->procent with a new mutex local to the
+drivers/pci/proc.c file, and store the created entries to
+bus->procdir and dev->procent only on success, so a failed
+creation can never overwrite a valid pointer.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Additionally, wrap the for_each_pci_dev() loop in pci_proc_init() with
+pci_lock_rescan_remove() to serialise against concurrent PCI bus
+operations, add an early return in pci_proc_attach_device() when
+dev->procent is already set to make the function idempotent, and clear
+bus->procdir in pci_proc_detach_bus() to prevent use of a dangling
+pointer after proc_remove().
+
+Reported-by: Shuan He <heshuan@bytedance.com>
+Closes: https://lore.kernel.org/linux-pci/20250702155112.40124-2-heshuan@bytedance.com/
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+---
+Changes in v4:
+  https://lore.kernel.org/linux-pci/20260606203022.743558-1-kwilczynski@kernel.org/
+ 
+  - Dropped the pci_proc_attach_bus() calls from pci_register_host_bridge()
+    and pci_alloc_child_bus(), returning to creating the per-bus procfs
+    directory lazily on first device attach.  Creating the directory at
+    bus creation time left directories behind for buses that never
+    receive any devices, changing the visible contents of /proc/bus/pci.
+  - Serialised pci_proc_attach_device(), pci_proc_detach_device() and
+    pci_proc_detach_bus() with a new mutex local to drivers/pci/proc.c.
+    The pci_rescan_remove_lock cannot serialise every caller, as for
+    example pci_enable_sriov() reaches pci_bus_add_device() both with
+    the lock held (a driver probed during boot enumeration) and without
+    it (the same driver probed from a later modprobe), so the procfs
+    attach path can neither take the lock itself nor expect all callers
+    to hold it.
+  - Set proc_initialized in pci_proc_init() with the new mutex held, so
+    that a concurrent caller can no longer observe it set while
+    proc_bus_pci_dir is not yet visible.
+  - Added the missing Reported-by tag to credit Shuan He properly.
+
+Changes in v3:
+  https://lore.kernel.org/linux-pci/20260606170146.673140-1-kwilczynski@kernel.org/
+
+  - Used local variables in pci_proc_attach_bus() and pci_proc_attach_device()
+    to ensure that bus->procdir and dev->procent are only assigned on success.
+    If either the proc_mkdir() or proc_create_data() returns NULL, the struct
+    field will not see a new assignment, preventing a valid pointer from being
+    overwritten.  This was reported by Sashiko, see:
+    https://sashiko.dev/#/patchset/20260606170146.673140-1-kwilczynski%40kernel.org?part=1
+   
+Changes in v2:
+  https://lore.kernel.org/linux-pci/20260430003542.455198-1-kwilczynski@kernel.org/
+
+  - Extracted bus->procdir creation into new pci_proc_attach_bus()
+    function, addressing the suggestion to move proc_mkdir() to a bus
+    creation path, as per Bjorn Helgaas' feedback.
+  - Added bus->procdir = NULL in pci_proc_detach_bus() for symmetry
+    and to prevent dangling pointer after proc_remove().
+ drivers/pci/proc.c | 79 ++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 56 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index ce36e35681e8..71ad289fcb8e 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -18,6 +18,7 @@
+ #include "pci.h"
+ 
+ static int proc_initialized;	/* = 0 */
++static DEFINE_MUTEX(pci_proc_lock);
+ 
+ static loff_t proc_bus_pci_lseek(struct file *file, loff_t off, int whence)
+ {
+@@ -416,40 +417,64 @@ static const struct seq_operations proc_bus_pci_devices_op = {
+ 
+ static struct proc_dir_entry *proc_bus_pci_dir;
+ 
+-int pci_proc_attach_device(struct pci_dev *dev)
++static int __pci_proc_attach_bus(struct pci_bus *bus)
+ {
+-	struct pci_bus *bus = dev->bus;
+-	struct proc_dir_entry *e;
++	struct proc_dir_entry *dir;
+ 	char name[16];
+ 
++	lockdep_assert_held(&pci_proc_lock);
++
+ 	if (!proc_initialized)
+ 		return -EACCES;
+ 
+-	if (!bus->procdir) {
+-		if (pci_proc_domain(bus)) {
+-			sprintf(name, "%04x:%02x", pci_domain_nr(bus),
+-					bus->number);
+-		} else {
+-			sprintf(name, "%02x", bus->number);
+-		}
+-		bus->procdir = proc_mkdir(name, proc_bus_pci_dir);
+-		if (!bus->procdir)
+-			return -ENOMEM;
+-	}
++	if (bus->procdir)
++		return 0;
++
++	if (pci_proc_domain(bus))
++		sprintf(name, "%04x:%02x", pci_domain_nr(bus), bus->number);
++	else
++		sprintf(name, "%02x", bus->number);
++
++	dir = proc_mkdir(name, proc_bus_pci_dir);
++	if (!dir)
++		return -ENOMEM;
++
++	bus->procdir = dir;
++
++	return 0;
++}
++
++int pci_proc_attach_device(struct pci_dev *dev)
++{
++	struct pci_bus *bus = dev->bus;
++	struct proc_dir_entry *entry;
++	char name[16];
++	int ret;
++
++	guard(mutex)(&pci_proc_lock);
++
++	if (dev->procent)
++		return 0;
++
++	ret = __pci_proc_attach_bus(bus);
++	if (ret)
++		return ret;
+ 
+ 	sprintf(name, "%02x.%x", PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
+-	e = proc_create_data(name, S_IFREG | S_IRUGO | S_IWUSR, bus->procdir,
+-			     &proc_bus_pci_ops, dev);
+-	if (!e)
++	entry = proc_create_data(name, S_IFREG | S_IRUGO | S_IWUSR,
++				 bus->procdir, &proc_bus_pci_ops, dev);
++	if (!entry)
+ 		return -ENOMEM;
+-	proc_set_size(e, dev->cfg_size);
+-	dev->procent = e;
++
++	proc_set_size(entry, dev->cfg_size);
++	dev->procent = entry;
+ 
+ 	return 0;
+ }
+ 
+ int pci_proc_detach_device(struct pci_dev *dev)
+ {
++	guard(mutex)(&pci_proc_lock);
+ 	proc_remove(dev->procent);
+ 	dev->procent = NULL;
+ 	return 0;
+@@ -457,19 +482,27 @@ int pci_proc_detach_device(struct pci_dev *dev)
+ 
+ int pci_proc_detach_bus(struct pci_bus *bus)
+ {
++	guard(mutex)(&pci_proc_lock);
+ 	proc_remove(bus->procdir);
++	bus->procdir = NULL;
+ 	return 0;
+ }
+ 
+ static int __init pci_proc_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
+-	proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
+-	proc_create_seq("devices", 0, proc_bus_pci_dir,
+-		    &proc_bus_pci_devices_op);
+-	proc_initialized = 1;
++
++	scoped_guard(mutex, &pci_proc_lock) {
++		proc_bus_pci_dir = proc_mkdir("bus/pci", NULL);
++		proc_create_seq("devices", 0, proc_bus_pci_dir,
++				&proc_bus_pci_devices_op);
++		proc_initialized = 1;
++	}
++
++	pci_lock_rescan_remove();
+ 	for_each_pci_dev(dev)
+ 		pci_proc_attach_device(dev);
++	pci_unlock_rescan_remove();
+ 
+ 	return 0;
+ }
+-- 
+2.54.0
+
