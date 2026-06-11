@@ -1,114 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B8540D56C
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 09:33:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D91130DEA6;
+	Thu, 11 Jun 2026 09:57:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781170393; cv=none; b=bE6oj/VdJqCZVg1811HMZv4MUp+mvV8ukpW017eTt9zr6lAzXn8KBg5anQPFfWgWXAPNegU6BJYxvjZZ0W5JH3oX6EBfTZhcEh66lMDBPG30PmsgYpGHHsotdSsGzDgp2raW8j4p5zOiIxNWEnW5SWjtTcQ4QWhIwruIu9n3KpM=
+	t=1781171857; cv=none; b=QqKD+vU7dSHoLAfqe9hIN7SB6eb/OgbdtVULPjXD32w0VwqEG14OQUa5zYzpJDVVJeOZX6xKdVPbe/GjmN63uuIJC2fPhWooomBiw6EHRD/sifhAGt9FNqTZA6ifT6Xsq5mUx3Tkvhy1vJCFQNJJ3o9ZbB7XdULMskWs9qZ3nGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781170393; c=relaxed/simple;
-	bh=NkIDUMu3VMWbxRt7PpZiHwnSSRq07+kiLjqOn67zr5M=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=qSzMrmb2Cgyr2eWq1fyj6PpRsFaRVeouF6KpC8J/yF3b1DfF+xwXuJekijPJqqLpO3RYcUunTC76XcDn+i9vEQPdVV6xD3QkFeeU81HmbZnHR8iv1A2np/yyOPCz79BuJ+/tXLi1yQEfSqPQxF4qtBzdZWTjT4AY7ertyRWf0A8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TRTC79uP; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781171857; c=relaxed/simple;
+	bh=yWJjbFWP40GQ6mBlWIN/vS9n955pAAcL7GLSYEsj4HY=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=qaudqhlAEl/QC6rh6jcsYEGfp7BpcvnGAERxZvf/bIPePcCmDBpYKqUIlf22TxklxFT5Zt3yceTiyJZmrecmR/gwk0QKKr8uegPZh0Wif4Ot8KOgBFDXQ6Cd93cQJIzxyUauLYe7aWHyp44+pYi9Y67U1Pojxxi23z1nNrPZph4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OBTTQExz; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TRTC79uP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F7371F00893;
-	Thu, 11 Jun 2026 09:33:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781170392;
-	bh=MUpbJYpkybRn1Vrh5k0ox0UfDtFf4I9AfmzRGvnZEfg=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=TRTC79uP8gIv5001JD4dq93coyTtninv7h2QNg0Xeau5HZoqemTZOcTcg4SrwFsF3
-	 1h6Nh48EZHhiImZC+bOsyKK/zDHaCE3qWvL/MiqBSp6eQAe79yYnMHk6QpCtOS06Jc
-	 3hsjc6tbHGBfhQvSLbZpwEh812xAVLUQpcti3mmOuCgmkk5Xu7bTqKpqoMnWfIP79E
-	 XBxGK1sQzOkVDb61vjA3KVDkOInKoJTkzwwwVgjuxuGxG5dBs5rQZTK8e79oubXRb9
-	 RVu2aSO1B4/mwLjmFGi6aSNg+2n88LFLreWB+ziNpK+4QrRRhF6gbeUCMlDCur0en/
-	 xB/YRPaTHVo3Q==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH] PCI: pnv_php: Use common error handling code in
- pnv_php_alloc_slot()
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Markus Elfring" <Markus.Elfring@web.de>
-Cc: linux-pci@vger.kernel.org
-In-Reply-To: <5cd04727-44c5-4ace-af86-d3c227234d4b@web.de>
-References: <5cd04727-44c5-4ace-af86-d3c227234d4b@web.de>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Thu, 11 Jun 2026 09:33:11 +0000
-Message-Id: <20260611093312.0F7371F00893@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OBTTQExz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1781171857; x=1812707857;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=yWJjbFWP40GQ6mBlWIN/vS9n955pAAcL7GLSYEsj4HY=;
+  b=OBTTQExz475P2M9aWF0XlvRisa9/aFb5oZW/jsZpbhBU4RqFvx2CQ+Jn
+   ga1z/Vt7/JJjNhCpRbCBioCpZeyo34Kd2rJmvAN4RENFbzSygd4T0bfrb
+   YtHnY0GwN91VpOVMZLe1n7PiJPWjHJaOZu7KuYFB0CcRZyBUmF4LbhrVb
+   Lg1Zrtu5sTlqKwmpTvi+gvDPysJc3sddDBEdct3EmmNUuH/ngamOSHmGY
+   irNahPyyHh81NsoPrCPMUrF7ISgV0C9A/NCJnPDJIhSJJkU2pBcHYt7dO
+   BTXR5TDONRAP51PcDU82GN1xLfYYm5ieRZPAjOfFLiWw3ZfeNMmIfhbAe
+   A==;
+X-CSE-ConnectionGUID: JxdTu95TT7WO5ysRteZKIg==
+X-CSE-MsgGUID: 0HTt3UaLTWWhpsPiSfBFVA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11813"; a="81960659"
+X-IronPort-AV: E=Sophos;i="6.24,198,1774335600"; 
+   d="scan'208";a="81960659"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2026 02:57:36 -0700
+X-CSE-ConnectionGUID: x0Bc822/ToWPO/USHQ7R+Q==
+X-CSE-MsgGUID: /Wwg94r3T2yEBx6ELbbw3A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,198,1774335600"; 
+   d="scan'208";a="246458770"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.157])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2026 02:57:32 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Thu, 11 Jun 2026 12:57:28 +0300 (EEST)
+To: Yuguo Li <cs.hugolee@gmail.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>, 
+    Jesse Barnes <jbarnes@virtuousgeek.org>, 
+    Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, 
+    Ivan Kokshaysky <ink@jurassic.park.msu.ru>, 
+    Yinghai Lu <yinghai@kernel.org>, Yuguo Li <hugoolli@tencent.com>
+Subject: Re: [PATCH 2/2] PCI: setup-res: Guard against bus->self == NULL in
+ _pci_assign_resource()
+In-Reply-To: <20260610135709.1630627-3-hugoolli@tencent.com>
+Message-ID: <ef439f87-46dc-8c29-ecb4-10813eff98d0@linux.intel.com>
+References: <20260610135709.1630627-1-hugoolli@tencent.com> <20260610135709.1630627-3-hugoolli@tencent.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 
-Thank you for your contribution! Sashiko AI review found 2 potential issue(=
-s) to consider:
+On Wed, 10 Jun 2026, Yuguo Li wrote:
 
-New issues:
-- [Low] The patch introduces spaghetti code by placing an error cleanup lab=
-el inside the body of an intermediate 'if' block.
+> _pci_assign_resource() walks up the parent buses looking for a
+> transparent bridge to retry resource allocation against.  The
+> termination check dereferences bus->self->transparent without first
+> testing bus->self.
+> 
+> For SR-IOV virtual buses created by virtfn_add_bus() via
+> pci_add_new_bus(parent, NULL, busnr) -- which happens when a VF lands
+> on a bus number different from its PF -- bus->self is NULL.  When
+> __pci_assign_resource() is invoked on such a VF (e.g. via
+> pci_assign_resource() from userspace-triggered LTP coverage) and the
+> allocation fails on the first iteration, the !bus->parent test passes
+> because the virtual bus does have a parent, and the next term then
+> NULL-derefs bus->self.
+> 
+> Add an explicit !bus->self check, mirroring the established pattern
+> elsewhere in drivers/pci/ (e.g. pci.c, probe.c, pciehp_hpc.c).
+> 
+> Reproduced on mainline 7.1.0-rc7+ on x86_64 with an SR-IOV PF whose
+> VFs span multiple bus numbers, by triggering pci_assign_resource() on
+> a VF that lives on a virtual bus:
+> 
+>     BUG: kernel NULL pointer dereference, address: 0000000000000860
+>     RIP: 0010:_pci_assign_resource+0x63/0x130
+>     Call Trace:
+>      pci_assign_resource+0xe9/0x370
+>      ... (LTP tpci test-case 12 driving pci_assign_resource via sysfs)
 
-Pre-existing issues:
-- [High] Calling SLOT_WARN() when alloc_workqueue() fails causes a NULL poi=
-nter dereference because php_slot->bus is uninitialized.
---
+Hi,
 
-commit fc5acb6d5ef23950f12a496bbb0ba6bddebe9f87
-Author: Markus Elfring <elfring@users.sourceforge.net>
+And who called _*pci_assign_resource(), etc.? I actually wanted to check 
+the code... :-( Please don't strip PCI core related parts of the 
+callchain.
 
-PCI: pnv_php: Use common error handling code in pnv_php_alloc_slot()
+>      do_syscall_64+0xab/0x500
+> 
+> This is the same SR-IOV-virtual-bus / self == NULL pattern fixed for
+> pci_read_bridge_bases() in commit ("PCI: Bail out of
+> pci_read_bridge_bases() for SR-IOV virtual buses").
+> 
+> Fixes: d09ee9687e02 ("PCI: improve resource allocation under transparent bridges")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Yuguo Li <hugoolli@tencent.com>
+> ---
+>  drivers/pci/setup-res.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> index 991d3ed543f5..e8bd3d4ff923 100644
+> --- a/drivers/pci/setup-res.c
+> +++ b/drivers/pci/setup-res.c
+> @@ -353,7 +353,7 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+>  
+>  	bus = dev->bus;
+>  	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
+> -		if (!bus->parent || !bus->self->transparent)
+> +		if (!bus->parent || !bus->self || !bus->self->transparent)
 
-This commit introduces a new goto label to reuse error handling when alloca=
-ting
-a PCI hotplug slot in pnv_php.
+I'd like to know if this should not break in case of !bus->self because
+I couldn't immediately find the code which would add window resources to 
+the VF virtual bus so I'm not convinced this check is right.
 
-> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-> index ff92a5c301b81..e448f18020026 100644
-> --- a/drivers/pci/hotplug/pnv_php.c
-> +++ b/drivers/pci/hotplug/pnv_php.c
-[ ... ]
-> @@ -791,16 +791,15 @@ static struct pnv_php_slot *pnv_php_alloc_slot(stru=
-ct device_node *dn)
-[ ... ]
->  	/* Allocate workqueue for this slot's interrupt handling */
->  	php_slot->wq =3D alloc_workqueue("pciehp-%s", WQ_PERCPU, 0, php_slot->n=
-ame);
->  	if (!php_slot->wq) {
->  		SLOT_WARN(php_slot, "Cannot alloc workqueue\n");
+__pci_assign_resource() obviously must have failed to assign the resource 
+if you can trigger NULL deref here so that hints VF bus does not have the 
+resource that could parent dev's resource present (another explanation 
+could be that it just doesn't fit there but I cannot say it based on the 
+limited information).
 
-[Severity: High]
-This is a pre-existing issue, but can this call to SLOT_WARN() cause a NULL
-pointer dereference?
+Did the resource fail to assign? What is the resulting resource tree with 
+this change?
 
-Looking at pnv_php_alloc_slot(), php_slot->pdev and php_slot->bus are not
-initialized until much later in the function. Since the structure is
-kzalloc'd, SLOT_WARN() will evaluate with a NULL php_slot->pdev and fall ba=
-ck
-to dev_warn(&(sl)->bus->dev, ...).
+The more approriate check might be this one:
 
-Because php_slot->bus is also NULL here, this calculates an offset from a N=
-ULL
-pointer and passes it to dev_warn(), which will crash when it attempts to r=
-ead
-the device name.
+		if (!bus->parent || (bus->self && !bus->self->transparent))
 
->  		kfree(php_slot->name);
-> +free_php_slot:
+-- 
+ i.
 
-[Severity: Low]
-Does placing a cleanup label inside an intermediate if block obscure the
-control flow?=20
-
-Standard kernel coding style typically places cleanup labels sequentially at
-the end of the function rather than embedding them inside failure paths.
-
->  		kfree(php_slot);
->  		return NULL;
->  	}
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/5cd04727-44c5-4ace-=
-af86-d3c227234d4b@web.de?part=3D1
