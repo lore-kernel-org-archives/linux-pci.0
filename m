@@ -1,65 +1,63 @@
-Received: from PA4PR04CU001.outbound.protection.outlook.com (mail-francecentralazon11013049.outbound.protection.outlook.com [40.107.162.49])
+Received: from GVXPR05CU001.outbound.protection.outlook.com (mail-swedencentralazon11013010.outbound.protection.outlook.com [52.101.83.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB45235AC0C;
-	Thu, 11 Jun 2026 20:47:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.162.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6772B32863D;
+	Thu, 11 Jun 2026 21:00:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.83.10
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781210850; cv=fail; b=WNDIwaF+5y19zEq1hNzX12DnA1AGcFewXlqpCkwZNhIIJVYOWfwq9BswTBQsz4l0pR7hnSYP+JMyw2ofBYtYVQKrQPAxeAOriNPfN9LNUjdrmEsXpnuX4JMZ8A0KzCSb9ssPAkna9MT7DAN82Hk1h9y4ara6nGFr1vIHEsfJ01g=
+	t=1781211620; cv=fail; b=mj+q8qauccRu1n6xKwTlJlpNuBgh9SQVqE6edTUbWrP/Rg8TLqf9NUlOpoxeTk/DzjprEWnbJwihd/UvCqZL3THDpOVUyttQf5+mtsDVbzJ9XEbZct5WJKseig1Nw1gs25d9v4nFUboF4I+1BPkuwJL306huYWUCx9MkQCNlYCQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781210850; c=relaxed/simple;
-	bh=r39DvU8bMGYrNOQIRiouhjTcL8W7z4rs75hUPDjtFOQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=oydzHXjq1rIzSm4Y8U20qYpovuxpqLtaRwIBfILON+ujGj80eydu+P9c9V1HjlyxT1HmFOkalJZbwgu5CDu4cW0XErJfFCtmqQD1S9HZxuNkN2kC27S05JZ4w0cJutQqTDKrt11KUUTY29Q5XorS/00es4rhjygq8GFUFxwkFHc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=J6ZICj1c; arc=fail smtp.client-ip=40.107.162.49
+	s=arc-20240116; t=1781211620; c=relaxed/simple;
+	bh=3g8MHVBixgjZNnOk6WO3cxS8gEVE1fvVKMPExmnyZRs=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=P0IOo591HdGeS8l8VW/a24ufmuBZYG3LzIiLHASD/UgjsHhzcEU6I2cRcJhrbkPgorMkfiyL8stvOz6/jV8uvanro1LhPsaMBkRpW0J0Epv3Tfn1E/00eHUA9ZStNM+hXayRgA7HKwBVCzNN7SCr4digfGzFJpWWKokrhe++qzg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com; spf=pass smtp.mailfrom=oss.nxp.com; dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b=bwIKcWS1; arc=fail smtp.client-ip=52.101.83.10
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="J6ZICj1c"
+	dkim=pass (2048-bit key) header.d=NXP1.onmicrosoft.com header.i=@NXP1.onmicrosoft.com header.b="bwIKcWS1"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pUM35Pwh36iRIrjxQ6hqzwBUWWYPpmgvefoQOBC7HabOHq2DDmwS3LsgVYuTdyieb2f03HBzznSf5UhiGQgyOLm9xdcbPbpf9cyocGQ1c779g3flS9QwTOJBihnpiG9mUeIFArG4b0jXn/TsEm24iflWj5o0Hjj+Ms/x5xXDmRAWCG8EFXZFKlUv7pG36MbBBOZrpIYXHNINyt7GL4lkPrZNuZs4A043K6FTvX+Ri6BvVMrEeOpNyGGCwq7jUymh/lOvzqkSJmTQUKqEJJCg1h/spLDcOQ30a8VeVMPbIHCrqR0mhxpRlvVKVIa5RZj5U0SoQkuYZ5CtaCG/ClcAAQ==
+ b=F6aTKbo/zRJrdSpe2dqVoHYBflPL0ZqtgFIRQP0hLmvy3ZTAV+TCVMNBEK7fa/spvjfhsAECNtwpAQEUpuIo4KC8mQ8Aj+alV2mjzKsCqHwqSYl43a8Eu8jpnwS4YAp0LxvjdzywjsccWZk0TSHozqbiHplNbhK15woUG9Y2V6Am13LemDaW1pRrotbBvKyedKxvEUNDTe8TLCapr71+5XLFoi5z1nnRAAyxInj9diYObsuBYyN2xkiEqHVf0kWDSusbv0gO8LCzdBFPsjFOhyKpMTPcT2+wllDiCOhemV0qiTj1dF8iTvT7H4QFRh81VltQaqzKXtAURiWWLrX7eg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Kp0V96hQHO0Vi6EebPNh77DUKMaBtTyx0jyQfV8ieCY=;
- b=phRVnClxZlgmVEreYwslKEMOP50dqZ/No5ROIq70+X8LSsC0KE+HlyOXoqBv0DM9E7kujzgbqJgzZd7yG9DcQWAC4VT8XxC3HKB7paZ4VhwQoDFXGP0Dwx8bqZYbrENHrb539RUKfei8OgQBhds4W7tFrqEtLCVBHoKMUBUF2smTxYM+E9JCpN3XwpO/nfpP72IIYsQIZOlD6FvGedqcJ2ilzuE8R/+Il2vSBmZB6oj9lgdhXOpcNEo5RLzoFumUE8aXE8mQwaFTme4F1WdqK99pPqADb0REY1eIKSHY7VI1zqrqKNEh2oLS7LDDwWqB5UI5fW8lbTv9ZVOmFGWiaQ==
+ bh=k/79D8BmEsWJZgXomdvw4Wh1wafDCAcSk5lj7hAThCY=;
+ b=rY3yucvsPyLEb2Bvp0S2HcqjncHGZYjrDL5eoEu1v6i9shipEp7lzq90uDNgQjF3FjRMpDzhUmbdi1/rQf1MP36+Wn7kbBbpt2hUtSsMqIJSmUT3diwFCNkgNUGyd5yiW6o9ln8kSBIQM8QkqJXrMZwF19orIomvEAcsmKSaPURpVQZRK20YKJ5jkz1Fc8cw9zl5Vg38AmkT9dPD97XMKkrX6xGw92Krm15vYunmOn6HYP5XQqJnESsn9VY1xsfxCvg8IPfRTou94R/JEtjTNRCtlu0SR173w1LJXR2by9LRaTkmn2NRBmKAYideHENoj0UGQPs2lcj40wQQqh/biA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oss.nxp.com; dmarc=pass action=none header.from=oss.nxp.com;
  dkim=pass header.d=oss.nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=NXP1.onmicrosoft.com;
  s=selector1-NXP1-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Kp0V96hQHO0Vi6EebPNh77DUKMaBtTyx0jyQfV8ieCY=;
- b=J6ZICj1c+jk6ovcrpBB+bAq3GSCPXAR/a0ise4JfCVX3XIsobtRQVAT7dDYtvlEIMUPm8pIAYJe7kE3UOY4o2qvq+YgAprZeQUuqCjQmX6gvC4a6Bqg8hKpmCFHDyEgpq3mY/k3P+uKMu7kN+jQRIxSiKWhK2eS8feERZCyrdIoK1nncsGcsqZedahJ43NH/EnlGEjcfGwP/WBMMN+EWMvIFyqBCUHTUyefDSu2RtRTmnvmvKEB1Lw8g9Wy9xxaTiM7r6jCk8KX+0ocnJA0BUrQtcvwRCFKVFslXs1/HawA2a0M7TBR/sLqew+BB4U6OkLLvN2yolNcXTp1Lpyav+A==
+ bh=k/79D8BmEsWJZgXomdvw4Wh1wafDCAcSk5lj7hAThCY=;
+ b=bwIKcWS1pxz9EiSvfkbBXvV7nGx71c9N4miHhbRFv0vFRpbvWI6wMODJtSHVkEX969CdbZdhkd2r4IDsW/ebyo7pzdcqdVgI886udcm76XotIuQRuQFNO3/pTHANKQVQkeOB9K8olucR3iHjvVlD05rSDvQLwYHC1nlNIH2lsWbp6wXkhql3+AJZZBo1AiCeI38pft4EEcCUi/q+O4FpPfO2Ehi9FgAnsI38jVaS9eLG3cV/1lVY1nmuTYRiMY22m4Wgflg+aoMOkJ/d6T3SZUAWiftbFgu9Oa9IucH8z9AyJaVJ+tQWV9bDe4ClI+uHzzo674/e8c2CZ8YkN7hg5A==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=oss.nxp.com;
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
- by DB8PR04MB6796.eurprd04.prod.outlook.com (2603:10a6:10:11e::7) with
+ by GVXPR04MB10563.eurprd04.prod.outlook.com (2603:10a6:150:221::5) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.14; Thu, 11 Jun
- 2026 20:47:25 +0000
+ 2026 21:00:13 +0000
 Received: from GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c]) by GV2PR04MB11799.eurprd04.prod.outlook.com
  ([fe80::2146:83a2:5329:b7c%6]) with mapi id 15.21.0092.016; Thu, 11 Jun 2026
- 20:47:25 +0000
-Date: Thu, 11 Jun 2026 16:47:18 -0400
-From: Frank Li <Frank.li@oss.nxp.com>
-To: Aksh Garg <a-garg7@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, mani@kernel.org,
-	kwilczynski@kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	kishon@kernel.org, skhan@linuxfoundation.org, lukas@wunner.de,
-	cassel@kernel.org, alistair@alistair23.me,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	s-vadapalli@ti.com, danishanwar@ti.com, srk@ti.com
-Subject: Re: [PATCH v5 0/4] PCI: Add DOE support for endpoint
-Message-ID: <aise1tIyTj4WLU89@lizhi-Precision-Tower-5810>
-References: <20260610100256.1889111-1-a-garg7@ti.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260610100256.1889111-1-a-garg7@ti.com>
-X-ClientProxiedBy: SA1P222CA0176.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:806:3c4::12) To GV2PR04MB11799.eurprd04.prod.outlook.com
- (2603:10a6:150:2cf::9)
+ 21:00:13 +0000
+From: Frank.Li@oss.nxp.com
+To: mani@kernel.org,
+	kwilczynski@kernel.org,
+	kishon@kernel.org,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	imx@lists.linux.dev
+Cc: Frank Li <Frank.Li@nxp.com>
+Subject: [PATCH 1/1] MAINTAINERS: PCI: endpoint: Add Frank Li as reviewer
+Date: Thu, 11 Jun 2026 17:00:05 -0400
+Message-ID: <20260611210007.529205-1-Frank.Li@oss.nxp.com>
+X-Mailer: git-send-email 2.43.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SN6PR01CA0010.prod.exchangelabs.com (2603:10b6:805:b6::23)
+ To GV2PR04MB11799.eurprd04.prod.outlook.com (2603:10a6:150:2cf::9)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,269 +65,97 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|DB8PR04MB6796:EE_
-X-MS-Office365-Filtering-Correlation-Id: 237a1f7e-3cf4-461b-d55e-08dec7faa4d3
+X-MS-TrafficTypeDiagnostic: GV2PR04MB11799:EE_|GVXPR04MB10563:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2a5bab1e-80f9-44b4-aa2f-08dec7fc6e64
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|23010399003|19092799006|6133799003|18002099003|22082099003|11063799006|56012099006|5023799004;
+	BCL:0;ARA:13230040|1800799024|376014|23010399003|366016|19092799006|56012099006|11063799006|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	G/CR8Zfrn9UJEOR9xkT0sOTJVen0nxxT299+lvbtgnNB0U4BRDsgmQhLbxJ2ftERA1XhLStPpLvpxRBLO2GsPDOqO4UvWG33rkVgvV1rKM4aIR6veTe4kl7dUVWWe7+P+XxQ8QwfMZnIfGJKbEJdSoUGbglRHq6+EdYm2HTxvaIoKkNsOlOp/pe4a7sc1GwvTqTUQg/X4ItoXoqYPH/zzV1DAe7LwsdQVUlZ4fa6kRzz43lc32pVRGoR6yn42oc5b4uyWaec7Eut4wCO4ay+48IH8mBzn90yE2J4JkmPRfFHYd7Vr/XHsZ0wUV94RNryYrM/mzp3Ze0rM5+31umhDI74LC3O8QxNvdanQ6QvuBCZaMLPcTn0xcA3SQVsyL5NwJHv8FcUtN64KhurgEP/CQxbRWnD8QweQ6IQOrmaL0hQWn4kJ/QbK+gKn7b9qTjX3dgqH1zwL4aNFL1G7XrGld/yEjlK49/OnST7+gJPYmos1VTZVEK7GtbVA5FLdMKqk7kGGVu+anhXuVonJTXslRdEQTvw1+lvysc15mswmzafxtSm0zsmqVGkl/7ALdLs7NIWe+zq8329OMyuiSfhyzIjBh5D1l0+ASqfv60JEHvtR1eXgW8y3UlFqABR2pkg19TjhRF/r6ToQddI+Yi/LnJJMcPGKfAi+5BljEoC9QoJbiiJQAUXUQIW0y5rQ2dEOrzeEbekcLwpV8//6Zgmbw==
+	3Sq42ENsufbwBO1fkPPvQbtfChsBCEhgMZgHGkr4KFcDJj5RUg7RHmHNQICejnOLYLnKSr+y7IQzQlmY/LT6MMbB2eVHJJh71QxZMzlcbi+JDbbAmXPXDXRvFZLLM5HkSVJh/U9PkSEEDAHhwClFRHGW27H0X2H/Y+yh7LEdJzoPAUDDFvy4mpeAxuuYI4O3EXpsdbnMaWx8OgvM5qebS6Vm855+rcX652KnRaes6daLOA9z7vxjyHbRDWDo4ojep0B82S+4arrCwU+pxomAws2rBGiY1aTZzTjWc57FZFHhOgilcFUe75baksYgtIAm1+45uhws6/ZJiWZgzC4VfntEIfrssAQ69b5dt3K5scwb94bDGFgu/gLN3z/uOx+Vm6l8kfCL5qIIXoMw60eEP0g27E0PexiLRGft3xwryg7yKUTogHZZpbw8dsoaNBFGsRAGKqObymsa5ZROI4rzUX7MxOSI0QKj+F70GGCOL3sVsbkSk0GgMgPpbtqmC4oKLGzYl7MZHYBuBJcmo0ieiTTJ05TYM/NiyLCFdRMIZWT8VTvUEwPMiJ6JwpU7HEpzXZfRPzB8NvxviaKNE/X/5QxlCvy9JrFO590/EVC24+RL5czyGRLnbtip7ye2UykyCHqZlIKT1yJKgT+iOKqlqYuaWslMyD3EL2uQtvRWoEgRbbez2iVmXHdKVruJX9lk6rt/a3u8knnwZcsl9xaAYw==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(23010399003)(19092799006)(6133799003)(18002099003)(22082099003)(11063799006)(56012099006)(5023799004);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:GV2PR04MB11799.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(23010399003)(366016)(19092799006)(56012099006)(11063799006)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?h8SGX/prKXwgyELifkCcbf+WSK1n+yvXBDQ0JZXwTk2nD9d982lXnOMvjDNH?=
- =?us-ascii?Q?+JQ4jvFkpXmsi+KyGglduBdaP1bKAv3mtD7VNR/hcf8j3K4uTa3F7jPCeuNX?=
- =?us-ascii?Q?yOlLysrmIq1OTNZtn1KmYtHv4Ejr4EnWX/w+aVnIc7+YdrCAFaDLz3SkQ447?=
- =?us-ascii?Q?At9k4go3C/jTtilOKUQnB3XaewsNmZmw4cv1KwwE6tbtE6Z6xses3OAjelIf?=
- =?us-ascii?Q?7r8AwcZ5e1WIhqhYO/ecbOnHLal9G5WRlUdK1WpgVNqrYIf6LvFAXz9gsEMn?=
- =?us-ascii?Q?fDmUT4UatM2rrFCPTc8yif6LAPbmpB5e1UdZq1TrlHLU64MKJ9sdHJptrVmp?=
- =?us-ascii?Q?lGr6j59U3x/3wOH5RKtABDUHhlRE2+rVyybu5a1qcgqvoXrqP2GLnNjB5k+F?=
- =?us-ascii?Q?eZOCJUDgc6GiRHkgVYu68dl/DOTicGpndA1fT/exSDXkjcKzX1tDJx9ASH3Y?=
- =?us-ascii?Q?kJVqTIhntunmV71xxi5Z8E7Vwcs0aNl3M8bIM3aV8QyUpRv/4/gDiuYRkOlo?=
- =?us-ascii?Q?bOpP7wEEVajx7iJOkX6uFDnlwEkXb4OpW4+3YxESKx4YKhlHmZURkdCf8EUJ?=
- =?us-ascii?Q?HeCLC74AxCfZJNbkFd2wz06rDUbwdQS54B5FwD92Lp8+R8XSc1Mgp5cZ4AyP?=
- =?us-ascii?Q?Qd3QtAa4i1MJKO+Jelh5WIaRVDzOVHm0wDBNj03Ll0DmGn/HBPH4DLYbgtHq?=
- =?us-ascii?Q?NVnx5RIAsiHo9M9lcdnVq685l9ZJ6vmLyfR0HwZhvHoSanNJT9Iy7nxw4rYu?=
- =?us-ascii?Q?m5r3mzadyYPdSyaA11d5RmnHI91+DR69zdD4VkTi3rdjLNYpEhtPHPB6bDil?=
- =?us-ascii?Q?EuokuOl56P5CclDNxzs46NExYF6Kk8N7Etmf4ccRvta0ss5BEKxj8S7AvY/O?=
- =?us-ascii?Q?Q6Bdyn9VsE6UZIZaNJ2poLvUUOdRI+sQF8m3OHvdx7W1IIiovayyJ0qT+yK5?=
- =?us-ascii?Q?k4ipfiMYbxcLNZDyjpKx2UA6Y7vfKdUvmkZVcVgIW0ihiw2a2D9vGVsdpOX5?=
- =?us-ascii?Q?Z3+xj9YkWTwBXd65OhlBR+u9ukRstjMzvLWQiOqsWOX23zXJetM0rmKmJ9ZB?=
- =?us-ascii?Q?D2f6S8dGyTzAsWXr0GSzIfwwRoqTToW0xzELQwponScJqiIBojjr0PExa5Lz?=
- =?us-ascii?Q?EzT/sutn86xBhz44R5NxmZUa0VXzcLAyyBMhIfyxD+DKISHOOe3r6MEtKOIL?=
- =?us-ascii?Q?we0nFfahTeMYLKpj0HdpldoytNU/xotxEiv+vPfus0fZ7SdfDUcl/+P4d5RM?=
- =?us-ascii?Q?mVP5r9fvH1qMM3NTh4jSTmKQfZwOWlnJHxcl7BfY74G3SGbGODjUvqL/opYU?=
- =?us-ascii?Q?YlzLYkO4vzi0+jQC7y5upw4v/a0HZzl0clH5ljZ6RLPKqrnTMYXbjY0mt/tc?=
- =?us-ascii?Q?mMhWseqvMRTtwYWCUmJyxfd+4u/2hW0QHFYSrAKX9xqq4rphQYFvhRXNit0/?=
- =?us-ascii?Q?IA5Lw5t65VxoU5N7Lwg0EY41Mh4gl7IMvTnc+6bhS6XIM0zjsgIbmPXRWji7?=
- =?us-ascii?Q?OcA/9r4BehxeSwsVWBKyk1x7XtTYUZmoxm6M+WRIobKuIhEYP4WxkAVD8mdn?=
- =?us-ascii?Q?D4BGmoQ6dLNhqpmAuDFxaGjELwEuAgFI/Zm4F16tq7uXKRXqED0LUrGx3oPv?=
- =?us-ascii?Q?0IHjhXAwR1gM+C8+4kCxdE2ehXgJZ0WlQFLH98cf+c1kckBWMm0XF9jJwWri?=
- =?us-ascii?Q?Ba/4E39BYCD84BltjZQy2xZyxYDsvlU2KkLRSc3yvQAZZi2FNOyYoYabO1ag?=
- =?us-ascii?Q?y4NOkljRKQnju0eGinFcgSqLWZIQFO4geenx5yhP1zBWbieWlCw9?=
+	=?utf-8?B?WUI5Z28rWXo2a2w1QWxnWm1sS2d4QlZReUlOSlR0bW50NkVhTTNEY29LRlc5?=
+ =?utf-8?B?QzlEcVcvUmNMNENFYUE2M1JFODJiajVmQ1NGc3cxSkZxaTZiTk8wdTlBMlpK?=
+ =?utf-8?B?eUdtckI4aEd5SVVwTnc4YXcwck1DVkRLYVhqZFpUYWwwSTdBZ0R2OVh1ZHQ5?=
+ =?utf-8?B?N0tyR2tQRDAyZkRORCswaGFTTTRvc01oRk0wS28rUE1rbVduMnVta0FVNjNW?=
+ =?utf-8?B?SlFzeDhaSm9OalNrOWg5YVdJSnl6amhUTDQyMzNTNCs4Rk5LelIzaGl0NDMv?=
+ =?utf-8?B?UVo4NzJiQzd1SlRGRlg1bk9MN2NOOUZlSmlFS1MycHhHVGhMc0VkQUljR3p6?=
+ =?utf-8?B?SGMxN25aV3JocWNHS3lSKzlXOExQR3phUm94bFRyL1lsQS9jbXFFaDFUcXBa?=
+ =?utf-8?B?TG1uYWpHeTg2MjJScXMvOVBsNWxwMmU2eGtraTMybUFkOHJscndkaGNUVWFm?=
+ =?utf-8?B?UE1Qd1F6V1BYSEZuSnN3dXdJZGFZT3dGNHlydmpaRzRvcTFJb05lbDJYWXg5?=
+ =?utf-8?B?aC9IZ1dBeHF6REttbW50SUtSK2tlTWsvRnNmUjBwOXVhdmlnS1lGdzUweXVa?=
+ =?utf-8?B?QUhsYzJZL2cxT3A5azcyU2pqdURQNlZ0NlRkbFpNcmxlNG80TEFxM1kwbmo5?=
+ =?utf-8?B?NjhrMXFVY056UXRMdVhyaVQyTTRQUFNubUlzTk1ENHBCTFBUWFZUZi9sVXFK?=
+ =?utf-8?B?RkgzWVlHZ2ZlbUJFaHZzSDZZYndjelNNWTRhVUViL0FlL1FjY1RUdU4xd3lQ?=
+ =?utf-8?B?dVZhcHVPYWZaQVJCNThpRWg5M0M1ZmFySjh4VXZpNTRrWHBhRjNtVWRFK1RE?=
+ =?utf-8?B?NWNhRmJKUklxMitaZFdxTkV1Z0tCUGo4RlVPbnN0RmFJejlXYm1JZ2xqajFS?=
+ =?utf-8?B?Uk5iN05oVEU1WFJnR1JQQUg2WnlrS0pOQ2d4UTAyREFCc0VyTk5KMDZRRXNj?=
+ =?utf-8?B?WlRiYW9ydjlsVW1DTk5zYVVZM3lxRkNrT1hZME40UDdONFJGQ2FFYk5mV2Vj?=
+ =?utf-8?B?Q04xM051WURicC9jZXlQSk9kTStLOEc1QUtGTDFrQkYrZDRsbUtGbjZnT0V0?=
+ =?utf-8?B?MWhsaHU4SWFOTVZ2UzIzMGQ3K0VZVWpsUkdDTXluVFlMWElvaTB3ZDJjOXV0?=
+ =?utf-8?B?SllibTVjYm5OT0NSVk43WHhKUVZkcGVLUDROVFdQaHhTMnNhcTZSK2xhTTg1?=
+ =?utf-8?B?L3BmNTZkNk05bjBabHZtc29DN1VKclRIdSsvWk9JTkU3bHFUdHJGTGxPajhq?=
+ =?utf-8?B?S1JYbFExbUw5RmtJcDY0SlRESTVwY1gvVlA4SFFpZExycnhnZ0YwT3V6Tmsy?=
+ =?utf-8?B?c1FYYm1aaGVKMFhKbExMb1RySm5VRHVDL3JPbkYzQ1lrR2pnTWNVVDJxaXVO?=
+ =?utf-8?B?T3Jycm5nZG1sVHlsNWtCM0lmNnF3L0VVNHVZakNPQzFSd2xLS1MraUFCSmU0?=
+ =?utf-8?B?WEdOWU96QW5KZm9tdjFWekdoVTd0L2NGMDhuZFVVSE0zVDU0ZllWaWdEaVlr?=
+ =?utf-8?B?dVlMYkN3azFFNVdkNGRua1Yvem5MMmJaRldaSVF6VWc5US90WWR6VTBUNStw?=
+ =?utf-8?B?Z3htWDdhK0hzTy9Eb29TL3EzSlYxNEhQcWRXZ1o5L3ZxMlRZT2htUDlIdHZn?=
+ =?utf-8?B?Z0hpWWlnd1Q2Rk53RlFMTU1xd25hd0tiYkJDMDM2eEtURUFvdjBMdytwc1p6?=
+ =?utf-8?B?RllnbVlUSWpCQ0dMd3hiL096UlNnbGJwNEJJMlRuck5YRjhXcFdab1VwbzMx?=
+ =?utf-8?B?S2pOU1ZqNk5ETUN6ZVB3WHhxYkZleFkrYmgvRGhiRkc5VnVPNHlJc1lFdlR6?=
+ =?utf-8?B?c2ZNSlByY2xoNHYxVys2Z2tuUGRlVEM5N3RlSGVsNVVRcVpXMmxMdGZ2S3hE?=
+ =?utf-8?B?MmJtbElFd2RiYjFuOE03TitLVnVWTlYxdGpkRUEvenBaSDFQM1JRNC9qQlZu?=
+ =?utf-8?B?YVIrdkhSZ0dEQ0JXR2hyTTlIaXFJQWNUVDc5RXp3bWI2WU9HdktQSzd3N1Ur?=
+ =?utf-8?B?RzZoWjdEbTlIUXNJblBFTVhnQ0VQQlpTRmtMNlVxWWRTZVVlZWZlRndaTmZy?=
+ =?utf-8?B?MG5UNmVJMnhVL0taeXFxNTZrU0NoL1BFWWY0YjMyRmU4Z29NK0F5SHBXdzR6?=
+ =?utf-8?B?aWZEQWU5d1Z2cUlJS0VScis2M2poUHFQeDBBbkJmcG5vV0dBM2Rwd3loOGRB?=
+ =?utf-8?B?TjlLMVdZQzgwSm5CbmtjcVFRTWtkL3I3UmowcmVSOVl3VXJpdktCQkdHWk5T?=
+ =?utf-8?B?OXRmT2kxSHVhenBzVzBPeGh5RTBFd0o3M0RpdU03VG5GSEcxUVVxd2JFZkl6?=
+ =?utf-8?B?TlU2OWtsaDgwVFB4N082aDVLc1Q4Y3NRMnFCd1lTNndZS3RTY0lqU21OSEp4?=
+ =?utf-8?Q?JYgro8b6xClzN5jRtAOQWd4YEd4wra0cwS5RB?=
 X-OriginatorOrg: oss.nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 237a1f7e-3cf4-461b-d55e-08dec7faa4d3
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2a5bab1e-80f9-44b4-aa2f-08dec7fc6e64
 X-MS-Exchange-CrossTenant-AuthSource: GV2PR04MB11799.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2026 20:47:25.7166
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2026 21:00:13.2726
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2ljzym62vfXqDVm18irSrRhKtuyKUcGQg69mQxBGLZfahT2TiwSuNf0gPXGfr6EHOxm55h+3XZaF3MpCn1XljjRsjZeYCGQsgNm8Zat5q1XXTswoiDRVCkCvW/lz8PBc
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB8PR04MB6796
+X-MS-Exchange-CrossTenant-UserPrincipalName: pUVo1JddsdDwidhkpdVsPmN1RavxgcxDQ0ge85kqDDFiNET/qF8h9lxJOFaaVYbwNOFZcUzA4BJCluz+vSd/HgOgNaJgx40M1nLTB3dw4BKKfzMrdLhNLpU5Z7EKPsxt
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: GVXPR04MB10563
 
-On Wed, Jun 10, 2026 at 03:32:52PM +0530, Aksh Garg wrote:
-> This patch series introduces the framework for supporting the Data
-> Object Exchange (DOE) feature for PCIe endpoint devices. Please refer
-> to the documentation added in patch 4 for details on the feature and
-> implementation architecture.
->
-> The implementation provides a common framework for all PCIe endpoint
-> controllers, not specific to any particular SoC vendor.
->
+From: Frank Li <Frank.Li@nxp.com>
 
-General question, does DOE generate irq when received msg for HOST? I have
-not related irq handle code.
+I has been working on the PCI endpoint subsystem for an extended period,
+including contributions such as the MSI doorbell implementation and vNTB
+function drivers. I have volunteered to review PCI endpoint-related
+changes.
 
-Any program to test it? such as pci_endpoint_test, need at least one real
-user to use it.
+Add myself as a reviewer to ensure he is notified when related patches are
+posted.
 
-Frank
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-> The changes since v1 are documented in the respective patch descriptions.
->
-> v4: https://lore.kernel.org/all/20260522052434.802034-1-a-garg7@ti.com/
-> v3: https://lore.kernel.org/all/20260427051725.223704-1-a-garg7@ti.com/
-> v2: https://lore.kernel.org/all/20260401073022.215805-1-a-garg7@ti.com/
-> v1 (RFC): https://lore.kernel.org/all/20260213123603.420941-1-a-garg7@ti.com/
->
-> Below is a code demonstration showing the integration of DOE-EP APIs with
-> EPC drivers.
->
-> Note: The provided code is just to show how an EPC driver is expected to
->       utilize the pci_ep_doe_process_request() and pci_ep_doe_abort() APIs,
->       and might not cover all the corner cases. The below implementation
->       also expects the EPC hardware to have some memory buffer to store the
->       data from(for) write_mailbox(read_mailbox) DOE capability registers.
->
-> ============================================================================
->
-> /* ========== DOE Completion Callback (invoked by DOE-EP core) ========== */
->
-> static void doe_completion_cb(struct pci_epc *epc, u8 func_no, u16 cap_offset,
-> 			       int status, u16 vendor, u8 type,
-> 			       void *response_pl, size_t response_pl_sz)
-> {
-> 	struct epc_driver *drv = epc_get_drvdata(epc);
-> 	u32 *response = (u32 *)response_pl;
-> 	u32 header1, header2;
-> 	int payload_dw, i;
->
-> 	if (readl(drv->base + PF_DOE_CTRL_REG(func_no, cap_offset)) & DOE_CTRL_ABORT) {
-> 		/* Aborted: do not send response */
-> 		goto free;
-> 	}
->
-> 	if (status < 0) {
-> 		/* Error: set ERROR bit in DOE Status register */
-> 		writel(1 << DOE_STATUS_ERROR,
-> 		       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
-> 		goto free;
-> 	}
->
-> 	/* Success: write DOE headers first, then response to the read memory */
->
-> 	/* Header 1: Vendor ID (bits 15:0) | Type (bits 23:16) */
-> 	header1 = (type << 16) | vendor;
-> 	writel(header1, drv->base + PF_DOE_RD_MEMORY_WR_REG(func_no, cap_offset));
->
-> 	/* Header 2: Length in DW (including 2 DW of headers + payload) */
-> 	payload_dw = DIV_ROUND_UP(response_pl_sz, sizeof(u32));
-> 	header2 = 2 + payload_dw;  /* 2 header DWs + payload */
-> 	writel(header2, drv->base + PF_DOE_RD_MEMORY_WR_REG(func_no, cap_offset));
->
-> 	/* Set READY bit to signal response ready */
-> 	writel(1 << DOE_STATUS_READY,
-> 	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
->
-> 	/* Write response payload DWORDs to Read memory */
-> 	for (i = 0; i < payload_dw; i++)
-> 		writel(response[i],
-> 		       drv->base + PF_DOE_RD_MEMORY_WR_REG(func_no, cap_offset));
->
-> 	/* Wait for the memory to empty before clearing the READY bit */
-> 	while (!RD_MEMORY_EMPTY()) {/* wait */}
->
-> 	writel(0 << DOE_STATUS_READY,
-> 	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
->
-> free:
-> 	/* unset BUSY bit */
-> 	writel(0 << DOE_STATUS_BUSY,
-> 	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
->
-> 	kfree(response_pl);
-> }
->
-> /* ========== DOE Interrupt Handler (triggered on GO bit from root complex) ========== */
->
-> static irqreturn_t doe_interrupt_handler(int irq, void *priv)
-> {
-> 	struct epc_driver *drv = priv;
-> 	u16 cap_offset = extract_cap_offset_from_irq(irq);
-> 	u8 func_no = extract_func_from_irq(irq);
-> 	u32 header1, header2, length_dw, *request;
-> 	u16 vendor;
-> 	u8 type;
-> 	int i, ret;
->
-> 	/* Read first header DWORD: Vendor ID (bits 15:0) | Type (bits 23:16) */
-> 	header1 = readl(drv->base + PF_DOE_WR_MEMORY_RD_REG(func_no, cap_offset));
-> 	vendor = header1 & 0xFFFF;
-> 	type = (header1 >> 16) & 0xFF;
->
-> 	/* Read second header DWORD: Length in DW (includes 2 DW of headers) */
-> 	header2 = readl(drv->base + PF_DOE_WR_MEMORY_RD_REG(func_no, cap_offset));
-> 	length_dw = header2 & 0x3FFFF;  /* Bits 17:0 */
->
-> 	if (!length_dw)
-> 		length_dw = PCI_DOE_MAX_LENGTH;
->
-> 	length_dw -= 2;  /* Subtract 2 DW of headers to get payload length */
-> 	/* Allocate buffer for complete request (headers + payload) */
-> 	request = kzalloc(length_dw * sizeof(u32), GFP_ATOMIC);
-> 	if (!request) {
-> 		writel(1 << DOE_STATUS_ERROR,
-> 		       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
-> 		return IRQ_HANDLED;
-> 	}
->
-> 	/* Read remaining payload DWORDs from Write memory */
-> 	for (i = 0; i < length_dw; i++) {
-> 		while (WR_MEMORY_EMPTY()) { /* wait */ }
-> 		request[i] = readl(drv->base + PF_DOE_WR_MEMORY_RD_REG(func_no, cap_offset));
-> 	}
->
-> 	mutex_lock(&lock);
-> 	/* Check the ABORT bit, if set then return */
-> 	if (readl(drv->base + PF_DOE_CTRL_REG(func_no, cap_offset)) & DOE_CTRL_ABORT) {
-> 		kfree(request);
-> 		mutex_unlock(&lock);
-> 		return IRQ_HANDLED;
-> 	}
->
-> 	/* Set BUSY bit */
-> 	writel(1 << DOE_STATUS_BUSY,
-> 	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
-> 	mutex_unlock(&lock);
->
-> 	/* Hand off to DOE-EP core for asynchronous processing */
-> 	ret = pci_ep_doe_process_request(drv->epc, func_no, cap_offset,
-> 					 vendor, type, (void *)request,
-> 					 length_dw * sizeof(u32),
-> 					 doe_completion_cb);
-> 	if (ret) {
-> 		writel(1 << DOE_STATUS_ERROR,
-> 		       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
-> 		kfree(request);
-> 	}
->
-> 	return IRQ_HANDLED;
-> }
->
-> /* ========== Abort Handler (triggered on ABORT bit from root complex) ========== */
->
-> static irqreturn_t doe_abort_handler(int irq, void *priv)
-> {
-> 	struct epc_driver *drv = priv;
-> 	u16 cap_offset = extract_cap_offset_from_irq(irq);
-> 	u8 func_no = extract_func_from_irq(irq);
->
-> 	mutex_lock(&lock);
->
-> 	/* call abort API only if BUSY bit set (pci_ep_doe_process_request() called) */
-> 	if (readl(drv->base + PF_DOE_STATUS_REG(func_no, cap_offset)) & DOE_STATUS_BUSY)
-> 		pci_ep_doe_abort(drv->epc, func_no, cap_offset);
->
-> 	mutex_unlock(&lock);
->
-> 	/* Discard Write memory contents */
-> 	writel(DOE_WR_MEMORY_CTRL_DISCARD,
-> 	       drv->base + PF_DOE_WR_MEMORY_CTRL_REG(func_no, cap_offset));
->
-> 	/* Clear status bits */
-> 	writel((0 << DOE_STATUS_ERROR) | (0 << DOE_STATUS_READY),
-> 	       drv->base + PF_DOE_STATUS_REG(func_no, cap_offset));
->
-> 	return IRQ_HANDLED;
-> }
->
-> ====================================================================================
->
-> Aksh Garg (4):
->   PCI/DOE: Move common definitions to the header file
->   PCI: endpoint: Add DOE mailbox support for endpoint functions
->   PCI: endpoint: Add support for DOE initialization and setup in EPC
->     core
->   Documentation: PCI: Add documentation for DOE endpoint support
->
->  Documentation/PCI/endpoint/index.rst          |   1 +
->  .../PCI/endpoint/pci-endpoint-doe.rst         | 333 ++++++++++
->  drivers/pci/doe.c                             |  11 -
->  drivers/pci/endpoint/Kconfig                  |  14 +
->  drivers/pci/endpoint/Makefile                 |   1 +
->  drivers/pci/endpoint/pci-ep-doe.c             | 594 ++++++++++++++++++
->  drivers/pci/endpoint/pci-epc-core.c           | 104 +++
->  drivers/pci/pci.h                             |  48 ++
->  include/linux/pci-doe.h                       |   8 +
->  include/linux/pci-epc.h                       |   9 +
->  10 files changed, 1112 insertions(+), 11 deletions(-)
->  create mode 100644 Documentation/PCI/endpoint/pci-endpoint-doe.rst
->  create mode 100644 drivers/pci/endpoint/pci-ep-doe.c
->
-> --
-> 2.34.1
->
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d5cea10654fd4..8a9144e9206ac 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20749,6 +20749,7 @@ PCI ENDPOINT SUBSYSTEM
+ M:	Manivannan Sadhasivam <mani@kernel.org>
+ M:	Krzysztof Wilczyński <kwilczynski@kernel.org>
+ R:	Kishon Vijay Abraham I <kishon@kernel.org>
++R:	Frank Li <Frank.Li@kernel.org>
+ L:	linux-pci@vger.kernel.org
+ S:	Supported
+ Q:	https://patchwork.kernel.org/project/linux-pci/list/
+-- 
+2.43.0
+
