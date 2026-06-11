@@ -1,357 +1,579 @@
-Received: from CWXP265CU010.outbound.protection.outlook.com (mail-ukwestazon11022126.outbound.protection.outlook.com [52.101.101.126])
+Received: from mx0b-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3EE14A2E10;
-	Thu, 11 Jun 2026 16:28:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.101.126
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781195332; cv=fail; b=TPBVpaeDRE+Iz/y4GS/f726JwR2dYZYSfZwM/x0q0Xor90+AdtGEtTuLDb37kCeeGTNmyg3FmGJmLTKCt++lrJghkRM8yWyl/bHqJFESIu92ogyweQzM0wBaIy0Jw5ArxH3IUb2zrZv0FQjnYY+QrJ+mZF6AzEl1ckG42541wk4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781195332; c=relaxed/simple;
-	bh=jwpOL+8onvWtIguzV59vIP2zyg5diaxn32RlHDnn1Gg=;
-	h=From:Date:Subject:Content-Type:Message-Id:References:In-Reply-To:
-	 To:Cc:MIME-Version; b=H0kZf0Wi4KDumFoGKJrvTN90vQDzW/Xsu/8OYxsu1IOvuRxtNvGG1us5uHVWx1qADAsZAx63SlXoBPhae+HQfyTWE3Kit5cM6zR+ck2cm91SrAYW/b8fvFo+/pmoqpp2ajuUS4IvnH16jbhTxukIZNcGiySr1ru5l0ssg7GtFTM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net; spf=pass smtp.mailfrom=garyguo.net; dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b=uGPObIUx; arc=fail smtp.client-ip=52.101.101.126
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=garyguo.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=garyguo.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6F992773F9
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 16:46:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781196373; cv=none; b=IcJcJ0NUl0+sQh+dx22IFlT4wn5gdDKuWuvWYgP+uHBahA+F8ANcu7s3V/nv1Uhf/BelwfuAJthYAKLYBgRSDD3ZqgBDH6Bt2ZBogsPeQx+8kJ7+7/lSStyVGVHD3d3hxjP6SPlMREgdLJf/PvzG7lCd6r8cJEz5VRP57dZ0ZTo=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781196373; c=relaxed/simple;
+	bh=60J/swpt8hSXKkHXnXQ2XH60IYV90l/RAZy8zo4DPfo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=E1qgSDUGQbcl2aaT2dQVAwWpnLPjjsCg+TSN8kbAjQeajBvsD+D+aPZToZKFSyvBN8SkbIatjNVlYGrUyLtEzpIebLtG/m6NMntUjEeglvtMgWNv60UKYU9Z1jpIcTHogaYxvLMDF4ElnwbhasrqwWOZG4OUCqErGtP1YIfFqTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=v+/EgHMG; arc=none smtp.client-ip=67.231.153.30
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=garyguo.net header.i=@garyguo.net header.b="uGPObIUx"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=IVdmpd3JKygNH4wHQT82r0pY6N3nF23WcofrLTz2zmKnTO/mU12qCJv1z7mFPKrbE0euk5qmaMS4dU5bkpb5tcHKGeTPDnibJNNk54l2u2lwKjMVr8T+H/JfDdpWrMGweG5iRELIrXfla4qZX/jWEnBPrxNqsRZe6nMrfBK/GUU2mjfxtgqXeFEl8/VPX6iLRvP1nAagrus//VVGI3IkhG+xjwAUXLFx3He5y1/Dt8GfG/e4I1rhbMlRumF45VDTVtDMtpkSvq8M15TQ7dvQnfJwA+cNmPqcvvCz1pkkLdOp9mwvUvh3chfrsFdabSSE1XfxJkjRIkdeUJrLowVKJQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fCVwIbTNS4Ld6i4HIC/5quYTYSjv320ziVokMa2TFXw=;
- b=P2nakvRWa2n+VOx4VqDTEs6sBB35mzc5uALF9EABkb+6uej65QYdHEQyuau1drhoXKhdJRO4LodTHGMsvTiiQTZsr1Bj6jf6oeqyGb+zOmHs71ln9eIK2k8PTOrxN+W98/VJGJToRbUgSmBwgtzoLjfXPUz4vi6PqMPfr7z128QC25C04s6EwEFqo3Jt5U6TR0T6dGzlrGZJ4PawOx1n5SEiL36vs99Flka6Mo81vKbG2CVGvmx4AnpVQ3JhHfTaKmYwUcJkBKtmXEtxr48v4VWVvlgn/4DyIelshB3trJRGzgr3nOu72spB3yzaBzraRYtAQLR/fHOYuUNhBEwOmw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=garyguo.net; dmarc=pass action=none header.from=garyguo.net;
- dkim=pass header.d=garyguo.net; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=garyguo.net;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fCVwIbTNS4Ld6i4HIC/5quYTYSjv320ziVokMa2TFXw=;
- b=uGPObIUxkBtCGG3a9gtcIsDh5D9+k5GntMuGYzp0CUONlDBK/mVuwcyEK6dR6TN9FXsekagajwtcJCoFVbuIjflJCYOpiSZbTKo2/EZ1e6Iz6T9Kp+11ixq29dosYWGZWNM5AJRDdbqqUoopOb3WSfbYTRBGYD18qRjYvSec7uA=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=garyguo.net;
-Received: from CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:27c::13)
- by LO4P265MB6525.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:2e7::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.11; Thu, 11 Jun
- 2026 16:28:33 +0000
-Received: from CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
- ([fe80::6c9e:93c8:10db:e995]) by CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
- ([fe80::6c9e:93c8:10db:e995%6]) with mapi id 15.21.0113.011; Thu, 11 Jun 2026
- 16:28:33 +0000
-From: Gary Guo <gary@garyguo.net>
-Date: Thu, 11 Jun 2026 17:28:20 +0100
-Subject: [PATCH v4 18/20] rust: dma: drop `dma_read!` and `dma_write!` API
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20260611-io_projection-v4-18-1f7224b02dcb@garyguo.net>
-References: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
-In-Reply-To: <20260611-io_projection-v4-0-1f7224b02dcb@garyguo.net>
-To: Alice Ryhl <aliceryhl@google.com>, 
- Daniel Almeida <daniel.almeida@collabora.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
- Boqun Feng <boqun@kernel.org>, Gary Guo <gary@garyguo.net>, 
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
- Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
- Trevor Gross <tmgross@umich.edu>, Bjorn Helgaas <bhelgaas@google.com>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Abdiel Janulgue <abdiel.janulgue@gmail.com>, 
- Robin Murphy <robin.murphy@arm.com>, 
- Alexandre Courbot <acourbot@nvidia.com>, David Airlie <airlied@gmail.com>, 
- Simona Vetter <simona@ffwll.ch>
-Cc: Danilo Krummrich <dakr@kernel.org>, driver-core@lists.linux.dev, 
- rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, nova-gpu@lists.linux.dev, 
- dri-devel@lists.freedesktop.org
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1781195302; l=8864;
- i=gary@garyguo.net; s=20221204; h=from:subject:message-id;
- bh=jwpOL+8onvWtIguzV59vIP2zyg5diaxn32RlHDnn1Gg=;
- b=Dw/uRpp9JFOqgDpEN11O2fB0xrpBa1HLOGCIiwu+lyBAguYvVvy3Ieo2Rbqc4wV7wfQACInli
- SogeJHP1suAAn0djAB0PAeEnwF1uiDaFYvXnTe8V/P28wder8/MSSpS
-X-Developer-Key: i=gary@garyguo.net; a=ed25519;
- pk=vB3uIX95SM4eVrIqo1DWNWKDKD2xzB+yLLLr0yOPYMo=
-X-ClientProxiedBy: LO6P265CA0015.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:339::8) To CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:400:27c::13)
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="v+/EgHMG"
+Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65BEO71s1446923
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 09:46:11 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
+	 bh=OKtfjeKUos+le6rbGwLhae2ZwdVWKZcx+SvDveSqOBo=; b=v+/EgHMGpOA8
+	OsP8MSJ/tgP54IawW8YER2C0nKCdDEHHJJxkm3VlG2cdLI/Fr5bjXxULnXjbxwhR
+	8xeI9izSLO12Pr6MQQA5ckFyJcgkZQ+zdCpmlFqV9reOiy47Y+klzscEyup3t74I
+	vGY+pxGjpONqQTAsy3oLtv9+s2i9HUX6+0Bs+0lSnAGSYYZxkAtdKX0CffwTBBDW
+	Nj+WB4Nob6iA3F+dJEaCqVgpJTtY/eWDZhR7u5nC/Sk8ntusIyyfWuqNIcaHk5C4
+	AIYGFkt3Uh8pKAUU92GhTbjWEGcyxRiSaC/4UQ8RiDw0S2HJND7vNFoAE2L0eMpm
+	QO0NKOVqAQ==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4eqe78essv-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 09:46:10 -0700 (PDT)
+Received: from twshared8664.02.snb3.facebook.com (2620:10d:c0a8:1b::30) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.2562.41; Thu, 11 Jun 2026 16:46:09 +0000
+Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
+	id 26C313DD37764; Thu, 11 Jun 2026 09:23:48 -0700 (PDT)
+From: Zhiping Zhang <zhipingz@meta.com>
+To: <netdev@vger.kernel.org>
+CC: <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        Zhiping Zhang
+	<zhipingz@meta.com>
+Subject: [PATCH v7 5/5] RDMA/mlx5: get tph for p2p access when registering dma-buf mr
+Date: Thu, 11 Jun 2026 09:11:20 -0700
+Message-ID: <20260611161546.4075580-6-zhipingz@meta.com>
+X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20260611161546.4075580-1-zhipingz@meta.com>
+References: <20260611161546.4075580-1-zhipingz@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CW1P265MB8877:EE_|LO4P265MB6525:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4a895751-d97b-4b54-6b55-08dec7d67ada
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|10070799003|921020|6133799003|56012099006|3023799007|5023799004|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	2/zg+cr6djZnOu/sNg5fmxH0tu/wdwdQ8jHBiWBn7fIMES9gstF5a8/Tbnrczrb1uN/REqvqSPTVOXPl/5n1F0b9mDUl3KmmrzhpFpSPeqGL0i9b8TKW2LuQ1rUBbgyEm/1gi+p+ijG4SomabcxG7zDAIxMNgskCiUj2oshbE21/aByI4AdyfheACRpXCsrZNaHnsyRLJFIKgq0f/YJh35p1nV7aI8ewuq0L8JpF0HD2Gylj7B75Ec1SjEKvR5NwBowD9nOxWD9W4fUMtAMqFqweJwYaLZW0xzWD/4PDCGhexTtFqs4uk4QadBSJdvruXUm7LvHnnh5ihekGCPmoHieMmaGXO5j2ZDKs9F3iCGSWwiblvjiLPMKh9xSaamyTBJ567YUcA2/nu9DYcvqIWUEg6UFWZR06ogzTV60xMDh1kSWrllaUyXcpKhrMXxy1FiY8N9d7Xghq/6g0D+/YRPnFvUTKzsMxCftzmMrwYgEVRg7p3tMFVXYEQIjXafZbWDjGl+IqDECxNDO4FQnzFEbBizpt8DVX5p3neWk6nGnKQtRoiSCbjxONCfgMtnxxDli4LmoFMjckqTKBgjoTcOIE07ntysysPU0M/MUIMDtDBdZ6IHz8Lw/lVo0pNX+MCzFA5Isv3Cl0dMxYC2GgKYFYqVBmiABt7ztB563XujEbg/6P+BtsQNT3xpLma1iJSAl9AL0dMOIieuJT2ueAMzZF9givcBSAFMWKgCf09F0=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(10070799003)(921020)(6133799003)(56012099006)(3023799007)(5023799004)(22082099003)(18002099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?R1RLbHowV01hVEV4clo1eXkzcFBqcWVsOXFWUnh5aVJoWG43dGJlQlJ2MzFJ?=
- =?utf-8?B?UUlVcnRRT0lkZ0tVdTdXVjJCTThFTTg3aUpZR1hqbkpzOVRwNitZS284dGNv?=
- =?utf-8?B?L3cvT2VGbDlvNlJzYjFScGlMOWQ2RXEzRGJyeWpBU0oxREpnUk5od0xWQ2RB?=
- =?utf-8?B?cUNUck1VY1Mxc1hsSEFGSFRhc3pSVS84dS9EMUtlOWZYdldhL20yNHNkWDcr?=
- =?utf-8?B?NlBqOWhyc0VvSXNvSWk5dEZHWW9oWm5hQ0p3Tm5FTmh1Skp5b1FUMjhDcFFt?=
- =?utf-8?B?a1JaOE1GSTVRNjdhbkdXS1NDZ2FkZnlqdWp3V0cvdzl6SytNcnp0T2tMSTFU?=
- =?utf-8?B?cjR4WW93T1pvNW8rSytkOFF5R3MySEk0WU9hYXIwY2trM25hOGRyTkhQUGx0?=
- =?utf-8?B?K2hiQXJVdng4TTc4QVRrWGVJQTREV1RzK1p2L1Jkd1ZYSVNHTTZiWEtIbXVF?=
- =?utf-8?B?VVRzNWxTQ0JJT3N3SXNuVXRRSU5LdzFNejQyUHpVU1VOZExFcEpid2duUHQ0?=
- =?utf-8?B?enk5OUpDS0dBUlh0djd6b1p3TE4zL2hSWHR2cmhZOWZYMWJWWmZNQlIwSHBG?=
- =?utf-8?B?dmxsTlE5dW1SSzQ2VEs3S1FWeXg4U1VQZXljVld5TkhhQ0RuYkQwUFdWK3E1?=
- =?utf-8?B?eUhtdkJWTnBoT2NKeUcyQlhBM1JYRTRVYzVCUWFpWFg3STJDLy9OOGJRcXFC?=
- =?utf-8?B?cDdyQVB1eXY3MmZGUVoxdUF0cm1oWVk4cmt1Z045d3U1bXhQM1lYakFnblRI?=
- =?utf-8?B?N3lQU2g1dUpsUkhlelNJdUtZNnNJdUNudm1RTVdaN3lvaGNoZ041VVdobWdP?=
- =?utf-8?B?WFppWnZNUUcwUmM4SnpPYUppRFlDeTN6Q0pJbllaTEx5QVBZMzE3WUlsLzcz?=
- =?utf-8?B?VEdRdTJFV0NHL1RlZ3JsUjFzMTBQaldITXQ3RExUdXRWdGp0b1M3NzNZWnYx?=
- =?utf-8?B?YXduUWVFMGNSUjRxeFRvZlh2c3ZpdUpYL3hRWTl4NnRXRWxpT0RxTU9MVEJ4?=
- =?utf-8?B?enVEN2ppZkF3bHpmd1dTSU4rK0kwaDlBWTJUWFdsOEEzT1VkaVVha3AraXZP?=
- =?utf-8?B?SzVhODZsTlJhK25rVEk3VjZjdXowaDJnR2dmWWdJTWFVVTVVRjNOOFRPNldX?=
- =?utf-8?B?YkhVMXhTcjVMMmw2clNjRDBvSHYwaFFBQlRVVG9ubnRvSlZKcE5tcWtEZVRJ?=
- =?utf-8?B?RVdrSUZTVDUxcWhYVGIxY2Q4WGUrUEVPNnp3TDlTazVkSGh0RzlJNmE2ZVBq?=
- =?utf-8?B?MzdaN1c0NVJvNXd5QlIrUFR2K3M3aGltSTJ3MUdWSmYxanNEM1NmaFF6YlFu?=
- =?utf-8?B?U2dHbWVLU2VoVDZLbmZnL296U1BPcUZqdUM5QllPVzM4OUZoQjRiY2h5cWVV?=
- =?utf-8?B?eTlHbUtOMWZrWFc2MUhVRzdoU2c2MHdTM0tuVGtIazhvMGw2VXVpNldJRGN6?=
- =?utf-8?B?bVRVRnVUZ3N2R0tyaUtMUXF6Q3JTOTkxa1Bvd3JoNS9sRlgrUDlqSVB2bTZF?=
- =?utf-8?B?cWpJaTRvMnNERFB0dEFPZEN2eG1VM1RnMUVOSVMzQWRoM2dDUTMxY1VsTWR4?=
- =?utf-8?B?ckhlcVRmNlFRSlZwUWN3bm9aSHV5aVA2cmJPZE5zTFRLSlBieVEyNDJXaTBP?=
- =?utf-8?B?OEg0NnQ2cDlVaWU1WEUzVlpTZXJPcVp0UktUZHgydTRvUUFuc0M2aDI2WjhZ?=
- =?utf-8?B?ZHd0ci8zbzZUSDUrcWljbkgxcXhYVW80bTBOYmJXNGo1M1cyd2I0cmJ2bnFi?=
- =?utf-8?B?TnJCTmNPRE5qRnV5QzNTdXMvQUdURmxGaFRhU2RyejBOZTV6QVVrMER2MXRH?=
- =?utf-8?B?K0VuSXdYOGpKNUVqZkVPbkQ4U251RFBrS0NjeXBBbGtkOTZxVEtFdHNvVEtN?=
- =?utf-8?B?QlpSbDZNUDNhdlAzR2J6d05uUVdDdXA4MEZ2b0srVEdBR2JybEJYcXk5c3dW?=
- =?utf-8?B?N2d6ZmdhZi9GeTFTeFUrZE94SWk4MEcxcEJVeTYxcytNUHBhVUpCVU5XSzdD?=
- =?utf-8?B?TGk2ak5yYng3K3l3aDR3OC9pK1NmOHY1ZVUyNUxvMkNSc281N3JzQjZjeTRV?=
- =?utf-8?B?Y0xyQ1RFRWYwby9ONUkxY0VaeVpkcVZVLzhMeWlnVStiRVdIOVdlUE0vS1dj?=
- =?utf-8?B?SG5aTGRCeUxqZFZaUkRUZmN5RlBrd3JkSkFmU2N4Vld6YWtUbG93NVFxNVh6?=
- =?utf-8?B?M1Q4Q3NzVGpzbHRiN1dPN3pQSFRVRDdyQjQzanBMVmF6WjZ6RWhnV1hVd0hH?=
- =?utf-8?B?Y0QxWVNEZm5sU3ViYTY4azIwVktxWWdkTmNFNmIyM3g3NWIvOE1SbWM0ZnpE?=
- =?utf-8?B?YXYxY1gxaklvaUhMT0p5Zkl5S3Bwdis0bkU5S3dnYms1UXFMbU1Ddz09?=
-X-OriginatorOrg: garyguo.net
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4a895751-d97b-4b54-6b55-08dec7d67ada
-X-MS-Exchange-CrossTenant-AuthSource: CW1P265MB8877.GBRP265.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2026 16:28:33.2185
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: bbc898ad-b10f-4e10-8552-d9377b823d45
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: O2av2+OxSKkLNV0H+7DA+hVgyuhuw62B7D+LbjNM6SdqErgAeXnyRmrkW51aN0ExCnowD46Rs7x4WmADLeBCAA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO4P265MB6525
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: msEXEEjzLLa8eVmyJ1DA2gjyrahUwNtR
+X-Proofpoint-GUID: msEXEEjzLLa8eVmyJ1DA2gjyrahUwNtR
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDE2OCBTYWx0ZWRfX/SmoRSM2xdaV
+ qKT1n1SI1IuQeg+kXsLnWF6Hjv1KQLMbbJhKIPIV+1R/yWPKrNg7mk05pR3+25tGNaiPajv1A4h
+ k43nqZMN0YVSkvAcgsSHR62vJ7CKrotxxd/HSKRB7j3BZygftH72dkgvzzRtMClauhbvn5qE6NB
+ bOr+OuIe1DNl6pR5NBKhIvH/73NmmhkOTeBHLC1fBhnTn/x6pVKFTXoInQ/aclRKeZE9MO5p5zk
+ 1LSetixax3gQq1Df6qcKTWppGMjCauzV+3MHnyx7SrKZq3vkq3NDdo7AHaYwuxXuKgvLOUp6Vsi
+ GpYS3BSTWq0R0oXgAZYLwI05Fnu9NJCDpNbeC89QO/V+vttOdpdL8OTIqo9mvGn9wqK8rUBHyM/
+ 8IGjhjWqbw1D/131XwGd6E/HThkdttDxCRVrHg9pnB7K8JPz2sCQy/BBR4aSJh1gS+/mH1nYqAb
+ My5DjFdRwABqAKmXaRw==
+X-Authority-Analysis: v=2.4 cv=L98theT8 c=1 sm=1 tr=0 ts=6a2ae652 cx=c_pps
+ a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
+ a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
+ a=JnKecZnUtZousrUlYMGU:22 a=VabnemYjAAAA:8 a=Ea2IVqN79ALhG3V46woA:9
+ a=gKebqoRLp9LExxC7YDUY:22
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDE2OCBTYWx0ZWRfX5ETd53CT6O8Y
+ bFKJUwwO9EOkvixjmsh60hze4IDSzeif/xJx+rGDEsZP6+SjJS9utctB8NqVSEMt2G5NrMaNfdE
+ xz9G8jcx8KHBtw0PBjW2y0prWRf0hBI=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-11_03,2026-06-11_01,2025-10-01_01
 
-The primitive read/write use case is covered by the `io_read!` and
-`io_write!` macro. The non-primitive use case was finicky; they should
-either be achieved using `CoherentBox` or `as_ref()/as_mut()` to assert the
-lack of concurrent access, or should be using memcpy-like APIs to express
-the non-atomic and tearable nature.
+Query dma-buf TPH metadata when registering a dma-buf MR for peer-to-
+peer access to a PCIe endpoint and use it to program requester-side TPH
+on the outbound mkey. If the exporter has no metadata, fall back to the
+existing no-TPH path.
 
-Reviewed-by: Andreas Hindborg <a.hindborg@kernel.org>
-Signed-off-by: Gary Guo <gary@garyguo.net>
+For TPH-backed FRMRs, make the extra ST-table reference belong to the
+hardware mkey handle rather than the transient MR object. Extend the
+FRMR pool API so reuse and final destroy can transfer and drop that ref
+at the handle lifetime boundaries, and add mlx5_st_get_index() to take
+a ref on an already-known ST index.
+
+Also decode PH from kernel_vendor_key when recreating pooled mkeys so
+the requester hint matches the pool key.
+
+Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 ---
- rust/kernel/dma.rs       | 128 -----------------------------------------------
- samples/rust/rust_dma.rs |  13 ++---
- 2 files changed, 7 insertions(+), 134 deletions(-)
+ drivers/infiniband/core/frmr_pools.c          |  20 +++-
+ drivers/infiniband/hw/mlx5/mr.c               | 111 +++++++++++++++++-
+ .../net/ethernet/mellanox/mlx5/core/lib/st.c  |  49 ++++++--
+ include/linux/mlx5/driver.h                   |  12 ++
+ include/rdma/frmr_pools.h                     |   5 +-
+ 5 files changed, 178 insertions(+), 19 deletions(-)
 
-diff --git a/rust/kernel/dma.rs b/rust/kernel/dma.rs
-index ab6504910e4f..0ff4cce8e809 100644
---- a/rust/kernel/dma.rs
-+++ b/rust/kernel/dma.rs
-@@ -661,52 +661,6 @@ pub unsafe fn as_mut(&self) -> &mut T {
-         // SAFETY: per safety requirement.
-         unsafe { &mut *self.as_mut_ptr() }
-     }
--
--    /// Reads the value of `field` and ensures that its type is [`FromBytes`].
--    ///
--    /// # Safety
--    ///
--    /// This must be called from the [`dma_read`] macro which ensures that the `field` pointer is
--    /// validated beforehand.
--    ///
--    /// Public but hidden since it should only be used from [`dma_read`] macro.
--    #[doc(hidden)]
--    pub unsafe fn field_read<F: FromBytes>(&self, field: *const F) -> F {
--        // SAFETY:
--        // - By the safety requirements field is valid.
--        // - Using read_volatile() here is not sound as per the usual rules, the usage here is
--        // a special exception with the following notes in place. When dealing with a potential
--        // race from a hardware or code outside kernel (e.g. user-space program), we need that
--        // read on a valid memory is not UB. Currently read_volatile() is used for this, and the
--        // rationale behind is that it should generate the same code as READ_ONCE() which the
--        // kernel already relies on to avoid UB on data races. Note that the usage of
--        // read_volatile() is limited to this particular case, it cannot be used to prevent
--        // the UB caused by racing between two kernel functions nor do they provide atomicity.
--        unsafe { field.read_volatile() }
--    }
--
--    /// Writes a value to `field` and ensures that its type is [`AsBytes`].
--    ///
--    /// # Safety
--    ///
--    /// This must be called from the [`dma_write`] macro which ensures that the `field` pointer is
--    /// validated beforehand.
--    ///
--    /// Public but hidden since it should only be used from [`dma_write`] macro.
--    #[doc(hidden)]
--    pub unsafe fn field_write<F: AsBytes>(&self, field: *mut F, val: F) {
--        // SAFETY:
--        // - By the safety requirements field is valid.
--        // - Using write_volatile() here is not sound as per the usual rules, the usage here is
--        // a special exception with the following notes in place. When dealing with a potential
--        // race from a hardware or code outside kernel (e.g. user-space program), we need that
--        // write on a valid memory is not UB. Currently write_volatile() is used for this, and the
--        // rationale behind is that it should generate the same code as WRITE_ONCE() which the
--        // kernel already relies on to avoid UB on data races. Note that the usage of
--        // write_volatile() is limited to this particular case, it cannot be used to prevent
--        // the UB caused by racing between two kernel functions nor do they provide atomicity.
--        unsafe { field.write_volatile(val) }
--    }
+diff --git a/drivers/infiniband/core/frmr_pools.c b/drivers/infiniband/co=
+re/frmr_pools.c
+index 5e992ff3d7cf..61a77847118e 100644
+--- a/drivers/infiniband/core/frmr_pools.c
++++ b/drivers/infiniband/core/frmr_pools.c
+@@ -92,7 +92,8 @@ static void destroy_all_handles_in_queue(struct ib_devi=
+ce *device,
+ 	u32 count;
+=20
+ 	while (pop_frmr_handles_page(pool, queue, &page, &count)) {
+-		pools->pool_ops->destroy_frmrs(device, page->handles, count);
++		pools->pool_ops->destroy_frmrs(device, &pool->key,
++					       page->handles, count);
+ 		kfree(page);
+ 	}
  }
- 
- impl<T: AsBytes + FromBytes> Coherent<T> {
-@@ -1265,85 +1219,3 @@ fn as_view(self) -> CoherentView<'a, Self::Target> {
-         }
-     }
+@@ -136,7 +137,8 @@ static bool age_pinned_pool(struct ib_device *device,=
+ struct ib_frmr_pool *pool)
+ 	spin_unlock(&pool->lock);
+=20
+ 	if (destroyed)
+-		pools->pool_ops->destroy_frmrs(device, handles, destroyed);
++		pools->pool_ops->destroy_frmrs(device, &pool->key, handles,
++					       destroyed);
+ 	kfree(handles);
+ 	return has_work;
  }
+@@ -453,9 +455,11 @@ int ib_frmr_pools_set_pinned(struct ib_device *devic=
+e, struct ib_frmr_key *key,
+ }
+=20
+ static int get_frmr_from_pool(struct ib_device *device,
+-			      struct ib_frmr_pool *pool, struct ib_mr *mr)
++			      struct ib_frmr_pool *pool, struct ib_mr *mr,
++			      bool *reused)
+ {
+ 	struct ib_frmr_pools *pools =3D device->frmr_pools;
++	bool local_reused =3D false;
+ 	u32 handle;
+ 	int err;
+=20
+@@ -464,6 +468,7 @@ static int get_frmr_from_pool(struct ib_device *devic=
+e,
+ 		if (pool->inactive_queue.ci > 0) {
+ 			handle =3D pop_handle_from_queue_locked(
+ 				&pool->inactive_queue);
++			local_reused =3D true;
+ 		} else {
+ 			spin_unlock(&pool->lock);
+ 			err =3D pools->pool_ops->create_frmrs(device, &pool->key,
+@@ -474,6 +479,7 @@ static int get_frmr_from_pool(struct ib_device *devic=
+e,
+ 		}
+ 	} else {
+ 		handle =3D pop_handle_from_queue_locked(&pool->queue);
++		local_reused =3D true;
+ 	}
+=20
+ 	pool->in_use++;
+@@ -484,6 +490,8 @@ static int get_frmr_from_pool(struct ib_device *devic=
+e,
+=20
+ 	mr->frmr.pool =3D pool;
+ 	mr->frmr.handle =3D handle;
++	if (reused)
++		*reused =3D local_reused;
+=20
+ 	return 0;
+ }
+@@ -493,10 +501,12 @@ static int get_frmr_from_pool(struct ib_device *dev=
+ice,
+  *
+  * @device: The device to pop the FRMR handle from.
+  * @mr: The MR to pop the FRMR handle from.
++ * @reused: Optional output that reports whether the returned handle was
++ *	    reused from the pool instead of freshly created.
+  *
+  * Returns 0 on success, negative error code on failure.
+  */
+-int ib_frmr_pool_pop(struct ib_device *device, struct ib_mr *mr)
++int ib_frmr_pool_pop(struct ib_device *device, struct ib_mr *mr, bool *r=
+eused)
+ {
+ 	struct ib_frmr_pools *pools =3D device->frmr_pools;
+ 	struct ib_frmr_pool *pool;
+@@ -509,7 +519,7 @@ int ib_frmr_pool_pop(struct ib_device *device, struct=
+ ib_mr *mr)
+ 			return PTR_ERR(pool);
+ 	}
+=20
+-	return get_frmr_from_pool(device, pool, mr);
++	return get_frmr_from_pool(device, pool, mr, reused);
+ }
+ EXPORT_SYMBOL(ib_frmr_pool_pop);
+=20
+diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
+/mr.c
+index 3b6da45061a5..5697c2862615 100644
+--- a/drivers/infiniband/hw/mlx5/mr.c
++++ b/drivers/infiniband/hw/mlx5/mr.c
+@@ -38,6 +38,7 @@
+ #include <linux/delay.h>
+ #include <linux/dma-buf.h>
+ #include <linux/dma-resv.h>
++#include <linux/pci-tph.h>
+ #include <rdma/frmr_pools.h>
+ #include <rdma/ib_umem_odp.h>
+ #include "dm.h"
+@@ -167,12 +168,39 @@ static int get_unchangeable_access_flags(struct mlx=
+5_ib_dev *dev,
+ #define MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK 0xFF0000
+ #define MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK 0xFFFF
+=20
++static int mlx5_ib_get_frmr_st_handle_ref(struct mlx5_ib_dev *dev,
++					  u16 st_index)
++{
++	if (st_index =3D=3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
++		return 0;
++
++	return mlx5_st_get_index(dev->mdev, st_index);
++}
++
++static void mlx5_ib_put_st_index_ref(struct mlx5_ib_dev *dev, u16 st_ind=
+ex)
++{
++	if (st_index =3D=3D MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX)
++		return;
++
++	mlx5_st_dealloc_index(dev->mdev, st_index);
++}
++
++static void mlx5_ib_put_frmr_st_handle_ref(struct mlx5_ib_dev *dev,
++					   u64 kernel_vendor_key)
++{
++	u16 st_index =3D kernel_vendor_key &
++		       MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK;
++
++	mlx5_ib_put_st_index_ref(dev, st_index);
++}
++
+ static struct mlx5_ib_mr *
+ _mlx5_frmr_pool_alloc(struct mlx5_ib_dev *dev, struct ib_umem *umem,
+ 		      int access_flags, int access_mode,
+ 		      unsigned long page_size, u16 st_index, u8 ph)
+ {
+ 	struct mlx5_ib_mr *mr;
++	bool reused =3D false;
+ 	int err;
+=20
+ 	mr =3D kzalloc_obj(*mr);
+@@ -195,11 +223,14 @@ _mlx5_frmr_pool_alloc(struct mlx5_ib_dev *dev, stru=
+ct ib_umem *umem,
+=20
+ 	mr->ibmr.frmr.key.kernel_vendor_key =3D
+ 		st_index | (ph << MLX5_FRMR_POOLS_KERNEL_KEY_PH_SHIFT);
+-	err =3D ib_frmr_pool_pop(&dev->ib_dev, &mr->ibmr);
++	err =3D ib_frmr_pool_pop(&dev->ib_dev, &mr->ibmr, &reused);
+ 	if (err) {
+ 		kfree(mr);
+ 		return ERR_PTR(err);
+ 	}
++	if (reused)
++		mlx5_ib_put_frmr_st_handle_ref(
++			dev, mr->ibmr.frmr.key.kernel_vendor_key);
+ 	mr->mmkey.key =3D mr->ibmr.frmr.handle;
+ 	init_waitqueue_head(&mr->mmkey.wait);
+=20
+@@ -229,7 +260,7 @@ struct mlx5_ib_mr *mlx5_mr_cache_alloc(struct mlx5_ib=
+_dev *dev,
+ 	init_waitqueue_head(&mr->mmkey.wait);
+=20
+ 	mr->ibmr.frmr.key =3D key;
+-	ret =3D ib_frmr_pool_pop(&dev->ib_dev, &mr->ibmr);
++	ret =3D ib_frmr_pool_pop(&dev->ib_dev, &mr->ibmr, NULL);
+ 	if (ret) {
+ 		kfree(mr);
+ 		return ERR_PTR(ret);
+@@ -273,7 +304,8 @@ static int mlx5r_create_mkeys(struct ib_device *devic=
+e, struct ib_frmr_key *key,
+=20
+ 	st_index =3D key->kernel_vendor_key &
+ 		   MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK;
+-	ph =3D key->kernel_vendor_key & MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK;
++	ph =3D (key->kernel_vendor_key & MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK) >>
++	     MLX5_FRMR_POOLS_KERNEL_KEY_PH_SHIFT;
+ 	if (ph) {
+ 		/* Normalize ph: swap MLX5_IB_NO_PH for 0 */
+ 		if (ph =3D=3D MLX5_IB_NO_PH)
+@@ -299,7 +331,8 @@ static int mlx5r_create_mkeys(struct ib_device *devic=
+e, struct ib_frmr_key *key,
+ 	return err;
+ }
+=20
+-static void mlx5r_destroy_mkeys(struct ib_device *device, u32 *handles,
++static void mlx5r_destroy_mkeys(struct ib_device *device,
++				const struct ib_frmr_key *key, u32 *handles,
+ 				unsigned int count)
+ {
+ 	struct mlx5_ib_dev *dev =3D to_mdev(device);
+@@ -311,6 +344,9 @@ static void mlx5r_destroy_mkeys(struct ib_device *dev=
+ice, u32 *handles,
+ 			pr_warn_ratelimited(
+ 				"mlx5_ib: failed to destroy mkey %d: %d",
+ 				handles[i], err);
++		else
++			mlx5_ib_put_frmr_st_handle_ref(dev,
++						       key->kernel_vendor_key);
+ 	}
+ }
+=20
+@@ -333,6 +369,7 @@ static int mlx5r_build_frmr_key(struct ib_device *dev=
+ice,
+ 		get_unchangeable_access_flags(dev, in->access_flags);
+ 	out->vendor_key =3D in->vendor_key;
+ 	out->num_dma_blocks =3D in->num_dma_blocks;
++	out->kernel_vendor_key =3D in->kernel_vendor_key;
+=20
+ 	return 0;
+ }
+@@ -753,6 +790,12 @@ static struct ib_mr *create_real_mr(struct ib_pd *pd=
+, struct ib_umem *umem,
+=20
+ 	xlt_with_umr =3D mlx5r_umr_can_load_pas(dev, umem->length);
+ 	if (xlt_with_umr) {
++		err =3D mlx5_ib_get_frmr_st_handle_ref(dev, st_index);
++		if (err) {
++			ib_umem_release(umem);
++			return ERR_PTR(err);
++		}
++
+ 		mr =3D alloc_cacheable_mr(pd, umem, iova, access_flags,
+ 					MLX5_MKC_ACCESS_MODE_MTT,
+ 					st_index, ph);
+@@ -767,6 +810,8 @@ static struct ib_mr *create_real_mr(struct ib_pd *pd,=
+ struct ib_umem *umem,
+ 		mutex_unlock(&dev->slow_path_mutex);
+ 	}
+ 	if (IS_ERR(mr)) {
++		if (xlt_with_umr)
++			mlx5_ib_put_st_index_ref(dev, st_index);
+ 		ib_umem_release(umem);
+ 		return ERR_CAST(mr);
+ 	}
+@@ -899,6 +944,52 @@ static struct dma_buf_attach_ops mlx5_ib_dmabuf_atta=
+ch_ops =3D {
+ 	.invalidate_mappings =3D mlx5_ib_dmabuf_invalidate_cb,
+ };
+=20
++static void get_tph_mr_dmabuf(struct mlx5_ib_dev *dev, struct dma_buf *d=
+mabuf,
++			      u16 *st_index, u8 *ph)
++{
++	u16 local_st_index;
++	u16 steering_tag;
++	u8 local_ph;
++	bool extended;
++	int ret;
++
++	switch (pcie_tph_enabled_req_type(dev->mdev->pdev)) {
++	case PCI_TPH_REQ_TPH_ONLY:
++		extended =3D false;
++		break;
++	case PCI_TPH_REQ_EXT_TPH:
++		extended =3D true;
++		break;
++	default:
++		return;
++	}
++
++	dma_resv_lock(dmabuf->resv, NULL);
++	ret =3D dma_buf_get_tph(dmabuf, extended, &steering_tag, &local_ph);
++	dma_resv_unlock(dmabuf->resv);
++	if (ret) {
++		if (ret !=3D -EOPNOTSUPP)
++			mlx5_ib_dbg(dev, "get_tph failed (%d)\n", ret);
++		return;
++	}
++
++	ret =3D mlx5_st_alloc_index_by_tag(dev->mdev, steering_tag,
++					 &local_st_index);
++	if (ret) {
++		mlx5_ib_dbg(dev, "st_alloc_index_by_tag failed (%d)\n", ret);
++		return;
++	}
++
++	*st_index =3D local_st_index;
++	*ph =3D local_ph;
++}
++
++static void mlx5_ib_mr_put_frmr_st_handle_ref(struct mlx5_ib_mr *mr)
++{
++	mlx5_ib_put_frmr_st_handle_ref(mr_to_mdev(mr),
++				       mr->ibmr.frmr.key.kernel_vendor_key);
++}
++
+ static struct ib_mr *
+ reg_user_mr_dmabuf(struct ib_pd *pd, struct device *dma_device,
+ 		   u64 offset, u64 length, u64 virt_addr,
+@@ -941,12 +1032,22 @@ reg_user_mr_dmabuf(struct ib_pd *pd, struct device=
+ *dma_device,
+ 		ph =3D dmah->ph;
+ 		if (dmah->valid_fields & BIT(IB_DMAH_CPU_ID_EXISTS))
+ 			st_index =3D mdmah->st_index;
++
++		err =3D mlx5_ib_get_frmr_st_handle_ref(dev, st_index);
++		if (err) {
++			ib_umem_release(&umem_dmabuf->umem);
++			return ERR_PTR(err);
++		}
++	} else {
++		get_tph_mr_dmabuf(dev, umem_dmabuf->attach->dmabuf,
++				  &st_index, &ph);
+ 	}
+=20
+ 	mr =3D alloc_cacheable_mr(pd, &umem_dmabuf->umem, virt_addr,
+ 				access_flags, access_mode,
+ 				st_index, ph);
+ 	if (IS_ERR(mr)) {
++		mlx5_ib_put_st_index_ref(dev, st_index);
+ 		ib_umem_release(&umem_dmabuf->umem);
+ 		return ERR_CAST(mr);
+ 	}
+@@ -1400,6 +1501,8 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib=
+_mr *mr)
+ 		dma_resv_unlock(
+ 			to_ib_umem_dmabuf(mr->umem)->attach->dmabuf->resv);
+ 	}
++	if (!ret)
++		mlx5_ib_mr_put_frmr_st_handle_ref(mr);
+ 	return ret;
+ }
+=20
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c b/drivers/n=
+et/ethernet/mellanox/mlx5/core/lib/st.c
+index 7cedc348790d..877b37b4e639 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/st.c
+@@ -92,23 +92,18 @@ void mlx5_st_destroy(struct mlx5_core_dev *dev)
+ 	kfree(st);
+ }
+=20
+-int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
+-			unsigned int cpu_uid, u16 *st_index)
++int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
++			       u16 *st_index)
+ {
+ 	struct mlx5_st_idx_data *idx_data;
+ 	struct mlx5_st *st =3D dev->st;
+ 	unsigned long index;
+ 	u32 xa_id;
+-	u16 tag;
+-	int ret;
++	int ret =3D 0;
+=20
+ 	if (!st)
+ 		return -EOPNOTSUPP;
+=20
+-	ret =3D pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
+-	if (ret)
+-		return ret;
 -
--/// Reads a field of an item from an allocated region of structs.
--///
--/// The syntax is of the form `kernel::dma_read!(dma, proj)` where `dma` is an expression evaluating
--/// to a [`Coherent`] and `proj` is a [projection specification](kernel::ptr::project!).
--///
--/// # Examples
--///
--/// ```
--/// use kernel::device::Device;
--/// use kernel::dma::{attrs::*, Coherent};
--///
--/// struct MyStruct { field: u32, }
--///
--/// // SAFETY: All bit patterns are acceptable values for `MyStruct`.
--/// unsafe impl kernel::transmute::FromBytes for MyStruct{};
--/// // SAFETY: Instances of `MyStruct` have no uninitialized portions.
--/// unsafe impl kernel::transmute::AsBytes for MyStruct{};
--///
--/// # fn test(alloc: &kernel::dma::Coherent<[MyStruct]>) -> Result {
--/// let whole = kernel::dma_read!(alloc, [try: 2]);
--/// let field = kernel::dma_read!(alloc, [panic: 1].field);
--/// # Ok::<(), Error>(()) }
--/// ```
--#[macro_export]
--macro_rules! dma_read {
--    ($dma:expr, $($proj:tt)*) => {{
--        let dma = &$dma;
--        let ptr = $crate::ptr::project!(
--            $crate::dma::Coherent::as_ptr(dma), $($proj)*
--        );
--        // SAFETY: The pointer created by the projection is within the DMA region.
--        unsafe { $crate::dma::Coherent::field_read(dma, ptr) }
--    }};
--}
--
--/// Writes to a field of an item from an allocated region of structs.
--///
--/// The syntax is of the form `kernel::dma_write!(dma, proj, val)` where `dma` is an expression
--/// evaluating to a [`Coherent`], `proj` is a
--/// [projection specification](kernel::ptr::project!), and `val` is the value to be written to the
--/// projected location.
--///
--/// # Examples
--///
--/// ```
--/// use kernel::device::Device;
--/// use kernel::dma::{attrs::*, Coherent};
--///
--/// struct MyStruct { member: u32, }
--///
--/// // SAFETY: All bit patterns are acceptable values for `MyStruct`.
--/// unsafe impl kernel::transmute::FromBytes for MyStruct{};
--/// // SAFETY: Instances of `MyStruct` have no uninitialized portions.
--/// unsafe impl kernel::transmute::AsBytes for MyStruct{};
--///
--/// # fn test(alloc: &kernel::dma::Coherent<[MyStruct]>) -> Result {
--/// kernel::dma_write!(alloc, [try: 2].member, 0xf);
--/// kernel::dma_write!(alloc, [panic: 1], MyStruct { member: 0xf });
--/// # Ok::<(), Error>(()) }
--/// ```
--#[macro_export]
--macro_rules! dma_write {
--    (@parse [$dma:expr] [$($proj:tt)*] [, $val:expr]) => {{
--        let dma = &$dma;
--        let ptr = $crate::ptr::project!(
--            mut $crate::dma::Coherent::as_mut_ptr(dma), $($proj)*
--        );
--        let val = $val;
--        // SAFETY: The pointer created by the projection is within the DMA region.
--        unsafe { $crate::dma::Coherent::field_write(dma, ptr, val) }
--    }};
--    (@parse [$dma:expr] [$($proj:tt)*] [.$field:tt $($rest:tt)*]) => {
--        $crate::dma_write!(@parse [$dma] [$($proj)* .$field] [$($rest)*])
--    };
--    (@parse [$dma:expr] [$($proj:tt)*] [[$flavor:ident: $index:expr] $($rest:tt)*]) => {
--        $crate::dma_write!(@parse [$dma] [$($proj)* [$flavor: $index]] [$($rest)*])
--    };
--    ($dma:expr, $($rest:tt)*) => {
--        $crate::dma_write!(@parse [$dma] [] [$($rest)*])
--    };
--}
-diff --git a/samples/rust/rust_dma.rs b/samples/rust/rust_dma.rs
-index 5046b4628d0e..6727c441658a 100644
---- a/samples/rust/rust_dma.rs
-+++ b/samples/rust/rust_dma.rs
-@@ -12,6 +12,7 @@
-         Device,
-         DmaMask, //
-     },
-+    io::io_read,
-     page, pci,
-     prelude::*,
-     scatterlist::{Owned, SGTable},
-@@ -73,11 +74,11 @@ fn probe<'bound>(
-             // SAFETY: There are no concurrent calls to DMA allocation and mapping primitives.
-             unsafe { pdev.dma_set_mask_and_coherent(mask)? };
- 
--            let ca: Coherent<[MyStruct]> =
--                Coherent::zeroed_slice(pdev.as_ref(), TEST_VALUES.len(), GFP_KERNEL)?;
-+            let mut ca: CoherentBox<[MyStruct]> =
-+                CoherentBox::zeroed_slice(pdev.as_ref(), TEST_VALUES.len(), GFP_KERNEL)?;
- 
-             for (i, value) in TEST_VALUES.into_iter().enumerate() {
--                kernel::dma_write!(ca, [try: i], MyStruct::new(value.0, value.1));
-+                ca.init_at(i, MyStruct::new(value.0, value.1))?;
-             }
- 
-             let size = 4 * page::PAGE_SIZE;
-@@ -87,7 +88,7 @@ fn probe<'bound>(
- 
-             Ok(try_pin_init!(Self {
-                 pdev: pdev.into(),
--                ca,
-+                ca: ca.into(),
-                 sgt <- sgt,
-             }))
-         })
-@@ -97,8 +98,8 @@ fn probe<'bound>(
- impl DmaSampleDriver {
-     fn check_dma(&self) {
-         for (i, value) in TEST_VALUES.into_iter().enumerate() {
--            let val0 = kernel::dma_read!(self.ca, [panic: i].h);
--            let val1 = kernel::dma_read!(self.ca, [panic: i].b);
-+            let val0 = io_read!(self.ca, [panic: i].h);
-+            let val1 = io_read!(self.ca, [panic: i].b);
- 
-             assert_eq!(val0, value.0);
-             assert_eq!(val1, value.1);
-
--- 
-2.54.0
+ 	if (st->direct_mode) {
+ 		*st_index =3D tag;
+ 		return 0;
+@@ -152,8 +147,46 @@ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, e=
+num tph_mem_type mem_type,
+ 	mutex_unlock(&st->lock);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(mlx5_st_alloc_index_by_tag);
++
++int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
++			unsigned int cpu_uid, u16 *st_index)
++{
++	u16 tag;
++	int ret;
++
++	ret =3D pcie_tph_get_cpu_st(dev->pdev, mem_type, cpu_uid, &tag);
++	if (ret)
++		return ret;
++
++	return mlx5_st_alloc_index_by_tag(dev, tag, st_index);
++}
+ EXPORT_SYMBOL_GPL(mlx5_st_alloc_index);
+=20
++int mlx5_st_get_index(struct mlx5_core_dev *dev, u16 st_index)
++{
++	struct mlx5_st_idx_data *idx_data;
++	struct mlx5_st *st =3D dev->st;
++	int ret =3D 0;
++
++	if (!st)
++		return -EOPNOTSUPP;
++
++	if (st->direct_mode)
++		return 0;
++
++	mutex_lock(&st->lock);
++	idx_data =3D xa_load(&st->idx_xa, st_index);
++	if (WARN_ON_ONCE(!idx_data))
++		ret =3D -EINVAL;
++	else
++		refcount_inc(&idx_data->usecount);
++	mutex_unlock(&st->lock);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(mlx5_st_get_index);
++
+ int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index)
+ {
+ 	struct mlx5_st_idx_data *idx_data;
+diff --git a/include/linux/mlx5/driver.h b/include/linux/mlx5/driver.h
+index 04b96c5abb57..0480b5c4f189 100644
+--- a/include/linux/mlx5/driver.h
++++ b/include/linux/mlx5/driver.h
+@@ -1166,10 +1166,22 @@ int mlx5_dm_sw_icm_dealloc(struct mlx5_core_dev *=
+dev, enum mlx5_sw_icm_type type
+ 			   u64 length, u16 uid, phys_addr_t addr, u32 obj_id);
+=20
+ #ifdef CONFIG_PCIE_TPH
++int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev, u16 tag,
++			       u16 *st_index);
++int mlx5_st_get_index(struct mlx5_core_dev *dev, u16 st_index);
+ int mlx5_st_alloc_index(struct mlx5_core_dev *dev, enum tph_mem_type mem=
+_type,
+ 			unsigned int cpu_uid, u16 *st_index);
+ int mlx5_st_dealloc_index(struct mlx5_core_dev *dev, u16 st_index);
+ #else
++static inline int mlx5_st_alloc_index_by_tag(struct mlx5_core_dev *dev,
++					     u16 tag, u16 *st_index)
++{
++	return -EOPNOTSUPP;
++}
++static inline int mlx5_st_get_index(struct mlx5_core_dev *dev, u16 st_in=
+dex)
++{
++	return -EOPNOTSUPP;
++}
+ static inline int mlx5_st_alloc_index(struct mlx5_core_dev *dev,
+ 				      enum tph_mem_type mem_type,
+ 				      unsigned int cpu_uid, u16 *st_index)
+diff --git a/include/rdma/frmr_pools.h b/include/rdma/frmr_pools.h
+index af1b88801fa4..a08d2b2cf9f3 100644
+--- a/include/rdma/frmr_pools.h
++++ b/include/rdma/frmr_pools.h
+@@ -24,7 +24,8 @@ struct ib_frmr_key {
+ struct ib_frmr_pool_ops {
+ 	int (*create_frmrs)(struct ib_device *device, struct ib_frmr_key *key,
+ 			    u32 *handles, u32 count);
+-	void (*destroy_frmrs)(struct ib_device *device, u32 *handles,
++	void (*destroy_frmrs)(struct ib_device *device,
++			      const struct ib_frmr_key *key, u32 *handles,
+ 			      u32 count);
+ 	int (*build_key)(struct ib_device *device, const struct ib_frmr_key *in=
+,
+ 			 struct ib_frmr_key *out);
+@@ -33,7 +34,7 @@ struct ib_frmr_pool_ops {
+ int ib_frmr_pools_init(struct ib_device *device,
+ 		       const struct ib_frmr_pool_ops *pool_ops);
+ void ib_frmr_pools_cleanup(struct ib_device *device);
+-int ib_frmr_pool_pop(struct ib_device *device, struct ib_mr *mr);
++int ib_frmr_pool_pop(struct ib_device *device, struct ib_mr *mr, bool *r=
+eused);
+ int ib_frmr_pool_push(struct ib_device *device, struct ib_mr *mr);
+=20
+ #endif /* FRMR_POOLS_H */
+--=20
+2.53.0-Meta
 
