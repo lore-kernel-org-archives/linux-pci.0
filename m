@@ -1,42 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E27D2C2363
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 05:59:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8A4E2BD58A;
+	Thu, 11 Jun 2026 06:10:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781157568; cv=none; b=WR780csvF4SgYiQbl3o9mfnlHcLe2Cb6eUDYMxw15nj11ghp78dpC84+pR3Rug+K3SzFh4+UFVWBYfySRtTqGDyMnN4l/uzvsVm1rp487KpKALukYYyFtJtth2z+NauVuhNZTWKWmSofLH6JsDtjx/Rt2H2DnVv4pfLnGbv9KmU=
+	t=1781158214; cv=none; b=rh09aZZ0P4RiI5bw5YJ0h5788qiV2UdJwkOtrdByWLFiAtrP+xcfJA9CHF9GrzT435IbsSoT8JY8f/quFL+KTqYNVp5pUAFPJ0lUg1pNPhpIBhVCdoXGomz6EA9MFT/85vpEjPD22LiZk51oZ5mhjk92x8ueRKYZGqSmMybkk0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781157568; c=relaxed/simple;
-	bh=hBaAtGkm6b5nPan2JqXL9zO1AXTy45TtkpfZ0OQt2UE=;
+	s=arc-20240116; t=1781158214; c=relaxed/simple;
+	bh=t2WRqjUsFELcSyHpuIYWTBzanLaf8gP8z46IW8xDkiE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=D3qceW880Cau6cvvGjVayWgfnjVa1/+TEbS7UkQ7yR5j/moFe52u6UEcweqrEqtXt/R41ZRBOZJ5+R7jzdeuGgnrEMdXpTpOqf6FfPUy2vbxy+d3zZrOI5RT1QxWdZbr05N+OBUhBp8SdH2AxqbwYtIbVB3V+ZIQeL8CQVz9XKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=opENHFyR; arc=none smtp.client-ip=100.103.45.18
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bh8aSBOl2KCjRxB60WNlwD9cMB7aRhOYTHTihDbxxPbVEtB0b6k2I2KNV65qCxIVLUF9D5nwfYoGnEEf7nxvHncYAFnSQZmt73MD78mDRazfrDgfeBmRJnret5pNCq70/ZGjYXpE8rPKeEp4CHMvIrr6SemAe36snzuiiyuQQuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JEK4OmPQ; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="opENHFyR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BC2A1F00893;
-	Thu, 11 Jun 2026 05:59:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JEK4OmPQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E87C91F00898;
+	Thu, 11 Jun 2026 06:10:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781157566;
-	bh=Fyntgr8x1W0aiYM1+gEIFSAd+jEbz9QHnx/VG5oMKOo=;
+	s=k20260515; t=1781158213;
+	bh=rKMmMKeuz2fRooQhiP60q8uhlHxR04FyvuIbk8BELm0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=opENHFyR2lntYzfj/Ruh7hlwtxRTk1yhIAQ0ojhmx+vjVv8AyJdukq4QrtsDJa0Zq
-	 7lYROfn76CFoPWHIDFDviy07auNpZtSR3TeUdLZsd3iqJYut6eJr+cgTGuAPs0M0ma
-	 r1AEccZhqNO9oBY37TdFJ5aOKmp+JA6Z8lhEj9QkA6/3IPH+16YDTTngNB36fUFyZs
-	 f70yuncNDKJnHNUReLtW4uQYHQmOiQXmRXxbUBxgs+6XCp3j6ER31sS+Q3m2kU6qLA
-	 4OH6Pdc4XB4E/VPmaf+HwycSZu+BhLsAwiaDBv7rY6AKxxBZf5F0QW2WlwNdPL3Ff9
-	 BOwLl9do5Moxg==
-Date: Thu, 11 Jun 2026 07:59:21 +0200
+	b=JEK4OmPQqu/AINjDWh7OeWFdsCKnRRBZo7pwUtVTSgBjwfAZE9reBqrQgsIt/TAJk
+	 3Ydb8VFZ+SGE02xeyV1gmLiJSx6uwkJ5s4bUXbOA2Eimf+0rr5vWXuTYdpCYWfMN0M
+	 V9OSJ6QdNopMijhZuxeFw2jRrS8RYfuwCKm8aseLa0c9V0vTDdZik09+FLH6UfbiJX
+	 oX3B4jFQeO8VIMjvLnz/nyGXoTaeHMSQWjvB7knj/lb4wX3xU0a2mjWLzrwfHedFoy
+	 TUEVe/wWovnQii8IgaJz66lLraFMn+Zc0kE5QvRLYGiluoaXF5YHobmUSyRaujyned
+	 YjxYpEXktqICA==
+Date: Thu, 11 Jun 2026 08:10:05 +0200
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Marek Vasut <marek.vasut@mailbox.org>
-Cc: wsa+renesas@sang-engineering.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: rcar-gen4: Limit Max_Read_Request_Size and
- Max_Payload_Size to 256 Bytes
-Message-ID: <kg7uvgl4kaupiea56e63xiikhl3xqtgug4dqynxchw7prgdo6t@gclq5wdan4tc>
-References: <20260519195219.189323-1-marek.vasut+renesas@mailbox.org>
- <20260519202037.8BD001F000E9@smtp.kernel.org>
- <orrpfub5f2hkrgkmxrdtykhzmxyuclnky4dn6vnz3cgvvbdcvb@5altvzufcq53>
- <bc40e4c6-1922-4bce-99d1-341730a4e6f8@mailbox.org>
+To: Sherry Sun <sherry.sun@nxp.com>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>, 
+	"sashiko-reviews@lists.linux.dev" <sashiko-reviews@lists.linux.dev>, 
+	"manivannan.sadhasivam@oss.qualcomm.com" <manivannan.sadhasivam@oss.qualcomm.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, 
+	"robh@kernel.org" <robh@kernel.org>, "Frank.Li@kernel.org" <Frank.Li@kernel.org>, 
+	"conor+dt@kernel.org" <conor+dt@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
+	"imx@lists.linux.dev" <imx@lists.linux.dev>
+Subject: Re: [PATCH 1/2] dt-bindings: connector: pcie-m2-e: Add 3.3Vaux
+ supply support
+Message-ID: <6ouch5ybqk7gws3yrvc2sylq67nioqva6klc7o7wcgbpobs2lu@ioscmsg6ufyx>
+References: <20260609033840.2006078-2-sherry.sun@oss.nxp.com>
+ <20260609034408.BC69D1F00893@smtp.kernel.org>
+ <20260609-unique-magnificent-eel-eb623f@quoll>
+ <VI0PR04MB121140EFB8E614326D799503A921A2@VI0PR04MB12114.eurprd04.prod.outlook.com>
+ <mvxoynvocxcalxcwogbiovg5yurjczxqfu2fqkji33bunmlplz@zxqjsdjts65j>
+ <VI0PR04MB12114DBDD65F25FB615EA8967921A2@VI0PR04MB12114.eurprd04.prod.outlook.com>
+ <ihrmgh6etb2n5zqjbrykfjjms4a6zgpzwjgrd3rvy24jufbss7@f4nfxrp7jksy>
+ <VI0PR04MB12114DA25D08329D3DC2C3ADA921B2@VI0PR04MB12114.eurprd04.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,63 +55,83 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <bc40e4c6-1922-4bce-99d1-341730a4e6f8@mailbox.org>
+In-Reply-To: <VI0PR04MB12114DA25D08329D3DC2C3ADA921B2@VI0PR04MB12114.eurprd04.prod.outlook.com>
 
-On Wed, Jun 10, 2026 at 08:50:58PM +0200, Marek Vasut wrote:
-> On 6/10/26 7:11 PM, Manivannan Sadhasivam wrote:
-> 
-> [...]
-> 
-> > > > +static int rcar_gen4_pcie_enable_device(struct pci_host_bridge *bridge,
-> > > > +					struct pci_dev *dev)
-> > > > +{
-> > > [ ... ]
-> > > > +	if (pcie_get_mps(dev) > 256) {
-> > > > +		pci_info(dev, "Limiting MPS to 256 bytes\n");
-> > > > +		pcie_set_mps(dev, 256);
-> > > 
-> > > [Severity: High]
-> > > Will modifying the Max_Payload_Size locally in the enable_device hook
-> > > desynchronize it from the rest of the PCIe fabric?
-> > > 
-> > > The PCIe specification and Linux PCI core generally manage MPS uniformly
-> > > across the hierarchy during boot via pcie_bus_configure_settings().
-> > > Because this hook runs later during driver probe via pci_enable_device(),
-> > > if the upstream Root Port or Switch retains a larger MPS and transmits a
-> > > TLP exceeding 256 bytes, could the downstream device drop it as a Malformed
-> > > TLP and cause a fatal link error?
-> > > 
-> > > Would it be safer to restrict the Root Port's MPS capabilities before
-> > > enumeration so the core logic correctly scales the entire fabric?
-> > > 
+On Thu, Jun 11, 2026 at 03:59:28AM +0000, Sherry Sun wrote:
+> > On Wed, Jun 10, 2026 at 10:13:00AM +0000, Sherry Sun wrote:
+> > > > On Wed, Jun 10, 2026 at 08:40:54AM +0000, Sherry Sun wrote:
+> > > > > > On Tue, Jun 09, 2026 at 03:44:08AM +0000, sashiko-bot@kernel.org
+> > wrote:
+> > > > > > > Thank you for your contribution! Sashiko AI review found 1
+> > > > > > > potential
+> > > > > > issue(s) to consider:
+> > > > > > > - [Medium] The `vpcie3v3aux-supply` property describes a
+> > > > > > > non-existent
+> > > > > > hardware feature on the M.2 Key E connector to work around a
+> > > > > > software policy.
+> > > > > >
+> > > > > > Feels valid. Describe which pin on M2 connector are you representing.
+> > > > > >
+> > > > >
+> > > > > Refer to PCI Express M.2 Specification r5.1 sec3.1.1 Power Sources
+> > > > > and Grounds.
+> > > > >
+> > > > > PCI Express M.2 Socket 1 utilizes a 3.3 V power source. The
+> > > > > voltage source, 3.3 V, is expected to be available during the
+> > > > > system’s stand-by/suspend state to support wake event processing
+> > > > > on the communications card.
+> > > > >
+> > > > > But the current vpcie3v3-supply may be gated off during system
+> > suspend.
+> > > > > So I  tried to add vpcie3v3aux-supply to let this 3.3 V power
+> > > > > source always on for PCIe M.2 Key E connector. That means
+> > > > > vpcie3v3aux-supply and vpcie3v3-supply actually refer to the same 3.3 V
+> > power source.
+> > > > >
+> > > > > @Mani, do you think this is reasonable? Or do you have any other
+> > > > > better solutions? Thanks!
+> > > > >
+> > > >
+> > > > There is no Vaux defined in the M.2 spec. So you cannot define that
+> > > > supply in the binding. You can define the custom Vaux supply as a
+> > > > fixed regulator in DT and mark it always on so that it is keeps supplying
+> > 3.3v to the card.
+> > > >
+> > >
+> > > Hi Mani, thanks for the suggestion, but adding an always on regulator
+> > > may cause board power waste, current solution ensures the 3.3v
+> > > regulator is only enabled when M.2 connector needs to work .
+> > >
 > > 
-> > Marek, you said that Root Port's MPSS is fixed to 256B. So this means, PCI core
-> > will only set the endpoint's MPS to <=256B. So I don't see a need to limit MPS
-> > here.
-> 
-> The MPS limiter is optional and I never saw MPS > 256 in my tests, however I
-> feel that to make this bulletproof, it would be good to keep this check. If
-> you feel strongly about this, I can drop it, just let me know.
-> 
-
-There is no way the PCI core will let device MPS to go beyond Root Port's MPSS.
-So this check is mostly redundant and I would drop it. Also, add this note in
-the commit message since it is not documented anywhere.
-
-> [...]
-> 
-> > > Should pp->bridge->no_inc_mrrs = 1 be set during this initialization
-> > > to enforce the limit permanently?
-> > > 
+> > What do you mean by 'need to work'? For getting the M.2 card to work, you
+> > already have 3.3v supply. If you want the board to be always ON, then you
+> > need to supply 3.3Vaux, which should be always ON too.
 > > 
-> > This is a valid concern. I believe you should set 'pp->bridge->no_inc_mrrs = 1'
-> > in the Rcar driver to prevent client drivers from increasing MRRS.
+> > But who is turning off vpcie3v3-supply? M.2 connector driver or the
+> > platform?
+> > 
 > 
-> I will add this one.
+> Hi Mani,
+> I'm not sure if I understand your question correctly, actually it's the platform
+> driver that calls the M.2 connector driver to turn off vpcie3v3-supply.
+> Take i.MX pci device as an example, 
+> pm_suspend() -> imx_pcie_suspend_noirq() -> imx_pcie_host_exit() ->
+> pci_pwrctrl_power_off_devices() -> pwrseq_power_off() ->
+> pwrseq_unit_disable() -> pwrseq_pcie_m2_vregs_disable()
 > 
-> And I will also re-ask about the MRRS 256 Byte limit now.
+> Taking back to M.2 Specification:
+> PCI Express M.2 Socket 1 utilizes a 3.3 V power source. The
+> voltage source, 3.3 V, is expected to be available during the
+> system’s stand-by/suspend state to support wake event processing
+> on the communications card.
+> 
+> Per my understanding of the above, the M.2 Spec actually suggest the
+> 3.3 V power source should not be turned off.
+> Should we simply enable the 3.3 V power source in pwrseq_pcie_m2_probe()
+> and remove the pwrseq_pcie_m2_vregs_unit_data?
+> 
 
-Okay.
+Just don't call pci_pwrctrl_power_off_devices() from the suspend path.
 
 - Mani
 
