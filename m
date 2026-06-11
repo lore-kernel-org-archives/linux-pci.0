@@ -1,85 +1,50 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74C6A3750D7
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 22:14:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF3FE3C8C5D;
+	Thu, 11 Jun 2026 22:26:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781216091; cv=none; b=NCZjaL1pyQ2aq9UZ6IbhydIbO2mHP/ROhISSMx5xFXhGOh160QqtOL9iFUGR+O5QD3xg/dm82ji6ACfvsdWS57vTCW1fbHMO6Xjgqf2ol7rQBzVoCKK7x2ohqkBv7jviFa2f3j5gRg2XxMfpeODGJsE53+EMjO1ECJkeun5AAjo=
+	t=1781216816; cv=none; b=euNKWAa9F9M1PEAta5B3BfS1ZOg6NuQtYiXaq4d6xOi6orifbfbbX4jMsLg/1//VYXKaJcnIreUQkfG4mi51p3kf8bnG5kYXM2udTT2IdiViHOuLmUM48BgmUcG47zc9q74GG8n5wS9dE93osakcWEFDE0WuMhTNDAVRfDt+CTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781216091; c=relaxed/simple;
-	bh=driLtFFPc2/aFa5tQeIQT0kqHjSvzncIJmA5n8m8Ti8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ujYFzKo4kgyJYYRyB1QdLVbh85e5K48HLtXwhjT0ldWDiCrL3rRptrX4WBcLtv1tFmWWATRma2d3fDdgPqN30Wxwc14t/37IDrZeO5qk81CkOUs5mBZVrlTH6FO/UwZeMJGppZ/5ilUsyZKTSc0zoyOwPlRR2+cYVFkIzDabbTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=Hk6EukkN; arc=none smtp.client-ip=209.85.160.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+	s=arc-20240116; t=1781216816; c=relaxed/simple;
+	bh=xVW9Bdt1R8FfYrs1bdcu57axvNjxmpnDpigeImiS8og=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=mTOCAomoV2g+53pcmBHxWSHKxdqka0mENA5R1+nQPY2aaJyxAJV2MwVRgmWG16zmzrsiiz1MmQTpjuIyVwGqyrYjgbO5Tl8PQkr7fCbNnLGPCfIgwIaH/wFlZ7wM+COY0r/ZBMzYL7cfjzzQ7AoSbiuvQP89mU9GOF9+KnZwGNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BcNwpAN9; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Hk6EukkN"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-5175eab3a93so2114451cf.2
-        for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 15:14:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google; t=1781216089; x=1781820889; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8TU5lI+UtOlVYfDvzN8n1Q1p4EuEL8icx+G3TWgzZwc=;
-        b=Hk6EukkN3JgY5a2y/WCgOZ5Ku02LMoqvT+bOkn8NbqlM6cSDWQcxUfBiTm/CBediGe
-         koRdsbmPyWxuBFHdpGyHrLF1imrx41vycYoesSI9qpdWKsyZddRVSzxFMEJhHhX0MYgq
-         RnEWYFDA7CjfI9E6JvQmlwaKD+Wo9EiNUsZAjfgjaUcudUtB7czxcbyb7Zv0GHLDoCzi
-         G1OjPNieqq0gJA7dWkVXNvYGBKn3THrN9GRe7RL0FW17qUIwwzmEaq7qX10sypeVxnOz
-         HfxhuczJdW4eKzmy0ZVaz2+RBLNXOQvEsWKkPCEsGvyk9oG4MwqVuJaTvOO7XKrCLxlI
-         xw/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781216089; x=1781820889;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=8TU5lI+UtOlVYfDvzN8n1Q1p4EuEL8icx+G3TWgzZwc=;
-        b=fE3lIzpPcoLoWjoAjgVSSGBMBZi6c262B4+bPmhtJgMJTbPQj7Xy4g8HZcviELmwgW
-         PVT+2KvoBnmwikwOUsH/pG4LdUVufUN0TYC+eP4jF7TNCqG4g5ORomMc/G0Pcwvw8hPp
-         ec0mTqsighBXxyJWmx3CabUUn57HduThUfSZfruthUG6kmc3fbFj3R0/iSPeveFyuygL
-         +maUT+/Py2AGmT7gEmvBmoyFWm3uPb9D9BSEn6wKwVIB7XIkLdJXmBaDYlT8uANlgk/R
-         FMMzVcNdZpFKbwePcFigwRtewG/jdA6q4skUKJCj8SODceNCaJPvvGOC7NOrHVhJv9Ib
-         xu1A==
-X-Gm-Message-State: AOJu0YwzV3ToW1jA51xklJXliAquGt1ygvAZvIhb/2SAhHUXXQPU5eKu
-	FXcRbhd7buRzRtN/eqrjfyfSg2Ls9bTRVdzjoUwKQwXQbMm5bORk/NaL9ZVnvBET/Ak=
-X-Gm-Gg: Acq92OHiK7B6KHQ1871sP66tbzCTtSbrs81flxin6gNzooZdgdh3DIdd/odVg6NVu3f
-	qKiklXnBbgrg16qHJLZIwmpI20vdgdk2DNot0ZzXIkyln7aa/AqIQ5/+5DL16ne9Sj++hb21unS
-	JytiXLyF1nqCtKTYeH6vZV/cyqxLkexAMpmF81g/SodKGQHVcG9MuAvld8jjlyWbPdzFV1AMPf+
-	ILjisMOXB+xjV9dovTTHUUnQLiKXi1qcE6++C8shLOe5QHmkQ5IyyYs9x9UZBcXcPrPK1V+CaP+
-	rJvLIGy/dtCTR5wjYirZI/DSbe8pamh8nehcOpPaXthDHhU48FL0CNAdggCo+1VLWK7nsPFGNkP
-	3FRX4ThxE887W7Vczcu3a9W5Qae3oQTZlKz1OlVf2hfqQwTWIzvCBZnGn0Zz9vP4pAdb7ea+1Cs
-	beKV7pAhyXeCL1jKfWU/i9JOL2Q4+m8uWwlOB1nT+tashq3miUs4IskSSnFJmIioDLPveBrH9CT
-	RUudg==
-X-Received: by 2002:a05:622a:90d:b0:517:d869:427b with SMTP id d75a77b69052e-517fe4ecf87mr871481cf.29.1781216089450;
-        Thu, 11 Jun 2026 15:14:49 -0700 (PDT)
-Received: from ziepe.ca (crbknf0213w-47-54-130-67.pppoe-dynamic.high-speed.nl.bellaliant.net. [47.54.130.67])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517fb7a00desm5011991cf.19.2026.06.11.15.14.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jun 2026 15:14:48 -0700 (PDT)
-Received: from jgg by wakko with local (Exim 4.97)
-	(envelope-from <jgg@ziepe.ca>)
-	id 1wXnfj-00000006bNK-2S4X;
-	Thu, 11 Jun 2026 19:14:47 -0300
-Date: Thu, 11 Jun 2026 19:14:47 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-To: Pranjal Shrivastava <praan@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>, Matt Evans <mattev@meta.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	Leon Romanovsky <leon@kernel.org>,
-	Shivaji Kant <shivajikant@google.com>,
-	Samiullah Khawaja <skhawaja@google.com>
-Subject: Re: [RFC PATCH 0/5] vfio/pci: Support ZONE_DEVICE-backed P2P
- Registration
-Message-ID: <20260611221447.GH1066031@ziepe.ca>
-References: <20260610151853.3608948-1-praan@google.com>
- <20260610162848.GO2764304@ziepe.ca>
- <airI0VIb563jHTcy@google.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BcNwpAN9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 41BB71F00A3A;
+	Thu, 11 Jun 2026 22:26:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781216815;
+	bh=BlddrtjDVCAlCgNHnLo0GABr55ofYJLh22S8cPPK6vE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=BcNwpAN9g6CyY54DyXzcOwLS0ZaRuogb/V+aAniatqyJ+wzg1FSqY5AOqNpmXnUTO
+	 Ql/Q4qQoJYEKmyRlevaGJa32KVHmqEYeM4y+sJ6gg+PMaoYdt9EsJU2Oz6XQ9S2/Ui
+	 ybBpcuVJWpAmmIEummwCwLeauvAlD+lEzDYeuYoJjElyiSEw8npN1zizgdbab/I7aB
+	 5sla8YC1c08m19/0XjV8mpISxV4W4zSRmoGssrfFqlGwfNJ3p2JiGVRJjHaFHD0g1I
+	 w3Uv1f7M5LBV0DaXbcE5tKiG8KeWUh8MRCtoD747Af2ovlYngx6DiEkVJlggtNlU5u
+	 QecWu1lX5QjZw==
+Date: Thu, 11 Jun 2026 17:26:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shuvam Pandey <shuvampandey1@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yue Wang <yue.wang@amlogic.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
+	Jerome Brunet <jbrunet@baylibre.com>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Fan Ni <fan.ni@samsung.com>, Shradha Todi <shradha.t@samsung.com>,
+	Hanjie Lin <hanjie.lin@amlogic.com>, linux-pci@vger.kernel.org,
+	linux-amlogic@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: meson: Add missing remove callback
+Message-ID: <20260611222653.GA527114@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -88,58 +53,63 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <airI0VIb563jHTcy@google.com>
+In-Reply-To: <1a0c86ab264cdc1c79c917e984b90991af51d827.1779123847.git.shuvampandey1@gmail.com>
 
-On Thu, Jun 11, 2026 at 02:40:17PM +0000, Pranjal Shrivastava wrote:
-> On Wed, Jun 10, 2026 at 01:28:48PM -0300, Jason Gunthorpe wrote:
-> > On Wed, Jun 10, 2026 at 03:18:48PM +0000, Pranjal Shrivastava wrote:
-> > 
-> > > Users utilize the standard sysfs p2pmem/allocate interface for managing
-> > > memory slices once a BAR is registered.
-> > 
-> > I'm shocked someone wants to use API, what are you expecting to do
-> > with it??
+On Mon, May 18, 2026 at 10:44:18PM +0545, Shuvam Pandey wrote:
+> meson_pcie_probe() powers on the PHY and registers the DesignWare host
+> bridge with dw_pcie_host_init(), but the driver has no remove callback.
+> On driver unbind or module unload, the driver core therefore proceeds to
+> devres cleanup without first unregistering the host bridge or powering off
+> the PHY.
 > 
-> Our primary use-case is PCIe BAR (DDR / HBM) -> NFS via P2PDMA while the
-> PCIe device is managed by a user-space driver based on vfio-pci. While
-> kernel drivers (e.g.drm) can register BARs with ZONE_DEVICE natively to
-> enable this, VFIO currently lacks an equivalent mechanism.
+> Add a remove callback that deinitializes the DesignWare host bridge and
+> powers off the PHY while device-managed resources are still valid.
 
-I mean the weird sysfs mmap API. It is only useful if the device is
-basically pure memory with no functionality. You can't even learn what
-MMIO offset the returned allocation gives so it is almost completely
-useless.
+What's the user-visible effect of this?  Does it avoid an oops?
+Reduce power usage?
 
-nvme could use it because CMB is pure memory and you reference it by
-its MMIO address, but that doesn't apply to VFIO..
+Of the 34 instances of .probe() in drivers/pci/controller/dwc/, on 12
+implement .remove(), so if this fixes a problem, I'm wondering whether
+other drivers have the same problem.
 
-> > > An alternative implementation has been explored which integrates with the
-> > > ongoing VFIO DMABUF-mmap refactor [1]. In that approach, rather than
-> > > registering a BAR as a system-wide P2P provider, VFIO optionally
-> > > allocates ZONE_DEVICE pages only for specifically exported DMABUFs via a
-> > > new VFIO_DMA_BUF_FLAG_ALLOC_STRUCT_PAGES flag.
-> > 
-> > That's probably more sensible but you can't have a DMABUF mmap
-> > actually install non-special memory. The native vfio mmap still can,
-> > but not mmap on the dmabuf fd. That's still workable, just keep in
-> > mind.
+> Fixes: 9c0ef6d34fdb ("PCI: amlogic: Add the Amlogic Meson PCIe controller driver")
+> Signed-off-by: Shuvam Pandey <shuvampandey1@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pci-meson.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> Ack. I guess, we could have a separate mmap path in case of BARs that are
-> struct page backed which doesn't go through the dmabuf exporter.
-
-The dmabuf export is perfectly fine, you just have to think very
-carefully about the mmap path.
-
-I suppose if you build the proper revocation fence for zone device
-pages as part of the vfio implementation it would be OK for dmabuf
-mmap to expose them as well since it would have the right lifecycle
-model.
-
-That's the tricky thing with zone_device, you have to be careful to
-wait for all the page references to be put back at all the right
-times.
-
-Come to think of it, since the sysfs API cannot do that in the way
-VFIO wants I actually think you can't use it..
-
-Jason
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+> index 0694084f6..c96e2244a 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -451,6 +451,14 @@ static int meson_pcie_probe(struct platform_device *pdev)
+>  	return ret;
+>  }
+>  
+> +static void meson_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct meson_pcie *mp = platform_get_drvdata(pdev);
+> +
+> +	dw_pcie_host_deinit(&mp->pci.pp);
+> +	meson_pcie_power_off(mp);
+> +}
+> +
+>  static const struct of_device_id meson_pcie_of_match[] = {
+>  	{
+>  		.compatible = "amlogic,axg-pcie",
+> @@ -464,6 +472,7 @@ MODULE_DEVICE_TABLE(of, meson_pcie_of_match);
+>  
+>  static struct platform_driver meson_pcie_driver = {
+>  	.probe = meson_pcie_probe,
+> +	.remove = meson_pcie_remove,
+>  	.driver = {
+>  		.name = "meson-pcie",
+>  		.of_match_table = meson_pcie_of_match,
+> -- 
+> 2.50.1 (Apple Git-155)
+> 
+> 
+> _______________________________________________
+> linux-amlogic mailing list
+> linux-amlogic@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-amlogic
