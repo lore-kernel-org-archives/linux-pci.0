@@ -1,362 +1,271 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0885842EEAA
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 16:46:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EDD434403D;
+	Thu, 11 Jun 2026 17:00:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781196387; cv=none; b=HQetkl9yHGYhqsG+A726gkw28dWwqGpd2J+M+c0spnoptfzE8gjilsEiXg42zxWA1fWDAsQ/J6SnNHYhOWTYUoxtZn5ACgmJXsWpoauPdzQLPNEq6DbGSfCwDyVVVM6l/m4HcWxuc+S7/TovJFHspnWhsFqdvvZ83yP9Mv2YMn8=
+	t=1781197210; cv=none; b=oUG2teck06lXyzDv4wu2vtKBvV213D+7W6xn3MONk9nmW4AnjviJeG4jmmgjwZcxNflpuz1atC7wcZeKes7SRCRNzneqNUay1atYqzn0zzat8aLdrJj57rHqz9P6lADXtJMqy+XUCRdatNZb0vQAOf9qF7g9MxSrdxB14ePKG+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781196387; c=relaxed/simple;
-	bh=Atlcqwx1CSWgGgkvnS0mRZ+P+9R1RYqnbvptj2L+F+8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aTcD5jUJu9gN5u4Vq9TMoQLVCqGQNlR0lSYhwPa9eAxYTREDarCWWucH8PIT02T5NQvsTmo1Ex/LWBoLGVR7udKD8rRGokWFAuJmpExio3QTvVKWNe1coJGCOuVIk/G5h4IKff2krkQICZ/Ixw1yDLS4FQgG7zzVeJW72s5xGeg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=GCRlI9JE; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1781197210; c=relaxed/simple;
+	bh=A4MGbRj/NGYRowDYj1+kKdUnRne4B7CPs0cXMnv9KMI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=LsTsRDon+aL5grIcnI/p5lwYDMxbUtzD9YiP2DYj6nA0Z+XLOXnAvLwYdVTOQXgt2rhct5UHq/sHZeyWkJ+tfDB/tQgM1sdng0EqjaZ3PErN04TIn97Bh7HnHqaV6POiyVuuA4+pUTZ8/B9nWMzA1WH8bIdeJ9Lanymyr/gIAmw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Q+YFC391; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="GCRlI9JE"
-Received: from pps.filterd (m0528007.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65BECju42241299
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 09:46:24 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2025-q2;
-	 bh=i0/fryQsHZZUsVpWLovLPhh4uANlkSKGKFUxbWvZ4kE=; b=GCRlI9JEnuhx
-	Sl1/K5JKeGBIsRlXMmgFITWKUVKP+QzM4E6F+G4ncR11jjNlaKjygRt8WQahf5Qy
-	5Owb3G2biK+qYe8Mrteh4smjeJyTLxIMjm54JOo8TGPbg7lY8vdwB/28lCB/yC1o
-	4a8pyMTDOAZPISDgT0s4U/HqY+uFlxqDf1gLN2Tqqss3/433EXpzznMQ4SwooE5t
-	EJ9idSicRgxxkkKsgvyzUgXnzbromuNz2NkT/NeO6mUfxew6vB6zEzEdPW9d4z8E
-	9XBYPDj9EOCvtw22TvvR27nCEO4LlZUBFQWslmLBpsJif0EcLx4ZgmO1Y5YrponX
-	SP5NXhy9DA==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 4eqe81pqcy-6
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 09:46:24 -0700 (PDT)
-Received: from twshared90953.15.frc2.facebook.com (2620:10d:c0a8:1c::1b) by
- mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.2562.41; Thu, 11 Jun 2026 16:46:20 +0000
-Received: by devbig259.ftw1.facebook.com (Postfix, from userid 664516)
-	id 663463DD363EC; Thu, 11 Jun 2026 09:23:46 -0700 (PDT)
-From: Zhiping Zhang <zhipingz@meta.com>
-To: <netdev@vger.kernel.org>
-CC: <kvm@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        Zhiping Zhang
-	<zhipingz@meta.com>
-Subject: [PATCH v7 4/5] vfio/pci: implement get_tph and DMA_BUF_TPH feature
-Date: Thu, 11 Jun 2026 09:11:19 -0700
-Message-ID: <20260611161546.4075580-5-zhipingz@meta.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20260611161546.4075580-1-zhipingz@meta.com>
-References: <20260611161546.4075580-1-zhipingz@meta.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Q+YFC391"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=qb
+	TxoXO4EpXLwxSblJxz8PYIzkBdGWKbjTYCDndhxBM=; b=Q+YFC391E7gVlQb78J
+	Qu/IukssMrMTAgIjJamBLEBTBkOfD5+SMwUeAmQFWoTzbr03jf9/lo242sYBmz5s
+	VDyvdJ8of9ictKCrOO7QkT5Eg7LEIqmCxMW4clWb+1g5AA8+Gf0XtIBDpYswtz2d
+	iPkZ9jDuDY1jal+5Nqf1L+50w=
+Received: from zhb.. (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgCXxPp36SpqDeA0Bw--.8139S5;
+	Fri, 12 Jun 2026 00:59:38 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org
+Cc: robh@kernel.org,
+	mpillai@cadence.com,
+	a-garg7@ti.com,
+	s-vadapalli@ti.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v7 3/3] PCI: cadence: Add LGA IP debugfs for LTSSM status
+Date: Fri, 12 Jun 2026 00:59:33 +0800
+Message-Id: <20260611165933.20071-4-18255117159@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260611165933.20071-1-18255117159@163.com>
+References: <20260611165933.20071-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Authority-Analysis: v=2.4 cv=d8nFDxjE c=1 sm=1 tr=0 ts=6a2ae660 cx=c_pps
- a=MfjaFnPeirRr97d5FC5oHw==:117 a=MfjaFnPeirRr97d5FC5oHw==:17
- a=FelO9ux0wxsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=7x6HtfJdh03M6CCDgxCd:22
- a=4h92JMTCafKA-fb_NiOh:22 a=VabnemYjAAAA:8 a=pIVkarnfHJxX8sQW8bgA:9
- a=gKebqoRLp9LExxC7YDUY:22
-X-Proofpoint-GUID: bgwpT6Im6byFwU_KAHfaGyGRJMaj074Q
-X-Proofpoint-ORIG-GUID: bgwpT6Im6byFwU_KAHfaGyGRJMaj074Q
-X-Proofpoint-Spam-Info: AW1haW4tMjYwNjExMDE2OCBTYWx0ZWRfX5XHAdaqrl4M3
- 6106yhtK8e6xDUlkfAScdAODU7yfAYgkdyBYnxjcm+vdaPvPKLO4om0mKftUqjbjyqWJxWFQ5tZ
- qmZLYPayuGMPIn97p41pxCvQsETCDqU=
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjExMDE2OCBTYWx0ZWRfX1AMVd1+wwf9y
- mCP/w9Gv11ZJSYh2wAnxdUrAeRHpgX7SRqE4RQf2wJ+Btx4c+CSVvIgoC6got/eAYLSmFI6F3YF
- PnMEeBKsBBRPL37/8o89rKAscATuX727Yv+4+nU7lj6MaewgI1OY4iVK0Q/fGp5Ft2Y9aOYh1TN
- fMly5c1u6v175tNvpDJCqpeJpXFdyIn5INMaMsT6ht37phDVqfnPJuU+yBOTWvNBpVhOu6I9HXN
- lTvFztRQ3243sox2Y1m+TSicF4uzytKRMtkZJ8ab58Tu0dUnQm8CVPxMepF2LANxQhqXdh02HFn
- zMZfdOzSTy2A7Oyc2weJ7Izfsls38qC+v2V0T+st5f0/XtysZoq21D/ZfyiejJT/5n5A8boV693
- uVy8E6i/GVcagiSgxQZx+KZixxokCKyDK/PU2CSwImRiFcP/7SEDPdGufTyjlE79z99JmJBAAcq
- m4Vn/PcS6cyZk2gbrOw==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
- definitions=2026-06-11_03,2026-06-11_01,2025-10-01_01
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PigvCgCXxPp36SpqDeA0Bw--.8139S5
+X-Coremail-Antispam: 1Uf129KBjvJXoWxtF1UKr17tFyUJr1UGw4kZwb_yoWDGF4DpF
+	ykCayvyF4IvwnFva1jy3WkZF45JFsayFZrCrs7ArW0k3ZxA3WDWr45Jr4vkrZ5tFsrWr12
+	qwn0yrnrGayfJ3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zMVbkUUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbCxBu9YWoq6XvrBgAA38
 
-Implement dma-buf get_tph for vfio-pci exported dma-bufs and add
-VFIO_DEVICE_FEATURE_DMA_BUF_TPH so userspace can publish TPH metadata
-for a VFIO-owned device.
+Extend debugfs support to LGA-based Cadence PCIe controllers. The
+'ltssm_status' file now works for both HPA and LGA IP by selecting the
+appropriate register access based on the 'is_hpa' flag.
 
-8-bit ST and 16-bit Extended ST are distinct PCIe TPH namespaces; the
-uAPI carries both with explicit validity flags, and get_tph() returns
-the value matching the importer's requested namespace or -EOPNOTSUPP.
-
-Publish and read the TPH descriptor under dmabuf->resv, matching the
-locking used for other importer-visible dma-buf state. The SET ioctl
-takes dma_resv_lock_interruptible(), while the callback runs under
-DMA-buf's asserted resv lock.
-
-Reject requests the device cannot consume as a completer:
-pcie_tph_completer_type() must report at least
-PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY, and Extended ST requires
-PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH. Validate fields before the completer
-check so userspace gets the narrowest errno.
-
-Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c   |  3 +
- drivers/vfio/pci/vfio_pci_dmabuf.c | 94 +++++++++++++++++++++++++++++-
- drivers/vfio/pci/vfio_pci_priv.h   | 12 ++++
- include/uapi/linux/vfio.h          | 37 ++++++++++++
- 4 files changed, 145 insertions(+), 1 deletion(-)
+ .../controller/cadence/pcie-cadence-debugfs.c | 61 ++++++++++++++++++-
+ .../pci/controller/cadence/pcie-cadence-ep.c  |  3 +
+ .../controller/cadence/pcie-cadence-host.c    |  9 ++-
+ drivers/pci/controller/cadence/pcie-cadence.h | 43 +++++++++++++
+ 4 files changed, 112 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci=
-_core.c
-index 050e7542952e..4fa36f2f7555 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -1569,6 +1569,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device =
-*device, u32 flags,
- 		return vfio_pci_core_feature_token(vdev, flags, arg, argsz);
- 	case VFIO_DEVICE_FEATURE_DMA_BUF:
- 		return vfio_pci_core_feature_dma_buf(vdev, flags, arg, argsz);
-+	case VFIO_DEVICE_FEATURE_DMA_BUF_TPH:
-+		return vfio_pci_core_feature_dma_buf_tph(vdev, flags, arg,
-+							 argsz);
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/drivers/vfio/pci/vfio_pci_dmabuf.c b/drivers/vfio/pci/vfio_p=
-ci_dmabuf.c
-index 1a177ce7de54..0a0705c8dbea 100644
---- a/drivers/vfio/pci/vfio_pci_dmabuf.c
-+++ b/drivers/vfio/pci/vfio_pci_dmabuf.c
-@@ -3,6 +3,7 @@
-  */
- #include <linux/dma-buf-mapping.h>
- #include <linux/pci-p2pdma.h>
-+#include <linux/pci-tph.h>
- #include <linux/dma-resv.h>
-=20
- #include "vfio_pci_priv.h"
-@@ -19,7 +20,12 @@ struct vfio_pci_dma_buf {
- 	u32 nr_ranges;
- 	struct kref kref;
- 	struct completion comp;
--	u8 revoked : 1;
-+	u8 tph_st_valid:1;
-+	u8 tph_st_ext_valid:1;
-+	u8 tph_ph:2;
-+	u8 tph_st;
-+	u16 tph_st_ext;
-+	u8 revoked:1;
- };
-=20
- static int vfio_pci_dma_buf_attach(struct dma_buf *dmabuf,
-@@ -69,6 +75,26 @@ vfio_pci_dma_buf_map(struct dma_buf_attachment *attach=
-ment,
- 	return ret;
- }
-=20
-+static int vfio_pci_dma_buf_get_tph(struct dma_buf *dmabuf, bool extende=
-d,
-+				    u16 *steering_tag, u8 *ph)
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-debugfs.c b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+index 61960840ba67..6e34138e165b 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-debugfs.c
+@@ -13,6 +13,58 @@
+ 
+ #define CDNS_DEBUGFS_BUF_MAX		128
+ 
++static const char *cdns_pcie_lga_ltssm_status_string(enum cdns_pcie_lga_ltssm ltssm)
 +{
-+	struct vfio_pci_dma_buf *priv =3D dmabuf->priv;
++	const char *str;
 +
-+	dma_resv_assert_held(dmabuf->resv);
-+
-+	if (extended) {
-+		if (!priv->tph_st_ext_valid)
-+			return -EOPNOTSUPP;
-+		*steering_tag =3D priv->tph_st_ext;
-+	} else {
-+		if (!priv->tph_st_valid)
-+			return -EOPNOTSUPP;
-+		*steering_tag =3D priv->tph_st;
++	switch (ltssm) {
++#define CDNS_PCIE_LGA_LTSSM_NAME(n) case n: str = #n; break
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_DETECT_QUIET);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_DETECT_ACTIVE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_POLLING_ACTIVE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_POLLING_COMPLIANCE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_POLLING_CONFIGURATION);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LINKWIDTH_START);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LINKWIDTH_ACCEPT);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LANENUM_ACCEPT);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LANENUM_WAIT);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_CONFIGURATION_COMPLETE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_CONFIGURATION_IDLE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_RCVRLOCK);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_SPEED);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_RCVRCFG);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_IDLE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_L0);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RX_L0S_ENTRY);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RX_L0S_IDLE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RX_L0S_FTS);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_TX_L0S_ENTRY);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_TX_L0S_IDLE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_TX_L0S_FTS);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_L1_ENTRY);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_L1_IDLE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_L2_IDLE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_L2_TRANSMITWAKE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_DISABLED);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_LOOPBACK_ENTRY_MASTER);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_LOOPBACK_ACTIVE_MASTER);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_LOOPBACK_EXIT_MASTER);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_LOOPBACK_ENTRY_SLAVE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_LOOPBACK_ACTIVE_SLAVE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_LOOPBACK_EXIT_SLAVE);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_HOT_RESET);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_0);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_1);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_2);
++	CDNS_PCIE_LGA_LTSSM_NAME(CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_3);
++	default:
++		str = "CDNS_PCIE_LGA_LTSSM_UNKNOWN";
++		break;
 +	}
-+	*ph =3D priv->tph_ph;
-+	return 0;
++
++	return str + strlen("CDNS_PCIE_LGA_LTSSM_");
 +}
 +
- static void vfio_pci_dma_buf_unmap(struct dma_buf_attachment *attachment=
-,
- 				   struct sg_table *sgt,
- 				   enum dma_data_direction dir)
-@@ -101,6 +127,7 @@ static void vfio_pci_dma_buf_release(struct dma_buf *=
-dmabuf)
-=20
- static const struct dma_buf_ops vfio_pci_dmabuf_ops =3D {
- 	.attach =3D vfio_pci_dma_buf_attach,
-+	.get_tph =3D vfio_pci_dma_buf_get_tph,
- 	.map_dma_buf =3D vfio_pci_dma_buf_map,
- 	.unmap_dma_buf =3D vfio_pci_dma_buf_unmap,
- 	.release =3D vfio_pci_dma_buf_release,
-@@ -333,6 +360,71 @@ int vfio_pci_core_feature_dma_buf(struct vfio_pci_co=
-re_device *vdev, u32 flags,
- 	return ret;
+ static const char *cdns_pcie_hpa_ltssm_status_string(enum cdns_pcie_hpa_ltssm ltssm)
+ {
+ 	const char *str;
+@@ -158,6 +210,7 @@ static const char *cdns_pcie_hpa_ltssm_status_string(enum cdns_pcie_hpa_ltssm lt
+ static int ltssm_status_show(struct seq_file *s, void *v)
+ {
+ 	struct cdns_pcie *pci = s->private;
++	enum cdns_pcie_lga_ltssm lga_ltssm;
+ 	enum cdns_pcie_hpa_ltssm hpa_ltssm;
+ 	const char *str_ltssm;
+ 	u32 val;
+@@ -168,11 +221,13 @@ static int ltssm_status_show(struct seq_file *s, void *v)
+ 		hpa_ltssm = FIELD_GET(CDNS_PCIE_HPA_LTSSM_STATUS_MASK, val);
+ 		str_ltssm = cdns_pcie_hpa_ltssm_status_string(hpa_ltssm);
+ 	} else {
+-		/* TODO: LGA IP*/
+-		return 0;
++		val = cdns_pcie_readl(pci, CDNS_PCIE_LM_BASE);
++		lga_ltssm = FIELD_GET(CDNS_PCIE_LGA_LTSSM_STATUS_MASK, val);
++		str_ltssm = cdns_pcie_lga_ltssm_status_string(lga_ltssm);
+ 	}
+ 
+-	seq_printf(s, "%s (0x%02x)\n", str_ltssm, hpa_ltssm);
++	seq_printf(s, "%s (0x%02x)\n", str_ltssm,
++		   pci->is_hpa ? hpa_ltssm : lga_ltssm);
+ 
+ 	return 0;
  }
-=20
-+int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-+				      u32 flags,
-+				      struct vfio_device_feature_dma_buf_tph __user *arg,
-+				      size_t argsz)
-+{
-+	struct vfio_device_feature_dma_buf_tph set_tph;
-+	struct vfio_pci_dma_buf *priv;
-+	struct dma_buf *dmabuf;
-+	u8 comp;
-+	int ret;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index c0e1194a936b..370b19f4d38f 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -655,6 +655,7 @@ void cdns_pcie_ep_disable(struct cdns_pcie_ep *ep)
+ 	struct device *dev = ep->pcie.dev;
+ 	struct pci_epc *epc = to_pci_epc(dev);
+ 
++	cdns_pcie_debugfs_deinit(&ep->pcie);
+ 	pci_epc_deinit_notify(epc);
+ 	pci_epc_mem_free_addr(epc, ep->irq_phys_addr, ep->irq_cpu_addr,
+ 			      SZ_128K);
+@@ -761,6 +762,8 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+ 
+ 	pci_epc_init_notify(epc);
+ 
++	cdns_pcie_debugfs_init(pcie);
 +
-+	ret =3D vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-+				 sizeof(set_tph));
-+	if (ret !=3D 1)
+ 	return 0;
+ 
+  free_epc_mem:
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 87fd8afa301b..2ab8d8ac0595 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -364,6 +364,7 @@ void cdns_pcie_host_disable(struct cdns_pcie_rc *rc)
+ {
+ 	struct pci_host_bridge *bridge;
+ 
++	cdns_pcie_debugfs_deinit(&rc->pcie);
+ 	bridge = pci_host_bridge_from_priv(rc);
+ 	pci_lock_rescan_remove();
+ 	pci_stop_root_bus(bridge->bus);
+@@ -425,7 +426,13 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 	if (!bridge->ops)
+ 		bridge->ops = &cdns_pcie_host_ops;
+ 
+-	return pci_host_probe(bridge);
++	ret = pci_host_probe(bridge);
++	if (ret)
 +		return ret;
 +
-+	if (copy_from_user(&set_tph, arg, sizeof(set_tph)))
-+		return -EFAULT;
++	cdns_pcie_debugfs_init(pcie);
 +
-+	if (set_tph.flags & ~(VFIO_DMA_BUF_TPH_ST | VFIO_DMA_BUF_TPH_ST_EXT))
-+		return -EINVAL;
-+
-+	if (set_tph.ph & ~0x3)
-+		return -EINVAL;
-+
-+	comp =3D pcie_tph_completer_type(vdev->pdev);
-+	if (comp =3D=3D PCI_EXP_DEVCAP2_TPH_COMP_NONE)
-+		return -EOPNOTSUPP;
-+	if ((set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT) &&
-+	    comp !=3D PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH)
-+		return -EOPNOTSUPP;
-+
-+	dmabuf =3D dma_buf_get(set_tph.dmabuf_fd);
-+	if (IS_ERR(dmabuf))
-+		return PTR_ERR(dmabuf);
-+
-+	if (dmabuf->ops !=3D &vfio_pci_dmabuf_ops) {
-+		ret =3D -EINVAL;
-+		goto out_put;
-+	}
-+
-+	priv =3D dmabuf->priv;
-+	if (priv->vdev !=3D vdev) {
-+		ret =3D -EINVAL;
-+		goto out_put;
-+	}
-+
-+	ret =3D dma_resv_lock_interruptible(dmabuf->resv, NULL);
-+	if (ret)
-+		goto out_put;
-+
-+	priv->tph_st         =3D set_tph.steering_tag;
-+	priv->tph_st_ext     =3D set_tph.steering_tag_ext;
-+	priv->tph_ph         =3D set_tph.ph;
-+	priv->tph_st_valid   =3D !!(set_tph.flags & VFIO_DMA_BUF_TPH_ST);
-+	priv->tph_st_ext_valid =3D
-+		!!(set_tph.flags & VFIO_DMA_BUF_TPH_ST_EXT);
-+	dma_resv_unlock(dmabuf->resv);
-+	ret =3D 0;
-+
-+out_put:
-+	dma_buf_put(dmabuf);
-+	return ret;
-+}
-+
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revok=
-ed)
- {
- 	struct vfio_pci_dma_buf *priv;
-diff --git a/drivers/vfio/pci/vfio_pci_priv.h b/drivers/vfio/pci/vfio_pci=
-_priv.h
-index fca9d0dfac90..c58f369be4b3 100644
---- a/drivers/vfio/pci/vfio_pci_priv.h
-+++ b/drivers/vfio/pci/vfio_pci_priv.h
-@@ -118,6 +118,10 @@ static inline bool vfio_pci_is_vga(struct pci_dev *p=
-dev)
- int vfio_pci_core_feature_dma_buf(struct vfio_pci_core_device *vdev, u32=
- flags,
- 				  struct vfio_device_feature_dma_buf __user *arg,
- 				  size_t argsz);
-+int vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev,
-+				      u32 flags,
-+				      struct vfio_device_feature_dma_buf_tph __user *arg,
-+				      size_t argsz);
- void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device *vdev);
- void vfio_pci_dma_buf_move(struct vfio_pci_core_device *vdev, bool revok=
-ed);
- #else
-@@ -128,6 +132,14 @@ vfio_pci_core_feature_dma_buf(struct vfio_pci_core_d=
-evice *vdev, u32 flags,
- {
- 	return -ENOTTY;
++	return 0;
  }
-+
-+static inline int
-+vfio_pci_core_feature_dma_buf_tph(struct vfio_pci_core_device *vdev, u32=
- flags,
-+				  struct vfio_device_feature_dma_buf_tph __user *arg,
-+				  size_t argsz)
-+{
-+	return -ENOTTY;
-+}
- static inline void vfio_pci_dma_buf_cleanup(struct vfio_pci_core_device =
-*vdev)
- {
- }
-diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-index 5de618a3a5ee..5dd693220a0d 100644
---- a/include/uapi/linux/vfio.h
-+++ b/include/uapi/linux/vfio.h
-@@ -1534,6 +1534,43 @@ struct vfio_device_feature_dma_buf {
-  */
- #define VFIO_DEVICE_FEATURE_MIG_PRECOPY_INFOv2  12
-=20
-+/**
-+ * Upon VFIO_DEVICE_FEATURE_SET associate TPH (TLP Processing Hints) met=
-adata
-+ * with a vfio-exported dma-buf. The dma-buf must have been created by
-+ * VFIO_DEVICE_FEATURE_DMA_BUF on this device, and the device must repor=
-t
-+ * TPH Completer support in Device Capabilities 2 (bits 13:12); requests
-+ * carrying VFIO_DMA_BUF_TPH_ST_EXT additionally require the device to
-+ * report the Extended TPH Completer encoding. Otherwise the ioctl
-+ * returns -EOPNOTSUPP.
-+ *
-+ * dmabuf_fd is the file descriptor returned by VFIO_DEVICE_FEATURE_DMA_=
-BUF.
-+ *
-+ * 8-bit ST (steering_tag) and 16-bit Extended ST (steering_tag_ext) are
-+ * distinct namespaces. Userspace supplies whichever values are valid an=
-d sets
-+ * the matching VFIO_DMA_BUF_TPH_ST / VFIO_DMA_BUF_TPH_ST_EXT bits in @f=
-lags;
-+ * an importer requests one namespace and receives the matching value.
-+ *
-+ * @flags =3D=3D 0 marks any previously published ST / Extended-ST as in=
-valid
-+ * for future get_tph() requests on this dma-buf.
-+ *
-+ * ph is the 2-bit TLP Processing Hint and must be in the range [0, 3].
-+ *
-+ * Userspace must publish TPH before handing the dma-buf fd to an import=
-er.
-+ * Calling SET again replaces the published values.
-+ */
-+#define VFIO_DEVICE_FEATURE_DMA_BUF_TPH 13
-+
-+#define VFIO_DMA_BUF_TPH_ST		(1 << 0)
-+#define VFIO_DMA_BUF_TPH_ST_EXT		(1 << 1)
-+
-+struct vfio_device_feature_dma_buf_tph {
-+	__s32	dmabuf_fd;
-+	__u32	flags;
-+	__u16	steering_tag_ext;
-+	__u8	steering_tag;
-+	__u8	ph;
+ EXPORT_SYMBOL_GPL(cdns_pcie_host_setup);
+ 
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 8de292405765..195c42140f29 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -14,6 +14,7 @@
+ #include "pcie-cadence-lga-regs.h"
+ #include "pcie-cadence-hpa-regs.h"
+ 
++#define CDNS_PCIE_LGA_LTSSM_STATUS_MASK	GENMASK(29, 24)
+ #define CDNS_PCIE_HPA_LTSSM_STATUS_MASK	GENMASK(27, 20)
+ 
+ enum cdns_pcie_rp_bar {
+@@ -44,6 +45,48 @@ enum cdns_pcie_reg_bank {
+ 	REG_BANKS_MAX,
+ };
+ 
++enum cdns_pcie_lga_ltssm {
++	CDNS_PCIE_LGA_LTSSM_DETECT_QUIET			= 0x00,
++	CDNS_PCIE_LGA_LTSSM_DETECT_ACTIVE			= 0x01,
++	CDNS_PCIE_LGA_LTSSM_POLLING_ACTIVE			= 0x02,
++	CDNS_PCIE_LGA_LTSSM_POLLING_COMPLIANCE			= 0x03,
++	CDNS_PCIE_LGA_LTSSM_POLLING_CONFIGURATION		= 0x04,
++	CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LINKWIDTH_START	= 0x05,
++	CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LINKWIDTH_ACCEPT	= 0x06,
++	CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LANENUM_ACCEPT	= 0x07,
++	CDNS_PCIE_LGA_LTSSM_CONFIGURATION_LANENUM_WAIT		= 0x08,
++	CDNS_PCIE_LGA_LTSSM_CONFIGURATION_COMPLETE		= 0x09,
++	CDNS_PCIE_LGA_LTSSM_CONFIGURATION_IDLE			= 0x0A,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_RCVRLOCK			= 0x0B,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_SPEED			= 0x0C,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_RCVRCFG			= 0x0D,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_IDLE			= 0x0E,
++	CDNS_PCIE_LGA_LTSSM_L0					= 0x10,
++	CDNS_PCIE_LGA_LTSSM_RX_L0S_ENTRY			= 0x11,
++	CDNS_PCIE_LGA_LTSSM_RX_L0S_IDLE				= 0x12,
++	CDNS_PCIE_LGA_LTSSM_RX_L0S_FTS				= 0x13,
++	CDNS_PCIE_LGA_LTSSM_TX_L0S_ENTRY			= 0x14,
++	CDNS_PCIE_LGA_LTSSM_TX_L0S_IDLE				= 0x15,
++	CDNS_PCIE_LGA_LTSSM_TX_L0S_FTS				= 0x16,
++	CDNS_PCIE_LGA_LTSSM_L1_ENTRY				= 0x17,
++	CDNS_PCIE_LGA_LTSSM_L1_IDLE				= 0x18,
++	CDNS_PCIE_LGA_LTSSM_L2_IDLE				= 0x19,
++	CDNS_PCIE_LGA_LTSSM_L2_TRANSMITWAKE			= 0x1A,
++	CDNS_PCIE_LGA_LTSSM_DISABLED				= 0x20,
++	CDNS_PCIE_LGA_LTSSM_LOOPBACK_ENTRY_MASTER		= 0x21,
++	CDNS_PCIE_LGA_LTSSM_LOOPBACK_ACTIVE_MASTER		= 0x22,
++	CDNS_PCIE_LGA_LTSSM_LOOPBACK_EXIT_MASTER		= 0x23,
++	CDNS_PCIE_LGA_LTSSM_LOOPBACK_ENTRY_SLAVE		= 0x24,
++	CDNS_PCIE_LGA_LTSSM_LOOPBACK_ACTIVE_SLAVE		= 0x25,
++	CDNS_PCIE_LGA_LTSSM_LOOPBACK_EXIT_SLAVE			= 0x26,
++	CDNS_PCIE_LGA_LTSSM_HOT_RESET				= 0x27,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_0	= 0x28,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_1	= 0x29,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_2	= 0x2A,
++	CDNS_PCIE_LGA_LTSSM_RECOVERY_EQUALIZATION_PHASE_3	= 0x2B,
++	CDNS_PCIE_LGA_LTSSM_UNKNOWN				= 0xFFFFFFFF,
 +};
 +
- /* -------- API for Type1 VFIO IOMMU -------- */
-=20
- /**
---=20
-2.53.0-Meta
+ enum cdns_pcie_hpa_ltssm {
+ 	CDNS_PCIE_HPA_LTSSM_DETECT_QUIET		= 0,
+ 	CDNS_PCIE_HPA_LTSSM_DETECT_QUIET_ENTRY		= 1,
+-- 
+2.34.1
 
