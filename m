@@ -1,75 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E731B36CE03;
-	Thu, 11 Jun 2026 22:06:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E3638E129;
+	Thu, 11 Jun 2026 22:10:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781215590; cv=none; b=E12NbXUnichnsfRlQnom2Gf2SEbRxU7n/ml25kYF4qqAC73CDkRR0bcHDRWsgUeBffQuO7JHQOiWv0WcUr5pDMRlA2x3bxxUnIzB+AuSvKH1Cvb49FhiIs2msb/K7kfgU2yJgcceZdbsChD32YxupRi1bgKVYNYxExEbdLigKTA=
+	t=1781215804; cv=none; b=AFO65oAbgqPqF9jw8EGqGcNMKvE60Ka18Wy2HXEgvsozCGDvg9FyJvtBFt3oKEmHXhVGFNzes6IvobOxDIF/jRy0xYr6HyfjitjAexu8ijcpDsymQ6TTZtuzfyASsBDNm0paIdVoXIDRplq068niSJgeif2ErvnH2Nwv3c95vuQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781215590; c=relaxed/simple;
-	bh=1+Fu6xQqAZjFPg10nIgV2EIBK+Epez+QhHFubi5pCBQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nFwHhczRAj5EEd49K63NOX3IZqAziBX97F6HXQDZ/GAU69N840kLEazJHt8+AiOH5GzRdAjVvow9glNhvQMy6I/Lo1SNO2AScg+gzG1U1ERl3FsnNSSvvXk5QZScCzlxlhfLKlVAQRoQuqY/a7H9avBtJmSe8rRWH+7bExtCk4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KMR4rJFg; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781215804; c=relaxed/simple;
+	bh=865w9fZBcCWpZ8bfo9NmSFiRhVhRtUx2f56KBYcegwA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=pnqOV76HdL8PEoQF9Xb1QMQiAs5lM3DEKIL5KVhHpq9CHg0skOF2PxmmlAdSyW+pn49kK4M+dQ4xflLafTfeAysFMnYYpb5lh79oY2YxmeEKB0kfV4BIKISxk+6q/L1xMsUnLV2IbrLdjzjbvNlop/hvXDvwxxTybxngSC8UK5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WT9pt1f2; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KMR4rJFg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DB441F000E9;
-	Thu, 11 Jun 2026 22:06:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WT9pt1f2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A0C71F000E9;
+	Thu, 11 Jun 2026 22:10:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781215589;
-	bh=d4jkEdHNeRbnxD+sRfLfqYzsT1pyKMAHjLP9pToS+iw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=KMR4rJFge8VszC/VcUQkowiFhOLgrbrkp7kUgMbFdjFWQROXLFj4jpsKxDHfCKPL3
-	 G4G9r/O4TaPDnzqq7bg1TzrMtSCjy3yVXmZ2+CmrkZvpDndAeIL+99x7agr9qFMVPL
-	 2oeRpCyVOrFT1PpXpuBUBOxgBKD3HHWuRLTbQqkZwMJloYx/E3JwRPfzF+sVAx/jaX
-	 Ziu0whO2ajBgoCMd5R5xOczSMXnzQUIwSoQFytHJyNIuQpY3TmdQSAX58KC/mushVz
-	 S+RH9e17z++iy5IAbpluc5licSLoeig+MxTQ4mc9TK0VebWwL+3iKvpJ59VgUqwwls
-	 8MEkVbX+zFZBg==
-Date: Fri, 12 Jun 2026 07:06:27 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Frank.Li@oss.nxp.com
-Cc: mani@kernel.org, kishon@kernel.org, bhelgaas@google.com, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, imx@lists.linux.dev, 
-	Frank Li <Frank.Li@nxp.com>
-Subject: Re: [PATCH 1/1] MAINTAINERS: PCI: endpoint: Add Frank Li as reviewer
-Message-ID: <20260611220302.GA395823@rocinante>
-References: <20260611210007.529205-1-Frank.Li@oss.nxp.com>
+	s=k20260515; t=1781215801;
+	bh=uzVD5s+95WmQgg4kuThSYNI11+iYet9ftNMS9PZCYWg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=WT9pt1f23qU4nuc0lOmfmxft1w4QZmMjX0jSY3qNiMo/1MI3uhXlQpq1dU8bwe3ws
+	 dKLDI9s1ONUJa4yXyoaJP1GZ9nxqesa1kBVF+o+9GacgWztrt8CWjXRKjOfgAhLDSw
+	 MOLaWjmN3IAie74C3apbYLj1TiMSoyaHRJ7y7k1cAgiE2wALhPxRD/FJdZn/U3Gxa0
+	 UnA10NC75Jc3M3lzyMnV/CezfGkg7AcMp0Uv1WuBWQEeL/euBhKlgBvM5nYjHfxMBT
+	 09RFTPlAH+VaP87iW/ufGpEEasyjaqL9KCEcILJ2A2RoDVcy5Im37as4iryc2s27r9
+	 /4YGpGUI5HtTA==
+Date: Thu, 11 Jun 2026 17:10:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shuvam Pandey <shuvampandey1@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yue Wang <yue.wang@amlogic.com>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Rob Herring <robh@kernel.org>, Kevin Hilman <khilman@baylibre.com>,
+	Jerome Brunet <jbrunet@baylibre.com>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	Fan Ni <fan.ni@samsung.com>, Shradha Todi <shradha.t@samsung.com>,
+	Hanjie Lin <hanjie.lin@amlogic.com>, linux-pci@vger.kernel.org,
+	linux-amlogic@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: dwc: Guard RAS DES debugfs deinit
+Message-ID: <20260611221000.GA524832@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20260611210007.529205-1-Frank.Li@oss.nxp.com>
+In-Reply-To: <0f97352506d8d813f70f441de4d63fcd5b7d1c3e.1779123847.git.shuvampandey1@gmail.com>
 
-Hello,
-
-> Add myself as a reviewer to ensure he is notified when related patches are
-> posted.
+On Mon, May 18, 2026 at 10:44:17PM +0545, Shuvam Pandey wrote:
+> dwc_pcie_rasdes_debugfs_init() returns success when the controller has
+> no RAS DES capability, leaving pci->debugfs->rasdes_info unset. The
+> common debugfs teardown path still calls
+> dwc_pcie_rasdes_debugfs_deinit(), which dereferences rasdes_info
+> unconditionally.
 > 
-> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> Return early when no RAS DES state was allocated. In that case no RAS DES
+> mutex was initialized, so there is nothing to destroy.
+> 
+> Fixes: 4fbfa17f9a07 ("PCI: dwc: Add debugfs based Silicon Debug support for DWC")
+> Signed-off-by: Shuvam Pandey <shuvampandey1@gmail.com>
 > ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/pci/controller/dwc/pcie-designware-debugfs.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index d5cea10654fd4..8a9144e9206ac 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -20749,6 +20749,7 @@ PCI ENDPOINT SUBSYSTEM
->  M:	Manivannan Sadhasivam <mani@kernel.org>
->  M:	Krzysztof Wilczyński <kwilczynski@kernel.org>
->  R:	Kishon Vijay Abraham I <kishon@kernel.org>
-> +R:	Frank Li <Frank.Li@kernel.org>
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+> index d0884253b..c3671cb2f 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+> @@ -557,6 +557,9 @@ static void dwc_pcie_rasdes_debugfs_deinit(struct dw_pcie *pci)
+>  {
+>  	struct dwc_pcie_rasdes_info *rinfo = pci->debugfs->rasdes_info;
+>  
+> +	if (!rinfo)
+> +		return;
 
-Sounds good!
+I guess this prevents a NULL pointer dereference, right?
 
-Reviewed-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-
-Thank you!
-
-	Krzysztof
+>  	mutex_destroy(&rinfo->reg_event_lock);
+>  }
+>  
+> -- 
+> 2.50.1 (Apple Git-155)
+> 
+> 
+> _______________________________________________
+> linux-amlogic mailing list
+> linux-amlogic@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-amlogic
