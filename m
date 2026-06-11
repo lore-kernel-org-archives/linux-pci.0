@@ -1,117 +1,148 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08DB733D6F7
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 04:43:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781153001; cv=none; b=lYjADLbDQHDQLAvOh3r41imofbKcpf9KeoPU9ftooMyaL8BbiuEnZzYFXWgdUmtJyUoWosd7k/BUmXP+2V5YdvsP4KFzQDzCeBEExKuGeLNil8DrMJaYvOc2WqwPOM969I/eqYa5213vbTebJ2PyCuP7+F2yzqv6vQxG1CRwzl0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781153001; c=relaxed/simple;
-	bh=51fwaAf64FzofFfgwzNCWoO/6ksD1+r+yYyCpLXZNBE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Km+5/3X7sbUTi/m4wQgyayX3OXSvluU6crvTrgrf9gQLYcnQD/frVL0wZIQgPhaffO2d0cjCrp9ZESSTOUFNgI5rk7DN5KX4PoPD4TaC77HLxN4In/GoSuT46Lf8zTAhQnfap3YOY6Z3FxJVPN6zu+DplGFDvAHfAEfSb5m8FnY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=i7jLg2Us; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83D70309F1B
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 05:09:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.82.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781154596; cv=pass; b=NMVzU5H+UZ4XZT7u6XqAsiMOmx3LTmW4ncBpbc+dMFK29LTknnYQ+x50YricCUInrjpqRNTj0scgeCKyyBnCD1RJi5vhR8A0Dpa+cBDULejMA8SFb6FjPXVy8yN6TEzR5D1BkKJLf7k3N9p1TYzHuoKYJWZ0/wQlyo9jHRxPfkA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781154596; c=relaxed/simple;
+	bh=8CQLlPE10gtfc+80LGNUmW64kb5+lwCt/hJuXkDKz8k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lVHQiDdId+7GNujAveoxUQ7LXOrWkW4h+ew+n8YjzD14mPEQiDkdKFpCPuY4D7q3Jn6naltukXH83ApAwoscK4jmcXRxUAulUgHIKRCCK5XLkyr7OdCcZEP3g1p6S9IrSpP6QOoeH/CJkUtiR1GQYXJfqP/m68mTRip/xHQCcPo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UtQLiKW4; arc=pass smtp.client-ip=74.125.82.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="i7jLg2Us"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=wbbAdaq+l2HzeM3t/FWYy9MmfznYHb7o3G8GQlqGv80=;
-	b=i7jLg2UsCLHRKSBa/pCA2WHKYWHwcF0sW40AEM4GWOWJhoh1asdgWwRWr2xba8
-	mXKOi3NC8rZM5NrCjWEd7yV6CL4cJDn0D0r+ijslxtZ1py2Fz4X/vcriYxY4t+Kh
-	xlw0+j3U++VqO8yAsidwW5vbT546f1kakv0KZNYWmSFs8=
-Received: from [192.168.50.71] (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wD334_PPCpq34DzCg--.22715S2;
-	Thu, 11 Jun 2026 12:42:56 +0800 (CST)
-Message-ID: <7e46fd05-b190-42ed-8e5e-78c8a0a6bc20@163.com>
-Date: Thu, 11 Jun 2026 12:42:52 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UtQLiKW4"
+Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-1365eb2a773so367821c88.1
+        for <linux-pci@vger.kernel.org>; Wed, 10 Jun 2026 22:09:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1781154589; cv=none;
+        d=google.com; s=arc-20240605;
+        b=GQrvWSrdJD1pUlPlhisYwfLH3n8PGjTg7HX7yNsjE/taGAXG2UUya5Tx0oV+wuI/SO
+         VZ9ds8rtx1iQldUyCWQrRErNbwj9r8suNgq4jY5QqOXK3aTZMhAg3vWGf9MtSiO7NxRs
+         /72hGzRZarh2Up45nEX4BW+PgaXoUrDDYKfeBJxvZ0FnzcrMQRqcPzyGX1T/eNlFq8RU
+         34QC2CwnhhGhtUvpLkhTb/5HOmPPMu2SpNtnkc7tR3X7qAMQKhZ3tftEqX01YA+XaImW
+         gKrJEhiRRggx3u2gu3EvonPXhPa4g734VMbNdwoZNqP8/ncV5pFwc1HDf8Baxfhaq+ur
+         jLCg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=lyFerlgaYrMaDYJQQ4DjXG7o7AcnUs9BuBitZg+XRxc=;
+        fh=ifRwFzYF+9oyjAkxN0avFagWlD5eJ8x7oOamVpTAVwA=;
+        b=QN+4VYq336mQA7Y/DyIHoiPJvTkToIk6NmSSvcWrUaa0nUBWRVsyL47vZmeZAknUOG
+         ZwVUfPXkLxoXBKHVeY0cHdVsjbwIUheIaPFEo1zPKKXkD6RPZCM1mHvBx3mjp6VtfgQ6
+         IK3XGnkWR7qA1idNzI626dxjuTK87Mxw2QDdRt8r5NQU6cq7hfob1yShOReORfH2GLfq
+         FausFx7ZJgAGamXnx+VFNKGLSLC813Wzbda/BMPuC1+0RBtFSr5P8A+MDYmsoc4FzBtX
+         Jys8YMdFG2KZG2qz/lJelpymYaIIlQzByxkUlYhsgwfDAPDS2Yik1t8GgbZYrK8rCIaY
+         i3hA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1781154589; x=1781759389; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lyFerlgaYrMaDYJQQ4DjXG7o7AcnUs9BuBitZg+XRxc=;
+        b=UtQLiKW4tTBKMw+OQuNmmkVJJzoLOkse3Iw4sdyF7e2CbCnHCnoMBK1wta58381gLO
+         98GBR/RnkHuzdRQvH72+jx1jDedWTXYJvP+hhBfoWywh6VB7LMaZArWiIN1ZcUkoJy+b
+         89uV0nzni/DjLhNe0Ar71Gtr8k5AYfSRF23+eb5ZxdVGLzdpe5zB7kWB5VlWUm0lGj1e
+         pRC61BcZDDHH/fwtULK8B9Mqra13T0+jVxz75E0iKPK/USdq1tj8FO08Esr/D3bKaGOn
+         nKCsVsNxJsuYuOWjmGUX3cEewTpAyXkKGt1fk3/0kjz7MyTtfh+sUfGFNUSJjaGKlcuG
+         enbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1781154589; x=1781759389;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=lyFerlgaYrMaDYJQQ4DjXG7o7AcnUs9BuBitZg+XRxc=;
+        b=SNwJJfHU9uNw5SNyoM+5mhyO4zp9+YaHfkStDeznTWch+ds24Vd5t7qSmRqjlg3zsG
+         CWchf6VDQVEirsa5pHDDGmRuIIw7QiUX9klIug6wdy22sJKc0qfJLRapwVZIF77DoOCc
+         4cNzqlgupKH2zqPCN16i51qy67TBRklWUbmYIlRM78wfMHRev7Fl9+5BhMZxUEqOzi01
+         6h8rLN/0ERVKKpkHalxAWgTXRh+nhcZF72fNhkgDIydItFiK47XD1JWFDYlgaSvnPC2s
+         HzvxUvjxzEJjTEWLNv8SC/nvfBClsZt86hW3IcN/6ReZHzSXK1LzOFKt2V3X2Z4gS+Tm
+         /vSw==
+X-Forwarded-Encrypted: i=1; AFNElJ8TVqZmOidCgID3YqhihzQhwaj+ZZenCsmyY7DKw3u6u5e+QTHBuOdTR+QYiGNKjSe5xpGhKz23EUc=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxNKothCLoqCH65q570VDiAbMzNGBMeCjOQye6p0IW6yCNzNTcz
+	nmavP/QEEj98qR7b1tNgwPgzDFmrB2Eem+jC+AoVeSipW3Vo/Y8wuPN6gIGpRAWUQuf05Ybys5z
+	l88CiRP3MDb6rKEg/n2GUPZVTNC5dFTGxsLgCLPU=
+X-Gm-Gg: Acq92OGGX3hTKlo3fSERzMdP4BKLyb6c5S/cGDv1dofwwHrze/49lQuk/Y+BJj0pJie
+	XejoIUfA83g4HMT/kUUQjBH6v2v4KFtbX1TxP2MEvQZAHogNbSvn1erGF1H8W0l5LbP7l80pZ+L
+	QAEkeMyQdsK/+RsKKhHYxFtw2EIjYFCBLqS4KUbI/hVsWugsvppc3zWrQPd8qecVPo/7RkNp6Zu
+	u4qE/iOwG5dXbyg8uPoX8FUWm2pqsB2YTmO7G7lStIMNjyaCYWHdaUdCeUAbLmqCowM74YoTEO3
+	LeRuzGtc11PKOkstAsBFcm0zUEc4qG9g/qc+YC0xO9v/8LTAqNCaKFBu/SgRCONtSf9vdgbtkbb
+	iRcWZsbgpPCbCYBCy+VFVPEEBubR/xl6FfR8aV0uhlmo1
+X-Received: by 2002:a05:7300:aca2:b0:304:d700:1e90 with SMTP id
+ 5a478bee46e88-30804a5f5e2mr536231eec.3.1781154589390; Wed, 10 Jun 2026
+ 22:09:49 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 8/9] PCI: vmd: Protect root bus removal with rescan lock
-To: Manivannan Sadhasivam <mani@kernel.org>, sashiko-reviews@lists.linux.dev
-Cc: linux-pci@vger.kernel.org
-References: <20260521161822.132996-9-18255117159@163.com>
- <20260521212024.8689D1F000E9@smtp.kernel.org>
- <r5vwd573ydynlrrax5iy6jt25dc2yiqkvlciqy366zsxxu4d7f@hyvqgsdj4ulw>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <r5vwd573ydynlrrax5iy6jt25dc2yiqkvlciqy366zsxxu4d7f@hyvqgsdj4ulw>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wD334_PPCpq34DzCg--.22715S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr1kZF47KFyUCFyUZFWxtFb_yoW5Gw1DpF
-	ZxXa45ur18JrySvws2va18Zr90vwn7GrW5Xw1fWrnrWFy3Z342vrWYyFWjvF90gFsFva1Y
-	vr1kt3yftrs8AaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRO18PUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbC6xBoDGoqPNAOZQAA3Y
+References: <20260608-io_projection-v3-0-c5cde13a5ec4@garyguo.net> <20260608-io_projection-v3-19-c5cde13a5ec4@garyguo.net>
+In-Reply-To: <20260608-io_projection-v3-19-c5cde13a5ec4@garyguo.net>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Thu, 11 Jun 2026 07:09:36 +0200
+X-Gm-Features: AVVi8Cf920yVhFg_hQqFb2LNc7XWN7dI5ldNW7tmfqMVwtmKAogJd1U0zilXmbw
+Message-ID: <CANiq72nLZPG_Cnf+R5B4CoxzbLpOWy39A+hiVtetDD7zT6MgRQ@mail.gmail.com>
+Subject: Re: [PATCH v3 19/19] rust: io: implement `Io` for `Either`
+To: Gary Guo <gary@garyguo.net>, Benno Lossin <lossin@kernel.org>
+Cc: Danilo Krummrich <dakr@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Miguel Ojeda <ojeda@kernel.org>, Boqun Feng <boqun@kernel.org>, 
+	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Andreas Hindborg <a.hindborg@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
+	Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	Abdiel Janulgue <abdiel.janulgue@gmail.com>, Robin Murphy <robin.murphy@arm.com>, 
+	Alexandre Courbot <acourbot@nvidia.com>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	driver-core@lists.linux.dev, rust-for-linux@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	nova-gpu@lists.linux.dev, dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, Jun 8, 2026 at 9:59=E2=80=AFPM Gary Guo <gary@garyguo.net> wrote:
+>
+> +/// General purpose sum type with two cases.
+> +#[derive(Clone, Copy)]
+> +pub enum Either<L, R> {
+> +    /// A value of type `L`.
+> +    Left(L),
+> +    /// A value of type `R`.
+> +    Right(R),
+> +}
 
+[ A summary of what I mentioned in the call yesterday so that others
+can see it too. ]
 
-On 6/11/26 01:28, Manivannan Sadhasivam wrote:
-> On Thu, May 21, 2026 at 09:20:24PM +0000, sashiko-bot@kernel.org wrote:
->> Thank you for your contribution! Sashiko AI review found 2 potential issue(s) to consider:
->>
->> New issues:
->> - [High] Acquiring `pci_rescan_remove_lock` in `vmd_remove()` introduces self-deadlocks and AB-BA lock inversions.
->>
->> Pre-existing issues:
->> - [High] SRCU structures are destroyed in `vmd_remove()` while their corresponding interrupt handlers are still registered and active, leading to a Use-After-Free in interrupt context.
->> --
->>
->> commit 8d5d06b67e6b02d2cc99f2151e90ba61c0d16662
->> Author: Hans Zhang <18255117159@163.com>
->>
->> PCI: vmd: Protect root bus removal with rescan lock
->>
->> This commit acquires the pci_rescan_remove_global_lock while stopping
->> and removing the VMD root bus in vmd_remove(). This is intended to
->> prevent races with concurrent PCI rescan operations.
->>
->>> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
->>> index d4ae250d4bc6d..9565567026cf0 100644
->>> --- a/drivers/pci/controller/vmd.c
->>> +++ b/drivers/pci/controller/vmd.c
->>> @@ -1056,9 +1056,11 @@ static void vmd_remove(struct pci_dev *dev)
->>>   {
->>>   	struct vmd_dev *vmd = pci_get_drvdata(dev);
->>>   
->>> +	pci_lock_rescan_remove();
->>
->> [Severity: High]
->> Can acquiring pci_rescan_remove_lock here cause self-deadlocks or AB-BA lock
->> inversions?
->>
->> When a VMD device is removed via PCI hotplug or sysfs remove node, the PCI
->> core calls pci_stop_and_remove_bus_device_locked(), which acquires
->> pci_rescan_remove_lock and eventually triggers vmd_remove(). Because
->> pci_rescan_remove_lock is a non-recursive mutex, won't attempting to acquire
->> it again immediately self-deadlock?
->>
->> Also, when unbound via sysfs, the core holds device_lock and calls
->> vmd_remove(), which then waits for pci_rescan_remove_lock. Since normal PCI
->> rescans acquire pci_rescan_remove_lock first, then attempt to acquire
->> device_lock, does this create an AB-BA lock inversion?
->>
-> 
-> This is a valid concern. Since VMD is registered as a PCI driver, removing the
-> VMD device through sysfs will trigger vmd_remove() callback and it will result
-> in deadlock. The AB-BA lock inversion is also valid.
-> 
+We had `Either` in the past and we ended up removing it in commit
+28753212e0f9 ("rust: types: remove `Either<L, R>`"):
 
-Hi Mani,
+    This enum is not used. Additionally, using it would result in poor
+    ergonomics, because in order to do any operation on a value it has to b=
+e
+    matched first. Our version of `Either` also doesn't provide any helper
+    methods making it even more difficult to use.
 
-Thank you for your reply. I checked it and found that this is indeed the 
-registered PCI driver. This patch will be dropped from this series. I 
-wonder if you have any further comments or opinions regarding the 
-remaining patches. Do I need to send the next version?
+    The alternative of creating a custom enum for the concrete use-case als=
+o
+    is much better for ergonomics. As one can provide functions on the type
+    directly and users don't need to match the value manually.
 
-Best regards,
-Hans
+We also wanted to try to get developers to provide more concrete
+enums/names for their use cases, instead of using `Either` whenever
+they may have two symmetrical values.
 
+Anyway, if we want to re-introduce it, we should likely add what we
+had when we removed it (possibly just reverting the commit), which
+included examples etc.; and probably add in its docs some guidance on
+when (and when not) to use it.
+
+Cc Benno.
+
+Cheers,
+Miguel
