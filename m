@@ -1,60 +1,62 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14A9E3A5E65
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 15:45:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D93F403AF4;
+	Fri, 12 Jun 2026 16:46:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781279127; cv=none; b=BuvcMKjvfcuT7IO/Nhrj9+OiS3umONgGucY4vRXk01FvmTQumDAajryE9LB996WHKWylEL1Qz7hV7uVdmkp6oJSHWfRcXJz3A/XmydHPTM/s9JiT/bhedlK9+NoeNHRpFLKPGfXh2rn1KwlwMpkxyL56yrWpBw7/VKNX/SYsxAs=
+	t=1781282791; cv=none; b=bQeU7Q8PiQiEI5pHWExZv3nCHE6MAI3PUThCflWPCDHD9XZzuiMbVeW/ZkeHo2jDlTuQyzHX+Cjag3O6cwN8PPguDxBu+OjtkAhbCTKkCagNvK/OF0HlH/fWfscXDLYAcVGoQZvmbSPGZsvsLvjjU75DhkPy2w5N1O3J7qJzFUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781279127; c=relaxed/simple;
-	bh=54MGIL2fP6UxJUsR96DHwoJUSyyvPIssH0h1bbbnPIw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Sq5QSXEvBPW2qS8tYSbUQGO3JwcVvt9YVU4nyZyUKqWyWjjNPKn6s9HgAU2bjMtggZfxtl6Eu3f51fIW0PdZ5vPtetZ8lvHikj75wYf1f8JW3w9n/u9W3gU4eRRwB9mKbmmb+lsjpFGfRu8Sf+a6noEhoIzJfJrDBd2Vzl3j4TM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=goHt6IVH; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781282791; c=relaxed/simple;
+	bh=z3cN2YNTSqj1GppNhVITMb01UlRSfK533h86PTstYe8=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=B9GHlCayq4ByMu+nHy/OFvrmmROZmmi3jleq/gHqnxiECVZHv1fqsxSHTSal7QkniYDtkltPi3T9csgnq7abPlErH6JUSrkoB3zgro2CZkKNqhaTJt224sQADQuaBLExNd034v5z8xjufg+ueXratA5oLNoBe3RVQKwOutVawOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IuTbxKr4; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="goHt6IVH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 554991F000E9;
-	Fri, 12 Jun 2026 15:45:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IuTbxKr4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2EA51F00A3E;
+	Fri, 12 Jun 2026 16:46:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781279126;
-	bh=10y/PqVdybTQA7CAuBtXpVaH4R+E+jCeVQ/pdF/7o0M=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=goHt6IVHRHlVrwe5gOVhPf2UTbwd2JwwOj4suce0zCHN/HOA2pJa43vICK8h4trTz
-	 F90nGxRMMYSTYQ/oIEWx5hkMkyufSuI4pFkujlQki+CMHPauy57rYapv7IHh54fJLu
-	 jYGGln8PD06hU8z4Rvdp6b9PEF2oiNIFfCJuBgs8iimJBDaWyva0LJtpZdmFgxDVra
-	 B2Is0zHwGjnqFJUJSPSihurWDbJZCa3lALbNfWj8c7T74zYLdF1VajKrORRxtqJJJy
-	 v+I4IZ+lrzjo3RdZsQNkwXWDwnPriMijVsyXm1zsybLMIKf7e2qn+1w7bDOTVy398n
-	 N4GIph4V98GvQ==
-Date: Sat, 13 Jun 2026 00:45:24 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>, Lukas Wunner <lukas@wunner.de>, Shuan He <heshuan@bytedance.com>, 
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4] PCI/proc: Fix race between pci_proc_init() and
- pci_bus_add_device()
-Message-ID: <20260612154259.GA1436258@rocinante>
-References: <20260611150543.511422-1-kwilczynski@kernel.org>
+	s=k20260515; t=1781282788;
+	bh=z3cN2YNTSqj1GppNhVITMb01UlRSfK533h86PTstYe8=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=IuTbxKr44MkWBs54JcmT2WddU10iS17yV0rdIfw3Y4Ql8jZC1NXfYBLdQMTEdaPkD
+	 v8tJKzfSbEsZ25prYg5v9daA9Cr1gaCY1KOY1S32INra1cNSz27BUCY8ADsnXFYUR9
+	 21pvTMvci/EqXeJTfSIe671z1vzaS/+736SrtxDHk5yAek1heuZEfg0Yov1YPsXz8Y
+	 iKjG5o2AWPCOq9DORioT7zsc7eJuB18/j66Cvcho1Cal5oOW3He9OaGIKl0joU7x1u
+	 EeNWBxOgPqBAWHOwpU68VB3UwVOdhUZe0QnKUUKg1v0A47H8JF8pItDSkIPsAxqb9I
+	 HjEPlF3+qtB8A==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v7 1/5] net/mlx5: free mlx5_st_idx_data on final dealloc
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Zhiping Zhang" <zhipingz@meta.com>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org, kvm@vger.kernel.org
+In-Reply-To: <20260611161546.4075580-2-zhipingz@meta.com>
+References: <20260611161546.4075580-2-zhipingz@meta.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 12 Jun 2026 16:46:27 +0000
+Message-Id: <20260612164627.F2EA51F00A3E@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260611150543.511422-1-kwilczynski@kernel.org>
 
-Hello,
+> When the last reference to an ST table entry is dropped,
+> mlx5_st_dealloc_index() removed the entry from idx_xa but leaked the
+> backing mlx5_st_idx_data allocation. Repeated alloc/dealloc cycles
+> therefore accumulate one struct mlx5_st_idx_data per cycle.
+>=20
+> Free idx_data after the xa_erase() so the lifetime of the bookkeeping
+> struct matches the lifetime of the ST entry it tracks.
+>=20
+> Fixes: 888a7776f4fb ("net/mlx5: Add support for device steering tag")
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
 
-Related fix:
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-  https://lore.kernel.org/linux-fsdevel/20260612153031.536525-1-kwilczynski@kernel.org/
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611161546.4075=
+580-1-zhipingz@meta.com?part=3D1
 
-Found while working on this patch.
-
-Thank you,
-
-	Krzysztof
