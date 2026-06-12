@@ -1,133 +1,82 @@
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41EB0365A13
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 14:40:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.217.51
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781275222; cv=pass; b=EVowKt30jt6Jh545ZrNuvOBSH5LM6BLzZo3tskMePjACvYKwUDphzrNUYivriPyWAubY7aG++9XQIXRojSkbWYgZRmwOd7vnmEIYCgKYfLudF4FqG6LdS083FQ2ScxQeVykADdDQhwWmqhs2jj1un4KDuumAqvAhIJIg8Giqas4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781275222; c=relaxed/simple;
-	bh=2bGDMG4l77cX9hw6ZXFvUynZCjcpi5tIL9qA48dVTZ4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=VMIDCvr7Jod7dBve57qhNu9iXOTOcVn5uGnpZq7uOXPIh7LQAkWAAIz4XiCQjqTLYnxndDLE/O1dROKPoJLH53tBkM7p+0YtwV/nXvLnwh3ZPEN/63CbR8IbTKZJd0eYXzy/Xcmj6a8Frg0rIhrb53nchRpOov8qS9IRCTxYL+o=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=q6hyVm4E; arc=pass smtp.client-ip=209.85.217.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE2E2384CD6
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 14:41:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781275314; cv=none; b=OwVW/0M0O38NHHcrfxZRQGW5N+rPdX5ericrW29Rq73gL/AF4YyJ4z7Ozl6QmT91+pURnGKpdyzp/2pT4H1mbXZymOsGtUAer4lbht8JZrzAkbQRa9ZnFlZzuQqSmEuogIeI+OgnnCbbmvuydGIEUtV++jVgGGn7hcco6rDO2dU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781275314; c=relaxed/simple;
+	bh=6iZkZgESgMQX/QZFVJDemaFY12GIEqJSn/lpeUYNKnc=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=IbWAxg0X+G/tEBeKp+lbwZMVWmllLMQwgGmrD7+kjz/pcYvWjUQu+9G3VXmnM4Z0jrZb0Zq1/e9mm3GKzIxkTkbilEeTxHyW8V70clqv4qHxo8297UmMhn7LWQs253V4qY2VdcD2hIipiz1+k14v88y6eKB0L7loHLEhdydmON4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M+IrCART; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q6hyVm4E"
-Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-6c4a2458683so436815137.1
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 07:40:21 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781275220; cv=none;
-        d=google.com; s=arc-20240605;
-        b=RW0cVZv7z2cUScX5TjM7Ae1vIkArWnR2C4t0BsQzqJA+u5X+mAtzNrIBH8chSgH5lM
-         0lPHYtoHYyoiK6J7iyh5WkIsD9RXrKbw6BZdwjyKAfNvkUI+471GaivWM8IqXxnuqLIk
-         HYxTGjFlvcrU4j35Eg6U25jd8QQZUbM/tbSEMFdqFooWeunkVtOrBQjD+ps+sawl0L+x
-         c51QnDMJ21sZO1iEH3GZ2mjho5a2aPxe/1YDdJF+oMdLFTK+rKI4/JefFGu519yxbES5
-         BMVKk9DH+0q0jLMB9nilPfdDy5ZWPscwu9vmqc8lERVSs2LMZTbV5SNwdY3GkCtGl/hA
-         rpug==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=jws4kc/6HCJln3nPYNLHurE61VFKguu58eheUohgKlM=;
-        fh=nIy99EuauuUfZBDiLZQcBc09RNFTiT3ITskK57WVWcU=;
-        b=OXJsUAzpOmquDzJYm7x3JvM/VhA2cEc6uJMczpFi1+YyA6tAx/AJp2T1IKJaWoCKBG
-         shauyZVwpj3u5sjcXqkSd1v7tVn48BKjRAhlBvfk9uuj7xIYx/WTvb+O6Wdj0yFx9kk+
-         4wTQ2GGf1bXkhY1ChcB1ytDyXkKO6KLlnz0IwVA0xzyLlrw97D2Yx6nZk3ERQfV/6EoA
-         eR4f27gH6p57pw62LHCaD6g8cQ6URXhSDkIfRW78aAmgXI/XRUpNggcDIBMzbeF8g1ho
-         Re6Hqe4kPWiZYufoddWsgC64GHK16/FivQMgfbvf94SrHP5ckzdpr+3oKLJdqcJn/vVt
-         /bGw==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781275220; x=1781880020; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=jws4kc/6HCJln3nPYNLHurE61VFKguu58eheUohgKlM=;
-        b=q6hyVm4E2pXDu7thkHH2Od7gdU/C4lz2D6xXry6k7IWNT0oli6yTkyIcJNyw1ORUrV
-         SWrnWsYQtlgWY1hPRS6O4K9wKps5eGtPZcvY47Yzzao0xrPtyoMU4JWKVfxDO0F2Sv8a
-         TyeP2yERThYCnZIGRz2BDG+k8+fmwAWbmVbac4AXkMBeqhWUKg1p4pkd0ouuGLAtR9Pt
-         b+LJeajdPSb574v4W+AbbfuyAtlJeq1TIcfq6Isz//yCEuLtSg2J6Fl8zNTPMaxjs6Yl
-         nzKm8nHT0HnLr4uJYIZ/X1ZZImg5n+8FGd98KgZHRPSExvkEuNe1x6/sCRKFIZwe7Fus
-         P+Zw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781275220; x=1781880020;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jws4kc/6HCJln3nPYNLHurE61VFKguu58eheUohgKlM=;
-        b=FW+QDD/QGIZyyPg24zKm0IhjOYz+Fufz9KpDHN1zg1J1bXaDcKYZZ/cmUpDaYmYYIK
-         f41L2yOiOxsfWhjOGWsYlNWVxtCTEnKgQE7ZNg8AYGvlL56wteC3gxG9C9tiA9ruKqz9
-         XLR0J1GZ1cP3KTjmHz5rnvJwUK5ierYWWOK+j1y+NeZHFQHP5YJmR79vJy9XcL3gyWS7
-         2aHmc76bU3kMLez/s/qxpV6w/SNXB/evKasWOVX8m7uHoEslRvHtvXXeYYBpylAtdpFh
-         Hq1ZbIADRXuN5Gc1T8n+QO60LgayfWh1jnws4F0mDQYJyFnFrhdSPGoa5qLPG+Ck2k3m
-         fO/g==
-X-Forwarded-Encrypted: i=1; AFNElJ/4vnStJgaRslMwY+vdkofEnfs7gYHDs23flmM1sUjRM+80XPCxi9ER/1h4SixVk74tDIeyik2UluE=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz727zP3vX8c9+ssbtcscv4MAMQT/jyYYuYYu4PyZUMHiOvBXWN
-	Eyma0sSyOcUw5C0n5vhkvBAfsrPf7IqOqjrNHUF8uSuCkHhL35FyejIeOa58sIiLDj4MTWfs5jC
-	kFC3ktrDg3fkLo2vXP96C4WKnPgsAz0o=
-X-Gm-Gg: Acq92OHRCp4jiL8wK8WGoEv/1BBvUU4IAKpMFEG+cfMVEqdJxGIthJrLdRC1nzv/Uvc
-	tuHvCht8g9n79OWViwzsgTNQplx5vkmmSWSYXWXXQFrHYqAYX3de6dNFrP+xnNHWm4JyVD4P94n
-	d3Xcgi/Ocrt2eU9e+6/wwfYFLjOcvlWfO0mqZ9dxDhsuzd/oeBPK+9HDqHIH5SdbxydrvCMdXJA
-	bDWAkdamI8iPnAEydjLKFUKEqVhtWxQefxTqbFmcPLuuIgfzdTt6FDFu6WnYcCvJMmpxDtyTH18
-	0xxT7em+izS7ThgR2eudp3m/HyqXK3CpopIASb4=
-X-Received: by 2002:a05:6102:3e8a:b0:633:f2bf:7de4 with SMTP id
- ada2fe7eead31-71e88b250c7mr1959385137.10.1781275220197; Fri, 12 Jun 2026
- 07:40:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M+IrCART"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4907E1F000E9;
+	Fri, 12 Jun 2026 14:41:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781275313;
+	bh=IRPrI3yBAc/IgtOws2/bqKrXNJ/HJeBHmVWeQD6ll3s=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=M+IrCARTi3AxanZ0ACZm8WFEVcXCO33sgCa9oIpMzmogSjtZBz2Sq1njOHk6kVNFA
+	 cb+MMERu1Dw3bsbWfm8r0PxEdgZChmPEqwcPJ58RynFroIlQpvXlKxcHJXi8fo7s4t
+	 VkrRpuaXZ9GxEr3OfP1ArRkNBKOdqMB1L3fNA4t87sRFsdlwhSBEDF3CM08BdZG/BG
+	 DMTwHhv2SDl2u1Xcw8NZD++Q5Ur7vxRIZLlVEPe/0TaZR0KupnAmnqRSmriPnqXrJC
+	 9uhHLr85ea4CGBkMcf7I7bQJ6mEGBKOjcDIakBNiLrIBUIMBGUz10TYkWVT4uM8TGU
+	 9ACV1Yd6VHTJw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
+Reply-To: sashiko-reviews@lists.linux.dev
+To: "Jose Ignacio Tornos Martinez" <jtornosm@redhat.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260612142638.1243895-1-jtornosm@redhat.com>
+References: <20260612142638.1243895-1-jtornosm@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 12 Jun 2026 14:41:52 +0000
+Message-Id: <20260612144153.4907E1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <1a0c86ab264cdc1c79c917e984b90991af51d827.1779123847.git.shuvampandey1@gmail.com>
- <20260611222653.GA527114@bhelgaas>
-In-Reply-To: <20260611222653.GA527114@bhelgaas>
-From: Shuvam Pandey <shuvampandey1@gmail.com>
-Date: Fri, 12 Jun 2026 20:24:56 +0545
-X-Gm-Features: AVVi8CdKAP86TtMoO599NkYV98Yvwx6Qva5SIn9Z5VQSeP_4V_va59YftVroKA4
-Message-ID: <CANAAWH+qT8T4_OBwu0WxU6o0FTT7xqwpLTOFrWiV1dZbXHk+fw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: meson: Add missing remove callback
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>, Manivannan Sadhasivam <mani@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Yue Wang <yue.wang@amlogic.com>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Rob Herring <robh@kernel.org>, 
-	Kevin Hilman <khilman@baylibre.com>, Jerome Brunet <jbrunet@baylibre.com>, 
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Fan Ni <fan.ni@samsung.com>, 
-	Shradha Todi <shradha.t@samsung.com>, Hanjie Lin <hanjie.lin@amlogic.com>, 
-	linux-pci@vger.kernel.org, linux-amlogic@lists.infradead.org, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 
-Hi Bjorn,
+> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modem=
+s)
+> lack working reset methods for VFIO passthrough scenarios. These devices
+> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> broken bus reset.
+>=20
+> The problem manifests in VFIO passthrough scenarios:
+>=20
+> - WCN6855 WiFi card (17cb:1103): Normal VM operation works fine, including
+>   clean shutdown/reboot. However, when the VM terminates uncleanly
+>   (crash, force-off), VFIO attempts to reset the device before it can
+>   be assigned to another VM. Without a working reset method, the device
+>   remains in an undefined state, preventing reuse.
+>=20
+> - WCN7850 WiFi card (17cb:1107): Same behavior as WCN6855.
+>=20
+> - SDX62/SDX65 5G modems (17cb:0308): Never successfully initialize even
+>   on first VM assignment without proper reset capability.
+>=20
+> Add device-specific reset entries for these Qualcomm devices using D3hot
+> power cycling. Testing shows that despite advertising NoSoftRst+, D3hot
+> transition provides sufficient reset for VFIO reuse, particularly after
+> unexpected VM termination. While not a complete reset (BARs preserved),
+> it provides the only viable reset mechanism for these devices.
+>=20
+> Testing was performed on desktop platforms with M.2 WiFi and modem cards
+> using M.2-to-PCIe adapters, including extensive force-reset cycling to
+> verify stability.
+>=20
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
 
-> What's the user-visible effect of this?  Does it avoid an oops?
-> Reduce power usage?
+Sashiko has reviewed this patch and found no issues. It looks great!
 
-I don't have hardware with this controller, so I have not observed an
-oops from this.
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612142638.1243=
+895-1-jtornosm@redhat.com?part=3D1
 
-The concrete effect is that driver unbind/module unload gets the
-matching teardown for the successful probe path: the DesignWare host
-bridge is unregistered with dw_pcie_host_deinit(), and the PHY is
-powered off with meson_pcie_power_off() before devres releases the
-driver's resources.
-
-So yes, it should reduce power usage after unbind. The host bridge
-teardown is also the matching cleanup for dw_pcie_host_init(), but I
-don't have hardware evidence of an oops on unbind.
-
-> Of the 34 instances of .probe() in drivers/pci/controller/dwc/, on 12
-> implement .remove(), so if this fixes a problem, I'm wondering whether
-> other drivers have the same problem.
-
-Yes, that may deserve a broader driver-by-driver audit. I only checked
-Meson for this patch. Some DWC drivers implement .remove(), and several
-others set .suppress_bind_attrs, which affects the manual sysfs
-bind/unbind path. Before this patch, the Meson driver had neither, while
-meson_pcie_probe() calls meson_pcie_power_on() and registers the host
-bridge with dw_pcie_host_init().
-
-Thanks,
-Shuvam
