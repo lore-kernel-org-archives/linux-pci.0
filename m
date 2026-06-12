@@ -1,104 +1,113 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 247663396EE;
-	Fri, 12 Jun 2026 23:24:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC8F262A6
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 23:34:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781306645; cv=none; b=cGRSNH1yo2HzZ5b/VNEhq44RplqCRnRGYmWm3E4oJi4VVFuazbFNpe2nkB0rith/ivNBKXkPs3kLk0Ucqf7raCzjIoVtkANvQqK/OdAfpZIl491PoRuhiRSmgHbwouupPL8iibLETNxf+uMIXylMAM2K1vczXMd7YPJaNd2QoxA=
+	t=1781307268; cv=none; b=GQRz9rdveLcNjkSMK/9HM5zAHFG8pvWWMSQP3otZwpz0gOGlS/KVjliaRFSV6PcHA1Ji8aPFH48hPeMhHLzkBjn7cD712QNt+TMXR6hq0teeUDL1GK4KFMVEpgUMkVzF7GfpitgdZC6fZIbVW1SeWuZ5Qo0saLbpw2jikWQdhPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781306645; c=relaxed/simple;
-	bh=q66Q/IT6j2syih5xvnzoFJ5QQu7ZtCEqp02WsrLvOFA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=J/P37/+FICN4XFT65siEspYFeZtf+VtaCxAWaGm4TxmWVVh+11Q9HwRKF+2U3l/G9qMvFtd7vS4oY3wQ/bGhkm/pZPYc7Dpm5e+UMMpFW4OeEu3Kpg6DpCLmXk5434AZ5Nx/GutWApZuDqc2GysYEKAR5DJMvn988d4cQQe6upo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N6Ghg/3i; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781307268; c=relaxed/simple;
+	bh=KdGVlWGc1xt7EcKmaxnCgt6R0VqmZCq87hsakbjTEFw=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=YJJ6cZDEwjDUL4quNfglOwSxeSifeaMLQWimLZX3VsGyOqhHScRz/DPT/OVoO8HA6jGl/qA9U/B/o/qSW8eJXbJP1rij/Sivphbn77hOthTMd8RIqRr2k4KcYahppr+aZmGHnGkKjBCpD2OVthhnqTx9JSbCEpBK8kFwD4w+RjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kGBGrh5M; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N6Ghg/3i"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FCCC1F000E9;
-	Fri, 12 Jun 2026 23:24:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kGBGrh5M"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7EFD1F000E9;
+	Fri, 12 Jun 2026 23:34:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781306643;
-	bh=KYdYu+X0f0vJdas42PYuu/STKPDbGG0DXiHJtnelvHg=;
-	h=From:To:Cc:Subject:Date;
-	b=N6Ghg/3iE2/6sLipkW33bNq0LBLJ5yjWvrcRbmooKAKFST83vphbO3T2n8wMrEjLp
-	 wwN6NOJ8w9aEdpIKy9sHNnJcpoaYr0y9dzk3Uv80d3HokOj58Sol1Q5LqLaYY8fiT+
-	 33sBJzRQPpqkoISfNhYOS7VX29vbFEuNXGFMh5XVAx64V2LnRAvHgIsrI7NO6t9CEO
-	 7s2ZsPvit2SIz+PN+Ysh7+CJbFnaLJ2xzxNKYpoH4rncuFXUATP73kYzQe7uMli1YY
-	 t0DV3x+AjifD1xB3SdvBWPVH/XYHPH5rjB5bRQZeye+QwP34qFcvSuKnU/wGBQjb+5
-	 hABrODFehrOJA==
-From: =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-To: Richard Henderson <richard.henderson@linaro.org>
-Cc: Magnus Lindholm <linmag7@gmail.com>,
-	Matt Turner <mattst88@gmail.com>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	linux-alpha@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] alpha/PCI: Fix I/O port accessor argument order in pci_legacy_write()
-Date: Fri, 12 Jun 2026 23:24:00 +0000
-Message-ID: <20260612232400.585195-1-kwilczynski@kernel.org>
-X-Mailer: git-send-email 2.54.0
+	s=k20260515; t=1781307267;
+	bh=WV7zgm/nDozuoBgytn7wESR9Xg3RA8Njd6u1WGhADF4=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=kGBGrh5ME4Myx0QGyQpnL23P22pnATEnatkoZX0QkDn26lnsBaXSmhXjaas4zuqm9
+	 JTCMCDBUjx+uZy4pRwwqZixg/nUpSbNbakSmkOeZfsj0nsw14xeQOvNyFrE2MJbYKJ
+	 gyU3LQX37VDoHQV5njIZOpqwMjmV0Oo7Tvq0jD/3glHDbASTivLGs7MqWz4sP9oY+S
+	 TRijHAP7bmJQpwU2p7NiMrtiISeUVCewq5Tjh7fmdMqY/COHMN5UMTWBA9IaXt/2Q/
+	 iaQlniOBKJ4he+cl02aD+nodFIA/AqgcDXn+3Zlrg+ImnCewc8n5NMjyo315bwrQTx
+	 TroLcMvVb6cBg==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] alpha/PCI: Fix I/O port accessor argument order in
+ pci_legacy_write()
+Reply-To: sashiko-reviews@lists.linux.dev
+To: =?utf-8?b?S3J6eXN6dG9mIFdpbGN6ecWEc2tp?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260612232400.585195-1-kwilczynski@kernel.org>
+References: <20260612232400.585195-1-kwilczynski@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Date: Fri, 12 Jun 2026 23:34:26 +0000
+Message-Id: <20260612233426.B7EFD1F000E9@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-pci_legacy_write() in arch/alpha/kernel/pci-sysfs.c passes its arguments
-to outb(), outw() and outl() in the wrong order:
+Thank you for your contribution! Sashiko AI review found 1 potential issue(=
+s) to consider:
 
-  outb(port, val);
+Pre-existing issues:
+- [High] Unconditional 4-byte dereference of a dynamically sized buffer in =
+`pci_write_legacy_io()` causes KASAN slab-out-of-bounds reads and potential=
+ uninitialized memory leakage to PCI legacy I/O ports.
+--
 
-The Alpha I/O accessors in arch/alpha/include/asm/io.h take the value
-first and the port second:
+commit d23423541386d95f58a7717629ce697088a7288f
+Author: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
 
-  extern void outb(u8 b, unsigned long port);
+alpha/PCI: Fix I/O port accessor argument order in pci_legacy_write()
 
-So the port number is written as data to the I/O address taken from the
-user-supplied value, and the intended write to the requested port never
-happens.
+This commit fixes the argument order for outb(), outw(), and outl() in the
+Alpha architecture's pci_legacy_write() function. Previously, the port and
+value arguments were swapped, resulting in incorrect writes.
 
-The arguments have been reversed since the file was added, and the
-function returns the access size regardless, so the caller sees success
-while the requested port is left untouched.
+> diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
+> index 94dbc470cd6c0..7050f0f7fe3d7 100644
+> --- a/arch/alpha/kernel/pci-sysfs.c
+> +++ b/arch/alpha/kernel/pci-sysfs.c
+> @@ -224,17 +224,17 @@ int pci_legacy_write(struct pci_bus *bus, loff_t po=
+rt, u32 val, size_t size)
 
-Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
-Cc: stable@vger.kernel.org
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
----
- arch/alpha/kernel/pci-sysfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+[Severity: High]
+This isn't a bug introduced by this patch, but I noticed a problem with how
+the val parameter is populated by the caller.
 
-diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 3048758304b5..354ec5f10ad0 100644
---- a/arch/alpha/kernel/pci-sysfs.c
-+++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -355,17 +355,17 @@ int pci_legacy_write(struct pci_bus *bus, loff_t port, u32 val, size_t size)
- 
- 	switch(size) {
- 	case 1:
--		outb(port, val);
-+		outb(val, port);
- 		return 1;
- 	case 2:
- 		if (port & 1)
- 			return -EINVAL;
--		outw(port, val);
-+		outw(val, port);
- 		return 2;
- 	case 4:
- 		if (port & 3)
- 			return -EINVAL;
--		outl(port, val);
-+		outl(val, port);
- 		return 4;
- 	}
- 	return -EINVAL;
--- 
-2.54.0
+In drivers/pci/pci-sysfs.c:pci_write_legacy_io(), there is an unconditional
+4-byte dereference of the dynamically sized buffer when calling
+pci_legacy_write():
 
+    return pci_legacy_write(bus, off, *(u32 *)buf, count);
+
+When a user writes 1 or 2 bytes to the legacy_io sysfs file,
+kernfs_fop_write_iter() allocates a buffer sized to the requested length
+plus a null terminator. The unconditional 32-bit dereference causes a
+KASAN slab-out-of-bounds read and populates the upper bytes of val with
+uninitialized heap garbage.
+
+While it appears the Alpha outb() implementation safely truncates this to
+the lowest byte, other architectures like little-endian PowerPC can
+extract the uninitialized memory instead of the user's intended value:
+
+arch/powerpc/kernel/pci-common.c:pci_legacy_write() {
+    ...
+    out_8(addr, val >> 24);
+    ...
+}
+
+Could this lead to leaking uninitialized memory to the hardware port and
+bypassing the intended device write? Does the PCI subsystem need a fix in
+pci_write_legacy_io() to safely read from buf based on count before passing
+it to pci_legacy_write()?
+
+> =20
+>  	switch(size) {
+>  	case 1:
+> -		outb(port, val);
+> +		outb(val, port);
+>  		return 1;
+[ ... ]
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612232400.5851=
+95-1-kwilczynski@kernel.org?part=3D1
