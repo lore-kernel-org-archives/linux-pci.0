@@ -1,213 +1,203 @@
-Received: from CY3PR05CU001.outbound.protection.outlook.com (mail-westcentralusazon11013062.outbound.protection.outlook.com [40.93.201.62])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58A33624D4;
-	Fri, 12 Jun 2026 08:24:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.201.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 125811F5842;
+	Fri, 12 Jun 2026 08:27:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.18
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781252667; cv=fail; b=GwY/hB8420iB7AfvMkXuP0OIJ4TzIquHh4o9bALid+uD9YljglCgNSOWsqBo2LcA8GD0iC3qIp9UnBhdO6ks7/zT/MSjeCmg/MIl2g1WXmG9LdSn29xSJm1+w9/8lvga6N/4tuESUabxbunzk8mFfAQWL0ROa71EE6l0ckOJimQ=
+	t=1781252857; cv=fail; b=YLWUhl2vfbO/8pIAVOEwV/qRQtHiAenk90bO9qrGQ+KOCaPlRx6WsE0iAaBMKEnA81DEmQOV/HRBRxvR7nyU3CDYFfbVmd0fdE7Sz7AU0gwpc6vXZ6uNAttrnQQfddiA3YrrUrNWNZV2mWXF8HneuFKalw854/dgWZJ17+CHFh8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781252667; c=relaxed/simple;
-	bh=7GjuHlI54z73WbvZFbGwXE4+X4DP6VT8jisSrT+Y/j0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=fzp0fMTBz/F6/NGvnDEFOn6lBQN6Zb4r3zANa0qYNMQ5IoZMruo7ubfIuQVNk16ld1XvNcRnOr+xJUAHSFJq6yd+OYt0MfV8E/NrFe8g5E7ASqKrs9WGdubr+T28YJ4rgF3Km3hL9Ho02TV0NoSPid8zKe+0QiszRyz1cYAWvSg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=njKNsbGB; arc=fail smtp.client-ip=40.93.201.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1781252857; c=relaxed/simple;
+	bh=Scb76004SgJJMbwX89xSDCDis8uU4cknL3wBhWI/W5M=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=AZCOd+7Q5fTqhMwipJUSrQDHlwE9BuunpRTl2rSQs9nHEiT6q7I8G3AhjcKWMmpDyR9MY2Rt3JiFjNSOfzOMTancPOUL7x17eiqxWDKUxJgpMxRtPmbv09w4M6Qw311be/cTCDuzSwAH+9F+Pah3sUCyrHkTrfMmaVPwCo/ZYC8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a4zBHTrj; arc=fail smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="njKNsbGB"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a4zBHTrj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1781252856; x=1812788856;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=Scb76004SgJJMbwX89xSDCDis8uU4cknL3wBhWI/W5M=;
+  b=a4zBHTrj7dqln/vG5jNDlJI7/4M1sB+67tRjdrG2vZHHqzFqcTRBVdXg
+   fwAJICl3+gOz/9IwkXC9xdm8EK+uXpDxfSs3JZroogYLKkrqIuYVHTC8r
+   bPgW+5CqfqhxYSyOyE7vFvKpXHcdPBgxPTYFei1AbtDTeylWH6TkB4g7u
+   97xa8Z1Ng5haoYAnTpxLxcNrWodxCO/eCpEfXudwPN0AR+0MKlwJPLKoX
+   t13rqBRvfkRZk1MdXdgmhLSWznvobLBPmXLdiXUumowSCEle2mMKsCgt1
+   oSFr9rzj0+E9RRERJsokJOelG6eHQt2I2MP/+Tb78fgyYzErShrBuusrC
+   g==;
+X-CSE-ConnectionGUID: kANEMQJESN2hfHFQtE1D8A==
+X-CSE-MsgGUID: qGTtoe8bRHijnI2PAKdtmQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11813"; a="82143459"
+X-IronPort-AV: E=Sophos;i="6.24,200,1774335600"; 
+   d="scan'208";a="82143459"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2026 01:27:35 -0700
+X-CSE-ConnectionGUID: TSnLhAI1SyO6OqZPOxuRbA==
+X-CSE-MsgGUID: 1zCa3usYQGOYnPHyz7iWJg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.24,200,1774335600"; 
+   d="scan'208";a="250692369"
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by orviesa003.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2026 01:27:35 -0700
+Received: from ORSMSX903.amr.corp.intel.com (10.22.229.25) by
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 12 Jun 2026 01:27:34 -0700
+Received: from ORSEDG903.ED.cps.intel.com (10.7.248.13) by
+ ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37 via Frontend Transport; Fri, 12 Jun 2026 01:27:34 -0700
+Received: from DM5PR21CU001.outbound.protection.outlook.com (52.101.62.34) by
+ edgegateway.intel.com (134.134.137.113) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.2562.37; Fri, 12 Jun 2026 01:27:34 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=t8IMl3XBk6xU/mhcwDrrR1it9xX0TjYilJ3OS314NV/kzDGtRm4wq44O9PUtAo9aAVX2k5LlhIRdTl4NpmyE+yCTvav7kMvF20pleqcAZ97+yCPetl97P7l5t/OHiVWZHHpur6cBl0JN7gOTyPuyotGuqg2/yqlU2Y6yir5LN9v/zBzjQiAsHbhrQktt8kBGqSFY1PzB4dhF4IWPehOxkzLBF3qOfuaDnHSk1yzcunn6Imxr+vpG6U4XqMgXqGyOKHvyK8KMn2bRHF0g1WwMYXHQl2MR1no3h/90LLF7uXLGPx3c25VWNFBOXGsH1BUylk5y5sCgftB7CfTcahJZjQ==
+ b=PR5EwXp6DFixvyeSBAJFx413fLSvORFsU6VsGj35gy80P7UZwEG+qSnkj0UdWsr77WXrAutW6AV63HKLLDEYc22ez5oN5uNdYMlwEIlHEap/FycvTtzhdjzE808BRmtskT/KEUQTP8oip2U+oInNStuFstEEJSgIK1zVt0HomCJsScA2xoQuKXCFrKNOX/UI7zOtyGuLGf5tBOYwHiAuv4Lc+eyhuZHdn3HSQDhitU3ZJMSl1RITUzS7TGw6GrjX5uvNnlSjXXWdCx+hgWMBXnxK7M4c9UT9Zlj0nDXP0kPk9k1XeEo8e1MxkUHXeoCvBvKlVSWgtLAwOeoF8L+A4w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=keQg7FwQaY5dINm3w07p2a0/6qk+3CwnjgZeEz7jFBo=;
- b=bdAuDRHvjOi1y/KEZytPYC7SidA7NzLAAAqzXAqUL8ki8KRqSnvkjUOw94ByS3DU+Uez5ypm81HwO/ZkZkYikDISsFIrsAGtFudwui1ufonmnCeB0jEtRCrnX61pYn1UpS/c0Fq09VEdymbSVIrR5mEz8fATS/RANCy+sy4PTYOTCzCzgjqFCitIHIBOpVd78NAs80P9XucKtzTQstIwCS97slrDeggMiLrgVmgezccTNH+bDx2NeYOD7PbBaW4eim37j5wn3lMbnyz3j/seZfBBbec7KcJRhHm1v32rOIm4cVXMWaI9diWAyZ0f5KyXxlcyIg1N7Go1uep1HfOOvQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 198.47.23.194) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
- dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=keQg7FwQaY5dINm3w07p2a0/6qk+3CwnjgZeEz7jFBo=;
- b=njKNsbGB0k96/Q6QbYO8qYEYLdfwWR6Ky4TSu2SpHQvLKgWvX0hSUZJq4F94iOw+ojVluqPS8vT0gKgdQKvjEtpysuoRGWS2u5ez5Dk3AYh0QN8kQjeFNjaEBdorHZzCL0jJTCrXigc3QXxGKwXzA/PZQUsjOPVKSc7lyvUC78Q=
-Received: from MN0PR03CA0014.namprd03.prod.outlook.com (2603:10b6:208:52f::30)
- by DS0PR10MB6822.namprd10.prod.outlook.com (2603:10b6:8:11d::16) with
+ bh=Ko0CuUljGWKcTaBRoa59PGwmcyv/SvANLh+u6jPTiKw=;
+ b=hsDdzNWuowsFbdd0DEUzePWkCGhjIQcGma/9f55nEsu/fJUdDS397/9x12NrKsbXP399r1dykT8meua2LcnEq6CZDk8E90+3wmlJ2ShVh84LSVkNb/gxR99eBzH6GSKLbd0u4EqC+ui8iVSBxMa8dH1erpeRfL8LeROmcw2TKPcRU26RBevGWP+e5CnUlcuEy/t8ePmtYa6JUvnBonbiNCqA3B9Wpgo+1aVPiqb2qTAznYhM3UnaV0Oo2simw0QENoYC3/g4iZ+al5jHcleQMbSKa/dXJOLzoCCu0Te2MI9tx7jqu5V7qBqQTZ6txAxXNQ5wAi/rt7Tedevp42wg9g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from DM6PR11MB3690.namprd11.prod.outlook.com (2603:10b6:5:13d::32)
+ by DM4PR11MB8131.namprd11.prod.outlook.com (2603:10b6:8:190::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.14; Fri, 12 Jun
- 2026 08:24:20 +0000
-Received: from BL6PEPF0001AB76.namprd02.prod.outlook.com
- (2603:10b6:208:52f:cafe::5a) by MN0PR03CA0014.outlook.office365.com
- (2603:10b6:208:52f::30) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.113.14 via Frontend Transport; Fri,
- 12 Jun 2026 08:24:19 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.194)
- smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
- action=none header.from=ti.com;
-Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
- 198.47.23.194 as permitted sender) receiver=protection.outlook.com;
- client-ip=198.47.23.194; helo=lewvzet200.ext.ti.com; pr=C
-Received: from lewvzet200.ext.ti.com (198.47.23.194) by
- BL6PEPF0001AB76.mail.protection.outlook.com (10.167.242.169) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.113.7 via Frontend Transport; Fri, 12 Jun 2026 08:24:19 +0000
-Received: from DLEE204.ent.ti.com (157.170.170.84) by lewvzet200.ext.ti.com
- (10.4.14.103) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 12 Jun
- 2026 03:24:19 -0500
-Received: from DLEE205.ent.ti.com (157.170.170.85) by DLEE204.ent.ti.com
- (157.170.170.84) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 12 Jun
- 2026 03:24:19 -0500
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE205.ent.ti.com
- (157.170.170.85) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
- Transport; Fri, 12 Jun 2026 03:24:19 -0500
-Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 65C8ODsR3668782;
-	Fri, 12 Jun 2026 03:24:14 -0500
-Message-ID: <0216a528-3737-4714-b9d1-5d28008e0ec8@ti.com>
-Date: Fri, 12 Jun 2026 13:54:13 +0530
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.71.11; Fri, 12 Jun
+ 2026 08:27:31 +0000
+Received: from DM6PR11MB3690.namprd11.prod.outlook.com
+ ([fe80::7db8:f6b3:30f8:ee4b]) by DM6PR11MB3690.namprd11.prod.outlook.com
+ ([fe80::7db8:f6b3:30f8:ee4b%4]) with mapi id 15.21.0113.013; Fri, 12 Jun 2026
+ 08:27:30 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>, "Leon
+ Romanovsky" <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro
+	<amastro@fb.com>, =?iso-8859-1?Q?Christian_K=F6nig?=
+	<christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, "Logan
+ Gunthorpe" <logang@deltatee.com>
+CC: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
+	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>, Sumit Semwal
+	<sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>, "Pranjal
+ Shrivastava" <praan@google.com>, Alistair Popple <apopple@nvidia.com>,
+	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3 0/9] vfio/pci: Add mmap() for DMABUFs
+Thread-Topic: [PATCH v3 0/9] vfio/pci: Add mmap() for DMABUFs
+Thread-Index: AQHc+PAJB2FDg3e4hU+WfDDhtpmx/7Y6l0AA
+Date: Fri, 12 Jun 2026 08:27:30 +0000
+Message-ID: <DM6PR11MB3690A65EA9D8A9B77AF93E198C182@DM6PR11MB3690.namprd11.prod.outlook.com>
+References: <20260610154327.37758-1-matt@ozlabs.org>
+In-Reply-To: <20260610154327.37758-1-matt@ozlabs.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: DM6PR11MB3690:EE_|DM4PR11MB8131:EE_
+x-ms-office365-filtering-correlation-id: 5cff3f8f-030b-4525-2ec3-08dec85c7205
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|23010399003|1800799024|376014|7416014|18002099003|22082099003|38070700021|56012099006|11063799006;
+x-microsoft-antispam-message-info: NlGyh0URd4H6dIh3TENlsWwGCB0iC0NjN32prAl5HAJzf3MeIwxnLP3Q25XlDTbo/itC7EYwRO2Qn0/drqFQ7FtFdmXrRQtfc23uCO1MvJPmXKyMV9BZWBW9fLMOyw2D4X0WZbO2QesM7GB3p45T6aNdTVNSFbrU1j1crcJpJaPqFWg8xQpWZ2E6xa0x4LqU7wAKtJy4aKalJF9cK/svar45f2crdVOpu8+1hULcElVnJCDNbf6URYearByIVcy9LGemYwx7T4NSn2c3PeUt6T/CoJ7h3IWeMuM11Syo8SidOnTf6nfiRI5ks9gI4UlvITf4WWSIpqaCMUSyABYhjQih7I2YFhL/a4egauUQ3j8mzx5qQ2EztfP3PAJSUDcnvZnTr2kB5+nsN5pFfXknoGC1GTOJphDRxmqcOpG3hZ4F3dEnavgLxTdWS6BcVRRMuzqMiZLoXjbVurBxxeNv7IXa/M1fdsg11MBN7M+LqNLlq1Qpz19G5IS3x9eyz+QsdkX5lBO5p+DDfPmX0pFCI2HOoitOCxdIHzRR70pskdeJ+2Wv3RTKlNjgPDYbXErP45jvJp0kfX7NUGpEhEzY7Q/SGTr3EXjbp8bFu9bt2sRRQ+gkpMxXNxgx7y5cjkLX2u5NvY4RZI9j2CN2R7Wy/UMiVyU1eSf2/J+HriVLvDddMdoTjxnBViOT7EYmasfjGsUJl7xD9cPKowsy8PULWIU7Yax+7zuL3ZeABhK1MhNjMH6P+A2hu+YOwNVPRLAT
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB3690.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(23010399003)(1800799024)(376014)(7416014)(18002099003)(22082099003)(38070700021)(56012099006)(11063799006);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?wdBCHg/kZqLf6d+yeIRt6dy+WKRjGPDhTGLWjhZN4BuinO32/w01JhwWfz?=
+ =?iso-8859-1?Q?61O8a0UZMYQOmaiJoJjBzN3Xss9cX44aAXIyV6Qfb6huOPSlSEbjer7IQx?=
+ =?iso-8859-1?Q?U/IeHiwO1Azb8esFuYrVBoeagQLW4B9zAHmxaeWcu+w+5cU5PcFyK9h/Dv?=
+ =?iso-8859-1?Q?2FZFFNGvDuh8vSBf+936++lmobFyBcVUDIRKQXlkchN9rb8+LG1ZKdhE/G?=
+ =?iso-8859-1?Q?12TzELjWox4/DQhzmJJbLk4LiedZ/rFKl8mnS4R+SjaoS4QILnKGaABCO1?=
+ =?iso-8859-1?Q?zBu6xlwaMMfqB+x2dA9e0LIySm0wEqpRNPvqUStaFGDaJ8n5YWXaZ5So6D?=
+ =?iso-8859-1?Q?jsrKMu+1kkdknVWbsRgsX8wezL1+SWmM7YKCIavhgUnJXn6kGsuQR9KDgc?=
+ =?iso-8859-1?Q?Y61Ub2ZB4Ij5f6nx4p/jo1wK1ONcIbhae59kdmyvkxdtycVc2j8GfjXibH?=
+ =?iso-8859-1?Q?wj7hNVySjNnBenXCLC3XWZzWlFOBd1rxDoLDTKS7aas6amqcpaFH8hQGhV?=
+ =?iso-8859-1?Q?zv0D+OmKLYh4vVhT7IBAVfEIYG8djltsvAhQ4XNAAY4up1lOsnSdZPp2LO?=
+ =?iso-8859-1?Q?NJpl3JKJo0n3DZA0CpO604XawrTWClg032vt4ihIOJhl2LxHuRFYV2zaea?=
+ =?iso-8859-1?Q?1U3Y/lnobrMXFXRjxybqrY4KhoAy8kW/85Y6gsvKm3KjUQBhs0X2OAdRLY?=
+ =?iso-8859-1?Q?4nUh0xKRRv2NLHblxqI4heZRjbET/sEO86+P6kK/9k7bKMVJ8wz61rvq66?=
+ =?iso-8859-1?Q?Ev3En2GNI+w1/8ApOn0DOC09mbzSpTi41NEjZ+Tr+EeRnet4rK2/CnlW4k?=
+ =?iso-8859-1?Q?9EQSlABeZ3XMjsc3toTiYNEelodd901+RcvQ1I5vohhqS9iHcn0fWt1KYH?=
+ =?iso-8859-1?Q?qEWSC1737Cm9d5hvH+GcA7VVtJRJubS5WlNmkmwqO+II8rZm7i9tuCsO+D?=
+ =?iso-8859-1?Q?GNTu+GrlcqLpiYJBMFex+xD0A+ytBJBGyNn3zEaubiXGGxrdNbjZyAPaOO?=
+ =?iso-8859-1?Q?0ghr3x3DyywWlr/tC1DQ+cN/glbuu2pqwTFXLu5nrvKfY5sFf+ayCww05n?=
+ =?iso-8859-1?Q?DaapjVUaUM3ru3l2ceUug1L3PZjkGzDfnVe7PryrXt2LJWKJQfIeBYQzNV?=
+ =?iso-8859-1?Q?98ZHVmaLvcFSWgK+zUr9JRJTRtdin2DB7wSSIQD/O4PEKmEmE0ZCEmhLaF?=
+ =?iso-8859-1?Q?f/NjT/d44ZlfgAzwuPadf3BO/4D2/ztSvUkR9lPD4kWsslDaUmAUxgwqat?=
+ =?iso-8859-1?Q?4hryjJ19j2mPQWZXw/njyMjOgLn6nBVPjrZ/uSgvn4Zd0uJ7qLspZ3aMCk?=
+ =?iso-8859-1?Q?TjjKsE9Suvn4liuWtCo3RVdTk5FCyM2iqEtp8PJCBU97MXCqoe9rUqXBua?=
+ =?iso-8859-1?Q?pg35X60V2Eih8pbypUPzdBRUAaTCR37i2i6MF9QMmtff6NVxANhZ60XAV0?=
+ =?iso-8859-1?Q?qGjHw0Rza4tyScbJaFOz+vQoeo0BlVjAubFjEt5ttGCPGq2zyc1GsVsmvM?=
+ =?iso-8859-1?Q?Huagl2ODsXN5omhu2mjll/hktNbINBDzi3UAHJLwJfuCQVrb81EFsB4T/F?=
+ =?iso-8859-1?Q?USLaz7Vf+2X3gI3aiiEmNfz2xxeZraWmZTCVhifxJC530MUsoZJFHdT+gb?=
+ =?iso-8859-1?Q?pdkOUASVaQQbwvmaKbbPCsefoRv/DazLnW2f3GsJjji+T1elFm70dv1rdx?=
+ =?iso-8859-1?Q?AfPSxVYAmKhgAtodwBKzJ9V6rm+fJPW60xDgeT4clgrpmbEQ/JLdUS4Gfc?=
+ =?iso-8859-1?Q?wNMnsPFMs4YsX5i7LXJ6yDT22d8ikiyTrCrkEGFSvRHsvK?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 3/4] PCI: endpoint: Add support for DOE initialization
- and setup in EPC core
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<mani@kernel.org>, <kwilczynski@kernel.org>, <bhelgaas@google.com>,
-	<corbet@lwn.net>, <kishon@kernel.org>, <skhan@linuxfoundation.org>,
-	<lukas@wunner.de>, <cassel@kernel.org>, <alistair@alistair23.me>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-	<s-vadapalli@ti.com>, <danishanwar@ti.com>, <srk@ti.com>
-References: <20260611191252.GA499821@bhelgaas>
-Content-Language: en-US
-From: Aksh Garg <a-garg7@ti.com>
-In-Reply-To: <20260611191252.GA499821@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB76:EE_|DS0PR10MB6822:EE_
-X-MS-Office365-Filtering-Correlation-Id: e20660a1-e26b-4a0a-1755-08dec85c003b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|7416014|376014|23010399003|82310400026|1800799024|22082099003|18002099003|6133799003|56012099006;
-X-Microsoft-Antispam-Message-Info:
-	5Rq2rd8kwdArAc59j0NXlgQWLkFcBcrHwNtEyWOQT/h74YVkXmfRUV6FqsauE8uNWsvowG92bSomhQBxzdz00/pu3sRsviLxLEmCSgFsuOr9DYEsNlkqrjJt/9cTsX82M5jqrFTNtQYL+GTvpcPCSOHZPH5Y5zIUQle2I058aXbDCbWVnyULzczu6sgTxn4ZSc8evzlIzkgzap5S/anRIattjEfR5Xuf3mB8K256uey/cA/OPcMoxNfY5cMi8SQZbqhYztvZECgQN9yB6hhZjsiuP3t8Dl/w03O6ZBtivVdTl7be19KYR6IEoCr0NarbUPNZ9NDmFuwgWQlCU7o46cOJNxGkb+n2w9+Z0uXKgI9nTh94nlRFHrDcEHT9WjnpcoNyjwehvmA/FgRcGS0EA+k5ocS1wobTaw2oz9p6zmzpvzBi7TgcBRWDqztMrNfgSuJyRAyvH9esaFADzh7yBuZZo4aUuoV1sfHl/J8YfuI97vMtfF90YraRpl6bVsXMIfDnGWpZY0ctnt6UoP1eWPdcNuSEp8iIT4Ar9IntBIx86LmMphLe5LqpOoCFCPe9VdBVmlslvLrIBH03Kr3QRJIVP+GiV5bTk4ZL6FYf3VtimtK9RN5kZt0FiVAtXuWJKu89fI0GvWGXQej3de1xwsa8Rvacnz3hKauuPPoAne/M8JxE/m1kpjKxRU0xi8Fs5Fif7RhKtswt696O5FR625oyM3okiV4zJSex0XzDRl8=
-X-Forefront-Antispam-Report:
-	CIP:198.47.23.194;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet200.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(7416014)(376014)(23010399003)(82310400026)(1800799024)(22082099003)(18002099003)(6133799003)(56012099006);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	WHizbig8QcAReQ5mUh4t8u4FUkE4LPHsbR9MnWvugYklakbNeZrbaUfk7rM0UqjAH/CIErYJg/d6WHKu2yG9nkfJUkETv4U3ofKrtnZRyizFHoZ8qWdNb34QasXluNZafIDHQ2Marhr/omorSmsT0oLgNNSLVKGPLn2+N/JLsRPTMr+bbFZhINsdse1y+4BTAejAfL9nGlzGekalT7BhxW/0udRgbj9zKV6HaAhgjPRDuXmvfwPZPvYUnncUCzEn/2gGD0Q2g6XHBTkx6O0f3IBbm00Y6PpjH6TzsCZsfBqnmHqK7fqE6+ttKcy3Z533EguNXmSaOj+fND4K0yFy8A9pcMqXd27et5jws6oYnXBbcmfV3TwCbWIxk9ineG5W4lBr9Lnt8deixrw0RKpg3Lc54tVu/7fOPJp7zvr4egLOvyBgccs2CSLrl7JUA0+W
-X-OriginatorOrg: ti.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jun 2026 08:24:19.8435
+X-Exchange-RoutingPolicyChecked: lbX5x1Lp50hqgvYCnt3GFy0N+8gY0W857gBkICKa0gIZqdkw9MWucCHQ3JmD2Fe0XSNxYOUOBWoyUjNuhExvZ+nrxx/00bTx5MxnSQNvmDr13P9vbRCT3xgdui5b3mkCDc+OtjoOBnOak19zIkot0/WIaDtL6WGEU34+0vkeqfq68Uz1IB+3Wf+tuwo3PZXBW5+l8InXybBypEy6uQcoEsHjpcrUbLYGvPwGlICjHxCbACSsATlzifOozDdYsZULxYpUkGpHNpHLOJFCjhm2PSCGYkqBRFWzmJ7zpXTQf1RHTcFSRr/7Rptx1BHKH5J7H787tcxCrnI1Zqdkqbl3BA==
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB3690.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5cff3f8f-030b-4525-2ec3-08dec85c7205
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Jun 2026 08:27:30.8241
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: e20660a1-e26b-4a0a-1755-08dec85c003b
-X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.194];Helo=[lewvzet200.ext.ti.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL6PEPF0001AB76.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6822
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: oc5DbL8m/CcrmFFTCEO81uIIfKq67+lj7UuarbmNcvInxV2HP2Y0XTRTxF0dUu/VYmmJioMzD4Gd/hrk9kPkxQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR11MB8131
+X-OriginatorOrg: intel.com
 
+> From: Matt Evans <matt@ozlabs.org>
+> Sent: Wednesday, June 10, 2026 11:43 PM
+>
+[...]
+>=20
+>  vfio/pci: Support mmap() of a VFIO DMABUF
+>=20
+>    Adds mmap() for a DMABUF fd exported from vfio-pci.
+>=20
+>    It was a goal to keep the VFIO device fd lifetime behaviour
+>    unchanged with respect to the DMABUFs.  An application can close
+>    all device fds, and this will revoke/clean up all DMABUFs; no
+>    mappings or other access can be performed now.  When enabling
+>    mmap() of the DMABUFs, this means access through the VMA is also
+>    revoked.  This complicates the fault handler because whilst the
+>    DMABUF exists, it has no guarantee that the corresponding VFIO
+>    device is still alive.  Adds synchronisation ensuring the vdev is
+>    available before vdev->memory_lock is touched; this holds the
+>    device registration so that even if the buffer has been cleaned up,
+>    vdev hasn't been freed and so the lock can be safely taken.
+>=20
+>    This commit makes VFIO_PCI_CORE depend on PCI_P2PDMA_CORE
+> (commit
+>    1) to bring in (only) the P2PDMA provider code.
 
+the last sentence is stale as the dependency is now added in patch4.
 
-On 12/06/26 00:42, Bjorn Helgaas wrote:
-> On Wed, Jun 10, 2026 at 03:32:55PM +0530, Aksh Garg wrote:
->> Add pci_epc_init_capabilities() in EPC core driver to initialize and
->> setup the capabilities supported by the EPC driver. This calls
->> pci_epc_doe_setup() to setup the DOE framework for an endpoint controller,
->> which discovers the DOE capabilities (extended capability ID 0x2E), and
->> registers each discovered DOE mailbox for all the functions in the
->> endpoint controller.
->>
->> Add pci_epc_deinit_capabilities() in EPC core driver for cleanup of the
->> resources used by the capabilities of the EPC driver. This calls
->> pci_ep_doe_destroy() to destroy all DOE mailboxes and free associated
->> resources.
->>
->> Co-developed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
->> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
->> Signed-off-by: Aksh Garg <a-garg7@ti.com>
->> ---
->> +/**
->> + * pci_epc_doe_setup() - Discover and setup DOE mailboxes for all functions
->> + * @epc: the EPC device on which DOE mailboxes has to be setup
->> + *
->> + * Discover DOE (Data Object Exchange) capabilities for all physical functions
->> + * in the endpoint controller and register DOE mailboxes.
->> + *
->> + * Returns: 0 on success, -errno on failure
->> + */
->> +static int pci_epc_doe_setup(struct pci_epc *epc)
->> +{
->> +	u8 func_no, vfunc_no = 0;
->> +	u16 cap_offset;
->> +	int ret;
->> +
->> +	if (!epc->ops || !epc->ops->find_ext_capability)
->> +		return -EINVAL;
-> 
+>=20
+> End
+> =3D=3D=3D
+>=20
+> This is based on VFIO next (e.g. at b9285405c5f6).
+>=20
 
-Hi Bjorn,
+Sashiko failed to apply this series. Is there dependent work in vfio-next?
 
-Thank you for your feedback comments. I will work on them and post v6
-series incorporating the changes.
-
-> I don't see anything that sets pci_epc_ops.find_ext_capability in this
-> series, so this looks currently unused and untestable, so likely not
-> mergeable as-is.  What's the plan for users of this?
-> 
-
-Currently there is no EPC driver upstream which supports DOE yet. 
-However, I am working on a platform which supports DOE (support for
-which would be added soon). Mani pointed out that if EPC driver support
-for the same is guaranteed to be added soon, the APIs can be merged
-first.
-
-For the demonstration purpose, he asked to show how an EPC driver is
-expected to use the API as a snippet in the cover letter itself.
-
-I will add a code snippet in the cover letter, which sets
-pci_epc_ops.find_ext_capability as well, if that is acceptable.
-
-Regards,
-Aksh Garg
-
->> +	/* Discover DOE capabilities for all functions */
->> +	for (func_no = 0; func_no < epc->max_functions; func_no++) {
->> +		mutex_lock(&epc->lock);
->> +		cap_offset = epc->ops->find_ext_capability(epc, func_no,
->> +							   vfunc_no, 0,
->> +							   PCI_EXT_CAP_ID_DOE);
->> +		mutex_unlock(&epc->lock);
->> +
->> +		while (cap_offset) {
->> +			/* Register this DOE mailbox */
->> +			ret = pci_ep_doe_add_mailbox(epc, func_no, cap_offset);
->> +			if (ret) {
->> +				dev_warn(&epc->dev,
->> +					 "[pf%d:offset %x] failed to add DOE mailbox\n",
->> +					 func_no, cap_offset);
->> +			}
->> +
->> +			mutex_lock(&epc->lock);
->> +			cap_offset = epc->ops->find_ext_capability(epc, func_no,
->> +								   vfunc_no, cap_offset,
->> +								   PCI_EXT_CAP_ID_DOE);
->> +			mutex_unlock(&epc->lock);
->> +		}
->> +	}
->> +
->> +	dev_dbg(&epc->dev, "DOE mailboxes setup complete\n");
->> +	return 0;
->> +}
->> +
+otherwise getting a Sashiko review is helpful here.
