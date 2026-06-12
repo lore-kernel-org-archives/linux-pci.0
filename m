@@ -1,202 +1,139 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4550D36EA82;
-	Fri, 12 Jun 2026 15:12:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 214EF319852;
+	Fri, 12 Jun 2026 15:13:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781277139; cv=none; b=Qx0+xRp+EccslXxViLorQxwVtCcr1I6ODCx4/FVeSyv5tL3Wmg5lKeCjZcXgOIL9OsxDPVVtKfyUsbAB1QKDJZCsxmgN4OoMqNN0UTLpiwzwaBZpzj28KYG0XWDLJhjGGRdxwjZ2dTcSTWaR2p6Pz6/iZxuCbkSsOKX2QNW0Trc=
+	t=1781277230; cv=none; b=Xg3wOgu4vxcX29dhaQaNN5acIiGl/mVs+kbWykSW8TtNflZcspJix4rFjAsGDsv32KdNOIR4JngEolqg6EE9+N3AicEAy0VoqRN/b3jcFIq8IeSVQCmx0DDDFSt8NUHV1bZMiIV25iybYxWy+y0zb9tirlilObYG0luMIG1e81Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781277139; c=relaxed/simple;
-	bh=txyrxT8yboQMDQ5xaGacmeJbEnSicxk+P9F60nr2898=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gt2HyBzJmF3dR5U7oZB9edBefuLwlizJOSBQoD5i3URiS01Q3/6yT0aE3i5PxzTahmKp2FxjiclVyKPyRvnY4skU+oe8RgskEUmMew/uXhogLIMXZWg0aHBNYpP2IUO9kbdaQquvf+jsSIEkrGIVXC4MExqWYMZLdrEwkiME1kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=IfyvRcoU; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Q+QS1wjE; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
+	s=arc-20240116; t=1781277230; c=relaxed/simple;
+	bh=vcYFYrdiTBSQmyb7+fe1/EvgY/j1i3d16AGxw+D+kwg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ftYfDqq1ZfRmW/o5kemJtfyn5ZZvA5JCny4lJzDbraWG2EBBDQEyqNxw7lKpIk50f9lrFE2BSZucBcfMfld3twZUTpb931ttBQ8LmjGh9J3ln9vFqKPmleyYy7K3Ps7WQq0W9YPjlHsMDJTVIoYTxCFYevSmOWRgLExEycZpHGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N74h59wL; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="IfyvRcoU";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Q+QS1wjE"
-Received: from phl-compute-01.internal (phl-compute-01.internal [10.202.2.41])
-	by mailfout.phl.internal (Postfix) with ESMTP id 5B470EC01FA;
-	Fri, 12 Jun 2026 11:12:16 -0400 (EDT)
-Received: from phl-frontend-03 ([10.202.2.162])
-  by phl-compute-01.internal (MEProxy); Fri, 12 Jun 2026 11:12:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
-	cc:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1781277136;
-	 x=1781363536; bh=kCZGhFktK5I+Rd85vY1rnYGowRfHuOl4vJ+wXdl1bFk=; b=
-	IfyvRcoUnzGp1tOUTqkNLcO3Wcc8D8dm0UNFS2E2nVyl/GDtW9v3gdpGNjRfIfF0
-	ulWQFmmIia0uVlKpdpN86jxiYBjyfckuiBtOn0HQPmswkm2HhtlRQwX/dJ57yWMD
-	m3JGaBnEGUB4Bq8l+e2zik/3mSG4uofkGz2p0S65zJZlx2auFw8xC+l/wmmejtak
-	fL00hnW4hKoTCv7HP7zIwzE9j1YvrduNVmebOyG/r7UqwWXXysf2PuSem3OvMWME
-	v23M78lEEuesHz1gvyDTVetZQPimp0IDerAuLPNffsUu0WMvOp/A921TJe/lsrqA
-	Iyo7cQtGdG/FcXEVJx2WAw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781277136; x=
-	1781363536; bh=kCZGhFktK5I+Rd85vY1rnYGowRfHuOl4vJ+wXdl1bFk=; b=Q
-	+QS1wjEEttGbj4DTZNzem3+nTtifIQQqK9DFTHSWSKp4iccaKs9OfXQr0wETFin0
-	9Uit7BUNDbtqG+qrblUSYAQFTNKdW+zhCSpOSxGIj/0D+EgAhUEMhb/uMFa0F0Dx
-	jGEQAXvwd5Wof7eAaygP3AfY1ueF52Ae7sVwSAKroQErrP/cjlFzTWpxzO4euw71
-	zWMvN4VVnMb7V7hzbeLFYKztHT6CmXNZqzzqhOg34b94FK00Ytbbk/L5hzrQUBi3
-	huvvdiX5WM/YORhySL4CNJNhk+O2YHK07HW3hVQsCov+N6ryILKi+qf2FA3CIigr
-	F+OdIsNYgGATsqd7o8l6Q==
-X-ME-Sender: <xms:zyEsauS7o0p0XsvnBltMVZSTFd3UapsTS4K6J3tTdErr-R63wshkCQ>
-    <xme:zyEsar6ptPtlg7hdk8cZGIZfT9yS1pV2Vo13BLRqCxdpLlfHIiCtFAw_G9PDmX3_X
-    7Dcf8pTHbBibGeSngz9N93v0XE2QduLx1BkO8pRX5pzl_nZnp3qAQ>
-X-ME-Received: <xmr:zyEsarUHLoVgmMt75ciFQXohSG0EKZL6hnBhFgn_pJZ7Ck2sPdvOqaHJXG8>
-X-ME-Proxy-Cause: dmFkZTEhPZaTC5WJocVUz5p5x0OW7AO+PJl65exHIc4Skl9u7+pCIASypwnZ2mEtrsFjVd
-    nAfGYOfgwVEG7Zck9yOtoDUwnm3G0j/e0qgulx3823I9tWTC/B/GDf3mRot4aYYObkOqax
-    Wn484U1gesW3V20fygsVoDQ2FgRl6KKkCUBHDXDUfYJIboONNnLbM0J/4de0z9gBp2Sor4
-    oXI57Wy1cuV5E2BkFQMI7FmRf2kQp0wHEtzSsXEUWDPo1EPVbOz3OLD2gDAW8V7So8zC5j
-    yZCiv0IRwN5Q7xB8h/b3oS4idkhxxZKhVjo1aKWDiIgbfCbaefLLuazkONhY4t5LiB2RPT
-    sDXgC091zSfc/Aa4/vRolhXA7u9HOFswKXvU0crPiGqsHevBawOuXIgivjl++1GvYBvh7h
-    sy0RAMDpQd5le+cGaXVqFHIUVKFgYM5l6A8FRtwdmURbZZqmU5k6IT+MlcgFJzSRvTa8LP
-    hErtaApFyLC1Dewo6rLv9g/EHrMOgHZcSUPq+HUFRAswPxDaO5+VC2XC1/l8u96zlIsU7+
-    NGTAk8lYTPzWEcY/cxNS8X5lIJQIDfVVSdSWls2jJ2LzHlmct5J+zGROScUvJc6pu6tSv7
-    XPVghDqVNSLLVxiPQ2PrutL4Zc1Kx6AhCtEUwSAeUa0ZpZJTV5onbaL6Of3Q
-X-ME-Proxy: <xmx:zyEsap9kzHKg_LrhUXmOrDBPM5oo_86flSWGUSA_ihQGmEktc9z26g>
-    <xmx:zyEsajrT8aQdWUZXjlvWGviCXlde0e1mh0lRHc96ZAdRyugRRogk4A>
-    <xmx:zyEsakKroulvIZeTvpN4JhHSKPxFEVEKqgvOsNeUBo4XkcG8RigiOg>
-    <xmx:zyEsauNB4lU9fXK8hyd6TL3ny-TBiPddrekpS_WnfSv7WZd7P7zJ0w>
-    <xmx:0CEsav_yNxm_0aJmrBPDTiAhBvUfsHE43ZEvwMvNzWAy7dNExeuNxlH6>
-Feedback-ID: i03f14258:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 12 Jun 2026 11:12:13 -0400 (EDT)
-Date: Fri, 12 Jun 2026 09:12:11 -0600
-From: Alex Williamson <alex@shazbot.org>
-To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
-Cc: bhelgaas@google.com, jjohnson@kernel.org, mani@kernel.org,
- linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
- ath11k@lists.infradead.org, ath12k@lists.infradead.org,
- mhi@lists.linux.dev, linux-kernel@vger.kernel.org, alex@shazbot.org
-Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
-Message-ID: <20260612091211.53856fbe@shazbot.org>
-In-Reply-To: <20260612142638.1243895-1-jtornosm@redhat.com>
-References: <20260612142638.1243895-1-jtornosm@redhat.com>
-X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N74h59wL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7A7E1F00A3A;
+	Fri, 12 Jun 2026 15:13:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781277229;
+	bh=UkC9wJNbN8DWnV+rIxALikJhH7vxyoleW0S5SIbWfqo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=N74h59wLwlqfrzAJekopnPa+gmpQzuGPAV/NjVuNYkkUpHMFbJjYTblZt3QKz8Frn
+	 dPHFgYQbb0/q92ELOMM1uDBeMmxiuJfQi6YphMyeBkebR1GGugtVUq6E7gk1JyoQxM
+	 RYJo8tAV2TjZIxyDqrP1OilD6wdrYgUaubSNulPQOX3gDLIokw2/bMRpmxLjSYOtl7
+	 RyeYmrMcs7ayFhj0qh/cDuU7jGo4apK2nIez1AXeWjpjnusSuNT0Sxsn9ndQBfByM7
+	 fkoj1dVUUceJ9DWKu6AcI7c+HalCFRovDVLPPDJPraM10jfLB8TcKFhO7bj2wYN2iz
+	 duYpTWextcEqQ==
+Date: Fri, 12 Jun 2026 10:13:48 -0500
+From: Rob Herring <robh@kernel.org>
+To: hongxing.zhu@oss.nxp.com
+Cc: krzk+dt@kernel.org, conor+dt@kernel.org, bhelgaas@google.com,
+	frank.li@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org,
+	kwilczynski@kernel.org, mani@kernel.org, s.hauer@pengutronix.de,
+	kernel@pengutronix.de, festevam@gmail.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, imx@lists.linux.dev,
+	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: Re: [PATCH v6 1/3] dt-bindings: imx6q-pcie: Add optional
+ intr/aer/pme interrupts for i.MX95
+Message-ID: <20260612151348.GA1040341-robh@kernel.org>
+References: <20260603062510.3767610-1-hongxing.zhu@oss.nxp.com>
+ <20260603062510.3767610-2-hongxing.zhu@oss.nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260603062510.3767610-2-hongxing.zhu@oss.nxp.com>
 
-On Fri, 12 Jun 2026 16:26:38 +0200
-Jose Ignacio Tornos Martinez <jtornosm@redhat.com> wrote:
-
-> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
-> lack working reset methods for VFIO passthrough scenarios. These devices
-> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
-> broken bus reset.
+On Wed, Jun 03, 2026 at 02:25:08PM +0800, hongxing.zhu@oss.nxp.com wrote:
+> From: Richard Zhu <hongxing.zhu@nxp.com>
 > 
-> The problem manifests in VFIO passthrough scenarios:
+> The i.MX95 PCIe controller introduces three additional dedicated hardware
+> interrupt lines for specific events:
+> - intr: general controller events
+> - aer: Advanced Error Reporting events
+> - pme: Power Management Events
 > 
-> - WCN6855 WiFi card (17cb:1103): Normal VM operation works fine, including
->   clean shutdown/reboot. However, when the VM terminates uncleanly
->   (crash, force-off), VFIO attempts to reset the device before it can
->   be assigned to another VM. Without a working reset method, the device
->   remains in an undefined state, preventing reuse.
+> These interrupts are optional on i.MX95. PCIe basic functionality
+> (enumeration, configuration, and data transfer) works correctly without
+> them, as the controller can operate using only the existing msi interrupt.
 > 
-> - WCN7850 WiFi card (17cb:1107): Same behavior as WCN6855.
+> Earlier i.MX PCIe variants (imx6q, imx6sx, imx6qp, imx7d, imx8mm, imx8mp,
+> imx8mq, imx8q) do not have these three dedicated interrupt lines.
 > 
-> - SDX62/SDX65 5G modems (17cb:0308): Never successfully initialize even
->   on first VM assignment without proper reset capability.
+> Update the binding to allow up to 5 interrupts for i.MX95, while
+> restricting earlier variants to a maximum of 2 interrupts using
+> conditional constraints (if/then schema). This ensures the schema
+> accurately reflects the hardware capabilities of each SoC variant.
 > 
-> Add device-specific reset entries for these Qualcomm devices using D3hot
-> power cycling. Testing shows that despite advertising NoSoftRst+, D3hot
-> transition provides sufficient reset for VFIO reuse, particularly after
-> unexpected VM termination. While not a complete reset (BARs preserved),
-> it provides the only viable reset mechanism for these devices.
-> 
-> Testing was performed on desktop platforms with M.2 WiFi and modem cards
-> using M.2-to-PCIe adapters, including extensive force-reset cycling to
-> verify stability.
-> 
-> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> Reviewed-by: Frank Li <Frank.Li@nxp.com>
 > ---
-> v9:
->   - Complete redesign based on maintainer feedback (Alex Williamson, Bjorn
->     Helgaas, Rafael Wysocki): dropped general d3cold infrastructure entirely
->     and now just a single patch: the proven D3hot reset for specific
->     Qualcomm devices (device-specific reset)
->   - Previous v8 patch 1/3 (general d3cold) dropped: concerns about ACPI
->     portability, bridge issues, runtime PM, and lack of _PR3 hardware for
->     testing.
->   - Previous v8 patch 3/3 (quirk_no_bus_reset) already merged for v7.2
-> v8: https://lore.kernel.org/all/20260609163649.319755-1-jtornosm@redhat.com/
+>  .../bindings/pci/fsl,imx6q-pcie.yaml          | 29 +++++++++++++++++++
+>  1 file changed, 29 insertions(+)
 > 
->  drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> index e8b8131f5f23..9b5d4e59dfff 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> @@ -58,12 +58,18 @@ properties:
+>      items:
+>        - description: builtin MSI controller.
+>        - description: builtin DMA controller.
+> +      - description: PCIe event interrupt.
+> +      - description: builtin AER SPI standalone interrupt line.
+> +      - description: builtin PME SPI standalone interrupt line.
+>  
+>    interrupt-names:
+>      minItems: 1
+>      items:
+>        - const: msi
+>        - const: dma
+> +      - const: intr
+> +      - const: aer
+> +      - const: pme
+>  
+>    reset-gpio:
+>      deprecated: true
+> @@ -248,6 +254,29 @@ allOf:
+>              - const: pcie_aux
+>              - const: ref
+>              - const: extref  # Optional
+> +        interrupts:
+> +          maxItems: 5
+> +        interrupt-names:
+> +          maxItems: 5
+
+5 is already the max.
+
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - fsl,imx6q-pcie
+> +            - fsl,imx6sx-pcie
+> +            - fsl,imx6qp-pcie
+> +            - fsl,imx7d-pcie
+> +            - fsl,imx8mm-pcie
+> +            - fsl,imx8mp-pcie
+> +            - fsl,imx8mq-pcie
+> +            - fsl,imx8q-pcie
+> +    then:
+> +      properties:
+> +        interrupts:
+> +          maxItems: 2
+> +        interrupt-names:
+> +          maxItems: 2
+>  
+>  unevaluatedProperties: false
+>  
+> -- 
+> 2.34.1
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 431c021d7414..bac1edb6c2dc 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4240,6 +4240,41 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
->  	return 0;
->  }
->  
-> +/*
-> + * Device-specific reset method for certain Qualcomm devices via D3hot power
-> + * cycle.
-> + *
-> + * These specific Qualcomm devices lack FLR capability, advertise NoSoftRst+
-> + * (blocking PM reset), and have broken bus reset. Despite advertising
-> + * NoSoftRst+, testing shows that D3hot transition provides sufficient reset
-> + * for VFIO reuse, particularly after unexpected VM termination where the
-> + * device would otherwise remain in an undefined state. While not a complete
-> + * reset (BARs are preserved), it provides the only viable reset mechanism for
-> + * these devices in the commented situations.
-> + */
-> +static int reset_qualcomm_d3hot(struct pci_dev *dev, bool probe)
-> +{
-> +	int ret;
-> +
-> +	if (probe)
-> +		return 0;
-> +
-> +	if (dev->current_state != PCI_D0)
-> +		return -EINVAL;
-> +
-> +	ret = pci_set_power_state(dev, PCI_D3hot);
-> +	if (ret)
-> +		return ret;
-> +	msleep(200);
-> +
-> +	ret = pci_set_power_state(dev, PCI_D0);
-> +	if (ret)
-> +		return ret;
-> +	msleep(200);
-> +
-> +	return 0;
-> +}
-> +
->  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
->  		 reset_intel_82599_sfp_virtfn },
-> @@ -4255,6 +4290,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
->  		reset_chelsio_generic_dev },
->  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
->  		reset_hinic_vf_dev },
-> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_d3hot },  /* WCN6855 */
-> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_d3hot },  /* WCN7850 */
-> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_d3hot },  /* SDX62/SDX65 */
->  	{ 0 }
->  };
->  
-
-Comment and scope is better, but this is duplicating the body of
-pci_pm_reset() using a different mechanism with different timeouts. It
-would be better to extract the core of pci_pm_reset() to a
-pci_do_pm_reset() function that's used both here and by the
-pci_pm_reset() function. Thanks,
-
-Alex
