@@ -1,134 +1,175 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from BL2PR02CU003.outbound.protection.outlook.com (mail-eastusazon11011032.outbound.protection.outlook.com [52.101.52.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91430382F0F
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 09:20:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781256014; cv=none; b=HKrhbLkosGmCOnfiGdSy5Ay9qs3tEugPEdb+ZiJ0EfD7+JiVTB40CPbgU78JvzdUy73pt9se3qA+BSalduaUYioTnhd3U6+g/sqQHG/6FdYQIZo2RxuJYgKic0TslhzKFcmonsV7ckCdHcNEnfpHmcVjbo6NgmxaLt3xp9jci9s=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781256014; c=relaxed/simple;
-	bh=nK8oSt5EIh86hjy16VZ5ws+ZIcIDCfDkVWMJvoB+yNI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=No524UtH/+bx6VflfkY25+KQ+lSqhcWyDxuLTn10hqj0k5pbkAX7d3r/oaYJt1GG5/Bs09IGpLMrRmJpzWHK/dq5Lta3ptrU+C5sgPdyfJiYRofoRi3Jz65AmNHVJgf04HiYA24Pb7HvlJ3SQNTDskQea3Hmlwn8vhjaEw6t8cQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fRzzMYYL; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEA7A3A0B1D;
+	Fri, 12 Jun 2026 09:30:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.52.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781256641; cv=fail; b=XN9rYXZg2KbVBePJiNsVoqhDQIzgtH8i2gP7KR2kR9Kjiqeo999moND4eZscOtFsZXqW3yeoin6vycVnQ3GI703CDRHRI6ZtqnmfZU9wTnEEg537PBd3U5xDEBl4h9nU3Zm73mC7hgRFa2UjMiTOSsU2Y0oczWc9RJ1992id/sU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781256641; c=relaxed/simple;
+	bh=2LIuG5vZr0nQI2voz6KesMnDHECdhjP1LLYYaNKR2go=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=IUerf1VUlW8V42eOIUCyVXMLrjL1pZ8IDx/jg2WUTUf5JNSDuJy5QZLZ4+KzOiwX2ACURy36aTQ47nHA811Cwr7+4R5kn8uy088igEfu2rLGWkckgDmBOWMlTbSuOEc+Ets610a5wA2fAmQNo3C/uPhKKOJNyF4OmrZ3xIcRHYc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=Mh2B+oSM; arc=fail smtp.client-ip=52.101.52.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fRzzMYYL"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2c0b1a48855so85405ad.0
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 02:20:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781256010; x=1781860810; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zvPmlCR2+M8z2It1PyWjRPyBRhJXBH/RxmRhWYVyMeM=;
-        b=fRzzMYYLXoLbwa6O4DDeOA1Dd721HBWwlMWYDllZUFJ/PTywZdsB5Nwlzv5k7x2d0R
-         WvHhTKPMyLGoqFR3dXk4MZlKcgQ+ayEvfB5xvC5obxLWlwNHu2z7b0SjDke0/huZR6Dy
-         rACpzpT2wiXVJNFA67ImFhSZr9+neZziK6J2yoh4qRgMtwPT/ZfW3hNtyxHfc/fsRD3g
-         GFcOs2i1hCawvKj3RLmbnBeGgbQr7dOlEft+MKhsSkeo4F880mzkcKN8W80Ip0Lby3e9
-         4s7LNmv9oz+vhxUaKaLOH7e/ZpmkbxeE0XuEbJaU1jhwkOtaSukQ+7t//wS7/4pyvAFv
-         1Y6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781256010; x=1781860810;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zvPmlCR2+M8z2It1PyWjRPyBRhJXBH/RxmRhWYVyMeM=;
-        b=qfMzVbd/JgTd8vbe2C8olM0y0KRtGPj75RbMUxWzu5CeP7Ol3+sNl5C+DAgkNZ1vTq
-         qxdXpNvtIsjlIg0TU17JWgj2hn8d6CgcdqDuQvzM7r/Sba10RG6o2kKnoHrjmC+XmSYp
-         XXJb9HZmILvVRUQYxt45E1hbB6AM2BYFe7eynuf/Afd5ADo/0whoOuz2bgerx0HNCXPK
-         9DRhMqgn2N8hJ2G6rhi6PhPm54u4rfTg2F3HVrIUSw4gIuRI23nsB9gCQvqTk+iDhtsr
-         0KSsCXTNnAADQwhbzfwifCLJ74gf4nMQGesZND++FQagfjHb7orLamipY14bGDUAE+Ae
-         gpHQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9XW5x0rCEOs3wELv/vMMfZ6X3ONeCOID4aVuMpr0oq4FIf3a9O8RUKuZYxtH6j8l0km1+HG8vOlLM=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw1XuhON1XHXwBvBft/KiMjvBIWvH8/vJAkSxGBbyi+7LEBsWEz
-	njNbjtmgYq/SJv3FTP7oZJkk2JWlaDGv/FJgUdaf0gkVv9k4KXY3G97oKoW/A4xwUw==
-X-Gm-Gg: Acq92OHsN+AGiP74CO/lQyGUYqgnxHDBGF+vJ/2AUNoyPWtqtAV83PMxpMLZY7lYfkY
-	J5+qaiclQYOPPX2LArOfEKiU2D4QKVEicCsFPWYxujQNcIGOgySdmsWQWJdhD8fy50HBm2b12ig
-	TYJvz2FEBDkIX3VgcNaMtKQbIkamYClpjYY1df3gjJ9G/rsAwsy2nBKzoKsqmCblEc4qi5uZY1G
-	VZ/IxeWhoqHcX3nDgNpGeEsPslU6JkIrELoHthE44ChXglqE1k3dgjVE4j9CiIYLswDHbUA07We
-	9OmeMF1MJI2Vzbyafrr6iQpZGRts7qkEwsFimpjWl78bCsgrz0LehX6GAq38oWGxmx8lgb61krH
-	Kwpy+Ig+76y+tEeq5njacme0kflAaYt+xZ1hcVDLQVK0HzO0gs/sQF8NRLKtLt1l1jwbKVjMNqm
-	NjFBWtt08Ce2miWg45+MbzVtUecCMN4MUft/N84fFpBNeOHNzZWQvgOPvO61jdx+YSKEhBJdg=
-X-Received: by 2002:a17:902:e811:b0:2bf:139c:dcf3 with SMTP id d9443c01a7336-2c405c8817fmr1345405ad.19.1781256009183;
-        Fri, 12 Jun 2026 02:20:09 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8434afd17f5sm1476657b3a.39.2026.06.12.02.20.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Jun 2026 02:20:08 -0700 (PDT)
-Date: Fri, 12 Jun 2026 09:20:01 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Matt Evans <matt@ozlabs.org>
-Cc: Alex Williamson <alex@shazbot.org>, Leon Romanovsky <leon@kernel.org>,
-	Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 3/9] vfio/pci: Add a helper to create a DMABUF for a
- BAR-map VMA
-Message-ID: <aivPQcSlolwptnB6@google.com>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-4-matt@ozlabs.org>
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Mh2B+oSM"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=BeQlG0oz7OFHFxZ1noBbm1DnOAotbgWyta1O5v3lDwFKGHhzf/Fsqh03s4NC1W6P/DutPCzKQOMH4sV8NxJQEs2ftNZslFhNh+Vg+LSY0YBiNSUX8q5tp4r5QHtnLXNI25Sc//6mEoYaUc3/1IUIcrHBlxt6ol4gLJ+Qk+Qvfm//sXeQ6KzWjj+DqM5nwvK/GlYuBlEUiJgJtcBYp+JBHaovjzFSRnYflRbfFc2gxkrNBLwyk05GHGK21iAQYp5KrTCDcfBPRa716iDMbqgV8UAkXuJ2Ghe0RMSBrlKZBLPu4pTYXRdQQMsLJ2Zt70B+sMBpEir+xwTp6d4F3nt0yQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=egGhdVD7aDifg9XzPL+QYYZq0ZaiWOwQfHoxnScbCEs=;
+ b=uK5BFruiWDjh7ZdL8trDYmxxCMGq5VK0i7XqvCLMmCF876ibNzNZ/8riiEWepCD/0LsTpPzn9mtsY1hJ6ygViBO5Jlx0+f6F2ki0UeM+/watrpi9RMeTU6gJa/MNS9kErS7NAA3FXoooFxf4uybFWDG6mgv79PdBzahcjFcJoq8PwLW7zWaQdJpScDFuvt8d4QLMTvkRI+MlbLttpzti/lym8kW5l1k/quYGIzKJ6XFoKIdMmI0osoL+GhXhRMie/8G7xiYTdnq8sPKF041a2lSfT9/wJHE09uHt4cOO5dEeq7BAtH+VKpJpvu2EpSv4x4/2WxvyEW/3UIQ5jVfveQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 198.47.23.195) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=ti.com;
+ dmarc=pass (p=quarantine sp=none pct=100) action=none header.from=ti.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=egGhdVD7aDifg9XzPL+QYYZq0ZaiWOwQfHoxnScbCEs=;
+ b=Mh2B+oSMkJnu9Dp+ZJeGVZQ515BO1fkrgbOq3znaX6ntzdEizMelPaQ/XD7u9rtxRoKuL7D9OtVpQKnLNOTS5eTtT9V3M7h/9j6Sa85nZa+NrWlG+1s9t5XYKoJ7cAG1/a3pzL7QvADj5FQ9vTZHmlir8ozSetY46fimlpX9p00=
+Received: from BL1PR13CA0403.namprd13.prod.outlook.com (2603:10b6:208:2c2::18)
+ by DS7PR10MB5949.namprd10.prod.outlook.com (2603:10b6:8:86::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.92.14; Fri, 12 Jun 2026 09:30:37 +0000
+Received: from BN2PEPF00004FBC.namprd04.prod.outlook.com
+ (2603:10b6:208:2c2:cafe::f) by BL1PR13CA0403.outlook.office365.com
+ (2603:10b6:208:2c2::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.113.15 via Frontend Transport; Fri,
+ 12 Jun 2026 09:30:37 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 198.47.23.195)
+ smtp.mailfrom=ti.com; dkim=none (message not signed) header.d=none;dmarc=pass
+ action=none header.from=ti.com;
+Received-SPF: Pass (protection.outlook.com: domain of ti.com designates
+ 198.47.23.195 as permitted sender) receiver=protection.outlook.com;
+ client-ip=198.47.23.195; helo=lewvzet201.ext.ti.com; pr=C
+Received: from lewvzet201.ext.ti.com (198.47.23.195) by
+ BN2PEPF00004FBC.mail.protection.outlook.com (10.167.243.182) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.21.113.7 via Frontend Transport; Fri, 12 Jun 2026 09:30:36 +0000
+Received: from DLEE205.ent.ti.com (157.170.170.85) by lewvzet201.ext.ti.com
+ (10.4.14.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 12 Jun
+ 2026 04:30:36 -0500
+Received: from DLEE206.ent.ti.com (157.170.170.90) by DLEE205.ent.ti.com
+ (157.170.170.85) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37; Fri, 12 Jun
+ 2026 04:30:35 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DLEE206.ent.ti.com
+ (157.170.170.90) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.37 via Frontend
+ Transport; Fri, 12 Jun 2026 04:30:35 -0500
+Received: from [10.24.68.129] (a0507033-hp.dhcp.ti.com [10.24.68.129])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 65C9UWL33215381;
+	Fri, 12 Jun 2026 04:30:33 -0500
+Message-ID: <d0feedff-b0f6-4a1a-a9df-fae9e2d58abd@ti.com>
+Date: Fri, 12 Jun 2026 15:00:32 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260610154327.37758-4-matt@ozlabs.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 0/3] PCI: cadence: Add LTSSM debugfs
+To: Hans Zhang <18255117159@163.com>, <bhelgaas@google.com>,
+	<lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>
+CC: <robh@kernel.org>, <mpillai@cadence.com>, <s-vadapalli@ti.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20260611165933.20071-1-18255117159@163.com>
+Content-Language: en-US
+From: Aksh Garg <a-garg7@ti.com>
+In-Reply-To: <20260611165933.20071-1-18255117159@163.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN2PEPF00004FBC:EE_|DS7PR10MB5949:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0ecdc8c1-d0aa-41c2-5472-08dec865429a
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|23010399003|82310400026|376014|36860700016|22082099003|18002099003|56012099006;
+X-Microsoft-Antispam-Message-Info:
+	Sw55LqCy3ysunrl7BebzKJtHTuOCkkt5rntPah+uo78VuiaHGZY+Dy3kwTTfCTZLVb0wgiB/M+jo4sU3H6dhRKDhiAU5PJjt0sUHaWyt3+JMyc2YCmsCkz7EqTNdNu3FcthE2VAnsopl6wXbceil2BoYvHEAfxMYRzNe+H+Bmtq9F7OyFOUf/T4XA91y/T+8T+5w9eWH1UN/X3AH1ttJDyQuriAf8LlDKxlkRlLvC/04Fz5Of1UulQ3aH5bc0wybX+uGblNZIARAXHc+XRlk8ylndMzCnEeUCfQSArO31THiY+y2fx9hx+QuCZjZ4tfARwQs6vFfy4vb3BMeCjud+7P1lGJxCRqwOWxs0FFahrIQWGaQ80dvLdxXA+E6NhoUm9zav3XsP16aOonczVTGY3frMLiYQLT6OSA9vTQpvmJ9AXrs9kBcMaQZCYgzYSoZM2deKVWAyldpoceXScXfVVZvTHfdaz2NMTq3ynryxEFZ8T5lt9GqqenSGVvIax4NPkok1jb7TMke+O9mmD0JKMKO/jHN35jA5n2v6SBzTwGQUDNd/boyzaCD/CLTWDlXqD/mrH3M5VJgNgRO8ulIGDbZuYqZvq7SBnMh2AA4+WaC9IP/UuV8+3lZ0Rm0fL//9NY4QnW7udvYGb3iI+67wd9g2uvX81juMHz8F6SaW3q+DfFOG2lcQCEMfyNhlni/ET6g6m+BSLbb3f7TE6OQ19nDcUgPcPrF24igmJi8AQI=
+X-Forefront-Antispam-Report:
+	CIP:198.47.23.195;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lewvzet201.ext.ti.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(82310400026)(376014)(36860700016)(22082099003)(18002099003)(56012099006);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	FJjUxkHxpjY83SSbvyyP9fZIEQCHJllDQL38upvBqFgod2qcZxVkNX5Y5LlmBwWfbZW6dK5zldpbXk+d+h+yyUiBxUOKkHluRtF9XJU4IATFBojJPGpy7mwlD1orWhrbMhCIrLJaIHEzkbfzkzmZoMTcnexJpVuKsQjsvrELULBfnKCJi21MMsYPLE7BGg3Q7Np8dwZIkeZiEm9F77WjP9M1x8CCecWP/Zr9rf+FSuU6XQ21ER31YFAHre6Er9LZICJKXtSeaNlBWzLdFXRMQUbTukCBofdpz0ivX6TV/QB3VA7lLncqEhvqyMqexJ/aGsSyG5jftO9DRbZGaw9pPqgFB0xmBcDcv1cYUu6aGmVPkLn9ZLUiuRJBWBvp2LDLxNSUZv3BwxsUK8M9coLPtEmn4GUIylTmzBP1Hgm7PxnwbRlqbmJ0GALs+ExhGhzj
+X-OriginatorOrg: ti.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jun 2026 09:30:36.6594
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0ecdc8c1-d0aa-41c2-5472-08dec865429a
+X-MS-Exchange-CrossTenant-Id: e5b49634-450b-4709-8abb-1e2b19b982b7
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=e5b49634-450b-4709-8abb-1e2b19b982b7;Ip=[198.47.23.195];Helo=[lewvzet201.ext.ti.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN2PEPF00004FBC.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5949
 
-On Wed, Jun 10, 2026 at 04:43:17PM +0100, Matt Evans wrote:
-> This helper, vfio_pci_core_mmap_prep_dmabuf(), creates a single-range
-> DMABUF for the purpose of mapping a PCI BAR.  This is used in a future
-> commit by VFIO's ordinary mmap() path.
+
+
+On 11/06/26 22:29, Hans Zhang wrote:
+> Hi,
 > 
-> This function transfers ownership of the VFIO device fd to the
-> DMABUF, which fput()s when it's released.
+> This series adds debugfs support to the Cadence PCIe controller driver,
+> allowing users to read the current LTSSM state of the link for debugging
+> purposes.
 > 
-> Refactor the existing vfio_pci_core_feature_dma_buf() to split out
-> export code common to the two paths, VFIO_DEVICE_FEATURE_DMA_BUF and
-> this new VFIO_BAR mmap().
+> Patch 1 introduces a new flag 'is_hpa' in the cdns_pcie structure to
+> distinguish HPA (High Performance Architecture) IP platforms from LGA
+> (Legacy Architecture) IP platforms, as they have different register
+> layouts for LTSSM status.
 > 
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
+> Patch 2 implements the debugfs file "ltssm_status" for HPA IP under a
+> per-device directory. It reads the LTSSM state from the appropriate
+> hardware register based on the 'is_hpa' flag and displays both a
+> descriptive string and the raw value.
+> 
+> Patch 3 adds LTSSM debugfs support for LGA IP, utilizing a new callback
+> 'get_lga_ltssm' in cdns_pcie_ops to read the LTSSM state from the LGA
+> register. The debugfs interface now supports both IP types seamlessly.
+> 
+> =====================
+> Test:
+> root@orangepi6plus:~# ls -l /sys/kernel/debug/cdns_pcie_a0*
+> /sys/kernel/debug/cdns_pcie_a010000.pcie:
+> total 0
+> -r--r--r-- 1 root root 0 Jan  1  1970 ltssm_status
+> 
+> /sys/kernel/debug/cdns_pcie_a0c0000.pcie:
+> total 0
+> -r--r--r-- 1 root root 0 Jan  1  1970 ltssm_status
+> 
+> /sys/kernel/debug/cdns_pcie_a0e0000.pcie:
+> total 0
+> -r--r--r-- 1 root root 0 Jan  1  1970 ltssm_status
+> root@orangepi6plus:~#
+> root@orangepi6plus:~#
+> root@orangepi6plus:~# cat /sys/kernel/debug/cdns_pcie_a0*/ltss*
+> L0_STATE (0x29)
+> L0_STATE (0x29)
+> L0_STATE (0x29)
+> root@orangepi6plus:~#
+> root@orangepi6plus:~# uname -a
+> Linux orangepi6plus 7.1.0-rc3-00007-ge3963f3f4e31 #62 SMP PREEMPT Tue May 19 20:28:24 CST 2026 aarch64 aarch64 aarch64 GNUx
+> =====================
+> 
 > ---
->  drivers/vfio/pci/vfio_pci_dmabuf.c | 142 +++++++++++++++++++++++------
->  drivers/vfio/pci/vfio_pci_priv.h   |   5 +
->  2 files changed, 117 insertions(+), 30 deletions(-)
->
 
-[...]
+Hi,
 
-> +
-> +	/*
-> +	 * Ownership of the DMABUF file transfers to the VMA so that
-> +	 * other users can locate the DMABUF via a VA.  Ownership of
-> +	 * the original VFIO device file being mmap()ed transfers to
-> +	 * priv, and is put when the DMABUF is released.  This
-> +	 * intentionally does not use get_file()/vma_set_file()
-> +	 * because the references are already held, and ownership
-> +	 * moves.
-> +	 */
-> +	priv->vfile = vma->vm_file;
-> +	vma->vm_file = priv->dmabuf->file;
-> +	vma->vm_private_data = priv;
+I have tested the series for LGA IP:
 
-I appreciate this comment. Thanks for being clear!
+Tested-by: Aksh Garg <a-garg7@ti.com>
 
-Reviewed-by: Pranjal Shrivastava <praan@google.com>
+Regards,
+Aksh Garg
 
-Thanks,
-Praan
+
