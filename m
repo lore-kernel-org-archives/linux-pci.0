@@ -1,183 +1,145 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A635336654C;
-	Fri, 12 Jun 2026 08:46:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.9
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781254006; cv=fail; b=iyw+biN51BmO36bcNhhYxYvexGCSw5F22PwXHfAWXgpmZybL4KCsKQahKHXbZqHvS1uIFgEzU22aXwZL0YmAVzwdFk0s/MGThbB3RRLOfPQlLd6Q4leCux/o43c/+xX4tLxR5CQq81P3Bq4RsfgIADSTEKpGbkMfHtiaVvnZFHQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781254006; c=relaxed/simple;
-	bh=/I0IBdOFa8e013jza48uPd9o4ycQPVoDgqii9ReRH+k=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=X64X+QV/EE7OFkOGUEa0rG+a62UBXbhgA2hru7W7E3XL84F1RHi1mjLPgSFXwe3ruuU8ygMrAW9q+gZFm3f8dHK3SNojMTTsH9ErFgpftzSZ0I+xtIXSIIHcPWumhplFxCWhHcDb9L4V+a2QMQa/gqjiVU1QFyZ0D+tnrMtXr34=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LOr5Ho/M; arc=fail smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A8212B143
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 08:48:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781254106; cv=none; b=tLzsTQpcj7/3O8LQQAzhNReaNWjOE8H81EawRsXp8NgP7/Rpuxgbm4gDFhXY0gU8aWwQP9/H5aE2iTAuQDNIsMBxF+go8JS6KGGWqtP7jrPphipnktklAshAwQ6CHmKw7CVI5wmLIP144VclDN2uDt4Fy6e190ATEt305ZZUB0I=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781254106; c=relaxed/simple;
+	bh=0Ak1/fRjH8fxjMPZWCZileUPKweprqfzDifXqZ6GUQg=;
+	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
+	 Message-Id; b=r5hR6BLe2NhE4ZyU3rqKYwKsuM2vpXbrxKuyyNruSWonrhTI8PMhccMw3zCvwpcg/W3qO4Qyn21KUhpSNOkZpF7/+jw1AAmJAAHw127+A79doAvo7yFkN6AqRnWvk7R89wSuLjUm+m/waewYjo7cpK/ia5ODV7tSN6ieS3lzsHI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HSu/kgl3; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LOr5Ho/M"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1781254005; x=1812790005;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=/I0IBdOFa8e013jza48uPd9o4ycQPVoDgqii9ReRH+k=;
-  b=LOr5Ho/MvHNTNxtQmwvog/VaUDGLwlD/KYG1st8uWxl4a0VyxsfH15Wm
-   SVhuSKVQqtm7sXD6FvEpjzkMyzvqMcaqr79Gk3MW0yYmwysc/oFdn8yZr
-   Y+gVOd9gW5lZHAyAbRPe0y5J+Yym9pdm8+KyQEGMVaqTU+zvVu2e7a4fu
-   QVemtXxMUKH/GEr60YxRNFwqHbkZn8iHo5MO+dzjorZ21PxRODbMyCD9q
-   fQbsEtPupgmRlzIWmVyIrsaFPd058WlscOX/wRqDeFANLvms6dGjEZbQG
-   xA+uuPknggVzroxm++Kl9SY+MX017IwoDkV3EUZcW7ncbd3A2tA6cSdj9
-   A==;
-X-CSE-ConnectionGUID: v0zjXFyLQPW1LOCgQ9ZXdQ==
-X-CSE-MsgGUID: SGqUzqUWQTSt9aE/qHBvBA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11813"; a="104752500"
-X-IronPort-AV: E=Sophos;i="6.24,200,1774335600"; 
-   d="scan'208";a="104752500"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2026 01:46:44 -0700
-X-CSE-ConnectionGUID: ffjnt4fhQbmBAA+yqwWJrw==
-X-CSE-MsgGUID: lVHPW3QWSNK2++RzZtB5ig==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.24,200,1774335600"; 
-   d="scan'208";a="245674532"
-Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
-  by orviesa006.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jun 2026 01:46:44 -0700
-Received: from ORSMSX902.amr.corp.intel.com (10.22.229.24) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Fri, 12 Jun 2026 01:46:43 -0700
-Received: from ORSEDG902.ED.cps.intel.com (10.7.248.12) by
- ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37 via Frontend Transport; Fri, 12 Jun 2026 01:46:43 -0700
-Received: from PH7PR06CU001.outbound.protection.outlook.com (52.101.201.35) by
- edgegateway.intel.com (134.134.137.112) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.37; Fri, 12 Jun 2026 01:46:43 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dVsrvjOolmwBaq38m2puLqGRMpe1oPfkhU1CMUHLH1KwzxB0cUu3rwgCilul131dQUGmXs7bKABNJ/M1wVZ1tElqpxfC2rqMngrZ+68l+UDjxg0UUNLnRDcy0dfa0vfbgNeQtTVuQdBLsDvptrmDSoFofhfvNsG/NpokCTJtBoj5ryvioES6hootAnAlVlq7mL3oyH1j9I/5qlerOuzfgw7vSsKlgt38HtFLJrdgjF1u+JxEGyRzEwNP1/s7CZ3SVEXOcV/rSc4AK2ZiK4GXd/jZIL/vZKqFjnsuvevAKyJAMTPL55K7uRmCToxWWTZwDzXudqMKSBJezUmI6Ijf4g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kxPj53CO4NsqYOGM9wZkxTZLkccBzpJ3G+1RnfMOKWM=;
- b=J6XHTz4oTjKmXWSNJBY5oezJkfYGIgS+nbgf49WiPMoetZcZmlJieTLlOhXpgNg64P+odn1UsjX3QEDdi2APtQuYq7cRtdsmJYWL1Bdjhh/6yIF49YqowFI7X5lP/PmZdJZilLXeGcbvbU3E41MgQVdy0FHviJ9Zk0a/ErmXK4mnp+7UP5WY/bCxJvCuukU99A6Dj6qUcKOPvucFANYY+OAJR2gzruJmokEHq5V0BQRblefOqIYAbH+mmnRW8kt8TScIUBWnOrqD3PbT70Hvt+Bnr0E/7SHD/RAFO/03Rfnz64883fuT/HcHvvyQOlCAFZln0Ub50llmto9SveX1sw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Received: from DM6PR11MB3690.namprd11.prod.outlook.com (2603:10b6:5:13d::32)
- by PH0PR11MB7493.namprd11.prod.outlook.com (2603:10b6:510:284::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.113.13; Fri, 12 Jun
- 2026 08:46:35 +0000
-Received: from DM6PR11MB3690.namprd11.prod.outlook.com
- ([fe80::7db8:f6b3:30f8:ee4b]) by DM6PR11MB3690.namprd11.prod.outlook.com
- ([fe80::7db8:f6b3:30f8:ee4b%4]) with mapi id 15.21.0113.013; Fri, 12 Jun 2026
- 08:46:35 +0000
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Matt Evans <matt@ozlabs.org>, Alex Williamson <alex@shazbot.org>, "Leon
- Romanovsky" <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>, Alex Mastro
-	<amastro@fb.com>, =?iso-8859-1?Q?Christian_K=F6nig?=
-	<christian.koenig@amd.com>, Bjorn Helgaas <bhelgaas@google.com>, "Logan
- Gunthorpe" <logang@deltatee.com>
-CC: Mahmoud Adam <mngyadam@amazon.de>, David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>, Sumit Semwal
-	<sumit.semwal@linaro.org>, Ankit Agrawal <ankita@nvidia.com>, "Pranjal
- Shrivastava" <praan@google.com>, Alistair Popple <apopple@nvidia.com>,
-	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v3 5/9] vfio/pci: Provide a user-facing name for BAR
- mappings
-Thread-Topic: [PATCH v3 5/9] vfio/pci: Provide a user-facing name for BAR
- mappings
-Thread-Index: AQHc+PAWmyVUyj2tVkKEgfWs4tY1NrY6nf3Q
-Date: Fri, 12 Jun 2026 08:46:35 +0000
-Message-ID: <DM6PR11MB3690314327A881DBE7ED56538C182@DM6PR11MB3690.namprd11.prod.outlook.com>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <20260610154327.37758-6-matt@ozlabs.org>
-In-Reply-To: <20260610154327.37758-6-matt@ozlabs.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR11MB3690:EE_|PH0PR11MB7493:EE_
-x-ms-office365-filtering-correlation-id: 66c108fc-a4e1-4128-35c5-08dec85f1c4f
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014|23010399003|38070700021|18002099003|22082099003|56012099006|11063799006|4143699003;
-x-microsoft-antispam-message-info: zk9p3Gm0ToWgPBK9bCVxnYHqnSBf26CfE/TsB6Ctr4gGgIjTgCM/5fFf0ei8OEJo+elBQikvP1izJbT2udnXmFBJziK8FiBm2djgtQ9TyJXxlxpTFClspPCJCjzbyEHmoYkvLZl/H3eYAA+gMG9x1axRqqLwzCPj27iDpKGi7W8/UnuAIBPLiqclRLiRPrD5PWZKUgKL6v/UQxYSvAn/qUViqGES4/to/+EK1n6dMUHzAYyDTyhFJvyNMuxkA7wU33/gFI+Woe/uhKEJQ6jxHI3xs/WR9fnCtKNIPkrCKpwfH9ax3sn968Mf1VIes724D7OSgsb1YCXZLpvNKOweAZ7AQ3qLrTzgg+svBFdaDDDY7yFBxjR4Bl/HfsjjjZSxqcG1cJLBbpo7W24OGwLLDHRNyTR+uZXOyIakeUl0yMjFQ2NiMva45NksXFLQR+wxG25ikmCRa4QUHXSnGAAIr2etHAZWYe0hyFlnba+zcD2V924Xa6F7teFgSx5TcdyE0FOYkW1zrT2odOkk4X0mMxwGghf0Hty5WatEqSjA0d2NacQp7akEzdmZQzR8EE3h7niHhPX1uvCwjdQlhpDRXm+vmziu+nEfjKWM5p1GcqlQb2lZ0XlFmPWoN1p0MuhpfwzfpZ3iFdUJAJpxxtm4jcVTAxwYwKqyM66WrvNuVnlQYolt8U0E9nBgAFYMKj9v4uTsUpza7aMdhIDr8INXT6Apc5C1LXzVjN6HJpXeo2yedXjUa3tWLX4okVqiZTS2
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB3690.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(23010399003)(38070700021)(18002099003)(22082099003)(56012099006)(11063799006)(4143699003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?DAjltmdWJd33LeqMiGaoLldbW2Yhrki1jvjxbhpA0O1ESatyPpDC79x+tD?=
- =?iso-8859-1?Q?XWX6b4ka+OXOD9txnqvxiItJv4unUf48QTuhkM9QcFiiUBKSJ9MMx1M/s7?=
- =?iso-8859-1?Q?FLsSCQR0R0Rmj5eWXgh+mK8ERRKrx+myW7xsLHZSFZWKrLo52oqb9ILs/h?=
- =?iso-8859-1?Q?rMMzFA38sfJjmcgvWPHsgwPKUrHk6mMUnTwyFVDmbOXn6nFDo4lxik3RMz?=
- =?iso-8859-1?Q?Sy7GM3qMCtjaGUmlC6v483iZOC/jwN3C37QMn8NmCzUVkTSIq6dt/dmXwa?=
- =?iso-8859-1?Q?DkQBlVgUViM8KUQjRDdcb21KlYBs962sMP5agQl0VLm2XJbsPgjn+G2+QA?=
- =?iso-8859-1?Q?1u73Sg+Rf1UyvzQiy3TojdkKMZ0eOko73AtWbBKXVyVPkhpHr4ALvm5bio?=
- =?iso-8859-1?Q?dhR+qfjHiQpcuUAQLZUmzGhJRK1aB+jxkSzxr9foGM+1wKjDyn3j82v7i4?=
- =?iso-8859-1?Q?wqd+bjgfeIFUYPp8vtv/iXBbXv68DYh+G0piixdw1KaD8h+WHqVHDytGoT?=
- =?iso-8859-1?Q?uo0+e/+8qmbvONG8aPDVWi48P1ncqu9GiS4BElPDNlazM1bgESYx7fHaqg?=
- =?iso-8859-1?Q?YqoHW4nBAqgl0CLhhXT2eUKIIImPZn2OkyP393dnRSP3M/zDYbFGnTC4qJ?=
- =?iso-8859-1?Q?m0aN7e8mv8t0vp7dAxgmS2wK2QnQVSAiN3sA7Zb3fR6Keq89ZA/oHHDUgL?=
- =?iso-8859-1?Q?43pAPgHNrn86FFigro2G9+IsZzms77QrW+2Wd/HIdY/7TNPi1y5yi3P1TB?=
- =?iso-8859-1?Q?v8PhHknKcU/+CAul+CBxGq45MFhZK7r/xIxwaB5wkRCSnTLZBgLck2fw2T?=
- =?iso-8859-1?Q?QVqsdoySSEvmxiujB7w2uw1TE4/PX/njKBnpK3ZHmXYwWaKo65pXswbxoq?=
- =?iso-8859-1?Q?p4CKH3gF6QypEZ9P3aXRC2+YdoDlGm+iBTAKS8kRRuS14nQF6IqkftvRN5?=
- =?iso-8859-1?Q?i2I5v4vE+/4pCgu/4lBbMXPQGLndpMMN5jUc6IjN7lZmYavDVQo63LKEx9?=
- =?iso-8859-1?Q?OeT/0PzshE1xNx30hUf0zK4zYHxbFEMt+dvRTPK+lbC/EqLpaRDeGhQHFR?=
- =?iso-8859-1?Q?otWYwI4/rWz28aDH3GT/+fh1fbbaxRCYYMHg924CGTITj0m748XCVOtga8?=
- =?iso-8859-1?Q?RIHIEHEQsYjUcUG0gX3OOSX4s8jL3DS1LSm4gOqwr2X10CBmLB0JGTecLI?=
- =?iso-8859-1?Q?Vh2jnmzxavH8cK04MYWF8QRPW0dHhX5VlmH/gZPgTDRc3W+xOvIpj9O2AW?=
- =?iso-8859-1?Q?FWLFWNryz+j5qXq0dL1T64Fx68ab5qDoFiIt4OqmSRnuK/wxo//73wpZOr?=
- =?iso-8859-1?Q?P1sqsewws92ItjzUOXIRucRTWJ3BSkao9JmPsqEF+HNLQsGQ2mn0eB2Ia0?=
- =?iso-8859-1?Q?WAeRs5ELK8Ovf0hXQEkOHwnQyeh5BU5P++uO1eaI5DH5X8k0aoicDO1GsA?=
- =?iso-8859-1?Q?z1Q6owp1NUKJebq/zO1+7TdmwTb7uUBIbKrIVWrxkLlwmIH1pUpYUkuZj5?=
- =?iso-8859-1?Q?UTYA+0sc4dV7XhDB56f7utLtQAFhyNAX05HnuzOA+yTd1RRHl/DePIOkj4?=
- =?iso-8859-1?Q?1RKzE1XbsoGf6W8/Wu2gP3cgpgP8sYSPZJzv2Zciy7ohZ7wf512Ip5jE5s?=
- =?iso-8859-1?Q?B5690J3wiIJM4PVASIOih3aEgDj/us4pirnN3Y9+g6E9/K7jbBVHbc8OsI?=
- =?iso-8859-1?Q?6kqibQzGNhQTLWaeCbCojCch2bPNvhJgpF3qX/NoQWgS6N88zMSZKM90EA?=
- =?iso-8859-1?Q?03V24LTnLE+VkhwGl58+/zarR60wDpCX0tmbpH3t0wjrsz?=
-Content-Type: text/plain; charset="iso-8859-1"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HSu/kgl3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3DE91F00A3A;
+	Fri, 12 Jun 2026 08:48:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781254104;
+	bh=1FMEOm2MaI3cCtppgRk+r3+7Lugs4QOF6Pt5RyldXwM=;
+	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
+	b=HSu/kgl3Fx4GNTinHh70p012MC+K4Cyg9aHznFpbRDu8Ld33QRx6goNT3HItH7Vv8
+	 W3sHtj9hk1swGI746zk6q4Ap/+DG31AI3SZ+IHKHay4na8G/pR2lDmgpQCoy5zxj33
+	 G7SqDKKSRWWiYzOIO9qP/gP1Cg2aGmPLzCjFkjxfgE4Slkn/REpTtJb5myog/LYnMC
+	 4i1aPLbyYFNCP/haqUM2QzWuExpgQJoG4o6Z2FADg/mvFqhmgSdcgKRGbixtyYu+07
+	 jM7UVNVJ3OSJkTI3WClwVnBHHsaYMwkLDqhNsN3PoECZk2Mp06b4/W9GzI+Gp4epKX
+	 HQKTjahAUpuSw==
+From: sashiko-bot@kernel.org
+Subject: Re: [PATCH] PCI/P2PDMA: Use RCU_INIT_POINTER() to clear
+ pdev->p2pdma
+Reply-To: sashiko-reviews@lists.linux.dev
+To: lirongqing <lirongqing@baidu.com>
+Cc: linux-pci@vger.kernel.org
+In-Reply-To: <20260612083452.1639-1-lirongqing@baidu.com>
+References: <20260612083452.1639-1-lirongqing@baidu.com>
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
+Date: Fri, 12 Jun 2026 08:48:24 +0000
+Message-Id: <20260612084824.A3DE91F00A3A@smtp.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Exchange-RoutingPolicyChecked: PpBUs8Kjk+wHk/TJnN4hE4uqivNhkXRhmyXoxtEe2zEAV5oTCA0Tp4pEv2Qi4lxAsinfSZxB54tn3QX6U9MeST8mMtUyXpfzOckfnz2FvrLAWRHfDDfphg/q+N8974Z3/b6aAzv+sIpdqKidYSpVT0FCK9Hke0LoCvumvCWA+R3n5hepk5FSPB/9xHt2PdKMQHaEFNKUHbijsNi5L82d3bPntAXjELrNkThKxxtzbDZn1xWOetqp3PM0OQGjDrsV8i3X5wG1MnGoTDxwwZFVUTaFyMk4BCeLDPWcQ/u6iew7fjVnXMabisHe11zHxjHdB6WnNYPERUf/CbKBa/8bnQ==
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB3690.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 66c108fc-a4e1-4128-35c5-08dec85f1c4f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Jun 2026 08:46:35.5101
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: CH9ylq1vaUekTWWqw+WM3l84werHcoos6fsynabt00kAYx1xVcZXSAKjQkpfiXyDcCzeKz4vwOdYus5iW3gmkw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR11MB7493
-X-OriginatorOrg: intel.com
 
-> From: Matt Evans <matt@ozlabs.org>
-> Sent: Wednesday, June 10, 2026 11:43 PM
->=20
-> Since converting BAR mmap()s to using DMABUFs, we lose the original
-> device path in /proc/<pid>/maps, lsof, etc.  Generate a debug-oriented
-> synthetic 'filename' based on the cdev, plus BDF, plus resource index.
->=20
-> This applies only to BAR mappings via the VFIO device fd, as
-> explicitly-exported DMABUFs are named by userspace via the
-> DMA_BUF_SET_NAME ioctl.
->=20
-> Signed-off-by: Matt Evans <matt@ozlabs.org>
+Thank you for your contribution! Sashiko AI review found 2 potential issue(=
+s) to consider:
 
-Reviewed-by: Kevin Tian <kevin.tian@intel.com>
+Pre-existing issues:
+- [High] pci_p2pdma_release() skips synchronize_rcu() when p2pdma->pool is =
+NULL, causing a use-after-free of the devm-allocated p2pdma structure and c=
+orruption of its map_types xarray for concurrent RCU readers.
+- [High] Missing devres action removal in pci_p2pdma_add_resource() error p=
+aths causes Use-After-Free of p2p_pgmap during devres teardown.
+--
+
+commit eb4ec2c32d602512abbeccbe720637cf83f85cb6
+Author: Li RongQing <lirongqing@baidu.com>
+
+PCI/P2PDMA: Use RCU_INIT_POINTER() to clear pdev->p2pdma
+
+Since pdev->p2pdma is an RCU-protected pointer, directly assigning
+NULL to it violates RCU semantics and triggers sparse static analysis
+warnings.
+
+Fix this by using RCU_INIT_POINTER() instead of a raw assignment,
+ensuring proper RCU annotations and consistency with the subsequent
+synchronize_rcu() call.
+
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 7c898542af8d5..fd98624208c50 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -236,7 +236,7 @@ static void pci_p2pdma_release(void *data)
+>  		return;
+> =20
+>  	/* Flush and disable pci_alloc_p2p_mem() */
+> -	pdev->p2pdma =3D NULL;
+> +	RCU_INIT_POINTER(pdev->p2pdma, NULL);
+>  	if (p2pdma->pool)
+>  		synchronize_rcu();
+
+[Severity: High]
+This isn't a bug introduced by this patch, but could skipping
+synchronize_rcu() here result in a use-after-free for concurrent RCU reader=
+s?
+
+If p2pdma->pool is NULL, synchronize_rcu() is bypassed before destroying the
+map_types xarray and returning. Since the p2pdma structure is managed by
+devres, it will be freed shortly after this callback returns.
+
+If concurrent RCU readers (like those executing pci_p2pdma_map_type()) obta=
+in
+the pointer just before it is cleared, will they continue to access the fre=
+ed
+map_types xarray and p2pdma structure?
+
+>  	xa_destroy(&p2pdma->map_types);
+
+
+While reviewing this file, I noticed another pre-existing issue in
+pci_p2pdma_add_resource():
+
+drivers/pci/p2pdma.c:pci_p2pdma_add_resource()
+{
+[ ... ]
+	error =3D devm_add_action_or_reset(&pdev->dev, pci_p2pdma_unmap_mappings,
+					 p2p_pgmap);
+	if (error)
+		goto pages_free;
+
+	p2pdma =3D rcu_dereference_protected(pdev->p2pdma, 1);
+	error =3D gen_pool_add_owner(p2pdma->pool, (unsigned long)addr,
+			pci_bus_address(pdev, bar) + offset,
+			range_len(&pgmap->range), dev_to_node(&pdev->dev),
+			&pgmap->ref);
+	if (error)
+		goto pages_free;
+[ ... ]
+pages_free:
+	devm_memunmap_pages(&pdev->dev, pgmap);
+pgmap_free:
+	devm_kfree(&pdev->dev, p2p_pgmap);
+
+[Severity: High]
+This is also a pre-existing issue, but are we leaving a dangling pointer in
+the devres list here?
+
+If gen_pool_add_owner() fails, the code jumps to the pages_free label and
+explicitly frees p2p_pgmap via devm_kfree(). However, the devres action
+pci_p2pdma_unmap_mappings is not removed.
+
+During devres teardown, the registered action will execute and call
+pci_p2pdma_unmap_mappings() with the freed p2p_pgmap pointer. This
+dereferences p2p_pgmap->mem->owner->kobj, resulting in a use-after-free.
+
+Would it be safer to use devm_remove_action() here to prevent this?
+
+	return error;
+}
+
+--=20
+Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260612083452.1639=
+-1-lirongqing@baidu.com?part=3D1
