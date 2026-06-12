@@ -1,198 +1,210 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+Received: from fout-a2-smtp.messagingengine.com (fout-a2-smtp.messagingengine.com [103.168.172.145])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59849404BCF;
-	Fri, 12 Jun 2026 16:46:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B944D401495;
+	Fri, 12 Jun 2026 16:52:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781282799; cv=none; b=HtoyC5/WMxE7y9hwrnAxLXjdx6NZF6RgVXbW7hZ999+W+lD9HH7uk3rshERxkyMwMqHv7gfa6/NxAV5UAme3Veh70/VQss+UBqkW0LPTbG0DGJiCwexafgm1H/m795dXjA8bu7GgcWTvm86uuWaolnVS/9vR12QxIJPb206CKPI=
+	t=1781283175; cv=none; b=ri1HKE05ZtEBIjvWewzpctBzfoFLXluBl6vxbYokvNtwZHawa7wUv2+Y+uzAAwDi8navPrHXy/PmDSg6iMcfMNoPIXJppDfx/UjG3Ct1Qvp7GB6CI7BwBMD3muU8bRZAeYMaHH4DPtkKcvHfEHLrvERP4oUTfhaKnxlO4j44clI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781282799; c=relaxed/simple;
-	bh=97H6GBfxd6XhqBULPCTuxLrbdbAfcvXXuiz93QslRh8=;
-	h=From:Subject:To:Cc:In-Reply-To:References:Content-Type:Date:
-	 Message-Id; b=eQWrdT0+gL1E9+L+QxCNIjdKQu5BtBiLnHjcXSgRCOhaWFXYKGG7hJSzi7fKgZqiwoBiueoFSd88pEYmNpHhns+KkX97hlEJFAFx9GvLE9n9UUgGqX2niapqXoOE+PuyLWSmrx8YHRmIjfrnTAQFJPYOQsSywym9Hou3bQMHtW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ohr2UhVv; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1781283175; c=relaxed/simple;
+	bh=24wQChAQOJp4jUd0/0DfoMQ1yU723OejhdZTkJTDDq8=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=o9lFVIEjgLwvhuQAYuZthLs2dEtx1PekSR146CHA97X7dcdaO/fXBmCQEO08FgOtA0lXGiq+UJc8rbQ/QWblCGSRUwr9aoGPVl7C+FTherVql1rsLY258bJsqq3ORqk3Sb0Zlx2pEq0fvFQ06Ag1DBlEXKw+xZyqaY/FCrV2qLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org; spf=pass smtp.mailfrom=shazbot.org; dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b=lFXpnGwc; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=XAPZINl4; arc=none smtp.client-ip=103.168.172.145
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=shazbot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shazbot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ohr2UhVv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 092181F00A3E;
-	Fri, 12 Jun 2026 16:46:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1781282793;
-	bh=1nY1pHPKgHRMmy1WoJ9Er1KDAoChru83MJwkm9RXwfE=;
-	h=From:Subject:Reply-To:To:Cc:In-Reply-To:References:Date;
-	b=ohr2UhVvwiEZJgsdjwG4+LjBYDp7T48ZFHLlUqpcQSjBJkXgg3ogo3DQuCrX5vTUf
-	 7MM0GglyMMlcl+ZwYRfIaC1DKIk8rmaQwgcek/xLXLBBDc+YWyghujbXlxVg1b1/iv
-	 jb2fnYiKc6/w459q1NMhhJ8gRBpj7P8DdsGpvQqMB19i7YdC0zCJ72WHVupLrBefMm
-	 BUj1DF8Fem2RGsdGJQgwXEAhaS/LahJm5NZF2XkqGUPKkGekxRc5hBVHBtFVCYzxsy
-	 e9PtxyefdIVR8OAKCMLpuUS8l9fmyM4VDSsFMJI81tjVsltMwuDmVXz8/Kts1CkLxq
-	 GKR2vDU0zijkA==
-From: sashiko-bot@kernel.org
-Subject: Re: [PATCH v7 5/5] RDMA/mlx5: get tph for p2p access when
- registering dma-buf mr
-Reply-To: sashiko-reviews@lists.linux.dev
-To: "Zhiping Zhang" <zhipingz@meta.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org
-In-Reply-To: <20260611161546.4075580-6-zhipingz@meta.com>
-References: <20260611161546.4075580-6-zhipingz@meta.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Date: Fri, 12 Jun 2026 16:46:32 +0000
-Message-Id: <20260612164633.092181F00A3E@smtp.kernel.org>
+	dkim=pass (2048-bit key) header.d=shazbot.org header.i=@shazbot.org header.b="lFXpnGwc";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="XAPZINl4"
+Received: from phl-compute-07.internal (phl-compute-07.internal [10.202.2.47])
+	by mailfout.phl.internal (Postfix) with ESMTP id E25FBEC019E;
+	Fri, 12 Jun 2026 12:52:51 -0400 (EDT)
+Received: from phl-frontend-03 ([10.202.2.162])
+  by phl-compute-07.internal (MEProxy); Fri, 12 Jun 2026 12:52:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=shazbot.org; h=
+	cc:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm3; t=1781283171;
+	 x=1781369571; bh=IMjdTnzoJaPEHm5nCFiglgf4MQ8JbUyD46xJ1bIgrWU=; b=
+	lFXpnGwcIYKgvYDL/3TehmOZ1Kgfm1m9vLzM4mh/5yn9qC778edLi/zuF7hTlyjf
+	7qEddjjKjzQuqm4uSKFbE6qGiqy87DoZM+mEUczzThnuFEmt90jrmxS3aBeAnGCT
+	XR6O4Ttz0NeqrMcB3aPpr/UlrBguVCNi+DHhbmDneCLjeS0+jFP86IFiYg90472U
+	SImrX52qe13TDNV4Epnsmtwhk7mv1AfA7Umy7q8gdJrFtohQ0BOhAN8uS9LfCQ2d
+	IMhJF8PgmNrTDeybihtO5vB9OaVtSmVL60l9g2vudNSJP5ZqHfsJ6JdGjswJ1v1L
+	mE5nOq5ghRbU3QikXVqOdA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1781283171; x=
+	1781369571; bh=IMjdTnzoJaPEHm5nCFiglgf4MQ8JbUyD46xJ1bIgrWU=; b=X
+	APZINl4QZ2sv1IAtwV0X5I8RtX9LZO0DG52Yrq77EpvCfmoAZanl1Bcy13qDZ78K
+	/QmmDrVv7f9cAbtBNMjIGiVPYZgk4qz40C+evlq/XC/2ZOLcgEN7n4ZtlI7xIdgz
+	ZdoYzn5cZSQPcxSk1l58haSDHhQO2cGpqc9uI3LlsgN4QuDs3C11qacpFjlfhyIO
+	1s74t5LKX2qQkmhWEm1buNr9kVfNyKn0cJLFU0+402Vls/QFsZPQx1ERZD6Yp7sB
+	bER8rgxmB3n5pR89AHF6pJ05DONBN+AbqpEYi8dEWcWHG7qNQ3aePRSgAj90jyPM
+	+CcYbYwDpu73ohUoyvW1g==
+X-ME-Sender: <xms:YzksaijV2vVVUTeeAYkagwU2paX2dIwLb_OUzgO-wNF4pW33MyD0lw>
+    <xme:Yzksan9nG4juEl0zI9_NI5U2clxUya8qLszrV6BIOBPwGC6yIXFClGT8G-Bh4nuEc
+    RNpoF3nWEeDnvz29gNLRBhJZnl8vSCnNOlHZJYaprprovFIvUt6ZcQ>
+X-ME-Received: <xmr:YzksauVaO59SZ3a4kcLchXtf9Bh4Hi0PbFSaICy-IiC_xVKHRZIm6WBpr54>
+X-ME-Proxy-Cause: dmFkZTFArRAgYvj57o1HapZcwzWeF52p9meQLcL+oU7S3KkL5oUp5Lte8sAxnl9d9x1/ZI
+    RLFZ0Ew+UiUwi/bM4ff5ppqTuM4MbAYuNZ75VRe8KfLHkgZhmp8++kMM/+DL0wkBbwFkul
+    qPjutE0A+8Ns3D6Ada0IOAt+c8rgQLsrFffQHinYO2qulO1USE+gglknL0VN+6P9H726m5
+    xBHH7ldOezsD2nyYupyaUaQzGEd8EyJEiGUbuztdXsBXFLTQH5YARqX5ywuXUgloMOyRNA
+    au3HGF1JmRmCEZQgn2zLFDygU/9/t+ISKtlsVhjl+pgWu+H0VAwpKmNqtmlE0VuNvgzFpv
+    79z9rjoK/mTGkTTkHeSOa2riRWrtXHZp9rH+GivfOr7tBEWEU7mBYi5EUpEB5MD+muV0xY
+    2XWDeOTkxIfpa+VeTxPv+hLFY0shiD3Zp4AbBphRn0nFhZ2xFzvKF1uHC4u6E/6h/4/dSS
+    Y7BcM9/DwiCm6uf6FdJF5IdZLr3MWWDNtIUO27SpNPI0bgVid1LGh7BW2BlD/e4d0zZoGb
+    cmS27lyXQB19Q9qua0syP3urPPGJnavmgyGab4irYA114Yx70Yi4VLqqGxxXmUAUfrQ4Vl
+    nrpUizVG/kbLfNqXaw7fRDMW4JTQ3BhiKpuYO3fX2mmJtUA+mKUs1t7VxTVg
+X-ME-Proxy: <xmx:YzksarAnrZKlgWMr7tYnezzEzpPKIZDoosrd7p34OGBYFuHuyubiMw>
+    <xmx:YzksajECqQSpPRwwqlRdjFdQU-8hAni02m_bnQn7L76gkVJVJsvorg>
+    <xmx:Yzksas7b5c6J5oiWIJNPM1yDVPdq2FH4dzrnaR7CE0ODnqekJGRsOQ>
+    <xmx:Yzksapnj51SIs-6eVY3tPprGjn80B5MTc3l41_NSEqdyR9WLTTbGuw>
+    <xmx:YzksaplYLxICKNcYipUieI2lwGVGIjbIAV3k_FYYCwDCp_JGEDX1j6F->
+Feedback-ID: i03f14258:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 12 Jun 2026 12:52:50 -0400 (EDT)
+Date: Fri, 12 Jun 2026 10:52:48 -0600
+From: Alex Williamson <alex@shazbot.org>
+To: Zhiping Zhang <zhipingz@meta.com>
+Cc: <netdev@vger.kernel.org>, <kvm@vger.kernel.org>,
+ <linux-rdma@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <dri-devel@lists.freedesktop.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ alex@shazbot.org
+Subject: Re: [PATCH v7 2/5] PCI/TPH: Add requester/completer type helpers
+Message-ID: <20260612105248.7d8431f2@shazbot.org>
+In-Reply-To: <20260611161546.4075580-3-zhipingz@meta.com>
+References: <20260611161546.4075580-1-zhipingz@meta.com>
+	<20260611161546.4075580-3-zhipingz@meta.com>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.52; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Thank you for your contribution! Sashiko AI review found 4 potential issue(=
-s) to consider:
+On Thu, 11 Jun 2026 09:11:17 -0700
+Zhiping Zhang <zhipingz@meta.com> wrote:
 
-New issues:
-- [Critical] Unconditional release of ST index reference during MR cleanup =
-leads to refcount underflow and WARN_ON_ONCE for ST index 0.
-- [High] Pre-allocated FRMR pool handles via `ib_frmr_pools_set_pinned` fai=
-l to acquire ST index references, leading to underflow on destruction.
+> Add pcie_tph_enabled_req_type() so drivers can query the enabled TPH
+> requester mode without reaching into pci_dev internals.
+> 
+> Add pcie_tph_completer_type() so drivers that publish TPH metadata for
+> a device acting as a completer can gate on the "TPH Completer
+> Supported" field of Device Capabilities 2 (bits 13:12,
+> PCI_EXP_DEVCAP2_TPH_COMP_MASK) rather than reusing requester-side
+> state. Fold the reserved 0b10 encoding into NONE so callers only see
+> the defined values.
+> 
+> This keeps pci_dev::tph_req_type and the completer-capability decode
+> inside the PCI/TPH code and provides !CONFIG_PCIE_TPH stubs for
+> callers.
+> 
+> Signed-off-by: Zhiping Zhang <zhipingz@meta.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Pre-existing issues:
-- [High] Off-by-one array index in `mlx5r_create_mkeys` error path destroys=
- the wrong mkey and leaks successful allocations.
-- [High] Hardware mkeys created during pinned pool expansion are leaked if =
-pushing them to the pool queue fails.
---
+This is carrying forward an ack for v6, where half the interface here
+was dropped and changed shape.  Thanks,
 
-commit b05f2090a2616db2c2747f4768f18e80acf1a2d2
-Author: Zhiping Zhang <zhipingz@meta.com>
-Date:   Thu Jun 11 16:11:20 2026 +0000
+Alex
 
-    RDMA/mlx5: get tph for p2p access when registering dma-buf mr
-   =20
-    Query dma-buf TPH metadata when registering a dma-buf MR for peer-to-
-    peer access to a PCIe endpoint and use it to program requester-side TPH
-    on the outbound mkey. If the exporter has no metadata, fall back to the
-    existing no-TPH path.
-
-> diff --git a/drivers/infiniband/core/frmr_pools.c b/drivers/infiniband/co=
-re/frmr_pools.c
-> index 5e992ff3d7cff..61a77847118e6 100644
-> --- a/drivers/infiniband/core/frmr_pools.c
-> +++ b/drivers/infiniband/core/frmr_pools.c
-> @@ -92,7 +92,8 @@ static void destroy_all_handles_in_queue(struct ib_devi=
-ce *device,
->  	u32 count;
-> =20
->  	while (pop_frmr_handles_page(pool, queue, &page, &count)) {
-> -		pools->pool_ops->destroy_frmrs(device, page->handles, count);
-> +		pools->pool_ops->destroy_frmrs(device, &pool->key,
-> +					       page->handles, count);
->  		kfree(page);
->  	}
+> ---
+>  drivers/pci/tph.c       | 43 +++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-tph.h |  8 ++++++++
+>  2 files changed, 51 insertions(+)
+> 
+> diff --git a/drivers/pci/tph.c b/drivers/pci/tph.c
+> index 91145e8d9d95..4fe076bba953 100644
+> --- a/drivers/pci/tph.c
+> +++ b/drivers/pci/tph.c
+> @@ -174,6 +174,49 @@ u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev)
 >  }
+>  EXPORT_SYMBOL(pcie_tph_get_st_table_loc);
+>  
+> +/**
+> + * pcie_tph_enabled_req_type - Return the device's enabled TPH requester type
+> + * @pdev: PCI device to query
+> + *
+> + * Return: PCI_TPH_REQ_DISABLE, PCI_TPH_REQ_TPH_ONLY or PCI_TPH_REQ_EXT_TPH.
+> + */
+> +u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
+> +{
+> +	return pdev->tph_req_type;
+> +}
+> +EXPORT_SYMBOL(pcie_tph_enabled_req_type);
+> +
+> +/**
+> + * pcie_tph_completer_type - Return the device's TPH Completer support
+> + * @pdev: PCI device to query
+> + *
+> + * Reads the "TPH Completer Supported" field (bits 13:12) of Device
+> + * Capabilities 2. The reserved 0b10 encoding is folded into
+> + * "not supported" so callers only need to compare against the three
+> + * defined values.
+> + *
+> + * Return: one of %PCI_EXP_DEVCAP2_TPH_COMP_NONE,
+> + *         %PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY or
+> + *         %PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH.
+> + */
+> +u8 pcie_tph_completer_type(struct pci_dev *pdev)
+> +{
+> +	u32 reg;
+> +
+> +	if (pcie_capability_read_dword(pdev, PCI_EXP_DEVCAP2, &reg))
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
+> +
+> +	switch (FIELD_GET(PCI_EXP_DEVCAP2_TPH_COMP_MASK, reg)) {
+> +	case PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY:
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_TPH_ONLY;
+> +	case PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH:
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_EXT_TPH;
+> +	default:
+> +		return PCI_EXP_DEVCAP2_TPH_COMP_NONE;
+> +	}
+> +}
+> +EXPORT_SYMBOL(pcie_tph_completer_type);
+> +
+>  /*
+>   * Return the size of ST table. If ST table is not in TPH Requester Extended
+>   * Capability space, return 0. Otherwise return the ST Table Size + 1.
+> diff --git a/include/linux/pci-tph.h b/include/linux/pci-tph.h
+> index be68cd17f2f8..7743af6fe432 100644
+> --- a/include/linux/pci-tph.h
+> +++ b/include/linux/pci-tph.h
+> @@ -9,6 +9,8 @@
+>  #ifndef LINUX_PCI_TPH_H
+>  #define LINUX_PCI_TPH_H
+>  
+> +#include <linux/pci_regs.h>
+> +
+>  /*
+>   * According to the ECN for PCI Firmware Spec, Steering Tag can be different
+>   * depending on the memory type: Volatile Memory or Persistent Memory. When a
+> @@ -30,6 +32,8 @@ void pcie_disable_tph(struct pci_dev *pdev);
+>  int pcie_enable_tph(struct pci_dev *pdev, int mode);
+>  u16 pcie_tph_get_st_table_size(struct pci_dev *pdev);
+>  u32 pcie_tph_get_st_table_loc(struct pci_dev *pdev);
+> +u8 pcie_tph_enabled_req_type(struct pci_dev *pdev);
+> +u8 pcie_tph_completer_type(struct pci_dev *pdev);
+>  #else
+>  static inline int pcie_tph_set_st_entry(struct pci_dev *pdev,
+>  					unsigned int index, u16 tag)
+> @@ -41,6 +45,10 @@ static inline int pcie_tph_get_cpu_st(struct pci_dev *dev,
+>  static inline void pcie_disable_tph(struct pci_dev *pdev) { }
+>  static inline int pcie_enable_tph(struct pci_dev *pdev, int mode)
+>  { return -EINVAL; }
+> +static inline u8 pcie_tph_enabled_req_type(struct pci_dev *pdev)
+> +{ return PCI_TPH_REQ_DISABLE; }
+> +static inline u8 pcie_tph_completer_type(struct pci_dev *pdev)
+> +{ return PCI_EXP_DEVCAP2_TPH_COMP_NONE; }
+>  #endif
+>  
+>  #endif /* LINUX_PCI_TPH_H */
 
-[Severity: High]
-This is a pre-existing issue, but can hardware mkeys be permanently leaked
-during pinned pool expansion?
-
-If push_handle_to_queue_locked() fails inside ib_frmr_pools_set_pinned():
-
-ib_frmr_pools_set_pinned()
-   ret =3D pools->pool_ops->create_frmrs(device, key, handles, needed_handl=
-es);
-   for (i =3D 0; i < needed_handles; i++) {
-       ret =3D push_handle_to_queue_locked(&pool->queue, handles[i]);
-       if (ret)
-           goto end;
-   }
-
-The array is freed, but the un-pushed hardware mkeys (from index i to
-needed_handles - 1) do not appear to be cleaned up or tracked anywhere.
-
-[ ... ]
-
-> diff --git a/drivers/infiniband/hw/mlx5/mr.c b/drivers/infiniband/hw/mlx5=
-/mr.c
-> index 14c1aec1edbbc..3ca4b36deecfc 100644
-> --- a/drivers/infiniband/hw/mlx5/mr.c
-> +++ b/drivers/infiniband/hw/mlx5/mr.c
-
-[ ... ]
-
-> @@ -273,7 +304,8 @@ static int mlx5r_create_mkeys(struct ib_device *devic=
-e, struct ib_frmr_key *key,
-> =20
->  	st_index =3D key->kernel_vendor_key &
->  		   MLX5_FRMR_POOLS_KERNEL_KEY_ST_INDEX_MASK;
-> -	ph =3D key->kernel_vendor_key & MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK;
-> +	ph =3D (key->kernel_vendor_key & MLX5_FRMR_POOLS_KERNEL_KEY_PH_MASK) >>
-> +	     MLX5_FRMR_POOLS_KERNEL_KEY_PH_SHIFT;
-
-[Severity: High]
-This is a pre-existing issue, but does the error path here destroy the wrong
-mkey and leak the successful allocations?
-
-If mlx5_core_create_mkey() fails at loop index i, the code jumps to free_in:
-
-free_in:
-    kfree(in);
-    if (err)
-        for (; i > 0; i--)
-            mlx5_core_destroy_mkey(dev->mdev, handles[i]);
-
-Because the loop evaluates i > 0, executes for handles[i], and then
-decrements, it will destroy the handle at index i (which just failed and is
-invalid) and terminate before reaching index 0. Are successfully created
-handles (like handles[0]) silently leaked?
-
-[ ... ]
-
-> @@ -311,6 +344,9 @@ static void mlx5r_destroy_mkeys(struct ib_device *dev=
-ice, u32 *handles,
->  			pr_warn_ratelimited(
->  				"mlx5_ib: failed to destroy mkey %d: %d",
->  				handles[i], err);
-> +		else
-> +			mlx5_ib_put_frmr_st_handle_ref(dev,
-> +						       key->kernel_vendor_key);
->  	}
->  }
-
-[Severity: High]
-Does this improperly drop ST index references for pre-allocated pool handle=
-s?
-
-Pre-allocated FRMR pool handles via ib_frmr_pools_set_pinned() directly call
-create_frmrs() to program the hardware but do not appear to acquire the ST
-index reference for them. When these handles are later destroyed during
-pool aging or teardown, dropping the reference unconditionally here could
-result in a deterministic refcount underflow for whichever ST index is
-encoded in the key.
-
-[ ... ]
-
-> @@ -1419,6 +1520,8 @@ static int mlx5r_handle_mkey_cleanup(struct mlx5_ib=
-_mr *mr)
->  		dma_resv_unlock(
->  			to_ib_umem_dmabuf(mr->umem)->attach->dmabuf->resv);
->  	}
-> +	if (!ret)
-> +		mlx5_ib_mr_put_frmr_st_handle_ref(mr);
->  	return ret;
->  }
-
-[Severity: Critical]
-Could this unconditional release cause a refcount underflow and WARN_ON_ONCE
-for ST index 0?
-
-In mlx5_mr_cache_alloc(), kernel_vendor_key is explicitly initialized to 0.
-Similarly, MRs created via reg_create() remain with 0 from kzalloc, and no
-ST reference is ever acquired.=20
-
-When these MRs are deregistered and hit this cleanup path,
-mlx5_ib_put_frmr_st_handle_ref() extracts 0 and forwards it to
-mlx5_st_dealloc_index(). Since 0 does not match the sentinel
-MLX5_MKC_PCIE_TPH_NO_STEERING_TAG_INDEX (which is 0xFFFF), it causes an
-unbalanced refcount_dec_and_test() for ST index 0. Can this corrupt
-legitimate PCIe endpoint steering tags?
-
---=20
-Sashiko AI review =C2=B7 https://sashiko.dev/#/patchset/20260611161546.4075=
-580-1-zhipingz@meta.com?part=3D5
