@@ -1,146 +1,172 @@
-Received: from mail-yx1-f45.google.com (mail-yx1-f45.google.com [74.125.224.45])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 990FA371048
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 14:43:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=74.125.224.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781275410; cv=pass; b=EHIv0iER/GxvaQRUYsicDUoTLc9zF8eRQ+pKVrXlVAdlDQSP6mXjyAnHCPJh2FtH4QrGbBfGsLl7DgCq3cCD9+7i8HLeUDzXxQTLXrv2bGp5IGs2hIvEKjHSLZoSTTWomYZd5koLwKQWNX6HCw1r+E1ztyu3dR+/fwSA7NYVMTk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781275410; c=relaxed/simple;
-	bh=w2nfYxYASA0giwl+BZunFh4T1jMKsr4eozLXGQlfC2M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YgRqhz4k54OrT9ACSbwr0AFkPa06Eo3qt3smlE9JGPj3irTjw4tSI/hsHh3H5IIOki3ptT4wGGfRrzWuBlZkjPNlbrfipjegBxfdPUpnYCUBK5A5d+eHEggsCItgJL++/d7PSf9ZYzJzhcgVomBb1PY0kamJdBfCXkV+UOlypkk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=sOj0cjiU; arc=pass smtp.client-ip=74.125.224.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CF3024886E
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 14:50:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1781275828; cv=none; b=g7blOcYlr83d3GnYEcHZP0WVWcMSmvieBPyitjO0N3vWOwFDZkLD3Xu/SLQJ/6IhUdQN++bf3kqMv1xqBxY7hR+mYbFSHIRTWaesQowHBj6sJ1epiz3ozQh9RgPot2uvvsk6O5H/U4Jswwga5SwLnTJ4UdyxZ73fD30JL9InL10=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1781275828; c=relaxed/simple;
+	bh=ktJEoejF4IYc2x2sx5hNzOusqn1PFWfmraLH5p9R6zY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lC4hd4ZJYFL7kHUOsk5IrSkUJmPhkaSd4PkZcnrabUdd39y5EPPJ5C6XL6TBbp4hGhTIZwGEu7nBrp6+NFAex/sKZYJCz+d3vh51Pe+F5S8BRo6UTC3FYMIuSw2zqt9kEjQc4sDmzBgYi7gqr1xYGTTCzsSLtzYamIWkD9UPkj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ZcErODWZ; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sOj0cjiU"
-Received: by mail-yx1-f45.google.com with SMTP id 956f58d0204a3-6607048fa62so1079935d50.1
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 07:43:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1781275409; cv=none;
-        d=google.com; s=arc-20240605;
-        b=ZfXHvruS4BUo6sdANx5N/yCdWTzeS6+ZHx9qsZ2M8Q8949QQf7KF3Ao7yi5G82WhDS
-         lVlVfI91e8uiYM6iGJTVWV55qlfsb6ntebHJAt9QeCT7ksZO/u8CChqnPW8RND3n3R/0
-         exMvxRLyFc4FxtrhrWXI3q745JUHUT5t4OypQgjaMJJMBW1I+nqo2CKr3Ve9EgwihpLk
-         PslpMTE6f4966EQ0VlawBspW1yH5s0zvQV4bNi0eS2IsL1bhsFa7d3M+B8zv7zKD2EMR
-         2N+ytcO60GDgc3m0GgkaEz8wxUEyv07NqXH7/5gH6IQRhkeHm2KbCF0TPwRkRzapxijy
-         eFyA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=k6VIcBkgcxYBFEz2ZSEGflERwIhJmjq3dpuCUDCSMSg=;
-        fh=tFG4r7dEh4KwLRx1Boj0fq9/0ZcjguolXt6VlubDfiQ=;
-        b=TwyVBmnoYr6YlcSm/CeBpbmQBigY+hzrIKCSuy+V+D0I/yIUeBzvuorzhNcVrmG2n2
-         ApwmIc9crblHzD3wzoMXVYzgG5GH41y/0+fOAOW4JvwNYBpBcuFWU7XqcrhpFS5ojcp/
-         yzouxmayCNbp111AxJNCEW+TuMB+iK8KvCyk09E1O6ph94kjfguvedjA5C/pJ+0fZ2Hl
-         M2y549E/kjcJzP6FIrnBj8Ijzp9BqQIU0seAaIxvm6FDABY61dMjuBQF9Zl+02iehfcI
-         Hi4nxCCog+8USV1SYSC1Gz5MEg6r4SoMQY8HKt1r/eE7u4VahaCJsXAIgx0Mx6Duf2kp
-         /5ig==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZcErODWZ"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2c0b1a48855so117865ad.0
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 07:50:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1781275409; x=1781880209; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k6VIcBkgcxYBFEz2ZSEGflERwIhJmjq3dpuCUDCSMSg=;
-        b=sOj0cjiU+oLii5kZ9YJ8er3Dz6GyDX9pBlxk57B6nDm7XGOvW2TuGYLkv6TmGrSE8b
-         NWkk5Xsph/9a26Cnxc/UO2L1qEk+5dJUGXlj4vmr5QlMPi+SeivvADfupo+VaqDQnCsT
-         8iVfHCr2Kzlx4uUVA6Hu1gUrYPR79kYKxVFtCUjV8iUq3hUARiOzr/UDT06CEFP3pFoH
-         cYRXDCrkpcf2b1WXlOs0lGzpSvVa4rkp4dOTDXTbK466jLGi3SoRG2UglC/hok+twPbb
-         ly0NXwvO9FLa38hAYEMW8o5cejprOjEtkmzO2iNY637RpKToJCPK5cYH7k7p+Yk4ygL/
-         X4jA==
+        d=google.com; s=20251104; t=1781275826; x=1781880626; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TKPEKDhY7MEkgse5vNpBg59/8pjz1cpSSV/zhg7oF9E=;
+        b=ZcErODWZ/U+nUPxMmEv908bsS0S53JqNsdPVrwuiUXQR6xzrpMlzDbRfWs4pDrRNBs
+         XdFvi6Vfcgexc7xuhQ+AiCox+kc2p/4jATO1IZ5jzQ/OCsNMacY1Ru2+wjPS6/908v2a
+         wu352v6ehffF9GmvaIpBuaUHhCADthkerJYsfoyRTPjT3fPBPUY8asxPuAllC895AvkM
+         xnYS7MdHnCoFKPMlNN7M7T2cyIgMFlj+4IRISsh/7OPXKKAUF8iyMsE4gU2vq+MDKb7R
+         yPNYS+4AwDVCaPrucN/dzPIBYUJz1xw4lb8BNJrE2Y/9Jl2dM63nz/l5fJVxwU2+nlsf
+         B57g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781275409; x=1781880209;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=k6VIcBkgcxYBFEz2ZSEGflERwIhJmjq3dpuCUDCSMSg=;
-        b=KX82TBoz+SMXfQGHxQpROeO4/YwUNcroR2vtXvrYZGHKgU/BaxFqg5ly1LraHJs/i7
-         I5FHTAkr5l4FtQawuM9ZOfAfsbwZWlT6InrkfM9aWLe/KgZx208qFMVORwcbVv/lna1W
-         A79iJ/fRcrw3Zvo+30xjNeaDRsdTZV0LCpIBqpBS1r/StfAUboK3X96meHJed+tk+TZN
-         XIEBsV4hliKr5BFNFkapuvTqVaOqsS4UxRMgFYc2IPXkPzKm2IyhgEDSIZNbE+mbLRrD
-         lFE4qG2pV20BLnax3S5cbk6dKEEo7o2iRlosgPt8id4Irl+kCS3Eh6yTWhbgpn+B8rvA
-         ysjw==
-X-Forwarded-Encrypted: i=1; AFNElJ9VJUEf/c8m0a4DDyrJ9Yv+zrw14tzgYPFyVhqK4TCBPBB5XRcblfCUEj/3lqSPlcjObXzbwVNBZ7k=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwlHJCmJQghxkYtMZvEG96hYMHUsWGb7kcTzgUVJnoUbpklmpjY
-	FKwVROIdp84zpKMQBYtkez6OHg0b5eCRUhau1G6Rn0M8hhTn14t42v4b1SVN4UJkkOrFAXHuYpU
-	5DhZ7Y/KziZMf6mqsN6Rij4oSYSOzdjc=
-X-Gm-Gg: Acq92OG3Udut+ISkufEKZOVyFAUomHT4o0X2IP88zN2pFH9FfeyzrR4oYr2IjMDhDUk
-	WX/cdkA92EfkdyRGQSGB5ZqyNZIgwu9hs0PxA0XEb5BxZTSbesJfaASZX4WxFFuTvXgb4UJ/hro
-	5c0OKw9e8h6nIxRO/M6pmTC17BU9wSU2+G9Cla9uXwLGJavrGiN9rzsRaZbACtId+BxnfjKzgS1
-	7/AjypNZ/DSbrw4diL7OVxvtkCjo/ZQDh62r97OPqvJOwydX7JGcDnarelk5UuFQlC9tJN3b6ZM
-	JG54jlUE3YEAzo0hJ1qT9kKOEilg06yxAPToY7RRoBLU1Aug6GSPU/ptJ80H7Ow7zfOS2r2E9+g
-	CCYtf
-X-Received: by 2002:a05:690e:b45:b0:660:d0a6:935e with SMTP id
- 956f58d0204a3-662782cf742mr2320722d50.40.1781275408429; Fri, 12 Jun 2026
- 07:43:28 -0700 (PDT)
+        d=1e100.net; s=20251104; t=1781275826; x=1781880626;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=TKPEKDhY7MEkgse5vNpBg59/8pjz1cpSSV/zhg7oF9E=;
+        b=hFI4BIIgY9RHvT4ZSTxfhsH/BzWjdXAMm7PKFGhaf543d2Q+Axtp6r/8WUKoZqfvmx
+         WRtDgJkdGAVZYeziYSbXpGyeE2k2AgHdqgWYf8jieIrRg9sR3ekQRNyFdeUV4/oPS80u
+         OA5jOp1S4cTukAdEKguIrkipDNdfm53eUluXs/yoHkpwQ/+KPvcxYsQ/8MWvrr+6qlw4
+         GaNAh21N/YWw6mKHc8CMA3gBFlpHRk/GguDiybD7TCnnrRXhvlWr2VnIvwloj3uazpoi
+         JFijuU+xcLp0m7Gr8t4PVvqDDhXR4uC4ZbVAXmmDSqaFiwqyeUEyE5sz3SrBTxijlx/O
+         83bA==
+X-Gm-Message-State: AOJu0Yy1XC7RPi4nA3w5/NBotUE+MSNe+1ywYj0Na+2exUo37WKoR22u
+	rRewY53AGOPzbkR8Q89BAgjnnKvpiVLC6Bz1uHZQcBLF3p18cyiQwCypUICKWailYQ==
+X-Gm-Gg: Acq92OEjdktBRlhcbDTrxujM90N4bj0B4Z8Xt+z9fnsRa1Pf7FIZb/2xdb34vfKY7xk
+	xLLJGGKantxHHfZddYCHDjoCGI8Fh9k/hJ8zoPUMcOfJKYKDOpKOdjupIbRn8cBauy8hhqlpDta
+	l8Ax9fyOH5ngk9DoBNVQpLAJSJJ8rn7ivmvEOiz2eGZV38rw9dDjiVp4lN+uxFTri7uVWuZSzUj
+	67WB7XVtZqNkeMZrP9Brx5wnf76ynkub4CThuj+mrtyAuz8CNipDNu/u2v0Rm8HF1yDER9W72Pc
+	uwv3y7AMIqIybj1Wo/WT2hkmGBaTR8B6nkuhgGNCr1DweN/nhc2rDl5gPZZ2wWMkh151t+g7od8
+	l7hXHY+cRh8GHhbaQdkBlbWnIF7be+dAbo6fKjcjo2gEXuJsUciq0RiF09Y78/KyBSjK5zvZXMM
+	C/EJMhe5F8ofdAfJkU5e3HcfUJK/jFyl8kmR3tNUCknCbwDRAy7a/VjAtrzu04
+X-Received: by 2002:a17:902:f78d:b0:2a7:87c2:fcde with SMTP id d9443c01a7336-2c405c8818bmr2171605ad.15.1781275825932;
+        Fri, 12 Jun 2026 07:50:25 -0700 (PDT)
+Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c432d8a039sm23848235ad.62.2026.06.12.07.50.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jun 2026 07:50:25 -0700 (PDT)
+Date: Fri, 12 Jun 2026 14:50:18 +0000
+From: Pranjal Shrivastava <praan@google.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Alex Williamson <alex@shazbot.org>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Ankit Agrawal <ankita@nvidia.com>, Matt Evans <mattev@meta.com>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	Leon Romanovsky <leon@kernel.org>,
+	Shivaji Kant <shivajikant@google.com>,
+	Samiullah Khawaja <skhawaja@google.com>
+Subject: Re: [RFC PATCH 0/5] vfio/pci: Support ZONE_DEVICE-backed P2P
+ Registration
+Message-ID: <aiwcquSgAonkh_6L@google.com>
+References: <20260610151853.3608948-1-praan@google.com>
+ <20260610162848.GO2764304@ziepe.ca>
+ <airI0VIb563jHTcy@google.com>
+ <20260611221447.GH1066031@ziepe.ca>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CABBYNZJY68zrRO49VEtgEVzQfqVY9QZzwUuc8VoKkAAeKUwAOw@mail.gmail.com>
- <20260612142839.GA598449@bhelgaas>
-In-Reply-To: <20260612142839.GA598449@bhelgaas>
-From: Luiz Augusto von Dentz <luiz.dentz@gmail.com>
-Date: Fri, 12 Jun 2026 11:43:15 -0300
-X-Gm-Features: AVVi8CcNNJ7VW_uXeCu9TvXEetVXekrhRt_l2XVfoJETDiDudc5tf7WtnqOKGeo
-Message-ID: <CABBYNZK9e8T_gVyhvyU3EyGqUs7=1BDuTdaUkZPoJCygNUq1sw@mail.gmail.com>
-Subject: Re: [PATCH v1 1/2] Bluetooth: hci_core: Add reset_type parameter to
- hdev->reset() callback
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>, linux-bluetooth@vger.kernel.org, 
-	linux-pci@vger.kernel.org, bhelgaas@google.com, 
-	ravishankar.srivatsa@intel.com, chethan.tumkur.narayan@intel.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260611221447.GH1066031@ziepe.ca>
 
-Hi Bjorn,
+On Thu, Jun 11, 2026 at 07:14:47PM -0300, Jason Gunthorpe wrote:
+> On Thu, Jun 11, 2026 at 02:40:17PM +0000, Pranjal Shrivastava wrote:
+> > On Wed, Jun 10, 2026 at 01:28:48PM -0300, Jason Gunthorpe wrote:
+> > > On Wed, Jun 10, 2026 at 03:18:48PM +0000, Pranjal Shrivastava wrote:
+> > > 
+> > > > Users utilize the standard sysfs p2pmem/allocate interface for managing
+> > > > memory slices once a BAR is registered.
+> > > 
+> > > I'm shocked someone wants to use API, what are you expecting to do
+> > > with it??
+> > 
+> > Our primary use-case is PCIe BAR (DDR / HBM) -> NFS via P2PDMA while the
+> > PCIe device is managed by a user-space driver based on vfio-pci. While
+> > kernel drivers (e.g.drm) can register BARs with ZONE_DEVICE natively to
+> > enable this, VFIO currently lacks an equivalent mechanism.
+> 
+> I mean the weird sysfs mmap API. It is only useful if the device is
+> basically pure memory with no functionality. You can't even learn what
+> MMIO offset the returned allocation gives so it is almost completely
+> useless.
+> 
+> nvme could use it because CMB is pure memory and you reference it by
+> its MMIO address, but that doesn't apply to VFIO..
+> 
 
-On Fri, Jun 12, 2026 at 11:28=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org>=
- wrote:
->
-> On Fri, Jun 12, 2026 at 11:08:06AM -0300, Luiz Augusto von Dentz wrote:
-> > On Thu, Jun 11, 2026 at 10:29=E2=80=AFPM Chandrashekar Devegowda
-> > <chandrashekar.devegowda@intel.com> wrote:
-> > >
-> > > Add a u8 reset_type parameter to the hdev->reset() callback to allow
-> > > userspace to select the reset method via sysfs. Writing 1 to
-> > > /sys/class/bluetooth/hci0/reset triggers a Product Level Device
-> > > Reset (PLDR), while any other value triggers a Function Level Reset
-> > > (FLR).
-> > >
-> > > The reset_type values are:
-> > >   0 - Function Level Reset (FLR)
-> > >   1 - Product Level Device Reset (PLDR)
-> >
-> > This should probably be treated as a generic level at the sysfs level,
-> > then each vendor can interpret according to its own needs, for
-> > btintel_pcie that would result in the above levels.
->
-> Are you suggesting that this should be implemented in the
-> pci_dev_reset_methods[] framework in drivers/pci/quirks.c, so the
-> PCI-generic /sys/bus/pci/devices/.../reset interface could do the
-> PLDR?
+Ack, I agree, sysfs allocation doesn't provide the offset-level control.
+I'll pivot entirely to the DMABUF approach.
 
-This is the Bluetooth sysfs reset entry, not the PCI one, which was
-created for Bluetooth-specific reset methods like the one above. If
-you think the generic level could be applied to the PCI sysfs level
-that is perhaps a different suggestion.
+> > > > An alternative implementation has been explored which integrates with the
+> > > > ongoing VFIO DMABUF-mmap refactor [1]. In that approach, rather than
+> > > > registering a BAR as a system-wide P2P provider, VFIO optionally
+> > > > allocates ZONE_DEVICE pages only for specifically exported DMABUFs via a
+> > > > new VFIO_DMA_BUF_FLAG_ALLOC_STRUCT_PAGES flag.
+> > > 
+> > > That's probably more sensible but you can't have a DMABUF mmap
+> > > actually install non-special memory. The native vfio mmap still can,
+> > > but not mmap on the dmabuf fd. That's still workable, just keep in
+> > > mind.
+> > 
+> > Ack. I guess, we could have a separate mmap path in case of BARs that are
+> > struct page backed which doesn't go through the dmabuf exporter.
+> 
+> The dmabuf export is perfectly fine, you just have to think very
+> carefully about the mmap path.
+> 
+> I suppose if you build the proper revocation fence for zone device
+> pages as part of the vfio implementation it would be OK for dmabuf
+> mmap to expose them as well since it would have the right lifecycle
+> model.
+> 
 
-> That sounds worth exploring, although I really don't know anything
-> about the unusual multi-function model of some of these devices.
-> And the /sys/class/bluetooth/hci<index>/reset attribute already exists
-> and probably couldn't be removed.
+Ack, I'll move forward with adding a flag to request a ZONE_DEVICE-backed  
+DMABUF export (the 'Alternative Approach' mentioned in the cover letter).
 
-Yeah, I suggested just treating the parameter as generic levels, so we
-don't define its domain and leave it for each driver to decide how to
-interpret it. The sysfs entry is not transport-specific (pci, usb,
-uart), so using pci terminology in the documentation may lead to the
-assumption that it is PCI-specific when it is not.
+And yes, I agree we need to ensure the mmap path is handled carefully
+with the correct lifecycle in mind.
 
---=20
-Luiz Augusto von Dentz
+> That's the tricky thing with zone_device, you have to be careful to
+> wait for all the page references to be put back at all the right
+> times.
+
+Yea, that's going to be tricky.. I'm thinking if we can have a zap model
+there somehow? If the device is gone / going through a reset, we can
+handle the refcounts accordingly?
+
+> 
+> Come to think of it, since the sysfs API cannot do that in the way
+> VFIO wants I actually think you can't use it..
+
+Ack. Baking this into the VFIO DMABUF allows us to enforce the right
+lifecycle.
+
+My plan for RFC v2 is to add a flag like VFIO_DMA_BUF_FLAG_ZONE_DEVICE
+to struct vfio_device_feature_dma_buf which allows the caller to opt-in
+to ZONE_DEVICE backing specifically for that export.
+
+Does this opt-in flag sound like a reasonable uAPI or do you see any
+concerns with this direction?
+
+Otherwise, as you noted, the lifecycle and the mmap path remain the main
+problems to solve.
+
+Thanks,
+Praan
