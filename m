@@ -1,57 +1,112 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 19E22367B73;
-	Fri, 12 Jun 2026 18:45:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id CC6FB30F7F2;
+	Fri, 12 Jun 2026 19:27:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781289904; cv=none; b=akLQ/1j1Y5UZTFfWzO+2E0AVClLaKcZQNoB+YqerPy09lXkAQdcYuoPJvyIrhl8d0NzHOb+yVcDIz3XnPbvFOP6c7SHOOCIZitfkxj7LA/z35GGNhpz0fdkR9+XMHRrXG10qbtrlhNj6UC7sQyisGhnzA8m14vY3Jo+2FwIzG3U=
+	t=1781292434; cv=none; b=VleDkHqh7IszHijuIAB0vxVRVQzWgYVkG0clJleMyQZH93CmY/uP1EePL+MF0C1d8RN8+1qs9sr0p1ako0zqLYRr+BrjOipbJ5FHIu5qJMhl6ELqcTU7SMEcApu3IbcEFyDdHWl6CnNk49W8LqcjXUGNyb0YBZWQylKspk2R2WM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781289904; c=relaxed/simple;
-	bh=NhAM2rnivPz5BrNpOWCW6/ItHr2V9Q+DfHIs37fwR5I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DcR45EAV0fd/+3o1+MN1EgeYx87l/VGKHTI36j+RLoEN8GH+VVbxQXLqMvg+Ec+6DCeRVbJxetZpWk0Bz6j2pnaij1XvKhuNdGKlIY6NpWtIe+642boyJPhvfVd5PtYk0Zg96aG8SYkEe9AuNy4MqIwYs198Ov9p2MDm22I7aX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=J9hiYqXG; arc=none smtp.client-ip=13.77.154.182
+	s=arc-20240116; t=1781292434; c=relaxed/simple;
+	bh=sDlNg3jNR3VkC9Yc5jiT7PReuDVVqc2WuKd4K66BGpc=;
+	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=ajwa92VL1vIHtLzroZpVz9iG0BAXT5m620qVtDNVWY/S2vgfLITi4Lq2NT6g61nxlTJEQfXjfM+wi+/daY1BxgIpRYRQQ6tdeG14ap+9DNv2gqm2OsX2dKjLY4ejN9cLMpxjTwn9KWuserrSCFdeStA2M6X2WYzfLjq3jnF8KGs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=sGFB1Ysv; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="J9hiYqXG"
-Received: by linux.microsoft.com (Postfix, from userid 1216)
-	id 91A2220B716A; Fri, 12 Jun 2026 11:44:43 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 91A2220B716A
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="sGFB1Ysv"
+Received: from [192.168.201.246] (unknown [4.194.122.170])
+	by linux.microsoft.com (Postfix) with ESMTPSA id C324A20B716A;
+	Fri, 12 Jun 2026 12:26:47 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com C324A20B716A
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1781289883;
-	bh=NhAM2rnivPz5BrNpOWCW6/ItHr2V9Q+DfHIs37fwR5I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=J9hiYqXG85M4v/+2kHazB3TUmUJow/1MO+KGeI3+8TYKwlUASGUH7Ou3X2i+Kli1v
-	 7+sVjMKPKZgLObLM6RXS3x8AKKY0tQF4IQuqSN85KEUgCzxALzOWXnAhxFW+Hq3JAF
-	 SzhgvqPMKR+8MQFFg7U47dZ/eJg7C+ssHAx2VsR4=
-Date: Fri, 12 Jun 2026 14:44:43 -0400
-From: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
-To: Long Li <longli@microsoft.com>
-Cc: "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <DECUI@microsoft.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH] PCI: hv: add hard timeout to wait_for_response()
-Message-ID: <aixTm07GodS/Av9c@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
-References: <20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com>
- <SA1PR21MB6683BAA40F52C52150D7811ECE182@SA1PR21MB6683.namprd21.prod.outlook.com>
+	s=default; t=1781292413;
+	bh=VFoPonWpWXwuXHtqnk4IpXqhlk14J/U7sojhe9tiN34=;
+	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+	b=sGFB1Ysvao5HmkpJS06nA+8PKkJkHs2MZRIuSerNWxtGDQLczDVSK2FjA5HIkuaE1
+	 n1AoECTdDT6ntcT5pS0JVCMWDsR8apFE3hyOsTIKJpl4qjq0AQ0VC3JtCy79EHXcZf
+	 IOJd43P7Pv7qRpNRd31razBjW1gGqKmy7tbjyw04=
+Message-ID: <9239f428-9b94-48a6-aec1-f459198da6b3@linux.microsoft.com>
+Date: Fri, 12 Jun 2026 12:27:03 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <SA1PR21MB6683BAA40F52C52150D7811ECE182@SA1PR21MB6683.namprd21.prod.outlook.com>
+User-Agent: Mozilla Thunderbird
+Cc: linux-hyperv@vger.kernel.org, easwar.hariharan@linux.microsoft.com,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Long Li <longli@microsoft.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: hv: add hard timeout to wait_for_response()
+To: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+References: <20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com>
+From: Easwar Hariharan <easwar.hariharan@linux.microsoft.com>
+Content-Language: en-US
+In-Reply-To: <20260612174010.2598695-1-hamzamahfooz@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jun 12, 2026 at 06:04:22PM +0000, Long Li wrote:
-> What if the VMBUS response comes in right after this check? The completion is allocated on the caller stack, and it will cause kernel OOP.
+On 6/12/2026 10:40, Hamza Mahfooz wrote:
+> It is possible that we never receive a rescind event, in which case we
+> will wait indefinitely for a device that will never show up. So, assume
+> a device is gone if have been polling for more than 5 seconds.
+> 
 
-That is a fair point, I'll try to see if there is a better way to handle this error case.
+Echo Long's request for more context on where this was seen.
+
+> Cc: stable@vger.kernel.org
+> Fixes: c3635da2a336 ("PCI: hv: Do not wait forever on a device that has disappeared")
+> Signed-off-by: Hamza Mahfooz <hamzamahfooz@linux.microsoft.com>
+> ---
+>  drivers/pci/controller/pci-hyperv.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index cfc8fa403dad..bd63efc4a210 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -52,6 +52,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/sizes.h>
+>  #include <linux/of_irq.h>
+> +#include <linux/jiffies.h>
+>  #include <asm/mshyperv.h>
+>  
+>  /*
+> @@ -1038,6 +1039,8 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+>  		kfree(hpdev);
+>  }
+>  
+> +#define TIMEOUT_MS 5000
+> +
+
+This can be in seconds, see below.
+
+>  /*
+>   * There is no good way to get notified from vmbus_onoffer_rescind(),
+>   * so let's use polling here, since this is not a hot path.
+> @@ -1045,8 +1048,13 @@ static void put_pcichild(struct hv_pci_dev *hpdev)
+>  static int wait_for_response(struct hv_device *hdev,
+>  			     struct completion *comp)
+>  {
+> +	unsigned long timeout = get_jiffies_64() + msecs_to_jiffies(TIMEOUT_MS);
+
+You can use secs_to_jiffies() here instead.
+
+> +	unsigned long now;
+> +
+>  	while (true) {
+> -		if (hdev->channel->rescind) {
+> +		now = get_jiffies_64();
+> +		if (hdev->channel->rescind ||
+> +		    time_after(now, timeout)) {
+>  			dev_warn_once(&hdev->device, "The device is gone.\n");
+>  			return -ENODEV;
+>  		}
+
