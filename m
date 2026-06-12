@@ -1,259 +1,226 @@
-Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCBCA39A807
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 05:15:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9A0934F24A
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 06:22:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781241313; cv=none; b=Nzu6SqX4ASj4i84VpnA3kNtVrUDjUAToGFdYKXvYTOP0h7M4uGMYnlHAujCEsdO65FCiK4XjANwqksHDuLNso+zDhcI2+UMVY/I9vXN9f6l4weojwZLUe7194apNtVgREO8cQoRL5fwBmbZk2jUcCCIaVwHzm4OdJcjvdDXFfU0=
+	t=1781245336; cv=none; b=F0jLrLk1mbPkpR3LC58xMlYtulqBVEeBya0//NnFAUzul6FgxgW9xf5nOTDPjAkxeOy6tEJmdiYUPScyuzKYdUsgqdkJic05wrI/3yrN+14+PH1kofIAau1AwZb0vl7qm1bCEFX03kQBvwJuSTsDEt5elITuzemiMt4EPKPrUrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781241313; c=relaxed/simple;
-	bh=EzD98ff1aItiQM04E7u7INRRf8aew7gIPA1oAqmmEbk=;
-	h=MIME-Version:Content-Type:Subject:From:To:Cc:In-Reply-To:
-	 References:Date:Message-Id; b=G+PYR/u5VoaX1nenYGI6aRJ1iU7pSvGBI4BF4MW8SLR2B3XrDJR/dSAuT/XQzv4JcZc2mrUfN9kZBJ96fHoAScngWV5SuRKQ7oSgggauqktxHsptwin9czEXwLN62klV4kr8I1uEsEol4ZLCwfIl/Dm1G7yJ/7liyQYEY69sSXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=LE48o4T+; arc=none smtp.client-ip=209.85.160.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	s=arc-20240116; t=1781245336; c=relaxed/simple;
+	bh=9iqy1lLQxvVwdgkFr/jdiScy6r805+sd9YPN4XMJ5oo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iILVPvp/rJWmsYCmJdmIuvdirfB9aEzWKovwxzlOkshpiZAoLDjHIz4ijhQHieshlcqVKQtH1Scw7tfsZuJBpi31C2qqi9ZOc8SrGGfnS+oMC3qoiigSvIjQMVQUh9M/cQn4CG0A/UnQH0t+O4soIYCeaz7q0iHfw5nOZioC074=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=jZFgzOXK; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=P7a8XEre; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="LE48o4T+"
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-51788280e71so6198681cf.0
-        for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 22:15:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="jZFgzOXK";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="P7a8XEre"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 65C39fxb2497007
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 06:22:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=n7Yf1YYFjiuiIuFcDTEBV9uJ
+	IVRQFm5qqW6YmchUZPg=; b=jZFgzOXK9pKsRi2r5t7j3LL0DzuWJGnuEJvYH0Gd
+	CXK0x0Sn8WX7d28XX2Qz7rbvbz0nvfJyJYkG+FxBa9SzhEK4XlckEZuuhHxna15m
+	vQau1gp5ZqWskc7mVmf3RgoBBRCDbr93dKQ3/iZXoTIPGpn43K/DYvfF/ESw+/ez
+	SfllUhLNKp/jFNUCroHLzTdp+KhLZACJLyb+6Jzi5EIdsX/YZTeruBfkA7lEG9uN
+	cm7OYFoCOyU7WheX24qlJsN969sn17nYm6PUT1GTRhsbdPR7bWRKfXkkMHpNaN2q
+	rYhXJYf6wLuamA70or1UgOrWYGzLoqKtf1lSGMtgC1F7+Q==
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com [209.85.222.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4er0x7je0j-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 06:22:14 +0000 (GMT)
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-9158f2c4b55so111440585a.0
+        for <linux-pci@vger.kernel.org>; Thu, 11 Jun 2026 23:22:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1781241311; x=1781846111; darn=vger.kernel.org;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ytd7iPwY/amgpO/lDKmmEiHlsDrpfROrVFTbD1YMi6c=;
-        b=LE48o4T+WfVyhfYfuEIX5KMQL84366Qymw+OHUQ+O6n3DPG1tHzC2jU2tv5RuWJvjA
-         kdEIj16CUvyCsCH7CLQ/8+icfm4uJ0kPAxHjA48sogb0+vBebD0gsuonryQ5OnU+l4x/
-         yFSDiLJWu7EryD5s4o/lL/wa/JnUcEeseQ2utQb3XtX7eeJ5jUgdiSKk6h+WhcDaTg+Q
-         qqrVltTm2jUuTN38AGZFHAe5LtaEXEwcM33hlnafeonlGetYyzouB+k2X1NSuuvjtFTP
-         doIyZ00FqjeNrqW2ZqqsXLBsHizr/MZQ9x1nIF/hgQ5O1HiD6X+ewLTafvlykIkvDLms
-         809w==
+        d=oss.qualcomm.com; s=google; t=1781245334; x=1781850134; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=n7Yf1YYFjiuiIuFcDTEBV9uJIVRQFm5qqW6YmchUZPg=;
+        b=P7a8XEresDdl0eww1tsRJN1CQ+AFQSv15H0dUStl5O3MG9o4hQbdgk0hl73i0Nw2MK
+         WBNEZeRqeb3hVOM4fhRHWTZgVSty1ZeXZg7n6S7WlikaL6V12t1NG6rjFrqYmN+NVSnz
+         WyD4r+NFmVkDzPW2gqiblklKDWPLsAzWWhYKnAcItK2LI12CgEyTb4/U7uvC0kU7MAuE
+         y6ul1KC1UJYTgCGOryIYCMnL3YyYZTQqoeInokm30k8tff7vIWep+guXbbTFtoup+m7j
+         o+QCtJK3/UhBLjGpzg7BjiT9G26gbhXZxFDsKLsCPdf453j4Pq6Y23uPAYrhVEPBwTjT
+         SW2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781241311; x=1781846111;
-        h=message-id:date:references:in-reply-to:cc:to:from:subject
-         :content-transfer-encoding:mime-version:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Ytd7iPwY/amgpO/lDKmmEiHlsDrpfROrVFTbD1YMi6c=;
-        b=raTVv4B4oM56+JzR1eFHKsFegPLLLAJF9otUcImjezAXrCiUd+LjPW3yYc9pxSicvB
-         e82Dbi7LfhIoumroSajExjrCJLaxXwj0cBUByjLzDZBA/VzX+sCJc7Nroy5KHLg5Ggks
-         wNiSSj2xHVhwHBqb2P98Fp/dUA8SyBM8wy3Qxe6E1In6eopfe7V31zmbWQgkOc+l0zVA
-         6WbQ0h27nL3jQTrwPZOUA0XGOfpUa4pO2p96t3+aIhM0tx1b5KiW1Sd05DEygMrgK3ps
-         AATGVPigXLVzfGJLt3BwnQAN02TLtdbXyPbm2Buz7IaY7rkky1vFxwvPiYCueXFWPX5x
-         mzMQ==
-X-Forwarded-Encrypted: i=1; AFNElJ9TJmJJqWpHaE3b+H43QYBMJUbEAa+fb9v6yZZop4+dfUMcCWhSr2RbyygE0l+GnwzuD1/49bxMSrk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIsqYNlV8dZzw444H2yDr/fDAUKIH5T9nPeEWV5W69Bw/Attm5
-	JcI0pzlGjjqbAjsbvmUcYfy3moTiOCYG1moWMayZEAQpJyVu/xgRsjIO9DPthz9XvpM=
-X-Gm-Gg: Acq92OE5AAard9LjTRKS11N2gZvN5hJYAmKHV0si8wAnRj4tjDLb5aD7oxApFpd+oWe
-	uSMAJ5Yuo6MZGl1+lakgNh/sqIoV+g/P7QHvKDr0FP+VBAPeasmy5Buiy8e/t5yPRhuLoedag5I
-	4dNNSvH40PjIuecsjMIMIKIiB970a8pHJ+nrBPX5AGVpP83aadin0lWlYy5ATPZCxppyGLW7mB1
-	cdgJtBP/UggfOzSBqERdGQ64PlgOJAndyutdwCbv2P8p2YBPTSSSeMgyoWcGgXZAL7Sn4WghMS3
-	VJjFVmi8XBg49ZMcP066pOMuFw/0LzSLHstT1eUYDjgJSiyYBpAWhGU5LZ/ZjNgJN5W0IgWoIAV
-	kNq1v16dCqo/bI3okTn3vWoKG0/yKOpLlSmHVXPCiZPAR3ISSaNYi1WddLrzqLijRBS9uGzaBQ6
-	f2K0HaDrn0YrAe6awTeRiLSsAiapO54Gt+xFDE+44ziIB0pSuOlt7Lp0KVYLSN
-X-Received: by 2002:a05:622a:60c:b0:517:6b31:8058 with SMTP id d75a77b69052e-517fe50614bmr16606071cf.40.1781241310554;
-        Thu, 11 Jun 2026 22:15:10 -0700 (PDT)
-Received: from [127.0.1.1] ([71.181.43.54])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-517fb7e8900sm12732291cf.23.2026.06.11.22.15.09
+        d=1e100.net; s=20251104; t=1781245334; x=1781850134;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=n7Yf1YYFjiuiIuFcDTEBV9uJIVRQFm5qqW6YmchUZPg=;
+        b=L05oREHTCKvTlqWE/3QtcLcHufJR835GBhEUVAU/WL+YI8qgfJfoNhi8L8GOf+1FPz
+         o6RlucY95BrbO9namLnk3LIsVVw9+XySZG8ba8bO0OuHo/ZbqFNqBrd6A10Q+7svv7O5
+         XcUft2ZL67wo5cSiG3qi45+ApErd1GQr2oApjl0SOLlrIQsFFzFz45ANwViixsYyHlDW
+         VB+oCRJIkjrz/dD4X+ZEgDBdfhbgfaA1NxxjeXPdKT1Rs5H2rDuhbdrKCoO9rQkW3Lt3
+         VjfEcUwjFYUZSge3vJwT2tISdOIO36hFFKSxvVp+ken6URYKJpkv2zjaR1qIKgfh7MvA
+         xFuw==
+X-Forwarded-Encrypted: i=1; AFNElJ+h8gsnJyWZRSLcx3rar2zBSgCMZJFH8R6TLb3FSHz/i8t7w/dZZSjTDje38g4npnX8x6MNqS+OjTU=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy/bDBLyhVY0xzypd51y3kB2o06uhph+N/SAvJAaXPqKtM/GIRk
+	5h5p1oHxzhP2BXSeU81rSmMceSIdiiwTTWVUqGQLfraUfm53L2bl/lLV7yzPuc6Vgy7XAlgp/Ai
+	6LkRSa6EqNF111qZ+pyXy12JC9geFQbeijUPURE74FpmXz2kROo3syQ9OO3pyVhM=
+X-Gm-Gg: Acq92OHKz3oqLx66c/r42x4MjINtZ81gNx0fw8EYwsMgDtjJih5zsUhG2kw2EdXaKVL
+	C1QoiZ+H9Bch5WJflBX9WV8WVwoUzWI4g0bKMYf3HJgw0ULCLMbMTrZXhppJ2MGVaSXCTAlMJL4
+	5XGAfv7pGeWHj35rF+4KgaQnWj3ruHAVx/X4o9rTKL9CO3Zrlv517GPCJupaQ0QQSDX+N1FR4Jc
+	n/XK9M+7UbffVqV9W54i6BWGcSLU5HHYv2m/flMZBxCVxCXYlxkcvJ/y1oTqfIVrogTceJPgWWv
+	UJorHppgqkRi49h8VSMFEIBbX1/BT/shT5aGaR653+Axl9X5W00fzPr7J1ZbzgiUuXDcIz/gVbz
+	VO9I5aOAIXEM/H6BrjCqEorUuu30LlpbJmIz34rE3CcWCxHtsjqi6elzRCbd1238pgd0++wNArm
+	fRhwim8v1E94jyiwHy3Qd0IS4gQmV8t1Yr6Rw=
+X-Received: by 2002:a05:622a:1109:b0:50f:b257:9301 with SMTP id d75a77b69052e-517fe566319mr18736001cf.52.1781245333849;
+        Thu, 11 Jun 2026 23:22:13 -0700 (PDT)
+X-Received: by 2002:a05:622a:1109:b0:50f:b257:9301 with SMTP id d75a77b69052e-517fe566319mr18735801cf.52.1781245333414;
+        Thu, 11 Jun 2026 23:22:13 -0700 (PDT)
+Received: from umbar.lan (2001-14ba-a073-af00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a073:af00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-5ad2e1aeb6dsm253549e87.64.2026.06.11.23.22.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 11 Jun 2026 22:15:10 -0700 (PDT)
+        Thu, 11 Jun 2026 23:22:12 -0700 (PDT)
+Date: Fri, 12 Jun 2026 09:22:10 +0300
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Matthew Leung <matthew.leung@oss.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: qcom: Document the Hawi PCIe
+ Controller
+Message-ID: <m2kwzigrz4fbdedzr2bj2auqtvafj6qstbplghssato4d6tdnd@ftug3clgxmd6>
+References: <20260529-hawi-pcie-v2-0-de87c6cc230c@oss.qualcomm.com>
+ <20260529-hawi-pcie-v2-1-de87c6cc230c@oss.qualcomm.com>
+ <2tenqkmwcr2gshtjwh44pvban4gtlzcgrm3iibkfrs4zh6vphb@h5losfunylr6>
+ <aiteRU8cWykuhlVO@hu-mattleun-lv.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v6 01/12] PCI: liveupdate: Set up FLB handler for the
- PCI core
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: David Matlack <dmatlack@google.com>
-Cc: kexec@lists.infradead.org, linux-doc@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-pci@vger.kernel.org, 
- Adithya Jayachandran <ajayachandra@nvidia.com>, 
- Alexander Graf <graf@amazon.com>, Alex Williamson <alex@shazbot.org>, 
- Bjorn Helgaas <bhelgaas@google.com>, Chris Li <chrisl@kernel.org>, 
- David Rientjes <rientjes@google.com>, 
- Jacob Pan <jacob.pan@linux.microsoft.com>, Jason Gunthorpe <jgg@nvidia.com>, 
- Jonathan Corbet <corbet@lwn.net>, Josh Hilke <jrhilke@google.com>, 
- Leon Romanovsky <leonro@nvidia.com>, Lukas Wunner <lukas@wunner.de>, 
- Mike Rapoport <rppt@kernel.org>, Parav Pandit <parav@nvidia.com>, 
- Pasha Tatashin <pasha.tatashin@soleen.com>, 
- Pranjal Shrivastava <praan@google.com>, 
- Pratyush Yadav <pratyush@kernel.org>, Saeed Mahameed <saeedm@nvidia.com>, 
- Samiullah Khawaja <skhawaja@google.com>, 
- Shuah Khan <skhan@linuxfoundation.org>, Vipin Sharma <vipinsh@google.com>, 
- William Tu <witu@nvidia.com>, Yi Liu <yi.l.liu@intel.com>
-In-Reply-To: <20260522202410.3104264-2-dmatlack@google.com>
-References: <20260522202410.3104264-1-dmatlack@google.com>
- <20260522202410.3104264-2-dmatlack@google.com>
-Date: Fri, 12 Jun 2026 05:15:02 +0000
-Message-Id: <178124130274.908199.14827357870284807134.b4-review@b4>
-X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4474;
- i=pasha.tatashin@soleen.com; h=from:subject:message-id;
- bh=EzD98ff1aItiQM04E7u7INRRf8aew7gIPA1oAqmmEbk=;
- b=owEBbQKS/ZANAwAKAbt3KEzbc3reAcsmYgBqK5Xc6OMuwmCG+aG2z1N7L1TcMXvQcxKu7DUJX
- +1rPXHL7kiJAjMEAAEKAB0WIQRBMaqT7LRvGvB/NmK7dyhM23N63gUCaiuV3AAKCRC7dyhM23N6
- 3sl4D/49rTQw3AtcTrHTcVdJeLsKzlzrERbSSrQdqByRDKt/VZ3tYXxZ42pX6dtH57jB2TwPimJ
- fosBa4kw60OkjlCXDe0327bTsC/RBIpO8fpRg1nrQ4mdgxcxCA9WDOPf7nJKIGccIBHIyBSvzMH
- F1ist4SEhl3S9htSG08rn/5MOMDrQMbyPYpiMXJkCX8jmEnu+IhogD/W9GVaoN48kPyeW1BSYys
- rlDCm4C1C+TpXxkc9eQoTDokqxutzb6n9L+BmuGFXMZzLRT+Cvyy2XYoSMZ7h/ca1urQmGkcYQI
- C94Kxe+cqfGA4hE2Id/Dtrfj2Cv5PJVKahykKX4kp5vdFS8qGiWiexcvY5qrgFRIkuR467BP+WH
- IjdCg6yY0k1YvqmZTee/96z3eDX+BL7agDjBDpQJ6P92fVdayoI0kDL71lX9FhtUoobW0gUipjR
- UEi/3DifS9I2vz9+U7MN2RA4kPvyOQjqLtNmo9v4FSBa/YkCLnoyRA0LlRsIjF9d9WdtKu8M1ad
- CMeu4L4tloS40kHaM4VoOCDpVOxau7uk165pKvOGsyGdRN5wGMShHp0btN7htAjYMh9jz2E1mw7
- uMP27uJMOKTo6YqcPACF1qa4YPc+FVG+bLp/Qp6ddOr+7jiJvg9s9XVb469tJ1qe/BZiKMpm5tf
- 9wtlEwOJSVNY0UA==
-X-Developer-Key: i=pasha.tatashin@soleen.com; a=openpgp;
- fpr=CAAAB722DD22A081F0D49F35633A6A993D43B569
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aiteRU8cWykuhlVO@hu-mattleun-lv.qualcomm.com>
+X-Proofpoint-GUID: aoSJ9qgWYVGJEtrx1bsE5sVDoZ6kt-iq
+X-Authority-Analysis: v=2.4 cv=c4abhx9l c=1 sm=1 tr=0 ts=6a2ba596 cx=c_pps
+ a=hnmNkyzTK/kJ09Xio7VxxA==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=FelO9ux0wxsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
+ a=u7WPNUs3qKkmUXheDGA7:22 a=yOCtJkima9RkubShWh1s:22 a=EUspDBNiAAAA:8
+ a=onbnNvR133blzQGUTA0A:9 a=CjuIK1q_8ugA:10 a=PEH46H7Ffwr30OY-TuGO:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwNjEyMDA1NSBTYWx0ZWRfX9Mf6gH6oOclS
+ y6GGuAaV8iXgEo//I6aBec2g5xPDVuDnyaILSVEHCuGMFVQbTht6dZObBMDB1aWJvOnV6JYUuFh
+ JQn+SmrKMdqE4F75gAZDymn8RMdJu+xk7GuFQ2VMiA5hGpnFEbMT998XomqRphVHYt1IzPCh56h
+ LVAiOzxTdYwf52VNXQWav00CesDi8Q8YqtTyZsy13Wc8pZhSwh9BiZCKKyflnSiVXiojsd4cCtF
+ at1Izm8HlyuzmNr5+y/WfU6bipHinQ2cxT9+sbCHtGXWZxld/X7wg0NTG7lVnoM/nJP1dJtLsgp
+ cVHoUuU6yhD4GeuH6eHo/WUYRZP0YsW14Jay+IVEn4HZ354IutyDS47iF3kPHrkraW4Pq0MDzVf
+ TDU8fb2hAMKoUrn8vV6BP3wIk8WMNYe2gmg5QooaesSIndziNUdP9O4hF4qbuSLv2A26hYYk/cX
+ biXZAY7ebXl6e+wCp1A==
+X-Proofpoint-ORIG-GUID: aoSJ9qgWYVGJEtrx1bsE5sVDoZ6kt-iq
+X-Proofpoint-Spam-Info: AW1haW4tMjYwNjEyMDA1NSBTYWx0ZWRfX3lWsbIBvV4Hl
+ er3Q6zgdV/LmN5+vQquwVZ4LP8+wwAxDpHV/2McBaXCaQN7Ijnwhe7XyYwp43IIXfTJVjZXCqDD
+ p/zer1G/0j1uH+3NcX5gmTIuYBCM/IQ=
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1143,Hydra:6.1.125,FMLib:17.12.100.49
+ definitions=2026-06-12_01,2026-06-11_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 adultscore=0 clxscore=1015 phishscore=0 priorityscore=1501
+ malwarescore=0 bulkscore=0 suspectscore=0 impostorscore=0 spamscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2606040000 definitions=main-2606120055
 
-On Fri, 22 May 2026 20:23:59 +0000, David Matlack <dmatlack@google.com> wrote:
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 2fb1c75afd16..6c618830cf61 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -20530,6 +20530,16 @@ L:	linux-pci@vger.kernel.org
->  S:	Supported
->  F:	Documentation/PCI/pci-error-recovery.rst
->  
-> +PCI LIVE UPDATE
-> +M:	David Matlack <dmatlack@google.com>
+On Thu, Jun 11, 2026 at 06:17:57PM -0700, Matthew Leung wrote:
+> On Sun, Jun 07, 2026 at 11:01:10PM +0300, Dmitry Baryshkov wrote:
+> > On Fri, May 29, 2026 at 01:10:08AM +0000, Matthew Leung wrote:
+> > > Add a dedicated schema for the PCIe controllers found on the Hawi
+> > > platform.
+> > > 
+> > > Signed-off-by: Matthew Leung <matthew.leung@oss.qualcomm.com>
+> > > ---
+> > >  .../devicetree/bindings/pci/qcom,hawi-pcie.yaml    | 204 +++++++++++++++++++++
+> > >  1 file changed, 204 insertions(+)
+> > > 
+> > > +
+> > > +examples:
+> > > +  - |
+> > > +    #include <dt-bindings/clock/qcom,hawi-gcc.h>
+> > > +    #include <dt-bindings/gpio/gpio.h>
+> > > +    #include <dt-bindings/interconnect/qcom,icc.h>
+> > > +    #include <dt-bindings/interconnect/qcom,hawi-rpmh.h>
+> > 
+> > Stop referencing clocks and interconnect header files. Replace used nocs
+> > with ephemeral values.
+> > 
+> > > +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > > +
+> > > +    soc {
+> > > +        #address-cells = <2>;
+> > > +        #size-cells = <2>;
+> > 
+> > Not looking around should be a sin. Take a look at other Qualcomm PCIe
+> > bindings. Compare them to yours. Then fix yours to follow.
+> > 
+> > Hint: the extra soc node is useless. This is just an example, so use the
+> > default, 1 cells for address and size.
+> 
+> Thank you for the feedback. This new binding follows the examples set in
+> the qcom,pcie-sm8x50 bindings and retains the same formatting (extra soc
+> node and header references).
 
-Please add Pratyush, Mike, and myself so we are notified directly of 
-incoming patches, the same as with other areas where the liveupdate/ 
-tree is specified.
+Hmm, interesting. Then I'm a sinner :-)
 
->
-> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
-> new file mode 100644
-> index 000000000000..737e7b9366db
-> --- /dev/null
-> +++ b/drivers/pci/liveupdate.c
-> @@ -0,0 +1,145 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +
-> +/*
-> + * Copyright (c) 2026, Google LLC.
-> + * David Matlack <dmatlack@google.com>
-> + */
-> +
-> +/**
-> + * DOC: PCI Live Update
-> + *
-> + * The PCI subsystem participates in the Live Update process to enable drivers
-> + * to preserve their PCI devices across kexec.
-> + *
-> + * File-Lifecycle-Bound (FLB) Data
-> + * ===============================
+I looked at msm8996, but I didn't notice that the rest of the files use
+the soc node (and match what you've sent). Please excuse me.
 
-...
+> 
+> I understand the example can be simplified with your suggestions but
+> want additional confirmation that these will be the convention for new
+> bindings going forward.
 
-> + *
-> + * PCI device preservation across Live Update is built on top of the Live Update
-> + * Orchestrator's (LUO) support for file preservation across kexec. Drivers
+At least, let's keep it for now. The other comment stands. To remove
+dependencies please use ephemeral nodes instead of depending on DT
+bindings from other subsystems.
 
-I prefer to just use acronyms FLB, and LUO, but have links to the actual 
-documentations about them.
-
-So, something like this:
-
-  * :ref:`FLB <flb>` Data
-  * =====================
-  *
-  * PCI device preservation across Live Update is built on top of the
-  * :ref:`LUO <luo>` support for file preservation across kexec. Drivers
-
-And also add _luo and _flb to Documentation/core-api/liveupdate.rst
-
-.. _luo:
-
- ========================
- Live Update Orchestrator
- ========================
-
-.. _flb:
-
- LUO File Lifecycle Bound Global Data
- ====================================
-
-> [ ... skip 17 lines ... ]
-> + *
-> + *  * ``pci_liveupdate_register_flb(driver_file_handler)``
-> + *  * ``pci_liveupdate_unregister_flb(driver_file_handler)``
-> + */
-> +
-> +#define pr_fmt(fmt) "PCI: liveupdate: " fmt
-
-Nit, may be:
-
-> +
-> +#include <linux/io.h>
-> +#include <linux/kexec_handover.h>
-> +#include <linux/kho/abi/pci.h>
-> +#include <linux/liveupdate.h>
-> +#include <linux/mutex.h>
-> +#include <linux/mm.h>
-
-Please sort alphabetically.
-
-> [ ... skip 12 lines ... ]
-> +	 * future to increase the chances that there is enough room to preserve
-> +	 * devices that are not yet present on the system (e.g. VFs, hot-plugged
-> +	 * devices).
-> +	 */
-> +	for_each_pci_dev(dev)
-> +		max_nr_devices++;
-
-I think, we want to use kho_block [1] (it is in liveupdate/next branch) 
-to allow number of supported devices to be dynamic.
-
-To support this, we would redefine the ABI and tracking structures like 
-so:
-
-/* include/linux/kho/abi/pci.h */
-struct pci_ser {
-	u64 devices;      /* Phys address of the first block header of kho_block_set */
-	u64 nr_devices;   /* Total count of active preserved devices */
-} __packed;
-
-/* drivers/pci/liveupdate.c */
-struct pci_flb_outgoing {
-	struct pci_ser *ser;            /* Points to the FDT/KHO-allocated ABI struct */
-	struct kho_block_set block_set;  /* Controls the active blocks on the fly */
-};
-
-In  __pci_liveupdate_preserve_device() , we would search for 
-and reuse any inactive  pci_dev_ser  slot first, and only call 
-kho_block_set_grow() to expand if no inactive slots are available.
-
-In pci_liveupdate_unpreserve_device(), we would simply 
-mark the  pci_dev_ser as inactive.
-
->
-> diff --git a/include/linux/pci_liveupdate.h b/include/linux/pci_liveupdate.h
-> new file mode 100644
-> index 000000000000..8ec98beefcb4
-> --- /dev/null
-> +++ b/include/linux/pci_liveupdate.h
-> @@ -0,0 +1,30 @@
-> [ ... skip 24 lines ... ]
-> +static inline void pci_liveupdate_unregister_flb(struct liveupdate_file_handler *fh)
-> +{
-> +}
-> +#endif
-> +
-> +#endif /* LINUX_PCI_LIVEUPDATE_H */
-
-[1] https://lore.kernel.org/all/20260603154402.468928-1-pasha.tatashin@soleen.com/
-
-Preserving: In  __pci_liveupdate_preserve_device() , we would search for 
-Unpreserving: In  pci_liveupdate_unpreserve_device(), we would simply
-
-Preserving: In  __pci_liveupdate_preserve_device() , we would search for 
-Unpreserving: In  pci_liveupdate_unpreserve_device(), we would simply 
+> 
+> > 
+> > > +
+> > > +        pcie@1c00000 {
+> > > +            compatible = "qcom,hawi-pcie";
+> > > +            reg = <0 0x01c00000 0 0x3000>,
+> > > +                  <0 0x40000000 0 0xf1d>,
+> > > +                  <0 0x40000f20 0 0xa8>,
+> > > +                  <0 0x40001000 0 0x1000>,
+> > > +                  <0 0x40100000 0 0x100000>;
+> > > +            reg-names = "parf", "dbi", "elbi", "atu", "config";
+> > > +            ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
+> > > +                     <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x3d00000>;
+> > > +
+> > > +            bus-range = <0x00 0xff>;
+> > > +            device_type = "pci";
+> > > +            linux,pci-domain = <0>;
+> > > +            num-lanes = <2>;
+> > > +
+> > > +            #address-cells = <3>;
+> > > +            #size-cells = <2>;
+> > > +
+> > > +            clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
+> > 
+> > <&gcc_pcie_0_aux_clk>, etc.
+> > 
+> > > +                     <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+> > > +                     <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
+> > > +                     <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
+> > > +                     <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
+> > > +                     <&gcc GCC_AGGRE_NOC_PCIE_AXI_CLK>,
+> > > +                     <&gcc GCC_CNOC_PCIE_SF_AXI_CLK>;
+> > 
+> > -- 
+> > With best wishes
+> > Dmitry
 
 -- 
-Pasha Tatashin <pasha.tatashin@soleen.com>
+With best wishes
+Dmitry
