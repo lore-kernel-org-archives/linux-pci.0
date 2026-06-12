@@ -1,90 +1,41 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 471582D8DC4
-	for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 15:17:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862DF2D238A;
+	Fri, 12 Jun 2026 15:17:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1781277454; cv=none; b=jIeKHKDK21L6i1M0vuc8iySWo+r4Im5y+VIVuo7V7jr5p64DMZXXB0AIXJIvv9NAL+3X8kFU67yriNPzYFzdDUXgFUYJ9AgNNLGIi33EFPwz97TzIiQZRAt892Pn1PPdwlAgqRVWPNfs+GTZWpDBQ3I7ddRirag4z0pq6YqMn4o=
+	t=1781277472; cv=none; b=WCpWW/RBUCUgsav267q73Naub0Ly48YhF5TEZlNv0Cf/34yY8RGmd77+cX6vooVXPy6BiPu+Ml7dBsBq/JSaawW0TLrDRETmgVqsFOtegmFcko3WSVKu/hSFdy1VpRLAAWkxo4EFzynwi0glKaNYo50g/v5HDmizygIHz5trs84=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1781277454; c=relaxed/simple;
-	bh=DqXswA747+6bYY1uTzSstZbbvVg2LEzGaCUeKcgc+fU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fmGW6WidcNFpxjK+1KkphW2vydbOZiwOoA3+h8eu4o56dSkSXJtmep5SdA2uoWv1tUUXEs8wnPe8P67Gfh/uJ/3jZuCa7f0uDYwbpOEiUz0NAHb0+21adUkIDDJCwq/poNPG4BFiMlukZkv9q8Lz3FuG8nBwx/ByUiVlaygsnPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DG9h1qWt; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1781277472; c=relaxed/simple;
+	bh=U4O+P7MXQot0uopxFWZ0QHzHbnym462DP/joRZT0bv8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=kGr0MqoB4PtwVczDeMYH3g/feZNJbCP/JLERq9kkGQR7CqPxeImbwVXqvXtvKwP4FBBrE4pj22yCPqcPo0NWH5AM8kOfzmG69pw0vrPjZ/MDC6UdSHkQj59c3gAb0v03TcZel4wqTV8IZlJI5jDyXmN3bZgJXXNjFYXLY7QL448=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fRS8UoxT; arc=none smtp.client-ip=100.103.45.18
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DG9h1qWt"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2bf2911f93cso89415ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2026 08:17:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1781277451; x=1781882251; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TlOQuFqEcpnxb6HFkKMVShmOdVTUgHEmVlFieGLUVKw=;
-        b=DG9h1qWtDqUFvH2jnGQe74cqO+Mcin3e9wQwaDNY/xVaRLarO/RzGty8crffvjcuX3
-         fjjAujlbyBfomVuH3aTvXe4PyIGGLTEf5Xd1BYWNSkl45i8himGPka1QAQRW0q4DnD/r
-         hySU40dZSNSKcT6AGED7fRPZmITyuanDN8vPi3kf+hb6KT1GeuV05mWAinSwOYpedFZ3
-         kiKP+CAcnfRmjgnKc55xY+Z2azQOKILhjU8dvCrWPtR5FlrKBWoT8PvoueBCKOHeugFF
-         TGKD6aH9kH+6pvkQPi+IE9xhG6gkXqD+kv2KRb/AZWjs/KeYbcgCH4rFOxqTD2ZP1TKq
-         8CGg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1781277451; x=1781882251;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=TlOQuFqEcpnxb6HFkKMVShmOdVTUgHEmVlFieGLUVKw=;
-        b=S/TWgYT+QqF7Ds2kZKYHdw1LiJAhP/O+qsZEZRSuvcbW/kNOa6EifxvZrsLzfjPp9T
-         Xo5OAxF73RFzCISwyH457PkNUzZc7x8L7ALBfnvtRAeCLXL7Ft4U7PoUgc1uFvY27UPl
-         30DHgfkc1qaG5+3UJPKQA18Ec9rMzXHw8ycpP/3Z9Tch+YJKxYVE3rXQbK/TjLodF/Vx
-         SyKmuJxiLPgSTQacxfeESgmT8xHtwxRSNtQSbMP9+Bhp6im0R9nRCHs3ndPW8fWJijD4
-         dRObLz6pM95l7pJ/AyAar18uEm7/3+35VEKqaiCXDb7dP3mb5NQRvfQdEsian8mRLZKo
-         OOdw==
-X-Forwarded-Encrypted: i=1; AFNElJ+pGSqOgn7zLoDXuA004kwCJt0JNmJezy6aTA0T97qGEfiwcGGGjIjRjGZ3FMoot4tzdQZimNsI0xU=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwZFvYoc6ydCiRpD0uxP/WzlQECIQs/RzzDRZCLs4LtaDiLw60t
-	/0OeD5ZJGpHuvbF6Bv4KNbxPqHL1Zzd9m02R3IzQpasOzewXhZFm2//IFKddsq2jAA==
-X-Gm-Gg: Acq92OGyMHakTkD3FXhvDGwNaK8Vq4ZibCru4UatK/IF3GIybMgstulhPlgVAzcaTyl
-	hoPjU+VYNRj1+4TrK+jaiwSFJOjMS4krxqG5+uqxVljodbaNHEfWusm6LyWvCOVXbCjuQw77CFY
-	J6OPCdmJJ/PdiigWLDgHJ9NC2jw3cByIhwMFQI9WNADMfW4W4qDkmCzMf7T/U9Q/6t/MzvhKbqw
-	lJGCxkaJIkmvnu759SXhuniMjuIhmsCnSJs4VGYlebNnak0T/oHa01SGwgD42EbhZPx+5VOh3FK
-	7+R5TC1kiZXPj+X6s+MSkI78yF3RbVemDsaMb1TfEChgqpXo/RqGDeHLwWbqzGbzHXYYNb2ENoM
-	KQxkA+jLpGE9Ekp6Bmu5/vXQCe7N0vGNJacRpd1jwjGBjeGaPEha2KzFXNMy7moGB8L8wm2wDxO
-	ZyP9pCx9wlvPdQJbbQRXKvbQXgN5U55Evw0m6aaiGHVusV4/QQ2r8fvEPGNjsQfFGWdGCOHDA=
-X-Received: by 2002:a17:902:e805:b0:2b2:70ba:305c with SMTP id d9443c01a7336-2c3e1160718mr2635095ad.8.1781277450033;
-        Fri, 12 Jun 2026 08:17:30 -0700 (PDT)
-Received: from google.com (199.255.142.34.bc.googleusercontent.com. [34.142.255.199])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2c4328a4c14sm22623545ad.43.2026.06.12.08.17.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Jun 2026 08:17:29 -0700 (PDT)
-Date: Fri, 12 Jun 2026 15:17:21 +0000
-From: Pranjal Shrivastava <praan@google.com>
-To: Matt Evans <matt@ozlabs.org>
-Cc: "Tian, Kevin" <kevin.tian@intel.com>,
-	Alex Williamson <alex@shazbot.org>,
-	Leon Romanovsky <leon@kernel.org>, Jason Gunthorpe <jgg@nvidia.com>,
-	Alex Mastro <amastro@fb.com>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Mahmoud Adam <mngyadam@amazon.de>,
-	David Matlack <dmatlack@google.com>,
-	=?iso-8859-1?Q?Bj=F6rn_T=F6pel?= <bjorn@kernel.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Ankit Agrawal <ankita@nvidia.com>,
-	Alistair Popple <apopple@nvidia.com>,
-	"Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3 0/9] vfio/pci: Add mmap() for DMABUFs
-Message-ID: <aiwjAbFVhPkkj-6U@google.com>
-References: <20260610154327.37758-1-matt@ozlabs.org>
- <DM6PR11MB3690A65EA9D8A9B77AF93E198C182@DM6PR11MB3690.namprd11.prod.outlook.com>
- <9812ae0f-8f22-4d62-a706-4c7232a5656b@ozlabs.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fRS8UoxT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36F791F000E9;
+	Fri, 12 Jun 2026 15:17:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1781277471;
+	bh=6XpxeIXcm0bcntaNBOITL3pX8sOGQ/dSwg/AQ/P7ms4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To;
+	b=fRS8UoxTBVb4rjGnYIwpI1u8mm+LKqLs/UKIe2+xv44fYHk8PoTevfj9MV/O1HD+H
+	 OLVwNhdiVr/PDit8ZkqapCQ4Kd3HwfDtPOq7ldw4enMG9cH25buCz/2Fff5FHTdQQw
+	 MeJRzZv4oKxo6RKAyS7nMh1vxIBPA8Ucxwv+Flv3qYlOYDd+Q1/fGxcovQKFqArt2T
+	 WeuEJUALKmD7dJzVnz5ifVEnIIfmbTwxiCZyPwlt8v1CVvGgVy4tZL4k/7bd3sKNWD
+	 tmwDmp62wqcZ6VKiLv4HGRhnGesNFX5jt5lm6HYOs60imYuOy3mRBvAKjmsuWzN+xU
+	 tOR09zOWG5emw==
+Date: Fri, 12 Jun 2026 10:17:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>,
+	Alex Williamson <alex@shazbot.org>
+Cc: bhelgaas@google.com, jjohnson@kernel.org, mani@kernel.org,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath11k@lists.infradead.org, ath12k@lists.infradead.org,
+	mhi@lists.linux.dev, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v9] PCI: Add device-specific reset for Qualcomm devices
+Message-ID: <20260612151749.GA603817@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -93,65 +44,135 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9812ae0f-8f22-4d62-a706-4c7232a5656b@ozlabs.org>
+In-Reply-To: <20260612142638.1243895-1-jtornosm@redhat.com>
 
-On Fri, Jun 12, 2026 at 04:11:50PM +0100, Matt Evans wrote:
-> Hi Kevin,
-> 
-> On 12/06/2026 09:27, Tian, Kevin wrote:
-> >> From: Matt Evans <matt@ozlabs.org>
-> >> Sent: Wednesday, June 10, 2026 11:43 PM
-> >>
-> > [...]
-> >>
-> >>  vfio/pci: Support mmap() of a VFIO DMABUF
-> >>
-> >>    Adds mmap() for a DMABUF fd exported from vfio-pci.
-> >>
-> >>    It was a goal to keep the VFIO device fd lifetime behaviour
-> >>    unchanged with respect to the DMABUFs.  An application can close
-> >>    all device fds, and this will revoke/clean up all DMABUFs; no
-> >>    mappings or other access can be performed now.  When enabling
-> >>    mmap() of the DMABUFs, this means access through the VMA is also
-> >>    revoked.  This complicates the fault handler because whilst the
-> >>    DMABUF exists, it has no guarantee that the corresponding VFIO
-> >>    device is still alive.  Adds synchronisation ensuring the vdev is
-> >>    available before vdev->memory_lock is touched; this holds the
-> >>    device registration so that even if the buffer has been cleaned up,
-> >>    vdev hasn't been freed and so the lock can be safely taken.
-> >>
-> >>    This commit makes VFIO_PCI_CORE depend on PCI_P2PDMA_CORE
-> >> (commit
-> >>    1) to bring in (only) the P2PDMA provider code.
-> > 
-> > the last sentence is stale as the dependency is now added in patch4.
-> 
-> Right, will fix.
-> 
-> >>
-> >> End
-> >> ===
-> >>
-> >> This is based on VFIO next (e.g. at b9285405c5f6).
-> >>
-> > 
-> > Sashiko failed to apply this series. Is there dependent work in vfio-next?
-> > 
-> > otherwise getting a Sashiko review is helpful here.
-> 
-> It _did_ depend on (at least the context of) some fixes in vfio-next.
-> Looks like it'll rebase on master now those are merged.  I should've
-> re-checked this for v3, oops. :|
-> 
-> (FWIW, I had Robot Claude Opus 4.8 to review several times up to v3.
-> But I agree, Sashiko would be interesting too.  Can it be manually
-> triggered with branch guidance?)
+[+to: Alex, VFIO resets]
 
-I guess relevant steps to run locally are here:
-https://github.com/sashiko-dev/sashiko/blob/main/README.md
+On Fri, Jun 12, 2026 at 04:26:38PM +0200, Jose Ignacio Tornos Martinez wrote:
+> Some Qualcomm PCIe devices (WCN6855/WCN7850 WiFi cards, SDX62/SDX65 modems)
+> lack working reset methods for VFIO passthrough scenarios. These devices
+> have no FLR capability, advertise NoSoftRst+ (blocking PM reset), and have
+> broken bus reset.
 
-Additionally, we can try providing a base-commit (which points to a
-public commit). 
+I guess "bus reset" here refers to Secondary Bus Reset being asserted
+by the bridge upstream from these devices?  Seems a bit surprising if
+that doesn't work.  Or is it just that we can't use SBR because there
+are multiple devices below that bridge?
 
-Thanks,
-Praan
+> The problem manifests in VFIO passthrough scenarios:
+> 
+> - WCN6855 WiFi card (17cb:1103): Normal VM operation works fine, including
+>   clean shutdown/reboot. However, when the VM terminates uncleanly
+>   (crash, force-off), VFIO attempts to reset the device before it can
+>   be assigned to another VM. Without a working reset method, the device
+>   remains in an undefined state, preventing reuse.
+
+I don't know enough about VFIO, but I sort of expected that VFIO would
+reset devices between reassignment regardless of how a VM terminates.
+I guess that's not true?
+
+> - WCN7850 WiFi card (17cb:1107): Same behavior as WCN6855.
+> 
+> - SDX62/SDX65 5G modems (17cb:0308): Never successfully initialize even
+>   on first VM assignment without proper reset capability.
+> 
+> Add device-specific reset entries for these Qualcomm devices using D3hot
+> power cycling. Testing shows that despite advertising NoSoftRst+, D3hot
+> transition provides sufficient reset for VFIO reuse, particularly after
+> unexpected VM termination. While not a complete reset (BARs preserved),
+> it provides the only viable reset mechanism for these devices.
+
+Since the device claims to preserve internal state across D3hot->D0
+(and it sounds like at least BARs *are* preserved), is this a
+potential leak of state between VMs?  To play devil's advocate, how do
+we convince a customer that none of their data is ever leaked to a
+subsequent tenant using this device?
+
+> Testing was performed on desktop platforms with M.2 WiFi and modem cards
+> using M.2-to-PCIe adapters, including extensive force-reset cycling to
+> verify stability.
+> 
+> Signed-off-by: Jose Ignacio Tornos Martinez <jtornosm@redhat.com>
+> ---
+> v9:
+>   - Complete redesign based on maintainer feedback (Alex Williamson, Bjorn
+>     Helgaas, Rafael Wysocki): dropped general d3cold infrastructure entirely
+>     and now just a single patch: the proven D3hot reset for specific
+>     Qualcomm devices (device-specific reset)
+>   - Previous v8 patch 1/3 (general d3cold) dropped: concerns about ACPI
+>     portability, bridge issues, runtime PM, and lack of _PR3 hardware for
+>     testing.
+>   - Previous v8 patch 3/3 (quirk_no_bus_reset) already merged for v7.2
+> v8: https://lore.kernel.org/all/20260609163649.319755-1-jtornosm@redhat.com/
+> 
+>  drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 431c021d7414..bac1edb6c2dc 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4240,6 +4240,41 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Device-specific reset method for certain Qualcomm devices via D3hot power
+> + * cycle.
+> + *
+> + * These specific Qualcomm devices lack FLR capability, advertise NoSoftRst+
+> + * (blocking PM reset), and have broken bus reset. Despite advertising
+> + * NoSoftRst+, testing shows that D3hot transition provides sufficient reset
+> + * for VFIO reuse, particularly after unexpected VM termination where the
+> + * device would otherwise remain in an undefined state. While not a complete
+> + * reset (BARs are preserved), it provides the only viable reset mechanism for
+> + * these devices in the commented situations.
+> + */
+> +static int reset_qualcomm_d3hot(struct pci_dev *dev, bool probe)
+> +{
+> +	int ret;
+> +
+> +	if (probe)
+> +		return 0;
+> +
+> +	if (dev->current_state != PCI_D0)
+> +		return -EINVAL;
+> +
+> +	ret = pci_set_power_state(dev, PCI_D3hot);
+> +	if (ret)
+> +		return ret;
+> +	msleep(200);
+> +
+> +	ret = pci_set_power_state(dev, PCI_D0);
+> +	if (ret)
+> +		return ret;
+> +	msleep(200);
+> +
+> +	return 0;
+
+If we think this is a viable method, it seems like we should use
+pci_pm_reset(), which takes care of IOMMU and device readiness issues.
+
+We would have to change pci_pm_reset() to deal with the fact that
+PCI_PM_CTRL_NO_SOFT_RESET seems wrong on these devices.  Maybe we
+could cache PCI_PM_CTRL_NO_SOFT_RESET in pci_pm_init(), then override
+it with quirks for these devices?
+
+> +}
+> +
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -4255,6 +4290,9 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  		reset_chelsio_generic_dev },
+>  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+>  		reset_hinic_vf_dev },
+> +	{ PCI_VENDOR_ID_QCOM, 0x1103, reset_qualcomm_d3hot },  /* WCN6855 */
+> +	{ PCI_VENDOR_ID_QCOM, 0x1107, reset_qualcomm_d3hot },  /* WCN7850 */
+> +	{ PCI_VENDOR_ID_QCOM, 0x0308, reset_qualcomm_d3hot },  /* SDX62/SDX65 */
+>  	{ 0 }
+>  };
+>  
+> -- 
+> 2.54.0
+> 
